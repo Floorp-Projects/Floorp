@@ -44,6 +44,10 @@ MWContext *new_stub_context(URL_Struct *URL_s);
 void free_stub_context(MWContext *window_id);
 static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id);
 
+#if defined(XP_WIN)
+nsresult PerformNastyWindowsAsyncDNSHack(URL_Struct* URL_s, nsIURL* aURL);
+#endif /* XP_WIN */
+
 extern "C" {
 #include "fileurl.h"
 #include "httpurl.h"
@@ -350,6 +354,21 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
             goto loser;
         }
 
+#if defined(XP_WIN)
+        /*
+         * When opening a blocking HTTP stream, perform a synchronous DNS 
+         * lookup now, to avoid netlib from doing an async lookup later
+         * and causing a deadlock!
+         */
+        result = PerformNastyWindowsAsyncDNSHack(URL_s, aUrl);
+        if (NS_OK != result) {
+            NET_FreeURLStruct(URL_s);
+            pBlockingStream->Release();
+            pConn->Release();
+            goto loser;
+        }
+#endif /* XP_WIN */
+
         /* 
          * Mark the URL as background loading.  This prevents many
          * client upcall notifications...
@@ -534,6 +553,52 @@ void nsNetlibService::NetPollSocketsCallback(nsITimer* aTimer, void* aClosure)
 ///        }
     }
 }
+
+#if defined(XP_WIN)
+/*
+ * This routine is used to avoid a (hopefully temporary) problem which netlib
+ * has when processing blocking HTTP streams.  
+ * 
+ * When ASYNC_DNS is enabled, all DNS lookups go through the main message pump,
+ * unfortunately, this is not possible when processing a blocking stream, so 
+ * we deadlock :-(
+ *
+ * To avoid this deadlock, we synchronously resolve the hostname and store it
+ * in the little known IPAddressString field of the URL_Struct.  This prevents
+ * netlib from doing an Async DNS lookup later...
+ */
+nsresult PerformNastyWindowsAsyncDNSHack(URL_Struct *URL_s, nsIURL* aURL)
+{
+    PRHostEnt hpbuf;
+    char dbbuf[PR_NETDB_BUF_SIZE];
+    PRStatus err;
+    nsresult rv = NS_OK;
+
+    /* Only attempt to resolve the hostname for HTTP URLs... */
+    if (0 == PL_strcasecmp("http", aURL->GetProtocol())) {
+        /* Perform a synchronous DNS lookup... */
+        err = PR_GetHostByName(aURL->GetHost(), dbbuf, sizeof(dbbuf),  &hpbuf);
+        if (PR_SUCCESS == err) {
+            int a,b,c,d;
+            unsigned char *pc;
+
+            pc = (unsigned char *) hpbuf.h_addr_list[0];
+
+            a = (int) *pc;
+            b = (int) *(++pc);
+            c = (int) *(++pc);
+            d = (int) *(++pc);
+            URL_s->IPAddressString = PR_smprintf("%d.%d.%d.%d", a,b,c,d);
+        }
+        /* 
+         * If we fail to resolve a host on a HTTP connection, then abort the 
+         * connection to prevent a deadlock...
+         */
+        rv = NS_ERROR_FAILURE;
+    }
+    return rv;
+}
+#endif /* XP_WIN */
 
 
 static nsNetlibService *gNetlibService = nsnull;
