@@ -47,17 +47,20 @@ struct priv_data {
 #endif
 
 typedef struct {
-    char    *full_name;
-    char    *name;
-    char    *name_space;
-    char    *iid;
+    char     *full_name;
+    char     *name;
+    char     *name_space;
+    char     *iid;
+    gboolean is_forward_dcl;
 } NewInterfaceHolder;
 
 static NewInterfaceHolder*
-CreateNewInterfaceHolder(char *name, char *name_space, char *iid)
+CreateNewInterfaceHolder(char *name, char *name_space, char *iid, 
+                         gboolean is_forward_dcl)
 {
     NewInterfaceHolder *holder = calloc(1, sizeof(NewInterfaceHolder));
     if(holder) {
+        holder->is_forward_dcl = is_forward_dcl;
         if(name)
             holder->name = xpidl_strdup(name);
         if(name_space)
@@ -105,15 +108,32 @@ add_interface_maybe(IDL_tree_func_data *tfd, gpointer user_data)
     TreeState *state = user_data;
     IDL_tree up;
     if (IDL_NODE_TYPE(tfd->tree) == IDLN_IDENT) {
-        if ((IDL_NODE_TYPE((up = IDL_NODE_UP(tfd->tree))) == IDLN_INTERFACE)) {
+        IDL_tree_type node_type = IDL_NODE_TYPE((up = IDL_NODE_UP(tfd->tree)));
+        if (node_type == IDLN_INTERFACE || node_type == IDLN_FORWARD_DCL) {
+
+            /* We only want to add a new entry if there is no entry by this 
+             * name or if the previously found entry was just a forward 
+             * declaration and the new entry is not.
+             */
+
             char *iface = IDL_IDENT(tfd->tree).str;
-            if (!g_hash_table_lookup(IFACE_MAP(state), iface)) {
+            NewInterfaceHolder *old_holder = (NewInterfaceHolder *) 
+                    g_hash_table_lookup(IFACE_MAP(state), iface);
+            if (old_holder && old_holder->is_forward_dcl &&
+                node_type != IDLN_FORWARD_DCL)
+            {
+                g_hash_table_remove(IFACE_MAP(state), iface);
+                DeleteNewInterfaceHolder(old_holder);
+                old_holder = NULL;
+            }
+            if (!old_holder) {
                 /* XXX should we parse here and store a struct nsID *? */
                 char *iid = (char *)IDL_tree_property_get(tfd->tree, "uuid");
                 char *name_space = (char *)
                             IDL_tree_property_get(tfd->tree, "namespace");
                 NewInterfaceHolder *holder =
-                        CreateNewInterfaceHolder(iface, name_space, iid);
+                        CreateNewInterfaceHolder(iface, name_space, iid,
+                                     (gboolean) node_type == IDLN_FORWARD_DCL);
                 if(!holder)
                     return FALSE;
                 g_hash_table_insert(IFACE_MAP(state),
@@ -158,6 +178,9 @@ find_interfaces(IDL_tree_func_data *tfd, gpointer user_data)
         if (node)
             xpidl_list_foreach(node, add_interface_maybe, user_data);
         node = IDL_INTERFACE(tfd->tree).ident;
+        break;
+      case IDLN_FORWARD_DCL:
+        node = IDL_FORWARD_DCL(tfd->tree).ident;
         break;
       default:
         node = NULL;
@@ -612,6 +635,7 @@ fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
             }
             switch (IDL_NODE_TYPE(up)) {
                 /* This whole section is abominably ugly */
+              case IDLN_FORWARD_DCL:
               case IDLN_INTERFACE: {
                 XPTInterfaceDirectoryEntry *ide, *ides;
                 uint16 num_ifaces;
@@ -623,6 +647,8 @@ handle_iid_is:
                 /* might get here via the goto, so re-check type */
                 if (IDL_NODE_TYPE(up) == IDLN_INTERFACE)
                     className = IDL_IDENT(IDL_INTERFACE(up).ident).str;
+                else if (IDL_NODE_TYPE(up) == IDLN_FORWARD_DCL)
+                    className = IDL_IDENT(IDL_FORWARD_DCL(up).ident).str;
                 else
                     className = IDL_IDENT(IDL_NATIVE(up).ident).str;
                 iid_is = NULL;
