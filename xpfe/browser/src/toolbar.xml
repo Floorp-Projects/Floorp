@@ -1,0 +1,25 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+<!DOCTYPE window> 
+
+<window>
+        <xul:toolbar>
+                <html:button cmd="nsCmd:loadURL" style="background-color:rgb(192,192,192)">
+                                <html:img src="resource:/res/toolbar/TB_Back.gif"/><html:BR/>Back
+                </html:button>
+                <html:button cmd="nsCmd:loadURL" style="background-color:rgb(192,192,192)">
+                                <html:img src="resource:/res/toolbar/TB_Forward.gif"/><html:BR/>Forward
+                </html:button>
+                <html:button cmd="nsCmd:loadURL" style="background-color:rgb(192,192,192)">
+                                <html:img src="resource:/res/toolbar/TB_Reload.gif"/><html:BR/>Reload
+                </html:button>
+                <html:button cmd="nsCmd:loadURL" style="background-color:rgb(192,192,192)">
+                                <html:img src="resource:/res/toolbar/TB_Stop.gif"/><html:BR/>Stop
+                </html:button>
+                <html:input cols=30 style="width: 295px;"></html:input>
+                <html:a style="position:relative; direction:rtl; right:3; top: 2px;" href="http://www.netscape.com">
+                        <html:img alt="Throbber!" border=0 src="resource:/res/throbber/anims00.gif"/>
+                </html:a>
+        </xul:toolbar>
+</window>
+

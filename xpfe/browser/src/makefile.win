@@ -64,6 +64,8 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
   $(MAKE_INSTALL) appshell.html $(DIST)\bin\res\samples
+  $(MAKE_INSTALL) toolbar.xml $(DIST)\bin\res\samples
+  $(MAKE_INSTALL) xul.css $(DIST)\bin\res\samples
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
