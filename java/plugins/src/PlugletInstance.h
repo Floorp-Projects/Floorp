@@ -15,8 +15,8 @@
  */
 #ifndef __PlugletInstance_h__
 #define __PlugletInstance_h__
-#include "jni.h"
 #include "nsplugin.h"
+#include "jni.h"
 #include "PlugletInstanceView.h"
 
 class PlugletInstance : public nsIPluginInstance {

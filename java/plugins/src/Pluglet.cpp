@@ -49,7 +49,7 @@ nsresult Pluglet::CreatePluginInstance(const char* aPluginMIMEType, void **aResu
 nsresult Pluglet::Initialize(void) {
     JNIEnv *env = PlugletEngine::GetJNIEnv();
     if(!env) {
-	return NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE;
     }
     if (!initializeMID) { 
 	jclass clazz = env->FindClass("org/mozilla/pluglet/Pluglet");

@@ -1,4 +1,4 @@
-/* 
+/*  -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- 
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -17,7 +17,7 @@
 #include "PlugletEngine.h"
 #include "PlugletStreamListener.h"
 #include "PlugletInstancePeer.h"
-
+#include "Registry.h"
 
 jmethodID PlugletInstance::initializeMID = NULL;
 jmethodID PlugletInstance::startMID = NULL;
@@ -37,9 +37,11 @@ PlugletInstance::PlugletInstance(jobject object) {
     //nb check for null
     peer = NULL;
     view = new PlugletInstanceView();
+    Registry::SetPeer(jthis,(jlong)this);
 }
 
 PlugletInstance::~PlugletInstance() {
+    Registry::Remove(jthis);
     PlugletEngine::GetJNIEnv()->DeleteGlobalRef(jthis);
     NS_RELEASE(peer);
 }
