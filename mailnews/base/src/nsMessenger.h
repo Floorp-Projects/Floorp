@@ -55,6 +55,7 @@ private:
 
   /* rhp - need this to drive message display */
   nsIDOMWindow       *mWindow;
+  nsCOMPtr<nsIMsgWindow> mMsgWindow;
   nsIWebShell        *mWebShell;
 
   nsCOMPtr <nsIDocumentLoaderObserver> m_docLoaderObserver;

@@ -135,6 +135,7 @@ nsMessenger::nsMessenger() : m_folderPath("")
 	mScriptObject = nsnull;
 	mWebShell = nsnull; 
 	mWindow = nsnull;
+  mMsgWindow = nsnull;
 
 	InitializeFolderRoot();
 }
@@ -176,6 +177,8 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
 {
 	if(!aWin)
 		return NS_ERROR_NULL_POINTER;
+
+  mMsgWindow = aMsgWindow;
 
   nsAutoString  webShellName("messagepane");
   NS_IF_RELEASE(mWindow);
@@ -301,16 +304,16 @@ nsMessenger::OpenURL(const char * url)
           
           if (NS_SUCCEEDED(rv) && messageService)
           {
-			messageService->DisplayMessage(unescapedUrl, mWebShell, nsnull, nsnull);
-			ReleaseMessageServiceFromURI(unescapedUrl, messageService);
+			      messageService->DisplayMessage(unescapedUrl, mWebShell, mMsgWindow, nsnull, nsnull);
+			      ReleaseMessageServiceFromURI(unescapedUrl, messageService);
           }
-		//If it's not something we know about, then just load the url.
+		      //If it's not something we know about, then just load the url.
           else
           {
-			nsAutoString urlStr(unescapedUrl);
-			if (mWebShell) {
-				mWebShell->LoadURL(urlStr.GetUnicode());
-			}
+			      nsAutoString urlStr(unescapedUrl);
+			      if (mWebShell) {
+				    mWebShell->LoadURL(urlStr.GetUnicode());
+			    }
           }
           PL_strfree(unescapedUrl);
         }
@@ -403,7 +406,7 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
             if (NS_SUCCEEDED(rv) && messageService)
             {
               rv = messageService->DisplayMessage(messageUri,
-                                                  convertedListener,
+                                                  convertedListener,mMsgWindow,
                                                   nsnull, nsnull); 
             }
           }
@@ -533,7 +536,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
                     from.GetUnicode(), to.GetUnicode(), aListener,
                     channelSupport, getter_AddRefs(convertedListener));
                   if (NS_SUCCEEDED(rv))
-                    messageService->DisplayMessage(url, convertedListener,
+                    messageService->DisplayMessage(url, convertedListener,mMsgWindow,
                                                    nsnull, nsnull);
                 }
               }
