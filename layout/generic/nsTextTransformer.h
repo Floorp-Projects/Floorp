@@ -25,6 +25,7 @@
 class nsIFrame;
 class nsTextRun;
 class nsILineBreaker;
+class nsIWordBreaker;
 
 /**
  * This object manages the transformation of text:
@@ -45,7 +46,8 @@ class nsILineBreaker;
 class nsTextTransformer {
 public:
 
-  nsTextTransformer(PRUnichar* aBuffer, PRInt32 aBufLen, nsILineBreaker* aLineBreaker);
+  nsTextTransformer(PRUnichar* aBuffer, PRInt32 aBufLen, 
+                    nsILineBreaker* aLineBreaker, nsIWordBreaker *aWordBreaker);
 
   ~nsTextTransformer();
 
@@ -65,12 +67,14 @@ public:
   PRUnichar* GetNextWord(PRBool aInWord,
                          PRInt32& aWordLenResult,
                          PRInt32& aContentLenResult,
-                         PRBool& aIsWhitespaceResult);
+                         PRBool& aIsWhitespaceResult,
+                         PRBool aForLineBreak = PR_TRUE);
 
   PRUnichar* GetPrevWord(PRBool aInWord,
                                PRInt32& aWordLenResult,
                                PRInt32& aContentLenResult,
-                               PRBool& aIsWhitespaceResult);
+                               PRBool& aIsWhitespaceResult,
+                               PRBool aForLineBreak = PR_TRUE);
   PRBool HasMultibyte() const {
     return mHasMultibyte;
   }
@@ -98,6 +102,7 @@ protected:
   PRUint8 mPreformatted;
 
   nsILineBreaker* mLineBreaker;
+  nsIWordBreaker* mWordBreaker;
 };
 
 #endif /* nsTextTransformer_h___ */

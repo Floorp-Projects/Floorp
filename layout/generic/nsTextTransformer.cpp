@@ -23,6 +23,7 @@
 #include "nsITextContent.h"
 #include "nsStyleConsts.h"
 #include "nsILineBreaker.h"
+#include "nsIWordBreaker.h"
 
 
 #include "nsIServiceManager.h"
@@ -42,14 +43,17 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 #define MAX_UNIBYTE 127
 
 nsTextTransformer::nsTextTransformer(PRUnichar* aBuffer, PRInt32 aBufLen, 
-                                     nsILineBreaker* aLineBreaker)
+                                     nsILineBreaker* aLineBreaker,
+                                     nsIWordBreaker* aWordBreaker)
   : mAutoBuffer(aBuffer),
     mBuffer(aBuffer),
     mBufferLength(aBufLen < 0 ? 0 : aBufLen),
     mHasMultibyte(PR_FALSE),
-    mLineBreaker(aLineBreaker)
+    mLineBreaker(aLineBreaker),
+    mWordBreaker(aWordBreaker)
 {
   NS_IF_ADDREF(mLineBreaker);
+  NS_IF_ADDREF(mWordBreaker);
 }
 
 nsTextTransformer::~nsTextTransformer()
@@ -58,6 +62,7 @@ nsTextTransformer::~nsTextTransformer()
     delete [] mBuffer;
   }
   NS_IF_RELEASE(mLineBreaker);
+  NS_IF_RELEASE(mWordBreaker);
 }
 
 nsresult
@@ -160,7 +165,8 @@ PRUnichar*
 nsTextTransformer::GetNextWord(PRBool aInWord,
                                PRInt32& aWordLenResult,
                                PRInt32& aContentLenResult,
-                               PRBool& aIsWhitespaceResult)
+                               PRBool& aIsWhitespaceResult,
+                               PRBool aForLineBreak)
 {
   NS_PRECONDITION(mOffset <= mContentLength, "bad offset");
 
@@ -253,7 +259,11 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
 		if(wordLen > 0) {
 			nsresult res = NS_OK;
 			PRBool breakBetween = PR_FALSE;
-			res = mLineBreaker->BreakInBetween(mBuffer, wordLen, 
+			if(aForLineBreak)
+			   res = mLineBreaker->BreakInBetween(mBuffer, wordLen, 
+				                         cp, (fragLen-offset), &breakBetween);
+			else 
+			   res = mWordBreaker->BreakInBetween(mBuffer, wordLen, 
 				                         cp, (fragLen-offset), &breakBetween);
 			if ( breakBetween )
 				goto done;
@@ -262,7 +272,12 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
 			PRUint32 next;
 
 			// Find next position
-			res = mLineBreaker->Next(cp0, fragLen, offset, &next, &tryNextFrag);
+                        
+			if(aForLineBreak)
+			   res = mLineBreaker->Next(cp0, fragLen, offset, &next, &tryNextFrag);
+      else
+			   res = mWordBreaker->Next(cp0, fragLen, offset, &next, &tryNextFrag);
+       
 			
 			numChars = (next - offset);
 			// check buffer size before copy
@@ -390,7 +405,8 @@ PRUnichar*
 nsTextTransformer::GetPrevWord(PRBool aInWord,
                                PRInt32& aWordLenResult,
                                PRInt32& aContentLenResult,
-                               PRBool& aIsWhitespaceResult)
+                               PRBool& aIsWhitespaceResult,
+                               PRBool aForLineBreak)
 {
   NS_PRECONDITION(mOffset <= mContentLength, "bad offset");
 
@@ -446,6 +462,7 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
   else if (CH_NBSP == firstChar) {
     firstChar = ' ';
   }
+  if(firstChar > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
   *bp++ = firstChar;
   mCurrentFragOffset = offset +1;
   if (offset < 0) {
