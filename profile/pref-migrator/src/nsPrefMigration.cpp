@@ -187,7 +187,7 @@ nsPrefMigration::ProcessPrefs(char* profilePath, char* newProfilePath, nsresult 
   success = DoTheCopy(oldMailPath, newMailPath, mailFileArray);
   success = DoTheCopy(oldNewsPath, newNewsPath, newsFileArray);
 
-  PR_Free(newProfilePath);
+  //PR_Free(newProfilePath);
   PR_Free(oldMailPath);
   PR_Free(oldNewsPath);
   PR_Free(newMailPath);
