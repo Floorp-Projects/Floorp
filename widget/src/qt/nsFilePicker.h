@@ -52,10 +52,24 @@ class QFileDialog;
 class nsFilePicker : public nsBaseFilePicker
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIFILEPICKER
-
     nsFilePicker();
+
+    NS_DECL_ISUPPORTS
+
+    // nsIFilePicker (less what's in nsBaseFilePicker)
+    NS_IMETHODIMP Init(nsIDOMWindow *parent, const nsAString & title, PRInt16 mode);
+    NS_IMETHODIMP AppendFilters(PRInt32 filterMask);
+    NS_IMETHODIMP AppendFilter(const nsAString & aTitle, const nsAString & aFilter);
+    NS_IMETHODIMP GetDefaultString(nsAString & aDefaultString);
+    NS_IMETHODIMP SetDefaultString(const nsAString & aDefaultString);
+    NS_IMETHODIMP GetDefaultExtension(nsAString & aDefaultExtension);
+    NS_IMETHODIMP SetDefaultExtension(const nsAString & aDefaultExtension);
+    NS_IMETHODIMP GetFilterIndex(PRInt32 *aFilterIndex);
+    NS_IMETHODIMP SetFilterIndex(PRInt32 aFilterIndex);
+    NS_IMETHODIMP GetFile(nsILocalFile * *aFile);
+    NS_IMETHODIMP GetFileURL(nsIFileURL * *aFileURL);
+    NS_IMETHODIMP GetFiles(nsISimpleEnumerator * *aFiles);
+    NS_IMETHODIMP Show(PRInt16 *aReturn);
 
 private:
     ~nsFilePicker();
