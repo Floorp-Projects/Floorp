@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributors: timeless
+ *               slucy@objectivesw.co.uk
  */
 
 function file_init()
@@ -486,6 +487,26 @@ function MsgSubscribe()
 {
     var preselectedFolder = GetFirstSelectedMsgFolder();
     Subscribe(preselectedFolder);
+}
+
+function ConfirmUnsubscribe(folder)
+{
+    var sBundle = srGetStrBundle("chrome://messenger/locale/messenger.properties"); 
+    var titleMsg = sBundle.GetStringFromName("confirmUnsubscribeTitle");
+    var dialogMsg = sBundle.formatStringFromName("confirmUnsubscribeText",
+                                        [ folder.name], 1);
+
+    var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
+                                                                    "nsICommonDialogs");
+    return commonDialogService.Confirm(window, titleMsg, dialogMsg);    
+}
+
+function MsgUnsubscribe()
+{
+    var folder = GetFirstSelectedMsgFolder();
+    if (ConfirmUnsubscribe(folder)) {
+    	UnSubscribe(folder);
+    }
 }
 
 function MsgSaveAsFile() 

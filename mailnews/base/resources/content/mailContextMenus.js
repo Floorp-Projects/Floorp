@@ -219,11 +219,21 @@ function fillFolderPaneContextMenu()
 
 	SetupNewMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
 
-	ShowMenuItem("folderPaneContext-subscribe", (numSelected <= 1) && canSubscribeToFolder && serverType != 'nntp');
+	ShowMenuItem("folderPaneContext-subscribe",	(numSelected <=	1) && canSubscribeToFolder);
 	EnableMenuItem("folderPaneContext-subscribe", true);
 
-	ShowMenuItem("folderPaneContext-newsSubscribe", (numSelected <= 1) && canSubscribeToFolder && isServer && serverType == 'nntp');
-	EnableMenuItem("folderPaneContext-subscribe", true);
+// News	folder context menu	=============================================
+
+	ShowMenuItem("folderPaneContext-newsUnsubscribe", (numSelected <= 1) &&	canSubscribeToFolder &&	!isServer && serverType	== 'nntp');
+	EnableMenuItem("folderPaneContext-newsUnsubscribe",	true);
+	ShowMenuItem("folderPaneContext-markAllRead", (numSelected <= 1) &&	!isServer && serverType	== 'nntp');
+	EnableMenuItem("folderPaneContext-markAllRead",	true);
+	ShowMenuItem("folderPaneContext-getMessages", (numSelected <= 1) &&	!isServer && serverType	== 'nntp');
+	EnableMenuItem("folderPaneContext-getMessages",	true);	
+	ShowMenuItem("folderPaneContext-new", (numSelected <= 1) &&	!isServer && serverType	!= 'nntp');
+	EnableMenuItem("folderPaneContext-new",	(numSelected <=	1) && !isServer	&& serverType != 'nntp');
+
+// End of News folder context menu =======================================	
 
 	ShowMenuItem("folderPaneContext-searchMessages", (numSelected<=1));
 	EnableMenuItem("folderPaneContext-searchMessages", true);

@@ -801,17 +801,19 @@ function MsgDeleteFolder()
         specialFolder = folder.getAttribute('SpecialFolder');
         if (specialFolder != "Inbox" && specialFolder != "Trash")
         {
-            dump(folderuri);
-            parent = folder.parentNode.parentNode;	
-            var parenturi = parent.getAttribute('id');
-            if(parenturi)
-                dump(parenturi);
-            else
-                dump("No parenturi");
-            dump("folder = " + folder.localName + "\n"); 
-            dump("parent = " + parent.localName + "\n"); 
-            messenger.DeleteFolders(tree.database,
+            if (isNewsURI(folderuri)) {
+              var msgfolder = GetMsgFolderFromURI(folderuri);
+              var unsubscribe = ConfirmUnsubscribe(msgfolder);
+              if (unsubscribe) {
+                UnSubscribe(msgfolder);
+              }
+            }
+            else {
+              parent = folder.parentNode.parentNode;	
+              var parenturi = parent.getAttribute('id');
+              messenger.DeleteFolders(tree.database,
                                     parent.resource, folder.resource);
+            }
         }
 	}
 

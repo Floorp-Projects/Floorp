@@ -41,6 +41,7 @@ Rights Reserved.
 <script src="chrome://messenger/content/mailCommands.js"/>
 <script src="chrome://messenger/content/mailWindowOverlay.js"/>
 
+
 <broadcasterset id="broadcasterset">
 	<!-- File Menu -->
 	<broadcaster id="cmd_newNavigator"/>
@@ -347,26 +348,30 @@ Rights Reserved.
 	</popup>
 
     <popup id="folderPaneContext" oncreate="return fillFolderPaneContextMenu();" >
-		<menuitem id="folderPaneContext-newsSubscribe"
-			  value="&folderContextSubscribe.label;"
-			  accesskey="&folderContextSubscribe.accesskey;"
-			  oncommand="MsgSubscribe();"/>
-		<menuitem id="folderPaneContext-getMessages"
-			  value="&folderContextGetMessages.label;"
-			  accesskey="&folderContextGetMessages.accesskey;"
-			  oncommand="MsgGetMessage();"/>
-		<menuitem id="folderPaneContext-openNewWindow"
+    		<menuitem id="folderPaneContext-openNewWindow"
 			  value="&folderContextOpenNewWindow.label;"
 			  accesskey="&folderContextOpenNewWindow.accesskey;"
 			  oncommand="MsgOpenNewWindowForFolder(null);"/>
-		<menuitem id="folderPaneContext-new"
-			  value="&folderContextNew.label;"
-			  accesskey="&folderContextNew.accesskey;"
-			  oncommand="MsgNewFolder();"/>
 		<menuitem id="folderPaneContext-subscribe"
 			  value="&folderContextSubscribe.label;"
 			  accesskey="&folderContextSubscribe.accesskey;"
 			  oncommand="MsgSubscribe();"/>
+		<menuitem id="folderPaneContext-newsUnsubscribe"
+			  value="&folderContextUnsubscribe.label;"
+			  accesskey="&folderContextUnsubscribe.accesskey;"
+			  oncommand="MsgUnsubscribe();"/>
+		<menuitem id="folderPaneContext-getMessages"
+			  value="&folderContextGetMessages.label;"
+			  accesskey="&folderContextGetMessages.accesskey;"
+			  oncommand="MsgGetMessage();"/>
+		<menuitem id="folderPaneContext-markAllRead"
+			  value="&folderContextMarkNewsgroupRead.label;"
+			  accesskey="&folderContextMarkNewsgroupRead.accesskey;"
+			  oncommand="MsgMarkAllRead();"/>
+		<menuitem id="folderPaneContext-new"
+			  value="&folderContextNew.label;"
+			  accesskey="&folderContextNew.accesskey;"
+			  oncommand="MsgNewFolder();"/>
 		<menuitem id="folderPaneContext-rename"
 			  value="&folderContextRename.label;"
 			  accesskey="&folderContextRename.accesskey;"
