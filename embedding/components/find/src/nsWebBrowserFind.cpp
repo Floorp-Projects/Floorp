@@ -29,12 +29,6 @@
 #include "nsFind.h"
 
 #include "nsIComponentManager.h"
-#ifdef TEXT_SVCS_TEST
-#include "nsITextServicesDocument.h"
-#include "nsTextServicesCID.h"
-#include "nsIServiceManager.h"
-#include "nsIPref.h"
-#endif /* TEXT_SVCS_TEST */
 #include "nsIScriptGlobalObject.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -62,17 +56,6 @@
 #include "nsIWebNavigation.h"
 #include "nsXPIDLString.h"
 #endif
-
-#if defined(TEXT_SVCS_TEST) && defined(XP_UNIX) && defined(DEBUG)
-#include <sys/time.h>
-#endif
-
-#ifdef TEXT_SVCS_TEST
-PRBool gUseTextServices = PR_FALSE;
-
-static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
-static NS_DEFINE_CID(kPrefServiceCID,       NS_PREF_CID);
-#endif /* TEXT_SVCS_TEST */
 
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
@@ -102,17 +85,6 @@ NS_IMPL_ISUPPORTS2(nsWebBrowserFind, nsIWebBrowserFind, nsIWebBrowserFindInFrame
 NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
 {
     nsresult rv;
-
-#ifdef TEXT_SVCS_TEST
-    // Figure out whether to use the old or new version:
-    gUseTextServices = PR_TRUE;
-    nsCOMPtr<nsIPref> prefService = do_GetService(kPrefServiceCID, &rv);
-    if (NS_SUCCEEDED(rv) && prefService) {
-        PRBool newFind = PR_FALSE;
-        prefService->GetBoolPref("browser.new_find", &newFind);
-        gUseTextServices = !newFind;
-    }
-#endif /* TEXT_SVCS_TEST */
 
     NS_ENSURE_ARG_POINTER(outDidFind);
     *outDidFind = PR_FALSE;
@@ -617,11 +589,6 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
                                          PRBool aWrapping,
                                          PRBool* aDidFind)
 {
-#if defined(TEXT_SVCS_TEST) && defined(XP_UNIX) && defined(DEBUG)
-    struct timeval timeAtStart;
-    gettimeofday(&timeAtStart, 0);
-#endif /* TEXT_SVCS_TEST */
-
     NS_ENSURE_ARG(aWindow);
     NS_ENSURE_ARG_POINTER(aDidFind);
 
@@ -639,22 +606,6 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
     // and make a new one. The nsIFindAndReplace is *not* stateless;
     // it remembers the last search offset etc.
     nsCOMPtr<nsIDOMWindow> searchFrame = do_QueryReferent(mCurrentSearchFrame);    
-#ifdef TEXT_SVCS_TEST
-    if (mTSFind && (searchFrame.get() != aWindow))
-        mTSFind = nsnull;       // throw away old one, if any
-
-    if (gUseTextServices)
-    {
-        if (!mTSFind)
-        {
-            mTSFind = do_CreateInstance(NS_FINDANDREPLACE_CONTRACTID, &rv);
-            if (NS_FAILED(rv))
-                return rv;
-        }
-    }
-    else {
-
-#endif /* TEXT_SVCS_TEST */
     // Get the selection controller -- we'd better do this every time,
     // since the doc might have changed since the last time.
     nsCOMPtr<nsIDocShell> docShell;
@@ -665,16 +616,7 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
     NS_ENSURE_ARG_POINTER(presShell);
 
     if (!mFind)
-    {
-#ifdef DEBUG_akkana
-        printf("Making a new nsFind object\n");
-#endif
         mFind = do_CreateInstance(NS_FIND_CONTRACTID, &rv);
-    }
-
-#ifdef TEXT_SVCS_TEST
-    }
-#endif /* TEXT_SVCS_TEST */
 
 #if DEBUG_smfr
     {
@@ -693,29 +635,6 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
         }
     }
 #endif
-
-#ifdef TEXT_SVCS_TEST
-    if (gUseTextServices)
-    {
-        nsCOMPtr<nsITextServicesDocument> txtDoc;
-        rv = MakeTSDocument(aWindow, getter_AddRefs(txtDoc));
-        if (NS_FAILED(rv) || !txtDoc)
-            return rv;
-    
-        (void) mTSFind->SetCaseSensitive(mMatchCase);
-        (void) mTSFind->SetFindBackwards(mFindBackwards);
-        (void) mTSFind->SetWrapFind(mWrapFind);
-        (void) mTSFind->SetEntireWord(mEntireWord);
-
-        rv = mTSFind->SetTsDoc(txtDoc);
-        if (NS_FAILED(rv))
-            return rv;
-
-        rv =  mTSFind->Find(mSearchString.get(), aDidFind);
-    }
-    else
-    {
-#endif /* TEXT_SVCS_TEST */
 
     (void) mFind->SetCaseSensitive(mMatchCase);
     (void) mFind->SetFindBackwards(mFindBackwards);
@@ -756,21 +675,6 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
         *aDidFind = PR_TRUE;
         SetSelectionAndScroll(foundRange, selCon);
     }
-
-#ifdef TEXT_SVCS_TEST
-    }
-    if (gUseTextServices)
-        mTSFind->SetTsDoc(nsnull);
-
-#if defined(XP_UNIX) && defined(DEBUG)
-    struct timeval timeAtEnd;
-    gettimeofday(&timeAtEnd, 0);
-    double sec = (timeAtEnd.tv_sec - timeAtStart.tv_sec) +
-        (((double)timeAtEnd.tv_usec - (double)timeAtStart.tv_usec) / 1000000.);
-    printf("nsWebBrowserFind::SearchInFrame (%s) took %f sec\n",
-           (gUseTextServices ? "txtsvc" : "new find"), sec);
-#endif /* XP_UNIX && DEBUG */
-#endif /* TEXT_SVCS_TEST */
 
     if (*aDidFind) 
       MoveFocusToCaret(aWindow);
@@ -829,46 +733,6 @@ nsresult nsWebBrowserFind::OnFind(nsIDOMWindow *aFoundWindow)
 
     return NS_OK;
 }
-
-#ifdef TEXT_SVCS_TEST
-nsresult nsWebBrowserFind::MakeTSDocument(nsIDOMWindow* aWindow, nsITextServicesDocument** aDoc)
-{
-    NS_ENSURE_ARG(aWindow);
-    NS_ENSURE_ARG_POINTER(aDoc);
-
-    nsresult rv;
-    *aDoc = NULL;
-
-    nsCOMPtr<nsITextServicesDocument>  tempDoc(do_CreateInstance(kCTextServicesDocumentCID, &rv));
-    if (NS_FAILED(rv) || !tempDoc)
-        return rv;
-
-    nsCOMPtr<nsIDocShell> docShell;
-    rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
-    if (NS_FAILED(rv) || !docShell)
-        return NS_ERROR_FAILURE;
-	
-    nsCOMPtr<nsIPresShell> presShell;
-    docShell->GetPresShell(getter_AddRefs(presShell));
-    if (!presShell)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIDOMDocument> domDoc;    
-    rv = aWindow->GetDocument(getter_AddRefs(domDoc));
-    if (!domDoc)
-        return NS_ERROR_FAILURE;
-
-    rv = tempDoc->InitWithDocument(domDoc, presShell);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // Return the resulting text services document.
-    *aDoc = tempDoc;
-    NS_IF_ADDREF(*aDoc);
-  
-    return rv;
-}
-#endif /* TEXT_SVCS_TEST */
 
 /*---------------------------------------------------------------------------
 

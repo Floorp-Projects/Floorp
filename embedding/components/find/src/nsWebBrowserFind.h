@@ -25,21 +25,12 @@
 #ifndef nsWebBrowserFindImpl_h__
 #define nsWebBrowserFindImpl_h__
 
-// We're going to stop using text services.
-// But the code remains here for a little while, for performance testing
-// and so that we can easily switch back and forth.
-#define TEXT_SVCS_TEST 1
-
 #include "nsIWebBrowserFind.h"
 
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 
 #include "nsIFind.h"
-
-#ifdef TEXT_SVCS_TEST
-#include "nsIFindAndReplace.h"
-#endif /* TEXT_SVCS_TEST */
 
 #include "nsString.h"
 
@@ -52,10 +43,6 @@ class nsISelectionController;
 class nsIDOMWindow;
 
 class nsIDocShell;
-
-#ifdef TEXT_SVCS_TEST
-class nsITextServicesDocument;
-#endif /* TEXT_SVCS_TEST */
 
 //*****************************************************************************
 // class nsWebBrowserFind
@@ -95,10 +82,6 @@ protected:
     
     nsresult    OnFind(nsIDOMWindow *aFoundWindow);
     
-#ifdef TEXT_SVCS_TEST
-    nsresult    MakeTSDocument(nsIDOMWindow* aWindow, nsITextServicesDocument** aDoc);
-#endif /* TEXT_SVCS_TEST */
-
     nsresult    GetDocShellFromWindow(nsIDOMWindow *inWindow, nsIDocShell** outDocShell);
 
     void        SetSelectionAndScroll(nsIDOMRange* aRange,
@@ -131,9 +114,6 @@ protected:
     nsWeakPtr       mRootSearchFrame;       // who knows if windows can go away during our lifetime, hence weak
     nsWeakPtr       mLastFocusedWindow;     // who knows if windows can go away during our lifetime, hence weak
     
-#ifdef TEXT_SVCS_TEST
-    nsCOMPtr<nsIFindAndReplace> mTSFind;
-#endif /* TEXT_SVCS_TEST */
     nsCOMPtr<nsIFind> mFind;
 };
 
