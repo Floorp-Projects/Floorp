@@ -980,21 +980,40 @@ out:
 #endif /* JS_HAS_EXPORT_IMPORT */
 
 static JSBool
-CheckRedeclaration(JSContext *cx, JSObject *obj, JSObject *obj2, jsid id,
-                   JSProperty *prop, uintN attrs)
+CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
+                   JSBool *foundp)
 {
+    JSObject *obj2;
+    JSProperty *prop;
+    JSBool ok;
     uintN oldAttrs;
     JSBool isFunction;
     jsval value;
 
-    if (!OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &oldAttrs))
+    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
         return JS_FALSE;
+    *foundp = (prop != NULL);
+    if (!prop)
+        return JS_TRUE;
+    ok = OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &oldAttrs);
+    OBJ_DROP_PROPERTY(cx, obj2, prop);
+    if (!ok)
+        return JS_FALSE;
+
     if ((oldAttrs & JSPROP_READONLY) == (attrs & JSPROP_READONLY) &&
         !JS_HAS_STRICT_OPTION(cx)) {
-        return JS_TRUE;
+        /*
+         * Allow redefinition if const-ness isn't changing.  Also insist that
+         * the new value is not a getter or setter, or if it is, that the old
+         * property was not permanent.
+         */
+        if (!(attrs & (JSPROP_GETTER | JSPROP_SETTER)))
+            return JS_TRUE;
+        if (!(oldAttrs & JSPROP_PERMANENT))
+            return JS_TRUE;
     }
 
-    isFunction = (attrs & (JSPROP_GETTER | JSPROP_SETTER)) != 0;
+    isFunction = (oldAttrs & (JSPROP_GETTER | JSPROP_SETTER)) != 0;
     if (!isFunction) {
         if (!OBJ_GET_PROPERTY(cx, obj, id, &value))
             return JS_FALSE;
@@ -2797,15 +2816,12 @@ js_Interpret(JSContext *cx, jsval *result)
 
             /* Lookup id in order to check for redeclaration problems. */
             id = (jsid)atom;
-            ok = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
+            ok = CheckRedeclaration(cx, obj, id, attrs, &cond);
             if (!ok)
                 goto out;
 
             /* Bind a variable only if it's not yet defined. */
-            if (prop) {
-                ok = CheckRedeclaration(cx, obj, obj2, id, prop, attrs);
-                OBJ_DROP_PROPERTY(cx, obj2, prop);
-            } else {
+            if (!cond) {
                 ok = OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID, NULL, NULL,
                                          attrs, NULL);
             }
@@ -2863,15 +2879,9 @@ js_Interpret(JSContext *cx, jsval *result)
              * here at runtime as well as at compile-time, to handle eval
              * as well as multiple HTML script tags.
              */
-            ok = OBJ_LOOKUP_PROPERTY(cx, parent, id, &obj2, &prop);
+            ok = CheckRedeclaration(cx, parent, id, attrs, &cond);
             if (!ok)
                 goto out;
-            if (prop) {
-                ok = CheckRedeclaration(cx, parent, obj2, id, prop, attrs);
-                OBJ_DROP_PROPERTY(cx, obj2, prop);
-                if (!ok)
-                    goto out;
-            }
 
             ok = OBJ_DEFINE_PROPERTY(cx, parent, id,
                                      flags ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
@@ -3092,6 +3102,7 @@ js_Interpret(JSContext *cx, jsval *result)
               default:
                 JS_ASSERT(0);
             }
+
             if (JS_TypeOfValue(cx, rval) != JSTYPE_FUNCTION) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_BAD_GETTER_OR_SETTER,
@@ -3101,6 +3112,14 @@ js_Interpret(JSContext *cx, jsval *result)
                 ok = JS_FALSE;
                 goto out;
             }
+
+            /*
+             * Getters and setters are just like watchpoints from an access
+             * control point of view.
+             */
+            if (!OBJ_CHECK_ACCESS(cx, obj, id, JSACC_WATCH, &rtmp, &attrs))
+                return JS_FALSE;
+
             if (op == JSOP_GETTER) {
                 getter = (JSPropertyOp) JSVAL_TO_OBJECT(rval);
                 setter = NULL;
@@ -3111,6 +3130,12 @@ js_Interpret(JSContext *cx, jsval *result)
                 attrs = JSPROP_SETTER;
             }
             attrs |= JSPROP_ENUMERATE;
+
+            /* Check for a readonly or permanent property of the same name. */
+            ok = CheckRedeclaration(cx, obj, id, attrs, &cond);
+            if (!ok)
+                goto out;
+
             ok = OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID, getter, setter,
                                      attrs, NULL);
             if (!ok)
