@@ -245,8 +245,7 @@ void nsIMAPNamespaceList::ClearNamespaces(PRBool deleteFromPrefsNamespaces, PRBo
 
 nsIMAPNamespace *nsIMAPNamespaceList::GetNamespaceNumber(int nodeIndex)
 {
-  int total = GetNumberOfNamespaces();
-  NS_ASSERTION(nodeIndex >= 0 && nodeIndex < total, "invalid IMAP namespace node index");
+  NS_ASSERTION(nodeIndex >= 0 && nodeIndex < GetNumberOfNamespaces(), "invalid IMAP namespace node index");
   if (nodeIndex < 0) nodeIndex = 0;
 
   // XXX really could be just ElementAt; that's why we have the assertion

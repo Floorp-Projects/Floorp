@@ -3141,7 +3141,6 @@ NS_IMETHODIMP nsImapService::NewURI(const nsACString &aSpec,
     
     nsXPIDLCString folderName;
     nsXPIDLCString urlPath;
-    PRBool possibleOtherUsersFolder = PR_FALSE;
 
     // if we can't get a folder name out of the url then I think this is an error
     aImapUrl->CreateCanonicalSourceFolderPathString(getter_Copies(folderName));
