@@ -55,6 +55,7 @@ public:
 
   NS_IMETHOD GetStringFromID(PRInt32 aID, nsString& aResult);
   NS_IMETHOD GetStringFromName(const nsString& aName, nsString& aResult);
+  NS_IMETHOD GetEnumeration(nsIBidirectionalEnumerator** elements);
 
   nsIPersistentProperties* mProps;
 };
@@ -125,6 +126,17 @@ nsStringBundle::GetStringFromName(const nsString& aName, nsString& aResult)
   nsresult ret = mProps->GetProperty(aName, aResult);
 
   return ret;
+}
+
+NS_IMETHODIMP
+nsStringBundle::GetEnumeration(nsIBidirectionalEnumerator** elements)
+{
+	if (!elements)
+		return NS_ERROR_INVALID_POINTER;
+
+	nsresult ret = mProps->EnumerateProperties(elements);
+
+	return ret;
 }
 
 class nsStringBundleService : public nsIStringBundleService

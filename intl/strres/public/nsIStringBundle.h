@@ -22,6 +22,7 @@
 #include "nsILocale.h"
 #include "nsIURL.h"
 #include "nsString.h"
+#include "nsIEnumerator.h"
 
 // {D85A17C0-AA7C-11d2-9B8C-00805F8A16D9}
 #define NS_ISTRINGBUNDLESERVICE_IID \
@@ -45,6 +46,7 @@ class nsIStringBundle : public nsISupports
 public:
   NS_IMETHOD GetStringFromID(PRInt32 aID, nsString& aResult) = 0;
   NS_IMETHOD GetStringFromName(const nsString& aName, nsString& aResult) = 0;
+  NS_IMETHOD GetEnumeration(nsIBidirectionalEnumerator** elements) = 0;
 };
 
 class nsIStringBundleService : public nsISupports
