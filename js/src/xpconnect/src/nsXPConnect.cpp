@@ -250,11 +250,11 @@ nsXPConnect::ReleaseXPConnectSingleton()
         if(GetRuntime() && GetRuntime()->GetJSRuntime())
         {
             AutoPushCompatibleJSContext a(GetRuntime()->GetJSRuntime());
-            if(a.GetSafeJSContext())
+            if(a.GetJSContext())
             {
                 FILE* oldFileHandle = js_DumpGCHeap;
                 js_DumpGCHeap = stdout;
-                js_ForceGC(a.GetSafeJSContext());
+                js_ForceGC(a.GetJSContext());
                 js_DumpGCHeap = oldFileHandle;
             }
         }
