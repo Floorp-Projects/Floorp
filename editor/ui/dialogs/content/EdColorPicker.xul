@@ -44,14 +44,13 @@
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
 
   <keyset id="keyset"/>
-  <!-- Weird, but using radiogroup makes radio buttons disappear -->
-  <!-- <radiogroup id="1" orient="horizontal"> -->
   <box id="TableOrCellGroup" valign="middle" autostretch="never" collapsed="true">
     <text value="&background.label;"/>
-    <radio group="1" id="TableRadio" value="&table.label;" oncommand="document.getElementById('CellRadio').checked=false"/>
-    <radio group="1" id="CellRadio"  value="&cell.label;"  oncommand="document.getElementById('TableRadio').checked=false"/>
+    <radiogroup id="1" orient="horizontal">
+      <radio group="1" id="TableRadio" value="&table.label;"/>
+      <radio group="1" id="CellRadio"  value="&cell.label;"/>
+  </radiogroup>
   </box>
-  <!-- </radiogroup> -->
   <colorpicker id="ColorPicker" palettename="standard" 
     persist="palettename"
     onclick="SelectColor();"/>
@@ -83,7 +82,7 @@
     <text class="label" value="&setColor2.label;"/>
     <text class="label" value="&setColorExample.label;"/>
     <box valign="middle" autostretch="never" flex="1=">
-      <textfield id="ColorInput" style="width: 8em" onkeyup="SetColorSwatch()"/>
+      <textfield id="ColorInput" style="width: 8em" oninput="SetColorSwatch()"/>
       <spring flex="1"/>
       <spring id="ColorPickerSwatch"/>
       <spring flex="1"/>
