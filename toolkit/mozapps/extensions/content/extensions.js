@@ -607,7 +607,7 @@ var gExtensionsDNDObserver =
       
       var data = { }, length = { };
       xfer.getTransferData("text/x-moz-url", data, length);
-      var fileURL = data.value.QueryInterface(Components.interfaces.nsISupportsString).data;
+      var fileURL = data.value.QueryInterface(Components.interfaces.nsISupportsString).data.split("\n")[0];
 
       var fileURI = this._ioServ.newURI(fileURL, null, null);
       var url = fileURI.QueryInterface(Components.interfaces.nsIURL);
@@ -636,7 +636,7 @@ var gExtensionsDNDObserver =
       
       var data = { }, length = { };
       xfer.getTransferData("text/x-moz-url", data, length);
-      var fileURL = data.value.QueryInterface(Components.interfaces.nsISupportsString).data;
+      var fileURL = data.value.QueryInterface(Components.interfaces.nsISupportsString).data.split("\n")[0];
       var uri = Components.classes["@mozilla.org/network/standard-url;1"]
                           .createInstance(Components.interfaces.nsIURI);
       uri.spec = fileURL;
