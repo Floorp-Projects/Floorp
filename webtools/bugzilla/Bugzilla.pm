@@ -99,8 +99,17 @@ sub login {
 }
 
 sub logout {
+    use Bugzilla::Auth::CGI;
+    # remove cookies and clean up database state
+    Bugzilla::Auth::CGI->logout();
+    logout_request();
+}
+
+sub logout_request {
     undef $_user;
     $::userid = 0;
+    delete $::COOKIE{"Bugzilla_login"};
+    delete $::COOKIE{"Bugzilla_logincookie"};
 }
 
 my $_dbh;
@@ -266,10 +275,13 @@ L<Bugzilla::User|Bugzilla::User>.
 
 =item C<logout>
 
-Logs out the current user. For the moment, this will just cause calls to
-C<user> to return C<undef>. Eventually this will handle deleting cookies from
-the browser and values from the database, which is currently all handled
-by C<relogin.cgi>.
+Logs out the current user.
+
+=item C<logout_request>
+
+Essentially, causes calls to C<user> to return C<undef>. This has the
+effect of logging out a user for the current request only; cookies and
+database state are left intact. 
 
 =item C<dbh>
 

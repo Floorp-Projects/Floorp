@@ -23,7 +23,6 @@
 
 use strict;
 
-use vars %::COOKIE;
 use vars qw($template $vars);
 
 use lib qw(.);
@@ -37,33 +36,12 @@ require "CGI.pl";
 ConnectToDatabase();
 quietly_check_login();
 
+Bugzilla->logout();
+
 my $cgi = Bugzilla->cgi;
-
-if ($::userid) {
-    # Even though we know the userid must match, we still check it in the
-    # SQL as a sanity check, since there is no locking here, and if
-    # the user logged out from two machines simulataniously, while someone
-    # else logged in and got the same cookie, we could be logging the
-    # other user out here. Yes, this is very very very unlikely, but why
-    # take chances? - bbaetz
-    SendSQL("DELETE FROM logincookies WHERE cookie = " .
-            SqlQuote($::COOKIE{"Bugzilla_logincookie"}) .
-            "AND userid = $::userid");
-}
-
-$cgi->send_cookie(-name => "Bugzilla_login",
-                  -expires => "Tue, 15-Sep-1998 21:49:00 GMT");
-$cgi->send_cookie(-name => "Bugzilla_logincookie",
-                  -expires => "Tue, 15-Sep-1998 21:49:00 GMT");
-
-delete $::COOKIE{"Bugzilla_login"};
+print $cgi->header();
 
 $vars->{'message'} = "logged_out";
-
-# This entire script should eventually just become a call to Bugzilla->logout
-Bugzilla->logout;
-
-print $cgi->header();
 $template->process("global/message.html.tmpl", $vars)
   || ThrowTemplateError($template->error());
 

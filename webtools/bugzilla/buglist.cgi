@@ -95,7 +95,7 @@ if ($::FORM{'format'} && $::FORM{'format'} eq "rdf" && !$::FORM{'ctype'}) {
 # Note that if and when this call clears cookies or has other persistent 
 # effects, we'll need to do this another way instead.
 if ((exists $::FORM{'ctype'}) && ($::FORM{'ctype'} eq "js")) {
-    Bugzilla->logout();
+    Bugzilla->logout_request();
 }
 
 # Determine the format in which the user would like to receive the output.

@@ -177,6 +177,28 @@ sub login {
 
 }
 
+sub logout {
+    my ($class, $user) = @_;
+
+    if ($user) {
+        # Even though we know the userid must match, we still check it in the
+        # SQL as a sanity check, since there is no locking here, and if
+        # the user logged out from two machines simulataniously, while someone
+        # else logged in and got the same cookie, we could be logging the
+        # other user out here. Yes, this is very very very unlikely, but why
+        # take chances? - bbaetz
+        my $dbh = Bugzilla->dbh;
+        $dbh->do("DELETE FROM logincookies WHERE cookie = ? AND userid = ?",
+                 undef, $::COOKIE{"Bugzilla_logincookie"}, $user->id);
+    }
+
+    my $cgi = Bugzilla->cgi;
+    $cgi->send_cookie(-name => "Bugzilla_login",
+                      -expires => "Tue, 15-Sep-1998 21:49:00 GMT");
+    $cgi->send_cookie(-name => "Bugzilla_logincookie",
+                      -expires => "Tue, 15-Sep-1998 21:49:00 GMT");
+}
+
 1;
 
 __END__
@@ -188,7 +210,7 @@ Bugzilla::Auth::CGI - CGI-based logins for Bugzilla
 =head1 SUMMARY
 
 This is a L<login module|Bugzilla::Auth/"LOGIN"> for Bugzilla. Users connecting
-from a CGI script use this module to authenticate.
+from a CGI script use this module to authenticate. Logouts are also handled here.
 
 =head1 BEHAVIOUR
 
@@ -197,6 +219,9 @@ using the CGI parameters I<Bugzilla_login> and I<Bugzilla_password>.
 
 If no data is present for that, then cookies are tried, using
 L<Bugzilla::Auth::Cookie>.
+
+When a logout is performed, we take care of removing the relevant
+logincookie database entry and effectively deleting the client cookie.
 
 =head1 SEE ALSO
 

@@ -47,15 +47,11 @@ unless (Bugzilla::Auth->can_edit) {
   ThrowUserError("auth_cant_create_account");
 }
 
-my $cgi = Bugzilla->cgi;
-
 # Clear out the login cookies.  Make people log in again if they create an
 # account; otherwise, they'll probably get confused.
-$cgi->send_cookie(-name => 'Bugzilla_login',
-                  -expires => 'Tue, 15-Sep-1998 21:49:00 GMT');
-$cgi->send_cookie(-name => 'Bugzilla_logincookie',
-                  -expires => 'Tue, 15-Sep-1998 21:49:00 GMT');
+Bugzilla->logout();
 
+my $cgi = Bugzilla->cgi;
 print $cgi->header();
 
 my $login = $::FORM{'login'};
