@@ -51,6 +51,7 @@
 #include "nsIXULDocument.h"
 #include "nsIXULPrototypeDocument.h"
 #include "nsRDFDOMNodeList.h"
+#include "nsTime.h"
 #include "nsVoidArray.h"
 #include "nsWeakPtr.h"
 #include "nsWeakReference.h"
@@ -459,7 +460,7 @@ protected:
     static PRInt32 kNameSpaceID_XUL;
 
     static nsIXULContentUtils* gXULUtils;
-    static nsIXULPrototypeCache* gXULPrototypeCache;
+    static nsIXULPrototypeCache* gXULCache;
 
     static PRLogModuleInfo* gXULLog;
 
@@ -633,6 +634,11 @@ protected:
     nsresult CheckBroadcasterHookup(nsIContent* aElement);
 
     /**
+     * Add the current prototype's style sheets to the document.
+     */
+    nsresult AddPrototypeSheets();
+
+    /**
      * Used to resolve broadcaster references
      */
     class BroadcasterHookup : public nsForwardReference
@@ -686,6 +692,10 @@ protected:
     nsresult
     ProcessCommonAttributes(nsIContent* aElement);
 
+    static
+    PRBool
+    IsChromeURI(nsIURI* aURI);
+
     /**
      * The current prototype that we are walking to construct the
      * content model.
@@ -714,6 +724,11 @@ protected:
      * prototype walk.
      */
     nsresult ResumeWalk();
+
+#if defined(DEBUG_waterson) || defined(DEBUG_hyatt)
+    // timing
+    nsTime mLoadStart;
+#endif
 };
 
 

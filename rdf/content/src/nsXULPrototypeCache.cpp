@@ -25,10 +25,14 @@
 
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsICSSStyleSheet.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULPrototypeDocument.h"
 #include "nsIURI.h"
-#include "plhash.h"
+#include "nsHashtable.h"
+#include "nsXPIDLString.h"
+#include "plstr.h"
+
 
 class nsXULPrototypeCache : public nsIXULPrototypeCache
 {
@@ -36,8 +40,16 @@ public:
     // nsISupports
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD Get(nsIURI* aURI, nsIXULPrototypeDocument** _result);
-    NS_IMETHOD Put(nsIURI* aURI, nsIXULPrototypeDocument* aDocument);
+    NS_IMETHOD GetPrototype(nsIURI* aURI, nsIXULPrototypeDocument** _result);
+    NS_IMETHOD PutPrototype(nsIXULPrototypeDocument* aDocument);
+
+    NS_IMETHOD GetStyleSheet(nsIURI* aURI, nsICSSStyleSheet** _result);
+    NS_IMETHOD PutStyleSheet(nsICSSStyleSheet* aStyleSheet);
+
+    NS_IMETHOD GetScript(nsIURI* aURI, nsString& aScript, const char** aVersion);
+    NS_IMETHOD PutScript(nsIURI* aURI, const nsString& aScript, const char* aVersion);
+
+    NS_IMETHOD Flush();
 
 protected:
     friend NS_IMETHODIMP
@@ -45,13 +57,45 @@ protected:
 
     nsXULPrototypeCache();
     virtual ~nsXULPrototypeCache();
-    static PRIntn ReleaseTableEntry(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosure);
-    nsresult Init();
 
-    static PLHashNumber Hash(const void* aKey);
-    static PRIntn CompareKeys(const void* aKey1, const void* aKey2);
+    static PRBool
+    ReleaseScriptEntryEnumFunc(nsHashKey* aKey, void* aData, void* aClosure);
 
-    PLHashTable* mTable;
+    nsSupportsHashtable mPrototypeTable;
+    nsSupportsHashtable mStyleSheetTable;
+    nsHashtable         mScriptTable;
+
+
+    class nsIURIKey : public nsHashKey {
+    protected:
+        nsCOMPtr<nsIURI> mKey;
+  
+    public:
+        nsIURIKey(nsIURI* key) : mKey(key) {}
+        ~nsIURIKey(void) {}
+  
+        PRUint32 HashValue(void) const {
+            nsXPIDLCString spec;
+            mKey->GetSpec(getter_Copies(spec));
+            return (PRUint32) PL_HashString(spec);
+        }
+
+        PRBool Equals(const nsHashKey *aKey) const {
+            PRBool eq;
+            mKey->Equals( ((nsIURIKey*) aKey)->mKey, &eq );
+            return eq;
+        }
+
+        nsHashKey *Clone(void) const {
+            return new nsIURIKey(mKey);
+        }
+    };
+
+    class ScriptEntry {
+    public:
+        nsString    mScript;
+        const char* mVersion;
+    };
 };
 
 
@@ -64,35 +108,17 @@ nsXULPrototypeCache::nsXULPrototypeCache()
 
 nsXULPrototypeCache::~nsXULPrototypeCache()
 {
-    if (mTable) {
-        PL_HashTableEnumerateEntries(mTable, ReleaseTableEntry, nsnull);
-        PL_HashTableDestroy(mTable);
-    }
+    mScriptTable.Enumerate(ReleaseScriptEntryEnumFunc, nsnull);
 }
 
-PRIntn
-nsXULPrototypeCache::ReleaseTableEntry(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosure)
+
+PRBool
+nsXULPrototypeCache::ReleaseScriptEntryEnumFunc(nsHashKey* aKey, void* aData, void* aClosure)
 {
-    nsIURI* key = NS_REINTERPRET_CAST(nsIURI*, NS_CONST_CAST(void*, aHashEntry->key));
-    NS_RELEASE(key);
-
-    nsIXULPrototypeDocument* value = NS_REINTERPRET_CAST(nsIXULPrototypeDocument*, aHashEntry->value);
-    NS_RELEASE(value);
-
-    return HT_ENUMERATE_REMOVE;
+    ScriptEntry* entry = NS_REINTERPRET_CAST(ScriptEntry*, aData);
+    delete entry;
+    return PR_TRUE;
 }
-
-
-nsresult
-nsXULPrototypeCache::Init()
-{
-    mTable = PL_NewHashTable(16, Hash, CompareKeys, PL_CompareValues, nsnull, nsnull);
-    if (! mTable)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    return NS_OK;
-}
-
 
 NS_IMPL_ISUPPORTS1(nsXULPrototypeCache, nsIXULPrototypeCache);
 
@@ -109,11 +135,6 @@ NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult)
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv;
-    rv = result->Init();
-    if (NS_FAILED(rv)) {
-        delete result;
-        return rv;
-    }
 
     NS_ADDREF(result);
     rv = result->QueryInterface(aIID, aResult);
@@ -122,36 +143,98 @@ NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     return rv;
 }
 
-PLHashNumber
-nsXULPrototypeCache::Hash(const void* aKey)
-{
-    nsIURI* uri = NS_REINTERPRET_CAST(nsIURI*, NS_CONST_CAST(void*, aKey));
-    nsXPIDLCString spec;
-    uri->GetSpec(getter_Copies(spec));
-    return PL_HashString(spec);
-}
 
-
-PRIntn
-nsXULPrototypeCache::CompareKeys(const void* aKey1, const void* aKey2)
-{
-    nsIURI* uri1 = NS_REINTERPRET_CAST(nsIURI*, NS_CONST_CAST(void*, aKey1));
-    nsIURI* uri2 = NS_REINTERPRET_CAST(nsIURI*, NS_CONST_CAST(void*, aKey2));
-    PRBool eq;
-    uri1->Equals(uri2, &eq);
-    return eq;
-}
+//----------------------------------------------------------------------
 
 
 NS_IMETHODIMP
-nsXULPrototypeCache::Get(nsIURI* aURI, nsIXULPrototypeDocument** _result)
+nsXULPrototypeCache::GetPrototype(nsIURI* aURI, nsIXULPrototypeDocument** _result)
 {
+    nsIURIKey key(aURI);
+    *_result = NS_STATIC_CAST(nsIXULPrototypeDocument*, mPrototypeTable.Get(&key));
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsXULPrototypeCache::Put(nsIURI* aURI, nsIXULPrototypeDocument* aDocument)
+nsXULPrototypeCache::PutPrototype(nsIXULPrototypeDocument* aDocument)
 {
+    nsresult rv;
+    nsCOMPtr<nsIURI> uri;
+    rv = aDocument->GetURI(getter_AddRefs(uri));
+
+    nsIURIKey key(uri);
+    mPrototypeTable.Put(&key, aDocument);
+
     return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsXULPrototypeCache::GetStyleSheet(nsIURI* aURI, nsICSSStyleSheet** _result)
+{
+    nsIURIKey key(aURI);
+    *_result = NS_STATIC_CAST(nsICSSStyleSheet*, mStyleSheetTable.Get(&key));
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeCache::PutStyleSheet(nsICSSStyleSheet* aStyleSheet)
+{
+    nsresult rv;
+    nsCOMPtr<nsIURI> uri;
+    rv = aStyleSheet->GetURL(*getter_AddRefs(uri));
+
+    nsIURIKey key(uri);
+    mStyleSheetTable.Put(&key, aStyleSheet);
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeCache::GetScript(nsIURI* aURI, nsString& aScript, const char** aVersion)
+{
+    nsIURIKey key(aURI);
+    const ScriptEntry* entry = NS_REINTERPRET_CAST(const ScriptEntry*, mScriptTable.Get(&key));
+    if (entry) {
+        aScript   = entry->mScript;
+        *aVersion = entry->mVersion;
+    }
+    else {
+        aScript.Truncate();
+        *aVersion = nsnull;
+    }
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeCache::PutScript(nsIURI* aURI, const nsString& aScript, const char* aVersion)
+{
+    ScriptEntry* newentry = new ScriptEntry();
+    if (! newentry)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    newentry->mScript  = aScript;
+    newentry->mVersion = aVersion;
+
+    nsIURIKey key(aURI);
+    ScriptEntry* oldentry = NS_REINTERPRET_CAST(ScriptEntry*, mScriptTable.Put(&key, newentry));
+
+    delete oldentry;
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeCache::Flush()
+{
+    mPrototypeTable.Reset();
+    mStyleSheetTable.Reset();
+    mScriptTable.Reset(ReleaseScriptEntryEnumFunc, nsnull);
+    return NS_OK;
+}
+

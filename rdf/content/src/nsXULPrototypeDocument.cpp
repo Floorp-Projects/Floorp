@@ -25,7 +25,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
-#include "nsIStyleSheet.h"
 #include "nsIXULPrototypeDocument.h"
 #include "nsIURI.h"
 #include "nsString2.h"
@@ -48,11 +47,11 @@ public:
     NS_IMETHOD GetRootElement(nsXULPrototypeElement** aResult);
     NS_IMETHOD SetRootElement(nsXULPrototypeElement* aElement);
 
-    NS_IMETHOD AddStyleSheet(nsIStyleSheet* aStyleSheet);
-    NS_IMETHOD GetStyleSheets(nsVoidArray& aResult);
+    NS_IMETHOD AddStyleSheetReference(nsIURI* aStyleSheet);
+    NS_IMETHOD GetStyleSheetReferences(nsISupportsArray** aResult);
 
     NS_IMETHOD AddOverlayReference(nsIURI* aURI);
-    NS_IMETHOD GetOverlayReferences(nsVoidArray& aResult);
+    NS_IMETHOD GetOverlayReferences(nsISupportsArray** aResult);
 
     NS_IMETHOD GetHeaderData(nsIAtom* aField, nsString& aData) const;
     NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsString& aData);
@@ -60,7 +59,7 @@ public:
 protected:
     nsCOMPtr<nsIURI> mURI;
     nsXULPrototypeElement* mRoot;
-    nsCOMPtr<nsISupportsArray> mStyleSheets;
+    nsCOMPtr<nsISupportsArray> mStyleSheetReferences;
     nsCOMPtr<nsISupportsArray> mOverlayReferences;
 
     nsXULPrototypeDocument();
@@ -86,7 +85,7 @@ nsXULPrototypeDocument::Init()
 {
     nsresult rv;
 
-    rv = NS_NewISupportsArray(getter_AddRefs(mStyleSheets));
+    rv = NS_NewISupportsArray(getter_AddRefs(mStyleSheetReferences));
     if (NS_FAILED(rv)) return rv;
 
     rv = NS_NewISupportsArray(getter_AddRefs(mOverlayReferences));
@@ -166,33 +165,22 @@ nsXULPrototypeDocument::SetRootElement(nsXULPrototypeElement* aElement)
 
 
 NS_IMETHODIMP
-nsXULPrototypeDocument::AddStyleSheet(nsIStyleSheet* aStyleSheet)
+nsXULPrototypeDocument::AddStyleSheetReference(nsIURI* aURI)
 {
-    NS_PRECONDITION(aStyleSheet != nsnull, "null ptr");
-    if (! aStyleSheet)
+    NS_PRECONDITION(aURI != nsnull, "null ptr");
+    if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
-    mStyleSheets->AppendElement(aStyleSheet);
+    mStyleSheetReferences->AppendElement(aURI);
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsXULPrototypeDocument::GetStyleSheets(nsVoidArray& aResult)
+nsXULPrototypeDocument::GetStyleSheetReferences(nsISupportsArray** aResult)
 {
-    nsresult rv;
-    aResult.Clear();
-
-    PRUint32 cnt;
-    rv = mStyleSheets->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 i = 0; i < PRInt32(cnt); ++i) {
-        nsIStyleSheet* sheet = NS_REINTERPRET_CAST(nsIStyleSheet*, mStyleSheets->ElementAt(i));
-        aResult.AppendElement(sheet);
-        NS_RELEASE(sheet);
-    }
-
+    *aResult = mStyleSheetReferences;
+    NS_ADDREF(*aResult);
     return NS_OK;
 }
 
@@ -211,21 +199,10 @@ nsXULPrototypeDocument::AddOverlayReference(nsIURI* aURI)
 
 
 NS_IMETHODIMP
-nsXULPrototypeDocument::GetOverlayReferences(nsVoidArray& aResult)
+nsXULPrototypeDocument::GetOverlayReferences(nsISupportsArray** aResult)
 {
-    nsresult rv;
-    aResult.Clear();
-
-    PRUint32 cnt;
-    rv = mOverlayReferences->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 i = 0; i < PRInt32(cnt); ++i) {
-        nsIURI* ref = NS_REINTERPRET_CAST(nsIURI*, mOverlayReferences->ElementAt(i));
-        aResult.AppendElement(ref);
-        NS_RELEASE(ref);
-    }
-
+    *aResult = mOverlayReferences;
+    NS_ADDREF(*aResult);
     return NS_OK;
 }
 

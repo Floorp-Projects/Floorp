@@ -57,11 +57,11 @@ public:
     NS_IMETHOD GetRootElement(nsXULPrototypeElement** aResult) = 0;
     NS_IMETHOD SetRootElement(nsXULPrototypeElement* aElement) = 0;
 
-    NS_IMETHOD AddStyleSheet(nsIStyleSheet* aStyleSheet) = 0;
-    NS_IMETHOD GetStyleSheets(nsVoidArray& aResult) = 0;
+    NS_IMETHOD AddStyleSheetReference(nsIURI* aStyleSheet) = 0;
+    NS_IMETHOD GetStyleSheetReferences(nsISupportsArray** aResult) = 0;
 
     NS_IMETHOD AddOverlayReference(nsIURI* aURI) = 0;
-    NS_IMETHOD GetOverlayReferences(nsVoidArray& aResult) = 0;
+    NS_IMETHOD GetOverlayReferences(nsISupportsArray** aResult) = 0;
 
     NS_IMETHOD GetHeaderData(nsIAtom* aField, nsString& aData) const = 0;
     NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsString& aData) = 0;

@@ -71,6 +71,7 @@
 #include "nsIXULDocument.h"
 #include "nsIXULKeyListener.h"
 #include "nsIXULPrototypeDocument.h"
+#include "nsIXULPrototypeCache.h"
 #include "nsLayoutCID.h"
 #include "nsNeckoUtil.h"
 #include "nsRDFCID.h"
@@ -102,6 +103,8 @@ static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
 static NS_DEFINE_CID(kCSSLoaderCID,              NS_CSS_LOADER_CID);
 static NS_DEFINE_CID(kCSSParserCID,              NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,       NS_NAMESPACEMANAGER_CID);
+static NS_DEFINE_CID(kXULContentUtilsCID,        NS_XULCONTENTUTILS_CID);
+static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 
 //----------------------------------------------------------------------
 
@@ -142,6 +145,8 @@ protected:
     // pseudo-constants
     static nsrefcnt               gRefCnt;
     static nsINameSpaceManager*   gNameSpaceManager;
+    static nsIXULContentUtils*    gXULUtils;
+    static nsIXULPrototypeCache*  gXULCache;
 
     static nsIAtom* kClassAtom;
     static nsIAtom* kIdAtom;
@@ -240,6 +245,8 @@ protected:
 
 nsrefcnt XULContentSinkImpl::gRefCnt;
 nsINameSpaceManager* XULContentSinkImpl::gNameSpaceManager;
+nsIXULContentUtils* XULContentSinkImpl::gXULUtils;
+nsIXULPrototypeCache* XULContentSinkImpl::gXULCache;
 
 nsIAtom* XULContentSinkImpl::kClassAtom;
 nsIAtom* XULContentSinkImpl::kIdAtom;
@@ -377,6 +384,15 @@ XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
         kScriptAtom         = NS_NewAtom("script");
         kStyleAtom          = NS_NewAtom("style");
         kTemplateAtom       = NS_NewAtom("template");
+
+        rv = nsServiceManager::GetService(kXULContentUtilsCID,
+                                          NS_GET_IID(nsIXULContentUtils),
+                                          (nsISupports**) &gXULUtils);
+        if (NS_FAILED(rv)) return;
+
+        rv = nsServiceManager::GetService(kXULPrototypeCacheCID,
+                                          NS_GET_IID(nsIXULPrototypeCache),
+                                          (nsISupports**) &gXULCache);
     }
 
 #ifdef PR_LOGGING
@@ -390,11 +406,6 @@ XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
 
 XULContentSinkImpl::~XULContentSinkImpl()
 {
-#ifdef DEBUG_REFS
-    --gInstanceCount;
-    fprintf(stdout, "%d - RDF: XULContentSinkImpl\n", gInstanceCount);
-#endif
-
     NS_IF_RELEASE(mParser); // XXX should've been released by now, unless error.
 
     {
@@ -475,6 +486,16 @@ XULContentSinkImpl::~XULContentSinkImpl()
         NS_IF_RELEASE(kScriptAtom);
         NS_IF_RELEASE(kStyleAtom);
         NS_IF_RELEASE(kTemplateAtom);
+
+        if (gXULUtils) {
+            nsServiceManager::ReleaseService(kXULContentUtilsCID, gXULUtils);
+            gXULUtils = nsnull;
+        }
+
+        if (gXULCache) {
+            nsServiceManager::ReleaseService(kXULPrototypeCacheCID, gXULCache);
+            gXULCache = nsnull;
+        }
     }
 }
 
@@ -821,7 +842,7 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
 {
     static const char kCSSType[] = "text/css";
 
-    nsresult result = NS_OK;
+    nsresult rv = NS_OK;
 
     if (aAlternate) { // if alternate, does it have title?
         if (0 == aTitle.Length()) { // alternates must have title
@@ -835,11 +856,35 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
 
     if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase(kCSSType)) {
         nsCOMPtr<nsIURI> url;
-        result = NS_NewURI(getter_AddRefs(url), aHref, mDocumentURL);
-        if (NS_OK != result) {
+        rv = NS_NewURI(getter_AddRefs(url), aHref, mDocumentURL);
+        if (NS_OK != rv) {
             return NS_OK; // The URL is bad, move along, don't propagate the error (for now)
         }
 
+        // Add the style sheet reference to the prototype
+        mPrototype->AddStyleSheetReference(url);
+
+        // See if the style sheet is in the style sheet cache. If so,
+        // just use it.
+        if (gXULUtils->UseXULCache()) {
+            nsCOMPtr<nsICSSStyleSheet> sheet;
+            rv = gXULCache->GetStyleSheet(url, getter_AddRefs(sheet));
+
+            if (NS_SUCCEEDED(rv) && sheet) {
+                nsCOMPtr<nsICSSStyleSheet> newsheet;
+                rv = sheet->Clone(*getter_AddRefs(newsheet));
+
+                if (NS_SUCCEEDED(rv) && newsheet) {
+                    nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+                    if (doc) {
+                        doc->AddStyleSheet(newsheet);
+                        return NS_OK;
+                    }
+                }
+            }
+        }
+
+        // Nope, we need to load it asynchronously
         PRBool blockParser = PR_FALSE;
         if (! aAlternate) {
             if (0 < aTitle.Length()) {  // possibly preferred sheet
@@ -862,16 +907,16 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
         // sheet in a fairly random location if we're loading an
         // overlay. Should we just use a Very Large Number?
         PRBool doneLoading;
-        result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, kNameSpaceID_Unknown,
-                                           mStyleSheetCount++, 
-                                           ((blockParser) ? mParser : nsnull),
-                                           doneLoading);
-        if (NS_SUCCEEDED(result) && blockParser && (! doneLoading)) {
-            result = NS_ERROR_HTMLPARSER_BLOCK;
+        rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, kNameSpaceID_Unknown,
+                                       mStyleSheetCount++, 
+                                       ((blockParser) ? mParser : nsnull),
+                                       doneLoading);
+        if (NS_SUCCEEDED(rv) && blockParser && (! doneLoading)) {
+            rv = NS_ERROR_HTMLPARSER_BLOCK;
         }
     }
 
-    return result;
+    return rv;
 }
 
 
