@@ -382,7 +382,6 @@ nsresult
 nsComposerCommandsUpdater::Notify(nsITimer *timer)
 {
   NS_ASSERTION(timer == mUpdateTimer.get(), "Hey, this ain't my timer!");
-  mUpdateTimer = NULL;    // release my hold  
   TimerCallback();
   return NS_OK;
 }
