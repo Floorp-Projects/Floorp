@@ -128,12 +128,8 @@ sub show_user {
     my $bug_id = $::FORM{'bug_id'} || "";
         
     my $name = $::FORM{'user'} || Bugzilla->user->login;
-    my $who = DBname_to_id($name);
-    
-    # After DBNameToIdAndCheck is templatised and prints a Content-Type, 
-    # the above should revert to a call to that function, and this 
-    # special error handling should go away.
-    $who || ThrowUserError("invalid_username", {name => $name});
+    my $who = DBNameToIdAndCheck($name);
+    my $userid = Bugzilla->user ? Bugzilla->user->id : 0;
     
     my $canedit = 1 if (Bugzilla->user &&
                         $name eq Bugzilla->user->login);
@@ -193,7 +189,7 @@ sub show_user {
             # and they can see there are votes 'missing', but not on what bug
             # they are. This seems a reasonable compromise; the alternative is
             # to lie in the totals.
-            next if !CanSeeBug($id, $who);            
+            next if !CanSeeBug($id, $userid);            
             
             push (@bugs, { id => $id, 
                            summary => $summary,
