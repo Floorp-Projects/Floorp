@@ -861,6 +861,19 @@ BookmarkParser::ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder)
 	content.Mid(charset, start, content.Length() - start);
 	if (charset.Length() < 1)	return(NS_ERROR_UNEXPECTED);
 
+	NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &rv);
+	if (NS_SUCCEEDED(rv) && (calias))
+	{
+		nsAutoString	charsetName;
+		if (NS_SUCCEEDED(rv = calias->GetPreferred(charset, charsetName)))
+		{
+			if (charsetName.Length() > 0)
+			{
+				charset = charsetName;
+			}
+		}
+	}
+
 	// found a charset, now try and get a decoder from it to Unicode
 	nsICharsetConverterManager	*charsetConv = nsnull;
 	rv = nsServiceManager::GetService(kCharsetConverterManagerCID, 
@@ -3273,12 +3286,19 @@ nsresult
 nsBookmarksService::insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aArguments, PRInt32 parentArgIndex, nsIRDFResource *objType)
 {
 	nsresult			rv;
-
+	PRInt32				srcIndex = 0;
 	nsCOMPtr<nsIRDFResource>	argParent;
-	if (NS_FAILED(rv = getArgumentN(aArguments, kNC_Parent,
-			parentArgIndex, getter_AddRefs(argParent))))
-		return(rv);
 
+	if (src == kNC_BookmarksRoot)
+	{
+		argParent = src;
+	}
+	else
+	{
+		if (NS_FAILED(rv = getArgumentN(aArguments, kNC_Parent,
+				parentArgIndex, getter_AddRefs(argParent))))
+			return(rv);
+	}
 	nsCOMPtr<nsIRDFContainer>	container;
 	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFContainerCID, nsnull,
 			NS_GET_IID(nsIRDFContainer), getter_AddRefs(container))))
@@ -3286,9 +3306,11 @@ nsBookmarksService::insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aA
 	if (NS_FAILED(rv = container->Init(mInner, argParent)))
 		return(rv);
 
-	PRInt32		srcIndex;
-	if (NS_FAILED(rv = container->IndexOf(src, &srcIndex)))
-		return(rv);
+	if (src != kNC_BookmarksRoot)
+	{
+		if (NS_FAILED(rv = container->IndexOf(src, &srcIndex)))
+			return(rv);
+	}
 
 	nsCOMPtr<nsIRDFResource>	newElement;
 	if (NS_FAILED(rv = BookmarkParser::CreateAnonymousResource(&newElement)))
@@ -3324,9 +3346,8 @@ nsBookmarksService::insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aA
 	if (NS_FAILED(rv = mInner->Assert(newElement, kNC_BookmarkAddDate, dateLiteral, PR_TRUE)))
 		return(rv);
 
-	if (NS_FAILED(rv = container->InsertElementAt(newElement, srcIndex + 1, PR_TRUE)))
+	if (NS_FAILED(rv = container->InsertElementAt(newElement, ((srcIndex == 0) ? 1 : srcIndex), PR_TRUE)))
 		return(rv);
-
 	return(rv);
 }
 

@@ -612,12 +612,6 @@ function doContextCmd(cmdName)
 	cmdResource = cmdResource.QueryInterface(Components.interfaces.nsIRDFResource);
 	if (!cmdResource)        return(false);
 
-	var select_list = treeNode.selectedItems;
-	if (!select_list)		return(false);
-	if (select_list.length < 1)	return(false);
-
-	debug("# of Nodes selected: " + select_list.length);
-
 	// set up selection nsISupportsArray
 	var selectionInstance = Components.classes["component://netscape/supports-array"].createInstance();
 	var selectionArray = selectionInstance.QueryInterface(Components.interfaces.nsISupportsArray);
@@ -630,7 +624,22 @@ function doContextCmd(cmdName)
 	var parentArc = rdf.GetResource("http://home.netscape.com/NC-rdf#parent");
 	if (!parentArc)        return(false);
 
-	for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
+	var select_list = treeNode.selectedItems;
+	debug("# of Nodes selected: " + select_list.length);
+
+	if (select_list.length < 1)
+	{
+		// if nothing is selected, default to using the "ref" on the root of the tree
+		var	uri = treeNode.getAttribute("ref");
+		if (!uri || uri=="")    return(false);
+		var rdfNode = rdf.GetResource(uri);
+		// add node into selection array
+		if (rdfNode)
+		{
+			selectionArray.AppendElement(rdfNode);
+		}
+	}
+	else for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
 	{
 		var node = select_list[nodeIndex];
 		if (!node)    break;
