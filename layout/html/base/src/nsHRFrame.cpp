@@ -158,7 +158,7 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
                                  width - diameter, height);
      }
   }
-  return NS_OK;
+  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
 NS_IMETHODIMP

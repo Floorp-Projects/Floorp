@@ -39,11 +39,13 @@
 #include "nsIDOMSelectionListener.h"
 #include "nsIContentIterator.h"
 
-
+//included for desired x position;
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
+#include "nsICaret.h"
 
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsICaret.h"
 
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
@@ -152,6 +154,9 @@ private:
   nsIDOMNode*  FetchEndParent(nsIDOMRange *aRange);     //skip all the com stuff and give me the start/end
   PRInt32      FetchEndOffset(nsIDOMRange *aRange);
 
+  nscoord      FetchDesiredX(); //the x position requested by the Key Handling for up down
+  void         InvalidateDesiredX(); //do not listen to mDesiredX you must get another.
+  void         SetDesiredX(nscoord aX); //set the mDesiredX
 
   void         setAnchorFocusRange(PRInt32); //pass in index into rangelist
   
@@ -169,6 +174,7 @@ private:
   NS_IMETHOD SetOriginalAnchorPoint(nsIDOMNode *aNode, PRInt32 aOffset);
   NS_IMETHOD GetOriginalAnchorPoint(nsIDOMNode **aNode, PRInt32 *aOffset);
 
+  NS_IMETHOD GetPrimaryFrameForFocusNode(nsIFrame **aResultFrame);
   nsCOMPtr<nsISupportsArray> mRangeArray;
 
   nsCOMPtr<nsIDOMRange> mAnchorFocusRange;
@@ -187,6 +193,8 @@ private:
   void*		mScriptObject;
   nsIFocusTracker *mTracker;
   PRBool mMouseDownState; //for drag purposes
+  PRInt32 mDesiredX;
+  PRBool mDesiredXSet;
   static nsIAtom *sTableAtom;
   static nsIAtom *sCellAtom;
   static nsIAtom *sTbodyAtom;
@@ -723,7 +731,59 @@ nsRangeList::FetchEndOffset(nsIDOMRange *aRange)
 }
 
 
- 
+
+nscoord
+nsRangeList::FetchDesiredX() //the x position requested by the Key Handling for up down
+{
+  if (!mTracker)
+  {
+    NS_ASSERTION(0,"fetch desired X failed\n");
+    return -1;
+  }
+  if (mDesiredXSet)
+    return mDesiredX;
+  else {
+    nsPoint coord;
+    PRBool  collapsed;
+    nsCOMPtr<nsICaret> caret;
+    nsCOMPtr<nsIPresContext> context;
+    nsCOMPtr<nsIPresShell> shell;
+    nsresult result = mTracker->GetPresContext(getter_AddRefs(context));
+    if (NS_FAILED(result) || !context)
+      return result;
+    result = context->GetShell(getter_AddRefs(shell));
+    if (NS_FAILED(result) || !shell)
+      return result;
+    result = shell->GetCaret(getter_AddRefs(caret));
+    if (NS_FAILED(result) || !caret)
+      return result;
+
+    result = caret->GetWindowRelativeCoordinates(coord,collapsed);
+    if (NS_FAILED(result))
+      return result;
+    return coord.x;
+  }
+}
+
+
+
+void
+nsRangeList::InvalidateDesiredX() //do not listen to mDesiredX you must get another.
+{
+  mDesiredXSet = PR_FALSE;
+}
+
+
+
+void
+nsRangeList::SetDesiredX(nscoord aX) //set the mDesiredX
+{
+  mDesiredX = aX;
+  mDesiredXSet = PR_TRUE;
+}
+
+
+
 nsresult
 nsRangeList::AddItem(nsISupports *aItem)
 {
@@ -867,6 +927,7 @@ nsRangeList::Init(nsIFocusTracker *aTracker)
 {
   mTracker = aTracker;
   mMouseDownState = PR_FALSE;
+  mDesiredXSet = PR_FALSE;
   return NS_OK;
 }
 
@@ -908,6 +969,7 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
   if (!aGuiEvent)
     return NS_ERROR_NULL_POINTER;
   STATUS_CHECK_RETURN_MACRO();
+
   nsresult result = NS_OK;
   if (NS_KEY_DOWN == aGuiEvent->message) {
     nsKeyEvent *keyEvent = (nsKeyEvent *)aGuiEvent; //this is ok. It really is a keyevent
@@ -916,90 +978,94 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
     nsSelectionAmount amount = eSelectCharacter;
     if (keyEvent->isControl)
       amount = eSelectWord;
-    nsCOMPtr<nsICaret> caret;
-    result = mTracker->GetCaret(getter_AddRefs(caret));
+
+    PRBool isCollapsed;
+    nscoord desiredX; //we must keep this around and revalidate it when its just UP/DOWN
+
+    result = GetIsCollapsed(&isCollapsed);
+    if (NS_FAILED(result))
+      return result;
+    if (keyEvent->keyCode == nsIDOMUIEvent::VK_UP || keyEvent->keyCode == nsIDOMUIEvent::VK_DOWN)
+      desiredX= FetchDesiredX();
+
+    if (!isCollapsed && !keyEvent->isShift) {
+      switch (keyEvent->keyCode){
+        case nsIDOMUIEvent::VK_LEFT  : 
+        case nsIDOMUIEvent::VK_UP    : {
+            if ((GetDirection() == eDirPrevious)) { //f,a
+              offsetused = FetchFocusOffset();
+              weakNodeUsed = FetchFocusNode();
+            }
+            else {
+              offsetused = FetchAnchorOffset();
+              weakNodeUsed = FetchAnchorNode();
+            }
+            result = Collapse(weakNodeUsed,offsetused);
+
+                                       } break;
+        case nsIDOMUIEvent::VK_RIGHT : 
+        case nsIDOMUIEvent::VK_DOWN  : {
+            if ((GetDirection() == eDirPrevious)) { //f,a
+              offsetused = FetchAnchorOffset();
+              weakNodeUsed = FetchAnchorNode();
+            }
+            else {
+              offsetused = FetchFocusOffset();
+              weakNodeUsed = FetchFocusNode();
+            }
+            result = Collapse(weakNodeUsed,offsetused);
+                                       } break;
+      }
+      if (keyEvent->keyCode == nsIDOMUIEvent::VK_UP || keyEvent->keyCode == nsIDOMUIEvent::VK_DOWN)
+        SetDesiredX(desiredX);
+      return NS_OK;
+    }
+
+    offsetused = FetchFocusOffset();
+    weakNodeUsed = FetchFocusNode();
+    nsIFrame *frame;
+    nsCOMPtr<nsIContent> content;
+    result = GetPrimaryFrameForFocusNode(&frame);
     if (NS_FAILED(result))
       return result;
     switch (keyEvent->keyCode){
       case nsIDOMUIEvent::VK_LEFT  : 
+        {
         //we need to look for the previous PAINTED location to move the cursor to.
-#ifdef DEBUG_NAVIGATION
-        printf("debug vk left\n");
-#endif
-        if (keyEvent->isShift || (GetDirection() == eDirPrevious)) { //f,a
-          offsetused = FetchFocusOffset();
-          weakNodeUsed = FetchFocusNode();
-        }
-        else {
-          offsetused = FetchAnchorOffset();
-          weakNodeUsed = FetchAnchorNode();
-        }
-        if (weakNodeUsed && offsetused >=0){
-          nsIFrame *frame;
-          nsCOMPtr<nsIContent> content = do_QueryInterface(weakNodeUsed);
-          if (content){
-            result = mTracker->GetPrimaryFrameFor(content, &frame);
-            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(caret, amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
-              result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift);
-            }
-            result = ScrollIntoView();
+          if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
+            result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift);
           }
+          result = ScrollIntoView();
         }
         break;
       case nsIDOMUIEvent::VK_RIGHT : 
+        {
         //we need to look for the previous PAINTED location to move the cursor to.
-#ifdef DEBUG_NAVIGATION
-        printf("debug vk left\n");
-#endif
-        if (keyEvent->isShift || (GetDirection() == eDirPrevious)) { //f,a
-          offsetused = FetchFocusOffset();
-          weakNodeUsed = FetchFocusNode();
-        }
-        else {
-          offsetused = FetchAnchorOffset();
-          weakNodeUsed = FetchAnchorNode();
-        }
-        if (weakNodeUsed && offsetused >=0){
-          nsIFrame *frame;
-          nsCOMPtr<nsIContent> content = do_QueryInterface(weakNodeUsed);
-          if (content){
-            result = mTracker->GetPrimaryFrameFor(content, &frame);
-            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(caret, amount, eDirNext, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
-              result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift);
-            }
-            result = ScrollIntoView();
+          if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirNext, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
+            result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift);
           }
+          result = ScrollIntoView();
         }
        break;
       case nsIDOMUIEvent::VK_UP : 
+      case nsIDOMUIEvent::VK_DOWN : 
         {
   //we need to look for the previous PAINTED location to move the cursor to.
-            amount = eSelectLine;
-#ifdef DEBUG_NAVIGATION
-          printf("debug vk left\n");
-#endif
-          if (keyEvent->isShift || (GetDirection() == eDirPrevious)) { //f,a
-            offsetused = FetchFocusOffset();
-            weakNodeUsed = FetchFocusNode();
-          }
-          else {
-            offsetused = FetchAnchorOffset();
-            weakNodeUsed = FetchAnchorNode();
-          }
-          if (weakNodeUsed && offsetused >=0){
-            nsIFrame *frame;
-            nsCOMPtr<nsIContent> content = do_QueryInterface(weakNodeUsed);
-            if (content){
-              result = mTracker->GetPrimaryFrameFor(content, &frame);
-              if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(caret, amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
-                result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift);
-              }
-              result = ScrollIntoView();
+          amount = eSelectLine;
+          if (nsIDOMUIEvent::VK_UP == keyEvent->keyCode)
+          {
+            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
+              result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift);
             }
           }
+          else
+            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirNext, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
+              result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift);
+            }
+          result = ScrollIntoView();
+          SetDesiredX(desiredX);
         }
         break;
-      case nsIDOMUIEvent::VK_DOWN : 
 #ifdef DEBUG_NAVIGATION
         printf("debug vk down\n");
 #endif
@@ -1009,6 +1075,36 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
   }
   return result;
 }
+
+
+//utility method to get the primary frame of node or use the offset to get frame of child node
+NS_IMETHODIMP
+nsRangeList::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame)
+{
+  if (!aReturnFrame)
+    return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDOMNode> node = dont_QueryInterface(FetchFocusNode());
+  nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+  PRBool canContainChildren = PR_FALSE;
+  nsresult result = content->CanContainChildren(canContainChildren);
+  if (NS_SUCCEEDED(result) && canContainChildren)
+  {
+    PRInt32 offset = FetchFocusOffset();
+    if (GetDirection() == eDirNext)
+      offset--;
+    if (offset >0)
+    {
+      nsCOMPtr<nsIContent> child;
+      result = content->ChildAt(offset, *getter_AddRefs(child));
+      if (NS_FAILED(result) || !child) //out of bounds?
+        return result;
+      content = child;//releases the focusnode
+    }
+  }
+  result = mTracker->GetPrimaryFrameFor(content,aReturnFrame);
+  return result;
+}
+
 
 #ifdef DEBUG
 void nsRangeList::printSelection()
@@ -1139,8 +1235,8 @@ nsRangeList::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
   nsCOMPtr<nsIContent> parent2;
   if (NS_FAILED(aNewFocus->GetParent(*getter_AddRefs(parent))) || !parent)
     return NS_ERROR_FAILURE;
-  if (NS_FAILED(parent->GetParent(*getter_AddRefs(parent2))) || !parent2)
-    return NS_ERROR_FAILURE;
+  //if (NS_FAILED(parent->GetParent(*getter_AddRefs(parent2))) || !parent2)
+    //return NS_ERROR_FAILURE;
 
   //END HACKHACKHACK /checking for root frames/content
 
@@ -1319,25 +1415,7 @@ nsRangeList::ScrollIntoView()
 {
   nsresult result;
   nsIFrame *frame;
-  nsCOMPtr<nsIDOMNode> node = dont_QueryInterface(FetchFocusNode());
-  nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-  PRBool canContainChildren = PR_FALSE;
-  result = content->CanContainChildren(canContainChildren);
-  if (NS_SUCCEEDED(result) && canContainChildren)
-  {
-    PRInt32 offset = FetchFocusOffset();
-    if (GetDirection() == eDirNext)
-      offset--;
-    if (offset >0)
-    {
-      nsCOMPtr<nsIContent> child;
-      result = content->ChildAt(offset, *getter_AddRefs(child));
-      if (NS_FAILED(result) || !child) //out of bounds?
-        return result;
-      content = child;//releases the focusnode
-    }
-  }
-  result = mTracker->GetPrimaryFrameFor(content,&frame);
+  result = GetPrimaryFrameForFocusNode(&frame);
   if (NS_FAILED(result))
     return result;
   result = mTracker->ScrollFrameIntoView(frame);
@@ -1426,7 +1504,7 @@ NS_IMETHODIMP
 nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
 {
   nsresult result;
-
+  InvalidateDesiredX();
   // Delete all of the current ranges
   if (!mRangeArray)
     return NS_ERROR_FAILURE;
@@ -1827,7 +1905,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   // First, find the range containing the old focus point:
   if (!mRangeArray)
     return NS_ERROR_FAILURE;
-
+  InvalidateDesiredX();
   nsCOMPtr<nsIDOMRange> difRange;
   nsresult res;
   res = nsComponentManager::CreateInstance(kRangeCID, nsnull,
