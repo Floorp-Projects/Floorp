@@ -71,6 +71,7 @@ typedef struct SSMSSLSocketStatus
 	PRInt32 m_error;
     SSMResourceCert *m_cert; /* placeholder - will we want to get an
                                 SSMCertificate object ref later? */
+	char *m_caName;		/* Name of the CA that signed SSL cert */
 } SSMSSLSocketStatus;
 
 SSMStatus SSMSSLSocketStatus_Create(void *arg, SSMControlConnection * conn, 
