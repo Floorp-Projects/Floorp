@@ -1205,6 +1205,8 @@ nsMsgFolderDataSource::createFolderSpecialNode(nsIMsgFolder *folder,
     specialFolderString.AssignLiteral("Templates");
   else if (flags & MSG_FOLDER_FLAG_JUNK)
     specialFolderString.AssignLiteral("Junk");
+  else if (flags & MSG_FOLDER_FLAG_VIRTUAL)
+    specialFolderString.AssignLiteral("Virtual");
   else {
     // XXX why do this at all? or just ""
     specialFolderString.AssignLiteral("none");
