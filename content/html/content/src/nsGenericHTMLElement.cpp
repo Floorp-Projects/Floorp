@@ -2226,10 +2226,6 @@ nsGenericHTMLElement::GetPrimaryFrameFor(nsIContent* aContent,
     // Cause a flush of content, so we get up-to-date frame
     // information
     aDocument->FlushPendingNotifications(Flush_Frames);
-  } else {
-    // Still need to flush out style reresolves so we don't hand back
-    // a frame that could get destroyed on layout flush
-    aDocument->FlushPendingNotifications(Flush_StyleReresolves);
   }
 
   // Get presentation shell 0

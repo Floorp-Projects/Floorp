@@ -5016,7 +5016,7 @@ PresShell::EndReflowBatching(PRBool aFlushPendingReflows)
   nsresult rv = NS_OK;
   mBatchReflows = PR_FALSE;
   if (aFlushPendingReflows) {
-    rv = FlushPendingNotifications(Flush_Layout);
+    rv = FlushPendingNotifications(Flush_OnlyReflow);
   }
   else {
     PostReflowEvent();
