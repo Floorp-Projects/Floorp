@@ -111,6 +111,7 @@ view_manager(nsIDocShell *aDocShell)
     return shell->GetViewManager();
 }
 
+#ifdef DEBUG
 static already_AddRefed<nsIDocument>
 document(nsIDocShell *aDocShell)
 {
@@ -125,6 +126,7 @@ document(nsIDocShell *aDocShell)
     CallQueryInterface(domDoc, &result);
     return result;
 }
+#endif
 
 nsLayoutDebuggingTools::nsLayoutDebuggingTools()
   : mPaintFlashing(PR_FALSE),
