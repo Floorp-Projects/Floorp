@@ -26,7 +26,6 @@
 # assigned to them that has status NEW that has not been touched for
 # more than 7 days.
 
-use diagnostics;
 use strict;
 
 require "globals.pl";

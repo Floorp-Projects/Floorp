@@ -94,7 +94,6 @@
 # Global definitions
 ###########################################################################
 
-use diagnostics;
 use strict;
 
 # 12/17/00 justdave@syndicomm.com - removed declarations of the localconfig

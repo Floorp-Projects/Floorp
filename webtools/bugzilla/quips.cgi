@@ -22,7 +22,6 @@
 #                 Gervase Markham <gerv@gerv.net>
 #                 David Fallon <davef@tetsubo.com>
 
-use diagnostics;
 use strict;
 
 use vars qw(

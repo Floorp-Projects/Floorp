@@ -25,7 +25,6 @@
 # a new bug into bugzilla. Everything before the beginning <?xml line
 # is removed so you can pipe in email messages.
 
-use diagnostics;
 use strict;
 
 #####################################################################

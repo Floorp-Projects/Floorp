@@ -21,7 +21,6 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Matthew Tuck <matty@chariot.net.au>
 
-use diagnostics;
 use strict;
 
 use lib qw(.);

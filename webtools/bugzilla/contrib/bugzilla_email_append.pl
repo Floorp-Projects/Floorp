@@ -28,7 +28,6 @@
 # 1. better way to get the body text (I don't know what dump_entity() is 
 #   actually doing
 
-use diagnostics;
 use strict;
 use MIME::Parser;
 

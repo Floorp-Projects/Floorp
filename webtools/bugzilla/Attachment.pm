@@ -24,7 +24,6 @@
 # Module Initialization
 ############################################################################
 
-use diagnostics;
 use strict;
 
 package Attachment;

@@ -23,7 +23,6 @@
 # mysqld-watcher.pl - a script that watches the running instance of
 # mysqld and kills off any long-running SELECTs against the shadow_db
 # 
-use diagnostics;
 use strict;
 
 # some configurables: 

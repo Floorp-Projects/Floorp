@@ -24,7 +24,6 @@
 ################################################################################
 
 # Make it harder for us to do dangerous things in Perl.
-use diagnostics;
 use strict;
 
 # Bundle the functions in this file together into the "Token" package.

@@ -29,7 +29,6 @@ push @INC, "../."; # this script now lives in contrib
 
 require "globals.pl";
 
-use diagnostics;
 use strict;
 
 my $EMAIL_TRANSFORM_NONE = "email_transform_none";

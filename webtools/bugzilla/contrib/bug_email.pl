@@ -37,7 +37,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.12 2002/08/17 14:19:57 bbaetz%student.usyd.edu.au Exp $
+# $Id: bug_email.pl,v 1.13 2002/08/26 06:17:21 bbaetz%student.usyd.edu.au Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -66,7 +66,6 @@
 # - integrate some setup in the checksetup.pl script
 # - gpg signatures for security
 
-use diagnostics;
 use strict;
 use MIME::Parser;
 

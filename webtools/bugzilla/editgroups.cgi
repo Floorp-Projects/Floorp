@@ -23,7 +23,6 @@
 
 # Code derived from editowners.cgi and editusers.cgi
 
-use diagnostics;
 use strict;
 use lib ".";
 

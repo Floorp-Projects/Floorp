@@ -27,7 +27,6 @@
 
 # Contains some global routines used throughout the CGI scripts of Bugzilla.
 
-use diagnostics;
 use strict;
 use lib ".";
 

@@ -24,7 +24,6 @@
 
 use vars %::FORM;
 
-use diagnostics;
 use strict;
 
 use lib qw(.);

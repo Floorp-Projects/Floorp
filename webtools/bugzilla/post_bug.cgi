@@ -23,7 +23,6 @@
 #                 Joe Robins <jmrobins@tgix.com>
 #                 Gervase Markham <gerv@gerv.net>
 
-use diagnostics;
 use strict;
 use lib qw(.);
 

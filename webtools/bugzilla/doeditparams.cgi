@@ -21,7 +21,6 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 J. Paul Reed <preed@sigkill.com>
 
-use diagnostics;
 use strict;
 
 use lib qw(.);

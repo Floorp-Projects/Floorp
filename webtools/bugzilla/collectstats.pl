@@ -26,7 +26,6 @@
 
 
 use AnyDBM_File;
-use diagnostics;
 use strict;
 use vars @::legal_product;
 

@@ -23,7 +23,6 @@
 #                 Matthias Radestock <matthias@sorted.org>
 #                 Gervase Markham <gerv@gerv.net>
 
-use diagnostics;
 use strict;
 use lib ".";
 

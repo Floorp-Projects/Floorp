@@ -21,7 +21,6 @@
 # Contributor(s): Dawn Endico    <endico@mozilla.org>
 #                 Terry Weissman <terry@mozilla.org>
 
-use diagnostics;
 use strict;
 
 use lib qw(.);

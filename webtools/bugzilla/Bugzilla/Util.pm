@@ -69,7 +69,6 @@ use base qw(Exporter);
                              trim);
 
 use strict;
-use diagnostics;
 
 =head1 FUNCTIONS
 

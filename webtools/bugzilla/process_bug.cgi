@@ -24,7 +24,6 @@
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Myk Melez <myk@mozilla.org>
 
-use diagnostics;
 use strict;
 
 my $UserInEditGroupSet = -1;

@@ -23,7 +23,6 @@
 
 package Support::Templates;
 
-use diagnostics;
 use strict;
 
 use lib 't';

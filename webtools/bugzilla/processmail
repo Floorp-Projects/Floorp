@@ -25,7 +25,6 @@
 #                 Jacob Steenhagen <jake@actex.net>
 #                 Matthew Tuck <matty@chariot.net.au>
 
-use diagnostics;
 use strict;
 use lib ".";
 

@@ -38,7 +38,6 @@
 # Myk Melez <myk@mozilla.org):
 #    Implemented form field validation and reorganized code.
 
-use diagnostics;
 use strict;
 
 use lib qw(.);

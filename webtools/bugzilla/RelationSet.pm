@@ -29,7 +29,6 @@
 # might involve turning this into a virtual base class, and having
 # UserSet and KeywordSet types that inherit from it.
 
-use diagnostics;
 use strict;
 
 # Everything that uses RelationSet should already have globals.pl loaded

@@ -21,7 +21,6 @@
 #                 Terry Weissman <terry@mozilla.org>
 #                 Chris Yeh      <cyeh@bluemartini.com>
 
-use diagnostics;
 use strict;
 
 use DBI;

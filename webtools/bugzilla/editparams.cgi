@@ -22,7 +22,6 @@
 #                 J. Paul Reed <preed@sigkill.com>
 
 
-use diagnostics;
 use strict;
 use lib ".";
 

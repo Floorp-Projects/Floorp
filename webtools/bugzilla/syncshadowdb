@@ -21,7 +21,6 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 David Gardiner <david.gardiner@unisa.edu.au>
 
-use diagnostics;
 use strict;
 
 require "globals.pl";

@@ -28,7 +28,6 @@
 # either case), numbers 0-9, the underscore "_" and the hyphen "-".
 ###############################################################################
 
-use diagnostics;
 use strict;
 
 use lib ".";

@@ -21,7 +21,6 @@
 #                 Dave Miller <justdave@syndicomm.com>
 #                 Vaskin Kissoyan <vkissoyan@yahoo.com>
 
-use diagnostics;
 use strict;
 
 use RelationSet;

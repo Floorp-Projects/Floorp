@@ -25,7 +25,6 @@
 #                 Myk Melez <myk@mozilla.org>
 #                 Michael Schindler <michael@compressconsult.com>
 
-use diagnostics;
 use strict;
 
 require "globals.pl";

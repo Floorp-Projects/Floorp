@@ -25,7 +25,6 @@
 
 # Contains some global variables and routines used throughout bugzilla.
 
-use diagnostics;
 use strict;
 
 use Bugzilla::Util;

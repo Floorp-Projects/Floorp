@@ -16,7 +16,6 @@
 # Contributor(s): Jacob Steenhagen <jake@acutex.net>
 
 use strict;
-use diagnostics;
 
 use lib ".";
 require "CGI.pl";

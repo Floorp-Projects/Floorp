@@ -27,7 +27,6 @@ use vars qw(
   $userid
 );
 
-use diagnostics;
 use strict;
 
 use lib qw(.);

@@ -13,7 +13,6 @@
 #
 
 
-use diagnostics;
 use strict;
 use lib ".";
 

@@ -23,7 +23,6 @@
 #                 Christian Reis <kiko@async.com.br>
 #                 Myk Melez <myk@mozilla.org>
 
-use diagnostics;
 use strict;
 
 use lib qw(.);
