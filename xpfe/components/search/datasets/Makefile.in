@@ -43,8 +43,6 @@ FILES		= \
 	lxrmozilla.src      \
 	mozilla.gif         \
 	mozilla.src         \
-	NetscapeSearch.gif  \
-	NetscapeSearch.src  \
 	$(NULL)
 endif
 

@@ -717,7 +717,7 @@ function onNavWindowLoad() {
         for (var i = 0; i < engineBox.childNodes.length; ++i) {
           itemNode = engineBox.childNodes[i];
           var theID = itemNode.id;
-          if (theID.indexOf("NetscapeSearch.src") != -1) {
+          if (theID.indexOf("google.src") != -1) {
             engineURIs[engineURIs.length] = theID;
             foundEngine = true;
             break;
