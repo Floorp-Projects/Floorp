@@ -40,6 +40,21 @@ static NS_DEFINE_CID(kThisStdURLImplementationCID,
                      NS_THIS_STANDARDURL_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kStdURLParserCID, NS_STANDARDURLPARSER_CID);
 
+#if defined (XP_MAC)
+void SwapSlashColon(char * s)
+{
+	while (*s)
+	{
+		if (*s == '/')
+			*s++ = ':';
+		else if (*s == ':')
+			*s++ = '/';
+		else
+			*s++;
+	}
+} 
+#endif
+
 nsStdURL::nsStdURL()
     : mScheme(nsnull),
       mUsername(nsnull),
@@ -969,16 +984,16 @@ nsStdURL::GetFile(nsIFile * *aFile)
          }
     }
     path.ReplaceChar('/', '\\');
-#elif defined(XP_MAC)
-	// For now we'll just convert the /'s into :'s to make it look like a Mac path
-	// at some point we need to doa  better job - FIX ME!!!!!!!
-    path.ReplaceChar('/', ':');
-    if (path.CharAt(0) == ':')
-        path.Cut(0, 1);
 #endif
 
     nsUnescape((char*)path.GetBuffer());
-
+#if defined( XP_MAC )
+ 	// Now Swap the / and colons to convert back to a mac path
+    SwapSlashColon( (char*)path.GetBuffer() );
+// and wack off leading :'s
+    if (path.CharAt(0) == ':')
+        path.Cut(0, 1);
+#endif
     nsCOMPtr<nsILocalFile> localFile;
     rv = NS_NewLocalFile(path, getter_AddRefs(localFile));
 
