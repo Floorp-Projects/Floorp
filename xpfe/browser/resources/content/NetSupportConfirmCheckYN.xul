@@ -21,6 +21,7 @@ Rights Reserved.
 
 Contributor(s): ______________________________________. -->
 
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 
 <!DOCTYPE window SYSTEM "chrome://navigator/locale/NetSupportConfirmCheckYN.dtd" >
 
