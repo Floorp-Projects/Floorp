@@ -71,12 +71,13 @@ in plain text (docs/txt), HTML (docs/html), or SGML source (docs/sgml).
         4. Data::Dumper Perl module
         5. DBD::mySQL 
         6. TimeDate Perl module collection
-        7. GD perl module (1.8.3)
-        8. Chart::Base Perl module (0.99c)
-        9. The web server of your choice.  Apache is recommended.
+        7. GD perl module (1.8.3) (optional, for bug charting)
+        8. Chart::Base Perl module (0.99c) (optional, for bug charting)
+        9. DB_File Perl module (optional, for bug charting)
+        10. The web server of your choice.  Apache is recommended.
 
 	For the contrib/bug_email.pl interface, you also need:
-	10.  MIME::Parser Perl module
+	11.  MIME::Parser Perl module
 
     You must also run Bugzilla on a filesystem that supports file locking via
 flock().  This is necessary for Bugzilla to operate safely with multiple
@@ -250,7 +251,13 @@ module, only the specific versions listed above will work. Earlier
 versions used GIF's, which are no longer supported by the latest
 versions of GD.
 
-1.9. HTTP server
+1.9. DB_File Perl module
+
+   DB_File is a module which allows Perl programs to make use of the facilities provided by 
+Berkeley DB version 1.x. This module is required by collectstats.pl which is used for 
+bug charting. If you plan to make use of bug charting, you must install this module.
+
+1.10. HTTP server
 
    You have a freedom of choice here - Apache, Netscape or any other
 server on UNIX would do.  You can easily run the web server on a different
