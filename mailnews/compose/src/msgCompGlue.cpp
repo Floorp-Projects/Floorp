@@ -44,7 +44,31 @@ char*				NET_ScanHTMLForURLs(const char* input) {return NULL;}
 int					XP_FileRemove(const char *, XP_FileType) {return 0;}
 XP_FILE_URL_PATH	XP_PlatformFileToURL (const XP_FILE_NATIVE_PATH ) {return NULL;}
 MWContext *			XP_FindContextOfType(MWContext *, MWContextType) {return NULL;}
-char *				XP_StripLine (char *) {return NULL;}
+char *				XP_StripLine (char * string)
+{
+	//ducarroz: we should use nsString::Trim
+	//
+    char * ptr;
+
+	/* remove leading blanks */
+    while(*string=='\t' || *string==' ' || *string=='\r' || *string=='\n')
+		string++;    
+
+    for(ptr=string; *ptr; ptr++)
+		;   /* NULL BODY; Find end of string */
+
+	/* remove trailing blanks */
+    for(ptr--; ptr >= string; ptr--) 
+	  {
+        if(*ptr=='\t' || *ptr==' ' || *ptr=='\r' || *ptr=='\n') 
+			*ptr = '\0'; 
+        else 
+			break;
+	  }
+
+    return string;
+
+}
 XP_File				XP_FileOpen (const char* name, XP_FileType type, const XP_FilePerm permissions) {return NULL;}
 int					XP_Stat(const char * name, XP_StatStruct * outStat, XP_FileType type) {return 0;}
 int					XP_FileTruncate(const char* name, XP_FileType type, int32 length) {return 0;}
