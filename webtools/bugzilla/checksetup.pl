@@ -3897,6 +3897,8 @@ if (!$series_exists) {
     }
 }
 
+AddFDef("owner_idle_time", "Time Since Owner Touched", 0);
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #

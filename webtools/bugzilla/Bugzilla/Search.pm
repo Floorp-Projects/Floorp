@@ -703,6 +703,42 @@ sub init {
                 push(@wherepart, "$table.dependson = bugs.bug_id");
          },
 
+         "^owner_idle_time,(greaterthan|lessthan)" => sub {
+                my $table = "idle_" . $chartid;
+                $v =~ /^(\d+)\s*([hHdDwWmMyY])?$/;
+                my $quantity = $1;
+                my $unit = lc $2;
+                my $unitinterval = 'DAY';
+                if ($unit eq 'h') {
+                    $unitinterval = 'HOUR';
+                } elsif ($unit eq 'w') {
+                    $unitinterval = ' * 7 DAY';
+                } elsif ($unit eq 'm') {
+                    $unitinterval = 'MONTH';
+                } elsif ($unit eq 'y') {
+                    $unitinterval = 'YEAR';
+                }
+                my $cutoff = "DATE_SUB(NOW(), 
+                              INTERVAL $quantity $unitinterval)";
+                my $assigned_fieldid = &::GetFieldID('assigned_to');
+                push(@supptables, "LEFT JOIN longdescs comment_$table " .
+                                  "ON comment_$table.who = bugs.assigned_to " .
+                                  "AND comment_$table.bug_id = bugs.bug_id " .
+                                  "AND comment_$table.bug_when > $cutoff");
+                push(@supptables, "LEFT JOIN bugs_activity activity_$table " .
+                                  "ON (activity_$table.who = bugs.assigned_to " .
+                                  "OR activity_$table.fieldid = $assigned_fieldid) " .
+                                  "AND activity_$table.bug_id = bugs.bug_id " .
+                                  "AND activity_$table.bug_when > $cutoff");
+                if ($t =~ /greater/) {
+                    push(@wherepart, "(comment_$table.who IS NULL " .
+                                     "AND activity_$table.who IS NULL)");
+                } else {
+                    push(@wherepart, "(comment_$table.who IS NOT NULL " .
+                                     "OR activity_$table.who IS NOT NULL)");
+                }
+                $term = "0=0";
+         },
 
          ",equals" => sub {
              $term = "$ff = $q";
