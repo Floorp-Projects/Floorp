@@ -606,6 +606,15 @@ function my_unknown (e)
 {
     e.params.shift(); /* remove the code */
     e.params.shift(); /* and the dest. nick (always me) */
+    
+    // Handle random IRC numerics automatically.
+    var msg = getMsg("msg.err.irc." + e.code, null, "");
+    if (msg)
+    {
+        this.display(msg);
+        return;
+    }
+    
         /* if it looks like some kind of "end of foo" code, and we don't
          * already have a mapping for it, make one up */
     var length = e.params.length;
