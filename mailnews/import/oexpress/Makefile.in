@@ -60,7 +60,6 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= \
 		nsOEImport.cpp			\
-		nsOEFactory.cpp  		\
 		nsOEScanBoxes.cpp		\
 		nsOEMailbox.cpp			\
 		nsOEAddressIterator.cpp		\
