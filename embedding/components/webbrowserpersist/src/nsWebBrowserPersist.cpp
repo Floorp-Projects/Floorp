@@ -255,6 +255,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SetPersistFlags(PRUint32 aPersistFlags)
 {
     mPersistFlags = aPersistFlags;
     mReplaceExisting = (mPersistFlags & PERSIST_FLAGS_REPLACE_EXISTING_FILES) ? PR_TRUE : PR_FALSE;
+    mSerializingOutput = (mPersistFlags & PERSIST_FLAGS_SERIALIZE_OUTPUT) ? PR_TRUE : PR_FALSE;
     return NS_OK;
 }
 
@@ -382,54 +383,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(
 
     if (NS_SUCCEEDED(rv) && datapathAsURI)
     {
-        // Count how many URIs in the URI map require persisting
-        PRUint32 urisToPersist = 0;
-        if (mURIMap.Count() > 0)
-        {
-            mURIMap.Enumerate(EnumCountURIsToPersist, &urisToPersist);
-        }
-
-        if (urisToPersist > 0)
-        {
-            // Persist each file in the uri map. The document(s)
-            // will be saved after the last one of these is saved.
-            mURIMap.Enumerate(EnumPersistURIs, this);
-        }
-
-        if (mOutputMap.Count() == 0)
-        {
-            // There are no URIs to save, so just save the document(s)
-
-            // State start notification
-            if (mProgressListener)
-            {
-                mProgressListener->OnStateChange(nsnull, nsnull,
-                    nsIWebProgressListener::STATE_START |
-                        nsIWebProgressListener::STATE_IS_NETWORK,
-                    NS_OK);
-            }
-
-            rv = SaveDocuments();
-            if (NS_FAILED(rv))
-                EndDownload(rv);
-            else
-            {
-                // local files won't trigger OnStopRequest so we call EndDownload here
-                PRBool isFile = PR_FALSE;
-                fileAsURI->SchemeIs("file", &isFile);
-                if (isFile)
-                    EndDownload(NS_OK);
-            }
-
-            // State stop notification
-            if (mProgressListener)
-            {
-                mProgressListener->OnStateChange(nsnull, nsnull,
-                    nsIWebProgressListener::STATE_STOP |
-                        nsIWebProgressListener::STATE_IS_NETWORK,
-                    NS_OK);
-            }
-        }
+        rv = SaveGatheredURIs(fileAsURI);
     }
     else if (mProgressListener)
     {
@@ -439,7 +393,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(
                                          NS_OK);
         mProgressListener->OnStateChange(nsnull, nsnull,
                                          nsIWebProgressListener::STATE_STOP,
-                                         NS_OK);
+                                         rv);
     }
 
     return rv;
@@ -483,6 +437,88 @@ nsWebBrowserPersist::StartUpload(nsIStorageStream *storStream,
 
     return NS_OK;
 }
+
+nsresult
+nsWebBrowserPersist::SaveGatheredURIs(nsIURI *aFileAsURI)
+{
+    nsresult rv = NS_OK;
+
+    // Count how many URIs in the URI map require persisting
+    PRUint32 urisToPersist = 0;
+    if (mURIMap.Count() > 0)
+    {
+        mURIMap.Enumerate(EnumCountURIsToPersist, &urisToPersist);
+    }
+
+    if (urisToPersist > 0)
+    {
+        // Persist each file in the uri map. The document(s)
+        // will be saved after the last one of these is saved.
+        mURIMap.Enumerate(EnumPersistURIs, this);
+    }
+
+    // if we don't have anything in mOutputMap (added from above enumeration)
+    // then we build the doc list (SaveDocuments)
+    if (mOutputMap.Count() == 0)
+    {
+        // There are no URIs to save, so just save the document(s)
+
+        // State start notification
+        PRUint32 addToStateFlags = 0;
+        if (mProgressListener)
+        {
+            if (mJustStartedLoading)
+            {
+                addToStateFlags |= nsIWebProgressListener::STATE_IS_NETWORK;
+            }
+            mProgressListener->OnStateChange(nsnull, nsnull,
+                nsIWebProgressListener::STATE_START | addToStateFlags, NS_OK);
+        }
+
+        rv = SaveDocuments();
+        if (NS_FAILED(rv))
+            EndDownload(rv);
+        else if (aFileAsURI)
+        {
+            // local files won't trigger OnStopRequest so we call EndDownload here
+            PRBool isFile = PR_FALSE;
+            aFileAsURI->SchemeIs("file", &isFile);
+            if (isFile)
+                EndDownload(NS_OK);
+        }
+
+        // State stop notification
+        if (mProgressListener)
+        {
+            mProgressListener->OnStateChange(nsnull, nsnull,
+                nsIWebProgressListener::STATE_STOP | addToStateFlags, rv);
+        }
+    }
+
+    return rv;
+}
+
+// this method returns true if there is another file to persist and false if not
+PRBool
+nsWebBrowserPersist::SerializeNextFile()
+{
+    if (!mSerializingOutput)
+    {
+        return PR_FALSE;
+    }
+
+    nsresult rv = SaveGatheredURIs(nsnull);
+    if (NS_FAILED(rv))
+    {
+        return PR_FALSE;
+    }
+
+    return (mURIMap.Count() 
+        || mUploadList.Count()
+        || mDocList.Count()
+        || mOutputMap.Count());
+}
+
 
 //*****************************************************************************
 // nsWebBrowserPersist::nsIRequestObserver
@@ -552,6 +588,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(
             mOutputMap.Remove(&key);
 
             // cancel; we don't need to know any more
+            // stop request will get called
             request->Cancel(NS_BINDING_ABORTED);
         }
     }
@@ -581,18 +618,28 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(
             mUploadList.Remove(&key);
         }
     }
-    if (mOutputMap.Count() == 0 && !mCancel && !mStartSaving)
+
+    // ensure we call SaveDocuments if we:
+    // 1) aren't canceling
+    // 2) we haven't triggered the save (which we only want to trigger once)
+    // 3) we aren't serializing (which will call it inside SerializeNextFile)
+    if (mOutputMap.Count() == 0 && !mCancel && !mStartSaving 
+    && !mSerializingOutput)
     {
-        mStartSaving = PR_TRUE;
         nsresult rv = SaveDocuments();
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
     }
 
     PRBool completed = PR_FALSE;
-    if (mOutputMap.Count() == 0 && (mUploadList.Count() == 0)
-        && mDocList.Count() == 0)
+    if (mOutputMap.Count() == 0 && mUploadList.Count() == 0)
     {
-        completed = PR_TRUE;
+        // if no documents left in mDocList, --> done
+        // if we have no files left to serialize and no error result, --> done
+        if (mDocList.Count() == 0
+            || (!SerializeNextFile() && NS_SUCCEEDED(mPersistResult)))
+        {
+            completed = PR_TRUE;
+        }
     }
 
     if (completed)
@@ -700,11 +747,15 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
 
         PRInt32 channelContentLength = -1;
         if (!cancel &&
-            NS_SUCCEEDED(channel->GetContentLength(&channelContentLength)) &&
-            channelContentLength != -1)
+            NS_SUCCEEDED(channel->GetContentLength(&channelContentLength)))
         {
-            if ((channelContentLength - (aOffset + aLength)) == 0)
+            // if we get -1 at this point, we didn't get content-length header
+            // assume that we got all of the data and push what we have; 
+            // that's the best we can do now
+            if ((-1 == channelContentLength) ||
+                ((channelContentLength - (aOffset + aLength)) == 0))
             {
+                NS_ASSERTION(channelContentLength != -1, "no content length");
                 // we're done with this pass; see if we need to do upload
                 nsCAutoString contentType;
                 channel->GetContentType(contentType);
@@ -1371,6 +1422,8 @@ nsresult nsWebBrowserPersist::SaveDocuments()
 {
     nsresult rv = NS_OK;
 
+    mStartSaving = PR_TRUE;
+
     // Iterate through all queued documents, saving them to file and fixing
     // them up on the way.
 
@@ -1422,6 +1475,10 @@ nsresult nsWebBrowserPersist::SaveDocuments()
 
         if (NS_FAILED(rv))
             break;
+
+        // if we're serializing, bail after first iteration of loop
+        if (mSerializingOutput)
+            break;
     }
 
     // delete, cleanup regardless of errors (bug 132417)
@@ -1429,8 +1486,17 @@ nsresult nsWebBrowserPersist::SaveDocuments()
     {
         DocData *docData = (DocData *) mDocList.ElementAt(i);
         delete docData;
+        if (mSerializingOutput)
+        {
+            mDocList.RemoveElementAt(i);
+            break;
+        }
     }
-    mDocList.Clear();
+
+    if (!mSerializingOutput)
+    {
+        mDocList.Clear();
+    }
 
     return rv;
 }
@@ -1806,6 +1872,9 @@ nsWebBrowserPersist::EnumPersistURIs(nsHashKey *aKey, void *aData, void* closure
     data->mSaved = PR_TRUE;
 
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+    if (pthis->mSerializingOutput)
+        return PR_FALSE;
 
     return PR_TRUE;
 }
