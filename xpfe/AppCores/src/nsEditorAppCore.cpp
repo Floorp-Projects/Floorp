@@ -525,11 +525,12 @@ nsEditorAppCore::RemoveTextProperty(const nsString& aAttr)
 }
 
 NS_IMETHODIMP
-nsEditorAppCore::GetTextProperty(const nsString& aAttr, PRBool* aAnyHas, PRBool* aAllHas)
+nsEditorAppCore::GetTextProperty(const nsString& aAttr, PRBool* aFirstHas, PRBool* aAnyHas, PRBool* aAllHas)
 {
 	nsIAtom		*styleAtom = nsnull;
 	nsresult	err = NS_NOINTERFACE;
 
+  PRBool		firstOfSelectionHasProp = PR_FALSE;
 	PRBool		anyOfSelectionHasProp = PR_FALSE;
 	PRBool		allOfSelectionHasProp = PR_FALSE;
 	
@@ -542,23 +543,24 @@ nsEditorAppCore::GetTextProperty(const nsString& aAttr, PRBool* aAnyHas, PRBool*
 				// should we allow this?
 				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
 				if (textEditor)
-					err = textEditor->GetTextProperty(styleAtom, anyOfSelectionHasProp, allOfSelectionHasProp);
+					err = textEditor->GetTextProperty(styleAtom, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
 			}
 			break;
 		case eHTMLTextEditorType:
 			{
 				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
 				if (htmlEditor)
-					err = htmlEditor->GetTextProperty(styleAtom, anyOfSelectionHasProp, allOfSelectionHasProp);
+					err = htmlEditor->GetTextProperty(styleAtom, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
 			}
 			break;
 		default:
 			err = NS_ERROR_NOT_IMPLEMENTED;
 	}
 
+  if (aFirstHas) *aFirstHas = firstOfSelectionHasProp;
 	if (aAnyHas) *aAnyHas = anyOfSelectionHasProp;
 	if (aAllHas) *aAllHas = allOfSelectionHasProp;
-	
+  	
 	NS_RELEASE(styleAtom);
 	return err;
 }

@@ -45,7 +45,7 @@ public:
 
   NS_IMETHOD    RemoveTextProperty(const nsString& aAttr)=0;
 
-  NS_IMETHOD    GetTextProperty(const nsString& aAttr, PRBool* aAnyHas, PRBool* aAllHas)=0;
+  NS_IMETHOD    GetTextProperty(const nsString& aAttr, PRBool* aFirstHas, PRBool* aAnyHas, PRBool* aAllHas)=0;
 
   NS_IMETHOD    Undo()=0;
 
@@ -87,7 +87,7 @@ public:
   NS_IMETHOD    SetEditorType(const nsString& aEditorType);  \
   NS_IMETHOD    SetTextProperty(const nsString& aAttr);  \
   NS_IMETHOD    RemoveTextProperty(const nsString& aAttr);  \
-  NS_IMETHOD    GetTextProperty(const nsString& aAttr, PRBool* aAnyHas, PRBool* aAllHas);  \
+  NS_IMETHOD    GetTextProperty(const nsString& aAttr, PRBool* aFirstHas, PRBool* aAnyHas, PRBool* aAllHas);  \
   NS_IMETHOD    Undo();  \
   NS_IMETHOD    Redo();  \
   NS_IMETHOD    Cut();  \
@@ -113,7 +113,7 @@ public:
   NS_IMETHOD    SetEditorType(const nsString& aEditorType) { return _to##SetEditorType(aEditorType); }  \
   NS_IMETHOD    SetTextProperty(const nsString& aAttr) { return _to##SetTextProperty(aAttr); }  \
   NS_IMETHOD    RemoveTextProperty(const nsString& aAttr) { return _to##RemoveTextProperty(aAttr); }  \
-  NS_IMETHOD    GetTextProperty(const nsString& aAttr, PRBool* aAnyHas, PRBool* aAllHas) { return _to##GetTextProperty(aAttr, aAnyHas, aAllHas); }  \
+  NS_IMETHOD    GetTextProperty(const nsString& aAttr, PRBool* aFirstHas, PRBool* aAnyHas, PRBool* aAllHas) { return _to##GetTextProperty(aAttr, aFirstHas, aAnyHas, aAllHas); }  \
   NS_IMETHOD    Undo() { return _to##Undo(); }  \
   NS_IMETHOD    Redo() { return _to##Redo(); }  \
   NS_IMETHOD    Cut() { return _to##Cut(); }  \

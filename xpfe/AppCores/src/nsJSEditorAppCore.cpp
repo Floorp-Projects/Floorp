@@ -277,6 +277,7 @@ EditorAppCoreGetTextProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   nsAutoString b0;
   PRBool b1;
   PRBool b2;
+  PRBool b3;
 
   *rval = JSVAL_NULL;
 
@@ -285,7 +286,7 @@ EditorAppCoreGetTextProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
     return JS_TRUE;
   }
 
-  if (argc >= 3) {
+  if (argc >= 4) {
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -297,14 +298,18 @@ EditorAppCoreGetTextProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->GetTextProperty(b0, &b1, &b2)) {		// idlc bug
+    if (!nsJSUtils::nsConvertJSValToBool(&b3, cx, argv[3])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->GetTextProperty(b0, &b1, &b2, &b3)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function getTextProperty requires 3 parameters");
+    JS_ReportError(cx, "Function getTextProperty requires 4 parameters");
     return JS_FALSE;
   }
 
@@ -907,7 +912,7 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"setEditorType",          EditorAppCoreSetEditorType,     1},
   {"setTextProperty",          EditorAppCoreSetTextProperty,     1},
   {"removeTextProperty",          EditorAppCoreRemoveTextProperty,     1},
-  {"getTextProperty",          EditorAppCoreGetTextProperty,     3},
+  {"getTextProperty",          EditorAppCoreGetTextProperty,     4},
   {"undo",          EditorAppCoreUndo,     0},
   {"redo",          EditorAppCoreRedo,     0},
   {"cut",          EditorAppCoreCut,     0},
