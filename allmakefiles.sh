@@ -869,6 +869,7 @@ other-licenses/branding/firefox/content/Makefile
 
 MAKEFILES_thunderbird_branding="
 other-licenses/branding/thunderbird/Makefile
+other-licenses/branding/thunderbird/content/Makefile
 "
 
 MAKEFILES_phoenix="
