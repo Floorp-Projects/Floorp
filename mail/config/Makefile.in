@@ -27,23 +27,18 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT)
-  BASEMAIL = basemail-win
+	BASEMAIL = basemail-win
+	PREF = pref-win
+	INSPECTOR = inspector-win
+	_PLATFORM = dos
 else
-  BASEMAIL = basemail-unix
+	BASEMAIL = basemail-unix
+	PREF = pref-unix
+	INSPECTOR = inspector-unix
+	_PLATFORM = unix
 endif
-
-
-# packaging file for the pref extension which is optional
-PREF = pref-win
-INSPECTOR = inspector-win
 
 APP_NAME=thunderbird
-
-ifeq ($(OS_ARCH),WINNT)
-  _PLATFORM = dos
-else
-  _PLATFORM = unix
-endif
 
 mail_chrome: mail-jar.mn
 
