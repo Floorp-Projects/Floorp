@@ -75,39 +75,39 @@ div {
 }
 h1 {
   display: block;
-  font-size: xx-large;
+  font-size: 2em;
   font-weight: bold;
-  margin: 1em 0;
+  margin: .67em 0;
 }
 h2 {
   display: block;
-  font-size: x-large;
+  font-size: 1.5em;
   font-weight: bold;
-  margin: 1em 0;
+  margin: .83em 0;
 }
 h3 {
   display: block;
-  font-size: large;
+  font-size: 1.17em;
   font-weight: bold;
   margin: 1em 0;
 }
 h4 {
   display: block;
-  font-size: medium;
   font-weight: bold;
-  margin: 1em 0;
+  margin: 1.33em 0;
 }
 h5 {
   display: block;
-  font-size: small;
+  font-size: 0.83em;
   font-weight: bold;
-  margin: 1em 0;
+  line-height: 1.17em;
+  margin: 1.67em 0;
 }
 h6 {
   display: block;
-  font-size: x-small;
+  font-size: 0.67em;
   font-weight: bold;
-  margin: 1em 0;
+  margin: 2.33em 0;
 }
 layer {
   display: block;
