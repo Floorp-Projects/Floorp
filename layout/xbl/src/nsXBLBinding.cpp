@@ -854,7 +854,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
             // destruction of any initial value that might be set.
             // This means we only have to worry about defining the getter
             // or setter.
-            rv = ::JS_DefineUCProperty(cx, (JSObject*)mScriptObject, name.GetUnicode(), 
+            ::JS_DefineUCProperty(cx, (JSObject*)mScriptObject, name.GetUnicode(), 
                                        name.Length(), JSVAL_VOID,
                                        (JSPropertyOp) getFunc, 
                                        (JSPropertyOp) setFunc, 
@@ -887,7 +887,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
               
               if (!undefined) {
                 // Define that value as a property
-                rv = ::JS_DefineUCProperty(cx, (JSObject*)mScriptObject, name.GetUnicode(), 
+                ::JS_DefineUCProperty(cx, (JSObject*)mScriptObject, name.GetUnicode(), 
                                            name.Length(), result,
                                            nsnull, nsnull,
                                            attrs); 

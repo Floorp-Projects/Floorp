@@ -115,8 +115,10 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding )
     mBindingTable = new nsSupportsHashtable;
 
   nsISupportsKey key(aContent);
-  if (aBinding)
-    mBindingTable->Put(&key, aBinding);
+  if (aBinding) {
+    nsIXBLBinding* oldBinding = NS_STATIC_CAST(nsIXBLBinding*, mBindingTable->Put(&key, aBinding));
+    NS_IF_RELEASE(oldBinding);
+  }
   else
     mBindingTable->Remove(&key);
 
