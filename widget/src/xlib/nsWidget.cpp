@@ -134,10 +134,6 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
   mBounds = aRect;
   // call the native create function
   CreateNative(parent, mBounds);
-  // set up the GC for this window.
-  if (!mBaseWindow)
-    printf("*** warning: this is about to fail...\n");
-  mGC = XCreateGC(gDisplay, mBaseWindow, 0, NULL);
   XSync(gDisplay, False);
   return NS_OK;
 }
@@ -407,6 +403,11 @@ void nsWidget::CreateNative(Window aParent, nsRect aRect)
     attr_mask |= CWColormap;
 
   CreateNativeWindow(aParent, mBounds, attr, attr_mask);
+  // set up the GC for this window.
+  if (!mBaseWindow)
+    printf("*** warning: this is about to fail...\n");
+  mGC = XCreateGC(gDisplay, mBaseWindow, 0, NULL);
+
 }
                             
 

@@ -140,21 +140,7 @@ PRBool nsScrollbar::OnPaint(nsPaintEvent &event)
   PRBool result;
   nsRect scrollRect;
   printf("nsScrollbar::OnPaint\n");
-  // create a rendering context for this window
-  static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-  static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-  if (nsnull == mRenderingContext) {
-    if (NS_OK != nsComponentManager::CreateInstance(kRenderingContextCID,
-                                                    nsnull,
-                                                    kRenderingContextIID,
-                                                    (void **)&mRenderingContext)) {
-      // oy vey!
-      printf("Oh, dear.  I couldn't create an nsRenderingContext for this scrollbar.  All hell is about to break loose.\n");
-    }
-    mRenderingContext->Init(mContext, this);
-  }
   // draw the scrollbar itself
-  mRenderingContext->SetColor(NS_RGB(0,0,0));
   scrollRect.x = 0;
   scrollRect.y = 0;
   scrollRect.width = mBounds.width/2;
@@ -163,7 +149,9 @@ PRBool nsScrollbar::OnPaint(nsPaintEvent &event)
          mBounds.width, mBounds.height);
   printf("About to fill rect %d %d\n",
          scrollRect.width, scrollRect.height);
-  mRenderingContext->FillRect(scrollRect);
+  if (mRenderingContext) {
+    mRenderingContext->FillRect(scrollRect);
+  }
   result = PR_FALSE;
   return result;
 }
@@ -207,4 +195,22 @@ void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
     attr_mask |= CWColormap;
 
   CreateNativeWindow(aParent, mBounds, attr, attr_mask);
+
+  // set up the GC for this window.
+  if (!mBaseWindow)
+    printf("*** warning: this is about to fail...\n");
+  mGC = XCreateGC(gDisplay, mBaseWindow, 0, NULL);
+
+  // create a rendering context for this window
+  static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
+  static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
+  if (NS_OK != nsComponentManager::CreateInstance(kRenderingContextCID,
+                                                  nsnull,
+                                                  kRenderingContextIID,
+                                                  (void **)&mRenderingContext)) {
+    // oy vey!
+    printf("Oh, dear.  I couldn't create an nsRenderingContext for this scrollbar.  All hell is about to break loose.\n");
+  }
+  mRenderingContext->Init(mContext, this);
+  mRenderingContext->SetColor(NS_RGB(0,0,0));
 }
