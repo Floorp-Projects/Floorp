@@ -435,28 +435,10 @@ nsImageControlFrame::GetCursor(nsIPresContext* aPresContext,
 void
 nsImageControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
-  PRInt32 type;
-  GetType(&type);
-
-  if ((nsnull != mFormFrame) && !nsFormFrame::GetDisabled(this)) {
-    nsIContent *formContent = nsnull;
-    mFormFrame->GetContent(&formContent);
-
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event;
-    event.eventStructType = NS_EVENT;
-    event.message = NS_FORM_SUBMIT;
-    if (nsnull != formContent) {
-      nsCOMPtr<nsIPresShell> shell;
-      nsresult result = aPresContext->GetShell(getter_AddRefs(shell));
-      if (NS_SUCCEEDED(result) && shell) {
-        shell->HandleDOMEventWithTarget(formContent, &event, &status);
-      }
-      NS_RELEASE(formContent);
-    }
-    if (nsEventStatus_eConsumeNoDefault != status) {
-      mFormFrame->OnSubmit(aPresContext, this);
-    }
+  if (nsnull != mFormFrame && !nsFormFrame::GetDisabled(this)) {
+    // Do Submit & DOM Processing
+    nsFormControlHelper::DoManualSubmitOrReset(aPresContext, nsnull, 
+                                               mFormFrame, this, PR_TRUE, PR_TRUE); 
   } 
 }
 

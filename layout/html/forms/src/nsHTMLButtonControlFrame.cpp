@@ -331,36 +331,20 @@ void
 nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
   if ((nsnull != mFormFrame) && !nsFormFrame::GetDisabled(this)) {
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event;
-    event.eventStructType = NS_EVENT;
-    nsIContent *formContent = nsnull;
-    mFormFrame->GetContent(&formContent);
+    PRInt32 type;
+    GetType(&type);
 
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
-    if (presShell) {
-      PRInt32 type;
-      GetType(&type);
-      if (IsReset(type) == PR_TRUE) {
-        event.message = NS_FORM_RESET;
-        presShell->HandleEventWithTarget(&event, nsnull, formContent, NS_EVENT_FLAG_INIT, &status);
-        if (nsEventStatus_eConsumeNoDefault != status && mFormFrame) {
-          mFormFrame->OnReset(aPresContext);
-        }
-      }
-      else if (IsSubmit(aPresContext, type) == PR_TRUE) {
-        event.message = NS_FORM_SUBMIT;
-        presShell->HandleEventWithTarget(&event, nsnull, formContent, NS_EVENT_FLAG_INIT, &status);
-        if (nsEventStatus_eConsumeNoDefault != status && mFormFrame) {
-          mFormFrame->OnSubmit(aPresContext, this);
-        }
-      }
+    if (IsReset(type) == PR_TRUE) {
+      // do Reset & Frame processing of event
+      nsFormControlHelper::DoManualSubmitOrReset(aPresContext, nsnull, mFormFrame, 
+                                                 this, PR_FALSE, PR_FALSE); 
     }
- 
-    NS_IF_RELEASE(formContent);
+    else if (IsSubmit(aPresContext, type) == PR_TRUE) {
+      // do Submit & Frame processing of event
+      nsFormControlHelper::DoManualSubmitOrReset(aPresContext, nsnull, mFormFrame, 
+                                                 this, PR_TRUE, PR_FALSE); 
+    }
   }
-
 }
 
 void 

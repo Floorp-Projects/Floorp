@@ -182,6 +182,15 @@ public:
   static const char * GetHTMLPropertiesFileName() { return FORM_PROPERTIES; }
 
   static nsresult GetDisabled(nsIContent* aContent, PRBool* oIsDisabled);
+
+  // If the PresShell is null then the PresContext will get its own and use it
+  static nsresult DoManualSubmitOrReset(nsIPresContext* aPresContext,
+                                        nsIPresShell*   aPresShell,
+                                        nsIFrame*       aFormFrame,
+                                        nsIFrame*       aFormControlFrame,
+                                        PRBool          aDoSubmit,     // Submit = TRUE, Reset = FALSE
+                                        PRBool          aDoDOMEvent);
+
 //
 //-------------------------------------------------------------------------------------
 //  Utility methods for managing checkboxes and radiobuttons
