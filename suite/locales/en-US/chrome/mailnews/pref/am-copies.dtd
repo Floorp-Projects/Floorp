@@ -2,7 +2,7 @@
 
 <!ENTITY copyAndFolderTitle.label "Copy and Folder settings">
 <!ENTITY sendingPrefix.label "When sending messages, automatically ">
-<!ENTITY fccLocalSent.label "Place a copy in folder Sent on Local Mail ">
+<!ENTITY fccMailFolder.label "Place a copy in:">
 <!ENTITY chooseFolderButton.label "Choose Folder...">
 <!ENTITY bccAccount.label "Bcc ">
 <!ENTITY bccAddress.label "Bcc these addresses:">

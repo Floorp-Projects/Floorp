@@ -58,10 +58,25 @@ function setDivText(divid, str) {
 }
 
 function getFolder(uri) {
+    dump("uri = " + uri + "\n");
     if (uri) {
-        var res = RDF.GetResource(uri);
-        if (res)
-            return res.QueryInterface(Components.interfaces.nsIMsgFolder);
+	var res = null;
+	try {
+        	res = RDF.GetResource(uri);
+        }
+	catch (ex) {
+		dump("GetResource of this uri failed: " + uri + "\n");
+		return null;
+	}
+        if (res) {
+		try {
+            		return res.QueryInterface(Components.interfaces.nsIMsgFolder);
+		}
+		catch (ex) {
+			dump(uri + " was not a nsIMsgFolder\n");
+			return null;
+		}
+	}
     }
     return null;
 }

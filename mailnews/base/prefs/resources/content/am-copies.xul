@@ -19,7 +19,8 @@
 
   <box align="horizontal">
     <html:input name="identity.doFcc" type="checkbox"/>
-    <html:div>&fccLocalSent.label;</html:div>
+    <html:div>&fccMailFolder.label;</html:div>
+    <html:input type="text" name="identity.fccFolder"/> 
     <spring flex="100%"/>
     <titledbutton value="&chooseFolderButton.label;"/>
   </box>
@@ -32,7 +33,7 @@
   <box align="horizontal">
     <html:input name="identity.bccOthers" type="checkbox"/>
     <html:div>&bccAddress.label;</html:div>
-    <html:input type="text"/>
+    <html:input type="text" name="identity.bccList"/> 
   </box>
 </box>
 
@@ -40,19 +41,19 @@
 <box align="vertical" class="cleanborder" flex="100%">
   <box align="horizontal">
     <html:div>&draftMailFolder.label;</html:div>
-    <html:div id="identity.drafts"/>
+    <html:input type="text" name="identity.draftFolder"/> 
     <spring flex="100%"/>
     <titledbutton value="&chooseFolderButton.label;"/>
   </box>
   <box align="horizontal">
     <html:div>&templateMailFolder.label;</html:div>
-    <html:div id="identity.stationary"/>
+    <html:input type="text" name="identity.stationaryFolder"/> 
     <spring flex="100%"/>
     <titledbutton value="&chooseFolderButton.label;"/>
   </box>
   <box align="horizontal">
     <html:div>&junkMailFolder.label;</html:div>
-    <html:div id="identity.junkmail"/>
+    <html:input type="text" name="identity.junkMailFolder"/> 
     <spring flex="100%"/>
     <titledbutton value="&chooseFolderButton.label;"/>
   </box>
