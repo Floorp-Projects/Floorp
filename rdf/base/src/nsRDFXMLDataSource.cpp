@@ -112,7 +112,7 @@ static NS_DEFINE_IID(kIParserIID,            NS_IPARSER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID,    NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
 
-static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID); // XXX
+static NS_DEFINE_CID(kParserCID,                NS_PARSER_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFContentSinkCID,        NS_RDFCONTENTSINK_CID);

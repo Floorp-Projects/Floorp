@@ -69,7 +69,7 @@
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kXMLDocumentCID,             NS_XMLDOCUMENT_CID);
-static NS_DEFINE_CID(kParserCID,                  NS_PARSER_IID); // XXX What's up with this???
+static NS_DEFINE_CID(kParserCID,                  NS_PARSER_CID);
 
 class nsXBLDocumentInfo : public nsIXBLDocumentInfo, public nsSupportsWeakReference
 {

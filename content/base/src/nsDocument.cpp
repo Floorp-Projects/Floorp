@@ -114,7 +114,7 @@
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_CID(kPresShellCID, NS_PRESSHELL_CID);
-static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 #include "nsILineBreakerFactory.h"
 #include "nsIWordBreakerFactory.h"

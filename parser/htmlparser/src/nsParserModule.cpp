@@ -134,7 +134,7 @@ nsParserService::IsBlock(PRInt32 aId, PRBool& aIsBlock) const
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_CID(kParserCID, NS_PARSER_IID);
+static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 static NS_DEFINE_CID(kLoggingSinkCID, NS_LOGGING_SINK_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);

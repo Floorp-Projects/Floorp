@@ -446,7 +446,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
      }
   }
 
-  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+  static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
   rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
                                           NS_GET_IID(nsIParser), 

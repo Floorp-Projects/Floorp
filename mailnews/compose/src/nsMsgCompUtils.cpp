@@ -1964,7 +1964,7 @@ ERROR_OUT:
 #include "nsIContentSink.h"
 #include "nsICharsetConverterManager.h"
 
-static NS_DEFINE_CID(kCParserCID, NS_PARSER_IID); 
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID); 
 
 /**
  * Converts a buffer to plain text. Some conversions may

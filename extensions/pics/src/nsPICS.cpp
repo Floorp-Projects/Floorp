@@ -1365,7 +1365,7 @@ nsresult
 nsPICS::GetRootURL(nsIURI* aURL)
 {
 	static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-	static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+	static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 	nsresult rv;
 	nsIParser *mParser;

@@ -52,7 +52,7 @@ static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 
 static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 const  int            gTabSize=2;
 

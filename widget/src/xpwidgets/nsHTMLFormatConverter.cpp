@@ -42,7 +42,7 @@
 #include "nsIDocumentEncoder.h"
 #include "nsIHTMLToTextSink.h"
 
-static NS_DEFINE_CID(kCParserCID, NS_PARSER_IID);  // don't panic. NS_PARSER_IID just has the wrong name.
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 NS_IMPL_ADDREF(nsHTMLFormatConverter)
 NS_IMPL_RELEASE(nsHTMLFormatConverter)

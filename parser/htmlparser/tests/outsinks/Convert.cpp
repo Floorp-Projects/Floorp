@@ -42,7 +42,7 @@ extern "C" void NS_SetupRegistry();
 #endif
 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
-static NS_DEFINE_CID(kParserCID, NS_PARSER_IID); // don't panic. NS_PARSER_IID just has the wrong name.
+static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
 int
 Compare(nsString& str, nsString& aFileName)

@@ -95,7 +95,7 @@ SetupRegistry(void)
     nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
     // parser
-    static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID);
+    static NS_DEFINE_CID(kParserCID,                NS_PARSER_CID);
     static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
 
     nsComponentManager::RegisterComponent(kParserCID,                NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);

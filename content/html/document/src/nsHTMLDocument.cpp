@@ -110,7 +110,6 @@
 #include "nsHTMLParts.h" //for createelementNS
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
-static NS_DEFINE_CID(kHTMLStyleSheetCID,NS_HTMLSTYLESHEET_CID);
 
 #define DETECTOR_CONTRACTID_MAX 127
 static char g_detector_contractid[DETECTOR_CONTRACTID_MAX + 1];
@@ -147,6 +146,10 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
+
+static NS_DEFINE_CID(kHTMLStyleSheetCID,NS_HTMLSTYLESHEET_CID);
 
 nsIRDFService* nsHTMLDocument::gRDF;
 nsrefcnt       nsHTMLDocument::gRefCntRDFService = 0;
@@ -626,8 +629,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
         }
       }
   }
-
-  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
   if (needsParser) {
     rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
@@ -2131,8 +2132,6 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
   result = Reset(channel, group);
   if (NS_FAILED(result)) return result;
   if (NS_OK == result) {
-    static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-    
     result = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
                                                 NS_GET_IID(nsIParser), 
                                                 (void **)&mParser);

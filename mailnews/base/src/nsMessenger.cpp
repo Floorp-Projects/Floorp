@@ -134,7 +134,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #include "nsIContentSink.h"
 #include "nsIHTMLToTextSink.h"
 
-static NS_DEFINE_CID(kCParserCID, NS_PARSER_IID);
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 static nsresult
 ConvertBufToPlainText(nsString &aConBuf)

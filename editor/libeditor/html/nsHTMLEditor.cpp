@@ -117,7 +117,7 @@ static NS_DEFINE_CID(kCRangeCID,      NS_RANGE_CID);
 static NS_DEFINE_CID(kCDOMSelectionCID,      NS_DOMSELECTION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID); 
-static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID); 
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID); 
 static NS_DEFINE_CID(kCTransitionalDTDCID,  NS_CTRANSITIONAL_DTD_CID);
 
 #if defined(NS_DEBUG) && defined(DEBUG_buster)

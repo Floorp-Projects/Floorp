@@ -280,7 +280,7 @@ extern "C" NS_EXPORT int DebugRobot(
     nsIParser* parser;
 
     static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-    static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+    static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
     rv = nsComponentManager::CreateInstance(kCParserCID, 
                                       nsnull, 

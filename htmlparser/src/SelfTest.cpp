@@ -117,7 +117,7 @@ void parseFile (const char* aFilename,int size)
     nsIParser* parser;
 
     static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-    static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+    static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
     nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
                                                nsnull, 
@@ -205,7 +205,7 @@ int main(int argc, char* argv [])
     strcpy(buffer,argv[1]);
   else _getcwd(buffer,_MAX_PATH);
 
-  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+  static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
   nsComponentManager::RegisterComponent(kCParserCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
 
   walkDirectoryTree(buffer);

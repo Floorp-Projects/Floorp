@@ -27,10 +27,9 @@
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 
-// XXX Should be _CID and not _IID
-#define NS_PARSER_IID      \
-  {0x2ce606b0, 0xbee6,  0x11d1,  \
-  {0xaa, 0xd9, 0x00,    0x80, 0x5f, 0x8a, 0x3e, 0x14}}
+// {2ce606b0-bee6-11d1-aad9-00805f8a3e14}
+#define NS_PARSER_CID      \
+{ 0x2ce606b0, 0xbee6, 0x11d1, { 0xaa, 0xd9, 0x0, 0x80, 0x5f, 0x8a, 0x3e, 0x14 } }
 
 // XXX: This object should not be exposed outside of the parser.
 //      Remove when CNavDTD subclasses do not need access

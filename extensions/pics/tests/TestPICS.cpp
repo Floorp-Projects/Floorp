@@ -33,7 +33,7 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kIOServiceCID, NS_IOSERVICE_CID);
 
 static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 
 PRInt32 main(PRInt32 argc, char *argv[])

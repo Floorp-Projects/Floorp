@@ -101,7 +101,7 @@ static NS_DEFINE_CID(kRDFContentSinkCID,        NS_RDFCONTENTSINK_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,      NS_RDFXMLDATASOURCE_CID);
 
 // parser
-static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID);
+static NS_DEFINE_CID(kParserCID,                NS_PARSER_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
 
 // layout
