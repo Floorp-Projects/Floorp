@@ -167,7 +167,7 @@ nsWebShell::nsWebShell() : nsDocShell()
   ++gNumberOfWebShells;
 #endif
 #ifdef DEBUG
-    printf("WEBSHELL+ = %ld\n", gNumberOfWebShells);
+    printf("++WEBSHELL == %ld\n", gNumberOfWebShells);
 #endif
 
   mThread = nsnull;
@@ -213,7 +213,7 @@ nsWebShell::~nsWebShell()
   --gNumberOfWebShells;
 #endif
 #ifdef DEBUG
-  printf("WEBSHELL- = %ld\n", gNumberOfWebShells);
+  printf("--WEBSHELL == %ld\n", gNumberOfWebShells);
 #endif
 }
 
