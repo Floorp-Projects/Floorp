@@ -1474,7 +1474,7 @@ $vars->{'order'} = $order;
 my $login = $::COOKIE{'Bugzilla_login'};
 
 $vars->{'caneditbugs'} = UserInGroup('editbugs');
-$vars->{'usebuggroups'} = UserInGroup('usebuggroups');
+$vars->{'usebuggroups'} = Param('usebuggroups');
 
 # Whether or not this user is authorized to move bugs to another installation.
 $vars->{'ismover'} = 1
