@@ -265,6 +265,7 @@ nsMsgNewsFolder::Enumerate(nsIEnumerator **result)
   return NS_NewConjoiningEnumerator(folders, messages, 
                                     (nsIBidirectionalEnumerator**)result);
 #endif
+  return NS_OK;
 }
 
 nsresult
@@ -571,6 +572,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *folderName)
 	NS_IF_RELEASE(child);
 	return rv;
 #endif
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::RemoveSubFolder(nsIMsgFolder *which)

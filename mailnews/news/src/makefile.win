@@ -67,6 +67,9 @@ LINCS=							\
 		-I$(PUBLIC)\security	\
 		-I$(PUBLIC)\rdf			\
 		-I$(PUBLIC)\mime			\
+        -I$(PUBLIC)\pref     \
+        -I$(PUBLIC)\js     \
+        -I$(PUBLIC)\rdfutil  \
 		$(NULL)
 
 LCFLAGS = \

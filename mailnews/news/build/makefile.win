@@ -86,6 +86,7 @@ LLIBS=												\
 			$(DIST)\lib\msgcoreutil.lib				\
 			$(DIST)\lib\nntp.lib					\
 			$(DIST)\lib\netlib.lib					\
+			$(DIST)\lib\rdfutil_s.lib		\
 			$(LIBNSPR)								\
 			$(NULL)
 
@@ -100,6 +101,7 @@ LINCS=$(LINCS) -I,							\
 			   -I$(PUBLIC)\rdf				\
 			   -I$(PUBLIC)\netlib			\
 			   -I$(PUBLIC)\dom				\
+			   -I$(PUBLIC)\rdfutil				\
  			    $(NULL)
 
 #//------------------------------------------------------------------------
