@@ -2587,6 +2587,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
 
     event.eventStructType = NS_MOUSE_EVENT;
     event.widget = aEvent->widget;
+    event.nativeMsg = nsnull;
     event.point = aEvent->point;
     event.refPoint = aEvent->refPoint;
     event.clickCount = aEvent->clickCount;
@@ -2616,6 +2617,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
         
         event2.eventStructType = NS_MOUSE_EVENT;
         event2.widget = aEvent->widget;
+        event2.nativeMsg = nsnull;
         event2.point = aEvent->point;
         event2.refPoint = aEvent->refPoint;
         event2.clickCount = aEvent->clickCount;
