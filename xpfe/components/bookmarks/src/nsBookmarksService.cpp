@@ -1641,13 +1641,13 @@ protected:
 	nsIRDFDataSource*		mInner;
 	PRBool				mBookmarksAvailable;
 	PRBool				mDirty;
-	nsCOMPtr<nsITimer>		mTimer;
 	PRBool				busySchedule;
 	nsCOMPtr<nsIRDFResource>	busyResource;
 	PRUint32			htmlSize;
 	nsCOMPtr<nsISupportsArray>      mObservers;
 	nsCOMPtr<nsIStringBundle>	mBundle;
 	nsString			mPersonalToolbarName;
+static	nsCOMPtr<nsITimer>		mTimer;
 
 #ifdef	XP_MAC
 	PRBool				mIEFavoritesAvailable;
@@ -1814,6 +1814,10 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
+
+
+
+nsCOMPtr<nsITimer>		nsBookmarksService::mTimer;
 
 
 
@@ -2194,8 +2198,6 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 	nsBookmarksService *bmks = NS_STATIC_CAST(nsBookmarksService *, aClosure);
 	if (!bmks)	return;
 
-	bmks->mTimer = nsnull;
-
 	if ((bmks->mBookmarksAvailable == PR_TRUE) && (bmks->mDirty == PR_TRUE))
 	{
 		bmks->Flush();
@@ -2218,24 +2220,22 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 			nsCOMPtr<nsIURI>	uri;
 			if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(uri), url)))
 			{
-#if 0
-				rv = NS_OpenURI(NS_STATIC_CAST(nsIStreamListener *, bmks), nsnull, uri, nsnull);
-#else
 				nsCOMPtr<nsIChannel>	channel;
 				if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull)))
 				{
 					nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
 					if (httpChannel)
 					{
-						bmks->busySchedule = PR_TRUE;
 						bmks->htmlSize = 0;
 
 //						httpChannel->SetRequestMethod(HM_GET);
 						httpChannel->SetRequestMethod(HM_HEAD);
-						rv = channel->AsyncRead(bmks, nsnull);
+						if (NS_SUCCEEDED(rv = channel->AsyncRead(bmks, nsnull)))
+						{
+							bmks->busySchedule = TRUE;
+						}
 					}
 				}
-#endif
 			}
 		}
 	}
@@ -2246,12 +2246,16 @@ else
 	}
 #endif
 
-#ifndef REPEATING_TIMERS
-	// reschedule the timer
-	nsresult rv = NS_NewTimer(getter_AddRefs(bmks->mTimer));
-	if (NS_FAILED(rv)) return;
-	bmks->mTimer->Init(nsBookmarksService::FireTimer, bmks, /* repeat, */ BOOKMARK_TIMEOUT);
-	// Note: don't addref "bmks" as we'll cancel the timer in the nsBookmarkService destructor
+#ifndef	REPEATING_TIMERS
+	if (mTimer)
+	{
+		mTimer->Cancel();
+		mTimer = nsnull;
+	}
+	nsresult rv = NS_NewTimer(getter_AddRefs(mTimer));
+	if (NS_FAILED(rv) || (!mTimer)) return;
+	mTimer->Init(nsBookmarksService::FireTimer, bmks, BOOKMARK_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
+	// Note: don't addref "this" as we'll cancel the timer in the nsBookmarkService destructor
 #endif
 }
 
