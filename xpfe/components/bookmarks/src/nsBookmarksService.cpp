@@ -1584,7 +1584,7 @@ nsBookmarksService::ChangeURL(nsIRDFResource *aSource, nsIRDFResource *aProperty
 		if (!aProperty)	continue;
 
 		// don't copy URL property as it is special
-		if (aProperty == kNC_URL)	continue;
+		if (aProperty.get() == kNC_URL)	continue;
 
 		nsCOMPtr<nsIRDFNode>	aValue;
 		if (NS_SUCCEEDED(rv = GetTarget(newURLRes, aProperty, PR_TRUE, getter_AddRefs(aValue)))
@@ -1622,7 +1622,7 @@ nsBookmarksService::ChangeURL(nsIRDFResource *aSource, nsIRDFResource *aProperty
 		if (!aProperty)	continue;
 
 		// don't copy URL property as it is special
-		if (aProperty == kNC_URL)	continue;
+		if (aProperty.get() == kNC_URL)	continue;
 
 		nsCOMPtr<nsISimpleEnumerator>	srcList;
 		if (NS_FAILED(rv = GetSources(aProperty, oldURLRes, PR_TRUE,
