@@ -17,8 +17,6 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-//#ifdef ClientWallet
-
 /*
    wallet.cpp
 */
@@ -1891,38 +1889,151 @@ wallet_PostEdit() {
   }
 }
 
-PUBLIC void
-Wallet_AddToHTML(int* g_ptr, char* buffer, PRBool isNoCapture, char* listname)
-{
-  wallet_InitializeURLList();
-  XP_List *url_ptr = wallet_URL_list;
-  int urlNum = 0;
-  int preview_or_capture = isNoCapture ? NO_CAPTURE : NO_PREVIEW;
-  wallet_MapElement *url;
-  char* urlCString;
-  while ( (url=(wallet_MapElement *) XP_ListNextObject(url_ptr)) ) {
-    if (url->item2->CharAt(preview_or_capture) == 'y') {
-      urlCString = url->item1->ToNewCString();
-      (*g_ptr) += PR_snprintf(buffer+(*g_ptr), BUFLEN-(*g_ptr),
-"      if (!deleted_%s[%d]) {\n"
-"        top.frames[list_frame].document.write(\n"
-"                    \"<OPTION value=%d>\" +\n"
-"                      \"%s\" +\n"
-"                    \"</OPTION>\"\n"
-"        );\n"
-"      }\n",
-        listname, urlNum, urlNum, urlCString
-      );
-      delete[] urlCString;
+PRIVATE void
+wallet_FreeURL(wallet_MapElement *url) {
 
-      urlNum++;
+    if(!url) {
+        return;
     }
-  }
+    XP_ListRemoveObject(wallet_URL_list, url);
+    PR_FREEIF(url->item1);
+    PR_FREEIF(url->item2);
+    PR_Free(url);
+}
+
+PUBLIC void
+Wallet_SignonViewerReturn (nsAutoString results) {
+    XP_List *url_ptr;
+    wallet_MapElement *url;
+    wallet_MapElement *URLToDelete;
+    int urlNumber;
+    char * gone;
+
+    /*
+     * step through all nopreviews and delete those that are in the sequence
+     * Note: we can't delete nopreview while "url_ptr" is pointing to it because
+     * that would destroy "url_ptr". So we do a lazy deletion
+     */
+    URLToDelete = 0;
+    gone = SI_FindValueInArgs(results, "|goneP|");
+    urlNumber = 0;
+    url_ptr = wallet_URL_list;
+    while ((url = (wallet_MapElement *) XP_ListNextObject(url_ptr))) {
+      if (url->item2->CharAt(NO_PREVIEW) == 'y') {
+        if (SI_InSequence(gone, urlNumber)) {
+          url->item2->SetCharAt('n', NO_PREVIEW);
+          if (url->item2->CharAt(NO_CAPTURE) == 'n') {
+            if (URLToDelete) {
+                wallet_FreeURL(URLToDelete);
+            }
+            URLToDelete = url;
+          }
+        }
+        urlNumber++;
+      }
+    }
+    if (URLToDelete) {
+        wallet_FreeURL(URLToDelete);
+        wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
+    }
+    delete[] gone;
+
+    /*
+     * step through all nocaptures and delete those that are in the sequence
+     * Note: we can't delete nocapture while "url_ptr" is pointing to it because
+     * that would destroy "url_ptr". So we do a lazy deletion
+     */
+    URLToDelete = 0;
+    gone = SI_FindValueInArgs(results, "|goneC|");
+    urlNumber = 0;
+    url_ptr = wallet_URL_list;
+    while ((url = (wallet_MapElement *) XP_ListNextObject(url_ptr))) {
+      if (url->item2->CharAt(NO_CAPTURE) == 'y') {
+        if (SI_InSequence(gone, urlNumber)) {
+          url->item2->SetCharAt('n', NO_CAPTURE);
+          if (url->item2->CharAt(NO_PREVIEW) == 'n') {
+            if (URLToDelete) {
+                wallet_FreeURL(URLToDelete);
+            }
+            URLToDelete = url;
+          }
+        }
+        urlNumber++;
+      }
+    }
+    if (URLToDelete) {
+        wallet_FreeURL(URLToDelete);
+        wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
+    }
+    delete[] gone;
 }
 
 /***************************************************************/
 /* The following are the interface routines seen by other dlls */
 /***************************************************************/
+
+#define BUFLEN2 5000
+#define BREAK '\001'
+
+PUBLIC void
+WLLT_GetNopreviewListForViewer(nsString& aNopreviewList)
+{
+  char *buffer = (char*)XP_ALLOC(BUFLEN2);
+  int g = 0, nopreviewNum;
+  XP_List *url_ptr;
+  wallet_MapElement *url;
+  char* urlCString;
+
+  wallet_InitializeURLList();
+  buffer[0] = '\0';
+  url_ptr = wallet_URL_list;
+  nopreviewNum = 0;
+  while ( (url=(wallet_MapElement *) XP_ListNextObject(url_ptr)) ) {
+    if (url->item2->CharAt(NO_PREVIEW) == 'y') {
+      urlCString = url->item1->ToNewCString();
+      g += PR_snprintf(buffer+g, BUFLEN2-g,
+"%c        <OPTION value=%d>%s</OPTION>\n",
+      BREAK,
+      nopreviewNum,
+      urlCString
+      );
+      delete[] urlCString;
+      nopreviewNum++;
+    }
+  }
+  aNopreviewList = buffer;
+  PR_FREEIF(buffer);
+}
+
+PUBLIC void
+WLLT_GetNocaptureListForViewer(nsString& aNocaptureList)
+{
+  char *buffer = (char*)XP_ALLOC(BUFLEN2);
+  int g = 0, nocaptureNum;
+  XP_List *url_ptr;
+  wallet_MapElement *url;
+  char* urlCString;
+
+  wallet_InitializeURLList();
+  buffer[0] = '\0';
+  url_ptr = wallet_URL_list;
+  nocaptureNum = 0;
+  while ( (url=(wallet_MapElement *) XP_ListNextObject(url_ptr)) ) {
+    if (url->item2->CharAt(NO_CAPTURE) == 'y') {
+      urlCString = url->item1->ToNewCString();
+      g += PR_snprintf(buffer+g, BUFLEN2-g,
+"%c        <OPTION value=%d>%s</OPTION>\n",
+      BREAK,
+      nocaptureNum,
+      urlCString
+      );
+      delete[] urlCString;
+      nocaptureNum++;
+    }
+  }
+  aNocaptureList = buffer;
+  PR_FREEIF(buffer);
+}
 
 /*
  * edit the users data
@@ -2359,30 +2470,3 @@ WLLT_Capture(nsIDocument* doc, nsString field, nsString value, nsString vcard) {
     }
   }
 }
-
-//#else
-//#include "prtypes.h"
-//extern "C" {
-
-//PUBLIC void
-//WLLT_PreEdit(nsIURL* url) {
-//}
-
-//PUBLIC void
-//WLLT_PrefillReturn(nsAutoString results) {
-//}
-
-//PUBLIC void
-//WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
-//}
-
-//PUBLIC void
-//WLLT_OKToCapture(PRBool * result, PRInt32 count, char* urlName) {
-//}
-
-//PUBLIC void
-//WLLT_Capture(nsIDocument* doc, nsString field, nsString value, nsString vcard) {
-//}
-
-//}
-//#endif

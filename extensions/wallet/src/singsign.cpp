@@ -2761,6 +2761,9 @@ SI_MakeDialog(char* S) {
   strm.close();
 }
 
+extern void
+Wallet_SignonViewerReturn (nsAutoString results);
+
 PUBLIC void
 SINGSIGN_SignonViewerReturn (nsAutoString results) {
     XP_List *url_ptr;
@@ -2841,23 +2844,83 @@ SINGSIGN_SignonViewerReturn (nsAutoString results) {
     }
     si_unlock_signon_list();
     delete[] gone;
+
+    /* now give wallet a chance to do its deletions */
+    Wallet_SignonViewerReturn(results);
 }
 
-#define BUFLEN 50000
-extern void Wallet_AddToHTML(int* g_ptr, char* buffer, PRBool isNoCapture, char* listname);
+#define BUFLEN2 5000
+#define BREAK '\001'
+
 PUBLIC void
-SINGSIGN_DisplaySignonInfoAsHTML()
+SINGSIGN_GetSignonListForViewer(nsString& aSignonList)
 {
-    char *buffer = (char*)XP_ALLOC(BUFLEN);
+    char *buffer = (char*)XP_ALLOC(BUFLEN2);
     int g = 0, signonNum;
     XP_List *url_ptr;
     XP_List *user_ptr;
     XP_List *data_ptr;
-    XP_List *reject_ptr;
     si_SignonURLStruct *url;
     si_SignonUserStruct * user;
     si_SignonDataStruct* data;
+
+    buffer[0] = '\0';
+    url_ptr = si_signon_list;
+    signonNum = 0;
+    while ( (url=(si_SignonURLStruct *) XP_ListNextObject(url_ptr)) ) {
+        user_ptr = url->signonUser_list;
+        while ( (user=(si_SignonUserStruct *) XP_ListNextObject(user_ptr)) ) {
+            /* first data item for user is the username */
+            data_ptr = user->signonData_list;
+            data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
+            g += PR_snprintf(buffer+g, BUFLEN2-g,
+"%c        <OPTION value=%d>%s:%s</OPTION>\n",
+            BREAK,
+            signonNum,
+            url->URLName,
+            data->value
+            );
+            signonNum++;
+        }
+    }
+    aSignonList = buffer;
+    PR_FREEIF(buffer);
+}
+
+PUBLIC void
+SINGSIGN_GetRejectListForViewer(nsString& aRejectList)
+{
+    char *buffer = (char*)XP_ALLOC(BUFLEN2);
+    int g = 0, rejectNum;
+    XP_List *reject_ptr;
     si_Reject *reject;
+
+    buffer[0] = '\0';
+    reject_ptr = si_reject_list;
+    rejectNum = 0;
+    while ( (reject=(si_Reject *) XP_ListNextObject(reject_ptr)) ) {
+        g += PR_snprintf(buffer+g, BUFLEN2-g,
+"%c        <OPTION value=%d>%s:%s</OPTION>\n",
+        BREAK,
+        rejectNum,
+        reject->URLName,
+        reject->userName
+        );
+        rejectNum++;
+    }
+    aRejectList = buffer;
+    PR_FREEIF(buffer);
+}
+
+#define BUFLEN 50000
+extern void Wallet_GetNocaptureListForViewer(nsString& aNocaptureList);
+extern void Wallet_GetNopreviewListForViewer(nsString& aNopreviewList);
+
+PUBLIC void
+SINGSIGN_DisplaySignonInfoAsHTML()
+{
+    char *buffer = (char*)XP_ALLOC(BUFLEN);
+    int g = 0;
     char * view_signons = NULL;
     char * view_rejects = NULL;
     char * view_nopreview = NULL;
@@ -2897,8 +2960,10 @@ SINGSIGN_DisplaySignonInfoAsHTML()
 "    button_frame = 5;\n"
 "\n"
 "    var signon_mode;\n"
-"    var goneS;\n"
-"    var goneR;\n"
+"    var signonList = [];\n"
+"    var rejectList =  [];\n"
+"    var nopreviewList =  [];\n"
+"    var nocaptureList =  [];\n"
 "    deleted_signons = new Array;\n"
 "    deleted_rejects = new Array;\n"
 "    deleted_nopreviews = new Array;\n"
@@ -2982,7 +3047,7 @@ SINGSIGN_DisplaySignonInfoAsHTML()
 "        if (selname.options[i-1].selected) {\n"
 "          selname.options[i-1].selected = 0;\n"
 "          goneC.value = goneC.value + selname.options[i-1].value + \",\";\n"
-"          deleted_nocaputures[selname.options[i-1].value] = 1;\n"
+"          deleted_nocaptures[selname.options[i-1].value] = 1;\n"
 "          for (j=i; j < selname.options.length; j++) {\n"
 "            selname.options[j-1] = selname.options[j];\n"
 "          }\n"
@@ -3060,29 +3125,14 @@ SINGSIGN_DisplaySignonInfoAsHTML()
     PR_FREEIF(heading);
 
     /* generate the html for the list of signons */
-    url_ptr = si_signon_list;
-    signonNum = 0;
-    while ( (url=(si_SignonURLStruct *) XP_ListNextObject(url_ptr)) ) {
-        user_ptr = url->signonUser_list;
-        while ( (user=(si_SignonUserStruct *) XP_ListNextObject(user_ptr)) ) {
-            /* first data item for user is the username */
-            data_ptr = user->signonData_list;
-            data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
+
             g += PR_snprintf(buffer+g, BUFLEN-g,
-"      if (!deleted_signons[%d]) {\n"
-"        top.frames[list_frame].document.write(\n"
-"                    \"<OPTION value=%d>\" +\n"
-"                      \"%s:%s\" +\n"
-"                    \"</OPTION>\"\n"
-"        );\n"
-"      }\n",
-            signonNum, signonNum,
-            url->URLName,
-            data->value
+"      for (i=1; i<signonList.length; i++) {\n"
+"        if (!deleted_signons[i-1]) {\n"
+"          top.frames[list_frame].document.write(signonList[i]);\n"
+"        }\n"
+"      }\n"
             );
-            signonNum++;
-        }
-    }
 
     /* generate next section of html file */
     StrAllocCopy (heading, Wallet_Localize("SavedRejects"));
@@ -3159,24 +3209,14 @@ SINGSIGN_DisplaySignonInfoAsHTML()
     PR_FREEIF(heading);
 
     /* generate the html for the list of rejects */
-    signonNum = 0;
-    reject_ptr=si_reject_list;
-    while ( (reject=(si_Reject *)
-                      XP_ListNextObject(reject_ptr)) ) {
-        g += PR_snprintf(buffer+g, BUFLEN-g,
-"      if (!deleted_rejects[%d]) {\n"
-"        top.frames[list_frame].document.write(\n"
-"                    \"<OPTION value=\" +\n"
-"                      \"%d>\" +\n"
-"                      \"%s: %s\" +\n"
-"                    \"</OPTION>\"\n"
-"        );\n"
-"      }\n",
-            signonNum, signonNum,
-            reject->URLName,
-            reject->userName);
-        signonNum++;
-    }
+
+            g += PR_snprintf(buffer+g, BUFLEN-g,
+"      for (i=1; i<rejectList.length; i++) {\n"
+"        if (!deleted_rejects[i-1]) {\n"
+"          top.frames[list_frame].document.write(rejectList[i]);\n"
+"        }\n"
+"      }\n"
+            );
 
     /* generate next section of html file */
     StrAllocCopy (heading, Wallet_Localize("SavedNopreviews"));
@@ -3252,7 +3292,14 @@ SINGSIGN_DisplaySignonInfoAsHTML()
     PR_FREEIF(heading);
 
     /* generate the html for the list of nopreviews */
-    Wallet_AddToHTML(&g, buffer, PR_FALSE, "nopreviews");
+
+            g += PR_snprintf(buffer+g, BUFLEN-g,
+"      for (i=1; i<nopreviewList.length; i++) {\n"
+"        if (!deleted_nopreviews[i-1]) {\n"
+"          top.frames[list_frame].document.write(nopreviewList[i]);\n"
+"        }\n"
+"      }\n"
+            );
 
     /* generate next section of html file */
     StrAllocCopy (heading, Wallet_Localize("SavedNocaptures"));
@@ -3269,7 +3316,7 @@ SINGSIGN_DisplaySignonInfoAsHTML()
 "    }\n"
 "\n"
 "    function loadNocaptures(){\n"
-"      signon_mode = 2;\n"
+"      signon_mode = 3;\n"
 "      top.frames[index_frame].document.open();\n"
 "      top.frames[index_frame].document.write(\n"
 "        \"<BODY BGCOLOR=#C0C0C0>\" +\n"
@@ -3328,7 +3375,14 @@ SINGSIGN_DisplaySignonInfoAsHTML()
     PR_FREEIF(heading);
 
     /* generate the html for the list of nocaptures */
-    Wallet_AddToHTML(&g, buffer, PR_TRUE, "nocaptures");
+
+            g += PR_snprintf(buffer+g, BUFLEN-g,
+"      for (i=1; i<nocaptureList.length; i++) {\n"
+"        if (!deleted_nocaptures[i-1]) {\n"
+"          top.frames[list_frame].document.write(nocaptureList[i]);\n"
+"        }\n"
+"      }\n"
+            );
 
     /* generate next section of html file */
     StrAllocCopy (heading, Wallet_Localize("SavedRejects"));
@@ -3366,6 +3420,8 @@ SINGSIGN_DisplaySignonInfoAsHTML()
 "          \"<INPUT TYPE=HIDDEN NAME=goneR VALUE=\\\"\\\" SIZE=-1>\" +\n"
 "          \"<INPUT TYPE=HIDDEN NAME=goneP VALUE=\\\"\\\" SIZE=-1>\" +\n"
 "          \"<INPUT TYPE=HIDDEN NAME=goneC VALUE=\\\"\\\" SIZE=-1>\" +\n"
+"          \"<INPUT TYPE=HIDDEN NAME=signonList VALUE=\\\"\\\" SIZE=-1>\" +\n"
+"          \"<INPUT TYPE=HIDDEN NAME=rejectList VALUE=\\\"\\\" SIZE=-1>\" +\n"
 "        \"</FORM>\"\n"
 "      );\n"
 "      top.frames[button_frame].document.close();\n"
@@ -3373,6 +3429,18 @@ SINGSIGN_DisplaySignonInfoAsHTML()
 "\n"
 "    function loadFrames(){\n"
 "      StartUp(\"Signons\");\n"
+"      list = DoGetSignonList();\n"
+"      BREAK = list[0];\n"
+"      signonList = list.split(BREAK);\n"
+"      list = DoGetRejectList();\n"
+"      BREAK = list[0];\n"
+"      rejectList = list.split(BREAK);\n"
+"      list = DoGetNopreviewList();\n"
+"      BREAK = list[0];\n"
+"      nopreviewList = list.split(BREAK);\n"
+"      list = DoGetNocaptureList();\n"
+"      BREAK = list[0];\n"
+"      nocaptureList = list.split(BREAK);\n"
 "      loadSignons();\n"
 "      loadButtons();\n"
 "    }\n"
@@ -3380,7 +3448,10 @@ SINGSIGN_DisplaySignonInfoAsHTML()
 "    function Save(){\n"
 "      var goneS = top.frames[button_frame].document.buttons.goneS;\n"
 "      var goneR = top.frames[button_frame].document.buttons.goneR;\n"
-"      var result = \"|goneS|\"+goneS.value+\"|goneR|\"+goneR.value+\"|\";\n"
+"      var goneP = top.frames[button_frame].document.buttons.goneP;\n"
+"      var goneC = top.frames[button_frame].document.buttons.goneC;\n"
+"      var result = \"|goneS|\"+goneS.value+\"|goneR|\"+goneR.value;\n"
+"      result += \"|goneC|\"+goneC.value+\"|goneP|\"+goneP.value+\"|\";\n"
 "      DoSave(result);\n"
 "    }\n"
 "\n"
@@ -3465,6 +3536,14 @@ SINGSIGN_RememberSignonData
 
 void
 SINGSIGN_SignonViewerReturn (nsAutoString results) {
+}
+
+void
+SINGSIGN_GetSignonListForViewer(nsString& aSignonList) {
+}
+
+void
+SINGSIGN_GetRejectListForViewer(nsString& aRejectList) {
 }
 
 void

@@ -98,6 +98,26 @@ NS_IMETHODIMP nsWalletlibService::SI_SignonViewerReturn(nsAutoString results){
     return NS_OK;
 }
 
+NS_IMETHODIMP nsWalletlibService::SI_GetSignonListForViewer(nsString& aSignonList){
+    ::SINGSIGN_GetSignonListForViewer(aSignonList);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsWalletlibService::SI_GetRejectListForViewer(nsString& aRejectList){
+    ::SINGSIGN_GetRejectListForViewer(aRejectList);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsWalletlibService::WALLET_GetNopreviewListForViewer(nsString& aNopreviewList){
+    ::WLLT_GetNopreviewListForViewer(aNopreviewList);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsWalletlibService::WALLET_GetNocaptureListForViewer(nsString& aNocaptureList){
+    ::WLLT_GetNocaptureListForViewer(aNocaptureList);
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsWalletlibService::SI_RememberSignonData
         (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt) {
     ::SINGSIGN_RememberSignonData(URLName, name_array, value_array, type_array, value_cnt);

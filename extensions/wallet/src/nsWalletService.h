@@ -39,6 +39,10 @@ public:
 
     NS_IMETHOD SI_DisplaySignonInfoAsHTML();
     NS_IMETHOD SI_SignonViewerReturn(nsAutoString results);
+    NS_IMETHOD SI_GetSignonListForViewer(nsString& aSignonList);
+    NS_IMETHOD SI_GetRejectListForViewer(nsString& aRejectList);
+    NS_IMETHOD WALLET_GetNopreviewListForViewer(nsString& aNopreviewList);
+    NS_IMETHOD WALLET_GetNocaptureListForViewer(nsString& aNocaptureList);
 
     NS_IMETHOD SI_RememberSignonData
         (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt);

@@ -35,6 +35,12 @@ extern void
 SINGSIGN_DisplaySignonInfoAsHTML();
 
 extern void
+SINGSIGN_GetSignonListForViewer (nsString& aSignonList);
+
+extern void
+SINGSIGN_GetRejectListForViewer (nsString& aRejectList);
+
+extern void
 SINGSIGN_SignonViewerReturn(nsAutoString results);
 
 extern void

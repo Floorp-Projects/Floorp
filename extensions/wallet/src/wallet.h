@@ -51,6 +51,13 @@ WLLT_OKToCapture(PRBool * result, PRInt32 count, char* URLName);
 extern void
 WLLT_Capture(nsIDocument* doc, nsString name, nsString value, nsString vcard);
 
+extern void
+WLLT_GetNopreviewListForViewer (nsString& aNopreviewList);
+
+extern void
+WLLT_GetNocaptureListForViewer (nsString& aNocaptureList);
+
+
 XP_END_PROTOS
 
 #endif /* !_WALLET_H */
