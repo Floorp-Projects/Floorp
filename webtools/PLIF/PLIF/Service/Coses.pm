@@ -43,7 +43,7 @@ sub expand {
     my $self = shift;
     my($app, $session, $protocol, $string, $data) = @_;
     my @index = (); my $index = 0;
-    my @stack = (); my $stack = $app->getService('service.xml')->parseString($self->getString($app, $session, $protocol, $string));
+    my @stack = (); my $stack = $app->getService('service.xml')->parse($self->getString($app, $session, $protocol, $string));
     my @scope = (); my $scope = {'data' => $data};
     my $result = '';
     if (not $scope->{'coses: skip sanitation'}) {
@@ -150,7 +150,7 @@ sub expand {
                     push(@index, $index);
                     push(@stack, $stack);
                     $index = 0;
-                    $stack = $self->parseString($self->getString($app, $session, $protocol, $self->evaluateExpression($attributes->{'string'}, $scope)));
+                    $stack = $app->getService('service.xml')->parse($self->getString($app, $session, $protocol, $self->evaluateExpression($attributes->{'string'}, $scope)));
                     push(@scope, $superscope);
                     next node; # skip default handling
                 } elsif ($node eq 'else') {

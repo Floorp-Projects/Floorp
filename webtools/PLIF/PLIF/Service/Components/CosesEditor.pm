@@ -33,6 +33,8 @@ use PLIF::Service;
 @ISA = qw(PLIF::Service);
 1;
 
+# XXX I need to register and require rights
+
 sub provides {
     my $class = shift;
     my($service) = @_;
@@ -114,7 +116,7 @@ sub cmdCosesStringEdit {
     my %strings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
     my $dataSource = $app->getService('dataSource.strings');
     my %expectedVariants = $dataSource->getDescribedVariants();    
-    my %stringsVariants = $dataSource->getStringVariants($app, $id);
+    my %stringVariants = $dataSource->getStringVariants($app, $id);
     $app->output->cosesEditorString($id, $strings{$id}, \%expectedVariants, \%stringVariants);
 }
 
@@ -184,7 +186,7 @@ sub cmdCosesVariantImport {
     };
     $XML->walk($self, $XML->parse($file), $data);
 
-    # use data
+    # add data
     my $dataSource = $app->getService('dataSource.strings');
     my $id = $dataSource->setVariant($app, undef, @{$data->{'variant'}});
     foreach my $string (keys(%{$data->{'strings'}})) {
@@ -193,7 +195,8 @@ sub cmdCosesVariantImport {
 
     # display data
     my %expectedStrings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
-    $app->output->cosesEditorVariant($id, @{$data->{'variant'}}, \%expectedStrings, $data->{'strings'}->{$string});
+    my %variantStrings = $dataSource->getVariantStrings($app, $id);
+    $app->output->cosesEditorVariant($id, @{$data->{'variant'}}, \%expectedStrings, \%variantStrings);
 }
 
 # service.xml.sink
@@ -217,7 +220,7 @@ sub walkElement {
             if (exists($attributes->{'name'})) {
                 $data->{'string'} = $attributes->{'name'};
             } else {
-                $self->error(1, 'invalid variant document format - missing attribute 'name' on <string>');
+                $self->error(1, 'invalid variant document format - missing attribute \'name\' on <string>');
             }
         } else {
             $self->error(1, 'invalid variant document format - <string> not child of <variant>');
@@ -315,14 +318,25 @@ sub strings {
 sub getDefaultString {
     my $self = shift;
     my($app, $protocol, $string) = @_;
-    # XXX
     if ($protocol eq 'stdout') {
-        if ($string eq 'cosesEditor') {
+        if ($string eq 'cosesEditor.index') {
             return '<text>COSES Editor<br/></text>';
+        } elsif ($string eq 'cosesEditor.variant') {
+            return '<text>COSES Editor<br/>Variant Editor<br/></text>';
+        } elsif ($string eq 'cosesEditor.string') {
+            return '<text>COSES Editor<br/>String Editor<br/></text>';
+        } elsif ($string eq 'cosesEditor.export') {
+            return '<text><text variable="(data.output)"/><br/></text>';
         }
     } elsif ($protocol eq 'http') {
-        if ($string eq 'cosesEditor') {
-            return '<text>HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>COSES Editor</text>';
+        if ($string eq 'cosesEditor.index') {
+            return '<text>HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>COSES Editor: Index</text>';
+        } elsif ($string eq 'cosesEditor.variant') {
+            return '<text>HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>COSES Editor: Variant Editor</text>';
+        } elsif ($string eq 'cosesEditor.string') {
+            return '<text>HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>COSES Editor: String Editor</text>';
+        } elsif ($string eq 'cosesEditor.export') {
+            return '<text>HTTP/1.1 200 OK<br/>Content-Type: text/xml<br/><br/><text variable="(data.output)"/></text>';
         }
     }
     return; # nope, sorry

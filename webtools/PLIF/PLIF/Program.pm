@@ -41,9 +41,10 @@ $app->run();
 # setup everything (automatically called by the constructor, above)
 sub init {
     my $self = shift;
-    $self->dump(10, '', '', '********************************');
-    $self->dump(5, '*** Started PLIF Application ***');
+    $self->dump(8, '', '');
     $self->dump(10, '********************************');
+    $self->dump(5, '*** Started PLIF Application ***');
+    $self->dump(9, '********************************');
     $self->SUPER::init(@_);
     $self->initInput();
 }

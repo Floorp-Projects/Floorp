@@ -63,8 +63,8 @@ sub getDescribedVariants {
             'charset' => $variant->[5],
             'language' => $variant->[6],
             'description' => $variant->[7],
-            'translator' => $variant->[8];
-        };        
+            'translator' => $variant->[8],
+        };
     }
     return %result;
 }
