@@ -95,7 +95,9 @@ public:
 #endif
 
   virtual int GetURL (ilIURL * aUrl, ImgCachePolicy aLoadMethod,
-		      ilINetReader *aReader);
+		      ilINetReader *aReader, PRBool IsAnimationLoop);
+
+  virtual int GetContentLength(ilIURL * aURL);
 
   nsresult RequestDone(ImageConsumer *aConsumer, nsIChannel* channel,
                        nsISupports* ctxt, nsresult status, const PRUnichar* aMsg);
@@ -392,8 +394,8 @@ ImageConsumer::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, nsIIn
             max_read = 128;
     }
 
-    if (max_read > (length-bytes_read)) {
-      max_read = length-bytes_read;
+    if (max_read > (length - bytes_read)) {
+      max_read = length - bytes_read;
     }
 
     if (max_read > IMAGE_BUF_SIZE) {
@@ -697,10 +699,37 @@ ImageNetContextImpl::IsURLInDiskCache(ilIURL *aUrl)
 #endif /* NU_CACHE */
 
 int 
+ImageNetContextImpl::GetContentLength (ilIURL * aURL)
+{
+    nsresult rv;
+    int content_length=0;
+
+    nsCOMPtr<nsIURI> nsurl = do_QueryInterface(aURL, &rv);
+    if (NS_FAILED(rv)) return 0;
+
+
+    nsCOMPtr<nsIChannel> channel;
+    nsCOMPtr<nsISupports> loadContext (do_QueryReferent(mLoadContext)); 
+    nsCOMPtr<nsILoadGroup> group (do_GetInterface(loadContext));
+    nsCOMPtr<nsIInterfaceRequestor> sink(do_QueryInterface(loadContext));
+
+    rv = NS_OpenURI(getter_AddRefs(channel), nsurl, nsnull, group, sink);
+    if (NS_FAILED(rv)) return 0;
+
+    rv = channel->GetContentLength(&content_length);
+    return content_length;
+
+}
+
+
+int 
 ImageNetContextImpl::GetURL (ilIURL * aURL, 
                              ImgCachePolicy aLoadMethod,
-                             ilINetReader *aReader)
+                             ilINetReader *aReader,
+                             PRBool IsAnimationLoop)
 {
+
+
   NS_PRECONDITION(nsnull != aURL, "null URL");
   NS_PRECONDITION(nsnull != aReader, "null reader");
   if (aURL == nsnull || aReader == nsnull) {
@@ -720,7 +749,8 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
   if (NS_FAILED(rv)) return 0;
 
   aURL->SetReader(aReader);
-  SetReloadPolicy(aLoadMethod);    
+  SetReloadPolicy(aLoadMethod); 
+ 
   
   // Find previously created ImageConsumer if possible
   ImageConsumer *ic = new ImageConsumer(aURL, this);
@@ -737,7 +767,11 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     nsCOMPtr<nsILoadGroup> group (do_GetInterface(loadContext));
     nsCOMPtr<nsIInterfaceRequestor> sink(do_QueryInterface(loadContext));
 
-    rv = NS_OpenURI(getter_AddRefs(channel), nsurl, nsnull, group, sink);
+   nsLoadFlags flags=0;   
+   if(IsAnimationLoop)
+       flags |= nsIChannel::VALIDATE_NEVER;
+
+    rv = NS_OpenURI(getter_AddRefs(channel), nsurl, nsnull, group, sink, flags);
     if (NS_FAILED(rv)) goto error;
 
     nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
@@ -759,33 +793,12 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
         }
     }
 
-    nsLoadFlags flags;
+
     rv = channel->GetLoadAttributes(&flags);
     if (NS_FAILED(rv)) goto error;
 
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
     if (NS_FAILED(rv)) return rv;
-
-	if((nsIChannel::LOAD_NORMAL == flags) &&( prefs ))
-	{
-		PRInt32 prefSetting;
-		if ( NS_SUCCEEDED( 	prefs->GetIntPref( "browser.cache.check_doc_frequency" , &prefSetting) ) )
-		{
-		   	switch ( prefSetting )
-		   	{
-
-	   			case 0:
-		   					flags |= nsIChannel::VALIDATE_ONCE_PER_SESSION;
-		   					break;
-		   		case 1:
-		   					flags |= nsIChannel::VALIDATE_ALWAYS;
-		   					break;
-		   		case 2:
-		   					flags |= nsIChannel::VALIDATE_NEVER;
-		   					break;
-		   	}
-		}
-	}
 
    if (aURL->GetBackgroundLoad()) 
       flags |= nsIChannel::LOAD_BACKGROUND;
