@@ -1,31 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
-<!DOCTYPE window
-[
-
-<!-- These entity declarations will go into a separate, locale file at some point -->
-<!-- Window title -->
-<!ENTITY windowTitle.label "Insert Table">
-
-<!ENTITY numRowsEditField.label "Number of rows">
-<!ENTITY numColumnsEditField.label "Number of columns">
-<!ENTITY widthEditField.label "Table Width">
-<!ENTITY borderEditField.label "Border">
-
-<!ENTITY alignmentFieldset.label "Alignment">
-<!ENTITY leftPopup.value "Left">
-<!ENTITY centerPopup.value "Center">
-<!ENTITY rightPopup.value "Right">
-
-<!ENTITY pixelsPopup.value "pixels">
-<!ENTITY percentPopup.value "percent">
-
-<!ENTITY OKButton.label "OK">
-<!ENTITY CancelButton.label "Cancel">
-<!ENTITY AdvancedEditButton.label "Advanced Edit...">
-
-]>
+<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorInsertTable.dtd">
 
 <xul:window class="dialog" title="&windowTitle.label;"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
