@@ -104,7 +104,7 @@ mkdir($STAGE, 0775);
 #-------------------------------------------------------------------------
 #// call pkgcp.pl
 chdir("$inSrcDir/xpinstall/packager");
-system("perl pkgcp.pl -o $platform -s $DIST -d $STAGE -f $inConfigFiles/packages-static -v");
+system("perl pkgcp.pl -o $platform -s $DIST -d $STAGE -f $inConfigFiles/$ENV{WIZ_packagesFile} -v");
 spew("Completed copying build files");
 
 #// call xptlink.pl to make big .xpt files/component
@@ -143,6 +143,9 @@ sub copy
 
 sub ParseInstallerCfg
 {
+    $ENV{WIZ_distSubdir} = "bin";
+    $ENV{WIZ_packagesFile} = "packages-static";
+
     open(fpInstallCfg, "$inConfigFiles/installer.cfg") || die"\ncould not open $inConfigFiles/installer.cfg: $!\n";
 
     while ($line = <fpInstallCfg>)
@@ -188,6 +191,12 @@ sub ParseInstallerCfg
       }
       elsif ($prop eq "7ZipSFXModule") {
         $ENV{WIZ_sfxModule} = $value;
+      }
+      elsif ($prop eq "DistSubdir") {
+        $ENV{WIZ_distSubdir} = $value;
+      }
+      elsif ($prop eq "packagesFile") {
+        $ENV{WIZ_packagesFile} = $value;
       }
     }
 
@@ -263,7 +272,7 @@ sub GetVersion
 
     $distWinPathName = "dist";
 
-    $fileMozilla = "$depthPath/$distWinPathName/bin/$ENV{WIZ_fileMainExe}";
+    $fileMozilla = "$depthPath/$distWinPathName/$ENV{WIZ_distSubdir}/$ENV{WIZ_fileMainExe}";
     
   # verify the existance of file
   if(!(-e "$fileMozilla"))
