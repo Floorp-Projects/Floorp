@@ -66,9 +66,6 @@
           var buttons = (document.getAnonymousNodes(theToolbar))[0].firstChild;
           var menu = buttons.nextSibling.childNodes[1];
           var width = window.innerWidth;
-          /*if (theToolbar.boxObject.width < width)
-            width = theToolbar.boxObject.width;
-          */var overflowed = false;
           menu.collapsed = true;
 
           for (var i=4; i<buttons.childNodes.length; i++) {
