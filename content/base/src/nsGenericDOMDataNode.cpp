@@ -385,8 +385,8 @@ nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
 
   // sanitize arguments
   PRUint32 textLength = mText.GetLength();
-  if (aOffset > textLength) {
-    aOffset = textLength;
+  if ((aOffset > textLength) || (aOffset < 0) || (aCount < 0)) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
   // Allocate new buffer
