@@ -41,11 +41,16 @@
 #include <string.h>
 
 #include "nsString.h"
-#include "nsINativeAppSupportWin.h"
 #include "nsIStringBundle.h"
 #include "nsDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsNativeCharsetUtils.h"
+
+#ifdef MOZ_XUL_APP
+#include "nsNativeAppSupportWin.h"
+#else
+#include "nsINativeAppSupportWin.h"
+#endif
 
 #define MOZ_HWND_BROADCAST_MSG_TIMEOUT 5000
 #define MOZ_CLIENT_BROWSER_KEY "Software\\Clients\\StartMenuInternet"
