@@ -691,9 +691,19 @@ function createToDo()
     return Components.classes["@mozilla.org/calendar/todo;1"].createInstance(Components.interfaces.calITodo);
 }
 
+function createRecurrenceInfo()
+{
+    return Components.classes["@mozilla.org/calendar/recurrence-info;1"].createInstance(Components.interfaces.calIRecurrenceInfo);
+}
+
 function createDateTime()
 {
     return Components.classes["@mozilla.org/calendar/datetime;1"].createInstance(Components.interfaces.calIDateTime);
+}
+
+function createAttendee()
+{
+    return Components.classes["@mozilla.org/calendar/attendee;1"].createInstance(Components.interfaces.calIAttendee);
 }
 
 function createCalendar()

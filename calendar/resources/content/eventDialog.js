@@ -235,6 +235,13 @@ function loadCalendarEventDialog()
         setFieldValue("invite-checkbox", false, "checked");
     }
 
+    // handle attendees
+    attendeeList = event.getAttendees({});
+    for (var i = 0; i < attendeeList.length; i++) {
+        attendee = attendeeList[i];
+        addAttendee(attendee.id);
+    }
+
     /* XXX
     setFieldValue("repeat-checkbox", gEvent.recur, "checked");
     if( gEvent.recurInterval < 1 )
@@ -380,7 +387,7 @@ function onOKCommand()
     if (event.hasAlarm) {
         alarmLength = getFieldValue( "alarm-length-field" );
         alarmUnits  = getFieldValue( "alarm-length-units", "value" );
-    //event.alarmTime = ...
+        //event.alarmTime = ...
     }
 
     event.recurrenceInfo = null;
@@ -388,14 +395,34 @@ function onOKCommand()
     if (getFieldValue("repeat-checkbox", "checked")) {
         recurrenceInfo = createRecurrenceInfo();
         recurUnits    = getFieldValue("repeat-length-units", "value");
-    recurForever  = getFieldValue("repeat-forever-radio", "selected");
-    recurInterval = getFieldValue("repeat-length-field");
-    recurCount    = (getFieldValue("repeat-numberoftimes-radio", "selected")
-        ? Math.max(1, getFieldValue("repeat-numberoftimes-textbox"))
-        : 0); // 0 means not selected.
+        recurInterval = getFieldValue("repeat-length-field");
 
-    //recurrenceInfo.recurType = ...
-    //recurrenceInfo.recurEnd = ...
+        if (getFieldValue("repeat-forever-radio", "selected")) {
+            recurrenceInfo.recurCount = -1;
+        }
+        else if (getFieldValue("repeat-numberoftimes-radio", "selected")) {
+            recurrenceInfo.recurCount = Math.max(1, getFieldValue("repeat-numberoftimes-textbox"))
+        }
+        else if (getFieldValue("repeat-until-radio", "selected")) {
+            var recurEndDate = document.getElementById("repeat-end-date-picker").value;
+            recurrenceInfo.recurEnd.jsDate = recurEndDate;
+        }
+
+
+        // Exceptions
+        var listbox = document.getElementById("exception-dates-listbox");
+
+        var exceptionArray = new Array();
+        for (var i = 0; i < listbox.childNodes.length; i++) {
+            var dateObj = new Date(listbox.childNodes[i].value);
+            exceptionArray.push(jsDateToDateTime(dateObj));
+        }
+        if (exceptionArray.length > 0)
+            event.recurrenceInfo.setException(exceptionArray.length, exceptionArray);
+
+
+        // Finally, set the recurrenceInfo
+        event.recurrenceInfo = recurrenceInfo;
     }
 
 
@@ -424,24 +451,6 @@ function onOKCommand()
     else
         event.deleteProperty('inviteEmailAddress');
 
-
-   /* EXCEPTIONS */
-   
-/*
-   gEvent.removeAllExceptions();
-
-   var listbox = document.getElementById( "exception-dates-listbox" );
-
-   var i;
-   for( i = 0; i < listbox.childNodes.length; i++ )
-   {
-      var dateObj = new Date( );
-
-      dateObj.setTime( listbox.childNodes[i].value );
-
-      gEvent.addException( dateObj );
-   }
-*/
 
     /* File attachments */
     //loop over the items in the listbox
@@ -473,6 +482,17 @@ function onOKCommand()
         {
         }
     }
+
+    /* wire up attendees */
+    //evenet.clearAttendees();
+    attendeeList = document.getElementById("bucketBody").getElementsByTagName("treecell");
+    for (var i = 0; i < attendeeList.length; i++) {
+        label = attendeeList[i].getAttribute("label");
+        attendee = createAttendee();
+        attendee.id = label;
+        event.addAttendee(attendee);
+    }
+
 
    var Server = getFieldValue( "server-field" );
 
@@ -1552,4 +1572,22 @@ function processComponentType()
   }
   else
     dump("processComponentType: no componentMenu.selectedItem!\n");
+}
+
+
+function onIniviteAdd()
+{
+    textBox = document.getElementById("invite-email-field");
+    addAttendee(textBox.email);
+}
+
+function addAttendee(email)
+{
+    treeItem = document.createElement("treeitem");
+    treeRow = document.createElement("treerow");
+    treeCell = document.createElement("treecell");
+    treeCell.setAttribute("label", email);
+    treeItem.appendChild(treeRow);
+    treeRow.appendChild(treeCell);
+    document.getElementById("bucketBody").appendChild(treeItem);
 }

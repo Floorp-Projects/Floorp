@@ -353,12 +353,13 @@ WeekView.prototype.createEventBox = function ( calItem )
 
     // figure out what column we need to put this on
     var dayIndex = new Date(gHeaderDateItemArray[1].getAttribute("date"));
-    var index = calEvent.startDate.day - dayIndex.getDate() - 1;
-    // XXX need to fix this for wrapping months
+    var index = calEvent.startDate.jsDate.getDay() - dayIndex.getDay();
+    dump("index is:" + index + "(" + calEvent.startDate.jsDate.getDay() + " - " + dayIndex.getDay() + ")\n");
 
     var boxLeft = document.getElementById("week-tree-day-"+index+"-item-"+startHour).boxObject.x - 
                   document.getElementById( "week-view-content-box" ).boxObject.x +
                   ( /*calendarEventDisplay.startDrawSlot*/1 * eventSlotWidth );
+    dump(boxLeft + "\n");
     eventBox.setAttribute("left", boxLeft);
    
     // set the event box to be of class week-view-event-class and the appropriate calendar-color class

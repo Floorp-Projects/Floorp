@@ -91,6 +91,7 @@
 
 <!-- Javascript includes -->
 
+<script type="application/x-javascript" src="chrome://calendar/content/calendar.js"/>
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/eventDialog.js"/>
@@ -581,7 +582,7 @@
             <!-- Contacts panel -->
             <tabpanel orient="vertical">
                <!-- Invite -->    
-               <vbox collapsed="true">
+               <vbox collapsed="false">
                   <hbox id="invite-box" align="center">
                      <checkbox id="invite-checkbox"
                                label="&newevent.invite.label;"
@@ -590,6 +591,7 @@
                      <textbox id="invite-email-field"
                               size="39"
                               disabled="true"/>
+                     <button label="Add" id="invite-email-button" onclick="onIniviteAdd();"/>
                   </hbox>
                </vbox>
 
@@ -672,7 +674,7 @@
                       <tree id="addressBucket"
                             flex="1"
                             hidecolumnpicker="true"
-                            onclick="selectEventRecipient( this );">
+                            onclick="selectEventRecipient(this);">
                           <treecols>
                               <treecol id="addressCol"
                                        flex="1"
