@@ -24,7 +24,9 @@
 
   TO DO
 
-  1) Implement DOM interfaces.
+  1) Convert mBroadcastListeners to a _pointer_ to an nsVoidArray,
+     instead of an automatic nsVoidArray. This should reduce the
+     footprint per element by 40-50 bytes.
 
  */
 
@@ -231,7 +233,7 @@ public:
     nsresult GetResource(nsIRDFResource** aResource);
     nsresult EnsureContentsGenerated(void) const;
 
-    void AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
+    nsresult AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
 
     static nsresult
     GetElementsByTagName(nsIDOMNode* aNode,
@@ -941,6 +943,22 @@ RDFElementImpl::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject
                                     (void**) &mScriptObject);
 
         NS_RELEASE(global);
+
+        // Ensure that a reference exists to this element
+        if (mDocument) {
+            nsAutoString tag;
+            mTag->ToString(tag);
+
+            char buf[64];
+            char* p = buf;
+            if (tag.Length() >= sizeof(buf))
+                p = new char[tag.Length() + 1];
+
+            aContext->AddNamedReference((void*) &mScriptObject, mScriptObject, buf);
+
+            if (p != buf)
+                delete[] p;
+        }
     }
 
     *aScriptObject = mScriptObject;
@@ -1039,7 +1057,7 @@ NS_IMETHODIMP
 RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 {
     if (aDocument == mDocument)
-      return NS_OK;
+        return NS_OK;
 
     nsresult rv;
 
@@ -1047,17 +1065,70 @@ RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
     GetResource(getter_AddRefs(resource));
 
     nsCOMPtr<nsIRDFDocument> rdfDoc;
-    if (mDocument && resource) {
-        if (NS_SUCCEEDED(mDocument->QueryInterface(kIRDFDocumentIID, getter_AddRefs(rdfDoc)))) {
-            rv = rdfDoc->RemoveElementForResource(resource, this);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "error unmapping resource from element");
+    if (mDocument) {
+
+        // Remove this element from the RDF resource-to-element map in
+        // the old document.
+        if (resource) {
+            if (NS_SUCCEEDED(mDocument->QueryInterface(kIRDFDocumentIID, getter_AddRefs(rdfDoc)))) {
+                rv = rdfDoc->RemoveElementForResource(resource, this);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "error unmapping resource from element");
+            }
+        }
+
+        // Release the named reference to the script object so it can
+        // be garbage collected.
+        if (mScriptObject) {
+            nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
+            if (nsnull != owner) {
+                nsIScriptContext *context;
+                if (NS_OK == owner->GetScriptContext(&context)) {
+                    context->RemoveReference((void *) &mScriptObject,
+                                             mScriptObject);
+
+                    NS_RELEASE(context);
+                }
+                NS_RELEASE(owner);
+            }
         }
     }
+
     mDocument = aDocument; // not refcounted
-    if (mDocument && resource) {
-        if (NS_SUCCEEDED(mDocument->QueryInterface(kIRDFDocumentIID, getter_AddRefs(rdfDoc)))) {
-            rv = rdfDoc->AddElementForResource(resource, this);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "error mapping resource to element");
+
+    if (mDocument) {
+
+        // Add this element to the RDF resource-to-element map in the
+        // new document.
+        if (resource) {
+            if (NS_SUCCEEDED(mDocument->QueryInterface(kIRDFDocumentIID, getter_AddRefs(rdfDoc)))) {
+                rv = rdfDoc->AddElementForResource(resource, this);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "error mapping resource to element");
+            }
+        }
+
+        // Add a named reference to the script object.
+        if (mScriptObject) {
+            nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
+            if (nsnull != owner) {
+                nsIScriptContext *context;
+                if (NS_OK == owner->GetScriptContext(&context)) {
+                    nsAutoString tag;
+                    mTag->ToString(tag);
+
+                    char buf[64];
+                    char* p = buf;
+                    if (tag.Length() >= sizeof(buf))
+                        p = new char[tag.Length() + 1];
+
+                    context->AddNamedReference((void*) &mScriptObject, mScriptObject, buf);
+
+                    if (p != buf)
+                        delete[] p;
+
+                    NS_RELEASE(context);
+                }
+                NS_RELEASE(owner);
+            }
         }
     }
 
@@ -1390,8 +1461,8 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         }
     }
 
-	  // XUL Only. Check for event handlers and notify broadcast listeners.
-	  if (successful) {
+    // XUL Only. Check for event handlers and notify broadcast listeners.
+    if (successful) {
         
       
         // Check for event handlers
@@ -1427,6 +1498,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         else if (attributeName.EqualsIgnoreCase("onpaint"))
             AddScriptEventListener(aName, aValue, kIDOMPaintListenerIID); 
 
+        // Notify any broadcasters that are listening to this node.
         count = mBroadcastListeners.Count();
         for (PRInt32 i = 0; i < count; i++) {
             XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
@@ -1453,7 +1525,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
             }
         }
     }
-	  // End XUL Only Code
+    // End XUL Only Code
 
     if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
         mDocument->AttributeChanged(this, aName, NS_STYLE_HINT_UNKNOWN);
@@ -1471,30 +1543,34 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     return rv;
 }
 
-void RDFElementImpl::AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID)
+nsresult
+RDFElementImpl::AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID)
 {
-  nsresult ret = NS_OK;
-  nsIScriptContext* context;
-  nsIScriptContextOwner* owner;
+    if (! mDocument)
+        return NS_OK; // XXX
 
-  if (nsnull != mDocument) {
-      owner = mDocument->GetScriptContextOwner();
-      if (NS_OK == owner->GetScriptContext(&context)) {
-            nsIEventListenerManager *manager;
-            if (NS_OK == GetListenerManager(&manager)) {
-                nsIScriptObjectOwner* owner;
-                if (NS_OK == QueryInterface(kIScriptObjectOwnerIID,
-                                                      (void**) &owner)) {
-                    ret = manager->AddScriptEventListener(context, owner,
-                                                          aName, aValue, aIID);
-                    NS_RELEASE(owner);
-              }
-              NS_RELEASE(manager);
+    nsresult ret = NS_OK;
+    nsIScriptContext* context;
+    nsIScriptContextOwner* owner;
+
+    owner = mDocument->GetScriptContextOwner();
+    if (NS_OK == owner->GetScriptContext(&context)) {
+        nsIEventListenerManager *manager;
+        if (NS_OK == GetListenerManager(&manager)) {
+            nsIScriptObjectOwner* owner;
+            if (NS_OK == QueryInterface(kIScriptObjectOwnerIID,
+                                        (void**) &owner)) {
+                ret = manager->AddScriptEventListener(context, owner,
+                                                      aName, aValue, aIID);
+                NS_RELEASE(owner);
+            }
+            NS_RELEASE(manager);
         }
         NS_RELEASE(context);
-      }
-      NS_RELEASE(owner);
-  }
+    }
+    NS_RELEASE(owner);
+
+    return ret;
 }
 
 NS_IMETHODIMP
