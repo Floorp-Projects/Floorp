@@ -108,7 +108,7 @@ extern "C" {
    for a name with a colon. */
 #define XML_TOK_PREFIXED_NAME 41
 
-#if 0
+#if 1
 #define XML_DTD
 #endif /* 0 */
 

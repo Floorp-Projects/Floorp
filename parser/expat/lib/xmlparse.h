@@ -411,7 +411,7 @@ The new parser is completely independent and may safely be used in a separate th
 The handlers and userData are initialized from the parser argument.
 Returns 0 if out of memory.  Otherwise returns a new XML_Parser object. */
 
-#if 0
+#if 1
 #define XML_DTD
 #endif /* 0 */
 
