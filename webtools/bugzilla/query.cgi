@@ -163,10 +163,18 @@ sub PrefillForm {
             $value = "";
         }
         
+        # If the name begins with field, type, or value, then it is part of
+        # the boolean charts. Because these are built different than the rest
+        # of the form, we don't need to save a default value. We do, however,
+        # need to indicate that we found something so the default query isn't
+        # added in if all we have are boolean chart items.
+        if ($name =~ m/^(?:field|type|value)/) {
+            $foundone = 1;
+        }
         # If the name ends in a number (which it does for the fields which
         # are part of the email searching), we use the array
         # positions to show the defaults for that number field.
-        if ($name =~ m/^(.+)(\d)$/ && defined($default{$1})) {
+        elsif ($name =~ m/^(.+)(\d)$/ && defined($default{$1})) {
             $foundone = 1;
             $default{$1}->[$2] = $value;
         }
