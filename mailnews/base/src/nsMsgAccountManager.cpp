@@ -1033,7 +1033,7 @@ nsMsgAccountManager::GetAllServers(nsISupportsArray **_retval)
   return rv;
 }
 
-PRBool
+PRBool PR_CALLBACK
 nsMsgAccountManager::getServersToArray(nsHashKey *aKey,
                                        void *element,
                                        void *aData)

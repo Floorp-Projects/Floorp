@@ -1727,7 +1727,7 @@ MimeGetStringByID(PRInt32 stringID)
     return tempString;
 }
 
-void 
+void PR_CALLBACK
 ResetChannelCharset(MimeObject *obj) 
 { 
   if (obj->options && obj->options->stream_closure && 

@@ -151,7 +151,7 @@ private:
   //
   
   // load up the servers into the given nsISupportsArray
-  static PRBool getServersToArray(nsHashKey* aKey, void *element, void *aData);
+  static PRBool PR_CALLBACK getServersToArray(nsHashKey* aKey, void *element, void *aData);
 
   // find the server given by {username, hostname, type}
   static PRBool findServer(nsISupports *aElement, void *data);
