@@ -23,6 +23,9 @@
 #include "nsTableContent.h"
 #include "nsTableRow.h"
 
+// forward declarations
+struct nsStyleColor;
+
 /**
  * nsTableCell is the content object that represents table cells 
  * (HTML tags TD and TH). This class cannot be reused
@@ -93,6 +96,11 @@ public:
 
   virtual void MapAttributesInto(nsIStyleContext* aContext,
                                  nsIPresContext* aPresContext);
+
+  virtual void MapBackgroundAttributesInto(nsIStyleContext* aContext,
+                                           nsIPresContext* aPresContext);
+
+  void SetBackgroundFromAttribute(nsStyleColor *aColor, nsHTMLValue *aValue);
 
  
 

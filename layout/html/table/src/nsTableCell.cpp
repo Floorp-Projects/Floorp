@@ -21,6 +21,8 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIDocument.h"
+#include "nsIURL.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPtr.h"
@@ -362,6 +364,152 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
       textStyle->mWhiteSpace = NS_STYLE_WHITESPACE_NOWRAP;
     }
   }
+}
+
+void
+nsTableCell::MapBackgroundAttributesInto(nsIStyleContext* aContext,
+                                         nsIPresContext* aPresContext)
+{
+  nsHTMLValue value;
+  nsStyleColor* color=nsnull;
+
+  // background
+  if (eContentAttr_HasValue == GetAttribute(nsHTMLAtoms::background, value)) {
+    if (eHTMLUnit_String == value.GetUnit()) {
+      color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+      SetBackgroundFromAttribute(color, &value);
+    }
+  }
+  // otherwise check the row for background and inherit it
+  else 
+  {
+    if (nsnull!=mRow)
+    {
+      // TODO: optimize by putting a flag on the row to say whether background attr is set
+      mRow->GetAttribute(nsHTMLAtoms::background, value);
+      if (value.GetUnit() == eHTMLUnit_String)
+      {
+        nsString rowBackground;
+        value.GetStringValue(rowBackground);
+        if (nsnull==color)
+          color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+        SetBackgroundFromAttribute(color, &value);
+      }
+      else
+      { // we need to check the row group as well
+        nsTableRowGroup *rowGroup = mRow->GetRowGroup();
+        if (nsnull!=rowGroup)
+        {
+          rowGroup->GetAttribute(nsHTMLAtoms::background, value);
+          if (value.GetUnit() == eHTMLUnit_String)
+          {
+            nsString rowBackground;
+            value.GetStringValue(rowBackground);
+            if (nsnull==color)
+              color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+            SetBackgroundFromAttribute(color, &value);
+          }
+        }
+      }
+    }
+  }
+
+  // bgcolor
+  if (eContentAttr_HasValue == GetAttribute(nsHTMLAtoms::bgcolor, value)) {
+    if (eHTMLUnit_Color == value.GetUnit()) {
+      if (nsnull==color)
+        color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+      color->mBackgroundColor = value.GetColorValue();
+      color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+    }
+    else if (eHTMLUnit_String == value.GetUnit()) {
+      nsAutoString buffer;
+      value.GetStringValue(buffer);
+      char cbuf[40];
+      buffer.ToCString(cbuf, sizeof(cbuf));
+
+      if (nsnull==color)
+        color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+      NS_ColorNameToRGB(cbuf, &(color->mBackgroundColor));
+      color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+    }
+  }
+  // otherwise check the row for background and inherit it
+  else 
+  {
+    if (nsnull!=mRow)
+    {
+      // TODO: optimize by putting a flag on the row to say whether bgcolor attr is set
+      if (eContentAttr_HasValue == mRow->GetAttribute(nsHTMLAtoms::bgcolor, value))
+      {
+        if (eHTMLUnit_Color == value.GetUnit()) {
+          if (nsnull==color)
+            color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+          color->mBackgroundColor = value.GetColorValue();
+          color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+        }
+        else if (eHTMLUnit_String == value.GetUnit()) {
+          nsAutoString buffer;
+          value.GetStringValue(buffer);
+          char cbuf[40];
+          buffer.ToCString(cbuf, sizeof(cbuf));
+          if (nsnull==color)
+            color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+          NS_ColorNameToRGB(cbuf, &(color->mBackgroundColor));
+          color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+        }
+      }
+      else
+      { // we need to check the row group as well
+        nsTableRowGroup *rowGroup = mRow->GetRowGroup();
+        if (nsnull!=rowGroup)
+        {
+          if (eContentAttr_HasValue == rowGroup->GetAttribute(nsHTMLAtoms::bgcolor, value)) {
+            if (eHTMLUnit_Color == value.GetUnit()) {
+              if (nsnull==color)
+                color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+              color->mBackgroundColor = value.GetColorValue();
+              color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+            }
+            else if (eHTMLUnit_String == value.GetUnit()) {
+              nsAutoString buffer;
+              value.GetStringValue(buffer);
+              char cbuf[40];
+              buffer.ToCString(cbuf, sizeof(cbuf));
+
+              if (nsnull==color)
+                color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+              NS_ColorNameToRGB(cbuf, &(color->mBackgroundColor));
+              color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+void nsTableCell::SetBackgroundFromAttribute(nsStyleColor *aColor, nsHTMLValue *aValue)
+{
+  NS_ASSERTION(nsnull!=aColor && nsnull!=aValue, "bad args");
+
+  // Resolve url to an absolute url
+  nsIURL* docURL = nsnull;
+  nsIDocument* doc = mDocument;
+  if (nsnull != doc) {
+    docURL = doc->GetDocumentURL();
+  }
+
+  nsAutoString absURLSpec;
+  nsAutoString spec;
+  aValue->GetStringValue(spec);
+  nsresult rv = NS_MakeAbsoluteURL(docURL, "", spec, absURLSpec);
+  if (nsnull != docURL) {
+    NS_RELEASE(docURL);
+  }
+  aColor->mBackgroundImage = absURLSpec;
+  aColor->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
+  aColor->mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
 }
 
 nsContentAttr
