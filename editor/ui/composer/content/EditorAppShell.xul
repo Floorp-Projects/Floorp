@@ -172,6 +172,10 @@
       <menuitem name="Test Selection" onclick="EditorTestSelection()"/>
       <menuitem name="Test Document" onclick="EditorTestDocument()"/>
       <menuitem name="Run Unit Tests" onclick="EditorUnitTests()"/>
+      <separator />
+      <menuitem name="Start Journal" onclick=""/>
+      <menuitem name="Stop Journal" onclick=""/>
+      <menuitem name="Run Journal" onclick="EditorRunJournal()"/>
     </menu>
     <menu name="Help">
       <menuitem name=".About" onclick=""/>
