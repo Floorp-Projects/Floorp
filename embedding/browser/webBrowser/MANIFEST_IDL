@@ -24,7 +24,7 @@ nsCWebBrowser.idl
 nsIWebBrowser.idl
 nsIWebBrowserChrome.idl
 nsIWebBrowserSetup.idl
+nsIEmbeddingSiteWindow.idl
 nsIWebBrowserPersist.idl
 nsIWebBrowserFocus.idl
-nsIWebBrowserSiteWindow.idl
 nsIWebBrowserFind.idl

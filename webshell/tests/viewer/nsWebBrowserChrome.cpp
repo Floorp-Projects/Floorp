@@ -63,13 +63,13 @@ NS_IMPL_ADDREF(nsWebBrowserChrome)
 NS_IMPL_RELEASE(nsWebBrowserChrome)
 
 NS_INTERFACE_MAP_BEGIN(nsWebBrowserChrome)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
-   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
-   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
-   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
-   NS_INTERFACE_MAP_ENTRY(nsIPrompt)
-   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
+  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+  NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
+  NS_INTERFACE_MAP_ENTRY(nsIPrompt)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -147,6 +147,11 @@ NS_IMETHODIMP nsWebBrowserChrome::CreateBrowserWindow(PRUint32 aChromeMask,
    return NS_OK;
 }
 
+NS_IMETHODIMP nsWebBrowserChrome::DestroyBrowserWindow()
+{
+   return mBrowserWindow->Destroy();
+}
+
 #if 0
 /* Just commenting out for now because it looks like somebody went to
    a lot of work here. This method has been removed from nsIWebBrowserChrome
@@ -206,57 +211,41 @@ NS_IMETHODIMP nsWebBrowserChrome::ExitModalEventLoop(nsresult aStatus)
 }
 
 //*****************************************************************************
-// nsWebBrowserChrome::nsIWebBrowserSiteWindow
+// nsWebBrowserChrome::nsIEmbeddingSiteWindow
 //*****************************************************************************   
 
-NS_IMETHODIMP nsWebBrowserChrome::Destroy()
+NS_IMETHODIMP nsWebBrowserChrome::SetDimensions(PRUint32 aFlags, PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY)
 {
-   return mBrowserWindow->Destroy();
+  PRInt32 x, y, cx, cy;
+  mBrowserWindow->GetPositionAndSize(&x, &y, &cx, &cy);
+  if (aFlags & DIM_FLAGS_POSITION)
+  {
+    x = aX;
+    y = aY;
+  }
+  if (aFlags & DIM_FLAGS_SIZE_INNER || aFlags & DIM_FLAGS_SIZE_OUTER)
+  {
+    cx = aCX;
+    cy = aCY;
+  }
+  return mBrowserWindow->SetPositionAndSize(aX, aY, aCX, aCY, PR_TRUE);
 }
 
-NS_IMETHODIMP nsWebBrowserChrome::SetPosition(PRInt32 aX, PRInt32 aY)
+NS_IMETHODIMP nsWebBrowserChrome::GetDimensions(PRUint32 aFlags, PRInt32 *aX, PRInt32 *aY, PRInt32 *aCX, PRInt32 *aCY)
 {
-   PRInt32 cx=0;
-   PRInt32 cy=0;
-
-   NS_ENSURE_SUCCESS(GetSize(&cx, &cy), NS_ERROR_FAILURE);
-   NS_ENSURE_SUCCESS(SetPositionAndSize(aX, aY, cx, cy, PR_FALSE), 
-      NS_ERROR_FAILURE);
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsWebBrowserChrome::GetPosition(PRInt32* aX, PRInt32* aY)
-{
-   return GetPositionAndSize(aX, aY, nsnull, nsnull);
-}
-
-NS_IMETHODIMP nsWebBrowserChrome::SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
-{
-   PRInt32 x=0;
-   PRInt32 y=0;
-
-   NS_ENSURE_SUCCESS(GetPosition(&x, &y), NS_ERROR_FAILURE);
-   NS_ENSURE_SUCCESS(SetPositionAndSize(x, y, aCX, aCY, aRepaint), 
-      NS_ERROR_FAILURE);
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsWebBrowserChrome::GetSize(PRInt32* aCX, PRInt32* aCY)
-{
-   return GetPositionAndSize(nsnull, nsnull, aCX, aCY);
-}
-
-NS_IMETHODIMP nsWebBrowserChrome::SetPositionAndSize(PRInt32 aX, PRInt32 aY, 
-   PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
-{
-   return mBrowserWindow->SetPositionAndSize(aX, aY, aCX, aCY, aRepaint);
-}
-
-NS_IMETHODIMP nsWebBrowserChrome::GetPositionAndSize(PRInt32* aX, PRInt32* aY, 
-   PRInt32* aCX, PRInt32* aCY)
-{
-   return mBrowserWindow->GetPositionAndSize(aX, aY, aCX, aCY);
+  PRInt32 x, y, cx, cy;
+  mBrowserWindow->GetPositionAndSize(&x, &y, &cx, &cy);
+  if (aFlags & DIM_FLAGS_POSITION)
+  {
+    *aX = x;
+    *aY = y;
+  }
+  if (aFlags & DIM_FLAGS_SIZE_INNER || aFlags & DIM_FLAGS_SIZE_OUTER)
+  {
+    *aCX = cx;
+    *aCY = cy;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::GetSiteWindow(void ** aParentNativeWindow)
@@ -266,6 +255,16 @@ NS_IMETHODIMP nsWebBrowserChrome::GetSiteWindow(void ** aParentNativeWindow)
    //XXX First Check In
    NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
    return NS_OK;
+}
+
+NS_IMETHODIMP nsWebBrowserChrome::GetVisibility(PRBool *aVisibility)
+{
+  return mBrowserWindow->GetVisibility(aVisibility);
+}
+
+NS_IMETHODIMP nsWebBrowserChrome::SetVisibility(PRBool aVisibility)
+{
+  return mBrowserWindow->SetVisibility(aVisibility);
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::SetFocus()

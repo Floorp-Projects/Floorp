@@ -32,98 +32,105 @@ interface nsIDocShellTreeItem;
 [scriptable, uuid(BA434C60-9D52-11d3-AFB0-00A024FFC08C)]
 interface nsIWebBrowserChrome : nsISupports
 {
-	const unsigned long STATUS_SCRIPT         = 0x00000001;
-	const unsigned long STATUS_SCRIPT_DEFAULT = 0x00000002;
-	const unsigned long STATUS_LINK           = 0x00000003;
+    const unsigned long STATUS_SCRIPT         = 0x00000001;
+    const unsigned long STATUS_SCRIPT_DEFAULT = 0x00000002;
+    const unsigned long STATUS_LINK           = 0x00000003;
 
-	/*
-	    Called when the status text in the chrome needs to be updated.
-		The statusType indicates what is setting the text, the text is nsnull
-		when there is no longer any status
+    /*
+        Called when the status text in the chrome needs to be updated.
+        The statusType indicates what is setting the text, the text is nsnull
+        when there is no longer any status
+     */
+    void setStatus(in unsigned long statusType, in wstring status);
+
+    /*
+        This is the currently loaded webBrowser.  The browser chrome may be
+	told to set the webBrowser object to a new object via setting of this
+	attribute.  In this case the implementer is responsible for taking the 
+	new webBrowser object and doing any necessary initialization or setup 
+	as if it had created the webBrowser itself.  This includes positioning
+	setting up listeners etc.
     */
-	void setStatus(in unsigned long statusType, in wstring status);
+    attribute nsIWebBrowser webBrowser;
 
-	/*
-		This is the currently loaded webBrowser.  The browser chrome may be
-		told to set the webBrowser object to a new object via setting of this
-		attribute.  In this case the implementer is responsible for taking the 
-		new webBrowser object and doing any necessary initialization or setup 
-		as if it had created the webBrowser itself.  This includes positioning
-		setting up listeners etc.
-	*/
-	attribute nsIWebBrowser webBrowser;
-
-	/*
-		Definitions for the chrome flags
-	*/
-	const unsigned long CHROME_DEFAULT          = 0x00000001;
-	const unsigned long CHROME_WINDOW_BORDERS   = 0x00000002;
-	const unsigned long CHROME_WINDOW_CLOSE     = 0x00000004;
-	const unsigned long CHROME_WINDOW_RESIZE    = 0x00000008;
-	const unsigned long CHROME_MENUBAR          = 0x00000010;
-	const unsigned long CHROME_TOOLBAR          = 0x00000020;
-	const unsigned long CHROME_LOCATIONBAR      = 0x00000040;
-	const unsigned long CHROME_STATUSBAR        = 0x00000080;
-	const unsigned long CHROME_PERSONAL_TOOLBAR = 0x00000100;
-	const unsigned long CHROME_SCROLLBARS       = 0x00000200;
-	const unsigned long CHROME_TITLEBAR         = 0x00000400;
-	const unsigned long CHROME_EXTRA            = 0x00000800;
-
+    /*
+        Definitions for the chrome flags
+    */
+    const unsigned long CHROME_DEFAULT          = 0x00000001;
+    const unsigned long CHROME_WINDOW_BORDERS   = 0x00000002;
+    const unsigned long CHROME_WINDOW_CLOSE     = 0x00000004;
+    const unsigned long CHROME_WINDOW_RESIZE    = 0x00000008;
+    const unsigned long CHROME_MENUBAR          = 0x00000010;
+    const unsigned long CHROME_TOOLBAR          = 0x00000020;
+    const unsigned long CHROME_LOCATIONBAR      = 0x00000040;
+    const unsigned long CHROME_STATUSBAR        = 0x00000080;
+    const unsigned long CHROME_PERSONAL_TOOLBAR = 0x00000100;
+    const unsigned long CHROME_SCROLLBARS       = 0x00000200;
+    const unsigned long CHROME_TITLEBAR         = 0x00000400;
+    const unsigned long CHROME_EXTRA            = 0x00000800;
+    
     // createBrowserWindow specific flags
     const unsigned long CHROME_WITH_SIZE        = 0x00001000;
     const unsigned long CHROME_WITH_POSITION    = 0x00002000;
 
-	const unsigned long CHROME_WINDOW_RAISED    = 0x02000000;
-	const unsigned long CHROME_WINDOW_LOWERED   = 0x04000000;
-	const unsigned long CHROME_CENTER_SCREEN    = 0x08000000;
-	const unsigned long CHROME_DEPENDENT        = 0x10000000;
-	// Note: The modal style bit just affects the way the window looks and does
-	//       mean it's actually modal.
-	const unsigned long CHROME_MODAL            = 0x20000000; 
-	const unsigned long CHROME_OPENAS_DIALOG    = 0x40000000;
-	const unsigned long CHROME_OPENAS_CHROME    = 0x80000000;
+    const unsigned long CHROME_WINDOW_RAISED    = 0x02000000;
+    const unsigned long CHROME_WINDOW_LOWERED   = 0x04000000;
+    const unsigned long CHROME_CENTER_SCREEN    = 0x08000000;
+    const unsigned long CHROME_DEPENDENT        = 0x10000000;
+    // Note: The modal style bit just affects the way the window looks and does
+    //       mean it's actually modal.
+    const unsigned long CHROME_MODAL            = 0x20000000; 
+    const unsigned long CHROME_OPENAS_DIALOG    = 0x40000000;
+    const unsigned long CHROME_OPENAS_CHROME    = 0x80000000;
+    
+    const unsigned long CHROME_ALL              = 0x00000ffe;
+    
+    /*
+        The chrome flags for this browser chrome
+    */
+    attribute unsigned long chromeFlags;
 
-	const unsigned long CHROME_ALL              = 0x00000ffe;
-
-	/*
-		The chrome flags for this browser chrome
-	*/
-	attribute unsigned long chromeFlags;
-
-	/*
-	    Asks the implementer of this interface to create a new webbrowser
-		object and return the nsIWebBrowser interface to it. The chrome
-		flags indicate the style of the surrounding frame window and
-		associated chrome. The position parameters should be ignored
-		unless the CHROME_WITH_POSITION chrome flags is set. The size
-		parameters should be ignored unless the CHROME_WITH_SIZE chrome flag
-		is set. 
-	*/
-
+    /*
+        Asks the implementer of this interface to create a new webbrowser
+	object and return the nsIWebBrowser interface to it. The chrome
+	flags indicate the style of the surrounding frame window and
+	associated chrome. The position parameters should be ignored
+	unless the CHROME_WITH_POSITION chrome flags is set. The size
+	parameters should be ignored unless the CHROME_WITH_SIZE chrome flag
+	is set. 
+    */
     nsIWebBrowser createBrowserWindow(in unsigned long chromeFlags,
 	                  in long aX, in long aY, in long aCX, in long aCY);
 
-	/*
-		Tells the chrome to size itself such that the browser will be the 
-		specified size.
-	*/
-	void sizeBrowserTo(in long aCX, in long aCY);
 
-	/*
-		Shows the window as a modal window.
-	*/
-	void showAsModal();
+    /*
+        Asks the implementer to destroy the window associated with this
+        webbrowser object.
+    */
+    void destroyBrowserWindow();
 
-	/**
-	Is the window modal (that is, currently executing a modal loop)?
-	@return true if it's a modal window
-	*/
-	boolean isWindowModal();
 
-	/**
-	 Exit a modal event loop if we're in one. The implementation
-	 should also exit out of the loop if the window is destroyed.
-	 @param aStatus - the result code to return from showAsModal
-	*/
-	void exitModalEventLoop(in nsresult aStatus);
+    /*
+        Tells the chrome to size itself such that the browser will be the 
+        specified size.
+    */
+    void sizeBrowserTo(in long aCX, in long aCY);
+    
+    /*
+        Shows the window as a modal window.
+    */
+    void showAsModal();
+    
+    /**
+        Is the window modal (that is, currently executing a modal loop)?
+        @return true if it's a modal window
+    */
+    boolean isWindowModal();
+
+    /**
+        Exit a modal event loop if we're in one. The implementation
+	should also exit out of the loop if the window is destroyed.
+        @param aStatus - the result code to return from showAsModal
+    */
+    void exitModalEventLoop(in nsresult aStatus);
 };

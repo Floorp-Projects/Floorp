@@ -243,7 +243,9 @@ EmbedPrivate::Hide(void)
 void
 EmbedPrivate::Resize(PRUint32 aWidth, PRUint32 aHeight)
 {
-  mWindow->SetPositionAndSize(0, 0, aWidth, aHeight, PR_FALSE);
+  mWindow->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION |
+			 nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER,
+			 0, 0, aWidth, aHeight);
 }
 
 void

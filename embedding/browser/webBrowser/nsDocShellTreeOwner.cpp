@@ -433,7 +433,7 @@ NS_IMETHODIMP nsDocShellTreeOwner::Destroy()
 {
     if (mOwnerWin)
     {
-        return mOwnerWin->Destroy();
+        return mWebBrowserChrome->DestroyBrowserWindow();
     }
     return NS_ERROR_NULL_POINTER;
 }
@@ -442,7 +442,8 @@ NS_IMETHODIMP nsDocShellTreeOwner::SetPosition(PRInt32 aX, PRInt32 aY)
 {
     if (mOwnerWin)
     {
-        return mOwnerWin->SetPosition(aX, aY);
+       return mOwnerWin->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION,
+                                       aX, aY, 0, 0);
     }
     return NS_ERROR_NULL_POINTER;
 }
@@ -451,7 +452,8 @@ NS_IMETHODIMP nsDocShellTreeOwner::GetPosition(PRInt32* aX, PRInt32* aY)
 {
     if (mOwnerWin)
     {
-        return mOwnerWin->GetPosition(aX, aY);
+        return mOwnerWin->GetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION,
+                                        aX, aY, nsnull, nsnull);
     }
     return NS_ERROR_NULL_POINTER;
 }
@@ -460,7 +462,8 @@ NS_IMETHODIMP nsDocShellTreeOwner::SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRep
 {
     if (mOwnerWin)
     {
-        return mOwnerWin->SetSize(aCX, aCY, aRepaint);
+        return mOwnerWin->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER,
+                                        0, 0, aCX, aCY);
     }
     return NS_ERROR_NULL_POINTER;
 }
@@ -469,7 +472,8 @@ NS_IMETHODIMP nsDocShellTreeOwner::GetSize(PRInt32* aCX, PRInt32* aCY)
 {
     if (mOwnerWin)
     {
-        return mOwnerWin->GetSize(aCX, aCY);
+        return mOwnerWin->GetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER,
+                                        nsnull, nsnull, aCX, aCY);
     }
     return NS_ERROR_NULL_POINTER;
 }
@@ -479,7 +483,9 @@ NS_IMETHODIMP nsDocShellTreeOwner::SetPositionAndSize(PRInt32 aX, PRInt32 aY,
 {
     if (mOwnerWin)
     {
-        return mOwnerWin->SetPositionAndSize(aX, aY, aCX, aCY, aRepaint);
+        return mOwnerWin->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER |
+                                        nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION,
+                                        aX, aY, aCX, aCY);
     }
     return NS_ERROR_NULL_POINTER;
 }
@@ -489,7 +495,9 @@ NS_IMETHODIMP nsDocShellTreeOwner::GetPositionAndSize(PRInt32* aX, PRInt32* aY,
 {
     if (mOwnerWin)
     {
-        return mOwnerWin->GetPositionAndSize(aX, aY, aCX, aCY);
+        return mOwnerWin->GetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER |
+                                        nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION,
+                                        aX, aY, aCX, aCY);
     }
     return NS_ERROR_NULL_POINTER;
 }
@@ -525,11 +533,19 @@ NS_IMETHODIMP nsDocShellTreeOwner::SetParentNativeWindow(nativeWindow aParentNat
 
 NS_IMETHODIMP nsDocShellTreeOwner::GetVisibility(PRBool* aVisibility)
 {
+    if (mOwnerWin)
+    {
+        return mOwnerWin->GetVisibility(aVisibility);
+    }
     return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetVisibility(PRBool aVisibility)
 {
+    if (mOwnerWin)
+    {
+        return mOwnerWin->SetVisibility(aVisibility);
+    }
     return NS_ERROR_NULL_POINTER;
 }
 
@@ -676,7 +692,7 @@ NS_IMETHODIMP nsDocShellTreeOwner::SetWebBrowserChrome(nsIWebBrowserChrome* aWeb
       }
    else
       {
-      nsCOMPtr<nsIWebBrowserSiteWindow> ownerWin(do_QueryInterface(aWebBrowserChrome));
+      nsCOMPtr<nsIEmbeddingSiteWindow> ownerWin(do_QueryInterface(aWebBrowserChrome));
       nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(aWebBrowserChrome));
 
       // it's ok for ownerWin or requestor to be null.

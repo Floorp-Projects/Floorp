@@ -36,7 +36,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIWebBrowserSiteWindow.h"
+#include "nsIEmbeddingSiteWindow.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 #include "nsIDOMKeyListener.h"
@@ -112,7 +112,7 @@ protected:
    nsIDocShellTreeItem*    mPrimaryContentShell; 
 
    nsIWebBrowserChrome*    mWebBrowserChrome;
-   nsIWebBrowserSiteWindow* mOwnerWin;
+   nsIEmbeddingSiteWindow* mOwnerWin;
    nsIInterfaceRequestor*  mOwnerRequestor;
    
     // the object that listens for chrome events like context menus and tooltips. 
