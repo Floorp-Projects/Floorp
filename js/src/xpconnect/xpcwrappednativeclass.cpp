@@ -1161,7 +1161,7 @@ nsXPCWrappedNativeClass::OneTimeInit()
     WrappedNative_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
     WrappedNative_ops.dropProperty = js_ObjectOps.dropProperty;
     return JS_TRUE;
-}        
+}
 
 // static
 JSBool
@@ -1251,7 +1251,7 @@ nsXPCWrappedNativeClass::DebugDump(int depth)
                         XPC_LOG_INDENT();
                         jsval idval;
                         const char *name;
-                        if (JS_IdToValue(GetJSContext(), desc.id, &idval) && 
+                        if (JS_IdToValue(GetJSContext(), desc.id, &idval) &&
                             JSVAL_IS_STRING(idval) &&
                            (name = JS_GetStringBytes(
                                     JSVAL_TO_STRING(idval))) != NULL)
@@ -1272,7 +1272,7 @@ nsXPCWrappedNativeClass::DebugDump(int depth)
             depth++;
         }
     XPC_LOG_OUTDENT();
-#endif        
+#endif
     return NS_OK;
-}        
+}
 

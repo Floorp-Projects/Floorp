@@ -25,7 +25,7 @@
 #include "prtypes.h"
 #include "prlog.h"
 
-/* 
+/*
  * This uses prlog.h See prlog.h for environment settings for output.
  * The module name used here is 'xpclog'. These environment settings
  * should work...

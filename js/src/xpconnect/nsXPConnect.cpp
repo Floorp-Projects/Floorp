@@ -147,13 +147,13 @@ nsXPConnect::InitJSContext(JSContext* aJSContext,
     {
         if(!aGlobalJSObj)
             aGlobalJSObj = JS_GetGlobalObject(aJSContext);
-        if(aGlobalJSObj && 
+        if(aGlobalJSObj &&
            !mContextMap->Find(aJSContext) &&
            NewContext(aJSContext, aGlobalJSObj))
         {
             return NS_OK;
         }
-    }        
+    }
     NS_ASSERTION(0,"nsXPConnect::InitJSContext failed");
     return NS_ERROR_FAILURE;
 }
@@ -192,7 +192,7 @@ nsXPConnect::InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
 }
 
 XPCContext*
-nsXPConnect::NewContext(JSContext* cx, JSObject* global, 
+nsXPConnect::NewContext(JSContext* cx, JSObject* global,
                         JSBool doInit /*= JS_TRUE*/)
 {
     XPCContext* xpcc;
@@ -285,8 +285,8 @@ ContextMapDumpEnumerator(JSHashEntry *he, intN i, void *arg)
 {
     ((XPCContext*)he->value)->DebugDump(*(int*)arg);
     return HT_ENUMERATE_NEXT;
-}        
-#endif        
+}
+#endif
 
 NS_IMETHODIMP
 nsXPConnect::DebugDump(int depth)
@@ -308,9 +308,9 @@ nsXPConnect::DebugDump(int depth)
             XPC_LOG_OUTDENT();
         }
     XPC_LOG_OUTDENT();
-#endif        
+#endif
     return NS_OK;
-}        
+}
 
 XPC_PUBLIC_API(nsIXPConnect*)
 XPC_GetXPConnect()
@@ -325,11 +325,19 @@ XPC_GetXPConnect()
 XPC_PUBLIC_API(void)
 XPC_Dump(nsISupports* p, int depth)
 {
-    if(!p || !depth)
+    if(!depth)
         return;
+    if(!p)
+    {
+        XPC_LOG_ALWAYS(("*** Cound not dump object with NULL address"));
+        return;
+    }
 
     nsIXPConnect* xpc;
     nsIXPCWrappedNativeClass* wnc;
+    nsIXPCWrappedJSClass* wjsc;
+    nsIXPConnectWrappedNative* wn;
+    nsIXPConnectWrappedJSMethods* wjsm;
 
     if(NS_SUCCEEDED(p->QueryInterface(nsIXPConnect::IID(),(void**)&xpc)))
     {
@@ -337,12 +345,37 @@ XPC_Dump(nsISupports* p, int depth)
         xpc->DebugDump(depth);
         NS_RELEASE(xpc);
     }
-    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPCWrappedNativeClass::IID(),(void**)&wnc)))
+    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPCWrappedNativeClass::IID(),
+                        (void**)&wnc)))
     {
         XPC_LOG_ALWAYS(("Dumping a nsIXPCWrappedNativeClass..."));
         wnc->DebugDump(depth);
-        NS_RELEASE(xpc);
+        NS_RELEASE(wnc);
     }
-}        
-#endif        
+    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPCWrappedJSClass::IID(),
+                        (void**)&wjsc)))
+    {
+        XPC_LOG_ALWAYS(("Dumping a nsIXPCWrappedJSClass..."));
+        wjsc->DebugDump(depth);
+        NS_RELEASE(wjsc);
+    }
+    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPConnectWrappedNative::IID(),
+                        (void**)&wn)))
+    {
+        XPC_LOG_ALWAYS(("Dumping a nsIXPConnectWrappedNative..."));
+        wn->DebugDump(depth);
+        NS_RELEASE(wn);
+    }
+    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPConnectWrappedJSMethods::IID(),
+                        (void**)&wjsm)))
+    {
+        XPC_LOG_ALWAYS(("Dumping a nsIXPConnectWrappedJSMethods..."));
+        wjsm->DebugDump(depth);
+        NS_RELEASE(wjsm);
+    }
+    else
+        XPC_LOG_ALWAYS(("*** Cound not dump the nsISupports @ %x", p));
+
+}
+#endif
 

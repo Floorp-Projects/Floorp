@@ -75,6 +75,7 @@ public:
     NS_IMETHOD GetNative(nsISupports** aObj) = 0;
     NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info) = 0;
     NS_IMETHOD GetIID(nsIID** iid) = 0; // returns IAllocatator alloc'd copy
+    NS_IMETHOD DebugDump(int depth) = 0;
 };
 
 /***************************************************************************/
@@ -110,6 +111,7 @@ public:
     NS_IMETHOD GetJSObject(JSObject** aJSObj) = 0;
     NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info) = 0;
     NS_IMETHOD GetIID(nsIID** iid) = 0; // returns IAllocatator alloc'd copy
+    NS_IMETHOD DebugDump(int depth) = 0;
 };
 
 /***************************************************************************/

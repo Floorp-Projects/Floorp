@@ -201,7 +201,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
     case nsXPTType::T_FLOAT : *d = JAM_DOUBLE(cx,*((float*)s),dbl);      break;
     case nsXPTType::T_DOUBLE: *d = JAM_DOUBLE(cx,*((double*)s),dbl);     break;
     case nsXPTType::T_BOOL  : *d = *((PRBool*)s)?JSVAL_TRUE:JSVAL_FALSE; break;
-    case nsXPTType::T_CHAR  : 
+    case nsXPTType::T_CHAR  :
         {
             char* p = (char*)s;
             if(!p)
@@ -212,7 +212,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
             *d = STRING_TO_JSVAL(str);
             break;
         }
-    case nsXPTType::T_WCHAR : 
+    case nsXPTType::T_WCHAR :
         {
             jschar* p = (jschar*)s;
             if(!p)
@@ -404,7 +404,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         {
             char* bytes;
             JSString* str;
-        
+
             if(!(str = JS_ValueToString(cx, s))||
                !(bytes = JS_GetStringBytes(str)))
             {

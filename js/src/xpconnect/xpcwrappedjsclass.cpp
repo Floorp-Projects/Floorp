@@ -337,7 +337,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                     goto pre_call_clean_up;
             }
 
-            if(!XPCConvert::NativeData2JS(cx, &val, &pv->val, type, 
+            if(!XPCConvert::NativeData2JS(cx, &val, &pv->val, type,
                                           conditional_iid))
             {
                 goto pre_call_clean_up;
@@ -379,7 +379,7 @@ pre_call_clean_up:
             if(param.IsIn())
             {
                 nsISupports** pp;
-                if((NULL != (pp = (nsISupports**) params[i].val.p)) && 
+                if((NULL != (pp = (nsISupports**) params[i].val.p)) &&
                     NULL != *pp)
                 {
                     (*pp)->Release();
@@ -457,7 +457,7 @@ pre_call_clean_up:
         }
     }
 
-    // if we didn't manage all the result conversions then we have 
+    // if we didn't manage all the result conversions then we have
     // to cleanup any junk that *did* get converted.
     if(i != paramCount)
     {
@@ -499,4 +499,58 @@ JSObject*
 nsXPCWrappedJSClass::NewOutObject()
 {
     return JS_NewObject(GetJSContext(), &WrappedJSOutArg_class, NULL, NULL);
+}
+
+NS_IMETHODIMP
+nsXPCWrappedJSClass::DebugDump(int depth)
+{
+#ifdef DEBUG
+    depth-- ;
+    XPC_LOG_ALWAYS(("nsXPCWrappedJSClass @ %x with mRefCnt = %d", this, mRefCnt));
+    XPC_LOG_INDENT();
+        char* name;
+        nsIAllocator* al;
+        mInfo->GetName(&name);
+        XPC_LOG_ALWAYS(("interface name is %s", name));
+        if(name && NULL != (al = nsXPConnect::GetAllocator()))
+        {
+            al->Free(name);
+            NS_RELEASE(al);
+        }
+        char * iid = mIID.ToString();
+        XPC_LOG_ALWAYS(("IID number is %s", iid));
+        free(iid);
+        XPC_LOG_ALWAYS(("InterfaceInfo @ %x", mInfo));
+        uint16 methodCount = 0;
+        if(depth)
+        {
+            uint16 i;
+            nsIInterfaceInfo* parent;
+            XPC_LOG_INDENT();
+            mInfo->GetParent(&parent);
+            XPC_LOG_ALWAYS(("parent @ %x", parent));
+            mInfo->GetMethodCount(&methodCount);
+            XPC_LOG_ALWAYS(("MethodCount = %d", methodCount));
+            mInfo->GetConstantCount(&i);
+            XPC_LOG_ALWAYS(("ConstantCount = %d", i));
+            XPC_LOG_OUTDENT();
+        }
+        XPC_LOG_ALWAYS(("mXPCContext @ %x", mXPCContext));
+        XPC_LOG_ALWAYS(("JSContext @ %x", GetJSContext()));
+        XPC_LOG_ALWAYS(("mDescriptors @ %x count = %d", mDescriptors, methodCount));
+        if(depth && mDescriptors && methodCount)
+        {
+            depth--;
+            XPC_LOG_INDENT();
+            for(uint16 i = 0; i < methodCount; i++)
+            {
+                XPC_LOG_ALWAYS(("Method %d is %s%s", \
+                        i, IsReflectable(i) ? "":" NOT ","reflectable"));
+            }
+            XPC_LOG_OUTDENT();
+            depth++;
+        }
+    XPC_LOG_OUTDENT();
+#endif
+    return NS_OK;
 }

@@ -84,7 +84,7 @@ public:
     virtual ~nsXPConnect();
 private:
     nsXPConnect();
-    XPCContext*  NewContext(JSContext* cx, JSObject* global, 
+    XPCContext*  NewContext(JSContext* cx, JSObject* global,
                             JSBool doInit = JS_TRUE);
 
 private:
@@ -152,7 +152,7 @@ private:
 class nsIXPCWrappedJSClass : public nsISupports
 {
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_JS_CLASS_IID)
-    // no methods
+    NS_IMETHOD DebugDump(int depth) = 0;
 };
 
 /*************************/
@@ -161,6 +161,7 @@ class nsXPCWrappedJSClass : public nsIXPCWrappedJSClass
 {
     // all the interface method declarations...
     NS_DECL_ISUPPORTS;
+    NS_IMETHOD DebugDump(int depth);
 public:
 
     static nsXPCWrappedJSClass* GetNewOrUsedClass(XPCContext* xpcc,
@@ -223,6 +224,7 @@ public:
     nsXPCWrappedJSClass*  GetClass() {return mClass;}
     REFNSIID GetIID() {return GetClass()->GetIID();}
     nsXPCWrappedJS* GetRootWrapper() {return mRoot;}
+    void DebugDump(int depth);
 
     virtual ~nsXPCWrappedJS();
 private:
@@ -248,9 +250,12 @@ public:
     NS_IMETHOD GetJSObject(JSObject** aJSObj);
     NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
     NS_IMETHOD GetIID(nsIID** iid); // returns IAllocatator alloc'd copy
+    NS_IMETHOD DebugDump(int depth);
 
     nsXPCWrappedJSMethods(nsXPCWrappedJS* aWrapper);
     virtual ~nsXPCWrappedJSMethods();
+    // used in nsXPCWrappedJS::DebugDump
+    int GetRefCnt() {return mRefCnt;}
 
 private:
     nsXPCWrappedJSMethods();  // not implemented
@@ -416,6 +421,7 @@ class nsXPCWrappedNative : public nsIXPConnectWrappedNative
     NS_IMETHOD GetNative(nsISupports** aObj);
     NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
     NS_IMETHOD GetIID(nsIID** iid); // returns IAllocatator alloc'd copy
+    NS_IMETHOD DebugDump(int depth);
 
 public:
     static nsXPCWrappedNative* GetNewOrUsedWrapper(XPCContext* xpcc,

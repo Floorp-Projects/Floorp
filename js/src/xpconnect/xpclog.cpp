@@ -45,13 +45,13 @@ static PRBool Init()
     if(!g_LogMod || !g_Spaces || !PR_LOG_TEST(g_LogMod,1))
     {
         g_InitState = -1;
-        return PR_FALSE;                
+        return PR_FALSE;
     }
     g_InitState = 1;
-    return PR_TRUE;                
-}        
+    return PR_TRUE;
+}
 
-XPC_PUBLIC_API(void)    
+XPC_PUBLIC_API(void)
 XPC_Log_print(const char *fmt, ...)
 {
     va_list ap;
@@ -64,32 +64,32 @@ XPC_Log_print(const char *fmt, ...)
         PR_LogPrint("%s%s",g_Spaces+SPACE_COUNT-(INDENT_FACTOR*g_Indent),line);
     else
         PR_LogPrint("%s",line);
-}        
+}
 
-XPC_PUBLIC_API(PRBool)  
+XPC_PUBLIC_API(PRBool)
 XPC_Log_Check(int i)
 {
     return CAN_RUN && PR_LOG_TEST(g_LogMod,1);
-}        
+}
 
-XPC_PUBLIC_API(void)    
+XPC_PUBLIC_API(void)
 XPC_Log_Indent()
 {
     if(INDENT_FACTOR*(++g_Indent) > SPACE_COUNT)
         g_Indent-- ;
-}        
+}
 
-XPC_PUBLIC_API(void)    
+XPC_PUBLIC_API(void)
 XPC_Log_Outdent()
 {
     if(--g_Indent < 0)
         g_Indent++;
-}        
+}
 
-XPC_PUBLIC_API(void)   
+XPC_PUBLIC_API(void)
 XPC_Log_Clear_Indent()
 {
     g_Indent = 0;
-}        
+}
 
 #endif

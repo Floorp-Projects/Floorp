@@ -569,9 +569,6 @@ int main()
             for(char** p = txt; *p; p++)
                 JS_EvaluateScript(cx, glob, *p, strlen(*p), "builtin", 1, &rval);
 
-            // dump to log test...
-            XPC_DUMP(xpc, 50);
-
             if(JS_GetProperty(cx, glob, "bar", &v) && JSVAL_IS_OBJECT(v))
             {
                 JSObject* bar = JSVAL_TO_OBJECT(v);
@@ -597,7 +594,7 @@ int main()
                             "expected result" : "WRONG RESULT" );
 
                     // dump to log test...
-                    XPC_DUMP(xpc, 1);
+                    XPC_DUMP(xpc, 50);
 
                     NS_RELEASE(methods);
                     NS_RELEASE(wrapper);
@@ -611,11 +608,25 @@ int main()
     }
     NS_RELEASE(foo);
 
+    // XXX things are still rooted to the global object in the test scripts...
+
+    // dump to log test...
+//    XPC_LOG_ALWAYS((""));
+//    XPC_LOG_ALWAYS(("after running release object..."));
+//    XPC_LOG_ALWAYS((""));
+//    XPC_DUMP(xpc, 3);
+
     JS_GC(cx);
+
+    // dump to log test...
+//    XPC_LOG_ALWAYS((""));
+//    XPC_LOG_ALWAYS(("after running JS_GC..."));
+//    XPC_LOG_ALWAYS((""));
+//    XPC_DUMP(xpc, 3);
+
     JS_DestroyContext(cx);
     JS_DestroyRuntime(rt);
     JS_ShutDown();
-
     return 0;
 }
 
