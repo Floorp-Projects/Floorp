@@ -179,3 +179,12 @@
 #defaultAppName {
   margin-left: 6px !important; 
 }
+
+expander {
+  margin: 2px;
+}
+
+#privacyCategories > expander[open="true"] {
+  background-color: #FFFFCC;
+  border: 1px solid black;
+}

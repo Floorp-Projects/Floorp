@@ -26,6 +26,24 @@
         settings.collapsed = !open;
         expander.open = open;
       ]]></constructor>
+      <property name="open">
+        <setter>
+          <![CDATA[
+            var settings = document.getAnonymousElementByAttribute(this, "anonid", "settings");
+            var expander = document.getAnonymousElementByAttribute(this, "anonid", "disclosure");
+            settings.collapsed = !val;
+            expander.open = val;
+            if (val)
+              this.setAttribute("open", "true");
+            else
+              this.removeAttribute("open");
+            return val;
+          ]]>
+        </setter>
+        <getter>
+          return this.getAttribute("open");
+        </getter>
+      </property>        
       <method name="onCommand">
         <parameter name="aEvent"/>
         <body><![CDATA[
@@ -34,11 +52,7 @@
           switch (button) {
           case "disclosure":
           case "label":
-            var settings = document.getAnonymousElementByAttribute(this, "anonid", "settings");
-            settings.collapsed = !settings.collapsed;
-            var disclosure = document.getAnonymousElementByAttribute(this, "anonid", "disclosure");
-            disclosure.open = !disclosure.open;
-            this.setAttribute("open", disclosure.open);
+            this.open = !this.open;
             break;
           case "clear-button":
             var event = document.createEvent("Events");
