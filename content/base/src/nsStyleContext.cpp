@@ -421,6 +421,14 @@ nsStyleContext::GetUniqueStyleData(nsIPresContext* aPresContext, const nsStyleSt
     mBits &= ~NS_STYLE_INHERIT_TEXT;
     break;
   }
+  case eStyleStruct_TextReset: {
+    const nsStyleTextReset* reset = (const nsStyleTextReset*)GetStyleData(aSID);
+    nsStyleTextReset* newReset = new (aPresContext) nsStyleTextReset(*reset);
+    SetStyle(aSID, *newReset);
+    result = newReset;
+    mBits &= ~NS_STYLE_INHERIT_TEXT_RESET;
+    break;
+  }
   default:
     NS_ERROR("Struct type not supported.  Please find another way to do this if you can!\n");
   }
