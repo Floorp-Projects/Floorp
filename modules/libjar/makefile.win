@@ -37,6 +37,7 @@ DLL=$(OBJDIR)\$(DLLNAME).dll
 MAPFILE=$(DLLNAME).map
 
 XPIDLSRCS=.\nsIZipReader.idl \
+          .\nsIJAR.idl \
           $(NULL)
 
 EXPORTS=zipfile.h

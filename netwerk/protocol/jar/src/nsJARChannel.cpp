@@ -33,6 +33,7 @@
 #include "nsIAggregatePrincipal.h"
 #include "nsIProgressEventSink.h"
 #include "nsXPIDLString.h"
+#include "nsIJAR.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
@@ -495,8 +496,10 @@ nsJARChannel::GetOwner(nsISupports* *aOwner)
         rv = EnsureZipReader();
         if (NS_FAILED(rv)) return rv;
 
+        nsCOMPtr<nsIJAR> jar = do_QueryInterface(mJAR, &rv);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Zip reader is not an nsIJAR");
         nsCOMPtr<nsIPrincipal> certificate;
-        rv = mJAR->GetCertificatePrincipal(mJAREntry, 
+        rv = jar->GetCertificatePrincipal(mJAREntry, 
                                            getter_AddRefs(certificate));
         if (NS_FAILED(rv)) return rv;
         if (certificate)

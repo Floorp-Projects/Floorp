@@ -56,6 +56,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include "nsIZipReader.h"
+#include "nsIJAR.h"
 #include "nsIPluginInstance.h"
 #include "nsIXPConnect.h"
 #include "nsIScriptGlobalObject.h"
@@ -366,8 +367,6 @@ nsSecurityNameSet::AddNameSet(nsIScriptContext* aScriptContext)
     return NS_OK;
 }
 
-
-
 /////////////////////////////
 // nsScriptSecurityManager //
 /////////////////////////////
@@ -398,6 +397,10 @@ SetBit(unsigned char *bitVector, PRInt32 index)
 ///////////////////////////////////////////////////
 // Methods implementing nsIScriptSecurityManager //
 ///////////////////////////////////////////////////
+
+static char *domPropNames[] = {
+    NS_DOM_PROP_NAMES
+};
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckScriptAccess(JSContext *cx, 
@@ -1292,15 +1295,16 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
 #endif
         systemCertFile->Append("systemSignature.jar");
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-        nsCOMPtr<nsIZipReader> systemCertJar;
+        nsCOMPtr<nsIZipReader> systemCertZip;
         rv = nsComponentManager::CreateInstance(kZipReaderCID, nsnull, 
                                                 NS_GET_IID(nsIZipReader),
-                                                getter_AddRefs(systemCertJar));
+                                                getter_AddRefs(systemCertZip));
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-        systemCertJar->Init(systemCertFile);
-        rv = systemCertJar->Open();
+        systemCertZip->Init(systemCertFile);
+        rv = systemCertZip->Open();
         if (NS_SUCCEEDED(rv))
         {
+			nsCOMPtr<nsIJAR> systemCertJar = do_QueryInterface(systemCertZip);
             rv = systemCertJar->GetCertificatePrincipal(nsnull, 
                                                         getter_AddRefs(mSystemCertificate));
             if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
@@ -1672,12 +1676,6 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     /*
     ** Access tests failed, so now report error.
     */
-    char *str;
-    if (NS_FAILED(subject->ToUserVisibleString(&str)))
-        return NS_ERROR_FAILURE;
-    JS_ReportError(aCx, "access disallowed from scripts at %s to documents "
-                        "at another domain", str);
-    nsCRT::free(str);
     return NS_ERROR_DOM_PROP_ACCESS_DENIED;
 }
 
@@ -1747,10 +1745,6 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext,
     }
     return NS_OK;
 }
-
-static char *domPropNames[] = {
-    NS_DOM_PROP_NAMES
-};
 
 struct nsDomainEntry {
     nsDomainEntry(const char *anOrigin, const char *aPolicy, 

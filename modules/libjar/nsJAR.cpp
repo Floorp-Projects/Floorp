@@ -32,6 +32,7 @@
 #include "nsIServiceManager.h"
 #include "plbase64.h"
 #include "nsIConsoleService.h"
+#include "nscore.h"
 
 #ifdef XP_UNIX
   #include <sys/stat.h>
@@ -121,7 +122,7 @@ public:
 //-------------------------------------------------
 nsJARManifestItem::nsJARManifestItem(): mType(JAR_INTERNAL),
                                         entryVerified(PR_FALSE),
-                                        status(nsIZipReader::NOT_SIGNED),
+                                        status(nsIJAR::NOT_SIGNED),
                                         calculatedSectionDigest(nsnull),
                                         storedEntryDigest(nsnull)
 {
@@ -147,7 +148,7 @@ DeleteManifestEntry(nsHashKey* aKey, void* aData, void* closure)
 
 // The following initialization makes a guess of 10 entries per jarfile.
 nsJAR::nsJAR(): mManifestData(nsnull, nsnull, DeleteManifestEntry, nsnull, 10),
-                mParsedManifest(PR_FALSE), mGlobalStatus(nsIZipReader::NOT_SIGNED),
+                mParsedManifest(PR_FALSE), mGlobalStatus(nsIJAR::NOT_SIGNED),
                 mReleaseTime(PR_INTERVAL_NO_TIMEOUT), mCache(nsnull), mLock(nsnull)
 {
   NS_INIT_REFCNT();
@@ -160,7 +161,7 @@ nsJAR::~nsJAR()
 	PR_DestroyLock(mLock);
 }
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsJAR, nsIZipReader)
+NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsJAR, nsIZipReader, nsIJAR)
 NS_IMPL_THREADSAFE_ADDREF(nsJAR)
 
 // Custom Release method works with nsZipReaderCache...
@@ -185,7 +186,7 @@ nsrefcnt nsJAR::Release(void)
 } 
 
 //----------------------------------------------
-// nsJAR public implementation
+// nsIZipReader implementation
 //----------------------------------------------
 
 NS_METHOD
@@ -341,6 +342,10 @@ nsJAR::GetInputStream(const char* aFilename, nsIInputStream** result)
   return NS_OK;
 }
 
+//----------------------------------------------
+// nsIJAR implementation
+//----------------------------------------------
+
 NS_IMETHODIMP
 nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
 {
@@ -358,7 +363,7 @@ nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
   //-- Parse the manifest
   rv = ParseManifest(verifier);
   if (NS_FAILED(rv)) return rv;
-  if (mGlobalStatus == nsIZipReader::NO_MANIFEST)
+  if (mGlobalStatus == nsIJAR::NO_MANIFEST)
     return NS_OK;
 
   PRInt16 requestedStatus;
@@ -366,7 +371,7 @@ nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
   {
     //-- Find the item
     nsCStringKey key(aFilename);
-    nsJARManifestItem* manItem = (nsJARManifestItem*)mManifestData.Get(&key);
+    nsJARManifestItem* manItem = NS_STATIC_CAST(nsJARManifestItem*, mManifestData.Get(&key));
     if (!manItem)
       return NS_OK;
     //-- Verify the item against the manifest
@@ -384,7 +389,7 @@ nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
   else // User wants identity of signer w/o verifying any entries
     requestedStatus = mGlobalStatus;
 
-  if (requestedStatus != nsIZipReader::VALID)
+  if (requestedStatus != nsIJAR::VALID)
     ReportError(aFilename, requestedStatus);
   else // Valid signature
   {
@@ -481,7 +486,7 @@ nsJAR::ParseManifest(nsISignatureVerifier* verifier)
   if (NS_FAILED(rv)) return rv;
   if (!file)
   {
-    mGlobalStatus = nsIZipReader::NO_MANIFEST;
+    mGlobalStatus = nsIJAR::NO_MANIFEST;
     mParsedManifest = PR_TRUE;
     return NS_OK;
   }
@@ -514,7 +519,7 @@ nsJAR::ParseManifest(nsISignatureVerifier* verifier)
   if (NS_FAILED(rv)) return rv;
   if (!file)
   {
-    mGlobalStatus = nsIZipReader::NO_MANIFEST;
+    mGlobalStatus = nsIJAR::NO_MANIFEST;
     mParsedManifest = PR_TRUE;
     return NS_OK;
   }
@@ -543,7 +548,7 @@ nsJAR::ParseManifest(nsISignatureVerifier* verifier)
     }
   if (NS_FAILED(rv))
   {
-    mGlobalStatus = nsIZipReader::NO_MANIFEST;
+    mGlobalStatus = nsIJAR::NO_MANIFEST;
     mParsedManifest = PR_TRUE;
     return NS_OK;
   }
@@ -554,11 +559,11 @@ nsJAR::ParseManifest(nsISignatureVerifier* verifier)
                                  &verifyError, getter_AddRefs(mPrincipal));
   if (NS_FAILED(rv)) return rv;
   if (mPrincipal)
-    mGlobalStatus = nsIZipReader::VALID;
+    mGlobalStatus = nsIJAR::VALID;
   else if (verifyError == nsISignatureVerifier::VERIFY_ERROR_UNKNOWN_CA)
-    mGlobalStatus = nsIZipReader::INVALID_UNKNOWN_CA;
+    mGlobalStatus = nsIJAR::INVALID_UNKNOWN_CA;
   else
-    mGlobalStatus = nsIZipReader::INVALID_SIG;
+    mGlobalStatus = nsIJAR::INVALID_SIG;
 
   //-- Parse the SF file. If the verification above failed, principal
   // is null, and ParseOneFile will mark the relevant entries as invalid.
@@ -665,14 +670,14 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
             NS_ASSERTION(curItemSF->status == nsJAR::NOT_SIGNED,
                          "SECURITY ERROR: nsJARManifestItem not correctly initialized");
             curItemSF->status = mGlobalStatus;
-            if (curItemSF->status == nsIZipReader::VALID)
+            if (curItemSF->status == nsIJAR::VALID)
             { // Compare digests
               if (storedSectionDigest.Length() == 0)
-                curItemSF->status = nsIZipReader::NOT_SIGNED;
+                curItemSF->status = nsIJAR::NOT_SIGNED;
               else
               {
                 if (!storedSectionDigest.Equals((const char*)curItemSF->calculatedSectionDigest))
-                  curItemSF->status = nsIZipReader::INVALID_MANIFEST;
+                  curItemSF->status = nsIJAR::INVALID_MANIFEST;
                 JAR_NULLFREE(curItemSF->calculatedSectionDigest)
                 storedSectionDigest = "";
               }
@@ -754,18 +759,18 @@ nsJAR::VerifyEntry(nsISignatureVerifier* verifier,
                    nsJARManifestItem* aManItem, const char* aEntryData,
                    PRUint32 aLen)
 {
-  if (aManItem->status == nsIZipReader::VALID)
+  if (aManItem->status == nsIJAR::VALID)
   {
     if(!aManItem->storedEntryDigest)
       // No entry digests in manifest file. Entry is unsigned.
-      aManItem->status = nsIZipReader::NOT_SIGNED;
+      aManItem->status = nsIJAR::NOT_SIGNED;
     else
     { //-- Calculate and compare digests
       char* calculatedEntryDigest;
       nsresult rv = CalculateDigest(verifier, aEntryData, aLen, &calculatedEntryDigest);
       if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
       if (PL_strcmp(aManItem->storedEntryDigest, calculatedEntryDigest) != 0)
-        aManItem->status = nsIZipReader::INVALID_ENTRY;
+        aManItem->status = nsIJAR::INVALID_ENTRY;
       JAR_NULLFREE(calculatedEntryDigest)
       JAR_NULLFREE(aManItem->storedEntryDigest)
     }
@@ -786,19 +791,19 @@ void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
   message.AppendWithConversion(" is invalid because ");
   switch(errorCode)
   {
-  case nsIZipReader::NOT_SIGNED:
+  case nsIJAR::NOT_SIGNED:
     message.AppendWithConversion("the archive did not contain a valid PKCS7 signature.");
     break;
-  case nsIZipReader::INVALID_SIG:
+  case nsIJAR::INVALID_SIG:
     message.AppendWithConversion("the digital signature (*.RSA) file is not a valid signature of the signature instruction file (*.SF).");
     break;
-  case nsIZipReader::INVALID_UNKNOWN_CA:
+  case nsIJAR::INVALID_UNKNOWN_CA:
     message.AppendWithConversion("the certificate used to sign this file has an unrecognized issuer.");
     break;
-  case nsIZipReader::INVALID_MANIFEST:
+  case nsIJAR::INVALID_MANIFEST:
     message.AppendWithConversion("the signature instruction file (*.SF) does not contain a valid hash of the MANIFEST.MF file.");
     break;
-  case nsIZipReader::INVALID_ENTRY:
+  case nsIJAR::INVALID_ENTRY:
     message.AppendWithConversion("the MANIFEST.MF file does not contain a valid hash of the file being verified.");
     break;
   default:
@@ -1198,7 +1203,7 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
   if (NS_FAILED(rv)) return rv;
 
   nsCStringKey key(path);
-  nsJAR* zip = (nsJAR*)mZips.Get(&key); // AddRefs
+  nsJAR* zip = NS_STATIC_CAST(nsJAR*, NS_STATIC_CAST(nsIZipReader*,mZips.Get(&key))); // AddRefs
   if (zip) {
 #ifdef ZIP_CACHE_HIT_RATE
     mZipCacheHits++;
@@ -1223,7 +1228,7 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
       return rv;
     }
 
-    PRBool collision = mZips.Put(&key, zip); // AddRefs to 2
+    PRBool collision = mZips.Put(&key, NS_STATIC_CAST(nsIZipReader*, zip)); // AddRefs to 2
     NS_ASSERTION(!collision, "horked");
   }
   *result = zip;
