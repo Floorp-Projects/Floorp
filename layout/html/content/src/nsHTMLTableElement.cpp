@@ -1094,132 +1094,141 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     aPresContext->GetScaledPixelsToTwips(&p2t);
     nsHTMLValue value;
 
-    // width
-    aAttributes->GetAttribute(nsHTMLAtoms::width, value);
-    if (value.GetUnit() != eHTMLUnit_Null) {
-      nsStylePosition* position = (nsStylePosition*)
-        aContext->GetMutableStyleData(eStyleStruct_Position);
-      switch (value.GetUnit()) {
-      case eHTMLUnit_Percent:
-        position->mWidth.SetPercentValue(value.GetPercentValue());
-        break;
-
-      case eHTMLUnit_Pixel:
-        position->mWidth.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
-        break;
-      default:
-        break;
-      }
+    const nsStyleDisplay* readDisplay = (nsStyleDisplay*)
+                aContext->GetStyleData(eStyleStruct_Display);
+    if (readDisplay && (readDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL)) {
+      // handle attributes for table cell
+int x = 0;
+x += 1;
     }
-
-    // height
-    aAttributes->GetAttribute(nsHTMLAtoms::height, value);
-    if (value.GetUnit() != eHTMLUnit_Null) {
-      nsStylePosition* position = (nsStylePosition*)
-        aContext->GetMutableStyleData(eStyleStruct_Position);
-      switch (value.GetUnit()) {
-      case eHTMLUnit_Percent:
-        position->mHeight.SetPercentValue(value.GetPercentValue());
-        break;
-
-      case eHTMLUnit_Pixel:
-        position->mHeight.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
-        break;
-      default:
-        break;
-      }
-    }
-
-    // border and frame
-    MapTableBorderInto(aAttributes, aContext, aPresContext);
-
-    // align; Check for enumerated type (it may be another type if
-    // illegal)
-    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      if (NS_STYLE_TEXT_ALIGN_CENTER == value.GetIntValue()) {
-        nsStyleSpacing* spacing = (nsStyleSpacing*)
-          aContext->GetMutableStyleData(eStyleStruct_Spacing);
-        nsStyleCoord otto(eStyleUnit_Auto);
-        spacing->mMargin.SetLeft(otto);
-        spacing->mMargin.SetRight(otto);
-      }
-      else {
-        nsStyleDisplay* display = (nsStyleDisplay*)
-          aContext->GetMutableStyleData(eStyleStruct_Display);
-        switch (value.GetIntValue()) {
-        case NS_STYLE_TEXT_ALIGN_LEFT:
-          display->mFloats = NS_STYLE_FLOAT_LEFT;
+    else {  // handle attributes for table
+      // width
+      aAttributes->GetAttribute(nsHTMLAtoms::width, value);
+      if (value.GetUnit() != eHTMLUnit_Null) {
+        nsStylePosition* position = (nsStylePosition*)
+          aContext->GetMutableStyleData(eStyleStruct_Position);
+        switch (value.GetUnit()) {
+        case eHTMLUnit_Percent:
+          position->mWidth.SetPercentValue(value.GetPercentValue());
           break;
 
-        case NS_STYLE_TEXT_ALIGN_RIGHT:
-          display->mFloats = NS_STYLE_FLOAT_RIGHT;
+        case eHTMLUnit_Pixel:
+          position->mWidth.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+          break;
+        default:
           break;
         }
       }
-    }
 
-    // layout
-    nsStyleTable* tableStyle=nsnull;
-    aAttributes->GetAttribute(nsHTMLAtoms::layout, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) {  // it may be another type if illegal
-      tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
-      tableStyle->mLayoutStrategy = value.GetIntValue();
-    }
+      // height
+      aAttributes->GetAttribute(nsHTMLAtoms::height, value);
+      if (value.GetUnit() != eHTMLUnit_Null) {
+        nsStylePosition* position = (nsStylePosition*)
+          aContext->GetMutableStyleData(eStyleStruct_Position);
+        switch (value.GetUnit()) {
+        case eHTMLUnit_Percent:
+          position->mHeight.SetPercentValue(value.GetPercentValue());
+          break;
 
-    // cellpadding
-    aAttributes->GetAttribute(nsHTMLAtoms::cellpadding, value);
-    if (value.GetUnit() == eHTMLUnit_Pixel) {
-      if (nsnull==tableStyle)
+        case eHTMLUnit_Pixel:
+          position->mHeight.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+          break;
+        default:
+          break;
+        }
+      }
+
+      // border and frame
+      MapTableBorderInto(aAttributes, aContext, aPresContext);
+
+      // align; Check for enumerated type (it may be another type if
+      // illegal)
+      aAttributes->GetAttribute(nsHTMLAtoms::align, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated) {
+        if (NS_STYLE_TEXT_ALIGN_CENTER == value.GetIntValue()) {
+          nsStyleSpacing* spacing = (nsStyleSpacing*)
+            aContext->GetMutableStyleData(eStyleStruct_Spacing);
+          nsStyleCoord otto(eStyleUnit_Auto);
+          spacing->mMargin.SetLeft(otto);
+          spacing->mMargin.SetRight(otto);
+        }
+        else {
+          nsStyleDisplay* display = (nsStyleDisplay*)
+            aContext->GetMutableStyleData(eStyleStruct_Display);
+          switch (value.GetIntValue()) {
+          case NS_STYLE_TEXT_ALIGN_LEFT:
+            display->mFloats = NS_STYLE_FLOAT_LEFT;
+            break;
+
+          case NS_STYLE_TEXT_ALIGN_RIGHT:
+            display->mFloats = NS_STYLE_FLOAT_RIGHT;
+            break;
+          }
+        }
+      }
+
+      // layout
+      nsStyleTable* tableStyle=nsnull;
+      aAttributes->GetAttribute(nsHTMLAtoms::layout, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated) {  // it may be another type if illegal
         tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
-      tableStyle->mCellPadding.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
-    }
+        tableStyle->mLayoutStrategy = value.GetIntValue();
+      }
 
-    // cellspacing  (reuses tableStyle if already resolved)
-    // ua.css sets cellspacing
-    aAttributes->GetAttribute(nsHTMLAtoms::cellspacing, value);
-    if (value.GetUnit() == eHTMLUnit_Pixel) {
-      if (nsnull==tableStyle)
-        tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
-      tableStyle->mBorderSpacingX.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
-      tableStyle->mBorderSpacingY.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
-    }
+      // cellpadding
+      aAttributes->GetAttribute(nsHTMLAtoms::cellpadding, value);
+      if (value.GetUnit() == eHTMLUnit_Pixel) {
+        if (nsnull==tableStyle)
+          tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+        tableStyle->mCellPadding.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+      }
 
-    // cols
-    aAttributes->GetAttribute(nsHTMLAtoms::cols, value);
-    if (value.GetUnit() != eHTMLUnit_Null) {
-      if (nsnull==tableStyle)
-        tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
-      if (value.GetUnit() == eHTMLUnit_Integer)
-        tableStyle->mCols = value.GetIntValue();
-      else // COLS had no value, so it refers to all columns
-        tableStyle->mCols = NS_STYLE_TABLE_COLS_ALL;
-    }
+      // cellspacing  (reuses tableStyle if already resolved)
+      // ua.css sets cellspacing
+      aAttributes->GetAttribute(nsHTMLAtoms::cellspacing, value);
+      if (value.GetUnit() == eHTMLUnit_Pixel) {
+        if (nsnull==tableStyle)
+          tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+        tableStyle->mBorderSpacingX.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+        tableStyle->mBorderSpacingY.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+      }
 
-    // rules, must come after handling of border which set the default
-    aAttributes->GetAttribute(nsHTMLAtoms::rules, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      if (nsnull==tableStyle)
-        tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
-      tableStyle->mRules = value.GetIntValue();
-    }
+      // cols
+      aAttributes->GetAttribute(nsHTMLAtoms::cols, value);
+      if (value.GetUnit() != eHTMLUnit_Null) {
+        if (nsnull==tableStyle)
+          tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+        if (value.GetUnit() == eHTMLUnit_Integer)
+          tableStyle->mCols = value.GetIntValue();
+        else // COLS had no value, so it refers to all columns
+          tableStyle->mCols = NS_STYLE_TABLE_COLS_ALL;
+      }
 
-    //background: color
-    nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext, aPresContext);
-    nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+      // rules, must come after handling of border which set the default
+      aAttributes->GetAttribute(nsHTMLAtoms::rules, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated) {
+        if (nsnull==tableStyle)
+          tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+        tableStyle->mRules = value.GetIntValue();
+      }
 
-    // direction
-    aAttributes->GetAttribute(nsHTMLAtoms::dir, value);
-    if (eHTMLUnit_String == value.GetUnit()) {
-      nsString dir;
-      value.GetStringValue(dir);
-      nsStyleDisplay* display = (nsStyleDisplay*)
-        aContext->GetMutableStyleData(eStyleStruct_Display);
-      if (dir.EqualsIgnoreCase("RTL")) {
-        display->mDirection = NS_STYLE_DIRECTION_RTL;
-      } 
-      else {
-        display->mDirection = NS_STYLE_DIRECTION_LTR;
+      //background: color
+      nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext, aPresContext);
+      nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+
+      // direction
+      aAttributes->GetAttribute(nsHTMLAtoms::dir, value);
+      if (eHTMLUnit_String == value.GetUnit()) {
+        nsString dir;
+        value.GetStringValue(dir);
+        nsStyleDisplay* display = (nsStyleDisplay*)
+          aContext->GetMutableStyleData(eStyleStruct_Display);
+        if (dir.EqualsIgnoreCase("RTL")) {
+          display->mDirection = NS_STYLE_DIRECTION_RTL;
+        } 
+        else {
+          display->mDirection = NS_STYLE_DIRECTION_LTR;
+        }
       }
     }
   }
