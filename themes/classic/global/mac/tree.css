@@ -38,11 +38,11 @@ treeitem > treerow {
 }
 
 treeitem[selected="true"] > treerow { 
-	color: #000000;
+	color: HighlightText;
 	background-color: Highlight;
 }
 treeitem[dd-dropon="true"] > treerow { 
-	color: #000000;
+	color: HighlightText;
 	background-color: Highlight;
 }
 
