@@ -16,10 +16,12 @@
  * Reserved.
  */
 #include "nsLeafFrame.h"
-#include "nsIStyleContext.h"
+#include "nsHTMLContainerFrame.h"
 #include "nsCSSRendering.h"
 #include "nsHTMLParts.h"
+#include "nsHTMLAtoms.h"
 #include "nsIPresShell.h"
+#include "nsIStyleContext.h"
 
 nsLeafFrame::nsLeafFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsFrame(aContent, aParentFrame)
@@ -121,3 +123,15 @@ NS_METHOD nsLeafFrame::ContentChanged(nsIPresShell*   aShell,
   return result;
 }
 
+NS_IMETHODIMP
+nsLeafFrame::AttributeChanged(nsIPresShell* aShell,
+                              nsIPresContext* aPresContext,
+                              nsIContent* aChild,
+                              nsIAtom* aAttribute)
+{
+  if (nsHTMLAtoms::style == aAttribute) {
+    nsHTMLContainerFrame::ApplyStyleChangeToTree(*aPresContext, this);
+    nsHTMLContainerFrame::StyleChangeReflow(*aPresContext, this);
+  }
+  return NS_OK;
+}
