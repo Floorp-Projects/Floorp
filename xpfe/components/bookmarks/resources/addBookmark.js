@@ -174,15 +174,15 @@ function Startup()
       }
     }
   }
-  
+
+  if ((arg != "newBookmark") && (bookmarkView.currentIndex == -1))
+    bookmarkView.treeBoxObject.selection.select(0);
+
   if (shouldSetOKButton)
     onFieldInput();
   if (document.getElementById("bookmarknamegrid").hidden) {
     bookmarkView.tree.focus();
-    if (bookmarkView.currentIndex == -1)
-      bookmarkView.treeBoxObject.selection.select(0);
-  }
-  else {
+  } else {
     gFld_Name.select();
     gFld_Name.focus();
   }
