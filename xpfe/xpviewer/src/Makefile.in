@@ -24,33 +24,34 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-TOOLKIT_GFX_LIB		= $(addprefix -lgfx, $(MOZ_TOOLKIT))
-TOOLKIT_WIDGET_LIB	= $(addprefix -lwidget, $(MOZ_TOOLKIT))
-TOOLKIT_BASE_LIB	= $(addprefix -lgmbase, $(MOZ_TOOLKIT))
+TOOLKIT_GFX_LIB     = -lgfx$(MOZ_TOOLKIT)
+TOOLKIT_WIDGET_LIB  = -lwidget$(MOZ_TOOLKIT)
+TOOLKIT_BASE_LIB    = -lgmbase$(MOZ_TOOLKIT)
 
-ifneq (,$(filter gtk,$(MOZ_TOOLKIT)))
+ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
 TOOLKIT_CFLAGS = \
 	-DWIDGET_DLL=\"libwidgetgtk.so\" \
-	-DGFXWIN_DLL=\"libgfxgtk.so\"
+	-DGFXWIN_DLL=\"libgfxgtk.so\" \
+	$(TK_GTK_CFLAGS)
 
 TOOLKIT_CPPSRCS = \
 	nsGTKMain.cpp \
 	nsGTKMenu.cpp
 
-TOOLKIT_CFLAGS += $(TK_GTK_CFLAGS)
-TOOLKIT_LIBS   = $(TK_GTK_LIBS)
+TOOLKIT_LIBS = $(TK_GTK_LIBS)
 else
-ifneq (,$(filter motif,$(MOZ_TOOLKIT)))
+ifneq (,$(filter motif, $(MOZ_TOOLKIT))
 TOOLKIT_CFLAGS = \
 	-DWIDGET_DLL=\"libwidgetmotif.so\" \
-	-DGFXWIN_DLL=\"libgfxmotif.so\"
+	-DGFXWIN_DLL=\"libgfxmotif.so\" \
+	$(TK_MOTIF_CFLAGS)
 
 TOOLKIT_CPPSRCS = \
 	nsMotifMenu.cpp \
 	nsUnixMain.cpp
 
-TOOLKIT_CFLAGS += $(TK_MOTIF_CFLAGS)
-TOOLKIT_LIBS   = $(TK_MOTIF_LIBS)
+TOOLKIT_LIBS = $(TK_MOTIF_LIBS) $(XLDFLAGS) $(XLIBS)
+
 endif
 endif
 
@@ -80,7 +81,7 @@ ifdef MOZ_OJI
 	JSJ_LIB = -ljsj
 endif
 
-OBJS    = $(CPPSRCS:.cpp=.o)
+OBJS	= $(CPPSRCS:.cpp=.o)
 
 EX_LIBS = \
 	-L$(DIST)/bin \
@@ -114,9 +115,6 @@ EX_LIBS = \
 	-lnetlib \
 	-lnetutil \
 	-lnetwork \
-	-lnspr21 \
-	-lplc21 \
-	-lplds21 \
 	-lraptorwebwidget \
 	-lreg \
 	-lremoturl \
@@ -142,22 +140,18 @@ EX_LIBS += \
 	$(NULL)
 endif
 
-PROGS = xpviewer
+PROGS = $(OBJDIR)/xpviewer
 
 TARGETS = $(PROGS)
 
 include $(topsrcdir)/config/rules.mk
 
-$(PROGS): $(OBJS) #$(EX_LIBS)
+$(PROGS): $(OBJS) # $(EX_LIBS)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),Linux)
-	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
+	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS) $(TOOLKIT_LIBS)
 else
-ifeq ($(OS_ARCH),IRIX)
-	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIB) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
-else
-	$(CCC) -o $@ $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
-endif
+	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS) $(TOOLKIT_LIBS)
 endif
 
 export::
@@ -320,3 +314,5 @@ clobber::
 	rm -f $(DIST)/bin/res/throbber/anims11.gif
 	rm -f $(DIST)/bin/res/throbber/anims12.gif
 	rm -f $(DIST)/bin/res/throbber/anims13.gif
+
+
