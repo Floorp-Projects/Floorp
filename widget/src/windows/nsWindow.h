@@ -175,7 +175,7 @@ protected:
     virtual PRBool          OnResize(nsRect &aWindowRect);
 
 #ifdef tague_keyboard_patch
-    BOOL                    OnChar(UINT aVirtualKeyCode, bool isMultibyte);
+    BOOL                    OnChar(UINT mbcsCharCode, UINT virtualKeyCode, bool isMultibyte);
 #else
    BOOL                    OnChar(UINT aVirtualKeyCode);
 #endif
