@@ -1,0 +1,113 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is OEone Calendar Code, released October 31st, 2001.
+ *
+ * The Initial Developer of the Original Code is
+ * OEone Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s): Mostafa Hosseini <mostafah@oeone.com>
+ *                 Chris Charabaruk <ccharabaruk@meldstar.com>
+ *                 ArentJan Banck <ajbanck@planet.nl>
+ *                 Dan Mosedale <dan.mosedale@oracle.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+// decls for stuff from other files
+interface nsIURI;
+interface calIItemBase;
+
+// forward decls for this file
+interface calIObserver;
+interface calIOperationListener;
+interface calIRange;
+interface calIDateTime;
+
+[scriptable, uuid(4c352774-2c4f-11d9-9c63-00045ace3b8d)]
+interface calICalendar : nsISupports
+{
+  attribute boolean batchMode; // XXX use start/end methods instead of attr?
+  attribute nsIURI uri; // XXX is this heavier weight than we need?
+  attribute boolean suppressAlarms;
+
+  const unsigned long ITEM_FILTER_COMPLETED_YES = 1 << 0; 
+  const unsigned long ITEM_FILTER_COMPLETED_NO = 1 << 1; 
+  const unsigned long ITEM_FILTER_COMPLETED_ALL = 
+    (ITEM_FILTER_COMPLETED_YES | ITEM_FILTER_COMPLETED_NO);
+
+  const unsigned long ITEM_FILTER_TYPE_TODO = 1 << 2;
+  const unsigned long ITEM_FILTER_TYPE_EVENT = 1 << 3;
+  const unsigned long ITEM_FILTER_TYPE_ALL = 
+    (ITEM_FILTER_TYPE_TODO | ITEM_FILTER_TYPE_EVENT);
+
+  void addObserver( in calIObserver observer, in unsigned long aItemFilter );
+  void removeObserver( in calIObserver observer );
+
+  void addItem( in calIItemBase aItem, in calIOperationListener aListener );
+  void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
+  void deleteItem( in string id, in calIOperationListener aListener );
+  void getItem( in string id, in calIOperationListener aListener );
+
+  /**
+   * getItems() has a very basic filtering mechanism for retrieving data to
+   * get us started.  At some point fairly soon, we're going to need to 
+   * generalize this.
+   *
+   * XXX does calIDateTime support null / infinity / -infinity dates?
+   * (ie are we gonna need explicit params about when to use aRange*)
+   *
+   * XXX what do we guarantee about item ordering, especially w.r.t.
+   * which items are returned when aCount != 0
+   */
+  void getItems( in unsigned long aItemFilter, in unsigned long aCount,
+                 in calIDateTime aRangeStart, in calIDateTime aRangeEnd,
+                 in calIOperationListener aListener );
+
+  void reportError( in unsigned long errorid, in AUTF8String aMessage );
+};
+
+[scriptable, uuid(2953c9b2-2c73-11d9-80b6-00045ace3b8d)]
+interface calIObserver : nsISupports
+{
+  void onStartBatch();
+  void onEndBatch();
+  void onLoad();
+  void onAddItem( in calIItemBase aItem );
+  void onModifyItem( in calIItemBase aNewItem, in calIItemBase aOldItem );
+  void onDeleteItem( in calIItemBase aDeletedItem );
+  void onAlarm( in calIItemBase aAlarmItem );
+  void onError( in unsigned long aErrNo, in AUTF8String aMessage );
+};
+
+[scriptable, uuid(ed3d87d8-2c77-11d9-8f5f-00045ace3b8d)]
+interface calIOperationListener : nsISupports
+{
+  // XXX forthcoming
+};
