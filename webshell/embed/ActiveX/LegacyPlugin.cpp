@@ -102,10 +102,27 @@ NPP_New(NPMIMEType pluginType,
 
 	for (int16 i = 0; i < argc; i++)
 	{
-		if (stricmp(argn[i], "CLSID") == 0)
+		if (stricmp(argn[i], "CLSID") == 0 ||
+			stricmp(argn[i], "CLASSID") == 0)
 		{
+			char szCLSID[256];
+			if (strnicmp(argv[i], "CLSID:", 6) == 0)
+			{
+				char szTmp[256];
+				sscanf(argv[i], "CLSID:%s", szTmp);
+				sprintf(szCLSID, "{%s}", szTmp);
+			}
+			else if(argv[i][0] != '{')
+			{
+				sprintf(szCLSID, "{%s}", argv[i]);
+			}
+			else
+			{
+				strncpy(szCLSID, argv[i], sizeof(szCLSID));
+			}
+
 			USES_CONVERSION;
-			CLSIDFromString(A2OLE(argv[i]), &clsid);
+			CLSIDFromString(A2OLE(szCLSID), &clsid);
 		}
 		else if (stricmp(argn[i], "NAME") == 0)
 		{
@@ -157,7 +174,11 @@ NPP_New(NPMIMEType pluginType,
 	pSite->AddRef();
 
 	// Create the object
-	pSite->Create(clsid, pl, szName);
+	if (FAILED(pSite->Create(clsid, pl, szName)))
+	{
+		pSite->Release();
+		return NPERR_GENERIC_ERROR;
+	}
 
     instance->pdata = pSite;
 
