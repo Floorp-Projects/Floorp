@@ -121,6 +121,7 @@ NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result)
     if (NS_FAILED(rv)) return rv;
 
     result = resultStr;
+    nsAllocator::Free(resultStr);
     return rv;
 }
 
