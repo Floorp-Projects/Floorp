@@ -565,6 +565,13 @@ public:
     NS_IMETHOD
     SetWindowSize(PRUint32 width, PRUint32 height);
 
+	NS_IMETHOD
+	GetJSWindow(JSObject* *outJSWindow)
+	{
+		*outJSWindow = NULL;
+		return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
 	nsIPluginInstance* GetInstance(void) { return mInstance; }
 	NPP GetNPPInstance(void) { return npp; }
 	
