@@ -723,7 +723,6 @@ embedding/components/windowwatcher/src/Makefile
 embedding/components/ui/Makefile
 embedding/components/ui/helperAppDlg/Makefile
 embedding/config/Makefile
-embedding/tests/gtkEmbed/Makefile
 "
 
 MAKEFILES_psm2="
