@@ -316,22 +316,22 @@ nsUnixToolkitService::GetTimerCID(nsCID ** aTimerCIDOut)
     //
     
     // Gtk
-    if (unixToolkitName == "gtk")
+    if (unixToolkitName.Equals("gtk"))
     {
       sTimerCID = &kCTimerGtkCID;
     }
     // Motif
-    else if (unixToolkitName == "motif")
+    else if (unixToolkitName.Equals("motif"))
     {
       sTimerCID = &kCTimerMotifCID;
     }
     // Xlib
-    else if (unixToolkitName == "xlib")
+    else if (unixToolkitName.Equals("xlib"))
     {
       sTimerCID = &kCTimerXlibCID;
     }
     // Qt
-    else if (unixToolkitName == "qt")
+    else if (unixToolkitName.Equals("qt"))
     {
       sTimerCID = &kCTimerQtCID;
     }
