@@ -52,8 +52,15 @@ protected:
 
   PRBool            mIgnoreEmptyNotification;
 
-  nsIWidget         *mWindow;
   static GtkWidget  *sWidget;
+
+  // Used for communicating pasted data
+  // from the asynchronous X routines back to a blocking paste:
+  GtkSelectionData mSelectionData;
+  PRBool mBlocking;
+
+  void SelectionReceiver(GtkWidget *aWidget,
+                         GtkSelectionData *aSelectionData);
 
   static void SelectionGetCB(GtkWidget *widget, 
                              GtkSelectionData *selection_data,
