@@ -81,9 +81,14 @@ EX_LIBS = \
 	$(DIST)/bin/libxp.so \
 	$(DIST)/bin/libxpcom.so \
 	$(DIST)/bin/libzlib.so \
+	$(NULL)
+
+ifeq ($(OS_ARCH),Linux)
+EX_LIBS += \
 	$(DIST)/bin/libpwcac.so \
 	$(DIST)/bin/libdbm.so \
 	$(NULL)
+endif
 
 PROGS   = $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
 
@@ -107,7 +112,7 @@ $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o
 ifeq ($(OS_ARCH),Linux)
 	$(CCC) -rdynamic -o $@ $@.o $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXp -lXext
 else
-	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
+	$(CCC) -o $@ $@.o -woff 84,85 $(LDFLAGS) $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
 endif
 
 export::
