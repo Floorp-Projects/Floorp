@@ -257,13 +257,9 @@ NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, OtherUsersNamespace,
                        "namespace.other_users");
 
 NS_IMETHODIMP
-nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue*
-                                                  aClientEventQueue,
+nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQueue,
                                                   nsIImapUrl* aImapUrl,
-                                                  nsIUrlListener*
-                                                  aUrlListener,
-                                                  nsISupports* aConsumer,
-                                                  nsIURI** aURL)
+                                                  nsISupports* aConsumer)
 {
     nsresult rv = NS_OK;
     nsIImapProtocol* aProtocol = nsnull;
@@ -272,9 +268,6 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue*
     if (NS_FAILED(rv)) return rv;
 
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(aImapUrl, &rv);
-    if (NS_SUCCEEDED(rv) && mailnewsurl && aUrlListener)
-        mailnewsurl->RegisterListener(aUrlListener);
-
     if (aProtocol)
     {
         rv = aProtocol->LoadUrl(mailnewsurl, aConsumer);
@@ -300,11 +293,6 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue*
         m_urlConsumers.AppendElement((void*)aConsumer);
         NS_IF_ADDREF(aConsumer);
         PR_CExitMonitor(this);
-    }
-    if (aURL)
-    {
-        *aURL = mailnewsurl;
-        NS_IF_ADDREF(*aURL);
     }
 
     return rv;
