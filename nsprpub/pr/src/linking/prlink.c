@@ -29,6 +29,11 @@
 #include <TextUtils.h>
 #include <Types.h>
 #include <Strings.h>
+#include <Aliases.h>
+
+#include "prlink_mac.h"
+#include "macdll.h"
+#include "mdmac.h"
 #endif
 
 #ifdef XP_UNIX
@@ -720,6 +725,126 @@ PR_FindLibrary(const char *name)
     PR_ExitMonitor(pr_linker_lock);
     return result;
 }
+
+
+#ifdef XP_MAC
+
+PR_IMPLEMENT(PRLibrary*) 
+PR_LoadNamedFragment(const FSSpec *fileSpec, const char* fragmentName)
+{
+	PRLibrary*					newLib = NULL;
+	PRLibrary* 					result;
+	FSSpec							resolvedSpec = *fileSpec;
+	CFragConnectionID		connectionID = 0;
+	Boolean							isFolder, wasAlias;
+	OSErr								err = noErr;
+	
+	if (!_pr_initialized) _PR_ImplicitInitialization();
+
+	/* See if library is already loaded */
+	PR_EnterMonitor(pr_linker_lock);
+
+	result = pr_UnlockedFindLibrary(fragmentName);
+	if (result != NULL) goto unlock;
+
+	newLib = PR_NEWZAP(PRLibrary);
+	if (newLib == NULL) goto unlock;
+	newLib->staticTable = NULL;
+
+
+	/* Resolve an alias if this was one */
+	err = ResolveAliasFile(&resolvedSpec, true, &isFolder, &wasAlias);
+	if (err != noErr)
+		goto unlock;
+
+  if (isFolder)
+  {
+  	err = fnfErr;
+  	goto unlock;
+  }
+    
+	/* Finally, try to load the library */
+	err = NSLoadNamedFragment(&resolvedSpec, fragmentName, &connectionID);
+	if (err != noErr)
+		goto unlock;
+
+  newLib->name = strdup(fragmentName);
+  newLib->dlh = connectionID;
+  newLib->next = pr_loadmap;
+  pr_loadmap = newLib;
+
+  result = newLib;    /* success */
+  PR_LOG(_pr_linker_lm, PR_LOG_MIN, ("Loaded library %s (load lib)", newLib->name));
+
+unlock:
+	if (result == NULL) {
+		PR_SetError(PR_LOAD_LIBRARY_ERROR, _MD_ERRNO());
+		DLLErrorInternal(_MD_ERRNO());  /* sets error text */
+	}
+	PR_ExitMonitor(pr_linker_lock);
+	return result;
+}
+
+
+PR_EXTERN(PRLibrary*)
+PR_LoadIndexedFragment(const FSSpec *fileSpec, PRUint32 fragIndex)
+{
+	PRLibrary*					newLib = NULL;
+	PRLibrary* 					result;
+	FSSpec							resolvedSpec = *fileSpec;
+	char*								fragmentName = NULL;
+	CFragConnectionID		connectionID = 0;
+	Boolean							isFolder, wasAlias;
+	OSErr								err = noErr;
+
+	if (!_pr_initialized) _PR_ImplicitInitialization();
+
+	/* See if library is already loaded */
+	PR_EnterMonitor(pr_linker_lock);
+
+	result = pr_UnlockedFindLibrary(fragmentName);
+	if (result != NULL) goto unlock;
+
+	newLib = PR_NEWZAP(PRLibrary);
+	if (newLib == NULL) goto unlock;
+	newLib->staticTable = NULL;
+
+
+	/* Resolve an alias if this was one */
+	err = ResolveAliasFile(&resolvedSpec, true, &isFolder, &wasAlias);
+	if (err != noErr)
+		goto unlock;
+
+  if (isFolder)
+  {
+  	err = fnfErr;
+  	goto unlock;
+  }
+    
+	/* Finally, try to load the library */
+	err = NSLoadIndexedFragment(&resolvedSpec, fragIndex, &fragmentName, &connectionID);
+	if (err != noErr)
+		goto unlock;
+
+  newLib->name = fragmentName;			/* was malloced in NSLoadIndexedFragment */
+  newLib->dlh = connectionID;
+  newLib->next = pr_loadmap;
+  pr_loadmap = newLib;
+
+  result = newLib;    /* success */
+  PR_LOG(_pr_linker_lm, PR_LOG_MIN, ("Loaded library %s (load lib)", newLib->name));
+
+unlock:
+	if (result == NULL) {
+		PR_SetError(PR_LOAD_LIBRARY_ERROR, _MD_ERRNO());
+		DLLErrorInternal(_MD_ERRNO());  /* sets error text */
+	}
+	PR_ExitMonitor(pr_linker_lock);
+	return result;
+}
+
+
+#endif
 
 /*
 ** Unload a shared library which was loaded via PR_LoadLibrary
