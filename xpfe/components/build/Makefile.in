@@ -32,6 +32,16 @@ IS_COMPONENT	= 1
 
 CPPSRCS		= nsModule.cpp
 
+ifeq ($(OS_ARCH),OS2)
+EXTRA_DSO_LIBS	= autocomplete_s bookmarks_s directry history_s related_s \
+		search_s timebomb_s urlbarhistory_s	
+
+ifdef MOZ_PERF_METRICS
+EXTRA_DSO_LIBS	+= mozutil_s
+endif
+
+else
+
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/libautocomplete_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/libbookmarks_s.$(LIB_SUFFIX) \
@@ -47,6 +57,8 @@ ifdef MOZ_PERF_METRICS
 SHARED_LIBRARY_LIBS	+= $(DIST)/lib/libmozutil_s.$(LIB_SUFFIX)
 endif
 
+endif
+
 LOCAL_INCLUDES	= \
 	-I$(srcdir)/../autocomplete/src  \
 	-I$(srcdir)/../bookmarks/src     \
@@ -59,6 +71,7 @@ LOCAL_INCLUDES	= \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = \
+	$(EXTRA_DSO_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(MOZ_JS_LIBS) \
 	$(NULL)
