@@ -651,6 +651,20 @@ NS_IMETHODIMP nsImapMailFolder::SetVerifiedAsOnlineFolder(PRBool aVerifiedAsOnli
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsImapMailFolder::GetOnlineDelimiter(char** onlineDelimiter)
+{
+    if (onlineDelimiter)
+    {
+        nsresult rv;
+        PRUnichar delimiter = 0;
+        rv = GetHierarchyDelimiter(&delimiter);
+        nsAutoString aString = delimiter;
+        *onlineDelimiter = aString.ToNewCString();
+        return rv;
+    }
+    return NS_ERROR_NULL_POINTER;
+}
+
 NS_IMETHODIMP nsImapMailFolder::SetHierarchyDelimiter(PRUnichar aHierarchyDelimiter)
 {
 	m_hierarchyDelimiter = aHierarchyDelimiter;
