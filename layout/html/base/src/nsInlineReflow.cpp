@@ -430,7 +430,7 @@ nsInlineReflow::ComputeAvailableSize()
     mFrameAvailSize.width = mOuterReflowState.maxSize.width;
     return PR_TRUE;
   }
-#if 0
+
   // Give up now if there is no chance. Note that we allow a reflow if
   // the available space is zero because that way things that end up
   // zero sized won't trigger a new line to be created. We also allow
@@ -440,7 +440,6 @@ nsInlineReflow::ComputeAvailableSize()
       ((mFrameAvailSize.width < 0) || (mFrameAvailSize.height < 0))) {
     return PR_FALSE;
   }
-#endif
   return PR_TRUE;
 }
 
