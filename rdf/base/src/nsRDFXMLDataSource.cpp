@@ -414,7 +414,7 @@ RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
         NameSpaceMap* doomed = mNameSpaces;
         mNameSpaces = mNameSpaces->Next;
 
-        NS_RELEASE(doomed->Prefix);
+        NS_IF_RELEASE(doomed->Prefix);
         delete doomed;
     }
 
@@ -461,8 +461,10 @@ rdf_BlockingParse(nsIURL* aURL, nsIStreamListener* aConsumer)
     // should be able to do by itself.
 
     nsIInputStream* in;
-    if (NS_FAILED(rv = NS_OpenURL(aURL, &in, nsnull /* XXX aConsumer */)))
+    if (NS_FAILED(rv = NS_OpenURL(aURL, &in, nsnull /* XXX aConsumer */))) {
+        NS_ERROR("unable to open blocking stream");
         return rv;
+    }
 
     rv = NS_ERROR_OUT_OF_MEMORY;
     ProxyStream* proxy = new ProxyStream();
@@ -858,7 +860,7 @@ RDFXMLDataSourceImpl::AddNameSpace(nsIAtom* aPrefix, const nsString& aURI)
     if (! entry)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    NS_ADDREF(aPrefix);
+    NS_IF_ADDREF(aPrefix);
     entry->Prefix = aPrefix;
     entry->URI = aURI;
     entry->Next = mNameSpaces;
@@ -939,7 +941,12 @@ RDFXMLDataSourceImpl::MakeQName(nsIRDFResource* resource,
     for (NameSpaceMap* entry = mNameSpaces; entry != nsnull; entry = entry->Next) {
         if (uri.Find(entry->URI) == 0) {
             nameSpaceURI    = entry->URI;
-            entry->Prefix->ToString(nameSpacePrefix);
+            if (entry->Prefix) {
+                entry->Prefix->ToString(nameSpacePrefix);
+            }
+            else {
+                nameSpacePrefix.Truncate();
+            }
             uri.Right(property, uri.Length() - nameSpaceURI.Length());
             return PR_TRUE;
         }
