@@ -89,7 +89,7 @@ if(!$inProductName || !$inOs)
   PrintUsage();
 }
 
-if($inOs =~ /^win$/i)
+if(($inOs eq 'win') || ($inOs eq 'os2'))
 {
   $gOsPkg = "dos";
 }
@@ -128,7 +128,7 @@ else
 }
 
 # This is where the stage area is actually created.
-&StageProduct($inDirSrcDist, $inDirDestStage, $inProductName, $gOsPkg);
+&StageProduct($inDirSrcDist, $inDirDestStage, $inProductName, $gOsPkg, $inOs);
 chdir($gDirCwd);
 
 exit(0);
@@ -193,9 +193,10 @@ sub ParseArgV
       if($#myArgv >= ($counter + 1))
       {
         ++$counter;
-        if(($myArgv[$counter] =~ /^win$/i) ||
-           ($myArgv[$counter] =~ /^mac$/i) ||
-           ($myArgv[$counter] =~ /^unix$/i))
+        if(($myArgv[$counter] eq 'win') ||
+           ($myArgv[$counter] eq 'mac') ||
+           ($myArgv[$counter] eq 'unix') ||
+           ($myArgv[$counter] eq 'os2'))
         {
           $inOs = $myArgv[$counter];
         }
