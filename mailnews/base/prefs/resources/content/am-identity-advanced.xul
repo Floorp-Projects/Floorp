@@ -31,12 +31,12 @@
   title="&identityAdvanced.label;"
   align="vertical"
   onload="onLoad();"
-  width="30em">
+  width="0em">
 
   <script language="javascript" src="am-identity-advanced.js"/>
   <script language="javascript" src="chrome://global/content/strres.js"/>
   
-  <html value="&smtpDesc.label;"/>
+  <html>&smtpDesc.label;</html>
   <box orient="horizontal">
     <text value="&smtpName.label;"/>
     <menulist oncommand="onSelected(event)">
