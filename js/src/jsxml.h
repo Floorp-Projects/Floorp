@@ -65,19 +65,22 @@ typedef enum JSXMLMarkFlag {
 
 struct JSXMLNamespace {
     JSObject            *object;
-    JSString   	        *prefix;
-    JSString   	        *uri;
-    JSXMLMarkFlag       markflag;
+    JSString            *prefix;
+    JSString            *uri;
+    int8                markflag;       /* JSXMLMarkflag, see above */
+    JSPackedBool        declared;       /* true if declared in its XML tag */
 };
 
 extern JSXMLNamespace *
-js_NewXMLNamespace(JSContext *cx, JSString *prefix, JSString *uri);
+js_NewXMLNamespace(JSContext *cx, JSString *prefix, JSString *uri,
+                   JSBool declared);
 
 extern void
 js_DestroyXMLNamespace(JSContext *cx, JSXMLNamespace *ns);
 
 extern JSObject *
-js_NewXMLNamespaceObject(JSContext *cx, JSString *prefix, JSString *uri);
+js_NewXMLNamespaceObject(JSContext *cx, JSString *prefix, JSString *uri,
+                         JSBool declared);
 
 extern JSObject *
 js_GetXMLNamespaceObject(JSContext *cx, JSXMLNamespace *ns);
@@ -157,11 +160,12 @@ struct JSXML {
     uint32              serial;
 #endif
     JSObject            *object;
+    void                *domnode;       /* DOM node if mapped info item */
     JSXML               *parent;
     JSXMLQName          *name;
     int8                markflag;
-    uint8               xml_class;
-    uint16              xml_flags;
+    uint8               xml_class;      /* discriminates u, below */
+    uint16              xml_flags;      /* flags, see below */
     union {
         struct JSXMLListVar {
             JSXMLArray  kids;           /* NB: must come first */
@@ -176,6 +180,8 @@ struct JSXML {
         JSString        *value;
         jsdouble        align;
     } u;
+
+    /* Don't add anything after u -- see js_NewXML for why. */
 };
 
 /* union member shorthands */
@@ -223,7 +229,8 @@ extern JS_FRIEND_DATA(JSClass)          js_AnyNameClass;
 extern JS_FRIEND_DATA(JSExtendedClass)  js_NamespaceClass;
 
 /*
- * NB: jsapi.h and jsobj.h must be included before any call to this macro.
+ * Macros to test whether an object or a value is of type "xml" (per typeof).
+ * NB: jsapi.h must be included before any call to VALUE_IS_XML.
  */
 #define OBJECT_IS_XML(cx,obj)   ((obj)->map->ops == &js_XMLObjectOps.base)
 #define VALUE_IS_XML(cx,v)      (!JSVAL_IS_PRIMITIVE(v) &&                    \
