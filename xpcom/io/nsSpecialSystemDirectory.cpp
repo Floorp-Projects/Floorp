@@ -27,7 +27,7 @@
 
 #ifdef XP_MAC
 #include <Folders.h>
-#elif XP_PC
+#elif defined XP_PC
 #include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -64,7 +64,7 @@ nsSpecialSystemDirectory::SetSpecialSystemDirectory(SystemDirectories aSystemSys
 #ifdef XP_MAC
     OSErr  osErr;
     FSSpec aMacSpec;
-#elif XP_PC
+#elif defined XP_PC
     char path[_MAX_PATH];
     PRInt32 len;
 #endif
@@ -88,7 +88,7 @@ nsSpecialSystemDirectory::SetSpecialSystemDirectory(SystemDirectories aSystemSys
                 }
             }
         }
-#elif XP_MAC
+#elif defined XP_MAC
         {
             if (GetFSSpecFromSystemEnum(kVolumeRootFolderType, aMacSpec) == noErr)
                 *fileSpec = aMacSpec;
@@ -115,11 +115,11 @@ nsSpecialSystemDirectory::SetSpecialSystemDirectory(SystemDirectories aSystemSys
 
             strcat( path, "\\" );
            *fileSpec = path;
-#elif XP_MAC
+#elif defined XP_MAC
             if (GetFSSpecFromSystemEnum(kTemporaryFolderType, aMacSpec) == noErr)
                 *fileSpec = aMacSpec;
         
-#elif XP_UNIX
+#elif defined XP_UNIX
             *fileSpec = "/tmp/";
 #endif
         break;
