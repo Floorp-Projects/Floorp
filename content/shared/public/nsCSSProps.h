@@ -28,6 +28,12 @@ public:
   // known. The lookup function uses a perfect hash.
   static PRInt32 LookupName(const char* str);
 
+    
+  // Given a CSS Property ID and an Property Value Index
+  // Return back a const char* representation of the 
+  // value. Return back nsnull if no value is found
+  static const char* LookupProperty(PRInt32 aProp, PRInt32 aIndex);
+
   struct NameTableEntry {
     const char* name;
     PRInt32 id;

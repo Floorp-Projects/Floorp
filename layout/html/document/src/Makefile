@@ -33,6 +33,7 @@ INCLUDES += \
 
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
+	nsMarkupDocument.cpp		\
 	nsHTMLContentSink.cpp		\
 	nsHTMLDocument.cpp		\
 	nsHTMLFrame.cpp    \

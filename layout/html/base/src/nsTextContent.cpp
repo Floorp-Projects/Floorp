@@ -47,7 +47,6 @@
 
 #define gCalcDebug 0
 
-PRBool IsInRange(nsIContent * aStart, nsIContent * aEnd, nsIContent * aContent);
 
 
 #ifdef NS_DEBUG
@@ -588,14 +587,13 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
       nsISelection     * selection = doc->GetSelection();
       nsSelectionRange * range     = selection->GetRange();
 
-      NS_RELEASE(shell);
-      NS_RELEASE(doc);
-      NS_RELEASE(selection);
 
 
-      if (IsInRange(range->GetStartContent(), range->GetEndContent(), mContent)) {
+      if (doc->IsInRange(range->GetStartContent(), range->GetEndContent(), mContent)) {
         nsRect rect;
         GetRect(rect);
+        rect.x = 0;     // HACK!!!: Not sure why x and y value are sometime garbage -- gpk
+        rect.y = 0;
         rect.width--;
         rect.height--;
 
@@ -616,6 +614,9 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         aRenderingContext.SetColor(color->mColor);
         aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
       }
+      NS_RELEASE(shell);
+      NS_RELEASE(doc);
+      NS_RELEASE(selection);
 
       if (s0 != buf) {
         delete[] s0;
@@ -659,13 +660,12 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
       nsISelection     * selection = doc->GetSelection();
       nsSelectionRange * range     = selection->GetRange();
 
-      NS_RELEASE(shell);
-      NS_RELEASE(doc);
-      NS_RELEASE(selection);
 
-      if (IsInRange(range->GetStartContent(), range->GetEndContent(), mContent)) {
+      if (doc->IsInRange(range->GetStartContent(), range->GetEndContent(), mContent)) {
         nsRect rect;
         GetRect(rect);
+        rect.x = 0;     // HACK!!!: Not sure why x and y value are sometime garbage -- gpk
+        rect.y = 0;
         rect.width--;
         rect.height--;
 
@@ -686,6 +686,10 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         aRenderingContext.SetColor(color->mColor);
         aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
       }
+
+      NS_RELEASE(shell);
+      NS_RELEASE(doc);
+      NS_RELEASE(selection);
 
       if (s0 != buf) {
         delete[] s0;

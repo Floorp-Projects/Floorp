@@ -57,7 +57,7 @@ NS_NewHTMLDocument(nsIDocument** aInstancePtrResult)
 }
 
 nsHTMLDocument::nsHTMLDocument()
-  : nsDocument(),
+  : nsMarkupDocument(),
     mAttrStyleSheet(nsnull)
 {
   nsHTMLAtoms::AddrefAtoms();

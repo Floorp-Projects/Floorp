@@ -24,6 +24,7 @@ REQUIRES=xpcom raptor
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
+	nsMarkupDocument.cpp			\
 	nsHTMLContentSink.cpp			\
 	nsHTMLDocument.cpp			\
 	nsHTMLFrame.cpp			\
@@ -32,6 +33,7 @@ CPPSRCS=					\
 	$(NULL)
 
 CPP_OBJS=					\
+	.\$(OBJDIR)\nsMarkupDocument.obj	\
 	.\$(OBJDIR)\nsHTMLContentSink.obj	\
 	.\$(OBJDIR)\nsHTMLDocument.obj		\
 	.\$(OBJDIR)\nsHTMLFrame.obj		\

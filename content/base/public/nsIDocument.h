@@ -42,6 +42,8 @@ class nsIViewerContainer;
 class nsIDOMEvent;
 class nsIDeviceContext;
 class nsIParser;
+class nsIDOMNode;
+class nsXIFConverter;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -209,13 +211,25 @@ public:
     * NOTE: we may way to place the result in a stream,
     * but we will use a string for now -- gpk
   */
-  virtual void ToXIF(nsString & aBuffer, PRBool aUseSelection) = 0;
+  virtual void CreateXIF(nsString & aBuffer, PRBool aUseSelection) = 0;
+  virtual void ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode) = 0;
+  virtual void BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode) = 0;
+  virtual void ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode) = 0;
+  virtual void FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode) = 0;
 
+  /* Helper methods to help determine the logical positioning of content */
+  virtual PRBool IsInRange(nsIContent *aStartContent, nsIContent* aEndContent, nsIContent* aContent) const = 0;
+  virtual PRBool IsBefore(nsIContent *aNewContent, nsIContent* aCurrentContent) const = 0;
+  virtual nsIContent* GetPrevContent(nsIContent *aContent) const = 0;
+  virtual nsIContent* GetNextContent(nsIContent *aContent) const = 0;
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
                                   nsGUIEvent* aEvent, 
                                   nsIDOMEvent* aDOMEvent,
                                   nsEventStatus& aEventStatus) = 0;
+
+
+
 
 };
 
