@@ -136,7 +136,7 @@ public:
                                nsIFrame*       aChildList);
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
 
-  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
 
   virtual nsIFrame* GetContentInsertionFrame();
 
