@@ -130,7 +130,7 @@
     </javah>
   </target>
 
-  <target name="clean">
+  <target name="clean" depends="clean.jni">
 
     <exec os="SunOS" dir="${basedir}/src" executable="gmake" 
           failonerror="yes">
@@ -166,8 +166,17 @@
       <arg line="clobber_all"/>
     </exec>
 
-    <delete dir="${build.home}/org/mozilla/dom"/>
+    <delete>
+      <fileset dir="" includes="**/*.ilk"/>
+    </delete>
 
+  </target>
+
+  <target name="clean.jni">
+    <delete dir="${build.home}/org/mozilla/dom"/>
+    <delete>
+      <fileset dir="jni" includes="org_mozilla_dom_*.h"/>
+    </delete>
   </target>
 
   <target name="run.test" depends="main" description="Run unit tests">

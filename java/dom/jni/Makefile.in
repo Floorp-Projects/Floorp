@@ -22,7 +22,7 @@ topsrcdir	= $(DEPTH)
 srcdir		= $(topsrcdir)/java/dom/jni
 VPATH		= $(topsrcdir)/java/dom/jni
 
-JAVAHOME        = $(JDKHOME)
+JAVAHOME        = $(MOZ_JDKHOME)
 
 REQUIRES	= xpcom \
  		  javadom \
@@ -69,43 +69,22 @@ CPPSRCS		= \
 	org_mozilla_dom_events_UIEventImpl.cpp \
 	org_mozilla_dom_events_MouseEventImpl.cpp
 
+EXTRA_LIBS		+= \
+			$(XPCOM_LIBS) \
+			$(NSPR_LIBS) \
+			$(NULL)
+
 include $(topsrcdir)/config/config.mk
-
-include $(topsrcdir)/config/rules.mk
-
-JAVA_CLS= \
-	org.mozilla.dom.DOMAccessor \
-	org.mozilla.dom.AttrImpl \
-	org.mozilla.dom.CharacterDataImpl \
-	org.mozilla.dom.DocumentImpl \
-	org.mozilla.dom.DocumentTypeImpl \
-	org.mozilla.dom.DOMImplementationImpl \
-	org.mozilla.dom.ElementImpl \
-	org.mozilla.dom.EntityImpl \
-	org.mozilla.dom.NamedNodeMapImpl \
-	org.mozilla.dom.NodeImpl \
-	org.mozilla.dom.NodeListImpl \
-	org.mozilla.dom.NotationImpl \
-	org.mozilla.dom.ProcessingInstructionImpl \
-	org.mozilla.dom.TextImpl \
-	org.mozilla.dom.events.EventImpl \
-	org.mozilla.dom.events.MouseEventImpl \
-	org.mozilla.dom.events.UIEventImpl \
- $(NULL)
 
 ifeq ($(OS_ARCH),Linux)
 INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/linux
 else
+ifeq ($(OS_ARCH),WINNT)
+ INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/win32
+else
 INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/solaris
 endif
+endif
 
-JAVAH_PROG=$(JDKHOME)/bin/javah
-JAVAH_FLAGS=-jni -classpath $(CLASSPATH):$(JAVA_DESTPATH)
+include $(topsrcdir)/config/rules.mk
 
-export::
-	$(JAVAH_PROG) $(JAVAH_FLAGS) $(JAVA_CLS)
-
-clobber_all:: clobber
-
-clobber::
-	rm -f org_*.h

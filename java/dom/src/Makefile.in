@@ -23,7 +23,7 @@ srcdir		= .
 
 include $(DEPTH)/config/autoconf.mk
 
-JAVAHOME	= $(JDKHOME)
+JAVAHOME	= $(MOZ_JDKHOME)
 MODULE		= javadom
 LIBRARY_NAME	= javadom
 IS_COMPONENT	= 1
@@ -50,6 +50,12 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 	nsJavaDOMImpl.cpp
 
+EXTRA_LIBS		+= \
+			$(XPCOM_LIBS) \
+			$(NSPR_LIBS) \
+			$(NULL)
+
+
 include $(topsrcdir)/config/config.mk
 
 ifeq ($(OS_ARCH),Linux)
@@ -65,7 +71,10 @@ ifeq ($(OS_ARCH),Linux)
  DEFINES	+= -DDISABLE_JIT
 else
 ifeq ($(OS_ARCH),WINNT)
- INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/win32/
+ INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/win32
+ EXTRA_LIBS     += \
+			$(JAVAHOME)/lib/jvm.lib \
+			$(NULL)
 else
  INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/solaris
  DSO_LDOPTS	+= \
@@ -87,3 +96,8 @@ EXPORTS 	= \
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
+
+edburns:
+	@echo $(XPCOM_LIBS)
+	@echo libs: $(EXTRA_LIBS)
+	
