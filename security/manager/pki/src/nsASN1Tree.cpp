@@ -43,7 +43,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSASN1Tree, nsIASN1Tree,
 nsNSSASN1Tree::nsNSSASN1Tree() 
 :mTopNode(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsNSSASN1Tree::~nsNSSASN1Tree()

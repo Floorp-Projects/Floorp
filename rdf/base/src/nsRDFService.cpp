@@ -393,7 +393,6 @@ public:
 
     BlobImpl(const PRUint8 *aBytes, PRInt32 aLength)
     {
-        NS_INIT_ISUPPORTS();
         mData.mLength = aLength;
         mData.mBytes = new PRUint8[aLength];
         memcpy(mData.mBytes, aBytes, aLength);
@@ -569,7 +568,6 @@ LiteralImpl::Create(const PRUnichar* aValue, nsIRDFLiteral** aResult)
 
 LiteralImpl::LiteralImpl(const PRUnichar* s)
 {
-    NS_INIT_ISUPPORTS();
     gRDFService->RegisterLiteral(this);
     NS_ADDREF(gRDFService);
 }
@@ -672,7 +670,6 @@ private:
 DateImpl::DateImpl(const PRTime s)
     : mValue(s)
 {
-    NS_INIT_ISUPPORTS();
     gRDFService->RegisterDate(this);
     NS_ADDREF(gRDFService);
 }
@@ -779,7 +776,6 @@ private:
 IntImpl::IntImpl(PRInt32 s)
     : mValue(s)
 {
-    NS_INIT_ISUPPORTS();
     gRDFService->RegisterInt(this);
     NS_ADDREF(gRDFService);
 }
@@ -866,7 +862,6 @@ RDFServiceImpl::RDFServiceImpl()
     :  mNamedDataSources(nsnull),
        mLastPrefixlen(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsresult

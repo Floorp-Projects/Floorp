@@ -241,7 +241,6 @@ CreateFromDER(unsigned char *data,
 nsNSSASN1Sequence::nsNSSASN1Sequence() : mIsValidContainer(PR_TRUE),
                                          mIsExpanded(PR_TRUE)
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 
@@ -359,7 +358,6 @@ nsNSSASN1Sequence::SetIsExpanded(PRBool aIsExpanded)
 nsNSSASN1PrintableItem::nsNSSASN1PrintableItem() : mData(nsnull),
                                                    mLen(0)
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 

@@ -241,7 +241,6 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 nsCrypto::nsCrypto()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsCrypto::~nsCrypto()
@@ -1622,7 +1621,6 @@ CryptoRunnableEvent::~CryptoRunnableEvent()
 nsP12Runnable::nsP12Runnable(nsIX509Cert **certArr, PRInt32 numCerts,
                              nsIPK11Token *token)
 {
-  NS_INIT_ISUPPORTS();
   mCertArr  = certArr;
   mNumCerts = numCerts;
   mToken = token;
@@ -1720,14 +1718,12 @@ nsP12Runnable::Run()
 
 nsCryptoRunArgs::nsCryptoRunArgs() 
 {
-  NS_INIT_ISUPPORTS();
 }
 nsCryptoRunArgs::~nsCryptoRunArgs() {}
 
 
 nsCryptoRunnable::nsCryptoRunnable(nsCryptoRunArgs *args)
 {
-  NS_INIT_ISUPPORTS();
   NS_ASSERTION(args,"Passed nsnull to nsCryptoRunnable constructor.");
   m_args = args;
   NS_IF_ADDREF(m_args);
@@ -2061,7 +2057,6 @@ nsCrypto::DisableRightClick()
 
 nsCRMFObject::nsCRMFObject()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsCRMFObject::~nsCRMFObject()
@@ -2090,7 +2085,6 @@ nsCRMFObject::SetCRMFRequest(char *inRequest)
 
 nsPkcs11::nsPkcs11()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsPkcs11::~nsPkcs11()

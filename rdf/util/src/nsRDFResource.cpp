@@ -56,7 +56,6 @@ nsrefcnt nsRDFResource::gRDFServiceRefCnt = 0;
 nsRDFResource::nsRDFResource(void)
     : mURI(nsnull), mDelegates(nsnull)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsRDFResource::~nsRDFResource(void)

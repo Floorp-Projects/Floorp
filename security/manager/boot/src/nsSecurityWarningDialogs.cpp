@@ -46,7 +46,6 @@ static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 
 nsSecurityWarningDialogs::nsSecurityWarningDialogs()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSecurityWarningDialogs::~nsSecurityWarningDialogs()

@@ -93,7 +93,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 class ConsoleOutputStreamImpl : public nsIOutputStream
 {
 public:
-    ConsoleOutputStreamImpl(void) { NS_INIT_ISUPPORTS(); }
+    ConsoleOutputStreamImpl(void) {}
     virtual ~ConsoleOutputStreamImpl(void) {}
 
     // nsISupports interface

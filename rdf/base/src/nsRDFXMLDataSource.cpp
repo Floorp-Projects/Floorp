@@ -149,7 +149,6 @@ private:
 public:
     ProxyStream(void) : mBuffer(nsnull)
     {
-        NS_INIT_ISUPPORTS();
     }
 
     virtual ~ProxyStream(void) {
@@ -465,8 +464,6 @@ RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
       mIsDirty(PR_FALSE),
       mLoadState(eLoadState_Unloaded)
 {
-    NS_INIT_ISUPPORTS();
-
 #ifdef PR_LOGGING
     if (! gLog)
         gLog = PR_NewLogModule("nsRDFXMLDataSource");

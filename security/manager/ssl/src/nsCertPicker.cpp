@@ -61,7 +61,6 @@ NS_IMPL_ISUPPORTS1(nsCertPicker, nsIUserCertPicker)
 
 nsCertPicker::nsCertPicker()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsCertPicker::~nsCertPicker()

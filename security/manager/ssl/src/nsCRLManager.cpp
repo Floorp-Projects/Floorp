@@ -71,7 +71,6 @@ NS_IMPL_ISUPPORTS1(nsCRLManager, nsICRLManager)
 
 nsCRLManager::nsCRLManager()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsCRLManager::~nsCRLManager()

@@ -139,8 +139,6 @@ nsRDFDataSourceDataSource::nsRDFDataSourceDataSource():
   mURI(nsnull),
   mDataSource(nsnull)
 {
-  NS_INIT_ISUPPORTS();
-
 }
 
 nsRDFDataSourceDataSource::~nsRDFDataSourceDataSource()

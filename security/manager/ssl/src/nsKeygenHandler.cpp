@@ -166,7 +166,6 @@ MOZ_DECL_CTOR_COUNTER(nsKeygenFormProcessor)
 
 nsKeygenFormProcessor::nsKeygenFormProcessor()
 { 
-   NS_INIT_ISUPPORTS();
    MOZ_COUNT_CTOR(nsKeygenFormProcessor);
    m_ctx = new PipUIContext();
 

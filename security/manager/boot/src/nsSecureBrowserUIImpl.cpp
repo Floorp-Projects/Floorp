@@ -131,7 +131,6 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
   : mIsViewSource(PR_FALSE),
     mPreviousSecurityState(lis_no_security)
 {
-  NS_INIT_ISUPPORTS();
   mTransferringRequests.ops = nsnull;
   mNewToplevelSecurityState = STATE_IS_INSECURE;
   ResetStateTracking();
@@ -1255,7 +1254,6 @@ NS_IMPL_ISUPPORTS1(nsUIContext, nsIInterfaceRequestor)
 nsUIContext::nsUIContext(nsIDOMWindow *aWindow)
 : mWindow(aWindow)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsUIContext::~nsUIContext()

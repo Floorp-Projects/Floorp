@@ -405,7 +405,6 @@ RDFContainerImpl::IndexOf(nsIRDFNode *aElement, PRInt32 *aIndex)
 RDFContainerImpl::RDFContainerImpl()
     : mDataSource(nsnull), mContainer(nsnull)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 

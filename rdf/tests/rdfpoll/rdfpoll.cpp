@@ -106,7 +106,6 @@ public:
 
 Observer::Observer()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(Observer, nsIRDFObserver)
