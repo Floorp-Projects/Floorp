@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1998,1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 
@@ -38,6 +38,7 @@
 #include "nsAddrBookSession.h"
 #include "nsAbDirProperty.h"
 #include "nsAbAutoCompleteSession.h"
+#include "nsAbAddressCollecter.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -51,6 +52,8 @@ static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kAbDirPropertyCID, NS_ABDIRPROPERTY_CID);
 static NS_DEFINE_CID(kAbAutoCompleteSessionCID ,NS_ABAUTOCOMPLETESESSION_CID);
+
+static NS_DEFINE_CID(kAbAddressCollecterCID, NS_ABADDRESSCOLLECTER_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -235,6 +238,19 @@ nsresult nsAbFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, voi
 	{
 		return NS_NewAbAutoCompleteSession(aIID, aResult);
 	}
+	else if (mClassID.Equals(kAbAddressCollecterCID))
+	{
+		nsresult rv;
+		nsAbAddressCollecter * abAddressCollecter = new nsAbAddressCollecter;
+		if (abAddressCollecter)
+			rv = abAddressCollecter->QueryInterface(aIID, aResult);
+		else
+			rv = NS_ERROR_OUT_OF_MEMORY;
+
+		if (NS_FAILED(rv) && abAddressCollecter)
+			delete abAddressCollecter;
+		return rv;
+	}
 	return NS_NOINTERFACE;  
 }  
 
@@ -351,6 +367,14 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 								  path, PR_TRUE, PR_TRUE);
 
 	if (NS_FAILED(rv)) finalResult = rv;
+
+	rv = compMgr->RegisterComponent(kAbAddressCollecterCID,
+								  "Address Collecter Service",
+								  "component://netscape/addressbook/services/addressCollecter",
+								  path, PR_TRUE, PR_TRUE);
+
+	if (NS_FAILED(rv)) finalResult = rv;
+
 	return finalResult;
 }
 
@@ -394,6 +418,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kAbAutoCompleteSessionCID, path);
+	if (NS_FAILED(rv)) finalResult = rv;
+	
+	rv = compMgr->UnregisterComponent(kAbAddressCollecterCID, path);
 	if (NS_FAILED(rv)) finalResult = rv;
 	
 	return finalResult;
