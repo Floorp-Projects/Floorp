@@ -50,11 +50,9 @@
       <separator />
       <menuitem name="Select All" onclick="EditorSelectAll()"/>
       <separator />
-      <menuitem name="Find..." onclick="EditorFind(true)"/>
-      <menuitem name="Find Again" onclick="EditorFind(false)"/>
-      <separator />
-      <menuitem name="Show Clipboard" onclick="EditorShowClipboard()"/>
-   </menu>
+      <menuitem name=".Find..." onclick="EditorFind(true)"/>
+      <menuitem name=".Find Again" onclick="EditorFind(false)"/>
+    </menu>
 
     <menu name="View">
       <menuitem name=".Hide Composition Toolbar" onclick=""/>
@@ -93,6 +91,8 @@
       <separator />
       <menuitem name="Test Selection" onclick="EditorTestSelection()"/>
       <menuitem name="Test Document" onclick="EditorTestDocument()"/>
+      <separator />
+      <menuitem name="Show Clipboard" onclick="EditorShowClipboard()"/>
     </menu>
     <menu name="Help">
       <menuitem name=".About" onclick=""/>
