@@ -436,7 +436,7 @@ sub confirm_login {
 	    $nexturl = $&;
         }
         my $method = "POST";
-        if (defined $ENV{"REQUEST_METHOD"}) {
+        if (defined $ENV{"REQUEST_METHOD"} && length($::buffer) > 1) {
             $method = $ENV{"REQUEST_METHOD"};
         }
         print "
