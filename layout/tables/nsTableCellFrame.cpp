@@ -1059,44 +1059,6 @@ NS_NewTableCellFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 /* ----- methods from CellLayoutData ----- */
 
 /**
-  * Given a frame and an edge, find the margin
-  *
-  **/
-nscoord nsTableCellFrame::GetMargin(nsIFrame* aFrame, PRUint8 aEdge) const
-{
-  nscoord result = 0;
-
-  if (aFrame)
-  {
-    const nsStyleSpacing* spacing;
-    aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
-    nsMargin  margin;
-    spacing->CalcMarginFor(aFrame, margin);
-    switch (aEdge)
-    {
-      case NS_SIDE_TOP:
-        result = margin.top;
-      break;
-
-      case NS_SIDE_RIGHT:
-        result = margin.right;
-      break;
-
-      case NS_SIDE_BOTTOM:
-        result = margin.bottom;
-      break;
-
-      case NS_SIDE_LEFT:
-        result = margin.left;
-      break;
-
-    }
-  }
-  return result;
-}
-
-
-/**
   * Given an Edge, find the opposing edge (top<-->bottom, left<-->right)
   *
   **/

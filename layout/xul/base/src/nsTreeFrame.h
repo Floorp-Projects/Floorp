@@ -77,6 +77,9 @@ public:
   NS_IMETHOD  DidReflow(nsIPresContext*   aPresContext,
                         nsDidReflowStatus aStatus);
 
+  // returns PR_TRUE if layout requires a preliminary pass over the content 
+  virtual PRBool IsAutoLayout(const nsHTMLReflowState* aReflowState = nsnull);
+
   PRInt32 GetCurrentGeneration() { return mGeneration; };
   void SetCurrentGeneration(PRInt32 aGeneration) { mGeneration = aGeneration; };
 
