@@ -271,8 +271,8 @@ function loadDialog()
     print_paper_unit   = gPrintSettings.paperSizeUnit;
     print_paper_width  = gPrintSettings.paperWidth;
     print_paper_height = gPrintSettings.paperHeight;
-    print_color        = gPrintSettings.printInColor;
-    print_command      = gPrintSettings.printCommand;
+    print_color     = gPrintSettings.printInColor;
+    print_command   = gPrintSettings.printCommand;
     
     if (print_paper_unit == gPrintSettingsInterface.kPaperSizeInches) {
       print_paper_width_mm  = gPrintSettings.paperWidth  * 25.4;
@@ -329,18 +329,10 @@ function loadDialog()
   dialog.cmdInput.value = print_command;
 
   try {
-    // first get the generic settings
     dialog.topInput.value    = gPrefs.getIntPref("print.print_edge_top") / 100.0;
     dialog.bottomInput.value = gPrefs.getIntPref("print.print_edge_left") / 100.0;
     dialog.leftInput.value   = gPrefs.getIntPref("print.print_edge_right") / 100.0;
     dialog.rightInput.value  = gPrefs.getIntPref("print.print_edge_bottom") / 100.0;
-
-    // then the printer specific settings
-    var printername = gPrintSettings.printerName;
-    dialog.topInput.value    = gPrefs.getIntPref("print."+printername+"print_edge_top") / 100.0;
-    dialog.bottomInput.value = gPrefs.getIntPref("print."+printername+"print_edge_left") / 100.0;
-    dialog.leftInput.value   = gPrefs.getIntPref("print."+printername+"print_edge_right") / 100.0;
-    dialog.rightInput.value  = gPrefs.getIntPref("print."+printername+"print_edge_bottom") / 100.0;
   } catch (e) {
     dialog.topInput.value    = "0.04";
     dialog.bottomInput.value = "0.04";
@@ -348,6 +340,8 @@ function loadDialog()
     dialog.rightInput.value  = "0.04";
   }
 }
+
+var param;
 
 //---------------------------------------------------
 function onLoad()
@@ -403,18 +397,17 @@ function onAccept()
 
     // 
     try {
-      var printerName = gPrintSettings.printerName;
       var i = dialog.topInput.value * 100;
-      gPrefs.setIntPref("print."+printerName+"print_edge_top", i);
+      gPrefs.setIntPref("print.print_edge_top", i);
 
       i = dialog.bottomInput.value * 100;
-      gPrefs.setIntPref("print."+printerName+"print_edge_left", i);
+      gPrefs.setIntPref("print.print_edge_left", i);
 
       i = dialog.leftInput.value * 100;
-      gPrefs.setIntPref("print."+printerName+"print_edge_right", i);
+      gPrefs.setIntPref("print.print_edge_right", i);
 
       i = dialog.rightInput.value * 100;
-      gPrefs.setIntPref("print."+printerName+"print_edge_bottom", i);
+      gPrefs.setIntPref("print.print_edge_bottom", i);
     } catch (e) {
     }
 
@@ -433,11 +426,11 @@ function onAccept()
     dump("************ onAccept gPrintSettings: "+gPrintSettings+"\n");
   }
 
-  if (paramBlock) {
+  if (param) {
     // set return value to "ok"
-    paramBlock.SetInt(0, 1);
+    param.SetInt(0, 1);
   } else {
-    dump("*** FATAL ERROR: paramBlock missing\n");
+    dump("*** FATAL ERROR: printService missing\n");
   }
 
   return true;

@@ -62,10 +62,99 @@ interface nsISimpleEnumerator;
 
 interface nsIPrintOptions : nsISupports
 {
+  /* Print Option Flags for Bit Field*/
+  const long kOptPrintOddPages              = 0x00000001;
+  const long kOptPrintEvenPages             = 0x00000002;
+  const long kPrintOptionsEnableSelectionRB = 0x00000004;
+
+  /* Print Range Enums */
+  const long kRangeAllPages           = 0;
+  const long kRangeSpecifiedPageRange = 1;
+  const long kRangeSelection          = 2;
+  const long kRangeFocusFrame         = 3;
+
+  /* Justification Enums */
+  const long kJustLeft   = 0;
+  const long kJustCenter = 1;
+  const long kJustRight  = 2;
+
+  /**
+   * Page Size Constants (NOTE: These have been deprecated!);
+   */
+  const short kLetterPaperSize    = 0;
+  const short kLegalPaperSize     = 1;
+  const short kExecutivePaperSize = 2;
+  const short kA4PaperSize        = 3;
+  const short kA3PaperSize        = 4;
+
+  /**
+   * FrameSet Default Type Constants
+   */
+  const short kUseInternalDefault     = 0;
+  const short kUseSettingWhenPossible = 1;
+
+  /**
+   * Page Size Type Constants
+   */
+  const short kPaperSizeNativeData  = 0;
+  const short kPaperSizeDefined     = 1;
+
+  /**
+   * Page Size Unit Constants
+   */
+  const short kPaperSizeInches      = 0;
+  const short kPaperSizeMillimeters = 1;
+
+  /**
+   * Orientation Constants
+   */
+  const short kPortraitOrientation  = 0;
+  const short kLandscapeOrientation = 1;
+
+  /**
+   * Print Frame Constants
+   */
+  const short kNoFrames      = 0;
+  const short kFramesAsIs    = 1;
+  const short kSelectedFrame = 2;
+  const short kEachFrameSep  = 3;
+
+  /**
+   * How to Enable Frame Set Printing Constants
+   */
+  const short kFrameEnableNone        = 0;
+  const short kFrameEnableAll         = 1;
+  const short kFrameEnableAsIsAndEach = 2;
+
   /**
    * Show Native Print Options dialog, this may not be supported on all platforms
    */
   void ShowPrintSetupDialog(in nsIPrintSettings aThePrintSettings);
+
+  /**
+   * Set PrintOptions 
+   */
+  void SetPrintOptions(in PRInt32 aType, in PRBool aTurnOnOff);
+
+  /**
+   * Get PrintOptions 
+   */
+  PRBool GetPrintOptions(in PRInt32 aType);
+
+  /**
+   * Set PrintOptions Bit field
+   */
+  PRInt32 GetPrintOptionsBits();
+
+  /**
+   * Read Prefs 
+   */
+  void ReadPrefs();
+
+  /**
+   * Write Prefs
+   */
+  void WritePrefs();
 
   /**
    * Creates a new PrintSettnigs Object
@@ -82,20 +171,79 @@ interface nsIPrintOptions : nsISupports
 
   /**
    * Initialize the values in the PrintSettings from Prefs
-   * aPS - PrintSettings to have its settings read
-   * aUsePrinterNamePrefix - indicates whether to use the printer name as a prefix
    */
-  void initPrintSettingsFromPrefs(in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags);
+  void InitPrintSettingsFromPrefs(in nsIPrintSettings aPO);
 
   /**
-   * Save all the PrintSettings to Prefs.
-   * This is on a printer by printer basis
-   * Or saved generically if the printer name is null or empty
-   *
-   * aPS - PrintSettings to have its settings saved
-   * aUsePrinterNamePrefix - indicates whether to use the printer name as a prefix
+   * Data Members
    */
-  void savePrintSettingsToPrefs(in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags);
+  attribute long    startPageRange;    
+  attribute long    endPageRange;    
+
+  attribute double  marginTop;     /*  these are in inches */
+  attribute double  marginLeft;
+  attribute double  marginBottom;
+  attribute double  marginRight;
+
+  attribute double  scaling;       /* values 0.0 - 1.0 */
+  attribute boolean printBGColors; /* Print Background Colors */
+  attribute boolean printBGImages; /* Print Background Images */
+
+  attribute short   printRange; 
+
+  attribute wstring title;
+  attribute wstring docURL;
+
+  attribute wstring headerStrLeft;
+  attribute wstring headerStrCenter;
+  attribute wstring headerStrRight;
+
+  attribute wstring footerStrLeft;
+  attribute wstring footerStrCenter;
+  attribute wstring footerStrRight;
+
+  attribute short   howToEnableFrameUI;
+  attribute boolean isCancelled;
+  attribute short   printFrameTypeUsage; /* indicates whether to use the interal value or not*/
+  attribute short   printFrameType;
+  attribute boolean printSilent;	/* print without putting up the dialog */
+
+  attribute nsIPrintSettings printSettingsValues; /* used copy the values to/from the settings obj*/
+  attribute nsIPrintSettings printSettings;       /* used to set and get the current object */
+
+  /* Additional XP Related */
+  attribute short   paperSizeType; /* use native data or is defined here */
+  attribute short   paperData;     /* native data value */
+  attribute double  paperWidth;    /* width of the paper in inches or mm */
+  attribute double  paperHeight;   /* height of the paper in inches or mm */
+  attribute short   paperSizeUnit; /* paper is in inches or mm */
+
+  attribute long    paperSize;     /*  This has been deprecated */
+
+  attribute boolean printReversed;
+  attribute boolean printInColor;  /* a false means grayscale */
+  attribute long    orientation;   /*  see orientation consts */
+  attribute wstring printCommand;
+  attribute long    numCopies;
+  attribute wstring printerName;
+  attribute boolean printToFile;
+  attribute wstring toFileName;
+
+  attribute long    printPageDelay; /* in milliseconds */
+
+  /* No Script Methods */
+
+  [noscript] void SetFontNamePointSize(in nsNativeStringRef aName, in PRInt32 aPointSize);
+
+  [noscript] void SetMarginInTwips(in nsNativeMarginRef aMargin);
+  /* Purposely made this an "in" arg */
+  [noscript] void GetMarginInTwips(in nsNativeMarginRef aMargin);
+
+  [noscript] void SetDefaultFont(in nsNativeFontRef aMargin);
+  /* Purposely made this an "in" arg */
+  [noscript] void GetDefaultFont(in nsNativeFontRef aMargin);
+
+  [noscript] void GetPageSizeInTwips(out long aWidth, out long aHeight);
 
   /**
    * available Printers
@@ -106,22 +254,6 @@ interface nsIPrintOptions : nsISupports
    * display Printer Job Properties dialog
    */
    void displayJobProperties (in wstring aPrinter, in nsIPrintSettings aPrintSettings, out boolean aDisplayed);
-
-  // Attributes
-  attribute boolean isCancelled;
-
-  attribute wstring title;
-  attribute wstring docURL;
-
-  attribute boolean printToFile;
-  attribute wstring toFileName;
-
-  // no script methods
-  [noscript] void SetFontNamePointSize(in nsNativeStringRef aName, in PRInt32 aPointSize);
-
-  [noscript] void SetDefaultFont(in nsNativeFontRef aFont);
-  /* Purposely made this an "in" arg */
-  [noscript] void GetDefaultFont(in nsNativeFontRef aFont);
 
   /**
    * Native data constants
