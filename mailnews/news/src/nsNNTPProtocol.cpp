@@ -18,6 +18,7 @@
 
 #define FORCE_PR_LOG /* Allow logging in the release build (sorry this breaks the PCH) */
 #include "msgCore.h"    // precompiled header...
+#include "MailNewsTypes.h"
 #include "nntpCore.h"
 
 #include "nsNNTPProtocol.h"
