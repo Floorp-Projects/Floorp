@@ -61,7 +61,7 @@ static XPCOMFunctions *xpcomFunctions = nsnull;
 #ifdef XP_MAC
 #define XPCOM_DLL "XPCOM_DLL"
 #else
-#define XPCOM_DLL  "libxpcom.so"
+#define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
 #endif
 #endif
 

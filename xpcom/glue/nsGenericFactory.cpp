@@ -45,6 +45,14 @@
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 
+#ifdef XPCOM_GLUE
+#include "nsXPCOMGlue.h"
+#include "nsIServiceManager.h"
+#include "nsIFile.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryService.h"
+#endif
+
 nsGenericFactory::nsGenericFactory(const nsModuleComponentInfo *info)
     : mInfo(info)
 {
@@ -231,6 +239,11 @@ nsGenericModule::nsGenericModule(const char* moduleName, PRUint32 componentCount
 nsGenericModule::~nsGenericModule()
 {
     Shutdown();
+
+#ifdef XPCOM_GLUE
+   XPCOMGlueShutdown();
+#endif
+
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsGenericModule, nsIModule)
@@ -254,17 +267,45 @@ nsGenericModule::AddFactoryNode(nsIGenericFactory* fact)
 nsresult
 nsGenericModule::Initialize(nsIComponentManager *compMgr)
 {
+    nsresult rv;
+
     if (mInitialized) {
         return NS_OK;
     }
 
     if (mCtor) {
-        nsresult rv = mCtor(this);
+        rv = mCtor(this);
         if (NS_FAILED(rv))
             return rv;
     }
 
-    nsresult rv;
+
+#ifdef XPCOM_GLUE
+    nsCOMPtr<nsIServiceManager> servMgr = do_QueryInterface(compMgr, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCOMPtr<nsIProperties> dirService;
+    rv = servMgr->GetServiceByContractID(NS_DIRECTORY_SERVICE_CONTRACTID, 
+                                         NS_GET_IID(nsIProperties), 
+                                         getter_AddRefs(dirService));
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCOMPtr<nsIFile> xpcomDll;
+    rv = dirService->Get(NS_XPCOM_LIBRARY_FILE, NS_GET_IID(nsIFile), getter_AddRefs(xpcomDll));
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCAutoString path;
+    xpcomDll->GetNativePath(path);
+    rv = XPCOMGlueStartup(path.get());
+
+    if (NS_FAILED(rv))
+        return rv;
+
+#endif
+
     nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(compMgr, &rv);
     if (NS_FAILED(rv))
         return rv;

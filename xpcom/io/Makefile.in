@@ -79,7 +79,6 @@ endif # OS2
 EXPORTS		= \
 		nsAppDirectoryServiceDefs.h \
 		nsDirectoryService.h \
-		nsDirectoryServiceDefs.h \
 		nsDirectoryServiceUtils.h \
 		nsEscape.h \
 		nsFastLoadPtr.h \
@@ -142,6 +141,10 @@ SDK_XPIDLSRCS   = \
 		nsIInputStream.idl \
 		nsIOutputStream.idl \
 		nsIScriptableInputStream.idl \
+		$(NULL)
+
+SDK_HEADERS =  \
+		nsDirectoryServiceDefs.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

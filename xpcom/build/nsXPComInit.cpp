@@ -109,6 +109,17 @@
 #endif
 #include "nsRecyclingAllocator.h"
 
+// seawood tells me there isn't a better way...
+#ifdef XP_PC
+#define XPCOM_DLL  "xpcom.dll"
+#else
+#ifdef XP_MAC
+#define XPCOM_DLL "XPCOM_DLL"
+#else
+#define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
+#endif
+#endif
+
 // Registry Factory creation function defined in nsRegistry.cpp
 // We hook into this function locally to create and register the registry
 // Since noone outside xpcom needs to know about this and nsRegistry.cpp
@@ -359,11 +370,6 @@ static const nsModuleComponentInfo components[] = {
 
 const int components_length = sizeof(components) / sizeof(components[0]);
 
-static const PRStaticLinkTable sGlueSymbols[] = { {
-    "NS_GetFrozenFunctions",
-    (void (* PR_CALLBACK)())&NS_GetFrozenFunctions
-} } ;
-
 // gMemory will be freed during shutdown.
 static nsIMemory* gMemory = nsnull;
 nsresult NS_COM NS_GetMemoryManager(nsIMemory* *result)
@@ -417,8 +423,6 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
 
     StartupSpecialSystemDirectory();
 
-    PR_LoadStaticLibrary("XPCOMComponentGlue", sGlueSymbols);
-
     // Start the directory service so that the component manager init can use it.
     rv = nsDirectoryService::Create(nsnull,
                                     NS_GET_IID(nsIProperties),
@@ -442,14 +446,18 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
         if (compMgr == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(compMgr);
-
+        
+        nsCOMPtr<nsIFile> xpcomLib;
+                
         PRBool value;
         if (binDirectory)
         {
             rv = binDirectory->IsDirectory(&value);
 
-            if (NS_SUCCEEDED(rv) && value)
+            if (NS_SUCCEEDED(rv) && value) {
                 gDirectoryService->Set(NS_XPCOM_INIT_CURRENT_PROCESS_DIR, binDirectory);
+                binDirectory->Clone(getter_AddRefs(xpcomLib));
+            }
 
             //Since people are still using the nsSpecialSystemDirectory, we should init it.
             nsCAutoString path;
@@ -459,6 +467,17 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
             nsSpecialSystemDirectory::Set(nsSpecialSystemDirectory::Moz_BinDirectory, &spec);
 
         }
+        else {
+            gDirectoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, 
+                                   NS_GET_IID(nsIFile), 
+                                   getter_AddRefs(xpcomLib));
+        }
+
+        if (xpcomLib) {
+            xpcomLib->AppendNative(nsDependentCString(XPCOM_DLL));
+            gDirectoryService->Set(NS_XPCOM_LIBRARY_FILE, xpcomLib);
+        }
+        
         if (appFileLocationProvider) {
             rv = dirService->RegisterProvider(appFileLocationProvider);
             if (NS_FAILED(rv)) return rv;
@@ -775,8 +794,6 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     return NS_OK;
 }
 
-
-
 nsresult NS_COM PR_CALLBACK
 NS_GetFrozenFunctions(XPCOMFunctions *functions, const char* libraryPath)
 {
@@ -841,7 +858,6 @@ NS_GetFrozenFunctions(XPCOMFunctions *functions, const char* libraryPath)
         PR_UnloadLibrary(xpcomLib);
         return NS_ERROR_FAILURE;
     }
-    
 
     PR_UnloadLibrary(xpcomLib); // the library is refcnt'ed above by the caller.
     xpcomLib = nsnull;
