@@ -1,3 +1,5 @@
+#!perl
+
 use strict;
 
 my $tab = "    ";
@@ -272,8 +274,12 @@ sub collect {
                          $init_tab . $tab . $tab . "return f;\n" .
                          $init_tab . $tab . "}\n");
 
+        my $printops_body = &get_printops_body(@types);
+        my $printops_decl = ($printops_body ne "" ? "virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {\n"
+                                                  : "virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {\n");
+
         $class_decs .= ($init_tab . $tab . 
-                         "virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {\n" .
+                         $printops_decl .
                          &get_printops_body(@types) .
                          $init_tab . $tab . $tab . "return f;\n" .
                          $init_tab . $tab . "}\n");
@@ -401,7 +407,7 @@ sub get_printops_body {
         if ($type eq "Register") {
             push (@oplist, "\"R\" << mOp$op << \" = \" << registers[mOp$op]");
         } elsif ($type eq "RegisterList") {
-            push (@oplist, "\"RL\" << mOp$op");
+            push (@oplist, "ArgList(mOp$op, registers)");
         }
 
         $op++;
