@@ -363,7 +363,7 @@ my $action  = '';
 if (defined $::FORM{action}) {
   $action  = trim($::FORM{action});
 }
-if ($action eq Param("move-button-text")) {
+if (Param("move-enabled") && $action eq Param("move-button-text")) {
   $::FORM{'buglist'} = join (":", @idlist);
   do "move.pl" || die "Error executing move.cgi: $!";
   PutFooter();
