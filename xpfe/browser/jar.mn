@@ -16,7 +16,6 @@ comm.jar:
         content/navigator/NetSupportConfirmYN.xul      (resources/content/NetSupportConfirmYN.xul)
         content/navigator/NetSupportConfirmCheckYN.xul (resources/content/NetSupportConfirmCheckYN.xul)
         content/navigator/tooltip.js                   (resources/content/tooltip.js)
-        content/navigator/nsContextMenu.js             (resources/content/nsContextMenu.js)
         content/navigator/askViewZoom.xul              (resources/content/askViewZoom.xul)
         content/navigator/askViewZoom.js               (resources/content/askViewZoom.js)
 

@@ -67,13 +67,11 @@ Rights Reserved.
 <script type="text/javascript" src="chrome://messenger/content/mailContextMenus.js"/>
 <script type="text/javascript" src="chrome://messenger/content/messengerdnd.js"/>
 <script type="text/javascript" src="chrome://messenger/content/accountUtils.js"/>
-<script type="text/javascript" src="chrome://navigator/content/nsContextMenu.js"/>
 <script type="text/javascript" src="chrome://navigator/content/navigator.js"/>
-<script type="text/javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
+<script type="text/javascript" src="chrome://communicator/content/contentAreaClick.js"/>
 <script type="text/javascript" src="chrome://communicator/content/contentAreaDD.js"/>
 <script type="text/javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
 <script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>
-<script type="text/javascript" src="chrome://global/content/nsTransferable.js"/>
 <script type="text/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
 <commands id="commands">
@@ -98,8 +96,8 @@ Rights Reserved.
 </commands>
 
 <broadcasterset id="broadcasterset"/>
-<keyset id="keyset"/>
 
+<keyset id="keyset"/>
 
 <popupset>
 

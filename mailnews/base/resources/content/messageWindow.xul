@@ -51,10 +51,10 @@ Rights Reserved.
         <script type="text/javascript" src="chrome://messenger/content/mailWindow.js"/>
         <script type="text/javascript" src="chrome://messenger/content/messageWindow.js"/>
         <script type="text/javascript" src="chrome://messenger/content/accountUtils.js"/>
-        <script type="text/javascript" src="chrome://navigator/content/nsContextMenu.js"/>
         <script type="text/javascript" src="chrome://navigator/content/navigator.js"/>
+        <script type="text/javascript" src="chrome://communicator/content/nsContextMenu.js">
         <script type="text/javascript" src="chrome://messenger/content/mailContextMenus.js"/>
-        <script type="text/javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
+        <script type="text/javascript" src="chrome://communicator/content/contentAreaClick.js"/>
         <script type="text/javascript" src="chrome://communicator/content/contentAreaDD.js"/>
         <script type="text/javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
         <script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>
