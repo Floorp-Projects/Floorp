@@ -1911,6 +1911,15 @@ nsInstall::SaveError(PRInt32 errcode)
   return errcode;
 }
 
+PRBool DeleteEntry(nsHashKey *aKey, void *aData, void *closure)
+{
+    nsFileSpec* data = (nsFileSpec *)aData;
+    delete data;
+    data = nsnull;
+    return PR_TRUE;
+}
+
+
 /*
  * CleanUp
  * call	it when	done with the install
@@ -1939,7 +1948,8 @@ nsInstall::CleanUp(void)
 
     if (mPatchList)
     {
-        // XXX do I need to delete every entry?
+        mPatchList->Enumerate(DeleteEntry, nsnull);
+        mPatchList->Reset();
         delete mPatchList;
     }
     
