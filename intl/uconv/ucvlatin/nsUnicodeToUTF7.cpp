@@ -315,5 +315,9 @@ PRBool nsUnicodeToUTF7::DirectEncodable(PRUnichar aChar) {
   else if ((aChar >= 44) && (aChar <= 47)) return PR_TRUE;
   else if (aChar == 58) return PR_TRUE;
   else if (aChar == 63) return PR_TRUE;
+  else if (aChar == ' ') return PR_TRUE;
+  else if (aChar == 9) return PR_TRUE;
+  else if (aChar == 13) return PR_TRUE;
+  else if (aChar == 10) return PR_TRUE;
   else return PR_FALSE;
 }
