@@ -537,10 +537,6 @@ stack, bulletinboard {
   display: -moz-stack;
 }
 
-:-moz-deck-hidden {
-   visibility: hidden;
-}
-
 /********** tabbox *********/
 
 tabbox {

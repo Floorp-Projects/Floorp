@@ -66,6 +66,8 @@
 #include "nsStyleConsts.h"
 #include "nsLayoutAtoms.h"
 #include "nsCSSPseudoClasses.h"
+#include "nsCSSPseudoElements.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsINameSpaceManager.h"
 #include "nsINameSpace.h"
 #include "nsThemeConstants.h"
@@ -1526,11 +1528,6 @@ static PRBool IsSinglePseudoClass(const nsCSSSelector& aSelector)
 }
 
 #ifdef MOZ_XUL
-static PRBool IsTreePseudoElement(const nsString& aPseudo)
-{
-  return Substring(aPseudo, 0, 10).Equals(NS_LITERAL_STRING("-moz-tree-"));
-}
-
 static PRBool IsTreePseudoElement(nsIAtom* aPseudo)
 {
   const char* str;
@@ -2112,40 +2109,75 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
                                       PRInt32& aErrorCode,
                                       PRBool aIsNegated)
 {
-  nsAutoString buffer;
   if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof
-    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("name of pseudo-selector"));
+    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("name of pseudo-class or pseudo-element"));
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
     return;
   }
 
-  buffer.Truncate();
-  buffer.Append(PRUnichar(':'));
-  buffer.Append(mToken.mIdent);
-  ToLowerCase(buffer);
-  nsCOMPtr<nsIAtom> pseudo = do_GetAtom(buffer);
-
-  if (eCSSToken_Ident != mToken.mType) {  // malformed selector
-    if (eCSSToken_Function != mToken.mType ||
-        !(
-#ifdef MOZ_XUL
-          // -moz-tree is a pseudo-element and therefore cannot be negated
-          (!aIsNegated && IsTreePseudoElement(mToken.mIdent)) ||
-#endif
-          // the negation pseudo-class is a function
-          (nsCSSPseudoClasses::notPseudo == pseudo) ||
-          // as is the lang pseudo-class
-          (nsCSSPseudoClasses::lang == pseudo))) {
-      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for pseudo-class selector not found"));
-      UngetToken();
+  // First, find out whether we are parsing a CSS3 pseudo-element
+  PRBool parsingPseudoElement = PR_FALSE;
+  if (mToken.IsSymbol(':')) {
+    parsingPseudoElement = PR_TRUE;
+    if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof
+      REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("name of pseudo-class or pseudo-element"));
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
     }
   }
 
+  // Do some sanity-checking on the token
+  if (eCSSToken_Ident != mToken.mType && eCSSToken_Function != mToken.mType) {
+    // malformed selector
+    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for pseudo-class or pseudo-element but found"));
+    UngetToken();
+    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+    return;
+  }
+
+  // OK, now we know we have an mIdent.  Atomize it.  All the atoms, for
+  // pseudo-classes as well as pseudo-elements, start with a single ':'.
+  nsAutoString buffer;
+  buffer.Append(PRUnichar(':'));
+  buffer.Append(mToken.mIdent);
+  ToLowerCase(buffer);
+  nsCOMPtr<nsIAtom> pseudo = do_GetAtom(buffer);
+
+  // stash away some info about this pseudo so we only have to get it once.
+#ifdef MOZ_XUL
+  PRBool isTree = (eCSSToken_Function == mToken.mType) &&
+                  IsTreePseudoElement(pseudo);
+#endif
+  PRBool isPseudoElement = nsCSSPseudoElements::IsPseudoElement(pseudo);
+  PRBool isAnonBox = nsCSSAnonBoxes::IsAnonBox(pseudo);
+
+  // If it's a function token, it better be on our "ok" list
+  if (eCSSToken_Function == mToken.mType &&
+#ifdef MOZ_XUL
+      !isTree &&
+#endif
+      nsCSSPseudoClasses::notPseudo != pseudo &&
+      nsCSSPseudoClasses::lang != pseudo) { // There are no other function pseudos
+    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for function pseudo-class or pseudo-element but found"));
+    UngetToken();
+    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+    return;
+  }
+  
+  // If it starts with "::", it better be a pseudo-element
+  if (parsingPseudoElement &&
+      !isPseudoElement &&
+      !isAnonBox) {
+    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected pseudo-element but found"));
+    UngetToken();
+    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+    return;
+  }
+
   if (nsCSSPseudoClasses::notPseudo == pseudo) {
     if (aIsNegated) { // :not() can't be itself negated
       REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Negation pseudo-class can't be negated"));
+      UngetToken();
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
     }
@@ -2155,7 +2187,8 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
       return;
     }
   }    
-  else if (nsCSSPseudoClasses::IsPseudoClass(pseudo)) {
+  else if (!parsingPseudoElement &&
+           nsCSSPseudoClasses::IsPseudoClass(pseudo)) {
     aDataMask |= SEL_MASK_PCLASS;
     if (nsCSSPseudoClasses::lang == pseudo) {
       ParseLangSelector(aSelector, aParsingStatus, aErrorCode);
@@ -2168,26 +2201,43 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
       return;
     }
   }
-  else {
+  else if (isPseudoElement || isAnonBox) {
+    // Pseudo-element.  Make some more sanity checks.
+    
     if (aIsNegated) { // pseudo-elements can't be negated
       REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Pseudo-elements can't be negated"));
+      UngetToken();
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
     }
+    // CSS2 pseudo-elements are allowed to have a single ':' on them, as are
+    // various -moz-* pseudo-elements (anonymous boxes).  Others (CSS3+
+    // pseudo-elements) must have |parsingPseudoElement| set.
+    if (!parsingPseudoElement &&
+        // XXXbz remove the isAnonBox check once we have converted all
+        // of our stylesheets to using '::' (see bug 211657).
+        !isAnonBox &&
+        !nsCSSPseudoElements::IsCSS2PseudoElement(pseudo)) {
+      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("This pseudo-element must use the \"::\" form: "));
+      UngetToken();
+      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+      return;      
+    }
+
     if (0 == (aDataMask & SEL_MASK_PELEM)) {
       aDataMask |= SEL_MASK_PELEM;
       aSelector.AddPseudoClass(pseudo); // store it here, it gets pulled later
 
 #ifdef MOZ_XUL
-      if (eCSSToken_Function == mToken.mType && 
-          IsTreePseudoElement(mToken.mIdent)) {
+      if (isTree) {
         // We have encountered a pseudoelement of the form
         // -moz-tree-xxxx(a,b,c).  We parse (a,b,c) and add each
         // item in the list to the pseudoclass list.  They will be pulled
-        // from the list later along with the pseudoelement.
-        if (!ParseTreePseudoElement(aErrorCode, aSelector))
+        // from the list later along with the pseudo-element.
+        if (!ParseTreePseudoElement(aErrorCode, aSelector)) {
           aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
           return;
+        }
       }
 #endif
 
@@ -2211,6 +2261,12 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
     }
+  } else {
+    // Not a pseudo-class, not a pseudo-element.... forget it
+    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Unknown pseudo-class or pseudo-element"));
+    UngetToken();
+    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+    return;
   }
   aParsingStatus = SELECTOR_PARSING_ENDED_OK;
 }

@@ -51,6 +51,8 @@ public:
 
   static PRBool IsPseudoElement(nsIAtom *aAtom);
 
+  static PRBool IsCSS2PseudoElement(nsIAtom *aAtom);
+
 #define CSS_PSEUDO_ELEMENT(_name, _value) static nsICSSPseudoElement* _name;
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT

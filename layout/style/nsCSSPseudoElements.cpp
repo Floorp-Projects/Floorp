@@ -65,3 +65,14 @@ PRBool nsCSSPseudoElements::IsPseudoElement(nsIAtom *aAtom)
                                    NS_ARRAY_LENGTH(CSSPseudoElements_info));
 }
 
+PRBool nsCSSPseudoElements::IsCSS2PseudoElement(nsIAtom *aAtom)
+{
+#define CSS2_PSEUDO_ELEMENT(name_, value_) \
+   nsCSSPseudoElements::name_ == aAtom ||
+#define CSS_PSEUDO_ELEMENT(name_, value_)
+  return
+#include "nsCSSPseudoElementList.h"
+    PR_FALSE;
+#undef CSS_PSEUDO_ELEMENT
+#undef CSS2_PSEUDO_ELEMENT
+}
