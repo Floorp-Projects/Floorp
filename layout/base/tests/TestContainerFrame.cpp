@@ -48,7 +48,11 @@ class SimpleContent : public nsIContent {
 public:
   SimpleContent();
 
-  nsIDocument* GetDocument() const {return mDocument;}
+  NS_IMETHOD GetDocument(nsIDocument*& adoc) const {
+    adoc = mDocument;
+    return NS_OK;
+  }
+
   void         SetDocument(nsIDocument* aDocument) {mDocument = aDocument;}
 
   nsIContent* GetParent() const { return nsnull; }
@@ -58,10 +62,12 @@ public:
   PRInt32      ChildCount() const {return 0;}
   nsIContent*  ChildAt(PRInt32 aIndex) const {return nsnull;}
   PRInt32      IndexOf(nsIContent* aPossibleChild) const {return -1;}
-  PRBool       InsertChildAt(nsIContent* aKid, PRInt32 aIndex) {return PR_FALSE;}
-  PRBool       ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex) {return PR_FALSE;}
-  PRBool       AppendChild(nsIContent* aKid) {return PR_FALSE;}
-  PRBool       RemoveChildAt(PRInt32 aIndex) {return PR_FALSE;}
+  NS_IMETHOD   InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+                            PRBool aNotify) { return NS_OK; }
+  NS_IMETHOD   ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
+                              PRBool aNotify){ return NS_OK; }
+  NS_IMETHOD   AppendChild(nsIContent* aKid, PRBool aNotify) {return NS_OK;}
+  NS_IMETHOD   RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {return NS_OK;}
 
   NS_IMETHOD IsSynthetic(PRBool& aResult) {
     aResult = PR_FALSE;
