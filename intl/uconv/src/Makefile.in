@@ -25,10 +25,14 @@ MODULE		= uconv
 LIBRARY_NAME	= uconv
 
 CSRCS		=  \
+                  ugen.c \
+                  uscan.c \
+                  umap.c \
 		  $(NULL)
 
-CPPSRCS		= nsAscii2Unicode.cpp \
+CPPSRCS		= \
                   nsCharsetConverterManager.cpp \
+                  nsUnicodeDecodeUtil.cpp \
                   nsUConvDll.cpp \
 		  $(NULL)
 
@@ -39,3 +43,6 @@ CFLAGS		+= -DUSE_NSREG -D__STDC__
 REQUIRES	= $(MODULE) libxpcom libraptorbase
 
 include $(topsrcdir)/config/rules.mk
+
+INCLUDES        += -I$(srcdir)/../ucvlatin \
+                   -I$(srcdir)/../ucvja
