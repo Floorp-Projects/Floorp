@@ -35,6 +35,7 @@
 #include "prerror.h"
 #include "pprio.h" // Include this rather than prio.h so we get def of PR_ImportFile
 #include "prmem.h"
+#include "plbase64.h"
 
 #include "FullPath.h"
 #include "FileCopy.h"
@@ -2063,6 +2064,59 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsLocalFile::GetPersistentDescriptor(char * *aPersistentDescriptor)
+{
+   NS_ENSURE_ARG_POINTER(aPersistentDescriptor);
+   *aPersistentDescriptor = nsnull;
+   
+   nsresult  rv = ResolveAndStat( PR_TRUE );
+   if ( NS_FAILED( rv ) )
+     return rv;
+
+   AliasHandle    aliasH;
+   OSErr err = ::NewAlias(nil, &mTargetSpec, &aliasH);
+   if (err != noErr)
+     return MacErrorMapper(err);
+
+   PRUint32 bytes = ::GetHandleSize((Handle) aliasH);
+   HLock((Handle) aliasH);
+   char* buf = PL_Base64Encode((const char*)*aliasH, bytes, nsnull); // Passing nsnull for dest makes NULL-term string
+   ::DisposeHandle((Handle) aliasH);
+   NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
+
+   *aPersistentDescriptor = buf;
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLocalFile::SetPersistentDescriptor(const char * aPersistentDescriptor)
+{
+   NS_ENSURE_ARG(aPersistentDescriptor);
+   
+   nsresult rv;
+
+   PRUint32 dataSize = nsCRT::strlen(aPersistentDescriptor);
+   char* decodedData = PL_Base64Decode((const char*)aPersistentDescriptor, dataSize, nsnull);
+   // Cast to an alias record and resolve.
+   AliasHandle aliasH = nsnull;
+   if (::PtrToHand(decodedData, &(Handle)aliasH, (dataSize * 3) / 4) != noErr)
+      rv = NS_ERROR_OUT_OF_MEMORY;
+   PR_Free(decodedData);
+   NS_ENSURE_SUCCESS(rv, rv);
+
+   Boolean changed;
+   FSSpec resolvedSpec;
+   OSErr err;
+   if ((err = ::ResolveAlias(nsnull, aliasH, &resolvedSpec, &changed)) != noErr)
+      rv = MacErrorMapper(err);
+   DisposeHandle((Handle) aliasH);
+   NS_ENSURE_SUCCESS(rv, rv);
+ 
+   return InitWithFSSpec(&resolvedSpec);   
+}
+
 #pragma mark -
 
 // a stack-based, exception safe class for an AEDesc
@@ -2649,10 +2703,12 @@ NS_NewLocalFile(const char* path, PRBool followLinks, nsILocalFile* *result)
 
     file->SetFollowLinks(followLinks);
 
-	nsresult rv = file->InitWithPath(path);
-	if (NS_FAILED(rv)) {
-		NS_RELEASE(file);
-		return rv;
+    if (path) {
+    	nsresult rv = file->InitWithPath(path);
+    	if (NS_FAILED(rv)) {
+    		NS_RELEASE(file);
+    		return rv;
+    	}
 	}
 	*result = file;
 	return NS_OK;
