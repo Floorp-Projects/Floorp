@@ -137,13 +137,13 @@ PR_STATIC_CALLBACK(JSBool) pref_NativeGetLDAPAttr(JSContext *cx, JSObject *obj, 
 /*----------------------------------------------------------------------------------------*/
 #include "prefapi_private_data.h"
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 global_enumerate(JSContext *cx, JSObject *obj)
 {
     return JS_EnumerateStandardClasses(cx, obj);
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 global_resolve(JSContext *cx, JSObject *obj, jsval id)
 {
     JSBool resolved;
@@ -229,7 +229,7 @@ PRBool pref_VerifyLockFile(char* buf, long buflen);
 
 
 JSBool PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *script);
-void pref_ErrorReporter(JSContext *cx, const char *message,JSErrorReport *report);
+void JS_DLL_CALLBACK pref_ErrorReporter(JSContext *cx, const char *message,JSErrorReport *report);
 void pref_Alert(char* msg);
 PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action);
 static void* pref_HashTableLookup(const void *key);
@@ -1015,7 +1015,7 @@ PREF_GetBinaryPref(const char *pref_name, void * return_value, int *size, PRBool
     return result;
 }
 
-typedef PrefResult (*CharPrefReadFunc)(const char*, char**, PRBool);
+typedef PrefResult (* PR_CALLBACK CharPrefReadFunc)(const char*, char**, PRBool);
 
 static PrefResult
 ReadCharPrefUsing(const char *pref_name, void** return_value, int *size, CharPrefReadFunc inFunc, PRBool isDefault)
@@ -1070,7 +1070,7 @@ PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default)
 #endif /* XP_MAC */
 
 /* Delete a branch. Used for deleting mime types */
-int
+int PR_CALLBACK
 pref_DeleteItem(PLHashEntry *he, int i, void *arg)
 {
     const char *to_delete = (const char *) arg;
@@ -1540,7 +1540,7 @@ typedef struct
   and entry is
   "a.b.c" or "a.b"
   then add "a.b" to the list. */
-int
+int PR_CALLBACK
 pref_addChild(PLHashEntry *he, int i, void *arg)
 {
     PrefChildIter* pcs = (PrefChildIter*) arg;
@@ -1896,7 +1896,7 @@ JSBool PR_CALLBACK pref_NativeGetLDAPAttr
 
 /* Dump debugging info in response to about:config.
  */
-int
+int PR_CALLBACK
 pref_printDebugInfo(PLHashEntry *he, int i, void *arg)
 {
     char *buf1=NULL, *buf2=NULL;
