@@ -148,7 +148,7 @@ protected:
     *
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     */
-  virtual PRBool SetColumnsToMinWidth();
+  virtual PRBool BalanceColumnsTableDoesNotFit();
 
   /** assign the maximum allowed width for each column that has proportional width.
     * Typically called when the desired max table width fits in the available space.
