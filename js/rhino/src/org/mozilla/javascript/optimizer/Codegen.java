@@ -2766,10 +2766,6 @@ class BodyCodegen
         if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
             OptLocalVariable lVar = OptLocalVariable.get(child);
             short reg = lVar.getJRegister();
-            if (reg == -1) {
-                reg = getNewWordPairLocal();
-                lVar.assignJRegister(reg);
-            }
             cfw.addDLoad(reg);
             cfw.add(ByteCode.DUP2);
             cfw.addPush(1.0);
@@ -2782,10 +2778,6 @@ class BodyCodegen
                 if (lVar == null)
                     lVar = fnCurrent.getVar(child.getString());
                 short reg = lVar.getJRegister();
-                if (reg == -1) {
-                    reg = getNewWordLocal();
-                    lVar.assignJRegister(reg);
-                }
                 cfw.addALoad(reg);
                 cfw.add(ByteCode.DUP);
                 addObjectToDouble();
@@ -3229,14 +3221,6 @@ class BodyCodegen
             lVar = fnCurrent.getVar(name);
         if (lVar != null) {
             short reg = lVar.getJRegister();
-            if (reg == -1) {
-                if (lVar.isNumber()) {
-                    reg = getNewWordPairLocal();
-                } else {
-                    reg = getNewWordLocal();
-                }
-                lVar.assignJRegister(reg);
-            }
             if (lVar.isParameter() && inDirectCallFunction &&
                 !itsForcedObjectParameters)
             {
@@ -3280,14 +3264,6 @@ class BodyCodegen
         if (lVar != null) {
             generateCodeFromNode(child.getNext(), node);
             short reg = lVar.getJRegister();
-            if (reg == -1) {
-                if (lVar.isNumber()) {
-                    reg = getNewWordPairLocal();
-                } else {
-                    reg = getNewWordLocal();
-                }
-                lVar.assignJRegister(reg);
-            }
             if (lVar.isParameter()
                         && inDirectCallFunction
                         && !itsForcedObjectParameters) {
