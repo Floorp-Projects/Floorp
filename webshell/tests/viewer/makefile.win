@@ -151,6 +151,7 @@ install:: $(PROGRAM)
 	$(MAKE_INSTALL) samples\test13.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test_pr.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test_gfx.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\test_lbox.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\toolbarTest1.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\treeTest1.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\xulTest.css $(DIST)\bin\res\samples
@@ -202,6 +203,7 @@ clobber::
 	rm -f $(DIST)\bin\res\samples\test12.html
 	rm -f $(DIST)\bin\res\samples\test_pr.html
 	rm -f $(DIST)\bin\res\samples\test_gfx.html
+	rm -f $(DIST)\bin\res\samples\test_lbox.html
 	rm -f $(DIST)\bin\res\throbber\anim.gif
 	rm -f $(DIST)\bin\res\throbber\anims00.gif
 	rm -f $(DIST)\bin\res\throbber\anims01.gif

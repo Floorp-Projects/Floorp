@@ -377,9 +377,11 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
   aPresContext.GetScaledPixelsToTwips(&sp2t);
   nscoord onePixel = NSIntPixelsToTwips(1, sp2t);
 
+#if 0
   nscoord scrollbarWidth  = 0;
   nscoord scrollbarHeight = 0;
   nsListControlFrame::GetScrollBarDimensions(aPresContext, scrollbarWidth, scrollbarHeight);
+#endif
 
   nscoord extra = desiredSize.height - (rowHeight * numRows);
 

@@ -1721,82 +1721,86 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*  aPresContext,
                                             PRBool           aIsFixedPositioned,
                                             nsAbsoluteItems& aFixedItems)
 {
+#define NS_FRAME_BASED_COMBO_WORKS 0
   nsresult rv = NS_OK;
   nsWidgetRendering mode;
   aPresContext->GetWidgetRenderingMode(&mode);
-//XXX: When frame-based rendering works uncomment this and remove the line below
-//  if (eWidgetRendering_Gfx == mode) {
-   if (0) {
+
+  if (eWidgetRendering_Gfx == mode) {
     nsIDOMHTMLSelectElement* select   = nsnull;
     PRInt32                  size = 1;
     nsresult result = aContent->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&select);
     if (NS_OK == result) {
       result = select->GetSize(&size); 
       if (1 == size) {
-        nsIFrame * comboboxFrame;
-        rv = NS_NewComboboxControlFrame(comboboxFrame);
-        nsIComboboxControlFrame* comboBox;
-        if (NS_OK == comboboxFrame->QueryInterface(kIComboboxControlFrameIID, (void**)&comboBox)) {
+        if (! NS_FRAME_BASED_COMBO_WORKS) {
+          rv = NS_NewSelectControlFrame(aNewFrame);
+        } else {
+          nsIFrame * comboboxFrame;
+          rv = NS_NewComboboxControlFrame(comboboxFrame);
+          nsIComboboxControlFrame* comboBox;
+          if (NS_OK == comboboxFrame->QueryInterface(kIComboboxControlFrameIID, (void**)&comboBox)) {
 
-          nsIFrame * listFrame;
-          rv = NS_NewListControlFrame(listFrame);
+            nsIFrame * listFrame;
+            rv = NS_NewListControlFrame(listFrame);
 
-          // This is important to do before it is initialized
-          // it tells it that it is in "DropDown Mode"
-          nsIListControlFrame * listControlFrame;
-          if (NS_OK == listFrame->QueryInterface(kIListControlFrameIID, (void**)&listControlFrame)) {
-            listControlFrame->SetComboboxFrame(comboboxFrame);
+            // This is important to do before it is initialized
+            // it tells it that it is in "DropDown Mode"
+            nsIListControlFrame * listControlFrame;
+            if (NS_OK == listFrame->QueryInterface(kIListControlFrameIID, (void**)&listControlFrame)) {
+              listControlFrame->SetComboboxFrame(comboboxFrame);
+            }
+
+            InitializeScrollFrame(listFrame, aPresContext, aContent, comboboxFrame, aStyleContext,
+                                  aAbsoluteItems,  aNewFrame, aFixedItems, aIsAbsolutelyPositioned, 
+                                  aIsFixedPositioned, PR_TRUE);
+
+            nsIFrame* placeholderFrame;
+
+            CreatePlaceholderFrameFor(aPresContext, aContent, aNewFrame, aStyleContext,
+                                      aParentFrame, placeholderFrame);
+
+            // Add the absolutely positioned frame to its containing block's list
+            // of child frames
+            if (aIsAbsolutelyPositioned)
+              aAbsoluteItems.AddChild(aNewFrame);
+
+            listFrame = aNewFrame;
+
+            // This needs to be done "after" the ListFrame has it's ChildList set
+            // because the SetInitChildList intializes the ListBox selection state
+            // and this method initializes the ComboBox's selection state
+            comboBox->SetDropDown(placeholderFrame, listFrame);
+
+            // Set up the Pseudo Style contents
+            //XXX: What should happend if resolving the pseudo style fails?
+            nsCOMPtr<nsIStyleContext> visiblePseudoStyle;
+            aPresContext->ResolvePseudoStyleContextFor
+                                (aContent, nsHTMLAtoms::dropDownVisible, aStyleContext, PR_FALSE, 
+                                 getter_AddRefs(visiblePseudoStyle));
+
+            nsCOMPtr<nsIStyleContext> hiddenPseudoStyle;
+            aPresContext->ResolvePseudoStyleContextFor
+                                (aContent, nsHTMLAtoms::dropDownHidden, aStyleContext, PR_FALSE,
+                                 getter_AddRefs(hiddenPseudoStyle));
+
+            nsCOMPtr<nsIStyleContext> outPseudoStyle;
+            aPresContext->ResolvePseudoStyleContextFor
+                                (aContent, nsHTMLAtoms::dropDownBtnOut, aStyleContext, PR_FALSE,
+                                 getter_AddRefs(outPseudoStyle));
+
+            nsCOMPtr<nsIStyleContext> pressPseudoStyle;
+            aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::dropDownBtnPressed, 
+                                 aStyleContext, PR_FALSE, getter_AddRefs(pressPseudoStyle));
+
+            comboBox->SetDropDownStyleContexts(visiblePseudoStyle, hiddenPseudoStyle);
+            comboBox->SetButtonStyleContexts(outPseudoStyle, pressPseudoStyle);
+
+            aProcessChildren = PR_FALSE;
+            nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, listFrame,
+                                                     aStyleContext, PR_TRUE);
+            aNewFrame = comboboxFrame;
           }
-
-          InitializeScrollFrame(listFrame, aPresContext, aContent, comboboxFrame, aStyleContext,
-                                aAbsoluteItems,  aNewFrame, aFixedItems, aIsAbsolutelyPositioned, 
-                                aIsFixedPositioned, PR_TRUE);
-
-          nsIFrame* placeholderFrame;
-
-          CreatePlaceholderFrameFor(aPresContext, aContent, aNewFrame, aStyleContext,
-                                    aParentFrame, placeholderFrame);
-
-          // Add the absolutely positioned frame to its containing block's list
-          // of child frames
-          if (aIsAbsolutelyPositioned)
-            aAbsoluteItems.AddChild(aNewFrame);
-
-          listFrame = aNewFrame;
-
-          // This needs to be done "after" the ListFrame has it's ChildList set
-          // because the SetInitChildList intializes the ListBox selection state
-          // and this method initializes the ComboBox's selection state
-          comboBox->SetDropDown(placeholderFrame, listFrame);
-
-          // Set up the Pseudo Style contents
-          //XXX: What should happend if resolving the pseudo style fails?
-          nsCOMPtr<nsIStyleContext> visiblePseudoStyle;
-          aPresContext->ResolvePseudoStyleContextFor
-                              (aContent, nsHTMLAtoms::dropDownVisible, aStyleContext, PR_FALSE, 
-                               getter_AddRefs(visiblePseudoStyle));
-
-          nsCOMPtr<nsIStyleContext> hiddenPseudoStyle;
-          aPresContext->ResolvePseudoStyleContextFor
-                              (aContent, nsHTMLAtoms::dropDownHidden, aStyleContext, PR_FALSE,
-                               getter_AddRefs(hiddenPseudoStyle));
-
-          nsCOMPtr<nsIStyleContext> outPseudoStyle;
-          aPresContext->ResolvePseudoStyleContextFor
-                              (aContent, nsHTMLAtoms::dropDownBtnOut, aStyleContext, PR_FALSE,
-                               getter_AddRefs(outPseudoStyle));
-
-          nsCOMPtr<nsIStyleContext> pressPseudoStyle;
-          aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::dropDownBtnPressed, 
-                               aStyleContext, PR_FALSE, getter_AddRefs(pressPseudoStyle));
-
-          comboBox->SetDropDownStyleContexts(visiblePseudoStyle, hiddenPseudoStyle);
-          comboBox->SetButtonStyleContexts(outPseudoStyle, pressPseudoStyle);
-
-          aProcessChildren = PR_FALSE;
-          nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, listFrame,
-                                                   aStyleContext, PR_TRUE);
-          aNewFrame = comboboxFrame;
         }
 
       } else {

@@ -23,10 +23,8 @@
 #include "nsIDOMFocusListener.h"
 #include "nsIPresContext.h"
 #include "nsIFormControlFrame.h"
-#ifdef PLUGGABLE_EVENTS
-#include "nsIPluggableEventListener.h"
-#endif
 #include "nsIListControlFrame.h"
+
 
 class nsIDOMHTMLSelectElement;
 class nsIDOMHTMLCollection;
@@ -35,33 +33,7 @@ class nsFormFrame;
 class nsScrollFrame;
 class nsIComboboxControlFrame;
 
-#if 0
-struct nsInputDimSpec
-{
-  nsIAtom*  mColSizeAttr;            // attribute used to determine width
-  PRBool    mColSizeAttrInPixels;    // is attribute value in pixels (otherwise num chars)
-  nsIAtom*  mColValueAttr;           // attribute used to get value to determine size
-                                     //    if not determined above
-  nsString* mColDefaultValue;        // default value if not determined above
-  nscoord   mColDefaultSize;         // default width if not determined above
-  PRBool    mColDefaultSizeInPixels; // is default width in pixels (otherswise num chars)
-  nsIAtom*  mRowSizeAttr;            // attribute used to determine height
-  nscoord   mRowDefaultSize;         // default height if not determined above
 
-  nsInputDimSpec(nsIAtom* aColSizeAttr, PRBool aColSizeAttrInPixels, 
-                       nsIAtom* aColValueAttr, nsString* aColDefaultValue,
-                       nscoord aColDefaultSize, PRBool aColDefaultSizeInPixels,
-                       nsIAtom* aRowSizeAttr, nscoord aRowDefaultSize)
-                       : mColSizeAttr(aColSizeAttr), mColSizeAttrInPixels(aColSizeAttrInPixels),
-                         mColValueAttr(aColValueAttr), 
-                         mColDefaultValue(aColDefaultValue), mColDefaultSize(aColDefaultSize),
-                         mColDefaultSizeInPixels(aColDefaultSizeInPixels),
-                         mRowSizeAttr(aRowSizeAttr), mRowDefaultSize(aRowDefaultSize)
-  {
-  }
-
-};
-#endif
 /**
  * The block frame has two additional named child lists:
  * - "Floater-list" which contains the floated frames
@@ -71,11 +43,8 @@ struct nsInputDimSpec
  * @see nsLayoutAtoms::floaterList
  */
 class nsListControlFrame : public nsScrollFrame, 
-                            public nsIFormControlFrame, 
-                            public nsIListControlFrame
-#ifdef PLUGGABLE_EVENTS
-                            public nsIPluggableEventListener
-#endif
+                           public nsIFormControlFrame, 
+                           public nsIListControlFrame
 {
 public:
   friend nsresult NS_NewListControlFrame(nsIFrame*& aNewFrame);
@@ -101,20 +70,6 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  //
-/*  virtual nsresult AppendNewFrames(nsIPresContext& aPresContext, nsIFrame*);
-
-  virtual nsresult InsertNewFrame(nsIPresContext&  aPresContext,
-                          nsBaseIBFrame* aParentFrame,
-                          nsIFrame* aNewFrame,
-                          nsIFrame* aPrevSibling);
-
-  virtual nsresult DoRemoveFrame(nsBlockReflowState& aState,
-                         nsBaseIBFrame* aParentFrame,
-                         nsIFrame* aDeletedFrame,
-                         nsIFrame* aPrevSibling);
-                         */
-
   NS_IMETHOD  Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
@@ -127,24 +82,10 @@ public:
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
 
-
-#if 0
-  virtual void GetStyleSize(nsIPresContext& aContext,
-                    const nsHTMLReflowState& aReflowState,
-                    nsSize& aSize);
-#endif
-
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
-#if 0
-  nscoord CalculateSize (nsIPresContext* aPresContext, nsListControlFrame* aFrame,
-                                const nsSize& aCSSSize, nsInputDimSpec& aDimensionSpec, 
-                                nsSize& aBounds, PRBool& aWidthExplicit, 
-                                PRBool& aHeightExplicit, nscoord& aRowSize,
-                                nsIRenderingContext *aRendContext);
-#endif
 
   /*virtual nsresult Focus(nsIDOMEvent* aEvent);
   virtual nsresult Blur(nsIDOMEvent* aEvent);
@@ -156,21 +97,9 @@ public:
 
   NS_METHOD GetMultiple(PRBool* aResult, nsIDOMHTMLSelectElement* aSelect = nsnull);
 
-  ///XXX: End o the temporary methods
-#if 0
-  nscoord GetTextSize(nsIPresContext& aContext, nsListControlFrame* aFrame,
-                             const nsString& aString, nsSize& aSize,
-                             nsIRenderingContext *aRendContext);
-
-  nscoord GetTextSize(nsIPresContext& aContext, nsListControlFrame* aFrame,
-                             PRInt32 aNumChars, nsSize& aSize,
-                             nsIRenderingContext *aRendContext);
-#endif
   virtual nsresult GetSizeFromContent(PRInt32* aSize) const;
   NS_IMETHOD GetMaxLength(PRInt32* aSize);
 
-  static  void GetScrollBarDimensions(nsIPresContext& aPresContext,
-                                  nscoord &aWidth, nscoord &aHeight);
   virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
@@ -205,7 +134,7 @@ public:
   NS_IMETHOD GetName(nsString* aName);
 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
-
+  
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
   virtual void Reset();
@@ -219,19 +148,10 @@ public:
 
   virtual void SetFormFrame(nsFormFrame* aFrame);
 
-  // nsIPluggableEventListener
-  NS_IMETHOD  PluggableEventHandler(nsIPresContext& aPresContext, 
-                                    nsGUIEvent*     aEvent,
-                                    nsEventStatus&  aEventStatus);
-
-  NS_IMETHOD  PluggableGetFrameForPoint(const nsPoint& aPoint, 
-                                        nsIFrame**     aFrame);
-
   // nsIListControlFrame
   NS_IMETHOD SetComboboxFrame(nsIFrame* aComboboxFrame);
   NS_IMETHOD GetSelectedItem(nsString & aStr);
   NS_IMETHOD AboutToDropDown();
-
 
   // Static Methods
   static nsIDOMHTMLSelectElement* GetSelect(nsIContent * aContent);
@@ -239,6 +159,10 @@ public:
   static nsIDOMHTMLOptionElement* GetOption(nsIDOMHTMLCollection& aOptions, PRUint32 aIndex);
   static PRBool                   GetOptionValue(nsIDOMHTMLCollection& aCollecton, PRUint32 aIndex, nsString& aValue);
 
+  nsIContent*                 GetOptionContent(PRUint32 aIndex);
+  PRBool IsFrameSelected(PRUint32 aIndex);
+  void   SetFrameSelected(PRUint32 aIndex, PRBool aSelected);
+ 
 protected:
   nsListControlFrame();
   virtual ~nsListControlFrame();
@@ -249,12 +173,14 @@ protected:
                                  nsIAtom*       aList,
                                  nsIFrame**     aFrame);
 
-  // nsHTMLContainerFrame overrides
-  virtual void PaintChildren(nsIPresContext&      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsFramePaintLayer    aWhichLayer);
+  // Utility methods
 
+  void DisplaySelected(nsIContent* aContent); 
+  void DisplayDeselected(nsIContent* aContent); 
+  void UpdateItem(nsIContent* aContent, PRBool aSelected);
+
+  // nsHTMLContainerFrame overrides
+ 
   void ClearSelection();
   void InitializeFromContent(PRBool aDoDisplay = PR_FALSE);
 
@@ -272,35 +198,26 @@ protected:
 
   // Data Members
   nsFormFrame* mFormFrame;
-
   PRInt32      mNumRows;
-
-  PRBool       mIsFrameSelected[64];
+//XXX: TODO: This should not be hardcoded to 64 
+//ZZZ  PRBool       mIsFrameSelected[64];
   PRInt32      mNumSelections;
   PRInt32      mMaxNumSelections;
   PRBool       mMultipleSelections;
-
-
-  //nsIContent * mSelectedContent;
   PRInt32      mSelectedIndex;
   PRInt32      mStartExtendedIndex;
   PRInt32      mEndExtendedIndex;
-
-  nsIFrame *   mHitFrame;
+  nsIFrame   * mHitFrame;
   nsIContent * mHitContent;
-
-  nsIFrame *   mCurrentHitFrame;
+  nsIFrame   * mCurrentHitFrame;
   nsIContent * mCurrentHitContent;
-
-  nsIFrame *   mSelectedFrame;
+  nsIFrame   * mSelectedFrame;
   nsIContent * mSelectedContent;
-
   PRBool       mIsInitializedFromContent;
-
-  nsIFrame * mContentFrame;
-  PRBool     mInDropDownMode;
+  nsIFrame *   mContentFrame;
+  PRBool       mInDropDownMode;
   nsIComboboxControlFrame * mComboboxFrame;
-  nsString   mSelectionStr;
+  nsString     mSelectionStr;
 
 };
 
