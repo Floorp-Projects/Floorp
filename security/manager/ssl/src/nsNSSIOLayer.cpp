@@ -360,7 +360,8 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
                                     (void*)fd, forceHandshake, useTLS));
 
   if (!useTLS && forceHandshake) {
-    PRInt32 res = SSL_ForceHandshake(fd);
+    // Kick-start the handshake in order to work around bug 66706
+    PRInt32 res = PR_Write(fd,0,0);
     
     if (res == -1) {
       PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("[%p] ForceHandshake failure -- error %d\n",
