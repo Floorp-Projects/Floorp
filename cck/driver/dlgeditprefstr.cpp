@@ -53,7 +53,9 @@ BEGIN_MESSAGE_MAP(CDlgEditPrefStr, CDialog)
 	ON_WM_CREATE()
 	ON_WM_CANCELMODE()
 	ON_BN_CLICKED(IDC_DEFAULT, OnResetDefault)
+	ON_BN_CLICKED(IDC_REMOTEADMIN, OnRemoteAdmin)
 	//}}AFX_MSG_MAP
+
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -116,6 +118,13 @@ BOOL CDlgEditPrefStr::OnInitDialog()
     m_checkValue.ShowWindow(SW_HIDE);
   }
 
+  // disable lock checkbox if pref is not lockable
+  
+  if (!m_bLockable)
+  {
+    m_checkLocked.EnableWindow(FALSE);
+  }
+    
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
@@ -168,3 +177,19 @@ void CDlgEditPrefStr::OnResetDefault()
 }
 
 
+void CDlgEditPrefStr::OnRemoteAdmin()
+{
+  if (m_bLockable)
+  {
+    if (m_checkRemoteAdmin.GetCheck())
+    {
+      m_checkLocked.SetCheck(1);
+      m_checkLocked.EnableWindow(FALSE);
+    }
+    else if (m_bLockable)
+    {
+      m_checkLocked.SetCheck(0);
+      m_checkLocked.EnableWindow(TRUE);
+    }
+  }
+}
