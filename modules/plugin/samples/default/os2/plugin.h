@@ -111,14 +111,11 @@ public:
 #define DEFAULT_PLUGINFINDER_URL "http://plugins.netscape.com/plug-in_finder.adp"
 #define JVM_SMARTUPDATE_URL "http://home.netscape.com/plugins/jvm.html"
 
-#ifdef WIN32
-#define REGISTRY_PLACE "Software\\Netscape\\Netscape Navigator\\Default Plugin"
-#else
+#define OS2INI_PLACE "Mozilla Default Plugin"
 #define GWL_USERDATA        0
 #define COLOR_3DSHADOW      COLOR_BTNFACE
 #define COLOR_3DLIGHT       COLOR_BTNHIGHLIGHT
 #define COLOR_3DDKSHADOW    COLOR_BTNSHADOW
-#endif
 
 #define CLASS_NULL_PLUGIN "NullPluginClass"
  

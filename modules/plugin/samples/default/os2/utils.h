@@ -38,10 +38,7 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
-#ifdef OLDCODE
-HKEY openRegistry();
 BOOL IsNewMimeType(PSZ szMimeType);
-#endif
 void SetDlgItemTextWrapped(HWND hWnd, int iID, PSZ szText);
 
 #endif // __UTILS_H__

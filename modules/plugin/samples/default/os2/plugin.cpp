@@ -227,7 +227,7 @@ BOOL CPlugin::init(HWND hWndParent)
     WinShowWindow(m_hWnd, TRUE);
   }
 
-//  if(IsNewMimeType((PSZ)m_pNPMIMEType) || m_bHidden)
+  if(IsNewMimeType((PSZ)m_pNPMIMEType) || m_bHidden)
     showGetPluginDialog();
 
   return TRUE;
