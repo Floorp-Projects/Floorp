@@ -47,7 +47,7 @@ public:
     enum {
         eChildrenMustBeRebuilt  = 0x1,
         eTemplateContentsBuilt  = 0x2,
-        eContainerContentsBuilt = 0x4,
+        eContainerContentsBuilt = 0x4
     };
 
     NS_IMETHOD SetLazyState(PRInt32 aFlags) = 0;
