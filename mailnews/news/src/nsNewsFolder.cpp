@@ -630,12 +630,6 @@ NS_IMETHODIMP nsMsgNewsFolder::Rename(const PRUnichar *newName, nsIMsgWindow *ms
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos)
-{
-  NS_ASSERTION(0,"Adopt not implemented");  
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsMsgNewsFolder::GetAbbreviatedName(PRUnichar * *aAbbreviatedName)
 {
   nsresult rv = NS_OK;

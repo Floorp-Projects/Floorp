@@ -67,7 +67,6 @@ public:
 
 	NS_IMETHOD Delete ();
 	NS_IMETHOD Rename (const PRUnichar *newName, nsIMsgWindow *msgWindow);
-	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
 
 	NS_IMETHOD GetAbbreviatedName(PRUnichar * *aAbbreviatedName);
 
