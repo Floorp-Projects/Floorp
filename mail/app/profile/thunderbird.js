@@ -59,6 +59,8 @@ pref("editor.singleLine.pasteNewlines", 4);  // substitute commas for new lines 
 // to avoid the height of the header area from changing when headers are present / not present
 pref("mailnews.headers.minNumHeaders", 0); // 0 means we ignore this pref
 
+pref("mail.compose.dontWarnMail2Newsgroup", false);
+
 pref("messenger.throbber.url","chrome://messenger-region/locale/region.properties");
 pref("mailnews.release_notes.url","chrome://messenger-region/locale/region.properties");
 pref("mailnews.hints_and_tips.url","chrome://messenger-region/locale/region.properties");

@@ -1626,9 +1626,9 @@ function GenericSendMessage( msgType )
 
   if (gMsgCompose != null)
   {
-      var msgCompFields = gMsgCompose.compFields;
-      if (msgCompFields)
-      {
+    var msgCompFields = gMsgCompose.compFields;
+    if (msgCompFields)
+    {
       Recipients2CompFields(msgCompFields);
       var subject = document.getElementById("msgSubject").value;
       msgCompFields.subject = subject;
@@ -1637,9 +1637,10 @@ function GenericSendMessage( msgType )
       if (msgType == nsIMsgCompDeliverMode.Now || msgType == nsIMsgCompDeliverMode.Later)
       {
         //Do we need to check the spelling?
-        if (sPrefs.getBoolPref("mail.SpellCheckBeforeSend")){
-        //We disable spellcheck for the following -subject line, attachment pane, identity and addressing widget
-        //therefore we need to explicitly focus on the mail body when we have to do a spellcheck.
+        if (sPrefs.getBoolPref("mail.SpellCheckBeforeSend")) 
+        {
+          //We disable spellcheck for the following -subject line, attachment pane, identity and addressing widget
+          //therefore we need to explicitly focus on the mail body when we have to do a spellcheck.
           window.content.focus();
           window.cancelSendMessage = false;
           try {
@@ -1649,66 +1650,95 @@ function GenericSendMessage( msgType )
           catch(ex){}
           if(window.cancelSendMessage)
             return;
-        }
+         }
 
-        //Check if we have a subject, else ask user for confirmation
-        if (subject == "")
-        {
-          if (gPromptService)
-          {
-            var result = {value:sComposeMsgsBundle.getString("defaultSubject")};
-            if (gPromptService.prompt(
-              window,
-              sComposeMsgsBundle.getString("subjectDlogTitle"),
-              sComposeMsgsBundle.getString("subjectDlogMessage"),
-                        result,
-              null,
-              {value:0}
-              ))
-              {
-                msgCompFields.subject = result.value;
-                var subjectInputElem = document.getElementById("msgSubject");
-                subjectInputElem.value = result.value;
-              }
-              else
-                return;
+         //Check if we have a subject, else ask user for confirmation
+         if (subject == "")
+         {
+           if (gPromptService)
+           {            
+             var result = {value:sComposeMsgsBundle.getString("defaultSubject")};
+             if (gPromptService.prompt(
+                window,
+                sComposeMsgsBundle.getString("subjectDlogTitle"),
+                sComposeMsgsBundle.getString("subjectDlogMessage"),
+                result,
+                null,
+                {value:0}))
+             {
+               msgCompFields.subject = result.value;
+               var subjectInputElem = document.getElementById("msgSubject");
+               subjectInputElem.value = result.value;
+             }
+             else
+               return;
             }
           }
 
-        // Before sending the message, check what to do with HTML message, eventually abort.
-        var convert = DetermineConvertibility();
-        var action = DetermineHTMLAction(convert);
-        if (action == nsIMsgCompSendFormat.AskUser)
-        {
-                    var recommAction = convert == nsIMsgCompConvertible.No
-                                   ? nsIMsgCompSendFormat.AskUser
-                                   : nsIMsgCompSendFormat.PlainText;
-                    var result2 = {action:recommAction,
-                                  convertible:convert,
-                                  abort:false};
-                    window.openDialog("chrome://messenger/content/messengercompose/askSendFormat.xul",
-                                      "askSendFormatDialog", "chrome,modal,titlebar,centerscreen",
-                                      result2);
-          if (result2.abort)
-            return;
-          action = result2.action;
-        }
-        switch (action)
-        {
-          case nsIMsgCompSendFormat.PlainText:
-            msgCompFields.forcePlainText = true;
-            msgCompFields.useMultipartAlternative = false;
-            break;
-          case nsIMsgCompSendFormat.HTML:
-            msgCompFields.forcePlainText = false;
-            msgCompFields.useMultipartAlternative = false;
-            break;
-          case nsIMsgCompSendFormat.Both:
-            msgCompFields.forcePlainText = false;
-            msgCompFields.useMultipartAlternative = true;
-            break;
-           default: dump("\###SendMessage Error: invalid action value\n"); return;
-        }
+          // check if the user tries to send a message to a newsgroup through a mail account
+          var currentAccountKey = getCurrentAccountKey();
+          var account = gAccountManager.getAccount(currentAccountKey);
+          var servertype = account.incomingServer.type;
+
+          if (servertype != "nntp" && msgCompFields.newsgroups != "")
+          {
+            // default to ask user if the pref is not set
+            var dontAskAgain = sPrefs.getBoolPref("mail.compose.dontWarnMail2Newsgroup");
+
+            if (!dontAskAgain)
+            {
+              var checkbox = {value:false};
+              var okToProceed = gPromptService.confirmCheck(window,
+                                                            sComposeMsgsBundle.getString("subjectDlogTitle"),
+                                                            sComposeMsgsBundle.getString("recipientDlogMessage"),
+                                                            sComposeMsgsBundle.getString("CheckMsg"), checkbox);
+
+              if (!okToProceed)
+                return;
+
+              if (checkbox.value)
+                sPrefs.setBoolPref(kDontAskAgainPref, true);
+            }
+
+            // remove newsgroups to prevent news_p to be set 
+            // in nsMsgComposeAndSend::DeliverMessage()
+            msgCompFields.newsgroups = "";
+          }
+
+          // Before sending the message, check what to do with HTML message, eventually abort.
+          var convert = DetermineConvertibility();
+          var action = DetermineHTMLAction(convert);
+          if (action == nsIMsgCompSendFormat.AskUser)
+          {
+            var recommAction = convert == nsIMsgCompConvertible.No
+                           ? nsIMsgCompSendFormat.AskUser
+                           : nsIMsgCompSendFormat.PlainText;
+            var result2 = {action:recommAction,
+                          convertible:convert,
+                          abort:false};
+            window.openDialog("chrome://messenger/content/messengercompose/askSendFormat.xul",
+                              "askSendFormatDialog", "chrome,modal,titlebar,centerscreen",
+                              result2);
+            if (result2.abort)
+              return;
+            action = result2.action;
+          }
+          switch (action)
+          {
+            case nsIMsgCompSendFormat.PlainText:
+              msgCompFields.forcePlainText = true;
+              msgCompFields.useMultipartAlternative = false;
+              break;
+            case nsIMsgCompSendFormat.HTML:
+              msgCompFields.forcePlainText = false;
+              msgCompFields.useMultipartAlternative = false;
+              break;
+            case nsIMsgCompSendFormat.Both:
+              msgCompFields.forcePlainText = false;
+              msgCompFields.useMultipartAlternative = true;
+              break;
+             default: dump("\###SendMessage Error: invalid action value\n"); return;
+          }
       }
 
       // hook for extra compose pre-processing
@@ -1755,8 +1785,7 @@ function GenericSendMessage( msgType )
           gSendOrSaveOperationInProgress = true;
         }
         msgWindow.SetDOMWindow(window);
-
-        gMsgCompose.SendMsg(msgType, getCurrentIdentity(), getCurrentAccountKey(), msgWindow, progress);
+        gMsgCompose.SendMsg(msgType, getCurrentIdentity(), currentAccountKey, msgWindow, progress);
       }
       catch (ex) {
         dump("failed to SendMsg: " + ex + "\n");
