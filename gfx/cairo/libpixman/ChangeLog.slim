@@ -1,0 +1,39 @@
+2003-09-23  Carl Worth  <cworth@east.isi.edu>
+
+	* src/slim_internal.h: The slim_hidden_def macros were causing
+	build failures with gcc 2.95.4. I've bumped the test for these
+	macros up to: __GNUC__ >= 3. We'll see if that's sufficient.
+
+2003-09-09  Carl Worth  <cworth@isi.edu>
+
+	* configure.in (SLIM_VERSION): Bump version number to 0.2.0
+	instead, (this is an incompatible change after all).
+	
+	* configure.in (SLIM_VERSION): Bump version number to 0.1.1
+
+	* src/slim_internal.h (slim_hidden_def): Remove ';' from macro
+	definition, (forcing the user to provide it which looks better
+	anyway). This also helps to avoid confusing etags.
+
+2003-07-31  Richard Henderson  <rth@twiddle.net>
+
+	* src/slim_internal.h (__internal_linkage): Attribute visibility
+	not present until gcc 3.3.
+
+2003-07-30  Richard Henderson  <rth@twiddle.net>
+
+	* Makefile.am (EXTRA_DIST, pkgconfigdir, pkgconfig_DATA): New.
+	* configure.in (AC_OUTPUT): Add slim.pc.
+	* slim.pc.in: New file.
+
+2003-07-30  Richard Henderson  <rth@twiddle.net>
+
+	* src/slim_internal.h: New file.
+	* src/slim_export.h: New file.
+	* src/slim_import.h: New file.
+	* src/Makefile.am (include_HEADERS): Add them.
+	* configure.in (AC_INIT): Check for src/slim_export.h
+
+2003-07-29  Carl Worth  <cworth@isi.edu>
+
+	* Create package skeleton.

@@ -1,0 +1,279 @@
+* Add support for non-antialiased rendering. API ?
+
+* Cleanup cairo_snippets so they operate in a more default cairo
+  environment, (particularly with a default CTM).
+
+* Add one of cairo_surface_finish/_finalize/_close to resolve the
+  "reference counting vs garbage collection" thread.
+
+* Shove experimental snapping code from libsvg-cairo down int cairo
+  proper.
+
+* Clean up the cache code a bit, (there is at least one redundant
+  level of cacheing, and there are some minor style issues).
+
+* Implement the parallel install stuff, (most importantly, push
+  cairo.h down into into one directory below $(includedir)).
+
+* Add CAIRO_FILL_RULE_INVERSE_WINDING and CAIRO_FILL_RULE_INVERSE_EVEN_ODD
+
+* Simplifying the operator set?
+
+* Fix clipping to work for all operators. The equation we have come up
+  with is:
+
+	((src Op dest) In clip) Add (dest Out clip)
+
+* Resolve the rest of the rendering equation. We need a fundamental
+  equation upon which more convenient operations are based, (at least
+  formally). Some of the common operations that should be convenient:
+
+	* display surface
+	* display surface multiplied by constant alpha
+	* display pattern masked by surface
+
+  So this involves deciding whether to expose a new mask object in the
+  graphics state, and deciding exactly what set_alpha means. It almost
+  certainly means adding cairo_show_surface_mask.
+
+* Implement a hidden transform, (as per the result of the hidden
+  offset thread on the mailing list).
+
+* Replace PNG backend with an image_surface function to save a PNG
+  image.
+
+* Clean up the API in preparation for freezing and release.
+
+* Implement a PDF backend.
+
+* Make a more interesting PS backend, (other than the current
+"giant-image for every page" approach).
+
+* Figure out what to do with DPI for image/png backends.
+
+* Change stroke code to go through one giant polygon. This will fix
+problems with stroking self-intersecting paths.
+
+* Implement cairo_stroke_path, (very easy to do after the above change
+is done).
+
+* Re-work the backend clipping interface to use geometry rather than
+images.
+
+* Fix the intersection problem, (see reference to Hobby's paper
+mentioned in cairo_traps.c).
+
+* Add a new cairo_text_glyphs function (a sort of bridge between the
+toy and the real text API):
+
+	>       void
+	>       cairo_text_glyphs (cairo_t *cr, const unsigned char *utf8,
+	>                          cairo_glyph_t *glyphs, int *num_glyphs);
+	>
+	> with num_glyphs as an input-output parameter. The behavior of this
+	> function would be such that calling:
+	>
+	>       cairo_text_glyphs (cr, string, glyphs, &num_glyphs);
+	>       cairo_show_glyphs (cr, glyphs, num_glyphs);
+	>
+	> would be equivalent too:
+	>
+	>       cairo_show_text (cr, string);
+	>
+	> as long as the original size of glyphs/num_glyphs was large
+	> enough.
+
+* Implement dashing for cairo_curve_to.
+
+* Implement support for programmatic patterns, (ie. figure out how to
+do gradients the Right Way).
+
+* Implement cairo_arc_to.
+
+* Fix support for old X servers so that it is not swamped with image
+transport. The key idea is to assume that nothing external to cairo
+will be drawing to the same drawable after it is handed to
+cairo. Beyond that, we might actually provide support for cooperating
+with external entities by adding one or more of the following
+functions:
+
+   cairo_flush
+   cairo_erase
+   cairo_mark_dirty
+
+* Re-implement the trapezoid rasterization algorithm according to the
+  new "specification".
+
+* Stroking closed, degenerate paths should still draw caps.  Round
+  caps are easy; square should probably draw an axis-aligned square.
+
+* It would be nice if the user had a mechanism to reliably draw custom
+  caps. One approach here would be to provide the coordinates of the
+  butt cap faces so that the user can append seamless caps to the
+  current path. We may also need to provide the coordinates of the
+  faces of every dash as well.
+
+* Should add geometry pruning as appropriate.
+
+* We need a way to get at the image data after something
+  like cairo_surface_create_similar with the image backend.
+
+* Three suggestions from Owen that will help GTK+ performance:
+
+  - The ability have an additional rectangle-list clip in the
+   Xlib surface. Frequently during an expose event, GTK+ is
+   drawing L shaped areas
+
+         XXXXXX
+         X.....
+         X.....
+
+   And passing the real clip to the server is going to save
+   a lot of pixel operations that will be thrown away.
+
+ - The ability to pass in a width/height to cairo_xlib_surface_create()
+   to avoid a round-trip. (Round-trips are bad to the point where
+   querying the the server is something you don't want to do in
+   production software)
+
+ - More of a future thing, the ability to hint to to cairo that
+   the contents of the Xlib surface passed to
+   cairo_xlib_surface_create() are a solid fill ... this is
+   very much the normal case for GTK+ usage and allows for
+   big optimization in the no-RENDER case.
+   (see http://mail.gnome.org/archives/gtk-devel-list/2003-March/msg00045.html
+
+* Verification, profiling, optimization.
+
+	centi_unfinished.svg may provide a good test case.
+
+A comparison with PostScript
+============================
+
+Here's a list of several classes of PostScript operators indicating
+which operators have rough equivalents in cairo and which do not. In
+general, the name of a cairo function corresponding to a PostScript
+operator can be obtained by inserting a '_' between each word and
+prefixing it with "cairo_". For example, "cairo_move_to" corresponds
+to the PostScript "moveto".
+
+In cases where the name of the cairo function deviates from this
+convention, or when the behavior of the cairo function is
+significantly different, the change is noted in parentheses below.
+
+This list is not exhaustive, (there are definitely some minor (major?)
+semantic deviations that are not noted below). Also, this list is
+almost certainly out of date with respect to the current cairo
+implementation. Caveat lector.
+
+Operators that are not yet in cairo, but probably should be: arcto,
+strokepath, rectclip?, clipsave/restore?, setstrokeadjust?,
+currentdash, grestoreall?, initgraphics?, currentgstate?, setgstate?,
+erasepage?, setsmoothness?
+
+Painting operators
+------------------
+in cairo: stroke, fill, eofill (set_fill_rule/fill), image
+(show_surface)
+
+not in cairo: erasepage, rectstroke, rectfill, shfill, colorimage,
+imagemask
+
+Path construction operators
+---------------------------
+in cairo: arc, arcn (arc_negative), newpath, moveto, rmoveto
+(rel_move_to), lineto, rlineto (rel_line_to), curveto, rcurveto
+(rel_curve_to), closepath, currentpoint, charpath (text_path),
+pathforall (current_path), flattenpath (current_path_flat)
+
+not in cairo: arct, arcto, reversepath, strokepath, clippath, pathbbox
+
+Clipping
+--------
+in cairo:  clip, eoclip (set_fill_rule/clip)
+
+not in cairo: initclip, rectclip, clipsave, cliprestore
+
+Graphics state operators
+------------------------
+in cairo: setlinewidth, currentlinewidth, setlinecap, currentlinecap,
+setlinejoin, currentlinejoin, setmiterlimit, currentmiterlimit,
+setdash
+
+not in cairo: setstrokeadjust, currentstrokeadjust, currentdash
+
+Color specification operators
+-----------------------------
+in cairo:  setrgbcolor, currentcolor
+
+not in cairo: setcolor, setgray, currentgray, currentrgbcolor,
+sethsbcolor, currenthsbcolor, setcmykcolor, currentcmykcolor,
+setcolorspace, currentcolorspace
+
+Form and pattern operators
+--------------------------
+in cairo: setpattern, makepattern (lock_pattern)
+
+not in cairo: execform
+
+Whole-state manipulation
+------------------------
+in cairo:  gsave (save), grestore (restore)
+
+not in cairo: grestoreall, initgraphics, gstate, currentgstate,
+setgstate
+
+Coordinate system and matrix operators
+--------------------------------------
+in cairo: identmatrix (identity_matrix), initmatrix (default_matrix),
+setmatrix, translate, scale, rotate, concatmatrix, currentmatrix,
+transform (transform_point), dtransform (transform_distance)
+
+not in cairo: matrix, defaultmatrix, concat, itransform, idtransform,
+invertmatrix
+
+Insideness testing
+------------------
+in cairo: infill, instroke, ineofill (set_fill_rule/in_fill)
+
+not in cairo: inufill, inustroke, inueofill
+
+Device setup
+------------
+in cairo: showpage, copypage
+
+not in cairo: setpagedevice, currentpagedevice, nulldevice
+
+Glyph and font operators
+------------------------
+in cairo: currentfont, definefont (font_create_for_ft_face),
+undefine_font (font_destroy), findfont (font_create), makefont
+(transform_font), setfont, scalefont, selectfont, show (show_text),
+stringwidth (x/y in text_extents), xyshow (glyph_show -- but ignoring
+current_point and using absolute positions)
+
+not in cairo, (and likely not needed): composefont, rootfont, ashow,
+widthshow, awidthshow, xshow, xyshow, yshow, glyphshow, cshow, kshow,
+FontDirectory, GlobalFontDirectory, StandardEncoding,
+ISOLatin1Encoding, findencoding, setcachedevice, setcachedevice2,
+setcharwidth
+
+Graphics state operators (device-dependent)
+-------------------------------------------
+in cairo:  setflat (set_tolerance), currentflat (current_tolerance)
+
+not in cairo: sethalftone, currenthalftone, setscreen, currentscreen,
+setcolorscreen, currentcolorscreen, settransfer, currenttransfer,
+setcolortransfer, currentcolortransfer, setblackgeneration,
+currentblackgeneration, setundercolorremoval,
+currentundercolorremoval, setcolorrendering, currentcolorrendering,
+setoverprint, currentoverprint, setsmoothness, currentsmoothness
+
+PostScript operators never to be in cairo
+-----------------------------------------
+Operator Stack Manipulation Operators, Arithmetic and Math Operators,
+Array Operators, Packed Array Operators, Dictionary Operators, String
+Operators, Rational,Boolean,and Bitwise Operators, Control Operators,
+Type,Attribute,and Conversion Operators, File Operators, Resource
+Operators, Virtual Memory Operators, Miscellaneous Operators,
+Interpreter Parameter Operators, Errors, User Path Operators
