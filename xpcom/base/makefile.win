@@ -39,6 +39,7 @@ EXPORTS =                  \
         nsWeakReference.h  \
         nsWeakPtr.h        \
         nscore.h           \
+        pure.h             \
         $(NULL)			
 
 XPIDL_MODULE = xpcom_base
@@ -83,6 +84,9 @@ CPP_OBJS =                            \
 !ifdef GC_LEAK_DETECTOR
 	.\$(OBJDIR)\nsGarbageCollector.obj \
 	.\$(OBJDIR)\nsLeakDetector.obj \
+!endif
+!ifdef MOZ_DEBUG
+	.\$(OBJDIR)\pure_api.obj      \
 !endif
         $(NULL)
 

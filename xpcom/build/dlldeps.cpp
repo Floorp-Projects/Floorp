@@ -49,6 +49,9 @@
 #include "nsWeakReference.h"
 #include "nsISizeOfHandler.h"
 #include "nsTextFormater.h"
+#ifdef DEBUG
+#include "pure.h"
+#endif
 
 class dummyComparitor: public nsAVLNodeComparitor {
 public:
@@ -96,6 +99,7 @@ void XXXNeverCalled()
     info->GetName(NULL);
 #ifdef DEBUG
     info->print(NULL);
+    PurePrintf(0);
 #endif
     XPTC_InvokeByIndex(NULL, 0, 0, NULL);
     NS_NewFileSpec(NULL);
