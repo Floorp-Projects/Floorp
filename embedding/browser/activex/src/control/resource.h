@@ -26,9 +26,20 @@
 #define IDD_PPAGE_LINK                  210
 #define IDC_ADDRESS                     210
 #define IDD_CONFIRMEX                   211
+#define IDD_HELPERAPP                   212
 #define IDC_VALUE                       213
+#define IDD_PROGRESS                    213
 #define IDC_USERNAME                    214
 #define IDC_PASSWORD                    215
+#define IDC_CHOOSE                      218
+#define IDC_URL                         222
+#define IDC_CONTENTTYPE                 223
+#define IDC_APPLICATION                 224
+#define IDC_SOURCE                      225
+#define IDC_DESTINATION                 226
+#define IDC_PROGRESS                    227
+#define IDC_OPENWITHAPP                 300
+#define IDC_SAVETOFILE                  301
 #define IDS_LOCATEMOZILLA               1000
 #define IDS_LOCATEMOZILLATITLE          1001
 #define IDS_CANNOTCREATEPREFS           1002
@@ -78,9 +89,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        211
+#define _APS_NEXT_RESOURCE_VALUE        214
 #define _APS_NEXT_COMMAND_VALUE         32792
-#define _APS_NEXT_CONTROL_VALUE         216
+#define _APS_NEXT_CONTROL_VALUE         228
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

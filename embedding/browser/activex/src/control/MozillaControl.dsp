@@ -106,6 +106,10 @@ SOURCE=.\guids.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\HelperAppDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\IEHtmlDocument.cpp
 # End Source File
 # Begin Source File
@@ -207,6 +211,10 @@ SOURCE=.\DropTarget.h
 # Begin Source File
 
 SOURCE=.\guids.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\HelperAppDlg.h
 # End Source File
 # Begin Source File
 

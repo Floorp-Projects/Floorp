@@ -217,9 +217,9 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Confirmation"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "0",IDC_BUTTON0,204,74,50,14
-    PUSHBUTTON      "2",IDC_BUTTON2,88,74,50,14
-    PUSHBUTTON      "1",IDC_BUTTON1,146,74,50,14
+    DEFPUSHBUTTON   "0",IDC_BUTTON0,195,75,65,14
+    PUSHBUTTON      "2",IDC_BUTTON2,55,75,65,14
+    PUSHBUTTON      "1",IDC_BUTTON1,125,75,65,14
     ICON            IDI_MOZILLABROWSER,IDC_QUESTION,7,7,20,20
     LTEXT           "Message",IDC_MESSAGE,36,7,220,41
     CONTROL         "Check Msg",IDC_CHECKMSG,"Button",BS_AUTOCHECKBOX | 
@@ -354,6 +354,95 @@ END
 #endif    // APSTUDIO_INVOKED
 
 #endif    // English (U.K.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (Ireland) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENI)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_EIRE
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_HELPERAPP DIALOG DISCARDABLE  0, 0, 285, 161
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Downloading"
+FONT 8, "MS Sans Serif"
+BEGIN
+    ICON            IDI_MOZILLABROWSER,IDC_STATIC,7,7,21,20
+    LTEXT           "You have chosen to download a file that requires special handling. What would you like to do with this file?",
+                    IDC_MESSAGE,34,7,244,21
+    CONTROL         "Open with the specified application",IDC_OPENWITHAPP,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,40,
+                    219,10
+    PUSHBUTTON      "&Choose...",IDC_CHOOSE,228,38,50,14
+    CONTROL         "Save to file",IDC_SAVETOFILE,"Button",
+                    BS_AUTORADIOBUTTON,7,53,51,10
+    GROUPBOX        "Details",IDC_STATIC,7,68,271,67
+    DEFPUSHBUTTON   "OK",IDOK,173,139,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,228,139,50,14
+    LTEXT           "Location:",IDC_STATIC,13,82,30,8
+    EDITTEXT        IDC_URL,63,79,208,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Content Type:",IDC_STATIC,13,99,46,8
+    EDITTEXT        IDC_CONTENTTYPE,63,96,208,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    LTEXT           "Application:",IDC_STATIC,13,116,38,8
+    EDITTEXT        IDC_APPLICATION,63,113,208,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+END
+
+IDD_PROGRESS DIALOG DISCARDABLE  0, 0, 244, 102
+STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Download progress:",IDC_STATIC,7,7,150,8
+    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER,7,
+                    23,230,10
+    LTEXT           "Source:",IDC_STATIC,7,44,26,8
+    EDITTEXT        IDC_SOURCE,50,42,187,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Destination:",IDC_STATIC,7,64,38,8
+    EDITTEXT        IDC_DESTINATION,50,62,187,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    PUSHBUTTON      "Cancel",IDCANCEL,96,81,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_HELPERAPP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 278
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 153
+    END
+
+    IDD_PROGRESS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 237
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 95
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (Ireland) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

@@ -43,6 +43,7 @@
 #include "nsITooltipListener.h"
 #include "nsICommandHandler.h"
 #include "nsIEmbeddingSiteWindow.h"
+#include "nsIEmbeddingSiteWindow2.h"
 #include "nsIURIContentListener.h"
 #include "nsIWebBrowserChromeFocus.h"
 #include "nsWeakReference.h"
@@ -51,7 +52,7 @@
 // interfaces into the web shell and so forth.
 
 class CWebBrowserContainer :
-        public nsIEmbeddingSiteWindow,
+        public nsIEmbeddingSiteWindow2,
         public nsIWebBrowserChrome,
         public nsIWebProgressListener,
         public nsIRequestObserver,
@@ -73,15 +74,17 @@ protected:
 
 // Protected members
 protected:
-    CMozillaBrowser *m_pOwner;
-    nsString m_sTitle;
-    nsIURI *m_pCurrentURI;
-    CDWebBrowserEvents1 *m_pEvents1;
-    CDWebBrowserEvents2 *m_pEvents2;
+    CMozillaBrowser *mOwner;
+    nsCOMPtr<nsIURI> mCurrentURI;
+    CDWebBrowserEvents1 *mEvents1;
+    CDWebBrowserEvents2 *mEvents2;
+    nsString mTitle;
+    PRPackedBool mVisible;
 
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIEMBEDDINGSITEWINDOW
+    NS_DECL_NSIEMBEDDINGSITEWINDOW2
     NS_DECL_NSIWEBBROWSERCHROME
     NS_DECL_NSIURICONTENTLISTENER
     NS_DECL_NSIREQUESTOBSERVER
