@@ -123,6 +123,7 @@ BOOL CDlgEditPrefStr::OnInitDialog()
   if (!m_bLockable)
   {
     m_checkLocked.EnableWindow(FALSE);
+    m_checkRemoteAdmin.EnableWindow(FALSE);
   }
     
 
