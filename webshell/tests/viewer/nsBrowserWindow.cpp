@@ -81,7 +81,6 @@
 #include "nsCWebBrowser.h"
 
 #include "nsIParser.h"
-#include "nsHTMLContentSinkStream.h"
 #include "nsEditorMode.h"
 
 // Needed for "Find" GUI
