@@ -97,7 +97,7 @@ function Startup() {
       element.hidden = "true";
     } else {
       element = document.getElementById("cookieviewer");
-      element.setAttribute("title", cookieBundle.getString("imageTitle"));
+      element.setAttribute("title", cookieBundle.getString("popupTitle"));
       element = document.getElementById("permissionsTab");
       element.label = cookieBundle.getString("tabBannedPopups");
       tabBox.selectedTab = element;
