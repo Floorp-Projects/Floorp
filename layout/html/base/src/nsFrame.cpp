@@ -394,6 +394,27 @@ NS_IMETHODIMP nsFrame::GetStyleData(nsStyleStructID aSID, const nsStyleStruct*& 
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrame::GetAdditionalStyleContext(PRInt32 aIndex, 
+                                   nsIStyleContext** aStyleContext) const
+{
+  NS_PRECONDITION(aIndex >= 0, "invalid index number");
+  NS_ASSERTION(aStyleContext, "null ptr");
+  if (! aStyleContext) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aStyleContext = nsnull;
+  return ((aIndex < 0) ? NS_ERROR_INVALID_ARG : NS_OK);
+}
+
+NS_IMETHODIMP
+nsFrame::SetAdditionalStyleContext(PRInt32 aIndex, 
+                                   nsIStyleContext* aStyleContext)
+{
+  NS_PRECONDITION(aIndex >= 0, "invalid index number");
+  return ((aIndex < 0) ? NS_ERROR_INVALID_ARG : NS_OK);
+}
+
 void nsFrame::CaptureStyleChangeFor(nsIFrame* aFrame,
                                     nsIStyleContext* aOldContext, 
                                     nsIStyleContext* aNewContext,

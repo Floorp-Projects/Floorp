@@ -377,6 +377,19 @@ public:
                                     PRInt32* aLocalChange) = 0;
 
   /**
+   * These methods are to access any additional style contexts that
+   * the frame may be holding. These are contexts that are children
+   * of the frame's primary context and are NOT used as style contexts
+   * for any child frames. These contexts also MUST NOT have any child 
+   * contexts whatsoever. If you need to insert style contexts into the
+   * style tree, then you should create pseudo element frames to own them
+   */
+  NS_IMETHOD  GetAdditionalStyleContext(PRInt32 aIndex, 
+                                        nsIStyleContext** aStyleContext) const = 0;
+  NS_IMETHOD  SetAdditionalStyleContext(PRInt32 aIndex, 
+                                        nsIStyleContext* aStyleContext) = 0;
+
+  /**
    * Accessor functions for geometric parent
    */
   NS_IMETHOD  GetParent(nsIFrame** aParent) const = 0;
