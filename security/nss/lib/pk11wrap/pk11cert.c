@@ -356,13 +356,13 @@ PK11_IsUserCert(PK11SlotInfo *slot, CERTCertificate *cert,
 	    PK11_SETATTRS(&theTemplate,CKA_VALUE, pubKey->u.dh.publicValue.data,
 						pubKey->u.dh.publicValue.len);
 	    break;
-#ifdef NSS_ENABLE_ECC
 	case ecKey:
+#ifdef NSS_ENABLE_ECC
 	    PK11_SETATTRS(&theTemplate,CKA_EC_POINT, 
 			  pubKey->u.ec.publicValue.data,
 			  pubKey->u.ec.publicValue.len);
-	    break;
 #endif /* NSS_ENABLE_ECC */
+	    break;
 	case keaKey:
 	case fortezzaKey:
 	case nullKey:
