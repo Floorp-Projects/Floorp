@@ -7,7 +7,7 @@
 <!ENTITY rHeader "Layout and Rendering debugging preferences">
 
 <!-- Debug: Turn on gfx-rendered widgets -->
-<!ENTITY widgetRendering.label "Debug: Rendering">
+<!ENTITY widgetRendering.label "Rendering">
 <!ENTITY gfxScrollbars.label "gfx scrollbars">
 <!ENTITY debugWindow.label "debug window">
 <!ENTITY debugXULBox.label "debug XUL boxes">
@@ -22,14 +22,17 @@
 <!ENTITY debugMotionEventDumping.label "Motion Event Dumping">
 <!ENTITY debugCrossingEventDumping.label "Crossing Event Dumping">
 
+<!-- Network-->
+<!ENTITY debugNetworking.label        "Networking">
+<!ENTITY debugEnableKeepAlive.label   "Enable Keep Alive">
+<!ENTITY debugEnablePipelining.label  "Enable HTTP Pipelining">
+<!ENTITY acceptEncoding.label         "Accept-Encoding">
+<!ENTITY httpVersion.label            "HTTP Version">
+
 <!-- Miscelleneous -->
 <!ENTITY debugMiscellaneous.label   "Miscellaneous">
 <!ENTITY debugDisableXULCache.label "Disable XUL Cache">
-<!ENTITY debugEnableKeepAlive.label "Enable Keep Alive">
-<!ENTITY debugEnablePipelining.label "Enable HTTP Pipelining">
-<!ENTITY acceptEncoding.label "Accept-Encoding">
-<!ENTITY httpVersion.label "HTTP Version">
 <!ENTITY debugEnableMemCache.label "Enable Mem Cache">
 <!ENTITY debugEnableDiskCache.label "Enable Disk Cache">
 <!ENTITY debugEnableXPCOMRefcntLog.label "Enable XPCOM Refcount Log">
-<!ENTITY debugShowAboutAsStupidModalWindow.label "Show 'About' as modal dialog (woohoo)">
+<!ENTITY debugShowAboutAsStupidModalWindow.label "Show 'About' as modal dialog">
