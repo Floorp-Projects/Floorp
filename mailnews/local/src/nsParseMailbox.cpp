@@ -1114,7 +1114,8 @@ int nsParseMailMessageState::FinalizeHeaders()
 					NS_ASSERTION(offset < 10000, "invalid status offset"); /* ### Debugging hack */
                 }
 			}
-			m_newMsgHdr->SetAuthor(sender->value);
+			if (sender)
+				m_newMsgHdr->SetAuthor(sender->value);
 			if (recipient == &m_newsgroups)
 			{
 			  /* In the case where the recipient is a newsgroup, truncate the string
@@ -1134,7 +1135,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 				}
 				m_newMsgHdr->SetRecipients(recipient->value, FALSE);
 			}
-			else
+			else if (recipient)
 			{
 				// note that we're now setting the whole recipient list,
 				// not just the pretty name of the first recipient.
