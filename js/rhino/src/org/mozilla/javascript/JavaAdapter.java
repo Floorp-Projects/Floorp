@@ -46,16 +46,15 @@ import java.lang.reflect.*;
 import java.io.IOException;
 import java.util.*;
 
-public class JavaAdapter extends ScriptableObject {
-    public boolean equals(Object obj) {
-        return super.equals(obj);
-    }
-
-    public String getClassName() {
+public class JavaAdapter extends ScriptableObject
+{
+    public String getClassName()
+    {
         return "JavaAdapter";
     }
 
-    public static Object convertResult(Object result, Class c) {
+    public static Object convertResult(Object result, Class c)
+    {
         if (result == Undefined.instance &&
             (c != ScriptRuntime.ObjectClass &&
              c != ScriptRuntime.StringClass))
@@ -66,7 +65,8 @@ public class JavaAdapter extends ScriptableObject {
         return NativeJavaObject.coerceType(c, result, true);
     }
 
-    public static Scriptable setAdapterProto(Scriptable obj, Object adapter) {
+    public static Scriptable setAdapterProto(Scriptable obj, Object adapter)
+    {
         // We could be called from a thread not associated with a Context
         Context cx = Context.enter();
         try {
@@ -183,10 +183,11 @@ public class JavaAdapter extends ScriptableObject {
         throw new ClassNotFoundException("adapter");
     }
 
-    public static byte[]
-    createAdapterCode(Context cx, Scriptable jsObj, String adapterName,
-                       Class superClass, Class[] interfaces,
-                       String scriptClassName)
+    public static byte[] createAdapterCode(Context cx, Scriptable jsObj,
+                                           String adapterName,
+                                           Class superClass,
+                                           Class[] interfaces,
+                                           String scriptClassName)
     {
         ClassFileWriter cfw = new ClassFileWriter(adapterName,
                                                   superClass.getName(),
@@ -439,8 +440,10 @@ public class JavaAdapter extends ScriptableObject {
         cfw.stopMethod((short)20, null); // TODO: magic number "20"
     }
 
-    private static void generateEmptyCtor(ClassFileWriter cfw, String adapterName,
-                                          String superName, String scriptClassName)
+    private static void generateEmptyCtor(ClassFileWriter cfw,
+                                          String adapterName,
+                                          String superName,
+                                          String scriptClassName)
     {
         cfw.startMethod("<init>", "()V", ClassFileWriter.ACC_PUBLIC);
 
@@ -827,7 +830,8 @@ public class JavaAdapter extends ScriptableObject {
     /**
      * Returns a fully qualified method name concatenated with its signature.
      */
-    private static String getMethodSignature(Method method) {
+    private static String getMethodSignature(Method method)
+    {
         Class[] parms = method.getParameterTypes();
         StringBuffer sb = new StringBuffer();
         sb.append('(');
@@ -868,18 +872,21 @@ public class JavaAdapter extends ScriptableObject {
      * Provides a key with which to distinguish previously generated
      * adapter classes stored in a hash table.
      */
-    static class ClassSignature {
+    static class ClassSignature
+    {
         Class mSuperClass;
         Class[] mInterfaces;
         Object[] mProperties;    // JDK1.2: Use HashSet
 
-        ClassSignature(Class superClass, Class[] interfaces, Scriptable jsObj) {
+        ClassSignature(Class superClass, Class[] interfaces, Scriptable jsObj)
+        {
             mSuperClass = superClass;
             mInterfaces = interfaces;
             mProperties = ScriptableObject.getPropertyIds(jsObj);
         }
 
-        public boolean equals(Object obj) {
+        public boolean equals(Object obj)
+        {
             if (obj instanceof ClassSignature) {
                 ClassSignature sig = (ClassSignature) obj;
                 if (mSuperClass == sig.mSuperClass) {
@@ -905,7 +912,8 @@ public class JavaAdapter extends ScriptableObject {
             return false;
         }
 
-        public int hashCode() {
+        public int hashCode()
+        {
             return mSuperClass.hashCode();
         }
     }
