@@ -41,6 +41,7 @@
         ondialogaccept="return onOK(event)"
         title="&newBookmark.title;" selectFolderTitle="&selectFolder.title;"
         onload="Startup();"
+        onunload="persistTreeSize();"
         persist="screenX screenY"
         screenX="24" screenY="24">
    
@@ -94,7 +95,8 @@
   <vbox id="folderbox" flex="1">
     <label id="destinationLabel" value="&destination.label;"/>
     <bookmarks-tree id="bookmarks-view" flex="1" type="folders"
-                    rows="10" seltype="single"/>
+                    rows="10" seltype="single"
+                    persist="width height"/>
 
     <separator id="folderbuttonseparator" class="thin"/>
 
