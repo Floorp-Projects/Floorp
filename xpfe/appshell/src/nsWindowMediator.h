@@ -41,13 +41,10 @@
 #include "nsCOMPtr.h"
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
+#include "nsISupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
-#include "nsIRDFObserver.h"
-#include "nsIRDFContainer.h"
-#include "nsIRDFDataSource.h"
-#include "nsIRDFObserver.h"
 
 class nsAppShellWindowEnumerator;
 class nsASXULWindowEarlyToLateEnumerator;
@@ -59,9 +56,7 @@ class nsASXULWindowBackToFrontEnumerator;
 struct nsWindowInfo;
 struct PRLock;
 
-class nsWindowMediator : public nsIWindowMediator,
-                         public nsIRDFDataSource,
-                         public nsIRDFObserver
+class nsWindowMediator : public nsIWindowMediator
 {
 friend class nsAppShellWindowEnumerator;
 friend class nsASXULWindowEarlyToLateEnumerator;
@@ -78,22 +73,14 @@ public:
 
   NS_DECL_NSIWINDOWMEDIATOR
   
-  // COM and RDF 
+  // COM 
   NS_DECL_ISUPPORTS 
-
-  // nsIRDFDataSource
-  NS_DECL_NSIRDFDATASOURCE
-
-  // nsIRDFObserver
-  NS_DECL_NSIRDFOBSERVER
 
 private:
   // Helper functions
-  nsresult AddWindowToRDF( nsWindowInfo* ioWindowInfo );
   PRInt32 AddEnumerator( nsAppShellWindowEnumerator* inEnumerator );
   PRInt32 RemoveEnumerator( nsAppShellWindowEnumerator* inEnumerator);
   nsWindowInfo *MostRecentWindowInfo(const PRUnichar* inType);
-  nsresult RemoveAndUpdateSynthetics(nsIRDFNode *node);
 
   NS_IMETHOD UnregisterWindow( nsWindowInfo *inInfo );
 
@@ -104,16 +91,9 @@ private:
   PRInt32       mUpdateBatchNest;
   PRLock       *mListLock;
   nsCOMPtr<nsIWindowWatcher> mWatcher;
-  nsCOMPtr<nsISupportsArray> mObservers;
+  nsCOMPtr<nsISupportsArray> mListeners;
 
-  // pseudo-constants for RDF
-  static nsIRDFResource* kNC_WindowMediatorRoot;
-  static nsIRDFResource* kNC_Name;
-  static nsIRDFResource* kNC_URL;
-  static nsIRDFResource* kNC_KeyIndex;
   static PRInt32 gRefCnt;
-  static nsIRDFContainer*  mContainer;
-  static nsIRDFDataSource* mInner;
 };
 
 #endif

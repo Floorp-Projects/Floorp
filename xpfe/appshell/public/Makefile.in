@@ -41,6 +41,7 @@ XPIDLSRCS	= \
 		nsICmdLineService.idl \
 		nsICmdLineHandler.idl \
 		nsIWindowMediator.idl \
+		nsIWindowMediatorListener.idl \
 		nsIXULWindow.idl \
 		nsIUserInfo.idl \
 		nsITimingService.idl \

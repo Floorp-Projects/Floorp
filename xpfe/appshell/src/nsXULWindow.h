@@ -49,9 +49,10 @@
 
 // nsXULWindow
 
-class nsXULWindow : public nsIXULWindow, public nsIBaseWindow, 
-   public nsIInterfaceRequestor,
-   public nsSupportsWeakReference
+class nsXULWindow : public nsIBaseWindow,
+                    public nsIInterfaceRequestor,
+                    public nsIXULWindow, 
+                    public nsSupportsWeakReference
 {
 friend class nsChromeTreeOwner;
 friend class nsContentTreeOwner;

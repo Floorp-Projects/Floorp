@@ -46,6 +46,7 @@ DIRS= \
     resetPref \
     killAll \
     alerts \
+    windowds \
     build \
     $(NULL)
 

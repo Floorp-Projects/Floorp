@@ -26,7 +26,29 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= bookmarks directory download-manager filepicker find history search sidebar related regviewer xfer prefwindow shistory timebomb console autocomplete updates urlbarhistory intl resetPref killAll
+DIRS	= \
+			bookmarks \
+			directory \
+			download-manager \
+			filepicker \
+			find history \
+			search \
+			sidebar \
+			related \
+			regviewer \
+			xfer \
+			prefwindow \
+			shistory \
+			timebomb \
+			console \
+			autocomplete \
+			updates \
+			urlbarhistory \
+			intl \
+			resetPref \
+			killAll \
+			windowds \
+			$(NULL)
 
 ifdef MOZ_ENABLE_XREMOTE
 DIRS		+= xremote
