@@ -178,8 +178,8 @@ nsImageFrame::GetImageLoad(imgIRequest *aRequest)
 nsImageFrame::nsImageFrame() :
   mIntrinsicSize(0, 0),
   mGotInitialReflow(PR_FALSE),
-  mFailureReplace(PR_TRUE),
-  mImageBlocked(PR_FALSE)
+  mImageBlocked(PR_FALSE),
+  mFailureReplace(PR_TRUE)
 {
   // Size is constrained if we have a width and height. 
   // - Set in reflow in case the attributes are changed
@@ -612,7 +612,6 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
       mLoads[0].mIntrinsicSize = mLoads[1].mIntrinsicSize;
       // XXX i don't think we always want to set this.
       mLoads[0].mTransform = mLoads[1].mTransform;
-      struct ImageLoad *load= &mLoads[0];
 
       mLoads[1].mRequest = nsnull;
 
@@ -743,32 +742,10 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
-  nscoord widthConstraint = NS_INTRINSICSIZE;
-  nscoord heightConstraint = NS_INTRINSICSIZE;
-  PRBool fixedContentWidth = PR_FALSE;
-  PRBool fixedContentHeight = PR_FALSE;
-
-  nscoord minWidth, maxWidth, minHeight, maxHeight;
-
-  // Determine whether the image has fixed content width
-  widthConstraint = aReflowState.mComputedWidth;
-  minWidth = aReflowState.mComputedMinWidth;
-  maxWidth = aReflowState.mComputedMaxWidth;
-  if (widthConstraint != NS_INTRINSICSIZE) {
-    fixedContentWidth = PR_TRUE;
-  }
-
-  // Determine whether the image has fixed content height
-  heightConstraint = aReflowState.mComputedHeight;
-  minHeight = aReflowState.mComputedMinHeight;
-  maxHeight = aReflowState.mComputedMaxHeight;
-  if (heightConstraint != NS_UNCONSTRAINEDSIZE) {
-    fixedContentHeight = PR_TRUE;
-  }
-
-  // if mLoads[0].mIntrinsicSize.width and height are 0, then we should check to see
-  // if the size is already known by the image container.
-  if (mLoads[0].mIntrinsicSize.width == 0 && mLoads[0].mIntrinsicSize.height == 0) {
+  // if mLoads[0].mIntrinsicSize.width and height are 0, then we should
+  // check to see if the size is already known by the image container.
+  if (mLoads[0].mIntrinsicSize.width == 0 &&
+      mLoads[0].mIntrinsicSize.height == 0) {
     if (mLoads[0].mRequest) {
       nsCOMPtr<imgIContainer> con;
       mLoads[0].mRequest->GetImage(getter_AddRefs(con));
@@ -780,55 +757,50 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
   mIntrinsicSize = mLoads[0].mIntrinsicSize;
 
-  PRBool haveComputedSize = PR_FALSE;
-  PRBool needIntrinsicImageSize = PR_FALSE;
-
   float t2p, sp2t;
   aPresContext->GetTwipsToPixels(&t2p);
   aPresContext->GetScaledPixelsToTwips(&sp2t);
 
   // convert from normal twips to scaled twips (printing...)
-  float t2st = t2p*sp2t; // twips to scaled twips
-  nscoord intrinsicScaledWidth = NSToCoordRound(float(mIntrinsicSize.width) * t2st);
-  nscoord intrinsicScaledHeight = NSToCoordRound(float(mIntrinsicSize.height) * t2st);
+  float t2st = t2p * sp2t; // twips to scaled twips
+  nscoord intrinsicWidth =
+      NSToCoordRound(float(mIntrinsicSize.width) * t2st);
+  nscoord intrinsicHeight =
+      NSToCoordRound(float(mIntrinsicSize.height) * t2st);
 
-  nscoord newWidth=0, newHeight=0;
-  if (fixedContentWidth) {
-    newWidth = MINMAX(widthConstraint, minWidth, maxWidth);
-    if (fixedContentHeight) {
-      newHeight = MINMAX(heightConstraint, minHeight, maxHeight);
-      haveComputedSize = PR_TRUE;
-    } else {
-      // We have a width, and an auto height. Compute height from
-      // width once we have the intrinsic image size.
-      if (intrinsicScaledWidth != 0) {
-        newHeight = (intrinsicScaledHeight * newWidth) / intrinsicScaledWidth;
-        haveComputedSize = PR_TRUE;
-      } else {
-        newHeight = 0;
-        needIntrinsicImageSize = PR_TRUE;
-      }
-    }
-  } else if (fixedContentHeight) {
-    // We have a height, and an auto width. Compute width from height
-    // once we have the intrinsic image size.
-    newHeight = MINMAX(heightConstraint, minHeight, maxHeight);
-    if (intrinsicScaledHeight != 0) {
-      newWidth = (intrinsicScaledWidth * newHeight) / intrinsicScaledHeight;
-      haveComputedSize = PR_TRUE;
-    } else {
-      newWidth = 0;
-      needIntrinsicImageSize = PR_TRUE;
+  // Determine whether the image has fixed content width
+  nscoord widthConstraint = aReflowState.mComputedWidth;
+  nscoord minWidth = aReflowState.mComputedMinWidth;
+  nscoord maxWidth = aReflowState.mComputedMaxWidth;
+
+  // Determine whether the image has fixed content height
+  nscoord heightConstraint = aReflowState.mComputedHeight;
+  nscoord minHeight = aReflowState.mComputedMinHeight;
+  nscoord maxHeight = aReflowState.mComputedMaxHeight;
+
+  PRBool isAutoWidth = widthConstraint == NS_INTRINSICSIZE;
+  if (isAutoWidth)
+    widthConstraint = intrinsicWidth;
+  PRBool isAutoHeight = heightConstraint == NS_UNCONSTRAINEDSIZE;
+  if (isAutoHeight)
+    heightConstraint = intrinsicHeight;
+
+  nscoord newWidth = MINMAX(widthConstraint, minWidth, maxWidth);
+  nscoord newHeight = MINMAX(heightConstraint, minHeight, maxHeight);
+
+  if (isAutoWidth && newWidth != intrinsicWidth)
+    isAutoWidth = PR_FALSE;
+  if (isAutoHeight && newHeight != intrinsicHeight)
+    isAutoHeight = PR_FALSE;
+
+  if (isAutoWidth) {
+    if (!isAutoHeight && intrinsicHeight != 0) {
+       newWidth = (intrinsicWidth * newHeight) / intrinsicHeight;
     }
   } else {
-    // auto size the image
-    if (mIntrinsicSize.width == 0 && mIntrinsicSize.height == 0)
-      needIntrinsicImageSize = PR_TRUE;
-    else
-      haveComputedSize = PR_TRUE;
-
-    newWidth = intrinsicScaledWidth;
-    newHeight = intrinsicScaledHeight;
+    if (isAutoHeight && intrinsicWidth != 0) {
+       newHeight = (intrinsicHeight * newWidth) / intrinsicWidth;
+    }
   }
 
   mComputedSize.width = newWidth;
