@@ -792,30 +792,40 @@ case "$target" in
         BIN_FLAGS='-Zlinker /PM:VIO -Zlinker /ST:0x30000'
         IMPLIB='emximp -o'
         FILTER='emxexp'
+        AC_DEFINE(OS2)
         AC_DEFINE(OS2EMX_PLAIN_CHAR)
-	MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/lib $(NSPR_LIBS)'
-	MOZ_COMPONENT_XPCOM_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcom.lib'
-	XPCOM_LIBS='-L$(DIST)/lib -lxpcom'
+        MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/lib $(NSPR_LIBS)'
+        MOZ_COMPONENT_XPCOM_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcom.lib'
+        XPCOM_LIBS='-L$(DIST)/lib -lxpcom'
         ;;
 
     *-*-os2_vacpp)
-        AR=ilib
+#        MOZ_BUILD_ROOT="$ROOT"`pwd -D`
+        AR=-ilib
         AR_FLAGS='/NOL /NOI /O:$(subst /,\\,$@)'
         AR_LIST='/L'
         AR_EXTRACT='-*'
         AR_DELETE='-'
-        CFLAGS="$CFLAGS /qlibansi"
-        CXXFLAGS=""
+        LD='-ilink'
+        TARGET_MD_ARCH=os2
+        CFLAGS="/Q /qlibansi /Gd /Gm /Su4 /Mp /Tl-"
+        CXXFLAGS="/Q /qlibansi /Gd /Gm /Su4 /Mp /Tl-"
+        LDFLAGS="/FREE /DE /NOE /LINENUMBERS /nologo"
         DSO_LDOPTS=''
         IMPLIB='implib /NOL /NOI'
         FILTER='cppfilt -q -B -P'
         AC_DEFINE(NO_ANSI_KEYWORDS)
-        AC_DEFINE(OS2::4)
+        AC_DEFINE(OS2,4)
         AC_DEFINE(_X86_)
+        AC_DEFINE(XP_OS2_VACPP)
         AC_DEFINE(TCPV40HDRS)
+        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
+        AC_DEFINE(STDC_HEADERS)
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
         XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
+        MKSHLIB='$(LD) $(DSO_LDOPTS)'
+        MKCSHLIB='$(LD) $(DSO_LDOPTS)'
         ;;
     esac
     ;;
@@ -1631,6 +1641,16 @@ AC_TYPE_SIZE_T
 AC_TYPE_UID_T
 AC_STRUCT_ST_BLKSIZE
 
+dnl Visual Age for os/2 also defines size_t and off_t in certain 
+dnl  header files.  These defines make Visual Age use the mozilla
+dnl  defines types.
+case "$target" in
+    *-*-os2_vacpp)
+        AC_DEFINE(__size_t)
+        AC_DEFINE(__off_t)
+        ;;
+esac
+
 dnl Check for int16_t, int32_t, int64_t, int64, uint, uint_t, and uint16_t.
 dnl ========================================================
 AC_MSG_CHECKING(for int16_t)
@@ -2033,7 +2053,14 @@ if test "$MISSING_NSPR"; then
    AC_MSG_RESULT(no (will build it from source))
    NSPR_INCLUDE_DIR=
    NSPR_CFLAGS=
-   NSPR_LIBS="-lplds$NSPR_VERSION -lplc$NSPR_VERSION -lnspr$NSPR_VERSION $_PTHREAD_LDFLAGS"
+   case "$target" in
+   *-*-os2_vacpp)
+      NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '$_PTHREAD_LDFLAGS''
+      ;;
+   *)
+      NSPR_LIBS="-lplds$NSPR_VERSION -lplc$NSPR_VERSION -lnspr$NSPR_VERSION $_PTHREAD_LDFLAGS"
+      ;;
+   esac
 dnl
 dnl Otherwise, we are using an NSPR installed in the system.
 dnl
@@ -2889,7 +2916,14 @@ MOZ_DEBUG=1
 
 if test ! "$MOZ_DEBUG_FLAGS"
 then
-	MOZ_DEBUG_FLAGS="-g"
+    case "$target" in
+    *-*-os2_vacpp)
+        MOZ_DEBUG_FLAGS="/Ti+"
+        ;;
+    *)
+    	MOZ_DEBUG_FLAGS="-g"
+        ;;
+    esac
 fi
 
 MOZ_ARG_DISABLE_BOOL(debug,
@@ -3789,9 +3823,13 @@ dnl ========================================================
 if test "$OS_TARGET" = "OS/2" || test "$OS_TARGET" = "OS_2"; then
   AC_DEFINE(XP_PC)
   AC_DEFINE(XP_OS2)
-  AC_DEFINE(OS2)
   AC_DEFINE(BSD_SELECT)
   AC_DEFINE(XP_OS2_FIX)
+  case "$target" in
+    *-*-os2_vacpp)
+        LIBS='so32dll.lib tcp32dll.lib'
+        ;;
+  esac
 elif test "$OS_TARGET" = "WINNT"; then
   AC_DEFINE(XP_PC)
 elif test "$OS_TARGET" = "BeOS"; then
@@ -3938,9 +3976,12 @@ dnl
 dnl Where the NSPR stuff gets installed: $DIST/{bin,lib,include}
 dnl 
 MOZ_NSPRENV_DIST=`pwd`/dist
-case "$target_os" in
-os2*)
+case "$target" in
+*-*-os2_emx)
     MOZ_NSPRENV_DIST=`pwd -D`'/dist'
+    ;;
+*-*-os2_vacpp)
+    MOZ_NSPRENV_DIST="$ROOT"`pwd -D`'/dist'
     ;;
 esac
 
