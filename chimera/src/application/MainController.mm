@@ -376,12 +376,12 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(IBAction) addBookmark:(id)aSender
 {
-  [[[mApplication mainWindow] windowController] addBookmarkExtended: YES isFolder: NO];
+  [[[mApplication mainWindow] windowController] addBookmarkExtended: YES isFolder: NO URL:nil title:nil];
 }
 
 -(IBAction) addFolder:(id)aSender
 {
-  [[[mApplication mainWindow] windowController] addBookmarkExtended: YES isFolder: YES];
+  [[[mApplication mainWindow] windowController] addBookmarkExtended: YES isFolder: YES URL:nil title:nil];
 }
 
 -(IBAction) addSeparator:(id)aSender

@@ -75,7 +75,7 @@ class BookmarksService;
 
 -(IBAction)addFolder:(id)aSender;
 
--(void)addBookmark:(id)aSender useSelection:(BOOL)aSel isFolder:(BOOL)aIsFolder;
+-(void)addBookmark:(id)aSender useSelection:(BOOL)aSel isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle;
 
 -(NSString*)resolveKeyword:(NSString*)aKeyword;
 
