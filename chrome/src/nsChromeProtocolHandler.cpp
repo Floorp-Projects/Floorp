@@ -695,6 +695,11 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         rv = serv->NewChannelFromURI(chromeURI, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
+        // Make sure that the channel remembers where it was
+        // originally loaded from.
+        rv = result->SetOriginalURI(aURI);
+        if (NS_FAILED(rv)) return rv;
+
         // Get a system principal for chrome and set the owner
         // property of the result
         NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
