@@ -96,6 +96,31 @@ static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 #define HTTP_PREF(_pref) HTTP_PREF_PREFIX _pref
 
 //-----------------------------------------------------------------------------
+
+static nsresult
+NewURI(const nsACString &aSpec,
+       const char *aCharset,
+       nsIURI *aBaseURI,
+       PRInt32 aDefaultPort,
+       nsIURI **aURI)
+{
+    nsStandardURL *url = new nsStandardURL();
+    if (!url)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(url);
+
+    nsresult rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY,
+                            aDefaultPort, aSpec, aCharset, aBaseURI);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(url);
+        return rv;
+    }
+
+    *aURI = url; // no QI needed
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
 // nsHttpHandler <public>
 //-----------------------------------------------------------------------------
 
@@ -119,10 +144,6 @@ nsHttpHandler::nsHttpHandler()
     , mRedirectionLimit(10)
     , mLastUniqueID(NowInSeconds())
     , mSessionStartTime(0)
-    //, mActiveConnections(0)
-    //, mIdleConnections(0)
-    //, mTransactionQ(0)
-    //, mConnectionLock(nsnull)
     , mUserAgentIsDirty(PR_TRUE)
     , mUseCache(PR_TRUE)
     , mSendSecureXSiteReferrer(PR_TRUE)
@@ -167,10 +188,6 @@ nsHttpHandler::Init()
         NS_WARNING("unable to continue without io service");
         return rv;
     }
-
-    //mConnectionLock = PR_NewLock();
-    //if (!mConnectionLock)
-    //    return NS_ERROR_OUT_OF_MEMORY;
 
     InitUserAgentComponents();
 
@@ -1331,7 +1348,7 @@ nsHttpHandler::GetScheme(nsACString &aScheme)
 NS_IMETHODIMP
 nsHttpHandler::GetDefaultPort(PRInt32 *result)
 {
-    *result = 80;
+    *result = NS_HTTP_DEFAULT_PORT;
     return NS_OK;
 }
 
@@ -1348,24 +1365,8 @@ nsHttpHandler::NewURI(const nsACString &aSpec,
                       nsIURI *aBaseURI,
                       nsIURI **aURI)
 {
-    nsresult rv = NS_OK;
-
     LOG(("nsHttpHandler::NewURI\n"));
-
-    nsCOMPtr<nsIStandardURL> url;
-    NS_NEWXPCOM(url, nsStandardURL);
-    if (!url)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    // use the correct default port
-    PRInt32 defaultPort;
-    GetDefaultPort(&defaultPort);
-
-    rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY,
-                   defaultPort, aSpec, aCharset, aBaseURI);
-    if (NS_FAILED(rv)) return rv;
-
-    return CallQueryInterface(url, aURI);
+    return ::NewURI(aSpec, aCharset, aBaseURI, NS_HTTP_DEFAULT_PORT, aURI);
 }
 
 NS_IMETHODIMP
@@ -1698,7 +1699,7 @@ nsHttpsHandler::GetScheme(nsACString &aScheme)
 NS_IMETHODIMP
 nsHttpsHandler::GetDefaultPort(PRInt32 *aPort)
 {
-    *aPort = 443;
+    *aPort = NS_HTTPS_DEFAULT_PORT;
     return NS_OK;
 }
 
@@ -1714,7 +1715,7 @@ nsHttpsHandler::NewURI(const nsACString &aSpec,
                        nsIURI *aBaseURI,
                        nsIURI **_retval)
 {
-    return gHttpHandler->NewURI(aSpec, aOriginCharset, aBaseURI, _retval);
+    return ::NewURI(aSpec, aOriginCharset, aBaseURI, NS_HTTPS_DEFAULT_PORT, _retval);
 }
 
 NS_IMETHODIMP

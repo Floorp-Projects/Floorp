@@ -101,7 +101,7 @@ public:
     nsIProxyInfo *ProxyInfo()            { return mProxyInfo; }
     PRBool        UsingHttpProxy() const { return mUsingHttpProxy; }
     PRBool        UsingSSL() const       { return mUsingSSL; }
-    PRInt32       DefaultPort() const    { return mUsingSSL ? 443 : 80; }
+    PRInt32       DefaultPort() const    { return mUsingSSL ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT; }
             
 private:
     nsrefcnt               mRef;

@@ -928,7 +928,7 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
         storagePolicy = nsICache::STORE_ANYWHERE; // allow on disk
     nsCOMPtr<nsICacheSession> session;
     rv = gHttpHandler->GetCacheSession(storagePolicy,
-                                               getter_AddRefs(session));
+                                       getter_AddRefs(session));
     if (NS_FAILED(rv)) return rv;
 
     // Set the desired cache access mode accordingly...
@@ -1600,7 +1600,6 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     // close down this transaction (null if processing a cached redirect)
     if (mTransaction)
         gHttpHandler->CancelTransaction(mTransaction, NS_BINDING_REDIRECTED);
-        //mTransaction->Cancel(NS_BINDING_REDIRECTED);
     
     // disconnect from our listener
     mListener = 0;
@@ -1645,7 +1644,6 @@ nsHttpChannel::ProcessAuthentication(PRUint32 httpStatus)
 
     // kill off the current transaction
     gHttpHandler->CancelTransaction(mTransaction, NS_BINDING_REDIRECTED);
-    //mTransaction->Cancel(NS_BINDING_REDIRECTED);
     mPrevTransaction = mTransaction;
     mPrevTransactionPump = mTransactionPump;
     mTransaction = nsnull;
@@ -2998,7 +2996,7 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
     // if the request is for something we no longer reference, then simply 
     // drop this event.
     if ((request != mTransactionPump) && (request != mCachePump)) {
-        NS_WARNING("got stale request... why wasn't it cancelled?");
+        NS_NOTREACHED("got stale request... why wasn't it cancelled?");
         return NS_BASE_STREAM_CLOSED;
     }
 
