@@ -49,7 +49,6 @@ CPP_OBJS=   \
 	.\$(OBJDIR)\nsHTTPHandlerFactory.obj		\
 	.\$(OBJDIR)\nsHTTPConnection.obj			\
 	.\$(OBJDIR)\nsHTTPRequest.obj				\
-	.\$(OBJDIR)\nsHTTPRequestObserver.obj		\
 	.\$(OBJDIR)\nsHTTPResponseListener.obj		\
 	.\$(OBJDIR)\nsHTTPResponse.obj				\
 	$(NULL)

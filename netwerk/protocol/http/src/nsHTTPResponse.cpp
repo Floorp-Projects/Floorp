@@ -26,8 +26,9 @@
 #include "kHTTPHeaders.h"
 #include "plstr.h"
 
-nsHTTPResponse::nsHTTPResponse(nsIHTTPConnection* i_pCon):
-    m_pConn(dont_QueryInterface(i_pCon))
+nsHTTPResponse::nsHTTPResponse(nsIHTTPConnection* i_pCon, nsIInputStream* i_InputStream):
+    m_pConn(dont_QueryInterface(i_pCon)),
+    m_pInputStream(i_InputStream)
 {
 }
 
@@ -501,5 +502,12 @@ nsHTTPResponse::SetStatusString(const char* i_Status)
     int len = PL_strlen(i_Status);
     m_pStatusString = new char[len+1];
     PL_strncpy(m_pStatusString, i_Status, len);
+    return NS_OK;
+}
+
+NS_METHOD
+nsHTTPResponse::GetInputStream(nsIInputStream* *o_Stream)
+{
+    *o_Stream = m_pInputStream;
     return NS_OK;
 }

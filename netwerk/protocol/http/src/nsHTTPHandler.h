@@ -45,7 +45,7 @@
 class nsHashtable;
 class nsITransport;
 
-class nsHTTPHandler : public nsIHTTPHandler, public nsIProtocolHandler
+class nsHTTPHandler : public nsIHTTPHandler
 		//, public nsIProxy 
 {
 
@@ -119,6 +119,7 @@ public:
         return pHandler;
     };
 
+    // Functions from nsIHTTPHandler
     /* 
         Pull out an existing transport from the hashtable, or if none exists
         create one. 

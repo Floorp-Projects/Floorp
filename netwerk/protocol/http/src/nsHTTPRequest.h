@@ -21,26 +21,43 @@
 
 #include "nsIHTTPCommonHeaders.h"
 #include "nsIHTTPRequest.h"
+#include "nsIStreamObserver.h"
 
+class nsIInputStream;
 class nsIUrl;
 class nsVoidArray;
+class nsIByteBufferInputStream;
+class nsITransport;
+class nsHTTPConnection;
+
 /* 
     The nsHTTPRequest class is the request object created for each HTTP 
     request before the connection. A request object may be cloned and 
     saved for later reuse. 
+
+    This is also the observer class for writing to the transport. This
+    receives notifications of OnStartBinding and OnStopBinding as the
+    request is being written out to the server. Each instance of this 
+    class is tied to the corresponding transport that it writes the 
+    request to. 
+    
+    The essential purpose of the observer portion is to create the 
+    response listener once it is done writing a request and also notify 
+    the handler when this is done writing a request out. The latter could 
+    be used (later) to do pipelining.
 
     This class is internal to the protocol handler implementation and 
     should theroetically not be used by the app or the core netlib.
 
     -Gagan Saksena 03/29/99
 */
-class nsHTTPRequest : public nsIHTTPRequest
+class nsHTTPRequest : public nsIHTTPRequest , public nsIStreamObserver
 {
 
 public:
 
     // Constructor and destructor
-    nsHTTPRequest(nsIUrl* i_URL=0, HTTPMethod i_Method=HM_GET);
+    nsHTTPRequest(nsIUrl* i_URL=0, HTTPMethod i_Method=HM_GET, nsITransport* i_pTranport = nsnull);
     virtual ~nsHTTPRequest();
 
     // Methods from nsISupports
@@ -220,6 +237,13 @@ public:
     NS_IMETHOD          SetUserAgent(const char* i_Value);
     NS_IMETHOD          GetUserAgent(const char* *o_Value) const;
 
+    // nsIStreamObserver functions
+    NS_IMETHOD OnStartBinding(nsISupports* context);
+
+    NS_IMETHOD OnStopBinding(nsISupports* context,
+               nsresult aStatus,
+               nsIString* aMsg);
+
     // Finally our own methods...
     /*
         Clone the current request for later use. Release it
@@ -232,7 +256,16 @@ public:
                         
     NS_IMETHOD          SetPriority(); // TODO 
     NS_IMETHOD          GetPriority(); //TODO
+    
+    /* 
+        Returns the stream set up to hold the request data
+        Calls build if not already built.
+    */
+    NS_IMETHOD          GetInputStream(nsIInputStream* *o_Stream);
 
+    NS_IMETHOD          SetTransport(nsITransport* i_pTransport);
+
+    NS_IMETHOD          SetConnection(nsHTTPConnection* i_pConnection);
 
 protected:
 
@@ -244,17 +277,17 @@ protected:
     {
         static const char methods[][TOTAL_NUMBER_OF_METHODS] = 
         {
-            "DELETE",
-            "GET",
-            "HEAD",
-            "INDEX",
-            "LINK",
-            "OPTIONS",
-            "POST",
-            "PUT",
-            "PATCH",
-            "TRACE",
-            "UNLINK"
+            "DELETE ",
+            "GET ",
+            "HEAD ",
+            "INDEX ",
+            "LINK ",
+            "OPTIONS ",
+            "POST ",
+            "PUT ",
+            "PATCH ",
+            "TRACE ",
+            "UNLINK "
         };
 
         return methods[i_Method];
@@ -263,9 +296,11 @@ protected:
     nsIUrl*                     m_pURI;
     HTTPVersion                 m_Version;
     HTTPMethod                  m_Method;
-    // The actual request string! 
-    char*                       m_Request; 
+    // The actual request stream! 
+    nsIByteBufferInputStream*   m_Request; 
     nsVoidArray*                m_pArray;
+    nsITransport*               m_pTransport;
+    nsHTTPConnection*           m_pConnection;
 };
 
 #endif /* _nsHTTPRequest_h_ */

@@ -55,6 +55,18 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
     static int extrabufferlen = 0;
 
     NS_ASSERTION(i_pStream, "Fake stream!");
+    // Set up the response
+    if (!m_pResponse)
+    {
+        m_pResponse = new nsHTTPResponse (m_pConnection, i_pStream);
+        if (!m_pResponse)
+        {
+            NS_ERROR("Failed to create the response object!");
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        NS_ADDREF(m_pResponse);
+    }
+ 
     //printf("nsHTTPResponseListener::OnDataAvailable...\n");
     /* 
         Check its current state, 
@@ -123,15 +135,13 @@ nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
     //printf("nsHTTPResponseListener::OnStartBinding...\n");
     m_pConnection = NS_STATIC_CAST(nsIHTTPConnection*, i_pContext);
     NS_ADDREF(m_pConnection);
-    // Set up the response
-    m_pResponse = new nsHTTPResponse (m_pConnection);
-    if (!m_pResponse)
-    {
-        NS_ERROR("Failed to create the response object!");
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_ADDREF(m_pResponse);
-    
+
+    nsIHTTPEventSink* pSink= nsnull;
+    nsresult rv = m_pConnection->EventSink(&pSink);
+    if (NS_FAILED(rv))
+        NS_ERROR("No HTTP Event Sink!");
+    rv = pSink->OnStartBinding(i_pContext);
+   
     return NS_OK;
 }
 
