@@ -87,11 +87,7 @@ RCFLAGS=$(RCFLAGS) /DXP_WIN32
 #// Include the common makefile rules
 #//
 #//------------------------------------------------------------------------
-!ifdef MOZ_JAVA
-include <$(DEPTH)/sun-java/config/rules.mak>
-!else
 include <$(DEPTH)/config/rules.mak>
-!endif
 
 install:: $(DLL) $(LIBRARY)
     $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
