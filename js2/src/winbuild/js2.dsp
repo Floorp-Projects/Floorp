@@ -63,8 +63,8 @@ LIB32=link.exe -lib
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ  /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ  /c
+# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -83,10 +83,202 @@ LIB32=link.exe -lib
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
+# Begin Source File
+
+SOURCE=..\debugger.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\exception.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\formatter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\hash.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\icode_emitter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\icodegenerator.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\interpreter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\jsmath.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\jstypes.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\lexer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\mem.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\numerics.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\parser.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\reader.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\strings.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\token.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\utilities.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\vmtypes.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\world.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=..\algo.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\cpucfg.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\debugger.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\ds.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\exception.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\formatter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\gc_allocator.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\gc_container.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\hash.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\icode.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\icodegenerator.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\icodemap.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\interpreter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\jsclasses.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\jsmath.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\jstypes.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\lexer.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\mem.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\nodefactory.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\numerics.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\parser.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\reader.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\stlcfg.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\strings.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\systemtypes.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\token.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\utilities.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\vmtypes.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\world.h
+# End Source File
 # End Group
 # End Target
 # End Project
