@@ -689,12 +689,24 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
         
 #if defined(XP_PC) && !defined(XP_OS2)
         PRBool dirExists = PR_FALSE;
+        PRBool invalidHome = PR_FALSE;
         if (homeDir)
         {
             homeDir->Exists(&dirExists);
             if (!dirExists)
-                 GetFile(NS_WIN_WINDOWS_DIR,persistent, getter_AddRefs(homeDir));
+                invalidHome = PR_TRUE;        
         }
+        else
+        {
+            // We got a null value from file service.
+            // Home directory is not available/set.
+            invalidHome = PR_TRUE;
+        }
+  
+        // If home directory is invalid or absent, use windows
+        // directory as fall back.
+        if (invalidHome)
+            GetFile(NS_WIN_WINDOWS_DIR,persistent, getter_AddRefs(homeDir));
 #endif
         if (homeDir)
         {
