@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Chak Nanga <chak@netscape.com> 
+ *   Chak Nanga <chak@netscape.com>
+ *   David Epstein <depstein@netscape.com>
  */
 
 // File Overview....
@@ -68,6 +69,7 @@
 #include "BrowserImpl.h"
 
 #include "QaUtils.h"
+#include "Tests.h"
 
 CBrowserImpl::CBrowserImpl()
 {
@@ -112,6 +114,8 @@ NS_INTERFACE_MAP_BEGIN(CBrowserImpl)
    NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
    NS_INTERFACE_MAP_ENTRY(nsISHistoryListener) // de: added 5/11
+   NS_INTERFACE_MAP_ENTRY(nsIStreamListener) // de: added 6/29
+   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver) // de: added 6/29
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -142,6 +146,7 @@ NS_IMETHODIMP CBrowserImpl::SetStatus(PRUint32 aType, const PRUnichar* aStatus)
 		return NS_ERROR_FAILURE;
 
 	m_pBrowserFrameGlue->UpdateStatusBarText(aStatus);
+//  CQaUtils::QAOutput("nsIWebBrowserChrome::SetStatus().", 1);
 
 	return NS_OK;
 }
@@ -237,7 +242,7 @@ NS_IMETHODIMP CBrowserImpl::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 		return NS_ERROR_FAILURE;
 
 	m_pBrowserFrameGlue->SetBrowserFrameSize(aCX, aCY);
-	CQaUtils::QAOutput("nsIWebBrowserChrome::SizeBrowserTo(): Browser resized.", 1);
+	CQaUtils::QAOutput("nsIWebBrowserChrome::SizeBrowserTo(): Browser sized.", 1);
 
 	return NS_OK;
 }
@@ -386,3 +391,40 @@ NS_IMETHODIMP CBrowserImpl::SetVisibility(PRBool aVisibility)
     return NS_OK;
 }
 
+//*****************************************************************************
+// CBrowserImpl::nsIStreamListener (used for nsIRequest)
+
+NS_IMETHODIMP CBrowserImpl::OnDataAvailable(nsIRequest *request,
+				nsISupports *ctxt, nsIInputStream *input,
+				PRUint32 offset, PRUint32 count)
+{
+	CQaUtils::QAOutput("Inside OnDataAvailable().");
+	CTests::IsPendingReqTest(request);
+	CTests::GetStatusReqTest(request);
+
+	CTests::SuspendReqTest(request);	
+	CQaUtils::QAOutput("nsIRequest: Between Suspend and Resume.");
+	CTests::ResumeReqTest(request);	
+
+//	CTests::CancelReqTest(request);	
+
+ 	nsCOMPtr<nsILoadGroup> theLoadGroup(do_CreateInstance(NS_LOADGROUP_CONTRACTID));
+	CTests::SetLoadGroupTest(request, theLoadGroup);	
+	CTests::GetLoadGroupTest(request);
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP CBrowserImpl::OnStartRequest(nsIRequest *request,
+				nsISupports *ctxt)
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP CBrowserImpl::OnStopRequest(nsIRequest *request,
+				nsISupports *ctxt, nsresult rv)
+{
+	return NS_OK;
+}
+
+//*****************************************************************************   

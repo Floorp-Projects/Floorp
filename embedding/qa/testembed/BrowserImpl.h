@@ -27,15 +27,16 @@
 #include "IBrowserFrameGlue.h"
 #include "nsIWebBrowserChromeFocus.h"
 
-class CBrowserImpl : public nsIInterfaceRequestor,
-					 public nsIWebBrowserChrome,
-                     public nsIWebBrowserChromeFocus,
-					 public nsIEmbeddingSiteWindow,
-					 public nsIWebProgressListener,
-					 public nsIContextMenuListener,
-					 public nsSupportsWeakReference,
-					 public nsISHistoryListener
-					 // de: added this in 5/11
+class CBrowserImpl : 
+	 public nsIInterfaceRequestor,
+	 public nsIWebBrowserChrome,
+     public nsIWebBrowserChromeFocus,
+	 public nsIEmbeddingSiteWindow,
+	 public nsIWebProgressListener,
+	 public nsIContextMenuListener,
+	 public nsSupportsWeakReference,
+	 public nsISHistoryListener,	// de: added this in 5/11   					 
+	 public nsIStreamListener		// de: added this in 6/29
 {
 public:
     CBrowserImpl();
@@ -52,7 +53,8 @@ public:
     NS_DECL_NSIWEBPROGRESSLISTENER
     NS_DECL_NSICONTEXTMENULISTENER
 	NS_DECL_NSISHISTORYLISTENER  // de: added this in 5/11
-
+	NS_DECL_NSISTREAMLISTENER  	 // de: added this in 6/29
+	NS_DECL_NSIREQUESTOBSERVER   // de: added this in 6/29
 protected:
 
     PBROWSERFRAMEGLUE  m_pBrowserFrameGlue;
