@@ -601,7 +601,10 @@ nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
                                                  nsIFile *component,
                                                  PRBool *unregistered)
 {
+
     nsresult rv = NS_ERROR_FAILURE;
+
+    *unregistered = PR_FALSE;
 
     nsXPIDLCString persistentDescriptor;
     // what I want to do here is QI for a Component Registration Manager.  Since this 
@@ -633,18 +636,23 @@ nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
 
     rv = SelfUnregisterDll(dll);
 
+    PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
+           ("nsNativeComponentLoader: AutoUnregistration for %s %s.",
+            (NS_FAILED(rv) ? "FAILED" : "succeeded"), dll->GetDisplayPath()));
+
+    if (NS_FAILED(rv))
+        return rv;
+
     // Remove any autoreg info about this dll
     nsCStringKey key(persistentDescriptor);
     mDllStore->RemoveAndDelete(&key);
     
-    nsCOMPtr<nsIComponentLoaderManager> manager = do_QueryInterface(mCompMgr, &rv);
-    if (NS_FAILED(rv))
-        return rv;
+    nsCOMPtr<nsIComponentLoaderManager> manager = do_QueryInterface(mCompMgr);
+    NS_ASSERTION(manager, "Something is terribly wrong");
+
     manager->RemoveFileInfo(component, nsnull);
 
-    PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
-           ("nsNativeComponentLoader: AutoUnregistration for %s %s.",
-            (NS_FAILED(rv) ? "FAILED" : "succeeded"), dll->GetDisplayPath()));
+    *unregistered = PR_TRUE;
     return rv;
 }
 
@@ -656,6 +664,8 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
     nsresult rv;
     if (!registered)
         return NS_ERROR_NULL_POINTER;
+
+    *registered = PR_FALSE;
 
     /* this should be a pref or registry entry, or something */
     static const char *ValidDllExtensions[] = {
@@ -768,6 +778,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
                    ("nsNativeComponentLoader: + nsDll not changed \"%s\". Skipping...",
                     dll->GetDisplayPath()));
+            *registered = PR_TRUE;
             return NS_OK;
         }
 
@@ -869,6 +880,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         if (res == NS_ERROR_FACTORY_REGISTER_AGAIN) {
             /* defer for later loading */
             mDeferredComponents.AppendElement(dll);
+            *registered = PR_TRUE;
             return NS_OK;
         } else {
             PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
@@ -885,6 +897,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         // Marking dll along with modified time and size in the
         // registry happens at PlatformRegister(). No need to do it
         // here again.
+        *registered = PR_TRUE;
     }
     return NS_OK;
 }
