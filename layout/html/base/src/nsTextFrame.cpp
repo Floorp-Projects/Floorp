@@ -513,10 +513,10 @@ public:
     nscoord mAveCharWidth;
     PRBool mJustifying;
     PRBool mPreformatted;
-    PRInt32 mNumSpacesToRender;
-    PRInt32 mNumSpacesToMeasure;
-    nscoord mExtraSpacePerSpace;
-    PRInt32 mNumSpacesReceivingExtraJot;
+    PRInt32 mNumJustifiableCharacterToRender;
+    PRInt32 mNumJustifiableCharacterToMeasure;
+    nscoord mExtraSpacePerJustifiableCharacter;
+    PRInt32 mNumJustifiableCharacterReceivingExtraJot;
 
     TextStyle(nsPresContext* aPresContext,
               nsIRenderingContext& aRenderingContext,
@@ -570,10 +570,10 @@ public:
         mLetterSpacing = 0;
       }
 
-      mNumSpacesToRender = 0;
-      mNumSpacesToMeasure = 0;
-      mNumSpacesReceivingExtraJot = 0;
-      mExtraSpacePerSpace = 0;
+      mNumJustifiableCharacterToRender = 0;
+      mNumJustifiableCharacterToMeasure = 0;
+      mNumJustifiableCharacterReceivingExtraJot = 0;
+      mExtraSpacePerJustifiableCharacter = 0;
       mPreformatted = (NS_STYLE_WHITESPACE_PRE == mText->mWhiteSpace) ||
         (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == mText->mWhiteSpace);
 
@@ -657,14 +657,15 @@ public:
 
   nsIDocument* GetDocument(nsPresContext* aPresContext);
 
-  PRIntn PrepareUnicodeText(nsTextTransformer& aTransformer,
-                            nsAutoIndexBuffer* aIndexBuffer,
-                            nsAutoTextBuffer* aTextBuffer,
-                            PRInt32* aTextLen,
-                            PRBool aForceArabicShaping = PR_FALSE);
+  void PrepareUnicodeText(nsTextTransformer& aTransformer,
+                          nsAutoIndexBuffer* aIndexBuffer,
+                          nsAutoTextBuffer* aTextBuffer,
+                          PRInt32* aTextLen,
+                          PRBool aForceArabicShaping = PR_FALSE,
+                          PRIntn* aJustifiableCharCount = nsnull);
   void ComputeExtraJustificationSpacing(nsIRenderingContext& aRenderingContext,
                                         TextStyle& aTextStyle,
-                                        PRUnichar* aBuffer, PRInt32 aLength, PRInt32 aNumSpaces);
+                                        PRUnichar* aBuffer, PRInt32 aLength, PRInt32 aNumJustifiableCharacter);
 
   void PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                             nsStyleContext* aStyleContext,
@@ -797,6 +798,9 @@ protected:
                                     PRBool isBidiSystem);
 
   void SetOffsets(PRInt32 start, PRInt32 end);
+
+  PRBool IsChineseJapaneseLangGroup();
+  PRBool IsJustifiableCharacter(PRUnichar aChar, PRBool aLangIsCJ);
 };
 
 #ifdef ACCESSIBILITY
@@ -1483,21 +1487,64 @@ nsTextFrame::Paint(nsPresContext*      aPresContext,
   return NS_OK;
 }
 
+PRBool
+nsTextFrame::IsChineseJapaneseLangGroup()
+{
+  const nsStyleVisibility* visibility = mStyleContext->GetStyleVisibility();
+  if (visibility->mLangGroup == nsLayoutAtoms::Japanese
+      || visibility->mLangGroup == nsLayoutAtoms::Chinese
+      || visibility->mLangGroup == nsLayoutAtoms::Taiwanese
+      || visibility->mLangGroup == nsLayoutAtoms::HongKongChinese)
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
+
+/*
+ * XXX Currently only Unicode characters in the BMP (below U+10000) have their 
+ * spacing modified by justification. 
+ */
+inline PRBool
+nsTextFrame::IsJustifiableCharacter(PRUnichar aChar, PRBool aLangIsCJ)
+{
+  if (0x20u == aChar || 0xa0u == aChar)
+    return PR_TRUE;
+  if (aChar < 0x2150u)
+    return PR_FALSE;
+  if (aLangIsCJ && (
+       (0x2150u <= aChar && aChar <= 0x22ffu) || // Number Forms, Arrows, Mathematical Operators
+       (0x2460u <= aChar && aChar <= 0x24ffu) || // Enclosed Alphanumerics
+       (0x2580u <= aChar && aChar <= 0x27bfu) || // Block Elements, Geometric Shapes, Miscellaneous Symbols, Dingbats
+       (0x27f0u <= aChar && aChar <= 0x2bffu) || // Supplemental Arrows-A, Braille Patterns, Supplemental Arrows-B,
+                                                 // Miscellaneous Mathematical Symbols-B, Supplemental Mathematical Operators,
+                                                 // Miscellaneous Symbols and Arrows
+       (0x2e80u <= aChar && aChar <= 0x312fu) || // CJK Radicals Supplement, CJK Radicals Supplement,
+                                                 // Ideographic Description Characters, CJK Symbols and Punctuation,
+                                                 // Hiragana, Katakana, Bopomofo
+       (0x3190u <= aChar && aChar <= 0xabffu) || // Kanbun, Bopomofo Extended, Katakana Phonetic Extensions,
+                                                 // Enclosed CJK Letters and Months, CJK Compatibility,
+                                                 // CJK Unified Ideographs Extension A, Yijing Hexagram Symbols,
+                                                 // CJK Unified Ideographs, Yi Syllables, Yi Radicals
+       (0xf900u <= aChar && aChar <= 0xfaffu) || // CJK Compatibility Ideographs
+       (0xff5eu <= aChar && aChar <= 0xff9fu)    // Halfwidth and Fullwidth Forms(a part)
+     ))
+    return PR_TRUE;
+  return PR_FALSE;
+}
 
 /**
  * Prepare the text in the content for rendering. If aIndexes is not nsnull
  * then fill in aIndexes's with the mapping from the original input to
  * the prepared output.
  */
-PRIntn
+void
 nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
                                 nsAutoIndexBuffer* aIndexBuffer,
                                 nsAutoTextBuffer* aTextBuffer,
                                 PRInt32* aTextLen,
-                                PRBool aForceArabicShaping)
+                                PRBool aForceArabicShaping,
+                                PRIntn* aJustifiableCharCount)
 {
-  PRIntn numSpaces = 0;
-
   // Setup transform to operate starting in the content at our content
   // offset
   aTX.Init(this, mContent, mContentOffset, aForceArabicShaping);
@@ -1545,6 +1592,12 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
   PRInt32 column = mColumn;
   PRInt32 textLength = 0;
   PRInt32 dstOffset = 0;
+
+  nsAutoTextBuffer tmpTextBuffer;
+  nsAutoTextBuffer* textBuffer = aTextBuffer;
+  if (!textBuffer && aJustifiableCharCount)
+    textBuffer = &tmpTextBuffer;
+
   while (0 != n) {
     PRUnichar* bp;
     PRBool isWhitespace, wasTransformed;
@@ -1610,7 +1663,6 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
           }
         }
       }
-      numSpaces += wordLen;
     }
     else {
       PRInt32 i;
@@ -1631,20 +1683,12 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
           }
         }
       }
-      // Nonbreaking spaces count as spaces, not letters
-      PRUnichar* tp = bp;
-      i = wordLen;
-      while (--i >= 0) {
-        if (*tp++ == ' ') {
-          numSpaces++;
-        }
-      }
     }
 
     // Grow the buffer before we run out of room. The only time this
     // happens is because of tab expansion.
-    if (aTextBuffer != nsnull && dstOffset + wordLen > aTextBuffer->mBufferLen) {
-      nsresult rv = aTextBuffer->GrowBy(wordLen);
+    if (textBuffer != nsnull && dstOffset + wordLen > textBuffer->mBufferLen) {
+      nsresult rv = textBuffer->GrowBy(wordLen);
       if (NS_FAILED(rv)) {
         break;
       }
@@ -1653,8 +1697,8 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
     column += wordLen;
     textLength += wordLen;
     n -= contentLen;
-    if (aTextBuffer != nsnull) {
-      memcpy(aTextBuffer->mBuffer + dstOffset, bp,
+    if (textBuffer != nsnull) {
+      memcpy(textBuffer->mBuffer + dstOffset, bp,
              sizeof(PRUnichar)*wordLen);
     }
     dstOffset += wordLen;
@@ -1665,8 +1709,8 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
     NS_ASSERTION(indexp <= aIndexBuffer->mBuffer + aIndexBuffer->mBufferLen,
                  "yikes - we just overwrote memory");
   }
-  if (aTextBuffer) {
-    NS_ASSERTION(dstOffset <= aTextBuffer->mBufferLen,
+  if (textBuffer) {
+    NS_ASSERTION(dstOffset <= textBuffer->mBufferLen,
                  "yikes - we just overwrote memory");
   }
 
@@ -1675,13 +1719,11 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
   // Remove trailing whitespace if it was trimmed after reflow
   // TEXT_TRIMMED_WS can be set in measureText during reflow, and 
   // nonexitent text buffer may occur in this situation.
-  if (TEXT_TRIMMED_WS & mState  && aTextBuffer) {
+  if (TEXT_TRIMMED_WS & mState && textBuffer) {
     if (--dstOffset >= 0) {
-      PRUnichar ch = aTextBuffer->mBuffer[dstOffset];
-      if (XP_IS_SPACE(ch)) {
+      PRUnichar ch = textBuffer->mBuffer[dstOffset];
+      if (XP_IS_SPACE(ch))
         textLength--;
-        numSpaces--;
-      }
     }
   }
 
@@ -1695,7 +1737,16 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
   }
 
   *aTextLen = textLength;
-  return numSpaces;
+
+  if (aJustifiableCharCount && textBuffer) {
+    PRBool isCJ = IsChineseJapaneseLangGroup();
+    PRIntn numJustifiableCharacter = 0;
+    for (PRInt32 i = 0; i < textLength; i++) {
+      if (IsJustifiableCharacter(textBuffer->mBuffer[i], isCJ))
+        numJustifiableCharacter++;
+    }
+    *aJustifiableCharCount = numJustifiableCharacter;
+  }
 }
 
 
@@ -2503,9 +2554,9 @@ nsTextFrame::GetPositionSlowly(nsPresContext* aPresContext,
   // Transform text from content into renderable form
   nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aPresContext);
   PRInt32 textLength;
-  PRInt32 numSpaces;
+  PRIntn numJustifiableCharacter;
 
-  numSpaces = PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength, PR_TRUE);
+  PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength, PR_TRUE, &numJustifiableCharacter);
   if (textLength <= 0) {
     // If we've already assigned aNewContent, make sure to 0 it out here.
     // aNewContent is undefined in the case that we return a failure,
@@ -2529,7 +2580,7 @@ nsTextFrame::GetPositionSlowly(nsPresContext* aPresContext,
   }
 #endif // IBMBIDI
 
-  ComputeExtraJustificationSpacing(*aRendContext, ts, paintBuffer.mBuffer, textLength, numSpaces);
+  ComputeExtraJustificationSpacing(*aRendContext, ts, paintBuffer.mBuffer, textLength, numJustifiableCharacter);
 
 //IF STYLE SAYS TO SELECT TO END OF FRAME HERE...
   PRInt32 prefInt =
@@ -2599,6 +2650,11 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
   PRBool spacing = (0 != aTextStyle.mLetterSpacing) ||
     (0 != aTextStyle.mWordSpacing) || aTextStyle.mJustifying;
 
+  PRBool justifying = aTextStyle.mJustifying &&
+    (aTextStyle.mNumJustifiableCharacterReceivingExtraJot != 0 || aTextStyle.mExtraSpacePerJustifiableCharacter != 0);
+
+  PRBool isCJ = IsChineseJapaneseLangGroup();
+
   //German 0x00df might expand to "SS", but no need to count it for speed reason
   if (aTextStyle.mSmallCaps) {
      if (aLength*2 > TEXT_BUF_SIZE) {
@@ -2654,12 +2710,7 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
     }
     else if (ch == ' ') {
       nextFont = aTextStyle.mNormalFont;
-      glyphWidth = aTextStyle.mSpaceWidth + aTextStyle.mWordSpacing + aTextStyle.mLetterSpacing
-        + aTextStyle.mExtraSpacePerSpace;
-      if ((PRUint32)--aTextStyle.mNumSpacesToRender <
-            (PRUint32)aTextStyle.mNumSpacesReceivingExtraJot) {
-        glyphWidth++;
-      }
+      glyphWidth = aTextStyle.mSpaceWidth + aTextStyle.mWordSpacing + aTextStyle.mLetterSpacing;
     }
     else {
       if (lastFont != aTextStyle.mNormalFont) {
@@ -2692,6 +2743,13 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
         aRenderingContext.SetFont(aTextStyle.mSmallFont);
       }
       nextFont = aTextStyle.mNormalFont;
+    }
+    if (justifying && IsJustifiableCharacter(ch, isCJ)) {
+      glyphWidth += aTextStyle.mExtraSpacePerJustifiableCharacter;
+      if ((PRUint32)--aTextStyle.mNumJustifiableCharacterToRender
+            < (PRUint32)aTextStyle.mNumJustifiableCharacterReceivingExtraJot) {
+        glyphWidth++;
+      }
     }
     if (nextFont != lastFont) {
       pendingCount = bp - runStart;
@@ -2779,6 +2837,10 @@ nsTextFrame::GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
 
   nsIFontMetrics* lastFont = aStyle.mLastFont;
   nsTextDimensions sum, glyphDimensions;
+  PRBool justifying = aStyle.mJustifying &&
+    (aStyle.mNumJustifiableCharacterReceivingExtraJot != 0 || aStyle.mExtraSpacePerJustifiableCharacter != 0);
+  PRBool isCJ = IsChineseJapaneseLangGroup();
+
   while (--length >= 0) {
     PRUnichar ch = *inBuffer++;
     if (aStyle.mSmallCaps &&
@@ -2800,11 +2862,7 @@ nsTextFrame::GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
     }
     else if (ch == ' ') {
       glyphDimensions.width = aStyle.mSpaceWidth + aStyle.mLetterSpacing
-        + aStyle.mWordSpacing + aStyle.mExtraSpacePerSpace;
-      if ((PRUint32)--aStyle.mNumSpacesToMeasure
-            < (PRUint32)aStyle.mNumSpacesReceivingExtraJot) {
-        ++glyphDimensions.width;
-      }
+        + aStyle.mWordSpacing;
     }
     else {
       if (lastFont != aStyle.mNormalFont) {
@@ -2813,6 +2871,13 @@ nsTextFrame::GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
       }
       aRenderingContext.GetTextDimensions(&ch, (PRUint32)1, glyphDimensions);
       glyphDimensions.width += aStyle.mLetterSpacing;
+    }
+    if (justifying && IsJustifiableCharacter(ch, isCJ)) {
+      glyphDimensions.width += aStyle.mExtraSpacePerJustifiableCharacter;
+      if ((PRUint32)--aStyle.mNumJustifiableCharacterToMeasure
+            < (PRUint32)aStyle.mNumJustifiableCharacterReceivingExtraJot) {
+        ++glyphDimensions.width;
+      }
     }
     sum.Combine(glyphDimensions);
     *bp++ = ch;
@@ -2855,38 +2920,38 @@ void
 nsTextFrame::ComputeExtraJustificationSpacing(nsIRenderingContext& aRenderingContext,
                                               TextStyle& aTextStyle,
                                               PRUnichar* aBuffer, PRInt32 aLength,
-                                              PRInt32 aNumSpaces)
+                                              PRInt32 aNumJustifiableCharacter)
 {
   if (aTextStyle.mJustifying) {
     nsTextDimensions trueDimensions;
     
     // OK, so this is a bit ugly. The problem is that to get the right margin
     // nice and clean, we have to apply a little extra space to *some* of the
-    // spaces. It has to be the same ones every time or things will go haywire.
+    // justifiable characters. It has to be the same ones every time or things will go haywire.
     // This implies that the GetTextDimensionsOrLength and RenderString functions depend
     // on a little bit of secret state: which part of the prepared text they are
     // looking at. It turns out that they get called in a regular way: they look
-    // at the text from the beginning to the end. So we just count which spaces
+    // at the text from the beginning to the end. So we just count which justifiable character
     // we're up to, for each context.
     // This is not a great solution, but a perfect solution requires much more
     // widespread changes, to explicitly annotate all the transformed text fragments
     // that are passed around with their position in the transformed text
     // for the entire frame.
-    aTextStyle.mNumSpacesToMeasure = 0;
-    aTextStyle.mExtraSpacePerSpace = 0;
-    aTextStyle.mNumSpacesReceivingExtraJot = 0;
+    aTextStyle.mNumJustifiableCharacterToMeasure = 0;
+    aTextStyle.mExtraSpacePerJustifiableCharacter = 0;
+    aTextStyle.mNumJustifiableCharacterReceivingExtraJot = 0;
     
     GetTextDimensions(aRenderingContext, aTextStyle, aBuffer, aLength, &trueDimensions);
 
-    aTextStyle.mNumSpacesToMeasure = aNumSpaces;
-    aTextStyle.mNumSpacesToRender = aNumSpaces;
+    aTextStyle.mNumJustifiableCharacterToMeasure = aNumJustifiableCharacter;
+    aTextStyle.mNumJustifiableCharacterToRender = aNumJustifiableCharacter;
 
     nscoord extraSpace = mRect.width - trueDimensions.width;
 
-    if (extraSpace > 0 && aNumSpaces > 0) {
-      aTextStyle.mExtraSpacePerSpace = extraSpace/aNumSpaces;
-      aTextStyle.mNumSpacesReceivingExtraJot =
-        extraSpace - aTextStyle.mExtraSpacePerSpace*aNumSpaces;
+    if (extraSpace > 0 && aNumJustifiableCharacter > 0) {
+      aTextStyle.mExtraSpacePerJustifiableCharacter = extraSpace/aNumJustifiableCharacter;
+      aTextStyle.mNumJustifiableCharacterReceivingExtraJot =
+        extraSpace - aTextStyle.mExtraSpacePerJustifiableCharacter*aNumJustifiableCharacter;
     }
   }
 }
@@ -2932,10 +2997,10 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
   PRInt32 textLength;
 
   nsTextTransformer tx(lb, nsnull, aPresContext);
-  PRInt32 numSpaces;
+  PRIntn numJustifiableCharacter;
   
-  numSpaces = PrepareUnicodeText(tx, (displaySelection ? &indexBuffer : nsnull),
-                                 &paintBuffer, &textLength, PR_TRUE);
+  PrepareUnicodeText(tx, (displaySelection ? &indexBuffer : nsnull),
+                     &paintBuffer, &textLength, PR_TRUE, &numJustifiableCharacter);
 
   PRInt32* ip = indexBuffer.mBuffer;
   PRUnichar* text = paintBuffer.mBuffer;
@@ -2961,7 +3026,7 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
       }
     }
 #endif // IBMBIDI
-    ComputeExtraJustificationSpacing(aRenderingContext, aTextStyle, text, textLength, numSpaces);
+    ComputeExtraJustificationSpacing(aRenderingContext, aTextStyle, text, textLength, numJustifiableCharacter);
     if (!displaySelection || !isSelected) { 
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
@@ -3726,11 +3791,11 @@ nsTextFrame::GetPointFromOffset(nsPresContext* aPresContext,
   nsIDocument *doc = GetDocument(aPresContext);
   nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aPresContext);
   PRInt32 textLength;
-  PRInt32 numSpaces;
+  PRIntn numJustifiableCharacter;
 
-  numSpaces = PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
+  PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength, PR_FALSE, &numJustifiableCharacter);
 
-  ComputeExtraJustificationSpacing(*inRendContext, ts, paintBuffer.mBuffer, textLength, numSpaces);
+  ComputeExtraJustificationSpacing(*inRendContext, ts, paintBuffer.mBuffer, textLength, numJustifiableCharacter);
 
 
   PRInt32* ip = indexBuffer.mBuffer;
@@ -5391,7 +5456,7 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
 
   // Compute space and letter counts for justification, if required
   if (ts.mJustifying) {
-    PRInt32 numSpaces;
+    PRIntn numJustifiableCharacter;
     PRInt32 textLength;
 
     // This will include a space for trailing whitespace, if any is present.
@@ -5401,8 +5466,8 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
     // there because of the need to repair counts when wrapped words are backed out.
     // So I do it via PrepareUnicodeText ... a little slower perhaps, but a lot saner,
     // and it localizes the counting logic to one place.
-    numSpaces = PrepareUnicodeText(tx, nsnull, nsnull, &textLength, PR_TRUE);
-    lineLayout.SetTextJustificationWeights(numSpaces, textLength - numSpaces);
+    PrepareUnicodeText(tx, nsnull, nsnull, &textLength, PR_TRUE, &numJustifiableCharacter);
+    lineLayout.SetTextJustificationWeights(numJustifiableCharacter, textLength - numJustifiableCharacter);
   }
 
 
