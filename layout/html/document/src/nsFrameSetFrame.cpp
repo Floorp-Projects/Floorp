@@ -1033,7 +1033,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
     if (lastRow != cellIndex.y) {  // changed to next row
       offset.x = 0;
       offset.y += lastSize.height;
-      if (borderWidth > 0) {
+      if ((borderWidth > 0) && (eFrameborder_No != frameborder)) {
         if (firstTime) { // create horizontal border
           borderFrame = new nsHTMLFramesetBorderFrame(mContent, this, borderWidth, PR_FALSE, PR_FALSE);
           nsIStyleContext* pseudoStyleContext =
