@@ -2243,23 +2243,21 @@ my $headernum = 1;
 sub AddFDef ($$$) {
     my ($name, $description, $mailhead) = (@_);
 
-    $name = $dbh->quote($name);
-    $description = $dbh->quote($description);
-
     my $sth = $dbh->prepare("SELECT fieldid FROM fielddefs " .
-                            "WHERE name = $name");
-    $sth->execute();
+                            "WHERE name = ?");
+    $sth->execute($name);
     my ($fieldid) = ($sth->fetchrow_array());
     if (!$fieldid) {
-        $fieldid = 'NULL';
-        $dbh->do("INSERT INTO fielddefs " .
-             "(fieldid, name, description, mailhead, sortkey) VALUES " .
-             "($fieldid, $name, $description, $mailhead, $headernum)");
+        $dbh->do(q{INSERT INTO fielddefs
+                               (name, description, mailhead, sortkey)
+                   VALUES (?, ?, ?, ?)},
+                 undef, ($name, $description, $mailhead, $headernum));
     } else {
-        $dbh->do("UPDATE fielddefs " .
-                 "SET name = $name, description = $description, " .
-                 "mailhead = $mailhead, sortkey = $headernum " .
-                 "WHERE fieldid = $fieldid");
+        $dbh->do(q{UPDATE fielddefs
+                      SET name = ?, description = ?,
+                          mailhead = ?, sortkey = ?
+                    WHERE fieldid = ?}, undef,
+                 $name, $description, $mailhead, $headernum, $fieldid);
     }
     $headernum++;
 }
@@ -2354,7 +2352,8 @@ sub PopulateEnumTable ($@) {
         my $sortorder = 0;
         foreach my $value (@valuelist) {
             $sortorder = $sortorder + 100;
-            my $isactive = !exists($defaultinactive{$value});
+            # Not active if the value exists in $defaultinactive
+            my $isactive = exists($defaultinactive{$value}) ? 0 : 1;
             print "Inserting value '$value' in table $table" 
                 . " with sortkey $sortorder...\n";
             $insert->execute($value, $sortorder, $isactive);
@@ -2401,16 +2400,24 @@ $sth = $dbh->prepare("SELECT description FROM products");
 $sth->execute;
 unless ($sth->rows) {
     print "Creating initial dummy product 'TestProduct' ...\n";
-    $dbh->do('INSERT INTO products(name, description, milestoneurl, disallownew, votesperuser, votestoconfirm) ' .
-             'VALUES ("TestProduct", ' .
-             '"This is a test product.  This ought to be blown away and ' .
-             'replaced with real stuff in a finished installation of ' .
-             'bugzilla.", "", 0, 0, 0)');
+    my $test_product_name = 'TestProduct';
+    my $test_product_desc = 
+        'This is a test product. This ought to be blown away and'
+        . ' replaced with real stuff in a finished installation of bugzilla.';
+    my $test_product_version = 'other';
+
+    $dbh->do(q{INSERT INTO products(name, description, milestoneurl, 
+                           disallownew, votesperuser, votestoconfirm)
+               VALUES (?, ?, '', ?, ?, ?)},
+               undef, $test_product_name, $test_product_desc, 0, 0, 0);
+
     # We could probably just assume that this is "1", but better
     # safe than sorry...
     my $product_id = $dbh->bz_last_key('products', 'id');
     
-    $dbh->do(qq{INSERT INTO versions (value, product_id) VALUES ("other", $product_id)});
+    $dbh->do(q{INSERT INTO versions (value, product_id) 
+                VALUES (?, ?)}, 
+             undef, $test_product_version, $product_id);
     # note: since admin user is not yet known, components gets a 0 for 
     # initialowner and this is fixed during final checks.
     $dbh->do("INSERT INTO components (name, product_id, description, " .
@@ -2420,7 +2427,9 @@ unless ($sth->rows) {
              "'This is a test component in the test product database.  " .
              "This ought to be blown away and replaced with real stuff in " .
              "a finished installation of Bugzilla.', 0, 0)");
-    $dbh->do(qq{INSERT INTO milestones (product_id, value) VALUES ($product_id,"---")});
+    $dbh->do(q{INSERT INTO milestones (product_id, value, sortkey) 
+               VALUES (?,?,?)},
+             undef, $product_id, '---', 0);
 }
 
 
