@@ -363,4 +363,5 @@ pref("mail.server.default.max_size", 50);
 pref("mail.server.default.auth_login", true);
 pref("mail.server.default.delete_mail_left_on_server", false);
 
-pref("mail.enable_emoticons",true);
+pref("mail.convert_emoticons",true);
+pref("mail.convert_structs",true);
