@@ -2244,16 +2244,19 @@ js_Interpret(JSContext *cx, jsval *result)
 	     * the default case if the discriminant isn't an int jsval.
 	     * (This opcode is only emitted for all-integer switches.)
 	     */
-	    if (JSVERSION_IS_ECMAv2(cx->version) &&
-		!JSVAL_IS_INT(*sp)) {
-		break;
+	    if (cx->version == JSVERSION_DEFAULT ||
+		cx->version >= JSVERSION_1_4) {
+		rval = POP();
+		if (!JSVAL_IS_INT(rval))
+		    break;
+		i = JSVAL_TO_INT(rval);
+	    } else {
+		SAVE_SP(fp);
+		ok = PopInt(cx, &i);
+		RESTORE_SP(fp);
+		if (!ok)
+		    goto out;
 	    }
-
-	    SAVE_SP(fp);
-	    ok = PopInt(cx, &i);
-	    RESTORE_SP(fp);
-	    if (!ok)
-		goto out;
 
 	    pc2 += 2;
 	    low = GET_JUMP_OFFSET(pc2);
