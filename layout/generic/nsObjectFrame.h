@@ -156,7 +156,8 @@ protected:
  
   nsresult GetBaseURL(nsIURI* &aURL);
 
-  PRBool IsHidden() const;
+  // check attributes and optionally CSS to see if we should display anything
+  PRBool IsHidden(PRBool aCheckVisibilityStyle = PR_TRUE) const;
 
   nsresult NotifyContentObjectWrapper();
 
