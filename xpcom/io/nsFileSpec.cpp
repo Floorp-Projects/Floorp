@@ -971,14 +971,31 @@ PRBool nsFileSpec::operator == (const nsFileSpec& inOther) const
         return heEmpty;
     if (heEmpty) // ('cuz I'm not...)
         return PR_FALSE;
-    #if defined(XP_PC)
-       // windows does not care about case.
-       if (_stricmp(mPath, inOther.mPath ) == 0)
+    
+    nsSimpleCharString      str = mPath;
+    nsSimpleCharString      inStr = inOther.mPath;
+    
+    // Length() is size of buffer, not length of string
+    PRUint32 strLast = str.Length() - 1, inLast = inStr.Length() - 1;
+#if defined(XP_PC)
+#define DIR_SEPARATOR '\\'      // XXX doesn't NSPR have this?
+    /* windows does not care about case. */
+#define DIR_STRCMP    _stricmp
+#else
+#define DIR_SEPARATOR '/'
+#define DIR_STRCMP     strcmp
+#endif
+    
+    if(str[strLast] == DIR_SEPARATOR)
+        str[strLast] = '\0';
+
+    if(inStr[inLast] == DIR_SEPARATOR)
+        inStr[inLast] = '\0';
+
+    if (DIR_STRCMP(str, inStr ) == 0)
            return PR_TRUE;
-    #else
-       if (strcmp(mPath, inOther.mPath ) == 0)
-           return PR_TRUE;
-    #endif
+#undef DIR_SEPARATOR
+#undef DIR_STRCMP
 #endif
    return PR_FALSE;
 }
