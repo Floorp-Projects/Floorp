@@ -35,6 +35,7 @@ static const char kHTMLNameSpaceURI[] = "http://www.w3.org/TR/REC-html40";  // X
 // XXX To be removed: Bug 7834 ---
 static const char kXHTMLNameSpaceURI[] = "http://www.w3.org/1999/xhtml";
 static const char kXLinkNameSpaceURI[] = "http://www.w3.org/1999/xlink";
+static const char kXSLTNameSpaceURI[] = "http://www.w3.org/1999/XSL/Transform";
 
 //-----------------------------------------------------------
 // Name Space ID table support
@@ -57,21 +58,25 @@ static void AddRefTable()
     nsString* xhtml = new nsString( NS_ConvertASCIItoUCS2(kXHTMLNameSpaceURI) );
     nsString* xlink = new nsString( NS_ConvertASCIItoUCS2(kXLinkNameSpaceURI) );
     nsString* html = new nsString( NS_ConvertASCIItoUCS2(kHTMLNameSpaceURI) );
+    nsString* xslt = new nsString( NS_ConvertASCIItoUCS2(kXSLTNameSpaceURI) );
     gURIArray->AppendElement(xmlns);  // ordering here needs to match IDs
     gURIArray->AppendElement(xml);
     gURIArray->AppendElement(xhtml); 
     gURIArray->AppendElement(xlink);
     gURIArray->AppendElement(html); 
+    gURIArray->AppendElement(xslt);
     nsStringKey xmlnsKey(*xmlns);
     nsStringKey xmlKey(*xml);
     nsStringKey xhtmlKey(*xhtml);
     nsStringKey xlinkKey(*xlink);
     nsStringKey htmlKey(*html);
+    nsStringKey xsltKey(*xslt);
     gURIToIDTable->Put(&xmlnsKey, (void*)kNameSpaceID_XMLNS);
     gURIToIDTable->Put(&xmlKey, (void*)kNameSpaceID_XML);
     gURIToIDTable->Put(&xhtmlKey, (void*)kNameSpaceID_HTML);
     gURIToIDTable->Put(&xlinkKey, (void*)kNameSpaceID_XLink);
     gURIToIDTable->Put(&htmlKey, (void*)kNameSpaceID_HTML);
+    gURIToIDTable->Put(&xsltKey, (void*)kNameSpaceID_XSLT);
   }
   NS_ASSERTION(nsnull != gURIToIDTable, "no URI table");
   NS_ASSERTION(nsnull != gURIArray, "no URI array");
