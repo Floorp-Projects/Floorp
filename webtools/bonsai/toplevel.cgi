@@ -91,7 +91,13 @@ foreach $checkin (@::CheckInList) {
      $username{$addr} = $$info{'person'};
      $people{$addr} .= " " if $people{$addr};
      $people{$addr} .= "$checkin";
-     $closedcheckin{$addr} .= " $checkin" unless $$info{'treeopen'};
+     if (!$$info{'treeopen'}) {
+         if (!defined $closedcheckin{$addr}) {
+             $closedcheckin{$addr} = 1;
+         } else {
+             $closedcheckin{$addr}++;
+         }
+     }
 }
 
 
@@ -129,8 +135,7 @@ Can't contact the directory server at $ldapserver:$ldapport -- $errvar
           my ($uname, $namepart, $extra) = ('', '', '');
 
           if (exists($closedcheckin{$p})) {
-               my $n = split(/\s+/, $closedcheckin{$p});
-               $extra = " <font color=red>($n while tree closed!)</font>";
+               $extra = " <font color=red>($closedcheckin{$p} while tree closed!)</font>";
           }
 
           $uname = $username{$p};
