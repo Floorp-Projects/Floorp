@@ -1850,6 +1850,9 @@ ClearBroadcasterMapEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
     BroadcasterMapEntry* entry =
         NS_STATIC_CAST(BroadcasterMapEntry*, aEntry);
+    for (PRInt32 i = entry->mListeners.Count(); i>= 0; --i) {
+        delete (BroadcastListener*)entry->mListeners[i];
+    }
 
     // N.B. that we need to manually run the dtor because we
     // constructed the nsSmallVoidArray object in-place.
