@@ -81,6 +81,9 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIFileLocator.h"
 #include "nsIFileSpec.h"
 #include "nsIWalletService.h"
+
+#include "nsCURILoader.h"
+
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
@@ -161,50 +164,15 @@ nsBrowserAppCore::~nsBrowserAppCore()
   NS_IF_RELEASE(mSHistory);
 }
 
+NS_IMPL_ADDREF(nsBrowserAppCore)
+NS_IMPL_RELEASE(nsBrowserAppCore)
 
-NS_IMPL_ADDREF(nsBrowserInstance)
-NS_IMPL_RELEASE(nsBrowserInstance)
-
-
-NS_IMETHODIMP 
-nsBrowserAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
-{
-  if (aInstancePtr == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // Always NULL result, in case of failure
-  *aInstancePtr = NULL;
-
-  if ( aIID.Equals( nsIBrowserInstance::GetIID() ) ) {
-    *aInstancePtr = this;
-    this->AddRef();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(nsIDocumentLoaderObserver::GetIID())) {
-    nsIDocumentLoaderObserver *self = this;
-    *aInstancePtr = self;
-    self->AddRef();
-    return NS_OK;
-  }
-
-  if (aIID.Equals( nsIObserver::GetIID())) {
-    nsIObserver *self = this;  
-    *aInstancePtr = self;
-    self->AddRef();
-    return NS_OK;
-  }
-
-  if ( aIID.Equals( nsCOMTypeInfo<nsISupports>::GetIID() ) ) {
-    nsISupports *self = (nsIBrowserInstance*)this;
-    *aInstancePtr = self;
-    self->AddRef();
-    return NS_OK;
-  }
-
-  return NS_ERROR_NO_INTERFACE;
-}
+NS_IMPL_QUERY_HEAD(nsBrowserAppCore)
+   NS_IMPL_QUERY_BODY(nsIBrowserInstance)
+   NS_IMPL_QUERY_BODY(nsIDocumentLoaderObserver)
+   NS_IMPL_QUERY_BODY(nsIObserver)
+   NS_IMPL_QUERY_BODY(nsIURIContentListener)
+NS_IMPL_QUERY_TAIL(nsIBrowserInstance)
 
 static
 nsIPresShell*
@@ -245,12 +213,19 @@ nsBrowserAppCore::Init()
                                           (void **)&mSHistory );
 
   if ( NS_SUCCEEDED( rv ) ) {
+#ifdef DEBUG_radha
 	  printf("Successfully created instance of session history\n");
+#endif
       // Add this object of observer of various events.
       BeginObserving(); 
   }
- 
-  
+
+  // register ourselves as a content listener with the uri dispatcher service
+  rv = NS_OK;
+  NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_PROGID, &rv);
+  if (NS_SUCCEEDED(rv)) 
+    rv = dispatcher->RegisterContentListener(this);
+   
   return rv;
 }
 
@@ -1273,6 +1248,9 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
   if (nsnull != webShell) {
     mWebShell = webShell;
     //NS_ADDREF(mWebShell); WE DO NOT OWN THIS
+    // inform our top level webshell that we are its parent URI content listener...
+    mWebShell->SetParentURIContentListener(this);
+
     const PRUnichar * name;
     webShell->GetName( &name);
     nsAutoString str(name);
@@ -1956,6 +1934,13 @@ nsBrowserAppCore::Close()
   // Release search context.
   mSearchContext = 0;
 
+  // unregister ourselves with the uri loader because
+  // we can no longer accept new content!
+  nsresult rv = NS_OK;
+  NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_PROGID, &rv);
+  if (NS_SUCCEEDED(rv)) 
+    rv = dispatcher->UnRegisterContentListener(this);
+
   return NS_OK;
 }
 
@@ -2221,6 +2206,55 @@ nsBrowserInstance::SetIsViewSource(PRBool aBool) {
     mIsViewSource = aBool;
     return rv;
 }
+
+// nsIURIContentListener support
+
+NS_IMETHODIMP 
+nsBrowserInstance::GetProtocolHandler(nsIURI * /* aURI */, nsIProtocolHandler **aProtocolHandler)
+{
+   // we don't have any app specific protocol handlers we want to use so 
+  // just use the system default by returning null.
+  *aProtocolHandler = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsBrowserInstance::DoContent(const char *aContentType, const char *aCommand, const char *aWindowTarget, 
+                             nsIChannel *aChannel, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
+{
+  // forward the DoContent call to our content area webshell
+  nsCOMPtr<nsIURIContentListener> ctnListener = do_QueryInterface(mContentAreaWebShell);
+  if (ctnListener)
+    return ctnListener->DoContent(aContentType, aCommand, aWindowTarget, aChannel, aContentHandler, aAbortProcess);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsBrowserInstance::CanHandleContent(const char * aContentType,
+                                    const char * aCommand,
+                                    const char * aWindowTarget,
+                                    char ** aDesiredContentType,
+                                    PRBool * aCanHandleContent)
+
+{
+  // need to list all the content types the browser window knows how to handle here:
+  if (aContentType)
+  {
+     if (nsCRT::strcasecmp(aContentType, "multipart/x-mixed-replace") == 0)
+     {
+       *aDesiredContentType = nsCRT::strdup("text/html");
+       *aCanHandleContent = PR_TRUE;
+     }
+     if (nsCRT::strcasecmp(aContentType, "text/html") == 0)
+       *aCanHandleContent = PR_TRUE;
+        
+  }
+  else
+    *aCanHandleContent = PR_FALSE;
+
+  return NS_OK;
+}
+
 
 NS_DEFINE_MODULE_INSTANCE_COUNTER()
 
