@@ -1,0 +1,70 @@
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code,
+ * released March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *     Troy Chevalier <troy@netscape.com>
+ *     Sean Su <ssu@netscape.com>
+ *     IBM Corp.
+ */
+
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+DLGTEMPLATE IDD_EXTRACTING DISCARDABLE  
+BEGIN
+  DIALOG "Extracting...", IDD_EXTRACTING,   0, 202, 182,  50,
+  WS_VISIBLE | FS_DLGBORDER | FS_SCREENALIGN,
+  FCF_TITLEBAR | FCF_SYSMENU | FCF_NOMOVEWITHOWNER
+  BEGIN
+    WINDOW "", FID_CLIENT, 0, 0, 0, 0, "NSExtracting", WS_VISIBLE
+    BEGIN
+    LTEXT         "",             IDC_STATUS,   9,  33, 149,   7, SS_TEXT | DT_WORDBREAK | DT_MNEMONIC
+    CONTROL       "",              IDC_GAUGE,   9,  16, 164,   9, "NSGauge", 0x0 | WS_VISIBLE
+    END
+  END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+ICON                       1    DISCARDABLE     "nsinstall.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STATUS_EXTRACTING   "Extracting %s"
+    IDS_STATUS_LAUNCHING_SETUP "Launching Setup..."
+    IDS_ERROR_FILE_WRITE    "Unable to write file %s"
+    IDS_TITLE               "Installation"
+    IDS_ERROR_OUT_OF_MEMORY "Out of memory!"
+END
+
