@@ -35,6 +35,8 @@ class nsICSSLoader;
 // Interface to the css parser.
 class nsICSSParser : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_ICSS_PARSER_IID; return iid; }
+
   // Return a mask of the various css standards that this parser
   // supports.
   NS_IMETHOD GetInfoMask(PRUint32& aResult) = 0;
