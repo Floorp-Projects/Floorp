@@ -43,7 +43,7 @@
 #include "NSBrowserView.h"
 #include "nsCRT.h"
 
-PRInt32 nsCocoaBrowserService::sNumBrowser = 0;
+PRInt32 nsCocoaBrowserService::sNumBrowsers = 0;
 nsAlertController* nsCocoaBrowserService::sController = nsnull;
 nsCocoaBrowserService* nsCocoaBrowserService::sSingleton = nsnull;
 
