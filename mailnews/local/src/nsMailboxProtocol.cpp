@@ -141,7 +141,7 @@ void nsMailboxProtocol::Initialize(nsIURL * aURL)
 
 	m_mailboxParser = nsnull;
 
-	m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, PR_TRUE);
+	m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, LINEBREAK, PR_TRUE);
 
 	m_nextState = MAILBOX_READ_FOLDER;
 	m_initialState = MAILBOX_READ_FOLDER;
@@ -436,7 +436,7 @@ PRInt32 nsMailboxProtocol::ReadFolderResponse(nsIInputStream * inputStream, PRUi
 PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRUint32 length)
 {
 	char *line = nsnull;
-	PRInt32 status = 0;
+	PRUint32 status = 0;
 	nsresult rv = NS_OK;
 
 	// if we are doing a move or a copy, forward the data onto the copy handler...
@@ -452,7 +452,7 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 		PRBool pauseForMoreData = PR_FALSE;
 		do
 		{
-			line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
+			line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 		
 			if (!line || (line[0] == '.' && line[1] == 0))
 			{
