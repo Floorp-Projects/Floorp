@@ -357,10 +357,14 @@ nsImapService::CopyMessages(nsMsgKeyArray *keys, nsIMsgFolder *srcFolder, nsIStr
             nsCAutoString urlSpec;
 			PRUnichar hierarchySeparator = '/';
             rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
-
+			nsIImapUrl::nsImapAction action;
+			if (moveMessage)
+				action = nsIImapUrl::nsImapOnlineToOfflineMove;
+			else
+				action = nsIImapUrl::nsImapOnlineToOfflineCopy;
 			imapUrl->SetCopyState(aMailboxCopy);
             // now try to display the message
-			rv = FetchMessage(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
+			rv = FetchMessage(imapUrl, action, folder, imapMessageSink,
                               aURL, streamSupport, messageIds.GetBuffer(), PR_TRUE);
 			// ### end of copy operation should know how to do the delete.if this is a move
 
@@ -455,8 +459,7 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
         return NS_ERROR_NULL_POINTER;
 
     nsCAutoString urlSpec;
-    nsresult rv = aImapUrl->SetImapAction(aImapAction /* nsIImapUrl::nsImapMsgFetch */);
-    rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
+    nsresult rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
 
     rv = aImapUrl->SetImapMessageSink(aImapMessage);
     if (NS_SUCCEEDED(rv))
@@ -487,6 +490,7 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
 		  // const char *. hopefully they will fix it soon.
 		  rv = url->SetSpec((char *) urlSpec.GetBuffer());
 
+	    rv = aImapUrl->SetImapAction(aImapAction /* nsIImapUrl::nsImapMsgFetch */);
 	   if (aImapMailFolder && aDisplayConsumer)
 	   {
 			nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;

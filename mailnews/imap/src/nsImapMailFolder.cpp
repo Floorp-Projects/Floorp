@@ -2480,6 +2480,16 @@ nsImapMailFolder::OnlineCopyCompleted(nsIImapProtocol *aProtocol, ImapOnlineCopy
                                               messageIds.GetBuffer(),
                                               kImapMsgDeletedFlag,
                                               PR_TRUE);
+			if (NS_SUCCEEDED(rv))
+			{
+				nsMsgKeyArray affectedMessages;
+				char *keyTokenString = messageIds.ToNewCString();
+				ParseUidString(keyTokenString, affectedMessages);
+				if (mDatabase) 
+					mDatabase->DeleteMessages(&affectedMessages,NULL);
+				nsCRT::free(keyTokenString);
+				return rv;
+			}
         }
         /* unhandled action */
         else return NS_ERROR_FAILURE;
