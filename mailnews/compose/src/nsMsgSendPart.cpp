@@ -662,7 +662,7 @@ nsMsgSendPart::Write()
       {
         nsAutoString error_msg;
         nsAutoString path;
-        m_filespec->GetNativePathString(path);
+        nsMsgGetNativePathString(m_filespec->GetNativePathCString(),path);
         nsMsgBuildErrorMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE, error_msg, &path, nsnull);
         sendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg.get(), PR_FALSE);
       }

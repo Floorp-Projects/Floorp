@@ -210,4 +210,11 @@ NS_MSG_BASE nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char*
  */
 NS_MSG_BASE nsresult nsMsgI18NFormatNNTPXPATInNonRFC1522Format(const nsCString& aCharset, const nsString& inString, nsCString& outString);
 
+/**
+ * convert a path in the native filesystem charset
+ */
+NS_MSG_BASE
+void
+nsMsgGetNativePathString(const char *aPath, nsString& aResult);
+
 #endif /* _nsMsgI18N_H_ */

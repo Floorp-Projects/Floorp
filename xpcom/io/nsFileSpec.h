@@ -365,10 +365,6 @@ class NS_COM nsFileSpec
                                 // Do not try to free this!
        const char*              GetNativePathCString() const { return GetCString(); }
 
-                                // Returns a path in unicode 
-                                // converted from a file system charset.
-       void                     GetNativePathString(nsString &nativePathString);
-
        PRBool                   IsChildOf(nsFileSpec &possibleParent);
 
 #if defined(XP_MAC)
@@ -420,17 +416,6 @@ class NS_COM nsFileSpec
     //--------------------------------------------------
 
         char*                   GetLeafName() const; // Allocated.  Use nsCRT::free().
-
-				// Unicode version of GetLeafName()
-	void			GetLeafName(nsString &nativePathString);
-
-#if 0
-// needs implementing
-                                // copy the leaf name into the supplied buffer, thus
-                                // getting a copy without allocation. Buffer should be
-                                // 64 chars big.
-        void                    GetLeafNameCopy(char* destBuffer, PRInt32 bufferSize) const;
-#endif        
                                 // inLeafName can be a relative path, so this allows
                                 // one kind of concatenation of "paths".
         void                    SetLeafName(const char* inLeafName);
@@ -519,15 +504,7 @@ class NS_COM nsFileSpec
         nsresult                Execute(const char* args) const;
         nsresult                Execute(const nsString& args) const;
 
-    // Internal routine
-    //--------------------------------------------------
-
-    // Convert's routine from Native charset to Unicode.
     protected:
-
-                                // use delete [] to free the returned buffer
-       PRUnichar*               ConvertFromFileSystemCharset(const char *inString);
-       static void              GetFileSystemCharset(nsString & fileSystemCharset);
 
     //--------------------------------------------------
     // Data

@@ -56,6 +56,7 @@
 #include "nsIPrompt.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIMsgLocalMailFolder.h"
+#include "nsMsgI18N.h"
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
@@ -362,7 +363,7 @@ nsFolderCompactState::FinishCompact()
   nsString dbName;
 
   pathSpec->GetLeafName(getter_Copies(idlName));
-  summarySpec.GetLeafName(dbName);
+  nsMsgGetNativePathString(summarySpec.GetLeafName(), dbName);
 
     // close down the temp file stream; preparing for deleting the old folder
     // and its database; then rename the temp folder and database

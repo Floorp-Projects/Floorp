@@ -509,7 +509,7 @@ nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
         {
           nsAutoString error_msg;
           nsAutoString path;
-          mFileSpec->GetNativePathString(path);
+          nsMsgGetNativePathString(mFileSpec->GetNativePathCString(),path);
           nsMsgBuildErrorMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE, error_msg, &path, nsnull);
           sendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg.get(), PR_FALSE);
         }
@@ -592,7 +592,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       {
         nsAutoString error_msg;
         nsAutoString path;
-        mFileSpec->GetNativePathString(path);
+        nsMsgGetNativePathString(mFileSpec->GetNativePathCString(),path);
         nsMsgBuildErrorMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE, error_msg, &path, nsnull);
         sendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg.get(), PR_FALSE);
       }

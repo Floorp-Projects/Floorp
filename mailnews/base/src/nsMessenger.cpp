@@ -380,7 +380,7 @@ nsMessenger::PromptIfFileExists(nsFileSpec &fileSpec)
         PRBool dialogResult = PR_FALSE;
         nsXPIDLString errorMessage;
 
-        fileSpec.GetNativePathString(path);
+        nsMsgGetNativePathString(fileSpec.GetNativePathCString(),path);
         const PRUnichar *pathFormatStrings[] = { path.get() };
         NS_NAMED_LITERAL_STRING(fileExistsPropertyTag, "fileExists");
         const PRUnichar *fpropertyTag = fileExistsPropertyTag.get();

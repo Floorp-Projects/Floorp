@@ -234,7 +234,7 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 	for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++) {
 		nsFileSpec currentFolderPath = dir.Spec();
 
-    currentFolderPath.GetLeafName(currentFolderNameStr);
+    nsMsgGetNativePathString(currentFolderPath.GetLeafName(),currentFolderNameStr);
 		if (nsShouldIgnoreFile(currentFolderNameStr))
 			continue;
 
@@ -414,7 +414,7 @@ nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
     // here because of the way nsFileSpec concatenates
  
     nsAutoString str;
-    path.GetNativePathString(str);
+    nsMsgGetNativePathString(path.GetNativePathCString(), str);
     str.Append(sep);
     path = str;
 
@@ -771,7 +771,7 @@ nsMsgLocalMailFolder::CheckIfFolderExists(const PRUnichar *folderName, nsFileSpe
    for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++)
    {
       nsFileSpec currentFolderPath = dir.Spec();
-      currentFolderPath.GetLeafName(leafName);
+      nsMsgGetNativePathString(currentFolderPath.GetLeafName(),leafName);
       if (!leafName.IsEmpty() &&
           Compare(nsDependentString(folderName), leafName,
                   nsCaseInsensitiveStringComparator()) == 0)
@@ -1237,7 +1237,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
 	nsCAutoString newNameStr(convertedNewName.get());
 
     nsXPIDLCString oldLeafName;
-	oldPathSpec->GetLeafName(getter_Copies(oldLeafName));
+    oldPathSpec->GetLeafName(getter_Copies(oldLeafName));
 
     if (PL_strcasecmp(oldLeafName, convertedNewName) == 0) {
        if(msgWindow)

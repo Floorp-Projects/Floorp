@@ -760,3 +760,15 @@ nsMsgI18NGetAcceptLanguage(void)
 }
 
 
+// taken from nsFileSpec::GetNativePAthString()
+void
+nsMsgGetNativePathString(const char *aPath, nsString& aResult)
+{
+  if (!aPath) {
+    aResult.Truncate();
+    return;
+  }
+
+  ConvertToUnicode(nsMsgI18NFileSystemCharset(), aPath, aResult);
+}
+

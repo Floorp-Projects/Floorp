@@ -594,7 +594,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
       {
         nsAutoString error_msg;
         nsAutoString path;
-        mHTMLFileSpec->GetNativePathString(path);
+        nsMsgGetNativePathString(mHTMLFileSpec->GetNativePathCString(),path);
         nsMsgBuildErrorMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE, error_msg, &path, nsnull);
         mSendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg.get(), PR_FALSE);
       }
@@ -679,7 +679,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     {
       nsAutoString error_msg;
       nsAutoString path;
-      mTempFileSpec->GetNativePathString(path);
+      nsMsgGetNativePathString(mTempFileSpec->GetNativePathCString(),path);
       nsMsgBuildErrorMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE, error_msg, &path, nsnull);
       mSendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg.get(), PR_FALSE);
     }
@@ -3956,7 +3956,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
     {
       nsAutoString error_msg;
       nsAutoString path;
-      tFileSpec->GetNativePathString(path);
+      nsMsgGetNativePathString(tFileSpec->GetNativePathCString(),path);
       nsMsgBuildErrorMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE, error_msg, &path, nsnull);
       mSendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg.get(), PR_FALSE);
     }
@@ -3976,7 +3976,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
     {
       nsAutoString error_msg;
       nsAutoString path;
-      input_file->GetNativePathString(path);
+      nsMsgGetNativePathString(input_file->GetNativePathCString(),path);
       nsMsgBuildErrorMessageByID(NS_MSG_UNABLE_TO_OPEN_FILE, error_msg, &path, nsnull);
       mSendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg.get(), PR_FALSE);
     }
