@@ -39,6 +39,7 @@
  * contains a base-10 integer that fits into 31 bits.
  * Otherwise return v.
  */
+static jsval
 try_convert_to_jsint(JSContext *cx, jsval idval)
 {
     const jschar *cp;
@@ -370,7 +371,7 @@ JSObjectOps JavaArray_ops = {
     NULL                        /* hasInstance */
 };
 
-JSObjectOps *
+static JSObjectOps *
 JavaArray_getObjectOps(JSContext *cx, JSClass *clazz)
 {
     return &JavaArray_ops;
