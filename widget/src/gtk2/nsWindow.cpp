@@ -159,6 +159,33 @@ static PRBool            gRaiseWindows         = PR_TRUE;
 nsCOMPtr  <nsIRollupListener> gRollupListener;
 nsWeakPtr                     gRollupWindow;
 
+#ifdef USE_XIM
+
+struct nsXICLookupEntry {
+    PLDHashEntryHdr mKeyHash;
+    nsWindow*   mShellWindow;
+    GtkIMContext* mXIC;
+};
+
+PLDHashTable nsWindow::gXICLookupTable;
+nsWindow *nsWindow::gFocusedWindow;
+
+static void IM_commit_cb              (GtkIMContext *context,
+                                       const gchar *str,
+                                       nsWindow *window);
+static void IM_preedit_changed_cb     (GtkIMContext *context,
+                                       nsWindow *window);
+static void IMSetTextRange            (const PRInt32 aLen,
+                                       const gchar *aPreeditString,
+                                       const PangoAttrList *aFeedback,
+                                       PRUint32 *aTextRangeListLengthResult,
+                                       nsTextRangeArray *aTextRangeListResult);
+
+// If after selecting profile window, the startup fail, please refer to
+// http://bugzilla.gnome.org/show_bug.cgi?id=88940
+#endif
+
+
 #ifdef ACCESSIBILITY
 MaiHook *gMaiHook = NULL;
 #endif
@@ -206,10 +233,73 @@ nsWindow::nsWindow()
     mDragMotionTime = 0;
     mDragMotionTimerID = 0;
 
+#ifdef USE_XIM
+    if (gXICLookupTable.ops == NULL) {
+        PL_DHashTableInit(&gXICLookupTable, PL_DHashGetStubOps(), nsnull,
+            sizeof(nsXICLookupEntry), PL_DHASH_MIN_SIZE);
+    }
+    mIMEShellWindow = nsnull;
+#endif
+
 #ifdef ACCESSIBILITY
     mTopLevelAccessible  = nsnull;
 #endif
 }
+
+#ifdef USE_XIM
+void
+nsWindow::IMEGetShellWindow(void)
+{
+    GtkWidget* top_window = nsnull;
+    GetToplevelWidget(&top_window);
+    if (top_window) {
+        mIMEShellWindow = get_window_for_gtk_widget(top_window);
+    }
+}
+
+GtkIMContext*
+nsWindow::IMEGetContext()
+{
+    if (!mIMEShellWindow) {
+        return NULL;
+    }
+    PLDHashEntryHdr* hash_entry;
+    nsXICLookupEntry* entry;
+
+    hash_entry = PL_DHashTableOperate(&gXICLookupTable,
+                                      mIMEShellWindow, PL_DHASH_LOOKUP);
+
+    if (hash_entry) {
+        entry = NS_REINTERPRET_CAST(nsXICLookupEntry *, hash_entry);
+        if (entry->mXIC) {
+            return entry->mXIC;
+        }
+    }
+    return NULL;
+}
+
+void
+nsWindow::IMECreateContext(GdkWindow* aGdkWindow)
+{
+    PLDHashEntryHdr* hash_entry;
+    nsXICLookupEntry* entry;
+    GtkIMContext *im = gtk_im_multicontext_new();
+    if (im) {
+        hash_entry = PL_DHashTableOperate(&gXICLookupTable, this, PL_DHASH_ADD);
+        if (hash_entry) {
+            entry = NS_REINTERPRET_CAST(nsXICLookupEntry *, hash_entry);
+            entry->mShellWindow = this;
+            entry->mXIC = im;
+        }
+        gtk_im_context_set_client_window(im, aGdkWindow);
+        g_signal_connect(G_OBJECT(im), "commit",
+                         G_CALLBACK(IM_commit_cb), this);
+        g_signal_connect(G_OBJECT(im), "preedit_changed",
+                         G_CALLBACK(IM_preedit_changed_cb), this);
+        this->mIMEShellWindow = this;
+    }
+}
+#endif
 
 nsWindow::~nsWindow()
 {
@@ -294,6 +384,21 @@ nsWindow::Destroy(void)
         }
     }
 
+#ifdef USE_XIM
+    GtkIMContext *im = IMEGetContext();
+    // unset focus before destroy
+    if (im && !mShell && mIMEShellWindow == gFocusedWindow) {
+        gtk_im_context_focus_out(im);
+    }
+    // if shell, delete GtkIMContext
+    if (im && mShell) {
+        gtk_im_context_reset(im);
+        PL_DHashTableOperate(&gXICLookupTable, this, PL_DHASH_REMOVE);
+        g_object_unref(G_OBJECT(im));
+    }
+    mIMEShellWindow = nsnull;
+#endif
+
     // make sure that we remove ourself as the focus window
     if (mHasFocus) {
         LOG(("automatically losing focus...\n"));
@@ -326,6 +431,8 @@ nsWindow::Destroy(void)
     }
 
     OnDestroy();
+
+
 
 #ifdef ACCESSIBILITY
     if (gMaiHook && mTopLevelAccessible && gMaiHook->RemoveTopLevelAccessible)
@@ -535,8 +642,16 @@ nsWindow::SetFocus(PRBool aRaise)
     owningWindow->mFocusChild = this;
     mHasFocus = PR_TRUE;
 
-    DispatchGotFocusEvent();
+#ifdef USE_XIM
+    GtkIMContext *im = IMEGetContext();
+    if (!mIsTopLevel && im && !mFocusChild) {
+        gFocusedWindow = this;
+        gtk_im_context_focus_in(im);
+    }
+#endif
 
+    DispatchGotFocusEvent();
+    
     // make sure to unset the activate flag and send an activate event
     if (gJustGotActivate) {
         gJustGotActivate = PR_FALSE;
@@ -994,6 +1109,17 @@ nsWindow::GetAttention()
 void
 nsWindow::LoseFocus(void)
 {
+#ifdef USE_XIM
+    GtkIMContext *im = IMEGetContext();
+    if (!mIsTopLevel && im && !mFocusChild) {
+        gtk_im_context_focus_out(im);
+        IMEComposeStart();
+        IMEComposeText(NULL, 0, NULL, NULL);
+        IMEComposeEnd();
+        LOG(("gtk_im_context_focus_out\n"));
+    }
+#endif
+
     // we don't have focus
     mHasFocus = PR_FALSE;
 
@@ -1291,6 +1417,21 @@ nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
 
     // dispatch a got focus event
     DispatchGotFocusEvent();
+
+#ifdef USE_XIM
+    nsWindow * aTmpWindow;
+    aTmpWindow = this;
+
+    if (mFocusChild)
+        while (aTmpWindow->mFocusChild)
+            aTmpWindow = aTmpWindow->mFocusChild;
+
+    GtkIMContext *im = aTmpWindow->IMEGetContext();
+    if (!(aTmpWindow->mIsTopLevel) && im) {
+        gtk_im_context_focus_in(im);
+        LOG(("OnContainFocusIn-set IC focus in. aTmpWindow:%x\n", aTmpWindow));
+    }
+#endif
 }
 
 void
@@ -1308,6 +1449,15 @@ nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
 gboolean
 nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 {
+#ifdef USE_XIM
+    GtkIMContext *im = IMEGetContext();
+    if (im) {
+        if (gtk_im_context_filter_keypress(im, aEvent)) {
+            return TRUE;
+        }
+    }
+#endif
+    
     // work around for annoying things.
     if (aEvent->keyval == GDK_Tab)
         if (aEvent->state & GDK_CONTROL_MASK)
@@ -1372,6 +1522,15 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 gboolean
 nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 {
+#ifdef USE_XIM
+    GtkIMContext *im = IMEGetContext();
+    if (!mIsTopLevel && im && !mFocusChild) {
+        if (gtk_im_context_filter_keypress(im, aEvent)) {
+           return TRUE;
+        }
+    }
+#endif
+    
     // unset the repeat flag
     mInKeyRepeat = PR_FALSE;
 
@@ -1904,6 +2063,10 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 
             mDrawingarea = moz_drawingarea_new(nsnull, mContainer);
         }
+#ifdef USE_XIM
+        // get mIMEShellWindow and keep it
+        IMEGetShellWindow();
+#endif
     }
         break;
     default:
@@ -1947,6 +2110,13 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         g_signal_connect(G_OBJECT(mShell), "property_notify_event",
                          G_CALLBACK(property_notify_event_cb), NULL);
     }
+
+#ifdef USE_XIM
+    if (mShell) {
+        // init GtkIMContext for shell
+        IMECreateContext(mShell->window);
+    }
+#endif
 
     if (mContainer) {
         g_signal_connect_after(G_OBJECT(mContainer), "size_allocate",
@@ -3202,3 +3372,282 @@ nsChildWindow::~nsChildWindow()
 {
 }
 
+#ifdef USE_XIM
+
+void
+nsWindow::IMEComposeStart(void)
+{
+    nsCompositionEvent compEvent;
+
+    compEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
+    compEvent.point.x = compEvent.point.y = 0;
+    compEvent.time = 0;    // Potential problem ?
+    compEvent.message = compEvent.eventStructType
+        = compEvent.compositionMessage = NS_COMPOSITION_START;
+
+    nsEventStatus status;
+    DispatchEvent(&compEvent, status);
+}
+
+void
+nsWindow::IMEComposeText (const PRUnichar *aText,
+                          const PRInt32 aLen,
+                          const gchar *aPreeditString,
+                          const PangoAttrList *aFeedback)
+{
+    nsTextEvent textEvent;
+
+    textEvent.time = 0;
+    textEvent.isShift = textEvent.isControl =
+    textEvent.isAlt = textEvent.isMeta = PR_FALSE;
+  
+    textEvent.message = textEvent.eventStructType = NS_TEXT_EVENT;
+    textEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
+    textEvent.point.x = textEvent.point.y = 0;
+
+    if (aLen == 0) {
+        textEvent.theText = nsnull;
+        textEvent.rangeCount = 0;
+        textEvent.rangeArray = nsnull;
+    } else {
+        textEvent.theText = (PRUnichar*)aText;
+        textEvent.rangeCount = 0;
+        textEvent.rangeArray = nsnull;
+
+        if (aPreeditString && aFeedback && (aLen > 0)) {
+            IMSetTextRange(aLen, aPreeditString, aFeedback,
+                           &(textEvent.rangeCount),
+                           &(textEvent.rangeArray));
+        }
+    }
+
+    nsEventStatus status;
+    DispatchEvent(&textEvent, status);
+  
+    if (textEvent.rangeArray) {
+        delete[] textEvent.rangeArray;
+    }
+}
+
+void
+nsWindow::IMEComposeEnd(void)
+{
+    nsCompositionEvent compEvent;
+    compEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
+    compEvent.point.x = compEvent.point.y = 0;
+    compEvent.time = 0;
+    compEvent.message = compEvent.eventStructType
+        = compEvent.compositionMessage = NS_COMPOSITION_END;
+
+    nsEventStatus status;
+    DispatchEvent(&compEvent, status);
+}
+
+/* static */
+void
+IM_preedit_changed_cb(GtkIMContext *context,
+                      nsWindow     *awindow)
+{
+    gchar *preedit_string;
+    gint cursor_pos;
+    PangoAttrList *feedback_list;
+
+    // call for focused window
+    nsWindow *window = awindow->gFocusedWindow;
+    if (!window) return;
+  
+    // Should use cursor_pos ?
+    gtk_im_context_get_preedit_string(context, &preedit_string,
+                                      &feedback_list, &cursor_pos);
+  
+    LOG(("preedit string is: %s   length is: %d\n",
+         preedit_string, strlen(preedit_string)));
+
+    if ((preedit_string == NULL) || (0 == strlen(preedit_string))) {
+        window->IMEComposeStart();
+        window->IMEComposeText(NULL, 0, NULL, NULL);
+        return;
+    }
+
+    gunichar2 * uniStr;
+    glong uniStrLen;
+
+    uniStr = NULL;
+    uniStrLen = 0;
+    uniStr = g_utf8_to_utf16(preedit_string, -1, NULL, &uniStrLen, NULL);
+
+    if (!uniStr) {
+        g_free(preedit_string);
+        LOG(("utf8-utf16 string tranfer failed!\n"));
+        if (feedback_list)
+            pango_attr_list_unref(feedback_list);
+        return;
+    }
+
+    if (window && (uniStrLen > 0)) {
+        window->IMEComposeStart();
+        window->IMEComposeText(NS_STATIC_CAST(const PRUnichar *, uniStr),
+                               uniStrLen, preedit_string, feedback_list);
+    }
+
+    g_free(preedit_string);
+    g_free(uniStr);
+    if (feedback_list)
+        pango_attr_list_unref(feedback_list);
+}
+
+/* static */
+void
+IM_commit_cb (GtkIMContext *context,
+              const gchar  *utf8_str,
+              nsWindow   *awindow)
+{
+    gunichar2 * uniStr;
+    glong uniStrLen;
+
+    // call for focused window
+    nsWindow *window = awindow->gFocusedWindow;
+    if (!window) return;
+
+    uniStr = NULL;
+    uniStrLen = 0;
+    uniStr = g_utf8_to_utf16(utf8_str, -1, NULL, &uniStrLen, NULL);
+
+    // Will free it in call function, don't need
+    // g_free((void *)utf8_str));
+
+    if (!uniStr) {
+        LOG(("utf80utf16 string tranfer failed!\n"));
+        return;
+    }
+
+    if (window && (uniStrLen > 0)) {
+        window->IMEComposeStart();
+        window->IMEComposeText((const PRUnichar *)uniStr,
+                               (PRInt32)uniStrLen, NULL, NULL);
+        window->IMEComposeEnd();
+    }
+
+    g_free(uniStr);
+}
+
+#define	START_OFFSET(I)	\
+    (*aTextRangeListResult)[I].mStartOffset
+
+#define	END_OFFSET(I) \
+    (*aTextRangeListResult)[I].mEndOffset
+
+#define	SET_FEEDBACKTYPE(I,T) (*aTextRangeListResult)[I].mRangeType = T
+
+/* static */
+void
+IMSetTextRange (const PRInt32 aLen,
+                const gchar *aPreeditString,
+                const PangoAttrList *aFeedback,
+                PRUint32 *aTextRangeListLengthResult,
+                nsTextRangeArray *aTextRangeListResult)
+{
+    if (aLen == 0) {
+        aTextRangeListLengthResult = 0;
+        aTextRangeListResult = NULL;
+        return;
+    }
+    
+    PangoAttrIterator * aFeedbackIterator;
+    aFeedbackIterator = pango_attr_list_get_iterator((PangoAttrList*)aFeedback);
+    //(NS_REINTERPRET_CAST(PangoAttrList*, aFeedback));
+    // Since some compilers don't permit this casting -- from const to un-const
+    if (aFeedbackIterator == NULL) return;
+
+    /*
+     * Don't use pango_attr_iterator_range, it'll mislead you.
+     * As for going through the list to get the attribute number,
+     * it take much time for performance.
+     * Now it's simple and enough, although maybe waste a little space.
+    */
+    PRInt32 aMaxLenOfTextRange;
+    aMaxLenOfTextRange = 2*aLen + 1;
+    *aTextRangeListResult = new nsTextRange[aMaxLenOfTextRange];
+    NS_ASSERTION(*aTextRangeListResult, "No enough memory.");
+    
+    // Set caret's postion
+    SET_FEEDBACKTYPE(0, NS_TEXTRANGE_CARETPOSITION);
+    START_OFFSET(0) = aLen;
+    END_OFFSET(0) = aLen;
+
+    int count;
+    PangoAttribute * aPangoAttr;
+    count = 0;
+    /*
+     * Depend on gtk2's implementation on XIM support.
+     * In aFeedback got from gtk2, there are only three types of data:
+     * PANGO_ATTR_UNDERLINE, PANGO_ATTR_FOREGROUND, PANGO_ATTR_BACKGROUND.
+     * Corresponding to XIMUnderline, XIMReverse.
+     * Don't take PANGO_ATTR_BACKGROUND into account, since
+     * PANGO_ATTR_BACKGROUND and PANGO_ATTR_FOREGROUND are always
+     * a couple.
+     */
+    gunichar2 * uniStr;
+    glong uniStrLen;
+    do {
+        aPangoAttr = pango_attr_iterator_get(aFeedbackIterator,
+                                             PANGO_ATTR_UNDERLINE);
+        if (aPangoAttr) {
+            // Stands for XIMUnderline
+            count++;
+            START_OFFSET(count) = 0;
+            END_OFFSET(count) = 0;
+            
+            uniStr = NULL;
+            if (aPangoAttr->start_index > 0)
+                uniStr = g_utf8_to_utf16(aPreeditString,
+                                         aPangoAttr->start_index,
+                                         NULL, &uniStrLen, NULL);
+            if (uniStr)
+                START_OFFSET(count) = uniStrLen;
+            
+            uniStr = NULL;
+            uniStr = g_utf8_to_utf16(aPreeditString + aPangoAttr->start_index,
+                         aPangoAttr->end_index - aPangoAttr->start_index,
+                         NULL, &uniStrLen, NULL);
+            if (uniStr) {
+                END_OFFSET(count) = START_OFFSET(count) + uniStrLen;
+                SET_FEEDBACKTYPE(count, NS_TEXTRANGE_CONVERTEDTEXT);
+            }
+        } else {
+            aPangoAttr = pango_attr_iterator_get(aFeedbackIterator,
+                                                 PANGO_ATTR_FOREGROUND);
+            if (aPangoAttr) {
+                count++;
+                START_OFFSET(count) = 0;
+                END_OFFSET(count) = 0;
+                
+                uniStr = NULL;
+                if (aPangoAttr->start_index > 0)
+                    uniStr = g_utf8_to_utf16(aPreeditString,
+                                             aPangoAttr->start_index,
+                                             NULL, &uniStrLen, NULL);
+                if (uniStr)
+                    START_OFFSET(count) = uniStrLen;
+            
+                uniStr = NULL;
+                uniStr = g_utf8_to_utf16(
+                             aPreeditString + aPangoAttr->start_index,
+                             aPangoAttr->end_index - aPangoAttr->start_index,
+                             NULL, &uniStrLen, NULL);
+
+                if (uniStr) {
+                    END_OFFSET(count) = START_OFFSET(count) + uniStrLen;
+                    SET_FEEDBACKTYPE(count, NS_TEXTRANGE_SELECTEDRAWTEXT);
+                }
+            }
+        }
+    } while ((count < aMaxLenOfTextRange - 1) &&
+             (pango_attr_iterator_next(aFeedbackIterator)));
+
+   *aTextRangeListLengthResult = count + 1;
+
+   pango_attr_iterator_destroy(aFeedbackIterator);
+}
+
+#endif
