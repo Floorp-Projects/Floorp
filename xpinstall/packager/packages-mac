@@ -75,6 +75,14 @@ viewer:Essential Files:SSL3.shlb
 viewer:Essential Files:SMIME3.shlb
 viewer:Essential Files:Softoken3.shlb
 
+; printing plugin for OSX
+viewer:Essential Files:PrintDialogPDE.plugin
+-viewer:Essential Files:PrintDialogPDE.plugin:CVS
+-viewer:Essential Files:PrintDialogPDE.plugin:Contents:CVS
+-viewer:Essential Files:PrintDialogPDE.plugin:Contents:MacOS:CVS
+-viewer:Essential Files:PrintDialogPDE.plugin:Contents:Resources:CVS
+-viewer:Essential Files:PrintDialogPDE.plugin:Contents:Resources:English.lproj:CVS
+
 viewer:Components:docshell.shlb
 viewer:Components:AppShell.shlb 
 viewer:Components:appshell.xpt 
