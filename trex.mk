@@ -29,14 +29,12 @@ DEPTH=.
 # Command macro defines
 #
 
+CWD=`pwd`
+TOP=$(CWD)/..
 
 CVS=cvs -q co -P
 CVTREX = $(CVSROOT:pub=src)
 CVST=cvs -q -d $(CVTREX) co -P
-
-include $(DEPTH)/config/config.mk
-
-include $(DEPTH)/config/rules.mk
 
 default:  pull_all build_all
 
@@ -44,31 +42,33 @@ pull_all: pull_platform pull_trex
 
 pull_platform:
 	cd $(MOZ_SRC); \
-    -$(CVS) mozilla/config mozilla/nglayout.mk; \
-    cd $(MOZ_SRC)/mozilla ; \
-    nmake -f nglayout.mk pull_all ;\
-    cd $(MOZ_SRC)
+	$(CVS) mozilla/config mozilla/nglayout.mk; \
+	cd mozilla ;\
+	gmake -f nglayout.mk pull_all;\
+	cd $(MOZ_SRC)
 
 pull_trex:
 	cd $(MOZ_SRC); \
-    -$(CVS)  mozilla/gconfig ; \
-    -$(CVS)  mozilla/shell; \
-    cd $(MOZ_SRC)/mozilla; \
-    -$(CVST)  -d trex ns/trex; \
-    cd $(MOZ_SRC)/.
+	$(CVS)  mozilla/gconfig; \
+	$(CVS)  mozilla/shell; \
+	cd $(MOZ_SRC)/mozilla; \
+	$(CVST)  -d trex ns/trex; \
+	cd $(MOZ_SRC)/.
 
 build_all: build_platform build_trex
 
 build_platform:
 	cd $(MOZ_SRC)/mozilla; \
-    gmake -f nglayout.mk real_all; \
-    cd $(MOZ_SRC)
+	gmake -f nglayout.mk real_all; \
+	cd $(MOZ_SRC)
 
 
 build_trex:
 	cd $(MOZ_SRC)/mozilla/shell; \
-    gmake; cd $(MOZ_SRC)/mozilla/trex; \
-    gmake; cd $(MOZ_SRC)
+	gmake; \
+	cd $(MOZ_SRC)/mozilla/trex; \
+	gmake; \
+	cd $(MOZ_SRC)
 
 
 
