@@ -116,6 +116,9 @@ public:
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
 
+  // column groups don't paint their own background -- the cells do
+  virtual PRBool CanPaintBackground() { return PR_FALSE; }
+
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
                               const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
