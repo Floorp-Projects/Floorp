@@ -61,6 +61,10 @@ class nsHTTPChannel;
 // because of HTTP/1.1 is default now
 #define DEFAULT_ALLOWED_CAPABILITIES    (DEFAULT_PROXY_CAPABILITIES|DEFAULT_SERVER_CAPABILITIES)
 
+#define DEFAULT_HTTP_REQUEST_TIMEOUT    30
+#define DEFAULT_HTTP_CONNECT_TIMEOUT    30
+#define DEFAULT_MAX_ALLOWED_KEEPALIVES  30
+
 class   nsHTTPPipelinedRequest;
 class   nsIHTTPChannel;
 
@@ -96,7 +100,7 @@ public:
                                      nsIChannel** o_pTrans);
     
     /* Remove this transport from the list. */
-    virtual nsresult ReleaseTransport(nsIChannel* i_pTrans, PRUint32 capabilies = 0);
+    virtual nsresult ReleaseTransport(nsIChannel* i_pTrans, PRUint32 capabilies = 0, PRBool aDontRestartChannels = PR_FALSE);
     virtual nsresult CancelPendingChannel(nsHTTPChannel* aChannel);
     PRTime GetSessionStartTime() { return mSessionStartTime; }
 
@@ -127,9 +131,12 @@ protected:
     char*               mAcceptEncodings;
     PRUint32			mHttpVersion;
     nsAuthEngine        mAuthEngine;
+    
     PRUint32            mCapabilities;
     PRInt32             mKeepAliveTimeout;
     PRInt32             mMaxConnections;
+    PRInt32             mMaxAllowedKeepAlives;
+
     nsCOMPtr<nsIPref>   mPrefs;
     nsCOMPtr<nsIProtocolProxyService>       mProxySvc;
     PRUint32            mReferrerLevel;
@@ -155,6 +162,9 @@ protected:
 private:
 
     nsHashtable mCapTable;
+    PRInt32     mRequestTimeout;
+    PRInt32     mConnectTimeout;
+
     PRUint32 getCapabilities (const char *host, PRInt32 port, PRUint32 cap);
     void     setCapabilities (nsIChannel* i_pTrans, PRUint32 aCapabilities);
 

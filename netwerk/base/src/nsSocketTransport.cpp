@@ -98,7 +98,6 @@ nsSocketState gStateTable[eSocketOperation_Max][eSocketState_Max] = {
 #define CONNECT_TIMEOUT_IN_MS 20
 
 static PRIntervalTime gConnectTimeout  = PR_INTERVAL_NO_WAIT;
-static PRIntervalTime gTimeoutInterval = PR_INTERVAL_NO_WAIT;
 
 #if defined(PR_LOGGING)
 //
@@ -115,6 +114,9 @@ static PRIntervalTime gTimeoutInterval = PR_INTERVAL_NO_WAIT;
 PRLogModuleInfo* gSocketLog = nsnull;
 
 #endif /* PR_LOGGING */
+
+static  PRUint32    sTotalTransportsCreated = 0;
+static  PRUint32    sTotalTransportsDeleted = 0;
 
 nsSocketTransport::nsSocketTransport():
     mCancelStatus(NS_OK),
@@ -143,7 +145,9 @@ nsSocketTransport::nsSocketTransport():
     mWriteBufferIndex(0),
     mWriteBufferLength(0),
     mBufferSegmentSize(0),
-    mBufferMaxSize(0)
+    mBufferMaxSize(0),
+    mSocketTimeout        (PR_INTERVAL_NO_TIMEOUT),
+    mSocketConnectTimeout (PR_MillisecondsToInterval (DEFAULT_SOCKET_CONNECT_TIMEOUT_IN_MS))
 {
   NS_INIT_REFCNT();
 
@@ -178,15 +182,15 @@ nsSocketTransport::nsSocketTransport():
 #endif /* PR_LOGGING */
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-         ("Creating nsSocketTransport [%x].\n", this));
+         ("Creating nsSocketTransport [%x], TotalCreated=%d, TotalDeleted=%d\n", this, ++sTotalTransportsCreated, sTotalTransportsDeleted));
 }
 
 
 nsSocketTransport::~nsSocketTransport()
 {
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-         ("Deleting nsSocketTransport [%s:%d %x].\n", 
-          mHostName, mPort, this));
+         ("Deleting nsSocketTransport [%s:%d %x], TotalCreated=%d, TotalDeleted=%d\n", 
+          mHostName, mPort, this, sTotalTransportsCreated, ++sTotalTransportsDeleted));
 
   // Release the nsCOMPtrs...
   //
@@ -308,16 +312,17 @@ nsresult nsSocketTransport::CheckForTimeout (PRIntervalTime aCurrentTime)
     
     idleInterval = aCurrentTime - mLastActiveTime;
     
-    //
-    // Only timeout if the transport is waiting to connect to the server
-    //
-    if ((mCurrentState  == eSocketState_WaitConnect)
-        && idleInterval >= gTimeoutInterval)
+    if (mSocketConnectTimeout != PR_INTERVAL_NO_TIMEOUT && mCurrentState  == eSocketState_WaitConnect
+        && idleInterval >= mSocketConnectTimeout
+        ||
+        mSocketTimeout != PR_INTERVAL_NO_TIMEOUT && mCurrentState  == eSocketState_WaitReadWrite
+        && idleInterval >= mSocketTimeout) 
     {
-        PR_LOG(gSocketLog, PR_LOG_ERROR, 
-            ("nsSocketTransport::CheckForTimeout() [%s:%d %x].\t"
-            "TIMED OUT... Idle interval: %d\n",
-            mHostName, mPort, this, idleInterval));
+        PR_LOG (
+                gSocketLog, PR_LOG_ERROR, ("nsSocketTransport::CheckForTimeout() [%s:%d %x].\t"
+                "TIMED OUT... Idle interval: %d\n",
+                mHostName, mPort, this, idleInterval)
+                );
         
         // Move the transport into the Timeout state...  
         mCurrentState = eSocketState_Timeout;
@@ -1254,12 +1259,6 @@ nsresult nsSocketTransport::CloseConnection(PRBool bNow)
 }
 
 
-void nsSocketTransport::SetSocketTimeout(PRIntervalTime aTimeInterval)
-{
-  gTimeoutInterval = aTimeInterval;
-}
-
-
 //
 // --------------------------------------------------------------------------
 // nsISupports implementation...
@@ -2156,28 +2155,6 @@ nsSocketTransport::SetNotificationCallbacks(nsIInterfaceRequestor* aNotification
   return NS_OK;
 }
 
-nsresult
-nsSocketTransport::fireStatus(PRUint32 aCode)
-{
-  // need to optimize this - TODO
-  nsXPIDLString tempmesg;
-  nsresult rv = GetSocketErrorString(aCode, getter_Copies(tempmesg));
-
-  nsAutoString mesg(tempmesg);
-  if (mPrintHost)
-    mesg.AppendWithConversion(mPrintHost);
-  else
-    mesg.AppendWithConversion(mHostName);
-
-  if (NS_FAILED(rv)) return rv;
-
-  return mEventSink ? mEventSink->OnStatus(this,
-                                           mReadContext, 
-                                           mesg.GetUnicode()) // this gets freed elsewhere.
-                    : NS_ERROR_FAILURE;
-}
-
-
 NS_IMETHODIMP
 nsSocketTransport::IsAlive (PRUint32 seconds, PRBool *alive)
 {
@@ -2197,11 +2174,11 @@ nsSocketTransport::IsAlive (PRUint32 seconds, PRBool *alive)
         static char c;
         PRInt32 rval = PR_Read (mSocketFD, &c, 0);
         
-        if (rval <= 0)
+        if (rval < 0)
         {
             PRErrorCode code = PR_GetError ();
 
-            if (rval < 0 && code != PR_WOULD_BLOCK_ERROR)
+            if (code != PR_WOULD_BLOCK_ERROR)
                 *alive = PR_FALSE;
         }
     }
@@ -2209,6 +2186,75 @@ nsSocketTransport::IsAlive (PRUint32 seconds, PRBool *alive)
         *alive = PR_FALSE;
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetSocketTimeout (PRUint32 * o_Seconds)
+{
+    if (o_Seconds == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    if (mSocketTimeout == PR_INTERVAL_NO_TIMEOUT)
+        *o_Seconds = 0;
+    else
+        *o_Seconds = PR_IntervalToSeconds (mSocketTimeout);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetSocketTimeout (PRUint32  a_Seconds)
+{
+    if (a_Seconds == 0)
+        mSocketTimeout = PR_INTERVAL_NO_TIMEOUT;
+    else
+        mSocketTimeout = PR_SecondsToInterval (a_Seconds);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetSocketConnectTimeout (PRUint32 * o_Seconds)
+{
+    if (o_Seconds == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    if (mSocketConnectTimeout == PR_INTERVAL_NO_TIMEOUT)
+        *o_Seconds = 0;
+    else
+        *o_Seconds = PR_IntervalToSeconds (mSocketConnectTimeout);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetSocketConnectTimeout (PRUint32   a_Seconds)
+{
+    if (a_Seconds == 0)
+        mSocketConnectTimeout = PR_INTERVAL_NO_TIMEOUT;
+    else
+        mSocketConnectTimeout = PR_SecondsToInterval (a_Seconds);
+    return NS_OK;
+}
+
+nsresult
+nsSocketTransport::fireStatus(PRUint32 aCode)
+{
+  // need to optimize this - TODO
+  nsXPIDLString tempmesg;
+  nsresult rv = GetSocketErrorString(aCode, getter_Copies(tempmesg));
+
+  nsAutoString mesg(tempmesg);
+  if (mPrintHost)
+    mesg.AppendWithConversion(mPrintHost);
+  else
+    mesg.AppendWithConversion(mHostName);
+
+  if (NS_FAILED(rv)) return rv;
+
+  return mEventSink ? mEventSink->OnStatus(this,
+                                           mReadContext, 
+                                           mesg.GetUnicode()) // this gets freed elsewhere.
+                    : NS_ERROR_FAILURE;
 }
 
 //TODO l10n and i18n stuff here!

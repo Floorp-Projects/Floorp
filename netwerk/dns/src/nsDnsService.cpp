@@ -760,6 +760,7 @@ nsDNSService::LookupComplete(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     if (lookup) {
         int error = WSAGETASYNCERROR(lParam);
         rv = lookup->CompletedLookup(error ? NS_ERROR_UNKNOWN_HOST : NS_OK);
+        gService->FreeMsgID(lookup->mMsgID); 
         NS_IF_RELEASE(lookup);
         return NS_SUCCEEDED(rv) ? 0 : -1;
     }

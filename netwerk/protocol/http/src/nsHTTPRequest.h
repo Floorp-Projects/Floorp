@@ -195,6 +195,7 @@ public:
 
     nsresult    GetCurrentRequest (nsHTTPRequest ** o_Req);
     nsresult    AdvanceToNextRequest ();
+    nsresult    RestartRequest ();
 
     nsresult    IsPending (PRBool *result);
     nsresult    Cancel  (nsresult status );

@@ -78,7 +78,7 @@ nsHTTPChunkConv::AsyncConvertData (
     mListener = aListener;
     NS_ADDREF (mListener);
 
-    mAsyncConvContext = aCtxt;
+    mAsyncConvContext = (nsISupportsPRBool *) aCtxt;
 	
     return NS_OK; 
 } 
@@ -199,9 +199,8 @@ nsHTTPChunkConv::OnDataAvailable (
                         }
                         else
                         {
-                            PRBool * eof = (PRBool *) mAsyncConvContext;
-                            if (eof != NULL)
-                                *eof = PR_TRUE;
+                            if (mAsyncConvContext)
+                                mAsyncConvContext -> SetData (PR_TRUE);
                         }
 
 						mState = CHUNK_STATE_INIT;

@@ -106,6 +106,12 @@ enum nsSocketReadWriteInfo {
   eSocketDNS_Wait             = 0x2020
 };
 
+//
+// This is the default timeout value (in milliseconds) for sockets which have
+// no activity...
+//
+#define DEFAULT_SOCKET_CONNECT_TIMEOUT_IN_MS  35*1000
+
 // Forward declarations...
 class nsSocketTransportService;
 class nsIInterfaceRequestor;
@@ -137,7 +143,7 @@ public:
 
   nsresult Process(PRInt16 aSelectFlags);
 
-  nsresult CheckForTimeout(PRIntervalTime aCurrentTime);
+  nsresult CheckForTimeout (PRIntervalTime aCurrentTime);
 
   // Close this socket either right away or once done with the transaction. 
   nsresult CloseConnection(PRBool bNow=PR_TRUE);
@@ -148,8 +154,6 @@ public:
   PRCList*    GetListNode(void)    { return &mListLink;   }
 
   static nsSocketTransport* GetInstance(PRCList* qp) { return (nsSocketTransport*)((char*)qp - offsetof(nsSocketTransport, mListLink)); }
-
-  static void SetSocketTimeout(PRIntervalTime aTimeoutInterval);
 
   PRBool CanBeReused(void) { return 
     (mCurrentState != eSocketState_Error) && !mCloseConnectionOnceDone;}
@@ -167,6 +171,9 @@ protected:
   nsresult GetSocketErrorString(PRUint32 iCode, PRUnichar** oString) const;
 
 private:
+  PRIntervalTime mSocketTimeout;
+  PRIntervalTime mSocketConnectTimeout;
+
   // Access methods for manipulating the ReadWriteInfo...
   inline void SetReadType(nsSocketReadWriteInfo aType) {
     mReadWriteState = (mReadWriteState & ~eSocketRead_Type_Mask) | aType; 

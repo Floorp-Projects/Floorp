@@ -28,6 +28,16 @@ interface nsISocketTransport : nsISupports
 	attribute boolean reuseConnection;
 
 	/**
+	 * socket read/write timeout in seconds; 0 = no timeout
+	 */
+	attribute unsigned long socketTimeout;
+
+	/**
+	 * socket   connect  timeout in seconds; 0 = no timeout
+	 */
+	attribute unsigned long socketConnectTimeout;
+
+	/**
 	 * Is used to tell the channel to stop reading data after a certain point;
 	 * needed by HTTP/1.1
 	 */
@@ -39,7 +49,7 @@ interface nsISocketTransport : nsISupports
 	 *
 	 * @param seconds	amount of time after which the socket is always deemed to be
 	 *					dead (no further checking is done in this case); seconds = 0
-	 *					will cause it not to do timeout checking at all
+	 *					will cause it not to do the timeout checking at all
 	 */
 	boolean	isAlive (in unsigned long seconds);
 };
