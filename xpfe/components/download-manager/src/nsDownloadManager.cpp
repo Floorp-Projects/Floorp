@@ -287,6 +287,23 @@ nsDownloadManager::AssertProgressInfo()
 // nsIDownloadManager
 
 NS_IMETHODIMP
+nsDownloadManager::CreateDownload(nsIDownloadItem** aDownloadItem)
+{
+  NS_ENSURE_ARG_POINTER(aDownloadItem);
+
+  // only one class (DownloadItem) is really going to implement nsIDownloadItem,
+  // which allows us to make many assumptions about how nsIDownloadItem will work
+  // we want to ensure that clients don't get hold of a bogus impl, hence this method
+  DownloadItem* item = new DownloadItem();
+  if (!item) return NS_ERROR_OUT_OF_MEMORY;
+
+  *aDownloadItem = NS_STATIC_CAST(nsIDownloadItem*, item);
+  NS_ADDREF(*aDownloadItem);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDownloadManager::AddDownload(nsIDownloadItem* aDownloadItem)
 {
   NS_ENSURE_ARG_POINTER(aDownloadItem);
@@ -296,7 +313,6 @@ nsDownloadManager::AddDownload(nsIDownloadItem* aDownloadItem)
   if (NS_FAILED(rv)) return rv;
 
   DownloadItem* item = NS_STATIC_CAST(DownloadItem*, aDownloadItem);
-
   item->SetDownloadManager(this);
 
   nsXPIDLCString filePath;
@@ -777,8 +793,13 @@ DownloadItem::UpdateProgressInfo()
   nsresult rv = gRDFService->GetDataSource("rdf:downloads", getter_AddRefs(ds));
   if (NS_FAILED(rv)) return rv;
 
+  nsCOMPtr<nsIRDFResource> res;
+  char* path;
+  mTarget->GetPath(&path);
+  gRDFService->GetResource(path, getter_AddRefs(res));
+
   nsCOMPtr<nsIRDFNode> oldTarget;
-  rv = ds->GetTarget(mDownloadItem, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(oldTarget));
+  rv = ds->GetTarget(res, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(oldTarget));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIRDFInt> percent;
@@ -787,9 +808,9 @@ DownloadItem::UpdateProgressInfo()
   if (NS_FAILED(rv)) return rv;
 
   if (oldTarget)
-    rv = ds->Change(mDownloadItem, gNC_ProgressPercent, oldTarget, percent);
+    rv = ds->Change(res, gNC_ProgressPercent, oldTarget, percent);
   else
-    rv = ds->Assert(mDownloadItem, gNC_ProgressPercent, percent, PR_TRUE);
+    rv = ds->Assert(res, gNC_ProgressPercent, percent, PR_TRUE);
 
   // XXX Store elapsed time here eventually
 
