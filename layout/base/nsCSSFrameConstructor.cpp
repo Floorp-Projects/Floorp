@@ -211,6 +211,8 @@ nsresult
 NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 extern nsresult
 NS_NewSVGImageFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsIFrame** newFrame);
+nsresult
+NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 #endif
 
 #include "nsIDocument.h"
@@ -7491,6 +7493,10 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
   }
   else if (aTag == nsSVGAtoms::image) {
     rv = NS_NewSVGImageFrame(aPresShell, aContent, &newFrame);
+  }
+  else if (aTag == nsSVGAtoms::clipPath) {
+    processChildren = PR_TRUE;
+    rv = NS_NewSVGClipPathFrame(aPresShell, aContent, &newFrame);
   }
   
   if (newFrame == nsnull) {

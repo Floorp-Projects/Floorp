@@ -828,23 +828,26 @@ nsStyleSVG::nsStyleSVG()
 {
     mFill.mType              = eStyleSVGPaintType_Color;
     mFill.mPaint.mColor      = NS_RGB(0,0,0);
-    mFillOpacity             = 1.0f;
-    mFillRule                = NS_STYLE_FILL_RULE_NONZERO;
-    mPointerEvents           = NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED;
-    mShapeRendering          = NS_STYLE_SHAPE_RENDERING_AUTO;
     mStopColor.mType         = eStyleSVGPaintType_Color;
     mStopColor.mPaint.mColor = NS_RGB(0,0,0);
-    mStopOpacity             = 1.0f;
     mStroke.mType            = eStyleSVGPaintType_None;
     mStroke.mPaint.mColor    = NS_RGB(0,0,0);
     mStrokeDasharray         = nsnull;
-    mStrokeDasharrayLength   = 0;
+
+    mFillOpacity             = 1.0f;
+    mStopOpacity             = 1.0f;
     mStrokeDashoffset        = 0.0f;
-    mStrokeLinecap           = NS_STYLE_STROKE_LINECAP_BUTT;
-    mStrokeLinejoin          = NS_STYLE_STROKE_LINEJOIN_MITER;
     mStrokeMiterlimit        = 4.0f;
     mStrokeOpacity           = 1.0f;
     mStrokeWidth             = 1.0f;
+
+    mStrokeDasharrayLength   = 0;
+    mClipRule                = NS_STYLE_FILL_RULE_NONZERO;
+    mFillRule                = NS_STYLE_FILL_RULE_NONZERO;
+    mPointerEvents           = NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED;
+    mShapeRendering          = NS_STYLE_SHAPE_RENDERING_AUTO;
+    mStrokeLinecap           = NS_STYLE_STROKE_LINECAP_BUTT;
+    mStrokeLinejoin          = NS_STYLE_STROKE_LINEJOIN_MITER;
     mTextAnchor              = NS_STYLE_TEXT_ANCHOR_START;
     mTextRendering           = NS_STYLE_TEXT_RENDERING_AUTO;
 }
@@ -859,16 +862,13 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   //memcpy((nsStyleSVG*)this, &aSource, sizeof(nsStyleSVG));
 
   mFill = aSource.mFill;
-  mFillOpacity = aSource.mFillOpacity;
-  mFillRule = aSource.mFillRule;
+  mStopColor = aSource.mStopColor;
+  mStroke = aSource.mStroke;
+
   mMarkerEnd = aSource.mMarkerEnd;
   mMarkerMid = aSource.mMarkerMid;
   mMarkerEnd = aSource.mMarkerStart;
-  mPointerEvents = aSource.mPointerEvents;
-  mShapeRendering = aSource.mShapeRendering;
-  mStopColor = aSource.mStopColor;
-  mStopOpacity = aSource.mStopOpacity;
-  mStroke = aSource.mStroke;
+
   mStrokeDasharrayLength = aSource.mStrokeDasharrayLength;
   if (aSource.mStrokeDasharray) {
     mStrokeDasharray = new float[mStrokeDasharrayLength];
@@ -881,12 +881,20 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   } else {
     mStrokeDasharray = nsnull;
   }
+
+  mFillOpacity = aSource.mFillOpacity;
+  mStopOpacity = aSource.mStopOpacity;
   mStrokeDashoffset = aSource.mStrokeDashoffset;
-  mStrokeLinecap = aSource.mStrokeLinecap;
-  mStrokeLinejoin = aSource.mStrokeLinejoin;
   mStrokeMiterlimit = aSource.mStrokeMiterlimit;
   mStrokeOpacity = aSource.mStrokeOpacity;
   mStrokeWidth = aSource.mStrokeWidth;
+
+  mClipRule = aSource.mClipRule;
+  mFillRule = aSource.mFillRule;
+  mPointerEvents = aSource.mPointerEvents;
+  mShapeRendering = aSource.mShapeRendering;
+  mStrokeLinecap = aSource.mStrokeLinecap;
+  mStrokeLinejoin = aSource.mStrokeLinejoin;
   mTextAnchor = aSource.mTextAnchor;
   mTextRendering = aSource.mTextRendering;
 }
@@ -894,23 +902,26 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
 nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
 {
   if ( mFill                  != aOther.mFill                  ||
-       mFillOpacity           != aOther.mFillOpacity           ||
-       mFillRule              != aOther.mFillRule              ||
+       mStopColor             != aOther.mStopColor             ||
+       mStroke                != aOther.mStroke                ||
        !EqualURIs(mMarkerEnd, aOther.mMarkerEnd)               ||
        !EqualURIs(mMarkerMid, aOther.mMarkerMid)               ||
        !EqualURIs(mMarkerStart, aOther.mMarkerStart)           ||
-       mPointerEvents         != aOther.mPointerEvents         ||
-       mShapeRendering        != aOther.mShapeRendering        ||
-       mStopColor             != aOther.mStopColor             ||
+
+       mFillOpacity           != aOther.mFillOpacity           ||
        mStopOpacity           != aOther.mStopOpacity           ||
-       mStroke                != aOther.mStroke                ||
-       mStrokeDasharrayLength != aOther.mStrokeDasharrayLength ||
        mStrokeDashoffset      != aOther.mStrokeDashoffset      ||
-       mStrokeLinecap         != aOther.mStrokeLinecap         ||
-       mStrokeLinejoin        != aOther.mStrokeLinejoin        ||
        mStrokeMiterlimit      != aOther.mStrokeMiterlimit      ||
        mStrokeOpacity         != aOther.mStrokeOpacity         ||
        mStrokeWidth           != aOther.mStrokeWidth           ||
+
+       mClipRule              != aOther.mClipRule              ||
+       mFillRule              != aOther.mFillRule              ||
+       mPointerEvents         != aOther.mPointerEvents         ||
+       mShapeRendering        != aOther.mShapeRendering        ||
+       mStrokeDasharrayLength != aOther.mStrokeDasharrayLength ||
+       mStrokeLinecap         != aOther.mStrokeLinecap         ||
+       mStrokeLinejoin        != aOther.mStrokeLinejoin        ||
        mTextAnchor            != aOther.mTextAnchor            ||
        mTextRendering         != aOther.mTextRendering)
     return NS_STYLE_HINT_VISUAL;
@@ -935,6 +946,7 @@ nsChangeHint nsStyleSVG::MaxDifference()
 //
 nsStyleSVGReset::nsStyleSVGReset() 
 {
+    mClipPath         = nsnull;
     mDominantBaseline = NS_STYLE_DOMINANT_BASELINE_AUTO;
 }
 
@@ -944,12 +956,14 @@ nsStyleSVGReset::~nsStyleSVGReset()
 
 nsStyleSVGReset::nsStyleSVGReset(const nsStyleSVGReset& aSource)
 {
-  memcpy((nsStyleSVGReset*)this, &aSource, sizeof(nsStyleSVGReset));
+  mClipPath = aSource.mClipPath;
+  mDominantBaseline = aSource.mDominantBaseline;
 }
 
 nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) const
 {
-  if (mDominantBaseline != aOther.mDominantBaseline)
+  if (!EqualURIs(mClipPath, aOther.mClipPath)       ||
+      mDominantBaseline != aOther.mDominantBaseline)
     return NS_STYLE_HINT_VISUAL;
   
   return NS_STYLE_HINT_NONE;

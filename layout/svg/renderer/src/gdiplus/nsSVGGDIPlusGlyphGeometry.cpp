@@ -317,6 +317,52 @@ nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
     Update(nsISVGGeometrySource::UPDATEMASK_ALL, getter_AddRefs(region));
   }
 
+  nsCOMPtr<nsISVGGDIPlusCanvas> gdiplusCanvas = do_QueryInterface(canvas);
+  NS_ASSERTION(gdiplusCanvas, "wrong svg canvas for geometry!");
+  if (!gdiplusCanvas) return NS_ERROR_FAILURE;
+
+  PRUint16 canvasRenderMode;
+  canvas->GetRenderMode(&canvasRenderMode);
+  if (canvasRenderMode == nsISVGRendererCanvas::SVG_RENDER_MODE_CLIP) {
+    nsCOMPtr<nsISVGGDIPlusGlyphMetrics> metrics;
+    {
+      nsCOMPtr<nsISVGRendererGlyphMetrics> xpmetrics;
+      mSource->GetMetrics(getter_AddRefs(xpmetrics));
+      metrics = do_QueryInterface(xpmetrics);
+      NS_ASSERTION(metrics, "wrong metrics object!");
+      if (!metrics)
+        return NS_ERROR_FAILURE;
+    }
+  
+    FontFamily fontFamily;
+    metrics->GetFont()->GetFamily(&fontFamily);
+  
+    nsAutoString text;
+    mSource->GetCharacterData(text);
+
+    float x,y;
+    mSource->GetX(&x);
+    mSource->GetY(&y);
+  
+    GraphicsPath path;
+    path.AddString(PromiseFlatString(text).get(), -1,
+                   &fontFamily, metrics->GetFont()->GetStyle(),
+                   metrics->GetFont()->GetSize(),
+                   PointF(x,y), StringFormat::GenericTypographic());
+
+    PRUint16 rule;
+    mSource->GetClipRule(&rule);
+    if (rule == nsISVGGeometrySource::FILL_RULE_EVENODD)
+      path.SetFillMode(FillModeAlternate);
+    else
+      path.SetFillMode(FillModeWinding);
+
+    Region *region = gdiplusCanvas->GetClipRegion();
+    if (region)
+      region->Union(&path);
+    return NS_OK;
+  }
+
   PRBool hasFill = PR_FALSE, hasStroke = PR_FALSE;
   PRUint16 filltype, stroketype;
 
@@ -333,9 +379,6 @@ nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
   SectionIterator sections(mSource);
   if (sections.IsEnd()) return NS_OK; // nothing to paint
 
-  nsCOMPtr<nsISVGGDIPlusCanvas> gdiplusCanvas = do_QueryInterface(canvas);
-  NS_ASSERTION(gdiplusCanvas, "wrong svg canvas for geometry!");
-  if (!gdiplusCanvas) return NS_ERROR_FAILURE;
   gdiplusCanvas->GetGraphics()->SetSmoothingMode(SmoothingModeAntiAlias);
   //gdiplusCanvas->GetGraphics()->SetPixelOffsetMode(PixelOffsetModeHalf);
   

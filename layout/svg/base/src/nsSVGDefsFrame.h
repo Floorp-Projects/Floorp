@@ -58,7 +58,7 @@ class nsSVGDefsFrame : public nsSVGDefsFrameBase,
 protected:
   nsSVGDefsFrame();
   virtual ~nsSVGDefsFrame();
-  nsresult Init();
+  virtual nsresult Init();
   
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);

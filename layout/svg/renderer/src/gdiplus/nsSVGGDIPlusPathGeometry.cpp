@@ -383,6 +383,23 @@ nsSVGGDIPlusPathGeometry::Render(nsISVGRendererCanvas *canvas)
   NS_ASSERTION(gdiplusCanvas, "wrong svg render context for geometry!");
   if (!gdiplusCanvas) return NS_ERROR_FAILURE;
 
+  PRUint16 canvasRenderMode;
+  canvas->GetRenderMode(&canvasRenderMode);
+  if (canvasRenderMode == nsISVGRendererCanvas::SVG_RENDER_MODE_CLIP) {
+    Region *region = gdiplusCanvas->GetClipRegion();
+    GraphicsPath *path = GetFill();
+
+    PRUint16 rule;
+    mSource->GetClipRule(&rule);
+    if (rule == nsISVGGeometrySource::FILL_RULE_EVENODD)
+      path->SetFillMode(FillModeAlternate);
+    else
+      path->SetFillMode(FillModeWinding);
+
+    region->Union(path);
+    return NS_OK;
+  }
+
   PRUint16 renderingMode;
   mSource->GetShapeRendering(&renderingMode);
   switch (renderingMode) {

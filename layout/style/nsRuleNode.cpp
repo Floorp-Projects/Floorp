@@ -4465,6 +4465,15 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   if (!parentSVG)
     parentSVG = svg;
 
+  // clip-rule: enum, inherit
+  if (eCSSUnit_Enumerated == SVGData.mClipRule.GetUnit()) {
+    svg->mClipRule = SVGData.mClipRule.GetIntValue();
+  }
+  else if (eCSSUnit_Inherit == SVGData.mClipRule.GetUnit()) {
+    inherited = PR_TRUE;
+    svg->mClipRule = parentSVG->mClipRule;
+  }
+
   // fill: 
   SetSVGPaint(SVGData.mFill, parentSVG->mFill, mPresContext, aContext, svg->mFill, inherited);
 
@@ -4696,6 +4705,16 @@ nsRuleNode::ComputeSVGResetData(nsStyleStruct* aStartStruct,
     parentSVGReset = parentContext->GetStyleSVGReset();
 
   PRBool inherited = aInherited;
+
+  // clip-path: url, none, inherit
+  if (eCSSUnit_URL == SVGData.mClipPath.GetUnit()) {
+    svgReset->mClipPath = SVGData.mClipPath.GetURLValue();
+  } else if (eCSSUnit_None == SVGData.mClipPath.GetUnit()) {
+    svgReset->mClipPath = nsnull;
+  } else if (eCSSUnit_Inherit == SVGData.mClipPath.GetUnit()) {
+    inherited = PR_TRUE;
+    svgReset->mClipPath = parentSVGReset->mClipPath;
+  }
 
   // dominant-baseline: enum, auto, inherit
   if (eCSSUnit_Enumerated == SVGData.mDominantBaseline.GetUnit()) {

@@ -56,6 +56,7 @@
 
 // tags
 SVG_ATOM(circle, "circle")
+SVG_ATOM(clipPath, "clipPath")
 SVG_ATOM(defs, "defs")
 SVG_ATOM(desc, "desc")
 SVG_ATOM(ellipse, "ellipse")
@@ -92,6 +93,7 @@ SVG_ATOM(_class, "class")
 SVG_ATOM(clip, "clip")
 SVG_ATOM(clip_path, "clip-path")
 SVG_ATOM(clip_rule, "clip-rule")
+SVG_ATOM(clipPathUnits, "clipPathUnits")
 SVG_ATOM(color, "color")
 SVG_ATOM(cursor, "cursor")
 SVG_ATOM(cx, "cx")
@@ -213,7 +215,7 @@ SVG_ATOM(pad, "pad")
 SVG_ATOM(reflect, "reflect")
 SVG_ATOM(repeat, "repeat")
 
-// Gradient/Marker Units
+// Gradient/Marker/ClipPath Units
 SVG_ATOM(userSpaceOnUse, "userSpaceOnUse")
 SVG_ATOM(objectBoundingBox, "objectBoundingBox")
 

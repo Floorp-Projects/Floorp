@@ -853,38 +853,52 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
     fprintf(out, "%s ", URICString(svg->mFill.mPaint.mPaintServer).get());
   else
     fprintf(out, "%ld ", (long)svg->mFill.mPaint.mColor);
-  fprintf(out, "%f %d %s %s %s %d %d %d ",
-          svg->mFillOpacity,
-          (int)svg->mFillRule,
-          URICString(svg->mMarkerEnd).get(),
-          URICString(svg->mMarkerMid).get(),
-          URICString(svg->mMarkerStart).get(),
-          (int)svg->mPointerEvents,
-          (int)svg->mShapeRendering,
-          (int)svg->mStroke.mType);
+
+  fprintf(out, "%d ", (int)svg->mStopColor.mType);
+  if (svg->mStopColor.mType == eStyleSVGPaintType_Server)
+    fprintf(out, "%s ", URICString(svg->mStopColor.mPaint.mPaintServer).get());
+  else
+    fprintf(out, "%ld ", (long)svg->mStopColor.mPaint.mColor);
+
+  fprintf(out, "%d ", (int)svg->mStroke.mType);
   if (svg->mStroke.mType == eStyleSVGPaintType_Server)
     fprintf(out, "%s ", URICString(svg->mStroke.mPaint.mPaintServer).get());
   else
     fprintf(out, "%ld ", (long)svg->mStroke.mPaint.mColor);
+
+  fprintf(out, "%s %s ",
+          URICString(svg->mMarkerEnd).get(),
+          URICString(svg->mMarkerMid).get(),
+          URICString(svg->mMarkerStart).get());
+
   for (PRUint32 i = 0; i < svg->mStrokeDasharrayLength; i++)
     fprintf(out,
             "%f%c",
             svg->mStrokeDasharray[i],
             (i == svg->mStrokeDasharrayLength) ? ' ' : ',');
-  fprintf(out, "%f %d %d %f %f %f %d %d\" />\n",
+
+  fprintf(out, "%f %f %f %f %f %f %d %d %d %d %d %d %d %d %d\" />\n",
+          svg->mFillOpacity,
+          svg->mStopOpacity,
           svg->mStrokeDashoffset,
-          (int)svg->mStrokeLinecap,
-          (int)svg->mStrokeLinejoin,
           svg->mStrokeMiterlimit,
           svg->mStrokeOpacity,
           svg->mStrokeWidth,
+          (int)svg->mStrokeDasharrayLength,
+          (int)svg->mClipRule,
+          (int)svg->mFillRule,
+          (int)svg->mPointerEvents,
+          (int)svg->mShapeRendering,
+          (int)svg->mStrokeLinecap,
+          (int)svg->mStrokeLinejoin,
           (int)svg->mTextAnchor,
           (int)svg->mTextRendering);
 
   // SVGReset
   IndentBy(out,aIndent);
   const nsStyleSVGReset* svgReset = GetStyleSVGReset();
-  fprintf(out, "<svgreset data=\"%d\" />\n",
+  fprintf(out, "<svgreset data=\"%s %d\" />\n",
+          URICString(svgReset->mClipPath).get(),
           (int)svgReset->mDominantBaseline);
 #endif
   //#insert new style structs here#

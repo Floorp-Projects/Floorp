@@ -55,6 +55,7 @@ using namespace Gdiplus;
 #include "nsIRenderingContextWin.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsISVGGDIPlusSurface.h"
+#include "nsVoidArray.h"
 
 /**
  * \addtogroup gdiplus_renderer GDI+ Rendering Engine
@@ -80,7 +81,7 @@ public:
 
   // nsISVGGDIPlusCanvas interface:
   NS_IMETHOD_(Graphics*) GetGraphics();
-  
+  NS_IMETHOD_(Region*) GetClipRegion();
 
 private:
   nsCOMPtr<nsIRenderingContext> mMozContext;
@@ -88,6 +89,8 @@ private:
   Graphics *mGraphics;
   nsVoidArray mClipStack;
   nsVoidArray mSurfaceStack;
+  Region mClipRegion;
+  PRUint16 mRenderMode;
 
 #ifdef SVG_GDIPLUS_ENABLE_OFFSCREEN_BUFFER
   Bitmap *mOffscreenBitmap;
@@ -182,6 +185,8 @@ nsSVGGDIPlusCanvas::Init(nsIRenderingContext* ctx,
 #else
   mGraphics->TranslateTransform(dx/scale, dy/scale, MatrixOrderPrepend);
 #endif
+
+  mRenderMode = SVG_RENDER_MODE_NORMAL;
   
   return NS_OK;
 }
@@ -324,6 +329,28 @@ nsSVGGDIPlusCanvas::GetGraphics()
 #endif
 }
 
+NS_IMETHODIMP
+nsSVGGDIPlusCanvas::GetRenderMode(PRUint16 *aMode)
+{
+  *aMode = mRenderMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGGDIPlusCanvas::SetRenderMode(PRUint16 aMode)
+{
+  if (mRenderMode == SVG_RENDER_MODE_CLIP && aMode == SVG_RENDER_MODE_NORMAL)
+    mGraphics->SetClip(&mClipRegion, CombineModeIntersect);
+  mRenderMode = aMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(Region*)
+nsSVGGDIPlusCanvas::GetClipRegion()
+{
+  return &mClipRegion;
+}
+
 /** Implements pushClip(); */
 NS_IMETHODIMP
 nsSVGGDIPlusCanvas::PushClip()
@@ -333,6 +360,8 @@ nsSVGGDIPlusCanvas::PushClip()
     mGraphics->GetClip(region);
   // append even if we failed to allocate the region so push/pop match
   mClipStack.AppendElement((void *)region);
+
+  mClipRegion.MakeEmpty();
 
   return NS_OK;
 }

@@ -81,7 +81,6 @@ private:
 nsSVGCairoPathBuilder::nsSVGCairoPathBuilder(cairo_t *ctx)
   : mCR(ctx)
 {
-  cairo_new_path(mCR);
 }
 
 nsresult

@@ -355,6 +355,18 @@ nsSVGLibartCanvas::GetArtColor(nscolor rgb, ArtColor& artColor)
   }
 }
 
+NS_IMETHODIMP
+nsSVGLibartCanvas::GetRenderMode(PRUint16 *aMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsSVGLibartCanvas::SetRenderMode(PRUint16 mode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /** Implements void flush(); */
 NS_IMETHODIMP
 nsSVGLibartCanvas::PushClip()

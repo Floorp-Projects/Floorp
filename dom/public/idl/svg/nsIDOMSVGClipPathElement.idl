@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,13 +14,11 @@
  *
  * The Original Code is the Mozilla SVG project.
  *
- * The Initial Developer of the Original Code is
- * Crocodile Clips Ltd..
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,47 +34,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_ISVGGDIPLUS_CANVAS_H__
-#define __NS_ISVGGDIPLUS_CANVAS_H__
-
-#include <windows.h>
-
-// unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
-#include <unknwn.h>
-
-#include <Gdiplus.h>
-using namespace Gdiplus;
-
-#include "nsISVGRendererCanvas.h"
-
-// {c4cd849e-a0aa-405b-bc75-ba8982319fe4}
-#define NS_ISVGGDIPLUSCANVAS_IID \
-{ 0xc4cd849e, 0xa0aa, 0x405b, { 0xbc, 0x75, 0xba, 0x89, 0x82, 0x31, 0x9f, 0xe4} }
+#include "nsIDOMSVGElement.idl"
 
 /**
- * \addtogroup gdiplus_renderer GDI+ Rendering Engine
- * @{
+ * The nsIDOMSVGClipPathElement interface is the interface to an SVG
+ * clipPath element.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/SVG11/masking.html
+ *
  */
 
-/**
- * 'Private' rendering engine interface
- */
-class nsISVGGDIPlusCanvas : public nsISVGRendererCanvas
+interface nsIDOMSVGAnimatedEnumeration;
+
+[scriptable, uuid(0c3f45a4-e6d0-44e7-a2f8-d128ecf1db9b)]
+interface nsIDOMSVGClipPathElement
+  : nsIDOMSVGElement
+/*
+  The SVG DOM makes use of multiple interface inheritance.
+  Since XPCOM only supports single interface inheritance,
+  the best thing that we can do is to promise that whenever
+  an object implements _this_ interface it will also
+  implement the following interfaces. (We then have to QI to
+  hop between them.)
+  
+    nsIDOMSVGTests,
+    nsIDOMSVGLangSpace,
+    nsIDOMSVGExternalResourcesRequired,
+    nsIDOMSVGStylable,
+    nsIDOMSVGTransformable,
+*/
 {
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGGDIPLUSCANVAS_IID)
+  // Extended to provide enumerations for clipPathUnits
+  // These constants are taken from SVGUnitTypes
+  const unsigned short SVG_CPUNITS_UNKNOWN = 0;
+  const unsigned short SVG_CPUNITS_OBJECTBOUNDINGBOX = 1;
+  const unsigned short SVG_CPUNITS_USERSPACEONUSE = 2;
 
-  /**
-   * Obtain the Gdiplus::Graphics object for this canvas.
-   */
-  NS_IMETHOD_(Graphics*) GetGraphics()=0;
-
-  /**
-   * Obtain the GdiPlus::Region clip path.
-   */
-  NS_IMETHOD_(Region*) GetClipRegion()=0;
+  readonly attribute nsIDOMSVGAnimatedEnumeration clipPathUnits;
 };
-
-/** @} */
-
-#endif //__NS_ISVGGDIPLUS_CANVAS_H__

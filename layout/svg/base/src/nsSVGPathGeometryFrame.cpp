@@ -57,6 +57,10 @@
 #include "nsISVGMarkable.h"
 #include "nsIViewManager.h"
 #include "nsSVGMatrix.h"
+#include "nsSVGClipPathFrame.h"
+#include "nsISVGRendererCanvas.h"
+#include "nsSVGAtoms.h"
+#include "nsIViewManager.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGPathGeometryFrame
@@ -186,6 +190,29 @@ nsSVGPathGeometryFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyR
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
 
+  /* check for a clip path */
+
+  nsIURI *aURI;
+  nsSVGClipPathFrame *clip = NULL;
+  aURI = GetStyleSVGReset()->mClipPath;
+  if (aURI) {
+    NS_GetSVGClipPathFrame(&clip, aURI, mContent);
+
+    if (clip) {
+      nsCOMPtr<nsIDOMSVGMatrix> matrix;
+      GetCanvasTM(getter_AddRefs(matrix));
+      canvas->PushClip();
+      clip->ClipPaint(canvas, this, matrix);
+    }
+
+#ifdef DEBUG_tor    
+    nsCAutoString spec;
+    aURI->GetAsciiSpec(spec);
+    fprintf(stderr, "CLIPPATH %s %p\n", spec.get(), clip);
+#endif
+  }
+
+  /* render */
   GetGeometry()->Render(canvas);
   
   nsISVGMarkable *markable;
@@ -217,6 +244,9 @@ nsSVGPathGeometryFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyR
       markerEnd->PaintMark(canvas, this, (nsSVGMark *)marks[num-1], strokeWidth);
   }
 
+  if (clip)
+    canvas->PopClip();
+
   return NS_OK;
 }
 
@@ -231,8 +261,25 @@ nsSVGPathGeometryFrame::GetFrameForPoint(float x, float y, nsIFrame** hit)
   *hit = nsnull;
   PRBool isHit;
   GetGeometry()->ContainsPoint(x, y, &isHit);
-  if (isHit) 
-    *hit = this;
+
+  if (isHit) {
+    PRBool clipHit = PR_TRUE;;
+
+    nsIURI *aURI;
+    nsSVGClipPathFrame *clip = NULL;
+    aURI = GetStyleSVGReset()->mClipPath;
+    if (aURI)
+      NS_GetSVGClipPathFrame(&clip, aURI, mContent);
+
+    if (clip) {
+      nsCOMPtr<nsIDOMSVGMatrix> matrix;
+      GetCanvasTM(getter_AddRefs(matrix));
+      clip->ClipHitTest(this, matrix, x, y, &clipHit);
+    }
+
+    if (clipHit)
+      *hit = this;
+  }
   
   return NS_OK;
 }
@@ -508,6 +555,14 @@ nsSVGPathGeometryFrame::GetFillRule(PRUint16 *aFillRule)
   return NS_OK;
 }
 
+/* readonly attribute unsigned short clipRule; */
+NS_IMETHODIMP
+nsSVGPathGeometryFrame::GetClipRule(PRUint16 *aClipRule)
+{
+  *aClipRule = GetStyleSVG()->mClipRule;
+  return NS_OK;
+}
+
 /* readonly attribute unsigned short strokePaintType; */
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokePaintType(PRUint16 *aStrokePaintType)
@@ -562,6 +617,24 @@ nsSVGPathGeometryFrame::GetFillGradient(nsISVGGradient **aGrad)
     return NS_ERROR_FAILURE;
   // Now have the URI.  Get the gradient 
   return NS_GetSVGGradient(aGrad, aServer, mContent, nsSVGPathGeometryFrameBase::GetPresContext()->PresShell());
+}
+
+/* [noscript] boolean isClipChild; */
+NS_IMETHODIMP
+nsSVGPathGeometryFrame::IsClipChild(PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  nsCOMPtr<nsIContent> node(mContent);
+
+  do {
+    if (node->Tag() == nsSVGAtoms::clipPath) {
+      *_retval = PR_TRUE;
+      break;
+    }
+    node = node->GetParent();
+  } while (node);
+    
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

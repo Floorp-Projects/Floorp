@@ -86,8 +86,8 @@ private:
   nsCOMPtr<nsPresContext> mPresContext;
   cairo_t *mCR;
   PRUint32 mWidth, mHeight;
-
   nsVoidArray mSurfaceStack;
+  PRUint16 mRenderMode;
 };
 
 
@@ -141,6 +141,8 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
                   dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
   cairo_clip(mCR);
   cairo_new_path(mCR);
+
+  mRenderMode = SVG_RENDER_MODE_NORMAL;
 
   return NS_OK;
 }
@@ -229,6 +231,22 @@ nsSVGCairoCanvas::Clear(nscolor color)
 NS_IMETHODIMP
 nsSVGCairoCanvas::Flush()
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGCairoCanvas::GetRenderMode(PRUint16 *aMode)
+{
+  *aMode = mRenderMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGCairoCanvas::SetRenderMode(PRUint16 mode)
+{
+  if (mRenderMode == SVG_RENDER_MODE_CLIP && mode == SVG_RENDER_MODE_NORMAL)
+    cairo_clip(mCR);
+  mRenderMode = mode;
   return NS_OK;
 }
 

@@ -78,6 +78,7 @@ CPPSRCS		= \
 		nsSVGAtoms.cpp \
 		nsSVGCircleElement.cpp \
 		nsSVGClassValue.cpp \
+		nsSVGClipPathElement.cpp \
 		nsSVGCoordCtxProvider.cpp \
 		nsSVGDefsElement.cpp \
 		nsSVGDescElement.cpp \

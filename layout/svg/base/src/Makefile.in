@@ -65,6 +65,7 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= \
 		nsSVGCircleFrame.cpp \
+		nsSVGClipPathFrame.cpp \
 		nsSVGDefsFrame.cpp \
 		nsSVGEllipseFrame.cpp \
 		nsSVGForeignObjectFrame.cpp \
