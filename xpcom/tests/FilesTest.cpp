@@ -45,8 +45,8 @@ struct FilesTest
     int Persistence(const char* relativePath);
     int FileSpecEquality(const char *aFile, const char *bFile);
     int FileSpecAppend(nsFileSpec& parent, const char* relativePath);
-    int Copy(const char*  sourceFile, const char* targDir);
-    int Move(const char*  sourceFile, const char*  targDir);
+    int CopyToDir(const char*  sourceFile, const char* targDir);
+    int MoveToDir(const char*  sourceFile, const char*  targDir);
     int Rename(const char*  sourceFile, const char* newName);
     
     int DiskSpace();
@@ -537,7 +537,7 @@ int FilesTest::FileSpecEquality(const char *aFile, const char *bFile)
 } // FilesTest::FileSpecEquality
 
 //----------------------------------------------------------------------------------------
-int FilesTest::Copy(const char* file, const char* dir)
+int FilesTest::CopyToDir(const char* file, const char* dir)
 //----------------------------------------------------------------------------------------
 {
     nsFileSpec dirPath(nsFilePath(dir, PR_TRUE));
@@ -557,7 +557,7 @@ int FilesTest::Copy(const char* file, const char* dir)
     if (! filePath.Exists())
         return Failed();
    
-    nsresult error = filePath.Copy(dirPath);
+    nsresult error = filePath.CopyToDir(dirPath);
 
     char* leafName = filePath.GetLeafName();
     dirPath += leafName;
@@ -570,7 +570,7 @@ int FilesTest::Copy(const char* file, const char* dir)
 }
 
 //----------------------------------------------------------------------------------------
-int FilesTest::Move(const char* file, const char* dir)
+int FilesTest::MoveToDir(const char* file, const char* dir)
 //----------------------------------------------------------------------------------------
 {
     nsFileSpec dirPath(nsFilePath(dir, PR_TRUE));
@@ -589,7 +589,7 @@ int FilesTest::Move(const char* file, const char* dir)
     if (! srcSpec.Exists())
         return Failed();
    
-    nsresult error = srcSpec.Move(dirPath);
+    nsresult error = srcSpec.MoveToDir(dirPath);
 
     char* leafName = srcSpec.GetLeafName();
     dirPath += leafName;
@@ -1039,12 +1039,12 @@ int FilesTest::RunAllTests()
 	    goto Clean;
 
     Banner("Copy");
-    rv = Copy("mumble/copyfile.txt", "mumble/copy");
+    rv = CopyToDir("mumble/copyfile.txt", "mumble/copy");
 	if (rv)
 	    goto Clean;
     
     Banner("Move");
-    rv = Move("mumble/moveFile.txt", "mumble/move");
+    rv = MoveToDir("mumble/moveFile.txt", "mumble/move");
 	if (rv)
 	    goto Clean;
 
