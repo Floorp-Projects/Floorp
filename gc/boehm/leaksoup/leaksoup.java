@@ -62,14 +62,27 @@ class Leak {
 			return (l1.mRefCount - l2.mRefCount);
 		}
 	}
+	
+	public static void sort(Leak[] leaks) {
+		QuickSort sorter = new QuickSort(new Comparator());
+		sorter.sort(leaks);
+	}
 }
 
 public class leaksoup {
 	public static void main(String[] args) {
+		if (args.length == 0) {
+			System.out.println("usage:  leaksoup leaks");
+			System.exit(1);
+		}
+		
+		String inputName = args[0];
+	
 		try {
 			Vector vec = new Vector();
 			Hashtable table = new Hashtable();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(args[0])));
+			Histogram hist = new Histogram();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputName)));
 			String line = reader.readLine();
 			while (line != null) {
 				if (line.startsWith("0x")) {
@@ -77,7 +90,7 @@ public class leaksoup {
 					String type = line.substring(line.indexOf('<'), line.indexOf('>') + 1);
 					int size;
 					try {
-						String str = line.substring(line.indexOf('=') + 1, line.indexOf(')')).trim();
+						String str = line.substring(line.indexOf('(') + 1, line.indexOf(')')).trim();
 						size = Integer.parseInt(str);
 					} catch (NumberFormatException nfe) {
 						size = 0;
@@ -88,6 +101,9 @@ public class leaksoup {
 					Object[] refs = new Object[vec.size()];
 					vec.copyInto(refs);
 					table.put(addr, new Leak(addr, type, refs, size));
+					if (type.equals("<void*>"))
+						type = "(" + size + ") <void*>";
+					hist.record(type);
 				} else {
 					line = reader.readLine();
 				}
@@ -122,25 +138,65 @@ public class leaksoup {
 			table.clear();
 			table = null;
 			
-			// sort the leaks by reference count.
-			QuickSort sorter = new QuickSort(new Leak.Comparator());
-			sorter.sort(leaks);
+			// store the leak report in inputName + ".soup"
+			PrintStream out = new PrintStream(new FileOutputStream(inputName + ".soup"));
 			
-			System.out.println("Leak Soup Report:");
-			System.out.println("total objects leaked = " + leakCount);
-			System.out.println("total memory leaked  = " + totalSize + " bytes.");
-
-			// now, print the report, sorted by reference count.
-			for (int i = 0; i < leakCount; i++) {
-				Leak leak = leaks[i];
-				System.out.println(leak);
-				Object[] refs = leak.mReferences;
-				int count = refs.length;
-				for (int j = 0; j < count; j++)
-					System.out.println("\t" + refs[j]);
-			}
+			// print the object histogram report.
+			printHistogram(out, hist);
+			
+			// print the leak report.
+			printLeaks(out, leaks, leakCount, totalSize);
+			
+			out.close();
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
+		}
+	}
+	
+	static void printLeaks(PrintStream out, Leak[] leaks, int leakCount, long totalSize) throws IOException {
+		// sort the leaks by reference count.
+		QuickSort sorter = new QuickSort(new Leak.Comparator());
+		sorter.sort(leaks);
+		
+		// store reduced leaks in "RuntimeLeaks.soup"
+		out.println("Leak Soup Report:");
+		out.println("total objects leaked = " + leakCount);
+		out.println("total memory leaked  = " + totalSize + " bytes.");
+
+		// now, print the report, sorted by reference count.
+		for (int i = 0; i < leakCount; i++) {
+			Leak leak = leaks[i];
+			out.println(leak);
+			Object[] refs = leak.mReferences;
+			int count = refs.length;
+			for (int j = 0; j < count; j++)
+				out.println("\t" + refs[j]);
+		}
+	}
+	
+	static class HistComparator implements QuickSort.Comparator {
+		Histogram hist;
+		
+		HistComparator(Histogram hist) {
+			this.hist = hist;
+		}
+	
+		public int compare(Object obj1, Object obj2) {
+			return (hist.count(obj1) - hist.count(obj2));
+		}
+	}
+
+	static void printHistogram(PrintStream out, Histogram hist) throws IOException {
+		// sort the objects by histogram count.
+		Object[] objects = hist.objects();
+		QuickSort sorter = new QuickSort(new HistComparator(hist));
+		sorter.sort(objects);
+		
+		out.println("Leak Type Histogram:");
+		int count = objects.length;
+		while (count > 0) {
+			Object object = objects[--count];
+			out.println(object.toString() + " : " + hist.count(object));
 		}
 	}
 }
