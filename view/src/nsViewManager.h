@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: true; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -31,20 +31,24 @@
 #include "prtime.h"
 #include "prinrval.h"
 #include "nsVoidArray.h"
+#include "nsHashtable.h"
 #include "nsIScrollableView.h"
 #include "nsIRegion.h"
 #include "nsIBlender.h"
 
-// Uncomment this line to enable the performance timer for the view manager.
+class nsISupportsArray;
+struct DisplayListElement2;
+struct DisplayZTreeNode;
+
+//Uncomment the following line to enable generation of viewmanager performance data.
 #ifdef MOZ_PERF_METRICS
-//#define NS_VM_PERF_METRICS 1
+//#define NS_VM_PERF_METRICS 1 
 #endif
 
 #ifdef NS_VM_PERF_METRICS
 #include "nsTimer.h"
 #endif
 
-class nsISupportsArray;
 
 // Dont want to get rid of timer code, because we may want to use it
 // if we go to a implementation where we have invalidates that have been queued
@@ -152,19 +156,18 @@ public:
   NS_IMETHOD GetWidget(nsIWidget **aWidget);
   NS_IMETHOD ForceUpdate();
   NS_IMETHOD GetOffset(nscoord *aX, nscoord *aY);
-
+ 
   NS_IMETHOD IsCachingWidgetChanges(PRBool* aCaching);
   NS_IMETHOD CacheWidgetChanges(PRBool aCache);
-
-  
 protected:
   virtual ~nsViewManager();
 
 private:
 	nsIRenderingContext *CreateRenderingContext(nsIView &aView);
 	void AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) const;
-	void UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) const;
 	void UpdateTransCnt(nsIView *oldview, nsIView *newview);
+
+    PRBool UpdateAllCoveringWidgets(nsIView *aView, nsIView *aTarget, nsRect &aDamagedRect);
 
 	void ProcessPendingUpdates(nsIView *aView);
 	void UpdateViews(nsIView *aView, PRUint32 aUpdateFlags);
@@ -175,17 +178,33 @@ private:
 	             const nsRect *rect, PRUint32 aUpdateFlags);
 	void RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect,
 					 PRBool &aResult);
+
 	void RenderView(nsIView *aView, nsIRenderingContext &aRC,
 					const nsRect &aDamageRect, nsRect &aGlobalRect, PRBool &aResult);
-	PRBool CreateDisplayList(nsIView *aView, PRInt32 *aIndex, nscoord aOriginX, nscoord aOriginY,
-	                       nsIView *aRealView, const nsRect *aDamageRect = nsnull,
-	                       nsIView *aTopView = nsnull, nsVoidArray *aArray = nsnull,
-	                       nscoord aX = 0, nscoord aY = 0);
-	PRBool AddToDisplayList(nsVoidArray *aArray, PRInt32 *aIndex,
-	                      nsIView *aView, nsRect &aRect, PRUint32 aFlags);
+
+    void RenderDisplayListElement(DisplayListElement2* element, nsIRenderingContext &aRC);
+
+	void PaintView(nsIView *aView, nsIRenderingContext &aRC, nscoord x, nscoord y,
+				  const nsRect &aDamageRect);
+    
+    nsresult CreateBlendingBuffers(nsIRenderingContext &aRC);
+					
+	PRBool CreateDisplayList(nsIView *aView, PRBool aReparentedViewsPresent, DisplayZTreeNode* &aResult, nscoord aOriginX, nscoord aOriginY,
+	                       PRBool aInsideRealView, nsIView *aRealView, const nsRect *aDamageRect = nsnull,
+	                       nsIView *aTopView = nsnull, nscoord aX = 0, nscoord aY = 0);
+	PRBool AddToDisplayList(nsIView *aView, DisplayZTreeNode* &aParent, nsRect &aClipRect, nsRect& aDirtyRect, PRUint32 aFlags, nscoord aAbsX, nscoord aAbsY);
+    void ReapplyClipInstructions(PRBool aHaveClip, nsRect& aClipRect, PRInt32& aIndex);
+	nsresult OptimizeDisplayList(const nsRect& aDamageRect);
+    // Remove redundant PUSH/POP_CLIP pairs.
+    void OptimizeDisplayListClipping(PRBool aHaveClip, nsRect& aClipRect, PRInt32& aIndex,
+                                     PRBool& aAnyRendered);
 	void ShowDisplayList(PRInt32 flatlen);
-	void ComputeViewOffset(nsIView *aView, nscoord *aX, nscoord *aY, PRInt32 aFlag);
-	PRBool DoesViewHaveNativeWidget(nsIView &aView);
+	void ComputeViewOffset(nsIView *aView, nsPoint *aOrigin);
+
+	// Predicates
+	PRBool DoesViewHaveNativeWidget(nsIView* aView);
+	PRBool IsClipView(nsIView* aView);
+
 	void PauseTimer(void);
 	void RestartTimer(void);
 
@@ -204,7 +223,7 @@ private:
 	void ViewToWidget(nsIView *aView, nsIView* aWidgetView, nsRect &aRect) const;
 	// void WidgetToView(nsIView* aView, nsRect &aWidgetRect);
 
-    /**
+  /**
 	 * Transforms a rectangle from specified view's coordinate system to
 	 * an absolute coordinate rectangle which can be compared against the
    * rectangle returned by GetVisibleRect to determine visibility.
@@ -233,8 +252,62 @@ private:
 	 */
   PRBool IsRectVisible(nsIView *aView, const nsRect &aRect);
 
+  nsresult ProcessWidgetChanges(nsIView* aView);
+
+  // Utilities used to size the offscreen drawing surface
+
+  /**
+	 * Determine the maximum and width and height of all of the
+   * view manager's widgets.
+   *
+   * @param aMaxWidgetBounds the maximum width and height of all view managers
+   * widgets on exit.
+	 */
+  void GetMaxWidgetBounds(nsRect& aMaxWidgetBounds) const;
+
+  /**
+	 * Determine if a rect's width and height will fit within a specified width and height
+   * @param aRect rectangle to test
+   * @param aWidth width to determine if the rectangle's width will fit within
+   * @param aHeight height to determine if the rectangles height will fit within
+   * @returns PR_TRUE if the rect width and height fits with aWidth, aHeight, PR_FALSE
+   * otherwise.
+	 */
+  PRBool RectFitsInside(nsRect& aRect, PRInt32 aWidth, PRInt32 aHeight) const;
+
+  /**
+	 * Determine if two rectangles width and height will fit within a specified width and height
+   * @param aRect1 first rectangle to test
+   * @param aRect1 second rectangle to test
+   * @param aWidth width to determine if both rectangle's width will fit within
+   * @param aHeight height to determine if both rectangles height will fit within
+   * @returns PR_TRUE if the rect1's and rect2's width and height fits with aWidth,
+   * aHeight, PR_FALSE otherwise.
+	 */
+  PRBool BothRectsFitInside(nsRect& aRect1, nsRect& aRect2, PRInt32 aWidth, PRInt32 aHeight, nsRect& aNewSize) const;
+  
+  /**
+	 * Return an offscreen surface size from a set of discrete surface sizes.
+   * The smallest discrete surface size that can enclose both the Maximum widget 
+   * size (@see GetMaxWidgetBounds) and the requested size is returned.
+   *
+   * @param aRequestedSize Requested size for the offscreen.
+   * @param aSurfaceSize contains the surface size 
+	 */
+  void CalculateDiscreteSurfaceSize(nsRect& aRequestedSize, nsRect& aSize) const;
+
+  /**
+	 * Get the size of the offscreen drawing surface..
+   *
+   * @param aRequestedSize Desired size for the offscreen.
+   * @param aSurfaceSize   Offscreen adjusted to a discrete size which encloses aRequestedSize.
+	 */
+  void GetDrawingSurfaceSize(nsRect& aRequestedSize, nsRect& aSurfaceSize) const;
+
 private:
   nsIDeviceContext  *mContext;
+  float				mTwipsToPixels;
+  float				mPixelsToTwips;
   nsIViewObserver   *mObserver;
   nsIWidget         *mRootWindow;
   PRIntervalTime    mLastRefresh;
@@ -245,8 +318,14 @@ private:
   nsIView           *mKeyGrabber;
   PRInt32           mUpdateCnt;
   PRInt32           mUpdateBatchCnt;
-  nsVoidArray       *mDisplayList;
+  PRInt32           mDisplayListCount;
+  nsVoidArray       mDisplayList;
+  PRInt32			mTranslucentViewCount;
+  nsRect            mTranslucentArea;       // bounding box of all translucent views.
   nsIScrollableView *mRootScrollable;
+  PRInt32           mCachingWidgetChanges;
+
+  nsHashtable       mMapPlaceholderViewToZTreeNode;
 
   //from here to public should be static and locked... MMP
   static PRInt32           mVMCount;        //number of viewmanagers
@@ -255,32 +334,33 @@ private:
 
   //blending buffers
   static nsDrawingSurface  gOffScreen;
-  static nsDrawingSurface  gRed;
-  static nsDrawingSurface  gBlue;
-  static PRInt32           gBlendWidth;
-  static PRInt32           gBlendHeight;
+  static nsDrawingSurface  gBlack;
+  static nsDrawingSurface  gWhite;
+  static nsSize            gOffScreenSize;
+
+  // Largest requested offscreen size if larger than a full screen.
+  static nsSize            gLargestRequestedSize;
+
+  //list of view managers
+  static nsVoidArray       *gViewManagers;
 
   //compositor regions
-  nsIRegion         *mTransRgn;
   nsIRegion         *mOpaqueRgn;
-  nsIRegion         *mRCRgn;
-  nsIRegion         *mTRgn;
-  nsRegionRectSet   *mTransRects;
+  nsIRegion         *mTmpRgn;
 
   nsIBlender        *mBlender;
 
   nsIRenderingContext *mOffScreenCX;
-  nsIRenderingContext *mRedCX;
-  nsIRenderingContext *mBlueCX;
+  nsIRenderingContext *mBlackCX;
+  nsIRenderingContext *mWhiteCX;
 
   nsISupportsArray  *mCompositeListeners;
 
 public:
   //these are public so that our timer callback can poke them.
-#if NS_VIEWMANAGER_NEEDS_TIMER
+#ifdef NS_VIEWMANAGER_NEEDS_TIMER
   nsCOMPtr<nsITimer> mTimer;
 #endif
-  nsRect            mDirtyRect;
   nsIView           *mRootView;
   PRUint32          mFrameRate;
   PRUint32          mTrueFrameRate;
@@ -294,5 +374,4 @@ protected:
 #endif
 };
 
-#endif
-
+#endif /* nsViewManager_h___ */
