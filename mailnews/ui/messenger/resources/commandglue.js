@@ -84,6 +84,11 @@ function MsgAccountManager()
   }
 }
 
+function MsgSubscribe()
+{
+    dump('open subscribe window.\n');
+}
+
 function LoadMessage(messageNode)
 {
   var uri = messageNode.getAttribute('id');

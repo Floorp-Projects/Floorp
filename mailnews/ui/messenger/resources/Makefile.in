@@ -72,7 +72,10 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/FilterListDialog.xul	\
 	$(srcdir)/FilterEditor.xul		\
 	$(srcdir)/FilterEditor.js		\
-	$(srcdir)/test1.html			\
+	$(srcdir)/subscribe.xul			\
+	$(srcdir)/check.gif			\
+	$(srcdir)/dot.gif			\
+	$(srcdir)/subscribe.css			\
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

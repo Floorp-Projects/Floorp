@@ -64,7 +64,10 @@ install::
 	$(MAKE_INSTALL) FilterListDialog.xul	$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) FilterEditor.xul	$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) FilterEditor.js		$(DIST)\bin\res\mailnews\messenger
-
+	$(MAKE_INSTALL) subscribe.xul		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) check.gif		$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) dot.gif			$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) subscribe.css		$(DIST)\bin\res\mailnews\messenger
 
 clobber::
 	rm -f $(DIST)\res\mailnews\messenger\mailshell.xul
@@ -99,5 +102,8 @@ clobber::
 	rm -f $(DIST)\res\mailnews\messenger\FilterListDialog.xul
 	rm -f $(DIST)\res\mailnews\messenger\FilterEditor.xul
 	rm -f $(DIST)\res\mailnews\messenger\FilterEditor.js
-
+	rm -f $(DIST)\res\mailnews\messenger\subscribe.xul
+	rm -f $(DIST)\res\mailnews\messenger\check.gif
+	rm -f $(DIST)\res\mailnews\messenger\dot.gif
+	rm -f $(DIST)\res\mailnews\messenger\subscribe.css
 

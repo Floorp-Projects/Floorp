@@ -262,7 +262,6 @@ function MsgSaveAsFile() {}
 function MsgSaveAsTemplate() {}
 function MsgSendUnsentMsg() {}
 function MsgUpdateMsgCount() {}
-function MsgSubscribe() {}
 function MsgRenameFolder() {}
 function MsgEmptyTrash() {}
 function MsgCompactFolders() {}
