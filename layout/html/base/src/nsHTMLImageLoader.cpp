@@ -253,9 +253,9 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
         newWidth = widthConstraint;
         if (mFlags.mHaveIntrinsicImageSize) {
           float width = mIntrinsicImageSize.width
-            ? mIntrinsicImageSize.width
-            : mIntrinsicImageSize.height;         // avoid divide by zero
-          float height = mIntrinsicImageSize.height;
+            ? (float) mIntrinsicImageSize.width
+            : (float) mIntrinsicImageSize.height;     // avoid divide by zero
+          float height = (float) mIntrinsicImageSize.height;
           newHeight = (nscoord)
             NSToIntRound(widthConstraint * height / width);
           haveComputedSize = PR_TRUE;
@@ -272,10 +272,10 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
       // once we have the intrinsic image size.
       newHeight = heightConstraint;
       if (mFlags.mHaveIntrinsicImageSize) {
-        float width = mIntrinsicImageSize.width;
+        float width = (float) mIntrinsicImageSize.width;
         float height = mIntrinsicImageSize.height
-          ? mIntrinsicImageSize.height
-          : mIntrinsicImageSize.width;            // avoid divide by zero
+          ? (float) mIntrinsicImageSize.height
+          : (float) mIntrinsicImageSize.width;         // avoid divide by zero
         newWidth = (nscoord)
           NSToIntRound(heightConstraint * width / height);
         haveComputedSize = PR_TRUE;
