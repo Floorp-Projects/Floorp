@@ -784,7 +784,10 @@ nsXPInstallManager::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
         // returning an error will stop the download. We may get extra
         // OnData calls if they were already queued so beware
         if (mDlg)
+        {
             mDlg->Close();
+            mDlg = nsnull;
+        }
         return NS_ERROR_FAILURE;
     }
 
@@ -814,7 +817,7 @@ nsXPInstallManager::OnProgress(nsIRequest* request, nsISupports *ctxt, PRUint32 
     nsresult rv = NS_OK;
     
     PRTime now = PR_Now();
-    if (!mCancelled && TimeToUpdate(now))
+    if (mDlg && !mCancelled && TimeToUpdate(now))
     {
         if (mContentLength < 1) {
             nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
@@ -835,7 +838,7 @@ nsXPInstallManager::OnStatus(nsIRequest* request, nsISupports *ctxt,
 {
     nsresult rv;
     PRTime now = PR_Now();
-    if (!mCancelled && TimeToUpdate(now))
+    if (mDlg && !mCancelled && TimeToUpdate(now))
     {
         mLastUpdate = now;
         nsCOMPtr<nsIStringBundleService> sbs = do_GetService(kStringBundleServiceCID, &rv);
@@ -864,10 +867,13 @@ nsXPInstallManager::BeforeJavascriptEvaluation(const PRUnichar *URL)
     nsresult rv = NS_OK;
 
     mFinalizing = PR_FALSE;
-    mDlg->SetProgress( 0, 0, BARBER_POLE ); // turn on the barber pole
+    if (mDlg)
+    {
+        mDlg->SetProgress( 0, 0, BARBER_POLE ); // turn on the barber pole
 
-    PRUnichar tmp[] = { '\0' };
-    mDlg->SetActionText(tmp);
+        PRUnichar tmp[] = { '\0' };
+        mDlg->SetActionText(tmp);
+    }
 
     return rv;
 }
@@ -885,6 +891,9 @@ nsXPInstallManager::AfterJavascriptEvaluation(const PRUnichar *URL)
 NS_IMETHODIMP 
 nsXPInstallManager::InstallStarted(const PRUnichar *URL, const PRUnichar *UIPackageName)
 {
+    if (!mDlg)
+        return NS_OK;
+
     mDlg->SetActionText(nsnull);
     return mDlg->SetHeading( nsString(UIPackageName).get() );
 }
@@ -893,7 +902,7 @@ NS_IMETHODIMP
 nsXPInstallManager::ItemScheduled(const PRUnichar *message)
 {
     PRTime now = PR_Now();
-    if (TimeToUpdate(now))
+    if (mDlg && TimeToUpdate(now))
     {
         mLastUpdate = now;
         return mDlg->SetActionText( nsString(message).get() );
@@ -905,6 +914,9 @@ nsXPInstallManager::ItemScheduled(const PRUnichar *message)
 NS_IMETHODIMP 
 nsXPInstallManager::FinalizeProgress(const PRUnichar *message, PRInt32 itemNum, PRInt32 totNum)
 {
+    if (!mDlg)
+        return NS_OK;
+
     nsresult rv = NS_OK;
 
     if (!mFinalizing)
@@ -928,7 +940,7 @@ nsXPInstallManager::FinalizeProgress(const PRUnichar *message, PRInt32 itemNum, 
     if (TimeToUpdate(now))
     {
         mLastUpdate = now;
-	rv = mDlg->SetProgress( itemNum, totNum, PROGRESS_BAR );
+        rv = mDlg->SetProgress( itemNum, totNum, PROGRESS_BAR );
     }
 
     return rv;
