@@ -84,6 +84,11 @@ interface nsINNTPNewsgroupPost : nsISupports {
      * to write to so that it can better manage the assembled message.
      */
     string GetFullMessage();
+%{ C++
+
+  NS_IMETHOD SetPostMessageFile(nsFilePath& aFileName) = 0;
+  NS_IMETHOD GetPostMessageFile(nsFilePath ** aFileName) = 0; 
+%} 
 };
 
 
