@@ -2615,6 +2615,10 @@ nsDocShell::ForceUpdate(nsIDocShell* aDocShell)
   nsCOMPtr<nsIPresShell> presShell;
   aDocShell->GetPresShell(getter_AddRefs(presShell));
 
+  // we might not have a presshell yet
+  if (!presShell)
+    return;
+
   nsCOMPtr<nsIViewManager> vm;
   presShell->GetViewManager(getter_AddRefs(vm));
   if (vm) {

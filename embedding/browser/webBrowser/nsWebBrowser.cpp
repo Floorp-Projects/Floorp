@@ -1097,7 +1097,8 @@ NS_IMETHODIMP nsWebBrowser::SetFocus()
 {
    NS_ENSURE_STATE(mDocShell);
 
-   NS_ENSURE_SUCCESS(mDocShellAsWin->SetFocus(), NS_ERROR_FAILURE);
+   if (NS_FAILED(mDocShellAsWin->SetFocus()))
+     return NS_ERROR_FAILURE;
 
    return NS_OK;
 }
