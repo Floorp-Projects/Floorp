@@ -54,7 +54,7 @@ EXTRA_DSO_LDOPTS = \
 		-lsecfree				\
 		$(NULL)
 
-include $(topsrcdir)/config/config.mk
-
 include $(topsrcdir)/config/rules.mk
+
+$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 

@@ -54,9 +54,7 @@ EXTRA_DSO_LDOPTS = 	\
 	-lmailnewsmsgdb			\
 	$(NULL)
 
-$(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
-
-include $(topsrcdir)/config/config.mk
-
 include $(topsrcdir)/config/rules.mk
+
+$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 

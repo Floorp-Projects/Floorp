@@ -65,7 +65,7 @@ EXTRA_DSO_LDOPTS =	       \
 
 include $(topsrcdir)/config/rules.mk
 
-$(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
+$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 
 install:: $(TARGETS)
 	$(INSTALL) $(srcdir)/../resources/sidebar.xul $(DIST)/bin/res/rdf
