@@ -133,9 +133,16 @@ public:
 
     nsSocketTransport();
 
+    // this method instructs the socket transport to open a socket of the
+    // given type(s) to the given host or proxy.
     nsresult Init(const char **socketTypes, PRUint32 typeCount,
                   const nsACString &host, PRUint16 port,
                   nsIProxyInfo *proxyInfo);
+
+    // this method instructs the socket transport to use an already connected
+    // socket with the given address.
+    nsresult InitWithConnectedSocket(PRFileDesc *socketFD,
+                                     const PRNetAddr *addr);
 
     // nsASocketHandler methods:
     void OnSocketReady(PRFileDesc *, PRInt16 outFlags); 
