@@ -316,3 +316,14 @@ NS_IMETHODIMP nsDeviceContextGTK::EndPage(void)
 {
   return NS_OK;
 }
+
+NS_IMETHODIMP nsDeviceContextGTK::GetDepth(PRUint32& aDepth)
+{
+  GdkVisual * rgb_visual = gdk_rgb_get_visual();
+
+  gint rgb_depth = rgb_visual->depth;
+
+  aDepth = (PRUint32) rgb_depth;
+
+  return NS_OK;
+}
