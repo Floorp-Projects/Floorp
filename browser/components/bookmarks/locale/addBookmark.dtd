@@ -18,9 +18,10 @@
 <!ENTITY button.defaultfolder.accesskey "d">
 <!ENTITY selectFolder.label         "Choose Folder">
 
+<!ENTITY expanderdown.tooltip    "Show all the bookmarks folders">
+<!ENTITY expanderup.tooltip      "Hide">
 <!ENTITY addGroup.label          "Bookmark all tabs in a folder">
 <!ENTITY addGroup.accesskey      "B">
 <!ENTITY newFolder.label         "New Folder">
 <!ENTITY newFolder.accesskey     "N">
 <!ENTITY accept.label            "Add">
-
