@@ -728,6 +728,23 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
     return succeeded;
 }        
 
+// static 
+PRBool xptiManifest::Delete(xptiInterfaceInfoManager* aMgr)
+{
+    nsCOMPtr<nsILocalFile> aFile;
+    if(!aMgr->GetCloneOfManifestDir(getter_AddRefs(aFile)) || !aFile)
+        return PR_FALSE;
+    
+    if(NS_FAILED(aFile->Append(g_MainManifestFilename)))
+        return PR_FALSE;
 
-     
+    PRBool exists;
+    if(NS_FAILED(aFile->Exists(&exists)))
+        return PR_FALSE;
+
+    if(exists && NS_FAILED(aFile->Remove(PR_FALSE)))
+        return PR_FALSE;
+    
+    return PR_TRUE;
+}
 

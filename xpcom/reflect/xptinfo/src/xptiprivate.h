@@ -607,6 +607,8 @@ public:
     static PRBool Write(xptiInterfaceInfoManager* aMgr,
                         xptiWorkingSet*           aWorkingSet);
 
+    static PRBool Delete(xptiInterfaceInfoManager* aMgr);
+
     xptiManifest(); // no implementation
 };
 
