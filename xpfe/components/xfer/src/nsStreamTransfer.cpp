@@ -114,4 +114,5 @@ nsStreamTransfer::SelectFile( nsFileSpec &aResult ) {
 // Generate base nsIAppShellComponent implementation.
 NS_IMPL_IAPPSHELLCOMPONENT( nsStreamTransfer,
                             nsIStreamTransfer,
-                            NS_ISTREAMTRANSFER_PROGID )
+                            NS_ISTREAMTRANSFER_PROGID,
+                            0 )
