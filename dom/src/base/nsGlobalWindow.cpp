@@ -2620,9 +2620,11 @@ GlobalWindowImpl::GetBrowserWindowInterface(
   NS_ENSURE_TRUE(aWebShell, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+
+  // fix me! not returning NS_ERROR_FAILURE if topLevelWindow is null.
   NS_ENSURE_SUCCESS(aWebShell->GetTopLevelWindow(
       getter_AddRefs(topLevelWindow)), NS_ERROR_FAILURE);
-  
+  if (!topLevelWindow) return NS_ERROR_FAILURE;
   return topLevelWindow->QueryInterface(NS_GET_IID(nsIBrowserWindow), (void**)&aBrowser);
 }
 
