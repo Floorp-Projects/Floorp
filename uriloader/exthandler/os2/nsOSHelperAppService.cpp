@@ -46,6 +46,7 @@
 #include "nsIPref.h" // XX Need to convert Handler code to new pref stuff
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID); // XXX need to convert to contract id
 
+#define INCL_DOS
 #include <os2.h>
 
 #ifdef MOZ_LOGGING
@@ -159,6 +160,14 @@ nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 nsOSHelperAppService::~nsOSHelperAppService()
 {}
 
+#define SALT_SIZE 8
+#define TABLE_SIZE 36
+const PRUnichar table[] = 
+  { 'a','b','c','d','e','f','g','h','i','j',
+    'k','l','m','n','o','p','q','r','s','t',
+    'u','v','w','x','y','z','0','1','2','3',
+    '4','5','6','7','8','9'};
+
 NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInfo, nsIFile * aTempFile)
 {
   LOG(("-- nsOSHelperAppService::LaunchAppWithTempFile"));
@@ -198,12 +207,57 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
       application->GetNativePath(appPath);
       LOG(("The helper is '%s'\n", appPath.get()));
     }
+
+    ULONG ulAppType;
+    nsCAutoString apppath;
+    application->GetNativePath(apppath);
+    DosQueryAppType(apppath.get(), &ulAppType);
+    if (ulAppType & (FAPPTYP_DOS |
+                     FAPPTYP_WINDOWSPROT31 |
+                     FAPPTYP_WINDOWSPROT |
+                     FAPPTYP_WINDOWSREAL)) {
+      // if the helper application is a DOS app, create an 8.3 filename
+      // we do this even if the filename is valid because it's 8.3, who cares
+      nsCOMPtr<nsPIExternalAppLauncher> helperAppService (do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID));
+      if (helperAppService)
+      {
+        nsCAutoString leafName; 
+        aTempFile->GetNativeLeafName(leafName);
+        const char* lastDot = strrchr(leafName.get(), '.');
+        char suffix[CCHMAXPATH + 1] = "";
+        if (lastDot)
+        {
+            strcpy(suffix, lastDot);
+        }
+        suffix[4] = '\0';
+        
+        nsAutoString saltedTempLeafName;
+        do {
+            saltedTempLeafName.Truncate();
+            // this salting code was ripped directly from the profile manager.
+            // turn PR_Now() into milliseconds since epoch 1058 // and salt rand with that. 
+            double fpTime;
+            LL_L2D(fpTime, PR_Now());
+            srand((uint)(fpTime * 1e-6 + 0.5));
+            PRInt32 i;
+            for (i=0;i<SALT_SIZE;i++) 
+            {
+              saltedTempLeafName.Append(table[(rand()%TABLE_SIZE)]);
+            }
+            saltedTempLeafName.Append(NS_ConvertASCIItoUCS2(suffix));
+            nsresult rv = aTempFile->MoveTo(nsnull, saltedTempLeafName);
+        } while (NS_FAILED(rv));
+        helperAppService->DeleteTemporaryFileOnExit(aTempFile);
+        aTempFile->GetNativePath(path);
+      }
+    } else {
+      path.Insert('\"', 0);
+      path.Append('\"');
+    }
       
+    const char * strPath = path.get();
     // if we were given an application to use then use it....otherwise
     // make the registry call to launch the app
-    path.Insert('\"', 0);
-    path.Append('\"');
-    const char * strPath = path.get();
     nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID);
     if (NS_FAILED(rv = process->Init(application)))
       return rv;
