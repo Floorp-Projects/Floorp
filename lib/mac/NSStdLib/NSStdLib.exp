@@ -1001,3 +1001,5 @@ GC_generic_init_threads
 GC_gcollect
 GC_stdout
 GC_stderr
+GC_address_to_source
+MWUnmangle
