@@ -214,21 +214,12 @@ else
 JMC_SUBDIR              = $(LOCAL_JMC_SUBDIR)
 endif
 
-ifdef NSBUILDROOT
-JDK_GEN_DIR		= $(XPDIST)/_gen
-JMC_GEN_DIR		= $(XPDIST)/$(JMC_SUBDIR)
-JRI_GEN_DIR		= $(XPDIST)/_jri
-JNI_GEN_DIR		= $(XPDIST)/_jni
-JDK_STUB_DIR		= $(XPDIST)/_stubs
-XPIDL_GEN_DIR		= $(XPDIST)/_xpidlgen
-else
 JDK_GEN_DIR		= _gen
 JMC_GEN_DIR		= $(JMC_SUBDIR)
 JRI_GEN_DIR		= _jri
 JNI_GEN_DIR		= _jni
 JDK_STUB_DIR		= _stubs
 XPIDL_GEN_DIR		= _xpidlgen
-endif
 
 #
 # If this is an "official" build, try to build everything.
@@ -243,7 +234,7 @@ CLICK_STOPWATCH		= true
 endif
 
 ifdef MOZ_UPDATE_XTERM
-UPDATE_TITLE		= echo "]2;gmake: $@ in $(SRCDIR)/$$d"
+UPDATE_TITLE		= echo "]2;gmake: $@ in $(shell echo $(srcdir) | sed 's:\.\./::g')/$$d"
 else
 UPDATE_TITLE		= true
 endif
@@ -782,11 +773,7 @@ endif
 #
 ifneq ($(JDK_GEN),)
 ifdef JAVA_OR_NSJVM
-ifdef NSBUILDROOT
-INCLUDES		+= -I$(JDK_GEN_DIR) -I$(XPDIST)
-else
 INCLUDES		+= -I$(JDK_GEN_DIR)
-endif
 JDK_PACKAGE_CLASSES	= $(JDK_GEN)
 JDK_PATH_CLASSES	= $(subst .,/,$(JDK_PACKAGE_CLASSES))
 JDK_HEADER_CLASSFILES	= $(patsubst %,$(JAVA_DESTPATH)/%.class,$(JDK_PATH_CLASSES))
@@ -825,11 +812,7 @@ endif
 #
 ifneq ($(JRI_GEN),)
 ifdef JAVA_OR_NSJVM
-ifdef NSBUILDROOT
-INCLUDES		+= -I$(JRI_GEN_DIR) -I$(XPDIST)
-else
 INCLUDES		+= -I$(JRI_GEN_DIR)
-endif
 JRI_PACKAGE_CLASSES	= $(JRI_GEN)
 JRI_PATH_CLASSES	= $(subst .,/,$(JRI_PACKAGE_CLASSES))
 JRI_HEADER_CLASSFILES	= $(patsubst %,$(JAVA_DESTPATH)/%.class,$(JRI_PATH_CLASSES))
@@ -870,11 +853,7 @@ endif
 #
 ifneq ($(JNI_GEN),)
 ifdef JAVA_OR_NSJVM
-ifdef NSBUILDROOT
-INCLUDES		+= -I$(JNI_GEN_DIR) -I$(XPDIST)
-else
 INCLUDES		+= -I$(JNI_GEN_DIR)
-endif
 JNI_PACKAGE_CLASSES	= $(JNI_GEN)
 JNI_PATH_CLASSES	= $(subst .,/,$(JNI_PACKAGE_CLASSES))
 JNI_HEADER_CLASSFILES	= $(patsubst %,$(JAVA_DESTPATH)/%.class,$(JNI_PATH_CLASSES))

@@ -149,7 +149,6 @@ MY_RULES	:= $(DEPTH)/config/myrules.mk
 #
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 REVDEPTH	:= $(topsrcdir)/config/revdepth
-SRCDIR		= $(shell $(PERL) $(REVDEPTH).pl $(DEPTH))
 endif
 
 #
@@ -407,19 +406,10 @@ WHOAMI			= $(ACWHOAMI)
 ZIP_PROG		= $(ACZIP)
 endif
 
-# Figure out where the binary code lives. It either lives in the src
-# tree (NSBUILDROOT is undefined) or somewhere else.
-ifdef NSBUILDROOT
-BUILD		= $(NSBUILDROOT)/$(OBJDIR_NAME)/build
-OBJDIR		= $(BUILD)/$(SRCDIR)
-XPDIST		= $(NSBUILDROOT)
-DIST		= $(NSBUILDROOT)/$(OBJDIR_NAME)/dist
-else
 BUILD		= $(OBJDIR_NAME)
 OBJDIR		= $(OBJDIR_NAME)
 XPDIST		= $(DEPTH)/dist
 DIST		= $(DEPTH)/dist/$(OBJDIR_NAME)
-endif
 
 # We need to know where to find the libraries we
 # put on the link line for binaries, and should
@@ -608,7 +598,7 @@ endif
 # For profiling
 ifdef MOZILLA_GPROF
 # Don't want profiling on build tools..
-ifneq ($(SRCDIR),config)
+ifneq ($(shell echo $(srcdir) | sed 's:\.\./::g'),config)
 PROF_FLAGS	= $(OS_GPROF_FLAGS) -DMOZILLA_GPROF
 endif
 endif
