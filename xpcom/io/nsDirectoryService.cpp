@@ -75,7 +75,9 @@
 #endif 
 
 // define home directory
-#ifdef XP_PC
+#ifdef XP_OS2
+#define HOME_DIR NS_OS2_DIR
+#elif defined (XP_PC)
 #define HOME_DIR NS_WIN_HOME_DIR
 #elif defined (XP_MAC)
 #define HOME_DIR NS_MAC_HOME_DIR
@@ -685,7 +687,7 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
         nsCOMPtr<nsIFile> homeDir;
         GetFile(HOME_DIR, persistent, getter_AddRefs(homeDir));
         
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
         PRBool dirExists = PR_FALSE;
         if (homeDir)
         {
