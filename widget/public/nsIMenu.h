@@ -25,6 +25,7 @@
 class nsIMenuBar;
 class nsIMenu;
 class nsIMenuItem;
+class nsIMenuListener;
 
 // {35A3DEC1-4992-11d2-8DBA-00609703C14E}
 #define NS_IMENU_IID      \
