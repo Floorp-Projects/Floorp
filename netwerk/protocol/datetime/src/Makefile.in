@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
 LIBRARY_NAME	= necko_datetime
+SHORT_LIBNAME	= neckodtm
 IS_COMPONENT	= 1
 
 CPPSRCS		= \
