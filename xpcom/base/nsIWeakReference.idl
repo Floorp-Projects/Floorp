@@ -86,18 +86,6 @@ typedef nsCOMPtr<nsIWeakReference> nsWeakPtr;
 
 
 /**
- * |NS_GetWeakReference| is a convenience function that bundles up all the work needed
- * to get a weak reference to an arbitrary object, i.e., the |QueryInterface|, test, and
- * call through to |GetWeakReference|.  It produces an |nsIWeakReference*| as its
- * function result specifically to cooperate with |nsCOMPtr| (or |nsWeakPtr|) like so:
- * |nsWeakPtr myWeakPtr = getter_AddRefs( NS_GetWeakReference(aPtr) );|.
- */
-extern NS_COM
-nsIWeakReference*
-NS_GetWeakReference( nsISupports* , nsresult* aResult=0 );
-
-
-/**
  *
  */
 template <class T>
@@ -136,5 +124,75 @@ do_QueryReferent( nsIWeakReference* aRawPtr, nsresult* error = 0 )
     return nsQueryReferent(aRawPtr, error);
   }
 
+
+
+class NS_COM nsGetWeakReference : public nsCOMPtr_helper
+  {
+    public:
+      nsGetWeakReference( nsISupports* aRawPtr, nsresult* error )
+          : mRawPtr(aRawPtr),
+            mErrorPtr(error)
+        {
+          // nothing else to do here
+        }
+
+      virtual nsresult operator()( const nsIID&, void** ) const;
+
+    private:
+      nsISupports*  mRawPtr;
+      nsresult*     mErrorPtr;
+  };
+
+  /**
+   * |do_GetWeakReference| is a convenience function that bundles up all the work needed
+   * to get a weak reference to an arbitrary object, i.e., the |QueryInterface|, test, and
+   * call through to |GetWeakReference|, and put it into your |nsCOMPtr|.
+   * It is specifically designed to cooperate with |nsCOMPtr| (or |nsWeakPtr|) like so:
+   * |nsWeakPtr myWeakPtr = do_GetWeakReference(aPtr);|.
+   */
+inline
+const nsGetWeakReference
+do_GetWeakReference( nsISupports* aRawPtr, nsresult* error = 0 )
+  {
+    return nsGetWeakReference(aRawPtr, error);
+  }
+
+inline
+void
+do_GetWeakReference( nsIWeakReference* aRawPtr, nsresult* error = 0 )
+  {
+    // This signature exists soley to _stop_ you from doing a bad thing.
+    //  Saying |do_GetWeakReference()| on a weak reference itself,
+    //  is very likely to be a programmer error.
+  }
+
+template <class T>
+inline
+void
+do_GetWeakReference( already_AddRefed<T>& )
+  {
+    // This signature exists soley to _stop_ you from doing the bad thing.
+    //  Saying |do_GetWeakReference()| on a pointer that is not otherwise owned by
+    //  someone else is an automatic leak.  See <http://bugzilla.mozilla.org/show_bug.cgi?id=8221>.
+  }
+
+template <class T>
+inline
+void
+do_GetWeakReference( already_AddRefed<T>&, nsresult* )
+  {
+    // This signature exists soley to _stop_ you from doing the bad thing.
+    //  Saying |do_GetWeakReference()| on a pointer that is not otherwise owned by
+    //  someone else is an automatic leak.  See <http://bugzilla.mozilla.org/show_bug.cgi?id=8221>.
+  }
+
+
+
+  /**
+   * Deprecated, use |do_GetWeakReference| instead.
+   */
+extern NS_COM
+nsIWeakReference*
+NS_GetWeakReference( nsISupports* , nsresult* aResult=0 );
 
 %}
