@@ -649,8 +649,8 @@ nsHTTPChannel::Open(void)
     if (NS_FAILED(rv)) return rv;
 
     // Go through the external modules and notify each one.
-    nsISupports *supEntry;
-    rv = pModules->GetNext(&supEntry);
+    nsCOMPtr<nsISupports> supEntry;
+    rv = pModules->GetNext(getter_AddRefs(supEntry));
     while (NS_SUCCEEDED(rv)) 
     {
         nsCOMPtr<nsINetModRegEntry> entry = do_QueryInterface(supEntry, &rv);
@@ -669,7 +669,7 @@ nsHTTPChannel::Open(void)
             // we could do something with the return code from the external
             // module, but what????            
         }
-        rv = pModules->GetNext(&supEntry); // go around again
+        rv = pModules->GetNext(getter_AddRefs(supEntry)); // go around again
     }
 
     if (transport) {
@@ -875,8 +875,8 @@ nsresult nsHTTPChannel::OnHeadersAvailable()
     if (NS_FAILED(rv)) return rv;
 
     // Go through the external modules and notify each one.
-    nsISupports *supEntry;
-    rv = pModules->GetNext(&supEntry);
+    nsCOMPtr<nsISupports> supEntry;
+    rv = pModules->GetNext(getter_AddRefs(supEntry));
     while (NS_SUCCEEDED(rv)) 
     {
         nsCOMPtr<nsINetModRegEntry> entry = do_QueryInterface(supEntry, &rv);
@@ -895,7 +895,7 @@ nsresult nsHTTPChannel::OnHeadersAvailable()
             // we could do something with the return code from the external
             // module, but what????            
         }
-        rv = pModules->GetNext(&supEntry); // go around again
+        rv = pModules->GetNext(getter_AddRefs(supEntry)); // go around again
     }
     return NS_OK;
 }
