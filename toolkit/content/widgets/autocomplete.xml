@@ -383,6 +383,9 @@
               this.mEnterEvent = aEvent;
               cancel = this.mController.handleEnter();
               break;
+#ifdef XP_MACOSX
+            case KeyEvent.DOM_VK_BACK_SPACE:
+#endif
             case KeyEvent.DOM_VK_DELETE:
               if (aEvent.shiftKey)
                 cancel = this.mController.handleDelete();
