@@ -207,7 +207,7 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
 		return NS_ERROR_OUT_OF_MEMORY;
 	}
 	
-	ClearGWorld(mImageGWorld);
+	//ClearGWorld(mImageGWorld);
 	
 	// calculate the pixel data size
 	PixMapHandle	thePixMap = ::GetGWorldPixMap(mImageGWorld);
@@ -252,7 +252,7 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
 		
 		if (mAlphaGWorld)
 		{
-			ClearGWorld(mAlphaGWorld);
+			//ClearGWorld(mAlphaGWorld);
 
 			// calculate the pixel data size
 			PixMapHandle	maskPixMap = GetGWorldPixMap(mAlphaGWorld);
@@ -289,6 +289,14 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
 
 	if (!mImageGWorld)
 		return NS_ERROR_FAILURE;
+
+	// currently the top is 0, this may change and this code will have to reflect that
+	if (( mDecodedY2 < aSHeight) ) {
+		// adjust the source and dest height to reflect this
+		aDHeight = float(mDecodedY2/float(aSHeight)) * aDHeight;
+		aSHeight = mDecodedY2;
+	}
+	
 
 	::SetRect(&srcRect, aSX, aSY, aSX + aSWidth, aSY + aSHeight);
 	maskRect = srcRect;
