@@ -270,8 +270,8 @@ nsEventStatus nsMenuBar::MenuConstruct(
           nsString menuNodeType;
           nsString menuName;
           menuElement->GetNodeName(menuNodeType);
-          if (menuNodeType.Equals("menu")) {
-            menuElement->GetAttribute(nsAutoString("value"), menuName);
+          if (menuNodeType.EqualsWithConversion("menu")) {
+            menuElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuName);
             // Don't create the menu yet, just add in the top level names
 
             // Create nsMenu

@@ -130,7 +130,7 @@ NS_METHOD nsRadioButton::GetLabel(nsString& aBuffer)
 	if(mRadioButton && mRadioButton->LockLooper())
 	{
 		aBuffer.SetLength(0);
-		aBuffer.Append(mRadioButton->Label());
+		aBuffer.AppendWithConversion(mRadioButton->Label());
 		mRadioButton->UnlockLooper();
 	}
 	return NS_OK;
