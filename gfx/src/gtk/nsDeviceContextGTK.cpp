@@ -42,6 +42,9 @@
 #define GDK_COLOR_TO_NS_RGB(c) \
   ((nscolor) NS_RGB(c.red, c.green, c.blue))
 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
+
 nscoord nsDeviceContextGTK::mDpi = 96;
 
 NS_IMPL_ISUPPORTS1(nsDeviceContextGTK, nsIDeviceContext)
@@ -66,9 +69,14 @@ nsDeviceContextGTK::nsDeviceContextGTK()
 
 nsDeviceContextGTK::~nsDeviceContextGTK()
 {
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    prefs->UnregisterCallback("browser.screen_resolution",
+                              prefChanged, (void *)this);
+  }
 }
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 {
