@@ -16,8 +16,6 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
- *
- * Contributor(s): 
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
@@ -45,6 +43,7 @@ public:
   NS_IMETHOD    SetDefaultSelected(PRBool aDefaultSelected)=0;
 
   NS_IMETHOD    GetText(nsString& aText)=0;
+  NS_IMETHOD    SetText(const nsString& aText)=0;
 
   NS_IMETHOD    GetIndex(PRInt32* aIndex)=0;
   NS_IMETHOD    SetIndex(PRInt32 aIndex)=0;
@@ -68,6 +67,7 @@ public:
   NS_IMETHOD    GetDefaultSelected(PRBool* aDefaultSelected);  \
   NS_IMETHOD    SetDefaultSelected(PRBool aDefaultSelected);  \
   NS_IMETHOD    GetText(nsString& aText);  \
+  NS_IMETHOD    SetText(const nsString& aText);  \
   NS_IMETHOD    GetIndex(PRInt32* aIndex);  \
   NS_IMETHOD    SetIndex(PRInt32 aIndex);  \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled);  \
@@ -86,6 +86,7 @@ public:
   NS_IMETHOD    GetDefaultSelected(PRBool* aDefaultSelected) { return _to GetDefaultSelected(aDefaultSelected); } \
   NS_IMETHOD    SetDefaultSelected(PRBool aDefaultSelected) { return _to SetDefaultSelected(aDefaultSelected); } \
   NS_IMETHOD    GetText(nsString& aText) { return _to GetText(aText); } \
+  NS_IMETHOD    SetText(const nsString& aText) { return _to SetText(aText); } \
   NS_IMETHOD    GetIndex(PRInt32* aIndex) { return _to GetIndex(aIndex); } \
   NS_IMETHOD    SetIndex(PRInt32 aIndex) { return _to SetIndex(aIndex); } \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to GetDisabled(aDisabled); } \
