@@ -1282,31 +1282,11 @@ nsIMEGtkIC::IsPreeditComposing()
   if (gInputStyle & GDK_IM_PREEDIT_CALLBACKS) {
     if (mPreedit && mPreedit->GetPreeditLength()) {
       return PR_TRUE;
-    }
-  } else {
-#if XlibSpecificationRelease >= 6
-    XIMPreeditState preedit_state = XIMPreeditUnKnown;
-    XVaNestedList preedit_attr;
-    PRBool ret_flag = PR_FALSE;
-
-    preedit_attr = XVaCreateNestedList(0,
-                                       XNPreeditState, &preedit_state,
-                                       0);
-    if (!XGetICValues(mIC->xic,
-                      XNPreeditAttributes, preedit_attr,
-                      NULL)) {
-      if (preedit_state == XIMPreeditEnable) {
-        ret_flag = PR_TRUE;
-      }
     } else {
-      // kinput2 does not support XGetICValues(XNPreeditState)
-      ret_flag = PR_TRUE;
+      return PR_FALSE;
     }
-    XFree(preedit_attr);
-    return ret_flag;
-#endif
   }
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
 GdkFont*

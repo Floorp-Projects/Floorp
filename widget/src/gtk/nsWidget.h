@@ -311,7 +311,6 @@ protected:
 #ifdef USE_XIM
 protected:
   PRBool            mIMEEnable;
-  PRBool            mIMEIsDeactivating;
   void		    GetXIC();
   static GdkFont    *gPreeditFontset;
   static GdkFont    *gStatusFontset;
@@ -319,12 +318,10 @@ protected:
   nsIMEGtkIC        *mXIC;
   PRBool	    mIMECallComposeStart;
   PRBool	    mIMECallComposeEnd;
+  PRBool	    mIMEIsBeingActivate;
   nsWidget*         mIMEShellWidget;
-  PRBool	    mICPerShell;
   void              SetXICSpotLocation(nsPoint aPoint);
   void              SetXICBaseFontSize(int height);
-  void		    IMECheckPreedit_PreProc();
-  void		    IMECheckPreedit_PostProc();
 
   void              GetXYFromPosition(unsigned long *aX, unsigned long *aY);
   nsCOMPtr<nsITimer> mICSpotTimer;
@@ -333,7 +330,6 @@ protected:
   nsresult          PrimeICSpotTimer();
   nsresult          UpdateICSpot();
   int               mXICFontSize;
-  nsWidget*         GetShellWidget2();
 
 public:
   void		    ime_preedit_start();
@@ -343,10 +339,9 @@ public:
 
   void 		    IMEUnsetFocusWidget();
   void 		    IMESetFocusWidget();
-  void 		    IMEDeactivateWidget();
-  void 		    IMEActivateWidget();
+  void 		    IMEGetShellWidget();
   void 		    IMEDestroyIC();
-  nsWidget*         mIMEChildWidget;
+  void 		    IMEBeingActivate(PRBool aActive);
 #endif // USE_XIM 
 protected:
   void              IMEComposeStart(guint aTime);
