@@ -80,10 +80,12 @@ public:
  * @return error status
  */
   NS_IMETHOD ClosePrintManager();
+  
+  NS_IMETHOD GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight);
 
   NS_IMETHOD GetToPrinter( PRBool &aToPrinter ); 
 
-  NS_IMETHOD GetPrinterName ( char **aPrinter );
+  NS_IMETHOD GetPrinterName ( const char **aPrinter );
 
   NS_IMETHOD GetCopies ( int &aCopies ); 
 
@@ -101,9 +103,9 @@ public:
  
   NS_IMETHOD GetRightMargin ( float &value ); 
  
-  NS_IMETHOD GetCommand ( char **aCommand );   
+  NS_IMETHOD GetCommand ( const char **aCommand );   
  
-  NS_IMETHOD GetPath ( char **aPath );    
+  NS_IMETHOD GetPath ( const char **aPath );    
  
   NS_IMETHOD GetPageDimensions (float &aWidth, float &aHeight ); 
  
@@ -124,7 +126,7 @@ public:
 
 protected:
   BeOSPrData mPrData;
-	
+  nsCOMPtr<nsIPrintSettings> mPrintSettings;	
 };
 
 //-------------------------------------------------------------------------

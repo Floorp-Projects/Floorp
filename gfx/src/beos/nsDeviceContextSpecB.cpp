@@ -219,6 +219,8 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS::Init(nsIPrintSettings* aPS, PRBool aQuiet
 {
   nsresult rv = NS_ERROR_FAILURE;
   NS_ASSERTION(nsnull != aPS, "No print settings.");
+
+  mPrintSettings = aPS;
   
   // if there is a current selection then enable the "Selection" radio button
   if (aPS != nsnull) {
@@ -358,7 +360,7 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetToPrinter( PRBool &aToPrinter )
         return NS_OK;
 } 
 
-NS_IMETHODIMP nsDeviceContextSpecBeOS::GetPrinterName ( char **aPrinter )
+NS_IMETHODIMP nsDeviceContextSpecBeOS::GetPrinterName ( const char **aPrinter )
 {
    *aPrinter = &mPrData.printer[0];
    return NS_OK;
@@ -449,13 +451,13 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetLeftMargin ( float &value )
   return NS_OK; 
 } 
  
-NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetCommand ( char **aCommand )      
+NS_IMETHODIMP nsDeviceContextSpecBeOS::GetCommand ( const char **aCommand )      
 { 
   *aCommand = &mPrData.command[0]; 
   return NS_OK; 
 } 
  
-NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetPath ( char **aPath )      
+NS_IMETHODIMP nsDeviceContextSpecBeOS::GetPath ( const char **aPath )      
 { 
   *aPath = &mPrData.path[0]; 
   return NS_OK; 
@@ -476,8 +478,10 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: ClosePrintManager()
   return NS_OK;
 }  
 
-
-
+NS_IMETHODIMP nsDeviceContextSpecBeOS::GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight)
+{
+  return mPrintSettings->GetPageSizeInTwips(aWidth, aHeight);
+}
 
 //  Printer Enumerator
 nsPrinterEnumeratorBeOS::nsPrinterEnumeratorBeOS()
