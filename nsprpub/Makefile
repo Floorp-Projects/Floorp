@@ -19,7 +19,7 @@
 
 MOD_DEPTH = .
 
-DIRS = config pr lib pr/tests
+DIRS = config pr lib
 
 ifdef MOZILLA_CLIENT
 PR_CLIENT_BUILD = 1
@@ -37,7 +37,7 @@ endif
 
 ifdef PR_CLIENT_BUILD
 export::
-	rm -rf $(DIST)/../public/nspr
+	rm -r -f $(DIST)/../public/nspr
 ifdef PR_CLIENT_BUILD_UNIX
 	rm -f $(DIST)/lib/libnspr.a
 	rm -f $(DIST)/bin/libnspr.$(DLL_SUFFIX)
