@@ -3952,24 +3952,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj, jsval id, PRUint32 flags,
                        JSObject **objp, PRBool *_retval)
 {
-  JSBool did_resolve = JS_FALSE;
-
-  if (!::JS_ResolveStandardClass(cx, obj, id, &did_resolve)) {
-    *_retval = JS_FALSE;
-
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (did_resolve) {
-    *objp = obj;
-
-    return NS_OK;
-  }
-
-  if (id == sConstructor_id && !(flags & JSRESOLVE_ASSIGNING)) {
-    return ResolveConstructor(cx, obj, objp);
-  }
-
   if (JSVAL_IS_STRING(id)) {
     JSString *str = JSVAL_TO_STRING(id);
     nsCOMPtr<nsISupports> native;
@@ -3991,8 +3973,31 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     nsresult rv = NS_OK;
 
     if (!(flags & JSRESOLVE_ASSIGNING)) {
-      // If we're resolving for assignment it's not worth calling
-      // GlobalResolve()
+      // We're not resolving for assignment. It's not worth calling
+      // JS_ResolveStandardClass() or calling GlobalResolve() since
+      // only read-write properties are dealt with in those calls.
+
+      JSContext *my_cx = (JSContext *) my_context->GetNativeContext();
+      JSBool did_resolve = JS_FALSE;
+
+      // Resolve standard classes on my_context's JSContext, not on
+      // cx, in case the two contexts have different origins.  We want
+      // lazy standard class initialization to behave as if it were
+      // done eagerly, on each window's own context (not on some other
+      // window-caller's context).
+
+      if (!::JS_ResolveStandardClass(my_cx, obj, id, &did_resolve)) {
+        *_retval = JS_FALSE;
+
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      if (did_resolve) {
+        *objp = obj;
+
+        return NS_OK;
+      }
+
       rv = GlobalResolve(native, cx, obj, str, flags, &did_resolve);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -4003,6 +4008,13 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
         return NS_OK;
       }
+
+      // We want this code to be before the child frame lookup code
+      // below so that a child frame named 'constructor' doesn't
+      // shadow the window's constructor property.
+      if (id == sConstructor_id) {
+        return ResolveConstructor(cx, obj, objp);
+      }
     }
 
     // Hmm, we do an aweful lot of QI's here, maybe we should add a
@@ -4010,7 +4022,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // window code directly...
 
     nsCOMPtr<nsIDocShell> docShell;
-
     sgo->GetDocShell(getter_AddRefs(docShell));
 
     nsCOMPtr<nsIDocShellTreeNode> dsn(do_QueryInterface(docShell));
@@ -4203,6 +4214,25 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         }
 
         *objp = obj;
+
+        return NS_OK;
+      }
+
+      // Do a security check when resolving heretofore unknown string
+      // properties on window objects to prevent detection of a
+      // property's existence across origins. We only do this when
+      // resolving for a GET, no need to do it for set since we'll do
+      // a security check in nsWindowSH::SetProperty() in that case.
+      rv =
+        doCheckPropertyAccess(cx, obj, id, wrapper,
+                              nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
+                              PR_TRUE);
+      if (NS_FAILED(rv)) {
+        // Security check failed. The security manager set a JS
+        // exception, we must make sure that exception is propagated, so
+        // return NS_OK here.
+
+        *_retval = PR_FALSE;
 
         return NS_OK;
       }
@@ -4932,6 +4962,8 @@ nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, PRUint32 flags,
                          JSObject **objp, PRBool *_retval)
 {
+  nsresult rv;
+
   if (id == sLocation_id) {
     // This must be done even if we're just getting the value of
     // document.location (i.e. no checking flags & JSRESOLVE_ASSIGNING
@@ -4947,7 +4979,7 @@ nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIDOMLocation> location;
-    nsresult rv = doc->GetLocation(getter_AddRefs(location));
+    rv = doc->GetLocation(getter_AddRefs(location));
     NS_ENSURE_SUCCESS(rv, rv);
 
     jsval v;
@@ -4968,6 +5000,24 @@ nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
 
     *objp = obj;
+
+    return NS_OK;
+  }
+
+  // Do a security check when resolving heretofore unknown string
+  // properties on document objects to prevent detection of a
+  // property's existence across origins.
+  rv = doCheckPropertyAccess(cx, obj, id, wrapper,
+                             (flags & JSRESOLVE_ASSIGNING) ?
+                             nsIXPCSecurityManager::ACCESS_SET_PROPERTY :
+                             nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
+                             PR_FALSE);
+  if (NS_FAILED(rv)) {
+    // Security check failed. The security manager set a JS exception,
+    // we must make sure that exception is propagated, so return NS_OK
+    // here.
+
+    *_retval = PR_FALSE;
 
     return NS_OK;
   }
@@ -5130,6 +5180,12 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                              JSObject *obj, jsval id, PRUint32 flags,
                              JSObject **objp, PRBool *_retval)
 {
+  // nsDocumentSH::NewResolve() does a security check that we'd kinda
+  // want to do here too before doing anything else. But given that we
+  // only define dynamic properties here before the call to
+  // nsDocumentSH::NewResolve() we're ok, since once those properties
+  // are accessed, we'll do the necessary security check.
+
   if (!(flags & JSRESOLVE_ASSIGNING)) {
     nsCOMPtr<nsISupports> result;
 
