@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: API.pm,v 1.12 1998/08/13 22:03:42 leif Exp $
+# $Id: API.pm,v 1.13 1999/01/21 23:52:41 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -247,7 +247,7 @@ require AutoLoader;
 # Add Everything in %EXPORT_TAGS to @EXPORT_OK
 Exporter::export_ok_tags(keys %EXPORT_TAGS);
 
-$VERSION = '1.00';
+$VERSION = '1.1';
 
 # The XS 'constant' routine returns an integer.  There are all constants
 # we want to return something else.

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: API.xs,v 1.15 1998/08/13 22:40:53 leif Exp $
+ * $Id: API.xs,v 1.16 1999/01/21 23:52:41 leif%netscape.com Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -70,22 +70,24 @@ static int ldap_default_rebind_auth = LDAP_AUTH_SIMPLE;
 /* Return a Perl List from a char ** in PPCODE */
 #define RET_CPP(cppvar) \
 	   int cppindex; \
+	   if (cppvar) { \
 	   for (cppindex = 0; cppvar[cppindex] != NULL; cppindex++) \
 	   { \
 	      EXTEND(sp,1); \
 	      PUSHs(sv_2mortal(newSVpv(cppvar[cppindex],strlen(cppvar[cppindex])))); \
 	   } \
-	   ldap_value_free(cppvar)
+	   ldap_value_free(cppvar); }
 
 /* Return a Perl List from a berval ** in PPCODE */
 #define RET_BVPP(bvppvar) \
 	   int bvppindex; \
+	   if (bvppvar) { \
 	   for (bvppindex = 0; bvppvar[bvppindex] != NULL; bvppindex++) \
 	   { \
 	      EXTEND(sp,1); \
 	      PUSHs(sv_2mortal(newSVpv(bvppvar[bvppindex]->bv_val,bvppvar[bvppindex]->bv_len))); \
 	   } \
-	   ldap_value_free_len(bvppvar)
+	   ldap_value_free_len(bvppvar); }
 
 /* Return a char ** when passed a reference to an AV */
 char ** avref2charptrptr(SV *avref)
@@ -118,7 +120,7 @@ struct berval ** avref2berptrptr(SV *avref)
    I32 avref_arraylen;
    int ix_av,val_len;
    SV **current_val;
-   char *tmp_char;
+   char *tmp_char,*tmp2;
    struct berval **tmp_ber;
 
    if (SvTYPE(SvRV(avref)) != SVt_PVAV || 
@@ -132,11 +134,14 @@ struct berval ** avref2berptrptr(SV *avref)
    {
       New(1,tmp_ber[ix_av],1,struct berval);
       current_val = av_fetch((AV *)SvRV(avref),ix_av,0);
+
+      tmp_char = SvPV(*current_val,na);
       val_len = SvCUR(*current_val);
 
-      Newz(1,tmp_char,val_len+1,char);
-      Copy(SvPV(*current_val,na),tmp_char,val_len,char);
-      tmp_ber[ix_av]->bv_val = tmp_char;
+      Newz(1,tmp2,val_len+1,char);
+      Copy(tmp_char,tmp2,val_len,char);
+
+      tmp_ber[ix_av]->bv_val = tmp2;
       tmp_ber[ix_av]->bv_len = val_len;
    }
    tmp_ber[ix_av] = NULL;
@@ -479,6 +484,13 @@ void
 ldap_ber_free(ber,freebuf)
 	BerElement *	ber
 	int		freebuf
+	CODE:
+	{
+	   if (ber)
+	   {
+	      ldap_ber_free(ber,freebuf);
+	   }
+	}
 
 int
 ldap_bind(ld,dn,passwd,authmethod)
@@ -587,7 +599,8 @@ ldap_create_filter(buf,buflen,pattern,prefix,suffix,attr,value,valwords)
 	char *		value
 	char **		valwords
 	CLEANUP:
-	ldap_value_free(valwords);
+	if (valwords)
+	  ldap_value_free(valwords);
 
 #ifdef LDAPV3
 
@@ -720,7 +733,8 @@ ldap_extended_operation_s(ld,requestoid,requestdata,serverctrls,clientctrls,reto
 	retoidp
 	retdatap
 	CLEANUP:
-	ldap_value_free_len(retdatap);
+	if (retdatap)
+	  ldap_value_free_len(retdatap);
 
 #endif
 
@@ -957,7 +971,8 @@ ldap_memcache_init(ttl,size,baseDNs,cachep)
 	RETVAL
 	cachep
 	CLEANUP:
-	ldap_value_free(baseDNs);
+	if (baseDNs)
+	  ldap_value_free(baseDNs);
 
 int
 ldap_memcache_set(ld,cache)
@@ -1052,6 +1067,15 @@ ldap_mods_free(mods,freemods)
 int
 ldap_msgfree(lm)
 	LDAPMessage *	lm
+	CODE:
+	{
+	   if (lm)
+	   {
+	      RETVAL = ldap_msgfree(lm);
+	   }
+	}
+	OUTPUT:
+	RETVAL
 
 int
 ldap_msgid(lm)
@@ -1074,7 +1098,8 @@ ldap_multisort_entries(ld,chain,attr)
 	RETVAL
 	chain
 	CLEANUP:
-	ldap_value_free(attr);
+	if (attr)
+	  ldap_value_free(attr);
 
 char *
 ldap_next_attribute(ld,entry,ber)
@@ -1285,7 +1310,8 @@ ldap_search(ld,base,scope,filter,attrs,attrsonly)
 	char **		attrs
 	int		attrsonly
 	CLEANUP:
-	ldap_value_free(attrs);
+	if (attrs)
+	  ldap_value_free(attrs);
 
 #ifdef LDAPV3
 
@@ -1306,7 +1332,8 @@ ldap_search_ext(ld,base,scope,filter,attrs,attrsonly,serverctrls,clientctrls,tim
 	RETVAL
 	msgidp
 	CLEANUP:
-	ldap_value_free(attrs);
+	if (attrs)
+	  ldap_value_free(attrs);
 
 int
 ldap_search_ext_s(ld,base,scope,filter,attrs,attrsonly,serverctrls,clientctrls,timeoutp,sizelimit,res)
@@ -1325,7 +1352,8 @@ ldap_search_ext_s(ld,base,scope,filter,attrs,attrsonly,serverctrls,clientctrls,t
 	RETVAL
 	res
 	CLEANUP:
-	ldap_value_free(attrs);
+	if (attrs)
+	  ldap_value_free(attrs);
 
 #endif
 
@@ -1342,7 +1370,8 @@ ldap_search_s(ld,base,scope,filter,attrs,attrsonly,res)
 	RETVAL
 	res
 	CLEANUP:
-	ldap_value_free(attrs);
+	if (attrs)
+	  ldap_value_free(attrs);
 
 int
 ldap_search_st(ld,base,scope,filter,attrs,attrsonly,timeout,res)
@@ -1358,7 +1387,8 @@ ldap_search_st(ld,base,scope,filter,attrs,attrsonly,timeout,res)
 	RETVAL
 	res
 	CLEANUP:
-	ldap_value_free(attrs);
+	if (attrs)
+	  ldap_value_free(attrs);
 	
 int
 ldap_set_filter_additions(lfdp,prefix,suffix)

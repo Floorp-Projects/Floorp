@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: modattr.pl,v 1.7 1998/08/13 23:32:28 leif Exp $
+# $Id: modattr.pl,v 1.8 1999/01/21 23:52:46 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -31,6 +31,9 @@ use Getopt::Std;			# To parse command line arguments.
 use Mozilla::LDAP::Conn;		# Main "OO" layer for LDAP
 use Mozilla::LDAP::Utils;		# LULU, utilities.
 
+use strict;
+no strict "vars";
+
 
 #############################################################################
 # Constants, shouldn't have to edit these...
@@ -58,8 +61,7 @@ Mozilla::LDAP::Utils::userCredentials(\%ld) unless $opt_n;
 $conn = new Mozilla::LDAP::Conn(\%ld);
 die "Could't connect to LDAP server $ld{host}" unless $conn;
 
-#$conn->setDefaultRebindProc($ld{bind}, $ld{pswd}, 128);
-#$conn->setRebindProc(\&LdapUtils::rebindProc);
+$conn->setDefaultRebindProc($ld{bind}, $ld{pswd});
 
 ($change, $search) = @ARGV;
 if (($change eq "") || ($search eq ""))
@@ -74,26 +76,37 @@ while ($entry)
 {
   $changed = 0;
 
-  if ($opt_d && defined $entry->{$attr})
+  if ($opt_d)
     {
-      if ($value)
+      if (defined $entry->{$attr})
 	{
-	  $changed = $entry->removeValue($attr, $value);
-	  if ($changed && $opt_v)
+	  if ($value)
 	    {
-	      print "Removed value from ", $entry->getDN(), "\n" if $opt_v;
+	      $changed = $entry->removeValue($attr, $value);
+	      if ($changed && $opt_v)
+		{
+		  print "Removed value from ", $entry->getDN(), "\n" if $opt_v;
+		}
+	    }
+	  else
+	    {
+	      delete $entry->{$attr};
+	      print "Deleted attribute $attr for ", $entry->getDN(), "\n" if $opt_v;
+	      $changed = 1;
 	    }
 	}
       else
 	{
-	  delete $entry->{$attr};
-	  print "Deleted attribute $attr for ", $entry->getDN(), "\n" if $opt_v;
-	  $changed = 1;
+	  print "No attribute values for: $attr\n";
 	}
     }
   else
     {
-      if ($opt_a)
+      if (!defined($value) || !$value)
+	{
+	  print "No value provided for the attribute $attr\n";
+	}
+      elsif ($opt_a)
 	{
 	  $changed = $entry->addValue($attr, $value);
 	  if ($changed && $opt_v)
@@ -103,12 +116,9 @@ while ($entry)
 	}
       else
 	{
-	  if ($entry->{$attr}[0] ne $value)
-	    {
-	      $entry->{$attr} = [$value];
-	      $changed = 1;
-	      print "Set attribute for ", $entry->getDN(), "\n" if $opt_v;
-	    }
+	  $entry->setValue($attr, $value);
+	  $changed = 1;
+	  print "Set attribute for ", $entry->getDN(), "\n" if $opt_v;
 	}
     }
   if ($changed && ! $opt_n)

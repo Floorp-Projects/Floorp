@@ -1,0 +1,6 @@
+1999-01-05  Leif Hedstrom  <leif@netscape.com>
+
+	* entry.pl: New script, to test all Entry:: methods.
+
+	* conn.pl (attributeEQ): Added test for modifyRDN().
+

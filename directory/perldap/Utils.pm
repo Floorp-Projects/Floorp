@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Utils.pm,v 1.10 1998/08/13 21:32:29 leif Exp $
+# $Id: Utils.pm,v 1.11 1999/01/21 23:52:43 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -63,7 +63,7 @@ sub normalizeDN
   my ($dn) = @_;
   my (@vals);
 
-  return "" if ($dn eq "");
+  return "" unless (defined($dn) && ($dn ne ""));
 
   @vals = Mozilla::LDAP::API::ldap_explode_dn(lc $dn, 0);
 
@@ -188,14 +188,29 @@ sub str2Scope
 
 
 #############################################################################
-# Ask for a password, without displaying it on the TTY. This is very non-
-# portable, we need a better solution (using the term package perhaps?).
+# Ask for a password, without displaying it on the TTY.
 #
 sub askPassword
 {
-  system('/bin/stty -echo');
-  chop($_ = <STDIN>);
-  system('/bin/stty echo');
+  my $prompt = $_[0];
+  my $hasReadKey = 0;
+
+  eval "use Term::ReadKey";
+  $hasReadKey=1 unless ($@);
+
+  print "LDAP password: " if $prompt;
+  if ($hasReadKey)
+    {
+      ReadMode(2);
+      chop($_ = ReadLine(0));
+      ReadMode(0);
+    }
+  else
+    {
+      system('/bin/stty -echo');
+      chop($_ = <STDIN>);
+      system('/bin/stty echo');
+    }
   print "\n";
 
   return $_;
@@ -204,7 +219,8 @@ sub askPassword
 
 #############################################################################
 # Handle some standard LDAP options, and construct a nice little structure
-# that we can use later on.
+# that we can use later on. We really should have some appropriate defaults,
+# perhaps from an Mozilla::LDAP::Config module.
 #
 sub ldapArgs
 {
@@ -212,8 +228,9 @@ sub ldapArgs
   my %ld;
 
   $main::opt_v = $main::opt_n if defined($main::opt_n);
-  $main::opt_p = LDAPS_PORT unless (defined($main::opt_p) ||
-				    ($main::opt_p eq ""));
+  $main::opt_p = LDAPS_PORT if (!defined($main::opt_p) &&
+				defined($main::opt_P) &&
+				($main::opt_P ne ""));
 
   $ld{"host"} = $main::opt_h || "ldap";
   $ld{"port"} = $main::opt_p || LDAP_PORT;
@@ -221,12 +238,11 @@ sub ldapArgs
   $ld{"bind"} = $main::opt_D || $bind || "";
   $ld{"pswd"} = $main::opt_w || "";
   $ld{"cert"} = $main::opt_P || "";
-  $ld{"scope"} = $main::opt_s || LDAP_SCOPE_SUBTREE;
+  $ld{"scope"} = (defined($main::opt_s) ? $main::opt_s : LDAP_SCOPE_SUBTREE);
 
   if (($ld{"bind"} ne "") && ($ld{"pswd"} eq ""))
     {
-      print "LDAP password: ";
-      $ld{pswd} = askPassword();
+      $ld{pswd} = askPassword(1);
     }
 
   return %ld;
@@ -250,7 +266,7 @@ sub unixCrypt
 
 #############################################################################
 # Try to find a user to bind as, and possibly ask for the password. Pass
-# a pointer to the hash array with parameters to this function.
+# a pointer to the hash array with LDAP parameters to this function.
 #
 sub userCredentials
 {
@@ -268,13 +284,11 @@ sub userCredentials
 
       $conn->close();
       $ld->{"bind"} = $entry->getDN();
-      print "Binding as ", $ld->{"bind"}, "\n\n" if $main::opt_v;
     }
 
   if ($ld->{"pswd"} eq "")
     {
-      print "Enter bind password: ";
-      $ld->{"pswd"} = Mozilla::LDAP::Utils::askPassword();
+      $ld->{"pswd"} = Mozilla::LDAP::Utils::askPassword(1);
     }
 }
 
@@ -293,6 +307,12 @@ sub answer
   return "Y" if /^[yY]/;
   return "N" if /^[nN]/;
 }
+
+
+#############################################################################
+# Mandatory TRUE return value.
+#
+1;
 
 
 #############################################################################

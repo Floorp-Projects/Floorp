@@ -26,37 +26,50 @@ functionality in future releases.
 Installing PerLDAP Binaries
 ===========================
 
-You will first need version 3.0 Beta 1 of the LDAP C SDK from Netscape.  This
-is available from the DevEdge page at:
+You will first need version 3.0 of the LDAP C SDK from Netscape.  This is
+available from the DevEdge page at:
 
     http://developer.netscape.com/tech/directory/
 
-You will also need Perl v5.004, available at http://www.perl.com/.  Earlier
-versions of Perl will NOT work with the binaries.  If you wish to use v5.004,
-you will need to compile PerLDAP from source.
+You will also need Perl v5.004, available at http://www.perl.com/.
+Earlier, or later, versions of Perl will NOT work with these binaries. If
+you wish to use v5.005, you will need to compile PerLDAP from source.
 
 On Unix (Solaris Only...HPUX, IRIX, AIX to follow):
   1. Be sure that the libraries from the C SDK are installed in locations
-     referenced by the environment variable LD_LIBRARY_PATH.
+     referenced by the environment variable LD_LIBRARY_PATH, or one of the
+     default system lib directories (e.g. /usr/lib). Alternatively you can
+     later also copy the SDK libraries to the same "site" directory where
+     Perl installed the PerLDAP libraries.
+
   2. Save the file in a temporary location
+
   3. Unzip the file by entering the command:
       gunzip <filename>.tar.gz
+
   4. Untar the resulting tar file by entering the command:
       tar xvof <filename>.tar
+
   5. Change to the extract directory:
-      cd PerLDAP-1.0
+      cd PerLDAP-1.1
+
   6. Execute the following command in as the super-user (root):
       perl install-bin
 
 On Windows NT:
-  1. Be sure that the DLL from the C SDK is installed in your system32
-     directory. Or alternatively, put the SDK DLLs in the same directory
-     as your Perl-5 binary.
+  1. Put the LDAP C SDK DLL in the same directory as the perl.exe
+  binary. You can also set your PATH to point to the directory where you
+  have the C SDK installed. Alternatively, you can put the DLL in the
+  system32 folder, but avoid that if possible.
+
   2. Save the file in a temporary location
+
   3. Unzip the file by entering the command:
       I don't have a tool for creating self-extracting archives...
+
   4. Change to the extract directory:
-      cd PerLDAP-1.0
+      cd PerLDAP-1.1
+
   5. Execute the following command:
       perl install-bin
 
@@ -77,6 +90,11 @@ PerLDAP, and it checks out the directory
 Further instructions for using CVS and Mozilla is available at
 
   http://www.mozilla.org/cvs.html
+
+and an FAQ is at
+
+  http://www.mozilla.org/directory/faq/perldap-faq.html
+
 
 Instructions for building the source can be found in the INSTALL file
 in the source distribution.
@@ -140,7 +158,7 @@ Reporting problems and bugs
 
 Address all bug reports and comments to the Mozilla newsgroups at:
 
-   news://news.mozilla.org/netscape.public.mozilla.general
+   news://news.mozilla.org/netscape.public.mozilla.directory
 
 
 License/Copyright

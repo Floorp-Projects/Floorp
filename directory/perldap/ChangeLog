@@ -1,6 +1,216 @@
+1999-01-06  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm (nextEntry): Fixed (tried to fix...) the bug with
+	missing attributes. I hope this will work, at a minimum I'm sure
+	it won't hurt. The idea is to keep the case on the attribute type
+	when requesting the values_len().
+
+1999-01-11  Leif Hedstrom  <leif@netscape.com>
+
+	* API.xs: Added IF statements around all ldap_value_free() calls.
+
+1999-01-05  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm (getRes): Ooops, didn't return the appropriate
+	value... :(
+	(init): Changed test for LDAP_SUCCESS, to always return 0 or 1.
+	(close): Dito.
+	(delete): Dito.
+	(add): Dito.
+	(modifyRDN): Dito.
+	(update): Dito.
+	(simpleAuth): Dito.
+
+	* Entry.pm (NEXTKEY): Don't return the last $key if it's one that
+	should be hidden.
+
+	* Conn.pm (newEntry): New method, to create an empty LDAP::Entry
+	object. It is properly "tied" into the appropriate object.
+
+1999-01-04  Leif Hedstrom  <leif@netscape.com>
+
+	* Entry.pm (setDN): Added third optional argument, to enfoce DN
+	normalization.
+	(getDN): Dito.
+	(hasDNValue): Dito.
+	(matchDNValue): Dito.
+
+	* Entry.pm (removeValue): Added support for DN normalization
+	(optional argument).
+	(addValue): Dito
+	(getDN): Dito.
+
+1998-12-31  Leif Hedstrom  <leif@netscape.com>
+
+	* Entry.pm (DESTROY): Added this method, don't know if it actually
+	makes any sense at all... :(
+
+	* Conn.pm (add): Use _oc_order_ to find a list of attributes, to
+	avoide calling the TIEHASH methods.
+	(update): Dito.
+	(ALL): Clean out some "my" definitions.
+
+	* Entry.pm (unRemove): New function, to undo remove opertaions on
+	an attribute.
+	(DELETE): Bug-fix, don't undef the attribute, it would prevent us
+	from updating it properly in the Conn::update() method.
+	(remove): Dito.
+
+	* Conn.pm (nextEntry): Return $obj instead of blessing the %entry
+	(again).
+
+1998-12-25  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm (POD): Changed examples from $conn -> $entry.
+
+1998-12-17  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm (DESTROY): undef the Perl data after doing a
+	ldap_msgfree(), bug #1964.
+	(search): Dito.
+	(searchURL): Dito.
+	(nextEntry): Changed the order of setting numattr, to make sure
+	it's zero if we don't find anything.
+
+1998-12-16  Leif Hedstrom  <leif@netscape.com>
+
+	* Entry.pm (FIRSTKEY): Modified to honor the oc_order.
+	(NEXTKEY): Dito.
+	(markModified): Made as an alias for attrModified().
+
+	* Conn.pm (nextEntry): Added code to handle internal counters for
+	number of attributes in oc_order. This is used/needed for the
+	FIRSTKEY and NEXTKEY methods in the Entry/Tie::Hash object.
+
+	* Entry.pm (isAttr): New method, to make sure an attribute name
+	really is a valid LDAP attribute.
+	(FIRSTKEY): Now we'll handle each() and keys() properly, whooohoo!
+	(NEXTKEY): Dito.
+
+1998-12-15  Leif Hedstrom  <leif@netscape.com>
+
+	* Entry.pm (isDeleted): Added new method, almost identical to isModified().
+	(EXISTS): New method, to implement the EXISTS functionality.
+
+	* API.xs (RET_CPP): Test for NULL pointers, bug #1387.
+	(RET_BVPP): Dito.
+
+	* Utils.pm (ldapArgs): Fixed bug where "-s 0" would not be honored
+	(I'm an idiot, OK?).
+
+1998-12-14  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm (getRes): New method, to return the internal result message.
+	(getLD): Use defined() around test for existence.
+
+1998-12-11  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm (new): Make sure binddn and bindpasswd are set to the
+	empty string unless specified.
+	(init): Make sure certdb is defined before trying to use it.
+	(setDefaultRebindProc): Added default auth method, unless
+	explicitly specified.
+
+	* Utils.pm (askPassword): Added support for Term::ReadKey.
+	(askPassword): Moved the eval "use ..." here.
+	(userCredentials): Removed verbose print statement.
+	(askPassword): Added an optional argument to print a prompt;
+
+	* Conn.pm (setDefaultRebindProc): Added a default "auth" value, if
+	not provided in the call.
+
+1998-12-04  Leif Hedstrom  <leif@netscape.com>
+
+	* Makefile.PL: Modified so that "silent" install will actually
+	echo what options it's setting.
+	It will now croak() if the SDK dir specified doesn't exist.
+
+	* INSTALL: Updated to reflect new v1.1 stuff. Added links to the
+	FAQ.
+
+	* README: Dito. Also changed some of the binary install
+	information, which might not be useful anyways...
+
+	* Makefile.PL: Added "filters" to remove .dll and .sl from shared
+	libraries when creating link options. I also replaced the code to
+	put the valid library extensions into a variable (bug #1344).
+
+	* Makefile.PL: Fixed some crap with the config parsing, and ENV
+	handling (for silent installs).
+
+1998-12-03  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm (update): Bug fix, now we empty the hash array before
+	examining changed attributes (bug #1385).
+
+	* Makefile.PL: Added the "-nolinenumbers" XSUBS options (bug #1329).
+
+1998-09-26  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm (init): Cleaned out _perror() calls.
+	(delete): Added support for calling delete() with an Entry::
+	object as paramter.
+	(new): Cleaned out some dead code for $ref.
+
+	* Entry.pm (setValue): New method, to avoid having to use Perl
+	assignment statements to set an entire attribute value.
+
+1998-09-18  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm (init): Changed call to ldapssl_client_init() to pass a
+	0 value as the handle pointer. This avoids a Perl compiler warning.
+
+1998-09-12  Leif Hedstrom  <leif@netscape.com>
+
+	* LDIF.pm (readEntries): Changed tests for empty arguments, to use
+	defined().
+
+	* Utils.pm (ldapArgs): Bug fix, we used the wrong option for the
+	certificate (-P) when checking to set the LDAP port.
+	(normalizeDN): Chagned tests for empty arguments, to use use defined().
+
+	* Entry.pm (STORE): Changed tests for empty arguments, to use
+	defined().
+	(DELETE): Dito.
+	(attrModified): Dito.
+	(isModified): Dito.
+	(remove): Dito.
+	(removeValue): Dito.
+	(addValue): Dito.
+	(hasValue): Dito.
+	(matchValue): Dito.
+	(setDN): Dito.
+	(size): Dito.
+	(exists): Dito.
+
+	* Conn.pm (printError): Changed test for $str to see if it's defined.
+	(delete): Cleaned up code around $dn.
+	(modifyRDN): Cleaned up testes around $dn and $del.
+
+1998-09-11  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm (modifyRDN): We now preserve the case of the DN/RDN, but
+	still treat RDNs as CIS when comparing strings.
+
+1998-09-08  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm (setDefaultRebindProc): Bug fix, it had the Ldapc:: crap
+	stil in there... :-(.
+	(simpleAuth): New method, to do simple authentication rebind.
+
+1998-09-07  Leif Hedstrom  <leif@netscape.com>
+
+	* Makefile.PL: Changed all <> to <STDIN>, to support command line
+	arguments for MakeMaker.
+
+1998-09-03  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm (nextEntry): Fixed bug with case sensitivity.
+
 1998-08-18  Leif Hedstrom  <leif@netscape.com>
 
 	* Conn.pm (setDefaultRebindProc): It's back!
+	Officially released PerLDAP v1.0.
 
 1998-08-13  Leif Hedstrom  <leif@netscape.com>
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: rename.pl,v 1.3 1998/08/13 09:56:03 leif Exp $
+# $Id: rename.pl,v 1.4 1999/01/21 23:52:47 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -36,8 +36,6 @@ use Mozilla::LDAP::Utils;		# LULU, utilities.
 #
 $APPNAM	= "rename";
 $USAGE	= "$APPNAM [-nvI] -b base -h host -D bind -w pswd -P cert filter new_rdn";
-
-@ATTRIBUTES = ("objectclass");
 
 
 #############################################################################

@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Entry.pm,v 1.9 1998/08/13 21:31:36 leif Exp $
+# $Id: Entry.pm,v 1.10 1999/01/21 23:52:42 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -28,6 +28,7 @@
 
 package Mozilla::LDAP::Entry;
 
+use Mozilla::LDAP::Utils qw(normalizeDN);
 require Tie::Hash;
 @ISA = (Tie::StdHash);
 
@@ -47,7 +48,7 @@ sub TIEHASH
 
 
 #############################################################################
-# Destructor, does nothing really...
+# Destructor.
 #
 #sub DESTROY
 #{
@@ -61,7 +62,8 @@ sub STORE
 {
   my ($self, $attr, $val) = ($_[$[], lc $_[$[ + 1], $_[$[ + 2]);
 
-  return if (($val eq "") || ($attr eq ""));
+  return unless (defined($val) && ($val ne ""));
+  return unless (defined($attr) && ($attr ne ""));
 
   if (defined($self->{$attr}))
     {
@@ -75,6 +77,7 @@ sub STORE
   if (($attr ne "dn") && !grep(/^$attr$/i, @{$self->{"_oc_order_"}}))
     {
       push(@{$self->{"_oc_order_"}}, $attr);
+      $self->{"_oc_numattr_"}++;
     }
 }
 
@@ -87,23 +90,86 @@ sub FETCH
   my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
 
   return unless defined($self->{$attr});
+  return if $self->{"_${attr}_deleted_"};
 
   return $self->{$attr};
 }
 
 
 #############################################################################
-# Delete method, to keep track of changes.
+# Delete method, to keep track of changes. Note that we actually don't
+# delete the attribute, just mark it as deleted.
 #
 sub DELETE
 {
   my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
 
-  return if ($attr eq "");
+  return unless (defined($attr) && ($attr ne ""));
   return unless defined($self->{$attr});
 
   $self->{"_${attr}_deleted_"} = 1;
-  undef $self->{$attr};
+}
+
+
+#############################################################################
+# See if an attribute/key exists in the entry (could still be undefined).
+#
+sub EXISTS
+{
+  my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
+
+  return 0 unless (defined($attr) && ($attr ne ""));
+  return 0 if $self->{"_${attr}_deleted_"};
+
+  return exists $self->{$attr};
+}
+
+
+#############################################################################
+# Reset the each()/key() session, and return the first key. This honors
+# the oc_order, i.e. the order the attributes were returned in.
+#
+sub FIRSTKEY
+{
+  my ($self, $idx) = ($_[$[], 0);
+  my @attrs = @{$self->{"_oc_order_"}};
+  my $key;
+
+  while ($idx < $self->{"_oc_numattr_"})
+    {
+      $key = $attrs[$idx++];
+      next if ($key =~ /^_.+_$/);
+      next if $self->{"_${key}_deleted_"};
+      last;
+    }
+  $self->{"_oc_keyidx_"} = $idx;
+
+  return $key;
+}
+
+
+#############################################################################
+# Get the next key, if appropriate.
+#
+sub NEXTKEY
+{
+  my $self = $_[$[];
+  my $idx = $self->{"_oc_keyidx_"};
+  my @attrs = @{$self->{"_oc_order_"}};
+  my $key;
+
+  while ($idx < $self->{"_oc_numattr_"})
+    {
+      $key = $attrs[$idx++];
+      next if ($key =~ /^_.+_$/);
+      next if $self->{"_${key}_deleted_"};
+      last;
+    }
+  $self->{"_oc_keyidx_"} = $idx;
+
+  return if ($key =~ /^_.+_$/);
+  return if $self->{"_${key}_deleted_"};
+  return $key;
 }
 
 
@@ -115,8 +181,9 @@ sub attrModified
 {
   my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
 
-  return 0 if ($attr eq "");
+  return 0 unless (defined($attr) && ($attr ne ""));
   return 0 unless defined($self->{$attr});
+  return 0 if $self->{"_${attr}_deleted_"};
 
   @{$self->{"_${attr}_save_"}} = @{$self->{$attr}}
     unless $self->{"_${attr}_save_"};
@@ -124,6 +191,7 @@ sub attrModified
 
   return 1;
 }
+*markModified = \*attrModified;
 
 
 #############################################################################
@@ -134,8 +202,40 @@ sub isModified
 {
   my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
 
-  return 0 if ($attr eq ""); return 0 unless defined($self->{$attr});
+  return 0 unless (defined($attr) && ($attr ne ""));
+  return 0 unless defined($self->{$attr});
   return $self->{"_self_obj_"}->{"_${attr}_modified_"};
+}
+
+
+#############################################################################
+# Ask if a particular attribute has been deleted already. Return True or
+# false depending on the internal status of the attribute.
+#
+sub isDeleted
+{
+  my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
+
+  return 0 unless (defined($attr) && ($attr ne ""));
+  return 0 unless defined($self->{$attr});
+
+  return $self->{"_self_obj_"}->{"_${attr}_deleted_"};
+}
+
+
+#############################################################################
+# Test if a attribute name is actually a real attribute, and not part of
+# the internal structures.
+#
+sub isAttr
+{
+  my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
+
+  return 0 unless (defined($attr) && ($attr ne ""));
+  return 0 unless defined($self->{$attr});
+  return 0 if $self->{"_${attr}_deleted_"};
+
+  return ($attr !~ /^_.+_$/);
 }
 
 
@@ -148,15 +248,37 @@ sub remove
 {
   my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
 
-  return 0 if ($attr eq "");
+  return 0 unless (defined($attr) && ($attr ne ""));
   return 0 unless defined($self->{$attr});
 
   $self->{"_self_obj_"}->{"_${attr}_deleted_"} = 1;
-  undef $self->{"_self_obj_"}->{$attr};
 
   return 1;
 }
 *delete = \*remove;
+
+
+#############################################################################
+# Undo a remove(), or set of removeValues() fairly useless, to restore an
+# attribute to it's original state. This is fairly useless, but hey...
+#
+sub unRemove
+{
+  my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
+
+  return 0 unless (defined($attr) && ($attr ne ""));
+  return 0 unless defined($self->{$attr});
+
+  undef $self->{"_self_obj_"}->{"_${attr}_deleted_"};
+  if (defined $self->{"_${attr}_save_"})
+    {
+      @{$self->{$attr}} = @{$self->{"_${attr}_save_"}};
+      undef @{$selfl->{"_${key}_save_"}};
+    }
+
+  return 1;
+}
+*unDelete = \*unRemove;
 
 
 #############################################################################
@@ -166,17 +288,22 @@ sub remove
 #
 sub removeValue
 {
-  my ($self, $attr, $val) = ($_[$[], lc $_[$[ + 1], $_[$[ + 2]);
+  my ($self, $attr, $val, $norm) = ($_[$[], lc $_[$[ + 1], $_[$[ + 2],
+				    $_[$[ + 3]);
   my $i = 0;
   local $_;
 
-  return 0 if (($val eq "") || ($attr eq ""));
+  return 0 unless (defined($val) && ($val ne ""));
+  return 0 unless (defined($attr) && ($attr ne ""));
   return 0 unless defined($self->{$attr});
 
-  @{$self->{"_${attr}_save_"}} = @{$self->{$attr}}
-    unless $self->{"_${attr}_save_"};
+  $val = normalizeDN($val) if (defined($norm) && $norm);
+  @{$self->{"_${attr}_save_"}} = @{$self->{$attr}} unless
+    defined $self->{"_${attr}_save_"};
+
   foreach (@{$self->{$attr}})
     {
+      $_ = normalizeDN($_) if (defined($norm) && $norm);
       if ($_ eq $val)
 	{
 	  splice(@{$self->{$attr}}, $i, 1);
@@ -187,7 +314,6 @@ sub removeValue
 	  else
 	    {
 	      $self->{"_self_obj_"}->{"_${attr}_deleted_"} = 1;
-	      # TODO: Now remove it from _oc_order_ !
 	    }
 
 	  return 1;
@@ -201,6 +327,18 @@ sub removeValue
 
 
 #############################################################################
+# Just like removeValue(), but force the DN normalization of the value.
+#
+sub removeDNValue
+{
+  my ($self, $attr, $val) = ($_[$[], lc $_[$[ + 1], $_[$[ + 2]);
+
+  return $self->removeValue($attr, $val, 1);
+}
+*deleteDNValue = \*removeDNValue;
+
+
+#############################################################################
 # Add a value to an attribute. The optional third argument indicates that
 # we should not enforce the uniqueness on this attibute, thus bypassing
 # the test and always add the value.
@@ -208,15 +346,22 @@ sub removeValue
 sub addValue
 {
   my $self = shift;
-  my ($attr, $val, $force) = (lc $_[$[], $_[$[ + 1], $_[$[ + 2]);
+  my ($attr, $val, $force, $norm) = (lc $_[$[], $_[$[ + 1], $_[$[ + 2],
+				     $_[$[ + 3]);
   local $_;
 
-  return 0 if (($val eq "") || ($attr eq ""));
-  if (!$force)
+  return 0 unless (defined($val) && ($val ne ""));
+  return 0 unless (defined($attr) && ($attr ne ""));
+
+  if (!defined($force) || !$force)
     {
+      my $nval = $val;
+
+      $nval = normalizeDN($val) if (defined($norm) && $norm);
       foreach (@{$self->{$attr}})
         {
-          return 0 if ($_ eq $val);
+	  $_ = normalizeDN($_) if (defined($norm) && $norm);
+          return 0 if ($_ eq $nval);
         }
     }
 
@@ -233,8 +378,44 @@ sub addValue
   if (($attr ne "dn") && !grep(/^$attr$/i, @{$self->{"_oc_order_"}}))
     {
       push(@{$self->{"_oc_order_"}}, $attr);
+      $self->{"_oc_numattr_"}++;
     }
 
+  return 1;
+}
+
+
+#############################################################################
+# Just like addValue(), but force the DN normalization of the value. Note
+# that we also have an $norm argument here, to normalize the DN value
+# before we add it.
+#
+sub addDNValue
+{
+  my $self = shift;
+  my ($attr, $val, $force, $norm) = (lc $_[$[], $_[$[ + 1], $_[$[ + 2],
+				     $_[$[ + 2]);
+
+  $val = normalizeDN($val) if (defined($norm) && $norm);
+  return $self->addValue($attr, $val, $force, 1);
+}
+
+
+#############################################################################
+# Set the entire value of an attribute, removing whatever was already set.
+# The arguments are the name of the attribute, and then one or more values,
+# passed as scalar or an array (not pointer).
+#
+sub setValue
+{
+  my ($self, $attr) = (shift, lc shift);
+  my (@vals) = @_;
+  local $_;
+
+  return 0 unless (defined(@vals) && ($#vals >= $[));
+  return 0 unless (defined($attr) && ($attr ne ""));
+
+  $self->{$attr} = [@vals];
   return 1;
 }
 
@@ -245,12 +426,42 @@ sub addValue
 #
 sub hasValue
 {
+  my($self, $attr, $val, $nocase, $norm) = @_;
+
+  return 0 unless (defined($val) && ($val ne ""));
+  return 0 unless (defined($attr) && ($attr ne ""));
+  return 0 unless defined($self->{$attr});
+
+  $val = normalizeDN($val) if (defined($norm) && $norm);
+  if ($nocase)
+    {
+      foreach (@{$self->{$attr}})
+	{
+	  $_ = normalizeDN($_) if (defined($norm) && $norm);
+	  return 1 if /^\Q$val\E$/i;
+	}
+    }
+  else
+    {
+      foreach (@{$self->{$attr}})
+	{
+	  $_ = normalizeDN($_) if (defined($norm) && $norm);
+	  return 1 if /^\Q$val\E$/;
+	}
+    }
+
+  return 0;
+}
+
+
+#############################################################################
+# Just like hasValue(), but force the DN normalization of the value.
+#
+sub hasDNValue
+{
   my($self, $attr, $val, $nocase) = @_;
 
-  return 0 if (($val eq "") || ($attr eq ""));
-  return 0 unless defined($self->{$attr});
-  return grep(/^\Q$val\E$/i, @{$self->{$attr}}) if $nocase;
-  return grep(/^\Q$val\E$/, @{$self->{$attr}});
+  return $self->hasValue($attr, $val, $nocase, 1);
 }
 
 
@@ -262,10 +473,39 @@ sub matchValue
 {
   my($self, $attr, $reg, $nocase) = @_;
 
-  return 0 if (($reg eq "") || ($attr eq ""));
+  return 0 unless (defined($reg) && ($reg ne ""));
+  return 0 unless (defined($attr) && ($attr ne ""));
   return 0 unless defined($self->{$attr});
-  return grep(/$reg/i, @{$self->{$attr}}) if $nocase;
-  return grep(/$reg/, @{$self->{$attr}});
+
+  if ($nocase)
+    {
+      foreach (@{$self->{$attr}})
+	{
+	  $_ = normalizeDN($_);
+	  return 1 if /$reg/i;
+	}
+    }
+  else
+    {
+      foreach (@{$self->{$attr}})
+	{
+	  $_ = normalizeDN($_);
+	  return 1 if /$reg/;
+	}
+    }
+
+  return 0;
+}
+
+
+#############################################################################
+# Just like matchValue(), but force the DN normalization of the values.
+#
+sub matchDNValue
+{
+  my($self, $attr, $reg, $nocase) = @_;
+
+  return $self->matchValue($attr, $reg, $nocase, 1);
 }
 
 
@@ -274,10 +514,11 @@ sub matchValue
 #
 sub setDN
 {
-  my ($self, $val) = @_;
+  my ($self, $val, $norm) = @_;
 
-  return 0 if ($val eq "");
+  return 0 unless (defined($val) && ($val ne ""));
 
+  $val = normalizeDN($val) if (defined($norm) && $norm);
   $self->{"dn"} = $val;
 
   return 1;
@@ -289,8 +530,9 @@ sub setDN
 #
 sub getDN
 {
-  my ($self) = @_;
+  my ($self, $norm) = @_;
 
+  return normalizeDN($self->{"dn"}) if (defined($norm) && $norm);
   return $self->{"dn"};
 }
 
@@ -304,7 +546,7 @@ sub size
   my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
   my @val;
 
-  return 0 if ($attr eq "");
+  return 0 unless (defined($attr) && ($attr ne ""));
   return 0 unless defined($self->{$attr});
 
   @val = @{$self->{$attr}};
@@ -320,7 +562,8 @@ sub exists
 {
   my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
 
-  return 0 if ($attr eq "");
+  return 0 unless (defined($attr) && ($attr ne ""));
+
   return defined($self->{$attr});
 }
 
@@ -383,10 +626,12 @@ easy to write LDAP clients that needs to update/modify entries, since
 you'll just do the changes, and this object class will take care of the
 rest.
 
-We define local functions for STORE, FETCH and DELETE in this object
-class, and inherit the rest from the super class. Overloading these
-specific functions is how we can keep track of what is changing in the
-entry, which turns out to be very convenient.
+We define local functions for STORE, FETCH, DELETE, EXISTS, FIRSTKEY and
+NEXTKEY in this object class, and inherit the rest from the super
+class. Overloading these specific functions is how we can keep track of
+what is changing in the entry, which turns out to be very convenient. We
+can also easily "loop" over the attribute types, ignoring internal data,
+or deleted attributes.
 
 Most of the methods here either return the requested LDAP value, or a
 status code. The status code (either 0 or 1) indicates the failure or
@@ -467,6 +712,28 @@ been modified, in any way, we return True (1), otherwise we return False
 
     if ($entry->isModified("cn")) { # do something }
 
+=item B<isDeleted>
+
+This is almost identical to B<isModified>, except it tests if an attribute
+has been deleted. You use it the same way as above, like
+
+    if (! $entry->isDeleted("cn")) { # do something }
+
+=item B<isAttr>
+
+This method can be used to decide if an attribute name really is a valid
+LDAP attribute in the current entry. Use of this method is fairly limited,
+but could potentially be useful. Usage is like previous examples, like
+
+    if ($entry->isAttr("cn")) { # do something }
+
+The code section will only be executed if these criterias are true:
+
+    1. The name of the attribute is a non-empty string.
+    2. The name of the attribute does not begin, and end, with an
+       underscore character (_).
+    2. The attribute has one or more values in the entry.
+
 =item B<remove>
 
 This will remove the entire attribute, including all it's values, from the
@@ -486,6 +753,20 @@ sensitive, so make sure you preserve case properly. An example is:
 
     $entry->removeValue("objectclass", "nscpPerson");
 
+=item B<removeDNValue>
+
+This is almost identical to B<removeValue>, except it will normalize the
+attribute values before trying to remove them. This is useful if you know
+that the attribute is a DN value, but perhaps the values are not cosistent
+in all LDAP entries. For example
+
+   $dn = "uid=Leif, dc=Netscape, dc=COM";
+   $entry->removeDNValue("owner", $dn);
+
+
+will remove the owner "uid=leif,dc=netscape,dc=com", no matter how it's
+capitalized and formatted in the entry.
+
 =item B<addValue>
 
 Add a value to an attribute. If the attribute value already exists, or we
@@ -500,6 +781,33 @@ a particular attribute. To add a CN to an existing entry/attribute, do:
 
     $entry->addValue("cn", "Leif Hedstrom");
 
+=item B<addDNValue>
+
+Just like B<addValue>, except this method assume the value is a DN
+attribute. For instance
+
+   $dn = "uid=Leif, dc=Netscape, dc=COM";
+   $entry->addDNValue("uniqueMember", $dn);
+
+
+will only add the DN for "uid=leif" if it does not exist as a DN in the
+uniqueMember attribute.
+
+=item B<setValue>
+
+Set the specified attribute to the new value (or values), overwriting
+whatever old values it had before. This is a little dangerous, since you
+can lose attribute values you didn't intend to remove. Therefore, it's
+usually recommended to use B<removeValue()> and B<setValue()>. If you know
+exactly what the new values should be like, you can use this method like
+
+    $entry->setValue("cn", "Leif Hedstrom", "The Swede");
+    $entry->setValue("mail", @mailAddresses);
+
+or if it's a single value attribute,
+
+    $entry->setValue("uidNumber", "12345");
+
 =item B<hasValue>
 
 Return TRUE or FALSE if the attribute has the specified value. A typical
@@ -511,6 +819,11 @@ The (optional) third argument indicates if the string comparison should be
 case insensitive or not. The first two arguments are the name and value of
 the attribute, as usual.
 
+=item B<hasDNValue>
+
+Exactly like B<hasValue>, except we assume the attribute values are DN
+attributes.
+
 =item B<matchValue>
 
 This is very similar to B<hasValue>, except it does a regular expression
@@ -520,6 +833,9 @@ matching. The usage is identical to the example for hasValue, e.g.
 
     if ($entry->matchValue("objectclass", "pers", 1)) { # do something }
 
+=item B<matchDNValue>
+
+Like B<matchValue>, except the attribute values are considered being DNs.
 
 =item B<setDN>
 
@@ -531,11 +847,18 @@ newly created entry, we can do
 
     $entry->setDN("uid=leif,ou=people,dc=netscape,dc=com");
 
+There is an optional third argument, a boolean flag, indicating that we
+should normalize the DN before setting it. This will assure a consistent
+format of your DNs.
+
 =item B<getDN>
 
 Return the DN for the entry. For instance
 
     print "The DN is: ", $entry->getDN(), "\n";
+
+Just like B<setDN>, this method also has an optional argument, which
+indicates we should normalize the DN before returning it to the caller.
 
 =item B<size>
 

@@ -26,6 +26,11 @@ information available on
 
 	http://www.mozilla.org/directory/
 
+and the FAQ at
+
+	http://www.mozilla.org/directory/faq/perldap-faq.html
+
+
 
 Building
 ========
@@ -46,12 +51,15 @@ session is
 
     PerLDAP - Perl 5 Module for LDAP
     ================================
-
     Directory containing 'include' and 'lib' directory of the Netscape
     LDAP Software Developer Kit (default: /usr): /opt/ldapsdk3
     Using LDAPv3 Developer Kit (default: yes)?  
     Include SSL Support (default: yes)?  
+    Libraries to link with (default: -L/opt/pkg/ldapsdk3/lib -lldapssl30):  
+    Checking if your kit is complete...
+    Looks good
     Writing Makefile for Mozilla::LDAP::API
+
 
 
 The important question is where your LDAP SDK is installed, in the example
@@ -77,12 +85,13 @@ it possible to do configuration and installs non-interactively. The
 variables are
 
         LDAPSDKDIR    - Full path to the C SDK base directory
-        LDAPSDKVER    - Either "11" (for v1.1) or "30" (for v3.x)
-        LDAPSDKSSL    - Set to "Y" to enable SSL
+        LDAPV3ON      - Set to "N" to diable LDAP v3 (on by default)
+        LDAPSDKSSL    - Set to "N" to disable SSL (SSL is default)
 
 
-With these variables set, you will not be asked any of the questions
-above. Just run the Makefile.PL script, and finish the build, e.g.
+With these variables set, you will not be asked any of the questions above
+(but it will echo the paramaters). Just run the Makefile.PL script, and
+finish the build, e.g.
 
         % perl5 Makefile.PL
 	% make

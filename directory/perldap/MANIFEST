@@ -16,6 +16,9 @@ MPL-1.0.txt
 test_api/search.pl
 test_api/write.pl
 test_api/api.pl
+t/conn.pl
+t/entry.pl
+t/ChangeLog
 examples/ChangeLog
 examples/lfinger.pl
 examples/qsearch.pl
@@ -26,4 +29,5 @@ examples/tabdump.pl
 examples/modattr.pl
 examples/rename.pl
 examples/psoftsync.pl
+examples/changes2ldif.pl
 install-bin

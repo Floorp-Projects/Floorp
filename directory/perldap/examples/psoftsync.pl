@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: psoftsync.pl,v 1.4 1998/08/13 09:27:53 leif Exp $
+# $Id: psoftsync.pl,v 1.5 1999/01/21 23:52:47 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -132,7 +132,7 @@ chop($TODAY);
 #
 sub psoftError
 {
-  my($str, $entry) = @_;
+  my ($str, $entry) = @_;
 
   print "Error: $str: ";
   print $entry->key(), " (";
@@ -147,10 +147,9 @@ sub psoftError
 #
 sub readDump
 {
-  my($file) = @_;
-  my(@info);
-  my(%entries);
-  my($val);
+  my ($file) = @_;
+  my (@info, %entries);
+  my $val;
 
   if (!open(PSOFT, $file))
     {
@@ -206,10 +205,10 @@ sub readDump
 # Make a list "uniq", just like the Unix command.
 #
 sub uniq {				# uniq(elements[])
-   my(%tmp);
+  my %tmp;
    
-   grep($tmp{$_}++, @_);
-   return sort(keys(%tmp));
+  grep($tmp{$_}++, @_);
+  return sort(keys(%tmp));
 }
 
 
@@ -217,7 +216,7 @@ sub uniq {				# uniq(elements[])
 # Delete an attribute from an entry.
 #
 sub delAttr {				# delAttr(ENTRY, ATTR)
-  ($entry, $attr) = @_;
+  my ($entry, $attr) = @_;
 
   if (defined($entry->{$attr}))
     {
@@ -365,7 +364,7 @@ package PsoftEntry;
 #
 sub new
 {
-  my($class, $key) = @_;
+  my ($class, $key) = @_;
   my $self = {};
   
   bless $self, ref $class || $class;
@@ -380,7 +379,7 @@ sub new
 #
 sub add
 {
-  my($self, $attr, $val, $lev) = @_;
+  my ($self, $attr, $val, $lev) = @_;
 
   return if ($lev & 16);
 
@@ -397,7 +396,7 @@ sub add
 	}
       $self->{__employeetype__} = $val;
     }
-  elsif ($val eq "")
+  elsif (!defined($val) || ($val eq ""))
     {
       main::psoftError("No attribute $attr", $self)
 	if ($main::opt_W && ($lev & 1) && !($lev & 8));
@@ -415,7 +414,7 @@ sub add
 #
 sub get
 {
-  my($self, $attr) = @_;
+  my ($self, $attr) = @_;
 
   return $self->{$attr};
 }
@@ -427,7 +426,7 @@ sub get
 #
 sub expired
 {
-  my($self, $date) = @_;
+  my ($self, $date) = @_;
 
   if ($date)
     {
@@ -441,7 +440,7 @@ sub expired
 
       if ($date lt $main::TODAY)
 	{
-	  $self->{employeetype} = "$NOTYPE";
+	  $self->{employeetype} = "$main::NOTYPE";
 	  $self->{__expired__} = 1;
 
 	  return 1;
@@ -457,7 +456,7 @@ sub expired
 #
 sub handled
 {
-  my($self, $flag) = @_;
+  my ($self, $flag) = @_;
 
   $self->{__handled__} = 1 if $flag;
 
@@ -470,7 +469,7 @@ sub handled
 #
 sub key
 {
-  my($self) = @_;
+  my ($self) = @_;
 
   return $self->{__key__};
 }
@@ -489,7 +488,7 @@ package Mail;
 #
 sub new
 {
-  my($class, $to, $from, $subject) = @_;
+  my ($class, $to, $from, $subject) = @_;
   my $self = {};
 
   bless $self, ref $class || $class;
@@ -511,7 +510,7 @@ sub new
 #
 sub DESTROY
 {
-  my($self) = @_;
+  my ($self) = @_;
 
   if ($self->{send} && !$self->{nomail})
     {
@@ -526,7 +525,7 @@ sub DESTROY
 #
 sub set
 {
-  my($self, $field, $string) = @_;
+  my ($self, $field, $string) = @_;
 
   if ($field && $string)
     {
@@ -541,7 +540,7 @@ sub set
 #
 sub write
 {
-  my($self, $string) = @_;
+  my ($self, $string) = @_;
 
   if ($string ne "")
     {
@@ -559,7 +558,7 @@ sub write
 #
 sub force
 {
-  my($self) = @_;
+  my ($self) = @_;
 
   $self->{send} = 1;
   $self->{nomail} = 0;
@@ -571,7 +570,7 @@ sub force
 #
 sub nomail
 {
-  my($self) = @_;
+  my ($self) = @_;
 
   $self->{send} = 0;
   $self->{nomail} = 1;
@@ -583,7 +582,7 @@ sub nomail
 #
 sub echo
 {
-  my($self) = @_;
+  my ($self) = @_;
 
   $self->{echo} = 1;
 }
@@ -595,7 +594,7 @@ sub echo
 #
 sub send
 {
-  my($self) = @_;
+  my ($self) = @_;
 
   if ($self->{send} && !$self->{nomail})
     {

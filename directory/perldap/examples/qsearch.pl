@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: qsearch.pl,v 1.7 1998/08/13 09:28:05 leif Exp $
+# $Id: qsearch.pl,v 1.8 1999/01/21 23:52:47 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -28,6 +28,9 @@
 use Getopt::Std;			# To parse command line arguments.
 use Mozilla::LDAP::Conn;		# Main "OO" layer for LDAP
 use Mozilla::LDAP::Utils;		# LULU, utilities.
+
+use strict;
+no strict "vars";
 
 
 #################################################################################
@@ -80,7 +83,7 @@ foreach $search (@srch)
   print "Searched for `$search':\n\n";
   $conn->printError() if $conn->getErrorCode();
 
-  while($entry)
+  while ($entry)
     {
       $entry->printLDIF();
       $entry = $conn->nextEntry;

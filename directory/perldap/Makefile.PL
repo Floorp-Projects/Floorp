@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Makefile.PL,v 1.13 1998/08/14 21:45:39 leif%netscape.com Exp $
+# $Id: Makefile.PL,v 1.14 1999/01/21 23:52:42 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -26,24 +26,33 @@
 
 use ExtUtils::MakeMaker;
 use Config;
+use Carp;
 
 $perlpath = $Config{'perlpath'};
 $osname   = $Config{'osname'};
 
 $ldapsdk_loc = $ENV{"LDAPSDKDIR"}; # Full Path to C SDK Top-Level
-$ldapsdk_ver = $ENV{"LDAPSDKVER"}; # 11 or 30
-$ldapsdk_ssl = $ENV{"LDAPSDKSSL"}; # Y to include SSL
+$ldapsdk_ssl = $ENV{"LDAPSDKSSL"}; # N to exclude SSL
+$ldapsdk_ver = $ENV{"LDAPV3ON"};   # N to exclude LDAP v3 features
+
+$libexts = "so|sl|a|lib";
+
 
 print "\nPerLDAP - Perl 5 Module for LDAP\n";
 print     "================================\n";
 
+$silent = 1;
+print "Directory containing 'include' and 'lib' directory of the Netscape\n";
+print "LDAP Software Developer Kit (default: /usr): ";
 if (!$ldapsdk_loc)
 {
-   print "Directory containing 'include' and 'lib' directory of the Netscape\n";
-   print "LDAP Software Developer Kit (default: /usr): ";
-   chomp ($ldapsdk_loc = <>);
+   $silent = 0;
+   chomp ($ldapsdk_loc = <STDIN>);
    $ldapsdk_loc = "/usr" unless $ldapsdk_loc =~ /\S/;
+} else {
+  print "$ldapsdk_loc\n";
 }
+croak("Directory $ldapsdk_loc does not exist!") unless -d $ldapsdk_loc;
 
 if ($osname =~ /mswin/i)
 {
@@ -55,80 +64,110 @@ if ($osname =~ /mswin/i)
 $include_ldap = $ldapsdk_loc . $dir_sep . "include";
 $lib_ldap = $ldapsdk_loc . $dir_sep . "lib";
 
+print "Using LDAPv3 Developer Kit (default: yes)?  ";
 if (!$ldapsdk_ver)
 {
-   print "Using LDAPv3 Developer Kit (default: yes)?  ";
-   chomp ($ver = <>);
-   if ($ver =~ /^n/i)
-   {
-      $ldapsdk_ver = "11";
-   } else {
-      $ldapsdk_ver = "30";
-   }
+   $silent = 0;
+   chomp ($ldapsdk_ver = <STDIN>);
+} else {
+  print "YES\n";
 }
+$v3_def = "-DLDAPV3" unless ($ldapsdk_ver =~ /^n/i);
 
-if ($ldapsdk_ver == "30")
-{
-   $v3def = "-DLDAPV3";
-}
    
+print "Include SSL Support (default: yes)?  ";
 if (!$ldapsdk_ssl)
 {
-   print "Include SSL Support (default: yes)?  ";
-   chomp ($ldapsdk_ssl = <>);
+   $silent = 0;
+   chomp ($ldapsdk_ssl = <STDIN>);
+} else {
+  print "YES\n";
+}
+$ssl_def = "-DUSE_SSL" unless ($ldapsdk_ssl =~ /^n/i);
+
+
+opendir(DIR,$lib_ldap);
+@files = grep{/ldap|lber/} readdir(DIR);
+closedir(DIR);
+
+if (!((@ldaplib = grep{/ldapssl.*\.($libexts)$/} @files) && $ssl_def))
+{
+   @ldaplib = grep{/ldap.*\.($libexts)$/} @files;
+   @lberlib = grep{/lber.*\.($libexts)$/} @files;
 }
 
-if ($ldapsdk_ssl =~ /^n/i)
+if ($#ldaplib < 0)
 {
-   $ssl_def = "";
-} else {
-   $ssl_def = "-DUSE_SSL";
+   die "No LDAP libraries found.";
 }
 
-if ($osname =~ /mswin/i)
+if ($#ldaplib > 0)
 {
-   if ($ssl_def)
+   print "Located multiple libraries:\n";
+   foreach $alib (@ldaplib)
    {
-      if ($ldapsdk_ver == "30")
-      {
-         $ldap_lib = "nsldapssl32v30";
-      } else {
-         $ldap_lib = "nsldap32v11";
-      }
-   } else {
-      $ldap_lib = "nsldap32v" . $ldapsdk_ver;
-   }
-} else {
-   if ($ssl_def)
-   {
-      if ($ldapsdk_ver == "30")
-      {
-         $ldap_lib = "ldapssl30";
-      } else {
-         $ldap_lib = "ldap30";
-      }
-   } else {
-      $ldap_lib = "ldap" . $ldapsdk_ver;
+      print " - $alib\n";
    }
 }
 
+$lline_ldap = $ldaplib[0];
+$lline_ldap =~ s/^lib//;
+$lline_ldap =~ s/\.($libexts)$//;
+$lline = "-L$lib_ldap -l$lline_ldap";
+
+if ($#lberlib >= 0 && $lline =~ /ldap$/)
+{
+   $lline_lber = $lberlib[0];
+   $lline_lber =~ s/^lib//;
+   $lline_lber =~ s/\.($libexts)$//;
+   $lline .= " -l$lline_lber";
+}
+
+print "Libraries to link with (default: $lline):  ";
+if (!$silent)
+{
+   chomp ($lib_line = <STDIN>);
+   $lib_line = $lline unless $lib_line =~ /\S/;
+} else {
+  print "\n";
+}
+
+
 if ($osname =~ /mswin/i)
 {
-   $myextlib = "$lib_ldap\\$ldap_lib.lib";
+   $myextlib = "$lib_ldap\\$ldaplib[0]";
+   if ($lber_lib)
+   {
+      $myextlib .= " $lib_ldap\\$lberlib[0]";
+   }
 } else {
    $myextlib = "";
 }
 
+@extras = ();
+
+push(@extras,
+     CAPI => 'TRUE')
+    if ($] >= 5.005 and $^O eq 'MSWin32'
+        and $Config{archname} =~ /-object\b/i);
+
+push(@extras,
+     ABSTRACT => 'Perl methods for LDAP C API calls',
+     AUTHOR   => 'Netscape Communications Corp., Inc. and Clayton Donley')
+    if ($ExtUtils::MakeMaker::Version >= 5.4301);
 
 WriteMakefile(
 	'NAME'		=> 	'Mozilla::LDAP::API',
+        'DISTNAME'	=>  'PerLDAP',
 	'VERSION_FROM'	=> 	'API.pm',
 	($include_ldap ne "/usr/include" ? (
 	'INC'		=> 	"-I$include_ldap",
 	) : (
 	'INC'		=> 	"",
 	)),
-	'LIBS'		=> 	["-L$lib_ldap -l$ldap_lib"],
+	'LIBS'		=> 	[$lib_line],
 	'MYEXTLIB'	=>	$myextlib,
 	'DEFINE'	=> 	"$v3_def $ssl_def",
+	'XSOPT'		=>	"-nolinenumbers",
+    @extras
 );

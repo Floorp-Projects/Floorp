@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Conn.pm,v 1.18 1998/08/18 22:26:30 leif%netscape.com Exp $
+# $Id: Conn.pm,v 1.19 1999/01/21 23:52:42 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -43,9 +43,7 @@ sub new
 {
   my $class = shift;
   my $self = {};
-  my $ref;
 
-  $ref = ref($_[$[]);
   if (ref $_[$[] eq "HASH")
     {
       my $hash;
@@ -68,11 +66,13 @@ sub new
       $self->{"certdb"} = $certdb;
     }
 
+  $self->{"binddn"} = "" unless defined $self->{"binddn"};
+  $self->{"bindpasswd"} = "" unless defined $self->{"bindpasswd"};
+
   if (!defined($self->{"port"}) || ($self->{"port"} eq ""))
     {
       $self->{"port"} = (($self->{"certdb"} ne "") ? LDAPS_PORT : LDAP_PORT);
     }
-
   bless $self, $class;
 
   return unless $self->init();
@@ -90,7 +90,11 @@ sub DESTROY
   return unless defined($self->{"ld"});
 
   ldap_unbind_s($self->{"ld"});
-  ldap_msgfree($self->{"ldres"}) if defined($self->{"ldres"});
+  if (defined($self->{"ldres"}))
+    {
+      ldap_msgfree($self->{"ldres"});
+      undef $self->{"ldres"};
+    }
 
   undef $self->{"ld"};
 }
@@ -103,12 +107,11 @@ sub DESTROY
 sub init
 {
   my $self = shift;
-  my $ret;
-  my $ld;
+  my ($ret, $ld);
 
-  if ($self->{"certdb"} ne "")
+  if (defined($self->{"certdb"}) && ($self->{"certdb"} ne ""))
     {
-      $ret = ldapssl_client_init($self->{"certdb"}, "");
+      $ret = ldapssl_client_init($self->{"certdb"}, 0);
       return 0 if ($ret < 0);
 
       $ld = ldapssl_init($self->{"host"}, $self->{"port"}, 1);
@@ -117,24 +120,27 @@ sub init
     {
       $ld = ldap_init($self->{"host"}, $self->{"port"});
     }
-  if (!$ld)
-    {
-      perror("ldap_init");
-
-      return 0;
-    }
+  return 0 unless $ld;
 
   $self->{"ld"} = $ld;
   $ret = ldap_simple_bind_s($ld, $self->{"binddn"}, $self->{"bindpasswd"});
 
-  if ($ret)
-    {
-      ldap_perror($ld, "Authentication failed");
+  return (($ret == LDAP_SUCCESS) ? 1 : 0);
+}
 
-      return 0;
-    }
 
-  return 1;
+#############################################################################
+# Create a new, empty, Entry object, properly tied into the Entry class.
+# This is mostly for convenience, you could directly do the "tie" yourself
+# in your code.
+#
+sub newEntry
+{
+  my %entry = ();
+
+  tie %entry, Mozilla::LDAP::Entry;
+
+  return bless \%entry, Mozilla::LDAP::Entry;
 }
 
 
@@ -157,7 +163,19 @@ sub getLD
 {
   my ($self) = @_;
 
-  return $self->{"ld"} if $self->{"ld"};
+  return $self->{"ld"} if defined($self->{"ld"});
+}
+
+
+#############################################################################
+# Return the actual the current result message, don't use this unless you
+# really have to...
+#
+sub getRes
+{
+  my ($self) = @_;
+
+  return $self->{"ldres"} if defined($self->{"ldres"});
 }
 
 
@@ -182,7 +200,7 @@ sub getErrorCode
 sub getErrorString 
 {
   my ($self) = @_;
-  my ($err);
+  my $err;
   
   $err = ldap_get_lderrno($self->{"ld"}, undef, undef);
 
@@ -197,7 +215,7 @@ sub printError
 {
   my ($self, $str) = @_;
 
-  $str = "LDAP error: " if ($str eq "");
+  $str = "LDAP error: " unless defined($str);
   ldap_perror($self->{"ld"}, $str);
 }
 
@@ -209,14 +227,17 @@ sub printError
 sub search
 {
   my ($self, $basedn, $scope, $filter, $attrsonly, @attrs) = @_;
-  my $resv;
-  my $entry;
+  my ($resv, $entry);
   my $res = \$resv;
 
   $scope = Mozilla::LDAP::Utils::str2Scope($scope);
   $filter = "(objectclass=*)" if ($filter =~ /^ALL$/i);
 
-  ldap_msgfree($self->{"ldres"}) if defined($self->{"ldres"});
+  if (defined($self->{"ldres"}))
+    {
+      ldap_msgfree($self->{"ldres"});
+      undef $self->{"ldres"};
+    }
   if (ldap_is_ldap_url($filter))
     {
       if (! ldap_url_search_s($self->{"ld"}, $filter, $attrsonly, $res))
@@ -247,11 +268,15 @@ sub search
 sub searchURL
 {
   my ($self, $url, $attrsonly) = @_;
-  my $resv;
-  my $entry;
+  my ($resv, $entry);
   my $res = \$resv;
 
-  ldap_msgfree($self->{"ldres"}) if defined($self->{"ldres"});
+  if (defined($self->{"ldres"}))
+    {
+      ldap_msgfree($self->{"ldres"});
+      undef $self->{"ldres"};
+    }
+      
   if (! ldap_url_search_s($self->{"ld"}, $url, $attrsonly, $res))
     {
       $self->{"ldres"} = $res;
@@ -270,9 +295,8 @@ sub searchURL
 sub nextEntry
 {
   my $self = shift;
-  my %entry;
-  my @ocorder;
-  my ($attr, @vals, $obj, $ldentry, $berv, $dn);
+  my (%entry, @ocorder, @vals);
+  my ($attr, $lcattr, $obj, $ldentry, $berv, $dn, $count);
   my $ber = \$berv;
 
   # I use the object directly, to avoid setting the "change" flags
@@ -294,24 +318,33 @@ sub nextEntry
   return "" unless $ldentry;
 
   $dn = ldap_get_dn($self->{"ld"}, $self->{"ldentry"});
+  $obj->{"_oc_numattr_"} = 0;
+  $obj->{"_oc_keyidx_"} = 0;
   $obj->{"dn"} = $dn;
   $self->{"dn"} = $dn;
+
   $attr = ldap_first_attribute($self->{"ld"}, $self->{"ldentry"}, $ber);
   return (bless \%entry, Mozilla::LDAP::Entry) unless $attr;
 
+  $lcattr = lc $attr;
   @vals = ldap_get_values_len($self->{"ld"}, $self->{"ldentry"}, $attr);
-  $obj->{$attr} = [@vals];
-  push(@ocorder, $attr);
+  $obj->{$lcattr} = [@vals];
+  push(@ocorder, $lcattr);
 
+  $count = 1;
   while ($attr = ldap_next_attribute($self->{"ld"},
 				     $self->{"ldentry"}, $ber))
     {
+      $lcattr = lc $attr;
       @vals = ldap_get_values_len($self->{"ld"}, $self->{"ldentry"}, $attr);
-      $obj->{$attr} = [@vals];
-      push(@ocorder, $attr);
+      $obj->{$lcattr} = [@vals];
+      push(@ocorder, $lcattr);
+      $count++;
     }
+
   $obj->{"_oc_order_"} = \@ocorder;
   $obj->{"_self_obj_"} = $obj;
+  $obj->{"_oc_numattr_"} = $count;
 
   ldap_ber_free($ber, 0) if $ber;
 
@@ -333,7 +366,7 @@ sub close
   $ret = ldap_unbind_s($self->{"ld"}) if defined($self->{"ld"});
   undef $self->{"ld"};
 
-  return ($ret == LDAP_SUCCESS);
+  return (($ret == LDAP_SUCCESS) ? 1 : 0);
 }
 
 
@@ -342,20 +375,23 @@ sub close
 #
 sub delete
 {
-  my ($self, $dn) = @_;
+  my ($self, $id) = @_;
   my $ret = 1;
+  my $dn = $id;
 
-  if ($dn ne "")
+  if (ref($id) eq "Mozilla::LDAP::Entry")
     {
-      $dn = Mozilla::LDAP::Utils::normalizeDN($dn);
+      $dn = $id->getDN();
     }
   else
     {
-      $dn = Mozilla::LDAP::Utils::normalizeDN($self->{"dn"});
+      $dn = $self->{"dn"} unless (defined($dn) && ($dn ne ""));
     }
+
+  $dn = Mozilla::LDAP::Utils::normalizeDN($dn);
   $ret = ldap_delete_s($self->{"ld"}, $dn) if ($dn ne "");
 
-  return ($ret == LDAP_SUCCESS)
+  return (($ret == LDAP_SUCCESS) ? 1 : 0);
 }
 
 
@@ -365,14 +401,14 @@ sub delete
 sub add
 {
   my ($self, $entry) = @_;
-  my ($ref, $key, $val, %ent);
-  my $ret = 1;
-  my $gotcha = 0;
+  my %ent;
+  my ($ref, $key, $val);
+  my ($ret, $gotcha) = (1, 0);
 
   $ref = ref($entry);
   if (($ref eq "Mozilla::LDAP::Entry") || ($ref eq "HASH"))
     {
-      foreach $key (keys %{$entry})
+      foreach $key (@{$entry->{"_oc_order_"}})
 	{
 	  next if (($key eq "dn") || ($key =~ /^_.+_$/));
 	  $ent{$key} = $entry->{$key};
@@ -382,25 +418,27 @@ sub add
       $ret = ldap_add_s($self->{"ld"}, $entry->{"dn"}, \%ent) if $gotcha;
     }
 
-  return ($ret == LDAP_SUCCESS);
+  return (($ret == LDAP_SUCCESS) ? 1 : 0);
 }
 
 
 #############################################################################
 # Modify the RDN, and update the entry accordingly. Note that the last
-# two arguments (DN and "delete") are optional.
+# two arguments (DN and "delete") are optional. The last (optional) argument
+# is a flag, which if set to TRUE (the default), will cause the corresponding
+# attribute value to be removed from the entry.
 #
 sub modifyRDN
 {
-  my ($self, $rdn, $dn, $del) = ($_[$[], lc $_[$[ + 1], $_[$[ + 2], $_[$[ + 3]);
-  my (@vals);
+  my ($self, $rdn, $dn, $del) = ($_[$[], $_[$[ + 1], $_[$[ + 2], $_[$[ + 3]);
+  my @vals;
   my $ret = 1;
 
-  $del = 1 if ($del eq "");
-  $dn = $self->{"dn"} if ($dn eq "");
+  $del = 1 unless (defined($del) && ($del ne ""));
+  $dn = $self->{"dn"} unless (defined($dn) && ($dn ne ""));
 
-  @vals = ldap_explode_dn(lc $dn, 0);
-  if ($vals[$[] ne $rdn)
+  @vals = ldap_explode_dn($dn, 0);
+  if (lc($vals[$[]) ne lc($rdn))
     {
       $ret = ldap_modrdn2_s($self->{"ld"}, $dn, $rdn, $del);
       if ($ret == LDAP_SUCCESS)
@@ -411,7 +449,7 @@ sub modifyRDN
 	}
     }
 
-  return ($ret == LDAP_SUCCESS);
+  return (($ret == LDAP_SUCCESS) ? 1 : 0);
 }
 
 
@@ -422,14 +460,14 @@ sub modifyRDN
 sub update
 {
   my ($self, $entry) = @_;
-  my (@vals, %mod, %new, @arr);
+  my (@vals, @arr, %mod, %new);
   my ($key, $val);
   my $ret = 1;
   local $_;
 
-  foreach $key (keys (%$entry))
+  foreach $key (@{$entry->{"_oc_order_"}})
     {
-      next if (($key eq "dn") || ($key =~ /^_.+_/));
+      next if (($key eq "dn") || ($key =~ /^_.+_$/));
 
       if ($entry->{"_${key}_modified_"})
 	{
@@ -441,6 +479,7 @@ sub update
 	  else
 	    {
 	      @arr = ();
+	      undef %new;
 	      grep(($new{$_} = 1), @vals);
 	      foreach (@{$entry->{"_${key}_save_"}})
 		{
@@ -461,13 +500,15 @@ sub update
 	    }
 
 	  delete $entry->{"_self_obj_"}->{"_${key}_modified_"};
-	  undef @{$entry->{"_${key}_save_"}};
+	  undef @{$entry->{"_${key}_save_"}} if
+	    defined $entry->{"_${key}_save_"};
 	}
       elsif ($entry->{"_${key}_deleted_"})
 	{
 	  $mod{$key} = { "db", [] };
-	  undef @{$entry->{"_${key}_save_"}};
 	  delete $entry->{"_self_obj_"}->{"_${key}_deleted_"};
+	  undef @{$entry->{"_${key}_save_"}} if
+	    defined $entry->{"_${key}_save_"};
 	}
     }
 
@@ -492,7 +533,7 @@ sub update
   $ret = ldap_modify_s($self->{"ld"}, $entry->{"dn"}, \%mod)
     if ($#arr >= $[);
 
-  return ($ret == LDAP_SUCCESS);
+  return (($ret == LDAP_SUCCESS) ? 1 : 0);
 }
 
 
@@ -516,10 +557,25 @@ sub setDefaultRebindProc
 {
   my ($self, $dn, $pswd, $auth) = @_;
 
+  $auth = LDAP_AUTH_SIMPLE unless defined($auth);
   die "No LDAP connection"
     unless defined($self->{ld});
 
- Ldapc::ldap_set_default_rebind_proc($self->{"ld"}, $dn, $pswd, $auth);
+  ldap_set_default_rebind_proc($self->{"ld"}, $dn, $pswd, $auth);
+}
+
+
+#############################################################################
+# Do a simple authentication, so that we can rebind as another user.
+#
+sub simpleAuth
+{
+  my ($self, $dn, $pswd) = @_;
+  my $ret;
+
+  $ret = ldap_simple_bind_s($self->{"ld"}, $dn, $pswd);
+
+  return (($ret == LDAP_SUCCESS) ? 1 : 0);
 }
 
 
@@ -766,8 +822,9 @@ the B<searchURL> method, add a second argument, which should be 0 or 1.
 
 Once you have an LDAP entry, either from a search, or created directly to
 get a new empty object, you are ready to modify it. If you are creating a
-new entry, the first thing to set it it's DN:
+new entry, the first thing to set it it's DN, like
 
+    $entry = $conn->newEntry();
     $entry->setDN("uid=leif,ou=people,o=netscape.com");
 
 You should not do this for an existing LDAP entry, changing the RDN (or
@@ -795,18 +852,19 @@ server, just call the B<delete> method, like
 
 You can't use native Perl functions like push() and splice() on attribute
 values, since they won't update the ::Entry instance state properly.
-Instead use one of the methods provided by the object class, for instance
+Instead use one of the methods provided by the Mozilla::LDAP::Entry
+object class, for instance
 
-    $conn->addValue("cn", "The Swede");
-    $conn->removeValue("mailAlternateAddress", "leif@mcom.com");
-    $conn->remove("seeAlso");
+    $entry->addValue("cn", "The Swede");
+    $entry->removeValue("mailAlternateAddress", "leif@mcom.com");
+    $entry->remove("seeAlso");
 
 These methods return a TRUE or FALSE value, depending on the outcome
 of the operation. If there was no value to remove, or a value already
 exists, we return FALSE, otherwise TRUE. To check if an attribute has a
 certain value, use the B<hasValue> method, like
 
-    if ($conn->hasValue("mail", "leif@netscape.com")) {
+    if ($entry->hasValue("mail", "leif@netscape.com")) {
         # Do something
     }
 
@@ -876,6 +934,16 @@ This method will return the next entry from the search result, and can
 therefore only be called after a succesful search has been initiated. If
 there are no more entries to retrieve, it returns nothing (empty string).
 
+=item B<newEntry>
+
+This will create an empty Mozilla::LDAP::Entry object, which is properly
+tied into the appropriate objectclass. Use this method instead of manually
+creating new Entry objects, or at least make sure that you use the "tie"
+function when creating the entry. This function takes no arguments, and
+returns a pointer to an ::Entry object. For instance
+
+    $entry = $conn->newEntry();
+
 =item B<update>
 
 After modifying an Ldap::Entry entry (see below), use the B<update>
@@ -901,6 +969,27 @@ B<search> or B<entry>.
 
 Add a new entry to the LDAP server. Make sure you use the B<new> method
 for the Mozilla::LDAP::Entry object, to create a proper entry.
+
+=item B<simpleAuth>
+
+This method will rebind the LDAP connection using new credentials (i.e. a
+new user-DN and password). To rebind "anonymously", just don't pass a DN
+and password, and it will default to binding as the unprivleged user. For
+example:
+
+    $user = "leif";
+    $password = "secret";
+    $conn = new Mozilla::LDAP::Conn($host, $port);	# Anonymous bind
+    die "Could't connect to LDAP server $host" unless $conn;
+
+    $entry = $conn->search($root, $scope, "(uid=$user)", 0, (uid));
+    exit (-1) unless $entry;
+
+    $ret = $conn->simpleAuth($entry->getDN(), $password);
+    exit (-1) unless $ret;
+
+    $ret = $conn->simpleAuth();		# Bind as anon again.
+
 
 =item B<close>
 
@@ -930,6 +1019,18 @@ Returns TRUE or FALSE if the given argument is a properly formed URL.
 Return the (internal) LDAP* connection handle, which you can use
 (carefully) to call the native LDAP API functions. You shouldn't have to
 use this in most cases, unless of course our OO layer is seriously flawed.
+
+=item B<getRes>
+
+Just like B<getLD>, except it returns the internal LDAP return message
+structure. Again, use this very carefully, and be aware that this might
+break in future releases of PerLDAP. These two methods can be used to call
+some useful API functions, like 
+
+    $cld = $conn->getLD();
+    $res = $conn->getRes();
+    $count = Mozilla::LDAP::API::ldap_count_entries($cld, $res);
+
 
 =item B<getErrorCode>
 
