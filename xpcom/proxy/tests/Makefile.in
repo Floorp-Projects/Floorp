@@ -21,9 +21,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= proxy
+MODULE = proxytest
 
 CPPSRCS         = proxytests.cpp
+
+XPIDLSRCS       = nsITestProxy.idl
 
 LIBS		=     \
         -L$(DIST)/bin \

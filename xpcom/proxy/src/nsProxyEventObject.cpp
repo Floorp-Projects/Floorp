@@ -270,19 +270,7 @@ nsProxyEventObject::CallMethod(PRUint16 methodIndex,
                            const nsXPTMethodInfo* info,
                            nsXPTCMiniVariant * params)
 {
-    uint8 paramCount = info->GetParamCount();
-
-    nsXPTCVariant   *fullParam = (nsXPTCVariant*)malloc(sizeof(nsXPTCVariant) * paramCount);
-    
-    for (int index = 0; index < paramCount; index++)
-    {
-        fullParam[index].flags = 0;
-        fullParam[index].val   = params[index].val;
-    }
-    
-    // fullParam will be deleted inside the mProxyObject
-
-    return mProxyObject->Post(methodIndex, paramCount, fullParam);
+    return mProxyObject->Post(methodIndex, (nsXPTMethodInfo*)info, params, GetClass()->GetInterfaceInfo());
 }
 
 

@@ -17,7 +17,10 @@
 DEPTH=..\..\..
 
 MAKE_OBJ_TYPE   = EXE
-PROGRAM = .\$(OBJDIR)\ProxyEventTest.exe
+PROGRAM = .\$(OBJDIR)\ProxyTest.exe
+
+MODULE = proxytest
+XPIDLSRCS = .\nsITestProxy.idl
 
 OBJS =  \
 	.\$(OBJDIR)\proxytests.obj		\
@@ -39,7 +42,7 @@ install:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
 clobber::
-	rm -f $(DIST)\bin\ProxyEventTest.exe
+	rm -f $(DIST)\bin\ProxyTest.exe
 
 $(PROGRAM):: $(OBJS) $(LLIBS)
 
