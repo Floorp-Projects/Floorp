@@ -500,8 +500,8 @@ protected:
     nsDTDContext*       mFormContext;
     nsDTDContext*       mMapContext;
     nsDTDContext*       mTempContext;
-    PRBool              mHasOpenForm;
-    PRBool              mHasOpenMap;
+    PRInt32             mHasOpenForm;
+    PRInt32             mOpenMapCount;
     PRInt32             mHasOpenHead;
     PRBool              mHasOpenBody;
     PRInt32             mHasOpenNoXXX;  //true when NOFRAMES, NOSCRIPT, NOEMBED, NOLAYER are open
