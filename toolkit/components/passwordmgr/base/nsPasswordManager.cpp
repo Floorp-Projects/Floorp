@@ -72,6 +72,7 @@ static PRBool sRememberPasswords = PR_FALSE;
 static PRBool sPrefsInitialized = PR_FALSE;
 
 static nsIStringBundle* sPMBundle;
+static nsISecretDecoderRing* sDecoderRing;
 
 static void PMLocalizedString(const nsAString& key, nsAString& aResult,
                               PRBool aFormatted = PR_FALSE,
@@ -114,8 +115,8 @@ nsPasswordManager::PasswordEntry::PasswordEntry(const nsACString& aKey,
   : mHost(aKey)
 {
   if (aData) {
-    mUser.Assign(aData->userValue);
-    mPassword.Assign(aData->passValue);
+    nsPasswordManager::DecryptData(aData->userValue, mUser);
+    nsPasswordManager::DecryptData(aData->passValue, mPassword);
   }
 }
 
@@ -277,6 +278,7 @@ nsPasswordManager::Unregister(nsIComponentManager* aCompMgr,
 /* static */ void
 nsPasswordManager::Shutdown()
 {
+  NS_IF_RELEASE(sDecoderRing);
   NS_IF_RELEASE(sPMBundle);
 }
 
@@ -288,8 +290,8 @@ nsPasswordManager::AddUser(const nsACString& aHost,
                            const nsAString& aPassword)
 {
   SignonDataEntry* entry = new SignonDataEntry();
-  entry->userValue.Assign(aUser);
-  entry->passValue.Assign(aPassword);
+  EncryptDataUCS2(aUser, entry->userValue);
+  EncryptDataUCS2(aPassword, entry->passValue);
 
   AddSignonData(aHost, entry);
   WriteSignonFile();
@@ -306,7 +308,11 @@ nsPasswordManager::RemoveUser(const nsACString& aHost, const nsAString& aUser)
     return NS_ERROR_FAILURE;
 
   for (; entry; prevEntry = entry, entry = entry->next) {
-    if (entry->userValue.Equals(aUser)) {
+
+    nsAutoString ptUser;
+    DecryptData(entry->userValue, ptUser);
+
+    if (ptUser.Equals(aUser)) {
       if (prevEntry) {
         prevEntry->next = entry->next;
         entry->next = nsnull;
@@ -565,8 +571,13 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
     if (!foundNode || !passField)
       continue;
 
-    userField->SetValue(entry->userValue);
-    passField->SetValue(entry->passValue);
+    nsAutoString buffer;
+
+    DecryptData(entry->userValue, buffer);
+    userField->SetValue(buffer);
+
+    DecryptData(entry->passValue, buffer);
+    passField->SetValue(buffer);
   }
 
   return NS_OK;
@@ -705,17 +716,26 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
       SignonDataEntry* entry;
 
       if (mSignonTable.Get(realm, &entry)) {
+
+        nsAutoString buffer;
+
         for (; entry; entry = entry->next) {
           if (entry->userField.Equals(userFieldName) &&
-              entry->userValue.Equals(userValue) &&
               entry->passField.Equals(passFieldName)) {
 
-            if (!entry->passValue.Equals(passValue)) {
-              entry->passValue.Assign(passValue);
-              WriteSignonFile();
-            }
+            DecryptData(entry->userValue, buffer);
 
-            return NS_OK;
+            if (buffer.Equals(userValue)) {
+
+              DecryptData(entry->passValue, buffer);
+
+              if (!buffer.Equals(passValue)) {
+                EncryptDataUCS2(passValue, entry->passValue);
+                WriteSignonFile();
+              }
+
+              return NS_OK;
+            }
           }
         }
       }
@@ -742,8 +762,8 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
         entry = new SignonDataEntry();
         entry->userField.Assign(userFieldName);
         entry->passField.Assign(passFieldName);
-        entry->userValue.Assign(userValue);
-        entry->passValue.Assign(passValue);
+        EncryptDataUCS2(userValue, entry->userValue);
+        EncryptDataUCS2(userValue, entry->passValue);
 
         AddSignonData(realm, entry);
         WriteSignonFile();
@@ -786,11 +806,13 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
                 temp = temp->next;
               }
 
+              nsAutoString* ptUsernames = new nsAutoString[entryCount];
               const PRUnichar** formatArgs = new const PRUnichar*[entryCount];
               temp = entry;
 
               for (PRUint32 arg = 0; arg < entryCount; ++arg) {
-                formatArgs[arg] = entry->userValue.get();
+                DecryptData(temp->userValue, ptUsernames[arg]);
+                formatArgs[arg] = ptUsernames[arg].get();
                 temp = temp->next;
               }
 
@@ -808,6 +830,8 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
                              &confirm);
 
               delete[] formatArgs;
+              delete[] ptUsernames;
+
               if (confirm && selection >= 0) {
                 changeEntry = entry;
                 for (PRInt32 m = 1; m < selection; ++m)
@@ -815,8 +839,10 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
               }
 
             } else {
-              nsAutoString dialogTitle, dialogText;
-              const PRUnichar* formatArgs[1] = { entry->userValue.get() };
+              nsAutoString dialogTitle, dialogText, ptUser;
+
+              DecryptData(entry->userValue, ptUser);
+              const PRUnichar* formatArgs[1] = { ptUser.get() };
 
               PMLocalizedString(NS_LITERAL_STRING("passwordChangeTitle"), dialogTitle);
               PMLocalizedString(NS_LITERAL_STRING("passwordChangeText"),
@@ -839,7 +865,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
       if (changeEntry) {
         nsAutoString newValue;
         passFields.ObjectAt(1)->GetValue(newValue);
-        changeEntry->passValue.Assign(newValue);
+        EncryptDataUCS2(newValue, changeEntry->passValue);
         WriteSignonFile();
       }
     }
@@ -904,9 +930,7 @@ nsPasswordManager::ReadSignonFile()
          STATE_PASSFIELD, STATE_PASSVALUE } state = STATE_REJECT;
 
   nsCAutoString realm;
-  nsAutoString decryptedValue;
   SignonDataEntry* entry = nsnull;
-  PRBool decryptError = PR_FALSE;
 
   do {
     rv = lineStream->ReadLine(buffer, &moreData);
@@ -931,11 +955,8 @@ nsPasswordManager::ReadSignonFile()
       // If the line is a ., we've reached the end of this realm's entries.
       if (buffer.Equals(NS_LITERAL_STRING("."))) {
         if (entry) {
-          // Add this entry to the hashtable, unless we had a decryption error
-          if (!decryptError)
-            AddSignonData(realm, entry);
+          AddSignonData(realm, entry);
           entry = nsnull;
-          decryptError = PR_FALSE;
           state = STATE_REALM;
         }
       } else {
@@ -949,10 +970,7 @@ nsPasswordManager::ReadSignonFile()
     case STATE_USERVALUE:
       NS_ASSERTION(entry, "bad state");
 
-      if (NS_SUCCEEDED(DecryptData(buffer, decryptedValue)))
-        entry->userValue.Assign(decryptedValue);
-      else
-        decryptError = PR_TRUE;  // abort this entry
+      entry->userValue.Assign(buffer);
 
       state = STATE_PASSFIELD;
       break;
@@ -961,8 +979,7 @@ nsPasswordManager::ReadSignonFile()
       NS_ASSERTION(entry, "bad state");
 
       // Strip off the leading "*" character
-      if (!decryptError)
-        entry->passField.Assign(Substring(buffer, 1, buffer.Length() - 1));
+      entry->passField.Assign(Substring(buffer, 1, buffer.Length() - 1));
 
       state = STATE_PASSVALUE;
       break;
@@ -970,12 +987,7 @@ nsPasswordManager::ReadSignonFile()
     case STATE_PASSVALUE:
       NS_ASSERTION(entry, "bad state");
 
-      if (!decryptError) {
-        if (NS_SUCCEEDED(DecryptData(buffer, decryptedValue)))
-          entry->passValue.Assign(decryptedValue);
-        else
-          decryptError = PR_TRUE;  // abort this entry
-      }
+      entry->passValue.Assign(buffer);
 
       state = STATE_USERFIELD;
       break;
@@ -1001,21 +1013,12 @@ nsPasswordManager::WriteRejectEntryEnumerator(const nsACString& aKey,
   return PL_DHASH_NEXT;
 }
 
-struct writeSignonEntryContext {
-  nsIOutputStream* stream;
-  nsPasswordManager* manager;
-};
-
 /* static */ PLDHashOperator PR_CALLBACK
 nsPasswordManager::WriteSignonEntryEnumerator(const nsACString& aKey,
                                               SignonDataEntry* aEntry,
                                               void* aUserData)
 {
-  writeSignonEntryContext* context = NS_STATIC_CAST(writeSignonEntryContext*,
-                                                    aUserData);
-
-  nsIOutputStream* stream = context->stream;
-  nsPasswordManager* manager = context->manager;
+  nsIOutputStream* stream = NS_STATIC_CAST(nsIOutputStream*, aUserData);
   PRUint32 bytesWritten;
 
   nsCAutoString buffer(aKey);
@@ -1026,7 +1029,7 @@ nsPasswordManager::WriteSignonEntryEnumerator(const nsACString& aKey,
   userField.Append(NS_LINEBREAK);
   stream->Write(userField.get(), userField.Length(), &bytesWritten);
 
-  manager->EncryptData(aEntry->userValue, buffer);
+  buffer.Assign(NS_ConvertUCS2toUTF8(aEntry->userValue));
   buffer.Append(NS_LINEBREAK);
   stream->Write(buffer.get(), buffer.Length(), &bytesWritten);
 
@@ -1035,7 +1038,7 @@ nsPasswordManager::WriteSignonEntryEnumerator(const nsACString& aKey,
   buffer.Append(NS_LINEBREAK);
   stream->Write(buffer.get(), buffer.Length(), &bytesWritten);
 
-  manager->EncryptData(aEntry->passValue, buffer);
+  buffer.Assign(NS_ConvertUCS2toUTF8(aEntry->passValue));
   buffer.Append(NS_LINEBREAK);
   stream->Write(buffer.get(), buffer.Length(), &bytesWritten);
 
@@ -1066,8 +1069,7 @@ nsPasswordManager::WriteSignonFile()
   fileStream->Write(buffer.get(), buffer.Length(), &bytesWritten);
 
   // Write out the signon data.
-  writeSignonEntryContext context = { fileStream, this };
-  mSignonTable.EnumerateRead(WriteSignonEntryEnumerator, &context);
+  mSignonTable.EnumerateRead(WriteSignonEntryEnumerator, fileStream);
 }
 
 void
@@ -1084,7 +1086,7 @@ nsPasswordManager::AddSignonData(const nsACString& aRealm,
   mSignonTable.Put(aRealm, aEntry);
 }
 
-nsresult
+/* static */ nsresult
 nsPasswordManager::DecryptData(const nsAString& aData,
                                nsAString& aPlaintext)
 {
@@ -1103,12 +1105,12 @@ nsPasswordManager::DecryptData(const nsAString& aData,
 
     // This is encrypted using nsISecretDecoderRing.
     EnsureDecoderRing();
-    if (!mDecoderRing) {
+    if (!sDecoderRing) {
       NS_WARNING("Unable to get decoder ring service");
       return NS_ERROR_FAILURE;
     }
 
-    if (NS_FAILED(mDecoderRing->DecryptString(flatData.get(), &buffer)))
+    if (NS_FAILED(sDecoderRing->DecryptString(flatData.get(), &buffer)))
       return NS_ERROR_FAILURE;
 
   }
@@ -1119,15 +1121,20 @@ nsPasswordManager::DecryptData(const nsAString& aData,
   return NS_OK;
 }
 
-nsresult
+// Note that nsISecretDecoderRing encryption uses a pseudo-random salt value,
+// so it's not possible to test equality of two strings by comparing their
+// ciphertexts.  We need to decrypt both strings and compare the plaintext.
+
+
+/* static */ nsresult
 nsPasswordManager::EncryptData(const nsAString& aPlaintext,
                                nsACString& aEncrypted)
 {
   EnsureDecoderRing();
-  NS_ENSURE_TRUE(mDecoderRing, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(sDecoderRing, NS_ERROR_FAILURE);
 
   char* buffer;
-  if (NS_FAILED(mDecoderRing->EncryptString(NS_ConvertUCS2toUTF8(aPlaintext).get(), &buffer)))
+  if (NS_FAILED(sDecoderRing->EncryptString(NS_ConvertUCS2toUTF8(aPlaintext).get(), &buffer)))
     return NS_ERROR_FAILURE;
 
   aEncrypted.Assign(buffer);
@@ -1136,11 +1143,23 @@ nsPasswordManager::EncryptData(const nsAString& aPlaintext,
   return NS_OK;
 }
 
-void
+/* static */ nsresult
+nsPasswordManager::EncryptDataUCS2(const nsAString& aPlaintext,
+                                   nsAString& aEncrypted)
+{
+  nsCAutoString buffer;
+  nsresult rv = EncryptData(aPlaintext, buffer);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aEncrypted.Assign(NS_ConvertUTF8toUCS2(buffer));
+  return NS_OK;
+}
+
+/* static */ void
 nsPasswordManager::EnsureDecoderRing()
 {
-  if (!mDecoderRing)
-    mDecoderRing = do_GetService("@mozilla.org/security/sdr;1");
+  if (!sDecoderRing)
+    CallGetService("@mozilla.org/security/sdr;1", &sDecoderRing);
 }
 
 nsresult
@@ -1154,20 +1173,36 @@ nsPasswordManager::FindPasswordEntryFromSignonData(SignonDataEntry* aEntry,
 {
   // host has already been checked, so just look for user/password match.
   SignonDataEntry* entry = aEntry;
+  nsAutoString buffer;
 
   for (; entry; entry = entry->next) {
-    PRBool userMatched = (aUser.IsEmpty() || aUser.Equals(entry->userValue));
-    PRBool passMatched = (aPassword.IsEmpty() ||
-                          aPassword.Equals(entry->passValue));
 
-    if (userMatched && passMatched)
-      break;
+    PRBool matched;
+
+    if (aUser.IsEmpty()) {
+      matched = PR_TRUE;
+    } else {
+      DecryptData(entry->userValue, buffer);
+      matched = aUser.Equals(buffer);
+    }
+
+    if (matched) {
+      if (aPassword.IsEmpty()) {
+        matched = PR_TRUE;
+      } else {
+        DecryptData(entry->passValue, buffer);
+        matched = aPassword.Equals(buffer);
+      }
+
+      if (matched)
+        break;
+    }
   }
 
   if (entry) {
     aHostFound.Assign(aHost);
-    aUserFound.Assign(entry->userValue);
-    aPasswordFound.Assign(entry->passValue);
+    DecryptData(entry->userValue, aUserFound);
+    DecryptData(entry->passValue, aPasswordFound);
     return NS_OK;
   }
 
