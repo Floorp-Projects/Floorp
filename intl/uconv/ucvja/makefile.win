@@ -43,7 +43,6 @@ OBJS = \
         $(NULL)
 
 EXPORTS=				\
-        nsUCVJACID.h                    \
 	$(NULL)
 
 LINCS=					\

@@ -81,6 +81,7 @@ public:
   NS_IMETHOD SetInputErrorBehavior(PRInt32 aBehavior);
 
 private:
+  PRInt32 mBehavior;
   nsIUnicodeDecodeUtil *mUtil;
 
 };
@@ -108,6 +109,7 @@ nsSJIS2Unicode::nsSJIS2Unicode()
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
   mUtil = nsnull;
+  mBehavior = kOnError_Recover;
 }
 
 nsSJIS2Unicode::~nsSJIS2Unicode() 
@@ -142,8 +144,9 @@ NS_IMETHODIMP nsSJIS2Unicode::Convert(PRUnichar * aDest, PRInt32 aDestOffset,
        return res;
      }
   }
-  return mUtil->ConvertBy1Table( aDest, aDestOffset, aDestLength, 
+  return mUtil->Convert( aDest, aDestOffset, aDestLength, 
                                  aSrc, aSrcOffset, aSrcLength,
+                                 mBehavior,
                                  (uShiftTable*) &gShiftTable, 
                                  (uMappingTable*)&gMappingTable);
 }
@@ -161,7 +164,7 @@ NS_IMETHODIMP nsSJIS2Unicode::Length(const char * aSrc, PRInt32 aSrcOffset,
                                       PRInt32 * aDestLength)
 {
   *aDestLength = aSrcLength;
-  return NS_EXACT_LENGTH;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsSJIS2Unicode::Reset()
@@ -171,7 +174,7 @@ NS_IMETHODIMP nsSJIS2Unicode::Reset()
 
 NS_IMETHODIMP nsSJIS2Unicode::SetInputErrorBehavior(PRInt32 aBehavior)
 {
-  // no input error possible, this encoding is too simple
+  mBehavior = aBehavior;
   return NS_OK;
 }
 
@@ -257,14 +260,14 @@ NS_IMETHODIMP nsSJIS2UnicodeFactory::LockFactory(PRBool aLock)
 //----------------------------------------------------------------------
 // Interface nsICharsetConverterInfo [implementation]
 
-NS_IMETHODIMP nsSJIS2UnicodeFactory::GetCharsetSrc(nsString ** aCharset)
+NS_IMETHODIMP nsSJIS2UnicodeFactory::GetCharsetSrc(char ** aCharset)
 {
-  (*aCharset) = new nsString(NS_SRC_CHARSET);
+  (*aCharset) = NS_SRC_CHARSET;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSJIS2UnicodeFactory::GetCharsetDest(nsString ** aCharset)
+NS_IMETHODIMP nsSJIS2UnicodeFactory::GetCharsetDest(char ** aCharset)
 {
-  (*aCharset) = new nsString(NS_DEST_CHARSET);
+  (*aCharset) = NS_DEST_CHARSET;
   return NS_OK;
 }

@@ -28,28 +28,26 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 CPPSRCS =				\
 	nsCharsetConverterManager.cpp	\
-	nsAscii2Unicode.cpp		\
 	nsUnicodeDecodeUtil.cpp		\
 	nsUConvDll.cpp			\
 	$(NULL)
 
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsCharsetConverterManager.obj 	\
-	.\$(OBJDIR)\nsAscii2Unicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeDecodeUtil.obj 		\
 	.\$(OBJDIR)\nsUConvDll.obj 			\
 	$(NULL)
 
-CSRCS =				\
+CSRCS =		\
 	umap.c	\
 	ugen.c	\
 	uscan.c	\
 	$(NULL)
 
-OBJS = \
-        .\$(OBJDIR)\umap.obj \
-        .\$(OBJDIR)\ugen.obj \
-        .\$(OBJDIR)\uscan.obj \
+OBJS = 				\
+        .\$(OBJDIR)\umap.obj	\
+        .\$(OBJDIR)\ugen.obj	\
+        .\$(OBJDIR)\uscan.obj	\
         $(NULL)
 
 EXPORTS=				\
@@ -59,8 +57,8 @@ LINCS=					\
 	-I$(PUBLIC)\raptor		\
 	-I$(PUBLIC)\xpcom 		\
 	-I$(PUBLIC)\uconv		\
-# the following lines are hacks
-	-I$(PUBLIC)\ucvja		\
+	-I..\ucvja	  		\
+	-I..\ucvlatin			\
 	$(NULL)
 
 LLIBS=					\

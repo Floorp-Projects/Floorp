@@ -31,28 +31,57 @@ NS_DECLARE_ID ( kIUnicodeDecodeUtilIID,
 class nsIUnicodeDecodeUtil : public nsISupports {
 
 public:
-    NS_IMETHOD ConvertBy1Table(
-      PRUnichar   *aDest,
-      PRInt32    aDestOffset,
-      PRInt32    *aDestLength,
-      const char  *aSrc,
-      PRInt32    aSrcOffset,
-      PRInt32    *aSrcLength,
-      uShiftTable *aShiftTable,
+    /*
+     *
+     */
+    NS_IMETHOD Convert(
+      PRUnichar       *aDest,
+      PRInt32          aDestOffset,
+      PRInt32         *aDestLength,
+      const char      *aSrc,
+      PRInt32          aSrcOffset,
+      PRInt32         *aSrcLength,
+      PRInt32          aBehavior,
+      uShiftTable     *aShiftTable,
       uMappingTable   *aMappingTable
    ) = 0;
 
-   NS_IMETHOD ConvertByNTable(
-      PRUnichar  *aDest,
-      PRInt32   aDestOffset,
-      PRInt32   *aDestLength,
-      const char *aSrc,
-      PRInt32   aSrcOffset,
-      PRInt32   *aSrcLength,
-      PRUint16   numOfTable,
-      uRange     *aRangeArray,
-      uShiftTable *aShiftTableArray,
+    /*
+     *
+     */
+   NS_IMETHOD Convert(
+      PRUnichar       *aDest,
+      PRInt32          aDestOffset,
+      PRInt32         *aDestLength,
+      const char      *aSrc,
+      PRInt32          aSrcOffset,
+      PRInt32         *aSrcLength,
+      PRInt32          aBehavior,
+      PRUint16         numOfTable,
+      uRange          *aRangeArray,
+      uShiftTable     *aShiftTableArray,
       uMappingTable   *aMappingTableArray
+   ) = 0;
+
+    /*
+     *
+     */
+   NS_IMETHOD Init1ByteFastTable(
+      uMappingTable   *aMappingTable,
+      PRUnichar       *aFastTable
+   ) = 0;
+
+    /*
+     *
+     */
+   NS_IMETHOD Convert(
+      PRUnichar       *aDest,
+      PRInt32          aDestOffset,
+      PRInt32         *aDestLength,
+      const char      *aSrc,
+      PRInt32          aSrcOffset,
+      PRInt32         *aSrcLength,
+      const PRUnichar *aFastTable
    ) = 0;
 };
 #endif

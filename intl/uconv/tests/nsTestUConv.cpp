@@ -24,35 +24,26 @@
 #include "nsISupports.h"
 #include "nsICharsetConverterManager.h"
 #include "nsConverterCID.h"
-
-#define TEST_SJIS
-#ifdef TEST_SJIS
 #include "nsUCVJACID.h"
-#ifdef XP_UNIX
-#define UCVJA_DLL       "libucvja.so"
-#else
-#ifdef XP_MAC
-#define UCVJA_DLL       "UCVJA_DLL"
-#else /* XP_MAC */
-#define UCVJA_DLL       "ucvja.dll"
-#endif
-#endif
-
-#endif
-
-
 
 #ifdef XP_UNIX
-#define UCONV_DLL       "libuconv.so"
-#else
+
+#define UCONV_DLL         "libuconv.so"
+#define UCVLATIN_DLL      "libucvlatin.so"
+#define UCVJA_DLL         "libucvja.so"
+#else /* XP_UNIX */
 #ifdef XP_MAC
 #define UCONV_DLL       "UCONV_DLL"
+#define UCVLATIN_DLL    "UCVLATIN_DLL"
+#define UCVJA_DLL       "UCVJA_DLL"
 #else /* XP_MAC */
 #define UCONV_DLL       "uconv.dll"
+#define UCVLATIN_DLL    "ucvlatin.dll"
+#define UCVJA_DLL       "ucvja.dll"
+#endif 
 #endif
-#endif
-#define TABLE_SIZE1     5
 
+#define TABLE_SIZE1     5
 
 nsICharsetConverterManager * ccMan = NULL;
 
@@ -63,15 +54,13 @@ nsresult setupRegistry()
   res = nsRepository::RegisterFactory(kCharsetConverterManagerCID, UCONV_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
-  res = nsRepository::RegisterFactory(kAscii2UnicodeCID, UCONV_DLL, PR_FALSE, PR_FALSE);
-
-#ifdef TEST_SJIS
+  res = nsRepository::RegisterFactory(kLatin1ToUnicodeCID, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
   res = nsRepository::RegisterFactory(kSJIS2UnicodeCID, UCVJA_DLL, PR_FALSE, PR_FALSE);
-#endif
+  if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
-  return res;
+  return NS_OK;
 }
 
 nsresult init()
@@ -79,7 +68,7 @@ nsresult init()
   nsresult res;
 
   res = setupRegistry();
-  if (NS_FAILED(res)  && (NS_ERROR_FACTORY_EXISTS != res)) {
+  if (NS_FAILED(res)) {
     printf("Error setting up registry: 0x%x",res);
     return res;
   }
@@ -140,13 +129,13 @@ nsresult testCharsetConverterManager()
   return NS_OK;
 }
 
-nsresult testAsciiDecoder()
+nsresult testLatin1Decoder()
 {
-  printf("\n[T2] Ascii2Unicode\n");
+  printf("\n[T2] Latin1ToUnicode\n");
 
   // create converter
   nsIUnicodeDecoder * dec;
-  nsAutoString str("Ascii");
+  nsAutoString str("iso-8859-1");
   nsresult res = ccMan->GetUnicodeDecoder(&str,&dec);
   if (NS_FAILED(res)) {
     printf("ERROR 0x%x: Cannot instantiate.\n",res);
@@ -187,7 +176,7 @@ nsresult testAsciiDecoder()
 
   return NS_OK;
 }
-#ifdef TEST_SJIS
+
 
 #define SJIS_TEST_SRC_SIZE 40
 #define SJIS_TEST_DEST_SIZE 24
@@ -347,7 +336,6 @@ U+FF11 U+FF12 U+FF13 U+FF21 U+FF22 U+FF23
   return NS_OK;
 }
 
-#endif
 nsresult run()
 {
   nsresult res;
@@ -355,13 +343,8 @@ nsresult run()
   res = testCharsetConverterManager();
   if (NS_FAILED(res)) return res;
 
-  res = testAsciiDecoder();
-
-#ifdef TEST_SJIS
-  if (NS_FAILED(res)) return res;
-
+  res = testLatin1Decoder();
   res = testSJISDecoder();
-#endif
 
   return NS_OK;
 }

@@ -20,7 +20,6 @@
 #ifndef nsICharsetConverterInfo_h___
 #define nsICharsetConverterInfo_h___
 
-#include "nsString.h"
 #include "nsISupports.h"
 
 // Interface ID for our Converter Information interface
@@ -50,14 +49,14 @@ public:
    *
    * @param aCharset    [OUT] a name/alias for the source charset
    */
-  NS_IMETHOD GetCharsetSrc(nsString ** aCharset) = 0;
+  NS_IMETHOD GetCharsetSrc(char ** aCharset) = 0;
 
   /**
    * Returns the character set this converter is converting into.
    *
    * @param aCharset    [OUT] a name/alias for the destination charset
    */
-  NS_IMETHOD GetCharsetDest(nsString ** aCharset) = 0;
+  NS_IMETHOD GetCharsetDest(char ** aCharset) = 0;
 };
 
 #endif /* nsICharsetConverterInfo_h___ */
