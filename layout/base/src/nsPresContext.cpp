@@ -70,6 +70,12 @@
 #include "nsBidiPresUtils.h"
 #endif // IBMBIDI
 
+// Needed for Start/Stop of Image Animation
+#include "imgIContainer.h"
+#include "nsIDOMHTMLImageElement.h"
+#include "nsIImageFrame.h"
+
+
 static nscolor
 MakeColorPref(const char *colstr)
 {
@@ -827,10 +833,82 @@ nsPresContext::GetImageAnimationMode(nsImageAnimation* aModeResult)
   return NS_OK;
 }
 
+// Helper function for setting Anim Mode on image
+static void SetImgAnimModeOnImgReq(imgIRequest* aImgReq, PRUint16 aMode)
+{
+  if (aImgReq != nsnull) {
+    nsCOMPtr<imgIContainer> imgCon;
+    aImgReq->GetImage(getter_AddRefs(imgCon));
+    if (imgCon) {
+      imgCon->SetAnimationMode(aMode);
+    }
+  }
+}
+
+ // Enumeration call back for HashTable
+PR_STATIC_CALLBACK(PRBool) set_animation_mode(nsHashKey *aKey, void *aData, void* closure)
+{
+  nsISupports *sup = NS_REINTERPRET_CAST(nsISupports*, aData);
+  nsImageLoader *loader = NS_REINTERPRET_CAST(nsImageLoader*, sup);
+  nsCOMPtr<imgIRequest> imgReq;
+  loader->GetRequest(getter_AddRefs(imgReq));
+  SetImgAnimModeOnImgReq(imgReq, (PRUint16)closure);
+  return PR_TRUE;
+}
+
+// IMPORTANT: Assumption is that all images for a Presentation 
+// have the same Animation Mode (pavlov said this was OK)
+//
+// Walks content and set the animation mode
+// this is a way to turn on/off image animations
+void nsPresContext::SetImgAnimations(nsCOMPtr<nsIContent>& aParent, nsImageAnimation aMode)
+{
+  nsCOMPtr<nsIDOMHTMLImageElement> imgContent(do_QueryInterface(aParent));
+  if (imgContent) {
+    nsIFrame* frame;
+    mShell->GetPrimaryFrameFor(aParent, &frame);
+    if (frame != nsnull) {
+      nsIImageFrame* imgFrame = nsnull;
+      CallQueryInterface(frame, &imgFrame);
+      if (imgFrame != nsnull) {
+        nsCOMPtr<imgIRequest> imgReq;
+        imgFrame->GetImageRequest(getter_AddRefs(imgReq));
+        SetImgAnimModeOnImgReq(imgReq, aMode);
+      }
+    }
+  }
+  PRInt32 count;
+  aParent->ChildCount(count);
+  for (PRInt32 i=0;i<count;i++) {
+    nsCOMPtr<nsIContent> child;
+    aParent->ChildAt(i, *getter_AddRefs(child));
+    if (child) {
+      SetImgAnimations(child, aMode);
+    }
+  }
+}
 
 NS_IMETHODIMP
 nsPresContext::SetImageAnimationMode(nsImageAnimation aMode)
 {
+  // This hash table contains a list of background images
+  // so iterate over it and set the mode
+  mImageLoaders.Enumerate(set_animation_mode, (void*)aMode);
+
+  // Now walk the content tree and set the animation mode 
+  // on all the images
+  nsCOMPtr<nsIDocument> doc;
+  if (mShell != nsnull) {
+    mShell->GetDocument(getter_AddRefs(doc));
+    if (doc) {
+      nsCOMPtr<nsIContent> rootContent;
+      doc->GetRootContent(getter_AddRefs(rootContent));
+      if (rootContent) {
+        SetImgAnimations(rootContent, aMode);
+      }
+    }
+  }
+
   mImageAnimationMode = aMode;
   return NS_OK;
 }
