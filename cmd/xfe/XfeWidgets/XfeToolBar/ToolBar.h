@@ -38,6 +38,8 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 /*																		*/
 /*----------------------------------------------------------------------*/
 
+#define XmNforceDimensionsCallback			"forceDimensionsCallback"
+
 #define XmNactiveButton						"activeButton"
 #define XmNallowWrap						"allowWrap"
 #define XmNdynamicIndicator					"dynamicIndicator"
@@ -111,6 +113,23 @@ enum
 };
 /*----------------------------------------------------------------------*/
 
+#define XmCR_XFE_LAST_REASON 1
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Callback Reasons														*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+enum
+{
+	XmCR_TOOL_BAR_SELECTION_CHANGED = XmCR_XFE_LAST_REASON + 99, /* ToolBar selection changed */
+	XmCR_TOOL_BAR_VALUE_CHANGED,			/* ToolBar value changed	*/
+	XmCR_FORCE_DIMENSIONS					/* ToolBar force dimensions	*/
+};
+
+/*----------------------------------------------------------------------*/
+
+
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* XmINDICATOR_DONT_SHOW - for XmNindicatorPosition to hide indicator.	*/
@@ -131,6 +150,19 @@ typedef struct
     Boolean		armed;					/* Button armed ?				*/
     Boolean		selected;				/* Button selected ?			*/
 } XfeToolBarCallbackStruct;
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* ToolBar force dimensions callback structure							*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+typedef struct
+{
+    int			reason;					/* Reason why CB was invoked	*/
+    XEvent *	event;					/* Event that triggered CB		*/
+	Widget		target;					/* Button that invoked callback	*/
+	Boolean		allow_change;			/* Allow the change ?			*/
+} XfeToolBarForceDimensionsCallbackStruct;
 
 /*----------------------------------------------------------------------*/
 /*																		*/

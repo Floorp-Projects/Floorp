@@ -75,8 +75,6 @@ enum
     XmCR_ACTION  = (XmCR_OBSCURED_TRAVERSAL + 999),/* Generic action	*/
     XmCR_ANIMATION,								/* Logo animation		*/
 	XmCR_TITLE_CHANGED,							/* Title changed		*/
-	XmCR_TOOL_BAR_SELECTION_CHANGED,			/* TB selection changed	*/
-	XmCR_TOOL_BAR_VALUE_CHANGED,				/* TB value changed		*/
     XmCR_BEFORE_REALIZE,						/* Before realize		*/
     XmCR_BEFORE_RESIZE,							/* Before resize		*/
     XmCR_BUTTON_3_DOWN,							/* Button 3 down		*/
@@ -84,11 +82,8 @@ enum
     XmCR_CHANGE_MANAGED,						/* Change managed		*/
     XmCR_CLOSE,									/* Task bar close		*/
     XmCR_DELETE_WINDOW,							/* Delete window		*/
-    XmCR_DOCK,									/* Task bar dock		*/
     XmCR_ENTER,									/* Enter				*/
     XmCR_FIRST_MAP,								/* First map			*/
-    XmCR_FLOATING_MAP,							/* Floating map			*/
-    XmCR_FLOATING_UNMAP,						/* Floating unmap		*/
     XmCR_GRAB,									/* Grab					*/
     XmCR_LEAVE,									/* Leave				*/
     XmCR_LOWER,									/* Lower				*/
@@ -106,16 +101,6 @@ enum
     XmCR_TASK_BAR,								/* Task bar active		*/
     XmCR_TOGGLE_BOX,							/* Toggle box			*/
     XmCR_TOGGLE_SELECTION,						/* Toggle selection		*/
-    XmCR_TOOL_BOX_ALLOW,						/* Tool box allow		*/
-    XmCR_TOOL_BOX_CLOSE,						/* Tool box close		*/
-    XmCR_TOOL_BOX_DRAG_END,						/* Tool box drag end	*/
-    XmCR_TOOL_BOX_DRAG_MOTION,					/* Tool box drag motion	*/
-    XmCR_TOOL_BOX_DRAG_START,					/* Tool box drag start	*/
-    XmCR_TOOL_BOX_NEW_ITEM,						/* Tool box new item    */
-    XmCR_TOOL_BOX_OPEN,							/* Tool box open		*/
-    XmCR_TOOL_BOX_SNAP,							/* Tool box snap		*/
-    XmCR_TOOL_BOX_SWAP,							/* Tool box swap		*/
-    XmCR_UNDOCK,								/* Task bar undock		*/ 
     XmCR_UNGRAB,								/* Ungrab				*/
     XmCR_XFE_LAST_REASON						/* Last reason marker	*/
 };

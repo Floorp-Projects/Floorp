@@ -66,6 +66,24 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Callback Reasons														*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+enum
+{
+    XmCR_TOOL_BOX_ALLOW = XmCR_XFE_LAST_REASON + 99,/* Tool box allow	*/
+    XmCR_TOOL_BOX_CLOSE,						/* Tool box close		*/
+    XmCR_TOOL_BOX_DRAG_END,						/* Tool box drag end	*/
+    XmCR_TOOL_BOX_DRAG_MOTION,					/* Tool box drag motion	*/
+    XmCR_TOOL_BOX_DRAG_START,					/* Tool box drag start	*/
+    XmCR_TOOL_BOX_NEW_ITEM,						/* Tool box new item    */
+    XmCR_TOOL_BOX_OPEN,							/* Tool box open		*/
+    XmCR_TOOL_BOX_SNAP,							/* Tool box snap		*/
+    XmCR_TOOL_BOX_SWAP							/* Tool box swap		*/
+};
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* Tool box callback structures											*/
 /*																		*/
 /*----------------------------------------------------------------------*/

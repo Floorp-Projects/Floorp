@@ -61,6 +61,23 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 #define XmCShowDockedTaskBar				"ShowDockedTaskBar"
 #define XmCUndockPixmap						"UndockPixmap"
 
+#define XmCR_XFE_LAST_REASON 1
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Callback Reasons														*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+enum
+{
+	XmCR_DOCK = XmCR_XFE_LAST_REASON + 99,		/* Task bar dock		*/
+    XmCR_UNDOCK,								/* Task bar undock		*/ 
+    XmCR_FLOATING_MAP,							/* Floating map			*/
+    XmCR_FLOATING_UNMAP							/* Floating unmap		*/
+};
+
+/*----------------------------------------------------------------------*/
+
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* XfeDashBoard components												*/
