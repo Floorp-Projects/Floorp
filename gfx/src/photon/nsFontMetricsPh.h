@@ -65,6 +65,8 @@ public:
   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
+  virtual nsresult GetSpaceWidth(nscoord &aSpaceWidth);
+  
 protected:
   void RealizeFont();
 
@@ -85,6 +87,8 @@ protected:
   nscoord             mStrikeoutOffset;
   nscoord             mUnderlineSize;
   nscoord             mUnderlineOffset;
+  nscoord             mSpaceWidth;
+  
   nsCOMPtr<nsIAtom>   mLangGroup;
 };
 

@@ -56,6 +56,7 @@ nsFontMetricsPh :: nsFontMetricsPh()
   mStrikeoutOffset = 0;
   mUnderlineSize = 0;
   mUnderlineOffset = 0;
+  mSpaceWidth = 0;
 }
   
 nsFontMetricsPh :: ~nsFontMetricsPh()
@@ -89,6 +90,7 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
   FontDetails   fDetails[MAX_FONTDETAIL];
   int           fontcount;
   int           index;
+  PhRect_t      extent;
 
 	result = aContext->FirstExistingFont(aFont, firstFace);
 
@@ -181,20 +183,26 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
 		mMaxDescent = mDescent = nscoord(fontInfo.descender * f);
 		mMaxAdvance            = nscoord(fontInfo.width * f);  /* max width */
 
+        /***** Get the width of a space *****/
+        PfExtentText(&extent, NULL, NSFullFontName, " ", 1);
+//PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::Init with nsFont mSpaceWidth=<%d> font=<%s> f=<%f> \n", (extent.lr.x - extent.ul.x + 1),  NSFullFontName, f ));
+        mSpaceWidth = (int) ((extent.lr.x - extent.ul.x + 1) * f);
+    
+
 		/****** stolen from GTK *******/
 		// 56% of ascent, best guess for non-true type
 		mXHeight = NSToCoordRound((float) fontInfo.ascender * f * 0.56f * -1.0);
 	
-		mUnderlineOffset = -NSToIntRound(PR_MAX (1, floor (0.1 * height + 0.5)) * f);
-		mUnderlineSize = NSToIntRound(PR_MAX(1, floor (0.05 * height + 0.5)) * f);
-		mStrikeoutOffset = NSToIntRound((mAscent + 1) / 2.5);
-		mStrikeoutSize = mUnderlineSize;
-		mSuperscriptOffset = mXHeight;
-		mSubscriptOffset = mXHeight;
-		mLeading = 0;
+		mUnderlineOffset   = -NSToIntRound(PR_MAX (1, floor (0.1 * height + 0.5)) * f);
+		mUnderlineSize     =  NSToIntRound(PR_MAX(1, floor (0.05 * height + 0.5)) * f);
+		mStrikeoutOffset   =  NSToIntRound((mAscent + 1) / 2.5);
+		mStrikeoutSize     =  mUnderlineSize;
+		mSuperscriptOffset =  mXHeight;
+		mSubscriptOffset   =  mXHeight;
+		mLeading           =  0;
 
 		PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::Init with nsFont: Font Metrics for <%s> mHeight=<%d> mMaxAscent=<%d> mMaxDescent=<%d> mMaxAdvance=<%d>\n",
-		fontInfo.font, mHeight, mMaxAscent, mMaxDescent, mMaxAdvance));
+		  fontInfo.font, mHeight, mMaxAscent, mMaxDescent, mMaxAdvance));
 	}
 
 	delete [] str;
@@ -360,6 +368,61 @@ nsFontMetricsPh::GetFontHandle(nsFontHandle &aHandle)
   return NS_OK;
 }
 
+nsresult
+nsFontMetricsPh::GetSpaceWidth(nscoord &aSpaceWidth)
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::GetSpaceWidth mSpaceWidth=<%d>\n", mSpaceWidth));
+  aSpaceWidth = mSpaceWidth;
+  return NS_OK;
+}
+
+struct nsFontFamily
+{
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  PLHashTable* mCharSets;
+};
+
+
+static nsFontFamily* GetFontNames(char* aPattern)
+{
+  nsFontFamily* family = nsnull;
+  int         MAX_FONTDETAIL = 30;
+  FontDetails fDetails[MAX_FONTDETAIL];
+  int         fontcount;
+
+    fontcount = PfQueryFonts('a', PHFONT_ALL_FONTS, fDetails, MAX_FONTDETAIL);
+    if (fontcount >= MAX_FONTDETAIL)
+    {
+      NS_WARNING("nsFontMetricsPh::GetFontNames ERROR - Font Array size should be increased!\n");
+    }
+
+    if (fontcount)
+    {
+      int index;
+      for(index=0; index < fontcount; index++)
+      {
+        nsAutoString familyName2(fDetails[index].desc);
+        family = (nsFontFamily*) PL_HashTableLookup(gFamilies, (nsString*) &familyName2);
+        if (!family)
+        {
+          family = new nsFontFamily;
+          if (!family)
+          {
+            continue;
+          }
+          nsString* copy = new nsString(fDetails[index].desc);
+          if (!copy) {
+           delete family;
+           continue;
+          }
+          PL_HashTableAdd(gFamilies, copy, family);
+    }
+
+      
+      }
+    }
+}
 
 
 // The Font Enumerator
@@ -434,7 +497,7 @@ CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
 NS_IMETHODIMP
 nsFontEnumeratorPh::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::EnumerateAllFonts  this=<%p>\n", this));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::EnumerateAllFonts  this=<%p> gInitializedFontEnumerator=<%d>\n", this, gInitializedFontEnumerator));
 
   if (aCount) {
     *aCount = 0;
@@ -455,25 +518,36 @@ nsFontEnumeratorPh::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
     }
   }
 
-  PRUnichar** array = (PRUnichar**)
-    nsAllocator::Alloc(gFamilies->nentries * sizeof(PRUnichar*));
-  if (!array) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  EnumerateFamilyInfo info = { array, 0 };
-  PL_HashTableEnumerateEntries(gFamilies, EnumerateFamily, &info);
-  if (!info.mIndex) {
-    nsAllocator::Free(array);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::EnumerateAllFonts after InitializeFontEnumerator gFamilies=<%p>", gFamilies));
 
-  NS_QuickSort(array, gFamilies->nentries, sizeof(PRUnichar*),
+  if (gFamilies)
+  {
+    PRUnichar** array = (PRUnichar**) nsAllocator::Alloc(gFamilies->nentries * sizeof(PRUnichar*));
+    if (!array)
+    {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    EnumerateFamilyInfo info = { array, 0 };
+    PL_HashTableEnumerateEntries(gFamilies, EnumerateFamily, &info);
+    if (!info.mIndex)
+    {
+      nsAllocator::Free(array);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    NS_QuickSort(array, gFamilies->nentries, sizeof(PRUnichar*),
     CompareFontNames, nsnull);
 
-  *aCount = gFamilies->nentries;
-  *aResult = array;
+    *aCount = gFamilies->nentries;
+    *aResult = array;
 
-  return NS_OK;
+    return NS_OK;
+  }
+  else
+  {
+    return NS_ERROR_FAILURE;
+  }
 }
 
 NS_IMETHODIMP
