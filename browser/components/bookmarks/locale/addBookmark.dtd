@@ -8,7 +8,7 @@
 <!ENTITY button.createin.accesskey  "c">
 <!ENTITY button.createin2.label     "Create In &lt;&lt;">
 <!ENTITY createin.label             "Create in:">
-<!ENTITY createin.accesskey         "i">
+<!ENTITY createin.accesskey         "C">
 <!ENTITY button.newfolder.label     "New Folder...">
 <!ENTITY button.newfolder.accesskey "w">
 <!ENTITY alwayscreateinfolder.label "Don't show this dialog again">
@@ -18,10 +18,10 @@
 <!ENTITY button.defaultfolder.accesskey "d">
 <!ENTITY selectFolder.label         "Choose Folder">
 
-<!ENTITY expanderdown.tooltip    "Show all the bookmarks folders">
-<!ENTITY expanderup.tooltip      "Hide">
+<!ENTITY expanderDown.tooltip    "Show all the bookmarks folders">
+<!ENTITY expanderUp.tooltip      "Hide">
 <!ENTITY addGroup.label          "Bookmark all tabs in a folder">
 <!ENTITY addGroup.accesskey      "B">
 <!ENTITY newFolder.label         "New Folder">
 <!ENTITY newFolder.accesskey     "N">
-<!ENTITY accept.label            "Add">
+<!ENTITY acceptButton.label      "Add">
