@@ -612,7 +612,7 @@ $InstallSize$:chatzilla
 $InstallSizeSystem$
 $InstallSizeArchive$:chatzilla.xpi
 Attributes=SELECTED|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\Chrome\chatzilla.jar
+Force Upgrade File0=[SETUP PATH]\chrome\chatzilla.jar
 
 [Component Venkman]
 Description Short=Debugger
@@ -623,7 +623,7 @@ $InstallSize$:venkman
 $InstallSizeSystem$
 $InstallSizeArchive$:venkman.xpi
 Attributes=SELECTED|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\Chrome\venkman.jar
+Force Upgrade File0=[SETUP PATH]\chrome\venkman.jar
 
 [Component DOM Inspector]
 Description Short=Inspector
@@ -634,7 +634,7 @@ $InstallSize$:inspector
 $InstallSizeSystem$
 $InstallSizeArchive$:inspector.xpi
 Attributes=SELECTED|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\Chrome\inspector.jar
+Force Upgrade File0=[SETUP PATH]\chrome\inspector.jar
 
 [Component US English Profile Defaults]
 Description Short=US English profile defaults
@@ -657,7 +657,7 @@ $InstallSize$:langenus
 $InstallSizeSystem$
 $InstallSizeArchive$:langenus.xpi
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\Chrome\en-US.jar
+Force Upgrade File0=[SETUP PATH]\chrome\en-US.jar
 
 [Component US region pack]
 ;*** LOCALIZE ME BABY ***
@@ -669,7 +669,7 @@ $InstallSize$:regus
 $InstallSizeSystem$
 $InstallSizeArchive$:regus.xpi
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\Chrome\US.jar
+Force Upgrade File0=[SETUP PATH]\chrome\US.jar
 
 [Component QFA]
 Description Short=Quality Feedback Agent
@@ -680,7 +680,7 @@ Install Size=870
 Install Size System=1
 Install Size Archive=248
 Attributes=SELECTED|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\Components\fullsoft.dll
+Force Upgrade File0=[SETUP PATH]\components\fullsoft.dll
 
 ; This is to randomly set the default checkbox for this component.
 ; This particular value will set the checkbox checked [number]% of the time.
@@ -747,13 +747,13 @@ Only If Exists=FALSE
 
 
 ;Copy FileX sections
-;Copy the uninstaller to the [Setup Path]\Uninstall folder.
+;Copy the uninstaller to the [Setup Path]\uninstall folder.
 ;This copy is to be used when the user installed on a system with
 ;restricted access.
 [Copy File0]
 Timing=post smartupdate
 Source=[WINDIR]\$UninstallFile$
-Destination=[SETUP PATH]\Uninstall
+Destination=[SETUP PATH]\uninstall
 Fail If Exists=FALSE
 Do Not Uninstall=FALSE
 
@@ -770,13 +770,13 @@ Do Not Uninstall=TRUE
 Timing=post launchapp
 Filename=install_wizard.log
 Source=[SETUP PATH]
-Destination=[SETUP PATH]\Uninstall
+Destination=[SETUP PATH]\uninstall
 
 
 ;Create DirectoryX sections
 [Create Directory0]
 Timing=post download
-Destination=[SETUP PATH]\Plugins
+Destination=[SETUP PATH]\plugins
 
 
 ;Delete FileX sections
@@ -890,7 +890,7 @@ Root Key=HKEY_LOCAL_MACHINE
 ;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Uninstall
 Name=Uninstall Log Folder
-Name Value=[SETUP PATH]\Uninstall
+Name Value=[SETUP PATH]\uninstall
 Type=REG_SZ
 Decrypt Key=FALSE
 Decrypt Name=FALSE
@@ -974,7 +974,7 @@ Root Key=HKEY_CURRENT_USER
 ;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Uninstall
 Name=Uninstall Log Folder
-Name Value=[SETUP PATH]\Uninstall
+Name Value=[SETUP PATH]\uninstall
 Type=REG_SZ
 Decrypt Key=FALSE
 Decrypt Name=FALSE
@@ -1069,11 +1069,11 @@ Show Folder=HIDE
 Program Folder=[Default Folder]
 
 [Program Folder0-Shortcut0]
-File=[SETUP PATH]\Uninstall\$UninstallFile$
+File=[SETUP PATH]\uninstall\$UninstallFile$
 Arguments=/ua "$UserAgent$"
 Working Dir=[SETUP PATH]
 Description=Uninstall $ProductName$
-Icon Path=[SETUP PATH]\Uninstall\$UninstallFile$
+Icon Path=[SETUP PATH]\uninstall\$UninstallFile$
 Icon Id=0
 
 ; Default value:
