@@ -2412,6 +2412,10 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
 
   mIsDestroyed = PR_TRUE;
 
+  // we should call nsIPluginInstance::Stop and nsIPluginInstance::SetWindow 
+  // for those plugins who want it
+  mActivePluginList.stopRunning();  
+
   // at this point nsIPlugin::Shutdown calls will be performed if needed
   mActivePluginList.shut();
 
