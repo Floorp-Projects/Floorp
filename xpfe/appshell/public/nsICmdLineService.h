@@ -42,11 +42,13 @@ class nsICmdLineService : public nsISupports
 {
 public:
 
-  NS_IMETHOD Initialize(int c, char ** argv) = 0;
-  NS_IMETHOD GetCmdLineValue(char * arg, char ** value) = 0;
+  NS_IMETHOD Initialize(PRInt32 aArgc, char ** aArgv) = 0;
+  NS_IMETHOD GetCmdLineValue(char * aArg, char ** aValue) = 0;
   NS_IMETHOD GetURLToLoad(char ** aResult) = 0;
   NS_IMETHOD GetProgramName(char ** aResult) = 0;
-//  NS_IMETHOD PrintCmdArgs() = 0;
+  NS_IMETHOD GetArgc(PRInt32 *  aResult) = 0;
+  NS_IMETHOD GetArgv(char ** aResult[]) = 0;
+
 };
 
 
