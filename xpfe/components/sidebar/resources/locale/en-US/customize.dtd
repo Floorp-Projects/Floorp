@@ -41,13 +41,22 @@
 <!ENTITY sidebar.customize.title.label          "Customize &sidebarName;">
 <!-- LOCALIZATION NOTE  sidebar.customize.current.label: Do NOT localize the term "Sidebar"  -->
 <!ENTITY sidebar.customize.current.label        "Tabs in &sidebarName;:">
+<!ENTITY sidebar.customize.current.accesskey     "t">
 <!ENTITY sidebar.customize.reorder.label        "Reorder">
 <!ENTITY sidebar.customize.customize.label      "Customize Tab...">
+<!ENTITY sidebar.customize.customize.accesskey  "c">
 <!ENTITY sidebar.customize.remove.label         "Remove">
+<!ENTITY sidebar.customize.remove.accesskey     "r">
 <!-- LOCALIZATION NOTE  sidebar.customize.additional.label: Do NOT localize the term "Sidebar"  -->
 <!ENTITY sidebar.customize.additional.label     "Available Tabs:">
+<!ENTITY sidebar.customize.additional.accesskey  "v">
 <!ENTITY sidebar.customize.add.label            "Add">
+<!ENTITY sidebar.customize.add.accesskey         "a">
 <!ENTITY sidebar.customize.preview.label        "Preview...">
+<!ENTITY sidebar.customize.preview.accesskey    "p">
 <!ENTITY sidebar.customize.up.label             "Up">
+<!ENTITY sidebar.customize.up.accesskey         "u">
 <!ENTITY sidebar.customize.down.label           "Down">
-<!ENTITY sidebar.more.label "Find more tabs...">
+<!ENTITY sidebar.customize.down.accesskey       "d">
+<!ENTITY sidebar.more.label                     "Find more tabs...">
+<!ENTITY sidebar.more.accesskey                 "f">
