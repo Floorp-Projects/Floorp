@@ -197,7 +197,7 @@ nsWindow::nsWindow(nsISupports *aOuter):
   mDisplayed = PR_FALSE;
   mLowerLeft = PR_FALSE;
   mCursor = eCursor_standard;
-
+  mChildCount = 0;
 }
 
 
@@ -549,6 +549,8 @@ void nsWindow::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+    if (aParent)
+      aParent->AddChild(this);
     CreateWindow((nsNativeWidget)((aParent) ? aParent->GetNativeData(NS_NATIVE_WIDGET) : 0), 
         aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit,
         aInitData);
@@ -610,6 +612,8 @@ nsIEnumerator* nsWindow::GetChildren()
 //-------------------------------------------------------------------------
 void nsWindow::AddChild(nsIWidget* aChild)
 {
+  mChildArray[mChildCount] = aChild;
+  mChildCount++;
 }
 
 
@@ -649,9 +653,9 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 {
   mBounds.x = aX;
   mBounds.y = aY;
-  UpdateVisibilityFlag();
-  UpdateDisplay();
-  XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
+//  UpdateVisibilityFlag();
+//  UpdateDisplay();
+  XtMoveWidget(mWidget, aX, GetYCoord(aY));
 }
 
 //-------------------------------------------------------------------------
@@ -665,8 +669,8 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
                   gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
-  UpdateVisibilityFlag();
-  UpdateDisplay();
+//  UpdateVisibilityFlag();
+//  UpdateDisplay();
   XtVaSetValues(mWidget, XmNx, mBounds.x, XmNy, mBounds.y, XmNwidth, aWidth, XmNheight, aHeight, nsnull);
 }
 
@@ -682,8 +686,8 @@ void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeigh
   mBounds.y      = aY;
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
-  UpdateVisibilityFlag();
-  UpdateDisplay();
+//  UpdateVisibilityFlag();
+//  UpdateDisplay();
   XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY),
                          XmNwidth, aWidth, XmNheight, aHeight, nsnull);
 }
@@ -1058,6 +1062,20 @@ nsIAppShell* nsWindow::GetAppShell()
 //-------------------------------------------------------------------------
 void nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
+  int i;
+
+   // Scroll all of the form widgets
+  for (i = 0; i < mChildCount; i++) {
+    nsIWidget* widget = mChildArray[i];
+    nsRect rect;
+    widget->GetBounds(rect);
+    Widget w = widget->GetNativeData(NS_NATIVE_WIDGET);
+    rect.x = rect.x + aDx;
+    rect.y = rect.y + aDy;
+    widget->Move(rect.x, rect.y);
+  }
+
+
   if (mWidget == nsnull) {
     return;
   }

@@ -195,6 +195,8 @@ protected:
   PRBool      mShown;
   PRBool      mVisible;
   PRBool      mDisplayed;
+  int mChildCount;
+  nsIWidget*   mChildArray[100];
 
   // Resize event management
   nsRect mResizeRect;
