@@ -45,6 +45,9 @@
 #include "nsIScrollPositionListener.h"
 #include "nsISelectionListener.h"
 #include "nsISelectionController.h"
+#include "nsIController.h"
+#include "nsIControllers.h"
+#include "nsIFocusController.h"
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsUnicharUtils.h"
@@ -137,14 +140,16 @@ protected:
   void PlayNotFoundSound();
   void GetTopContentPresShell(nsIDocShellTreeItem *aTreeItem, 
                               nsIPresShell **aPresShell);
+  void GetStartWindow(nsIDOMWindow *aWindow, nsIDOMWindow **aStartWindow);
   nsresult GetWebBrowserFind(nsIDOMWindow *aDOMWin,
                              nsIWebBrowserFind **aWebBrowserFind);
   void StartTimeout();
   nsresult Init();
   void Shutdown();
-  nsresult UseInWindow(nsIDOMWindow *aDomWin);
+  nsresult UseInWindow(nsIDOMWindow *aDomWin, nsIDOMWindow **aStartWin);
   void SetSelectionLook(nsIPresShell *aPresShell, PRBool aChangeColor, 
                         PRBool aEnabled);
+  void ResetGlobalAutoStart(PRBool aAutoStart);
   void AttachDocListeners(nsIPresShell *aPresShell);
   void RemoveDocListeners();
   void AttachWindowListeners(nsIDOMWindow *aDOMWin);
@@ -192,6 +197,7 @@ protected:
   // boolean variable is getting passed into a method. For example:
   // GetBoolPref("accessibility.typeaheadfind.linksonly", &mLinksOnlyPref);
   PRBool mIsFindAllowedInWindow;
+  PRBool mAutoStartPref;
   PRBool mLinksOnlyPref;
   PRBool mStartLinksOnlyPref;
   PRPackedBool mLinksOnly;
@@ -236,6 +242,7 @@ protected:
   nsCOMPtr<nsIFindService> mFindService;
   nsCOMPtr<nsIStringBundle> mStringBundle;
   nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<nsIFocusController> mFocusController;
 
   // The focused content window that we're listening to and it's cached objects
   nsCOMPtr<nsISelection> mFocusedDocSelection;
@@ -247,3 +254,16 @@ protected:
   nsCOMPtr<nsISupportsArray> mManualFindWindows;
 };
 
+
+class nsTypeAheadController : public nsIController
+{
+public:
+  nsTypeAheadController(nsIFocusController *aFocusController);
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICONTROLLER
+
+private:
+  nsCOMPtr<nsIFocusController> mFocusController;
+  nsresult EnsureContentWindow(nsIDOMWindowInternal *aFocusedWin,
+                               nsIDOMWindow **aStartContentWin);
+};

@@ -178,7 +178,7 @@ Rights Reserved.
         <hbox id="msgHeaderView"/>
 
         <!-- message view -->
-        <browser id="messagepane" context="messagePaneContext"
+        <browser id="messagepane" context="messagePaneContext" autofind="false"
                  style="height: 0px; min-height: 1px" flex="1" name="messagepane" 
                  disablehistory="true" type="content-primary" src="about:blank"
                  disablesecurity="true" onclick="contentAreaClick(event);"/>

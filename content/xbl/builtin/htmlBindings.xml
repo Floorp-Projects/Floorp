@@ -47,6 +47,9 @@ Can't yet put script tags in XBL (hyatt has the bug)
       <handler event="keypress" key="z" command="cmd_undo" modifiers="accel"/>
       <handler event="keypress" key="z" command="cmd_redo" modifiers="accel,shift" />
       <handler event="keypress" key="a" command="cmd_selectAll" modifiers="accel"/>
+
+      <handler event="keypress" key="/" command="cmd_findTypeText"/>
+      <handler event="keypress" key="'" command="cmd_findTypeLinks"/>
     </handlers>
   </binding>
 

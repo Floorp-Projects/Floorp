@@ -136,10 +136,13 @@ pref("accessibility.accesskeycausesactivation", true);
 
 // Type Ahead Find
 pref("accessibility.typeaheadfind", true);
+pref("accessibility.typeaheadfind.autostart", true);
 pref("accessibility.typeaheadfind.linksonly", true);
 pref("accessibility.typeaheadfind.startlinksonly", false);
 pref("accessibility.typeaheadfind.timeout", 4000);
+pref("accessibility.typeaheadfind.enabletimeout", true);
 pref("accessibility.typeaheadfind.soundURL", "default");
+pref("accessibility.typeaheadfind.enablesound", true);
 
 // Dialog modality issues
 pref("browser.prefWindowModal", true);

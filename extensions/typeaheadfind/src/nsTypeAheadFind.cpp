@@ -57,7 +57,6 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsIChromeEventHandler.h"
-#include "nsIFocusController.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
@@ -142,7 +141,7 @@ PRInt32 nsTypeAheadFind::sAccelKey = -1;  // magic value of -1 when unitialized
 
 
 nsTypeAheadFind::nsTypeAheadFind():
-  mIsFindAllowedInWindow(PR_FALSE),
+  mIsFindAllowedInWindow(PR_FALSE), mAutoStartPref(PR_FALSE),
   mLinksOnlyPref(PR_FALSE), mStartLinksOnlyPref(PR_FALSE),
   mLinksOnly(PR_FALSE), mIsTypeAheadOn(PR_FALSE), mCaretBrowsingOn(PR_FALSE),
   mLiteralTextSearchOnly(PR_FALSE), mDontTryExactMatch(PR_FALSE),
@@ -306,19 +305,39 @@ nsTypeAheadFind::PrefsReset()
     }
   }
 
+  PRBool oldAutoStartPref = mAutoStartPref;
+  prefBranch->GetBoolPref("accessibility.typeaheadfind.autostart",
+                           &mAutoStartPref);
+  if (mAutoStartPref != oldAutoStartPref) {
+    ResetGlobalAutoStart(mAutoStartPref);
+  }
+ 
   prefBranch->GetBoolPref("accessibility.typeaheadfind.linksonly",
                           &mLinksOnlyPref);
 
   prefBranch->GetBoolPref("accessibility.typeaheadfind.startlinksonly",
                           &mStartLinksOnlyPref);
 
+  PRBool isSoundEnabled = PR_TRUE;
+  prefBranch->GetBoolPref("accessibility.typeaheadfind.enablesound",
+                           &isSoundEnabled);
   nsXPIDLCString soundStr;
-  prefBranch->GetCharPref("accessibility.typeaheadfind.soundURL",
-                           getter_Copies(soundStr));
+  if (isSoundEnabled) {
+    prefBranch->GetCharPref("accessibility.typeaheadfind.soundURL",
+                             getter_Copies(soundStr));
+  }
   mNotFoundSoundURL = soundStr;
 
-  prefBranch->GetIntPref("accessibility.typeaheadfind.timeout",
-                         &mTimeoutLength);
+  PRBool isTimeoutEnabled;
+  prefBranch->GetBoolPref("accessibility.typeaheadfind.enabletimeout",
+                          &isTimeoutEnabled);
+  PRInt32 timeoutLength = 0;
+  if (isTimeoutEnabled) {
+    prefBranch->GetIntPref("accessibility.typeaheadfind.timeout",
+                           &timeoutLength);
+  }
+  mTimeoutLength = timeoutLength;
+
 
   prefBranch->GetBoolPref("accessibility.browsewithcaret",
                           &mCaretBrowsingOn);
@@ -366,6 +385,44 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
     return NS_OK;
   }
 
+  // -- Attach/Remove window listeners --
+  nsCOMPtr<nsIDOMWindow> topLevelWindow(do_QueryInterface(aSubject));
+  NS_ENSURE_TRUE(topLevelWindow, NS_OK);
+
+  if (isOpening) {
+    if (mAutoStartPref) {
+      AttachWindowListeners(topLevelWindow);
+    }
+
+    // Attach nsTypeAheadController to window
+    // so it can handle / and ' shortcuts to start text and link search
+    nsCOMPtr<nsIDOMWindowInternal> winInternal = 
+      do_QueryInterface(aSubject);
+    if (winInternal) {
+      nsCOMPtr<nsIControllers> controllers;
+      winInternal->GetControllers(getter_AddRefs(controllers));
+      NS_ENSURE_TRUE(controllers, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsPIDOMWindow> privateWindow(do_QueryInterface(topLevelWindow));
+      NS_ENSURE_TRUE(privateWindow, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIFocusController> focusController;
+      privateWindow->GetRootFocusController(getter_AddRefs(focusController));
+      NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIController> controller = 
+        new nsTypeAheadController(focusController);
+      NS_ENSURE_TRUE(controller, NS_ERROR_FAILURE);
+
+      controllers->AppendController(controller);
+    }
+ 
+    return NS_OK;
+  }
+
+  RemoveWindowListeners(topLevelWindow);
+
+  // -- Prevent leaks ---
   // When a window closes, we have to remove it and all of its subwindows
   // from mManualFindWindows so that we don't leak.
   // Eek, lots of work for such a simple thing.
@@ -382,7 +439,6 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
                                   getter_AddRefs(docShellEnumerator));
 
   // Iterate through shells to get windows
-  // Eek! docshell -> presshell -> doc -> script global object -> window
   PRBool hasMoreDocShells;
   while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells))
          && hasMoreDocShells) {
@@ -392,27 +448,21 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
 
     if (ifreq) {
       nsCOMPtr<nsIDOMWindow> domWin(do_GetInterface(ifreq));
-      if (isOpening) {
-        AttachWindowListeners(domWin);
+      nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(domWin));
+
+      if (windowSupports) {
+        PRInt32 index = mManualFindWindows->IndexOf(windowSupports);
+
+        if (index >= 0) {
+          mManualFindWindows->RemoveElementAt(index);
+        }
       }
-      else {
-        nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(domWin));
 
-        if (windowSupports) {
-          PRInt32 index = mManualFindWindows->IndexOf(windowSupports);
-
-          if (index >= 0) {
-            mManualFindWindows->RemoveElementAt(index);
-          }
-        }
-
-        // Don't hold references to things that will keep objects alive
-        // longer than they would otherwise be.
-        if (domWin == mFocusedWindow) {
-          RemoveWindowListeners(domWin);
-          RemoveDocListeners();
-          CancelFind();
-        }
+      // Don't hold references to things that will keep objects alive
+      // longer than they would otherwise be.
+      if (domWin == mFocusedWindow) {
+        RemoveDocListeners();
+        CancelFind();
       }
     }
   }
@@ -422,12 +472,17 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
 
 
 nsresult
-nsTypeAheadFind::UseInWindow(nsIDOMWindow *aDOMWin)
+nsTypeAheadFind::UseInWindow(nsIDOMWindow *aDOMWin, nsIDOMWindow **aStartWindow)
 {
+  NS_ENSURE_ARG_POINTER(aDOMWin);
+  NS_ENSURE_ARG_POINTER(aStartWindow);
+
   // Set member variables and listeners up for new window and doc
 
   mFindNextBuffer.Truncate();
   CancelFind();
+
+  GetStartWindow(aDOMWin, aStartWindow);
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   aDOMWin->GetDocument(getter_AddRefs(domDoc));
@@ -530,12 +585,11 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
   }
 
 #ifdef XP_WIN
-  // After each keystroke, destroy sound object to free up memory 
+  // After each keystroke, ensure sound object is destroyed, to free up memory 
   // allocated for error sound, otherwise Windows' nsISound impl 
   // holds onto the last played sound, using up memory.
   mSoundInterface = nsnull;
 #endif
-
   nsCOMPtr<nsIContent> targetContent;
   nsCOMPtr<nsIPresShell> targetPresShell;
   GetTargetIfTypeAheadOkay(aEvent, getter_AddRefs(targetContent), 
@@ -582,12 +636,13 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     // 1. it is a way for the user to deselect with the keyboard
     // 2. it is a way for the user to cancel incremental find with
     //    visual feedback
-    if (!mTypeAheadBuffer.IsEmpty()) {
+    if (mIsTypeAheadOn) {
       // If Escape is normally used for a command, don't do it
       aEvent->PreventDefault();
       CancelFind();
     }
     if (mFocusedDocSelection) {
+      SetSelectionLook(targetPresShell, PR_FALSE, PR_FALSE);
       mFocusedDocSelection->CollapseToStart();
     }
 
@@ -618,6 +673,14 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
   // Function keys, etc. exit here
   if (keyCode || charCode < ' ' || 
       (charCode == ' ' && mTypeAheadBuffer.IsEmpty())) {
+    return NS_OK;
+  }
+
+  // Ignore first / or ' -- they are used to set links/text only
+  // Needs to come to us through htmlBindings.xml's keybinding
+  // then via nsTypeAheadController::DoCommand()
+  if (!mLinksOnlyManuallySet && (charCode == '\'' || charCode == '/') && 
+      mTypeAheadBuffer.IsEmpty()) {
     return NS_OK;
   }
 
@@ -733,7 +796,7 @@ nsTypeAheadFind::HandleBackspace()
 
   // ----------- Perform the find ------------------
   mIsFindingText = PR_TRUE; // so selection won't call CancelFind()
-  if (NS_FAILED(FindItNow(presShell, findBackwards, mLinksOnly, PR_FALSE))) {
+  if (NS_FAILED(FindItNow(presShell, findBackwards, mLinksOnlyPref, PR_FALSE))) {
     DisplayStatus(PR_FALSE, nsnull, PR_FALSE); // Display failure status
   }
   mIsFindingText = PR_FALSE;
@@ -786,34 +849,6 @@ nsTypeAheadFind::HandleChar(PRUnichar aChar)
     }
   }
 
-  // ---- Check for prefix chars that change type of find ----
-  if (bufferLength == 0 && !mLinksOnlyManuallySet) {
-    if (aChar == '`' || aChar =='\'' || aChar =='\"') {
-      // mLinksOnlyManuallySet = PR_TRUE when the user has already 
-      // typed / or '. This allows the next / or ' to get searched for.
-      mLinksOnlyManuallySet = PR_TRUE;
-
-      // If you type quote, it starts a links only search
-      mLinksOnly = PR_TRUE;
-
-      return NS_OK;
-    }
-
-    if (aChar == '/') {
-      // If you type / it starts a search for all text
-      mLinksOnly = PR_FALSE;
-
-      // In text search, repeated characters will not search for links
-      mLiteralTextSearchOnly = PR_TRUE;
-
-      // mLinksOnlyManuallySet = PR_TRUE when the user has already 
-      // typed / or '. This allows the next / or ' to get searched for.
-      mLinksOnlyManuallySet = PR_TRUE;
-
-      return NS_OK;
-    }
-  }
-
   mTypeAheadBuffer += aChar;    // Add the char!
 
   // --------- Initialize find if 1st char ----------
@@ -829,6 +864,7 @@ nsTypeAheadFind::HandleChar(PRUnichar aChar)
     // If you can see the selection (not collapsed or thru caret browsing),
     // or if already focused on a page element, start there.
     // Otherwise we're going to start at the first visible element
+    NS_ENSURE_TRUE(mFocusedDocSelection, NS_ERROR_FAILURE);
     PRBool isSelectionCollapsed;
     mFocusedDocSelection->GetIsCollapsed(&isSelectionCollapsed);
 
@@ -897,6 +933,10 @@ nsTypeAheadFind::HandleChar(PRUnichar aChar)
     }
   }
   else {
+    if (aChar == '/' || aChar == '\'') {
+      // Didn't find / or ' -- use that key to start a new text or link find
+      return StartNewFind(mFocusedWindow, aChar == '\'');
+    }
     PRUint32 length = mTypeAheadBuffer.Length();
     if (mLastBadChar && length >= 1) {
       // We have to do this to put the exact typed string in the status 
@@ -1359,6 +1399,10 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
                                      nsIPresShell **aPresShell,
                                      nsIPresContext **aPresContext)
 {
+  NS_ENSURE_ARG_POINTER(aContainer);
+  NS_ENSURE_ARG_POINTER(aPresShell);
+  NS_ENSURE_ARG_POINTER(aPresContext);
+
   *aPresShell = nsnull;
   *aPresContext = nsnull;
 
@@ -1749,27 +1793,81 @@ nsTypeAheadFind::GetIsActive(PRBool *aIsActive)
 NS_IMETHODIMP
 nsTypeAheadFind::StartNewFind(nsIDOMWindow *aWindow, PRBool aLinksOnly)
 {
-  if (!mFind)
+  if (!mFind || !mIsTypeAheadOn || !aWindow)
     return NS_ERROR_FAILURE;  // Type Ahead Find not correctly initialized
 
-  nsCOMPtr<nsIDOMWindowInternal> windowInternal(do_QueryInterface(aWindow));
-  if (!windowInternal)
-    return NS_ERROR_FAILURE;
+  // This routine will set up the doc listeners
+  // Do it first, it does a CancelFind()
+  nsCOMPtr<nsIDOMWindow> startWindow;
+  UseInWindow(aWindow, getter_AddRefs(startWindow));
 
-  AttachWindowListeners(aWindow);
-  if (mFocusedWindow != aWindow) {
-    // This routine will set up the keypress and other listeners
-    UseInWindow(aWindow);
-  }
   mLinksOnly = aLinksOnly;
+  mLinksOnlyManuallySet = PR_TRUE;
+
+  PRBool isAutoStartWin;
+  GetAutoStart(startWindow, &isAutoStartWin);
+  if (!isAutoStartWin) {
+    AttachWindowListeners(startWindow);
+  }
+
+  if (mFocusedDocSelection) {
+    mIsFindingText = PR_TRUE;  // Turn off side effects from selection listener
+    mFocusedDocSelection->CollapseToStart();
+    mIsFindingText = PR_FALSE;
+    nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mFocusedWeakShell));
+    SetSelectionLook(presShell, PR_TRUE, PR_TRUE);
+  }
+  DisplayStatus(PR_TRUE, nsnull, PR_FALSE);
+  StartTimeout();
 
   return NS_OK;
+}
+
+void
+nsTypeAheadFind::ResetGlobalAutoStart(PRBool aAutoStart)
+{
+  // Enumerate through the current top level windows
+  // and either attach or remove window listeners
+
+  CancelFind();
+
+  nsCOMPtr<nsIWindowWatcher> windowWatcher =
+    do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+  if (!windowWatcher) {
+    return;
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  windowWatcher->GetWindowEnumerator(getter_AddRefs(enumerator));
+  if (!enumerator) {
+    return;
+  }
+
+  PRBool hasMoreWindows;
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreWindows))
+         && hasMoreWindows) {
+    nsCOMPtr<nsISupports> supports;
+    enumerator->GetNext(getter_AddRefs(supports));
+    nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(supports));
+    if (domWin) {
+      if (aAutoStart) {
+        AttachWindowListeners(domWin);
+      }
+      else {
+        RemoveWindowListeners(domWin);
+      }
+    }
+  }
 }
 
 
 NS_IMETHODIMP
 nsTypeAheadFind::SetAutoStart(nsIDOMWindow *aDOMWin, PRBool aAutoStartOn)
 {
+  if (!aDOMWin) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(aDOMWin));
   PRInt32 index = mManualFindWindows->IndexOf(windowSupports);
 
@@ -1778,15 +1876,11 @@ nsTypeAheadFind::SetAutoStart(nsIDOMWindow *aDOMWin, PRBool aAutoStartOn)
       // Remove from list of windows requiring manual find
       mManualFindWindows->RemoveElementAt(index);
     }
-
-    AttachWindowListeners(aDOMWin);
   }
   else {  // Should be in list of windows requiring manual find
     if (aDOMWin == mFocusedWindow) {
       CancelFind();
     }
-
-    RemoveWindowListeners(aDOMWin);
 
     if (index < 0) {  // Should be in list of windows requiring manual find
       mManualFindWindows->InsertElementAt(windowSupports, 0);
@@ -1801,6 +1895,9 @@ NS_IMETHODIMP
 nsTypeAheadFind::GetAutoStart(nsIDOMWindow *aDOMWin, PRBool *aIsAutoStartOn)
 {
   *aIsAutoStartOn = PR_FALSE;
+
+  if (!mAutoStartPref || !aDOMWin)
+    return NS_OK;
 
   nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(aDOMWin));
   NS_ENSURE_TRUE(ifreq, NS_OK);
@@ -1829,14 +1926,6 @@ nsTypeAheadFind::GetAutoStart(nsIDOMWindow *aDOMWin, PRBool *aIsAutoStartOn)
       return NS_OK;
     }
   }
-  // XXX the manual id check for the mailnews message pane looks like a hack,
-  // but is necessary. We conflict with mailnews single key shortcuts like "n"
-  // for next unread message.
-  // We need this manual check in Mozilla 1.0 and Netscape 7.0
-  // because people will be using XPI's to install us there, so we have to
-  // do our check from here rather than create a new interface or attribute on
-  // the browser element.
-  // XXX We'll use autotypeaheadfind="false" in future trunk builds
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   aDOMWin->GetDocument(getter_AddRefs(domDoc));
@@ -1854,13 +1943,11 @@ nsTypeAheadFind::GetAutoStart(nsIDOMWindow *aDOMWin, PRBool *aIsAutoStartOn)
       do_QueryInterface(browserElContent);
 
     if (browserElement) {
-      nsAutoString id, tagName, autoFind;
+      nsAutoString tagName, autoFind, test;
       browserElement->GetLocalName(tagName);
-      browserElement->GetAttribute(NS_LITERAL_STRING("id"), id);
-      browserElement->GetAttribute(NS_LITERAL_STRING("autotypeaheadfind"),
-                                   autoFind);
-      if (tagName.EqualsWithConversion("editor") ||
-          id.EqualsWithConversion("messagepane") ||
+      browserElement->GetAttribute(NS_LITERAL_STRING("type"), test);
+      browserElement->GetAttribute(NS_LITERAL_STRING("autofind"), autoFind);
+      if (tagName.EqualsWithConversion("editor") || 
           autoFind.EqualsWithConversion("false")) {
         return NS_OK;
       }
@@ -1886,7 +1973,7 @@ nsTypeAheadFind::CancelFind()
   //   5. User tabs (this can move the selection)
   //   6. Timer expires
 
-  if (!mTypeAheadBuffer.IsEmpty() || mRepeatingMode != eRepeatingNone) {
+  if (mIsTypeAheadOn || mRepeatingMode != eRepeatingNone) {
     mTypeAheadBuffer.Truncate();
     DisplayStatus(PR_FALSE, nsnull, PR_TRUE); // Clear status
     nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mFocusedWeakShell));
@@ -1907,11 +1994,18 @@ nsTypeAheadFind::CancelFind()
   mLastBadChar = 0;
   mAllTheSameChar = PR_TRUE; // Until at least 2 different chars are typed
 
-  nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(mFocusedWindow));
-  if (mManualFindWindows->IndexOf(windowSupports) >= 0) {
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nsnull;
+  }
+
+  PRBool isAutoStartWin;
+  GetAutoStart(mFocusedWindow, &isAutoStartWin);
+  if (!isAutoStartWin) {
     RemoveDocListeners();
     RemoveWindowListeners(mFocusedWindow);
     mIsFindAllowedInWindow = PR_FALSE;
+    mFocusedWindow = nsnull;
   }
 
   return NS_OK;
@@ -1936,11 +2030,45 @@ nsTypeAheadFind::GetTopContentPresShell(nsIDocShellTreeItem *aDocShellTreeItem,
   topContentDocShell->GetPresShell(aPresShell);
 }
 
+void 
+nsTypeAheadFind::GetStartWindow(nsIDOMWindow *aWindow, nsIDOMWindow **aStartWindow)
+{
+  // Return the root ancestor content window of aWindow
+
+  *aStartWindow = nsnull;
+  nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(aWindow));
+  NS_ASSERTION(ifreq, "Can't get interface requestor");
+  if (!ifreq)
+    return;
+
+  nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(ifreq));
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(webNav));
+  NS_ASSERTION(ifreq, "Can't get doc shell tree item");
+  if (!treeItem)
+    return;
+  
+  PRInt32 docShellType;
+  treeItem->GetItemType(&docShellType);
+  if (docShellType == nsIDocShellTreeItem::typeContent) {
+    nsCOMPtr<nsIDocShellTreeItem> rootContentTreeItem;
+    treeItem->GetSameTypeRootTreeItem(getter_AddRefs(rootContentTreeItem));
+    nsCOMPtr<nsIDOMWindow> domWin(do_GetInterface(rootContentTreeItem));
+    *aStartWindow = domWin;
+  }
+  else {
+    *aStartWindow = aWindow;
+  }
+
+  NS_IF_ADDREF(*aStartWindow);
+}
 
 nsresult
 nsTypeAheadFind::GetWebBrowserFind(nsIDOMWindow *aWin, 
                                    nsIWebBrowserFind **aWebBrowserFind)
 {
+  NS_ENSURE_ARG_POINTER(aWin);
+  NS_ENSURE_ARG_POINTER(aWebBrowserFind);
+
   *aWebBrowserFind = nsnull;
 
   nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(aWin));
@@ -2210,6 +2338,10 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
                                           nsIContent **aTargetContent,
                                           nsIPresShell **aTargetPresShell)
 {
+  NS_ENSURE_ARG_POINTER(aEvent);
+  NS_ENSURE_ARG_POINTER(aTargetContent);
+  NS_ENSURE_ARG_POINTER(aTargetPresShell);
+
   *aTargetContent = nsnull;
   *aTargetPresShell = nsnull;
 
@@ -2276,13 +2408,15 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
   nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
   doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
   nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(ourGlobal));
+  nsCOMPtr<nsIDOMWindow> topContentWin;
+  GetStartWindow(domWin, getter_AddRefs(topContentWin));
 
-  if (domWin != mFocusedWindow) {
-    GetAutoStart(domWin, &mIsFindAllowedInWindow);
+  if (topContentWin != mFocusedWindow) {
+    mFocusedWindow = topContentWin;
+    GetAutoStart(topContentWin, &mIsFindAllowedInWindow);
     if (mIsFindAllowedInWindow) {
-      UseInWindow(domWin);
+      UseInWindow(topContentWin, getter_AddRefs(mFocusedWindow));
     }
-    mFocusedWindow = domWin;
   }
   if (!mIsFindAllowedInWindow) {
     return NS_OK;
@@ -2315,7 +2449,7 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
   
   if (lastShell != presShell) {
     // Same window, but a new document, so start fresh
-    UseInWindow(domWin);
+    UseInWindow(domWin, getter_AddRefs(mFocusedWindow));
   }
 
   NS_ADDREF(*aTargetPresShell = presShell);  
@@ -2354,6 +2488,11 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
                                 PRBool aGetTopVisibleLeaf,
                                 nsIDOMRange **aFirstVisibleRange)
 {
+  NS_ENSURE_ARG_POINTER(aPresShell);
+  NS_ENSURE_ARG_POINTER(aPresContext);
+  NS_ENSURE_ARG_POINTER(aRange);
+  NS_ENSURE_ARG_POINTER(aFirstVisibleRange);
+
   // We need to know if the range start is visible.
   // Otherwise, return a the first visible range start 
   // in aFirstVisibleRange
@@ -2563,6 +2702,17 @@ nsTypeAheadFind::DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent,
   else {
     if (aClearStatus) {
       GetTranslatedString(NS_LITERAL_STRING("stopfind"), statusString);
+    } else if (aSuccess && mTypeAheadBuffer.IsEmpty()) {
+      // When find has been started manually
+      // but no characters have been typed yet
+      nsAutoString key;
+
+      if (mLinksOnly) {
+        key.Assign(NS_LITERAL_STRING("startlinkfind"));
+      } else {
+        key.Assign(NS_LITERAL_STRING("starttextfind"));
+      }
+      GetTranslatedString(key, statusString);
     } else {
       nsAutoString key;
 
@@ -2624,4 +2774,146 @@ nsTypeAheadFind::DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent,
 
   browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK,
                            PromiseFlatString(statusString).get());
+}
+
+
+// ------- nsTypeAheadController ---------------
+
+const char * const sLinkFindString = "cmd_findTypeLinks";
+const char * const sTextFindString = "cmd_findTypeText";
+
+NS_IMPL_ISUPPORTS1(nsTypeAheadController, nsIController)
+
+nsTypeAheadController::nsTypeAheadController(nsIFocusController *aFocusController):
+  mFocusController(aFocusController)
+{
+}
+
+NS_IMETHODIMP
+nsTypeAheadController::IsCommandEnabled(const char *aCommand, PRBool *aResult)
+{
+  return SupportsCommand(aCommand, aResult);
+}
+
+NS_IMETHODIMP
+nsTypeAheadController::SupportsCommand(const char *aCommand, PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  *aResult = PR_FALSE;
+
+  if (!nsCRT::strcmp(sLinkFindString, aCommand) ||
+      !nsCRT::strcmp(sTextFindString, aCommand)) {
+    *aResult = PR_TRUE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTypeAheadController::DoCommand(const char *aCommand)
+{
+  nsresult rv = NS_OK;
+
+  PRBool isLinkSearch = PR_FALSE;
+
+  if (nsCRT::strcmp(sLinkFindString, aCommand) == 0) {
+    isLinkSearch = PR_TRUE;
+  }
+  else if (nsCRT::strcmp(sTextFindString, aCommand) != 0) {
+    return NS_OK;
+  }
+
+  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMWindowInternal> domWinInternal;
+  mFocusController->GetFocusedWindow(getter_AddRefs(domWinInternal));
+
+  nsCOMPtr<nsIDOMWindow> startContentWin;
+  EnsureContentWindow(domWinInternal, getter_AddRefs(startContentWin));
+  NS_ENSURE_TRUE(startContentWin, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsITypeAheadFind> typeAhead = 
+    do_GetService(NS_TYPEAHEADFIND_CONTRACTID);
+  NS_ENSURE_TRUE(typeAhead, NS_ERROR_FAILURE);
+
+  return typeAhead->StartNewFind(startContentWin, isLinkSearch);
+}
+
+/* void onEvent (in string eventName); */
+NS_IMETHODIMP
+nsTypeAheadController::OnEvent(const char *eventName)
+{
+  return NS_OK;
+}
+
+nsresult
+nsTypeAheadController::EnsureContentWindow(nsIDOMWindowInternal *aFocusedWin, 
+                                           nsIDOMWindow **aStartContentWin)
+{
+  NS_ENSURE_ARG_POINTER(aFocusedWin);
+  NS_ENSURE_ARG_POINTER(aStartContentWin);
+
+  *aStartContentWin = nsnull;
+  nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(aFocusedWin));
+  NS_ENSURE_TRUE(ifreq, NS_OK);
+
+  nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(ifreq));
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(webNav));
+  NS_ENSURE_TRUE(treeItem, NS_OK);
+  PRInt32 treeItemType;
+  treeItem->GetItemType(&treeItemType);
+
+  nsCOMPtr<nsIDOMWindow> startContentWin;
+  if (treeItemType == nsIDocShellTreeItem::typeContent) {
+    startContentWin = do_QueryInterface(aFocusedWin);
+  }
+  else {
+    // Use enumerator tet first content docshell
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webNav));
+    NS_ENSURE_TRUE(docShell, NS_OK);
+
+    nsCOMPtr<nsISimpleEnumerator> docShellEnumerator;
+    docShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeContent,
+                                    nsIDocShell::ENUMERATE_FORWARDS,
+                                    getter_AddRefs(docShellEnumerator));
+  
+    PRBool hasMoreDocShells;
+    if (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells))
+        && hasMoreDocShells) {
+
+      // There is a content docshell child, let's use it (focus it and return it)
+      nsCOMPtr<nsISupports> container;
+      docShellEnumerator->GetNext(getter_AddRefs(container));
+      nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(container));
+
+      if (ifreq) {
+        startContentWin = do_GetInterface(ifreq);
+        NS_ENSURE_TRUE(startContentWin, NS_ERROR_FAILURE);
+
+        // Set new focus in root content of new window
+        // This only happens if we weren't already in content
+        // Using nsIContent to focus makes sure the 
+        // previous window's focused content gets blurred properly
+        nsCOMPtr<nsIDOMDocument> domDoc;
+        startContentWin->GetDocument(getter_AddRefs(domDoc));
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+        NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+        nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+        nsCOMPtr<nsIPresContext> presContext;
+        docShell->GetPresContext(getter_AddRefs(presContext));
+        NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+
+        nsCOMPtr<nsIContent> rootContent;
+        doc->GetRootContent(getter_AddRefs(rootContent));
+        NS_ENSURE_TRUE(rootContent, NS_ERROR_FAILURE);
+        rootContent->SetFocus(presContext);
+      }
+    }
+  }
+
+  *aStartContentWin = startContentWin;
+  NS_IF_ADDREF(*aStartContentWin);
+  return NS_OK;
 }

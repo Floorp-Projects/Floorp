@@ -134,8 +134,10 @@ Rights Reserved.
     <hbox id="msgHeaderView"/>
 
     <!-- message view -->
-    <browser id="messagepane" context="messagePaneContext" style="height: 0px; min-height: 1px" flex="1" name="messagepane" 
-      disablesecurity="true" disableHistory="true" type="content-primary" src="about:blank" onclick="contentAreaClick(event);"/>
+    <browser id="messagepane" context="messagePaneContext" 
+      style="height: 0px; min-height: 1px" flex="1" name="messagepane" 
+      disablesecurity="true" disableHistory="true" type="content-primary" 
+      src="about:blank" onclick="contentAreaClick(event);" autofind="false"/>
   </vbox>  
 </vbox>
 

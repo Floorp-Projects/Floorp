@@ -61,6 +61,7 @@ REQUIRES        = appcomps \
 		  webbrwsr \
 		  windowwatcher \
 		  xpcom \
+		  xuldoc \
 		  $(NULL)
 
 EXPORT_LIBRARY = 1

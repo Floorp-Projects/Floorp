@@ -174,7 +174,7 @@ Rights Reserved.
         <browser id="messagepane" context="messagePaneContext"
                  style="height: 0px; min-height: 1px" flex="1" name="messagepane" 
                  disablehistory="true" type="content-primary" src="about:blank"
-                 disablesecurity="true"/>
+                 disablesecurity="true" autofind="false"/>
        </vbox>  
      </vbox>
    </vbox>             
