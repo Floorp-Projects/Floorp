@@ -214,10 +214,10 @@ include jsconfig.mk
 nsinstall-target:
 	cd ../../config; $(MAKE) OBJDIR=$(OBJDIR) OBJDIR_NAME=$(OBJDIR)
 ifdef USE_MSVC
-$(PROGRAM): $(PROG_OBJS) $(LIBRARY)
+$(PROGRAM): $(PROG_OBJS) $(LIBRARY) fdlibm/$(OBJDIR)/$(FDLIBM_LIBRARY)
 	link.exe -out:"$@" $(EXE_LINK_FLAGS) $^
 else
-$(PROGRAM): $(PROG_OBJS) $(LIBRARY)
+$(PROGRAM): $(PROG_OBJS) $(LIBRARY) fdlibm/$(OBJDIR)/$(FDLIBM_LIBRARY)
 	$(CC) -o $@ $(CFLAGS) $(PROG_OBJS) $(LIBRARY) $(LDFLAGS) $(OTHER_LIBS)
 endif
 
