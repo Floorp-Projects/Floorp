@@ -97,5 +97,10 @@ interface nsIWebBrowserNav : nsISupports
 	Retrieves or sets the current Document for the WebBrowser.  When setting
 	this will simulate the normal load process.
 	*/
-	readonly attribute nsIDOMDocument document;		
+	readonly attribute nsIDOMDocument document;
+	
+	/*
+	Retrieves the current URI that is loaded.
+	*/
+	readonly attribute wstring currentURI;		
 };
