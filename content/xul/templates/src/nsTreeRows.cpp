@@ -83,11 +83,7 @@ nsOutlinerRows::iterator
 nsOutlinerRows::First()
 {
     iterator result;
-    Subtree* current = &mRoot;
-    while (current && current->Count()) {
-        result.Push(current, 0);
-        current = GetSubtreeFor(current, 0);
-    }
+    result.Push(&mRoot, 0);
     result.SetRowIndex(0);
     return result;
 }

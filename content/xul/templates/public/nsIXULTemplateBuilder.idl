@@ -115,7 +115,12 @@ interface nsIXULOutlinerBuilder : nsISupports
     /**
      * Retrieve the RDF resource associated with the specified row.
      */
-    nsIRDFResource getResourceFor(in long aRowIndex);
+    nsIRDFResource getResourceAtIndex(in long aRowIndex);
+
+    /**
+     * Retrieve the index associated with specified RDF resource.
+     */
+    long getIndexOfResource(in nsIRDFResource resource);
 
     /** 
      * Add a Outliner Builder Observer to handle Outliner View 
