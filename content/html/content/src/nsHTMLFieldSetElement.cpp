@@ -266,3 +266,13 @@ nsHTMLFieldSetElement::SetWidget(nsIWidget* aWidget)
   NS_ASSERTION(0, "Fieldset has no widget");
   return NS_FORM_NOTOK;
 }
+
+NS_IMETHODIMP
+nsHTMLFieldSetElement::GetStyleHintForAttributeChange(
+    const nsIContent * aNode,
+    const nsIAtom* aAttribute,
+    PRInt32 *aHint) const
+{
+  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  return NS_OK;
+}

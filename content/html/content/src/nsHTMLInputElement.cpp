@@ -672,3 +672,13 @@ nsHTMLInputElement::SetWidget(nsIWidget* aWidget)
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTMLInputElement::GetStyleHintForAttributeChange(
+    const nsIContent * aNode,
+    const nsIAtom* aAttribute,
+    PRInt32 *aHint) const
+{
+  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  return NS_OK;
+}

@@ -409,3 +409,23 @@ nsHTMLTableCellElement::HandleDOMEvent(nsIPresContext& aPresContext,
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 }
+
+NS_IMETHODIMP
+nsHTMLTableCellElement::GetStyleHintForAttributeChange(
+    const nsIContent * aNode,
+    const nsIAtom* aAttribute,
+    PRInt32 *aHint) const
+{
+  if (PR_TRUE == nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, 
+    aAttribute, aHint)) {
+    // Do nothing
+  }
+  else if (nsHTMLAtoms::abbr != aAttribute &&
+      nsHTMLAtoms::axis != aAttribute &&
+      nsHTMLAtoms::headers != aAttribute &&
+      nsHTMLAtoms::scope != aAttribute)
+  {
+    *aHint = NS_STYLE_HINT_REFLOW;
+  }
+  return NS_OK;
+}

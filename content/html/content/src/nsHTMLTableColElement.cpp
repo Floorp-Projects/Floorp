@@ -314,3 +314,19 @@ NS_METHOD nsHTMLTableColElement::GetSpanValue(PRInt32* aSpan)
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTMLTableColElement::GetStyleHintForAttributeChange(
+    const nsIContent * aNode,
+    const nsIAtom* aAttribute,
+    PRInt32 *aHint) const
+{
+  if (PR_TRUE == nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, 
+    aAttribute, aHint)) {
+    // Do nothing
+  }
+  else {
+    *aHint = NS_STYLE_HINT_REFLOW;
+  }
+  return NS_OK;
+}

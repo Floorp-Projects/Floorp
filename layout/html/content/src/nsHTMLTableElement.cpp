@@ -1217,4 +1217,19 @@ nsHTMLTableElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
-
+NS_IMETHODIMP
+nsHTMLTableElement::GetStyleHintForAttributeChange(
+    const nsIContent* aNode,
+    const nsIAtom* aAttribute,
+    PRInt32 *aHint) const
+{
+  if (PR_TRUE == nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, 
+    aAttribute, aHint)) {
+    // Do nothing
+  }
+  else if (nsHTMLAtoms::summary != aAttribute)
+  {
+    *aHint = NS_STYLE_HINT_REFLOW;
+  }
+  return NS_OK;
+}

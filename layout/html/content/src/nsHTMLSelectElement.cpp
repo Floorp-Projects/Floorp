@@ -644,3 +644,13 @@ nsOptionList::Clear()
   }
   mElements.Clear();
 }
+
+NS_IMETHODIMP
+nsHTMLSelectElement::GetStyleHintForAttributeChange(
+    const nsIContent * aNode,
+    const nsIAtom* aAttribute,
+    PRInt32 *aHint) const
+{
+  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  return NS_OK;
+}

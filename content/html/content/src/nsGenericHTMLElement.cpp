@@ -1704,6 +1704,56 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(nsIHTMLAttributes* aAttributes
   }
 }
 
+static PRBool AttributeChangeRequiresRepaint(const nsIAtom* aAttribute)
+{
+  // these are attributes that always require a restyle and a repaint, but not a reflow
+  // regardless of the tag they are associated with
+  return (PRBool)
+    (aAttribute==nsHTMLAtoms::bgcolor ||
+     aAttribute==nsHTMLAtoms::color);
+}
+
+static PRBool AttributeChangeRequiresReflow(const nsIAtom* aAttribute)
+{
+    // these are attributes that always require a restyle and reflow
+    // regardless of the tag they are associated with
+  return (PRBool)
+    (aAttribute==nsHTMLAtoms::align        ||
+     aAttribute==nsHTMLAtoms::border       ||
+     aAttribute==nsHTMLAtoms::cellpadding  ||
+     aAttribute==nsHTMLAtoms::cellspacing  ||
+     aAttribute==nsHTMLAtoms::ch           ||
+     aAttribute==nsHTMLAtoms::choff        ||
+     aAttribute==nsHTMLAtoms::colspan      ||
+     aAttribute==nsHTMLAtoms::face         ||
+     aAttribute==nsHTMLAtoms::frame        ||
+     aAttribute==nsHTMLAtoms::height       ||
+     aAttribute==nsHTMLAtoms::nowrap       ||
+     aAttribute==nsHTMLAtoms::rowspan      ||
+     aAttribute==nsHTMLAtoms::rules        ||
+     aAttribute==nsHTMLAtoms::span         ||
+     aAttribute==nsHTMLAtoms::valign       ||
+     aAttribute==nsHTMLAtoms::width);
+}
+
+PRBool
+nsGenericHTMLElement::SetStyleHintForCommonAttributes(const nsIContent* aNode,
+                                                      const nsIAtom* aAttribute,
+                                                      PRInt32* aHint)
+{
+  PRBool setHint = PR_TRUE;
+  if (PR_TRUE == AttributeChangeRequiresReflow(aAttribute)) {
+    *aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (PR_TRUE == AttributeChangeRequiresRepaint(aAttribute)) {
+    *aHint = NS_STYLE_HINT_VISUAL;
+  }
+  else {
+    setHint = PR_FALSE;
+  }
+  return setHint;
+}
+
 //----------------------------------------------------------------------
 
 nsGenericHTMLLeafElement::nsGenericHTMLLeafElement()
