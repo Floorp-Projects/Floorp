@@ -25,10 +25,11 @@
 #include "nsIStreamListener.h"
 #include "nsITransport.h"
 #include "nsIThread.h"
+#include "nsIUrl.h"
+
 
 #include "nsString2.h"
-
-class nsIConnectionGroup;
+#include "plevent.h"
 
 class nsFtpProtocolConnection : public nsIFtpProtocolConnection
                                 /*,public nsIStreamListener*/ {
