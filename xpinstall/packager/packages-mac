@@ -131,7 +131,6 @@ viewer:Components:res.xpt
 viewer:Components:resource.shlb
 viewer:Components:Search.shlb 
 viewer:Components:search.xpt 
-viewer:Components:smime.shlb
 viewer:Components:streamconv.shlb 
 viewer:Components:streamconv.xpt 
 viewer:Components:strres.shlb 
@@ -269,6 +268,8 @@ viewer:Components:MsgLocal.xpt
 viewer:Components:MsgNews.shlb 
 viewer:Components:MsgNews.xpt 
 viewer:Components:vcard.shlb 
+viewer:Components:smime.shlb
+viewer:Components:signed.shlb 
 viewer:chrome:addressbook:* 
 viewer:chrome:messenger:* 
 viewer:chrome:messengercompose:* 
