@@ -59,8 +59,11 @@ public:
     //   NS_DECL_NSIPROMPT
     NS_DECL_NSIINTERFACEREQUESTOR
 
-protected:
+    nsresult CreateBrowser(PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY,
+                           nsIWebBrowser **aBrowser);
    
+protected:
+
    nativeWindow mNativeWindow;
    
    nsCOMPtr<nsIWebBrowser> mWebBrowser;
