@@ -233,8 +233,10 @@ GrafPtr 	savePort;
   	::SetRect(&macRect, 0, 0, 2, 2);
 	}
 
-	// create offscreen
-  QDErr osErr = ::NewGWorld(&offscreenGWorld, depth, &macRect, nil, nil, useTempMem);
+	// create offscreen, first with normal memory, if that fails use temp memory, if that fails, return
+	QDErr osErr = ::NewGWorld(&offscreenGWorld, depth, &macRect, nil, nil, nil);
+  if (osErr != noErr)
+		osErr = ::NewGWorld(&offscreenGWorld, depth, &macRect, nil, nil, useTempMem);
   if (osErr != noErr)
   	return NS_ERROR_FAILURE;
 
