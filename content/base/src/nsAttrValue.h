@@ -124,6 +124,14 @@ public:
   inline nsISVGValue* GetSVGValue() const;
 #endif
 
+  // Methods to get access to atoms we may have
+  // Returns the number of atoms we have; 0 if we have none.  It's OK
+  // to call this without checking the type first; it handles that.
+  PRInt32 GetAtomCount() const;
+  // Returns the atom at aIndex (0-based).  Do not call this with
+  // aIndex >= GetAtomCount().
+  nsIAtom* AtomAt(PRInt32 aIndex) const;
+
   PRUint32 HashValue() const;
   PRBool Equals(const nsAttrValue& aOther) const;
 

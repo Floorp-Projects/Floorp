@@ -1810,28 +1810,10 @@ nsGenericHTMLElement::GetID(nsIAtom** aResult) const
   return NS_OK;
 }
 
-nsresult
-nsGenericHTMLElement::GetClasses(nsVoidArray& aArray) const
+const nsAttrValue*
+nsGenericHTMLElement::GetClasses() const
 {
-  aArray.Clear();
-  
-  const nsAttrValue* val = mAttrsAndChildren.GetAttr(nsHTMLAtoms::kClass);
-  if (val) {
-    if (val->Type() == nsAttrValue::eAtom) {
-      // NOTE atom is not addrefed
-      aArray.AppendElement(val->GetAtomValue());
-    }
-    else if (val->Type() == nsAttrValue::eAtomArray) {
-      nsCOMArray<nsIAtom>* array = val->GetAtomArrayValue();
-      PRInt32 i, count = array->Count();
-      for (i = 0; i < count; ++i) {
-        // NOTE atom is not addrefed
-        aArray.AppendElement(array->ObjectAt(i));
-      }
-    }
-  }
-
-  return NS_OK;
+  return mAttrsAndChildren.GetAttr(nsHTMLAtoms::kClass);
 }
 
 nsIAtom *

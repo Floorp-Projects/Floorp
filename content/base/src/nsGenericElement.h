@@ -422,7 +422,7 @@ public:
 
   // nsIStyledContent interface methods
   NS_IMETHOD GetID(nsIAtom** aResult) const;
-  NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
+  virtual const nsAttrValue* GetClasses() const;
   NS_IMETHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD GetInlineStyleRule(nsICSSStyleRule** aStyleRule);
