@@ -187,8 +187,6 @@ moz_gtk_scrollbar_button_paint(GdkWindow* window, GtkStyle* style,
 {
   GtkStateType state_type = ConvertGtkState(state);
   GtkShadowType shadow_type = (state->active) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
-
-  moz_gtk_button_paint(window, style, arrowRect, clipRect, state, GTK_RELIEF_NORMAL);
   gtk_paint_arrow(style, window, state_type, shadow_type, clipRect,
                   gScrollbarWidget, (arrowType < 2) ? "vscrollbar" : "hscrollbar", 
                   arrowType, TRUE,
@@ -200,6 +198,10 @@ moz_gtk_scrollbar_trough_paint(GdkWindow* window, GtkStyle* style,
                                GdkRectangle* troughRect, GdkRectangle* clipRect,
                                GtkWidgetState* state)
 {
+  gtk_style_apply_default_background(style, window, TRUE, GTK_STATE_ACTIVE,
+                                     clipRect, troughRect->x, troughRect->y,
+                                     troughRect->width, troughRect->height);
+
   gtk_paint_box(style, window, GTK_STATE_ACTIVE, GTK_SHADOW_IN,
                 clipRect, gScrollbarWidget, "trough", troughRect->x,
                 troughRect->y, troughRect->width, troughRect->height);
