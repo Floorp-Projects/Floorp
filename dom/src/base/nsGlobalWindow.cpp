@@ -193,6 +193,18 @@ NS_IMETHODIMP GlobalWindowImpl::GetScriptObject(nsIScriptContext *aContext,
                              nsnull, &mScriptObject);
       aContext->AddNamedReference(&mScriptObject, mScriptObject, 
                                 "window_object");
+#if 0
+      // This code is useful for debugging leaks of global window objects
+      // that are caused by leaked GC roots.  To use it, #define
+      // GC_MARK_DEBUG at the top of js/src/jsgc.c and uncomment this
+      // block.  The JS engine will then show why a global window is
+      // not being garbage collected.
+      extern void* js_LiveThingToFind;
+      static int count = 0;
+      if (++count == 2) {
+         js_LiveThingToFind = mScriptObject;
+      }
+#endif
       }
    *aScriptObject = mScriptObject;
    return res;
