@@ -6,8 +6,8 @@
 #		 on the tinderbox status page.
 
 
-# $Revision: 1.9 $ 
-# $Date: 2001/10/10 15:06:47 $ 
+# $Revision: 1.10 $ 
+# $Date: 2001/12/03 19:57:35 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
@@ -169,25 +169,10 @@ sub save_note {
   # there is a problem with a page, then we know which machine it came
   # from.
 
-  my ($rendered_notice) = (
-                           "<!-- posted from remote host: $REMOTE_HOST -->\n".
-                            "\t\t<p>\n".
-                           "\t\t\t[<b>".
-                           HTMLPopUp::Link(
-                                           "linktxt"=>$MAILADDR,
-                                           "href"=>"mailto:$MAILADDR",
-                                          ).
-                           " - $pretty_time".
-                           "</b>]<\p>\n".
-                           "\t\t\t<p>\n".
-                           "$NOTE\n".
-                           "\t\t</p>\n"
-                          );
   my ($record) = {
                   'tree' => $TREE,
                   'mailaddr' => $MAILADDR,
-                  'notice' => $NOTE,
-                  'rendered_notice' => $rendered_notice, 
+                  'note' => $NOTE,
                   'time' => $time,
                   'localtime' => $localtime,
                   'remote_host' => $REMOTE_HOST,
