@@ -20,7 +20,7 @@
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "../nsGfxCIID.h"
+#include "nsGfxCIID.h"
 #include "nsFontMetricsMotif.h"
 #include "nsRenderingContextMotif.h"
 #include "nsImageMotif.h"

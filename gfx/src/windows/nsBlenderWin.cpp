@@ -59,8 +59,6 @@ nsBlenderWin :: ~nsBlenderWin()
 
   if (nsnull != mSecondSrcbinfo)
     DeleteDIB(&mSecondSrcbinfo, &mSecondSrcBytes);
-
-  mDstBytes = nsnull;
 }
 
 /** --------------------------------------------------------------------------
@@ -104,6 +102,7 @@ HDC           srcdc, dstdc, secondsrcdc;
 PRBool        srcissurf = PR_FALSE;
 PRBool        secondsrcissurf = PR_FALSE;
 PRBool        dstissurf = PR_FALSE;
+nsPixelFormat pixformat;
 
 // This is a temporary solution, nsDrawingSurface is a void*, but on windows it is really a
 // nsDrawingSurfaceWin, which is an XPCom object.  I am going to cast it here just temporarily
@@ -125,7 +124,7 @@ PRBool        dstissurf = PR_FALSE;
   srect.right = aSX + aWidth;
   srect.bottom = aSY + aHeight;
 
-  if (PR_TRUE == LockSurface(SrcWinSurf->mSurface, &mSrcSurf, &mSrcInfo, &srect, DDLOCK_READONLY)){
+  if (PR_TRUE == LockSurface(SrcWinSurf->mSurface, &mSrcSurf, &mSrcInfo, &srect, DDLOCK_READONLY, &pixformat)){
     srcissurf = PR_TRUE;
     mSRowBytes = mSrcInfo.bmWidthBytes;
   }else
@@ -146,7 +145,7 @@ PRBool        dstissurf = PR_FALSE;
         srcbits = SrcWinSurf->mSelectedBitmap;
       }
 
-      BuildDIB(&mSrcbinfo, &mSrcBytes, mSrcInfo.bmWidth, mSrcInfo.bmHeight, mSrcInfo.bmBitsPixel);
+      BuildDIB(&mSrcbinfo, &mSrcBytes, mSrcInfo.bmWidth, mSrcInfo.bmHeight, mSrcInfo.bmBitsPixel, &pixformat);
       numbytes = ::GetDIBits(srcdc, srcbits, 0, mSrcInfo.bmHeight, mSrcBytes, (LPBITMAPINFO)mSrcbinfo, DIB_RGB_COLORS);
 
       mSRowBytes = CalcBytesSpan(mSrcInfo.bmWidth, mSrcInfo.bmBitsPixel);
@@ -165,7 +164,7 @@ PRBool        dstissurf = PR_FALSE;
   drect.right = aDX + aWidth;
   drect.bottom = aDY + aHeight;
 
-  if (PR_TRUE == LockSurface(DstWinSurf->mSurface, &mDstSurf, &mDstInfo, &drect, 0)){
+  if (PR_TRUE == LockSurface(DstWinSurf->mSurface, &mDstSurf, &mDstInfo, &drect, 0, nsnull)){
     dstissurf = PR_TRUE;
     mDRowBytes = mDstInfo.bmWidthBytes;
   }
@@ -187,7 +186,7 @@ PRBool        dstissurf = PR_FALSE;
         dstbits = DstWinSurf->mSelectedBitmap;
       }
 
-      BuildDIB(&mDstbinfo, &mDstBytes, mDstInfo.bmWidth, mDstInfo.bmHeight, mDstInfo.bmBitsPixel);
+      BuildDIB(&mDstbinfo, &mDstBytes, mDstInfo.bmWidth, mDstInfo.bmHeight, mDstInfo.bmBitsPixel, nsnull);
       numbytes = ::GetDIBits(dstdc, dstbits, 0, mDstInfo.bmHeight, mDstBytes, (LPBITMAPINFO)mDstbinfo, DIB_RGB_COLORS);
   
       mDRowBytes = CalcBytesSpan(mDstInfo.bmWidth, mDstInfo.bmBitsPixel);
@@ -208,7 +207,7 @@ PRBool        dstissurf = PR_FALSE;
     srect.right = aSX + aWidth;
     srect.bottom = aSY + aHeight;
 
-    if (PR_TRUE == LockSurface(SecondSrcWinSurf->mSurface, &mSecondSrcSurf, &mSecondSrcInfo, &srect, DDLOCK_READONLY)){
+    if (PR_TRUE == LockSurface(SecondSrcWinSurf->mSurface, &mSecondSrcSurf, &mSecondSrcInfo, &srect, DDLOCK_READONLY, nsnull)){
       secondsrcissurf = PR_TRUE;
     }else
 #endif
@@ -228,7 +227,7 @@ PRBool        dstissurf = PR_FALSE;
           srcbits = SecondSrcWinSurf->mSelectedBitmap;
         }
 
-        BuildDIB(&mSecondSrcbinfo, &mSecondSrcBytes, mSecondSrcInfo.bmWidth, mSecondSrcInfo.bmHeight, mSecondSrcInfo.bmBitsPixel);
+        BuildDIB(&mSecondSrcbinfo, &mSecondSrcBytes, mSecondSrcInfo.bmWidth, mSecondSrcInfo.bmHeight, mSecondSrcInfo.bmBitsPixel, nsnull);
         numbytes = ::GetDIBits(secondsrcdc, srcbits, 0, mSecondSrcInfo.bmHeight, mSecondSrcBytes, (LPBITMAPINFO)mSecondSrcbinfo, DIB_RGB_COLORS);
       }
 
@@ -252,7 +251,7 @@ PRBool        dstissurf = PR_FALSE;
         case 32:
           if (!mask){
             level = (PRInt32)(aSrcOpacity*100);
-            Do32Blend(level,numlines,numbytes,s1,d1,ssl,slinespan,dlinespan,nsHighQual,aSrcBackColor,aSecondSrcBackColor);
+            Do32Blend(level,numlines,numbytes,s1,d1,ssl,slinespan,dlinespan,nsHighQual,aSrcBackColor,aSecondSrcBackColor,pixformat);
             result = NS_OK;
           }else
             result = NS_ERROR_FAILURE;
@@ -264,7 +263,7 @@ PRBool        dstissurf = PR_FALSE;
             result = NS_OK;
           }else{
             level = (PRInt32)(aSrcOpacity*100);
-            Do24Blend(level,numlines,numbytes,s1,d1,ssl,slinespan,dlinespan,nsHighQual,aSrcBackColor,aSecondSrcBackColor);
+            Do24Blend(level,numlines,numbytes,s1,d1,ssl,slinespan,dlinespan,nsHighQual,aSrcBackColor,aSecondSrcBackColor,pixformat);
             result = NS_OK;
           }
           break;
@@ -272,7 +271,7 @@ PRBool        dstissurf = PR_FALSE;
         case 16:
           if (!mask){
             level = (PRInt32)(aSrcOpacity*100);
-            Do16Blend(level,numlines,numbytes,s1,d1,ssl,slinespan,dlinespan,nsHighQual,aSrcBackColor,aSecondSrcBackColor);
+            Do16Blend(level,numlines,numbytes,s1,d1,ssl,slinespan,dlinespan,nsHighQual,aSrcBackColor,aSecondSrcBackColor,pixformat);
             result = NS_OK;
           }
           else
@@ -302,7 +301,7 @@ PRBool        dstissurf = PR_FALSE;
         ::DeleteObject(tb1);
       }
     } else
-        result = NS_ERROR_FAILURE;
+      result = NS_ERROR_FAILURE;
   }
 
 #ifdef NGLAYOUT_DDRAW
@@ -315,6 +314,16 @@ PRBool        dstissurf = PR_FALSE;
   if (PR_TRUE == secondsrcissurf)
     SecondSrcWinSurf->mSurface->Unlock(mSecondSrcSurf.lpSurface);
 #endif
+
+  // get rid of the DIB's
+  if (nsnull != mSrcbinfo)
+    DeleteDIB(&mSrcbinfo, &mSrcBytes);
+
+  if (nsnull != mDstbinfo)
+    DeleteDIB(&mDstbinfo, &mDstBytes);
+
+  if (nsnull != mSecondSrcbinfo)
+    DeleteDIB(&mSecondSrcbinfo, &mSecondSrcBytes);
 
   return result;
 }
@@ -331,7 +340,7 @@ PRBool        dstissurf = PR_FALSE;
  * @param DWORD -- 
  * @result PR_TRUE lock was succesful
  */
-PRBool nsBlenderWin :: LockSurface(IDirectDrawSurface *aSurface, DDSURFACEDESC *aDesc, BITMAP *aBitmap, RECT *aRect, DWORD aLockFlags)
+PRBool nsBlenderWin :: LockSurface(IDirectDrawSurface *aSurface, DDSURFACEDESC *aDesc, BITMAP *aBitmap, RECT *aRect, DWORD aLockFlags, nsPixelFormat *aPixFormat)
 {
   if (nsnull != aSurface){
     aDesc->dwSize = sizeof(DDSURFACEDESC);
@@ -355,6 +364,149 @@ PRBool nsBlenderWin :: LockSurface(IDirectDrawSurface *aSurface, DDSURFACEDESC *
       aBitmap->bmPlanes = 1;
       aBitmap->bmBitsPixel = (PRUint16)aDesc->ddpfPixelFormat.dwRGBBitCount;
       aBitmap->bmBits = aDesc->lpSurface;
+
+      if ((nsnull != aPixFormat) && (aBitmap->bmBitsPixel > 8)) {
+        DWORD btemp, shiftcnt;
+
+        btemp = aDesc->ddpfPixelFormat.dwRBitMask;
+
+        aPixFormat->mRedMask = btemp;
+
+        shiftcnt = 32;
+
+        if (!(btemp & 0xffff)) {
+          aPixFormat->mRedShift = 16;
+          btemp >>= 16;
+          shiftcnt = 16;
+        }
+        else if (!(btemp & 0xff)) {
+          aPixFormat->mRedShift = 8;
+          btemp >>= 8;
+          shiftcnt = 24;
+        }
+        else {
+          aPixFormat->mRedShift = 0;
+          shiftcnt = 32;
+        }
+
+        while (!(btemp & 1) && shiftcnt--) {
+          btemp >>= 1;
+          aPixFormat->mRedShift++;
+        }
+
+        aPixFormat->mRedZeroMask = btemp;
+        aPixFormat->mRedCount = 0;
+
+        while ((btemp & 1) && shiftcnt--) {
+          btemp >>= 1;
+          aPixFormat->mRedCount++;
+        }
+
+        btemp = aDesc->ddpfPixelFormat.dwGBitMask;
+
+        aPixFormat->mGreenMask = btemp;
+
+        shiftcnt = 32;
+
+        if (!(btemp & 0xffff)) {
+          aPixFormat->mGreenShift = 16;
+          btemp >>= 16;
+          shiftcnt = 16;
+        }
+        else if (!(btemp & 0xff)) {
+          aPixFormat->mGreenShift = 8;
+          btemp >>= 8;
+          shiftcnt = 24;
+        }
+        else {
+          aPixFormat->mGreenShift = 0;
+          shiftcnt = 32;
+        }
+
+        while (!(btemp & 1) && shiftcnt--) {
+          btemp >>= 1;
+          aPixFormat->mGreenShift++;
+        }
+
+        aPixFormat->mGreenZeroMask = btemp;
+        aPixFormat->mGreenCount = 0;
+
+        while ((btemp & 1) && shiftcnt--) {
+          btemp >>= 1;
+          aPixFormat->mGreenCount++;
+        }
+
+        btemp = aDesc->ddpfPixelFormat.dwBBitMask;
+
+        aPixFormat->mBlueMask = btemp;
+
+        shiftcnt = 32;
+
+        if (!(btemp & 0xffff)) {
+          aPixFormat->mBlueShift = 16;
+          btemp >>= 16;
+          shiftcnt = 16;
+        }
+        else if (!(btemp & 0xff)) {
+          aPixFormat->mBlueShift = 8;
+          btemp >>= 8;
+          shiftcnt = 24;
+        }
+        else {
+          aPixFormat->mBlueShift = 0;
+          shiftcnt = 32;
+        }
+
+        while (!(btemp & 1) && shiftcnt--) {
+          btemp >>= 1;
+          aPixFormat->mBlueShift++;
+        }
+
+        aPixFormat->mBlueZeroMask = btemp;
+        aPixFormat->mBlueCount = 0;
+
+        while ((btemp & 1) && shiftcnt--) {
+          btemp >>= 1;
+          aPixFormat->mBlueCount++;
+        }
+
+        aPixFormat->mAlphaCount = aDesc->ddpfPixelFormat.dwAlphaBitDepth;
+
+        if (aPixFormat->mAlphaCount > 0) {
+          btemp = aDesc->ddpfPixelFormat.dwRGBAlphaBitMask;
+
+          aPixFormat->mAlphaMask = btemp;
+
+          shiftcnt = 32;
+
+          if (!(btemp & 0xffff)) {
+            aPixFormat->mAlphaShift = 16;
+            btemp >>= 16;
+            shiftcnt = 16;
+          }
+          else if (!(btemp & 0xff)) {
+            aPixFormat->mAlphaShift = 8;
+            btemp >>= 8;
+            shiftcnt = 24;
+          }
+          else {
+            aPixFormat->mAlphaShift = 0;
+            shiftcnt = 32;
+          }
+
+          while (!(btemp & 1) && shiftcnt--) {
+            btemp >>= 1;
+            aPixFormat->mAlphaShift++;
+          }
+
+          aPixFormat->mAlphaZeroMask = btemp;
+        }
+        else {
+          aPixFormat->mAlphaMask = 0;
+          aPixFormat->mAlphaShift = 0;
+          aPixFormat->mAlphaZeroMask = 0;
+        }
+      }
 
       return PR_TRUE;
     }else
@@ -464,7 +616,7 @@ PRInt32   startx,starty;
  * @result NS_OK if the build was succesful
  */
 nsresult 
-nsBlenderWin :: BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth)
+nsBlenderWin :: BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsPixelFormat *aPixFormat)
 {
   PRInt32 palsize, imagesize, spanbytes, allocsize;
   PRUint8 *colortable;
@@ -484,12 +636,52 @@ nsBlenderWin :: BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt
       masks[0] = 0xf800;
       masks[1] = 0x07e0;
       masks[2] = 0x001f;
+
+      if (nsnull != aPixFormat) {
+        aPixFormat->mRedZeroMask = 0x1f;
+        aPixFormat->mGreenZeroMask = 0x3f;
+        aPixFormat->mBlueZeroMask = 0x1f;
+        aPixFormat->mAlphaZeroMask = 0;
+        aPixFormat->mRedMask = masks[0];
+        aPixFormat->mGreenMask = masks[1];
+        aPixFormat->mBlueMask = masks[2];
+        aPixFormat->mAlphaMask = 0;
+        aPixFormat->mRedCount = 5;
+        aPixFormat->mGreenCount = 6;
+        aPixFormat->mBlueCount = 5;
+        aPixFormat->mAlphaCount = 0;
+        aPixFormat->mRedShift = 11;
+        aPixFormat->mGreenShift = 5;
+        aPixFormat->mBlueShift = 0;
+        aPixFormat->mAlphaShift = 0;
+      }
+
       break;
 
 		case 24:
       palsize = 0;
 			allocsize = 0;
       bicomp = BI_RGB;
+
+      if (nsnull != aPixFormat) {
+        aPixFormat->mRedZeroMask = 0xff;
+        aPixFormat->mGreenZeroMask = 0xff;
+        aPixFormat->mBlueZeroMask = 0xff;
+        aPixFormat->mAlphaZeroMask = 0;
+        aPixFormat->mRedMask = 0xff;
+        aPixFormat->mGreenMask = 0xff00;
+        aPixFormat->mBlueMask = 0xff0000;
+        aPixFormat->mAlphaMask = 0;
+        aPixFormat->mRedCount = 8;
+        aPixFormat->mGreenCount = 8;
+        aPixFormat->mBlueCount = 8;
+        aPixFormat->mAlphaCount = 0;
+        aPixFormat->mRedShift = 0;
+        aPixFormat->mGreenShift = 8;
+        aPixFormat->mBlueShift = 16;
+        aPixFormat->mAlphaShift = 0;
+      }
+
       break;
 
 		case 32:
@@ -499,6 +691,26 @@ nsBlenderWin :: BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt
       masks[0] = 0xff0000;
       masks[1] = 0x00ff00;
       masks[2] = 0x0000ff;
+
+      if (nsnull != aPixFormat) {
+        aPixFormat->mRedZeroMask = 0xff;
+        aPixFormat->mGreenZeroMask = 0xff;
+        aPixFormat->mBlueZeroMask = 0xff;
+        aPixFormat->mAlphaZeroMask = 0xff;
+        aPixFormat->mRedMask = masks[0];
+        aPixFormat->mGreenMask = masks[1];
+        aPixFormat->mBlueMask = masks[2];
+        aPixFormat->mAlphaMask = 0xff000000;
+        aPixFormat->mRedCount = 8;
+        aPixFormat->mGreenCount = 8;
+        aPixFormat->mBlueCount = 8;
+        aPixFormat->mAlphaCount = 8;
+        aPixFormat->mRedShift = 16;
+        aPixFormat->mGreenShift = 8;
+        aPixFormat->mBlueShift = 0;
+        aPixFormat->mAlphaShift = 24;
+      }
+
       break;
 
 		default:

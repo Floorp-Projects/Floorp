@@ -94,7 +94,7 @@ public:
    * @param aHeight Height of the bitmap to create
    * @param aDepth  Bits per pixel of the bitmap to create
    */
-  nsresult BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth);
+  nsresult BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsPixelFormat *aPixFormat);
 
   /**
    * Delete the DIB header and bits created from BuildDIB
@@ -115,7 +115,7 @@ public:
    * @param DWORD -- 
    * @result PR_TRUE lock was succesful
    */
-  PRBool LockSurface(IDirectDrawSurface *aSurface, DDSURFACEDESC *aDesc, BITMAP *aBitmap, RECT *aRect, DWORD aLockFlags);
+  PRBool LockSurface(IDirectDrawSurface *aSurface, DDSURFACEDESC *aDesc, BITMAP *aBitmap, RECT *aRect, DWORD aLockFlags, nsPixelFormat *aPixFormat);
 #endif
 
   private:

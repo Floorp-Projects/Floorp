@@ -21,7 +21,7 @@
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "../nsGfxCIID.h"
+#include "nsGfxCIID.h"
 #include "nsFontMetricsGTK.h"
 #include "nsRenderingContextGTK.h"
 #include "nsImageGTK.h"

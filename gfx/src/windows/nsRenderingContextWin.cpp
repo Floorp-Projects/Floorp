@@ -85,18 +85,10 @@ void CALLBACK LineDDAFunc(int x,int y,LONG lData)
 {
   lineddastruct * dda_struct = (lineddastruct *) lData;
   
-  if (dda_struct->nDottedPixel == 1) 
-  {
-    dda_struct->nDottedPixel = 0;
+  dda_struct->nDottedPixel ^= 1; 
 
-    SetPixel(dda_struct->dc,
-             x,y,
-             dda_struct->crColor);
-  }
-  else
-  {
-    dda_struct->nDottedPixel = 1;
-  }    
+  if (dda_struct->nDottedPixel)
+    SetPixel(dda_struct->dc, x, y, dda_struct->crColor);
 }   
 
 
@@ -190,6 +182,8 @@ nsDrawingSurfaceWin :: nsDrawingSurfaceWin()
   mOrigBitmap = nsnull;
   mSelectedBitmap = nsnull;
   mKillDC = PR_TRUE;
+  mBitmapInfo = nsnull;
+  mDIBits = nsnull;
 
 #ifdef NGLAYOUT_DDRAW
   mSurface = NULL;
@@ -209,6 +203,14 @@ nsDrawingSurfaceWin :: ~nsDrawingSurfaceWin()
   }
 
   mSelectedBitmap = nsnull;
+
+  if (nsnull != mBitmapInfo)
+  {
+    delete mBitmapInfo;
+    mBitmapInfo = nsnull;
+  }
+
+  mDIBits = nsnull;
 
 #ifdef NGLAYOUT_DDRAW
   if (NULL != mSurface)
@@ -1106,7 +1108,31 @@ NS_IMETHODIMP nsRenderingContextWin :: CreateDrawingSurface(nsRect *aBounds, PRU
 #endif
     {
       if (nsnull != aBounds)
-        surf->mSelectedBitmap = ::CreateCompatibleBitmap(mMainDC, aBounds->width, aBounds->height);
+      {
+        if (aSurfFlags & NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS)
+        {
+          void *bits;
+          PRUint32 depth;
+          BITMAPINFO *binfo;
+
+          mContext->GetDepth(depth);
+
+          binfo = CreateBitmapInfo(aBounds->width, aBounds->height, depth);
+
+          if (nsnull != binfo)
+            surf->mSelectedBitmap = ::CreateDIBSection(mMainDC, binfo, DIB_RGB_COLORS, &bits, NULL, 0);
+
+          if (NULL == surf->mSelectedBitmap)
+            surf->mSelectedBitmap = ::CreateCompatibleBitmap(mMainDC, aBounds->width, aBounds->height);
+          else
+          {
+            surf->mBitmapInfo = binfo;
+            surf->mDIBits = (PRUint8 *)bits;
+          }
+        }
+        else
+          surf->mSelectedBitmap = ::CreateCompatibleBitmap(mMainDC, aBounds->width, aBounds->height);
+      }
       else
       {
         //we do this to make sure that the memory DC knows what the
@@ -2025,6 +2051,86 @@ nsresult nsRenderingContextWin :: GetDDraw(IDirectDraw2 **aDDraw)
 }
 
 #endif
+
+#define RASWIDTH(width, bpp) ((((width) * (bpp) + 31) >> 5) << 2)
+
+BITMAPINFO * nsRenderingContextWin :: CreateBitmapInfo(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth)
+{
+  PRInt32 palsize, imagesize, spanbytes, allocsize;
+  PRUint8 *colortable;
+  DWORD   bicomp, masks[3];
+  BITMAPINFO  *rv = nsnull;
+
+	switch (aDepth)
+  {
+		case 8:
+			palsize = 256;
+			allocsize = 256;
+      bicomp = BI_RGB;
+      break;
+
+    case 16:
+      palsize = 0;
+			allocsize = 3;
+      bicomp = BI_BITFIELDS;
+      masks[0] = 0xf800;
+      masks[1] = 0x07e0;
+      masks[2] = 0x001f;
+      break;
+
+		case 24:
+      palsize = 0;
+			allocsize = 0;
+      bicomp = BI_RGB;
+      break;
+
+		case 32:
+      palsize = 0;
+			allocsize = 3;
+      bicomp = BI_BITFIELDS;
+      masks[0] = 0xff0000;
+      masks[1] = 0x00ff00;
+      masks[2] = 0x0000ff;
+      break;
+
+		default:
+			palsize = -1;
+      break;
+  }
+
+  if (palsize >= 0)
+  {
+    spanbytes = RASWIDTH(aWidth, aDepth);
+    imagesize = spanbytes * aHeight;
+
+    rv = (BITMAPINFO *)new char[sizeof(BITMAPINFOHEADER) + (sizeof(RGBQUAD) * allocsize)];
+
+    if (nsnull != rv)
+    {
+      rv->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	    rv->bmiHeader.biWidth = aWidth;
+	    rv->bmiHeader.biHeight = aHeight;
+	    rv->bmiHeader.biPlanes = 1;
+	    rv->bmiHeader.biBitCount = (unsigned short)aDepth;
+	    rv->bmiHeader.biCompression = bicomp;
+	    rv->bmiHeader.biSizeImage = imagesize;
+	    rv->bmiHeader.biXPelsPerMeter = 0;
+	    rv->bmiHeader.biYPelsPerMeter = 0;
+	    rv->bmiHeader.biClrUsed = palsize;
+	    rv->bmiHeader.biClrImportant = palsize;
+
+      // set the color table in the info header
+	    colortable = (PRUint8 *)rv + sizeof(BITMAPINFOHEADER);
+
+      if ((aDepth == 16) || (aDepth == 32))
+        nsCRT::memcpy(colortable, masks, sizeof(DWORD) * allocsize);
+      else
+	      nsCRT::zero(colortable, sizeof(RGBQUAD) * palsize);
+    }
+  }
+
+  return rv;
+}
 
 NS_IMETHODIMP
 nsRenderingContextWin::GetScriptObject(nsIScriptContext* aContext,
