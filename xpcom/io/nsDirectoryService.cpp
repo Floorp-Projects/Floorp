@@ -41,6 +41,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsLocalFile.h"
 #include "nsDebug.h"
+#include "nsStaticAtom.h"
 
 #if defined(XP_MAC)
 #include <Folders.h>
@@ -414,7 +415,8 @@ nsIAtom*  nsDirectoryService::sSystemDirectory = nsnull;
 
 nsDirectoryService* nsDirectoryService::mService = nsnull;
 
-nsDirectoryService::nsDirectoryService()
+nsDirectoryService::nsDirectoryService() :
+    mHashtable(256, PR_TRUE)
 {
 }
 
@@ -431,92 +433,92 @@ nsDirectoryService::Create(nsISupports *outer, REFNSIID aIID, void **aResult)
     return mService->QueryInterface(aIID, aResult);
 }
 
+static const nsStaticAtom directory_atoms[] = {
+    { NS_XPCOM_CURRENT_PROCESS_DIR,     &nsDirectoryService::sCurrentProcess },
+    { NS_XPCOM_COMPONENT_REGISTRY_FILE, &nsDirectoryService::sComponentRegistry },
+    { NS_XPCOM_COMPONENT_DIR,         &nsDirectoryService::sComponentDirectory },
+    { NS_XPCOM_XPTI_REGISTRY_FILE, &nsDirectoryService::sXPTIRegistry },
+    { NS_GRE_DIR,                  &nsDirectoryService::sGRE_Directory },
+    { NS_GRE_COMPONENT_DIR,        &nsDirectoryService::sGRE_ComponentDirectory },
+    { NS_OS_DRIVE_DIR,             &nsDirectoryService::sOS_DriveDirectory },
+    { NS_OS_TEMP_DIR,              &nsDirectoryService::sOS_TemporaryDirectory },
+    { NS_OS_CURRENT_PROCESS_DIR,   &nsDirectoryService::sOS_CurrentProcessDirectory },
+    { NS_OS_CURRENT_WORKING_DIR,   &nsDirectoryService::sOS_CurrentWorkingDirectory },
+#if defined(XP_MAC)
+    { NS_OS_SYSTEM_DIR,            &nsDirectoryService::sDirectory },
+    { NS_MAC_DESKTOP_DIR,          &nsDirectoryService::sDesktopDirectory },
+    { NS_MAC_TRASH_DIR,            &nsDirectoryService::sTrashDirectory },
+    { NS_MAC_STARTUP_DIR,          &nsDirectoryService::sStartupDirectory },
+    { NS_MAC_SHUTDOWN_DIR,         &nsDirectoryService::sShutdownDirectory },
+    { NS_MAC_APPLE_MENU_DIR,       &nsDirectoryService::sAppleMenuDirectory },
+    { NS_MAC_CONTROL_PANELS_DIR,   &nsDirectoryService::sControlPanelDirectory },
+    { NS_MAC_EXTENSIONS_DIR,       &nsDirectoryService::sExtensionDirectory },
+    { NS_MAC_FONTS_DIR,            &nsDirectoryService::sFontsDirectory },
+    { NS_MAC_CLASSICPREFS_DIR,     &nsDirectoryService::sClassicPreferencesDirectory },
+    { NS_MAC_PREFS_DIR,            &nsDirectoryService::sPreferencesDirectory },
+    { NS_MAC_DOCUMENTS_DIR,        &nsDirectoryService::sDocumentsDirectory },
+    { NS_MAC_INTERNET_SEARCH_DIR,  &nsDirectoryService::sInternetSearchDirectory },
+    { NS_MAC_HOME_DIR,             &nsDirectoryService::sHomeDirectory },
+    { NS_MAC_DEFAULT_DOWNLOAD_DIR, &nsDirectoryService::sDefaultDownloadDirectory },
+    { NS_MAC_USER_LIB_DIR,         &nsDirectoryService::sUserLibDirectory },
+#elif defined (XP_MACOSX)
+    { NS_MAC_HOME_DIR,             &nsDirectoryService::sHomeDirectory },
+    { NS_MAC_DEFAULT_DOWNLOAD_DIR, &nsDirectoryService::sDefaultDownloadDirectory },
+#elif defined (XP_WIN) 
+    { NS_OS_SYSTEM_DIR,            &nsDirectoryService::sSystemDirectory },
+    { NS_WIN_WINDOWS_DIR,          &nsDirectoryService::sWindowsDirectory },
+    { NS_WIN_HOME_DIR,             &nsDirectoryService::sHomeDirectory },
+    { NS_WIN_DESKTOP_DIR,          &nsDirectoryService::sDesktop },
+    { NS_WIN_PROGRAMS_DIR,         &nsDirectoryService::sPrograms },
+    { NS_WIN_CONTROLS_DIR,         &nsDirectoryService::sControls },
+    { NS_WIN_PRINTERS_DIR,         &nsDirectoryService::sPrinters },
+    { NS_WIN_PERSONAL_DIR,         &nsDirectoryService::sPersonal },
+    { NS_WIN_FAVORITES_DIR,        &nsDirectoryService::sFavorites },
+    { NS_WIN_STARTUP_DIR,          &nsDirectoryService::sStartup },
+    { NS_WIN_RECENT_DIR,           &nsDirectoryService::sRecent },
+    { NS_WIN_SEND_TO_DIR,          &nsDirectoryService::sSendto },
+    { NS_WIN_BITBUCKET_DIR,        &nsDirectoryService::sBitbucket },
+    { NS_WIN_STARTMENU_DIR,        &nsDirectoryService::sStartmenu },
+    { NS_WIN_DESKTOP_DIRECTORY,    &nsDirectoryService::sDesktopdirectory },
+    { NS_WIN_DRIVES_DIR,           &nsDirectoryService::sDrives },
+    { NS_WIN_NETWORK_DIR,          &nsDirectoryService::sNetwork },
+    { NS_WIN_NETHOOD_DIR,          &nsDirectoryService::sNethood },
+    { NS_WIN_FONTS_DIR,            &nsDirectoryService::sFonts },
+    { NS_WIN_TEMPLATES_DIR,        &nsDirectoryService::sTemplates },
+    { NS_WIN_COMMON_STARTMENU_DIR, &nsDirectoryService::sCommon_Startmenu },
+    { NS_WIN_COMMON_PROGRAMS_DIR,  &nsDirectoryService::sCommon_Programs },
+    { NS_WIN_COMMON_STARTUP_DIR,   &nsDirectoryService::sCommon_Startup },
+    { NS_WIN_COMMON_DESKTOP_DIRECTORY, &nsDirectoryService::sCommon_Desktopdirectory },
+    { NS_WIN_APPDATA_DIR,          &nsDirectoryService::sAppdata },
+    { NS_WIN_PRINTHOOD,            &nsDirectoryService::sPrinthood },
+    { NS_WIN_COOKIES_DIR,          &nsDirectoryService::sWinCookiesDirectory },
+#elif defined (XP_UNIX)
+    { NS_UNIX_LOCAL_DIR,           &nsDirectoryService::sLocalDirectory },
+    { NS_UNIX_LIB_DIR,             &nsDirectoryService::sLibDirectory },
+    { NS_UNIX_HOME_DIR,            &nsDirectoryService::sHomeDirectory },
+#elif defined (XP_OS2)
+    { NS_OS_SYSTEM_DIR,            &nsDirectoryService::sSystemDirectory },
+    { NS_OS2_DIR,                  &nsDirectoryService::sOS2Directory },
+    { NS_OS2_HOME_DIR,             &nsDirectoryService::sHomeDirectory },
+    { NS_OS2_DESKTOP_DIR,          &nsDirectoryService::sDesktopDirectory },
+#elif defined (XP_BEOS)
+    { NS_OS_SYSTEM_DIR,            &nsDirectoryService::sSystemDirectory },
+    { NS_BEOS_SETTINGS_DIR,        &nsDirectoryService::sSettingsDirectory },
+    { NS_BEOS_HOME_DIR,            &nsDirectoryService::sHomeDirectory },
+    { NS_BEOS_DESKTOP_DIR,         &nsDirectoryService::sDesktopDirectory },
+#endif
+};    
+
 nsresult
 nsDirectoryService::Init()
 {
     nsresult rv;
-    mHashtable = new nsSupportsHashtable(256, PR_TRUE);
-    if (mHashtable == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
       
     rv = NS_NewISupportsArray(getter_AddRefs(mProviders));
     if (NS_FAILED(rv)) return rv;
+
+    NS_RegisterStaticAtoms(directory_atoms, NS_ARRAY_LENGTH(directory_atoms));
     
-    nsDirectoryService::sCurrentProcess             = NS_NewAtom(NS_XPCOM_CURRENT_PROCESS_DIR);
-    nsDirectoryService::sComponentRegistry          = NS_NewAtom(NS_XPCOM_COMPONENT_REGISTRY_FILE);
-    nsDirectoryService::sComponentDirectory         = NS_NewAtom(NS_XPCOM_COMPONENT_DIR);
-    nsDirectoryService::sXPTIRegistry               = NS_NewAtom(NS_XPCOM_XPTI_REGISTRY_FILE);
-    nsDirectoryService::sGRE_Directory              = NS_NewAtom(NS_GRE_DIR);
-    nsDirectoryService::sGRE_ComponentDirectory     = NS_NewAtom(NS_GRE_COMPONENT_DIR);
-
-    nsDirectoryService::sOS_DriveDirectory          = NS_NewAtom(NS_OS_DRIVE_DIR);
-    nsDirectoryService::sOS_TemporaryDirectory      = NS_NewAtom(NS_OS_TEMP_DIR);
-    nsDirectoryService::sOS_CurrentProcessDirectory = NS_NewAtom(NS_OS_CURRENT_PROCESS_DIR);
-    nsDirectoryService::sOS_CurrentWorkingDirectory = NS_NewAtom(NS_OS_CURRENT_WORKING_DIR);
-#if defined(XP_MAC)
-    nsDirectoryService::sDirectory                  = NS_NewAtom(NS_OS_SYSTEM_DIR);
-    nsDirectoryService::sDesktopDirectory           = NS_NewAtom(NS_MAC_DESKTOP_DIR);
-    nsDirectoryService::sTrashDirectory             = NS_NewAtom(NS_MAC_TRASH_DIR);
-    nsDirectoryService::sStartupDirectory           = NS_NewAtom(NS_MAC_STARTUP_DIR);
-    nsDirectoryService::sShutdownDirectory          = NS_NewAtom(NS_MAC_SHUTDOWN_DIR);
-    nsDirectoryService::sAppleMenuDirectory         = NS_NewAtom(NS_MAC_APPLE_MENU_DIR);
-    nsDirectoryService::sControlPanelDirectory      = NS_NewAtom(NS_MAC_CONTROL_PANELS_DIR);
-    nsDirectoryService::sExtensionDirectory         = NS_NewAtom(NS_MAC_EXTENSIONS_DIR);
-    nsDirectoryService::sFontsDirectory             = NS_NewAtom(NS_MAC_FONTS_DIR);
-    nsDirectoryService::sClassicPreferencesDirectory= NS_NewAtom(NS_MAC_CLASSICPREFS_DIR);
-    nsDirectoryService::sPreferencesDirectory       = NS_NewAtom(NS_MAC_PREFS_DIR);
-    nsDirectoryService::sDocumentsDirectory         = NS_NewAtom(NS_MAC_DOCUMENTS_DIR);
-    nsDirectoryService::sInternetSearchDirectory    = NS_NewAtom(NS_MAC_INTERNET_SEARCH_DIR);
-    nsDirectoryService::sHomeDirectory              = NS_NewAtom(NS_MAC_HOME_DIR);
-    nsDirectoryService::sDefaultDownloadDirectory   = NS_NewAtom(NS_MAC_DEFAULT_DOWNLOAD_DIR);
-    nsDirectoryService::sUserLibDirectory           = NS_NewAtom(NS_MAC_USER_LIB_DIR);
-#elif defined (XP_MACOSX)
-    nsDirectoryService::sHomeDirectory              = NS_NewAtom(NS_MAC_HOME_DIR);
-    nsDirectoryService::sDefaultDownloadDirectory   = NS_NewAtom(NS_MAC_DEFAULT_DOWNLOAD_DIR);
-#elif defined (XP_WIN) 
-    nsDirectoryService::sSystemDirectory            = NS_NewAtom(NS_OS_SYSTEM_DIR);
-    nsDirectoryService::sWindowsDirectory           = NS_NewAtom(NS_WIN_WINDOWS_DIR);
-    nsDirectoryService::sHomeDirectory              = NS_NewAtom(NS_WIN_HOME_DIR);
-    nsDirectoryService::sDesktop                    = NS_NewAtom(NS_WIN_DESKTOP_DIR);
-    nsDirectoryService::sPrograms                   = NS_NewAtom(NS_WIN_PROGRAMS_DIR);
-    nsDirectoryService::sControls                   = NS_NewAtom(NS_WIN_CONTROLS_DIR);
-    nsDirectoryService::sPrinters                   = NS_NewAtom(NS_WIN_PRINTERS_DIR);
-    nsDirectoryService::sPersonal                   = NS_NewAtom(NS_WIN_PERSONAL_DIR);
-    nsDirectoryService::sFavorites                  = NS_NewAtom(NS_WIN_FAVORITES_DIR);
-    nsDirectoryService::sStartup                    = NS_NewAtom(NS_WIN_STARTUP_DIR);
-    nsDirectoryService::sRecent                     = NS_NewAtom(NS_WIN_RECENT_DIR);
-    nsDirectoryService::sSendto                     = NS_NewAtom(NS_WIN_SEND_TO_DIR);
-    nsDirectoryService::sBitbucket                  = NS_NewAtom(NS_WIN_BITBUCKET_DIR);
-    nsDirectoryService::sStartmenu                  = NS_NewAtom(NS_WIN_STARTMENU_DIR);
-    nsDirectoryService::sDesktopdirectory           = NS_NewAtom(NS_WIN_DESKTOP_DIRECTORY);
-    nsDirectoryService::sDrives                     = NS_NewAtom(NS_WIN_DRIVES_DIR);
-    nsDirectoryService::sNetwork                    = NS_NewAtom(NS_WIN_NETWORK_DIR);
-    nsDirectoryService::sNethood                    = NS_NewAtom(NS_WIN_NETHOOD_DIR);
-    nsDirectoryService::sFonts                      = NS_NewAtom(NS_WIN_FONTS_DIR);
-    nsDirectoryService::sTemplates                  = NS_NewAtom(NS_WIN_TEMPLATES_DIR);
-    nsDirectoryService::sCommon_Startmenu           = NS_NewAtom(NS_WIN_COMMON_STARTMENU_DIR);
-    nsDirectoryService::sCommon_Programs            = NS_NewAtom(NS_WIN_COMMON_PROGRAMS_DIR);
-    nsDirectoryService::sCommon_Startup             = NS_NewAtom(NS_WIN_COMMON_STARTUP_DIR);
-    nsDirectoryService::sCommon_Desktopdirectory    = NS_NewAtom(NS_WIN_COMMON_DESKTOP_DIRECTORY);
-    nsDirectoryService::sAppdata                    = NS_NewAtom(NS_WIN_APPDATA_DIR);
-    nsDirectoryService::sPrinthood                  = NS_NewAtom(NS_WIN_PRINTHOOD);
-    nsDirectoryService::sWinCookiesDirectory        = NS_NewAtom(NS_WIN_COOKIES_DIR);
-#elif defined (XP_UNIX)
-    nsDirectoryService::sLocalDirectory             = NS_NewAtom(NS_UNIX_LOCAL_DIR);
-    nsDirectoryService::sLibDirectory               = NS_NewAtom(NS_UNIX_LIB_DIR);
-    nsDirectoryService::sHomeDirectory              = NS_NewAtom(NS_UNIX_HOME_DIR);
-#elif defined (XP_OS2)
-    nsDirectoryService::sSystemDirectory            = NS_NewAtom(NS_OS_SYSTEM_DIR);
-    nsDirectoryService::sOS2Directory               = NS_NewAtom(NS_OS2_DIR);  
-    nsDirectoryService::sHomeDirectory              = NS_NewAtom(NS_OS2_HOME_DIR);
-    nsDirectoryService::sDesktopDirectory           = NS_NewAtom(NS_OS2_DESKTOP_DIR);
-#elif defined (XP_BEOS)
-    nsDirectoryService::sSystemDirectory            = NS_NewAtom(NS_OS_SYSTEM_DIR);
-    nsDirectoryService::sSettingsDirectory          = NS_NewAtom(NS_BEOS_SETTINGS_DIR);
-    nsDirectoryService::sHomeDirectory              = NS_NewAtom(NS_BEOS_HOME_DIR);
-    nsDirectoryService::sDesktopDirectory           = NS_NewAtom(NS_BEOS_DESKTOP_DIR);
-#endif
-
     // Let the list hold the only reference to the provider.
     nsAppFileLocationProvider *defaultProvider = new nsAppFileLocationProvider;
     if (!defaultProvider)
@@ -537,82 +539,6 @@ nsDirectoryService::ReleaseValues(nsHashKey* key, void* data, void* closure)
 
 nsDirectoryService::~nsDirectoryService()
 {
-     delete mHashtable;
-
-     NS_IF_RELEASE(nsDirectoryService::sCurrentProcess);
-     NS_IF_RELEASE(nsDirectoryService::sComponentRegistry);
-     NS_IF_RELEASE(nsDirectoryService::sComponentDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sXPTIRegistry);
-     NS_IF_RELEASE(nsDirectoryService::sGRE_Directory);
-     NS_IF_RELEASE(nsDirectoryService::sGRE_ComponentDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sOS_DriveDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sOS_TemporaryDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sOS_CurrentProcessDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sOS_CurrentWorkingDirectory);
-#if defined(XP_MAC)
-     NS_IF_RELEASE(nsDirectoryService::sDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sDesktopDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sTrashDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sStartupDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sShutdownDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sAppleMenuDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sControlPanelDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sExtensionDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sFontsDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sClassicPreferencesDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sPreferencesDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sDocumentsDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sInternetSearchDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sHomeDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sDefaultDownloadDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sUserLibDirectory);
-#elif defined (XP_MACOSX)
-     NS_IF_RELEASE(nsDirectoryService::sHomeDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sDefaultDownloadDirectory);
-#elif defined (XP_WIN)
-     NS_IF_RELEASE(nsDirectoryService::sSystemDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sWindowsDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sHomeDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sDesktop);
-     NS_IF_RELEASE(nsDirectoryService::sPrograms);
-     NS_IF_RELEASE(nsDirectoryService::sControls);
-     NS_IF_RELEASE(nsDirectoryService::sPrinters);
-     NS_IF_RELEASE(nsDirectoryService::sPersonal);
-     NS_IF_RELEASE(nsDirectoryService::sFavorites);
-     NS_IF_RELEASE(nsDirectoryService::sStartup);
-     NS_IF_RELEASE(nsDirectoryService::sRecent);
-     NS_IF_RELEASE(nsDirectoryService::sSendto);
-     NS_IF_RELEASE(nsDirectoryService::sBitbucket);
-     NS_IF_RELEASE(nsDirectoryService::sStartmenu);
-     NS_IF_RELEASE(nsDirectoryService::sDesktopdirectory);
-     NS_IF_RELEASE(nsDirectoryService::sDrives);
-     NS_IF_RELEASE(nsDirectoryService::sNetwork);
-     NS_IF_RELEASE(nsDirectoryService::sNethood);
-     NS_IF_RELEASE(nsDirectoryService::sFonts);
-     NS_IF_RELEASE(nsDirectoryService::sTemplates);
-     NS_IF_RELEASE(nsDirectoryService::sCommon_Startmenu);
-     NS_IF_RELEASE(nsDirectoryService::sCommon_Programs);
-     NS_IF_RELEASE(nsDirectoryService::sCommon_Startup);
-     NS_IF_RELEASE(nsDirectoryService::sCommon_Desktopdirectory);
-     NS_IF_RELEASE(nsDirectoryService::sAppdata);
-     NS_IF_RELEASE(nsDirectoryService::sPrinthood);
-     NS_IF_RELEASE(nsDirectoryService::sWinCookiesDirectory);
-#elif defined (XP_UNIX)
-     NS_IF_RELEASE(nsDirectoryService::sLocalDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sLibDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sHomeDirectory);
-#elif defined (XP_OS2)
-     NS_IF_RELEASE(nsDirectoryService::sSystemDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sOS2Directory);
-     NS_IF_RELEASE(nsDirectoryService::sHomeDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sDesktopDirectory);
-#elif defined (XP_BEOS)
-     NS_IF_RELEASE(nsDirectoryService::sSettingsDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sHomeDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sDesktopDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sSystemDirectory);
-#endif
-
      // clear the global
      mService = nsnull;
 
@@ -625,10 +551,10 @@ NS_IMETHODIMP
 nsDirectoryService::Undefine(const char* prop)
 {
     nsCStringKey key(prop);
-    if (!mHashtable->Exists(&key))
+    if (!mHashtable.Exists(&key))
         return NS_ERROR_FAILURE;
 
-    mHashtable->Remove (&key);
+    mHashtable.Remove (&key);
     return NS_OK;
  }
 
@@ -688,7 +614,7 @@ nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
 {
     nsCStringKey key(prop);
     
-    nsCOMPtr<nsISupports> value = dont_AddRef(mHashtable->Get(&key));
+    nsCOMPtr<nsISupports> value = dont_AddRef(mHashtable.Get(&key));
     
     if (value)
     {
@@ -736,7 +662,7 @@ NS_IMETHODIMP
 nsDirectoryService::Set(const char* prop, nsISupports* value)
 {
     nsCStringKey key(prop);
-    if (mHashtable->Exists(&key) || value == nsnull)
+    if (mHashtable.Exists(&key) || value == nsnull)
         return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIFile> ourFile;
@@ -745,7 +671,7 @@ nsDirectoryService::Set(const char* prop, nsISupports* value)
     {
       nsCOMPtr<nsIFile> cloneFile;
       ourFile->Clone (getter_AddRefs (cloneFile));
-      mHashtable->Put(&key, cloneFile);
+      mHashtable.Put(&key, cloneFile);
 
       return NS_OK;
     }
