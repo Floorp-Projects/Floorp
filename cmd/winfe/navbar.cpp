@@ -499,7 +499,7 @@ void CNavTitleBar::OnLButtonUp(UINT nFlags, CPoint point)
 			History_entry *pHistEnt = SHIST_GetCurrent( &(mwContext->hist) );
 			if (pHistEnt)
 			{
-				HT_AddToContainer( HT_TopNode(m_View), pHistEnt->address, mwContext->title );
+				HT_AddToContainer( HT_TopNode(m_View), pHistEnt->address, pHistEnt->title );
 			}
 		}
 	}
