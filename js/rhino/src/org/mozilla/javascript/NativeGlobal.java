@@ -453,9 +453,9 @@ public class NativeGlobal {
      */
      
     public static EcmaError constructError(Context cx, 
-                                                    String error, 
-                                                    String message,
-                                                    Object scope)
+                                           String error, 
+                                           String message,
+                                           Object scope)
     {
         Scriptable scopeObject;
         try {
