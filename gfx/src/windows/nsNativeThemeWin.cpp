@@ -169,6 +169,9 @@ static void GetNativeRect(const nsRect& aSrc, RECT& aDst)
 HANDLE
 nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
 {
+  if (!mThemeDLL)
+    return NULL;
+
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
     case NS_THEME_RADIO:
