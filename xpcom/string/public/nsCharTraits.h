@@ -596,7 +596,50 @@ struct nsCharSourceTraits<const char*>
       }
  };
 
-// Add specialization for |PRUnichar| only if it is needed
+
+NS_SPECIALIZE_TEMPLATE
+struct nsCharSourceTraits<const PRUnichar*>
+  {
+    typedef ptrdiff_t difference_type;
+
+#if 0
+    static
+    PRUint32
+    distance( const PRUnichar* first, const PRUnichar* last )
+      {
+        return PRUint32(last-first);
+      }
+#endif
+
+    static
+    PRUint32
+    readable_distance( const PRUnichar* s )
+      {
+        return PRUint32(nsCharTraits<PRUnichar>::length(s));
+//      return numeric_limits<PRUint32>::max();
+      }
+
+    static
+    PRUint32
+    readable_distance( const PRUnichar* first, const PRUnichar* last )
+      {
+        return PRUint32(last-first);
+      }
+
+    static
+    const PRUnichar*
+    read( const PRUnichar* s )
+      {
+        return s;
+      }
+
+    static
+    void
+    advance( PRUnichar*& s, difference_type n )
+      {
+        s += n;
+      }
+ };
 
 #endif
 
