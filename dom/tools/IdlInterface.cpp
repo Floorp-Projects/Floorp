@@ -31,7 +31,7 @@ ostream& operator<<(ostream &s, IdlInterface &aInterface)
   int i;
   // write the interface header
   s << "interface " << aInterface.GetName();
-  long count = aInterface.BaseClasseCount();
+  long count = aInterface.BaseClassCount();
   if (count) {
     s << " : ";
     for (int i = 0; i < count - 1; i++) {
@@ -163,7 +163,7 @@ void IdlInterface::InheritsFrom(char *aBase)
   }
 }
 
-long IdlInterface::BaseClasseCount()
+long IdlInterface::BaseClassCount()
 {
   if (mBaseClasses) {
     return mBaseClasses->Count();

@@ -25,43 +25,53 @@
 #include "IdlParser.h"
 #include "Exceptions.h"
 #include "IdlSpecification.h"
+#include "XPCOMGen.h"
 
 int main(int argc, char *argv[])
 {
+  int gen_xpcom = 0;
+  int gen_js = 0;
+  int gen_idl = 0;
+  int op_dir = 0;
+  int op_dir_arg;
+
   // extract filenames from argv
   if (argc >= 2) {
-    int args = argc - 1;
+    int arg_cnt = 1;
 
-    // test if an output directory is provided
-    if (args > 1) {
-      int createDir = 1;
-
-      size_t length = strlen(argv[args]);
-      if (length > 4) {
-        if (0 == strcmp(argv[args] + length - 4, ".idl")) {
-          createDir = 0;
-        }
+    while ((arg_cnt < argc) && (*argv[arg_cnt] == '-')) {
+      switch (*(argv[arg_cnt]+1)) {
+        case 'd':
+          op_dir = 1;
+          op_dir_arg = ++arg_cnt;
+          break;
+        case 'x':
+          gen_xpcom = 1;
+          break;
+        case 'j':
+          gen_js = 1;
+          break;
+        case 'p':
+          gen_idl = 1;
+          break;
       }
-
-      if (createDir) {
-        struct stat sb;
-        if (stat(argv[args], &sb) == 0) {
-          if (!(sb.st_mode & _S_IFDIR)) {
-            cout << "Creating directory " << argv[args] << " ...\n";
-            if (mkdir(argv[args]) < 0) {
-              cout << "WARNING: cannot create output directory [" << argv[args] << "]\n";
-              cout << "++++++++ using current directory\n";
-            }
+      ++arg_cnt;
+    }
+    
+    if (op_dir) {
+      struct stat sb;
+      if (stat(argv[op_dir_arg], &sb) == 0) {
+        if (!(sb.st_mode & _S_IFDIR)) {
+          cout << "Creating directory " << argv[op_dir_arg] << " ...\n";
+          if (mkdir(argv[op_dir_arg]) < 0) {
+            cout << "WARNING: cannot create output directory [" << argv[op_dir_arg] << "]\n";
+            cout << "++++++++ using current directory\n";
           }
         }
-
-        args--;
       }
     }
 
-    for (int i = 1; i <= args; i++) {
-
-      cout << "************** PARSING " << argv[i] << " **************" << "\n";
+    for (int i = arg_cnt; i < argc; i++) {
 
       // create a specification object. On parser termination it will
       // contain all parsed interfaces
@@ -75,13 +85,33 @@ int main(int argc, char *argv[])
         cout << exc;
         delete parser;
         return -1;
+      } catch(FileNotFoundException &exc) {
+        cout << exc;
+        delete parser;
+        return -1;
       } catch(...) {
         cout << "Unknown Exception. Parser Aborted.";
       }
 
-      cout << "************** PARSED **************" << "\n" 
-           << "************** DUMPING **************" << "\n" 
-           << *specification;
+      if (gen_idl) {
+        cout << *specification;
+      }
+
+      if (gen_xpcom) {
+        XPCOMGen *xpcomgen = new XPCOMGen();
+        
+        try {
+          xpcomgen->Generate(argv[i], op_dir ? argv[op_dir_arg] : NULL,
+                             *specification);
+        }
+        catch(CantOpenFileException &exc) {
+          cout << exc;
+          delete xpcomgen;
+          delete parser;
+          return -1;
+        }
+        delete xpcomgen;
+      }
 
       delete parser;
     }
@@ -89,7 +119,16 @@ int main(int argc, char *argv[])
     return 0;
   }
 
-  cout << "ERROR: no file specified\n";
+  cout << "+++ERROR: no file specified\n";
+  goto usage;
+  return -1;
+
+usage:
+  cout << "Usage: [options] [-d outputdir] filename [filename...]\n";
+  cout << "Options:\n";
+  cout << "-x Spit out XPCOM interfaces\n";
+  cout << "-j Spit out JavaScript stub files\n";
+  cout << "-p Echo normalized idl to stdout\n";
   return -1;
 }
 

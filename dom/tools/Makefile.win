@@ -34,11 +34,14 @@ OBJS = \
 	.\$(OBJDIR)\IdlInterface.obj  \
 	.\$(OBJDIR)\IdlParameter.obj  \
 	.\$(OBJDIR)\IdlSpecification.obj\
+	.\$(OBJDIR)\FileGen.obj       \
+	.\$(OBJDIR)\XPCOMGen.obj      \
 	$(NULL)
 
 
 LLIBS= \
  $(DIST)\lib\raptorbase.lib	\
+ $(LIBNSPR)                     \
   -SUBSYSTEM:CONSOLE
 
 LINCS= \

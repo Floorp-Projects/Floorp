@@ -32,6 +32,8 @@ CPPSRCS = \
 	.\$(OBJDIR)\IdlInterface.obj  \
 	.\$(OBJDIR)\IdlParameter.obj  \
 	.\$(OBJDIR)\IdlSpecification.obj\
+	.\$(OBJDIR)\FileGen.obj       \
+	.\$(OBJDIR)\XPCOMGen.obj      \
 	$(NULL)
 
 OBJS	= $(CPPSRCS:.cpp=.o)

@@ -108,6 +108,9 @@ void IdlParser::Parse(char *aFileName, IdlSpecification &aSpecification)
       throw AbortParser(mScanner->GetFileName(), mScanner->GetLineNumber());
     } 
   }
+  else {
+    throw FileNotFoundException(aFileName);
+  }
 }
 
 /**

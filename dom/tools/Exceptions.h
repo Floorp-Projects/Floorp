@@ -48,6 +48,20 @@ public:
           ~AbortParser() {}
 };
 
+class FileNotFoundException : public Exception
+{
+public:
+          FileNotFoundException(char *aFileName);
+          ~FileNotFoundException() {}
+};
+
+class CantOpenFileException : public Exception
+{
+public:
+          CantOpenFileException(char *aFileName);
+          ~CantOpenFileException() {}
+};
+
 class ParserException : public Exception
 {
 public:
