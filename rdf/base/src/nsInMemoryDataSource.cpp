@@ -185,10 +185,16 @@ protected:
                  nsIRDFResource* property,
                  nsIRDFNode* target);
 
+    InMemoryDataSource(nsISupports* aOuter);
+    virtual ~InMemoryDataSource();
+    nsresult Init();
+
+    friend NS_IMETHODIMP
+    NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResult);
+
+    nsISupports* mOuter;
 
 public:
-    InMemoryDataSource(void);
-    virtual ~InMemoryDataSource(void);
 
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -322,7 +328,7 @@ public:
                                     nsIRDFNode* aTarget,
                                     PRBool aTruthValue);
 
-    virtual ~InMemoryAssertionEnumeratorImpl(void);
+    virtual ~InMemoryAssertionEnumeratorImpl();
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -364,7 +370,7 @@ InMemoryAssertionEnumeratorImpl::InMemoryAssertionEnumeratorImpl(
     }
 }
 
-InMemoryAssertionEnumeratorImpl::~InMemoryAssertionEnumeratorImpl(void)
+InMemoryAssertionEnumeratorImpl::~InMemoryAssertionEnumeratorImpl()
 {
     NS_IF_RELEASE(mDataSource);
     NS_IF_RELEASE(mSource);
@@ -489,7 +495,7 @@ InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aData
     }
 }
 
-InMemoryArcsEnumeratorImpl::~InMemoryArcsEnumeratorImpl(void)
+InMemoryArcsEnumeratorImpl::~InMemoryArcsEnumeratorImpl()
 {
     NS_RELEASE(mDataSource);
     NS_IF_RELEASE(mSource);
@@ -571,40 +577,46 @@ InMemoryArcsEnumeratorImpl::GetNext(nsISupports** aResult)
 ////////////////////////////////////////////////////////////////////////
 // InMemoryDataSource
 
-NS_IMPL_ADDREF(InMemoryDataSource);
-NS_IMPL_RELEASE(InMemoryDataSource);
-
 NS_IMETHODIMP
-InMemoryDataSource::QueryInterface(REFNSIID iid, void** result)
+NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResult)
 {
-    NS_PRECONDITION(result != nsnull, "null ptr");
-    if (! result)
-        return NS_ERROR_NULL_POINTER;
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+    InMemoryDataSource* datasource = new InMemoryDataSource(aOuter);
+    if (! datasource)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-    if (iid.Equals(kISupportsIID) ||
-        iid.Equals(nsIRDFDataSource::GetIID())) {
-        *result = NS_STATIC_CAST(nsIRDFDataSource*, this);
-    }
-    else if (iid.Equals(nsIRDFPurgeableDataSource::GetIID())) {
-        *result = NS_STATIC_CAST(nsIRDFPurgeableDataSource*, this);
-    }
-    else {
-        *result = nsnull;
-        return NS_NOINTERFACE;
+    nsresult rv;
+
+    rv = datasource->Init();
+    if (NS_SUCCEEDED(rv)) {
+        rv = datasource->QueryInterface(aIID, aResult); // This'll AddRef()
+
+        if (NS_SUCCEEDED(rv))
+            return rv;
     }
 
-    NS_ADDREF(this);
-    return NS_OK;
+    delete datasource;
+    *aResult = nsnull;
+    return rv;
 }
 
-InMemoryDataSource::InMemoryDataSource(void)
+
+
+InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
     : mURL(nsnull),
       mForwardArcs(nsnull),
       mReverseArcs(nsnull),
       mObservers(nsnull),
-      mLock(nsnull)
+      mLock(nsnull),
+      mOuter(aOuter)
+{
+    NS_INIT_REFCNT();
+}
+
+
+nsresult
+InMemoryDataSource::Init()
 {
     mForwardArcs = PL_NewHashTable(kInitialTableSize,
                                    rdf_HashPointer,
@@ -613,6 +625,9 @@ InMemoryDataSource::InMemoryDataSource(void)
                                    nsnull,
                                    nsnull);
 
+    if (! mForwardArcs)
+        return NS_ERROR_OUT_OF_MEMORY;
+
     mReverseArcs = PL_NewHashTable(kInitialTableSize,
                                    rdf_HashPointer,
                                    rdf_CompareNodes,
@@ -620,17 +635,23 @@ InMemoryDataSource::InMemoryDataSource(void)
                                    nsnull,
                                    nsnull);
 
-    mLock = PR_NewLock();
+    if (! mReverseArcs)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-    NS_INIT_REFCNT();
+    mLock = PR_NewLock();
+    if (! mLock)
+        return NS_ERROR_OUT_OF_MEMORY;
 
 #ifdef PR_LOGGING
     if (! gLog)
         gLog = PR_NewLogModule("InMemoryDataSource");
 #endif
+
+    return NS_OK;
 }
 
-InMemoryDataSource::~InMemoryDataSource(void)
+
+InMemoryDataSource::~InMemoryDataSource()
 {
     if (mForwardArcs) {
         // This'll release all of the Assertion objects that are
@@ -667,6 +688,65 @@ InMemoryDataSource::DeleteForwardArcsEntry(PLHashEntry* he, PRIntn i, void* arg)
     }
     return HT_ENUMERATE_NEXT;
 }
+
+
+////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP_(nsrefcnt)
+InMemoryDataSource::AddRef()
+{
+    if (mOuter) {
+        return mOuter->AddRef();
+    }
+    else {
+        return ++mRefCnt;
+    }
+}
+
+
+NS_IMETHODIMP_(nsrefcnt)
+InMemoryDataSource::Release()
+{
+    if (mOuter) {
+        return mOuter->Release();
+    }
+    else if (--mRefCnt == 0) {
+        delete this;
+    }
+    return mRefCnt;
+}
+
+
+NS_IMETHODIMP
+InMemoryDataSource::QueryInterface(REFNSIID aIID, void** aResult)
+{
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+    if (aIID.Equals(nsIRDFDataSource::GetIID()) ||
+        ((!mOuter && aIID.Equals(kISupportsIID)))) {
+        *aResult = NS_STATIC_CAST(nsIRDFDataSource*, this);
+    }
+    else if (aIID.Equals(nsIRDFPurgeableDataSource::GetIID())) {
+        *aResult = NS_STATIC_CAST(nsIRDFPurgeableDataSource*, this);
+    }
+    else if (mOuter) {
+        return mOuter->QueryInterface(aIID, aResult);
+    }
+    else {
+        *aResult = nsnull;
+        return NS_NOINTERFACE;
+    }
+
+    NS_ADDREF(this);
+    return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////
 
 
 Assertion*
@@ -1474,15 +1554,3 @@ InMemoryDataSource::SweepForwardArcsEntries(PLHashEntry* he, PRIntn i, void* arg
 
 ////////////////////////////////////////////////////////////////////////
 
-nsresult NS_NewRDFInMemoryDataSource(nsIRDFDataSource** result);
-nsresult
-NS_NewRDFInMemoryDataSource(nsIRDFDataSource** result)
-{
-    InMemoryDataSource* ds = new InMemoryDataSource();
-    if (! ds)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    *result = ds;
-    NS_ADDREF(*result);
-    return NS_OK;
-}

@@ -33,7 +33,8 @@
 class nsIRDFDataSource;
 
 // in nsInMemoryDataSource.cpp
-nsresult NS_NewRDFInMemoryDataSource(nsIRDFDataSource** result);
+NS_IMETHODIMP
+NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResult);
 
 #endif // nsBaseDataSources_h__
 

@@ -23,6 +23,7 @@
  */
 
 #include "nsIFactory.h"
+#include "nsIGenericFactory.h"
 #include "nsILocalStore.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
@@ -53,6 +54,7 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 
+static NS_DEFINE_CID(kGenericFactoryCID,                  NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kLocalStoreCID,                      NS_LOCALSTORE_CID);
 static NS_DEFINE_CID(kRDFBookmarkDataSourceCID,           NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID,          NS_RDFCOMPOSITEDATASOURCE_CID);
@@ -154,6 +156,7 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
+    
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
 
@@ -176,11 +179,6 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kXULFocusTrackerCID)) {
         if (NS_FAILED(rv = NS_NewXULFocusTracker((nsIXULFocusTracker**) &inst)))
-            return rv;
-    }
-    else if (mClassID.Equals(kRDFInMemoryDataSourceCID)) {
-
-        if (NS_FAILED(rv = NS_NewRDFInMemoryDataSource((nsIRDFDataSource**) &inst)))
             return rv;
     }
     else if (mClassID.Equals(kRDFXMLDataSourceCID)) {
@@ -297,7 +295,7 @@ nsresult RDFFactoryImpl::LockFactory(PRBool aLock)
 
 // return the proper factory to the caller
 extern "C" PR_IMPLEMENT(nsresult)
-NSGetFactory(nsISupports* aServMgr,
+NSGetFactory(nsISupports* aServiceMgr,
              const nsCID &aClass,
              const char *aClassName,
              const char *aProgID,
@@ -306,12 +304,39 @@ NSGetFactory(nsISupports* aServMgr,
     if (! aFactory)
         return NS_ERROR_NULL_POINTER;
 
-    RDFFactoryImpl* factory = new RDFFactoryImpl(aClass, aClassName, aProgID);
-    if (factory == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+    if (aClass.Equals(kRDFInMemoryDataSourceCID)) {
+        nsIGenericFactory::ConstructorProcPtr constructor;
 
-    NS_ADDREF(factory);
-    *aFactory = factory;
+        constructor = NS_NewRDFInMemoryDataSource;
+
+        // XXX Factor this part out if we get more of these
+        nsresult rv;
+        NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServiceMgr, kComponentManagerCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIGenericFactory> factory;
+        rv = compMgr->CreateInstance(kGenericFactoryCID,
+                                     nsnull,
+                                     nsIGenericFactory::GetIID(),
+                                     getter_AddRefs(factory));
+
+        if (NS_FAILED(rv)) return rv;
+
+        rv = factory->SetConstructor(constructor);
+        if (NS_FAILED(rv)) return rv;
+
+        *aFactory = factory;
+        NS_ADDREF(*aFactory);
+    }
+    else {
+        RDFFactoryImpl* factory = new RDFFactoryImpl(aClass, aClassName, aProgID);
+        if (factory == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        NS_ADDREF(factory);
+        *aFactory = factory;
+    }
+
     return NS_OK;
 }
 
