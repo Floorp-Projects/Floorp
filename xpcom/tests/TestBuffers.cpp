@@ -202,6 +202,53 @@ TestPageBuffers(PRUint32 growByPages, PRUint32 pageCount)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void
+TestSearch(const char* delim, PRUint32 segDataSize)
+{
+    nsresult rv;
+    nsIBuffer* buffer;
+    // need at least 2 segments to test boundary conditions:
+    PRUint32 bufDataSize = segDataSize * 2;
+    PRUint32 segSize = segDataSize + nsIBuffer::SEGMENT_OVERHEAD;
+    PRUint32 bufSize = segSize * 2;
+    rv = NS_NewBuffer(&buffer, segSize, bufSize);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NewBuffer failed");
+
+    PRUint32 i, amt;
+    PRUint32 delimLen = nsCRT::strlen(delim);
+    for (i = 0; i < bufDataSize; i++) {
+        // first fill the buffer
+        for (PRUint32 j = 0; j < i; j++) {
+            rv = buffer->Write("-", 1, &amt);
+            NS_ASSERTION(NS_SUCCEEDED(rv) && amt == 1, "Write failed");
+        }
+        rv = buffer->Write(delim, delimLen, &amt);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Write failed");
+        if (i + amt < bufDataSize) {
+            for (j = i + amt; j < bufDataSize; j++) {
+                rv = buffer->Write("+", 1, &amt);
+                NS_ASSERTION(NS_SUCCEEDED(rv) && amt == 1, "Write failed");
+            }
+        }
+        
+        // now search for the delimiter
+        PRBool found;
+        PRUint32 offset;
+        rv = buffer->Search(delim, PR_FALSE, &found, &offset);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Search failed");
+
+        // print the results
+        char* bufferContents = new char[bufDataSize + 1];
+        rv = buffer->Read(bufferContents, bufDataSize, &amt);
+        NS_ASSERTION(NS_SUCCEEDED(rv) && amt == bufDataSize, "Read failed");
+        bufferContents[bufDataSize] = '\0';
+        printf("Buffer: %s\nDelim: %s %s offset: %d\n", bufferContents,
+               delim, (found ? "found" : "not found"), offset);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 int
 main()
 {
@@ -233,6 +280,10 @@ main()
 
     rv = TestPageBuffers(5, 10);
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestPageBuffers failed");
+
+    TestSearch("foo", 8);
+    TestSearch("bar", 6);
+    TestSearch("baz", 2);
 
     return 0;
 }

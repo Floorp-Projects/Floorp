@@ -38,9 +38,7 @@ public:
     NS_IMETHOD Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount); 
 
     // nsIBufferInputStream methods:
-    NS_IMETHOD GetBuffer(PRUint32 startPosition, char * *bufferSegment,
-                         PRUint32 *bufferSegmentSize);
-    NS_IMETHOD Find(char * aString, PRInt32 *_retval);
+    NS_IMETHOD GetBuffer(nsIBuffer* *result);
 
     // nsBufferInputStream methods:
     nsBufferInputStream(nsIBuffer* buf, PRBool blocking);
@@ -181,16 +179,11 @@ nsBufferInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount)
 }
 
 NS_IMETHODIMP
-nsBufferInputStream::GetBuffer(PRUint32 startPosition, char * *bufferSegment,
-                               PRUint32 *bufferSegmentSize)
+nsBufferInputStream::GetBuffer(nsIBuffer* *result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
- 
-NS_IMETHODIMP
-nsBufferInputStream::Find(char * aString, PRInt32 *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *result = mBuffer;
+    NS_ADDREF(mBuffer);
+    return NS_OK;
 }
 
 nsresult
