@@ -80,6 +80,16 @@
    persist="screenX screenY width height"
    > 
  
+<broadcasterset>
+  <broadcaster id="delete_command" disabled="false"/>
+  <broadcaster id="modify_command" disabled="false"/>
+</broadcasterset>
+
+
+<keyset>
+  <key id="delete_key" keycode="VK_DELETE" observes="delete_command" onkeypress="onUnifinderCategoriesKeyPress(event)"/>
+</keyset>
+
 <!-- Javascript DTD To Variable -->
 <script type="application/x-javascript">
   var confirmDeleteEvent = "&calendar.confirm.deleteevent;";
@@ -117,38 +127,38 @@
      <!--
      <menuitem id="unifinder-newcategory-menu" label="&calendar.menu.options.newcategory;" oncommand="unifinderNewCategoryCommand()" />
      -->
-     <menuitem id="unifinder-modify-menu"      label="&calendar.menu.options.modify;"      oncommand="unifinderModifyCommand()" />
-     <menuitem id="unifinder-remove-menu"      label="&calendar.menu.options.remove;"      oncommand="unifinderRemoveCommand()" />
+     <menuitem id="unifinder-modify-menu"      observes="modify_command" label="&calendar.menu.options.modify;"      oncommand="unifinderModifyCommand()" />
+     <menuitem id="unifinder-remove-menu"      observes="delete_command" label="&calendar.menu.options.remove;"      oncommand="unifinderRemoveCommand()" />
  </popup>
 </popupset>
 
 <commandset id="commands"/>
 
-   <toolbox id="calendar-toolbox" class="toolbox-top" deferattached="true">
-      <!-- Menu -->
-      <menubar id="main-menubar" persist="collapsed"
-             grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;"/>
+<toolbox id="calendar-toolbox" class="toolbox-top" deferattached="true">
+   <!-- Menu -->
+   <menubar id="main-menubar" persist="collapsed"
+          grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;"/>
 
-      <toolbar class="toolbar-primary chromeclass-toolbar" id="calendar-bar" persist="collapsed" 
-             grippytooltip="aTooltip" grippytooltiptext="&navigationToolbar.tooltip;"
-             tbalign="stretch">
-             
-             <toolbarseparator class="toolbarseparator-primary"/>
-             <toolbarbutton class="toolbarbutton-1" id="calendar-new-event-button"      label="&calendar.newevent.button.label;"        tooltip="aTooltip" tooltiptext="&calendar.newevent.button.tooltip;"     oncommand="newEventCommand()"/>
-             <toolbarseparator class="toolbarseparator-primary"/>
-             <toolbarbutton class="toolbarbutton-1" id="calendar-choose-date-button"    label="&calendar.choosedate.button.label;"      tooltip="aTooltip" tooltiptext="&calendar.choosedate.button.tooltip;"   onmousedown="prepareChooseDate()" popup="oe-date-picker-popup"/>
-             <toolbarbutton class="toolbarbutton-1" id="calendar-go-to-today-button"    label="&calendar.gototoday.button.label;"       tooltip="aTooltip" tooltiptext="&calendar.gototoday.button.tooltip;"    oncommand="gCalendarWindow.goToToday()"/>
-             <toolbarseparator class="toolbarseparator-primary"/>
-             <toolbarbutton class="toolbarbutton-1" id="calendar-day-view-button"       label="&calendar.dayview.button.label;"         tooltip="aTooltip" tooltiptext="&calendar.dayview.button.tooltip;"      oncommand="gCalendarWindow.switchToDayView()"/>
-             <toolbarbutton class="toolbarbutton-1" id="calendar-week-view-button"      label="&calendar.weekview.button.label;"        tooltip="aTooltip" tooltiptext="&calendar.weekview.button.tooltip;"     oncommand="gCalendarWindow.switchToWeekView()"/>
-             <toolbarbutton class="toolbarbutton-1" id="calendar-month-view-button"     label="&calendar.monthview.button.label;"       tooltip="aTooltip" tooltiptext="&calendar.monthview.button.tooltip;"    oncommand="gCalendarWindow.switchToMonthView()"/>
-             <spacer flex="1"/>
-             <hbox id="throbber-box" align="center">
-                <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
-                    tooltiptext="&throbber.tooltip;"/>
-             </hbox>
-      </toolbar>
-   </toolbox>
+   <toolbar class="toolbar-primary chromeclass-toolbar" id="calendar-bar" persist="collapsed" 
+          grippytooltip="aTooltip" grippytooltiptext="&navigationToolbar.tooltip;"
+          tbalign="stretch">
+          
+          <toolbarseparator class="toolbarseparator-primary"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-new-event-button"      label="&calendar.newevent.button.label;"        tooltip="aTooltip" tooltiptext="&calendar.newevent.button.tooltip;"     oncommand="newEventCommand()"/>
+          <toolbarseparator class="toolbarseparator-primary"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-choose-date-button"    label="&calendar.choosedate.button.label;"      tooltip="aTooltip" tooltiptext="&calendar.choosedate.button.tooltip;"   onmousedown="prepareChooseDate()" popup="oe-date-picker-popup"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-go-to-today-button"    label="&calendar.gototoday.button.label;"       tooltip="aTooltip" tooltiptext="&calendar.gototoday.button.tooltip;"    oncommand="gCalendarWindow.goToToday()"/>
+          <toolbarseparator class="toolbarseparator-primary"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-day-view-button"       label="&calendar.dayview.button.label;"         tooltip="aTooltip" tooltiptext="&calendar.dayview.button.tooltip;"      oncommand="gCalendarWindow.switchToDayView()"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-week-view-button"      label="&calendar.weekview.button.label;"        tooltip="aTooltip" tooltiptext="&calendar.weekview.button.tooltip;"     oncommand="gCalendarWindow.switchToWeekView()"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-month-view-button"     label="&calendar.monthview.button.label;"       tooltip="aTooltip" tooltiptext="&calendar.monthview.button.tooltip;"    oncommand="gCalendarWindow.switchToMonthView()"/>
+          <spacer flex="1"/>
+          <hbox id="throbber-box" align="center">
+             <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
+                 tooltiptext="&throbber.tooltip;"/>
+          </hbox>
+   </toolbar>
+</toolbox>
 
 
 <!-- V I S I B L E  C O N T E N T  -->
@@ -173,41 +183,39 @@
 
    
 		<popupset>
-		<popup id="savetip" style="background-color: #FFFFC0;">
-			<label id="popuptooltiptext" value=" "/>
-		</popup>
+		   <popup id="savetip" style="background-color: #FFFFC0;">
+			   <label id="popuptooltiptext" value=" "/>
+		   </popup>
 		</popupset>
 
 
-		<spacer flex="1"/>
-      
-      <!-- Begin Day/Month/Week Deck -->
-		<deck id="calendar-deck" selectedIndex="0" flex="1">
-				 
-			 <!-- Calendar Month View -->
-			    
-			 <vbox id="month-view-box" flex="1"/>
-			 
-          <!-- End: Calendar Month View -->
-		
-			 
-          <!-- Calendar Week View -->
-				 
-			 <vbox id="week-view-box" flex="1"/>
-			
-			 <!-- End: Calendar Week View -->
-			
-			 
-          <!-- Calendar Day View -->
-			 
-			 <vbox id="day-view-box" flex="1"/>
-			
-			 <!-- End: Calendar Day View -->
-						 
-		</deck>  <!-- End: Day/Month/Week Deck -->
-		
-      <spacer flex="1"/>
-      
+		<!-- Begin Day/Month/Week Deck -->
+		<box flex="1" pack="center" align="center">
+         <deck id="calendar-deck" selectedIndex="0" flex="1">
+   				 
+   			 <!-- Calendar Month View -->
+   			    
+   			 <vbox id="month-view-box" flex="1"/>
+   			 
+             <!-- End: Calendar Month View -->
+   		
+   			 
+             <!-- Calendar Week View -->
+   				 
+   			 <vbox id="week-view-box" flex="1"/>
+   			
+   			 <!-- End: Calendar Week View -->
+   			
+   			 
+             <!-- Calendar Day View -->
+   			 
+   			 <vbox id="day-view-box" flex="1"/>
+   			
+   			 <!-- End: Calendar Day View -->
+   						 
+   		</deck>  <!-- End: Day/Month/Week Deck -->
+		</box>
+            
       </hbox> <!-- End: box with unifinder on left, calendar on right -->
   </vbox>
 

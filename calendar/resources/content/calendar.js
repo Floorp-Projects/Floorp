@@ -395,13 +395,9 @@ function selectEventInUnifinder( calendarEvent )
 
    }
 
-   document.getElementById( "unifinder-remove-button" ).removeAttribute( "disabled" );
+   document.getElementById( "delete_command" ).removeAttribute( "disabled" );
 
-   document.getElementById( "unifinder-modify-button" ).removeAttribute( "disabled" );
-
-   document.getElementById( "unifinder-modify-menu" ).removeAttribute( "disabled" );
-   
-   document.getElementById( "unifinder-remove-menu" ).removeAttribute( "disabled" );
+   document.getElementById( "modify_command" ).removeAttribute( "disabled" );
 }
 
 
@@ -422,35 +418,23 @@ function deselectEventInUnifinder( )
       gUnifinderSelection = null;
    }
 
-   document.getElementById( "unifinder-remove-button" ).setAttribute( "disabled", true );
+   document.getElementById( "delete_command" ).setAttribute( "disabled", true );
 
-   document.getElementById( "unifinder-modify-button" ).setAttribute( "disabled", true );
-
-   document.getElementById( "unifinder-modify-menu" ).setAttribute( "disabled", true );
-   
-   document.getElementById( "unifinder-remove-menu" ).setAttribute( "disabled", true );
+   document.getElementById( "modify_command" ).setAttribute( "disabled", true );
 }
    
 function selectCategoryInUnifinder( )
 {
-   document.getElementById( "unifinder-remove-button" ).removeAttribute( "disabled" );
+   document.getElementById( "delete_command" ).removeAttribute( "disabled" );
 
-   document.getElementById( "unifinder-modify-button" ).removeAttribute( "disabled" );
-
-   document.getElementById( "unifinder-modify-menu" ).removeAttribute( "disabled" );
-   
-   document.getElementById( "unifinder-remove-menu" ).removeAttribute( "disabled" );
+   document.getElementById( "modify_command" ).removeAttribute( "disabled" );
 }
 
 function deselectCategoryInUnifinder( )
 {
-   document.getElementById( "unifinder-remove-button" ).setAttribute( "disabled", true );
+   document.getElementById( "delete_command" ).setAttribute( "disabled", true );
 
-   document.getElementById( "unifinder-modify-button" ).setAttribute( "disabled", true );
-
-   document.getElementById( "unifinder-modify-menu" ).setAttribute( "disabled", true );
-   
-   document.getElementById( "unifinder-remove-menu" ).setAttribute( "disabled", true );
+   document.getElementById( "modify_command" ).setAttribute( "disabled", true );
 }
 
 
