@@ -46,18 +46,18 @@ HAVE_SNPRINTF = 1
 #
 # OSF1 V4.0D doesn't have snprintf but V5.0A does.
 #
-ifeq ($(OS_ARCH)$(OS_RELEASE),OSF1V4.0D)
+ifeq ($(OS_TARGET)$(OS_RELEASE),OSF1V4.0D)
 HAVE_SNPRINTF =
 endif
 ifdef HAVE_SNPRINTF
 DEFINES += -DHAVE_SNPRINTF
 endif
 
-ifeq (,$(filter-out IRIX Linux,$(OS_ARCH)))
+ifeq (,$(filter-out IRIX Linux,$(OS_TARGET)))
 DEFINES += -DHAVE_SYS_CDEFS_H
 endif
 
-ifeq (,$(filter-out DGUX NCR ReliantUNIX SCO_SV SCOOS UNIXWARE,$(OS_ARCH)))
+ifeq (,$(filter-out DGUX NCR ReliantUNIX SCO_SV SCOOS UNIXWARE,$(OS_TARGET)))
 DEFINES += -DHAVE_SYS_BYTEORDER_H
 endif
 
