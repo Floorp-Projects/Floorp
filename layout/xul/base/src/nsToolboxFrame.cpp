@@ -361,8 +361,8 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
       //
 
 #ifdef NS_DEBUG
-  //*** Highlights bug 3505. The frame still exists even though the display:none attribute is set on
-  //*** the content node.
+  // *** Highlights bug 3505. The frame still exists even though the display:none attribute is set on
+  // *** the content node.
   nsAutoString value;
   childContent->GetAttribute ( kNameSpaceID_None, kCollapsedAtom, value );
   if ( value == "true" )
