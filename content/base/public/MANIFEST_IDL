@@ -3,7 +3,6 @@
 #
 
 nsIContentPolicy.idl
-nsIDiskDocument.idl
 nsISelection.idl
 nsISelectionController.idl
 nsISelectionListener.idl
