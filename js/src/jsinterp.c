@@ -1299,7 +1299,7 @@ js_Interpret(JSContext *cx, jsval *result)
                     str = js_DecompileValueGenerator(cx, n, sp[n], NULL);
                     if (str != NULL) {
                         fprintf(tracefp, "%s %s",
-                                (n == 0) ? "  inputs:" : ",",
+                                (n == -nuses) ? "  inputs:" : ",",
                                 JS_GetStringBytes(str));
                     }
                 }
@@ -3712,7 +3712,7 @@ js_Interpret(JSContext *cx, jsval *result)
                     str = js_DecompileValueGenerator(cx, n, sp[n], NULL);
                     if (str) {
                         fprintf(tracefp, "%s %s",
-                                (n == 0) ? "  output:" : ",",
+                                (n == -ndefs) ? "  output:" : ",",
                                 JS_GetStringBytes(str));
                     }
                 }
