@@ -37,6 +37,7 @@
 #include "nsPrefMigration.h"
 #include "nsPMProgressDlg.h"
 
+#define PREF_MAIL_SERVER_TYPE	"mail.server_type"
 #define POP_4X_MAIL_TYPE 0
 #define IMAP_4X_MAIL_TYPE 1
 #define MOVEMAIL_4X_MAIL_TYPE 2  
@@ -237,7 +238,7 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
   if (NS_FAILED(rv)) return rv;
 
   /* Create the new mail directory from the setting in prefs.js or a default */
-  rv = m_prefs->GetIntPref("mail.server.type", &serverType);
+  rv = m_prefs->GetIntPref(PREF_MAIL_SERVER_TYPE, &serverType);
   if (NS_FAILED(rv)) return rv;
   
   if (serverType == POP_4X_MAIL_TYPE) 
@@ -516,19 +517,13 @@ nsresult
 nsPrefMigration::CreateNewUser5Tree(char* oldProfilePath, char* newProfilePath)
 {
   nsresult rv;
-  char* prefsFile;
   
   NS_ASSERTION((PL_strlen(PREF_FILE_NAME_IN_4x) > 0), "don't know how to migrate your platform");
   if (PL_strlen(PREF_FILE_NAME_IN_4x) == 0) {
     return NS_ERROR_UNEXPECTED;
   }
       
-  /* Copy the old prefs.js file to the new profile directory for modification and reading */
-  if ((prefsFile = (char*) PR_MALLOC(PL_strlen(oldProfilePath) + 32)) == NULL)
-  {
-    PR_FREEIF(prefsFile);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  /* Copy the old prefs file to the new profile directory for modification and reading.  after copying it, rename it to pref.js, the 5.x pref file name on all platforms */
 
   nsFileSpec oldPrefsFile(oldProfilePath);
   oldPrefsFile += PREF_FILE_NAME_IN_4x;
@@ -549,8 +544,6 @@ nsPrefMigration::CreateNewUser5Tree(char* oldProfilePath, char* newProfilePath)
   if (NS_FAILED(rv)) return rv;
   // magically, it will find newPrefsFile and use that. 
   m_prefs->StartUp();
-
-  PR_FREEIF(prefsFile);
 
   return NS_OK;
 }
@@ -580,7 +573,7 @@ nsPrefMigration::ComputeMailPath(nsFileSpec oldPath, nsFileSpec *newPath)
   rv = getPrefService();
   if (NS_FAILED(rv)) return rv;   
 
-  m_prefs->GetIntPref("mail.server_type", &serverType);
+  m_prefs->GetIntPref(PREF_MAIL_SERVER_TYPE, &serverType);
   if(serverType == POP_4X_MAIL_TYPE)
   {
     m_prefs->CopyCharPref("network.hosts.pop_server", &popServerName);
