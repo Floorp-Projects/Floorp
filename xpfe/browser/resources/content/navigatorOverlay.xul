@@ -51,8 +51,8 @@ Contributor(s): ______________________________________. -->
 	<key id="key_selectAll"/>
 	<key id="key_preferences"/>
 
-	<key id="goForwardKb"         xulkey="true" key="&goBackCmd.commandkey;" observes="Browser:GoForward" />
-	<key id="goBackwardKb"        xulkey="true" key="&goForwardCmd.commandkey;" observes="Browser:GoBackwards" />
+	<key id="goForwardKb"         xulkey="true" key="&goForwardCmd.commandkey;" observes="Browser:GoForward" />
+	<key id="goBackwardKb"        xulkey="true" key="&goBackCmd.commandkey;" observes="Browser:GoBackwards" />
     <key id="goHomeKb"            xulkey="true" key="&goHomeCmd.commandkey;" observes="Browser:GoHome" />
     
     <key id="addBookmarkKb"        xulkey="true" key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark" />
