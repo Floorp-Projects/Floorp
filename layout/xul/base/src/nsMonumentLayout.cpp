@@ -176,16 +176,27 @@ nsMonumentIterator::GetNextObelisk(nsObeliskLayout** aObelisk, PRBool aSearchChi
   return PR_FALSE;
 }
 
+//static long _nodes = 0;
+//static long _lists = 0;
+
 
 //------ nsInfoListNodeImpl ----
 
 nsBoxSizeListNodeImpl::~nsBoxSizeListNodeImpl()
 {
     MOZ_COUNT_DTOR(nsBoxSizeListNodeImpl);
+    //_nodes--;
+    //printf("Nodes %d\n",_nodes);
 }
 
 void
 nsBoxSizeListNodeImpl::Release(nsBoxLayoutState& aState)
+{
+  Destroy(aState);
+}
+
+void
+nsBoxSizeListNodeImpl::Destroy(nsBoxLayoutState& aState)
 {
   delete this;
 }
@@ -228,6 +239,8 @@ nsBoxSizeListNodeImpl::nsBoxSizeListNodeImpl(nsIBox* aBox):mNext(nsnull),
                                                            mIsSet(PR_FALSE)
 {
     MOZ_COUNT_CTOR(nsBoxSizeListNodeImpl);
+ // _nodes++;
+ // printf("Created. Nodes %d\n",_nodes);
 }
 
 nsBoxSizeList* 
@@ -272,32 +285,64 @@ nsBoxSizeListImpl::nsBoxSizeListImpl(nsIBox* aBox):nsBoxSizeListNodeImpl(aBox),
                                                    mListenerBox(nsnull)
 {
     MOZ_COUNT_CTOR(nsBoxSizeListImpl);
+ //   _lists++;
+ //   printf("Lists %d\n",_lists);
 }
 
+        
 nsBoxSizeListImpl::~nsBoxSizeListImpl()
 {
     MOZ_COUNT_DTOR(nsBoxSizeListImpl);
+ //   _lists--;
+ //   printf("Lists %d\n",_lists);
 }
 
+/* Ownership model nsMonumentLayout
+
+    nsTempleLayout owns 
+       mMonuments (nsBoxSizeListImpl)
+
+    nsBoxSizeListImpl owns 
+       mAdjacent (nsBoxSizeListImpl)
+       mFirst (nsBoxSizeList) Now mFirst is a list of
+       nsBoxSizeListImpl or nsBoxSizeListNodeImpl. 
+       It only owns nsBoxSizeNodeImpl not the
+       nsBoxSizeListImpl.
+*/
 void
-nsBoxSizeListImpl::Release(nsBoxLayoutState& aState)
+nsBoxSizeListImpl::Destroy(nsBoxLayoutState& aState)
 {
+  // notify the listener that we are going away
   if (mListener) {
     mListener->WillBeDestroyed(mListenerBox, aState, *this);
   }
 
+  // tell each of our children to release. If you ask
+  // a node to release it will delete itself. If you
+  // ask a list to release it will do nothing because
+  // Lists are not owned by other lists they are owned
+  // by Temples.
   nsBoxSizeList* list = mFirst;
   while(list)
   {
     nsBoxSizeList* toRelease = list;
     list = list->GetNext();
-    toRelease->SetParent(nsnull);
+    toRelease->Release(aState);
   }
 
+  // now tell each or our adacent children to be destroyed.
   if (mAdjacent)
-    mAdjacent->Release(aState);
+    mAdjacent->Destroy(aState);
 
   delete this;
+}
+
+void
+nsBoxSizeListImpl::Release(nsBoxLayoutState& aState)
+{
+  // do nothing. We can only be destroyed by our owner
+  // by calling Destroy.
+  mParent = nsnull;
 }
 
 void

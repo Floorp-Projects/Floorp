@@ -68,6 +68,7 @@ public:
     virtual void MarkDirty(nsBoxLayoutState& aState)=0;
     virtual void AddRef()=0;
     virtual void Release(nsBoxLayoutState& aState)=0;
+    virtual void Destroy(nsBoxLayoutState& aState)=0;
     virtual PRBool IsSet()=0;
     virtual nsIBox* GetBox()=0;
     virtual PRInt32 GetRefCount()=0;

@@ -63,6 +63,7 @@ public:
   virtual PRBool GetNextObelisk(nsObeliskLayout** aObelisk, PRBool aSearchChildren = PR_FALSE);
 };
 
+// nsBoxSizeListNodeImpl are OWNED by nsBoxSizeListImpl
 class nsBoxSizeListNodeImpl : public nsBoxSizeList
 {
 public:
@@ -84,6 +85,7 @@ public:
     virtual void MarkDirty(nsBoxLayoutState& aState);
     virtual void AddRef() { mRefCount++; }
     virtual void Release(nsBoxLayoutState& aState);
+    virtual void Destroy(nsBoxLayoutState& aState);
     virtual PRInt32 GetRefCount() { return mRefCount; }
     virtual PRBool IsSet() { return mIsSet; }
     virtual nsIBox* GetBox() { return mBox; }
@@ -95,13 +97,14 @@ public:
     virtual ~nsBoxSizeListNodeImpl();
 
     nsBoxSizeList* mNext;
-    nsBoxSizeList* mParent;
-    nsBoxSizeList* mAdjacent;
+    nsBoxSizeList* mParent; 
+    nsBoxSizeList* mAdjacent;  // OWN
     nsIBox* mBox;
     PRInt32 mRefCount;
     PRBool mIsSet;
 };
 
+// nsBoxSizeListImpl are OWNED by nsTempleLayout
 class nsBoxSizeListImpl : public nsBoxSizeListNodeImpl
 {
 public:
@@ -116,12 +119,13 @@ public:
     virtual PRBool SetListener(nsIBox* aBox, nsBoxSizeListener& aListener);
     virtual void RemoveListener();
     virtual void Release(nsBoxLayoutState& aState);
+    virtual void Destroy(nsBoxLayoutState& aState);
 
     nsBoxSizeListImpl(nsIBox* aBox);
     virtual ~nsBoxSizeListImpl();
 
-    nsBoxSizeList* mFirst;
-    nsBoxSizeList* mLast;
+    nsBoxSizeList* mFirst;  // OWN children who are nsBoxSizeListNodeImpl but not nsBoxSizeListImpl
+    nsBoxSizeList* mLast;   // OWN children who are nsBoxSizeListNodeImpl but not nsBoxSizeListImpl
     PRInt32 mCount;
     nsBoxSize mBoxSize;
     nsBoxSizeListener* mListener;
