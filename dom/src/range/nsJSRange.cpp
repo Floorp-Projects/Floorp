@@ -1349,6 +1349,46 @@ NSRangeCompareNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 }
 
 
+//
+// Native method NSDetach
+//
+PR_STATIC_CALLBACK(JSBool)
+NSRangeNSDetach(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMRange *privateThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMNSRange> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kINSRangeIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSRANGE_NSDETACH, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->NSDetach();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for Range
@@ -1398,6 +1438,7 @@ static JSFunctionSpec RangeMethods[] =
   {"comparePoint",          NSRangeComparePoint,     2},
   {"intersectsNode",          NSRangeIntersectsNode,     1},
   {"compareNode",          NSRangeCompareNode,     1},
+  {"nSDetach",          NSRangeNSDetach,     0},
   {0}
 };
 

@@ -106,6 +106,7 @@ public:
                              PRInt16* aResult);
   NS_IMETHOD    IntersectsNode(nsIDOMNode* aNode, PRBool* aReturn);
   NS_IMETHOD    CompareNode(nsIDOMNode* aNode, PRUint16* aReturn);
+  NS_IMETHOD    NSDetach();
 /*END nsIDOMNSRange interface implementations*/
   
   NS_IMETHOD    GetHasGeneratedBefore(PRBool *aBool);
@@ -134,6 +135,7 @@ public:
 
 //private: I wish VC++ would give me a &&*@!#$ break
   PRBool       mIsPositioned;
+  PRBool       mIsDetached;
   PRInt32      mStartOffset;
   PRInt32      mEndOffset;
   nsCOMPtr<nsIDOMNode> mStartParent;
@@ -174,6 +176,7 @@ public:
 
   PRBool        IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOff,
                              nsIDOMNode* aEndN, PRInt32 aEndOff);
+  PRBool        IsDetached(){return mIsDetached;}
                        
   nsresult      ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRInt32* aResult);
   

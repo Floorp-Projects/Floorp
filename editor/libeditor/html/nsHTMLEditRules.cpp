@@ -36,6 +36,7 @@
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsIDOMRange.h"
+#include "nsIDOMNSRange.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIEnumerator.h"
 #include "nsIStyleContext.h"
@@ -251,9 +252,22 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   
   if (!mActionNesting)
   {
-    if (mDocChangeRange) mDocChangeRange->Detach();  // clear out our accounting of what changed
-    if (mUtilRange) mUtilRange->Detach();  // ditto for mUtilRange.  
-    
+    nsresult rv;
+    nsCOMPtr<nsIDOMNSRange> nsrange;
+    if(mDocChangeRange)
+    {
+      nsrange = do_QueryInterface(mDocChangeRange);
+      if (NS_FAILED(rv) || !nsrange) 
+        return NS_ERROR_FAILURE;
+      nsrange->NSDetach();  // clear out our accounting of what changed
+    }
+    if(mUtilRange)
+    {
+      nsrange = do_QueryInterface(mUtilRange);
+      if (NS_FAILED(rv) || !nsrange) 
+        return NS_ERROR_FAILURE;
+      nsrange->NSDetach();  // ditto for mUtilRange.  
+    }
     // turn off caret
     nsCOMPtr<nsISelectionController> selCon;
     mEditor->GetSelectionController(getter_AddRefs(selCon));

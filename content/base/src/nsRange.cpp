@@ -18,7 +18,6 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -275,6 +274,7 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
 
 nsRange::nsRange() :
   mIsPositioned(PR_FALSE),
+  mIsDetached(PR_FALSE),
   mStartOffset(0),
   mEndOffset(0),
   mStartParent(),
@@ -473,6 +473,16 @@ nsRange::CompareNode(nsIDOMNode* aNode, PRUint16* aReturn)
 
   return NS_OK;
 }
+
+
+
+nsresult
+nsRange::NSDetach()
+{
+  return DoSetRange(nsnull,0,nsnull,0);
+}
+
+
 
 /******************************************************
  * Private helper routines
@@ -999,8 +1009,11 @@ nsresult nsRange::GetEndOffset(PRInt32* aEndOffset)
 
 nsresult nsRange::GetCollapsed(PRBool* aIsCollapsed)
 {
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
   if (!mIsPositioned)
     return NS_ERROR_NOT_INITIALIZED;
+
   if (mEndParent == 0 ||
       (mStartParent == mEndParent && mStartOffset == mEndOffset))
     *aIsCollapsed = PR_TRUE;
@@ -1011,6 +1024,9 @@ nsresult nsRange::GetCollapsed(PRBool* aIsCollapsed)
 
 nsresult nsRange::GetCommonAncestorContainer(nsIDOMNode** aCommonParent)
 { 
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+
   *aCommonParent = CommonParent(mStartParent,mEndParent);
   NS_IF_ADDREF(*aCommonParent);
   return NS_OK;
@@ -1018,6 +1034,9 @@ nsresult nsRange::GetCommonAncestorContainer(nsIDOMNode** aCommonParent)
 
 nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
 {
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+
   nsresult res;
   
   if (!aParent) return NS_ERROR_NULL_POINTER;
@@ -1043,10 +1062,11 @@ nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
 
 nsresult nsRange::SetStartBefore(nsIDOMNode* aSibling)
 {
-  if (nsnull == aSibling) {
-    // Not the correct one to throw, but spec doesn't say what is
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  if (nsnull == aSibling)// Not the correct one to throw, but spec doesn't say what is
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
+
   nsCOMPtr<nsIDOMNode> nParent;
   nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
   if (NS_FAILED(res) || !nParent) return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
@@ -1056,10 +1076,11 @@ nsresult nsRange::SetStartBefore(nsIDOMNode* aSibling)
 
 nsresult nsRange::SetStartAfter(nsIDOMNode* aSibling)
 {
-  if (nsnull == aSibling) {
-    // Not the correct one to throw, but spec doesn't say what is
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  if (nsnull == aSibling)// Not the correct one to throw, but spec doesn't say what is
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
+
   nsCOMPtr<nsIDOMNode> nParent;
   nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
   if (NS_FAILED(res) || !nParent) return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
@@ -1069,6 +1090,9 @@ nsresult nsRange::SetStartAfter(nsIDOMNode* aSibling)
 
 nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
 {
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+
   nsresult res;
   
   if (!aParent) return NS_ERROR_NULL_POINTER;
@@ -1094,10 +1118,11 @@ nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
 
 nsresult nsRange::SetEndBefore(nsIDOMNode* aSibling)
 {
-  if (nsnull == aSibling) {
-    // Not the correct one to throw, but spec doesn't say what is
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  if (nsnull == aSibling)// Not the correct one to throw, but spec doesn't say what is
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
+
   nsCOMPtr<nsIDOMNode> nParent;
   nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
   if (NS_FAILED(res) || !nParent) return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
@@ -1107,10 +1132,11 @@ nsresult nsRange::SetEndBefore(nsIDOMNode* aSibling)
 
 nsresult nsRange::SetEndAfter(nsIDOMNode* aSibling)
 {
-  if (nsnull == aSibling) {
-    // Not the correct one to throw, but spec doesn't say what is
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  if (nsnull == aSibling)// Not the correct one to throw, but spec doesn't say what is
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
+
   nsCOMPtr<nsIDOMNode> nParent;
   nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
   if (NS_FAILED(res) || !nParent) return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
@@ -1120,17 +1146,15 @@ nsresult nsRange::SetEndAfter(nsIDOMNode* aSibling)
 
 nsresult nsRange::Collapse(PRBool aToStart)
 {
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
   if (!mIsPositioned)
     return NS_ERROR_NOT_INITIALIZED;
 
   if (aToStart)
-  {
     return DoSetRange(mStartParent,mStartOffset,mStartParent,mStartOffset);
-  }
   else
-  {
     return DoSetRange(mEndParent,mEndOffset,mEndParent,mEndOffset);
-  }
 }
 
 nsresult nsRange::Unposition()
@@ -1141,6 +1165,9 @@ nsresult nsRange::Unposition()
 
 nsresult nsRange::SelectNode(nsIDOMNode* aN)
 {
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+
   if (!aN) return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMNode> parent;
   nsCOMPtr<nsIDOMNode> theNode( do_QueryInterface(aN) );
@@ -1165,6 +1192,9 @@ nsresult nsRange::SelectNode(nsIDOMNode* aN)
 
 nsresult nsRange::SelectNodeContents(nsIDOMNode* aN)
 {
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+
   nsCOMPtr<nsIDOMNode> theNode( do_QueryInterface(aN) );
   nsCOMPtr<nsIDOMNodeList> aChildNodes;
   
@@ -1182,6 +1212,9 @@ nsresult nsRange::SelectNodeContents(nsIDOMNode* aN)
 
 nsresult nsRange::DeleteContents()
 { 
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+
   nsCOMPtr<nsIContent> cStart;
   nsCOMPtr<nsIContent> cEnd;
   
@@ -1333,6 +1366,9 @@ nsresult nsRange::DeleteContents()
 nsresult nsRange::CompareBoundaryPoints(PRUint16 how, nsIDOMRange* srcRange,
                                    PRInt32* aCmpRet)
 {
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+
   nsresult res;
   if (aCmpRet == 0)
     return NS_ERROR_NULL_POINTER;
@@ -1393,6 +1429,9 @@ nsresult nsRange::CompareBoundaryPoints(PRUint16 how, nsIDOMRange* srcRange,
 
 nsresult nsRange::ExtractContents(nsIDOMDocumentFragment** aReturn)
 { 
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+
   nsresult res = CloneContents(aReturn);
   if (NS_FAILED(res))
     return res;
@@ -1511,7 +1550,9 @@ nsRange::CloneSibsAndParents(nsIDOMNode* aParentNode, PRInt32 nodeOffset,
 nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
 {
 // XXX  Not fully implemented  XXX
-return NS_ERROR_NOT_IMPLEMENTED; 
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  return NS_ERROR_NOT_IMPLEMENTED; 
 
 #if 0
 // partial implementation here
@@ -1557,6 +1598,9 @@ return NS_ERROR_NOT_IMPLEMENTED;
 
 nsresult nsRange::CloneRange(nsIDOMRange** aReturn)
 {
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+
   if (aReturn == 0)
     return NS_ERROR_NULL_POINTER;
 
@@ -1573,13 +1617,24 @@ nsresult nsRange::CloneRange(nsIDOMRange** aReturn)
 }
 
 nsresult nsRange::InsertNode(nsIDOMNode* aN)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 nsresult nsRange::SurroundContents(nsIDOMNode* aN)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 nsresult nsRange::ToString(nsAWritableString& aReturn)
 { 
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+
   nsCOMPtr<nsIContent> cStart( do_QueryInterface(mStartParent) );
   nsCOMPtr<nsIContent> cEnd( do_QueryInterface(mEndParent) );
   
@@ -1677,6 +1732,9 @@ nsresult nsRange::ToString(nsAWritableString& aReturn)
 nsresult
 nsRange::Detach()
 {
+  if(IsDetached())
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  mIsDetached = PR_TRUE;
   return DoSetRange(nsnull,0,nsnull,0);
 }
 
