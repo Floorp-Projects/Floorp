@@ -396,27 +396,32 @@ int main(int argc, char *argv[])
                                              (void **) &pMsgCompFields); 
     if (rv == NS_OK && pMsgCompFields)
     { 
-      pMsgCompFields->SetFrom(", rhp@netscape.com, ", NULL);
+		nsAutoString2 from(", rhp@netscape.com, ", eTwoByte);
+		nsAutoString2 newsgroup("news://news.mozilla.org./netscape.test", eTwoByte);
+		nsAutoString2 subject("[spam] test", eTwoByte);
+		nsAutoString2 body(email, eTwoByte);
+		nsAutoString2 charSet("us-ascii", eTwoByte);
+      pMsgCompFields->SetFrom(from.GetUnicode());
       //pMsgCompFields->SetTo("rhp@netscape.com", NULL);
-      pMsgCompFields->SetNewsgroups("news://news.mozilla.org./netscape.test", nsnull);
-      pMsgCompFields->SetSubject("[spam] test", NULL);
+      pMsgCompFields->SetNewsgroups(newsgroup.GetUnicode());
+      pMsgCompFields->SetSubject(subject.GetUnicode());
       // pMsgCompFields->SetTheForcePlainText(PR_TRUE, &rv);
-      pMsgCompFields->SetBody(email, NULL);
-      pMsgCompFields->SetCharacterSet("us-ascii", NULL);
+      pMsgCompFields->SetBody(body.GetUnicode());
+      pMsgCompFields->SetCharacterSet(charSet.GetUnicode());
 
       PRInt32 nBodyLength;
-      char    *pBody;
+      PRUnichar    *pBody;
 
 	    pMsgCompFields->GetBody(&pBody);
 	    if (pBody)
-		    nBodyLength = PL_strlen(pBody);
+			nBodyLength = nsCRT::strlen(pBody);
 	    else
 		    nBodyLength = 0;
 
       nsMsgAttachedFile *ptr = NULL;
       nsMsgAttachmentData *newPtr = NULL;
 
-      
+      nsAutoString2 charBody(pBody, eOneByte);
       newPtr = GetRemoteAttachments();      
       //ptr = GetAttachments();
 
@@ -431,7 +436,7 @@ int main(int argc, char *argv[])
 		nsMsgQueueForLater,				    // nsMsgDeliverNow,   // nsMsgDeliverMode                  mode,
 		nsnull, // nsIMessage *msgToReplace
 						    TEXT_HTML, //TEXT_PLAIN,       // const char                        *attachment1_type,
-						    pBody,            // const char                        *attachment1_body,
+						    charBody.GetBuffer(),            // const char                        *attachment1_body,
 						    nBodyLength,      // PRUint32                          attachment1_body_length,
 						    newPtr,           // const struct nsMsgAttachmentData   *attachments,
 						    ptr,              // const struct nsMsgAttachedFile     *preloaded_attachments,
