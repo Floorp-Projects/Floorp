@@ -494,7 +494,7 @@ public:
       aRenderingContext.SetFont(mNormalFont);
       aRenderingContext.GetWidth(' ', mSpaceWidth);
       mAveCharWidth = 0;
-#ifdef _WIN32
+#if defined(_WIN32) || defined(XP_OS2)
       mNormalFont->GetAveCharWidth(mAveCharWidth);
 #endif
       if (0 == mAveCharWidth) {
