@@ -1423,8 +1423,6 @@ NS_IMETHODIMP
 nsBox::GetDebugBoxAt( const nsPoint& aPoint,
                       nsIBox**     aBox)
 {
-  nsPoint tmp;
-
   nsRect rect;
   GetBounds(rect);
 
@@ -1436,6 +1434,7 @@ nsBox::GetDebugBoxAt( const nsPoint& aPoint,
   GetChildBox(&child);
 
   *aBox = nsnull;
+  nsPoint tmp;
   tmp.MoveTo(aPoint.x - rect.x, aPoint.y - rect.y);
   while (nsnull != child) {
     nsresult rv = child->GetDebugBoxAt(tmp, &hit);
