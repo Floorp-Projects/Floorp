@@ -103,7 +103,7 @@
 #define NS_VISIBILITY_HIDDEN   __attribute__ ((visibility ("hidden")))
 #define NS_VISIBILITY_DEFAULT
 
-#define NS_HIDDEN_(type)   type NS_VISIBILITY_HIDDEN
+#define NS_HIDDEN_(type)   NS_VISIBILITY_HIDDEN type
 #else
 #define NS_VISIBILITY_HIDDEN
 #define NS_VISIBILITY_DEFAULT
@@ -146,7 +146,7 @@
 #define NS_IMPORT_(type) type
 #define NS_EXPORT
 #define NS_EXPORT_(type) type
-#define NS_IMETHOD_(type) virtual type IMETHOD_VISIBILITY
+#define NS_IMETHOD_(type) virtual IMETHOD_VISIBILITY type
 #define NS_IMETHODIMP_(type) type
 #define NS_METHOD_(type) type
 #define NS_CALLBACK_(_type, _name) _type (* _name)
