@@ -56,6 +56,9 @@ class nsAppShell : public nsIAppShell
   static void HandleKeyReleaseEvent(XEvent *event, nsWidget *aWidget);
   static void HandleFocusInEvent(XEvent *event, nsWidget *aWidget);
   static void HandleFocusOutEvent(XEvent *event, nsWidget *aWidget);
+  static void HandleVisibilityNotifyEvent(XEvent *event, nsWidget *aWidget);
+  static void HandleMapNotifyEvent(XEvent *event, nsWidget *aWidget);
+  static void HandleUnmapNotifyEvent(XEvent *event, nsWidget *aWidget);
 
 protected:
   nsIEventQueueService * mEventQueueService;

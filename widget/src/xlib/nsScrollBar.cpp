@@ -225,7 +225,7 @@ void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
   // be discarded...
   attr.bit_gravity = SouthEastGravity;
   // make sure that we listen for events
-  attr.event_mask = StructureNotifyMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | FocusChangeMask;
+  attr.event_mask = StructureNotifyMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | FocusChangeMask | VisibilityChangeMask;
   // set the default background color and border to that awful gray
   attr.background_pixel = mBackgroundPixel;
   attr.border_pixel = mBorderPixel;
@@ -240,7 +240,7 @@ void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
   CreateNativeWindow(aParent, mBounds, attr, attr_mask);
   CreateGC();
   // set up the scrolling bar.
-  attr.event_mask = Button1MotionMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | FocusChangeMask;
+  attr.event_mask = Button1MotionMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | FocusChangeMask | VisibilityChangeMask;
   attr.background_pixel = xlib_rgb_xpixel_from_rgb(NS_RGB(192,192,192));
   attr.border_pixel = xlib_rgb_xpixel_from_rgb(NS_RGB(100,100,100));
   // set up the size

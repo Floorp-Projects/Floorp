@@ -355,10 +355,12 @@ nsAppShell::DispatchEvent(XEvent *event)
   case FocusOut:
     HandleFocusOutEvent(event, widget);
     break;
-
   case NoExpose:
+    // these annoy me.
     break;
-
+  case VisibilityNotify:
+    HandleVisibilityNotifyEvent(event, widget);
+    break;
   default:
     PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Unhandled window event: Window 0x%lx Got a %s event\n",
                                          event->xany.window, event_names[event->type]));
@@ -388,16 +390,12 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
   nsMouseEvent mevent;
   PRUint32 eventType = 0;
 
-  // XXX hack for now
-  PRBool doFocus = PR_FALSE;
-
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Button event for window 0x%lx button %d type %s\n",
          event->xany.window, event->xbutton.button, (event->type == ButtonPress ? "ButtonPress" : "ButtonRelease")));
   switch(event->type) {
   case ButtonPress:
     switch(event->xbutton.button) {
     case 1:
-      doFocus = PR_TRUE;
       eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
       break;
     case 2:
@@ -421,30 +419,6 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
       break;
     }
     break;
-  }
-
-  // XXX This is a hack that lets the text widgets get focus
-  // XXX ill fix it later.
-  if (doFocus)
-  {
-    nsGUIEvent focusEvent;
-
-    focusEvent.message = NS_GOTFOCUS;
-    focusEvent.widget  = aWidget;
-
-    focusEvent.eventStructType = NS_GUI_EVENT;
-
-    focusEvent.time = 0;
-    focusEvent.point.x = 0;
-    focusEvent.point.y = 0;
-
-    NS_ADDREF(aWidget);
-
-    printf("Button, and doing focus too, dude\n");
-  
-    aWidget->DispatchFocusEvent(focusEvent);
-  
-    NS_ADDREF(aWidget);
   }
 
   mevent.message = eventType;
@@ -568,6 +542,20 @@ nsAppShell::HandleFocusInEvent(XEvent *event, nsWidget *aWidget)
 {
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("FocusIn event for window 0x%lx\n",
                                        event->xfocus.window));
+  nsGUIEvent focusEvent;
+  
+  focusEvent.message = NS_GOTFOCUS;
+  focusEvent.widget  = aWidget;
+  
+  focusEvent.eventStructType = NS_GUI_EVENT;
+  
+  focusEvent.time = 0;
+  focusEvent.point.x = 0;
+  focusEvent.point.y = 0;
+  
+  NS_ADDREF(aWidget);
+  aWidget->DispatchFocusEvent(focusEvent);
+  NS_RELEASE(aWidget);
 }
 
 void
@@ -575,4 +563,51 @@ nsAppShell::HandleFocusOutEvent(XEvent *event, nsWidget *aWidget)
 {
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("FocusOut event for window 0x%lx\n",
                                        event->xfocus.window));
+  nsGUIEvent focusEvent;
+  
+  focusEvent.message = NS_LOSTFOCUS;
+  focusEvent.widget  = aWidget;
+  
+  focusEvent.eventStructType = NS_GUI_EVENT;
+  
+  focusEvent.time = 0;
+  focusEvent.point.x = 0;
+  focusEvent.point.y = 0;
+  
+  NS_ADDREF(aWidget);
+  aWidget->DispatchFocusEvent(focusEvent);
+  NS_RELEASE(aWidget);
+}
+
+void nsAppShell::HandleVisibilityNotifyEvent(XEvent *event, nsWidget *aWidget)
+{
+#ifdef DEBUG
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("VisibilityNotify event for window 0x%lx ",
+                                       event->xfocus.window));
+  switch(event->xvisibility.state) {
+  case VisibilityFullyObscured:
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Fully Obscured\n"));
+    break;
+  case VisibilityPartiallyObscured:
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Partially Obscured\n"));
+    break;
+  case VisibilityUnobscured:
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Unobscured\n"));
+  }
+#endif
+  aWidget->SetVisibility(event->xvisibility.state);
+}
+
+void nsAppShell::HandleMapNotifyEvent(XEvent *event, nsWidget *aWidget)
+{
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("MapNotify event for window 0x%lx\n",
+                                       event->xmap.window));
+  aWidget->SetMapStatus(PR_TRUE);
+}
+
+void nsAppShell::HandleUnmapNotifyEvent(XEvent *event, nsWidget *aWidget)
+{
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("UnmapNotifyEvent for window 0x%lx\n",
+                                       event->xunmap.window));
+  aWidget->SetMapStatus(PR_FALSE);
 }

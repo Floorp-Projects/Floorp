@@ -55,7 +55,7 @@ void nsWindow::CreateNative(Window aParent, nsRect aRect)
   // be discarded...
   attr.bit_gravity = NorthWestGravity;
   // make sure that we listen for events
-  attr.event_mask = StructureNotifyMask | ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask | FocusChangeMask;
+  attr.event_mask = StructureNotifyMask | ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask | FocusChangeMask | VisibilityChangeMask;
   // set the default background color and border to that awful gray
   attr.background_pixel = mBackgroundPixel;
   attr.border_pixel = mBorderPixel;
@@ -86,8 +86,8 @@ nsWindow::GetEventMask()
     PointerMotionMask |
     KeyPressMask | 
     KeyReleaseMask | 
-    FocusChangeMask;
-
+    FocusChangeMask |
+    VisibilityChangeMask;
   return event_mask;
 }
 

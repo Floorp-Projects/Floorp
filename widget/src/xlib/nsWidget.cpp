@@ -75,6 +75,8 @@ nsWidget::nsWidget() : nsBaseWidget()
   mScrollY = 0;
   mIsShown = PR_FALSE;
   mIsToplevel = PR_FALSE;
+  mIsMapped = PR_FALSE;
+  mVisibility = VisibilityFullyObscured; // this is an X constant.
 }
 
 nsWidget::~nsWidget()
@@ -254,6 +256,21 @@ NS_IMETHODIMP nsWidget::Enable(PRBool bState)
 
 NS_IMETHODIMP nsWidget::SetFocus(void)
 {
+  if (mBaseWindow) {
+    if (mIsMapped && (mVisibility != VisibilityFullyObscured)) {
+      PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::SetFocus() setting focus to 0x%lx\n", mBaseWindow));
+      XSetInputFocus(mDisplay,
+                     mBaseWindow,
+                     RevertToPointerRoot, // XXX is this the right behavior?
+                     CurrentTime);
+    }
+    else {
+      PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::SetFocus() NOT setting focus to 0x%lx because it's not mapped or is not visible\n", mBaseWindow));
+    }
+  }
+  else {
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::SetFocus() tried to set focus to a window that doesn't exist.\n"));
+  }
   return NS_OK;
 }
 
@@ -364,7 +381,7 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
 
   if (bState) {
     if (mIsToplevel) {
-      printf("Someone just used the show method on the toplevel window.\n");
+      PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Someone just used the show method on the toplevel window.\n"));
     }
     if (mParentWidget) {
       ((nsWidget *)mParentWidget)->WidgetShow(this);
@@ -372,7 +389,7 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
     else {
       if (mBaseWindow) {
         PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", mBaseWindow));
-        XMapWindow(mDisplay, mBaseWindow);
+        Map();
       }
     }
     mIsShown = PR_TRUE;
@@ -380,7 +397,7 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
   else {
     if (mBaseWindow) {
       PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Unmapping window 0x%lx...\n", mBaseWindow));
-      XUnmapWindow(mDisplay, mBaseWindow);
+      Unmap();
     }
     mIsShown = PR_FALSE;
   }
@@ -389,6 +406,12 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
 
 NS_IMETHODIMP nsWidget::IsVisible(PRBool &aState)
 {
+  if (mIsMapped && (mVisibility != VisibilityFullyObscured)) {
+    aState = PR_TRUE;
+  }
+  else {
+    aState = PR_FALSE;
+  }
   return NS_OK;
 }
 
@@ -479,7 +502,8 @@ nsWidget::GetEventMask()
 		ExposureMask | 
 		ButtonPressMask | 
 		ButtonReleaseMask | 
-		PointerMotionMask;
+		PointerMotionMask |
+    VisibilityChangeMask;
 
 	return event_mask;
 }
@@ -790,13 +814,13 @@ void nsWidget::WidgetMove(nsWidget *aWidget)
                 aWidget->mBounds.y);
     if (aWidget->mIsShown == PR_TRUE) {
       PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", mBaseWindow));
-      XMapWindow(aWidget->mDisplay, aWidget->mBaseWindow);
+      aWidget->Map();
     }
   }
   else {
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Widget is not visible...\n"));
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Unmapping window 0x%lx...\n", mBaseWindow));
-    XUnmapWindow(aWidget->mDisplay, aWidget->mBaseWindow);
+    aWidget->Unmap();
   }
 }
 
@@ -811,13 +835,13 @@ void nsWidget::WidgetResize(nsWidget *aWidget)
                   aWidget->mBounds.height);
     if (aWidget->mIsShown == PR_TRUE) {
       PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", mBaseWindow));
-      XMapWindow(aWidget->mDisplay, aWidget->mBaseWindow);
+      aWidget->Map();
     }
   }
   else {
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Widget is not visible...\n"));
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Unmapping window 0x%lx...\n", mBaseWindow));
-    XUnmapWindow(aWidget->mDisplay, aWidget->mBaseWindow);
+    aWidget->Unmap();
   }
 }
 
@@ -834,13 +858,13 @@ void nsWidget::WidgetMoveResize(nsWidget *aWidget)
                 aWidget->mBounds.y);
     if (aWidget->mIsShown == PR_TRUE) {
       PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", mBaseWindow));
-      XMapWindow(aWidget->mDisplay, aWidget->mBaseWindow);
+      aWidget->Map();
     }
   }
   else {
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Widget is not visible...\n"));
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Unmapping window 0x%lx...\n", mBaseWindow));
-    XUnmapWindow(aWidget->mDisplay, aWidget->mBaseWindow);
+    aWidget->Unmap();
   }
 }
 
@@ -849,7 +873,7 @@ void nsWidget::WidgetShow(nsWidget *aWidget)
   if (PR_TRUE == WidgetVisible(aWidget->mBounds)) {
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window...\n"));
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", mBaseWindow));
-    XMapWindow(aWidget->mDisplay, aWidget->mBaseWindow);
+    aWidget->Map();
   }
   else {
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Not Mapping window...\n"));
@@ -869,4 +893,24 @@ PRBool nsWidget::WidgetVisible(nsRect &aBounds)
   }
   PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("nsWidget::WidgetVisible(): widget is not visible\n"));
   return PR_FALSE;
+}
+
+void nsWidget::Map(void)
+{
+  XMapWindow(mDisplay, mBaseWindow);
+}
+
+void nsWidget::Unmap(void)
+{
+  XUnmapWindow(mDisplay, mBaseWindow);
+}
+
+void nsWidget::SetVisibility(int aState)
+{
+  mVisibility = aState;
+}
+
+void nsWidget::SetMapStatus(PRBool aState)
+{
+  mIsMapped = aState;
 }
