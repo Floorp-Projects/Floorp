@@ -287,11 +287,13 @@ pref("mailnews.start_page.enabled", true);
 
 pref("mailnews.remember_selected_message", true);
 
-pref("mail.toolbars.showbutton.file", true);
+/* file, print, and stop hidden by default.  
+   see http://bugzilla.mozilla.org/show_bug.cgi?id=197729#c3 */
+pref("mail.toolbars.showbutton.file", false);
 pref("mail.toolbars.showbutton.next", true);
 pref("mail.toolbars.showbutton.junk", true);
-pref("mail.toolbars.showbutton.print", true);
-pref("mail.toolbars.showbutton.stop", true);
+pref("mail.toolbars.showbutton.print",false);
+pref("mail.toolbars.showbutton.stop", false);
 
 pref("mailnews.account_central_page.url", "chrome://messenger/locale/messenger.properties");
 
