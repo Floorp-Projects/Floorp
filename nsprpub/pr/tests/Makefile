@@ -203,14 +203,23 @@ endif
 endif
 
 ifneq ($(OS_ARCH), WINNT)
+# Use an absolute pathname as the runtime library path (for the -R
+# or -rpath linker option or the LD_RUN_PATH environment variable).
+ifeq (,$(patsubst /%,,$(DIST)))
+# $(DIST) is already an absolute pathname.
+ABSOLUTE_LIB_DIR = $(DIST)/lib
+else
+# $(DIST) is a relative pathname: prepend the current directory.
 PWD = $(shell pwd)
+ABSOLUTE_LIB_DIR = $(PWD)/$(DIST)/lib
+endif
 endif
 
 ifeq ($(OS_ARCH), IRIX)
     ifeq ($(USE_CPLUS), 1)
         CC = CC
     endif
-    LDOPTS += -rpath $(PWD)/$(DIST)/lib -rdata_shared
+    LDOPTS += -rpath $(ABSOLUTE_LIB_DIR) -rdata_shared
 # For 6.x machines, include this flag
     ifeq ($(basename $(OS_RELEASE)),6)
         ifeq ($(USE_N32),1)
@@ -238,12 +247,12 @@ ifeq ($(OS_ARCH), OSF1)
         LIBPLC = $(DIST)/lib/libplc$(MOD_VERSION).a
         EXTRA_LIBS = -lc_r
     else
-        LDOPTS += -rpath $(PWD)/$(DIST)/lib
+        LDOPTS += -rpath $(ABSOLUTE_LIB_DIR)
     endif
 endif
 
 ifeq ($(OS_ARCH), HP-UX)
-    LDOPTS += -z -Wl,+s,+b,$(PWD)/$(DIST)/lib
+    LDOPTS += -z -Wl,+s,+b,$(ABSOLUTE_LIB_DIR)
     ifeq ($(USE_64),1)
         LDOPTS += -L/usr/lib/pa20_64 -lpthread +DD64
     endif
@@ -251,7 +260,7 @@ endif
 
 # AIX
 ifeq ($(OS_ARCH),AIX)
-    LDOPTS += -blibpath:$(PWD)/$(DIST)/lib:/usr/lib:/lib
+    LDOPTS += -blibpath:$(ABSOLUTE_LIB_DIR):/usr/lib:/lib
     ifeq ($(OS_ARCH)$(OS_RELEASE),AIX4.1)
         LIBPR = -lnspr$(MOD_VERSION)_shr
         LIBPLC = -lplc$(MOD_VERSION)_shr
@@ -265,12 +274,12 @@ endif
 ifeq ($(OS_ARCH), SunOS)
     ifneq ($(OS_RELEASE), 4.1.3_U1)
         ifdef NS_USE_GCC
-            LDOPTS += -Xlinker -R -Xlinker $(PWD)/$(DIST)/lib
+            LDOPTS += -Xlinker -R -Xlinker $(ABSOLUTE_LIB_DIR)
         else
             ifeq ($(USE_CPLUS), 1)
                 CC = CC
             endif
-            LDOPTS += -R $(PWD)/$(DIST)/lib
+            LDOPTS += -R $(ABSOLUTE_LIB_DIR)
         endif
     endif
 
@@ -297,7 +306,7 @@ ifeq ($(OS_ARCH), NEC)
 # This hardcodes in the executable programs the directory to find
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath
 # option for ld on other platforms.
-    export LD_RUN_PATH = $(PWD)/$(DIST)/lib
+    export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
 endif
 
 ifeq ($(OS_ARCH), NCR)
@@ -308,7 +317,7 @@ ifeq ($(OS_ARCH), NCR)
 # This hardcodes in the executable programs the directory to find
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath 
 # option for ld on other platforms.
-    export LD_RUN_PATH = $(PWD)/$(DIST)/lib
+    export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
 endif
 
 ifeq ($(OS_ARCH), NEXTSTEP)
@@ -321,7 +330,7 @@ ifeq ($(OS_ARCH), NEWS-OS)
 # This hardcodes in the executable programs the directory to find
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath 
 # option for ld on other platforms.
-#export LD_RUN_PATH = $(PWD)/$(DIST)/lib
+#export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
     LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).a
     LIBPLC = $(DIST)/lib/libplc$(MOD_VERSION).a
     EXTRA_LIBS = -lsocket -lnsl -lgen -lresolv
@@ -331,7 +340,7 @@ ifeq ($(OS_ARCH), Linux)
     ifeq ($(OS_RELEASE), 1.2)
         EXTRA_LIBS = -ldl
     else
-        LDOPTS += -Xlinker -rpath $(PWD)/$(DIST)/lib
+        LDOPTS += -Xlinker -rpath $(ABSOLUTE_LIB_DIR)
         ifeq ($(USE_PTHREADS),1)
             EXTRA_LIBS = -lpthread
         endif
@@ -345,7 +354,7 @@ EXTRA_LIBS = -lsocket
 # This hardcodes in the executable programs the directory to find
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath 
 # option for ld on other platforms.
-export LD_RUN_PATH = $(PWD)/$(DIST)/lib
+export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
 endif
 
 ifeq ($(OS_ARCH),SINIX)
@@ -353,18 +362,18 @@ EXTRA_LIBS = -lsocket -lnsl -lresolv -ldl
 # This hardcodes in the executable programs the directory to find
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath
 # option for ld on other platforms.
-export LD_RUN_PATH = $(PWD)/$(DIST)/lib
+export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
 endif
 
 ifeq ($(OS_ARCH), UNIXWARE)
-export LD_RUN_PATH = $(PWD)/$(DIST)/lib
+export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
 endif
 
 ifeq ($(OS_ARCH),FreeBSD)
 ifeq ($(USE_PTHREADS),1)
 LDOPTS += -pthread
 endif
-LDOPTS += -Xlinker -R $(PWD)/$(DIST)/lib
+LDOPTS += -Xlinker -R $(ABSOLUTE_LIB_DIR)
 endif
 
 ifeq ($(OS_ARCH),BSD_OS)
