@@ -409,6 +409,18 @@ if (UserInGroup("editbugs")) {
         SendSQL("INSERT INTO keywords (bug_id, keywordid) 
                  VALUES ($id, $keyword)");
     }
+    if (@keywordlist) {
+        # Make sure that we have the correct case for the kw
+        SendSQL("SELECT name FROM keyworddefs WHERE id IN ( " .
+                join(',', @keywordlist) . ")");
+        my @list;
+        while (MoreSQLData()) {
+            push (@list, FetchOneColumn());
+        }
+        SendSQL("UPDATE bugs SET keywords = " .
+                SqlQuote(join(', ', @list)) .
+                " WHERE bug_id = $id");
+    }
     if (defined $::FORM{'dependson'}) {
         my $me = "blocked";
         my $target = "dependson";
