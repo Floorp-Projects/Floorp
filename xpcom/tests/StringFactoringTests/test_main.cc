@@ -4,7 +4,7 @@ using namespace std;
 #include "nsString.h"
 #include "nsStdStringWrapper.h"
 
-#define NS_USE_WCHAR_T
+// #define NS_USE_WCHAR_T
 
 
 static
