@@ -196,6 +196,8 @@ function GetColorAndUpdate(ColorWellID)
     textZone.value = color;
     if (ColorWellID == "bordertopCW")
       IfFourSidesSameStyle('border', 'color', color, 'allFourBordersSame', 'borderPreview', null);
+    else if (ColorWellID == "backgroundCW")
+      AddStyleToElement(gDialog.backgroundPreview, "background-color", color);
   }
   try {
     gDialog.selectedObject.style.setProperty(property,
@@ -931,6 +933,7 @@ function getSpecifiedStyle(property)
   if (gDialog.selectedObject && gDialog.selectedObject.style) {
     return gDialog.selectedObject.style.getPropertyValue(property).toLowerCase();
   }
+
   return null;
 }
 
@@ -1078,6 +1081,10 @@ function ToggleFourBorderSidesSameStyle(elt)
       AddStyleToElement(gDialog.borderPreview, "border-"+sideArray[i]+"-color", color);
       AddStyleToElement(gDialog.borderPreview, "border-"+sideArray[i]+"-style", style);
       AddStyleToElement(gDialog.borderPreview, "border-"+sideArray[i]+"-width", width);
+
+      AddStyleToElement(gDialog.selectedObject, "border-"+sideArray[i]+"-color", color);
+      AddStyleToElement(gDialog.selectedObject, "border-"+sideArray[i]+"-style", style);
+      AddStyleToElement(gDialog.selectedObject, "border-"+sideArray[i]+"-width", width);
     }
     else {
       styleMenulist.removeAttribute("disabled");
@@ -1182,6 +1189,9 @@ function Spinbutton(increment, id)
       }
       elt.value = (Math.round(100 * (parseFloat(numPart) + (increment * unitIncrement)))/100) + unitPart;
     }
+    else
+      elt.value = increment + "px";
+    elt.oninput();
   }
 }
 

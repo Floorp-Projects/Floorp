@@ -69,13 +69,11 @@ treechildren::-moz-tree-cell-text(external) {
     font-style: italic ! important;
 }
 
+/*
 spinbuttons image { border: solid thin black; padding: 2px; -moz-border-radius: 3px }
 
 spinbuttons image:hover:active {
-   /*-moz-border-top-colors: transparent transparent transparent #000000 #8290A5 #899AAC;
-   -moz-border-right-colors: transparent transparent transparent #000000 #8290A5 #899AAC;
-   -moz-border-bottom-colors: transparent transparent transparent #000000 #8290A5 #899AAC;
-   -moz-border-left-colors: transparent transparent transparent #000000 #8290A5 #899AAC;*/
    background-color: #90A1B3;
    color: #FFFFFF;
  }
+*/

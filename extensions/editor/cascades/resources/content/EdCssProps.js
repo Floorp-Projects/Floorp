@@ -43,7 +43,7 @@ const CHARSET_RULE = 5;
 const PAGE_RULE    = 6;
 const OWNER_NODE   = 7;
 
-const COMPATIBILITY_TAB = 1;
+// const COMPATIBILITY_TAB = 1;
 const GENERAL_TAB       = 2;
 const TEXT_TAB          = 3;
 const BACKGROUND_TAB    = 4;
@@ -63,15 +63,17 @@ var objectsArray = null;
 var gTimerID;
 var gAsyncLoadingTimerID;
 
+// needed for commonCssProps.js
 var gHaveDocumentUrl = false;
-var predefSelector = "";
 
 var gInsertIndex = -1;
 
 // * dialog initialization code
 function Startup()
 {
+  // are we in a pre-1.3 Mozilla ?
   if (typeof window.InitEditorShell == "function") {
+    // yes, so let's get an editorshell
     if (!InitEditorShell())
       return;
   }
@@ -81,6 +83,9 @@ function Startup()
   }
 
   // gDialog is declared in EdDialogCommon.js
+
+  gDialog.selectionBased = false;
+
   // Set commonly-used widgets like this:
   gDialog.selectedTab = TEXT_TAB;
   gDialog.sheetsTreechildren            = document.getElementById("stylesheetsTree");
@@ -95,7 +100,7 @@ function Startup()
   gDialog.upButton                      = document.getElementById("upButton");
   gDialog.downButton                    = document.getElementById("downButton");
 
-  gDialog.selectedTab = COMPATIBILITY_TAB;
+  gDialog.selectedTab = GENERAL_TAB;
   gDialog.sheetInfoTabPanelTitle        = document.getElementById("sheetInfoTabPanelTitle");
   gDialog.textTab                       = document.getElementById("textTab");
   gDialog.brownFoxLabel                 = document.getElementById("brownFoxLabel");
@@ -170,6 +175,7 @@ function toggleExpertMode()
 {
   // toggle the boolean
   gDialog.expertMode = !gDialog.expertMode;
+
   if (gDialog.expertMode) {
     if (gDialog.selectedIndex == -1) {
       // if expert mode is on but no selection in the tree, only
@@ -197,7 +203,6 @@ function toggleExpertMode()
 
 // * This function recreates the contents of the STYLE elements and
 //   of the stylesheets local to the filesystem
-// XXXX : this function is about to disappear due to last code cleanup
 function FlushChanges()
 {
   if (gDialog.modified) {
@@ -488,6 +493,8 @@ function GetSelectedItemData()
   gDialog.selectedIndex  = -1;
   gDialog.selectedObject = null;
 
+  if (!objectsArray)
+    return;
   // look for the object in objectsArray corresponding to the
   // selectedItem
   var i, l = objectsArray.length;
@@ -515,7 +522,6 @@ function onSelectCSSTreeItem(tab)
 {
   // convert the tab string into a tab id
   if      (tab == "general")       tab = GENERAL_TAB;
-  else if (tab == "compatibility") tab = COMPATIBILITY_TAB;
   else if (tab == "text")          tab = TEXT_TAB;
   else if (tab == "background")    tab = BACKGROUND_TAB;
   else if (tab == "border")        tab = BORDER_TAB;
@@ -527,8 +533,7 @@ function onSelectCSSTreeItem(tab)
   if (gDialog.selectedIndex == -1) {
     // there is no tree item selected, let's fallback to the Info tab
     // but there is nothing we can display in that tab...
-    if (tab != COMPATIBILITY_TAB)
-      gDialog.sheetTabbox.selectedTab = gDialog.sheetInfoTab;
+    gDialog.sheetTabbox.selectedTab = gDialog.sheetInfoTab;
     return;
   }
 
@@ -550,9 +555,6 @@ function onSelectCSSTreeItem(tab)
     tab = gDialog.selectedTab ? gDialog.selectedTab : GENERAL_TAB;
   }
   switch (tab) {
-    case COMPATIBILITY_TAB:
-      return;
-      break;
     case TEXT_TAB:
       // we have to update the text preview, let's remove its style attribute
       gDialog.brownFoxLabel.removeAttribute("style");      
@@ -761,7 +763,7 @@ function AddEditableZoneToInfobox(rows, label, value, callback, focus)
 function AddRadioGroupToInfoBox(rows, label)
 {
   var row = document.createElementNS(XUL_NS, "row");
-  row.setAttribute("align", "baseline");
+  row.setAttribute("align", "center");
 
   var labelLabel = document.createElementNS(XUL_NS, "label");
   labelLabel.setAttribute("value", label);
@@ -1712,18 +1714,3 @@ function AddCSSLevelChoice(rows)
   rows.appendChild(row);
 }
 
-function SelectCSSLevel(level)
-{
-  var bit = kCompatibilities[level];
-  var i = 0;
-  var id = kButtonCompatibilityArray[i];
-  while (id) {
-    var elt = document.getElementById(id);
-    if (elt) {
-      var compats = parseInt(kButtonCompatibilityArray[i+1], 2);
-      EnableUI(elt, (compats >> bit) & 1);
-    }
-    i += 2;
-    id = kButtonCompatibilityArray[i];
-  }
-}
