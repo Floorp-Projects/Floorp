@@ -29,7 +29,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsIView.h"
 #include "nsViewsCID.h"
-#include "nsAbsoluteFrame.h"
 #include "nsHTMLIIDs.h"
 #include "nsIWebShell.h"
 #include "nsHTMLValue.h"
@@ -59,24 +58,6 @@ nsBodyFrame::nsBodyFrame()
 nsBodyFrame::~nsBodyFrame()
 {
   NS_RELEASE(mSpaceManager);
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// nsISupports
-
-nsresult
-nsBodyFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIAbsoluteItemsIID)) {
-    nsIAbsoluteItems* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    return NS_OK;
-  }
-  return nsBlockFrame::QueryInterface(aIID, aInstancePtr);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -288,13 +269,10 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
     mStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (NS_STYLE_OVERFLOW_HIDDEN != display->mOverflow) {
-    for (PRInt32 i = 0; i < mAbsoluteItems.Count(); i++) {
-      // Get the anchor frame
-      nsAbsoluteFrame*  anchorFrame = (nsAbsoluteFrame*)mAbsoluteItems[i];
-      nsIFrame*         absoluteFrame = anchorFrame->GetAbsoluteFrame();
-      nsRect            rect;
+    for (nsIFrame* f = mAbsoluteFrames; nsnull != f; f->GetNextSibling(f)) {
+      nsRect  rect;
   
-      absoluteFrame->GetRect(rect);
+      f->GetRect(rect);
       nscoord xmost = rect.XMost();
       nscoord ymost = rect.YMost();
       if (xmost > aDesiredSize.width) {
@@ -371,7 +349,7 @@ nsBodyFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext);
+  cf->Init(aPresContext, mContent, aParent, mContentParent, aStyleContext);
   cf->SetFlags(mFlags);
   cf->AppendToFlow(this);
   aContinuingFrame = cf;
@@ -506,18 +484,6 @@ void nsBodyFrame::AddAbsoluteFrame(nsIFrame* aFrame)
   }
 }
 
-/////////////////////////////////////////////////////////////////////////////
-
-// nsIAbsoluteItems
-
-NS_METHOD nsBodyFrame::AddAbsoluteItem(nsAbsoluteFrame* aAnchorFrame)
-{
-  // Add the absolute anchor frame to our list of absolutely positioned
-  // items.
-  mAbsoluteItems.AppendElement(aAnchorFrame);
-  return NS_OK;
-}
-
 PRBool
 nsBodyFrame::IsAbsoluteFrame(nsIFrame* aFrame)
 {
@@ -531,18 +497,13 @@ nsBodyFrame::IsAbsoluteFrame(nsIFrame* aFrame)
   return PR_FALSE;
 }
 
-NS_METHOD nsBodyFrame::RemoveAbsoluteItem(nsAbsoluteFrame* aAnchorFrame)
-{
-  NS_NOTYETIMPLEMENTED("removing an absolutely positioned frame");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 // Called at the end of the Reflow() member function so we can process
 // any abolutely positioned items that need to be reflowed
 void
 nsBodyFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
                                  const nsHTMLReflowState& aReflowState)
 {
+#if 0
   for (PRInt32 i = 0; i < mAbsoluteItems.Count(); i++) {
     // Get the anchor frame and its absolutely positioned frame
     nsAbsoluteFrame*  anchorFrame = (nsAbsoluteFrame*)mAbsoluteItems[i];
@@ -638,6 +599,7 @@ nsBodyFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
       }
     }
   }
+#endif
 }
 
 // Translate aPoint from aFrameFrom's coordinate space to our coordinate space
