@@ -114,5 +114,19 @@
     {0x8c, 0xd9, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
+//
+// nsStorageTransport
+//
+#define NS_STORAGETRANSPORT_CLASSNAME \
+    "Storage Transport"
+#define NS_STORAGETRANSPORT_CONTRACTID \
+    "@mozilla.org/network/storage-transport;1"
+#define NS_STORAGETRANSPORT_CID                      \
+{ /* 5e955cdb-1334-4b8f-86b5-3b0f4d54b9d2 */         \
+    0x5e955cdb,                                      \
+    0x1334,                                          \
+    0x4b8f,                                          \
+    {0x86, 0xb5, 0x3b, 0x0f, 0x4d, 0x54, 0xb9, 0xd2} \
+}
 
 #endif /* !nsNetCID_h__ */

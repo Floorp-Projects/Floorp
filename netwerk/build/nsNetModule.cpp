@@ -94,6 +94,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleStreamProvider)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "nsStorageTransport.h"
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsStorageTransport)
+
+///////////////////////////////////////////////////////////////////////////////
+
 #include "nsIHTTPProtocolHandler.h"
 #include "nsHTTPHandler.h"
 #include "nsHTTPSHandler.h"
@@ -444,6 +450,10 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_ASYNCSTREAMLISTENER_CID,
       "@mozilla.org/network/async-stream-listener;1",
       nsAsyncStreamListener::Create },
+    { NS_STORAGETRANSPORT_CLASSNAME,
+      NS_STORAGETRANSPORT_CID,
+      NS_STORAGETRANSPORT_CONTRACTID,
+      nsStorageTransportConstructor },
       /*
     { "Sync Stream Listener", 
       NS_SYNCSTREAMLISTENER_CID,
