@@ -36,7 +36,9 @@ if {![cequal $FORM(product) $dontchange]} {
     if {!$vok || !$cok} {
         puts "<H1>Changing product means changing version and component.</H1>"
         puts "You have chosen a new product, and now the version and/or"
-        puts "component fields are not correct.  Please set them now.<p>"
+        puts "component fields are not correct.  (Or, possibly, the bug did"
+        puts "not have a valid component or version field in the first place.)"
+        puts "Anyway, please set the version and component now.<p>"
         puts "<form>"
         puts "<table>"
         puts "<tr>"
