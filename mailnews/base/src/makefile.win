@@ -37,10 +37,7 @@ EXPORTS=						\
     nsMsgAccount.h				\
     nsMsgAccountManager.h		\
 	nsMsgRDFDataSource.h		\
-	nsMsgAccountDataSource.h	\
 	nsMsgAccountManagerDS.h		\
-	nsMsgIdentityDataSource.h	\
-	nsMsgServerDataSource.h		\
 	nsMsgBiffManager.h			\
 	nsMsgNotificationManager.h	\
 	nsCopyMessageStreamListener.h \
@@ -70,10 +67,7 @@ CPP_OBJS=									\
 	.\$(OBJDIR)\nsMsgMessageDataSource.obj	\
 	.\$(OBJDIR)\nsMsgRDFUtils.obj			\
 	.\$(OBJDIR)\nsMsgRDFDataSource.obj		\
-	.\$(OBJDIR)\nsMsgAccountDataSource.obj	\
 	.\$(OBJDIR)\nsMsgAccountManagerDS.obj	\
-	.\$(OBJDIR)\nsMsgIdentityDataSource.obj	\
-	.\$(OBJDIR)\nsMsgServerDataSource.obj	\
 	.\$(OBJDIR)\nsMsgBiffManager.obj		\
 	.\$(OBJDIR)\nsMsgNotificationManager.obj \
 	.\$(OBJDIR)\nsMsgCopyService.obj		\

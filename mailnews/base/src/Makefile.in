@@ -38,9 +38,6 @@ EXPORTS = \
 	nsMsgMessageDataSource.h \
 	nsMessageViewDataSource.h \
 	nsMsgAccountManagerDS.h	\
-	nsMsgAccountDataSource.h	\
-	nsMsgIdentityDataSource.h	\
-	nsMsgServerDataSource.h	\
 	nsMsgRDFDataSource.h \
 	nsMsgBiffManager.h \
 	nsMsgNotificationManager.h \
@@ -64,9 +61,6 @@ CPPSRCS = \
 	nsMsgMessageDataSource.cpp \
 	nsMessageViewDataSource.cpp \
 	nsMsgAccountManagerDS.cpp	\
-	nsMsgAccountDataSource.cpp	\
-	nsMsgIdentityDataSource.cpp	\
-	nsMsgServerDataSource.cpp	\
 	nsMsgRDFUtils.cpp \
 	nsMsgBiffManager.cpp \
 	nsMsgNotificationManager.cpp \
