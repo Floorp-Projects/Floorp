@@ -1,0 +1,3 @@
+nsIJARChannel.idl
+nsIJARProtocolHandler.idl
+nsIJARURI.idl
