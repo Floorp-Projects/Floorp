@@ -22,12 +22,14 @@
 #include "nsplugin.h"
 #include "ns4xPlugin.h"
 #include "ns4xPluginInstance.h"
+#include "nsIServiceManager.h"
+#include "nsIAllocator.h"
 
 ////////////////////////////////////////////////////////////////////////
 
 NPNetscapeFuncs ns4xPlugin::CALLBACKS;
 nsIPluginManager *  ns4xPlugin::mPluginManager;
-nsIMalloc *         ns4xPlugin::mMalloc;
+nsIAllocator *      ns4xPlugin::mMalloc;
 
 void
 ns4xPlugin::CheckClassInitialized(void)
@@ -81,8 +83,10 @@ static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININSTANCEPEER_IID);
+static NS_DEFINE_IID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID); 
-static NS_DEFINE_IID(kIMallocIID, NS_IMALLOC_IID); 
+static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
+static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
 
 #ifndef NEW_PLUGIN_STREAM_API
 static NS_DEFINE_IID(kISeekablePluginStreamPeerIID, NS_ISEEKABLEPLUGINSTREAMPEER_IID);
@@ -91,7 +95,7 @@ static NS_DEFINE_IID(kISeekablePluginStreamPeerIID, NS_ISEEKABLEPLUGINSTREAMPEER
 ////////////////////////////////////////////////////////////////////////
 
 #ifdef NEW_PLUGIN_STREAM_API
-ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown, nsISupports* browserInterfaces)
+ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManager* serviceMgr)
 #else
 ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown)
 #endif
@@ -102,12 +106,12 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown)
     fShutdownEntry = aShutdown;
 
 #ifdef NEW_PLUGIN_STREAM_API
-	 // set up the connections to the plugin manager
-	 if (nsnull == mPluginManager)
-		 browserInterfaces->QueryInterface(kIPluginManagerIID, (void **)&mPluginManager);
+	// set up the connections to the plugin manager
+	if (nsnull == mPluginManager)
+		serviceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&mPluginManager);
 
 	 if (nsnull == mMalloc)
-		 browserInterfaces->QueryInterface(kIMallocIID, (void **)&mMalloc);
+		serviceMgr->GetService(kAllocatorCID, kIAllocatorIID, (nsISupports**)&mMalloc);
 #endif
 }
 
@@ -161,7 +165,7 @@ ns4xPlugin::QueryInterface(const nsIID& iid, void** instance)
 
 nsresult
 ns4xPlugin::CreatePlugin(PRLibrary *library,
-                         nsIPlugin **result, nsISupports* browserInterfaces)
+                         nsIPlugin **result, nsIServiceManager* serviceMgr)
 {
     CheckClassInitialized();
 
@@ -189,7 +193,7 @@ ns4xPlugin::CreatePlugin(PRLibrary *library,
         (NP_PLUGINSHUTDOWN)PR_FindSymbol(library, "NP_Shutdown");
 
 	// create the new plugin handler
-    *result = new ns4xPlugin(&callbacks, pfnShutdown, browserInterfaces);
+    *result = new ns4xPlugin(&callbacks, pfnShutdown, serviceMgr);
 
     NS_ADDREF(*result);
 
