@@ -150,6 +150,7 @@ NS_IMETHODIMP nsWindow::Destroy()
   // window, for example, the application will exit as it should.
 
   if (mIsDestroyingWindow == PR_TRUE) {
+    NS_IF_RELEASE(mParent);
     nsBaseWidget::Destroy();
     if (PR_FALSE == mOnDestroyCalled) {
         nsWidget::OnDestroy();
