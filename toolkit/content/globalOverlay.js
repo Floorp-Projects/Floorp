@@ -47,8 +47,8 @@ function canQuitApplication()
 function goQuitApplication()
 {
   if (!canQuitApplication())
-    return;
-    
+    return false;
+
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
   var enumerator = windowManagerInterface.getEnumerator( null );
