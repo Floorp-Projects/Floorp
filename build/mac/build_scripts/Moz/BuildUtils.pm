@@ -211,8 +211,19 @@ sub BuildIDLProject($$)
 
     if ($main::CLOBBER_IDL_PROJECTS)
     {
-        my($datafolder_path) = $project_path;
-        $datafolder_path =~ s/\.mcp$/ Data:/;       # generate name of the project's data folder.
+        my (@suffix_list) = (".mcp", ".xml");
+        my ($project_name, $project_dir, $suffix) = fileparse($project_path, @suffix_list);
+        if ($suffix eq "") { die "Error: Project, $project_path must end in .xml or .mcp\n"; }
+
+        my($datafolder_path);
+        if ($suffix eq ".xml")
+        {
+            $datafolder_path = $project_dir . "_" . $project_name . " Data:";
+        }
+        else {
+            $datafolder_path = $project_dir . $project_name . " Data:";
+        }
+
         print STDERR "Deleting IDL data folder: $datafolder_path\n";
         EmptyTree($datafolder_path);
     }
@@ -329,7 +340,7 @@ sub BuildOneProjectWithOutput($$$$$$)
 
     my (@suffix_list) = (".mcp", ".xml");
     my ($project_name, $project_dir, $suffix) = fileparse($project_path, @suffix_list);
-    if ($suffix eq "") { die "Project: $project_path must end in .xml or .mcp\n"; }
+    if ($suffix eq "") { die "Error: Project, $project_path must end in .xml or .mcp\n"; }
     
     my($dist_dir) = GetBinDirectory();
     
@@ -687,7 +698,7 @@ sub SetBuildNumber($$)
 }
 
 #-----------------------------------------------
-# SetBuildNumber
+# SetTimeBomb
 #-----------------------------------------------
 sub SetTimeBomb($$)		
 {
