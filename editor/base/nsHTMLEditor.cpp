@@ -717,6 +717,12 @@ NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMKeyEvent* aKeyEvent)
         return TypedText(empty, eTypedBreak);  // uses rules to figure out what to insert
       }
     }
+    else if (keyCode == nsIDOMKeyEvent::DOM_VK_ESCAPE)
+    {
+      // pass escape keypresses through as empty strings: needed forime support
+      nsAutoString empty;
+      return TypedText(empty, eTypedText);
+    }
     
     // if we got here we either fell out of the tab case or have a normal character.
     // Either way, treat as normal character.
@@ -810,7 +816,7 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLEditor::JoeCreateBR(nsCOMPtr<nsIDOMNode> *aInOutParent, PRInt32 *aInOutOffset, nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect)
+NS_IMETHODIMP nsHTMLEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent, PRInt32 *aInOutOffset, nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect)
 {
   if (!aInOutParent || !*aInOutParent || !aInOutOffset || !outBRNode) return NS_ERROR_NULL_POINTER;
   *outBRNode = nsnull;
@@ -891,7 +897,7 @@ NS_IMETHODIMP nsHTMLEditor::CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, nsCOMPt
 {
   nsCOMPtr<nsIDOMNode> parent = aNode;
   PRInt32 offset = aOffset;
-  return JoeCreateBR(&parent, &offset, outBRNode, aSelect);
+  return CreateBRImpl(&parent, &offset, outBRNode, aSelect);
 }
 
 NS_IMETHODIMP nsHTMLEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
@@ -1255,7 +1261,7 @@ nsresult nsHTMLEditor::SplitStyleAboveRange(nsIDOMRange *inRange,
                                             nsIAtom *aProperty, 
                                             const nsString *aAttribute)
 {
-  if (!inRange || !aProperty) return NS_ERROR_NULL_POINTER;
+  if (!inRange) return NS_ERROR_NULL_POINTER;
   nsresult res;
   nsCOMPtr<nsIDOMNode> startNode, endNode, origStartNode;
   PRInt32 startOffset, endOffset, origStartOffset;
@@ -1296,7 +1302,7 @@ nsresult nsHTMLEditor::SplitStyleAboveRange(nsIDOMRange *inRange,
 
 nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
                                            PRInt32 *aOffset,
-                                           nsIAtom *aProperty, 
+                                           nsIAtom *aProperty,          // null here means we split all properties
                                            const nsString *aAttribute)
 {
   if (!aNode || !*aNode || !aOffset) return NS_ERROR_NULL_POINTER;
@@ -1305,7 +1311,8 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
   PRInt32 offset;
   while (tmp && !nsHTMLEditUtils::IsBody(tmp))
   {
-    if (NodeIsType(tmp, aProperty))
+    if ( (aProperty && NodeIsType(tmp, aProperty)) ||   // node is the correct inline prop
+         (!aProperty && NodeIsProperty(tmp)) )         // or node is any prop, and we asked to split them all
     {
       // found a style node we need to split
       SplitNodeDeep(tmp, *aNode, *aOffset, &offset);
@@ -1318,13 +1325,23 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
   }
   return NS_OK;
 }
-                                             
+
+PRBool nsHTMLEditor::NodeIsProperty(nsIDOMNode *aNode)
+{
+  if (!aNode)               return PR_FALSE;
+  if (!IsContainer(aNode))  return PR_FALSE;
+  if (!IsEditable(aNode))   return PR_FALSE;
+  if (!IsInlineNode(aNode)) return PR_FALSE;
+  if (NodeIsType(aNode, nsIEditProperty::a)) return PR_FALSE;
+  return PR_TRUE;
+}
+
 nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode, 
-                                   nsIAtom *aProperty, 
+                                   nsIAtom *aProperty,   // null here means remove all properties
                                    const nsString *aAttribute, 
                                    PRBool aChildrenOnly)
 {
-  if (!aNode || !aProperty) return NS_ERROR_NULL_POINTER;
+  if (!aNode) return NS_ERROR_NULL_POINTER;
   if (IsTextNode(aNode)) return NS_OK;
   nsresult res = NS_OK;
   
@@ -1341,7 +1358,9 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
   }
   
   // then process the node itself
-  if (!aChildrenOnly && NodeIsType(aNode, aProperty))
+  if ( !aChildrenOnly && 
+       (aProperty && NodeIsType(aNode, aProperty)) || // node is prop we wasked for
+       (!aProperty && NodeIsProperty(aNode)) )        // or node is any prop and we asked for that
   {
     // if we weren't passed an attribute, then we want to 
     // remove any matching inlinestyles entirely
@@ -1773,9 +1792,19 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
   return result;
 }
 
+
+NS_IMETHODIMP nsHTMLEditor::RemoveAllInlineProperties()
+{
+  return RemoveInlinePropertyImpl(nsnull, nsnull);
+}
+
 NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsString *aAttribute)
 {
-  if (!aProperty) return NS_ERROR_NULL_POINTER;
+  return RemoveInlinePropertyImpl(aProperty, aAttribute);
+}
+
+nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsString *aAttribute)
+{
   if (!mRules)    return NS_ERROR_NOT_INITIALIZED;
   ForceCompositionEnd();
 
@@ -1790,7 +1819,8 @@ NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsStr
   if (isCollapsed)
   {
     // manipulating text attributes on a collapsed selection only sets state for the next text insertion
-    return mTypeInState->ClearProp(aProperty, *aAttribute);
+    if (aProperty) return mTypeInState->ClearProp(aProperty, *aAttribute);
+//    else return mTypeInState->ClearAllProps();
   }
   nsAutoEditBatch batchIt(this);
   nsAutoRules beginRulesSniffing(this, kOpRemoveTextProperty, nsIEditor::eNext);

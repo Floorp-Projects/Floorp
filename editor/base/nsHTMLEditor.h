@@ -103,6 +103,7 @@ public:
                              const nsString *aValue,
                              PRBool &aFirst, PRBool &aAny, PRBool &aAll);
 
+  NS_IMETHOD RemoveAllInlineProperties();
   NS_IMETHOD RemoveInlineProperty(nsIAtom *aProperty, const nsString *aAttribute);
   NS_IMETHOD IncreaseFontSize();
   NS_IMETHOD DecreaseFontSize();
@@ -356,7 +357,7 @@ protected:
   NS_IMETHOD TabInTable(PRBool inIsShift, PRBool *outHandled);
   NS_IMETHOD CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, 
                       nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect = eNone);
-  NS_IMETHOD JoeCreateBR(nsCOMPtr<nsIDOMNode> *aInOutParent, 
+  NS_IMETHOD CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent, 
                          PRInt32 *aInOutOffset, 
                          nsCOMPtr<nsIDOMNode> *outBRNode, 
                          EDirection aSelect);
@@ -488,7 +489,9 @@ protected:
                              nsIAtom *aProperty, 
                              const nsString *aAttribute, 
                              PRBool aChildrenOnly = PR_FALSE);
-
+  nsresult RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsString *aAttribute);
+  
+  PRBool NodeIsProperty(nsIDOMNode *aNode);
   PRBool HasAttr(nsIDOMNode *aNode, const nsString *aAttribute);
   PRBool HasAttrVal(nsIDOMNode *aNode, const nsString *aAttribute, const nsString *aValue);
   PRBool IsAtFrontOfNode(nsIDOMNode *aNode, PRInt32 aOffset);
