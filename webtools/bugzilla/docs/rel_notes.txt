@@ -66,9 +66,9 @@ XML::Parser (any)
 
 *** Outstanding Issues Of Note ***
 
-- Renaming or removing keywords will not update the "keyword
-  cache", and queries on keywords may not work properly, until
-  you rebuild the cache on the sanity check page
+- Renaming or removing keywords that are in use will not update
+  the "keyword cache" on bugs, and queries on keywords may not work
+  properly, until you rebuild the cache on the sanity check page
   (sanitycheck.cgi).  The changer will receive a warning to do
   this when altering the keyword.
   (bug 69621)
@@ -128,9 +128,9 @@ XML::Parser (any)
 - Querying on CC takes too long on big databases.
   (bug 127200)
 
-************************************************************
-*** USERS UPGRADING FROM 2.14.1 OR EARLIER - 2.16 ISSUES ***
-************************************************************
+***********************************************
+*** USERS UPGRADING FROM 2.14.1 OR EARLIER  ***
+***********************************************
 
 *** SECURITY ISSUES RESOLVED ***
 
@@ -199,21 +199,21 @@ XML::Parser (any)
   (bugs 97721, ???)
 
 - The index page is now a CGI instead of an HTML page.  You should remove
-  any existing HTML page and make sure your web server allows index.cgi to
-  be the default page in a directory.  If you are not able to do that you
+  any existing index.html file and make sure your web server allows index.cgi
+  to be the default page in a directory.  If you are not able to do that you
   can instead set index_html in the 'localconfig' file to 1 and checksetup.pl
   will create a redirect page for you.
   (bug 80183)
 
-- It is now strongly recommended that administrators run
-  "processmail rescanall" after upgrading to 2.16 or beyond.
+- It is now recommended that administrators run "processmail rescanall"
+  after upgrading to 2.16 or beyond.
 
   This will send out notification emails for changes that were
   made but not emailed, due to Bugzilla bugs.  All known
-  causes of this have been fixed (bug 104589 and 99519).
+  causes of this have been fixed in this version (bug 104589 and 99519).
 
   It is also recommended that this be run nightly to avoid
-  lengthy delays in future if this reoccurs.
+  lengthy delays in future if this problem reoccurs.
   (bug 106377)
 
 - If you wish to use ??? webdot htaccess stuff here ???
@@ -246,13 +246,13 @@ XML::Parser (any)
   (bug 71840)
 - The attachment system has been rewritten, supporting new
   "attachment statuses" (like keywords, but for attachments),
-  the ability to obsolete attachments, and the ability to
-  edit attachment metadata.
+  the ability to obsolete attachments, edit attachment MIME type,
+  and edit whether the attachment is a patch.
   (bugs 84338, 75176)
 - syncshadowdb now supports a configurable temp file location,
-  and properly shuts down Bugzilla.
+  and properly shuts down Bugzilla while running.
   (bug 75840)
-- Dependency tree now lets you exclude resolve bugs and bugs
+- Dependency tree now lets you exclude resolved bugs and bugs
   below a specific depth.
   (bugs 83058)
 - The "strictvaluechecks" parameter has gone away.  These checks
@@ -295,7 +295,7 @@ XML::Parser (any)
 - Midair collision checks will now properly work in all situations
   where dependencies have changed.
   (bug 73502)
-- Some browsers were able to corrupt the params file with the wrong
+- Browsers can no longer corrupt the params file if they use the "wrong"
   end-of-line markers.
   (bug 92500)
 - The MySQL port defined in localconfig is now properly honoured.
@@ -332,9 +332,9 @@ XML::Parser (any)
   their only email preference was being added or removed from QA.
   (bug 143091)
 
-************************************************************
-*** USERS UPGRADING FROM 2.14 OR EARLIER - 2.14.1 ISSUES ***
-************************************************************
+********************************************
+*** USERS UPGRADING FROM 2.14 OR EARLIER ***
+********************************************
 
 The 2.14.1 release fixes several security issues that became
 known to us after the Bugzilla 2.14 release.
@@ -386,9 +386,9 @@ known to us after the Bugzilla 2.14 release.
   was actually a number, allowing arbitrary SQL to be inserted
   if you edited the HTML by hand. (bug 109690)
 
-**********************************************************
-*** USERS UPGRADING FROM 2.12 OR EARLIER - 2.14 ISSUES ***
-**********************************************************
+********************************************
+*** USERS UPGRADING FROM 2.12 OR EARLIER ***
+********************************************
 
 *** IMPORTANT CHANGES ***
 
@@ -493,14 +493,14 @@ known to us after the Bugzilla 2.14 release.
   gets validated at their e-mail account, rather than have it
   mailed to them.
   (bug 74032)
-- When you using product groups and you move a bug between
+- When you are using product groups and you move a bug between
   products (single or mass change), the bug will no longer be
   restricted to the old product's group (if it was) and will
   be restricted to the new product's group.
   (bug 66235)
 - There are now options on a bug to choose whether the
-  reporter, assignee, QA and CCs can access a bug even if
-  they aren't in groups the bug it is restricted to.
+  reporter, and CCs can access a bug even if they aren't in
+  groups the bug it is restricted to.
   (bug 39816)
 - You can no longer mark a bug as a duplicate of a bug you
   can't see, and if you mark a bug a duplicate of a bug
@@ -567,9 +567,9 @@ known to us after the Bugzilla 2.14 release.
   queries could still be sent to the database.
   (bug 95082)
 
-**********************************************************
-*** USERS UPGRADING FROM 2.10 OR EARLIER - 2.12 ISSUES ***
-**********************************************************
+********************************************
+*** USERS UPGRADING FROM 2.10 OR EARLIER ***
+********************************************
 
 *** IMPORTANT CHANGES ***
 
@@ -664,3 +664,8 @@ known to us after the Bugzilla 2.14 release.
 
 Release notes were not compiled for versions of Bugzilla before
 2.12.
+
+The file 'UPGRADING-pre-2.8' contains instructions you may
+need to perform in addition to running 'checksetup.pl' if you
+are running a pre 2.8 version.
+
