@@ -111,19 +111,8 @@ NS_IMETHODIMP nsDocShellTreeOwner::FindItemWithName(const PRUnichar* aName,
 
    NS_ENSURE_TRUE(mWebBrowserChrome, NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsIWebBrowser> foundWebBrowser;
-   NS_ENSURE_SUCCESS(mWebBrowserChrome->FindNamedBrowser(aName,
-      getter_AddRefs(foundWebBrowser)), NS_ERROR_FAILURE);
-
-   if(!foundWebBrowser)
-      return NS_OK;
-
-   nsCOMPtr<nsIDocShell> foundDocShell;
-   foundWebBrowser->GetDocShell(getter_AddRefs(foundDocShell));
-
-   nsCOMPtr<nsIDocShellTreeItem> foundDocShellAsItem;
-   *aFoundItem = foundDocShellAsItem;
-   NS_IF_ADDREF(*aFoundItem);
+   NS_ENSURE_SUCCESS(mWebBrowserChrome->FindNamedBrowserItem(aName, aFoundItem),
+      NS_ERROR_FAILURE);
 
    return NS_OK;
 }
