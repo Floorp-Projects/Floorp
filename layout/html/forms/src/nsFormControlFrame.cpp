@@ -246,12 +246,13 @@ nsFormControlFrame::Reflow(nsIPresContext&          aPresContext,
     aDesiredSize.descent = 0;
 
   } else {
-    GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
+    nsresult rv = nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
     if (!mDidInit) {
+      //GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
       PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
       mDidInit = PR_TRUE;
     }
-    return nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+    return rv;
   }
 
   aStatus = NS_FRAME_COMPLETE;
