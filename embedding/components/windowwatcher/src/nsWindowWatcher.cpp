@@ -477,7 +477,8 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
   PRBool                          nameSpecified,
                                   featuresSpecified,
                                   windowIsNew = PR_FALSE,
-                                  windowIsModal = PR_FALSE;
+                                  windowIsModal = PR_FALSE,
+                                  uriToLoadIsChrome = PR_FALSE;
   PRUint32                        chromeFlags;
   nsAutoString                    name;             // string version of aName
   nsCString                       features;         // string version of aFeatures
@@ -493,10 +494,12 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
   if (aParent)
     GetWindowTreeOwner(aParent, getter_AddRefs(parentTreeOwner));
 
-  if (aUrl)
+  if (aUrl) {
     rv = URIfromURL(aUrl, aParent, getter_AddRefs(uriToLoad));
-  if (NS_FAILED(rv))
-    return rv;
+    if (NS_FAILED(rv))
+      return rv;
+    uriToLoad->SchemeIs("chrome", &uriToLoadIsChrome);
+  }
 
   nameSpecified = PR_FALSE;
   if (aName) {
@@ -512,7 +515,8 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     features.StripWhitespace();
   }
 
-  chromeFlags = CalculateChromeFlags(features.get(), featuresSpecified, aDialog);
+  chromeFlags = CalculateChromeFlags(features.get(), featuresSpecified, aDialog,
+                  uriToLoadIsChrome);
 
   // try to find an extant window with the given name
   if (nameSpecified) {
@@ -725,9 +729,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
     NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
-    PRBool isChrome = PR_FALSE;
-    rv = uriToLoad->SchemeIs("chrome", &isChrome);
-    if (NS_FAILED(rv) || !isChrome) {
+    if (NS_FAILED(rv) || !uriToLoadIsChrome) {
       nsCOMPtr<nsIPrincipal> principal;
       if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
         return NS_ERROR_FAILURE;
@@ -1187,7 +1189,8 @@ void nsWindowWatcher::CheckWindowName(nsString& aName)
  */
 PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
                                                PRBool aFeaturesSpecified,
-                                               PRBool aDialog)
+                                               PRBool aDialog,
+                                               PRBool aChromeURL)
 {
    if(!aFeaturesSpecified || !aFeatures) {
       if(aDialog)
@@ -1322,9 +1325,12 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
     chromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_LOWERED;
     chromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_RAISED;
     chromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_POPUP;
-    //XXX Temporarily removing this check to allow modal dialogs to be
-    //raised from script.  A more complete security based fix is needed.
-    //chromeFlags &= ~nsIWebBrowserChrome::CHROME_MODAL;
+    /* Untrusted script is allowed to pose modal windows with a chrome
+       scheme. This check could stand to be better. But it effectively
+       prevents untrusted script from opening modal windows in general
+       while still allowing alerts and the like. */
+    if (!aChromeURL)
+      chromeFlags &= ~nsIWebBrowserChrome::CHROME_MODAL;
   }
 
   return chromeFlags;
