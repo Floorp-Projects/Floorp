@@ -74,7 +74,6 @@
 #include "nsParserUtils.h"
 #include "nsIDocumentViewer.h"
 #include "nsIScrollable.h"
-#include "nsStyleConsts.h"
 
 // XXX misnamed header file, but oh well
 #include "nsHTMLTokens.h"
@@ -1543,27 +1542,11 @@ void
 nsXMLContentSink::StartLayout()
 {
 
-  PRBool topLevelFrameset = PR_FALSE;
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebShell));
-  if (docShellAsItem) {
-    nsCOMPtr<nsIDocShellTreeItem> root;
-    docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
-    if(docShellAsItem.get() == root.get()) {
-      topLevelFrameset = PR_TRUE;
-    }
-  }
-
-  // If it's a frameset document then disable scrolling.
-  // Else, reset scrolling to default settings for this shell.
+  // Reset scrolling to default settings for this shell.
   // This must happen before the initial reflow, when we create the root frame
   nsCOMPtr<nsIScrollable> scrollableContainer(do_QueryInterface(mWebShell));
   if (scrollableContainer) {
-    if (topLevelFrameset) {
-      scrollableContainer->SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_Y, NS_STYLE_OVERFLOW_HIDDEN);
-      scrollableContainer->SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_X, NS_STYLE_OVERFLOW_HIDDEN);
-    } else {
-      scrollableContainer->ResetScrollbarPreferences();
-    }
+    scrollableContainer->ResetScrollbarPreferences();
   }
 
   PRInt32 i, ns = mDocument->GetNumberOfShells();
@@ -1602,6 +1585,16 @@ nsXMLContentSink::StartLayout()
   }
   if (rv == NS_OK) {
     mRef.AssignWithConversion(ref);
+  }
+
+  PRBool topLevelFrameset = PR_FALSE;
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebShell));
+  if (docShellAsItem) {
+    nsCOMPtr<nsIDocShellTreeItem> root;
+    docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
+    if(docShellAsItem.get() == root.get()) {
+      topLevelFrameset = PR_TRUE;
+    }
   }
 
   if (ref || topLevelFrameset) {
