@@ -126,7 +126,7 @@ public:
   NS_IMETHOD GetNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr);
   NS_IMETHOD GetSecurityManager(nsIScriptSecurityManager** aInstancePtr);
 
-  NS_IMETHOD ScriptEvaluated(void);
+  NS_IMETHOD ScriptEvaluated(PRBool aTerminated);
   NS_IMETHOD SetOwner(nsIScriptContextOwner* owner);
   NS_IMETHOD GetOwner(nsIScriptContextOwner** owner);
   NS_IMETHOD SetTerminationFunction(nsScriptTerminationFunc aFunc,
