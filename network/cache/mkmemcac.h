@@ -61,8 +61,13 @@ NET_NextMemCacheObject(XP_List* list_ptr);
 #ifndef NU_CACHE
 MODULE_PRIVATE int NET_FindURLInMemCache(URL_Struct * URL_s, MWContext *ctxt);
 MODULE_PRIVATE void NET_DisplayMemCacheInfoAsHTML(ActiveEntry * cur_entry);
-void NET_InitMemCacProtocol(void);
+#endif
 
+
+#ifdef NU_CACHE
+extern void     NET_InitNuCacheProtocol(void);
+#else
+extern void     NET_InitMemCacProtocol(void);
 #endif
 
 #endif /* MK_MEMORY_CACHE_H */

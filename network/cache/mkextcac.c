@@ -1068,7 +1068,7 @@ CACHE_FindURLInCache(URL_Struct *URL_s, MWContext *ctxt)
 	XP_List *list_ptr;
 
 	/* larubbio */
-	XP_FileType fileType = 0;
+	XP_FileType fileType = (XP_FileType)0;
 
 	TRACEMSG(("Checking for URL in external cache"));
 

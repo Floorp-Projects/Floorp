@@ -1182,7 +1182,7 @@ MODULE_PRIVATE int
 NET_FindURLInMemCache(URL_Struct * URL_s, MWContext *ctxt)
 #ifdef NU_CACHE
 {
-	PR_ASSERT(0); /* Should not be getting called */
+	PR_ASSERT(0); /* Should not be getting called.  Also, compiler will warn of missing prototype */
 	return 0;
 }
 #else
@@ -2039,7 +2039,7 @@ net_CleanupMemoryCacheProtocol(void)
 }
 
 void
-NET_InitMemCacProtocol(void)
+NET_InitMemCacProtocol(void) /* no prototype when NU_CACHE */
 {
     static NET_ProtoImpl mem_cac_proto_impl;
 #ifdef NU_CACHE
