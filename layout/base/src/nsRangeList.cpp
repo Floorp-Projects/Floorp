@@ -2074,7 +2074,27 @@ nsDOMSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PR
 
   //get common parent
   nsCOMPtr<nsIDOMNode> parent;
-  res = aRange->GetCommonParent(getter_AddRefs(parent));
+  nsCOMPtr<nsIDOMRange> subRange;
+  res = nsComponentManager::CreateInstance(kRangeCID, nsnull,
+                                     nsIDOMRange::GetIID(),
+                                     getter_AddRefs(subRange));
+  if (NS_FAILED(res) || !subRange)
+    return NS_ERROR_FAILURE;
+  result = subRange->SetStart(startNode,startOffset);
+  if (NS_FAILED(result))
+    return result;
+  result = subRange->SetEnd(endNode,endOffset);
+  if (NS_FAILED(result))
+  {
+    result = subRange->SetEnd(startNode,startOffset);
+    if (NS_FAILED(result))
+      return result;
+    result = subRange->SetStart(endNode,endOffset);
+    if (NS_FAILED(result))
+      return result;
+  }
+
+  res = subRange->GetCommonParent(getter_AddRefs(parent));
   if (NS_FAILED(res) || !parent)
     return res;
  
