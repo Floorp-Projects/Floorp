@@ -40,7 +40,7 @@
 
 #include "stdio.h"
 
-#define DBG 1
+#define DBG 0
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
@@ -326,10 +326,10 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent,
                 nsXtWidget_Resize_Callback,
                 this);
 
-  XtAddCallback(mWidget,
+  /*XtAddCallback(mWidget,
                 XmNexposeCallback,
-                nsXtWidget_Resize_Callback,
-                this);
+                nsXtWidget_Expose_Callback,
+                this);*/
 
 
 }
@@ -383,7 +383,7 @@ void nsWindow::InitCallbacks(char * aName)
 
   XtAddEventHandler(mWidget, 
 		    ExposureMask, 
-		    PR_FALSE, 
+		    PR_TRUE, 
 		    nsXtWidget_ExposureMask_EventHandler,
 		    this);
 
@@ -517,8 +517,8 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 //-------------------------------------------------------------------------
 void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
- // if (DBG) 
-  printf("$$$$$$$$$ %s::Resize %d %d   Repaint: %s\n", gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
+  if (DBG) printf("$$$$$$$$$ %s::Resize %d %d   Repaint: %s\n", 
+                  gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
   XtVaSetValues(mWidget, XmNwidth, aWidth, XmNheight, aHeight, nsnull);
@@ -538,7 +538,6 @@ void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeigh
   mBounds.height = aHeight;
   XtVaSetValues(mWidget, XmNx, aX, XmNy, aY, 
                          XmNwidth, aWidth, XmNheight, aHeight, nsnull);
-  printf("$$$$$$$$$ %s::Resize %d %d   Repaint: %s\n", gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
 }
 
     
@@ -580,7 +579,6 @@ void nsWindow::SetBounds(const nsRect &aRect)
 void nsWindow::GetBounds(nsRect &aRect)
 {
 
-  printf("$$$$$$$$$ %s::GetBounds 0x%x\n", gInstanceClassName, this);
 
   /*XWindowAttributes attrs ;
   Window w = nsnull;
@@ -803,6 +801,32 @@ nsIDeviceContext* nsWindow::GetDeviceContext()
 //-------------------------------------------------------------------------
 void nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
+  if (mWidget == nsnull) {
+    return;
+  }
+
+  Window  win      = XtWindow(mWidget);
+  Display *display = XtDisplay(mWidget);
+  
+  XCopyArea(display, win, win, XDefaultGC(display, 0), 
+            aClipRect->x, aClipRect->y, 
+            aClipRect->XMost(),  aClipRect->YMost(), aDx, aDy);
+
+  printf("Clipping %d %d %d %d\n", aClipRect->x, aClipRect->y,aClipRect->XMost(),  aClipRect->YMost());
+  printf("Forcing repaint %d %d %d %d\n", mBounds.x, mBounds.y, mBounds.width, mBounds.height);
+  XEvent evt;
+  evt.xgraphicsexpose.type       = GraphicsExpose;
+  evt.xgraphicsexpose.send_event = False;
+  evt.xgraphicsexpose.display    = display;
+  evt.xgraphicsexpose.drawable   = win;
+  evt.xgraphicsexpose.x          = mBounds.x;
+  evt.xgraphicsexpose.y          = mBounds.y;
+  evt.xgraphicsexpose.width      = mBounds.width;
+  evt.xgraphicsexpose.height     = mBounds.height;
+  evt.xgraphicsexpose.count      = 0;
+  //XSendEvent(display, win, False, ExposureMask, &evt);
+  //XFlush(display);
+
 }
 
 
@@ -933,11 +957,11 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent aEvent)
         GetBounds(rect);
         if (rect.Contains(event.point.x, event.point.y)) {
           if (mCurrentWindow == NULL || mCurrentWindow != this) {
-            printf("Mouse enter");
+            //printf("Mouse enter");
             mCurrentWindow = this;
           }
         } else {
-          printf("Mouse exit");
+          //printf("Mouse exit");
         }
 
       } break;

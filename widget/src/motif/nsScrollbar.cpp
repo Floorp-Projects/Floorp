@@ -54,13 +54,6 @@ void nsScrollbar::Create(nsIWidget *aParent,
                       nsWidgetInitData *aInitData)
 {
   Widget parentWidget = nsnull;
-  printf("===============\n");
-  printf("===============\n");
-  printf("===============\n");
-  printf("===============\n");
-  printf("===============\n");
-  printf("===============\n");
-  printf("Scrollbar this 0x%x\n", this);
   strcpy(gInstanceClassName, "nsScrollbar");
 
   if (aParent) {
@@ -169,9 +162,8 @@ void nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 {
     int max = aEndRange;
     XtVaGetValues(mWidget, XmNmaximum, &max, nsnull);
+    if (DBG) printf("SetMaxRange %d\n", max);
 
-    max = aEndRange;
-    XtVaSetValues(mWidget, XmNmaximum, max, nsnull);
 }
 
 
@@ -197,6 +189,7 @@ void nsScrollbar::SetPosition(PRUint32 aPos)
 {
     int pos = aPos;
     XtVaSetValues(mWidget, XmNvalue, pos, nsnull);
+    if (DBG) printf("SetPosition %d\n", pos);
 }
 
 
@@ -222,6 +215,7 @@ PRUint32 nsScrollbar::GetPosition()
 void nsScrollbar::SetThumbSize(PRUint32 aSize)
 {
     XtVaSetValues(mWidget, XmNpageIncrement, (int)aSize, nsnull);
+    if (DBG) printf("SetThumbSize %d\n", aSize);
 }
 
 
@@ -244,9 +238,12 @@ PRUint32 nsScrollbar::GetThumbSize()
 // Set the line increment for this scrollbar
 //
 //-------------------------------------------------------------------------
-void nsScrollbar::SetLineIncrement(PRUint32 aSize)
+void nsScrollbar::SetLineIncrement(PRUint32 aLineIncrement)
 {
-    mLineIncrement = aSize;
+    mLineIncrement = aLineIncrement;
+    XtVaSetValues(mWidget, XmNincrement, aLineIncrement, nsnull);
+
+    if (DBG) printf("SetLineIncrement %d\n", aLineIncrement);
 }
 
 
@@ -273,11 +270,13 @@ void nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
     XtVaSetValues(mWidget, XmNincrement, aLineIncrement,
                            XmNmaximum,   aMaxRange,
                            XmNminimum,   0,
-                           XmNpageIncrement, aThumbSize,
+                           XmNsliderSize, aThumbSize,
                            XmNvalue,     aPosition, 
                            nsnull);
 
     mLineIncrement = aLineIncrement;
+    if (DBG) printf("SetParameters %d %d %d %d \n", aMaxRange, aThumbSize, 
+                    aPosition, aLineIncrement);
 }
 
 
