@@ -557,7 +557,11 @@ if ($my_webservergroup) {
 
 my $db_base = 'mysql';
 
-use DBI;
+# No need to "use" this here.  It should already be loaded from the
+# version-checking routines above, and this file won't even compile if
+# DBI isn't installed so the user gets nasty errors instead of our
+# pretty one saying they need to install it. -- justdave@syndicomm.com
+#use DBI;
 
 # get a handle to the low-level DBD driver
 my $drh = DBI->install_driver($db_base)
