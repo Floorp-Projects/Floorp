@@ -35,6 +35,7 @@ Rights Reserved.
     onload="searchOnLoad(); SetDatasources()"
     onunload="searchOnUnload();"
     onclose="onSearchStop();"
+    windowtype="mailnews:search"
     title="&searchDialogTitle.label;"
     width="640" height="470"
     persist="screenX screenY width height"

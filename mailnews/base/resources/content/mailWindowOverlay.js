@@ -27,6 +27,7 @@ var gPromptService;
 var gOfflinePromptsBundle;
 var nsPrefBranch = null;
 var gOfflineManager;
+var gWindowManagerInterface;
 
 // Disable the new account menu item if the account preference is locked.
 // Two other affected areas are the account central and the account manager
@@ -317,6 +318,15 @@ function GetFirstSelectedMsgFolder()
     }
 
     return result;
+}
+
+function GetWindowMediator()
+{
+    if (gWindowManagerInterface)
+        return gWindowManagerInterface;
+
+    var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+    return (gWindowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator));
 }
 
 function GetInboxFolder(server)
@@ -894,13 +904,36 @@ function MsgCanFindAgain()
 function MsgSearchMessages()
 {
     var preselectedFolder = GetFirstSelectedMsgFolder();
-    window.openDialog("chrome://messenger/content/SearchDialog.xul", "SearchMail", "chrome,resizable,centerscreen,dialog=no", { folder: preselectedFolder });
+    var windowManagerInterface = GetWindowMediator();
+    var searchWindow = windowManagerInterface.getMostRecentWindow("mailnews:search");
+
+    if (searchWindow)
+        searchWindow.focus();
+    else
+        window.openDialog("chrome://messenger/content/SearchDialog.xul", "", 
+                          "chrome,resizable,centerscreen,dialog=no", { folder: preselectedFolder });
 }
 
 function MsgFilters()
 {
     var preselectedFolder = GetFirstSelectedMsgFolder();
-    window.openDialog("chrome://messenger/content/FilterListDialog.xul", "FilterDialog", "chrome,resizable,centerscreen", { folder: preselectedFolder });
+    var windowManagerInterface = GetWindowMediator();
+    var filterList = windowManagerInterface.getMostRecentWindow("mailnews:filterlist");
+
+    if (filterList)
+    {
+        var filterEditor = windowManagerInterface.getMostRecentWindow("mailnews:filtereditor");
+
+        // If the filtereditor is open, then we focus that because it is modal and
+        // thus blocking the filterlist from focusing.
+        if (filterEditor)
+            filterEditor.focus();
+        else
+            filterList.focus();
+    }
+    else
+        window.openDialog("chrome://messenger/content/FilterListDialog.xul", "", 
+                          "chrome,resizable,centerscreen,dialog=yes", { folder: preselectedFolder });
 }
 
 function MsgViewAllHeaders()

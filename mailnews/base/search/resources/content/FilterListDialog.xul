@@ -30,6 +30,7 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   orient="vertical"
+  windowtype="mailnews:filterlist"
   onload="onLoad();"
   width="440"
   height="320"
@@ -74,7 +75,7 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
           <tree id="filterTree" class="inset" flex="1"
                 onselect="onFilterSelect(event);"
                 ondblclick="onFilterDoubleClick(event);"
-                datasources="rdf:msgfilters rdf:msgaccountmanager "
+                datasources="rdf:msgfilters rdf:msgaccountmanager"
                 containment="http://home.netscape.com/NC-rdf#child">
 
             <treehead>
