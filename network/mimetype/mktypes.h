@@ -24,6 +24,8 @@ desc=\"VCard\"                    icon=internal-gopher-unknown",
 desc=\"GIF Image\"		icon=internal-gopher-image",
 "exts=\"jpeg,jpg,jpe,jfif,pjpeg,pjp\" type=image/jpeg              \
 desc=\"JPEG Image\"               icon=internal-gopher-image",
+"exts=\"png\"                      type=image/png		            \
+desc=\"PNG Image\"		          icon=internal-gopher-image",
 "exts=\"tiff,tif\"                 type=image/tiff                 \
 desc=\"TIFF Image\"               icon=internal-gopher-image",
 "exts=\"ras\"                      type=image/x-cmu-raster         \
@@ -48,8 +50,6 @@ desc=\"RGB Image\"                icon=internal-gopher-image",
 desc=\"Windows Bitmap\"           icon=internal-gopher-image",
 "exts=\"pcd\"                      type=image/x-photo-cd		\
 desc=\"PhotoCD Image\"		icon=internal-gopher-image",
-"exts=\"png\"                      type=image/x-png		\
-desc=\"PNG Image\"		icon=internal-gopher-image",
 "exts=\"ief\"                      type=image/ief                  \
 desc=\"\"                         icon=internal-gopher-image",
 "exts=\"fif\"                      type=application/fractals       \
