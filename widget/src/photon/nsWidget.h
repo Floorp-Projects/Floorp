@@ -312,17 +312,17 @@ protected:
 		pt.x -= x; pt.y -= y;
 		}
 
-  inline void     InitKeyEvent(PhKeyEvent_t *aPhKeyEvent, nsWidget *aWidget,
-                                nsKeyEvent &aKeyEvent, PRUint32 aEventType);
-  void     InitMouseEvent(PhPointerEvent_t * aPhButtonEvent,
-                                  nsWidget         * aWidget,
-                                  nsMouseEvent     & anEvent,
-                                  PRUint32           aEventType);
+  inline void InitKeyEvent( PhKeyEvent_t *aPhKeyEvent, nsWidget *aWidget, nsKeyEvent &aKeyEvent, PRUint32 aEventType );
+  void InitMouseEvent( PhPointerEvent_t * aPhButtonEvent,
+                       nsWidget         * aWidget,
+                       nsMouseEvent     & anEvent,
+                       PRUint32         aEventType );
 
 
   /* Convert Photon key codes to Mozilla key codes */
-  PRUint32   nsConvertKey(unsigned long keysym, PRBool *aIsChar);
+  PRUint32 nsConvertKey( unsigned long keysym, unsigned long keymods, PRBool *aIsChar );
 
+#if 0
   //Enable/Disable Photon Damage		  
 	inline void EnableDamage( PtWidget_t *widget, PRBool enable )
 		{
@@ -332,6 +332,7 @@ protected:
 			else PtStartFlux( top );
 			}
 		}
+#endif
 
 
   //////////////////////////////////////////////////////////////////
