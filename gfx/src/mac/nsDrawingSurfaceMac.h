@@ -50,6 +50,7 @@ public:
 
   RgnHandle							mMainRegion;
   RgnHandle			    		mClipRegion;
+  RgnHandle			    		mOriginalClipRegion;
 
   nscolor               mColor;
   PRInt32               mFont;
