@@ -2360,7 +2360,7 @@ executeREBytecode(REGlobalData *gData, REMatchState *x)
                     charSet = &gData->regexp->classList[k];
                     if (!charSet->converted)
                         if (!processCharSet(gData, charSet))
-                            return JS_FALSE;
+                            return NULL;
                     matchCh1 = *x->cp;
                     k = matchCh1 / 8;
                     if ((charSet->length == 0 ||

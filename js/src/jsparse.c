@@ -917,7 +917,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
      */
     pn->pn_funAtom = js_AtomizeObject(cx, fun->object, 0);
     if (!pn->pn_funAtom)
-        return JS_FALSE;
+        return NULL;
 
     pn->pn_op = op;
     pn->pn_body = body;
