@@ -34,7 +34,7 @@ LIB1 = .\$(OBJDIR)\tmreader.lib
 
 PROGRAMS = $(PROG1) $(PROG2) $(PROG3)
 
-C_OBJS=.\$(OBJDIR)\spacecategory.obj
+C_OBJS=.\$(OBJDIR)\spacecategory.obj .\$(OBJDIR)\formdata.obj
 CPP_OBJS=.\$(OBJDIR)\tmreader.obj
 
 LINCS= $(LINCS) \
