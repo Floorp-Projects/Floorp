@@ -3109,6 +3109,21 @@ private:
     jsval mCheck;
 };
 
+/***************************************************************************/
+class XPCMarkableJSVal
+{
+public:
+    XPCMarkableJSVal(jsval val) : mVal(val), mValPtr(&mVal) {}
+    XPCMarkableJSVal(jsval *pval) : mVal(0), mValPtr(pval) {}
+    void Mark() {}
+    void MarkBeforeJSFinalize(JSContext* cx)
+        {if(JSVAL_IS_GCTHING(*mValPtr))
+            JS_MarkGCThing(cx, JSVAL_TO_GCTHING(*mValPtr), 
+                           "XPCMarkableJSVal", nsnull);}
+private:
+    jsval  mVal;
+    jsval* mValPtr;
+}; 
 
 /***************************************************************************/
 // AutoMarkingPtr is the base class for the various AutoMarking pointer types 
@@ -3186,12 +3201,16 @@ DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingNativeInterfacePtr, XPCNativeInterface)
 DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingNativeSetPtr, XPCNativeSet)
 DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingWrappedNativePtr, XPCWrappedNative)
 DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingWrappedNativeProtoPtr, XPCWrappedNativeProto)
+DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingJSVal, XPCMarkableJSVal)
                                     
 // Note: It looked like I would need one of these AutoMarkingPtr types for
 // XPCNativeScriptableInfo in order to manage marking its 
 // XPCNativeScriptableShared member during construction. But AFAICT we build
 // these and bind them to rooted things so immediately that this just is not
 // needed.
+
+#define AUTO_MARK_JSVAL(ccx, val) \
+    XPCMarkableJSVal _val(val); AutoMarkingJSVal _automarker(ccx, &_val)
 
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
 /***************************************************************************/
