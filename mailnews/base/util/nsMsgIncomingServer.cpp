@@ -336,9 +336,24 @@ nsMsgIncomingServer::GetFileValue(const char* prefname,
 {
   nsCAutoString fullPrefName;
   getPrefName(m_serverKey, prefname, fullPrefName);
-  nsresult rv = m_prefs->GetFilePref(fullPrefName, spec);
+  
+  nsCOMPtr<nsILocalFile> prefLocal;
+  nsCOMPtr<nsIFileSpec> outSpec;
+  nsXPIDLCString pathBuf;
+  
+  nsresult rv = m_prefs->GetFileXPref(fullPrefName, getter_AddRefs(prefLocal));
+  if (NS_FAILED(rv)) return rv;
+  rv = NS_NewFileSpec(getter_AddRefs(outSpec));
+  if (NS_FAILED(rv)) return rv;
+  rv = prefLocal->GetPath(getter_Copies(pathBuf));
+  if (NS_FAILED(rv)) return rv;
+  rv = outSpec->SetNativePath((const char *)pathBuf);
+  if (NS_FAILED(rv)) return rv;
+  
+  *spec = outSpec;
+  NS_ADDREF(*spec);
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -347,9 +362,19 @@ nsMsgIncomingServer::SetFileValue(const char* prefname,
 {
   nsCAutoString fullPrefName;
   getPrefName(m_serverKey, prefname, fullPrefName);
-  nsresult rv = m_prefs->SetFilePref(fullPrefName, spec, PR_FALSE);
+  
+  nsresult rv;
+  nsFileSpec tempSpec;
+  nsCOMPtr<nsILocalFile> prefLocal;
+  
+  rv = spec->GetFileSpec(&tempSpec);
+  if (NS_FAILED(rv)) return rv;
+  rv = NS_FileSpecToIFile(&tempSpec, getter_AddRefs(prefLocal));
+  if (NS_FAILED(rv)) return rv;
+  rv = m_prefs->SetFileXPref(fullPrefName, prefLocal);
+  if (NS_FAILED(rv)) return rv;
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult

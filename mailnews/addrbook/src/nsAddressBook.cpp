@@ -40,8 +40,6 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsIServiceManager.h"
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h"
 #include "nsAppShellCIDs.h"
 #include "nsIAppShellService.h"
 #include "nsIDOMWindow.h"
@@ -56,7 +54,6 @@
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
-static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORY_CID); 
 static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);

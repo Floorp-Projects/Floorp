@@ -427,10 +427,6 @@ nsresult DIR_ShutDown()  /* FEs should call this when the app is shutting down. 
 	return NS_OK;
 }
 
-#include "nsIFileSpec.h"
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h"
-static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 
 nsresult DIR_ContainsServer(DIR_Server* pServer, PRBool *hasDir)

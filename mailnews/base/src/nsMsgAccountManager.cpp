@@ -39,18 +39,13 @@
 #include "nsXPIDLString.h"
 #include "nscore.h"
 #include "nsIProfile.h"
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h"
 #include "nsCRT.h"  // for nsCRT::strtok
 #include "prprf.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIMsgFolderCache.h"
 #include "nsFileStream.h"
 #include "nsMsgUtils.h"
-#include "nsSpecialSystemDirectory.h"
-#include "nsIFileLocator.h" 
 #include "nsIFileSpec.h" 
-#include "nsFileLocations.h" 
 #include "nsIURL.h"
 #include "nsISmtpService.h"
 #include "nsString.h"
@@ -58,6 +53,8 @@
 #include "nsIObserverService.h"
 #include "nsIMsgMailSession.h"
 #include "nsIEventQueueService.h"
+#include "nsIDirectoryService.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #if defined(DEBUG_alecf) || defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_ACCOUNTMANAGER 1
@@ -79,8 +76,6 @@ static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);   
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);   
-static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
-static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
@@ -812,15 +807,23 @@ nsresult nsMsgAccountManager::GetFolderCache(nsIMsgFolderCache* *aFolderCache)
     if (NS_FAILED(rv))
 		return rv;
 
-    nsCOMPtr <nsIFileSpec> cacheFile;
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+    nsCOMPtr<nsIFile> cacheFile;
+    nsCOMPtr <nsIFileSpec> cacheFileSpec;
+    
+    rv = NS_GetSpecialDirectory(NS_APP_MESSENGER_FOLDER_CACHE_50_DIR, getter_AddRefs(cacheFile));
     if (NS_FAILED(rv)) return rv;
-
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_MessengerFolderCache50, getter_AddRefs(cacheFile));
+    
+    // TODO: Make nsIMsgFolderCache::Init take an nsIFile and
+    // avoid this conversion.
+    nsXPIDLCString pathBuf;   
+    rv = cacheFile->GetPath(getter_Copies(pathBuf));
     if (NS_FAILED(rv)) return rv;
-
-    m_msgFolderCache->Init(cacheFile);
-
+    rv = NS_NewFileSpec(getter_AddRefs(cacheFileSpec));
+    if (NS_FAILED(rv)) return rv;
+    rv = cacheFileSpec->SetNativePath(pathBuf);
+    if (NS_FAILED(rv)) return rv;
+               
+    m_msgFolderCache->Init(cacheFileSpec);
   }
 
   *aFolderCache = m_msgFolderCache;

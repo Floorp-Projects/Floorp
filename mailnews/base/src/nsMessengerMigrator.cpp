@@ -33,11 +33,11 @@
 #include "nsXPIDLString.h"
 #include "nscore.h"
 
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h"
 #include "nsCRT.h"  // for nsCRT::strtok
 #include "nsFileStream.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsIDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsIFileSpec.h" 
 #include "nsIURL.h"
 #include "nsIStringBundle.h"
@@ -83,7 +83,6 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);   
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);   
-static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kAB4xUpgraderServiceCID, NS_AB4xUPGRADER_CID);
 static NS_DEFINE_CID(kAddressBookCID, NS_ADDRESSBOOK_CID);
@@ -516,7 +515,7 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
   // create the directory structure for old 4.x "Local Mail"
   // under <profile dir>/Mail/Local Folders or
   // <"mail.directory" pref>/Local Folders 
-  nsCOMPtr <nsIFileSpec> mailDir;
+  nsCOMPtr <nsIFile> mailDir;
   nsFileSpec dir;
   PRBool dirExists;
 
@@ -525,29 +524,41 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
   // this only makes sense when we are migrating
   // for a new profile, that pref won't be set.
   if (migrating) {
-    rv = m_prefs->GetFilePref(PREF_MAIL_DIRECTORY, getter_AddRefs(mailDir));
-  }
-  else {
-    rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsILocalFile> localFile;
+    rv = m_prefs->GetFileXPref(PREF_MAIL_DIRECTORY, getter_AddRefs(localFile));
+    if (NS_SUCCEEDED(rv))
+        mailDir = localFile;
   }
 
-  if (NS_FAILED(rv)) {
+  if (!mailDir) {
     // we want <profile>/Mail
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_MailDirectory50, getter_AddRefs(mailDir));
+    rv = NS_GetSpecialDirectory(NS_APP_MAIL_50_DIR, getter_AddRefs(mailDir));
     if (NS_FAILED(rv)) return rv;
   }
-
-  // set the default local path for "none"
-  rv = server->SetDefaultLocalPath(mailDir);
+  
+  rv = mailDir->Exists(&dirExists);
+  if (NS_SUCCEEDED(rv) && !dirExists)
+    rv = mailDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+  if (NS_FAILED(rv)) return rv; 
+   
+  nsXPIDLCString descString;
+  nsCOMPtr<nsIFileSpec> mailDirSpec;
+  
+  // Convert the nsILocalFile into an nsIFileSpec
+  // TODO: convert users os nsIFileSpec to nsILocalFile
+  // and avoid this step.
+  nsXPIDLCString mailDirPath;
+  rv = mailDir->GetPath(getter_Copies(mailDirPath));
+  if (NS_FAILED(rv)) return rv;
+  rv = NS_NewFileSpec(getter_AddRefs(mailDirSpec));
+  if (NS_FAILED(rv)) return rv;
+  rv = mailDirSpec->SetNativePath(mailDirPath);
   if (NS_FAILED(rv)) return rv;
 
-  rv = mailDir->Exists(&dirExists);  
-  if (!dirExists) {
-    mailDir->CreateDir();
-  }
+
+  // set the default local path for "none"
+  rv = server->SetDefaultLocalPath(mailDirSpec);
+  if (NS_FAILED(rv)) return rv;
  
   if (migrating) {
   	// set the local path for this "none" server
@@ -556,14 +567,14 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
 	// the 4.x "Local Mail" (when using imap) got copied.
 	// it would be great to use the server key, but we don't know it
 	// when we are copying of the mail.
-	rv = mailDir->AppendRelativeUnixPath((const char *)mLocalFoldersHostname);
+	rv = mailDirSpec->AppendRelativeUnixPath((const char *)mLocalFoldersHostname);
 	if (NS_FAILED(rv)) return rv; 
-	rv = server->SetLocalPath(mailDir);
+	rv = server->SetLocalPath(mailDirSpec);
 	if (NS_FAILED(rv)) return rv;
     
-	rv = mailDir->Exists(&dirExists);
+	rv = mailDirSpec->Exists(&dirExists);
 	if (!dirExists) {
-	    mailDir->CreateDir();
+	    mailDirSpec->CreateDir();
 	}
   }
   return NS_OK;
@@ -1083,30 +1094,44 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   // create the directory structure for old 4.x "Local Mail"
   // under <profile dir>/Mail/Local Folders or
   // <"mail.directory" pref>/Local Folders 
-  nsCOMPtr <nsIFileSpec> mailDir;
+  nsCOMPtr<nsIFile> mailDir;
   nsFileSpec dir;
   PRBool dirExists;
 
   // if the "mail.directory" pref is set, use that.
   // if they used -installer, this pref will point to where their files got copied
-  rv = m_prefs->GetFilePref(PREF_MAIL_DIRECTORY, getter_AddRefs(mailDir));
-  if (NS_FAILED(rv)) {
+  nsCOMPtr<nsILocalFile> localFile;
+  rv = m_prefs->GetFileXPref(PREF_MAIL_DIRECTORY, getter_AddRefs(localFile));
+  if (NS_SUCCEEDED(rv))
+    mailDir = localFile;
+  
+  if (!mailDir) {
     // we want <profile>/Mail
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_MailDirectory50, getter_AddRefs(mailDir));
+    rv = NS_GetSpecialDirectory(NS_APP_MAIL_50_DIR, getter_AddRefs(mailDir));
     if (NS_FAILED(rv)) return rv;
   }
 
-  // set the default local path for "none"
-  rv = server->SetDefaultLocalPath(mailDir);
+  rv = mailDir->Exists(&dirExists);
+  if (NS_SUCCEEDED(rv) && !dirExists)
+    rv = mailDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+  if (NS_FAILED(rv)) return rv;  
+    
+  nsXPIDLCString mailDirPath;
+  nsCOMPtr<nsIFileSpec> mailDirSpec;
+  
+  // Convert the nsILocalFile into an nsIFileSpec
+  // TODO: convert users of nsIFileSpec to nsILocalFile
+  // and avoid this step.
+  rv = mailDir->GetPath(getter_Copies(mailDirPath));
+  if (NS_FAILED(rv)) return rv;
+  rv = NS_NewFileSpec(getter_AddRefs(mailDirSpec));
+  if (NS_FAILED(rv)) return rv;
+  rv = mailDirSpec->SetNativePath(mailDirPath);
   if (NS_FAILED(rv)) return rv;
 
-  rv = mailDir->Exists(&dirExists);  
-  if (!dirExists) {
-    mailDir->CreateDir();
-  }
+  // set the default local path for "none"
+  rv = server->SetDefaultLocalPath(mailDirSpec);
+  if (NS_FAILED(rv)) return rv;
 
   // set the local path for this "none" server
   //
@@ -1114,14 +1139,14 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   // the 4.x "Local Mail" (when using imap) got copied.
   // it would be great to use the server key, but we don't know it
   // when we are copying of the mail.
-  rv = mailDir->AppendRelativeUnixPath((const char *)mLocalFoldersHostname);
+  rv = mailDirSpec->AppendRelativeUnixPath((const char *)mLocalFoldersHostname);
   if (NS_FAILED(rv)) return rv; 
-  rv = server->SetLocalPath(mailDir);
+  rv = server->SetLocalPath(mailDirSpec);
   if (NS_FAILED(rv)) return rv;
     
-  rv = mailDir->Exists(&dirExists);
+  rv = mailDirSpec->Exists(&dirExists);
   if (!dirExists) {
-    mailDir->CreateDir();
+    mailDirSpec->CreateDir();
   }
   
   // pass the "Local Folders" server so the send later uri pref 
@@ -1134,7 +1159,7 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   noneServer = do_QueryInterface(server, &rv);
   if (NS_FAILED(rv)) return rv;
   if (!noneServer) return NS_ERROR_FAILURE;
-  rv = noneServer->CopyDefaultMessages("Templates",mailDir);
+  rv = noneServer->CopyDefaultMessages("Templates",mailDirSpec);
   if (NS_FAILED(rv)) return rv;
  
   return NS_OK;
@@ -1202,10 +1227,16 @@ nsMessengerMigrator::MigrateMovemailAccount(nsIMsgIdentity *identity)
   // if the "mail.directory" pref is set, use that.
   if (NS_FAILED(rv)) {
     // we wan't <profile>/Mail
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+    nsCOMPtr<nsIFile> aFile;
+    nsXPIDLCString pathBuf;
+    
+    rv = NS_GetSpecialDirectory(NS_APP_MAIL_50_DIR, getter_AddRefs(aFile));
     if (NS_FAILED(rv)) return rv;
-
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_MailDirectory50, getter_AddRefs(mailDir));
+    rv = aFile->GetPath(getter_Copies(pathBuf));
+    if (NS_FAILED(rv)) return rv;
+    rv = NS_NewFileSpec(getter_AddRefs(mailDir));
+    if (NS_FAILED(rv)) return rv;
+    rv = mailDir->SetNativePath((const char *)pathBuf);
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -1311,7 +1342,7 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
   if (NS_FAILED(rv)) return rv;
   
   // now upgrade all the prefs
-  nsCOMPtr <nsIFileSpec> mailDir;
+  nsCOMPtr <nsIFile> mailDir;
   nsFileSpec dir;
   PRBool dirExists;
 
@@ -1325,42 +1356,61 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
   rv = MigrateOldMailPrefs(server);
   if (NS_FAILED(rv)) return rv;
 
-  // if they used -installer, this pref will point to where their files got copied
-  rv = m_prefs->GetFilePref(PREF_MAIL_DIRECTORY, getter_AddRefs(mailDir));
   // create the directory structure for old 4.x pop mail
   // under <profile dir>/Mail/<pop host name> or
   // <"mail.directory" pref>/<pop host name>
   //
   // if the "mail.directory" pref is set, use that.
-  if (NS_FAILED(rv)) {
+  // if they used -installer, this pref will point to where their files got copied
+  nsCOMPtr<nsILocalFile> localFile;
+  rv = m_prefs->GetFileXPref(PREF_MAIL_DIRECTORY, getter_AddRefs(localFile));
+  if (NS_SUCCEEDED(rv))
+    mailDir = localFile;
+  
+  if (!mailDir) {
     // we wan't <profile>/Mail
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_MailDirectory50, getter_AddRefs(mailDir));
+    rv = NS_GetSpecialDirectory(NS_APP_MAIL_50_DIR, getter_AddRefs(mailDir));
     if (NS_FAILED(rv)) return rv;
   }
 
-  // set the default local path for "pop3"
-  rv = server->SetDefaultLocalPath(mailDir);
+  rv = mailDir->Exists(&dirExists);
+  if (NS_SUCCEEDED(rv) && !dirExists)
+    rv = mailDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsXPIDLCString mailDirPath;
+  nsCOMPtr<nsIFileSpec> mailDirSpec;
+  
+  // Convert the nsILocalFile into an nsIFileSpec
+  // TODO: convert users os nsIFileSpec to nsILocalFile
+  // and avoid this step.
+  rv = mailDir->GetPath(getter_Copies(mailDirPath));
+  if (NS_FAILED(rv)) return rv;
+  rv = NS_NewFileSpec(getter_AddRefs(mailDirSpec));
+  if (NS_FAILED(rv)) return rv;
+  rv = mailDirSpec->SetNativePath(mailDirPath);
   if (NS_FAILED(rv)) return rv;
 
-  rv = mailDir->Exists(&dirExists);
+  // set the default local path for "pop3"
+  rv = server->SetDefaultLocalPath(mailDirSpec);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = mailDirSpec->Exists(&dirExists);
   if (!dirExists) {
-    mailDir->CreateDir();
+    mailDirSpec->CreateDir();
   }
 
   // we want .../Mail/<hostname>, not .../Mail
-  rv = mailDir->AppendRelativeUnixPath(hostAndPort);
+  rv = mailDirSpec->AppendRelativeUnixPath(hostAndPort);
   if (NS_FAILED(rv)) return rv;
   
   // set the local path for this "pop3" server
-  rv = server->SetLocalPath(mailDir);
+  rv = server->SetLocalPath(mailDirSpec);
   if (NS_FAILED(rv)) return rv;
     
-  rv = mailDir->Exists(&dirExists);
+  rv = mailDirSpec->Exists(&dirExists);
   if (!dirExists) {
-    mailDir->CreateDir();
+    mailDirSpec->CreateDir();
   }
     
   // pass the pop server so the send later uri pref 
@@ -1555,42 +1605,61 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   rv = MigrateOldImapPrefs(server, hostAndPort);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr <nsIFileSpec> imapMailDir;
+  nsCOMPtr <nsIFile> imapMailDir;
   nsFileSpec dir;
   PRBool dirExists;
 
   // if they used -installer, this pref will point to where their files got copied
-  rv = m_prefs->GetFilePref(PREF_IMAP_DIRECTORY, getter_AddRefs(imapMailDir));
   // if the "mail.imap.root_dir" pref is set, use that.
-  if (NS_FAILED(rv)) {
+  nsCOMPtr<nsILocalFile> localFile;
+  rv = m_prefs->GetFileXPref(PREF_IMAP_DIRECTORY, getter_AddRefs(localFile));
+  if (NS_SUCCEEDED(rv))
+    imapMailDir = localFile;
+  
+  if (!imapMailDir) {
     // we want <profile>/ImapMail
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_ImapMailDirectory50, getter_AddRefs(imapMailDir));
+    rv = NS_GetSpecialDirectory(NS_APP_IMAP_MAIL_50_DIR, getter_AddRefs(imapMailDir));
     if (NS_FAILED(rv)) return rv;
   }
+
+  rv = imapMailDir->Exists(&dirExists);
+  if (NS_SUCCEEDED(rv) && !dirExists)
+    rv = imapMailDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsXPIDLCString pathBuf;
+  nsCOMPtr<nsIFileSpec> imapMailDirSpec;
+
+  // Convert the nsILocalFile into an nsIFileSpec
+  // TODO: convert users os nsIFileSpec to nsILocalFile
+  // and avoid this step.
+  rv = imapMailDir->GetPath(getter_Copies(pathBuf));
+  if (NS_FAILED(rv)) return rv;
+  rv = NS_NewFileSpec(getter_AddRefs(imapMailDirSpec));
+  if (NS_FAILED(rv)) return rv;
+  rv = imapMailDirSpec->SetNativePath(pathBuf);
+  if (NS_FAILED(rv)) return rv;
 
   // we only need to do this once
   if (!m_alreadySetImapDefaultLocalPath) {
     // set the default local path for "imap"
-    rv = server->SetDefaultLocalPath(imapMailDir);
+    rv = server->SetDefaultLocalPath(imapMailDirSpec);
     if (NS_FAILED(rv)) return rv;
 
     m_alreadySetImapDefaultLocalPath = PR_TRUE;
   }
   
   // we want .../ImapMail/<hostname>, not .../ImapMail
-  rv = imapMailDir->AppendRelativeUnixPath((const char *)hostname);
+  rv = imapMailDirSpec->AppendRelativeUnixPath((const char *)hostname);
   if (NS_FAILED(rv)) return rv;
 
   // set the local path for this "imap" server
-  rv = server->SetLocalPath(imapMailDir);
+  rv = server->SetLocalPath(imapMailDirSpec);
   if (NS_FAILED(rv)) return rv;
    
-  rv = imapMailDir->Exists(&dirExists);
+  rv = imapMailDirSpec->Exists(&dirExists);
   if (!dirExists) {
-    imapMailDir->CreateDir();
+    imapMailDirSpec->CreateDir();
   }
   
   if (isDefaultAccount) {
@@ -1712,29 +1781,47 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   abName.SetLength(len - suffixLen);
 
   // get 5.0 profile root.
-  nsCOMPtr <nsIFileSpec> ab4xFile;
-  nsCOMPtr <nsIFileSpec> tmpLDIFFile;
+  nsCOMPtr <nsIFile> ab4xFile;
+  nsCOMPtr <nsIFileSpec> ab4xFileSpec;
+  nsCOMPtr <nsIFile> tmpLDIFFile;
+  nsCOMPtr <nsIFileSpec> tmpLDIFFileSpec;
 
 #ifdef DEBUG_AB_MIGRATION
   printf("turn %s%s into %s%s\n", (const char *)abName,ADDRESSBOOK_PREF_VALUE_4x_SUFFIX,(const char *)abName,TEMP_LDIF_FILE_SUFFIX);
 #endif /* DEBUG_AB_MIGRATION */
 
-  nsCOMPtr<nsIFileLocator> locator = do_GetService(kFileLocatorCID,&rv);
-  NS_ASSERTION(NS_SUCCEEDED(rv) && locator,"ab migration failed: failed to get locator");
-  if (NS_FAILED(rv) || !locator) return;
-
-  rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, getter_AddRefs(ab4xFile));
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(ab4xFile));
   NS_ASSERTION(NS_SUCCEEDED(rv) && ab4xFile,"ab migration failed: failed to get profile dir");
   if (NS_FAILED(rv) || !ab4xFile) return;
 
-  rv = ab4xFile->AppendRelativeUnixPath((const char *)abFileName);
+  // TODO: Change users of nsIFileSpec to nsIFile and avoid this.
+  {
+     nsXPIDLCString pathBuf;  
+     rv = ab4xFile->GetPath(getter_Copies(pathBuf));
+     if (NS_FAILED(rv)) return;
+     rv = NS_NewFileSpec(getter_AddRefs(ab4xFileSpec));
+     if (NS_FAILED(rv)) return;
+     rv = ab4xFileSpec->SetNativePath(pathBuf);
+     if (NS_FAILED(rv)) return;
+  }
+  
+  rv = ab4xFileSpec->AppendRelativeUnixPath((const char *)abFileName);
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed:  failed to append filename");
   if (NS_FAILED(rv)) return;
 
-  nsSpecialSystemDirectory file(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-  rv = NS_NewFileSpecWithSpec(file, getter_AddRefs(tmpLDIFFile));
-  NS_ASSERTION(NS_SUCCEEDED(rv) && tmpLDIFFile,"ab migration failed:  failed to get tmp dir");
+  rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpLDIFFile));
   if (NS_FAILED(rv) || !tmpLDIFFile) return;
+
+  // TODO: Change users of nsIFileSpec to nsIFile and avoid this.
+  {
+     nsXPIDLCString pathBuf;  
+     rv = tmpLDIFFile->GetPath(getter_Copies(pathBuf));
+     if (NS_FAILED(rv)) return;
+     rv = NS_NewFileSpec(getter_AddRefs(tmpLDIFFileSpec));
+     if (NS_FAILED(rv)) return;
+     rv = tmpLDIFFileSpec->SetNativePath(pathBuf);
+     if (NS_FAILED(rv)) return;
+  }
 
 // HACK:  I need to rename pab.ldif -> abook.ldif, because a bunch of places are hacked to point to abook.mab, and when I import abook.ldif it will create abook.mab. this is a temporary hack and will go away soon.
   if (!PL_strcmp((const char *)abName,"pab")) {
@@ -1744,7 +1831,7 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   nsCAutoString ldifFileName;
   ldifFileName = (const char *)abName;
   ldifFileName += TEMP_LDIF_FILE_SUFFIX;
-  rv = tmpLDIFFile->AppendRelativeUnixPath((const char *)ldifFileName);
+  rv = tmpLDIFFileSpec->AppendRelativeUnixPath((const char *)ldifFileName);
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to append filename");
   if (NS_FAILED(rv)) return;
      
@@ -1752,11 +1839,11 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   NS_ASSERTION(NS_SUCCEEDED(rv) && ab, "failed to get address book");
   if (NS_FAILED(rv) || !ab) return;
 
-  rv = ab->ConvertNA2toLDIF(ab4xFile, tmpLDIFFile);
+  rv = ab->ConvertNA2toLDIF(ab4xFileSpec, tmpLDIFFileSpec);
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to convert na2 to ldif");
   if (NS_FAILED(rv)) return;
   
-  rv = ab->ConvertLDIFtoMAB(tmpLDIFFile, PR_TRUE /* migrating */);
+  rv = ab->ConvertLDIFtoMAB(tmpLDIFFileSpec, PR_TRUE /* migrating */);
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration filed:  failed to convert ldif to mab\n");
   if (NS_FAILED(rv)) return;
  
@@ -1806,7 +1893,7 @@ nsresult
 nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
 {
     nsresult rv;
-    nsCOMPtr <nsIFileSpec> newsDir;
+    nsCOMPtr <nsIFile> newsDir;
     nsFileSpec newsrcDir; // the directory that holds the newsrc files (and the fat file, if we are using one)
     nsFileSpec newsHostsDir; // the directory that holds the host directory, and the summary files.
     // the host directories will be under <profile dir>/News or
@@ -1821,28 +1908,31 @@ nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
     // the newsrc files lived.  we don't want that for the newsHostsDir.
 #ifdef USE_NEWSRC_MAP_FILE
     // if they used -installer, this pref will point to where their files got copied
-    rv = m_prefs->GetFilePref(PREF_NEWS_DIRECTORY, getter_AddRefs(newsDir));
-    if (NS_SUCCEEDED(rv)) {
-    	rv = newsDir->GetFileSpec(&newsHostsDir);
-    }
+    nsCOMPtr<nsILocalFile> localFile;
+    rv = m_prefs->GetFileXPref(PREF_NEWS_DIRECTORY, getter_AddRefs(localFile));
+    if (NS_SUCCEEDED(rv))
+        newsDir = localFile;
 #else
     rv = NS_ERROR_FAILURE;
 #endif /* USE_NEWSRC_MAP_FILE */
-    if (NS_FAILED(rv)) {
-	NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-	if (NS_FAILED(rv)) return rv;
 
-	rv = locator->GetFileLocation(nsSpecialFileSpec::App_NewsDirectory50, getter_AddRefs(newsDir));
-	if (NS_FAILED(rv)) return rv;
-   	rv = newsDir->GetFileSpec(&newsHostsDir);
-	if (NS_FAILED(rv)) return rv;
+    if (!newsDir) {	    
+	    rv = NS_GetSpecialDirectory(NS_APP_NEWS_50_DIR, getter_AddRefs(newsDir));
+	    if (NS_FAILED(rv)) return rv;
     }
  
     PRBool dirExists;
     rv = newsDir->Exists(&dirExists);
-    if (!dirExists) {
-	newsDir->CreateDir();
-    }
+    if (NS_SUCCEEDED(rv) && !dirExists)
+	    newsDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+    if (NS_FAILED(rv)) return rv;
+    
+    // TODO: convert users os nsIFileSpec to nsILocalFile
+    // and avoid this step.
+    nsXPIDLCString pathBuf;
+    rv = newsDir->GetPath(getter_Copies(pathBuf));
+    if (NS_FAILED(rv)) return rv;
+    newsHostsDir = pathBuf;    
     
 #ifdef USE_NEWSRC_MAP_FILE	
     // if we are using the fat file, it lives in the newsHostsDir.
@@ -1973,11 +2063,17 @@ nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
 	
 	inputStream.close();
 #else /* USE_NEWSRC_MAP_FILE */
-    rv = m_prefs->GetFilePref(PREF_NEWS_DIRECTORY, getter_AddRefs(newsDir));
+    nsCOMPtr<nsILocalFile> prefLocal;
+    rv = m_prefs->GetFileXPref(PREF_NEWS_DIRECTORY, getter_AddRefs(prefLocal));
     if (NS_FAILED(rv)) return rv;
+    newsDir = prefLocal;
     
-    rv = newsDir->GetFileSpec(&newsrcDir);
-    if (NS_FAILED(rv)) return rv;
+    {
+        nsXPIDLCString pathBuf;
+        newsDir->GetPath(getter_Copies(pathBuf));
+        if (NS_FAILED(rv)) return rv;
+        newsrcDir = (const char *)pathBuf;
+    }
 
     for (nsDirectoryIterator i(newsrcDir, PR_FALSE); i.Exists(); i++) {
       nsFileSpec possibleRcFile = i.Spec();

@@ -39,7 +39,6 @@ public:
 protected:
 
 	nsVoidArray *mListeners; 
-	nsFileSpec	*mpUserDirectory;
 
 };
 

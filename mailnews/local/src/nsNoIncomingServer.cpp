@@ -35,11 +35,10 @@
 #include "nsMsgLocalCID.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIMsgLocalMailFolder.h"
-#include "nsFileLocations.h"
-#include "nsIFileLocator.h"
 #include "nsIChromeRegistry.h" 
+#include "nsIDirectoryService.h"
+#include "nsAppDirectoryServiceDefs.h"
 
-static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsNoIncomingServer,
@@ -94,11 +93,8 @@ NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDi
     PRBool exists;
 	if (!folderNameOnDisk || !parentDir) return NS_ERROR_NULL_POINTER;
 
-	nsCOMPtr<nsIFileLocator> locator = do_GetService(kFileLocatorCID, &rv);
-	if (NS_FAILED(rv)) return rv;
-
-	nsCOMPtr<nsIFileSpec> defaultMessagesFile;
-	rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultsFolder50, getter_AddRefs(defaultMessagesFile));
+	nsCOMPtr<nsIFile> defaultMessagesFile;
+	rv = NS_GetSpecialDirectory(NS_APP_DEFAULTS_50_DIR, getter_AddRefs(defaultMessagesFile));
 	if (NS_FAILED(rv)) return rv;
 
 	// bin/defaults better exist
@@ -108,7 +104,7 @@ NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDi
 
 	// bin/defaults/messenger doesn't have to exist
     // if not, return.
-	rv = defaultMessagesFile->AppendRelativeUnixPath("messenger");
+	rv = defaultMessagesFile->Append("messenger");
 	if (NS_FAILED(rv)) return rv;
     rv = defaultMessagesFile->Exists(&exists);
 	if (NS_FAILED(rv)) return rv;
@@ -116,57 +112,58 @@ NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDi
 
 	// test if there is a locale provider
 	// this code stolen from nsMsgServiceProvider.cpp
-    nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+  nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsXPIDLString lc_name;
+    nsAutoString tmpstr; tmpstr.AssignWithConversion("navigator");
+    rv = chromeRegistry->GetSelectedLocale(tmpstr.GetUnicode(), getter_Copies(lc_name));
     if (NS_SUCCEEDED(rv)) {
-      nsXPIDLString lc_name;
-      nsAutoString tmpstr; tmpstr.AssignWithConversion("navigator");
-      rv = chromeRegistry->GetSelectedLocale(tmpstr.GetUnicode(), getter_Copies(lc_name));
-      if (NS_SUCCEEDED(rv)) {
-        nsAutoString localeStr(lc_name);
-        if (!localeStr.IsEmpty())
-        {
-          nsCOMPtr<nsIFileSpec> tmpdataFilesDir;
-          rv = NS_NewFileSpec(getter_AddRefs(tmpdataFilesDir));
-          NS_ENSURE_SUCCESS(rv,rv);
-          rv = tmpdataFilesDir->FromFileSpec(defaultMessagesFile);
-          NS_ENSURE_SUCCESS(rv,rv);
-
-          tmpdataFilesDir->AppendRelativeUnixPath(NS_ConvertUCS2toUTF8(lc_name));
-          NS_ENSURE_SUCCESS(rv,rv);
-          rv = tmpdataFilesDir->Exists(&exists);
-          NS_ENSURE_SUCCESS(rv,rv);
-          if (exists) {
-              // use locale provider instead
-              rv = defaultMessagesFile->AppendRelativeUnixPath(NS_ConvertUCS2toUTF8(lc_name));            
-			        NS_ENSURE_SUCCESS(rv,rv);
-          }
+      nsAutoString localeStr(lc_name);
+      if (!localeStr.IsEmpty()) {
+        nsCOMPtr<nsIFile> tmpdataFilesDir;
+        rv = defaultMessagesFile->Clone(getter_AddRefs(tmpdataFilesDir));
+        NS_ENSURE_SUCCESS(rv,rv);
+        rv = tmpdataFilesDir->AppendUnicode(lc_name);
+        NS_ENSURE_SUCCESS(rv,rv);
+        rv = tmpdataFilesDir->Exists(&exists);
+        NS_ENSURE_SUCCESS(rv,rv);
+        if (exists && (const PRUnichar *)lc_name) {
+            // use locale provider instead
+            rv = defaultMessagesFile->AppendUnicode(lc_name);            
+  	        NS_ENSURE_SUCCESS(rv,rv);
         }
       }
     }
+  }
 
 	// check if bin/defaults/messenger/<folderNameOnDisk> 
 	// (or bin/defaults/messenger/<locale>/<folderNameOnDisk> if we had a locale provide) exists.
 	// it doesn't have to exist.  if it doesn't, return
-	rv = defaultMessagesFile->AppendRelativeUnixPath(folderNameOnDisk);
+	rv = defaultMessagesFile->Append(folderNameOnDisk);
 	if (NS_FAILED(rv)) return rv;
     rv = defaultMessagesFile->Exists(&exists);
 	if (NS_FAILED(rv)) return rv;
 	if (!exists) return NS_OK;
+	
+	// Make an nsILocalFile of the parentDir
+	nsFileSpec parentDirSpec;
+	nsCOMPtr<nsILocalFile> localParentDir;
+	
+	rv = parentDir->GetFileSpec(&parentDirSpec);
+	if (NS_FAILED(rv)) return rv;
+	rv = NS_FileSpecToIFile(&parentDirSpec, getter_AddRefs(localParentDir));
+	if (NS_FAILED(rv)) return rv;
 
 	// check if parentDir/<folderNameOnDisk> exists
-	nsCOMPtr <nsIFileSpec> folderFile;
-	rv = NS_NewFileSpec(getter_AddRefs(folderFile));
-	if (NS_FAILED(rv)) return rv;
-	if (!folderFile) return NS_ERROR_FAILURE;
-
-	rv = folderFile->FromFileSpec(parentDir);
-	if (NS_FAILED(rv)) return rv;
-
-	rv = folderFile->AppendRelativeUnixPath(folderNameOnDisk);
-	if (NS_FAILED(rv)) return rv;
-
-	rv = folderFile->Exists(&exists);
-	if (NS_FAILED(rv)) return rv;
+  {
+    nsCOMPtr<nsIFile> testDir;
+    rv = localParentDir->Clone(getter_AddRefs(testDir));
+    if (NS_FAILED(rv)) return rv;
+    rv = testDir->Append(folderNameOnDisk);
+    if (NS_FAILED(rv)) return rv;
+    rv = testDir->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+  }
 
 	// if it exists add to the end, else copy
 	if (exists) {
@@ -181,7 +178,7 @@ NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDi
 #ifdef DEBUG_sspitzer
 		printf("copy default %s\n",folderNameOnDisk);
 #endif
-		rv = defaultMessagesFile->CopyToDir(parentDir);
+		rv = defaultMessagesFile->CopyTo(localParentDir, nsnull);
 		if (NS_FAILED(rv)) return rv;
 	}
 	return NS_OK;

@@ -25,17 +25,15 @@
 #include "nsAddrBookSession.h"
 #include "nsIAddrBookSession.h"
 #include "nsIFileSpec.h"
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h"
-
-
-static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
+#include "nsIDirectoryService.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsXPIDLString.h"
 
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsAddrBookSession, NS_GET_IID(nsIAddrBookSession));
     
 nsAddrBookSession::nsAddrBookSession():
-  mRefCnt(0), mpUserDirectory(nsnull)
+  mRefCnt(0)
 {
 	NS_INIT_REFCNT();
 
@@ -46,8 +44,6 @@ nsAddrBookSession::~nsAddrBookSession()
 {
 	if (mListeners) 
 		delete mListeners;
-	if (mpUserDirectory)
-		delete mpUserDirectory;
 }
 
 
@@ -55,12 +51,14 @@ nsAddrBookSession::~nsAddrBookSession()
 
 NS_IMETHODIMP nsAddrBookSession::AddAddressBookListener(nsIAbListener * listener)
 {
+    NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
 	mListeners->AppendElement(listener);
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsAddrBookSession::RemoveAddressBookListener(nsIAbListener * listener)
 {
+    NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
 	mListeners->RemoveElement(listener);
 	return NS_OK;
 }
@@ -68,6 +66,8 @@ NS_IMETHODIMP nsAddrBookSession::RemoveAddressBookListener(nsIAbListener * liste
 NS_IMETHODIMP nsAddrBookSession::NotifyItemPropertyChanged
 (nsISupports *item, const char *property, const PRUnichar* oldValue, const PRUnichar* newValue)
 {
+    NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
+
 	PRInt32 i;
 	PRInt32 count = mListeners->Count();
 	for(i = 0; i < count; i++)
@@ -82,6 +82,8 @@ NS_IMETHODIMP nsAddrBookSession::NotifyItemPropertyChanged
 
 NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryItemAdded(nsIAbDirectory *directory, nsISupports *item)
 {
+    NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
+
 	PRInt32 i;
 	PRInt32 count = mListeners->Count();
 	for(i = 0; i < count; i++)
@@ -96,6 +98,8 @@ NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryItemAdded(nsIAbDirectory *direct
 
 NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryItemDeleted(nsIAbDirectory *directory, nsISupports *item)
 {
+    NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
+
 	PRInt32 i;
 	PRInt32 count = mListeners->Count();
 	for(i = 0; i < count; i++)
@@ -109,21 +113,21 @@ NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryItemDeleted(nsIAbDirectory *dire
 
 NS_IMETHODIMP nsAddrBookSession::GetUserProfileDirectory(nsFileSpec * *userDir)
 {
-	nsresult rv = NS_OK;
-	if (!mpUserDirectory)
-		mpUserDirectory = new nsFileSpec();
+    NS_ENSURE_ARG_POINTER(userDir);
+    *userDir = nsnull;
 
-	NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-	if (NS_FAILED(rv))
-		return rv;
+	nsresult rv;		
+	nsCOMPtr<nsIFile> profileDir;
+	nsXPIDLCString pathBuf;
+	
+	rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
+	if (NS_FAILED(rv)) return rv;
+	rv = profileDir->GetPath(getter_Copies(pathBuf));
+	if (NS_FAILED(rv)) return rv;
+	
+	*userDir = new nsFileSpec(pathBuf);
+	NS_ENSURE_TRUE(*userDir, NS_ERROR_OUT_OF_MEMORY);
 
-	nsCOMPtr <nsIFileSpec> profiledir;
-	rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, getter_AddRefs(profiledir));
-	if (NS_FAILED(rv))
-		return rv;
-	profiledir->GetFileSpec(mpUserDirectory);
-
-	*userDir = mpUserDirectory;
 	return rv;
 }
 

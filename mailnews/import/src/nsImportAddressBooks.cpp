@@ -37,7 +37,6 @@
 #include "nsIURL.h"
 
 #include "nsIFileSpec.h"
-#include "nsIFileLocator.h"
 
 #include "nsIProfile.h"
 #include "nsIAddrDatabase.h"

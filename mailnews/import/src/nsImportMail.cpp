@@ -39,8 +39,6 @@
 #include "nsXPIDLString.h"
 
 #include "nsIFileSpec.h"
-#include "nsIFileLocator.h"
-#include "nsSpecialSystemDirectory.h"
 
 #include "nsIMsgAccountManager.h"
 #include "nsIMsgMailSession.h"
