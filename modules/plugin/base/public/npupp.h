@@ -38,7 +38,7 @@
 
 
 /*
- *  npupp.h $Revision: 3.11 $
+ *  npupp.h $Revision: 3.12 $
  *  function call mecahnics needed by platform specific glue code.
  */
 
@@ -1181,9 +1181,9 @@ enum
 
 typedef struct _BPSupportedMIMETypes
 {
- SInt32    structVersion;      // struct version
- Handle    typeStrings;        // STR# formated handle, allocated by plug-in
- Handle    infoStrings;        // STR# formated handle, allocated by plug-in
+ SInt32    structVersion;      /* struct version */
+ Handle    typeStrings;        /* STR# formated handle, allocated by plug-in */
+ Handle    infoStrings;        /* STR# formated handle, allocated by plug-in */
 } BPSupportedMIMETypes;
 OSErr BP_GetSupportedMIMETypes(BPSupportedMIMETypes *mimeInfo, UInt32 flags);
 
@@ -1201,16 +1201,16 @@ enum {
 		(const char *)CallUniversalProc((UniversalProcPtr)(FUNC), (ProcInfoType)uppNP_GetMIMEDescEntryProc)
 
 
-#else  // !_NPUPP_USE_UPP_
+#else  /* !_NPUPP_USE_UPP_ */
 
- // NP_GetMIMEDescription
+ /* NP_GetMIMEDescription */
 #define NP_GETMIMEDESCRIPTION_NAME "NP_GetMIMEDescription"
 typedef const char* (* NP_LOADDS NP_GetMIMEDescriptionUPP)();
 #define NewNP_GetMIMEDescEntryProc(FUNC)		\
 		((NP_GetMIMEDescriptionUPP) (FUNC))
 #define CallNP_GetMIMEDescEntryProc(FUNC)		\
 		(*(FUNC))()
-// BP_GetSupportedMIMETypes
+/* BP_GetSupportedMIMETypes */
 typedef OSErr (* NP_LOADDS BP_GetSupportedMIMETypesUPP)(BPSupportedMIMETypes*, UInt32);
 #define NewBP_GetSupportedMIMETypesEntryProc(FUNC)		\
 		((BP_GetSupportedMIMETypesUPP) (FUNC))

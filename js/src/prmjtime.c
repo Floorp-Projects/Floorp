@@ -193,7 +193,7 @@ pascal OSErr __JSInitialize(const CFragInitBlock* initBlock)
 
 pascal void __JSTerminate()
 {
-  // clean up the sleepQ entry
+  /* clean up the sleepQ entry */
   if (gSleepQEntryInstalled)
     SleepQRemove(&gSleepQEntry);
   

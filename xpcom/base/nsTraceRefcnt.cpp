@@ -57,7 +57,7 @@
 // if __USE_GNU is defined.  I suppose its some kind of standards
 // adherence thing.
 //
-#if (__GLIBC_MINOR__ >= 1)
+#if (__GLIBC_MINOR__ >= 1) && !defined(__USE_GNU)
 #define __USE_GNU
 #endif
 
