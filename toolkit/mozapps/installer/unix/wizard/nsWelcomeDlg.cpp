@@ -27,6 +27,8 @@
 #include "nsXInstaller.h"
 #include <sys/stat.h>
 
+const int nsWelcomeDlg::kMsgCount;
+
 nsWelcomeDlg::nsWelcomeDlg()
   : mTitle(NULL), mWelcomeMsg(NULL), mPixmap(NULL), mBox(NULL)
 {
