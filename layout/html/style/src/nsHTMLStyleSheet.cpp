@@ -228,19 +228,21 @@ struct nsFrameItems {
 	nsIFrame* lastChild;
 	
 	nsFrameItems();
-	AddChild(nsIFrame* aChild);
-	Clear();
+	void AddChild(nsIFrame* aChild);
+	void Clear();
 };
 
 nsFrameItems::nsFrameItems()
 :childList(nsnull), lastChild(nsnull)
 {}
 
+void 
 nsFrameItems::Clear()
 {
 	childList = lastChild = nsnull;
 }
 
+void 
 nsFrameItems::AddChild(nsIFrame* aChild)
 {
 	if (childList == nsnull) {
