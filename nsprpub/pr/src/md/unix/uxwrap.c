@@ -291,7 +291,14 @@ int select(int width, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *tv)
  * Redefine poll, when supported on platforms, for local threads
  */
 
-#if defined(_PR_POLL_AVAILABLE)
+/*
+ * I am commenting out the poll() wrapper for Linux for now
+ * because it is difficult to define _MD_POLL that works on all
+ * Linux varieties.  People reported that glibc 2.0.7 on Debian
+ * 2.0 Linux machines doesn't have the __syscall_poll symbol
+ * defined.  (WTC 30 Nov. 1998)
+ */
+#if defined(_PR_POLL_AVAILABLE) && !defined(LINUX)
 
 /*
  *-----------------------------------------------------------------------
