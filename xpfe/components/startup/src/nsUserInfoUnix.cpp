@@ -32,6 +32,13 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 
+/* Some UNIXy platforms don't have pw_gecos. In this case we use pw_name */
+#if defined(VMS)
+#define PW_GECOS pw_name
+#else
+#define PW_GECOS pw_gecos
+#endif
+
 nsUserInfo::nsUserInfo()
 {
   NS_INIT_REFCNT();
@@ -52,13 +59,13 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
 
     // do I need to free pw? 
 
-    if (!pw || !pw->pw_gecos) return NS_ERROR_FAILURE;
+    if (!pw || !pw->PW_GECOS) return NS_ERROR_FAILURE;
 
 #ifdef DEBUG_sspitzer
-    printf("fullname = %s\n", pw->pw_gecos);
+    printf("fullname = %s\n", pw->PW_GECOS);
 #endif
 
-    nsAutoString fullname(pw->pw_gecos);
+    nsAutoString fullname(pw->PW_GECOS);
 
     *aFullname = fullname.ToNewUnicode();
 
