@@ -250,18 +250,19 @@ public:
   SinkContext* mHeadContext;
   PRInt32 mNumOpenIFRAMES;
 
-  nsString* mRef;
-  nsScrollPreference mOriginalScrollPreference;
-  PRBool mNotAtRef;
-  nsIHTMLContent* mRefContent;
+  nsString*           mRef;
+  nsScrollPreference  mOriginalScrollPreference;
+  PRBool              mNotAtRef;
+  nsIHTMLContent*     mRefContent;
 
-  nsString mBaseHREF;
-  nsString mBaseTarget;
+  nsString            mBaseHREF;
+  nsString            mBaseTarget;
 
-  nsString mPreferredStyle;
-  PRInt32 mStyleSheetCount;
-  nsICSSLoader* mCSSLoader;
-  PRUint32 mContentIDCounter;
+  nsString            mPreferredStyle;
+  PRInt32             mStyleSheetCount;
+  nsICSSLoader*       mCSSLoader;
+  PRUint32            mContentIDCounter;
+  PRInt32             mInsideNoXXXTag;
 
   void StartLayout();
 
@@ -1197,28 +1198,36 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
 
   // Special handling for certain tags
   switch (nodeType) {
-  case eHTMLTag_a:
-    mSink->ProcessATag(aNode, content);
-    break;
-  case eHTMLTag_table:
-  case eHTMLTag_layer:
-  case eHTMLTag_thead:
-  case eHTMLTag_tbody:
-  case eHTMLTag_tfoot:
-  case eHTMLTag_tr:
-  case eHTMLTag_td:
-  case eHTMLTag_th:
-    // XXX if navigator_quirks_mode (only body in html supports background)
-    mSink->AddBaseTagInfo(content);     
-    break;
-  case eHTMLTag_map:
-    mSink->ProcessMAPTag(aNode, content);
-    break;
-  case eHTMLTag_iframe:
-    mSink->mNumOpenIFRAMES++;
-    break;
-  default:
-    break;
+
+    case eHTMLTag_noembed:
+    case eHTMLTag_noframes:
+    case eHTMLTag_nolayer:
+    case eHTMLTag_noscript:
+      mSink->mInsideNoXXXTag++;
+      break;
+
+    case eHTMLTag_a:
+      mSink->ProcessATag(aNode, content);
+      break;
+    case eHTMLTag_table:
+    case eHTMLTag_layer:
+    case eHTMLTag_thead:
+    case eHTMLTag_tbody:
+    case eHTMLTag_tfoot:
+    case eHTMLTag_tr:
+    case eHTMLTag_td:
+    case eHTMLTag_th:
+      // XXX if navigator_quirks_mode (only body in html supports background)
+      mSink->AddBaseTagInfo(content);     
+      break;
+    case eHTMLTag_map:
+      mSink->ProcessMAPTag(aNode, content);
+      break;
+    case eHTMLTag_iframe:
+      mSink->mNumOpenIFRAMES++;
+      break;
+    default:
+      break;
   }
 
   return NS_OK;
@@ -1293,37 +1302,44 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
   // Special handling for certain tags
   switch (nodeType) {
 
-  case eHTMLTag_form:
-    {
-      nsHTMLTag parserNodeType = nsHTMLTag(aNode.GetNodeType());
+    case eHTMLTag_noembed:
+    case eHTMLTag_noframes:
+    case eHTMLTag_nolayer:
+    case eHTMLTag_noscript:
+      mSink->mInsideNoXXXTag--;
+      break;
+ 
+    case eHTMLTag_form:
+      {
+        nsHTMLTag parserNodeType = nsHTMLTag(aNode.GetNodeType());
       
-      // If there's a FORM on the stack, but this close tag doesn't
-      // close the form, then close out the form *and* close out the
-      // next container up. This is since the parser doesn't do fix up
-      // of invalid form nesting. When the end FORM tag comes through, 
-      // we'll ignore it.
-      if (parserNodeType != nodeType) {
-        result = CloseContainer(aNode);
+        // If there's a FORM on the stack, but this close tag doesn't
+        // close the form, then close out the form *and* close out the
+        // next container up. This is since the parser doesn't do fix up
+        // of invalid form nesting. When the end FORM tag comes through, 
+        // we'll ignore it.
+        if (parserNodeType != nodeType) {
+          result = CloseContainer(aNode);
+        }
       }
-    }
-    break;
+      break;
 
-  case eHTMLTag_iframe:
-    mSink->mNumOpenIFRAMES--;
-    break;
+    case eHTMLTag_iframe:
+      mSink->mNumOpenIFRAMES--;
+      break;
 
-  case eHTMLTag_select:
-    {
-      nsCOMPtr<nsISelectElement> select = do_QueryInterface(content, &result);
+    case eHTMLTag_select:
+      {
+        nsCOMPtr<nsISelectElement> select = do_QueryInterface(content, &result);
 
-      if (NS_SUCCEEDED(result)) {
-        result = select->DoneAddingContent(PR_TRUE);
+        if (NS_SUCCEEDED(result)) {
+          result = select->DoneAddingContent(PR_TRUE);
+        }
       }
-    }
-    break;
+      break;
 
-  default:
-    break;
+    default:
+      break;
 
   }
 
@@ -1894,8 +1910,7 @@ NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
 }
 
 // Note: operator new zeros our memory
-HTMLContentSink::HTMLContentSink()
-{
+HTMLContentSink::HTMLContentSink() {
 #ifdef NS_DEBUG
   if (nsnull == gSinkLogModuleInfo) {
     gSinkLogModuleInfo = PR_NewLogModule("htmlcontentsink");
@@ -1904,6 +1919,7 @@ HTMLContentSink::HTMLContentSink()
   mNotAtRef        = PR_TRUE;
   mContentIDCounter = NS_CONTENT_ID_COUNTER_BASE;
   mInScript = 0;
+  mInsideNoXXXTag  = 0;
 }
 
 HTMLContentSink::~HTMLContentSink()
