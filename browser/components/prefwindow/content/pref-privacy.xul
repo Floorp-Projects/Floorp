@@ -45,7 +45,6 @@
       onunload="unload();" headertitle="&lHeader;">
 
   <script type="application/x-javascript" src="chrome://browser/content/pref/pref-privacy.js"/>
-  <script src="chrome://browser/content/pref/permissions.js"/>
   <script src="chrome://browser/content/cookieviewer/treeUtils.js"/>
 
   <stringbundle id="privacyBundle" src="chrome://browser/locale/pref/prefutilities.properties"/>
