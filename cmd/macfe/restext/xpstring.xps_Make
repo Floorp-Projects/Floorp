@@ -21,12 +21,19 @@
 Evaluate % = ("{{SourceFile}}" =~ /(Å:)¨0Å/)
 Directory "{{¨0}}"
 
-Set			ns					"::::"	# project folder relative
-Set -e		ResourceDir	"{{ns}}cmd:macfe:restext:"
-Set			TargetDir		"{{ns}}cmd:macfe:projects:client:"
-Set			RIncludes		"{{ns}}lib:mac:MW:Headers:Rez_Headers:"
+Set			mozilla			"::::"	# project folder relative
+Set -e		ResourceDir		"{{mozilla}}cmd:macfe:restext:"
+Set			TargetDir		"{{mozilla}}dist:client_debug:"
 
-MWCPPC -nodefaults -i- -e2 -D _XP_Core_ -D XP_MAC {IncludeFiles} "{{SourceFile}}" ¶
+if {DEBUG}
+	Set		TargetDir		"{{mozilla}}dist:client_debug:"
+else
+	Set		TargetDir		"{{mozilla}}dist:client:"
+end if
+
+# Set			RIncludes		"{{mozilla}}lib:mac:MW:Headers:Rez_Headers:"
+
+MWCPPC -nodefaults -i- -e2 -D _XP_Core_ {IncludeFiles} "{{SourceFile}}" ¶
 	> "{{ResourceDir}}Temp_XPStrings.r"
 
 if {status} != 0
@@ -39,23 +46,15 @@ End
 Directory "{{ResourceDir}}" # set to the correct folder
 perl resdef.pl Temp_XPStrings.r
 delete Temp_XPStrings.r
-Rez -t 'NSPL' -c MOSS -i "{RIncludes}" ¶
-	-o "{{TargetDir}}Essential Files:Netscape Resources" ¶
+Rez -t 'NSPL' -c MOZZ -i "{RIncludes}" ¶
+	-o "{{TargetDir}}Essential Files:Mozilla Resources" ¶
 	xpstring.r
 delete xpstring.r
-Rez -append -i "{RIncludes}" -i "{{ns}}cmd:macfe:include:" ¶
-	-o "{{TargetDir}}Essential Files:Netscape Resources" ¶
+Rez -append -i "{RIncludes}" -i "{{mozilla}}cmd:macfe:include:" ¶
+	-o "{{TargetDir}}Essential Files:Mozilla Resources" ¶
 	MacSTR.r
-Rez -append -i "{RIncludes}" -i "{{ns}}cmd:macfe:include:" ¶
-	-o "{{TargetDir}}Essential Files:Netscape Resources" ¶
+Rez -append -i "{RIncludes}" -i "{{mozilla}}cmd:macfe:include:" ¶
+	-o "{{TargetDir}}Essential Files:Mozilla Resources" ¶
 	exception_str.r
 	
-# Duplicate the Desktop icon scripts
-
-Set		SourceDir "{{ns}}cmd:macfe:desktop:"
-Set		DestDir	  "{{TargetDir}}Essential Files:"
-
-Duplicate -y "{{SourceDir}}Messenger script" "{{DestDir}}Messenger Inbox shortcut"
-Duplicate -y "{{SourceDir}}Navigator script" "{{DestDir}}Navigator shortcut"
-
 Quit # get rid of ToolServer
