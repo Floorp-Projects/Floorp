@@ -56,27 +56,27 @@ sub UpdateBuildNumber($$) {
     my $build_number = sprintf("%04d%02d%02d%02d", $year, 1+$mon, $mday, $hour);
 
     if ("$outfile" eq "") {
-	print "$build_number\n";
-	return;
+        print "$build_number\n";
+        return;
     }
 
     if ($official) {
-	&write_number($outfile, $build_number);
+        &write_number($outfile, $build_number);
     } else {
 
-	my $old_num = -1;
-	
-	# Only overwrite file if contents are not already set to 0
-	if ( -e $outfile ) {
-	    open(OLD, "<$outfile") || die "$outfile: $!\n";
-	    $old_num = <OLD>;
-	    chomp($old_num);
-	    close(OLD);
-	}
-	
-	if ($old_num != 0) {
-	    &write_number($outfile, "0000000000");
-	}
+        my $old_num = -1;
+        
+        # Only overwrite file if contents are not already set to 0
+        if ( -e $outfile ) {
+            open(OLD, "<$outfile") || die "$outfile: $!\n";
+            $old_num = <OLD>;
+            chomp($old_num);
+            close(OLD);
+        }
+    
+        if ($old_num != 0) {
+            &write_number($outfile, "0000000000");
+        }
     }
     return;
 }
@@ -86,36 +86,36 @@ sub SubstituteBuildNumber($$$) {
     my ($outfile, $build_num, $infile) = @_;
     my $INFILE = new IO::File;
     my $OUTFILE = new IO::File;
-
+    
     open $INFILE, "<$build_num";
     my $build = <$INFILE>;
     close $INFILE;
     chomp $build;
     
-    if ("$infile" ne "") {
-	open $INFILE, "<$infile" || die;
+    if ($infile ne "") {
+        open($INFILE, "< $infile") || die "$infile: $!\n";
     } else {
-	open $INFILE, "<$outfile" || die;
+        open($INFILE, "< $outfile") || die "$outfile: $!\n";
     }
     open $OUTFILE, ">${outfile}.old" || die;
     
     while (<$INFILE>) {
-	
-	my $id = $_;
-	my $temp;
-	if ($id =~ "Build ID:") {
-	    $temp = "Build ID: " . $build;
-	    $id =~ s/Build ID:\s\d+/$temp/;
-	    print $OUTFILE $id;
-	}
-	elsif ($id =~ "NS_BUILD_ID") {
-	    $temp = "NS_BUILD_ID " . $build;
-	    $id =~ s/NS_BUILD_ID\s\d+/$temp/;
-	    print $OUTFILE $id;
-	}
-	else {
-	    print $OUTFILE $_;
-	}
+    
+    my $id = $_;
+    my $temp;
+    if ($id =~ "Build ID:") {
+        $temp = "Build ID: " . $build;
+        $id =~ s/Build ID:\s\d+/$temp/;
+        print $OUTFILE $id;
+    }
+    elsif ($id =~ "NS_BUILD_ID") {
+        $temp = "NS_BUILD_ID " . $build;
+        $id =~ s/NS_BUILD_ID\s\d+/$temp/;
+        print $OUTFILE $id;
+    }
+    else {
+        print $OUTFILE $_;
+    }
     }
 
     close $INFILE;
