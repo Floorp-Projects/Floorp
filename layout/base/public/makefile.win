@@ -82,7 +82,7 @@ EXPORTS =				\
 	nsIXIFConverter.h \
 	$(NULL)
 
-MODULE=raptor 
+MODULE=layout_base
 
 XPIDLSRCS=					\
 		.\nsIChromeEventHandler.idl	\
