@@ -279,6 +279,7 @@ function getCalendarEventFromEvent( event )
       var event = tree.eventView.getCalendarEventAtRow( row.value );
       return event;
    }
+   return( false );
 }
 
 /**
@@ -327,108 +328,6 @@ function unifinderOnSelect( event )
    }
    
    gCalendarWindow.EventSelection.setArrayToSelection( ArrayOfEvents );
-}
-
-/**
-*  This is called from the unifinder's edit command
-*/
-
-function unifinderEditCommand()
-{
-   if( gCalendarWindow.EventSelection.selectedEvents.length == 1 )
-   {
-      var calendarEvent = gCalendarWindow.EventSelection.selectedEvents[0];
-
-      if( calendarEvent != null )
-      {
-         editEvent( calendarEvent );
-      }
-   }
-}
-
-
-/**
-*  This is called from the unifinder's delete command
-*/
-
-function unifinderDeleteCommand( DoNotConfirm )
-{
-   if( unifinderToDoHasFocus() )
-   {
-      unifinderDeleteToDoCommand( DoNotConfirm );
-      return;
-   }
-   
-   var SelectedItems = gCalendarWindow.EventSelection.selectedEvents;
-   
-   if( SelectedItems.length == 1 )
-   {
-      var calendarEvent = SelectedItems[0];
-
-      if ( calendarEvent.title != "" ) {
-         if( !DoNotConfirm ) {        
-            if ( confirm( confirmDeleteEvent+" "+calendarEvent.title+"?" ) ) {
-               gICalLib.deleteEvent( calendarEvent.id );
-
-               gCalendarWindow.clearSelectedEvent( calendarEvent );
-            }
-         }
-         else
-         {
-            gICalLib.deleteEvent( calendarEvent.id );
-
-            gCalendarWindow.clearSelectedEvent( calendarEvent );
-         }
-      }
-      else
-      {
-         if( !DoNotConfirm ) {        
-            if ( confirm( confirmDeleteUntitledEvent ) ) {
-               gICalLib.deleteEvent( calendarEvent.id );
-
-               gCalendarWindow.clearSelectedEvent( calendarEvent );
-            }
-         }
-         else
-         {
-            gICalLib.deleteEvent( calendarEvent.id );
-
-            gCalendarWindow.clearSelectedEvent( calendarEvent );
-         }
-      }
-   }
-   else if( SelectedItems.length > 1 )
-   {
-      gICalLib.batchMode = true;
-      
-      if( !DoNotConfirm )
-      {
-         if( confirm( "Are you sure you want to delete all selected events?" ) )
-         {
-            gCalendarWindow.clearSelectedEvent( calendarEvent );
-            
-            while( SelectedItems.length )
-            {
-               var ThisItem = SelectedItems.pop();
-               
-               gICalLib.deleteEvent( ThisItem.id );
-            }
-         }
-      }
-      else
-      {
-         gCalendarWindow.clearSelectedEvent( calendarEvent );
-            
-         while( SelectedItems.length )
-         {
-            var ThisItem = SelectedItems.pop();
-            
-            gICalLib.deleteEvent( ThisItem.id );
-         }
-      }
-
-      gICalLib.batchMode = false;
-   }
 }
 
 function unifinderToDoHasFocus()
@@ -569,66 +468,6 @@ function unifinderDoFilterEvents( event )
    
    setTimeout( "refreshEventTree( eventTable )", milliSecsTillTomorrow );
 }
-
-/**
-*  Attach the calendarToDo event to the treeitem
-*/
-
-function setUnifinderEventTreeItem( treeItem, calendarEvent )
-{
-      treeItem.calendarEvent = calendarEvent;
-      treeItem.setAttribute( "eventId", calendarEvent.id );
-      treeItem.setAttribute( "calendarevent", "true" );
-      treeItem.setAttribute( "id", "search-unifinder-treeitem-"+calendarEvent.id );
-
-      var treeRow = document.createElement( "treerow" );
-      var treeCellTitle     = document.createElement( "treecell" );
-      var treeCellStartdate = document.createElement( "treecell" );
-      var treeCellEnddate   = document.createElement( "treecell" );
-      var treeCellCategories = document.createElement( "treecell" );
-
-      var now = new Date();
-      
-      var thisMorning = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0 );
-
-      if(treeItem.getElementsByTagName( "treerow" )[0])
-        treeItem.removeChild( treeItem.getElementsByTagName( "treerow" )[0] );
-
-      if( calendarEvent.title == "" )
-         var titleText = "Untitled";
-      else  
-         var titleText = calendarEvent.title;
-
-      treeCellTitle.setAttribute( "label", titleText );
-
-      var eventStartDate = getNextOrPreviousRecurrence( calendarEvent );
-      var eventEndDate = new Date( calendarEvent.end.getTime() );
-      var startDate = formatUnifinderEventDate( eventStartDate );
-      var startTime = formatUnifinderEventTime( eventStartDate );
-      var endTime  = formatUnifinderEventTime( eventEndDate );
-      
-      if( calendarEvent.allDay )
-      {
-         startText = "All day " + startDate;
-         endText = "All day " + startDate;
-      }
-      else
-      {
-         startText = startDate + " " + startTime;
-         endText = startDate + " " + endTime;
-      }
-      
-      treeCellStartdate.setAttribute( "label", startText );
-      treeCellEnddate.setAttribute( "label", endText );
-      treeCellCategories.setAttribute( "label", calendarEvent.categories );
-
-      treeRow.appendChild( treeCellTitle );
-      treeRow.appendChild( treeCellStartdate );
-      treeRow.appendChild( treeCellEnddate );
-      treeRow.appendChild( treeCellCategories );
-      treeItem.appendChild( treeRow );
-}
-
 
 /**
 *  Redraw the categories unifinder tree
@@ -816,7 +655,7 @@ function refreshEventTree( eventArray )
       eventArray = getEventTable();
    }
    
-   gEventArray = null;
+   gEventArray = new Array();
 
    gEventArray = eventArray;
 
@@ -892,7 +731,7 @@ function changeToolTipTextForEvent( event )
 {
    var thisEvent = getCalendarEventFromEvent( event );
    
-   var Html = document.getElementById( "savetip" );
+   var Html = document.getElementById( "eventTooltip" );
 
    while( Html.hasChildNodes() )
    {
