@@ -72,8 +72,11 @@ CopyUCS2toASCII( const nsAReadableString& aSource, nsAWritableCString& aDest )
     aDest.SetLength(aSource.Length());
 
     nsReadingIterator<PRUnichar> fromBegin, fromEnd;
+
     nsWritingIterator<char> toBegin;
-    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), LossyConvertEncoding<PRUnichar, char>(aDest.BeginWriting(toBegin).get()));
+    LossyConvertEncoding<PRUnichar, char> converter(aDest.BeginWriting(toBegin).get());
+    
+    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
   }
 
 NS_COM
@@ -84,8 +87,11 @@ CopyASCIItoUCS2( const nsAReadableCString& aSource, nsAWritableString& aDest )
     aDest.SetLength(aSource.Length());
 
     nsReadingIterator<char> fromBegin, fromEnd;
+
     nsWritingIterator<PRUnichar> toBegin;
-    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), LossyConvertEncoding<char, PRUnichar>(aDest.BeginWriting(toBegin).get()));
+    LossyConvertEncoding<char, PRUnichar> converter(aDest.BeginWriting(toBegin).get());
+
+    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
   }
 
 
