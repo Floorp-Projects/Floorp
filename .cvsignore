@@ -1,1 +1,3 @@
-dist
+Makefile
+Makefile.in
+*.moc.cpp
