@@ -100,10 +100,38 @@ MYTMPDIR=`mktemp -d ./codesighs.tmp.XXXXXXXX`
 
 
 #
+#   Find the types of files we are interested in.
+#
+ONEFINDPASS="$MYTMPDIR/onefind.list"
+find ./mozilla -type f -name "*.obj" -or -name "*.map" > $ONEFINDPASS
+
+
+#
+#   Find all object files.
+#
+ALLOBJSFILE="$MYTMPDIR/allobjs.list"
+grep -i "\.obj$" < $ONEFINDPASS > $ALLOBJSFILE
+
+
+#
+#   Get a dump of the symbols in every object file.
+#
+ALLOBJSYMSFILE="$MYTMPDIR/allobjsyms.list"
+xargs -n 1 dumpbin.exe /symbols < $ALLOBJSFILE > $ALLOBJSYMSFILE 2> /dev/null
+
+
+#
+#   Produce the symdb for the symbols in all object files.
+#
+SYMDBFILE="$MYTMPDIR/symdb.tsv"
+./mozilla/dist/bin/msdump2symdb --input $ALLOBJSYMSFILE | sort > $SYMDBFILE 2> /dev/null
+
+
+#
 #   Find all map files.
 #
 ALLMAPSFILE="$MYTMPDIR/allmaps.list"
-find ./mozilla -type f -name "*.map" > $ALLMAPSFILE
+grep -i "\.map$" < $ONEFINDPASS > $ALLMAPSFILE
 
 
 #
@@ -115,11 +143,12 @@ RELEVANTSETFILE="$MYTMPDIR/relevant.set"
 grep -v '\;' < $MANIFEST | sed 's/.*\\//' | grep '\.[eEdD][xXlL][eElL]' | sed 's/\.[eEdD][xXlL][eElL]//' > $RELEVANTSETFILE
 RELEVANTARG=`xargs -n 1 echo --match-module < $RELEVANTSETFILE`
 
+
 #
 #   Produce the TSV output.
 #
 RAWTSVFILE="$MYTMPDIR/raw.tsv"
-xargs -n 1 ./mozilla/dist/bin/msmap2tsv $RELEVANTARG --input < $ALLMAPSFILE > $RAWTSVFILE
+./mozilla/dist/bin/msmap2tsv --symdb $SYMDBFILE --batch $RELEVANTARG < $ALLMAPSFILE > $RAWTSVFILE 2> /dev/null
 
 
 #
