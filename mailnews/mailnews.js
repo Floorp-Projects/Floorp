@@ -101,6 +101,7 @@ pref("mail.imap.mime_parts_on_demand",      true);
 pref("mail.imap.mime_parts_on_demand_max_depth", 15);
 pref("mail.imap.mime_parts_on_demand_threshold", 30000);
 pref("mail.imap.use_literal_plus",          true);
+pref("mail.imap.check_deleted_before_expunge", false);
 pref("mail.thread_without_re",	            true);
 pref("mail.leave_on_server",                false);
 pref("mail.default_cc",                     "");
@@ -317,7 +318,9 @@ pref("mail.identity.default.valid", true);
 pref("mail.identity.default.fcc",true);
 pref("mail.identity.default.fcc_folder","mailbox://nobody@Local%20Folders/Sent");
 
+
 // keep these defaults for backwards compatibility and migration
+
 // but .doBcc and .doBccList are the right ones from now on.
 pref("mail.identity.default.bcc_self",false);
 pref("mail.identity.default.bcc_others",false);

@@ -321,6 +321,7 @@ static PRBool gHideUnusedNamespaces = PR_TRUE;
 static PRBool gHideOtherUsersFromList = PR_FALSE;
 static PRBool gUseEnvelopeCmd = PR_FALSE;
 static PRBool gUseLiteralPlus = PR_TRUE;
+static PRBool gCheckDeletedBeforeExpunge = PR_FALSE; //bug 235004
 
 nsresult nsImapProtocol::GlobalInitialization()
 {
@@ -343,6 +344,7 @@ nsresult nsImapProtocol::GlobalInitialization()
     prefBranch->GetBoolPref("mail.imap.use_envelope_cmd",
                             &gUseEnvelopeCmd);
     prefBranch->GetBoolPref("mail.imap.use_literal_plus", &gUseLiteralPlus);
+    prefBranch->GetBoolPref("mail.imap.check_deleted_before_expunge", &gCheckDeletedBeforeExpunge);
     return NS_OK;
 }
 
@@ -4772,9 +4774,23 @@ void
 nsImapProtocol::Expunge()
 {
   ProgressEventFunctionUsingId (IMAP_STATUS_EXPUNGING_MAILBOX);
+
+  if(gCheckDeletedBeforeExpunge)
+  {
+    GetServerStateParser().ResetSearchResultSequence();
+    Search("SEARCH DELETED", PR_FALSE, PR_FALSE);
+    if (GetServerStateParser().LastCommandSuccessful()) 
+    {
+      nsImapSearchResultIterator *search = GetServerStateParser().CreateSearchResultIterator();
+      nsMsgKey key = search->GetNextMessageNumber();
+      delete search;
+      if (key == 0)
+        return;  //no deleted messages to expunge (bug 235004)
+    }
+  }
+
   IncrementCommandTagNumber();
-  
-  nsCString command(GetServerCommandTag());
+  nsCAutoString command(GetServerCommandTag());
   command.Append(" expunge"CRLF);
   
   nsresult rv = SendData(command.get());
