@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set tw=80 expandtab softtabstop=2 ts=2 sw=2: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -285,225 +286,198 @@ NS_IMETHODIMP
 nsHTMLAreaElement::GetProtocol(nsAWritableString& aProtocol)
 {
   nsAutoString href;
-  nsIURI *url;
-  nsresult result = NS_OK;
   
-  result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
-    if (NS_OK == result) {
-      char* protocol;
-      result = url->GetScheme(&protocol);
-      if (result == NS_OK) {
-        aProtocol.Assign(NS_ConvertASCIItoUCS2(protocol));
-        aProtocol.Append(PRUnichar(':'));
-        nsCRT::free(protocol);
-      }
-      NS_RELEASE(url);
-    }
-  }
+  nsresult rv = GetHref(href);
+  if (NS_FAILED(rv))
+    return rv;
 
-  return result;
+  return GetProtocolFromHrefString(href, aProtocol);
+}
+
+NS_IMETHODIMP
+nsHTMLAreaElement::SetProtocol(const nsAReadableString& aProtocol)
+{
+  nsAutoString href, new_href;
+  nsresult rv = GetHref(href);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  rv = SetProtocolInHrefString(href, aProtocol, new_href);
+  if (NS_FAILED(rv))
+    // Ignore failures to be compatible with NS4
+    return NS_OK;
+
+  return SetHref(new_href);
 }
 
 NS_IMETHODIMP    
 nsHTMLAreaElement::GetHost(nsAWritableString& aHost)
 {
   nsAutoString href;
-  nsIURI *url;
-  nsresult result = NS_OK;
   
-  result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
-    if (NS_OK == result) {
-      char* host;
-      result = url->GetHost(&host);
-      if (result == NS_OK) {
-        aHost.Assign(NS_ConvertASCIItoUCS2(host));
-        nsCRT::free(host);
-        PRInt32 port;
-        (void)url->GetPort(&port);
-        if (-1 != port) {
-          aHost.Append(PRUnichar(':'));
-          nsAutoString portStr;
-          portStr.AppendInt(port, 10);
-          aHost.Append(portStr);
-        }
-      }
-      NS_RELEASE(url);
-    }
-  }
+  nsresult rv = GetHref(href);
+  if (NS_FAILED(rv))
+    return rv;
 
-  return result;
+  return GetHostFromHrefString(href, aHost);
+}
+
+NS_IMETHODIMP
+nsHTMLAreaElement::SetHost(const nsAReadableString& aHost)
+{
+  nsAutoString href, new_href;
+  nsresult rv = GetHref(href);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = SetHostInHrefString(href, aHost, new_href);
+  if (NS_FAILED(rv))
+    // Ignore failures to be compatible with NS4
+    return NS_OK;
+
+  return SetHref(new_href);
 }
 
 NS_IMETHODIMP    
 nsHTMLAreaElement::GetHostname(nsAWritableString& aHostname)
 {
   nsAutoString href;
-  nsIURI *url;
-  nsresult result = NS_OK;
-  
-  result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
-    if (NS_OK == result) {
-      char* host;
-      result = url->GetHost(&host);
-      if (result == NS_OK) {
-        aHostname.Assign(NS_ConvertASCIItoUCS2(host));
-        nsCRT::free(host);
-      }
-      NS_RELEASE(url);
-    }
-  }
+  nsresult rv = GetHref(href);
+  if (NS_FAILED(rv))
+    return rv;
 
-  return result;
+  return GetHostnameFromHrefString(href, aHostname);
+}
+
+NS_IMETHODIMP
+nsHTMLAreaElement::SetHostname(const nsAReadableString& aHostname)
+{
+  nsAutoString href, new_href;
+  nsresult rv = GetHref(href);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = SetHostnameInHrefString(href, aHostname, new_href);
+  if (NS_FAILED(rv))
+    // Ignore failures to be compatible with NS4
+    return NS_OK;
+  
+  return SetHref(new_href);
 }
 
 NS_IMETHODIMP    
 nsHTMLAreaElement::GetPathname(nsAWritableString& aPathname)
 {
   nsAutoString href;
-  nsCOMPtr<nsIURI> uri;
-  nsresult result = NS_OK;
-
-  aPathname.Truncate();
  
-  result = GetHref(href);
-  NS_ENSURE_SUCCESS(result, result);
+  nsresult rv = GetHref(href);
+  if (NS_FAILED(rv))
+    return rv;
 
-  result = NS_NewURI(getter_AddRefs(uri), href);
-  NS_ENSURE_SUCCESS(result, result);
+  return GetPathnameFromHrefString(href, aPathname);
+}
 
-  nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
-  NS_ENSURE_TRUE(url, NS_OK);
+NS_IMETHODIMP
+nsHTMLAreaElement::SetPathname(const nsAReadableString& aPathname)
+{
+  nsAutoString href, new_href;
+  nsresult rv = GetHref(href);
+  if (NS_FAILED(rv))
+    return rv;
 
-  char* file;
-  result = url->GetFilePath(&file);
-  NS_ENSURE_SUCCESS(result, result);
+  rv = SetPathnameInHrefString(href, aPathname, new_href);
+  if (NS_FAILED(rv))
+    // Ignore failures to be compatible with NS4
+    return NS_OK;
 
-  aPathname.Assign(NS_ConvertASCIItoUCS2(file));
-  nsCRT::free(file);
-
-  return result;
+  return SetHref(new_href);
 }
 
 NS_IMETHODIMP    
 nsHTMLAreaElement::GetSearch(nsAWritableString& aSearch)
 {
   nsAutoString href;
-  nsCOMPtr<nsIURI> uri;
-  nsresult result = NS_OK;
 
-  result = GetHref(href);
-  if (NS_SUCCEEDED(result)) {
-    result = NS_NewURI(getter_AddRefs(uri), href);
-    if (NS_SUCCEEDED(result)) {
-      char *search;
-      nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+  nsresult rv = GetHref(href);
+  if (NS_FAILED(rv))
+    return rv;
 
-      if (url) {
-        result = url->GetEscapedQuery(&search);
-      }
-
-      if (NS_SUCCEEDED(result) && search && *search) {
-        aSearch.Assign(PRUnichar('?'));
-        aSearch.Append(NS_ConvertASCIItoUCS2(search));
-        nsCRT::free(search);
-      }
-      else {
-        aSearch.SetLength(0);
-      }
-    }
-  }
-
-  return result;
+  return GetSearchFromHrefString(href, aSearch);
 }
 
 NS_IMETHODIMP
 nsHTMLAreaElement::SetSearch(const nsAReadableString& aSearch)
 {
-  nsAutoString href;
+  nsAutoString href, new_href;
   nsresult rv = GetHref(href);
 
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIURI> uri;
+  if (NS_FAILED(rv))
+    return rv;
 
-    rv = NS_NewURI(getter_AddRefs(uri), href);
+  rv = SetSearchInHrefString(href, aSearch, new_href);
+  if (NS_FAILED(rv))
+    // Ignore failures to be compatible with NS4
+    return NS_OK;
 
-    if (uri) {
-      nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &rv));
-
-      if (url) {
-        rv = url->SetQuery(NS_ConvertUCS2toUTF8(aSearch).get());
-
-        nsXPIDLCString newHref;
-        uri->GetSpec(getter_Copies(newHref));
-        SetHref(NS_ConvertUTF8toUCS2(newHref));
-      }
-    }
-  }
-
-  return rv;
+  return SetHref(new_href);
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsHTMLAreaElement::GetPort(nsAWritableString& aPort)
 {
   nsAutoString href;
-  nsCOMPtr<nsIURI> url;
-  nsresult result = NS_OK;
   
-  result = GetHref(href);
-  if (NS_SUCCEEDED(result)) {
-    result = NS_NewURI(getter_AddRefs(url), href);
-    if (NS_SUCCEEDED(result)) {
-      aPort.SetLength(0);
-      PRInt32 port;
-      url->GetPort(&port);
-      if (-1 != port) {
-        nsAutoString portStr;
-        portStr.AppendInt(port, 10);
-        aPort.Append(portStr);
-      }
-    }
-  }
+  nsresult rv = GetHref(href);
+  if (NS_FAILED(rv))
+    return rv;
 
-  return result;
+  return GetPortFromHrefString(href, aPort);
+}
+
+NS_IMETHODIMP
+nsHTMLAreaElement::SetPort(const nsAReadableString& aPort)
+{
+  nsAutoString href, new_href;
+  nsresult rv = GetHref(href);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = SetPortInHrefString(href, aPort, new_href);
+  if (NS_FAILED(rv))
+    // Ignore failures to be compatible with NS4
+    return NS_OK;
+  
+  return SetHref(new_href);
 }
 
 NS_IMETHODIMP    
 nsHTMLAreaElement::GetHash(nsAWritableString& aHash)
 {
   nsAutoString href;
-  nsCOMPtr<nsIURI> uri;
-  nsresult result = NS_OK;
 
-  result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(getter_AddRefs(uri), href);
+  nsresult rv = GetHref(href);
+  if (NS_FAILED(rv))
+    return rv;
 
-    if (NS_SUCCEEDED(result)) {
-      char *ref;
-      nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
-      if (url) {
-        result = url->GetRef(&ref);
-      }
+  return GetHashFromHrefString(href, aHash);
+}
 
-      if (NS_SUCCEEDED(result) && ref && *ref) {
-        aHash.Assign(PRUnichar('#'));
-        aHash.Append(NS_ConvertASCIItoUCS2(ref));
-        nsCRT::free(ref);
-      }
-      else {
-        aHash.SetLength(0);
-      }
-    }
-  }
+NS_IMETHODIMP
+nsHTMLAreaElement::SetHash(const nsAReadableString& aHash)
+{
+  nsAutoString href, new_href;
+  nsresult rv = GetHref(href);
 
-  return result;
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = SetHashInHrefString(href, aHash, new_href);
+  if (NS_FAILED(rv))
+    // Ignore failures to be compatible with NS4
+    return NS_OK;
+
+  return SetHref(new_href);
 }
 
 NS_IMETHODIMP

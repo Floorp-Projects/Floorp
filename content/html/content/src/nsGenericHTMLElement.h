@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set tw=80 expandtab softtabstop=2 ts=2 sw=2: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -377,6 +378,55 @@ public:
 
   nsIHTMLAttributes* mAttributes;
 
+  // Helper functions for <a> and <area>
+  static nsresult SetProtocolInHrefString(const nsAReadableString &aHref,
+                                          const nsAReadableString &aProtocol,
+                                          nsAWritableString &aResult);
+
+  static nsresult SetHostInHrefString(const nsAReadableString &aHref,
+                                      const nsAReadableString &aHost,
+                                      nsAWritableString &aResult);
+
+  static nsresult SetHostnameInHrefString(const nsAReadableString &aHref,
+                                          const nsAReadableString &aHostname,
+                                          nsAWritableString &aResult);
+
+  static nsresult SetPathnameInHrefString(const nsAReadableString &aHref,
+                                          const nsAReadableString &aHostname,
+                                          nsAWritableString &aResult);
+
+  static nsresult SetSearchInHrefString(const nsAReadableString &aHref,
+                                        const nsAReadableString &aSearch,
+                                        nsAWritableString &aResult);
+  
+  static nsresult SetHashInHrefString(const nsAReadableString &aHref,
+                                      const nsAReadableString &aHash,
+                                      nsAWritableString &aResult);
+
+  static nsresult SetPortInHrefString(const nsAReadableString &aHref,
+                                      const nsAReadableString &aPort,
+                                      nsAWritableString &aResult);
+
+  static nsresult GetProtocolFromHrefString(const nsAReadableString &aHref,
+                                            nsAWritableString& aProtocol);
+
+  static nsresult GetHostFromHrefString(const nsAReadableString &aHref,
+                                        nsAWritableString& aHost);
+
+  static nsresult GetHostnameFromHrefString(const nsAReadableString &aHref,
+                                            nsAWritableString& aHostname);
+
+  static nsresult GetPathnameFromHrefString(const nsAReadableString &aHref,
+                                            nsAWritableString& aPathname);
+
+  static nsresult GetSearchFromHrefString(const nsAReadableString &aHref,
+                                          nsAWritableString& aSearch);
+
+  static nsresult GetPortFromHrefString(const nsAReadableString &aHref,
+                                        nsAWritableString& aPort);
+
+  static nsresult GetHashFromHrefString(const nsAReadableString &aHref,
+                                        nsAWritableString& aHash);
 protected:
   nsresult SetElementFocus(PRBool aDoFocus);
 
