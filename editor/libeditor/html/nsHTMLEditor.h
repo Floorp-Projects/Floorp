@@ -288,8 +288,8 @@ public:
   NS_IMETHOD StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
 
   /** All editor operations which alter the doc should be followed
-   *  with a call to EndOperation, naming the action and direction */
-  NS_IMETHOD EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
+   *  with a call to EndOperation */
+  NS_IMETHOD EndOperation();
 
   /** returns PR_TRUE if aParentTag can contain a child of type aChildTag */
   virtual PRBool TagCanContainTag(const nsString &aParentTag, const nsString &aChildTag);
@@ -496,7 +496,7 @@ protected:
 
   /* small utility routine to test the eEditorReadonly bit */
   PRBool IsModifiable();
-  
+
   /* helpers for block transformations */
   nsresult MakeDefinitionItem(const nsString& aItemType);
   nsresult InsertBasicBlock(const nsString& aBlockType);
