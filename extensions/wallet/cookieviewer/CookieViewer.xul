@@ -128,7 +128,8 @@
                 onkeypress="if(event.which == 46) gone_p += DeleteItemSelected('permissionstree', 'permtree_', 'permissionslist');"
                 multiple="true" onclick="ViewPermissionSelected();">
             <treecolgroup>
-              <treecol flex="1"/>
+              <treecol flex="5" width="0"/>
+              <treecol flex="5" width="0"/>
             </treecolgroup>
             <treehead>
               <treerow>
@@ -157,7 +158,8 @@
                 onkeypress="if(event.which == 46) gone_i += DeleteItemSelected('imagestree', 'imgtree_', 'imageslist');"
                 multiple="true" onclick="ViewImageSelected();">
             <treecolgroup>
-              <treecol flex="1"/>
+              <treecol flex="5" width="0"/>
+              <treecol flex="5" width="0"/>
             </treecolgroup>
             <treehead>
               <treerow>
