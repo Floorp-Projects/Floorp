@@ -142,7 +142,7 @@ function Startup()
 
   // Set method to detect clicking on OK button
   //  so we don't get fooled by changing "default" behavior
-  dialog.Ok.setAttribute("onclick", "onOKClick()");
+  dialog.Ok.setAttribute("onclick", "SetDefaultToOk()");
 
   // Make the "Last-picked" the default button
   //  until the user selects a color
@@ -173,11 +173,8 @@ function ChangePalette(palette)
 function SelectColor()
 {
   var color = dialog.ColorPicker.color;
-  if (color.length > 0)
-  {
+  if (color)
     SetCurrentColor(color);
-    SetDefaultToOk();
-  }
 }
 
 function RemoveColor()
@@ -185,6 +182,15 @@ function RemoveColor()
   SetCurrentColor("");
   dialog.ColorInput.focus();
   SetDefaultToOk();
+}
+
+function SelectColorByKeypress(aEvent)
+{
+  if (aEvent.charCode == aEvent.DOM_VK_SPACE)
+  {
+    SelectColor();
+    SetDefaultToOk();
+  }
 }
 
 function SelectLastPickedColor()
@@ -198,7 +204,10 @@ function SetCurrentColor(color)
 {
   // TODO: Validate color?
   if(!color) color = "";
-  dialog.ColorInput.value = color.trimString().toLowerCase();
+  color = color.trimString().toLowerCase();
+  if (color == "mixed")
+    color = "";
+  dialog.ColorInput.value = color;
   SetColorSwatch();
 }
 
@@ -223,15 +232,6 @@ function SetDefaultToOk()
   dialog.LastPickedButton.removeAttribute("default");
   dialog.Ok.setAttribute("default","true");
   LastPickedIsDefault = false;
-}
-
-function onOKClick()
-{
-  // Clicking on OK should not use LastPickedColor automatically
-  //  as using Enter ("default") key does
-  LastPickedIsDefault = false;
-  if ( onOK() )
-    window.close();
 }
 
 function ValidateData()
