@@ -22,6 +22,7 @@
 */
 
 #import "CHAutoCompleteTextField.h"
+#import "BrowserWindowController.h"
 #import "CHPageProxyIcon.h"
 #include "nsIServiceManager.h"
 #include "nsMemory.h"
@@ -69,6 +70,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   
   mSearchString = nil;
   mBackspaced = NO;
+  mCompleteResult = NO;
   mOpenTimer = nil;
   
   mSession = nsnull;
@@ -143,7 +145,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
   if (mSearchString)
     [mSearchString release];
-
+    
   [mPopupWin release];
   [mDataSource release];
 
@@ -182,11 +184,13 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 // searching ////////////////////////////
 
-- (void) startSearch:(NSString*)aString
+- (void) startSearch:(NSString*)aString complete:(BOOL)aComplete
 {  
   if (mSearchString)
     [mSearchString release];
   mSearchString = [aString retain];
+
+  mCompleteResult = aComplete;
 
   if ([self isOpen]) {
     [self performSearch];
@@ -200,11 +204,6 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     
     mOpenTimer = [[NSTimer scheduledTimerWithTimeInterval:0.2 target:self selector:@selector(searchTimer:)
                           userInfo:nil repeats:NO] retain];
-    
-    // we need to reset mBackspaced here, or else it might still be true if the user backspaces
-    // the textfield to be empty, then starts typing, because it is normally reset in selectRowAt
-    // which won't be called until perhaps after several keystrokes (due to the timer)
-    mBackspaced = NO;
   }
 }
 
@@ -254,6 +253,17 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [self performSearch];
 }
 
+- (void) clearResults
+{
+  // clear out search data
+  mSearchString = nil;
+  mResults = nil;
+
+  [mDataSource setResults:nil];
+
+  [self closePopup];
+}
+
 // handling the popup /////////////////////////////////
 
 - (void) openPopup
@@ -271,6 +281,11 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   NSPoint locationOrigin;
   int tableHeight;
   
+  if ([self visibleRows] == 0) {
+    [self closePopup];
+    return;
+  }
+
   // get the origin of the location bar in coordinates of the root view
   locationFrame = [[self superview] frame];
   locationOrigin = [[[self superview] superview] convertPoint:locationFrame.origin
@@ -307,12 +322,11 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   PRInt32 defaultRow;
   mResults->GetDefaultItemIndex(&defaultRow);
   
-  if (mBackspaced) {
-    [self selectRowAt:-1];
-    mBackspaced = NO;
-  } else {
+  if (mCompleteResult) {
     [self selectRowAt:defaultRow];
     [self completeResult:defaultRow];
+  } else {
+    [self selectRowAt:-1];
   }
 }
 
@@ -327,7 +341,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   NSText *text;
   NSString *result1;
 
-  if (aRow < 0) {
+  if (aRow < 0 && mSearchString) {
     [self setStringValue:mSearchString];
   } else {
     if ([mDataSource rowCount] <= 0)
@@ -351,10 +365,27 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 - (void) enterResult:(int)aRow
 {
-  if ([self isOpen] && aRow >= 0) {
+  if (aRow >= 0 && [mDataSource rowCount] > 0) {
     [self setStringValue: [mDataSource resultString:[mTableView selectedRow] column:@"col1"]];
     [self selectText:self];
     [self closePopup];
+  } else if (mOpenTimer) {
+    // if there was a search timer going when we hit enter, cancel it
+    [mOpenTimer invalidate];
+    [mOpenTimer release];
+    mOpenTimer = nil;
+  }
+}
+
+- (void) revertText
+{
+  BrowserWindowController *controller = (BrowserWindowController *)[[self window] windowController];
+  NSString *url = [[controller getBrowserWrapper] getCurrentURLSpec];
+  if (url) {
+    [self clearResults];
+    
+    [self setStringValue:url];
+    [self selectText:self];
   }
 }
 
@@ -362,8 +393,14 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 - (void) selectRowAt:(int)aRow
 {
-  [mTableView selectRow:aRow byExtendingSelection:NO];
-  [mTableView scrollRowToVisible: aRow];
+  if (aRow >= -1 && [mDataSource rowCount] > 0) {
+    // show the popup
+    if ([mPopupWin isVisible] == NO)
+      [mPopupWin orderFront:nil];
+
+    [mTableView selectRow:aRow byExtendingSelection:NO];
+    [mTableView scrollRowToVisible: aRow];
+  }
 }
 
 - (void) selectRowBy:(int)aRows
@@ -414,19 +451,26 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [self resizePopup];
 }
 
-// NSTextField ////////////////////////////////////////////
+// NSTextField delegate //////////////////////////////////
 
 - (void)controlTextDidChange:(NSNotification *)aNotification
 {
-  [self startSearch:[self stringValue]];
+  NSText *text = [[self window] fieldEditor:NO forObject:self];
+  NSRange range = [text selectedRange];
+  
+  // make sure we're typing at the end of the string
+  if (range.location == [[self stringValue] length])
+    [self startSearch:[self stringValue] complete:!mBackspaced];
+  else
+    [self clearResults];
+  
+  mBackspaced = NO;
 }
 
 - (void)controlTextDidEndEditing:(NSNotification *)aNotification
 {
   [self closePopup];
 }
-
-// NSTextField delegate //////////////////////////////////
 
 - (BOOL)control:(NSControl *)control textView:(NSTextView *)textView doCommandBySelector:(SEL)command
 {

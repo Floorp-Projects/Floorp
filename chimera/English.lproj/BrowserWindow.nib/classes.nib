@@ -16,7 +16,12 @@
             SUPERCLASS = NSObject; 
         }, 
         {CLASS = BookmarksToolbar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
-        {CLASS = BrowserWindow; LANGUAGE = ObjC; SUPERCLASS = NSWindow; }, 
+        {
+            CLASS = BrowserWindow; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mAutoCompleteTextField = id; }; 
+            SUPERCLASS = NSWindow; 
+        }, 
         {
             ACTIONS = {
                 back = id; 
