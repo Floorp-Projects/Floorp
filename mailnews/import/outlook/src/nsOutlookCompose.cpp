@@ -1015,7 +1015,7 @@ nsresult nsOutlookCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCop
 	nsCString	val;
 	nsCString	replaceVal;
 	PRInt32		written;
-	nsresult	rv = NS_ERROR_FAILURE;
+	nsresult	rv = NS_OK; // it's ok if we don't have the first header on the predefined lists.
 	PRInt32		specialHeader;
 	PRBool		specials[kMaxSpecialHeaders];
 	int			i;
