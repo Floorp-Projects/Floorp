@@ -29,6 +29,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMXULElement.h"
 #include "nsIPresContext.h"
 #include "nsIFrame.h"
 #include "nsIScrollableView.h"
@@ -192,7 +193,54 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToLine(PRInt32 line)
 /* void scrollToElement (in nsIDOMElement child); */
 NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsIScrollableView* scrollableView = GetScrollableView();
+    if (!scrollableView)
+       return NS_ERROR_FAILURE;
+
+    // prepare for twips
+    nsCOMPtr<nsIPresContext> context;
+    mPresShell->GetPresContext(getter_AddRefs(context));
+    float pixelsToTwips = 0.0;
+    context->GetPixelsToTwips(&pixelsToTwips);
+    
+    // get our box
+    nsIFrame* frame = GetFrame();
+    nsCOMPtr<nsIBox> box (do_QueryInterface(frame));
+
+    nsRect rect;
+    nsIBox* scrolledBox;
+    nsCOMPtr<nsIDOMXULElement> childDOMXULElement (do_QueryInterface(child));
+    nsIBoxObject * childBoxObject;
+	childDOMXULElement->GetBoxObject(&childBoxObject);
+
+    PRInt32 x,y;
+    childBoxObject->GetX(&x);
+    childBoxObject->GetY(&y);
+    // get the twips rectangle from the boxobject (which has pixels)    
+    rect.x = NSToIntRound(x * pixelsToTwips);
+    rect.y = NSToIntRound(y * pixelsToTwips);
+    
+    // get the scrolled box
+    box->GetChildBox(&scrolledBox);
+
+    // TODO: make sure the child is inside the box
+
+    // get our current info
+    PRBool horiz = PR_FALSE;
+    scrolledBox->GetOrientation(horiz);
+    nsPoint cp;
+    scrollableView->GetScrollPosition(cp.x,cp.y);
+    nscoord newx=cp.x, newy=cp.y;
+
+    // we only scroll in the direction of the scrollbox orientation
+    if (horiz) {
+        newx = rect.x;
+    } else {
+        newy = rect.y;
+    }
+    
+    // scroll away
+    return scrollableView->ScrollTo(newx, newy, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
 }
 
 /* void scrollToIndex (in long index); */
@@ -220,7 +268,74 @@ NS_IMETHODIMP nsScrollBoxObject::GetScrolledSize(PRInt32 *width, PRInt32 *height
 /* void ensureElementIsVisible (in nsIDOMElement child); */
 NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsIScrollableView* scrollableView = GetScrollableView();
+    if (!scrollableView)
+       return NS_ERROR_FAILURE;
+
+    // prepare for twips
+    nsCOMPtr<nsIPresContext> context;
+    mPresShell->GetPresContext(getter_AddRefs(context));
+    float pixelsToTwips = 0.0;
+    context->GetPixelsToTwips(&pixelsToTwips);
+    
+    // get our box
+    nsIFrame* frame = GetFrame();
+    nsCOMPtr<nsIBox> box (do_QueryInterface(frame));
+
+    nsRect rect, crect;
+    nsIBox* scrolledBox;
+    nsCOMPtr<nsIDOMXULElement> childDOMXULElement (do_QueryInterface(child));
+    nsIBoxObject * childBoxObject;
+    childDOMXULElement->GetBoxObject(&childBoxObject);
+
+    PRInt32 x,y,width,height;
+    childBoxObject->GetX(&x);
+    childBoxObject->GetY(&y);
+    childBoxObject->GetWidth(&width);
+    childBoxObject->GetHeight(&height);
+    // get the twips rectangle from the boxobject (which has pixels)    
+    rect.x = NSToIntRound(x * pixelsToTwips);
+    rect.y = NSToIntRound(y * pixelsToTwips);
+    rect.width = NSToIntRound(width * pixelsToTwips);
+    rect.height = NSToIntRound(height * pixelsToTwips);
+
+    // get the scrolled box
+    box->GetChildBox(&scrolledBox);
+
+    // TODO: make sure the child is inside the box
+
+    // get our current info
+    PRBool horiz = PR_FALSE;
+    scrolledBox->GetOrientation(horiz);
+
+    nsPoint cp;
+    scrollableView->GetScrollPosition(cp.x,cp.y);
+    GetOffsetRect(crect);    
+    crect.x = NSToIntRound(crect.x * pixelsToTwips);
+    crect.y = NSToIntRound(crect.y * pixelsToTwips);
+    crect.width = NSToIntRound(crect.width * pixelsToTwips);
+    crect.height = NSToIntRound(crect.height * pixelsToTwips);
+
+
+    nscoord newx=cp.x, newy=cp.y;
+
+    // we only scroll in the direction of the scrollbox orientation
+    if (horiz) {
+        if (rect.x + rect.width > cp.x + crect.width) {
+            newx = cp.x + ((rect.x + rect.width)-(cp.x + crect.width));
+        } else if (rect.x < cp.x) {
+            newx = rect.x;
+        }
+    } else {
+        if (rect.y + rect.height > cp.y + crect.height) {
+            newx = cp.y + ((rect.y + rect.height)-(cp.y + crect.height));
+        } else if (rect.y < cp.y) {
+            newy = rect.y;
+        }
+    }
+    
+    // scroll away
+    return scrollableView->ScrollTo(newx, newy, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
 }
 
 /* void ensureIndexIsVisible (in long index); */
