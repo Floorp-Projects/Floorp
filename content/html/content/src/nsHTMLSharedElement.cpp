@@ -112,6 +112,11 @@ public:
   // nsIDOMHTMLBaseFontElement
   NS_DECL_NSIDOMHTMLBASEFONTELEMENT
 
+  // nsIContent
+  // Have to override tabindex for <embed> to act right
+  NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
+  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
+  
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -206,6 +211,10 @@ NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Color, color)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Face, face)
 NS_IMPL_INT_ATTR(nsHTMLSharedElement, Size, size)
 
+// TabIndex for embed
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLSharedElement, TabIndex, tabindex,
+                               mNodeInfo->Equals(nsHTMLAtoms::embed) ? 0 : -1)
+  
 NS_IMETHODIMP
 nsHTMLSharedElement::GetType(nsAString& aType)
 {
@@ -241,8 +250,6 @@ nsHTMLSharedElement::GetForm(nsIDOMHTMLFormElement** aForm)
 // nsIDOMHTMLBaseElement
 NS_IMPL_URI_ATTR(nsHTMLSharedElement, Href, href)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Target, target)
-
-// spacer element code
 
 PRBool
 nsHTMLSharedElement::ParseAttribute(nsIAtom* aAttribute,
@@ -318,6 +325,8 @@ nsHTMLSharedElement::AttributeToString(nsIAtom* aAttribute,
 
   return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
+
+// spacer element code
 
 static void
 SpacerMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
