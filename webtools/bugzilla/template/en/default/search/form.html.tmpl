@@ -326,7 +326,9 @@ function selectProduct(f) {
   { value => "anywords", description => "contains any of the words" },
   { value => "regexp", description => "matches the regexp" },
   { value => "notregexp", description => "doesn't match the regexp" } ] %]
-     
+
+[% PROCESS "global/field-descs.html.tmpl" %]
+
 [%# *** Summary *** %]
 
 <table>
@@ -664,7 +666,7 @@ function selectProduct(f) {
     [% FOREACH field = chfield %]
       <option value="[% field FILTER html %]"
         [% " selected" IF lsearch(default.chfield, field) != -1 %]>
-        [% field FILTER html %]</option>
+        [% (field_descs.$field || field) FILTER html %]</option>
     [% END %]
     </select>
   </dd>

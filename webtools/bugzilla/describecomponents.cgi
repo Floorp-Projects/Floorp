@@ -64,9 +64,6 @@ if (!defined $::FORM{'product'}) {
     elsif ($prodsize > 1) {
         $::vars->{'proddesc'} = \%products;
         $::vars->{'target'} = "describecomponents.cgi";
-        $::vars->{'title'} = "Bugzilla component description";
-        $::vars->{'h2'} = 
-          "Please specify the product whose components you want described.";
 
         print "Content-type: text/html\n\n";
         $::template->process("global/choose-product.html.tmpl", $::vars)

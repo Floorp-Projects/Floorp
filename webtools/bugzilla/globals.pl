@@ -98,7 +98,7 @@ $::SIG{PIPE} = 'IGNORE';
 
 $::dontchange = "--do_not_change--";
 $::chooseone = "--Choose_one:--";
-$::defaultqueryname = "(Default query)";
+$::defaultqueryname = "(Default query)"; # This string not exposed in UI
 $::unconfirmedstate = "UNCONFIRMED";
 $::dbwritesallowed = 1;
 

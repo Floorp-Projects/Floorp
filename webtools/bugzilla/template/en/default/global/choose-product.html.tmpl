@@ -24,6 +24,14 @@
   # are their descriptions.
   #%]
 
+[% IF target == "enter_bug.cgi" %]
+  [% title = "Enter Bug" %]
+  [% h2 = "First, you must pick a product on which to enter a bug." %]
+[% ELSIF target == "describecomponents.cgi" %]
+  [% title = "Bugzilla Component Descriptions" %]
+  [% h2 = "Please specify the product whose components you want described." %]
+[% END %]
+
 [% DEFAULT title = "Choose a Product" %]
 [% PROCESS global/header.html.tmpl %]
 

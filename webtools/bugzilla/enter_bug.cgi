@@ -88,9 +88,6 @@ if (!defined $::FORM{'product'}) {
 
         $vars->{'target'} = "enter_bug.cgi";
         $vars->{'format'} = $::FORM{'format'};
-        $vars->{'title'} = "Enter Bug";
-        $vars->{'h2'} = 
-                    "First, you must pick a product on which to enter a bug.";
         
         print "Content-type: text/html\n\n";
         $template->process("global/choose-product.html.tmpl", $vars)
@@ -284,7 +281,6 @@ $default{'component_'} = formvalue('component');
 $vars->{'assigned_to'} = formvalue('assigned_to');
 $vars->{'cc'} = formvalue('cc');
 $vars->{'reporter'} = $::COOKIE{'Bugzilla_login'};
-$vars->{'user_agent'} = $ENV{'HTTP_USER_AGENT'};
 $vars->{'product'} = $product;
 $vars->{'bug_file_loc'} = formvalue('bug_file_loc', "http://");
 $vars->{'short_desc'} = formvalue('short_desc');
@@ -352,8 +348,7 @@ while (MoreSQLData()) {
     my $check;
 
     # If this is the group for this product, make it checked.
-    if(formvalue("maketemplate") eq 
-                               "Remember values as bookmarkable template") 
+    if(formvalue("maketemplate") ne "") 
     {
         # If this is a bookmarked template, then we only want to set the
         # bit for those bits set in the template.        
