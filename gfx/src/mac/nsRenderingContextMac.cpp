@@ -556,7 +556,7 @@ NS_IMETHODIMP nsRenderingContextMac::GetHints(PRUint32& aResult)
 {
 	PRUint32 result = 0;
 
-	// QuickDraw is prefered over to ATSUI for drawing 7-bit text
+	// QuickDraw is preferred over to ATSUI for drawing 7-bit text
 	// (it's not 8-bit: the name of the constant is misleading)
 	result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
 	aResult = result;

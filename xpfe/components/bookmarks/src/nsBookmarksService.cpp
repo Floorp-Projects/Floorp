@@ -5253,7 +5253,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 
 
 /*
-	Note: this routine is similiar, yet distinctly different from, nsRDFContentUtils::GetTextForNode
+	Note: this routine is similar, yet distinctly different from, nsRDFContentUtils::GetTextForNode
 */
 
 nsresult

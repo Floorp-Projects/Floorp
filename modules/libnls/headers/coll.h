@@ -165,7 +165,7 @@
  * <pre>
  * .       UnicodeString a("abcdefgh"), b("ijklmnop");
  *
- * .       // This comparision is not as fast as collation keys.
+ * .       // This comparison is not as fast as collation keys.
  * .       // For multiple comparison, use CollationKey.  Please see CollationKey
  * .       // class description for more description
  * .       if (myCollation->compare(a, b) == Collator::LESS) { // ... }

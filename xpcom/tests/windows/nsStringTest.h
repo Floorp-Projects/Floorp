@@ -224,7 +224,7 @@ int CStringTester::TestSearching(){
   {
     stringtype s1("hello there rick");
 
-    PRInt32 pos=s1.FindChar('r');  //this will search from the begining, and for the length of the string.
+    PRInt32 pos=s1.FindChar('r');  //this will search from the beginning, and for the length of the string.
     NS_ASSERTION(pos==9,"Error: FindChar() with offset and count");
 
     pos=s1.FindChar('r',PR_FALSE,0,5);  //this will search from the front using count. THIS WILL FAIL!

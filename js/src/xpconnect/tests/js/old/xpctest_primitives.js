@@ -6,7 +6,7 @@
 * original. It also exercises the 'toString' methods of the wrappers.
 *
 * The table has plugable compare functions to allows for 'equals' methods of
-* comparision and to allow for 'close enough' comparison of floats and doubles
+* comparison and to allow for 'close enough' comparison of floats and doubles
 */
 
 

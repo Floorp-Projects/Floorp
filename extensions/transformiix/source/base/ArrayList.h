@@ -22,7 +22,7 @@
  */
 
 /**
- * ArrayList is a simple array which will grow automatically, similiar to
+ * ArrayList is a simple array which will grow automatically, similar to
  * the Vector class in that other more popular object oriented programming language.
 **/
 

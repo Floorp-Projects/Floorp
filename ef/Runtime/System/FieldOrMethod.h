@@ -91,7 +91,7 @@ public:
 	/* Returns true if obj is an instance of this field. */
 	bool equals(JavaObject &obj) const {
 		/* Since we will not be creating duplicate copies of Field objects,
-		 * a simple pointer comparision will suffice
+		 * a simple pointer comparison will suffice
 		 */
 		return ((JavaObject *) this == &obj);
 	}

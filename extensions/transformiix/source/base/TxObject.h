@@ -50,7 +50,7 @@ class TxObject {
 
     /**
      * Returns true if the given Object is equal to this object.
-     * By default the comparision operator == is used, but this may
+     * By default the comparison operator == is used, but this may
      * be overridden
     **/
     virtual MBool equals(TxObject* obj) {

@@ -1195,7 +1195,7 @@ nsEventStateManager :: GetSelection ( nsIFrame* inFrame, nsIPresContext* inPresC
 // Note that when the mouse enters a new child window with its own view, the event's
 // coordinates will be in relation to the origin of the inner child window, which could
 // either be very different from that of the mouse coords of the mouse down and trigger
-// a drag too early, or very similiar which might not trigger a drag. 
+// a drag too early, or very similar which might not trigger a drag. 
 //
 // Do we need to do anything about this? Let's wait and see.
 //

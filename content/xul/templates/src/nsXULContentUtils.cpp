@@ -280,7 +280,7 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
 
 
 /*
-	Note: this routine is similiar, yet distinctly different from, nsBookmarksService::GetTextForNode
+	Note: this routine is similar, yet distinctly different from, nsBookmarksService::GetTextForNode
 */
 
 nsresult

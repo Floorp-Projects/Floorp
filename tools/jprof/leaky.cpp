@@ -469,7 +469,7 @@ void leaky::analyze()
   memset(countArray, 0, sizeof(countArray[0])*usefulSymbols);
 
   // The flag array is used to prevent counting symbols multiple times
-  // if functions are called recursivly.  In order to keep from having
+  // if functions are called recursively.  In order to keep from having
   // to zero it on each pass through the loop, we mark it with the value
   // of stacks on each trip through the loop.  This means we can determine
   // if we have seen this symbol for this stack trace w/o having to reset

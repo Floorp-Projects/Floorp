@@ -470,8 +470,8 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
 
 #if 0
       // ISSUE: Needs security review. We don't compare certificates. 
-      // because currently there is no basis for making a postive comparision.
-      // If one or the other context is signed, the comparision will fail.
+      // because currently there is no basis for making a postive comparison.
+      // If one or the other context is signed, the comparison will fail.
 
         char jscertid[buflen];
         char jvcertid[buflen];

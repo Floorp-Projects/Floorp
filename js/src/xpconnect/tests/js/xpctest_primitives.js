@@ -6,7 +6,7 @@
  * the License at http://www.mozilla.org/NPL/
  *
  * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
@@ -40,7 +40,7 @@
 * original. It also exercises the 'toString' methods of the wrappers.
 *
 * The table has plugable compare functions to allows for 'equals' methods of
-* comparision and to allow for 'close enough' comparison of floats and doubles
+* comparison and to allow for 'close enough' comparison of floats and doubles
 */
 
 
