@@ -1,3 +1,11 @@
+New Summary format and number of errors displayed on build page by
+        Adam Di Carlo <adam@onshore-devel.com>,
+
+Spelling and consistency fixes from:
+	Adam Di Carlo <adam@onshore-devel.com>, 
+	Orion Poplawski <OPoplawski@cqg.com>,
+	John L. Villanlovos <john.l.villalovos@intel.com>,
+
 Change HTML generation so that the text browser 'links' 
 (http://artax.karlin.mff.cuni.cz/~mikulas/links/) can
 work with tinderbox.
