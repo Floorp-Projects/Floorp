@@ -1,4 +1,4 @@
-<!-- -*- Mode: SGML; tab-width: 4; indent-tabs-mode: nil -*- -->
+<?xml version="1.0"?> <!-- -*- Mode: SGML; tab-width: 4; indent-tabs-mode: nil -*- -->
 
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://chrome.mozilla.org/rdf#"> 
