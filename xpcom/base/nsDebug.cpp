@@ -21,7 +21,34 @@
 
 #if defined(_WIN32)
 #include <windows.h>
+#elif defined(XP_MAC)
+   //------------------------
+   #include <MacTypes.h>
+   #include <Processes.h>
+
+   // TEMPORARY UNTIL WE HAVE MACINTOSH ENVIRONMENT VARIABLES THAT CAN TURN ON
+   // LOGGING ON MACINTOSH
+   // At this moment, NSPR's logging is a no-op on Macintosh.
+
+   #include <stdarg.h>
+   #include <stdio.h>
+ 
+   #undef PR_LOG
+   #define PR_LOG(module,level,args) dprintf args
+   static void dprintf(const char *format, ...)
+   {
+      va_list ap;
+      Str255 buffer;
+      
+      va_start(ap, format);
+      buffer[0] = vsnprintf((char *)buffer + 1, sizeof(buffer) - 1, format, ap);
+      va_end(ap);
+      
+      DebugStr(buffer);
+   }
+   //------------------------
 #endif
+
 
 /**
  * Implementation of the nsDebug methods. Note that this code is
@@ -48,6 +75,8 @@ NS_COM void nsDebug::Abort(const char* aFile, PRIntn aLine)
 #if defined(_WIN32)
   long* __p = (long*) 0x7;
   *__p = 0x7;
+#elif defined(XP_MAC)
+  ExitToShell();
 #endif
 }
 
@@ -60,6 +89,7 @@ NS_COM void nsDebug::Break(const char* aFile, PRIntn aLine)
   //XXX this works on win32 only for now. For all the other platforms call Abort
 #if defined(_WIN32)
   ::DebugBreak();
+#elif defined(XP_MAC)
 #else
   Abort(aFile, aLine);
 #endif
