@@ -804,9 +804,9 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   numTiles = (aDestRect.width*aDestRect.height)/(ScaledTileWidth*ScaledTileHeight);
 
   // if alpha is less than 8,not printing, and not 8 bit palette image then we can do
-  // a progressive tile and the tile is at least 4 times smaller than the area to update
+  // a progressive tile and the tile is at least 8 times smaller than the area to update
   if ( (mAlphaDepth < 8) && (canRaster!=DT_RASPRINTER) && (256!=mNumPaletteColors) && 
-          (numTiles > 3) ) {
+          (numTiles > 7) ) {
     result = ProgressiveDoubleBlit(aSurface,aDestRect.width, aDestRect.height,
                              ScaledTileWidth,ScaledTileHeight, x0,y0,x1,y1);  
     if (result ) {
