@@ -28,10 +28,12 @@
 #ifndef nsCOMPtr_h___
 #include "nsCOMPtr.h"
 #endif
-
 #ifndef nsIDOMElement_h__
 #include "nsIDOMElement.h"
 	// for |nsIDOMElement| because an |nsCOMPtr<nsIDOMElement>&| is used, below
+#endif
+#ifndef nsIDOMRange_h__
+#include "nsIDOMRange.h"
 #endif
 
 
@@ -268,8 +270,10 @@ public:
     * Assumes cell-selection model where each cell
     * is in a separate range (selection parent node is table row)
     * @param aCell     Selected cell or null if ranges don't contain cell selections
+    * @param aRange    Optional: if not null, return the selection range 
+    *                     associated with the cell
     */
-  NS_IMETHOD GetFirstSelectedCell(nsIDOMElement **aCell)=0;
+  NS_IMETHOD GetFirstSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)=0;
   
   /** Get next selected cell element from first selection range.
     * Assumes cell-selection model where each cell
@@ -277,8 +281,10 @@ public:
     * Always call GetFirstSelectedCell() to initialize stored index of "next" cell
     * @param aCell     Selected cell or null if no more selected cells
     *                     or ranges don't contain cell selections
+    * @param aRange    Optional: if not null, return the selection range 
+    *                     associated with the cell
     */
-  NS_IMETHOD GetNextSelectedCell(nsIDOMElement **aCell)=0;
+  NS_IMETHOD GetNextSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)=0;
 };
 
 #endif // nsITableEditor_h__

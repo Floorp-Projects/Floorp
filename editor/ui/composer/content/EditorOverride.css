@@ -36,5 +36,3 @@ a:link img, a:visited img, a:active img,
 a:out-of-date img, img[usemap], object[usemap] {
   cursor: default;
 }
-
-

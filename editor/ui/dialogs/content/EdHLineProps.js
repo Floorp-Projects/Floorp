@@ -96,8 +96,14 @@ function InitDialog()
   } else {
     dialog.leftAlign.checked = true;
   }
-  noshade = globalElement.getAttribute("noshade");
-  dialog.shading.checked = (noshade == "");
+
+  // This is tricky! Since the "noshade" attribute doesn't have a value,
+  //  we can't use getAttribute to figure out if it's set!
+  // This gets the attribute NODE from the attributes NamedNodeMap
+  if (globalElement.attributes.getNamedItem("noshade"))
+    dialog.shading.checked = false;
+  else
+    dialog.shading.checked = true;
 }
 
 function onSaveDefault()

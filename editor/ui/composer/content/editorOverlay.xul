@@ -183,9 +183,10 @@
     <broadcaster id="Editor:Exit"         value="&exitCmd.label;"          oncommand="goQuitApplication()"/>
     
     <!-- need to toggle the menu item text through style -->
- 	<broadcaster id="cmd_viewCompToolbar"   oncommand="goToggleToolbar('EditToolbar','cmd_viewCompToolbar');" checked="true"/>
- 	<broadcaster id="cmd_viewFormatToolbar" oncommand="goToggleToolbar('FormatToolbar','cmd_viewFormatToolbar');" checked="true"/>
-	<broadcaster id="cmd_viewtaskbar"       oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
+ 	<broadcaster id="cmd_viewCompToolbar"     oncommand="goToggleToolbar('EditToolbar','cmd_viewCompToolbar');" checked="true"/>
+ 	<broadcaster id="cmd_viewFormatToolbar"   oncommand="goToggleToolbar('FormatToolbar','cmd_viewFormatToolbar');" checked="true"/>
+ 	<broadcaster id="cmd_viewEditModeToolbar" oncommand="goToggleToolbar('EditModeToolbar','cmd_viewEditModeToolbar');" checked="true"/>
+	<broadcaster id="cmd_viewtaskbar"         oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
 
     <broadcaster id="Editor:InsertLink"   value="&insertLinkCmd.label;"    oncommand="EditorInsertOrEditLink()"/>
     <broadcaster id="Editor:InsertAnchor" value="&insertAnchorCmd.label;"  oncommand="EditorInsertOrEditNamedAnchor()"/>
@@ -263,11 +264,13 @@
 
   		<menuitem value="&compositionToolbarCmd.label;" accesskey="&compositiontb.accesskey;" observes="cmd_viewCompToolbar"  />
   		<menuitem value="&formattingToolbarCmd.label;"  accesskey="&formattingtb.accesskey;"  observes="cmd_viewFormatToolbar" />
+  		<menuitem value="&editmodeToolbarCmd.label;"    accesskey="&editmodetb.accesskey;"    observes="cmd_viewEditModeToolbar" />
   		<menuitem value="&taskbarCmd.label;"            accesskey="&taskbarCmd.accesskey;"    observes="cmd_viewtaskbar" />
 
       </menupopup>
     </menu>
-    <menuitem id="viewSourceMenuitem" value="&viewPageSource.label;" accesskey="&viewpagesource.accesskey;" oncommand="EditorViewSource();"/>
+    <menuitem id="viewSourceMenuitem" value="&viewPageSource.label;"     accesskey="&viewpagesource.accesskey;"     oncommand="EditorViewSource();"/>
+    <menuitem id="viewParagraphMarks" value="&viewParagraphMarks.label;" accesskey="&viewparagraphmarks.accesskey;" oncommand="EditorToggleParagraphMarks();" persist="checked"/>
 
     <menu  id="charsetMenu" value="&dcharMenu.label;" accesskey="&viewcharsetmenu.accesskey;">
       <menupopup>
@@ -736,8 +739,10 @@
 
     <!-- The new Color Picker UI -->
     <html:div id="ColorButtons">
-      <titledbutton id="BackColorPopupButton" popup="BackColorPopup"/>
-      <titledbutton id="TextColorPopupButton" popup="TextColorPopup"/>
+      <titledbutton id="BackColorPopupButton" popup="BackColorPopup"
+       tooltiptext="Set text color"/>
+      <titledbutton id="TextColorPopupButton" popup="TextColorPopup"
+       tooltiptext="Set page, table, or cell background color"/>
     </html:div>
 
     <titledbutton id="DecreaseFontSizeButton" onclick="EditorDecreaseFontSize()"/>

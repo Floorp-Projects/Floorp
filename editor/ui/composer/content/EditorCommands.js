@@ -1077,6 +1077,27 @@ function EditorSetDisplayStyle(mode)
   contentWindow.focus();
 }
 
+function EditorToggleParagraphMarks()
+{
+  var menuItem = document.getElementById("viewParagraphMarks");
+  if (menuItem)
+  {
+    var checked = menuItem.getAttribute("checked");
+    try {
+      editorShell.DisplayParagraphMarks(checked != "true");
+    }
+    catch(e)
+    {
+      dump("Failed to load style sheet for paragraph marks\n");
+      return;
+    }
+    if (checked)
+      menuItem.removeAttribute("checked");
+    else
+      menuItem.setAttribute("checked", "true");
+  }
+}
+
 function EditorPreview()
 {
   if (!editorShell.CheckAndSaveDocument(editorShell.GetString("BeforePreview")))

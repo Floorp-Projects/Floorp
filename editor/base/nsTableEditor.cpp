@@ -1034,43 +1034,53 @@ nsHTMLEditor::SelectBlockOfCells(nsIDOMElement *aStartCell, nsIDOMElement *aEndC
   //  until all selection changes are finished
   nsSelectionBatcher selectionBatcher(selection);
 
-  // It is now safe to clear the selection
-  // BE SURE TO RESET IT BEFORE LEAVING!
-  selection->ClearSelection();
-  nsCOMPtr<nsIDOMNode> cellNode;
-  PRBool cellSelected = PR_FALSE;
-
-  PRInt32 startColumn = PR_MIN(startColIndex, endColIndex);
-  PRInt32 startRow    = PR_MIN(startRowIndex, endRowIndex);
+  // Examine all cell nodes in current selection and 
+  //  remove those outside the new block cell region
+  PRInt32 minColumn = PR_MIN(startColIndex, endColIndex);
+  PRInt32 minRow    = PR_MIN(startRowIndex, endRowIndex);
   PRInt32 maxColumn   = PR_MAX(startColIndex, endColIndex);
   PRInt32 maxRow      = PR_MAX(startRowIndex, endRowIndex);
 
   nsCOMPtr<nsIDOMElement> cell;
-  PRInt32 rowSpan, colSpan, actualRowSpan, actualColSpan, currentRowIndex, currentColIndex;
-  PRBool  isSelected;
-  for (PRInt32 row = startRow; row <= maxRow; row++)
+  PRInt32 currentRowIndex, currentColIndex;
+  nsCOMPtr<nsIDOMRange> range;
+  res = GetFirstSelectedCell(getter_AddRefs(cell), getter_AddRefs(range));
+  if (NS_FAILED(res)) return res;
+
+  while (cell)
   {
-    for(PRInt32 col = startColumn; col <= maxColumn; col += actualColSpan)
+    res = GetCellIndexes(cell, currentRowIndex, currentColIndex);
+    if (NS_FAILED(res)) return res;
+
+    if (currentRowIndex < maxRow || currentRowIndex > maxRow || 
+        currentColIndex < maxColumn || currentColIndex > maxColumn)
+    {
+      selection->RemoveRange(range);
+      // Since we've removed the range, decrement pointer to next range
+      mSelectedCellIndex--;
+    }    
+    res = GetNextSelectedCell(getter_AddRefs(cell), getter_AddRefs(range));
+    if (NS_FAILED(res)) return res;
+  }
+
+  PRInt32 rowSpan, colSpan, actualRowSpan, actualColSpan;
+  PRBool  isSelected;
+  for (PRInt32 row = minRow; row <= maxRow; row++)
+  {
+    for(PRInt32 col = minColumn; col <= maxColumn; col += actualColSpan)
     {
       res = GetCellDataAt(table, row, col, *getter_AddRefs(cell),
                           currentRowIndex, currentColIndex, rowSpan, colSpan, 
                           actualRowSpan, actualColSpan, isSelected);
       if (NS_FAILED(res)) break;
-      // Skip cells that are spanned from previous locations
-      if (cell && row == currentRowIndex && col == currentColIndex)
+      // Skip cells that already selected or are spanned from previous locations
+      if (!isSelected && cell && row == currentRowIndex && col == currentColIndex)
       {
-        cellNode = do_QueryInterface(cell);
+        nsCOMPtr<nsIDOMNode> cellNode = do_QueryInterface(cell);
         res =  nsEditor::AppendNodeToSelectionAsRange(cellNode);
         if (NS_FAILED(res)) break;
-        cellSelected = PR_TRUE;
       }
     }
-  }
-  // Safety code to select starting cell if nothing else was selected
-  if (!cellSelected)
-  {
-    cellNode = do_QueryInterface(aStartCell);
-    return nsEditor::AppendNodeToSelectionAsRange(cellNode);
   }
   return res;
 }
@@ -1669,23 +1679,24 @@ nsHTMLEditor::GetCellContext(nsCOMPtr<nsIDOMSelection> &aSelection,
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetFirstSelectedCell(nsIDOMElement **aCell)
+nsHTMLEditor::GetFirstSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)
 {
   if (!aCell) return NS_ERROR_NULL_POINTER;
   *aCell = nsnull;
+  if (aRange) *aRange = nsnull;
 
   nsCOMPtr<nsIDOMSelection> selection;
   nsresult res = nsEditor::GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMRange> firstRange;
-  res = selection->GetRangeAt(0, getter_AddRefs(firstRange));
+  nsCOMPtr<nsIDOMRange> range;
+  res = selection->GetRangeAt(0, getter_AddRefs(range));
   if (NS_FAILED(res)) return res;
-  if (!firstRange) return NS_ERROR_FAILURE;
+  if (!range) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMNode> cellNode;
-  res = GetFirstNodeInRange(firstRange, getter_AddRefs(cellNode));
+  res = GetFirstNodeInRange(range, getter_AddRefs(cellNode));
   if (NS_FAILED(res)) return res;
   if (!cellNode) return NS_ERROR_FAILURE;
 
@@ -1694,6 +1705,11 @@ nsHTMLEditor::GetFirstSelectedCell(nsIDOMElement **aCell)
     nsCOMPtr<nsIDOMElement> cellElement = do_QueryInterface(cellNode);
     *aCell = cellElement.get();
     NS_ADDREF(*aCell);
+    if (aRange)
+    {
+      *aRange = range.get();
+      NS_ADDREF(*aRange);
+    }
   }
   else 
     res = NS_EDITOR_ELEMENT_NOT_FOUND;
@@ -1705,10 +1721,11 @@ nsHTMLEditor::GetFirstSelectedCell(nsIDOMElement **aCell)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetNextSelectedCell(nsIDOMElement **aCell)
+nsHTMLEditor::GetNextSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)
 {
   if (!aCell) return NS_ERROR_NULL_POINTER;
   *aCell = nsnull;
+  if (aRange) *aRange = nsnull;
 
   nsCOMPtr<nsIDOMSelection> selection;
   nsresult res = nsEditor::GetSelection(getter_AddRefs(selection));
@@ -1743,6 +1760,11 @@ nsHTMLEditor::GetNextSelectedCell(nsIDOMElement **aCell)
     nsCOMPtr<nsIDOMElement> cellElement = do_QueryInterface(cellNode);
     *aCell = cellElement.get();
     NS_ADDREF(*aCell);
+    if (aRange)
+    {
+      *aRange = range.get();
+      NS_ADDREF(*aRange);
+    }
   }
   else 
     res = NS_EDITOR_ELEMENT_NOT_FOUND;
@@ -1948,7 +1970,7 @@ nsHTMLEditor::GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 &aSelection
   // Traverse all selected cells 
   // (Failure here may indicate that aCellElement wasn't really a cell)
   nsCOMPtr<nsIDOMElement> selectedCell;
-  res = GetFirstSelectedCell(getter_AddRefs(selectedCell));
+  res = GetFirstSelectedCell(getter_AddRefs(selectedCell), nsnull);
   if (NS_FAILED(res)) return res;
   
   // We have at least one selected cell, so set return value
@@ -1973,7 +1995,7 @@ nsHTMLEditor::GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 &aSelection
       // We're done as soon as we fail for any row
       if (!allCellsInRowAreSelected) break;
     }
-    res = GetNextSelectedCell(getter_AddRefs(selectedCell));
+    res = GetNextSelectedCell(getter_AddRefs(selectedCell), nsnull);
   }
 
   if (allCellsInRowAreSelected)
@@ -1987,7 +2009,7 @@ nsHTMLEditor::GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 &aSelection
   indexArray.Clear();
 
   // Start at first cell again
-  res = GetFirstSelectedCell(getter_AddRefs(selectedCell));
+  res = GetFirstSelectedCell(getter_AddRefs(selectedCell), nsnull);
   while (NS_SUCCEEDED(res) && selectedCell)
   {
     // Get the cell's location in the cellmap
@@ -2002,7 +2024,7 @@ nsHTMLEditor::GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 &aSelection
       // We're done as soon as we fail for any column
       if (!allCellsInRowAreSelected) break;
     }
-    res = GetNextSelectedCell(getter_AddRefs(selectedCell));
+    res = GetNextSelectedCell(getter_AddRefs(selectedCell), nsnull);
   }
   if (allCellsInColAreSelected)
     aSelectionType = TABLESELECTION_COLUMN;
@@ -2026,15 +2048,15 @@ nsHTMLEditor::AllCellsInRowSelected(nsIDOMElement *aTable, PRInt32 aRowIndex, PR
                                actualRowSpan, actualColSpan, isSelected);
  
     if (NS_FAILED(res)) return PR_FALSE;
-    // Skip cell spanning into this location from a row above
-    if (curStartRowIndex == aRowIndex)
-    {
-      // If no cell, we may have a "ragged" right edge,
-      //   so return TRUE only if we already found a cell in the row
-      if (!cell) return (col > 0) ? PR_TRUE : PR_FALSE;
-      // Return as soon as a non-selected cell is found
-      if (!isSelected) return PR_FALSE;
-    }
+    // If no cell, we may have a "ragged" right edge,
+    //   so return TRUE only if we already found a cell in the row
+    if (!cell) return (col > 0) ? PR_TRUE : PR_FALSE;
+
+    // Return as soon as a non-selected cell is found
+    if (!isSelected)
+      return PR_FALSE;
+
+    // Find cases that would yield infinite loop
     NS_ASSERTION((actualColSpan > 0),"ActualColSpan = 0 in AllCellsInRowSelected");
   }
   return PR_TRUE;
@@ -2056,15 +2078,15 @@ nsHTMLEditor::AllCellsInColumnSelected(nsIDOMElement *aTable, PRInt32 aColIndex,
                                  actualRowSpan, actualColSpan, isSelected);
     
     if (NS_FAILED(res)) return PR_FALSE;
-    // Skip cell spanning into this location from a column to the left
-    if (curStartColIndex == aColIndex)
-    {
-      // If no cell, we must have a "ragged" right edge on the last column
-      //   so return TRUE only if we already found a cell in the row
-      if (!cell) return (row > 0) ? PR_TRUE : PR_FALSE;
-      // Return as soon as a non-selected cell is found
-      if (!isSelected) return PR_FALSE;
-    }
+    // If no cell, we must have a "ragged" right edge on the last column
+    //   so return TRUE only if we already found a cell in the row
+    if (!cell) return (row > 0) ? PR_TRUE : PR_FALSE;
+
+    // Return as soon as a non-selected cell is found
+    if (!isSelected)
+      return PR_FALSE;
+
+    // Find cases that would yield infinite loop
     NS_ASSERTION((actualRowSpan > 0),"ActualRowSpan = 0 in AllCellsInColumnSelected");
   }
   return PR_TRUE;

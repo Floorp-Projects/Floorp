@@ -134,11 +134,13 @@
           <box valign="middle" autostretch="never">
             <text class="MinWidth50" align="left" value="&color.label;"/>
             <menu class="colorpicker">
-    	        <html:div id="tableBackgroundCW" class="color-well"/>
-    	        <titledbutton class="popup" align="right" flex="1"/>
+    	        <box>
+                <spring id="tableBackgroundCW" class="color-well"/>
+                <image class="popup-trigger"/>
+              </box>
     	        <menupopup>
                 <colorpicker id="tableBackgroundCP" palettename="standard" onclick="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',this);"/>
-                <titledbutton class="push" value="&defaultColor.label;" onclick="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',this)"/>
+                <button class="dialog" value="&defaultColor.label;" onclick="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',this)"/>
     	        </menupopup>
             </menu>
             <spring class="spacer"/>
@@ -148,7 +150,7 @@
           <box valign="middle" autostretch="never">
             <text class="MinWidth50" align="left" for="TableImageInput" value="&image.label;"/>
               <html:input type="text" id="TableImageInput" flex="1"/>
-              <titledbutton class="push" value="&ChooseImage.label;" id="bgimage.button"/>
+              <button class="dialog" value="&ChooseImage.label;" id="bgimage.button"/>
           </box>
 <!-- Not sure if we will support this
           <box valign="middle" autostretch="never">
@@ -162,7 +164,7 @@
         <box flex="1" autostretch="never">
           <spring flex="1"/>
           <!-- From EdDialogOvlerlay.xul -->
-          <titledbutton id="AdvancedEditButton2"/>
+          <button class="dialog" id="AdvancedEditButton2"/>
         </box>
         <spring flex="1"/>
       </box>
@@ -180,9 +182,9 @@
             </menupopup>
           </menulist>
           <spring class="bigspacer"/>
-          <titledbutton class="push MinWidth50" value="&cellSelectionPrevious.label;" onclick="SelectPrevious()" disabled="true"/>
+          <button class="dialog MinWidth50" value="&cellSelectionPrevious.label;" onclick="SelectPrevious()" disabled="true"/>
           <spring class="bigspacer"/>
-          <titledbutton class="push MinWidth50" value="&cellSelectionNext.label;" onclick="SelectNext()" disabled="true"/>
+          <button class="dialog MinWidth50" value="&cellSelectionNext.label;" onclick="SelectNext()" disabled="true"/>
         </titledbox>
         <!-- cell size titledbox -->
         <titledbox class="NoBottomPad"><title><text align="left" value="&size.label;"/></title>
@@ -258,12 +260,14 @@
           <box valign="middle" autostretch="never">
             <text class="MinWidth50" align="left" value="&color.label;"/>
             <menu class="colorpicker">
-    	        <html:div id="cellBackgroundCW" class="color-well"/>
-    	        <titledbutton class="popup" align="right" flex="1"/>
+    	        <box>
+                <spring id="cellBackgroundCW" class="color-well"/>
+                <image class="popup-trigger"/>
+              </box>
     	        <menupopup>
                 <colorpicker id="cellBackgroundCP" palettename="standard"
                     onclick="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW',this)"/>
-                <titledbutton class="push" value="&defaultColor.label;"
+                <button class="dialog" value="&defaultColor.label;"
                     onclick="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW',this)"/>
     	        </menupopup>
             </menu>
@@ -274,7 +278,7 @@
           <box valign="middle" autostretch="never">
             <text class="MinWidth50" align="left" for="CellImageInput" value="&image.label;"/>
             <html:input type="text" id="CellImageInput" flex="1"/>
-            <titledbutton class="push" value="&ChooseImage.label;" id="cellbgimage.button"/>
+            <button class="dialog" value="&ChooseImage.label;" id="cellbgimage.button"/>
           </box>
 <!-- Not sure if we will support this
           <box valign="middle" autostretch="never">
@@ -288,13 +292,17 @@
         <box autostretch="never">
           <spring flex="1"/>
           <!-- From EdDialogOvlerlay.xul -->
-          <titledbutton id="AdvancedEditButton3"/>
+          <button class="dialog" id="AdvancedEditButton3"/>
         </box>
       </box>
 
     </tabpanel> 
     <spring class="spacer"/>
     <!-- from EdDialogOverlay -->
-	  <box id="okCancelButtons"/> 
+    <box>
+      <spring flex="1"/>
+	    <button class="dialog" value="Apply"/>
+      <box id="okCancelButtons"/> 
+    </box>
   </tabcontrol>
 </window>

@@ -43,9 +43,10 @@ public:
   /** load and apply the style sheet, specified by aURL, to
     * the editor's document. This can involve asynchronous
     * network I/O
-    * @param aURL       The style sheet to be loaded and applied.
+    * @param aURL         The style sheet to be loaded and applied.
+    * @param aStyleSheet  Optional: if not null, return the style sheet created from aURL
     */
-  NS_IMETHOD ApplyStyleSheet(const nsString& aURL)=0;
+  NS_IMETHOD ApplyStyleSheet(const nsString& aURL, nsICSSStyleSheet **aStyleSheet)=0;
 
   /** load and apply an Override style sheet, specified by aURL, to
     * the editor's document. 
@@ -57,9 +58,10 @@ public:
     *   that will not be affected by loading other "document" style sheets
     *   loaded using ApplyStyleSheet.
     *
-    * @param aURL       The style sheet to be loaded and applied.
+    * @param aURL         The style sheet to be loaded and applied.
+    * @param aStyleSheet  Optional: if not null, return the style sheet created from aURL
     */
-  NS_IMETHOD ApplyOverrideStyleSheet(const nsString& aURL)=0;
+  NS_IMETHOD ApplyOverrideStyleSheet(const nsString& aURL, nsICSSStyleSheet **aStyleSheet)=0;
 
   /** Add the given Style Sheet to the editor's document
     * This is always synchronous
@@ -69,9 +71,15 @@ public:
 
   /** Remove the given Style Sheet from the editor's document
     * This is always synchronous
-    * @param aSheet  The style sheet to be  applied.
+    * @param aSheet  The style sheet to be removed
     */
   NS_IMETHOD RemoveStyleSheet(nsICSSStyleSheet* aSheet)=0;
+
+  /** Remove the given Override Style Sheet from the editor's document
+    * This is always synchronous
+    * @param aSheet  The style sheet to be removed.
+    */
+  NS_IMETHOD RemoveOverrideStyleSheet(nsICSSStyleSheet* aSheet)=0;
 
 };
 

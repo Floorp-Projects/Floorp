@@ -41,21 +41,6 @@ tr {
   vertical-align: middle;
 }
 
-/* input widgets are too high! This doesn't seem to help */
-input {
-  height:         1em;
-  max-height:     1em;
-  padding-top:    2px;
-  padding-bottom: 2px;
-  margin:         0px;
-}
-
-
-/* This also doesn't work! */
-input[disabled="true"]
-{
-  background-color: #CCCCCC;
-}
 /* This strategy for hidding allows widget to keep layout space
    while using "hidden" attribute sets to display: none, removing space
 */
@@ -63,7 +48,6 @@ input[visibility=hidden]
 {
   visibility: hidden;
 }
-
 
 input.MinWidth200,select.MinWidth200,div.MinWidth200,titledbutton.MinWidth200,text.MinWidth200,spring.MinWidth100 {
   min-width: 200px;
@@ -113,14 +97,20 @@ div.middle-align {
   margin-right:  5px;
 }
 
-div.color-well {
-  width:20px; 
+*.color-well {
+  width:20px;
+  height: 1em; 
   border: 1px inset #CCCCCC;
   /* Background color is set at runtime */
 }
-div.color-well[default="true"] {
+
+*.color-well[default="true"] {
   border: 1px solid transparent;
   background-color: inherit;
+}
+
+image.popup-trigger {
+  list-style-image: url(chrome://global/skin/scroll-down.gif);
 }
 
 td#ColorPreview {
@@ -209,27 +199,15 @@ text.right {
   min-width:    10em;
 }
 
-/* need rule for outset shape */
+/* use outset shape for a button look */
 menu.colorpicker {
   border: 1px outset #CCCCCC;
   /* For a little extra space between buttons */
   margin-bottom: 2px;
 }
 
-titledbutton.color-well {
-	list-style-image:url("chrome://editor/skin/images/color.gif");
-  border: 1px solid #CCCCCC;
-  padding: 0px;
-  margin: 0px;
-}
-
-titledbutton.color-well[default="true"] {
-  border: 1px solid transparent;
-  background-color: inherit;
-}
-
-titledbutton.color-well:hover {
-  border: 1px solid white;
+menu.colorpicker:active {
+  border: 1px inset #CCCCCC;
 }
 
 /* THIS SHOULD BE IN GLOBAL.CSS */
