@@ -165,6 +165,7 @@ bin\components\xml-rpc.xpt
 bin\components\nsDictionary.js
 bin\components\nsXmlRpcClient.js
 bin\chrome\editor\*
+bin\chrome\modern\*
 -bin\chrome\editor\content\EditorInitPage.html
 -bin\chrome\editor\content\EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
