@@ -129,21 +129,6 @@ void TLineDownloadCache::CacheLine(const char *line, PRUint32 uid)
     fBytesUsed += lineLength;
 }
 
-NS_IMETHODIMP NS_NewImapProtocol(nsISupports * aOuter, REFNSIID iid, void ** aResult)
-{
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-
-  if (aOuter)
-  {
-      *aResult = nsnull;
-      return NS_ERROR_NO_AGGREGATION;
-  }
-
-  nsImapProtocol *imapProtocol = new nsImapProtocol();
-  if (!imapProtocol) return NS_ERROR_OUT_OF_MEMORY;
-  return imapProtocol->QueryInterface(iid, aResult); 
-}
-
 
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_THREADSAFE_ADDREF(nsImapProtocol)
@@ -6349,19 +6334,4 @@ NS_IMETHODIMP nsImapMockChannel::Suspend()
 NS_IMETHODIMP nsImapMockChannel::Resume()
 {
     return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP NS_NewImapMockChannel(nsISupports * aOuter, REFNSIID iid, void ** aResult)
-{
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-
-  if (aOuter)
-  {
-      *aResult = nsnull;
-      return NS_ERROR_NO_AGGREGATION;
-  }
-
-  nsImapMockChannel * mockChannel = new nsImapMockChannel();
-  if (!mockChannel) return NS_ERROR_OUT_OF_MEMORY;
-  return mockChannel->QueryInterface(iid, aResult); 
 }

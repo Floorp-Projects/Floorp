@@ -337,8 +337,4 @@ protected:
 
 };
 
-// factory method
- 
-NS_IMETHODIMP NS_NewImapMailFolder(nsISupports * aOuter, REFNSIID iid, void ** aResult);
-
 #endif

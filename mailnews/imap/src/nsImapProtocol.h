@@ -559,7 +559,4 @@ protected:
     nsISupports * m_channelContext;
 };
 
-NS_IMETHODIMP NS_NewImapProtocol(nsISupports * aOuter, REFNSIID iid, void **result);
-NS_IMETHODIMP NS_NewImapMockChannel(nsISupports * aOuter, REFNSIID iid, void **result);
-
 #endif  // nsImapProtocol_h___

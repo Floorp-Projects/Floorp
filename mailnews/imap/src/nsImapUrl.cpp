@@ -1099,18 +1099,3 @@ void nsImapUrl::ParseListOfMessageIds()
 	}
 }
 
-NS_IMETHODIMP NS_NewImapUrl(nsISupports * aOuter, REFNSIID iid, void ** aResult)
-{
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-
-  if (aOuter)
-  {
-      *aResult = nsnull;
-      return NS_ERROR_NO_AGGREGATION;
-  }
-
-  nsImapUrl *imapUrl = new nsImapUrl();
-  if (!imapUrl) return NS_ERROR_OUT_OF_MEMORY;
-  return imapUrl->QueryInterface(iid, aResult); 
-}
-
