@@ -252,6 +252,9 @@ protected:
   nsCOMPtr<nsIZipReader> mOverrideJAR;
   nsCString              mOverrideJARURL;
   
+  // useful atoms - these are static atoms, so don't use nsCOMPtr
+  static nsIAtom* sCPrefix;            // "c"
+  
   PRBool mUseXBLForms;
   
   PRPackedBool mInstallInitialized;

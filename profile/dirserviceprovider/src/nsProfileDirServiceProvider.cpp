@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,6 +38,7 @@
 
 #include "nsProfileDirServiceProvider.h"
 #include "nsIAtom.h"
+#include "nsStaticAtom.h"
 #include "nsILocalFile.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -92,21 +93,6 @@ nsProfileDirServiceProvider::nsProfileDirServiceProvider(PRBool aNotifyObservers
 
 nsProfileDirServiceProvider::~nsProfileDirServiceProvider()
 {
-  NS_IF_RELEASE(sApp_PrefsDirectory50);
-  NS_IF_RELEASE(sApp_PreferencesFile50);
-  NS_IF_RELEASE(sApp_UserProfileDirectory50);
-  NS_IF_RELEASE(sApp_UserChromeDirectory);
-  NS_IF_RELEASE(sApp_LocalStore50);
-  NS_IF_RELEASE(sApp_History50);
-  NS_IF_RELEASE(sApp_UsersPanels50);
-  NS_IF_RELEASE(sApp_UsersMimeTypes50);
-  NS_IF_RELEASE(sApp_BookmarksFile50);
-  NS_IF_RELEASE(sApp_DownloadsFile50);
-  NS_IF_RELEASE(sApp_SearchFile50);
-  NS_IF_RELEASE(sApp_MailDirectory50);
-  NS_IF_RELEASE(sApp_ImapMailDirectory50);
-  NS_IF_RELEASE(sApp_NewsDirectory50);
-  NS_IF_RELEASE(sApp_MessengerFolderCache50);
 }
 
 nsresult
@@ -304,40 +290,29 @@ nsProfileDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFi
 
 nsresult
 nsProfileDirServiceProvider::Initialize()
-{      
+{
+  static const nsStaticAtom provider_atoms[] = {
+    { NS_APP_PREFS_50_DIR,           &sApp_PrefsDirectory50 },
+    { NS_APP_PREFS_50_FILE,          &sApp_PreferencesFile50 },
+    { NS_APP_USER_PROFILE_50_DIR,    &sApp_UserProfileDirectory50 },
+    { NS_APP_USER_CHROME_DIR,        &sApp_UserChromeDirectory },
+    { NS_APP_LOCALSTORE_50_FILE,     &sApp_LocalStore50 },
+    { NS_APP_HISTORY_50_FILE,        &sApp_History50 },
+    { NS_APP_USER_PANELS_50_FILE,    &sApp_UsersPanels50 },
+    { NS_APP_USER_MIMETYPES_50_FILE, &sApp_UsersMimeTypes50 },
+    { NS_APP_BOOKMARKS_50_FILE,      &sApp_BookmarksFile50 },
+    { NS_APP_DOWNLOADS_50_FILE,      &sApp_DownloadsFile50 },
+    { NS_APP_SEARCH_50_FILE,         &sApp_SearchFile50 },
+    { NS_APP_MAIL_50_DIR,            &sApp_MailDirectory50 },
+    { NS_APP_IMAP_MAIL_50_DIR,       &sApp_ImapMailDirectory50 },
+    { NS_APP_NEWS_50_DIR,            &sApp_NewsDirectory50 },
+    { NS_APP_MESSENGER_FOLDER_CACHE_50_DIR, &sApp_MessengerFolderCache50 },
+    { NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR, nsnull },
+  };
+
   // Make our directory atoms
-  
-  // Preferences:
-  sApp_PrefsDirectory50         = NS_NewAtom(NS_APP_PREFS_50_DIR);
-  sApp_PreferencesFile50        = NS_NewAtom(NS_APP_PREFS_50_FILE);
-  
-  // Profile:
-  sApp_UserProfileDirectory50   = NS_NewAtom(NS_APP_USER_PROFILE_50_DIR);
-  
-  // Application Directories:
-  sApp_UserChromeDirectory      = NS_NewAtom(NS_APP_USER_CHROME_DIR);
-  
-  // Aplication Files:
-  sApp_LocalStore50             = NS_NewAtom(NS_APP_LOCALSTORE_50_FILE);
-  sApp_History50                = NS_NewAtom(NS_APP_HISTORY_50_FILE);
-  sApp_UsersPanels50            = NS_NewAtom(NS_APP_USER_PANELS_50_FILE);
-  sApp_UsersMimeTypes50         = NS_NewAtom(NS_APP_USER_MIMETYPES_50_FILE);
-  
-  // Bookmarks:
-  sApp_BookmarksFile50          = NS_NewAtom(NS_APP_BOOKMARKS_50_FILE);
-  
-  // Downloads
-  sApp_DownloadsFile50          = NS_NewAtom(NS_APP_DOWNLOADS_50_FILE);
-  
-  // Search
-  sApp_SearchFile50             = NS_NewAtom(NS_APP_SEARCH_50_FILE);
-  
-  // MailNews
-  sApp_MailDirectory50          = NS_NewAtom(NS_APP_MAIL_50_DIR);
-  sApp_ImapMailDirectory50      = NS_NewAtom(NS_APP_IMAP_MAIL_50_DIR);
-  sApp_NewsDirectory50          = NS_NewAtom(NS_APP_NEWS_50_DIR);
-  sApp_MessengerFolderCache50   = NS_NewAtom(NS_APP_MESSENGER_FOLDER_CACHE_50_DIR);
-  
+  NS_RegisterStaticAtoms(provider_atoms, NS_ARRAY_LENGTH(provider_atoms));
+        
   return NS_OK;
 }
 
