@@ -440,15 +440,27 @@ nsXULTreeElement::EnsureElementIsVisible(nsIDOMXULElement *aElement)
 		if (!shell)
 				continue;
 
-    nsIFrame *frame;
-    shell->GetPrimaryFrameFor(content, &frame);
+    nsIFrame *outerFrame;
+    shell->GetPrimaryFrameFor(content, &outerFrame);
 
-    if (frame) {
-      nsITreeFrame *treeFrame = nsnull;      
-      rv = frame->QueryInterface(NS_GET_IID(nsITreeFrame),
-                                 (void **)&treeFrame);
-      if (NS_SUCCEEDED(rv) && treeFrame) {
-        treeFrame->EnsureRowIsVisible(indexOfContent);
+    if (outerFrame) {
+
+      // need to look at the outer frame's children to find the nsTreeFrame
+      nsIFrame *childFrame=nsnull;
+      outerFrame->FirstChild(nsnull, &childFrame);
+
+      // now iterate through the children
+      while (childFrame) {
+        nsITreeFrame *treeFrame = nsnull;      
+        rv = outerFrame->QueryInterface(NS_GET_IID(nsITreeFrame),
+                                        (void **)&treeFrame);
+        if (NS_SUCCEEDED(rv) && treeFrame) {
+          treeFrame->EnsureRowIsVisible(indexOfContent);
+        }
+
+        nsIFrame *nextFrame;
+        childFrame->GetNextSibling(&nextFrame);
+        childFrame=nextFrame;
       }
     }
 
