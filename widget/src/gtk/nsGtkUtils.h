@@ -56,6 +56,14 @@ struct nsGtkUtils
                                    GdkColor *   color);
 
   /**
+   * Return the current keyboard modifier state.
+   *
+   * @return the current keyboard modifier state.
+   *
+   */
+  static GdkModifierType gdk_keyboard_get_modifiers();
+
+  /**
    * Flash an area within a GDK window (or the whole window)
    *
    * @param aGdkWindow   The GDK window to flash.

@@ -31,6 +31,8 @@
 #include <gdk/gdkx.h>
 #include "nsIRollupListener.h"
 
+#include "nsGtkUtils.h" // for nsGtkUtils::gdk_keyboard_get_modifiers()
+
 #ifdef USE_XIM
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
@@ -678,6 +680,9 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
   return NS_OK;
 }
 
+#define CAPS_LOCK_IS_ON \
+(nsGtkUtils::gdk_keyboard_get_modifiers() & GDK_LOCK_MASK)
+
 NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
 {
   if (!mWidget)
@@ -690,12 +695,15 @@ NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
     return NS_ERROR_FAILURE;
 
 #ifdef NS_DEBUG
-  debug_DumpInvalidate(stdout,
-                       this,
-                       nsnull,
-                       aIsSynchronous,
-                       debug_GetName(mWidget),
-                       debug_GetRenderXID(mWidget));
+  if (CAPS_LOCK_IS_ON)
+  {
+    debug_DumpInvalidate(stdout,
+                         this,
+                         nsnull,
+                         aIsSynchronous,
+                         debug_GetName(mWidget),
+                         debug_GetRenderXID(mWidget));
+  }
 #endif // NS_DEBUG
 
   if (aIsSynchronous) {
@@ -723,12 +731,15 @@ NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   mUpdateArea->Union(aRect.x, aRect.y, aRect.width, aRect.height);
 
 #ifdef NS_DEBUG
-  debug_DumpInvalidate(stdout,
-                       this,
-                       &aRect,
-                       aIsSynchronous,
-                       debug_GetName(mWidget),
-                       debug_GetRenderXID(mWidget));
+  if (CAPS_LOCK_IS_ON)
+  {
+    debug_DumpInvalidate(stdout,
+                         this,
+                         &aRect,
+                         aIsSynchronous,
+                         debug_GetName(mWidget),
+                         debug_GetRenderXID(mWidget));
+  }
 #endif // NS_DEBUG
 
 #if 0
@@ -1171,11 +1182,14 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *aEvent,
 #ifdef NS_DEBUG
   GtkWidget * gw = (GtkWidget *) aEvent->widget->GetNativeData(NS_NATIVE_WIDGET);
 
-  debug_DumpEvent(stdout,
-                  aEvent->widget,
-                  aEvent,
-                  debug_GetName(gw),
-                  (PRInt32) debug_GetRenderXID(gw));
+  if (CAPS_LOCK_IS_ON)
+  {
+    debug_DumpEvent(stdout,
+                    aEvent->widget,
+                    aEvent,
+                    debug_GetName(gw),
+                    (PRInt32) debug_GetRenderXID(gw));
+  }
 #endif // NS_DEBUG
 
   if (nsnull != mMenuListener) {
