@@ -3962,12 +3962,14 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresContext*         aPresCon
 
   nsFrameItems anonymousItems;
 
+  nsCOMPtr<nsIStyleContext> contentStyle = dont_QueryInterface(aContentStyle);
+
   PRBool isGfx = HasGfxScrollbars(aPresContext);
 
   if (isGfx) {
   
     BuildGfxScrollFrame(aPresContext, aState, aContent, aDocument, aParentFrame,
-                        aContentStyle, gfxScrollFrame, anonymousItems);
+                        contentStyle, gfxScrollFrame, anonymousItems);
 
     scrollFrame = anonymousItems.childList;
     parentFrame = gfxScrollFrame;
@@ -3977,17 +3979,17 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresContext*         aPresCon
     nsCOMPtr<nsIStyleContext> scrollPseudoStyle;
     aPresContext->ResolvePseudoStyleContextFor(aContent,
                                               nsLayoutAtoms::scrolledContentPseudo,
-                                              aContentStyle, PR_FALSE,
-                                              &aContentStyle);
+                                              contentStyle, PR_FALSE,
+                                              getter_AddRefs(contentStyle));
 
-    scrollFrame->Init(*aPresContext, aContent, parentFrame, aContentStyle,
+    scrollFrame->Init(*aPresContext, aContent, parentFrame, contentStyle,
                       nsnull);
 
   } else {
     NS_NewScrollFrame(&scrollFrame);
     aNewFrame = scrollFrame;
     parentFrame = aParentFrame;
-    scrollFrame->Init(*aPresContext, aContent, parentFrame, aContentStyle,
+    scrollFrame->Init(*aPresContext, aContent, parentFrame, contentStyle,
                       nsnull);
 
   }
@@ -3998,7 +4000,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresContext*         aPresCon
   nsCOMPtr<nsIStyleContext> scrolledPseudoStyle;
   aPresContext->ResolvePseudoStyleContextFor(aContent,
                                           aScrolledPseudo,
-                                          aContentStyle, PR_FALSE,
+                                          contentStyle, PR_FALSE,
                                           getter_AddRefs(scrolledPseudoStyle));
 
 
