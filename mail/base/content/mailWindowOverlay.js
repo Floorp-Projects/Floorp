@@ -2363,6 +2363,7 @@ function HandleMDNResponse(aUrl)
   if ((msgFlags & MSG_FLAG_IMAP_DELETED) || (msgFlags & MSG_FLAG_MDN_REPORT_SENT))
     return;
 
+  var DNTHeader = mimeHdr.extractHeader("Disposition-Notification-To", false);
   var oldDNTHeader = mimeHdr.extractHeader("Return-Receipt-To", false);
   if (!DNTHeader && !oldDNTHeader)
     return;
