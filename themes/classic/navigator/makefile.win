@@ -22,10 +22,10 @@
 DEPTH		= ..\..\..
 THEME_ROOT_DEPTH = ..
 
+DIRS= win
+
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
-
-DIRS= win
 
 clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\navigator\skin\*.*
