@@ -381,7 +381,7 @@ NS_IMETHODIMP nsWidget::Destroy(void)
 /* virtual */
 void nsWidget::DestroyNative(void)
 {
-  if (mWidget) {
+  if (mMozBox) {
     // destroying the mMozBox will also destroy the mWidget in question.
     ::gtk_widget_destroy(mMozBox);
     mWidget = NULL;
@@ -509,7 +509,7 @@ NS_IMETHODIMP nsWidget::IsVisible(PRBool &aState)
 
 NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
 {
-  if (mWidget) 
+  if (mMozBox) 
   {
     gtk_mozbox_set_position(GTK_MOZBOX(mMozBox), aX, aY);
   }
