@@ -296,6 +296,12 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
     char          *part = mime_part_address(child);
     char          *imappart = NULL;
 
+
+    /*
+      if we are processing an inline RFC822 message, we should skip its childern
+    */
+    Boolean isAnInlineMessage = mime_typep(child, (MimeObjectClass *) &mimeMessageClass);
+    
     /*
       AppleDouble part need special care: we need to fetch the part as well it's two
       children for the needed info as they could be anywhere, eventually, they won't contain
@@ -304,7 +310,7 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
     PRBool isAnAppleDoublePart = mime_typep(child, (MimeObjectClass *) &mimeMultipartAppleDoubleClass) &&
                                  ((MimeContainer *)child)->nchildren == 2;
     
-    if (!isAnAppleDoublePart)
+    if (!isAnAppleDoublePart && !isAnInlineMessage)
       if ( NS_FAILED(BuildAttachmentList((MimeObject *)child, aAttachData, aMessageURL)) )
         return NS_OK;
 
