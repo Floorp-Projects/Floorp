@@ -42,8 +42,6 @@
 #include "nsIPermissionManager.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
-#include "nsCOMPtr.h"
-#include "nsIIOService.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -60,10 +58,6 @@ public:
   nsPermissionManager();
   virtual ~nsPermissionManager(void);
   nsresult Init();
-
-protected:
-  // cached IOService
-  nsCOMPtr<nsIIOService>       mIOService;
   
 };
 

@@ -45,7 +45,6 @@
 #include "nsIPref.h"
 #include "nsTextFormatter.h"
 #include "nsIServiceManager.h"
-#include "nsIIOService.h"
 
 #define image_behaviorPref "network.image.imageBehavior"
 #define image_warningPref "network.image.warnAboutImages"
@@ -198,17 +197,11 @@ IMAGE_CheckForPermission
 }
 
 PUBLIC nsresult
-IMAGE_Block(const char* imageURL,
-            nsIIOService* ioService) {
+IMAGE_Block(const char* imageURL) {
   if (!imageURL || !(*imageURL)) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsresult rv = NS_OK;
-  char *host = nsnull;
-  PRUint32 start,end;
-  NS_ASSERTION(ioService, "IOService not available");
-  rv = ioService->ExtractUrlPart(imageURL, nsIIOService::url_Host | 
-                                 nsIIOService::url_Port, &start, &end, &host);
+  char *host = CKutil_ParseURL(imageURL, GET_HOST_PART);
   Permission_AddHost(host, PR_FALSE, IMAGEPERMISSION, PR_TRUE);
   return NS_OK;
 }

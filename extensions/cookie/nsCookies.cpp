@@ -51,8 +51,6 @@
 #include "nsIPref.h"
 #include "nsTextFormatter.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsIIOService.h"
-#include "nsNetCID.h"
 
 #define MAX_NUMBER_OF_COOKIES 300
 #define MAX_COOKIES_PER_SERVER 20
@@ -134,7 +132,6 @@ PRIVATE char* cookie_P3P = nsnull;
 #define cookie_P3P_Default    "drdraaaa"
 
 PRIVATE nsVoidArray * cookie_list=0;
-PRIVATE nsCOMPtr<nsIIOService> IOService = nsnull;
 
 static
 time_t
@@ -180,7 +177,6 @@ COOKIE_RemoveAll()
     delete cookie_list;
     cookie_list = nsnull;
     Recycle(cookie_P3P);
-    IOService = nsnull;
   }
 }
 
@@ -610,17 +606,8 @@ COOKIE_GetCookie(char * address) {
   if (cookie_list == nsnull) {
     return nsnull;
   }
-  char *host = nsnull;
-  char *path = nsnull;
-  PRUint32 start, end;
-  // Get host and path
-  nsresult result;
-  NS_ASSERTION(IOService, "IOService not available");
-  result = IOService->ExtractUrlPart(address, nsIIOService::url_Host |
-                                     nsIIOService::url_Port, &start, &end, 
-                                     &host);
-  result = IOService->ExtractUrlPart(address, nsIIOService::url_Path, 
-                                     &start, &end, &path);
+  char *host = CKutil_ParseURL(address, GET_HOST_PART);
+  char *path = CKutil_ParseURL(address, GET_PATH_PART);
   for (PRInt32 i = 0; i <cookie_list->Count(); i++) {
     cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
     NS_ASSERTION(cookie_s, "corrupt cookie list");
@@ -743,18 +730,8 @@ cookie_isForeign (char * curURL, char * firstURL) {
   if (!firstURL) {
     return PR_FALSE;
   }
-  char *curHost = nsnull;
-  char *firstHost = nsnull;
-  PRUint32 start,end;
-  nsresult rv;
-  NS_ASSERTION(IOService, "IOService not available");
-  // Get hosts
-  rv = IOService->ExtractUrlPart(curURL, nsIIOService::url_Host |
-                                 nsIIOService::url_Port, &start, &end, 
-                                 &curHost);
-  rv = IOService->ExtractUrlPart(firstURL, nsIIOService::url_Host |
-                                 nsIIOService::url_Port, &start, &end, 
-                                 &firstHost);
+  char * curHost = CKutil_ParseURL(curURL, GET_HOST_PART);
+  char * firstHost = CKutil_ParseURL(firstURL, GET_HOST_PART);
   char * curHostColon = 0;
   char * firstHostColon = 0;
 
@@ -898,17 +875,8 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
   cookie_CookieStruct * prev_cookie;
   char *path_from_header=nsnull, *host_from_header=nsnull;
   char *name_from_header=nsnull, *cookie_from_header=nsnull;
-  char *cur_host = nsnull;
-  char *cur_path = nsnull;
-  PRUint32 start,end;
-  nsresult rv;
-  NS_ASSERTION(IOService, "IOService not available");
-  // Get host and path
-  rv = IOService->ExtractUrlPart(curURL, nsIIOService::url_Host | 
-                                 nsIIOService::url_Port, &start, &end, 
-                                 &cur_host);
-  rv = IOService->ExtractUrlPart(curURL, nsIIOService::url_Path, 
-                                 &start, &end, &cur_path);
+  char *cur_path = CKutil_ParseURL(curURL, GET_PATH_PART);
+  char *cur_host = CKutil_ParseURL(curURL, GET_HOST_PART);
   char *semi_colon, *ptr, *equal;
   char *setCookieHeaderInternal = (char *) setCookieHeader;
   PRBool isSecure=PR_FALSE, isDomain=PR_FALSE;
@@ -1433,15 +1401,12 @@ COOKIE_Read() {
   if (cookie_list) {
     return NS_OK;
   }
-  nsresult rv = NS_OK;
-  IOService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
   cookie_CookieStruct *new_cookie, *tmp_cookie_ptr;
   size_t new_len;
   nsAutoString buffer;
   PRBool added_to_list;
   nsFileSpec dirSpec;
-  rv = CKutil_ProfileDirectory(dirSpec);
+  nsresult rv = CKutil_ProfileDirectory(dirSpec);
   if (NS_FAILED(rv)) {
     return rv;
   }

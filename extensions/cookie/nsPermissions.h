@@ -40,7 +40,6 @@
 #define PERMISSIONS_H
 
 #include "nsString.h"
-#include "nsIIOService.h"
 
 #define COOKIEPERMISSION 0
 #define IMAGEPERMISSION 1
@@ -56,7 +55,7 @@ typedef enum {
 class nsIPrompt;
 
 extern nsresult PERMISSION_Read();
-extern void PERMISSION_Add(const char * objectURL, PRBool permission, PRInt32 type, nsIIOService* ioService);
+extern void PERMISSION_Add(const char * objectURL, PRBool permission, PRInt32 type);
 extern void PERMISSION_RemoveAll();
 extern void PERMISSION_DeletePersistentUserData(void);
 

@@ -41,8 +41,6 @@
 
 #include "nsIImgManager.h"
 #include "nsIContentPolicy.h"
-#include "nsCOMPtr.h"
-#include "nsIIOService.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -59,11 +57,7 @@ public:
   nsImgManager();
   virtual ~nsImgManager(void);
   nsresult Init();
-
-protected:
-  // cached IOService
-  nsCOMPtr<nsIIOService>       mIOService;
-
+  
 };
 
 #endif /* nsImgManager_h__ */
