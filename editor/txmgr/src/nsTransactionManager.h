@@ -20,23 +20,7 @@
 #define nsTransactionManager_h__
 
 #include "nsITransactionManager.h"
-#include "nsDeque.h"
-
-class nsTransactionReleaseFunctor : public nsDequeFunctor
-{
-public:
-
-  nsTransactionReleaseFunctor()  {}
-
-  ~nsTransactionReleaseFunctor() {}
-
-  virtual void *operator()(void *aObject)
-  {
-    nsITransaction *t = (nsITransaction *)aObject;
-    NS_IF_RELEASE(t);
-    return 0;
-  }
-};
+#include "nsTransactionStack.h"
 
 /** implementation of a transaction manager object.
  *
@@ -45,10 +29,9 @@ class nsTransactionManager : public nsITransactionManager
 {
 private:
 
-  PRInt32 mMaxLevelsOfUndo;
-  nsTransactionReleaseFunctor mRF;
-  nsDeque mUndoStack;
-  nsDeque mRedoStack;
+  PRInt32                mMaxLevelsOfUndo;
+  nsTransactionStack     mUndoStack;
+  nsTransactionRedoStack mRedoStack;
 
 public:
 
@@ -74,7 +57,8 @@ public:
   virtual nsresult RemoveListener(nsITransactionListener *aListener);
 
   /* nsTransactionManager specific methods. */
-  virtual nsresult PruneRedoStack();
+  virtual nsresult ClearUndoStack(void);
+  virtual nsresult ClearRedoStack(void);
 };
 
 #endif // nsTransactionManager_h__
