@@ -22,7 +22,6 @@
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
-#include "jsnum.h"
 #include "nsJSUtils.h"
 #include "nsDOMError.h"
 #include "nscore.h"
@@ -250,7 +249,7 @@ CSSPrimitiveValueGetFloatValue(JSContext *cx, JSObject *obj, uintN argc, jsval *
       return nsJSUtils::nsReportError(cx, obj, result);
     }
 
-    *rval = DOUBLE_TO_JSVAL(js_NewDouble(cx, nativeRet));
+    *rval = DOUBLE_TO_JSVAL(JS_NewDouble(cx, nativeRet));
   }
 
   return JS_TRUE;
