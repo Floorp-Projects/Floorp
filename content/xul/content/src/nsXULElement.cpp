@@ -754,8 +754,10 @@ nsXULElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
         rv = EnsureSlots();
         if (NS_FAILED(rv)) return rv;
 
-        rv = nsXULAttributes::Create(NS_STATIC_CAST(nsIStyledContent*, this), &(mSlots->mAttributes));
-        if (NS_FAILED(rv)) return rv;
+        if (! Attributes()) {
+            rv = nsXULAttributes::Create(NS_STATIC_CAST(nsIStyledContent*, this), &(mSlots->mAttributes));
+            if (NS_FAILED(rv)) return rv;
+        }
     }
 
     *aAttributes = Attributes();
