@@ -83,7 +83,6 @@ LLIBS	= \
  $(DIST)\lib\netlib.lib         \
 !endif
  $(DIST)\lib\xpcom.lib \
- $(DIST)\lib\xppref32.lib \
  $(DIST)\lib\xpcom.lib \
  $(DIST)\lib\raptorhtmlpars.lib \
  $(HASHLIBS)
