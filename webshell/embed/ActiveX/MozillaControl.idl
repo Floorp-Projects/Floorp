@@ -26,6 +26,19 @@ library MOZILLACONTROLLib
 	//       verbatim rather than import'ing exdisp.idl - it stops MIDL
 	//       failing with a MIDL2020 error!
 
+	typedef enum
+	{
+		OLECMDIDF_REFRESH_NORMAL          = 0,
+		OLECMDIDF_REFRESH_IFEXPIRED       = 1,
+		OLECMDIDF_REFRESH_CONTINUE        = 2,
+		OLECMDIDF_REFRESH_COMPLETELY      = 3,
+		OLECMDIDF_REFRESH_NO_CACHE        = 4,
+		OLECMDIDF_REFRESH_RELOAD          = 5,
+		OLECMDIDF_REFRESH_LEVELMASK       = 0x00FF,
+		OLECMDIDF_REFRESH_CLEARUSERINPUT  = 0x1000,
+		OLECMDIDF_REFRESH_PROMPTIFOFFLINE = 0x2000,
+	} OLECMDID_REFRESHFLAG;
+
     [
         uuid(EAB22AC1-30C1-11CF-A7EB-0000C05BAE0B), // IID_IWebBrowser
         helpstring("Web Browser interface"),
