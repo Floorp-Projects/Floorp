@@ -3,9 +3,10 @@
     xmlns:html="http://www.w3.org/1999/xhtml"
 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 orient="vertical"
-    height="250"
-    width="250"
+    height="300"
+    width="400"
     windowtype="opener:test"	
+    onunload="restoreChromeURL();"
     onload="scheduleNextWindow();">
 
 <script src="winopen.js" type="application/x-javascript"></script>
@@ -33,6 +34,42 @@ This will open a series of browser windows, either "one at a
 </rows>
 </grid>
 <separator class="thick"/>
+</groupbox>
+
+<groupbox orient="vertical">
+    <caption label="Results"/>
+    <grid>
+        <columns>
+            <column/>
+            <column/>
+        </columns>
+        <rows>
+            <row autostretch="never" valign="middle">
+                <text value="Times (ignoring the first):"/>
+                <textbox id="formTimes" size="45" value=""/>
+            </row>
+            <row autostretch="never" valign="middle">
+                <text value="Txul (median):"/>
+                <hbox>
+                    <textbox id="formMed" size="6" value=""/>
+                    <spring/>
+                    <button id="formAgain" onclick="tryAgain();" label="Try again" disabled="true"/>
+                </hbox>
+            </row>
+            <row autostretch="never" valign="middle">
+                <text value="Avg:"/>
+                <hbox><textbox id="formAvg" size="6" value=""/></hbox>
+            </row>
+            <row autostretch="never" valign="middle">
+                <text value="Min:"/>
+                <hbox><textbox id="formMin" size="6" value=""/></hbox>
+            </row>
+            <row autostretch="never" valign="middle">
+                <text value="Max:"/>
+                <hbox><textbox id="formMax" size="6" value=""/></hbox>
+            </row>
+        </rows>
+    </grid>
 </groupbox>
 
 </window>
