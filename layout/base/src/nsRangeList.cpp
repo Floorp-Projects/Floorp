@@ -399,7 +399,7 @@ nsRangeList::nsRangeList()
   mChangesDuringBatching = PR_FALSE;
   mNotifyFrames = PR_TRUE;
   mScriptObject = nsnull;
-  mDirection = PR_TRUE;
+  mDirection = eDirNext;
 }
 
 
@@ -726,14 +726,14 @@ nsRangeList::HandleTextEvent(nsGUIEvent *aGUIEvent)
 NS_IMETHODIMP
 nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
 {
-  if (!aGuiEvent)
+#if 0
+if (!aGuiEvent)
     return NS_ERROR_NULL_POINTER;
   STATUS_CHECK_RETURN_MACRO();
   nsresult result = NS_OK;
   if (NS_KEY_DOWN == aGuiEvent->message) {
     nsKeyEvent *keyEvent = (nsKeyEvent *)aGuiEvent; //this is ok. It really is a keyevent
     nsCOMPtr<nsIDOMNode> weakNodeUsed;
-    nsIDOMNode *weakNodeUsed;
     PRInt32 offsetused = 0;
     nsIFrame *resultFrame;
     nsSelectionAmount amount = eSelectCharacter;
@@ -799,6 +799,8 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
     }
   }
   return result;
+#endif
+  return NS_OK;
 }
 
 #ifdef DEBUG
