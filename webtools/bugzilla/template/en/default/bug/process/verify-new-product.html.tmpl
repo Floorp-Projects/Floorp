@@ -36,7 +36,8 @@
 
 <form action="process_bug.cgi" method="post">
 
-[% PROCESS "global/hidden-fields.html.tmpl" exclude="^version|component|target_milestone$" %]
+[% PROCESS "global/hidden-fields.html.tmpl" 
+     exclude=(verify_fields ? "^version|component|target_milestone$" : "") %]
 
 [%# Verify the version, component, and target milestone fields. %]
 [% IF verify_fields %]
