@@ -53,7 +53,7 @@
  *   1. Normalization
  *	Scale x to y in [1,4) with even powers of 2: 
  *	find an integer k such that  1 <= (y=x*2^(2k)) < 4, then
- *		sqrt(x) = 2^k * sqrt(y)
+ *		sqrt(y) = 2^k * sqrt(x)
  *   2. Bit by bit computation
  *	Let q  = sqrt(y) truncated to i bit after binary point (q = 1),
  *	     i							 0
