@@ -78,10 +78,10 @@ public:
   PRInt32   mBytesRead;
   PRTime    mTotalTime;
   PRTime    mConnectTime;
-  nsString  mURLString;
+  nsCString mURLString;
 };
 
-URLLoadInfo::URLLoadInfo(const char *aUrl) : mURLString(aUrl, eOneByte)
+URLLoadInfo::URLLoadInfo(const char *aUrl) : mURLString(aUrl)
 {
   NS_INIT_REFCNT();
 
@@ -161,12 +161,13 @@ TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
 
             if (header) {
                 nsCOMPtr<nsIAtom> key;
-                nsAutoString field(eOneByte);
+                nsAutoString field;
                 nsXPIDLCString value;
 
                 header->GetField(getter_AddRefs(key));
                 key->ToString(field);
-                printf("\t%s: ", field.GetBuffer());
+                nsCAutoString theField(field);
+                printf("\t%s: ", theField.GetBuffer());
 
                 header->GetValue(getter_Copies(value));
                 printf("%s\n", (const char*)value);
@@ -188,12 +189,13 @@ TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
 
             if (header) {
                 nsCOMPtr<nsIAtom> key;
-                nsAutoString field(eOneByte);
+                nsAutoString field;
                 nsXPIDLCString value;
 
                 header->GetField(getter_AddRefs(key));
                 key->ToString(field);
-                printf("\t%s: ", field.GetBuffer());
+                nsCAutoString theField(field);
+                printf("\t%s: ", theField.GetBuffer());
 
                 header->GetValue(getter_Copies(value));
                 printf("%s\n", (const char*)value);
@@ -512,8 +514,8 @@ nsresult LoadURLsFromFile(char *aFileName)
     PRInt32 len, offset;
     PRFileDesc* fd;
     char buffer[1024];
-    nsString fileBuffer(eOneByte);
-    nsAutoString urlString(eOneByte);
+    nsCString fileBuffer;
+    nsCAutoString urlString;
 
     fd = PR_Open(aFileName, PR_RDONLY, 777);
     if (!fd) {
@@ -526,7 +528,7 @@ nsresult LoadURLsFromFile(char *aFileName)
         if (len>0) {
             fileBuffer.Append(buffer, len);
             // Treat each line as a URL...
-            while ((offset = fileBuffer.Find('\n')) != -1) {
+            while ((offset = fileBuffer.FindChar('\n')) != -1) {
                 fileBuffer.Left(urlString, offset);
                 fileBuffer.Cut(0, offset+1);
 
