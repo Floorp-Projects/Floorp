@@ -16,7 +16,7 @@
                 biffStart.label "every"
                 biffEnd.label   "minutes for new messages Check"
 -->
-<!ENTITY biffStart.label "Check for new mail every ">
+<!ENTITY biffStart.label "Check for new messages every ">
 <!ENTITY biffEnd.label "minutes">
 <!ENTITY isSecure.label "use secure connection. (SSL)">
 <!ENTITY leaveOnServer.label "Leave messages on server">
