@@ -210,7 +210,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
-          if ((nsITextEditor *)nsnull!=mEditor.get())
+          if (mEditor)
             mEditor->Undo(1);
         }
         break;
@@ -220,7 +220,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
-          if ((nsITextEditor *)nsnull!=mEditor.get())
+          if (mEditor)
             mEditor->Redo(1);
         }
         break;
@@ -230,21 +230,9 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
-          if ((nsITextEditor *)nsnull!=mEditor.get())
+          if (mEditor)
           {
-            nsCOMPtr<nsIEditProperty>prop;
-            nsresult result = NS_NewEditProperty(getter_AddRefs(prop));
-            if ((NS_SUCCEEDED(result)) && prop)
-            {
-              prop->Init(nsIEditProperty::italic, nsnull, PR_TRUE);
-              nsCOMPtr<nsISupportsArray>propList;
-              result = NS_NewISupportsArray(getter_AddRefs(propList));
-              if ((NS_SUCCEEDED(result)) && propList)
-              {
-                propList->AppendElement(prop);
-                mEditor->SetTextProperties(propList);
-              }
-            }
+            mEditor->SetTextProperty(nsIEditProperty::italic);
           }
         }
         break;
@@ -254,21 +242,22 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
-          if ((nsITextEditor *)nsnull!=mEditor.get())
+          if (mEditor)
           {
-            nsCOMPtr<nsIEditProperty>prop;
-            nsresult result = NS_NewEditProperty(getter_AddRefs(prop));
-            if ((NS_SUCCEEDED(result)) && prop)
-            {
-              prop->Init(nsIEditProperty::bold, nsnull, PR_TRUE);
-              nsCOMPtr<nsISupportsArray>propList;
-              result = NS_NewISupportsArray(getter_AddRefs(propList));
-              if ((NS_SUCCEEDED(result)) && propList)
-              {
-                propList->AppendElement(prop);
-                mEditor->SetTextProperties(propList);
-              }
-            }
+            mEditor->SetTextProperty(nsIEditProperty::bold);
+          }
+        }
+        break;
+
+      case nsIDOMEvent::VK_U:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+          {
+            PRBool any, all;
+            mEditor->GetTextProperty(nsIEditProperty::bold, any, all);
+            printf("the selection has BOLD any=%d all=%d\n", any, all);
           }
         }
         break;

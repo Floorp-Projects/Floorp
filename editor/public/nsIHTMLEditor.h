@@ -51,9 +51,9 @@ public:
                             nsIEditorCallback *aCallback=nsnull)=0;
 
 // Methods shared with nsITextEditor (see nsITextEditor.h for details)
-  NS_IMETHOD SetTextProperties(nsISupportsArray *aPropList)=0;
-  NS_IMETHOD GetTextProperties(nsISupportsArray *aPropList)=0;
-  NS_IMETHOD RemoveTextProperties(nsISupportsArray *aPropList)=0;
+  NS_IMETHOD SetTextProperty(nsIAtom *aProperty)=0;
+  NS_IMETHOD GetTextProperty(nsIAtom *aProperty, PRBool &aAll, PRBool &aAny)=0;
+  NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty)=0;
   NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir)=0;
   NS_IMETHOD InsertText(const nsString& aStringToInsert)=0;
   NS_IMETHOD InsertBreak(PRBool aCtrlKey)=0;

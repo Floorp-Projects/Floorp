@@ -36,6 +36,7 @@ NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
   mElement = do_QueryInterface(aElement);
   mOffset = aOffset;
   mNumCharsToDelete = aNumCharsToDelete;
+  NS_ASSERTION(0!=aNumCharsToDelete, "bad arg, numCharsToDelete");
   mDeletedText = "";
   return NS_OK;
 }

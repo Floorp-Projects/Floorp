@@ -23,8 +23,8 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
 
-class nsISupportsArray;
-
+class nsIStyleContext;
+class nsIDOMRange;
 
 /**
  * The text editor implementation.<br>
@@ -47,9 +47,9 @@ public:
   virtual ~nsTextEditor();
 
 // Editing Operations
-  NS_IMETHOD SetTextProperties(nsISupportsArray *aPropList);
-  NS_IMETHOD GetTextProperties(nsISupportsArray *aPropList);
-  NS_IMETHOD RemoveTextProperties(nsISupportsArray *aPropList);
+  NS_IMETHOD SetTextProperty(nsIAtom *aProperty);
+  NS_IMETHOD GetTextProperty(nsIAtom *aProperty, PRBool &aAny, PRBool &aAll);
+  NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty);
   NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir);
   NS_IMETHOD InsertText(const nsString& aStringToInsert);
   NS_IMETHOD InsertBreak(PRBool aCtrlKey);
@@ -81,6 +81,11 @@ public:
 
 protected:
 // Utility Methods
+
+  virtual void IsTextStyleSet(nsIStyleContext *aSC, 
+                              nsIAtom *aProperty, 
+                              PRBool &aIsSet) const;
+
   NS_IMETHOD SetTextPropertiesForNode(nsIDOMNode *aNode, 
                                       nsIDOMNode *aParent,
                                       PRInt32     aStartOffset,
@@ -94,12 +99,13 @@ protected:
                                                      nsIDOMNode *aParent,
                                                      nsIAtom    *aPropName);
 
-  NS_IMETHOD SetTextPropertiesForNodeWithDifferentParents(nsIDOMNode *aStartNode,
-                                                          PRInt32     aStartOffset,
-                                                          nsIDOMNode *aEndNode,
-                                                          PRInt32     aEndOffset,
-                                                          nsIDOMNode *aParent,
-                                                          nsIAtom    *aPropName);
+  NS_IMETHOD SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
+                                                          nsIDOMNode  *aStartNode,
+                                                          PRInt32      aStartOffset,
+                                                          nsIDOMNode  *aEndNode,
+                                                          PRInt32      aEndOffset,
+                                                          nsIDOMNode  *aParent,
+                                                          nsIAtom     *aPropName);
 
   NS_IMETHOD SetTagFromProperty(nsAutoString &aTag, nsIAtom *aPropName) const;
 
