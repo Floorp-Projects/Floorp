@@ -789,9 +789,47 @@ System.out.println();
                     return true;
                 /* Decimal escape */
                 case '0':
-                    if (state.cx.getLanguageVersion() != Context.VERSION_DEFAULT &&
-                        state.cx.getLanguageVersion() <= Context.VERSION_1_4) {
-                        /* octal escape */
+/*
+ * Under 'strict' ECMA 3, we interpret \0 as NUL and don't accept octal.
+ * However, (XXX and since Rhino doesn't have a 'strict' mode) we'll just
+ * behave the old way for compatibility reasons.
+ * (see http://bugzilla.mozilla.org/show_bug.cgi?id=141078)
+ *
+ */
+                    /* octal escape */
+                    num = 0;
+                    while (state.cp < state.cpend) {
+                        c = src[state.cp];
+                        if ((c >= '0') && (c <= '7')) {
+                            state.cp++;
+                            tmp = 8 * num + (c - '0');
+                            if (tmp > 0377)
+                                break;
+                            num = tmp;
+                        }
+                        else
+                            break;
+                    }
+                    c = (char)(num);
+                    doFlat(state, c);
+                    break;
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                    termStart = state.cp - 1;
+                    num = getDecimalValue(c, state);
+                    /* 
+                     * n > 9 and > count of parentheses, 
+                     * then treat as octal instead.
+                     */
+                    if ((num > 9) && (num > state.parenCount)) {
+                        state.cp = termStart;
                         num = 0;
                         while (state.cp < state.cpend) {
                             c = src[state.cp];
@@ -806,71 +844,15 @@ System.out.println();
                                 break;
                         }
                         c = (char)(num);
+                        doFlat(state, c);
+                        break;
                     }
-                    else
-                        c = 0;
-                    doFlat(state, c);
-                    break;
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    termStart = state.cp - 1;
-                    num = getDecimalValue(c, state);
-                    if (state.cx.getLanguageVersion() != Context.VERSION_DEFAULT &&
-                        state.cx.getLanguageVersion() <= Context.VERSION_1_4) {
-                        /* 
-                         * n in [8-9] and > count of parentheses, 
-                         * then revert to '8' or '9', ignoring the '\' 
-                         */
-                        if (((num == 8) || (num == 9)) 
-                                && (num > state.parenCount)) {
-                            c = (char)(num + '0');
-                            doFlat(state, c);
-                            break;
-                        }                    
-                        /* 
-                         * more than 1 digit, or a number greater than
-                         * the count of parentheses => it's an octal 
-                         */
-                        if (((state.cp - termStart) > 1)
-                                        || (num > state.parenCount)) {
-                            state.cp = termStart;
-                            num = 0;
-                            while (state.cp < state.cpend) {
-                                c = src[state.cp];
-                                if ((c >= '0') && (c <= '7')) {
-                                    state.cp++;
-                                    tmp = 8 * num + (c - '0');
-                                    if (tmp > 0377)
-                                        break;
-                                    num = tmp;
-                                }
-                                else
-                                    break;
-                            }
-                            c = (char)(num);
-                            doFlat(state, c);
-                            break;
-                        }
-                        state.result = new RENode(REOP_BACKREF);
-                        if (state.result == null) 
-                            return false;
-                        state.result.parenIndex = num - 1;
-                        state.progLength += 3;
-                    }
-                    else {
-                        state.result = new RENode(REOP_BACKREF);
-                        if (state.result == null) 
-                            return false;
-                        state.result.parenIndex = num - 1;
-                        state.progLength += 3;
-                    }
+                    /* otherwise, it's a back-reference */   
+                    state.result = new RENode(REOP_BACKREF);
+                    if (state.result == null) 
+                        return false;
+                    state.result.parenIndex = num - 1;
+                    state.progLength += 3;
                     break;
                 /* Control escape */
                 case 'f':
@@ -982,7 +964,8 @@ System.out.println();
             {
                 RENode result = null;
                 termStart = state.cp;
-                if ((src[state.cp] == '?') 
+                if ((state.cp < state.cpend)
+                        && (src[state.cp] == '?') 
                         && ( (src[state.cp + 1] == '=')
                                 || (src[state.cp + 1] == '!')
                                 || (src[state.cp + 1] == ':') )) {
