@@ -212,6 +212,7 @@ extern nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
                                       nsIWebShell* aWebShell,
                                       nsIChannel* aChannel);
 extern nsresult NS_NewHTMLFragmentContentSink(nsIHTMLFragmentContentSink** aInstancePtrResult);
+extern nsresult NS_NewHTMLFragmentContentSink2(nsIHTMLFragmentContentSink** aInstancePtrResult);
 
 /** Create a new HTML reflow command */
 extern nsresult
