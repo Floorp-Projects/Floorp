@@ -216,6 +216,7 @@ protected:
 
   PRBool IsMouseHandler(const nsString& aName);
   PRBool IsKeyHandler(const nsString& aName);
+  PRBool IsFocusHandler(const nsString& aName);
   PRBool IsXULHandler(const nsString& aName);
 
   static void GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound);
@@ -605,11 +606,12 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
           // Add an event listener for mouse and key events only.
           PRBool mouse = IsMouseHandler(type);
           PRBool key = IsKeyHandler(type);
+          PRBool focus = IsFocusHandler(type);
           PRBool xul = IsXULHandler(type);
 
           nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
             
-          if (mouse || key || xul) {
+          if (mouse || key || focus || xul) {
             // Create a new nsXBLEventHandler.
             nsXBLEventHandler* handler;
             NS_NewXBLEventHandler(mBoundElement, child, type, &handler);
@@ -626,6 +628,8 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
               receiver->AddEventListener(type, (nsIDOMMouseListener*)handler, useCapture);
             else if(key)
               receiver->AddEventListener(type, (nsIDOMKeyListener*)handler, useCapture);
+            else if(focus)
+              receiver->AddEventListener(type, (nsIDOMFocusListener*)handler, useCapture);
             else
               receiver->AddEventListener(type, (nsIDOMMenuListener*)handler, useCapture);
 
@@ -1370,6 +1374,12 @@ PRBool
 nsXBLBinding::IsKeyHandler(const nsString& aName)
 {
   return ((aName.EqualsWithConversion("keypress")) || (aName.EqualsWithConversion("keydown")) || (aName.EqualsWithConversion("keyup")));
+}
+
+PRBool
+nsXBLBinding::IsFocusHandler(const nsString& aName)
+{
+  return ((aName.EqualsWithConversion("focus")) || (aName.EqualsWithConversion("blur")));
 }
 
 PRBool
