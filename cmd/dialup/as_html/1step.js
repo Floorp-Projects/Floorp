@@ -149,7 +149,7 @@ function loadData()
 	{
 		var configFolder = globals.getConfigFolder( self );
 		var acctSetupIni = globals.getAcctSetupFilename( self );
-		var regFile = configFolder + documentVars.regServer.value;
+		var regFile = configFolder + documentVars.compServer.value;
 
 
 		var regSource = globals.GetNameValuePair( acctSetupIni, "Mode Selection", "RegSource" );
