@@ -121,8 +121,8 @@ public:
 
 //static CSharedParserObjects* gSharedParserObjects=0;
 
-nsString nsParser::gHackMetaCharset = "";
-nsString nsParser::gHackMetaCharsetURL = "";
+
+//-------------------------------------------------------------------------
 
 /**********************************************************************************
   This class is used as an interface between an external agent (like the DOM) and
@@ -160,9 +160,6 @@ public:
 
   nsDeque mTags;  //will hold a deque of prunichars...
 };
-
-//-------------------------------------------------------------------
-
 
 CSharedParserObjects& GetSharedObjects() {
   static CSharedParserObjects gSharedParserObjects;
@@ -624,31 +621,6 @@ nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerif
     if (rv != NS_OK) return rv;
     nsAutoString theName(spec);
 
-    // XXX temp hack to make parser use UTF-8 as default charset for XML, RDF, XUL
-    // XXX This should be removed once we have the SetDefaultCharset in the nsIParser interface
-	nsString last4;
-	theName.Right(last4, 4);
-	if(last4.EqualsIgnoreCase(".xul") || last4.EqualsIgnoreCase(".xml") || last4.EqualsIgnoreCase(".rdf") ) 
-	{
-                if(kCharsetFromDocTypeDefault >= mCharsetSource) {
-		   mCharset = "UTF-8";
-                   mCharsetSource = kCharsetFromDocTypeDefault;
-                }
-	}
-
-    // XXX begin of meta tag charset hack
-
-	if(theName.Equals(nsParser::gHackMetaCharsetURL) && (! nsParser::gHackMetaCharset.Equals("")))
-	{
-                if(kCharsetFromMetaTag > mCharsetSource) {
-	   	   mCharset = nsParser::gHackMetaCharset;
-		   mCharsetSource = kCharsetFromMetaTag;
-                }
-	}
-	nsParser::gHackMetaCharsetURL = theName;
-	nsParser::gHackMetaCharset = "";
-    // XXX end of meta tag charset hack
-
     CParserContext* pc=new CParserContext(new nsScanner(theName,PR_FALSE, mCharset, mCharsetSource),aKey,aListener);
     if(pc) {
       pc->mMultipart=PR_TRUE;
@@ -675,20 +647,7 @@ nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aK
   //ok, time to create our tokenizer and begin the process
   nsAutoString theUnknownFilename("unknown");
 
-  // XXX begin of meta tag charset hack
-  if(theUnknownFilename.Equals(nsParser::gHackMetaCharsetURL) && (! nsParser::gHackMetaCharset.Equals("")))
-  {
-         
-        if(kCharsetFromMetaTag > mCharsetSource) {
-		mCharset = nsParser::gHackMetaCharset;
-		mCharsetSource = kCharsetFromMetaTag;
-        }
-  }
-  nsParser::gHackMetaCharsetURL = theUnknownFilename;
-  nsParser::gHackMetaCharset = "";
-  // XXX end of meta tag charset hack
-
-	nsInputStream input(&aStream);
+  nsInputStream input(&aStream);
   CParserContext* pc=new CParserContext(new nsScanner(theUnknownFilename, input, mCharset, mCharsetSource,PR_FALSE),aKey,0);
   if(pc) {
     PushContext(*pc);
@@ -723,27 +682,6 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aCon
     aSourceBuffer.DebugDump(out);
   }
 #endif
-
-  if(aContentType.EqualsIgnoreCase("text/xul") || aContentType.EqualsIgnoreCase("text/xml") || aContentType.EqualsIgnoreCase("text/rdf") ) 
-  {
-        if(kCharsetFromDocTypeDefault >= mCharsetSource) {
-	    mCharset = "UTF-8";
-            mCharsetSource = kCharsetFromDocTypeDefault;
-        }
-  } 
-
-  // XXX begin of meta tag charset hack
-  nsAutoString theFakeURL("fromString");
-  if(theFakeURL.Equals(nsParser::gHackMetaCharsetURL) && (! nsParser::gHackMetaCharset.Equals("")))
-  {
-        if(kCharsetFromMetaTag > mCharsetSource) {
-	    mCharset = nsParser::gHackMetaCharset;
-	    mCharsetSource = kCharsetFromMetaTag;
-        }
-  }
-  nsParser::gHackMetaCharsetURL = theFakeURL;
-  nsParser::gHackMetaCharset = "";
-  // XXX end of meta tag charset hack
 
   //NOTE: Make sure that updates to this method don't cause 
   //      bug #2361 to break again!

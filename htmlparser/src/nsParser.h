@@ -137,6 +137,12 @@ friend class CTokenHandler;
      */
     virtual void SetDocumentCharset(nsString& aCharset, nsCharsetSource aSource);
 
+    void GetDocumentCharset(nsString& oCharset, nsCharsetSource& oSource)
+    {
+         oCharset = mCharset;
+         oSource = mCharsetSource;
+    }
+
 
     virtual nsIParserFilter* SetParserFilter(nsIParserFilter* aFilter);
     
@@ -257,12 +263,6 @@ friend class CTokenHandler;
      * @return  NS_OK if successful, or NS_HTMLPARSER_MEMORY_ERROR on error
      */
     virtual nsresult  CreateTagStack(nsITagStack** aTagStack);
-
-	/*
-	 * The following two should be removed once our Meta Charset work complete
-	 */
-	static nsString gHackMetaCharset; 
-	static nsString gHackMetaCharsetURL;
 
 protected:
 

@@ -1196,18 +1196,35 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
         PRInt32 index = 0; 
         const PRUnichar* theKeys[50]  = {0,0,0,0,0}; // XXX -  should be dynamic
         const PRUnichar* theValues[50]= {0,0,0,0,0}; // XXX -  should be dynamic
-        for(index=0; index<theAttrCount && theAttrCount < 50; index++) {
+        for(index=0; index<theAttrCount && index < 50; index++) {
           theKeys[index]   = aNode.GetKeyAt(index).GetUnicode(); 
           theValues[index] = aNode.GetValueAt(index).GetUnicode(); 
         } 
 
-        nsAutoString theCharsetKey("charset"); 
-        theKeys[index]=theCharsetKey.GetUnicode(); 
-        theValues[index] = nsParser::gHackMetaCharsetURL.GetUnicode(); 
+        nsAutoString charsetValue;
+        nsCharsetSource charsetSource;
+        mParser->GetDocumentCharset(charsetValue, charsetSource);
+        // Add pseudo attribute in the end
+        if(index < 50) {
+          nsAutoString theCharsetKey("charset"); 
+          theKeys[index]=theCharsetKey.GetUnicode(); 
+          theValues[index] = charsetValue.GetUnicode();
+          index++;
+        }
+
+        if(index < 50) {
+          nsAutoString theCharsetKey("charsetSource"); 
+          theKeys[index]=theCharsetKey.GetUnicode(); 
+          PRInt32 sourceInt = charsetSource;
+          nsAutoString intValue;
+          intValue.Append(sourceInt,10);
+          theValues[index] = intValue.GetUnicode();
+		  index++;
+        }
 
         CParserContext* pc=mParser->PeekContext(); 
         void* theDocID=(pc) ? pc-> mKey : 0; 
-        nsObserverNotifier theNotifier(aTag,theAttrCount,theKeys,theValues,(PRUint32)theDocID); 
+        nsObserverNotifier theNotifier(aTag,index,theKeys,theValues,(PRUint32)theDocID); 
         theDeque->FirstThat(theNotifier); 
         result=theNotifier.mResult; 
 
@@ -1216,23 +1233,21 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
   } 
 
 
-  //**********************************************************
-  //XXX Hack until I get the node observer API in place...
-
-  if(eHTMLTag_meta==aTag) {
-    PRInt32 theCount=aNode.GetAttributeCount();
-    if(1<theCount){
- 
-        //<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
-      const nsString& theKey=aNode.GetKeyAt(0);
-      if(theKey.EqualsIgnoreCase("HTTP-EQUIV")) {
-        const nsString& theKey2=aNode.GetKeyAt(1);
-        if(theKey2.EqualsIgnoreCase("CONTENT")) {
-            nsScanner* theScanner=mParser->GetScanner();
-            if(theScanner) {
-              const nsString& theValue=aNode.GetValueAt(1);
-              PRInt32 charsetValueStart = theValue.RFind("charset=", PR_TRUE ) ;
-              if(kNotFound != charsetValueStart) {	
+  if(eHTMLTag_meta==aTag) { 
+    PRInt32 theCount=aNode.GetAttributeCount(); 
+    if(1<theCount){ 
+  
+      const nsString& theKey=aNode.GetKeyAt(0); 
+#if 0
+      //<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1"> 
+      if(theKey.EqualsIgnoreCase("HTTP-EQUIV")) { 
+        const nsString& theKey2=aNode.GetKeyAt(1); 
+        if(theKey2.EqualsIgnoreCase("CONTENT")) { 
+            nsScanner* theScanner=mParser->GetScanner(); 
+            if(theScanner) { 
+              const nsString& theValue=aNode.GetValueAt(1); 
+              PRInt32 charsetValueStart = theValue.RFind("charset=", PR_TRUE ) ; 
+              if(kNotFound != charsetValueStart) { 
                  charsetValueStart += 8; // 8 = "charset=".length 
                  PRInt32 charsetValueEnd = theValue.FindCharInSet("\'\";", charsetValueStart  );
                  if(kNotFound == charsetValueEnd ) 
@@ -1247,28 +1262,26 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
         }
       } //if
 
-      else if(theKey.EqualsIgnoreCase("NAME")) {
-        const nsString& theValue1=aNode.GetValueAt(0);
-        if(theValue1.EqualsIgnoreCase("\"CRC\"")) {
-          const nsString& theKey2=aNode.GetKeyAt(1);
-          if(theKey2.EqualsIgnoreCase("CONTENT")) {
-            const nsString& theValue2=aNode.GetValueAt(1);
-            PRInt32 err=0;
-            mExpectedCRC32=theValue2.ToInteger(&err);          
-          } //if
-        } //if
-      } //else
+      else 
+#endif
+      if(theKey.EqualsIgnoreCase("NAME")) { 
+        const nsString& theValue1=aNode.GetValueAt(0); 
+        if(theValue1.EqualsIgnoreCase("\"CRC\"")) { 
+          const nsString& theKey2=aNode.GetKeyAt(1); 
+          if(theKey2.EqualsIgnoreCase("CONTENT")) { 
+            const nsString& theValue2=aNode.GetValueAt(1); 
+            PRInt32 err=0; 
+            mExpectedCRC32=theValue2.ToInteger(&err); 
+          } //if 
+        } //if 
+      } //else 
 
-    } //if
-  }//if
-
-  //XXX Hack until I get the node observer API in place...
-  //**********************************************************
+    } //if 
+  }//if 
 
   if(NS_OK==result) {
     result=gHTMLElements[aTag].HasSpecialProperty(kDiscardTag) ? 1 : NS_OK;
   }
-
 
   PRBool isHeadChild=gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag);
 
