@@ -334,66 +334,12 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
     rv = ProcessRequest(request, result);
 
     // delete requests that have completed
-    if (!listener || (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION))
+    if (!listener || (rv != NS_ERROR_CACHE_WAIT_FOR_VALIDATION))
         delete request;
 
     return rv;
 }
 
-#if 0
-nsresult
-nsCacheService::OpenCacheEntry(nsCacheSession *           session,
-                               const char *               key, 
-                               nsCacheAccessMode          accessRequested,
-                               nsICacheEntryDescriptor ** result)
-{
-    *result = nsnull;
-    if (!mCacheServiceLock)  return NS_ERROR_NOT_INITIALIZED;
-
-    nsCacheRequest * request = nsnull;
-    nsCacheEntry *   entry   = nsnull;
-
-    nsresult rv = CreateRequest(session, key, accessRequested, nsnull, &request);
-    if (NS_FAILED(rv))  return rv;
-
-    while (1) {
-        // XXX acquire lock
-        rv = ActivateEntry(request, &entry);
-        if (NS_FAILED(rv)) break;
-        // XXX check for NS_ERROR_CACHE_KEY_NOT_FOUND & READ-ONLY request
-
-        rv = entry->Open(request, result); // XXX release lock before waiting on request
-        if (rv != NS_ERROR_CACHE_ENTRY_DOOMED) break;
-    }
-
-    delete request;
-    return rv;
-}
-
-
-nsresult
-nsCacheService::AsyncOpenCacheEntry(nsCacheSession *   session,
-                                    const char *       key, 
-                                    nsCacheAccessMode  accessRequested,
-                                    nsICacheListener * listener)
-{
-    if (!mCacheServiceLock)  return NS_ERROR_NOT_INITIALIZED;
-    if (!listener)           return NS_ERROR_NULL_POINTER;
-    
-    nsCacheRequest * request = nsnull;
-    nsCacheEntry *   entry   = nsnull;
-
-    nsresult rv = CreateRequest(session, key, accessRequested, listener, &request);
-
-    // XXX acquire service lock PR_Lock(mCacheServiceLock);
-    rv = ActivateEntry(request, &entry);
-    if (NS_SUCCEEDED(rv)) {
-        entry->AsyncOpen(request); // XXX release lock after request queued, etc.
-    }
-
-   return rv;
-}
-#endif
 
 nsresult
 nsCacheService::ActivateEntry(nsCacheRequest * request, 
@@ -449,10 +395,11 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
         // XXX  we could perform an early bind in some cases based on storage policy
     }
 
-    rv = mActiveEntries.AddEntry(entry);
-    if (NS_FAILED(rv)) goto error;
-    entry->MarkActive();  // mark entry active, because it's now in mActiveEntries
-    
+    if (!entry->IsActive()) {
+        rv = mActiveEntries.AddEntry(entry);
+        if (NS_FAILED(rv)) goto error;
+        entry->MarkActive();  // mark entry active, because it's now in mActiveEntries
+    }
     *result = entry;
     return NS_OK;
     
