@@ -57,10 +57,6 @@ nsRuleNetwork::nsRuleNetwork()
 
 nsRuleNetwork::~nsRuleNetwork()
 {
-    // We "own" the nodes. So it's up to us to delete 'em
-    for (NodeSet::Iterator node = mNodes.First(); node != mNodes.Last(); ++node)
-        delete *node;
-
     Clear();
 }
 
@@ -75,6 +71,10 @@ nsRuleNetwork::CreateVariable(PRInt32* aVariable)
 nsresult
 nsRuleNetwork::Clear()
 {
+    // We "own" the nodes. So it's up to us to delete 'em
+    for (NodeSet::Iterator node = mNodes.First(); node != mNodes.Last(); ++node)
+        delete *node;
+
     mNodes.Clear();
     mRoot.RemoveAllChildren();
     return NS_OK;
@@ -335,7 +335,7 @@ VariableSet::Remove(PRInt32 aVariable)
 }
 
 PRBool
-VariableSet::Contains(PRInt32 aVariable)
+VariableSet::Contains(PRInt32 aVariable) const
 {
     for (PRInt32 i = mCount - 1; i >= 0; --i) {
         if (aVariable == mVariables[i])
