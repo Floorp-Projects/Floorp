@@ -560,7 +560,7 @@ RDFElementImpl::GetParentNode(nsIDOMNode** aParentNode)
     }
     else if (mDocument) {
         // XXX This is a mess because of our fun multiple inheritance heirarchy
-        nsCOMPtr<nsIContent> root( dont_QueryInterface(mDocument->GetRootContent()) );
+        nsCOMPtr<nsIContent> root = dont_AddRef( mDocument->GetRootContent() );
         nsCOMPtr<nsIContent> thisIContent;
         QueryInterface(kIContentIID, getter_AddRefs(thisIContent));
 
@@ -1065,7 +1065,7 @@ RDFElementImpl::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
     // element.
     if (mDocument) {
         nsCOMPtr<nsIContent> docroot
-            = dont_QueryInterface( mDocument->GetRootContent() );
+            = dont_AddRef( mDocument->GetRootContent() );
 
         if (docroot) {
             nsCOMPtr<nsIXMLContent> xml( do_QueryInterface(docroot) );
@@ -1412,19 +1412,18 @@ RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
         for (PRInt32 i = cnt - 1; i >= 0; --i) {
             // XXX this entire block could be more rigorous about
             // dealing with failure.
-            nsISupports* obj = mChildren->ElementAt(i);
+            nsCOMPtr<nsISupports> isupports = dont_AddRef( mChildren->ElementAt(i) );
 
-            PR_ASSERT(obj);
-            if (! obj)
+            NS_ASSERTION(isupports != nsnull, "null ptr");
+            if (! isupports)
                 continue;
 
-            nsIContent* child;
-            if (NS_SUCCEEDED(obj->QueryInterface(kIContentIID, (void**) &child))) {
-                child->SetDocument(aDocument, aDeep);
-                NS_RELEASE(child);
-            }
+            nsCOMPtr<nsIContent> child = do_QueryInterface(isupports);
+            NS_ASSERTION(child != nsnull, "not an nsIContent");
+            if (! child)
+                continue;
 
-            NS_RELEASE(obj);
+            child->SetDocument(aDocument, aDeep);
         }
     }
     return NS_OK;
@@ -1482,18 +1481,15 @@ RDFElementImpl::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
     if (! mChildren)
         return NS_OK;
 
-    // XXX The ultraparanoid way to do this...
-    nsISupports* obj = mChildren->ElementAt(aIndex);  // this automatically addrefs
-    if (obj) {
-      nsIContent* content;
-      rv = obj->QueryInterface(kIContentIID, (void**) &content);
-      NS_ASSERTION(rv == NS_OK, "not a content");
-      obj->Release();
-      aResult = content;
-    }
+    nsCOMPtr<nsISupports> isupports = dont_AddRef( mChildren->ElementAt(aIndex) );
+    if (! isupports)
+        return NS_OK; // It's okay to ask for an element off the end.
 
-    // But, since we're in a closed system, we can just do the following...
-    //aResult = (nsIContent*) mChildren->ElementAt(aIndex); // this automatically addrefs
+    nsIContent* content;
+    rv = isupports->QueryInterface(kIContentIID, (void**) &content);
+    if (NS_FAILED(rv)) return rv;
+
+    aResult = content; // take the AddRef() from the QI
     return NS_OK;
 }
 
@@ -1532,7 +1528,6 @@ RDFElementImpl::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 
     PRBool insertOk = mChildren->InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
     if (insertOk) {
-        NS_ADDREF(aKid);
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         //nsRange::OwnerChildInserted(this, aIndex);
         aKid->SetDocument(mDocument, PR_TRUE);
@@ -1558,8 +1553,16 @@ RDFElementImpl::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
     if (! aKid)
         return NS_ERROR_NULL_POINTER;
 
-    nsIContent* oldKid = (nsIContent *)mChildren->ElementAt(aIndex);
-    if (oldKid == aKid)
+    nsCOMPtr<nsISupports> isupports = dont_AddRef( mChildren->ElementAt(aIndex) );
+    if (! isupports)
+        return NS_OK; // XXX No kid at specified index; just silently ignore?
+
+    nsCOMPtr<nsIContent> oldKid = do_QueryInterface(isupports);
+    NS_ASSERTION(oldKid != nsnull, "old kid not nsIContent");
+    if (! oldKid)
+        return NS_ERROR_FAILURE;
+
+    if (oldKid.get() == aKid)
         return NS_OK;
 
     // Make sure that we're not trying to insert the same child
@@ -1572,7 +1575,6 @@ RDFElementImpl::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 
     PRBool replaceOk = mChildren->ReplaceElementAt(aKid, aIndex);
     if (replaceOk) {
-        NS_ADDREF(aKid);
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         //nsRange::OwnerChildReplaced(this, aIndex, oldKid);
         aKid->SetDocument(mDocument, PR_TRUE);
@@ -1581,7 +1583,6 @@ RDFElementImpl::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
         }
         oldKid->SetDocument(nsnull, PR_TRUE);
         oldKid->SetParent(nsnull);
-        NS_RELEASE(oldKid);
     }
     return NS_OK;
 }
@@ -1610,7 +1611,6 @@ RDFElementImpl::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 
     PRBool appendOk = mChildren->AppendElement(aKid);
     if (appendOk) {
-        NS_ADDREF(aKid);
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         // ranges don't need adjustment since new child is at end of list
         aKid->SetDocument(mDocument, PR_TRUE);
@@ -1640,7 +1640,15 @@ RDFElementImpl::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
     if (! mChildren)
         return NS_ERROR_ILLEGAL_VALUE;
 
-    nsIContent* oldKid = (nsIContent *)mChildren->ElementAt(aIndex);
+    nsCOMPtr<nsISupports> isupports = dont_AddRef( mChildren->ElementAt(aIndex) );
+    if (! isupports)
+        return NS_OK; // XXX No kid at specified index; just silently ignore?
+
+    nsCOMPtr<nsIContent> oldKid = do_QueryInterface(isupports);
+    NS_ASSERTION(oldKid != nsnull, "old kid not nsIContent");
+    if (! oldKid)
+        return NS_ERROR_FAILURE;
+
     if (oldKid) {
         nsIDocument* doc = mDocument;
         PRBool removeOk = mChildren->RemoveElementAt(aIndex);
@@ -1650,7 +1658,6 @@ RDFElementImpl::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
         }
         oldKid->SetDocument(nsnull, PR_TRUE);
         oldKid->SetParent(nsnull);
-        NS_RELEASE(oldKid);
     }
 
     return NS_OK;
@@ -2528,7 +2535,7 @@ RDFElementImpl::ElementIsInDocument()
 
     nsresult rv;
 
-    nsCOMPtr<nsIContent> root = dont_QueryInterface( mDocument->GetRootContent() );
+    nsCOMPtr<nsIContent> root = dont_AddRef( mDocument->GetRootContent() );
     if (! root)
         return PR_FALSE;
 
