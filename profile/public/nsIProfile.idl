@@ -23,10 +23,8 @@
 #include "nsISupports.idl"
 #include "nsIFile.idl"
 
-interface nsICmdLineService;
 
 %{C++
-#include "nsICmdLineService.h"
       
 #define NS_PROFILE_CID                                 \
   { /* {02b0625b-e7f3-11d2-9f5a-006008a6efe9} */       \
@@ -45,60 +43,21 @@ interface nsICmdLineService;
 
 [scriptable, uuid(02b0625a-e7f3-11d2-9f5a-006008a6efe9)]
 interface nsIProfile : nsISupports {
-    [noscript] void startupWithArgs(in nsICmdLineService cmdLine);
-    void startup(in wstring filename);
-
-    [noscript] void getProfileDir(in wstring profileName,
-                                  out nsIFile profileDir);
-    readonly attribute long profileCount;
-    readonly attribute wstring currentProfile;
-    readonly attribute wstring firstProfile;
-
-    // eventually we need to depricate getCurrentProfileDir
-    [noscript] void getCurrentProfileDir(out nsIFile profileDir);
-
-    [noscript] void setProfileDir(in wstring profileName,
-                                  in nsIFile profileDir);
-
-    boolean profileExists(in wstring profileName);
     
-    void migrateProfileInfo();
+    readonly attribute long profileCount;
+    void getProfileList(out unsigned long length, [retval, array, size_is(length)] out wstring profileNames); 
+    boolean profileExists(in wstring profileName);
+
+    readonly attribute wstring currentProfile;
 
     void createNewProfile(in wstring profileName, 
                           in wstring nativeProfileDir, 
                           in wstring langcode,
-                          in boolean useExistingDir);
+                          in boolean useExistingDir);    
 
     void renameProfile(in wstring oldName, in wstring newName);
-
     void deleteProfile(in wstring name, in boolean canDeleteFiles);
-
-    wstring getProfileList();
-
-    void startApprunner(in wstring profileName);
-
-    void migrateProfile(in wstring profileName, in boolean showProgressAsModalWindow);
-
-    long get4xProfileCount();
-
-    void migrateAllProfiles();
     void cloneProfile(in wstring profileName);
-    void forgetCurrentProfile();
-    void loadNewProfilePrefs();
-    boolean isCurrentProfileAvailable();
-
-    attribute boolean automigrate;
-
-    readonly attribute nsIFile defaultProfileParentDir;
-
-    [noscript] void updateRegistry(in nsIFile regName);
-    void setRegStrings(in wstring profileName, 
-                       in wstring regString,
-                       in wstring regName,
-                       in wstring regEmail,
-                       in wstring regOption);
-    string isRegStringSet(in wstring profileName); 
-
 };
 
 #endif /* nsIProfile_h__ */

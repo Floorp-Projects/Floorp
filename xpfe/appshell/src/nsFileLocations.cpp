@@ -52,7 +52,7 @@
 #include <sys/param.h>
 #endif
 
-#include "nsIProfile.h"
+#include "nsIProfileInternal.h"
 #include "nsIPrefMigration.h" // for NEW_IMAPMAIL_DIR_NAME, etc
 
 #include "plstr.h"
@@ -185,7 +185,7 @@ static PRBool GetProfileDirectory(nsFileSpec& outSpec)
     {
         // First time, initialize gProfileDir
         nsresult rv;
-        NS_WITH_SERVICE(nsIProfile, profileService, kProfileCID, &rv);
+        NS_WITH_SERVICE(nsIProfileInternal, profileService, kProfileCID, &rv);
         if (NS_FAILED(rv))
             return PR_FALSE;
         

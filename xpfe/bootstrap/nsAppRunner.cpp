@@ -99,7 +99,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 #endif
 
 // header file for profile manager
-#include "nsIProfile.h"
+#include "nsIProfileInternal.h"
 
 #if defined(XP_UNIX)
   extern void InstallUnixSignalHandlers(const char *ProgramName);
@@ -802,7 +802,7 @@ static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
     } 
     else 
     { 
-        nsCOMPtr<nsIProfile> profileMgr = do_GetService(kProfileCID, &rv);
+        nsCOMPtr<nsIProfileInternal> profileMgr = do_GetService(kProfileCID, &rv);
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get profile manager");
         if (NS_FAILED(rv)) return rv;
 

@@ -316,6 +316,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsProfile)
 NS_INTERFACE_MAP_BEGIN(nsProfile)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIProfile)
     NS_INTERFACE_MAP_ENTRY(nsIProfile)
+    NS_INTERFACE_MAP_ENTRY(nsIProfileInternal)
     NS_INTERFACE_MAP_ENTRY(nsIDirectoryServiceProvider)
 NS_INTERFACE_MAP_END
 
@@ -1094,7 +1095,7 @@ nsProfile::AddLevelOfIndirection(nsIFile *aDir)
  */
 
 // Sets the current profile directory
-NS_IMETHODIMP nsProfile::SetProfileDir(const PRUnichar *profileName, nsIFile *profileDir)
+nsresult nsProfile::SetProfileDir(const PRUnichar *profileName, nsIFile *profileDir)
 {
     NS_ENSURE_ARG(profileName);
     NS_ENSURE_ARG(profileDir);   
@@ -1476,16 +1477,26 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const PRUnichar* profileName, PRBool canD
     return rv;
 }
 
-// Get the list of all profiles
-// Populate the input param.
-// This method is written to support the core service
-// call to get the names all profiles.
-NS_IMETHODIMP nsProfile::GetProfileList(PRUnichar **profileListStr)
-{
-    NS_ENSURE_ARG_POINTER(profileListStr);
 
-    gProfileDataAccess->GetProfileList(profileListStr);
-    return NS_OK;
+NS_IMETHODIMP nsProfile::GetProfileList(PRUint32 *length, PRUnichar ***profileNames)
+{
+    NS_ENSURE_ARG_POINTER(length);
+    *length = 0;
+    NS_ENSURE_ARG_POINTER(profileNames);
+    *profileNames = nsnull;
+    
+    return gProfileDataAccess->GetProfileList(nsIProfileInternal::LIST_ONLY_NEW, length, profileNames);
+}
+ 
+
+NS_IMETHODIMP nsProfile::GetProfileListX(PRUint32 whichKind, PRUint32 *length, PRUnichar ***profileNames)
+{
+    NS_ENSURE_ARG_POINTER(length);
+    *length = 0;
+    NS_ENSURE_ARG_POINTER(profileNames);
+    *profileNames = nsnull;
+    
+    return gProfileDataAccess->GetProfileList(whichKind, length, profileNames);
 }
 
 
@@ -1532,7 +1543,7 @@ NS_IMETHODIMP nsProfile::StartApprunner(const PRUnichar* profileName)
     return rv;
 }
 
-NS_IMETHODIMP nsProfile::LoadNewProfilePrefs()
+nsresult nsProfile::LoadNewProfilePrefs()
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);

@@ -30,6 +30,7 @@ MODULE		= profile
 
 XPIDLSRCS	= \
                   nsIProfile.idl \
+                  nsIProfileInternal.idl \
                   nsIProfileStartupListener.idl \
                   $(NULL)
 

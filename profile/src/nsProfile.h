@@ -21,6 +21,7 @@
  */
 
 #include "nsIProfile.h"
+#include "nsIProfileInternal.h"
 #include "nsIProfileStartupListener.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
@@ -57,11 +58,12 @@
 #define REGISTRY_VERSION_STRING	  "Version"
 #define REGISTRY_VERSION_1_0      "1.0"		
 
-class nsProfile: public nsIProfile,
+class nsProfile: public nsIProfileInternal,
                  public nsIDirectoryServiceProvider 
 {
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROFILE
+    NS_DECL_NSIPROFILEINTERNAL
     NS_DECL_NSIDIRECTORYSERVICEPROVIDER
 
 private:
@@ -73,6 +75,8 @@ private:
 	                         nsIFile *newProfDir,
 								const char *fileName);
 	nsresult EnsureProfileFileExists(nsIFile *aFile);
+	nsresult LoadNewProfilePrefs();
+    nsresult SetProfileDir(const PRUnichar *profileName, nsIFile *profileDir);
 								
 	nsresult CloneProfileDirectorySpec(nsILocalFile **aLocalFile);
     nsresult AddLevelOfIndirection(nsIFile *aDir);
