@@ -1764,8 +1764,6 @@ NS_IMETHODIMP nsDocShell::Destroy()
       mScriptContext = nsnull;
       }
 
-   mScriptGlobal = nsnull;
-   mScriptContext = nsnull;
    mSessionHistory = nsnull;
    SetTreeOwner(nsnull);
 
@@ -3041,6 +3039,8 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
     nscolor bgcolor = NS_RGBA(0, 0, 0, 0);
     PRBool bgSet = PR_FALSE;
 
+    // Ensure that the content viewer is destroyed *after* the GC - bug 71515
+    nsCOMPtr<nsIContentViewer> kungfuDeathGrip = mContentViewer;
     if (mContentViewer) {
   // Stop any activity that may be happening in the old document before
   // releasing it...
@@ -3069,7 +3069,8 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
         mContentViewer = nsnull;
     }
 
-   // End copying block (Don't hold content/document viewer ref beyond here!!)
+   // End copying block (Don't mess with the old content/document viewer
+   // beyond here!!)
 
    // See the book I wrote above regarding why the focus controller is 
    // being used here.  -- hyatt
