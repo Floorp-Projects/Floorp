@@ -67,7 +67,7 @@ nsInternetCiter::GetCiteString(const nsString& aInString, nsString& aOutString)
   PRUnichar newline ('\n');
   PRInt32 i = 0;
   PRInt32 length = aInString.Length();
-  aOutString = "\n\n";
+  aOutString = "";
   PRUnichar uch = newline;
 
   // Loop over the string:
