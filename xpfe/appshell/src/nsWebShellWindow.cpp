@@ -79,7 +79,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "prlock.h"
 
 #include "nsIDOMXULDocument.h"
-#include "nsIDOMXULCommandDispatcher.h"
+
+#include "nsIFocusController.h"
 
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
@@ -532,20 +533,17 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         nsCOMPtr<nsIDOMDocument> domDocument;
         nsCOMPtr<nsIDOMWindowInternal> domWindow;
         ((nsWebShellWindow *)data)->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
-        domWindow->GetDocument(getter_AddRefs(domDocument));
-        nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(domDocument);
-        if (xulDoc) {
-          nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
-          xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
-          if (commandDispatcher) {
-            nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
-            commandDispatcher->GetFocusedWindow(getter_AddRefs(focusedWindow));
-            if (focusedWindow) {
-              commandDispatcher->SetSuppressFocus(PR_TRUE);
-              domWindow->Focus(); // This sets focus, but we'll ignore it.  
-                                  // A subsequent activate will cause us to stop suppressing.
-              break;
-            }
+        nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(domWindow));
+        nsCOMPtr<nsIFocusController> focusController;
+        piWin->GetRootFocusController(getter_AddRefs(focusController));
+        if (focusController) {
+          nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
+          focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
+          if (focusedWindow) {
+            focusController->SetSuppressFocus(PR_TRUE);
+            domWindow->Focus(); // This sets focus, but we'll ignore it.  
+                                // A subsequent activate will cause us to stop suppressing.
+            break;
           }
         }
 
