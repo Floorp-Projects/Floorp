@@ -208,20 +208,3 @@ NS_FFRECountHyphens (nsACString &aFFREName)
     }
     return h;
 }
-
-PRBool
-NS_IsASCIIFontName(const nsString& aName)
-{
-    PRUint32 len = aName.Length();
-    const PRUnichar* str = aName.get();
-    for (PRUint32 i = 0; i < len; i++) {
-        /*
-         * X font names are printable ASCII, ignore others (for now)
-         */
-        if ((str[i] < 0x20) || (str[i] > 0x7E)) {
-            return PR_FALSE;
-        }
-    }
-
-    return PR_TRUE;
-}

@@ -801,12 +801,15 @@ nsFontPSXft::CSSFontEnumCallback(const nsString& aFamily, PRBool aIsGeneric,
 {
     fontPSInfo *fpi = (fontPSInfo *)aFpi;
 
-    // make sure it's an ascii name, if not then return and continue
-    // enumerating
-    if (!NS_IsASCIIFontName(aFamily))
-        return PR_TRUE;
 
-    NS_LossyConvertUTF16toASCII name(aFamily);
+    // fontconfig always returns family names in UTF-8 so that we
+    // should do the same here.
+    NS_ConvertUTF16toUTF8 name(aFamily);
+
+    // The newest fontconfig does the full Unicode case folding so that 
+    // we're being lazy here by calling |ToLowerCase| after converting
+    // to UTF-8  assuming that in virtually all cases, we just have to
+    // fold [A-Z].  (bug 223653). 
     ToLowerCase(name);
     fpi->mFontList.AppendCString(name);
     fpi->mFontIsGeneric.AppendElement((void *)aIsGeneric);
