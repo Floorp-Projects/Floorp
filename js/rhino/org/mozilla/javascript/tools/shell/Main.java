@@ -262,6 +262,7 @@ public class Main {
                     in.close();
                     in = new FileReader(filename);
                 }
+                filename = new java.io.File(filename).getCanonicalPath();
             }
             catch (FileNotFoundException ex) {
                 Context.reportError(ToolErrorReporter.getMessage(
