@@ -60,14 +60,14 @@ insert into components (value, program, initialowner, initialqacontact) values (
 insert into components (value, program, initialowner, initialqacontact) values ("LDAP Tools", "Directory", "chuckb@netscape.com", "");
 
 
-insert into components (value, program, initialowner, initialqacontact) values ("Networking", "MailNews", "mscott@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Database", "MailNews", "davidmc@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("MIME", "MailNews", "rhp@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Security", "MailNews", "jefft@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Composition", "MailNews", "ducarroz@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Address Book", "MailNews", "putterman@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Front End", "MailNews", "warren@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Back End", "MailNews", "phil@netscape.com", "");
+insert into components (value, program, initialowner, initialqacontact) values ("Networking", "MailNews", "mscott@netscape.com", "lchiang@netscape.com");
+insert into components (value, program, initialowner, initialqacontact) values ("Database", "MailNews", "davidmc@netscape.com", "lchiang@netscape.com");
+insert into components (value, program, initialowner, initialqacontact) values ("MIME", "MailNews", "rhp@netscape.com", "lchiang@netscape.com");
+insert into components (value, program, initialowner, initialqacontact) values ("Security", "MailNews", "jefft@netscape.com", "lchiang@netscape.com");
+insert into components (value, program, initialowner, initialqacontact) values ("Composition", "MailNews", "ducarroz@netscape.com", "lchiang@netscape.com");
+insert into components (value, program, initialowner, initialqacontact) values ("Address Book", "MailNews", "putterman@netscape.com", "lchiang@netscape.com");
+insert into components (value, program, initialowner, initialqacontact) values ("Front End", "MailNews", "phil@netscape.com", "lchiang@netscape.com");
+insert into components (value, program, initialowner, initialqacontact) values ("Back End", "MailNews", "phil@netscape.com", "lchiang@netscape.com");
 insert into components (value, program, initialowner, initialqacontact) values ("Internationalization", "MailNews", "nhotta@netscape.com", "momoi@netscape.com");
 insert into components (value, program, initialowner, initialqacontact) values ("Localization", "MailNews", "rchen@netscape.com", "momoi@netscape.com");
 
