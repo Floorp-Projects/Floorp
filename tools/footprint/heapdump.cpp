@@ -52,8 +52,16 @@ BOOL IsMozilla(const char *title)
 {
     if (!title || !*title)
         return FALSE;
-    // Skip to where the <space>-<space>Mozilla exists
-    return strstr(title, " - Mozilla") ? TRUE : FALSE;
+    // Title containing " - Mozilla" is a mozilla window
+    if (strstr(title, " - Mozilla"))
+      return TRUE;
+
+    // Title containing "Mozilla {" is a mozilla window
+    // This form happens when there is no title
+    if (strstr(title, "Mozilla {"))
+      return TRUE;
+
+    return FALSE;
 }
 
 BOOL IsNetscape(const char *title)
@@ -77,8 +85,9 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
     GetClassName(hwnd, buf, sizeof(buf)-1);
     if (strcmp(buf, kMozAppClassName))
         return TRUE;
-    
+
     GetWindowText(hwnd, buf, sizeof(buf)-1);
+
     if (IsMozilla(buf)) {
         // Yeah. Search ends.
         *pwnd = hwnd;
