@@ -279,7 +279,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
     gtk_selection_data_set(selection_data,
                            GDK_SELECTION_TYPE_STRING,
                            8, 
-                           clipboardData,
+                           (unsigned char *)clipboardData,
                            dataLength);
     // the format arg, "8", indicates string data with no endianness
     
