@@ -148,6 +148,7 @@ public:
   virtual void SetMode(nsFormRenderingMode aMode) { mRenderingMode = aMode; }
 
   static nsString* gGET;
+  static nsString* gPOST;
   static nsString* gMULTIPART;
 
 
@@ -181,6 +182,7 @@ protected:
 // CLASS nsForm
 
 nsString* nsForm::gGET       = new nsString("get");
+nsString* nsForm::gPOST      = new nsString("post");
 nsString* nsForm::gMULTIPART = new nsString("multipart/form-data");
 
 // Note: operator new zeros our memory
@@ -305,7 +307,8 @@ void nsForm::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame,
   PRBool isURLEncoded = (enctype.EqualsIgnoreCase(*gMULTIPART)) ? PR_FALSE : PR_TRUE;
 
   // for enctype=multipart/form-data, force it to be post
-  PRBool isPost = (method.EqualsIgnoreCase(*gGET) && isURLEncoded) ? PR_FALSE : PR_TRUE;
+  // if method is "" (not specified) use "get" as default
+  PRBool isPost = (!method.EqualsIgnoreCase(*gPOST) && isURLEncoded) ? PR_FALSE : PR_TRUE;
 
   if (isURLEncoded) {
     ProcessAsURLEncoded(isPost, aSubmitter, data);
