@@ -938,12 +938,12 @@ nsComponentManagerImpl::GetInterface(const nsIID & uuid, void **result)
 
 AutoRegEntry::AutoRegEntry(const char* name, PRInt64* modDate)
 {
-    mName = strdup(name);
+    mName = PL_strdup(name);
     mModDate = *modDate;
 }
 AutoRegEntry::~AutoRegEntry()
 {
-    if(mName) free(mName);
+    if(mName) PL_strfree(mName);
 }
 
 PRBool 
@@ -1168,7 +1168,7 @@ nsComponentManagerImpl::ReadPersistentRegistry()
         }
 
         if (!contractIDTableEntry->mContractID)
-            contractIDTableEntry->mContractID = strdup(values[0]);
+            contractIDTableEntry->mContractID = PL_strdup(values[0]);
 
         contractIDTableEntry->mFactoryEntry = cidEntry;
     }
@@ -2380,7 +2380,7 @@ nsComponentManagerImpl::RegistryLocationForSpec(nsIFile *aSpec,
         return NS_ERROR_NOT_INITIALIZED;
 
     if (!aSpec) {
-        *aRegistryName = strdup("");
+        *aRegistryName = PL_strdup("");
         return NS_OK;
     }
 
