@@ -701,7 +701,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     {
       nsIDOMNode *newRowNode=nsnull;
       newRow->QueryInterface(kIDOMNodeIID, (void **)&newRowNode); // caller's addref
-      if ((0<=aIndex) && (rowCount<=aIndex)) // the index is greater than the number of rows, so just append
+      if ((0<=aIndex) && (PRInt32(rowCount)<=aIndex)) // the index is greater than the number of rows, so just append
         rv = parent->AppendChild(newRowNode, (nsIDOMNode **)aValue);
       else  // insert the new row before the reference row we found above
         rv = parent->InsertBefore(newRowNode, refRow, (nsIDOMNode **)aValue);

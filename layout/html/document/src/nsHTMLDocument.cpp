@@ -207,8 +207,7 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
                                   nsIStreamListener **aDocListener,
                                   const char* aCommand)
 {
-  nsresult rv = nsDocument::StartDocumentLoad(aURL, aContainer,
-                                              aDocListener);
+  nsresult rv = nsDocument::StartDocLoad(aURL, aContainer, aDocListener);
   if (NS_FAILED(rv)) {
     return rv;
   }

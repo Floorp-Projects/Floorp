@@ -58,15 +58,12 @@ class nsDocument : public nsIDocument,
                    public nsIDOMNSDocument,
                    public nsIScriptObjectOwner, 
                    public nsIDOMEventCapturer, 
-                   public nsIJSScriptObject {
+                   public nsIJSScriptObject
+{
 public:
   NS_DECL_ISUPPORTS
 
   virtual nsIArena* GetArena();
-
-  NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
-                               nsIContentViewerContainer* aContainer,
-                               nsIStreamListener **aDocListener);
 
   /**
    * Return the title of the document. May return null.
@@ -296,6 +293,11 @@ protected:
                           const nsIContent* aTest2) const;
 
 protected:
+
+  virtual nsresult StartDocLoad(nsIURL *aUrl, 
+                                nsIContentViewerContainer* aContainer,
+                                nsIStreamListener **aDocListener);
+
   virtual void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);  // subclass hook
 
   nsDocument();

@@ -20,6 +20,7 @@
 #define nsGenericHTMLElement_h___
 
 #include "nsGenericElement.h"
+#include "nsHTMLParts.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIContent.h"
 #include "nsHTMLValue.h"

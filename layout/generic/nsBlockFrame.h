@@ -131,10 +131,10 @@ protected:
                           nsIFrame* aNewFrame,
                           nsIFrame* aPrevSibling);
 
-  nsresult RemoveFrame(nsBlockReflowState& aState,
-                       nsBaseIBFrame* aParentFrame,
-                       nsIFrame* aDeletedFrame,
-                       nsIFrame* aPrevSibling);
+  nsresult DoRemoveFrame(nsBlockReflowState& aState,
+                         nsBaseIBFrame* aParentFrame,
+                         nsIFrame* aDeletedFrame,
+                         nsIFrame* aPrevSibling);
 
   virtual nsresult PrepareInitialReflow(nsBlockReflowState& aState);
 
@@ -361,7 +361,7 @@ protected:
 
   void TakeRunInFrames(nsBlockFrame* aRunInFrame);
 
-  nsresult FindTextRuns(nsBlockReflowState& aState);
+  nsresult ComputeTextRuns(nsBlockReflowState& aState);
 
   void BuildFloaterList();
 

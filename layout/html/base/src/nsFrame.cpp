@@ -1860,7 +1860,7 @@ void nsFrame::NewContentIsBefore(nsIPresContext& aPresContext,
  /********************************************************
 * Refreshes each content's frame
 *********************************************************/
-void RefreshAllContentFrames(nsIFrame * aFrame, nsIContent * aContent)
+static void RefreshAllContentFrames(nsIFrame * aFrame, nsIContent * aContent)
 {
   nsIContent* frameContent;
   aFrame->GetContent(frameContent);
@@ -1879,7 +1879,7 @@ void RefreshAllContentFrames(nsIFrame * aFrame, nsIContent * aContent)
 /********************************************************
 * Refreshes each content's frame
 *********************************************************/
-void RefreshContentFrames(nsIPresContext& aPresContext,
+static void RefreshContentFrames(nsIPresContext& aPresContext,
                           nsIContent * aStartContent,
                           nsIContent * aEndContent)
 {
@@ -2082,7 +2082,7 @@ void ForceDrawFrame(nsFrame * aFrame)//, PRBool)
 //----------------------------
 //
 //----------------------------
-void resetContentTrackers() {
+static void resetContentTrackers() {
   PRInt32 i;
   for (i=0;i<fTrackerRemoveListMax;i++) {
     NS_RELEASE(fTrackerContentArrayRemoveList[i]);
@@ -2097,7 +2097,7 @@ void resetContentTrackers() {
 //----------------------------
 //
 //----------------------------
-void RefreshFromContentTrackers(nsIPresContext& aPresContext) {
+static void RefreshFromContentTrackers(nsIPresContext& aPresContext) {
 
   PRInt32 i;
   nsIPresShell * shell = aPresContext.GetShell();
@@ -2120,7 +2120,7 @@ void RefreshFromContentTrackers(nsIPresContext& aPresContext) {
 //----------------------------
 //
 //----------------------------
-void addRangeToSelectionTrackers(nsIContent * aStartContent, nsIContent * aEndContent, PRUint32 aType) 
+static void addRangeToSelectionTrackers(nsIContent * aStartContent, nsIContent * aEndContent, PRUint32 aType) 
 {
   if (aStartContent == nsnull || aEndContent == nsnull) {
     return;
