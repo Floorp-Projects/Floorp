@@ -25,6 +25,7 @@
 #include "nsIPresContext.h"
 #include "nsIViewManager.h"
 #include "nsHTMLTokens.h" 
+#include "nsHTMLEntities.h" 
 #include "nsCRT.h"
 #include "prtime.h"
 #include "prlog.h"
@@ -201,7 +202,7 @@ protected:
                             const nsIParserNode& aNode);
   //----------------------------------------------------------------------
 
-  void FlushText();
+  PRBool FlushText();
 
   nsresult AddText(const nsString& aText, nsIHTMLContent** aContent);
 
@@ -480,10 +481,13 @@ NS_ASSERTION(nsnull == mBody, "yikes");
 NS_IMETHODIMP
 HTMLContentSink::CloseBody(const nsIParserNode& aNode)
 {
-  FlushText();
-
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::CloseBody", aNode);
+
+  if (FlushText()) {
+    // Trigger a reflow for the flushed text
+    mDocument->ContentAppended(mBody);
+  }
 
   NS_ASSERTION(mStackPos > 0, "bad bad");
   mNodeStack[--mStackPos] = eHTMLTag_unknown;
@@ -1489,7 +1493,7 @@ HTMLContentSink::AddText(const nsString& aText, nsIHTMLContent** aContent)
   return rv;
 }
 
-void
+PRBool
 HTMLContentSink::FlushText()
 {
   if (nsnull != mCurrentText) {
@@ -1498,7 +1502,9 @@ HTMLContentSink::FlushText()
     mCurrentText->QueryInterface(kIContentIID, (void**) &content);
     content->SetDocument(mDocument);
     NS_RELEASE(mCurrentText);
+    return PR_TRUE;
   }
+  return PR_FALSE;
 }
 
 void HTMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
