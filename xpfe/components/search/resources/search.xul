@@ -33,7 +33,7 @@
 			<spring align="horizontal" flex="100%" />
 		</box>
 		
-		<html:iframe style="height: 50%; width: 100%;" flex="100%" id="content" src="about:blank" />
-		<html:iframe style="height: 50%; width: 100%;" flex="100%" id="results" src="about:blank" />
+		<html:iframe style="height: 40%; width: 100%;" flex="100%" id="content" src="about:blank" />
+		<html:iframe style="height: 60%; width: 100%;" flex="100%" id="results" src="about:blank" />
 	</box>
 </window>

@@ -1,8 +1,38 @@
 
+var gEditorShell = null;
+
+function doLoad()
+{
+	dump("doLoad() entered.\n");
+
+	var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
+	if (editorShell)	editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+	if (editorShell)
+	{
+		window.editorShell = editorShell;
+
+		editorShell.Init();
+		dump("init\n");
+//		editorShell.SetWebShellWindow(window);
+//		dump("SetWebShellWindow\n");
+//		editorShell.SetToolbarWindow(window)
+//		dump("SetToolbarWindow\n");
+		editorShell.SetEditorType("html");
+		dump("SetEditorType\n");
+		editorShell.SetContentWindow(window.content);
+
+		// Get url for editor content and load it.
+		// the editor gets instantiated by the editor shell when the URL has finished loading.
+		editorShell.LoadUrl("about:blank");
+		
+		gEditorShell = editorShell;
+		dump("doLoad() succeeded.\n");
+	}
+	else dump("doLoad(): problem loading component://netscape/editor/editorshell \n");
+}
+
 function doClick(node)
 {
-	htmlText = "";
-
 	var theID = node.getAttribute("id");
 	if (!theID)	return(false);
 
@@ -22,20 +52,20 @@ function doClick(node)
 				if (target)	target = target.Value;
 				if (target)
 				{
-					htmlText = target;
-
-					var htmlArea = window.content;
-					if (htmlArea)
+					if (gEditorShell == null)
 					{
-						htmlArea.open();
+						doLoad();
+					}
+					if (gEditorShell)
+					{
+						var text = target;
 
-//						htmlArea.write("<HTML><BODY><TABLE><TR><TD>");
-//						htmlArea.write(target);
-//						htmlArea.write("</TD></TR></TABLE></BODY></HTML>\n");
-
-						htmlArea.close();
-						
-						dump("HTML\n----------\n" + target + "\n----------\n");
+						gEditorShell.SelectAll();
+						gEditorShell.DeleteSelection(2);
+//						gEditorShell.SetTextProperty("font", "size", "-2");
+						gEditorShell.InsertSource(text);
+//						gEditorShell.SelectAll();
+//						gEditorShell.SetTextProperty("font", "size", "-2");
 					}
 				}
 			}
