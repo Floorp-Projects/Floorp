@@ -37,7 +37,7 @@
  *
  * key.h - public data structures and prototypes for the private key library
  *
- * $Id: keyhi.h,v 1.8 2003/02/27 01:31:04 nelsonb%netscape.com Exp $
+ * $Id: keyhi.h,v 1.9 2004/01/22 02:19:42 nelsonb%netscape.com Exp $
  */
 
 #ifndef _KEYHI_H_
@@ -282,6 +282,10 @@ SECKEY_AddPublicKeyToListTail( SECKEYPublicKeyList *list,
 #define PUBKEY_LIST_HEAD(l) ((SECKEYPublicKeyListNode*)PR_LIST_HEAD(&l->list))
 #define PUBKEY_LIST_NEXT(n) ((SECKEYPublicKeyListNode *)n->links.next)
 #define PUBKEY_LIST_END(n,l) (((void *)n) == ((void *)&l->list))
+
+#ifdef NSS_ENABLE_ECC
+extern int SECKEY_ECParamsToKeySize(const SECItem *params);
+#endif /* NSS_ENABLE_ECC */
 
 SEC_END_PROTOS
 
