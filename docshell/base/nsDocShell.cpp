@@ -4540,12 +4540,12 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
     
     nsXPIDLCString contractId;
     rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", aContentType, getter_Copies(contractId));
-    if (NS_FAILED(rv))
-      return rv;
 
     // Create an instance of the document-loader-factory
-    nsCOMPtr<nsIDocumentLoaderFactory>
-        docLoaderFactory(do_GetService(contractId.get()));
+    nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory;
+    if (NS_SUCCEEDED(rv))
+        docLoaderFactory = do_GetService(contractId.get());
+
     if (!docLoaderFactory) {
         // try again after loading plugins
         nsCOMPtr<nsIPluginManager> pluginManager = do_QueryInterface(pluginHost);
