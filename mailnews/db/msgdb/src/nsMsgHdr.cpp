@@ -398,18 +398,31 @@ NS_IMETHODIMP nsMsgHdr::GetRecipientsIsNewsgroup(PRBool *rfc822)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addresses, PRUint32 numAddresses)
+nsresult nsMsgHdr::BuildRecipientsFromArray(const char *names, const char *addresses, PRUint32 numAddresses, nsCAutoString& allRecipients)
 {
 	nsresult ret;
 	const char *curName = names;
 	const char *curAddress = addresses;
-	nsCAutoString	allRecipients;
+	nsIMsgHeaderParser *headerParser = m_mdb->GetHeaderParser();
 
-	for (PRUint32 i = 0; i < numAddresses; i++)
+	for (PRUint32 i = 0; i < numAddresses; i++, curName += strlen(curName) + 1, curAddress += strlen(curAddress) + 1)
 	{
 		if (i > 0)
 			allRecipients += ", ";
 
+		if (headerParser)
+		{
+		   char * fullAddress;
+		   ret = headerParser->MakeFullAddress(nsnull, curName, curAddress, &fullAddress);
+		   if (NS_SUCCEEDED(ret) && fullAddress)
+		   {
+		      allRecipients += fullAddress;
+		      nsCRT::free(fullAddress);
+		      continue;
+		   }
+		}
+
+        // Just in case the parser failed...
 		if (strlen(curName))
 		{
 			allRecipients += curName;
@@ -422,9 +435,20 @@ NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addres
 			allRecipients += curAddress;
 			allRecipients += '>';
 		}
-		curName += strlen(curName) + 1;
-		curAddress += strlen(curAddress) + 1;
 	}
+	
+	return ret;
+}
+
+NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addresses, PRUint32 numAddresses)
+{
+	nsresult ret;
+	nsCAutoString	allRecipients;
+	
+    ret = BuildRecipientsFromArray(names, addresses, numAddresses, allRecipients);
+    if (NS_FAILED(ret))
+        return ret;
+
 	ret = SetRecipients(allRecipients);
     SetRecipientsIsNewsgroup(PR_TRUE);
 	return ret;
@@ -439,33 +463,12 @@ NS_IMETHODIMP nsMsgHdr::SetCcList(const char *ccList)
 NS_IMETHODIMP nsMsgHdr::SetCCListArray(const char *names, const char *addresses, PRUint32 numAddresses)
 {
 	nsresult ret;
-	const char *curName = names;
-	const char *curAddress = addresses;
 	nsCAutoString	allRecipients;
+	
+    ret = BuildRecipientsFromArray(names, addresses, numAddresses, allRecipients);
+    if (NS_FAILED(ret))
+        return ret;
 
-	for (PRUint32 i = 0; i < numAddresses; i++)
-	{
-		if (i > 0)
-			allRecipients += ", ";
-
-		if (strlen(curName))
-		{
-			allRecipients += curName;
-			allRecipients += ' ';
-		}
-
-		if (strlen(curAddress))
-		{
-			if (strlen(curName))
-				allRecipients += '<';
-			else
-				allRecipients += "<";
-			allRecipients += curAddress;
-			allRecipients += '>';
-		}
-		curName += strlen(curName) + 1;
-		curAddress += strlen(curAddress) + 1;
-	}
 	ret = SetCcList(allRecipients);
 	return ret;
 }
