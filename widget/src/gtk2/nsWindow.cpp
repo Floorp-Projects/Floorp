@@ -1969,8 +1969,8 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
                aAppShell, aToolkit, aInitData);
 
     // Do we need to listen for resizes?
-    PRBool listenForResizes;
-    if (aNativeParent || aInitData->mListenForResizes)
+    PRBool listenForResizes = PR_FALSE;;
+    if (aNativeParent || (aInitData && aInitData->mListenForResizes))
         listenForResizes = PR_TRUE;
 
     // and do our common creation
