@@ -296,6 +296,8 @@ nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult, n
   nsCOMPtr<nsIDocument> document;
   aContent->GetDocument(*getter_AddRefs(document));
   nsCOMPtr<nsIBindingManager> bindingManager;
+  NS_ASSERTION(document, "no document");
+  if (!document) return NS_ERROR_FAILURE;
   document->GetBindingManager(getter_AddRefs(bindingManager));
   
   nsCOMPtr<nsIXBLBinding> binding;
