@@ -1041,6 +1041,15 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   aMetrics.mOverflowArea.SetRect(0, 0, aMetrics.width, aMetrics.height);
   FinishAndStoreOverflow(&aMetrics);
 
+  // Now that that's all done, check whether we're resizing... if we are,
+  // invalidate our rect.
+  // XXXbz we really only want to do this when reflow is completely done, but
+  // we have no way to detect when mRect changes (since SetRect is non-virtual,
+  // so this is the best we can do).
+  if (mRect.width != aMetrics.width || mRect.height != aMetrics.height) {
+    Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
+  }
+
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("exit nsImageFrame::Reflow: size=%d,%d",
                   aMetrics.width, aMetrics.height));
