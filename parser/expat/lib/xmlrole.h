@@ -91,7 +91,7 @@ typedef struct prolog_state {
 
 void XMLTOKAPI XmlPrologStateInit(PROLOG_STATE *);
 
-//#define EXTERNAL_ENTITY_SUPPORT
+/* #define EXTERNAL_ENTITY_SUPPORT */
 #ifdef EXTERNAL_ENTITY_SUPPORT
 void XMLTOKAPI XmlPrologStateHack(PROLOG_STATE *);
 #endif
