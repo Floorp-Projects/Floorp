@@ -953,8 +953,11 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
   // First things first, we are now going to see if this is an HTML
   // Doc and if it is, we need to see if we can determine the charset 
   // for this part by sniffing the HTML file.
+  // This is needed only when the charset is not set already.
+  // (e.g. a charset may be specified in HTTP header)
   //
-  if ( (m_type) &&  (*m_type) ) 
+  if ( (m_type) &&  (*m_type) &&
+       (!m_charset || !(*m_charset)) ) 
   {
     if (PL_strcasecmp(m_type, TEXT_HTML) == 0)
     {

@@ -532,6 +532,16 @@ nsMsgI18NParseMetaCharset(nsFileSpec* fileSpec)
       { 
         PL_strncpy(charset, token, sizeof(charset));
         charset[sizeof(charset)-1] = '\0';
+
+        // this function cannot parse a file if it is really
+        // encoded by one of the following charsets
+        // so we can say that the charset label must be incorrect for
+        // the .html if we actually see those charsets parsed
+        // and we should ignore them
+        if (!nsCRT::strncasecmp("UTF-16", charset, sizeof("UTF-16")-1) || 
+            !nsCRT::strncasecmp("UTF-32", charset, sizeof("UTF-32")-1))
+          charset[0] = '\0';
+
         break;
       } 
     } 
