@@ -187,8 +187,9 @@ nsWebShellWindow::nsWebShellWindow()
   mCallbacks = nsnull;
   mContinueModalLoop = PR_FALSE;
   mChromeInitialized = PR_FALSE;
-	mLockedUntilChromeLoad = PR_FALSE;
+  mLockedUntilChromeLoad = PR_FALSE;
   mContentShells = nsnull;
+  mChromeMask = NS_CHROME_ALL_CHROME;
 }
 
 
@@ -326,8 +327,8 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
   mWebShell->SetObserver((nsIStreamObserver*)anObserver);
   mWebShell->SetDocLoaderObserver(this);
 
-	// The outermost web shell is always considered to be chrome.
-	mWebShell->SetWebShellType(nsWebShellChrome);
+  // The outermost web shell is always considered to be chrome.
+  mWebShell->SetWebShellType(nsWebShellChrome);
 
   /*
    * XXX:  How should preferences be supplied to the nsWebShellWindow?
@@ -365,9 +366,9 @@ NS_METHOD
 nsWebShellWindow::Close()
 {
   ExitModalLoop();
-  if ( mWebShell ) {
+  if (mWebShell) {
     mWebShell->Destroy();
-    NS_IF_RELEASE(mWebShell);
+    NS_RELEASE(mWebShell);
   }
 
   NS_IF_RELEASE(mWindow);
@@ -446,7 +447,7 @@ NS_IMETHODIMP
 nsWebShellWindow::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 {
   // If loading a new root .xul document, then redo chrome.
-  if ( aShell == mWebShell ) {
+  if (aShell == mWebShell) {
       mChromeInitialized = PR_FALSE;
   }
   return NS_OK;
@@ -1125,10 +1126,15 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
   if ((aChromeMask & NS_CHROME_OPEN_AS_CHROME) != 0) {
     // Just do a nice normal create of a web shell and
     // return it immediately.  
-    appShell->CreateTopLevelWindow(nsnull, nsnull, PR_FALSE, *getter_AddRefs(newWindow),
+    rv = appShell->CreateTopLevelWindow(nsnull, nsnull, PR_FALSE, *getter_AddRefs(newWindow),
                                    nsnull, nsnull, 615, 480);
-    newWindow->GetWebShell(aNewWebShell); // GetWebShell does the addref.
-    return NS_OK;
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIBrowserWindow> browser(do_QueryInterface(newWindow));
+      if (browser)
+        browser->SetChrome(aChromeMask);
+      newWindow->GetWebShell(aNewWebShell); // GetWebShell does the addref.
+    }
+    return rv;
   }
 
 #ifdef XP_PC // XXX: Won't work on any other platforms yet. Sigh.
@@ -1148,53 +1154,63 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
 
   nsCOMPtr<nsIURL> urlObj;
   rv = NS_NewURL(getter_AddRefs(urlObj), "chrome://navigator/content/");
-  if (NS_FAILED(rv))
-    return rv;
 
-  appShell->CreateTopLevelWindow(nsnull, urlObj, PR_FALSE, *getter_AddRefs(newWindow),
-                                 nsnull, nsnull, 615, 480);
+  if (NS_SUCCEEDED(rv))
+    rv = appShell->CreateTopLevelWindow(nsnull, urlObj, PR_FALSE, *getter_AddRefs(newWindow),
+                                   nsnull, nsnull, 615, 480);
 
-  // Spin into the modal loop.
   nsIAppShell *subshell;
-  rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID, (void**)&subshell);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIBrowserWindow> browser(do_QueryInterface(newWindow));
+    if (browser)
+      browser->SetChrome(aChromeMask);
 
-  subshell->Create(0, nsnull);
-  subshell->Spinup(); // Spin up 
-
-  // Specify that we want the window to remain locked until the chrome has loaded.
-  newWindow->LockUntilChromeLoad();
-
-  PRBool locked = PR_FALSE;
-  newWindow->GetLockedState(locked);
-  while (NS_SUCCEEDED(rv) && locked) {
-    void      *data;
-    PRBool    isRealEvent;
-    
-    rv = subshell->GetNativeEvent(isRealEvent, data);
-    subshell->DispatchNativeEvent(isRealEvent, data);
-
-    newWindow->GetLockedState(locked);
+    // Spin into the modal loop.
+    rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID, (void**)&subshell);
   }
 
-  // Get rid of the nested UI thread queue used for netlib, and release the event queue service.
-  eQueueService->PopThreadEventQueue();
+  if (NS_SUCCEEDED(rv)) {
 
-  subshell->Spindown();
-  NS_RELEASE(subshell);
+    subshell->Create(0, nsnull);
+    subshell->Spinup(); // Spin up 
+
+    // Specify that we want the window to remain locked until the chrome has loaded.
+    newWindow->LockUntilChromeLoad();
+
+    PRBool locked = PR_FALSE;
+    nsresult looprv = NS_OK;
+    newWindow->GetLockedState(locked);
+    while (NS_SUCCEEDED(looprv) && locked) {
+      void      *data;
+      PRBool    isRealEvent;
+    
+      looprv = subshell->GetNativeEvent(isRealEvent, data);
+      subshell->DispatchNativeEvent(isRealEvent, data);
+
+      newWindow->GetLockedState(locked);
+    }
+
+    // Get rid of the nested UI thread queue used for netlib, and release the event queue service.
+    eQueueService->PopThreadEventQueue();
+
+    subshell->Spindown();
+    NS_RELEASE(subshell);
+  }
 
   // We're out of the nested loop.
   // During the layout of the new window, all content shells were located and placed
   // into the new window's content shell array.  Locate the "content area" content
   // shell.
-  if (NS_FAILED(rv = newWindow->GetContentShellById("content", &aNewWebShell))) {
-    NS_ERROR("Unable to obtain a browser content shell.");
-    return rv;
+  if (NS_SUCCEEDED(rv)) {
+    rv = newWindow->GetContentShellById("content", &aNewWebShell);
+    if (NS_FAILED(rv)) {
+      NS_ERROR("Unable to obtain a browser content shell.");
+      return rv;
+    }
   }
 #endif // XP_PC
 
-  return NS_OK;
+  return rv;
 }
 
 
@@ -1344,8 +1360,8 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
   mChromeInitialized = PR_TRUE;
 
-	if (mLockedUntilChromeLoad) {
-		mLockedUntilChromeLoad = PR_FALSE;
+  if (mLockedUntilChromeLoad) {
+    mLockedUntilChromeLoad = PR_FALSE;
   }
 
   // register as document listener
@@ -1377,12 +1393,12 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
     #ifdef XP_MAC
     LoadMenus(menubarDOMDoc, mWindow);
     // Context Menu test
-      	  nsCOMPtr<nsIDOMElement> element;
-		  menubarDOMDoc->GetDocumentElement(getter_AddRefs(element));
-		  nsCOMPtr<nsIDOMNode> window(do_QueryInterface(element));
+    nsCOMPtr<nsIDOMElement> element;
+    menubarDOMDoc->GetDocumentElement(getter_AddRefs(element));
+    nsCOMPtr<nsIDOMNode> window(do_QueryInterface(element));
 
-		  int endCount = 0;
-          contextMenuTest = FindNamedDOMNode(nsAutoString("contextmenu"), window, endCount, 1);
+    int endCount = 0;
+    contextMenuTest = FindNamedDOMNode(nsAutoString("contextmenu"), window, endCount, 1);
     // End Context Menu test
     #else
     DynamicLoadMenus(menubarDOMDoc, mWindow);
@@ -1391,6 +1407,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
   SetSizeFromXUL();
   SetTitleFromXUL();
+  ShowAppropriateChrome();
 
 #if 0
   nsCOMPtr<nsIDOMDocument> toolbarDOMDoc(GetNamedDOMDoc(nsAutoString("browser.toolbar")));
@@ -1810,7 +1827,6 @@ void nsWebShellWindow::SetSizeFromXUL()
       }
     }
     mWindow->GetBounds(currentSize);
-    windowWidget->Resize(currentSize.width, specHeight, PR_TRUE);
   }
 #endif
 } // SetSizeFromXUL
@@ -1830,6 +1846,66 @@ void nsWebShellWindow::SetTitleFromXUL()
   SetTitle(windowTitle);
 } // SetTitleFromXUL
 
+
+#include "nsIDOMXULElement.h"
+// show/hide contents according to the current chrome mask
+void nsWebShellWindow::ShowAppropriateChrome()
+{
+  nsCOMPtr<nsIDOMElement>    rootElement;
+  nsCOMPtr<nsIDOMXULElement> xulRoot;
+  nsCOMPtr<nsIDOMDocument>   chromeDoc;
+  nsCOMPtr<nsIDOMWindow>     domWindow;
+
+  // get this window's document
+  if (NS_FAILED(ConvertWebShellToDOMWindow(mWebShell, getter_AddRefs(domWindow))))
+    return;
+  if (NS_FAILED(domWindow->GetDocument(getter_AddRefs(chromeDoc))))
+    return;
+  if (NS_FAILED(chromeDoc->GetDocumentElement(getter_AddRefs(rootElement))))
+    return;
+
+  // get a list of this document's elements with the chromeclass attribute specified
+  xulRoot = do_QueryInterface(rootElement);
+  if (xulRoot) { // todo (maybe) the longer, straight DOM (not RDF) version?
+    nsCOMPtr<nsIDOMNodeList> chromeNodes;
+    if (NS_SUCCEEDED(xulRoot->GetElementsByAttribute("chromeclass", "*",
+                                getter_AddRefs(chromeNodes)))) {
+      PRUint32 nodeCtr, nodeCount;
+      chromeNodes->GetLength(&nodeCount);
+      for (nodeCtr = 0; nodeCtr < nodeCount; nodeCtr++) {
+        nsCOMPtr<nsIDOMNode> domNode;
+        nsCOMPtr<nsIDOMElement> domElement;
+        chromeNodes->Item(nodeCtr, getter_AddRefs(domNode));
+        domElement = do_QueryInterface(domNode);
+        if (domElement) {
+          nsAutoString chromeClass;
+          PRBool       makeChange;
+          PRUint32     flag;
+          // show or hide the element according to its chromeclass and the chromemask
+          domElement->GetAttribute("chromeclass", chromeClass);
+          makeChange = PR_FALSE;
+          if (chromeClass == "location") {
+            makeChange = PR_TRUE;
+            flag = mChromeMask & NS_CHROME_LOCATION_BAR_ON;
+          } else if (chromeClass == "menubar") {
+            makeChange = PR_TRUE;
+            flag = mChromeMask & NS_CHROME_MENU_BAR_ON;
+          } else if (chromeClass == "status") {
+            makeChange = PR_TRUE;
+            flag = mChromeMask & NS_CHROME_STATUS_BAR_ON;
+          } else if (chromeClass == "toolbar") {
+            makeChange = PR_TRUE;
+            flag = mChromeMask & NS_CHROME_TOOL_BAR_ON;
+          }
+          if (makeChange)
+            domElement->SetAttribute("chromehidden", "");
+          else
+            domElement->RemoveAttribute("chromehidden");
+        }
+      }
+    }
+  }
+}
 
 //----------------------------------------------------------------
 //-- nsIDocumentObserver
@@ -2017,7 +2093,6 @@ NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
    nsresult rv;
    nsCOMPtr<nsIURL> urlObj;
  
-   // (temporary)
    rv = NS_NewURL(getter_AddRefs(urlObj), "chrome://navigator/content/");
    if (NS_FAILED(rv))
      return rv;
@@ -2027,6 +2102,7 @@ NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
    // a generic browser appcore here someday.
    rv = Initialize(nsnull, aAppShell, urlObj,
        nsnull, nsnull, aBounds.width, aBounds.height);
+   mChromeMask = aChromeMask;
    if (NS_SUCCEEDED(rv))
      MoveTo(aBounds.x, aBounds.y);
    return rv;
@@ -2058,20 +2134,14 @@ NS_IMETHODIMP nsWebShellWindow::GetWindowBounds(nsRect& aResult)
  
 NS_IMETHODIMP nsWebShellWindow::SetChrome(PRUint32 aNewChromeMask)
 {
-   // yeah sure. we got your chrome changes.
+   mChromeMask = aNewChromeMask;
+   ShowAppropriateChrome();
    return NS_OK;
 }
  
 NS_IMETHODIMP nsWebShellWindow::GetChrome(PRUint32& aChromeMaskResult)
 {
-   // Do our best to fake an interesting, rather inapplicable concept from the old world.
-   // We can't tell what sort of chrome features we have until we invent a standard
-   // for XUL chrome elements, and then go looking for them.  For now, take a guess...
-   aChromeMaskResult = NS_CHROME_WINDOW_BORDERS_ON | NS_CHROME_WINDOW_CLOSE_ON |
-                       NS_CHROME_WINDOW_RESIZE_ON | NS_CHROME_MENU_BAR_ON |
-                       NS_CHROME_TOOL_BAR_ON | NS_CHROME_LOCATION_BAR_ON |
-                       NS_CHROME_STATUS_BAR_ON | NS_CHROME_PERSONAL_TOOLBAR_ON |
-                       NS_CHROME_SCROLLBARS_ON | NS_CHROME_TITLEBAR_ON;
+   aChromeMaskResult = mChromeMask;
    return NS_OK;
 }
  

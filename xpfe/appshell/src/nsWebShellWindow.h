@@ -55,7 +55,7 @@ class nsVoidArray;
 
 class nsWebShellWindow : public nsIWebShellWindow,
                          public nsIWebShellContainer,
-												 public nsIBrowserWindow,
+                         public nsIBrowserWindow,
                          public nsIDocumentLoaderObserver,
                          public nsIDocumentObserver
 {
@@ -241,7 +241,7 @@ protected:
   void                     ExecuteStartupCode();
   void                     SetSizeFromXUL();
   void                     SetTitleFromXUL();
-  
+  void                     ShowAppropriateChrome();
 
   virtual ~nsWebShellWindow();
 
@@ -253,8 +253,9 @@ protected:
   nsIWebShell*            mWebShell;
   nsIXULWindowCallbacks*  mCallbacks;
   PRBool                  mContinueModalLoop;
-	PRBool									mLockedUntilChromeLoad;
+  PRBool                  mLockedUntilChromeLoad;
   PRBool                  mChromeInitialized;
+  PRUint32                mChromeMask;
 
   nsVoidArray mMenuDelegates;
 

@@ -1,6 +1,10 @@
 /** Contains style definitions for the navigator application 
  **/
 
+[chromehidden] { /* what to do if chrome requests you be invisible */
+	display: none;
+}
+
 titledbutton#print-button {
 	list-style-image:url(resource:/res/toolbar/TB_Print.gif);
 }

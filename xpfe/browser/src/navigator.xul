@@ -265,8 +265,7 @@
   <broadcaster id="Browser:Throbber" busy="false"/>
   <broadcaster id="args" value="http://www.mozilla.org/quality/smoketests/"/>
 
-
-  <menubar>
+  <menubar chromeclass="menubar">
       <menu name="&fileMenu.label;">
       <menuitem name="&browserCmd.label;" onclick="BrowserNewWindow();"/>
       	<menu name="New">
@@ -551,7 +550,7 @@
   
   <box id="outer-box" align="vertical">
    <toolbox>
-    <toolbar class="main-bar">
+    <toolbar class="main-bar" chromeclass="toolbar">
 		  <titledbutton id="back-button" align="bottom" value="&backButton.label;" onclick="BrowserBack()">	
 				  <observes element="canGoBack" attribute="disabled" onChange="BrowserSetBack()"/>			
 	      </titledbutton>
@@ -573,7 +572,7 @@
 	  
 	      <box align="vertical" flex="100%">
 		    <spring flex="100%"/>
-	  		<html:input id="urlbar" type="text" style="min-width: 100px; min-height: 25px"
+	  		<html:input id="urlbar" type="text" chromeclass="location" style="min-width: 100px; min-height: 25px"
 			  onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
 			<spring flex="100%"/>
 	      </box>
@@ -587,7 +586,7 @@
           </titledbutton>
 	</toolbar>
 
-    <toolbar class="main-bar">
+    <toolbar class="main-bar" chromeclass="toolbar">
     	<titledbutton id="home-button" align="right" value="&homeButton.label;" 
 			onclick="BrowserHome()"/>
 		<titledbutton id="netscape-button" align="right" value="&netscapeButton.label;" 
@@ -633,7 +632,7 @@
   </box>
 
   <toolbox>
-	  <toolbar id="taskbar">
+	  <toolbar id="taskbar" chromeclass="status">
 	  	  <box align="horizontal">
   	 	     <titledbutton align="left" class="popup"  value="&webButton.label;" />
   	 	     <titledbutton align="left" class="popup"  value="&mailButton.label;" />

@@ -1554,7 +1554,7 @@ GlobalWindowImpl::CalculateChromeFlags(char *aFeatures) {
   PRUint32  chromeFlags = 0;
 
   if (nsnull == aFeatures)
-    return (PRUint32)~0; // default is fully chromed (but don't copy history?)
+    return NS_CHROME_ALL_CHROME;
 
   chromeFlags |= WinHasOption(aFeatures, "toolbar") ? NS_CHROME_TOOL_BAR_ON : 0;
   chromeFlags |= WinHasOption(aFeatures, "location") ? NS_CHROME_LOCATION_BAR_ON : 0;
