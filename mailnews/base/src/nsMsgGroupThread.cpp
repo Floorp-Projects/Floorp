@@ -34,7 +34,7 @@
 #include "msgCore.h"
 #include "nsMsgGroupThread.h"
 
-NS_IMPL_ISUPPORTS1(nsMsgGroupThread, nsIMsgThread);
+NS_IMPL_ISUPPORTS1(nsMsgGroupThread, nsIMsgThread)
 
 nsMsgGroupThread::nsMsgGroupThread()
 {
