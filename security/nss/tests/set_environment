@@ -36,6 +36,8 @@ fi
 MANPATH=/usr/share/man:/usr/openwin/man:/usr/local/man
 
 RMAIL=rmail
+BEFORE_CONTEXT_GREP=""
+AFTER_CONTEXT_GREP=""
 
 export CVSROOT HOME os_name os_version os_full MANPATH
 
@@ -70,6 +72,11 @@ elif [ $os_name = "Linux" ]
 then
     PATH=/lib:/usr/lib:/bin:/sbin:/usr/bin:/usr/sbin:$PATH
     RMAIL=sendmail
+    #the gnu grep, on Linux can output 10 lines above and 3 lines below 
+    #the errormessage
+    BEFORE_CONTEXT_GREP="--before-context=10"
+    AFTER_CONTEXT_GREP="--after-context=3"
+
 elif [ $os_name = "AIX" ]
 then
     PATH=$PATH:/tools/contrib/bin:/usr/local/bin 
