@@ -1004,30 +1004,42 @@ NS_IMETHODIMP nsXULWindow::GetDOMElementById(char* aID, nsIDOMElement** aDOMElem
 NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
    PRBool aPrimary, const PRUnichar* aID)
 {
-   nsContentShellInfo* shellInfo = new nsContentShellInfo(aID, aPrimary, aContentShell);
+  nsContentShellInfo* shellInfo = nsnull;
+  nsAutoString newID(aID);
 
-   mContentShells.AppendElement((void*)shellInfo);
+  PRInt32 count = mContentShells.Count();
+  for (PRInt32 i = 0; i < count; i++) {
+    nsContentShellInfo* info = (nsContentShellInfo*)mContentShells.ElementAt(i);
+    nsAutoString srcID(info->id);
+       
+    if (info->primary == aPrimary && srcID.Equals(newID)) {
+      // We already exist. Do a replace.
+      info->child = aContentShell;
+      shellInfo = info;
+      break;
+    }
+  }
 
-   // Set the default content tree owner if one does not exist.
+  if (!shellInfo) {
+    shellInfo = new nsContentShellInfo(aID, aPrimary, aContentShell);
+    mContentShells.AppendElement((void*)shellInfo);
+  }
+    
+  // Set the default content tree owner if one does not exist.
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  aContentShell->GetTreeOwner(getter_AddRefs(treeOwner));
+  if (!treeOwner) {
+    if (aPrimary) {
+      NS_ENSURE_SUCCESS(EnsurePrimaryContentTreeOwner(), NS_ERROR_FAILURE);
+      aContentShell->SetTreeOwner(mPrimaryContentTreeOwner);
+    }
+    else {
+      NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
+      aContentShell->SetTreeOwner(mContentTreeOwner);
+    }
+  }
 
-   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-   aContentShell->GetTreeOwner(getter_AddRefs(treeOwner));
-
-   if(!treeOwner)
-      {
-      if(aPrimary)
-         {
-         NS_ENSURE_SUCCESS(EnsurePrimaryContentTreeOwner(), NS_ERROR_FAILURE);
-         aContentShell->SetTreeOwner(mPrimaryContentTreeOwner);
-         }
-      else
-         {
-         NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
-         aContentShell->SetTreeOwner(mContentTreeOwner);
-         }
-      }
-
-   return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::SizeShellTo(nsIDocShellTreeItem* aShellItem,
