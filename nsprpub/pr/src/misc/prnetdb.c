@@ -2135,6 +2135,7 @@ PR_IMPLEMENT(void *) PR_EnumerateAddrInfo(void             *iterPtr,
     if (ai) {
         /* copy sockaddr to PRNetAddr */
         memcpy(result, ai->ai_addr, ai->ai_addrlen);
+        result->raw.family = ai->ai_addr->sa_family;
         if (ai->ai_addrlen < sizeof(PRNetAddr))
             memset(((char*)result)+ai->ai_addrlen, 0, sizeof(PRNetAddr) - ai->ai_addrlen);
 
