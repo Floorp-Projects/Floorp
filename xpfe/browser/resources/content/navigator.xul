@@ -216,7 +216,7 @@ Contributor(s): ______________________________________. -->
             <menupopup>
               <menuitem class="menuitem-iconic bookmarkitem" uri="rdf:*"
                         value="rdf:http://home.netscape.com/NC-rdf#Name"
-                        oncommand="OpenBookmarkURL(event,document.getElementById('BookmarksMenu').database)" />
+                        oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" />
             </menupopup>
            </rule>
         </template>
