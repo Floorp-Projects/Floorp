@@ -73,9 +73,9 @@ public:
     virtual nsresult NS_FASTCALL operator()( const nsIID&, void** ) const;
     
 private:
-    const nsCID&	mCID;
-    nsISupports*	mOuter;
-    nsresult*		mErrorPtr;
+    const nsCID&    mCID;
+    nsISupports*    mOuter;
+    nsresult*       mErrorPtr;
 };
 
 class NS_COM nsCreateInstanceByContractID : public nsCOMPtr_helper
@@ -85,17 +85,37 @@ public:
         : mContractID(aContractID),
           mOuter(aOuter),
           mErrorPtr(aErrorPtr)
-				{
-					// nothing else to do here
-				}
+    {
+        // nothing else to do here
+    }
     
     virtual nsresult NS_FASTCALL operator()( const nsIID&, void** ) const;
     
 private:
-    const char*	  mContractID;
+    const char*   mContractID;
     nsISupports*  mOuter;
-    nsresult*	  mErrorPtr;
+    nsresult*     mErrorPtr;
 };
+
+class NS_COM nsCreateInstanceFromFactory : public nsCOMPtr_helper
+{
+public:
+    nsCreateInstanceFromFactory( nsIFactory* aFactory, nsISupports* aOuter, nsresult* aErrorPtr )
+        : mFactory(aFactory),
+          mOuter(aOuter),
+          mErrorPtr(aErrorPtr)
+    {
+        // nothing else to do here
+    }
+    
+    virtual nsresult NS_FASTCALL operator()( const nsIID&, void** ) const;
+    
+private:
+    nsIFactory*   mFactory;
+    nsISupports*  mOuter;
+    nsresult*     mErrorPtr;
+};
+
 
 inline
 const nsCreateInstanceByCID
@@ -123,6 +143,74 @@ const nsCreateInstanceByContractID
 do_CreateInstance( const char* aContractID, nsISupports* aOuter, nsresult* error = 0 )
 {
     return nsCreateInstanceByContractID(aContractID, aOuter, error);
+}
+
+inline
+const nsCreateInstanceFromFactory
+do_CreateInstance( nsIFactory* aFactory, nsresult* error = 0 )
+{
+    return nsCreateInstanceFromFactory(aFactory, 0, error);
+}
+
+inline
+const nsCreateInstanceFromFactory
+do_CreateInstance( nsIFactory* aFactory, nsISupports* aOuter, nsresult* error = 0 )
+{
+    return nsCreateInstanceFromFactory(aFactory, aOuter, error);
+}
+
+
+class NS_COM nsGetClassObjectByCID : public nsCOMPtr_helper
+{
+public:
+    nsGetClassObjectByCID( const nsCID& aCID, nsresult* aErrorPtr )
+        : mCID(aCID),
+          mErrorPtr(aErrorPtr)
+    {
+        // nothing else to do here
+    }
+    
+    virtual nsresult NS_FASTCALL operator()( const nsIID&, void** ) const;
+    
+private:
+    const nsCID&    mCID;
+    nsresult*       mErrorPtr;
+};
+
+class NS_COM nsGetClassObjectByContractID : public nsCOMPtr_helper
+{
+public:
+    nsGetClassObjectByContractID( const char* aContractID, nsresult* aErrorPtr )
+        : mContractID(aContractID),
+          mErrorPtr(aErrorPtr)
+    {
+        // nothing else to do here
+    }
+    
+    virtual nsresult NS_FASTCALL operator()( const nsIID&, void** ) const;
+    
+private:
+    const char*   mContractID;
+    nsresult*     mErrorPtr;
+};
+
+/**
+ * do_GetClassObject can be used to improve performance of callers 
+ * that call |CreateInstance| many times.  They can cache the factory
+ * and call do_CreateInstance or CallCreateInstance with the cached
+ * factory rather than having the component manager retrieve it every
+ * time.
+ */
+inline const nsGetClassObjectByCID
+do_GetClassObject( const nsCID& aCID, nsresult* error = 0 )
+{
+    return nsGetClassObjectByCID(aCID, error);
+}
+
+inline const nsGetClassObjectByContractID
+do_GetClassObject( const char* aContractID, nsresult* error = 0 )
+{
+    return nsGetClassObjectByContractID(aContractID, error);
 }
 
 // type-safe shortcuts for calling |CreateInstance|
@@ -181,6 +269,59 @@ CallCreateInstance( const char *aContractID,
     return nsComponentManager::CreateInstance(aContractID, nsnull,
                                               NS_GET_IID(DestinationType),
                                               NS_REINTERPRET_CAST(void**, aDestination));
+}
+
+template <class DestinationType>
+inline
+nsresult
+CallCreateInstance( nsIFactory *aFactory,
+                    nsISupports *aDelegate,
+                    DestinationType** aDestination )
+{
+    NS_PRECONDITION(aFactory, "null parameter");
+    NS_PRECONDITION(aDestination, "null parameter");
+    
+    return aFactory->CreateInstance(aDelegate,
+                                    NS_GET_IID(DestinationType),
+                                    NS_REINTERPRET_CAST(void**, aDestination));
+}
+
+template <class DestinationType>
+inline
+nsresult
+CallCreateInstance( nsIFactory *aFactory,
+                    DestinationType** aDestination )
+{
+    NS_PRECONDITION(aFactory, "null parameter");
+    NS_PRECONDITION(aDestination, "null parameter");
+    
+    return aFactory->CreateInstance(nsnull,
+                                    NS_GET_IID(DestinationType),
+                                    NS_REINTERPRET_CAST(void**, aDestination));
+}
+
+template <class DestinationType>
+inline
+nsresult
+CallGetClassObject( const nsCID &aClass,
+                    DestinationType** aDestination )
+{
+    NS_PRECONDITION(aDestination, "null parameter");
+    
+    return nsComponentManager::GetClassObject(aClass,
+        NS_GET_IID(DestinationType), NS_REINTERPRET_CAST(void**, aDestination));
+}
+
+template <class DestinationType>
+inline
+nsresult
+CallGetClassObject( const char* aContractID,
+                    DestinationType** aDestination )
+{
+    NS_PRECONDITION(aDestination, "null parameter");
+    
+    return nsComponentManager::GetClassObjectByContractID(aContractID,
+        NS_GET_IID(DestinationType), NS_REINTERPRET_CAST(void**, aDestination));
 }
 
 /* keys for registry use */

@@ -83,6 +83,11 @@ public:
   static nsresult GetClassObject(const nsCID &aClass, const nsIID &aIID,
                                  void **aResult);
 
+  // Get the singleton class object that implements the CID aClass
+  static nsresult GetClassObjectByContractID(const char *aContractID,
+                                             const nsIID &aIID,
+                                             void **aResult);
+
   // Finds a class ID for a specific Program ID
   static nsresult ContractIDToClassID(const char *aContractID,
                                 nsCID *aClass);
