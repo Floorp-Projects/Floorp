@@ -3,7 +3,7 @@
   FILE: icalfileset.c
   CREATOR: eric 23 December 1999
   
-  $Id: icalfileset.c,v 1.11 2004/04/29 20:54:26 mkaply%us.ibm.com Exp $
+  $Id: icalfileset.c,v 1.12 2004/09/17 20:44:21 mostafah%oeone.com Exp $
   $Locker:  $
     
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -130,7 +130,7 @@ icalfileset* icalfileset_new_open(const char* path, int flags, mode_t mode)
 #ifndef WIN32
     impl->fd = open(impl->path,flags, mode);
 #else
-	impl->fd = sopen(impl->path,flags, _SH_DENYWR, _S_IREAD | _S_IWRITE);
+	impl->fd = sopen(impl->path,flags | O_BINARY, _SH_DENYWR, _S_IREAD | _S_IWRITE);
 #endif
     
     if (impl->fd < 0){
