@@ -426,5 +426,41 @@ PRBool nsHTMLContentSink::AddLeaf(const nsIParserNode& aNode){
   return result;
 }
 
+ /**
+  * This method gets called when the parser begins the process
+  * of building the content model via the content sink.
+  *
+  * @update 5/7/98 gess
+ */     
+void nsHTMLContentSink::WillBuildModel(void){
+}
+
+ /**
+  * This method gets called when the parser concludes the process
+  * of building the content model via the content sink.
+  *
+  * @update 5/7/98 gess
+  */     
+void nsHTMLContentSink::DidBuildModel(void){
+}
+
+/**
+ * This method gets called when the parser gets i/o blocked,
+ * and wants to notify the sink that it may be a while before
+ * more data is available.
+ *
+ * @update 5/7/98 gess
+ */     
+void nsHTMLContentSink::WillInterrupt(void) {
+}
+
+/**
+ * This method gets called when the parser i/o gets unblocked,
+ * and we're about to start dumping content again to the sink.
+ *
+ * @update 5/7/98 gess
+ */     
+void nsHTMLContentSink::WillResume(void) {
+}
 
 

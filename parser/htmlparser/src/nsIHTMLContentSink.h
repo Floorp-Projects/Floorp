@@ -213,6 +213,39 @@ class nsIHTMLContentSink : public nsIContentSink {
     * @return PR_TRUE if successful. 
     */     
     virtual PRBool AddLeaf(const nsIParserNode& aNode)=0;
+
+   /**
+    * This method gets called when the parser begins the process
+    * of building the content model via the content sink.
+    *
+    * @update 5/7/98 gess
+    */     
+    virtual void WillBuildModel(void)=0;
+
+   /**
+    * This method gets called when the parser concludes the process
+    * of building the content model via the content sink.
+    *
+    * @update 5/7/98 gess
+    */     
+    virtual void DidBuildModel(void)=0;
+
+   /**
+    * This method gets called when the parser gets i/o blocked,
+    * and wants to notify the sink that it may be a while before
+    * more data is available.
+    *
+    * @update 5/7/98 gess
+    */     
+    virtual void WillInterrupt(void)=0;
+
+   /**
+    * This method gets called when the parser i/o gets unblocked,
+    * and we're about to start dumping content again to the sink.
+    *
+    * @update 5/7/98 gess
+    */     
+    virtual void WillResume(void)=0;
 };
 
 

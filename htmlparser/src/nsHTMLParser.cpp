@@ -516,15 +516,19 @@ PRBool nsHTMLParser::Parse(nsIURL* aURL,eParseMode aMode){
       mDTD->SetParser(this);
     mTokenizer=new CTokenizer(aURL, theDelegate, mParseMode);
 
+    mSink->WillBuildModel();
 #ifdef __INCREMENTAL 
     int iter=-1;
     for(;;){
+      mSink->WillResume();
       mTokenizer->TokenizeAvailable(++iter);
+      mSink->WillInterrupt();
     }
 #else
     mTokenizer->Tokenize();
 #endif
     result=IterateTokens();
+    mSink->DidBuildModel();
   }
   return result;
 }
@@ -541,6 +545,11 @@ PRBool nsHTMLParser::Parse(nsIURL* aURL,eParseMode aMode){
  *  @return  PR_TRUE if parsing concluded successfully.
  */
 PRBool nsHTMLParser::ResumeParse() {
+  mSink->WillResume();
+  int iter=0;
+  PRInt32 errcode=mTokenizer->TokenizeAvailable(iter);
+  if(kInterrupted==errcode)
+    mSink->WillInterrupt();
   PRBool result=IterateTokens();
   return result;
 }
