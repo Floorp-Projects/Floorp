@@ -4194,7 +4194,7 @@ nsHTMLDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix,
                "HTML elements in an HTML document should have "
                "kNamespaceID_None as their namespace ID.");
 
-  return nsDocument::CreateElement(aName, aPrefix, aNamespaceID,
-                                   aDocumentDefaultType, aResult);
+  return nsDocument::CreateElem(aName, aPrefix, aNamespaceID,
+                                aDocumentDefaultType, aResult);
 }
 #endif
