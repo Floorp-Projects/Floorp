@@ -532,12 +532,14 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
 {
   aEventStatus = nsEventStatus_eIgnore;
   
-  nsIEventStateManager *mManager;
-  if (NS_OK == aPresContext.GetEventStateManager(&mManager)) {
-    mManager->SetEventTarget((nsISupports*)mContent);
-    NS_RELEASE(mManager);
+  if (nsnull != mContent) {
+    nsIEventStateManager *mManager;
+    if (NS_OK == aPresContext.GetEventStateManager(&mManager)) {
+      mManager->SetEventTarget((nsISupports*)mContent);
+      NS_RELEASE(mManager);
+    }
+    mContent->HandleDOMEvent(aPresContext, aEvent, nsnull, aEventStatus);
   }
-  mContent->HandleDOMEvent(aPresContext, aEvent, nsnull, aEventStatus);
 
 #if DO_SELECTION
 
