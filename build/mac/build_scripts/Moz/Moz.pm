@@ -283,15 +283,20 @@ sub ImportXMLProject($$)
 {
     my ($xml_path, $project_path) = @_;
     my ($codewarrior_ide_name) = Moz::CodeWarriorLib::getCodeWarriorIDEName();
-    my $ascript = <<EOS;
-    tell application "$codewarrior_ide_name"
-      with timeout of 30 seconds
-        make new (project document) as ("$project_path") with data ("$xml_path")
-      end timeout
-    end tell
-EOS
-    print $ascript."\n";
-    MacPerl::DoAppleScript($ascript) or die "Error: ImportXMLProject AppleScript failed $^E\n";
+#    my $ascript = <<EOS;
+#      tell application "$codewarrior_ide_name"
+#        make new (project document) as ("$project_path") with data ("$xml_path")
+#      end tell
+#EOS
+#    print $ascript."\n";
+#    my($result) = MacPerl::DoAppleScript($ascript);
+#    unless ($result) { die "Error: ImportXMLProject AppleScript failed $^E $result\n";  }
+#    
+
+    my($import_error) = Moz::CodeWarriorLib::import_project($xml_path, $project_path);
+    if ($import_error ne "") {
+      die "Error: ImportXMLProject failed with error $import_error\n";
+    }
 }
 
 
@@ -319,8 +324,8 @@ sub MakeAlias($$)
 
 		my $message = "Can't create a Finder alias (at \"$new_file\")\n for \"$old_file\"; because ";
 
-		die "$message \"$old_file\" doesn't exist.\n" unless -e $old_file;
-		die "$message I won't replace an existing (non-alias) file with an alias.\n" if ( -e $new_file && ! -l $new_file );
+		die "Error: $message \"$old_file\" doesn't exist.\n" unless -e $old_file;
+		die "Error: $message I won't replace an existing (non-alias) file with an alias.\n" if ( -e $new_file && ! -l $new_file );
 
 			# now: $old_file exists; $new_file doesn't (or else, is an alias already)
 
@@ -336,7 +341,7 @@ sub MakeAlias($$)
 				unlink $new_file;
 			}
 		
-		symlink($old_file, $new_file) || die "$message symlink returned an unexpected error.\n";
+		symlink($old_file, $new_file) || die "Error: $message symlink returned an unexpected error.\n";
 	}
 	
 	
