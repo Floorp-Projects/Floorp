@@ -139,8 +139,11 @@ public:
 
 protected:
 
-  virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
-  virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
+    virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
+    virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
+    nsresult                MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aFlags, UINT aCommand);
+    nsIMenuItem *           FindMenuItem(nsIMenu * aMenu, PRUint32 aId);
+    nsIMenu *               FindMenu(nsIMenu * aMenu, HMENU aNativeMenu, PRInt32 &aDepth);
 
      // Allow Derived classes to modify the height that is passed
      // when the window is created or resized.
@@ -198,8 +201,10 @@ protected:
     PRInt32     mPreferredWidth;
     PRInt32     mPreferredHeight;
 
-    nsIMenuBar * mMenuBar;
-    PRInt32      mMenuCmdId;
+    nsIMenuBar  * mMenuBar;
+    PRInt32       mMenuCmdId;
+    nsIMenu     * mHitMenu;
+    nsVoidArray * mHitSubMenus;
 
 
     // Enumeration of the methods which are accessable on the "main GUI thread"
