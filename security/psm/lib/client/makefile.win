@@ -92,6 +92,7 @@ OBJS=                         \
     .\$(OBJDIR)\cmtpasswd.obj \
     .\$(OBJDIR)\cmtadvisor.obj \
     .\$(OBJDIR)\cmtrng.obj \
+	.\$(OBJDIR)\cmtsdr.obj \
     $(NULL)
 
 #//------------------------------------------------------------------------
