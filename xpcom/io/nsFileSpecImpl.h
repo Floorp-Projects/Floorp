@@ -21,7 +21,6 @@
 
 #include "nsIFileSpec.h" 
 #include "nsFileSpec.h"
-#include "nsAgg.h"
 
 //========================================================================================
 class NS_COM nsFileSpecImpl
@@ -31,7 +30,7 @@ class NS_COM nsFileSpecImpl
 
  public: 
 
-	NS_DECL_AGGREGATED
+	NS_DECL_ISUPPORTS
 
 	NS_IMETHOD fromFileSpec(const nsIFileSpec *original);
 
