@@ -1,0 +1,9 @@
+[gecko]
+#if SHARED_LIBRARY
+dist/bin/components/@SHARED_LIBRARY@
+#else
+!staticcomp @LIBRARY@ @MODULE_NAME@
+#endif
+#if MOZ_ENABLE_XFT
+dist/bin/res/fonts/fontEncoding.properties
+#endif

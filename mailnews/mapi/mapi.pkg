@@ -1,0 +1,5 @@
+[xpfe-mailnews]
+dist/bin/MapiProxy.dll
+dist/bin/mozMapi32.dll
+dist/bin/components/msgMapi.dll
+!xpt dist/bin/components/mapihook.xpt

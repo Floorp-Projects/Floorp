@@ -1,0 +1,12 @@
+# right now this only packages the mozilla component
+# we can think about standalone too
+
+# xxxbsmedberg: should this move to the GRE?
+# currently transformiix is not part of the default firebird
+# build, but that can be controlled by --enable-extensions
+[xpfe-browser browser]
+#if SHARED_LIBRARY
+dist/bin/components/@SHARED_LIBRARY@
+#else
+!staticcomp @LIBRARY@ @MODULE_NAME@
+#endif

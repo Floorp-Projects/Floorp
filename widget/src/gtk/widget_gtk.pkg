@@ -1,0 +1,10 @@
+[gecko]
+#if SHARED_LIBRARY
+dist/bin/components/@SHARED_LIBRARY@
+#else
+!staticcomp @LIBRARY@ @MODULE_NAME@
+#endif
+
+[xpfe-browser]
+dist/bin/icons/mozicon50.xpm
+dist/bin/icons/mozicon16.xpm

@@ -1,0 +1,6 @@
+[venkman]
+dist/bin/components/venkman-service.js
+dist/bin/chrome/venkman.jar
+
+[venkman-xpi]
+!preprocess xpiroot/install.js -E -Fsubstitution @topsrcdir@/xpinstall/packager/common/share.t @topsrcdir@/extensions/venkman/install.jst

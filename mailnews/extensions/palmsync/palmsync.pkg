@@ -1,0 +1,9 @@
+# this is win32-only, right?
+
+[xpfe-mailnews]
+dist/bin/mozABConduit.dll
+dist/bin/PalmSyncProxy.dll
+dist/bin/PalmSyncInstall.exe
+dist/bin/components/palmsync.dll
+dist/bin/palm.html
+!xpt dist/bin/components/palmsync.xpt

@@ -1,0 +1,5 @@
+[xpfe-default-US]
+dist/bin/defaults/messenger/mailViews.dat
+
+[xpfe-locale-US]
+dist/bin/defaults/messenger/US/mailViews.dat

@@ -1,0 +1,21 @@
+# xpfe-browser instead of xpfe-mailnews for autoconfig
+
+[xpfe-browser mail]
+#if OS_ARCH==WINNT
+dist/bin/nsldap32v50.dll
+dist/bin/nsldappr32v50.dll
+#else
+dist/bin/@DLLP@ldap50@DLLS@
+dist/bin/@DLLP@prldap50@DLLS@
+#endif
+
+#if SHARED_LIBRARY
+dist/bin/components/@SHARED_LIBRARY@
+#else
+!staticcomp @LIBRARY@ @MODULE_NAME@
+#endif
+!xpt dist/bin/components/mozldap.xpt
+
+[unpackaged-files]
+!optional dist/bin/dirver@BINS@
+

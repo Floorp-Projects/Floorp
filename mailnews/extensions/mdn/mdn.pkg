@@ -1,0 +1,8 @@
+[xpfe-mailnews]
+#if !MOZ_STATIC_MAIL_BUILD
+dist/bin/components/@DLLP@msgmdn@DLLS@
+#endif
+dist/bin/components/mdn-service.js
+
+[xpfe-browser]
+dist/bin/defaults/pref/mdn.js
