@@ -16,17 +16,46 @@
  * Reserved.
  */
 
-#include "nspr.h"
+#include "primpl.h"
 
 #include <string.h>
+
+#if defined(HPUX) && defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
+
+#include <pthread.h>
+#define HAVE_UNIX98_RWLOCK
+#define RWLOCK_T pthread_rwlock_t
+#define RWLOCK_INIT(lock) pthread_rwlock_init(lock, NULL)
+#define RWLOCK_DESTROY(lock) pthread_rwlock_destroy(lock)
+#define RWLOCK_RDLOCK(lock) pthread_rwlock_rdlock(lock)
+#define RWLOCK_WRLOCK(lock) pthread_rwlock_wrlock(lock)
+#define RWLOCK_UNLOCK(lock) pthread_rwlock_unlock(lock)
+
+#elif defined(SOLARIS) && (defined(_PR_PTHREADS) \
+        || defined(_PR_GLOBAL_THREADS_ONLY))
+
+#include <synch.h>
+#define HAVE_UI_RWLOCK
+#define RWLOCK_T rwlock_t
+#define RWLOCK_INIT(lock) rwlock_init(lock, USYNC_THREAD, NULL)
+#define RWLOCK_DESTROY(lock) rwlock_destroy(lock)
+#define RWLOCK_RDLOCK(lock) rw_rdlock(lock)
+#define RWLOCK_WRLOCK(lock) rw_wrlock(lock)
+#define RWLOCK_UNLOCK(lock) rw_unlock(lock)
+
+#endif
 
 /*
  * Reader-writer lock
  */
 struct PRRWLock {
-    PRLock			*rw_lock;
 	char			*rw_name;			/* lock name					*/
 	PRUint32		rw_rank;			/* rank of the lock				*/
+
+#if defined(HAVE_UNIX98_RWLOCK) || defined(HAVE_UI_RWLOCK)
+	RWLOCK_T		rw_lock;
+#else
+    PRLock			*rw_lock;
 	PRInt32			rw_lock_cnt;		/* ==  0, if unlocked			*/
 										/* == -1, if write-locked		*/
 										/* > 0	, # of read locks		*/
@@ -34,7 +63,10 @@ struct PRRWLock {
 	PRUint32		rw_writer_cnt;		/* number of waiting writers	*/
 	PRCondVar   	*rw_reader_waitq;	/* cvar for readers 			*/
 	PRCondVar   	*rw_writer_waitq;	/* cvar for writers				*/
+#ifdef DEBUG
     PRThread 		*rw_owner;			/* lock owner for write-lock	*/
+#endif
+#endif
 };
 
 #ifdef DEBUG
@@ -45,8 +77,7 @@ struct PRRWLock {
 
 #ifdef _PR_RWLOCK_RANK_ORDER_DEBUG
 
-static PRUintn	pr_thread_rwlock_initialized;
-static PRUintn	pr_thread_rwlock;				/* TPD key for lock stack */
+static PRUintn	pr_thread_rwlock_key;			/* TPD key for lock stack */
 static PRUintn	pr_thread_rwlock_alloc_failed;
 
 #define	_PR_RWLOCK_RANK_ORDER_LIMIT	10
@@ -79,35 +110,20 @@ PR_IMPLEMENT(PRRWLock *)
 PR_NewRWLock(PRUint32 lock_rank, const char *lock_name)
 {
     PRRWLock *rwlock;
+#if defined(HAVE_UNIX98_RWLOCK) || defined(HAVE_UI_RWLOCK)
+	int err;
+#endif
+
+    if (!_pr_initialized) _PR_ImplicitInitialization();
 
     rwlock = PR_NEWZAP(PRRWLock);
     if (rwlock == NULL)
 		return NULL;
-	
-	rwlock->rw_lock = PR_NewLock();
-    if (rwlock->rw_lock == NULL) {
-		PR_DELETE(rwlock);
-		return(NULL);
-	}
-	rwlock->rw_reader_waitq = PR_NewCondVar(rwlock->rw_lock);
-    if (rwlock->rw_reader_waitq == NULL) {
-		PR_DestroyLock(rwlock->rw_lock);
-		PR_DELETE(rwlock);
-		return(NULL);
-	}
-	rwlock->rw_writer_waitq = PR_NewCondVar(rwlock->rw_lock);
-    if (rwlock->rw_writer_waitq == NULL) {
-		PR_DestroyCondVar(rwlock->rw_reader_waitq);	
-		PR_DestroyLock(rwlock->rw_lock);
-		PR_DELETE(rwlock);
-		return(NULL);
-	}
+
+	rwlock->rw_rank = lock_rank;
 	if (lock_name != NULL) {
 		rwlock->rw_name = (char*) PR_Malloc(strlen(lock_name) + 1);
     	if (rwlock->rw_name == NULL) {
-			PR_DestroyCondVar(rwlock->rw_reader_waitq);	
-			PR_DestroyCondVar(rwlock->rw_writer_waitq);	
-			PR_DestroyLock(rwlock->rw_lock);
 			PR_DELETE(rwlock);
 			return(NULL);
 		}
@@ -115,12 +131,45 @@ PR_NewRWLock(PRUint32 lock_rank, const char *lock_name)
 	} else {
 		rwlock->rw_name = NULL;
 	}
-	rwlock->rw_rank = lock_rank;
+	
+#if defined(HAVE_UNIX98_RWLOCK) || defined(HAVE_UI_RWLOCK)
+	err = RWLOCK_INIT(&rwlock->rw_lock);
+	if (err != 0) {
+		PR_SetError(PR_UNKNOWN_ERROR, err);
+		PR_Free(rwlock->rw_name);
+		PR_DELETE(rwlock);
+		return NULL;
+	}
+	return rwlock;
+#else
+	rwlock->rw_lock = PR_NewLock();
+    if (rwlock->rw_lock == NULL) {
+		goto failed;
+	}
+	rwlock->rw_reader_waitq = PR_NewCondVar(rwlock->rw_lock);
+    if (rwlock->rw_reader_waitq == NULL) {
+		goto failed;
+	}
+	rwlock->rw_writer_waitq = PR_NewCondVar(rwlock->rw_lock);
+    if (rwlock->rw_writer_waitq == NULL) {
+		goto failed;
+	}
 	rwlock->rw_reader_cnt = 0;
 	rwlock->rw_writer_cnt = 0;
 	rwlock->rw_lock_cnt = 0;
+	return rwlock;
 
-    return rwlock;
+failed:
+	if (rwlock->rw_reader_waitq != NULL) {
+		PR_DestroyCondVar(rwlock->rw_reader_waitq);	
+	}
+	if (rwlock->rw_lock != NULL) {
+		PR_DestroyLock(rwlock->rw_lock);
+	}
+	PR_Free(rwlock->rw_name);
+	PR_DELETE(rwlock);
+	return NULL;
+#endif
 }
 
 /*
@@ -129,10 +178,16 @@ PR_NewRWLock(PRUint32 lock_rank, const char *lock_name)
 PR_IMPLEMENT(void)
 PR_DestroyRWLock(PRRWLock *rwlock)
 {
+#if defined(HAVE_UNIX98_RWLOCK) || defined(HAVE_UI_RWLOCK)
+	int err;
+	err = RWLOCK_DESTROY(&rwlock->rw_lock);
+	PR_ASSERT(err == 0);
+#else
 	PR_ASSERT(rwlock->rw_reader_cnt == 0);
 	PR_DestroyCondVar(rwlock->rw_reader_waitq);	
 	PR_DestroyCondVar(rwlock->rw_writer_waitq);	
 	PR_DestroyLock(rwlock->rw_lock);
+#endif
 	if (rwlock->rw_name != NULL)
 		PR_Free(rwlock->rw_name);
     PR_DELETE(rwlock);
@@ -144,10 +199,14 @@ PR_DestroyRWLock(PRRWLock *rwlock)
 PR_IMPLEMENT(void)
 PR_RWLock_Rlock(PRRWLock *rwlock)
 {
+#ifdef _PR_RWLOCK_RANK_ORDER_DEBUG
 PRThread *me = PR_GetCurrentThread();
+#endif
+#if defined(HAVE_UNIX98_RWLOCK) || defined(HAVE_UI_RWLOCK)
+int err;
+#endif
 
 #ifdef _PR_RWLOCK_RANK_ORDER_DEBUG
-
 	/*
 	 * assert that rank ordering is not violated; the rank of 'rwlock' should
 	 * be equal to or greater than the highest rank of all the locks held by
@@ -156,6 +215,11 @@ PRThread *me = PR_GetCurrentThread();
 	PR_ASSERT((rwlock->rw_rank == PR_RWLOCK_RANK_NONE) || 
 					(rwlock->rw_rank >= _PR_GET_THREAD_RWLOCK_RANK(me)));
 #endif
+
+#if defined(HAVE_UNIX98_RWLOCK) || defined(HAVE_UI_RWLOCK)
+	err = RWLOCK_RDLOCK(&rwlock->rw_lock);
+	PR_ASSERT(err == 0);
+#else
 	PR_Lock(rwlock->rw_lock);
 	/*
 	 * wait if write-locked or if a writer is waiting; preference for writers
@@ -172,6 +236,7 @@ PRThread *me = PR_GetCurrentThread();
 	rwlock->rw_lock_cnt++;
 
 	PR_Unlock(rwlock->rw_lock);
+#endif
 
 #ifdef _PR_RWLOCK_RANK_ORDER_DEBUG
 	/*
@@ -188,7 +253,12 @@ PR_IMPLEMENT(void)
 PR_RWLock_Wlock(PRRWLock *rwlock)
 {
 PRInt32 lock_acquired = 0;
+#if defined(DEBUG) || defined(_PR_RWLOCK_RANK_ORDER_DEBUG)
 PRThread *me = PR_GetCurrentThread();
+#endif
+#if defined(HAVE_UNIX98_RWLOCK) || defined(HAVE_UI_RWLOCK)
+int err;
+#endif
 
 #ifdef _PR_RWLOCK_RANK_ORDER_DEBUG
 	/*
@@ -199,6 +269,11 @@ PRThread *me = PR_GetCurrentThread();
 	PR_ASSERT((rwlock->rw_rank == PR_RWLOCK_RANK_NONE) || 
 					(rwlock->rw_rank >= _PR_GET_THREAD_RWLOCK_RANK(me)));
 #endif
+
+#if defined(HAVE_UNIX98_RWLOCK) || defined(HAVE_UI_RWLOCK)
+	err = RWLOCK_WRLOCK(&rwlock->rw_lock);
+	PR_ASSERT(err == 0);
+#else
 	PR_Lock(rwlock->rw_lock);
 	/*
 	 * wait if read locked
@@ -214,8 +289,11 @@ PRThread *me = PR_GetCurrentThread();
 	rwlock->rw_lock_cnt--;
 	PR_ASSERT(rwlock->rw_lock_cnt == -1);
 	PR_ASSERT(me != NULL);
+#ifdef DEBUG
     rwlock->rw_owner = me;
+#endif
 	PR_Unlock(rwlock->rw_lock);
+#endif
 
 #ifdef _PR_RWLOCK_RANK_ORDER_DEBUG
 	/*
@@ -231,8 +309,17 @@ PRThread *me = PR_GetCurrentThread();
 PR_IMPLEMENT(void)
 PR_RWLock_Unlock(PRRWLock *rwlock)
 {
+#if defined(DEBUG) || defined(_PR_RWLOCK_RANK_ORDER_DEBUG)
 PRThread *me = PR_GetCurrentThread();
+#endif
+#if defined(HAVE_UNIX98_RWLOCK) || defined(HAVE_UI_RWLOCK)
+int err;
+#endif
 
+#if defined(HAVE_UNIX98_RWLOCK) || defined(HAVE_UI_RWLOCK)
+	err = RWLOCK_UNLOCK(&rwlock->rw_lock);
+	PR_ASSERT(err == 0);
+#else
 	PR_Lock(rwlock->rw_lock);
 	/*
 	 * lock must be read or write-locked
@@ -252,13 +339,13 @@ PRThread *me = PR_GetCurrentThread();
 				PR_NotifyCondVar(rwlock->rw_writer_waitq);
 		}
 	} else {
-		PRThread *me = PR_GetCurrentThread();
-
 		PR_ASSERT(rwlock->rw_lock_cnt == -1);
 
 		rwlock->rw_lock_cnt = 0;
+#ifdef DEBUG
     	PR_ASSERT(rwlock->rw_owner == me);
     	rwlock->rw_owner = NULL;
+#endif
 		/*
 		 * wakeup a writer, if present; preference for writers
 		 */
@@ -271,6 +358,7 @@ PRThread *me = PR_GetCurrentThread();
 			PR_NotifyAllCondVar(rwlock->rw_reader_waitq);
 	}
 	PR_Unlock(rwlock->rw_lock);
+#endif
 
 #ifdef _PR_RWLOCK_RANK_ORDER_DEBUG
 	/*
@@ -281,7 +369,23 @@ PRThread *me = PR_GetCurrentThread();
 	return;
 }
 
-#ifdef _PR_RWLOCK_RANK_ORDER_DEBUG
+#ifndef _PR_RWLOCK_RANK_ORDER_DEBUG
+
+void _PR_InitRWLocks(void) { }
+
+#else
+
+void _PR_InitRWLocks(void)
+{
+	/*
+	 * allocated thread-private-data index for rwlock list
+	 */
+	if (PR_NewThreadPrivateIndex(&pr_thread_rwlock_key,
+			_PR_RELEASE_LOCK_STACK) == PR_FAILURE) {
+		pr_thread_rwlock_alloc_failed = 1;
+		return;
+	}
+}
 
 /*
  * _PR_SET_THREAD_RWLOCK_RANK
@@ -297,30 +401,13 @@ thread_rwlock_stack *lock_stack;
 PRStatus rv;
 
 	/*
-	 * allocated thread-private-data for rwlock list, if not already allocated
-	 */
-	if (!pr_thread_rwlock_initialized) {
-		/*
-		 * allocate tpd, only if not failed already
-		 */
-		if (!pr_thread_rwlock_alloc_failed) {
-			if (PR_NewThreadPrivateIndex(&pr_thread_rwlock,
-										_PR_RELEASE_LOCK_STACK)
-												== PR_FAILURE) {
-				pr_thread_rwlock_alloc_failed = 1;
-				return;
-			}
-		} else
-			return;
-	}
-	/*
 	 * allocate a lock stack
 	 */
-	if ((lock_stack = PR_GetThreadPrivate(pr_thread_rwlock)) == NULL) {
+	if ((lock_stack = PR_GetThreadPrivate(pr_thread_rwlock_key)) == NULL) {
 		lock_stack = (thread_rwlock_stack *)
 						PR_CALLOC(1 * sizeof(thread_rwlock_stack));
 		if (lock_stack) {
-			rv = PR_SetThreadPrivate(pr_thread_rwlock, lock_stack);
+			rv = PR_SetThreadPrivate(pr_thread_rwlock_key, lock_stack);
 			if (rv == PR_FAILURE) {
 				PR_DELETE(lock_stack);
 				pr_thread_rwlock_alloc_failed = 1;
@@ -338,7 +425,6 @@ PRStatus rv;
 		if (lock_stack->trs_index < _PR_RWLOCK_RANK_ORDER_LIMIT)
 			lock_stack->trs_stack[lock_stack->trs_index++] = rwlock;	
 	}
-	pr_thread_rwlock_initialized = 1;
 }
 
 static void
@@ -360,14 +446,10 @@ _PR_GET_THREAD_RWLOCK_RANK(PRThread *me)
 {
 	thread_rwlock_stack *lock_stack;
 
-	if (pr_thread_rwlock_initialized) {
-		if ((lock_stack = PR_GetThreadPrivate(pr_thread_rwlock)) == NULL)
-			return (PR_RWLOCK_RANK_NONE);
-		else
-			return(lock_stack->trs_stack[lock_stack->trs_index - 1]->rw_rank);
-
-	} else
-			return (PR_RWLOCK_RANK_NONE);
+	if ((lock_stack = PR_GetThreadPrivate(pr_thread_rwlock_key)) == NULL)
+		return (PR_RWLOCK_RANK_NONE);
+	else
+		return(lock_stack->trs_stack[lock_stack->trs_index - 1]->rw_rank);
 }
 
 /*
@@ -383,10 +465,7 @@ _PR_UNSET_THREAD_RWLOCK_RANK(PRThread *me, PRRWLock *rwlock)
 	thread_rwlock_stack *lock_stack;
 	int new_index = 0, index, done = 0;
 
-	if (!pr_thread_rwlock_initialized)
-		return;
-
-	lock_stack = PR_GetThreadPrivate(pr_thread_rwlock);
+	lock_stack = PR_GetThreadPrivate(pr_thread_rwlock_key);
 
 	PR_ASSERT(lock_stack != NULL);
 

@@ -36,14 +36,13 @@ static void check_array(void);
 typedef struct thread_args {
 	PRRWLock	*rwlock;
 	PRInt32		loop_cnt;
-	void		*data;
 } thread_args;
 
 PRFileDesc  *output;
 PRFileDesc  *errhandle;
 
 #define	DEFAULT_THREAD_CNT	4
-#define	DEFAULT_DATA_CNT	100
+#define	DEFAULT_LOOP_CNT	100
 #define	TEST_ARRAY_SIZE		100
 
 PRIntn main(PRIntn argc, char **argv)
@@ -53,13 +52,13 @@ PRIntn main(PRIntn argc, char **argv)
 	PRInt32 i;
 
 	PRInt32 thread_cnt = DEFAULT_THREAD_CNT;
-	PRInt32 data_cnt = DEFAULT_DATA_CNT;
+	PRInt32 loop_cnt = DEFAULT_LOOP_CNT;
 	PRThread **threads;
 	thread_args *params;
 	PRRWLock	*rwlock1;
 
 	PLOptStatus os;
-	PLOptState *opt = PL_CreateOptState(argc, argv, "dt:");
+	PLOptState *opt = PL_CreateOptState(argc, argv, "dt:c:");
 
 	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
@@ -72,8 +71,8 @@ PRIntn main(PRIntn argc, char **argv)
         case 't':  /* thread count */
             thread_cnt = atoi(opt->value);
             break;
-        case 'c':  /* data count */
-            data_cnt = atoi(opt->value);
+        case 'c':  /* loop count */
+            loop_cnt = atoi(opt->value);
             break;
          default:
             break;
@@ -99,12 +98,9 @@ PRIntn main(PRIntn argc, char **argv)
 	/*
 	 * allocate and initialize data arrays
 	 */
-	array_A =(PRInt32 *) PR_MALLOC(sizeof(PRInt32) * TEST_ARRAY_SIZE
-									* TEST_ARRAY_SIZE);
-	array_B =(PRInt32 *) PR_MALLOC(sizeof(PRInt32) * TEST_ARRAY_SIZE
-									* TEST_ARRAY_SIZE);
-	array_C =(PRInt32 *) PR_MALLOC(sizeof(PRInt32) * TEST_ARRAY_SIZE
-									* TEST_ARRAY_SIZE);
+	array_A =(PRInt32 *) PR_MALLOC(sizeof(PRInt32) * TEST_ARRAY_SIZE);
+	array_B =(PRInt32 *) PR_MALLOC(sizeof(PRInt32) * TEST_ARRAY_SIZE);
+	array_C =(PRInt32 *) PR_MALLOC(sizeof(PRInt32) * TEST_ARRAY_SIZE);
 	cnt = 0;
 	for (i=0; i < TEST_ARRAY_SIZE;i++) {
 		array_A[i] = cnt++;
@@ -113,14 +109,13 @@ PRIntn main(PRIntn argc, char **argv)
 	}
 
 	if (_debug_on)
-		PR_fprintf(output,"%s: thread_cnt = %d data_cnt = %d\n", argv[0],
-							thread_cnt, data_cnt);
+		PR_fprintf(output,"%s: thread_cnt = %d loop_cnt = %d\n", argv[0],
+							thread_cnt, loop_cnt);
 	for(cnt = 0; cnt < thread_cnt; cnt++) {
 		PRThreadScope scope;
 
 		params[cnt].rwlock = rwlock1;
-		params[cnt].data = NULL;
-		params[cnt].loop_cnt = data_cnt;
+		params[cnt].loop_cnt = loop_cnt;
 
 		/*
 		 * create LOCAL and GLOBAL threads alternately
@@ -162,6 +157,7 @@ PRIntn main(PRIntn argc, char **argv)
 	PR_DestroyRWLock(rwlock1);
 
 	
+	printf("PASS\n");
 	return 0;
 }
 

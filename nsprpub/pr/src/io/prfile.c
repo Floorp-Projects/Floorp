@@ -463,37 +463,55 @@ PR_IMPLEMENT(PRInt32) PR_Stat(const char *name, struct stat *buf)
 
 PR_IMPLEMENT(PRStatus) PR_LockFile(PRFileDesc *fd)
 {
-    PRStatus rv = PR_SUCCESS;
+    PRStatus status = PR_SUCCESS;
+
+#ifdef WINNT
+    if (!fd->secret->md.io_model_committed) {
+        PRInt32 rv;
+        rv = _md_Associate((HANDLE)fd->secret->md.osfd);
+        PR_ASSERT(0 != rv);
+        fd->secret->md.io_model_committed = PR_TRUE;
+    }
+#endif
 
     PR_Lock(_pr_flock_lock);
     if (fd->secret->lockCount == 0) {
-        rv = _PR_MD_LOCKFILE(fd->secret->md.osfd);
-        if (rv == PR_SUCCESS)
+        status = _PR_MD_LOCKFILE(fd->secret->md.osfd);
+        if (status == PR_SUCCESS)
             fd->secret->lockCount = 1;
     } else {
         fd->secret->lockCount++;
     }
     PR_Unlock(_pr_flock_lock);
  
-    return rv;
+    return status;
 }
 
 PR_IMPLEMENT(PRStatus) PR_TLockFile(PRFileDesc *fd)
 {
-    PRStatus rv = PR_SUCCESS;
+    PRStatus status = PR_SUCCESS;
+
+#ifdef WINNT
+    if (!fd->secret->md.io_model_committed) {
+        PRInt32 rv;
+        rv = _md_Associate((HANDLE)fd->secret->md.osfd);
+        PR_ASSERT(0 != rv);
+        fd->secret->md.io_model_committed = PR_TRUE;
+    }
+#endif
 
     PR_Lock(_pr_flock_lock);
     if (fd->secret->lockCount == 0) {
-        rv = _PR_MD_TLOCKFILE(fd->secret->md.osfd);
-        PR_ASSERT(rv == PR_SUCCESS || fd->secret->lockCount == 0);
-        if (rv == PR_SUCCESS)
+        status = _PR_MD_TLOCKFILE(fd->secret->md.osfd);
+        PR_ASSERT(status == PR_SUCCESS || fd->secret->lockCount == 0);
+        if (status == PR_SUCCESS)
             fd->secret->lockCount = 1;
     } else {
         fd->secret->lockCount++;
     }
     PR_Unlock(_pr_flock_lock);
 
-    return rv;
+    return status;
 }
 
 PR_IMPLEMENT(PRStatus) PR_UnlockFile(PRFileDesc *fd)

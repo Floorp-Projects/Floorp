@@ -89,7 +89,7 @@
 #define PR_END_OF_FILE_ERROR                     (-5938L)
 #define PR_FILE_SEEK_ERROR                       (-5937L)
 #define PR_FILE_IS_BUSY_ERROR                    (-5936L)
-#define PR_RESERVED_ERROR                        (-5935L)
+#define PR_RESERVED_ERROR_5935                   (-5935L)
 #define PR_IN_PROGRESS_ERROR                     (-5934L)
 #define PR_ALREADY_INITIATED_ERROR               (-5933L)
 #define PR_GROUP_EMPTY_ERROR                     (-5932L)
@@ -99,7 +99,7 @@
 #define PR_CONNECT_ABORTED_ERROR                 (-5928L)
 #define PR_HOST_UNREACHABLE_ERROR                (-5927L)
 #define PR_MAX_ERROR                             (-5926L)
-extern void pr_init_error_table_nspr(void);
+extern void nspr_InitializePRErrorTable(void);
 #define ERROR_TABLE_BASE_nspr (-6000L)
 
 #endif /* prerr_h___ */

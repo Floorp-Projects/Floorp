@@ -13,7 +13,7 @@ prdtoa.h
 prenv.h
 prerr.h
 prerror.h
-prerrorplugin.h
+prerrorinstall.h
 prinet.h
 prinit.h
 prinrval.h

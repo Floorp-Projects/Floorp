@@ -17,6 +17,7 @@
  */
 
 #include "primpl.h"
+#include <ctype.h>
 #include <string.h>
 
 PRLogModuleInfo *_pr_clock_lm;
@@ -73,11 +74,45 @@ PRBool _pr_initialized = PR_FALSE;
 PR_IMPLEMENT(PRBool) PR_VersionCheck(const char *importedVersion)
 {
     /*
-    ** This is the secret handshake algorithm. Right now it requires
-    ** an exact match. Later it should get more clever.
+    ** This is the secret handshake algorithm.
+    **
+    ** This release (3.1) is backward compatible with
+    ** all the previous releases ("2.1 19980529", "3.0",
+    ** "3.0.x").  It is not compatible with future
+    ** releases or patches.  So this release has a
+    ** simple version compatibility check algorithm.
     */
-    if (!_pr_initialized) _PR_ImplicitInitialization();
-    return ((0 == strcmp(importedVersion, PR_VERSION)) ? PR_TRUE : PR_FALSE);
+    int vmajor = 0, vminor = 0, vpatch = 0;
+    const char *ptr = importedVersion;
+
+    while (isdigit(*ptr)) {
+        vmajor = 10 * vmajor + *ptr - '0';
+        ptr++;
+    }
+    if (*ptr == '.') {
+        ptr++;
+        while (isdigit(*ptr)) {
+            vminor = 10 * vminor + *ptr - '0';
+            ptr++;
+        }
+        if (*ptr == '.') {
+            ptr++;
+            while (isdigit(*ptr)) {
+                vpatch = 10 * vpatch + *ptr - '0';
+                ptr++;
+            }
+        }
+    }
+
+    if (vmajor > PR_VMAJOR) {
+        return PR_FALSE;
+    } else if (vmajor == PR_VMAJOR && vminor > PR_VMINOR) {
+        return PR_FALSE;
+    } else if (vminor == PR_VMINOR && vpatch > PR_VPATCH) {
+        return PR_FALSE;
+    } else {
+        return PR_TRUE;
+    }
 }  /* PR_VersionCheck */
 
 
@@ -149,8 +184,9 @@ static void _PR_InitStuff(void)
     _PR_InitCallOnce();
     _PR_InitDtoa();
     _PR_InitMW();
+    _PR_InitRWLocks();
 
-    pr_init_error_table_nspr();
+    nspr_InitializePRErrorTable();
 
     _PR_MD_FINAL_INIT();
 }
@@ -609,7 +645,6 @@ PR_IMPLEMENT(PRFileDesc *) PR_GetInheritedFD(
         }
         ptr++;
     }
-    return NULL;
 }
 
 PR_IMPLEMENT(PRProcess*) PR_CreateProcess(

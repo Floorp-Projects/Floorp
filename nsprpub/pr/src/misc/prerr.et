@@ -99,7 +99,7 @@ ec PR_NO_MORE_FILES_ERROR,      "No more entries in the directory"
 ec PR_END_OF_FILE_ERROR,        "Encountered end of file"
 ec PR_FILE_SEEK_ERROR,  "Seek error"
 ec PR_FILE_IS_BUSY_ERROR,       "The file is busy"
-ec PR_RESERVED_ERROR,       "Reserved Error Code"
+ec PR_RESERVED_ERROR_5935,       "Reserved Error Code -5935"
 ec PR_IN_PROGRESS_ERROR,
 "Operation is still in progress (probably a non-blocking connect)"
 ec PR_ALREADY_INITIATED_ERROR,

@@ -41,7 +41,7 @@ provided "as is" without express or implied warranty.
 #include <errno.h>
 #include "prmem.h"
 #include "prerror.h"
-#include "prerrorplugin.h"
+#include "prerrorinstall.h"
 
 #define	ERRCODE_RANGE	8	/* # of bits to shift table number */
 #define	BITS_PER_CHAR	6	/* # bits to shift per character in name */
@@ -55,18 +55,18 @@ extern const int sys_nerr;
 struct PRErrorTableList {
     struct PRErrorTableList *next;
     const struct PRErrorTable *table;
-    struct PRErrorPluginTableRock *table_rock;
+    struct PRErrorCallbackTablePrivate *table_private;
 };
 static struct PRErrorTableList * Table_List = (struct PRErrorTableList *) NULL;
 
 /* Supported languages */
 static const char * default_languages[] = { "i-default", "en", 0 };
-static const char * const * plugin_languages = default_languages;
+static const char * const * callback_languages = default_languages;
 
-/* Plugin info */
-static struct PRErrorPluginRock *plugin_rock = 0;
-static PRErrorPluginLookupFn *plugin_lookup = 0;
-static PRErrorPluginNewtableFn *plugin_newtable = 0;
+/* Callback info */
+static struct PRErrorCallbackPrivate *callback_private = 0;
+static PRErrorCallbackLookupFn *callback_lookup = 0;
+static PRErrorCallbackNewtableFn *callback_newtable = 0;
 
 
 static const char char_set[] =
@@ -96,8 +96,6 @@ error_table_name (PRErrorCode num)
     return(buf);
 }
 
-
-
 PR_IMPLEMENT(const char *)
 PR_ErrorToString(PRErrorCode code, PRLanguageCode language)
 {
@@ -117,9 +115,9 @@ PR_ErrorToString(PRErrorCode code, PRLanguageCode language)
 	if (et->table->base <= code &&
 	    et->table->base + et->table->n_msgs > code) {
 	    /* This is the right table */
-	    if (plugin_lookup) {
-		msg = plugin_lookup(code, language, et->table,
-		    plugin_rock, et->table_rock);
+	    if (callback_lookup) {
+		msg = callback_lookup(code, language, et->table,
+		    callback_private, et->table_private);
 		if (msg) return msg;
 	    }
     
@@ -154,10 +152,26 @@ PR_ErrorToString(PRErrorCode code, PRLanguageCode language)
     return(buffer);
 }
 
+PR_IMPLEMENT(const char *)
+PR_ErrorToName(PRErrorCode code)
+{
+    struct PRErrorTableList *et;
+
+    for (et = Table_List; et; et = et->next) {
+	if (et->table->base <= code &&
+	    et->table->base + et->table->n_msgs > code) {
+	    /* This is the right table */
+	    return(et->table->msgs[code - et->table->base].name);
+	}
+    }
+
+    return 0;
+}
+
 PR_IMPLEMENT(const char * const *)
 PR_ErrorLanguages(void)
 {
-    return plugin_languages;
+    return callback_languages;
 }
 
 PR_IMPLEMENT(PRErrorCode)
@@ -170,10 +184,10 @@ PR_ErrorInstallTable(const struct PRErrorTable *table)
     if (!new_et)
 	return errno;	/* oops */
     new_et->table = table;
-    if (plugin_newtable) {
-	new_et->table_rock = plugin_newtable(table, plugin_rock);
+    if (callback_newtable) {
+	new_et->table_private = callback_newtable(table, callback_private);
     } else {
-	new_et->table_rock = 0;
+	new_et->table_private = 0;
     }
     new_et->next = Table_List;
     Table_List = new_et;
@@ -181,24 +195,24 @@ PR_ErrorInstallTable(const struct PRErrorTable *table)
 }
 
 PR_IMPLEMENT(void)
-PR_ErrorInstallPlugin(const char * const * languages,
-		       PRErrorPluginLookupFn *lookup, 
-		       PRErrorPluginNewtableFn *newtable,
-		       struct PRErrorPluginRock *rock)
+PR_ErrorInstallCallback(const char * const * languages,
+		       PRErrorCallbackLookupFn *lookup, 
+		       PRErrorCallbackNewtableFn *newtable,
+		       struct PRErrorCallbackPrivate *cb_private)
 {
     struct PRErrorTableList *et;
 
     assert(strcmp(languages[0], "i-default") == 0);
     assert(strcmp(languages[1], "en") == 0);
     
-    plugin_languages = languages;
-    plugin_lookup = lookup;
-    plugin_newtable = newtable;
-    plugin_rock = rock;
+    callback_languages = languages;
+    callback_lookup = lookup;
+    callback_newtable = newtable;
+    callback_private = cb_private;
 
-    if (plugin_newtable) {
+    if (callback_newtable) {
 	for (et = Table_List; et; et = et->next) {
-	    et->table_rock = plugin_newtable(et->table, plugin_rock);
+	    et->table_private = callback_newtable(et->table, callback_private);
 	}
     }
 }

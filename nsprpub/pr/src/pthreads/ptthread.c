@@ -309,10 +309,35 @@ static PRThread* _PR_CreateThread(
         thred->priority = priority;
         if (PR_UNJOINABLE_THREAD == state)
             thred->state |= PT_THREAD_DETACHED;
+
+        if (PR_LOCAL_THREAD == scope)
+        	scope = PR_GLOBAL_THREAD;
+			
+        if (PR_GLOBAL_BOUND_THREAD == scope) {
+			/*
+			 * should a Posix feature test be used here?
+			 */
+#ifdef PTHREAD_SCOPE_SYSTEM
+    		rv = pthread_attr_setscope(&tattr, PTHREAD_SCOPE_SYSTEM);
+			if (rv) {
+				/*
+				 * system scope not supported
+				 */
+        		scope = PR_GLOBAL_THREAD;
+				/*
+				 * reset scope
+				 */
+    			rv = pthread_attr_setscope(&tattr, PTHREAD_SCOPE_PROCESS);
+    			PR_ASSERT(0 == rv);
+			}
+#endif
+		}
         if (PR_GLOBAL_THREAD == scope)
             thred->state |= PT_THREAD_GLOBAL;
-        if (PR_GLOBAL_BOUND_THREAD == scope)
+        else if (PR_GLOBAL_BOUND_THREAD == scope)
             thred->state |= (PT_THREAD_GLOBAL | PT_THREAD_BOUND);
+		else	/* force it global */
+            thred->state |= PT_THREAD_GLOBAL;
         if (PR_SYSTEM_THREAD == type)
             thred->state |= PT_THREAD_SYSTEM;
 
@@ -341,14 +366,6 @@ static PRThread* _PR_CreateThread(
         else pt_book.user += 1;
         PR_Unlock(pt_book.ml);
 
-        if (thred->state & PT_THREAD_BOUND) {
-			/*
-			 * should a Posix feature test be used here?
-			 */
-#ifdef PTHREAD_SCOPE_SYSTEM
-    		rv = pthread_attr_setscope(&tattr, PTHREAD_SCOPE_SYSTEM);
-#endif
-		}
         /*
          * We pass a pointer to a local copy (instead of thred->id)
          * to pthread_create() because who knows what wacky things
@@ -359,6 +376,17 @@ static PRThread* _PR_CreateThread(
 #if !defined(_PR_DCETHREADS)
         if (EPERM == rv)
         {
+#if defined(IRIX)
+        	if (PR_GLOBAL_BOUND_THREAD == scope) {
+				/*
+				 * SCOPE_SYSTEM requires appropriate privilege
+				 * reset to process scope and try again
+				 */
+    			rv = pthread_attr_setscope(&tattr, PTHREAD_SCOPE_PROCESS);
+    			PR_ASSERT(0 == rv);
+            	thred->state &= ~PT_THREAD_BOUND;
+			}
+#else
             /* Remember that we don't have thread scheduling privilege. */
             pt_schedpriv = EPERM;
             PR_LOG(_pr_thread_lm, PR_LOG_MIN,
@@ -368,6 +396,7 @@ static PRThread* _PR_CreateThread(
             rv = pthread_attr_setinheritsched(&tattr, PTHREAD_INHERIT_SCHED);
             PR_ASSERT(0 == rv);
 #endif
+#endif	/* IRIX */
             rv = PTHREAD_CREATE(&id, tattr, _pt_root, thred);
         }
 #endif

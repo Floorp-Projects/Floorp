@@ -94,39 +94,43 @@ purpose.  It is provided "as is" without express or implied warranty.
 ** Description:	Localizable error code to string function.
 **
 **
-** NSPR provides a mechanism for converting an error code to a descriptive
-** string, in a caller-specified language.
+** NSPR provides a mechanism for converting an error code to a
+** descriptive string, in a caller-specified language.
 **
-** Error codes themselves are 32 bit (signed) integers.  Typically, the high
-** order 24 bits are an identifier of which error table the error code is
-** from, and the low order 8 bits are a sequential error number within
-** the table.  NSPR supports error tables whose first error code is not
-** a multiple of 256, such error code assignments should be avoided when
-** possible.
+** Error codes themselves are 32 bit (signed) integers.  Typically,
+** the high order 24 bits are an identifier of which error table the
+** error code is from, and the low order 8 bits are a sequential error
+** number within the table.  NSPR supports error tables whose first
+** error code is not a multiple of 256, such error code assignments
+** should be avoided when possible.
 **
 ** Error table 0 is defined to match the UNIX system call error table
 ** (sys_errlist); this allows errno values to be used directly in the
-** library.  Other error table numbers are typically formed by compacting
-** together the first four characters of the error table name.  The mapping
-** between characters in the name and numeric values in the error code are
-** defined in a system-independent fashion, so that two systems that can
-** pass integral values between them can reliably pass error codes without
-** loss of meaning; this should work even if the character sets used are not
-** the same. (However, if this is to be done, error table 0 should be avoided,
-** since the local system call error tables may differ.)
+** library.  Other error table numbers are typically formed by
+** compacting together the first four characters of the error table
+** name.  The mapping between characters in the name and numeric
+** values in the error code are defined in a system-independent
+** fashion, so that two systems that can pass integral values between
+** them can reliably pass error codes without loss of meaning; this
+** should work even if the character sets used are not the
+** same. (However, if this is to be done, error table 0 should be
+** avoided, since the local system call error tables may differ.)
 **
-** Libraries defining error codes need only provide a table mapping error
-** code numbers to names and default English descriptions, calling a routine
-** to make the table ``known'' to NSPR library.  Any error code the library
-** generates can be converted to the corresponding error message.  There is
-** also a default format for error codes accidentally returned before making
-** the table known, which is of the form "unknown code foo 32", where "foo"
-** would be the name of the table.
+** Libraries defining error codes need only provide a table mapping
+** error code numbers to names and default English descriptions,
+** calling a routine to install the table, making it ``known'' to NSPR
+** library.  Once installed, a table may not be removed.  Any error
+** code the library generates can be converted to the corresponding
+** error message.  There is also a default format for error codes
+** accidentally returned before making the table known, which is of
+** the form "unknown code foo 32", where "foo" would be the name of
+** the table.
 **
-** Normally, the error code conversion routine only supports the languages
-** "i-default" and "en", returning the error-table-provided English
-** description for both languages.  The application may provide a
-** localization plugin, allowing support for additional languages.
+** Normally, the error code conversion routine only supports the
+** languages "i-default" and "en", returning the error-table-provided
+** English description for both languages.  The application may
+** provide a localization plugin, allowing support for additional
+** languages.
 **
 **/
 
@@ -143,7 +147,7 @@ purpose.  It is provided "as is" without express or implied warranty.
  *    which has been explicitly negotiated.  Additional language
  *    codes are defined by an application-provided localization plugin.
  */
-typedef PRInt32 PRLanguageCode;
+typedef PRUint32 PRLanguageCode;
 #define PR_LANGUAGE_I_DEFAULT 0 /* i-default, the default language */
 #define PR_LANGUAGE_EN 1 /* English, explicitly negotiated */
 
@@ -152,7 +156,7 @@ typedef PRInt32 PRLanguageCode;
 /**********************************************************************/
 
 /***********************************************************************
-** FUNCTION:    PR_ErrorTableToString
+** FUNCTION:    PR_ErrorToString
 ** DESCRIPTION:
 **  Returns the UTF-8 message for an error code in
 **  the requested language.  May return the message
@@ -163,6 +167,20 @@ typedef PRInt32 PRLanguageCode;
 ***********************************************************************/
 PR_EXTERN(const char *) PR_ErrorToString(PRErrorCode code,
     PRLanguageCode language);
+
+
+/***********************************************************************
+** FUNCTION:    PR_ErrorToName
+** DESCRIPTION:
+**  Returns the macro name for an error code, or NULL
+**  if the error code is not known.  The returned string is
+**  valid for the duration of the process.
+**
+**  Does not work for error table 0, the system error codes.
+**
+***********************************************************************/
+PR_EXTERN(const char *) PR_ErrorToName(PRErrorCode code);
+
 
 /***********************************************************************
 ** FUNCTION:    PR_ErrorLanguages
