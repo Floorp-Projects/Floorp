@@ -187,6 +187,8 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit, nsMacMessageSink* aSink)
 	mRunning = PR_FALSE;
 	mMouseRgn = ::NewRgn();
 
+  NS_ASSERTION(mToolkit, "No toolkit");
+  
 	//
 	// create the TSM Message Pump
 	//
@@ -257,44 +259,60 @@ void nsMacMessagePump::DoMessagePump()
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID,   NS_FILETRANSPORTSERVICE_CID);
 
-// #define BUSINESS_INDICATOR
+//#define BUSINESS_INDICATOR
+#define kIdleHysterysisTicks    60
 
 //=================================================================
 /* Return TRUE if the program is busy, like doing network stuff.
  *
 */
 PRBool nsMacMessagePump::BrowserIsBusy()
-{
+{	
+	// we avoid frenetic oscillations between busy and idle states by not going
+	// idle for a few ticks after we've detected idleness. This was added after
+	// observing rapid busy/idle oscillations during chrome loading.
+	static PRUint32 sNextIdleTicks = 0;
+	PRBool  foundActivity = PR_TRUE;
+
+	do    // convenience for breaking. We'll start by assuming that we're busy.
+	{
+  	nsCOMPtr<nsISocketTransportService> socketTransport = do_GetService(kSocketTransportServiceCID);
+  	if (socketTransport)
+  	{
+  		PRUint32 inUseTransports;
+  		socketTransport->GetInUseTransportCount(&inUseTransports);
+  		if (inUseTransports > 0)
+  		  break;
+  	}
+
+  	nsCOMPtr<nsIFileTransportService> fileTransport = do_GetService(kFileTransportServiceCID);
+  	if (fileTransport)
+  	{
+  		PRUint32 inUseTransports;
+  		fileTransport->GetInUseTransportCount(&inUseTransports);
+  		if (inUseTransports > 0)
+  		  break;
+  	}
+  	
+  	if (mToolkit->ToolkitBusy())
+  	  break;
+
+   	foundActivity = PR_FALSE;
+
+	} while(0);
+
+	PRBool  isBusy = foundActivity;
+
+  if (foundActivity)
+    sNextIdleTicks = ::TickCount() + kIdleHysterysisTicks;
+  else if (::TickCount() < sNextIdleTicks)
+    isBusy = PR_TRUE;
+
 #ifdef BUSINESS_INDICATOR
 	static PRBool wasBusy;
-#endif
-	
-	PRBool isBusy = PR_FALSE;
-	
-	nsCOMPtr<nsISocketTransportService> socketTransport = do_GetService(kSocketTransportServiceCID);
-	if (socketTransport)
-	{
-		PRUint32 inUseTransports;
-		socketTransport->GetInUseTransportCount(&inUseTransports);
-		isBusy = inUseTransports > 0;
-	}
-
-	nsCOMPtr<nsIFileTransportService> fileTransport = do_GetService(kFileTransportServiceCID);
-	if (fileTransport)
-	{
-		PRUint32 inUseTransports;
-		fileTransport->GetInUseTransportCount(&inUseTransports);
-		isBusy |= (inUseTransports > 0);
-	}
-	
-#ifdef BUSINESS_INDICATOR
 	if (isBusy != wasBusy)
 	{
-		if (isBusy)
-			printf("¤¤ Message pump became busy\n");
-		else
-			printf("¤¤ Message pump became idle\n");
-			
+		printf("¤¤ Message pump became %s at %ld (next idle %ld)\n", isBusy ? "busy" : "idle", ::TickCount(), sNextIdleTicks);			
 	  wasBusy = isBusy;
 	}
 #endif
@@ -322,19 +340,22 @@ PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 	// don't call more than once every 4 ticks
 	if (!havePendingEvent && (::TickCount() < sNextWNECall))
 		return PR_FALSE;
-	
-	SInt32  sleepTime = (havePendingEvent || BrowserIsBusy()) ? 0 : 2;
-	
+		
 	// when in the background, we don't want to chew up time processing mouse move
 	// events, so set the mouse region to null. If we're in the fg, however,
 	// we want every mouseMove event we can get our grubby little hands on, so set
 	// it to a 1x1 rect.
 	RgnHandle mouseRgn = nsToolkit::IsAppInForeground() ? mMouseRgn : nsnull;
+
+	PRBool 	browserBusy = BrowserIsBusy();
+	SInt32  sleepTime = (havePendingEvent || browserBusy) ? 0 : 2;
 	
 	::SetEventMask(everyEvent); // we need keyUp events
 	PRBool haveEvent = ::WaitNextEvent(everyEvent, &theEvent, sleepTime, mouseRgn);
   
-	sNextWNECall = ::TickCount() + kWNECallIntervalTicks;
+	// if we are not busy, call WNE as often as possible to yield time to
+	// other apps (especially important on Mac OS X)
+	sNextWNECall = browserBusy ? (::TickCount() + kWNECallIntervalTicks) : 0;
 
 #if !TARGET_CARBON
 	if (haveEvent && ::TSMEvent(&theEvent) )

@@ -26,8 +26,10 @@
 #include "nsIToolkit.h"
 #include "nsRepeater.h"
 
-class nsIEventQueue;
+#include "nsCOMPtr.h"
 
+class nsIEventQueue;
+class nsIEventQueueService;
 
 /**
  * The toolkit abstraction is necessary because the message pump must
@@ -66,6 +68,11 @@ public:
     
   NS_IMETHOD  	Init(PRThread *aThread);
   
+  // are there pending events on the toolkit's event queue?
+  PRBool        ToolkitBusy();
+  
+public:
+
   // Appearance Mgr
   static bool 	HasAppearanceManager();
   
@@ -92,6 +99,8 @@ public:
 	// Repeater interface
 	virtual	void		RepeatAction(const EventRecord& inMacEvent);
 
+  PRBool          EventsArePending();
+  
 protected:
 
 	void						ProcessPLEventQueue();
@@ -100,6 +109,7 @@ protected:
 
 	nsrefcnt								mRefCnt;
 
+	nsCOMPtr<nsIEventQueueService>			mEventQueueService;
 };
 
 

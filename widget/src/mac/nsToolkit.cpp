@@ -34,15 +34,13 @@
 #include "nsIImageManager.h"
 #include "nsGfxCIID.h"
 
-//#define MAC_PL_EVENT_TWEAKING
-
 // Class IDs...
 static NS_DEFINE_CID(kEventQueueCID,  NS_EVENTQUEUE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,  NS_EVENTQUEUESERVICE_CID);
 
 static NS_DEFINE_IID(kImageManagerCID, NS_IMAGEMANAGER_CID);
 
-static nsMacNSPREventQueueHandler*	gEventQueueHandler = nsnull;
+static nsMacNSPREventQueueHandler*  gEventQueueHandler = nsnull;
 
 //
 // Static thread local storage index of the Toolkit 
@@ -55,7 +53,8 @@ static PRUintn gToolkitTLSIndex = 0;
 //-------------------------------------------------------------------------
 nsMacNSPREventQueueHandler::nsMacNSPREventQueueHandler(): Repeater()
 {
-	mRefCnt = 0;
+  mRefCnt = 0;
+  mEventQueueService = do_GetService(kEventQueueServiceCID);
 }
 
 //-------------------------------------------------------------------------
@@ -63,7 +62,7 @@ nsMacNSPREventQueueHandler::nsMacNSPREventQueueHandler(): Repeater()
 //-------------------------------------------------------------------------
 nsMacNSPREventQueueHandler::~nsMacNSPREventQueueHandler()
 {
-	StopRepeating();
+  StopRepeating();
 }
 
 //-------------------------------------------------------------------------
@@ -71,9 +70,9 @@ nsMacNSPREventQueueHandler::~nsMacNSPREventQueueHandler()
 //-------------------------------------------------------------------------
 void nsMacNSPREventQueueHandler::StartPumping()
 {
-	++mRefCnt;
-	NS_LOG_ADDREF(this, mRefCnt, "nsMacNSPREventQueueHandler", sizeof(*this));
-	StartRepeating();
+  ++mRefCnt;
+  NS_LOG_ADDREF(this, mRefCnt, "nsMacNSPREventQueueHandler", sizeof(*this));
+  StartRepeating();
 }
 
 //-------------------------------------------------------------------------
@@ -81,16 +80,16 @@ void nsMacNSPREventQueueHandler::StartPumping()
 //-------------------------------------------------------------------------
 PRBool nsMacNSPREventQueueHandler::StopPumping()
 {
-	if (mRefCnt > 0) {
-		--mRefCnt;
-		NS_LOG_RELEASE(this, mRefCnt, "nsMacNSPREventQueueHandler");
-		if (mRefCnt == 0) {
-			StopRepeating();
-			return PR_TRUE;
-		}
-	}
+  if (mRefCnt > 0) {
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "nsMacNSPREventQueueHandler");
+    if (mRefCnt == 0) {
+      StopRepeating();
+      return PR_TRUE;
+    }
+  }
 
-	return PR_FALSE;
+  return PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -98,7 +97,27 @@ PRBool nsMacNSPREventQueueHandler::StopPumping()
 //-------------------------------------------------------------------------
 void nsMacNSPREventQueueHandler::RepeatAction(const EventRecord& inMacEvent)
 {
-	ProcessPLEventQueue();
+  ProcessPLEventQueue();
+}
+
+
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
+PRBool nsMacNSPREventQueueHandler::EventsArePending()
+{
+  PRBool   pendingEvents = PR_FALSE;
+  
+  if (mEventQueueService)
+  {
+    nsCOMPtr<nsIEventQueue> queue;
+    mEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+
+    if (queue)
+      queue->PendingEvents(&pendingEvents);
+  }
+
+  return pendingEvents;
 }
 
 
@@ -107,35 +126,19 @@ void nsMacNSPREventQueueHandler::RepeatAction(const EventRecord& inMacEvent)
 //-------------------------------------------------------------------------
 void nsMacNSPREventQueueHandler::ProcessPLEventQueue()
 {
-	nsCOMPtr<nsIEventQueueService> eventQService = do_GetService(kEventQueueServiceCID);
-	if (eventQService)
-	{
-		nsCOMPtr<nsIEventQueue> queue;
-		eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-	
-#ifdef MAC_PL_EVENT_TWEAKING
-		// just handle one event at a time
-		if (queue)
-		{
-			PRBool plEventAvail = PR_FALSE;
-			queue->EventAvailable(plEventAvail);
-			if (plEventAvail)
-			{
-				PLEvent* thisEvent;
-				if (NS_SUCCEEDED(queue->GetEvent(&thisEvent)))
-				{
-					queue->HandleEvent(thisEvent);
-				}
-			}
-		}
-
-#else
-		// the old way
-		if (queue)
-			queue->ProcessPendingEvents();
-#endif	
-	}
-
+  NS_ASSERTION(mEventQueueService, "Need event queue service here");
+  
+  nsCOMPtr<nsIEventQueue> queue;
+  mEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+  if (queue)
+  {
+    PRBool eventsPending = PR_FALSE;
+    if (NS_SUCCEEDED(queue->PendingEvents(&eventsPending)) && eventsPending)
+    {
+      nsresult rv = queue->ProcessPendingEvents();
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Error processing PLEvents");
+    }
+  }
 }
 
 
@@ -153,9 +156,9 @@ bool nsToolkit::sInForeground = true;
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit() : mInited(false)
 {
-	NS_INIT_REFCNT();
-	if (gEventQueueHandler == nsnull)
-		gEventQueueHandler = new nsMacNSPREventQueueHandler;
+  NS_INIT_REFCNT();
+  if (gEventQueueHandler == nsnull)
+    gEventQueueHandler = new nsMacNSPREventQueueHandler;
 }
 
 //-------------------------------------------------------------------------
@@ -165,17 +168,17 @@ nsToolkit::~nsToolkit()
 { 
   nsWidgetAtoms::ReleaseAtoms();
   
-	/* StopPumping decrements a refcount on gEventQueueHandler; a prelude toward
-	   stopping event handling. This is not something you want to do unless you've
-	   bloody well started event handling and incremented the refcount. That's
-	   done in the Init method, not the constructor, and that's what mInited is about.
-	*/
-	if (mInited && gEventQueueHandler) {
-		if (gEventQueueHandler->StopPumping()) {
-			delete gEventQueueHandler;
-			gEventQueueHandler = nsnull;
-		}
-	}
+  /* StopPumping decrements a refcount on gEventQueueHandler; a prelude toward
+     stopping event handling. This is not something you want to do unless you've
+     bloody well started event handling and incremented the refcount. That's
+     done in the Init method, not the constructor, and that's what mInited is about.
+  */
+  if (mInited && gEventQueueHandler) {
+    if (gEventQueueHandler->StopPumping()) {
+      delete gEventQueueHandler;
+      gEventQueueHandler = nsnull;
+    }
+  }
     // Remove the TLS reference to the toolkit...
     PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
 }
@@ -186,14 +189,24 @@ nsToolkit::~nsToolkit()
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsToolkit::Init(PRThread */*aThread*/)
 {
-	if (gEventQueueHandler)
-		gEventQueueHandler->StartPumping();
+  if (gEventQueueHandler)
+    gEventQueueHandler->StartPumping();
 
   nsWidgetAtoms::AddRefAtoms();
 
-	mInited = true;
-	return NS_OK;
+  mInited = true;
+  return NS_OK;
 }
+
+
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
+PRBool nsToolkit::ToolkitBusy()
+{
+  return (gEventQueueHandler) ? gEventQueueHandler->EventsArePending() : PR_FALSE;
+}
+
 
 //-------------------------------------------------------------------------
 //
@@ -201,25 +214,25 @@ NS_IMETHODIMP nsToolkit::Init(PRThread */*aThread*/)
 bool nsToolkit::HasAppearanceManager()
 {
 
-#define APPEARANCE_MIN_VERSION	0x0110		// we require version 1.1
-	
-	static bool inited = false;
-	static bool hasAppearanceManager = false;
+#define APPEARANCE_MIN_VERSION  0x0110    // we require version 1.1
+  
+  static bool inited = false;
+  static bool hasAppearanceManager = false;
 
-	if (inited)
-		return hasAppearanceManager;
-	inited = true;
+  if (inited)
+    return hasAppearanceManager;
+  inited = true;
 
-	SInt32 result;
-	if (::Gestalt(gestaltAppearanceAttr, &result) != noErr)
-		return false;		// no Appearance Mgr
+  SInt32 result;
+  if (::Gestalt(gestaltAppearanceAttr, &result) != noErr)
+    return false;   // no Appearance Mgr
 
-	if (::Gestalt(gestaltAppearanceVersion, &result) != noErr)
-		return false;		// still version 1.0
+  if (::Gestalt(gestaltAppearanceVersion, &result) != noErr)
+    return false;   // still version 1.0
 
-	hasAppearanceManager = (result >= APPEARANCE_MIN_VERSION);
+  hasAppearanceManager = (result >= APPEARANCE_MIN_VERSION);
 
-	return hasAppearanceManager;
+  return hasAppearanceManager;
 }
 
 
@@ -327,10 +340,10 @@ OSErr nsMacMemoryCushion::Init(Size bufferSize, Size reserveSize)
   ::HPurge(mBufferHandle);
 
 #if !TARGET_CARBON
-	::SetGrowZone(NewGrowZoneProc(GrowZoneProc));
+  ::SetGrowZone(NewGrowZoneProc(GrowZoneProc));
 #endif
 
-	return noErr;
+  return noErr;
 }
 
 
