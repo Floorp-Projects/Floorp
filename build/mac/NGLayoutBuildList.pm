@@ -562,6 +562,10 @@ sub MakeResourceAliases()
  		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:locale:en-US:MANIFEST",	"$pref_chrome_dir:locale:en-US:", 0);
  	}
 
+	_InstallResources(":mozilla:xpfe:components:console:resources:content:MANIFEST", 		"$global_chrome_dir:content:default:", 0);
+	_InstallResources(":mozilla:xpfe:components:console:resources:skin:MANIFEST",			"$global_chrome_dir:skin:default:", 0);
+	_InstallResources(":mozilla:xpfe:components:console:resources:locale:en-US:MANIFEST",	"$global_chrome_dir:locale:en-US:", 0);
+
 	{
 		 my($wallet_chrome_dir) = "$chrome_dir" . "Wallet";
 		_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST",				"$wallet_chrome_dir:content:default:", 0);
@@ -930,6 +934,8 @@ sub BuildClientDist()
 	 _InstallFromManifest(":mozilla:xpfe:components:directory:MANIFEST_IDL",		"$distdirectory:idl:");
 	 # regviewer
 	 _InstallFromManifest(":mozilla:xpfe:components:regviewer:MANIFEST_IDL",		"$distdirectory:idl:");
+   # console
+	 _InstallFromManifest(":mozilla:xpfe:components:console:MANIFEST_IDL",		"$distdirectory:idl:");
 
 	# XPAPPS
 	_InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",					"$distdirectory:xpfe:");
@@ -1200,7 +1206,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:xpfe:components:search:macbuild:SearchIDL.mcp",	"search");
 	BuildIDLProject(":mozilla:xpfe:components:macbuild:mozcompsIDL.mcp",			"mozcomps");
 	BuildIDLProject(":mozilla:xpfe:components:timebomb:macbuild:timebombIDL.mcp",	"tmbm");
-	
+	BuildIDLProject(":mozilla:xpfe:components:console:macbuild:ConsoleIDL.mcp",	"console");
 	
 	BuildIDLProject(":mozilla:xpfe:appshell:macbuild:appshellIDL.mcp",				"appshell");
 	
@@ -1256,7 +1262,11 @@ sub BuildRuntimeProjects()
 	}
 	else
 	{
-		_BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",			"MacOS Interfaces");
+	    if (0 /* $main::UNIVERSAL_HEADERS_VERSION >= 0x0330 */) {
+    		_BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",			"MacOS Interfaces (3.3)");
+	    } else {
+    		_BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",			"MacOS Interfaces");
+    	}
 	}
 	
 	#// Build all of the startup libraries, for Application, Component, and Shared Libraries. These are
@@ -1616,6 +1626,7 @@ sub BuildXPAppProjects()
 	BuildOneProject(":mozilla:xpfe:components:history:macbuild:history.mcp", "history$D.shlb", "historyComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:shistory:macbuild:shistory.mcp", "shistory$D.shlb", "shistoryComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:related:macbuild:Related.mcp", "Related$D.shlb", "RelatedComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:xpfe:components:console:macbuild:Console.mcp", "Console$D.shlb", "Console.toc", 1, $main::ALIAS_SYM_FILES, 1);
 		
 	# Applications
 	BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",				"AppShell$D.shlb", "AppShell.toc", 1, $main::ALIAS_SYM_FILES, 1);
