@@ -17,6 +17,7 @@
  */
 
 #include "nsIRDFContainer.h"
+#include "nsRDFContentUtils.h"
 #include "nsRDFParserUtils.h"
 #include "nsRDFResource.h"
 #include "nsString.h"
@@ -24,7 +25,7 @@
 
 void XXXNeverCalled()
 {
-    static nsAutoString s;
+    nsAutoString s;
 
     // nsRDFParserUtils
     nsRDFParserUtils::EntityToUnicode("");
@@ -32,10 +33,23 @@ void XXXNeverCalled()
     nsRDFParserUtils::GetQuotedAttributeValue(s, s, s);
     nsRDFParserUtils::IsJavaScriptLanguage(s);
 
+    // nsRDFContentUtils
+    nsRDFContentUtils::AttachTextNode(nsnull, nsnull);
+    nsRDFContentUtils::FindChildByTag(nsnull, 0, nsnull, nsnull);
+    nsRDFContentUtils::FindChildByTagAndResource(nsnull, 0, nsnull, nsnull, nsnull);
+    nsRDFContentUtils::GetElementResource(nsnull, nsnull);
+    nsRDFContentUtils::GetElementRefResource(nsnull, nsnull);
+    nsRDFContentUtils::GetTextForNode(nsnull, s);
+    nsRDFContentUtils::GetElementLogString(nsnull, s);
+    nsRDFContentUtils::MakeElementURI(nsnull, s, s);
+    nsRDFContentUtils::MakeElementID(nsnull, s, s);
+
     // rdfutils
     rdf_CreateAnonymousResource(s, nsnull);
     rdf_IsAnonymousResource(s, nsnull);
-    rdf_PossiblyMakeRelative(s, s);
+    rdf_MakeRelativeRef(s, s);
+    rdf_MakeRelativeName(s, s);
+    rdf_MakeAbsoluteURI(s, s);
     NS_NewContainerEnumerator(nsnull, nsnull, nsnull);
     NS_NewEmptyEnumerator(nsnull);
 
