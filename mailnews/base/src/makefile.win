@@ -20,18 +20,22 @@ IGNORE_MANIFEST=1
 
 include <$(DEPTH)\config\config.mak>
 
-LIBRARY_NAME=msgcore_s
+LIBRARY_NAME=msgcore
 MODULE= mailnews
 REQUIRES=xpcom js nspr
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=    nsMsgRFC822Parser.cpp  \
-			nsMsgFolder.cpp \
+CPPSRCS=    nsMsgRFC822Parser.cpp   \
+			nsMsgFolder.cpp			\
+			nsMsgPtrArray.cpp		\
+			nsMsgGroupRecord.cpp	\
 			$(NULL)
 
-CPP_OBJS=   .\$(OBJDIR)\nsMsgRFC822Parser.obj  \
-			.\$(OBJDIR)\nsMsgFolder.obj \
+CPP_OBJS=   .\$(OBJDIR)\nsMsgRFC822Parser.obj   \
+			.\$(OBJDIR)\nsMsgFolder.obj			\
+			.\$(OBJDIR)\nsMsgPtrArray.obj		\
+			.\$(OBJDIR)\nsMsgGroupRecord.obj	\
 			$(NULL)
 
 
