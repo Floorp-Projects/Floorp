@@ -142,19 +142,19 @@ nsMsgIncomingServer::SetRootFolder(nsIFolder * aRootFolder)
 NS_IMETHODIMP
 nsMsgIncomingServer::GetRootFolder(nsIFolder * *aRootFolder)
 {
-	if (!aRootFolder)
-		return NS_ERROR_NULL_POINTER;
-    if (m_rootFolder) {
-      *aRootFolder = m_rootFolder;
-      NS_ADDREF(*aRootFolder);
-    } else {
-      nsresult rv = CreateRootFolder();
-      if (NS_FAILED(rv)) return rv;
-      
-      *aRootFolder = m_rootFolder;
-      NS_IF_ADDREF(*aRootFolder);
-    }
-	return NS_OK;
+  if (!aRootFolder)
+    return NS_ERROR_NULL_POINTER;
+  if (m_rootFolder) {
+    *aRootFolder = m_rootFolder;
+    NS_ADDREF(*aRootFolder);
+  } else {
+    nsresult rv = CreateRootFolder();
+    if (NS_FAILED(rv)) return rv;
+    
+    *aRootFolder = m_rootFolder;
+    NS_IF_ADDREF(*aRootFolder);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -173,31 +173,31 @@ NS_IMETHODIMP
 nsMsgIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
 {
 #ifdef DEBUG_sspitzer
-	printf("PerformExpand()\n");
+  printf("PerformExpand()\n");
 #endif
-	return NS_OK;
+  return NS_OK;
 }
 
   
 NS_IMETHODIMP
 nsMsgIncomingServer::PerformBiff()
 {
-	//This had to be implemented in the derived class, but in case someone doesn't implement it
-	//just return not implemented.
-	return NS_ERROR_NOT_IMPLEMENTED;	
+  //This had to be implemented in the derived class, but in case someone doesn't implement it
+  //just return not implemented.
+  return NS_ERROR_NOT_IMPLEMENTED;	
 }
 
 
 NS_IMETHODIMP nsMsgIncomingServer::GetPerformingBiff(PRBool *aPerformingBiff)
 {
   NS_ENSURE_ARG_POINTER(aPerformingBiff);
-	*aPerformingBiff = mPerformingBiff;
-	return NS_OK;
+  *aPerformingBiff = mPerformingBiff;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgIncomingServer::SetPerformingBiff(PRBool aPerformingBiff)
 {
-	mPerformingBiff = aPerformingBiff;
+  mPerformingBiff = aPerformingBiff;
   return NS_OK;
 }
 
@@ -205,14 +205,14 @@ NS_IMPL_GETSET(nsMsgIncomingServer, BiffState, PRUint32, m_biffState);
 
 NS_IMETHODIMP nsMsgIncomingServer::WriteToFolderCache(nsIMsgFolderCache *folderCache)
 {
-	nsresult rv = NS_OK;
-	if (m_rootFolder)
-	{
-		nsCOMPtr <nsIMsgFolder> msgFolder = do_QueryInterface(m_rootFolder, &rv);
-		if (NS_SUCCEEDED(rv) && msgFolder)
-			rv = msgFolder->WriteToFolderCache(folderCache, PR_TRUE /* deep */);
-	}
-	return rv;
+  nsresult rv = NS_OK;
+  if (m_rootFolder)
+  {
+    nsCOMPtr <nsIMsgFolder> msgFolder = do_QueryInterface(m_rootFolder, &rv);
+    if (NS_SUCCEEDED(rv) && msgFolder)
+      rv = msgFolder->WriteToFolderCache(folderCache, PR_TRUE /* deep */);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1788,12 +1788,11 @@ nsMsgIncomingServer::ConfigureTemporaryReturnReceiptsFilter(nsIMsgFilterList *fi
           rv = term->GetValue(getter_AddRefs(value));
           if (NS_SUCCEEDED(rv))
           {
-            // XXX todo
-            // determine if ::OtherHeader is the best way to do this.
-            // see nsMsgSearchOfflineMail::MatchTerms()
-            value->SetAttrib(nsMsgSearchAttrib::OtherHeader);
+            // we need to use OtherHeader + 1 so nsMsgFilter::GetTerm will
+            // return our custom header.
+            value->SetAttrib(nsMsgSearchAttrib::OtherHeader + 1);
             value->SetStr(NS_LITERAL_STRING("multipart/report").get());
-            term->SetAttrib(nsMsgSearchAttrib::OtherHeader);  
+            term->SetAttrib(nsMsgSearchAttrib::OtherHeader + 1);  
             term->SetOp(nsMsgSearchOp::Contains);
             term->SetBooleanAnd(PR_TRUE);
             term->SetArbitraryHeader("Content-Type");
@@ -1810,9 +1809,9 @@ nsMsgIncomingServer::ConfigureTemporaryReturnReceiptsFilter(nsIMsgFilterList *fi
             // XXX todo
             // determine if ::OtherHeader is the best way to do this.
             // see nsMsgSearchOfflineMail::MatchTerms()
-            value->SetAttrib(nsMsgSearchAttrib::OtherHeader);
+            value->SetAttrib(nsMsgSearchAttrib::OtherHeader + 1);
             value->SetStr(NS_LITERAL_STRING("disposition-notification").get());
-            term->SetAttrib(nsMsgSearchAttrib::OtherHeader);
+            term->SetAttrib(nsMsgSearchAttrib::OtherHeader + 1);
             term->SetOp(nsMsgSearchOp::Contains);
             term->SetBooleanAnd(PR_TRUE);
             term->SetArbitraryHeader("Content-Type");
