@@ -71,6 +71,9 @@ static nsresult ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *a
 #define DEBUG_OUT_RANGE(x)  
 #endif //MOZ_DEBUG
 
+
+#define OLD_SELECTION PRFALSE
+
 //#define DEBUG_SELECTION // uncomment for printf describing every collapse and extend.
 //#define DEBUG_NAVIGATION
 
@@ -1688,6 +1691,7 @@ nsDOMSelection::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
         result = iter->CurrentNode(getter_AddRefs(content));
         if (NS_FAILED(result) || !content)
           return result;
+#if OLD_SELECTION
         result = inneriter->Init(content);
         if (NS_SUCCEEDED(result))
         {
@@ -1705,6 +1709,11 @@ nsDOMSelection::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
         	    return result;
           }
         }
+#else
+        result = mRangeList->GetTracker()->GetPrimaryFrameFor(content, &frame);
+        if (NS_SUCCEEDED(result) && frame)
+          frame->SetSelected(aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+#endif
         result = iter->Next();
       }
     }
@@ -2109,6 +2118,7 @@ nsDOMSelection::GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn)
 	return NS_OK;
 }
 
+#if OLD_SELECTION
 
 //may change parameters may not.
 //return NS_ERROR_FAILURE if invalid new selection between anchor and passed in parameters
@@ -2341,6 +2351,121 @@ nsDOMSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PR
   }
   return NS_OK;
 }
+#else
+
+//may change parameters may not.
+//return NS_ERROR_FAILURE if invalid new selection between anchor and passed in parameters
+NS_IMETHODIMP
+nsDOMSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PRBool *aFixupState)
+{
+  if (!aRange || !aFixupState)
+    return NS_ERROR_NULL_POINTER;
+  *aFixupState = PR_FALSE;
+  nsresult res;
+  
+  //startNode is the beginning or "anchor" of the range
+  //end Node is the end or "focus of the range
+  nsCOMPtr<nsIDOMNode> startNode;
+  nsCOMPtr<nsIDOMNode> endNode;
+  PRInt32 startOffset;
+  PRInt32 endOffset;
+  nsresult result;
+  if (*aDir == eDirNext)
+  {
+    aRange->GetStartParent(getter_AddRefs(startNode));
+    aRange->GetStartOffset(&startOffset);
+    aRange->GetEndParent(getter_AddRefs(endNode));
+    aRange->GetEndOffset(&endOffset);
+  }
+  else
+  {
+    aRange->GetEndParent(getter_AddRefs(startNode));
+    aRange->GetEndOffset(&startOffset);
+    aRange->GetStartParent(getter_AddRefs(endNode));
+    aRange->GetStartOffset(&endOffset);
+  }
+  if (!startNode || !endNode)
+    return NS_ERROR_FAILURE;
+  if (startNode == endNode)
+    return NS_OK;
+
+
+  //get common parent
+  nsCOMPtr<nsIDOMNode> parent;
+
+  res = aRange->GetCommonParent(getter_AddRefs(parent));
+  if (NS_FAILED(res) || !parent)
+    return res;
+ 
+  //look for dest. if you see a cell you are in "cell mode"
+  //if you see a table you select "whole" table
+
+  //src first 
+  nsCOMPtr<nsIDOMNode> tempNode;
+  nsCOMPtr<nsIDOMNode> tempNode2;
+  PRBool cellMode = PR_FALSE;
+  PRBool dirtystart = PR_FALSE;
+  PRBool dirtyend = PR_FALSE;
+  nsCOMPtr<nsIAtom> atom;
+  if (parent != startNode)
+  {
+    result = startNode->GetParentNode(getter_AddRefs(tempNode));
+    if (NS_FAILED(result) || !tempNode)
+      return NS_ERROR_FAILURE;
+    while (tempNode != parent)
+    {
+      atom = GetTag(tempNode);
+      if (atom.get() == nsRangeList::sTableAtom) //select whole table  if in cell mode, wait for cell
+      {
+        result = ParentOffset(tempNode, getter_AddRefs(startNode), &startOffset);
+        if (NS_FAILED(result))
+          return NS_ERROR_FAILURE;
+        endOffset = startOffset+1;
+        dirtystart = PR_TRUE;
+        cellMode = PR_FALSE;
+      }
+      else if (atom.get() == nsRangeList::sCellAtom) //you are in "cell" mode put selection to end of cell
+      {
+        cellMode = PR_TRUE;
+        result = ParentOffset(tempNode, getter_AddRefs(startNode), &startOffset);
+        if (NS_FAILED(result))
+          return result;
+        endOffset = startOffset+1;
+        dirtystart = PR_TRUE;
+      }
+      result = tempNode->GetParentNode(getter_AddRefs(tempNode2));
+      if (NS_FAILED(result) || !tempNode2)
+        return NS_ERROR_FAILURE;
+      tempNode = tempNode2;
+    }
+  }
+  
+  if (dirtystart)
+  {
+    *aFixupState = PR_TRUE;
+    if (*aDir == eDirNext)
+    {
+      if (NS_FAILED(aRange->SetStart(startNode,startOffset)) || NS_FAILED(aRange->SetEnd(startNode, endOffset)))
+      {
+        *aDir = eDirPrevious;
+        aRange->SetStart(startNode, endOffset);
+        aRange->SetEnd(startNode, startOffset);
+      }
+    }
+    else
+    {
+      if (NS_FAILED(aRange->SetStart(startNode,endOffset)) || NS_FAILED(aRange->SetEnd(startNode, startOffset)))
+      {
+        aRange->SetStart(startNode, startOffset);
+        aRange->SetEnd(startNode, endOffset);
+      }
+    }
+  }
+  return NS_OK;
+}
+
+#endif //OLD_SELECTION
+
 
 
 
@@ -2447,7 +2572,7 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
 
 
   nsDirection dir = GetDirection();
-  PRBool fixupState; //if there was a previous fixup the optimal drawing erasing will NOT work
+  PRBool fixupState = PR_FALSE; //if there was a previous fixup the optimal drawing erasing will NOT work
   if (NS_FAILED(res))
     return res;
 
@@ -2479,19 +2604,31 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     if (NS_FAILED(res))
       return res;
     dir = eDirNext;
-    res = FixupSelectionPoints(range, &dir, &fixupState);
+    res = difRange->SetEnd(FetchEndParent(range), FetchEndOffset(range));
+    res |= difRange->SetStart(FetchFocusNode(), FetchFocusOffset());
     if (NS_FAILED(res))
       return res;
-    if (fixupState) //unselect previous and select new state has changed to not fixed up
+#if OLD_SELECTION
+    res = FixupSelectionPoints(range, &dir, &fixupState);
+#else
+    if (FetchAnchorNode() != FetchFocusNode()) //start and end are not same in old range
+      res = FixupSelectionPoints(difRange, &dir, &fixupState);
+#endif
+    if (NS_FAILED(res))
+      return res;
+    if (fixupState) 
     {
+#if OLD_SELECTION
       selectFrames(mAnchorFocusRange, PR_FALSE);
       selectFrames(range, PR_TRUE);
+#else
+      selectFrames(difRange,PR_FALSE);
+      difRange->SetEnd(aParentNode, aOffset);
+      difRange->SetStart(FetchAnchorNode(),FetchAnchorOffset());
+      selectFrames(difRange,PR_TRUE);
+#endif
     }
     else{
-      res = difRange->SetEnd(FetchEndParent(range), FetchEndOffset(range));
-      res |= difRange->SetStart(FetchFocusNode(), FetchFocusOffset());
-      if (NS_FAILED(res))
-        return res;
       selectFrames(difRange , PR_TRUE);
     }
   }
@@ -2501,6 +2638,7 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     res = range->SetStart(aParentNode,aOffset);
     if (NS_FAILED(res))
       return res;
+#if OLD_SELECTION
     res = FixupSelectionPoints(range, &dir, &fixupState);
     if (NS_FAILED(res))
       return res;
@@ -2510,6 +2648,7 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
       selectFrames(range, PR_TRUE);
     }
     else
+#endif
       selectFrames(range, PR_TRUE);
   }
   else if (result3 <= 0 && result2 >= 0) {//a,2,1 or a2,1 or a,21 or a21
@@ -2519,19 +2658,33 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     if (NS_FAILED(res))
       return res;
 
-    dir = eDirNext;
     res = range->SetEnd(aParentNode,aOffset);
     if (NS_FAILED(res))
       return res;
+#if OLD_SELECTION    
+    dir = eDirNext;
     res = FixupSelectionPoints(range, &dir, &fixupState);
+#else
+    if (aParentNode != FetchFocusNode())
+      res = FixupSelectionPoints(difRange, &dir, &fixupState);
+#endif
     if (NS_FAILED(res))
       return res;
     if (fixupState) //unselect previous and select new state has changed to not fixed up
     {
+#if OLD_SELECTION    
       selectFrames(mAnchorFocusRange, PR_FALSE);
       selectFrames(range, PR_TRUE);
+#else
+      difRange->SetEnd(FetchFocusNode(),FetchFocusOffset());
+      selectFrames(difRange, PR_FALSE);
+      difRange->SetStart(FetchAnchorNode(),FetchAnchorOffset());
+      difRange->SetEnd(aParentNode,aOffset);
+      selectFrames(difRange, PR_TRUE);
+#endif
     }
-    else {
+    else 
+    {
       selectFrames(difRange, 0);//deselect now if fixup succeeded
       difRange->SetEnd(FetchEndParent(range),FetchEndOffset(range));
       selectFrames(difRange, PR_TRUE);//must reselect last node maybe more if fixup did something
@@ -2547,15 +2700,19 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     res = range->SetEnd(aParentNode,aOffset);
     if (NS_FAILED(res))
       return res;
+#if OLD_SELECTION
     res = FixupSelectionPoints(range, &dir, &fixupState);
     if (NS_FAILED(res))
       return res;
+
     if (fixupState) //unselect previous and select new state has changed to not fixed up
     {
       selectFrames(mAnchorFocusRange, PR_FALSE);
       selectFrames(range, PR_TRUE);
     }
-    else {
+    else 
+#endif
+    {
       if (FetchFocusNode() != FetchAnchorNode() || FetchFocusOffset() != FetchAnchorOffset() ){//if collapsed diff dont do anything
         res = difRange->SetStart(FetchFocusNode(), FetchFocusOffset());
         res |= difRange->SetEnd(FetchAnchorNode(), FetchAnchorOffset());
@@ -2579,15 +2736,28 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     if (NS_FAILED(res))
       return res;
 
+#if OLD_SELECTION
     res = FixupSelectionPoints(range, &dir, &fixupState);
+#else
+    res = FixupSelectionPoints(difRange, &dir, &fixupState);
+#endif
     if (NS_FAILED(res))
       return res;
     if (fixupState) //unselect previous and select new state has changed to not fixed up
     {
+#if OLD_SELECTION
       selectFrames(mAnchorFocusRange, PR_FALSE);
       selectFrames(range, PR_TRUE);
+#else
+      difRange->SetStart(FetchFocusNode(),FetchFocusOffset());
+      selectFrames(difRange, PR_FALSE);
+      difRange->SetStart(aParentNode,aOffset);
+      difRange->SetEnd(FetchAnchorNode(),FetchAnchorOffset());
+      selectFrames(difRange, PR_TRUE);
+#endif
     }
-    else {
+    else 
+    {
       selectFrames(difRange , PR_FALSE);
       difRange->SetStart(FetchStartParent(range),FetchStartOffset(range));
       selectFrames(difRange, PR_TRUE);//must reselect last node
@@ -2601,6 +2771,7 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     res = range->SetStart(aParentNode,aOffset);
     if (NS_FAILED(res))
       return res;
+#if OLD_SELECTION
     res = FixupSelectionPoints(range, &dir, &fixupState);
     if (NS_FAILED(res))
       return res;
@@ -2610,6 +2781,7 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
       selectFrames(range, PR_TRUE);
     }
     else
+#endif
     {
       //deselect from a to 1
       if (FetchFocusNode() != FetchAnchorNode() || FetchFocusOffset() != FetchAnchorOffset() ){//if collapsed diff dont do anything
@@ -2627,19 +2799,31 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     if (NS_FAILED(res))
       return res;
     dir = eDirPrevious;
+    res = difRange->SetEnd(FetchFocusNode(), FetchFocusOffset());
+    res |= difRange->SetStart(FetchStartParent(range), FetchStartOffset(range));
+    if (NS_FAILED(res))
+      return res;
+
+#if OLD_SELECTION
     res = FixupSelectionPoints(range, &dir, &fixupState);
+#else
+    res = FixupSelectionPoints(difRange, &dir, &fixupState);
+#endif
     if (NS_FAILED(res))
       return res;
     if (fixupState) //unselect previous and select new state has changed to not fixed up
     {
+#if OLD_SELECTION
       selectFrames(mAnchorFocusRange, PR_FALSE);
       selectFrames(range, PR_TRUE);
+#else
+      selectFrames(difRange,PR_FALSE);
+      difRange->SetStart(aParentNode, aOffset);
+      difRange->SetEnd(FetchAnchorNode(),FetchAnchorOffset());
+      selectFrames(difRange,PR_TRUE);
+#endif
     }
     else {
-      res = difRange->SetEnd(FetchFocusNode(), FetchFocusOffset());
-      res |= difRange->SetStart(FetchStartParent(range), FetchStartOffset(range));
-      if (NS_FAILED(res))
-        return res;
       selectFrames(difRange, PR_TRUE);
     }
   }

@@ -236,7 +236,8 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext&      aPresContext,
   }
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  return NS_OK;
+  /*nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);*/
 
 }
 

@@ -257,10 +257,11 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   aRenderingContext.PopState(clipState);
   
-  return nsFrame::Paint(aPresContext,
+  return NS_OK;
+  /*nsFrame::Paint(aPresContext,
                         aRenderingContext,
                         aDirtyRect,
-                        aWhichLayer);
+                        aWhichLayer);*/
 }
 
 //null range means the whole thing
@@ -268,16 +269,16 @@ NS_IMETHODIMP
 nsTableCellFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
 {
   //traverse through children unselect tables
-  if ((aSpread == eSpreadDown) && aSelected){
+  if ((aSpread == eSpreadDown)){
     nsIFrame* kid;
     FirstChild(nsnull, &kid);
     while (nsnull != kid) {
-      kid->SetSelected(nsnull,PR_FALSE,eSpreadDown);
+      kid->SetSelected(nsnull,aSelected,eSpreadDown);
 
       kid->GetNextSibling(&kid);
     }
   }
-  return nsFrame::SetSelected(aRange,aSelected,eSpreadNone);
+  return NS_OK;//nsFrame::SetSelected(aRange,aSelected,eSpreadNone);
 }
 
 PRIntn
