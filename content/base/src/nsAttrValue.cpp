@@ -764,16 +764,19 @@ nsAttrValue::ParseSpecialIntValue(const nsAString& aString,
   nsAutoString tmp(aString);
   PRInt32 val = tmp.ToInteger(&ec);
 
-  if (NS_FAILED(ec) && aCanBeProportional) {
-    // Even if the integer could not be parsed, it might just be "*"
-    tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
-    if (tmp.Length() == 1 && tmp.Last() == '*') {
-      // special case: HTML spec says a value '*' == '1*'
-      // see http://www.w3.org/TR/html4/types.html#type-multi-length
-      // bug 29061
-      SetIntValueAndType(1, eProportional);
-      return PR_TRUE;
+  if (NS_FAILED(ec)) {
+    if (aCanBeProportional) {
+      // Even if the integer could not be parsed, it might just be "*"
+      tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
+      if (tmp.Length() == 1 && tmp.Last() == '*') {
+        // special case: HTML spec says a value '*' == '1*'
+        // see http://www.w3.org/TR/html4/types.html#type-multi-length
+        // bug 29061
+        SetIntValueAndType(1, eProportional);
+        return PR_TRUE;
+      }
     }
+    return PR_FALSE;
   }
 
   val = PR_MAX(val, 0);
