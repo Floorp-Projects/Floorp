@@ -207,7 +207,7 @@
     </menu>
 
     <!-- Mail Edit Charset Menu -->
-    <menu id="maileditCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot" oncommand="SetDocumentCharacterSet(event.target.getAttribute('id'));" onpopupshowing="CreateMenu('mailedit');InitCharsetMenuCheckMark();" onpopupshown="CreateMenu('more-menu');">
+    <menu id="maileditCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot" oncommand="MaileditMultiplexHandler(event);" onpopupshowing="CreateMenu('mailedit');InitCharsetMenuCheckMark();" onpopupshown="CreateMenu('more-menu');">
         <template>
             <rule>
                 <menupopup>
@@ -217,7 +217,7 @@
         </template>
 
         <menupopup>
-        <menuitem name="charsetCustomizeMail" label="&charsetCustomize.label;"
+        <menuitem name="charsetCustomize" label="&charsetCustomize.label;"
                   accesskey="&charsetCustomize.accesskey;"/>
         <menuseparator />
         </menupopup>

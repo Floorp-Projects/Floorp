@@ -15,10 +15,6 @@ function MultiplexHandler(event)
         // please remove this else statement, once the charset prefs moves to the pref window
         window.openDialog("chrome://communicator/content/pref/pref-charset.xul",
                           "_blank", "chrome,modal,resizable", "browser");
-    } else if (name == 'charsetCustomizeMail') {
-        // please remove this else statement, once the charset prefs moves to the pref window
-        window.openDialog("chrome://communicator/content/pref/pref-charset.xul",
-                          "_blank", "chrome,modal,resizable", "mailedit");
     } else {
         SetForcedCharset(node.getAttribute('id'));
         SetDefaultCharacterSet(node.getAttribute('id'));
@@ -37,7 +33,9 @@ function MailMultiplexHandler(event)
         charset = charset.substring('charset.'.length, charset.length)
         MessengerSetDefaultCharacterSet(charset);
     } else if (name == 'charsetCustomize') {
-        //do nothing - please remove this else statement, once the charset prefs moves to the pref window
+        // please remove this else statement, once the charset prefs moves to the pref window
+        window.openDialog("chrome://communicator/content/pref/pref-charset.xul",
+                          "_blank", "chrome,modal,resizable", "browser");
     } else {
         MessengerSetDefaultCharacterSet(node.getAttribute('id'));
     }
@@ -55,9 +53,25 @@ function ComposerMultiplexHandler(event)
         charset = charset.substring('charset.'.length, charset.length)
         EditorSetDocumentCharacterSet(charset);
     } else if (name == 'charsetCustomize') {
-        //do nothing - please remove this else statement, once the charset prefs moves to the pref window
+        // please remove this else statement, once the charset prefs moves to the pref window
+        window.openDialog("chrome://communicator/content/pref/pref-charset.xul",
+                          "_blank", "chrome,modal,resizable", "browser");
     } else {
         SetForcedEditorCharset(node.getAttribute('id'));
+    }
+}
+
+function MaileditMultiplexHandler(event)
+{
+    var node = event.target;
+    var name = node.getAttribute('name');
+
+    if (name == 'charsetCustomize') {
+        // please remove this else statement, once the charset prefs moves to the pref window
+        window.openDialog("chrome://communicator/content/pref/pref-charset.xul",
+                          "_blank", "chrome,modal,resizable", "mailedit");
+    } else {
+        SetDocumentCharacterSet(node.id);
     }
 }
 

@@ -1507,8 +1507,8 @@ function GetCharsetUIString()
     if (gCharsetTitle == null) {
       try {
         // check if we have a converter for this charset
-        var charsetAlias = gCharsetConvertManager.GetCharsetAlias(charset);
-        var encoderList = gCharsetConvertManager.GetEncoderList();
+        var charsetAlias = gCharsetConvertManager.getCharsetAlias(charset);
+        var encoderList = gCharsetConvertManager.getEncoderList();
         var found = false;
         while (encoderList.hasMore()) {
             if (charsetAlias == encoderList.getNext()) {
