@@ -501,7 +501,7 @@ ifeq ($(OS_ARCH),WINNT)
 	$(CC) $(PROGOBJS) -Fe$@ -link $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
 else
 ifeq ($(CPP_PROG_LINK),1)
-	$(CCC) -o $@ $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
+	$(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 ifeq ($(OS_ARCH),BeOS)
 ifdef BEOS_PROGRAM_RESOURCE
@@ -510,7 +510,7 @@ ifdef BEOS_PROGRAM_RESOURCE
 endif
 endif
 else
-	$(CC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(CC) -o $@ $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 ifeq ($(OS_ARCH),BeOS)
 ifdef BEOS_PROGRAM_RESOURCE
 	xres -o $@ $(BEOS_PROGRAM_RESOURCE)
@@ -531,10 +531,10 @@ endif
 #
 $(SIMPLE_PROGRAMS):%: %.o $(EXTRA_DEPS) Makefile Makefile.in
 ifeq ($(CPP_PROG_LINK),1)
-	$(CCC) $(WRAP_MALLOC_CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
+	$(CCC) $(WRAP_MALLOC_CFLAGS) $(CXXFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 else
-	$(CC) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
+	$(CC) $(WRAP_MALLOC_CFLAGS) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 endif
 
@@ -545,17 +545,17 @@ endif
 #
 pure:	$(PROGRAM)
 ifeq ($(CPP_PROG_LINK),1)
-	$(PURIFY) $(CCC) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(PURIFY) $(CCC) -o $^.pure $(CXXFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 else
-	$(PURIFY) $(CC) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(PURIFY) $(CC) -o $^.pure $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
 	$(INSTALL) -m 555 $^.pure $(DIST)/bin
 
 quantify: $(PROGRAM)
 ifeq ($(CPP_PROG_LINK),1)
-	$(QUANTIFY) $(CCC) -o $^.quantify $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(QUANTIFY) $(CCC) -o $^.quantify $(CXXFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 else
-	$(QUANTIFY) $(CC) -o $^.quantify $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(QUANTIFY) $(CC) -o $^.quantify $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
 	$(INSTALL) -m 555 $^.quantify $(DIST)/bin
 
@@ -657,12 +657,12 @@ ifeq ($(NO_LD_ARCHIVE_FLAGS),1)
 ifdef SHARED_LIBRARY_LIBS
 	@rm -f $(SUB_LOBJS)
 	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
-	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(SUB_LOBJS) $(EXTRA_DSO_LDOPTS)
+	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(SUB_LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS)
 else
-	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS)
+	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS)
 endif
 else
-	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS)
+	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS)
 endif
 	@rm -f foodummyfilefoo $(SUB_LOBJS)
 else
@@ -709,7 +709,7 @@ endif
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(CC) -Fo$@ -c $(CFLAGS) $<
 else
-	$(CC) -o $@ -c $(CFLAGS) $<
+	$(CC) -o $@ -c $(COMPILE_CFLAGS) $<
 endif
 
 moc_%.cpp: %.h
@@ -730,26 +730,26 @@ moc_%.cpp: %.h
 # Please keep the next two rules in sync.
 #
 %.o: %.cc
-	$(CCC) -o $@ -c $(CXXFLAGS) $<
+	$(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
 
 %.o: %.cpp
 ifdef STRICT_CPLUSPLUS_SUFFIX
 	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > t_$*.cc
-	$(CCC) -o $@ -c $(CXXFLAGS) t_$*.cc
+	$(CCC) -o $@ -c $(COMPILE_CXXFLAGS) t_$*.cc
 	rm -f t_$*.cc
 else
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(CCC) -Fo$@ -c $(CXXFLAGS) $<
 else
-	$(CCC) -o $@ -c $(CXXFLAGS) $<
+	$(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
 endif
 endif #STRICT_CPLUSPLUS_SUFFIX
 
 %.i: %.cpp
-	$(CCC) -C -E $(CXXFLAGS) $< > $*.i
+	$(CCC) -C -E $(COMPILE_CXXFLAGS) $< > $*.i
 
 %.i: %.c
-	$(CC) -C -E $(CFLAGS) $< > $*.i
+	$(CC) -C -E $(COMPILE_CFLAGS) $< > $*.i
 
 %: %.pl
 	rm -f $@; cp $< $@; chmod +x $@
