@@ -559,13 +559,6 @@ nsNetDiskCache::RemoveAll(void)
   return InitCacheFolder() ;
 }
 
-NS_IMETHODIMP
-nsNetDiskCache::RecoveryCleanup(void)
-{
-    DBRecovery();
-    return NS_OK;
-}
-
 //////////////////////////////////////////////////////////////////
 // nsINetDataDiskCache methods
 

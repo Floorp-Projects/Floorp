@@ -87,15 +87,6 @@ private:
     // Memory cache capacity, in KB
     PRUint32                  mMemCacheCapacity;
 
-    // Number of times CacheManager was accessed
-    PRUint32                  mNumCacheAccessed;
-
-    // When mNumCacheAccessed reaches mNumCacheAccessedLimit, 
-    // DBRecovery is done.
-    PRUint32                  mNumCacheAccessedLimit;
-
-    PRBool                    mRecoveryCleanupNotDone;
-
 	// Helper routines
 		nsresult InitPrefs();
 		nsresult GetCacheAndReplacementPolicy( PRUint32 aFlags, nsINetDataCache*& cache, nsReplacementPolicy *&spaceManager );
@@ -103,7 +94,9 @@ protected:
     static nsresult NoteDormant(nsCachedNetData* aEntry);
     static nsresult LimitCacheSize();
     static nsresult LimitMemCacheSize();
-    static nsresult LimitDiskCacheSize();
+public:
+    static nsresult LimitDiskCacheSize(PRBool skipCheck=PR_FALSE);
+protected:
 
     friend class nsCachedNetData;
     friend class CacheOutputStream;

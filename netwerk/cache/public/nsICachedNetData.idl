@@ -139,6 +139,8 @@ interface nsICachedNetData : nsISupports
      */
     readonly attribute PRTime lastAccessTime;
 
+    readonly attribute PRTime lastUpdateTime;
+
     /**
      * Number of times this record has been accessed since it was first stored.
      */

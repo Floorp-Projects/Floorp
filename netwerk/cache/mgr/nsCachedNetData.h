@@ -229,13 +229,12 @@ protected:
     // We use modification time of the original document for replacement policy
     // computations, i.e. to compute a document's age, but if we don't know it,
     // we use the time that the document was last written to the cache.
-    union {
-        // Document modification time, if known.
+    // Document modification time, if known.
+
         PRUint32 mLastModifiedTime;
 
         // Time of last cache update for this doc
         PRUint32 mLastUpdateTime;
-    };
 
     union {
       // Time until which document is fresh, i.e. does not have to be validated
