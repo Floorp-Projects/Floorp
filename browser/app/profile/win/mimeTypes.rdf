@@ -7,9 +7,6 @@
   <Description about="urn:mimetypes"> 
     <NC:MIME-types> 
       <Seq about="urn:mimetypes:root"> 
-        <RDF:li resource="urn:mimetype:application/vnd.ms-excel"/>
-        <RDF:li resource="urn:mimetype:application/msword"/>
-        <RDF:li resource="urn:mimetype:application/vnd.ms-powerpoint"/>
         <RDF:li resource="urn:mimetype:application/pdf"/>
         <RDF:li resource="urn:mimetype:video/avi"/>
         <RDF:li resource="urn:mimetype:video/quicktime"/>
@@ -26,54 +23,7 @@
 
       </Seq> 
     </NC:MIME-types> 
-  </Description> 
-    
-  <!-- Microsoft Excel -->     
-  <RDF:Description about="urn:mimetype:application/vnd.ms-excel"
-                   NC:value="application/vnd.ms-excel"
-                   NC:editable="true"
-                   NC:fileExtensions="xls"
-                   NC:description="Microsoft Excel Worksheet">
-    <NC:handlerProp resource="urn:mimetype:handler:application/vnd.ms-excel"/>
-  </RDF:Description>
-  <RDF:Description about="urn:mimetype:handler:application/vnd.ms-excel"
-                   NC:alwaysAsk="false"
-                   NC:useSystemDefault="true">
-    <NC:externalApplication resource="urn:mimetype:externalApplication:application/vnd.ms-excel"/>
-  </RDF:Description>
-  <RDF:Description about="urn:mimetype:externalApplication:application/vnd.ms-excel"
-                   NC:prettyName=""
-                   NC:path="" />
-
-  <!-- Microsoft Word -->
-  <RDF:Description about="urn:mimetype:application/msword"
-                   NC:value="application/msword"
-                   NC:editable="true">
-    <NC:handlerProp resource="urn:mimetype:handler:application/msword"/>
-  </RDF:Description>
-  <RDF:Description about="urn:mimetype:handler:application/msword"
-                   NC:alwaysAsk="false"
-                   NC:useSystemDefault="true">
-    <NC:externalApplication resource="urn:mimetype:externalApplication:application/msword"/>
-  </RDF:Description>
-  <RDF:Description about="urn:mimetype:externalApplication:application/msword"
-                   NC:prettyName=""
-                   NC:path="" />
-  
-  <!-- Microsoft Word -->
-  <RDF:Description about="urn:mimetype:application/vnd.ms-powerpoint"
-                   NC:value="application/vnd.ms-powerpoint"
-                   NC:editable="true">
-    <NC:handlerProp resource="urn:mimetype:handler:application/vnd.ms-powerpoint"/>
-  </RDF:Description>
-  <RDF:Description about="urn:mimetype:handler:application/vnd.ms-powerpoint"
-                   NC:alwaysAsk="false"
-                   NC:useSystemDefault="true">
-    <NC:externalApplication resource="urn:mimetype:externalApplication:application/vnd.ms-powerpoint"/>
-  </RDF:Description>
-  <RDF:Description about="urn:mimetype:externalApplication:application/vnd.ms-powerpoint"
-                   NC:prettyName=""
-                   NC:path="" />
+  </Description>     
                    
   <!-- Adobe Acrobat -->
   <RDF:Description about="urn:mimetype:application/pdf"
