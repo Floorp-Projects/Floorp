@@ -54,7 +54,10 @@ nsresult nsRegionOS2::GetNativeRegion (void *&aRegion) const
 PRUint32 nsRegionOS2::NumOfRects (HPS aPS, HRGN aRegion) const
 {
   RGNRECT rgnRect;
+  rgnRect.ircStart = 1;
+  rgnRect.crc = 0xFFFFFFFF;
   rgnRect.crcReturned = 0;
+  rgnRect.ulDirection = RECTDIR_LFRT_TOPBOT;
 
   GFX (::GpiQueryRegionRects (aPS, aRegion, NULL, &rgnRect, NULL), FALSE);
  
