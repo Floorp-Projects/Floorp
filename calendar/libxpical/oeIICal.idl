@@ -219,6 +219,7 @@ interface oeIICal : nsISupports
     attribute boolean batchMode;
     readonly attribute oeIICalTodo filter;
     attribute string server;
+    attribute boolean suppressAlarms;
 
     void addObserver( in oeIICalObserver observer );
     void removeObserver( in oeIICalObserver observer );
@@ -256,6 +257,7 @@ interface oeIICal : nsISupports
 interface oeIICalContainer : nsISupports
 {
     attribute boolean batchMode;
+    attribute boolean suppressAlarmsByDefault;
     readonly attribute oeIICalTodo filter;
 
 

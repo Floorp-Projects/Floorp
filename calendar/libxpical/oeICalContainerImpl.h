@@ -106,6 +106,7 @@ public:
     icaltimetype GetNextEvent( icaltimetype starting );
 private:
     bool m_batchMode;
+    bool m_suppressAlarmsByDefault;
     nsCOMPtr<nsISupportsArray> m_calendarArray;
     nsCOMPtr<nsISupportsArray> m_observerArray;
     nsCOMPtr<nsISupportsArray> m_todoobserverArray;

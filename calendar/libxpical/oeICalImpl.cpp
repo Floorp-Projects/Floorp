@@ -353,6 +353,7 @@ oeICalImpl::oeICalImpl()
 #endif
 
         m_batchMode = false;
+        m_suppressAlarms = false;
 
         m_alarmtimer = nsnull;
 
@@ -368,18 +369,7 @@ oeICalImpl::~oeICalImpl()
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::~oeICalImpl()\n" );
 #endif
-    if( m_alarmtimer  ) {
-        PRUint32 delay = 0;
-        #ifdef NS_INIT_REFCNT //A temporary way of keeping backward compatibility with Mozilla 1.0 source compile
-        delay = m_alarmtimer->GetDelay();
-        #else
-        m_alarmtimer->GetDelay( &delay );
-        #endif
-        if ( delay != 0 )
-            m_alarmtimer->Cancel();
-        m_alarmtimer->Release();
-        m_alarmtimer = nsnull;
-    }
+    CancelAlarmTimer();
 
     NS_RELEASE( m_filter );
 }
@@ -956,6 +946,30 @@ NS_IMETHODIMP oeICalImpl::SetBatchMode(PRBool aBatchMode)
     return NS_OK;
 }
 
+/* attribute boolean suppressAlarms; */
+NS_IMETHODIMP oeICalImpl::GetSuppressAlarms(PRBool *aRetVal)
+{
+    *aRetVal = m_suppressAlarms;
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP oeICalImpl::SetSuppressAlarms(PRBool aNewVal)
+{
+    if( m_suppressAlarms ) {
+        if( !aNewVal ) {
+            m_suppressAlarms = PR_FALSE;
+            SetupAlarmManager();
+        }
+    } else {
+        if( aNewVal ) {
+            m_suppressAlarms = PR_TRUE;
+            CancelAlarmTimer();
+        }
+    }
+    return NS_OK;
+}
 
 /**
 *
@@ -1804,7 +1818,8 @@ void oeICalImpl::SetupAlarmManager() {
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::SetupAlarmManager()\n" );
 #endif
-
+    if( m_suppressAlarms )
+        return;
     if( m_batchMode )
     {
         #ifdef ICAL_DEBUG
@@ -1973,18 +1988,8 @@ void oeICalImpl::SetupAlarmManager() {
 
     lastcheck = now;
 
-    if( m_alarmtimer  ) {
-        PRUint32 delay = 0;
-        #ifdef NS_INIT_REFCNT //A temporary way of keeping backward compatibility with Mozilla 1.0 source compile
-        delay = m_alarmtimer->GetDelay();
-        #else
-        m_alarmtimer->GetDelay( &delay );
-        #endif
-        if ( delay != 0 )
-            m_alarmtimer->Cancel();
-        m_alarmtimer->Release();
-        m_alarmtimer = nsnull;
-    }
+    CancelAlarmTimer(); //cancel the current alarm timer if any
+
     if( !icaltime_is_null_time( nextalarm ) ) {
         #ifdef ICAL_DEBUG
         printf( "NEXT ALARM IS: %s\n", icaltime_as_ical_string( nextalarm ) );
@@ -2002,6 +2007,21 @@ void oeICalImpl::SetupAlarmManager() {
             #else
             m_alarmtimer->InitWithFuncCallback( AlarmTimerCallback, this, timediff*1000, nsITimer::TYPE_ONE_SHOT );
             #endif
+    }
+}
+
+void oeICalImpl::CancelAlarmTimer() {
+    if( m_alarmtimer  ) {
+        PRUint32 delay = 0;
+        #ifdef NS_INIT_REFCNT //A temporary way of keeping backward compatibility with Mozilla 1.0 source compile
+        delay = m_alarmtimer->GetDelay();
+        #else
+        m_alarmtimer->GetDelay( &delay );
+        #endif
+        if ( delay != 0 )
+            m_alarmtimer->Cancel();
+        m_alarmtimer->Release();
+        m_alarmtimer = nsnull;
     }
 }
 

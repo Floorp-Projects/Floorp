@@ -246,6 +246,7 @@ private:
     nsCOMPtr<nsISupportsArray> m_observerlist;
     nsCOMPtr<nsISupportsArray> m_todoobserverlist;
     bool m_batchMode;
+    bool m_suppressAlarms;
     EventList m_eventlist;
     TodoList m_todolist;
     nsITimer *m_alarmtimer;
@@ -254,6 +255,7 @@ private:
     bool SatisfiesFilter( oeIICalTodo *comp );
     void ChopAndAddEventToEnum( struct icaltimetype startdate,
                                         nsISimpleEnumerator **eventlist, oeICalEventImpl* event, bool isallday, bool isbeginning );
+    void CancelAlarmTimer();
 };
 
 #endif

@@ -225,6 +225,7 @@ oeICalContainerImpl::oeICalContainerImpl()
 #endif
 
         m_batchMode = false;
+        m_suppressAlarmsByDefault = false;
 
         NS_NewISupportsArray(getter_AddRefs(m_calendarArray));
         if ( m_calendarArray == nsnull ) {
@@ -331,6 +332,8 @@ oeICalContainerImpl::AddCalendar( const char *server, const char *type ) {
     }
 
     calendar->SetBatchMode( m_batchMode ); //Make sure the current batchmode value is inherited
+
+    calendar->SetSuppressAlarms( m_suppressAlarmsByDefault );
 
     calendar->SetServer( server );
 
@@ -479,6 +482,19 @@ NS_IMETHODIMP oeICalContainerImpl::SetBatchMode(PRBool aBatchMode)
         }
     }
     
+    return NS_OK;
+}
+
+/* attribute boolean suppressAlarmsByDefault; */
+NS_IMETHODIMP oeICalContainerImpl::GetSuppressAlarmsByDefault(PRBool *aRetVal)
+{
+    *aRetVal = m_suppressAlarmsByDefault;
+    return NS_OK;
+}
+
+NS_IMETHODIMP oeICalContainerImpl::SetSuppressAlarmsByDefault(PRBool aNewVal)
+{
+    m_suppressAlarmsByDefault = aNewVal;
     return NS_OK;
 }
 
