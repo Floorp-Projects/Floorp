@@ -54,7 +54,9 @@ public:
   virtual nsresult MigrateTridentPreferences(PRUint32 aItems) = 0;
 };
 
-// generic constructor access; a kind of factory
+/* Generic constructor access; a kind of factory. Each platform-specific
+   migrator implementation must implement this method. The object should be
+   constructing using new, and the caller must delete it when finished. */
 nsTridentPreferences *MakeTridentPreferences();
 
 #endif
