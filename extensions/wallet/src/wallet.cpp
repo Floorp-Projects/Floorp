@@ -962,7 +962,7 @@ char * wallet_GetDoubleString(char * szMessage, char * szMessage2, PRBool& match
   if (NS_FAILED(res)) {
     return NULL;
   }
-  if (retval == NULL) {
+  if (!retval) {
     delete[] pwd;
     return NULL; /* user pressed cancel */
   }
@@ -977,7 +977,7 @@ char * wallet_GetDoubleString(char * szMessage, char * szMessage2, PRBool& match
   delete[] pwd2;
   matched = (password == password2);
 
-  if (retval != NULL) {
+  if (retval) {
     return password.ToNewCString();
   } else {
     return NULL; /* user pressed cancel */
