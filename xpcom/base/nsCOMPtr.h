@@ -178,8 +178,10 @@ class nsDerivedSafe : public T
       NS_IMETHOD_(nsrefcnt) Release(void);
 #endif
 
+#ifndef XP_OS2_VACPP
       void operator delete( void*, size_t );                  // NOT TO BE IMPLEMENTED
         // declaring |operator delete| private makes calling delete on an interface pointer a compile error
+#endif
 
       nsDerivedSafe<T>& operator=( const T& );                // NOT TO BE IMPLEMENTED
         // you may not call |operator=()| through a dereferenced |nsCOMPtr|, because you'd get the wrong one
