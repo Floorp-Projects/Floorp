@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.24 2001/05/15 19:12:44 mcgreer%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.25 2001/05/15 23:15:08 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -2217,7 +2217,7 @@ done:
   return (srv) ? NS_ERROR_FAILURE : NS_OK;
 }
 
-static char *
+char *
 default_nickname(CERTCertificate *cert, nsIInterfaceRequestor* ctx)
 {   
   nsresult rv;

@@ -56,6 +56,7 @@ LINCS = $(LINCS)     \
     $(NULL)
 
 LLIBS   = \
+    $(DIST)/lib/crmf.lib \
     $(DIST)/lib/ssl.lib \
     $(DIST)/lib/nss.lib \
     $(DIST)/lib/ssl.lib \
@@ -71,6 +72,7 @@ LLIBS   = \
     $(DIST)/lib/dbm.lib \
     $(LIBNSPR) \
     $(DIST)\lib\xpcom.lib \
+    $(DIST)\lib\js3250.lib \
     $(NULL)
 
 EXPORTS = \
@@ -91,6 +93,7 @@ OBJS = \
     .\$(OBJDIR)\nsKeygenHandler.obj \
     .\$(OBJDIR)\nsCertOutliner.obj \
     .\$(OBJDIR)\nsNSSASN1Object.obj \
+    .\$(OBJDIR)\nsCrypto.obj \
     .\$(OBJDIR)\nsPKCS11Slot.obj \
     $(NULL)
 

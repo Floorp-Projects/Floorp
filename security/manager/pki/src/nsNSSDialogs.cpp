@@ -111,13 +111,14 @@ nsNSSDialogs::~nsNSSDialogs()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS7(nsNSSDialogs, nsINSSDialogs, 
+NS_IMPL_THREADSAFE_ISUPPORTS8(nsNSSDialogs, nsINSSDialogs, 
                                             nsITokenPasswordDialogs,
                                             nsISecurityWarningDialogs,
                                             nsIBadCertListener,
                                             nsICertificateDialogs,
                                             nsIClientAuthDialogs,
-                                            nsITokenDialogs);
+                                            nsITokenDialogs,
+                                            nsIDOMCryptoDialogs);
 
 nsresult
 nsNSSDialogs::Init()
@@ -784,3 +785,36 @@ nsNSSDialogs::ChooseToken(nsIInterfaceRequestor *aCtx, const PRUnichar **aTokenL
   return rv;
 }
 
+/* boolean ConfirmKeyEscrow (in nsIX509Cert escrowAuthority); */
+NS_IMETHODIMP 
+nsNSSDialogs::ConfirmKeyEscrow(nsIX509Cert *escrowAuthority, PRBool *_retval)
+                                     
+{
+  *_retval = PR_FALSE;
+
+  nsresult rv;
+
+  nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kPKIParamBlockCID);
+  if (!block)
+    return NS_ERROR_FAILURE;
+
+  rv = block->SetISupportAtIndex(1, escrowAuthority);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = nsNSSDialogHelper::openDialog(nsnull,
+                                     "chrome://pippki/content/escrowWarn.xul",
+                                     block);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  PRInt32 status=0;
+  nsCOMPtr<nsIDialogParamBlock> dlgParamBlock = do_QueryInterface(block);
+  rv = dlgParamBlock->GetInt(1, &status);
+ 
+  if (status) {
+    *_retval = PR_TRUE;
+  } 
+  return rv;
+}

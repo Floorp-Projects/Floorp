@@ -697,12 +697,12 @@ nsresult
 getNSSDialogs(void **_result, REFNSIID aIID)
 {
   nsresult rv;
-  nsISupports *result;
+  nsCOMPtr<nsISupports> result;
   nsCOMPtr<nsISupports> proxiedResult;
 
   rv = nsServiceManager::GetService(kNSSDialogsContractId, 
                                     NS_GET_IID(nsINSSDialogs),
-                                    &result);
+                                    getter_AddRefs(result));
   if (NS_FAILED(rv)) 
     return rv;
 
@@ -714,9 +714,11 @@ getNSSDialogs(void **_result, REFNSIID aIID)
                               aIID, result, PROXY_SYNC,
                               getter_AddRefs(proxiedResult));
 
-  rv = proxiedResult->QueryInterface(aIID, _result);
+  if (!proxiedResult) {
+    return NS_ERROR_FAILURE;
+  }
 
-  NS_RELEASE(result);
+  rv = proxiedResult->QueryInterface(aIID, _result);
 
   return rv;
 }

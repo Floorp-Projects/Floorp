@@ -40,6 +40,10 @@
 #include "nsPKCS11Slot.h"
 #include "nsNSSCertificate.h"
 #include "nsCertOutliner.h"
+#include "nsCrypto.h"
+//For the NS_CRYPTO_CONTRACTID define
+#include "nsDOMCID.h"
+
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNSSComponent, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecureBrowserUIImpl)
@@ -51,6 +55,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPKCS11ModuleDB)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(CertContentListener, init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSCertificateDB)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCertOutliner)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCrypto)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPkcs11)
+
 
 static nsModuleComponentInfo components[] =
 {
@@ -171,7 +178,22 @@ static nsModuleComponentInfo components[] =
     NS_CERTOUTLINER_CID,
     NS_CERTOUTLINER_CONTRACTID,
     nsCertOutlinerConstructor
+  },
+
+  {
+    NS_PKCS11_CLASSNAME,
+    NS_PKCS11_CID,
+    NS_PKCS11_CONTRACTID,
+    nsPkcs11Constructor
+  },
+
+  {
+    NS_CRYPTO_CLASSNAME,
+    NS_CRYPTO_CID,
+    NS_CRYPTO_CONTRACTID,
+    nsCryptoConstructor
   }
+
 
 };
 
