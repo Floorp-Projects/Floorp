@@ -35,7 +35,7 @@
 
 /**
  * The nsIComponentRegistrar interface.
- * @status UNDER_REVIEW - Will Freeze for mozilla 1.0!!
+ * @status FROZEN
  */
 
 #include "nsISupports.idl"
