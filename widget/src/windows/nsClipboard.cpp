@@ -527,9 +527,9 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
               } break;
 
             default: {
-              if ( fe.cfFormat == fileDescriptorFlavor || fe.cfFormat == fileFlavor )
+              if ( fe.cfFormat == fileDescriptorFlavor || fe.cfFormat == fileFlavor ) {
                 NS_WARNING ( "Mozilla doesn't yet understand how to read this type of file flavor" );
-              else
+              } else
                 result = GetGlobalData(stm.hGlobal, aData, aLen);
             } break;
           } // switch
