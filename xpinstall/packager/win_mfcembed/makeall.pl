@@ -71,10 +71,10 @@ $inDistPath           = $ARGV[2];
 
 # Until we really figure out what to do with this batch file, this will get it
 #   into the installer, at least
-print "\n Copying runapp.bat $inStagePath\\mfcembed\\bin\n";
-if(system("copy runapp.bat $inStagePath\\mfcembed\\bin"))
+print "\n Copying runapp.bat $inStagePath\\mfcembed\\gre_app_support\n";
+if(system("copy runapp.bat $inStagePath\\mfcembed\\gre_app_support"))
 {
-  die "\n Error: copy runapp.bat $inStagePath\\mfcembed\\bin\n";
+  die "\n Error: copy runapp.bat $inStagePath\\mfcembed\\gre_app_support\n";
 }
 
 $inXpiURL = "";

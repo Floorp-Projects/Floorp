@@ -138,7 +138,7 @@ if(verifyDiskSpace(fProgram, srDest))
 
   err = addDirectory("",
                      "",
-                     "bin",         // dir name in jar to extract 
+                     "gre_app_support", // dir name in jar to extract 
                      fProgram,      // Where to put this file (Returned from GetFolder) 
                      "",            // subdir name to create relative to fProgram
                      true);         // Force Flag 
@@ -146,10 +146,10 @@ if(verifyDiskSpace(fProgram, srDest))
 
   err = addDirectory("",
                      "",
-                     "gre_app_support",  // dir name in jar to extract 
-                     fProgram,           // Where to put this file (Returned from GetFolder) 
-                     "",                 // subdir name to create relative to fProgram
-                     true);              // Force Flag 
+                     "Embed",      // dir name in jar to extract 
+                     fProgram,     // Where to put this file (Returned from GetFolder) 
+                     "",           // subdir name to create relative to fProgram
+                     true);        // Force Flag 
   logComment("addDirectory() of Program returned: " + err);
 
   fSubdir = getFolder("Program", "plugins");
