@@ -284,8 +284,10 @@ nsPrefetchService::ProcessNextURI()
         //
         // if opening the channel fails, then just skip to the next uri
         //
-        rv = NS_NewChannel(getter_AddRefs(mCurrentChannel), uri, nsnull, nsnull,
-                           nsnull, nsIRequest::LOAD_BACKGROUND);
+        rv = NS_NewChannel(getter_AddRefs(mCurrentChannel), uri,
+                           nsnull, nsnull, nsnull,
+                           nsIRequest::LOAD_BACKGROUND |
+                           nsICachingChannel::LOAD_ONLY_IF_MODIFIED);
         if (NS_FAILED(rv)) continue;
 
         // configure HTTP specific stuff
