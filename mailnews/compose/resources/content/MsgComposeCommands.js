@@ -637,8 +637,9 @@ var defaultController =
 function QuoteSelectedMessage()
 {
   if (gMsgCompose) {
-    var mailWindow = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"]
-                     .getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("mail:3pane");
+    var mailWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService()
+                     .QueryInterface(Components.interfaces.nsIWindowMediator)
+                     .getMostRecentWindow("mail:3pane");
     if (mailWindow) {
       var selectedURIs = mailWindow.GetSelectedMessages();
       if (selectedURIs)
