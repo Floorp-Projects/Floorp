@@ -28,7 +28,7 @@ CPPSRCS=nsHTMLContentSink.cpp \
     nsToken.cpp nsTokenizer.cpp nsTokenHandler.cpp  \
     CNavDTD.cpp CNavDelegate.cpp \
     COtherDTD.cpp COtherDelegate.cpp \
-    nsHTMLParser.cpp
+    nsHTMLParser.cpp prstrm.cpp
 
 EXPORTS=nshtmlpars.h nsIContentSink.h nsIHTMLContentSink.h \
     nsHTMLTokens.h nsIParserNode.h nsIParser.h nsToken.h 
@@ -39,7 +39,8 @@ CPP_OBJS=.\$(OBJDIR)\nsHTMLContentSink.obj \
     .\$(OBJDIR)\nsHTMLParser.obj \
     .\$(OBJDIR)\nsHTMLTokens.obj          .\$(OBJDIR)\nsParserNode.obj \
     .\$(OBJDIR)\nsScanner.obj             .\$(OBJDIR)\nsToken.obj \
-    .\$(OBJDIR)\nsTokenizer.obj           .\$(OBJDIR)\nsTokenHandler.obj 
+    .\$(OBJDIR)\nsTokenizer.obj           .\$(OBJDIR)\nsTokenHandler.obj \
+    .\$(OBJDIR)\prstrm.obj
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib
 

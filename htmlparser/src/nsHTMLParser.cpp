@@ -33,10 +33,13 @@
 #include "prio.h"
 #include "plstr.h"
 #include <fstream.h>
+#include "prstrm.h"
 #include "nsIInputStream.h"
 #ifdef XP_PC
 #include <direct.h> //this is here for debug reasons...
 #endif
+#include <time.h>
+#include "prmem.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kClassIID, NS_IHTML_PARSER_IID); 
@@ -49,10 +52,20 @@ static const char* kNullToken = "Error: Null token given";
 static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
 
 static char*  gVerificationOutputDir=0;
+static PRBool gRecordingStatistics=PR_TRUE;
 static char*  gURLRef=0;
 static int    rickGDebug=0;
 static const int gTransferBufferSize=4096;  //size of the buffer used in moving data from iistream
 
+extern "C" NS_EXPORT void SetVerificationDirectory(char * verify_dir)
+{
+	gVerificationOutputDir = verify_dir;
+}
+
+extern "C" NS_EXPORT void SetRecordStatistics(PRBool bval)
+{
+	gRecordingStatistics = bval;
+}
 
 /**
  *  This method is defined in nsIParser. It is used to 
@@ -72,7 +85,6 @@ NS_HTMLPARS nsresult NS_NewHTMLParser(nsIParser** aInstancePtrResult)
 
   return it->QueryInterface(kIParserIID, (void **) aInstancePtrResult);
 }
-
 
 /**
  *  This big dispatch method is used to route token handler calls to the right place.
@@ -367,6 +379,298 @@ nsIContentSink* nsHTMLParser::SetContentSink(nsIContentSink* aSink) {
   return old;
 }
 
+/** 
+ * This debug method records an invalid context vector and it's
+ * associated context vector and URL in a simple flat file mapping which
+ * resides in the verification directory and is named context.map
+ *
+ * @update  jevering 6/06/98
+ * @param   path is the directory structure indicating the bad context vector
+ * @param   pURLRef is the associated URL
+ * @param   filename to record mapping to if not already recorded
+ * @return  TRUE if it is already record (dont rerecord)
+ */
+
+#define CONTEXT_VECTOR_MAP	"/vector.map"
+#define CONTEXT_VECTOR_STAT	"/vector.stat"
+#define VECTOR_TABLE_HEADER "count  vector\r\n====== =============================================\r\n"    
+PRBool DebugRecord(char * path, char * pURLRef, char * filename)
+{
+   char recordPath[2048];
+   PRIntn oflags = 0;
+
+   // create the record file name from the verification director
+   // and the default name.
+   strcpy(recordPath,gVerificationOutputDir);
+   strcat(recordPath,CONTEXT_VECTOR_MAP);
+
+   // create the file exists, only open for read/write
+   // otherwise, create it
+   if(PR_Access(recordPath,PR_ACCESS_EXISTS) != PR_SUCCESS)
+      oflags = PR_CREATE_FILE;
+   oflags |= PR_RDWR;
+
+   // open the record file
+   PRFileDesc * recordFile = PR_Open(recordPath,oflags,0);
+
+   if (recordFile) {
+
+      char * string = (char *)PR_Malloc(2048);
+      PRBool found = PR_FALSE;
+
+	  // vectors are stored on the format iof "URL vector filename"
+	  // where the vector contains the verification path and
+	  // the filename contains the debug source dump
+      sprintf(string,"%s %s %s\r\n", pURLRef, path, filename);
+
+	  // get the file size, read in the file and parse it line at
+	  // a time to check to see if we have already recorded this
+	  // occurance
+
+      PRInt32 iSize = PR_Seek(recordFile,0,PR_SEEK_END);
+      if (iSize) {
+
+         char * buffer = (char*)PR_Malloc(iSize);
+         char * stringbuf = (char*)PR_Calloc(sizeof(char*),2048);
+         if (buffer!=NULL && string!=NULL) {
+            PRInt32 ibufferpos, istringpos;
+
+			// beginning of file for read
+            PR_Seek(recordFile,0,PR_SEEK_SET);
+            PR_Read(recordFile,buffer,iSize);
+
+			// run through the file looking for a matching vector
+            for (ibufferpos = istringpos = 0; ibufferpos < iSize; ibufferpos++)
+            {
+			   // compare string once we have hit the end of the line
+               if (buffer[ibufferpos] == '\r') {
+                  stringbuf[istringpos] = '\0';
+                  istringpos = 0;
+                  // skip newline and space
+                  ibufferpos++;
+
+                  if (PL_strlen(stringbuf)) {
+					char * space;
+   					// chop of the filename for compare
+                    if ((space = PL_strrchr(stringbuf, ' '))!=NULL)
+						*space = '\0';
+
+					// we have already recorded this one, free up, and return
+                    if (!PL_strncmp(string,stringbuf,PL_strlen(stringbuf))) {
+						PR_Free(buffer);
+                        PR_Free(stringbuf);
+						PR_Free(string);
+                        return PR_TRUE;
+                    }
+                  }
+               }
+
+               // build up the compare string
+               else
+                  stringbuf[istringpos++] = buffer[ibufferpos];
+            }
+
+            // throw away the record file data
+            PR_Free(buffer);
+            PR_Free(stringbuf);
+         }
+      }
+
+      // if this bad vector was not recorded, add it to record file
+
+      if (!found) {
+         PR_Seek(recordFile,0,PR_SEEK_END);
+         PR_Write(recordFile,string,PL_strlen(string));
+      }
+
+      PR_Close(recordFile);
+	  PR_Free(string);
+   }
+
+   // vector was not recorded
+   return PR_FALSE;
+}
+
+// structure to store the vector statistic information
+
+typedef struct vector_info {
+	PRInt32 references;     // number of occurances counted
+	PRInt32 count;          // number of tags in the vector
+    PRBool  good_vector;    // is this a valid vector?
+	PRInt32 * vector;       // and the vector
+} VectorInfo;
+
+// global table for storing vector statistics and the size
+static VectorInfo ** gVectorInfoArray = 0;
+static PRInt32 gVectorCount = 0;
+
+// the statistic vector table grows each time it exceeds this
+// stepping value
+#define TABLE_SIZE	128
+
+// compare function for quick sort.  Compares references and
+// sorts in decending order
+
+static int compare( const void *arg1, const void *arg2 )
+{
+	VectorInfo ** p1 = (VectorInfo**)arg1;
+	VectorInfo ** p2 = (VectorInfo**)arg2;
+	return (*p2)->references - (*p1)->references;
+}
+
+/**
+ * quick sort the statistic array causing the most frequently
+ * used vectors to be at the top (this makes it a little speedier
+ * when looking them up)
+ */
+
+void SortVectorRecord(void)
+{
+    // of course, sort it only if there is something to sort
+	if (gVectorCount) {
+		qsort((void*)gVectorInfoArray,(size_t)gVectorCount,sizeof(VectorInfo*),compare);
+	}
+}
+
+/**
+ *  This debug routines stores statistical information about a
+ *  context vector.  The context vector statistics are stored in
+ *  a global array.  The table is resorted each time it grows to
+ *  aid in lookup speed.  If a vector has already been noted, its
+ *  reference count is bumped, otherwise it is added to the table
+ *
+ *  @update     jevering 6/11/98
+ *  @param      aTags is the tag list (vector)
+ *  @param      count is the size of the vector
+ *  @return
+ */
+
+void NoteVector(PRInt32 aTags[],PRInt32 count, PRBool good_vector)
+{
+    // if the table doesn't exist, create it
+	if (!gVectorInfoArray) {
+		gVectorInfoArray = (VectorInfo**)PR_Calloc(TABLE_SIZE,sizeof(VectorInfo*));
+	} 
+	else {
+        // attempt to look up the vector
+		for (PRInt32 i = 0; i < gVectorCount; i++)
+
+            // check the vector only if they are the same size, if they
+            // match then just return without doing further work
+			if (gVectorInfoArray[i]->count == count)
+				if (!memcmp(gVectorInfoArray[i]->vector, aTags, sizeof(PRInt32)*count)) {
+
+                    // bzzzt. and we have a winner.. bump the ref count
+					gVectorInfoArray[i]->references++;
+					return;
+				}
+	}
+
+    // the context vector hasn't been noted, so allocate it and
+    // initialize it one.. add it to the table
+	VectorInfo * pVectorInfo = (VectorInfo*)PR_Malloc(sizeof(VectorInfo));
+	pVectorInfo->references = 1;
+	pVectorInfo->count = count;
+	pVectorInfo->good_vector = good_vector;
+	pVectorInfo->vector = (PRInt32*)PR_Malloc(count*sizeof(PRInt32));
+	memcpy(pVectorInfo->vector,aTags,sizeof(PRInt32)*count);
+	gVectorInfoArray[gVectorCount++] = pVectorInfo;
+
+    // have we maxed out the table?  grow it.. sort it.. love it. 
+	if ((gVectorCount % TABLE_SIZE) == 0) {
+		gVectorInfoArray = (VectorInfo**)realloc(
+			gVectorInfoArray,
+			(sizeof(VectorInfo*)*((gVectorCount/TABLE_SIZE)+1)*TABLE_SIZE));
+		SortVectorRecord();
+	}
+}
+
+void MakeVectorString(char * vector_string, VectorInfo * pInfo)
+{
+    sprintf (vector_string, "%6d ", pInfo->references);
+    for (PRInt32 j = 0; j < pInfo->count; j++) {
+	    PL_strcat(vector_string, "<");
+	    PL_strcat(vector_string, (const char *)GetTagName(pInfo->vector[j]));
+	    PL_strcat(vector_string, ">");
+    }
+    PL_strcat(vector_string,"\r\n");
+}
+
+/**
+ *  This debug routine dumps out the vector statistics to a text
+ *  file in the verification directory and defaults to the name
+ *  "vector.stat".  It contains all parsed context vectors and there
+ *  occurance count sorted in decending order.
+ *  
+ *  @update     jevering 6/11/98
+ *  @param
+ *  @return
+ */
+
+extern "C" NS_EXPORT void DumpVectorRecord(void)
+{
+    // do we have a table?
+	if (gVectorCount) {
+
+        // hopefully, they wont exceed 1K.
+		char vector_string[1024];
+		char path[1024];
+
+		path[0] = '\0';
+
+        // put in the verification directory.. else the root
+		if (gVerificationOutputDir)
+			strcpy(path,gVerificationOutputDir);
+
+		strcat(path,CONTEXT_VECTOR_STAT);
+
+        // open the stat file creaming any existing stat file
+		PRFileDesc * statisticFile = PR_Open(path,PR_CREATE_FILE|PR_RDWR,0);
+		if (statisticFile) {
+
+            PRInt32 i;
+            PRofstream ps;
+            ps.attach(statisticFile);
+        
+            // oh what the heck, sort it again
+			SortVectorRecord();
+
+            // cute little header
+		    sprintf(vector_string,"Context vector occurance results. Processed %d unique vectors.\r\n\r\n", gVectorCount);
+		    ps << vector_string;
+
+            ps << "Invalid context vector summary (see " CONTEXT_VECTOR_STAT ") for mapping.\r\n";
+		    ps << VECTOR_TABLE_HEADER;
+
+            // dump out the bad vectors encountered
+			for (i = 0; i < gVectorCount; i++) {
+                if (!gVectorInfoArray[i]->good_vector) {
+                    MakeVectorString(vector_string, gVectorInfoArray[i]);
+	    			ps << vector_string;
+                }
+            }
+
+            ps << "\r\n\r\nValid context vector summary\r\n";
+		    ps << VECTOR_TABLE_HEADER;
+            
+            // take a big vector table dump (good vectors)
+			for (i = 0; i < gVectorCount; i++) {
+                if (gVectorInfoArray[i]->good_vector) {
+                    MakeVectorString(vector_string, gVectorInfoArray[i]);
+	    			ps << vector_string;
+                }
+                // free em up.  they mean nothing to me now (I'm such a user)
+				PR_Free(gVectorInfoArray[i]);
+			}
+		}
+
+        // ok, we are done with the table, free it up as well
+		PR_Free(gVectorInfoArray);
+		gVectorInfoArray = 0;
+		gVectorCount = 0;
+		PR_Close(statisticFile);
+	}
+}
 
 /**
  * This debug method allows us to determine whether or not 
@@ -378,47 +682,72 @@ nsIContentSink* nsHTMLParser::SetContentSink(nsIContentSink* aSink) {
  * @param   aDTD is the DTD we plan to ask for verification
  * @return  TRUE if we know how to handle it, else false
  */
-PRBool VerifyContextVector(PRInt32 aTags[],PRInt32 count,nsIDTD* aDTD) {
+
+PRBool VerifyContextVector(CTokenizer * tokenizer, PRInt32 aTags[],PRInt32 count,nsIDTD* aDTD) {
 
   PRBool  result=PR_TRUE;
 
+  //ok, now see if we understand this vector
+
+  if(0!=gVerificationOutputDir || gRecordingStatistics) 
+      result=aDTD->VerifyContextVector(aTags,count);
+
+  if (gRecordingStatistics) {
+	  NoteVector(aTags,count,result);
+  }
+
   if(0!=gVerificationOutputDir) {
-  
-#ifdef XP_PC
-      char    path[_MAX_PATH+1];
+      char    path[2048];
       strcpy(path,gVerificationOutputDir);
-#endif
 
       int i=0;      
       for(i=0;i<count;i++){
-
-#ifdef NS_WIN32
         strcat(path,"/");
         const char* name=GetTagName(aTags[i]);
         strcat(path,name);
         mkdir(path);
-#endif
       }
-      //ok, now see if we understand this vector
-      result=aDTD->VerifyContextVector(aTags,count);
-
 	  if(PR_FALSE==result){
-#ifdef NS_WIN32
-      // save file to directory indicated by bad context vector
-      int iCount = 1;
+      static PRBool rnd_initialized = PR_FALSE;
+
+      if (!rnd_initialized) {
+         // seed randomn number generator to aid in temp file
+         // creation.
+         rnd_initialized = PR_TRUE;
+         srand((unsigned)time(NULL));
+      }
+
+      // generate a filename to dump the html source into
       char filename[_MAX_PATH];
       do {
-         sprintf(filename,"%s/html%04d.dbg", path, iCount++);
+         // use system time to generate a temporary file name
+         time_t ltime;
+         time (&ltime);
+         // add in random number so that we can create uniques names
+         // faster than simply every second.
+         ltime += (time_t)rand();
+         sprintf(filename,"%s/%lX.html", path, ltime);
+         // try until we find one we can create
       } while (PR_Access(filename,PR_ACCESS_EXISTS) == PR_SUCCESS);
-      PRFileDesc * debugFile = PR_Open(filename,PR_CREATE_FILE|PR_RDWR,0);
-      if (debugFile) {
-         PR_Write(debugFile,gURLRef,PL_strlen(gURLRef));
-         PR_Write(debugFile,"\n",PL_strlen("\n"));
-         PR_Close(debugFile);
+
+      // check to see if we already recorded an instance of this particular
+      // bad vector.  
+      if (!DebugRecord(path,gURLRef, filename))
+      {
+         // save file to directory indicated by bad context vector
+         PRFileDesc * debugFile = PR_Open(filename,PR_CREATE_FILE|PR_RDWR,0);
+         // if we were able to open the debug file, then
+         // write the true URL at the top of the file.
+         if (debugFile) {
+            // dump the html source into the newly created file.
+            if (tokenizer) {
+               PRofstream ps;
+               ps.attach(debugFile);
+               tokenizer->DebugDumpSource(ps);
+            }
+            PR_Close(debugFile);
+         }
       }
-#endif
-      //add debugging code here to record the fact that we just encountered
-      //a context vector we don't know how to handle.
     }
   }
 
@@ -454,7 +783,7 @@ PRInt32 nsHTMLParser::IterateTokens() {
     if(aHandler) {
       theMarkPos=*mCurrentPos;
       result=(*aHandler)(theToken,this);
-      VerifyContextVector(mContextStack,mContextStackPos,mDTD);
+      VerifyContextVector(mTokenizer, mContextStack,mContextStackPos,mDTD);
     }
     ++(*mCurrentPos);
   }
