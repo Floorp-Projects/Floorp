@@ -129,7 +129,7 @@ SinkTraceNode(PRUint32 aBit,
     PRInt32 nt = aNode.GetNodeType();
     if ((nt > PRInt32(eHTMLTag_unknown)) &&
         (nt < PRInt32(eHTMLTag_text))) {
-      cp = NS_EnumToTag(nsHTMLTag(aNode.GetNodeType()));
+      cp = nsHTMLTags::GetStringValue(nsHTMLTag(aNode.GetNodeType()));
     } else {
       aNode.GetText().ToCString(cbuf, sizeof(cbuf));
       cp = cbuf;
@@ -421,7 +421,7 @@ ReduceEntities(nsString& aString)
           continue;
         }
         *cp = '\0';
-        PRInt32 ch = NS_EntityToUnicode(cbuf);
+        PRInt32 ch = nsHTMLEntities::EntityToUnicode(nsSubsumeCStr(cbuf, PR_FALSE));
         if (ch < 0) {
           continue;
         }
@@ -785,7 +785,7 @@ CreateContentObject(const nsIParserNode& aNode,
     tmp.ToLowerCase();
   }
   else {
-    tmp.Append(NS_EnumToTag(aNodeType));
+    tmp.Append(nsHTMLTags::GetStringValue(aNodeType));
   }
   nsIAtom* atom = NS_NewAtom(tmp);
   if (nsnull == atom) {
@@ -810,17 +810,14 @@ nsresult
 NS_CreateHTMLElement(nsIHTMLContent** aResult, const nsString& aTag)
 {
   // Find tag in tag table
-  nsAutoString tmp(aTag);
-  tmp.ToLowerCase();
-  char cbuf[20];
-  tmp.ToCString(cbuf, sizeof(cbuf));
-  nsHTMLTag id = NS_TagToEnum(cbuf);
+  nsHTMLTag id = nsHTMLTags::LookupTag(aTag);
   if (eHTMLTag_userdefined == id) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   // Create atom for tag and then create content object
-  nsIAtom* atom = NS_NewAtom(tmp);
+  const nsCString& tag = nsHTMLTags::GetStringValue(id);
+  nsIAtom* atom = NS_NewAtom((const char*)tag);
   nsresult rv = MakeContentObject(id, atom, nsnull, nsnull, aResult);
   NS_RELEASE(atom);
 
