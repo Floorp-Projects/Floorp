@@ -91,6 +91,15 @@ PRIVATE int16 sjisShiftT[] = {
 	ShiftCell(u2BytesChar, 	2, 0xE0, 0xFC, 0xE0, 0x40, 0xFC, 0xFC)
 };
 /*-----------------------------------------------------------------------------------
+		ShiftTable for t61 encoding 
+-----------------------------------------------------------------------------------*/
+PRIVATE int16 t61ShiftT[] = { 
+	3, uMultibytesCharset, 	
+	ShiftCell(u1ByteChar, 	1, 0x00, 0xBF, 0x00, 0x00, 0x00, 0xBF),
+	ShiftCell(u1ByteChar, 	1, 0xD0, 0xFF, 0x00, 0xD0, 0x00, 0xFF),
+	ShiftCell(u2BytesChar, 	2, 0xC0, 0xCF, 0xC0, 0x41, 0xCF, 0x7A)
+};
+/*-----------------------------------------------------------------------------------
 		ShiftTable for JIS0212 in EUCJP encoding 
 -----------------------------------------------------------------------------------*/
 PRIVATE int16 x0212ShiftT[] = 	{ 
@@ -257,7 +266,7 @@ sbShiftT,
 sbShiftT,
 
 /* 0x60-0x67 */
-0,
+t61ShiftT,
 0,
 0,
 0,
@@ -422,7 +431,7 @@ sbShiftT,
 sbShiftT,
 
 /* 0x60-0x67 */
-0,
+t61ShiftT,
 0,
 0,
 0,

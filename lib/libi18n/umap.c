@@ -127,6 +127,7 @@ MODULE_PRIVATE XP_Bool uMapCode(uTable *uT, uint16 in, uint16* out)
 	XP_Bool done = FALSE;
 	uint16 itemOfList = uT->itemOfList;
 	uint16 i;
+	*out = NOMAPPING;
 	for(i=0;i<itemOfList;i++)
 	{
 		uMapCell* uCell;

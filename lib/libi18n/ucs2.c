@@ -167,7 +167,7 @@ CS_VIET_TCVN,
 CS_VIET_VNI,
 	
 /* 0x60 - 0x6F*/	
-CS_UNKNOWN,			
+CS_T61,			
 CS_UNKNOWN,			
 CS_UNKNOWN,			
 CS_UNKNOWN,			
@@ -401,6 +401,14 @@ PRIVATE uint16 DingbatsToTbl[] = {
 #include "macdingb.ut"
 };
 /*--------------------------------------------------------------------------*/
+/*	T61 Stuff */
+PRIVATE uint16 T61FromTbl[] = {
+#include "t61.uf"
+};
+PRIVATE uint16 T61ToTbl[] = {
+#include "t61.ut"
+};
+/*--------------------------------------------------------------------------*/
 /*	Thai  */
 PRIVATE uint16 TIS620FromTbl[] = {
 #include "cp874.uf" /* use cp874 untill we have real TIS 620 table */
@@ -492,6 +500,8 @@ PRIVATE uTable* LoadToUCS2Table(uint16 csid)
 
 	case CS_TIS620:
 		return (uTable*) TIS620ToTbl;
+	case CS_T61:
+		return (uTable*) T61ToTbl;
 	/*	Other Stuff */
 	default:
 		XP_ASSERT(TRUE);
@@ -583,6 +593,8 @@ PRIVATE uTable* LoadFromUCS2Table(uint16 csid)
 	case CS_TIS620:
 		return (uTable*) TIS620FromTbl;
 
+	case CS_T61:
+		return (uTable*) T61FromTbl;
 		/*	Other Stuff */
 	default:
 		XP_ASSERT(TRUE);
@@ -2006,7 +2018,6 @@ PUBLIC uint32    INTL_TextToUnicode(
 			XP_ASSERT(i!=num);
 #endif
 			*ustr= NOMAPPING;
-			scanlen=1;
 		}
 	}
 	*ustr = (INTL_Unicode) 0;
