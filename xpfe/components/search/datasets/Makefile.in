@@ -28,6 +28,7 @@ FILES = \
 	Google.src				\
 	GoTo.com.src				\
 	Netscape_Open_Directory.src		\
+	Snap.com.src				\
 	$(NULL)
 
 FILES := $(addprefix $(srcdir)/, $(FILES))
