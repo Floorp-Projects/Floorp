@@ -52,9 +52,7 @@
 #include "nsITimer.h"
 #include "nsIReflowCallback.h"
 
-#ifdef USE_IMG2
 #include "imgIDecoderObserver.h"
-#endif
 
 class nsSupportsHashtable;
 
@@ -199,7 +197,6 @@ private:
   PRInt32 mColIndex;
 };
 
-#ifdef USE_IMG2
 // The interface for our image listener.
 // {90586540-2D50-403e-8DCE-981CAA778444}
 #define NS_ITREEIMAGELISTENER_IID \
@@ -235,7 +232,6 @@ private:
   nsString mColID;
   nsITreeBoxObject* mTree;
 };
-#endif
 
 // The actual frame that paints the cells and rows.
 class nsTreeBodyFrame : public nsLeafBoxFrame, public nsITreeBoxObject, public nsICSSPseudoComparator,
@@ -381,11 +377,9 @@ protected:
   nsresult GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect, PRInt32 aRowIndex,
                                nsTreeColumn* aColumn, PRUnichar** aChildElt);
 
-#ifdef USE_IMG2
   // Fetch an image from the image cache.
   nsresult GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUseContext,
                     nsIStyleContext* aStyleContext, imgIContainer** aResult);
-#endif
 
   // Returns the size of a given image.   This size *includes* border and
   // padding.  It does not include margins.

@@ -89,12 +89,10 @@
 #include "nsITheme.h"
 #include "nsITimelineService.h"
 #include "nsITimerInternal.h"
-#ifdef USE_IMG2
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "imgIContainerObserver.h"
 #include "imgILoader.h"
-#endif
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -1786,7 +1784,6 @@ nsTreeBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsTreeColumn* aCol)
   }
 }
 
-#ifdef USE_IMG2
 nsresult
 nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUseContext,
                           nsIStyleContext* aStyleContext, imgIContainer** aResult)
@@ -1880,7 +1877,6 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
   }
   return NS_OK;
 }
-#endif
 
 nsRect nsTreeBodyFrame::GetImageSize(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUseContext,
                                          nsIStyleContext* aStyleContext)
@@ -1929,7 +1925,6 @@ nsRect nsTreeBodyFrame::GetImageSize(PRInt32 aRowIndex, const PRUnichar* aColID,
   else 
     needHeight = PR_TRUE;
 
-#ifdef USE_IMG2
   // We have to load image even though we already have a size.
   // Don't change this, otherwise things start to go crazy.
   nsCOMPtr<imgIContainer> image;
@@ -1953,7 +1948,6 @@ nsRect nsTreeBodyFrame::GetImageSize(PRInt32 aRowIndex, const PRUnichar* aColID,
         r.height += NSIntPixelsToTwips(height, p2t); 
       }
     }
-#endif
   }
 
   return r;
@@ -2669,7 +2663,6 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
     AdjustForBorderPadding(imageContext, imageRect);
     AdjustForBorderPadding(imageContext, imageSize);
 
-#ifdef USE_IMG2
     // Get the image for drawing.
     nsCOMPtr<imgIContainer> image; 
     GetImage(aRowIndex, aColumn->GetID().get(), PR_FALSE, imageContext, getter_AddRefs(image));
@@ -2694,7 +2687,6 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
       // Paint the image.
       aRenderingContext.DrawImage(image, &imageSize, &p);
     }
-#endif
   }
 
   return NS_OK;
@@ -3739,7 +3731,6 @@ nsTreeBodyFrame::ScrollCallback(nsITimer *aTimer, void *aClosure)
 // The ImageListener implementation
 // ==============================================================================
 
-#ifdef USE_IMG2
 NS_IMPL_ISUPPORTS3(nsTreeImageListener, imgIDecoderObserver, imgIContainerObserver, nsITreeImageListener)
 
 nsTreeImageListener::nsTreeImageListener(nsITreeBoxObject* aTree, const PRUnichar* aColID)
@@ -3820,4 +3811,3 @@ nsTreeImageListener::Invalidate()
 
   return NS_OK;
 }
-#endif
