@@ -30,7 +30,7 @@ class nsTitledButtonFrame : public nsLeafFrame, public nsIBox
 {
 public:
 
-  enum TruncationStyle { Left, Right, Center };
+  enum CroppingStyle { CropLeft, CropRight, CropCenter };
 
   friend nsresult NS_NewTitledButtonFrame(nsIFrame** aNewFrame);
 
@@ -151,10 +151,10 @@ private:
 
   PRBool mHasOnceBeenInMixedState;
  
-  TruncationStyle mTruncationType;
+  CroppingStyle mCropType;
   PRIntn mAlign;
   nsString mTitle;
-  nsString mTruncatedTitle;
+  nsString mCroppedTitle;
 
   nsHTMLImageLoader mImageLoader;
   PRBool mSizeFrozen;

@@ -79,6 +79,7 @@ XUL_ATOM(shortcut, "shortcut") // The shortcut key for a menu or menu item
 
 XUL_ATOM(progressmeter, "progressmeter")
 XUL_ATOM(titledbutton, "titledbutton")
+XUL_ATOM(crop, "crop")
 
 XUL_ATOM(mode, "mode")
 XUL_ATOM(box, "box")
