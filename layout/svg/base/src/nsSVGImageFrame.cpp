@@ -434,16 +434,28 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
   aNewFrame->GetWidth(&width);
   aNewFrame->GetHeight(&height);
   
-  nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+  nsresult rv;
   nsCOMPtr<nsISVGRenderer> renderer;
-  outerSVGFrame->GetRenderer(getter_AddRefs(renderer));
-  renderer->CreateSurface(width, height, getter_AddRefs(mSurface));
+
+  nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+  if (!outerSVGFrame)
+    return NS_ERROR_FAILURE;
+  rv = outerSVGFrame->GetRenderer(getter_AddRefs(renderer));
+  if (NS_FAILED(rv))
+    return rv;
+  rv = renderer->CreateSurface(width, height, getter_AddRefs(mSurface));
+  if (NS_FAILED(rv))
+    return rv;
   
   PRUint8 *data, *target;
   PRUint32 length;
   PRInt32 stride;
   mSurface->Lock();
   mSurface->GetData(&data, &length, &stride);
+  if (!data) {
+    mSurface->Unlock();
+    return NS_ERROR_FAILURE;
+  }
 #ifdef XP_WIN
   stride = -stride;
 #endif
@@ -455,7 +467,13 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
   PRUint32 bpr, abpr;
   aNewFrame->GetImageData(&rgb, &length);
   aNewFrame->GetImageBytesPerRow(&bpr);
-  
+  if (!rgb) {
+    mSurface->Unlock();
+    aNewFrame->UnlockImageData();
+    aNewFrame->UnlockAlphaData();
+    return NS_ERROR_FAILURE;
+  }
+
   aNewFrame->GetAlphaData(&alpha, &length);
   aNewFrame->GetAlphaBytesPerRow(&abpr);
 
