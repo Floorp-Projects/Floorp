@@ -468,6 +468,7 @@ nsRangeList::Clear()
   for (PRInt32 i = 0; i < mRangeArray->Count();i++)
   {
     mRangeArray->RemoveElementAt(i);
+    // Does RemoveElementAt also delete the elements?
   }
   return NS_OK;
 }
@@ -553,7 +554,8 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent, ns
 #ifdef DEBUG
 void nsRangeList::printSelection()
 {
-  printf("nsRangeList 0x%x:\n", this);
+  printf("nsRangeList 0x%x: %d items\n", this,
+         mRangeArray ? mRangeArray->Count() : -99);
 
   // Get an iterator
   nsRangeListIterator iter(this);
@@ -576,6 +578,7 @@ void nsRangeList::printSelection()
     printRange(range);
     iter.Next();
   }
+
   printf("Anchor is 0x%x, %ld\n", GetAnchorNode(), GetAnchorOffset());
   printf("Focus is 0x%x, %ld\n", GetFocusNode(), GetFocusOffset());
   printf(" ... end of selection\n");
@@ -691,7 +694,7 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
       return NS_ERROR_FAILURE;
     parent = nsnull;//just force a release now even though we dont have to.
     parent2 = nsnull;
-    Clear(); //change this later 
+
     nsIFrame *frame;
     nsIFrame *anchor;
     PRBool direction(BACKWARD);//true == left to right
@@ -714,7 +717,7 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
         direction = PR_TRUE; //slecting "english" right
         aFrame->SetSelected(PR_TRUE,aOffset,aOffset,PR_FALSE);
         aTracker->SetFocus(aFrame,aFrame);
-        setAnchor(domNode,aContentOffset);
+        Collapse(domNode, aContentOffset + aOffset);
       }
       else {
         if (aFrame == frame){ //drag to same frame
@@ -825,49 +828,12 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
             }
           }
         }
-/*
-#1 figure out the order
-we can tell the direction of the selection by asking for the anchors selection
-if the begin is less than the end then we know the selection is to the "right".
-else it is a backwards selection.
-a = anchor
-1 = old cursor
-2 = new cursor
-
-  if (a <= 1 && 1 <=2)    a,1,2  or (a1,2)
-  if (a < 2 && 1 > 2)     a,2,1
-  if (1 < a && a <2)      1,a,2
-  if (a > 2 && 2 >1)      1,2,a
-  if (2 < a && a <1)      2,a,1
-  if (a > 1 && 1 >2)      2,1,a
-then execute
-a  1  2 select from 1 to 2
-a  2  1 deselect from 2 to 1
-1  a  2 deselect from 1 to a select from a to 2
-1  2  a deselect from 1 to 2
-2  1  a = continue selection from 2 to 1
-      
-*/
       }
-      nsCOMPtr<nsIDOMRange> range;
-      if (NS_SUCCEEDED(nsRepository::CreateInstance(kRangeCID, nsnull, kIDOMRangeIID, getter_AddRefs(range)))){ //create an irange
-        if (domNode){
-          setFocus(domNode, aOffset + aContentOffset);
-          if (direction == FORWARD){
-            range->SetStart(GetAnchorNode(),GetAnchorOffset());
-            range->SetEnd(GetFocusNode(),GetFocusOffset());
-          }
-          else {
-            range->SetStart(GetFocusNode(),GetFocusOffset());
-            range->SetEnd(GetAnchorNode(),GetAnchorOffset());
-          }
-          DEBUG_OUT_RANGE(range);
-          nsCOMPtr<nsISupports> rangeISupports(range);
-          if (rangeISupports) {
-            AddItem(rangeISupports);
-            return NS_OK;
-          }
-        }
+
+      // Now update the range list:
+      if (aContinueSelection && domNode)
+      {
+        Extend(domNode, aOffset + aContentOffset);
       }
     }
   }
@@ -1012,38 +978,33 @@ nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
 {
   nsresult res;
 
-  // Clear all but one of the ranges; we'll reuse the first one.
+  // Delete all of the current ranges
   if (!mRangeArray)
     return NS_ERROR_FAILURE;
-  for (PRInt32 i = 1; i < mRangeArray->Count();i++)
-  {
-    mRangeArray->RemoveElementAt(i);
-  }
+  Clear();
 
   nsCOMPtr<nsIDOMRange> range;
-  if (mRangeArray->Count() < 1)
-  {
-    res = nsRepository::CreateInstance(kRangeCID, nsnull,
-                                       kIDOMRangeIID,
-                                       getter_AddRefs(range));
-    if (!NS_SUCCEEDED(res))
-      return res;
-    res = AddItem(range);
-    if (!NS_SUCCEEDED(res))
-      return res;
-  }
-  nsCOMPtr<nsISupports> firstElement (mRangeArray->ElementAt(0));
-  res = firstElement->QueryInterface(kIDOMRangeIID, getter_AddRefs(range));
+  res = nsRepository::CreateInstance(kRangeCID, nsnull,
+                                     kIDOMRangeIID,
+                                     getter_AddRefs(range));
   if (!NS_SUCCEEDED(res))
     return res;
+
+  if (0 == range)
+    return NS_ERROR_UNEXPECTED;
   res = range->SetEnd(aParentNode, aOffset);
   if (!NS_SUCCEEDED(res))
     return res;
   res = range->SetStart(aParentNode, aOffset);
   if (!NS_SUCCEEDED(res))
     return res;
+
   setAnchor(aParentNode, aOffset);
   setFocus(aParentNode, aOffset);
+
+  res = AddItem(range);
+  if (!NS_SUCCEEDED(res))
+    return res;
   return NS_OK;
 }
 
@@ -1076,12 +1037,90 @@ nsRangeList::IsCollapsed(PRBool* aIsCollapsed)
 }
 
 /*
+Notes which might come in handy for extend:
+
+We can tell the direction of the selection by asking for the anchors selection
+if the begin is less than the end then we know the selection is to the "right".
+else it is a backwards selection.
+a = anchor
+1 = old cursor
+2 = new cursor
+
+  if (a <= 1 && 1 <=2)    a,1,2  or (a1,2)
+  if (a < 2 && 1 > 2)     a,2,1
+  if (1 < a && a <2)      1,a,2
+  if (a > 2 && 2 >1)      1,2,a
+  if (2 < a && a <1)      2,a,1
+  if (a > 1 && 1 >2)      2,1,a
+then execute
+a  1  2 select from 1 to 2
+a  2  1 deselect from 2 to 1
+1  a  2 deselect from 1 to a select from a to 2
+1  2  a deselect from 1 to 2
+2  1  a = continue selection from 2 to 1
+*/
+
+/*
  * Extend extends the selection away from the anchor.
+ * We don't need to know the direction, because we always change the focus.
  */
 NS_IMETHODIMP
 nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // First, find the range containing the old focus point:
+  if (!mRangeArray)
+    return NS_ERROR_FAILURE;
+
+  PRInt32 i;
+  for (i = 0; i < mRangeArray->Count(); i++)
+  {
+    nsCOMPtr<nsIDOMRange> range (mRangeArray->ElementAt(i));
+
+    nsCOMPtr<nsIDOMNode> endNode;
+    PRInt32 endOffset;
+    nsCOMPtr<nsIDOMNode> startNode;
+    PRInt32 startOffset;
+    range->GetEndParent(getter_AddRefs(endNode));
+    range->GetEndOffset(&endOffset);
+    range->GetStartParent(getter_AddRefs(startNode));
+    range->GetStartOffset(&startOffset);
+    nsresult res;
+
+    if ((GetFocusNode() == endNode) && (GetFocusOffset() == endOffset))
+    {
+      res = range->SetEnd(aParentNode, aOffset);
+      if (res == NS_ERROR_ILLEGAL_VALUE)
+      {
+        res = range->SetEnd(startNode, startOffset);
+        if (NS_SUCCEEDED(res))
+          res = range->SetStart(aParentNode, aOffset);
+      }
+      if (NS_SUCCEEDED(res))
+        setFocus(aParentNode, aOffset);
+
+      return res;
+    }
+    
+    if ((GetFocusNode() == startNode) && (GetFocusOffset() == startOffset))
+    {
+      res = range->SetStart(aParentNode, aOffset);
+      if (res == NS_ERROR_ILLEGAL_VALUE)
+      {
+        res = range->SetStart(endNode, endOffset);
+        if (NS_SUCCEEDED(res))
+          res = range->SetEnd(aParentNode, aOffset);
+      }
+      if (NS_SUCCEEDED(res))
+        setFocus(aParentNode, aOffset);
+      return res;
+    }
+  }
+
+  // If we get here, the focus wasn't contained in any of the ranges.
+#ifdef DEBUG
+  printf("nsRangeList::Extend: focus not contained in any ranges\n");
+#endif
+  return NS_ERROR_UNEXPECTED;
 }
 
 
@@ -1103,34 +1142,12 @@ nsRangeList::DeleteFromDocument()
     // If the offset is positive, then it's easy:
     if (GetFocusOffset() > 0)
     {
-      nsIDOMNode* focusNode = GetFocusNode();
-      if (!focusNode)
-        return NS_ERROR_FAILURE;
-
-      nsCOMPtr<nsIDOMRange> range;
-      res = nsRepository::CreateInstance(kRangeCID, nsnull,
-                                         kIDOMRangeIID,
-                                         getter_AddRefs(range));
-      if (!NS_SUCCEEDED(res))
-        return res;
-
-      // For some reason, this doesn't leave the anchor in the
-      // right place after the delete happens; it's point too far right.
-      setAnchor(GetFocusNode(), GetFocusOffset()-1);
-      res = range->SetStart(GetAnchorNode(), GetAnchorOffset());
-      if (!NS_SUCCEEDED(res))
-        return res;
-      res = range->SetEnd(GetFocusNode(), GetFocusOffset());
-      if (!NS_SUCCEEDED(res))
-        return res;
-
-      res = AddItem(range);
-      if (!NS_SUCCEEDED(res))
-        return res;
+      Extend(GetFocusNode(), GetFocusOffset() - 1);
     }
     else
     {
       // Otherwise it's harder, have to find the previous node
+      printf("Sorry, don't know how to delete across frame boundaries yet\n");
       return NS_ERROR_NOT_IMPLEMENTED;
     }
   }
@@ -1153,9 +1170,17 @@ nsRangeList::DeleteFromDocument()
     iter.Next();
   }
 
-  // HACK: We need to reset the anchor and offset,
-  // in order for text insertion to work after a deletion.
-  Collapse(GetAnchorNode(), GetAnchorOffset());
+  // Collapse to the new location.
+  // If we deleted one character, then we move back one element.
+  // FIXME  We don't know how to do this past frame boundaries yet.
+  if (isCollapsed)
+    Collapse(GetAnchorNode(), GetAnchorOffset()-1);
+  else if (GetAnchorOffset() > 0)
+    Collapse(GetAnchorNode(), GetAnchorOffset());
+#ifdef DEBUG
+  else
+    printf("Don't know how to set selection back past frame boundary\n");
+#endif
 
   return NS_OK;
 }
