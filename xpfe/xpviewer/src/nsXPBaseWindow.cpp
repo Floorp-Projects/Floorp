@@ -382,7 +382,7 @@ NS_IMETHODIMP nsXPBaseWindow::GetTitle(PRUnichar** aResult)
 //---------------------------------------------------------------
 NS_IMETHODIMP nsXPBaseWindow::LoadURL(const nsString& aURL)
 {
-  mWebShell->LoadURL(aURL, nsnull);
+  mWebShell->LoadURL(aURL);
   return NS_OK;
 }
 

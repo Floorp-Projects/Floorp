@@ -22,6 +22,7 @@
 #define VIEWER_OPEN             40000
 #define VIEWER_EXIT             40002
 #define PREVIEW_CLOSE           40003
+#define VIEW_SOURCE             40004
 
 #define VIEWER_WINDOW_OPEN      40009
 #define VIEWER_FILE_OPEN        40010

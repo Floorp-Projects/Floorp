@@ -496,6 +496,26 @@ nsViewerApp::OpenWindow()
 }
 
 NS_IMETHODIMP
+nsViewerApp::ViewSource(nsString& aURL)
+{
+  // Create browser window
+  // XXX Some piece of code needs to properly hold the reference to this
+  // browser window. For the time being the reference is released by the
+  // browser event handling code during processing of the NS_DESTROY event...
+  nsBrowserWindow* bw = nsnull;
+  nsresult rv = nsRepository::CreateInstance(kBrowserWindowCID, nsnull,
+                                             kIBrowserWindowIID,
+                                             (void**) &bw);
+  bw->SetApp(this);
+  bw->Init(mAppShell, mPrefs, nsRect(0, 0, 620, 400), PRUint32(~0), mAllowPlugins);
+  bw->Show();
+  bw->GoTo(aURL.GetUnicode(),"view-source");
+  NS_RELEASE(bw);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsViewerApp::OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
 {
   // Create browser window

@@ -356,6 +356,18 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   case VIEWER_FILE_OPEN:
     DoFileOpen();
     break;
+
+  case VIEW_SOURCE:
+    {
+      PRInt32 theIndex;
+      mWebShell->GetHistoryIndex(theIndex);
+      PRUnichar* theURL;
+      mWebShell->GetURL(theIndex,&theURL);
+      nsAutoString theString(theURL);
+      mApp->ViewSource(theString);
+      //XXX Find out how the string is allocated, and perhaps delete it...
+    }
+    break;
   
   case VIEWER_EDIT_COPY:
     DoCopy();
@@ -424,9 +436,9 @@ nsBrowserWindow::Forward()
 }
 
 void
-nsBrowserWindow::GoTo(const PRUnichar* aURL)
+nsBrowserWindow::GoTo(const PRUnichar* aURL,const char* aCommand)
 {
-  mWebShell->LoadURL(aURL, nsnull);
+  mWebShell->LoadURL(aURL, aCommand, nsnull);
 }
 
 #define FILE_PROTOCOL "file://"

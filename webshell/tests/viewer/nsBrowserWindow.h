@@ -118,7 +118,7 @@ public:
   void Layout(PRInt32 aWidth, PRInt32 aHeight);
   void Back();
   void Forward();
-  void GoTo(const PRUnichar* aURL);
+  void GoTo(const PRUnichar* aURL,const char* aCommand=nsnull);
   void StartThrobber();
   void StopThrobber();
   void LoadThrobberImages();

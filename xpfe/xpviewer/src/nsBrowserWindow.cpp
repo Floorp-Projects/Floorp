@@ -778,7 +778,7 @@ nsBrowserWindow::Forward()
 void
 nsBrowserWindow::GoTo(const PRUnichar* aURL)
 {
-  mWebShell->LoadURL(aURL, nsnull);
+  mWebShell->LoadURL(aURL);
   UpdateToolbarBtns();
 }
 

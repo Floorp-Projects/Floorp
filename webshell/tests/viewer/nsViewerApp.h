@@ -51,6 +51,7 @@ public:
   NS_IMETHOD Initialize(int argc, char** argv);
   NS_IMETHOD ProcessArguments(int argc, char** argv);
   NS_IMETHOD OpenWindow();
+  NS_IMETHOD ViewSource(nsString& aURL);
   NS_IMETHOD OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow);
   NS_IMETHOD CreateRobot(nsBrowserWindow* aWindow);
   NS_IMETHOD CreateSiteWalker(nsBrowserWindow* aWindow);
