@@ -33,8 +33,7 @@ XPIDLSRCS =                         \
 
 EXPORTS=xp_obs.h \
         stopwatch.h \
-		nsTimer.h \
-		nsStackBasedTimer.h
+		nsTimer.h
 
 
 !include $(DEPTH)\config\rules.mak

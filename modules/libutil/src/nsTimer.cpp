@@ -22,12 +22,14 @@
 
 #include "nsTimer.h"
 #include <stdarg.h>
+#include <stdio.h>
 
 char* __mysprintf(char* aFormatString, ... )
 {
   va_list argList;
   int size = vprintf(aFormatString, argList);
-  char* buf = new(sizeof(char) * size);
+  char* buf = new char[size];
   vsprintf(buf, aFormatString, argList);
   return buf;
 }
+
