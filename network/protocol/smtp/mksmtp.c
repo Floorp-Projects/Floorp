@@ -1688,7 +1688,7 @@ Subject: %s\n\
     
 }
 
-#ifndef MOZ_MAIL_NEWS
+#if !defined(MOZ_MAIL_NEWS) && !defined(SMART_MAIL)
 PUBLIC const char*
 NET_GetPopUsername ()
 {
