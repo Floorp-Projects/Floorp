@@ -743,6 +743,7 @@ nsExternalAppHandler::nsExternalAppHandler()
   NS_INIT_ISUPPORTS();
   mCanceled = PR_FALSE;
   mReceivedDispositionInfo = PR_FALSE;
+  mHandlingAttachment = PR_FALSE;
   mStopRequestIssued = PR_FALSE;
   mDataBuffer = (char *) nsMemory::Alloc((sizeof(char) * DATA_BUFFER_SIZE));
   mProgressListenerInitialized = PR_FALSE;
@@ -873,10 +874,29 @@ void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChan
   // disposition-type < ; name=value >* < ; filename=value > < ; name=value >*
   if ( NS_SUCCEEDED( rv ) && !disp.IsEmpty() ) 
   {
-    nsACString::const_iterator start, end;
+    nsCAutoString::const_iterator start, end;
     disp.BeginReading(start);
     disp.EndReading(end);
-    nsACString::const_iterator iter = end;
+    // skip leading whitespace
+    while (start != end && nsCRT::IsAsciiSpace(*start)) {
+      ++start;
+    }
+    nsCAutoString::const_iterator iter = start;
+    // walk forward till we hit the next whitespace or semicolon
+    while (iter != end && *iter != ';' && !nsCRT::IsAsciiSpace(*iter)) {
+      ++iter;
+    }
+    if (start != iter &&
+        Substring(start, iter).Equals(NS_LITERAL_CSTRING("attachment"),
+                                      nsCaseInsensitiveCStringComparator())) {
+      mHandlingAttachment = PR_TRUE;
+    }
+
+    // We may not have a disposition type listed; some servers suck.
+    // But they could have listed a filename anyway.
+    disp.BeginReading(start);
+    iter = end;
+
     if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("filename="),
                                       start,
                                       iter))
@@ -901,7 +921,7 @@ void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChan
         if (endChar == ';' && iter != start) {
           --iter;
           while (iter != start && nsCRT::IsAsciiSpace(*iter)) {
-            iter--;
+            --iter;
           }
           ++iter;
         }
@@ -1189,7 +1209,13 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   // they want us to do with this content...
 
   PRBool alwaysAsk = PR_TRUE;
+  // If we're handling an attachment we want to default to saving but
+  // always ask just in case
+  if (mHandlingAttachment) {
+    mMimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
+  } else {
   mMimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
+  }
   if (alwaysAsk)
   {
     // do this first! make sure we don't try to take an action until the user tells us what they want to do

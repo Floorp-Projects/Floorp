@@ -573,6 +573,14 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
         }
         else {
             mNewPart = PR_TRUE;
+            // Reset state so we don't carry it over from part to part
+            mContentType.Truncate();
+            mContentLength = -1;
+            mContentDisposition.Truncate();
+            mIsByteRangeRequest = PR_FALSE;
+            mByteRangeStart = 0;
+            mByteRangeEnd = 0;
+            
             rv = SendStop(NS_OK);
             if (NS_FAILED(rv)) ERR_OUT
             // reset the token to front. this allows us to treat
