@@ -68,6 +68,13 @@ LDAPSDKDIST = $(LDAPSDK_LOC)/$(LDAPSDK_PLATFORM)
 
 endif
 
+#Which versin of install.js do we really want?
+ifeq ($(OS_ARCH), WINNT)
+INSTALL_JS = install.js
+else 
+INSTALL_JS = unix-install.js
+endif
+
 ifneq ($(OS_ARCH), WINNT)
 ifeq ($(OS_ARCH), Linux)
 # On linux, we link with libstdc++ (we're always using egcs on linux, right?)
@@ -293,3 +300,18 @@ patch: $(PROGRAM)
 #   - i18n libraries
 #   - xpcom libraries
 #   - subdirectories (ui, do)
+
+build_xpi: $(PROGRAM)
+	$(NSINSTALL) -m 644 ../ui/$(PLATFORM)/psm*.properties xpi/psm/ui
+	$(NSINSTALL) -m 644 ../doc/*.gif ../doc/*.html ../doc/*.htm xpi/psm/doc
+	$(NSINSTALL) -m 644 $(XPCOM_LIBS) xpi/psm
+	$(NSINSTALL) -m 644 $(I18N_COMPONENTS) xpi/psm/components
+	$(NSINSTALL) -m 644 $(NSPR_LIBS) xpi/psm
+ifneq ($(OS_ARCH), WINNT)
+	$(NSINSTALL) -m 775 start-psm xpi/psm
+endif
+	cp $(INSTALL_JS) xpi/install.js
+	cd xpi; zip -T -r ../$(PLATFORM)/psm.xpi psm install.js
+	rm -rf xpi
+
+	
