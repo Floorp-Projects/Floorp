@@ -31,6 +31,6 @@ CSRCS		= cslabel.c \
 		  picsapi.c \
 		  $(NULL)
 
-REQUIRES	= js nspr dbm img layer util pref security
+REQUIRES	= js nspr dbm img layer util pref security httpurl
 
 include $(DEPTH)/config/rules.mk
