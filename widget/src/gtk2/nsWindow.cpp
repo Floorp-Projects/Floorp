@@ -969,7 +969,24 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
     nsCAutoString path;
     pathConverter->GetNativePath(path);
 
-    return SetWindowIcon(path);
+    nsCStringArray iconList;
+    iconList.AppendCString(path);
+
+    // Get the 16px icon path as well
+    iconSpec = aIconSpec + NS_LITERAL_STRING("16.xpm");
+
+    chromeDir->GetPath(iconPath);
+    iconPath.Append(iconSpec.get() + n - 1);
+
+    rv = NS_NewLocalFile(iconPath, PR_TRUE,
+                         getter_AddRefs(pathConverter));
+    if (NS_FAILED(rv))
+        return rv;
+
+    pathConverter->GetNativePath(path);
+    iconList.AppendCString(path);
+
+    return SetWindowIconList(iconList);
 }
 
 NS_IMETHODIMP
@@ -2585,18 +2602,27 @@ nsWindow::SetupPluginPort(void)
 }
 
 nsresult
-nsWindow::SetWindowIcon(nsCString &aPath)
+nsWindow::SetWindowIconList(const nsCStringArray &aIconList)
 {
-    LOG(("window [%p] Loading icon from %s\n", (void *)this, aPath.get()));
+    GList *list = NULL;
 
-    GdkPixbuf *icon = gdk_pixbuf_new_from_file(aPath.get(), NULL);
-    if (!icon)
+    for (int i = 0; i < aIconList.Count(); ++i) {
+        const char *path = aIconList[i]->get();
+        LOG(("window [%p] Loading icon from %s\n", (void *)this, path));
+
+        GdkPixbuf *icon = gdk_pixbuf_new_from_file(path, NULL);
+        if (!icon)
+            continue;
+
+        list = g_list_append(list, icon);
+    }
+
+    if (!list)
         return NS_ERROR_FAILURE;
 
-    GList *list = NULL;
-    list = g_list_append(list, icon);
     gtk_window_set_icon_list(GTK_WINDOW(mShell), list);
-    g_object_unref(G_OBJECT(icon));
+
+    g_list_foreach(list, (GFunc) g_object_unref, NULL);
     g_list_free(list);
 
     return NS_OK;
@@ -2627,7 +2653,10 @@ nsWindow::SetDefaultIcon(void)
     nsCAutoString path;
     defaultPathConverter->GetNativePath(path);
 
-    SetWindowIcon(path);
+    nsCStringArray iconList;
+    iconList.AppendCString(path);
+
+    SetWindowIconList(iconList);
 }
 
 void
