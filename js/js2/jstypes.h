@@ -34,12 +34,12 @@
 #ifndef jstypes_h
 #define jstypes_h
 
+#include "utilities.h"
+#include "gc_allocator.h"
 #include <vector>
 #include <map>
 #include <stack>
 
-#include "gc_allocator.h"
-#include "utilities.h"
 
 /* forward declare classes from JavaScript::ICG */
 namespace JavaScript {

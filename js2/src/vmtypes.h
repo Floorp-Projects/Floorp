@@ -34,10 +34,10 @@
 #ifndef vmtypes_h
 #define vmtypes_h
 
-#include <vector>
-#include "world.h"
 #include "numerics.h" /* needed for formatter << double */
 #include "jstypes.h"
+#include "world.h"
+#include <vector>
 
 namespace JavaScript {
 namespace VM {
