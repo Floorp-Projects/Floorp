@@ -371,6 +371,12 @@ extern char* _MD_ReadDir(struct _MDDir *md,PRIntn flags);
 #define	_MD_RMDIR 			_MD_Delete
 
 /*
+** Pipe I/O Related definitions (not implemented)
+*/
+
+#define _MD_PIPEAVAILABLE(fd) -1
+
+/*
 ** Socket I/O Related definitions
 */
 
