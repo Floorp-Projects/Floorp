@@ -31,7 +31,6 @@
 #include "nsImgDecCID.h"
 #include "prtypes.h"
 
-
 #include "il_strm.h"
 
 
@@ -65,7 +64,7 @@ public:
   il_container *SetContainer(il_container *ic) {mContainer=ic; return ic;};
 
   ImgDecoder(il_container *aContainer){ NS_INIT_ISUPPORTS(); mContainer=aContainer;};
-  virtual ~ImgDecoder(); // XXX Pam needs to fix this
+  virtual ~ImgDecoder(); 
 
 private:
   il_container* mContainer;
@@ -75,7 +74,9 @@ NS_IMPL_ISUPPORTS(ImgDecoder, kImgDecoderIID)
 
 ImgDecoder:: ~ImgDecoder()
 {
-    return;
+  if(mContainer)
+    delete mContainer;
+  return;
 }
 /*-----------------------------------------*/
 /*-----------------------------------------*/
@@ -723,7 +724,9 @@ il_size(il_container *ic)
     /* Create and initialize the mask pixmap structure, if required.  A mask
        is allocated only if the image is transparent and no background color
        was specified for this image request. */
-    if (src_header->transparent_pixel && !ic->background_color) {
+    if ((src_header->transparent_pixel && !ic->background_color)
+      ||(img_header->alpha_bits))
+    {
         if (!ic->mask) {
             NI_PixmapHeader *mask_header;
     
@@ -746,10 +749,7 @@ il_size(il_container *ic)
         /* Notify observers that the image is transparent and has a mask. */
         il_transparent_notify(ic);
     }
-    else {                      /* Mask not required. */
-
-        /*  for png alpha*/
-        if (ic->mask) {
+    else if (ic->mask) /*  for png alpha*/ {
                 il_transparent_notify(ic);
                 if(ic->background_color){
 /*
@@ -758,12 +758,12 @@ il_size(il_container *ic)
                
                     XP_MEMCPY(img_trans_pixel, ic->background_color, sizeof(IL_IRGB)); 
 */
-        }
+                }else{
 /*
-            il_destroy_pixmap(ic->img_cb, ic->mask);
-            ic->mask = NULL;
+                    il_destroy_pixmap(ic->img_cb, ic->mask);
+                    ic->mask = NULL;
 */
-        }
+                }
         
     }
 
@@ -1039,10 +1039,12 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
 
   if (NS_FAILED(result))
     return MK_IMAGE_LOSSAGE;
+ NS_ADDREF(imgdec);
   
   
   imgdec->SetContainer(ic);
   ic->imgdec = imgdec;
+  
   ret = imgdec->ImgDInit();
   if(ret == 0)
   {
@@ -1401,22 +1403,22 @@ il_image_complete(il_container *ic)
 		    PR_ASSERT(ic->image && ic->image->bits);
 
 		    ILTRACE(1,("il: complete %d image width %d (%d) height %d,"
-                       " depth %d, %d colors",
-				       ic->multi,
-				       ic->image->header.width,
-                       ic->image->header.widthBytes,
-                       ic->image->header.height,
-                       ic->image->header.color_space->pixmap_depth, 
-				       ic->image->header.color_space->cmap.num_colors));
+                   " depth %d, %d colors",
+				           ic->multi,
+				           ic->image->header.width,
+                   ic->image->header.widthBytes,
+                   ic->image->header.height,
+                   ic->image->header.color_space->pixmap_depth, 
+				           ic->image->header.color_space->cmap.num_colors));
 
-		    /* 3 cases: simple, multipart MIME, multi-image animation */
-		    if (!ic->loop_count && !ic->is_multipart) {
+		        /* 3 cases: simple, multipart MIME, multi-image animation */
+		        if (!ic->loop_count && !ic->is_multipart) {
                 /* A single frame, single part image. */
                 il_container_complete(ic);
             }
             else {
                 /* Display the rest of the last image before starting a new one */
-			    il_flush_image_data(ic);
+			           il_flush_image_data(ic);
 
                 /* Force new colormap to be loaded in case its different from the
                  * LOSRC or previous images in the multipart message.
@@ -1495,7 +1497,7 @@ il_image_complete(il_container *ic)
                         /* Call to netlib for net cache data happens here. */
 					              netRequest->SetBackgroundLoad(PR_TRUE);
 					              reader = IL_NewNetReader(ic);
-                        (void) ic->net_cx->GetURL(ic->url, NET_DONT_RELOAD, 
+                        (void) ic->net_cx->GetURL(ic->url, NET_CACHE_ONLY_RELOAD /*NET_DONT_RELOAD*/, 
 											      reader);
                         /* Release reader, GetURL will keep a ref to it. */
                         NS_RELEASE(reader);
@@ -1944,9 +1946,9 @@ IL_GetImage(const char* image_url,
             break;
             
         default:
-             PR_ASSERT(0); 
-            /*  NS_RELEASE(image_req->net_cx);*/
-            /*  PR_FREEIF(image_req);*/
+            PR_ASSERT(0);
+            //NS_RELEASE(image_req->net_cx);
+            //PR_FREEIF(image_req);
             /* This takes the image_req out of the ic client list,
                 frees image_req->new_cx, frees image_req.*/
             int ret = il_delete_client(ic, image_req);
@@ -1981,11 +1983,13 @@ IL_GetImage(const char* image_url,
 
     if (!url)
     {
-        /* NS_RELEASE(image_req->net_cx);*/
-        /* PR_FREEIF(image_req); */
+       // NS_IF_RELEASE(image_req->net_cx);  
+       // PR_FREEIF(image_req);
         /* This takes the image_req out of the ic client list,
-                frees image_req->new_cx, frees image_req. */
+           frees image_req->new_cx, frees image_req.
+        */
         int ret = il_delete_client(ic, image_req);
+
         return NULL;
     }        
     
@@ -2002,12 +2006,13 @@ IL_GetImage(const char* image_url,
     /* save away the container */
 	reader = IL_NewNetReader(ic);
 	if (!reader) {
-           /* NS_RELEASE(image_req->net_cx); */
-           /* PR_FREEIF(image_req);*/
-           /* This takes the image_req out of the ic client list,
-            frees image_req->new_cx, frees image_req.*/
-           int ret = il_delete_client(ic, image_req);
-           return NULL;
+        //NS_RELEASE(image_req->net_cx);
+        //PR_FREEIF(image_req);
+        /* This takes the image_req out of the ic client list,
+           frees image_req->new_cx, frees image_req.
+        */
+        int ret = il_delete_client(ic, image_req);
+        return NULL;
 	}
     err = ic->net_cx->GetURL(url, cache_reload_policy, reader);
     /* Release reader, GetURL will keep a ref to it. */
