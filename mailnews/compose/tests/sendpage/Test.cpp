@@ -79,11 +79,13 @@ public:
                            nsIFileSpec *returnFileSpec);
 
   // For the nsIMsgCopySerivceListener!
-  NS_IMETHOD OnStartCopy(nsISupports *listenerData);
+  NS_IMETHOD OnStartCopy();
   
-  NS_IMETHOD OnProgress(PRUint32 aProgress, PRUint32 aProgressMax, nsISupports *listenerData);
+  NS_IMETHOD OnProgress(PRUint32 aProgress, PRUint32 aProgressMax);
   
-  NS_IMETHOD OnStopCopy(nsresult aStatus, nsISupports *listenerData);
+  NS_IMETHOD OnStopCopy(nsresult aStatus);
+  NS_IMETHOD SetMessageKey(PRUint32 aMessageKey);
+  NS_IMETHOD GetMessageId(nsString2* aMessageId);
 
 private:
   nsMsgSendLater    *mSendLater;
@@ -177,7 +179,7 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
 }
 
 nsresult
-SendOperationListener::OnStartCopy(nsISupports *listenerData)
+SendOperationListener::OnStartCopy()
 {
 #ifdef NS_DEBUG
   printf("SendOperationListener::OnStartCopy()\n");
@@ -187,7 +189,7 @@ SendOperationListener::OnStartCopy(nsISupports *listenerData)
 }
 
 nsresult
-SendOperationListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax, nsISupports *listenerData)
+SendOperationListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
 {
 #ifdef NS_DEBUG
   printf("SendOperationListener::OnProgress() - COPY\n");
@@ -196,7 +198,7 @@ SendOperationListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax, nsI
 }
   
 nsresult
-SendOperationListener::OnStopCopy(nsresult aStatus, nsISupports *listenerData)
+SendOperationListener::OnStopCopy(nsresult aStatus)
 {
   if (NS_SUCCEEDED(aStatus))
   {
@@ -208,6 +210,18 @@ SendOperationListener::OnStopCopy(nsresult aStatus, nsISupports *listenerData)
   }
 
   return NS_OK;
+}
+
+nsresult
+SendOperationListener::SetMessageKey(PRUint32 aMessageKey)
+{
+	return NS_OK;
+}
+
+nsresult
+SendOperationListener::GetMessageId(nsString2* aMessageId)
+{
+	return NS_OK;
 }
 
 nsIMsgSendListener **
