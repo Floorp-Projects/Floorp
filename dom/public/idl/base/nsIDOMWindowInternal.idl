@@ -185,4 +185,6 @@ interface nsIDOMWindowInternal : nsIDOMWindow
   // Ascii base64 data to binary data and vice versa...
   DOMString                 atob(in DOMString aAsciiString);
   DOMString                 btoa(in DOMString aBase64Data);
+
+  readonly attribute nsIDOMElement               frameElement;
 };

@@ -57,7 +57,8 @@ struct nsGUIEvent;
 class  nsHTMLFramesetFrame;
 
 #define NS_IFRAMESETFRAME_IID \
-{ 0xf47deac0, 0x4200, 0x11d2, { 0x80, 0x3c, 0x0, 0x60, 0x8, 0x15, 0xa7, 0x91 } }
+{ 0xf47deac0, 0x4200, 0x11d2, \
+  { 0x80, 0x3c, 0x0, 0x60, 0x8, 0x15, 0xa7, 0x91 } }
 
 #define NO_COLOR 0xFFFFFFFA
 
@@ -115,8 +116,10 @@ struct nsFramesetDrag {
 class nsHTMLFramesetFrame : public nsHTMLContainerFrame,
                             public nsIObserver
 {
-
 public:
+  // Woohoo, concrete class with an IID!
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAMESETFRAME_IID)
+
   nsHTMLFramesetFrame();
 
   virtual ~nsHTMLFramesetFrame();

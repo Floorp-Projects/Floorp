@@ -38,7 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsIEditorBoxObject.h"
 #include "nsBoxObject.h"
-#include "nsIPresShell.h"
+#include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "nsIEditorShell.h"
 #include "nsIComponentManager.h"
@@ -128,15 +128,27 @@ NS_IMETHODIMP nsEditorBoxObject::GetEditorShell(nsIEditorShell** aResult)
 NS_IMETHODIMP nsEditorBoxObject::GetDocShell(nsIDocShell** aResult)
 {
   *aResult = nsnull;
+
   if (!mPresShell)
     return NS_OK;
 
-  nsCOMPtr<nsISupports> subShell;
-  mPresShell->GetSubShellFor(mContent, getter_AddRefs(subShell));
-  if(!subShell)
-    return NS_OK;
+  nsCOMPtr<nsIDocument> doc, sub_doc;
+  mPresShell->GetDocument(getter_AddRefs(doc));
 
-  return CallQueryInterface(subShell, aResult); //Addref happens here.
+  doc->GetSubDocumentFor(mContent, getter_AddRefs(sub_doc));
+
+  if (!sub_doc) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsISupports> container;
+  sub_doc->GetContainer(getter_AddRefs(container));
+
+  if (!container) {
+    return NS_OK;
+  }
+
+  return CallQueryInterface(container, aResult);
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
