@@ -46,5 +46,5 @@ include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
-install:: $(LIBRARY_NAME)
+install::
 	$(INSTALL) $(CSS) $(DIST)/bin/res
