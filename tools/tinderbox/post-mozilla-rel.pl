@@ -337,6 +337,7 @@ sub main {
   }
 
   if ($cachebuild) { 
+    unlink "last-built";
     open BLAH, ">last-built"; 
     close BLAH;
     return reportRelease ("$url_path\/", "$datestamp");
