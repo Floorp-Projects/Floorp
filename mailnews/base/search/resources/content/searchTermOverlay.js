@@ -211,7 +211,7 @@ function removeSearchRow(index)
 function getBooleanAnd()
 {
     if (gSearchBooleanRadiogroup.selectedItem)
-        return (booleanAndElement.selectedItem.getAttribute("data") == "and") ? true : false;
+        return (gSearchBooleanRadiogroup.selectedItem.getAttribute("data") == "and") ? true : false;
 
     // default to false
     return false;

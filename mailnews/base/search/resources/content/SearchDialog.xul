@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
+
 
 <!--
 The contents of this file are subject to the Netscape Public
@@ -21,67 +21,46 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
+<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
+<?xul-overlay href="chrome://messenger/content/threadPane.xul"?>
+<?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
+
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/SearchDialog.dtd" >
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    title="&searchDialogTitle.label;">
+    onload="searchOnLoad();"
+    title="&searchDialogTitle.label;"
+    class="dialog"
+    orient="vertical">
 
-<html:script language="JavaScript" src="SearchDialog.js"/>
-<box align="horizontal" style="width: 100%; height: 100%">
-  <box flex="100%" align="vertical" class="padded">
-    <box align="horizontal">
-      <html:div>
-         &searchHeading.label;
-      </html:div>
-      <html:select flex="100%">
-         <html:option>sample server 1</html:option>
-         <html:option>sample server 2</html:option>
-      </html:select>
-    </box>
+  <script src="chrome://messenger/content/SearchDialog.js"/>
+  <script src="chrome://global/content/strres.js"/>
+  <text value="This dialog is a work in progress! Please don't file any bugs against it."/>
+  <box>
+    <text class="label" value="&searchHeading.label;"/>
+    <menulist>
+      <menupopup>
+        <menuitem value="sample1"/>
+        <menuitem value="sample1"/>
+        <menuitem value="sample1"/>
+      </menupopup>
+    </menulist>
+    <spring flex="1"/>
+    <checkbox value="&searchSubfolders.label;"/>
+  </box>
 
-    <box align="vertical" class="cleanborder">
-    <box align="vertical">
-       <html:div>
-         <html:input checked="1" type="radio" name="andor" value="and"/>
-         &matchAll.label;
-       </html:div>
-       <html:div>
-         <html:input type="radio" name="andor" value="or"/>
-         &matchAny.label;
-       </html:div>
-    </box>
-
-    <html:div align="horizontal" class="cleanborder" id="criteriabox">
-    <html:div>
-    <html:select id="zoober" onchange="OnFieldSelect(event);">
-      <html:option value="subject">&scopeSubject.label;</html:option>
-      <html:option value="sender">&scopeSender.label;</html:option>
-      <html:option value="date">&scopeDate.label;</html:option>
-      <html:option value="text">&scopeText.label;</html:option>
-      <html:option value="keyword">&scopeKeyword.label;</html:option>
-      <html:option value="age">&scopeAgeDays.label;</html:option>
-    </html:select>
-    <html:select onchange="OnComparatorSelect(event);">
-      <html:option value="contains">&critContains.label;</html:option>
-      <html:option value="nocontains">&critNotContains.label;</html:option>
-    </html:select>
-    <html:input type="text" flex="100%"/>
-    </html:div>
-    </html:div>
-    <spring class="spacer"/>
-    <box align="horizontal">
-      <titledbutton class="push" value="&buttonMore.label;" onclick="OnMore(event);"/>
-      <titledbutton class="push" value="&buttonFewer.label;" onclick="OnLess(event);"/>
-      <spring flex="100%"/>
-      <titledbutton class="push" value="&buttonClear.label;"/>
+  <box>
+    <titledbox id="searchTermListBox" flex="1"/>
+    <box orient="vertical">
+      <button value="&searchButton.label;"/>
+      <button value="&resetButton.label;"/>
     </box>
   </box>
+
+  <tree id="threadTree" class="inset" flex="1" style="height:0px" context="threadPaneContext"/>
+  <box>
+    <spring flex="100%"/>
+    <button value="&closeButton.label;" onclick="window.close()"/>
   </box>
-  <box align="vertical" class="padded">
-    <titledbutton class="push" value="&buttonSearch.label;"/>
-    <titledbutton class="push" value="&buttonOptions.label;" onclick="onOptions(event);"/>
-    <titledbutton class="push" value="&buttonClose.label;" onclick="window.close();"/>
-  </box>
-</box>
 </window>
