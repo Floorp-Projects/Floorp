@@ -2016,7 +2016,7 @@ public class Interpreter {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.delete(lhs, rhs);
+        stack[stackTop] = ScriptRuntime.delete(cx, scope, lhs, rhs);
         break;
     }
     case TokenStream.GETPROP : {

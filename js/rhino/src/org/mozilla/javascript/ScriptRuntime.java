@@ -1059,11 +1059,15 @@ public class ScriptRuntime {
      * define a return value. Here we assume that the [[Delete]]
      * method doesn't return a value.
      */
-    public static Object delete(Object obj, Object id) {
+    public static Object delete(Context cx, Scriptable scope,
+                                Object obj, Object id)
+    {
+        Scriptable sobj = (obj instanceof Scriptable)
+                          ? (Scriptable)obj : toObject(cx, scope, obj);
         String s = getStringId(id);
-        boolean result = s != null
-            ? ScriptableObject.deleteProperty((Scriptable) obj, s)
-            : ScriptableObject.deleteProperty((Scriptable) obj, getIntId(id));
+        boolean result = (s != null)
+            ? ScriptableObject.deleteProperty(sobj, s)
+            : ScriptableObject.deleteProperty(sobj, getIntId(id));
         return result ? Boolean.TRUE : Boolean.FALSE;
     }
 

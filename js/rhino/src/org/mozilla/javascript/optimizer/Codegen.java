@@ -191,7 +191,7 @@ public class Codegen extends Interpreter {
 
         Exception e = null;
         Class result = null;
-        ClassLoader parentLoader = cx.getClass().getClassLoader();
+        ClassLoader parentLoader = cx.getApplicationClassLoader();
         GeneratedClassLoader loader;
         if (securityController == null) {
             loader = cx.createClassLoader(parentLoader);
@@ -1421,12 +1421,16 @@ public class Codegen extends Interpreter {
                 break;
 
               case TokenStream.DELPROP:
+                aload(contextLocal);
+                aload(variableObjectLocal);
                 while (child != null) {
                     generateCodeFromNode(child, node, trueLabel, falseLabel);
                     child = child.getNext();
                 }
                 addScriptRuntimeInvoke("delete",
-                                       "(Ljava/lang/Object;"
+                                       "(Lorg/mozilla/javascript/Context;"
+                                       +"Lorg/mozilla/javascript/Scriptable;"
+                                       +"Ljava/lang/Object;"
                                        +"Ljava/lang/Object;"
                                        +")Ljava/lang/Object;");
                 break;
