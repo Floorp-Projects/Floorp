@@ -113,6 +113,56 @@ testThis('x()');
 
 
 /*
+ * Same as above, but with non-empty call parentheses
+ */
+status = inSection(14);
+x = 'abc';
+testThis('x(1)');
+
+status = inSection(15);
+testThis('"abc"(1)');
+
+status = inSection(16);
+x = new Date();
+testThis('x(1)');
+
+status = inSection(17);
+testThis('Date(12345)(1)');
+
+status = inSection(18);
+x = Number(1);
+testThis('x(1)');
+
+status = inSection(19);
+testThis('1(1)');
+
+status = inSection(20);
+x = void(0);
+testThis('x(1)');
+
+status = inSection(21);
+testThis('void(0)(1)');
+
+status = inSection(22);
+x = Math;
+testThis('x(1)');
+
+status = inSection(23);
+testThis('Math(1)');
+
+status = inSection(24);
+x = Array(5);
+testThis('x(1)');
+
+status = inSection(25);
+testThis('[1,2,3,4,5](1)');
+
+status = inSection(26);
+x = [1,2,3].splice(1,2);
+testThis('x(1)');
+
+
+/*
  * Functions and RegExps both have |typeof| == 'function'.
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=61911.
  *
@@ -120,30 +170,30 @@ testThis('x()');
  * Note we use checkThis() instead of testThis()
  *
  */
-status = inSection(14);
+status = inSection(27);
 x = function (y) {return y+1;};
 checkThis('x("abc")');
 
-status = inSection(15);
+status = inSection(28);
 checkThis('function (y) {return y+1;}("abc")');
 
-status = inSection(16);
+status = inSection(29);
 function f(y) { function g() {return y;}; return g();};
 checkThis('f("abc")');
 
-status = inSection(17);
+status = inSection(30);
 x = /a()/;
 checkThis('x("abc")');
 
-status = inSection(18);
+status = inSection(31);
 x = /a()/gi;
 checkThis('x("abc")');
 
-status = inSection(19);
+status = inSection(32);
 x = RegExp('a()');
 checkThis('x("abc")');
 
-status = inSection(20);
+status = inSection(33);
 x = new RegExp('a()', 'gi');
 checkThis('x("")');
 
