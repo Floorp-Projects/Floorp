@@ -89,6 +89,7 @@ protected:
   PRInt32 Read(PRInt32* aErrorCode);
   PRInt32 Peek(PRInt32* aErrorCode);
   void Unread();
+  void Pushback(PRUnichar aChar);
   PRBool LookAhead(PRInt32* aErrorCode, PRUnichar aChar);
   PRBool EatWhiteSpace(PRInt32* aErrorCode);
   PRBool EatNewline(PRInt32* aErrorCode);
@@ -111,8 +112,11 @@ protected:
   PRUnichar* mBuffer;
   PRInt32 mOffset;
   PRInt32 mCount;
-  PRInt32 mLookAhead;
+  PRUnichar* mPushback;
+  PRInt32 mPushbackCount;
+  PRInt32 mPushbackSize;
   PRInt32 mLastRead;
+  PRUnichar mLocalPushback[4];
 };
 
 #endif /* nsCSSScanner_h___ */

@@ -87,15 +87,20 @@ nsCSSScanner::nsCSSScanner()
   mBuffer = new PRUnichar[BUFFER_SIZE];
   mOffset = 0;
   mCount = 0;
-  mLookAhead = -1;
+  mPushback = mLocalPushback;
+  mPushbackCount = 0;
+  mPushbackSize = 4;
 }
 
 nsCSSScanner::~nsCSSScanner()
 {
   Close();
   if (nsnull != mBuffer) {
-    delete mBuffer;
+    delete [] mBuffer;
     mBuffer = nsnull;
+  }
+  if (mLocalPushback != mPushback) {
+    delete [] mPushback;
   }
 }
 
@@ -118,9 +123,8 @@ void nsCSSScanner::Close()
 PRInt32 nsCSSScanner::Read(PRInt32* aErrorCode)
 {
   PRInt32 rv;
-  if (mLookAhead >= 0) {
-    rv = mLookAhead;
-    mLookAhead = -1;
+  if (0 < mPushbackCount) {
+    rv = PRInt32(mPushback[--mPushbackCount]);
   } else {
     if (mCount < 0) {
       return -1;
@@ -142,21 +146,39 @@ PRInt32 nsCSSScanner::Read(PRInt32* aErrorCode)
 
 PRInt32 nsCSSScanner::Peek(PRInt32* aErrorCode)
 {
-  if (mLookAhead < 0) {
-    mLookAhead = Read(aErrorCode);
-    if (mLookAhead < 0) {
+  if (0 == mPushbackCount) {
+    mPushback[0] = Read(aErrorCode);
+    if (mPushback[0] < 0) {
       return -1;
     }
+    mPushbackCount++;
   }
 //printf("Peek => %x\n", mLookAhead);
-  return mLookAhead;
+  return PRInt32(mPushback[mPushbackCount - 1]);
 }
 
 void nsCSSScanner::Unread()
 {
-  NS_PRECONDITION((mLastRead >= 0) && (mLookAhead < 0), "double pushback");
-  mLookAhead = mLastRead;
+  NS_PRECONDITION((mLastRead >= 0), "double pushback");
+  Pushback(PRUnichar(mLastRead));
   mLastRead = -1;
+}
+
+void nsCSSScanner::Pushback(PRUnichar aChar)
+{
+  if (mPushbackCount == mPushbackSize) { // grow buffer
+    PRUnichar*  newPushback = new PRUnichar[mPushbackSize + 4];
+    if (nsnull == newPushback) {
+      return;
+    }
+    mPushbackSize += 4;
+    nsCRT::memcpy(newPushback, mPushback, sizeof(PRUnichar) * mPushbackCount);
+    if (mPushback != mLocalPushback) {
+      delete [] mPushback;
+    }
+    mPushback = newPushback;
+  }
+  mPushback[mPushbackCount++] = aChar;
 }
 
 PRBool nsCSSScanner::LookAhead(PRInt32* aErrorCode, PRUnichar aChar)
@@ -280,6 +302,62 @@ PRBool nsCSSScanner::Next(PRInt32* aErrorCode, nsCSSToken* aToken)
         aToken->mIdent.Append(PRUnichar(ch));
         aToken->mIdent.Append(PRUnichar(nextChar));
         return ParseCComment(aErrorCode, aToken);
+      }
+    }
+    if (ch == '<') {  // consume HTML comment tags as comments
+      PRInt32 nextChar = Peek(aErrorCode);
+      if (nextChar == '!') {
+        (void) Read(aErrorCode);
+        aToken->mType = eCSSToken_WhiteSpace;
+        aToken->mIdent.SetLength(0);
+        aToken->mIdent.Append(PRUnichar(ch));
+        aToken->mIdent.Append(PRUnichar(nextChar));
+        nextChar = Peek(aErrorCode);
+        while ((0 < nextChar) && (nextChar == '-')) {
+          Read(aErrorCode);
+          aToken->mIdent.Append(PRUnichar(nextChar));
+          nextChar = Peek(aErrorCode);
+        }
+        return PR_TRUE;
+      }
+    }
+    if (ch == '-') {  // check for HTML comment end
+      PRInt32 nextChar = Peek(aErrorCode);
+      if (nextChar == '-') {
+        PRInt32 dashCount = 1;
+        PRBool white = PR_FALSE;
+        while (nextChar == '-') {
+          (void) Read(aErrorCode);
+          dashCount++;
+          nextChar = Peek(aErrorCode);
+        }
+        if ((nextChar == ' ') || (nextChar == '\n') || 
+            (nextChar == '\r') || (nextChar == '\t')) {
+          EatWhiteSpace(aErrorCode);
+          white = PR_TRUE;
+          nextChar = Peek(aErrorCode);
+        }
+        if (nextChar == '>') { // HTML end
+          (void) Read(aErrorCode);
+          aToken->mType = eCSSToken_WhiteSpace;
+          aToken->mIdent.SetLength(0);
+          while (0 < dashCount--) {
+            aToken->mIdent.Append('-');
+          }
+          if (white) {
+            aToken->mIdent.Append(' ');
+          }
+          aToken->mIdent.Append('>');
+          return PR_TRUE;
+        }
+        else {  // wasn't an end comment, push it all back
+          if (white) {
+            Pushback(' ');
+          }
+          while (0 < --dashCount) {
+            Pushback('-');
+          }
+        }
       }
     }
   }
