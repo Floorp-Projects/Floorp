@@ -338,6 +338,7 @@
     ((:tuple-end 1) (b :right-triangle-bracket-10))
     ((:true 4) (:global-variable "true"))
     ((:false 5) (:global-variable "false"))
+    ((:unique 6) (:semantic-keyword "unique"))
     ))
 
 

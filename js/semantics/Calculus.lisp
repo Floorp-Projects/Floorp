@@ -43,6 +43,12 @@
   (or (and a (not b)) (and (not a) b)))
 
 
+; Complement of eq.
+(declaim (inline not-eq))
+(defun not-eq (a b)
+  (not (eq a b)))
+
+
 (defun digit-char-36 (char)
   (assert-non-null (digit-char-p char 36)))
 
@@ -437,6 +443,7 @@
   (integer-type nil :type (or null type))            ;Type used for integers
   (rational-type nil :type (or null type))           ;Type used for rational numbers
   (double-type nil :type (or null type))             ;Type used for double-precision floating-point numbers
+  (id-type nil :type (or null type))                 ;Type used for id's
   (character-type nil :type (or null type))          ;Type used for characters
   (string-type nil :type (or null type))             ;Type used for strings (vectors of characters)
   (grammar-infos nil :type list)                     ;List of grammar-info
@@ -718,6 +725,7 @@
            :integer   ;nil              ;nil
            :rational  ;nil              ;nil
            :double    ;nil              ;nil
+           :id        ;nil              ;nil
            :character ;nil              ;nil
            :->        ;nil              ;(result-type arg1-type arg2-type ... argn-type)
            :vector    ;nil              ;(element-type)
@@ -859,6 +867,7 @@
         (:integer (write-string "integer" stream))
         (:rational (write-string "rational" stream))
         (:double (write-string "double" stream))
+        (:id (write-string "id" stream))
         (:character (write-string "character" stream))
         (:-> (pprint-logical-block (stream nil :prefix "(" :suffix ")")
                (format stream "-> ~@_")
@@ -1389,6 +1398,7 @@
 ;;;   An integer
 ;;;   A rational number
 ;;;   A double-precision floating-point number (or :+inf, :-inf, or :nan)
+;;;   An id (represented by a lisp symbol)
 ;;;   A character
 ;;;   A function (represented by a lisp function)
 ;;;   A vector (represented by a list)
@@ -1398,7 +1408,7 @@
 ;;;   An address (represented by a cons cell whose cdr contains the value and car contains a serial number)
 
 
-(defvar *address-counter*) ;Last used address serial number
+(defvar *address-counter* 0) ;Last used address serial number
 
 
 ; Return true if the value appears to have the given type.  This function
@@ -1413,6 +1423,7 @@
     (:integer (integerp value))
     (:rational (rationalp value))
     (:double (double? value))
+    (:id (and value (symbolp value)))
     (:character (characterp value))
     (:-> (functionp value))
     (:vector (let ((element-type (vector-element-type type)))
@@ -1451,7 +1462,7 @@
     (:void (assert-true (null value))
            (write-string "empty" stream))
     (:boolean (write-string (if value "true" "false") stream))
-    ((:integer :rational :character :->) (write value :stream stream))
+    ((:integer :rational :id :character :->) (write value :stream stream))
     (:double (case value
                (:+inf (write-string "+infinity" stream))
                (:-inf (write-string "-infinity" stream))
@@ -2531,6 +2542,7 @@
     (integer . :integer)
     (rational . :rational)
     (double . :double)
+    (id . :id)
     (character . :character)))
 
 
@@ -2582,6 +2594,10 @@
     (double-multiply (-> (double double) double) #'double-multiply)
     (double-divide (-> (double double) double) #'double-divide)
     (double-remainder (-> (double double) double) #'double-remainder)
+    
+    (unique id (gensym "U") :global :unique %primary%)
+    (id= (-> (id id) boolean) #'eq :infix "=" t %relational% %term% %term%)
+    (id/= (-> (id id) boolean) #'not-eq :infix :not-equal t %relational% %term% %term%)
     
     (code-to-character (-> (integer) character) #'code-char)
     (character-to-code (-> (character) integer) #'char-code)
@@ -2914,6 +2930,7 @@
   (setf (world-integer-type world) (make-type world :integer nil nil))
   (setf (world-rational-type world) (make-type world :rational nil nil))
   (setf (world-double-type world) (make-type world :double nil nil))
+  (setf (world-id-type world) (make-type world :id nil nil))
   (setf (world-character-type world) (make-type world :character nil nil))
   (setf (world-string-type world) (make-vector-type world (world-character-type world)))
   (define-primitives world)
