@@ -69,7 +69,3 @@ override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 
-# tmp fix for vpath changes
-export::
-	$(RM) -f $(OSDIR)/*.o
-

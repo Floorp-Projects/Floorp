@@ -29,7 +29,3 @@ EXTRA_DSO_LDOPTS += \
 
 include $(topsrcdir)/config/rules.mk
 
-# Hack to remove old objects stuck in the srcdir
-export::
-	$(RM) -f $(addprefix $(srcdir)/, $(CPPSRCS:.cpp=.$(OBJ_SUFFIX)))
-
