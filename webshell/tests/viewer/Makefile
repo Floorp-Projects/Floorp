@@ -100,7 +100,7 @@ EX_LIBS += \
 	$(NULL)
 endif
 
-PROGS = main
+PROGS = $(OBJDIR)/viewer
 
 TARGETS = $(PROGS)
 
