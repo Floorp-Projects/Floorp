@@ -4146,7 +4146,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
 
         // Convert to a tree row group frame.
         nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
-        if (treeRowGroup->IsLazy()) {
+        if (treeRowGroup && treeRowGroup->IsLazy()) {
           treeRowGroup->OnContentAdded(*aPresContext);
           return NS_OK;
         }
@@ -4363,7 +4363,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
 
         // Convert to a tree row group frame.
         nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
-        if (treeRowGroup->IsLazy()) {
+        if (treeRowGroup && treeRowGroup->IsLazy()) {
           treeRowGroup->OnContentAdded(*aPresContext);
           return NS_OK;
         }
@@ -4683,7 +4683,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 
           // Convert to a tree row group frame.
           nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
-          if (treeRowGroup->IsLazy()) {
+          if (treeRowGroup && treeRowGroup->IsLazy()) {
             treeRowGroup->OnContentRemoved(*aPresContext, nsnull);
             return NS_OK;
           }
