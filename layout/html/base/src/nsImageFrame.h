@@ -132,6 +132,7 @@ protected:
   nsImageMap*         mImageMap;
   PRPackedBool        mSizeFrozen;
   PRPackedBool        mInitialLoadCompleted;
+  PRPackedBool        mCanSendLoadEvent;
   nsMargin            mBorderPadding;
 };
 

@@ -321,11 +321,9 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelectio
     mFrame->GetFormContent(*getter_AddRefs(content));
     if (content) {
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsGUIEvent event;
-      event.eventStructType = NS_GUI_EVENT;
-      event.widget = nsnull;
+      nsEvent event;
+      event.eventStructType = NS_EVENT;
       event.message = NS_FORM_SELECTED;
-      event.flags = NS_EVENT_FLAG_INIT;
 
       nsCOMPtr<nsIDocument> doc;
       if (NS_SUCCEEDED(content->GetDocument(*getter_AddRefs(doc)))) {
