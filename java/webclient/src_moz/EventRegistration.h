@@ -70,5 +70,7 @@ void addDocumentLoadListener(JNIEnv *env, WebShellInitContext *initContext,
 void addMouseListener(JNIEnv *env, WebShellInitContext *initContext,
                       jobject listener);
 
+void removeAllListeners(JNIEnv *env, WebShellInitContext *initContext);
+
 
 #endif

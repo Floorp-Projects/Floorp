@@ -33,6 +33,7 @@
 #include "nsString.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIDOMMouseListener.h"
+#include "nsIDOMEventTarget.h"
 
 class nsIURI;
 
@@ -99,7 +100,7 @@ static char *maskNames [];
                                WebShellInitContext *yourInitContext);
     
     DocumentLoaderObserverImpl();
-    virtual ~DocumentLoaderObserverImpl() {};
+    virtual ~DocumentLoaderObserverImpl();
 
     /* nsIDocumentLoaderObserver methods */
   NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, 
@@ -143,7 +144,7 @@ static char *maskNames [];
 
   NS_IMETHOD AddMouseListener(nsCOMPtr<nsIDOMMouseListener> toAdd);
 
-  NS_IMETHOD RemoveMouseListener(nsCOMPtr<nsIDOMMouseListener> toRemove);
+  NS_IMETHOD RemoveMouseListener(void);
 
   NS_IMETHOD SetTarget(jobject newTarget);
 
@@ -155,6 +156,7 @@ protected:
   WebShellInitContext *mInitContext;
   jobject mTarget;
   nsCOMPtr<nsIDOMMouseListener> mMouseListener;
+  nsCOMPtr<nsIDOMEventTarget> mDomEventTarget;
   
 };
 
