@@ -56,7 +56,7 @@ nsMsgDisplayMessageByString(const PRUnichar * msg)
 
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
   if (NS_FAILED(rv)) return rv;
-  rv = dialog->Alert(msg);
+  rv = dialog->Alert(nsnull, msg);
   return NS_OK;
 }
 
@@ -90,7 +90,7 @@ nsMsgAskBooleanQuestionByString(const PRUnichar * msg, PRBool *answer)
   
   if (dialog) 
   {
-    rv = dialog->Confirm(msg, &result);
+    rv = dialog->Confirm(nsnull, msg, &result);
     if (result == 1) 
       *answer = PR_TRUE;
     else 

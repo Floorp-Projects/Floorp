@@ -109,33 +109,13 @@ NS_IMETHODIMP nsWalletlibService::WALLET_ExpirePassword(){
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::PromptUsernameAndPasswordURL
-    (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     const char *urlname, PRBool stripUrl, nsIPrompt* dialog, PRBool *returnValue) {
-  return ::SINGSIGN_PromptUsernameAndPassword
-    (text, user, pwd, urlname, dialog, returnValue, stripUrl);
-}
-
-NS_IMETHODIMP nsWalletlibService::PromptPasswordURL
-    (const PRUnichar *text, PRUnichar **pwd, const char *urlname, PRBool stripUrl,
-    nsIPrompt* dialog, PRBool *returnValue) {
-  return ::SINGSIGN_PromptPassword(text, pwd, urlname, dialog, returnValue, stripUrl);
-}
-
-NS_IMETHODIMP nsWalletlibService::PromptURL
-    (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
-     const char *urlname, PRBool stripUrl, nsIPrompt* dialog, PRBool *returnValue) {
-  return ::SINGSIGN_Prompt
-    (text, defaultText, resultText, urlname, dialog, returnValue, stripUrl);
-}
-
-NS_IMETHODIMP nsWalletlibService::SI_RemoveUser(const char *URLName, PRBool stripUrl, const PRUnichar *userName) {
-  ::SINGSIGN_RemoveUser(URLName, userName, stripUrl);
+NS_IMETHODIMP nsWalletlibService::SI_RemoveUser(const char *key, const PRUnichar *userName) {
+  ::SINGSIGN_RemoveUser(key, userName);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::SI_StorePassword(const char *URLName, PRBool stripUrl, const PRUnichar *userName, const PRUnichar *password) {
-  ::SINGSIGN_StorePassword(URLName, userName, password, stripUrl);
+NS_IMETHODIMP nsWalletlibService::SI_StorePassword(const char *key, const PRUnichar *userName, const PRUnichar *password) {
+  ::SINGSIGN_StorePassword(key, userName, password);
   return NS_OK;
 }
 
@@ -397,9 +377,9 @@ nsWalletlibService::GetPassword(PRUnichar **password)
 }
 
 NS_IMETHODIMP
-nsWalletlibService::HaveData(const char *url, const PRUnichar *userName, PRBool stripUrl, PRBool *_retval)
+nsWalletlibService::HaveData(const char *key, const PRUnichar *userName, PRBool *_retval)
 {
-  return ::SINGSIGN_HaveData(url, userName, stripUrl, _retval);
+  return ::SINGSIGN_HaveData(key, userName, _retval);
 }
 
 NS_IMETHODIMP
@@ -419,3 +399,113 @@ nsWalletlibService::WALLET_Decrypt (const char *crypt, PRUnichar **text) {
   *text = textAutoString.ToNewUnicode();
   return rv;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// nsSingleSignOnPrompt
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsSingleSignOnPrompt, nsISingleSignOnPrompt, nsIPrompt)
+
+NS_IMETHODIMP
+nsSingleSignOnPrompt::Alert(const PRUnichar *dialogTitle, const PRUnichar *text)
+{
+  return mPrompt->Alert(dialogTitle, text);
+}
+
+NS_IMETHODIMP
+nsSingleSignOnPrompt::Confirm(const PRUnichar *dialogTitle, const PRUnichar *text, PRBool *_retval)
+{
+  return mPrompt->Confirm(dialogTitle, text, _retval);
+}
+
+NS_IMETHODIMP
+nsSingleSignOnPrompt::ConfirmCheck(const PRUnichar *dialogTitle, const PRUnichar *text, 
+                          const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
+{
+  return mPrompt->ConfirmCheck(dialogTitle, text, checkMsg, checkValue, _retval);
+}
+
+NS_IMETHODIMP
+nsSingleSignOnPrompt::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text, 
+                    const PRUnichar *passwordRealm, const PRUnichar *defaultText, 
+                    PRUnichar **result, PRBool *_retval)
+{
+  nsresult rv;
+  nsCAutoString realm;
+  realm.AssignWithConversion(passwordRealm);     // XXX should be PRUnichar*
+  rv = SINGSIGN_Prompt(dialogTitle, text, defaultText, result, realm.GetBuffer(), mPrompt, _retval);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsSingleSignOnPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle, const PRUnichar *text, 
+                                       const PRUnichar *passwordRealm, PRBool persistPassword, 
+                                       PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
+{
+  nsresult rv;
+  nsCAutoString realm;
+  realm.AssignWithConversion(passwordRealm);     // XXX should be PRUnichar*
+  rv = SINGSIGN_PromptUsernameAndPassword(dialogTitle, text, user, pwd,
+                                          realm.GetBuffer(), mPrompt, _retval, persistPassword);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsSingleSignOnPrompt::PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm,
+                            PRBool persistPassword, PRUnichar **pwd, PRBool *_retval)
+{
+  nsresult rv;
+  nsCAutoString realm;
+  realm.AssignWithConversion(passwordRealm);     // XXX should be PRUnichar*
+  rv = SINGSIGN_PromptPassword(dialogTitle, text, pwd,
+                               realm.GetBuffer(), mPrompt, _retval, persistPassword);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsSingleSignOnPrompt::Select(const PRUnichar *dialogTitle, const PRUnichar *text, PRUint32 count,
+                    const PRUnichar **selectList, PRInt32 *outSelection, PRBool *_retval)
+{
+  return mPrompt->Select(dialogTitle, text, count, selectList, outSelection, _retval);
+}
+
+NS_IMETHODIMP
+nsSingleSignOnPrompt::UniversalDialog(const PRUnichar *titleMessage, const PRUnichar *dialogTitle, 
+                             const PRUnichar *text, const PRUnichar *checkboxMsg, const PRUnichar *button0Text,
+                             const PRUnichar *button1Text, const PRUnichar *button2Text, 
+                             const PRUnichar *button3Text, const PRUnichar *editfield1Msg,
+                             const PRUnichar *editfield2Msg, PRUnichar **editfield1Value,
+                             PRUnichar **editfield2Value, const PRUnichar *iconURL,
+                             PRBool *checkboxState, PRInt32 numberButtons, PRInt32 numberEditfields,
+                             PRInt32 editField1Password, PRInt32 *buttonPressed)
+{
+  return mPrompt->UniversalDialog(titleMessage, dialogTitle, text, checkboxMsg, button0Text, button1Text,
+                                  button2Text, button3Text, editfield1Msg, editfield2Msg, editfield1Value,
+                                  editfield2Value, iconURL, checkboxState, numberButtons, numberEditfields,
+                                  editField1Password, buttonPressed);
+}
+  
+// nsISingleSignOnPrompt methods:
+
+NS_IMETHODIMP
+nsSingleSignOnPrompt::Init(nsIPrompt* dialogs)
+{
+  mPrompt = dialogs;
+  return NS_OK;
+}
+
+NS_METHOD
+nsSingleSignOnPrompt::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
+
+  nsSingleSignOnPrompt* prompt = new nsSingleSignOnPrompt();
+  if (prompt == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(prompt);
+  nsresult rv = prompt->QueryInterface(aIID, aResult);
+  NS_RELEASE(prompt);
+  return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////

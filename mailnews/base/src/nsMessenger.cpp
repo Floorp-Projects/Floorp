@@ -989,8 +989,9 @@ nsMessenger::Alert(const char *stringName)
     {
         nsCOMPtr<nsIPrompt> dialog(do_GetInterface(mDocShell));
         
-        if (dialog)
-            rv = dialog->Alert(errorMessage.GetUnicode());
+        if (dialog) {
+            rv = dialog->Alert(nsnull, errorMessage.GetUnicode());
+        }
     }
     return rv;
 }

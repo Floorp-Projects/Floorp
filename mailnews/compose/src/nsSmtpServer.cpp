@@ -24,7 +24,7 @@
 #include "nsIPref.h"
 #include "nsEscape.h"
 #include "nsSmtpServer.h"
-#include "nsINetPrompt.h"
+#include "nsIPrompt.h"
 #include "nsIWalletService.h"
 #include "nsXPIDLString.h"
 
@@ -199,7 +199,7 @@ nsSmtpServer::SetPassword(const char * aPassword)
 NS_IMETHODIMP
 nsSmtpServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
                                 PRUnichar *aPromptTitle, 
-                                nsINetPrompt* aDialog,
+                                nsIPrompt* aDialog,
                                 char **aPassword) 
 {
     nsresult rv = NS_OK;
@@ -217,8 +217,10 @@ nsSmtpServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 			nsXPIDLCString serverUri;
 			rv = GetServerURI(getter_Copies(serverUri));
 			if (NS_FAILED(rv)) return rv;
-			rv = aDialog->PromptPassword(serverUri, PR_FALSE, aPromptTitle, aPromptMessage, getter_Copies(uniPassword), &okayValue);
-            		if (NS_FAILED(rv)) return rv;
+			rv = aDialog->PromptPassword(aPromptTitle, aPromptMessage, 
+                                         NS_ConvertToString(serverUri).GetUnicode(), PR_TRUE,
+                                         getter_Copies(uniPassword), &okayValue);
+            if (NS_FAILED(rv)) return rv;
 				
 			if (!okayValue) // if the user pressed cancel, just return NULL;
 			{
@@ -254,7 +256,7 @@ nsSmtpServer::ForgetPassword()
     if (NS_FAILED(rv)) return rv;
     
     
-    rv = walletservice->SI_RemoveUser((const char *)serverUri, PR_FALSE, nsnull);
+    rv = walletservice->SI_RemoveUser((const char *)serverUri, nsnull);
     return rv;
 }
 

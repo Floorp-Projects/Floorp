@@ -35,7 +35,6 @@
 #include "nsString.h"
 #include "nsTextFormatter.h"
 #include "nsIMsgIdentity.h"
-#include "nsINetPrompt.h"
 #include "nsISmtpServer.h"
 #include "nsMsgComposeStringBundle.h"
 #include "prtime.h"
@@ -112,7 +111,7 @@ nsresult nsExplainErrorDetails(int code, ...)
 	}
 
 	if (msg) {
-		rv = dialog->Alert(msg);
+		rv = dialog->Alert(nsnull, msg);
 		nsTextFormatter::smprintf_free(msg);
 	}
 
@@ -1490,8 +1489,8 @@ nsSmtpProtocol::GetPassword(char **aPassword)
     nsCRT::free(*aPassword);
     *aPassword = 0;
 
-    nsCOMPtr<nsINetPrompt> netPrompt;
-    rv = smtpUrl->GetNetPrompt(getter_AddRefs(netPrompt));
+    nsCOMPtr<nsIPrompt> netPrompt;
+    rv = smtpUrl->GetPrompt(getter_AddRefs(netPrompt));
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString username;
@@ -1605,8 +1604,9 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionError(const PRUnichar *pErrMsg, 
 	
   // step (2) alert the user about the error
   nsCOMPtr<nsIPrompt> dialog (do_GetService(kCNetSupportDialogCID));
-  if (dialog && pErrMsg && pErrMsg[0])
-    dialog->Alert(pErrMsg);
+  if (dialog && pErrMsg && pErrMsg[0]) {
+    dialog->Alert(nsnull, pErrMsg);
+  }
 
   // step (3) if they entered a bad password, forget about it!
 	if (aBadPassword && smtpServer)

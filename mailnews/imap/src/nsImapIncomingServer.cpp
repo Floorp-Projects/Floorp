@@ -702,7 +702,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
     nsCAutoString uri;
 	nsXPIDLCString serverUri;
 
-	GetServerURI(getter_Copies(serverUri));
+	GetServerPasswordRealm(getter_Copies(serverUri));
 
     uri.Assign(serverUri);
 
@@ -1313,7 +1313,7 @@ nsImapIncomingServer::FEAlert(const PRUnichar* aString)
 	nsresult rv;
 	NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
 
-	rv = dialog->Alert(aString);
+	rv = dialog->Alert(nsnull, aString);
     return rv;
 }
 
@@ -1340,7 +1340,7 @@ NS_IMETHODIMP  nsImapIncomingServer::FEAlertFromServer(const char *aString)
 		{
 			nsAutoString message(serverSaidPrefix);
 			message.AppendWithConversion(whereRealMessage ? whereRealMessage : serverSaid);
-			rv = dialog->Alert(message.GetUnicode());
+			rv = dialog->Alert(nsnull, message.GetUnicode());
 
 			PR_Free(serverSaidPrefix);
 		}

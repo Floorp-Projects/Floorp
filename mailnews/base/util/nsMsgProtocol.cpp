@@ -260,7 +260,7 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *c
                default:
 						break;
 			}
-			dialog->Alert(alertMsg.GetUnicode());
+			dialog->Alert(nsnull, alertMsg.GetUnicode());
 		}
 	}
 

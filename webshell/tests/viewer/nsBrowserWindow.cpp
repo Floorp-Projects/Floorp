@@ -2186,7 +2186,7 @@ nsBrowserWindow::OnStatus(nsIChannel* channel, nsISupports *ctxt, const PRUnicha
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::Alert(const PRUnichar *text)
+nsBrowserWindow::Alert(const PRUnichar *dialogTitle, const PRUnichar *text)
 {
   nsCAutoString str; str.AssignWithConversion(text);
   printf("%cBrowser Window Alert: %s\n", '\007', str.GetBuffer());
@@ -2195,7 +2195,8 @@ nsBrowserWindow::Alert(const PRUnichar *text)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::Confirm(const PRUnichar *text,
+nsBrowserWindow::Confirm(const PRUnichar *dialogTitle, 
+                         const PRUnichar *text,
                          PRBool *result)
 {
   nsCAutoString str; str.AssignWithConversion(text);
@@ -2220,16 +2221,19 @@ nsBrowserWindow::Confirm(const PRUnichar *text,
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::ConfirmCheck(const PRUnichar *text,
+nsBrowserWindow::ConfirmCheck(const PRUnichar *dialogTitle, 
+                              const PRUnichar *text,
                               const PRUnichar *checkMsg,
                               PRBool *checkValue,
                               PRBool *result)
 {
-  return Confirm(text, result);
+  return Confirm(dialogTitle, text, result);
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::Prompt(const PRUnichar *text,
+nsBrowserWindow::Prompt(const PRUnichar *dialogTitle, 
+                        const PRUnichar *text,
+                        const PRUnichar *passwordRealm,
                         const PRUnichar *defaultText,
                         PRUnichar **result,
                         PRBool *_retval)
@@ -2253,7 +2257,10 @@ nsBrowserWindow::Prompt(const PRUnichar *text,
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::PromptUsernameAndPassword(const PRUnichar *text,
+nsBrowserWindow::PromptUsernameAndPassword(const PRUnichar *dialogTitle, 
+                                           const PRUnichar *text,
+                                           const PRUnichar *passwordRealm,
+                                           PRBool persistPassword,
                                            PRUnichar **user,
                                            PRUnichar **pwd,
                                            PRBool *_retval)
@@ -2283,8 +2290,10 @@ nsBrowserWindow::PromptUsernameAndPassword(const PRUnichar *text,
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::PromptPassword(const PRUnichar *text,
-				const PRUnichar *title,
+nsBrowserWindow::PromptPassword(const PRUnichar *dialogTitle, 
+                                const PRUnichar *text,
+                                const PRUnichar *passwordRealm,
+                                PRBool persistPassword,
                                 PRUnichar **pwd,
                                 PRBool *_retval)
 {

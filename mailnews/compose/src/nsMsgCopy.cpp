@@ -369,7 +369,7 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
       //                  newsgroup://news.mozilla.org/netscape.test
       //
       char *serverURI = nsnull;
-      rv = inServer->GetServerURI(&serverURI);
+      rv = inServer->GetServerPasswordRealm(&serverURI);
       if ( NS_FAILED(rv) || (!serverURI) || !(*serverURI) )
         continue;
       

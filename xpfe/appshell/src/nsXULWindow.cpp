@@ -101,8 +101,16 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP nsXULWindow::GetInterface(const nsIID& aIID, void** aSink)
 {
+  nsresult rv;
    NS_ENSURE_ARG_POINTER(aSink);
 
+   if (aIID.Equals(NS_GET_IID(nsIPrompt))) {
+     // XXX until nsIWebShellWindow goes away:
+     nsCOMPtr<nsIWebShellWindow> webShellWin = 
+       do_QueryInterface(NS_STATIC_CAST(nsIXULWindow*, this), &rv);
+     if (NS_FAILED(rv)) return rv;
+     return webShellWin->GetPrompter((nsIPrompt**)aSink);
+   }
    if(aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)) && 
       NS_SUCCEEDED(EnsureContentTreeOwner()) &&
       NS_SUCCEEDED(mContentTreeOwner->QueryInterface(aIID, aSink)))

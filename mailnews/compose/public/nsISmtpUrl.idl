@@ -29,7 +29,7 @@
 %}
 
 interface nsIMsgIdentity;
-interface nsINetPrompt;
+interface nsIPrompt;
 interface nsISmtpServer;
 
 [scriptable, uuid(16ADF2F1-BBAD-11d2-804E-006008128C4E)]
@@ -64,7 +64,7 @@ interface nsISmtpUrl : nsISupports {
 	// NOTE:  the SMTP username and SMTP server are in the smtp url
 	// smtp://sspitzer@tintin/...
 	attribute nsIMsgIdentity senderIdentity;
-    attribute nsINetPrompt netPrompt;
+    attribute nsIPrompt prompt;
     attribute nsISmtpServer smtpServer;
 };
 

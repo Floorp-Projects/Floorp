@@ -28,20 +28,23 @@ interface nsIPrompt : nsISupports
     /**
      * Puts up an alert dialog with an OK button.
      */
-    void alert(in wstring text);
+    void alert(in wstring dialogTitle,
+               in wstring text);
 
     /**
      * Puts up a dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */
-    boolean confirm(in wstring text);
+    boolean confirm(in wstring dialogTitle,
+                    in wstring text);
 
     /**
      * Puts up a dialog with OK and Cancel buttons, and
      * a message with a single checkbox.
      * @return true for OK, false for Cancel
      */
-    boolean confirmCheck(in wstring text,
+    boolean confirmCheck(in wstring dialogTitle,
+                         in wstring text,
                          in wstring checkMsg,
                          out boolean checkValue);
 
@@ -49,7 +52,9 @@ interface nsIPrompt : nsISupports
      * Puts up a text input dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */
-    boolean prompt(in wstring text,
+    boolean prompt(in wstring dialogTitle,
+                   in wstring text,
+                   in wstring passwordRealm,
                    in wstring defaultText, 
                    out wstring result);
 
@@ -57,7 +62,10 @@ interface nsIPrompt : nsISupports
      * Puts up a username/password dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */
-    boolean promptUsernameAndPassword(in wstring text,
+    boolean promptUsernameAndPassword(in wstring dialogTitle,
+                                      in wstring text,
+                                      in wstring passwordRealm,
+                                      in boolean persistPassword,
                                       out wstring user, 
                                       out wstring pwd);
 
@@ -65,38 +73,40 @@ interface nsIPrompt : nsISupports
      * Puts up a password dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */
-    boolean promptPassword(in wstring text, 
-                           in wstring title,
+    boolean promptPassword(in wstring dialogTitle,
+                           in wstring text,
+                           in wstring passwordRealm,
+                           in boolean persistPassword,
                            out wstring pwd);
     
     /**
      * Puts up a dialog box which has a list box of strings
      */                                               
-    boolean select(in wstring inDialogTitle,
-                   in wstring inMsg,
-                   in  PRUint32 inCount,
-                   [array, size_is(inCount)] in wstring inList,
+    boolean select(in wstring dialogTitle,
+                   in wstring text,
+                   in  PRUint32 count,
+                   [array, size_is(count)] in wstring selectList,
                    out long outSelection);
 
     /**
      * Put up a universal dialog
      */
-    void universalDialog(in wstring inTitleMessage,
-                         in wstring inDialogTitle, /* e.g., alert, confirm, prompt, prompt password */
-                         in wstring inMsg, /* main message for dialog */
-                         in wstring inCheckboxMsg, /* message for checkbox */
-                         in wstring inButton0Text, /* text for first button */
-                         in wstring inButton1Text, /* text for second button */
-                         in wstring inButton2Text, /* text for third button */
-                         in wstring inButton3Text, /* text for fourth button */
-                         in wstring inEditfield1Msg, /*message for first edit field */
-                         in wstring inEditfield2Msg, /* message for second edit field */
-                         inout wstring inoutEditfield1Value, /* initial and final value for first edit field */
-                         inout wstring inoutEditfield2Value, /* initial and final value for second edit field */
-                         in wstring inIConURL, /* url of icon to be displayed in dialog */
-                         inout boolean inoutCheckboxState, /* initial and final state of checkbox */
-                         in PRInt32 inNumberButtons, /* total number of buttons (0 to 4) */
-                         in PRInt32 inNumberEditfields, /* total number of edit fields (0 to 2) */
-                         in PRInt32 inEditField1Password, /* ??? */
-                         out PRInt32 outButtonPressed); /* number of button that was pressed (0 to 3) */
+    void universalDialog(in wstring titleMessage,
+                         in wstring dialogTitle, /* e.g., alert, confirm, prompt, prompt password */
+                         in wstring text, /* main message for dialog */
+                         in wstring checkboxMsg, /* message for checkbox */
+                         in wstring button0Text, /* text for first button */
+                         in wstring button1Text, /* text for second button */
+                         in wstring button2Text, /* text for third button */
+                         in wstring button3Text, /* text for fourth button */
+                         in wstring editfield1Msg, /*message for first edit field */
+                         in wstring editfield2Msg, /* message for second edit field */
+                         inout wstring editfield1Value, /* initial and final value for first edit field */
+                         inout wstring editfield2Value, /* initial and final value for second edit field */
+                         in wstring iconURL, /* url of icon to be displayed in dialog */
+                         inout boolean checkboxState, /* initial and final state of checkbox */
+                         in PRInt32 numberButtons, /* total number of buttons (0 to 4) */
+                         in PRInt32 numberEditfields, /* total number of edit fields (0 to 2) */
+                         in PRInt32 editField1Password, /* ??? */
+                         out PRInt32 buttonPressed); /* number of button that was pressed (0 to 3) */
 };

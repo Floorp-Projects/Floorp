@@ -755,7 +755,7 @@ Wallet_Confirm(PRUnichar * szMessage)
 
   const nsAutoString message = szMessage;
   retval = PR_FALSE; /* in case user exits dialog by clicking X */
-  res = dialog->Confirm(message.GetUnicode(), &retval);
+  res = dialog->Confirm(nsnull, message.GetUnicode(), &retval);
   return retval;
 }
 
@@ -856,7 +856,7 @@ Wallet_Alert(PRUnichar * szMessage)
   }
 
   const nsAutoString message = szMessage;
-  res = dialog->Alert(message.GetUnicode());
+  res = dialog->Alert(nsnull, message.GetUnicode());
   return;     // XXX should return the error
 }
 

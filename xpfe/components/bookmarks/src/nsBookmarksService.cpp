@@ -2644,8 +2644,8 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 					nsAutoString	stopOption;
 					getLocaleString("WebPageAskStopOption", stopOption);
 					PRBool		stopCheckingFlag = PR_FALSE;
-					rv = dialog->ConfirmCheck(promptStr.GetUnicode(), stopOption.GetUnicode(),
-						&stopCheckingFlag, &openURLFlag);
+					rv = dialog->ConfirmCheck(nsnull, promptStr.GetUnicode(), stopOption.GetUnicode(),
+								  &stopCheckingFlag, &openURLFlag);
 					if (NS_FAILED(rv))
 					{
 						openURLFlag = PR_FALSE;

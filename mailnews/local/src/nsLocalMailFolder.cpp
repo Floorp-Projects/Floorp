@@ -1273,7 +1273,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteSubFolders(
     if (dialog)
     {
       PRBool okToDelete = PR_FALSE;
-      dialog->Confirm(alertString, &okToDelete);
+      dialog->Confirm(nsnull, alertString, &okToDelete);
       if (okToDelete)
         return nsMsgFolder::DeleteSubFolders(folders, msgWindow);
     }

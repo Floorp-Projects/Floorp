@@ -559,24 +559,24 @@ Local_SACopy(char **destination, const char *source) {
 const char* empty = "empty";
 
 PRIVATE char*
-si_StrippedURL (const char* URLName) {
+si_StrippedURL (const char* passwordRealm) {
   char *result = 0;
   char *s, *t;
 
-  /* check for null URLName */
-  if (URLName == NULL || PL_strlen(URLName) == 0) {
+  /* check for null passwordRealm */
+  if (passwordRealm == NULL || PL_strlen(passwordRealm) == 0) {
     return NULL;
   }
 
   /* remove protocol */
-  s = (char*) PL_strchr(URLName +1, '/');
+  s = (char*) PL_strchr(passwordRealm +1, '/');
   if (s && *s == '/' && *(s+1) == '/') {
     s += 2;
   }
   if (s) {
     StrAllocCopy(result, s);
   } else {
-    StrAllocCopy(result, URLName);
+    StrAllocCopy(result, passwordRealm);
   }
 
   /* remove everything after hostname */
@@ -709,8 +709,8 @@ public:
 
 class si_SignonURLStruct {
 public:
-  si_SignonURLStruct() : URLName(NULL), chosen_user(NULL), signonUser_list(NULL) {}
-  char * URLName;
+  si_SignonURLStruct() : passwordRealm(NULL), chosen_user(NULL), signonUser_list(NULL) {}
+  char * passwordRealm;
   si_SignonUserStruct* chosen_user; /* this is a state variable */
   nsVoidArray * signonUser_list;
 };
@@ -718,8 +718,8 @@ public:
 
 class si_Reject {
 public:
-  si_Reject() : URLName(NULL) {}
-  char * URLName;
+  si_Reject() : passwordRealm(NULL) {}
+  char * passwordRealm;
   nsAutoString userName;
 };
 
@@ -734,14 +734,14 @@ public:
 //} si_SignonUserStruct;
 
 //typedef struct _SignonURLStruct {
-//  char * URLName;
+//  char * passwordRealm;
 //  si_SignonUserStruct* chosen_user; /* this is a state variable */
 //  nsVoidArray * signonUser_list;
 //} si_SignonURLStruct;
 
 
 //typedef struct _RejectStruct {
-//  char * URLName;
+//  char * passwordRealm;
 //  nsAutoString userName;
 //} si_Reject;
 
@@ -756,29 +756,30 @@ PRIVATE PRBool si_signon_list_changed = PR_FALSE;
  * This routine is called only when holding the signon lock!!!
  */
 PRIVATE si_SignonURLStruct *
-si_GetURL(const char * URLName) {
+si_GetURL(const char * passwordRealm) {
   si_SignonURLStruct * url;
-  char *strippedURLName = 0;
-  if (!URLName) {
-    /* no URLName specified, return first URL (returns NULL if not URLs) */
+  char *strippedRealm = 0;
+  if (!passwordRealm) {
+    /* no passwordRealm specified, return first URL (returns NULL if not URLs) */
     if (LIST_COUNT(si_signon_list)==0) {
       return NULL;
     }
     return (si_SignonURLStruct *) (si_signon_list->ElementAt(0));
   }
-  strippedURLName = si_StrippedURL(URLName);
+  strippedRealm = si_StrippedURL(passwordRealm);
   PRInt32 urlCount = LIST_COUNT(si_signon_list);
   for (PRInt32 i=0; i<urlCount; i++) {
     url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i));
-    if(url->URLName && !PL_strcmp(strippedURLName, url->URLName)) {
-      PR_Free(strippedURLName);
+    if(url->passwordRealm && !PL_strcmp(strippedRealm, url->passwordRealm)) {
+      PR_Free(strippedRealm);
       return url;
     }
   }
-  PR_Free(strippedURLName);
+  PR_Free(strippedRealm);
   return (NULL);
 }
 
+#if 0
 static nsresult MangleUrl(const char *url, char **result)
 {
 	if (!url || !result) return NS_ERROR_FAILURE;
@@ -799,11 +800,11 @@ static nsresult MangleUrl(const char *url, char **result)
 #endif
 	return NS_OK;
 }
+#endif
 
 /* Remove a user node from a given URL node */
 PRIVATE PRBool
-si_RemoveUser(const char *URLName, nsAutoString userName, PRBool save, PRBool strip) {
-  nsresult res;
+si_RemoveUser(const char *passwordRealm, nsAutoString userName, PRBool save) {
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
@@ -813,13 +814,15 @@ si_RemoveUser(const char *URLName, nsAutoString userName, PRBool save, PRBool st
     return PR_FALSE;
   }
 
-  /* convert URLName to a uri so we can parse out the username and hostname */
+#if 0
+  nsresult res;
+  /* convert passwordRealm to a uri so we can parse out the username and hostname */
   nsXPIDLCString host;
   if (strip) {
-    if (URLName) {
+    if (passwordRealm) {
       nsCOMPtr<nsIURL> uri;
       nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
-      res = uri->SetSpec(URLName);
+      res = uri->SetSpec(passwordRealm);
       if (NS_FAILED(res)) return PR_FALSE;
 
       /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
@@ -847,14 +850,15 @@ si_RemoveUser(const char *URLName, nsAutoString userName, PRBool save, PRBool st
       }
     }
   } else {
-    res = MangleUrl(URLName, getter_Copies(host));
+    res = MangleUrl(passwordRealm, getter_Copies(host));
     if (NS_FAILED(res)) return PR_FALSE;
   }
+#endif
 
   si_lock_signon_list();
 
   /* get URL corresponding to host */
-  url = si_GetURL((const char *)host);
+  url = si_GetURL(passwordRealm);
   if (!url) {
     /* URL not found */
     si_unlock_signon_list();
@@ -894,7 +898,7 @@ si_RemoveUser(const char *URLName, nsAutoString userName, PRBool save, PRBool st
 
   /* remove this URL if it contains no more users */
   if (LIST_COUNT(url->signonUser_list) == 0) {
-    PR_Free(url->URLName);
+    PR_Free(url->passwordRealm);
     si_signon_list->RemoveElement(url);
   }
 
@@ -909,14 +913,14 @@ si_RemoveUser(const char *URLName, nsAutoString userName, PRBool save, PRBool st
 }
 
 PUBLIC PRBool
-SINGSIGN_RemoveUser(const char *URLName, const PRUnichar *userName, PRBool strip) {
-  return si_RemoveUser(URLName, nsAutoString(userName), PR_TRUE, strip);
+SINGSIGN_RemoveUser(const char *passwordRealm, const PRUnichar *userName) {
+  return si_RemoveUser(passwordRealm, nsAutoString(userName), PR_TRUE);
 }
 
 
 /* Determine if a specified url/user exists */
 PRIVATE PRBool
-si_CheckForUser(char *URLName, nsAutoString userName) {
+si_CheckForUser(char *passwordRealm, nsAutoString userName) {
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
@@ -928,8 +932,8 @@ si_CheckForUser(char *URLName, nsAutoString userName) {
 
   si_lock_signon_list();
 
-  /* get URL corresponding to URLName */
-  url = si_GetURL(URLName);
+  /* get URL corresponding to passwordRealm */
+  url = si_GetURL(passwordRealm);
   if (!url) {
     /* URL not found */
     si_unlock_signon_list();
@@ -961,13 +965,13 @@ si_CheckForUser(char *URLName, nsAutoString userName) {
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE si_SignonUserStruct*
-si_GetUser(const char* URLName, PRBool pickFirstUser, nsAutoString userText) {
+si_GetUser(const char* passwordRealm, PRBool pickFirstUser, nsAutoString userText) {
   si_SignonURLStruct* url;
   si_SignonUserStruct* user = nsnull;
   si_SignonDataStruct* data;
 
   /* get to node for this URL */
-  url = si_GetURL(URLName);
+  url = si_GetURL(passwordRealm);
   if (url != NULL) {
 
     /* node for this URL was found */
@@ -1068,7 +1072,7 @@ si_GetUser(const char* URLName, PRBool pickFirstUser, nsAutoString userText) {
        */
 
 #ifdef junk
-      NET_RemoveURLFromCache(NET_CreateURLStruct((char *)URLName, NET_DONT_RELOAD));
+      NET_RemoveURLFromCache(NET_CreateURLStruct((char *)passwordRealm, NET_DONT_RELOAD));
 #endif
 
     }
@@ -1086,13 +1090,13 @@ si_GetUser(const char* URLName, PRBool pickFirstUser, nsAutoString userText) {
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE si_SignonUserStruct*
-si_GetSpecificUser(const char* URLName, nsAutoString userName, nsAutoString userText) {
+si_GetSpecificUser(const char* passwordRealm, nsAutoString userName, nsAutoString userText) {
   si_SignonURLStruct* url;
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
 
   /* get to node for this URL */
-  url = si_GetURL(URLName);
+  url = si_GetURL(passwordRealm);
   if (url != NULL) {
 
     /* step through set of user nodes for this URL looking for specified username */
@@ -1118,7 +1122,7 @@ si_GetSpecificUser(const char* URLName, nsAutoString userName, nsAutoString user
      */
 
 #ifdef junk
-    NET_RemoveURLFromCache(NET_CreateURLStruct((char *)URLName, NET_DONT_RELOAD));
+    NET_RemoveURLFromCache(NET_CreateURLStruct((char *)passwordRealm, NET_DONT_RELOAD));
 #endif
 
   }
@@ -1186,7 +1190,7 @@ si_GetURLAndUserForChangeForm(nsAutoString password)
 
           nsAutoString userName;
           if (NS_SUCCEEDED(si_Decrypt (data->value, userName))) {
-            nsAutoString temp; temp.AssignWithConversion(url->URLName);
+            nsAutoString temp; temp.AssignWithConversion(url->passwordRealm);
             temp.AppendWithConversion(":");
             temp.Append(userName);
 
@@ -1242,7 +1246,7 @@ PUBLIC void
 SI_RemoveAllSignonData() {
   if (si_PartiallyLoaded) {
     /* repeatedly remove first user node of first URL node */
-    while (si_RemoveUser(NULL, nsAutoString(), PR_FALSE, PR_TRUE)) {
+    while (si_RemoveUser(NULL, nsAutoString(), PR_FALSE)) {
     }
   }
   si_PartiallyLoaded = PR_FALSE;
@@ -1273,12 +1277,12 @@ si_FreeReject(si_Reject * reject) {
       return;
   }
   si_reject_list->RemoveElement(reject);
-  PR_FREEIF(reject->URLName);
+  PR_FREEIF(reject->passwordRealm);
   PR_Free(reject);
 }
 
 PRIVATE PRBool
-si_CheckForReject(char * URLName, nsAutoString userName) {
+si_CheckForReject(char * passwordRealm, nsAutoString userName) {
   si_Reject * reject;
 
   si_lock_signon_list();
@@ -1286,9 +1290,9 @@ si_CheckForReject(char * URLName, nsAutoString userName) {
     PRInt32 rejectCount = LIST_COUNT(si_reject_list);
     for (PRInt32 i=0; i<rejectCount; i++) {
       reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(i));
-      if(!PL_strcmp(URLName, reject->URLName)) {
+      if(!PL_strcmp(passwordRealm, reject->passwordRealm)) {
 // No need for username check on a rejectlist entry.  URL check is sufficient
-//    if(!PL_strcmp(userName, reject->userName) && !PL_strcmp(URLName, reject->URLName)) {
+//    if(!PL_strcmp(userName, reject->userName) && !PL_strcmp(passwordRealm, reject->passwordRealm)) {
         si_unlock_signon_list();
         return PR_TRUE;
       }
@@ -1299,8 +1303,8 @@ si_CheckForReject(char * URLName, nsAutoString userName) {
 }
 
 PRIVATE void
-si_PutReject(char * URLName, nsAutoString userName, PRBool save) {
-  char * URLName2=NULL;
+si_PutReject(char * passwordRealm, nsAutoString userName, PRBool save) {
+  char * passwordRealm2=NULL;
   nsAutoString userName2;
   si_Reject * reject = new si_Reject;
 
@@ -1318,15 +1322,15 @@ si_PutReject(char * URLName, nsAutoString userName, PRBool save) {
       si_lock_signon_list();
     }
 
-    StrAllocCopy(URLName2, URLName);
+    StrAllocCopy(passwordRealm2, passwordRealm);
     userName2 = userName;
-    reject->URLName = URLName2;
+    reject->passwordRealm = passwordRealm2;
     reject->userName = userName2;
 
     if(!si_reject_list) {
       si_reject_list = new nsVoidArray();
       if(!si_reject_list) {
-        PR_Free(reject->URLName);
+        PR_Free(reject->passwordRealm);
         PR_Free(reject);
         if (save) {
           si_unlock_signon_list();
@@ -1342,7 +1346,7 @@ si_PutReject(char * URLName, nsAutoString userName, PRBool save) {
     for (PRInt32 i = 0; i<rejectCount; ++i) {
       tmp_reject = NS_STATIC_CAST(si_Reject *, si_reject_list->ElementAt(i));
       if (tmp_reject) {
-        if (PL_strcasecmp(reject->URLName, tmp_reject->URLName)<0) {
+        if (PL_strcasecmp(reject->passwordRealm, tmp_reject->passwordRealm)<0) {
           si_reject_list->InsertElementAt(reject, i);
           rejectAdded = PR_TRUE;
           break;
@@ -1375,7 +1379,7 @@ si_PutReject(char * URLName, nsAutoString userName, PRBool save) {
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE void
-si_PutData(const char * URLName, nsVoidArray * signonData, PRBool save) {
+si_PutData(const char * passwordRealm, nsVoidArray * signonData, PRBool save) {
   PRBool added_to_list = PR_FALSE;
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
@@ -1417,7 +1421,7 @@ si_PutData(const char * URLName, nsVoidArray * signonData, PRBool save) {
   }
 
   /* find node in signon list having the same URL */
-  if ((url = si_GetURL(URLName)) == NULL) {
+  if ((url = si_GetURL(passwordRealm)) == NULL) {
 
     /* doesn't exist so allocate new node to be put into signon list */
     url = new si_SignonURLStruct;
@@ -1429,8 +1433,8 @@ si_PutData(const char * URLName, nsVoidArray * signonData, PRBool save) {
     }
 
     /* fill in fields of new node */
-    url->URLName = si_StrippedURL(URLName);
-    if (!url->URLName) {
+    url->passwordRealm = si_StrippedURL(passwordRealm);
+    if (!url->passwordRealm) {
       PR_Free(url);
       if (save) {
         si_unlock_signon_list();
@@ -1440,7 +1444,7 @@ si_PutData(const char * URLName, nsVoidArray * signonData, PRBool save) {
 
     url->signonUser_list = new nsVoidArray();
     if(!url->signonUser_list) {
-      PR_Free(url->URLName);
+      PR_Free(url->passwordRealm);
       PR_Free(url);
     }
 
@@ -1453,7 +1457,7 @@ si_PutData(const char * URLName, nsVoidArray * signonData, PRBool save) {
     for (PRInt32 ii = 0; ii<urlCount; ++ii) {
       tmp_URL = NS_STATIC_CAST(si_SignonURLStruct *, si_signon_list->ElementAt(ii));
       if (tmp_URL) {
-        if (PL_strcasecmp(url->URLName, tmp_URL->URLName)<0) {
+        if (PL_strcasecmp(url->passwordRealm, tmp_URL->passwordRealm)<0) {
           si_signon_list->InsertElementAt(url, ii);
           added_to_list = PR_TRUE;
           break;
@@ -1666,7 +1670,7 @@ si_ReadLine
  */
 PUBLIC int
 SI_LoadSignonData() {
-  char * URLName;
+  char * passwordRealm;
   nsAutoString buffer;
   PRBool badInput = PR_FALSE;
 
@@ -1710,15 +1714,15 @@ SI_LoadSignonData() {
       break; /* end of reject list */
     }
     si_StripLF(buffer);
-    URLName = buffer.ToNewCString();
-    si_PutReject(URLName, buffer, PR_FALSE); /* middle parameter is obsolete */
-    Recycle (URLName);
+    passwordRealm = buffer.ToNewCString();
+    si_PutReject(passwordRealm, buffer, PR_FALSE); /* middle parameter is obsolete */
+    Recycle (passwordRealm);
   }
 
   /* read the URL line */
   while(!NS_FAILED(si_ReadLine(strm, buffer))) {
     si_StripLF(buffer);
-    URLName = buffer.ToNewCString();
+    passwordRealm = buffer.ToNewCString();
 
     /* prepare to read the name/value pairs */
     badInput = PR_FALSE;
@@ -1767,15 +1771,15 @@ SI_LoadSignonData() {
     }
 
     /* store the info for this URL into memory-resident data structure */
-    if (!URLName || PL_strlen(URLName) == 0) {
+    if (!passwordRealm || PL_strlen(passwordRealm) == 0) {
       badInput = PR_TRUE;
     }
     if (!badInput) {
-      si_PutData(URLName, signonData, PR_FALSE);
+      si_PutData(passwordRealm, signonData, PR_FALSE);
     }
 
     /* free up all the allocations done for processing this URL */
-    Recycle(URLName);
+    Recycle(passwordRealm);
     if (badInput) {
       si_unlock_signon_list();
       return -1;
@@ -1852,9 +1856,9 @@ si_SaveSignonDataLocked() {
   si_WriteLine(strm, NS_ConvertToString(HEADER_VERSION));
 
   /* format for next part of file shall be:
-   * URLName -- first url/username on reject list
+   * passwordRealm -- first url/username on reject list
    * userName
-   * URLName -- second url/username on reject list
+   * passwordRealm -- second url/username on reject list
    * userName
    * ...     -- etc.
    * .       -- end of list
@@ -1865,7 +1869,7 @@ si_SaveSignonDataLocked() {
     PRInt32 rejectCount = LIST_COUNT(si_reject_list);
     for (PRInt32 i=0; i<rejectCount; i++) {
       reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(i));
-      si_WriteLine(strm, NS_ConvertToString(reject->URLName));
+      si_WriteLine(strm, NS_ConvertToString(reject->passwordRealm));
     }
   }
   si_WriteLine(strm, NS_ConvertToString("."));
@@ -1886,7 +1890,7 @@ si_SaveSignonDataLocked() {
       for (PRInt32 i3=0; i3<userCount; i3++) {
         user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i3));
         si_WriteLine
-          (strm, NS_ConvertToString(url->URLName));
+          (strm, NS_ConvertToString(url->passwordRealm));
 
         /* write out each data node of the user node */
         PRInt32 dataCount = LIST_COUNT(user->signonData_list);
@@ -1915,11 +1919,11 @@ si_SaveSignonDataLocked() {
 
 /* Ask user if it is ok to save the signon data */
 PRIVATE PRBool
-si_OkToSave(char *URLName, nsAutoString userName) {
-  char *strippedURLName = 0;
+si_OkToSave(char *passwordRealm, nsAutoString userName) {
+  char *strippedRealm = 0;
 
   /* if url/user already exists, then it is safe to save it again */
-  if (si_CheckForUser(URLName, userName)) {
+  if (si_CheckForUser(passwordRealm, userName)) {
     return PR_TRUE;
   }
 
@@ -1937,19 +1941,19 @@ si_OkToSave(char *URLName, nsAutoString userName) {
   }
 #endif
 
-  strippedURLName = si_StrippedURL(URLName);
-  if (si_CheckForReject(strippedURLName, userName)) {
-    PR_Free(strippedURLName);
+  strippedRealm = si_StrippedURL(passwordRealm);
+  if (si_CheckForReject(strippedRealm, userName)) {
+    PR_Free(strippedRealm);
     return PR_FALSE;
   }
 
   PRUnichar * message = Wallet_Localize("WantToSavePassword?");
   PRInt32 button = si_3ButtonConfirm(message);
   if (button == NEVER_BUTTON) {
-    si_PutReject(strippedURLName, userName, PR_TRUE);
+    si_PutReject(strippedRealm, userName, PR_TRUE);
   }
   Recycle(message);
-  PR_Free(strippedURLName);
+  PR_Free(strippedRealm);
   return (button == YES_BUTTON);
 }
 
@@ -1957,7 +1961,7 @@ si_OkToSave(char *URLName, nsAutoString userName) {
  * Check for a signon submission and remember the data if so
  */
 PUBLIC void
-SINGSIGN_RememberSignonData (char* URLName, nsVoidArray * signonData)
+SINGSIGN_RememberSignonData (char* passwordRealm, nsVoidArray * signonData)
 {
   int passwordCount = 0;
   int pswd[3];
@@ -1998,7 +2002,7 @@ SINGSIGN_RememberSignonData (char* URLName, nsVoidArray * signonData)
     if (j<signonData->Count()) {
       data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
 
-      if (si_OkToSave(URLName, data2->value)) {
+      if (si_OkToSave(passwordRealm, data2->value)) {
         for (j=0; j<signonData->Count(); j++) {
           data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
           nsAutoString value = data2->value;
@@ -2006,7 +2010,7 @@ SINGSIGN_RememberSignonData (char* URLName, nsVoidArray * signonData)
             return;
           }
         }
-        si_PutData(URLName, signonData, PR_TRUE);
+        si_PutData(passwordRealm, signonData, PR_TRUE);
       }
     }
   } else if (passwordCount == 2) {
@@ -2068,7 +2072,7 @@ SINGSIGN_RememberSignonData (char* URLName, nsVoidArray * signonData)
 }
 
 PUBLIC void
-SINGSIGN_RestoreSignonData (char* URLName, PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
+SINGSIGN_RestoreSignonData (char* passwordRealm, PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
   nsAutoString correctedName;
@@ -2101,7 +2105,7 @@ SINGSIGN_RestoreSignonData (char* URLName, PRUnichar* name, PRUnichar** value, P
 
   /* determine if name has been saved (avoids unlocking the database if not) */
   PRBool nameFound = PR_FALSE;
-  user = si_GetUser(URLName, PR_FALSE, correctedName);
+  user = si_GetUser(passwordRealm, PR_FALSE, correctedName);
   if (user) {
     PRInt32 dataCount = LIST_COUNT(user->signonData_list);
     for (PRInt32 i=0; i<dataCount; i++) {
@@ -2125,12 +2129,12 @@ SINGSIGN_RestoreSignonData (char* URLName, PRUnichar* name, PRUnichar** value, P
    */
   /* see if this is first item in form and is a password */
   /* get first saved user just so we can see the name of the first item on the form */
-  user = si_GetUser(URLName, PR_TRUE, NULL); /* this is the first saved user */
+  user = si_GetUser(passwordRealm, PR_TRUE, NULL); /* this is the first saved user */
   if (user) {
     data = (si_SignonDataStruct *) (user->signonData_list->ElementAt(0)); /* 1st item on form */
     if(data->isPassword && correctedName.Length() && (data->name == correctedName)) {
       /* current item is first item on form and is a password */
-      user = (URLName, MK_SIGNON_PASSWORDS_FETCH);
+      user = (passwordRealm, MK_SIGNON_PASSWORDS_FETCH);
       if (user) {
         /* user has confirmed it's a change-of-password form */
         PRInt32 dataCount = LIST_COUNT(user->signonData_list);
@@ -2152,7 +2156,7 @@ SINGSIGN_RestoreSignonData (char* URLName, PRUnichar* name, PRUnichar** value, P
 
   /* restore the data from previous time this URL was visited */
 
-  user = si_GetUser(URLName, PR_FALSE, correctedName);
+  user = si_GetUser(passwordRealm, PR_FALSE, correctedName);
   if (user) {
     PRInt32 dataCount = LIST_COUNT(user->signonData_list);
     for (PRInt32 i=0; i<dataCount; i++) {
@@ -2174,7 +2178,7 @@ SINGSIGN_RestoreSignonData (char* URLName, PRUnichar* name, PRUnichar** value, P
  * Remember signon data from a browser-generated password dialog
  */
 PRIVATE void
-si_RememberSignonDataFromBrowser(const char* URLName, nsAutoString username, nsAutoString password) {
+si_RememberSignonDataFromBrowser(const char* passwordRealm, nsAutoString username, nsAutoString password) {
   /* do nothing if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
     return;
@@ -2197,7 +2201,7 @@ si_RememberSignonDataFromBrowser(const char* URLName, nsAutoString username, nsA
   signonData->AppendElement(data2);
 
   /* Save the signon data */
-  si_PutData(URLName, signonData, PR_TRUE);
+  si_PutData(passwordRealm, signonData, PR_TRUE);
 
   /* Deallocate */
   delete data1;
@@ -2211,16 +2215,16 @@ si_RememberSignonDataFromBrowser(const char* URLName, nsAutoString username, nsA
  */
 PRIVATE void
 si_RestoreOldSignonDataFromBrowser
-    (const char* URLName, PRBool pickFirstUser, nsAutoString& username, nsAutoString& password) {
+    (const char* passwordRealm, PRBool pickFirstUser, nsAutoString& username, nsAutoString& password) {
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
 
   /* get the data from previous time this URL was visited */
   si_lock_signon_list();
   if (username.Length() != 0) {
-    user = si_GetSpecificUser(URLName, username, NS_ConvertToString(USERNAMEFIELD));
+    user = si_GetSpecificUser(passwordRealm, username, NS_ConvertToString(USERNAMEFIELD));
   } else {
-    user = si_GetUser(URLName, pickFirstUser, NS_ConvertToString(USERNAMEFIELD));
+    user = si_GetUser(passwordRealm, pickFirstUser, NS_ConvertToString(USERNAMEFIELD));
   }
   if (!user) {
     /* leave original username and password from caller unchanged */
@@ -2247,18 +2251,19 @@ si_RestoreOldSignonDataFromBrowser
 }
 
 PUBLIC PRBool
-SINGSIGN_StorePassword(const char *URLName, const PRUnichar *user, const PRUnichar *password, PRBool strip) {
-  nsresult res;
-
+SINGSIGN_StorePassword(const char *passwordRealm, const PRUnichar *user, const PRUnichar *password) {
   nsAutoString userName(user);
 
-  /* convert URLName to a uri so we can parse out the username and hostname */
+#if 0
+  nsresult res;
+
+  /* convert passwordRealm to a uri so we can parse out the username and hostname */
   nsXPIDLCString host;
   if (strip) {
-    if (URLName) {
+    if (passwordRealm) {
       nsCOMPtr<nsIURL> uri;
       nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
-      res = uri->SetSpec(URLName);
+      res = uri->SetSpec(passwordRealm);
       if (NS_FAILED(res)) return PR_FALSE;
 
       /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
@@ -2286,11 +2291,12 @@ SINGSIGN_StorePassword(const char *URLName, const PRUnichar *user, const PRUnich
       }
     }
   } else {
-    res = MangleUrl(URLName, getter_Copies(host));
+    res = MangleUrl(passwordRealm, getter_Copies(host));
     if (NS_FAILED(res)) return PR_FALSE;
   } 
+#endif
 
-  si_RememberSignonDataFromBrowser ((const char *)host, userName, nsAutoString(password));
+  si_RememberSignonDataFromBrowser(passwordRealm, userName, nsAutoString(password));
   return PR_TRUE;
 }
 
@@ -2310,20 +2316,23 @@ SINGSIGN_StorePassword(const char *URLName, const PRUnichar *user, const PRUnich
 
 PUBLIC nsresult
 SINGSIGN_PromptUsernameAndPassword
-    (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     const char *urlname, nsIPrompt* dialog, PRBool *pressedOK, PRBool strip) {
+    (const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
+     const char *passwordRealm, nsIPrompt* dialog, PRBool *pressedOK, PRBool persistPassword) {
 
   nsresult res;
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    return dialog->PromptUsernameAndPassword(text, user, pwd, pressedOK);
+    nsString realm = NS_ConvertToString(passwordRealm);   // XXX hack
+    return dialog->PromptUsernameAndPassword(dialogTitle, text, realm.GetUnicode(), 
+                                             persistPassword, user, pwd, pressedOK);
   }
 
+#if 0
   /* convert to a uri so we can parse out the hostname */
   nsCOMPtr<nsIURL> uri;
   nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
-  res = uri->SetSpec(urlname);
+  res = uri->SetSpec(passwordRealm);
   if (NS_FAILED(res)) {
     return res;
   }
@@ -2338,15 +2347,16 @@ SINGSIGN_PromptUsernameAndPassword
       return res;
     }
   } else {
-    res = MangleUrl(urlname, getter_Copies(host));
+    res = MangleUrl(passwordRealm, getter_Copies(host));
     if (NS_FAILED(res)) {
       return res;
     }
   }
+#endif
 
   /* prefill with previous username/password if any */
   nsAutoString username, password;
-  si_RestoreOldSignonDataFromBrowser((const char*)host, PR_FALSE, username, password);
+  si_RestoreOldSignonDataFromBrowser(passwordRealm, PR_FALSE, username, password);
 
   /* get new username/password from user */
   *user = username.ToNewUnicode();
@@ -2361,7 +2371,7 @@ SINGSIGN_PromptUsernameAndPassword
     return NS_OK;
   }
   if (checked) {
-    si_RememberSignonDataFromBrowser ((const char*)host, nsAutoString(*user), nsAutoString(*pwd));
+    si_RememberSignonDataFromBrowser (passwordRealm, nsAutoString(*user), nsAutoString(*pwd));
   }
 
   /* cleanup and return */
@@ -2371,8 +2381,8 @@ SINGSIGN_PromptUsernameAndPassword
 
 PUBLIC nsresult
 SINGSIGN_PromptPassword
-    (const PRUnichar *text, PRUnichar **pwd, const char *urlname,
-    nsIPrompt* dialog, PRBool *pressedOK, PRBool strip) 
+    (const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **pwd, const char *passwordRealm,
+     nsIPrompt* dialog, PRBool *pressedOK, PRBool persistPassword) 
 {
 
   nsresult res;
@@ -2381,15 +2391,19 @@ SINGSIGN_PromptPassword
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
     PRUnichar * prompt_string = Wallet_Localize("PromptForPassword");
-    res = dialog->PromptPassword(text, prompt_string, pwd, pressedOK);
+    nsString realm = NS_ConvertToString(passwordRealm);      // XXX hack
+    res = dialog->PromptPassword(prompt_string,
+                                 text, realm.GetUnicode(), persistPassword,
+                                 pwd, pressedOK);
     Recycle(prompt_string);
     return res;
   }
 
+#if 0
   /* convert to a uri so we can parse out the username and hostname */
   nsCOMPtr<nsIURL> uri;
   nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
-  res = uri->SetSpec(urlname);
+  res = uri->SetSpec(passwordRealm);
   if (NS_FAILED(res)) {
     return res;
   }
@@ -2404,7 +2418,7 @@ SINGSIGN_PromptPassword
       return res;
     }
   } else {
-    res = MangleUrl(urlname, getter_Copies(host));
+    res = MangleUrl(passwordRealm, getter_Copies(host));
     if (NS_FAILED(res)) {
       return res;
     }
@@ -2425,9 +2439,10 @@ SINGSIGN_PromptPassword
 	    prehost.Left(username, colon);  
 	  }
   }
+#endif
 
   /* get previous password used with this username, pick first user if no username found */
-  si_RestoreOldSignonDataFromBrowser((const char *)host, (username.Length() == 0), username, password);
+  si_RestoreOldSignonDataFromBrowser(passwordRealm, (username.Length() == 0), username, password);
 
   /* return if a password was found */
   if (password.Length() != 0) {
@@ -2447,7 +2462,7 @@ SINGSIGN_PromptPassword
     return NS_OK;
   }
   if (checked) {
-    si_RememberSignonDataFromBrowser ((const char *)host, username, nsAutoString(*pwd));
+    si_RememberSignonDataFromBrowser(passwordRealm, username, nsAutoString(*pwd));
   }
 
   /* cleanup and return */
@@ -2457,8 +2472,8 @@ SINGSIGN_PromptPassword
 
 PUBLIC nsresult
 SINGSIGN_Prompt
-    (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
-    const char *urlname, nsIPrompt* dialog, PRBool *pressedOK, PRBool strip) 
+    (const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
+     const char *passwordRealm, nsIPrompt* dialog, PRBool *pressedOK) 
 {
   nsresult res;
   nsAutoString data, emptyUsername;
@@ -2466,15 +2481,17 @@ SINGSIGN_Prompt
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
     PRUnichar * prompt_string = Wallet_Localize("PromptForData");
-    res = dialog->Prompt(text, prompt_string, resultText, pressedOK);
+    nsString realm = NS_ConvertToString(passwordRealm);   // XXX hack
+    res = dialog->Prompt(dialogTitle, text, realm.GetUnicode(), prompt_string, resultText, pressedOK);
     Recycle(prompt_string);
     return res;
   }
 
+#if 0
   /* convert to a uri so we can parse out the hostname */
   nsCOMPtr<nsIURL> uri;
   nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
-  res = uri->SetSpec(urlname);
+  res = uri->SetSpec(passwordRealm);
   if (NS_FAILED(res)) {
     return res;
   }
@@ -2487,14 +2504,15 @@ SINGSIGN_Prompt
       return res;
     }
   } else {
-    res = MangleUrl(urlname, getter_Copies(host));
+    res = MangleUrl(passwordRealm, getter_Copies(host));
     if (NS_FAILED(res)) {
       return res;
     }
   }
+#endif
 
   /* get previous data used with this hostname */
-  si_RestoreOldSignonDataFromBrowser((const char *)host, PR_TRUE, emptyUsername, data);
+  si_RestoreOldSignonDataFromBrowser(passwordRealm, PR_TRUE, emptyUsername, data);
 
   /* return if data was found */
   if (data.Length() != 0) {
@@ -2514,7 +2532,7 @@ SINGSIGN_Prompt
     return NS_OK;
   }
   if (checked) {
-    si_RememberSignonDataFromBrowser ((const char *)host, emptyUsername, nsAutoString(*resultText));
+    si_RememberSignonDataFromBrowser(passwordRealm, emptyUsername, nsAutoString(*resultText));
   }
 
   /* cleanup and return */
@@ -2606,7 +2624,7 @@ SINGSIGN_SignonViewerReturn (nsAutoString results) {
         /* do the deletion */
         nsAutoString userName;
         if (NS_SUCCEEDED(si_Decrypt(data->value, userName))) {
-          si_RemoveUser(url->URLName, userName, PR_TRUE, PR_TRUE);
+          si_RemoveUser(url->passwordRealm, userName, PR_TRUE);
           si_signon_list_changed = PR_TRUE;
         }
       }
@@ -2669,7 +2687,7 @@ SINGSIGN_GetSignonListForViewer(nsAutoString& aSignonList)
         buffer.AppendWithConversion("<OPTION value=");
         buffer.AppendInt(signonNum, 10);
         buffer.AppendWithConversion(">");
-        buffer.AppendWithConversion(url->URLName);
+        buffer.AppendWithConversion(url->passwordRealm);
         buffer.AppendWithConversion(":");
         if (!data->isPassword) { /* need this test in case all fields are passwords */
           buffer += userName;
@@ -2745,7 +2763,7 @@ SINGSIGN_GetRejectListForViewer(nsAutoString& aRejectList)
     buffer.AppendWithConversion("<OPTION value=");
     buffer.AppendInt(rejectNum, 10);
     buffer.AppendWithConversion(">");
-    buffer.AppendWithConversion(reject->URLName);
+    buffer.AppendWithConversion(reject->passwordRealm);
     buffer.AppendWithConversion(":");
     buffer += reject->userName;
     buffer.AppendWithConversion("</OPTION>\n");
@@ -2755,9 +2773,8 @@ SINGSIGN_GetRejectListForViewer(nsAutoString& aRejectList)
 }
 
 PUBLIC nsresult
-SINGSIGN_HaveData(const char *url, const PRUnichar *userName, PRBool strip, PRBool *retval)
+SINGSIGN_HaveData(const char *passwordRealm, const PRUnichar *userName, PRBool *retval)
 {
-  nsresult res;
   nsAutoString data, usernameForLookup;
 
   *retval = PR_FALSE;
@@ -2766,12 +2783,14 @@ SINGSIGN_HaveData(const char *url, const PRUnichar *userName, PRBool strip, PRBo
     return NS_OK;
   }
 
+#if 0
+  nsresult res;
   NS_ASSERTION(strip == PR_FALSE, "this code needs to be finished for the strip case");
 
   /* convert to a uri so we can parse out the username and hostname */
   nsCOMPtr<nsIURL> uri;
   nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
-  res = uri->SetSpec(url);
+  res = uri->SetSpec(passwordRealm);
   if (NS_FAILED(res)) return res;
 
   /* get host part of the uri */
@@ -2782,18 +2801,19 @@ SINGSIGN_HaveData(const char *url, const PRUnichar *userName, PRBool strip, PRBo
       return res;
     }
   } else {
-    res = MangleUrl(url, getter_Copies(host));
+    res = MangleUrl(passwordRealm, getter_Copies(host));
     if (NS_FAILED(res)) return res;
   }
 
   if (strip) {
-      /* convert url to a uri so we can parse out the username and hostname */
+      /* convert passwordRealm to a uri so we can parse out the username and hostname */
       /* if no username given, extract it from uri -- note: prehost is <username>:<password> */
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+#endif
 
   /* get previous data used with this username, pick first user if no username found */
-  si_RestoreOldSignonDataFromBrowser((const char *)host, (usernameForLookup.Length() == 0), usernameForLookup, data);
+  si_RestoreOldSignonDataFromBrowser(passwordRealm, (usernameForLookup.Length() == 0), usernameForLookup, data);
 
   if (data.Length()) {
     *retval = PR_TRUE;
@@ -2829,7 +2849,7 @@ si_KeychainCallback( KCEvent keychainEvent, KCCallbackInfo *info, void *userCont
  */
 PRIVATE int
 si_LoadSignonDataFromKeychain() {
-  char * URLName;
+  char * passwordRealm;
   si_FormSubmitData submit;
   nsAutoString name_array[MAX_ARRAY_SIZE];
   nsAutoString value_array[MAX_ARRAY_SIZE];
@@ -2903,8 +2923,8 @@ si_LoadSignonDataFromKeychain() {
 
     /* null terminate */
     buffer[actualSize] = 0;
-    URLName = NULL;
-    StrAllocCopy(URLName, buffer);
+    passwordRealm = NULL;
+    StrAllocCopy(passwordRealm, buffer);
     if (!reject) {
       /* get the password data */
       status = KCGetData(itemRef, BUFFER_SIZE, buffer, &actualSize);
@@ -2963,19 +2983,19 @@ si_LoadSignonDataFromKeychain() {
       }
       submit.value_cnt++;
       /* store the info for this URL into memory-resident data structure */
-      if (!URLName || PL_strlen(URLName) == 0) {
+      if (!passwordRealm || PL_strlen(passwordRealm) == 0) {
         badInput = PR_TRUE;
       }
       if (!badInput) {
-        si_PutData(URLName, &submit, PR_FALSE);
+        si_PutData(passwordRealm, &submit, PR_FALSE);
       }
 
     } else {
       /* reject */
-      si_PutReject(URLName, nsAutoString(buffer), PR_FALSE);
+      si_PutReject(passwordRealm, nsAutoString(buffer), PR_FALSE);
     }
     reject = PR_FALSE; /* reset reject flag */
-    PR_Free(URLName);
+    PR_Free(passwordRealm);
     KCReleaseItemRef( &itemRef );
     status = KCFindNextItem( searchRef, &itemRef);
   }
@@ -3032,7 +3052,7 @@ si_SaveSignonDataInKeychain() {
     for (PRInt32 i=0; i<rejectCount; i++) {
       reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(i));
       status = kcaddinternetpassword
-        (reject->URLName, nil,
+        (reject->passwordRealm, nil,
          reject->userName,
          kAnyPort,
          kNetscapeProtocolType,
@@ -3101,7 +3121,7 @@ si_SaveSignonDataInKeychain() {
         }
         /* if it's already there, we just want to change the password */
         status = kcfindinternetpassword
-            (URL->URLName,
+            (URL->passwordRealm,
              nil,
              account,
              kAnyPort,
@@ -3121,7 +3141,7 @@ si_SaveSignonDataInKeychain() {
         } else {
           /* wasn't there, let's add it */
           status = kcaddinternetpassword
-            (URL->URLName,
+            (URL->passwordRealm,
              nil,
              account,
              kAnyPort,

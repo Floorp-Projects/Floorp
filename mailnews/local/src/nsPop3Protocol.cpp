@@ -796,9 +796,10 @@ nsPop3Protocol::Error(PRInt32 err_code)
 	if (NS_SUCCEEDED(rv))
 	{
 		PRUnichar * alertString = nsnull;
-    mStringService->GetStringByID(err_code, &alertString);
-		if (alertString)
-			dialog->Alert(alertString); 
+        mStringService->GetStringByID(err_code, &alertString);
+        if (alertString) {
+			dialog->Alert(nsnull, alertString); 
+        }
 		nsCRT::free(alertString);
 	}
 		

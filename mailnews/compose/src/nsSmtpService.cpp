@@ -36,7 +36,7 @@
 #include "nsIFileSpec.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgIdentity.h"
-#include "nsINetPrompt.h"
+#include "nsIPrompt.h"
 #include "nsMsgComposeStringBundle.h"
 
 typedef struct _findServerByKeyEntry {
@@ -63,7 +63,7 @@ NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
                    const char* aRecipients, 
                    nsIMsgIdentity * aSenderIdentity,
                    nsIUrlListener * aUrlListener,
-                   nsINetPrompt * aNetPrompt,
+                   nsIPrompt * aNetPrompt,
                    nsIURI ** aUrl);
 
 nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer);
@@ -89,7 +89,7 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
                                         nsIMsgIdentity * aSenderIdentity,
                                         nsIUrlListener * aUrlListener, 
                                         nsISmtpServer * aServer,
-                                        nsINetPrompt * aNetPrompt,
+                                        nsIPrompt * aNetPrompt,
                                         nsIURI ** aURL)
 {
 	nsIURI * urlToRun = nsnull;
@@ -152,7 +152,7 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
                             const char * aRecipients, 
                             nsIMsgIdentity * aSenderIdentity,
                             nsIUrlListener * aUrlListener, 
-                            nsINetPrompt * aNetPrompt,
+                            nsIPrompt * aNetPrompt,
                             nsIURI ** aUrl)
 {
 	// mscott: this function is a convience hack until netlib actually dispatches smtp urls.
@@ -174,10 +174,10 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
 		{
 			nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(smtpUrl);
 			url->SetSpec(urlSpec);
-      smtpUrl->SetRecipients(aRecipients);
+            smtpUrl->SetRecipients(aRecipients);
 			smtpUrl->SetPostMessageFile(aFilePath);
 			smtpUrl->SetSenderIdentity(aSenderIdentity);
-      smtpUrl->SetNetPrompt(aNetPrompt);
+            smtpUrl->SetPrompt(aNetPrompt);
 			url->RegisterListener(aUrlListener);
 			PR_Free(urlSpec);
 		}

@@ -511,7 +511,7 @@ nsSmtpUrl::SetSenderIdentity(nsIMsgIdentity * aSenderIdentity)
 }
 
 NS_IMETHODIMP
-nsSmtpUrl::SetNetPrompt(nsINetPrompt *aNetPrompt)
+nsSmtpUrl::SetPrompt(nsIPrompt *aNetPrompt)
 {
     NS_ENSURE_ARG_POINTER(aNetPrompt);
     m_netPrompt = aNetPrompt;
@@ -519,7 +519,7 @@ nsSmtpUrl::SetNetPrompt(nsINetPrompt *aNetPrompt)
 }
 
 NS_IMETHODIMP
-nsSmtpUrl::GetNetPrompt(nsINetPrompt **aNetPrompt)
+nsSmtpUrl::GetPrompt(nsIPrompt **aNetPrompt)
 {
     NS_ENSURE_ARG_POINTER(aNetPrompt);
     if (!m_netPrompt) return NS_ERROR_NULL_POINTER;

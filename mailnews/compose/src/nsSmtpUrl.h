@@ -29,7 +29,7 @@
 #include "nsIFileSpec.h"
 #include "nsIMsgIdentity.h"
 #include "nsCOMPtr.h"
-#include "nsINetPrompt.h"
+#include "nsIPrompt.h"
 #include "nsISmtpServer.h"
 
 class nsMailtoUrl : public nsIMailtoUrl, public nsIURI
@@ -99,7 +99,7 @@ protected:
 	nsCString	m_userName;
 	nsCOMPtr<nsIFileSpec> m_fileName;
 	nsCOMPtr<nsIMsgIdentity> m_senderIdentity;
-    nsCOMPtr<nsINetPrompt> m_netPrompt;
+    nsCOMPtr<nsIPrompt> m_netPrompt;
     nsCOMPtr<nsISmtpServer> m_smtpServer;
 
 	// it is possible to encode the message to parse in the form of a url.

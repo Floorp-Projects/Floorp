@@ -84,48 +84,53 @@ NS_IMETHODIMP CWebBrowserContainer::GetInterface(const nsIID & uuid, void * *res
 // nsIPrompt
 
 /* void alert (in wstring text); */
-NS_IMETHODIMP CWebBrowserContainer::Alert(const PRUnichar *text)
+NS_IMETHODIMP CWebBrowserContainer::Alert(const PRUnichar* dialogTitle, const PRUnichar *text)
 {
 	USES_CONVERSION;
-	m_pOwner->MessageBox(W2T(text), _T("Alert"), MB_OK | MB_ICONEXCLAMATION);
+	m_pOwner->MessageBox(W2T(text), W2T(dialogTitle), MB_OK | MB_ICONEXCLAMATION);
     return NS_OK;
 }
 
 /* boolean confirm (in wstring text); */
-NS_IMETHODIMP CWebBrowserContainer::Confirm(const PRUnichar *text, PRBool *_retval)
+NS_IMETHODIMP CWebBrowserContainer::Confirm(const PRUnichar* dialogTitle, const PRUnichar *text, PRBool *_retval)
 {
 	USES_CONVERSION;
-	int nAnswer = m_pOwner->MessageBox(W2T(text), _T("Confirm"), MB_YESNO | MB_ICONQUESTION);
+	int nAnswer = m_pOwner->MessageBox(W2T(text), W2T(dialogTitle), MB_YESNO | MB_ICONQUESTION);
 	*_retval = (nAnswer == IDYES) ? PR_TRUE : PR_FALSE;
     return NS_OK;
 }
 
 /* boolean confirmCheck (in wstring text, in wstring checkMsg, out boolean checkValue); */
-NS_IMETHODIMP CWebBrowserContainer::ConfirmCheck(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
+NS_IMETHODIMP CWebBrowserContainer::ConfirmCheck(const PRUnichar* dialogTitle, const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
 {
 	USES_CONVERSION;
 
 	// TODO show dialog with check box
 
-	int nAnswer = m_pOwner->MessageBox(W2T(text), _T("Confirm"), MB_YESNO | MB_ICONQUESTION);
+	int nAnswer = m_pOwner->MessageBox(W2T(text), W2T(dialogTitle), MB_YESNO | MB_ICONQUESTION);
 	*_retval = (nAnswer == IDYES) ? PR_TRUE : PR_FALSE;
     return NS_OK;
 }
 
 /* boolean prompt (in wstring text, in wstring defaultText, out wstring result); */
-NS_IMETHODIMP CWebBrowserContainer::Prompt(const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
+NS_IMETHODIMP CWebBrowserContainer::Prompt(const PRUnichar* dialogTitle, const PRUnichar *text, const PRUnichar* passwordRealm,
+                                           const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* boolean promptUsernameAndPassword (in wstring text, out wstring user, out wstring pwd); */
-NS_IMETHODIMP CWebBrowserContainer::PromptUsernameAndPassword(const PRUnichar *text, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
+NS_IMETHODIMP CWebBrowserContainer::PromptUsernameAndPassword(const PRUnichar* dialogTitle, const PRUnichar *text, 
+                                                              const PRUnichar* passwordRealm, PRBool persistPassword,
+                                                              PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* boolean promptPassword (in wstring text, in wstring title, out wstring pwd); */
-NS_IMETHODIMP CWebBrowserContainer::PromptPassword(const PRUnichar *text, const PRUnichar *title, PRUnichar **pwd, PRBool *_retval)
+NS_IMETHODIMP CWebBrowserContainer::PromptPassword(const PRUnichar* dialogTitle, const PRUnichar *text, 
+                                                   const PRUnichar* passwordRealm, PRBool persistPassword,
+                                                   PRUnichar **pwd, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

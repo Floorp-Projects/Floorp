@@ -66,7 +66,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsTextFormatter.h"
 #include "nsIWebShell.h"
-#include "nsINetPrompt.h"
+#include "nsIPrompt.h"
 #include "nsIAppShellService.h"
 #include "nsMailHeaders.h"
 #include "nsIDocShell.h"
@@ -2811,13 +2811,11 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 	  NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(aFileSpec));
 
     // rhp: we don't always have a mDocShell...
-    nsCOMPtr<nsINetPrompt> netPrompt = nsnull;
+    nsCOMPtr<nsIPrompt> netPrompt;
     nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
     if (webShell)
     {
-      nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-      rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
-      netPrompt = do_QueryInterface(topLevelWindow, &rv);
+      netPrompt = do_GetInterface(webShell, &rv);
     }
     else
     {
@@ -2829,7 +2827,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
         appshellservice->GetHiddenWindow(getter_AddRefs(xulWindow));
         if (xulWindow)
         {
-          netPrompt = do_QueryInterface(xulWindow, &rv);
+          netPrompt = do_GetInterface(xulWindow, &rv);
         }
       }
     }

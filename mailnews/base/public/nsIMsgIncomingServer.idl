@@ -103,7 +103,7 @@ interface nsIMsgIncomingServer : nsISupports {
 
   
   /* the RDF URI for the root mail folder */
-  readonly attribute string serverURI;
+  readonly attribute string serverPasswordRealm;
 
   /* the root folder for this server */
   attribute nsIFolder RootFolder;

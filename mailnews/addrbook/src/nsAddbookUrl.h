@@ -28,7 +28,6 @@
 #include "nsIFileSpec.h"
 #include "nsIMsgIdentity.h"
 #include "nsCOMPtr.h"
-#include "nsINetPrompt.h"
 #include "nsISmtpServer.h"
 #include "nsIAddbookUrl.h"
 #include "nsAbCardProperty.h"

@@ -1046,7 +1046,7 @@ nsWebShell::OnOverLink(nsIContent* aContent,
 NS_IMETHODIMP
 nsWebShell::GetLinkState(const nsString& aLinkURI, nsLinkState& aState)
 {
-   aState = eLinkState_Unvisited;
+  aState = eLinkState_Unvisited;
 
    if(mGlobalHistory)
       {
@@ -1276,7 +1276,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
          errorMsg.AppendWithConversion(' ');
          errorMsg.Append(messageStr);
 
-         prompter->Alert(errorMsg.GetUnicode());
+         prompter->Alert(nsnull, errorMsg.GetUnicode());
          } 
       else if(aStatus == NS_ERROR_CONNECTION_REFUSED)
          {// Doc failed to load because we couldn't connect to the server.
@@ -1304,7 +1304,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             errorMsg.AppendInt(port);
             }
          errorMsg.AppendWithConversion('.');
-         prompter->Alert(errorMsg.GetUnicode());
+         prompter->Alert(nsnull, errorMsg.GetUnicode());
          } 
       else if(aStatus == NS_ERROR_NET_TIMEOUT)
          {// Doc failed to load because the socket function timed out.
@@ -1326,7 +1326,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
          errorMsg.AppendWithConversion(host);
          errorMsg.AppendWithConversion('.');
 
-         prompter->Alert(errorMsg.GetUnicode());            
+         prompter->Alert(nsnull, errorMsg.GetUnicode());            
          } // end NS_ERROR_NET_TIMEOUT
       } // end mDocLoader == loader
 

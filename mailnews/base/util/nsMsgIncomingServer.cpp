@@ -44,7 +44,7 @@
 #include "nsIDocShell.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
-#include "nsINetPrompt.h"
+#include "nsIPrompt.h"
 #include "nsIWalletService.h"
 
 #include "nsIRDFService.h"
@@ -52,6 +52,7 @@
 #include "nsAppShellCIDs.h"
 #include "nsIXULWindow.h"
 #include "nsRDFCID.h"
+#include "nsIInterfaceRequestor.h"
 
 #ifdef DEBUG_sspitzer
 #define DEBUG_MSGINCOMING_SERVER
@@ -181,7 +182,7 @@ nsMsgIncomingServer::CloseCachedConnections()
 
 // construct <localStoreType>://[<username>@]<hostname
 NS_IMETHODIMP
-nsMsgIncomingServer::GetServerURI(char **aResult)
+nsMsgIncomingServer::GetServerPasswordRealm(char* *aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
     nsresult rv;
@@ -228,7 +229,7 @@ nsMsgIncomingServer::CreateRootFolder()
 	nsresult rv;
 			  // get the URI from the incoming server
   nsXPIDLCString serverUri;
-  rv = GetServerURI(getter_Copies(serverUri));
+  rv = GetServerPasswordRealm(getter_Copies(serverUri));
   if (NS_FAILED(rv)) return rv;
 
   NS_WITH_SERVICE(nsIRDFService, rdf,
@@ -609,7 +610,7 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
     NS_ENSURE_ARG_POINTER(okayValue);
 
     if (m_password.IsEmpty()) {
-        nsCOMPtr<nsINetPrompt> dialog;
+        nsCOMPtr<nsIPrompt> dialog;
         // aMsgWindow is required if we need to prompt
         if (aMsgWindow)
         {
@@ -617,13 +618,10 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
             nsCOMPtr<nsIDocShell> docShell;
             rv = aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
             if (NS_FAILED(rv)) return rv;
+
             nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell, &rv));
             if (NS_FAILED(rv)) return rv;
-            // get top level window
-            nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-            rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
-            if (NS_FAILED(rv)) return rv;
-            dialog =  do_QueryInterface( topLevelWindow, &rv );
+            dialog = do_GetInterface(webShell, &rv);
         }
         else
         {
@@ -641,10 +639,12 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 		{
             nsXPIDLString uniPassword;
 			nsXPIDLCString serverUri;
-			rv = GetServerURI(getter_Copies(serverUri));
+			rv = GetServerPasswordRealm(getter_Copies(serverUri));
 			if (NS_FAILED(rv)) return rv;
-			rv = dialog->PromptPassword(serverUri, PR_FALSE, aPromptTitle, aPromptMessage, getter_Copies(uniPassword), okayValue);
-            		if (NS_FAILED(rv)) return rv;
+			rv = dialog->PromptPassword(aPromptTitle, aPromptMessage, 
+                                        NS_ConvertToString(serverUri).GetUnicode(), PR_TRUE,
+                                        getter_Copies(uniPassword), okayValue);
+            if (NS_FAILED(rv)) return rv;
 				
 			if (!*okayValue) // if the user pressed cancel, just return NULL;
 			{
@@ -677,11 +677,11 @@ nsMsgIncomingServer::StorePassword()
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString serverUri;
-    rv = GetServerURI(getter_Copies(serverUri));
+    rv = GetServerPasswordRealm(getter_Copies(serverUri));
     if (NS_FAILED(rv)) return rv;
 
     nsAutoString password; password.AssignWithConversion((const char *)pwd);
-    rv = walletservice->SI_StorePassword((const char *)serverUri, PR_FALSE, nsnull, password.GetUnicode());
+    rv = walletservice->SI_StorePassword((const char *)serverUri, nsnull, password.GetUnicode());
     return rv;
 }
 
@@ -694,14 +694,14 @@ nsMsgIncomingServer::ForgetPassword()
 
     
     nsXPIDLCString serverUri;
-    rv = GetServerURI(getter_Copies(serverUri));
+    rv = GetServerPasswordRealm(getter_Copies(serverUri));
     if (NS_FAILED(rv)) return rv;
 
     rv = SetPassword("");
     if (NS_FAILED(rv)) return rv;
     
     
-    rv = walletservice->SI_RemoveUser((const char *)serverUri, PR_FALSE, nsnull);
+    rv = walletservice->SI_RemoveUser((const char *)serverUri, nsnull);
     return rv;
 }
 

@@ -300,7 +300,8 @@ char * PromptUserCallback(void *arg, char *prompt, int isPasswd)
     NS_WITH_PROXIED_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, NS_UI_THREAD_EVENTQ, &rv);
     
     if (NS_SUCCEEDED(rv)) {
-	    rv = dialog->PromptPassword(NS_ConvertASCIItoUCS2(prompt).GetUnicode(), NS_ConvertASCIItoUCS2(" ").GetUnicode(), &password, &value);
+	    rv = dialog->PromptPassword(nsnull, NS_ConvertASCIItoUCS2(prompt).GetUnicode(),
+                                  NS_ConvertASCIItoUCS2(" ").GetUnicode(), PR_TRUE, &password, &value);
 
         if (NS_SUCCEEDED(rv)) {
             nsString a(password);

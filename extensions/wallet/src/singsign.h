@@ -44,33 +44,33 @@ extern void
 SINGSIGN_SignonViewerReturn(nsAutoString results);
 
 extern void
-SINGSIGN_RestoreSignonData(char* URLName, PRUnichar* name, PRUnichar** value, PRUint32 elementNumber);
+SINGSIGN_RestoreSignonData(char* passwordRealm, PRUnichar* name, PRUnichar** value, PRUint32 elementNumber);
 
 extern nsresult
 SINGSIGN_PromptUsernameAndPassword
-    (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     const char *urlname,nsIPrompt* dialog, PRBool *returnValue, PRBool strip);
+    (const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
+     const char* passwordRealm, nsIPrompt* dialog, PRBool *returnValue, PRBool persistPassword = PR_TRUE);
 
 extern nsresult
 SINGSIGN_PromptPassword
-    (const PRUnichar *text, PRUnichar **pwd, const char *urlname,
-    nsIPrompt* dialog, PRBool *returnValue, PRBool strip);
+    (const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **pwd, const char* passwordRealm,
+     nsIPrompt* dialog, PRBool *returnValue, PRBool persistPassword = PR_TRUE);
 
 extern nsresult
 SINGSIGN_Prompt
-    (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
-     const char *urlname,nsIPrompt* dialog, PRBool *returnValue, PRBool strip);
+    (const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
+     const char* passwordRealm, nsIPrompt* dialog, PRBool *returnValue);
 
 extern PRBool
 SINGSIGN_RemoveUser
-    (const char *URLName, const PRUnichar *userName, PRBool strip);
+    (const char* passwordRealm, const PRUnichar *userName);
 
 extern PRBool
 SINGSIGN_StorePassword
-    (const char *URLName, const PRUnichar *userName, const PRUnichar *password, PRBool strip);
+    (const char* passwordRealm, const PRUnichar *userName, const PRUnichar *password);
 
 extern nsresult
-SINGSIGN_HaveData(const char *url, const PRUnichar *userName, PRBool strip, PRBool *retval);
+SINGSIGN_HaveData(const char* passwordRealm, const PRUnichar *userName, PRBool *retval);
 
 
 XP_END_PROTOS

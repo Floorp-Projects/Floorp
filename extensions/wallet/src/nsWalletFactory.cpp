@@ -34,6 +34,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWalletlibService)
 static nsModuleComponentInfo components[] = {
     { NS_WALLETSERVICE_CLASSNAME, NS_WALLETSERVICE_CID,
       NS_WALLETSERVICE_PROGID, nsWalletlibServiceConstructor },
+    { NS_SINGLESIGNONPROMPT_CLASSNAME, NS_SINGLESIGNONPROMPT_CID,
+      NS_SINGLESIGNONPROMPT_PROGID, nsSingleSignOnPrompt::Create }
 };
 
 NS_IMPL_NSGETMODULE("nsWalletModule", components)

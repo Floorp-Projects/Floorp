@@ -1519,8 +1519,9 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
             if (docShell) dialog = do_GetInterface(docShell);
             PRUnichar *moveToTrashStr = IMAPGetStringByID(IMAP_MOVE_FOLDER_TO_TRASH);
 
-            if (dialog && moveToTrashStr)
-                dialog->Confirm (moveToTrashStr, &moveToTrash);
+            if (dialog && moveToTrashStr) {
+                dialog->Confirm(nsnull, moveToTrashStr, &moveToTrash);
+            }
                 
             for (i = 0; i < folderCount; i++)
             {

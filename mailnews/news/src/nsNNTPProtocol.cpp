@@ -84,7 +84,8 @@
 #include "nsIPref.h"
 
 #include "nsIMsgWindow.h"
-#include "nsINetPrompt.h"
+#include "nsIWebShell.h"
+#include "nsIWebShellWindow.h"
 #include "nntpCore.h"
 
 #undef GetPort  // XXX Windows!
@@ -3867,7 +3868,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
   
       if (!cancelInfo.from) {
           GetNewsStringByName("cancelDisallowed", getter_Copies(alertText));
-          rv = dialog->Alert(alertText);
+          rv = dialog->Alert(nsnull, alertText);
 		  // XXX:  todo, check rv?
           
           status = MK_NNTP_CANCEL_DISALLOWED;
@@ -3892,7 +3893,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
 	/* Last chance to cancel the cancel.
 	*/
 	GetNewsStringByName("cancelConfirm", getter_Copies(confirmText));
-	rv = dialog->Confirm(confirmText, &confirmCancelResult);
+	rv = dialog->Confirm(nsnull, confirmText, &confirmCancelResult);
 	// XXX:  todo, check rv?
   } 
   else {
@@ -3965,7 +3966,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
 	rv = prefs->GetBoolPref(PREF_NEWS_CANCEL_ALERT_ON_SUCCESS, &showAlertAfterCancel);
 	if (NS_FAILED(rv) || showAlertAfterCancel) {
 		GetNewsStringByName("messageCancelled", getter_Copies(alertText));
-		rv = dialog->Alert(alertText);
+		rv = dialog->Alert(nsnull, alertText);
 		// XXX:  todo, check rv?
 	}
 

@@ -58,7 +58,7 @@
 #include "nsIMsgWindow.h"
 #include "nsIDocShell.h"
 #include "nsIWebShell.h"
-#include "nsINetPrompt.h"
+#include "nsIPrompt.h"
 
 #include "nsXPIDLString.h"
 
@@ -70,6 +70,7 @@
 #include "nsIAppShellService.h"
 #include "nsIXULWindow.h"
 #include "nsAppShellCIDs.h"
+#include "nsIInterfaceRequestor.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -1373,7 +1374,7 @@ NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupUsername()
     rv = CreateNewsgroupUsernameUrlForSignon(mURI, getter_Copies(signonURL));
     if (NS_FAILED(rv)) return rv;
 
-    rv = walletservice->SI_RemoveUser((const char *)signonURL, PR_FALSE, nsnull);
+    rv = walletservice->SI_RemoveUser((const char *)signonURL, nsnull);
     return rv;
 }
 
@@ -1390,7 +1391,7 @@ NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupPassword()
     rv = CreateNewsgroupPasswordUrlForSignon(mURI, getter_Copies(signonURL));
     if (NS_FAILED(rv)) return rv;
 
-    rv = walletservice->SI_RemoveUser((const char *)signonURL, PR_FALSE, nsnull);
+    rv = walletservice->SI_RemoveUser((const char *)signonURL, nsnull);
     return rv;
 }
 
@@ -1400,32 +1401,28 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
                                        nsIMsgWindow* aMsgWindow,
                                        char **aGroupPassword)
 {
-    nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
 
-    NS_ENSURE_ARG_POINTER(aGroupPassword);
+  NS_ENSURE_ARG_POINTER(aGroupPassword);
 
-    if (!mGroupPassword) {
-        // prompt the user for the password
+  if (!mGroupPassword) {
+    // prompt the user for the password
+        
+		nsCOMPtr<nsIPrompt> dialog;
 
-        nsCOMPtr<nsINetPrompt> dialog;
-
-        NS_ASSERTION(aMsgWindow,"no msg window, fix this, for now, use the hidden window");
+    NS_ASSERTION(aMsgWindow,"no msg window, fix this, for now, use the hidden window");
 		if (aMsgWindow) {
-            nsCOMPtr<nsIDocShell> docShell;
+      nsCOMPtr<nsIDocShell> docShell;
 
-            rv = aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
-            if (NS_FAILED(rv)) return rv;
+      rv = aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
+      if (NS_FAILED(rv)) return rv;
 
-            nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell, &rv));
-            if (NS_FAILED(rv)) return rv;
+      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell, &rv));
+      if (NS_FAILED(rv)) return rv;
 
-            // get top level window
-            nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-            rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
-            if (NS_FAILED(rv)) return rv;
-			dialog = do_QueryInterface(topLevelWindow, &rv);
+      dialog = do_GetInterface(webShell, &rv);
 			if (NS_FAILED(rv)) return rv;
-        }
+    }
 		else {
 			nsCOMPtr <nsIAppShellService> appshellservice = do_GetService(kAppShellServiceCID, &rv);
 			if (NS_FAILED(rv)) return rv;
@@ -1436,39 +1433,41 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
 			if (NS_FAILED(rv)) return rv;
 			if (!xulWindow) return NS_ERROR_FAILURE;
 
-			dialog = do_QueryInterface(xulWindow, &rv);
+			dialog = do_GetInterface(xulWindow, &rv);
 			if (NS_FAILED(rv)) return rv;
 		}
  
 		NS_ASSERTION(dialog,"we didn't get a net prompt");
-        if (dialog) {
-            nsXPIDLString uniGroupPassword;
+    if (dialog) {
+      nsXPIDLString uniGroupPassword;
 
-            PRBool okayValue = PR_TRUE;
+      PRBool okayValue = PR_TRUE;
             
-            nsXPIDLCString signonURL;
-            rv = CreateNewsgroupPasswordUrlForSignon(mURI, getter_Copies(signonURL));
-            if (NS_FAILED(rv)) return rv;
+      nsXPIDLCString signonURL;
+      rv = CreateNewsgroupPasswordUrlForSignon(mURI, getter_Copies(signonURL));
+      if (NS_FAILED(rv)) return rv;
 
-            rv = dialog->PromptPassword((const char *)signonURL, PR_FALSE, aPromptTitle, aPromptMessage, getter_Copies(uniGroupPassword), &okayValue);
-            if (NS_FAILED(rv)) return rv;
+      nsAutoString realm = NS_ConvertToString(signonURL);
+      rv = dialog->PromptPassword(aPromptTitle, aPromptMessage, realm.GetUnicode(), PR_TRUE,
+                                  getter_Copies(uniGroupPassword), &okayValue);
+      if (NS_FAILED(rv)) return rv;
 
-            if (!okayValue) // if the user pressed cancel, just return NULL;
-            {
-                *aGroupPassword = nsnull;
-                return rv;
-            }
+      if (!okayValue) // if the user pressed cancel, just return NULL;
+      {
+        *aGroupPassword = nsnull;
+        return rv;
+      }
 
-            // we got a password back...so remember it
-            nsCString aCStr; aCStr.AssignWithConversion(uniGroupPassword);
-            rv = SetGroupPassword((const char *) aCStr);
-            if (NS_FAILED(rv)) return rv;
+      // we got a password back...so remember it
+      nsCString aCStr; aCStr.AssignWithConversion(uniGroupPassword);
+      rv = SetGroupPassword((const char *) aCStr);
+      if (NS_FAILED(rv)) return rv;
 
-        } // if we got a prompt dialog
-    } // if the password is empty
+    } // if we got a prompt dialog
+  } // if the password is empty
 
-    rv = GetGroupPassword(aGroupPassword);
-    return rv;
+  rv = GetGroupPassword(aGroupPassword);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1484,23 +1483,19 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
     if (!mGroupUsername) {
         // prompt the user for the username
         
-		nsCOMPtr<nsINetPrompt> dialog;
+		nsCOMPtr<nsIPrompt> dialog;
 
 		NS_ASSERTION(aMsgWindow,"no msg window, fix this, for now, use the hidden window");
 		if (aMsgWindow) {
-            // prompt the user for the password
-            nsCOMPtr<nsIDocShell> docShell;
-            rv = aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
-            if (NS_FAILED(rv)) return rv;
-            nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell, &rv));
-            if (NS_FAILED(rv)) return rv;
-            // get top level window
-            nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-            rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
-            if (NS_FAILED(rv)) return rv;
-            dialog = do_QueryInterface(topLevelWindow, &rv);
+      // prompt the user for the password
+      nsCOMPtr<nsIDocShell> docShell;
+      rv = aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
+      if (NS_FAILED(rv)) return rv;
+      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell, &rv));
+      if (NS_FAILED(rv)) return rv;
+      dialog = do_GetInterface(webShell, &rv);
 			if (NS_FAILED(rv)) return rv;
-        }
+    }
 		else {
 			nsCOMPtr <nsIAppShellService> appshellservice = do_GetService(kAppShellServiceCID, &rv);
 			if (NS_FAILED(rv)) return rv;
@@ -1511,7 +1506,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
 			if (NS_FAILED(rv)) return rv;
 			if (!xulWindow) return NS_ERROR_FAILURE;
 
-			dialog = do_QueryInterface(xulWindow, &rv);
+			dialog = do_GetInterface(xulWindow, &rv);
 			if (NS_FAILED(rv)) return rv;
 		}
  
@@ -1525,7 +1520,9 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
             rv = CreateNewsgroupUsernameUrlForSignon(mURI, getter_Copies(signonURL));
             if (NS_FAILED(rv)) return rv;
 
-            rv = dialog->Prompt((const char *)signonURL, PR_FALSE, aPromptTitle, aPromptMessage, getter_Copies(uniGroupUsername), &okayValue);
+            nsAutoString realm = NS_ConvertToString(signonURL);
+            rv = dialog->Prompt(aPromptTitle, aPromptMessage, realm.GetUnicode(), nsnull,
+                                getter_Copies(uniGroupUsername), &okayValue);
             if (NS_FAILED(rv)) return rv;
 
             if (!okayValue) // if the user pressed cancel, just return NULL;

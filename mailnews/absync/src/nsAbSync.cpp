@@ -279,7 +279,7 @@ nsAbSync::DisplayErrorMessage(const PRUnichar * msg)
 
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
   if (NS_FAILED(rv)) return rv;
-  rv = dialog->Alert(msg);
+  rv = dialog->Alert(nsnull, msg);
   return NS_OK;
 }
 
