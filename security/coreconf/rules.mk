@@ -862,8 +862,10 @@ $(SOURCE_RELEASE_XP_DIR)/include::
 		$(NSINSTALL) -D $@; \
 	fi
 
-release_export:: $(EXPORTS) $(SOURCE_RELEASE_XP_DIR)/include
-	$(INSTALL) -m 444 $(EXPORTS) $(SOURCE_RELEASE_XP_DIR)/include
+release_export:: $(SOURCE_RELEASE_XP_DIR)/include
+
+release_export:: $(EXPORTS)
+	$(INSTALL) -m 444 $^ $(SOURCE_RELEASE_XP_DIR)/include
 endif
 
 
