@@ -683,12 +683,12 @@ Contributor(s):
   
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar"
              fullscreentoolbar="true" mode="icons"
-             defaultset="back-button,forward-button,urlbar-container,reload-button,stop-button"
+             defaultset="back-button,forward-button,reload-button,stop-button,urlbar-container,throbber-box"
              context="toolbar-context-menu">
         <toolbarpalette>
           <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
                          label="&backCmd.label;"
-                         command="Browser:Back"
+						 command="Browser:Back"
                          context="backMenu"
                          tooltiptext="&backButton.tooltip;">
             <menupopup context="" onpopupshowing="BrowserBackMenu(event);"
