@@ -205,8 +205,11 @@ var downloadViewController = {
     switch (aCommand) {
     case "cmd_properties":
       selectedItem = getSelectedItem();
-      if (selectedItem && gDownloadManager.getDownload(selectedItem.id))
-        gDownloadManager.openProgressDialogFor(selectedItem.id, window, false);
+      var dl;
+      if (selectedItem)
+        dl = gDownloadManager.getDownload(selectedItem.id);
+      if (dl)
+        gDownloadManager.openProgressDialogFor(dl, window, false);
       break;
     case "cmd_openfile":
       selectedItem = getSelectedItem();

@@ -131,8 +131,8 @@ interface nsIDownloadManager : nsISupports {
   /**
   * Opens an individual progress dialog displaying progress for the download.
   *
-  * @param aTargetPath           The target path of the download to
-  *                              display progress for.
+  * @param aDownload The download object to display progress for, as returned
+  *                  by getDownload or addDownload.
   *
   * @param aParent The parent, or opener, of the front end (optional).
   *
@@ -140,7 +140,7 @@ interface nsIDownloadManager : nsISupports {
   *                                     should cancel the download.
   */
 
-  void openProgressDialogFor(in AUTF8String aTargetPath,
+  void openProgressDialogFor(in nsIDownload aDownload,
                              in nsIDOMWindow aParent,
                              in boolean aCancelDownloadOnClose);
 

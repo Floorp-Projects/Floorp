@@ -82,14 +82,7 @@ public:
     if (behavior == 0)
       rv = dm->Open(nsnull, this);
     else if (behavior == 1) {
-      nsAutoString path;
-      rv = aTarget->GetPath(path);
-      if (NS_FAILED(rv))
-        return rv;
-
-      NS_ConvertUCS2toUTF8 utf8Path(path);
-      rv = dm->OpenProgressDialogFor(utf8Path, nsnull, PR_TRUE);
-    }
+      rv = dm->OpenProgressDialogFor(mInner, nsnull, PR_TRUE);
     return rv;
   }
 
