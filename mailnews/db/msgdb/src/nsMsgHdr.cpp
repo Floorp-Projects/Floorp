@@ -298,7 +298,7 @@ NS_IMETHODIMP nsMsgHdr::SetAuthor(const char *author)
 
 NS_IMETHODIMP nsMsgHdr::SetReferences(const char *references)
 {
-	nsCString reference;
+	nsCAutoString reference;
 
 	for (const char *startNextRef = references; startNextRef != nsnull;)
 	{
@@ -666,8 +666,8 @@ PRBool nsMsgHdr::IsParentOf(nsIMsgDBHdr *possibleChild)
 {
 	PRUint16 numReferences = 0;
 	possibleChild->GetNumReferences(&numReferences);
-	nsCString reference;
-	nsCString messageId;
+	nsCAutoString reference;
+	nsCAutoString messageId;
 
 	GetMessageId(&messageId);
 	possibleChild->GetStringReference(numReferences - 1, reference);

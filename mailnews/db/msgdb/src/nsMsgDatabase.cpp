@@ -2102,7 +2102,7 @@ nsresult nsMsgDatabase::RowCellColumnTonsCString(nsIMdbRow *hdrRow, mdb_token co
 nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr)
 {
 	nsresult err;
-	nsString nakedString;
+	nsAutoString nakedString;
 	err = RowCellColumnTonsString(row, columnToken, nakedString);
 	if (NS_SUCCEEDED(err) && nakedString.Length() > 0)
 	{
@@ -2113,8 +2113,8 @@ nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_to
 
 		if (NS_SUCCEEDED(err) && nsnull != converter) 
 		{
-			nsString charset;
-			nsString decodedStr;
+			nsAutoString charset;
+			nsAutoString decodedStr;
 			m_dbFolderInfo->GetCharacterSet(&charset);
 			err = converter->DecodeMimePartIIStr(nakedString, charset, resultStr);
 			NS_RELEASE(converter);
@@ -2163,7 +2163,7 @@ nsresult nsMsgDatabase::GetCollationKeyGenerator()
 
 nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr)
 {
-	nsString nakedString;
+	nsAutoString nakedString;
 	nsresult err;
 
 	err = RowCellColumnToMime2DecodedString(row, columnToken, nakedString);
@@ -2476,7 +2476,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 #define SUBJ_THREADING 1// try reference threading first
 	for (PRInt32 i = numReferences - 1; i >= 0;  i--)
 	{
-		nsCString reference;
+		nsCAutoString reference;
 
 		newHdr->GetStringReference(i, reference);
 		// first reference we have hdr for is best top-level hdr.
