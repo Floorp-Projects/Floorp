@@ -2116,18 +2116,19 @@ nsChromeRegistry::GetProfileRoot(nsCString& aFileURL)
      rv = userChromeDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
    if (NS_FAILED(rv))
      return rv;
-       
-   nsXPIDLCString filePath;
-   rv = userChromeDir->GetPath(getter_Copies(filePath));
+   
+   nsXPIDLCString urlSpec;   
+   nsCOMPtr<nsIFileURL> url = do_CreateInstance("@mozilla.org/network/standard-url;1", &rv);
    if (NS_FAILED(rv))
      return rv;
-  
-   nsFileSpec chromeFile(filePath);
-   nsFileURL fileURL(chromeFile);
-   
-   const char* fileStr = fileURL.GetURLString();
-   aFileURL = fileStr;
-   
+   rv = url->SetFile(userChromeDir);
+   if (NS_FAILED(rv))
+     return rv;
+   rv = url->GetSpec(getter_Copies(urlSpec));
+   if (NS_FAILED(rv))
+     return rv;
+   aFileURL = urlSpec;
+         
    return NS_OK;
 }
 
@@ -2143,15 +2144,18 @@ nsChromeRegistry::GetInstallRoot(nsCString& aFileURL)
   if (NS_FAILED(rv) || !appChromeDir)
     return NS_ERROR_FAILURE;
 
-  nsXPIDLCString filePath;
-  rv = appChromeDir->GetPath(getter_Copies(filePath));
+  nsXPIDLCString urlSpec;   
+  nsCOMPtr<nsIFileURL> url = do_CreateInstance("@mozilla.org/network/standard-url;1", &rv);
   if (NS_FAILED(rv))
     return rv;
-  
-  nsFileSpec chromeFile(filePath);
-  nsFileURL fileURL(chromeFile);
-  const char* fileStr = fileURL.GetURLString();
-  aFileURL = fileStr;
+  rv = url->SetFile(appChromeDir);
+  if (NS_FAILED(rv))
+    return rv;
+  rv = url->GetSpec(getter_Copies(urlSpec));
+  if (NS_FAILED(rv))
+    return rv;
+  aFileURL = urlSpec;
+
   return NS_OK; 
 }
 
