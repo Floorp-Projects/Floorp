@@ -150,7 +150,7 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
 
         // Okay, now we'll suck stuff off of our iterator into the mBuf...
         while (PRUint32(mBuf.Length()) < aCount && mIter->Exists()) {
-            nsFileSpec current = mIter->Spec();
+            const nsFileSpec& current = mIter->Spec();
             ++(*mIter);
 
             PRFileInfo fileinfo;
