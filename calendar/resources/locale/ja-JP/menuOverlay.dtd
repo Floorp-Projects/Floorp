@@ -39,81 +39,86 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!-- Event Menu -->                                      
+<!-- Event Menu -->
 <!ENTITY event.menu.title   "イベント">
 <!ENTITY eventMenuCmd.accesskey     "v">
 
-<!ENTITY event.new.event		"新しいイベント">
-<!ENTITY event.new.event.accesskey "n">
+<!ENTITY event.new.event           "新しいイベント">
+<!ENTITY event.new.event.accesskey "N">
 
-<!ENTITY event.new.todo		"新しい ToDo">
-<!ENTITY event.new.todo.accesskey "t">
+<!ENTITY event.new.todo     "新しい ToDo">
+<!ENTITY event.new.todo.accesskey "T">
 
-<!ENTITY calendar.new.server.label "新しいカレンダー">
+<!ENTITY calendar.new.server.label "New Calendar">
 <!ENTITY calendar.new.server.accesskey "l">
 
-<!ENTITY event.edit.event	"編集">
-<!ENTITY event.edit.event.accesskey	"e">
+<!ENTITY event.edit.event   "編集">
+<!ENTITY event.edit.event.accesskey "E">
 
-<!ENTITY event.delete.event	"選択イベントを削除">
-<!ENTITY event.delete.event.accesskey	"d">
+<!ENTITY event.delete.event "選択イベントを削除)">
+<!ENTITY event.delete.event.accesskey   "D">
 
-<!ENTITY event.delete.tasks	"選択 ToDo を削除">
-<!ENTITY event.delete.tasks.accesskey	"t">
+<!ENTITY event.delete.tasks "選択 ToDo を削除)">
+<!ENTITY event.delete.tasks.accesskey   "T">
 
-<!ENTITY event.mail.event	"選択イベントを送信">
-<!ENTITY event.mail.event.accesskey	"m">
+<!ENTITY event.mail.event   "選択イベントを送信">
+<!ENTITY event.mail.event.accesskey "M">
 
-<!ENTITY calendar.print.label	"アクティブなカレンダを印刷...">
-<!ENTITY calendar.print.accesskey	"r">
+<!ENTITY calendar.print.label   "アクティブなカレンダを印刷...">
+<!ENTITY calendar.print.accesskey   "P">
 
-<!ENTITY calendar.printpreview.label	"印刷プレビュー">
-<!ENTITY calendar.printpreview.accesskey	"v">
+<!ENTITY calendar.printpreview.label    "印刷プレビュー">
+<!ENTITY calendar.printpreview.accesskey    "v">
 
-<!ENTITY calendar.pagesetup.label	"ページ設定...">
-<!ENTITY calendar.pagesetup.accesskey	"u">
+<!ENTITY calendar.pagesetup.label   "ページ設定...">
+<!ENTITY calendar.pagesetup.accesskey   "u">
 
-<!ENTITY calendar.import.label	"ファイルからインポート...">
-<!ENTITY calendar.import.accesskey	"i">
+<!ENTITY calendar.import.label  "ファイルからインポート...">
+<!ENTITY calendar.import.accesskey  "I">
 
-<!ENTITY calendar.wizard.label	"ウィザード起動">
-<!ENTITY calendar.wizard.accesskey	"w">
+<!ENTITY calendar.wizard.label  "ウィザード起動">
+<!ENTITY calendar.wizard.accesskey  "W">
 
-<!ENTITY calendar.export.label	"選択イベントをエクスポート...">
-<!ENTITY calendar.export.accesskey	"e">
+<!ENTITY calendar.export.label  "選択イベントをエクスポート...">
+<!ENTITY calendar.export.accesskey  "E">
 
 <!ENTITY calendar.subscribe.label "別のカレンダーを購読...">
-<!ENTITY calendar.subscribe.accesskey "s">
+<!ENTITY calendar.subscribe.accesskey "R">
 
 <!ENTITY calendar.publish.label "選択イベントを公開...">
-<!ENTITY calendar.publish.accesskey "p">
+<!ENTITY calendar.publish.accesskey "S">
 
-<!ENTITY calendar.about.label	"Calendar について">
-<!ENTITY calendar.about.accesskey	"a">
+<!ENTITY calendar.about.label   "Calendar について">
+<!ENTITY calendar.about.accesskey   "C">
 
-<!ENTITY calendar.cut.label	"切り取り">
-<!ENTITY calendar.cut.accesskey	"t">
+<!ENTITY calendar.cut.label "切り取り">
+<!ENTITY calendar.cut.accesskey "t">
 
-<!ENTITY calendar.copy.label	"コピー">
-<!ENTITY calendar.copy.accesskey	"c">
+<!ENTITY calendar.copy.label    "コピー">
+<!ENTITY calendar.copy.accesskey    "C">
 
-<!ENTITY calendar.paste.label	"貼り付け">
-<!ENTITY calendar.paste.accesskey	"p">
+<!ENTITY calendar.paste.label   "貼り付け">
+<!ENTITY calendar.paste.accesskey   "P">
 
-<!ENTITY calendar.selectall.label	"すべて選択">
-<!ENTITY calendar.selectall.accesskey	"a">
+<!ENTITY calendar.selectall.label   "すべて選択">
+<!ENTITY calendar.selectall.accesskey   "A">
 
-<!ENTITY calendar.preferences.label	"設定...">
-<!ENTITY calendar.preferences.accesskey	"p">
+<!ENTITY calendar.preferences.label "設定...">
+<!ENTITY calendar.preferences.accesskey "e">
 
 <!ENTITY goMenu.label                   "移動">
-<!ENTITY goMenu.accesskey               "g">
+<!ENTITY goMenu.accesskey               "G">
 
 <!ENTITY goTodayCmd.label               "今日へ移動">
-<!ENTITY goTodayCmd.accesskey           "t">
+<!ENTITY goTodayCmd.accesskey           "T">
 
-<!ENTITY goPreviousCmd.label            "1 つ前のコマンド">
-<!ENTITY goPreviousCmd.accesskey        "p">
+<!ENTITY goPreviousCmd.label            "前へ">
+<!ENTITY goPreviousCmd.accesskey        "P">
 
-<!ENTITY goNextCmd.label                "次のコマンド">
-<!ENTITY goNextCmd.accesskey            "n">
+<!ENTITY goNextCmd.label                "次へ">
+<!ENTITY goNextCmd.accesskey            "N">
+
+<!ENTITY taskMenu.label                "ツール">
+<!ENTITY taskMenu.accesskey            "T">
+
+<!ENTITY helpMenu.accesskey            "H">

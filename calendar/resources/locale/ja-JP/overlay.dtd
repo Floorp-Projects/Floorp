@@ -1,4 +1,4 @@
-<!-- Translated to Japanese by Teiji Matsuba <matsuba@dream.com> -->
-<!ENTITY calendarCmd.label	"Calendar">  
-<!ENTITY calendarCmd.accesskey	"r">  
-<!ENTITY calendarCmd.commandkey	"7">  
+<!-- Translated to Japanese Teiji Matsuba <matsuba@dream.com> -->
+<!ENTITY calendarCmd.label  "Calendar">
+<!ENTITY calendarCmd.accesskey  "r">
+<!ENTITY calendarCmd.commandkey "7">

@@ -41,7 +41,7 @@
 
 <!ENTITY calendar.label             "Calendar" >
 <!ENTITY calendarPanel.label        "Calendar" >
-<!ENTITY calendar.accesskey         "c" >
+<!ENTITY calendar.accesskey         "C" >
 <!ENTITY calendar.publish.label     "公開">
 <!ENTITY calendar.alarms.label      "アラーム">
 <!ENTITY calendar.views.label       "ビュー">
@@ -88,7 +88,6 @@
 <!ENTITY pref.numberofweeks.6      "6 週間" >
 <!ENTITY pref.numberofpreviousweeks.label     "前週の数:" >
 
-
 <!ENTITY pref.hour.help.description    "イベントがこの時間帯以外の場合に書き直す" >
 <!ENTITY pref.hour.00    "00:00" >
 <!ENTITY pref.hour.01    "01:00" >
@@ -116,15 +115,15 @@
 <!ENTITY pref.hour.23    "23:00" >
 
 <!ENTITY pref.calendar.view.allview.caption "全般">
-<!ENTITY pref.calendar.view.dayview.caption "デービュー"> 
-<!ENTITY pref.calendar.view.weekview.caption "ウィークビュー"> 
+<!ENTITY pref.calendar.view.dayview.caption "デービュー">
+<!ENTITY pref.calendar.view.weekview.caption "ウィークビュー">
 <!ENTITY pref.calendar.view.weekanddayview.caption "ウィークとデービュー">
 <!ENTITY pref.calendar.view.monthview.caption "マンスビュー">
-<!ENTITY pref.calendar.view.multiweekview.caption "マルチウィークビュー"> 
+<!ENTITY pref.calendar.view.multiweekview.caption "マルチウィークビュー">
 
-<!ENTITY pref.calendar.view.restrict.label "ビューを以下に制限する "> 
-<!ENTITY pref.calendar.view.starttime.label "開始時間:"> 
-<!ENTITY pref.calendar.view.endtime.label   "終了時間:"> 
+<!ENTITY pref.calendar.view.restrict.label "ビューを以下に制限する ">
+<!ENTITY pref.calendar.view.starttime.label "開始時間:">
+<!ENTITY pref.calendar.view.endtime.label   "終了時間:">
 
 <!ENTITY pref.categories.label   "カテゴリ" >
 
@@ -140,7 +139,6 @@
 <!ENTITY pref.minutes.label "分">
 
 <!-- Calendar Timezone preferences information -->
-
 <!ENTITY pref.calendar.timezone.label "タイムゾーン">
 <!ENTITY pref.calendar.timezone.caption "タイムゾーン">
 <!ENTITY pref.defaultzone.label     "標準のタイムゾーン:" >
