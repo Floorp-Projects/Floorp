@@ -963,6 +963,7 @@ NS_IMETHODIMP nsLocalFile::IsHidden(PRBool *_retval)
 NS_IMETHODIMP nsLocalFile::IsDirectory(PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = PR_FALSE;
   
   FSRef fsRef;
   nsresult rv = GetFSRefInternal(fsRef);
@@ -982,6 +983,7 @@ NS_IMETHODIMP nsLocalFile::IsDirectory(PRBool *_retval)
 NS_IMETHODIMP nsLocalFile::IsFile(PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = PR_FALSE;
   
   FSRef fsRef;
   nsresult rv = GetFSRefInternal(fsRef);
