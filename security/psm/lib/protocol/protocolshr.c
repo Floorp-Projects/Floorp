@@ -53,6 +53,7 @@ CMT_DoEncryptionRequest(CMTItem *message)
   /* Initialize */
   request.keyid.data = 0;
   request.data.data = 0;
+  reply.item.data = 0;
 
   /* Decode incoming message */
   rv = CMT_DecodeMessage(EncryptRequestTemplate, &request, message);
@@ -82,6 +83,8 @@ CMT_DoEncryptionRequest(CMTItem *message)
 loser:
   if (request.keyid.data) free(request.keyid.data);
   if (request.data.data) free(request.data.data);
+  if (request.ctx.data) free(request.ctx.data);
+  if (reply.item.data) free(reply.item.data);
 
   return rv;
 }
@@ -96,7 +99,8 @@ CMT_DoDecryptionRequest(CMTItem *message)
   CMUint32 pLen = strlen(kPrefix);
 
   /* Initialize */
-  request.item.data = 0;
+  request.data.data = 0;
+  request.ctx.data = 0;
   reply.item.data = 0;
 
   /* Decode the message */
@@ -108,16 +112,16 @@ CMT_DoDecryptionRequest(CMTItem *message)
   message->data = NULL;
 
   /* "Decrypt" the message by removing the key */
-  if (pLen && memcmp(request.item.data, kPrefix, pLen) != 0) {
+  if (pLen && memcmp(request.data.data, kPrefix, pLen) != 0) {
     rv = CMTFailure;  /* Invalid format */
     goto loser;
   }
 
-  reply.item.len = request.item.len - pLen;
+  reply.item.len = request.data.len - pLen;
   reply.item.data = calloc(reply.item.len, 1);
   if (!reply.item.data) { rv = CMTFailure;  goto loser; }
 
-  memcpy(reply.item.data, &request.item.data[pLen], reply.item.len);
+  memcpy(reply.item.data, &request.data.data[pLen], reply.item.len);
   decrypt(&reply.item);
 
   /* Create reply message */
@@ -126,7 +130,8 @@ CMT_DoDecryptionRequest(CMTItem *message)
   if (rv != CMTSuccess) goto loser;
 
 loser:
-  if (request.item.data) free(request.item.data);
+  if (request.data.data) free(request.data.data);
+  if (request.ctx.data) free(request.ctx.data);
   if (reply.item.data) free(reply.item.data);
 
   return rv;
