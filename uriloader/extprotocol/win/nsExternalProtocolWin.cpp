@@ -68,7 +68,7 @@ PRBool GetCommandString( const char *pProtocol, nsCString& command)
 	//	<protocol>/shell/open/command
 	
 	PRBool	result = PR_FALSE;
-	nsCString	reg = pProtocol;
+	nsCString	reg(pProtocol);
 	reg.Append( "\\shell\\open\\command");
 	HKEY	hKey;
 	LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, reg, 0, KEY_QUERY_VALUE, &hKey);
