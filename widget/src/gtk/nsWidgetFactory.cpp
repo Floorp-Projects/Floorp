@@ -204,7 +204,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsISupports*)(nsWidget *)new nsTextWidget();
     }
     else if (mClassID.Equals(kCAppShell)) {
-        inst = (nsISupports*)(nsIAppShell*)new nsAppShell();
+        inst = (nsISupports*)new nsAppShell();
     }
     else if (mClassID.Equals(kCToolkit)) {
         inst = (nsISupports*)(nsWidget *)new nsToolkit();

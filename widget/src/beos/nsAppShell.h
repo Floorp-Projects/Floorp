@@ -41,6 +41,8 @@ class nsAppShell : public nsIAppShell
     virtual nsresult      Run(); 
     NS_IMETHOD          Spinup();
     NS_IMETHOD          Spindown();
+    NS_IMETHOD          ListenToEventQueue(nsIEventQueue *aQueue, PRBool aListen)
+                          { return NS_OK; }
     NS_IMETHOD          GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
     NS_IMETHOD          DispatchNativeEvent(PRBool aRealEvent, void * aEvent);
     NS_IMETHOD          EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
