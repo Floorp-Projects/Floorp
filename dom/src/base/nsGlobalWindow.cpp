@@ -521,6 +521,10 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
           //xblService->AttachGlobalDragHandler(rec);
         }
       }
+
+      nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(aDocument));
+
+      nsWindowSH::InstallGlobalScopePolluter(cx, mJSObject, nsnull, html_doc);
     }
 
     return NS_OK;
