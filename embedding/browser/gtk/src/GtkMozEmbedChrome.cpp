@@ -520,6 +520,12 @@ NS_IMETHODIMP GtkMozEmbedChrome::ShowAsModal(void)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP GtkMozEmbedChrome::ExitModalEventLoop(nsresult aStatus)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::ExitModalLoop\n"));
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 // nsIURIContentListener
 
 NS_IMETHODIMP GtkMozEmbedChrome::OnStartURIOpen(nsIURI *aURI, const char *aWindowTarget, PRBool *aAbortOpen)

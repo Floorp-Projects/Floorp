@@ -79,7 +79,7 @@ protected:
       PRBool aPrimary, const PRUnichar* aID);
    NS_IMETHOD SizeShellTo(nsIDocShellTreeItem* aShellItem, PRInt32 aCX, 
       PRInt32 aCY);
-   NS_IMETHOD ExitModalLoop();
+   NS_IMETHOD ExitModalLoop(nsresult aStatus);
    NS_IMETHOD GetNewWindow(PRInt32 aChromeFlags, 
       nsIDocShellTreeItem** aDocShellTreeItem);
    NS_IMETHOD CreateNewChromeWindow(PRInt32 aChromeFlags,
@@ -102,6 +102,7 @@ protected:
    nsCOMPtr<nsIWeakReference> mParentWindow;
    nsVoidArray             mContentShells;
    PRBool                  mContinueModalLoop;
+   nsresult                mModalStatus;
    PRBool                  mDebuting;       // being made visible right now
    PRBool                  mChromeLoaded; // True when chrome has loaded
    PRBool                  mShowAfterLoad;

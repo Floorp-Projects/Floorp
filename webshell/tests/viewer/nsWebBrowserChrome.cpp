@@ -191,6 +191,12 @@ NS_IMETHODIMP nsWebBrowserChrome::ShowAsModal()
    return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsWebBrowserChrome::ExitModalEventLoop(nsresult aStatus)
+{
+   NS_ERROR("Haven't Implemented this yet");
+   return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP
 nsWebBrowserChrome::SetPersistence(PRBool aPersistX, PRBool aPersistY,
                                    PRBool aPersistCX, PRBool aPersistCY,

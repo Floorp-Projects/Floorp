@@ -457,6 +457,12 @@ CWebBrowserContainer::ShowModal()
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+CWebBrowserContainer::ExitModalLoop(nsresult aStatus)
+{
+	// Ignore request to exit modal loop
+	return NS_OK;
+}
 
 NS_IMETHODIMP CWebBrowserContainer::GetNewWindow(PRInt32 aChromeFlags, 
    nsIDocShellTreeItem** aDocShellTreeItem)
@@ -726,6 +732,13 @@ NS_IMETHODIMP
 CWebBrowserContainer::ShowAsModal(void)
 {
 	return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+CWebBrowserContainer::ExitModalEventLoop(nsresult aStatus)
+{
+	// Ignore request to exit modal loop
+	return NS_OK;
 }
 
 

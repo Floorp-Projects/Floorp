@@ -206,6 +206,14 @@ NS_IMETHODIMP nsDocShellTreeOwner::ShowModal()
    return mWebBrowserChrome->ShowAsModal();
 }
 
+NS_IMETHODIMP nsDocShellTreeOwner::ExitModalLoop(nsresult aStatus)
+{
+   if(mTreeOwner)
+      return mTreeOwner->ExitModalLoop(aStatus);
+
+   return mWebBrowserChrome->ExitModalEventLoop(aStatus);
+}
+
 NS_IMETHODIMP nsDocShellTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
    nsIDocShellTreeItem** aDocShellTreeItem)
 {

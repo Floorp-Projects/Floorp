@@ -68,7 +68,7 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull), 
    mContentTreeOwner(nsnull), mPrimaryContentTreeOwner(nsnull),
-   mContinueModalLoop(PR_FALSE), mChromeLoaded(PR_FALSE), 
+   mContinueModalLoop(PR_FALSE), mModalStatus(NS_OK), mChromeLoaded(PR_FALSE), 
    mShowAfterLoad(PR_FALSE), mIntrinsicallySized(PR_FALSE),
    mCenterAfterLoad(PR_FALSE), mZlevel(nsIXULWindow::normalZ)
    
@@ -243,7 +243,7 @@ NS_IMETHODIMP nsXULWindow::ShowModal()
    window->SetModal(PR_FALSE);
    appShell->Spindown();
 
-   return NS_OK;
+   return mModalStatus;
 }
 
 //*****************************************************************************
@@ -306,7 +306,7 @@ NS_IMETHODIMP nsXULWindow::Destroy()
    // a convenience, the hide prevents user interaction with the partially
    // destroyed window. This is especially necessary when the eldest window
    // in a stack of modal windows is destroyed first. It happens.
-   ExitModalLoop();
+   ExitModalLoop(NS_OK);
    mWindow->Show(PR_FALSE);
 
    mDOMWindow = nsnull;
@@ -963,11 +963,12 @@ NS_IMETHODIMP nsXULWindow::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::ExitModalLoop()
+NS_IMETHODIMP nsXULWindow::ExitModalLoop(nsresult aStatus)
 {
    if (mContinueModalLoop) // was a modal window
      EnableParent(PR_TRUE);
    mContinueModalLoop = PR_FALSE;
+   mModalStatus = aStatus;
    return NS_OK;
 }
 
