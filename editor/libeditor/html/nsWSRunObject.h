@@ -72,11 +72,13 @@ class nsWSRunObject
 {
   public:
 
-    typedef enum
+    enum BlockBoundary
     {
-      kForward,
-      kBackward
-    } EWSDirection;
+      kBeforeBlock,
+      kBlockStart,
+      kBlockEnd,
+      kAfterBlock
+    };
 
     // constructor / destructor -----------------------------------------------
     nsWSRunObject(nsHTMLEditor *aEd);
@@ -85,6 +87,13 @@ class nsWSRunObject
     
     // public methods ---------------------------------------------------------
 
+    // ScrubBlockBoundary removes any non-visible whitespace at the specified
+    // location relative to a block node.  
+    static nsresult ScrubBlockBoundary(nsHTMLEditor *aHTMLEd, 
+                                       nsCOMPtr<nsIDOMNode> *aBlock,
+                                       BlockBoundary aBoundary,
+                                       PRInt32 *aOffset = 0);
+    
     // PrepareToJoinBlocks fixes up ws at the end of aLeftParent and the
     // beginning of aRightParent in preperation for them to be joined.
     // example of fixup: trailingws in aLeftParent needs to be removed.
@@ -273,6 +282,11 @@ class nsWSRunObject
     nsresult CheckTrailingNBSPOfRun(WSFragment *aRun);
     nsresult CheckTrailingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aOffset);
     nsresult CheckLeadingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aOffset);
+    
+    static nsresult ScrubBlockBoundaryInner(nsHTMLEditor *aHTMLEd, 
+                                       nsCOMPtr<nsIDOMNode> *aBlock,
+                                       BlockBoundary aBoundary);
+    nsresult Scrub();
     
     // member variables ---------------------------------------------------------
     

@@ -106,6 +106,13 @@ protected:
     kEnd
   };
 
+  enum BRLocation
+  {
+    kBeforeBlock,
+    kBlockEnd
+  };
+
+
 
   // nsHTMLEditRules implementation methods
   nsresult WillInsert(nsISelection *aSelection, PRBool *aCancel);
@@ -122,6 +129,11 @@ protected:
   nsresult DidInsertBreak(nsISelection *aSelection, nsresult aResult);
   nsresult WillDeleteSelection(nsISelection *aSelection, nsIEditor::EDirection aAction, 
                                PRBool *aCancel, PRBool *aHandled);
+  nsresult JoinBlocks(nsISelection *aSelection, nsCOMPtr<nsIDOMNode> *aLeftBlock, 
+                      nsCOMPtr<nsIDOMNode> *aRightBlock, PRBool *aCanceled);
+  nsresult MoveBlock(nsISelection *aSelection, nsIDOMNode *aNewParent, PRInt32 aOffset = -1);
+  nsresult MoveNodeSmart(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *aOffset);
+  nsresult MoveContents(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *aOffset);
   nsresult DeleteNonTableElements(nsIDOMNode *aNode);
   nsresult WillMakeList(nsISelection *aSelection, const nsAReadableString *aListType, PRBool aEntireList, PRBool *aCancel, PRBool *aHandled, const nsAReadableString *aItemType=nsnull);
   nsresult WillRemoveList(nsISelection *aSelection, PRBool aOrderd, PRBool *aCancel, PRBool *aHandled);
@@ -157,6 +169,8 @@ protected:
                                       PRInt32 *ioStartOffset,
                                       PRInt32 aAction,
                                       PRBool *aHandled);
+  nsresult CheckForInvisibleBR(nsIDOMNode *aBlock, BRLocation aWhere, 
+                               nsCOMPtr<nsIDOMNode> *outBRNode, PRInt32 aOffset=0);
   PRBool IsFirstNode(nsIDOMNode *aNode);
   PRBool IsLastNode(nsIDOMNode *aNode);
   PRBool AtStartOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);

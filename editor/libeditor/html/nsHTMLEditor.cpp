@@ -1532,6 +1532,7 @@ nsHTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(nsISelection *aSelect
 NS_IMETHODIMP
 nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAReadableString& aSourceToInsert)
 {
+  nsAutoRules beginRulesSniffing(this, kOpIgnore, nsIEditor::eNone); // dont do any post processing, rules get confused
   nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;

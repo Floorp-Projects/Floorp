@@ -406,8 +406,6 @@ public:
                        PRBool aListOrCellNotEmpty = PR_FALSE,
                        PRBool aSafeToAskFrames = PR_FALSE);
                        
-  PRBool IsBlockNode(nsIDOMNode *aNode);
-
 protected:
 
   NS_IMETHOD  InitRules();
@@ -521,6 +519,8 @@ protected:
 
   NS_IMETHOD IsSubordinateBlock(nsString &aTag, PRBool &aIsTag);
 
+  virtual PRBool IsBlockNode(nsIDOMNode *aNode);
+  
   static nsCOMPtr<nsIDOMNode> GetEnclosingTable(nsIDOMNode *aNode);
 
   /** content-based query returns PR_TRUE if <aProperty aAttribute=aValue> effects aNode
