@@ -2251,6 +2251,13 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
             rv = container->AddChild(aNewEntry, aChildOffset);
         }
     }
+    else if (!aCloneRef) {
+        /* This is an initial load in some subframe.  Just append it if we can */
+        nsCOMPtr<nsISHContainer> container(do_QueryInterface(mOSHE, &rv));
+        if (container) {
+            rv = container->AddChild(aNewEntry, aChildOffset);
+        }
+    }
     else if (mSessionHistory) {
         /* You are currently in the rootDocShell.
          * You will get here when a subframe has a new url
@@ -2272,10 +2279,8 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
         nsCOMPtr<nsISHEntry> currentEntry(do_QueryInterface(currentHE));
         if (currentEntry) {
             PRUint32 cloneID = 0;
-            nsCOMPtr<nsISHEntry> nextEntry;  //(do_CreateInstance(NS_SHENTRY_CONTRACTID));
-            //   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
-            if (aCloneRef)
-                aCloneRef->GetID(&cloneID);
+            nsCOMPtr<nsISHEntry> nextEntry;
+            aCloneRef->GetID(&cloneID);
             rv = CloneAndReplace(currentEntry, cloneID, aNewEntry,
                                  getter_AddRefs(nextEntry));
 
@@ -2288,21 +2293,29 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
         }
     }
     else {
-        /* You will get here when you are in a subframe and
-         * a new url has been loaded on you. 
-         * The mOSHE in this subframe will be the previous url's
-         * mOSHE. This mOSHE will be used as the identification
-         * for this subframe in the  CloneAndReplace function.
-         */
-
+        /* Just pass this along */
         nsCOMPtr<nsIDocShellHistory> parent(do_QueryInterface(mParent, &rv));
         if (parent) {
-            if (!aCloneRef) {
-                aCloneRef = mOSHE;
-            }
             rv = parent->AddChildSHEntry(aCloneRef, aNewEntry, aChildOffset);
-        }
+        }          
+    }
+    return rv;
+}
 
+nsresult
+nsDocShell::DoAddChildSHEntry(nsISHEntry* aNewEntry, PRInt32 aChildOffset)
+{
+    /* You will get here when you are in a subframe and
+     * a new url has been loaded on you. 
+     * The mOSHE in this subframe will be the previous url's
+     * mOSHE. This mOSHE will be used as the identification
+     * for this subframe in the  CloneAndReplace function.
+     */
+
+    nsresult rv;
+    nsCOMPtr<nsIDocShellHistory> parent(do_QueryInterface(mParent, &rv));
+    if (parent) {
+        rv = parent->AddChildSHEntry(mOSHE, aNewEntry, aChildOffset);
     }
     return rv;
 }
@@ -6212,7 +6225,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
         // This is a subframe.
         if ((mLoadType != LOAD_NORMAL_REPLACE) ||
             (mLoadType == LOAD_NORMAL_REPLACE && !mOSHE))
-            rv = AddChildSHEntry(nsnull, entry, mChildOffset);
+            rv = DoAddChildSHEntry(entry, mChildOffset);
     }
 
     // Return the new SH entry...

@@ -250,7 +250,8 @@ protected:
     // Session History
     virtual PRBool ShouldAddToSessionHistory(nsIURI * aURI);
     virtual nsresult AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
-        nsISHEntry ** aNewEntry);   
+        nsISHEntry ** aNewEntry);
+    nsresult DoAddChildSHEntry(nsISHEntry* aNewEntry, PRInt32 aChildOffset);
 
     NS_IMETHOD LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType);
     NS_IMETHOD PersistLayoutHistoryState();
