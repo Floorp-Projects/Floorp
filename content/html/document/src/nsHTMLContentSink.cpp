@@ -892,6 +892,7 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
                             allowReflow);
 #ifdef NS_DEBUG
       if (allowReflow && (((PRInt32)gSinkLogModuleInfo->level) > 127)) {
+        mRoot->List(stdout, 0);
         PRInt32 i, ns = mDocument->GetNumberOfShells();
         for (i = 0; i < ns; i++) {
           nsIPresShell* shell = mDocument->GetShellAt(i);
@@ -1207,6 +1208,7 @@ HTMLContentSink::GetCurrentContainer(eHTMLTags* aType)
 
 NS_IMETHODIMP HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 {
+  NS_ASSERTION(mStackPos > 0, "bad parser");
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::AddLeaf", aNode);
 
