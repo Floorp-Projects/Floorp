@@ -144,6 +144,7 @@ sub tb_load_data {
 
   $td->{bloaty}     = load_bloaty($td);
   $td->{pageloader} = load_pageloader($td);
+  $td->{startup}    = load_startup($td);
   $td->{warnings}   = load_warnings($td);
 
   return $td;
@@ -438,6 +439,34 @@ sub load_pageloader {
     $pageloader->{$logfile} = [ $pageloader_time ];
   }
   return $pageloader;
+}
+
+
+# Load data about startup times.
+#   File format: <logfile>|<pageloader time>
+#
+sub load_startup {
+  my $treedata = $_[0];
+  local $_;
+
+  my $startup = {};
+  
+  open(BLOATLOG, "<$treedata->{name}/startup.dat");
+  while (<BLOATLOG>) {
+    chomp;
+    my ($logfile, $startup_time) = split /\|/;
+
+    # Allow 1k of noise
+    # my $leaks_cmp = int(($leaks - $leaks_baseline) / 1000);
+    # my $bloat_cmp = int(($bloat - $bloat_baseline) / 1000);
+    
+    # If there was a rise or drop, set a new baseline
+    # $leaks_baseline = $leaks unless $leaks_cmp == 0;
+    # $bloat_baseline = $bloat unless $bloat_cmp == 0;
+
+    $startup->{$logfile} = [ $startup_time ];
+  }
+  return $startup;
 }
 
 

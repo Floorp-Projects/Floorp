@@ -398,6 +398,14 @@ BEGIN {
         print sprintf "<br>Tp:%3.1fs", $pageloader_time/1000;
       }
 
+      # Startup data
+      if (defined $td->{startup}{$logfile}) {
+        my ($startup_time)
+            = @{ $td->{startup}{$logfile} };
+        # ex: Tp:5.45s
+        print sprintf "<br>Ts:%3.1fs", $startup_time/1000;
+      }
+
       # Warnings
       if (defined $td->{warnings}{$logfile}) {
         my ($warning_count) = $td->{warnings}{$logfile};

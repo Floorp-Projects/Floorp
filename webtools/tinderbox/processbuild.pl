@@ -95,6 +95,15 @@ if (defined $pageloader_buildnames_pat
   system "./pageloader.pl $tinderbox{tree} $tinderbox{logfile}";
 }
 
+# Startup data
+#   Compare the name with $startup_buildnames_pat which is defined in
+#   $tinderbox{tree}/treedata.pl if at all.
+if (defined $startup_buildnames_pat
+    and $tinderbox{build} =~ /^$startup_buildnames_pat$/
+    and $tinderbox{status} eq 'success') {
+  system "./startup.pl $tinderbox{tree} $tinderbox{logfile}";
+}
+
 # Static pages
 #   For Sidebar flash and tinderbox panels.
 $ENV{QUERY_STRING}="tree=$tinderbox{tree}&static=1";
