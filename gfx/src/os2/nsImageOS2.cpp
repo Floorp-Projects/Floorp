@@ -254,34 +254,80 @@ nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
                 aX, aY, aWidth, aHeight);
 }
 
-nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
-                           nsDrawingSurface aSurface,
-                           PRInt32 aSX, PRInt32 aSY, PRInt32 aSW, PRInt32 aSH,
-                           PRInt32 aDX, PRInt32 aDY, PRInt32 aDW, PRInt32 aDH)
+NS_IMETHODIMP 
+nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+                  PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-   if (aDW == 0 || aDH == 0 || aSW == 0 || aSH == 0)  // Nothing to draw
-      return NS_OK;
+  PRInt32 origSHeight = aSHeight, origDHeight = aDHeight;
+  PRInt32 origSWidth = aSWidth, origDWidth = aDWidth;
+  PRInt32 srcy;
 
-   nsDrawingSurfaceOS2 *surf = (nsDrawingSurfaceOS2*) aSurface;
+  if (mInfo == nsnull || aSWidth < 0 || aDWidth < 0 || aSHeight < 0 || aDHeight < 0) 
+    return NS_ERROR_FAILURE;
 
+  if (0 == aSWidth || 0 == aDWidth || 0 == aSHeight || 0 == aDHeight)
+    return NS_OK;
+
+  // limit the size of the blit to the amount of the image read in
+  if (aSX + aSWidth > mDecodedX2) {
+    aDWidth -= ((aSX + aSWidth - mDecodedX2)*origDWidth)/origSWidth;
+    aSWidth -= (aSX + aSWidth) - mDecodedX2;
+  }
+  if (aSX < mDecodedX1) {
+    aDX += ((mDecodedX1 - aSX)*origDWidth)/origSWidth;
+    aSX = mDecodedX1;
+  }
+
+  if (aSY + aSHeight > mDecodedY2) {
+    aDHeight -= ((aSY + aSHeight - mDecodedY2)*origDHeight)/origSHeight;
+    aSHeight -= (aSY + aSHeight) - mDecodedY2;
+  }
+  if (aSY < mDecodedY1) {
+    aDY += ((mDecodedY1 - aSY)*origDHeight)/origSHeight;
+    aSY = mDecodedY1;
+  }
+
+  if (aDWidth <= 0 || aDHeight <= 0)
+    return NS_OK;
+
+  // Translate to bottom-up coordinates for the source bitmap
+  srcy = mInfo->cy - (aSY + aSHeight);
+
+  nsDrawingSurfaceOS2 *surf = (nsDrawingSurfaceOS2*) aSurface;
+
+#define OLD_OS2_IMAGE_CODE    // notLoadedDY still used elsewhere
+#ifdef OLD_OS2_IMAGE_CODE
    // Find target rect in OS/2 coords.
-   nsRect trect( aDX, aDY, aDW, aDH);
-   RECTL  rcl;
-   surf->NS2PM_ININ (trect, rcl); // !! !! !!
+   nsRect trect2( aDX, aDY, aDWidth, aDHeight);
+   RECTL  rcl2;
+   surf->NS2PM_ININ (trect2, rcl2); // !! !! !!
 
    // limit the size of the blit to the amount of the image read in
    PRInt32 notLoadedDY = 0;
    if( mDecodedY2 < mInfo->cy)
    {
-      notLoadedDY = aSH - PRInt32(float(mDecodedY2/float(mInfo->cy))*aSH);
+      notLoadedDY = aSHeight - PRInt32(float(mDecodedY2/float(mInfo->cy))*aSHeight);
    }
 
+#if 0
    // Set up blit coord array
    POINTL aptl[ 4] = { { rcl.xLeft, rcl.yBottom + notLoadedDY },
                        { rcl.xRight, rcl.yTop },
                        { aSX, mInfo->cy - aSY - aSH + notLoadedDY },
                        { aSX + aSW, mInfo->cy - aSY } };
+#endif
+#endif
 
+   nsRect trect( aDX, aDY, aDWidth, aDHeight);
+   RECTL  rcl;
+   surf->NS2PM_ININ (trect, rcl);
+
+   // Set up blit coord array
+   POINTL aptl[ 4] = { { rcl.xLeft, rcl.yBottom },
+                       { rcl.xRight, rcl.yTop },
+                       { aSX, srcy },
+                       { aSX + aSWidth, mInfo->cy - aSY } };
 
    // Don't bother creating HBITMAPs, just use the pel data to GpiDrawBits
    // at all times.  This (a) makes printing work 'cos bitmaps are
