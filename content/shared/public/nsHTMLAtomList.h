@@ -225,7 +225,6 @@ HTML_ATOM(pagex, "pagex")
 HTML_ATOM(pagey, "pagey")
 HTML_ATOM(param, "param")
 HTML_ATOM(phase, "phase") //XML Events
-HTML_ATOM(plaintext, "plaintext")
 HTML_ATOM(pointSize, "point-size")
 HTML_ATOM(pre, "pre")
 HTML_ATOM(profile, "profile")
