@@ -3445,8 +3445,15 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
               nsCOMPtr<nsIURI> uri;
               rv = nsContentUtils::NewURIWithDocumentCharset(
                                        getter_AddRefs(uri), spec, doc, docURL);
-              if (NS_SUCCEEDED(rv))
-                aData->mColorData->mBackImage.SetURLValue(uri);
+              if (NS_SUCCEEDED(rv)) {
+                nsCSSValue::URL *url = new nsCSSValue::URL(uri, spec.get());
+                if (url) {
+                  if (url->mString)
+                    aData->mColorData->mBackImage.SetURLValue(url);
+                  else
+                    delete url;
+                }
+              }
             }
           }
         }

@@ -405,10 +405,8 @@ PRBool nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty, const n
     aResult.Append(PRUnichar(')'));
   }
   else if (eCSSUnit_URL == unit) {
-    nsCAutoString spec;
-    aValue.GetURLValue()->GetSpec(spec);
     aResult.Append(NS_LITERAL_STRING("url(") +
-                   NS_ConvertUTF8toUCS2(spec) +
+                   nsDependentString(aValue.GetOriginalURLValue()) +
                    NS_LITERAL_STRING(")"));
   }
   else if (eCSSUnit_Percent == unit) {

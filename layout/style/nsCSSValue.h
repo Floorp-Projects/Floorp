@@ -45,6 +45,7 @@
 #include "nsCSSProperty.h"
 #include "nsUnitConversion.h"
 #include "nsIURI.h"
+#include "nsCOMPtr.h"
 
 enum nsCSSUnit {
   eCSSUnit_Null         = 0,      // (n/a) null unit, value is not specified
@@ -57,7 +58,7 @@ enum nsCSSUnit {
   eCSSUnit_Attr         = 11,     // (PRUnichar*) a attr(string) value
   eCSSUnit_Counter      = 12,     // (PRUnichar*) a counter(string,[string]) value
   eCSSUnit_Counters     = 13,     // (PRUnichar*) a counters(string,string[,string]) value
-  eCSSUnit_URL          = 14,     // (nsIURI*) a URL value (null == invalid URI)
+  eCSSUnit_URL          = 14,     // (nsCSSValue::URL*) value
   eCSSUnit_Integer      = 50,     // (int) simple value
   eCSSUnit_Enumerated   = 51,     // (int) value has enumerated meaning
   eCSSUnit_Color        = 80,     // (color) an RGBA value
@@ -114,6 +115,9 @@ enum nsCSSUnit {
 
 class nsCSSValue {
 public:
+  struct URL;
+  friend struct URL;
+
   // for valueless units only (null, auto, inherit, none, normal)
   nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)
     : mUnit(aUnit)
@@ -129,7 +133,7 @@ public:
   nsCSSValue(float aValue, nsCSSUnit aUnit);
   nsCSSValue(const nsAString& aValue, nsCSSUnit aUnit);
   nsCSSValue(nscolor aValue);
-  nsCSSValue(nsIURI* aValue);
+  nsCSSValue(nsCSSValue::URL* aValue);
   nsCSSValue(const nsCSSValue& aCopy);
   ~nsCSSValue(void)
   {
@@ -205,7 +209,13 @@ public:
   nsIURI* GetURLValue(void) const
   {
     NS_ASSERTION(mUnit == eCSSUnit_URL, "not a URL value");
-    return mValue.mURL;
+    return mValue.mURL->mURI;
+  }
+
+  const PRUnichar* GetOriginalURLValue(void) const
+  {
+    NS_ASSERTION(mUnit == eCSSUnit_URL, "not a URL value");
+    return mValue.mURL->mString;
   }
 
 
@@ -253,7 +263,7 @@ public:
         (nsnull != mValue.mString)) {
       nsCRT::free(mValue.mString);
     } else if (eCSSUnit_URL == mUnit) {
-      NS_IF_RELEASE(mValue.mURL);
+      mValue.mURL->Release();
     }
     mUnit = eCSSUnit_Null;
     mValue.mInt = 0;
@@ -279,7 +289,7 @@ public:
 
   void  SetStringValue(const nsAString& aValue, nsCSSUnit aUnit);
   void  SetColorValue(nscolor aValue);
-  void  SetURLValue(nsIURI* aURI);
+  void  SetURLValue(nsCSSValue::URL* aURI);
   void  SetAutoValue(void);
   void  SetInheritValue(void);
   void  SetInitialValue(void);
@@ -291,6 +301,47 @@ public:
   void  AppendToString(nsAString& aBuffer, nsCSSProperty aPropID = eCSSProperty_UNKNOWN) const;
   void  ToString(nsAString& aBuffer, nsCSSProperty aPropID = eCSSProperty_UNKNOWN) const;
 
+  MOZ_DECL_CTOR_COUNTER(nsCSSValue::URL)
+
+  struct URL {
+    // Caller must delete this object immediately if the allocation of
+    // |mString| fails.
+    URL(nsIURI* aURI, const PRUnichar* aString)
+      : mURI(aURI),
+        mString(nsCRT::strdup(aString)),
+        mRefCnt(0)
+    {
+      MOZ_COUNT_CTOR(nsCSSValue::URL);
+    }
+
+    ~URL()
+    {
+      // null |mString| isn't valid normally, but is checked by callers
+      // of the constructor
+      if (mString)
+        nsCRT::free(mString);
+      MOZ_COUNT_DTOR(nsCSSValue::URL);
+    }
+
+    PRBool operator==(const URL& aOther)
+    {
+      PRBool eq;
+      return nsCRT::strcmp(mString, aOther.mString) == 0 &&
+             (mURI == aOther.mURI || // handles null == null
+              (mURI && aOther.mURI &&
+               NS_SUCCEEDED(mURI->Equals(aOther.mURI, &eq)) &&
+               eq));
+    }
+
+    nsCOMPtr<nsIURI> mURI; // null == invalid URL
+    PRUnichar* mString;
+
+    void AddRef() { ++mRefCnt; }
+    void Release() { if (--mRefCnt == 0) delete this; }
+  private:
+    nsrefcnt mRefCnt;
+  };
+
 protected:
   nsCSSUnit mUnit;
   union {
@@ -298,7 +349,7 @@ protected:
     float      mFloat;
     PRUnichar* mString;
     nscolor    mColor;
-    nsIURI*    mURL;
+    URL*       mURL;
   }         mValue;
 };
 
