@@ -1,5 +1,5 @@
 #ifdef XP_WIN
-.noWin, .mac, .unix { display: none; }
+.noWin, .mac, .unix { display: none; } 
 #else
 #ifdef XP_MACOSX
 .noMac, .win, .unix { display: none; }
