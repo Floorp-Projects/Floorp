@@ -160,6 +160,21 @@ void nsTreeFrame::ClearSelection(nsIPresContext& aPresContext)
 	mSelectedItems.Clear();
 }
 
+void
+nsTreeFrame::RemoveFromSelection(nsTreeCellFrame* frame)
+{
+  PRInt32 count = mSelectedItems.Count();
+  for (PRInt32 i = 0; i < count; i++)
+	{
+		// Remove the tree cell from the selection.
+		nsTreeCellFrame* theFrame = (nsTreeCellFrame*)mSelectedItems[i];
+    if (theFrame == frame) {
+      mSelectedItems.RemoveElementAt(i);
+      break;
+    }
+	}
+}
+
 void nsTreeFrame::MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
 {
 	PRInt32 rowIndex;
