@@ -1,149 +1,173 @@
-/* colors */
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ */
 
-.color-dialog
-  {
-    background-color      : #B4C3D4;
-    color                 : #000000;
-  }
-  
-.color-window
-  {
-    background-color      : #FFFFFF;
-    color                 : #000000;
-  }
+/* ===== formatting.css =================================================
+  == Styles for various formatting styles.
+  ======================================================================= */
 
-/* inset areas */
-.inset
-  {
-    border                : 1px inset #CCCCCC;
-    margin                : 0px 5px 5px 5px;
-  }
-  
-/* formatting */
-.groove-top
-  {
-    border-top            : 2px groove #CCCCCC;  
-  }
-  
-.groove-right
-  {
-    border-right          : 2px groove #CCCCCC;
-  }
-  
-.groove-left
-  {
-    border-left           : 2px groove #CCCCCC;
-  }
-  
-.groove-bottom
-  {
-    border-bottom         : 2px groove #CCCCCC;
-  }
-  
-.outset
-  {
-    border                : 1px outset #CCCCCC;
-  }  
-  
-/** separator rules **/
-/* standard separators */
-  separator, separator[orient="horizontal"] 
-    {
-      height: 1.5em;
-    }
-  
-  separator[orient="vertical"] 
-    {
-      width: 1.5em;
-    }
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* thinner separators (50% size) */
-  separator.thin, separator.thin[orient="horizontal"] 
-    {
-      height: 0.5em;
-    }
-  
-  separator.thin[orient="vertical"] 
-    {
-      width: 0.5em;
-    }
+/* ::::: colors ::::: */
 
-/* groove separators (50% size) */
-  separator.groove,
-  separator.groove[orient="horizontal"] 
-    {
-   	  border-top			  : 1px solid #7A8490;
-      border-bottom         : 1px solid #FEFEFE; 
-      height: 0px;
-      margin-top: 0.4em;
-      margin-bottom: 0.4em;
-    }
-  
-  separator.groove[orient="vertical"] 
-    {
-      border-left: 1px solid #7A8490;
-      border-right: 1px solid #FEFEFE;
-      margin-left: 0.4em;
-      margin-right: 0.4em;
-    }
-  
-/* groove separators (0 padding, for dividing effects) */  
-  separator.groove-thin 
-    {
-      border-top: 2px groove #CCCCCC;
-      height: 0px;
-    }
-  
-  separator[orient="vertical"].groove-thin 
-    {
-      border-left: 2px groove #CCCCCC;
-    }
+.color-dialog {
+  background-color: #B4C3D4;
+  color: #000000;
+}
 
-/** text formatting rules **/
-/* label (with margins) */
-  text.label 
-    {
-      margin              : 1px 5px 2px 5px;
-    }
-    
-  text[disabled="true"] 
-    {
-      color                 : #5A616A;
-    }    
-    
-  html
-    {
-      margin              : 1px 5px 4px 5px;
-      cursor              : default;
-    }
+.color-window {
+  background-color: #FFFFFF;
+  color: #000000;
+}
 
-  .header 
-    {
-      font-weight         : bold;
-    }
-   
-  .indent
-    {
-      margin-left         : 20px;
-    }
+/* ::::: inset/outset areas ::::: */
 
-  .icon-dropmarker
-    {
-      list-style-image    : url("chrome://global/skin/simple-arrow-down.gif");
-    }
-    
-  .box-padded
-    {
-      padding             : 5px;
-    }    
-    
-  .spaced
-    {
-      margin              : 3px 5px 4px 5px;
-    }    
+.inset {
+  border: 1px inset #B4C3D4;
+}
 
+.outset {
+  border: 1px outset #B4C3D4;
+}
 
-  .wizard-box
-    {
-      padding             : 20px 44px 10px 44px;
-    }      
+/* .... grooves ..... */
+.groove-top {
+  border-top: 2px groove #C2D0D0;
+}
+
+.groove-right {
+  border-right: 2px groove #C2D0D0;
+}
+
+.groove-left {
+  border-left: 2px groove #C2D0D0;
+}
+
+.groove-bottom {
+  border-bottom: 2px groove #C2D0D0;
+}
+
+/* ::::: separators ::::: */
+
+/* ..... standard separators ..... */
+
+separator,
+separator[orient="horizontal"] {
+  height: 1.5em;
+}
+
+separator[orient="vertical"] {
+  width: 1.5em;
+}
+
+/* ..... thinner separators ..... */
+
+separator.thin,
+separator.thin[orient="horizontal"] {
+  height: 0.5em;
+}
+
+separator.thin[orient="vertical"] {
+  width: 0.5em;
+}
+
+/* ..... groove separators ..... */
+
+separator.groove,
+separator.groove[orient="horizontal"] {
+  margin: 0.4em 5px 0.4em 5px;
+  border-top: 1px solid #7A8490;
+  border-bottom: 1px solid #FEFEFE;
+  height: 0px;
+}
+
+separator.groove[orient="vertical"] {
+  margin-right: 0.4em;
+  margin-left: 0.4em;
+  border-right: 1px solid #FEFEFE;
+  border-left: 1px solid #7A8490;
+}
+
+/* ..... thin groove separators ..... */
+
+separator.groove-thin {
+  border-top: 2px groove #C2D0D0;
+  height: 0px;
+}
+
+separator[orient="vertical"].groove-thin {
+  border-left: 2px groove #C2D0D0;
+}
+
+/* ::::: text formatting rules ::::: */
+
+/* ..... label (with margins) ..... */
+
+text.label {
+  margin: 1px 4px 2px 4px;
+}
+
+text[disabled="true"] {
+  color: #85959E;
+}
+
+html {
+  cursor: default;
+  margin: 1px 4px 2px 4px;
+}
+
+.header {
+  font-weight: bold;
+}
+
+.larger-text {
+  font-size: larger;
+}
+
+.smaller-text {
+  font-size: smaller;
+}
+
+.monospace {
+  font-family: monospace;
+}
+
+.indent {
+  margin-left: 20px;
+}
+
+.icon-dropmarker {
+  list-style-image: url("chrome://global/skin/simple-arrow-down.gif");
+}
+
+.box-padded {
+  padding: 2px 4px;
+}
+
+.spaced {
+  margin: 3px 5px 4px 5px;
+}
+
+.wizard-box {
+  padding: 20px 44px 10px 44px;
+}
+

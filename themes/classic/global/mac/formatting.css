@@ -119,7 +119,22 @@
     {
       font-weight         : bold;
     }
+
+  .larger-text 
+    {
+      font-size           : larger;
+    }
+
+  .smaller-text 
+    {
+      font-size           : smaller;
+    }
    
+  .monospace
+    {
+      font-family         : monospace;
+    }
+
   .indent
     {
       margin-left         : 20px;

@@ -19,17 +19,111 @@
  * Contributor(s): 
  */
 
-@import url(chrome://global/skin/global.css);
+@import url(chrome://global/skin);
 
-.treecell-error {
-    white-space: normal;
+.console-box 
+  {
+    background-color    : -moz-field;
+    color               : WindowText;
+  }
+ 
+/* :::::::::: console rows :::::::::: */
+
+.console-row 
+  {
+    padding             : 0px;
+    border-bottom       : 2px solid WindowText;
+  }
+
+.console-row-icon 
+  {
+    border-right        : 1px outset ThreeDFace;
+    padding             : 5px;
+    background-color    : ThreeDFace;
+    vertical-align      : top !important;
+  }
+
+.console-icon 
+  {
+    list-style-image    : inherit !important;
+  }
+
+/* error rows */
+
+.console-row-code 
+  {
+    padding             : 3px 0px 3px 3px;
+    font-size           : larger;
+    color               : #0000BB;
+  }
+
+.console-dots, .console-caret 
+  {
+    height              : 9px;
+  }
+
+.console-dots 
+  {
+    background          : url("chrome://global/skin/console-error-dash.gif") repeat-x top;
+  }
+
+.console-caret 
+  {
+    width               : 7px;
+    background          : url("chrome://global/skin/console-error-caret.gif") no-repeat top;
+  }
+
+/* message rows */
+
+.console-row[type="message"] 
+  {
+    font-family         : monospace;
+  } 
+
+/* selected state */
+
+.console-row[selected="true"] 
+  {
+    background-color    : Highlight;
+    color               : HighlightText;
+  }
+
+.console-row-code[selected="true"],
+.console-row-content[selected="true"] > .console-row-file > .console-error-source > .text-link 
+  {
+    color               : inherit !important;  
+  }
+
+/* ::::: icons ::::: */
+
+.console-row[type="error"],
+.console-row[type="exception"] 
+  {
+    list-style-image    : url("chrome://global/skin/error-icon.gif");
+  }
+
+.console-row[type="warning"] 
+  {
+    list-style-image    : url("chrome://global/skin/alert-icon.gif");
+  }
+
+.console-row[type="message"] {
+  list-style-image      : url("chrome://global/skin/message-icon.gif");
 }
 
-.treecell-error[type="error"] {
-  list-style-image: url("chrome://global/skin/error-icon.gif") !important;
-}
+/* ::::: toolbars ::::: */
 
-.treecell-error[type="warning"] {
-  list-style-image: url("chrome://global/skin/alert-icon.gif") !important;
-}
+#TextfieldEval
+  {
+    margin            : 1px 2px 1px 2px ;
+  }
 
+#ButtonEval 
+  {
+    margin            : 1px 2px 1px 0px;
+  }
+
+toolbarseparator 
+  {
+    min-height        : 1em;
+  }

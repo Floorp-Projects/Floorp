@@ -8,7 +8,8 @@ toolbar
   	background-color	    : #5B7693;
     // DON'T DELETE.  Removes disappearance of scrollbars in content pane when window is made smaller.
     // Talk to evaughan@netscape.com for details.
-    min-width			        : 1px;      
+    min-width			        : 1px;
+    color                 : #FFFFFF;
   }
 
 toolbar > .toolbar-holder 
@@ -103,3 +104,22 @@ toolbarseparator
     border-right          : 1px solid #92ABC9;
     margin                : 2px 0.2em 2px 0.2em;
   } 
+
+/* ::::: special looks for widgets in toolbars ::::: */
+
+tree.toolbar,
+textfield.toolbar {
+  border-top: 1px solid #536B86;
+  border-right: 1px solid #94A6B9;
+  border-bottom: 1px solid #94A6B9;
+  border-left: 1px solid #536B86;
+}
+
+tree.toolbar > .tree-container-treerows,
+textfield.toolbar > .textfield-internal-box {
+  border-color: #364556;
+}
+
+textfield.toolbar[focused="true"] {
+  border: 1px solid #2D3B49;
+}

@@ -1,61 +1,120 @@
-/* 
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- *  
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *  
- * The Original Code is mozilla.org code.
- * 
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
+ *
  */
 
-.error-icon-box {
-  background-color: #CCCCCC;
-  padding: 5px;
-  border-right: 1px solid #999999;
-}
+/* ===== console.css ====================================================
+  == Styles used by the JavaScript Console window.
+  ======================================================================= */
 
-.treecell-error {
-  border-bottom: 1px solid #000000 !important;
-  padding: 0px;
-  white-space: normal;
-}
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.treecell-error[type="error"] {
-  list-style-image: url("chrome://global/skin/error-icon.gif") !important;
-}
-
-.treecell-error[type="warning"] {
-  list-style-image: url("chrome://global/skin/alert-icon.gif") !important;
-}
-
-.error-icon {
-  list-style-image: inherit !important;
-}
-
-.button-toolbar[toggled="true"] {
-  border: 1px solid #526573 !important;
-  background-color: #B4C3D4;
+.console-box {
+  background-color: #FFFFFF;
   color: #000000;
-  -moz-border-radius: 4px;
-}    
+}
+ 
+/* ::::: console rows ::::: */
 
-.button-toolbar {
-  border: 1px solid transparent !important;
+.console-row {
+  border-bottom: 2px solid #000000;
+  padding: 0px;
 }
 
-.button-toolbar:hover,
-.button-toolbar:hover:active,
-.button-toolbar[home-dragover="true"] {
-  border: 1px solid #526573;
+.console-row-icon {
+  border-right: 1px outset #B4C3D4;
+  padding: 5px;
+  background-color: #B4C3D4;
+  vertical-align: top !important;
+}
+
+.console-icon {
+  list-style-image: inherit;
+}
+
+/* ..... error rows ..... */
+
+.console-row-code {
+  padding: 3px 0px 3px 3px;
+  color: #0000BB;
+  font-size: larger;
+}
+
+.console-dots, 
+.console-caret {
+  height: 9px;
+}
+
+.console-dots {
+  background: url("chrome://global/skin/console/error-dash.gif") repeat-x top;
+}
+
+.console-caret {
+  width: 7px;
+  background: url("chrome://global/skin/console/error-caret.gif") no-repeat top;
+}
+
+/* ..... message rows ..... */
+
+.console-row[type="message"] {
+  font-family: monospace;
+} 
+
+/* ..... selected state ..... */
+
+.console-row[selected="true"] {
+  background-color: #486380 !important;
+  color: #ffffff;
+}
+
+.console-row-code[selected="true"],
+.console-row-content[selected="true"] > .console-row-file > .console-error-source > .text-link {
+  color: inherit !important;  
+}
+
+/* ::::: icons ::::: */
+
+.console-row[type="error"],
+.console-row[type="exception"] {
+  list-style-image: url("chrome://global/skin/error-icon.gif");
+}
+
+.console-row[type="warning"] {
+  list-style-image: url("chrome://global/skin/alert-icon.gif");
+}
+
+.console-row[type="message"] {
+  list-style-image: url("chrome://global/skin/message-icon.gif");
+}
+
+/* ::::: toolbars ::::: */
+
+#TextfieldEval {
+  margin: 2px !important;
+}
+
+#ButtonEval {
+  margin: 2px 2px 2px 0px !important;
+}
+
+toolbarseparator {
+  min-height: 1em;
 }

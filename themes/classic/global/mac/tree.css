@@ -29,6 +29,9 @@ tree.inset > .tree-container-treerows {
   border: 1px solid #000000;
 }
 
+treeitem {
+  list-style-image: none;
+}
 
 treeitem > treerow {
 	border-bottom : 1px solid #FFFFFF;
