@@ -49,9 +49,12 @@ CAppearancePrefs::InitDialog()
 
 	EnableDlgItem(IDC_CHECK1, !PREF_PrefIsLocked("general.startup.browser"));
 #ifdef MOZ_MAIL_NEWS
+	ShowWindow(GetDlgItem(m_hwndDlg, IDC_CHECK2), SW_SHOW);
+	ShowWindow(GetDlgItem(m_hwndDlg, IDC_CHECK3), SW_SHOW);
 	EnableDlgItem(IDC_CHECK2, !PREF_PrefIsLocked("general.startup.mail"));
 	EnableDlgItem(IDC_CHECK3, !PREF_PrefIsLocked("general.startup.news"));
 #ifdef EDITOR
+	ShowWindow(GetDlgItem(m_hwndDlg, IDC_CHECK4), SW_SHOW);
 	EnableDlgItem(IDC_CHECK4, !PREF_PrefIsLocked("general.startup.editor"));
 #endif /* EDITOR */
 #endif /* MOZ_MAIL_NEWS */

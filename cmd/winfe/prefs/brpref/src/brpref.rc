@@ -47,6 +47,13 @@ BEGIN
                     17,117,57,10
     CONTROL         "&Text Only",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,17,
                     130,46,10
+    CONTROL         "&Messenger",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | NOT 
+                    WS_VISIBLE | WS_TABSTOP,17,57,77,10
+    CONTROL         "Collabra &Discussions",IDC_CHECK3,"Button",
+                    BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,17,70,77,
+                    10
+    CONTROL         "&Composer",IDC_CHECK4,"Button",BS_AUTOCHECKBOX | NOT 
+                    WS_VISIBLE | WS_TABSTOP,17,44,77,10
 END
 
 IDD_BROWSER DIALOG DISCARDABLE  0, 0, 256, 190

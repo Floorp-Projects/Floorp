@@ -331,35 +331,6 @@ class CProxiesPrefs : public CBrowserPropertyPage {
 		void	EnableControls();
 };
 
-/////////////////////////////////////////////////////////////////////////////
-// CDiskSpacePrefs
-
-class CDiskSpacePrefs : public CBrowserPropertyPage {
-	public:
-		CDiskSpacePrefs();
-
-	protected:
-		STDMETHODIMP Activate(HWND hwndParent, LPCRECT lprc, BOOL bModal);
-		BOOL		 InitDialog();
-		BOOL		 DoTransfer(BOOL bSaveAndValidate);
-		BOOL		 ApplyChanges();
-
-		// Event Processing
-		BOOL	OnCommand(int id, HWND hwndCtl, UINT notifyCode);
-
-	private:
-
-		BOOL	m_bLimitSize;
-		int		m_nLimitSize;
-		BOOL	m_bPromptPurge;
-		int		m_nPurgeSize;
-		int		m_nKeepMethod;
-		int		m_nKeepDays;
-		int		m_nKeepCounts;
-		BOOL	m_bKeepUnread;
-		BOOL	m_bRemoveBody;
-		int		m_nRemoveDays;
-};
 
 #ifdef MOZ_SMARTUPDATE
 
