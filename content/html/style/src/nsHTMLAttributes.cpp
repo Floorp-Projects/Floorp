@@ -1137,28 +1137,19 @@ HTMLAttributesImpl::SetAttributeFor(nsIAtom* aAttrName, const nsString& aValue,
   PRBool  haveAttr;
   result = SetAttributeName(aAttrName, haveAttr);
   if (NS_SUCCEEDED(result)) {
-    if (haveAttr) {
-      HTMLAttribute*  attr = nsnull;
-      if (aMappedToStyle) {
-        NS_ASSERTION(mMapped, "don't have mapped attributes");
-        if (mMapped) {
-          attr = HTMLAttribute::FindHTMLAttribute(aAttrName, &(mMapped->mFirst));
-        }
-      }
-      else {
-        attr = HTMLAttribute::FindHTMLAttribute(aAttrName, mFirstUnmapped);
-      }
-      NS_ASSERTION(attr, "failed to find attribute");
-      if (attr) {
-        attr->mValue.SetStringValue(aValue);
+    if (aMappedToStyle) {
+      result = EnsureSingleMappedFor(aContent, aSheet, PR_TRUE);
+      if (mMapped) {
+        result = mMapped->SetAttribute(aAttrName, aValue);
+        UniqueMapped(aSheet);
       }
     }
     else {
-      if (aMappedToStyle) {
-        result = EnsureSingleMappedFor(aContent, aSheet, PR_TRUE);
-        if (mMapped) {
-          result = mMapped->SetAttribute(aAttrName, aValue);
-          UniqueMapped(aSheet);
+      if (haveAttr) {
+        HTMLAttribute*  attr = HTMLAttribute::FindHTMLAttribute(aAttrName, mFirstUnmapped);
+        NS_ASSERTION(attr, "failed to find attribute");
+        if (attr) {
+          attr->mValue.SetStringValue(aValue);
         }
       }
       else {
@@ -1210,28 +1201,19 @@ HTMLAttributesImpl::SetAttributeFor(nsIAtom* aAttrName,
   PRBool  haveAttr;
   result = SetAttributeName(aAttrName, haveAttr);
   if (NS_SUCCEEDED(result)) {
-    if (haveAttr) {
-      HTMLAttribute*  attr = nsnull;
-      if (aMappedToStyle) {
-        NS_ASSERTION(mMapped, "don't have mapped attributes");
-        if (mMapped) {
-          attr = HTMLAttribute::FindHTMLAttribute(aAttrName, &(mMapped->mFirst));
-        }
-      }
-      else {
-        attr = HTMLAttribute::FindHTMLAttribute(aAttrName, mFirstUnmapped);
-      }
-      NS_ASSERTION(attr, "failed to find attribute");
-      if (attr) {
-        attr->mValue = aValue;
+    if (aMappedToStyle) {
+      result = EnsureSingleMappedFor(aContent, aSheet, PR_TRUE);
+      if (mMapped) {
+        result = mMapped->SetAttribute(aAttrName, aValue);
+        UniqueMapped(aSheet);
       }
     }
     else {
-      if (aMappedToStyle) {
-        result = EnsureSingleMappedFor(aContent, aSheet, PR_TRUE);
-        if (mMapped) {
-          result = mMapped->SetAttribute(aAttrName, aValue);
-          UniqueMapped(aSheet);
+      if (haveAttr) {
+        HTMLAttribute*  attr = HTMLAttribute::FindHTMLAttribute(aAttrName, mFirstUnmapped);
+        NS_ASSERTION(attr, "failed to find attribute");
+        if (attr) {
+          attr->mValue = aValue;
         }
       }
       else {
