@@ -501,11 +501,7 @@ HandlePluginEvent(nsGUIEvent *aEvent)
   if (aEvent == nsnull || aEvent->widget == nsnull)   //null pointer check
     return nsEventStatus_eIgnore;
 
-#ifdef XP_WIN
-  // on Windows, the mouse click is converted to an NS_PLUGIN_ACTIVATE
-  if( aEvent->message == NS_PLUGIN_ACTIVATE)  
-    (nsIWidget*)(aEvent->widget)->SetFocus();  // send focus to child window
-#else
+#ifndef XP_WIN
   // the Mac, and presumably others, send NS_MOUSE_ACTIVATE
   if (aEvent->message == NS_MOUSE_ACTIVATE) {
     (nsIWidget*)(aEvent->widget)->SetFocus();  // send focus to child window
