@@ -329,44 +329,7 @@ nsHTMLTagContent::SetDocument(nsIDocument* aDocument)
     return rv;
   }
 
-  // Once the element is added to the doc tree we need to check if event handler
-  // were registered on it.  Unfortunately, this means doing a GetAttribute for
-  // every type of handler.
   if (nsnull != mAttributes) {
-    nsHTMLValue mValue;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onclick, mValue))
-      AddScriptEventListener(nsHTMLAtoms::onclick, mValue, kIDOMMouseListenerIID); 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::ondblclick, mValue))
-      AddScriptEventListener(nsHTMLAtoms::onclick, mValue, kIDOMMouseListenerIID); 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmousedown, mValue))
-      AddScriptEventListener(nsHTMLAtoms::onmousedown, mValue, kIDOMMouseListenerIID); 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmouseup, mValue))
-      AddScriptEventListener(nsHTMLAtoms::onmouseup, mValue, kIDOMMouseListenerIID); 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmouseover, mValue))
-      AddScriptEventListener(nsHTMLAtoms::onmouseover, mValue, kIDOMMouseListenerIID); 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmouseout, mValue))
-      AddScriptEventListener(nsHTMLAtoms::onmouseout, mValue, kIDOMMouseListenerIID); 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onkeydown, mValue))
-      AddScriptEventListener(nsHTMLAtoms::onkeydown, mValue, kIDOMKeyListenerIID); 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onkeyup, mValue))
-      AddScriptEventListener(nsHTMLAtoms::onkeyup, mValue, kIDOMKeyListenerIID); 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onkeypress, mValue))
-      AddScriptEventListener(nsHTMLAtoms::onkeypress, mValue, kIDOMKeyListenerIID); 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmousemove, mValue))
-      AddScriptEventListener(nsHTMLAtoms::onmousemove, mValue, kIDOMMouseMotionListenerIID); 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onload, mValue))
-      AddScriptEventListener(nsHTMLAtoms::onload, mValue, kIDOMLoadListenerIID); 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onunload, mValue))
-      AddScriptEventListener(nsHTMLAtoms::onunload, mValue, kIDOMLoadListenerIID); 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onabort, mValue))
-      AddScriptEventListener(nsHTMLAtoms::onabort, mValue, kIDOMLoadListenerIID); 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onerror, mValue))
-      AddScriptEventListener(nsHTMLAtoms::onerror, mValue, kIDOMLoadListenerIID); 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onfocus, mValue))
-      AddScriptEventListener(nsHTMLAtoms::onfocus, mValue, kIDOMFocusListenerIID); 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onblur, mValue))
-      AddScriptEventListener(nsHTMLAtoms::onblur, mValue, kIDOMFocusListenerIID); 
-
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
     sheet->SetAttributesFor(mTag, mAttributes); // sync attributes with sheet
   }
@@ -486,11 +449,13 @@ nsHTMLTagContent::StringToAttribute(nsIAtom* aAttribute,
 }
 
 nsresult
-nsHTMLTagContent::AddScriptEventListener(nsIAtom* aAttribute, nsHTMLValue& aValue, REFNSIID aIID)
+nsHTMLTagContent::AddScriptEventListener(nsIAtom* aAttribute, const nsString& aValue, REFNSIID aIID)
 {
   nsresult mRet = NS_OK;  
   nsIScriptContext* mContext;
   nsIScriptContextOwner* mOwner;
+
+  NS_PRECONDITION(nsnull != mDocument, "Element not yet added to doc");
 
   if (nsnull != mDocument) {
     mOwner = mDocument->GetScriptContextOwner();
@@ -504,9 +469,7 @@ nsHTMLTagContent::AddScriptEventListener(nsIAtom* aAttribute, nsHTMLValue& aValu
           if (NS_OK == mReceiver->GetListenerManager(&mManager)) {
             nsIScriptObjectOwner *mObjectOwner;
             if (NS_OK == mGlobal->QueryInterface(kIScriptObjectOwnerIID, (void**)&mObjectOwner)) {
-              nsString mValue;
-              aValue.GetStringValue(mValue);
-              mRet = mManager->AddScriptEventListener(mContext, mObjectOwner, aAttribute, mValue, aIID); 
+              mRet = mManager->AddScriptEventListener(mContext, mObjectOwner, aAttribute, aValue, aIID); 
               NS_RELEASE(mObjectOwner);
             }
             NS_RELEASE(mManager);
@@ -518,9 +481,7 @@ nsHTMLTagContent::AddScriptEventListener(nsIAtom* aAttribute, nsHTMLValue& aValu
       else {
         nsIEventListenerManager *mManager;
         if (NS_OK == GetListenerManager(&mManager)) {
-          nsString mValue;
-          aValue.GetStringValue(mValue);
-          mRet = mManager->AddScriptEventListener(mContext, this, aAttribute, mValue, aIID);
+          mRet = mManager->AddScriptEventListener(mContext, this, aAttribute, aValue, aIID);
           NS_RELEASE(mManager);
         }
       }
@@ -558,6 +519,40 @@ nsHTMLTagContent::SetAttribute(nsIAtom* aAttribute,
     NS_RELEASE(css);
   }
   else {
+    // Check for event handlers
+    if (nsHTMLAtoms::onclick == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onclick, aValue, kIDOMMouseListenerIID); 
+    if (nsHTMLAtoms::ondblclick == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onclick, aValue, kIDOMMouseListenerIID); 
+    if (nsHTMLAtoms::onmousedown == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onmousedown, aValue, kIDOMMouseListenerIID); 
+    if (nsHTMLAtoms::onmouseup == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onmouseup, aValue, kIDOMMouseListenerIID); 
+    if (nsHTMLAtoms::onmouseover == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onmouseover, aValue, kIDOMMouseListenerIID); 
+    if (nsHTMLAtoms::onmouseout == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onmouseout, aValue, kIDOMMouseListenerIID); 
+    if (nsHTMLAtoms::onkeydown == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onkeydown, aValue, kIDOMKeyListenerIID); 
+    if (nsHTMLAtoms::onkeyup == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onkeyup, aValue, kIDOMKeyListenerIID); 
+    if (nsHTMLAtoms::onkeypress == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onkeypress, aValue, kIDOMKeyListenerIID); 
+    if (nsHTMLAtoms::onmousemove == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onmousemove, aValue, kIDOMMouseMotionListenerIID); 
+    if (nsHTMLAtoms::onload == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onload, aValue, kIDOMLoadListenerIID); 
+    if (nsHTMLAtoms::onunload == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onunload, aValue, kIDOMLoadListenerIID); 
+    if (nsHTMLAtoms::onabort == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onabort, aValue, kIDOMLoadListenerIID); 
+    if (nsHTMLAtoms::onerror == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onerror, aValue, kIDOMLoadListenerIID); 
+    if (nsHTMLAtoms::onfocus == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onfocus, aValue, kIDOMFocusListenerIID); 
+    if (nsHTMLAtoms::onblur == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onblur, aValue, kIDOMFocusListenerIID); 
+
     if (nsnull != mDocument) {  // set attr via style sheet
       nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
       result = sheet->SetAttributeFor(aAttribute, aValue, mTag, mAttributes);
