@@ -35,7 +35,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-$cvs_id = '@(#) $RCSfile: oidgen.perl,v $ $Revision: 1.5 $ $Date: 2005/02/02 22:28:24 $';
+$cvs_id = '@(#) $RCSfile: oidgen.perl,v $ $Revision: 1.6 $ $Date: 2005/03/14 18:02:00 $';
 $cfile = shift;
 $hfile = shift;
 $count = -1;
@@ -243,12 +243,6 @@ static const char OIDDATA_CVS_ID[] = "$g{CVS_ID} ; $cvs_id";
 #ifndef NSSPKI1T_H
 #include "nsspki1t.h"
 #endif /* NSSPKI1T_H */
-
-extern const NSSOID nss_builtin_oids[];
-extern const PRUint32 nss_builtin_oid_count;
-
-/*extern const nssAttributeTypeAliasTable nss_attribute_type_aliases[];*/
-/*extern const PRUint32 nss_attribute_type_alias_count;*/
 
 EOD
     ;
