@@ -221,8 +221,7 @@ void nsHTMLTagContent::SetAttribute(nsIAtom* aAttribute,
       nsIStyleRule* rule;
       rv = css->ParseDeclarations(aValue, nsnull, rule);
       if ((NS_OK == rv) && (nsnull != rule)) {
-        printf("XXX STYLE= discarded: ");
-        rule->List();
+        mAttributes->SetAttribute(aAttribute, nsHTMLValue(rule));
         NS_RELEASE(rule);
       }
       NS_RELEASE(css);
