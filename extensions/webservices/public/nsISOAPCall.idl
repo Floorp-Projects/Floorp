@@ -125,21 +125,11 @@ interface nsISOAPCall : nsISupports {
    * The script-only method for setting the list of parameters to
    * include in the SOAP call. Despite what the idl implies, this
    * method takes an arbitrary number of arguments. Each is either
-   * a SOAPParameter object or a JavaScript value which will be
-   * converted to an unnamed SOAPParameter.
+   * a SOAPParameter object or a JavaScript value (string, number
+   * boolean, array or object) which will be converted to an unnamed 
+   * SOAPParameter.
    */
   void setParameters();
-
-  /**
-   * A script-only method for setting the list of parameters, where
-   * the parameters are unnamed and are encoded using the default
-   * encoding style. This method actually expects a variable number
-   * of arguments, each representing an individual parameter - an
-   * actual script type and not a nsISOAPParameter object. This is 
-   * purely a convenience for scripters who want unnamed parameters
-   * and don't want to create an array of parameter objects.
-   */
-  void setSimpleParameters();
 
   /**
    * Synchronously make the SOAP call. At this point, the document

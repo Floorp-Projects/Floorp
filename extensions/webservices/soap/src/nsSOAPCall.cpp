@@ -667,12 +667,6 @@ NS_IMETHODIMP nsSOAPCall::SetParameters()
   return NS_OK;
 }
 
-/* void setSimpleParameters (); */
-NS_IMETHODIMP nsSOAPCall::SetSimpleParameters()
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsresult
 nsSOAPCall::GetTransport(nsISOAPTransport** aTransport)
 {
