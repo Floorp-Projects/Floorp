@@ -776,7 +776,7 @@ morkWriter::OnNothingDone(morkEnv* ev)
 {
   mWriter_Incremental = !mWriter_NeedDirtyAll; // opposites
   
-  if (!mWriter_Store->IsStoreDirty())
+  if (!mWriter_Store->IsStoreDirty() && !mWriter_NeedDirtyAll)
   {
     mWriter_Phase = morkWriter_kPhaseWritingDone;
     return morkBool_kTrue;
