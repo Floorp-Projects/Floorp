@@ -135,7 +135,7 @@ protected:
   
     nsCOMPtr<nsIChannel>       mDocumentChannel;       // [OWNER] ???compare with document
     nsVoidArray                mDocObservers;
-    nsVoidArray                mListenerList;
+    nsCOMPtr<nsISupportsArray> mListenerList;
     nsISupports*               mContainer;             // [WEAK] it owns me!
 
     nsDocLoaderImpl*           mParent;                // [WEAK]
