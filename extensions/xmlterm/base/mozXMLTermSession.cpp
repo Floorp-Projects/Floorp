@@ -108,8 +108,6 @@ const char* const mozXMLTermSession::treeActionNames[] = {
 mozXMLTermSession::mozXMLTermSession() :
   mInitialized(PR_FALSE),
   mXMLTerminal(nsnull),
-  mPresShell(nsnull),
-  mDOMDocument(nsnull),
 
   mBodyNode(nsnull),
   mSessionNode(nsnull),
@@ -177,6 +175,8 @@ NS_IMETHODIMP mozXMLTermSession::Init(mozIXMLTerminal* aXMLTerminal,
                                       nsIDOMDocument* aDOMDocument,
                                       PRInt32 nRows, PRInt32 nCols)
 {
+  nsresult result = NS_OK;
+
   XMLT_LOG(mozXMLTermSession::Init,30,("\n"));
 
   if (mInitialized)
@@ -186,8 +186,6 @@ NS_IMETHODIMP mozXMLTermSession::Init(mozIXMLTerminal* aXMLTerminal,
       return NS_ERROR_NULL_POINTER;
 
   mXMLTerminal = aXMLTerminal;    // containing XMLTerminal; no addref
-  mPresShell = aPresShell;        // presentation shell; no addref
-  mDOMDocument = aDOMDocument;    // DOM document; no addref
 
   mInitialized = PR_TRUE;
 
@@ -196,10 +194,13 @@ NS_IMETHODIMP mozXMLTermSession::Init(mozIXMLTerminal* aXMLTerminal,
   mTopScrollRow = mScreenRows - 1;
   mBotScrollRow = 0;
 
-  nsresult result = NS_OK;
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  result = mXMLTerminal->GetDOMDocument(getter_AddRefs(domDoc));
+  if (NS_FAILED(result) || !domDoc)
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMHTMLDocument> vDOMHTMLDocument
-                                             (do_QueryInterface(mDOMDocument));
+                                             (do_QueryInterface(domDoc));
   if (!vDOMHTMLDocument)
     return NS_ERROR_FAILURE;
 
@@ -283,8 +284,6 @@ NS_IMETHODIMP mozXMLTermSession::Finalize(void)
   mCurrentDebugNode = nsnull;
 
   mXMLTerminal = nsnull;
-  mPresShell = nsnull;
-  mDOMDocument = nsnull;
 
   XMLT_LOG(mozXMLTermSession::Finalize,32,("END\n"));
 
@@ -874,6 +873,11 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           nsAutoString metaCommandOutput;
 	  metaCommandOutput.SetLength(0);
 
+          nsCOMPtr<nsIDOMDocument> domDoc;
+          result = mXMLTerminal->GetDOMDocument(getter_AddRefs(domDoc));
+          if (NS_FAILED(result) || !domDoc)
+            break;
+
           switch (mMetaCommandType) {
 
           case DEFAULT_META_COMMAND:
@@ -885,7 +889,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
               JSCommand.AppendWithConversion("\");");
 
               // Execute JavaScript command
-              result = mozXMLTermUtils::ExecuteScript(mDOMDocument,
+              result = mozXMLTermUtils::ExecuteScript(domDoc,
                                                       JSCommand,
                                                       metaCommandOutput);
               if (NS_FAILED(result))
@@ -919,7 +923,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           case JS_META_COMMAND:
             {
               // Execute JavaScript command
-              result = mozXMLTermUtils::ExecuteScript(mDOMDocument,
+              result = mozXMLTermUtils::ExecuteScript(domDoc,
                                                       commandArgs,
                                                       metaCommandOutput);
               if (NS_FAILED(result))
@@ -1091,9 +1095,13 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
     if (mEntryHasOutput)
       PositionOutputCursor(lineTermAux);
 
-    nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(mPresShell);
+    nsCOMPtr<nsISelectionController> selCon;
+    result = mXMLTerminal->GetSelectionController(getter_AddRefs(selCon));
+    if (NS_FAILED(result) || !selCon)
+      return NS_ERROR_FAILURE;
+
     selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
-                                        nsISelectionController::SELECTION_FOCUS_REGION);
+                                    nsISelectionController::SELECTION_FOCUS_REGION);
   }
 
   // Show caret
@@ -1136,9 +1144,10 @@ NS_IMETHODIMP mozXMLTermSession::Abort(mozILineTermAux* lineTermAux,
 
     // Collapse selection and position cursor
     nsCOMPtr<nsISelectionController> selCon;
-    selCon = do_QueryInterface(mPresShell);
-    if (!selCon)
+    result = mXMLTerminal->GetSelectionController(getter_AddRefs(selCon));
+    if (NS_FAILED(result) || !selCon)
       return NS_ERROR_FAILURE;
+
     nsCOMPtr<nsISelection> selection;
     result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
                                       getter_AddRefs(selection));
@@ -1179,9 +1188,10 @@ NS_IMETHODIMP mozXMLTermSession::DisplayInput(const nsString& aString,
 
   // Collapse selection and position cursor
   nsCOMPtr<nsISelectionController> selCon;
-  selCon = do_QueryInterface(mPresShell);
-  if (!selCon)
-    return NS_ERROR_FAILURE;
+  result = mXMLTerminal->GetSelectionController(getter_AddRefs(selCon));
+  if (NS_FAILED(result) || !selCon)
+      return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsISelection> selection;
 
   result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
@@ -1430,6 +1440,11 @@ NS_IMETHODIMP mozXMLTermSession::BreakOutput(PRBool positionCursorBelow)
   if (!mEntryHasOutput)
     return NS_OK;
 
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  result = mXMLTerminal->GetDOMDocument(getter_AddRefs(domDoc));
+  if (NS_FAILED(result) || !domDoc)
+    return NS_ERROR_FAILURE;
+
   switch (mOutputMarkupType) {
 
   case INSECURE_FRAGMENT:
@@ -1480,7 +1495,7 @@ NS_IMETHODIMP mozXMLTermSession::BreakOutput(PRBool positionCursorBelow)
       // Execute JS fragment
       nsAutoString jsOutput;
       jsOutput.SetLength(0);
-      result = mozXMLTermUtils::ExecuteScript(mDOMDocument,
+      result = mozXMLTermUtils::ExecuteScript(domDoc,
                                               mFragmentBuffer,
                                               jsOutput);
       if (NS_FAILED(result))
@@ -2197,10 +2212,16 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
   result = InsertFragment(markupString, mOutputDisplayNode,
                           mCurrentEntryNumber, mOutputTextNode.get());
 
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  result = mXMLTerminal->GetDOMDocument(getter_AddRefs(domDoc));
+  if (NS_FAILED(result) || !domDoc)
+    return NS_ERROR_FAILURE;
+
   // Insert text node containing newline only
   nsCOMPtr<nsIDOMText> newText;
   nsAutoString newlineStr; newlineStr.AssignWithConversion("\n");
-  result = mDOMDocument->CreateTextNode(newlineStr, getter_AddRefs(newText));
+
+  result = domDoc->CreateTextNode(newlineStr, getter_AddRefs(newText));
   if (NS_FAILED(result) || !newText)
     return NS_ERROR_FAILURE;
 
@@ -2253,9 +2274,10 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
   nsCOMPtr<nsISelection> selection;
 
   nsCOMPtr<nsISelectionController> selCon;
-  selCon = do_QueryInterface(mPresShell);
-  if (!selCon)
+  result = mXMLTerminal->GetSelectionController(getter_AddRefs(selCon));
+  if (NS_FAILED(result) || !selCon)
     return NS_ERROR_FAILURE;
+
   result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
                                     getter_AddRefs(selection));
   if (NS_FAILED(result) || !selection)
@@ -2852,9 +2874,10 @@ void mozXMLTermSession::PositionOutputCursor(mozILineTermAux* lineTermAux)
   nsCOMPtr<nsISelection> selection;
 
   nsCOMPtr<nsISelectionController> selCon;
-  selCon = do_QueryInterface(mPresShell);
-  if (!selCon)
-    return ;; // NS_ERROR_FAILURE;
+  result = mXMLTerminal->GetSelectionController(getter_AddRefs(selCon));
+  if (NS_FAILED(result) || !selCon)
+    return; // NS_ERROR_FAILURE
+
   result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
                                     getter_AddRefs(selection));
   if (NS_SUCCEEDED(result) && selection) {
@@ -2897,7 +2920,12 @@ NS_IMETHODIMP mozXMLTermSession::ScrollToBottomLeft(void)
   if (NS_FAILED(result) || !domWindow)
     return NS_ERROR_FAILURE;
 
-  mPresShell->FlushPendingNotifications();
+  nsCOMPtr<nsIPresShell> presShell;
+  result = mXMLTerminal->GetPresShell(getter_AddRefs(presShell));
+  if (NS_FAILED(result) || !presShell)
+    return NS_ERROR_FAILURE;
+
+  presShell->FlushPendingNotifications();
 
   // Scroll to bottom left of screen
   domWindow->ScrollBy(-99999,99999);
@@ -3155,10 +3183,15 @@ NS_IMETHODIMP mozXMLTermSession::NewEntry(const nsString& aPrompt)
     if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
 
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    result = mXMLTerminal->GetDOMDocument(getter_AddRefs(domDoc));
+    if (NS_FAILED(result) || !domDoc)
+      return NS_ERROR_FAILURE;
+
     // Create IMG element
     tagName.AssignWithConversion("img");
     nsCOMPtr<nsIDOMElement> imgElement;
-    result = mDOMDocument->CreateElement(tagName, getter_AddRefs(imgElement));
+    result = domDoc->CreateElement(tagName, getter_AddRefs(imgElement));
     if (NS_FAILED(result) || !imgElement)
       return NS_ERROR_FAILURE;
 
@@ -3187,7 +3220,7 @@ NS_IMETHODIMP mozXMLTermSession::NewEntry(const nsString& aPrompt)
     // Append text node containing single space
     nsCOMPtr<nsIDOMText> stubText;
     nsAutoString spaceStr; spaceStr.AssignWithConversion(" ");
-    result = mDOMDocument->CreateTextNode(spaceStr, getter_AddRefs(stubText));
+    result = domDoc->CreateTextNode(spaceStr, getter_AddRefs(stubText));
     if (NS_FAILED(result) || !stubText)
       return NS_ERROR_FAILURE;
 
@@ -3296,9 +3329,11 @@ NS_IMETHODIMP mozXMLTermSession::NewScreen(void)
   result = PositionScreenCursor(0, 0);
 
   if (NS_SUCCEEDED(result)) {
-    nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(mPresShell);
-    if (!selCon)
+    nsCOMPtr<nsISelectionController> selCon;
+    result = mXMLTerminal->GetSelectionController(getter_AddRefs(selCon));
+    if (NS_FAILED(result) || !selCon)
       return NS_ERROR_FAILURE;
+
     result = selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
                                                  nsISelectionController::SELECTION_FOCUS_REGION);
   }
@@ -3428,9 +3463,10 @@ NS_IMETHODIMP mozXMLTermSession::PositionScreenCursor(PRInt32 aRow,
   nsCOMPtr<nsISelection> selection;
 
   nsCOMPtr<nsISelectionController> selCon;
-  selCon = do_QueryInterface(mPresShell);
-  if (!selCon)
+  result = mXMLTerminal->GetSelectionController(getter_AddRefs(selCon));
+  if (NS_FAILED(result) || !selCon)
     return NS_ERROR_FAILURE;
+
   result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
                                     getter_AddRefs(selection));
 
@@ -3728,9 +3764,14 @@ NS_IMETHODIMP mozXMLTermSession::NewAnchor(const nsString& classAttribute,
 
   XMLT_LOG(mozXMLTermSession::NewAnchor,80,("\n"));
 
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  result = mXMLTerminal->GetDOMDocument(getter_AddRefs(domDoc));
+  if (NS_FAILED(result) || !domDoc)
+    return NS_ERROR_FAILURE;
+
   // Create anchor
   nsCOMPtr<nsIDOMElement> newElement;
-  result = mDOMDocument->CreateElement(tagName, getter_AddRefs(newElement));
+  result = domDoc->CreateElement(tagName, getter_AddRefs(newElement));
   if (NS_FAILED(result) || !newElement)
     return NS_ERROR_FAILURE;
 
@@ -3785,9 +3826,14 @@ NS_IMETHODIMP mozXMLTermSession::NewElement(const nsString& tagName,
 
   XMLT_LOG(mozXMLTermSession::NewElement,80,("\n"));
 
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  result = mXMLTerminal->GetDOMDocument(getter_AddRefs(domDoc));
+  if (NS_FAILED(result) || !domDoc)
+    return NS_ERROR_FAILURE;
+
   // Create element
   nsCOMPtr<nsIDOMElement> newElement;
-  result = mDOMDocument->CreateElement(tagName, getter_AddRefs(newElement));
+  result = domDoc->CreateElement(tagName, getter_AddRefs(newElement));
   if (NS_FAILED(result) || !newElement)
     return NS_ERROR_FAILURE;
 
@@ -3841,10 +3887,15 @@ NS_IMETHODIMP mozXMLTermSession::NewTextNode( nsIDOMNode* parentNode,
 
   XMLT_LOG(mozXMLTermSession::NewTextNode,80,("\n"));
 
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  result = mXMLTerminal->GetDOMDocument(getter_AddRefs(domDoc));
+  if (NS_FAILED(result) || !domDoc)
+    return NS_ERROR_FAILURE;
+
   // Create text node
   nsCOMPtr<nsIDOMText> newText;
   nsAutoString nullStr; nullStr.SetLength(0);
-  result = mDOMDocument->CreateTextNode(nullStr, getter_AddRefs(newText));
+  result = domDoc->CreateTextNode(nullStr, getter_AddRefs(newText));
   if (NS_FAILED(result) || !newText)
     return NS_ERROR_FAILURE;
 
@@ -3881,6 +3932,11 @@ NS_IMETHODIMP mozXMLTermSession::NewIFrame(nsIDOMNode* parentNode,
 
   XMLT_LOG(mozXMLTermSession::NewIFrame,80,("\n"));
 
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  result = mXMLTerminal->GetDOMDocument(getter_AddRefs(domDoc));
+  if (NS_FAILED(result) || !domDoc)
+    return NS_ERROR_FAILURE;
+
 #if 0
   nsAutoString iframeFrag("<iframe name='iframe");
   iframeFrag.Append(number,10);
@@ -3898,7 +3954,7 @@ NS_IMETHODIMP mozXMLTermSession::NewIFrame(nsIDOMNode* parentNode,
   // Create IFRAME element
   nsCOMPtr<nsIDOMElement> newElement;
   nsAutoString tagName; tagName.AssignWithConversion("iframe");
-  result = mDOMDocument->CreateElement(tagName, getter_AddRefs(newElement));
+  result = domDoc->CreateElement(tagName, getter_AddRefs(newElement));
   if (NS_FAILED(result) || !newElement)
     return NS_ERROR_FAILURE;
 

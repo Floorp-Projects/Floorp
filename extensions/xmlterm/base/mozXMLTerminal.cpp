@@ -236,7 +236,8 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
   // Initialization flag
   mInitialized = PR_TRUE;
 
-  mDocShell = aDocShell;          // containing docshell; no addref
+  // Containing docshell
+  mDocShell = getter_AddRefs(NS_GetWeakReference(aDocShell)); // weak ref
 
   mXMLTermShell = aXMLTermShell;  // containing xmlterm shell; no addref
 
@@ -244,7 +245,7 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
 
   printf("mozXMLTerminal::Init, check1\n");
   nsCOMPtr<nsIContentViewer> contViewer;
-  result = mDocShell->GetContentViewer(getter_AddRefs(contViewer));
+  result = aDocShell->GetContentViewer(getter_AddRefs(contViewer));
   printf("mozXMLTerminal::Init, check2, result=%x, contViewer=%x\n",
          result, (unsigned int) contViewer.get());
 
@@ -258,7 +259,7 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
     XMLT_LOG(mozXMLTerminal::Init,22,("setting DocLoaderObs\n"));
 
     // About to create owning reference to this
-    result = mDocShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*)this);
+    result = aDocShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*)this);
     if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
 
@@ -273,7 +274,7 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
     if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
 
-    result = mDocShell->LoadURI(uri, nsnull, nsIWebNavigation::LOAD_FLAGS_NONE);
+    result = aDocShell->LoadURI(uri, nsnull, nsIWebNavigation::LOAD_FLAGS_NONE);
     if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
 
@@ -306,10 +307,12 @@ NS_IMETHODIMP mozXMLTerminal::Finalize(void)
     mXMLTermSession = nsnull;
   }
 
-  if (mDOMDocument) {
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryReferent(mDOMDocument);
+
+  if (domDoc) {
     // Release any event listeners for the document
     nsCOMPtr<nsIDOMEventReceiver> eventReceiver;
-    nsresult result = mDOMDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(eventReceiver));
+    nsresult result = domDoc->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(eventReceiver));
 
     if (NS_SUCCEEDED(result) && eventReceiver) {
       if (mKeyListener) {
@@ -336,8 +339,9 @@ NS_IMETHODIMP mozXMLTerminal::Finalize(void)
         mDragListener = nsnull;
       }
     }
-    mDOMDocument = nsnull;
   }
+
+  mDOMDocument = nsnull;
 
   if (mLineTermAux) {
     // Finalize and release reference to LineTerm object owned by us
@@ -345,11 +349,12 @@ NS_IMETHODIMP mozXMLTerminal::Finalize(void)
     mLineTermAux = nsnull;
   }
 
-  if (mDocShell) {
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
+  if (docShell) {
     // Stop observing document loading
-    mDocShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)nsnull);
-    mDocShell = nsnull;
+    docShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)nsnull);
   }
+  mDocShell = nsnull;
 
   mPresShell = nsnull;
   mXMLTermShell = nsnull;
@@ -386,8 +391,12 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
     return result;
   }
 
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
+  if (!docShell)
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIDOMWindowInternal> outerDOMWindow;
-  result = mozXMLTermUtils::ConvertDocShellToDOMWindow(mDocShell,
+  result = mozXMLTermUtils::ConvertDocShellToDOMWindow(docShell,
                                               getter_AddRefs(outerDOMWindow));
 
   if (NS_FAILED(result) || !outerDOMWindow) {
@@ -426,14 +435,18 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
   if ((mDOMDocument != nsnull) || (mPresShell != nsnull))
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
+  if (!docShell)
+    return NS_ERROR_FAILURE;
+
   // Get reference to presentation shell
   nsCOMPtr<nsIPresContext> presContext;
-  result = mDocShell->GetPresContext(getter_AddRefs(presContext));
+  result = docShell->GetPresContext(getter_AddRefs(presContext));
   if (NS_FAILED(result) || !presContext)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIPresShell> presShell;
-  result = mDocShell->GetPresShell(getter_AddRefs(presShell));
+  result = docShell->GetPresShell(getter_AddRefs(presShell));
   if (NS_FAILED(result) || !presShell)
     return NS_ERROR_FAILURE;
 
@@ -444,14 +457,13 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
   if (NS_FAILED(result) || !document)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);
-  if (!domDocument)
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(document);
+  if (!domDoc)
     return NS_ERROR_FAILURE;
 
-  // Save references to presentation shell and DOMDocument
-  // (SVN: Should these be addref'ed and released in the destructor?)
-  mPresShell = presShell;      // no addref
-  mDOMDocument = domDocument;  // no addref
+  // Save weak references to presentation shell and DOMDocument
+  mPresShell   = getter_AddRefs(NS_GetWeakReference(presShell)); // weak ref
+  mDOMDocument = getter_AddRefs(NS_GetWeakReference(domDoc));    // weak ref
 
   // Show caret
   ShowCaret();
@@ -477,7 +489,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  result = mXMLTermSession->Init(this, mPresShell, mDOMDocument, nRows, nCols);
+  result = mXMLTermSession->Init(this, presShell, domDoc, nRows, nCols);
   if (NS_FAILED(result)) {
     XMLT_WARNING("mozXMLTerminal::Activate: Warning - Failed to initialize XMLTermSession\n");
     return NS_ERROR_FAILURE;
@@ -507,7 +519,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
                                  mPromptExpr.GetUnicode(),
                                  options, LTERM_DETERMINE_PROCESS,
                                  nRows, nCols, xPixels, yPixels,
-                                 mDOMDocument, anObserver, cookie);
+                                 domDoc, anObserver, cookie);
 
   if (NS_FAILED(result)) {
     XMLT_WARNING("mozXMLTerminal::Activate: Warning - Failed to open LineTermAux\n");
@@ -520,7 +532,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
 
   // Get the DOM event receiver for document
   nsCOMPtr<nsIDOMEventReceiver> eventReceiver;
-  result = mDOMDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver),
+  result = domDoc->QueryInterface(NS_GET_IID(nsIDOMEventReceiver),
                                         getter_AddRefs(eventReceiver));
   if (NS_FAILED(result)) {
     XMLT_WARNING("mozXMLTerminal::Activate: Warning - Failed to get DOM receiver\n");
@@ -605,9 +617,13 @@ NS_IMETHODIMP mozXMLTerminal::ScreenSize(PRInt32& rows, PRInt32& cols,
 
   XMLT_LOG(mozXMLTerminal::ScreenSize,70,("\n"));
 
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (!presShell)
+    return NS_ERROR_FAILURE;
+
   // Get presentation context
   nsCOMPtr<nsIPresContext> presContext;
-  result = mPresShell->GetPresContext( getter_AddRefs(presContext) );
+  result = presShell->GetPresContext( getter_AddRefs(presContext) );
   if (NS_FAILED(result))
     return result;
 
@@ -724,7 +740,11 @@ NS_IMETHODIMP mozXMLTerminal::ShowCaret(void)
   if (!mPresShell)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(mPresShell);
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (!presShell)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(presShell);
 
   if (!selCon) {
     return NS_ERROR_FAILURE;
@@ -746,7 +766,7 @@ NS_IMETHODIMP mozXMLTerminal::ShowCaret(void)
   selCon->SetCaretReadOnly(PR_FALSE);
 
   nsCOMPtr<nsICaret> caret;
-  if (NS_SUCCEEDED(mPresShell->GetCaret(getter_AddRefs(caret)))) {
+  if (NS_SUCCEEDED(presShell->GetCaret(getter_AddRefs(caret)))) {
 
     caret->SetCaretVisible(PR_TRUE);
     caret->SetCaretReadOnly(PR_FALSE);
@@ -869,7 +889,12 @@ NS_IMETHODIMP mozXMLTerminal::GetDocument(nsIDOMDocument** aDoc)
   NS_PRECONDITION(mDOMDocument, "bad state, null mDOMDocument");
   if (!mDOMDocument)
     return NS_ERROR_NOT_INITIALIZED;
-  return mDOMDocument->QueryInterface(NS_GET_IID(nsIDOMDocument),
+
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryReferent(mDOMDocument);
+  if (!domDoc)
+    return NS_ERROR_FAILURE;
+
+  return domDoc->QueryInterface(NS_GET_IID(nsIDOMDocument),
                                       (void **)aDoc);
 }
 
@@ -885,7 +910,14 @@ NS_IMETHODIMP mozXMLTerminal::GetDocShell(nsIDocShell** aDocShell)
   NS_PRECONDITION(mDocShell, "bad state, null mDocShell");
   if (!mDocShell)
     return NS_ERROR_NOT_INITIALIZED;
-  return mDocShell->QueryInterface(NS_GET_IID(nsIDocShell),
+
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
+  if (!docShell) {
+    XMLT_ERROR("mozXMLTerminal::GetDocShell: Error - Invalid weak reference\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  return docShell->QueryInterface(NS_GET_IID(nsIDocShell),
                                     (void **)aDocShell);
 }
 
@@ -901,8 +933,61 @@ NS_IMETHODIMP mozXMLTerminal::GetPresShell(nsIPresShell** aPresShell)
   NS_PRECONDITION(mPresShell, "bad state, null mPresShell");
   if (!mPresShell)
     return NS_ERROR_NOT_INITIALIZED;
-  return mPresShell->QueryInterface(NS_GET_IID(nsIPresShell),
+
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (!presShell) {
+    XMLT_ERROR("mozXMLTerminal::GetPresShell: Error - Invalid weak reference\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  return presShell->QueryInterface(NS_GET_IID(nsIPresShell),
                                     (void **)aPresShell);
+}
+
+
+// Returns DOMDocument associated with XMLTerm
+NS_IMETHODIMP mozXMLTerminal::GetDOMDocument(nsIDOMDocument** aDOMDocument)
+{
+  if (!aDOMDocument)
+    return NS_ERROR_NULL_POINTER;
+
+  *aDOMDocument = nsnull;
+
+  NS_PRECONDITION(mDOMDocument, "bad state, null mDOMDocument");
+  if (!mDOMDocument)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryReferent(mDOMDocument);
+  if (!domDoc) {
+    XMLT_ERROR("mozXMLTerminal::GetDOMDocument: Error - Invalid weak reference\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  return domDoc->QueryInterface(NS_GET_IID(nsIDOMDocument),
+                                (void **)aDOMDocument);
+}
+
+
+// Returns SelectionController associated with XMLTerm
+NS_IMETHODIMP mozXMLTerminal::GetSelectionController(nsISelectionController** aSelectionController)
+{
+  if (!aSelectionController)
+    return NS_ERROR_NULL_POINTER;
+
+  *aSelectionController = nsnull;
+
+  NS_PRECONDITION(mPresShell, "bad state, null mPresShell");
+  if (!mPresShell)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (!presShell) {
+    XMLT_ERROR("mozXMLTerminal::GetSelectionControlle: Error - Invalid weak reference\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  return presShell->QueryInterface(NS_GET_IID(nsISelectionController),
+                                (void **)aSelectionController);
 }
 
 

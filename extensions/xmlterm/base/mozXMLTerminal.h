@@ -26,6 +26,7 @@
 #include "nspr.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
+#include "nsWeakPtr.h"
 #include "nsString.h"
 
 #include "mozXMLT.h"
@@ -79,6 +80,10 @@ class mozXMLTerminal : public mozIXMLTerminal,
 
   NS_IMETHOD GetPresShell(nsIPresShell** aPresShell);
 
+  NS_IMETHOD GetDOMDocument(nsIDOMDocument** aDOMDocument);
+
+  NS_IMETHOD GetSelectionController(nsISelectionController** aSelectionController);
+
   NS_IMETHOD GetScreenMode(PRBool* aFlag);
 
   NS_IMETHOD MatchesCookie(const PRUnichar* aCookie, PRBool *_retval);
@@ -121,14 +126,14 @@ class mozXMLTerminal : public mozIXMLTerminal,
   /** non-owning reference to containing XMLTermShell object */
   mozIXMLTermShell*  mXMLTermShell;
 
-  /** non-owning reference to containing doc shell */
-  nsIDocShell*       mDocShell;
+  /** weak reference to containing doc shell */
+  nsWeakPtr          mDocShell;
 
-  /** non-owning (??) reference to presentation shell for XMLterm */
-  nsIPresShell*      mPresShell;
+  /** weak reference to presentation shell for XMLterm */
+  nsWeakPtr          mPresShell;
 
-  /** non-owning (??) reference to DOM document containing XMLterm */
-  nsIDOMDocument*    mDOMDocument;
+  /** weak reference to DOM document containing XMLterm */
+  nsWeakPtr          mDOMDocument;
 
   /** XMLTermSession object created by us (not reference counted) */
   mozXMLTermSession* mXMLTermSession;

@@ -45,7 +45,3 @@ Known bugs
 
     causes crash (seems to be related to GTK event callback)
     Switching to XP event posting may remove this bug
-
-13. xmlterm termination not clean, segfaults
-
-    in mozXMLTerminal, mPresShell and mDOMDocument need to addref'ed?
