@@ -17,6 +17,7 @@
  */
 
 #include "nsRDFParserUtils.h"
+#include "nsRDFResource.h"
 #include "nsString.h"
 #include "rdfutil.h"
 
@@ -52,6 +53,9 @@ void XXXNeverCalled()
     NS_NewEmptyRDFAssertionCursor(nsnull);
     NS_NewEmptyRDFArcsInCursor(nsnull);
     NS_NewEmptyRDFArcsOutCursor(nsnull);
+
+    // nsRDFResource
+    nsRDFResource r("foo");
 }
 
 
