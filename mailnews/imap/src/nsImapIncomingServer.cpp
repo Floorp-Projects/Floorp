@@ -1047,12 +1047,6 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
     
   if (!folderPath || !*folderPath) return NS_ERROR_NULL_POINTER;
 
-  if (mDoingSubscribeDialog) 
-  {
-    rv = AddTo(folderPath, mDoingLsub /* add as subscribed */, mDoingLsub /* change if exists */);
-    return rv;
-  }
-
   nsCOMPtr<nsIFolder> rootFolder;
   rv = GetRootFolder(getter_AddRefs(rootFolder));
 
@@ -1062,6 +1056,27 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 
   if (NS_FAILED(rv))
     return rv;
+
+  if (mDoingSubscribeDialog) 
+  {
+    rv = AddTo(folderPath, mDoingLsub /* add as subscribed */, mDoingLsub /* change if exists */);
+    NS_ENSURE_SUCCESS(rv,rv);
+    // Make sure the imapmailfolder object has the right delimiter because the unsubscribed
+    // folders (those not in the 'lsub' list) have the delimiter set to the default ('^').
+    if (a_nsIFolder && folderPath && (*folderPath))
+    {
+      nsCOMPtr<nsIMsgFolder> msgFolder;
+      nsCOMPtr<nsIFolder> subFolder;
+      rv = a_nsIFolder->FindSubFolder(folderPath, getter_AddRefs(subFolder));
+      NS_ENSURE_SUCCESS(rv,rv);
+      msgFolder = do_QueryInterface(subFolder, &rv);
+      NS_ENSURE_SUCCESS(rv,rv);
+      nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(msgFolder, &rv);
+      NS_ENSURE_SUCCESS(rv,rv);
+      imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
+      return rv;
+    }
+  }
 
   hostFolder = do_QueryInterface(a_nsIFolder, &rv);
   if (NS_FAILED(rv))
@@ -2834,6 +2849,19 @@ nsImapIncomingServer::SubscribeToFolder(const PRUnichar *aName, PRBool subscribe
 	if (NS_FAILED(rv)) return rv;
     if (!rootMsgFolder) return NS_ERROR_FAILURE;
 
+  // Locate the folder so that the correct hierarchical delimiter is used in the
+  // folder pathnames, otherwise root's (ie, '^') is used and this is wrong.
+  nsCAutoString folderCName;
+  folderCName.AppendWithConversion(aName);
+  nsCOMPtr<nsIMsgFolder> msgFolder;
+  nsCOMPtr<nsIFolder> subFolder;
+  if (rootMsgFolder && aName && (*aName))
+  {
+    rv = rootMsgFolder->FindSubFolder(folderCName.get(), getter_AddRefs(subFolder));
+    if (NS_SUCCEEDED(rv))
+      msgFolder = do_QueryInterface(subFolder);
+  }
+
 	nsCOMPtr<nsIEventQueue> queue;
     // get the Event Queue for this thread...
     nsCOMPtr<nsIEventQueueService> pEventQService = 
@@ -2845,13 +2873,13 @@ nsImapIncomingServer::SubscribeToFolder(const PRUnichar *aName, PRBool subscribe
 
 	if (subscribe) {
 			rv = imapService->SubscribeFolder(queue,
-                               rootMsgFolder,
+                               msgFolder,
                                aName,
                                nsnull, nsnull);
 	}
 	else {
 			rv = imapService->UnsubscribeFolder(queue,
-                               rootMsgFolder,
+                               msgFolder,
                                aName,
                                nsnull, nsnull);
 	}
