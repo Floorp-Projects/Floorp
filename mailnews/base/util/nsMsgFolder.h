@@ -199,7 +199,7 @@ public:
   NS_IMETHOD ThrowAlertMsg(const char* msgName, nsIMsgWindow *msgWindow);
   NS_IMETHOD GetStringWithFolderNameFromBundle(const char* msgName, PRUnichar **aResult);
   NS_IMETHOD GetPersistElided(PRBool *aPersistElided);
-  NS_IMETHOD GetSortKey(PRUnichar **aSortKey);
+  NS_IMETHOD GetSortKey(PRUint8 **aKey, PRUint32 *aLength);
   NS_IMETHOD GetParentMsgFolder(nsIMsgFolder **aParentMsgFolder);
   // end NS_DECL_NSIMSGFOLDER
   
@@ -221,8 +221,6 @@ public:
 	
   void			ChangeNumPendingUnread(PRInt32 delta);
   void			ChangeNumPendingTotalMessages(PRInt32 delta);
-
-  
 
 
 #ifdef HAVE_ADMINURL
@@ -266,7 +264,7 @@ protected:
   nsresult ThrowConfirmationPrompt(nsIMsgWindow *msgWindow, const PRUnichar *confirmString, PRBool *confirmed);
   nsresult GetWarnFilterChanged(PRBool *aVal);
   nsresult SetWarnFilterChanged(PRBool aVal);
-  nsresult CreateCollationKey(const PRUnichar *aSource, PRUnichar **aSortKey);
+  nsresult CreateCollationKey(const nsString &aSource,  PRUint8 **aKey, PRUint32 *aLength);
 protected:
   PRUint32 mFlags;
   nsWeakPtr mParent;     //This won't be refcounted for ownership reasons.

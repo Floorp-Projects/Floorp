@@ -90,6 +90,20 @@ nsresult createIntNode(PRInt32 value, nsIRDFNode **node, nsIRDFService *rdfServi
 	return rv;
 }
 
+nsresult createBlobNode(PRUint8 *value, PRUint32 &length, nsIRDFNode **node, nsIRDFService *rdfService)
+{
+  *node = nsnull;
+  nsresult rv; 
+  if (!rdfService) return NS_ERROR_NULL_POINTER;  
+  nsCOMPtr<nsIRDFBlob> blob;
+  rv = rdfService->GetBlobLiteral(value, length, getter_AddRefs(blob));
+  if(NS_SUCCEEDED(rv)) {
+    *node = blob;
+    NS_IF_ADDREF(*node);
+  }
+  return rv;
+}
+
 nsresult GetTargetHasAssertion(nsIRDFDataSource *dataSource, nsIRDFResource* folderResource,
 							   nsIRDFResource *property,PRBool tv, nsIRDFNode *target,PRBool* hasAssertion)
 {

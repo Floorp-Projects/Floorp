@@ -49,6 +49,8 @@
 #include "nsMsgKeyArray.h"
 %}
 
+[ptr] native octet_ptr(PRUint8);
+
 interface nsIMsgDBHdr;
 interface nsIMsgWindow;
 interface nsIMsgDatabase;
@@ -394,6 +396,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   wstring getStringWithFolderNameFromBundle(in string msgName);
   void notifyCompactCompleted();
   long compareSortKeys(in nsIMsgFolder msgFolder);
+  [noscript] void getSortKey(out octet_ptr key, out unsigned long length);
 
   attribute nsIMsgRetentionSettings retentionSettings;
   attribute nsIMsgDownloadSettings downloadSettings;
@@ -403,8 +406,6 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    */
   attribute long sortOrder;
 
-  [noscript]readonly attribute wstring sortKey;
-
   /** 
    * used to determine if we persist the close / open state of this folder or not
    */
@@ -412,4 +413,5 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 
   /* handy accessor when we want a msg folder */
   readonly attribute nsIMsgFolder parentMsgFolder;
+
 };

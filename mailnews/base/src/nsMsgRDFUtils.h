@@ -115,7 +115,6 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_FLAGGED_SORT				NC_NAMESPACE_URI "Flagged?sort=true"
 
 #define NC_RDF_NAME_SORT				NC_NAMESPACE_URI "Name?sort=true"
-#define NC_RDF_FOLDERTREENAME_COLLATION_SORT		NC_NAMESPACE_URI "FolderTreeName?collation=true"
 #define NC_RDF_FOLDERTREENAME_SORT		NC_NAMESPACE_URI "FolderTreeName?sort=true"
 
 //Folder Commands
@@ -143,6 +142,9 @@ nsresult createDateNode(PRTime time, nsIRDFNode **node, nsIRDFService *rdfServic
 
 //Given an PRInt32 creates an nsIRDFNode that is really an int literal.
 nsresult createIntNode(PRInt32 value, nsIRDFNode **node, nsIRDFService *rdfService);
+
+//Given an nsIRDFBlob creates an nsIRDFNode that is really an blob literal.
+nsresult createBlobNode(PRUint8 *value, PRUint32 &length,  nsIRDFNode **node, nsIRDFService *rdfService);
 
 //s Assertion for a datasource that will just call GetTarget on property.  When all of our 
 //datasource derive from our datasource baseclass, this should be moved there and the first

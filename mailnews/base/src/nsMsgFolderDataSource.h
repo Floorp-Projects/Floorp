@@ -212,7 +212,6 @@ protected:
   static nsIRDFResource* kNC_FolderTreeSimpleName;
   static nsIRDFResource* kNC_NameSort;
   static nsIRDFResource* kNC_FolderTreeNameSort;
-  static nsIRDFResource* kNC_FolderTreeNameCollationSort;
   static nsIRDFResource* kNC_Columns;
   static nsIRDFResource* kNC_MSGFolderRoot;
   static nsIRDFResource* kNC_SpecialFolder;

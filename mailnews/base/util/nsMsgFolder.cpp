@@ -1191,11 +1191,11 @@ NS_IMETHODIMP nsMsgFolder::RecursiveDelete(PRBool deleteStorage, nsIMsgWindow *m
 			child->SetParent(nsnull);
 			status = child->RecursiveDelete(deleteStorage,msgWindow);  // recur
       if (NS_SUCCEEDED(status))
-          mSubFolders->RemoveElement(supports);  // unlink it from this's child list
+        mSubFolders->RemoveElement(supports);  // unlink it from this's child list
       else
-        { // setting parent back if we failed for some reason
+      { // setting parent back if we failed for some reason
           child->SetParent(this);
-        }
+      }
 		}
 		cnt--;
 	}
@@ -2838,10 +2838,10 @@ NS_IMETHODIMP nsMsgFolder::GetSortOrder(PRInt32 *order)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetSortKey(PRUnichar **aSortKey)
+NS_IMETHODIMP nsMsgFolder::GetSortKey(PRUint8 **aKey, PRUint32 *aLength)
 {
-  nsresult rv=NS_OK;
-  NS_ENSURE_ARG(aSortKey);
+  nsresult rv;
+  NS_ENSURE_ARG(aKey);
   PRInt32 order;
   rv = GetSortOrder(&order);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -2852,7 +2852,7 @@ NS_IMETHODIMP nsMsgFolder::GetSortKey(PRUnichar **aSortKey)
   rv = GetName(getter_Copies(folderName));
   NS_ENSURE_SUCCESS(rv,rv);
   orderString.Append(folderName);
-  rv = CreateCollationKey(orderString.get(), aSortKey);
+  rv = CreateCollationKey(orderString, aKey, aLength);
   return rv;
 }
 
@@ -2864,51 +2864,42 @@ NS_IMETHODIMP nsMsgFolder::GetPersistElided(PRBool *aPersistElided)
 }
 
 nsresult
-nsMsgFolder::CreateCollationKey(const PRUnichar *aSource,  PRUnichar **aSortKey)
+nsMsgFolder::CreateCollationKey(const nsString &aSource,  PRUint8 **aKey, PRUint32 *aLength)
 {
-  nsresult rv =NS_OK;
-  if (kCollationKeyGenerator)
-  {
-    nsAutoString sourceString(aSource);
-    PRUint8 *key=nsnull;
-    PRUint32 length;
+  nsresult rv;
+  
+  NS_ASSERTION(kCollationKeyGenerator, "kCollationKeyGenerator is null");
+  if (!kCollationKeyGenerator)
+    return NS_ERROR_NULL_POINTER;
 
-    rv = kCollationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, sourceString, &length);
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = kCollationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, aSource, aLength);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    key = (PRUint8 *) PR_Malloc(length+3);
-    if (!key) return NS_ERROR_OUT_OF_MEMORY;
+  if (*aLength == 0)
+    return NS_ERROR_FAILURE;
 
-    rv = kCollationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, sourceString, key, &length);
+  *aKey = (PRUint8 *) PR_Malloc(*aLength);
+  if (!aKey) 
+    return NS_ERROR_OUT_OF_MEMORY;
 
-    if (NS_SUCCEEDED(rv))
-    {
-      key[length] = 0;
-      key[length+1] = 0;
-      key[length+2] = 0;
-      *aSortKey =(PRUnichar *) key;
-    }
-    else
-      PR_Free(key);
-  }
-  return rv;
+  return kCollationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, aSource, *aKey, aLength);
 }
 
 NS_IMETHODIMP nsMsgFolder::CompareSortKeys(nsIMsgFolder *aFolder, PRInt32 *sortOrder)
 {
   nsresult rv;
-  nsXPIDLString sortKey1;
-  nsXPIDLString sortKey2;
-  rv = GetSortKey(getter_Copies(sortKey1));
+  PRUint8 *sortKey1=nsnull;
+  PRUint8 *sortKey2=nsnull;
+  PRUint32 sortKey1Length;
+  PRUint32 sortKey2Length;
+  rv = GetSortKey(&sortKey1, &sortKey1Length);
   NS_ENSURE_SUCCESS(rv,rv);
-  aFolder->GetSortKey(getter_Copies(sortKey2));
+  aFolder->GetSortKey(&sortKey2, &sortKey2Length);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = kCollationKeyGenerator->CompareRawSortKey((const PRUint8 *) sortKey1.get(),
-                 sortKey1.Length() * sizeof(PRUnichar),
-                 (const PRUint8 *) sortKey2.get(),
-                 sortKey2.Length() * sizeof(PRUnichar),
-                 sortOrder);                    
+  rv = kCollationKeyGenerator->CompareRawSortKey(sortKey1, sortKey1Length, sortKey2, sortKey2Length, sortOrder);
+  PR_Free(sortKey1);
+  PR_Free(sortKey2);
   return rv;
 }
 
