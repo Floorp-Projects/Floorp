@@ -178,7 +178,7 @@ NS_METHOD nsLabel::GetLabel(nsString& aBuffer)
     PtArg_t arg;
     char    *label;
 
-    PtSetArg( &arg, Pt_ARG_TEXT_STRING, label, 0 );
+    PtSetArg( &arg, Pt_ARG_TEXT_STRING, &label, 0 );
     if( PtGetResources( mWidget, 1, &arg ) == 0 )
     {
       aBuffer.Append( label );
