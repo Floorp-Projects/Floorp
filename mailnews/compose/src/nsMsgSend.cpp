@@ -2140,6 +2140,7 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
         mCompFields->SetFcc("");
       else
         mCompFields->SetFcc(uri);
+      PL_strfree(uri);
     }
     else
       mCompFields->SetFcc("");
