@@ -21,9 +21,11 @@
  */
 
 const kPersonalAddressbookURI = "moz-abmdbdirectory://abook.mab";
+const kLabelOffset = 1;  // 1=2-1, from msgViewPickerOveraly.xul, <menuitem value="2" id="labelMenuItem1"/>
+const kLastDefaultViewIndex = 8;  // 8, because 7 + 1, <menuitem id="createCustomView" value="7" label="&viewPickerCustomView.label;"/>
+const kCustomItemValue = "7"; // from msgViewPickerOveraly.xul, <menuitem id="createCustomView" value="7" label="&viewPickerCustomView.label;"/>
 
 var gMailViewList = null;
-var gLastDefaultViewIndex = 8;
 var gCurrentViewValue = "0"; // initialize to the first view ("All")
 
 var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
@@ -36,7 +38,7 @@ function viewChange(aMenuList)
 {
   var val = aMenuList.value;
 
-  if (val == "7") {
+  if (val == kCustomItemValue) { 
     // restore to the previous view value, in case they cancel
     aMenuList.value = gCurrentViewValue;
     LaunchCustomizeDialog();
@@ -56,15 +58,15 @@ function viewChange(aMenuList)
    case "1": // Unread
      ViewNewMail();
      break;
-   case "2":
-   case "3":
-   case "4":
-   case "5":
-   case "6":
-     ViewLabel(parseInt(val) - 1);
+   case "2": // label 1
+   case "3": // label 2
+   case "4": // label 3
+   case "5": // label 4
+   case "6": // label 5
+     ViewLabel(parseInt(val) - kLabelOffset);
      break;
    default:
-     LoadCustomMailView(parseInt(val) - gLastDefaultViewIndex);
+     LoadCustomMailView(parseInt(val) - kLastDefaultViewIndex);
      break;
   } //      
 
@@ -121,9 +123,8 @@ function viewPickerOnLoad()
 
 function LaunchCustomizeDialog()
 {
-  // making it modal, see bug #191188
-  //OpenOrFocusWindow({onOkCallback: refreshCustomMailViews, onCancelCallback: cancelCustomMailViews}, 'mailnews:mailviewlist', 'chrome://messenger/content/mailViewList.xul'); 
-  window.openDialog("chrome://messenger/content/mailViewList.xul", "mailnews:mailviewlist", "chrome,modal,titlebar,resizable,centerscreen", {onOkCallback: refreshCustomMailViews});
+  // made it modal, see bug #191188
+  window.openDialog("chrome://messenger/content/mailViewList.xul", "mailnews:mailviewlist", "chrome,modal,titlebar,resizable,centerscreen", {onCloseCallback: refreshCustomMailViews});
 }
 
 function LoadCustomMailView(index)
@@ -195,8 +196,9 @@ function refreshCustomMailViews(aDefaultSelectedIndex)
   {
     newMenuItem = document.createElement('menuitem');
     newMenuItem.setAttribute('label', gMailViewList.getMailViewAt(index).mailViewName);
+    newMenuItem.setAttribute('id', "userdefinedview" + (kLastDefaultViewIndex + index));
     item = menupopupNode.insertBefore(newMenuItem, customNode);
-    item.setAttribute('value',  gLastDefaultViewIndex + index);
+    item.setAttribute('value',  kLastDefaultViewIndex + index);
   }
 
   if (!numItems)
@@ -207,9 +209,8 @@ function refreshCustomMailViews(aDefaultSelectedIndex)
   if (aDefaultSelectedIndex >= 0)
   {
     var viewPicker = document.getElementById('viewPicker');
-    viewPicker.value = gLastDefaultViewIndex + aDefaultSelectedIndex;
-    gCurrentViewValue = viewPicker.value;
-    LoadCustomMailView(aDefaultSelectedIndex);
+    viewPicker.selectedItem = document.getElementsByAttribute("value", kLastDefaultViewIndex + aDefaultSelectedIndex)[0];
+    viewChange(viewPicker);
   }
 }
 

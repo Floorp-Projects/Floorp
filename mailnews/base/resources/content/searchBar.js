@@ -426,6 +426,16 @@ function disableQuickSearchClearButton()
    gClearButton.setAttribute("disabled", true); //going out of search disable clear button
 }
 
+function ClearQSIfNecessary()
+{
+  GetSearchInput();
+
+  if (gSearchInput.value == "")
+    return;
+
+  Search("");
+}
+
 function Search(str)
 {
   GetSearchInput();

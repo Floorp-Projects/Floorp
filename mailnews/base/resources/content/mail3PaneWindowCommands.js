@@ -374,7 +374,7 @@ var DefaultController =
       case "cmd_viewThreadsWithUnread":
       case "cmd_viewWatchedThreadsWithUnread":
       case "cmd_viewIgnoredThreads":
-        return gDBView && gDBView.supportsThreading;
+        return gDBView;
       case "cmd_stop":
         return true;
       case "cmd_undo":

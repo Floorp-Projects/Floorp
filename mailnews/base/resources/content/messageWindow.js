@@ -422,6 +422,10 @@ function HideMenus()
 	if (viewMessagesMenu)
 		viewMessagesMenu.setAttribute("hidden", "true");
 
+	var viewMessageViewMenu = document.getElementById('viewMessageViewMenu');
+	if (viewMessageViewMenu)
+		viewMessageViewMenu.setAttribute("hidden", "true");
+
 	var viewMessagesMenuSeparator = document.getElementById('viewMessagesMenuSeparator');
 	if (viewMessagesMenuSeparator)
 		viewMessagesMenuSeparator.setAttribute("hidden", "true");
@@ -433,10 +437,6 @@ function HideMenus()
 	var viewSortMenu = document.getElementById('viewSortMenu');
 	if (viewSortMenu)
 		viewSortMenu.setAttribute("hidden", "true");
-
-	var viewThreadedMenu = document.getElementById('menu_showThreads');
-	if (viewThreadedMenu)
-		viewThreadedMenu.setAttribute("hidden", "true");
 
 	var emptryTrashMenu = document.getElementById('menu_emptyTrash');
 	if (emptryTrashMenu)

@@ -323,6 +323,15 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
 
 function SwitchView(command)
 {
+  // when switching thread views, we might be coming out of quick search
+  // or a message view.
+  // first set view picker to all
+  ViewMessagesBy("viewPickerAll");
+
+  // clear the QS text, if we need to
+  ClearQSIfNecessary();
+  
+  // now switch views
   var oldSortType = gDBView ? gDBView.sortType : nsMsgViewSortType.byThread;
   var oldSortOrder = gDBView ? gDBView.sortOrder : nsMsgViewSortOrder.ascending;
   var viewFlags = gCurViewFlags;

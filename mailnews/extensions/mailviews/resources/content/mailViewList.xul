@@ -30,23 +30,22 @@ Rights Reserved.
 %FilterListDialogDTD;
 ]>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<dialog id="mailViewListDialog"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="mailViewListOnLoad();"
+        onunload="mailViewListOnUnload()"
         windowtype="mailnews:mailviewlist"
         title="&mailViewListTitle.label;"
         width="400" height="340"
+        buttons="accept,help"
+        ondialogaccept="window.close();"
+        ondialoghelp="return openHelp('message-views-using');"
         persist="screenX screenY width height">
 
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/mailViewList.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
-  <keyset id="dialogKeys"/>
-    
   <vbox flex="1">
-
-    <separator/>
-
     <hbox flex="1">
       <listbox id="mailViewList" flex="1"  onselect="onMailViewSelect(event);">
         <listcols>
@@ -63,13 +62,10 @@ Rights Reserved.
        <button id="editButton" label="&editButton.label;" accesskey="&editButton.accesskey;" oncommand="onEditMailView();"/>
        <button id="deleteButton" label="&deleteButton.label;" accesskey="&deleteButton.accesskey;" oncommand="onDeleteMailView();"/>
       </vbox>
-
     </hbox>
-
-    <separator class="thin"/>
-
-    <hbox id="okCancelHelpButtonsRight"/>
-
   </vbox>
+</dialog>
 
-</window>
+
+
+
