@@ -60,6 +60,7 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 
 nsresult nsAppShell::Run()
 {
+  NS_ADDREF_THIS();
     // Process messages
   MSG msg;
   while (GetMessage(&msg, NULL, 0, 0)) {
@@ -68,6 +69,7 @@ nsresult nsAppShell::Run()
       if (mDispatchListener)
         mDispatchListener->AfterDispatch();
   }
+  Release();
   return msg.wParam;
 }
 
