@@ -75,7 +75,7 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 #define DEFAULT_HOST	"nsmail-2.mcom.com"
 #define DEFAULT_PORT	25		/* we get this value from SmtpCore.h */
-#define DEFAULT_URL_TYPE  "sockstub://"	/* do NOT change this value until netlib re-write is done...*/
+#define DEFAULT_URL_TYPE  "mailto://"	/* do NOT change this value until netlib re-write is done...*/
 #define DEFAULT_RECIPIENT "mscott@netscape.com"
 #define DEFAULT_FILE	  "message.eml"
 #define	DEFAULT_SENDER	  "qatest03@netscape.com"

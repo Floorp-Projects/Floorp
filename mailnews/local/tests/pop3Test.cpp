@@ -88,7 +88,7 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 #define DEFAULT_HOST	"nsmail-2.mcom.com"
 #define DEFAULT_PORT	POP3_PORT		/* we get this value from nsPop3Protocol.h */
-#define DEFAULT_URL_TYPE  "sockstub://"	/* do NOT change this value until netlib re-write is done...*/
+#define DEFAULT_URL_TYPE  "pop3://"
 
 //extern NET_StreamClass *MIME_MessageConverter(int format_out, void *closure, 
 //											  URL_Struct *url, MWContext *context);
