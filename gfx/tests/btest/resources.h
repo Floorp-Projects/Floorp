@@ -27,5 +27,6 @@
 #define DRAWTEST                  40014
 #define FILLTEST                  40015
 #define ARCTEST                   40016
+#define COMPTST                   40017
 
 #endif /* resources_h___ */

@@ -205,7 +205,19 @@ HDC   the_hdc = (HDC)aSurface;
 
 //------------------------------------------------------------
 
-PRBool nsImageWin :: MakePalette()
+void 
+nsImageWin::CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation)
+{
+
+  
+
+
+}
+
+//------------------------------------------------------------
+
+PRBool 
+nsImageWin::MakePalette()
 {
 	// makes a logical palette (mHPalette) from the DIB's color table
 	// this palette will be selected and realized prior to drawing the DIB
