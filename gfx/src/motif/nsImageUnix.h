@@ -47,6 +47,8 @@ public:
   virtual void ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
   virtual PRBool      IsOptimized()       { return (mImage!=nsnull); }
+
+  virtual  nsresult   BuildImage(nsDrawingSurface aDrawingSurface);
   virtual nsresult    Optimize(nsDrawingSurface aSurface);
   virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
   virtual PRInt32     GetAlphaWidth()   { return 0;}
@@ -94,6 +96,7 @@ private:
 
 
 private:
+  PRBool     mStaticImage;
   PRInt32    mWidth;
   PRInt32    mHeight;
   PRInt32    mDepth;       // bits per pixel
