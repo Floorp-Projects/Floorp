@@ -19,6 +19,8 @@
 
 /* Javascript code calling the Python test interface. */
 
+var extended_unicode_string = "The Euro Symbol is '\u20ac'";
+
 function MakeTestInterface()
 {
     var clazz = Components.classes["Python.TestComponent"];
@@ -60,12 +62,27 @@ if (c.wstring_value != 'dee')
 c.wstring_value = 'eee';
 if (c.wstring_value != 'eee')
 	throw("wstring_value has wrong new value");
+c.wstring_value = extended_unicode_string;
+if (c.wstring_value != extended_unicode_string)
+	throw("wstring_value has wrong new value");
 
 if (c.domstring_value != 'dom')
 	throw("domstring_value has wrong initial value");
 c.domstring_value = 'New value';
 if (c.domstring_value != 'New value')
 	throw("domstring_value has wrong new value");
+c.domstring_value = extended_unicode_string;
+if (c.domstring_value != extended_unicode_string)
+	throw("domstring_value has wrong new value");
+
+if (c.utf8string_value != 'utf8string')
+	throw("utf8string_value has wrong initial value");
+c.utf8string_value = 'New value';
+if (c.utf8string_value != 'New value')
+	throw("utf8string_value has wrong new value");
+c.utf8string_value = extended_unicode_string;
+if (c.utf8string_value != extended_unicode_string)
+	throw("utf8string_value has wrong new value");
 
 var v = new Object();
 v.value = "Hello"
