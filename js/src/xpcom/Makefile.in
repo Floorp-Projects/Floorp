@@ -69,9 +69,6 @@ INCLUDES	+= -I$(PUBLIC)/xpcom -I$(PUBLIC)/js
 
 PROGRAM		= jsxpcom
 
-# use the C++ compiler to do the final link
-CPP_PROG_LINK 	= 1
-
 # `libs' just does libs, `install' does programs
 LIBS_NEQ_INSTALL = 1
 
