@@ -56,6 +56,8 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_NSPR_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES += -DXP_UNIX
+
 export::	copysrcs
 
 copysrcs::
