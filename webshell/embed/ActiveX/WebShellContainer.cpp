@@ -195,7 +195,7 @@ CWebShellContainer::SetTitle(const PRUnichar* aTitle)
 
 
 NS_IMETHODIMP
-CWebShellContainer::GetTitle(const PRUnichar** aResult)
+CWebShellContainer::GetTitle(PRUnichar** aResult)
 {
 	NG_TRACE_METHOD(CWebShellContainer::GetTitle);
 	*aResult = nsnull;
