@@ -293,6 +293,13 @@ static JSClass prop_iterator_class = {
         }                                                                     \
     JS_END_MACRO
 
+#define FETCH_OBJECT(cx, n, v, obj)                                           \
+    JS_BEGIN_MACRO                                                            \
+        v = FETCH_OPND(n);                                                    \
+        VALUE_TO_OBJECT(cx, v, obj);                                          \
+        STORE_OPND(n, OBJECT_TO_JSVAL(obj));                                  \
+    JS_END_MACRO
+
 #if JS_BUG_VOID_TOSTRING
 #define CHECK_VOID_TOSTRING(cx, v)                                            \
     if (JSVAL_IS_VOID(v)) {                                                   \
@@ -1989,8 +1996,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             break;
 
           case JSOP_ENTERWITH:
-            rval = FETCH_OPND(-1);
-            VALUE_TO_OBJECT(cx, rval, obj);
+            FETCH_OBJECT(cx, -1, rval, obj);
             withobj = js_NewObject(cx, &js_WithClass, obj, fp->scopeChain);
             if (!withobj)
                 goto out;
@@ -2487,6 +2493,8 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
               default:
                 /* Convert lval to a non-null object containing id. */
                 VALUE_TO_OBJECT(cx, lval, obj);
+                if (i + 1 < 0)
+                    STORE_OPND(i + 1, OBJECT_TO_JSVAL(obj));
 
                 /* Set the variable obj[id] to refer to rval. */
                 fp->flags |= JSFRAME_ASSIGNING;
@@ -2523,8 +2531,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 #define PROPERTY_OP(n, call)                                                  \
     JS_BEGIN_MACRO                                                            \
         /* Fetch the left part and resolve it to a non-null object. */        \
-        lval = FETCH_OPND(n);                                                 \
-        VALUE_TO_OBJECT(cx, lval, obj);                                       \
+        FETCH_OBJECT(cx, n, lval, obj);                                       \
                                                                               \
         /* Get or set the property, set ok false if error, true if success. */\
         SAVE_SP(fp);                                                          \
@@ -2539,8 +2546,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
         FETCH_ELEMENT_ID(n, id);                                              \
                                                                               \
         /* Fetch the left part and resolve it to a non-null object. */        \
-        lval = FETCH_OPND(n-1);                                               \
-        VALUE_TO_OBJECT(cx, lval, obj);                                       \
+        FETCH_OBJECT(cx, n - 1, lval, obj);                                   \
                                                                               \
         /* Ensure that id has a type suitable for use with obj. */            \
         CHECK_ELEMENT_ID(obj, id);                                            \
@@ -3232,6 +3238,8 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
           do_incop:
             VALUE_TO_OBJECT(cx, lval, obj);
+            if (i < 0)
+                STORE_OPND(i, OBJECT_TO_JSVAL(obj));
             CHECK_ELEMENT_ID(obj, id);
 
             /* The operand must contain a number. */
@@ -3411,8 +3419,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
           case JSOP_ENUMELEM:
             /* Funky: the value to set is under the [obj, id] pair. */
             FETCH_ELEMENT_ID(-1, id);
-            lval = FETCH_OPND(-2);
-            VALUE_TO_OBJECT(cx, lval, obj);
+            FETCH_OBJECT(cx, -2, lval, obj);
             CHECK_ELEMENT_ID(obj, id);
             rval = FETCH_OPND(-3);
             SAVE_SP(fp);
@@ -4609,8 +4616,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 FETCH_ELEMENT_ID(-2, id);
                 i = -2;
               gs_pop_lval:
-                lval = FETCH_OPND(i-1);
-                VALUE_TO_OBJECT(cx, lval, obj);
+                FETCH_OBJECT(cx, i - 1, lval, obj);
                 break;
 
 #if JS_HAS_INITIALIZERS
@@ -5053,8 +5059,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
           case JSOP_DESCENDANTS:
           case JSOP_DELDESC:
-            lval = FETCH_OPND(-2);
-            VALUE_TO_OBJECT(cx, lval, obj);
+            FETCH_OBJECT(cx, -2, lval, obj);
             rval = FETCH_OPND(-1);
             SAVE_SP(fp);
             ok = js_GetXMLDescendants(cx, obj, rval, &rval);
@@ -5074,8 +5079,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             break;
 
           case JSOP_FILTER:
-            lval = FETCH_OPND(-1);
-            VALUE_TO_OBJECT(cx, lval, obj);
+            FETCH_OBJECT(cx, -1, lval, obj);
             len = GET_JUMP_OFFSET(pc);
             SAVE_SP(fp);
             ok = js_FilterXMLList(cx, obj, pc + cs->length, &rval);
@@ -5191,8 +5195,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             /* Get an immediate atom naming the property. */
             atom = GET_ATOM(cx, script, pc);
             id   = ATOM_TO_JSID(atom);
-            lval = FETCH_OPND(-1);
-            VALUE_TO_OBJECT(cx, lval, obj);
+            FETCH_OBJECT(cx, -1, lval, obj);
             SAVE_SP(fp);
 
             /* Special-case XML object method lookup, per ECMA-357. */
