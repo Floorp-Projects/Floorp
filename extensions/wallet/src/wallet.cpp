@@ -1860,7 +1860,7 @@ static PRInt32 FieldToValue(
 
     if (wallet_ReadFromList(temp, value, itemList, wallet_SchemaToValue_list, PR_TRUE, index2)) {
       /* value found, prefill it into form */
-      schema = field;
+      schema = temp;
       index = index2;
       return 0;
     }
@@ -2392,7 +2392,7 @@ wallet_GetSchemaFromDisplayableText(nsIDOMNode* elementNode, nsString& schema, P
   return;
 }
 
-static PRInt32
+nsresult
 wallet_GetPrefills(
   nsIDOMNode* elementNode,
   nsIDOMHTMLInputElement*& inputElement,  
@@ -2416,10 +2416,12 @@ wallet_GetPrefills(
         nsVoidArray* itemList;
 
         /* try to get schema name from vcard attribute if it exists */
-        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
-        if (element) {
-          nsAutoString vcard; vcard.AssignWithConversion("VCARD_NAME");
-          result = element->GetAttribute(vcard, schema);
+        if (schema.Length() == 0) {
+          nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
+          if (element) {
+            nsAutoString vcard; vcard.AssignWithConversion("VCARD_NAME");
+            result = element->GetAttribute(vcard, schema);
+          }
         }
 
         /* try to get schema name from displayable text if possible */
@@ -2442,7 +2444,7 @@ if (schema.Length()) {
             nsAutoString encryptedValue( ((wallet_Sublist *)itemList->ElementAt(0))->item );
             if (NS_FAILED(Wallet_Decrypt(encryptedValue, value))) {
               NS_RELEASE(inputElement);
-              return -1;
+              return NS_ERROR_FAILURE;
             }
           }
           selectElement = nsnull;
@@ -2458,7 +2460,7 @@ if (schema.Length()) {
       }
     }
     NS_RELEASE(inputElement);
-    return -1;
+    return NS_ERROR_FAILURE;
   }
 
   /* get prefills for dropdown list */
@@ -2509,7 +2511,7 @@ if (schema.Length()) {
     }
     NS_RELEASE(selectElement);
   }
-  return -1;
+  return NS_ERROR_FAILURE;
 }
 
 /*
@@ -3350,14 +3352,14 @@ wallet_TraversalForPrefill
                            * elements in group will have count field set to 0
                            */
                           prefillElement = new wallet_PrefillElement;
-                          if (wallet_GetPrefills
+                          if (NS_SUCCEEDED(wallet_GetPrefills
                               (elementNode,
                               prefillElement->inputElement,
                               prefillElement->selectElement,
                               prefillElement->schema,
                               prefillElement->value,
                               prefillElement->selectIndex,
-                              index) != -1) {
+                              index))) {
                             /* another value found */
                             if (nsnull == firstElement) {
                               firstElement = prefillElement;
@@ -3399,6 +3401,43 @@ wallet_TraversalForPrefill
       }
     }
   }
+}
+
+PUBLIC nsresult
+WLLT_PrefillOneElement
+  (nsIDOMWindowInternal* win, nsIDOMNode* elementNode, nsString& compositeValue)
+{
+  nsIDOMHTMLInputElement* inputElement;
+  nsIDOMHTMLSelectElement* selectElement;
+  nsString schema;
+  nsString value;
+  PRInt32 selectIndex = 0;
+  PRInt32 index = 0;
+
+  if (nsnull != win) {
+    nsCOMPtr<nsIDOMDocument> domdoc;
+    nsresult result = win->GetDocument(getter_AddRefs(domdoc));
+    if (NS_SUCCEEDED(result)) {
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+      if (doc) {
+        wallet_Initialize(PR_TRUE);
+        wallet_InitializeCurrentURL(doc);
+        wallet_InitializeStateTesting();
+        while (NS_SUCCEEDED(wallet_GetPrefills
+            (elementNode,
+            inputElement,
+            selectElement,
+            schema,
+            value,
+            selectIndex,
+            index))) {
+              compositeValue.AppendWithConversion(BREAK);
+              compositeValue.Append(value);
+        }
+      }
+    }
+  }
+  return NS_OK;
 }
 
 PUBLIC nsresult

@@ -112,6 +112,16 @@ nsWalletlibService::WALLET_RequestToCapture(nsIDOMWindowInternal* aWin,
 }
 
 NS_IMETHODIMP
+nsWalletlibService::WALLET_PrefillOneElement
+    (nsIDOMWindowInternal* aWin, nsIDOMNode* elementNode, PRUnichar **value)
+{
+  nsAutoString compositeValue;
+  nsresult rv = ::WLLT_PrefillOneElement(aWin, elementNode, compositeValue);
+  *value = compositeValue.ToNewUnicode();
+  return rv;
+}
+
+NS_IMETHODIMP
 nsWalletlibService::WALLET_Prefill(PRBool quick,
                                    nsIDOMWindowInternal* aWin,
                                    PRBool* status)

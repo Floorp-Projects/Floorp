@@ -54,6 +54,8 @@ interface nsIWalletService : nsISupports {
   void WALLET_DeleteAll();
   unsigned long WALLET_RequestToCapture(in nsIDOMWindowInternal win);
   boolean WALLET_Prefill(in boolean quick, in nsIDOMWindowInternal win);
+  wstring WALLET_PrefillOneElement
+    (in nsIDOMWindowInternal win, in nsIDOMNode elementNode);
   [noscript]void WALLET_PrefillReturn(in nsAutoString results);
   void WALLET_FetchFromNetCenter();
   boolean WALLET_ExpirePassword();

@@ -64,6 +64,10 @@ extern void
 WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindowInternal * win, PRUint32* status);
 
 extern nsresult
+WLLT_PrefillOneElement
+  (nsIDOMWindowInternal* win, nsIDOMNode* elementNode, nsString& compositeValue);
+
+extern nsresult
 WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win);
 
 extern void
