@@ -75,7 +75,8 @@ static NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
 //
 static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 
-
+// global variable
+static PRBool g_verbose = PR_FALSE;
 
 // Create a collation key, the memory is allocated using new which need to be deleted by a caller.
 //
@@ -374,13 +375,43 @@ static void TestSortPrint1(nsString *string_array, int len)
 static int compare1( const void *arg1, const void *arg2 )
 {
   nsString string1, string2;
-  PRInt32 result;
+  PRInt32 result,result2;
   nsresult res;
 
   string1 = *(nsString *) arg1;
   string2 = *(nsString *) arg2;
 
-  res = g_collationInst->CompareString(g_CollationStrength, string1, string2, &result);
+  res = g_collationInst->CompareString(g_CollationStrength, string1, string2, &result2);
+
+  nsString key1,key2;
+  res = g_collationInst->CreateSortKey(g_CollationStrength, string1, key1);
+  NS_ASSERTION(NS_SUCCEEDED(res), "CreateSortKey");
+  res = g_collationInst->CreateSortKey(g_CollationStrength, string2, key2);
+  NS_ASSERTION(NS_SUCCEEDED(res), "CreateSortKey");
+
+  res = g_collationInst->CompareSortKey(key1, key2, &result);
+  NS_ASSERTION(NS_SUCCEEDED(res), "CreateSortKey");
+  NS_ASSERTION(NS_SUCCEEDED((PRBool)(result == result2)), "result unmatch");
+  if (g_verbose) {
+    // Warning: casting to char*
+    char *cstr = string1.ToNewCString();
+    cout << cstr << ' ';
+    delete [] cstr;
+    switch ((int)result) {
+    case 0:
+      cout << "==";
+      break;
+    case 1:
+      cout << '>';
+      break;
+    case -1:
+      cout << '<';
+      break;
+    }
+    cstr = string2.ToNewCString();
+    cout << ' ' << cstr << '\n';
+    delete [] cstr;
+  }
 
   return (int) result;
 }
@@ -733,36 +764,10 @@ static char* find_option(int argc, char** argv, char* arg)
 }
 
 int main(int argc, char** argv) {
-  nsresult res; 
-
-#ifdef XP_MAC
-  res = nsComponentManager::RegisterComponent(kCollationFactoryCID, NULL, NULL, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
-
-  res = nsComponentManager::RegisterComponent(kCollationCID, NULL, NULL, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
-
-  res = nsComponentManager::RegisterComponent(kDateTimeFormatCID, NULL, NULL, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
-
-  res = nsComponentManager::RegisterComponent(kCharsetConverterManagerCID, NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
-
-  res = nsComponentManager::RegisterComponent(kLatin1ToUnicodeCID, NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
-
-  res = nsComponentManager::RegisterComponent(kUnicharUtilCID, NULL, NULL, UNICHARUTIL_DLL_NAME, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
-
-	res = nsComponentManager::RegisterComponent(kLocaleFactoryCID, NULL, NULL, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
-	NS_ASSERTION(res==NS_OK,"nsLocaleTest: RegisterComponent failed.");
-
-#endif
-  // --------------------------------------------
-
   nsILocale *locale = NULL;
 
 #if 0
+  nsresult res; 
 	nsILocaleFactory*	localeFactory;
 
 	res = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory);
@@ -798,8 +803,12 @@ int main(int argc, char** argv) {
     s = find_option(argc, argv, "-h");
     if (s) {
       cout << argv[0] << " usage:\n-date\tdate time format test\n-col\tcollation test\n-sort\tsort test\n\
--f file\tsort data file\n-case\tcase sensitive sort\n-locale\tlocale\n";
+-f file\tsort data file\n-case\tcase sensitive sort\n-locale\tlocale\n-v\tverbose";
       return 0;
+    }
+    s = find_option(argc, argv, "-v");
+    if (s) {
+      g_verbose = PR_TRUE;
     }
     s = get_option(argc, argv, "-f");
     if (s) {
