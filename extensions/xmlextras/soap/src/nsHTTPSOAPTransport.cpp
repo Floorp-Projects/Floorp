@@ -187,8 +187,8 @@ NS_IMETHODIMP nsHTTPSOAPTransportCompletion::Abort(PRBool *_retval)
 {
   if (mRequest) {
     if (NS_SUCCEEDED(mRequest->Abort())) {
-      mRequest = nsnull;
       *_retval = PR_TRUE;
+      mRequest = nsnull;
       return NS_OK;
     }
   }
@@ -219,7 +219,8 @@ nsHTTPSOAPTransportCompletion::HandleEvent(nsIDOMEvent* aEvent)
     else {
       mResponse = nsnull;
     }
-    mRequest = nsnull;	//  Break cycle.
+    nsCOMPtr<nsISOAPCallCompletion> kungFuDeathGrip = this;
+    mRequest = nsnull;	//  Break cycle of references by releas.
     PRBool c;  //  In other transports, this may signal to stop returning if multiple returns
     mListener->HandleResponse(mResponse, mCall, rv, PR_TRUE, &c);
   }
