@@ -31,6 +31,7 @@
 #define INCL_NLS
 #define INCL_DOS
 #define INCL_WINSTDFILE
+#define INCL_DOSERRORS
 #include <os2.h>
 #include <uconv.h>  // Rather not have to include these two, but need types...
 #include <unikbd.h> // 
