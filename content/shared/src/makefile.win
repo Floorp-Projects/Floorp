@@ -34,7 +34,9 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  layout \
 		  gfx \
+		  uconv \
 		  $(NULL)
+
 LIBRARY_NAME=contentshared_s 
 DEFINES=-D_IMPL_NS_LAYOUT -DWIN32_LEAN_AND_MEAN
 !if defined(XP_NEW_SELECTION)
