@@ -1548,7 +1548,7 @@ mips-sony-newsos*)
     else
         CC="$CC -xstrconst"
         CXX="$CXX -Qoption cg -xstrconst"
-        if test -n "$BUILD_NUMBER" && test -z "$MOZ_OPTIMIZE"; then
+        if test -z "$MOZ_OPTIMIZE"; then
             CFLAGS="$CFLAGS -xs"
             CXXFLAGS="$CXXFLAGS -xs"
         fi
