@@ -36,6 +36,7 @@ CPPSRCS =				\
 	nsUnicodeToGB2312.cpp		\
 	nsUnicodeToGB2312GL.cpp		\
 	nsGBKToUnicode.cpp		\
+	nsUnicodeToGBKNoAscii.cpp	\
 	nsUnicodeToGBK.cpp		\
 	nsISO2022CNToUnicode.cpp		\
 	nsUnicodeToISO2022CN.cpp		\
@@ -55,6 +56,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToGB2312GL.obj		\
 	.\$(OBJDIR)\nsGBKToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToGBK.obj		\
+	.\$(OBJDIR)\nsUnicodeToGBKNoAscii.obj		\
 	.\$(OBJDIR)\nsISO2022CNToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToISO2022CN.obj		\
 	.\$(OBJDIR)\nsHZToUnicode.obj 		\
