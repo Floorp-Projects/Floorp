@@ -639,7 +639,7 @@ nsNntpIncomingServer::GetFirstGroupNeedingCounts(nsISupports **aFirstGroupNeedin
 		*aFirstGroupNeedingCounts = nsnull;
     	delete mGroupsEnumerator;
 		mGroupsEnumerator = nsnull;
-		return NS_ERROR_FAILURE;
+		return NS_OK; // this is not an error - it just means we reached the end of the groups.
 	}
 
     rv = mGroupsEnumerator->GetNext(aFirstGroupNeedingCounts);

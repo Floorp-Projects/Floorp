@@ -3636,7 +3636,8 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 	{
 		SetFlag(NNTP_NEWSRC_PERFORMED);
         rv = m_nntpServer->GetNumGroupsNeedingCounts(&m_newsRCListCount);
-		if (NS_FAILED(rv)) return -1;
+		if (NS_FAILED(rv))
+      return -1;
 	}
 	
 	nsCOMPtr <nsISupports> currChild;
@@ -3645,20 +3646,32 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 		ClearFlag(NNTP_NEWSRC_PERFORMED);
 		return -1;
 	}
+  else if (!currChild)
+  {
+		ClearFlag(NNTP_NEWSRC_PERFORMED);
+    m_nextState = NEWS_DONE;
+    return 0;
+  }
 
 	nsCOMPtr<nsIFolder> currFolder;
     currFolder = do_QueryInterface(currChild, &rv);
-	if (NS_FAILED(rv)) return -1;
-	if (!currFolder) return -1;
+	if (NS_FAILED(rv))
+    return -1;
+	if (!currFolder) 
+    return -1;
 
     m_newsFolder = do_QueryInterface(currFolder, &rv);
-	if (NS_FAILED(rv)) return -1;
-	if (!m_newsFolder) return -1;
+	if (NS_FAILED(rv)) 
+    return -1;
+	if (!m_newsFolder) 
+    return -1;
 
 	nsXPIDLString name;
 	rv = currFolder->GetName(getter_Copies(name));
-	if (NS_FAILED(rv)) return -1;
-	if (!name) return -1;
+	if (NS_FAILED(rv)) 
+    return -1;
+	if (!name) 
+    return -1;
 
 	// do I need asciiName?
 	nsCAutoString asciiName; asciiName.AssignWithConversion(name);
@@ -5032,6 +5045,11 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 
 				// mscott: I've removed the code that used to be here because it involved connection
 				// management which should now be handled by the netlib module.
+
+        // bienvenu: netlib never did handle connection caching, so we need to resurrect this code :-(
+        if (m_nntpServer)
+          m_nntpServer->RemoveConnection(this);
+
 				m_nextState = NEWS_FREE;
 				break;
     

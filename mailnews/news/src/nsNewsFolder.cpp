@@ -103,6 +103,7 @@ nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
      mExpungedBytes(0), mGettingNews(PR_FALSE),
     mInitialized(PR_FALSE), mOptionLines(""), mUnsubscribedNewsgroupLines(""), mCachedNewsrcLine(nsnull), mGroupUsername(nsnull), mGroupPassword(nsnull)
 {
+  MOZ_COUNT_CTOR(nsNewsFolder); // double count these for now.
   /* we're parsing the newsrc file, and the line breaks are platform specific.
    * if MSG_LINEBREAK != CRLF, then we aren't looking for CRLF 
    */
@@ -116,6 +117,7 @@ nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
 
 nsMsgNewsFolder::~nsMsgNewsFolder(void)
 {
+  MOZ_COUNT_DTOR(nsNewsFolder);
   PR_FREEIF(mCachedNewsrcLine);
   PR_FREEIF(mGroupUsername);
   PR_FREEIF(mGroupPassword);
