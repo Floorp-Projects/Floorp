@@ -62,6 +62,19 @@ public:
   virtual nsresult Redo(void) = 0;
 
   /**
+   * Attempts to merge a transaction into "this" transaction. Both transactions
+   * must be in their undo state, Do() methods already executed. The transaction
+   * manager calls this method to coalesce a new transaction with the
+   * transaction on the top of the undo stack.
+   * @param aDidMerge will contain merge result. True if transactions were
+   * merged successfully. False if merge is not possible or failed. If true,
+   * the transaction manager will Release() the new transacton instead of
+   * pushing it on the undo stack.
+   * @param aTransaction the previously executed transaction to merge.
+   */
+  virtual nsresult Merge(PRBool *aDidMerge, nsITransaction *aTransaction) = 0;
+
+  /**
    * Write a stream representation of the current state of the transaction.
    * @param aOutputStream the stream to write to.
    */
