@@ -78,7 +78,8 @@ public:
 typedef enum {
   nsReload,
   nsReloadBypassCache,
-  nsReloadBypassProxy
+  nsReloadBypassProxy,
+  nsReloadBypassCacheAndProxy
 } nsReloadType;
 
 // Return value from WillLoadURL
@@ -149,7 +150,8 @@ public:
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      nsIPostData* aPostData=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
-                     nsReloadType type=nsReload) = 0;
+                     nsReloadType aType=nsReload,
+                     const PRUint32 aLocalIP=0) = 0;
   NS_IMETHOD Stop(void) = 0;
   NS_IMETHOD Reload(nsReloadType aType) = 0;
   

@@ -163,7 +163,8 @@ public:
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      nsIPostData* aPostData=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
-                     nsReloadType type = nsReload);
+                     nsReloadType aType = nsReload,
+                     const PRUint32 localIP = 0);
   NS_IMETHOD Stop(void);
   NS_IMETHOD Reload(nsReloadType aType);
    
@@ -1033,7 +1034,8 @@ NS_IMETHODIMP
 nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     nsIPostData* aPostData,
                     PRBool aModifyHistory,
-                    nsReloadType type)
+                    nsReloadType aType,
+                    const PRUint32 aLocalIP)
 {
   nsresult rv;
   PRInt32 colon, fSlash;
@@ -1106,7 +1108,8 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                            aPostData,      // Post Data
                            nsnull,         // Extra Info...
                            this,           // Observer
-                           (PRInt32)type);      // reload type
+                           (PRInt32)aType, // reload type
+                           aLocalIP);   // load attributes.
 
 
   return rv;

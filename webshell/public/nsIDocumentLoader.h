@@ -22,6 +22,7 @@
 #include "nsweb.h"
 #include "prtypes.h"
 #include "nsISupports.h"
+#include "nsILoadAttribs.h"
 
 /* Forward declarations... */
 class nsString;
@@ -72,7 +73,8 @@ public:
                        nsIPostData* aPostData = nsnull,
                        nsISupports* aExtraInfo = nsnull,
                        nsIStreamObserver* anObserver = nsnull,
-                       PRInt32 type = 0) = 0;
+                       PRInt32 type = 0,
+                       const PRUint32 aLocalIP = 0) = 0;
 
     NS_IMETHOD LoadURL(const nsString& aURLSpec,
                        nsIStreamListener* aListener) = 0;

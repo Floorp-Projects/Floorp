@@ -39,6 +39,7 @@
 #include "nsIDocumentLoadInfo.h"
 #include "nsVoidArray.h"
 #include "nsIHttpUrl.h"
+#include "nsILoadAttribs.h"
 
 // XXX: Only needed for dummy factory...
 #include "nsIDocument.h"
@@ -100,7 +101,8 @@ public:
     nsresult Bind(const nsString& aURLSpec, 
                   nsIPostData* aPostData,
                   nsIStreamListener* aListener,
-                  PRInt32 type = 0);
+                  PRInt32 type = 0,
+                  nsILoadAttribs* aLoadAttrib = nsnull);
 
     nsresult Stop(void);
 
@@ -451,7 +453,8 @@ public:
                        nsIPostData* aPostData = nsnull,
                        nsISupports* aExtraInfo = nsnull,
                        nsIStreamObserver* anObserver = nsnull,
-                       PRInt32 type = 0);
+                       PRInt32 type = 0,
+                       const PRUint32 aLocalIP = 0);
 
     NS_IMETHOD LoadURL(const nsString& aURLSpec,
                        nsIStreamListener* aListener);
@@ -490,6 +493,8 @@ protected:
     nsDocLoaderImpl* mParent;
     nsISupportsArray* mChildDocLoaderList;
     nsVoidArray mObservers;
+    nsILoadAttribs*     m_LoadAttrib;
+
 };
 
 
@@ -501,7 +506,7 @@ nsDocLoaderImpl::nsDocLoaderImpl()
     NS_NewISupportsArray(&mChildDocLoaderList);
 
     mParent = nsnull;
-
+    m_LoadAttrib = nsnull;
     m_DocFactory = new nsDocFactoryImpl();
     NS_ADDREF(m_DocFactory);
 }
@@ -515,6 +520,7 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
     NS_IF_RELEASE(mChildDocLoaderList);
     NS_IF_RELEASE(m_LoadingDocsList);
     NS_IF_RELEASE(m_DocFactory);
+    NS_IF_RELEASE(m_LoadAttrib);
 }
 
 
@@ -590,7 +596,8 @@ nsDocLoaderImpl::LoadURL(const nsString& aURLSpec,
                          nsIPostData* aPostData,
                          nsISupports* aExtraInfo,
                          nsIStreamObserver* anObserver,
-                         PRInt32 type)
+                         PRInt32 type,
+                         const PRUint32 aLocalIP)
 {
     nsresult rv;
     nsDocumentBindInfo* loader = nsnull;
@@ -615,7 +622,27 @@ nsDocLoaderImpl::LoadURL(const nsString& aURLSpec,
     /* The DocumentBindInfo reference is only held by the Array... */
     m_LoadingDocsList->AppendElement((nsIStreamListener *)loader);
 
-    rv = loader->Bind(aURLSpec, aPostData, nsnull, type);
+    // If we've got special loading instructions, mind them.
+    if ( (type == 2) || (type == 3) ) {
+        if (!m_LoadAttrib) {
+            rv = NS_NewLoadAttribs(&m_LoadAttrib);
+            if (rv != NS_OK)
+                return rv;
+        }
+        // type 2 and 3 correspond to proxy bypas 
+        m_LoadAttrib->SetBypassProxy(PR_TRUE);
+    }
+    if ( aLocalIP ) {
+        if (!m_LoadAttrib) {
+            rv = NS_NewLoadAttribs(&m_LoadAttrib);
+            if (rv != NS_OK)
+                return rv;
+        }
+
+        m_LoadAttrib->SetLocalIP(aLocalIP);
+    }
+
+    rv = loader->Bind(aURLSpec, aPostData, nsnull, type, m_LoadAttrib);
 
 done:
     return rv;
@@ -883,7 +910,8 @@ nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
 nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec, 
                                   nsIPostData* aPostData,
                                   nsIStreamListener* aListener,
-                                  PRInt32 type)
+                                  PRInt32 type,
+                                  nsILoadAttribs* aLoadAttrib)
 {
     nsresult rv;
 
@@ -904,10 +932,14 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
         }
     }
 
+    if (aLoadAttrib)
+        m_Url->SetLoadAttribs(aLoadAttrib);
+
     rv = m_Url->SetReloadType(type);
     if (rv != NS_OK) {
         return rv;
     }
+
 
     /* Store any POST data into the URL */
     if (nsnull != aPostData) {

@@ -73,7 +73,8 @@ LLIBS=$(LLIBS) ole32.lib
 
 LINCS=$(LINCS)  -I. \
                 -I$(PUBLIC)\raptor   \
-                -I$(PUBLIC)\xpcom
+                -I$(PUBLIC)\xpcom    \
+                -I$(PUBLIC)\netlib
 
 # clobber and clobber_all will remove the following garbage:
 GARBAGE	= $(GARBAGE) _gen
