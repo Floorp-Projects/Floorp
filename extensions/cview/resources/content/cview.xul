@@ -139,7 +139,7 @@
 
     </vbox>
 
-    <splitter id="main-splitter" orient="vertical" collapse="after">
+    <splitter id="main-splitter" collapse="after">
       <grippy/>
     </splitter>
 
@@ -163,7 +163,7 @@
 
   </hbox> <!-- inner-box -->
 
-  <splitter id="textbox-splitter" orient="horizontal" collapse="after">
+  <splitter id="textbox-splitter" collapse="after">
     <grippy/>
   </splitter>
 
