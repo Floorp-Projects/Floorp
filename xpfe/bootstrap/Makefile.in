@@ -103,7 +103,7 @@ CPPSRCS		= \
 		$(NULL)
 
 
-ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+ifneq ($(OS_ARCH),WINNT)
 STACKWALK_SRC_LCSRCS =               \
 		nsStackFrameUnix.cpp \
 		nsStackFrameUnix.h   \
