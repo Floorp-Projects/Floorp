@@ -1264,7 +1264,8 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
     case NPPVpluginTransparentBool: {
       NPBool bTransparent = (result != nsnull);
       return inst->SetTransparent(bTransparent);
-
+    }
+        
     case NPPVjavascriptPushCallerBool:
       {
         nsresult rv;
@@ -1290,7 +1291,7 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
         return NS_SUCCEEDED(rv) ? NPERR_NO_ERROR : NPERR_GENERIC_ERROR;
       }
       break;
-    }
+    
 
     default:
       return NPERR_NO_ERROR;
