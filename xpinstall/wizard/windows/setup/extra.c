@@ -2970,7 +2970,7 @@ void SiCNodeSetItemsSelected(DWORD dwSetupType)
      * selected the destination path for the product.  The destination path is
      * critical to the checking of the Force Upgrade. */
     ResolveForceUpgrade(siCNode);
-    ResolveSupercede(siCNode);
+    ResolveSupersede(siCNode);
     siCNode = siCNode->Next;
   } while((siCNode != NULL) && (siCNode != siComponents));
 
@@ -3006,14 +3006,14 @@ void SiCNodeSetItemsSelected(DWORD dwSetupType)
         /* Setup Type other than custom detected, so
          * make sure all components from this Setup Type
          * is selected (regardless if it's DISABLED or not). 
-         * Don't select components that are superceded */
-        if(!siCNode->bSupercede)
+         * Don't select components that are Superseded */
+        if(!siCNode->bSupersede)
           siCNode->dwAttributes |= SIC_SELECTED;
 
         if(*szOverrideAttributes != '\0')
           siCNode->dwAttributes = ParseComponentAttributes(szOverrideAttributes, siCNode->dwAttributes, TRUE);
       }
-      else if(!(siCNode->dwAttributes & SIC_DISABLED) && !siCNode->bForceUpgrade && !siCNode->bSupercede)
+      else if(!(siCNode->dwAttributes & SIC_DISABLED) && !siCNode->bForceUpgrade && !siCNode->bSupersede)
       {
         /* Custom setup type detected and the component is
          * not DISABLED and FORCE_UPGRADE.  Reset the component's 
@@ -3962,10 +3962,10 @@ HRESULT ParseComponentAttributes(char *szAttribute, DWORD dwAttributes, BOOL bOv
   else if(strstr(szBuf, "ADDITIONAL"))
     dwAttributes |= SIC_ADDITIONAL;
 
-  if(strstr(szBuf, "NOTSUPERCEDE"))
-    dwAttributes &= ~SIC_SUPERCEDE;
-  else if(strstr(szBuf, "SUPERCEDE"))
-    dwAttributes |= SIC_SUPERCEDE;
+  if(strstr(szBuf, "NOTSUPERSEDE"))
+    dwAttributes &= ~SIC_SUPERSEDE;
+  else if(strstr(szBuf, "SUPERSEDE"))
+    dwAttributes |= SIC_SUPERSEDE;
    
 
   return(dwAttributes);
@@ -3998,42 +3998,62 @@ siC *SiCNodeFind(siC *siCHeadNode, char *szInReferenceName)
   return(NULL);
 }
 
-BOOL ResolveSupercede(siC *siCObject)
+BOOL ResolveSupersede(siC *siCObject)
 {
   DWORD dwIndex;
   char  szFilePath[MAX_BUF];
-  char  szSupercedeFile[MAX_BUF];
+  char  szSupersedeFile[MAX_BUF];
+  char  szSupersedeVersion[MAX_BUF];
   char  szType[MAX_BUF_TINY];
   char  szKey[MAX_BUF_TINY];
+  verBlock  vbVersionNew;
+  verBlock  vbVersionOld;
 
-  siCObject->bSupercede = FALSE;
-  if(siCObject->dwAttributes & SIC_SUPERCEDE)
+  siCObject->bSupersede = FALSE;
+  if(siCObject->dwAttributes & SIC_SUPERSEDE)
   {
     dwIndex = 0;
-    GetPrivateProfileString(siCObject->szReferenceName, "SupercedeType", "", szType, sizeof(szType), szFileIniConfig);
+    GetPrivateProfileString(siCObject->szReferenceName, "SupersedeType", "", szType, sizeof(szType), szFileIniConfig);
     if(*szType !='\0')
     {
       if(lstrcmpi(szType, "File Exists") == 0)
       {
-        wsprintf(szKey, "SupercedeFile%d", dwIndex);        
-        GetPrivateProfileString(siCObject->szReferenceName, szKey, "", szSupercedeFile, sizeof(szSupercedeFile), szFileIniConfig);
-        while(*szSupercedeFile != '\0')
+        wsprintf(szKey, "SupersedeFile%d", dwIndex);        
+        GetPrivateProfileString(siCObject->szReferenceName, szKey, "", szSupersedeFile, sizeof(szSupersedeFile), szFileIniConfig);
+        while(*szSupersedeFile != '\0')
         {
-          DecryptString(szFilePath, szSupercedeFile);
+          DecryptString(szFilePath, szSupersedeFile);
           if(FileExists(szFilePath))
           {
-            siCObject->bSupercede = TRUE;
-
-            /* Found at least one file, so break out of while loop */
-            break;
+            wsprintf(szKey, "SupersedeMinVersion%d",dwIndex);
+            GetPrivateProfileString(siCObject->szReferenceName, szKey, "", szSupersedeVersion, sizeof(szSupersedeVersion), szFileIniConfig);
+            if(*szSupersedeVersion != '\0')
+            {
+              if (GetFileVersion(szFilePath,&vbVersionOld))
+              {
+                /* If we can get the version, and it is greater than or equal to the SupersedeVersion
+                 * set supersede.  If we cannot get the version, do not supersede the file. */
+                TranslateVersionStr(szSupersedeVersion, &vbVersionNew);
+                if ( CompareVersion(vbVersionOld,vbVersionNew) >= 0)
+                {  
+                  siCObject->bSupersede = TRUE;
+                  break;  /* Found at least one file, so break out of while loop */
+                }
+              }
+            }
+            else
+            { /* The file exists, and there's no version to check.  set Supersede */
+              siCObject->bSupersede = TRUE;
+              break;  /* Found at least one file, so break out of while loop */
+            }
           }
-          wsprintf(szKey, "SupercedeFile%d", ++dwIndex);        
-          GetPrivateProfileString(siCObject->szReferenceName, szKey, "", szSupercedeFile, sizeof(szSupercedeFile), szFileIniConfig);
+          wsprintf(szKey, "SupersedeFile%d", ++dwIndex);        
+          GetPrivateProfileString(siCObject->szReferenceName, szKey, "", szSupersedeFile, sizeof(szSupersedeFile), szFileIniConfig);
         }
       }
     }
 
-    if(siCObject->bSupercede)
+    if(siCObject->bSupersede)
     {
       siCObject->dwAttributes &= ~SIC_SELECTED;
       siCObject->dwAttributes |= SIC_DISABLED;
@@ -4045,10 +4065,10 @@ BOOL ResolveSupercede(siC *siCObject)
        *
        * If the Setup Type is Custom and this component is DISABLED by default
        * via the config.ini, it's default value will be restored in the
-       * SiCNodeSetItemsSelected() function that called ResolveSupercede(). */
+       * SiCNodeSetItemsSelected() function that called ResolveSupersede(). */
       siCObject->dwAttributes &= ~SIC_DISABLED;
   }
-  return(siCObject->bSupercede);
+  return(siCObject->bSupersede);
 }
 
 BOOL ResolveForceUpgrade(siC *siCObject)

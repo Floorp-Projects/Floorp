@@ -191,7 +191,7 @@ int               CRCCheckArchivesStartup(char *szCorruptedArchiveList,
                                           DWORD dwCorruptedArchiveListSize,
                                           BOOL bIncludeTempPath);
 BOOL              ResolveForceUpgrade(siC *siCObject);
-BOOL              ResolveSupercede(siC *siCObject);
+BOOL              ResolveSupersede(siC *siCObject);
 void              RestoreInvisibleFlag(siC *siCNode);
 void              RestoreAdditionalFlag(siC *siCNode);
 void              SwapFTPAndHTTP(char *szInUrl, DWORD dwInUrlSize);
