@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapi.h,v 1.4 2000/07/21 20:50:31 nelsonb%netscape.com Exp $
+ * $Id: blapi.h,v 1.5 2000/12/19 23:43:07 mcgreer%netscape.com Exp $
  */
 
 #ifndef _BLAPI_H_
@@ -398,7 +398,61 @@ extern SECStatus DES_Decrypt(DESContext *cx, unsigned char *output,
 			    unsigned int *outputLen, unsigned int maxOutputLen,
 			    unsigned char *input, unsigned int inputLen);
 
+/******************************************/
+/*
+** AES symmetric block cypher (Rijndael)
+*/
 
+/*
+** Create a new AES context suitable for AES encryption/decryption.
+** 	"key" raw key data
+** 	"keylen" the number of bytes of key data (16, 24, or 32)
+**      "blocklen" is the blocksize to use (16, 24, or 32)
+**                        XXX currently only blocksize==16 has been tested!
+*/
+extern AESContext *
+AES_CreateContext(unsigned char *key, unsigned char *iv, int mode, int encrypt,
+                  unsigned int keylen, unsigned int blocklen);
+
+/*
+** Destroy a AES encryption/decryption context.
+**	"cx" the context
+**	"freeit" if PR_TRUE then free the object as well as its sub-objects
+*/
+extern void 
+AES_DestroyContext(AESContext *cx, PRBool freeit);
+
+/*
+** Perform AES encryption.
+**	"cx" the context
+**	"output" the output buffer to store the encrypted data.
+**	"outputLen" how much data is stored in "output". Set by the routine
+**	   after some data is stored in output.
+**	"maxOutputLen" the maximum amount of data that can ever be
+**	   stored in "output"
+**	"input" the input data
+**	"inputLen" the amount of input data
+*/
+extern SECStatus 
+AES_Encrypt(AESContext *cx, unsigned char *output,
+            unsigned int *outputLen, unsigned int maxOutputLen,
+            unsigned char *input, unsigned int inputLen);
+
+/*
+** Perform AES decryption.
+**	"cx" the context
+**	"output" the output buffer to store the decrypted data.
+**	"outputLen" how much data is stored in "output". Set by the routine
+**	   after some data is stored in output.
+**	"maxOutputLen" the maximum amount of data that can ever be
+**	   stored in "output"
+**	"input" the input data
+**	"inputLen" the amount of input data
+*/
+extern SECStatus 
+AES_Decrypt(AESContext *cx, unsigned char *output,
+            unsigned int *outputLen, unsigned int maxOutputLen,
+            unsigned char *input, unsigned int inputLen);
 
 
 /******************************************/
@@ -733,8 +787,6 @@ extern void PQG_DestroyParams(PQGParams *params);
  *  Free the PQGVerify struct and the things it points to.                *
  **************************************************************************/
 extern void PQG_DestroyVerify(PQGVerify *vfy);
-
-
 
 SEC_END_PROTOS
 

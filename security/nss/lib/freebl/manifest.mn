@@ -75,7 +75,6 @@ CSRCS = \
 	dsa.c \
 	rsa.c \
 	$(MPI_SRCS) \
+	rijndael.c \
 	$(NULL)
 endif
-
-#DEFINES += -DUSE_MPI_EXPT_D

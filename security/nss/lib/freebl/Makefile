@@ -188,6 +188,11 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 export:: private_export
 
+rijndael_tables:
+	$(CC) -o $(OBJDIR)/make_rijndael_tab rijndael_tables.c \
+	         $(DEFINES) $(INCLUDES) $(OBJDIR)/libfreebl.a
+	$(OBJDIR)/make_rijndael_tab
+
 ifdef MOZILLA_BSAFE_BUILD
 
 private_export::
