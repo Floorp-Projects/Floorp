@@ -36,6 +36,8 @@
 #[installed by xpidl] nsIMsgThread.h
 #[installed by xpidl] nsIMsgMessageService.h
 #[installed by xpidl] nsIMessage.h
+#[installed by xpidl] nsIMsgBiffManager.h
+
 
 msgCore.h
 nsMsgFolderFlags.h
@@ -44,5 +46,4 @@ nsMsgHeaderMasks.h
 nsMsgMessageFlags.h
 nsIMsgMailNewsUrl.h
 nsIUrlListenerManager.h
-nsIMsgBiffManager.h
 
