@@ -35,12 +35,12 @@ static PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebug = PR_FALSE;
 #endif
 
-const nscoord gBigSpace = 100000;
+const nscoord gBigSpace = 100000; // a fudge constant used when the table is laid out with unconstrained width
 
 /* ---------- ProportionalColumnLayoutStruct ---------- */  
 // TODO: make public so other subclasses can use it
 
-/** useful info about a column for layout */
+/** useful info about a column for layout of tables with colspans */
 struct ProportionalColumnLayoutStruct
 {
   ProportionalColumnLayoutStruct(PRInt32 aColIndex, 
@@ -62,6 +62,7 @@ struct ProportionalColumnLayoutStruct
 
 
 /* ---------- ColSpanStruct ---------- */
+/** useful info about a column for layout of tables with colspans */
 struct ColSpanStruct
 {
   PRInt32 colIndex;
@@ -851,6 +852,9 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(const nsHTMLReflowSt
   if (NS_UNCONSTRAINEDSIZE==aMaxWidth  ||  NS_UNCONSTRAINEDSIZE==mMinTableWidth)
   { // the max width of the table fits comfortably in the available space
     if (gsDebug) printf ("  * table laying out in NS_UNCONSTRAINEDSIZE, calling BalanceColumnsTableFits\n");
+    // nested tables are laid out with unconstrained width.  But the underlying algorithms require a 
+    // real width.  So we pick a really big width here.  It doesn't really matter, of course, because
+    // eventually the table will be laid out with a constrained width.
     nscoord bigSpace = gBigSpace;
     bigSpace = PR_MAX(bigSpace, mMaxTableWidth);
     result = BalanceColumnsTableFits(aReflowState, bigSpace, 
