@@ -305,6 +305,8 @@ private:
   static nsINameSpaceManager *sNameSpaceManager;
 
   static nsIIOService *sIOService;
+
+  static PRBool sInitialized;
 };
 
 

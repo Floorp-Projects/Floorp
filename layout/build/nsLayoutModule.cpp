@@ -170,6 +170,9 @@ NS_IMETHODIMP
 NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 #endif
 
+PR_STATIC_CALLBACK(nsresult) Initialize(nsIModule* aSelf);
+PR_STATIC_CALLBACK(void) Shutdown(nsIModule* aSelf);
+
 #ifdef MOZ_MATHML
 #include "nsMathMLAtoms.h"
 #include "nsMathMLOperators.h"
@@ -186,7 +189,9 @@ NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 class ContentShutdownObserver : public nsIObserver
 {
 public:
-  ContentShutdownObserver() { NS_INIT_ISUPPORTS(); }
+  ContentShutdownObserver()
+  {
+  }
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -208,18 +213,26 @@ ContentShutdownObserver::Observe(nsISupports *aSubject,
 static PRBool gInitialized = PR_FALSE;
 
 // Perform our one-time intialization for this module
-PR_STATIC_CALLBACK(nsresult)
+
+// static
+nsresult PR_CALLBACK
 Initialize(nsIModule* aSelf)
 {
-  static PRBool initializing = PR_FALSE;
-  NS_PRECONDITION(!gInitialized || initializing, "module already initialized");
-  if (gInitialized)
+  NS_PRECONDITION(!gInitialized, "module already initialized");
+  if (gInitialized) {
     return NS_OK;
+  }
 
-  initializing = PR_TRUE;
   gInitialized = PR_TRUE;
     
-  nsContentUtils::Init();
+  nsresult rv = nsContentUtils::Init();
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not initialize nsContentUtils");
+
+    Shutdown(aSelf);
+
+    return rv;
+  }
 
   // Register all of our atoms once
   nsCSSAnonBoxes::AddRefAtoms();
@@ -234,7 +247,14 @@ Initialize(nsIModule* aSelf)
   nsXULAtoms::AddRefAtoms();
 
 #ifdef MOZ_XUL
-  nsXULContentUtils::Init();
+  rv = nsXULContentUtils::Init();
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not initialize nsXULContentUtils");
+
+    Shutdown(aSelf);
+
+    return rv;
+  }
 #endif
 
 #ifdef MOZ_MATHML
@@ -249,7 +269,15 @@ Initialize(nsIModule* aSelf)
 #ifdef DEBUG
   nsFrame::DisplayReflowStartup();
 #endif
-  nsTextTransformer::Initialize();
+  rv = nsTextTransformer::Initialize();
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not initialize nsTextTransformer");
+
+    Shutdown(aSelf);
+
+    return rv;
+  }
+
   nsImageLoadingContent::Initialize();
 
   // Add our shutdown observer.
@@ -260,20 +288,28 @@ Initialize(nsIModule* aSelf)
     ContentShutdownObserver* observer =
       new ContentShutdownObserver();
 
-    if (observer)
-      observerService->AddObserver(observer, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+    if (!observer) {
+      Shutdown(aSelf);
+
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    observerService->AddObserver(observer, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+  } else {
+    NS_WARNING("Could not get an observer service.  We will leak on shutdown.");
   }
 
-  initializing = PR_FALSE;
   return NS_OK;
 }
 
 // Shutdown this module, releasing all of the module resources
-PR_STATIC_CALLBACK(void)
+
+// static
+void PR_CALLBACK
 Shutdown(nsIModule* aSelf)
 {
   NS_PRECONDITION(gInitialized, "module not initialized");
-  if (! gInitialized)
+  if (!gInitialized)
     return;
 
   gInitialized = PR_FALSE;
