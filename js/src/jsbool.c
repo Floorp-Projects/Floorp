@@ -67,23 +67,23 @@ JSClass js_BooleanClass = {
 
 static JSBool
 bool_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-	      jsval *rval)
+              jsval *rval)
 {
     jsval v;
     char buf[32];
     JSString *str;
 
     if (!JS_InstanceOf(cx, obj, &js_BooleanClass, argv))
-	return JS_FALSE;
+        return JS_FALSE;
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     if (!JSVAL_IS_BOOLEAN(v))
-	return js_obj_toSource(cx, obj, argc, argv, rval);
+        return js_obj_toSource(cx, obj, argc, argv, rval);
     JS_snprintf(buf, sizeof buf, "(new %s(%s))",
-		js_BooleanClass.name,
-		js_boolean_str[JSVAL_TO_BOOLEAN(v) ? 1 : 0]);
+                js_BooleanClass.name,
+                js_boolean_str[JSVAL_TO_BOOLEAN(v) ? 1 : 0]);
     str = JS_NewStringCopyZ(cx, buf);
     if (!str)
-	return JS_FALSE;
+        return JS_FALSE;
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
@@ -91,21 +91,21 @@ bool_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 static JSBool
 bool_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-	      jsval *rval)
+              jsval *rval)
 {
     jsval v;
     JSAtom *atom;
     JSString *str;
 
     if (!JS_InstanceOf(cx, obj, &js_BooleanClass, argv))
-	return JS_FALSE;
+        return JS_FALSE;
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     if (!JSVAL_IS_BOOLEAN(v))
-	return js_obj_toString(cx, obj, argc, argv, rval);
+        return js_obj_toString(cx, obj, argc, argv, rval);
     atom = cx->runtime->atomState.booleanAtoms[JSVAL_TO_BOOLEAN(v) ? 1 : 0];
     str = ATOM_TO_STRING(atom);
     if (!str)
-	return JS_FALSE;
+        return JS_FALSE;
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
@@ -114,7 +114,7 @@ static JSBool
 bool_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     if (!JS_InstanceOf(cx, obj, &js_BooleanClass, argv))
-	return JS_FALSE;
+        return JS_FALSE;
     *rval = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     return JS_TRUE;
 }
@@ -123,8 +123,8 @@ static JSFunctionSpec boolean_methods[] = {
 #if JS_HAS_TOSOURCE
     {js_toSource_str,   bool_toSource,          0,0,0},
 #endif
-    {js_toString_str,	bool_toString,		0,0,0},
-    {js_valueOf_str,	bool_valueOf,		0,0,0},
+    {js_toString_str,   bool_toString,          0,0,0},
+    {js_valueOf_str,    bool_valueOf,           0,0,0},
     {0,0,0,0,0}
 };
 
@@ -140,15 +140,15 @@ Boolean(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsval bval;
 
     if (argc != 0) {
-	if (!js_ValueToBoolean(cx, argv[0], &b))
-	    return JS_FALSE;
-	bval = BOOLEAN_TO_JSVAL(b);
+        if (!js_ValueToBoolean(cx, argv[0], &b))
+            return JS_FALSE;
+        bval = BOOLEAN_TO_JSVAL(b);
     } else {
-	bval = JSVAL_FALSE;
+        bval = JSVAL_FALSE;
     }
     if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
-	*rval = bval;
-	return JS_TRUE;
+        *rval = bval;
+        return JS_TRUE;
     }
     OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, bval);
     return JS_TRUE;
@@ -160,9 +160,9 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
     JSObject *proto;
 
     proto = JS_InitClass(cx, obj, NULL, &js_BooleanClass, Boolean, 1,
-			NULL, boolean_methods, NULL, NULL);
+                        NULL, boolean_methods, NULL, NULL);
     if (!proto)
-	return NULL;
+        return NULL;
     OBJ_SET_SLOT(cx, proto, JSSLOT_PRIVATE, JSVAL_FALSE);
     return proto;
 }
@@ -174,7 +174,7 @@ js_BooleanToObject(JSContext *cx, JSBool b)
 
     obj = js_NewObject(cx, &js_BooleanClass, NULL, NULL);
     if (!obj)
-	return NULL;
+        return NULL;
     OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, BOOLEAN_TO_JSVAL(b));
     return obj;
 }
@@ -192,27 +192,27 @@ js_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
     jsdouble d;
 
     if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v)) {
-	b = JS_FALSE;
+        b = JS_FALSE;
     } else if (JSVAL_IS_OBJECT(v)) {
-	if (!JSVERSION_IS_ECMA(cx->version)) {
-	    if (!OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), JSTYPE_BOOLEAN, &v))
-		return JS_FALSE;
-	    if (!JSVAL_IS_BOOLEAN(v))
-		v = JSVAL_TRUE;		/* non-null object is true */
-	    b = JSVAL_TO_BOOLEAN(v);
-	} else {
-	    b = JS_TRUE;
-	}
+        if (!JSVERSION_IS_ECMA(cx->version)) {
+            if (!OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), JSTYPE_BOOLEAN, &v))
+                return JS_FALSE;
+            if (!JSVAL_IS_BOOLEAN(v))
+                v = JSVAL_TRUE;         /* non-null object is true */
+            b = JSVAL_TO_BOOLEAN(v);
+        } else {
+            b = JS_TRUE;
+        }
     } else if (JSVAL_IS_STRING(v)) {
-	b = JSSTRING_LENGTH(JSVAL_TO_STRING(v)) ? JS_TRUE : JS_FALSE;
+        b = JSSTRING_LENGTH(JSVAL_TO_STRING(v)) ? JS_TRUE : JS_FALSE;
     } else if (JSVAL_IS_INT(v)) {
-	b = JSVAL_TO_INT(v) ? JS_TRUE : JS_FALSE;
+        b = JSVAL_TO_INT(v) ? JS_TRUE : JS_FALSE;
     } else if (JSVAL_IS_DOUBLE(v)) {
-	d = *JSVAL_TO_DOUBLE(v);
-	b = (!JSDOUBLE_IS_NaN(d) && d != 0) ? JS_TRUE : JS_FALSE;
+        d = *JSVAL_TO_DOUBLE(v);
+        b = (!JSDOUBLE_IS_NaN(d) && d != 0) ? JS_TRUE : JS_FALSE;
     } else {
         JS_ASSERT(JSVAL_IS_BOOLEAN(v));
-	b = JSVAL_TO_BOOLEAN(v);
+        b = JSVAL_TO_BOOLEAN(v);
     }
 
     *bp = b;

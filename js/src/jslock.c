@@ -1131,7 +1131,7 @@ js_TransferScopeLock(JSContext *cx, JSScope *oldscope, JSScope *newscope)
      * state update.
      */
     if (!oldscope)
-	return;
+        return;
     JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, oldscope));
 
     /*
@@ -1141,7 +1141,7 @@ js_TransferScopeLock(JSContext *cx, JSScope *oldscope, JSScope *newscope)
      * was actually locked.
      */
     if (CX_THREAD_IS_RUNNING_GC(cx))
-	return;
+        return;
 
     /*
      * Special case in js_LockObj and js_UnlockScope for locking the sealed

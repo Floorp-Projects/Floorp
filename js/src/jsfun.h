@@ -48,7 +48,7 @@
 JS_BEGIN_EXTERN_C
 
 struct JSFunction {
-    jsrefcount	 nrefs;		/* number of referencing objects */
+    jsrefcount   nrefs;         /* number of referencing objects */
     JSObject     *object;       /* back-pointer to GC'ed object header */
     union {
         JSNative native;        /* native method pointer or null */
@@ -99,7 +99,7 @@ js_InitCallClass(JSContext *cx, JSObject *obj);
 
 extern JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
-	       uintN flags, JSObject *parent, JSAtom *atom);
+               uintN flags, JSObject *parent, JSAtom *atom);
 
 extern JSObject *
 js_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent);
@@ -109,7 +109,7 @@ js_LinkFunctionObject(JSContext *cx, JSFunction *fun, JSObject *object);
 
 extern JSFunction *
 js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
-		  uintN nargs, uintN flags);
+                  uintN nargs, uintN flags);
 
 /*
  * Flags for js_ValueToFunction and js_ReportIsNotFunction.  We depend on the

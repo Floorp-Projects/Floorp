@@ -118,7 +118,7 @@
 #define STDOUTPUT_NAME          "Standard output stream"
 #define STDERROR_NAME           "Standard error stream"
 
-#define RESOLVE_PATH            js_canonicalPath	/* js_absolutePath */
+#define RESOLVE_PATH            js_canonicalPath        /* js_absolutePath */
 
 /* Error handling */
 typedef enum JSFileErrNum {
@@ -150,8 +150,8 @@ JSFile_GetErrorMessage(void *userRef, const char *locale,
 {
     if ((errorNumber > 0) && (errorNumber < JSFileErr_Limit))
         return &JSFile_ErrorFormatString[errorNumber];
-	else
-	    return NULL;
+    else
+        return NULL;
 }
 
 #define JSFILE_CHECK_NATIVE(op)     \

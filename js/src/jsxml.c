@@ -6557,7 +6557,7 @@ xml_setName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     xml = CHECK_COPY_ON_WRITE(cx, xml, obj);
     if (!xml)
         return JS_FALSE;
-	js_DestroyXMLQName(cx, xml->name);
+    js_DestroyXMLQName(cx, xml->name);
     xml->name = (JSXMLQName *) JS_GetPrivate(cx, nameobj);
     return JS_TRUE;
 }

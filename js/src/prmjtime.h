@@ -57,21 +57,21 @@ typedef struct PRMJTime       PRMJTime;
  * Broken down form of 64 bit time value.
  */
 struct PRMJTime {
-    JSInt32 tm_usec;		/* microseconds of second (0-999999) */
-    JSInt8 tm_sec;		/* seconds of minute (0-59) */
-    JSInt8 tm_min;		/* minutes of hour (0-59) */
-    JSInt8 tm_hour;		/* hour of day (0-23) */
-    JSInt8 tm_mday;		/* day of month (1-31) */
-    JSInt8 tm_mon;		/* month of year (0-11) */
-    JSInt8 tm_wday;		/* 0=sunday, 1=monday, ... */
-    JSInt16 tm_year;		/* absolute year, AD */
-    JSInt16 tm_yday;		/* day of year (0 to 365) */
-    JSInt8 tm_isdst;		/* non-zero if DST in effect */
+    JSInt32 tm_usec;            /* microseconds of second (0-999999) */
+    JSInt8 tm_sec;              /* seconds of minute (0-59) */
+    JSInt8 tm_min;              /* minutes of hour (0-59) */
+    JSInt8 tm_hour;             /* hour of day (0-23) */
+    JSInt8 tm_mday;             /* day of month (1-31) */
+    JSInt8 tm_mon;              /* month of year (0-11) */
+    JSInt8 tm_wday;             /* 0=sunday, 1=monday, ... */
+    JSInt16 tm_year;            /* absolute year, AD */
+    JSInt16 tm_yday;            /* day of year (0 to 365) */
+    JSInt8 tm_isdst;            /* non-zero if DST in effect */
 };
 
 /* Some handy constants */
-#define PRMJ_USEC_PER_SEC	1000000L
-#define PRMJ_USEC_PER_MSEC	1000L
+#define PRMJ_USEC_PER_SEC       1000000L
+#define PRMJ_USEC_PER_MSEC      1000L
 
 /* Return the current local time in micro-seconds */
 extern JSInt64

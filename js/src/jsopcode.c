@@ -357,7 +357,7 @@ Sprint(Sprinter *sp, const char *format, ...)
     ptrdiff_t offset;
 
     va_start(ap, format);
-    bp = JS_vsmprintf(format, ap);	/* XXX vsaprintf */
+    bp = JS_vsmprintf(format, ap);      /* XXX vsaprintf */
     va_end(ap);
     if (!bp) {
         JS_ReportOutOfMemory(sp->context);
@@ -546,7 +546,7 @@ js_printf(JSPrinter *jp, const char *format, ...)
     }
 
     /* Allocate temp space, convert format, and put. */
-    bp = JS_vsmprintf(format, ap);	/* XXX vsaprintf */
+    bp = JS_vsmprintf(format, ap);      /* XXX vsaprintf */
     if (fp) {
         JS_free(jp->sprinter.context, fp);
         format = NULL;
@@ -582,7 +582,7 @@ typedef struct SprintStack {
 } SprintStack;
 
 /* Gap between stacked strings to allow for insertion of parens and commas. */
-#define PAREN_SLOP	(2 + 1)
+#define PAREN_SLOP      (2 + 1)
 
 /*
  * These pseudo-ops help js_DecompileValueGenerator decompile JSOP_SETNAME,
@@ -851,9 +851,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 /*
  * Local macros
  */
-#define DECOMPILE_CODE(pc,nb)	if (!Decompile(ss, pc, nb)) return JS_FALSE
-#define POP_STR()		OFF2STR(&ss->sprinter, PopOff(ss, op))
-#define LOCAL_ASSERT(expr)	JS_ASSERT(expr); if (!(expr)) return JS_FALSE
+#define DECOMPILE_CODE(pc,nb)   if (!Decompile(ss, pc, nb)) return JS_FALSE
+#define POP_STR()               OFF2STR(&ss->sprinter, PopOff(ss, op))
+#define LOCAL_ASSERT(expr)      JS_ASSERT(expr); if (!(expr)) return JS_FALSE
 
 /*
  * Callers know that ATOM_IS_STRING(atom), and we leave it to the optimizer to
@@ -887,7 +887,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     endpc = pc + nb;
     forelem_tail = forelem_done = NULL;
     tail = -1;
-    todo = -2;			/* NB: different from Sprint() error return. */
+    todo = -2;                  /* NB: different from Sprint() error return. */
     op = JSOP_NOP;
     sn = NULL;
     rval = NULL;
@@ -2295,7 +2295,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 atom = GET_ATOM(cx, jp->script, pc);
                 xval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
                                    (jschar)
-				   (ATOM_IS_IDENTIFIER(atom) ? 0 : '\''));
+                                   (ATOM_IS_IDENTIFIER(atom) ? 0 : '\''));
                 if (!xval)
                     return JS_FALSE;
                 rval = POP_STR();

@@ -109,7 +109,7 @@ typedef enum JSOp {
 #define JUMP_OFFSET_LO(off)     ((jsbytecode)(off))
 #define GET_JUMP_OFFSET(pc)     ((int16)(((pc)[1] << 8) | (pc)[2]))
 #define SET_JUMP_OFFSET(pc,off) ((pc)[1] = JUMP_OFFSET_HI(off),               \
-				 (pc)[2] = JUMP_OFFSET_LO(off))
+                                 (pc)[2] = JUMP_OFFSET_LO(off))
 #define JUMP_OFFSET_MIN         ((int16)0x8000)
 #define JUMP_OFFSET_MAX         ((int16)0x7fff)
 
@@ -126,7 +126,7 @@ typedef enum JSOp {
  */
 #define GET_SPANDEP_INDEX(pc)   ((uint16)(((pc)[1] << 8) | (pc)[2]))
 #define SET_SPANDEP_INDEX(pc,i) ((pc)[1] = JUMP_OFFSET_HI(i),                 \
-				 (pc)[2] = JUMP_OFFSET_LO(i))
+                                 (pc)[2] = JUMP_OFFSET_LO(i))
 #define SPANDEP_INDEX_MAX       ((uint16)0xfffe)
 #define SPANDEP_INDEX_HUGE      ((uint16)0xffff)
 
@@ -151,9 +151,9 @@ typedef enum JSOp {
 #define ATOM_INDEX_LO(index)    ((jsbytecode)(index))
 #define GET_ATOM_INDEX(pc)      ((jsatomid)(((pc)[1] << 8) | (pc)[2]))
 #define SET_ATOM_INDEX(pc,index)((pc)[1] = ATOM_INDEX_HI(index),              \
-				 (pc)[2] = ATOM_INDEX_LO(index))
+                                 (pc)[2] = ATOM_INDEX_LO(index))
 #define GET_ATOM(cx,script,pc)  js_GetAtom((cx), &(script)->atomMap,          \
-					   GET_ATOM_INDEX(pc))
+                                           GET_ATOM_INDEX(pc))
 #define ATOM_INDEX_LIMIT_LOG2   16
 #define ATOM_INDEX_LIMIT        ((uint32)1 << ATOM_INDEX_LIMIT_LOG2)
 
@@ -238,7 +238,7 @@ js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp);
 
 extern JS_FRIEND_API(uintN)
 js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
-		JSBool lines, FILE *fp);
+                JSBool lines, FILE *fp);
 #endif /* DEBUG */
 
 /*
@@ -268,7 +268,7 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun);
  */
 extern JSString *
 js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
-			   JSString *fallback);
+                           JSString *fallback);
 
 #define JSDVG_IGNORE_STACK      0
 #define JSDVG_SEARCH_STACK      1
