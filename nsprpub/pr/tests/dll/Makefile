@@ -30,7 +30,6 @@ endif
 
 INCLUDES = -I$(DIST)/include
 
-
 OBJS = $(OBJDIR)/mygetval.$(OBJ_SUFFIX) \
 	$(OBJDIR)/mysetval.$(OBJ_SUFFIX)
 
@@ -61,6 +60,14 @@ endif
 else
 SHARED_LIBRARY	= $(OBJDIR)/libmy.$(DLL_SUFFIX)
 TARGETS		= $(SHARED_LIBRARY)
+endif
+
+#
+# To create a loadable module on Rhapsody, we must override
+# -dynamiclib with -bundle.
+#
+ifeq ($(OS_ARCH),Rhapsody)
+DSO_LDOPTS = -bundle
 endif
 
 include $(MOD_DEPTH)/config/rules.mk
