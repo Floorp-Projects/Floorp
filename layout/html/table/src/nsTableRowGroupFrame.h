@@ -107,22 +107,20 @@ public:
                             nsHTMLReflowMetrics& aDesiredSize,
                             RowGroupReflowState& aReflowState,
                             nsReflowStatus&      aStatus,
-                            nsIFrame *           aInsertedFrame,
+                            nsTableRowFrame *    aInsertedFrame,
                             PRBool               aReplace);
 
   NS_IMETHOD IR_RowAppended(nsIPresContext&      aPresContext,
                             nsHTMLReflowMetrics& aDesiredSize,
                             RowGroupReflowState& aReflowState,
                             nsReflowStatus&      aStatus,
-                            nsIFrame *           aAppendedFrame);
-
-  NS_IMETHOD IR_DidAppendRow(nsTableRowFrame *aRowFrame);
+                            nsTableRowFrame *    aAppendedFrame);
 
   NS_IMETHOD IR_RowRemoved(nsIPresContext&      aPresContext,
                            nsHTMLReflowMetrics& aDesiredSize,
                            RowGroupReflowState& aReflowState,
                            nsReflowStatus&      aStatus,
-                           nsIFrame *           aDeletedFrame);
+                           nsTableRowFrame *    aDeletedFrame);
   
   NS_IMETHOD IR_UnknownFrameInserted(nsIPresContext&      aPresContext,
                                      nsHTMLReflowMetrics& aDesiredSize,
@@ -138,6 +136,9 @@ public:
                                     nsIFrame *           aDeletedFrame);
 
 
+  NS_IMETHOD DidAppendRow(nsTableRowFrame *aRowFrame);
+
+  PRBool NoRowsFollow();
 
   /** @see nsContainerFrame::CreateContinuingFrame */
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
@@ -174,7 +175,7 @@ protected:
                           RowGroupReflowState& aReflowState,
                           const nsMargin&      aKidMargin);
 
-  void          PlaceChild( nsIPresContext*      aPresContext,
+  void          PlaceChild( nsIPresContext&      aPresContext,
                             RowGroupReflowState& aReflowState,
                             nsIFrame*            aKidFrame,
                             const nsRect&        aKidRect,
@@ -197,9 +198,13 @@ protected:
    * @return  true if we successfully reflowed all the mapped children and false
    *            otherwise, e.g. we pushed children to the next in flow
    */
-  PRBool        ReflowMappedChildren(nsIPresContext*      aPresContext,
+  NS_METHOD     ReflowMappedChildren(nsIPresContext&      aPresContext,
+                                     nsHTMLReflowMetrics& aDesiredSize,
                                      RowGroupReflowState& aReflowState,
-                                     nsSize*              aMaxElementSize);
+                                     nsReflowStatus&      aStatus,
+                                     nsTableRowFrame *    aStartFrame,
+                                     nsReflowReason       aReason,
+                                     PRBool               aDoSiblings);
 
   /**
    * Try and pull-up frames from our next-in-flow
@@ -209,9 +214,10 @@ protected:
    * @return  true if we successfully pulled-up all the children and false
    *            otherwise, e.g. child didn't fit
    */
-  PRBool        PullUpChildren(nsIPresContext*      aPresContext,
+  NS_METHOD     PullUpChildren(nsIPresContext&      aPresContext,
+                               nsHTMLReflowMetrics& aDesiredSize,
                                RowGroupReflowState& aReflowState,
-                               nsSize*              aMaxElementSize);
+                               nsReflowStatus&      aStatus);
 
 private:
   nsIAtom *mType;

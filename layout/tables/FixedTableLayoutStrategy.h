@@ -44,19 +44,16 @@ public:
     * @paran aFrame           the table frame for which this delegate will do layout
     * @param aNumCols         the total number of columns in the table    
     */
-  FixedTableLayoutStrategy(nsTableFrame *aFrame, PRInt32 aNumCols);
+  FixedTableLayoutStrategy(nsTableFrame *aFrame);
 
   /** destructor */
   virtual ~FixedTableLayoutStrategy();
 
-  /** no need to override Initialize since it calls our AssignPreliminaryColumnWidths */
-  // virtual PRBool Initialize(nsSize* aMaxElementSize);
-
   /** Called during resize reflow to determine the new column widths
     * @param aTableStyle - the resolved style for mTableFrame
-	* @param aReflowState - the reflow state for mTableFrame
-	* @param aMaxWidth - the computed max width for columns to fit into
-	*/
+	  * @param aReflowState - the reflow state for mTableFrame
+	  * @param aMaxWidth - the computed max width for columns to fit into
+	  */
   virtual PRBool BalanceColumnWidths(nsIStyleContext *    aTableStyle,
                                      const nsHTMLReflowState& aReflowState,
                                      nscoord              aMaxWidth);

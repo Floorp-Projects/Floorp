@@ -6,7 +6,7 @@
 function insertCaption() {
   var table = document.getElementsByTagName("TABLE")[0];
   var caption = document.createElement("CAPTION", null);
-  var text = document.createTextNode("here is the new caption text");
+  var text = document.createTextNode("here is the new caption text\n");
   caption.appendChild(text);
   table.appendChild(caption);
 }
@@ -25,7 +25,7 @@ function insertColGroup() {
   colGroup.width=200;
   colGroup.span=1;
   table.insertBefore(colGroup, refColGroup);
-  dump("inserted COLGROUP with span=1 width=200 as first colgroup in table");
+  dump("SCRIPT: inserted COLGROUP with span=1 width=200 as first colgroup in table\n");
 }
 
 function appendColGroup() {
@@ -34,13 +34,14 @@ function appendColGroup() {
   colGroup.width=300;
   colGroup.span=1;
   table.appendChild(colGroup);
-  dump("appended COLGROUP with span=1 width=300");
+  dump("SCRIPT: appended COLGROUP with span=1 width=300\n");
 }
 
 function deleteColGroup() {
   var table = document.getElementsByTagName("TABLE")[0];
   var colGroup = document.getElementsByTagName("COLGROUP")[0];
   table.removeChild(colGroup);
+  dump("SCRIPT: deleted first COLGROUP\n");
 }
 
 
@@ -51,20 +52,21 @@ function insertCol() {
   col.width=200;
   col.span=1;
   table.insertBefore(col, refCol);
-  dump("inserted COL with span=1 width=200 as first col in first col group");
+  dump("SCRIPT: inserted COL with span=1 width=200 as first col in first col group\n");
 }
 
 function appendCol() {
   var table = document.getElementsByTagName("TABLE")[0];
   var col = document.createElement("COL", null);
   table.appendChild(col);
-  dump("appended COL with span=1 width=300");
+  dump("SCRIPT: appended COL with span=1 width=300\n");
 }
 
 function deleteCol() {
   var table = document.getElementsByTagName("TABLE")[0];
   var col = document.getElementsByTagName("COL")[0];
   table.removeChild(col);
+  dump("SCRIPT: deleted first COL in first COLGROUP\n");
 }
 
 
@@ -73,52 +75,110 @@ function insertRowGroup() {
   var refRowGroup = document.getElementsByTagName("TBODY")[0];
   var rowGroup = document.createElement("TBODY", null);
   table.insertBefore(rowGroup, refRowGroup);
-  dump("inserted empty ROWGROUP as first rowgroup in table");
+  dump("SCRIPT: inserted empty ROWGROUP as first rowgroup in table\n");
 }
 
 function appendRowGroup() {
   var table = document.getElementsByTagName("TABLE")[0];
   var rowGroup = document.createElement("TBODY", null);
   table.appendChild(rowGroup);
-  dump("appended empty ROWGROUP");
+  dump("SCRIPT: appended empty ROWGROUP\n");
 }
 
 function appendRowGroupWithContent() {
+  dump("\nSCRIPT: starting appendRowGroupWithContent\n");
   var table = document.getElementsByTagName("TABLE")[0];
   var rowGroup = document.createElement("TBODY", null);
   var row = document.createElement("TR", null);
   var cell = document.createElement("TD", null);
-  var text = document.createTextNode("here is content in the cell from the script");
+  var text = document.createTextNode("here is content in the cell from the script appendRowGroupWithContent\n");
   cell.appendChild(text);
   row.appendChild(cell);
   rowGroup.appendChild(row);  
   table.appendChild(rowGroup);
-  dump("appended ROWGROUP with 1 row and 1 cell");
+  dump("SCRIPT: appended ROWGROUP with 1 row and 1 cell\n");
 }
 
 function deleteRowGroup() {
   var table = document.getElementsByTagName("TABLE")[0];
   var rowGroup = document.getElementsByTagName("TBODY")[0];
   table.removeChild(rowGroup);
+  dump("SCRIPT: deleted first ROWGROUP\n");
 }
 
+
 function insertRow() {
-  var table = document.getElementsByTagName("TABLE")[0];
+  var rg = document.getElementsByTagName("TBODY")[0];
+  var refRow = document.getElementsByTagName("TR")[0];
   var row = document.createElement("TR", null);
-  table.appendChild(row);
+  rg.insertBefore(row, refRow);
+  dump("SCRIPT: inserted empty ROW as first row in first rowgroup in table\n");
+}
+
+function appendRow() {
+  var rg = document.getElementsByTagName("TBODY")[0];
+  var row = document.createElement("TR", null);
+  rg.appendChild(row);
+  dump("SCRIPT: appended empty ROW in first ROWGROUP\n");
+}
+
+function appendRowWithContent() {
+  dump("\nSCRIPT: starting appendRowWithContent\n");
+  var rg = document.getElementsByTagName("TBODY")[0];
+  var row = document.createElement("TR", null);
+  var cell = document.createElement("TD", null);
+  var text = document.createTextNode("here is content in the cell from the script appendRowWithContent\n");
+  cell.appendChild(text);
+  row.appendChild(cell);
+  rg.appendChild(row);  
+  dump("SCRIPT: appended ROW with 1 cell in first ROWGROUP\n");
 }
 
 function deleteRow() {
-  var table = document.getElementsByTagName("TABLE")[0];
+  var rg = document.getElementsByTagName("TBODY")[0];
   var row = document.getElementsByTagName("TR")[0];
-  table.removeChild(row);
+  rg.removeChild(row);
+  dump("SCRIPT: deleted first ROW in first ROWGROUP\n");
+}
+
+
+
+
+function insertCell() {
+  var row = document.getElementsByTagName("TR")[0];
+  var refCell = document.getElementsByTagName("TD")[0];
+  var cell = document.createElement("TD", null);
+  row.insertBefore(cell, refCell);
+  dump("SCRIPT: inserted empty Cell as first cell in first row\n");
+}
+
+function appendCell() {
+  var row = document.getElementsByTagName("TR")[0];
+  var cell = document.createElement("TD", null);
+  row.appendChild(cell);
+  dump("SCRIPT: appended empty CELL in first ROW\n");
+}
+
+function appendCellWithContent() {
+  var row = document.getElementsByTagName("TR")[0];
+  var cell = document.createElement("TD", null);
+  var text = document.createTextNode("here is content in the cell from the script appendRowWithContent\n");
+  cell.appendChild(text);
+  row.appendChild(cell);
+  dump("SCRIPT: appended CELL with text content in first ROW\n");
+}
+
+function deleteCell() {
+  var row = document.getElementsByTagName("TR")[0];
+  var cell = document.getElementsByTagName("TD")[0];
+  row.removeChild(cell);
+  dump("SCRIPT: deleted first CELL in first ROW\n");
 }
 
 </SCRIPT>
 </HEAD>
 
 <BODY>
-all insert buttons currently do an append
 all delete buttons currently remove the first item of <type> found
 <table border>
 	<tbody>
@@ -150,6 +210,12 @@ all delete buttons currently remove the first item of <type> found
 <INPUT TYPE="button" NAME="Ins Row" VALUE="InsertRow" onClick="insertRow()" width=100>
 <INPUT TYPE="button" NAME="App Row" VALUE="AppendRow" onClick="appendRow()" width=100>
 <INPUT TYPE="button" NAME="Del Row" VALUE="DeleteRow" onClick="deleteRow()" width=100>
+<INPUT TYPE="button" NAME="App Row with content" VALUE="AppendRow with content" onClick="appendRowWithContent()" width=100>
+<br>
+<INPUT TYPE="button" NAME="Ins Cell" VALUE="InsertCell" onClick="insertCell()" width=100>
+<INPUT TYPE="button" NAME="App Cell" VALUE="AppendCell" onClick="appendCell()" width=100>
+<INPUT TYPE="button" NAME="Del Cell" VALUE="DeleteCell" onClick="deleteCell()" width=100>
+<INPUT TYPE="button" NAME="App Cell with content" VALUE="AppendCell with content" onClick="appendCellWithContent()" width=100>
 <br>
 </form>
 

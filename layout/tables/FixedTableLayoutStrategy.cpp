@@ -35,8 +35,8 @@ static PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebug = PR_FALSE;
 #endif
 
-FixedTableLayoutStrategy::FixedTableLayoutStrategy(nsTableFrame *aFrame, PRInt32 aNumCols)
-  : BasicTableLayoutStrategy(aFrame, aNumCols)
+FixedTableLayoutStrategy::FixedTableLayoutStrategy(nsTableFrame *aFrame)
+  : BasicTableLayoutStrategy(aFrame)
 {
 }
 

@@ -103,25 +103,21 @@ PRBool BasicTableLayoutStrategy::IsFixedWidth(const nsStylePosition* aStylePosit
 }
 
 
-BasicTableLayoutStrategy::BasicTableLayoutStrategy(nsTableFrame *aFrame, PRInt32 aNumCols)
+BasicTableLayoutStrategy::BasicTableLayoutStrategy(nsTableFrame *aFrame)
 {
   NS_ASSERTION(nsnull!=aFrame, "bad frame arg");
 
   mTableFrame = aFrame;
-  mNumCols = aNumCols;
   mMinTableWidth=0;
   mMaxTableWidth=0;
   mFixedTableWidth=0;
-
-  //cache the value of the cols attribute
-  mCols = mTableFrame->GetEffectiveCOLSAttribute();
 }
 
 BasicTableLayoutStrategy::~BasicTableLayoutStrategy()
 {
 }
 
-PRBool BasicTableLayoutStrategy::Initialize(nsSize* aMaxElementSize)
+PRBool BasicTableLayoutStrategy::Initialize(nsSize* aMaxElementSize, PRInt32 aNumCols)
 {
 #ifdef NS_DEBUG
   nsIFrame *tablePIF=nsnull;
@@ -132,9 +128,11 @@ PRBool BasicTableLayoutStrategy::Initialize(nsSize* aMaxElementSize)
   PRBool result = PR_TRUE;
 
   // re-init instance variables
+  mNumCols = aNumCols;
   mMinTableWidth=0;
   mMaxTableWidth=0;
   mFixedTableWidth=0;
+  mCols = mTableFrame->GetEffectiveCOLSAttribute();
 
   // Step 1 - assign the width of all fixed-width columns
   AssignPreliminaryColumnWidths();
