@@ -1633,7 +1633,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIRDFDat
 		container->AppendChildTo(node, aNotify);
 	}
 
-	if ((cacheHandle) && (sortInfo.mInner) && ((*cacheHandle) != sortInfo.mInner))
+	if ((cacheHandle) && (sortInfo.mInner) && ((*cacheHandle) != sortInfo.mInner.get()))
 	{
 		*cacheHandle = sortInfo.mInner;
 		NS_ADDREF(*cacheHandle);
