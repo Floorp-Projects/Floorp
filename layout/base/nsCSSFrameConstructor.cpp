@@ -1169,6 +1169,31 @@ nsMathMLmtableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame)
 }
 #endif // MOZ_MATHML
 
+// Structure used to ensure that bindings are properly enqueued in the
+// binding manager's attached queue.
+struct nsAutoEnqueueBinding
+{
+  nsAutoEnqueueBinding(nsIDocument* aDocument) :
+    mDocument(aDocument)
+  {}
+
+  ~nsAutoEnqueueBinding();
+
+  nsCOMPtr<nsIXBLBinding> mBinding;
+private:
+  nsIDocument* mDocument;
+};
+
+nsAutoEnqueueBinding::~nsAutoEnqueueBinding()
+{
+  if (mBinding) {
+    nsIBindingManager *bm = mDocument->GetBindingManager();
+    if (bm) {
+      bm->AddToAttachedQueue(mBinding);
+    }
+  }
+}
+
 /**
  * If the parent frame is a |tableFrame| and the child is a
  * |captionFrame|, then we want to insert the frames beneath the
@@ -6972,7 +6997,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
   // can then be extended arbitrarily.
   const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
   nsRefPtr<nsStyleContext> styleContext(aStyleContext);
-  nsCOMPtr<nsIXBLBinding> binding;
+  nsAutoEnqueueBinding binding(mDocument);
   if (!aXBLBaseTag)
   {
     
@@ -6987,7 +7012,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
       if (!xblService)
         return NS_ERROR_FAILURE;
 
-      rv = xblService->LoadBindings(aContent, display->mBinding, PR_FALSE, getter_AddRefs(binding), &resolveStyle);
+      rv = xblService->LoadBindings(aContent, display->mBinding, PR_FALSE, getter_AddRefs(binding.mBinding), &resolveStyle);
       if (NS_FAILED(rv))
         return NS_OK;
 
@@ -7012,11 +7037,6 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
                                   styleContext,
                                   aFrameItems,
                                   PR_TRUE);
-        if (binding) {
-          nsIBindingManager *bm = mDocument->GetBindingManager();
-          if (bm)
-            bm->AddToAttachedQueue(binding);
-        }
         return rv;
       }
     }
@@ -7089,12 +7109,6 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
     rv = ConstructFrameByDisplayType(aPresShell, aPresContext, aState, display,
                                      aContent, aNameSpaceID, aTag,
                                      aParentFrame, styleContext, aFrameItems);
-  }
-
-  if (binding) {
-    nsIBindingManager *bm = mDocument->GetBindingManager();
-    if (bm)
-      bm->AddToAttachedQueue(binding);
   }
 
   return rv;
