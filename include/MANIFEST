@@ -6,7 +6,6 @@ abcom.h
 abdefn.h
 addrbook.h
 allxpstr.h
-cgi.h
 client.h
 csid.h
 ctxtfunc.h
