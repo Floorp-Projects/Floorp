@@ -39,12 +39,10 @@ static nsICaseConversion* gCaseConv =  nsnull;
 
 #define MAX_UNIBYTE 127
 
-nsTextTransformer::nsTextTransformer(PRUnichar* aBuffer, PRInt32 aBufLen, 
-                                     nsILineBreaker* aLineBreaker,
+nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
                                      nsIWordBreaker* aWordBreaker)
-  : mAutoBuffer(aBuffer),
-    mBuffer(aBuffer),
-    mBufferLength(aBufLen < 0 ? 0 : aBufLen),
+  : mBuffer(mAutoWordBuffer),
+    mBufferLength(NS_TEXT_TRANSFORMER_AUTO_WORD_BUF_SIZE),
     mHasMultibyte(PR_FALSE),
     mLineBreaker(aLineBreaker),
     mWordBreaker(aWordBreaker)
@@ -53,7 +51,7 @@ nsTextTransformer::nsTextTransformer(PRUnichar* aBuffer, PRInt32 aBufLen,
 
 nsTextTransformer::~nsTextTransformer()
 {
-  if (mBuffer != mAutoBuffer) {
+  if (mBuffer != mAutoWordBuffer) {
     delete [] mBuffer;
   }
 }
@@ -63,14 +61,6 @@ nsTextTransformer::Init(nsIFrame* aFrame,
                         nsIContent* aContent,
                         PRInt32 aStartingOffset)
 {
-  // Make sure we have *some* space in case arguments to the ctor were
-  // bizzare.
-  if (mBufferLength < 100) {
-    if (!GrowBuffer()) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
   // Get the frames text content
   nsITextContent* tc;
   if (NS_OK != aContent->QueryInterface(kITextContentIID, (void**) &tc)) {
@@ -143,8 +133,9 @@ nsTextTransformer::GrowBuffer(PRBool aForNextWord)
     if(aForNextWord)
       nsCRT::memcpy(newBuffer, mBuffer, sizeof(PRUnichar) * mBufferLength);
     else
-      nsCRT::memcpy(&newBuffer[mBufferLength], mBuffer, sizeof(PRUnichar) * mBufferLength);
-    if (mBuffer != mAutoBuffer) {
+      nsCRT::memcpy(&newBuffer[mBufferLength], mBuffer,
+                    sizeof(PRUnichar) * mBufferLength);
+    if (mBuffer != mAutoWordBuffer) {
       delete [] mBuffer;
     }
   }
@@ -677,11 +668,4 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
 }
 #endif
   return &(mBuffer[mBufferLength-wordLen]);
-}
-
-PRUnichar*
-nsTextTransformer::GetTextAt(PRInt32 aOffset)
-{
-  // XXX
-  return mBuffer + aOffset;
 }
