@@ -2786,6 +2786,14 @@ fe_NeutralizeFocus(MWContext * context)
 	// Finally, try the top level widget
     XmProcessTraversal(CONTEXT_WIDGET(top_context),XmTRAVERSE_CURRENT);
 }
+
+
+extern "C" MWContext * FE_GetRelatedLinksContext()
+{
+    return someGlobalContext;
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 extern "C" MWContext *FE_GetRDFContext(void) {
   /* MWContext *context = NULL; */
