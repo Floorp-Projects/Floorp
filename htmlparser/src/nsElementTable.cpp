@@ -154,7 +154,7 @@ CTagList  gFontKids(2,0,eHTMLTag_legend,eHTMLTag_text);
 CTagList  gFormKids(1,0,eHTMLTag_keygen);
 CTagList  gFramesetKids(3,0,eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes);
 
-static eHTMLTags gHTMLKidList[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script};
+static eHTMLTags gHTMLKidList[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_newline,eHTMLTag_whitespace};
 CTagList  gHtmlKids(sizeof(gHTMLKidList)/sizeof(eHTMLTag_unknown),gHTMLKidList);
 
 static eHTMLTags gHeadKidList[]=
@@ -607,7 +607,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gInHTML,	&gInHTML,
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kHTMLContent, (kHeadContent|kHeadMisc), kNone,	
-    /*special props, prop-range*/       kOmitWS|kNoStyleLeaksIn, kDefaultPropRange,
+    /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
     /*special parents,kids,skip*/       &gInHTML,&gHeadKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_hr,
@@ -623,7 +623,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gHTMLRootTags,	&gHTMLRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kHTMLContent, kNone,	
-    /*special props, prop-range*/       kSaveMisplaced|kOmitEndTag|kOmitWS|kNoStyleLeaksIn, kDefaultPropRange,
+    /*special props, prop-range*/       kSaveMisplaced|kOmitEndTag|kNoStyleLeaksIn, kDefaultPropRange,
     /*special parents,kids,skip*/       0,&gHtmlKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_i,
