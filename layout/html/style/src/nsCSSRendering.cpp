@@ -737,7 +737,11 @@ void nsCSSRendering::DrawDashedSides(PRIntn startSide,
         dashLength = DOT_LENGTH;
       }
 
-      aContext.SetColor(aSpacing.GetBorderColor(whichSide));  
+      nscolor sideColor;
+      if (! aSpacing.GetBorderColor(whichSide, sideColor)) {
+        continue; // side is transparent
+      }
+      aContext.SetColor(sideColor);  
       switch (whichSide) {
       case NS_SIDE_LEFT:
         //XXX need to properly handle wrap around from last edge to first edge
@@ -1392,33 +1396,42 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
   aPresContext.GetPixelsToTwips(&p2t);/* XXX */
   twipsPerPixel = (nscoord) p2t;/* XXX */
 
+  nscolor sideColor;
   if (0 == (aSkipSides & (1<<NS_SIDE_TOP))) {
-    DrawSide(aRenderingContext, NS_SIDE_TOP,
-             aBorderStyle.GetBorderStyle(NS_SIDE_TOP),
-             aBorderStyle.GetBorderColor(NS_SIDE_TOP),
-             bgColor->mBackgroundColor, inside,outside, 
-             twipsPerPixel, aGap);
+    if (aBorderStyle.GetBorderColor(NS_SIDE_TOP, sideColor)) {
+      DrawSide(aRenderingContext, NS_SIDE_TOP,
+               aBorderStyle.GetBorderStyle(NS_SIDE_TOP),
+               sideColor,
+               bgColor->mBackgroundColor, inside,outside, 
+               twipsPerPixel, aGap);
+    }
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_LEFT))) {
-    DrawSide(aRenderingContext, NS_SIDE_LEFT,
-             aBorderStyle.GetBorderStyle(NS_SIDE_LEFT), 
-             aBorderStyle.GetBorderColor(NS_SIDE_LEFT),
-             bgColor->mBackgroundColor,inside, outside,
-             twipsPerPixel, aGap);
+    if (aBorderStyle.GetBorderColor(NS_SIDE_LEFT, sideColor)) {
+      DrawSide(aRenderingContext, NS_SIDE_LEFT,
+               aBorderStyle.GetBorderStyle(NS_SIDE_LEFT), 
+               sideColor,
+               bgColor->mBackgroundColor,inside, outside,
+               twipsPerPixel, aGap);
+    }
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_BOTTOM))) {
-    DrawSide(aRenderingContext, NS_SIDE_BOTTOM,
-             aBorderStyle.GetBorderStyle(NS_SIDE_BOTTOM),
-             aBorderStyle.GetBorderColor(NS_SIDE_BOTTOM),
-			 bgColor->mBackgroundColor,inside, outside,
-			 twipsPerPixel, aGap);
+    if (aBorderStyle.GetBorderColor(NS_SIDE_BOTTOM, sideColor)) {
+      DrawSide(aRenderingContext, NS_SIDE_BOTTOM,
+               aBorderStyle.GetBorderStyle(NS_SIDE_BOTTOM),
+               sideColor,
+			   bgColor->mBackgroundColor,inside, outside,
+			   twipsPerPixel, aGap);
+    }
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_RIGHT))) {
-    DrawSide(aRenderingContext, NS_SIDE_RIGHT,
-             aBorderStyle.GetBorderStyle(NS_SIDE_RIGHT),
-             aBorderStyle.GetBorderColor(NS_SIDE_RIGHT),
-			 bgColor->mBackgroundColor,inside, outside,
-			 twipsPerPixel, aGap);
+    if (aBorderStyle.GetBorderColor(NS_SIDE_RIGHT, sideColor)) {
+      DrawSide(aRenderingContext, NS_SIDE_RIGHT,
+               aBorderStyle.GetBorderStyle(NS_SIDE_RIGHT),
+               sideColor,
+      			   bgColor->mBackgroundColor,inside, outside,
+			         twipsPerPixel, aGap);
+    }
   }
 }
 
