@@ -66,7 +66,7 @@ nsresult XPCOMGlueStartup(const char* xpcomFile)
     return NS_OK;
 #else
     nsresult rv;
-    GetFrozenFunctionsFunc function;
+    GetFrozenFunctionsFunc function = nsnull;
 
     xpcomFunctions.version = XPCOM_GLUE_VERSION;
     xpcomFunctions.size    = sizeof(XPCOMFunctions);
@@ -82,20 +82,25 @@ nsresult XPCOMGlueStartup(const char* xpcomFile)
     //
 
     if (xpcomFile && (xpcomFile[0] == '.' && xpcomFile[1] == '\0')) {
-        function = (GetFrozenFunctionsFunc)PR_FindSymbolAndLibrary("NS_GetFrozenFunctions", &xpcomLib);
-        if (!function)
-            return NS_ERROR_FAILURE;
-
-        char *libPath = PR_GetLibraryFilePathname(XPCOM_DLL, (PRFuncPtr) function);
-
-        if (!libPath)
-            rv = NS_ERROR_FAILURE;
+        function = (GetFrozenFunctionsFunc)
+                PR_FindSymbolAndLibrary("NS_GetFrozenFunctions", &xpcomLib);
+        if (!function) {
+            // The symbol was not found, so failover to loading XPCOM_DLL,
+            // and look for the symbol there.  See bug 240986 for details.
+            xpcomFile = nsnull;
+        }
         else {
-            rv = (*function)(&xpcomFunctions, libPath);
-            PR_Free(libPath);
+            char *libPath = PR_GetLibraryFilePathname(XPCOM_DLL, (PRFuncPtr) function);
+            if (!libPath)
+                rv = NS_ERROR_FAILURE;
+            else {
+                rv = (*function)(&xpcomFunctions, libPath);
+                PR_Free(libPath);
+            }
         }
     }
-    else {
+
+    if (!function) {
         PRLibSpec libSpec;
 
         libSpec.type = PR_LibSpec_Pathname;
