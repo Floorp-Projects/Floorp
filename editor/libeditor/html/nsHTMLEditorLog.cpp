@@ -106,9 +106,9 @@ nsHTMLEditorLog::SetParagraphFormat(const nsString& aParagraphFormat)
   if (!mLocked && mFileSpec)
   {
     PrintSelection();
-    Write("window.editorShell.paragraphFormat = \"");
+    Write("window.editorShell.SetParagraphFormat(\"");
     PrintUnicode(aParagraphFormat);
-    Write("\";\n");
+    Write("\");\n");
 
     Flush();
   }
