@@ -19,7 +19,7 @@
       <xul:hbox class="textbox-internal-box" flex="1">
         <html:input class="textbox-input" flex="1" inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly"/>
       </xul:hbox>
-        <xul:menupopup onpopupshowing="this.parentNode.doPopupItemEnabling(this); this.focus();">
+        <xul:menupopup onpopupshowing="this.parentNode.focus(); this.parentNode.doPopupItemEnabling(this);">
           <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');              
             controller.doCommand('cmd_undo');"/>
@@ -76,6 +76,7 @@
                                          if (val) this.setAttribute('disabled', 'true');
                                          else this.removeAttribute('disabled'); return val;"
                                   onget="return this.inputField.readonly;"/>
+                                  
 
       <method name="select">
         <body>

@@ -1365,7 +1365,7 @@
   <binding id="autocomplete-internal-box">
     <content context="_child">
       <children/>
-        <xul:menupopup onpopupshowing="this.parentNode.doPopupItemEnabling(this);">
+        <xul:menupopup onpopupshowing="this.parentNode.focus(); this.parentNode.doPopupItemEnabling(this);">
           <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"
                         oncommand="var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');              
                                    controller.doCommand('cmd_undo');"/>
