@@ -1546,11 +1546,11 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 #ifdef MOZ_UNICODE
     LONG contentType = aInitData? aInitData->mContentType: (parent? nsToolkit::mGetWindowLong(parent, GWL_ID): -1);
     LONG isContent = (contentType == 1 || contentType == 2);
-    nsToolkit::mSetWindowLong(mWnd, GWL_ID, contentType);
+    nsToolkit::mSetWindowLong(mWnd, GWL_ID, isContent);
 #else
     LONG contentType = aInitData? aInitData->mContentType: (parent? ::GetWindowLong(parent, GWL_ID): -1);
     LONG isContent = (contentType == 1 || contentType == 2);
-    ::SetWindowLong(mWnd, GWL_ID, contentType);
+    ::SetWindowLong(mWnd, GWL_ID, isContent);
 #endif
 
     // call the event callback to notify about creation
