@@ -123,7 +123,7 @@ var progressListener = {
       var percent;
       if ( aMaxTotalProgress > 0)
       {
-        percent = parseInt( (overallProgress*100)/aMaxTotalProgress + .5 );
+        percent = Math.floor((overallProgress*100.0)/aMaxTotalProgress);
         if ( percent > 100 )
           percent = 100;
 
@@ -387,7 +387,7 @@ function onUnload()
 function onCancel ()
 {
    // Cancel app launcher.
-   if (helperAppLoader)
+   if (helperAppLoader && !completed)
    {
      try
      {
@@ -422,7 +422,6 @@ function setupPostProgressUI()
   if (cancelButton)
   {
     cancelButton.label = getString("close");
-    cancelButton.setAttribute("onclick", "window.close()");
     cancelButton.focus();
   }
 
