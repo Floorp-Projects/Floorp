@@ -80,6 +80,15 @@ interface nsIBookmarksService : nsISupports
     wstring getLastCharset(in string aURI);
 
     void importSystemBookmarks(in nsIRDFResource aParentFolder);
+    
+    /**
+     * Get the time when a bookmark was added
+     *
+     * @param aBookmarkURL    The url of the bookmark
+     * @param aAddTime        The time when aBookmarkURL was added to the bookmarks.
+     *
+     */
+    void getAddTime(in string aBookmarkURL, out long long aAddTime);
 };
 
 %{C++
