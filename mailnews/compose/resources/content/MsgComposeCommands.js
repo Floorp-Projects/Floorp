@@ -35,7 +35,7 @@ var currentAttachment = null;
 var documentLoaded = false;
 var contentChanged = false;
 
-var Bundle = srGetStrBundle("chrome://messengercompose/locale/composeMsgs.properties"); 
+var Bundle = srGetStrBundle("chrome://messenger/locale/messengercompose/composeMsgs.properties"); 
 
 var other_header = "";
 var update_compose_title_as_you_type = true;
@@ -497,7 +497,7 @@ function GenericSendMessage( msgType )
 				if (action == msgCompSendFormat.AskUser)
 				{
 					var result = {action:msgCompSendFormat.PlainText, abort:false};
-					window.openDialog("chrome://messengercompose/content/askSendFormat.xul",
+					window.openDialog("chrome://messenger/content/messengercompose/askSendFormat.xul",
 										"askSendFormatDialog", "chrome,modal",
 										result);
 					if (result.abort)
@@ -684,7 +684,7 @@ function SelectAddress()
 	var bccAddress = msgCompFields.GetBcc();
 	
 	dump("toAddress: " + toAddress + "\n");
-	window.openDialog("chrome://addressbook/content/abSelectAddressesDialog.xul",
+	window.openDialog("chrome://messenger/content/addressbook/abSelectAddressesDialog.xul",
 					  "",
 					  "chrome,resizable,modal",
 					  {composeWindow:top.window,
@@ -899,7 +899,7 @@ function AddAttachment(attachment)
 function AttachPage()
 {
     var result = {url: ""};
-	window.openDialog("chrome://messengercompose/content/MsgAttachPage.xul", "attachPageDialog", "chrome,modal", result);
+	window.openDialog("chrome://messenger/content/messengercompose/MsgAttachPage.xul", "attachPageDialog", "chrome,modal", result);
 	if (result.url != "")
 	    AddAttachment(result.url);
 }

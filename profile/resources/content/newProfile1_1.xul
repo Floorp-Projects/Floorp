@@ -21,9 +21,9 @@
 
 <!-- this is PAGE ONE of the Profile Creation Wizard -->
 
-<?xml-stylesheet href="chrome://profile/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/profile/profile.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://profile/locale/newProfile1_1.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/profile/newProfile1_1.dtd" >
 <window 
     xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 

@@ -53,15 +53,15 @@ install:: $(LIBRARY)
 
 clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
-        rm -f $(DIST)\bin\chrome\wallet\content\default\SignonViewer.xul
-        rm -f $(DIST)\bin\chrome\wallet\content\default\SignonViewer.js
-        rm -f $(DIST)\bin\chrome\wallet\skin\default\SignonViewer.css
-        rm -f $(DIST)\bin\chrome\wallet\locale\en-US\SignonViewer.properties
-        rm -f $(DIST)\bin\chrome\wallet\locale\en-US\SignonViewer.dtd
+        rm -f $(DIST)\bin\chrome\communicator\content\wallet\SignonViewer.xul
+        rm -f $(DIST)\bin\chrome\communicator\content\wallet\SignonViewer.js
+        rm -f $(DIST)\bin\chrome\communicator\skin\wallet\SignonViewer.css
+        rm -f $(DIST)\bin\chrome\communicator\locale\wallet\SignonViewer.properties
+        rm -f $(DIST)\bin\chrome\communicator\locale\wallet\SignonViewer.dtd
 
 install:: $(DLL)
-        $(MAKE_INSTALL) SignonViewer.xul $(DIST)\bin\chrome\wallet\content\default
-        $(MAKE_INSTALL) SignonViewer.js $(DIST)\bin\chrome\wallet\content\default
-        $(MAKE_INSTALL) SignonViewer.css $(DIST)\bin\chrome\wallet\skin\default
-        $(MAKE_INSTALL) SignonViewer.properties $(DIST)\bin\chrome\wallet\locale\en-US
-        $(MAKE_INSTALL) SignonViewer.dtd $(DIST)\bin\chrome\wallet\locale\en-US
+        $(MAKE_INSTALL) SignonViewer.xul $(DIST)\bin\chrome\communicator\content\wallet
+        $(MAKE_INSTALL) SignonViewer.js $(DIST)\bin\chrome\communicator\content\wallet
+        $(MAKE_INSTALL) SignonViewer.css $(DIST)\bin\chrome\communicator\skin\wallet
+        $(MAKE_INSTALL) SignonViewer.properties $(DIST)\bin\chrome\communicator\locale\wallet
+        $(MAKE_INSTALL) SignonViewer.dtd $(DIST)\bin\chrome\communicator\locale\wallet

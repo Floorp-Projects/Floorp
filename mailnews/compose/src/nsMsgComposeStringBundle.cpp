@@ -31,7 +31,7 @@
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
-#define COMPOSE_BE_URL       "chrome://messengercompose/locale/composeMsgs.properties"
+#define COMPOSE_BE_URL       "chrome://messenger/locale/messengercompose/composeMsgs.properties"
 
 nsComposeStringService::nsComposeStringService()
 {

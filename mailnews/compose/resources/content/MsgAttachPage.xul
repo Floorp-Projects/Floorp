@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://messengercompose/skin/" type="text/css"?>  
+<?xml-stylesheet href="chrome://messenger/skin/messengercompose/messengercompose.css" type="text/css"?>  
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
 
-<!DOCTYPE window SYSTEM "chrome://messengercompose/locale/MsgAttachPage.dtd">
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/MsgAttachPage.dtd">
 
 <window title="&windowTitle.label;"
     xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -13,7 +13,7 @@
     align="vertical"
     class="dialog"> 
 
-<html:script language="JavaScript" src="chrome://messengercompose/content/MsgAttachPage.js"/> 
+<html:script language="JavaScript" src="chrome://messenger/content/messengercompose/MsgAttachPage.js"/> 
 
 	<keyset id="keyset"/>
 

@@ -27,7 +27,7 @@
 var client = new Object();
 
 client.IMAGEDIR = "chrome://chatzilla/skin/images/";
-client.CSSDIR = "chrome://chatzilla/skin/";
+client.CSSDIR = "chrome://chatzilla/skin/chatzilla.css";
 //client.IMAGEDIR = "resource:///chrome/chatzilla/skin/default/images/";
 //client.CSSDIR = "resource:///chrome/chatzilla/skin/default/";
 

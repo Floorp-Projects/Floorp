@@ -37,8 +37,8 @@ EXPORT_NAV_RESOURCE_CONTENT = \
 include $(topsrcdir)/config/rules.mk
 
 install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/global/locale/en-US
-	$(INSTALL) $(EXPORT_NAV_RESOURCE_CONTENT) $(DIST)/bin/chrome/navigator/locale/en-US
+	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/global/locale
+	$(INSTALL) $(EXPORT_NAV_RESOURCE_CONTENT) $(DIST)/bin/chrome/navigator/locale
 
 
 

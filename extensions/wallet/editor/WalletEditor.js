@@ -26,7 +26,7 @@
 var walleteditor = null; // walleteditor interface
 var walletList = []; // input stream
 var bundle = null; // string bundle
-var JS_STRINGS_FILE = "chrome://wallet/locale/WalletEditor.properties";
+var JS_STRINGS_FILE = "chrome://communicator/locale/wallet/WalletEditor.properties";
 
 /* wallet-specific global variables */
     

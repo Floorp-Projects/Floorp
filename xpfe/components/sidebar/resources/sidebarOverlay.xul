@@ -18,9 +18,9 @@
 
 -->
  
-<?xml-stylesheet href="chrome://sidebar/skin/sidebarOverlay.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebarOverlay.css" type="text/css"?> 
 
-<!DOCTYPE window SYSTEM "chrome://sidebar/locale/sidebarOverlay.dtd">
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/sidebar/sidebarOverlay.dtd">
 
 <overlay id="sidebarOverlay"
   xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -98,7 +98,7 @@
 
   <!-- Scripts go last, because they peek at state to tweak menus -->
   <html:script language="JavaScript"
-               src="chrome://sidebar/content/sidebarOverlay.js"/>
+               src="chrome://communicator/content/sidebar/sidebarOverlay.js"/>
 
 </overlay>
 

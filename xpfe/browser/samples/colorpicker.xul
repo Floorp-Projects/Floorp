@@ -23,7 +23,7 @@
 
 -->
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 
 <window title="Color Picker"
   xmlns:html="http://www.w3.org/TR/REC-html40"

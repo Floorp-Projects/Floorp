@@ -19,10 +19,10 @@
    
    Contributor(s): 
   -->
-<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-wallet.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-wallet.dtd" >
 
 <window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
 	    	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -33,12 +33,12 @@
   <html:script language="JavaScript">
     function viewSignons()
     {
-      window.openDialog("chrome://wallet/content/SignonViewer.xul","","modal=yes,chrome,resizable=no");
+      window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","","modal=yes,chrome,resizable=no");
     }
     
     function viewWallet()
     {
-      window.openDialog("chrome://wallet/content/WalletEditor.xul","","modal=yes,chrome,resizable=no");
+      window.openDialog("chrome://communicator/content/wallet/WalletEditor.xul","","modal=yes,chrome,resizable=no");
     }
 
     function changePasswords()

@@ -1016,7 +1016,7 @@ menulist[editable="true"][open="true"] > .menu-dropmarker {
 }
 
 menulist[editable="true"] > .menu-icon {
-  list-style-image: url("chrome://bookmarks/skin/bookmark-item.gif");
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
   background-color: white;
   padding: 1px;
   border-left: 1px inset #CCCCCC;

@@ -23,9 +23,10 @@ DEPTH=..\..\..\..
 
 DIRS= locale
 
-CHROME_DIR          = search
-CHROME_CONTENT_DIR  = content/default
-CHROME_SKIN_DIR     = skin/default
+CHROME_DIR          = communicator
+CHROME_CONTENT_DIR = content\search
+CHROME_L10N_DIR = locale\search
+CHROME_SKIN_DIR = skin\search
 CHROME_SOURCE_DIR	= $(srcdir)
 
 CHROME_CONTENT = \
@@ -57,16 +58,26 @@ CHROME_SKIN = \
 	.\result.gif \
 	$(NULL)
 
-CHROME_L10N = \
-	.\locale\en-US\find.dtd \
-	.\locale\en-US\findresults.dtd \
-	.\locale\en-US\internet.dtd \
-	.\locale\en-US\internetresults.dtd \
-	.\locale\en-US\search.dtd \
-	.\locale\en-US\search-editor.dtd \
-	.\locale\en-US\search-editor.properties \
-	.\locale\en-US\search-panel.dtd \
-	.\locale\en-US\search-panel.properties \
-	$(NULL)
-
 include <$(DEPTH)\config\rules.mak>
+
+install::
+	$(MAKE_INSTALL)	.\locale\en-US\find.dtd	$(DIST)\bin\chrome\communicator\locale\search
+	$(MAKE_INSTALL)	.\locale\en-US\findresults.dtd	$(DIST)\bin\chrome\communicator\locale\search
+	$(MAKE_INSTALL)	.\locale\en-US\internet.dtd	$(DIST)\bin\chrome\communicator\locale\search
+	$(MAKE_INSTALL)	.\locale\en-US\internetresults.dtd	$(DIST)\bin\chrome\communicator\locale\search
+	$(MAKE_INSTALL)	.\locale\en-US\search.dtd	$(DIST)\bin\chrome\communicator\locale\search
+	$(MAKE_INSTALL)	.\locale\en-US\search-editor.dtd	$(DIST)\bin\chrome\communicator\locale\search
+	$(MAKE_INSTALL)	.\locale\en-US\search-editor.properties	$(DIST)\bin\chrome\communicator\locale\search
+	$(MAKE_INSTALL)	.\locale\en-US\search-panel.dtd	$(DIST)\bin\chrome\communicator\locale\search
+	$(MAKE_INSTALL)	.\locale\en-US\search-panel.properties	$(DIST)\bin\chrome\communicator\locale\search
+
+clobber::
+	rm -f $(DIST)\bin\chrome\communicator\locale\search\find.dtd
+	rm -f $(DIST)\bin\chrome\communicator\locale\search\findresults.dtd
+	rm -f $(DIST)\bin\chrome\communicator\locale\search\internet.dtd
+	rm -f $(DIST)\bin\chrome\communicator\locale\search\internetresults.dtd
+	rm -f $(DIST)\bin\chrome\communicator\locale\search\search.dtd
+	rm -f $(DIST)\bin\chrome\communicator\locale\search\search-editor.dtd
+	rm -f $(DIST)\bin\chrome\communicator\locale\search\search-editor.properties
+	rm -f $(DIST)\bin\chrome\communicator\locale\search\search-panel.dtd
+	rm -f $(DIST)\bin\chrome\communicator\locale\search\search-panel.properties

@@ -25,9 +25,9 @@ MODULE=msgnews
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) newshost.gif	$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) newshost.gif	$(DIST)\bin\chrome\messenger\skin
 
 
 clobber::
-	rm -f $(DIST)\chrome\messenger\skin\default\newshost.gif
+	rm -f $(DIST)\chrome\messenger\skin\newshost.gif
 

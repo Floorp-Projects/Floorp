@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://search/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/search/search.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://search/locale/search.dtd">
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/search/search.dtd">
 
 <window id="search-window" title="&window.title.label;"
     class="dialog" windowtype="search:window"
@@ -28,7 +28,7 @@
 		</menu>
 	</menubar>
 
-	<html:script src="chrome://search/content/search.js" />
+	<html:script src="chrome://communicator/content/search/search.js" />
 
 	<tabcontrol align="vertical"> 
 		<tabbox align="horizontal"> 

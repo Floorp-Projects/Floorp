@@ -329,7 +329,7 @@ function Commit()
 			var duration = document.getElementById("duration").value;
 			if (duration == "")
 			{
-				var bundle = srGetStrBundle("chrome://bookmarks/locale/bookmark.properties");
+				var bundle = srGetStrBundle("chrome://communicator/locale/bookmarks/bookmark.properties");
 				alert( bundle.GetStringFromName("pleaseEnterADuration") );
 				return(false);
 			}
@@ -341,7 +341,7 @@ function Commit()
 			if (document.getElementById("openWindow").checked)	method += ",open";
 			if (method.length < 1)
 			{
-				var bundle = srGetStrBundle("chrome://bookmarks/locale/bookmark.properties");
+				var bundle = srGetStrBundle("chrome://communicator/locale/bookmarks/bookmark.properties");
 				alert( bundle.GetStringFromName("pleaseSelectANotification") );
 				return(false);
 			}

@@ -18,7 +18,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 */
  
-@import url(chrome://global/skin/);
+@import url(chrome://global/skin/global.css);
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
 @namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for XUL elements */
@@ -116,11 +116,11 @@ treeitem[selected="true"] > treerow {
 }
 
 tree[class="abDirectory"] treeitem > treerow > treecell > .tree-icon {
-	list-style-image: url("chrome://addressbook/skin/myaddrbk.gif");
+	list-style-image: url("chrome://messenger/skin/addressbook/myaddrbk.gif");
 }
 
 tree[class="abResults"] treeitem > treerow > treecell.cardicon {
-	list-style-image: url("chrome://addressbook/skin/person.gif");
+	list-style-image: url("chrome://messenger/skin/addressbook/person.gif");
 	height: 14px;
 	min-height: 14px;
 }
@@ -137,19 +137,19 @@ tree[class="abResults"] treeitem > treerow > treecell.cardicon {
 }
 
 #button_newcard {
-	list-style-image:url("chrome://addressbook/skin/newcard.gif");
+	list-style-image:url("chrome://messenger/skin/addressbook/newcard.gif");
 }
 
 #button_newlist {
-	list-style-image:url("chrome://addressbook/skin/newlist.gif");
+	list-style-image:url("chrome://messenger/skin/addressbook/newlist.gif");
 }
 
 #button_editcard {
-	list-style-image:url("chrome://addressbook/skin/edit.gif");
+	list-style-image:url("chrome://messenger/skin/addressbook/edit.gif");
 }
 
 #button_newmessage {
-	list-style-image:url("chrome://addressbook/skin/newmsgab.gif");
+	list-style-image:url("chrome://messenger/skin/addressbook/newmsgab.gif");
 }
 
 #button_delete {

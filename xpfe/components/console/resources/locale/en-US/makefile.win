@@ -23,7 +23,7 @@ DEPTH=..\..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\global\locale\en-US
+DISTBROWSER=$(DIST)\bin\chrome\global\locale
 
 install::
 	$(MAKE_INSTALL) console.dtd $(DISTBROWSER)

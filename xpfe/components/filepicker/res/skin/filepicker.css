@@ -1,4 +1,4 @@
-@import url(chrome://global/skin/);
+@import url(chrome://global/skin/global.css);
 
 treecell.directory > .tree-button {
   list-style-image: url("chrome://global/skin/dir-closed.gif");

@@ -255,7 +255,7 @@ nsMimeXULEmitter::WriteXULHeader()
   UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader.css\" type=\"text/css\"?>");
 
   // Make it look consistent...
-  UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://global/skin/\" type=\"text/css\"?>");
+  UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://global/skin/global.css\" type=\"text/css\"?>");
 
 
   // Now, the XUL window!

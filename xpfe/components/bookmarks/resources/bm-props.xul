@@ -22,12 +22,12 @@
 
 -->
 
-<?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://bookmarks/skin/bm-props.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bm-props.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://bookmarks/locale/bm-props.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/bookmarks/bm-props.dtd" >
 
 <window
 	xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -38,7 +38,7 @@
  
 	<html:script language="Javascript" src="chrome://global/content/globalOverlay.js"/>  
 	<html:script language="JavaScript" src="chrome://global/content/strres.js" />
-	<html:script language="JavaScript" src="chrome://bookmarks/content/bm-props.js" />
+	<html:script language="JavaScript" src="chrome://communicator/content/bookmarks/bm-props.js" />
 
 <box id="Tabs" align="horizontal">
 	<titledbutton class="push" value="General Information" onclick="return switchTab(0)" />

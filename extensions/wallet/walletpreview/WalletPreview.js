@@ -22,7 +22,7 @@
  */
 
 /* for localization */
-var JS_STRINGS_FILE = "chrome://wallet/locale/WalletPreview.properties";
+var JS_STRINGS_FILE = "chrome://communicator/locale/wallet/WalletPreview.properties";
 var bundle = srGetStrBundle(JS_STRINGS_FILE);
 var heading = bundle.GetStringFromName("heading");
 var bypass = bundle.GetStringFromName("bypass");

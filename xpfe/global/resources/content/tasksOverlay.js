@@ -1,7 +1,7 @@
 
 function toNavigator()
 {
-	CycleWindow('navigator:browser', 'chrome://navigator/content/');
+	CycleWindow('navigator:browser', 'chrome://navigator/content/navigator.xul');
 }
 
 function toMessengerWindow()
@@ -10,20 +10,20 @@ function toMessengerWindow()
 		var layoutType = pref.GetIntPref("mail.pane_config");
 				
 		if(layoutType == 0)
-			toOpenWindowByType("mail:3pane", "chrome://messenger/content/");
+			toOpenWindowByType("mail:3pane", "chrome://messenger/content/messenger.xul");
 		else
 			toOpenWindowByType("mail:3pane", "chrome://messenger/content/mail3PaneWindowVertLayout.xul");
 	}
 	catch(ex)
 	{
-		toOpenWindowByType("mail:3pane", "chrome://messenger/content/");
+		toOpenWindowByType("mail:3pane", "chrome://messenger/content/messenger.xul");
 	}
 }
 
 
 function toAddressBook() 
 {
-	toOpenWindowByType("mail:addressbook", "chrome://addressbook/content/addressbook.xul");
+	toOpenWindowByType("mail:addressbook", "chrome://messenger/content/addressbook/addressbook.xul");
 }
 
 function toNewsgroups() 
@@ -62,7 +62,7 @@ function toHistory()
     }
     gDisableHistory = true;
 
-    window.open( "chrome://history/content/", "_blank", "chrome,menubar,resizable,scrollbars" );
+    window.open( "chrome://communicator/content/history/history.xul", "_blank", "chrome,menubar,resizable,scrollbars" );
     setTimeout(enableHistory, 2000);
   }
 
@@ -193,7 +193,7 @@ function CycleWindow( inType, inChromeURL )
 
 function toEditor()
 {
-	CycleWindow('composer:html', 'chrome://editor/content/');
+	CycleWindow('composer:html', 'chrome://editor/content/editor.xul');
 }
 
 function ShowWindowFromResource( node )
@@ -347,15 +347,15 @@ function WalletDialog( which )
 {
   switch( which ) {
     case "signon":
-      window.openDialog("chrome://wallet/content/SignonViewer.xul","SSViewer","modal,chrome,height=504,width=436"); 
+      window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","SSViewer","modal,chrome,height=504,width=436"); 
       break;
     case "cookie":
       this.pref.SetBoolPref("cookieviewer.cookieTab", true);
-      window.openDialog("chrome://wallet/content/CookieViewer.xul","CookieViewer","modal,chrome,height=504,width=436"); 
+      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal,chrome,height=504,width=436"); 
       break;
     case "image":
       this.pref.SetBoolPref("cookieviewer.cookieTab", false);
-      window.openDialog("chrome://wallet/content/CookieViewer.xul","CookieViewer","modal,chrome,height=504,width=436"); 
+      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal,chrome,height=504,width=436"); 
       break;
     case "samples":
       window.content.location.href= 'http://www.mozilla.org/wallet/samples/';
@@ -365,7 +365,7 @@ function WalletDialog( which )
       break;
     case "wallet":
     default:
-      window.openDialog("chrome://wallet/content/WalletEditor.xul","walletEditor","modal,chrome,height=504,width=436"); 
+      window.openDialog("chrome://communicator/content/wallet/WalletEditor.xul","walletEditor","modal,chrome,height=504,width=436"); 
       break;
   }
 }

@@ -23,7 +23,7 @@ Contributor(s):
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 
-<!DOCTYPE window SYSTEM "chrome://timebomb/locale/timebomb.dtd">
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/timebomb/timebomb.dtd">
 
 <window  title="&title.label;" 
          id="timebomb-window" 

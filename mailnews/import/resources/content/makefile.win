@@ -25,25 +25,25 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: 
 	$(MAKE_INSTALL) import-test.html                $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) importDialog.js                 $(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) importDialog.xul                $(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) importProgress.xul              $(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) importProgress.js               $(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) fieldMapExport.xul              $(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) fieldMapExport.js               $(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) fieldMapImport.xul              $(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) fieldMapImport.js               $(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) importDialog.js                 $(DIST)\bin\chrome\messenger\content
+	$(MAKE_INSTALL) importDialog.xul                $(DIST)\bin\chrome\messenger\content
+	$(MAKE_INSTALL) importProgress.xul              $(DIST)\bin\chrome\messenger\content
+	$(MAKE_INSTALL) importProgress.js               $(DIST)\bin\chrome\messenger\content
+	$(MAKE_INSTALL) fieldMapExport.xul              $(DIST)\bin\chrome\messenger\content
+	$(MAKE_INSTALL) fieldMapExport.js               $(DIST)\bin\chrome\messenger\content
+	$(MAKE_INSTALL) fieldMapImport.xul              $(DIST)\bin\chrome\messenger\content
+	$(MAKE_INSTALL) fieldMapImport.js               $(DIST)\bin\chrome\messenger\content
 
 clobber::
 	rm -f $(DIST)\bin\res\samples\import-test.html
-	rm -f $(DIST)\bin\chrome\messenger\content\default\importDialog.js
-	rm -f $(DIST)\bin\chrome\messenger\content\default\importDialog.xul
-	rm -f $(DIST)\bin\chrome\messenger\content\default\importProgress.js
-	rm -f $(DIST)\bin\chrome\messenger\content\default\importProgress.xul
-	rm -f $(DIST)\bin\chrome\messenger\content\default\fieldMapExport.js
-	rm -f $(DIST)\bin\chrome\messenger\content\default\fieldMapExport.xul
-	rm -f $(DIST)\bin\chrome\messenger\content\default\fieldMapImport.js
-	rm -f $(DIST)\bin\chrome\messenger\content\default\fieldMapImport.xul
+	rm -f $(DIST)\bin\chrome\messenger\content\importDialog.js
+	rm -f $(DIST)\bin\chrome\messenger\content\importDialog.xul
+	rm -f $(DIST)\bin\chrome\messenger\content\importProgress.js
+	rm -f $(DIST)\bin\chrome\messenger\content\importProgress.xul
+	rm -f $(DIST)\bin\chrome\messenger\content\fieldMapExport.js
+	rm -f $(DIST)\bin\chrome\messenger\content\fieldMapExport.xul
+	rm -f $(DIST)\bin\chrome\messenger\content\fieldMapImport.js
+	rm -f $(DIST)\bin\chrome\messenger\content\fieldMapImport.xul
 
 
 

@@ -24,8 +24,8 @@ DEPTH=..\..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) oeImportMsgs.properties $(DIST)\bin\chrome\messenger\locale\en-US
+	$(MAKE_INSTALL) oeImportMsgs.properties $(DIST)\bin\chrome\messenger\locale
 
 clobber::
-	rm -f $(DIST)bin\chrome\messenger\locale\en-US\oeImportMsgs.properties
+	rm -f $(DIST)bin\chrome\messenger\locale\oeImportMsgs.properties
 

@@ -26,7 +26,7 @@ DIRS=win
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\global\content\default
+DISTBROWSER=$(DIST)\bin\chrome\global\content
 
 install::
 	$(MAKE_INSTALL) browserBindings.xul $(DISTBROWSER)
@@ -65,4 +65,4 @@ install::
 	$(MAKE_INSTALL) treePopups.js $(DISTBROWSER)
   
 clobber::
-  rm -f $(DIST)\bin\chrome\global\content\default\*.*
+  rm -f $(DIST)\bin\chrome\global\content\*.*

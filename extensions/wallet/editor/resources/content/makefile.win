@@ -23,7 +23,7 @@ DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-CONTENTDIR=$(DIST)\bin\chrome\wallet\content\default
+CONTENTDIR=$(DIST)\bin\chrome\communicator\content\wallet
 
 install::
 	$(MAKE_INSTALL) WalletEditor.xul $(CONTENTDIR)
@@ -31,4 +31,4 @@ install::
 	
 
 clobber::
-  rm -f $(DIST)\bin\chrome\wallet\content\default\*.*
+  rm -f $(DIST)\bin\chrome\communicator\content\wallet\*.*

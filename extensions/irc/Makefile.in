@@ -123,8 +123,8 @@ include $(topsrcdir)/config/rules.mk
 INSTALLROOT = $(DIST)/bin/chrome/chatzilla
 
 install::
-	$(INSTALL) $(JSLIBFILES) $(INSTALLROOT)/content/default/lib/js
-	$(INSTALL) $(XULLIBFILES) $(INSTALLROOT)/content/default/lib/xul
-	$(INSTALL) $(CONTENTFILES) $(INSTALLROOT)/content/default
-	$(INSTALL) $(SKINFILES) $(INSTALLROOT)/skin/default
-	$(INSTALL) $(IMAGEFILES) $(INSTALLROOT)/skin/default/images
+	$(INSTALL) $(JSLIBFILES) $(INSTALLROOT)/content/lib/js
+	$(INSTALL) $(XULLIBFILES) $(INSTALLROOT)/content/lib/xul
+	$(INSTALL) $(CONTENTFILES) $(INSTALLROOT)/content
+	$(INSTALL) $(SKINFILES) $(INSTALLROOT)/skin
+	$(INSTALL) $(IMAGEFILES) $(INSTALLROOT)/skin/images

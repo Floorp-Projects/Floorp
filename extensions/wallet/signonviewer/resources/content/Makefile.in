@@ -29,5 +29,5 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/SignonViewer.xul $(srcdir)/SignonViewer.js $(DIST)/bin/chrome/wallet/content/default	
+	$(INSTALL) $(srcdir)/SignonViewer.xul $(srcdir)/SignonViewer.js $(DIST)/bin/chrome/communicator/content/wallet	
 

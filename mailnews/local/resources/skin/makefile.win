@@ -25,9 +25,9 @@ MODULE=msglocal
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) local-mailhost.gif	$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) local-mailhost.gif	$(DIST)\bin\chrome\messenger\skin
 
 
 clobber::
-	rm -f $(DIST)\chrome\messenger\skin\default\local-mailhost.gif
+	rm -f $(DIST)\chrome\messenger\skin\local-mailhost.gif
 

@@ -23,7 +23,7 @@ DEPTH=..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSWER=$(DIST)\bin\chrome\navigator\content\default
+DISTBROWSWER=$(DIST)\bin\chrome\navigator\content
 
 install::
 	$(MAKE_INSTALL) openLocation.js $(DISTBROWSWER)

@@ -397,28 +397,14 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
  
   nsCAutoString finalURL;
   GetBaseURL(package, provider, finalURL);
-  if (finalURL.IsEmpty()) {
+  if (finalURL.IsEmpty())
     finalURL = "resource:/chrome/";
-    finalURL += package;
-    finalURL += "/";
-    finalURL += provider;
-    finalURL += "/";
 
-    // XXX Remove hack when our directory structure gets fixed.
-    if (provider.Equals(nsCAutoString("locale")))
-      finalURL += "en-US";
-    else finalURL += "default";
-    finalURL += "/";
-
-    finalURL += remaining;
-  }
-  else {
-    finalURL += package;
-    finalURL += "/";
-    finalURL += provider;
-    finalURL += "/";
-    finalURL += remaining;
-  }
+  finalURL += package;
+  finalURL += "/";
+  finalURL += provider;
+  finalURL += "/";
+  finalURL += remaining;
 
   aChromeURL->SetSpec(finalURL);
   return NS_OK;

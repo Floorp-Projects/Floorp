@@ -25,7 +25,7 @@ DIRS=win
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\global\locale\en-US
+DISTBROWSER=$(DIST)\bin\chrome\global\locale
 
 
 install::
@@ -43,4 +43,4 @@ install::
 	$(MAKE_INSTALL) about.dtd $(DISTBROWSER)
   
 clobber::
-  rm -f $(DIST)\bin\chrome\global\locale\en-US\*.*
+  rm -f $(DIST)\bin\chrome\global\locale\*.*

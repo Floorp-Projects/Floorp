@@ -444,7 +444,7 @@ nsGfxButtonControlFrame::GetDefaultLabel(nsString& aString)
   return rv;
 }
 
-#define form_properties "chrome://layout/locale/HtmlForm.properties"
+#define form_properties "chrome://communicator/locale/layout/HtmlForm.properties"
 
 // Return localised string for resource string (e.g. "Submit" -> "Submit Query")
 // This code is derived from nsBookmarksService::Init() and cookie_Localize()

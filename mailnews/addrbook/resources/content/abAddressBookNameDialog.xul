@@ -19,11 +19,11 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://addressbook/locale/abAddressBookNameDialog.dtd">
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abAddressBookNameDialog.dtd">
 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -33,7 +33,7 @@ Rights Reserved.
         onload="abNameOnLoad()"
         style="padding:10px"> 
         
-<html:script language="JavaScript" src="chrome://addressbook/content/abAddressBookNameDialog.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/addressbook/abAddressBookNameDialog.js"/>
 
 	<keyset id="keyset"/>
 

@@ -23,14 +23,14 @@
 	sspitzer@netscape.com
   -->
 
-<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
   
 
 <!DOCTYPE window [
 <!ENTITY % platformDTD SYSTEM "chrome://global/locale/platformDialogOverlay.dtd" >
 %platformDTD;
-<!ENTITY % prefMousewheelDTD SYSTEM "chrome://pref/locale/pref-mousewheel.dtd" >
+<!ENTITY % prefMousewheelDTD SYSTEM "chrome://communicator/locale/pref/pref-mousewheel.dtd" >
 %prefMousewheelDTD;
 ]>
 
@@ -41,7 +41,7 @@
 		align="vertical" title="&title.label;"
 		>
 
-<html:script language="JavaScript" src="chrome://pref/content/pref-mousewheel.js"/>
+<html:script language="JavaScript" src="chrome://communicator/content/pref/pref-mousewheel.js"/>
     
   <box type="smallheader" title="&title.label;" description="&info.label;"/>
 

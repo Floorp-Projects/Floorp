@@ -162,7 +162,7 @@ nsInstallProgressDialog::Open(nsIDialogParamBlock* ioParamBlock)
             jsval *argv = JS_PushArguments( jsContext,
                                             &stackPtr,
                                             "sss%ip%ip",
-                                            "chrome://xpinstall/content/xpistatus.xul",
+                                            "chrome://communicator/content/xpinstall/xpistatus.xul",
                                             "_blank",
                                             "chrome",
                                             (const nsIID*)&NS_GET_IID(nsIDialogParamBlock),

@@ -49,6 +49,6 @@ EXPORT_RESOURCE_IMAGES = \
 include $(topsrcdir)/config/rules.mk
 
 install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_SKIN) $(DIST)/bin/chrome/editor/skin/default
-	$(INSTALL) $(EXPORT_RESOURCE_IMAGES) $(DIST)/bin/chrome/editor/skin/default/images
+	$(INSTALL) $(EXPORT_RESOURCE_SKIN) $(DIST)/bin/chrome/editor/skin
+	$(INSTALL) $(EXPORT_RESOURCE_IMAGES) $(DIST)/bin/chrome/editor/skin/images
 

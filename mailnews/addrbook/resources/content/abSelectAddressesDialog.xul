@@ -19,14 +19,14 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<?xul-overlay href="chrome://addressbook/content/abDirTreeOverlay.xul"?>
-<?xul-overlay href="chrome://addressbook/content/abResultsTreeOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/addressbook/abDirTreeOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/addressbook/abResultsTreeOverlay.xul"?>
 
 
-<!DOCTYPE window SYSTEM "chrome://addressbook/locale/abSelectAddressesDialog.dtd">
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abSelectAddressesDialog.dtd">
 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -39,10 +39,10 @@ Rights Reserved.
         onload="OnLoadSelectAddress()"
         align="vertical">
 
-<html:script language="JavaScript" src="chrome://addressbook/content/abCommon.js"/>
-<html:script language="JavaScript" src="chrome://addressbook/content/abSelectAddressesDialog.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/addressbook/abCommon.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/addressbook/abSelectAddressesDialog.js"/>
 <html:script language="JavaScript" src="chrome://global/content/strres.js"/>
-<html:script language="JavaScript" src="chrome://messengercompose/content/MsgComposeCommands.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
 <html:script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
 <!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
 

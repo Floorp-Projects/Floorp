@@ -24,10 +24,10 @@ DEPTH=..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 clobber::
-        rm -f $(DIST)\bin\chrome\wallet\content\default\SignonViewer.xul
-        rm -f $(DIST)\bin\chrome\wallet\content\default\SignonViewer.js
+        rm -f $(DIST)\bin\chrome\communicator\content\wallet\SignonViewer.xul
+        rm -f $(DIST)\bin\chrome\communicator\content\wallet\SignonViewer.js
        
 install:: $(DLL)
-        $(MAKE_INSTALL) SignonViewer.xul $(DIST)\bin\chrome\wallet\content\default
-        $(MAKE_INSTALL) SignonViewer.js $(DIST)\bin\chrome\wallet\content\default
+        $(MAKE_INSTALL) SignonViewer.xul $(DIST)\bin\chrome\communicator\content\wallet
+        $(MAKE_INSTALL) SignonViewer.js $(DIST)\bin\chrome\communicator\content\wallet
         

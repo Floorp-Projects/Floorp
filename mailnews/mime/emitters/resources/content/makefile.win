@@ -24,7 +24,7 @@ DEPTH=..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) attach.js			$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) attach.js			$(DIST)\bin\chrome\messenger\content
 
 clobber::
-	rm -f $(DIST)\chrome\messenger\content\default\attach.xul
+	rm -f $(DIST)\chrome\messenger\content\attach.xul

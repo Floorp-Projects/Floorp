@@ -56,4 +56,4 @@ override NO_STATIC_LIB=
 include $(topsrcdir)/config/rules.mk
 
 install::
-	$(INSTALL) $(srcdir)/appstrings.properties $(DIST)/bin/chrome/global/locale/en-US
+	$(INSTALL) $(srcdir)/appstrings.properties $(DIST)/bin/chrome/global/locale

@@ -24,8 +24,8 @@ DEPTH=..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) abookstat.js $(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) abookstat.js $(DIST)\bin\chrome\messenger\content
 
 clobber::
-	rm -f $(DIST)\chrome\messenger\content\default\abookstat.js
+	rm -f $(DIST)\chrome\messenger\content\abookstat.js
 

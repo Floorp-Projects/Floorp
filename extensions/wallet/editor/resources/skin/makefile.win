@@ -23,11 +23,11 @@ DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-SKINDIR=$(DIST)\bin\chrome\wallet\skin\default
+SKINDIR=$(DIST)\bin\chrome\communicator\skin\wallet
 
 install::
 	$(MAKE_INSTALL) CookieViewer.css $(SKINDIR)
 	
 
 clobber::
-  rm -f $(DIST)\bin\chrome\wallet\skin\default\*.*
+  rm -f $(DIST)\bin\chrome\communicator\skin\wallet\*.*

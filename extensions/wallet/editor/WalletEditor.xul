@@ -22,11 +22,11 @@
 -->
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
-<?xml-stylesheet href="chrome://wallet/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/wallet/wallet.css" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
-<!DOCTYPE window SYSTEM "chrome://wallet/locale/WalletEditor.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/WalletEditor.dtd" >
 
 <window id="walleteditor"
         class="dialog"
@@ -36,7 +36,7 @@
         align="vertical"
         onload="Startup()">
 
-  <html:script src="chrome://wallet/content/WalletEditor.js"/>
+  <html:script src="chrome://communicator/content/wallet/WalletEditor.js"/>
 	<html:script language="javascript" src="chrome://global/content/strres.js" />
 
     <box id="system" flex="100%" align="vertical">

@@ -27,10 +27,10 @@
   
 -->
 
-<?xml-stylesheet href="chrome://profile/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/profile/profile.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://profile/locale/profileSelection.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/profile/profileSelection.dtd" >
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   width="475" height="335"
@@ -42,8 +42,8 @@
   onload="StartUp();"> 
       
 	<html:script language="javascript" src="chrome://global/content/strres.js" />
-  <html:script language="javascript" src="chrome://profile/content/profileSelection.js"/>
-  <html:script language="javascript" src="chrome://profile/content/profileManager.js"/>
+  <html:script language="javascript" src="chrome://communicator/content/profile/profileSelection.js"/>
+  <html:script language="javascript" src="chrome://communicator/content/profile/profileManager.js"/>
 
   <keyset id="keyset">
     <key id="fooKey" key="s" xulkey="true" shift="true" onkeydown="foo()"/>

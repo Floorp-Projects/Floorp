@@ -19,7 +19,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/FilterListDialog.dtd" >

@@ -668,7 +668,7 @@ wallet_DumpStopwatch() {
 /* The following routines are used for accessing strings to be localized */
 /*************************************************************************/
 
-#define PROPERTIES_URL "chrome://wallet/locale/wallet.properties"
+#define PROPERTIES_URL "chrome://communicator/locale/wallet/wallet.properties"
 
 PUBLIC PRUnichar *
 Wallet_Localize(char* genericString) {

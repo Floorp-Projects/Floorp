@@ -32,5 +32,5 @@ EXPORT_RESOURCE_CONTENT = \
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) $(EXPORT_PREF_CONTENT) $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)\bin\chrome\chatzilla\locale\en-US
+	$(MAKE_INSTALL) $(EXPORT_PREF_CONTENT) $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)\bin\chrome\chatzilla\locale

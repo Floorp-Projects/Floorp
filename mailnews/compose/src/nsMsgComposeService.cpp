@@ -154,7 +154,7 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
 	if (msgComposeWindowURL && *msgComposeWindowURL)
         rv = openWindow( msgComposeWindowURL, args.GetUnicode() );
 	else
-        rv = openWindow( nsString("chrome://messengercompose/content/").GetUnicode(),
+        rv = openWindow( nsString("chrome://messenger/content/messengercompose/messengercompose.xul").GetUnicode(),
                          args.GetUnicode() );
 	
 	return rv;
@@ -283,7 +283,7 @@ nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const PRUnichar *m
 	if (msgComposeWindowURL && *msgComposeWindowURL)
         rv = openWindow( msgComposeWindowURL, args.GetUnicode() );
 	else
-        rv = openWindow( nsString("chrome://messengercompose/content/").GetUnicode(),
+        rv = openWindow( nsString("chrome://messenger/content/messengercompose/messengercompose.xul").GetUnicode(),
                          args.GetUnicode() );
 
     if (NS_FAILED(rv))
@@ -370,5 +370,5 @@ NS_IMETHODIMP nsMsgComposeService::HandleContent(const char * aContentType, cons
   return rv;
 }
 
-CMDLINEHANDLER_IMPL(nsMsgComposeService,"-compose","general.startup.messengercompose","chrome://messengercompose/content/","Start with messenger compose.",NS_MSGCOMPOSESTARTUPHANDLER_PROGID,"Messenger Compose Startup Handler", PR_TRUE, "about:blank", PR_TRUE)
+CMDLINEHANDLER_IMPL(nsMsgComposeService,"-compose","general.startup.messengercompose","chrome://messenger/content/messengercompose/messengercompose.xul","Start with messenger compose.",NS_MSGCOMPOSESTARTUPHANDLER_PROGID,"Messenger Compose Startup Handler", PR_TRUE, "about:blank", PR_TRUE)
 

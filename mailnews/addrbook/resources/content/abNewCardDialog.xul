@@ -19,12 +19,12 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<?xul-overlay href="chrome://addressbook/content/abCardOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/addressbook/abCardOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://addressbook/locale/abNewCardDialog.dtd">
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abNewCardDialog.dtd">
 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"

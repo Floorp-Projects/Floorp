@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://search/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://search/skin/internet.css" type="text/css"?>
-<?xml-stylesheet href="chrome://search/skin/icons.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/search/search.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/search/internet.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/search/icons.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://search/locale/internet.dtd">
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/search/internet.dtd">
 
 <window class="dialog" align="vertical"
 	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="loadPage()" onunload="unloadPage()">
 
-	<html:script src="chrome://search/content/internet.js" />
-	<html:script src="chrome://search/content/shared.js" />
+	<html:script src="chrome://communicator/content/search/internet.js" />
+	<html:script src="chrome://communicator/content/search/shared.js" />
 
 	<box align="horizontal" style="width: 100%;" >
 		<spring align="horizontal" flex="100%" />

@@ -1,10 +1,10 @@
 <?xml version="1.0"?> 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
-<?xul-overlay href="chrome://messengercompose/content/addressingWidgetOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/messengercompose/addressingWidgetOverlay.xul"?>
 <?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
 
-<?xml-stylesheet href="chrome://messengercompose/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://messenger/skin/messengercompose/messengercompose.css" type="text/css"?> 
 
 <!--
 The contents of this file are subject to the Netscape Public
@@ -26,7 +26,7 @@ Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
 -->
 
-<!DOCTYPE window SYSTEM "chrome://messengercompose/locale/messengercompose.dtd">
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/messengercompose.dtd">
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -46,8 +46,8 @@ Rights Reserved.
 <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
 <html:script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
 <html:script language="JavaScript" src="chrome://global/content/strres.js"/>
-<html:script language="JavaScript" src="chrome://messengercompose/content/MsgComposeCommands.js"/>
-<html:script language="JavaScript" src="chrome://messengercompose/content/addressAutoComplete.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/messengercompose/addressAutoComplete.js"/>
 
 <commands id="commands">
 	<commandset id="globalEditMenuItems"/>
@@ -204,7 +204,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<menuseparator/>
 			<menuitem value="&EditHtmlCmd.label;" disabled="true" oncommand="nsCmd:ComposeNYI"/>
 			<menuseparator/>
-			<menuitem id="menu_preferences" oncommand="goPreferences('messengercompose.xul', 'chrome://messengercompose/content/pref-messages.xul')"/>
+			<menuitem id="menu_preferences" oncommand="goPreferences('messengercompose.xul', 'chrome://messenger/content/messengercompose/pref-messages.xul')"/>
 		</menupopup>
 	</menu>
 	<menu id="menu_View">

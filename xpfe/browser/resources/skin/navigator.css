@@ -1,7 +1,7 @@
 /** Contains style definitions for the navigator application 
  **/
 
-@import url(chrome://global/skin/);
+@import url(chrome://global/skin/global.css);
 
 box#sidebar-parent {
 	margin-right: 2px;
@@ -60,7 +60,7 @@ window[chromehidden~="extrachrome"] [chromeclass="extrachrome"] {
 	margin: 0px; 
 	min-width: 10px;
 	border: none; 
-	list-style-image:url("chrome://bookmarks/skin/bookmark-item.gif"); 
+	list-style-image:url("chrome://communicator/skin/bookmarks/bookmark-item.gif"); 
 } 
 
 #urlbar { 

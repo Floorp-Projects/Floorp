@@ -23,11 +23,11 @@
 -->
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
-<?xml-stylesheet href="chrome://wallet/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/wallet/wallet.css" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
-<!DOCTYPE window SYSTEM "chrome://wallet/locale/CookieViewer.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/CookieViewer.dtd" >
 
 <window id="cookieviewer"
         class="dialog"
@@ -37,7 +37,7 @@
         align="vertical"
         onload="Startup()">
 
-  <html:script src="chrome://wallet/content/CookieViewer.js"/>
+  <html:script src="chrome://communicator/content/wallet/CookieViewer.js"/>
 	<html:script language="javascript" src="chrome://global/content/strres.js" />
 
   <tabcontrol flex="100%" align="vertical">

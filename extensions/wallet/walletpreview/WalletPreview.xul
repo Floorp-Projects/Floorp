@@ -21,9 +21,9 @@
   Contributor(s):
 -->
 
-<?xml-stylesheet href="chrome://wallet/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/wallet/wallet.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<!DOCTYPE window SYSTEM "chrome://wallet/locale/SignonViewer.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/SignonViewer.dtd" >
 
 <window id="walletpreview"
         title="&windowtitle.label;"
@@ -34,7 +34,7 @@
         onload="Startup()">
 
   <html:script src="chrome://global/content/strres.js" />
-  <html:script src="chrome://wallet/content/WalletPreview.js"/>
+  <html:script src="chrome://communicator/content/wallet/WalletPreview.js"/>
 
   <spring style="height: 10px;"/>
   <box align="vertical" flex="100%">

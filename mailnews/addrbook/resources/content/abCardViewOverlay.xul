@@ -19,13 +19,13 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!DOCTYPE window SYSTEM "chrome://addressbook/locale/abCardViewOverlay.dtd">
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abCardViewOverlay.dtd">
 
 <overlay xmlns:html="http://www.w3.org/TR/REC-html40"
 		 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:script language="JavaScript" src="chrome://addressbook/content/abCardViewOverlay.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/addressbook/abCardViewOverlay.js"/>
 
 <box id="CardViewBox" align="vertical" flex="1">
 	

@@ -4557,9 +4557,9 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			nsAutoString	iconChromeDefault;
 
 			if (browserResultTypeStr.EqualsIgnoreCase("category"))
-				iconChromeDefault.AssignWithConversion("chrome://search/skin/category.gif");
+				iconChromeDefault.AssignWithConversion("chrome://communicator/skin/search/category.gif");
 			else if ((browserResultTypeStr.EqualsIgnoreCase("result")) && (!engineIconNode))
-				iconChromeDefault.AssignWithConversion("chrome://search/skin/result.gif");
+				iconChromeDefault.AssignWithConversion("chrome://communicator/skin/search/result.gif");
 
 			if (iconChromeDefault.Length() > 0)
 			{

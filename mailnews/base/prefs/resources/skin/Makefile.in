@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/skin/default
+SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/skin
 
 EXPORT_RESOURCE_SAMPLES = \
 		AccountManager.css \

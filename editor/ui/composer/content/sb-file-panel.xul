@@ -23,8 +23,8 @@
    -    Ben Goodger
   -->
 
-<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"

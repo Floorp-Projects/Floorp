@@ -74,7 +74,7 @@ function onDoStyleChange (newStyle)
 
     if (newStyle == "other")
         newStyle = window.prompt ("Enter stylesheet filename " +
-                                  "(relative to chrome://chatzilla/skin/)");
+                                  "(relative to chrome://chatzilla/skin/chatzilla.css)");
 
     if (newStyle)
     {

@@ -23,7 +23,7 @@ DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-LOCALEDIR=$(DIST)\bin\chrome\messenger\locale\en-US
+LOCALEDIR=$(DIST)\bin\chrome\messenger\locale
 
 
 install::
@@ -40,4 +40,4 @@ install::
 	$(MAKE_INSTALL) msgHdrViewOverlay.dtd $(LOCALEDIR)
 
 clobber::
-  rm -f $(DIST)\bin\chrome\messenger\locale\en-US\*.*
+  rm -f $(DIST)\bin\chrome\messenger\locale\*.*

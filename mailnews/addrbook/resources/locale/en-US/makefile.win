@@ -23,7 +23,7 @@ DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\addressbook\locale\en-US
+DISTBROWSER=$(DIST)\bin\chrome\messenger\locale\addressbook
 
 
 install::
@@ -37,11 +37,11 @@ install::
 	$(MAKE_INSTALL) abSelectAddressesDialog.dtd $(DISTBROWSER)
 
 clobber::
-  rm -f $(DIST)\bin\chrome\addressbook\locale\en-US\abAddressBookNameDialog.dtd
-  rm -f $(DIST)\bin\chrome\addressbook\locale\en-US\abCardOverlay.dtd
-  rm -f $(DIST)\bin\chrome\addressbook\locale\en-US\abCardViewOverlay.dtd
-  rm -f $(DIST)\bin\chrome\addressbook\locale\en-US\abDirTreeOverlay.dtd
-  rm -f $(DIST)\bin\chrome\addressbook\locale\en-US\abMainWindow.dtd
-  rm -f $(DIST)\bin\chrome\addressbook\locale\en-US\abNewCardDialog.dtd
-  rm -f $(DIST)\bin\chrome\addressbook\locale\en-US\abResultsTreeOverlay.dtd
-  rm -f $(DIST)\bin\chrome\addressbook\locale\en-US\abSelectAddressesDialog.dtd
+  rm -f $(DIST)\bin\chrome\messenger\locale\addressbook\abAddressBookNameDialog.dtd
+  rm -f $(DIST)\bin\chrome\messenger\locale\addressbook\abCardOverlay.dtd
+  rm -f $(DIST)\bin\chrome\messenger\locale\addressbook\abCardViewOverlay.dtd
+  rm -f $(DIST)\bin\chrome\messenger\locale\addressbook\abDirTreeOverlay.dtd
+  rm -f $(DIST)\bin\chrome\messenger\locale\addressbook\abMainWindow.dtd
+  rm -f $(DIST)\bin\chrome\messenger\locale\addressbook\abNewCardDialog.dtd
+  rm -f $(DIST)\bin\chrome\messenger\locale\addressbook\abResultsTreeOverlay.dtd
+  rm -f $(DIST)\bin\chrome\messenger\locale\addressbook\abSelectAddressesDialog.dtd

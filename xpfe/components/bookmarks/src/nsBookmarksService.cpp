@@ -133,7 +133,7 @@ static const char kURINC_NewSearchFolder[]        = "NC:NewSearchFolder"; // XXX
 static const char kDefaultPersonalToolbarFolder[] = "Personal Toolbar Folder";
 static const char kBookmarkCommand[]              = "http://home.netscape.com/NC-rdf#command?";
 
-#define bookmark_properties "chrome://bookmarks/locale/bookmark.properties"
+#define bookmark_properties "chrome://communicator/locale/bookmarks/bookmark.properties"
 
 ////////////////////////////////////////////////////////////////////////
 

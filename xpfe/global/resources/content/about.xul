@@ -20,7 +20,7 @@ Rights Reserved.
 
 Contributor(s): Michael Lowe <michael.lowe@bigfoot.com> -->
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/about.dtd"> 

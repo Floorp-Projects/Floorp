@@ -16,7 +16,7 @@ function handleCancelButton()
 function onLoad()
 {
   try {
-    bundle = srGetStrBundle("chrome://profile/locale/migration.properties");
+    bundle = srGetStrBundle("chrome://communicator/locale/profile/migration.properties");
   }
   catch (ex) {
     dump("please fix bug #26291\n");

@@ -53,11 +53,11 @@ install:: $(LIBRARY)
 
 clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
-        rm -f $(DIST)\bin\chrome\wallet\content\default\WalletPreview.xul
-        rm -f $(DIST)\bin\chrome\wallet\content\default\WalletPreview.js
-        rm -f $(DIST)\bin\chrome\wallet\locale\en-US\WalletPreview.properties
+        rm -f $(DIST)\bin\chrome\communicator\content\wallet\WalletPreview.xul
+        rm -f $(DIST)\bin\chrome\communicator\content\wallet\WalletPreview.js
+        rm -f $(DIST)\bin\chrome\communicator\locale\wallet\WalletPreview.properties
 
 install:: $(DLL)
-        $(MAKE_INSTALL) WalletPreview.xul $(DIST)\bin\chrome\wallet\content\default
-        $(MAKE_INSTALL) WalletPreview.js $(DIST)\bin\chrome\wallet\content\default
-        $(MAKE_INSTALL) WalletPreview.properties $(DIST)\bin\chrome\wallet\locale\en-US
+        $(MAKE_INSTALL) WalletPreview.xul $(DIST)\bin\chrome\communicator\content\wallet
+        $(MAKE_INSTALL) WalletPreview.js $(DIST)\bin\chrome\communicator\content\wallet
+        $(MAKE_INSTALL) WalletPreview.properties $(DIST)\bin\chrome\communicator\locale\wallet

@@ -24,10 +24,10 @@ DEPTH=..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 clobber::
-        rm -f $(DIST)\bin\chrome\wallet\content\default\WalletPreview.xul
-        rm -f $(DIST)\bin\chrome\wallet\content\default\WalletPreview.js
+        rm -f $(DIST)\bin\chrome\communicator\content\wallet\WalletPreview.xul
+        rm -f $(DIST)\bin\chrome\communicator\content\wallet\WalletPreview.js
 
 install:: $(DLL)
-        $(MAKE_INSTALL) WalletPreview.xul $(DIST)\bin\chrome\wallet\content\default
-        $(MAKE_INSTALL) WalletPreview.js $(DIST)\bin\chrome\wallet\content\default
+        $(MAKE_INSTALL) WalletPreview.xul $(DIST)\bin\chrome\communicator\content\wallet
+        $(MAKE_INSTALL) WalletPreview.js $(DIST)\bin\chrome\communicator\content\wallet
 

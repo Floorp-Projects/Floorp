@@ -19,7 +19,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!DOCTYPE window SYSTEM "chrome://addressbook/locale/abDirTreeOverlay.dtd">
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abDirTreeOverlay.dtd">
 
 
 <overlay xmlns:html="http://www.w3.org/TR/REC-html40"

@@ -43,7 +43,7 @@ LLIBS=				\
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSWER=$(DIST)\bin\chrome\global\content\default
+DISTBROWSWER=$(DIST)\bin\chrome\global\content
 
 install:: $(PROGRAMS)
 	$(MAKE_INSTALL) $(PROG0) $(DIST)\bin

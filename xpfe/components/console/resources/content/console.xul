@@ -20,7 +20,7 @@ Rights Reserved.
 
 Contributor(s): ______________________________________. -->
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/console.dtd" >
 

@@ -121,9 +121,9 @@ include <$(DEPTH)\config\rules.mak>
 INSTALLROOT = $(DIST)\bin\chrome\chatzilla
 
 install::
-    $(MAKE_INSTALL) $(JSLIBFILES) $(INSTALLROOT)\content\default\lib\js
-    $(MAKE_INSTALL) $(XULLIBFILES) $(INSTALLROOT)\content\default\lib\xul
-    $(MAKE_INSTALL) $(CONTENTFILES) $(INSTALLROOT)\content\default
-    $(MAKE_INSTALL) $(SKINFILES) $(INSTALLROOT)\skin\default
-    $(MAKE_INSTALL) $(IMAGEFILES) $(INSTALLROOT)\skin\default\images
+    $(MAKE_INSTALL) $(JSLIBFILES) $(INSTALLROOT)\content\lib\js
+    $(MAKE_INSTALL) $(XULLIBFILES) $(INSTALLROOT)\content\lib\xul
+    $(MAKE_INSTALL) $(CONTENTFILES) $(INSTALLROOT)\content
+    $(MAKE_INSTALL) $(SKINFILES) $(INSTALLROOT)\skin
+    $(MAKE_INSTALL) $(IMAGEFILES) $(INSTALLROOT)\skin\images
 

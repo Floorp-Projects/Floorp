@@ -82,6 +82,6 @@ EXPORT_RESOURCE_TOOLBAR = \
 include $(topsrcdir)/config/rules.mk
 
 install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_SKIN) $(DIST)/bin/chrome/editor/skin/default
-	$(INSTALL) $(EXPORT_RESOURCE_TOOLBAR) $(DIST)/bin/chrome/editor/skin/default/images
+	$(INSTALL) $(EXPORT_RESOURCE_SKIN) $(DIST)/bin/chrome/editor/skin
+	$(INSTALL) $(EXPORT_RESOURCE_TOOLBAR) $(DIST)/bin/chrome/editor/skin/images
 

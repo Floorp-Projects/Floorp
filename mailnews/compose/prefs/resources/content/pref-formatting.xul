@@ -1,8 +1,8 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messengercompose/locale/pref-formatting.dtd">
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/pref-formatting.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

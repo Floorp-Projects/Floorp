@@ -25,22 +25,22 @@ MODULE=msgcompo
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) messengercompose.css $(DIST)\bin\chrome\messengercompose\skin\default
-	$(MAKE_INSTALL) send.gif $(DIST)\bin\chrome\messengercompose\skin\default
-	$(MAKE_INSTALL) quote.gif $(DIST)\bin\chrome\messengercompose\skin\default
-	$(MAKE_INSTALL) address.gif $(DIST)\bin\chrome\messengercompose\skin\default
-	$(MAKE_INSTALL) attach.gif $(DIST)\bin\chrome\messengercompose\skin\default
-	$(MAKE_INSTALL) spelling.gif $(DIST)\bin\chrome\messengercompose\skin\default
-	$(MAKE_INSTALL) save.gif $(DIST)\bin\chrome\messengercompose\skin\default
-	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\messengercompose\skin\default
+	$(MAKE_INSTALL) messengercompose.css $(DIST)\bin\chrome\messenger\skin\messengercompose
+	$(MAKE_INSTALL) send.gif $(DIST)\bin\chrome\messenger\skin\messengercompose
+	$(MAKE_INSTALL) quote.gif $(DIST)\bin\chrome\messenger\skin\messengercompose
+	$(MAKE_INSTALL) address.gif $(DIST)\bin\chrome\messenger\skin\messengercompose
+	$(MAKE_INSTALL) attach.gif $(DIST)\bin\chrome\messenger\skin\messengercompose
+	$(MAKE_INSTALL) spelling.gif $(DIST)\bin\chrome\messenger\skin\messengercompose
+	$(MAKE_INSTALL) save.gif $(DIST)\bin\chrome\messenger\skin\messengercompose
+	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\messenger\skin\messengercompose
 
 clobber::
-	rm -f $(DIST)\bin\chrome\messengercompose\skin\default\messengercompose.css
-	rm -f $(DIST)\bin\chrome\messengercompose\skin\default\send.gif
-	rm -f $(DIST)\bin\chrome\messengercompose\skin\default\quote.gif
-	rm -f $(DIST)\bin\chrome\messengercompose\skin\default\address.gif
-	rm -f $(DIST)\bin\chrome\messengercompose\skin\default\attach.gif
-	rm -f $(DIST)\bin\chrome\messengercompose\skin\default\spelling.gif
-	rm -f $(DIST)\bin\chrome\messengercompose\skin\default\save.gif
-	rm -f $(DIST)\bin\chrome\messengercompose\skin\default\stop.gif
+	rm -f $(DIST)\bin\chrome\messenger\skin\messengercompose\messengercompose.css
+	rm -f $(DIST)\bin\chrome\messenger\skin\messengercompose\send.gif
+	rm -f $(DIST)\bin\chrome\messenger\skin\messengercompose\quote.gif
+	rm -f $(DIST)\bin\chrome\messenger\skin\messengercompose\address.gif
+	rm -f $(DIST)\bin\chrome\messenger\skin\messengercompose\attach.gif
+	rm -f $(DIST)\bin\chrome\messenger\skin\messengercompose\spelling.gif
+	rm -f $(DIST)\bin\chrome\messenger\skin\messengercompose\save.gif
+	rm -f $(DIST)\bin\chrome\messenger\skin\messengercompose\stop.gif
 

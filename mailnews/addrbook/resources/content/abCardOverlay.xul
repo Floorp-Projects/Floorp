@@ -19,14 +19,14 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!DOCTYPE window SYSTEM "chrome://addressbook/locale/abCardOverlay.dtd">
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abCardOverlay.dtd">
 
 
 <overlay id="editcardOverlay"
 		 xmlns:html="http://www.w3.org/TR/REC-html40"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:script language="JavaScript" src="chrome://addressbook/content/abCardOverlay.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/addressbook/abCardOverlay.js"/>
 
 
 <box id="editcard" align="vertical">

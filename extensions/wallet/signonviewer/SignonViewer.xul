@@ -23,11 +23,11 @@
 -->
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
-<?xml-stylesheet href="chrome://wallet/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/wallet/wallet.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
-<!DOCTYPE window SYSTEM "chrome://wallet/locale/SignonViewer.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/SignonViewer.dtd" >
 
 <window id="signonviewer"
         width="470" height="440"
@@ -38,7 +38,7 @@
         class="dialog"
         onload="Startup()">
 
-  <html:script src="chrome://wallet/content/SignonViewer.js"/>
+  <html:script src="chrome://communicator/content/wallet/SignonViewer.js"/>
 	<html:script src="chrome://global/content/strres.js" />
 
   <tabcontrol flex="100%" align="vertical">

@@ -23,7 +23,7 @@ DEPTH=..\..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-LOCALEDIR=$(DIST)\bin\chrome\wallet\locale\en-US
+LOCALEDIR=$(DIST)\bin\chrome\communicator\locale\wallet
 
 install::
 	$(MAKE_INSTALL) WalletEditor.dtd $(LOCALEDIR)
@@ -31,4 +31,4 @@ install::
 	
 
 clobber::
-  rm -f $(DIST)\bin\chrome\wallet\locale\en-US\*.*
+  rm -f $(DIST)\bin\chrome\communicator\locale\wallet\*.*

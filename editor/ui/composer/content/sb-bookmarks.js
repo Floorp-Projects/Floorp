@@ -37,7 +37,7 @@ function BookmarkProperties()
 	var type = select_list[0].getAttribute('type');
         if (type != "http://home.netscape.com/NC-rdf#BookmarkSeparator")
         {
-		var props = window.open("chrome://bookmarks/content/bm-props.xul",
+		var props = window.open("chrome://communicator/content/bookmarks/bm-props.xul",
                                 "BookmarkProperties", "chrome,menubar,resizable");
 		props.BookmarkURL = select_list[0].getAttribute("id");
 	}

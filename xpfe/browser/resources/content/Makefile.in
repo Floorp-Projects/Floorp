@@ -46,5 +46,5 @@ EXPORT_RESOURCE_CONTENT := $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_CONTENT))
 include $(topsrcdir)/config/rules.mk
 
 install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/navigator/content/default
+	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/navigator/content
 

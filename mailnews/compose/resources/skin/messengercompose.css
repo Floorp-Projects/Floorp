@@ -1,5 +1,5 @@
-@import url(chrome://global/skin/);
-@import url(chrome://messenger/skin/);
+@import url(chrome://global/skin/global.css);
+@import url(chrome://messenger/skin/messenger.css);
 
 spring.spacer {
 	width: 5px;
@@ -27,7 +27,7 @@ tree[class="attachment"] treeitem > treerow > treecell > titledbutton {
 	margin:0px;
 	padding:0px;
 	border:2px groove black;
-	list-style-image: url("chrome://addressbook/skin/myaddrbk.gif");
+	list-style-image: url("chrome://messenger/skin/addressbook/myaddrbk.gif");
 }
 
 /* addressing widget */
@@ -41,7 +41,7 @@ tree[class="addressingWidget"] treeitem > treerow  > treecell > image {
 	margin:0px;
 	padding:0px;
 	border:none;
-	list-style-image: url("chrome://addressbook/skin/person.gif");
+	list-style-image: url("chrome://messenger/skin/addressbook/person.gif");
 	user-focus: ignore;
 }
 
@@ -54,27 +54,27 @@ input[class="addressingWidget"] {
 
 
 #button_send {
-	list-style-image:url("chrome://messengercompose/skin/send.gif");
+	list-style-image:url("chrome://messenger/skin/messengercompose/send.gif");
 }
 
 #button_address {
-	list-style-image:url("chrome://messengercompose/skin/address.gif");
+	list-style-image:url("chrome://messenger/skin/messengercompose/address.gif");
 }
 
 #button_attach {
-	list-style-image:url("chrome://messengercompose/skin/attach.gif");
+	list-style-image:url("chrome://messenger/skin/messengercompose/attach.gif");
 }
 
 #button_quote {
-	list-style-image:url("chrome://messengercompose/skin/quote.gif");
+	list-style-image:url("chrome://messenger/skin/messengercompose/quote.gif");
 }
 
 #button_spelling {
-	list-style-image:url("chrome://messengercompose/skin/spelling.gif");
+	list-style-image:url("chrome://messenger/skin/messengercompose/spelling.gif");
 }
 
 #button_save {
-	list-style-image:url("chrome://messengercompose/skin/save.gif");
+	list-style-image:url("chrome://messenger/skin/messengercompose/save.gif");
 }
 
 #button_stop {

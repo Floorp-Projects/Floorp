@@ -24,14 +24,14 @@ DEPTH=..\..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) .\SearchDialog.dtd		$(DIST)\bin\chrome\messenger\locale\en-US
-	$(MAKE_INSTALL) .\SearchOptions.dtd		$(DIST)\bin\chrome\messenger\locale\en-US
-	$(MAKE_INSTALL) .\FilterListDialog.dtd	$(DIST)\bin\chrome\messenger\locale\en-US
-	$(MAKE_INSTALL) .\FilterEditor.dtd		$(DIST)\bin\chrome\messenger\locale\en-US
+	$(MAKE_INSTALL) .\SearchDialog.dtd		$(DIST)\bin\chrome\messenger\locale
+	$(MAKE_INSTALL) .\SearchOptions.dtd		$(DIST)\bin\chrome\messenger\locale
+	$(MAKE_INSTALL) .\FilterListDialog.dtd	$(DIST)\bin\chrome\messenger\locale
+	$(MAKE_INSTALL) .\FilterEditor.dtd		$(DIST)\bin\chrome\messenger\locale
 
 clobber::
-	rm -f $(DIST)\chrome\messenger\locale\en-US\SearchDialog.dtd
-	rm -f $(DIST)\chrome\messenger\locale\en-US\FilterListDialog.dtd
-	rm -f $(DIST)\chrome\messenger\locale\en-US\FilterEditor.dtd
-	rm -f $(DIST)\chrome\messenger\locale\en-US\SearchOptions.dtd
+	rm -f $(DIST)\chrome\messenger\locale\SearchDialog.dtd
+	rm -f $(DIST)\chrome\messenger\locale\FilterListDialog.dtd
+	rm -f $(DIST)\chrome\messenger\locale\FilterEditor.dtd
+	rm -f $(DIST)\chrome\messenger\locale\SearchOptions.dtd
 

@@ -29,6 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 install:: $(TARGETS)
-	$(INSTALL) SignonViewer.properties SignonViewer.dtd $(DIST)/bin/chrome/wallet/locale/en-US
+	$(INSTALL) SignonViewer.properties SignonViewer.dtd $(DIST)/bin/chrome/communicator/locale/wallet
 
 

@@ -109,13 +109,13 @@
 #define ACTIVATION_WINDOW_WIDTH        480 
 #define ACTIVATION_WINDOW_HEIGHT       480 
 
-#define ACTIVATION_FRAME_URL           "chrome://profile/content/activation.xul"
-#define PROFILE_SELECTION_URL          "chrome://profile/content/profileSelection.xul"
+#define ACTIVATION_FRAME_URL           "chrome://communicator/content/profile/activation.xul"
+#define PROFILE_SELECTION_URL          "chrome://communicator/content/profile/profileSelection.xul"
 #define PROFILE_SELECTION_CMD_LINE_ARG "-SelectProfile"
-#define PROFILE_MANAGER_URL            "chrome://profile/content/profileSelection.xul?manage=true"
+#define PROFILE_MANAGER_URL            "chrome://communicator/content/profile/profileSelection.xul?manage=true"
 #define PROFILE_MANAGER_CMD_LINE_ARG   "-ProfileManager"
-#define PROFILE_WIZARD_URL             "chrome://profile/content/createProfileWizard.xul"
-#define CONFIRM_AUTOMIGRATE_URL        "chrome://profile/content/confirmMigration.xul"
+#define PROFILE_WIZARD_URL             "chrome://communicator/content/profile/createProfileWizard.xul"
+#define CONFIRM_AUTOMIGRATE_URL        "chrome://communicator/content/profile/confirmMigration.xul"
 #define PROFILE_WIZARD_CMD_LINE_ARG    "-ProfileWizard"
 #define INSTALLER_CMD_LINE_ARG         "-installer"
 #define CREATE_PROFILE_CMD_LINE_ARG    "-CreateProfile"

@@ -58,7 +58,7 @@ var gone_i                = "";
 // string bundle
 var bundle                = null;
 // CHANGE THIS WHEN MOVING FILES - strings localization file!
-var JS_STRINGS_FILE       = "chrome://wallet/locale/CookieViewer.properties";
+var JS_STRINGS_FILE       = "chrome://communicator/locale/wallet/CookieViewer.properties";
     
 // function : <CookieViewer.js>::Startup();
 // purpose  : initialises the cookie viewer dialog

@@ -200,7 +200,7 @@ function startWithProfile(node)
 
 function onManageProfiles()
 {
-  window.openDialog("chrome://profile/content/profileManager.xul","","chrome");
+  window.openDialog("chrome://communicator/content/profile/profileManager.xul","","chrome");
 }
 
 function foo()

@@ -25,27 +25,27 @@ MODULE=addrbook
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) addressbook.css	$(DIST)\bin\chrome\addressbook\skin\default
-	$(MAKE_INSTALL) newcard.gif 	$(DIST)\bin\chrome\addressbook\skin\default
-	$(MAKE_INSTALL) newlist.gif 	$(DIST)\bin\chrome\addressbook\skin\default
-	$(MAKE_INSTALL) property.gif 	$(DIST)\bin\chrome\addressbook\skin\default
-	$(MAKE_INSTALL) edit.gif 	$(DIST)\bin\chrome\addressbook\skin\default
-	$(MAKE_INSTALL) abnewmsg.gif 	$(DIST)\bin\chrome\addressbook\skin\default
-	$(MAKE_INSTALL) newmsgab.gif 	$(DIST)\bin\chrome\addressbook\skin\default
-	$(MAKE_INSTALL) person.gif 		$(DIST)\bin\chrome\addressbook\skin\default
-	$(MAKE_INSTALL) list.gif 		$(DIST)\bin\chrome\addressbook\skin\default
-	$(MAKE_INSTALL) myaddrbk.gif 	$(DIST)\bin\chrome\addressbook\skin\default
+	$(MAKE_INSTALL) addressbook.css	$(DIST)\bin\chrome\messenger\skin\addressbook
+	$(MAKE_INSTALL) newcard.gif 	$(DIST)\bin\chrome\messenger\skin\addressbook
+	$(MAKE_INSTALL) newlist.gif 	$(DIST)\bin\chrome\messenger\skin\addressbook
+	$(MAKE_INSTALL) property.gif 	$(DIST)\bin\chrome\messenger\skin\addressbook
+	$(MAKE_INSTALL) edit.gif 	$(DIST)\bin\chrome\messenger\skin\addressbook
+	$(MAKE_INSTALL) abnewmsg.gif 	$(DIST)\bin\chrome\messenger\skin\addressbook
+	$(MAKE_INSTALL) newmsgab.gif 	$(DIST)\bin\chrome\messenger\skin\addressbook
+	$(MAKE_INSTALL) person.gif 		$(DIST)\bin\chrome\messenger\skin\addressbook
+	$(MAKE_INSTALL) list.gif 		$(DIST)\bin\chrome\messenger\skin\addressbook
+	$(MAKE_INSTALL) myaddrbk.gif 	$(DIST)\bin\chrome\messenger\skin\addressbook
 
 
 clobber::
-	rm -f $(DIST)\chrome\addressbook\skin\default\addressbook.css
-	rm -f $(DIST)\chrome\addressbook\skin\default\newcard.gif
-	rm -f $(DIST)\chrome\addressbook\skin\default\newlist.gif
-	rm -f $(DIST)\chrome\addressbook\skin\default\property.gif
-	rm -f $(DIST)\chrome\addressbook\skin\default\edit.gif
-	rm -f $(DIST)\chrome\addressbook\skin\default\abnewmsg.gif
-	rm -f $(DIST)\chrome\addressbook\skin\default\newmsgab.gif
-	rm -f $(DIST)\chrome\addressbook\skin\default\person.gif
-	rm -f $(DIST)\chrome\addressbook\skin\default\list.gif
-	rm -f $(DIST)\chrome\addressbook\skin\default\myaddrbk.gif
+	rm -f $(DIST)\chrome\messenger\skin\addressbook\addressbook.css
+	rm -f $(DIST)\chrome\messenger\skin\addressbook\newcard.gif
+	rm -f $(DIST)\chrome\messenger\skin\addressbook\newlist.gif
+	rm -f $(DIST)\chrome\messenger\skin\addressbook\property.gif
+	rm -f $(DIST)\chrome\messenger\skin\addressbook\edit.gif
+	rm -f $(DIST)\chrome\messenger\skin\addressbook\abnewmsg.gif
+	rm -f $(DIST)\chrome\messenger\skin\addressbook\newmsgab.gif
+	rm -f $(DIST)\chrome\messenger\skin\addressbook\person.gif
+	rm -f $(DIST)\chrome\messenger\skin\addressbook\list.gif
+	rm -f $(DIST)\chrome\messenger\skin\addressbook\myaddrbk.gif
 

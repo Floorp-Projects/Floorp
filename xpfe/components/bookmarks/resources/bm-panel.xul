@@ -22,8 +22,8 @@
 
 -->
 
-<?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://bookmarks/skin/bm-panel.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bm-panel.css" type="text/css"?>
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -32,9 +32,9 @@
   ondraggesture="return TopLevelDrag(event);"
   align="vertical">
 
-  <html:script src="chrome://bookmarks/content/bm-panel.js" />
-  <html:script src="chrome://bookmarks/content/bookmarks.js" />
-  <html:script src="chrome://bookmarks/content/bookmarksDD.js"/>
+  <html:script src="chrome://communicator/content/bookmarks/bm-panel.js" />
+  <html:script src="chrome://communicator/content/bookmarks/bookmarks.js" />
+  <html:script src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
   <html:script src="chrome://global/content/strres.js"/>
 
   <html:div style="width:100px;height:100px" flex="1">

@@ -151,7 +151,7 @@ function AbClose()
 
 function AbNewAddressBook()
 {
-	var dialog = window.openDialog("chrome://addressbook/content/abAddressBookNameDialog.xul",
+	var dialog = window.openDialog("chrome://messenger/content/addressbook/abAddressBookNameDialog.xul",
 								   "",
 								   "chrome",
 								   {title:"New Address Book",

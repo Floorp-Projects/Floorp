@@ -1281,7 +1281,7 @@ NS_IMETHODIMP nsNntpService::GetChromeUrlForTask(char **aChromeUrlForTask)
 		if(NS_SUCCEEDED(rv))
 		{
 			if(layout == 0)
-				*aChromeUrlForTask = PL_strdup("chrome://messenger/content/");
+				*aChromeUrlForTask = PL_strdup("chrome://messenger/content/messenger.xul");
 			else
 				*aChromeUrlForTask = PL_strdup("chrome://messenger/content/mail3PaneWindowVertLayout.xul");
 
@@ -1289,7 +1289,7 @@ NS_IMETHODIMP nsNntpService::GetChromeUrlForTask(char **aChromeUrlForTask)
 
 		}	
 	}
-	*aChromeUrlForTask = PL_strdup("chrome://messenger/content/"); 
+	*aChromeUrlForTask = PL_strdup("chrome://messenger/content/messenger.xul"); 
     return NS_OK; 
 }
 

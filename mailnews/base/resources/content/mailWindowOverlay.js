@@ -206,7 +206,7 @@ function MsgOpenNewWindowForFolder(folderUri)
 		var layoutType = pref.GetIntPref("mail.pane_config");
 		
 		if(layoutType == 0)
-			window.openDialog( "chrome://messenger/content/", "_blank", "chrome,all,dialog=no", folderUri );
+			window.openDialog( "chrome://messenger/content/messenger.xul", "_blank", "chrome,all,dialog=no", folderUri );
 		else
 			window.openDialog("chrome://messenger/content/mail3PaneWindowVertLayout.xul", "_blank", "chrome,all,dialog=no", folderUri );
 	}

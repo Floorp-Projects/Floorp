@@ -1,7 +1,7 @@
 function showManualProxyConfig()
 {
   var manualRow = document.getElementById("manual-proxy");
-  bundle = srGetStrBundle("chrome://pref/locale/prefutilities.properties");
+  bundle = srGetStrBundle("chrome://communicator/locale/pref/prefutilities.properties");
   var viewHideButton = document.getElementById("viewhideManual");
   if( manualRow.style.display == "none" ) {
     viewHideButton.value = bundle.GetStringFromName("hiderow");

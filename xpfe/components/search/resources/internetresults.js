@@ -121,7 +121,7 @@ function doEngineClick( event, aNode )
 	}
 	else
 	{
-		window.frames[0].document.location = "chrome://search/content/default.htm";
+		window.frames[0].document.location = "chrome://communicator/content/search/default.htm";
 	}
 }
 

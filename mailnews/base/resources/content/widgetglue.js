@@ -520,7 +520,7 @@ function MsgViewPageSource()
       url += "?header=src";
 
     // Use a browser window to view source
-    window.openDialog( "chrome://navigator/content/",
+    window.openDialog( "chrome://navigator/content/navigator.xul",
                        "_blank",
                        "chrome,menubar,status,dialog=no,resizable",
                        url,

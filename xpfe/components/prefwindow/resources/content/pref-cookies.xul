@@ -19,10 +19,10 @@
    
    Contributor(s): 
   -->
-<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-cookies.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-cookies.dtd" >
 
 <window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
 	    	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -37,7 +37,7 @@
       pref = pref.getService();
       pref = pref.QueryInterface(Components.interfaces.nsIPref);
       pref.SetBoolPref("cookieviewer.cookieTab", true);
-      window.openDialog("chrome://wallet/content/CookieViewer.xul","","modal=yes,chrome,resizable=no");
+      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","","modal=yes,chrome,resizable=no");
     }
     function viewImages() 
     {
@@ -45,7 +45,7 @@
       pref = pref.getService();
       pref = pref.QueryInterface(Components.interfaces.nsIPref);
       pref.SetBoolPref("cookieviewer.cookieTab", false);
-      window.openDialog("chrome://wallet/content/CookieViewer.xul","","modal=yes,chrome,resizable=no");
+      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","","modal=yes,chrome,resizable=no");
     }
   </html:script>
         

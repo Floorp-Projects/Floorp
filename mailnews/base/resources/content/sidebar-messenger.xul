@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?> 
 
 <!--
  The contents of this file are subject to the Netscape Public
@@ -29,7 +29,7 @@
   onload="Init('chrome://messenger/content/sidebar-messenger.rdf',
                'NC:MessengerSidebarRoot');" align="vertical">
 
-<html:script src="chrome://sidebar/content/sidebar.js" />
+<html:script src="chrome://communicator/content/sidebar/sidebar.js" />
 <box id="sidebox" align="vertical" flex="100%">
  <box class="sidebartitle">
   <html:div class="sidebartitlelabel">&sidebar.title.label;</html:div>

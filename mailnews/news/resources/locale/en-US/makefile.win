@@ -23,11 +23,11 @@ DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-LOCALEDIR=$(DIST)\bin\chrome\messenger\locale\en-US
+LOCALEDIR=$(DIST)\bin\chrome\messenger\locale
 
 install::
 	$(MAKE_INSTALL) downloadheaders.dtd $(LOCALEDIR)
 	$(MAKE_INSTALL) news.properties	$(LOCALEDIR)
 
 clobber::
-	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\*.*
+	rm -f $(DIST)\bin\chrome\messenger\locale\*.*

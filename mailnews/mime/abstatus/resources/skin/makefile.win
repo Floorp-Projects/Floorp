@@ -25,7 +25,7 @@ DEFINES=-DWIN32_LEAN_AND_MEAN
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) abookstat.gif $(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) abookstat.gif $(DIST)\bin\chrome\messenger\skin
 
 clobber::
-	rm -f $(DIST)\bin\chrome\messenger\skin\default\abookstat.gif
+	rm -f $(DIST)\bin\chrome\messenger\skin\abookstat.gif

@@ -20,7 +20,7 @@ Rights Reserved.
 Contributor(s): ______________________________________. -->
 
 
-<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-fonts.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-fonts.dtd" >
 
 <overlay id="fontScaling"
          xmlns:html="http://www.w3.org/TR/REC-html40"

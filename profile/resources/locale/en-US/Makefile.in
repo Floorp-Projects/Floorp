@@ -45,5 +45,5 @@ FILES		= \
 include $(topsrcdir)/config/rules.mk
 
 install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(FILES)) $(DIST)/bin/chrome/profile/locale/en-US
+	$(INSTALL) $(addprefix $(srcdir)/, $(FILES)) $(DIST)/bin/chrome/communicator/locale/profile
 

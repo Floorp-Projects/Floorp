@@ -20,7 +20,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
 <?xul-overlay href="chrome://messenger/content/aw-overlay.xul"?>
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-identity.dtd" >
 <window id="identitypage" xmlns:html="http://www.w3.org/TR/REC-html40"

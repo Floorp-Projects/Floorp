@@ -19,14 +19,14 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!DOCTYPE window SYSTEM "chrome://messengercompose/locale/addressingWidgetOverlay.dtd">
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/addressingWidgetOverlay.dtd">
 
 
 <overlay xmlns:html="http://www.w3.org/TR/REC-html40"
 		 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:script language="JavaScript" src="chrome://messengercompose/content/addressingWidgetOverlay.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/messengercompose/addressingWidgetOverlay.js"/>
 
 	<!-- Addressing Widget -->
 	<box id="addressingWidget"

@@ -23,7 +23,7 @@ Alec Flett <alecf@netscape.com>
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/wizard.css" type="text/css"?>
-<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 
 <overlay id="wizardOverlay"
     xmlns:html="http://www.w3.org/TR/REC-html40"

@@ -23,17 +23,17 @@ DEPTH=..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) frown.gif	$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) smile.gif $(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) wink.gif $(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) sick.gif $(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) more.gif $(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) less.gif $(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) frown.gif	$(DIST)\bin\chrome\messenger\skin
+	$(MAKE_INSTALL) smile.gif $(DIST)\bin\chrome\messenger\skin
+	$(MAKE_INSTALL) wink.gif $(DIST)\bin\chrome\messenger\skin
+	$(MAKE_INSTALL) sick.gif $(DIST)\bin\chrome\messenger\skin
+	$(MAKE_INSTALL) more.gif $(DIST)\bin\chrome\messenger\skin
+	$(MAKE_INSTALL) less.gif $(DIST)\bin\chrome\messenger\skin
 
 clobber::
-	rm -f $(DIST)\bin\chrome\messenger\skin\default\frown.gif
-	rm -f $(DIST)\bin\chrome\messenger\skin\default\smile.gif
-	rm -f $(DIST)\bin\chrome\messenger\skin\default\wink.gif
-	rm -f $(DIST)\bin\chrome\messenger\skin\default\sick.gif
-	rm -f $(DIST)\bin\chrome\messenger\skin\default\more.gif
-	rm -f $(DIST)\bin\chrome\messenger\skin\default\less.gif
+	rm -f $(DIST)\bin\chrome\messenger\skin\frown.gif
+	rm -f $(DIST)\bin\chrome\messenger\skin\smile.gif
+	rm -f $(DIST)\bin\chrome\messenger\skin\wink.gif
+	rm -f $(DIST)\bin\chrome\messenger\skin\sick.gif
+	rm -f $(DIST)\bin\chrome\messenger\skin\more.gif
+	rm -f $(DIST)\bin\chrome\messenger\skin\less.gif

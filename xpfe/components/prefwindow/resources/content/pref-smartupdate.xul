@@ -1,8 +1,8 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-smartupdate.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-smartupdate.dtd" >
  
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

@@ -25,12 +25,12 @@
 
 -->
 
-<?xml-stylesheet href="chrome://search/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://search/skin/search-editor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/search/search.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/search/search-editor.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://search/locale/search-editor.dtd">
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/search/search-editor.dtd">
 
 <window title="&window.title.label;" id="search-editor-window"
 	xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -43,7 +43,7 @@
 	>
 
 	<html:script language="Javascript" src="chrome://global/content/strres.js"/>
-	<html:script language="Javascript" src="chrome://search/content/search-editor.js" />
+	<html:script language="Javascript" src="chrome://communicator/content/search/search-editor.js" />
 
 	<titledbox orient="vertical" flex="1" >
 		<box align="horizontal" flex="100%" autostretch="never">

@@ -21,17 +21,17 @@
    Contributor(s): 
   -->
 
-<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-composer.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-composer.dtd" >
 
 <window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
         align="vertical" title="&title2.label;"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-editing' ); else parent.queuedTag = 'pref-editing'; InitColors();">
-  <script language="JavaScript" src="chrome://pref/content/pref-composer.js"/>
+  <script language="JavaScript" src="chrome://communicator/content/pref/pref-composer.js"/>
 
   <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
 

@@ -25,18 +25,3 @@ DIRS=appshell bootstrap browser components global
 
 include <$(DEPTH)\config\rules.mak>
 
-CHROME_DIRS=\
-        $(DIST)\bin\chrome\content              \
-        $(DIST)\bin\chrome\skin\mozilla         \
-        $(DIST)\bin\chrome\locale\en            \
-        $(DIST)\bin\chrome\platform\mac         \
-        $(DIST)\bin\chrome\platform\windows     \
-        $(DIST)\bin\chrome\platform\unix        \
-        $(NULL)
-
-$(CHROME_DIRS):
-        mkdir $@
-
-export:: $(CHROME_DIRS)
-
-

@@ -21,7 +21,7 @@
  * Alec Flett <alecf@netscape.com>
  */
 
-var bundle = srGetStrBundle("chrome://pref/locale/prefutilities.properties");
+var bundle = srGetStrBundle("chrome://communicator/locale/pref/prefutilities.properties");
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
 function getFileOrFolderSpec( aTitle, aFolder )
