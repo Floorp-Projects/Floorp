@@ -29,8 +29,8 @@
 # issue to work out.
 
 
-# $Revision: 1.16 $ 
-# $Date: 2002/05/03 04:16:12 $ 
+# $Revision: 1.17 $ 
+# $Date: 2002/05/10 21:21:07 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TreeData.pm,v $ 
 # $Name:  $ 
@@ -262,7 +262,7 @@ foreach $tree (keys %VC_TREE) {
                          "html_color" => '#eeff00', # a yellow
                          "hdml_char" => "M",
                          "order" => 4,
-                         "description" => "Require Current Sherriff approval",
+                         "description" => "Require Current Sheriff approval",
                      },
 
 		    );
