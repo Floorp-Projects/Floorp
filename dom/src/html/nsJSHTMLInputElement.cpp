@@ -710,7 +710,10 @@ HTMLInputElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.blur", &ok);
     if (!ok) {
@@ -719,26 +722,19 @@ HTMLInputElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  {
 
     if (NS_OK != nativeThis->Blur()) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function blur requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -757,7 +753,10 @@ HTMLInputElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.focus", &ok);
     if (!ok) {
@@ -766,26 +765,19 @@ HTMLInputElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  {
 
     if (NS_OK != nativeThis->Focus()) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function focus requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -804,7 +796,10 @@ HTMLInputElementSelect(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.select", &ok);
     if (!ok) {
@@ -813,26 +808,19 @@ HTMLInputElementSelect(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  {
 
     if (NS_OK != nativeThis->Select()) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function select requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -851,7 +839,10 @@ HTMLInputElementClick(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.click", &ok);
     if (!ok) {
@@ -860,26 +851,19 @@ HTMLInputElementClick(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  {
 
     if (NS_OK != nativeThis->Click()) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function click requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;

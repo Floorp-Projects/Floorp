@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -29,6 +30,7 @@
 #include "nsIDOMBaseAppCore.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIComponentManager.h"
+#include "nsIJSNativeInitializer.h"
 #include "nsDOMCID.h"
 
 
@@ -53,7 +55,7 @@ enum BaseAppCore_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetBaseAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMBaseAppCore *a = (nsIDOMBaseAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBaseAppCore *a = (nsIDOMBaseAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -61,11 +63,22 @@ GetBaseAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok = PR_FALSE;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case BASEAPPCORE_ID:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "baseappcore.id", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
-        if (NS_OK == a->GetId(prop)) {
+        if (NS_SUCCEEDED(a->GetId(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -76,6 +89,7 @@ GetBaseAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -91,7 +105,7 @@ GetBaseAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetBaseAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMBaseAppCore *a = (nsIDOMBaseAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBaseAppCore *a = (nsIDOMBaseAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -99,11 +113,18 @@ SetBaseAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok = PR_FALSE;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -149,18 +170,36 @@ ResolveBaseAppCore(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 BaseAppCoreInit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBaseAppCore *nativeThis = (nsIDOMBaseAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
+  nsIDOMBaseAppCore *nativeThis = (nsIDOMBaseAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "baseappcore.init", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function Init requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -170,30 +209,47 @@ BaseAppCoreInit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
     *rval = JSVAL_VOID;
   }
-  else {
-    JS_ReportError(cx, "Function Init requires 1 parameters");
-    return JS_FALSE;
-  }
 
   return JS_TRUE;
 }
 
 
+//
+// Native method SetDocumentCharset
+//
 PR_STATIC_CALLBACK(JSBool)
 BaseAppCoreSetDocumentCharset(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBaseAppCore *nativeThis = (nsIDOMBaseAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
+  nsIDOMBaseAppCore *nativeThis = (nsIDOMBaseAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "baseappcore.setdocumentcharset", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function SetDocumentCharset requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -202,10 +258,6 @@ BaseAppCoreSetDocumentCharset(JSContext *cx, JSObject *obj, uintN argc, jsval *a
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function close requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -218,7 +270,7 @@ BaseAppCoreSetDocumentCharset(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 //
 JSClass BaseAppCoreClass = {
   "BaseAppCore", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetBaseAppCoreProperty,
@@ -246,7 +298,7 @@ static JSPropertySpec BaseAppCoreProperties[] =
 static JSFunctionSpec BaseAppCoreMethods[] = 
 {
   {"Init",          BaseAppCoreInit,     1},
-  {"SetDocumentCharset", BaseAppCoreSetDocumentCharset,     1},
+  {"SetDocumentCharset",          BaseAppCoreSetDocumentCharset,     1},
   {0}
 };
 
@@ -263,8 +315,10 @@ BaseAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   nsIScriptNameSpaceManager* manager;
   nsIDOMBaseAppCore *nativeThis;
   nsIScriptObjectOwner *owner = nsnull;
+  nsIJSNativeInitializer* initializer = nsnull;
 
   static NS_DEFINE_IID(kIDOMBaseAppCoreIID, NS_IDOMBASEAPPCORE_IID);
+  static NS_DEFINE_IID(kIJSNativeInitializerIID, NS_IJSNATIVEINITIALIZER_IID);
 
   result = context->GetNameSpaceManager(&manager);
   if (NS_OK != result) {
@@ -285,7 +339,16 @@ BaseAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_FALSE;
   }
 
-  // XXX We should be calling Init() on the instance
+  result = nativeThis->QueryInterface(kIJSNativeInitializerIID, (void **)&initializer);
+  if (NS_OK == result) {
+    result = initializer->Initialize(cx, argc, argv);
+    NS_RELEASE(initializer);
+
+    if (NS_OK != result) {
+      NS_RELEASE(nativeThis);
+      return JS_FALSE;
+    }
+  }
 
   result = nativeThis->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);
   if (NS_OK != result) {

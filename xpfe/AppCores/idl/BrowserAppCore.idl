@@ -7,7 +7,11 @@ interface BrowserAppCore : BaseAppCore
 	
 	void back();
 	void forward();
-	void reload(in int reloadType);
+
+	/* XXXbe reloadType must be unsigned long to match nsIChannel.idl's
+		       nsLoadFlags typedef; pls. fix by converting this interface
+           from DOM IDL to XPIDL */
+	void reload(in unsigned long reloadType);
 	void stop();
 	void loadUrl(in wstring url);
 	void loadInitialPage();

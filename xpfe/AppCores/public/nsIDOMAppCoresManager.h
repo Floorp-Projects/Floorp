@@ -63,7 +63,7 @@ public:
   NS_IMETHOD    Find(const nsString& aId, nsIDOMBaseAppCore** aReturn) { return _to##Find(aId, aReturn); }  \
 
 
-extern nsresult NS_InitAppCoresManagerClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitAppCoresManagerClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptAppCoresManager(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

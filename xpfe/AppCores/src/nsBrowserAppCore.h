@@ -80,9 +80,9 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    Reload(PRInt32 aType);
 #endif
     NS_IMETHOD    Stop();
-	  NS_IMETHOD    BackButtonPopup();
-	  NS_IMETHOD    ForwardButtonPopup();
-	  NS_IMETHOD    GotoHistoryIndex(PRInt32 aIndex);
+    NS_IMETHOD    BackButtonPopup();
+    NS_IMETHOD    ForwardButtonPopup();
+    NS_IMETHOD    GotoHistoryIndex(PRInt32 aIndex);
 
     NS_IMETHOD    WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm);
     NS_IMETHOD    SignonViewer(nsIDOMWindow* aWin);
@@ -224,7 +224,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
     nsIWebShell *       mWebShell;									// weak reference
     nsIWebShell *       mContentAreaWebShell;				// weak reference
 
-	  nsISessionHistory*  mSHistory;			           // this is a service
+    nsISessionHistory*  mSHistory;			           // this is a service
 
     nsCOMPtr<nsISupports>  mSearchContext;				// at last, something we really own
 #ifdef DEBUG_warren

@@ -154,7 +154,10 @@ DOMImplementationHasFeature(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "domimplementation.hasfeature", &ok);
     if (!ok) {
@@ -163,19 +166,19 @@ DOMImplementationHasFeature(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  {
+    if (argc < 2) {
+      JS_ReportError(cx, "Function hasFeature requires 2 parameters");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
     if (NS_OK != nativeThis->HasFeature(b0, b1, &nativeRet)) {
@@ -183,10 +186,6 @@ DOMImplementationHasFeature(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     }
 
     *rval = BOOLEAN_TO_JSVAL(nativeRet);
-  }
-  else {
-    JS_ReportError(cx, "Function hasFeature requires 2 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
