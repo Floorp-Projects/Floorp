@@ -256,9 +256,11 @@ function upgradeCleanup()
 function updateWinIni()
 {
   var fWinIni  = getWinProfile(getFolder("Windows"), "win.ini");
-
-  fWinIni.writeString("Mail", "MAPI", "1");
-  fWinIni.writeString("Mail", "CMCDLLNAME32", "MAPI32.DLL");
+  if(fWinIni != null)
+  {
+    fWinIni.writeString("Mail", "MAPI", "1");
+    fWinIni.writeString("Mail", "MAPIX", "1");
+  }
 }
 
 // main
