@@ -1134,16 +1134,20 @@ endif
 
 JAR_MANIFEST := $(srcdir)/jar.mn
 
+ifdef MOZ_DISABLE_JAR_PACKAGING
+_JAR_FLAT_FILES_ONLY=-f
+_JAR_REGCHROME_JAR=1
+else
+_JAR_FLAT_FILES_ONLY=
+_JAR_REGCHROME_JAR=0
+endif
+
 chrome::
-	@if test -f $(JAR_MANIFEST); then $(PERL) $(topsrcdir)/config/make-jars.pl -c -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
+	@if test -f $(JAR_MANIFEST); then $(PERL) $(topsrcdir)/config/make-jars.pl -c $(_JAR_FLAT_FILES_ONLY) -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
 
 install:: chrome
 
-ifdef MOZ_DISABLE_JAR_PACKAGING
-REGCHROME = $(PERL) $(topsrcdir)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt 1
-else
-REGCHROME = $(PERL) $(topsrcdir)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt 0
-endif
+REGCHROME = $(PERL) $(topsrcdir)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt $(_JAR_REGCHROME_JAR)
 
 ##############################################################################
 

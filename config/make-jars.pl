@@ -1,6 +1,6 @@
 #!/perl
 
-# make-jars [-c] [-v] [-d <destPath>] [-s <srcdir>] < <jar.mn>
+# make-jars [-c] [-f] [-v] [-d <destPath>] [-s <srcdir>] < <jar.mn>
 
 use strict;
 
@@ -18,7 +18,7 @@ my $IS_FILE = 2;
 
 my $objdir = getcwd;
 
-getopts("d:s:cv");
+getopts("d:s:cvf");
 
 my $usrcdir = undef;
 if (defined($::opt_s)) {
@@ -41,6 +41,11 @@ if (defined($::opt_c)) {
 my $verbose = 0;
 if (defined($::opt_v)) {
     $verbose = 1;
+}
+
+my $flatfilesonly = 0;
+if (defined($::opt_f)) {
+    $flatfilesonly = 1;
 }
 
 if ($verbose) {
@@ -111,22 +116,26 @@ sub JarIt
             EnsureFileInDir("$indivPath/$file", $file, 0, 1);
         }
     }
+    
+    if (!$flatfilesonly) {
 
-    if (!($args eq "")) {
-	my $cwd = getcwd;
-	my $err = 0; 
-        #print("in $cwd; zip -u $destPath/$jarfile $args\n");
-        system("zip -u $destPath/$jarfile $args") == 0 or
-	    $err = $? >> 8;
-	zipErrorCheck($err);
+	if (!($args eq "")) {
+	    my $cwd = getcwd;
+	    my $err = 0; 
+	    #print("in $cwd; zip -u $destPath/$jarfile $args\n");
+	    system("zip -u $destPath/$jarfile $args") == 0 or
+		$err = $? >> 8;
+	    zipErrorCheck($err);
+	}
+	if (!($overrides eq "")) {
+	    my $err = 0; 
+	    print "+++ overriding $overrides\n";
+	    system("zip $destPath/$jarfile $overrides\n") == 0 or 
+		$err = $? >> 8;
+	    zipErrorCheck($err);
+	}
     }
-    if (!($overrides eq "")) {
-	my $err = 0; 
-        print "+++ overriding $overrides\n";
-        system("zip $destPath/$jarfile $overrides\n") == 0 or 
-	    $err = $? >> 8;
-	zipErrorCheck($err);
-    }
+
     Cleanup();
 }
 
