@@ -202,10 +202,14 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
     colFrame->SetWidth(PCT, WIDTH_NOT_SET);
     colFrame->SetWidth(PCT_ADJ, WIDTH_NOT_SET);
   }
-  // set PCT and PCT_ADJ widths on col frames and for an auto table return 
+  // set PCT and PCT_ADJ widths on col frames. An auto table returns 
   // a new table width based on percent cells/cols if they exist
-  nscoord perAdjTableWidth = (maxWidth != NS_UNCONSTRAINEDSIZE) 
-    ? AssignPercentageColumnWidths(maxWidth - mCellSpacingTotal, tableIsAutoWidth) : 0; 
+  nscoord perAdjTableWidth = 0;
+  if ((NS_UNCONSTRAINEDSIZE != maxWidth) || (tableIsAutoWidth)) {
+    // for an auto width table, use a large basis just so that the quirky
+    // auto table sizing will get as big as it should
+    perAdjTableWidth = AssignPercentageColumnWidths(maxWidth - mCellSpacingTotal, tableIsAutoWidth);
+  }
 
   PRBool recomputedAdjMin = RecomputeAdjMinIfNecessary();
   // set the table's columns to the min width
@@ -310,8 +314,8 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
     }
   }
 
-  // if this is a nested table and pass1 reflow, we are done
-  if (maxWidth == NS_UNCONSTRAINEDSIZE)  {
+  // if this is a nested non auto table and pass1 reflow, we are done
+  if ((maxWidth == NS_UNCONSTRAINEDSIZE) && (!tableIsAutoWidth))  {
     return BCW_Wrapup(this, mTableFrame, allocTypes);
   }
 
