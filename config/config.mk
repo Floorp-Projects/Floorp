@@ -160,11 +160,11 @@ FINAL_LINK_COMP_NAMES = $(DEPTH)/config/final-link-comp-names
 
 # The use of LIB_PREFIX for OS/2 VA builds is inconsistent 
 # due to bug 114748, so use _NSS_LIB_PREFIX instead
-#ifeq ($(MOZ_OS2_TOOLS),VACPP)
-#NSS_LIB_PREFIX=lib
-#else
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+NSS_LIB_PREFIX=lib
+else
 NSS_LIB_PREFIX=$(LIB_PREFIX)
-#endif
+endif
 
 # 
 # NSS libs needed for final link in static build
@@ -172,16 +172,6 @@ NSS_LIB_PREFIX=$(LIB_PREFIX)
 NSS_3_4=1
 
 ifdef NSS_3_4
-# win32 msvc & OS/2 VA builds use import libs
-ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
-NSS_LIBS	= \
-	$(DIST)/lib/$(NSS_LIB_PREFIX)crmf.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(NSS_LIB_PREFIX)smime3.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(NSS_LIB_PREFIX)ssl3.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(NSS_LIB_PREFIX)nss3.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(NSS_LIB_PREFIX)softokn3.$(LIB_SUFFIX) \
-	$(NULL)
-else
 NSS_LIBS	= \
 	$(DIST)/lib/$(NSS_LIB_PREFIX)crmf.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(NSS_LIB_PREFIX)smime3$(DLL_SUFFIX) \
@@ -189,7 +179,6 @@ NSS_LIBS	= \
 	$(DIST)/lib/$(NSS_LIB_PREFIX)nss3$(DLL_SUFFIX) \
 	$(DIST)/lib/$(NSS_LIB_PREFIX)softokn3$(DLL_SUFFIX) \
 	$(NULL)
-endif
 else
 NSS_LIBS	= \
 	$(DIST)/lib/$(NSS_LIB_PREFIX)smime.$(LIB_SUFFIX) \
