@@ -41,6 +41,22 @@
 #include "nsIObserver.h"
 #include "nsIEnumerator.h"
 #include "nsISupportsArray.h"
+#include "nsISimpleEnumerator.h"
+
+class ObserverListEnumerator : public nsISimpleEnumerator
+{
+public:
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISIMPLEENUMERATOR
+
+    ObserverListEnumerator(nsISupportsArray* aValueArray);
+    virtual ~ObserverListEnumerator(void);
+
+protected:
+    nsISupportsArray* mValueArray;
+    PRInt32 mIndex;
+};
 
 class nsObserverList
 {

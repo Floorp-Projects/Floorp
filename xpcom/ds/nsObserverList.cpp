@@ -131,5 +131,76 @@ nsObserverList::GetObserverList(nsISimpleEnumerator** anEnumerator)
 {
     nsAutoLock lock(mLock);
 
-    return NS_NewArrayEnumerator(anEnumerator, mObserverList);
+    ObserverListEnumerator * enumerator= new ObserverListEnumerator(mObserverList);
+    NS_IF_ADDREF(enumerator);
+    *anEnumerator = enumerator;
+    return NS_OK;
+}
+
+
+ObserverListEnumerator::ObserverListEnumerator(nsISupportsArray* aValueArray)
+    : mValueArray(aValueArray),
+      mIndex(0)
+{
+    NS_INIT_REFCNT();
+    NS_IF_ADDREF(mValueArray);
+}
+
+ObserverListEnumerator::~ObserverListEnumerator(void)
+{
+    NS_IF_RELEASE(mValueArray);
+}
+
+NS_IMPL_ISUPPORTS1(ObserverListEnumerator, nsISimpleEnumerator)
+
+NS_IMETHODIMP
+ObserverListEnumerator::HasMoreElements(PRBool* aResult)
+{
+    NS_PRECONDITION(aResult != 0, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    if (!mValueArray) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+    }
+
+    PRUint32 cnt;
+    nsresult rv = mValueArray->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    *aResult = (mIndex < (PRInt32) cnt);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ObserverListEnumerator::GetNext(nsISupports** aResult)
+{
+    NS_PRECONDITION(aResult != 0, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    if (!mValueArray) {
+        *aResult = nsnull;
+        return NS_OK;
+    }
+
+    PRUint32 cnt;
+    nsresult rv = mValueArray->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    if (mIndex >= (PRInt32) cnt)
+        return NS_ERROR_UNEXPECTED;
+
+    *aResult = mValueArray->ElementAt(mIndex++);
+    if (*aResult) {
+        nsCOMPtr<nsIWeakReference> weakRefFactory = do_QueryInterface(*aResult);
+        if ( weakRefFactory ) {
+            nsCOMPtr<nsISupports> weakref = do_QueryReferent(weakRefFactory);
+            NS_RELEASE(*aResult);
+            NS_ADDREF(*aResult = weakref);
+
+            return NS_OK;
+        }
+    }
+
+    return NS_OK;
 }
