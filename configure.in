@@ -3469,6 +3469,17 @@ MOZ_ARG_ENABLE_BOOL(official-branding,
 AC_SUBST(MOZ_USE_OFFICIAL_BRANDING)
 
 dnl ========================================================
+dnl = Distribution ID
+dnl ========================================================
+MOZ_ARG_WITH_STRING(distribution-id,
+[  --with-distribution-id=ID  Set distribution-specific id (default=org.mozilla)],
+[ val=`echo $withval`
+    MOZ_DISTRIBUTION_ID="$val"])
+
+AC_DEFINE_UNQUOTED(MOZ_DISTRIBUTION_ID,"$MOZ_DISTRIBUTION_ID")
+AC_SUBST(MOZ_DISTRIBUTION_ID)
+
+dnl ========================================================
 dnl = Phoenix
 dnl ========================================================
 MOZ_XUL_APP=

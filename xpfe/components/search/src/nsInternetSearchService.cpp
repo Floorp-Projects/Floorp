@@ -112,6 +112,10 @@
 #define INTL_PROPERTIES "chrome://navigator/locale/navigator.properties"
 #endif
 
+#ifndef MOZ_DISTRIBUTION_ID
+#define MOZ_DISTRIBUTION_ID "org.mozilla"
+#endif
+
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerCID,             NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,        NS_RDFCONTAINERUTILS_CID);
@@ -4884,8 +4888,9 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &engineNa
     keyTemplate.Append(NS_LITERAL_STRING(".release"));
 
     nsXPIDLString releaseValue;
-    const PRUnichar* strings[] = { langName.get() };
-    bundle->FormatStringFromName(keyTemplate.get(), strings, 1, getter_Copies(releaseValue));
+    const PRUnichar* strings[] = { NS_LITERAL_STRING(MOZ_DISTRIBUTION_ID).get(),
+                                   langName.get() };
+    bundle->FormatStringFromName(keyTemplate.get(), strings, 2, getter_Copies(releaseValue));
 
     if (!releaseValue.IsEmpty()) 
     {
