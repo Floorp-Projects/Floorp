@@ -830,6 +830,7 @@ PRBool nsDOMClassInfo::sIsInitialized = PR_FALSE;
 
 
 jsval nsDOMClassInfo::sTop_id             = JSVAL_VOID;
+jsval nsDOMClassInfo::sParent_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sScrollbars_id      = JSVAL_VOID;
 jsval nsDOMClassInfo::sLocation_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sComponents_id      = JSVAL_VOID;
@@ -931,6 +932,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   }
 
   SET_JSVAL_TO_STRING(sTop_id,             cx, "top");
+  SET_JSVAL_TO_STRING(sParent_id,          cx, "parent");
   SET_JSVAL_TO_STRING(sScrollbars_id,      cx, "scrollbars");
   SET_JSVAL_TO_STRING(sLocation_id,        cx, "location");
   SET_JSVAL_TO_STRING(sComponents_id,      cx, "Components");
@@ -2767,6 +2769,7 @@ nsDOMClassInfo::ShutDown()
   }
 
   sTop_id             = JSVAL_VOID;
+  sParent_id          = JSVAL_VOID;
   sScrollbars_id      = JSVAL_VOID;
   sLocation_id        = JSVAL_VOID;
   sComponents_id      = JSVAL_VOID;
