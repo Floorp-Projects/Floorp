@@ -514,14 +514,13 @@ nsPrintEngine::GetSeqFrameAndCountPagesInternal(nsPrintObject*  aPO,
       aSeqFrame = curFrame;
       break;
     }
-    curFrame->FirstChild(aPO->mPresContext, nsnull, &curFrame);
+    curFrame = curFrame->GetFirstChild(nsnull);
   }
   if (aSeqFrame == nsnull) return NS_ERROR_FAILURE;
 
   // first count the total number of pages
   aCount = 0;
-  nsIFrame * pageFrame;
-  aSeqFrame->FirstChild(aPO->mPresContext, nsnull, &pageFrame);
+  nsIFrame* pageFrame = aSeqFrame->GetFirstChild(nsnull);
   while (pageFrame != nsnull) {
     aCount++;
     pageFrame = pageFrame->GetNextSibling();
@@ -2688,7 +2687,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
       nsIFrame* frame;
       frameMan->GetPrimaryFrameFor(aPO->mContent, &frame);
       if (frame && (aPO->mFrameType == eIFrame || aPO->mFrameType == eFrame)) {
-        frame->FirstChild(aPO->mParent->mPresContext, nsnull, &frame);
+        frame = frame->GetFirstChild(nsnull);
       }
 
       if (frame) {
@@ -2957,8 +2956,7 @@ nsPrintEngine::CalcPageFrameLocation(nsIPresShell * aPresShell,
 
     // Calc the Page No it is on
     PRInt32 pageNum = 1;
-    nsIFrame * child;
-    seqFrame->FirstChild(aPO->mPresContext, nsnull, &child);
+    nsIFrame* child = seqFrame->GetFirstChild(nsnull);
     while (child != nsnull) {
       if (pageFrame == child) {
         aPO->mPageNum = pageNum;
@@ -2992,8 +2990,7 @@ nsPrintEngine::CalcNumPrintableDocsAndPages(PRInt32& aNumDocs, PRInt32& aNumPage
         po->mPresShell->GetPageSequenceFrame(&pageSequence);
         nsIFrame * seqFrame;
         if (NS_SUCCEEDED(CallQueryInterface(pageSequence, &seqFrame))) {
-          nsIFrame* frame;
-          seqFrame->FirstChild(po->mPresContext, nsnull, &frame);
+          nsIFrame* frame = seqFrame->GetFirstChild(nsnull);
           while (frame) {
             aNumPages++;
             frame = frame->GetNextSibling();
@@ -3060,7 +3057,7 @@ static void GetIFramePosition(nsPrintObject * aPO, nscoord& aX, nscoord& aY)
       if (frame) {
         // This gets the "inner" frame, 
         // and then traverse out ot the pageContentFrame
-        frame->FirstChild(aPO->mParent->mPresContext, nsnull, &frame);
+        frame = frame->GetFirstChild(nsnull);
         while (frame) {
           nsPoint pt = frame->GetPosition();
           aX += pt.x;
@@ -3655,9 +3652,8 @@ nsPrintEngine::FindFrameByType(nsIPresContext* aPresContext,
   NS_ASSERTION(aParentFrame, "Pointer is null!");
   NS_ASSERTION(aType, "Pointer is null!");
 
-  nsIFrame * child;
   aRect += aParentFrame->GetPosition();
-  aParentFrame->FirstChild(aPresContext, nsnull, &child);
+  nsIFrame* child = aParentFrame->GetFirstChild(nsnull);
   while (child) {
     nsIContent* content = child->GetContent();
     if (content && content->Tag() == aType) {
@@ -3693,8 +3689,7 @@ nsPrintEngine::FindSelectionBoundsWithList(nsIPresContext* aPresContext,
   NS_ASSERTION(aPresContext, "Pointer is null!");
   NS_ASSERTION(aParentFrame, "Pointer is null!");
 
-  nsIFrame * child;
-  aParentFrame->FirstChild(aPresContext, aList, &child);
+  nsIFrame* child = aParentFrame->GetFirstChild(aList);
   aRect += aParentFrame->GetPosition();
   while (child) {
     // only leaf frames have this bit flipped
@@ -3744,9 +3739,8 @@ nsPrintEngine::FindSelectionBounds(nsIPresContext* aPresContext,
   PRInt32  childListIndex = 0;
   do {
     nsresult rv = FindSelectionBoundsWithList(aPresContext, aRC, childListName, aParentFrame, aRect, aStartFrame, aStartRect, aEndFrame, aEndRect);
-    NS_IF_RELEASE(childListName);
     NS_ENSURE_SUCCESS(rv, rv);
-    aParentFrame->GetAdditionalChildListName(childListIndex++, &childListName);
+    childListName = aParentFrame->GetAdditionalChildListName(childListIndex++);
   } while (childListName);
   return NS_OK;
 }
@@ -3835,8 +3829,7 @@ nsPrintEngine::GetPageRangeForSelection(nsIPresShell *        aPresShell,
   // dump all the pages and their pointers
   {
   PRInt32 pageNum = 1;
-  nsIFrame * child;
-  seqFrame->FirstChild(aPresContext, nsnull, &child);
+  nsIFrame* child = seqFrame->GetFirstChild(nsnull);
   while (child != nsnull) {
     printf("Page: %d - %p\n", pageNum, child);
     pageNum++;
@@ -3848,8 +3841,7 @@ nsPrintEngine::GetPageRangeForSelection(nsIPresShell *        aPresShell,
   // Now that we have the page frames
   // find out what the page numbers are for each frame
   PRInt32 pageNum = 1;
-  nsIFrame * page;
-  seqFrame->FirstChild(aPresContext, nsnull, &page);
+  nsIFrame* page = seqFrame->GetFirstChild(nsnull);
   while (page != nsnull) {
     if (page == startPageFrame) {
       aStartPageNum = pageNum;
@@ -4715,8 +4707,7 @@ static void DumpFrames(FILE*                 out,
   NS_ASSERTION(aRendContext, "Pointer is null!");
   NS_ASSERTION(aFrame, "Pointer is null!");
 
-  nsIFrame * child;
-  aFrame->FirstChild(aPresContext, nsnull, &child);
+  nsIFrame* child = aFrame->GetFirstChild(nsnull);
   while (child != nsnull) {
     for (PRInt32 i=0;i<aLevel;i++) {
      fprintf(out, "  ");
@@ -4865,7 +4856,7 @@ static void DumpPrintObjectsList(nsVoidArray * aDocList)
         if (NS_SUCCEEDED(CallQueryInterface(rootFrame, &sqf))) {
           break;
         }
-        rootFrame->FirstChild(po->mPresContext, nsnull, &rootFrame);
+        rootFrame = rootFrame->GetFirstChild(nsnull);
       }
     }
 

@@ -375,9 +375,7 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
 
     // find the position of our outermost embellished container w.r.t
     // its siblings (frames are singly-linked together).
-    nsIFrame* firstChild;
-    parentAncestor->FirstChild(aPresContext, nsnull, &firstChild);
-    nsFrameList frameList(firstChild);
+    nsFrameList frameList(parentAncestor->GetFirstChild(nsnull));
 
     nsIFrame* nextSibling = embellishAncestor->GetNextSibling();
     nsIFrame* prevSibling = frameList.GetPrevSiblingFor(embellishAncestor);

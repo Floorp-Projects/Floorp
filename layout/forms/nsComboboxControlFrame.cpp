@@ -1364,8 +1364,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
       } else {
         nsIFrame * plainLstFrame;
         if (NS_SUCCEEDED(mListControlFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&plainLstFrame))) {
-          nsIFrame * frame;
-          plainLstFrame->FirstChild(aPresContext, nsnull, &frame);
+          nsIFrame * frame = plainLstFrame->GetFirstChild(nsnull);
           nsIScrollableFrame * scrollFrame;
           if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void**)&scrollFrame))) {
             plainLstFrame->Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
@@ -2257,17 +2256,13 @@ nsComboboxControlFrame::Destroy(nsIPresContext* aPresContext)
 }
 
 
-NS_IMETHODIMP
-nsComboboxControlFrame::FirstChild(nsIPresContext* aPresContext,
-                                   nsIAtom*        aListName,
-                                   nsIFrame**      aFirstChild) const
+nsIFrame*
+nsComboboxControlFrame::GetFirstChild(nsIAtom* aListName) const
 {
   if (nsLayoutAtoms::popupList == aListName) {
-    *aFirstChild = mPopupFrames.FirstChild();
-  } else {
-    nsAreaFrame::FirstChild(aPresContext, aListName, aFirstChild);
+    return mPopupFrames.FirstChild();
   }
-  return NS_OK;
+  return nsAreaFrame::GetFirstChild(aListName);
 }
 
 NS_IMETHODIMP
@@ -2298,25 +2293,21 @@ nsComboboxControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP
-nsComboboxControlFrame::GetAdditionalChildListName(PRInt32   aIndex,
-                                         nsIAtom** aListName) const
+nsIAtom*
+nsComboboxControlFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
    // Maintain a separate child list for the dropdown list (i.e. popup listbox)
    // This is necessary because we don't want the listbox to be included in the layout
    // of the combox's children because it would take up space, when it is suppose to
    // be floating above the display.
-  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
   if (aIndex <= NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX) {
-    return nsAreaFrame::GetAdditionalChildListName(aIndex, aListName);
+    return nsAreaFrame::GetAdditionalChildListName(aIndex);
   }
   
-  *aListName = nsnull;
   if (NS_COMBO_FRAME_POPUP_LIST_INDEX == aIndex) {
-    *aListName = nsLayoutAtoms::popupList;
-    NS_ADDREF(*aListName);
+    return nsLayoutAtoms::popupList;
   }
-  return NS_OK;
+  return nsnull;
 }
 
 PRIntn

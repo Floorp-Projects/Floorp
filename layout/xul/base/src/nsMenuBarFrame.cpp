@@ -316,8 +316,7 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
   if (!immediateParent)
     immediateParent = this;
 
-  nsIFrame* currFrame;
-  immediateParent->FirstChild(mPresContext, nsnull, &currFrame);
+  nsIFrame* currFrame = immediateParent->GetFirstChild(nsnull);
 
   while (currFrame) {
     nsIContent* current = currFrame->GetContent();
@@ -453,9 +452,7 @@ nsMenuBarFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
     }
   }
   else 
-    immediateParent->FirstChild(mPresContext,
-                                nsnull,
-                                &currFrame);
+    currFrame = immediateParent->GetFirstChild(nsnull);
 
   while (currFrame) {
     // See if it's a menu item.
@@ -468,9 +465,7 @@ nsMenuBarFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
     currFrame = currFrame->GetNextSibling();
   }
 
-  immediateParent->FirstChild(mPresContext,
-                              nsnull,
-                              &currFrame);
+  currFrame = immediateParent->GetFirstChild(nsnull);
 
   // Still don't have anything. Try cycling from the beginning.
   while (currFrame && currFrame != startFrame) {
@@ -498,10 +493,7 @@ nsMenuBarFrame::GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult
   if (!immediateParent)
     immediateParent = this;
 
-  nsIFrame* first;
-  immediateParent->FirstChild(mPresContext,
-                              nsnull, &first);
-  nsFrameList frames(first);
+  nsFrameList frames(immediateParent->GetFirstChild(nsnull));
                               
   nsIFrame* currFrame = nsnull;
   nsIFrame* startFrame = nsnull;

@@ -428,11 +428,6 @@ CanvasFrame::Paint(nsIPresContext*      aPresContext,
         nsresult rv = aPresContext->GetEventStateManager(getter_AddRefs(stateManager));
         if (NS_SUCCEEDED(rv)) {
           nsIFrame * parentFrame = GetParent();
-          nsIScrollableFrame* scrollableFrame;
-          if (NS_SUCCEEDED(parentFrame->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void**)&scrollableFrame))) {
-            nscoord width, height;
-            scrollableFrame->GetClipSize(aPresContext, &width, &height);
-          }
           nsIView* parentView = parentFrame->GetView();
 
           nsIScrollableView* scrollableView;
@@ -653,12 +648,11 @@ CanvasFrame::HandleEvent(nsIPresContext* aPresContext,
       aEvent->message == NS_MOUSE_MIDDLE_BUTTON_UP ||
       aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP ||
       aEvent->message == NS_MOUSE_MOVE ) {
-    nsIFrame *firstChild;
-    nsresult rv = FirstChild(aPresContext,nsnull,&firstChild);
+    nsIFrame *firstChild = GetFirstChild(nsnull);
     //canvas frame needs to pass mouse events to its area frame so that mouse movement
     //and selection code will work properly. this will still have the necessary effects
     //that would have happened if nsFrame::HandleEvent was called.
-    if (NS_SUCCEEDED(rv) && firstChild)
+    if (firstChild)
       firstChild->HandleEvent(aPresContext, aEvent, aEventStatus);
     else
       nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);

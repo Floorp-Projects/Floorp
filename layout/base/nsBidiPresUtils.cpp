@@ -367,7 +367,6 @@ nsBidiPresUtils::InitLogicalArray(nsIPresContext* aPresContext,
 {
   nsIFrame*             frame;
   nsIFrame*             directionalFrame;
-  nsIFrame*             kid;
   nsresult              rv;
   nsresult              res = NS_OK;
 
@@ -412,7 +411,7 @@ nsBidiPresUtils::InitLogicalArray(nsIPresContext* aPresContext,
           || (nsLayoutAtoms::positionedInlineFrame == frameType)
           || (nsLayoutAtoms::letterFrame == frameType)
           || (nsLayoutAtoms::blockFrame == frameType) ) ) {
-      frame->FirstChild(aPresContext, nsnull, &kid);
+      nsIFrame* kid = frame->GetFirstChild(nsnull);
       res = InitLogicalArray(aPresContext, kid, aNextInFlow, aAddMarkers);
     }
     else {
@@ -702,11 +701,10 @@ nsBidiPresUtils::RepositionContainerFrame(nsIPresContext* aPresContext,
                                           PRInt32& aMaxX) const
 {
   nsIFrame* frame;
-  nsIFrame* firstChild;
   PRInt32 minX = 0x7FFFFFFF;
   PRInt32 maxX = 0;
 
-  aContainer->FirstChild(aPresContext, nsnull, &firstChild);
+  nsIFrame* firstChild = aContainer->GetFirstChild(nsnull);
 
   for (frame = firstChild; frame; frame = frame->GetNextSibling()) {
     nsIAtom* frameType = frame->GetType();

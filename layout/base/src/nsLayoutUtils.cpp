@@ -64,10 +64,8 @@ GetFirstChildFrame(nsIPresContext* aPresContext,
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
-  nsIFrame* childFrame;
-
   // Get the first child frame
-  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
+  nsIFrame* childFrame = aFrame->GetFirstChild(nsnull);
 
   // If the child frame is a pseudo-frame, then return its first child.
   // Note that the frame we create for the generated content is also a
@@ -100,8 +98,7 @@ GetLastChildFrame(nsIPresContext* aPresContext,
   nsIFrame* lastInFlow = aFrame->GetLastInFlow();
 
   // Get the last child frame
-  nsIFrame* firstChildFrame;
-  lastInFlow->FirstChild(aPresContext, nsnull, &firstChildFrame);
+  nsIFrame* firstChildFrame = lastInFlow->GetFirstChild(nsnull);
   if (firstChildFrame) {
     nsFrameList frameList(firstChildFrame);
     nsIFrame*   lastChildFrame = frameList.LastChild();

@@ -865,8 +865,7 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext)
     nsRect   containerRect;
     if (mSelectionHeight > -1) {
       nsIFrame* childFrame = mFrames.FirstChild();
-      nsIFrame* conFrame;
-      childFrame->FirstChild(aPresContext, nsnull, &conFrame);
+      nsIFrame* conFrame = childFrame->GetFirstChild(nsnull);
       containerView = conFrame->GetView();
       NS_ASSERTION(containerView, "Container view can't be null!");
       containerRect = containerView->GetBounds();

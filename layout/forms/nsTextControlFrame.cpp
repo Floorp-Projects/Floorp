@@ -3035,8 +3035,7 @@ nsTextControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
   if (mEditor)
     mEditor->PostCreate();
   //look for scroll view below this frame go along first child list
-  nsIFrame *first;
-  FirstChild(aPresContext,nsnull, &first);
+  nsIFrame* first = GetFirstChild(nsnull);
 
   // Mark the scroll frame as being a reflow root. This will allow
   // incremental reflows to be initiated at the scroll frame, rather
@@ -3078,7 +3077,7 @@ nsTextControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
         break;
       }
     }
-    first->FirstChild(aPresContext,nsnull, &first);
+    first = first->GetFirstChild(nsnull);
   }
 
   return rv;

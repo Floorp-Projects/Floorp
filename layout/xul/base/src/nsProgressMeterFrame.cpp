@@ -117,8 +117,7 @@ nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
 
   // did the progress change?
   if (nsHTMLAtoms::value == aAttribute) {
-    nsIFrame* barChild = nsnull;
-    FirstChild(aPresContext, nsnull, &barChild);
+    nsIFrame* barChild = GetFirstChild(nsnull);
     if (!barChild) return NS_OK;
     nsIFrame* remainderChild = barChild->GetNextSibling();
     if (!remainderChild) return NS_OK;

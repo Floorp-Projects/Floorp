@@ -527,12 +527,10 @@ PRBool IsFirstRow(nsIPresContext*  aPresContext,
                   nsTableFrame&    aTable,
                   nsTableRowFrame& aRow)
 {
-  nsIFrame* firstRowGroup = nsnull;
-  aTable.FirstChild(aPresContext, nsnull, &firstRowGroup);
+  nsIFrame* firstRowGroup = aTable.GetFirstChild(nsnull);
   nsIFrame* rowGroupFrame = aRow.GetParent();
   if (rowGroupFrame == firstRowGroup) {
-    nsIFrame* firstRow;
-    rowGroupFrame->FirstChild(aPresContext, nsnull, &firstRow);
+    nsIFrame* firstRow = rowGroupFrame->GetFirstChild(nsnull);
     return (&aRow == firstRow);
   }
   return PR_FALSE;
@@ -612,10 +610,10 @@ nsTableRowFrame::GetFrameForPoint(nsIPresContext*        aPresContext,
   // This is basically copied from nsContainerFrame::GetFrameForPointUsing,
   // except for one bit removed
 
-  nsIFrame *kid, *hit;
+  nsIFrame *hit;
   nsPoint tmp;
 
-  FirstChild(aPresContext, nsnull, &kid);
+  nsIFrame* kid = GetFirstChild(nsnull);
   *aFrame = nsnull;
   tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
   while (nsnull != kid) {
@@ -1420,8 +1418,7 @@ nsTableRowFrame::Contains(nsIPresContext* aPresContext,
   }
   // if that fails, check the cells, they might span outside the row rect
   else {
-    nsIFrame* kid;
-    FirstChild(aPresContext, nsnull, &kid);
+    nsIFrame* kid = GetFirstChild(nsnull);
     while (nsnull != kid) {
       nsPoint point(aPoint);
       point.MoveBy(-mRect.x, -mRect.y); // offset the point to check by the row container

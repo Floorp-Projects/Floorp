@@ -176,33 +176,25 @@ nsTableOuterFrame::Init(nsIPresContext*  aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP
-nsTableOuterFrame::FirstChild(nsIPresContext* aPresContext,
-                              nsIAtom*        aListName,
-                              nsIFrame**      aFirstChild) const
+nsIFrame*
+nsTableOuterFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
-  *aFirstChild = (nsLayoutAtoms::captionList == aListName)
-                 ? mCaptionFrame : mFrames.FirstChild(); 
-  return NS_OK;
+  if (nsLayoutAtoms::captionList == aListName) {
+    return mCaptionFrame;
+  }
+  if (!aListName) {
+    return mFrames.FirstChild();
+  }
+  return nsnull;
 }
 
-NS_IMETHODIMP
-nsTableOuterFrame::GetAdditionalChildListName(PRInt32   aIndex,
-                                              nsIAtom** aListName) const
+nsIAtom*
+nsTableOuterFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
-  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
-  if (aIndex < 0) {
-    return NS_ERROR_INVALID_ARG;
+  if (aIndex == NS_TABLE_FRAME_CAPTION_LIST_INDEX) {
+    return nsLayoutAtoms::captionList;
   }
-  *aListName = nsnull;
-  switch (aIndex) {
-  case NS_TABLE_FRAME_CAPTION_LIST_INDEX:
-    *aListName = nsLayoutAtoms::captionList;
-    NS_ADDREF(*aListName);
-    break;
-  }
-  return NS_OK;
+  return nsnull;
 }
 
 NS_IMETHODIMP 

@@ -650,8 +650,7 @@ NS_IMETHODIMP nsTableFrame::AdjustRowIndices(nsIPresContext* aPresContext,
                                              PRInt32         anAdjustment)
 {
   nsresult rv = NS_OK;
-  nsIFrame* rowFrame;
-  aRowGroup->FirstChild(aPresContext, nsnull, &rowFrame);
+  nsIFrame* rowFrame = aRowGroup->GetFirstChild(nsnull);
   for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
     if (NS_STYLE_DISPLAY_TABLE_ROW==rowFrame->GetStyleDisplay()->mDisplay) {
       PRInt32 index = ((nsTableRowFrame*)rowFrame)->GetRowIndex();
@@ -681,8 +680,7 @@ void nsTableFrame::InsertColGroups(nsIPresContext& aPresContext,
       else {
         nsTableColGroupFrame* cgFrame = (nsTableColGroupFrame*)kidFrame;
         cgFrame->SetStartColumnIndex(colIndex);
-        nsIFrame* firstCol;
-        kidFrame->FirstChild(&aPresContext, nsnull, &firstCol);
+        nsIFrame* firstCol = kidFrame->GetFirstChild(nsnull);
         cgFrame->AddColsToTable(aPresContext, colIndex, PR_FALSE, firstCol);
         PRInt32 numCols = cgFrame->GetColCount();
         colIndex += numCols;
@@ -902,10 +900,9 @@ nsTableFrame::CreateAnonymousColFrames(nsIPresContext&       aPresContext,
 {
   *aFirstNewFrame = nsnull;
   nsIFrame* lastColFrame = nsnull;
-  nsIFrame* childFrame;
 
   // Get the last col frame
-  aColGroupFrame.FirstChild(&aPresContext, nsnull, &childFrame);
+  nsIFrame* childFrame = aColGroupFrame.GetFirstChild(nsnull);
   while (childFrame) {
     if (nsLayoutAtoms::tableColFrame == childFrame->GetType()) {
       lastColFrame = (nsTableColGroupFrame *)childFrame;
@@ -1265,8 +1262,7 @@ nsTableFrame::CollectRows(nsIPresContext* aPresContext,
   PRInt32 numRows = 0;
   nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(aFrame);
   if (rgFrame) {
-    nsIFrame* childFrame = nsnull;
-    rgFrame->FirstChild(aPresContext, nsnull, &childFrame);
+    nsIFrame* childFrame = rgFrame->GetFirstChild(nsnull);
     while (childFrame) {
       if (nsLayoutAtoms::tableRowFrame == childFrame->GetType()) {
         aCollection.AppendElement(childFrame);
@@ -1332,36 +1328,23 @@ nsTableFrame::InsertRowGroups(nsIPresContext&  aPresContext,
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
 
-NS_IMETHODIMP
-nsTableFrame::FirstChild(nsIPresContext* aPresContext,
-                         nsIAtom*        aListName,
-                         nsIFrame**      aFirstChild) const
+nsIFrame*
+nsTableFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
   if (aListName == nsLayoutAtoms::colGroupList) {
-    *aFirstChild = mColGroups.FirstChild();
-    return NS_OK;
+    return mColGroups.FirstChild();
   }
 
-  return nsHTMLContainerFrame::FirstChild(aPresContext, aListName, aFirstChild);
+  return nsHTMLContainerFrame::GetFirstChild(aListName);
 }
 
-NS_IMETHODIMP
-nsTableFrame::GetAdditionalChildListName(PRInt32   aIndex,
-                                         nsIAtom** aListName) const
+nsIAtom*
+nsTableFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
-  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
-  if (aIndex < 0) {
-    return NS_ERROR_INVALID_ARG;
+  if (aIndex == NS_TABLE_FRAME_COLGROUP_LIST_INDEX) {
+    return nsLayoutAtoms::colGroupList;
   }
-  *aListName = nsnull;
-  switch (aIndex) {
-  case NS_TABLE_FRAME_COLGROUP_LIST_INDEX:
-    *aListName = nsLayoutAtoms::colGroupList;
-    NS_ADDREF(*aListName);
-    break;
-  }
-  return NS_OK;
+  return nsnull;
 }
 
 void 
@@ -1475,13 +1458,10 @@ nsTableFrame::SetSelected(nsIPresContext* aPresContext,
 #if 0
   //traverse through children unselect tables
   if ((aSpread == eSpreadDown)){
-    nsIFrame* kid;
-    nsresult rv = FirstChild(nsnull, &kid);
-    if (NS_SUCCEEDED(rv)) {
-      while (kid) {
-        kid->SetSelected(nsnull, aSelected, eSpreadDown);
-        kid = kid->GetNextSibling();
-      }
+    nsIFrame* kid = GetFirstChild(nsnull);
+    while (kid) {
+      kid->SetSelected(nsnull, aSelected, eSpreadDown);
+      kid = kid->GetNextSibling();
     }
   }
 #endif
@@ -1615,8 +1595,7 @@ nsTableFrame::SetColumnDimensions(nsIPresContext* aPresContext,
   PRInt32 numCols = GetColCount();
   while (nsnull != colGroupFrame) {
     nscoord colGroupWidth = 0;
-    nsIFrame* colFrame = nsnull;
-    colGroupFrame->FirstChild(aPresContext, nsnull, &colFrame);
+    nsIFrame* colFrame = colGroupFrame->GetFirstChild(nsnull);
     nsPoint colOrigin(0,0);
     while (nsnull != colFrame) {
       if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
@@ -1660,8 +1639,7 @@ ProcessRowInserted(nsIPresContext* aPresContext,
   for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
     nsTableRowGroupFrame* rgFrame = (nsTableRowGroupFrame*)rowGroups.ElementAt(rgX);
     if (!rgFrame) continue; // should never happen
-    nsIFrame* childFrame = nsnull;
-    rgFrame->FirstChild(aPresContext, nsnull, &childFrame);
+    nsIFrame* childFrame = rgFrame->GetFirstChild(nsnull);
     // find the row that was inserted first
     while (childFrame) {
       if (nsLayoutAtoms::tableRowFrame == childFrame->GetType()) {
@@ -2286,8 +2264,7 @@ nsTableFrame::CollapseRowGroupIfNecessary(nsIPresContext* aPresContext,
   const nsStyleVisibility* groupVis = aRowGroupFrame->GetStyleVisibility();
   
   PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
-  nsIFrame* rowFrame;
-  aRowGroupFrame->FirstChild(aPresContext, nsnull, &rowFrame);
+  nsIFrame* rowFrame = aRowGroupFrame->GetFirstChild(nsnull);
 
   while (nsnull != rowFrame) {
     const nsStyleDisplay* rowDisplay = rowFrame->GetStyleDisplay();
@@ -2298,8 +2275,7 @@ nsTableFrame::CollapseRowGroupIfNecessary(nsIPresContext* aPresContext,
         aYGroupOffset += rowRect.height;
         rowRect.height = 0;
         rowFrame->SetRect(rowRect);
-        nsIFrame* cellFrame;
-        rowFrame->FirstChild(aPresContext, nsnull, &cellFrame);
+        nsIFrame* cellFrame = rowFrame->GetFirstChild(nsnull);
         while (nsnull != cellFrame) {
           const nsStyleDisplay* cellDisplay = cellFrame->GetStyleDisplay();
           if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay) {
@@ -4269,9 +4245,8 @@ nsTableFrame::GetFrameAtOrBefore(nsIPresContext* aPresContext,
 
   // aPriorChildFrame is not of type aChildType, so we need start from 
   // the beginnng and find the closest one 
-  nsIFrame* childFrame;
   nsIFrame* lastMatchingFrame = nsnull;
-  aParentFrame->FirstChild(aPresContext, nsnull, &childFrame);
+  nsIFrame* childFrame = aParentFrame->GetFirstChild(nsnull);
   while (childFrame && (childFrame != aPriorChildFrame)) {
     if (aChildType == childFrame->GetType()) {
       lastMatchingFrame = childFrame;
@@ -4287,13 +4262,11 @@ nsTableFrame::DumpRowGroup(nsIPresContext* aPresContext, nsIFrame* aKidFrame)
 {
   nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(aKidFrame);
   if (rgFrame) {
-    nsIFrame* rowFrame;
-    rgFrame->FirstChild(aPresContext, nsnull, &rowFrame);
+    nsIFrame* rowFrame = rgFrame->GetFirstChild(nsnull);
     while (rowFrame) {
       if (nsLayoutAtoms::tableRowFrame == rowFrame->GetType()) {
         printf("row(%d)=%p ", ((nsTableRowFrame*)rowFrame)->GetRowIndex(), rowFrame);
-        nsIFrame* cellFrame;
-        rowFrame->FirstChild(aPresContext, nsnull, &cellFrame);
+        nsIFrame* cellFrame = rowFrame->GetFirstChild(nsnull);
         while (cellFrame) {
           if (IS_TABLE_CELL(cellFrame->GetType())) {
             PRInt32 colIndex;
@@ -4364,8 +4337,7 @@ nsTableIterator::nsTableIterator(nsIPresContext*  aPresContext,
                                  nsIFrame&        aSource,
                                  nsTableIteration aType)
 {
-  nsIFrame* firstChild;
-  aSource.FirstChild(aPresContext, nsnull, &firstChild);
+  nsIFrame* firstChild = aSource.GetFirstChild(nsnull);
   Init(firstChild, aType);
 }
 
@@ -7387,8 +7359,7 @@ void DumpTableFramesRecur(nsIPresContext* aPresContext,
       nsLayoutAtoms::tableRowGroupFrame == fType ||
       nsLayoutAtoms::tableRowFrame      == fType ||
       IS_TABLE_CELL(fType)) {
-    nsIFrame* child;
-    aFrame->FirstChild(aPresContext, nsnull, &child);
+    nsIFrame* child = aFrame->GetFirstChild(nsnull);
     while(child) {
       DumpTableFramesRecur(aPresContext, child, aIndent+1);
       child = child->GetNextSibling();

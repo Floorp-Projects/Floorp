@@ -169,10 +169,7 @@ nsFirstLetterFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRang
 {
   if (aSelected && ParentDisablesSelection())
     return NS_OK;
-  nsIFrame *child;
-  nsresult result = FirstChild(aPresContext, nsnull, &child);
-  if (NS_FAILED(result))
-    return NS_OK;
+  nsIFrame *child = GetFirstChild(nsnull);
   while (child)
   {
     child->SetSelected(aPresContext, aRange, aSelected, aSpread);

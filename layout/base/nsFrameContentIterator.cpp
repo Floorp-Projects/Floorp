@@ -82,7 +82,7 @@ NS_IMETHODIMP
 nsFrameContentIterator::First()
 {
   // Get the first child frame and make it the current node
-  mParentFrame->FirstChild(mPresContext, nsnull, &mCurrentChild);
+  mCurrentChild = mParentFrame->GetFirstChild(nsnull);
   if (!mCurrentChild) {
     return NS_ERROR_FAILURE;
   }
@@ -109,7 +109,7 @@ GetNextChildFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
     aFrame->GetParent()->GetNextInFlow(&parent);
 
     if (parent) {
-      parent->FirstChild(aPresContext, nsnull, &nextSibling);
+      nextSibling = parent->GetFirstChild(nsnull);
     }
   }
 
@@ -119,11 +119,9 @@ GetNextChildFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
 NS_IMETHODIMP
 nsFrameContentIterator::Last()
 {
-  nsIFrame* nextChild;
-
   // Starting with the first child walk and find the last child
   mCurrentChild = nsnull;
-  mParentFrame->FirstChild(mPresContext, nsnull, &nextChild);
+  nsIFrame* nextChild = mParentFrame->GetFirstChild(nsnull);
   while (nextChild) {
     mCurrentChild = nextChild;
     nextChild = ::GetNextChildFrame(mPresContext, nextChild);
@@ -161,10 +159,8 @@ GetPrevChildFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
   // Get its previous sibling. Because we have a singly linked list we
   // need to search from the first child
   nsIFrame* parent = aFrame->GetParent();
-  nsIFrame* firstChild;
   nsIFrame* prevSibling;
-
-  parent->FirstChild(aPresContext, nsnull, &firstChild);
+  nsIFrame* firstChild = parent->GetFirstChild(nsnull);
 
   NS_ASSERTION(firstChild, "parent has no first child");
   nsFrameList frameList(firstChild);
@@ -176,7 +172,7 @@ GetPrevChildFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
     parent->GetPrevInFlow(&parent);
 
     if (parent) {
-      parent->FirstChild(aPresContext, nsnull, &firstChild);
+      firstChild = parent->GetFirstChild(nsnull);
       frameList.SetFrames(firstChild);
       prevSibling = frameList.LastChild();
     }
@@ -235,11 +231,9 @@ nsFrameContentIterator::IsDone()
 NS_IMETHODIMP
 nsFrameContentIterator::PositionAt(nsIContent* aCurNode)
 {
-  nsIFrame* child;
-
   // Starting with the first child frame search for the child frame
   // with the matching content object
-  mParentFrame->FirstChild(mPresContext, nsnull, &child);
+  nsIFrame* child = mParentFrame->GetFirstChild(nsnull);
   while (child) {
     if (child->GetContent() == aCurNode) {
       break;

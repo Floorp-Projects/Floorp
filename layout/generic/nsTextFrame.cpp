@@ -1964,9 +1964,8 @@ nsTextFrame::GetContentAndOffsetsForSelection(nsIPresContext *aPresContext, nsIC
       nsIFrame *grandParent = parent->GetParent();
       if (grandParent)
       {
-	nsIFrame *firstParent;
-        nsresult rv = grandParent->FirstChild(aPresContext,nsnull, &firstParent);
-        if (NS_SUCCEEDED(rv) && firstParent)
+	nsIFrame *firstParent = grandParent->GetFirstChild(nsnull);
+        if (firstParent)
         {
           *aLength = 0;
           if (firstParent == parent) //then our parent is the first child of granddad. use BEFORE
@@ -1979,7 +1978,7 @@ nsTextFrame::GetContentAndOffsetsForSelection(nsIPresContext *aPresContext, nsIC
           }
         }
         else
-          return rv;
+          return NS_OK;
       }
     }
   }

@@ -1564,10 +1564,9 @@ nsTableRowGroupFrame::GetHeightOfRows(nsIPresContext* aPresContext)
   nscoord height = 0;
 
   // enumerate the rows and total their heights
-  nsIFrame* rowFrame = nsnull;
-  rv = FirstChild(aPresContext, nsnull, &rowFrame);
+  nsIFrame* rowFrame = GetFirstChild(nsnull);
   PRInt32 numRows = 0;
-  while ((NS_SUCCEEDED(rv)) && rowFrame) {
+  while (rowFrame) {
     if (NS_STYLE_DISPLAY_TABLE_ROW == rowFrame->GetStyleDisplay()->mDisplay) {
       height += rowFrame->GetSize().height;
       numRows++;

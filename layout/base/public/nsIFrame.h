@@ -669,23 +669,18 @@ public:
    *
    * Note that the list is only the additional named child lists and does not
    * include the unnamed principal child list.
-   *
-   * @return NS_ERROR_INVALID_ARG if the index is < 0 and NS_OK otherwise
    */
-  NS_IMETHOD  GetAdditionalChildListName(PRInt32   aIndex,
-                                         nsIAtom** aListName) const = 0;
+  virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const = 0;
 
   /**
    * Get the first child frame from the specified child list.
    *
    * @param   aListName the name of the child list. A NULL pointer for the atom
    *            name means the unnamed principal child list
-   * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified name
+   * @return  the child frame, or NULL if there is no such child
    * @see     #GetAdditionalListName()
    */
-  NS_IMETHOD  FirstChild(nsIPresContext* aPresContext,
-                         nsIAtom*        aListName,
-                         nsIFrame**      aFirstChild) const = 0;
+  virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const = 0;
 
   /**
    * Child frames are linked together in a singly-linked list

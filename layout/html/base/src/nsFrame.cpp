@@ -696,21 +696,17 @@ nsFrame::SetAdditionalStyleContext(PRInt32 aIndex,
 
 // Child frame enumeration
 
-NS_IMETHODIMP
-nsFrame::GetAdditionalChildListName(PRInt32 aIndex, nsIAtom** aListName) const
+nsIAtom*
+nsFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
-  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
   NS_PRECONDITION(aIndex >= 0, "invalid index number");
-  *aListName = nsnull;
-  return aIndex < 0 ? NS_ERROR_INVALID_ARG : NS_OK;
+  return nsnull;
 }
 
-NS_IMETHODIMP nsFrame::FirstChild(nsIPresContext* aPresContext,
-                                  nsIAtom*        aListName,
-                                  nsIFrame**      aFirstChild) const
+nsIFrame*
+nsFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  *aFirstChild = nsnull;
-  return nsnull == aListName ? NS_OK : NS_ERROR_INVALID_ARG;
+  return nsnull;
 }
 
 PRInt16
@@ -776,7 +772,7 @@ static void RefreshAllContentFrames(nsIPresContext* aPresContext, nsIFrame * aFr
     ForceDrawFrame(aPresContext, (nsFrame *)aFrame);
   }
 
-  aFrame->FirstChild(aPresContext, nsnull, &aFrame);
+  aFrame = aFrame->GetFirstChild(nsnull);
   while (aFrame) {
     RefreshAllContentFrames(aPresContext, aFrame, aContent);
     aFrame = aFrame->GetNextSibling();
@@ -1936,22 +1932,17 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
                                                 PRInt32&        aContentOffsetEnd,
                                                 PRBool&         aBeginFrameContent)
 {
-  nsresult result = NS_ERROR_FAILURE;
-
   if (!aNewContent)
     return NS_ERROR_NULL_POINTER;
 
   // Traverse through children and look for the best one to give this
   // to if it fails the getposition call, make it yourself also only
   // look at primary list
-  nsIFrame *kid          = nsnull;
   nsIFrame *closestFrame = nsnull;
-
   nsIView *view = GetClosestView();
+  nsIFrame *kid = GetFirstChild(nsnull);
 
-  result = FirstChild(aCX, nsnull, &kid);
-
-  if (NS_SUCCEEDED(result) && nsnull != kid) {
+  if (kid) {
 #define HUGE_DISTANCE 999999 //some HUGE number that will always fail first comparison
 
     PRInt32 closestXDistance = HUGE_DISTANCE;
@@ -2102,7 +2093,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
       aContentOffsetEnd = aContentOffset;
     }
   }
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2919,8 +2910,8 @@ nsFrame::DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32
   nsIAtom* list = nsnull;
   PRInt32 listIndex = 0;
   do {
-    nsresult rv = FirstChild(aPresContext, list, &kid);
-    if (NS_SUCCEEDED(rv) && (nsnull != kid)) {
+    kid = GetFirstChild(list);
+    if (kid) {
       IndentBy(out, aIndent);
       if (nsnull != list) {
         nsAutoString listName;
@@ -2946,8 +2937,7 @@ nsFrame::DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32
       IndentBy(out, aIndent);
       fprintf(out, "</child-list>\n");
     }
-    NS_IF_RELEASE(list);
-    GetAdditionalChildListName(listIndex++, &list);
+    list = GetAdditionalChildListName(listIndex++);
   } while (nsnull != list);
 }
 
@@ -2975,16 +2965,12 @@ nsFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange, PRBool a
   if (!selectable)
     return NS_OK;
 
-/*  nsresult rv;
-
+/*
   if (eSpreadDown == aSpread){
-    nsIFrame* kid;
-    rv = FirstChild(nsnull, &kid);
-    if (NS_SUCCEEDED(rv)) {
-      while (nsnull != kid) {
-        kid->SetSelected(nsnull,aSelected,aSpread);
-        kid = kid->GetNextSibling();
-      }
+    nsIFrame* kid = GetFirstChild(nsnull);
+    while (nsnull != kid) {
+      kid->SetSelected(nsnull,aSelected,aSpread);
+      kid = kid->GetNextSibling();
     }
   }
 */
@@ -3742,12 +3728,12 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
             PRBool searchTableBool = PR_FALSE;
             if (aPos->mResultFrame->GetType() == nsLayoutAtoms::tableOuterFrame)
             {
-              nsIFrame *frame = aPos->mResultFrame;
-              result = frame->FirstChild(aPresContext, nsnull,&frame);
+              nsIFrame *frame = aPos->mResultFrame->GetFirstChild(nsnull);
+              result = NS_OK;
               //got the table frame now
               while(frame) //ok time to drill down to find iterator
               {
-                result = frame->FirstChild(aPresContext, nsnull,&frame);
+                frame = frame->GetFirstChild(nsnull);
                 if (frame && NS_SUCCEEDED(result))
                 {
                   result = frame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),
@@ -4381,8 +4367,7 @@ GetNextSiblingAcrossLines(nsIPresContext *aPresContext, nsIFrame *aFrame)
   aFrame->GetParent()->GetNextInFlow(&parent);
   if (!parent)
     return nsnull;
-  parent->FirstChild(aPresContext, nsnull, &result);
-  return result;
+  return parent->GetFirstChild(nsnull);
 }
 
 /**
@@ -4413,7 +4398,7 @@ GetCorrectedParent(nsIPresContext* aPresContext, nsIFrame* aFrame,
         // Use the wrapped frame, which is after the |:before|.
         parent = GetNextSiblingAcrossLines(aPresContext, aFrame);
       } else if (pseudo == nsCSSPseudoElements::after) {
-        parent->GetFirstInFlow()->FirstChild(aPresContext, nsnull, &parent);
+        parent = parent->GetFirstInFlow()->GetFirstChild(nsnull);
         // Now we have either the wrapped frame or the :before, but we
         // want the wrapped frame.
         if (parent->GetStyleContext()->GetPseudoType() ==
@@ -4499,11 +4484,10 @@ nsFrame::GetLastLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame)
   if (!aFrame || !*aFrame)
     return;
   nsIFrame *child = *aFrame;
-  nsresult result;
   //if we are a block frame then go for the last line of 'this'
   while (1){
-    result = child->FirstChild(aPresContext, nsnull, &child);
-    if (NS_FAILED(result) || !child)
+    child = child->GetFirstChild(nsnull);
+    if (!child)
       return;//nothing to do
     while (child->GetNextSibling())
       child = child->GetNextSibling();
@@ -4518,10 +4502,9 @@ nsFrame::GetFirstLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame)
   if (!aFrame || !*aFrame)
     return;
   nsIFrame *child = *aFrame;
-  nsresult result;
   while (1){
-    result = child->FirstChild(aPresContext, nsnull, &child);
-    if (NS_FAILED(result) || !child)
+    child = child->GetFirstChild(nsnull);
+    if (!child)
       return;//nothing to do
     *aFrame = child;
   }
@@ -5323,7 +5306,7 @@ void DR_State::PrettyUC(nscoord aSize,
     strcpy(aBuf, "UC");
   }
   else {
-    if(0xdeadbeefU == aSize)
+    if ((nscoord)0xdeadbeefU == aSize)
     {
       strcpy(aBuf, "deadbeef");
     }

@@ -109,9 +109,7 @@ nsPopupBoxObject::HidePopup()
     return NS_OK;
 
   if (rootFrame) {
-    nsCOMPtr<nsIPresContext> presContext;
-    mPresShell->GetPresContext(getter_AddRefs(presContext));
-    rootFrame->FirstChild(presContext, nsnull, &rootFrame);   
+    rootFrame = rootFrame->GetFirstChild(nsnull);
   }
 
   nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
@@ -146,9 +144,7 @@ nsPopupBoxObject::ShowPopup(nsIDOMElement* aSrcContent,
     return NS_OK;
 
   if (rootFrame) {
-    nsCOMPtr<nsIPresContext> presContext;
-    mPresShell->GetPresContext(getter_AddRefs(presContext));
-    rootFrame->FirstChild(presContext, nsnull, &rootFrame);   
+    rootFrame = rootFrame->GetFirstChild(nsnull);
   }
 
   nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));

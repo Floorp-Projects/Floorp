@@ -519,8 +519,7 @@ nsTableCellFrame::SetSelected(nsIPresContext* aPresContext,
   //traverse through children unselect tables
 #if 0
   if ((aSpread == eSpreadDown)){
-    nsIFrame* kid;
-    FirstChild(nsnull, &kid);
+    nsIFrame* kid = GetFirstChild(nsnull);
     while (nsnull != kid) {
       kid->SetSelected(nsnull, aSelected, eSpreadDown);
       kid = kid->GetNextSibling();

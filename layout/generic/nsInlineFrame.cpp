@@ -685,9 +685,7 @@ void MarkPercentAwareFrame(nsIPresContext *aPresContext,
   }
   else
   {
-    nsIFrame *child;
-    aFrame->FirstChild(aPresContext, nsnull, &child);
-    if (child)
+    if (aFrame->GetFirstChild(nsnull))
     { // aFrame is an inline container frame, check my frame state
       if (aFrame->GetStateBits() & NS_INLINE_FRAME_CONTAINS_PERCENT_AWARE_CHILD) {
         SetContainsPercentAwareChild(aInline); // if a child container is effected, so am I
@@ -1189,30 +1187,25 @@ nsPositionedInlineFrame::ReplaceFrame(nsIPresContext* aPresContext,
   }
 }
 
-NS_IMETHODIMP
-nsPositionedInlineFrame::GetAdditionalChildListName(PRInt32   aIndex,
-                                                    nsIAtom** aListName) const
+nsIAtom*
+nsPositionedInlineFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
-  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
-  *aListName = nsnull;
   if (0 == aIndex) {
-    *aListName = mAbsoluteContainer.GetChildListName();
-    NS_ADDREF(*aListName);
+    return mAbsoluteContainer.GetChildListName();
   }
-  return NS_OK;
+  return nsnull;
 }
 
-NS_IMETHODIMP
-nsPositionedInlineFrame::FirstChild(nsIPresContext* aPresContext,
-                                    nsIAtom*        aListName,
-                                    nsIFrame**      aFirstChild) const
+nsIFrame*
+nsPositionedInlineFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
   if (mAbsoluteContainer.GetChildListName() == aListName) {
-    return mAbsoluteContainer.FirstChild(this, aListName, aFirstChild);
+    nsIFrame* result = nsnull;
+    mAbsoluteContainer.FirstChild(this, aListName, &result);
+    return result;
   }
 
-  return nsInlineFrame::FirstChild(aPresContext, aListName, aFirstChild);
+  return nsInlineFrame::GetFirstChild(aListName);
 }
 
 nsIAtom*

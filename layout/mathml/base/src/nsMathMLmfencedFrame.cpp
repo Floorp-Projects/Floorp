@@ -298,8 +298,7 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
   nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
   nsHTMLReflowMetrics childDesiredSize(aDesiredSize.mComputeMEW, 
                       aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
-  nsIFrame* firstChild;
-  aForFrame->FirstChild(aPresContext, nsnull, &firstChild);
+  nsIFrame* firstChild = aForFrame->GetFirstChild(nsnull);
   nsIFrame* childFrame = firstChild;
   if (firstChild || aOpenChar || aCloseChar || aSeparatorsCount > 0) {
     // We use the ASCII metrics to get our minimum height. This way, if we have

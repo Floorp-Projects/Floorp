@@ -1347,8 +1347,7 @@ PRBool nsCellMap::CellsSpanOut(nsIPresContext* aPresContext,
   PRInt32 numNewRows = aRows.Count();
   for (PRInt32 rowX = 0; rowX < numNewRows; rowX++) {
     nsIFrame* rowFrame = (nsIFrame *) aRows.ElementAt(rowX);
-    nsIFrame* cellFrame = nsnull;
-    rowFrame->FirstChild(aPresContext, nsnull, &cellFrame);
+    nsIFrame* cellFrame = rowFrame->GetFirstChild(nsnull);
     while (cellFrame) {
       if (IS_TABLE_CELL(cellFrame->GetType())) {
         PRBool zeroSpan;
@@ -1487,8 +1486,7 @@ nsCellMap::ExpandWithRows(nsIPresContext* aPresContext,
   for (PRInt32 rowX = startRowIndex; rowX <= endRowIndex; rowX++) {
     nsTableRowFrame* rFrame = (nsTableRowFrame *)aRowFrames.ElementAt(newRowIndex);
     // append cells 
-    nsIFrame* cFrame = nsnull;
-    rFrame->FirstChild(aPresContext, nsnull, &cFrame);
+    nsIFrame* cFrame = rFrame->GetFirstChild(nsnull);
     PRInt32 colIndex = 0;
     while (cFrame) {
       if (IS_TABLE_CELL(cFrame->GetType())) {
@@ -1896,8 +1894,7 @@ nsCellMap::RebuildConsideringRows(nsIPresContext* aPresContext,
     rowX = aStartRowIndex;
     for (PRInt32 newRowX = 0; newRowX < numNewRows; newRowX++) {
       nsTableRowFrame* rFrame = (nsTableRowFrame *)aRowsToInsert->ElementAt(newRowX);
-      nsIFrame* cFrame = nsnull;
-      rFrame->FirstChild(aPresContext, nsnull, &cFrame);
+      nsIFrame* cFrame = rFrame->GetFirstChild(nsnull);
       while (cFrame) {
         if (IS_TABLE_CELL(cFrame->GetType())) {
           AppendCell(aMap, (nsTableCellFrame *)cFrame, rowX, PR_FALSE, aDamageArea);

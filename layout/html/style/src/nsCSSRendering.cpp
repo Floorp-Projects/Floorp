@@ -2519,8 +2519,7 @@ GetRootScrollableFrame(nsIPresContext* aPresContext, nsIFrame* aRootFrame)
   nsIScrollableFrame* scrollableFrame = nsnull;
 
   if (nsLayoutAtoms::viewportFrame == aRootFrame->GetType()) {
-    nsIFrame* childFrame;
-    aRootFrame->FirstChild(aPresContext, nsnull, &childFrame);
+    nsIFrame* childFrame = aRootFrame->GetFirstChild(nsnull);
 
     if (childFrame) {
       if (nsLayoutAtoms::scrollFrame == childFrame->GetType()) {
@@ -2616,8 +2615,7 @@ IsCanvasFrame(nsIPresContext* aPresContext, nsIFrame *aFrame)
       frameType == nsLayoutAtoms::pageFrame) {
     return aFrame;
   } else if (frameType == nsLayoutAtoms::viewportFrame) {
-    nsIFrame* firstChild;
-    aFrame->FirstChild(aPresContext, nsnull, &firstChild);
+    nsIFrame* firstChild = aFrame->GetFirstChild(nsnull);
     if (firstChild) {
       return firstChild;
     }
@@ -2633,8 +2631,7 @@ FindCanvasBackground(nsIPresContext* aPresContext,
 {
   // XXXldb What if the root element is positioned, etc.?  (We don't
   // allow that yet, do we?)
-  nsIFrame *firstChild;
-  aForFrame->FirstChild(aPresContext, nsnull, &firstChild);
+  nsIFrame *firstChild = aForFrame->GetFirstChild(nsnull);
   if (firstChild) {
     const nsStyleBackground* result = firstChild->GetStyleBackground();
   
@@ -2655,7 +2652,7 @@ FindCanvasBackground(nsIPresContext* aPresContext,
             kidFrame = kidFrame->GetNextSibling(); 
           }
         }
-        firstChild->FirstChild(aPresContext, nsnull, &firstChild);
+        firstChild = firstChild->GetFirstChild(nsnull);
       }
       return PR_FALSE;    // nothing found for this
     }
@@ -2716,8 +2713,7 @@ FindElementBackground(nsIPresContext* aPresContext,
   // XXXldb We shouldn't have to null-check |parentFrame| here.
   if (parentFrame && IsCanvasFrame(aPresContext, parentFrame) == parentFrame) {
     // Check that we're really the root (rather than in another child list).
-    nsIFrame *childFrame;
-    parentFrame->FirstChild(aPresContext, nsnull, &childFrame);
+    nsIFrame *childFrame = parentFrame->GetFirstChild(nsnull);
     if (childFrame == aForFrame)
       return PR_FALSE; // Background was already drawn for the canvas.
   }
@@ -3141,8 +3137,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
       // If the frame is the canvas, the image is placed relative to
       // the root element's (first) frame (see bug 46446)
       nsRect firstRootElementFrameArea;
-      nsIFrame* firstRootElementFrame;
-      aForFrame->FirstChild(aPresContext, nsnull, &firstRootElementFrame);
+      nsIFrame* firstRootElementFrame = aForFrame->GetFirstChild(nsnull);
       NS_ASSERTION(firstRootElementFrame, "A canvas with a background "
         "image had no child frame, which is impossible according to CSS. "
         "Make sure there isn't a background image specified on the "

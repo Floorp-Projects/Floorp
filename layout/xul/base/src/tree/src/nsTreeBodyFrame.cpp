@@ -377,8 +377,7 @@ static nsIFrame* InitScrollbarFrame(nsIPresContext* aPresContext, nsIFrame* aCur
     return aCurrFrame;
   }
 
-  nsIFrame* child;
-  aCurrFrame->FirstChild(aPresContext, nsnull, &child);
+  nsIFrame* child = aCurrFrame->GetFirstChild(nsnull);
   while (child) {
     nsIFrame* result = InitScrollbarFrame(aPresContext, child, aSM);
     if (result)

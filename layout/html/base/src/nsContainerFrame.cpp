@@ -144,39 +144,28 @@ nsContainerFrame::Destroy(nsIPresContext* aPresContext)
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
 
-NS_IMETHODIMP
-nsContainerFrame::FirstChild(nsIPresContext* aPresContext,
-                             nsIAtom*        aListName,
-                             nsIFrame**      aFirstChild) const
+nsIFrame*
+nsContainerFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
   // We only know about the unnamed principal child list and the overflow
   // list
   if (nsnull == aListName) {
-    *aFirstChild = mFrames.FirstChild();
-    return NS_OK;
+    return mFrames.FirstChild();
   } else if (nsLayoutAtoms::overflowList == aListName) {
-    *aFirstChild = GetOverflowFrames(aPresContext, PR_FALSE);
-    return NS_OK;
+    return GetOverflowFrames(GetPresContext(), PR_FALSE);
   } else {
-    *aFirstChild = nsnull;
-    return NS_ERROR_INVALID_ARG;
+    return nsnull;
   }
 }
 
-NS_IMETHODIMP
-nsContainerFrame::GetAdditionalChildListName(PRInt32   aIndex,
-                                             nsIAtom** aListName) const
+nsIAtom*
+nsContainerFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
-  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
-  NS_ENSURE_TRUE(aIndex >= 0, NS_ERROR_INVALID_ARG);
   if (aIndex == 0) {
-    *aListName = nsLayoutAtoms::overflowList;
-    NS_ADDREF(*aListName);
+    return nsLayoutAtoms::overflowList;
   } else {
-    *aListName = nsnull;
+    return nsnull;
   }
-  return NS_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -315,7 +304,7 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
                                         PRBool         aConsiderSelf,
                                         nsIFrame**     aFrame)
 {
-  nsIFrame *kid, *hit;
+  nsIFrame *hit;
   nsPoint tmp;
 
   PRBool inThisFrame = mRect.Contains(aPoint);
@@ -324,7 +313,7 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
     return NS_ERROR_FAILURE;
   }
 
-  FirstChild(aPresContext, aList, &kid);
+  nsIFrame* kid = GetFirstChild(aList);
   *aFrame = nsnull;
   tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
 
@@ -366,12 +355,10 @@ nsContainerFrame::ReplaceFrame(nsIPresContext* aPresContext,
                                nsIFrame*       aNewFrame)
 {
   nsIFrame* prevFrame;
-  nsIFrame* firstChild;
   nsresult  rv;
 
   // Get the old frame's previous sibling frame
-  FirstChild(aPresContext, aListName, &firstChild);
-  nsFrameList frames(firstChild);
+  nsFrameList frames(GetFirstChild(aListName));
   NS_ASSERTION(frames.ContainsFrame(aOldFrame), "frame is not a valid child frame");
   prevFrame = frames.GetPrevSiblingFor(aOldFrame);
 
@@ -993,8 +980,7 @@ nsContainerFrame::PositionChildViews(nsIPresContext* aPresContext,
 
   do {
     // Recursively walk aFrame's child frames
-    nsIFrame* childFrame;
-    aFrame->FirstChild(aPresContext, childListName, &childFrame);
+    nsIFrame* childFrame = aFrame->GetFirstChild(childListName);
     while (childFrame) {
       // Position the frame's view (if it has one) and recursively
       // process its children
@@ -1005,9 +991,8 @@ nsContainerFrame::PositionChildViews(nsIPresContext* aPresContext,
       childFrame = childFrame->GetNextSibling();
     }
 
-    NS_IF_RELEASE(childListName);
-    aFrame->GetAdditionalChildListName(childListIndex++, &childListName);
-  } while (childListName); 
+    childListName = aFrame->GetAdditionalChildListName(childListIndex++);
+  } while (childListName);
 }
 
 /**
@@ -1304,8 +1289,7 @@ nsContainerFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
   PRInt32 listIndex = 0;
   PRBool outputOneList = PR_FALSE;
   do {
-    nsIFrame* kid;
-    FirstChild(aPresContext, listName, &kid);
+    nsIFrame* kid = GetFirstChild(listName);
     if (nsnull != kid) {
       if (outputOneList) {
         IndentBy(out, aIndent);
@@ -1331,8 +1315,7 @@ nsContainerFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
       IndentBy(out, aIndent);
       fputs(">\n", out);
     }
-    NS_IF_RELEASE(listName);
-    GetAdditionalChildListName(listIndex++, &listName);
+    listName = GetAdditionalChildListName(listIndex++);
   } while(nsnull != listName);
 
   if (!outputOneList) {

@@ -83,7 +83,7 @@ void nsTableColGroupFrame::ResetColIndices(nsIPresContext* aPresContext,
       }
       nsIFrame* colFrame = aStartColFrame; 
       if (!colFrame || (colIndex != aFirstColIndex)) {
-        colGroupFrame->FirstChild(aPresContext, nsnull, &colFrame);
+        colFrame = colGroupFrame->GetFirstChild(nsnull);
       }
       while (colFrame) {
         if (nsLayoutAtoms::tableColFrame == colFrame->GetType()) {
@@ -654,8 +654,8 @@ nsTableColGroupFrame::GetColGroupFrameContaining(nsIPresContext*  aPresContext,
   nsIFrame* childFrame = aColGroupList.FirstChild();
   while (childFrame) { 
     if (nsLayoutAtoms::tableColGroupFrame == childFrame->GetType()) {
-      nsTableColFrame* colFrame = nsnull;
-      childFrame->FirstChild(aPresContext, nsnull, (nsIFrame **)&colFrame);
+      nsTableColFrame* colFrame =
+        NS_STATIC_CAST(nsTableColFrame*, childFrame->GetFirstChild(nsnull));
       while (colFrame) {
         if (colFrame == &aColFrame) {
           return (nsTableColGroupFrame *)childFrame;

@@ -611,7 +611,8 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
     if (!childframe) {
       // The only way we can get right here is that there are no options
       // and we need to get the dummy frame so it has the focus ring
-      result = containerFrame->FirstChild(mPresContext, nsnull, &childframe);
+      childframe = containerFrame->GetFirstChild(nsnull);
+      result = NS_OK;
     }
   }
 
@@ -853,8 +854,7 @@ static nscoord
 GetMaxOptionHeight(nsIPresContext *aPresContext, nsIFrame *aContainer)
 {
   nscoord result = 0;
-  nsIFrame *option;
-  for (aContainer->FirstChild(aPresContext, nsnull, &option);
+  for (nsIFrame* option = aContainer->GetFirstChild(nsnull);
        option; option = option->GetNextSibling()) {
     nscoord optionHeight;
     if (nsCOMPtr<nsIDOMHTMLOptGroupElement>

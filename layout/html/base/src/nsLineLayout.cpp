@@ -98,9 +98,8 @@ static nscoord AccumulateImageSizes(nsIPresContext& aPresContext, nsIFrame& aFra
     sizes += aFrame.GetSize().width;
   } else {
     // see if there are children to process
-    nsIFrame* child = nsnull;
     // XXX: process alternate child lists?
-    aFrame.FirstChild(&aPresContext,nsnull,&child);
+    nsIFrame* child = aFrame.GetFirstChild(nsnull);
     while (child) {
       // recurse: note that we already know we are in a child frame, so no need to track further
       sizes += AccumulateImageSizes(aPresContext, *child);
@@ -1652,8 +1651,7 @@ PRBool IsPercentageAwareFrame(nsIPresContext *aPresContext, nsIFrame *aFrame)
   }
   else
   {
-    nsIFrame *child;
-    aFrame->FirstChild(aPresContext, nsnull, &child);
+    nsIFrame *child = aFrame->GetFirstChild(nsnull);
     if (child)
     { // aFrame is an inline container frame, check my frame state
       if (aFrame->GetStateBits() & NS_INLINE_FRAME_CONTAINS_PERCENT_AWARE_CHILD) {
@@ -3176,8 +3174,7 @@ nsLineLayout::FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame)
       if (! canContinue)
         return nsnull;
 
-      nsIFrame* child;
-      next->FirstChild(aPresContext, nsnull, &child);
+      nsIFrame* child = next->GetFirstChild(nsnull);
 
       if (! child)
         break;

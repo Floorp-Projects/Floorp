@@ -132,9 +132,7 @@ nsTreeColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
   if (left || right) {
     // We are a header. Look for the correct splitter.
-    nsIFrame* firstChild;
-    mParent->FirstChild(aPresContext, nsnull, &firstChild);
-    nsFrameList frames(firstChild);
+    nsFrameList frames(mParent->GetFirstChild(nsnull));
     nsIFrame* child;
     if (left)
       child = frames.GetPrevSiblingFor(this);

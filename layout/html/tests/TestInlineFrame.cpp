@@ -226,7 +226,7 @@ PRInt32 InlineFrame::MaxChildWidth()
   PRInt32 maxWidth = 0;
 
   nsIFrame* f;
-  for (FirstChild(f); nsnull != f; f->GetNextSibling(f)) {
+  for (f = GetFirstChild(); nsnull != f; f->GetNextSibling(f)) {
     if (f->GetWidth() > maxWidth) {
       maxWidth = f->GetWidth();
     }
@@ -239,7 +239,7 @@ PRInt32 InlineFrame::MaxChildHeight()
 {
   PRInt32 maxHeight = 0;
 
-  for (nsIFrame* f = FirstChild(); nsnull != f; f = f->GetNextSibling()) {
+  for (nsIFrame* f = GetFirstChild(); nsnull != f; f = f->GetNextSibling()) {
     if (f->GetHeight() > maxHeight) {
       maxHeight = f->GetHeight();
     }
