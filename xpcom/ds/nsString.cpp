@@ -1252,7 +1252,7 @@ PRInt32 nsCString::Find(const nsStr& aString,PRBool aIgnoreCase,PRInt32 anOffset
  *  @param   
  *  @return  offset of found char, or -1 (kNotFound)
  */
-PRInt32 nsCString::Find(PRUnichar aChar,PRUint32 anOffset,PRBool aIgnoreCase) const{
+PRInt32 nsCString::Find(PRUnichar aChar,PRInt32 anOffset,PRBool aIgnoreCase) const{
   PRInt32 result=nsStr::FindChar(*this,aChar,aIgnoreCase,anOffset);
   return result;
 }
@@ -1365,7 +1365,7 @@ PRInt32 nsCString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset
  *  @param   
  *  @return  offset of found char, or -1 (kNotFound)
  */
-PRInt32 nsCString::RFind(PRUnichar aChar,PRUint32 anOffset,PRBool aIgnoreCase) const{
+PRInt32 nsCString::RFind(PRUnichar aChar,PRInt32 anOffset,PRBool aIgnoreCase) const{
   PRInt32 result=nsStr::RFindChar(*this,aChar,aIgnoreCase,anOffset);
   return result;
 }

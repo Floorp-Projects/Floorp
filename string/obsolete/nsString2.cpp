@@ -27,7 +27,7 @@
 #ifndef RICKG_TESTBED
 #include "prdtoa.h"
 #include "nsISizeOfHandler.h"
-#endif
+#endif 
 
 
 static const char* kNullPointerError = "Error: unexpected null ptr";
@@ -1359,7 +1359,7 @@ PRInt32 nsString::Find(const nsString& aString,PRBool aIgnoreCase,PRInt32 anOffs
  *  @param   
  *  @return  offset of found char, or -1 (kNotFound)
  */
-PRInt32 nsString::Find(PRUnichar aChar,PRUint32 anOffset,PRBool aIgnoreCase) const{
+PRInt32 nsString::Find(PRUnichar aChar,PRInt32 anOffset,PRBool aIgnoreCase) const{
   PRInt32 result=nsStr::FindChar(*this,aChar,aIgnoreCase,anOffset);
   return result;
 }
@@ -1484,11 +1484,11 @@ PRInt32 nsString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset)
  *  @param   
  *  @return  offset of found char, or -1 (kNotFound)
  */
-PRInt32 nsString::RFind(PRUnichar aChar,PRUint32 anOffset,PRBool aIgnoreCase) const{
+PRInt32 nsString::RFind(PRUnichar aChar,PRInt32 anOffset,PRBool aIgnoreCase) const{
   PRInt32 result=nsStr::RFindChar(*this,aChar,aIgnoreCase,anOffset);
   return result;
 }
-
+ 
 /**
  *  Search for a given char, starting at given offset
  *  
