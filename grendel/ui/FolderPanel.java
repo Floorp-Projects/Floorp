@@ -173,6 +173,24 @@ public class FolderPanel extends GeneralPanel {
 
   public static final int     kAll = 2;
 
+  /**
+   * Forward Quoted
+   */
+
+  public static final int     kQuoted = 0;
+
+  /**
+   * Forward Inline
+   */
+
+  public static final int     kInline = 1;
+
+  /**
+   * Forward as Attachment
+   */
+
+  public static final int     kAttachment = 2;
+
   //
   // Actions that can be enabled/disabled
   //
@@ -182,6 +200,10 @@ public class FolderPanel extends GeneralPanel {
 
   ReplyAction fReplyAction = new ReplyAction("msgReply", false);
   ReplyAction fReplyAllAction = new ReplyAction("msgReplyAll", true);
+
+  ForwardAction fForwardQuoted = new ForwardAction("fwdQuoted", kQuoted);
+  ForwardAction fForwardInline = new ForwardAction("fwdInline", kInline);
+  ForwardAction fForwardAttachment = new ForwardAction("fwdAttachment", kAttachment);
 
   MarkAction fMarkMsgReadAction = new MarkAction("markMsgRead", kMessage);
   MarkAction fMarkThreadReadAction = new MarkAction("markThreadRead", kThread);
@@ -199,6 +221,9 @@ public class FolderPanel extends GeneralPanel {
                                     fThreadAction,
                                     fReplyAction,
                                     fReplyAllAction,
+                                    fForwardQuoted,
+                                    fForwardInline,
+                                    fForwardAttachment,
                                     fMarkMsgReadAction,
                                     fMarkThreadReadAction,
                                     fMarkAllReadAction
@@ -881,6 +906,33 @@ public class FolderPanel extends GeneralPanel {
       }
       Composition frame = new Composition();
       frame.initializeAsReply((Message) (selection.elementAt(0)), replyall);
+      frame.show();
+      frame.requestFocus();
+    }
+  }
+
+  //
+  // ForwardAction class
+  //
+
+  class ForwardAction extends UIAction {
+    int fScope;
+
+    ForwardAction(String aName, int aScope) {
+      super(aName);
+      fScope = aScope;
+
+      this.setEnabled(aScope == kQuoted);
+    }
+
+    public void actionPerformed(ActionEvent aEvent) {
+      Vector selection = getSelectedMessageVector();
+      if (selection.size() != 1) {
+        Assert.Assertion(false,
+                         "Need to have exactly one message selected to reply");
+      }
+      Composition frame = new Composition();
+      frame.initializeAsForward((Message) (selection.elementAt(0)));
       frame.show();
       frame.requestFocus();
     }

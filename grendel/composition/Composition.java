@@ -143,7 +143,7 @@ public class Composition extends GeneralFrame {
         super.stopAnimation();
     }
 
-    /** Initialize the headers of this composition as being a reply to
+    /** Initialize the headers and body of this composition as being a reply to
       the given message. */
     public void initializeAsReply(Message msg, boolean replyall) {
         mCompositionPanel.setReferredMessage(msg);
@@ -187,6 +187,22 @@ public class Composition extends GeneralFrame {
 
         try {
             mCompositionPanel.setSubject("Re: " + mextra.simplifiedSubject());
+        } catch (MessagingException e) {
+        }
+
+        // Quote the original text
+        mCompositionPanel.QuoteOriginalMessage();
+
+    }
+
+    /** Initialize the headers and body of this composition 
+        as being a message that is forwarded 'quoted'. */
+    public void initializeAsForward(Message msg) {
+        mCompositionPanel.setReferredMessage(msg);
+        MessageExtra mextra = MessageExtraFactory.Get(msg);
+
+        try {
+            mCompositionPanel.setSubject("[Fwd: " + mextra.simplifiedSubject() + "]");
         } catch (MessagingException e) {
         }
 
