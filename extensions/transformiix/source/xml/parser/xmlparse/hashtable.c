@@ -60,7 +60,7 @@ NAMED *lookup(HASH_TABLE *table, KEY name, size_t createSize)
   if (table->size == 0) {
     if (!createSize)
       return 0;
-    table->v = calloc(INIT_SIZE, sizeof(NAMED *));
+    table->v = (NAMED**)calloc(INIT_SIZE, sizeof(NAMED *));
     if (!table->v)
       return 0;
     table->size = INIT_SIZE;
@@ -80,7 +80,7 @@ NAMED *lookup(HASH_TABLE *table, KEY name, size_t createSize)
     if (table->used == table->usedLim) {
       /* check for overflow */
       size_t newSize = table->size * 2;
-      NAMED **newV = calloc(newSize, sizeof(NAMED *));
+      NAMED **newV = (NAMED**)calloc(newSize, sizeof(NAMED *));
       if (!newV)
 	return 0;
       for (i = 0; i < table->size; i++)
@@ -102,7 +102,7 @@ NAMED *lookup(HASH_TABLE *table, KEY name, size_t createSize)
 	;
     }
   }
-  table->v[i] = calloc(1, createSize);
+  table->v[i] = (NAMED*)calloc(1, createSize);
   if (!table->v[i])
     return 0;
   table->v[i]->name = name;
