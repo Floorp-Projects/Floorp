@@ -53,7 +53,7 @@
         
         [% IF user.login %]
           [% email = user.login FILTER url_quote %]
-          | <a href="request.cgi?requester=[% email %]&requestee=[% email %]&do_union=1&group=type">My Requests</a>
+          | <a href="request.cgi?requester=[% email %]&amp;requestee=[% email %]&amp;do_union=1&amp;group=type">My Requests</a>
         [% ELSE %]
           | <a href="request.cgi">Requests</a>
         [% END %]
