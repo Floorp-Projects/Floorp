@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.9 $ 
-# $Date: 2001/07/20 18:55:44 $ 
+# $Revision: 1.10 $ 
+# $Date: 2001/07/20 19:04:54 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -32,7 +32,7 @@
 
 # complete rewrite by Ken Estes:
 #	 kestes@staff.mail.com Old work.
-#	 kestes@tradinglinx.com New work.
+#	 kestes@reefedge.com New work.
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 

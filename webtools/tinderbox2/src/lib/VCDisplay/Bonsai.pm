@@ -4,9 +4,9 @@
 # installed bonsai and are using cvsblame cvsguess and cvsquery to let
 # your webserver render html pages of your CVS repository.
 
-# $Revision: 1.6 $ 
-# $Date: 2001/03/26 14:04:44 $ 
-# $Author: kestes%tradinglinx.com $ 
+# $Revision: 1.7 $ 
+# $Date: 2001/07/20 19:05:22 $ 
+# $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/Bonsai.pm,v $ 
 # $Name:  $ 
 
@@ -32,7 +32,7 @@
 
 # complete rewrite by Ken Estes:
 #	 kestes@staff.mail.com Old work.
-#	 kestes@tradinglinx.com New work.
+#	 kestes@reefedge.com New work.
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 

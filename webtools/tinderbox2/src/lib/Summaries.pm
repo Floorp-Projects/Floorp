@@ -8,9 +8,9 @@
 # The only external interface to this library is summary_pages() and
 # create_global_index() these functions are only called by tinder.cgi.
 
-# $Revision: 1.7 $ 
-# $Date: 2001/03/26 14:02:26 $ 
-# $Author: kestes%tradinglinx.com $ 
+# $Revision: 1.8 $ 
+# $Date: 2001/07/20 19:04:59 $ 
+# $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Summaries.pm,v $ 
 # $Name:  $ 
 
@@ -35,7 +35,7 @@
 
 # complete rewrite by Ken Estes:
 #	 kestes@staff.mail.com Old work.
-#	 kestes@tradinglinx.com New work.
+#	 kestes@reefedge.com New work.
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 

@@ -5,9 +5,9 @@
 # information into the top of the status page outside of the main
 # table. 
 
-# $Revision: 1.3 $ 
-# $Date: 2001/03/26 14:03:53 $ 
-# $Author: kestes%tradinglinx.com $ 
+# $Revision: 1.4 $ 
+# $Date: 2001/07/20 19:05:17 $ 
+# $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/Build.pm,v $ 
 # $Name:  $ 
 
@@ -33,7 +33,7 @@
 
 # complete rewrite by Ken Estes:
 #	 kestes@staff.mail.com Old work.
-#	 kestes@tradinglinx.com New work.
+#	 kestes@reefedge.com New work.
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 
@@ -53,7 +53,7 @@ use TinderDB::Build;
 
 @ISA = qw(TinderDB::Build);
 
-$VERSION = ( qw $Revision: 1.3 $ )[1];
+$VERSION = ( qw $Revision: 1.4 $ )[1];
 
 $TinderHeader::NAMES2OBJS{ 'Build' } = 
   TinderHeader::Build->new();

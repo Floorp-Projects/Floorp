@@ -12,9 +12,9 @@
 
 
 
-# $Revision: 1.6 $ 
-# $Date: 2001/03/26 14:02:19 $ 
-# $Author: kestes%tradinglinx.com $ 
+# $Revision: 1.7 $ 
+# $Date: 2001/07/20 19:04:59 $ 
+# $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Persistence.pm,v $ 
 # $Name:  $ 
 
@@ -39,7 +39,7 @@
 
 # complete rewrite by Ken Estes:
 #	 kestes@staff.mail.com Old work.
-#	 kestes@tradinglinx.com New work.
+#	 kestes@reefedge.com New work.
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 

@@ -8,9 +8,9 @@
 #	 TreeState, Build, IgnoreBuilds, MOTD, Images, 
 
 
-# $Revision: 1.6 $ 
-# $Date: 2001/03/26 14:02:43 $ 
-# $Author: kestes%tradinglinx.com $ 
+# $Revision: 1.7 $ 
+# $Date: 2001/07/20 19:05:00 $ 
+# $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader.pm,v $ 
 # $Name:  $ 
 
@@ -35,7 +35,7 @@
 
 # complete rewrite by Ken Estes:
 #	 kestes@staff.mail.com Old work.
-#	 kestes@tradinglinx.com New work.
+#	 kestes@reefedge.com New work.
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 

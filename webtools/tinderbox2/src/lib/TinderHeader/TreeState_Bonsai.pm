@@ -6,8 +6,8 @@
 # the current tree state using the bonsai conventions when we have
 # implemented it.  
 
-# $Revision: 1.4 $ 
-# $Date: 2001/07/20 18:56:39 $ 
+# $Revision: 1.5 $ 
+# $Date: 2001/07/20 19:05:19 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/TreeState_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -32,7 +32,7 @@
 
 # complete rewrite by Ken Estes:
 #	 kestes@staff.mail.com Old work.
-#	 kestes@tradinglinx.com New work.
+#	 kestes@reefedge.com New work.
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 
@@ -50,7 +50,7 @@ use BonsaiData;
 
 
 
-$VERSION = ( qw $Revision: 1.4 $ )[1];
+$VERSION = ( qw $Revision: 1.5 $ )[1];
 
 # load the simple name of this module into TinderHeader so we can
 # track the implementations provided.

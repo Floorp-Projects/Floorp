@@ -6,9 +6,9 @@
 # as a Dump of the $DATABASE reference.
 
 
-# $Revision: 1.5 $ 
-# $Date: 2001/03/26 14:05:31 $ 
-# $Author: kestes%tradinglinx.com $ 
+# $Revision: 1.6 $ 
+# $Date: 2001/07/20 19:05:11 $ 
+# $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BasicTxtDB.pm,v $ 
 # $Name:  $ 
 
@@ -34,7 +34,7 @@
 
 # complete rewrite by Ken Estes:
 #	 kestes@staff.mail.com Old work.
-#	 kestes@tradinglinx.com New work.
+#	 kestes@reefedge.com New work.
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 
@@ -50,7 +50,7 @@ use FileStructure;
 use Persistence;
 
 
-$VERSION = ( qw $Revision: 1.5 $ )[1];
+$VERSION = ( qw $Revision: 1.6 $ )[1];
 
 
 # To help preserve the database in the event of a serious system

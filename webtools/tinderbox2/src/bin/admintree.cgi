@@ -7,9 +7,9 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.14 $ 
-# $Date: 2001/03/30 15:37:23 $ 
-# $Author: kestes%tradinglinx.com $ 
+# $Revision: 1.15 $ 
+# $Date: 2001/07/20 19:04:47 $ 
+# $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
 
@@ -33,7 +33,7 @@
 
 # complete rewrite by Ken Estes:
 #	 kestes@staff.mail.com Old work.
-#	 kestes@tradinglinx.com New work.
+#	 kestes@reefedge.com New work.
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 

@@ -6,9 +6,9 @@
 # cvsquery an we may need to generalize the interfaces in the future
 # to accomidate more VC systems.
 
-# $Revision: 1.4 $ 
-# $Date: 2001/03/26 14:04:56 $ 
-# $Author: kestes%tradinglinx.com $ 
+# $Revision: 1.5 $ 
+# $Date: 2001/07/20 19:05:22 $ 
+# $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/None.pm,v $ 
 # $Name:  $ 
 
@@ -34,7 +34,7 @@
 
 # complete rewrite by Ken Estes:
 #	 kestes@staff.mail.com Old work.
-#	 kestes@tradinglinx.com New work.
+#	 kestes@reefedge.com New work.
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 

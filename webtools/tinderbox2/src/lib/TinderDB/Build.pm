@@ -7,9 +7,9 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.20 $ 
-# $Date: 2001/03/30 19:54:50 $ 
-# $Author: kestes%tradinglinx.com $ 
+# $Revision: 1.21 $ 
+# $Date: 2001/07/20 19:05:11 $ 
+# $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
 
@@ -34,7 +34,7 @@
 
 # complete rewrite by Ken Estes:
 #	 kestes@staff.mail.com Old work.
-#	 kestes@tradinglinx.com New work.
+#	 kestes@reefedge.com New work.
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 
