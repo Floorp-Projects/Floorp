@@ -67,7 +67,7 @@ typedef bool (DeletePublic)(JS2Metadata *meta, js2val base, JS2Class *limit, con
 typedef bool (BracketRead)(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval);
 typedef bool (BracketWrite)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue);
 typedef bool (BracketDelete)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, bool *result);
-typedef js2val (ImplicitCoerce)(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
+typedef js2val (ImplicitCoerce)(JS2Metadata *meta, js2val newValue, JS2Class *toClass);
 typedef js2val (Is)(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
 
 bool defaultReadProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
@@ -141,6 +141,7 @@ enum ObjectKind {
     AlienInstanceKind,
     ForIteratorKind,
     WithFrameKind,
+    LimitedInstanceKind,
 
     EnvironmentKind,         // Not an available JS2 runtime kind
     MetaDataKind
@@ -833,6 +834,18 @@ public:
 
     virtual void markChildren();
     virtual ~SimpleInstance();
+};
+
+// A LimitedInstance represents an intermediate result of a 'super' or 'super(expr)' subexpression
+class LimitedInstance : public JS2Object {
+public:
+    LimitedInstance(JS2Object *instance, JS2Class *limit) : JS2Object(LimitedInstanceKind), instance(instance), limit(limit) { }
+
+    JS2Object   *instance;          // The value of 'expr' to whoch the super subexpression was applied; if 'expr'
+                                    // wasn't given, defaults to the value of 'this'. The value of instance is
+                                    // always an instance of one of the limit class's descendants.
+    JS2Class    *limit;             // The immediate superclass of the class inside which the 'super' subexpression
+                                    // was applied.
 };
 
 // Date instances are simple instances created by the Date class, they have an extra field 

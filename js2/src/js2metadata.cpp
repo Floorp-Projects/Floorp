@@ -1692,6 +1692,16 @@ namespace MetaData {
                     reportError(Exception::syntaxError, "No 'this' available", p->pos);
             }
             break;
+        case ExprNode::superExpr:
+            {
+                js2val a;
+                JS2Class *c = env->getEnclosingClass();
+                if ((c == NULL) || !env->findThis(this, false, &a))
+                    reportError(Exception::syntaxError, "No 'super' available", p->pos);
+                if (c->super == NULL)
+                    reportError(Exception::definitionError, "No 'super' for this class", p->pos);
+            }
+            break;
         case ExprNode::objectLiteral:
             break;
         case ExprNode::index:
@@ -2111,6 +2121,11 @@ doUnary:
         case ExprNode::This:
             {
                 bCon->emitOp(eThis, p->pos);
+            }
+            break;
+        case ExprNode::superExpr:
+            {
+                bCon->emitOp(eSuper, p->pos);
             }
             break;
         case ExprNode::Null:

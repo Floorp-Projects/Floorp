@@ -512,6 +512,7 @@ namespace MetaData {
         { eInt64,  "Int64", 0 },
         { eString,  "String", STR_PTR },            // <string pointer:u32>
         { eThis,  "This", 0 },
+        { eSuper,  "Super", 0 },
         { eNewObject,  "NewObject", U16 },         // <argCount:u16>
         { eNewArray,  "NewArray", U16 },          // <argCount:u16>
 
@@ -784,6 +785,7 @@ namespace MetaData {
         case eInt64:
         case eNull:
         case eThis:
+        case eSuper:
         case eRegExp:
         case eFunction:
         case eUndefined:

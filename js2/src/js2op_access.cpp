@@ -39,9 +39,17 @@
             pc += sizeof(short);
             b = pop();
             
-            JS2Class *limit = meta->objectType(b);
-            if (!limit->read(meta, &b, limit, mn, &lookup, RunPhase, &a))
-                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
+            if (JS2VAL_IS_OBJECT(b) && (JS2VAL_TO_OBJECT(b)->kind == LimitedInstanceKind)) {
+                LimitedInstance *li = checked_cast<LimitedInstance *>(JS2VAL_TO_OBJECT(b));
+                b = OBJECT_TO_JS2VAL(li->instance);
+                if (!li->limit->read(meta, &b, li->limit, mn, &lookup, RunPhase, &a))
+                    meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
+            }
+            else {
+                JS2Class *limit = meta->objectType(b);
+                if (!limit->read(meta, &b, limit, mn, &lookup, RunPhase, &a))
+                    meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
+            }
             push(a);
         }
         break;
@@ -70,10 +78,20 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             b = pop();
-            JS2Class *limit = meta->objectType(b);
-            if (!limit->write(meta, b, limit, mn, &lookup, true, a, false)) {
-                if (!meta->cxt.E3compatibility)
-                    meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
+            if (JS2VAL_IS_OBJECT(b) && (JS2VAL_TO_OBJECT(b)->kind == LimitedInstanceKind)) {
+                LimitedInstance *li = checked_cast<LimitedInstance *>(JS2VAL_TO_OBJECT(b));
+                b = OBJECT_TO_JS2VAL(li->instance);
+                if (!li->limit->write(meta, b, li->limit, mn, &lookup, true, a, false)) {
+                    if (!meta->cxt.E3compatibility)
+                        meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
+                }
+            }
+            else {
+                JS2Class *limit = meta->objectType(b);
+                if (!limit->write(meta, b, limit, mn, &lookup, true, a, false)) {
+                    if (!meta->cxt.E3compatibility)
+                        meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
+                }
             }
             push(a);
         }
