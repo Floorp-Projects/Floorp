@@ -195,6 +195,28 @@
 
   </chrome> 
 
+  <chrome about="chrome://profile/">
+  
+    <content> 
+      <RDF:Description about="chrome://profile/content/">
+	    <base>resource:/chrome/profile/content/default/</base>
+      </RDF:Description> 
+    </content> 
+  
+    <skin> 
+      <RDF:Description about="chrome://profile/skin/">
+	    <base>resource:/chrome/profile/skin/default/</base>
+      </RDF:Description> 
+    </skin> 
+
+    <locale> 
+      <RDF:Description about="chrome://profile/locale/">
+        <name>en-US</name>
+      </RDF:Description> 
+    </locale> 
+
+  </chrome>
+
   <chrome about="chrome://wallet/"> 
 
     <skin> 
@@ -358,5 +380,4 @@
    </chrome> 
 
 </RDF:RDF> 
-
 

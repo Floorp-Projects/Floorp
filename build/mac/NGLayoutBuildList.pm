@@ -1196,11 +1196,13 @@ sub MakeResourceAliases()
 	my($xpinstall_ch_dir) = "$chrome_dir" . "xpinstall";
 	_InstallResources(":mozilla:xpinstall:res:locale:en-US:MANIFEST",					"$xpinstall_ch_dir:locale:en-US:", 0);
 	
-	my($profile_dir) = "$resource_dir" . "profile:";
 	my($profile_chrome_dir) = "$chrome_dir" . "Profile";
-	_InstallResources(":mozilla:profile:resources:MANIFEST",							"$profile_dir");
-	_InstallResources(":mozilla:profile:pref-migrator:resources:MANIFEST",							"$profile_dir");
+	_InstallResources(":mozilla:profile:resources:content:MANIFEST",							"$profile_chrome_dir:content:default", 0);
+	_InstallResources(":mozilla:profile:resources:skin:MANIFEST",							"$profile_chrome_dir:skin:default", 0);
 	_InstallResources(":mozilla:profile:resources:locale:en-US:MANIFEST",				"$profile_chrome_dir:locale:en-US:", 0);
+
+	my($profile_dir) = "$resource_dir" . "profile:";
+	_InstallResources(":mozilla:profile:pref-migrator:resources:MANIFEST",							"$profile_dir");
 
 	# need to duplicate this line if more files in default profile folder
 	my($defaults_dir) = "$dist_dir" . "Defaults:";
