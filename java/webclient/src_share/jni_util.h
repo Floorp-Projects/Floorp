@@ -39,8 +39,116 @@
 #include <jni.h>
 
 //
-// Local classes
+// String constants, defined in jni_util.cpp
+//
+
+extern jobject SCREEN_X_KEY;
+extern jobject SCREEN_Y_KEY;
+extern jobject CLIENT_X_KEY;
+extern jobject CLIENT_Y_KEY;
+extern jobject ALT_KEY;
+extern jobject CTRL_KEY;
+extern jobject SHIFT_KEY;
+extern jobject META_KEY;
+extern jobject BUTTON_KEY;
+extern jobject CLICK_COUNT_KEY;
+extern jobject TRUE_VALUE;
+extern jobject FALSE_VALUE;
+extern jobject ONE_VALUE;
+extern jobject TWO_VALUE;
+
+/**
+
+ * How to create a new listener type on the native side: <P>
+
+ * 1. add an entry in the gSupportedListenerInterfaces array defined in
+ * ns_util.cpp or ie_util.cpp <P>
+
+ * 2. add a corresponding entry in the LISTENER_CLASSES enum in
+ * jni_util.h <P>
+
+ * 3. add a jstring to the string constant list in
+ * jni_util.cpp, below.
+
+ * 4. Initialize this jstring constant in jni_util.cpp
+ * util_InitStringConstants() <P>
+
+ * 5. add an entry to the switch statement in NativeEventThread.cpp
+ * native{add,remove}Listener <P>
+
+ */
+
+/**
+
+ * We need one of these for each of the classes in
+ * gSupportedListenerInterfaces, defined in ns_util.cpp
+
+ */
+extern jstring DOCUMENT_LOAD_LISTENER_CLASSNAME;
+extern jstring MOUSE_LISTENER_CLASSNAME;
+
+
 // 
+// Listener support
+//
+
+// these index into the gSupportedListenerInterfaces array
+
+typedef enum {
+    DOCUMENT_LOAD_LISTENER = 0,
+    MOUSE_LISTENER,
+    LISTENER_NOT_FOUND
+} LISTENER_CLASSES;
+
+// listener names and values, tightly correspond to java listener interfaces
+
+#define DOCUMENT_LOAD_LISTENER_CLASSNAME_VALUE "org.mozilla.webclient.DocumentLoadListener"
+#define MOUSE_LISTENER_CLASSNAME_VALUE "java.awt.event.MouseListener"
+
+
+#define START_DOCUMENT_LOAD_EVENT_MASK_VALUE "START_DOCUMENT_LOAD_EVENT_MASK"
+#define END_DOCUMENT_LOAD_EVENT_MASK_VALUE "END_DOCUMENT_LOAD_EVENT_MASK"
+#define START_URL_LOAD_EVENT_MASK_VALUE "START_URL_LOAD_EVENT_MASK"
+#define END_URL_LOAD_EVENT_MASK_VALUE "END_URL_LOAD_EVENT_MASK"
+#define PROGRESS_URL_LOAD_EVENT_MASK_VALUE "PROGRESS_URL_LOAD_EVENT_MASK"
+#define STATUS_URL_LOAD_EVENT_MASK_VALUE "STATUS_URL_LOAD_EVENT_MASK"
+#define UNKNOWN_CONTENT_EVENT_MASK_VALUE "UNKNOWN_CONTENT_EVENT_MASK"
+#define FETCH_INTERRUPT_EVENT_MASK_VALUE "FETCH_INTERRUPT_EVENT_MASK"
+
+#define MOUSE_DOWN_EVENT_MASK_VALUE "MOUSE_DOWN_EVENT_MASK"
+#define MOUSE_UP_EVENT_MASK_VALUE "MOUSE_UP_EVENT_MASK"
+#define MOUSE_CLICK_EVENT_MASK_VALUE "MOUSE_CLICK_EVENT_MASK"
+#define MOUSE_DOUBLE_CLICK_EVENT_MASK_VALUE "MOUSE_DOUBLE_CLICK_EVENT_MASK"
+#define MOUSE_OVER_EVENT_MASK_VALUE "MOUSE_OVER_EVENT_MASK"
+#define MOUSE_OUT_EVENT_MASK_VALUE "MOUSE_OUT_EVENT_MASK"
+
+typedef enum {
+  START_DOCUMENT_LOAD_EVENT_MASK = 0,
+  END_DOCUMENT_LOAD_EVENT_MASK,
+  START_URL_LOAD_EVENT_MASK,
+  END_URL_LOAD_EVENT_MASK,
+  PROGRESS_URL_LOAD_EVENT_MASK,
+  STATUS_URL_LOAD_EVENT_MASK,
+  UNKNOWN_CONTENT_EVENT_MASK,
+  FETCH_INTERRUPT_EVENT_MASK,
+  NUMBER_OF_DOCUMENT_LOADER_MASK_NAMES
+} DOCUMENT_LOADER_EVENT_MASK_NAMES;
+
+typedef enum {
+  MOUSE_DOWN_EVENT_MASK = 0,
+  MOUSE_UP_EVENT_MASK,
+  MOUSE_CLICK_EVENT_MASK,
+  MOUSE_DOUBLE_CLICK_EVENT_MASK,
+  MOUSE_OVER_EVENT_MASK,
+  MOUSE_OUT_EVENT_MASK,
+  NUMBER_OF_DOM_MOUSE_LISTENER_MASK_NAMES
+} DOM_MOUSE_LISTENER_EVENT_MASK_NAMES;
+
+extern jlong DocumentLoader_maskValues [NUMBER_OF_DOCUMENT_LOADER_MASK_NAMES];
+extern char *DocumentLoader_maskNames [NUMBER_OF_DOCUMENT_LOADER_MASK_NAMES + 1];
+
+extern jlong DOMMouseListener_maskValues [NUMBER_OF_DOM_MOUSE_LISTENER_MASK_NAMES];
+extern char *DOMMouseListener_maskNames [NUMBER_OF_DOM_MOUSE_LISTENER_MASK_NAMES + 1];
 
 /**
 
@@ -62,6 +170,15 @@ extern JavaVM *gVm; // defined in jni_util.cpp
 
 void    util_InitializeShareInitContext(void *initContext);
 void    util_DeallocateShareInitContext(void *initContext);
+
+/**
+
+ * Initialize the above extern jobject string constants as jstrings
+
+ */ 
+
+jboolean util_InitStringConstants(JNIEnv *env);
+jboolean util_StringConstantsAreInitialized();
 
 void    util_ThrowExceptionToJava (JNIEnv * env, const char * message);
 

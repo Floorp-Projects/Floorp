@@ -41,6 +41,55 @@ static jmethodID gPropertiesInitMethodID = nsnull;
 static jmethodID gPropertiesSetPropertyMethodID = nsnull;
 static jmethodID gPropertiesClearMethodID = nsnull;
 
+
+//
+// Listener data
+//
+
+jboolean STRING_CONSTANTS_INITED = JNI_FALSE;
+
+jobject SCREEN_X_KEY;
+jobject SCREEN_Y_KEY;
+jobject CLIENT_X_KEY;
+jobject CLIENT_Y_KEY;
+jobject ALT_KEY;
+jobject CTRL_KEY;
+jobject SHIFT_KEY;
+jobject META_KEY;
+jobject BUTTON_KEY;
+jobject CLICK_COUNT_KEY;
+jobject TRUE_VALUE;
+jobject FALSE_VALUE;
+jobject ONE_VALUE;
+jobject TWO_VALUE;
+
+jstring DOCUMENT_LOAD_LISTENER_CLASSNAME;
+jstring MOUSE_LISTENER_CLASSNAME;
+
+jlong DocumentLoader_maskValues[] = { -1L };
+char * DocumentLoader_maskNames[] = {
+  START_DOCUMENT_LOAD_EVENT_MASK_VALUE,
+  END_DOCUMENT_LOAD_EVENT_MASK_VALUE,
+  START_URL_LOAD_EVENT_MASK_VALUE,
+  END_URL_LOAD_EVENT_MASK_VALUE,
+  PROGRESS_URL_LOAD_EVENT_MASK_VALUE,
+  STATUS_URL_LOAD_EVENT_MASK_VALUE,
+  UNKNOWN_CONTENT_EVENT_MASK_VALUE,
+  FETCH_INTERRUPT_EVENT_MASK_VALUE,
+  nsnull
+};
+
+jlong DOMMouseListener_maskValues[] = { -1L };
+char *DOMMouseListener_maskNames[] = {
+    MOUSE_DOWN_EVENT_MASK_VALUE,
+    MOUSE_UP_EVENT_MASK_VALUE,
+    MOUSE_CLICK_EVENT_MASK_VALUE,
+    MOUSE_DOUBLE_CLICK_EVENT_MASK_VALUE,
+    MOUSE_OVER_EVENT_MASK_VALUE,
+    MOUSE_OUT_EVENT_MASK_VALUE,
+    nsnull
+};
+
 void    util_InitializeShareInitContext(void *yourInitContext)
 {
     ShareInitContext *initContext = (ShareInitContext *) yourInitContext;
@@ -50,6 +99,104 @@ void    util_InitializeShareInitContext(void *yourInitContext)
 void    util_DeallocateShareInitContext(void *yourInitContext)
 {
     // right now there is nothing to deallocate
+}
+
+jboolean util_InitStringConstants(JNIEnv *env)
+{
+	if (nsnull == gVm) { // declared in jni_util.h
+        ::util_GetJavaVM(env, &gVm);  // save this vm reference away for the callback!
+    }
+    
+    if (nsnull == (SCREEN_X_KEY = 
+                   ::util_NewGlobalRef(env, (jobject) 
+                                       ::util_NewStringUTF(env, "ScreenX")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (SCREEN_Y_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "ScreenY")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (CLIENT_X_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "ClientX")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (CLIENT_Y_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "ClientY")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (ALT_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "Alt")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (CTRL_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "Ctrl")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (SHIFT_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "Shift")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (META_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "Meta")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (BUTTON_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "Button")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (CLICK_COUNT_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           "ClickCount")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (TRUE_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "true")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (FALSE_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "false")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (ONE_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "1")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (TWO_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "2")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (DOCUMENT_LOAD_LISTENER_CLASSNAME = (jstring)
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           DOCUMENT_LOAD_LISTENER_CLASSNAME_VALUE)))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (MOUSE_LISTENER_CLASSNAME = (jstring)
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           MOUSE_LISTENER_CLASSNAME_VALUE)))) {
+        return JNI_FALSE;
+    }
+
+    return STRING_CONSTANTS_INITED = JNI_TRUE;
+}
+
+jboolean util_StringConstantsAreInitialized()
+{
+    return STRING_CONSTANTS_INITED;
 }
 
 void util_ThrowExceptionToJava (JNIEnv * env, const char * message)
