@@ -3,21 +3,21 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  */
- 
+
 var msgCompDeliverMode = Components.interfaces.nsIMsgCompDeliverMode;
 var msgCompSendFormat = Components.interfaces.nsIMsgCompSendFormat;
 var msgCompConvertible = Components.interfaces.nsIMsgCompConvertible;
@@ -116,7 +116,7 @@ var defaultController =
 //      case "cmd_printSetup":
       case "cmd_print":
       case "cmd_quit":
-      
+
       //Edit Menu
       case "cmd_pasteQuote":
       case "cmd_find":
@@ -124,7 +124,7 @@ var defaultController =
       case "cmd_replace":
       case "cmd_account":
       case "cmd_preferences":
-      
+
       //View Menu
       case "cmd_showComposeToolbar":
       case "cmd_showFormatToolbar":
@@ -203,12 +203,12 @@ var defaultController =
         return false;
     }
   },
-  
+
   isCommandEnabled: function(command)
   {
     //For some reason, when editor has the focus, focusedElement is null!.
     var focusedElement = top.document.commandDispatcher.focusedElement;
-    
+
     var composeHTML = msgCompose && msgCompose.composeHTML;
 
     switch (command)
@@ -261,7 +261,7 @@ var defaultController =
       case "cmd_insertBreak":
       case "cmd_insertBreakAll":
         return /*!focusedElement*/false;
-    
+
       //Options Menu
       case "cmd_selectAddress":
         return !windowLocked;
@@ -273,7 +273,7 @@ var defaultController =
 //        return mailSession && mailSession.topmostMsgWindow;
       case "cmd_rewrap":
         return !composeHTML && !focusedElement;
-      
+
       //Format Menu
       case "cmd_format":
         return !focusedElement;
@@ -329,7 +329,7 @@ var defaultController =
         return false;
     }
   },
-  
+
   doCommand: function(command)
   {
     switch (command)
@@ -355,7 +355,7 @@ var defaultController =
       case "cmd_sendLater"          : if (defaultController.isCommandEnabled(command)) SendMessageLater();     break;
 //      case "cmd_printSetup"         : dump("PRINT SETUP\n");                                                   break;
       case "cmd_print"              : DoCommandPrint();                                                        break;
-      
+
       //Edit Menu
       case "cmd_account"            : MsgAccountManager();    break;
       case "cmd_preferences"        : DoCommandPreferences(); break;
@@ -369,12 +369,12 @@ var defaultController =
 //      case "cmd_quoteMessage"       : if (defaultController.isCommandEnabled(command)) QuoteSelectedMessage();  break;
       case "cmd_rewrap"             : editorShell.Rewrap(false);                                                break;
 
-      default: 
+      default:
 //        dump("##MsgCompose: don't know what to do with command " + command + "!\n");
         return;
     }
   },
-  
+
   onEvent: function(event)
   {
 //    dump("DefaultController:onEvent\n");
@@ -391,7 +391,7 @@ function CommandUpdate_MsgCompose()
 {
 //  dump("\nCommandUpdate_MsgCompose\n");
   try {
-  
+
   //File Menu
   goUpdateCommand("cmd_attachFile");
   goUpdateCommand("cmd_attachPage");
@@ -418,7 +418,7 @@ function CommandUpdate_MsgCompose()
   //View Menu
   goUpdateCommand("cmd_showComposeToolbar");
   goUpdateCommand("cmd_showFormatToolbar");
-  
+
   //Insert Menu
   if (msgCompose && msgCompose.composeHTML)
   {
@@ -432,7 +432,7 @@ function CommandUpdate_MsgCompose()
     goUpdateCommand("cmd_insertChars");
     goUpdateCommand("cmd_insertBreak");
     goUpdateCommand("cmd_insertBreakAll");
-  
+
     //Format Menu
     goUpdateCommand("cmd_format");
     goUpdateCommand("cmd_decreaseFont");
@@ -489,7 +489,7 @@ function CommandUpdate_MsgCompose()
   goUpdateCommand("cmd_outputFormat");
 //  goUpdateCommand("cmd_quoteMessage");
   goUpdateCommand("cmd_rewrap");
-  
+
   } catch(e) {}
 }
 
@@ -501,15 +501,15 @@ function UpdateOfflineState()
 
     if (ioService && ioService.offline)
     {
-      sendButton.value = sendButton.getAttribute('later_value');
+      sendButton.label = sendButton.getAttribute('later_value');
       sendButton.setAttribute('tooltiptext', sendButton.getAttribute('later_tooltiptext'));
     }
     else
     {
-      sendButton.value = sendButton.getAttribute('now_value');
+      sendButton.label = sendButton.getAttribute('now_value');
       sendButton.setAttribute('tooltiptext', sendButton.getAttribute('now_tooltiptext'));
     }
-      
+
      goUpdateCommand('cmd_sendNow');
   } catch(e) {}
 }
@@ -548,7 +548,7 @@ function ToggleWindowLock()
 function GetArgs(originalData)
 {
 	var args = new Object();
-	
+
 	if (originalData == "")
 	  return null;
 
@@ -583,12 +583,12 @@ function GetArgs(originalData)
 			if (quoteChar == "")
 				data += separator;
 			else
-				data += aChar 
+				data += aChar
 		}
 		else
-			data += aChar 
+			data += aChar
 	}
-	
+
 	var pairs = data.split(separator);
 //	dump("Compose: argument: {" + data + "}\n");
 
@@ -637,7 +637,7 @@ function ComposeStartup()
 
   var params = null; // New way to pass parameters to the compose window as a nsIMsgComposeParameters object
   var args = null;   // old way, parameters are passed as a string
-  
+
   if (window.arguments && window.arguments[0])
   {
     try {
@@ -647,7 +647,7 @@ function ComposeStartup()
     if (params == null)
 	    args = GetArgs(window.arguments[0]);
   }
-    
+
   //dump("fill in Identity menulist\n");
   var identityList = document.getElementById("msgIdentity");
   var identityListPopup = document.getElementById("msgIdentityPopup");
@@ -662,7 +662,7 @@ function ComposeStartup()
 
     params = Components.classes["@mozilla.org/messengercompose/composeparams;1"].createInstance(Components.interfaces.nsIMsgComposeParams);
     params.composeFields = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
-    
+
     if (args) //Convert old fashion arguments into params
     {
       var composeFields = params.composeFields;
@@ -694,7 +694,7 @@ function ComposeStartup()
          composeFields.body = args.body;
     }
   }
-  
+
   if (params.identity == null) {
     // no pre selected identity, so use the default account
     var identities = accountManager.defaultAccount.identities;
@@ -704,7 +704,7 @@ function ComposeStartup()
     {
       identities = GetIdentities();
       params.identity = identities[0];
-    }	  
+    }
   }
 
   for (i = 0; i < identityListPopup.childNodes.length;i++) {
@@ -716,7 +716,7 @@ function ComposeStartup()
     }
   }
   LoadIdentity(true);
-  
+
 	if (msgComposeService)
 	{
 		msgCompose = msgComposeService.InitCompose(window, params);
@@ -735,7 +735,7 @@ function ComposeStartup()
 				dump("Failed to create editorShell!\n");
 				return;
 			}
-			
+
 			// save the editorShell in the window. The editor JS expects to find it there.
 			window.editorShell = editorShell;
 //			dump("Created editorShell\n");
@@ -765,7 +765,7 @@ function ComposeStartup()
 
     	var msgCompFields = msgCompose.compFields;
     	if (msgCompFields)
-    	{    	  
+    	{
         if (params.bodyIsLink)
         {
           var body = msgCompFields.body;
@@ -794,10 +794,10 @@ function ComposeStartup()
                 AddAttachment(atts[i], null);
         }
 			}
- 			
+
 			// Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore
 			msgCompose.editor = window.editorShell;
-			
+
 			msgCompose.RegisterStateListener(stateListener);
 
 			// call updateCommands to disable while we're loading the page
@@ -812,7 +812,7 @@ function WizCallback(state)
 	if (state){
 		ComposeStartup();
 	}
-	else 
+	else
 	{
 		if (msgCompose)
 		  msgCompose.CloseWindow();
@@ -838,8 +838,8 @@ function ComposeLoad()
 
       selectNode = selectNode.childNodes[0];
       var opt = document.createElement('menuitem');
-      opt.setAttribute("data", "addr_other");
-      opt.setAttribute("value", other_header + ":");
+      opt.setAttribute("value", "addr_other");
+      opt.setAttribute("label", other_header + ":");
       selectNode.appendChild(opt);
   	}
     if(state)
@@ -854,7 +854,7 @@ function ComposeLoad()
       commonDialogsService.Alert(window, errorTitle, errorMsg);
     else
       window.alert(errorMsg);
-      
+
     if (msgCompose)
       msgCompose.CloseWindow();
     else
@@ -869,7 +869,7 @@ function ComposeLoad()
 function ComposeUnload(calledFromExit)
 {
 	dump("\nComposeUnload from XUL\n");
-	
+
 	msgCompose.UnregisterStateListener(stateListener);
 	if (msgCompose && msgComposeService)
 		msgComposeService.DisposeCompose(msgCompose, false);
@@ -927,7 +927,7 @@ function InitCharsetMenuCheckMark()
     return;
   }
 
-  var menuitem; 
+  var menuitem;
 
   // try to get preferences service
   var prefs = null;
@@ -956,12 +956,12 @@ function InitCharsetMenuCheckMark()
   if (send_default_charset != compFieldsCharset) {
     menuitem.setAttribute('checked', 'true');
     return;
-  } 
+  }
 
   // use pref default
   menuitem = document.getElementById(send_default_charset);
-  if (menuitem) 
-    menuitem.setAttribute('checked', 'true'); 
+  if (menuitem)
+    menuitem.setAttribute('checked', 'true');
 
   // Set a document charset to a default mail send charset.
   SetDocumentCharacterSet(send_default_charset);
@@ -1016,7 +1016,7 @@ function GenericSendMessage( msgType )
 	dump("GenericSendMessage from XUL\n");
 
   dump("Identity = " + getCurrentIdentity() + "\n");
-    
+
 	if (msgCompose != null)
 	{
 	    var msgCompFields = msgCompose.compFields;
@@ -1032,16 +1032,16 @@ function GenericSendMessage( msgType )
 			catch (ex) {
 				dump("failed to SetAttachments\n");
 			}
-		
+
 			if (msgType == msgCompDeliverMode.Now || msgType == msgCompDeliverMode.Later)
 			{
 			  //Do we need to check the spelling?
         if (prefs.GetBoolPref("mail.SpellCheckBeforeSend"))
 	        goDoCommand('cmd_spelling');
-			  
+
 				//Check if we have a subject, else ask user for confirmation
 				if (subject == "")
-				{ 
+				{
     				if (commonDialogsService)
     				{
 						var result = {value:0};
@@ -1093,7 +1093,7 @@ function GenericSendMessage( msgType )
 					case msgCompSendFormat.Both:
 						msgCompFields.forcePlainText = false;
 						msgCompFields.useMultipartAlternative = true;
-						break;	    
+						break;
 				   default: dump("\###SendMessage Error: invalid action value\n"); return;
 				}
 			}
@@ -1199,7 +1199,7 @@ function MessageFcc(menuItem)
 				dump("FCC2: " + destUri + "\n");
 			}
 		}
-	}	
+	}
 }
 
 function PriorityMenuSelect(target)
@@ -1238,7 +1238,7 @@ function OutputFormatMenuSelect(target)
 	if (msgCompose)
 	{
 		var msgCompFields = msgCompose.compFields;
-   
+
         if (msgCompFields)
         {
             switch (target.getAttribute('id'))
@@ -1252,16 +1252,16 @@ function OutputFormatMenuSelect(target)
 	}
 }
 
-function SelectAddress() 
+function SelectAddress()
 {
 	var msgCompFields = msgCompose.compFields;
-	
+
 	Recipients2CompFields(msgCompFields);
-	
+
 	var toAddress = msgCompFields.to;
 	var ccAddress = msgCompFields.cc;
 	var bccAddress = msgCompFields.bcc;
-	
+
 	dump("toAddress: " + toAddress + "\n");
 	window.openDialog("chrome://messenger/content/addressbook/abSelectAddressesDialog.xul",
 					  "",
@@ -1296,7 +1296,7 @@ function GetIdentities()
 function fillIdentityListPopup(popup)
 {
     var identities = GetIdentities();
-	
+
     for (var i=0; i<identities.length; i++)
     {
 		var identity = identities[i];
@@ -1308,14 +1308,14 @@ function fillIdentityListPopup(popup)
 		var serverSupports = accountManager.GetServersForIdentity(identity);
 
 		//dump(i + " = " + identity.identityName + "," +identity.key + "\n");
-		
+
 		if(serverSupports.GetElementAt(0))
 			var	result = serverSupports.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
 		//dump ("The account name is = "+result.prettyName+ "\n");
 		var accountName = " - "+result.prettyName;
 
         var item=document.createElement('menuitem');
-        item.setAttribute('value', identity.identityName);
+        item.setAttribute('label', identity.identityName);
         item.setAttribute('class', 'identity-popup-item');
         item.setAttribute('accountname', accountName);
         item.setAttribute('id', identity.key);
@@ -1333,7 +1333,7 @@ function getCurrentIdentity()
 
     //dump("Looking for identity " + identityKey + "\n");
     var identity = accountManager.getIdentity(identityKey);
-    
+
     return identity;
 }
 
@@ -1366,11 +1366,11 @@ function AdjustFocus()
     }
 }
 
-function SetComposeWindowTitle(event) 
+function SetComposeWindowTitle(event)
 {
 	/* dump("event = " + event + "\n"); */
 
-	/* only set the title when they hit return (or tab?) if 
+	/* only set the title when they hit return (or tab?) if
 	  mail.update_compose_title_as_you_type == false
 	 */
 	if ((event != 13) && (update_compose_title_as_you_type == false)) {
@@ -1433,11 +1433,11 @@ function ComposeCanClose()
 					case 1:	//Cancel
 						return false;
 					case 2:	//Don't Save
-						break;	
-				}	
+						break;
+				}
 			}
 		}
-				
+
 		msgCompose.bodyModified = false;
 		contentChanged = false;
 	}
@@ -1464,13 +1464,13 @@ function AttachFile()
 			currentAttachment = fp.fileURL.spec;
 			dump("nsIFilePicker - "+currentAttachment+"\n");
 			}
-    } 	
+    }
 	catch (ex) {
 		dump("failed to get the local file to attach\n");
 	}
   if (!(DuplicateFileCheck(currentAttachment)))
 	  AddAttachment(currentAttachment, null);
-  else 
+  else
   {
     dump("###ERROR ADDING DUPLICATE FILE \n");
     var errorTitle = gComposeMsgsBundle.getString("DuplicateFileErrorDlogTitle");
@@ -1492,10 +1492,10 @@ function AddAttachment(attachment, prettyName)
 		var item = document.createElement("treeitem");
 		var row = document.createElement("treerow");
 		var cell = document.createElement("treecell");
-		
+
 		if (msgCompose && !prettyName)
 			prettyName = msgCompose.AttachmentPrettyName(attachment);
-		cell.setAttribute("value", prettyName);				//use for display only
+		cell.setAttribute("label", prettyName);				//use for display only
 		cell.setAttribute("attachment", attachment);		//full url stored here
 		cell.setAttribute("tooltip", "aTooltip");
 		try {
@@ -1505,7 +1505,7 @@ function AddAttachment(attachment, prettyName)
 		row.appendChild(cell);
 		item.appendChild(row);
 		bucketBody.appendChild(item);
-	}    
+	}
 }
 
 function AttachPage()
@@ -1594,14 +1594,14 @@ function RemoveSelectedAttachment()
 	if ( bucketTree )
 	{
 		var body = document.getElementById("bucketBody");
-		
+
 		if ( body && bucketTree.selectedItems && bucketTree.selectedItems.length )
 		{
 			for ( var item = bucketTree.selectedItems.length - 1; item >= 0; item-- )
 				body.removeChild(bucketTree.selectedItems[item]);
-		}	
-	}	
-	
+		}
+	}
+
 }
 
 function AttachVCard()
@@ -1622,7 +1622,7 @@ function DetermineHTMLAction(convertible)
     if (sendFormat == msgCompSendFormat.AskUser)
     {
         //Well, before we ask, see if we can figure out what to do for ourselves
-        
+
         var noHtmlRecipients;
         var noHtmlnewsgroups;
         var preferFormat;
@@ -1647,19 +1647,19 @@ function DetermineHTMLAction(convertible)
         {
            noHtmlnewsgroups = msgCompose.compFields.newsgroups;
         }
-        
+
         if (noHtmlRecipients != "" || noHtmlnewsgroups != "")
         {
             if (convertible == msgCompConvertible.Plain)
               return msgCompSendFormat.PlainText;
-            
+
             if (noHtmlnewsgroups == "")
             {
                 switch (preferFormat)
                 {
                   case abPreferMailFormat.plaintext :
                     return msgCompSendFormat.PlainText;
-                  
+
                   default :
                     //See if a preference has been set to tell us what to do. Note that we do not honor that
                     //preference for newsgroups. Only for e-mail addresses.
@@ -1701,9 +1701,9 @@ function DetermineConvertibility()
 
 function LoadIdentity(startup)
 {
-    var identityElement = document.getElementById("msgIdentity");    
+    var identityElement = document.getElementById("msgIdentity");
     var prevIdentity = currentIdentity;
-    
+
     if (identityElement) {
         var item = identityElement.selectedItem;
         var idKey = item.getAttribute('id');
@@ -1719,9 +1719,9 @@ function LoadIdentity(startup)
           {
             if (prevBcc != "")
               prevBcc += ","
-            prevBcc += prevIdentity.bccList; 
+            prevBcc += prevIdentity.bccList;
           }
-          
+
           var newReplyTo = currentIdentity.replyTo;
           var newBcc = "";
           if (currentIdentity.bccSelf)
@@ -1730,7 +1730,7 @@ function LoadIdentity(startup)
           {
             if (newBcc != "")
               newBcc += ","
-            newBcc += currentIdentity.bccList; 
+            newBcc += currentIdentity.bccList;
           }
 
           var needToCleanUp = false;
@@ -1744,7 +1744,7 @@ function LoadIdentity(startup)
             if (newReplyTo != "")
               awAddRecipients(msgCompFields, "addr_reply", newReplyTo);
           }
-          
+
           if (newBcc != prevBcc)
           {
             needToCleanUp = true;
@@ -1752,8 +1752,8 @@ function LoadIdentity(startup)
               awRemoveRecipients(msgCompFields, "addr_bcc", prevBcc);
             if (newReplyTo != "")
               awAddRecipients(msgCompFields, "addr_bcc", newBcc);
-          }          
-          
+          }
+
           if (needToCleanUp)
             awCleanupRows();
 
@@ -1761,7 +1761,7 @@ function LoadIdentity(startup)
             msgCompose.SetSignature(currentIdentity);
           } catch (ex) { dump("### Cannot set the signature: " + ex + "\n");}
         }
-        
+
         //Setup autocomplete session, we can doit from here as it's use as a service
         var session = Components.classes["@mozilla.org/autocompleteSession;1?type=addrbook"].getService(Components.interfaces.nsIAbAutoCompleteSession);
         if (session)
@@ -1770,14 +1770,14 @@ function LoadIdentity(startup)
             var start = emailAddr.lastIndexOf("@");
             session.defaultDomain = emailAddr.slice(start + 1, emailAddr.length);
         }
-    }   
+    }
 }
 
 
-function subjectKeyPress(event) 
+function subjectKeyPress(event)
 {
   switch(event.keyCode) {
-  case 9: 
+  case 9:
     if (!event.shiftKey) {
       window._content.focus();
       event.preventDefault();
@@ -1803,7 +1803,7 @@ function AttachmentBucketClicked(event)
 {
   if (event.originalTarget.localName == 'treechildren')
     goDoCommand('cmd_attachFile');
-}  
+}
 
 var attachmentBucketObserver = {
   onDrop: function (aEvent, aData, aDragSession)
@@ -1835,19 +1835,19 @@ var attachmentBucketObserver = {
           window.alert(errorMsg);
       }
     },
-    
+
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
       var attachmentBucket = document.getElementById("attachmentBucket");
       attachmentBucket.setAttribute("dragover", "true");
     },
-    
+
   onDragExit: function (aEvent, aDragSession)
     {
       var attachmentBucket = document.getElementById("attachmentBucket");
       attachmentBucket.removeAttribute("dragover");
     },
-        
+
   getSupportedFlavours: function ()
     {
       var flavourSet = new FlavourSet();
@@ -1855,7 +1855,7 @@ var attachmentBucketObserver = {
       flavourSet.appendFlavour("text/nsmessage");
       flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
       return flavourSet;
-    }  
+    }
 };
 
 function GetMsgFolderFromUri(uri)
@@ -1899,7 +1899,7 @@ function DisplaySaveFolderDlg(folderURI)
     try {
           currentIdentity.showSaveMsgDlg = !checkbox.value;
     }//try
-    catch (e) { 
+    catch (e) {
     return;
     }//catch
 
