@@ -42,3 +42,5 @@ REQUIRES = seccmd dbm
 PROGRAM = p7sign
 # PROGRAM = ./$(OBJDIR)/p7sign.exe
 
+USE_STATIC_LIBS = 1
+

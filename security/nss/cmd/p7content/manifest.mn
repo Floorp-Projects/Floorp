@@ -42,3 +42,5 @@ REQUIRES = seccmd dbm
 PROGRAM = p7content
 # PROGRAM = ./$(OBJDIR)/p7content.exe
 
+USE_STATIC_LIBS = 1
+

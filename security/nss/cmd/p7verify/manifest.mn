@@ -42,3 +42,5 @@ REQUIRES = seccmd dbm
 PROGRAM = p7verify
 # PROGRAM = ./$(OBJDIR)/p7verify.exe
 
+USE_STATIC_LIBS = 1
+
