@@ -26,6 +26,7 @@
 #include "nsIPrintOptions.h"  
 
 class nsIPref;
+class nsIPrintSettings;
 
 //*****************************************************************************
 //***    nsPrintOptions
