@@ -32,6 +32,10 @@ $CLOBBER_LIBS = 1;			# turn on to clobber existing libs and .xSYM files before
 							# building each project
 $MOZ_FULLCIRCLE = 0;
 
+# The following two options will delete all files, but leave the directory structure intact.
+$CLOBBER_DIST_ALL = 0;      # turn on to clobber all files inside dist (headers, xsym and libs)
+$CLOBBER_DIST_LIBS = 0;     # turn on to clobber the aliases to libraries and sym files in dist
+
 $pull{all} = 1;
 $pull{lizard} = 0;
 $pull{xpcom} = 0;

@@ -103,7 +103,7 @@ sub _getDistDirectory()
 
 
 #//--------------------------------------------------------------------------------------------------
-#// Checkout everything
+#// Check out everything
 #//--------------------------------------------------------------------------------------------------
 
 sub Checkout()
@@ -134,6 +134,41 @@ sub Checkout()
 	}
 }
 
+#//--------------------------------------------------------------------------------------------------
+#// Remove all files from a tree, leaving directories intact (except "CVS").
+#//--------------------------------------------------------------------------------------------------
+
+sub EmptyTree($)
+{
+	my ($root) = @_; 
+	#print "EmptyTree($root)\n";
+	opendir(DIR, $root);
+	my $sub;
+	foreach $sub (readdir(DIR))
+	{
+		my $fullpathname = $root.$sub; # -f, -d only work on full paths
+		if (-d $fullpathname) #if it's a directory (returns true for the alias of a directory, false for a broken alias)
+		{
+			EmptyTree($fullpathname.":");
+			if ($sub eq "CVS")
+			{
+				#print "rmdir $fullpathname\n";
+				rmdir $fullpathname;
+			}
+		}
+		else
+		{
+			#print "\tunlink $fullpathname\n";
+			my $cnt = unlink $fullpathname; # this is perlspeak for deleting a file.
+			if ($cnt ne 1)
+			{
+				print "Failed to delete $fullpathname";
+				die;
+			}
+		}
+    }
+    closedir(DIR);
+}
 
 #//--------------------------------------------------------------------------------------------------
 #// Build the 'dist' directory
@@ -147,22 +182,29 @@ sub BuildDist()
 	# activate MacPerl
 	ActivateApplication('McPL');
 
+	my $distdirectory = ":mozilla:dist"; # the parent directory in dist, including all the headers
+	my $dist_dir = _getDistDirectory(); # the subdirectory with the libs and executable.
+	if ($main::CLOBBER_DIST_ALL)
+	{
+		print "Clobbering ALL files inside :mozilla:dist:\n";
+		EmptyTree($distdirectory);
+	}
+	else
+	{
+		if ($main::CLOBBER_DIST_LIBS)
+		{
+			print "Clobbering library aliases and executables inside ".$dist_dir."\n";
+			EmptyTree($dist_dir);
+		}
+	}
+
 	# we really do not need all these paths, but many client projects include them
 	mkpath([ ":mozilla:dist:", ":mozilla:dist:client:", ":mozilla:dist:client_debug:", ":mozilla:dist:client_stubs:" ]);
 	mkpath([ ":mozilla:dist:viewer:", ":mozilla:dist:viewer_debug:" ]);
 
-	my($distdirectory) = ":mozilla:dist";
-	
 	if ($main::MOZ_FULLCIRCLE)
 	{
-		if ( $main::DEBUG )
-		{
-			mkpath([ "$distdirectory:viewer_debug:TalkBack"]);
-		} 
-		else
-		{
-			mkpath([ "$distdirectory:viewer:TalkBack"]);
-		}
+		mkpath([ $dist_dir."TalkBack"]);
 	}
 	
 	#MAC_COMMON

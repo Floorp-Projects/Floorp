@@ -30,6 +30,11 @@ $DEBUG = 1;
 $ALIAS_SYM_FILES = $DEBUG;
 $CLOBBER_LIBS = 1;			# turn on to clobber existing libs and .xSYM files before
 							# building each project
+							
+# The following two options will delete all files, but leave the directory structure intact.
+$CLOBBER_DIST_ALL = 0;      # turn on to clobber all aliases/files inside dist (headers/xsym/libs)
+$CLOBBER_DIST_LIBS = 0;     # turn on to clobber only aliases/files for libraries/sym files in dist
+
 $MOZ_FULLCIRCLE = 0;
 
 $pull{all} = 0;
@@ -71,7 +76,7 @@ if ($build{most})
 {
 ### Just uncomment/comment to get the ones you want (if "most" is selected).
 	$build{dist} = 1;
-#   $build{stubs} = 1;
+    $build{stubs} = 1;
 	$build{common} = 1; # Requires intl
 #   $build{intl} = 1; 
 	$build{nglayout} = 1;
@@ -94,18 +99,25 @@ if ($MOZ_FULLCIRCLE)
 	$buildnum = Moz::SetBuildNumber();
 }
 
-#Use time-stamped names so that you don't clobber your previous log file!
-my $now = localtime();
-while ($now =~ s@:@.@) {} # replace all colons by periods
-my $logdir = ":Build Logs:";
-if (!stat($logdir))
+$USE_TIMESTAMPED_LOGS = 1;
+if ($USE_TIMESTAMPED_LOGS)
 {
-        print "Creating directory $logdir\n";
-        mkdir $logdir, 0777 || die "Couldn't create directory $logdir";
+	#Use time-stamped names so that you don't clobber your previous log file!
+	my $now = localtime();
+	while ($now =~ s@:@.@) {} # replace all colons by periods
+	my $logdir = ":Build Logs:";
+	if (!stat($logdir))
+	{
+	        print "Creating directory $logdir\n";
+	        mkdir $logdir, 0777 || die "Couldn't create directory $logdir";
+	}
+	OpenErrorLog("$logdir$now");
 }
-
-OpenErrorLog("$logdir$now");
-#OpenErrorLog("Mozilla.BuildLog");		# Tinderbox requires that name
+else
+{
+	OpenErrorLog("NGLayoutBuildLog");		# Release build
+	#OpenErrorLog("Mozilla.BuildLog");		# Tinderbox requires that name
+}
 
 Moz::StopForErrors();
 #Moz::DontStopForErrors();
