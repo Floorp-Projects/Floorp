@@ -84,7 +84,6 @@ protected:
   nsresult CreateFontCache();
 
   nsIFontCache      *mFontCache;
-  float             mGammaValue;
   nsDrawingSurfaceUnix * mSurface ;
 
   PRUint32 mDepth;
@@ -92,11 +91,20 @@ protected:
   PRBool   mWriteable;
   PRUint32 mNumCells;
   Colormap mColormap;
-
   // XXX There should be a nsIColormap interface
+
+  float             mTwipsToPixels;
+  float             mPixelsToTwips;
+  float             mAppUnitsToDevUnits;
+  float             mDevUnitsToAppUnits;
+  float             mZoom;
+  float             mGammaValue;
+  PRUint8           *mGammaTable;
+
 public:
   void InstallColormap(void);
   void SetDrawingSurface(nsDrawingSurfaceUnix * aSurface) { mSurface = aSurface; }
+  void SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma);
 };
 
 #endif /* nsDeviceContextUnix_h___ */
