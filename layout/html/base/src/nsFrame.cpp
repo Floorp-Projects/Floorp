@@ -2852,7 +2852,7 @@ nsFrame::IsEmpty()
 }
 
 /* virtual */ PRBool
-nsFrame::IsFrameEmpty()
+nsFrame::IsSelfEmpty()
 {
   return PR_FALSE;
 }

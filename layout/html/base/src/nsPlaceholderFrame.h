@@ -86,7 +86,7 @@ public:
 #endif
 
   virtual PRBool IsEmpty() { return PR_TRUE; }
-  virtual PRBool IsFrameEmpty() { return PR_TRUE; }
+  virtual PRBool IsSelfEmpty() { return PR_TRUE; }
 
 protected:
   nsIFrame* mOutOfFlowFrame;

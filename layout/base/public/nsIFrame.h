@@ -1223,7 +1223,7 @@ public:
    * Determine whether the frame is logically empty, assuming that all
    * its children are empty.
    */
-  virtual PRBool IsFrameEmpty() = 0;
+  virtual PRBool IsSelfEmpty() = 0;
 
   /**
    * IsGeneratedContentFrame returns whether a frame corresponds to

@@ -483,7 +483,7 @@ public:
                                   PRBool*              aIsVisible);
 
   virtual PRBool IsEmpty();
-  virtual PRBool IsFrameEmpty() { return IsEmpty(); }
+  virtual PRBool IsSelfEmpty() { return IsEmpty(); }
 
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
