@@ -45,7 +45,7 @@
 const char* CACHE_MEM_CAPACITY = "browser.cache.memory_cache_size";
 const char* CACHE_DISK_CAPACITY = "browser.cache.disk_cache_size";
 
-static int diskCacheSizeChanged(const char *pref, void *closure)
+static int PR_CALLBACK diskCacheSizeChanged(const char *pref, void *closure)
 {
 	nsresult rv;
 	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
@@ -57,7 +57,7 @@ static int diskCacheSizeChanged(const char *pref, void *closure)
 	return ( (nsCacheManager*)closure )->SetDiskCacheCapacity( capacity );	
 }
 
-static int memCacheSizeChanged(const char *pref, void *closure)
+static int PR_CALLBACK memCacheSizeChanged(const char *pref, void *closure)
 {
 	nsresult rv;
 	PRInt32 capacity = DEFAULT_MEMORY_CACHE_CAPACITY ;
