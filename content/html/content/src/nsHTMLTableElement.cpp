@@ -1130,6 +1130,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
           break;
         }
       }
+      // else the width becomes auto if width = 0 or 0% for backward compatibility
 
       // height
       aAttributes->GetAttribute(nsHTMLAtoms::height, value);
@@ -1152,7 +1153,10 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       nsStyleSpacing* spacing = (nsStyleSpacing*)
         aContext->GetMutableStyleData(eStyleStruct_Spacing);
 
-      // default border style is the quirks outset
+      // default border style is the Nav4.6 extension which uses the background color as the
+      // basis of the outset border. If the table has a transparant background then it finds
+      // the closest ancestor that has a non transparant backgound. NS_STYLE_BORDER_OUTSET 
+      // uses the border color of the table and if that is not set, then it uses the color.
       PRUint8 borderStyle = NS_STYLE_BORDER_STYLE_BG_OUTSET;
 
       // bordercolor
