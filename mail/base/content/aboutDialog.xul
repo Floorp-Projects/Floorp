@@ -49,7 +49,12 @@
 <dialog xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="aboutDialog"
+#ifdef XP_MACOSX
+        buttons="extra2"
+        align="end"
+#else
         buttons="accept,extra2"
+#endif
         onload="onLoad();"
         title="&aboutDialog.title;" creditslabel="&credits;" aboutlabel="&aboutLink;" versionlabel="&aboutVersion;"
         style="width: 299px; height: 330px;"> 
