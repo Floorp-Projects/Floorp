@@ -51,8 +51,8 @@ static FileTypeRegistryEntry
     jpg( jpgExts, "MozillaJPEG", "Mozilla JPEG Image File" ),
     gif( gifExts, "MozillaGIF",  "Mozilla GIF Image File"  ),
     png( pngExts, "MozillaPNG",  "Mozilla Portable Network Graphic Image File" ),
-    xml( xmlExts, "MozillaXML",  "Mozilla Extensible Markup Language Document" ),
-    xul( xulExts, "MozillaXUL",  "Mozilla Extensible User-interface Language Document" );
+    xml( xmlExts, "MozillaXML",  "Mozilla XML File Document" ),
+    xul( xulExts, "MozillaXUL",  "Mozilla XUL File Document" );
 
 static EditableFileTypeRegistryEntry
     mozillaMarkup( htmExts, "MozillaHTML", "Mozilla Hypertext Markup Language Document" );
