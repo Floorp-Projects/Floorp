@@ -33,7 +33,7 @@ class nsCommentNode : public nsIDOMComment,
 {
 public:
   nsCommentNode();
-  ~nsCommentNode();
+  virtual ~nsCommentNode();
 
   // nsISupports
   NS_DECL_ISUPPORTS

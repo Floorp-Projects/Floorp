@@ -1037,7 +1037,7 @@ struct nsFileDownloadDialog : public nsIXULWindowCallbacks,
 
     // nsFileDownloadDialog stuff
     nsFileDownloadDialog( nsIURL *aURL, const char *aContentType );
-    ~nsFileDownloadDialog() { delete mOutput; delete [] mBuffer; }
+    virtual ~nsFileDownloadDialog() { delete mOutput; delete [] mBuffer; }
     void OnSave();
     void OnMore();
     void OnPick();
