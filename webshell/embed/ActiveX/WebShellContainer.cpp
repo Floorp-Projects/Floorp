@@ -160,6 +160,11 @@ CWebShellContainer::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& a
 	return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+CWebShellContainer::FocusAvailable(nsIWebShell* aFocusedWebShell)
+{
+  return NS_OK;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIStreamObserver implementation
