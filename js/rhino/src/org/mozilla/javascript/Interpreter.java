@@ -224,17 +224,7 @@ public class Interpreter extends LabelTable {
 
     }
 
-    boolean itsInFunctionFlag;
-
-    InterpreterData itsData;
-    VariableTable itsVariableTable;
-    int itsTryDepth = 0;
-    int itsStackDepth = 0;
-    String itsSourceFile;
-    int itsLineNumber = 0;
-
-    private int updateLineNumber(Node node, int iCodeTop)
-    {
+    private int updateLineNumber(Node node, int iCodeTop) {
         Object datum = node.getDatum();
         if (datum == null || !(datum instanceof Number))
             return iCodeTop;
@@ -256,8 +246,7 @@ public class Interpreter extends LabelTable {
         return iCodeTop;
     }
 
-    private void badTree(Node node)
-    {
+    private void badTree(Node node) {
         try {
             out = new PrintWriter(new FileOutputStream("icode.txt", true));
             out.println("Un-handled node : " + node.toString());
@@ -275,11 +264,10 @@ public class Interpreter extends LabelTable {
         switch (type) {
 
             case TokenStream.FUNCTION : {
-                    iCodeTop = addByte(TokenStream.CLOSURE, iCodeTop);
                     Node fn = (Node) node.getProp(Node.FUNCTION_PROP);
                     int index = fn.getExistingIntProp(Node.FUNCTION_PROP);
-                    iCodeTop = addByte(index >> 8, iCodeTop);
-                    iCodeTop = addByte(index & 0xff, iCodeTop);
+                    iCodeTop = addByte(TokenStream.CLOSURE, iCodeTop);
+                    iCodeTop = addShort(index, iCodeTop);
                     itsStackDepth++;
                     if (itsStackDepth > itsData.itsMaxStack)
                         itsData.itsMaxStack = itsStackDepth;
@@ -334,12 +322,7 @@ public class Interpreter extends LabelTable {
                     iCodeTop = addByte(theLocalSlot, iCodeTop);
                     iCodeTop = addByte(TokenStream.POP, iCodeTop);
                     itsStackDepth--;
-         /*
-            reminder - below we construct new GOTO nodes that aren't
-            linked into the tree just for the purpose of having a node
-            to pass to the addGoto routine. (Parallels codegen here).
-            Seems unnecessary.
-         */
+
                     ObjArray cases = (ObjArray) node.getProp(Node.CASES_PROP);
                     for (int i = 0; i < cases.size(); i++) {
                         Node thisCase = (Node)cases.get(i);
@@ -350,45 +333,38 @@ public class Interpreter extends LabelTable {
                         // the switch statement.
                         iCodeTop = generateICode(first, iCodeTop);
                         iCodeTop = addByte(TokenStream.USETEMP, iCodeTop);
+                        iCodeTop = addByte(theLocalSlot, iCodeTop);
                         itsStackDepth++;
                         if (itsStackDepth > itsData.itsMaxStack)
                             itsData.itsMaxStack = itsStackDepth;
-                        iCodeTop = addByte(theLocalSlot, iCodeTop);
                         iCodeTop = addByte(TokenStream.SHEQ, iCodeTop);
+                        itsStackDepth--;
                         Node target = new Node(TokenStream.TARGET);
                         thisCase.addChildAfter(target, first);
-                        Node branch = new Node(TokenStream.IFEQ);
-                        branch.putProp(Node.TARGET_PROP, target);
-                        iCodeTop = addGoto(branch, TokenStream.IFEQ,
+                        iCodeTop = addGoto(getTargetLabel(target),
+                                           TokenStream.IFEQ,
                                            iCodeTop);
-                        itsStackDepth--;
                     }
 
                     Node defaultNode = (Node) node.getProp(Node.DEFAULT_PROP);
                     if (defaultNode != null) {
                         Node defaultTarget = new Node(TokenStream.TARGET);
-                        defaultNode.getFirstChild().addChildToFront(defaultTarget);
-                        Node branch = new Node(TokenStream.GOTO);
-                        branch.putProp(Node.TARGET_PROP, defaultTarget);
-                        iCodeTop = addGoto(branch, TokenStream.GOTO,
-                                                            iCodeTop);
+                        defaultNode.getFirstChild().
+                            addChildToFront(defaultTarget);
+                        iCodeTop = addGoto(getTargetLabel(defaultTarget),
+                                           TokenStream.GOTO,
+                                           iCodeTop);
                     }
 
                     Node breakTarget = (Node) node.getProp(Node.BREAK_PROP);
-                    Node branch = new Node(TokenStream.GOTO);
-                    branch.putProp(Node.TARGET_PROP, breakTarget);
-                    iCodeTop = addGoto(branch, TokenStream.GOTO,
+                    iCodeTop = addGoto(getTargetLabel(breakTarget),
+                                       TokenStream.GOTO,
                                        iCodeTop);
                 }
                 break;
 
             case TokenStream.TARGET : {
-                    int label = node.getIntProp(Node.LABEL_PROP, -1);
-                    if (label == -1) {
-                        label = acquireLabel();
-                        node.putIntProp(Node.LABEL_PROP, label);
-                    }
-                    markLabel(label, iCodeTop);
+                    markTargetLabel(node, iCodeTop);
                     // if this target has a FINALLY_PROP, it is a JSR target
                     // and so has a PC value on the top of the stack
                     if (node.getProp(Node.FINALLY_PROP) != null) {
@@ -418,8 +394,12 @@ public class Interpreter extends LabelTable {
 
             case TokenStream.NEW :
             case TokenStream.CALL : {
-                    if (itsSourceFile != null && (itsData.itsSourceFile == null || ! itsSourceFile.equals(itsData.itsSourceFile)))
+                    if (itsSourceFile != null
+                        && (itsData.itsSourceFile == null
+                            || !itsSourceFile.equals(itsData.itsSourceFile)))
+                    {
                         itsData.itsSourceFile = itsSourceFile;
+                    }
                     iCodeTop = addByte(SOURCEFILE_ICODE, iCodeTop);
 
                     int childCount = 0;
@@ -528,14 +508,13 @@ public class Interpreter extends LabelTable {
                     itsStackDepth++;
                     if (itsStackDepth > itsData.itsMaxStack)
                         itsData.itsMaxStack = itsStackDepth;
-                    int falseTarget = acquireLabel();
-                    iCodeTop = addGoto(falseTarget, TokenStream.IFNE,
-                                                    iCodeTop);
+                    int falseJumpStart = iCodeTop;
+                    iCodeTop = addForwardGoto(TokenStream.IFNE, iCodeTop);
                     iCodeTop = addByte(TokenStream.POP, iCodeTop);
                     itsStackDepth--;
                     child = child.getNextSibling();
                     iCodeTop = generateICode(child, iCodeTop);
-                    markLabel(falseTarget, iCodeTop);
+                    resolveForwardGoto(falseJumpStart, iCodeTop);
                 }
                 break;
 
@@ -545,14 +524,13 @@ public class Interpreter extends LabelTable {
                     itsStackDepth++;
                     if (itsStackDepth > itsData.itsMaxStack)
                         itsData.itsMaxStack = itsStackDepth;
-                    int trueTarget = acquireLabel();
-                    iCodeTop = addGoto(trueTarget, TokenStream.IFEQ,
-                                       iCodeTop);
+                    int trueJumpStart = iCodeTop;
+                    iCodeTop = addForwardGoto(TokenStream.IFEQ, iCodeTop);
                     iCodeTop = addByte(TokenStream.POP, iCodeTop);
                     itsStackDepth--;
                     child = child.getNextSibling();
                     iCodeTop = generateICode(child, iCodeTop);
-                    markLabel(trueTarget, iCodeTop);
+                    resolveForwardGoto(trueJumpStart, iCodeTop);
                 }
                 break;
 
@@ -615,16 +593,16 @@ public class Interpreter extends LabelTable {
                         iCodeTop = addByte(TokenStream.UNDEFINED, iCodeTop);
                         break;
                     case TokenStream.NOT : {
-                            int trueTarget = acquireLabel();
-                            int beyond = acquireLabel();
-                            iCodeTop = addGoto(trueTarget, TokenStream.IFEQ,
-                                                        iCodeTop);
+                            int trueJumpStart = iCodeTop;
+                            iCodeTop = addForwardGoto(TokenStream.IFEQ,
+                                                      iCodeTop);
                             iCodeTop = addByte(TokenStream.TRUE, iCodeTop);
-                            iCodeTop = addGoto(beyond, TokenStream.GOTO,
-                                                        iCodeTop);
-                            markLabel(trueTarget, iCodeTop);
+                            int beyondJumpStart = iCodeTop;
+                            iCodeTop = addForwardGoto(TokenStream.GOTO,
+                                                      iCodeTop);
+                            resolveForwardGoto(trueJumpStart, iCodeTop);
                             iCodeTop = addByte(TokenStream.FALSE, iCodeTop);
-                            markLabel(beyond, iCodeTop);
+                            resolveForwardGoto(beyondJumpStart, iCodeTop);
                         }
                         break;
                     case TokenStream.BITNOT :
@@ -745,11 +723,11 @@ public class Interpreter extends LabelTable {
                                     itsStackDepth--;
                                 }
                                 else {
+                                    int i = itsVariableTable.getOrdinal(name);
                                     iCodeTop = addByte(type == TokenStream.INC
                                                        ? TokenStream.VARINC
                                                        : TokenStream.VARDEC,
                                                        iCodeTop);
-                                    int i = itsVariableTable.getOrdinal(name);
                                     iCodeTop = addByte(i, iCodeTop);
                                     itsStackDepth++;
                                     if (itsStackDepth > itsData.itsMaxStack)
@@ -854,18 +832,13 @@ public class Interpreter extends LabelTable {
                         itsData.itsMaxTryDepth = itsTryDepth;
                     Node catchTarget = (Node)node.getProp(Node.TARGET_PROP);
                     Node finallyTarget = (Node)node.getProp(Node.FINALLY_PROP);
+                    int tryStart = iCodeTop;
                     if (catchTarget == null) {
                         iCodeTop = addByte(TokenStream.TRY, iCodeTop);
                         iCodeTop = addShort(0, iCodeTop);
                     }
-                    else
-                        iCodeTop =
-                            addGoto(node, TokenStream.TRY, iCodeTop);
-                    int finallyHandler = 0;
-                    if (finallyTarget != null) {
-                        finallyHandler = acquireLabel();
-                        int theLabel = finallyHandler & 0x7FFFFFFF;
-                        addLabelFixup(theLabel, iCodeTop);
+                    else {
+                        iCodeTop = addGoto(node, TokenStream.TRY, iCodeTop);
                     }
                     iCodeTop = addShort(0, iCodeTop);
 
@@ -905,11 +878,11 @@ public class Interpreter extends LabelTable {
                     itsStackDepth = 0;
                     if (finallyTarget != null) {
                         // normal flow goes around the finally handler stublet
-                        int skippy = acquireLabel();
-                        iCodeTop =
-                            addGoto(skippy, TokenStream.GOTO, iCodeTop);
+                        int skippyJumpStart = iCodeTop;
+                        iCodeTop = addForwardGoto(TokenStream.GOTO, iCodeTop);
+                        int finallyOffset = iCodeTop - tryStart;
+                        recordJumpOffset(tryStart + 3, finallyOffset);
                         // on entry the stack will have the exception object
-                        markLabel(finallyHandler, iCodeTop);
                         itsStackDepth = 1;
                         if (itsStackDepth > itsData.itsMaxStack)
                             itsData.itsMaxStack = itsStackDepth;
@@ -920,12 +893,12 @@ public class Interpreter extends LabelTable {
                         int finallyLabel
                            = finallyTarget.getExistingIntProp(Node.LABEL_PROP);
                         iCodeTop = addGoto(finallyLabel,
-                                         TokenStream.GOSUB, iCodeTop);
+                                           TokenStream.GOSUB, iCodeTop);
                         iCodeTop = addByte(TokenStream.USETEMP, iCodeTop);
                         iCodeTop = addByte(theLocalSlot, iCodeTop);
                         iCodeTop = addByte(TokenStream.JTHROW, iCodeTop);
                         itsStackDepth = 0;
-                        markLabel(skippy, iCodeTop);
+                        resolveForwardGoto(skippyJumpStart, iCodeTop);
                     }
                     itsTryDepth--;
                 }
@@ -1053,41 +1026,68 @@ public class Interpreter extends LabelTable {
         return iCodeTop;
     }
 
-    private int addGoto(Node node, int gotoOp, int iCodeTop)
-    {
-        Node target = (Node)(node.getProp(Node.TARGET_PROP));
+    private int getTargetLabel(Node target) {
         int targetLabel = target.getIntProp(Node.LABEL_PROP, -1);
         if (targetLabel == -1) {
             targetLabel = acquireLabel();
             target.putIntProp(Node.LABEL_PROP, targetLabel);
         }
+        return targetLabel;
+    }
+
+    private void markTargetLabel(Node target, int iCodeTop) {
+        int label = getTargetLabel(target);
+        markLabel(label, iCodeTop);
+    }
+
+    private int addGoto(Node node, int gotoOp, int iCodeTop) {
+        Node target = (Node)(node.getProp(Node.TARGET_PROP));
+        int targetLabel = getTargetLabel(target);
         iCodeTop = addGoto(targetLabel, (byte) gotoOp, iCodeTop);
         return iCodeTop;
     }
 
-    private int addGoto(int targetLabel, int gotoOp, int iCodeTop)
-    {
+    private int addGoto(int targetLabel, int gotoOp, int iCodeTop) {
         int gotoPC = iCodeTop;
         iCodeTop = addByte(gotoOp, iCodeTop);
+        iCodeTop = addShort(0, iCodeTop);
         int theLabel = targetLabel & 0x7FFFFFFF;
         int targetPC = getLabelPC(theLabel);
         if (targetPC != -1) {
-            int offset = targetPC - gotoPC;
-            iCodeTop = addShort(offset, iCodeTop);
+            recordJumpOffset(gotoPC + 1, targetPC - gotoPC);
         }
         else {
             addLabelFixup(theLabel, gotoPC + 1);
-            iCodeTop = addShort(0, iCodeTop);
         }
         return iCodeTop;
     }
 
+    private int addForwardGoto(int gotoOp, int iCodeTop) {
+        iCodeTop = addByte(gotoOp, iCodeTop);
+        iCodeTop = addShort(0, iCodeTop);
+        return iCodeTop;
+    }
+
+    private void resolveForwardGoto(int jumpStart, int iCodeTop) {
+        if (jumpStart + 3 > iCodeTop) Context.codeBug();
+        int offset = iCodeTop - jumpStart;
+        // +1 to write after jump icode
+        recordJumpOffset(jumpStart + 1, offset);
+    }
+
+    private void recordJumpOffset(int pos, int offset) {
+        if (offset != (short)offset) {
+            throw Context.reportRuntimeError
+                ("Program too complex: too big jump offset");
+        }
+        itsData.itsICode[pos] = (byte)(offset >> 8);
+        itsData.itsICode[pos + 1] = (byte)offset;
+    }
+
     private int addByte(int b, int iCodeTop) {
         byte[] array = itsData.itsICode;
-        if (array.length == iCodeTop) {
-            byte[] ba = new byte[iCodeTop * 2];
-            System.arraycopy(array, 0, ba, 0, iCodeTop);
-            itsData.itsICode = array = ba;
+        if (iCodeTop == array.length) {
+            array = increaseICodeCapasity(iCodeTop, 1);
         }
         array[iCodeTop++] = (byte)b;
         return iCodeTop;
@@ -1096,9 +1096,7 @@ public class Interpreter extends LabelTable {
     private int addShort(int s, int iCodeTop) {
         byte[] array = itsData.itsICode;
         if (iCodeTop + 2 > array.length) {
-            byte[] ba = new byte[(iCodeTop + 2) * 2];
-            System.arraycopy(array, 0, ba, 0, iCodeTop);
-            itsData.itsICode = array = ba;
+            array = increaseICodeCapasity(iCodeTop, 2);
         }
         array[iCodeTop] = (byte)(s >>> 8);
         array[iCodeTop + 1] = (byte)s;
@@ -1108,9 +1106,7 @@ public class Interpreter extends LabelTable {
     private int addInt(int i, int iCodeTop) {
         byte[] array = itsData.itsICode;
         if (iCodeTop + 4 > array.length) {
-            byte[] ba = new byte[(iCodeTop + 4) * 2];
-            System.arraycopy(array, 0, ba, 0, iCodeTop);
-            itsData.itsICode = array = ba;
+            array = increaseICodeCapasity(iCodeTop, 4);
         }
         array[iCodeTop] = (byte)(i >>> 24);
         array[iCodeTop + 1] = (byte)(i >>> 16);
@@ -1148,6 +1144,19 @@ public class Interpreter extends LabelTable {
 
         iCodeTop = addShort(index, iCodeTop);
         return iCodeTop;
+    }
+
+    private byte[] increaseICodeCapasity(int iCodeTop, int extraSize) {
+        int capacity = itsData.itsICode.length;
+        if (iCodeTop + extraSize <= capacity) Context.codeBug();
+        capacity *= 2;
+        if (iCodeTop + extraSize > capacity) {
+            capacity = iCodeTop + extraSize;
+        }
+        byte[] array = new byte[capacity];
+        System.arraycopy(itsData.itsICode, 0, array, 0, iCodeTop);
+        itsData.itsICode = array;
+        return array;
     }
 
     private static int getShort(byte[] iCode, int pc) {
@@ -1288,10 +1297,14 @@ public class Interpreter extends LabelTable {
                             }
                             break;
                         case TokenStream.TRY : {
-                                int newPC1 = getTarget(iCode, pc);
-                                int newPC2 = getTarget(iCode, pc + 2);
-                                out.println(tname + " " + newPC1
-                                            + " " + newPC2);
+                                int catch_offset = getShort(iCode, pc);
+                                int finally_offset = getShort(iCode, pc + 2);
+                                int catch_pc = (catch_offset == 0)
+                                               ? -1 : pc - 1 + catch_offset;
+                                int finally_pc = (finally_offset == 0)
+                                               ? -1 : pc - 1 + finally_offset;
+                                out.println(tname + " " + catch_pc
+                                            + " " + finally_pc);
                                 pc += 4;
                             }
                             break;
@@ -2392,23 +2405,21 @@ public class Interpreter extends LabelTable {
                     if (exType == SCRIPT_THROW || exType == ECMA) {
                         // Allow JS to catch only JavaScriptException and
                         // EcmaError
-                        int catch_pc = getTarget(iCode, try_pc + 1);
-                        if (catch_pc == try_pc) { catch_pc = 0; }
-                        if (catch_pc != 0) {
+                        int catch_offset = getShort(iCode, try_pc + 1);
+                        if (catch_offset != 0) {
                             // Has catch block
                             rethrow = false;
-                            pc = catch_pc;
+                            pc = try_pc + catch_offset;
                             stackTop = STACK_SHFT;
                             stack[stackTop] = catchObj;
                         }
                     }
                     if (rethrow) {
-                        int finally_pc = getTarget(iCode, try_pc + 3);
-                        if (finally_pc == try_pc + 2) { finally_pc = 0; }
-                        if (finally_pc != 0) {
+                        int finally_offset = getShort(iCode, try_pc + 3);
+                        if (finally_offset != 0) {
                             // has finally block
                             rethrow = false;
-                            pc = finally_pc;
+                            pc = try_pc + finally_offset;
                             stackTop = STACK_SHFT;
                             stack[stackTop] = ex;
                         }
@@ -2725,6 +2736,14 @@ public class Interpreter extends LabelTable {
         activation.put(name, activation, value);
     }
 
+    private boolean itsInFunctionFlag;
+
+    private InterpreterData itsData;
+    private VariableTable itsVariableTable;
+    private int itsTryDepth = 0;
+    private int itsStackDepth = 0;
+    private String itsSourceFile;
+    private int itsLineNumber = 0;
 
     private int version;
     private boolean inLineStepMode;
