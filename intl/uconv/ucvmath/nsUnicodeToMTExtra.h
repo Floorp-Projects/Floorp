@@ -40,7 +40,7 @@
 #ifndef nsUnicodeToMTExtra_h___
 #define nsUnicodeToMTExtra_h___
 
-#include "nsUCvMathSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToMTExtra [declaration]
@@ -57,14 +57,6 @@ public:
    * Class constructor.
    */
   nsUnicodeToMTExtra();
-
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToMTExtra_h___ */

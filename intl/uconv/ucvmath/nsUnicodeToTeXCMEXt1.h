@@ -40,7 +40,7 @@
 #ifndef nsUnicodeToTeXCMEXt1_h___
 #define nsUnicodeToTeXCMEXt1_h___
 
-#include "nsUCvMathSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToTeXCMEXt1 [declaration]
@@ -57,14 +57,6 @@ public:
    * Class constructor.
    */
   nsUnicodeToTeXCMEXt1();
-
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToTeXCMEXt1_h___ */

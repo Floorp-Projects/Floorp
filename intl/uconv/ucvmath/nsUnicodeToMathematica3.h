@@ -40,7 +40,7 @@
 #ifndef nsUnicodeToMathematica3_h___
 #define nsUnicodeToMathematica3_h___
 
-#include "nsUCvMathSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToMathematica3 [declaration]
@@ -57,14 +57,6 @@ public:
    * Class constructor.
    */
   nsUnicodeToMathematica3();
-
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToMathematica3_h___ */
