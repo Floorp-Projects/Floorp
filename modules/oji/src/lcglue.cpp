@@ -137,7 +137,7 @@ map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, void* java_applet_
 	JSContext* context = NULL;
 	if (java_applet_obj != NULL) {
 		nsIPluginInstance* pluginInstance = NS_REINTERPRET_CAST(nsIPluginInstance*, java_applet_obj);
-		nsIPluginInstancePeer* pluginPeer = NULL;
+	        nsIPluginInstancePeer* pluginPeer = NULL;
 		if (pluginInstance->GetPeer(&pluginPeer) == NS_OK) {
 			nsIPluginInstancePeer2* pluginPeer2 = NULL;
 			if (pluginPeer->QueryInterface(NS_GET_IID(nsIPluginInstancePeer2), (void**) &pluginPeer2) == NS_OK) {
@@ -408,22 +408,6 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
                         void *pNSISecurityContext,
                         void *java_applet_obj)
 {
-	JVMContext* context = GetJVMContext();
-
-    // Get and Save the current applet object in the vm context.
-    // There is not a 1:1 coorespondence between jvmcontexts and
-    // jscontexts, but there is a 1:1 correspondence between
-    // jvmcontexts and applet objects. So syncronize the two
-    // here and use the applet object to get the jscontext when
-    // needed.
-
-    if (java_applet_obj) {
-        context->java_applet_obj = java_applet_obj;
-    }
-    else if (context->java_applet_obj) {
-        java_applet_obj=context->java_applet_obj;
-    }
-
     JSContext *pJSCX    = map_jsj_thread_to_js_context_impl(nsnull,java_applet_obj,jEnv,errp);
     nsCOMPtr<nsIPrincipal> principal;
 
