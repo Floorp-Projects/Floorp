@@ -376,6 +376,21 @@ nsContainerFrame::ReplaceFrame(nsIPresContext& aPresContext,
 /////////////////////////////////////////////////////////////////////////////
 // Helper member functions
 
+static PRBool
+TranslatePointTo(nsPoint& aPoint, nsIView* aChildView, nsIView* aParentView)
+{
+  do {
+    nsRect  bounds;
+
+    aChildView->GetBounds(bounds);
+    aPoint.x += bounds.x;
+    aPoint.y += bounds.y;
+    aChildView->GetParent(aChildView);
+  } while (aChildView && (aChildView != aParentView));
+
+  return aChildView == aParentView;
+}
+
 void
 nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
                                     nsIFrame*       aKidFrame,
@@ -384,19 +399,30 @@ nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
   if (aView) {
     // Position view relative to its parent, not relative to aKidFrame's
     // frame which may not have a view
-    nsIView*  containingView;
-    nsPoint   origin;
-    nsIView*  parentView;
+    nsIView*        containingView;
+    nsPoint         origin;
+    nsIView*        parentView;
+    nsIViewManager *vm;
 
     aView->GetParent(parentView);
     aKidFrame->GetOffsetFromView(aPresContext, origin, &containingView);
+    aView->GetViewManager(vm);
     
     if (containingView == parentView) {
-      nsIViewManager *vm;
-      aView->GetViewManager(vm);
       vm->MoveViewTo(aView, origin.x, origin.y);
-      NS_RELEASE(vm);
+
+    } else {
+      // Huh, the view's parent view isn't the same as the containing view.
+      // This happens for combo box drop-down frames.
+      //
+      // We have the origin in the coordinate space of the containing view,
+      // but we need it in the coordinate space of the parent view so do a
+      // view translation
+      NS_VERIFY(TranslatePointTo(origin, containingView, parentView), "translation failed");
+      vm->MoveViewTo(aView, origin.x, origin.y);
     }
+
+    NS_RELEASE(vm);
   }
 }
 
@@ -426,6 +452,16 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
       aFrame->GetOffsetFromView(aPresContext, origin, &containingView);
       
       if (containingView == parentView) {
+        vm->MoveViewTo(aView, origin.x, origin.y);
+      
+      } else {
+        // Huh, the view's parent view isn't the same as the containing view.
+        // This happens for combo box drop-down frames.
+        //
+        // We have the origin in the coordinate space of the containing view,
+        // but we need it in the coordinate space of the parent view so do a
+        // view translation
+        NS_VERIFY(TranslatePointTo(origin, containingView, parentView), "translation failed");
         vm->MoveViewTo(aView, origin.x, origin.y);
       }
     }
