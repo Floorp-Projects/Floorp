@@ -816,7 +816,7 @@
     <menuseparator />
     <menuitem value="&pasteAsQuotationCmd.label;"
            accesskey="&editpastequotation.accesskey;"
-           oncommand="EditorPasteAsQuotation()"/>
+           oncommand="goDoCommand('cmd_pasteQuote')"/>
     <menuitem value="&editRewrapCmd.label;"
            oncommand="editorShell.Rewrap(false)"/>
     <menuitem value="&editStripQuotesCmd.label;"
