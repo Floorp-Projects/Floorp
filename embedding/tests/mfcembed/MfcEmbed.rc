@@ -229,6 +229,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&View Page Source",           ID_VIEW_SOURCE
         MENUITEM SEPARATOR
+        MENUITEM "View &Image",                 ID_VIEW_IMAGE
+        MENUITEM SEPARATOR
         MENUITEM "Save &Page As...",            ID_FILE_SAVE_AS
         MENUITEM "Save &Link As...",            ID_SAVE_LINK_AS
         MENUITEM "&Copy Link Location",         ID_COPY_LINK_LOCATION
