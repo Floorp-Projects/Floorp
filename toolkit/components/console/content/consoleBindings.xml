@@ -62,7 +62,9 @@
             this.mSelectedItem.removeAttribute("selected");
           
           this.mSelectedItem = val;
-          val.setAttribute("selected", "true");
+          if (val)
+            val.setAttribute("selected", "true");
+          document.commandDispatcher.updateCommands("select");
         ]]></setter>
       </property>
     
@@ -92,6 +94,7 @@
           this.mMode = this.getAttribute("mode") || "All";
 
           this.appendInitialItems();
+          this.selectedItem = null; // fires command updater
         ]]></body>
       </method>
     
@@ -206,6 +209,7 @@
           var newRows = this.mConsoleRowBox.cloneNode(false);
           this.mConsoleRowBox.parentNode.replaceChild(newRows, this.mConsoleRowBox);
           this.mConsoleRowBox = newRows;
+          this.selectedItem = null;
         ]]></body>
       </method>
             
@@ -294,8 +298,7 @@
           while (target && !("_IsConsoleRow" in target))
             target = target.parentNode;
 
-          if (target)
-            this.selectedItem = target;
+          this.selectedItem = target;
         }
       ]]></handler>
     </handlers>

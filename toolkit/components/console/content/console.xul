@@ -24,14 +24,8 @@
 <?xml-stylesheet href="chrome://global/skin/console/console.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://global/content/console.css" type="text/css"?> 
 
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-
 <!DOCTYPE window [
   <!ENTITY % console SYSTEM "chrome://global/locale/console.dtd"> %console;
-  <!ENTITY % util SYSTEM "chrome://communicator/locale/utilityOverlay.dtd"> %util;
-  <!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd"> %globalRegionDTD;
-  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" > %brandDTD;
 ]>
 
 <window id="JSConsoleWindow"
@@ -42,15 +36,20 @@
         screenX="10" screenY="10"
         persist="screenX screenY width height"> 
 
-<script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-<script type="application/x-javascript" src="chrome://global/content/console.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/console.js"/>
 
-<stringbundle id="ConsoleBundle" src="chrome://global/locale/console.properties"/>
-<command id="cmd_copy" oncommand="copyItemToClipboard()"/>
-<command id="cmd_close" oncommand="window.close()"/>
+  <stringbundle id="ConsoleBundle" src="chrome://global/locale/console.properties"/>
 
-  <broadcaster id="Console:clear" label="&clear.label;" oncommand="clearConsole();"/>
-  
+  <commandset commandupdater="true"
+              events="select"
+              oncommandupdate="updateCopyMenu()">
+    <command id="cmd_copy" oncommand="copyItemToClipboard()"/>
+  </commandset>
+
+  <broadcaster id="Console:clear" label="&clear.label;" 
+               accesskey="&clear.accesskey;"
+               oncommand="clearConsole();"/>
   <broadcaster id="Console:sortAscend" label="&sortFirst.label;" 
                accesskey="&sortFirst.accesskey;"
                oncommand="changeSortOrder('forward');"/>
@@ -58,57 +57,64 @@
                accesskey="&sortLast.accesskey;"
                oncommand="changeSortOrder('reverse');"/>
 
-  <broadcaster id="Console:toggleToolbarMode" label="&toolbarMode.label;" 
-               oncommand="toggleToolbar(this);" checked="true" 
-               _toolbar="ToolbarMode"/>
-  <broadcaster id="Console:toggleToolbarEval" label="&toolbarEval.label;"
-               oncommand="toggleToolbar(this);" checked="true" 
-               _toolbar="ToolbarEval"/>
+  <broadcasterset id="ModeBroadcasters">
+    <broadcaster id="Console:modeAll" 
+                 label="&all.label;" accesskey="&all.accesskey;"
+                 oncommand="changeMode('All');"/>
+    <broadcaster id="Console:modeErrors"
+                 label="&errors.label;" accesskey="&errors.accesskey;"
+                 oncommand="changeMode('Errors');"/>
+    <broadcaster id="Console:modeWarnings"
+                 label="&warnings.label;" accesskey="&warnings.accesskey;"
+                 oncommand="changeMode('Warnings');"/>
+    <broadcaster id="Console:modeMessages"
+                 label="&messages.label;" accesskey="&messages.accesskey;"
+                 oncommand="changeMode('Messages');"/>
+  </broadcasterset>
 
-<broadcasterset id="ModeBroadcasters">
-  <broadcaster id="Console:modeAll" label="&all.label;" 
-               oncommand="changeMode('All');"/>
-  <broadcaster id="Console:modeErrors" label="&errors.label;"
-               oncommand="changeMode('Errors');"/>
-  <broadcaster id="Console:modeWarnings" label="&warnings.label;"
-               oncommand="changeMode('Warnings');"/>
-  <broadcaster id="Console:modeMessages" label="&messages.label;"
-               oncommand="changeMode('Messages');"/>
-</broadcasterset>
+  <keyset>
+    <key id="key_copy" 
+         key="&copyCmd.commandkey;" 
+         modifiers="accel"
+         command="cmd_copy"/>
+    <key id="key_close"
+         key="&closeCmd.commandkey;"
+         modifiers="accel"
+         oncommand="window.close()"/>
+    <key id="key_focus1" key="&focus1.commandkey;" modifiers="accel"
+         oncommand="gTextBoxEval.focus()"/>
+    <key id="key_focus2" key="&focus2.commandkey;" modifiers="alt"
+         oncommand="gTextBoxEval.focus()"/>
+  </keyset>
 
-<keyset>
-  <key id="key_copy"/>
-  <key id="key_close"/>
-</keyset>
-
-<popupset id="ContextMenus">
-  <popup id="ConsoleContext" onpopupshowing="UpdateCopyMenu()">
-    <menuitem type="radio" observes="Console:sortAscend"/>
-    <menuitem type="radio" observes="Console:sortDescend"/>
-    <menuseparator/>
-    <menuitem id="menu_copy_cm" observes="cmd_copy" label="&copyCmd.label;" accesskey="&copyCmd.accesskey;"/>
-  </popup>
-</popupset>
+  <popupset id="ContextMenus">
+    <popup id="ConsoleContext">
+      <menuitem type="radio" observes="Console:sortAscend"/>
+      <menuitem type="radio" observes="Console:sortDescend"/>
+      <menuseparator/>
+      <menuitem id="menu_copy_cm" observes="cmd_copy" label="&copyCmd.label;" key="key_copy" accesskey="&copyCmd.accesskey;"/>
+    </popup>
+  </popupset>
   
-<toolbox>
-  <toolbar class="chromeclass-toolbar" id="ToolbarMode" grippytooltiptext="&modeToolbar.tooltip;">
-    <toolbarbutton type="radio" group="mode" observes="Console:modeAll"/>
-    <toolbarbutton type="radio" group="mode" observes="Console:modeErrors"/>
-    <toolbarbutton type="radio" group="mode" observes="Console:modeWarnings"/>
-    <toolbarbutton type="radio" group="mode" observes="Console:modeMessages"/>
-    <toolbarseparator/>
-    <toolbarbutton observes="Console:clear"/>
-  </toolbar>
+  <toolbox>
+    <toolbar class="chromeclass-toolbar" id="ToolbarMode">
+      <toolbarbutton type="radio" group="mode" observes="Console:modeAll"/>
+      <toolbarbutton type="radio" group="mode" observes="Console:modeErrors"/>
+      <toolbarbutton type="radio" group="mode" observes="Console:modeWarnings"/>
+      <toolbarbutton type="radio" group="mode" observes="Console:modeMessages"/>
+      <toolbarseparator/>
+      <toolbarbutton observes="Console:clear"/>
+    </toolbar>
   
-  <toolbar class="chromeclass-toolbar" id="ToolbarEval" grippytooltiptext="&entryToolbar.tooltip;">
-    <textbox id="TextboxEval" class="toolbar" value="" onkeypress="onEvalKeyPress(event)" flex="1"/>
-    <toolbarbutton id="ButtonEval" label="&evaluate.label;" oncommand="evaluateTypein()"/>
-  </toolbar>
-</toolbox>
+    <toolbar class="chromeclass-toolbar" id="ToolbarEval">
+      <textbox id="TextboxEval" class="toolbar" value="" onkeypress="onEvalKeyPress(event)" flex="1"/>
+      <toolbarbutton id="ButtonEval" label="&evaluate.label;" oncommand="evaluateTypein()"/>
+    </toolbar>
+  </toolbox>
   
-<vbox id="ConsoleBox" class="console-box" flex="1" context="ConsoleContext" persist="sortOrder"/>
+  <vbox id="ConsoleBox" class="console-box" flex="1" context="ConsoleContext" persist="sortOrder"/>
 
-<iframe name="Evaluator" id="Evaluator" collapsed="true"/>
+  <iframe name="Evaluator" id="Evaluator" collapsed="true"/>
 
 </window>
 
