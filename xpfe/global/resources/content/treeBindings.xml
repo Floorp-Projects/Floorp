@@ -54,6 +54,16 @@
           return this.treeBoxObject.scrollToIndex(index);
         </body>
       </method>
+      <method name="getNumberOfVisibleRows">
+        <body>
+          return this.treeBoxObject.getNumberOfVisibleRows();
+        </body>
+      </method>
+      <method name="getIndexOfFirstVisibleRow">
+        <body>
+          return this.treeBoxObject.getIndexOfFirstVisibleRow();
+        </body>
+      </method>
     </interface>
     <handlers>
       <handler type="keypress" keycode="vk_enter">
@@ -104,6 +114,68 @@
            this.ensureIndexIsVisible(this.getIndexOfItem(this.selectedItems[0])+1);
            this.selectItem(n);
          }
+        ]]>
+      </handler>
+      <handler type="keypress" keycode="vk_page_up">
+        <![CDATA[
+         if (event.target != this || this.selectedItems.length != 1)
+           return;
+	 var i = this.getIndexOfFirstVisibleRow();
+         var v = this.getNumberOfVisibleRows() - 1;
+	 dump("IndexOfFirstVisibleRow: "+i+" NumberOfVisibleRows: "+v+"\n");
+         var n = this.getPreviousItem(this.selectedItems[0], v);
+         if (n) {
+	   this.scrollToIndex(i-v);
+           this.selectItem(n);
+	 }
+	 else {
+	   this.scrollToIndex(0);
+	   if ( i==0 )
+             this.selectItem(this.getItemAtIndex(0));
+	   else 
+             this.selectItem(this.getItemAtIndex(this.getIndexOfItem(this.selectedItems[0]) - i));
+	 }
+        ]]>
+      </handler>
+      <handler type="keypress" keycode="vk_page_down">
+        <![CDATA[
+         if (event.target != this || this.selectedItems.length != 1)
+	   return;
+	 var i = this.getIndexOfFirstVisibleRow();
+         var v = this.getNumberOfVisibleRows() - 1;
+	 dump("IndexOfFirstVisibleRow: "+i+" NumberOfVisibleRows: "+v+"\n");
+         var n = this.getNextItem(this.selectedItems[0], v);
+         if (n) {
+           this.scrollToIndex(i+v);
+           this.selectItem(n);
+         }
+	 else {
+	   var e = this.getElementsByTagName("treechildren");
+	   var e = e[0].lastChild;
+	   this.selectItem(e);
+	 }
+        ]]>
+      </handler>
+      <handler type="keypress" keycode="vk_home">
+        <![CDATA[
+         if (event.target != this || this.selectedItems.length != 1)
+           return;
+	 this.scrollToIndex(0);
+         this.selectItem(this.getItemAtIndex(0));
+        ]]>
+      </handler>
+      <handler type="keypress" keycode="vk_end">
+        <![CDATA[
+         if (event.target != this || this.selectedItems.length != 1)
+           return;
+	 var e = this.getElementsByTagName("treechildren");
+	 var e = e[0].lastChild;
+         var v = this.getNumberOfVisibleRows();
+	 var i = this.getIndexOfItem(e)-v;
+	 if ( i < 0 )
+	   i=0;
+	 this.scrollToIndex(i);
+	 this.selectItem(e);
         ]]>
       </handler>
     </handlers>    
