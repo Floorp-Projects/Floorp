@@ -4399,16 +4399,12 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
   PRBool  endsInNewline = PR_FALSE;
   PRBool  justDidFirstLetter = PR_FALSE;
   nsTextDimensions dimensions, lastWordDimensions;
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(XP_OS2)
   PRBool  measureTextRuns = !aTextData.mComputeMaxWordWidth && !aTs.mPreformatted &&
                             !aTs.mSmallCaps && !aTs.mWordSpacing && !aTs.mLetterSpacing &&
                             aTextData.mWrapping;
   // Don't measure text runs with letter spacing active, it doesn't work
   // it also doesn't work if we are not word-wrapping (bug 42832)
-#elif defined(XP_OS2)
-  PRBool  measureTextRuns = !aTextData.mComputeMaxWordWidth && !aTs.mSmallCaps &&
-                            !aTs.mWordSpacing && !aTs.mLetterSpacing &&
-                            aTextData.mWrapping;
 #else
   PRBool  measureTextRuns = PR_FALSE;
 #endif
