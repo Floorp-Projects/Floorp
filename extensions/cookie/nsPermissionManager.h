@@ -176,7 +176,7 @@ private:
                                          const PRUnichar  *aData);
   void     NotifyObservers(nsIPermission *aPermission, const PRUnichar *aData);
   nsresult RemoveAllFromMemory();
-  nsresult GetHostPort(nsIURI *aURI, nsACString &aResult);
+  nsresult GetHost(nsIURI *aURI, nsACString &aResult);
   void     RemoveTypeStrings();
 
   nsCOMPtr<nsIObserverService> mObserverService;
