@@ -51,7 +51,7 @@
   <hbox class="box-smallheader" title="SSL"/>
 
   <groupbox orient="horizontal">
-    <label value="&SSLProtocolVersions;"/>
+    <caption label="&SSLProtocolVersions;"/>
 
     <!-- Prefs -->
     <vbox flex="1" autostretch="never" >
@@ -78,7 +78,7 @@
   </groupbox>
 
   <groupbox orient="vertical" autostretch="never">
-    <label value="&SSLWarnings;"/>
+    <caption label="&SSLWarnings;"/>
     <html>&warn.description;</html>
     <!-- Prefs -->
     <checkbox id="warnEnteringSecure" label="&warn.enteringsecure;"

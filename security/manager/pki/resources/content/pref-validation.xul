@@ -49,7 +49,7 @@
   <hbox class="box-smallheader" title="&validation.title;"/>
 
   <groupbox orient="vertical">
-    <label value="&validation.crl.label;"/>
+    <caption label="&validation.crl.label;"/>
     <html>&validation.crl.description;</html>
     <hbox halign="left" autostretch="never">
       <button class="dialog" label="&validation.managecrls.button;"
@@ -61,7 +61,7 @@
   </groupbox>
 
   <groupbox orient="vertical" autostretch="never" >
-    <label value="&validation.ocsp.label;"/>
+    <caption label="&validation.ocsp.label;"/>
     <html>&validation.ocsp.description;</html>
     <!-- Prefs -->
     <radiogroup id="securityOCSPEnabled" orient="vertical" autostretch="never"

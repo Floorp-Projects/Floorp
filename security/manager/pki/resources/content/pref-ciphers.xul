@@ -91,7 +91,7 @@
   <vbox style="overflow: hidden;" flex="1">
 
   <groupbox orient="vertical" autostretch="never">
-    <label value="&cipher.ssl2.label;"/>
+    <caption label="&cipher.ssl2.label;"/>
 
     <checkbox label="&cipher.ssl2.rc4_128;" pref="true"
               prefstring="security.ssl2.rc4_128"/>
@@ -109,7 +109,7 @@
   </groupbox>
 
   <groupbox orient="vertical" autostretch="never">
-    <label value="&cipher.ssl3.label;"/>
+    <caption label="&cipher.ssl3.label;"/>
 
     <checkbox label="&cipher.ssl3.rsa_rc4_128_md5;" pref="true"
               prefstring="security.ssl3.rsa_rc4_128_md5"/>

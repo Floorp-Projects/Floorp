@@ -51,7 +51,7 @@
   <hbox class="box-smallheader" title="&certs.label;"/>
 
   <groupbox orient="vertical" autostretch="never">
-    <label value="&SSLClientAuthMethod;"/>
+    <caption label="&SSLClientAuthMethod;"/>
     <html> &certselect.description; </html>
     <!-- Prefs -->
     <radiogroup id="certSelection" pref="true" preftype="string" 
@@ -63,7 +63,7 @@
 
   <!-- Certificate manager -->
   <groupbox orient="vertical">
-    <label value="&managecerts.label;"/>
+    <caption label="&managecerts.label;"/>
     <html>&managecerts.text;</html>
     <hbox halign="left" autostretch="never">
       <button class="dialog" label="&managecerts.button;" disabled="false"
@@ -76,7 +76,7 @@
 
   <!-- Device manager -->
   <groupbox orient="vertical">
-    <label value="&managedevices.label;"/>
+    <caption label="&managedevices.label;"/>
     <html>&managedevices.text;</html>
     <hbox halign="left" autostretch="never">
       <button class="dialog" label="&managedevices.button;" disabled="false"
