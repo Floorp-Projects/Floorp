@@ -289,6 +289,9 @@ Contributor(s): ______________________________________. -->
 
   <html:script language="javascript" src="navigator.js">
   </html:script>
+  
+  <html:script language="javascript" src="tooltip.js">
+  </html:script>
 
 <popup id="translationlist">
 	<menu>
@@ -310,10 +313,11 @@ Contributor(s): ______________________________________. -->
 	</menu>
 </popup>
 
-<popup id="backtooltip">
+<!-- This needs to go into a xul fragment, but since those don't work now, this stays here !-->
+<popup id="aTooltip" oncreate="return FillInTooltip(document.tooltipElement);">
  <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   width="80" height="15" style="border: thin solid black">
-   Get Back, JoJo
+   width="200" height="20" style="border: thin solid black"> 
+  	<titledbutton id = "replaceMe" align="left" class="borderless paneltitle" value="" />
  </window>
 </popup>
 
@@ -753,7 +757,7 @@ Contributor(s): ______________________________________. -->
 		  </box>
 		  <spring flex="100%"/>
 	 	  <box align="horizontal">
-  	 		<titledbutton align="left"  class="popup" popup="samplePopup" 
+  	 		<titledbutton align="left"  class="popup" popup="samplePopup" tooltip="aTooltip" tooltiptext="This is a toolbar"
 			   popupanchor="topleft" popupalign="bottomleft" value="&dayplannerButton.label;" />
   	 		<titledbutton align="left"  class="popup" popup="samplePopup"
 			   popupanchor="topleft" popupalign="bottomleft" value="&shoppingButton.label;" />
