@@ -1278,7 +1278,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
         // layout strategy will compute a different maximum content width than we
         // computed for the initial reflow. That's because the table layout
         // strategy doesn't check whether the cell is auto-width...
-        desiredSize.mMaximumWidth = desiredSize.width;
+        desiredSize.mMaximumWidth = PR_MIN(desiredSize.mMaximumWidth, desiredSize.width);
       }
       ((nsTableCellFrame *)aNextFrame)->SetMaximumWidth(desiredSize.mMaximumWidth);
       if (oldMaximumWidth != desiredSize.mMaximumWidth) {
