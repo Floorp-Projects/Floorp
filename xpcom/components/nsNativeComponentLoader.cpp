@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-#include "prlog.h"
 #include "prmem.h"
 #include "prerror.h"
 #include "prsystem.h"           // PR_GetDirectorySeparator
@@ -40,6 +39,9 @@
 #define USE_REGISTRY 1
 #define XPCOM_USE_NSGETFACTORY 1
 
+// Logging of debug output
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#include "prlog.h"
 extern PRLogModuleInfo *nsComponentManagerLog;
 
 nsNativeComponentLoader::nsNativeComponentLoader() :
@@ -88,9 +90,9 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
 
     if (!dll)
         return NS_ERROR_OUT_OF_MEMORY;
-    
+
     if (!dll->IsLoaded()) {
-        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+        PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
                ("nsNativeComponentLoader: loading \"%s\"",
                 dll->GetDisplayPath()));
 
@@ -121,21 +123,13 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
     if (NS_FAILED(rv)) {
         if (rv == NS_ERROR_FACTORY_NOT_LOADED) {
             rv = GetFactoryFromNSGetFactory(dll, aCID, serviceMgr, _retval);
-#ifdef WARN_ABOUT_NSGETFACTORY
-            if (NS_SUCCEEDED(rv)) {
-                fprintf(stderr,
-                        "XPCOM: Component %s uses DEPRECATED\n"
-                        "       NSGetFactory interface. This could break "
-                        "AT ANY TIME.\n", dll->GetDisplayPath());
-            }
-#endif
         }
     }
 #endif
-    PR_LOG(nsComponentManagerLog, (NS_SUCCEEDED(rv) ? PR_LOG_DEBUG : PR_LOG_ERROR),
-           ("nsNativeComponentLoader: Factory creation %s "
-            "%s -> %s\n", (NS_SUCCEEDED(rv) ? "passed" : "FAILED"),
-            aLocation, dll->GetDisplayPath()));
+    PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
+           ("nsNativeComponentLoader: Factory creation %s for %s",
+            (NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"),
+            aLocation));
 
     // If the dll failed to get us a factory. But the dll registered that
     // it would be able to create a factory for this CID. mmh!
@@ -334,8 +328,8 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr, PRInt32 when)
         }
         else
         {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                   ("nsComponentManager: Unload cant get nsIModule or CanUnload for %s",
+            PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
+                   ("nsNativeComponentLoader: Unload cant get nsIModule or NSCanUnload for %s",
                     dll->GetDisplayPath()));
             return rv;
         }
@@ -354,8 +348,8 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr, PRInt32 when)
     // Check error status on CanUnload() call
     if (NS_FAILED(rv))
     {
-        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-               ("nsComponentManager: nsIModule::CanUnload() returned error for %s.",
+        PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
+               ("nsNativeComponentLoader: nsIModule::CanUnload() returned error for %s.",
                 dll->GetDisplayPath()));
         return rv;
     }
@@ -364,8 +358,8 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr, PRInt32 when)
     {
         if (dllMarkedForUnload)
         {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                   ("nsComponentManager: + Unloading \"%s\".", dll->GetDisplayPath()));
+            PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG, 
+                   ("nsNativeComponentLoader: + Unloading \"%s\".", dll->GetDisplayPath()));
 #if 0
             // XXX dlls aren't counting their outstanding instances correctly
             // XXX hence, dont unload until this gets enforced.
@@ -374,14 +368,14 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr, PRInt32 when)
         }
         else
         {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Ready for unload \"%s\".", dll->GetDisplayPath()));
+            PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
+                   ("nsNativeComponentLoader: Ready for unload \"%s\".", dll->GetDisplayPath()));
         }
     }
     else
     {
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-               ("nsComponentManager: + NOT Unloading %s", dll->GetDisplayPath()));
+               ("nsNativeComponentLoader: NOT ready for unload %s", dll->GetDisplayPath()));
         rv = NS_ERROR_FAILURE;
     }
     return rv;
@@ -435,17 +429,14 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll,
         return NS_ERROR_FAILURE;
     }
 
-    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-           ("nsNativeComponentLoader: + Loaded \"%s\".", dll->GetDisplayPath()));
+    PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
+           ("nsNativeComponentLoader: Loaded \"%s\".", dll->GetDisplayPath()));
 
     // Tell the module to self register
     nsCOMPtr<nsIModule> mobj;
     res = dll->GetModule(mCompMgr, getter_AddRefs(mobj));
     if (NS_SUCCEEDED(res))
     {
-        PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
-               ("nsNativeComponentLoader: %s using nsIModule to register self.",
-                dll->GetDisplayPath()));
         nsCOMPtr<nsIFile> fs;
         /*************************************************************
          * WARNING: Why are use introducing 'res2' here and then     *
@@ -478,11 +469,9 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll,
         {
             // Call the NSRegisterSelfProc to enable dll registration
             res = regproc(serviceMgr, registryLocation);
-            PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
-                   ("NSRegisterSelf(%s, %s) %s",
-                    serviceMgr ? "serviceMgr" : "(null)",
-                    registryLocation,
-                    NS_FAILED(res) ? "FAILED" : "succeeded"));
+            PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
+                   ("nsNativeComponentLoader: %s using OBSOLETE NSRegisterSelf()",
+                    dll->GetDisplayPath()));
         }
     }
 #endif /* OBSOLETE_MODULE_LOADING */
@@ -757,7 +746,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         {
             // Dll hasn't changed. Skip.
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                   ("nsComponentManager: + nsDll not changed \"%s\". Skipping...",
+                   ("nsNativeComponentLoader: + nsDll not changed \"%s\". Skipping...",
                     dll->GetDisplayPath()));
             return NS_OK;
         }
@@ -1038,10 +1027,6 @@ nsNativeComponentLoader::GetFactoryFromModule(nsDll *aDll, const nsCID &aCID,
     if (NS_FAILED(rv))
         return rv;
 
-    PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
-           ("nsNativeComponentLoader: %s using nsIModule to get factory",
-            aDll->GetDisplayPath()));
-    
     return module->GetClassObject(mCompMgr, aCID, NS_GET_IID(nsIFactory),
                                   (void **)aFactory);
 }
@@ -1060,7 +1045,7 @@ nsNativeComponentLoader::GetFactoryFromNSGetFactory(nsDll *aDll,
         return NS_ERROR_FACTORY_NOT_LOADED;
     
     PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
-           ("nsNativeComponentLoader: %s using OBSOLETE NSGetFactory\n",
+           ("nsNativeComponentLoader: %s using OBSOLETE NSGetFactory()\n",
             aDll->GetDisplayPath()));
 
     /*

@@ -206,6 +206,8 @@ nsresult nsComponentManagerImpl::Init(void)
     if (nsComponentManagerLog == NULL)
     {
         nsComponentManagerLog = PR_NewLogModule("nsComponentManager");
+        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+               ("xpcom-log-version : " NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING));
     }
 
     if (mFactories == NULL) {
@@ -231,8 +233,6 @@ nsresult nsComponentManagerImpl::Init(void)
 
     if (mNativeComponentLoader == nsnull) {
         /* Create the NativeComponentLoader */
-        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-               ("creating native ComponentLoader"));
         mNativeComponentLoader = new nsNativeComponentLoader();
         if (!mNativeComponentLoader)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -240,8 +240,6 @@ nsresult nsComponentManagerImpl::Init(void)
     }
     
     if (mLoaders == nsnull) {
-	PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-	       ("creating component loader table"));
 	mLoaders = new nsSupportsHashtable(16, /* Thread safe */ PR_TRUE);
 	if (mLoaders == nsnull)
 	    return NS_ERROR_OUT_OF_MEMORY;
@@ -479,7 +477,7 @@ nsComponentManagerImpl::PlatformVersionCheck(nsRegistryKey *aXPCOMRootKey)
     if (NS_FAILED(err) || PL_strcmp(buf, NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING))
     {
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-               ("nsComponentManager: Registry version mismatch (%s vs %s)."
+               ("nsComponentManager: Registry version mismatch (old:%s vs new:%s)."
                 "Nuking xpcom registry hierarchy.", (const char *)buf,
                 NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING));
 
@@ -494,21 +492,8 @@ nsComponentManagerImpl::PlatformVersionCheck(nsRegistryKey *aXPCOMRootKey)
 
         // The top-level Classes and CLSID trees are from an early alpha version,
         // we can probably remove these two deletions after the second beta or so.
-        rv = mRegistry->RemoveSubtree(nsIRegistry::Common, classIDKeyName);
-        if(NS_FAILED(rv))
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Failed To Nuke Subtree (%s)",classIDKeyName));
-            // don't return this error!
-        }
-
-        rv = mRegistry->RemoveSubtree(nsIRegistry::Common, classesKeyName);
-        if(NS_FAILED(rv))
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Failed To Nuke Subtree (%s)",classesKeyName));
-            // don't return this error!
-        }
+        (void) mRegistry->RemoveSubtree(nsIRegistry::Common, classIDKeyName);
+        (void) mRegistry->RemoveSubtree(nsIRegistry::Common, classesKeyName);
 
         // Recreate XPCOM key and version
         rv = mRegistry->AddSubtree(nsIRegistry::Common,xpcomKeyName, &xpcomKey);
@@ -534,7 +519,7 @@ nsComponentManagerImpl::PlatformVersionCheck(nsRegistryKey *aXPCOMRootKey)
     }
 
 
-    // return the XPCOM key (null check deferred so cleanup allways happens)
+    // return the XPCOM key (null check deferred so cleanup always happens)
     if (!aXPCOMRootKey)
         return NS_ERROR_NULL_POINTER;
     else
@@ -922,71 +907,6 @@ nsComponentManagerImpl::HashProgID(const char *aProgID, const nsCID &aClass)
     return NS_OK;
 }
 
-#if 0
-nsDll* nsComponentManagerImpl::CreateCachedDllName(const char *dllName)
-{
-    // Check our dllCollection for a dll with matching name
-    nsStringKey key(dllName);
-    nsDll *dll = (nsDll *) mDllStore->Get(&key);
-    
-    if (dll == NULL)
-    {
-        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-               ("nsComponentManager: New dll \"%s\".", dllName));
-
-        // Add a new Dll into the nsDllStore
-        dll = new nsDll(dllName, 1 /* dummy */);
-        if (dll == NULL) return NULL;
-        if (dll->GetStatus() != DLL_OK)
-        {
-            // Cant create a nsDll. Backoff.
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: ERROR in creating nsDll from \"%s\".", dllName));
-            delete dll;
-            dll = NULL;
-        }
-        else
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Adding New dll \"%s\" to mDllStore.",
-                    dllName));
-
-            mDllStore->Put(&key, (void *)dll);
-        }
-    }
-    else
-    {
-        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-               ("nsComponentManager: Found in mDllStore \"%s\".", dllName));
-    }
-
-    return dll;
-}
-
-
-
-
-nsDll* nsComponentManagerImpl::CreateCachedDll(nsIFile *dllSpec)
-{
-    nsDll *dll = NULL;
-    PRInt64 modDate;
-    PRInt64 size;
-
-    if (NS_FAILED(dllSpec->GetModDate(&modDate)) ||
-        NS_FAILED(dllSpec->GetFileSize(&size)))
-        return NULL;
-
-    char *persistentDescriptor = NULL;
-    if (NS_FAILED(dllSpec->GetPath(&persistentDescriptor)))
-        return NULL;
-    dll = CreateCachedDll(persistentDescriptor, modDate, size);
-    nsAllocator::free(persistentDescriptor);
-
-    return dll;
-}
-#endif
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl: Public methods
 ////////////////////////////////////////////////////////////////////////////////
@@ -1013,7 +933,7 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
     rv = aEntry->GetFactory(aFactory, this);
     if (NS_FAILED(rv)) {
         PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
-               ("nsComponentManager: failed to load factory from %s (%s)\n",
+               ("nsComponentManager: FAILED to load factory from %s (%s)\n",
                 (const char *)aEntry->location, (const char *)aEntry->type));
         return rv;
     }
@@ -1028,29 +948,21 @@ nsComponentManagerImpl::GetFactoryEntry(const nsCID &aClass, PRBool checkRegistr
     nsIDKey key(aClass);
     nsFactoryEntry *entry = (nsFactoryEntry*) mFactories->Get(&key);
 
-    if (entry) {
-        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-	       ("\t\tfound %s as %p in factory cache.",
-                (const char *)entry->location, entry));
-    } else {
 #ifdef USE_REGISTRY
+    if (!entry)
+    {
         if (checkRegistry)
         {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("\t\tnot found in factory cache. Looking in registry"));
-
             nsresult rv = PlatformFind(aClass, &entry);
 
             // If we got one, cache it in our hashtable
             if (NS_SUCCEEDED(rv))
             {
-                PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                       ("\t\tfound in registry."));
                 mFactories->Put(&key, entry);
             }
         }
-#endif /* USE_REGISTRY */
     }
+#endif /* USE_REGISTRY */
 
     return (entry);
 }
@@ -1068,13 +980,6 @@ nsresult
 nsComponentManagerImpl::FindFactory(const nsCID &aClass,
                                     nsIFactory **aFactory) 
 {
-    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
-    {
-        char *buf = aClass.ToString();
-        PR_LogPrint("nsComponentManager: FindFactory(%s)", buf);
-        delete [] buf;
-    }
-
     PR_ASSERT(aFactory != NULL);
 
     nsFactoryEntry *entry = GetFactoryEntry(aClass, !mPrePopulationDone);
@@ -1238,7 +1143,6 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
                                        const nsIID &aIID,
                                        void **aResult)
 {
-
     if (aResult == NULL)
     {
         return NS_ERROR_NULL_POINTER;
@@ -1251,15 +1155,23 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
     {
         res = factory->CreateInstance(aDelegate, aIID, aResult);
         NS_RELEASE(factory);
-        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-               ("\t\tFactory CreateInstance() %s.",
-                NS_SUCCEEDED(res) ? "succeeded" : "FAILED"));
-        return res;
+    }
+    else
+    {
+        // Translate error values
+        res = NS_ERROR_FACTORY_NOT_REGISTERED;
     }
 
-    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-           ("\t\tCreateInstance() FAILED."));
-    return NS_ERROR_FACTORY_NOT_REGISTERED;
+    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS)) 
+    {
+        char *buf = aClass.ToString();
+        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+               ("nsComponentManager: CreateInstance(%s) %s", buf,
+                NS_SUCCEEDED(res) ? "succeeded" : "FAILED"));
+        delete [] buf;
+    }
+
+    return res;
 }
 
 /**
@@ -1431,6 +1343,16 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
 
     nsIDKey key(aClass);
     entry = (nsFactoryEntry *)mFactories->Get(&key);
+
+    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
+    {
+        char *buf = aClass.ToString();
+        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+               ("nsComponentManager: RegisterFactory(%s, %s)", buf,
+                (aProgID ? aProgID : "(null)")));
+        delete [] buf;
+
+    }
     
 
     if (entry && !aReplace) {
@@ -1458,7 +1380,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
         if(NS_FAILED(rv)) {
             PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                    ("\t\tFactory register succeeded. "
-                    "PROGID(%s)->CLSID mapping failed.", aProgID));
+                    "Hashing progid (%s) FAILED.", aProgID));
             return rv;
         }
     }
@@ -1569,11 +1491,16 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
     nsCOMPtr<nsIComponentLoader> loader;
     PRBool sanity;
 
-    PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
-           ("RegisterComponentCommon: %s %s %s %s",
-            aClassName ? aClassName : "(null)",
-            aProgID ? aProgID : "(null)",
-            aType, aRegistryName));
+    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
+    {
+        char *buf = aClass.ToString();
+        PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
+               ("nsComponentManager: RegisterComponentCommon(%s, %s, %s, %s)",
+                buf,
+                aProgID ? aProgID : "(null)",
+                aRegistryName, aType));
+        delete [] buf;
+    }
 
     if (entry && !aReplace) {
         PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
@@ -1582,7 +1509,6 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
         goto out;
     }
 
-
 #ifdef USE_REGISTRY
     if (aPersist) {
         /* Add to the registry */
@@ -1590,7 +1516,7 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
                                     aRegistryName, aType);
         if (NS_FAILED(rv)) {
 	    PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
-		   ("\t\tadding %s %s to reg failed", aClassName, aProgID));
+		   ("\t\tadding %s %s to registry FAILED", aClassName, aProgID));
             goto out;
 	}
     }
@@ -1599,7 +1525,7 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
     rv = GetLoaderForType(aType, getter_AddRefs(loader));
     if (NS_FAILED(rv)) {
 	PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
-	       ("\t\tcouldn't get loader for %s\n", aType));
+	       ("\t\tgetting loader for %s FAILED\n", aType));
         goto out;
     }
 
@@ -1632,10 +1558,8 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
         ) {
         rv = HashProgID(aProgID, aClass);
         if (NS_FAILED(rv)) {
-	    char *cidString = aClass.ToString();
 	    PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
-		   ("\t\tHashProgID(%s,%s) failed\n", cidString, aProgID));
-	    delete [] cidString;
+		   ("\t\tHashProgID(%s) FAILED\n", aProgID));
             goto out;
 	}
     }
@@ -1645,17 +1569,14 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
                             aReplace, aPersist);
     if (NS_FAILED(rv)) {
         PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
-               ("loader->OnRegister failed for %s \"%s\" %s %s", aType,
+               ("\t\tloader->OnRegister FAILED for %s \"%s\" %s %s", aType,
                 aClassName, aProgID, aRegistryName));
         goto out;
     }
     
-    PR_LOG(nsComponentManagerLog,
-           NS_SUCCEEDED(rv) ? PR_LOG_DEBUG : PR_LOG_ERROR, 
-           ("\t\tFactory register %s progID=%s.",
-            NS_SUCCEEDED(rv) ? "succeeded" : "failed",
-            aProgID ? aProgID : "<none>"));
-
+    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+           ("\t\tRegisterComponentCommon() %s",
+            NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
  out:
     if (NS_FAILED(rv)) {
         if (newEntry)
@@ -1797,8 +1718,8 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS)) 
     {
         char *buf = aClass.ToString();
-        PR_LogPrint("nsComponentManager: Unregistering Factory.");
-        PR_LogPrint("nsComponentManager: + %s.", buf);
+        PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
+               ("nsComponentManager: UnregisterFactory(%s)", buf));
         delete [] buf;
     }
     	
@@ -1819,9 +1740,8 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
     }
 
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-           ("nsComponentManager: ! Factory unregister %s.", 
-            NS_SUCCEEDED(res) ? "succeeded" : "failed"));
-    	
+           ("\t\tUnregisterFactory() %s",
+            NS_SUCCEEDED(res) ? "succeeded" : "FAILED"));
     return res;
 }
 
@@ -1830,13 +1750,6 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
                                             const char *aLibrary)
 {
     nsresult rv;
-    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
-    {
-        char *buf = aClass.ToString();
-        PR_LogPrint("nsComponentManager: UnregisterComponentSpec(%s, %s)", buf,
-                    aLibrary);
-        delete [] buf;
-    }
 
     // Convert the persistent descriptor into a nsIFile
     nsLocalFile* libSpec = new nsLocalFile;
@@ -1846,7 +1759,7 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
             
     if (NS_FAILED(rv)) return rv;
     
-    return UnregisterComponentSpec(aClass, libSpec);    
+    return UnregisterComponentSpec(aClass, libSpec);
 }
 
 nsresult
