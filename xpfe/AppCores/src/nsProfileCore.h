@@ -124,7 +124,7 @@ class nsProfileCore
 
 	NS_IMETHOD			 CreateNewProfile(const nsString& aData);
 	NS_IMETHOD			 RenameProfile(const nsString& oldName, const nsString& newName);
-	NS_IMETHOD			 DeleteProfile(const nsString& profileName);
+	NS_IMETHOD			 DeleteProfile(const nsString& profileName, const nsString& deleteFlag);
 
 	NS_IMETHOD			 GetProfileList(nsString& profileList);
 	NS_IMETHOD			 StartCommunicator(const nsString& profileName);
