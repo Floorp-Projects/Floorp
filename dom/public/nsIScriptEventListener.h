@@ -35,6 +35,7 @@ class nsIDOMEventListener;
 class nsIScriptEventListener : public nsISupports {
 
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_ISCRIPTEVENTLISTENER_IID; return iid; }
 
  /**
   * Checks equality of internal script function pointer with the one passed in.

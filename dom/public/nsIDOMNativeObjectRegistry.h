@@ -28,6 +28,8 @@
 
 class nsIDOMNativeObjectRegistry : public nsISupports {
 public:  
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOM_NATIVE_OBJECT_REGISTRY_IID; return iid; }
+
   /**
    * Register a class ID for a factory to create the native object
    * associated with a specific DOM class e.g. "HTMLImageElement".

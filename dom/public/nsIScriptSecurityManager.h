@@ -36,6 +36,8 @@ class nsIScriptContext;
 class nsIScriptSecurityManager : public nsISupports {
 
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTSECURITYMANAGER_IID);
+
  /**
   * Inits the security manager
   */

@@ -35,6 +35,8 @@
  */
 class nsIScriptNameSpaceManager : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTNAMESPACEMANAGER_IID);
+
   /**
    * Used to register a single global symbol or name. The class ID
    * is used to obtain a factory which is used to instantiate
