@@ -46,7 +46,8 @@ public:
     
   nsresult Alert(const char * stringName);
     nsresult SaveAttachment(nsIFileSpec *fileSpec, const char* unescapedUrl,
-                            const char* messageUri, void *closure);
+                            const char* messageUri, const char* contentType, 
+                            void *closure);
   nsresult PromptIfFileExists(nsFileSpec &fileSpec);
 
 protected:

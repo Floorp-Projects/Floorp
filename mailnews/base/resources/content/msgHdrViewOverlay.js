@@ -714,7 +714,7 @@ function createNewAttachmentInfo(contentType, url, displayName, uri, notDownload
 
 function saveAttachment(contentType, url, displayName, messageUri)
 {
-  messenger.saveAttachment(url, displayName, messageUri);
+  messenger.saveAttachment(contentType, url, displayName, messageUri);
 }
 
 function openAttachment(contentType, url, displayName, messageUri)
@@ -899,6 +899,7 @@ function SaveAllAttachments()
  try 
  {
    // convert our attachment data into some c++ friendly structs
+   var attachmentContentTypeArray = new Array();
    var attachmentUrlArray = new Array();
    var attachmentDisplayNameArray = new Array();
    var attachmentMessageUriArray = new Array();
@@ -907,17 +908,20 @@ function SaveAllAttachments()
    for (index in currentAttachments)
    {
      var attachment = currentAttachments[index];
+     attachmentContentTypeArray[index] = attachment.contentType;
      attachmentUrlArray[index] = attachment.url;
      attachmentDisplayNameArray[index] = escape(attachment.displayName);
      attachmentMessageUriArray[index] = attachment.uri;
    }
 
    // okay the list has been built...now call our save all attachments code...
-   messenger.saveAllAttachments(attachmentUrlArray.length, attachmentUrlArray, attachmentDisplayNameArray, attachmentMessageUriArray);
+   messenger.saveAllAttachments(attachmentContentTypeArray.length,
+                                attachmentContentTypeArray, attachmentUrlArray,
+                                attachmentDisplayNameArray, attachmentMessageUriArray);
  }
  catch (ex)
  {
-   dump ("** failed to save all attachments ** \n");
+   dump ("** failed to save all attachments **\n");
  }
 }
 

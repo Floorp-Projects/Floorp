@@ -32,6 +32,9 @@
 #include "nsEscape.h"
 #include "nsXPIDLString.h"
 #include "nsTextFormatter.h"
+#ifdef XP_MAC
+#include "nsIAppleFileDecoder.h"
+#endif
 
 // necko
 #include "nsMimeTypes.h"
@@ -210,12 +213,16 @@ public:
     nsString      m_charset;
     nsString      m_outputFormat;
     nsString      m_msgBuffer;
+
+    nsString      m_contentType;    // used only when saving attachment
 };
 
 class nsSaveAllAttachmentsState
 {
 public:
-    nsSaveAllAttachmentsState(PRUint32 count, const char **urlArray,
+    nsSaveAllAttachmentsState(PRUint32 count,
+                              const char **contentTypeArray,
+                              const char **urlArray,
                               const char **displayNameArray,
                               const char **messageUriArray,
                               const char *directoryName);
@@ -224,6 +231,7 @@ public:
     PRUint32 m_count;
     PRUint32 m_curIndex;
     char* m_directoryName;
+    char** m_contentTypeArray;
     char** m_urlArray;
     char** m_displayNameArray;
     char** m_messageUriArray;
@@ -529,6 +537,7 @@ nsresult
 nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
                             const char * unescapedUrl,
                             const char * messageUri,
+                            const char * contentType,
                             void *closure)
 {
   nsIMsgMessageService * messageService = nsnull;
@@ -550,6 +559,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
   }
   NS_ADDREF(aListener);
 
+  aListener->m_contentType.AssignWithConversion(contentType);
   if (saveState)
       aListener->m_saveAllAttachmentsState = saveState;
 
@@ -617,8 +627,8 @@ nsMessenger::OpenAttachment(const char * aContentType, const char * aUrl, const
 }
 
 NS_IMETHODIMP
-nsMessenger::SaveAttachment(const char * url, const char * displayName, 
-                            const char * messageUri)
+nsMessenger::SaveAttachment(const char * contentType, const char * url,
+                            const char * displayName, const char * messageUri)
 {
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
   char *unescapedUrl = nsnull;
@@ -674,7 +684,7 @@ nsMessenger::SaveAttachment(const char * url, const char * displayName,
   fileSpec = do_CreateInstance("@mozilla.org/filespec;1", &rv);
   if (NS_FAILED(rv)) goto done;
   fileSpec->SetNativePath(filePath);
-  rv = SaveAttachment(fileSpec, unescapedUrl, messageUri, nsnull);
+  rv = SaveAttachment(fileSpec, unescapedUrl, messageUri, contentType, nsnull);
 
 done:
     PR_FREEIF(unescapedUrl);
@@ -683,7 +693,9 @@ done:
 
 
 NS_IMETHODIMP
-nsMessenger::SaveAllAttachments(PRUint32 count, const char **urlArray,
+nsMessenger::SaveAllAttachments(PRUint32 count,
+                                const char **contentTypeArray,
+                                const char **urlArray,
                                 const char **displayNameArray,
                                 const char **messageUriArray)
 {
@@ -714,7 +726,9 @@ nsMessenger::SaveAllAttachments(PRUint32 count, const char **urlArray,
     rv = NS_NewFileSpec(getter_AddRefs(fileSpec));
     if (NS_FAILED(rv)) goto done;
 
-    saveState = new nsSaveAllAttachmentsState(count, urlArray,
+    saveState = new nsSaveAllAttachmentsState(count,
+                                              contentTypeArray,
+                                              urlArray,
                                               displayNameArray,
                                               messageUriArray, 
                                               (const char*) dirName);
@@ -736,7 +750,7 @@ nsMessenger::SaveAllAttachments(PRUint32 count, const char **urlArray,
         if (NS_FAILED(rv)) return rv;
         fileSpec->SetFromFileSpec(aFileSpec);
         rv = SaveAttachment(fileSpec, unescapedUrl, messageUriArray[0], 
-                            (void *)saveState);
+                            contentTypeArray[0], (void *)saveState);
         if (NS_FAILED(rv)) goto done;
     }
 done:
@@ -1566,6 +1580,31 @@ nsSaveMsgListener::OnStartRequest(nsIRequest* request, nsISupports* aSupport)
     {
         m_dataBuffer = (char*) PR_CALLOC(FOUR_K+1);
     }
+    
+#ifdef XP_MAC
+  /* On Mac, if we are saving an appledouble or applesingle attachment, we need to use an Apple File Decoder */
+  char * contentType = m_contentType.ToNewCString();
+  if (contentType && *contentType)
+    if ((nsCRT::strcasecmp(contentType, APPLICATION_APPLEFILE) == 0) ||
+        (nsCRT::strcasecmp(contentType, MULTIPART_APPLEDOUBLE) == 0))
+    {        
+      /* ggrrrrr, I have a nsFileSpec but I need a nsILocalFile... */
+      nsCOMPtr<nsILocalFile> outputFile;
+      nsFileSpec realSpec;
+      m_fileSpec->GetFileSpec(&realSpec);
+      NS_FileSpecToIFile(&realSpec, getter_AddRefs(outputFile));
+      
+      nsCOMPtr<nsIAppleFileDecoder> appleFileDecoder = do_CreateInstance(NS_IAPPLEFILEDECODER_CONTRACTID, &rv);
+      if (NS_SUCCEEDED(rv) && appleFileDecoder)
+      {
+        rv = appleFileDecoder->Initialize(m_outputStream, outputFile);
+        if (NS_SUCCEEDED(rv))
+          m_outputStream = do_QueryInterface(appleFileDecoder, &rv);
+      }
+    }
+  CRTFREEIF(contentType);
+#endif
+
     return rv;
 }
 
@@ -1645,8 +1684,10 @@ nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
           rv = m_messenger->PromptIfFileExists(aFileSpec);
           if (NS_FAILED(rv)) goto done;
           fileSpec->SetFromFileSpec(aFileSpec);
-          rv = m_messenger->SaveAttachment(fileSpec, unescapedUrl,
+          rv = m_messenger->SaveAttachment(fileSpec,
+                                           unescapedUrl,
                                            state->m_messageUriArray[i],
+                                           state->m_contentTypeArray[i],
                                            (void *)state);
       done:
           if (NS_FAILED(rv))
@@ -1761,6 +1802,7 @@ nsMessenger::GetString(const PRUnichar *aStringName)
 }
 
 nsSaveAllAttachmentsState::nsSaveAllAttachmentsState(PRUint32 count,
+                                                     const char **contentTypeArray,
                                                      const char **urlArray,
                                                      const char **nameArray,
                                                      const char **uriArray,
@@ -1772,11 +1814,13 @@ nsSaveAllAttachmentsState::nsSaveAllAttachmentsState(PRUint32 count,
     
     m_count = count;
     m_curIndex = 0;
+    m_contentTypeArray = new char*[count];
     m_urlArray = new char*[count];
     m_displayNameArray = new char*[count];
     m_messageUriArray = new char*[count];
     for (i = 0; i < count; i++)
     {
+        m_contentTypeArray[i] = nsCRT::strdup(contentTypeArray[i]);
         m_urlArray[i] = nsCRT::strdup(urlArray[i]);
         m_displayNameArray[i] = nsCRT::strdup(nameArray[i]);
         m_messageUriArray[i] = nsCRT::strdup(uriArray[i]);
@@ -1789,10 +1833,12 @@ nsSaveAllAttachmentsState::~nsSaveAllAttachmentsState()
     PRUint32 i;
     for (i = 0; i < m_count; i++)
     {
+        nsCRT::free(m_contentTypeArray[i]);
         nsCRT::free(m_urlArray[i]);
         nsCRT::free(m_displayNameArray[i]);
         nsCRT::free(m_messageUriArray[i]);
     }
+    delete m_contentTypeArray;
     delete m_urlArray;
     delete m_displayNameArray;
     delete m_messageUriArray;
