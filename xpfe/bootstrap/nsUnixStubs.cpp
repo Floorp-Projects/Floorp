@@ -16,29 +16,5 @@
  * Reserved.
  */
 
-#include "xp_mcom.h"
-#include "net.h"
-#include "xp_linebuf.h"
-#include "mkbuf.h"
 
-#ifndef MOZ_USER_DIR
-#define MOZ_USER_DIR ".mozilla"
-#endif
-
-
-extern "C" char *fe_GetConfigDir(void) {
-  char *home = getenv("HOME");
-  if (home) {
-    int len = strlen(home);
-    len += strlen("/") + strlen(MOZ_USER_DIR) + 1;
-
-    char* config_dir = (char *)XP_CALLOC(len, sizeof(char));
-    // we really should use XP_STRN*_SAFE but this is MODULAR_NETLIB
-    XP_STRCPY(config_dir, home);
-    XP_STRCAT(config_dir, "/");
-    XP_STRCAT(config_dir, MOZ_USER_DIR); 
-    return config_dir;
-  }
-  
-  return strdup("/tmp");
-}
+/* fe_GetConfigDir() was moved to modules/libpref/src/unix/unixpref.c. */
