@@ -1,0 +1,383 @@
+/* -*- Mode: Text; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Chatzilla.
+ *
+ * The Initial Developer of the Original Code is New Dimensions Consulting,
+ * Inc. Portions created by New Dimensions Consulting, Inc. are
+ * Copyright (C) 1999 New Dimenstions Consulting, Inc. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *  Robert Ginda, rginda@ndcico.com, original author
+ * 
+ * Styles for output window
+ *
+ */
+
+/* 
+ * This file contains the CSS rules for the output window in ChatZilla.
+ * The output window is layed out as a table with two columns.  The first
+ * column holds a message type or a nickname, depending on what view the
+ * message is contained by, and what kind of message it is.  The second column
+ * contains the text of the message.  For most message types, ChatZilla displays
+ * ascii-art instead of the actual code.  For example, messages of type "JOIN"
+ * are displayed as "-->|", and most unclassified message types are displayed
+ * as "===".  If you turn on debug messages (using the options->debug messages
+ * menuitem) ChatZilla will always show the actual message type.  This can be
+ * helpful when styling a particular response from the IRC server.  See the
+ * description of the msg-type attribute below.
+ *
+ * You can modify these styles on your local system by placing your desired
+ * styles in a file called chatzilla.css in your <profile>/chrome directory.
+ * (the file won't be there already, you have to create it.)  Add the line
+ *
+ *     @import url(chatzilla.css);
+ *
+ * to the to your userContent.css (also in your <profile>/chrome directory, and
+ * also not there unless you created it already.)  End all CSS rules in your
+ * new chatzilla.css with !important to override any styles declared here.
+ * For example, on a Linux system, you would create a file called
+ * /home/<username>/.mozilla/<username>/chrome/userContent.css (if it
+ * doesn't already exist), and add the line @import url(chatzilla.css) to it.
+ * Next, create /home/<username>/.mozilla/<username>/chrome/chatzilla.css, and
+ * add the text:
+ *
+ *   .msg {
+ *     font-size: 14pt !important;
+ *   }
+ *
+ *   body.chatzilla-body {
+ *     background: green !important;
+ *   }
+ *
+ * Close your browser and restart.  When you bring up ChatZilla, it should have
+ * a 14pt font and a green background.
+ *
+ * To learn how to make more useful changes to the ChatZilla output style, read
+ * on.
+ *
+ * All of the output in the message window is contained in an html <TABLE>.
+ * New messages are composed of <TR> and <TD> elements inside this <TABLE>.
+ * The message table and it's children have the following CSS classes assigned
+ * to them:
+ *
+ *  + .msg-table is used as the class for the surrounding <TABLE>.
+ *    Styles applied to this class will affect all parts of all messages.
+ *
+ *  + .msg-nested-table  is used as the class for the surrounding <TABLE> for
+ *     messages sent from users with long nicknames.  A new table is created, and
+ *     nested inside a <TR colspan="2"> of the .msg-table.  The rows of this
+ *     table have their classes set as if they were direct children of the 
+ *     .msg-table.  Placing messages from users with long nicknames in a nested
+ *      table keeps the nickname column from getting too wide.
+ *
+ *  + .msg is used as the class for the surrounding <TR>.  This means that
+ *    any styles applied here will affect the entire message.
+ *
+ *  + .msg-type is used as the class for the <TD> surrounding the message type
+ *    portion of messages.  Styles applied here will only affect message
+ *    types.  ie. "-->|", or "[HELP]".
+ *
+ *  + .msg-user is used as the class for the <TD> surrounding the nickname
+ *    portion of messages.  ChatZilla makes use of the :before and :after
+ *    pseudoclasses to decorate nicknames with different characters depending
+ *    on their message type.  For example, when a user performs a /me, their
+ *    nickname may be surrounded by asterisks.
+ *
+ *  + .msg-data is used as the class for the <TD> surrounding the actual text
+ *    of the message.
+ *
+ * In addition to CSS class properties, portions of a message may have one
+ * or mode of the following attributes set:
+ *
+ *   + view-type is the type of view the message is contained in.  The types
+ *     are:
+ *          "IRCClient" for the *client* view
+ *          "IRCNetwork" for network and server views
+ *          "IRCChannel" for channel views
+ *          "IRCUser" for query views
+ *
+ *   + msg-type is the message type described above.  There are too many types
+ *     to list here.  Turn on debug messages to force message types to print
+ *     in the left column of the output.
+ *
+ *   + msg-user is the nickname (in lowercase) of the nickname who sent the
+ *     message.  If you sent the message, msg-user will be set to "ME!", so
+ *     that you can style your messages regardless of your nickname.
+ *
+ *   + msg-dest is the name of the object that the message is directed to.  It
+ *     could be a channel name, or a nickname (both in lowercase.)
+ *  
+ *   + dest-type is the type of object the message is directed to.  The types
+ *     are:
+ *          "IRCChannel" for messages sent to a channel.
+ *          "IRCUser" for messages sent directly to another user, including
+ *           private messages that appear in a network or channel view (when
+ *           a dedicated query view does not exist.)
+ *
+ *   + mark is either the text "even" or "odd".  When the first user speaks on 
+ *     a channel, that message is marked as "even".  Messages will continue to
+ *     be marked "even" until a different user speaks, when the mark switches
+ *     to "odd".  Each view maintains it's own mark state.  An example of how
+ *     ChatZilla marks messages would be:
+ *
+ *            EVEN:   <moe> this deep fat fry-o-later is great.
+ *            EVEN:   <moe> It'll deep fat fry a whole buffalo in 30 seconds.
+ *             ODD: <homer> but I'm hungry *now*!
+ *
+ *   + important is either the text "true", or it is not set at all.  If
+ *     important is true, then the message triggered ChatZilla /stalk function.
+ *     This occurs when someone with a nickname matching a pattern in your
+ *     /stalk list speaks, when someone says a word that matches a pattern in
+ *     your /stalk list, or when someone says your nickname.
+ *
+ * 
+ */
+
+/******************************************************************************
+ * basic classes                                                              *
+ ******************************************************************************/
+
+body.chatzilla-body {               /* The topmost container in the ChatZilla */
+    margin: 0px 0px 0px 0px;        /* output window. */
+    font: 10pt lucida, sans-serif;
+}
+
+/* links */
+a.chatzilla-link {
+    text-decoration: none;
+}
+
+/* link hover effect */
+a.chatzilla-link:hover {
+    text-decoration: underline;
+}
+
+/* basic styles */
+.chatzilla-highlight[name="Large"] {
+    font-size: 12pt;
+}
+
+.chatzilla-highlight[name="Small"] {
+    font-size: 8pt;
+}
+
+.chatzilla-highlight[name="Bold text"],
+.chatzilla-bold {
+    font-weight: bold;
+}
+
+.chatzilla-italic {
+    font-style: italic;
+}
+
+.chatzilla-underline {
+    text-decoration: underline;
+}
+
+.chatzilla-strikethrough {
+    text-decoration: line-through;
+}
+
+.chatzilla-teletype {
+    font-family: monospace;
+}
+
+.chatzilla-rheet {
+    font-weight: bold;
+}
+
+/* smiley faces */
+.chatzilla-emote-txt {              /* emoticon text inside                    */
+    display: none;
+}
+
+.chatzilla-emote:after {            /* empty span to attach :after images to   */
+    margin-left: 3px;
+    margin-right: 3px;
+    content: url(chrome://chatzilla/skin/images/face-dunno.gif);
+}
+
+.chatzilla-emote[type="face-angry"]:after {
+    content: url(chrome://chatzilla/skin/images/face-angry.gif);
+}
+
+.chatzilla-emote[type="face-cry"]:after {
+    content: url(chrome://chatzilla/skin/images/face-cry.gif);
+}
+
+.chatzilla-emote[type="face-frown"]:after {
+    content: url(chrome://chatzilla/skin/images/face-frown.gif);
+}
+
+.chatzilla-emote[type="face-screw"]:after {
+    content: url(chrome://chatzilla/skin/images/face-screw.gif);
+}
+
+.chatzilla-emote[type="face-smile"]:after {
+    content: url(chrome://chatzilla/skin/images/face-smile.gif);
+}
+
+.chatzilla-emote[type="face-surprise"]:after {
+    content: url(chrome://chatzilla/skin/images/face-surprise.gif);
+}
+
+.chatzilla-emote[type="face-tongue"]:after {
+    content: url(chrome://chatzilla/skin/images/face-tongue.gif);
+}
+
+.chatzilla-emote[type="face-wink"]:after {
+    content: url(chrome://chatzilla/skin/images/face-wink.gif);
+}
+
+/******************************************************************************
+ * message class base definitions                                             *
+ ******************************************************************************/
+
+.msg-table {                                /* <TABLE> containing all of the  */
+    width: 100%;                            /* messages.                      */
+}
+
+.msg-nested-table {                         /* <TABLE> nested inside          */
+    width: 100%;                            /* .msg-table for users with long */
+    margin: 0px;                            /* nicknames.                     */
+    border: 0px;
+    border-spacing: 0px;
+    padding: 0px;
+}
+
+.msg {                                      /* .msg = a single message in the */
+    width: 100%;                            /* output window                  */
+    font-size: 10pt;
+}
+
+.msg-type {                                 /* .msg-type = message type       */
+    font-variant: small-caps;               /* indicator                      */
+    font-size: 9pt;
+    padding-right: 10px;
+    text-align: right;
+    vertical-align: top;
+}
+
+.msg-user {                                 /* msg-user = nickname portion of */
+    text-align: right;                      /* a message (channel and query   */
+    vertical-align: top;                    /* views)                         */
+}
+
+.msg-data {                                 /* .msg-data = the text portion   */
+    padding: 1px 1px 1px 3px;               /* of a message                   */
+    width: 100%;
+    white-space: -moz-pre-wrap;
+}
+
+
+/******************************************************************************
+ * message class specific definitions                                         *
+ ******************************************************************************/
+
+/* msg-user is the nickname of the person who spoke, or "ME!" if you said it.
+ * msg-type is the type of the message, taken from the irc message.  If you 
+ * turn on debug messages (options->debug messages), the msg-types will be
+ * displayed to the left of the messages for all messages except:
+ * PRIVMSG: when a user sends you, or a channel you are on a message.
+ * ACTION: when a user performs a /me.
+ * NOTIFY: when a server or user sends you a notification.
+ */
+.msg-data[msg-user="|"],                     /* messages from common "bulk    */
+.msg-data[msg-user="||"],                    /* paste" nicks                  */
+.msg-data[msg-user="|||"],
+.msg-data[msg-user="]"],
+.msg-data[msg-user="["],
+.msg-data[msg-type="372"],                   /* MOTD                          */
+.msg-data[msg-type="EVAL-IN"],               /* /eval results                 */
+.msg-data[msg-type="EVAL-OUT"] {
+    font-size: 9pt;
+    font-family: monospace;
+}
+
+.msg-data[msg-type="USAGE"] {
+    font-style: italic;
+}
+
+.msg-data[msg-type="HELP"] {
+    font-weight: normal;
+}
+
+.msg-user[msg-type="ACTION"] {
+    font-style: italic;
+}
+
+.msg-user[important="true"] {
+    font-weight: bold;
+}
+
+/******************************************************************************
+ * nickname decorations                                                       *
+ ******************************************************************************/
+
+/* :before and :after pseudoclasses form the decorations around nicknames */
+.msg-user:before {
+    content: "<";
+}
+.msg-user:after {
+    content: ">";
+}
+.msg-user[important="true"]:before {
+    font-weight: bold;
+}
+.msg-user[important="true"]:after {
+    font-weight: bold;
+}
+.msg-user[msg-user="ME!"]:before {
+    content: "<";
+}
+.msg-user[msg-user="ME!"]:after {
+    content: ">";
+}
+.msg-user[msg-type="ACTION"]:before,
+.msg-user[msg-type="ACTION"]:after {
+    content: "";
+}
+.msg-user[msg-type="NOTICE"]:before {
+    content: "[";
+}
+.msg-user[msg-type="NOTICE"]:after {
+    content: "]";
+}
+
+/* private messages *not* in a query window */
+.msg-user[dest-type="IRCUser"]:before {
+    content: "to(";
+}
+.msg-user[dest-type="IRCUser"]:after {
+    content: ")";
+}
+.msg-user[msg-dest="ME!"]:before {
+    content: "from(";
+}
+.msg-user[msg-dest="ME!"]:after {
+    content: ")";
+}
+
+/* private messages in a query window */
+.msg-user[view-type="IRCUser"]:before {
+    content: "{";
+}
+.msg-user[view-type="IRCUser"]:after {
+    content: "}";
+}
+.msg-user[view-type="IRCUser"][msg-user="ME!"]:before {
+    content: "{";
+}
+.msg-user[view-type="IRCUser"][msg-user="ME!"]:after {
+    content: "}";
+}
