@@ -55,7 +55,7 @@ Rights Reserved.
       <separator/>
       <radiogroup id="acctyperadio" >
         <radio id="mailaccount" value="mailaccount"
-               label="&accountTypeMail.label;"
+               label="&accountTypeMail.label;" accesskey="&accountTypeMail.accesskey;"
                selected="true"/>
   
         <vbox datasources="rdf:ispdefaults" 
@@ -71,7 +71,7 @@ Rights Reserved.
          </template>
         </vbox>
         <radio id="newsaccount" value="newsaccount"
-               label="&accountTypeNews.label;"/>
+               label="&accountTypeNews.label;" accesskey="&accountTypeNews.accesskey;"/>
       </radiogroup>
     </vbox>
   </wizardpage>
@@ -87,7 +87,8 @@ Rights Reserved.
       <description>&fullnameDesc.label; &fullnameExample.label;</description>
       <separator class="thin"/>
       <hbox align="center">
-        <label class="awIdentityLabel" for="fullName" value="&fullnameLabel.label;"/>
+        <label class="awIdentityLabel" for="fullName" value="&fullnameLabel.label;"
+               accesskey="&fullnameLabel.accesskey;" control="fullName"/>
         <textbox mailtype="identity" wsm_persist="true" name="fullName" id="fullName" flex="1"/>
       </hbox>
       <separator/>  
@@ -102,7 +103,8 @@ Rights Reserved.
           <separator class="thin"/>
           <row>
             <hbox align="center">
-              <label class="awIdentityLabel" id="emailFieldLabel" value="&emailLabel.label;"/>
+              <label class="awIdentityLabel" id="emailFieldLabel" value="&emailLabel.label;"
+                     accesskey="&emailLabel.accesskey;" control="email"/>
               <textbox wsm_persist="true" mailtype="identity" name="email" id="email" flex="6" class="uri-element"/>
               <label id="postEmailText"/>
             </hbox>
@@ -125,8 +127,10 @@ Rights Reserved.
           <hbox align="center" class="serverDataBox">
             <!-- The initial value for the servertype radiogroup is set in onInit() -->
             <radiogroup id="servertype" wsm_persist="true" orient="horizontal">
-                <radio group="servertype" value="pop3" id="pop3" label="&popType.label;" wsm_persist="true" oncommand="setServerType();"/>
-                <radio group="servertype" value="imap" id="imap" label="&imapType.label;" wsm_persist="true" oncommand="setServerType();"/>
+                <radio group="servertype" value="pop3" id="pop3" label="&popType.label;" 
+                       wsm_persist="true" oncommand="setServerType();" accesskey="&popType.accesskey;"/>
+                <radio group="servertype" value="imap" id="imap" label="&imapType.label;"
+                       wsm_persist="true" oncommand="setServerType();" accesskey="&imapType.accesskey;"/>
             </radiogroup>
           </hbox>
         </vbox>
@@ -136,7 +140,8 @@ Rights Reserved.
         <vbox id="incomingServerbox">
           <description>&incomingServerNameDesc.label;</description>
           <hbox align="center" class="serverDataBox">
-            <label class="label, serverLabel" value="&incomingServerLabel.label;" for="incomingServer"/>
+            <label class="label, serverLabel" value="&incomingServerLabel.label;" for="incomingServer"
+                   accesskey="&incomingServerLabel.accesskey;" control="incomingServer"/>
             <textbox wsm_persist="true" id="incomingServer" flex="1" class="uri-element"/>
           </hbox>
         </vbox>
@@ -146,7 +151,8 @@ Rights Reserved.
         <vbox id="noSmtp">
           <description>&smtpServerDesc.label;</description>
           <hbox align="center" class="serverDataBox">
-            <label class="label, serverLabel" value="&smtpServerLabel.label;" for="smtphostname"/>
+            <label class="label, serverLabel" value="&smtpServerLabel.label;" for="smtphostname"
+                   accesskey="&smtpServerLabel.accesskey;" control="smtphostname"/>
             <textbox id="smtphostname" wsm_persist="true" flex="1" class="uri-element"/>
           </hbox>
         </vbox>
@@ -167,7 +173,8 @@ Rights Reserved.
       <description>&usernameDesc.label; &usernameExample.label;</description>
       <separator class="thin"/>
       <hbox align="center">
-        <label class="label" value="&usernameLabel.label;" for="username" style="width: 8em;"/>
+        <label class="label" value="&usernameLabel.label;" for="username" style="width: 8em;"
+               accesskey="&usernameLabel.accesskey;" control="username"/>
         <textbox id="username" wsm_persist="true" flex="1"/>
       </hbox>
     </vbox>
@@ -182,7 +189,7 @@ Rights Reserved.
       <description>&newsServerNameDesc.label;</description>
       <separator class="thin"/>
       <hbox align="center">
-        <label control="hostname" value="&newsServerLabel.label;" style="width: 8em;"/>
+        <label control="newsServer" value="&newsServerLabel.label;" accesskey="&newsServerLabel.accesskey;" style="width: 8em;"/>
         <textbox id="newsServer" wsm_persist="true" flex="1" class="uri-element"/>
       </hbox>
     </vbox>
@@ -198,7 +205,8 @@ Rights Reserved.
       <description>&accnameDesc.label;</description>
       <separator class="thin"/>
       <hbox align="center">
-        <label class="label" value="&accnameLabel.label;" for="prettyName" style="width: 8em;"/>
+        <label class="label" value="&accnameLabel.label;" for="prettyName" style="width: 8em;"
+               accesskey="&accnameLabel.accesskey;" control="prettyName"/>
         <textbox id="prettyName" size="40" wsm_persist="true" flex="1"/>
       </hbox>
     </vbox>

@@ -11,7 +11,9 @@
 <!ENTITY accountTypeDesc.label "This Wizard will collect the information necessary to set up a Mail or Newsgroup account. If you do not know the information requested, please contact your System Administrator or Internet Service Provider.">
 <!ENTITY accountTypeDirections.label "Select the type of account you would like to set up:">
 <!ENTITY accountTypeMail.label "Email account">
+<!ENTITY accountTypeMail.accesskey "E">
 <!ENTITY accountTypeNews.label "Newsgroup account">
+<!ENTITY accountTypeNews.accesskey "w">
 
 <!-- Entities for Identity page -->
 
@@ -26,8 +28,10 @@
 -->
 <!ENTITY fullnameExample.label "(for example, &quot;John Smith&quot;).">
 <!ENTITY fullnameLabel.label "Your Name:">
+<!ENTITY fullnameLabel.accesskey "Y">
 
 <!ENTITY emailLabel.label "Email Address:">
+<!ENTITY emailLabel.accesskey "E">
 <!ENTITY emailDesc.label "Enter your email address; this is the address others will use to send email to you">
 <!-- LOCALIZATION NOTE (emailExample.label) : do not translate "user@example.net" in below line -->
 <!ENTITY emailExample.label "(for example: user@example.net).">
@@ -41,6 +45,7 @@
 <!-- LOCALIZATION NOTE (incomingServerNameDesc.label) : Do not translate "&quot;pop.example.net&quot;" in below line -->
 <!ENTITY incomingServerNameDesc.label "Enter the name of your incoming server (for example, &quot;mail.example.net&quot;).">
 <!ENTITY incomingServerLabel.label "Incoming Server:">
+<!ENTITY incomingServerLabel.accesskey "S">
 <!-- LOCALIZATION NOTE (newsServerNameDesc.label) : Do not translate "NNTP" or the "&quot;" entities in below line -->
 <!ENTITY newsServerNameDesc.label "Enter the name of your news server (NNTP) (for example, &quot;news.example.net&quot;).">
 <!-- LOCALIZATION NOTE (smtpServerTitle.label) : Do not translate "SMTP" in below line -->
@@ -48,11 +53,15 @@
 <!-- LOCALIZATION NOTE (smtpServerDesc.label) : Do not translate "SMTP" and "&quot;smtp.example.net&quot;" in below line -->
 <!ENTITY smtpServerDesc.label "Enter the name of your outgoing server (SMTP) (for example, &quot;smtp.example.net&quot;).">
 <!ENTITY smtpServerLabel.label "Outgoing Server:">
+<!ENTITY smtpServerLabel.accesskey "O">
 <!ENTITY newsServerLabel.label "Newsgroup Server:">
+<!ENTITY newsServerLabel.accesskey "N">
 <!-- LOCALIZATION NOTE (imapType.label) : Do not translate "IMAP" in below line -->
 <!ENTITY imapType.label "IMAP">
+<!ENTITY imapType.accesskey "I">
 <!-- LOCALIZATION NOTE (popType.label) : Do not translate "POP" in below line -->
 <!ENTITY popType.label "POP">
+<!ENTITY popType.accesskey "P">
 <!ENTITY nntpType.label "News Server">
 
 <!-- for when the user has an SMTP server pre-configured -->
@@ -70,6 +79,7 @@
 <!-- LOCALIZATION NOTE (usernameExample.label) : do not translate "&quot;jsmith&quot;" in below line -->
 <!ENTITY usernameExample.label "(for example, &quot;jsmith&quot;).">
 <!ENTITY usernameLabel.label "User Name:">
+<!ENTITY usernameLabel.accesskey "U">
 
 <!-- Entities for Account name page -->
 
@@ -78,6 +88,7 @@
 <!ENTITY accnameDesc.label "Enter the name by which you would like to refer to this account (for example, &quot;Work Account&quot;, &quot;Home Account&quot; or &quot;News Account&quot;).">
 <!ENTITY accnameExample.label "For example, Work Account, Home Account or News Account">
 <!ENTITY accnameLabel.label "Account Name:">
+<!ENTITY accnameLabel.accesskey "A">
 
 <!-- Entities for Done (Congratulations) page -->
 
