@@ -28,6 +28,7 @@ class nsIDocumentObserver;
 class nsIPresContext;
 class nsIPresShell;
 class nsISelection;
+class nsIStreamListener;
 class nsIStyleSet;
 class nsIStyleSheet;
 class nsIURL;
@@ -56,13 +57,9 @@ public:
   // returns the arena associated with this document.
   virtual nsIArena* GetArena() = 0;
 
-  virtual void LoadURL(nsIURL* aURL, nsIPostData* aPostData = 0) = 0;
-
-  virtual void StartDocumentLoad() = 0;
-  virtual void PauseDocumentLoad() = 0;
-  virtual void StopDocumentLoad() = 0;
-  virtual void WaitForDocumentLoad() = 0;
-  virtual PRBool IsDocumentLoaded() = 0;
+  NS_IMETHOD LoadURL(nsIURL* aURL,
+                     nsIStreamListener* aListener,
+                     nsIPostData* aPostData = 0) = 0;
 
   /**
    * Return the title of the document. May return null.

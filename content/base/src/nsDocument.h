@@ -43,12 +43,6 @@ public:
 
   virtual nsIArena* GetArena();
 
-  virtual void StartDocumentLoad();
-  virtual void PauseDocumentLoad();
-  virtual void StopDocumentLoad();
-  virtual void WaitForDocumentLoad();
-  virtual PRBool IsDocumentLoaded();
-
   /**
    * Return the title of the document. May return null.
    */
