@@ -543,7 +543,7 @@ static nsresult main1(int argc, char* argv[])
   // this can happen, if the user hits cancel or close in the profile manager dialogs
   char *currentProfileStr = nsnull;
   rv = profileMgr->GetCurrentProfile(&currentProfileStr);
-  if (NS_FAILED(rv) || !currentProfileStr) {
+  if (NS_FAILED(rv) || !currentProfileStr || (PL_strlen(currentProfileStr) == 0)) {
   	return NS_ERROR_FAILURE;
   }
   PR_FREEIF(currentProfileStr);   
