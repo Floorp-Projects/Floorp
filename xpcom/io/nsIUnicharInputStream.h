@@ -49,10 +49,10 @@ typedef NS_CALLBACK(nsWriteUnicharSegmentFun)(nsIUnicharInputStream *aInStream,
                                               PRUint32 aToOffset,
                                               PRUint32 aCount,
                                               PRUint32 *aWriteCount);
-
+/* c4bcf6ee-3a79-4d77-8d48-f17be3199b3b */
 #define NS_IUNICHAR_INPUT_STREAM_IID \
-{ 0x2d97fbf0, 0x93b5, 0x11d1,        \
-  {0x89, 0x5b, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
+{ 0xc4bcf6ee, 0x3a79, 0x4d77,        \
+  {0x8d, 0x48, 0xf1, 0x7b, 0xe3, 0x19, 0x9b, 0x3b} }
 
 /** Abstract unicode character input stream
  *  @see nsIInputStream
