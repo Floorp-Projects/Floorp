@@ -26,6 +26,7 @@ class nsIFrame;
 class nsIAtom;
 class nsIStyleSheet;
 class nsIStyleRule;
+class nsStyleChangeList;
 
 // IID for the nsIStyleSet interface {a6cf9066-15b3-11d2-932e-00805f8add32}
 #define NS_ISTYLE_FRAME_CONSTRUCTION_IID \
@@ -88,6 +89,8 @@ public:
   NS_IMETHOD StyleRuleRemoved(nsIPresContext* aPresContext,
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule) = 0;
+  NS_IMETHOD ProcessRestyledFrames(nsStyleChangeList& aRestyleArray, 
+                                   nsIPresContext* aPresContext) = 0;
   
   // Notification that we were unable to render a replaced element.
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
