@@ -102,7 +102,8 @@
                 <menuseparator />
             </menupopup>
         </menu>
-        <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
+        <menuitem name="charsetCustomize" label="&charsetCustomize.label;"
+                  accesskey="&charsetCustomize.accesskey;"/>
         </menupopup>
     </menu>
 
@@ -200,7 +201,8 @@
                 <menuseparator />
             </menupopup>
         </menu>
-        <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
+        <menuitem name="charsetCustomize" label="&charsetCustomize.label;"
+                  accesskey="&charsetCustomize.accesskey;"/>
         </menupopup>
     </menu>
 
@@ -215,7 +217,8 @@
         </template>
 
         <menupopup>
-        <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'mailedit')"/>
+        <menuitem name="charsetCustomizeMail" label="&charsetCustomize.label;"
+                  accesskey="&charsetCustomize.accesskey;"/>
         <menuseparator />
         </menupopup>
     </menu>
@@ -314,7 +317,8 @@
                 <menuseparator />
             </menupopup>
         </menu>
-        <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
+        <menuitem name="charsetCustomize" label="&charsetCustomize.label;"
+                  accesskey="&charsetCustomize.accesskey;"/>
         </menupopup>
     </menu>
 

@@ -12,7 +12,13 @@ function MultiplexHandler(event)
         SetForcedCharset(charset);
         SetDefaultCharacterSet(charset);
     } else if (name == 'charsetCustomize') {
-        //do nothing - please remove this else statement, once the charset prefs moves to the pref window
+        // please remove this else statement, once the charset prefs moves to the pref window
+        window.openDialog("chrome://communicator/content/pref/pref-charset.xul",
+                          "_blank", "chrome,modal,resizable", "browser");
+    } else if (name == 'charsetCustomizeMail') {
+        // please remove this else statement, once the charset prefs moves to the pref window
+        window.openDialog("chrome://communicator/content/pref/pref-charset.xul",
+                          "_blank", "chrome,modal,resizable", "mailedit");
     } else {
         SetForcedCharset(node.getAttribute('id'));
         SetDefaultCharacterSet(node.getAttribute('id'));
