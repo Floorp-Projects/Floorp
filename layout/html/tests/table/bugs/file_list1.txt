@@ -86,3 +86,7 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug137388-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug137388-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug137388-3.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug138725.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug139524-1.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug139524-2.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug139524-3.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug139524-4.html
