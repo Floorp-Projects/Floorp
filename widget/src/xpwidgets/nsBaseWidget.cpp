@@ -811,4 +811,9 @@ NS_METHOD nsBaseWidget::EnableFileDrop(PRBool aEnable)
   return NS_OK;
 }
 
+NS_METHOD nsBaseWidget::SetModal(void)
+{
+  return NS_ERROR_FAILURE;
+}
+
 

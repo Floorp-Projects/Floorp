@@ -265,6 +265,13 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD Show(PRBool aState) = 0;
 
     /**
+     * Make the window modal 
+     *
+     *
+     */
+    NS_IMETHOD SetModal(void) = 0;
+
+    /**
      * Returns whether the window is visible
      *
      */

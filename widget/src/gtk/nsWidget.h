@@ -60,6 +60,7 @@ class nsWidget : public nsBaseWidget
     NS_IMETHOD Destroy(void);
     nsIWidget* GetParent(void);
 
+    NS_IMETHOD SetModal(void);
     NS_IMETHOD Show(PRBool state);
     NS_IMETHOD IsVisible(PRBool &aState);
 
