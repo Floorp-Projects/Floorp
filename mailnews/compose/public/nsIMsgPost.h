@@ -25,7 +25,7 @@ class nsIMsgPost : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGPOST_IID)
 
-  /* void PostMessage (in nsIMsgCompFields fields); */
+  /* void PostNewsMessage (in nsIMsgCompFields fields); */
   NS_IMETHOD PostNewsMessage(nsIMsgCompFields *fields) = 0;
 
 #ifdef XPIDL_JS_STUBS
