@@ -48,7 +48,7 @@ DEBUG_LIBS = $(LIBS)
 PROF_LIBS = $(LIBS)
 
 
-HEADER_PATHS = -I../../include -I../../nsprpub/pr/include
+NEXTSTEP_PB_CFLAGS = -DRHAPSODY
 FRAMEWORKS = -framework AppKit -framework Foundation
 
 

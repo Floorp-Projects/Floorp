@@ -49,6 +49,7 @@
     MAKEFILEDIR = "$(MAKEFILEPATH)/pb_makefiles"; 
     NEXTSTEP_APPICON = mozilla.tiff; 
     NEXTSTEP_BUILDTOOL = /bin/gnumake; 
+    NEXTSTEP_COMPILEROPTIONS = "-DRHAPSODY"; 
     NEXTSTEP_DOCUMENTEXTENSIONS = ({Extension = .html; Image = mozilla.tiff; }); 
     NEXTSTEP_INSTALLDIR = "$(HOME)/Apps"; 
     NEXTSTEP_JAVA_COMPILER = /usr/bin/javac; 
