@@ -1946,10 +1946,15 @@ $(JAVABIN_DIR)\npj32$(VERSION_NUMBER).dll:   $(DIST)\bin\npj32$(VERSION_NUMBER).
     @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
     @IF EXIST $(DIST)\bin\npj32$(VERSION_NUMBER).dll copy $(DIST)\bin\npj32$(VERSION_NUMBER).dll $(JAVABIN_DIR)\npj32$(VERSION_NUMBER).dll
 
+!if defined(MOZ_OJI)
 $(JAVABIN_DIR)\jrt32$(VERSION_NUMBER).dll:   $(DIST)\bin\jrt32$(VERSION_NUMBER).dll
     @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
     @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
     @IF EXIST $(DIST)\bin\jrt32$(VERSION_NUMBER).dll copy $(DIST)\bin\jrt32$(VERSION_NUMBER).dll $(JAVABIN_DIR)\jrt32$(VERSION_NUMBER).dll
+!elseif defined(MOZ_JAVA)
+$(OUTDIR)\jrt32$(VERSION_NUMBER).dll:   $(DIST)\bin\jrt32$(VERSION_NUMBER).dll
+    @IF EXIST $(DIST)\bin\jrt32$(VERSION_NUMBER).dll copy $(DIST)\bin\jrt32$(VERSION_NUMBER).dll $(OUTDIR)\jrt32$(VERSION_NUMBER).dll
+!endif
 
 $(OUTDIR)\unicvt32.dll:   $(DIST)\bin\unicvt32.dll
     @IF EXIST $(DIST)\bin\unicvt32.dll copy $(DIST)\bin\unicvt32.dll $(OUTDIR)\unicvt32.dll
