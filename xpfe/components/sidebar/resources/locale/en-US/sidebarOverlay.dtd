@@ -21,20 +21,22 @@
    -                 Samir Gehani <sgehani@netscape.com>
   --> 
 
-<!ENTITY sidebar.panels.label        "Sidebar">
-<!ENTITY sidebar.reload.label        "Reload">
-<!ENTITY sidebar.picker.label        "Tabs">
-<!ENTITY sidebar.customize.label     "Customize Sidebar...">
-<!ENTITY sidebar.customize.accesskey "u">
-<!ENTITY sidebar.hide.label          "Hide Panel">
-<!ENTITY sidebar.hide.accesskey      "H">
-<!ENTITY sidebar.switch.label        "Switch to Panel">
-<!ENTITY sidebar.switch.accesskey    "S">
-<!ENTITY sidebarCmd.label            "Sidebar">
-<!ENTITY sidebarCmd.accesskey        "b">
-<!ENTITY sidebar.loading.label       "Loading...">
-<!ENTITY sidebar.loadstopped.label   "Load stopped">
-<!ENTITY sidebar.loading.stop.label  "Stop">
+<!ENTITY sidebar.panels.label           "Sidebar">
+<!ENTITY sidebar.reload.label           "Reload">
+<!ENTITY sidebar.reload.accesskey       "R">
+<!ENTITY sidebar.picker.label           "Tabs">
+<!ENTITY sidebar.customize.label        "Customize Sidebar...">
+<!ENTITY sidebar.customize.accesskey    "u">
+<!ENTITY sidebar.hide.label             "Hide Tab">
+<!ENTITY sidebar.hide.accesskey         "H">
+<!ENTITY sidebar.switch.label           "Switch to Tab">
+<!ENTITY sidebar.switch.accesskey       "T">
+<!ENTITY sidebarCmd.label               "Sidebar">
+<!ENTITY sidebarCmd.accesskey           "b">
+<!ENTITY sidebar.loading.label          "Loading...">
+<!ENTITY sidebar.loadstopped.label      "Load stopped">
+<!ENTITY sidebar.loading.stop.label     "Stop">
+<!ENTITY sidebar.loading.stop.accesskey "S">
 
 <!ENTITY sidebar.no-panels.state     "The sidebar is currently empty.">
 <!ENTITY sidebar.no-panels.add       'You may add tabs by clicking on the "Tabs" button above.'>
