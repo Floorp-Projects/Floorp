@@ -1167,6 +1167,9 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/xmlextras/proxy/Makefile
             extensions/xmlextras/proxy/public/Makefile
             extensions/xmlextras/proxy/src/Makefile
+            extensions/xmlextras/security/Makefile
+            extensions/xmlextras/security/public/Makefile
+            extensions/xmlextras/security/src/Makefile
             extensions/xmlextras/schema/Makefile
             extensions/xmlextras/schema/public/Makefile
             extensions/xmlextras/schema/src/Makefile
