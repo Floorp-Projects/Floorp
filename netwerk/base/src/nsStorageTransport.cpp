@@ -833,7 +833,7 @@ NS_IMETHODIMP
 nsStorageTransport::nsOutputStream::GetNonBlocking(PRBool *aNonBlocking)
 {
     NS_ENSURE_ARG_POINTER(aNonBlocking);
-    *aNonBlocking = PR_TRUE;
+    *aNonBlocking = PR_FALSE;
     return NS_OK;
 }
 
