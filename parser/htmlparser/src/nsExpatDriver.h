@@ -99,7 +99,6 @@ private:
   PRPackedBool     mInCData;
   PRPackedBool     mInDoctype;
   PRPackedBool     mInExternalDTD;
-  PRPackedBool     mHandledXMLDeclaration;
   PRInt32          mBytePosition;
   nsresult         mInternalState;
   PRUint32         mBytesParsed;
