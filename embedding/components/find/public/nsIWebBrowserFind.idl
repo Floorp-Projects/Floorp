@@ -1,0 +1,169 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Author:
+ *   Conrad Carlen <ccarlen@netscape.com>
+ *
+ * Contributor(s): 
+ */
+ 
+#include "nsISupports.idl"
+
+#include "domstubs.idl"
+
+/*
+ * nsIWebBrowserFind interface
+ *
+ * Searches for text in a web browser.
+ *
+ * Get one by doing a GetInterface on an nsIWebBrowser.
+ *
+ * By default, the implementation will search the focussed frame, or
+ * if there is no focussed frame, the web browser content area. It
+ * does not by default search subframes or iframes. To change this
+ * behaviour, and to explicitly set the frame to search, 
+ * QueryInterface to nsIWebBrowserFindInFrames.
+ */
+
+[scriptable, uuid(2f977d44-5485-11d4-87e2-0010a4e75ef2)]
+interface nsIWebBrowserFind : nsISupports
+{
+    /*
+     * findNext
+     *
+     * Find the next occurrence of the search string, using the current
+     * search settings. By default, only searches the current frame (the
+     * focussed or content area frame). Fails if the search string is
+     * empty.
+     *
+     */
+	boolean		findNext();
+
+    /*
+     * searchString
+     *
+     * The string to search for. This must be non-empty to search.
+     *
+     */
+    attribute wstring searchString;
+    
+    /*
+     * findBackwards
+     *
+     * Whether to find backwards (towards the beginning of the document).
+     * Default is false (search forward).
+     */
+    attribute boolean findBackwards;
+
+    /*
+     * wrapFind
+     *
+     * Whether the search wraps around to the start (or end) of the document
+     * if no match was found between the current position and the end (or
+     * beginning). Works correctly when searching backwards. Default is
+     * false.
+     * 
+     */
+    attribute boolean wrapFind;
+
+    /*
+     * entireWord
+     *
+     * Wether to match entire words only. Default is false.
+     * 
+     */
+    attribute boolean entireWord;
+
+    /*
+     * matchCase
+     *
+     * Whether to match case (case sensitive) when searching. Default is false.
+     * 
+     */
+    attribute boolean matchCase;
+
+    /*
+     * searchFrames
+     *
+     * Whether to search through all frames in the content area. Default is true.
+     * 
+     * Note that you can control whether the search propagates into child or
+     * parent frames explicitly using nsIWebBrowserFindInFrames, but if one,
+     * but not both, of searchSubframes and searchParentFrames are set, this
+     * returns false.
+     */
+    attribute boolean searchFrames;
+};
+
+
+
+/*
+ * nsIWebBrowserFindInFrames interface
+ *
+ * Control how find behaves when multiple frames or iframes are present.
+ *
+ * Get by doing a QueryInterface from nsIWebBrowserFind.
+ *
+ */
+ 
+[scriptable, uuid(e0f5d182-34bc-11d5-be5b-b760676c6ebc)]
+interface nsIWebBrowserFindInFrames : nsISupports
+{
+    /*
+     * currentSearchFrame
+     *
+     * Frame at which to start the search. Once the search is done, this will
+     * be set to be the last frame searched, whether or not a result was found.
+     * Has to be equal to or contained within the rootSearchFrame.
+     *
+     */
+    attribute nsIDOMWindow  currentSearchFrame;
+
+    /*
+     * rootSearchFrame
+     *
+     * Frame within which to confine the search (normally the content area frame).
+     * Set this to only search a subtree of the frame hierarchy.
+     *
+     */
+    attribute nsIDOMWindow  rootSearchFrame;
+        
+    /*
+     * searchSubframes
+     *
+     * Whether to recurse down into subframes while searching. Default is true.
+     *
+     * Setting nsIWebBrowserfind.searchFrames to true sets this to true.
+     *
+     */
+    attribute boolean searchSubframes;
+    
+    /*
+     * searchParentFrames
+     *
+     * Whether to allow the search to propagate out of the currentSearchFrame into its
+     * parent frame(s). Search is always confined within the rootSearchFrame. Default
+     * is true.
+     *
+     * Setting nsIWebBrowserfind.searchFrames to true sets this to true.
+     *
+     */
+    attribute boolean searchParentFrames;
+
+};
