@@ -710,7 +710,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	m_pIWebShell->SetContainer((nsIWebShellContainer*) m_pWebShellContainer);
 ///	m_pIWebShell->SetObserver((nsIStreamObserver*) m_pWebShellContainer);
 	m_pIWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*) m_pWebShellContainer);
-	m_pIWebShell->SetWebShellType(nsWebShellContent);
+//	m_pIWebShell->SetWebShellType(nsWebShellContent);
 
 	m_pIWebShellWin->SetVisibility(PR_TRUE);
 
