@@ -56,13 +56,17 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIDOMWindow.h"
 
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIEventListenerManager.h"
 #include "nsGUIEvent.h"
 
-#include "nsIScriptEventHandler.h"
+#include "nsIScriptEventManager.h"
 #include "jsapi.h"
+#ifdef XPC_IDISPATCH_SUPPORT
 #include "nsIDispatchSupport.h"
+#endif
 
 #include "LegacyPlugin.h"
 #include "XPConnect.h"
@@ -631,6 +635,7 @@ nsScriptablePeer::SetProperty(const char *propertyName, nsIVariant *propertyValu
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef XPC_IDISPATCH_SUPPORT
 HRESULT
 nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
@@ -735,6 +740,8 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
         ATLTRACE(_T(");\n"));
     }
 #endif
+    m_spEventSinkTypeInfo->ReleaseFuncDesc(pFuncDesc);
+    pFuncDesc = NULL;
 
     nsCOMPtr<nsIDOMElement> element;
     NPN_GetValue(mPlugin->pPluginInstance, NPNVDOMElement, (void *) &element);
@@ -751,102 +758,69 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
         return S_OK;
     }
 
-    nsAutoString eventName(bstrName.m_str);
-
-    // TODO Turn VARIANT args into js objects
-#if 0
-    // Fire event to DOM 2 event listeners
-    nsCOMPtr<nsIDOMEventReceiver> eventReceiver = do_QueryInterface(element);
-    if (eventReceiver)
-    {
-        // Get the event manager
-        nsCOMPtr<nsIEventListenerManager> eventManager;
-        eventReceiver->GetListenerManager(getter_AddRefs(eventManager));
-        if (eventManager)
-        {
-            nsStringKey key(eventName);
-            nsEvent event;
-            event.message = NS_USER_DEFINED_EVENT;
-            event.userType = &key;
-
-            // Fire the event!
-            nsCOMPtr<nsIDOMEvent> domEvent;
-            nsEventStatus eventStatus;
-            nsresult rv = eventManager->HandleEvent(nsnull, &event, getter_AddRefs(domEvent),
-                eventReceiver, NS_EVENT_FLAG_INIT, &eventStatus);
-        }
-    }
-#endif
+    nsDependentString eventName(bstrName.m_str);
 
     nsresult rv;
     nsCOMPtr<nsIDOMDocument> domdoc;
     nsCOMPtr<nsIDOMNodeList> scriptElements;
 
-    // This outer loop is used for error handling...
-    do {
-        // Get a list of all SCRIPT elements in the document.
-        rv = element->GetOwnerDocument(getter_AddRefs(domdoc));
-        if (NS_FAILED(rv)) break;
+    // Fire the script event handler...
+    nsCOMPtr<nsIDOMWindow> window;
+    NPN_GetValue(mPlugin->pPluginInstance, NPNVDOMWindow, (void *)&window);
+    
+    nsCOMPtr<nsIScriptEventManager> eventManager(do_GetInterface(window));
+    if (!eventManager) return S_OK;
 
-        rv = domdoc->GetElementsByTagName(NS_LITERAL_STRING("script"),
-                                        getter_AddRefs(scriptElements));
-        if (NS_FAILED(rv)) break;
+    nsCOMPtr<nsISupports> handler;
 
-        // Get the number of script elements in the current document...
-        PRUint32 count = 0;
-        rv = scriptElements->GetLength(&count);
-        if (NS_FAILED(rv)) break;
+    eventManager->FindEventHandler(id, eventName, pDispParams->cArgs, getter_AddRefs(handler));
+    if (!handler)
+    {
+        return S_OK;
+    }
 
-        //
-        // Iterate over all of the SCRIPT elements looking for a handler.
-        //
-        // Walk the list backwards in order to pick up the most recently
-        // defined script handler (if more than one is present)...
-        //
-        nsDependentString eventName(bstrName.m_str);
-        nsCOMPtr<nsIDOMNode> node;
-        nsCOMPtr<nsIScriptEventHandler> handler;
+    // Create a list of arguments to pass along
+    //
+    // This array is created on the stack if the number of arguments
+    // less than kMaxArgsOnStack.  Otherwise, the array is heap
+    // allocated.
+    //
+    const int kMaxArgsOnStack = 10;
 
-        while (count--)
+    PRUint32 argc = pDispParams->cArgs;
+    jsval *args = nsnull;
+    jsval stackArgs[kMaxArgsOnStack];
+
+    // Heap allocate the jsval array if it is too big to fit on
+    // the stack (ie. more than kMaxArgsOnStack arguments)
+    if (argc > kMaxArgsOnStack)
+    {
+        args = new jsval[argc];
+        if (!args) return S_OK;
+    }
+    else if (argc)
+    {
+        // Use the jsval array on the stack...
+        args = stackArgs;
+    }
+
+    if (argc)
+    {
+        nsCOMPtr<nsIDispatchSupport> disp(do_GetService("@mozilla.org/nsdispatchsupport;1"));
+        for (UINT i = 0; i < argc; i++)
         {
-            rv = scriptElements->Item(count, getter_AddRefs(node));
-            if (NS_FAILED(rv)) break;
-
-            handler = do_QueryInterface(node, &rv);
-            if (NS_FAILED(rv)) continue;
-
-            PRBool bFound;
-            rv = handler->IsSameEvent(id, eventName, pDispParams->cArgs, &bFound);
-            if (NS_FAILED(rv)) break;
-
-            if (bFound)
-            {
-                // Create a list of arguments to pass along.
-                jsval *args = nsnull;
-                if (pDispParams->cArgs > 0)
-                {
-                    args = new jsval[pDispParams->cArgs];
-                    if (!args) break; 
-                    nsCOMPtr<nsIDispatchSupport> disp(do_GetService("@mozilla.org/nsdispatchsupport;1"));
-                    for (UINT i = 0; i < pDispParams->cArgs; i++)
-                    {
-                        // For some bizarre reason, arguments are listed backwards
-                        disp->COMVariant2JSVal(&pDispParams->rgvarg[pDispParams->cArgs - 1 - i], &args[i]);
-                    }
-                }
-
-                // Fire the Event.
-                handler->Invoke(element, args, pDispParams->cArgs);
-                if (args)
-                {
-                    // TODO cleanup jsval or are these things garbage collected somehow?
-                    delete[]args;
-                }
-                break;
-            }
+            disp->COMVariant2JSVal(&pDispParams->rgvarg[i], &args[i]);
         }
-    } while (0);
-    // Errors just fall of the end of the do..while 
+    }
+
+    // Fire the Event.
+    eventManager->InvokeEventHandler(handler, element, args, argc);
+
+    // Free the jsvals if they were heap allocated...
+    if (args != stackArgs)
+    {
+        delete [] args;
+    }
 
     // TODO Turn js objects for out params back into VARIANTS
 
@@ -859,10 +833,9 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
         pExcepInfo->wCode = 0;
     }
 
-    m_spEventSinkTypeInfo->ReleaseFuncDesc(pFuncDesc);
-
     return S_OK;
 }
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -56,8 +56,10 @@
 
 #define USE_PLUGIN
 
+// Uncomment if you want to say what is QI'ing for what
+//#define _ATL_DEBUG_QI
+
 // ATL headers
-#define _ATL_DEBUG_QI
 #include <atlbase.h>
 //You may derive a class from CComModule and use it if you want to override
 //something, but do not change the name of _Module

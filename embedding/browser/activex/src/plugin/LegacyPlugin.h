@@ -63,7 +63,9 @@ struct PluginInstanceData {
         CActiveScriptSiteInstance *pScriptSite;
         struct {
             CControlSiteInstance *pControlSite;
+#ifdef XPC_IDISPATCH_SUPPORT
             nsEventSinkInstance  *pControlEventSink;
+#endif
         };
     };
     char *szUrl;
