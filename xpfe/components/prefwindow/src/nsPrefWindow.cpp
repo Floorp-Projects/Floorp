@@ -214,7 +214,7 @@ NS_IMETHODIMP nsPrefWindow::ShowWindow(
     DOMWindowToWebShellWindow(currentFrontWin, &parent);
 
 
-#if defined(MODELESS_PREF_DIALOG)||defined(DEBUG_mcafee)||defined(DEBUG_akkana)
+#if defined(MODELESS_PREF_DIALOG)||defined(DEBUG_mcafee)||defined(DEBUG_akkana)||defined(DEBUG_pavlov)
     // testing modeless pref window.  -mcafee
     nsIWebShellWindow *foo = nsnull;
     rv = appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
@@ -548,8 +548,8 @@ nsresult nsPrefWindow::InitializePrefWidgets()
             mPrefs = prefs;
         }
 
-    NS_ASSERTION(mPanelFrame, "panel window is null");
-    NS_ASSERTION(mPrefs, "prefs pointer is null");
+    NS_ASSERTION(mPanelFrame, "nsPrefWindow::InitializePrefWidgets(), panel window is null");
+    NS_ASSERTION(mPrefs, "nsPrefWindow::InitializePrefWidgets(), prefs pointer is null");
     if (!mPanelFrame || !mPrefs)
         return NS_ERROR_FAILURE;
 
@@ -778,8 +778,8 @@ nsresult nsPrefWindow::FinalizeWidgetsRecursive(nsIDOMNode* inParentNode)
 nsresult nsPrefWindow::FinalizePrefWidgets()
 //----------------------------------------------------------------------------------------
 {
-    NS_ASSERTION(mPanelFrame, "panel window is null");
-    NS_ASSERTION(mPrefs, "prefs pointer is null");
+    NS_ASSERTION(mPanelFrame, "nsPrefWindow::FinalizePrefWidgets(), panel window is null");
+    NS_ASSERTION(mPrefs, "nsPrefWindow::FinalizePrefWidgets(), prefs pointer is null");
     if (!mPanelFrame || !mPrefs)
         return NS_ERROR_FAILURE;
 
