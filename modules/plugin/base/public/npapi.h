@@ -22,7 +22,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.11 $
+ *  npapi.h $Revision: 3.12 $
  *  Netscape client plug-in API spec
  */
 
@@ -292,13 +292,16 @@ typedef struct
  * List of variable names for which NPP_GetValue shall be implemented
  */
 typedef enum {
-	NPPVpluginNameString = 1,
-	NPPVpluginDescriptionString,
-	NPPVpluginWindowBool,
-	NPPVpluginTransparentBool,
+  NPPVpluginNameString = 1,
+  NPPVpluginDescriptionString,
+  NPPVpluginWindowBool,
+  NPPVpluginTransparentBool,
   NPPVjavaClass,
   NPPVpluginWindowSize,
-  NPPVpluginTimerInterval
+  NPPVpluginTimerInterval,
+
+  NPPVpluginScriptableInstance = 10,
+  NPPVpluginScriptableIID = 11
 } NPPVariable;
 
 /*
