@@ -90,7 +90,6 @@ static nsCOMPtr<nsIDOMNode> GetDOMNodeFromDocShell(nsIDocShell *aShell);
 static void GetAttribute( nsIXULWindow* inWindow,
                           const nsAString& inAttribute,
                           nsAString& outValue);
-static void GetWindowType( nsIXULWindow* inWindow, nsAutoString& outType);
 static inline PRUint32 GetWindowZ( nsIXULWindow *inWindow);
 
 
@@ -155,16 +154,6 @@ GetAttribute( nsIXULWindow* inWindow,
   }
 }
 
-
-
-void
-GetWindowType(nsIXULWindow* inWindow, nsAString& outType)
-{
-  GetAttribute(inWindow, NS_LITERAL_STRING("windowtype"), outType);
-}
-
-
-
 /* return an integer corresponding to the relative z order of the window.
    should probably be an explicit read-only method on nsIXULWindow */
 PRUint32
@@ -190,7 +179,7 @@ nsIRDFDataSource *nsWindowMediator::mInner = NULL;
 
 nsWindowMediator::nsWindowMediator() :
   mEnumeratorList(), mOldestWindow(0), mTopmostWindow(0),
-  mTimeStamp(0), mListLock(0), mUpdateBatchNest(0)
+  mTimeStamp(0), mUpdateBatchNest(0), mListLock(0)
 {
    NS_INIT_REFCNT();
 
