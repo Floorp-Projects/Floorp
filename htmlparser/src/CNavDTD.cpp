@@ -1301,7 +1301,8 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
         default:
           {
-            if(theHeadIsParent) {
+            if(theHeadIsParent || 
+              (mHasOpenHead && ((eHTMLTag_newline==theChildTag) || (eHTMLTag_whitespace==theChildTag)))) {
               result=AddHeadLeaf(*theNode);
             }
             else result=HandleDefaultStartToken(aToken,theChildTag,*theNode); 
@@ -2738,8 +2739,6 @@ nsresult CNavDTD::AddHeadLeaf(nsIParserNode& aNode){
       return result;
     }
 
-  if(eHTMLTag_newline==theTag)  //omit newlines from head...
-    return result;
 
   if(mSink) {
     result=OpenHead(aNode);
