@@ -42,8 +42,10 @@ interface nsIOutlinerSelection : nsISecurityCheckedComponent
   // Toggle the selection state of the row at the specified index.
   void toggleSelect(in long index);
 
-  // Select the range specified by the indices.
-  void rangedSelect(in long startIndex, in long endIndex);
+  // Select the range specified by the indices.  If augment is true,
+  // then we add the range to the selection without clearing out anything
+  // else.  If augment is false, everything is cleared except for the specified range.
+  void rangedSelect(in long startIndex, in long endIndex, in boolean augment);
 
   // Clears the selection.
   void clearSelection();

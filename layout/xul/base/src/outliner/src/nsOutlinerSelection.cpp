@@ -63,6 +63,55 @@ struct nsOutlinerRange
     mNext = aNext;
   };
 
+  void RemoveRange(PRInt32 aStart, PRInt32 aEnd) {
+    // See if this range overlaps.
+    if (aStart >= mMin && aStart <= mMax) {
+      // We start within this range.
+      // Do we also end within this range?
+      if (aEnd >= mMin && aEnd <= mMax) {
+        // We do.  This range should be split into
+        // two new ranges.
+        PRInt32 aNewStart = aEnd+1;
+        PRInt32 aNewEnd = mMax;
+        mMax = aStart-1;
+        nsOutlinerRange* range = new nsOutlinerRange(mSelection, aNewStart, aNewEnd);
+        range->Connect(this, mNext);
+        return; // We're done, since we were entirely contained within this range.
+      }
+      else {
+        // The end goes outside our range.  We should
+        // move our max down to before the start.
+        mMax = aStart-1;
+        if (mNext)
+          mNext->RemoveRange(aStart, aEnd);
+      }
+    }
+    else if (aEnd >= mMin && aEnd <= mMax) {
+      // The start precedes our range, but the end is contained
+      // within us.  Pull the range up past the end.
+      mMin = aEnd+1;
+      return; // We're done, since we contained the end.
+    }
+    else {
+      // Neither the start nor the end was contained inside us.
+      // Do the start and end encompass us instead?
+      if (mMin >= aStart && mMax <= aEnd) {
+        // They do.  We should simply be excised from the list.
+        if (mPrev)
+          mPrev->mNext = mNext;
+        else
+          mSelection->mFirstRange = mNext;
+        if (mNext)
+          mNext->mPrev = mPrev;
+        mPrev = mNext = nsnull;
+        delete this;
+      }
+
+      if (mNext)
+        mNext->RemoveRange(aStart, aEnd);
+    }
+  };
+
   void Remove(PRInt32 aIndex) {
     if (aIndex >= mMin && aIndex <= mMax) {
       // We have found the range that contains us.
@@ -161,6 +210,15 @@ struct nsOutlinerRange
     else if (mNext)
       mNext->RemoveAllBut(aIndex);
   };
+
+  void Insert(nsOutlinerRange* aRange) {
+    if (mMin >= aRange->mMax)
+      aRange->Connect(mPrev, this);
+    else if (mNext)
+      mNext->Insert(aRange);
+    else 
+      aRange->Connect(this, nsnull);
+  };
 };
 
 nsOutlinerSelection::nsOutlinerSelection(nsIOutlinerBoxObject* aOutliner)
@@ -256,20 +314,33 @@ NS_IMETHODIMP nsOutlinerSelection::ToggleSelect(PRInt32 aIndex)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEndIndex)
+NS_IMETHODIMP nsOutlinerSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aAugment)
 {
-  // Clear our selection.
-  mFirstRange->Invalidate();
-  delete mFirstRange;
-  
+  if (!aAugment) {
+    // Clear our selection.
+    mFirstRange->Invalidate();
+    delete mFirstRange;
+  }
+
   if (aStartIndex == -1)
     aStartIndex = mCurrentIndex;
     
   PRInt32 start = aStartIndex < aEndIndex ? aStartIndex : aEndIndex;
   PRInt32 end = aStartIndex < aEndIndex ? aEndIndex : aStartIndex;
 
-  mFirstRange = new nsOutlinerRange(this, start, end);
-  mFirstRange->Invalidate();
+  if (aAugment) {
+    // We need to remove all the items within our selected range from the selection,
+    // and then we insert our new range into the list.
+    mFirstRange->RemoveRange(start, end);
+  }
+
+  nsOutlinerRange* range =  new nsOutlinerRange(this, start, end);
+  range->Invalidate();
+
+  if (aAugment && mFirstRange)
+    mFirstRange->Insert(range);
+  else
+    mFirstRange = range;
 
   FireOnSelectHandler();
 
@@ -317,14 +388,35 @@ NS_IMETHODIMP nsOutlinerSelection::SelectAll()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::GetRangeCount(PRInt32 *_retval)
+NS_IMETHODIMP nsOutlinerSelection::GetRangeCount(PRInt32* aResult)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  PRInt32 count = 0;
+  nsOutlinerRange* curr = mFirstRange;
+  while (curr) {
+    count++;
+    curr = curr->mNext;
+  }
+
+  *aResult = count;
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::GetRangeAt(PRInt32 i, PRInt32 *min, PRInt32 *max)
+NS_IMETHODIMP nsOutlinerSelection::GetRangeAt(PRInt32 aIndex, PRInt32* aMin, PRInt32* aMax)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  *aMin = *aMax = -1;
+  PRInt32 i = -1;
+  nsOutlinerRange* curr = mFirstRange;
+  while (curr) {
+    i++;
+    if (i == aIndex) {
+      *aMin = curr->mMin;
+      *aMax = curr->mMax;
+      break;
+    }
+    curr = curr->mNext;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsOutlinerSelection::GetSelectEventsSuppressed(PRBool *aSelectEventsSuppressed)

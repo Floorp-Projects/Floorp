@@ -56,6 +56,7 @@ interface nsIOutlinerView : nsISupports
   // and if so, whether an open or closed twisty should be used.
   boolean isContainer(in long index);
   boolean isContainerOpen(in long index);
+  boolean isContainerEmpty(in long index);
   
   // The level is an integer value that represents
   // the level of indentation.  It is multiplied by the width specified in the 
@@ -73,7 +74,7 @@ interface nsIOutlinerView : nsISupports
   void toggleOpenState(in long index);
 
   // Called on the view when a header is clicked.
-  void cycleHeader(in nsIDOMElement elt);
+  void cycleHeader(in wstring colID, in nsIDOMElement elt);
 
   // Should be called from a XUL onselect handler whenever the selection changes.
   // XXX Should this be done automatically?
@@ -82,6 +83,13 @@ interface nsIOutlinerView : nsISupports
   // Called on the view when a cell in a non-selectable cycling column (e.g., unread/flag/etc.) is clicked.
   void cycleCell(in long row, in wstring colID);
   
+  // APIs for inline editing.  isEditable is called to ask the view if the cell contents are
+  // editable.  A value of true will result in the outliner popping up a text field when the
+  // user tries to inline edit the cell.
+  // setCellText is called when the contents of the cell have been edited by the user.
+  boolean isEditable(in long row, in wstring colID);
+  void setCellText(in long row, in wstring colID, in wstring value);
+
   // A command API that can be used to invoke commands on the selection.  The outliner
   // will automatically invoke this method when certain keys are pressed.  For example,
   // when the DEL key is pressed, performAction will be called with the "delete" string.

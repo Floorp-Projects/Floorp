@@ -60,13 +60,14 @@
 	     var col = {};
 	     var b = this.parentNode.outlinerBoxObject;
 	     b.getCellAt(event.clientX, event.clientY, row, col);
-         if (event.ctrlKey || event.metaKey) {
+		 var augment = event.ctrlKey || event.metaKey;
+		 if (event.shiftKey) {
+		   b.selection.rangedSelect(-1, row.value, augment);
+           b.currentIndex = row.value;
+         }
+         else if (augment) {
            b.selection.toggleSelect(row.value);
            b.selection.currentIndex = row.value;
-         }
-         else if (event.shiftKey) {
-		   b.selection.rangedSelect(-1, row.value);
-           b.currentIndex = row.value;
          }
          else {
           /* We want to deselect all the selected items except what was
@@ -103,7 +104,7 @@
       <xul:image class="outlinercol-sortdirection"/>
     </content>
 	<handlers>
-	  <handler event="click" action="this.parentNode.outlinerBoxObject.view.cycleHeader(this)"/>
+	  <handler event="click" action="this.parentNode.outlinerBoxObject.view.cycleHeader(this.id, this)"/>
 	</handlers>
   </binding>
 

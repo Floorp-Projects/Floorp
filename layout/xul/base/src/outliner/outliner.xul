@@ -32,7 +32,7 @@
     <outlinercol id="Col2" value="Col2" flex="1"/>
 	<outlinercol id="Col3" value="Col3" flex="1"/>
     <outlinercol id="Col4" value="Col4" flex="1"/>
-    <outlinerbody flex="1" onselect="alert('sel changed!')"/>
+    <outlinerbody flex="1" onselect="dump('selection changed!\n')"/>
   </outliner>
 
   <hbox>
