@@ -140,4 +140,4 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
 
   <!-- used to store the print -->
   <data style="display:none;" id="fpDialog" label="&fpDialog.title;"/>
-</window>
+</dialog>
