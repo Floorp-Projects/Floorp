@@ -81,6 +81,7 @@ LLIBS	= \
 	$(LIBNSPR) \
 	$(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib \
 	$(DIST)\lib\xpcom32.lib \
+	$(DIST)\lib\raptorbase.lib	\
 	$(HASHLIBS)
 
 #//------------------------------------------------------------------------
