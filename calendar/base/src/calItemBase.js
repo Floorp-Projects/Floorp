@@ -30,6 +30,18 @@ calItemBase.prototype = {
     },
 
 
+    initItemBase: function () {
+        this.mCreationDate = createCalDateTime();
+        this.mAlarmTime = createCalDateTime();
+
+
+        this.mRecurrenceInfo = null;
+        this.mAttachments = null;
+        this.mContacts = null;
+        this.mProperties = null;
+    },
+
+
 
     cloneItemBaseInto: function (m) {
         m.mImmutable = false;
@@ -107,3 +119,14 @@ calItemOccurrence.prototype = {
     next: null,
     previous: null
 };
+
+
+
+
+
+function createCalDateTime() {
+    const kCdtClass = Components.classes["@mozilla.org/calendar/datetime;1"];
+    const kCdtInterface = Components.interfaces.calIDateTime;
+
+    return kCdtClass.createInstance(kCdtInterface);
+}

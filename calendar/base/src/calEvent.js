@@ -1,5 +1,7 @@
 function calEvent() {
     this.wrappedJSObject = this;
+    this.initItemBase();
+    this.initEvent();
 }
 
 calEvent.prototype = {
@@ -10,11 +12,16 @@ calEvent.prototype = {
             !aIID.equals(Components.interfaces.calIItemBase) &&
             !aIID.equals(Components.interfaces.calIEvent))
         {
-            dump ("calEvent QI failed to " + aIID + "\n");
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
 
         return this;
+    },
+
+    initEvent: function () {
+        this.mStartDate = createCalDateTime();
+        this.mEndDate = createCalDateTime();
+        this.mStampDate = createCalDateTime();
     },
 
     clone: function () {

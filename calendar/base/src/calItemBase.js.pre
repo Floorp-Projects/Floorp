@@ -71,6 +71,18 @@ calItemBase.prototype = {
         this.mImmutable = true;
     },
 
+    // initialize this class's members
+    initItemBase: function () {
+        this.mCreationDate = createCalDateTime();
+        this.mAlarmTime = createCalDateTime();
+
+        // fix me
+        this.mRecurrenceInfo = null;
+        this.mAttachments = null;
+        this.mContacts = null;
+        this.mProperties = null;
+    },
+
     // for subclasses to use; copies the ItemBase's values
     // into m
     cloneItemBaseInto: function (m) {
@@ -149,3 +161,14 @@ calItemOccurrence.prototype = {
     next: null,
     previous: null
 };
+
+//
+// helper functions
+//
+
+function createCalDateTime() {
+    const kCdtClass = Components.classes["@mozilla.org/calendar/datetime;1"];
+    const kCdtInterface = Components.interfaces.calIDateTime;
+
+    return kCdtClass.createInstance(kCdtInterface);
+}
