@@ -639,11 +639,15 @@ nsMessengerMigrator::UpgradePrefs()
              do_GetService(kSmtpServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;    
 
-    rv = smtpService->GetDefaultServer(getter_AddRefs(smtpServer));
+    rv = smtpService->CreateSmtpServer(getter_AddRefs(smtpServer));
     if (NS_FAILED(rv)) return rv;    
 
     rv = MigrateSmtpServer(smtpServer);
     if (NS_FAILED(rv)) return rv;    
+
+    // set the newly created smtp server as the default
+    smtpService->SetDefaultServer(smtpServer); // ignore the error code....continue even if this call fails...
+
 
     if ( m_oldMailType == POP_4X_MAIL_TYPE) {
       // in 4.x, you could only have one pop account
