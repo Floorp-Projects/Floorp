@@ -60,6 +60,7 @@
 
 #define PRFileDesc          FILE
 typedef long                PRInt32;
+typedef PRInt32             PROffset32;
 typedef unsigned long       PRUint32;
 typedef short               PRInt16;
 typedef unsigned short      PRUint16;
