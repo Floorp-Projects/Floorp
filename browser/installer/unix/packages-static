@@ -101,6 +101,7 @@ bin/components/imglib2.xpt
 bin/components/intl.xpt
 bin/components/jar.xpt
 bin/components/jsconsole.xpt
+bin/components/libjsd.so
 bin/components/jsdservice.xpt
 bin/components/jsurl.xpt
 bin/components/layout_base.xpt
