@@ -39,6 +39,7 @@
 #include "nsIComponentLoader.h"
 #include "pldhash.h"
 #include NEW_H
+#include <stdio.h>
 
 struct StaticModuleInfo : public PLDHashEntryHdr {
     nsStaticModuleInfo  info;

@@ -55,6 +55,7 @@
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsITimelineService.h"
+#include "nsModule.h"
 #ifdef DEBUG
 #if defined(VMS)
 #include <lib$routines.h>

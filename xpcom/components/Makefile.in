@@ -69,6 +69,7 @@ EXPORTS		= \
 		nsComponentManagerObsolete.h \
 		nsIServiceManagerUtils.h \
 		nsIServiceManagerObsolete.h \
+		nsModule.h \
 		nsNativeComponentLoader.h \
 		nsStaticComponent.h \
 		nsObsoleteModuleLoading.h \
