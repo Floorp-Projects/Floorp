@@ -43,8 +43,8 @@
 #include "prio.h"
 #include "rdf.h"
 #include "nsFileSpec.h"
+#include "nsFileStream.h"
 #include "nsIRDFFileSystem.h"
-#include "nsFileSpec.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsEnumeratorUtils.h"
 
@@ -163,6 +163,7 @@ public:
 
 #ifdef	XP_WIN
     static PRBool   isValidFolder(nsIRDFResource *source);
+    static nsresult getIEFavoriteURL(nsIRDFResource *source, nsString aFileURL, nsIRDFLiteral **urlLiteral);
 #endif
 
 };
@@ -379,15 +380,18 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 		{
 			nsCOMPtr<nsIRDFLiteral> name;
 			rv = GetName(source, getter_AddRefs(name));
-			if (NS_FAILED(rv)) return rv;
-
+			if (NS_FAILED(rv)) return(rv);
+			if (!name)	rv = NS_RDF_NO_VALUE;
+			if (rv == NS_RDF_NO_VALUE)	return(rv);
 			return name->QueryInterface(nsIRDFNode::GetIID(), (void**) target);
 		}
 		else if (property == kNC_URL)
 		{
 			nsCOMPtr<nsIRDFLiteral> url;
 			rv = GetURL(source, getter_AddRefs(url));
-			if (NS_FAILED(rv)) return rv;
+			if (NS_FAILED(rv)) return(rv);
+			if (!url)	rv = NS_RDF_NO_VALUE;
+			if (rv == NS_RDF_NO_VALUE)	return(rv);
 
 			return url->QueryInterface(nsIRDFNode::GetIID(), (void**) target);
 		}
@@ -1076,6 +1080,76 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 
 
 
+#ifdef	XP_WIN
+nsresult
+FileSystemDataSource::getIEFavoriteURL(nsIRDFResource *source, nsString aFileURL, nsIRDFLiteral **urlLiteral)
+{
+	nsresult		rv = NS_OK;
+
+	*urlLiteral = nsnull;
+
+	nsFileURL		url(aFileURL);
+	nsFileSpec		uri(url);
+	if (uri.IsDirectory())
+	{
+		if (isValidFolder(source))
+			return(NS_RDF_NO_VALUE);
+		uri += "desktop.ini";
+	}
+	else if (aFileURL.Length() > 4)
+	{
+		nsAutoString	extension;
+		aFileURL.Right(extension, 4);
+		if (!extension.EqualsIgnoreCase(".url"))
+		{
+			return(NS_RDF_NO_VALUE);
+		}
+	}
+
+	nsInputFileStream	stream(uri);
+
+	if (!stream.is_open())
+		return(NS_RDF_NO_VALUE);
+
+	char		buffer[256];
+	nsAutoString	line;
+	while(NS_SUCCEEDED(rv) && (!stream.eof()) && (!stream.failed()))
+	{
+		PRBool	untruncated = stream.readline(buffer, sizeof(buffer));
+
+		if (stream.failed())
+		{
+			rv = NS_ERROR_FAILURE;
+			break;
+		}
+
+		line.Append(buffer);
+
+		if (untruncated)
+		{
+			if (line.Find("URL=", PR_TRUE) == 0)
+			{
+				line.Cut(0, 4);
+				rv = gRDFService->GetLiteral(line.GetUnicode(), urlLiteral);
+				break;
+			}
+			else if (line.Find("CDFURL=", PR_TRUE) == 0)
+			{
+				line.Cut(0, 7);
+				rv = gRDFService->GetLiteral(line.GetUnicode(), urlLiteral);
+				break;
+			}
+			line.Truncate();
+		}
+
+	}
+
+	return(rv);
+}
+#endif
+
+
+
 nsresult
 FileSystemDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult)
 {
@@ -1085,7 +1159,21 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult)
 	if (NS_FAILED(rv)) return(rv);
 	nsAutoString		url(uri);
 
-	nsIRDFLiteral		*literal;
+	nsIRDFLiteral		*literal = nsnull;
+
+#ifdef	XP_WIN
+	// under Windows, if its an IE favorite, munge the URL
+	if (ieFavoritesDir)
+	{
+		if (url.Find(ieFavoritesDir) == 0)
+		{
+			rv = getIEFavoriteURL(source, url, &literal);
+			*aResult = literal;
+			return(rv);
+		}
+	}
+#endif
+
 	gRDFService->GetLiteral(url.GetUnicode(), &literal);
 	*aResult = literal;
 	return NS_OK;
