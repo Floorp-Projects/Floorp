@@ -72,7 +72,7 @@ var progressListener = {
         const nsIWebBrowserPersist = Components.interfaces.nsIWebBrowserPersist;
         if (helperAppLoader || webBrowserPersist &&
             webBrowserPersist.currentState == nsIWebBrowserPersist.PERSIST_STATE_FINISHED)
-          setTimeout("processEndOfDownload()", 300);
+          processEndOfDownload();
       }
     },
 
