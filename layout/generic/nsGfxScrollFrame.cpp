@@ -718,14 +718,9 @@ nsGfxScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
     computedSize = nsSize(HTMLState->mComputedWidth, HTMLState->mComputedHeight);
     // If we know the computed size, then that's the effective maximum
     computedMax = computedSize;
-    // Get CSS maxima where we don't have a computed size
-    if (computedMax.width == NS_INTRINSICSIZE) {
-      computedMax.width = HTMLState->mComputedMaxWidth;
-    }
-    if (computedMax.height == NS_INTRINSICSIZE) {
-      computedMax.height = HTMLState->mComputedMaxHeight;
-    }
-
+    // One could imagine using other constraints in computedMax, but it doesn't
+    // really work. See bug 237622.
+ 
     // Pass a constraint to the block if we have at least one constraint
     // and our size is not fixed
     if (((computedSize.width == NS_INTRINSICSIZE)
