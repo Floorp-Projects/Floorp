@@ -110,10 +110,6 @@ static NS_DEFINE_CID(kPlatformCharsetCID,  NS_PLATFORMCHARSET_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_CID);
 
 
-#if defined(XP_PC) && !defined(XP_OS2)
-#include <windows.h>
-#endif
-
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIProtocolHandler.h"
