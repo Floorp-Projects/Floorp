@@ -302,6 +302,13 @@ CmdLineDdeCallBack(UINT type, UINT fmt,
 		case XTYP_EXECUTE:	{
 			//	We are the server.
 			//	A client said XTYP_EXECUTE in DdeClientTransaction
+
+            //  If we are currently not fully initialized, we must ignore
+            //      the request, but acknowledge it nonetheless.
+            if(theApp.m_bInInitInstance) {
+                return (HDDEDATA)DDE_FACK;
+            }
+
 			HDDEDATA& hDataExecute = hData;
 			char *pData = (char *)DdeAccessData(hDataExecute, NULL);
 			char szCmd[_MAX_PATH+12];
