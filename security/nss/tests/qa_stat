@@ -60,7 +60,7 @@ HTML_PASSEDMSG=Passed
 RSH_FILE=$TMP/rsh.$$
 echo >$RSH_FILE
 TMPFILES="$TMPFILES $WARNINGLIST $RSH_FILE "
-RSH_WAIT_TIME=40 #maximum time allowed for the 2 rsh to finish...
+RSH_WAIT_TIME=80 #maximum time allowed for the 2 rsh to finish...
 #TOTAL_TESTS=106
 TOTAL_TESTS=122
 
@@ -113,16 +113,25 @@ do
     IS_64=""
     IS_WIN=""
 
-    grep WINDOWS-OS-LINE ${RESULTDIR}/${QA_SYS}.nssqa >/dev/null && NO_RSH=TRUE
+    grep OS-LINE ${RESULTDIR}/${QA_SYS}.nssqa >/dev/null && NO_RSH=TRUE
 
     if [ "$NO_RSH" = "TRUE" ]
     then
-        grep WINDOWS-OS-LINE ${RESULTDIR}/${QA_SYS}.nssqa | sort -u | sed \
-             -e "s/WINDOWS-OS-LINE: /${QA_SYS}_/" >>$PLATFORMLIST
+
+        QA_OS=`grep OS-LINE ${RESULTDIR}/${QA_SYS}.nssqa | sort -u | sed \
+            -e "s/.*-OS-LINE: /${QA_SYS}/"`
+        QA_OS_STRING=`echo $QA_OS | sed -e "s/^[_ ]//" -e "s/ /_/g"`
+        echo $QA_OS_STRING >>$PLATFORMLIST
         if [ "$O_SILENT" != ON ] ; then
-            grep WINDOWS-OS-LINE ${RESULTDIR}/${QA_SYS}.nssqa | sort -u | sed \
-                 -e "s/WINDOWS-OS-LINE:/${QA_SYS}/" 
+            echo $QA_OS
         fi
+
+        #grep OS-LINE ${RESULTDIR}/${QA_SYS}.nssqa | sort -u | sed \
+             #-e "s/.*-OS-LINE: /${QA_SYS}_/" >>$PLATFORMLIST
+        #if [ "$O_SILENT" != ON ] ; then
+            #grep OS-LINE ${RESULTDIR}/${QA_SYS}.nssqa | sort -u | sed \
+                 #-e "s/.*-OS-LINE:/${QA_SYS}/" 
+        #fi
     else
         REM_SYSNAME=$QA_SYS
         watch_rsh start $REM_SYSNAME &
