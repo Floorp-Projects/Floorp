@@ -138,51 +138,54 @@ PRInt32 ReplaceExistingWindowsFile(nsIFile* currentSpec, nsIFile* finalSpec)
 
 PRInt32 DeleteFileNowOrSchedule(nsIFile* filename)
 {
-
-  PRBool flagExists;  
-  PRInt32 result = nsInstall::SUCCESS;
+    PRBool flagExists;  
+    PRInt32 result = nsInstall::SUCCESS;
 
     filename->Delete(PR_FALSE);
     filename->Exists(&flagExists);
     if (flagExists)
+        result = ScheduleFileForDeletion(filename);
+ 
+    return result;
+} 
+
+PRInt32 ScheduleFileForDeletion(nsIFile *filename)
+{
+    // could not delete, schedule it for later
+
+    RKEY newkey;
+    HREG reg;
+    REGERR  err;
+    PRInt32 result = nsInstall::UNEXPECTED_ERROR;
+
+    err = NR_RegOpen("", &reg) ;
+    if ( err == REGERR_OK )
     {
-        // could not delete, schedule it for later
-
-        RKEY newkey;
-        HREG reg;
-        REGERR  err;
-        result = nsInstall::UNEXPECTED_ERROR;
-
-        err = NR_RegOpen("", &reg) ;
+        err = NR_RegAddKey(reg,ROOTKEY_PRIVATE,REG_DELETE_LIST_KEY,&newkey);
         if ( err == REGERR_OK )
         {
-            err = NR_RegAddKey(reg,ROOTKEY_PRIVATE,REG_DELETE_LIST_KEY,&newkey);
+            char    valname[20];
+            char*   fnamestr = nsnull;
+
+            err = NR_RegGetUniqueName( reg, valname, sizeof(valname) );
             if ( err == REGERR_OK )
             {
-                char    valname[20];
-                char*   fnamestr = nsnull;
-
-                err = NR_RegGetUniqueName( reg, valname, sizeof(valname) );
-                if ( err == REGERR_OK )
+                nsresult rv;
+                rv = GetPersistentStringFromSpec( filename, &fnamestr );
+                if ( NS_SUCCEEDED(rv) && fnamestr )
                 {
-                    nsresult rv;
-                    rv = GetPersistentStringFromSpec( filename, &fnamestr );
-                    if ( NS_SUCCEEDED(rv) && fnamestr )
-                    {
+                    err = NR_RegSetEntry( reg, newkey, valname, 
+                                          REGTYPE_ENTRY_BYTES, 
+                                          (void*)fnamestr, 
+                                          strlen(fnamestr)+1);
 
-                        err = NR_RegSetEntry( reg, newkey, valname, 
-                                              REGTYPE_ENTRY_BYTES, 
-                                              (void*)fnamestr, 
-                                              strlen(fnamestr)+1);
-
-                        if ( err == REGERR_OK )
-                            result = nsInstall::REBOOT_NEEDED;
-                    }
+                    if ( err == REGERR_OK )
+                         result = nsInstall::REBOOT_NEEDED;
                 }
             }
-
-            NR_RegClose(reg);
         }
+
+        NR_RegClose(reg);
     }
 
     return result;
