@@ -95,6 +95,7 @@
 #include "imgIRequest.h"
 #include "gfxIImageFrame.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIDocumentEncoder.h"
 
 
 
@@ -762,6 +763,8 @@ nsContentAreaDragDrop::BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outU
     selection->ContainsNode(draggedNode, PR_FALSE, &containsTarget);
   }
     
+  PRBool getFormattedStrings = PR_FALSE;
+
   if ( selection && !isCollapsed && containsTarget ) {
     // track down the anchor node, if any, for the url
     nsCOMPtr<nsIDOMNode> selectionStart;
@@ -777,17 +780,7 @@ nsContentAreaDragDrop::BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outU
       }
     }
       
-    // find the title for the drag and any associated html
-    nsCOMPtr<nsISelectionPrivate> privSelection(do_QueryInterface(selection));
-    if ( privSelection ) {        
-      // the window has a selection so we should grab that rather
-      // than looking for specific elements
-      privSelection->ToStringWithFormat("text/html", 128+256, 0, getter_Copies(htmlString));
-      privSelection->ToStringWithFormat("text/plain", 0, 0, getter_Copies(titleString));
-    }
-    else 
-      selection->ToString(getter_Copies(titleString));
-
+    getFormattedStrings = PR_TRUE;
   } // if drag is within selection
   else {
     // if the alt key is down, don't start a drag if we're in an anchor because
@@ -813,6 +806,15 @@ nsContentAreaDragDrop::BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outU
     } // area
     else {
       nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(draggedNode));
+
+      if (img && parentAnchor) {
+        // If we are dragging around an image in an anchor, then we
+        // are dragging the entire anchor!
+
+        draggedNode = parentAnchor;
+        img = nsnull;
+      }
+
       if ( img ) {
         *outIsAnchor = PR_TRUE;
         // grab the href as the url, use alt text as the title of the area if it's there.
@@ -825,14 +827,6 @@ nsContentAreaDragDrop::BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outU
           urlString +
           NS_LITERAL_STRING("\">");
 
-        // if the image is also a link, then re-wrap htmlstring in
-        // an anchor tag
-        if ( parentAnchor ) {
-          *outIsAnchor = PR_TRUE;
-          GetAnchorURL(parentAnchor, urlString);
-          CreateLinkText(urlString, htmlString, htmlString);
-        }
-        
         // also grab the image data
         GetImageFromDOMNode(draggedNode, outImage);
         // select siblings up to and including the selected link. this
@@ -852,11 +846,11 @@ nsContentAreaDragDrop::BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outU
           if ( linkNode ) {
             *outIsAnchor = PR_TRUE;
             GetAnchorURL(linkNode, urlString);
-            GetNodeString(linkNode, titleString);
         
             // select siblings up to and including the selected link. this
             // shouldn't be fatal, and we should still do the drag if this fails
             NormalizeSelection(linkNode, selection);
+            getFormattedStrings = PR_TRUE;
           }
           else {
             // indicate that we don't allow drags in this case
@@ -866,6 +860,22 @@ nsContentAreaDragDrop::BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outU
       }
     }
   } // else no selection or drag outside it
+
+  if (getFormattedStrings && selection) {
+    // find the title for the drag and any associated html
+    nsCOMPtr<nsISelectionPrivate> privSelection(do_QueryInterface(selection));
+    if ( privSelection ) {        
+      // the window has a selection so we should grab that rather
+      // than looking for specific elements
+      privSelection->ToStringWithFormat("text/html",
+                                        nsIDocumentEncoder::OutputAbsoluteLinks |
+                                        nsIDocumentEncoder::OutputEncodeW3CEntities,
+                                        0, getter_Copies(htmlString));
+      privSelection->ToStringWithFormat("text/plain", 0, 0, getter_Copies(titleString));
+    }
+    else 
+      selection->ToString(getter_Copies(titleString));
+  }
 
   if ( startDrag ) {
     // default text value is the URL
