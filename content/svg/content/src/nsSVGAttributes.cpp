@@ -549,8 +549,7 @@ nsSVGAttributes::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     if ((aNameSpaceID == kNameSpaceID_Unknown ||
          attr->GetNodeInfo()->NamespaceEquals(aNameSpaceID)) &&
         (attr->GetNodeInfo()->Equals(aName))) {
-      // AddRefs
-      *aPrefix = attr->GetNodeInfo()->PrefixAtom().get();
+      NS_IF_ADDREF(*aPrefix = attr->GetNodeInfo()->GetPrefixAtom());
       attr->GetValue()->GetValueString(aResult);
       if (!aResult.IsEmpty()) {
         rv = NS_CONTENT_ATTR_HAS_VALUE;
@@ -603,7 +602,7 @@ nsSVGAttributes::SetAttr(nsINodeInfo* aNodeInfo,
     }
   }
 
-  PRInt32 nameSpaceID = aNodeInfo->GetNamespaceID();
+  PRInt32 nameSpaceID = aNodeInfo->NamespaceID();
   nsIAtom *name = aNodeInfo->NameAtom();
 
   // Send the notification before making any updates
@@ -798,9 +797,9 @@ nsSVGAttributes::GetAttrNameAt(PRInt32 aIndex,
 {
   nsSVGAttribute* attr = ElementAt(aIndex);
   if (attr) {
-    *aNameSpaceID = attr->GetNodeInfo()->GetNamespaceID();
+    *aNameSpaceID = attr->GetNodeInfo()->NamespaceID();
     NS_ADDREF(*aName = attr->GetNodeInfo()->NameAtom());
-    NS_IF_ADDREF(*aPrefix = attr->GetNodeInfo()->PrefixAtom());
+    NS_IF_ADDREF(*aPrefix = attr->GetNodeInfo()->GetPrefixAtom());
 
     return NS_OK;
   }
@@ -821,12 +820,9 @@ nsSVGAttributes::AddMappedSVGValue(nsIAtom* name, nsISupports* value)
   NS_ASSERTION(mContent,"no owner content");
   if (!mContent) return NS_ERROR_FAILURE;
   
-  nsCOMPtr<nsINodeInfoManager> nimgr;
-  mContent->GetNodeInfo()->GetNodeInfoManager(getter_AddRefs(nimgr));
-  NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
-
   nsCOMPtr<nsINodeInfo> ni;
-  nimgr->GetNodeInfo(name, nsnull, kNameSpaceID_None, getter_AddRefs(ni));
+  mContent->NodeInfoManager()->GetNodeInfo(name, nsnull, kNameSpaceID_None,
+                                           getter_AddRefs(ni));
   NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
   nsSVGAttribute* attrib = nsnull;
