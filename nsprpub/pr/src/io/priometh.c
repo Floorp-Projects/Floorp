@@ -51,7 +51,13 @@ PRIOMethods _pr_faulty_methods = {
     (PRGetsockoptFN)_PR_InvalidStatus,    
     (PRSetsockoptFN)_PR_InvalidStatus,    
     (PRGetsocketoptionFN)_PR_InvalidStatus,
-    (PRSetsocketoptionFN)_PR_InvalidStatus
+    (PRSetsocketoptionFN)_PR_InvalidStatus,
+    (PRSendfileFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt,
+    (PRReservedFN)_PR_InvalidInt,
+    (PRReservedFN)_PR_InvalidInt,
+    (PRReservedFN)_PR_InvalidInt,
+    (PRReservedFN)_PR_InvalidInt
 };
 
 PRIntn _PR_InvalidInt()
@@ -273,4 +279,10 @@ PR_IMPLEMENT(PRStatus) PR_SetSocketOption(
 	return((fd->methods->setsocketoption)(fd, data));
 }
 
+PR_IMPLEMENT(PRInt32) PR_SendFile(
+	PRFileDesc *sd, PRSendFileData *sfd,
+	PRTransmitFileFlags flags, PRIntervalTime timeout)
+{
+	return((sd->methods->sendfile)(sd,sfd,flags,timeout));
+}
 /* priometh.c */

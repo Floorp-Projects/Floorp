@@ -355,6 +355,17 @@ static PRStatus PR_CALLBACK pl_DefSetsocketoption (
     return (fd->lower->methods->setsocketoption)(fd->lower, data);
 }
 
+static PRInt32 PR_CALLBACK pl_DefSendfile (
+	PRFileDesc *sd, PRSendFileData *sfd,
+	PRTransmitFileFlags flags, PRIntervalTime timeout)
+{
+    PR_ASSERT(sd != NULL);
+    PR_ASSERT(sd->lower != NULL);
+
+    return sd->lower->methods->sendfile(
+        sd->lower, sfd, flags, timeout);
+}
+
 /* Methods for the top of the stack.  Just call down to the next fd. */
 static PRIOMethods pl_methods = {
     PR_DESC_LAYERED,
@@ -386,7 +397,13 @@ static PRIOMethods pl_methods = {
     pl_DefGetsockopt,
     pl_DefSetsockopt,
     pl_DefGetsocketoption,
-    pl_DefSetsocketoption
+    pl_DefSetsocketoption,
+    pl_DefSendfile,
+    (PRReservedFN)_PR_InvalidInt,
+    (PRReservedFN)_PR_InvalidInt,
+    (PRReservedFN)_PR_InvalidInt,
+    (PRReservedFN)_PR_InvalidInt,
+    (PRReservedFN)_PR_InvalidInt
 };
 
 PR_IMPLEMENT(const PRIOMethods*) PR_GetDefaultIOMethods()

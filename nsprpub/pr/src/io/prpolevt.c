@@ -93,7 +93,13 @@ static PRIOMethods _pr_polevt_methods = {
     (PRGetsockoptFN)_PR_InvalidStatus,    
     (PRSetsockoptFN)_PR_InvalidStatus,    
     (PRGetsocketoptionFN)_PR_InvalidStatus,
-    (PRSetsocketoptionFN)_PR_InvalidStatus
+    (PRSetsocketoptionFN)_PR_InvalidStatus,
+    (PRSendfileFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt
 };
 
 static PRDescIdentity _pr_polevt_id;

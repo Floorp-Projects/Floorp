@@ -43,6 +43,7 @@ typedef union  PRNetAddr        PRNetAddr;
 typedef struct PRIOMethods      PRIOMethods;
 typedef struct PRPollDesc       PRPollDesc;
 typedef struct PRFilePrivate    PRFilePrivate;
+typedef struct PRSendFileData   PRSendFileData;
 
 /*
 ***************************************************************************
@@ -358,6 +359,10 @@ typedef PRStatus (PR_CALLBACK *PRGetsocketoptionFN)(
     PRFileDesc *fd, PRSocketOptionData *data);
 typedef PRStatus (PR_CALLBACK *PRSetsocketoptionFN)(
     PRFileDesc *fd, const PRSocketOptionData *data);
+typedef PRInt32 (PR_CALLBACK *PRSendfileFN)(
+	PRFileDesc *networkSocket, PRSendFileData *sendData,
+	PRTransmitFileFlags flags, PRIntervalTime timeout);
+typedef PRIntn (PR_CALLBACK *PRReservedFN)(PRFileDesc *fd);
 
 struct PRIOMethods {
     PRDescType file_type;           /* Type of file represented (tos)           */
@@ -392,6 +397,12 @@ struct PRIOMethods {
                                     /* Get current setting of specified option  */
     PRSetsocketoptionFN setsocketoption;
                                     /* Set value of specified option            */
+    PRSendfileFN sendfile;			/* Send a (partial) file with header/trailer*/
+    PRReservedFN reserved_fn_4;		/* reserved for future use */
+    PRReservedFN reserved_fn_3;		/* reserved for future use */
+    PRReservedFN reserved_fn_2;		/* reserved for future use */
+    PRReservedFN reserved_fn_1;		/* reserved for future use */
+    PRReservedFN reserved_fn_0;		/* reserved for future use */
 };
 
 /*
@@ -1481,7 +1492,7 @@ PR_EXTERN(PRInt32) PR_TransmitFile(
 **************************************************************************
 */
 
-typedef struct PRSendFileData {
+struct PRSendFileData {
 	PRFileDesc	*fd;			/* file to send							*/
 	PRUint32	file_offset;	/* file offset							*/
 	PRSize		file_nbytes;	/* number of bytes of file data to send	*/
@@ -1491,7 +1502,7 @@ typedef struct PRSendFileData {
 	PRInt32		hlen;			/* header len							*/
 	const void	*trailer;		/* trailer buffer						*/
 	PRInt32		tlen;			/* trailer len							*/
-} PRSendFileData;
+};
 
 
 PR_EXTERN(PRInt32) PR_SendFile(
