@@ -311,8 +311,4 @@
       <!-- Others added by overlay -->
     </tabpanels>
   </tabbox>
-  <box>
-    <spacer flex="1"/>
-    <button label="&helpButton;" oncommand="doHelpButton();" />
-  </box>
 </window>
