@@ -303,6 +303,10 @@ protected:
   // Caches our box object.
   void SetBoxObject(nsIOutlinerBoxObject* aBoxObject) { mOutlinerBoxObject = aBoxObject; };
 
+  // A helper used when hit testing.
+  nsresult GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect, PRInt32 aRowIndex,
+                               nsOutlinerColumn* aColumn, PRUnichar** aChildElt);
+
 #ifdef USE_IMG2
   // Fetch an image from the image cache.
   nsresult GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, 
@@ -324,7 +328,7 @@ protected:
 
   // Looks up a style context in the style cache.  On a cache miss we resolve
   // the pseudo-styles passed in and place them into the cache.
-  nsresult GetPseudoStyleContext(nsIPresContext* aPresContext, nsIAtom* aPseudoElement, nsIStyleContext** aResult);
+  nsresult GetPseudoStyleContext(nsIAtom* aPseudoElement, nsIStyleContext** aResult);
 
   // Builds our cache of column info.
   void EnsureColumns();

@@ -409,17 +409,20 @@
          if (!event.ctrlKey && !event.shiftKey && !event.metaKey) {
            var row = {};
            var col = {};
+		   var obj = {};
            var b = this.parentNode.outlinerBoxObject;
-           b.getCellAt(event.clientX, event.clientY, row, col);
+           b.getCellAt(event.clientX, event.clientY, row, col, obj);
            
-           var column = document.getElementById(col.value);
-           var cycler = column.getAttribute('cycler') == 'true';
+		   if (obj.value != "twisty") {
+		     var column = document.getElementById(col.value);
+		     var cycler = column.getAttribute('cycler') == 'true';
 
-           if (cycler)
-             b.view.cycleCell(row.value, col.value);
-           else
-             if (!b.selection.isSelected(row.value))
-               b.selection.select(row.value);
+		     if (cycler)
+			   b.view.cycleCell(row.value, col.value);
+		     else
+			   if (!b.selection.isSelected(row.value))
+			     b.selection.select(row.value);
+		   }
          }
       ]]>
       </handler>
@@ -431,8 +434,13 @@
          if (event.button != 0) return;
          var row = {};
          var col = {};
+		 var obj = {};
          var b = this.parentNode.outlinerBoxObject;
-         b.getCellAt(event.clientX, event.clientY, row, col);
+         b.getCellAt(event.clientX, event.clientY, row, col, obj);
+		 if (obj.value == "twisty") {
+           b.view.toggleOpenState(row.value);
+		   return;
+		 }
          var augment = event.ctrlKey || event.metaKey;
          if (event.shiftKey) {
            b.selection.rangedSelect(-1, row.value, augment);
@@ -462,10 +470,13 @@
       <![CDATA[
            var row = {};
            var col = {};
-           // XXX Again, we need to check the cycler.
+		   var obj = {};
            var b = this.parentNode.outlinerBoxObject;
-           b.getCellAt(event.clientX, event.clientY, row, col);
-           if (b.view.isContainer(row.value))
+           b.getCellAt(event.clientX, event.clientY, row, col, obj);
+		   var column = document.getElementById(col.value);
+		   var cycler = column.getAttribute('cycler') == 'true';
+
+		   if (!cycler && obj.value != "twisty" && b.view.isContainer(row.value))
              b.view.toggleOpenState(row.value);
       ]]>
       </handler>

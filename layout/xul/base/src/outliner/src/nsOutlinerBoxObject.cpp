@@ -280,11 +280,12 @@ NS_IMETHODIMP nsOutlinerBoxObject::InvalidateScrollbar()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::GetCellAt(PRInt32 x, PRInt32 y, PRInt32 *row, PRUnichar **colID)
+NS_IMETHODIMP nsOutlinerBoxObject::GetCellAt(PRInt32 x, PRInt32 y, PRInt32 *row, PRUnichar **colID,
+                                             PRUnichar** childElt)
 {
   nsIOutlinerBoxObject* body = GetOutlinerBody();
   if (body)
-    return body->GetCellAt(x, y, row, colID);
+    return body->GetCellAt(x, y, row, colID, childElt);
   return NS_OK;
 }
 
