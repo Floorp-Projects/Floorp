@@ -57,6 +57,7 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsSpecialSystemDirectory.h"
 #include "mozITXTToHTMLConv.h"
+#include "nsIMIMEService.h"
 
 #include "nsIIOService.h"
 #include "nsIURI.h"
@@ -64,6 +65,7 @@
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 
 #ifdef MOZ_SECURITY
 #include HG01944
@@ -180,81 +182,115 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
   return NS_OK;
 }
 
-extern "C" nsresult
-MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachmentData **data)
+PRInt32
+CountTotalMimeAttachments(MimeContainer *aObj)
 {
-  MimeContainer         *cobj;
-  nsMsgAttachmentData   *tmp;
-  PRInt32               n;
-  PRInt32               i;
-  char                  *disp;
-  PRBool                isMsgBody = PR_FALSE, isAlternativeOrRelated = PR_FALSE;
-  MimeObject            *obj;
+  PRInt32     i;
+  PRInt32     rc = 0;
 
-  if (!data) 
+  if ( (!aObj) || (!aObj->children) || (aObj->nchildren <= 0) )
     return 0;
-  *data = NULL;
 
-  obj = mime_get_main_object(tobj);
-  if ( (obj) && (!mime_subclass_p(obj->clazz, (MimeObjectClass*) &mimeContainerClass)) )
+  for (i=0; i<aObj->nchildren; i++)
+    rc += CountTotalMimeAttachments((MimeContainer *)aObj->children[i]) + 1;
+
+  return rc;
+}
+
+void
+ValidateRealName(nsMsgAttachmentData *aAttach)
+{ 
+  // Sanity.
+  if (!aAttach)
+    return;
+
+  // Do we need to validate?
+  if ( (aAttach->real_name) && (*(aAttach->real_name)) )
+    return;
+
+  // Internal MIME structures need not be named!
+  if ( (!aAttach->real_type) || (aAttach->real_type && 
+                                 !nsCRT::strncasecmp(aAttach->real_type, "multipart", 9)) )
+    return;
+
+  // Special case...if this is a enclosed RFC822 message, give it a nice
+  // name.
+  if (aAttach->real_type && !nsCRT::strcasecmp(aAttach->real_type, MESSAGE_RFC822) && 
+     (!aAttach->real_name || *aAttach->real_name == 0))
   {
-    if (!PL_strcasecmp(obj->content_type, MESSAGE_RFC822))
-    {
-      return 0;
-    }
-    else
-    {
-      return ProcessBodyAsAttachment(obj, data);
-    }
+    mime_SACopy(&(aAttach->real_name), "forward.eml");
+    return;
   }
 
-  isMsgBody = MimeObjectChildIsMessageBody(obj, &isAlternativeOrRelated);
-  if (isAlternativeOrRelated)
-    return 0;
-  
-  cobj = (MimeContainer*) obj;
-  n = cobj->nchildren;          /* This is often too big, but that's OK. */
-  if (n <= 0) 
-    return n;
+  // 
+  // Now validate any other name we have for the attachment!
+  //
+  if (!aAttach->real_name || *aAttach->real_name == 0)
+  {
+    nsString  newAttachName = "attach";
+    nsresult  rv = NS_OK;
+    NS_WITH_SERVICE(nsIMIMEService, mimeFinder, kMimeServiceCID, &rv); 
+    if (NS_SUCCEEDED(rv) && mimeFinder) 
+    {
+      nsIMIMEInfo *mimeInfo = nsnull;
+      rv = mimeFinder->GetFromMIMEType(aAttach->real_type, &mimeInfo);
+      if (NS_SUCCEEDED(rv) && mimeInfo) 
+      {
+        char *aFileExtension = nsnull;
 
-  *data = (nsMsgAttachmentData *)PR_Malloc( (n + 1) * sizeof(MSG_AttachmentData));
-  if (!*data) 
-    return NS_ERROR_OUT_OF_MEMORY;
+        if ( (NS_SUCCEEDED(mimeInfo->FirstExtension(&aFileExtension))) && aFileExtension)
+        {
+          newAttachName.Append(".");
+          newAttachName.Append(aFileExtension);
+          PR_FREEIF(aFileExtension);
+        }
+      }        
+    }
 
-  nsCRT::memset(*data, 0, (n + 1) * sizeof(MSG_AttachmentData));
+    aAttach->real_name = newAttachName.ToNewCString();
+  }  
+}
 
-  tmp = *data;
-  
-  // let's figure out where to start..
-  if (isMsgBody)
+static  PRInt32     attIndex = 0;
+
+nsresult
+BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
+                    const char *aMessageURL)
+{
+  char                  *disp;
+  PRInt32               i;
+  MimeContainer         *cobj = (MimeContainer *) aChild;
+  nsMsgAttachmentData   *tmp = nsnull;
+  PRBool                isAlternativeOrRelated;
+
+  if ( (!aChild) || (!cobj->children) )
+    return NS_OK;
+
+  if (MimeObjectChildIsMessageBody(aChild, &isAlternativeOrRelated))
     i = 1;
   else
     i = 0;
-  
-  for (; i<cobj->nchildren ; i++, tmp++) 
+
+  for (; i<cobj->nchildren ; i++) 
   {
     MimeObject    *child = cobj->children[i];
     char          *part = mime_part_address(child);
     char          *imappart = NULL;
 
-    MimeContainer         *tempObj = (MimeContainer *)child;
-    printf("Children = %d\n", tempObj->nchildren);
+    if ( NS_FAILED(BuildAttachmentList((MimeObject *)child, aAttachData, aMessageURL)) )
+      return NS_OK;
 
     if (!part) 
       return NS_ERROR_OUT_OF_MEMORY;
 
-    if (obj->options->missing_parts)
+    if (aChild->options->missing_parts)
       imappart = mime_imap_part_address(child);
 
     char *urlSpec = nsnull;
     if (imappart)
-    {
       urlSpec = mime_set_url_imap_part(aMessageURL, imappart, part);
-    }
     else
-    {
       urlSpec = mime_set_url_part(aMessageURL, part, PR_TRUE);
-    }
   
 	  PR_FREEIF(part);
   	PR_FREEIF(imappart);
@@ -262,6 +298,7 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
     if (!urlSpec)
       return NS_ERROR_OUT_OF_MEMORY;
 
+    tmp = &(aAttachData[attIndex++]);
     nsresult rv = nsMimeNewURI(&(tmp->url), urlSpec, nsnull);
 
 	  PR_FREEIF(urlSpec);
@@ -313,15 +350,55 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
       PR_FREEIF(disp);
     }
 
-    tmp->description = MimeHeaders_get(child->headers, HEADER_CONTENT_DESCRIPTION, PR_FALSE, PR_FALSE);
-    if (tmp->real_type && !nsCRT::strcasecmp(tmp->real_type, MESSAGE_RFC822) && 
-       (!tmp->real_name || *tmp->real_name == 0))
-    {
-      mime_SACopy(&(tmp->real_name), "forward.msg");
-    }
+    tmp->description = MimeHeaders_get(child->headers, HEADER_CONTENT_DESCRIPTION, 
+                                       PR_FALSE, PR_FALSE);
+
+    // Now, do the right thing with the name!
+    ValidateRealName(tmp);
   }
 
   return NS_OK;
+}
+
+extern "C" nsresult
+MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachmentData **data)
+{
+  MimeObject            *obj;
+  MimeContainer         *cobj;
+  PRInt32               n;
+  PRBool                isAlternativeOrRelated = PR_FALSE;
+
+  if (!data) 
+    return 0;
+  *data = NULL;
+
+  obj = mime_get_main_object(tobj);
+  if ( (obj) && (!mime_subclass_p(obj->clazz, (MimeObjectClass*) &mimeContainerClass)) )
+  {
+    if (!PL_strcasecmp(obj->content_type, MESSAGE_RFC822))
+      return 0;
+    else
+      return ProcessBodyAsAttachment(obj, data);
+  }
+
+  (void) MimeObjectChildIsMessageBody(obj, &isAlternativeOrRelated);
+  if (isAlternativeOrRelated)
+    return 0;
+  
+  cobj = (MimeContainer*) obj;
+  n = CountTotalMimeAttachments(cobj);
+  if (n <= 0) 
+    return n;
+
+  *data = (nsMsgAttachmentData *)PR_Malloc( (n + 1) * sizeof(MSG_AttachmentData));
+  if (!*data) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  attIndex = 0;
+  nsCRT::memset(*data, 0, (n + 1) * sizeof(MSG_AttachmentData));
+  
+  // Now, build the list!
+  return BuildAttachmentList((MimeObject *) cobj, *data, aMessageURL);
 }
 
 extern "C" void
@@ -458,7 +535,7 @@ mime_type_desc(const char *type, void *stream_closure)
 #endif
 }
 
-
+// RICHIE - need to replace this with the new service from Judson!
 static char *
 mime_type_icon(const char *type, void *stream_closure)
 {
@@ -487,8 +564,6 @@ mime_convert_charset (const PRBool input_autodetect, const char *input_line, PRI
                       char **output_ret, PRInt32 *output_size_ret,
                       void *stream_closure)
 {
-  /*  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure; */
-
   // Now do conversion to UTF-8 for output
   char  *convertedString = NULL;
   PRInt32 convertedStringLen;
@@ -515,7 +590,6 @@ mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
                       char **output_ret, PRInt32 *output_size_ret,
                       void *stream_closure)
 {
-  /*  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure; */
   char *converted;
   char *line;
   char charset[128];
@@ -733,37 +807,11 @@ mime_insert_html_convert_charset (const PRBool input_autodetect, const char *inp
                                   void *stream_closure)
 {
   struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
-  int                     status;
-
-  // RICHIE SHERRY - I think this should go away, but I don't want to remove it without
-  // being around for the I18N folks
-  INTL_CharSetInfo csi = nsnull;
-  PRUint16         old_csid = INTL_GetCSIDocCSID(csi);
-
-  if (input_charset) 
-  {
-    msd->lastcsid = INTL_CharSetNameToID((char*) input_charset);
-  } 
-  else 
-  {
-    msd->lastcsid = 0;
-  }
-  if (output_charset) 
-  {
-    msd->outcsid = INTL_CharSetNameToID((char*) output_charset);
-  } 
-  else 
-  {
-    msd->outcsid = 0;
-  }
-  INTL_SetCSIDocCSID(csi, msd->lastcsid);
-
-  status = mime_convert_charset (input_autodetect, input_line, input_length,
-                                 input_charset, output_charset,
-                                 output_ret, output_size_ret,
-                                 stream_closure);
-  INTL_SetCSIDocCSID(csi, old_csid);
-  return status;
+  
+  return mime_convert_charset (input_autodetect, input_line, input_length,
+                               input_charset, output_charset,
+                               output_ret, output_size_ret,
+                               stream_closure);
 }
 
 static int
@@ -1194,7 +1242,6 @@ mime_bridge_create_display_stream(
   ////////////////////////////////////////////////////////////
   // Now, get the libmime prefs...
   ////////////////////////////////////////////////////////////
-//  msd->options->headers = MimeHeadersAll;
   
   MIME_NoInlineAttachments = PR_TRUE;   // false - display as links 
                                         // true - display attachment
@@ -1276,18 +1323,6 @@ mime_bridge_create_display_stream(
 
   if (msd->options->prefs)
     msd->options->prefs->GetBoolPref("mail.force_user_charset", &(msd->options->force_user_charset));
-  if (msd->options->force_user_charset)
-  {
-    /* rhp:
-        For now, we are not going to do this, but I am leaving the code here just in case
-        we do want a pref charset override capability.
-    char    charset[256];
-    int     length = sizeof(charset);
-
-    msd->prefs->GetCharPref("mail.charset", charset, &length); 
-    msd->options->override_charset = nsCRT::strdup(charset);
-    ****/
-  }
 
   // If this is a part, then we should emit the HTML to render the data
   // (i.e. embedded images)
@@ -1513,6 +1548,26 @@ mimeEmitterEndHeader(MimeDisplayOptions *opt)
   {
     nsIMimeEmitter *emitter = (nsIMimeEmitter *)msd->output_emitter;
     return emitter->EndHeader();
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+extern "C" nsresult     
+mimeEmitterUpdateCharacterSet(MimeDisplayOptions *opt, const char *aCharset)
+{
+  // Check for draft processing...
+  if (NoEmitterProcessing(opt->format_out))
+    return NS_OK;
+
+  mime_stream_data  *msd = GetMSD(opt);
+  if (!msd) 
+    return NS_ERROR_FAILURE;
+
+  if (msd->output_emitter)
+  {
+    nsIMimeEmitter *emitter = (nsIMimeEmitter *)msd->output_emitter;
+    return emitter->UpdateCharacterSet(aCharset);
   }
 
   return NS_ERROR_FAILURE;

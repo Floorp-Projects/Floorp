@@ -1226,7 +1226,7 @@ VObject* Parse_MIME_FromFileName(nsFileSpec *fname)
   }
   else {
     char msg[80];
-    sprintf(msg, "can't open file '%s' for reading\n", fname);
+    PR_snprintf(msg, sizeof(msg), "Can't open file for reading\n");
     mime_error_(msg);
     return 0;
   }
@@ -1244,13 +1244,13 @@ void registerMimeErrorHandler(MimeErrorHandler me)
     }
 
 void mime_error(char *s)
-    {
-    char msg[256];
-    if (mimeErrorHandler) {
-	sprintf(msg,"%s at line %d", s, mime_lineNum);
-	mimeErrorHandler(msg);
-	}
-    }
+{
+  char msg[256];
+  if (mimeErrorHandler) {
+    PR_snprintf(msg, sizeof(msg), "%s at line %d", s, mime_lineNum);
+    mimeErrorHandler(msg);
+  }
+}
 
 void mime_error_(char *s)
     {

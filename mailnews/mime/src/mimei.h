@@ -360,15 +360,6 @@ extern int MimeOptions_write(MimeDisplayOptions *,
 /* Writes out the right kind of HR (or rather, queues it for writing.) */
 extern int MimeObject_write_separator(MimeObject *);
 
-
-/* Turn this on if you want to play with the idea of displaying icons in the
-   headers to represent attachments, and put icons next to each attachment so
-   you can easily save them without having to bring up the "as links" view.
-   Right now, this is all really half-baked, half-implemented,
-   half-thought-out, and so on.  But the current "attachment panel" needs to be
-   destroyed, and this is the only hope. */
-#define JS_ATTACHMENT_MUMBO_JUMBO
-
 extern PRBool MimeObjectChildIsMessageBody(MimeObject *obj,
 											PRBool *isAlterOrRelated);
 

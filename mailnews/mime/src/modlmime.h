@@ -115,7 +115,7 @@ extern char *MimeHeaders_get_parameter (const char *header_value,
 										char **charset,
 										char **language);
 
-extern MimeHeaders *MimeHeaders_copy (MimeHeaders *srcHeaders);
+extern      MimeHeaders *MimeHeaders_copy (MimeHeaders *srcHeaders);
 
 extern void MimeHeaders_free (MimeHeaders *hdrs);
   

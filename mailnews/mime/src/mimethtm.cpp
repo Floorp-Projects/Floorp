@@ -52,85 +52,85 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
 {
   int status = ((MimeObjectClass*)&mimeLeafClass)->parse_begin(obj);
   if (status < 0) return status;
-
+  
   if (!obj->output_p) return 0;
-
+  
   MimeInlineTextHTML  *textHTML = (MimeInlineTextHTML *) obj;
-
+  
   textHTML->charset = nsnull;
-
+  
   /* If this HTML part has a Content-Base header, and if we're displaying
 	 to the screen (that is, not writing this part "raw") then translate
-	 that Content-Base header into a <BASE> tag in the HTML.
-   */
+   that Content-Base header into a <BASE> tag in the HTML.
+  */
   if (obj->options &&
-	  obj->options->write_html_p &&
-	  obj->options->output_fn)
-	{
-	  char *base_hdr = MimeHeaders_get (obj->headers, HEADER_CONTENT_BASE,
-										PR_FALSE, PR_FALSE);
-
+    obj->options->write_html_p &&
+    obj->options->output_fn)
+  {
+    char *base_hdr = MimeHeaders_get (obj->headers, HEADER_CONTENT_BASE,
+      PR_FALSE, PR_FALSE);
+    
     /* rhp - for MHTML Spec changes!!! */
     if (!base_hdr)
     {
       base_hdr = MimeHeaders_get (obj->headers, HEADER_CONTENT_LOCATION, PR_FALSE, PR_FALSE);
     }
     /* rhp - for MHTML Spec changes!!! */
-
-      /* Encapsulate the entire text/html part inside an in-flow
-         layer.  This will provide it a private coordinate system and
-         prevent it from escaping the bounds of its clipping so that
-         it might, for example, spoof a mail header. */
-	  if (obj->options->set_html_state_fn)
-        {
-          status = obj->options->set_html_state_fn(obj->options->stream_closure,
-                                                   PR_TRUE,   /* layer_encapulate_p */
-                                                   PR_TRUE,   /* start_p */
-                                                   PR_FALSE); /* abort_p */
-          if (status < 0) return status;
-        }
-
-	  if (base_hdr)
-		{
-		  char *buf = (char *) PR_MALLOC(nsCRT::strlen(base_hdr) + 20);
-		  const char *in;
-		  char *out;
-		  if (!buf)
-			return MIME_OUT_OF_MEMORY;
-
-		  /* The value of the Content-Base header is a number of "words".
-			 Whitespace in this header is not significant -- it is assumed
-			 that any real whitespace in the URL has already been encoded,
-			 and whitespace has been inserted to allow the lines in the
-			 mail header to be wrapped reasonably.  Creators are supposed
-			 to insert whitespace every 40 characters or less.
-		   */
-		  PL_strcpy(buf, "<BASE HREF=\"");
-		  out = buf + nsCRT::strlen(buf);
-
-		  for (in = base_hdr; *in; in++)
-			/* ignore whitespace and quotes */
-			if (!nsString::IsSpace(*in) && *in != '"')
-			  *out++ = *in;
-
-		  /* Close the tag and argument. */
-		  *out++ = '"';
-		  *out++ = '>';
-		  *out++ = 0;
-
-		  PR_Free(base_hdr);
-
-		  status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
-		  PR_Free(buf);
-		  if (status < 0) return status;
-		}
-	}
-
+    
+    /* Encapsulate the entire text/html part inside an in-flow
+    layer.  This will provide it a private coordinate system and
+    prevent it from escaping the bounds of its clipping so that
+    it might, for example, spoof a mail header. */
+    if (obj->options->set_html_state_fn)
+    {
+      status = obj->options->set_html_state_fn(obj->options->stream_closure,
+        PR_TRUE,   /* layer_encapulate_p */
+        PR_TRUE,   /* start_p */
+        PR_FALSE); /* abort_p */
+      if (status < 0) return status;
+    }
+    
+    if (base_hdr)
+    {
+      char *buf = (char *) PR_MALLOC(nsCRT::strlen(base_hdr) + 20);
+      const char *in;
+      char *out;
+      if (!buf)
+        return MIME_OUT_OF_MEMORY;
+      
+        /* The value of the Content-Base header is a number of "words".
+        Whitespace in this header is not significant -- it is assumed
+        that any real whitespace in the URL has already been encoded,
+        and whitespace has been inserted to allow the lines in the
+        mail header to be wrapped reasonably.  Creators are supposed
+        to insert whitespace every 40 characters or less.
+      */
+      PL_strcpy(buf, "<BASE HREF=\"");
+      out = buf + nsCRT::strlen(buf);
+      
+      for (in = base_hdr; *in; in++)
+        /* ignore whitespace and quotes */
+        if (!nsString::IsSpace(*in) && *in != '"')
+          *out++ = *in;
+        
+        /* Close the tag and argument. */
+        *out++ = '"';
+        *out++ = '>';
+        *out++ = 0;
+        
+        PR_Free(base_hdr);
+        
+        status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
+        PR_Free(buf);
+        if (status < 0) return status;
+    }
+  }
+  
   // rhp: For a change, we will write out a separator after formatted text
   //      bodies.
   status = MimeObject_write_separator(obj);
-	if (status < 0) return status;
-
+  if (status < 0) return status;
+  
   return 0;
 }
 

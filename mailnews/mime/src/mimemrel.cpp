@@ -516,7 +516,7 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
 		char* base_url;
 		relobj->head_loaded = PR_TRUE;
 		relobj->headobj = child;
-		relobj->buffered_hdrs = MimeHeaders_copy(child->headers);
+    relobj->buffered_hdrs = MimeHeaders_copy(child->headers);
 		base_url = MimeHeaders_get(child->headers, HEADER_CONTENT_BASE,
 								   PR_FALSE, PR_FALSE);
     /* rhp: need this for supporting Content-Location */

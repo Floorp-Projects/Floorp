@@ -114,9 +114,6 @@ struct mime_stream_data {           /* This struct is the state we pass around
   MimeDisplayOptions  *options;     /* Data for communicating with libmime.a */
   MimeHeaders         *headers;     /* Copy of outer most mime header */
 
-  /* These are used by FO_QUOTE_HTML_MESSAGE stuff only: */
-  PRInt16             lastcsid;     /* csid corresponding to above. */
-  PRInt16             outcsid;      /* csid passed to EDT_PasteQuoteINTL */
   nsIMimeEmitter      *output_emitter;  /* Output emitter engine for libmime */
 };
 
@@ -147,6 +144,7 @@ extern "C" nsresult     mimeEmitterEndBody(MimeDisplayOptions *opt);
 extern "C" nsresult     mimeEmitterEndHeader(MimeDisplayOptions *opt);
 extern "C" nsresult     mimeEmitterStartHeader(MimeDisplayOptions *opt, PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
                                                const char *outCharset);
+extern "C" nsresult     mimeEmitterUpdateCharacterSet(MimeDisplayOptions *opt, const char *aCharset);
 
 /* To Get the connnection to prefs service manager */
 extern "C" nsIPref          *GetPrefServiceManager(MimeDisplayOptions *opt);

@@ -23,6 +23,7 @@
 #include "msgCore.h"
 #include "mimemult.h"
 #include "modmime.h"
+#include "mimemoz2.h"
 
 #include "prmem.h"
 #include "plstr.h"
@@ -185,22 +186,52 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	  break;
 
 	case MimeMultipartHeaders:
-	  /* Parse this line as a header for the sub-part. */
-	  {
-		status = MimeHeaders_parse_line(line, length, mult->hdrs);
-		if (status < 0) return status;
+    /* Parse this line as a header for the sub-part. */
+    {
+      status = MimeHeaders_parse_line(line, length, mult->hdrs);
+      if (status < 0) return status;
+      
+      // If this line is blank, we're now done parsing headers, and should
+      // now examine the content-type to create this "body" part.
+      //
+      if (*line == CR || *line == LF)
+      {
+        status = ((MimeMultipartClass *) obj->clazz)->create_child(obj);
+        if (status < 0) return status;
+        PR_ASSERT(mult->state != MimeMultipartHeaders);
 
-		/* If this line is blank, we're now done parsing headers, and should
-		   now examine the content-type to create this "body" part.
-		 */
-		if (*line == CR || *line == LF)
-		  {
-			status = ((MimeMultipartClass *) obj->clazz)->create_child(obj);
-			if (status < 0) return status;
-			PR_ASSERT(mult->state != MimeMultipartHeaders);
-		  }
-		break;
-	  }
+        // Ok, at this point, we need to examine the headers and see if there
+        // is a special charset (i.e. non US-ASCII) for this message. If so, 
+        // we need to tell the emitter that this is the case for use in in any
+        // possible reply or forward operation.
+        //
+        PRBool isAlternativeOrRelated;
+        PRBool isBody = MimeObjectChildIsMessageBody(obj, &isAlternativeOrRelated);
+        if (isBody)
+        {
+      	  MimeContainer *container = (MimeContainer*) obj;
+          // If we have only one child and this is the message body object,
+          // this we should check for a special charset and notify the emitter 
+          // if one exists!
+      	  if ( (container->children) && (container->nchildren == 1) && (obj->options) )
+          {
+            char *ct = MimeHeaders_get(mult->hdrs, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
+            if (ct)
+            {
+              char *cset = MimeHeaders_get_parameter (ct, "charset", NULL, NULL);
+              if (cset)
+              {
+                mimeEmitterUpdateCharacterSet(obj->options, cset);
+              }
+
+              PR_FREEIF(ct);
+              PR_FREEIF(cset);
+            }
+          } 
+        }
+      }
+      break;
+    }
 
 	case MimeMultipartPartFirstLine:
 	  /* Hand this line off to the sub-part. */
@@ -273,10 +304,7 @@ static int
 MimeMultipart_create_child(MimeObject *obj)
 {
   MimeMultipart *mult = (MimeMultipart *) obj;
-#ifdef JS_ATTACHMENT_MUMBO_JUMBO
-  MimeContainer *cont = (MimeContainer *) obj;
-#endif
-  int status;
+  int           status;
   char *ct = (mult->hdrs
 			  ? MimeHeaders_get (mult->hdrs, HEADER_CONTENT_TYPE,
 								 PR_TRUE, PR_FALSE)
@@ -340,89 +368,11 @@ MimeMultipart_create_child(MimeObject *obj)
   /* Now that we've added this new object to our list of children,
 	 start its parser going (if we want to display it.)
    */
-  body->output_p = (((MimeMultipartClass *) obj->clazz)
-					->output_child_p(obj, body));
+  body->output_p = (((MimeMultipartClass *) obj->clazz)->output_child_p(obj, body));
   if (body->output_p)
 	{
-#ifdef JS_ATTACHMENT_MUMBO_JUMBO
-	  int attachment_count = 0;
-	  PRBool isMsgBody = PR_FALSE, isAlternativeOrRelated = PR_FALSE;
-#endif
 	  status = body->clazz->parse_begin(body);
 	  if (status < 0) return status;
-#ifdef JS_ATTACHMENT_MUMBO_JUMBO
-	  isMsgBody = MimeObjectChildIsMessageBody
-		                        (obj, &isAlternativeOrRelated); 
-	  if (isAlternativeOrRelated)
-		  attachment_count = 0;
-	  else if (isMsgBody)
-		  attachment_count = cont->nchildren - 1;
-	  else
-		  attachment_count = cont->nchildren;
-
-	  if (attachment_count &&
-		  obj->options && !obj->options->nice_html_only_p) {
-		/* This is not the first child, so it's an attachment.  Cause the
-		   "attachments in this message" icon(s) to become visible.
-		   Excluding the following types to avoid inline graphics and dull items :
-		   Headers: Content-Disposition: inline
-		   Content-Type: text/x-vcard
-		   Content-Type: text/html
-		   Content-Type: text/plain
-		   Content-Type: message/rfc822    */
-		  char *tmp = NULL;
-
-		  /* if (strncasestr(body->headers->all_headers, "DISPOSITION: INLINE", 300))
-		  	showIcon = PR_FALSE; */
-		  if (PL_strstr(body->content_type, "text/x-vcard"))
-			  showIcon = PR_FALSE;
-		  else if (PL_strstr(body->content_type, "text/html"))
-			  showIcon = PR_FALSE;
-		  else if (PL_strstr(body->content_type, "message/rfc822"))
-			  showIcon = PR_FALSE;
-		  else if (PL_strstr(body->content_type, "multipart/signed"))
-			  showIcon = PR_FALSE;
-		  else if (PL_strstr(body->content_type, "application/x-pkcs7-signature"))
-			  showIcon = PR_FALSE;
-      else if (XP_STRSTR(body->content_type, "application/pkcs7-signature"))
-        showIcon = PR_FALSE;			  
-		  else if (PL_strstr(body->content_type, "multipart/mixed"))
-			  showIcon = PR_FALSE;
-
-		  if (showIcon)
-		  {
-			  (obj)->showAttachmentIcon = PR_TRUE;
-			  parent = obj->parent;
-			  while (parent) {
-				  (parent)->showAttachmentIcon = PR_TRUE;
-				  parent = parent->parent;
-			  }
-		  }
-		  if (obj->options->attachment_icon_layer_id)
-		  {
-/* RICHIECSS
-      tmp = PR_smprintf("\n\
-<SCRIPT>\n\
-window.document.layers[\"noattach-%ld\"].visibility = \"hide\";\n\
-window.document.layers[\"attach-%ld\"].visibility = \"show\";\n\
-</SCRIPT>\n",
-*/
-      tmp = PR_smprintf("\n\
-<SCRIPT>\n\
-document.getElementById(\"noattach%ld\").style.display = \"none\";\n\
-document.getElementById(\"attach%ld\").style.display = \"\";\n\
-</SCRIPT>\n",
-              (long) obj->options->attachment_icon_layer_id,
-							(long) obj->options->attachment_icon_layer_id);
-			  if (tmp) {
-				status = MimeObject_write(obj, tmp, nsCRT::strlen(tmp), PR_TRUE);
-				PR_Free(tmp);
-				if (status < 0)
-					return status;
-			  }
-		  }
-	  }
-#endif /* JS_ATTACHMENT_MUMBO_JUMBO */
 	}
 
   return 0;

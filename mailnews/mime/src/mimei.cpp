@@ -238,7 +238,7 @@ mime_new (MimeObjectClass *clazz, MimeHeaders *hdrs,
 
   if (hdrs)
 	{
-	  hdrs = MimeHeaders_copy (hdrs);
+    hdrs = MimeHeaders_copy (hdrs);
 	  if (!hdrs) return 0;
 	}
 
@@ -622,7 +622,22 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
   if (!content_disposition || !nsCRT::strcasecmp(content_disposition, "inline"))
     ;	/* Use the class we've got. */
   else
-    clazz = (MimeObjectClass *)&mimeExternalObjectClass;
+  { 
+    // 
+    // rhp: Ok, this is a modification to try to deal with messages
+    //      that have content disposition set to "attachment" even though
+    //      we probably should show them inline. 
+    //
+    if (  (clazz != (MimeObjectClass *)&mimeInlineTextHTMLClass) &&
+          (clazz != (MimeObjectClass *)&mimeInlineTextClass) &&
+          (clazz != (MimeObjectClass *)&mimeInlineTextPlainClass) &&
+          (clazz != (MimeObjectClass *)&mimeInlineTextPlainFlowedClass) &&
+          (clazz != (MimeObjectClass *)&mimeInlineTextHTMLClass) &&
+          (clazz != (MimeObjectClass *)&mimeInlineTextRichtextClass) &&
+          (clazz != (MimeObjectClass *)&mimeInlineTextEnrichedClass) &&
+          (clazz != (MimeObjectClass *)&mimeInlineImageClass) )
+      clazz = (MimeObjectClass *)&mimeExternalObjectClass;
+  }
 
   PR_FREEIF(content_disposition);
   obj = mime_new (clazz, hdrs, content_type);
@@ -1258,7 +1273,7 @@ MimeOptions_write(MimeDisplayOptions *opt, char *data, PRInt32 length,
 		opt->state->separator_suppressed_p = PR_FALSE;
 	  else
 		{
-		  char sep[] = "<HR WIDTH=\"90%\" SIZE=4>";
+		  char sep[] = "<BR><HR WIDTH=\"90%\" SIZE=4><BR>";
 		  int lstatus = opt->output_fn(sep, nsCRT::strlen(sep), closure);
 		  opt->state->separator_suppressed_p = PR_FALSE;
 		  if (lstatus < 0) return lstatus;

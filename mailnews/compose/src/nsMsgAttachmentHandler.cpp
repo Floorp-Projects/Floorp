@@ -432,7 +432,7 @@ nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
     mFileSpec = nsMsgCreateTempFileSpec("nsmail.tmp");
     mCompFields = compFields;
     PR_FREEIF(m_real_name);
-    m_real_name = PL_strdup("forward.msg");
+    m_real_name = PL_strdup("forward.eml");
     PR_FREEIF(m_type);
     m_type = PL_strdup("message/rfc822");
     PR_FREEIF(m_override_type);

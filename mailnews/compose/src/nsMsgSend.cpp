@@ -1179,28 +1179,38 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   if ((!bodyText) || (!*bodyText))
     return NS_OK;
 
-  nsCOMPtr<mozITXTToHTMLConv> conv;
-  rv = nsComponentManager::CreateInstance(kTXTToHTMLConvCID,
-    NULL, nsCOMTypeInfo<mozITXTToHTMLConv>::GetIID(),
-    (void **) getter_AddRefs(conv));
-  if (NS_SUCCEEDED(rv)) 
-  {
-    PRUint32 whattodo = mozITXTToHTMLConv::kURLs;
-    PRBool enable_structs = PR_TRUE;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-    if (NS_SUCCEEDED(rv) && prefs)
-    {
-      rv = prefs->GetBoolPref(PREF_MAIL_CONVERT_STRUCTS,&enable_structs);
-      if (NS_FAILED(rv) || enable_structs)
-	    whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;
-	}
+  // If we are forcing this to be plain text, we should not be
+  // doing this conversion.
+  PRBool doConversion = PR_TRUE;
 
-    PRUnichar* wresult;
-    rv = conv->ScanHTML(bodyText, whattodo, &wresult);
-    if (NS_SUCCEEDED(rv))
+  if ( (mCompFields) && mCompFields->GetForcePlainText() )
+    doConversion = PR_FALSE;
+
+  if (doConversion)
+  {
+    nsCOMPtr<mozITXTToHTMLConv> conv;
+    rv = nsComponentManager::CreateInstance(kTXTToHTMLConvCID,
+      NULL, nsCOMTypeInfo<mozITXTToHTMLConv>::GetIID(),
+      (void **) getter_AddRefs(conv));
+    if (NS_SUCCEEDED(rv)) 
     {
-      Recycle(bodyText);
-      bodyText = wresult;
+      PRUint32 whattodo = mozITXTToHTMLConv::kURLs;
+      PRBool enable_structs = PR_TRUE;
+      NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+      if (NS_SUCCEEDED(rv) && prefs)
+      {
+        rv = prefs->GetBoolPref(PREF_MAIL_CONVERT_STRUCTS,&enable_structs);
+        if (NS_FAILED(rv) || enable_structs)
+          whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;
+      }
+      
+      PRUnichar* wresult;
+      rv = conv->ScanHTML(bodyText, whattodo, &wresult);
+      if (NS_SUCCEEDED(rv))
+      {
+        Recycle(bodyText);
+        bodyText = wresult;
+      }
     }
   }
   

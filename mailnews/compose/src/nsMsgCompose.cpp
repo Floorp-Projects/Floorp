@@ -51,6 +51,7 @@
 #include "nsIDOMSelection.h"
 #include "nsIDOMNode.h"
 #include "nsEscape.h"
+#include "plstr.h"
 
 // XXX temporary so we can use the current identity hack -alecf
 #include "nsIMsgMailSession.h"
@@ -212,6 +213,28 @@ GetNodeLocation(nsIDOMNode *inChild, nsCOMPtr<nsIDOMNode> *outParent, PRInt32 *o
   return result;
 }
 
+nsresult
+RICHIEDumpBody(nsString aConBuf)
+{
+  char      *tBuf = nsnull;
+  PRUint32   i;
+
+  if (aConBuf == "")
+    return NS_OK;
+
+  tBuf = aConBuf.ToNewCString();
+  if (!tBuf)
+    return NS_ERROR_FAILURE;
+
+  for (i=0; i<nsCRT::strlen(tBuf); i++)
+  {
+    printf("%c", tBuf[i]);
+  }
+
+  PR_FREEIF(tBuf);
+  return NS_OK;
+}
+
 nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString aPrefix, nsString aBuf, 
                                                    nsString aSignature, PRBool aQuoted, PRBool aHTMLEditor)
 {
@@ -246,7 +269,17 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
     }
 
     if (!aBuf.IsEmpty())
+    {
+//
+// Akkana: change this if to 1 and it will dump out the contents of
+// what I am trying to insert. I am seeing a long string of HTML for
+// the bug in question, but it gets truncated on insert
+//
+#if 0
+      RICHIEDumpBody(aBuf);
+#endif
       aEditorShell->InsertAsQuotation(aBuf.GetUnicode(), &nodeInserted);
+    }
 
     if (!aSignature.IsEmpty())
     {
@@ -993,7 +1026,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
           {
           	mQuotingToFollow = PR_TRUE;
             mWhatHolder = 2;
-			mQuoteURI = originalMsgURI;
+			      mQuoteURI = originalMsgURI;
           }
         
           break;
@@ -1093,7 +1126,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStartRequest(nsIChannel * /* aChann
 	return NS_OK;
 }
 
-NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChannel */, nsISupports * /* ctxt */, nsresult status, const PRUnichar * /* errorMsg */)
+NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */, nsresult status, const PRUnichar * /* errorMsg */)
 {
   nsresult rv = NS_OK;
   
@@ -1107,98 +1140,136 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
       mComposeObj->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
       if (compFields)
       {
-          nsAutoString aCharset(msgCompHeaderInternalCharset());
-          nsAutoString replyTo;
-          nsAutoString newgroups;
-          nsAutoString followUpTo;
-          nsAutoString messageId;
-          nsAutoString references;
-          char *outCString = nsnull;
-          PRUnichar emptyUnichar = 0;
-          PRBool toChanged = PR_FALSE;
-          
-          mHeaders->ExtractHeader(HEADER_REPLY_TO, PR_FALSE, &outCString);
-          if (outCString)
+        nsAutoString aCharset(msgCompHeaderInternalCharset());
+        nsAutoString replyTo;
+        nsAutoString newgroups;
+        nsAutoString followUpTo;
+        nsAutoString messageId;
+        nsAutoString references;
+        char *outCString = nsnull;
+        PRUnichar emptyUnichar = 0;
+        PRBool toChanged = PR_FALSE;
+        
+        mHeaders->ExtractHeader(HEADER_REPLY_TO, PR_FALSE, &outCString);
+        if (outCString)
+        {
+          // Convert fields to UTF-8
+          ConvertToUnicode(aCharset, outCString, replyTo);
+          PR_FREEIF(outCString);
+        }
+        
+        mHeaders->ExtractHeader(HEADER_NEWSGROUPS, PR_FALSE, &outCString);
+        if (outCString)
+        {
+          // Convert fields to UTF-8
+          ConvertToUnicode(aCharset, outCString, newgroups);
+          PR_FREEIF(outCString);
+        }
+        
+        mHeaders->ExtractHeader(HEADER_FOLLOWUP_TO, PR_FALSE, &outCString);
+        if (outCString)
+        {
+          // Convert fields to UTF-8
+          ConvertToUnicode(aCharset, outCString, followUpTo);
+          PR_FREEIF(outCString);
+        }
+        
+        mHeaders->ExtractHeader(HEADER_MESSAGE_ID, PR_FALSE, &outCString);
+        if (outCString)
+        {
+          // Convert fields to UTF-8
+          ConvertToUnicode(aCharset, outCString, messageId);
+          PR_FREEIF(outCString);
+        }
+        
+        mHeaders->ExtractHeader(HEADER_REFERENCES, PR_FALSE, &outCString);
+        if (outCString)
+        {
+          // Convert fields to UTF-8
+          ConvertToUnicode(aCharset, outCString, references);
+          PR_FREEIF(outCString);
+        }
+        
+        if (! replyTo.IsEmpty())
+        {
+          compFields->SetTo(replyTo.GetUnicode());
+          toChanged = PR_TRUE;
+        }
+        
+        if (! newgroups.IsEmpty())
+        {
+          compFields->SetNewsgroups(newgroups.GetUnicode());
+          if (type == nsIMsgCompType::Reply)
+            compFields->SetTo(&emptyUnichar);
+        }
+        
+        if (! followUpTo.IsEmpty())
+        {
+          compFields->SetNewsgroups(followUpTo.GetUnicode());
+          if (type == nsIMsgCompType::Reply)
+            compFields->SetTo(&emptyUnichar);
+        }
+        
+        if (! references.IsEmpty())
+          references += ' ';
+        references += messageId;
+        compFields->SetReferences(references.GetUnicode());
+        
+        if (toChanged)
+        {
+          //Remove duplicate addresses between TO && CC
+          char * resultStr;
+          nsMsgCompFields* _compFields = (nsMsgCompFields*)compFields;
+          if (NS_SUCCEEDED(rv))
           {
-            // Convert fields to UTF-8
-            ConvertToUnicode(aCharset, outCString, replyTo);
-            PR_FREEIF(outCString);
-          }
-          
-          mHeaders->ExtractHeader(HEADER_NEWSGROUPS, PR_FALSE, &outCString);
-          if (outCString)
-          {
-            // Convert fields to UTF-8
-            ConvertToUnicode(aCharset, outCString, newgroups);
-            PR_FREEIF(outCString);
-          }
-          
-          mHeaders->ExtractHeader(HEADER_FOLLOWUP_TO, PR_FALSE, &outCString);
-          if (outCString)
-          {
-            // Convert fields to UTF-8
-            ConvertToUnicode(aCharset, outCString, followUpTo);
-            PR_FREEIF(outCString);
-          }
-          
-          mHeaders->ExtractHeader(HEADER_MESSAGE_ID, PR_FALSE, &outCString);
-          if (outCString)
-          {
-            // Convert fields to UTF-8
-            ConvertToUnicode(aCharset, outCString, messageId);
-            PR_FREEIF(outCString);
-          }
-          
-          mHeaders->ExtractHeader(HEADER_REFERENCES, PR_FALSE, &outCString);
-          if (outCString)
-          {
-            // Convert fields to UTF-8
-            ConvertToUnicode(aCharset, outCString, references);
-            PR_FREEIF(outCString);
-          }
-          
-          if (! replyTo.IsEmpty())
-          {
-            compFields->SetTo(replyTo.GetUnicode());
-            toChanged = PR_TRUE;
-          }
-          
-          if (! newgroups.IsEmpty())
-          {
-            compFields->SetNewsgroups(newgroups.GetUnicode());
-            if (type == nsIMsgCompType::Reply)
-              compFields->SetTo(&emptyUnichar);
-          }
-          
-          if (! followUpTo.IsEmpty())
-          {
-            compFields->SetNewsgroups(followUpTo.GetUnicode());
-            if (type == nsIMsgCompType::Reply)
-              compFields->SetTo(&emptyUnichar);
-          }
-          
-          if (! references.IsEmpty())
-          	references += ' ';
-          references += messageId;
-          compFields->SetReferences(references.GetUnicode());
-          
-          if (toChanged)
-          {
-          	//Remove duplicate addresses between TO && CC
-          	char * resultStr;
-          	nsMsgCompFields* _compFields = (nsMsgCompFields*)compFields;
-  			if (NS_SUCCEEDED(rv))
-  			{
-			    rv= RemoveDuplicateAddresses(_compFields->GetCc(), _compFields->GetTo(), PR_FALSE, &resultStr);
+            rv= RemoveDuplicateAddresses(_compFields->GetCc(), _compFields->GetTo(), PR_FALSE, &resultStr);
 	          	if (NS_SUCCEEDED(rv))
-	          	{
-	          		_compFields->SetCc(resultStr);
-	          		PR_Free(resultStr);
-	          	}
-			}
+              {
+                _compFields->SetCc(resultStr);
+                PR_Free(resultStr);
+              }
           }
-       
-          NS_RELEASE(compFields);
+        }
+    
+        // Ok, if we are here, we need to see if a charset was tagged
+        // on this channel. If there WAS, then this charset needs to 
+        // override the default charset that is set in compFields. This
+        // is the case where you are replying to a message that has a
+        // non US-ASCII charset. You are supposed to reply in that charset.
+        // 
+        char *contentType = nsnull;
+        if (NS_SUCCEEDED(aChannel->GetContentType(&contentType)) && contentType)
+        {
+          char *workContentType = nsCRT::strdup(contentType);
+          if (workContentType)
+          {
+            char *ptr = PL_strstr(workContentType, "charset=");
+            if (ptr)
+            {
+              ptr += nsCRT::strlen("charset=");
+
+              char *ptr2 = ptr;
+              while (*ptr2)
+              {
+                if ( (*ptr2 == ' ') || (*ptr2 == ';') )
+                {
+                  *ptr2 = '\0';
+                  break;
+                }
+
+                ++ptr2;
+              }
+
+              compFields->SetCharacterSet(nsString(ptr).GetUnicode());
+            }
+
+            PR_FREEIF(workContentType);
+          }
+
+          PR_FREEIF(contentType);
+        }
+
+        NS_RELEASE(compFields);
       }
     }
     
@@ -1229,7 +1300,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
       mComposeObj->ConvertAndLoadComposeWindow(editor, mCitePrefix, mMsgBody, mSignature, PR_TRUE, compHTML);
     }
   }
-    
+  
   NS_IF_RELEASE(mComposeObj);	//We are done with it, therefore release it.
   return rv;
 }

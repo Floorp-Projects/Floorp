@@ -439,6 +439,10 @@ nsMimeBaseEmitter::GetHeaderValue(const char  *aHeaderName,
 // This is called at the start of the header block for all header information in ANY
 // AND ALL MESSAGES (yes, quoted, attached, etc...) 
 //
+// NOTE: This will be called even when headers are will not follow. This is
+// to allow us to be notified of the charset of the original message. This is
+// important for forward and reply operations
+//
 NS_IMETHODIMP
 nsMimeBaseEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
                                const char *outCharset)
@@ -458,7 +462,59 @@ nsMimeBaseEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const c
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  // If the main doc, check on updated character set
+  if (mDocHeader)
+    UpdateCharacterSet(outCharset);
+
   return NS_OK; 
+}
+
+// Ok, if we are here, and we have a aCharset passed in that is not
+// UTF-8 or US-ASCII, then we should tag the mChannel member with this
+// charset. This is because replying to messages with specified charset's
+// need to be tagged as that charset by default.
+//
+NS_IMETHODIMP
+nsMimeBaseEmitter::UpdateCharacterSet(const char *aCharset)
+{
+  if ( (aCharset) && (PL_strcasecmp(aCharset, "US-ASCII")) &&
+        (PL_strcasecmp(aCharset, "ISO-8859-1")) &&
+        (PL_strcasecmp(aCharset, "UTF-8")) )
+  {
+    char    *contentType = nsnull;
+    
+    if (NS_SUCCEEDED(mChannel->GetContentType(&contentType)) && contentType)
+    {
+      char *cPtr = (char *) PL_strstr(contentType, "charset=");
+
+      if (cPtr)
+      {
+        char  *ptr = contentType;
+        while (*ptr)
+        {
+          if ( (*ptr == ' ') || (*ptr == ';') ) 
+          {
+            if ((ptr + 1) >= cPtr)
+            {
+              *ptr = '\0';
+              break;
+            }
+          }
+        }
+      }
+
+      char *newContentType = (char *) PR_smprintf("%s; charset=%s", contentType, aCharset);
+      if (newContentType)
+      {
+        mChannel->SetContentType(newContentType); 
+        PR_FREEIF(newContentType);
+      }
+      
+      PR_FREEIF(contentType);
+    }
+  }
+
+  return NS_OK;
 }
 
 //
@@ -483,7 +539,7 @@ nsMimeBaseEmitter::AddHeaderField(const char *field, const char *value)
   if ( (ptr) && tPtr)
   {
     ptr->name = nsCRT::strdup(field);
-    ptr->value = nsCRT::strdup(value);
+    ptr->value = nsAutoString(value).ToNewUTF8String();
     tPtr->AppendElement(ptr);
   }
 

@@ -534,6 +534,37 @@ MimeMessage_add_child (MimeObject *parent, MimeObject *child)
   return ((MimeContainerClass*)&MIME_SUPERCLASS)->add_child (parent, child);
 }
 
+// This is necessary to determine which charset to use for a reply/forward
+char *
+DetermineMailCharset(MimeMessage *msg)
+{
+  char          *retCharset = nsnull;
+  
+  if ( (msg) && (msg->hdrs) )
+  {
+    char *ct = MimeHeaders_get (msg->hdrs, HEADER_CONTENT_TYPE,
+                                PR_FALSE, PR_FALSE);
+    if (ct)
+    {
+      retCharset = MimeHeaders_get_parameter (ct, "charset", NULL, NULL);
+      PR_Free(ct);
+    }
+    
+    if (!retCharset)
+    {
+      // If we didn't find "Content-Type: ...; charset=XX" then look
+      // for "X-Sun-Charset: XX" instead.  (Maybe this should be done
+      // in MimeSunAttachmentClass, but it's harder there than here.)
+      retCharset = MimeHeaders_get (msg->hdrs, HEADER_X_SUN_CHARSET,
+                                    PR_FALSE, PR_FALSE);
+    }    
+  }
+  
+  if (!retCharset)
+    return nsCRT::strdup("ISO-8859-1");
+  else
+    return retCharset;
+}
 
 static int
 MimeMessage_write_headers_html (MimeObject *obj)
@@ -554,7 +585,21 @@ MimeMessage_write_headers_html (MimeObject *obj)
   // suppressing headers on included email messages...
   if ( (obj->options->headers == MimeHeadersNone) &&
        (obj == obj->options->state->root) )
+  {
+    // Ok, we are going to kick the Emitter for a StartHeader
+    // operation ONLY WHEN THE CHARSET OF THE ORIGINAL MESSAGE IS
+    // NOT US-ASCII ("ISO-8859-1")
+    //
+    // This is only to notify the emitter of the charset of the 
+    // original message
+    char    *mailCharset = DetermineMailCharset(msg);
+
+    if ( (mailCharset) && (PL_strcasecmp(mailCharset, "US-ASCII")) &&
+         (PL_strcasecmp(mailCharset, "ISO-8859-1")) )
+      mimeEmitterUpdateCharacterSet(obj->options, mailCharset);
+    PR_FREEIF(mailCharset);
     return 0;
+  }
 
   if (!obj->options->state->first_data_written_p)
 	{
@@ -571,12 +616,19 @@ MimeMessage_write_headers_html (MimeObject *obj)
   char *msgID = MimeHeaders_get (msg->hdrs, HEADER_MESSAGE_ID,
 									                  PR_FALSE, PR_FALSE);
   PRBool outer_p = !obj->headers; /* is this the outermost message? */
+
+  // Ok, we should really find out the charset of this part. We always
+  // output UTF-8 for display, but the original charset is necessary for
+  // reply and forward operations.
+  //
+  char    *mailCharset = DetermineMailCharset(msg);
   mimeEmitterStartHeader(obj->options, 
                             outer_p, 
                             (obj->options->headers == MimeHeadersOnly),
                             msgID,
-                            "UTF-8");
+                            mailCharset);
   PR_FREEIF(msgID);
+  PR_FREEIF(mailCharset);
 
 #ifdef MOZ_SECURITY
     HG00919 
