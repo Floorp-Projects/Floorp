@@ -114,7 +114,7 @@ ImageConsumer::ImageConsumer(ilIURL *aURL, ImageNetContextImpl *aContext)
   mStatus = 0;
 }
 
-NS_DEFINE_IID(kIStreamNotificationIID, NS_ISTREAMNOTIFICATION_IID);
+NS_DEFINE_IID(kIStreamNotificationIID, NS_ISTREAMLISTENER_IID);
 NS_IMPL_ISUPPORTS(ImageConsumer,kIStreamNotificationIID);
 
 NS_IMETHODIMP
