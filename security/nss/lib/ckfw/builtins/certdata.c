@@ -32,7 +32,7 @@
  * GPL.
  */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.23 $ $Date: 2002/10/12 01:04:53 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.23 $ $Date: 2002/10/12 01:04:53 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.24 $ $Date: 2002/10/12 01:05:47 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.24 $ $Date: 2002/10/12 01:05:47 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BUILTINS_H
@@ -466,7 +466,7 @@ static const NSSItem nss_builtins_items_0 [] = {
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)"CVS ID", (PRUint32)7 },
   { (void *)"NSS", (PRUint32)4 },
-  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.23 $ $Date: 2002/10/12 01:04:53 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.23 $ $Date: 2002/10/12 01:04:53 $ $Name:  $", (PRUint32)179 }
+  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.24 $ $Date: 2002/10/12 01:05:47 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.24 $ $Date: 2002/10/12 01:05:47 $ $Name:  $", (PRUint32)179 }
 };
 #endif /* DEBUG */
 static const NSSItem nss_builtins_items_1 [] = {
