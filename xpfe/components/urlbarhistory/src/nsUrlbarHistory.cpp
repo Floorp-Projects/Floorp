@@ -36,11 +36,13 @@
 #include "nsIRDFService.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
+#include "nsIURL.h"
 
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFCUtilsCID, NS_RDFCONTAINERUTILS_CID);
+static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
 static char * ignoreArray[] = {
 		"http://",
@@ -378,100 +380,140 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
 {
     nsresult rv = NS_OK;
 	nsCOMPtr<nsISimpleEnumerator>  entries;
-    const PRUnichar * rdfValue = nsnull;
+
+    //printf("******** In SearchCache *******\n");
     nsAutoString searchAutoStr(searchStr);
-	PRUnichar * match = nsnull;
-	PRInt32 index = -1;
+	
+	PRInt32  protocolIndex=-1;
+    nsAutoString searchProtocol, searchPath, resultAutoStr;
+    PRInt32 searchPathIndex, searchStrLength;
+
+    // Get the length of the search string
+    searchStrLength = searchAutoStr.Length();
+    // Check if there is any protocol present in the 
+    // search string.
+    GetHostIndex(searchStr, &searchPathIndex);
+    if (searchPathIndex > 0) {
+        // There was a protocol in the search string. Strip off
+        // the protocol from the rest of the url  
+        searchAutoStr.Left(searchProtocol, searchPathIndex);
+        searchAutoStr.Mid(searchPath, searchPathIndex, searchStrLength);
+    }
+    else {
+        // There was no protocol in the search string. 
+        searchPath = searchAutoStr;
+    }
+	//printf("Search String is %s path = %s protocol = %s \n", searchAutoStr.ToNewCString(), searchPath.ToNewCString(), searchProtocol.ToNewCString());
 	   
 	if (!gRDFCUtils || !kNC_URLBARHISTORY)
-		return NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE;
 
-	 nsCOMPtr<nsIRDFContainer> container;
-	 /* Get the elements in the  data source
-      * through the container
-      */
-	 rv = gRDFCUtils->MakeSeq(mDataSource,
-                                       kNC_URLBARHISTORY,
-									   getter_AddRefs(container));
 
-     NS_ENSURE_TRUE(container, NS_ERROR_FAILURE);
+	nsCOMPtr<nsIRDFContainer> container;
+    /* Get the elements in the  data source
+     * through the container
+     */
+	rv = gRDFCUtils->MakeSeq(mDataSource,
+                            kNC_URLBARHISTORY,
+                            getter_AddRefs(container));
+
+    NS_ENSURE_TRUE(container, NS_ERROR_FAILURE);
  
-     //Get the elements from the container
-	 container->GetElements(getter_AddRefs(entries));
+    //Get the elements from the container
+    container->GetElements(getter_AddRefs(entries));
 
-     NS_ENSURE_TRUE(entries, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(entries, NS_ERROR_FAILURE);
+    
+    PRBool moreElements = PR_FALSE;
+    while (NS_SUCCEEDED(entries->HasMoreElements(&moreElements)) && moreElements) {
+       nsCOMPtr<nsISupports>  entry;
+       nsCOMPtr<nsIRDFLiteral>  literal;
+       nsAutoString rdfAutoStr;
+       nsAutoString rdfProtocol, rdfPath;
+       PRInt32 rdfLength, rdfPathIndex, index = -1;
+       PRUnichar * match = nsnull;
+       const PRUnichar * rdfValue = nsnull;   
 
-	 PRBool moreElements = PR_FALSE;
-     while (NS_SUCCEEDED(entries->HasMoreElements(&moreElements)) && moreElements) {
-	    nsCOMPtr<nsISupports>  entry;
-		nsCOMPtr<nsIRDFLiteral>  literal;
-		nsAutoString rdfAStr;
-		nsAutoString  prefix;
+       rv = entries->GetNext(getter_AddRefs(entry));
+       if (entry) {
+         literal = do_QueryInterface(entry);
+         literal->GetValueConst(&rdfValue);
+       }      
+       if (!rdfValue)
+          continue;
+       rdfAutoStr = rdfValue;
+       rdfLength = rdfAutoStr.Length();        
 
-		rv = entries->GetNext(getter_AddRefs(entry));
-		if (entry) {
-			literal = do_QueryInterface(entry);
-			if (literal)
-				literal->GetValueConst(&rdfValue);
-		}
-		if (rdfValue) {
-		    rdfAStr = (rdfValue);
-			index = rdfAStr.Find(searchStr, PR_TRUE);
-			match = rdfAStr.ToNewUnicode();
-		    //printf("SearchCache Round I-found item %s in rdf\n", rdfAStr.ToNewCString());
-	   }
-		/* Didn't succeed in the first attempt. See if there
-		 * is any prefix in the searchString, strip off the prefix
-		 * and see if it matches
-		 */
-	   if (index < 0) {
-		   PRInt32 resultSlashIndex = -1, searchStrLen = -1;
-		   searchStrLen = searchAutoStr.Length();
-		   resultSlashIndex = searchAutoStr.RFind("//", PR_TRUE);
-		   nsAutoString  resultStr;
-		   nsAutoString  resultPrefix;
-		   
-		   if (resultSlashIndex > -1) {
-			   resultSlashIndex += 2; // Increment by 2 for //		  		      
-		       searchAutoStr.Mid(resultStr, resultSlashIndex, searchStrLen);
-			   searchAutoStr.Left(prefix, resultSlashIndex);
-		   }
-           if ((resultStr.Length())) {
-                // OK, great.  we've stripped the protocol:// off resultStr.  Now we need to strip it off of rdfAStr as
-                // well.  Otherwise things like http://file://foo will match http://f
-                // So.  Compare the prefixes of the two and compare the actual data.
-                // The prefix comparison is so that http://f will not expand to htpp://foo just because we visited ftp://foo
-                PRInt32 matchSlashIndex = -1, matchStrLen = -1;
-                matchStrLen = rdfAStr.Length();
-                matchSlashIndex = rdfAStr.RFind("//", PR_TRUE);
-                nsAutoString matchStr;
-                nsAutoString matchPrefix;
-                if (matchSlashIndex > -1) {
-                    matchSlashIndex += 2; // increment by 2 for //
-                    rdfAStr.Mid(matchStr, matchSlashIndex, matchStrLen);
-                    rdfAStr.Left(matchPrefix, matchSlashIndex);
-                } else {
-                    rdfAStr.Left(matchStr, 0);
-                }
+       // Get the index of the hostname in the rdf string
+       GetHostIndex (rdfValue, &rdfPathIndex);
 
-                if ((matchPrefix.Length()) && (!matchPrefix.Compare(resultPrefix)) || (!matchPrefix.Length())) {
-                    index = matchStr.Find(resultStr, PR_TRUE);
-                    // printf("SearchCache Round II, searching for %s, prefix = %s\n", resultStr.ToNewCString(), resultPrefix.ToNewCString());
-                    if (match)
-                        Recycle(match);
-                    if (index == 0) {
-                        resultStr = resultPrefix + matchStr;
-                        //printf("SearchCache Round III, searching for %s\n", resultStr.ToNewCString());
-                        match = resultStr.ToNewUnicode();  
-                    }
-                    else		       
-                        match = rdfAStr.ToNewUnicode();			  
-                }
-           }
+       if (rdfPathIndex > 0) {
+          // RDf string has a protocol in it, Strip it off
+          // from the rest of the url;
+          rdfAutoStr.Left(rdfProtocol, rdfPathIndex);
+          rdfAutoStr.Mid(rdfPath, rdfPathIndex, rdfLength);
        }
+       else {
+          // There was no protocol.
+          rdfPath = rdfAutoStr;
+       }
+       //printf("RDFString is %s path = %s protocol = %s\n", rdfAutoStr.ToNewCString(), rdfPath.ToNewCString(), rdfProtocol.ToNewCString());
+       // We have all the data we need. Let's do the comparison
+       // We compare the path first and compare the protocol next
+       index = rdfPath.Find(searchPath, PR_TRUE);       
+       if (index == 0) {
+           // The paths match. Now let's compare protocols
+           if (searchProtocol.Length() && rdfProtocol.Length()) {
+              // Both the strings have a protocol part. Compare them.
+              protocolIndex = rdfProtocol.Find(searchProtocol);
+              if (protocolIndex == 0) {
+                  // Both protocols match. We found a result item
+                  match = rdfAutoStr.ToNewUnicode();
+              } 
+           } 
+           else if (searchProtocol.Length() && (rdfProtocol.Length() <= 0)) {
+               /* The searchString has a protocol but the rdf string doesn't
+                * Check if the searchprotocol is the default "http://". If so,
+                * prepend the searchProtocol to the rdfPath and provide that as 
+                * the result. Otherwise we don't have a match
+                */
+               // XXX I guess  hard-coded "http://" is OK, since netlib considers
+               // all urls to be char *
+               if ((searchProtocol.Find("http://", PR_TRUE)) == 0) {
+                  resultAutoStr = searchProtocol + rdfPath;
+                  match = resultAutoStr.ToNewUnicode();
+               }
+           }
+           else if ((searchProtocol.Length() <=0) && rdfProtocol.Length() ||
+                    (searchProtocol.Length() <=0) && (rdfProtocol.Length() <= 0)) {
+               /* Provide the rdfPath (no protocol, just the www.xyz.com/... part) 
+                * as the result for the following 2 cases.
+                * a) searchString has no protocol but rdfString has protocol
+                * b) Both searchString and rdfString don't have a protocol
+                */ 
+               match = rdfPath.ToNewUnicode();
+           }           
+       }  // (index == 0)
 
-	   if (index ==0) {
-           // Item found. Create an AutoComplete Item 
+      
+	   
+       if (match) {		   
+           /* We have a result item.
+            * First make sure that the value is not already
+            * present in the results array. If we have  
+            * www.mozilla.org and http://www.mozilla.org as unique addresses
+            * in the history and due to the algorithm we follow above to find a match,
+            * when the user user types, http://www.m, we would have 2 matches, both being,
+            * http://www.mozilla.org. So, before adding an entry as a result,
+            * make sure it is not already present in the resultarray
+            */
+           PRBool itemPresent = PR_FALSE;
+           rv = CheckItemAvailability(match, results, &itemPresent);
+           if (itemPresent) {
+               Recycle (match);
+               continue;
+           }
+           //Create an AutoComplete Item 
 		   nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID));
 		   NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);
            
@@ -482,12 +524,186 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
 		   { 
 			  // printf("Appending element %s to the results array\n", item->ToNewCString());
                 array->AppendElement((nsISupports*)newItem);
-		   }		  
-	   }
-	   Recycle(match);
-	}  //while
+		   }	
+           /* The result may be much more than what was asked for. For example
+            * the user types http://www.moz and we had http://www.mozilla.org/sidebar
+            * as an entry in the history. This will match our selection criteria above
+            * above and will be provided as result. But the user may actually want to 
+            * go to http://www.mozilla.org. If we are such a situation, offer
+            * http://www.mozilla.org (The first part of the result string http://www.mozilla.org/sidebar)
+            * as a result option(probably the default result).
+            */
+            rv = VerifyAndCreateEntry(searchStr, match, results);
+	   }   
 
+	   if (match)
+		   Recycle(match);
+    }    // while 
     return rv;
+}
+
+
+NS_IMETHODIMP
+nsUrlbarHistory::GetHostIndex(const PRUnichar * aPath, PRInt32 * aReturn)
+{
+    if (!aPath || !aReturn)
+        return NS_ERROR_FAILURE;
+
+    nsAutoString  path(aPath);
+    PRInt32 slashIndex=-1;    
+    nsresult rv;
+    
+    char * pathCStr = path.ToNewCString();
+    nsCOMPtr<nsIURL> pathURL=do_CreateInstance(kStandardURLCID, &rv);
+    if (pathURL) {
+       pathURL->SetSpec(pathCStr);
+       char *  host=nsnull, *preHost = nsnull, * filePath = nsnull;
+       pathURL->GetHost(&host);
+       pathURL->GetFilePath(&filePath);
+       pathURL->GetPreHost(&preHost);
+       if (preHost) 
+           slashIndex  = path.Find(preHost, PR_TRUE);
+       else if (host)
+           slashIndex = path.Find(host,PR_TRUE);
+       else if (filePath)
+           slashIndex = path.Find(filePath, PR_TRUE);
+       else
+           slashIndex = 0;
+       
+       nsCRT::free(preHost);
+       nsCRT::free(host);
+       nsCRT::free(filePath);
+       //printf("$$$$ Scheme for uri = %s, preHost = %s, filepath = %s, Host = %s HostIndex = %d\n", pathScheme, preHost, filePath, pathHost, *aReturn);
+    }
+
+    nsCRT::free(pathCStr);
+    *aReturn = slashIndex;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrlbarHistory::CheckItemAvailability(const PRUnichar * aItem, nsIAutoCompleteResults * aArray, PRBool * aResult)
+{
+    if (!aItem || !aArray)
+        return PR_FALSE;
+    
+    nsresult rv;
+    nsAutoString searchURL(aItem);
+    char * searchCStr = searchURL.ToNewCString();
+    *aResult = PR_FALSE;
+
+    nsCOMPtr<nsISupportsArray> array;
+    rv = aArray->GetItems(getter_AddRefs(array));
+    if (NS_SUCCEEDED(rv))
+    {
+        PRUint32 nbrOfItems=0;
+        PRUint32 i;
+        
+        rv = array->Count(&nbrOfItems);
+        // If there is no item found in the array, return false
+        if (nbrOfItems <= 0)
+            return PR_FALSE;
+        
+        nsCOMPtr <nsIAutoCompleteItem> resultItem;
+        for (i = 0; i < nbrOfItems; i ++)
+        {          
+            rv = array->QueryElementAt(i, nsIAutoCompleteItem::GetIID(), getter_AddRefs(resultItem));
+            if (NS_FAILED(rv))
+                return NS_ERROR_FAILURE;
+
+            PRUnichar *  itemValue=nsnull;
+            resultItem->GetValue(&itemValue);            
+            nsAutoString arrayAutoStr(itemValue);            
+            char *  arrayCString = arrayAutoStr.ToNewCString();            
+            // Using nsIURI to do comparisons didn't quite work out.
+            // So use nsCRT methods
+            if (nsCRT::strcasecmp(arrayCString, searchCStr) == 0)
+            {
+                //printf("In CheckItemAvailability. Item already found\n");
+                *aResult = PR_TRUE;
+                Recycle(itemValue);
+                nsCRT::free(arrayCString);
+                break;
+            }
+            Recycle(itemValue);
+            nsCRT::free(arrayCString);
+        }  // for
+    }
+    nsCRT::free(searchCStr);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, PRUnichar * aMatchStr, nsIAutoCompleteResults * aResultArray)
+{
+    if (!aSearchItem || !aMatchStr || !aResultArray)
+        return NS_ERROR_FAILURE;
+
+    nsAutoString item(aSearchItem);
+    char * searchCStr = item.ToNewCString();
+    PRInt32 searchStrLen = 0;
+
+    if (searchCStr)
+        searchStrLen = nsCRT::strlen(searchCStr);
+    nsresult rv;
+    nsCOMPtr<nsIURL>  searchURL = do_CreateInstance(kStandardURLCID, &rv);
+    if (searchURL) {
+        searchURL->SetSpec(searchCStr);
+        char * filePath = nsnull;
+        searchURL->GetFilePath(&filePath);
+        // Don't bother checking for hostname if the search string
+        // already has a filepath;
+        if (filePath && (nsCRT::strlen(filePath) > 1)) {
+            nsCRT::free(filePath);
+            nsCRT::free(searchCStr);
+            return NS_OK;
+        }
+        nsCRT::free(filePath);
+        nsCRT::free(searchCStr);
+    }
+          
+    nsAutoString matchAutoStr(aMatchStr);            
+    char * matchCString = matchAutoStr.ToNewCString();
+    nsCOMPtr<nsIURL> matchURL = do_CreateInstance(kStandardURLCID, &rv);
+    if (matchURL) {
+        matchURL->SetSpec(matchCString);
+        char * filePath = nsnull;
+        matchURL->GetFilePath(&filePath);
+        // If the match string doesn't have a filepath
+        // we need to do nothing here,  return.
+        if (!filePath || (filePath && (nsCRT::strlen(filePath) <=1))) {
+            nsCRT::free(filePath);
+            nsCRT::free(matchCString);
+            return NS_OK;
+        }
+        // Find the position of the filepath in the result string
+        PRInt32 slashIndex = matchAutoStr.Find("/", PR_FALSE, searchStrLen);
+        // Extract the host name
+        nsAutoString hostName;
+        matchAutoStr.Left(hostName, slashIndex);
+        //printf("#### Host Name is %s\n", hostName.ToNewCString());
+        // Check if this host is already present in the result array
+        // If not add it to the result array
+        PRBool itemAvailable = PR_TRUE;
+        CheckItemAvailability(hostName.GetUnicode(), aResultArray, &itemAvailable);
+        if (!itemAvailable) {
+            // Insert the host name to the result array at the top
+            //Create an AutoComplete Item 
+		    nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID));
+            NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);            
+            newItem->SetValue(hostName.GetUnicode());
+            nsCOMPtr<nsISupportsArray> array;
+            rv = aResultArray->GetItems(getter_AddRefs(array));
+            // Always insert the host entry at the top of the array
+            if (NS_SUCCEEDED(rv)) {
+                array->InsertElementAt(newItem, 0);
+            }
+        }       
+        nsCRT::free(filePath);
+    }
+    nsCRT::free(matchCString);
+    return NS_OK;
 }
 
 
