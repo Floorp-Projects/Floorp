@@ -413,22 +413,15 @@ public class FunctionObject extends BaseFunction {
             if (method == null) Context.codeBug();
             try {
                 result = invoker.invoke(thisObj, invokeArgs);
-            } catch (Exception e) {
-                throw JavaScriptException.wrapException(cx, scope, e);
+            } catch (Exception ex) {
+                throw ScriptRuntime.throwAsUncheckedException(ex);
             }
         } else {
             try {
                 result = (method == null) ? ctor.newInstance(invokeArgs)
                                           : method.invoke(thisObj, invokeArgs);
-            }
-            catch (InvocationTargetException e) {
-                throw JavaScriptException.wrapException(cx, scope, e);
-            }
-            catch (IllegalAccessException e) {
-                throw WrappedException.wrapException(e);
-            }
-            catch (InstantiationException e) {
-                throw WrappedException.wrapException(e);
+            } catch (Exception ex) {
+                throw ScriptRuntime.throwAsUncheckedException(ex);
             }
         }
         return hasVoidReturn ? Undefined.instance : result;
@@ -447,10 +440,8 @@ public class FunctionObject extends BaseFunction {
         Scriptable result;
         try {
             result = (Scriptable) method.getDeclaringClass().newInstance();
-        } catch (IllegalAccessException e) {
-            throw WrappedException.wrapException(e);
-        } catch (InstantiationException e) {
-            throw WrappedException.wrapException(e);
+        } catch (Exception ex) {
+            throw ScriptRuntime.throwAsUncheckedException(ex);
         }
 
         result.setPrototype(getClassPrototype());
@@ -459,7 +450,6 @@ public class FunctionObject extends BaseFunction {
     }
 
     private Object callVarargs(Context cx, Scriptable thisObj, Object[] args)
-        throws JavaScriptException
     {
         try {
             if (parmsLength == VARARGS_METHOD) {
@@ -474,21 +464,8 @@ public class FunctionObject extends BaseFunction {
                        ? ctor.newInstance(invokeArgs)
                        : method.invoke(null, invokeArgs);
             }
-        }
-        catch (InvocationTargetException e) {
-            Throwable target = e.getTargetException();
-            if (target instanceof EvaluatorException)
-                throw (EvaluatorException) target;
-            if (target instanceof EcmaError)
-                throw (EcmaError) target;
-            Scriptable scope = thisObj == null ? this : thisObj;
-            throw JavaScriptException.wrapException(cx, scope, target);
-        }
-        catch (IllegalAccessException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (InstantiationException e) {
-            throw WrappedException.wrapException(e);
+        } catch (Exception ex) {
+            throw ScriptRuntime.throwAsUncheckedException(ex);
         }
     }
 

@@ -1712,23 +1712,18 @@ public class Interpreter {
 
             final int SCRIPT_CAN_CATCH = 0, ONLY_FINALLY = 1, OTHER = 2;
             int exType;
-            for (;;) {
-                if (javaException instanceof JavaScriptException) {
-                    exType = SCRIPT_CAN_CATCH;
-                } else if (javaException instanceof EcmaError) {
-                    // an offical ECMA error object,
-                    exType = SCRIPT_CAN_CATCH;
-                } else if (javaException instanceof WrappedException) {
-                    WrappedException wex = (WrappedException)javaException;
-                    javaException = wex.getWrappedException();
-                    continue;
-                } else if (javaException instanceof RuntimeException) {
-                    exType = ONLY_FINALLY;
-                } else {
-                    // Error instance
-                    exType = OTHER;
-                }
-                break;
+            if (javaException instanceof JavaScriptException) {
+                exType = SCRIPT_CAN_CATCH;
+            } else if (javaException instanceof EcmaError) {
+                // an offical ECMA error object,
+                exType = SCRIPT_CAN_CATCH;
+            } else if (javaException instanceof WrappedException) {
+                exType = SCRIPT_CAN_CATCH;
+            } else if (javaException instanceof RuntimeException) {
+                exType = ONLY_FINALLY;
+            } else {
+                // Error instance
+                exType = OTHER;
             }
 
             if (exType != OTHER) {

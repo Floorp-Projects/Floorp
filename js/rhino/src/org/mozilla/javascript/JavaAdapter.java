@@ -141,7 +141,7 @@ public final class JavaAdapter
                                  newInstance(ctorArgs);
             return getAdapterSelf(adapterClass, adapter);
         } catch (Exception ex) {
-            throw WrappedException.wrapException(ex);
+            throw ScriptRuntime.throwAsUncheckedException(ex);
         }
     }
 
@@ -362,7 +362,7 @@ public final class JavaAdapter
             }
             return ScriptRuntime.call(cx, fun, thisObj, args, object);
         } catch (JavaScriptException ex) {
-            throw WrappedException.wrapException(ex);
+            throw ScriptRuntime.throwAsUncheckedException(ex);
         } finally {
             Context.exit();
         }

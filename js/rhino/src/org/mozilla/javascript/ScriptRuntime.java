@@ -700,51 +700,61 @@ public class ScriptRuntime {
     }
 
     /**
-     * Unwrap a JavaScriptException.  Sleight of hand so that we don't
-     * javadoc JavaScriptException.getRuntimeValue().
-     */
-    public static Object unwrapJavaScriptException(JavaScriptException jse) {
-        return jse.value;
-    }
-
-    /**
-     * Check a WrappedException. Unwrap a JavaScriptException and return
-     * the value, otherwise rethrow.
-     */
-    public static Object unwrapWrappedException(WrappedException we) {
-        Throwable t = we.getWrappedException();
-        if (t instanceof JavaScriptException)
-            return ((JavaScriptException) t).value;
-        throw we;
-    }
-
-    /**
      * Converts Java exceptions that JS can catch into an object the script
      * will see as the catch argument.
      */
     public static Object getCatchObject(Context cx, Scriptable scope,
-                                        Throwable exception)
+                                        Throwable t)
     {
-        Object catchObj;
-        for (;;) {
-            if (exception instanceof JavaScriptException) {
-                catchObj = ScriptRuntime.unwrapJavaScriptException(
-                               (JavaScriptException)exception);
-            } else if (exception instanceof EcmaError) {
-                // an offical ECMA error object,
-                catchObj = ((EcmaError)exception).getErrorObject();
-            } else if (exception instanceof WrappedException) {
-                WrappedException wex = (WrappedException)exception;
-                exception = wex.getWrappedException();
-                continue;
-            } else {
-                // catch can not be called with any other exceptions
-                Context.codeBug();
-                catchObj = null;
+        if (t instanceof JavaScriptException) {
+	    return ((JavaScriptException)t).getValue();
+        } else if (t instanceof EcmaError) {
+            return ((EcmaError)t).getErrorObject();
+        } else {
+            if (!(t instanceof WrappedException)) Context.codeBug();
+            do {
+                t = ((WrappedException)t).getWrappedException();
+            } while (t instanceof WrappedException);
+            if (t instanceof JavaScriptException) {
+                return ((JavaScriptException)t).getValue();
+            } else if (t instanceof EcmaError) {
+                return ((EcmaError)t).getErrorObject();
             }
-            break;
+	    return cx.getWrapFactory().wrap(cx, scope, t, null);
+	}
+    }
+
+    /**
+     * Rethrow exception wrapped into {@link WrappedException} unless
+     * the exception is an instance of {@link EvaluatorExceptions},
+     * {@link EcmaError} or java.lang.Error which are rethrown as-is.
+     * <p>
+     * Instances of java.lang.reflect.InvocationTargetExceptions are treated
+     * specially. They are unwrapped and throwAsUncheckedException  is applied
+     * recursively to its target.
+     * <p>
+     * This method always throws an exception, its return value is provided
+     * only for convenience to allow a usage like:
+     * <pre>
+     * throw ScriptRuntime.throwAsUncheckedException(ex);
+     * </pre>
+     * to indicate that code after the method is unreachable.
+     */
+    public static RuntimeException throwAsUncheckedException(Throwable e)
+    {
+        while ((e instanceof InvocationTargetException)) {
+            e = ((InvocationTargetException) e).getTargetException();
         }
-        return catchObj;
+        if (e instanceof Error) {
+            throw (Error)e;
+        }
+        if (e instanceof EvaluatorException) {
+            throw (EvaluatorException)e;
+        }
+        if (e instanceof EcmaError) {
+            throw (EcmaError)e;
+        }
+        throw new WrappedException(e);
     }
 
     public static Object getProp(Object obj, String id, Scriptable scope) {

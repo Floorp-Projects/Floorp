@@ -107,14 +107,8 @@ class JavaMembers {
                 rval = field.get(isStatic ? null : javaObject);
                 type = field.getType();
             }
-        } catch (IllegalAccessException accEx) {
-            throw new RuntimeException("unexpected IllegalAccessException "+
-                                       "accessing Java field");
-        } catch (InvocationTargetException e) {
-            // Since JavaScriptException is a checked exception, must
-            // wrap the JavaScriptException in a WrappedException
-            throw WrappedException.wrapException(
-                JavaScriptException.wrapException(cx, scope, e));
+        } catch (Exception ex) {
+            throw ScriptRuntime.throwAsUncheckedException(ex);
         }
         // Need to wrap the object before we return it.
         scope = ScriptableObject.getTopLevelScope(scope);
@@ -221,13 +215,8 @@ class JavaMembers {
                 Object[] args = { NativeJavaObject.coerceType(types[0], value,
                                                               true) };
                 method.invoke(javaObject, args);
-            } catch (IllegalAccessException accessEx) {
-                throw new RuntimeException("unexpected IllegalAccessException " +
-                                           "accessing Java field");
-            } catch (InvocationTargetException e) {
-                throw WrappedException.wrapException(
-                    JavaScriptException.wrapException(
-                        Context.getContext(), scope, e));
+            } catch (Exception ex) {
+                throw ScriptRuntime.throwAsUncheckedException(ex);
             }
         }
         else {

@@ -35,6 +35,7 @@
 
 package org.mozilla.javascript;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 /**
  * A wrapper for runtime exceptions.
@@ -44,16 +45,45 @@ import java.lang.reflect.InvocationTargetException;
  *
  * @author Norris Boyd
  */
-public class WrappedException extends EvaluatorException implements Wrapper {
+public class WrappedException extends EvaluatorException
+{
+
+    /**
+     * <p>Pointer to initCause() method of Throwable.
+     * If this method does not exist,
+     * (i.e. we're running on something earlier than Java 1.4), the pointer will
+     * be null.</p>
+     */
+    private static Method initCauseMethod = null;
+
+    static {
+        // Are we running on a JDK 1.4 or later system?
+        try {
+            Class ThrowableClass = ScriptRuntime.classOrNull(
+                                       "java.lang.Throwable");
+            initCauseMethod = ThrowableClass.getMethod("initCause",
+                                          new Class[]{ThrowableClass});
+        } catch (Exception ex) {
+            // Assume any exceptions means the method does not exist.
+        }
+    }
 
     /**
      * Create a new exception wrapped around an existing exception.
      *
      * @param exception the exception to wrap
      */
-    public WrappedException(Throwable exception) {
+    public WrappedException(Throwable exception)
+    {
         super(exception.getMessage());
         this.exception = exception;
+        if (initCauseMethod != null) {
+            try {
+                initCauseMethod.invoke(this, new Object[] {exception});
+            } catch (Exception e) {
+                // Ignore any exceptions
+            }
+        }
     }
 
     /**
@@ -61,7 +91,8 @@ public class WrappedException extends EvaluatorException implements Wrapper {
      *
      * Delegates to the wrapped exception.
      */
-    public String getMessage() {
+    public String getMessage()
+    {
         return "WrappedException of " + exception.toString();
     }
 
@@ -70,7 +101,8 @@ public class WrappedException extends EvaluatorException implements Wrapper {
      *
      * Delegates to the wrapped exception.
      */
-    public String getLocalizedMessage() {
+    public String getLocalizedMessage()
+    {
         return "WrappedException of " + exception.getLocalizedMessage();
     }
 
@@ -80,35 +112,9 @@ public class WrappedException extends EvaluatorException implements Wrapper {
      * @return the exception that was presented as a argument to the
      *         constructor when this object was created
      */
-    public Throwable getWrappedException() {
+    public Throwable getWrappedException()
+    {
         return exception;
-    }
-
-    /**
-     * Get the wrapped exception.
-     *
-     * @return the exception that was presented as a argument to the
-     *         constructor when this object was created
-     */
-    public Object unwrap() {
-        return exception;
-    }
-
-    /**
-     * Wrap an exception.
-     *
-     * Provides special cases for EvaluatorExceptions (which are returned
-     * as-is), and InvocationTargetExceptions (which are unwrapped and
-     * passed to a recursive call to wrapException).<p>
-     *
-     * Otherwise the exception is simply wrapped in a WrappedException.
-     */
-    public static EvaluatorException wrapException(Throwable e) {
-        if ((e instanceof InvocationTargetException))
-            e = ((InvocationTargetException) e).getTargetException();
-        if (e instanceof EvaluatorException)
-            return (EvaluatorException) e;
-        return new WrappedException(e);
     }
 
     private Throwable exception;

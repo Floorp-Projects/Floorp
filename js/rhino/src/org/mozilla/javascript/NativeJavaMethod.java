@@ -228,50 +228,49 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             }
             javaObject = ((Wrapper) o).unwrap();
         }
-        try {
-            if (debug) {
-                printDebug("Calling ", meth, args);
-            }
+        if (debug) {
+            printDebug("Calling ", meth, args);
+        }
 
-            Object retval;
+        Object retval;
+        try {
             try {
                 retval = meth.invoke(javaObject, args);
             } catch (IllegalAccessException e) {
                 retval = retryIllegalAccessInvoke(meth, javaObject, args, e);
             }
-            Class staticType = meth.getReturnType();
-
-            if (debug) {
-                Class actualType = (retval == null) ? null
-                                                    : retval.getClass();
-                System.err.println(" ----- Returned " + retval +
-                                   " actual = " + actualType +
-                                   " expect = " + staticType);
-            }
-
-            Object wrapped = cx.getWrapFactory().wrap(cx, scope,
-                                                      retval, staticType);
-
-            if (debug) {
-                Class actualType = (wrapped == null) ? null
-                                                     : wrapped.getClass();
-                System.err.println(" ----- Wrapped as " + wrapped +
-                                   " class = " + actualType);
-            }
-
-            if (wrapped == Undefined.instance)
-                return wrapped;
-            if (wrapped == null && staticType == Void.TYPE)
-                return Undefined.instance;
-            return wrapped;
         } catch (IllegalAccessException accessEx) {
             throw Context.reportRuntimeError(
                 "While attempting to call \"" + meth.getName() +
                 "\" in class \"" + meth.getDeclaringClass().getName() +
                 "\" receieved " + accessEx.toString());
-        } catch (InvocationTargetException e) {
-            throw JavaScriptException.wrapException(cx, scope, e);
+        } catch (Exception ex) {
+            throw ScriptRuntime.throwAsUncheckedException(ex);
         }
+        Class staticType = meth.getReturnType();
+
+        if (debug) {
+            Class actualType = (retval == null) ? null
+                                                : retval.getClass();
+            System.err.println(" ----- Returned " + retval +
+                               " actual = " + actualType +
+                               " expect = " + staticType);
+        }
+
+        Object wrapped = cx.getWrapFactory().wrap(cx, scope,
+                                                  retval, staticType);
+        if (debug) {
+            Class actualType = (wrapped == null) ? null
+                                                 : wrapped.getClass();
+            System.err.println(" ----- Wrapped as " + wrapped +
+                               " class = " + actualType);
+        }
+
+        if (wrapped == Undefined.instance)
+            return wrapped;
+        if (wrapped == null && staticType == Void.TYPE)
+            return Undefined.instance;
+        return wrapped;
     }
 
     static Object retryIllegalAccessInvoke(Method method, Object obj,
@@ -321,7 +320,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
 
     /**
      * Find the correct function to call given the set of methods
-     * or constructors and the arguments. 
+     * or constructors and the arguments.
      * If no function can be found to call, return null.
      */
     static Member findFunction(Member[] methodsOrCtors, Object[] args) {

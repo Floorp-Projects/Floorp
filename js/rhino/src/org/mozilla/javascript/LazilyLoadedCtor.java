@@ -63,7 +63,7 @@ public final class LazilyLoadedCtor {
                                  ScriptableObject.DONTENUM);
         }
         catch (PropertyException e) {
-            throw WrappedException.wrapException(e);
+            throw ScriptRuntime.throwAsUncheckedException(e);
         }
     }
 
@@ -85,24 +85,10 @@ public final class LazilyLoadedCtor {
                     try {
                         ScriptableObject.defineClass(obj, cl, sealed);
                         isReplaced = true;
-                    }
-                    catch (InstantiationException e) {
-                        throw WrappedException.wrapException(e);
-                    }
-                    catch (IllegalAccessException e) {
-                        throw WrappedException.wrapException(e);
-                    }
-                    catch (InvocationTargetException e) {
-                        throw WrappedException.wrapException(e);
-                    }
-                    catch (ClassDefinitionException e) {
-                        throw WrappedException.wrapException(e);
-                    }
-                    catch (PropertyException e) {
-                        throw WrappedException.wrapException(e);
-                    }
-                    catch (SecurityException ex) {
+                    } catch (SecurityException ex) {
                         removeOnError = true;
+                    } catch (Exception e) {
+                        throw ScriptRuntime.throwAsUncheckedException(e);
                     }
                 }
                 if (removeOnError) {

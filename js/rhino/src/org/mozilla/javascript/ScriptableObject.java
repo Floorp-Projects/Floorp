@@ -206,10 +206,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
 
         try {
             return slot.getter.invoke(getterThis, args);
-        } catch (InvocationTargetException e) {
-            throw WrappedException.wrapException(e);
-        } catch (IllegalAccessException e) {
-            throw WrappedException.wrapException(e);
+        } catch (Exception e) {
+            throw ScriptRuntime.throwAsUncheckedException(e);
         }
     }
 
@@ -308,10 +306,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
 
         try {
             setterResult = slot.setter.invoke(setterThis, args);
-        } catch (InvocationTargetException e) {
-            throw WrappedException.wrapException(e);
-        } catch (IllegalAccessException e) {
-            throw WrappedException.wrapException(e);
+        } catch (Exception e) {
+            throw ScriptRuntime.throwAsUncheckedException(e);
         }
 
         if (slot.setterReturnsValue) {

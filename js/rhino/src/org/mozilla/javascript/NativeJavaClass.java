@@ -235,11 +235,11 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
             String ctorString = ctor.toString();
             throw Context.reportRuntimeError3(
                 "msg.bad.ctor.sig", argEx.getMessage(), ctorString, signature);
-        } catch (InvocationTargetException e) {
-            throw JavaScriptException.wrapException(cx, scope, e);
         } catch (IllegalAccessException accessEx) {
             throw Context.reportRuntimeError1(
                 "msg.java.internal.private", accessEx.getMessage());
+        } catch (Exception ex) {
+            throw ScriptRuntime.throwAsUncheckedException(ex);
         }
         // we need to force this to be wrapped, because construct _has_
         // to return a scriptable

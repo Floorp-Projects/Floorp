@@ -38,92 +38,32 @@
 
 package org.mozilla.javascript;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
 /**
- * Java reflection of JavaScript exceptions.  (Possibly wrapping a Java exception.)
+ * Java reflection of JavaScript exceptions.
+ * Instances of this class are thrown by the JavaScript 'throw' keyword.
  *
  * @author Mike McCabe
  */
-public class JavaScriptException extends Exception {
+public class JavaScriptException extends Exception
+{
     /**
-     * <p>Pointer to initCause() method of Throwable.
-     * If this method does not exist,
-     * (i.e. we're running on something earlier than Java 1.4), the pointer will
-     * be null.</p>
-     */
-    private static Method initCauseMethod = null;
-
-    static {
-        // Are we running on a JDK 1.4 or later system?
-        try {
-            Class ThrowableClass = ScriptRuntime.classOrNull(
-                                       "java.lang.Throwable");
-            initCauseMethod = ThrowableClass.getMethod("initCause", 
-                                          new Class[]{ThrowableClass});
-        } catch (Exception ex) {
-            // Assume any exceptions means the method does not exist.
-        }
-    }
-
-    /**
-     * Create a JavaScript exception wrapping the given JavaScript value.
-     *
-     * Instances of this class are thrown by the JavaScript 'throw' keyword.
+     * Create a JavaScript exception wrapping the given JavaScript value
      *
      * @param value the JavaScript value thrown.
      */
-    public JavaScriptException(Object value) {
+    public JavaScriptException(Object value)
+    {
         super(ScriptRuntime.toString(value));
-        if (value instanceof Throwable && initCauseMethod != null) {
-            try {
-                initCauseMethod.invoke(this, new Object[] {value});
-            } catch (Exception e) {
-                // Ignore any exceptions 
-            }
-        }
         this.value = value;
     }
 
-    static JavaScriptException wrapException(Context cx, Scriptable scope,
-                                             Throwable exn)
-    {
-        if (exn instanceof InvocationTargetException)
-            exn = ((InvocationTargetException)exn).getTargetException();
-        if (exn instanceof JavaScriptException)
-            return (JavaScriptException)exn;
-        Object wrapper = cx.getWrapFactory().
-                            wrap(cx, scope, exn, Throwable.class);
-        return new JavaScriptException(wrapper);
-    }
-
     /**
-     * Get the exception value originally thrown.  This may be a
-     * JavaScript value (null, undefined, Boolean, Number, String,
-     * Scriptable or Function) or a Java exception value thrown from a
-     * host object or from Java called through LiveConnect.
-     *
      * @return the value wrapped by this exception
      */
-    public Object getValue() {
-        if (value != null && value instanceof Wrapper)
-            // this will also catch NativeStrings...
-            return ((Wrapper)value).unwrap();
-        else
-            return value;
+    public Object getValue()
+    {
+        return value;
     }
 
-    /**
-     * The JavaScript exception value.  This value is not
-     * intended for general use; if the JavaScriptException wraps a
-     * Java exception, getScriptableValue may return a Scriptable
-     * wrapping the original Java exception object.
-     *
-     * We would prefer to go through a getter to encapsulate the value,
-     * however that causes the bizarre error "nanosecond timeout value
-     * out of range" on the MS JVM.
-     * @serial
-     */
-    Object value;
+    private Object value;
 }

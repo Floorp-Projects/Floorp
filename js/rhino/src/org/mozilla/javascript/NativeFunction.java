@@ -115,7 +115,7 @@ public class NativeFunction extends BaseFunction {
             return null;
         } catch (Exception ex) {
             // Wrap the rest of exceptions including possible SecurityException
-            throw WrappedException.wrapException(ex);
+            throw ScriptRuntime.throwAsUncheckedException(ex);
         }
     }
 

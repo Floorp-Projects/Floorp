@@ -84,15 +84,11 @@ public class Delegator implements Function {
      */
     protected Delegator newInstance()
     {
-        Exception ex;
         try {
             return (Delegator)this.getClass().newInstance();
-        } catch (InstantiationException e) {
-            ex = e;
-        } catch (IllegalAccessException e) {
-            ex = e;
+        } catch (Exception ex) {
+            throw ScriptRuntime.throwAsUncheckedException(ex);
         }
-        throw WrappedException.wrapException(ex);
     }
 
     /**

@@ -150,7 +150,7 @@ public class Codegen extends Interpreter {
                         onlySave = true;
                     }
                 } catch (IOException iox) {
-                    throw WrappedException.wrapException(iox);
+                    throw ScriptRuntime.throwAsUncheckedException(iox);
                 }
             }
 
@@ -182,7 +182,7 @@ public class Codegen extends Interpreter {
                         onlySave = true;
                     }
                 } catch (IOException iox) {
-                    throw WrappedException.wrapException(iox);
+                    throw ScriptRuntime.throwAsUncheckedException(iox);
                 }
             }
         }
@@ -2143,31 +2143,27 @@ public class Codegen extends Interpreter {
         aload(savedVariableObject);
         astore(variableObjectLocal);
 
+        aload(contextLocal);
+        aload(variableObjectLocal);
         aload(exceptionObject);
         releaseWordLocal(exceptionObject);
+
+        // unwrap the exception...
+        addScriptRuntimeInvoke(
+            "getCatchObject",
+            "(Lorg/mozilla/javascript/Context;"
+            +"Lorg/mozilla/javascript/Scriptable;"
+            +"Ljava/lang/Throwable;"
+            +")Ljava/lang/Object;");
 
         String exceptionName;
 
         if (exceptionType == JAVASCRIPT_EXCEPTION) {
-            // unwrap the exception...
-            addScriptRuntimeInvoke(
-                "unwrapJavaScriptException",
-                "(Lorg/mozilla/javascript/JavaScriptException;"
-                +")Ljava/lang/Object;");
             exceptionName = "org/mozilla/javascript/JavaScriptException";
         } else if (exceptionType == WRAPPED_EXCEPTION) {
-            // unwrap the exception...
-            addScriptRuntimeInvoke(
-                "unwrapWrappedException",
-                "(Lorg/mozilla/javascript/WrappedException;"
-                +")Ljava/lang/Object;");
             exceptionName = "org/mozilla/javascript/WrappedException";
         } else {
             if (exceptionType != ECMAERROR_EXCEPTION) Context.codeBug();
-            // unwrap the exception...
-            addVirtualInvoke("org/mozilla/javascript/EcmaError",
-                             "getErrorObject",
-                             "()Lorg/mozilla/javascript/Scriptable;");
             exceptionName = "org/mozilla/javascript/EcmaError";
         }
 
