@@ -61,6 +61,7 @@
 #include "nsIComponentManager.h"
 #include "nsIProxyObjectManager.h"
 #include "nsIServiceManager.h"
+#include "nsISupportsPrimitives.h"
 
 #include "nsAutoLock.h"
 #include "nsString.h"
@@ -99,6 +100,10 @@ nsresult imgRequest::Init(nsIChannel *aChannel,
 
   NS_ASSERTION(!mImage, "imgRequest::Init -- Multiple calls to init");
   NS_ASSERTION(aChannel, "imgRequest::Init -- No channel");
+
+  mProperties = do_CreateInstance("@mozilla.org/properties;1");
+  if (!mProperties)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   mChannel = aChannel;
 
@@ -811,6 +816,32 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       }
 
       LOG_MSG(gImgLog, "imgRequest::OnDataAvailable", "Got content type from the channel");
+    }
+
+    /* set our mimetype as a property */
+    nsCOMPtr<nsISupportsCString> contentType(do_CreateInstance("@mozilla.org/supports-cstring;1"));
+    if (contentType) {
+      contentType->SetData(mContentType);
+      mProperties->Set("type", contentType);
+    }
+
+    /* set our content disposition as a property */
+    nsCAutoString disposition;
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
+    if (httpChannel) {
+      httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-disposition"), disposition);
+    } else {
+      nsCOMPtr<nsIMultiPartChannel> multiPartChannel(do_QueryInterface(aRequest));
+      if (multiPartChannel) {
+        multiPartChannel->GetContentDisposition(disposition);
+      }
+    }
+    if (!disposition.IsEmpty()) {
+      nsCOMPtr<nsISupportsCString> contentDisposition(do_CreateInstance("@mozilla.org/supports-cstring;1"));
+      if (contentDisposition) {
+        contentDisposition->SetData(disposition);
+        mProperties->Set("content-disposition", contentDisposition);
+      }
     }
 
     LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "content type", mContentType.get());

@@ -48,6 +48,7 @@
 
 #include "nsICacheEntryDescriptor.h"
 #include "nsIChannel.h"
+#include "nsIProperties.h"
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
 
@@ -99,6 +100,7 @@ private:
   friend class imgRequestProxy;
   friend class imgLoader;
   friend class imgCacheValidator;
+  friend class imgCache;
 
   inline void SetLoadId(void *aLoadId) {
     mLoadId = aLoadId;
@@ -111,6 +113,9 @@ private:
   void RemoveFromCache();
   inline const char *GetMimeType() const {
     return mContentType.get();
+  }
+  inline nsIProperties *Properties() {
+    return mProperties;
   }
 
   // Return true if at least one of our proxies, excluding
@@ -137,6 +142,7 @@ private:
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<imgIDecoder> mDecoder;
+  nsCOMPtr<nsIProperties> mProperties;
 
   nsVoidArray mObservers;
 
