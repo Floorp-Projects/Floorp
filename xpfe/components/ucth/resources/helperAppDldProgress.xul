@@ -108,7 +108,7 @@ Contributor(s):
             <text class="label" id="dialog.progressText" value="&#160;"/>
           </box>
         </row>
-        <separator class="thin"/>
+        <separator/>
         <row>
           <hbox flex="1">
             <checkbox id="keepProgressDialogUp" value="&keepProgressDialogUpMsg.label;"/>
