@@ -68,7 +68,7 @@ function calendarManager( CalendarWindow )
    if( !CalendarDirectory.exists() )
    {
       var thisDir = new Dir( CalendarDirectory.path );
-      thisDir.create( 0755 );
+      thisDir.create();
    }
 
    var profileFile = this.getProfileDirectory();
