@@ -359,6 +359,15 @@ alltags:
 	find . -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' \) -print | xargs etags -a
 
 #
+# Turn on C++ linking if we have any .cpp files
+# (moved this from config.mk so that config.mk can be included 
+#  before the CPPSRCS are defined)
+#
+ifdef CPPSRCS
+CPP_PROG_LINK = 1
+endif
+
+#
 # Define LINK_LINE here, since it gets used in two places.
 #
 ifdef CPP_PROG_LINK
