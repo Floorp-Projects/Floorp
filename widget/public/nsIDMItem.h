@@ -36,8 +36,13 @@ public:
 	// Inspectors
 	NS_IMETHOD GetIconImage(nsIImage*& pImage, nsIImageGroup* pGroup) = 0;
 	NS_IMETHOD GetOpenState(PRBool& answer) = 0;
+
+	// Methods for iterating over children.
 	NS_IMETHOD GetChildCount(PRUint32& count) = 0;
 	NS_IMETHOD GetNthChild(nsIDMItem*& pItem, PRUint32 item) = 0;
+
+	// Parent access
+	NS_IMETHOD GetParent(nsIDMItem*& pItem) = 0;
 
 	// Setters
 
