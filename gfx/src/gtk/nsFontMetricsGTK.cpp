@@ -2938,7 +2938,7 @@ nsFontMetricsGTK::FindLocalFont(PRUnichar aChar)
     if (mFontIsGeneric[mFontsIndex]) {
       return nsnull;
     }
-    nsCString* familyName = mFonts.CStringAt(mFontsIndex++);
+    nsCString* familyName = mFonts.CStringAt(mFontsIndex);
 
     /*
      * count hyphens
@@ -2978,6 +2978,8 @@ nsFontMetricsGTK::FindLocalFont(PRUnichar aChar)
         return font;
       }
     }
+    // bug 42917: increment only after all of the above fails
+    mFontsIndex++;
   }
 
   return nsnull;
