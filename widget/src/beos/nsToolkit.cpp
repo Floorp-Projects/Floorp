@@ -46,8 +46,8 @@ NS_IMPL_ISUPPORTS(nsToolkit,kIToolkitIID);
 
 struct ThreadInterfaceData
 {
-	void	*data;
-	int32	sync;
+  void	*data;
+  int32	sync;
 };
 
 //
@@ -57,87 +57,92 @@ PRBool gThreadState = PR_FALSE;
 
 static sem_id my_find_sem(const char *name)
 {
-	sem_id	ret = B_ERROR;
+  sem_id	ret = B_ERROR;
 
-	/* Get the sem_info for every sempahore in this team. */
-	sem_info info;
-	int32 cookie = 0;
+  /* Get the sem_info for every sempahore in this team. */
+  sem_info info;
+  int32 cookie = 0;
 
-	while(get_next_sem_info(0, &cookie, &info) == B_OK)
-		if(strcmp(name, info.name) == 0)
-		{
-			ret = info.sem;
-			break;
-		}
-
-	return ret;
+  while(get_next_sem_info(0, &cookie, &info) == B_OK)
+  {
+    if(strcmp(name, info.name) == 0)
+    {
+      ret = info.sem;
+      break;
+    }
+  }
+  return ret;
 }
 
 struct ThreadInitInfo {
-    PRMonitor *monitor;
-    nsToolkit *toolkit;
+  PRMonitor *monitor;
+  nsToolkit *toolkit;
 };
 
 void nsToolkit::RunPump(void* arg)
 {
-	int32		code;
-	char		portname[64];
-	char		semname[64];
-	ThreadInterfaceData id;
+  int32		code;
+  char		portname[64];
+  char		semname[64];
+  ThreadInterfaceData id;
 
-	ThreadInitInfo *info = (ThreadInitInfo*)arg;
-	::PR_EnterMonitor(info->monitor);
+  ThreadInitInfo *info = (ThreadInitInfo*)arg;
+  ::PR_EnterMonitor(info->monitor);
 
-	gThreadState = PR_TRUE;
+  gThreadState = PR_TRUE;
 
-	::PR_Notify(info->monitor);
-	::PR_ExitMonitor(info->monitor);
+  ::PR_Notify(info->monitor);
+  ::PR_ExitMonitor(info->monitor);
 
-	delete info;
+  delete info;
 
-	// system wide unique names
-	sprintf(portname, "event%lx", PR_GetCurrentThread());
-	sprintf(semname, "sync%lx", PR_GetCurrentThread());
+  // system wide unique names
+  sprintf(portname, "event%lx", PR_GetCurrentThread());
+  sprintf(semname, "sync%lx", PR_GetCurrentThread());
 
-	port_id	event = create_port(100, portname);
-	sem_id	sync = create_sem(0, semname);
+  port_id	event = create_port(100, portname);
+  sem_id	sync = create_sem(0, semname);
 
-	while(read_port(event, &code, &id, sizeof(id)) >= 0)
-	{
-		switch(code)
-		{
-			case 'WMti' :
-				{
-				// Hack
-				nsCOMPtr<nsTimerBeOS> timer = (nsTimerBeOS *)id.data;
-				timer->FireTimeout();
-				}
-				break;
+  while(read_port(event, &code, &id, sizeof(id)) >= 0)
+  {
+    switch(code)
+    {
+      case 'WMti' :
+        {
+          // Hack
+          nsCOMPtr<nsTimerBeOS> timer = (nsTimerBeOS *)id.data;
+          timer->FireTimeout();
+        }
+        break;
 
-			case WM_CALLMETHOD :
-				{
-				MethodInfo *mInfo = (MethodInfo *)id.data;
-				mInfo->Invoke();
-				if(! id.sync)
-					delete mInfo;
-				}
-				break;
+      case WM_CALLMETHOD :
+        {
+          MethodInfo *mInfo = (MethodInfo *)id.data;
+          mInfo->Invoke();
+          if(! id.sync)
+          {
+            delete mInfo;
+          }
+        }
+        break;
 
-			case 'natv' :	// native queue PLEvent
-				{
-				PREventQueue *queue = (PREventQueue *)id.data;
-				PR_ProcessPendingEvents(queue);
-				}
-				break;
+      case 'natv' :	// native queue PLEvent
+        {
+          PREventQueue *queue = (PREventQueue *)id.data;
+          PR_ProcessPendingEvents(queue);
+        }
+        break;
 
-			default :
-				printf("nsToolkit::RunPump - UNKNOWN EVENT\n");
-				break;
-		}
+      default :
+        printf("nsToolkit::RunPump - UNKNOWN EVENT\n");
+        break;
+    }
 
-		if(id.sync)
-			release_sem(sync);
-	}
+    if(id.sync)
+    {
+      release_sem(sync);
+    }
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -147,9 +152,9 @@ void nsToolkit::RunPump(void* arg)
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit()  
 {
-	localthread = false;
-    NS_INIT_REFCNT();
-    mGuiThread  = NULL;
+  localthread = false;
+  NS_INIT_REFCNT();
+  mGuiThread  = NULL;
 }
 
 
@@ -160,19 +165,19 @@ nsToolkit::nsToolkit()
 //-------------------------------------------------------------------------
 nsToolkit::~nsToolkit()
 {
-	Kill();
-	PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
+  Kill();
+  PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
 }
 
 void nsToolkit::Kill()
 {
-	if(localthread)
-	{
-		GetInterface();
+  if(localthread)
+  {
+    GetInterface();
 
-		// interrupt message flow
-		close_port(eventport);
-	}
+    // interrupt message flow
+    close_port(eventport);
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -182,30 +187,35 @@ void nsToolkit::Kill()
 //-------------------------------------------------------------------------
 void nsToolkit::CreateUIThread()
 {
-	PRMonitor *monitor = ::PR_NewMonitor();
+  PRMonitor *monitor = ::PR_NewMonitor();
 	
-	::PR_EnterMonitor(monitor);
+  ::PR_EnterMonitor(monitor);
 	
-	ThreadInitInfo *ti = new ThreadInitInfo();
-	ti->monitor = monitor;
-	ti->toolkit = this;
+  ThreadInitInfo *ti = new ThreadInitInfo();
+  if (ti)
+  {
+    ti->monitor = monitor;
+    ti->toolkit = this;
+  
+    // create a gui thread
+    mGuiThread = ::PR_CreateThread(PR_SYSTEM_THREAD,
+                                   RunPump,
+                                   (void*)ti,
+                                   PR_PRIORITY_NORMAL,
+                                   PR_LOCAL_THREAD,
+                                   PR_UNJOINABLE_THREAD,
+                                   0);
 
-	// create a gui thread
-	mGuiThread = ::PR_CreateThread(PR_SYSTEM_THREAD,
-					RunPump,
-					(void*)ti,
-					PR_PRIORITY_NORMAL,
-					PR_LOCAL_THREAD,
-					PR_UNJOINABLE_THREAD,
-					0);
-
-	// wait for the gui thread to start
-	while(gThreadState == PR_FALSE)
-		::PR_Wait(monitor, PR_INTERVAL_NO_TIMEOUT);
-
-	// at this point the thread is running
-	::PR_ExitMonitor(monitor);
-	::PR_DestroyMonitor(monitor);
+    // wait for the gui thread to start
+    while(gThreadState == PR_FALSE)
+    {
+      ::PR_Wait(monitor, PR_INTERVAL_NO_TIMEOUT);
+    }
+  }
+    
+  // at this point the thread is running
+  ::PR_ExitMonitor(monitor);
+  ::PR_DestroyMonitor(monitor);
 }
 
 
@@ -215,77 +225,84 @@ void nsToolkit::CreateUIThread()
 //-------------------------------------------------------------------------
 NS_METHOD nsToolkit::Init(PRThread *aThread)
 {
-	Kill();
+  Kill();
 
-	// Store the thread ID of the thread containing the message pump.  
-	// If no thread is provided create one
-	if (NULL != aThread) {
-		mGuiThread = aThread;
-		localthread = false;
-	} else {
-		localthread = true;
+  // Store the thread ID of the thread containing the message pump.  
+  // If no thread is provided create one
+  if (NULL != aThread) 
+  {
+    mGuiThread = aThread;
+    localthread = false;
+  } 
+  else 
+  {
+    localthread = true;
 
-		// create a thread where the message pump will run
-		CreateUIThread();
-	}
+    // create a thread where the message pump will run
+    CreateUIThread();
+  }
 
-	cached = false;
+  cached = false;
 
-	return NS_OK;
+  return NS_OK;
 }
 
 void nsToolkit::GetInterface()
 {
-	if(! cached)
-	{
-		char		portname[64];
-		char		semname[64];
+  if(! cached)
+  {
+    char portname[64];
+    char semname[64];
 
-		sprintf(portname, "event%lx", mGuiThread);
-		sprintf(semname, "sync%lx", mGuiThread);
+    sprintf(portname, "event%lx", mGuiThread);
+    sprintf(semname, "sync%lx", mGuiThread);
 
-		eventport = find_port(portname);
-		syncsem = my_find_sem(semname);
+    eventport = find_port(portname);
+    syncsem = my_find_sem(semname);
 
-		cached = true;
-	}
+    cached = true;
+  }
 }
 
 void nsToolkit::CallMethod(MethodInfo *info)
 {
-	ThreadInterfaceData	 id;
+  ThreadInterfaceData id;
 
-	GetInterface();
+  GetInterface();
 
-	id.data = info;
-	id.sync = true;
-	if(write_port(eventport, WM_CALLMETHOD, &id, sizeof(id)) == B_OK)
-	{
-		// semantics for CallMethod are that it should be synchronous
-		while(acquire_sem(syncsem) == B_INTERRUPTED)
-			;
-	}
+  id.data = info;
+  id.sync = true;
+  if(write_port(eventport, WM_CALLMETHOD, &id, sizeof(id)) == B_OK)
+  {
+    // semantics for CallMethod are that it should be synchronous
+    while(acquire_sem(syncsem) == B_INTERRUPTED)
+      ;
+  }
 }
 
 // to be used only from a BView or BWindow
 void nsToolkit::CallMethodAsync(MethodInfo *info)
 {
-	ThreadInterfaceData	 id;
+  ThreadInterfaceData id;
 
-	GetInterface();
+  GetInterface();
 
-	id.data = info;
-	id.sync = false;
+  id.data = info;
+  id.sync = false;
 	
-	// Check message count to not exceed the port's capacity.
-	// There seems to be a BeOS bug that allows more 
-	// messages on a port than its capacity.
-	port_info portinfo;
-	if (get_port_info(eventport, &portinfo) != B_OK)
-	  return;
-
-	if (port_count(eventport) < portinfo.capacity - 20) 
-	  write_port_etc(eventport, WM_CALLMETHOD, &id, sizeof(id), B_TIMEOUT, 0);
+  // Check message count to not exceed the port's capacity.
+  // There seems to be a BeOS bug that allows more 
+  // messages on a port than its capacity.
+  port_info portinfo;
+  if (get_port_info(eventport, &portinfo) != B_OK)
+  {
+    return;
+  }
+  
+  if (port_count(eventport) < portinfo.capacity - 20) 
+  {
+    write_port_etc(eventport, WM_CALLMETHOD, &id, sizeof(id), B_TIMEOUT, 0);
+  }
 }
 
 //------------------------------------------------------------------------- 
@@ -301,25 +318,32 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
   PRStatus status; 
 
   // Create the TLS index the first time through... 
-  if (0 == gToolkitTLSIndex) { 
+  if (0 == gToolkitTLSIndex)  
+  { 
     status = PR_NewThreadPrivateIndex(&gToolkitTLSIndex, NULL); 
-    if (PR_FAILURE == status) { 
+    if (PR_FAILURE == status) 
+    { 
       rv = NS_ERROR_FAILURE; 
     } 
   } 
 
-  if (NS_SUCCEEDED(rv)) { 
+  if (NS_SUCCEEDED(rv)) 
+  { 
     toolkit = (nsIToolkit*)PR_GetThreadPrivate(gToolkitTLSIndex); 
 
     // 
     // Create a new toolkit for this thread... 
     // 
-    if (!toolkit) { 
+    if (!toolkit) 
+    { 
       toolkit = new nsToolkit(); 
 
-      if (!toolkit) { 
+      if (!toolkit) 
+      { 
         rv = NS_ERROR_OUT_OF_MEMORY; 
-      } else { 
+      } 
+      else 
+      { 
         NS_ADDREF(toolkit); 
         toolkit->Init(PR_GetCurrentThread()); 
         // 
@@ -328,7 +352,9 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
         // 
         PR_SetThreadPrivate(gToolkitTLSIndex, (void*)toolkit); 
       } 
-    } else { 
+    } 
+    else 
+    { 
       NS_ADDREF(toolkit); 
     } 
     *aResult = toolkit; 
