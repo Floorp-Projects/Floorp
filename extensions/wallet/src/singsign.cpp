@@ -324,7 +324,7 @@ extern PRBool Wallet_BadKey();
 extern PRBool Wallet_SetKey(PRBool newkey);
 extern char * Wallet_Localize(char * genericString);
 
-extern nsFileSpec Wallet_ProfileDirectory(char * file);
+extern nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec);
 
 void
 si_RestartKey() {
@@ -1732,11 +1732,16 @@ SI_LoadSignonData(PRBool fullLoad) {
 #endif
 
     /* open the signon file */
-    nsInputFileStream strm(Wallet_ProfileDirectory("signon.tbl"));
+    nsFileSpec dirSpec;
+    nsresult rv = Wallet_ProfileDirectory(dirSpec);
+    if (NS_FAILED(rv)) {
+      return -1;
+    }
+    nsInputFileStream strm(dirSpec + "signon.tbl");
     if (!strm.is_open()) {
       return -1;
     }
-    nsInputFileStream strmx(Wallet_ProfileDirectory("signonx.tbl"));
+    nsInputFileStream strmx(dirSpec + "signonx.tbl");
     if (!strmx.is_open()) {
       return -1;
     }
@@ -2079,11 +2084,16 @@ si_SaveSignonDataLocked() {
 #endif
 
     /* do nothing if we are unable to open file that contains signon list */
-    nsOutputFileStream strm(Wallet_ProfileDirectory("signon.tbl"));
+    nsFileSpec dirSpec;
+    nsresult rv = Wallet_ProfileDirectory(dirSpec);
+    if (NS_FAILED(rv)) {
+      return 0;
+    }
+    nsOutputFileStream strm(dirSpec + "signon.tbl");
     if (!strm.is_open()) {
       return 0;
     }
-    nsOutputFileStream strmx(Wallet_ProfileDirectory("signonx.tbl"));
+    nsOutputFileStream strmx(dirSpec + "signonx.tbl");
     if (!strmx.is_open()) {
       return 0;
     }

@@ -330,20 +330,21 @@ nsBrowserAppCore::Stop()
 #define WALLET_SAMPLES_URL "http://people.netscape.com/morse/wallet/samples/"
 //#define WALLET_SAMPLES_URL "http://peoplestage/morse/wallet/samples/"
 
-nsFileSpec ProfileDirectory(char * file) {
+nsresult ProfileDirectory(nsFileSpec& dirSpec) {
   nsresult rv;
   nsIFileLocator* locator = nsnull;
   rv = nsServiceManager::GetService
     (kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
-  if (NS_FAILED(rv) || !locator)
-    return (nsFileSpec)NULL;
-  nsFileSpec dirSpec;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (!locator) {
+    return NS_ERROR_FAILURE;
+  }
   rv = locator->GetFileLocation
      (nsSpecialFileSpec::App_UserProfileDirectory50, &dirSpec);
   nsServiceManager::ReleaseService(kFileLocatorCID, locator);
-  if (NS_FAILED(rv))
-    return (nsFileSpec)NULL;
-  return dirSpec+file;
+  return rv;
 }
 
 PRInt32
@@ -407,7 +408,12 @@ nsBrowserAppCore::WalletEditor()
   res = nsServiceManager::GetService(kWalletServiceCID,
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
-  nsFileURL u = nsFileURL(ProfileDirectory(WALLET_EDITOR_NAME));
+  nsFileSpec dirSpec;
+  nsresult rv = ProfileDirectory(dirSpec);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsFileURL u = nsFileURL(dirSpec + WALLET_EDITOR_NAME);
   if ((NS_OK == res) && (nsnull != walletservice)) {
     nsIURL * url;
     if (!NS_FAILED(NS_NewURL(&url, (char *)(u.GetURLString())))) {
