@@ -567,7 +567,7 @@ nsresult
 DocumentViewerImpl::SyncParentSubDocMap()
 {
   nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(mContainer));
-  nsCOMPtr<nsPIDOMWindow> pwin(do_QueryInterface(item));
+  nsCOMPtr<nsPIDOMWindow> pwin(do_GetInterface(item));
   nsCOMPtr<nsIContent> content;
 
   if (mDocument && pwin) {
