@@ -110,7 +110,7 @@ interface calICalendar : nsISupports
   void getItems( in nsIIDRef aItemType, in unsigned long aItemFilter, 
                  in unsigned long aCount, in calIDateTime aRangeStart,
                  in calIDateTime aRangeEnd, 
-		 in calIOperationListener aListener );
+                 in calIOperationListener aListener );
 
   /** 
    * Remaining stuff is holdovers from oeIICal.idl; doxygen comments required
@@ -166,17 +166,16 @@ interface calIOperationListener : nsISupports
    * For add, modify, and delete.
    *
    * @param aOperationType 	type of operation that was completed
-   * @param aId			UUID of element that was changed
-   * @param aStatus		status code summarizing what happened
-   * @param aDetail		Not yet fully specified.  If aStatus is an
-   * 				error result, this will probably be any 
-   *                            extended error string (eg one returned by
-   * 				a server).
+   * @param aId			        UUID of element that was changed
+   * @param aStatus		      status code summarizing what happened
+   * @param aDetail		      not yet fully specified.  If aStatus is an error
+   *                        result, this will probably be an extended error
+   *                        string (eg one returned by a server).
    */
   void onOperationComplete(in unsigned long aOperationType,
-			   in string aId,
-			   in nsresult aStatus,
-			   in nsIVariant aDetail);
+                           in string aId,
+                           in nsresult aStatus,
+                           in nsIVariant aDetail);
   const unsigned long ADD = 1;
   const unsigned long MOVE = 2;
   const unsigned long DELETE = 3;
@@ -184,19 +183,18 @@ interface calIOperationListener : nsISupports
   /**
    * For getItem and getItems.
    * 
-   * @param aStatus	status code summarizing what happened.
+   * @param aStatus	  status code summarizing what happened.
    * @param aItemType	type of interface returned in the array (@see
-   *			calICalendar::GetItems).
-   * @param aDetail	Not yet fully specified.  If aStatus is an
-   * 			error result, this will probably be any 
-   *                    extended error string (eg one returned by
-   * 			a server).
-   * @param aCount      size of array returned, in items
-   * @param aItems	array of item interfaces
+   *               		calICalendar::GetItems).
+   * @param aDetail	  not yet fully specified.  If aStatus is an error
+   *                  result, this will probably be an extended error
+   *                  string (eg one returned by a server).
+   * @param aCount    size of array returned, in items
+   * @param aItems    array of item interfaces
    *			
    */
   void onGetComplete(in nsresult aStatus, in nsIIDRef aItemType, 
-		     in nsIVariant aDetail, in PRUint32 aCount, 
-		     [array, size_is(aCount), iid_is(aItemType)] 
-		     in nsQIResult aItems ); 
+                     in nsIVariant aDetail, in PRUint32 aCount, 
+                     [array, size_is(aCount), iid_is(aItemType)] 
+                     in nsQIResult aItems ); 
 };
