@@ -88,12 +88,13 @@ static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID
     rv = NS_ERROR_NO_AGGREGATION; 
     return rv; 
   } 
-  // create an nsRegionGtk and get the scriptable region from it 
+  // create an nsRegionBeOS and get the scriptable region from it 
   nsCOMPtr <nsIRegion> rgn; 
   NS_NEWXPCOM(rgn, nsRegionBeOS); 
+  nsCOMPtr<nsIScriptableRegion> scriptableRgn;
   if (rgn != nsnull) 
   { 
-    nsCOMPtr<nsIScriptableRegion> scriptableRgn = new nsScriptableRegion(rgn); 
+    scriptableRgn = new nsScriptableRegion(rgn); 
     inst = scriptableRgn; 
   } 
   if (!inst) 
@@ -102,6 +103,9 @@ static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID
     return rv; 
   } 
   NS_ADDREF(inst); 
+  // release our variable above now that we have created our owning
+  // reference - we don't want this to go out of scope early!
+  scriptableRgn = nsnull;
   rv = inst->QueryInterface(aIID, aResult); 
   NS_RELEASE(inst); 
  
@@ -132,7 +136,7 @@ static nsModuleComponentInfo components[] =
     nsImageBeOSConstructor }, 
   { "BeOS Region", 
     NS_REGION_CID, 
-    "@mozilla.org/gfx/region/gtk;1", 
+    "@mozilla.org/gfx/region/beos;1", 
     nsRegionBeOSConstructor }, 
   { "Scriptable Region", 
     NS_SCRIPTABLE_REGION_CID, 
