@@ -1,4 +1,5 @@
-#!gmake
+#!nmake
+#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -11,22 +12,18 @@
 #
 # The Initial Developer of this code under the NPL is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Copyright (C) 1999 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH	= ../..
-topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
-srcdir		= @srcdir@
+IGNORE_MANIFEST=1
 
-include $(DEPTH)/config/autoconf.mk
+DEPTH=..\..\..\..
 
-DIRS	= public src
+EXPORTS =       nsIInterfaceInfoManager.h       \
+                nsIInterfaceInfo.h              \
+                xpt_cpp.h                       \
+		$(NULL)
 
-DIRS    += tests
+MODULE	=	xptinfo
 
-DIRS	+= tools
-
-DIRS	+= xptinfo
-
-include $(topsrcdir)/config/rules.mk
+include <$(DEPTH)\config\rules.mak>

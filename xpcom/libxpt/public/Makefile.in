@@ -25,9 +25,6 @@ MODULE		= libxpt
 
 EXPORTS		= xpt_struct.h		\
 		  xpt_xdr.h		\
-		  xpt_cpp.h		\
-		  nsIInterfaceInfoManager.h \
-		  nsIInterfaceInfo.h \
 		  $(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
