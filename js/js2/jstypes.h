@@ -65,6 +65,8 @@ namespace JSTypes {
     class JSType;
     class Context;
     
+    typedef uint32 Register;
+
     /**
      * All JavaScript data types.
      */        
@@ -188,6 +190,9 @@ namespace JSTypes {
      * GC-scannable array of values.
      */
     typedef std::vector<JSValue, gc_allocator<JSValue> > JSValues;
+
+
+    String getRegisterValue(const JSValues& registerList, Register reg);
 
     extern const JSValue kUndefinedValue;
     extern const JSValue kNaNValue;
