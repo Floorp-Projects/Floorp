@@ -111,18 +111,21 @@ public class Interpreter
         Icode_LITERAL_NEW               = BASE_ICODE + 30,
         Icode_LITERAL_SET               = BASE_ICODE + 31,
 
+    // Array literal with skipped index like [1,,2]
+        Icode_SPARE_ARRAYLIT            = BASE_ICODE + 32,
+
     // Load string register to prepare for the following string operation
-        Icode_LOAD_STR1                 = BASE_ICODE + 32,
-        Icode_LOAD_STR2                 = BASE_ICODE + 33,
-        Icode_LOAD_STR4                 = BASE_ICODE + 34,
+        Icode_LOAD_STR1                 = BASE_ICODE + 33,
+        Icode_LOAD_STR2                 = BASE_ICODE + 34,
+        Icode_LOAD_STR4                 = BASE_ICODE + 35,
 
     // Load index register to prepare for the following index operation
-        Icode_LOAD_IND1                 = BASE_ICODE + 35,
-        Icode_LOAD_IND2                 = BASE_ICODE + 36,
-        Icode_LOAD_IND4                 = BASE_ICODE + 37,
+        Icode_LOAD_IND1                 = BASE_ICODE + 36,
+        Icode_LOAD_IND2                 = BASE_ICODE + 37,
+        Icode_LOAD_IND4                 = BASE_ICODE + 38,
 
     // Last icode
-        MAX_ICODE                       = BASE_ICODE + 37;
+        MAX_ICODE                       = BASE_ICODE + 38;
 
     public Object compile(Scriptable scope,
                           CompilerEnvirons compilerEnv,
@@ -1194,17 +1197,15 @@ public class Interpreter
     {
         int type = node.getType();
         int count;
-        Object ids;
+        Object[] propertyIds = null;
         if (type == Token.ARRAYLIT) {
             count = 0;
             for (Node n = child; n != null; n = n.getNext()) {
                 ++count;
             }
-            ids = (int[])node.getProp(Node.SKIP_INDEXES_PROP);
         } else if (type == Token.OBJECTLIT) {
-            Object[] propertyIds = (Object[])node.getProp(Node.OBJECT_IDS_PROP);
+            propertyIds = (Object[])node.getProp(Node.OBJECT_IDS_PROP);
             count = propertyIds.length;
-            ids = propertyIds;
         } else {
             throw badTree(node);
         }
@@ -1216,13 +1217,20 @@ public class Interpreter
             stackChange(-1);
             child = child.getNext();
         }
-        int idsOffset = -1;
-        if (ids != null) {
-            idsOffset = itsLiteralIds.size();
-            itsLiteralIds.add(ids);
+        if (type == Token.ARRAYLIT) {
+            int[] skipIndexes = (int[])node.getProp(Node.SKIP_INDEXES_PROP);
+            if (skipIndexes == null) {
+                iCodeTop = addToken(Token.ARRAYLIT, iCodeTop);
+            } else {
+                int index = itsLiteralIds.size();
+                itsLiteralIds.add(skipIndexes);
+                iCodeTop = addIndexOp(Icode_SPARE_ARRAYLIT, index, iCodeTop);
+            }
+        } else {
+            int index = itsLiteralIds.size();
+            itsLiteralIds.add(propertyIds);
+            iCodeTop = addIndexOp(Token.OBJECTLIT, index, iCodeTop);
         }
-        iCodeTop = addToken(type, iCodeTop);
-        iCodeTop = addInt(idsOffset, iCodeTop);
         return iCodeTop;
     }
 
@@ -1590,6 +1598,7 @@ public class Interpreter
                     case Icode_INTNUMBER:        return "INTNUMBER";
                     case Icode_LITERAL_NEW:      return "LITERAL_NEW";
                     case Icode_LITERAL_SET:      return "LITERAL_SET";
+                    case Icode_SPARE_ARRAYLIT:   return "SPARE_ARRAYLIT";
                     case Icode_LOAD_STR1:        return "LOAD_STR1";
                     case Icode_LOAD_STR2:        return "LOAD_STR2";
                     case Icode_LOAD_STR4:        return "LOAD_STR4";
@@ -1667,20 +1676,11 @@ public class Interpreter
                         out.println(
                             tname+" "+idata.itsRegExpLiterals[indexReg]);
                         break;
-                    case Token.ARRAYLIT : {
-                        int count = getInt(iCode, pc);
-                        pc += 4;
-                        int skipOffset = getInt(iCode, pc);
-                        pc += 4;
-                        out.println(tname+" : "+count+" "+skipOffset);
+                    case Token.OBJECTLIT :
+                    case Icode_SPARE_ARRAYLIT :
+                        out.println(
+                            tname+" "+idata.literalIds[indexReg]);
                         break;
-                    }
-                    case Token.OBJECTLIT : {
-                        int idsOffset = getInt(iCode, pc);
-                        pc += 4;
-                        out.println(tname+" : "+idsOffset);
-                        break;
-                    }
                     case Icode_CLOSURE :
                         out.println(
                             tname+" "+idata.itsNestedFunctions[indexReg]);
@@ -1853,6 +1853,7 @@ public class Interpreter
             case Icode_CATCH:
             case Icode_RETUNDEF:
             case Icode_LITERAL_SET:
+            case Icode_SPARE_ARRAYLIT:
             case Token.STRING :
             case Token.NAME :
             case Token.SETNAME :
@@ -1867,6 +1868,8 @@ public class Interpreter
             case Token.CALL :
             case Icode_LITERAL_NEW:
             case Token.NUMBER :
+            case Token.OBJECTLIT:
+            case Token.ARRAYLIT:
                 return 1;
 
             case Token.THROW :
@@ -1939,12 +1942,6 @@ public class Interpreter
             case Icode_LINE :
                 // line number
                 return 1 + 2;
-            case Token.ARRAYLIT:
-                // number of indexes and offset of skip array
-                return 1 + 4 + 4;
-            case Token.OBJECTLIT:
-                // offset of property ids array
-                return 1 + 4;
             default:
                 Kit.codeBug(); // Bad icodeToken
                 return 0;
@@ -3032,22 +3029,21 @@ public class Interpreter
         continue Loop;
     }
     case Token.ARRAYLIT :
+    case Icode_SPARE_ARRAYLIT :
     case Token.OBJECTLIT : {
-        int offset = getInt(iCode, pc);
         Object[] data = (Object[])stack[stackTop];
         Object val;
-        if (op == Token.ARRAYLIT) {
+        if (op == Token.OBJECTLIT) {
+            Object[] ids = (Object[])idata.literalIds[indexReg];
+            val = ScriptRuntime.newObjectLiteral(ids, data, cx, scope);
+        } else {
             int[] skipIndexces = null;
-            if (offset >= 0) {
-                skipIndexces = (int[])idata.literalIds[offset];
+            if (op == Icode_SPARE_ARRAYLIT) {
+                skipIndexces = (int[])idata.literalIds[indexReg];
             }
             val = ScriptRuntime.newArrayLiteral(data, skipIndexces, cx, scope);
-        } else {
-            Object[] ids = (Object[])idata.literalIds[offset];
-            val = ScriptRuntime.newObjectLiteral(ids, data, cx, scope);
         }
         stack[stackTop] = val;
-        pc += 4;
         continue Loop;
     }
     case Icode_LINE : {
