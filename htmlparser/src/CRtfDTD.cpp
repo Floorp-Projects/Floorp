@@ -583,9 +583,9 @@ PRInt32 CRTFContent::GetTokenType() {
  * @param 
  * @return
  */
-static nsString textTerminators("\\{}");
 
 nsresult CRTFContent::Consume(PRUnichar aChar,nsScanner& aScanner) {
+  static nsString textTerminators("\\{}");
   PRInt32 result=aScanner.ReadUntil(mTextValue,textTerminators,PR_FALSE,PR_FALSE);
   return result;
 }
