@@ -60,7 +60,7 @@ function WizardManager( frame_id, tagURLPrefix, tagURLPostfix, wizardMap )
   this.SavePageData         = WM_SavePageData;
   this.ProgressUpdate       = WM_ProgressUpdate;
   this.GetMapLength         = WM_GetMapLength;
-  
+
   // set up handlers from wizard overlay
   // #include chrome://global/content/wizardOverlay.js
   doSetWizardButtons( this );
