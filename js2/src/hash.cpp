@@ -63,7 +63,7 @@ JS::HashNumber JS::hashString(const String &s)
 //
 
 
-static const int minLgNBuckets = 4;
+const uint minLgNBuckets = 4;
 
 
 JS::GenericHashTableIterator::GenericHashTableIterator(GenericHashTable &ht):
@@ -164,7 +164,7 @@ void JS::GenericHashTable::rehash()
 		bucketsEnd = newBucketsEnd;
 	} catch (std::bad_alloc) {
 		// Out of memory.  Ignore the error and just relax the resizing boundaries.
-		if (JS_BIT(newLgNBuckets) > bucketsEnd - buckets)
+		if (buckets + JS_BIT(newLgNBuckets) > bucketsEnd)
 			maxNEntries >>= 1;
 		else
 			minNEntries <<= 1;

@@ -356,9 +356,11 @@ namespace JavaScript {
 	// A class to remember the format of an ostream so that a function may modify it internally
 	// without changing it for the caller.
 	class SaveFormat {
+#ifndef __GNUC__ // The GCC libraries don't support ios_base yet.
 		ostream &o;
 		std::ios_base::fmtflags flags;
 		char fill;
+#endif
 	  public:
 		explicit SaveFormat(ostream &out);
 		~SaveFormat();

@@ -1914,8 +1914,7 @@ static char *doubleToAscii(double d, int mode, bool biasUp, int ndigits,
     if ((word0(d) & Exp_mask) == Exp_mask) {
         // Infinity or NaN
         *decpt = 9999;
-        s = !word1(d) && !(word0(d) & Frac_mask) ? "Infinity" : "NaN";
-        strcpy(buf, s);
+        strcpy(buf, !word1(d) && !(word0(d) & Frac_mask) ? "Infinity" : "NaN");
         return buf[3] ? buf + 8 : buf + 3;
     }
     if (!d) {

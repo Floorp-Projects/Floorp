@@ -61,11 +61,17 @@ typedef float float32;
 // Use wchar_t on platforms on which wchar_t has 16 bits; otherwise use int16.
 // Note that in C++ wchar_t is a distinct type rather than a typedef for some integral type.
 // Like char, a char16 can be either signed or unsigned at the implementation's discretion.
-typedef wchar_t char16;
-#ifndef _WIN32 // Microsoft VC6 bug: wchar_t should be a built-in type, not a typedef
- typedef unsigned wchar_t uchar16;
+#ifdef __GNUC__
+ // GCC's wchar_t is 32 bits, so we can't use it.
+ typedef uint16 char16;
+ typedef uint16 uchar16;
 #else
- typedef wchar_t uchar16;
+ typedef wchar_t char16;
+ #ifndef _WIN32 // Microsoft VC6 bug: wchar_t should be a built-in type, not a typedef
+  typedef unsigned wchar_t uchar16;
+ #else
+  typedef wchar_t uchar16;
+ #endif
 #endif
 
 #ifdef _WIN32
