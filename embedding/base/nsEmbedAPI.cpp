@@ -102,7 +102,7 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
         if (NS_FAILED(rv))
             return rv;
         rv = directoryService->RegisterProvider(appFileLocProvider);
-        if (rv != TRUE) // This is needed but WRONG. RegisterProvider returns TRUE is suceeded, should return NS_OK
+        if (rv != 1) // This is needed but WRONG. RegisterProvider returns TRUE is suceeded, should return NS_OK
             return NS_ERROR_FAILURE;
         NS_RELEASE(appFileLocProvider); // RegisterProvider did AddRef - It owns it now 
         
