@@ -498,7 +498,10 @@ public:
   NS_DECL_NSIDOMNSLOCATION
 
 protected:
-  nsresult GetURI(nsIURI** aURL);
+  // In the case of jar: uris, we sometimes want the place the jar was
+  // fetched from as the URI instead of the jar: uri itself.  Pass in
+  // PR_TRUE for aGetInnermostURI when that's the case.
+  nsresult GetURI(nsIURI** aURL, PRBool aGetInnermostURI = PR_FALSE);
   nsresult GetWritableURI(nsIURI** aURL);
   nsresult SetURI(nsIURI* aURL);
   nsresult SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
