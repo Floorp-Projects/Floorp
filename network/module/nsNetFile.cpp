@@ -54,7 +54,7 @@ NS_RemoveStringEntries(PLHashEntry* he, PRIntn i, void* arg)
   char *entry = (char*)he->value;
 
   NS_ASSERTION(entry != nsnull, "null entry");
-  delete entry;
+  PR_Free(entry);
   return HT_ENUMERATE_REMOVE;
 }
 
@@ -69,6 +69,7 @@ nsNetFile::~nsNetFile() {
 
 nsresult nsNetFile::GetFilePath(const char *aName, char **aRes) {
     nsString newPath, fileName;
+    char *tmpString;
     char *path = nsnull, *locName = nsnull;
     char *tokBegin, *dirTok, *fileTok, *nextTok;
     nsFileAssoc *faFile = nsnull;
@@ -88,9 +89,13 @@ nsresult nsNetFile::GetFilePath(const char *aName, char **aRes) {
         newPath = locName;
         PR_Free(locName);
         locName = nsnull;
-        path = newPath.ToNewCString();
-        if (!path)
+        tmpString = newPath.ToNewCString();
+        if (!tmpString)
             return NS_ERROR_OUT_OF_MEMORY;
+        path = PL_strdup(tmpString);
+        delete[] tmpString;
+        tmpString = nsnull;
+
         *aRes = path;
         return NS_OK;
     }
@@ -100,10 +105,15 @@ nsresult nsNetFile::GetFilePath(const char *aName, char **aRes) {
     if (faFile) {
         char *dir = nsnull;
         if (faFile->dirTok.Length()) {
-            char *csDT = faFile->dirTok.ToNewCString();
-            if (!csDT) {
+            char *csDT;
+            tmpString = faFile->dirTok.ToNewCString();
+            if (!tmpString) {
                 return NS_ERROR_OUT_OF_MEMORY;
             }
+            csDT = PL_strdup(tmpString);
+            delete[] tmpString;
+            tmpString = nsnull;
+
             dir = (char*)PL_HashTableLookup(mHTDirs, csDT);
             PR_Free(csDT);
         }
@@ -118,7 +128,9 @@ nsresult nsNetFile::GetFilePath(const char *aName, char **aRes) {
             newPath.Append(mDirDel);
         }
         newPath.Append(faFile->name);
-        *aRes = newPath.ToNewCString();
+        tmpString = newPath.ToNewCString();
+        *aRes = PL_strdup(tmpString);
+        delete[] tmpString;
         return NS_OK;
     }
 
@@ -177,7 +189,9 @@ nsresult nsNetFile::GetFilePath(const char *aName, char **aRes) {
 
     newPath.Append(fileName);
     PR_Free(fileTok);
-    *aRes = newPath.ToNewCString();
+    tmpString = newPath.ToNewCString();
+    *aRes = PL_strdup(tmpString);
+    delete[] tmpString;
     PR_FREEIF(locName);
     return NS_OK;
 }
@@ -599,7 +613,7 @@ nsresult nsNetFile::OpenFile(const char *aPath, nsFileMode aMode, nsFile** aRes)
 
     file->fd = PR_Open(path, (convertToPRFlag(aMode)), 0600);
 
-    delete path;
+    PR_Free(path);
     path = nsnull;
 
     if (!file->fd) {
@@ -722,8 +736,7 @@ nsresult nsNetFile::FileRemove(const char *aPath) {
     // We should never be deleting a relative file.
     NS_PRECONDITION( ( (*path != mDirDel) && (*path && (*path+1 != ':'))), "Deleting a relative path.");
 
-    if (PR_Delete(path) == PR_FAILURE)
-        return NS_ERROR_FAILURE;
+    PR_Free(path);
 
     return NS_OK;
 }
@@ -749,15 +762,12 @@ nsresult nsNetFile::CreateDir(const char *aPath, PRBool aRecurse) {
 }
 
 nsresult nsNetFile::SetDirectory(const char *aToken, const char *aDir) {
-    nsString tok(aToken);
-    nsString val(aDir);
-    char *t = tok.ToNewCString();
-    char *v = val.ToNewCString();
+    nsresult rv = NS_OK;
 
-    if (!PL_HashTableAdd(mHTDirs, t, v)) {
-        return NS_ERROR_FAILURE;
+    if (!PL_HashTableAdd(mHTDirs, PL_strdup(aToken), PL_strdup(aDir))) {
+        rv = NS_ERROR_FAILURE;
     }
-    return NS_OK;
+    return rv;
 }
 
     // Associate a filename with a token, and optionally a dir token.
