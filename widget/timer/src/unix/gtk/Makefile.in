@@ -40,7 +40,7 @@ EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS)
 
 else
 
-LIBRARY_NAME = -ltimer_s
+LIBRARY_NAME = timer_s
 REQUIRES = xpcom
 CXXFLAGS += $(TK_CFLAGS)
 INCLUDES += $(TK_CFLAGS) -I$(srcdir)/..
