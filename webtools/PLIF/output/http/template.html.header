@@ -8,7 +8,7 @@ Content-Type: text/html
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html lang="en">
  <head>
-  <title>[% app.name %]: [% title %]</title>
+  <title>[% app.name %][% IF title != app.name %]: [% title %][% END %]</title>
   <link rel="stylesheet" href="style">
 [% IF session.fields.settings.stylesheet != '' -%]
   <link rel="stylesheet" href="[% session.fields.settings.stylesheet %]">
