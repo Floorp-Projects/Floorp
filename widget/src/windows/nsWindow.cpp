@@ -598,6 +598,30 @@ nsWindow::EventIsInsideWindow(nsWindow* aWindow)
   return PR_TRUE;
 }
 
+static LPCTSTR GetNSWindowPropName() {
+  static ATOM atom = 0;
+
+  // this is threadsafe, even without locking;
+  // even if there's a race, GlobalAddAtom("nsWindowPtr")
+  // will just return the same value
+  if (!atom) {
+    atom = ::GlobalAddAtom("nsWindowPtr");
+  }
+  return MAKEINTATOM(atom);
+}
+
+nsWindow * nsWindow::GetNSWindowPtr(HWND aWnd) {
+  return (nsWindow *) ::GetProp(aWnd, GetNSWindowPropName());
+}
+
+BOOL nsWindow::SetNSWindowPtr(HWND aWnd, nsWindow * ptr) {
+  if (ptr == NULL) {
+    ::RemoveProp(aWnd, GetNSWindowPropName());
+    return TRUE;
+  } else {
+    return ::SetProp(aWnd, GetNSWindowPropName(), (HANDLE)ptr);
+  }
+}
 
 PRBool
 nsWindow::IsScrollbar(HWND aWnd) {
@@ -606,7 +630,7 @@ nsWindow::IsScrollbar(HWND aWnd) {
   LONG proc = ::GetWindowLong(aWnd, GWL_WNDPROC);
   if (proc == (LONG)&nsWindow::WindowProc) {
     // It is a one of our windows.
-    nsWindow *someWindow = (nsWindow*)::GetWindowLong(aWnd, GWL_USERDATA);
+    nsWindow *someWindow = GetNSWindowPtr(aWnd);
       //This is inefficient, but this method is only called when
       //a popup window has been displayed, and your clicking within it.
       //The default window class begins with Netscape so comparing with the initial
@@ -717,7 +741,7 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
       return popupHandlingResult;
 
     // Get the window which caused the event and ask it to process the message
-    nsWindow *someWindow = (nsWindow*)::GetWindowLong(hWnd, GWL_USERDATA);
+    nsWindow *someWindow = GetNSWindowPtr(hWnd);
 
     // hold on to the window for the life of this method, in case it gets
     // deleted during processing. yes, it's a double hack, since someWindow
@@ -731,7 +755,7 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     if (msg == WM_NOTIFY) {
       LPNMHDR pnmh = (LPNMHDR) lParam;
       if (pnmh->code == TCN_SELCHANGE) {
-        someWindow = (nsWindow*)::GetWindowLong(pnmh->hwndFrom, GWL_USERDATA);
+        someWindow = GetNSWindowPtr(pnmh->hwndFrom);
       }
     }
 
@@ -766,6 +790,10 @@ LRESULT CALLBACK nsWindow::DefaultWindowProc(HWND hWnd, UINT msg, WPARAM wParam,
   return ::DefWindowProc(hWnd, msg, wParam, lParam);
 }
 #endif
+
+static BOOL CALLBACK DummyDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+  return FALSE;
+}
 
 //WINOLEAPI oleStatus;
 //-------------------------------------------------------------------------
@@ -858,18 +886,45 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
     mHas3DBorder = (extendedStyle & WS_EX_CLIENTEDGE) > 0;
 
-    mWnd = ::CreateWindowEx(extendedStyle,
-                            WindowClass(),
-                            "",
-                            style,
-                            aRect.x,
-                            aRect.y,
-                            aRect.width,
-                            GetHeight(aRect.height),
-                            parent,
-                            NULL,
-                            nsToolkit::mDllInstance,
-                            NULL);
+    if (mWindowType == eWindowType_dialog) {
+      struct {
+        DLGTEMPLATE t;
+        short noMenu;
+        short defaultClass;
+        short title;
+      } templ;
+      LONG units = GetDialogBaseUnits();
+
+      templ.t.style = style;
+      templ.t.dwExtendedStyle = extendedStyle;
+      templ.t.cdit = 0;
+      templ.t.x = (aRect.x*4)/LOWORD(units);
+      templ.t.y = (aRect.y*8)/HIWORD(units);
+      templ.t.cx = (aRect.width*4 + LOWORD(units) - 1)/LOWORD(units);
+      templ.t.cy = (GetHeight(aRect.height)*8 + HIWORD(units) - 1)/HIWORD(units);
+      templ.noMenu = 0;
+      templ.defaultClass = 0;
+      templ.title = 0;
+
+      mWnd = ::CreateDialogIndirectParam(nsToolkit::mDllInstance,
+                                         &templ.t,
+                                         parent,
+                                         DummyDialogProc,
+                                         NULL);
+    } else {
+      mWnd = ::CreateWindowEx(extendedStyle,
+                              WindowClass(),
+                              "",
+                              style,
+                              aRect.x,
+                              aRect.y,
+                              aRect.width,
+                              GetHeight(aRect.height),
+                              parent,
+                              NULL,
+                              nsToolkit::mDllInstance,
+                              NULL);
+    }
    
     VERIFY(mWnd);
 
@@ -1002,7 +1057,7 @@ nsIWidget* nsWindow::GetParent(void)
     if (mWnd) {
         HWND parent = ::GetParent(mWnd);
         if (parent) {
-            widget = (nsWindow *)::GetWindowLong(parent, GWL_USERDATA);
+            widget = GetNSWindowPtr(parent);
             if (widget) {
               // If the widget is in the process of being destroyed then
               // do NOT return it
@@ -1122,7 +1177,7 @@ NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
          if (!acceptEvent) {
            LONG proc = ::GetWindowLong(msgWindow, GWL_WNDPROC);
            if (proc == (LONG)&nsWindow::WindowProc) {
-             nsWindow *msgWin = (nsWindow*) ::GetWindowLong(msgWindow, GWL_USERDATA);
+             nsWindow *msgWin = GetNSWindowPtr(msgWindow);
              msgWin->IsEnabled(&acceptEvent);
            }
          }
@@ -2110,7 +2165,7 @@ void nsWindow::ConstrainZLevel(HWND *aAfter) {
     event.mPlacement = nsWindowZTop;
   else {
     event.mPlacement = nsWindowZRelative;
-    aboveWindow = (nsWindow*)::GetWindowLong(*aAfter, GWL_USERDATA);
+    aboveWindow = GetNSWindowPtr(*aAfter);
   }
   event.mReqBelow = aboveWindow;
 
@@ -2422,7 +2477,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 	          // we assume the message is coming from a horizontal scrollbar inside
 	          // a listbox and we don't bother processing it (well, we don't have to)
 	          if (lParam) {
-                nsWindow* scrollbar = (nsWindow*)::GetWindowLong((HWND)lParam, GWL_USERDATA);
+                nsWindow* scrollbar = GetNSWindowPtr((HWND)lParam);
 
 		            if (scrollbar) {
 		                result = scrollbar->OnScroll(LOWORD(wParam), (short)HIWORD(wParam));
@@ -2436,7 +2491,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         //case WM_CTLCOLORSCROLLBAR: //XXX causes a the scrollbar to be drawn incorrectly
         case WM_CTLCOLORSTATIC:
 	          if (lParam) {
-              nsWindow* control = (nsWindow*)::GetWindowLong((HWND)lParam, GWL_USERDATA);
+              nsWindow* control = GetNSWindowPtr((HWND)lParam);
 		          if (control) {
                 control->SetUpForPaint((HDC)wParam);
 		            *aRetValue = (LPARAM)control->OnControlColor();
@@ -2739,7 +2794,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			}
 
             else if (destWnd != mWnd) {
-                nsWindow* destWindow = (nsWindow*) ::GetWindowLong(destWnd, GWL_USERDATA);
+                nsWindow* destWindow = GetNSWindowPtr(destWnd);
                 if (destWindow) {
                     return destWindow->ProcessMessage(msg, wParam, lParam, aRetValue);
                 }
@@ -2941,11 +2996,11 @@ void nsWindow::SubclassWindow(BOOL bState)
                                                  (LONG)nsWindow::WindowProc);
         NS_ASSERTION(mPrevWndProc, "Null standard window procedure");
         // connect the this pointer to the nsWindow handle
-        ::SetWindowLong(mWnd, GWL_USERDATA, (LONG)this);
+        SetNSWindowPtr(mWnd, this);
     } 
     else {
         ::SetWindowLong(mWnd, GWL_WNDPROC, (LONG)mPrevWndProc);
-        ::SetWindowLong(mWnd, GWL_USERDATA, (LONG)NULL);
+        SetNSWindowPtr(mWnd, NULL);
         mPrevWndProc = NULL;
     }
   }
@@ -3275,7 +3330,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
             // window we get right here when in capture mode
             // but this window won't match the capture mode window so
             // we are ok
-            someWindow = (nsWindow*)::GetWindowLong(hWnd, GWL_USERDATA);
+            someWindow = GetNSWindowPtr(hWnd);
           } 
         }
         // only set the window into the mouse trailer if we have a good window
