@@ -381,7 +381,6 @@ AC_PATH_PROG(XARGS, xargs)
 if test -z "$XARGS" || test "$XARGS" = ":"; then
     AC_MSG_ERROR([xargs not found in \$PATH .])
 fi
-AC_PATH_PROG(DOXYGEN, doxygen, :)
 
 dnl Be sure the make we use is GNU make.
 AC_PATH_PROGS(MAKE, gmake make, :)
@@ -3687,6 +3686,34 @@ MOZ_ARG_ENABLE_BOOL(verbose-config-defs,
 [  --disable-verbose-config-defs
                           Do not output the contents of config-defs.h],
     VERBOSE_CONFIG_DEFS=)
+
+dnl ========================================================
+dnl = Doxygen configuration
+dnl ========================================================
+AC_PATH_PROG(DOXYGEN, doxygen, :)
+
+dnl Use commas to specify multiple dirs to this arg
+MOZ_DOC_INPUT_DIRS='./dist/include ./dist/idl'
+MOZ_ARG_WITH_STRING(doc-input-dirs,
+[  --with-doc-input-dirs=DIRS
+                          Header/idl dirs to create docs from],
+[ MOZ_DOC_INPUT_DIRS=`echo "$withval" | sed "s/,/ /g"` ] )
+AC_SUBST(MOZ_DOC_INPUT_DIRS)
+
+dnl Use commas to specify multiple dirs to this arg
+MOZ_DOC_INCLUDE_DIRS='./dist/include ./dist/include/nspr'
+MOZ_ARG_WITH_STRING(doc-include-dirs,
+[  --with-doc-include-dirs=DIRS  
+                          Include dirs to preprocess doc headers],
+[ MOZ_DOC_INCLUDE_DIRS=`echo "$withval" | sed "s/,/ /g"` ] )
+AC_SUBST(MOZ_DOC_INCLUDE_DIRS)
+
+MOZ_DOC_OUTPUT_DIR='./dist/docs'
+MOZ_ARG_WITH_STRING(doc-output-dir,
+[  --with-doc-output-dir=DIR
+                          Dir to generate docs into],
+[ MOZ_DOC_OUTPUT_DIR=$withval ] )
+AC_SUBST(MOZ_DOC_OUTPUT_DIR)
 
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl ========================================================
