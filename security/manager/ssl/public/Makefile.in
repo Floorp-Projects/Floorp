@@ -54,7 +54,7 @@ XPIDLSRCS = \
     nsICertPickDialogs.idl \
     nsIClientAuthDialogs.idl \
     nsIDOMCryptoDialogs.idl \
-    nsIGeneratingKeypairInfoDialogs.idl \
+    nsIGenKeypairInfoDlg.idl \
     nsITokenDialogs.idl \
     nsITokenPasswordDialogs.idl \
     nsISSLStatus.idl \

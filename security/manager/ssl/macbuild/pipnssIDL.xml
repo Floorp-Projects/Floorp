@@ -764,7 +764,7 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIGeneratingKeypairInfoDialogs.idl</PATH>
+                    <PATH>nsIGenKeypairInfoDlg.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -999,7 +999,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIGeneratingKeypairInfoDialogs.idl</PATH>
+                    <PATH>nsIGenKeypairInfoDlg.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -1855,7 +1855,7 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIGeneratingKeypairInfoDialogs.idl</PATH>
+                    <PATH>nsIGenKeypairInfoDlg.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -2090,7 +2090,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIGeneratingKeypairInfoDialogs.idl</PATH>
+                    <PATH>nsIGenKeypairInfoDlg.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -2294,7 +2294,7 @@
         <FILEREF>
             <TARGETNAME>headers</TARGETNAME>
             <PATHTYPE>Name</PATHTYPE>
-            <PATH>nsIGeneratingKeypairInfoDialogs.idl</PATH>
+            <PATH>nsIGenKeypairInfoDlg.idl</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
         <FILEREF>
