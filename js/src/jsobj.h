@@ -103,7 +103,7 @@ struct JSObjectMap {
 #define OBJ_SET_REQUIRED_SLOT(cx,obj,slot,v)                                  \
     ((obj)->map->ops->setRequiredSlot                                         \
      ? (obj)->map->ops->setRequiredSlot(cx, obj, slot, v)                     \
-     : JS_TRUE)
+     : (void)0)
 
 /*
  * In the original JS engine design, obj->slots pointed to a vector of length
@@ -456,7 +456,7 @@ js_Clear(JSContext *cx, JSObject *obj);
 extern jsval
 js_GetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot);
 
-extern JSBool
+extern void
 js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v);
 
 JS_END_EXTERN_C
