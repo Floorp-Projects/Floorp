@@ -164,15 +164,12 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
     rv = sServiceManager->GetService("@mozilla.org/chrome/chrome-registry;1", 
                                      nsIChromeRegistry::GetIID(), 
                                      getter_AddRefs(chromeReg));
-    NS_ASSERTION(chromeReg, "chrome check couldn't get the chrome registry");
-
-    if (!chromeReg)
-        return NS_ERROR_FAILURE;
-
-    // Ignore the return value here.  If chrome is already initialized
-    // this call will return an error even though nothing is wrong.
-    chromeReg->CheckForNewChrome();
-
+    if (chromeReg)
+    {
+        // Ignore the return value here.  If chrome is already initialized
+        // this call will return an error even though nothing is wrong.
+        (void) chromeReg->CheckForNewChrome();
+    }
     return NS_OK;
 
 }
