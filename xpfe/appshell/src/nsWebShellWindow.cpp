@@ -425,13 +425,15 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         break;
       }
       case NS_SIZE: {
+        PRBool chromeLock = PR_FALSE;
         nsSizeEvent* sizeEvent = (nsSizeEvent*)aEvent;
         nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(webShell));
         shellAsWin->SetPositionAndSize(0, 0, sizeEvent->windowSize->width, 
           sizeEvent->windowSize->height, PR_FALSE);  
         // persist size, but not immediately, in case this OS is firing
         // repeated size events as the user drags the sizing handle
-        eventWindow->SetPersistenceTimer(PR_TRUE, PR_FALSE, PR_TRUE);
+        if (NS_FAILED(eventWindow->GetLockedState(chromeLock)) || !chromeLock)
+          eventWindow->SetPersistenceTimer(PR_TRUE, PR_FALSE, PR_TRUE);
         result = nsEventStatus_eConsumeNoDefault;
         break;
       }
