@@ -61,6 +61,11 @@ nsStatusBarBiffManager::~nsStatusBarBiffManager()
     NS_RELEASE(kBiffStateAtom);
 }
 
+#define PREF_PLAY_SOUND_ON_NEW_MAIL      "mail.biff.play_sound"
+#define PREF_PLAY_DEFAULT_SOUND          "mail.biff.use_default_sound"
+#define PREF_USER_SPECIFIED_SOUND_FILE   "mail.biff.sound_file"
+#define DEFAULT_NEW_MAIL_SOUND_URL_PREF  "mail.biff.default_sound_url"
+
 nsresult nsStatusBarBiffManager::Init()
 {
 	if (mInitialized)
@@ -74,6 +79,12 @@ nsresult nsStatusBarBiffManager::Init()
 	if(NS_SUCCEEDED(rv))
 		mailSession->AddFolderListener(this);
 
+    nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID);
+    nsXPIDLCString url;
+    rv = pref->CopyCharPref(DEFAULT_NEW_MAIL_SOUND_URL_PREF, getter_Copies(url));
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    mDefaultSoundURL = url;
 	mInitialized = PR_TRUE;
 	return NS_OK;
 }
@@ -83,10 +94,6 @@ nsresult nsStatusBarBiffManager::Shutdown()
 	return NS_OK;
 }
 
-#define PREF_PLAY_SOUND_ON_NEW_MAIL      "mail.biff.play_sound"
-#define PREF_PLAY_DEFAULT_SOUND          "mail.biff.use_default_sound"
-#define PREF_USER_SPECIFIED_SOUND_FILE   "mail.biff.sound_file"
-#define DEFAULT_NEW_MAIL_SOUND           "chrome://messenger/content/newmail.wav"
 
 nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
 {
@@ -123,7 +130,7 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
               }
 
               if (NS_FAILED(rv) || playDefaultSound) {
-                rv = soundURL->SetSpec(DEFAULT_NEW_MAIL_SOUND);
+                rv = soundURL->SetSpec(mDefaultSoundURL.get());
               }
             }
 
