@@ -48,30 +48,105 @@ class nsTableCellFrame;
 class CellData
 {
 public:
+  /** Public constructor.
+    * @param aOrigCell  the table cell frame which will be stored in mOrigCell.   
+    */
   CellData(nsTableCellFrame* aOrigCell);
 
-  ~CellData();
+  /** destructor */
+  ~CellData(); //the constructor and destructor are implemented in nsCellMap.cpp
 
+  /** Initialize the mOrigCell pointer 
+    * @param aOrigCell  the table cell frame which will be stored in mOrigCell.   
+    */ 
   void   Init(nsTableCellFrame* aCellFrame);
+
+  /** does a cell originate from here
+    * @return    is true if a cell corresponds to this cellmap entry
+    */
   PRBool IsOrig() const;
+
+  /** is the celldata valid
+    * @return    is true if no cell originates and the cell is not spanned by 
+    *            a row- or colspan. mBits are 0 in this case and mOrigCell is
+    *            nsnull
+    */
   PRBool IsDead() const;
+
+  /** is the entry spanned by row- or a colspan
+    * @return    is true if the entry is spanned by a row- or colspan
+    */
   PRBool IsSpan() const;
 
+  /** is the entry spanned by rowspan
+    * @return    is true if the entry is spanned by a rowspan
+    */
   PRBool IsRowSpan() const;
+  
+  /** is the entry spanned by a zero rowspan
+    * zero rowspans span all cells starting from the originating cell down to 
+    * the end of the rowgroup or a cell originating in the same column
+    * @return    is true if the entry is spanned by a zero rowspan
+    */
   PRBool IsZeroRowSpan() const;
+
+  /** mark the current entry as spanned by a zero rowspan
+    * @param aIsZero    if true mark the entry as covered by a zero rowspan
+    */
   void SetZeroRowSpan(PRBool aIsZero);
+
+  /** get the distance from the current entry to the corresponding origin of the rowspan
+    * @return    containing the distance in the column to the originating cell
+    */
   PRUint32 GetRowSpanOffset() const;
+
+  /** set the distance from the current entry to the corresponding origin of the rowspan
+    * @param    the distance in the column to the originating cell
+    */
   void SetRowSpanOffset(PRUint32 aSpan);
 
+  /** is the entry spanned by colspan
+    * @return    is true if the entry is spanned by a colspan
+    */
   PRBool IsColSpan() const;
+
+  /** is the entry spanned by a zero colspan
+    * zero colspans span all cells starting from the originating cell towards 
+    * the end of the colgroup or a cell originating in the same row 
+    * or a rowspanned entry
+    * @return    is true if the entry is spanned by a zero colspan
+    */
   PRBool IsZeroColSpan() const;
+
+  /** mark the current entry as spanned by a zero colspan
+    * @param aIsZero    if true mark the entry as covered by a zero colspan
+    */
   void SetZeroColSpan(PRBool aIsZero);
+
+  /** get the distance from the current entry to the corresponding origin of the colspan
+    * @return    containing the distance in the row to the originating cell
+    */
   PRUint32 GetColSpanOffset() const;
+
+  /** set the distance from the current entry to the corresponding origin of the colspan
+    * @param    the distance in the column to the originating cell
+    */
   void SetColSpanOffset(PRUint32 aSpan);
-
+  
+  /** is the entry spanned by a row- and a colspan
+    * @return    is true if the entry is spanned by a row- and a colspan
+    */
   PRBool IsOverlap() const;
-  void SetOverlap(PRBool aOverlap);
 
+  /** mark the current entry as spanned by a row- and a colspan
+    * @param aOverlap    if true mark the entry as covered by a row- and a colspan
+    */
+  void SetOverlap(PRBool aOverlap);
+  
+  /** get the table cell frame for this entry 
+    * @return    a pointer to the cellframe, this will be nsnull when the entry 
+    *            is only a spanned entry
+    */
   nsTableCellFrame* GetCellFrame() const;
 
 protected:
@@ -82,7 +157,7 @@ protected:
   // effect and the data represents a span.
   union {
     nsTableCellFrame* mOrigCell;
-    long              mBits;
+    PRUint32          mBits;
   };
 };
 
@@ -181,7 +256,7 @@ public:
 #define COL_SPAN_0       0x00020000 // the col span is 0
 #define OVERLAP          0x00040000 // there is a row span and col span but no by same cell
 #define COL_SPAN_OFFSET  0xFFF80000 // the col offset to the data containing the original cell
-#define ROW_SPAN_SHIFT   3          // num bits to shift to get right justified col span
+#define ROW_SPAN_SHIFT   3          // num bits to shift to get right justified row span
 #define COL_SPAN_SHIFT   19         // num bits to shift to get right justified col span
 
 inline nsTableCellFrame* CellData::GetCellFrame() const

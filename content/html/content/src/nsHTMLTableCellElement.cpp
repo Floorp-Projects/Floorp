@@ -326,7 +326,8 @@ static nsGenericHTMLElement::EnumTable kCellScopeTable[] = {
   { 0 }
 };
 
-#define MAX_COLSPAN 1000
+#define MAX_COLSPAN 8190
+#define MAX_ROWSPAN 8190 // celldata.h can not handle more
 
 NS_IMETHODIMP
 nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
@@ -347,7 +348,7 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
            (aAttribute == nsHTMLAtoms::rowspan)) {
     PRBool parsed = (aAttribute == nsHTMLAtoms::colspan)
       ? ParseValue(aValue, -1, MAX_COLSPAN, aResult, eHTMLUnit_Integer)
-      : ParseValue(aValue, -1, aResult, eHTMLUnit_Integer);
+      : ParseValue(aValue, -1, MAX_ROWSPAN, aResult, eHTMLUnit_Integer);
     if (parsed) {
       PRInt32 val = aResult.GetIntValue();
       // quirks mode does not honor the special html 4 value of 0
