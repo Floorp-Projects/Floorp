@@ -234,8 +234,13 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
 {
   *aDocShell = nsnull;
 
-  nsresult rv = EnsureDocShell();
-  NS_ENSURE_SUCCESS(rv, rv);
+  // If we have an owner, make sure we have a docshell and return
+  // that. If not, we're most likely in the middle of being torn down,
+  // then we just return null.
+  if (mOwnerContent) {
+    nsresult rv = EnsureDocShell();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   *aDocShell = mDocShell;
   NS_IF_ADDREF(*aDocShell);
