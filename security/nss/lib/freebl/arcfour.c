@@ -208,6 +208,8 @@ rc4_no_opt(RC4Context *cx, unsigned char *output,
 		output[index] = cx->S[t] ^ input[index];
 	}
 	*outputLen = inputLen;
+	cx->i = tmpi;
+	cx->j = tmpj;
 	return SECSuccess;
 }
 
@@ -460,9 +462,12 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 			*pOutWord++ = inWord ^ streamWord;
 			inWord = nextInWord;
 		}
-		if (inputLen == 0)
+		if (inputLen == 0) {
 			/* Nothing left to do. */
+			cx->i = tmpi;
+			cx->j = tmpj;
 			return SECSuccess;
+		}
 		/* If the amount of remaining input is greater than the amount
 		 * bytes pulled from the current input word, need to do another
 		 * word load.  What's left in inWord will be consumed in step 3.
@@ -477,6 +482,8 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 		}
 		if (inputLen == 0) {
 			/* Nothing left to do. */
+			cx->i = tmpi;
+			cx->j = tmpj;
 			return SECSuccess;
 		} else {
 			/* A partial input word remains at the tail.  Load it.  The
@@ -502,6 +509,8 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 		mask |= 0xff << 8*i;
 	}
 	*pOutWord = (*pOutWord & ~mask) | ((inWord ^ streamWord) & mask);
+	cx->i = tmpi;
+	cx->j = tmpj;
 	return SECSuccess;
 }
 
