@@ -33,12 +33,13 @@ INCLUDES += \
 
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
-	nsMarkupDocument.cpp		\
 	nsHTMLContentSink.cpp		\
 	nsHTMLDocument.cpp		\
-	nsHTMLFrame.cpp    \
-	nsHTMLFrameset.cpp    \
-	nsHTMLParts.cpp    \
+	nsHTMLFrame.cpp			\
+	nsHTMLFrameset.cpp		\
+	nsHTMLParts.cpp			\
+	nsImageDocument.cpp		\
+	nsMarkupDocument.cpp		\
 	$(NULL)
 
 EXPORTS = \
