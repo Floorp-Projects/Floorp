@@ -6,8 +6,8 @@
 #		 on the tinderbox status page.
 
 
-# $Revision: 1.14 $ 
-# $Date: 2002/04/27 01:48:06 $ 
+# $Revision: 1.15 $ 
+# $Date: 2002/04/27 01:57:05 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
@@ -57,7 +57,7 @@ use Utils;
 sub timestring2time {
     my ($string) = @_;
 
-    $string =~ m!\s*(\d+)/(\d+)s+(\d+):(\d+)\s*!;
+    $string =~ m!\s*(\d+)/(\d+)\s+(\d+):(\d+)\s*!;
 
     my ($mon, $mday, $hours, $min,) = ($1, $2, $3, $4);
 
@@ -69,6 +69,9 @@ sub timestring2time {
     $mon--;
   
     # This calculation may use the wrong year.
+    my @time = localtime(time());
+    my $year = $time[5] + 1900;
+
     my $sec = 0;
     
     my ($time) = timelocal($sec,$min,$hours,$mday,$mon,$year);    
