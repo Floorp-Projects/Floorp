@@ -519,7 +519,7 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
   } // while
 
   //-- write last inflated bit to disk
-  if ( zerr = Z_STREAM_END && outpos < zs.total_out )
+  if ( zerr == Z_STREAM_END && outpos < zs.total_out )
   {
     chunk = zs.total_out - outpos;
     if ( PR_Write( fOut, outbuf, chunk ) < (PRInt32)chunk ) 
