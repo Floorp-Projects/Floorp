@@ -555,11 +555,9 @@ NS_IMETHODIMP FileImpl::Flush()
     mWriteCursor = nsnull;
     mWriteLimit  = nsnull;
 
-#ifndef XP_UNIX
     // On unix, it seems to fail always.
     if (PR_Sync(mFileDesc) != PR_SUCCESS)
         mFailed = PR_TRUE;
-#endif
                                                 
     return NS_OK;
 } // FileImpl::flush
