@@ -28,7 +28,7 @@ public:
     NS_IMETHOD   Notify(nsISupports** result);
  
     nsObserver();
-    ~nsObserver(void);
+    virtual ~nsObserver(void);
      
     NS_DECL_ISUPPORTS
 

@@ -33,7 +33,7 @@ public:
 	NS_IMETHOD EnumerateObserverList(nsIEnumerator** anEnumerator);
 
     nsObserverList();
-    ~nsObserverList(void);
+    virtual ~nsObserverList(void);
 
     // This is ObserverList monitor object.
     PRLock* mLock;

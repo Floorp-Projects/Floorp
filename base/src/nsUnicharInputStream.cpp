@@ -37,7 +37,7 @@ static NS_DEFINE_IID(kIUnicharInputStreamIID, NS_IUNICHAR_INPUT_STREAM_IID);
 class StringUnicharInputStream : public nsIUnicharInputStream {
 public:
   StringUnicharInputStream(nsString* aString);
-  ~StringUnicharInputStream();
+  virtual ~StringUnicharInputStream();
 
   NS_DECL_ISUPPORTS
 
@@ -159,7 +159,7 @@ public:
   ConverterInputStream(nsIInputStream* aStream,
                        nsIUnicodeDecoder* aConverter,
                        PRUint32 aBufSize);
-  ~ConverterInputStream();
+  virtual ~ConverterInputStream();
 
   NS_DECL_ISUPPORTS
   NS_IMETHOD Read(PRUnichar* aBuf,

@@ -24,7 +24,7 @@
 class ByteBufferImpl : public nsIByteBuffer {
 public:
   ByteBufferImpl(PRUint32 aBufferSize);
-  ~ByteBufferImpl();
+  virtual ~ByteBufferImpl();
 
   NS_DECL_ISUPPORTS
   NS_IMETHOD_(PRUint32) GetLength(void) const;

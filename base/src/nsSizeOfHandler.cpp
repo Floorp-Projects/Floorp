@@ -23,7 +23,7 @@ static NS_DEFINE_IID(kISizeOfHandlerIID, NS_ISIZEOF_HANDLER_IID);
 class nsSizeOfHandler : public nsISizeOfHandler {
 public:
   nsSizeOfHandler();
-  ~nsSizeOfHandler();
+  virtual ~nsSizeOfHandler();
 
   // nsISupports
   NS_DECL_ISUPPORTS
