@@ -15,6 +15,10 @@ try {
 }
 catch(e) {}
 
+const kPrefSvcContractID = "@mozilla.org/preferences;1";
+const kPrefSvcIID = Components.interfaces.nsIPref;
+const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
+
 function Startup()
 {
   gPrefutilitiesBundle = document.getElementById("bundle_prefutilities");
@@ -28,41 +32,42 @@ function Startup()
 
 function applySkin()
 {
-  var tree = document.getElementById( "skinsTree" );
+  var tree = document.getElementById("skinsTree");
   var selectedSkinItem = tree.selectedItems[0];
-  var skinName = selectedSkinItem.getAttribute( "name" );
-  if (!chromeRegistry.isSkinSelected(skinName, DEBUG_USE_PROFILE)) {
-    chromeRegistry.selectSkin( skinName, DEBUG_USE_PROFILE );
-    chromeRegistry.refreshSkins();
-  }
-}
+  var skinName = selectedSkinItem.getAttribute("name");
+  // XXX - this sucks and should only be temporary.
+  kPrefSvc.SetUnicharPref("general.skins.selectedSkin", skinName);
+  tree.selectItem(selectedSkinItem);
 
-function deselectSkin()
-{
-  var tree = document.getElementById( "skinsTree" );
-  var selectedSkinItem = tree.selectedItems[0];
-  var skinName = selectedSkinItem.getAttribute( "name" );
-  chromeRegistry.deselectSkin( skinName, DEBUG_USE_PROFILE );
-  chromeRegistry.refreshSkins();
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+  try {
+    var strbundle = srGetStrBundle("chrome://navigator/locale/navigator.properties");
+    var brandbundle = srGetStrBundle("chrome://global/locale/brand.properties");
+  }
+  catch(e) {
+    return;
+  }
+  
+  if (promptService) {
+    var dialogTitle = strbundle.GetStringFromName("switchskinstitle");
+    var brandName = brandbundle.GetStringFromName("brandShortName");
+    var msg = strbundle.formatStringFromName("switchskins",
+                                             [brandName],
+                                             1);
+    promptService.alert(window, dialogTitle, msg);
+  }
 }
 
 function uninstallSkin()
 {
-  var tree = document.getElementById( "skinsTree" );
+  var tree = document.getElementById("skinsTree");
   var selectedSkinItem = tree.selectedItems[0];
-  var skinName = selectedSkinItem.getAttribute( "name" );
+  var skinName = selectedSkinItem.getAttribute("name");
   var inUse = chromeRegistry.isSkinSelected(skinName, DEBUG_USE_PROFILE);
-  chromeRegistry.uninstallSkin( skinName, DEBUG_USE_PROFILE );
+  chromeRegistry.uninstallSkin(skinName, DEBUG_USE_PROFILE);
   if (inUse)
     chromeRegistry.refreshSkins();
   tree.selectedIndex = 0;
-}
-
-// XXX DEBUG ONLY. DO NOT LOCALIZE
-function installSkin()
-{
-  var themeURL = prompt( "Enter URL for a skin to install:","");
-  chromeRegistry.installSkin( themeURL, DEBUG_USE_PROFILE, false );
 }
 
 function themeSelect()
@@ -103,29 +108,36 @@ function themeSelect()
     author.setAttribute("value", selectedItem.getAttribute("author"));
     image.setAttribute("src", selectedItem.getAttribute("image"));
 
-
+    // XXX - this sucks and should only be temporary.
+    var selectedSkin = "";
+    try {
+      selectedSkin = kPrefSvc.CopyCharPref("general.skins.selectedSkin");
+    }
+    catch (e) {
+    }
     if (!oldTheme) {    
       description.appendChild(descText);
 
-      applyButton.removeAttribute("disabled");
+      var locType = selectedItem.getAttribute("loctype");
+      uninstallButton.disabled = (selectedSkin == skinName) || (locType == "install");
+      applyButton.disabled = (selectedSkin == skinName);
+      
       applyLabel = applyLabel.replace(/%theme_name%/, themeName);
       uninstallLabel = uninstallLabel.replace(/%theme_name%/, themeName);
       applyButton.label = applyLabel;
       uninstallButton.label = uninstallLabel;
-
-      var locType = selectedItem.getAttribute("loctype");
-      uninstallButton.disabled = (locType == "install");
     }
-    else{
+    else {
       applyLabel = gPrefutilitiesBundle.getString("applyThemePrefix");
       applyLabel = applyLabel.replace(/%theme_name%/, themeName);
       applyButton.label = applyLabel;
+      applyButton.disabled = selectedSkin == skinName;
 
       uninstallLabel = uninstallLabel.replace(/%theme_name%/, themeName);
       uninstallButton.label = uninstallLabel;
 
       applyButton.setAttribute("disabled", true);
-      uninstallButton.disabled = false;
+      uninstallButton.disabled = selectedSkin == skinName;
 
       var newText = gPrefutilitiesBundle.getString("oldTheme");
       newText = newText.replace(/%theme_name%/, themeName);
@@ -135,7 +147,6 @@ function themeSelect()
       descText = document.createTextNode(newText);
       description.appendChild(descText);
     }
-
   }
   else {
     applyButton.setAttribute("disabled", true);
