@@ -43,6 +43,8 @@ nsTextFragment::ReleaseText()
 }
 
 nsTextFragment::nsTextFragment(const nsTextFragment& aOther)
+  : m1b(nsnull),
+    mAllBits(0)
 {
   if (aOther.Is2b()) {
     SetTo(aOther.Get2b(), aOther.GetLength());
@@ -53,16 +55,22 @@ nsTextFragment::nsTextFragment(const nsTextFragment& aOther)
 }
 
 nsTextFragment::nsTextFragment(const char* aString)
+  : m1b(nsnull),
+    mAllBits(0)
 {
   SetTo(aString, strlen(aString));
 }
 
 nsTextFragment::nsTextFragment(const PRUnichar* aString)
+  : m1b(nsnull),
+    mAllBits(0)
 {
   SetTo(aString, nsCRT::strlen(aString));
 }
 
 nsTextFragment::nsTextFragment(const nsString& aString)
+  : m1b(nsnull),
+    mAllBits(0)
 {
   SetTo(aString.GetUnicode(), aString.Length());
 }
