@@ -1267,7 +1267,7 @@ function my_notice (e)
 CIRCChannel.prototype.onCTCPAction =
 function my_caction (e)
 {
-    this.display (toUnicode(e.CTCPData), "ACTION", e.user, this);
+    this.display (toUnicode(e.CTCPData, this), "ACTION", e.user, this);
 }
 
 CIRCChannel.prototype.onUnknownCTCP =
@@ -1501,7 +1501,7 @@ function my_notice (e)
 CIRCUser.prototype.onCTCPAction =
 function my_uaction (e)
 {
-    e.user.display(toUnicode(e.CTCPData), "ACTION", this, e.server.me);
+    e.user.display(toUnicode(e.CTCPData, this), "ACTION", this, e.server.me);
 }
 
 CIRCUser.prototype.onUnknownCTCP =
