@@ -163,6 +163,33 @@ MsgAppCoreGetNewMail(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   return JS_TRUE;
 }
 
+//
+// Native method Open3PaneWindow
+//
+PR_STATIC_CALLBACK(JSBool)
+MsgAppCoreOpen3PaneWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMMailCore *nativeThis = (nsIDOMMailCore*)JS_GetPrivate(cx, obj);
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc ==0 ) {
+
+    if (NS_OK != nativeThis->Open3PaneWindow()) {
+      return JS_FALSE;
+    }
+  }
+  else {
+    JS_ReportError(cx, "Open3PaneWindow don't have argument");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 // this was in the old MailCore
 #if 0
 //
@@ -319,6 +346,7 @@ static JSFunctionSpec MsgAppCoreMethods[] =
 {
   // don't have old MailCore methods
   {"GetNewMail",					MsgAppCoreGetNewMail,        0},
+  {"Open3PaneWindow",				MsgAppCoreOpen3PaneWindow,     0},
 #if 0
   {"SendMail",          MsgAppCoreSendMail,     3},
   {"MailCompleteCallback",          MsgAppCoreMailCompleteCallback,     1},
@@ -476,3 +504,4 @@ extern "C" NS_DOM nsresult NS_NewScriptMsgAppCore(nsIScriptContext *aContext, ns
 
   return NS_OK;
 }
+

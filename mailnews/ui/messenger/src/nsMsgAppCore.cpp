@@ -50,9 +50,9 @@ public:
   NS_IMETHOD SetScriptObject(void* aScriptObject);
 
   // nsIMsgAppCore
+  NS_IMETHOD Open3PaneWindow();
   NS_IMETHOD GetNewMail();
   NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
-
 
 private:
   
@@ -167,6 +167,39 @@ nsMsgAppCore::GetId(nsString& aId)
 //
 // nsIMsgAppCore
 //
+NS_IMETHODIMP    
+nsMsgAppCore::Open3PaneWindow()
+{
+	static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+	static NS_DEFINE_IID(kIAppShellServiceIID, NS_IAPPSHELL_SERVICE_IID);
+
+	nsIAppShellService* appShell;
+	char *  urlstr=nsnull;
+	nsresult rv;
+	nsString controllerCID;
+
+	urlstr = "resource:/res/samples/messenger.html";
+	rv = nsServiceManager::GetService(kAppShellServiceCID,
+									  kIAppShellServiceIID,
+									  (nsISupports**)&appShell);
+	nsIURL* url;
+	nsIWidget* newWindow;
+  
+	rv = NS_NewURL(&url, urlstr);
+	if (NS_FAILED(rv)) {
+	  goto done;
+	}
+
+	controllerCID = "6B75BB61-BD41-11d2-9D31-00805F8ADDDE";
+	appShell->CreateTopLevelWindow(url, controllerCID, newWindow, nsnull);
+	done:
+	NS_RELEASE(url);
+	if (nsnull != appShell) {
+		nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+	}
+	return NS_OK;
+}
+
 nsresult
 nsMsgAppCore::GetNewMail()
 {

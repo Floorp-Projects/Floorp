@@ -43,6 +43,7 @@
 interface nsIDOMMsgAppCore : nsIDOMBaseAppCore {
 
     void GetNewMail();
+	void Open3PaneWindow();
 
 };
 
