@@ -1001,11 +1001,11 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
                                  const PRUnichar* aTargetSpec,
                                  nsIInputStream* aPostDataStream)
 {
-  nsAutoString target(aTargetSpec);
+  nsCAutoString target; target.AssignWithConversion(aTargetSpec);
 
   switch(aVerb) {
     case eLinkVerb_New:
-      target.AssignWithConversion("_blank");
+      target = "_blank";
       // Fall into replace case
     case eLinkVerb_Undefined:
       // Fall through, this seems like the most reasonable action
@@ -1017,9 +1017,7 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
         nsCOMPtr<nsIURI> uri;
         NS_NewURI(getter_AddRefs(uri), aURLSpec, nsnull);
 
-        nsCAutoString tempTargetSpecCString;
-        tempTargetSpecCString.AssignWithConversion(aTargetSpec);
-        InternalLoad(uri, mCurrentURI, tempTargetSpecCString, aPostDataStream, loadLink); 
+        InternalLoad(uri, mCurrentURI, target, aPostDataStream, loadLink); 
       }
       break;
     case eLinkVerb_Embed:
