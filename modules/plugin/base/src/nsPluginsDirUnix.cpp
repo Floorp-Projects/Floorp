@@ -304,7 +304,12 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 
     libSpec.value.pathname = path.get();
  
+#ifdef SOLARIS
+    // Acrobat plugin might need this for libXm (bug 211587)
+    pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW);
+#else
     pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
+#endif
 
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
 
@@ -321,7 +326,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
     // work fine.
     if (!pLibrary) {
         LoadExtraSharedLibs();
-        // try reload plugin ones more
+        // try reload plugin once more
         pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
         if (!pLibrary)
             DisplayPR_LoadLibraryErrorMessage(libSpec.value.pathname);
