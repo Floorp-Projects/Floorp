@@ -804,7 +804,8 @@
               <menuitem id="javascriptConsole" label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
               <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>          
               <menuseparator id="prefSep"/>
-              <menuitem label="&preferencesCmd.label;"
+              <menuitem id="menu_preferences"
+                        label="&preferencesCmd.label;"
                         accesskey="&preferencesCmd.accesskey;"
                         oncommand="openPreferences();"/>
             </menupopup>
@@ -817,7 +818,8 @@
                         label="&releaseCmd.label;"
                         oncommand="openTopWin('&releaseURL;');"/>
               <menuseparator/>
-              <menuitem accesskey="&aboutCmd.accesskey;"
+              <menuitem id="aboutName"
+                        accesskey="&aboutCmd.accesskey;"
                         label="&aboutCmd.label;"
                         oncommand="openAboutDialog();"/>
             </menupopup>
