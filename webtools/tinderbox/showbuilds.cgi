@@ -226,7 +226,8 @@ sub print_page_head {
                         Successful Build, optional bloaty stats:<br>
                         <tt>Lk:XXX</tt> (bytes leaked)<br>
                         <tt>Bl:YYYY</tt> (bytes allocated, bloat)<br>
-                        <tt>Tpl:TTTT</tt> (page-loader time, ms)<br>
+                        <tt>Tp:TT.T</tt> (page-loader time, sec)<br>
+                        <tt>Ts:TT.T</tt> (startup time, sec)<br>
                       </td>
                 <tr bgcolor="$colormap{building}">
                   <td>Build in progress</td>
