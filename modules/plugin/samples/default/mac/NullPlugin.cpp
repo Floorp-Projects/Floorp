@@ -25,6 +25,11 @@
 #include "npapi.h"
 #endif
 
+#include <Icons.h>
+#include <Resources.h>
+#include <Processes.h>
+#include <Script.h>
+#include <TextUtils.h>
 
 #include <string.h>
 #include <ctype.h>
