@@ -144,9 +144,6 @@ Signaller::~Signaller()
 extern "C" {
     // from nsprpub/pr/src/io/priometh.c (libnspr4.so)
     extern void* _pr_faulty_methods;
-
-    // from nsprpub/pr/src/io/prlayer.c (libnspr4.so)
-    extern void* pl_methods;
 };
 
 static int
@@ -154,7 +151,6 @@ is_bamboozler(void* vt)
 {
     static void* bamboolzers[] = {
         _pr_faulty_methods,
-        pl_methods,
         0
     };
 
