@@ -28,7 +28,6 @@ class GraphicState
 {
 public:
   GraphicState();
-  GraphicState(GraphicState* aGS);
   ~GraphicState();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
@@ -50,7 +49,6 @@ public:
 
   RgnHandle							mMainRegion;
   RgnHandle			    		mClipRegion;
-  RgnHandle			    		mOriginalClipRegion;
 
   nscolor               mColor;
   PRInt32               mFont;
