@@ -28,22 +28,16 @@
 [%# Note: use Template comments and not JS ones here, to avoid bloating
     what we actually send to the browser %]
 
-[% IF Param('usetargetmilestone') %]
-[%   tms = 1 %]
-[% ELSE %]
-[%   tms = 0 %]
-[% END %]
-    
 <script language="JavaScript" type="text/javascript"> <!--
 
 var first_load = true;         [%# is this the first time we load the page? %]
 var last_sel = new Array();    [%# caches last selection %]
-var usetms = [% IF tms %]true[% ELSE %]false[% END %];
-                               [%# do we have target milestone? %]
 
 var cpts = new Array();
 var vers = new Array();
+[% IF Param('usetargetmilestone') %]
 var tms = new Array();
+[% END %]
 
 [%# Create three arrays of components, versions and target milestones, indexed 
   # numerically according to the product they refer to. #%]
@@ -54,7 +48,7 @@ var tms = new Array();
     [%- FOREACH item = componentsbyproduct.$p %]'[% item FILTER js %]', [%- END -%]];
   vers[[% n %]] = [ 
     [%- FOREACH item = versionsbyproduct.$p -%]'[%  item FILTER js %]', [%- END -%]];
-  [% IF tms %]
+  [% IF Param('usetargetmilestone') %]
   tms[[% n %]]  = [ 
      [%- FOREACH item = milestonesbyproduct.$p %]'[% item FILTER js %]', [%- END -%]];
   [% END %]
@@ -248,8 +242,6 @@ function restoreSelection(control, sel) {
   #       subarrays contain a list of names to be fed to the respective
   #       selectboxes. For bugzilla, these are generated with perl code
   #       at page start.
-  #     - usetms: this is a global boolean that is defined if the
-  #       bugzilla installation has it turned on. generated in perl too.
   #     - first_load: boolean, specifying if it is the first time we load
   #       the query page.
   #     - last_sel: saves our last selection list so we know what has
@@ -262,7 +254,7 @@ function selectProduct(f) {
     }
 
     [%# if this is the first load and nothing is selected, no need to
-       merge and sort all components; perl gives it to us sorted. %]
+        merge and sort all components; perl gives it to us sorted. %]
     if ((first_load) && (f.product.selectedIndex == -1)) {
         first_load = false;
         return;
@@ -307,9 +299,9 @@ function selectProduct(f) {
     [%# do the actual fill/update %]
     updateSelect(cpts, sel, f.component, merging);
     updateSelect(vers, sel, f.version, merging);
-    if (usetms) {
+    [% IF Param('usetargetmilestone') %]
         updateSelect(tms, sel, f.target_milestone, merging);
-    }
+    [% END %]
 }
 
 // -->
