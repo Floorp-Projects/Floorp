@@ -111,6 +111,7 @@ BOOL APIENTRY DllMain(  HINSTANCE hModule,
                 nsToolkit::gAIMMApp->Release();
 
             nsToolkit::gAIMMApp = NULL;
+            ::CoUninitialize();
 #endif
             //VERIFY(::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance));
             ::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance);
