@@ -375,7 +375,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
       {
         if (maxColWidth < cellDesiredWidth)
           maxColWidth = cellDesiredWidth;
-        if ((1==colSpan) && (effectiveMaxColumnWidth < maxColWidth))
+        if ((1==colSpan) && (effectiveMaxColumnWidth < cellDesiredWidth))
           effectiveMaxColumnWidth = cellDesiredWidth;
         if (minColWidth < cellMinWidth)
           minColWidth = cellMinWidth;
