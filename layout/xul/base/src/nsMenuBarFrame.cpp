@@ -53,6 +53,7 @@ NS_NewMenuBarFrame(nsIFrame** aNewFrame)
 // nsMenuBarFrame cntr
 //
 nsMenuBarFrame::nsMenuBarFrame()
+:mIsActive(PR_FALSE)
 {
 
 } // cntr
@@ -71,7 +72,6 @@ nsMenuBarFrame::Init(nsIPresContext&  aPresContext,
 
   // Hook up the menu bar as a key listener (capturer) on the whole document.  It will see every
   // key press that occurs before anyone else does and will know when to take control.
-  // Retrieve the root node.
   nsCOMPtr<nsIDocument> doc;
   aContent->GetDocument(*getter_AddRefs(doc));
   nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(doc);
