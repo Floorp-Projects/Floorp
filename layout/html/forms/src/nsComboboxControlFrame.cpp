@@ -974,10 +974,10 @@ nsComboboxControlFrame::ListWasSelected(nsIPresContext* aPresContext)
   ShowList(aPresContext, PR_FALSE);
   mListControlFrame->CaptureMouseEvents(PR_FALSE);
 
-  PRInt32 index;
-  mListControlFrame->GetSelectedIndex(&index);
+  PRInt32 indx;
+  mListControlFrame->GetSelectedIndex(&indx);
 
-  UpdateSelection(PR_TRUE, PR_FALSE, index);
+  UpdateSelection(PR_TRUE, PR_FALSE, indx);
 
   return NS_OK;
 }
@@ -1066,32 +1066,44 @@ nsComboboxControlFrame::SelectionChanged(PRBool aDoDispatchEvent)
 //----------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsComboboxControlFrame::AddOption(PRInt32 index)
+nsComboboxControlFrame::AddOption(PRInt32 aIndex)
 {
   nsISelectControlFrame* listFrame = nsnull;
   nsIFrame* dropdownFrame = GetDropdownFrame();
   nsresult rv = dropdownFrame->QueryInterface(nsCOMTypeInfo<nsISelectControlFrame>::GetIID(), 
                                               (void**)&listFrame);
   if (NS_SUCCEEDED(rv) && nsnull != listFrame) {
-    return listFrame->AddOption(index);
+    return listFrame->AddOption(aIndex);
   }
   return rv;
 }
   
 
 NS_IMETHODIMP
-nsComboboxControlFrame::RemoveOption(PRInt32 index)
+nsComboboxControlFrame::RemoveOption(PRInt32 aIndex)
 {
   nsISelectControlFrame* listFrame = nsnull;
   nsIFrame* dropdownFrame = GetDropdownFrame();
   nsresult rv = dropdownFrame->QueryInterface(nsCOMTypeInfo<nsISelectControlFrame>::GetIID(), 
                                               (void**)&listFrame);
   if (NS_SUCCEEDED(rv) && nsnull != listFrame) {
-    return listFrame->RemoveOption(index);
+    return listFrame->RemoveOption(aIndex);
   }
   return rv;
 }
-  
+
+NS_IMETHODIMP
+nsComboboxControlFrame::SetOptionSelected(PRInt32 aIndex, PRBool aValue)
+{
+  nsISelectControlFrame* listFrame = nsnull;
+  nsIFrame* dropdownFrame = GetDropdownFrame();
+  nsresult rv = dropdownFrame->QueryInterface(nsCOMTypeInfo<nsISelectControlFrame>::GetIID(), 
+                                              (void**)&listFrame);
+  if (NS_SUCCEEDED(rv) && nsnull != listFrame) {
+    return listFrame->SetOptionSelected(aIndex, aValue);
+  }
+  return rv;
+}
 
 NS_IMETHODIMP 
 nsComboboxControlFrame::HandleEvent(nsIPresContext& aPresContext, 

@@ -142,7 +142,8 @@ public:
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(PRInt32 index);
-  NS_IMETHOD RemoveOption(PRInt32 index); 
+  NS_IMETHOD RemoveOption(PRInt32 index);
+  NS_IMETHOD SetOptionSelected(PRInt32 aIndex, PRBool aValue);
 
   //nsIDOMEventListener
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);

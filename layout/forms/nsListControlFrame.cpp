@@ -557,16 +557,16 @@ nsListControlFrame::GetSelectedIndexFromContent(nsIContent *aContent)
 PRInt32 
 nsListControlFrame::GetSelectedIndexFromFrame(nsIFrame *aHitFrame) 
 {
-  PRInt32 index = kNothingSelected;
+  PRInt32 indx = kNothingSelected;
   // Get the content of the frame that was selected
   nsIContent* selectedContent = nsnull;
   NS_ASSERTION(aHitFrame, "No frame for html <select> element\n");  
   if (aHitFrame) {
     aHitFrame->GetContent(&selectedContent);
-    index = GetSelectedIndexFromContent(selectedContent);
+    indx = GetSelectedIndexFromContent(selectedContent);
     NS_RELEASE(selectedContent);
   }
-  return index;
+  return indx;
 }
 
 
@@ -1121,7 +1121,7 @@ nsListControlFrame::IsContentSelectedByIndex(PRUint32 aIndex)
 // being selected or not selected
 //---------------------------------------------------------
 void 
-nsListControlFrame::SetContentSelected(PRUint32 aIndex, PRBool aSelected)
+nsListControlFrame::SetContentSelected(PRInt32 aIndex, PRBool aSelected)
 {
   if (aIndex == kNothingSelected) {
     return;
@@ -1535,6 +1535,34 @@ nsListControlFrame::RemoveOption(PRInt32 aIndex)
 
   return NS_OK;
 }
+
+//---------------------------------------------------------
+// Select the specified item in the listbox using control logic.
+// If it a single selection listbox the previous selection will be
+// de-selected. 
+NS_IMETHODIMP
+nsListControlFrame::SetOptionSelected(PRInt32 aIndex, PRBool aValue)
+{
+  PRBool multiple;
+  GetMultiple(&multiple);
+
+  if (PR_TRUE == multiple) {
+    SetContentSelected(aIndex, aValue);
+  } else {
+    if (aValue) {
+      SetContentSelected(mSelectedIndex, PR_FALSE);
+      SetContentSelected(aIndex, PR_TRUE);
+      mSelectedIndex = aIndex;
+    } else {
+      SetContentSelected(aIndex, PR_FALSE);
+      if (mSelectedIndex == aIndex) {
+        mSelectedIndex = -1;
+      }
+    }
+  }
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 // End nsISelectControlFrame
 //----------------------------------------------------------------------
@@ -1572,9 +1600,9 @@ nsListControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
   if (nsHTMLAtoms::selected == aName) {
     PRInt32 error = 0;
     PRBool selected = PR_FALSE;
-    PRInt32 index = aValue.ToInteger(&error, 10); // Get index from aValue
+    PRInt32 indx = aValue.ToInteger(&error, 10); // Get index from aValue
     if (error == 0)
-       selected = IsContentSelectedByIndex(index); 
+       selected = IsContentSelectedByIndex(indx); 
   
     nsFormControlHelper::GetBoolString(selected, aValue);
     

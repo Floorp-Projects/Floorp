@@ -113,7 +113,8 @@ public:
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(PRInt32 index);
-  NS_IMETHOD RemoveOption(PRInt32 index); 
+  NS_IMETHOD RemoveOption(PRInt32 index);
+  NS_IMETHOD SetOptionSelected(PRInt32 aIndex, PRBool aValue);
 
   //nsIDOMEventListener
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);//{ printf("-MouseDown\n"); return NS_OK; };
@@ -158,7 +159,7 @@ protected:
   nsIContent* GetOptionContent(PRUint32 aIndex);
   PRBool   IsContentSelected(nsIContent* aContent);
   PRBool   IsContentSelectedByIndex(PRUint32 aIndex);
-  void     SetContentSelected(PRUint32 aIndex, PRBool aSelected);
+  void     SetContentSelected(PRInt32 aIndex, PRBool aSelected);
   void     GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
   nsresult Deselect();
   nsIFrame *GetOptionFromChild(nsIFrame* aParentFrame);
