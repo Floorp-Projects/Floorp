@@ -67,6 +67,8 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
     static PRBool firstTime = PR_TRUE;
 #endif
 
+nsPrefWindow* nsPrefWindow::sPrefWindow = nsnull;
+
 static void DOMWindowToWebShellWindow(nsIDOMWindow *DOMWindow, nsCOMPtr<nsIWebShellWindow> *webWindow);
 
 //----------------------------------------------------------------------------------------
@@ -81,8 +83,7 @@ nsPrefWindow::nsPrefWindow()
     
     printf("Created nsPrefWindow\n");
 #ifdef NS_DEBUG
-    NS_ASSERTION(firstTime, "There can be only one");
-    firstTime = PR_FALSE;
+    NS_ASSERTION(!sPrefWindow, "There can be only one");
 #endif
 
     // initialize substrings to null
@@ -106,88 +107,61 @@ nsPrefWindow::~nsPrefWindow()
                 delete[] mSubStrings[i];
         delete[] mSubStrings;
     }
-#ifdef NS_DEBUG
-    firstTime = PR_TRUE;
-#endif
+    sPrefWindow = 0;
 }
 
-
-NS_IMPL_ISUPPORTS(nsPrefWindow, nsPrefWindow::GetIID())
+NS_IMPL_ISUPPORTS( nsPrefWindow, nsIPrefWindow::GetIID())
 
 //----------------------------------------------------------------------------------------
+/* static */ nsPrefWindow* nsPrefWindow::Get()
+//----------------------------------------------------------------------------------------
+{
+	if (!sPrefWindow)
+	{
+		nsPrefWindow* prefWindow = new nsPrefWindow();
+		nsresult rv;
+		if (prefWindow)
+			rv = prefWindow->QueryInterface(GetIID(), &sPrefWindow);
+		else
+			rv = NS_ERROR_OUT_OF_MEMORY;			
+		if (NS_FAILED(rv) && prefWindow)
+			delete prefWindow;
+		else
+		    sPrefWindow = prefWindow;
+		// Note: QueryInterface AddRefs if it succeeds.
+	}
+	return sPrefWindow;
+}
+
+//----------------------------------------------------------------------------------------
+/* static */ PRBool nsPrefWindow::InstanceExists()
+//----------------------------------------------------------------------------------------
+{
+	return (sPrefWindow != nsnull);
+}
+//----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPrefWindow::Init(const PRUnichar* aID)
+// The ID is currently only used to display debugging text on the console.
 //----------------------------------------------------------------------------------------
 { 
 #ifdef NS_DEBUG
     nsOutputConsoleStream stream;
     char buf[512];
-    stream << nsString(aID).ToCString(buf, sizeof(buf)) << " initialized";
+    stream << "Pref object initialized by "
+    	<< nsString(aID).ToCString(buf, sizeof(buf))
+    	<< nsEndl;
 #endif
-
-    nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-    if (!prefs)
-        return NS_ERROR_FAILURE;
-    
-#if 0
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-    if (!locator)
-        return NS_ERROR_FAILURE;
-        
-    nsFileSpec newPrefs;
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_PreferencesFile50, &newPrefs);
-#if 0
-    // Migration?
-    if (NS_FAILED(rv) || !newPrefs.Exists())
+    if (!mPrefs)
     {
-        nsFileSpec oldPrefs;
-        rv = locator->GetFileLocation(App_PreferencesFile40, &oldPrefs);
-        if (NS_FAILED(rv) || !oldPrefs.Exists())
-        {
-            rv = locator->GetFileLocation(App_PreferencesFile30, &oldPrefs);
-        }
-        if (NS_SUCCEEDED(rv) && oldPrefs.Exists())
-        {
-            nsFileSpec newParent;
-            rv = locator->GetFileLocation(App_PrefsDirectory50, &newParent);
-            if (NS_SUCCEEDED(rv))
-            {
-                oldPrefs.Copy(newParent);
-                const char* oldName = oldPrefs.GetLeafName();
-                newPrefs = newParent + oldName;
-                PL_strfree(oldName);
-                newPrefs.Rename("prefs.js");
-            }
-        }
+	    nsIPref* prefs = nsnull;
+	    nsresult rv = nsServiceManager::GetService(
+	    	kPrefCID, nsIPref::GetIID(), (nsISupports**)&prefs);
+	    if (NS_FAILED(rv))
+	        return rv;
+	    mPrefs = prefs;
     }
-#endif
-    if (NS_SUCCEEDED(rv))
-    {
-	    if (!newPrefs.Exists())
-	    {
-	        nsOutputFileStream stream(newPrefs);
-	        if (stream.is_open())
-	        {
-	            stream << "// This is an empty prefs file" << nsEndl;
-	        }
-	    }
-	    if (newPrefs.Exists())
-	        rv = prefs->Startup(newPrefs.GetCString());
-	    else
-	        rv = NS_ERROR_FAILURE;
-    }
-
-    if (prefs && NS_FAILED(rv))
-        nsServiceManager::ReleaseService(kPrefCID, prefs);
-    
-    if (NS_FAILED(rv))
-        return rv;
-#endif // 0
-    mPrefs = prefs;
+    if (!mPrefs)
+        return NS_ERROR_FAILURE;
     return NS_OK;
 } // nsPrefWindow::Init()
 
@@ -592,13 +566,9 @@ NS_IMETHODIMP nsPrefWindow::ShowWindow(nsIDOMWindow* aCurrentFrontWin)
 //----------------------------------------------------------------------------------------
 {
     // (code adapted from nsToolkitCore::ShowModal. yeesh.)
-    nsresult           rv;
-    nsIWebShellWindow  *window;
-
-    window = nsnull;
-
+    nsIWebShellWindow* window = nsnull;
     nsCOMPtr<nsIURL> urlObj;
-    rv = NS_NewURL(getter_AddRefs(urlObj), "resource://res/samples/PrefsWindow.html");
+    nsresult rv = NS_NewURL(getter_AddRefs(urlObj), "chrome://pref/content/");
     if (NS_FAILED(rv))
         return rv;
 
@@ -606,19 +576,16 @@ NS_IMETHODIMP nsPrefWindow::ShowWindow(nsIDOMWindow* aCurrentFrontWin)
     if (NS_FAILED(rv))
         return rv;
 
-    // Create "save to disk" nsIXULCallbacks...
-    //nsIXULWindowCallbacks *cb = new nsFindDialogCallbacks( aURL, aContentType );
     nsIXULWindowCallbacks *cb = nsnull;
-
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(aCurrentFrontWin, &parent);
     appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, window,
                                  nsnull, cb, 504, 436);
-
-    if (window != nsnull) {
+    if (window)
+    {
         nsCOMPtr<nsIWidget> parentWindowWidgetThing;
-        nsresult gotParent;
-        gotParent = parent ? parent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
+        nsresult gotParent
+        	= parent ? parent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
                              NS_ERROR_FAILURE;
         // Windows OS is the only one that needs the parent disabled, or cares
         // arguably this should be done by the new window, within ShowModal...
@@ -628,7 +595,6 @@ NS_IMETHODIMP nsPrefWindow::ShowWindow(nsIDOMWindow* aCurrentFrontWin)
         if (NS_SUCCEEDED(gotParent))
             parentWindowWidgetThing->Enable(PR_TRUE);
     }
-
     return rv;
 } // nsPrefWindow::ShowWindow
 
@@ -696,7 +662,8 @@ static void DOMWindowToWebShellWindow(
     globalScript->GetWebShell(getter_AddRefs(webshell));
   if (webshell)
     webshell->GetRootWebShellEvenIfChrome(*getter_AddRefs(rootWebshell));
-  if (rootWebshell) {
+  if (rootWebshell)
+  {
     nsCOMPtr<nsIWebShellContainer> webshellContainer;
     rootWebshell->GetContainer(*getter_AddRefs(webshellContainer));
     *webWindow = do_QueryInterface(webshellContainer);
