@@ -195,7 +195,7 @@ class CharImpl
                                         {
                                             if (!mString)
                                             {
-                                                mAllocLength += kAllocQuantum;
+                                                mAllocLength = kAllocQuantum;
                                                 mString = new char[mAllocLength];
 	                                            if (!mString)
 	                                            {
@@ -210,6 +210,8 @@ class CharImpl
 
         virtual PRInt32                 write(const char* buf, PRUint32 aCount)
                                         {
+                                            if (!buf)
+                                            	return 0;
                                             PRInt32 maxCount = mAllocLength - 1 - mOffset;
                                             if ((PRInt32)aCount > maxCount)
                                             {
@@ -224,7 +226,7 @@ class CharImpl
 	                                                mLastResult = NS_ERROR_OUT_OF_MEMORY;
 	                                                return 0;
 	                                            }
-                                                strcpy(newString, mString);
+                                                memcpy(newString, mString, mLength);
                                                 delete [] mString;
                                                 mString = newString;
                                                 mConstString = newString;
@@ -269,6 +271,7 @@ class ConstStringImpl
 //========================================================================================
 class StringImpl
     : public ConstStringImpl
+// This is wrong, since it really converts to 1-char strings.
 //========================================================================================
 {
     public:
@@ -282,6 +285,8 @@ class StringImpl
     
         virtual PRInt32                 write(const char* buf, PRUint32 count)
                                         {
+                                            if (!buf)
+                                                return 0;
                                             // Clone our string as chars
                                             char* cstring = mString.ToNewCString();
                                             // Make a CharImpl and do the write
