@@ -32,7 +32,7 @@
 /*******************************************************/
 
 math, math[mode="inline"] {
-  display: inline;
+  display: inline-block;
   font-style: normal;
   font-family: CMSY10, CMEX10, Symbol, Times, Lucida Sans Unicode, MT Extra, Math1, Math2, Math3, Math4, Math5;
 }
@@ -143,7 +143,7 @@ mtable {
 mtr {
   display: table-row;
   text-align: center;
-  vertical-align: middle; /* baseline; */
+  vertical-align: baseline;
 }
 
 /* must never set padding in td, th */
@@ -184,11 +184,11 @@ mtd[rowalign="center"] {
   vertical-align: middle;
 }
 
-/* -- not yet supported --
 mtd[rowalign="baseline"] {
   vertical-align: baseline;
 }
 
+/* -- not yet supported --
 mtd[rowalign="axis"] {
   vertical-align: mathline;
 }
