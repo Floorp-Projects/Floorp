@@ -160,31 +160,16 @@ protected:
 
 
   void CreateGC();
-  void CreateWindow(nsNativeWidget aNativeParent, nsIWidget *aWidgetParent,
+
+  nsresult StandardWindowCreate(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
                       nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData);
-
-  void CreateMainWindow(nsNativeWidget aNativeParent, nsIWidget *aWidgetParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData);
-
-  void CreateChildWindow(nsNativeWidget aNativeParent, nsIWidget *aWidgetParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData);
-
-
+                      nsWidgetInitData *aInitData,
+                      nsNativeWidget aNativeParent = nsnull);
+  
   void InitToolkit(nsIToolkit *aToolkit, nsIWidget * aWidgetParent);
   void InitDeviceContext(nsIDeviceContext *aContext, GtkWidget *aWidgetParent);
 
@@ -221,12 +206,11 @@ protected:
   int mResized;
   PRBool mLowerLeft;
 
-private:
-
-protected:
   GtkWidget *mWidget;
   GtkWidget *mVBox;
   GdkGC *mGC;
+
+private:
 };
 
 //
