@@ -181,6 +181,7 @@ PRInt32 SpaceManager::GetBandData(nscoord       aYOffset,
     // Find the first band that contains the y-offset or is below the y-offset
     nsBandRect* band = mRectArray.mRects;
 
+    aBandData.count = 0;
     for (PRInt32 i = 0; i < mRectArray.mCount; ) {
       if (band->y > y) {
         // The band is below the y-offset. The area between the y-offset and
