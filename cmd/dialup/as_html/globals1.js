@@ -20,13 +20,13 @@
 
 
 compromisePrincipals();
-netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 enableExternalCapture(); 												// This requires UniversalBrowserWrite access
 parent.captureEvents( Event.MOUSEDOWN | Event.MOUSEUP | Event.DRAGDROP | Event.DBLCLICK );
 parent.onmousedown = cancelEvent;
 parent.onmouseup = cancelEvent;
 parent.ondragdrop = cancelEvent;
 parent.ondblclick = cancelEvent;
+var oneStepSemaphore = false;
 
 function cancelEvent( e )
 {
@@ -67,62 +67,47 @@ function SetNameValuePair( file, section, variable, data )
 }
 
 
-// ナreturns a string representing the path to the folder named "Config" inside the folder "Data" that
+// * returns a string representing the path to the folder named "Config" inside the folder "Data" that
 //	is installed in the Communicator's home directory
-function getConfigFolder( theObject )
+function getConfigFolder( object )
 {
-//	var thePlatform = new String( navigator.userAgent );
-//	var x = thePlatform.indexOf( "(" ) + 1;
-//	var y = thePlatform.indexOf( ";", x + 1 );
-//	thePlatform = thePlatform.substring( x, y );
-
 	var	pathName;
-	pathName = getFolder( theObject ) + "Config/";
-	
-//	if ( thePlatform == "Macintosh" )						// Macintosh support
-//		pathName = getFolder( theObject ) + "Config/";
-//	else													// Windows support
-//		pathName = getFolder( theObject ) + "Config/";
+	pathName = getFolder( object ) + "Config/";
 
 	debug( "getConfigFolder: " + pathName );
 
 	return pathName;
 }
 
-// ナreturns a string representing the path to the file "ACCTSET.INI" inside the folder
+// * returns a string representing the path to the file "ACCTSET.INI" inside the folder
 //	returned from getConfigFolder
-function getAcctSetupFilename( theObject )
+function getAcctSetupFilename( object )
 {
-//	var thePlatform = new String( navigator.userAgent );
-//	var x = thePlatform.indexOf( "(" ) + 1;
-//	var y = thePlatform.indexOf( ";", x + 1 );
-//	thePlatform = thePlatform.substring( x, y );
+	var file;
+	file = getConfigFolder( object ) + "ACCTSET.INI";
 
-	var theFile;
-	theFile = getConfigFolder( theObject ) + "ACCTSET.INI";
-
-//	if ( thePlatform == "Macintosh" )
-					// Macintosh support
-//		theFile = getConfigFolder( theObject ) + "ACCTSET.INI";
-//	else
-//		theFile = getConfigFolder( theObject ) + "ACCTSET.INI";
-
-	debug( "getAcctSetupFilename: " + theFile );
-	return theFile;
+	debug( "getAcctSetupFilename: " + file );
+	return file;
 }
 
-// ナreturns a canoncial path to the folder containing the document representing the current contents of "theWindow"
-function getFolder( theWindow )
+function getPlatform()
 {
-	var thePlatform = new String( navigator.userAgent );
-	var x = thePlatform.indexOf( "(" ) + 1;
-	var y = thePlatform.indexOf( ";", x + 1 );
-	thePlatform = thePlatform.substring( x, y );
-
-	if ( thePlatform == "Macintosh" )
+	var platform = new String( navigator.userAgent );
+	var x = platform.indexOf( "(" ) + 1;
+	var y = platform.indexOf( ";", x + 1 );
+	platform = platform.substring( x, y );
+	return platform;
+}
+	
+// * returns a canoncial path to the folder containing the document representing the current contents of "window"
+function getFolder( window )
+{
+	platform = getPlatform();
+	
+	if ( platform == "Macintosh" )
 	{				// Macintosh support
 
-		var path = unescape( theWindow.location.pathname );
+		var path = unescape( window.location.pathname );
 		if ( ( x = path.lastIndexOf( "/" ) ) > 0 )
 			path = path.substring( 0, x + 1 );
 
@@ -132,24 +117,24 @@ function getFolder( theWindow )
 		//if ( newpath.charAt( 0 ) == ':' )
 		//	newpath = newpath.substring( 1, newpath.length );
 
-		newpath = unescape( path );
+		newpath = path;
 	}
 	else	
 	{										// Windows support
 
 		// note: JavaScript returns path with '/' instead of '\'
-		var path = unescape( theWindow.location.pathname );
+		var path = unescape( window.location.pathname );
 
 		// gets the drive letter and directory path
 		if ( ( x = path.lastIndexOf( "|" ) ) > 0 )
 		{
-			var Drive = path.substring( path.indexOf( '/' ) + 1, path.indexOf( '|' ) );
+			var drive = path.substring( path.indexOf( '/' ) + 1, path.indexOf( '|' ) );
 			var dirPath = path.substring( path.indexOf( '|' ) + 1, path.lastIndexOf( '/' ) + 1 );
 		}
 
 		// construct newpath		
 
-		newpath = Drive + ":" + dirPath;
+		newpath = drive + ":" + dirPath;
 	}
 	return newpath;
 }
@@ -687,6 +672,61 @@ function saveGlobalData()
 		}
 }
 
+/*
+function monitorDialupConnection( numSecondsElapsed, monitorFunction,
+	monitorEndpointSuccessFunction, monitorEndpointFailureFunction )
+{
+	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
+
+	var		connectStatusFlag = document.setupPlugin.IsDialerConnected();
+	
+	// * give us 10 seconds to before we start to check the connection status
+	if ( ( numSecondsElapsed < 10 ) || ( connectStatusFlag == true ) )
+	{
+		numSecondsElapsed = numSecondsElapsed + 1;
+		
+		if ( eval ( monitorFunction ) == null )
+			setTimeout( "setRegisterMode(" + numSecondsElapsed + ")", 1000 );
+		else
+			eval( monitorEndpointSuccessFunction );
+	}
+	else
+	{
+		// hang up (even if already disconnected, this will delete
+		// the dialer's reference to the Registration Server)
+		document.setupPlugin.DialerHangup();
+		eval( monitorEndpointFailureFunction );
+	}
+}
+*/
+
+function set1StepMode( numSecondsElapsed )
+{
+	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
+
+	var			connectStatusFlag = document.setupPlugin.IsDialerConnected();
+
+	if ( ( numSecondsElapsed < 10 ) || ( connectStatusFlag == true ) )
+	{
+		numSecondsElapsed = numSecondsElapsed + 1;
+
+		if ( oneStepSemaphone == false )
+			setTimeout( "set1StepMode(" + numSecondsElapsed + ")", 1000 );
+		else
+			oneStepSemphore = false;
+	}
+	else
+	{
+		document.setupPlugin.DialerHangup();
+
+		// go to error screen
+		setContentPage( "error.htm" );
+		parent.screen.location.replace( "screen.htm" );
+	}
+}
+			
+		
+		
 function setRegisterMode( numSecondsElapsed )
 {
 	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
@@ -764,7 +804,7 @@ function setRegisterMode( numSecondsElapsed )
 		}
 	}
 
-	// ナwe've lost the connection
+	// * we've lost the connection
 	else
 	{
 		document.vars.regMode.value = "no";
