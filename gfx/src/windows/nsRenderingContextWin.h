@@ -192,7 +192,7 @@ protected:
   HRGN              mClipRegion;
   //default objects
   HBRUSH            mOrigSolidBrush;
-  HBRUSH            mBlackBrush;
+  HBRUSH            mWhiteBrush;
   HFONT             mOrigFont;
   HFONT             mDefFont;
   HPEN              mOrigSolidPen;
