@@ -43,6 +43,7 @@
 #include "nsIDOMAttr.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMDocumentFragment.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMLinkStyle.h"
 #include "nsIDOMEventReceiver.h"
@@ -98,6 +99,7 @@ public:
   PRBool RemoveElement(void* aElement);
   PRBool RemoveElementAt(PRInt32 aIndex);
   void Compact();
+  void Clear();
 
   void* operator[](PRInt32 aIndex) const { return ElementAt(aIndex); }
 
@@ -517,6 +519,36 @@ protected:
 
   nsVoidArray* mAttributes;
   nsCheapVoidArray mChildren;
+};
+
+
+// Internal non-public interface
+
+// IID for the nsIDocumentFragment interface
+#define NS_IDOCUMENTFRAGMENT_IID      \
+{ 0xd8fb2853, 0xf6d6, 0x4499, \
+  {0x9c, 0x60, 0x6c, 0xa2, 0x75, 0x35, 0x09, 0xeb} }
+
+// nsIDocumentFragment interface
+class nsIDocumentFragment : public nsIDOMDocumentFragment
+{
+public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENTFRAGMENT_IID)
+
+  // These methods are supposed to be used when *all* children of a
+  // document fragment are moved at once into a new parent w/o
+  // changing the relationship between the children. If the moving
+  // operation fails and some children were moved to a new parent and
+  // some weren't, ReconnectChildren() should be called to remove the
+  // children from their possible new parent and re-insert the
+  // children into the document fragment. Once the operation is
+  // complete and all children are successfully moved into their new
+  // parent DropChildReferences() should be called so that the
+  // document fragment will loose its references to the children.
+
+  NS_IMETHOD DisconnectChildren() = 0;
+  NS_IMETHOD ReconnectChildren() = 0;
+  NS_IMETHOD DropChildReferences() = 0;
 };
 
 

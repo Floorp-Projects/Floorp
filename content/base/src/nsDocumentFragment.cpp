@@ -49,7 +49,7 @@
 
 
 class nsDocumentFragment : public nsGenericContainerElement,
-                           public nsIDOMDocumentFragment,
+                           public nsIDocumentFragment,
                            public nsIDOM3Node
 {
 public:
@@ -58,6 +58,11 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
+
+  // interface nsIDocumentFragment
+  NS_IMETHOD DisconnectChildren();
+  NS_IMETHOD ReconnectChildren();
+  NS_IMETHOD DropChildReferences();
 
   // interface nsIDOMDocumentFragment
   NS_IMETHOD    GetNodeName(nsAWritableString& aNodeName)
@@ -238,6 +243,7 @@ nsDocumentFragment::~nsDocumentFragment()
 
 // QueryInterface implementation for nsDocumentFragment
 NS_INTERFACE_MAP_BEGIN(nsDocumentFragment)
+  NS_INTERFACE_MAP_ENTRY(nsIDocumentFragment)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentFragment)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
@@ -250,6 +256,65 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsDocumentFragment)
 NS_IMPL_RELEASE(nsDocumentFragment)
 
+NS_IMETHODIMP
+nsDocumentFragment::DisconnectChildren()
+{
+  nsCOMPtr<nsIContent> child;
+  PRInt32 i, count;
+
+  ChildCount(count);
+
+  for (i = 0; i < count; i++) {
+    ChildAt(i, *getter_AddRefs(child));
+    NS_ASSERTION(child, "Bad content container");
+
+    child->SetParent(nsnull);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::ReconnectChildren()
+{
+  nsCOMPtr<nsIContent> child, parent;
+  PRInt32 i, count = 0;
+
+  ChildCount(count);
+
+  for (i = 0; i < count; i++) {
+    ChildAt(i, *getter_AddRefs(child));
+    NS_ASSERTION(child, "Bad content container");
+
+    child->GetParent(*getter_AddRefs(parent));
+
+    if (parent) {
+      PRInt32 indx = -1;
+
+      // This is potentially a O(n**2) operation, but it should only
+      // happen in error cases (such as out of memory or something
+      // similar) so we don't care for now.
+
+      parent->IndexOf(child, indx);
+
+      if (indx >= 0) {
+        parent->RemoveChildAt(indx, PR_TRUE);
+      }
+    }
+
+    child->SetParent(this);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::DropChildReferences()
+{
+  mChildren.Clear();
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP    
 nsDocumentFragment::GetNodeType(PRUint16* aNodeType)

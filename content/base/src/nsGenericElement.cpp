@@ -353,6 +353,21 @@ nsCheapVoidArray::Compact()
 }
 
 void
+nsCheapVoidArray::Clear()
+{
+  if (HasSingleChild()) {
+    SetSingleChild(nsnull);
+
+    return;
+  }
+
+  nsVoidArray* vector = GetChildVector();
+  if (vector) {
+    vector->Clear();
+  }
+}
+
+void
 nsCheapVoidArray::SetSingleChild(void* aChild)
 {
   if (aChild)
@@ -2383,9 +2398,18 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
    */
   if (nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
     nsCOMPtr<nsIContent> childContent;
-    PRInt32 count, i;
+    PRInt32 count, old_count, i;
+
+    nsCOMPtr<nsIDocumentFragment> doc_fragment(do_QueryInterface(newContent));
+    NS_ENSURE_TRUE(doc_fragment, NS_ERROR_UNEXPECTED);
+
+    doc_fragment->DisconnectChildren();
 
     newContent->ChildCount(count);
+
+    ChildCount(old_count);
+
+    PRBool do_notify = !!aRefChild;
 
     /*
      * Iterate through the fragments children, removing each from
@@ -2393,26 +2417,39 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
      * new parent.
      */
     for (i = 0; i < count; i++) {
-      // Always get and remove the first child, since the child indexes
-      // change as we go along.
-      res = newContent->ChildAt(0, *getter_AddRefs(childContent));
+      // Get the n:th child from the document fragment. Since we
+      // disconnected the children from the document fragment they
+      // won't be removed from the document fragment when inserted
+      // into the new parent. This lets us do this operation *much*
+      // faster.
+      res = newContent->ChildAt(i, *getter_AddRefs(childContent));
       if (NS_FAILED(res)) {
-        return res;
-      }
-
-      res = newContent->RemoveChildAt(0, PR_FALSE);
-
-      if (NS_FAILED(res)) {
-        return res;
+        break;
       }
 
       // Insert the child and increment the insertion position
-      res = InsertChildAt(childContent, refPos++, PR_TRUE, PR_TRUE);
+      res = InsertChildAt(childContent, refPos++, do_notify, PR_TRUE);
 
       if (NS_FAILED(res)) {
-        return res;
+        break;
       }
     }
+
+    if (NS_FAILED(res)) {
+      // This should put the children that were moved out of the
+      // document fragment back into the document fragment and remove
+      // them from the element they were intserted into.
+
+      doc_fragment->ReconnectChildren();
+
+      return res;
+    }
+
+    if (!do_notify && mDocument) {
+      mDocument->ContentAppended(this, old_count);
+    }
+
+    doc_fragment->DropChildReferences();
   } else {
     nsCOMPtr<nsIDOMNode> oldParent;
     res = aNewChild->GetParentNode(getter_AddRefs(oldParent));
