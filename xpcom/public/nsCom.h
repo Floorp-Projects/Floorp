@@ -54,6 +54,9 @@
 #define NS_METHOD_(type) type __stdcall
 #define NS_METHOD nsresult __stdcall
 
+#define NS_CALLBACK_(_type, _name) _type (__stdcall * _name)
+#define NS_CALLBACK(_name) nsresult (__stdcall * _name)
+
 #elif defined(XP_MAC)
 
 #define NS_EXPORT __declspec(export)
@@ -67,6 +70,9 @@
 #define NS_METHOD_(type) type
 #define NS_METHOD nsresult
 
+#define NS_CALLBACK_(_type, _name) _type (* _name)
+#define NS_CALLBACK(_name) nsresult (* _name)
+
 #else  /* !XP_PC && !XP_MAC */
 
 #define NS_EXPORT
@@ -79,6 +85,9 @@
 
 #define NS_METHOD_(type) type
 #define NS_METHOD nsresult
+
+#define NS_CALLBACK_(_type, _name) _type (* _name)
+#define NS_CALLBACK(_name) nsresult (* _name)
 
 #endif /* !XP_PC */
 
