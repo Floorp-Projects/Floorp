@@ -792,6 +792,7 @@ function SendMailToNode(emailAddressNode)
     fields.to = emailAddressNode.getAttribute("fullAddress");
     params.type = Components.interfaces.nsIMsgCompType.New;
     params.format = Components.interfaces.nsIMsgCompFormat.Default;
+    params.identity = accountManager.getFirstIdentityForServer(GetLoadedMsgFolder().server);
     params.composeFields = fields;
     msgComposeService.OpenComposeWindowWithParams(null, params);
   }
