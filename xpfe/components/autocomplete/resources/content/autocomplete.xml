@@ -1257,11 +1257,6 @@
   </binding> 
 
   <binding id="autocomplete-result-popup" extends="chrome://global/content/bindings/popup.xml#popup">
-    <resources>
-      <stylesheet src="chrome://global/content/autocomplete.css"/>
-      <stylesheet src="chrome://global/skin/autocomplete.css"/>
-    </resources>
-
     <content>
       <xul:hbox class="autocomplete-result-box" flex="1">
         <xul:outliner anonid="outliner" class="autocomplete-outliner" flex="1">
@@ -1438,11 +1433,6 @@
   </binding>
 
   <binding id="autocomplete-outliner" extends="chrome://global/content/bindings/outliner.xml#outliner">
-    <resources>
-      <stylesheet src="chrome://global/content/autocomplete.css"/>
-      <stylesheet src="chrome://global/skin/autocomplete.css"/>
-    </resources>
-
     <content>
       <xul:vbox flex="1">
         <xul:hbox class="autocomplete-outliner-cols">
@@ -1461,11 +1451,6 @@
   </binding>
 
   <binding id="autocomplete-outlinerbody">
-    <resources>
-      <stylesheet src="chrome://global/content/autocomplete.css"/>
-      <stylesheet src="chrome://global/skin/autocomplete.css"/>
-    </resources>
-
     <implementation>
       <property name="textbox"
                 onget="return this.__AUTOCOMPLETE_BOX__;"/>
@@ -1503,11 +1488,6 @@
   </binding>
 
   <binding id="autocomplete-outlinerrows">
-    <resources>
-      <stylesheet src="chrome://global/content/autocomplete.css"/>
-      <stylesheet src="chrome://global/skin/autocomplete.css"/>
-    </resources>
-
     <content onmousedown="event.preventDefault()">
       <xul:hbox flex="1" class="outliner-bodybox">
         <children/>
@@ -1517,18 +1497,9 @@
   </binding>
 
   <binding id="autocomplete-outlinercol">
-    <resources>
-      <stylesheet src="chrome://global/content/autocomplete.css"/>
-      <stylesheet src="chrome://global/skin/autocomplete.css"/>
-    </resources>
   </binding>
 
   <binding id="autocomplete-history-popup" extends="chrome://global/content/bindings/popup.xml#popup">
-    <resources>
-      <stylesheet src="chrome://global/content/autocomplete.css"/>
-      <stylesheet src="chrome://global/skin/autocomplete.css"/>
-    </resources>
-
     <content>
       <xul:vbox class="autocomplete-result-box autocomplete-history-box" flex="1">
         <children/>
