@@ -380,8 +380,8 @@ protected:
 
 nsJSChannel::nsJSChannel() :
     mLoadFlags(LOAD_NORMAL),
-    mIsActive(PR_FALSE),
-    mIOThunk(nsnull)
+    mIOThunk(nsnull),
+    mIsActive(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
 }
