@@ -105,7 +105,9 @@ nsTextEditorKeyListener::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-#if 1
+// individual key handlers return NS_OK to indicate NOT consumed
+// by default, an error is returned indicating event is consumed
+// joki is fixing this interface.
 nsresult
 nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
@@ -160,6 +162,7 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 #if DEBUG
 		printf("Key not handled\n");
 #endif
+        return NS_OK;
         break;
 
       case nsIDOMUIEvent::VK_PAGE_UP:
@@ -175,89 +178,6 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
   
   return NS_ERROR_BASE;
 }
-#else
-nsresult
-nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
-{
-  PRUint32 keyCode;
-  PRBool   isShift;
-  PRBool   ctrlKey;
-
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aKeyEvent);
-  if (!uiEvent) {
-    //non-key event passed to keydown.  bad things.
-    return NS_OK;
-  }
-
-  if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)) && 
-      NS_SUCCEEDED(uiEvent->GetShiftKey(&isShift)) &&
-      NS_SUCCEEDED(uiEvent->GetCtrlKey(&ctrlKey))
-      ) {
-    PRBool keyProcessed;
-    ProcessShortCutKeys(aKeyEvent, keyProcessed);
-    if (PR_FALSE==keyProcessed)
-    {
-      switch(keyCode) {
-      case nsIDOMUIEvent::VK_BACK:
-        mEditor->DeleteSelection(nsIEditor::eDeleteLeft);
-        break;
-
-      case nsIDOMUIEvent::VK_DELETE:
-        mEditor->DeleteSelection(nsIEditor::eDeleteRight);
-        break;
-
-      case nsIDOMUIEvent::VK_RETURN:
-      //case nsIDOMUIEvent::VK_ENTER:			// why does this not exist?
-        // Need to implement creation of either <P> or <BR> nodes.
-        mEditor->InsertBreak();
-        break;
-      
-      case nsIDOMUIEvent::VK_LEFT:
-      case nsIDOMUIEvent::VK_RIGHT:
-      case nsIDOMUIEvent::VK_UP:
-      case nsIDOMUIEvent::VK_DOWN:
-      	// these have already been handled in nsRangeList. Why are we getting them
-      	// again here (Mac)? In switch to avoid putting in bogus chars.
-
-        //return NS_OK to allow page scrolling.
-        return NS_OK;
-      	break;
-      
-      case nsIDOMUIEvent::VK_HOME:
-      case nsIDOMUIEvent::VK_END:
-      	// who handles these?
-#if DEBUG
-		printf("Key not handled\n");
-#endif
-        break;
-
-      case nsIDOMUIEvent::VK_PAGE_UP:
-      case nsIDOMUIEvent::VK_PAGE_DOWN:
-        //return NS_OK to allow page scrolling.
-        return NS_OK;
-      	break;
-      	
-      default:
-        {
-          nsAutoString  key;
-          PRUint32     character;
-          // the charcode should be in Unicode already
-          if (NS_SUCCEEDED(uiEvent->GetCharCode(&character)))
-          {
-            key += character;
-            if (0!=character)
-              mEditor->InsertText(key);
-          }
-        }
-        break;
-      }
-    }
-  }
-  
-  return NS_ERROR_BASE;
-}
-#endif
 
 
 nsresult
@@ -267,7 +187,6 @@ nsTextEditorKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
 }
 
 
-#if 1
 nsresult
 nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
@@ -290,30 +209,23 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 	{
 		if (nsIDOMUIEvent::VK_BACK==keyCode) {
 			mEditor->DeleteSelection(nsIEditor::eDeleteLeft);
-			return NS_OK;
+			return NS_ERROR_BASE; // consumed
 		}	
 		if (nsIDOMUIEvent::VK_RETURN==keyCode) {
 			mEditor->InsertBreak();
-			return NS_OK;
+			return NS_ERROR_BASE; // consumed
 		}
 	}
 	
  	if (NS_SUCCEEDED(uiEvent->GetCharCode(&character)))
  	{
  		key += character;
- 		return mEditor->InsertText(key);
+ 		mEditor->InsertText(key);
  	}
 
-	return NS_ERROR_BASE;
+	return NS_ERROR_BASE; // consumed
   
 }
-#else
-nsresult
-nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
-{
-  return NS_OK;
-}
-#endif
 
 
 /* these includes are for debug only.  this module should never instantiate it's own transactions */
@@ -342,6 +254,10 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       NS_SUCCEEDED(uiEvent->GetAltKey(&altKey))
       ) 
   {
+    if (PR_TRUE==ctrlKey) {
+      aProcessed = PR_TRUE;
+    } 
+    // swallow all control keys
     // XXX: please please please get these mappings from an external source!
     switch (keyCode)
     {
@@ -349,7 +265,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_A:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
             mEditor->SelectAll();
         }
@@ -359,7 +274,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_X:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
             mEditor->Cut();
         }
@@ -405,7 +319,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_C:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
             mEditor->Copy();
         }
@@ -468,7 +381,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         if (PR_TRUE==ctrlKey)
         {
           printf("control-v\n");
-          aProcessed=PR_TRUE;
           if (mEditor)
           {
             if (altKey)
@@ -483,7 +395,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_Z:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
             mEditor->Undo(1);
         }
@@ -493,7 +404,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_Y:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
             mEditor->Redo(1);
         }
@@ -503,7 +413,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_I:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
           {
             // XXX: move this logic down into texteditor rules delegate
@@ -538,7 +447,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_B:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
           {
             // XXX: move this logic down into texteditor rules delegate
@@ -561,7 +469,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_U:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
           {
             // XXX: move this logic down into texteditor rules delegate
@@ -585,7 +492,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_1:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
           {
             // XXX: move this logic down into texteditor rules delegate
@@ -610,7 +516,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_2:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
           {
             // XXX: move this logic down into texteditor rules delegate
@@ -634,7 +539,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_3:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
           {
             // XXX: move this logic down into texteditor rules delegate
@@ -653,7 +557,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_4:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
           {
             // XXX: move this logic down into texteditor rules delegate
@@ -672,7 +575,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_5:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
           {
             // XXX: move this logic down into texteditor rules delegate
@@ -691,7 +593,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_6:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
           {
             // XXX: move this logic down into texteditor rules delegate
@@ -710,7 +611,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_7:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
           {
             nsCOMPtr<nsIHTMLEditor>htmlEditor;
@@ -729,7 +629,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_8:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
           {
             nsCOMPtr<nsIHTMLEditor>htmlEditor;
@@ -748,7 +647,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_9:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
           {
             nsCOMPtr<nsIHTMLEditor>htmlEditor;
@@ -764,7 +662,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_0:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
           {
             nsCOMPtr<nsIHTMLEditor>htmlEditor;
@@ -796,7 +693,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_COMMA:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
           {
             nsCOMPtr<nsIHTMLEditor>htmlEditor;
@@ -815,7 +711,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_PERIOD:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
           {
             nsCOMPtr<nsIHTMLEditor>htmlEditor;
@@ -836,7 +731,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       case nsIDOMUIEvent::VK_T:
         if (PR_TRUE==ctrlKey)
         {
-          aProcessed=PR_TRUE;
           if (mEditor)
           {
             PRInt32  numTests, numFailed;
