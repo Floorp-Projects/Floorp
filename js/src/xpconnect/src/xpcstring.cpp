@@ -158,7 +158,7 @@ static JSDHashTable DOMStringTable;
 static intN DOMStringFinalizerIndex = -1;
 
 // unref the appropriate handle when the matching string is finalized
-static void
+JS_STATIC_DLL_CALLBACK(void)
 FinalizeDOMString(JSContext *cx, JSString *str)
 {
     NS_ASSERTION(DOMStringFinalizerIndex != -1,
@@ -200,7 +200,7 @@ InitializeDOMStringFinalizer()
 }
 
 // cleanup enumerator for the DOMStringTable
-static JSDHashOperator
+JS_STATIC_DLL_CALLBACK(JSDHashOperator)
 ReleaseHandleAndRemove(JSDHashTable *table, JSDHashEntryHdr *hdr,
                        uint32 number, void *arg)
 {
