@@ -246,6 +246,7 @@ sub UpdateParams {
         ($param{'enablequips'} eq 'on')       && do {$new_value = 'open';};
         ($param{'enablequips'} eq 'approved') && do {$new_value = 'moderated';};
         ($param{'enablequips'} eq 'frozen')   && do {$new_value = 'closed';};
+        ($param{'enablequips'} eq 'off')      && do {$new_value = 'closed';};
         $param{'quip_list_entry_control'} = $new_value;
         delete $param{'enablequips'};
     }
