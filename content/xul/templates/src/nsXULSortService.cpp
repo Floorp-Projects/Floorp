@@ -2314,12 +2314,6 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	nsresult	rv;
 	_sortStruct	sortInfo;
 
-#ifdef	DEBUG
-	PRTime		now;
-	Microseconds((UnsignedWide *)&now);
-	printf("DoSort begins\n");
-#endif
-
 	// get tree node
 	nsCOMPtr<nsIContent>	contentNode = do_QueryInterface(node);
 	if (!contentNode)	return(NS_ERROR_FAILURE);
@@ -2353,8 +2347,6 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 			if (NS_SUCCEEDED(rv = treeNode->GetAttribute(kNameSpaceID_None, kSortDirectionAtom,
 				value)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
 			{
-			    PRBool  canOptimize = PR_FALSE;
-
         		if ((value.Equals(descendingStr) && sortDirection.Equals(ascendingStr)) ||
         		    (value.Equals(ascendingStr) && sortDirection.Equals(descendingStr)))
         		{
@@ -2450,16 +2442,6 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	treeBody->SetDocument(doc, PR_TRUE, PR_TRUE);
 
 	if (NS_FAILED(rv = treeParent->AppendChildTo(treeBody, PR_TRUE)))	return(rv);
-
-#ifdef	DEBUG
-	PRTime		now2;
-	Microseconds((UnsignedWide *)&now2);
-	PRUint64	loadTime64;
-	LL_SUB(loadTime64, now2, now);
-	PRUint32	loadTime32;
-	LL_L2UI(loadTime32, loadTime64);
-	printf("DoSort finished.  (%u microseconds)\n", loadTime32);
-#endif
 
 	return(NS_OK);
 }
