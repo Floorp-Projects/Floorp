@@ -157,7 +157,7 @@ static ICodeModule* genCode(Context &cx, StmtNode *p, const String &fileName)
     return icm;
 }
 
-static void readEvalFile(FILE* in, const String& fileName)
+static JSValue readEvalFile(FILE* in, const String& fileName)
 {
     Context cx(world, &global);
 
@@ -165,6 +165,7 @@ static void readEvalFile(FILE* in, const String& fileName)
     string line;
     LineReader inReader(in);
     JSValues emptyArgs;
+    JSValue result;
         
     while (inReader.readLine(line) != 0) {
         appendChars(buffer, line.data(), line.size());
@@ -189,7 +190,7 @@ static void readEvalFile(FILE* in, const String& fileName)
             // list of zero or more statements
             ICodeModule* icm = genCode(cx, parsedStatements, fileName);
             if (icm) {
-                cx.interpret(icm, emptyArgs);
+                result = cx.interpret(icm, emptyArgs);
                 delete icm;
             }
 
@@ -206,12 +207,14 @@ static void readEvalFile(FILE* in, const String& fileName)
             }
         }
     }
+    return result;
 }
 
 inline char narrow(char16 ch) { return char(ch); }
 
 static JSValue load(const JSValues &argv)
 {
+    JSValue result;
     size_t n = argv.size();
     if (n > 1) {                // the 'this' parameter is un-interesting
         for (size_t i = 1; i < n; ++i) {
@@ -222,13 +225,13 @@ static JSValue load(const JSValues &argv)
                 std::transform(fileName.begin(), fileName.end(), str.begin(), narrow);
                 FILE* f = fopen(str.c_str(), "r");
                 if (f) {
-                    readEvalFile(f, fileName);
+                    result = readEvalFile(f, fileName);
                     fclose(f);
                 }
             }
         }
     }
-    return kUndefinedValue;
+    return result;
 }
 
 static void readEvalPrint(FILE *in, World &world)

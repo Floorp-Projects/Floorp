@@ -81,6 +81,15 @@ Formatter& operator<< (Formatter& f, const ArgList& al)
     return f;
 }
 
+Formatter& operator<< (Formatter& f, TypedRegister& r)
+{
+    if (r.first == NotARegister)
+        f << "<NaR>";
+    else
+        f << "R" << r.first;
+    return f;
+}
+
 Formatter& operator<< (Formatter &f, InstructionStream &is)
 {
 
