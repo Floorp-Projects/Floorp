@@ -70,6 +70,8 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/cmd/unixfe/config/unixfe.mk
 #include $(topsrcdir)/cmd/unixfe/config/motif.mk
 
+CFLAGS		+= $(FE_X_CFLAGS)
+
 DIRS		= \
 		  $(XFE2_DIR) \
 		  $(HPUX_XMU_EXTRA_DIRS) \
