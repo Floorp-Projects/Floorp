@@ -40,7 +40,6 @@
 
 #include <mshtml.h>
 #include <hlink.h>
-#include "nsPIDOMWindow.h"
 
 // A barely documented interface called ITargetFrame from IE
 // This is needed for targeted Hlink* calls (e.g. HlinkNavigateString) to
@@ -125,6 +124,7 @@ public:
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsIPrincipal.h"
+#include "nsPIDOMWindow.h"
 
 #include "XPConnect.h"
 #include "XPCBrowser.h"
