@@ -25,7 +25,10 @@ Replaces the AppleScript library I<CodeWarriorLib>.
 =cut
 
 use strict;
+
 use Cwd;
+use File::Basename;
+
 use Mac::Types;
 use Mac::Events;
 use Mac::AppleEvents;
@@ -33,7 +36,7 @@ use Mac::AppleEvents::Simple;
 use Mac::Processes;
 use Mac::MoreFiles;
 use Mac::StandardFile;
-use File::Basename;
+
 
 use vars qw($VERSION);
 $VERSION = '1.02';
@@ -428,7 +431,48 @@ sub import_project ($$) {
 	my($prm) = "kocl:type(PRJD), rtyp:TEXT(@), data:TEXT(@), &subj:'null'()";
 	
 	my($evt) = do_event(qw/core crel/, $app, $prm, $project_path, $xml_file);    
-	return $evt->{ERROR};
+	my($result) = _get_event_result($evt);
+	
+	if ($result eq "") {
+		_close(_get_project($project_path));
+	}
+	return $result;
+}
+
+sub export_project ($$) {
+	my($project_path, $xml_out_path) = @_;
+	my($p, $project_was_closed);
+	
+	$project_was_closed = 0;
+	while (1) {
+		$p = _get_project($project_path);
+		if (!$p) {
+			if ($project_was_closed) {
+				print "### Error - request for project document failed after opening\n";
+				die "### possibly CW bug: be sure to close your Find window\n";
+}
+			$project_was_closed = 1;
+			_open_file($project_path);
+		} else {
+			last;
+		}
+	}
+
+    # avoid problems with the Project Messages window
+    _close_named_window("Project Messages");
+    
+	my($prm) =
+		q"'----':obj {form:indx, want:type(PRJD), " .
+		q"seld:1, from:'null'()}, kfil:TEXT(@)";
+
+	my($evt) = do_event(qw/CWIE EXPT/, $app, $prm, $xml_out_path);    
+	
+	if ($project_was_closed) {
+		$p = _get_project($project_path);
+		_close($p);
+	}
+	
+	return _get_event_result($evt);
 }
 
 sub _doc_named ($) {
@@ -463,11 +507,18 @@ sub _save_errors_window ($) {
 
 
 sub _close_errors_window () {
+    return _close_named_window('Errors & Warnings');
+}
+
+
+sub _close_named_window ($) {
+    my($window_name) = @_;
+    
 	my($prm) =
 		q"'----':obj {form:name, want:type(cwin), " .
 		q"seld:TEXT(@), from:'null'()}";
 
-	my($evt) = do_event(qw/core clos/, $app, $prm, 'Errors & Warnings');
+	my($evt) = do_event(qw/core clos/, $app, $prm, $window_name);
 	return($evt->{REPLY} eq 'aevt\ansr{}' ? 1 : 0);
 }
 
@@ -489,6 +540,21 @@ sub _get_folder ($$) {
         $default
     );
 }
+
+sub _get_event_result ($)
+{
+    my($evt) = @_;
+
+    my($result) = $evt->{ERROR};
+    
+    if ( $result eq "" && $evt->{ERRNO} != 0 )
+    {
+        $result = "unknown error (".$evt->{ERRNO}.")";
+    }
+    
+    return $result;
+}
+
 
 sub _save_appath ($$) {
 
