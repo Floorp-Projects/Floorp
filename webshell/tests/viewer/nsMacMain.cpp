@@ -36,11 +36,35 @@
 #include <Resources.h>
 #include <Dialogs.h>
 
-#include <PP_Messages.h>		// for PP standard menu commands
 #include "nsMacMessagePump.h"	// for the windowless menu event handler
 #include "nsILeakDetector.h"
 
 #include "macstdlibextras.h"
+
+typedef		SInt32			MessageT;
+typedef   PRUint32    Uint32;
+const MessageT	cmd_Undo			= 11;	// nil
+const MessageT	cmd_Cut				= 12;	// nil
+const MessageT	cmd_Copy			= 13;	// nil
+const MessageT	cmd_Paste			= 14;	// nil
+const MessageT	cmd_Clear			= 15;	// nil
+const MessageT	cmd_SelectAll		= 16;	// nil
+
+const MessageT	cmd_About			= 1;	// nil
+
+					// File Menu
+const MessageT	cmd_New				= 2;	// nil
+const MessageT	cmd_Open			= 3;	// nil
+const MessageT	cmd_Close			= 4;	// nil
+const MessageT	cmd_Save			= 5;	// nil
+const MessageT	cmd_SaveAs			= 6;	// nil
+const MessageT	cmd_Revert			= 7;	// nil
+const MessageT	cmd_PageSetup		= 8;	// nil
+const MessageT	cmd_Print			= 9;	// nil
+const MessageT	cmd_PrintOne		= 17;	// nil
+const MessageT	cmd_Quit			= 10;	// nil
+const MessageT	cmd_Preferences		= 27;	// nil
+
 
 enum
 {
