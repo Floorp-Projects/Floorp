@@ -289,11 +289,20 @@ protected:
   void      MapVAlignAttribute(nsIPresContext* aPresContext, nsTableFrame *aTableFrame);
   void      MapHAlignAttribute(nsIPresContext* aPresContext, nsTableFrame *aTableFrame);
 
+  // paint backgrounds and borders (in separate border model) if aVisibleBackground, always set aPaintChildren
+  virtual void PaintUnderlay(nsIPresContext&           aPresContext,
+                             nsIRenderingContext&      aRenderingContext,
+                             const nsRect&             aDirtyRect,
+                             PRUint32&                 aFlags,
+                             const nsStyleTableBorder& aCellTableStyle,
+                             const nsStyleBorder&      aStyleBorder,
+                             PRBool                    aVisibleBackground,
+                             PRBool&                   aPaintChildren);
+
   PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
   nsresult  DecorateForSelection(nsIPresContext* aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  const nsStyleBackground* aStyleColor);
-  const nsStyleColor * GetColorStyleFromSelection(const nsStyleColor *aStyleColor);
 
 protected:
 
@@ -441,6 +450,17 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
+
+protected:
+
+  virtual void PaintUnderlay(nsIPresContext&           aPresContext,
+                             nsIRenderingContext&      aRenderingContext,
+                             const nsRect&             aDirtyRect,
+                             PRUint32&                 aFlags,
+                             const nsStyleTableBorder& aCellTableStyle,
+                             const nsStyleBorder&      aStyleBorder,
+                             PRBool                    aVisibleBackground,
+                             PRBool&                   aPaintChildren);
 
 private:
   
