@@ -444,10 +444,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  PRInt32 nameSpace = kNameSpaceID_Unknown;
-  if (content)
-    content->GetNameSpaceID(&nameSpace);
-  const char *eventName = nsContentUtils::GetEventArgName(nameSpace);
+  const char *eventName = nsContentUtils::GetEventArgName(kNameSpaceID_XBL);
 
   if (isXULKey)
     boundContext->CompileEventHandler(scriptObject, onEventAtom, eventName,
