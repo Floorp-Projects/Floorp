@@ -43,32 +43,49 @@ public:
 
   virtual ~XFE_NavCenterView();
 
-  virtual void notify(HT_Resource n, HT_Event whatHappened);
+  virtual void    notify            (HT_Resource n, HT_Event whatHappened);
 
+  void            selectHTView             (HT_View view);
 #ifdef MOZ_SELECTOR_BAR
-  void setRDFView(HT_View view);
-  void addRDFView(HT_View view);
-  Widget  getSelector(void);
-  static void selector_activate_cb(Widget,XtPointer,XtPointer);
-  static void selector_destroy_cb(Widget,XtPointer,XtPointer);
+  void            addHTView                (HT_View view);
+  Widget          getSelector              () { return m_selector; }
+  static void     selector_activate_cb     (Widget,XtPointer,XtPointer);
 #endif /*MOZ_SELECTORY_BAR*/
 
 
-  virtual void handleDisplayPixmap(Widget, IL_Pixmap *, IL_Pixmap *, PRInt32 width, PRInt32 height);
-  virtual void handleNewPixmap(Widget, IL_Pixmap *, Boolean mask);
-  virtual void handleImageComplete(Widget, IL_Pixmap *);  
+  virtual void    handleDisplayPixmap      (Widget, IL_Pixmap *, IL_Pixmap *,
+                                            PRInt32 width, PRInt32 height);
+  virtual void    handleNewPixmap          (Widget, IL_Pixmap *, Boolean mask);
+  virtual void    handleImageComplete      (Widget, IL_Pixmap *);  
+#ifdef MOZ_SELECTOR_BAR
+  static void     image_complete_cb        (XtPointer);
+#endif
+
+protected:
+
+    // Override RDFBase methods
+    virtual void          finishPaneCreate      ();
+    virtual void          deletePane            ();
 
 private:
-  XFE_HTMLView * m_htmlview;
-  XFE_RDFChromeTreeView  * m_rdfview;
+  XFE_HTMLView *             _htmlview;
+  XFE_RDFChromeTreeView *    _rdftree;
 #ifdef MOZ_SELECTOR_BAR
-  Widget         m_selector;
+  Widget                     _selector;
 #else
-    // hack to pick the first added view (this will go away)
+  // Terrible hack to pick the first added view (this will go away)
   int _firstViewAdded;
 #endif /*!MOZ_SELECTORY_BAR*/
-  Widget         rdf_parent;
-  XP_Bool        m_isStandalone; // as oppposed to embedded in a browser
+
+  // as oppposed to embedded in a browser
+  XP_Bool                    _isStandalone;
+
+#ifdef MOZ_SELECTOR_BAR
+  void            createSelectorBar        ();
+#endif
+  void            createTree               ();
+  void            createHTMLArea           ();
+  void            doAttachments            ();
 };
 
 
