@@ -21,7 +21,10 @@
  */
 
 #include "nsIImageManager.h"
+#include "nsIMemory.h"
+
 #include "libimg.h"
+
 #include "nsCRT.h"
 #include "nsImageNet.h"
 #include "nsCOMPtr.h"
@@ -30,7 +33,8 @@
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kIImageManagerIID, NS_IIMAGEMANAGER_IID);
 
-class ImageManagerImpl : public nsIImageManager {
+class ImageManagerImpl : public nsIImageManager, public nsIMemoryPressureObserver
+{
 public:
   ImageManagerImpl();
   virtual ~ImageManagerImpl();
@@ -41,6 +45,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
+  NS_DECL_NSIMEMORYPRESSUREOBSERVER
+  
   virtual void SetCacheSize(PRInt32 aCacheSize);
   virtual PRInt32 GetCacheSize(void);
   virtual PRInt32 ShrinkCache(void);
@@ -81,15 +87,20 @@ ImageManagerImpl::ImageManagerImpl()
 
 ImageManagerImpl::~ImageManagerImpl()
 {
+  // nsMemory needs to be fixed to not hold refs to observers.
+  // nsMemory::UnregisterObserver(this);
+
   IL_Shutdown();
   gImageManager = nsnull;
 }
 
-NS_IMPL_ISUPPORTS1(ImageManagerImpl, nsIImageManager); 
+NS_IMPL_ISUPPORTS2(ImageManagerImpl, nsIImageManager, nsIMemoryPressureObserver); 
 
 nsresult 
 ImageManagerImpl::Init()
 {
+  // don't register until bug 52393 is fixed.
+  // nsMemory::RegisterObserver(this);
   return NS_OK;
 }
 
@@ -113,6 +124,13 @@ ImageManagerImpl::ShrinkCache(void)
 
 NS_IMETHODIMP
 ImageManagerImpl::FlushCache(void)
+{
+  IL_FlushCache();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ImageManagerImpl::FlushMemory(PRUint32 reason, size_t requestedAmount)
 {
   IL_FlushCache();
   return NS_OK;

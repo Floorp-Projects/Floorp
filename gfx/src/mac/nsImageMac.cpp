@@ -185,6 +185,7 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
 	if (err != noErr)
 	{
 		NS_WARNING("GWorld allocation failed");
+		nsMemory::HeapMinimize();
 		return NS_ERROR_OUT_OF_MEMORY;
 	}
 	
@@ -207,7 +208,10 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
 				mAlphaDepth = 1;
 				err = AllocateGWorld(mAlphaDepth, nsnull, bounds, &mAlphaGWorld);
 				if (err != noErr)
+				{
+      		nsMemory::HeapMinimize();
 					return NS_ERROR_OUT_OF_MEMORY;
+				}
 				break;
 				
 			case nsMaskRequirements_kNeeds8Bit:
@@ -222,7 +226,10 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
 				
 				err = AllocateGWorld(mAlphaDepth, grayRamp, bounds, &mAlphaGWorld);
 				if (err != noErr)
+				{
+      		nsMemory::HeapMinimize();
 					return NS_ERROR_OUT_OF_MEMORY;
+				}
 					
 				::DisposeHandle((Handle)grayRamp);
 				break;
@@ -318,13 +325,17 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
 			// image directly, since the transparent pixels come out black.
 			if (AllocateGWorld((**imagePixMap).packSize, nsnull, srcRect, &tempGWorld) == noErr)
 			{
+			  // erase it to white
+				ClearGWorld(tempGWorld);
+
 				PixMapHandle		tempPixMap = GetGWorldPixMap(tempGWorld);
 				if (tempPixMap)
 				{
 					StPixelLocker		tempPixLocker(tempPixMap);			// locks the pixels
 				
 					// copy from the destination into our temp GWorld, to get the background
-					::CopyBits((BitMap*)*destPixels, (BitMap*)*tempPixMap, &dstRect, &srcRect, srcCopy, nsnull);
+					// for some reason this copies garbage, so we erase to white above instead.
+					// ::CopyBits((BitMap*)*destPixels, (BitMap*)*tempPixMap, &dstRect, &srcRect, srcCopy, nsnull);
 					
 					PixMapHandle		maskPixMap = GetGWorldPixMap(mAlphaGWorld);
 					StPixelLocker		maskLocker(maskPixMap);
@@ -338,7 +349,7 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
 					::CopyBits((BitMap*)*tempPixMap, (BitMap*)*destPixels, &srcRect, &dstRect, srcCopy, nsnull);
 				}
 				
-				DisposeGWorld(tempGWorld);	// do this after dtor of tempPixLocker!
+				::DisposeGWorld(tempGWorld);	// do this after dtor of tempPixLocker!
 			}
 		}
 	}
@@ -488,16 +499,17 @@ OSErr nsImageMac::AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rec
 	long	totalSpace, contiguousSpace;
 	::PurgeSpace(&totalSpace, &contiguousSpace);		// this does not purge memory!
 	
-	QDErr		err = noErr;
-	
 	if (totalSpace > kReserveHeapFreeSpace && contiguousSpace > kReserverHeapContigSpace)
 	{
-		err = ::NewGWorld(outGWorld, depth, &bounds, colorTable, nsnull, 0);
-		if (err == noErr || err != memFullErr) return err;
+		::NewGWorld(outGWorld, depth, &bounds, colorTable, nsnull, 0);
+		if (*outGWorld) return noErr;
 	}
 	
-	err = ::NewGWorld(outGWorld, depth, &bounds, colorTable, nsnull, useTempMem);
-	return err;
+	::NewGWorld(outGWorld, depth, &bounds, colorTable, nsnull, useTempMem);
+	if (!*outGWorld)
+	  return memFullErr;
+
+	return noErr;
 }
 
 
