@@ -62,12 +62,8 @@ inBitmapURI::GetBitmapName(PRUnichar** aBitmapName)
 nsresult
 inBitmapURI::FormatSpec(char* *result)
 {
-  nsCString spec(NS_BITMAP_SCHEME);
-
-  spec += "//";
-  spec += mBitmapName;
-
-  *result = nsCRT::strdup(spec);
+  *result = ToNewCString(NS_LITERAL_CSTRING(NS_BITMAP_SCHEME "//") +
+                         mBitmapName);
   return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

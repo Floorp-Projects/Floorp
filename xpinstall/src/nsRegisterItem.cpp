@@ -308,7 +308,7 @@ PRInt32 nsRegisterItem::Complete()
                 if (mChromeType & CHROME_SKIN)
                 {
                     installStr = PR_smprintf("skin,%s,url,%s\n",
-                                             location, (const char*)mURL);
+                                             location, mURL.get());
                     if (installStr)
                     {
                         actual = strlen(installStr);
@@ -326,7 +326,7 @@ PRInt32 nsRegisterItem::Complete()
                 if (mChromeType & CHROME_LOCALE)
                 {
                     installStr = PR_smprintf("locale,%s,url,%s\n",
-                                             location, (const char*)mURL);
+                                             location, mURL.get());
                     if (installStr)
                     {
                         actual = strlen(installStr);
@@ -344,7 +344,7 @@ PRInt32 nsRegisterItem::Complete()
                 if (mChromeType & CHROME_CONTENT)
                 {
                     installStr = PR_smprintf("content,%s,url,%s\n",
-                                             location, (const char*)mURL);
+                                             location, mURL.get());
                     if (installStr)
                     {
                         actual = strlen(installStr);
