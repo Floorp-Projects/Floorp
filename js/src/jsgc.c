@@ -406,7 +406,7 @@ js_UnlockGCThing(JSContext *cx, void *thing)
 #include "jsprf.h"
 
 JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
-JS_FRIEND_DATA(void *) js_LiveThingToFind;
+JS_EXPORT_DATA(void *) js_LiveThingToFind;
 
 typedef struct GCMarkNode GCMarkNode;
 
@@ -417,40 +417,80 @@ struct GCMarkNode {
     GCMarkNode  *prev;
 };
 
+#ifdef HAVE_XPCONNECT
+#include "dump_xpc.h"
+#endif
+
+static const char*
+gc_object_class_name(JSRuntime* rt, void* thing)
+{
+    uint8 *flagp = gc_find_flags(rt, thing);
+    const char *className = "";
+
+    if (flagp && ((*flagp & GCF_TYPEMASK) == GCX_OBJECT)) {
+        JSObject  *obj = (JSObject *)thing;
+        JSClass   *clasp = JSVAL_TO_PRIVATE(obj->slots[JSSLOT_CLASS]);
+        jsval     privateValue = obj->slots[JSSLOT_PRIVATE];
+        void      *privateThing = JSVAL_IS_VOID(privateValue)
+                                  ? NULL
+                                  : JSVAL_TO_PRIVATE(privateValue);
+
+        className = clasp->name;
+#ifdef HAVE_XPCONNECT
+        if ((clasp->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) &&
+            (clasp->flags & JSCLASS_HAS_PRIVATE)) {
+            const char* xpcClassName = GetXPCObjectClassName(privateThing);
+            if (xpcClassName)
+                className = xpcClassName;
+        }
+#endif
+    }
+
+    return className;
+}
+
 static void
-gc_dump_thing(JSGCThing *thing, uint8 flags, GCMarkNode *prev, FILE *fp)
+gc_dump_thing(JSRuntime* rt, JSGCThing *thing, uint8 flags, GCMarkNode *prev,
+              FILE *fp)
 {
     GCMarkNode *next = NULL;
     char *path = NULL;
-    JSObject *obj;
-    JSClass *clasp;
 
     while (prev) {
-	next = prev;
-	prev = prev->prev;
+        next = prev;
+        prev = prev->prev;
     }
     while (next) {
-	path = JS_sprintf_append(path, "%s.", next->name);
-	next = next->next;
+        path = JS_sprintf_append(path, "%s(%s).",
+                                 next->name,
+                                 gc_object_class_name(rt, next->thing));
+        next = next->next;
     }
     if (!path)
-	return;
+        return;
 
     fprintf(fp, "%08lx ", (long)thing);
     switch (flags & GCF_TYPEMASK) {
       case GCX_OBJECT:
-	obj = (JSObject *)thing;
-	clasp = JSVAL_TO_PRIVATE(obj->slots[JSSLOT_CLASS]);
-	fprintf(fp, "object %s", clasp->name);
-	break;
+      {
+        JSObject  *obj = (JSObject *)thing;
+        JSClass   *clasp = JSVAL_TO_PRIVATE(obj->slots[JSSLOT_CLASS]);
+        jsval     privateValue = obj->slots[JSSLOT_PRIVATE];
+        void      *privateThing = JSVAL_IS_VOID(privateValue)
+                                  ? NULL
+                                  : JSVAL_TO_PRIVATE(privateValue);
+        const char* className = gc_object_class_name(rt, thing);
+        fprintf(fp, "object %08p %s", privateThing, className);
+        break;
+      }
       case GCX_STRING:
-	fprintf(fp, "string %s", JS_GetStringBytes((JSString *)thing));
-	break;
+        fprintf(fp, "string %s", JS_GetStringBytes((JSString *)thing));
+        break;
       case GCX_DOUBLE:
-	fprintf(fp, "double %g", *(jsdouble *)thing);
-	break;
+        fprintf(fp, "double %g", *(jsdouble *)thing);
+        break;
       case GCX_DECIMAL:
-	break;
+        break;
     }
     fprintf(fp, " via %s\n", path);
     free(path);
@@ -566,7 +606,7 @@ gc_mark(JSRuntime *rt, void *thing)
 
 #ifdef GC_MARK_DEBUG
     if (js_LiveThingToFind == thing)
-	gc_dump_thing(thing, flags, prev, stderr);
+        gc_dump_thing(rt, thing, flags, prev, stderr);
 #endif
 
     if (flags & GCF_MARK)
@@ -577,7 +617,7 @@ gc_mark(JSRuntime *rt, void *thing)
 
 #ifdef GC_MARK_DEBUG
     if (js_DumpGCHeap)
-	gc_dump_thing(thing, flags, prev, js_DumpGCHeap);
+        gc_dump_thing(rt, thing, flags, prev, js_DumpGCHeap);
 #endif
 
     if ((flags & GCF_TYPEMASK) == GCX_OBJECT) {
