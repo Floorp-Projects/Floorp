@@ -63,7 +63,7 @@ if ($action eq "show") {
     my $users;
     foreach my $quipid (@quipids) {
         my $userid = $quips->{$quipid}{'userid'};
-        if (not defined $users->{$userid}) {
+        if ($userid && not defined $users->{$userid}) {
             SendSQL("SELECT login_name FROM profiles WHERE userid = $userid");
             $users->{$userid} = FetchOneColumn();
         }
