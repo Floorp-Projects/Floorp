@@ -312,17 +312,17 @@ int initOptions(int aArgCount, char** aArgArray)
     /*
     ** Set the program name.
     */
-    globals.mOptions.mProgramName = aArgArray[0];
+    PR_snprintf(globals.mOptions.mProgramName, sizeof(globals.mOptions.mProgramName), "%s", aArgArray[0]);
 
     /*
     ** As a default, stdin is the input.
     */
-    globals.mOptions.mFileName = stdinDash;
+    PR_snprintf(globals.mOptions.mFileName, sizeof(globals.mOptions.mFileName), "%s", stdinDash);
 
     /*
     ** As a default, this directory is the output.
     */
-    globals.mOptions.mOutputDir = outputDir;
+    PR_snprintf(globals.mOptions.mOutputDir, sizeof(globals.mOptions.mOutputDir), "%s", outputDir);
 
     /*
     ** As a default, this is the port to listen for http requests.
@@ -377,13 +377,13 @@ int initOptions(int aArgCount, char** aArgArray)
 
     /*
     ** category file
-    **/
-    globals.mOptions.mCategoryFile = "rules.txt";
+    */
+    PR_snprintf(globals.mOptions.mCategoryFile, sizeof(globals.mOptions.mCategoryFile), "%s", "rules.txt");
 
     /*
     ** Default category name - name of root category
     */
-    globals.mOptions.mCategoryName = strdup(ST_ROOT_CATEGORY_NAME);
+    PR_snprintf(globals.mOptions.mCategoryName, sizeof(globals.mOptions.mCategoryName), "%s", ST_ROOT_CATEGORY_NAME);
 
     /*
     ** Go through all arguments.
@@ -409,7 +409,7 @@ int initOptions(int aArgCount, char** aArgArray)
                     ** If the entire option is a dash,
                     ** then input is stdin.
                     */
-                    globals.mOptions.mFileName = stdinDash;
+                    PR_snprintf(globals.mOptions.mFileName, sizeof(globals.mOptions.mFileName), "%s", stdinDash);
                 }
                 break;
 
@@ -478,7 +478,7 @@ int initOptions(int aArgCount, char** aArgArray)
                     */
                     if('\0' != aArgArray[traverse][2])
                     {
-                        globals.mOptions.mOutputDir = &aArgArray[traverse][2];
+                        PR_snprintf(globals.mOptions.mOutputDir, sizeof(globals.mOptions.mOutputDir), "%s", &aArgArray[traverse][2]);
                     }
                     else
                     {
@@ -830,16 +830,12 @@ int initOptions(int aArgCount, char** aArgArray)
                         */
                         for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
                         {
-                            if(NULL != globals.mOptions.mRestrictText[looper])
+                            if('\0' != globals.mOptions.mRestrictText[looper][0])
                             {
                                 continue;
                             }
 
-                            globals.mOptions.mRestrictText[looper] = strdup(&aArgArray[traverse][2]);
-                            if(NULL == globals.mOptions.mRestrictText[looper])
-                            {
-                                retval = __LINE__;
-                            }
+                            PR_snprintf(globals.mOptions.mRestrictText[looper], sizeof(globals.mOptions.mRestrictText[looper]), "%s", &aArgArray[traverse][2]);
                             break;
                         }
 
@@ -866,9 +862,7 @@ int initOptions(int aArgCount, char** aArgArray)
                     */
                     if('\0' != aArgArray[traverse][2])
                     {
-                        if (globals.mOptions.mCategoryFile)
-                            free(globals.mOptions.mCategoryFile);
-                        globals.mOptions.mCategoryFile = strdup(&aArgArray[traverse][2]);
+                        PR_snprintf(globals.mOptions.mCategoryFile, sizeof(globals.mOptions.mCategoryFile), "%s", &aArgArray[traverse][2]);
                     }
                     else
                     {
@@ -885,9 +879,7 @@ int initOptions(int aArgCount, char** aArgArray)
                     */
                     if('\0' != aArgArray[traverse][2])
                     {
-                        if (globals.mOptions.mCategoryName)
-                            free(globals.mOptions.mCategoryName);
-                        globals.mOptions.mCategoryName = strdup(&aArgArray[traverse][2]);
+                        PR_snprintf(globals.mOptions.mCategoryName, sizeof(globals.mOptions.mCategoryName), "%s", &aArgArray[traverse][2]);
                     }
                     else
                     {
@@ -923,7 +915,7 @@ int initOptions(int aArgCount, char** aArgArray)
             /*
             ** File to process.
             */
-            globals.mOptions.mFileName = aArgArray[traverse];
+            PR_snprintf(globals.mOptions.mFileName, sizeof(globals.mOptions.mFileName), "%s", aArgArray[traverse]);
         }
     }
 
@@ -1633,7 +1625,7 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions)
                 */
                 for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
                 {
-                    if(NULL != globals.mOptions.mRestrictText[looper] && '\0' != globals.mOptions.mRestrictText[looper][0])
+                    if('\0' != globals.mOptions.mRestrictText[looper][0])
                     {
                         if(0 == hasCallsiteMatch(current->mEvents[0].mCallsite, globals.mOptions.mRestrictText[looper], ST_FOLLOW_PARENTS))
                         {
@@ -1929,6 +1921,7 @@ STRun* createRunFromGlobal(void)
 
     if(NULL != retval)
     {
+        STCategoryNode* node = NULL;
         int failure = 0;
         int harvestRes = harvestRun(&globals.mRun, retval, NULL);
         if(0 == harvestRes)
@@ -1966,18 +1959,14 @@ STRun* createRunFromGlobal(void)
         ** if we are focussing on a category, return that run instead of
         ** the harvested run. Make sure to recalculate cost.
         */
-        if (globals.mOptions.mCategoryName)
+        node = findCategoryNode(globals.mOptions.mCategoryName, &globals);
+        if (node)
         {
-            STCategoryNode* node = findCategoryNode(globals.mOptions.mCategoryName, &globals);
-            if (node)
-            {
-                /* Recalculate cost of run */
-                recalculateRunCost(node->run);
-
-                retval = node->run;
-            }
+            /* Recalculate cost of run */
+            recalculateRunCost(node->run);
+            
+            retval = node->run;
         }
-
     }
 
     return retval;
@@ -2704,9 +2693,9 @@ void htmlAnchor(STRequest* inRequest, const char* aHref, const char* aText, cons
         /*
         ** In any mode, don't make an href to the current page.
         */
-        if(0 != anchorLive && NULL != inRequest->mFileName)
+        if(0 != anchorLive && NULL != inRequest->mGetFileName)
         {
-            if(0 == strcmp(aHref, inRequest->mFileName))
+            if(0 == strcmp(aHref, inRequest->mGetFileName))
             {
                 anchorLive = 0;
             }
@@ -3188,11 +3177,11 @@ int getDataPRUint64(const char* aGetData, const char* aCheckFor, PRUint64* aStor
 ** Pull out the string data, if specified.
 ** Return !0 on failure.
 */
-int getDataString(const char* aGetData, const char* aCheckFor, char** aStoreResult, int* aChanged)
+int getDataString(const char* aGetData, const char* aCheckFor, char* aStoreResult, int inStoreResultLength, int* aChanged)
 {
     int retval = 0;
 
-    if(NULL != aGetData && NULL != aCheckFor && NULL != aStoreResult)
+    if(NULL != aGetData && NULL != aCheckFor && NULL != aStoreResult && 0 != inStoreResultLength)
     {
         const char* found = NULL;
         PRInt32 scanRes = 0;
@@ -3206,7 +3195,7 @@ int getDataString(const char* aGetData, const char* aCheckFor, char** aStoreResu
             int length = 0;
             const char* dataPoint = NULL;
             const char* endPoint = NULL;
-            char* oldResult = NULL;
+            char oldResult[ST_OPTION_STRING_MAX];
             int theLen = 0;
             
             /*
@@ -3228,56 +3217,52 @@ int getDataString(const char* aGetData, const char* aCheckFor, char** aStoreResu
             /*
             ** Store original value if present.
             */
-            if(NULL != *aStoreResult)
-            {
-                oldResult = *aStoreResult;
-            }
+            PR_snprintf(oldResult, sizeof(oldResult), "%s", aStoreResult);
 
             /*
-            ** Allocate space for new string.
+            ** We have enough space for this?
             */
             theLen = (int)(endPoint - dataPoint);
-            *aStoreResult = (char*)malloc((size_t)(theLen + 1));
-            if(NULL != *aStoreResult)
+            if(inStoreResultLength > theLen)
             {
                 int index1 = 0;
                 int index2 = 0;
 
-                strncpy(*aStoreResult, dataPoint, theLen);
-                (*aStoreResult)[theLen] = '\0';
+                strncpy(aStoreResult, dataPoint, theLen);
+                aStoreResult[theLen] = '\0';
 
                 /*
                 ** Here's a totally suboptimal and bug prone unhexcaper.
                 */
                 for(; index1 <= theLen; index1++)
                 {
-                    if('%' == (*aStoreResult)[index1] && '\0' != (*aStoreResult)[index1 + 1] && '\0' != (*aStoreResult)[index1 + 2])
+                    if('%' == aStoreResult[index1] && '\0' != aStoreResult[index1 + 1] && '\0' != aStoreResult[index1 + 2])
                     {
                         int unhex = 0;
 
-                        if('9' >= (*aStoreResult)[index1 + 1])
+                        if('9' >= aStoreResult[index1 + 1])
                         {
-                            unhex |= (((*aStoreResult)[index1 + 1] - '0') << 4);
+                            unhex |= ((aStoreResult[index1 + 1] - '0') << 4);
                         }
                         else
                         {
-                            unhex |= ((toupper((*aStoreResult)[index1 + 1]) - 'A' + 10) << 4);
+                            unhex |= ((toupper(aStoreResult[index1 + 1]) - 'A' + 10) << 4);
                         }
 
-                        if('9' >= (*aStoreResult)[index1 + 2])
+                        if('9' >= aStoreResult[index1 + 2])
                         {
-                            unhex |= ((*aStoreResult)[index1 + 2] - '0');
+                            unhex |= (aStoreResult[index1 + 2] - '0');
                         }
                         else
                         {
-                            unhex |= (toupper((*aStoreResult)[index1 + 2]) - 'A' + 10);
+                            unhex |= (toupper(aStoreResult[index1 + 2]) - 'A' + 10);
                         }
 
                         index1 += 2;
-                        (*aStoreResult)[index1] = unhex;
+                        aStoreResult[index1] = unhex;
                     }
 
-                    (*aStoreResult)[index2++] = (*aStoreResult)[index1];
+                    aStoreResult[index2++] = aStoreResult[index1];
                 }
 
                 /*
@@ -3287,24 +3272,15 @@ int getDataString(const char* aGetData, const char* aCheckFor, char** aStoreResu
                 {
                     if(NULL != oldResult)
                     {
-                        if(0 != strcmp(oldResult, *aStoreResult))
+                        if(0 != strcmp(oldResult, aStoreResult))
                         {
                             (*aChanged) = (*aChanged) + 1;
                         }
                     }
-                    else if('\0' != (*aStoreResult)[0])
+                    else if('\0' != aStoreResult[0])
                     {
                         (*aChanged) = (*aChanged) + 1;
                     }
-                }
-
-                /*
-                ** Free off the prior value if relevant.
-                */
-                if(NULL != oldResult)
-                {
-                    free(oldResult);
-                    oldResult = NULL;
                 }
             }
             else
@@ -5117,19 +5093,17 @@ int applySettings(STRequest* inRequest)
     for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
     {
         PR_snprintf(looper_buf, sizeof(looper_buf), "mRestrictText%d", looper);
-        getRes += getDataString(inRequest->mGetData, looper_buf, &globals.mOptions.mRestrictText[looper], &changedSet);
+        getRes += getDataString(inRequest->mGetData, looper_buf, globals.mOptions.mRestrictText[looper], sizeof(globals.mOptions.mRestrictText[looper]), &changedSet);
     }
-    getRes += getDataString(inRequest->mGetData, "mCategoryName", &globals.mOptions.mCategoryName, &changedCategory);
+    getRes += getDataString(inRequest->mGetData, "mCategoryName", globals.mOptions.mCategoryName, sizeof(globals.mOptions.mCategoryName), &changedCategory);
     
     /*
     ** Sanity check options
     */
-    if (changedCategory && (!globals.mOptions.mCategoryName || !*globals.mOptions.mCategoryName
+    if (changedCategory && (!globals.mOptions.mCategoryName[0]
                             || !findCategoryNode(globals.mOptions.mCategoryName, &globals)))
     {
-        if (globals.mOptions.mCategoryName)
-            free(globals.mOptions.mCategoryName);
-        globals.mOptions.mCategoryName = strdup(ST_ROOT_CATEGORY_NAME);
+        PR_snprintf(globals.mOptions.mCategoryName, sizeof(globals.mOptions.mCategoryName), "%s", ST_ROOT_CATEGORY_NAME);
     }
 
     /*
@@ -5155,18 +5129,14 @@ int applySettings(STRequest* inRequest)
         ** right node and set the cache.mSortedRun. We need to recompute
         ** cost though. But that is cheap.
         */
-        if (globals.mOptions.mCategoryName)
+        STCategoryNode* node = findCategoryNode(globals.mOptions.mCategoryName, &globals);
+        if (node)
         {
-            STCategoryNode* node = findCategoryNode(globals.mOptions.mCategoryName, &globals);
-            if (node)
-            {
-                /* Recalculate cost of run */
-                recalculateRunCost(node->run);
-
-                globals.mCache.mSortedRun = node->run;
-            }
+            /* Recalculate cost of run */
+            recalculateRunCost(node->run);
+            
+            globals.mCache.mSortedRun = node->run;
         }
-
     }
 
 
@@ -5324,7 +5294,7 @@ int displaySettings(STRequest* inRequest)
     PR_fprintf(inRequest->mFD, "Keep all the strings together near the top of this list, as the code will stop trying to match on the first empty string.<br>\n");
     for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
     {
-        PR_fprintf(inRequest->mFD, "<input type=text name=\"mRestrictText%d\" value=\"%s\"><br>\n", looper, NULL == globals.mOptions.mRestrictText[looper] ? "" : globals.mOptions.mRestrictText[looper]);
+        PR_fprintf(inRequest->mFD, "<input type=text name=\"mRestrictText%d\" value=\"%s\"><br>\n", looper, globals.mOptions.mRestrictText[looper]);
     }
     PR_fprintf(inRequest->mFD, "<hr>\n");
 
@@ -5423,7 +5393,7 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
         memset(&request, 0, sizeof(request));
 
         request.mFD = aFD;
-        request.mFileName = aFileName;
+        request.mGetFileName = aFileName;
         request.mGetData = aGetData;
 
         /*
@@ -5484,10 +5454,10 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
 
             if(request.mGetData && *request.mGetData)
             {
-                char* categoryName = NULL;
-                int getRes = getDataString(request.mGetData, "mCategory", &categoryName, NULL);
+                char categoryName[ST_OPTION_STRING_MAX];
+                int getRes = getDataString(request.mGetData, "mCategory", categoryName, sizeof(categoryName), NULL);
                 STCategoryNode* node;
-                if (categoryName && *categoryName &&
+                if (*categoryName &&
                     strcmp(categoryName, globals.mOptions.mCategoryName) &&
                     (node = findCategoryNode(categoryName, &globals)))
                 {
@@ -5497,9 +5467,7 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
                     recalculateRunCost(node->run);
 
                     globals.mCache.mSortedRun = node->run;
-                    if (globals.mOptions.mCategoryName)
-                        free(globals.mOptions.mCategoryName);
-                    globals.mOptions.mCategoryName = categoryName;
+                    PR_snprintf(globals.mOptions.mCategoryName, sizeof(globals.mOptions.mCategoryName), "%s", categoryName);
                 }
             }
 
@@ -6331,18 +6299,6 @@ int main(int aArgCount, char** aArgArray)
         {
             REPORT_ERROR(runResult, doRun);
             retval = __LINE__;
-        }
-    }
-
-    /*
-    ** Options cleanup.
-    */
-    for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
-    {
-        if(NULL != globals.mOptions.mRestrictText[looper])
-        {
-            free(globals.mOptions.mRestrictText[looper]);
-            globals.mOptions.mRestrictText[looper] = NULL;
         }
     }
 
