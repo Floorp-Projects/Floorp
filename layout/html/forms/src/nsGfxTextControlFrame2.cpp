@@ -56,6 +56,41 @@
 
 static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
 
+
+
+
+
+class nsTextAreaSelectionImpl : public nsISelectionController
+{
+public:
+  nsTextAreaSelectionImpl(nsIFrameSelection *aSel){mFrameSelection = aSel;}
+  ~nsTextAreaSelectionImpl(){}
+
+  
+  //NSISELECTIONCONTROLLER INTERFACES
+  NS_IMETHOD SetDisplaySelection(PRInt16 toggle){return NS_OK;}
+  NS_IMETHOD GetDisplaySelection(PRInt16 *_retval){return NS_OK;}
+  NS_IMETHOD GetSelection(PRInt16 type, nsIDOMSelection **_retval){return NS_OK;}
+  NS_IMETHOD ScrollSelectionIntoView(PRInt16 type, PRInt16 region){return NS_OK;}
+  NS_IMETHOD RepaintSelection(PRInt16 type){return NS_OK;}
+  NS_IMETHOD SetCaretEnabled(PRBool enabled){return NS_OK;}
+  NS_IMETHOD GetCaretEnabled(PRBool *_retval){return NS_OK;}
+  NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend){return NS_OK;}
+  NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend){return NS_OK;}
+  NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend){return NS_OK;}
+  NS_IMETHOD IntraLineMove(PRBool aForward, PRBool aExtend){return NS_OK;}
+  NS_IMETHOD PageMove(PRBool aForward, PRBool aExtend){return NS_OK;}
+  NS_IMETHOD CompleteScroll(PRBool aForward){return NS_OK;}
+  NS_IMETHOD CompleteMove(PRBool aForward, PRBool aExtend){return NS_OK;}
+  NS_IMETHOD ScrollPage(PRBool aForward){return NS_OK;}
+  NS_IMETHOD ScrollLine(PRBool aForward){return NS_OK;}
+  NS_IMETHOD ScrollHorizontal(PRBool aLeft){return NS_OK;}
+  NS_IMETHOD SelectAll(void){return NS_OK;}
+private:
+  nsCOMPtr<nsIFrameSelection> mFrameSelection;
+};
+
+
 nsresult
 NS_NewGfxTextControlFrame2(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
@@ -88,7 +123,10 @@ NS_IMETHODIMP
 nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
                                            nsISupportsArray& aChildList)
 {
-  // create horzontal scrollbar
+//create editor
+//create selection
+//init editor with div.
+
   nsCAutoString progID = NS_ELEMENT_FACTORY_PROGID_PREFIX;
   progID += "http://www.w3.org/TR/REC-html40";
   nsresult rv;
@@ -98,10 +136,35 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsIContent> content;
   elementFactory->CreateInstanceByTag(NS_ConvertToString("div"), getter_AddRefs(content));
-  aChildList.AppendElement(content);
-//create editor
+  if (content)
+  {
+    aChildList.AppendElement(content);
+
+//make the editor
+    rv = nsComponentManager::CreateInstance(kHTMLEditorCID,
+                                                nsnull,
+                                                NS_GET_IID(nsIEditor), getter_AddRefs(mEditor));
+    if (NS_FAILED(result))
+      return result;
+    if (!mEditor) 
+      return NS_ERROR_OUT_OF_MEMORY;
 //create selection
-//init editor with div.
+    nsCOMPtr<nsIFrameSelection> frameSel;
+    rv = nsComponentManager::CreateInstance(kFrameSelectionCID, nsnull,
+                                                   NS_GET_IID(nsIFrameSelection),
+                                                   getter_AddRefs(frameSel));
+//create selection controller
+    nsTextAreaSelectionImpl * textSelImpl = new nsTextAreaSelectionImpl(frameSel);
+    mSelCon =  do_QueryInterface((nsISupports *)textSelImpl);//this will addref it once
+
+//get the presshell
+    nsCOMPtr<nsIPresShell> shell;
+    rv = aPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_FAILED(rv) || !shell)
+      return rv?rv:NS_ERROR_FAILURE;
+//initialize the editor
+    
+  }
   return NS_OK;
 }
 
