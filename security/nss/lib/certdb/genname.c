@@ -254,8 +254,10 @@ CERT_EncodeGeneralName(CERTGeneralName *genName, SECItem *dest, PRArenaPool *are
 
     PORT_Assert(arena);
     if (arena == NULL) {
-	goto loser;
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return NULL;
     }
+    /* TODO: mark arena */
     if (dest == NULL) {
 	dest = PORT_ArenaZNew(arena, SECItem);
 	if (!dest)
@@ -316,12 +318,12 @@ CERT_EncodeGeneralName(CERTGeneralName *genName, SECItem *dest, PRArenaPool *are
     if (!dest) {
 	goto loser;
     }
+    /* TODO: unmark arena */
     return dest;
 loser:
+    /* TODO: release arena back to mark */
     return NULL;
 }
-
-
 
 SECItem **
 cert_EncodeGeneralNames(PRArenaPool *arena, CERTGeneralName *names)
@@ -333,6 +335,7 @@ cert_EncodeGeneralNames(PRArenaPool *arena, CERTGeneralName *names)
     PRCList          *head;
 
     PORT_Assert(arena);
+    /* TODO: mark arena */
     current_name = names;
     if (names != NULL) {
 	count = 1;
@@ -355,8 +358,10 @@ cert_EncodeGeneralNames(PRArenaPool *arena, CERTGeneralName *names)
 	current_name = cert_get_next_general_name(current_name);
     }
     items[i] = NULL;
+    /* TODO: unmark arena */
     return items;
 loser:
+    /* TODO: release arena to mark */
     return NULL;
 }
 
@@ -369,6 +374,7 @@ CERT_DecodeGeneralName(PRArenaPool      *arena,
     SECStatus                        rv = SECSuccess;
 
     PORT_Assert(arena);
+    /* TODO: mark arena */
     if (genName == NULL) {
 	genName = PORT_ArenaZNew(arena, CERTGeneralName);
 	if (!genName)
@@ -418,8 +424,10 @@ CERT_DecodeGeneralName(PRArenaPool      *arena,
     genName->type = genNameType;
     genName->l.next = (PRCList *) ((char *) genName) + offsetof(CERTGeneralName, l);
     genName->l.prev = genName->l.next;
+    /* TODO: unmark arena */
     return genName;
 loser:
+    /* TODO: release arena to mark */
     return NULL;
 }
 
@@ -432,14 +440,15 @@ cert_DecodeGeneralNames (PRArenaPool  *arena,
     CERTGeneralName                   *currentName = NULL;
 
     PORT_Assert(arena);
-    if (!encodedGenName) {
-	goto loser;
+    if (!encodedGenName || !arena) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return NULL;
     }
+    /* TODO: mark arena */
     while (*encodedGenName != NULL) {
 	currentName = CERT_DecodeGeneralName(arena, *encodedGenName, NULL);
-	if (currentName == NULL) {
-	    goto loser;
-	}
+	if (currentName == NULL)
+	    break;
 	if (head == NULL) {
 	    head = &(currentName->l);
 	    tail = head;
@@ -450,9 +459,10 @@ cert_DecodeGeneralNames (PRArenaPool  *arena,
 	encodedGenName++;
     }
     if (currentName) {
+	/* TODO: unmark arena */
 	return cert_get_next_general_name(currentName);
     }
-loser:
+    /* TODO: release arena to mark */
     return NULL;
 }
 
@@ -478,7 +488,7 @@ cert_DestroyGeneralNames(CERTGeneralName *name)
     return SECSuccess;
 }
 
-SECItem *
+static SECItem *
 cert_EncodeNameConstraint(CERTNameConstraint  *constraint, 
 			 SECItem             *dest,
 			 PRArenaPool         *arena)
@@ -511,6 +521,7 @@ cert_EncodeNameConstraintSubTree(CERTNameConstraint  *constraints,
     PRCList             *head;
 
     PORT_Assert(arena);
+    /* TODO: mark arena */
     if (constraints != NULL) {
 	count = 1;
     }
@@ -536,8 +547,10 @@ cert_EncodeNameConstraintSubTree(CERTNameConstraint  *constraints,
     if (*dest == NULL) {
 	goto loser;
     }
+    /* TODO: unmark arena */
     return SECSuccess;
 loser:
+    /* TODO: release arena to mark */
     return SECFailure;
 }
 
@@ -549,6 +562,7 @@ cert_EncodeNameConstraints(CERTNameConstraints  *constraints,
     SECStatus    rv = SECSuccess;
 
     PORT_Assert(arena);
+    /* TODO: mark arena */
     if (constraints->permited != NULL) {
 	rv = cert_EncodeNameConstraintSubTree(constraints->permited, arena,
 					      &constraints->DERPermited, PR_TRUE);
@@ -568,8 +582,10 @@ cert_EncodeNameConstraints(CERTNameConstraints  *constraints,
     if (dest == NULL) {
 	goto loser;
     }
+    /* TODO: unmark arena */
     return SECSuccess;
 loser:
+    /* TODO: release arena to mark */
     return SECFailure;
 }
 
@@ -583,6 +599,7 @@ cert_DecodeNameConstraint(PRArenaPool       *arena,
     CERTGeneralName        *temp;
 
     PORT_Assert(arena);
+    /* TODO: mark arena */
     constraint = PORT_ArenaZNew(arena, CERTNameConstraint);
     if (!constraint)
     	goto loser;
@@ -600,11 +617,12 @@ cert_DecodeNameConstraint(PRArenaPool       *arena,
      *            point anywhere else.  Otherwise, bad things will happen.
      */
     constraint->name.l.prev = constraint->name.l.next = &(constraint->name.l);
+    /* TODO: unmark arena */
     return constraint;
 loser:
+    /* TODO: release arena back to mark */
     return NULL;
 }
-
 
 CERTNameConstraint *
 cert_DecodeNameConstraintSubTree(PRArenaPool   *arena,
@@ -618,6 +636,7 @@ cert_DecodeNameConstraintSubTree(PRArenaPool   *arena,
     int                  i = 0;
 
     PORT_Assert(arena);
+    /* TODO: mark arena */
     while (subTree[i] != NULL) {
 	current = cert_DecodeNameConstraint(arena, subTree[i]);
 	if (current == NULL) {
@@ -632,8 +651,10 @@ cert_DecodeNameConstraintSubTree(PRArenaPool   *arena,
 	i++;
     }
     first->l.prev = &(current->l);
+    /* TODO: unmark arena */
     return first;
 loser:
+    /* TODO: release arena back to mark */
     return NULL;
 }
 
@@ -646,6 +667,7 @@ cert_DecodeNameConstraints(PRArenaPool   *arena,
 
     PORT_Assert(arena);
     PORT_Assert(encodedConstraints);
+    /* TODO: mark arena */
     constraints = PORT_ArenaZNew(arena, CERTNameConstraints);
     if (constraints == NULL) {
 	goto loser;
@@ -671,8 +693,10 @@ cert_DecodeNameConstraints(PRArenaPool   *arena,
 	    goto loser;
 	}
     }
+    /* TODO: unmark arena */
     return constraints;
 loser:
+    /* TODO: release arena back to mark */
     return NULL;
 }
 
@@ -687,32 +711,35 @@ CERT_CopyGeneralName(PRArenaPool      *arena,
     CERTGeneralName *srcHead = src;
     CERTGeneralName *temp;
 
+    /* TODO: mark arena */
     PORT_Assert(dest != NULL);
     dest->type = src->type;
     do {
 	switch (src->type) {
 	  case certDirectoryName: {
-	      rv = SECITEM_CopyItem(arena, &dest->derDirectoryName, &src->derDirectoryName);
-	      if (rv != SECSuccess) {
-		  return rv;
-	      }
-	      rv = CERT_CopyName(arena, &dest->name.directoryName, &src->name.directoryName);
+	      rv = SECITEM_CopyItem(arena, &dest->derDirectoryName, 
+	                                    &src->derDirectoryName);
+	      if (rv == SECSuccess) 
+		  rv = CERT_CopyName(arena, &dest->name.directoryName, 
+					     &src->name.directoryName);
 	      break;
 	  }
 	  case certOtherName: {
-	      rv = SECITEM_CopyItem(arena, &dest->name.OthName.name, &src->name.OthName.name);
-	      if (rv != SECSuccess) {
-		  return rv;
-	      }
-	      rv = SECITEM_CopyItem(arena, &dest->name.OthName.oid, &src->name.OthName.oid);
+	      rv = SECITEM_CopyItem(arena, &dest->name.OthName.name, 
+	                                    &src->name.OthName.name);
+	      if (rv == SECSuccess) 
+		  rv = SECITEM_CopyItem(arena, &dest->name.OthName.oid, 
+						&src->name.OthName.oid);
 	      break;
 	  }
 	  default: {
-	      rv = SECITEM_CopyItem(arena, &dest->name.other, &src->name.other);
+	      rv = SECITEM_CopyItem(arena, &dest->name.other, 
+	                                    &src->name.other);
+	      break;
 	  }
 	}
 	if (rv != SECSuccess)
-	    return rv;
+	    goto loser;
 	src = cert_get_next_general_name(src);
 	/* if there is only one general name, we shouldn't do this */
 	if (src != srcHead) {
@@ -722,8 +749,8 @@ CERT_CopyGeneralName(PRArenaPool      *arena,
 		} else {
 		    temp = PORT_ZNew(CERTGeneralName);
 		}
-		if (!temp)
-		    return SECFailure;
+		if (!temp) 
+		    goto loser;
 		temp->l.next = &destHead->l;
 		temp->l.prev = &dest->l;
 		destHead->l.prev = &temp->l;
@@ -734,7 +761,11 @@ CERT_CopyGeneralName(PRArenaPool      *arena,
 	    }
 	}
     } while (src != srcHead && rv == SECSuccess);
+    /* TODO: unmark arena */
     return rv;
+loser:
+    /* TODO: release back to mark */
+    return SECFailure;
 }
 
 
@@ -756,6 +787,7 @@ CERT_CopyNameConstraint(PRArenaPool         *arena,
 {
     SECStatus  rv;
     
+    /* TODO: mark arena */
     if (dest == NULL) {
 	dest = PORT_ArenaZNew(arena, CERTNameConstraint);
 	if (!dest)
@@ -780,8 +812,10 @@ CERT_CopyNameConstraint(PRArenaPool         *arena,
 	goto loser;
     }
     dest->l.prev = dest->l.next = &dest->l;
+    /* TODO: unmark arena */
     return dest;
 loser:
+    /* TODO: release arena to mark */
     return NULL;
 }
 
@@ -861,6 +895,7 @@ CERT_GetNameConstraintByType (CERTNameConstraint *constraints,
     *returnList = NULL;
     if (!constraints)
 	return SECSuccess;
+    /* TODO: mark arena */
     current = constraints;
 
     do {
@@ -875,8 +910,10 @@ CERT_GetNameConstraintByType (CERTNameConstraint *constraints,
 	}
 	current = cert_get_next_name_constraint(current);
     } while (current != constraints);
+    /* TODO: unmark arena */
     return SECSuccess;
 loser:
+    /* TODO: release arena back to mark */
     return SECFailure;
 }
 
@@ -946,7 +983,7 @@ CERT_GetCertificateNames(CERTCertificate *cert, PRArenaPool *arena)
     SECItem          altNameExtension;
     SECStatus        rv;
 
-
+    /* TODO: mark arena */
     DN = PORT_ArenaZNew(arena, CERTGeneralName);
     if (DN == NULL) {
 	goto loser;
@@ -969,9 +1006,10 @@ CERT_GetCertificateNames(CERTCertificate *cert, PRArenaPool *arena)
     altName = CERT_DecodeAltNameExtension(arena, &altNameExtension);
     PORT_Free(altNameExtension.data);
     DN = cert_CombineNamesLists(DN, altName);
+    /* TODO: unmark arena */
     return DN;
 loser:
-
+    /* TODO: release arena to mark */
     return NULL;
 }
 
@@ -1363,6 +1401,7 @@ CERT_CompareNameSpace(CERTCertificate  *cert,
 	       ? NULL  /* success, space is unconstrained. */
 	       : CERT_DupCertificate(cert); /* failure, some other error */
     }
+    /* TODO: mark arena */
     constraints = cert_DecodeNameConstraints(arena, &constraintsExtension);
     currentName = namesList;
     if (constraints == NULL)  /* decode failed */
@@ -1399,8 +1438,10 @@ CERT_CompareNameSpace(CERTCertificate  *cert,
  	currentName = cert_get_next_general_name(currentName);
  	count ++;
     } while (currentName != namesList);
+    /* TODO: release back to mark */
     return NULL;
 loser:
+    /* TODO: release back to mark */
     badCert = CERT_FindCertByName (handle, &namesListIndex[count]);
     return badCert;
 }
