@@ -56,7 +56,7 @@
 #include "nsIMIMEService.h"
 #include "nsILoadGroup.h"
 #include "nsIWebProgressListener.h"
-#include "nsIDownload.h"
+#include "nsITransfer.h"
 #include "nsReadableUtils.h"
 #include "nsIRequest.h"
 #include "nsDirectoryServiceDefs.h"
@@ -1980,13 +1980,13 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISuppor
   ExecuteDesiredAction();
 
   // At this point, the channel should still own us. So releasing the reference
-  // to us in the nsIDownload should be ok.
-  // This nsIDownload object holds a reference to us (we are its observer), so
+  // to us in the nsITransfer should be ok.
+  // This nsITransfer object holds a reference to us (we are its observer), so
   // we need to release the reference to break a reference cycle (and therefore
   // to prevent leaking)
-  nsCOMPtr<nsIDownload> dl(do_QueryInterface(mWebProgressListener));
-  if (dl)
-    dl->SetObserver(nsnull);
+  nsCOMPtr<nsITransfer> tr(do_QueryInterface(mWebProgressListener));
+  if (tr)
+    tr->SetObserver(nsnull);
   mWebProgressListener = nsnull;
 
   return NS_OK;
@@ -2090,7 +2090,7 @@ NS_IMETHODIMP nsExternalAppHandler::GetSuggestedFileName(nsAString& aSuggestedFi
   return NS_OK;
 }
 
-nsresult nsExternalAppHandler::InitializeDownload(nsIDownload* aDownload)
+nsresult nsExternalAppHandler::InitializeDownload(nsITransfer* aTransfer)
 {
   nsresult rv;
   
@@ -2098,14 +2098,14 @@ nsresult nsExternalAppHandler::InitializeDownload(nsIDownload* aDownload)
   rv = NS_NewFileURI(getter_AddRefs(target), mFinalFileDestination);
   if (NS_FAILED(rv)) return rv;
   
-  rv = aDownload->Init(mSourceUrl, target, nsnull,
+  rv = aTransfer->Init(mSourceUrl, target, nsnull,
                        mMimeInfo, mTimeDownloadStarted, nsnull);
   if (NS_FAILED(rv)) return rv;
   
-  rv = aDownload->SetObserver(this);
+  rv = aTransfer->SetObserver(this);
 
   // Tell the listener about the location of the target file
-  nsCOMPtr<nsIObserver> obs(do_QueryInterface(aDownload));
+  nsCOMPtr<nsIObserver> obs(do_QueryInterface(aTransfer));
   if (obs)
     obs->Observe(mTempFile, "temp-file", nsnull);
 
@@ -2120,25 +2120,21 @@ nsresult nsExternalAppHandler::CreateProgressListener()
   // need to break the reference cycle.
   mDialog = nsnull;
   nsresult rv;
-
-  nsCOMPtr<nsIWebProgressListener> listener;
   
-  nsCOMPtr<nsIDownload> dl = do_CreateInstance("@mozilla.org/download;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
-    InitializeDownload(dl);
-    listener = do_QueryInterface(dl);
-  }
+  nsCOMPtr<nsITransfer> tr = do_CreateInstance("@mozilla.org/download;1", &rv);
+  if (NS_SUCCEEDED(rv))
+    InitializeDownload(tr);
 
   // note we might not have a listener here if the QI() failed, or if
-  // there is no nsIDownload object, but we still call
+  // there is no nsITransfer object, but we still call
   // SetWebProgressListener() to make sure our progress state is sane
-  // NOTE: This will set up a reference cycle (this nsIDownload has us set up as
+  // NOTE: This will set up a reference cycle (this nsITransfer has us set up as
   // its observer). This cycle will be broken in Cancel, CloseProgressWindow or
   // OnStopRequest.
-  SetWebProgressListener(listener);
+  SetWebProgressListener(tr);
 
-  if (listener)
-    listener->OnStateChange(nsnull, mRequest, nsIWebProgressListener::STATE_START, NS_OK);
+  if (tr)
+    tr->OnStateChange(nsnull, mRequest, nsIWebProgressListener::STATE_START, NS_OK);
 
   return rv;
 }
@@ -2456,9 +2452,9 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel()
 
   // Release the listener, to break the reference cycle with it (we are the
   // observer of the listener).
-  nsCOMPtr<nsIDownload> dl(do_QueryInterface(mWebProgressListener));
-  if (dl)
-    dl->SetObserver(nsnull);
+  nsCOMPtr<nsITransfer> tr(do_QueryInterface(mWebProgressListener));
+  if (tr)
+    tr->SetObserver(nsnull);
   mWebProgressListener = nsnull;
 
   return NS_OK;

@@ -954,6 +954,28 @@ nsDownload::Suspend()
 }
 
 nsresult
+nsDownload::SetDisplayName(const PRUnichar* aDisplayName)
+{
+  mDisplayName = aDisplayName;
+
+  nsCOMPtr<nsIRDFDataSource> ds;
+  mDownloadManager->GetDataSource(getter_AddRefs(ds));
+
+  nsCOMPtr<nsIRDFLiteral> nameLiteral;
+  nsCOMPtr<nsIRDFResource> res;
+  nsCAutoString path;
+  nsresult rv = GetFilePathUTF8(mTarget, path);
+  if (NS_FAILED(rv)) return rv;
+
+  gRDFService->GetResource(path, getter_AddRefs(res));
+  
+  gRDFService->GetLiteral(aDisplayName, getter_AddRefs(nameLiteral));
+  ds->Assert(res, gNC_Name, nameLiteral, PR_TRUE);
+
+  return NS_OK;
+}
+
+nsresult
 nsDownload::Resume()
 {
   if (!mRequest)
@@ -1288,28 +1310,6 @@ nsDownload::Init(nsIURI* aSource,
                  nsIWebBrowserPersist* aPersist)
 {
   NS_WARNING("Huh...how did we get here?!");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownload::SetDisplayName(const PRUnichar* aDisplayName)
-{
-  mDisplayName = aDisplayName;
-
-  nsCOMPtr<nsIRDFDataSource> ds;
-  mDownloadManager->GetDataSource(getter_AddRefs(ds));
-
-  nsCOMPtr<nsIRDFLiteral> nameLiteral;
-  nsCOMPtr<nsIRDFResource> res;
-  nsCAutoString path;
-  nsresult rv = GetFilePathUTF8(mTarget, path);
-  if (NS_FAILED(rv)) return rv;
-
-  gRDFService->GetResource(path, getter_AddRefs(res));
-  
-  gRDFService->GetLiteral(aDisplayName, getter_AddRefs(nameLiteral));
-  ds->Assert(res, gNC_Name, nameLiteral, PR_TRUE);
-
   return NS_OK;
 }
 

@@ -85,6 +85,7 @@ XPIDLSRCS = 							\
 				nsIURILoader.idl	 	\
 				nsCURILoader.idl		\
 				nsIDownload.idl   \
+				nsITransfer.idl \
 				nsIDocumentLoader.idl		\
 				$(NULL)
 

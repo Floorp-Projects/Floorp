@@ -339,7 +339,7 @@ function internalSave(aURL, aDocument, aDefaultFileName, aShouldBypassCache,
   persist.persistFlags |= nsIWBP.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
   // Create download and initiate it (below)
-  var dl = Components.classes["@mozilla.org/download;1"].createInstance(Components.interfaces.nsIDownload);
+  var tr = Components.classes["@mozilla.org/download;1"].createInstance(Components.interfaces.nsITransfer);
 
   if (useSaveDocument) {
     // Saving a Document, not a URI:
@@ -367,12 +367,12 @@ function internalSave(aURL, aDocument, aDefaultFileName, aShouldBypassCache,
     }
 
     const kWrapColumn = 80;
-    dl.init((aChosenData ? aChosenData.uri : fileInfo.uri),
+    tr.init((aChosenData ? aChosenData.uri : fileInfo.uri),
             persistArgs.target, null, null, null, persist);
     persist.saveDocument(persistArgs.source, persistArgs.target, filesFolder,
                          persistArgs.contentType, encodingFlags, kWrapColumn);
   } else {
-    dl.init((aChosenData ? aChosenData.uri : source),
+    tr.init((aChosenData ? aChosenData.uri : source),
             persistArgs.target, null, null, null, persist);
     var referer = aReferrer || getReferrer(document);
     persist.saveURI((aChosenData ? aChosenData.uri : source),

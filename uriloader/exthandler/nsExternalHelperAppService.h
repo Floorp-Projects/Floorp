@@ -76,7 +76,7 @@
 class nsExternalAppHandler;
 class nsIMIMEInfo;
 class nsIRDFService;
-class nsIDownload;
+class nsITransfer;
 
 /**
  * The helper app service. Responsible for handling content that Mozilla
@@ -450,9 +450,9 @@ protected:
   PRBool GetNeverAskFlagFromPref(const char * prefName, const char * aContentType);
 
   /**
-   * Initialize an nsIDownload object for use as a progress object
+   * Initialize an nsITransfer object for use as a progress object
    */
-  nsresult InitializeDownload(nsIDownload*);
+  nsresult InitializeDownload(nsITransfer*);
   
   /**
    * Helper routine to ensure mSuggestedFileName is "correct";

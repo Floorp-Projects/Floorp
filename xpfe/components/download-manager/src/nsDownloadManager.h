@@ -105,7 +105,6 @@ private:
 };
 
 class nsDownload : public nsIDownload,
-                   public nsIWebProgressListener,
                    public nsIObserver
 {
 public:
@@ -119,6 +118,7 @@ public:
   ~nsDownload();
 
   nsresult Suspend();
+  nsresult SetDisplayName(const PRUnichar* aDisplayName);
   nsresult Resume();
   void DisplayDownloadFinishedAlert();
 

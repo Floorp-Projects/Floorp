@@ -47,8 +47,7 @@
 
 #define DOWNLOAD_MANAGER_BEHAVIOR_PREF "browser.downloadmanager.behavior"
 
-class nsDownloadProxy : public nsIDownload,
-                        public nsIWebProgressListener
+class nsDownloadProxy : public nsIDownload
 {
 public:
 
@@ -92,13 +91,6 @@ public:
     if (!mInner)
       return NS_ERROR_NOT_INITIALIZED;
     return mInner->GetDisplayName(aDisplayName);
-  }
-  
-  NS_IMETHODIMP SetDisplayName(const PRUnichar* aDisplayName)
-  {
-    if (!mInner)
-      return NS_ERROR_NOT_INITIALIZED;
-    return mInner->SetDisplayName(aDisplayName);
   }
   
   NS_IMETHODIMP GetMIMEInfo(nsIMIMEInfo** aMIMEInfo)
