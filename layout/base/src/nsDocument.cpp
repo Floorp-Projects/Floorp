@@ -52,11 +52,7 @@
 #include "nsIDOMDOMImplementation.h"
 #include "nsGenericElement.h"
 
-//#include "nsCSSPropIDs.h"
-//#include "nsCSSProps.h"
 #include "nsICSSStyleSheet.h"
-//#include "nsICSSStyleRule.h"
-//#include "nsICSSDeclaration.h"
 
 #include "nsITextContent.h"
 #include "nsXIFConverter.h"
