@@ -104,6 +104,8 @@
 #include "nsIAggregatePrincipal.h"
 #include "nsIPrivateDOMImplementation.h"
 
+#include "nsIInterfaceRequestor.h"
+#include "nsIDOMWindow.h"
 
 #include "nsIDOMElement.h"
 
@@ -2082,8 +2084,29 @@ NS_IMETHODIMP
 nsDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
 {
   NS_ENSURE_ARG_POINTER(aDefaultView);
-
   *aDefaultView = nsnull;
+
+  nsIPresShell *shell = NS_STATIC_CAST(nsIPresShell *,
+                                       mPresShells.ElementAt(0));
+  NS_ENSURE_TRUE(shell, NS_OK);
+
+  nsCOMPtr<nsIPresContext> ctx;
+  nsresult rv = shell->GetPresContext(getter_AddRefs(ctx));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && ctx, rv);
+
+  nsCOMPtr<nsISupports> container;
+  rv = ctx->GetContainer(getter_AddRefs(container));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && container, rv);
+
+  nsCOMPtr<nsIInterfaceRequestor> ifrq(do_QueryInterface(container));
+  NS_ENSURE_TRUE(ifrq, NS_OK);
+
+  nsCOMPtr<nsIDOMWindow> window;
+  ifrq->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(window));
+  NS_ENSURE_TRUE(window, NS_OK);
+
+  window->QueryInterface(NS_GET_IID(nsIDOMAbstractView),
+                         (void **)aDefaultView);
 
   return NS_OK;
 }
