@@ -402,6 +402,11 @@ public:
    */
   NS_IMETHOD Stop(void) = 0;
 
+  // XXX Temp Hacks
+
+  NS_IMETHOD StopBeforeRequestingURL() = 0;
+  NS_IMETHOD StopAfterURLAvailable() = 0;
+
   /**
    * Reload the current document.
    */
