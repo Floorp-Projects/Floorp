@@ -585,10 +585,8 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
             aView->GetWidget(*getter_AddRefs(widget));
             if (widget) {
               // Enable translucency in the widget
-	      NS_WARNING("Enabling window transparency");
-              // commented out, see bug #198946
-              //widget->SetWindowTranslucency(PR_TRUE);
-              //viewHasTransparentContent = PR_TRUE;
+              widget->SetWindowTranslucency(PR_TRUE);
+              viewHasTransparentContent = PR_TRUE;
             }
           }
         }
