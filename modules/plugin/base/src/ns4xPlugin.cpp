@@ -770,7 +770,7 @@ NPError MakeNew4xStreamInternal (NPP npp,
 
   nsIPluginStreamListener* listener = nsnull;
   if(target == nsnull)
-    ((ns4xPluginInstance*)inst)->NewNotifyStream(&listener, notifyData, bDoNotify);
+    ((ns4xPluginInstance*)inst)->NewNotifyStream(&listener, notifyData, bDoNotify, relativeURL);
 
   switch (type) {
   case eNPPStreamTypeInternal_Get:

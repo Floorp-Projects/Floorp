@@ -76,22 +76,27 @@ NS_IMPL_ISUPPORTS1(ns4xPluginStreamListener, nsIPluginStreamListener);
 ///////////////////////////////////////////////////////////////////////////////
 
 ns4xPluginStreamListener::ns4xPluginStreamListener(nsIPluginInstance* inst, 
-                                                   void* notifyData)
+                                                   void* notifyData,
+                                                   const char* aURL)
     : mNotifyData(notifyData),
+      mStreamBuffer(nsnull),
+      mNotifyURL(nsnull),  
       mStreamStarted(PR_FALSE),
       mStreamCleanedUp(PR_FALSE),
-      mStreamInfo(nsnull),
-      mCallNotify(PR_FALSE)
+      mCallNotify(PR_FALSE),      
+      mStreamInfo(nsnull)
 {
   NS_INIT_REFCNT();
   mInst = (ns4xPluginInstance*) inst;
-  mStreamBuffer=nsnull;
   mPosition = 0;
   mStreamBufferSize = 0;
   // Initialize the 4.x interface structure
   memset(&mNPStream, 0, sizeof(mNPStream));
 
   NS_IF_ADDREF(mInst);
+
+  if (aURL)
+    mNotifyURL = PL_strdup(aURL);
 }
 
 
@@ -130,6 +135,9 @@ ns4xPluginStreamListener::~ns4xPluginStreamListener(void)
 
 
   NS_IF_RELEASE(inst);
+
+  if (mNotifyURL)
+    PL_strfree(mNotifyURL);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -191,22 +199,21 @@ void ns4xPluginStreamListener::CallURLNotify(NPReason reason)
   mInst->GetCallbacks(&callbacks);
   if(!callbacks)
     return;
-
-  NPP npp;
-  mInst->GetNPP(&npp);
-
+  
   if (callbacks->urlnotify) {
-    PRLibrary* lib = mInst->fLibrary;
+
+    NPP npp;
+    mInst->GetNPP(&npp);
 
     NS_TRY_SAFE_CALL_VOID(CallNPP_URLNotifyProc(callbacks->urlnotify,
                                                 npp,
-                                                mNPStream.url,
+                                                mNotifyURL,
                                                 reason,
-                                                mNotifyData), lib);
+                                                mNotifyData), mInst->fLibrary);
 
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
     ("NPP URLNotify called: this=%p, npp=%p, notify=%p, reason=%d, url=%s\n",
-    this, npp, mNotifyData, reason, mNPStream.url));
+    this, npp, mNotifyData, reason, mNotifyURL));
   }
 
   // Let's not leak this stream listener. Release the reference to the stream listener 
@@ -981,7 +988,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 // Create a normal stream, one without a urlnotify callback
 NS_IMETHODIMP ns4xPluginInstance::NewStream(nsIPluginStreamListener** listener)
 {
-  return NewNotifyStream(listener, nsnull, PR_FALSE);
+  return NewNotifyStream(listener, nsnull, PR_FALSE, nsnull);
 }
 
 
@@ -989,9 +996,10 @@ NS_IMETHODIMP ns4xPluginInstance::NewStream(nsIPluginStreamListener** listener)
 // Create a stream that will notify when complete
 nsresult ns4xPluginInstance::NewNotifyStream(nsIPluginStreamListener** listener, 
                                              void* notifyData,
-                                             PRBool aCallNotify)
+                                             PRBool aCallNotify,
+                                             const char* aURL)
 {
-  ns4xPluginStreamListener* stream = new ns4xPluginStreamListener(this, notifyData);
+  ns4xPluginStreamListener* stream = new ns4xPluginStreamListener(this, notifyData, aURL);
   NS_ENSURE_TRUE(stream, NS_ERROR_OUT_OF_MEMORY);
 
   // add it to the list
