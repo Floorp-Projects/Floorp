@@ -83,6 +83,7 @@ nsView :: nsView()
   mVFlags = 0;
   mOpacity = 1.0f;
   mViewManager = nsnull;
+  mCompositorFlags = 0;
 }
 
 nsView :: ~nsView()
@@ -1451,13 +1452,24 @@ NS_IMETHODIMP nsView::GetDirtyRegion(nsIRegion *&aRegion) const
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetScratchPoint(nsPoint **aPoint)
+NS_IMETHODIMP nsView::GetScratchPoint(nsPoint **aPoint)
 {
-  NS_ASSERTION(!(!aPoint), "no point");
+	NS_ASSERTION((aPoint != nsnull), "no point");
+	*aPoint = &mScratchPoint;
+	return NS_OK;
+}
 
-  *aPoint = &mScratchPoint;
+NS_IMETHODIMP nsView::SetCompositorFlags(PRUint32 aFlags)
+{
+	mCompositorFlags = aFlags;
+	return NS_OK;
+}
 
-  return NS_OK;
+NS_IMETHODIMP nsView::GetCompositorFlags(PRUint32 *aFlags)
+{
+	NS_ASSERTION((aFlags != nsnull), "no flags");
+	*aFlags = mCompositorFlags;
+	return NS_OK;
 }
 
 static void calc_extents(nsIView *view, nsRect *extents, nscoord ox, nscoord oy)

@@ -106,6 +106,8 @@ public:
   NS_IMETHOD  ClearViewFlags(PRUint32 aFlags);
   NS_IMETHOD  GetViewFlags(PRUint32 *aFlags) const;
   NS_IMETHOD  GetScratchPoint(nsPoint **aPoint);
+  NS_IMETHOD  SetCompositorFlags(PRUint32 aFlags);
+  NS_IMETHOD  GetCompositorFlags(PRUint32 *aFlags);
   NS_IMETHOD  GetExtents(nsRect *aExtents);
 
   // XXX Temporary for Bug #19416
@@ -138,6 +140,7 @@ protected:
   PRUint32          mVFlags;
   nsIRegion*        mDirtyRegion;
   nsPoint           mScratchPoint;
+  PRUint32			mCompositorFlags;
 
   // Bug #19416
   PRBool            mShouldIgnoreSetPosition;

@@ -483,6 +483,13 @@ public:
    * @return error status
    */
   NS_IMETHOD GetScratchPoint(nsPoint **aPoint) = 0;
+  
+  /**
+   * Used by the compositor for temporary marking of a view during
+   * compositing. This will eventually replace GetScratchPoint above.
+   */
+  NS_IMETHOD SetCompositorFlags(PRUint32 aFlags) = 0;
+  NS_IMETHOD GetCompositorFlags(PRUint32 *aFlags) = 0;
 
   /**
    * Get the extents of the view tree from 'this' down.
