@@ -3273,12 +3273,7 @@ dnl ========================================================
 
 MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc xmlextras help pref transformiix venkman inspector irc universalchardet typeaheadfind"
 
-dnl Check if Thai Rendering Extension needs to be enabled
-if test -n "$SUNCTL"; then
-  MOZ_EXTENSIONS_DEFAULT="$MOZ_EXTENSIONS_DEFAULT ctl"
-fi
-
-MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT xmlterm access-builtin ctl p3p interfaceinfo" 
+MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT xmlterm access-builtin p3p interfaceinfo" 
 
 MOZ_ARG_ENABLE_STRING(extensions,
 [  --enable-extensions     Enable extensions],
@@ -4333,17 +4328,6 @@ AC_SUBST(GLIB_GMODULE_LIBS)
 AC_SUBST(HOST_LIBIDL_CONFIG)
 AC_SUBST(HOST_LIBIDL_CFLAGS)
 AC_SUBST(HOST_LIBIDL_LIBS)
-
-dnl older versions of glib do not seem to have gmodule which ctl needs
-if test "`echo $MOZ_EXTENSIONS | grep -c ctl 2>/dev/null`" != 0; then
-_SAVE_CFLAGS=$CFLAGS
-CFLAGS="$CFLAGS $GLIB_CFLAGS"
-AC_TRY_COMPILE([#include <gmodule.h>],
-    [ int x = 1; x++; ],,
-    [AC_MSG_WARN([Cannot build ctl without gmodule support in glib. Removing ctl from MOZ_EXTENSIONS.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|ctl||'` ])
-CFLAGS=$_SAVE_CFLAGS
-fi
 
 dnl ========================================================
 dnl Check for libart
