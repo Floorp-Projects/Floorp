@@ -605,8 +605,13 @@ void add_bookmark_cb(GtkWidget *menu_item,GtkWidget *embed)
   gchar *url;
   gchar *title;
   
-  FILE* file = g_strconcat(g_get_home_dir(),"/.Minimo/bookmarks",NULL);
-  if (!(bookmark_file = fopen(file,"a+"))) return;
+  char* file_path = g_strconcat(g_get_home_dir(),"/.Minimo/bookmarks",NULL);
+  if (!file_path)
+    return;
+
+  if (!(bookmark_file = fopen(file_path,"a+"))) return;
+
+  g_free(file_path);
   
   if (!(url= gtk_moz_embed_get_location(minEmbed))) return;
   
