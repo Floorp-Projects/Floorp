@@ -28,7 +28,7 @@
 #include "nsSoftwareUpdateIIDs.h"
 
 #include "nsInstall.h"
-#include "zipfile.h"
+//#include "zipfile.h" // replaced by nsIJAR.h
 
 #include "nsRepository.h"
 #include "nsIServiceManager.h"
@@ -40,7 +40,8 @@
 #include "jsapi.h"
 
 #include "nsIEventQueueService.h"
-
+#include "nsIEnumerator.h"
+#include "nsIJAR.h"
 
 static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
 static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
@@ -126,16 +127,29 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
 static nsresult 
 GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *scriptLength)
 {
-    // Open the jarfile.
-    void* hZip;
+    nsIJAR* hZip = nsnull;
+    PRInt32 result;
     
     *scriptBuffer = nsnull;
     *scriptLength = 0;
 
-    nsresult rv = ZIP_OpenArchive(jarFile ,  &hZip);
-    
-    if (rv != ZIP_OK)
+    static NS_DEFINE_IID(kIJARIID, NS_IJAR_IID);
+    static NS_DEFINE_IID(kJARCID,  NS_JAR_CID);
+    nsresult rv = nsComponentManager::CreateInstance(kJARCID, nsnull, kIJARIID, 
+                                                     (void**) &hZip);
+    // Open the jarfile
+    if (hZip)
+        rv = hZip->Open( jarFile, &result );
+    if (NS_FAILED(rv))
+    {
+        NS_IF_RELEASE(hZip);
         return rv;
+    }
+    if (result != 0)
+    {
+        NS_IF_RELEASE(hZip);
+        return NS_ERROR_FAILURE;
+    }
 
 
     // Read manifest file for Install Script filename.
@@ -147,13 +161,18 @@ GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *
     installJSFileSpec.MakeUnique();
 
     // Extract the install.js file.
-    rv  = ZIP_ExtractFile( hZip, "install.js", nsNSPRPath(installJSFileSpec) );
-    if (rv != ZIP_OK)
+    rv = hZip->Extract( "install.js", nsNSPRPath(installJSFileSpec), &result );
+    if (NS_FAILED(rv))
     {
-        ZIP_CloseArchive(&hZip);
+        NS_IF_RELEASE( hZip );
         return rv;
     }
-    
+    if (result != 0)
+    {
+        NS_IF_RELEASE(hZip);
+        return NS_ERROR_FAILURE;
+    }
+
     // Read it into a buffer
     char* buffer;
     PRUint32 bufferLength;
@@ -175,7 +194,7 @@ GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *
         delete [] buffer;
     }
 
-    ZIP_CloseArchive(&hZip);
+    NS_IF_RELEASE( hZip );
     fileStream.close();
     installJSFileSpec.Delete(PR_FALSE);
         
