@@ -137,6 +137,12 @@ static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 #define PLUGIN_PROPERTIES_URL "chrome://global/locale/downloadProgress.properties"
+
+// #defines for reading prefs and extra search plugin paths from windows registry
+#define _MAXKEYVALUE_ 8196
+#define _NS_PREF_COMMON_PLUGIN_REG_KEY_ "browser.plugins.registry_plugins_folder_key_location"
+#define _NS_COMMON_PLUGIN_KEY_NAME_ "Plugins Folders"
+
 void DisplayNoDefaultPluginDialog(const char *mimeType);
 
 /**
@@ -3367,9 +3373,65 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
                          lpath, 
                          PR_TRUE);  // check for specific plugins
   }
+
+  mPluginsLoaded = PR_TRUE; // at this point 'some' plugins have been loaded,
+                            // the rest is optional
+ 
+  // Check the windows registry for extra paths to scan for plugins
+  //
+  // We are going to get this registry key location from the pref:
+  //    browser.plugins.registry_plugins_folder_key_location
+  // The key name is "Plugins Folders"
+  //
+  // So, for example, in winprefs.js put in this line:
+  // pref ("browser.plugins.registry_plugins_folder_key_location","Software\\Mozilla\\Common");
+  // Then, in HKEY_LOCAL_MACHINE\Software\Mozilla\Common
+  // Make a string key "Plugins Folder" who's value is a list of paths sperated by semi-colons
+
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+  if (!prefs) return NS_OK;     // if we can't get to the prefs, bail
+  
+  char * regkey;
+  rv = prefs->CopyCharPref(_NS_PREF_COMMON_PLUGIN_REG_KEY_,&regkey);
+  if (!NS_SUCCEEDED(rv) || regkey == nsnull) return NS_OK; //if pref isn't set, bail
+  
+  unsigned char valbuf[_MAXKEYVALUE_];
+  char* pluginPath;
+  HKEY  newkey;
+  LONG  result;
+  DWORD type   = REG_SZ;
+  DWORD length = _MAXKEYVALUE_;
+ 
+  // set up layout path (if not done above)
+  nsCOMPtr<nsIFile> lpath = nsnull;
+  if(isLayoutPath)
+    lpath = path;
+
+  result = RegOpenKeyEx( HKEY_LOCAL_MACHINE, regkey, NULL, KEY_QUERY_VALUE, &newkey );
+  
+  if ( ERROR_SUCCESS == result ) {
+      result = RegQueryValueEx( newkey, _NS_COMMON_PLUGIN_KEY_NAME_, nsnull, &type, valbuf, &length );
+      RegCloseKey( newkey );
+      if ( ERROR_SUCCESS == result ) {
+          // tokenize reg key value by semi-colons
+        for ( pluginPath = strtok((char *)&valbuf, ";"); pluginPath; pluginPath = strtok(NULL, ";") ) {
+          nsFileSpec winRegPluginPath (pluginPath);
+          if (winRegPluginPath.Exists()) {     // check for validity of path first
+#ifdef DEBUG
+printf("found some more plugins at: %s\n", pluginPath);
+#endif
+              ScanPluginsDirectory( (nsPluginsDir)winRegPluginPath,
+                                                  compManager,
+                                                  lpath,
+                                                  PR_FALSE);  // check for even unwanted plugins                                                  
+            } 
+         }  
+      }      
+  }
+  free (regkey);  // clean up
+
 #endif // !XP_WIN
 
-  mPluginsLoaded = PR_TRUE;
   return NS_OK;
 }
 
