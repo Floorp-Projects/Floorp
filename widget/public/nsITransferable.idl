@@ -39,6 +39,7 @@
 #define kFileMime      "application/x-moz-file"
 #define kURLMime       "text/x-moz-url"
 #define kNativeImageMime "application/x-moz-nativeimage"
+#define kNativeHTMLMime "application/x-moz-nativehtml"
 
 %}
 

@@ -55,8 +55,8 @@
 //
 // Given some data and the flavor it corresponds to, creates the appropriate
 // nsISupports* wrapper for passing across IDL boundaries. Right now, everything
-// creates a two-byte |nsISupportsWString|, even "text/plain" since it is decoded
-// from the native platform charset into unicode.
+// creates a two-byte |nsISupportsWString|, except for "text/plain" and native
+// platform HTML (CF_HTML on win32)
 //
 void
 nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataBuff, 
@@ -65,7 +65,7 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
   if ( !aPrimitive )
     return;
 
-  if ( strcmp(aFlavor,kTextMime) == 0 ) {
+  if ( strcmp(aFlavor,kTextMime) == 0 || strcmp(aFlavor,kNativeHTMLMime) == 0 ) {
     nsCOMPtr<nsISupportsString> primitive;
     nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
                                        NS_GET_IID(nsISupportsString), getter_AddRefs(primitive));
