@@ -31,58 +31,48 @@ var rdfc = Components.classes["@mozilla.org/rdf/container-utils;1"]
              .getService(Components.interfaces.nsIRDFContainerUtils);
 var localstore = rdf.GetDataSource("rdf:localstore");
 
-function FillHistoryMenu( aParent, aMenu )
+function FillHistoryMenu(aParent, aMenu)
   {
-    // Get the content area docshell
-    var browserElement = document.getElementById("content");
-    if (browserElement)
-      {
-        var webNavigation = browserElement.webNavigation;
-        if (webNavigation)
-          {
-            var shistory = webNavigation.sessionHistory;
-            if (shistory)
-              {
-                //Remove old entries if any
-                deleteHistoryItems( aParent );
-                var count = shistory.count;
-                var index = shistory.index;
-                var end;
-                var j;
-                var entry;
+    // Remove old entries if any
+    deleteHistoryItems(aParent);
 
-                switch (aMenu)
-                  {
-                    case "back":
-                      end = (index > MAX_HISTORY_MENU_ITEMS) ? index - MAX_HISTORY_MENU_ITEMS : 0;
-                      for ( j = index - 1; j >= end; j--)
-                        {
-                          entry = shistory.getEntryAtIndex(j, false);
-                          if (entry)
-                            createMenuItem( aParent, j, entry.title );
-                        }
-                      break;
-                    case "forward":
-                      end  = ((count-index) > MAX_HISTORY_MENU_ITEMS) ? index + MAX_HISTORY_MENU_ITEMS : count;
-                      for ( j = index + 1; j < end; j++)
-                        {
-                          entry = shistory.getEntryAtIndex(j, false);
-                          if (entry)
-                            createMenuItem( aParent, j, entry.title );
-                        }
-                      break;
-                    case "go":
-                      end = count > MAX_HISTORY_MENU_ITEMS ? count - MAX_HISTORY_MENU_ITEMS : 0;
-                      for( j = count - 1; j >= end; j-- )
-                        {
-                          entry = shistory.getEntryAtIndex(j, false);
-                          if (entry)
-                            createCheckboxMenuItem( aParent, j, entry.title, j==index );
-                        }
-                      break;
-                  }
-              }
-          }
+    var sessionHistory = getWebNavigation().sessionHistory;
+
+    var count = sessionHistory.count;
+    var index = sessionHistory.index;
+    var end;
+    var j;
+    var entry;
+
+    switch (aMenu)
+      {
+        case "back":
+          end = (index > MAX_HISTORY_MENU_ITEMS) ? index - MAX_HISTORY_MENU_ITEMS : 0;
+          for (j = index - 1; j >= end; j--)
+            {
+              entry = sessionHistory.getEntryAtIndex(j, false);
+              if (entry)
+                createMenuItem(aParent, j, entry.title);
+            }
+          break;
+        case "forward":
+          end  = ((count-index) > MAX_HISTORY_MENU_ITEMS) ? index + MAX_HISTORY_MENU_ITEMS : count;
+          for (j = index + 1; j < end; j++)
+            {
+              entry = sessionHistory.getEntryAtIndex(j, false);
+              if (entry)
+                createMenuItem(aParent, j, entry.title);
+            }
+          break;
+        case "go":
+          end = count > MAX_HISTORY_MENU_ITEMS ? count - MAX_HISTORY_MENU_ITEMS : 0;
+          for (j = count - 1; j >= end; j--)
+            {
+              entry = sessionHistory.getEntryAtIndex(j, false);
+              if (entry)
+                createCheckboxMenuItem(aParent, j, entry.title, j==index);
+            }
+          break;
       }
   }
 
@@ -92,8 +82,7 @@ function executeUrlBarHistoryCommand( aTarget )
     var value = aTarget.getAttribute("value");
     if (index != "nothing_available" && value)
       {
-        gURLBar.value = value;
-        BrowserLoadURL();
+        loadShortcutOrURI(value);
       }
   }
 
