@@ -40,11 +40,20 @@
 
 // NOTE: alphabetically ordered
 #include "nsContentCID.h"
+#include "nsIDeviceContext.h"
 #include "nsIDocument.h"
+#include "nsIDOMAbstractView.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMDocumentView.h"
 #include "nsIDOMRange.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIFontMetrics.h"
 #include "nsIFrame.h"
+#include "nsIRenderingContext.h"
 #include "nsITextContent.h"
+#include "nsIWidget.h"
+#include "nsStyleStruct.h"
 #include "nsTextAccessible.h"
 #include "nsTextFragment.h"
 
@@ -330,10 +339,148 @@ NS_IMETHODIMP nsAccessibleText::GetAttributeRange(PRInt32 aOffset, PRInt32 *aRan
 /*
  * Given an offset, the x, y, width, and height values are filled appropriately.
  */
-NS_IMETHODIMP nsAccessibleText::GetCharacterExtents(PRInt32 aOffset, PRInt32 *aX, PRInt32 *aY, PRInt32 *aLength, PRInt32 *aWidth, nsAccessibleCoordType aCoordType)
+NS_IMETHODIMP nsAccessibleText::GetCharacterExtents(PRInt32 aOffset,
+              PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight,
+              nsAccessibleCoordType aCoordType)
 {
-  // will do better job later
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mTextNode->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPresShell> shell;
+  doc->GetShellAt(0, getter_AddRefs(shell));
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPresContext> context;
+  shell->GetPresContext(getter_AddRefs(context));
+  NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mTextNode));
+  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+
+  nsIFrame *frame = nsnull;
+  shell->GetPrimaryFrameFor(content, &frame);
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+
+  nsRect frameRect;
+  if (NS_FAILED(frame->GetRect(frameRect))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIRenderingContext> rc;
+  shell->CreateRenderingContext(frame, getter_AddRefs(rc));
+  NS_ENSURE_TRUE(rc, NS_ERROR_FAILURE);
+
+  const nsStyleFont *font;
+  frame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
+  NS_ENSURE_TRUE(font, NS_ERROR_FAILURE);
+
+  const nsStyleVisibility *visibility;
+  frame->GetStyleData(eStyleStruct_Visibility,
+      (const nsStyleStruct *&)visibility);
+  nsCOMPtr<nsIAtom> langGroup;
+  if (visibility && visibility->mLanguage) {
+    visibility->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
+  }
+
+  if (NS_FAILED(rc->SetFont(font->mFont, langGroup))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIFontMetrics *fm;
+  rc->GetFontMetrics(fm);
+  NS_ENSURE_TRUE(fm, NS_ERROR_FAILURE);
+
+  PRUnichar ch;
+  if (NS_FAILED(GetCharacterAtOffset(aOffset, &ch))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  float t2p;
+  if (NS_FAILED(context->GetTwipsToPixels(&t2p))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  //Getting width
+  nscoord tmpWidth;
+  if (NS_SUCCEEDED(rc->GetWidth(ch, tmpWidth))) {
+    *aWidth = NSTwipsToIntPixels(tmpWidth, t2p);
+  }
+
+  //Getting height
+  nscoord tmpHeight;
+  if (NS_SUCCEEDED(fm->GetHeight(tmpHeight))) {
+    *aHeight = NSTwipsToIntPixels(tmpHeight, t2p);
+  }
+
+  //Getting x and y
+  PRInt32 tmpX, tmpY;
+  tmpX = frameRect.x;
+  tmpY = frameRect.y;
+
+  //add the width of the string before current char
+  nsAutoString beforeString;
+  nscoord beforeWidth;
+  if (NS_SUCCEEDED(GetText(0, aOffset, beforeString)) &&
+      NS_SUCCEEDED(rc->GetWidth(beforeString, beforeWidth))) {
+    tmpX += beforeWidth;
+  }
+
+  //find the topest frame, add the offset recursively
+  nsRect tmpRect;
+  nsIFrame *parentFrame = nsnull, *tmpFrame = frame;
+  nsresult rv = tmpFrame->GetParent(&parentFrame);
+  while (NS_SUCCEEDED(rv) && parentFrame) {
+    if (NS_SUCCEEDED(parentFrame->GetRect(tmpRect))) {
+      tmpX += tmpRect.x;
+      tmpY += tmpRect.y;
+    }
+    tmpFrame = parentFrame;
+    rv = tmpFrame->GetParent(&parentFrame);
+  }
+
+  tmpX = NSTwipsToIntPixels(tmpX, t2p);
+  tmpY = NSTwipsToIntPixels(tmpY, t2p);
+
+  //change to screen co-ord
+  nsIWidget *frameWidget;
+  if (NS_SUCCEEDED(tmpFrame->GetWindow(context, &frameWidget))) {
+    nsRect oldRect(tmpX, tmpY, 0, 0), newRect;
+    if (NS_SUCCEEDED(frameWidget->WidgetToScreen(oldRect, newRect))) {
+      tmpX = newRect.x;
+      tmpY = newRect.y;
+    }
+  }
+
+  if (aCoordType == COORD_TYPE_WINDOW) {
+    //co-ord type = window
+    nsCOMPtr<nsIDOMDocumentView> docView(do_QueryInterface(doc));
+    NS_ENSURE_TRUE(docView, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDOMAbstractView> abstractView;
+    docView->GetDefaultView(getter_AddRefs(abstractView));
+    NS_ENSURE_TRUE(abstractView, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDOMWindowInternal> windowInter(do_QueryInterface(abstractView));
+    NS_ENSURE_TRUE(windowInter, NS_ERROR_FAILURE);
+
+    PRInt32 screenX,screenY;
+    if (NS_FAILED(windowInter->GetScreenX(&screenX)) ||
+        NS_FAILED(windowInter->GetScreenY(&screenY))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    *aX = tmpX - screenX;
+    *aY = tmpY - screenY;
+  }
+  else {
+    //default: co-ord type = screen
+    *aX = tmpX;
+    *aY = tmpY;
+  }
+
+  return NS_OK;
 }
 
 /*
