@@ -268,6 +268,7 @@ private:
 // Standard implementations of addref/release.
 NS_IMPL_ADDREF( nsFindDialog );
 NS_IMPL_RELEASE( nsFindDialog );
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 NS_IMETHODIMP 
 nsFindDialog::QueryInterface( REFNSIID anIID, void **anInstancePtr) {
@@ -284,7 +285,7 @@ nsFindDialog::QueryInterface( REFNSIID anIID, void **anInstancePtr) {
         } else if ( anIID.Equals( nsIDocumentObserver::GetIID() ) ) {
             *anInstancePtr = (void*) ((nsIDocumentObserver*)this);
             NS_ADDREF_THIS();
-        } else if ( anIID.Equals( ::nsISupports::GetIID() ) ) {
+        } else if ( anIID.Equals( kISupportsIID ) ) {
             *anInstancePtr = (void*) ((nsISupports*)(nsIDocumentObserver*)this);
             NS_ADDREF_THIS();
         } else {
