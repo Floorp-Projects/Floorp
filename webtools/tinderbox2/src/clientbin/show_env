@@ -3,7 +3,10 @@
 #
 
 
-# show_env - a pretty print replacement for the env command.
+# show_env - a pretty print replacement for the env command. The
+# output is broken up using common separators so that it is easier to
+# read.  The output is /bin/sh compatible and can be sourced to
+# recreate the environment.
 
 
 # The contents of this file are subject to the Mozilla Public
@@ -27,8 +30,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.1 $
-# $Date: 2001/02/27 15:43:27 $
+# $Revision: 1.2 $
+# $Date: 2001/03/15 17:59:15 $
 # $Author: kestes%tradinglinx.com $
 # $Name:  $
 
@@ -38,25 +41,32 @@ sub pretty_print {
 	
     my ($str)=@_;
     
-    # protect single quotes with a backslash
-#    $str = s!\'!\\\'!  
+    # protect quotes and dollars with a backslash
+    $str =~ s!\"!\\\"!;  
+    $str =~ s!\$!\\\$!;  
 
-    $str =~ s!:!\'.\n\t\':!g;
-    $str =~ s!,!\'.\n\t\',!g;
-    $str =~ s!;!\'.\n\t\';!g;
-    $str =~ s! !\'.\n\t\' !g;
+    # break lines at the different separators in the string
+    $separator = "\";\n\tx=\"\$x";
+
+    $str =~ s!;!$separator;!g;
+    $str =~ s!:!$separator:!g;
+    $str =~ s!,!$separator,!g;
+    $str =~ s! !$separator !g;
+
+    $str = "\tx=\"$str\";\n";
     
     return $str;
 }
 
 
-sub main {
-    foreach $env (sort keys %ENV) {	
-	print "\$ENV{'$env'}='".
-	    &pretty_print($ENV{$env}).
-	    "';\n";
-    }
-    exit 0;   
-}
+# ------- main ---------
 
-&main();
+{
+
+  foreach $env (sort keys %ENV) {	
+    print &pretty_print($ENV{$env});
+    print "\n$env=\$x; export $env;\n\n";
+  }
+
+  exit 0;   
+}
