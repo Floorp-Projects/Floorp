@@ -6,6 +6,9 @@ dummy-flash.rdf
 flash-registry.rdf
 flash.js
 flash.xul
+panel-exists.xul
+panel-add-confirm.js
+panel-add-confirm.xul
 preview.css
 preview.js
 preview.xul
@@ -13,4 +16,3 @@ sidebarOverlay.js
 sidebarOverlay.xul
 local-panels.rdf
 remote-panels.rdf
-default-panels.rdf
