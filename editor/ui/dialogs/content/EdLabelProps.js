@@ -57,7 +57,7 @@ function Startup()
 
   editorShell.SelectElement(labelElement);
   gDialog.labelText.value = GetSelectionAsText();
-  if (labelElement.innerHTML.match(/</))
+  if (/</.test(labelElement.innerHTML))
   {
     gDialog.editText.checked = false;
     gDialog.editText.disabled = false;

@@ -117,7 +117,7 @@ function InitDialog()
 {
   // Get image from document
   gBackgroundImage = GetHTMLOrCSSStyleValue(globalElement, backgroundStr, cssBackgroundImageStr);
-  if (gBackgroundImage.match( /url\((.*)\)/ ))
+  if (/url\((.*)\)/.test( gBackgroundImage ))
     gBackgroundImage = RegExp.$1;
 
   gDialog.BackgroundImageInput.value = gBackgroundImage;
