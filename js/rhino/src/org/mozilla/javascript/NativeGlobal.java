@@ -37,8 +37,7 @@
 
 package org.mozilla.javascript;
 
-import java.io.StringReader;
-import java.io.IOException;
+import java.io.Serializable;
 import java.lang.reflect.Method;
 
 /**
@@ -50,7 +49,8 @@ import java.lang.reflect.Method;
  * @author Mike Shaver
  */
 
-public class NativeGlobal implements IdFunctionMaster {
+public class NativeGlobal implements Serializable, IdFunctionMaster
+{
 
     public static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeGlobal obj = new NativeGlobal();
