@@ -621,7 +621,8 @@ nsStandardURL::SetFileName(char * aFileName)
 NS_IMETHODIMP
 nsStandardURL::GetQuery(char * *aQuery)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aQuery = nsCRT::strdup(mQuery);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
