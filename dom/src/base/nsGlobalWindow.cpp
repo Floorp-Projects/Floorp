@@ -1095,14 +1095,14 @@ NS_IMETHODIMP GlobalWindowImpl::GetScrollX(PRInt32* aScrollX)
 {
    NS_ENSURE_ARG_POINTER(aScrollX);
    nsresult result = NS_OK;
-   nsCOMPtr<nsIScrollableView> view;
+   nsIScrollableView *view; // no addref/release for views
    float p2t, t2p;
 
    *aScrollX = 0;
 
    FlushPendingNotifications();
 
-   GetScrollInfo(getter_AddRefs(view), &p2t, &t2p);
+   GetScrollInfo(&view, &p2t, &t2p);
    if(view)
       {
       nscoord xPos, yPos;
@@ -1117,14 +1117,14 @@ NS_IMETHODIMP GlobalWindowImpl::GetScrollY(PRInt32* aScrollY)
 {
    NS_ENSURE_ARG_POINTER(aScrollY);
    nsresult result = NS_OK;
-   nsCOMPtr<nsIScrollableView> view;
+   nsIScrollableView *view; // no addref/release for views
    float p2t, t2p;
 
    *aScrollY = 0;
 
    FlushPendingNotifications();
 
-   GetScrollInfo(getter_AddRefs(view), &p2t, &t2p);
+   GetScrollInfo (&view, &p2t, &t2p);
    if(view)
       {
       nscoord xPos, yPos;
@@ -1461,26 +1461,27 @@ NS_IMETHODIMP GlobalWindowImpl::Scroll(PRInt32 aXScroll, PRInt32 aYScroll)
 NS_IMETHODIMP GlobalWindowImpl::ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)
 {
    nsresult result;
-   nsCOMPtr<nsIScrollableView> view;
+   nsIScrollableView *view; // no addref/release for views
    float p2t, t2p;
-   result = GetScrollInfo(getter_AddRefs(view), &p2t, &t2p);
+   result = GetScrollInfo(&view, &p2t, &t2p);
 
    if(view)
       {
       result = view->ScrollTo(NSIntPixelsToTwips(aXScroll, p2t),
-                            NSIntPixelsToTwips(aYScroll, p2t), 
-                            NS_VMREFRESH_IMMEDIATE);
+                              NSIntPixelsToTwips(aYScroll, p2t), 
+                              NS_VMREFRESH_IMMEDIATE);
       }
-  
+
    return result;
 }
 
 NS_IMETHODIMP GlobalWindowImpl::ScrollBy(PRInt32 aXScrollDif, PRInt32 aYScrollDif)
 {
    nsresult result;
-   nsCOMPtr<nsIScrollableView> view;
+   nsIScrollableView *view; // no addref/release for views
    float p2t, t2p;
-   result = GetScrollInfo(getter_AddRefs(view), &p2t, &t2p);
+   
+   result = GetScrollInfo(&view, &p2t, &t2p);
    
    if(view)
       {
@@ -1489,8 +1490,8 @@ NS_IMETHODIMP GlobalWindowImpl::ScrollBy(PRInt32 aXScrollDif, PRInt32 aYScrollDi
       if(NS_SUCCEEDED(result))
          {
          result = view->ScrollTo(xPos + NSIntPixelsToTwips(aXScrollDif, p2t),
-                              yPos + NSIntPixelsToTwips(aYScrollDif, p2t), 
-                              NS_VMREFRESH_IMMEDIATE);
+                                 yPos + NSIntPixelsToTwips(aYScrollDif, p2t), 
+                                 NS_VMREFRESH_IMMEDIATE);
          }
       }
 
