@@ -847,15 +847,17 @@ nsresult nsSecureBrowserUIImpl::FinishedLoadingStateChange(nsIRequest* aRequest)
     }
     else
     {
-      // high
+      // toplevel is high security
 
-      if (mSubRequestsLowSecurity
-          ||
-          mSubRequestsBrokenSecurity
+      if (mSubRequestsBrokenSecurity
           ||
           mSubRequestsNoSecurity)
       {
         newSecurityState = lis_mixed_security;
+      }
+      else if (mSubRequestsLowSecurity)
+      {
+        newSecurityState = lis_low_security;
       }
       else
       {
