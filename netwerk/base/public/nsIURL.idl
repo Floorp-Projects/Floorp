@@ -126,9 +126,9 @@ interface nsIURL : nsIURI
 /**
  * Protocol writers can obtain a default nsIURL implementation by calling the
  * component manager with NS_STANDARDURL_CID. The implementation returned will 
- * only implement the set of accessors specified by nsIURL. After obtaining the
- * instance from the component manager, the Init routine must be called on it
- * to initialize it from the user's URL spec. 
+ * implement only the set of accessors specified by nsIURL. After obtaining the
+ * instance from the component manager, the Init routine must be called on the
+ * new instance to initialize it from the user's URL spec. 
  */
 
 [scriptable, uuid(8793370a-311f-11d4-9876-00c04fa0cf4a)]

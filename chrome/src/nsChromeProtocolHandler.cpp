@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 /*
@@ -25,29 +25,32 @@
   A protocol handler for ``chrome:''
 
 */
- 
-#include "nsCOMPtr.h"
-#include "nsCRT.h"
+
 #include "nsChromeProtocolHandler.h"
+#include "nsCOMPtr.h"
+#include "nsContentCID.h"
+#include "nsCRT.h"
 #include "nsIChannel.h"
-#include "nsIFileChannel.h"
 #include "nsIChromeRegistry.h"
 #include "nsIComponentManager.h"
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
+#include "nsIFastLoadService.h"
+#include "nsIFile.h"
+#include "nsIFileChannel.h"
 #include "nsIIOService.h"
-#include "nsILoadGroup.h"
-#include "nsIResChannel.h"
 #include "nsIJARChannel.h"
+#include "nsIJARURI.h"
+#include "nsILoadGroup.h"
+#include "nsIObjectOutputStream.h"
+#include "nsIResChannel.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIStreamListener.h"
 #include "nsIServiceManager.h"
-#include "nsIXULDocument.h"
+#include "nsIStreamListener.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULPrototypeDocument.h"
-#include "nsContentCID.h"
-#include "nsXPIDLString.h"
 #include "nsNetCID.h"
+#include "nsXPIDLString.h"
 #include "prlog.h"
 
 //----------------------------------------------------------------------
@@ -127,8 +130,8 @@ public:
     NS_IMETHOD SetLoadGroup(nsILoadGroup *);
     NS_IMETHOD GetLoadFlags(nsLoadFlags *);
     NS_IMETHOD SetLoadFlags(nsLoadFlags);
-    
-// nsIChannel    
+
+// nsIChannel
     NS_DECL_NSICHANNEL
 
 };
@@ -137,8 +140,8 @@ public:
 PRLogModuleInfo* nsCachedChromeChannel::gLog;
 #endif
 
-NS_IMPL_ISUPPORTS2(nsCachedChromeChannel, 
-                   nsIChannel, 
+NS_IMPL_ISUPPORTS2(nsCachedChromeChannel,
+                   nsIChannel,
                    nsIRequest);
 
 nsresult
@@ -267,7 +270,7 @@ nsCachedChromeChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 NS_IMETHODIMP
 nsCachedChromeChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
-    *aLoadFlags = mLoadFlags; 
+    *aLoadFlags = mLoadFlags;
     return NS_OK;
 }
 
@@ -321,7 +324,7 @@ nsCachedChromeChannel::SetNotificationCallbacks(nsIInterfaceRequestor * aNotific
     return NS_OK;	// ignored
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsCachedChromeChannel::GetContentType(char * *aContentType)
 {
     *aContentType = nsCRT::strdup("mozilla.application/cached-xul");
@@ -407,7 +410,7 @@ nsCachedChromeChannel::HandleStartLoadEvent(PLEvent* aEvent)
     // send On[Start|Stop]Request().
     if (NS_FAILED(channel->mStatus))
       return nsnull;
-    
+
     PR_LOG(gLog, PR_LOG_DEBUG,
               ("nsCachedChromeChannel[%p]: firing OnStartRequest for %p",
                channel, channel->mListener.get()));
@@ -432,7 +435,7 @@ nsCachedChromeChannel::HandleStopLoadEvent(PLEvent* aEvent)
            ("nsCachedChromeChannel[%p]: firing OnStopRequest for %p",
             channel, channel->mListener.get()));
 
-    (void) channel->mListener->OnStopRequest(request, channel->mContext, 
+    (void) channel->mListener->OnStopRequest(request, channel->mContext,
                                              channel->mStatus);
 
     if (channel->mLoadGroup) {
@@ -513,10 +516,10 @@ nsChromeProtocolHandler::GetDefaultPort(PRInt32 *result)
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsChromeProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
 {
-    // don't override anything.  
+    // don't override anything.
     *_retval = PR_FALSE;
     return NS_OK;
 }
@@ -534,31 +537,27 @@ nsChromeProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 {
     nsresult rv;
 
-    // Chrome: URLs (currently) have no additional structure beyond that provided by standard
-    // URLs, so there is no "outer" given to CreateInstance 
+    // Chrome: URLs (currently) have no additional structure beyond that provided
+    // by standard URLs, so there is no "outer" given to CreateInstance
 
-    nsIURI* url;
-    rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
-                                            NS_GET_IID(nsIURI),
-                                            (void**)&url);
+    nsCOMPtr<nsIURI> url(do_CreateInstance(kStandardURLCID));
     if (NS_FAILED(rv)) return rv;
 
     if (aBaseURI) {
         nsXPIDLCString aResolvedURI;
         rv = aBaseURI->Resolve(aSpec, getter_Copies(aResolvedURI));
-        if (NS_FAILED(rv)) return rv;
-        rv = url->SetSpec(aResolvedURI);
+        if (NS_SUCCEEDED(rv))
+            rv = url->SetSpec(aResolvedURI);
     }
     else {
         rv = url->SetSpec((char*)aSpec);
     }
 
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(url);
+    if (NS_FAILED(rv))
         return rv;
-    }
 
     *result = url;
+    NS_ADDREF(*result);
     return rv;
 }
 
@@ -580,7 +579,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
 
     // Check the prototype cache to see if we've already got the
     // document in the cache.
-    nsCOMPtr<nsIXULPrototypeCache> cache = 
+    nsCOMPtr<nsIXULPrototypeCache> cache =
              do_GetService(kXULPrototypeCacheCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
@@ -598,7 +597,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         // Miss. Resolve the chrome URL using the registry and do a
         // normal necko load.
         nsCOMPtr<nsIURI> chromeURI;
-        rv = aURI->Clone(getter_AddRefs(chromeURI));        // don't mangle the original
+        rv = aURI->Clone(getter_AddRefs(chromeURI)); // don't mangle the original
         if (NS_FAILED(rv)) return rv;
 
         //nsXPIDLCString oldSpec;
@@ -609,31 +608,31 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         rv = reg->ConvertChromeURL(chromeURI, getter_Copies(spec));
         if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
+        nsCOMPtr<nsIIOService> ioServ(do_GetService(kIOServiceCID, &rv));
         if (NS_FAILED(rv)) return rv;
-        
-        rv = serv->NewURI(spec, nsnull, getter_AddRefs(chromeURI));
+
+        rv = ioServ->NewURI(spec, nsnull, getter_AddRefs(chromeURI));
         if (NS_FAILED(rv)) return rv;
-        
-        rv = serv->NewChannelFromURI(chromeURI, getter_AddRefs(result));
+
+        rv = ioServ->NewChannelFromURI(chromeURI, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
         // XXX Will be removed someday when we handle remote chrome.
-        nsCOMPtr<nsIJARChannel> jar;
-        nsCOMPtr<nsIResChannel> res;
-        nsCOMPtr<nsIFileChannel> file;
-        res = do_QueryInterface(result);
-        if (!res) {
-          file = do_QueryInterface(result);
-          if (!file)
-            jar = do_QueryInterface(result);
+        nsCOMPtr<nsIFileChannel> fileChan;
+        nsCOMPtr<nsIResChannel> resChan;
+        nsCOMPtr<nsIJARChannel> jarChan;
+        fileChan = do_QueryInterface(result);
+        if (!fileChan) {
+            resChan = do_QueryInterface(result);
+            if (!resChan)
+                jarChan = do_QueryInterface(result);
         }
-        if (!res && !file && !jar) {
-          NS_WARNING("Remote chrome not allowed! Only file:, resource:, and jar: are valid.\n");
-          result = nsnull;
-          return NS_ERROR_FAILURE;
+        if (!fileChan && !resChan && !jarChan) {
+            NS_WARNING("Remote chrome not allowed! Only file:, resource:, and jar: are valid.\n");
+            result = nsnull;
+            return NS_ERROR_FAILURE;
         }
-        
+
         // Make sure that the channel remembers where it was
         // originally loaded from.
         rv = result->SetOriginalURI(aURI);
@@ -644,19 +643,75 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
         nsXPIDLCString fileExtension;
         rv = url->GetFileExtension(getter_Copies(fileExtension));
-        if (PL_strcasecmp(fileExtension, "xul") == 0 || PL_strcasecmp(fileExtension, "html") == 0 ||
+        if (PL_strcasecmp(fileExtension, "xul") == 0 ||
+            PL_strcasecmp(fileExtension, "html") == 0 ||
             PL_strcasecmp(fileExtension, "xml") == 0)
         {
-            nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+            nsCOMPtr<nsIScriptSecurityManager> securityManager =
                      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
             if (NS_FAILED(rv)) return rv;
-            
+
             nsCOMPtr<nsIPrincipal> principal;
             rv = securityManager->GetSystemPrincipal(getter_AddRefs(principal));
             if (NS_FAILED(rv)) return rv;
-            
+
             nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
             result->SetOwner(owner);
+        }
+
+        // Track FastLoad file dependencies.
+        //
+        // This is harder than it ought to be!  While an nsResChannel "is-a"
+        // nsIFileChannel, an nsJARChannel is not.  Once you unravel the jar:
+        // URI, you may have a resource: URL -- but without a channel for it,
+        // you can't get the URI that it yields through substitution!
+        //
+        // XXXbe fix nsResChannel.cpp to move the substitution code into a new
+        //       nsResURL class?
+        nsCOMPtr<nsIFastLoadService> fastLoadServ(do_GetFastLoadService());
+        if (fastLoadServ) {
+            nsCOMPtr<nsIObjectOutputStream> objectOutput;
+            fastLoadServ->GetOutputStream(getter_AddRefs(objectOutput));
+            if (objectOutput) {
+                nsCOMPtr<nsIFile> file;
+                nsCOMPtr<nsIChannel> chan = result;
+                while (!fileChan) {
+                    nsCOMPtr<nsIURI> uri;
+                    chan->GetURI(getter_AddRefs(uri));
+
+                    // Loop, jar: URIs can nest (e.g. jar:jar:A.jar!B.jar!C.xml).
+                    // Often, however, we have jar:resource:/chrome/A.jar!C.xml.
+                    nsCOMPtr<nsIJARURI> jarURI;
+                    while ((jarURI = do_QueryInterface(uri)) != nsnull)
+                        jarURI->GetJARFile(getter_AddRefs(uri));
+
+                    // Here we must have a URL of the form resource:/chrome/A.jar
+                    // or file:/some/path/to/A.jar.  Let's hope for the latter.
+                    nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(uri));
+                    if (fileURL) {
+                        fileURL->GetFile(getter_AddRefs(file));
+                        if (file)
+                            break;
+                    }
+
+                    // Thanks to the way that the resource: URL implementation
+                    // hides its substitution code from itself and the rest of
+                    // the world, we must make a new channel simply to get the
+                    // substituted URI.
+                    ioServ->NewChannelFromURI(uri, getter_AddRefs(chan));
+                    if (!chan)
+                        break;
+                    fileChan = do_QueryInterface(chan);
+                }
+
+                if (!file && fileChan)
+                    fileChan->GetFile(getter_AddRefs(file));
+                if (file) {
+                    rv = fastLoadServ->AddDependency(file);
+                    if (NS_FAILED(rv))
+                        cache->AbortFastLoads();
+                }
+            }
         }
     }
 

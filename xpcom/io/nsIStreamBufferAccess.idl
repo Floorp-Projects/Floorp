@@ -86,6 +86,11 @@ interface nsIStreamBufferAccess : nsISupports
      */
     void disableBuffering();
     void enableBuffering();
+
+    /**
+     * The underlying, unbuffered input or output stream.
+     */
+    readonly attribute nsISupports unbufferedStream;
 };
 
 %{C++

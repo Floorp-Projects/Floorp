@@ -100,14 +100,12 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsFileOutputStream : public nsFileStream,
-                           public nsIFileOutputStream,
-                           public nsISeekableOutputStream
+                           public nsIFileOutputStream
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIOUTPUTSTREAM
     NS_DECL_NSIFILEOUTPUTSTREAM
-    NS_DECL_NSISEEKABLEOUTPUTSTREAM
 
     nsFileOutputStream() : nsFileStream() {}
     virtual ~nsFileOutputStream() { nsFileOutputStream::Close(); }

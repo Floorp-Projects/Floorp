@@ -82,7 +82,7 @@ nsJARURI::FormatSpec(const char* entryPath, char* *result)
     rv = mJARFile->GetSpec(&jarFileSpec);
     if (NS_FAILED(rv)) return rv;
 
-    nsCString spec(NS_JAR_SCHEME);
+    nsCAutoString spec(NS_JAR_SCHEME);
     spec += jarFileSpec;
     nsCRT::free(jarFileSpec);
     spec += NS_JAR_DELIMITER;
@@ -368,7 +368,7 @@ nsJARURI::Resolve(const char *relativePath, char **result)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIJARUri methods:
+// nsIJARURI methods:
 
 NS_IMETHODIMP
 nsJARURI::GetJARFile(nsIURI* *jarFile)
