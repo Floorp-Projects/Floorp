@@ -30,7 +30,7 @@ public class Utilities {
         for (int i = 0; i < args.length; i++) {
             System.out.println("--[java]callMethodByIndex args["+i+"] = "+args[i]);
         }
-        Method method = getMethodByIndex(mid,iid);
+        Method method = InterfaceRegistry.getMethodByIndex(mid,iid);
         System.out.println("--[java] org.mozilla.xpcom.Utilities.callMethodByIndex method "+method);
         try {
             if (method != null) {
@@ -42,9 +42,10 @@ public class Utilities {
         System.out.println("--callMethodByIndex method finished"+method);
         return null; //nb for testing
     }
+
     static Object callMethod(long oid, Method method, IID iid, long orb , Object[] args) {
         System.out.println("--[java]Utilities.callMethod "+method);
-        int mid = getIndexByMethod(method, iid);
+        int mid = InterfaceRegistry.getIndexByMethod(method, iid);
         if (mid <= 0) {
             System.out.println("--[java]Utilities.callMethod we do not have implementation for "+method);
             return null;
@@ -52,24 +53,9 @@ public class Utilities {
         System.out.println("--[java]Utilities.callMethod "+mid);
         return callMethodByIndex(oid,mid,iid.getString(), orb, args);
     }
-    
-    private static Method getMethodByIndex(int index, IID iid) {
-        Method result = null;
-        ProxyClass proxyClass = ProxyClass.getProxyClass(iid);
-        if (proxyClass != null) {
-            result = proxyClass.getMethodByIndex(index);
-        }
-        return result;
-    }
-    private static int getIndexByMethod(Method method, IID iid) {
-        int result = 0;
-        ProxyClass proxyClass = ProxyClass.getProxyClass(iid);
-        if (proxyClass != null) {
-            result = proxyClass.getIndexByMethod(method);
-        }
-        return result;
-    }
+
     private static native  Object callMethodByIndex(long oid, int index, String iid, long orb, Object[] args);
+    static native String[] getInterfaceMethodNames(String iid);
     static {
         System.loadLibrary("bcjavastubs");
     }

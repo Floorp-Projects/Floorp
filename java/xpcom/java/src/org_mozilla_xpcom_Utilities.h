@@ -15,6 +15,14 @@ extern "C" {
 JNIEXPORT jobject JNICALL Java_org_mozilla_xpcom_Utilities_callMethodByIndex
   (JNIEnv *, jclass, jlong, jint, jstring, jlong, jobjectArray);
 
+/*
+ * Class:     org_mozilla_xpcom_Utilities
+ * Method:    getInterfaceMethodNames
+ * Signature: (Ljava/lang/String;)[Ljava/lang/String;
+ */
+JNIEXPORT jobjectArray JNICALL Java_org_mozilla_xpcom_Utilities_getInterfaceMethodNames
+  (JNIEnv *, jclass, jstring);
+
 #ifdef __cplusplus
 }
 #endif

@@ -18,6 +18,7 @@
  *
  * Contributor(s):
  * Igor Kushnirskiy <idk@eng.sun.com>
+ * Denis Sharypov <sdv@sparc.spb.su>
  */
 #include "nsISupports.h"
 #include "org_mozilla_xpcom_Utilities.h"
@@ -28,6 +29,7 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "bcJavaMarshalToolkit.h"
+#include "ctype.h"
 
 /*
  * Class:     org_mozilla_xpcom_Utilities
@@ -69,3 +71,45 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_xpcom_Utilities_callMethodByIndex
     return NULL;
 }
 
+/*
+ * Class:     org_mozilla_xpcom_Utilities
+ * Method:    getInterfaceMethodNames
+ * Signature: (Ljava/lang/String;)[Ljava/lang/String;
+ */
+JNIEXPORT jobjectArray JNICALL Java_org_mozilla_xpcom_Utilities_getInterfaceMethodNames
+    (JNIEnv *env, jclass clazz, jstring jiid) {
+    if (!jiid) {
+        return NULL;
+    }
+    nsIID iid;
+    const char * str = NULL;
+    str = env->GetStringUTFChars(jiid, NULL);
+    iid.Parse(str);
+    env->ReleaseStringUTFChars(jiid,str);
+
+    nsIInterfaceInfo *interfaceInfo;
+    nsIInterfaceInfoManager* iimgr;
+    if((iimgr = XPTI_GetInterfaceInfoManager()) != NULL) {
+        if (NS_FAILED(iimgr->GetInfoForIID(&iid, &interfaceInfo))) {
+            return NULL;  //nb exception handling
+        }
+        NS_RELEASE(iimgr);
+    } else {
+        return NULL;
+    }
+    PRUint16 num;
+    interfaceInfo->GetMethodCount(&num);
+    jobjectArray names;
+    jclass stringClass = env->GetObjectClass(jiid);
+    names = env->NewObjectArray(num, stringClass, NULL);    
+    nsXPTMethodInfo* info;
+    char buf[256];
+    for (int i = 0; i < num; i++) {
+        interfaceInfo->GetMethodInfo(i, (const nsXPTMethodInfo **)&info);
+        const char* name = info->GetName();
+        // first letter of the method name is in lowercase in java
+        sprintf(buf, "%c%s", tolower(*name), name + 1);
+        env->SetObjectArrayElement(names, i, env->NewStringUTF(buf));                
+    }
+    return names;
+}

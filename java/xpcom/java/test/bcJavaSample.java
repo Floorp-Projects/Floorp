@@ -21,6 +21,7 @@
  */
 import org.mozilla.xpcom.*;
 import java.lang.reflect.*;
+
 public class bcJavaSample implements bcIJavaSample {
     public bcJavaSample() {
         System.out.println("--[java]bcJavaSample constructor");
@@ -71,32 +72,8 @@ public class bcJavaSample implements bcIJavaSample {
         String[] returnArray = {"4","3","2","1"};
         valueArray[0] = returnArray;
     }
-    static IID bcIJavaSampleIID;
-    static IID nsISupportsIID;
-    static { 
-        try {
-            Method[] methods = null;
-            Class bcIJavaSampleClass = Class.forName("bcIJavaSample");
-            Class IIDClass = Class.forName("org.mozilla.xpcom.IID");
-            methods = new Method[100];
-            Class ObjectArrayClass = (new Object[1]).getClass();
-            Class IntArrayClass = (new int[1]).getClass();
-            Class StringArrayArrayClass = (new String[1][1]).getClass();
-            methods[0] = bcIJavaSampleClass.getDeclaredMethod("queryInterface",new Class[]{IIDClass,ObjectArrayClass});
-            methods[3] = bcIJavaSampleClass.getDeclaredMethod("test0",new Class[]{});
-            methods[4] = bcIJavaSampleClass.getDeclaredMethod("test1",new Class[]{Integer.TYPE});
-            methods[5] = bcIJavaSampleClass.getDeclaredMethod("test2",new Class[]{bcIJavaSampleClass});
-            methods[6] = bcIJavaSampleClass.getDeclaredMethod("test3",new Class[]{Integer.TYPE,IntArrayClass});
-            methods[7] = bcIJavaSampleClass.getDeclaredMethod("test4",new Class[]{Integer.TYPE,StringArrayArrayClass});
-            System.out.println(methods[0]+" "+methods[3]+" "+methods[4]+" "+methods[5]+" "+methods[6]+" "+methods[7]);
-            bcIJavaSampleIID = new IID(bcIJavaSample.BC_IJAVASAMPLE_IID_STRING);
-            nsISupportsIID = new IID("00000000-0000-0000-c000-000000000046");
-            ProxyFactory.registerInterfaceForIID(bcIJavaSampleClass,bcIJavaSampleIID);
-            new ProxyClass(bcIJavaSampleIID, methods); 
-            //new ProxyClass(nsISupportsIID, methods); 
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
+    static IID bcIJavaSampleIID = new IID(bcIJavaSample.IID);
+    static IID nsISupportsIID = new IID(nsISupports.IID);
+
 };
 

@@ -31,32 +31,35 @@ import java.io.File;
 public class ComponentLoader {
     //  path to jar file. Name of main class sould to be in MANIFEST.
     public static Object loadComponent(String location) {
-	try {
-	    File file = (new File(location)).getCanonicalFile(); //To avoid spelling diffs, e.g c: and C:
-	    location = file.getAbsolutePath();
-	    if (File.separatorChar != '/') { 
-		location = location.replace(File.separatorChar,'/');
-	    }
-	    if (!location.startsWith("/")) {
-		location = "/" + location;
-	    }
-	    URL url = new URL("file:"+location);
-	    URLClassLoader loader = URLClassLoader.newInstance(new URL[]{url});
-	    URL manifestURL = new URL("jar:file:"+location+"!/META-INF/MANIFEST.MF");
-	    InputStream inputStream = manifestURL.openStream();
-	    Manifest manifest = new Manifest(inputStream);
-	    Attributes attr = manifest.getMainAttributes();
-	    String componentClassName = attr.getValue("Component-Class");
-	    if (componentClassName == null) {
-		//nb
-		return null;
-	    }
-	    Object object = loader.loadClass(componentClassName).newInstance();
-	    return object;
-	} catch (Exception e) {
+        try {
+            File file = (new File(location)).getCanonicalFile(); //To avoid spelling diffs, e.g c: and C:
+            location = file.getAbsolutePath();
+            if (File.separatorChar != '/') { 
+                location = location.replace(File.separatorChar,'/');
+            }
+            if (!location.startsWith("/")) {
+                location = "/" + location;
+            }
+            URL url = new URL("file:"+location);
+            URLClassLoader loader = URLClassLoader.newInstance(new URL[]{url});
+            URL manifestURL = new URL("jar:file:"+location+"!/META-INF/MANIFEST.MF");
+            InputStream inputStream = manifestURL.openStream();
+            Manifest manifest = new Manifest(inputStream);
+            Attributes attr = manifest.getMainAttributes();
+            String componentClassName = attr.getValue("Component-Class");
+            if (componentClassName == null) {
+                //nb
+                return null;
+            }
+            Object object = loader.loadClass(componentClassName).newInstance();
+            if (object instanceof nsISupports) {
+                InterfaceRegistry.register((nsISupports)object);
+            }
+            return object;
+        } catch (Exception e) {
             e.printStackTrace();
-	    return null;
-	}
+            return null;
+        }
     } 
 }
 

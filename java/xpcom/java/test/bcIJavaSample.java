@@ -6,9 +6,9 @@
 
 import org.mozilla.xpcom.*;
 
-public interface bcIJavaSample 
+public interface bcIJavaSample extends nsISupports
 {
-    public static final String BC_IJAVASAMPLE_IID_STRING =
+    public static final String IID =
         "ca1e2656-1dd1-11b2-9c4e-f49ea557abde";
     void queryInterface(IID iid, Object[] result);
     void test0();

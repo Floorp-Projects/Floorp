@@ -106,9 +106,12 @@ void test() {
 					   nsnull,
 					   NS_GET_IID(bcIJavaSample),
 					   (void**)&test);
+    if (NS_FAILED(r)) {
+        printf("--[debug] can not load bcJavaSample\n");
+        return;
+    }
     //sigsend(P_PID, getpid(),SIGINT);
     //test->Test1(2000);
-#if 0
     test->Test1(1000);
     bcIJavaSample *test1;
     if (NS_FAILED(r)) {
@@ -119,7 +122,6 @@ void test() {
     test->QueryInterface(NS_GET_IID(bcIJavaSample),(void**)&test1);
     int intArray[] = {1,2,3};
     test->Test3(3, intArray);
-#endif
     {
         char ** valueArray = (char **)malloc(sizeof(char*)*4);
         valueArray[0] = "hi";
