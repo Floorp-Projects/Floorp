@@ -328,12 +328,12 @@ function SwitchView(command)
     break;
     case "cmd_viewThreadsWithUnread":
       CreateDBView(msgWindow.openFolder, nsMsgViewType.eShowThreadsWithUnread, nsMsgViewFlagsType.kThreadedDisplay,
-            nsMsgViewSortType.byThread, nsMsgViewSortOrder.ascending);
+            nsMsgViewSortType.byThread, oldSortOrder);
 
     break;
     case "cmd_viewWatchedThreadsWithUnread":
       CreateDBView(msgWindow.openFolder, nsMsgViewType.eShowWatchedThreadsWithUnread, nsMsgViewFlagsType.kThreadedDisplay,
-            nsMsgViewSortType.byThread, nsMsgViewSortOrder.ascending);
+            nsMsgViewSortType.byThread, oldSortOrder);
    break;
     case "cmd_viewIgnoredThreads":
       if (viewFlags & nsMsgViewFlagsType.kShowIgnored)
@@ -341,7 +341,7 @@ function SwitchView(command)
       else
         viewFlags = viewFlags | nsMsgViewFlagsType.kShowIgnored;
       CreateDBView(msgWindow.openFolder, nsMsgViewType.eShowAllThreads, viewFlags,
-            nsMsgViewSortType.byThread, nsMsgViewSortOrder.ascending);
+            oldSortType, oldSortOrder);
     break;
   }
 
