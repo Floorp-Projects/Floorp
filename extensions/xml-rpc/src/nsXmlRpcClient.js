@@ -18,9 +18,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.1 $
+ *  Version: $Revision: 1.2 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.1 2000/05/05 06:06:34 mj%digicool.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.2 2000/05/08 10:38:26 mj%digicool.com Exp $
  */
 
 /*
@@ -70,7 +70,7 @@ nsXmlRpcClient.prototype = {
     _serverUrl: null,
 
     init: function(serverURL) {
-        oURL = createInstance('component://netscape/network/standard-url',
+        var oURL = createInstance('component://netscape/network/standard-url',
             'nsIURL');
         oURL.spec = serverURL;
 
@@ -205,7 +205,7 @@ nsXmlRpcClient.prototype = {
         }
 
         var methodArgs = [].concat(arguments);
-        methodArgs.splice(0, 3);
+        methodArgs = methodArgs.slice(3);
         debug('Arguments: ' + methodArgs);
 
         // Generate request body
@@ -832,8 +832,9 @@ Value.prototype = {
     get value() { return this._value; },
     set value(val) {
         // accepts [0-9]+ or x[0-9a-fA-F]+ and returns the character.
-        const entityTrans = new Function('substr', 'code', 
-            'return String.fromCharCode("0" + code);');
+        function entityTrans(substr, code) {
+            'return String.fromCharCode("0" + code);';
+        }
         
         switch (this.type) {
             case this.STRING:
@@ -1345,35 +1346,31 @@ function streamToBase64(stream, writer) {
 }
 
 /* Convert data (an array of integers) to a Base64 string. */
-const toBase64Table = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+const toBase64Table = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
     '0123456789+/';
 const base64Pad = '=';
 function toBase64(data) {
-    result = '';
-    length = data.length;
+    var result = '';
+    var length = data.length;
+    var i = 0;
     // Convert every three bytes to 4 ascii characters.
-    while (length > 2) {
-        result += toBase64Table.charAt(data[0] >> 2);
-        result += toBase64Table.charAt(((data[0] & 0x03) << 4) + 
-            (data[1] >> 4));
-        result += toBase64Table.charAt(((data[1] & 0x0f) << 2) + 
-            (data[2] >> 6));
-        result += toBase64Table.charAt(data[2] & 0x3f);
-
-        data = data.slice(3);
-        length -= 3;
+    for (var i = 0; i < (length - 2); i += 3) {
+        result += toBase64Table[data[i] >> 2];
+        result += toBase64Table[((data[i] & 0x03) << 4) + (data[i+1] >> 4)];
+        result += toBase64Table[((data[i+1] & 0x0f) << 2) + (data[i+2] >> 6)];
+        result += toBase64Table[data[i+2] & 0x3f];
     }
 
     // Convert the remaining 1 or 2 bytes, pad out to 4 characters.
-    if (length > 0) {
-        result += toBase64Table.charAt(data[0] >> 2);
-        if (length > 1) {
-            result += toBase64Table.charAt(((data[0] & 0x03) << 4)
-                (data[1] >> 4));
-            result += toBase64Table.charAt((data[1] & 0x0f) << 2);
+    if (length%3) {
+        i = length - (length%3);
+        result += toBase64Table[data[i] >> 2];
+        if ((length%3) == 2) {
+            result += toBase64Table[((data[i] & 0x03) << 4) + (data[i+1] >> 4)];
+            result += toBase64Table[(data[i+1] & 0x0f) << 2];
             result += base64Pad;
         } else {
-            result += toBase64Table.charAt((data[0] & 0x03) << 4);
+            result += toBase64Table[(data[i] & 0x03) << 4];
             result += base64Pad + base64Pad;
         }
     }
@@ -1400,7 +1397,7 @@ function base64ToString(data) {
     // Convert one by one.
     for (var i in data) {
         var c = toBinaryTable[data.charCodeAt(i) & 0x7f];
-        var padding = (data.charAt(i) == base64Pad);
+        var padding = (data[i] == base64Pad);
         // Skip illegal characters and whitespace
         if (c == -1) continue;
         
