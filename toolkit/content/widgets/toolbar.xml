@@ -35,18 +35,26 @@
           ]]>
         </body>
       </method>
+      <method name="foopy">
+        <body>
+        <![CDATA[
+          setTimeout(this.buildItemsFromPalette, 0, this);
+          ]]>
+          </body>
+          </method>
       <method name="buildItemsFromPalette">
+        <parameter name="aThis"/>
         <body>
           <![CDATA[
-            var currentSet = this.getAttribute("currentset");
+            var currentSet = aThis.getAttribute("currentset");
             if (!currentSet)
-              currentSet = this.getAttribute("defaultset");
+              currentSet = aThis.getAttribute("defaultset");
             if (!currentSet)
               return;
 
-            var node = this.palette ? this.palette : this.firstChild;
+            var node = aThis.palette ? aThis.palette : aThis.firstChild;
               
-            if (!this.palette) {
+            if (!aThis.palette) {
               while (node) {
                 if (node.localName == "toolbarpalette")
                   break;
@@ -55,9 +63,9 @@
               if (!node)
                 return;
             
-              this.afterPalette = node.nextSibling;
-              this.palette = node;
-              this.removeChild(node);
+              aThis.afterPalette = node.nextSibling;
+              aThis.palette = node;
+              aThis.removeChild(node);
             }
             
             var items = currentSet.split(",");
@@ -69,7 +77,7 @@
                 var sep = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                                    "toolbarseparator");
                 sep.id = "separator";
-                this.insertBefore(sep, this.afterPalette);
+                aThis.insertBefore(sep, aThis.afterPalette);
                 continue;
               }
 
@@ -80,7 +88,7 @@
                 if (paletteID == item) {
                   var newItem = paletteItem.cloneNode(true);
                   newItem.hidden = true;
-                  this.insertBefore(newItem, this.afterPalette);
+                  aThis.insertBefore(newItem, aThis.afterPalette);
                   newItem.hidden = false;
                   break;
                 }
@@ -93,7 +101,7 @@
       </method>
       <constructor>
         <![CDATA[
-          this.buildItemsFromPalette();
+          this.foopy();
         ]]>
       </constructor>
     </implementation>
