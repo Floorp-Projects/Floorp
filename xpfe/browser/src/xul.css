@@ -4,7 +4,6 @@ toolbar {
     border-top: solid white 1px;
     border-left: solid white 1px;
     border-right: solid darkGray 1px;
-    background-image:url(file:///Incoming/bk.gif);
     font: 10pt sans-serif;
 }
 toolbar[collapsed] {
