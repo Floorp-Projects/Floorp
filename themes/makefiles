@@ -30,9 +30,11 @@ themes/classic/communicator/xpinstall/Makefile
 themes/classic/Makefile
 themes/classic/editor/images/Makefile
 themes/classic/editor/Makefile
+themes/classic/editor/win/Makefile
 themes/classic/global/unix/Makefile
 themes/classic/global/Makefile
 themes/classic/messenger/addressbook/Makefile
+themes/classic/messenger/addressbook/win/Makefile
 themes/classic/messenger/Makefile
 themes/classic/messenger/messengercompose/Makefile
 themes/classic/navigator/Makefile
