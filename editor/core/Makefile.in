@@ -29,6 +29,7 @@ LIBRARY_NAME = ender
 CPPSRCS =                       \
     editor.cpp                  \
     editorInterfaces.cpp        \
+    nsEditFactory.cpp           \
     $(NULL)
 
 MODULE = editor

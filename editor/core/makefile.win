@@ -22,11 +22,13 @@ LIBRARY_NAME=ender
 
 CPPSRCS =				\
 	editor.cpp			\
-      editorInterfaces.cpp    \
+    editorInterfaces.cpp    \
+	nsEditFactory.cpp \
 	$(NULL)
 
 CPP_OBJS =					\
 	.\$(OBJDIR)\editor.obj		\
+	.\$(OBJDIR)\nsEditFactory.obj		\
 	.\$(OBJDIR)\editorInterfaces.obj		\
 	$(NULL)
 
