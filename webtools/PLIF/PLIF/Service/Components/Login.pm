@@ -121,11 +121,14 @@ sub cmdLoginLogout {
     my $self = shift;
     my($app) = @_;
     my $user = $app->getObject('user');
-    $self->assert(defined($user), 0, 'Not logged in, cannot log out');
-    $self->assert($app->getSelectingServiceList('user.logout.'.$app->input->defaultOutputProtocol)->logoutUser($app, $user) or
-                  $app->getSelectingServiceList('user.logout.generic')->logoutUser($app, $user),
-                  0, 'Logging out when using the '.($app->input->defaultOutputProtocol).' protocol is not supported');
-    $app->removeObject($user);
+    if (defined($user)) {
+        $self->assert($app->getSelectingServiceList('user.logout.'.$app->input->defaultOutputProtocol)->logoutUser($app, $user) or
+                      $app->getSelectingServiceList('user.logout.generic')->logoutUser($app, $user),
+                      0, 'Logging out when using the '.($app->input->defaultOutputProtocol).' protocol is not supported');
+        $app->removeObject($user);
+    } else {
+        $self->warn(4, 'tried to log out but was not logged in');
+    }
     $app->noCommand();
 }
 
