@@ -163,7 +163,7 @@ pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Nam
 
 // Scripts & Windows prefs
 pref("dom.disable_open_during_load",        true);
-pref("javascript.options.showInConsole",    false);
+pref("javascript.options.showInConsole",    true);
 
 // popups.policy 1=allow,2=reject
 pref("privacy.popups.policy",               1);
