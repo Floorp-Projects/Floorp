@@ -2,4 +2,4 @@
      so that with Mozilla Calendar, or with out, we have the same UI -->
 <!ENTITY other-cal-cmd.label "Calendar">
 <!ENTITY other-cal-cmd.accesskey "r">
-<!ENTITY other-cal-cmd.commandkey "7">
+<!ENTITY other-cal-cmd.commandkey "8">
