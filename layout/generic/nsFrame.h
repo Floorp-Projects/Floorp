@@ -388,7 +388,8 @@ public:
     if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       frameDebug->GetFrameName(tmp);
     }
-    fprintf(out, "%s@%p", tmp, aFrame);
+    nsCAutoString tmp2; tmp2.AssignWithConversion(tmp);
+    fprintf(out, "%s@%p", tmp2.GetBuffer(), aFrame);
   }
 
   static void IndentBy(FILE* out, PRInt32 aIndent) {
