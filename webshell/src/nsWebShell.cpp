@@ -47,7 +47,7 @@
 #include "nsITimerCallback.h"
 #include "jsurl.h"
 #include "nsIBrowserWindow.h"
-
+#include "nsIContent.h"
 #include "prlog.h"
 
 
@@ -206,11 +206,12 @@ public:
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell);
 
   // nsILinkHandler
-  NS_IMETHOD OnLinkClick(nsIFrame* aFrame, 
+  NS_IMETHOD OnLinkClick(nsIContent* aContent, 
+                         nsLinkVerb aVerb,
                          const PRUnichar* aURLSpec,
                          const PRUnichar* aTargetSpec,
                          nsIPostData* aPostData = 0);
-  NS_IMETHOD OnOverLink(nsIFrame* aFrame, 
+  NS_IMETHOD OnOverLink(nsIContent* aContent,
                         const PRUnichar* aURLSpec,
                         const PRUnichar* aTargetSpec);
   NS_IMETHOD GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState);
@@ -260,7 +261,9 @@ public:
   NS_IMETHOD FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
 
   // nsWebShell
-  void HandleLinkClickEvent(const PRUnichar* aURLSpec,
+  void HandleLinkClickEvent(nsIContent *aContent,
+                            nsLinkVerb aVerb,
+                            const PRUnichar* aURLSpec,
                             const PRUnichar* aTargetSpec,
                             nsIPostData* aPostDat = 0);
 
@@ -1459,18 +1462,22 @@ nsWebShell::FocusAvailable(nsIWebShell* aFocusedWebShell)
 // WebShell link handling
 
 struct OnLinkClickEvent : public PLEvent {
-  OnLinkClickEvent(nsWebShell* aHandler, const PRUnichar* aURLSpec,
+  OnLinkClickEvent(nsWebShell* aHandler, nsIContent* aContent,
+                   nsLinkVerb aVerb, const PRUnichar* aURLSpec,
                    const PRUnichar* aTargetSpec, nsIPostData* aPostData = 0);
   ~OnLinkClickEvent();
 
   void HandleEvent() {
-    mHandler->HandleLinkClickEvent(*mURLSpec, *mTargetSpec, mPostData);
+    mHandler->HandleLinkClickEvent(mContent, mVerb, *mURLSpec, *
+                                   mTargetSpec, mPostData);
   }
 
   nsWebShell*  mHandler;
   nsString*    mURLSpec;
   nsString*    mTargetSpec;
   nsIPostData* mPostData;
+  nsIContent*  mContent;
+  nsLinkVerb   mVerb;
 };
 
 static void PR_CALLBACK HandlePLEvent(OnLinkClickEvent* aEvent)
@@ -1484,6 +1491,8 @@ static void PR_CALLBACK DestroyPLEvent(OnLinkClickEvent* aEvent)
 }
 
 OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
+                                   nsIContent *aContent,
+                                   nsLinkVerb aVerb,
                                    const PRUnichar* aURLSpec,
                                    const PRUnichar* aTargetSpec,
                                    nsIPostData* aPostData)
@@ -1494,7 +1503,10 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
   mTargetSpec = new nsString(aTargetSpec);
   mPostData = aPostData;
   NS_IF_ADDREF(mPostData);
-
+  mContent = aContent;
+  NS_IF_ADDREF(mContent);
+  mVerb = aVerb;
+  
 #ifdef XP_PC
   PL_InitEvent(this, nsnull,
                (PLHandleEventProc) ::HandlePLEvent,
@@ -1516,16 +1528,19 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
 
 OnLinkClickEvent::~OnLinkClickEvent()
 {
+  NS_IF_RELEASE(mContent);
   NS_IF_RELEASE(mHandler);
   NS_IF_RELEASE(mPostData);
   if (nsnull != mURLSpec) delete mURLSpec;
   if (nsnull != mTargetSpec) delete mTargetSpec;
+  
 }
 
 //----------------------------------------
 
 NS_IMETHODIMP
-nsWebShell::OnLinkClick(nsIFrame* aFrame, 
+nsWebShell::OnLinkClick(nsIContent* aContent, 
+                        nsLinkVerb aVerb,
                         const PRUnichar* aURLSpec,
                         const PRUnichar* aTargetSpec,
                         nsIPostData* aPostData)
@@ -1533,7 +1548,8 @@ nsWebShell::OnLinkClick(nsIFrame* aFrame,
   OnLinkClickEvent* ev;
   nsresult rv = NS_OK;
 
-  ev = new OnLinkClickEvent(this, aURLSpec, aTargetSpec, aPostData);
+  ev = new OnLinkClickEvent(this, aContent, aVerb, aURLSpec, 
+                            aTargetSpec, aPostData);
   if (nsnull == ev) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1603,19 +1619,36 @@ nsWebShell::GetTarget(const PRUnichar* aName)
 }
 
 void
-nsWebShell::HandleLinkClickEvent(const PRUnichar* aURLSpec,
+nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
+                                 nsLinkVerb aVerb,
+                                 const PRUnichar* aURLSpec,
                                  const PRUnichar* aTargetSpec,
                                  nsIPostData* aPostData)
 {
-  nsIWebShell* shell = GetTarget(aTargetSpec);
-  if (nsnull != shell) {
-    shell->LoadURL(aURLSpec, aPostData);
-    NS_RELEASE(shell);
+  nsAutoString target(aTargetSpec);
+
+  switch(aVerb) {
+    case eLinkVerb_New:
+      target.SetString("_blank");
+      // Fall into replace case
+    case eLinkVerb_Replace: 
+      {
+        nsIWebShell* shell = GetTarget(target.GetUnicode());
+        if (nsnull != shell) {
+          shell->LoadURL(aURLSpec, aPostData);
+          NS_RELEASE(shell);
+        }
+      }
+      break;
+    case eLinkVerb_Embed:
+    default:
+      ;
+      // XXX Need to do this
   }
 }
 
 NS_IMETHODIMP
-nsWebShell::OnOverLink(nsIFrame* aFrame, 
+nsWebShell::OnOverLink(nsIContent* aContent,
                        const PRUnichar* aURLSpec,
                        const PRUnichar* aTargetSpec)
 {

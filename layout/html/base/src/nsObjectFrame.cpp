@@ -983,9 +983,12 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetURL(const char *aURL, const char *aTar
           NS_RELEASE(docURL);
           NS_RELEASE(doc);
 
-          if (NS_OK == rv)
-            rv = lh->OnLinkClick(mOwner, fullurl.GetUnicode(), unitarget.GetUnicode(), nsnull);
-
+          if (NS_OK == rv) {
+            nsIContent* content = nsnull;
+            mOwner->GetContent(content);
+            rv = lh->OnLinkClick(content, eLinkVerb_Replace, fullurl.GetUnicode(), unitarget.GetUnicode(), nsnull);
+            NS_IF_RELEASE(content);
+          }
           NS_RELEASE(lh);
         }
 

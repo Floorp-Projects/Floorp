@@ -1303,10 +1303,11 @@ nsGenericElement::Release()
 
 void
 nsGenericElement::TriggerLink(nsIPresContext& aPresContext,
-                                  const nsString& aBase,
-                                  const nsString& aURLSpec,
-                                  const nsString& aTargetSpec,
-                                  PRBool aClick)
+                              nsLinkVerb aVerb,
+                              const nsString& aBase,
+                              const nsString& aURLSpec,
+                              const nsString& aTargetSpec,
+                              PRBool aClick)
 {
   nsILinkHandler* handler;
   nsresult rv = aPresContext.GetLinkHandler(&handler);
@@ -1332,10 +1333,10 @@ nsGenericElement::TriggerLink(nsIPresContext& aPresContext,
 
     // Now pass on absolute url to the click handler
     if (aClick) {
-      handler->OnLinkClick(nsnull, absURLSpec, aTargetSpec);
+      handler->OnLinkClick(mContent, aVerb, absURLSpec, aTargetSpec);
     }
     else {
-      handler->OnOverLink(nsnull, absURLSpec, aTargetSpec);
+      handler->OnOverLink(mContent, absURLSpec, aTargetSpec);
     }
     NS_RELEASE(handler);
   }

@@ -29,6 +29,7 @@
 #include "nsILinkHandler.h"
 #include "nsIWebShell.h"
 #include "nsIBrowserWindow.h"
+#include "nsIContent.h"
 
 // Class IDs
 static NS_DEFINE_IID(kChildWindowCID, NS_CHILD_CID);
@@ -631,7 +632,7 @@ NS_IMETHODIMP pluginInstanceOwner :: GetURL(const char *aURL, const char *aTarge
           rv = NS_MakeAbsoluteURL(url, base, uniurl, fullurl);
 
           if (NS_OK == rv)
-            rv = lh->OnLinkClick(nsnull, fullurl.GetUnicode(), unitarget.GetUnicode(), nsnull);
+            rv = lh->OnLinkClick(nsnull, eLinkVerb_Replace, fullurl.GetUnicode(), unitarget.GetUnicode(), nsnull);
 
           NS_RELEASE(url);
         }

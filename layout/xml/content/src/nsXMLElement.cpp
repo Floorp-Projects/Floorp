@@ -24,6 +24,9 @@
 #include "nsIHTMLAttributes.h"
 #include "nsIDOMScriptObjectFactory.h"
 
+#include "nsIEventStateManager.h"
+#include "nsDOMEvent.h"
+
 //static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
 
@@ -48,6 +51,7 @@ nsXMLElement::nsXMLElement(nsIAtom *aTag)
   mNameSpace = nsnull;
   mNameSpaceId = gNameSpaceId_Unknown;
   mScriptObject = nsnull;
+  mIsLink = PR_FALSE;
 }
  
 nsXMLElement::~nsXMLElement()
@@ -161,14 +165,111 @@ nsXMLElement::GetNameSpaceIdentifier(PRInt32& aNameSpaceId)
 }
 
 NS_IMETHODIMP 
+nsXMLElement::SetAttribute(const nsString& aName, 
+			   const nsString& aValue,
+			   PRBool aNotify)
+{
+  // XXX It sucks that we have to do a couple of strcmps for
+  // every attribute set. It might be a bit more expensive
+  // to create an atom.
+  if (aName.Equals("xml:link") && (aValue.Equals("simple"))) {
+    mIsLink = PR_TRUE;
+  }
+
+  return mInner.SetAttribute(aName, aValue, aNotify);
+}
+
+NS_IMETHODIMP 
 nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
 			     nsEvent* aEvent,
 			     nsIDOMEvent** aDOMEvent,
 			     PRUint32 aFlags,
 			     nsEventStatus& aEventStatus)
 {
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
+  // Try script event handlers first
+  nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                       aFlags, aEventStatus);
+
+  if (mIsLink && (NS_OK == ret) && (nsEventStatus_eIgnore == aEventStatus)) {
+    switch (aEvent->message) {
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
+      {
+        nsIEventStateManager *stateManager;
+        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
+          stateManager->SetActiveLink(this);
+          NS_RELEASE(stateManager);
+        }
+        aEventStatus = nsEventStatus_eConsumeNoDefault; 
+      }
+      break;
+
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      {
+        nsIEventStateManager *stateManager;
+        nsIContent *activeLink;
+        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
+          stateManager->GetActiveLink(&activeLink);
+          NS_RELEASE(stateManager);
+        }
+
+        if (activeLink == this) {
+          nsEventStatus status;
+          nsMouseEvent event;
+          event.eventStructType = NS_MOUSE_EVENT;
+          event.message = NS_MOUSE_LEFT_CLICK;
+          HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
+
+          if (nsEventStatus_eConsumeNoDefault != status) {
+            nsAutoString show, href, base, target;
+	    nsLinkVerb verb = eLinkVerb_Replace;
+	    base.Truncate();
+	    target.Truncate();
+            GetAttribute(nsString("href"), href);
+            GetAttribute(nsString("show"), show);
+	    // XXX Should probably do this using atoms 
+	    if (show.Equals("new")) {
+	      verb = eLinkVerb_New;
+	    }
+	    else if (show.Equals("embed")) {
+	      verb = eLinkVerb_Embed;
+	    }
+            mInner.TriggerLink(aPresContext, verb, base, href, target, PR_TRUE);
+            aEventStatus = nsEventStatus_eConsumeNoDefault; 
+          }
+        }
+      }
+      break;
+
+    case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      // XXX Bring up a contextual menu provided by the application
+      break;
+
+    case NS_MOUSE_ENTER:
+      //mouse enter doesn't work yet.  Use move until then.
+      {
+        nsAutoString base, href, target;
+	base.Truncate();
+	target.Truncate();
+        GetAttribute(nsString("href"), href);
+        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, base, href, target, PR_FALSE);
+        aEventStatus = nsEventStatus_eConsumeDoDefault; 
+      }
+      break;
+
+      // XXX this doesn't seem to do anything yet
+    case NS_MOUSE_EXIT:
+      {
+        nsAutoString empty;
+        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, empty, empty, empty, PR_FALSE);
+        aEventStatus = nsEventStatus_eConsumeDoDefault; 
+      }
+      break;
+
+    default:
+      break;
+    }
+  }
+  return ret;
 }
 
 NS_IMETHODIMP

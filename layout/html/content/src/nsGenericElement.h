@@ -27,6 +27,7 @@
 #include "nsVoidArray.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIJSScriptObject.h"
+#include "nsILinkHandler.h"
 
 extern const nsIID kIDOMNodeIID;
 extern const nsIID kIDOMElementIID;
@@ -238,6 +239,7 @@ public:
                                   REFNSIID aIID);
 
   void TriggerLink(nsIPresContext& aPresContext,
+		   nsLinkVerb aVerb,
                    const nsString& aBase,
                    const nsString& aURLSpec,
                    const nsString& aTargetSpec,

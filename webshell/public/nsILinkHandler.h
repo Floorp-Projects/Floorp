@@ -22,8 +22,8 @@
 #include "nsweb.h"
 #include "nsISupports.h"
 
-class nsIFrame;
 class nsIPostData;
+class nsIContent;
 struct nsGUIEvent;
 
 // Interface ID for nsILinkHandler
@@ -38,29 +38,40 @@ enum nsLinkState {
   eLinkState_Hover      = 4   // mouse is hovering over link
 };
 
+// XXX Verb to use for link actuation. These are the verbs specified
+// in the current XLink draft. We may actually want to support more
+// (especially for extended links).
+enum nsLinkVerb {
+  eLinkVerb_Replace = 0,
+  eLinkVerb_New     = 1,
+  eLinkVerb_Embed   = 2
+};
+
 /**
  * Interface used for handling clicks on links
  */
 class nsILinkHandler : public nsISupports {
 public:
   /**
-   * Process a click on a link. aFrame is the frame that contains the
-   * linked content. aURLSpec is an absolute url spec that defines the
-   * destination for the link. aTargetSpec indicates where the link is
-   * targeted (it may be an empty string).
+   * Process a click on a link. aContent is the content for the frame 
+   * that generated the trigger. aURLSpec is an absolute url spec that 
+   * defines the destination for the link. aTargetSpec indicates where 
+   * the link is targeted (it may be an empty string). aVerb indicates
+   * the verb to use when the link is triggered.
    */
-  NS_IMETHOD OnLinkClick(nsIFrame* aFrame, 
+  NS_IMETHOD OnLinkClick(nsIContent* aContent, 
+                         nsLinkVerb aVerb,
                          const PRUnichar* aURLSpec,
                          const PRUnichar* aTargetSpec,
                          nsIPostData* aPostData = 0) = 0;
 
   /**
-   * Process a mouse-over a link. aFrame is the frame that contains the
+   * Process a mouse-over a link. aContent is the 
    * linked content. aURLSpec is an absolute url spec that defines the
    * destination for the link. aTargetSpec indicates where the link is
    * targeted (it may be an empty string).
    */
-  NS_IMETHOD OnOverLink(nsIFrame* aFrame, 
+  NS_IMETHOD OnOverLink(nsIContent* aContent, 
                         const PRUnichar* aURLSpec,
                         const PRUnichar* aTargetSpec) = 0;
 
