@@ -828,15 +828,31 @@ CDockedRDFCoordinator :: ShowAdSpace ( )
 void
 CDockedRDFCoordinator :: SetAdSpaceToCorrectSize ( HT_View inView )
 {
-	const kDefaultHeight = 200;
-	
-	//еее get the html area size property, convert it from % to pixel value and
-	//еее set the size of the pane accordingly.
-	const char* height = HT_HTMLPaneHeight(inView);
-	Uint32 adSpaceHeight = kDefaultHeight;			//еее use |height|
+	const kDefaultHeight = 100;
+	Int32 adSpaceHeight = kDefaultHeight;
 	
 	SDimension16 size;
 	GetFrameSize(size);
+	
+	// get the html area size property, convert it from % to pixel value and
+	// set the size of the pane accordingly.
+	string height = HT_HTMLPaneHeight(inView);
+	string::iterator percent = find ( height.begin(), height.end(), '%' );
+	if ( percent != height.end() ) {
+		// we know it is a percentage now, not a fixed height. Cut off string at
+		// the '%' and use it as a percentage of the total height.
+		*percent = NULL;
+		adSpaceHeight = size.height * ((double)abs(atoi(height.c_str())) / (double)100);
+		if ( ! adSpaceHeight )
+			adSpaceHeight = kDefaultHeight;		// sanity check
+	}
+	else {
+		// it's either a number or it's not specified so we need to make it the default
+		adSpaceHeight = abs ( atoi(height.c_str()) );
+		if ( ! adSpaceHeight )
+			adSpaceHeight = kDefaultHeight;
+	}
+	
 	Uint32 desiredPosition = size.height - adSpaceHeight;
 	
 	LDividedView* divView = AdSpaceShelf().GetShelf();
