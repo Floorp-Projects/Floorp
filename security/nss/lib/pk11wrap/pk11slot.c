@@ -2901,6 +2901,7 @@ PK11_GetKeyGen(CK_MECHANISM_TYPE type)
     case CKM_AES_MAC:
     case CKM_AES_MAC_GENERAL:
     case CKM_AES_CBC_PAD:
+    case CKM_AES_KEY_GEN:
 	return CKM_AES_KEY_GEN;
     case CKM_DES_ECB:
     case CKM_DES_CBC:
@@ -2908,32 +2909,38 @@ PK11_GetKeyGen(CK_MECHANISM_TYPE type)
     case CKM_DES_MAC_GENERAL:
     case CKM_KEY_WRAP_LYNKS:
     case CKM_DES_CBC_PAD:
+    case CKM_DES_KEY_GEN:
 	return CKM_DES_KEY_GEN;
     case CKM_DES3_ECB:
     case CKM_DES3_CBC:
     case CKM_DES3_MAC:
     case CKM_DES3_MAC_GENERAL:
     case CKM_DES3_CBC_PAD:
+    case CKM_DES3_KEY_GEN:
 	return CKM_DES3_KEY_GEN;
     case CKM_CDMF_ECB:
     case CKM_CDMF_CBC:
     case CKM_CDMF_MAC:
     case CKM_CDMF_MAC_GENERAL:
     case CKM_CDMF_CBC_PAD:
+    case CKM_CDMF_KEY_GEN:
 	return CKM_CDMF_KEY_GEN;
     case CKM_RC2_ECB:
     case CKM_RC2_CBC:
     case CKM_RC2_MAC:
     case CKM_RC2_MAC_GENERAL:
     case CKM_RC2_CBC_PAD:
+    case CKM_RC2_KEY_GEN:
 	return CKM_RC2_KEY_GEN;
     case CKM_RC4:
+    case CKM_RC4_KEY_GEN:
 	return CKM_RC4_KEY_GEN;
     case CKM_RC5_ECB:
     case CKM_RC5_CBC:
     case CKM_RC5_MAC:
     case CKM_RC5_MAC_GENERAL:
     case CKM_RC5_CBC_PAD:
+    case CKM_RC5_KEY_GEN:
 	return CKM_RC5_KEY_GEN;
     case CKM_SKIPJACK_CBC64:
     case CKM_SKIPJACK_ECB64:
@@ -2943,6 +2950,7 @@ PK11_GetKeyGen(CK_MECHANISM_TYPE type)
     case CKM_SKIPJACK_CFB16:
     case CKM_SKIPJACK_CFB8:
     case CKM_SKIPJACK_WRAP:
+    case CKM_SKIPJACK_KEY_GEN:
 	return CKM_SKIPJACK_KEY_GEN;
     case CKM_BATON_ECB128:
     case CKM_BATON_ECB96:
@@ -2950,36 +2958,42 @@ PK11_GetKeyGen(CK_MECHANISM_TYPE type)
     case CKM_BATON_COUNTER:
     case CKM_BATON_SHUFFLE:
     case CKM_BATON_WRAP:
+    case CKM_BATON_KEY_GEN:
 	return CKM_BATON_KEY_GEN;
     case CKM_JUNIPER_ECB128:
     case CKM_JUNIPER_CBC128:
     case CKM_JUNIPER_COUNTER:
     case CKM_JUNIPER_SHUFFLE:
     case CKM_JUNIPER_WRAP:
+    case CKM_JUNIPER_KEY_GEN:
 	return CKM_JUNIPER_KEY_GEN;
     case CKM_IDEA_CBC:
     case CKM_IDEA_ECB:
     case CKM_IDEA_MAC:
     case CKM_IDEA_MAC_GENERAL:
     case CKM_IDEA_CBC_PAD:
+    case CKM_IDEA_KEY_GEN:
 	return CKM_IDEA_KEY_GEN;
     case CKM_CAST_ECB:
     case CKM_CAST_CBC:
     case CKM_CAST_MAC:
     case CKM_CAST_MAC_GENERAL:
     case CKM_CAST_CBC_PAD:
+    case CKM_CAST_KEY_GEN:
 	return CKM_CAST_KEY_GEN;
     case CKM_CAST3_ECB:
     case CKM_CAST3_CBC:
     case CKM_CAST3_MAC:
     case CKM_CAST3_MAC_GENERAL:
     case CKM_CAST3_CBC_PAD:
+    case CKM_CAST3_KEY_GEN:
 	return CKM_CAST3_KEY_GEN;
     case CKM_CAST5_ECB:
     case CKM_CAST5_CBC:
     case CKM_CAST5_MAC:
     case CKM_CAST5_MAC_GENERAL:
     case CKM_CAST5_CBC_PAD:
+    case CKM_CAST5_KEY_GEN:
 	return CKM_CAST5_KEY_GEN;
     case CKM_RSA_PKCS:
     case CKM_RSA_9796:
@@ -2988,15 +3002,20 @@ PK11_GetKeyGen(CK_MECHANISM_TYPE type)
     case CKM_MD5_RSA_PKCS:
     case CKM_SHA1_RSA_PKCS:
     case CKM_KEY_WRAP_SET_OAEP:
+    case CKM_RSA_PKCS_KEY_PAIR_GEN:
 	return CKM_RSA_PKCS_KEY_PAIR_GEN;
     case CKM_DSA:
     case CKM_DSA_SHA1:
+    case CKM_DSA_KEY_PAIR_GEN:
 	return CKM_DSA_KEY_PAIR_GEN;
     case CKM_DH_PKCS_DERIVE:
+    case CKM_DH_PKCS_KEY_PAIR_GEN:
 	return CKM_DH_PKCS_KEY_PAIR_GEN;
     case CKM_KEA_KEY_DERIVE:
+    case CKM_KEA_KEY_PAIR_GEN:
 	return CKM_KEA_KEY_PAIR_GEN;
     case CKM_ECDSA:
+    case CKM_ECDSA_KEY_PAIR_GEN:
 	return CKM_ECDSA_KEY_PAIR_GEN;
     case CKM_SSL3_PRE_MASTER_KEY_GEN:
     case CKM_SSL3_MASTER_KEY_DERIVE:
@@ -3013,6 +3032,7 @@ PK11_GetKeyGen(CK_MECHANISM_TYPE type)
     case CKM_MD5_HMAC:
     case CKM_MD5_HMAC_GENERAL:
     case CKM_TLS_PRF_GENERAL:
+    case CKM_GENERIC_SECRET_KEY_GEN:
 	return CKM_GENERIC_SECRET_KEY_GEN;
     case CKM_PBE_MD2_DES_CBC:
     case CKM_PBE_MD5_DES_CBC:
