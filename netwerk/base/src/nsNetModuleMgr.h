@@ -30,8 +30,8 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsINetModuleMgr
-    NS_IMETHOD RegisterModule(const char *aTopic, nsINetNotify *aNotify);
-    NS_IMETHOD UnregisterModule(const char *aTopic, nsINetNotify *aNotify);
+    NS_IMETHOD RegisterModule(const char *aTopic, nsIEventQueue *aEventQueue, nsINetNotify *aNotify, const nsCID * aCID);
+    NS_IMETHOD UnregisterModule(const char *aTopic, nsIEventQueue *aEventQueue, nsINetNotify *aNotify, const nsCID * aCID);
     NS_IMETHOD EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnumerator);
     
     // nsNetModuleMgr

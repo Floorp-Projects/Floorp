@@ -24,7 +24,6 @@
 
 interface nsIEventQueue;
 interface nsINetModRegEntry;
-interface nsINetNotify;
 
 %{ C++
 // {F126BD90-1472-11d3-A15A-0050041CAF44}
@@ -33,11 +32,11 @@ interface nsINetNotify;
 %}
 
 [scriptable, uuid(9F482BD0-1476-11d3-A15A-0050041CAF44)]
-interface nsINetModRegEntry : nsISupports 
-{
-    readonly attribute nsINetNotify      SyncProxy;
-    readonly attribute nsINetNotify      AsyncProxy;
-    readonly attribute string            Topic;
+interface nsINetModRegEntry : nsISupports {
+    readonly attribute nsINetNotify      mNotify;
+    readonly attribute nsIEventQueue     mEventQ;
+    readonly attribute string            mTopic;
+	readonly attribute nsCIDPtr			 mCID;
 
 	boolean Equals(in nsINetModRegEntry aEntry);
 };
