@@ -207,9 +207,6 @@ nsMathMLTokenFrame::Place(nsIPresContext*      aPresContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
-  aDesiredSize.width = aDesiredSize.height = 0;
-  aDesiredSize.ascent = aDesiredSize.descent = 0;
-
   const nsStyleFont* font;
   GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)font);
   nsCOMPtr<nsIFontMetrics> fm;
@@ -235,8 +232,8 @@ nsMathMLTokenFrame::Place(nsIPresContext*      aPresContext,
       childSize.width = rect.width;
       childSize.height = aDesiredSize.height; //rect.height;
 
-      // place and size the child
-      dy = aDesiredSize.ascent - rect.y;
+      // place and size the child; (dx,0) makes the caret happy - bug 188146
+      dy = rect.IsEmpty() ? 0 : aDesiredSize.ascent - rect.y;
       FinishReflowChild(childFrame, aPresContext, nsnull, childSize, dx, dy, 0);
       dx += rect.width;
       childFrame->GetNextSibling(&childFrame);
