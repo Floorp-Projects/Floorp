@@ -2645,7 +2645,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     }
 
 
-#if !defined(XP_UNIX) && !defined(XP_BEOS)
+#if (!defined(XP_UNIX) && !defined(XP_BEOS)) || defined(XP_MACOSX)
     // Setup clipping so that rendering doesn't leak out of the computed
     // dirty rect
     PRBool clipState;
@@ -2805,7 +2805,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     }
 #endif
 
-#if !defined(XP_UNIX) && !defined(XP_BEOS)
+#if (!defined(XP_UNIX) && !defined(XP_BEOS)) || defined(XP_MACOSX)
     // Restore clipping
     aRenderingContext.PopState(clipState);
 #endif

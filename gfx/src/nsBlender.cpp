@@ -67,7 +67,7 @@ NS_IMPL_ISUPPORTS1(nsBlender, nsIBlender);
 // need to set up some masks for 16 bit blending
 // Use compile-time constants where possible for marginally smaller
 // footprint (don't need fields in nsBlender) but also for faster code
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 
 #define BLEND_RED_MASK        0x7c00
 #define BLEND_GREEN_MASK      0x03e0
