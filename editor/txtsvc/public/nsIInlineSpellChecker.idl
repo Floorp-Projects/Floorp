@@ -54,21 +54,23 @@ interface nsIInlineSpellChecker : nsISupports
 
   attribute boolean enableRealTimeSpell;
 
-  void spellCheckAfterEditorChange(in PRInt32 aAction,
+  void spellCheckAfterEditorChange(in long aAction,
                                    in nsISelection aSelection,
                                    in nsIDOMNode aPreviousSelectedNode,
-                                   in PRInt32 aPreviousSelectedOffset,
+                                   in long aPreviousSelectedOffset,
                                    in nsIDOMNode aStartNode,
-                                   in PRInt32 aStartOffset,
+                                   in long aStartOffset,
                                    in nsIDOMNode aEndNode,
-                                   in PRInt32 aEndOffset);
+                                   in long aEndOffset);
 
   void spellCheckRange(in nsIDOMRange aSelection);
 
-  nsIDOMRange getMispelledWord(in nsIDOMNode aNode, in PRInt32 aOffset);
-  void replaceWord(in nsIDOMNode aNode, in PRInt32 aOffset, in AString aNewword);
+  nsIDOMRange getMispelledWord(in nsIDOMNode aNode, in long aOffset);
+  void replaceWord(in nsIDOMNode aNode, in long aOffset, in AString aNewword);
   void addWordToDictionary(in AString aWord);
+  
   void ignoreWord(in AString aWord);
+  void ignoreWords([array, size_is(aCount)] in wstring aWordsToIgnore, in unsigned long aCount);
 };
 
 %{C++

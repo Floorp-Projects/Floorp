@@ -244,7 +244,9 @@ NS_IMETHODIMP mozPersonalDictionary::RemoveWord(const PRUnichar *aWord, const PR
 /* void IgnoreWord (in wstring word); */
 NS_IMETHODIMP mozPersonalDictionary::IgnoreWord(const PRUnichar *aWord)
 {
-  mIgnoreTable.PutEntry(aWord);
+  // avoid adding duplicate words to the ignore list
+  if (aWord && !mIgnoreTable.GetEntry(aWord)) 
+    mIgnoreTable.PutEntry(aWord);
   return NS_OK;
 }
 

@@ -438,6 +438,22 @@ NS_IMETHODIMP mozInlineSpellChecker::IgnoreWord(const nsAString &word)
   res = editor->GetRootElement(getter_AddRefs(rootElem));
   NS_ENSURE_SUCCESS(res, res); 
 
+  return SpellCheckBetweenNodes(rootElem, 0, rootElem, -1, NULL); 
+}
+
+NS_IMETHODIMP mozInlineSpellChecker::IgnoreWords(const PRUnichar **aWordsToIgnore, PRUint32 aCount)
+{
+  // add each word to the ignore list and then recheck the document
+  for (PRInt32 index = 0; index < aCount; index++)
+    mSpellCheck->IgnoreWordAllOccurrences(aWordsToIgnore[index]);
+
+  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
+  NS_ENSURE_TRUE(editor, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<nsIDOMElement> rootElem;
+  nsresult res = editor->GetRootElement(getter_AddRefs(rootElem));
+  NS_ENSURE_SUCCESS(res, res); 
+
   return SpellCheckBetweenNodes(rootElem, 0, rootElem, -1, NULL);
 }
 
