@@ -946,7 +946,6 @@ fe_SetDocPosition (MWContext *context, unsigned long x, unsigned long y)
   XP_Bool are_scrollbars_active;
   XP_Bool frame_scrolling_yes = False;
 
-
   if (x >= w + 100) x = 0;
   if (y >= h + lh)  y = ((h > lh) ? h - lh : 0);
 
@@ -1265,18 +1264,28 @@ fe_scroller_resize (Widget widget, XtPointer closure)
 	   */
 	  CONTEXT_DATA(context)->scrolled_width  = (unsigned long)w;
 	  CONTEXT_DATA(context)->scrolled_height = (unsigned long)h;
+      }
+    }
+  /* We just need to update the scrollbars and scrolled_height and width;
+     the other expose events which are coming will take care of
+     repainting the text.
+     Moved this up here because fe_EditorRefresh needs the width
+     *inside* the scrollbars: bug 94115. ...Akkana
+   */
+  fe_SetDocPosition (context,
+		     CONTEXT_DATA (context)->document_x,
+		     CONTEXT_DATA (context)->document_y);
 
 #ifdef EDITOR
-	/*
-	 *    This edit_view_source_hack is so completely bogus,
-	 *    but it seems to only be edit for the editor view
-	 *    source window. Do this for bug #23375. djw 96/06/15.
-	 */
-	if (EDT_IS_EDITOR(context) || context->edit_view_source_hack) {
-
-	  fe_EditorRefresh(context);
-	}
-	else
+  /*
+   *    This edit_view_source_hack is so completely bogus,
+   *    but it seems to only be edit for the editor view
+   *    source window. Do this for bug #23375. djw 96/06/15.
+   */
+  if (EDT_IS_EDITOR(context) || context->edit_view_source_hack) {
+      fe_EditorRefresh(context);
+  }
+  else
 #endif /*EDITOR*/
 
 #ifdef ENABLE_MARINER
@@ -1297,13 +1306,6 @@ fe_scroller_resize (Widget widget, XtPointer closure)
 	else
 	  fe_ReLayout (context, NET_RESIZE_RELOAD);
 #endif
-      }
-    }
-  /* We just need to update the scrollbars; the other expose events
-     which are coming will take care of repainting the text. */
-  fe_SetDocPosition (context,
-		     CONTEXT_DATA (context)->document_x,
-		     CONTEXT_DATA (context)->document_y);
 
   /* 
   ** this is wretched and gross.  the assignments below are exactly the same as the ones
@@ -1318,6 +1320,10 @@ fe_scroller_resize (Widget widget, XtPointer closure)
   **
   ** - toshok
   */
+  /* It's being set to the size of the drawing area (not counting
+   * the scrollbars) by fe_find_scrollbar_sizes, inside the 
+   * fe_SetDocPosition call.   ...Akkana
+   */
   CONTEXT_DATA(context)->scrolled_width  = (unsigned long)w;
   CONTEXT_DATA(context)->scrolled_height = (unsigned long)h;
 
