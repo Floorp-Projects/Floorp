@@ -4,8 +4,11 @@
 <!ENTITY      tab.signonsnotstored.label      "Signons Not Saved">
 <!ENTITY      tab.nopreview.label             "Forms not Previewed">
 
+<!-- LOCALIZATION NOTE (spiel.signonsstored.label): Do not translate "Mozilla" -->
 <!ENTITY      spiel.signonsstored.label       "Mozilla has saved login information for the following sites:">
+<!-- LOCALIZATION NOTE (spiel.signonsnotstored.label): Do not translate "Mozilla" -->
 <!ENTITY      spiel.signonsnotstored.label    "Mozilla will not save login information for the following sites:">
+<!-- LOCALIZATION NOTE (spiel.nopreview.label): Do not translate "Mozilla" -->
 <!ENTITY      spiel.nopreview.label           "Mozilla will not preview the following forms before filling them for you:">
 
 <!ENTITY      treehead.signonsite.label       "Site">
