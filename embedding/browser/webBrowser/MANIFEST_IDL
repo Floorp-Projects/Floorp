@@ -25,4 +25,3 @@ nsIProgress.idl
 nsIProgressListener.idl
 nsIWebBrowser.idl
 nsIWebBrowserChrome.idl
-nsIWebBrowserNav.idl
