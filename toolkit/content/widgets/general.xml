@@ -18,27 +18,8 @@
                                   onget="return this.getAttribute('disabled') == 'true';"/>
       <property name="image"      onset="return this.setAttribute('image',val);"
                                   onget="return this.getAttribute('image');"/>
-      <property name="accessKey">
-        <getter>
-          <![CDATA[
-            return this.labelElement ? this.labelElement.accessKey : this.getAttribute('accesskey');
-          ]]>
-        </getter>
-        <setter>
-          <![CDATA[
-            // Always store on the control
-            this.setAttribute('accesskey', val);
-            // If there is a label, change the accesskey on the labelElement
-            // if it's also set there
-            if (this.labelElement) {
-              this.labelElement.accessKey = val;
-            }
-            return val;
-          ]]>
-        </setter>
-      </property>
-      
-      <field name="labelElement"/>
+      <property name="accessKey"  onset="return this.setAttribute('accesskey',val);"
+                                  onget="return this.getAttribute('accesskey');"/>
     </implementation>      
   </binding>
 
@@ -269,6 +250,14 @@
            extends="chrome://global/content/bindings/general.xml#statusbarpanel">
     <content>
       <xul:image class="statusbarpanel-icon" xbl:inherits="src"/>
+    </content>
+  </binding>
+
+  <binding id="statusbarpanel-iconic-text" display="xul:button"
+           extends="chrome://global/content/bindings/general.xml#statusbarpanel">
+    <content>
+      <xul:image class="statusbarpanel-icon" xbl:inherits="src"/>
+      <xul:label class="statusbarpanel-text" xbl:inherits="value=label,crop"/>
     </content>
   </binding>
 

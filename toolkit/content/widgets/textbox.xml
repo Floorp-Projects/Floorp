@@ -23,7 +23,7 @@
       </xul:hbox>
     </content>
     
-    <implementation implements="nsIAccessibleProvider, nsIDOMXULTextBoxElement">
+    <implementation implements="nsIAccessibleProvider, nsIDOMXULTextboxElement">
       <property name="accessible">
         <getter>
           <![CDATA[
@@ -151,7 +151,6 @@
           if (this._timer)
             clearTimeout(this._timer);
           this._fireCommand(this);
-          event.preventDefault();
         ]]>
       </handler>
     </handlers>
@@ -169,7 +168,8 @@
   <binding id="input-box">
     <content context="_child">
       <children/>
-      <xul:menupopup onpopupshowing="if (document.commandDispatcher.focusedElement != this.parentNode.firstChild) 
+      <xul:menupopup anonid="input-box-contextmenu"
+                     onpopupshowing="if (document.commandDispatcher.focusedElement != this.parentNode.firstChild) 
                                        this.parentNode.firstChild.focus();
                                      this.parentNode.doPopupItemEnabling(this);"
                      oncommand="this.parentNode.doCommand(event.originalTarget.getAttribute('cmd'));event.preventBubble();">
@@ -190,7 +190,7 @@
         <body>
           <![CDATA[
             var children = popupNode.childNodes;
-            for (var i = 0; i < children.length; i++) {              
+            for (var i = 0; i < children.length; i++) {
               var command = children[i].getAttribute("cmd");
               if (command) {
                 var controller = document.commandDispatcher.getControllerForCommand(command);

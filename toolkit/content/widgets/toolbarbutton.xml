@@ -35,7 +35,7 @@
     <content>
       <children includes="observes|template|menupopup|tooltip"/>
       <xul:hbox flex="1" align="center">
-        <xul:box xbl:inherits="orient" flex="1">
+        <xul:box xbl:inherits="orient" flex="1" align="center">
           <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,toolbarmode,buttonstyle"/>
           <xul:label class="toolbarbutton-text" crop="right" flex="1"
                     xbl:inherits="value=label,accesskey,crop,dragover-top,toolbarmode,buttonstyle"/>

@@ -34,6 +34,11 @@
    - GPL.
   -->
 
+<!DOCTYPE window [
+  <!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findBar.dtd" >
+  %findBarDTD;
+]>
+
 <bindings id="browserBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -144,6 +149,7 @@
         <parameter name="aFlags"/>
         <parameter name="aReferrerURI"/>
         <parameter name="aCharset"/>
+        <parameter name="aPostData"/>
         <body>
           <![CDATA[
             if (!aURI)
@@ -156,7 +162,8 @@
               catch (e) {
               }
             }
-            this.webNavigation.loadURI(aURI, aFlags, aReferrerURI, null, null);
+            this.mFavIconURL = null;
+            this.webNavigation.loadURI(aURI, aFlags, aReferrerURI, aPostData, null);
           ]]>
         </body>
       </method>
@@ -232,6 +239,36 @@
         </getter>
       </property>
 
+      <field name="_fastFind">null</field>
+      <property name="fastFind"
+                readonly="true">
+        <getter>
+        <![CDATA[
+          if (!this._fastFind) {
+            var n = this.parentNode;
+            while (n && n.localName != "tabbrowser")
+              n = n.parentNode;
+
+            if (n && n.mCurrentBrowser == this)
+              return this._fastFind = n.fastFind
+
+            this._fastFind = Components.classes["@mozilla.org/typeaheadfind;1"]
+                                       .createInstance(Components.interfaces.nsITypeAheadFind);                                
+            this._fastFind.init(this.docShell);
+          }
+          return this._fastFind;
+        ]]>
+        </getter>
+      </property>
+      
+      <property name="findString" readonly="true">
+        <getter>
+        <![CDATA[
+          return this.fastFind.searchString;
+        ]]>
+        </getter>
+      </property>
+      
       <property name="webProgress"
                 readonly="true"
                 onget="return this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);"/>
@@ -349,12 +386,46 @@
         </body>
       </method>
       
+      <method name="findChildShell">
+        <parameter name="aDocShell"/>
+        <parameter name="aSoughtURI"/>
+        <body>
+          <![CDATA[
+            if (aDocShell.QueryInterface(Components.interfaces.nsIWebNavigation)
+                         .currentURI.spec == aSoughtURI.spec)
+              return aDocShell;
+            var node = aDocShell.QueryInterface(
+                                   Components.interfaces.nsIDocShellTreeNode);
+            for (var i = 0; i < node.childCount; ++i) {
+              var docShell = node.getChildAt(i);
+              docShell = this.findChildShell(docShell, aSoughtURI);
+              if (docShell)
+                return docShell;
+            }
+            return null;
+          ]]>
+        </body>
+      </method>
+
       <method name="onLoad">
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            this.removeEventListener("load", this.handleEvent, true);
             this.attachFormFill();
+            if (this.pageReport) {
+              var i = 0;
+              while (i < this.pageReport.length) {
+                if (this.findChildShell(this.docShell,
+                                        this.pageReport[i].requestingWindowURI))
+                  i++;
+                else
+                  this.pageReport.splice(i, 1);
+              }
+              if (this.pageReport.length == 0) {
+                this.pageReport = null;
+                this.updatePageReport();
+              }
+            }
          ]]>
         </body>
       </method>
@@ -396,8 +467,10 @@
               this.updatePageReport(); 
             }
 
-            // The "" is a hack to force a convert to string to defeat the "liveness" of the .location property.
-            this.pageReport.push(evt.target.location + "");
+            var obj = { requestingWindowURI: evt.requestingWindowURI,
+                        popupWindowURI: evt.popupWindowURI,
+                        popupWindowFeatures: evt.popupWindowFeatures };
+            this.pageReport.push(obj);
           ]]> 
         </body>
       </method>
@@ -411,7 +484,7 @@
       <field name="securityUI">
         null
       </field>
-
+      
       <field name="userTypedClear">
         true
       </field>
@@ -434,7 +507,13 @@
 
       <field name="focusedElement">
         null
+      </field>     
+      
+      <field name="isShowingMessage">
+        false
       </field>
+
+      <field name="mFavIconURL">null</field>
 
       <constructor>
         <![CDATA[
@@ -497,7 +576,9 @@
           this.detachFormFill();
           
           this.securityUI = null;
+          this._fastFind = null;
 
+          this.removeEventListener("load", this.onLoad, true);
           this.removeEventListener("unload", this.onUnload, true);
           this.removeEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
           ]]>
@@ -785,6 +866,143 @@
       </handler>
     </handlers>
 
+  </binding>
+  
+  <binding id="browsermessage" extends="xul:hbox">
+    <content align="center">
+      <xul:hbox anonid="messagePopupContainer" align="center" flex="1">
+        <xul:image       anonid="messageImage"   class="messageImage"/>
+        <xul:description anonid="messageText"    class="messageText" flex="1"/>
+      </xul:hbox>
+      <xul:button       anonid="messageButton"  class="messageButton"/>
+      <xul:spacer class="tabs-right"/>
+      <xul:hbox hidden="true" anonid="messageClose" class="tabs-closebutton-box" 
+                align="center" pack="end">
+        <xul:toolbarbutton ondblclick="event.preventBubble();" 
+                           class="tabs-closebutton close-button" 
+                           oncommand="this.parentNode.parentNode.hide();"/>
+      </xul:hbox>
+    </content>
+    <implementation>
+      <property name="type" onget="return this.getAttribute('type');"
+                            onset="this.setAttribute('type', val); return val;"/>
+
+      <field name="_imageElement">
+        document.getAnonymousElementByAttribute(this, "anonid", "messageImage");
+      </field>
+      <property name="image">
+        <getter>
+          <![CDATA[
+            return this._imageElement.getAttribute("src");
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            this._imageElement.setAttribute("src", val);
+            return val;
+          ]]>        
+        </setter>
+      </property>
+      
+      <field name="docShell">
+        null;
+      </field>
+      <field name="source">
+        "";
+      </field>
+      <property name="popup">
+        <setter>
+          <![CDATA[
+            if (val)
+              document.getAnonymousElementByAttribute(this, "anonid", "messagePopupContainer").setAttribute("popup", val);
+            else
+              document.getAnonymousElementByAttribute(this, "anonid", "messagePopupContainer").removeAttribute("popup");
+            return val;
+          ]]>
+        </setter>
+        <getter>
+          <![CDATA[
+            return document.getAnonymousElementByAttribute(this, "anonid", "messagePopupContainer").getAttribute("popup");
+          ]]>
+        </getter>
+      </property>
+
+      <field name="_textElement">
+        document.getAnonymousElementByAttribute(this, "anonid", "messageText");
+      </field>
+      <field name="_text">
+        "";
+      </field>
+      <property name="text">
+        <getter>
+          <![CDATA[
+            return this._text;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            this._text = val;
+            while (this._textElement.hasChildNodes())
+              this._textElement.removeChild(this._textElement.firstChild);
+            this._textElement.appendChild(document.createTextNode(val));
+            return val;
+          ]]>        
+        </setter>
+      </property>
+      
+      <field name="_buttonElement">
+        document.getAnonymousElementByAttribute(this, "anonid", "messageButton");
+      </field>
+      <property name="buttonText">
+        <getter>
+          <![CDATA[
+            return this._buttonElement.getAttribute("label");
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            if (val != "") {
+              this._buttonElement.removeAttribute("style");
+              this._buttonElement.setAttribute("label", val);
+            }
+            else
+              this._buttonElement.setAttribute("style", "max-width: 1px; visibility: hidden;");
+            return val;
+          ]]>        
+        </setter>
+      </property>
+      <property name="closeButton">
+        <getter>
+          <![CDATA[
+            return document.getAnonymousElementByAttribute(this, "anonid", "messageClose");
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            var elm = document.getAnonymousElementByAttribute(this, "anonid", "messageClose");
+            elm.hidden = !val;
+            return val;
+          ]]>        
+        </setter>
+      </property>
+      <method name="hide">
+        <body>
+          <![CDATA[
+            this.hidden = true;
+          ]]>
+        </body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="click">
+        if (event.originalTarget.getAttribute("anonid") == "messageButton") {
+          var os = Components.classes["@mozilla.org/observer-service;1"]
+                             .getService(Components.interfaces.nsIObserverService);
+          var subject = this.docShell ? this.docShell : null;
+          os.notifyObservers(subject, this.source, "");
+        }
+      </handler>
+    </handlers>
   </binding>
 
 </bindings>
