@@ -462,6 +462,8 @@ $query .= "group by bugs.bug_id\n";
 
 if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
     $query .= "order by ";
+    $::FORM{'order'} =~ s/votesum/bugs.votes/; # Silly backwards compatability
+                                               # hack.
     ORDER: for ($::FORM{'order'}) {
         /\./ && do {
             # This (hopefully) already has fieldnames in it, so we're done.
