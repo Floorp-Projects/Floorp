@@ -38,6 +38,7 @@
 #include "nsMsgNewsCID.h"
 #include "nsNNTPProtocol.h"
 
+#define VALID_VERSION			1
 #define NEW_NEWS_DIR_NAME        "News"
 #define PREF_MAIL_NEWSRC_ROOT    "mail.newsrc_root"
 #define HOSTINFO_FILE_NAME		 "hostinfo.dat"
@@ -82,6 +83,11 @@ nsNntpIncomingServer::nsNntpIncomingServer() : nsMsgLineBuffer(nsnull, PR_FALSE)
   NS_NewISupportsArray(getter_AddRefs(m_connectionCache));
   mHostInfoLoaded = PR_FALSE;
   mHostInfoHasChanged = PR_FALSE;
+  mLastGroupDate = 0;
+  mUniqueId = 0;
+  mPushAuth = PR_FALSE;
+  mHasSeenBeginGroups = PR_FALSE;
+  mVersion = 0;
 }
 
 nsNntpIncomingServer::~nsNntpIncomingServer()
@@ -668,13 +674,75 @@ nsNntpIncomingServer::SubscribeToNewsgroup(const char *name)
 	return NS_OK;
 }
 
+PRBool
+writeGroupToHostInfo(nsCString &aElement, void *aData)
+{
+	nsIOFileStream *stream;
+	stream = (nsIOFileStream *)aData;
+	
+    // ",,x,y,z" is a temporary hack
+	*stream << (const char *)aElement << ",,x,y,z" << MSG_LINEBREAK;
+
+	return PR_TRUE;
+}
+
+PRBool
+addGroup(nsCString &aElement, void *aData)
+{
+	nsresult rv;
+	nsNntpIncomingServer *server;
+	server = (nsNntpIncomingServer *)aData;
+	
+	rv = server->AddToSubscribeDS((const char *)aElement);
+	NS_ASSERTION(NS_SUCCEEDED(rv),"AddToSubscribeDS failed");
+	return PR_TRUE;
+}
+
+
 nsresult
 nsNntpIncomingServer::WriteHostInfoFile()
 {
+	nsresult rv;
 #ifdef DEBUG_sspitzer
 	printf("WriteHostInfoFile()\n");
 #endif
+
+	PRInt32 firstnewdate;
+
+	LL_L2I(firstnewdate, mFirstNewDate);
+
+	nsXPIDLCString hostname;
+	rv = GetHostName(getter_Copies(hostname));
+	if (NS_FAILED(rv)) return rv;
+	
+
+    nsFileSpec hostinfoFileSpec;
+    rv = mHostInfoFile->GetFileSpec(&hostinfoFileSpec);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIOFileStream hostinfoStream(hostinfoFileSpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
+
+#ifdef DEBUG_sspitzer
+	printf("xxx todo missing some formatting, need to fix this, see nsNNTPHost.cpp\n");
+#endif
+
+    hostinfoStream << "# Netscape newshost information file." << MSG_LINEBREAK;
+	hostinfoStream << "# This is a generated file!  Do not edit." << MSG_LINEBREAK;
+	hostinfoStream << "" << MSG_LINEBREAK;
+	hostinfoStream << "version=1" << MSG_LINEBREAK;
+	hostinfoStream << "newsrcname=" << (const char*)hostname << MSG_LINEBREAK;
+	hostinfoStream << "lastgroupdate=" << mLastGroupDate << MSG_LINEBREAK;
+	hostinfoStream << "firstnewdate=" << firstnewdate << MSG_LINEBREAK;
+	hostinfoStream << "uniqueid=" << mUniqueId << MSG_LINEBREAK;
+	hostinfoStream << "pushauth=" << mPushAuth << MSG_LINEBREAK;
+	hostinfoStream << "" << MSG_LINEBREAK;
+	hostinfoStream << "begingroups" << MSG_LINEBREAK;
+
+	mGroupsOnServer.EnumerateForwards((nsCStringArrayEnumFunc)writeGroupToHostInfo, (void *)&hostinfoStream);
+
 	mHostInfoHasChanged = PR_FALSE;
+
+    hostinfoStream.close();
 	return NS_OK;
 }
 
@@ -728,18 +796,6 @@ nsNntpIncomingServer::LoadHostInfoFile()
 	return NS_OK;
 }
 
-PRBool
-addGroup(nsCString &aElement, void *aData)
-{
-	nsresult rv;
-	nsNntpIncomingServer *server;
-	server = (nsNntpIncomingServer *)aData;
-	
-	rv = server->AddNewsgroupToSubscribeDS((const char *)aElement);
-	NS_ASSERTION(NS_SUCCEEDED(rv),"AddNewsgroupToSubscribeDS failed");
-	return PR_TRUE;
-}
-
 nsresult
 nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsgWindow)
 {
@@ -757,7 +813,7 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsg
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
+nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow, PRBool aForceToServer)
 {
   nsresult rv;
 
@@ -768,20 +824,24 @@ nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
   if (NS_FAILED(rv)) return rv;
   if (!nntpService) return NS_ERROR_FAILURE; 
 
-  if (!mHostInfoLoaded) {
+  if (!aForceToServer && !mHostInfoLoaded) {
 	// will set mHostInfoLoaded, if we were able to load the hostinfo.dat file
 	rv = LoadHostInfoFile();	
+
   	if (NS_FAILED(rv)) return rv;
   }
 
-  if (mHostInfoLoaded) {
+  if (!aForceToServer && mHostInfoLoaded && (mVersion == VALID_VERSION)) {
 	rv = PopulateSubscribeDatasourceFromHostInfo(aMsgWindow);
-  	if (NS_FAILED(rv)) return rv;
+	if (NS_FAILED(rv)) return rv;
   }
   else {
-#ifdef DEBUG_sspitzer
-	printf("todo:  build up the host info stuff, and set mHostInfoLoaded\n");
-#endif
+	// xxx todo move this somewhere else
+	mHostInfoHasChanged = PR_TRUE;
+	mVersion = 1;
+	mHostInfoLoaded = PR_TRUE;
+	mGroupsOnServer.Clear();
+
 	rv = nntpService->BuildSubscribeDatasource(this, aMsgWindow);
 	if (NS_FAILED(rv)) return rv;
   }
@@ -792,9 +852,14 @@ nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
 NS_IMETHODIMP
 nsNntpIncomingServer::AddNewsgroupToSubscribeDS(const char *aName)
 {
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
-	return AddToSubscribeDS(aName);
+	nsresult rv;
+
+	// since this comes from the server, append it to the list
+	mGroupsOnServer.AppendCString(aName);
+
+	rv = AddToSubscribeDS(aName);
+	if (NS_FAILED(rv)) return rv;
+	return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -960,17 +1025,14 @@ nsNntpIncomingServer::HandleLine(char* line, PRUint32 line_size)
 	NS_ASSERTION(line, "line is null");
 	if (!line) return 0;
 
+	// skip blank lines and comments
+	if (line[0] == '#' || line[0] == '\0') return 0;
+	
 	line[line_size] = 0;
-#ifdef DEBUG_sspitzer_
-	printf("%s",line);
-#endif
 
 	if (mHasSeenBeginGroups) {
 		char *commaPos = PL_strchr(line,',');
 		if (commaPos) *commaPos = 0;
-#ifdef DEBUG_sspitzer
-		printf("%s\n",line);
-#endif
 		nsCString str(line);
 		mGroupsOnServer.AppendCString(str);
 	}
@@ -979,6 +1041,21 @@ nsNntpIncomingServer::HandleLine(char* line, PRUint32 line_size)
 			mGroupsOnServer.Clear();
 			mHasSeenBeginGroups = PR_TRUE;
 		}
+		char*equalPos = PL_strchr(line, '=');	
+		if (equalPos) {
+			*equalPos++ = '\0';
+			if (PL_strcmp(line, "lastgroupdate") == 0) {
+				mLastGroupDate = strtol(equalPos, nsnull, 16);
+			} else if (PL_strcmp(line, "firstnewdate") == 0) {
+				mFirstNewDate = strtol(equalPos, nsnull, 16);
+			} else if (PL_strcmp(line, "uniqueid") == 0) {
+				mUniqueId = strtol(equalPos, nsnull, 16);
+			} else if (PL_strcmp(line, "pushauth") == 0) {
+				mPushAuth = strtol(equalPos, nsnull, 16);
+			} else if (PL_strcmp(line, "version") == 0) {
+				mVersion = strtol(equalPos, nsnull, 16);
+			}
+		}	
 	}
 
 	return 0;

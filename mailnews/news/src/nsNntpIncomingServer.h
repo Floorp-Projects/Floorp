@@ -88,6 +88,12 @@ private:
 	PRBool mHostInfoHasChanged;
 	nsCOMPtr <nsISubscribableServer> mInner;
 	nsCOMPtr <nsIFileSpec> mHostInfoFile;
+
+	PRUint32 mLastGroupDate;
+	PRTime mFirstNewDate;
+	PRInt32 mUniqueId;	
+	PRBool mPushAuth;
+	PRInt32 mVersion;
 };
 
 #endif

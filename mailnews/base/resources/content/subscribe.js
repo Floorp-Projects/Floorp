@@ -62,7 +62,7 @@ function onServerClick(event)
 	//dump("gServerURI="+gServerURI+"\n");
 
 	SetServerTypeSpecificTextValues();
-	SetUpTree();
+	SetUpTree(false);
 }
 
 function SetUpServerMenu()
@@ -95,7 +95,7 @@ var MySubscribeListener = {
 	}
 };
 
-function SetUpTree()
+function SetUpTree(forceToServer)
 {
 	//dump("SetUpTree()\n");
 	SetUpRDF();
@@ -113,7 +113,7 @@ function SetUpTree()
 		// Turn progress meter on.
       	gStatusBar.setAttribute("mode","undetermined");	
 
-		subscribableServer.populateSubscribeDatasource(null /* eventually, a nsIMsgWindow */);
+		subscribableServer.populateSubscribeDatasource(null /* eventually, a nsIMsgWindow */, forceToServer);
 	}
 	catch (ex) {
 		dump("failed to populate subscribe ds: " + ex + "\n");
@@ -160,7 +160,7 @@ function SubscribeOnLoad()
 	}
 
 	SetUpServerMenu();
-	SetUpTree();
+	SetUpTree(false);
 
   
   gNameField.focus();
@@ -296,7 +296,8 @@ function SubscribeOnClick(event)
 
 function RefreshList()
 {
-	dump("xxx todo refresh list\n");
+	// force it to talk to the server
+	SetUpTree(true);
 }
 
 function trackGroupInTree()

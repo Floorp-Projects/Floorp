@@ -330,7 +330,7 @@ nsSubscribableServer::GetSubscribeListener(nsISubscribeListener **aListener)
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
+nsSubscribableServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow, PRBool aForceToServer)
 {
 	NS_ASSERTION(PR_FALSE,"override this.");
 	return NS_ERROR_FAILURE;

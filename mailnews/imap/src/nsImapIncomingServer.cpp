@@ -1828,7 +1828,7 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHo
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
+nsImapIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow, PRBool aForceToServer /*ignored*/)
 {
 	nsresult rv;
 #ifdef DEBUG_sspitzer
