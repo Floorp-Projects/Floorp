@@ -16,3 +16,5 @@
 <!ENTITY  author.label            "Author">
 
 <!ENTITY  getNewThemes.label      "Get New Themes">
+<!ENTITY  themesTab.label         "Themes">
+<!ENTITY  extensionsTab.label     "Extensions">

@@ -47,8 +47,8 @@
 
   <tabbox flex="1">
   <tabs>
-    <tab label="Themes"/>
-    <tab label="Extensions"/>
+    <tab label="&themesTab.label;"/>
+    <tab label="&extensionsTab.label;"/>
   </tabs>
   <tabpanels flex="1">
   <vbox flex="1">
