@@ -157,14 +157,6 @@ function HandleColumnClick(columnID)
   }
   else {
     if (!simpleColumns && (dbview.viewFlags & nsMsgViewFlagsType.kThreadedDisplay)) {
-      var viewFlags = dbview.viewFlags;
-      dbview.viewFlags &= ~ (nsMsgViewFlagsType.kThreadedDisplay | nsMsgViewFlagsType.kGroupBySort);
-      if (viewFlags & nsMsgViewFlagsType.kGroupBySort)
-      {
-        dbview.sortType = sortType; // save sort in current view
-        viewDebug("switching view to all msgs\n");
-        return SwitchView("cmd_viewAllMsgs");
-      }
       MsgSortThreadPane(sortType);
     }
     else if (dbview.sortType == sortType) {
@@ -298,9 +290,17 @@ function MsgSortByThread()
 
 function MsgSortThreadPane(sortType)
 {
-    var dbview = GetDBView();
-    dbview.sort(sortType, nsMsgViewSortOrder.ascending);
-    UpdateSortIndicators(sortType, nsMsgViewSortOrder.ascending);
+  var dbview = GetDBView();
+  var viewFlags = dbview.viewFlags;
+  dbview.viewFlags &= ~ (nsMsgViewFlagsType.kThreadedDisplay | nsMsgViewFlagsType.kGroupBySort);
+  if (viewFlags & nsMsgViewFlagsType.kGroupBySort)
+  {
+    dbview.sortType = sortType; // save sort in current view
+    viewDebug("switching view to all msgs\n");
+    return SwitchView("cmd_viewAllMsgs");
+  }
+  dbview.sort(sortType, nsMsgViewSortOrder.ascending);
+  UpdateSortIndicators(sortType, nsMsgViewSortOrder.ascending);
 }
 
 function MsgReverseSortThreadPane()
