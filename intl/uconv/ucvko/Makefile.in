@@ -43,6 +43,8 @@ CPPSRCS		= \
 		nsUnicodeToCP949.cpp \
 		nsUnicodeToX11Johab.cpp \
 		nsUnicodeToJohab.cpp \
+		nsJohabToUnicode.cpp \
+		nsUnicodeToJohabNoAscii.cpp \
 		nsUCvKOSupport.cpp \
 		nsUCvKoModule.cpp \
 		$(NULL)

@@ -31,8 +31,8 @@ static const PRUint16 g2BytesShiftTable[] =  {
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
 
-static const PRUint16 gComposedHangulShiftTable[] =  {
-  0, uComposedHangulGLCharset,
+static const PRUint16 gDecomposedHangulShiftTable[] =  {
+  0, uDecomposedHangulGLCharset,
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
 
@@ -43,7 +43,7 @@ static const PRUint16 *g_MappingTable[3] = {
 
 static const PRUint16 *g_ShiftTable[3] =  {
   g2BytesShiftTable,
-  gComposedHangulShiftTable
+  gDecomposedHangulShiftTable
 };
 
 //----------------------------------------------------------------------

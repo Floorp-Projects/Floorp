@@ -41,7 +41,11 @@
 #include "nsUnicodeToEUCKR.h"
 #include "nsUnicodeToKSC5601.h"
 #include "nsUnicodeToX11Johab.h"
+#include "nsJohabToUnicode.h"
 #include "nsUnicodeToJohab.h"
+#include "nsUnicodeToJohabNoAscii.h"
+#include "nsCP949ToUnicode.h"
+#include "nsUnicodeToCP949.h"
 
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -72,13 +76,21 @@ NS_UCONV_REG_UNREG(nsEUCKRToUnicode, "EUC-KR", "Unicode" , NS_EUCKRTOUNICODE_CID
 NS_UCONV_REG_UNREG(nsUnicodeToEUCKR, "Unicode", "EUC-KR",  NS_UNICODETOEUCKR_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToKSC5601, "Unicode", "ks_c_5601-1987",  NS_UNICODETOKSC5601_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToX11Johab, "Unicode", "x-x11johab",  NS_UNICODETOX11JOHAB_CID);
+NS_UCONV_REG_UNREG(nsJohabToUnicode, "x-johab", "Unicode" , NS_JOHABTOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToJohab, "Unicode", "x-johab",  NS_UNICODETOJOHAB_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToJohabNoAscii, "Unicode", "x-johab-noascii",  NS_UNICODETOJOHABNOASCII_CID);
+NS_UCONV_REG_UNREG(nsCP949ToUnicode, "x-windows-949", "Unicode" , NS_CP949TOUNICODE_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToCP949, "Unicode", "x-windows-949",  NS_UNICODETOCP949_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEUCKRToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToEUCKR);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToKSC5601);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToX11Johab);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsJohabToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToJohab);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToJohabNoAscii);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP949ToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP949);
 
 static nsModuleComponentInfo components[] = 
 {
@@ -107,10 +119,34 @@ static nsModuleComponentInfo components[] =
     nsUnicodeToX11JohabRegSelf, nsUnicodeToX11JohabUnRegSelf
   },
   { 
+    DECODER_NAME_BASE "x-johab" , NS_JOHABTOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "x-johab",
+    nsJohabToUnicodeConstructor ,
+    nsJohabToUnicodeRegSelf , nsJohabToUnicodeUnRegSelf 
+  },
+  { 
     ENCODER_NAME_BASE "x-johab" , NS_UNICODETOJOHAB_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-johab",
     nsUnicodeToJohabConstructor,
     nsUnicodeToJohabRegSelf, nsUnicodeToJohabUnRegSelf
+  },
+  { 
+    ENCODER_NAME_BASE "x-johab-noascii", NS_UNICODETOJOHABNOASCII_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-johab-noascii",
+    nsUnicodeToJohabNoAsciiConstructor,
+    nsUnicodeToJohabNoAsciiRegSelf, nsUnicodeToJohabNoAsciiUnRegSelf
+  },
+  { 
+    DECODER_NAME_BASE "x-windows-949" , NS_CP949TOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "x-windows-949",
+    nsCP949ToUnicodeConstructor ,
+    nsCP949ToUnicodeRegSelf , nsCP949ToUnicodeUnRegSelf 
+  },
+  { 
+    ENCODER_NAME_BASE "x-windows-949" , NS_UNICODETOCP949_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-windows-949",
+    nsUnicodeToCP949Constructor,
+    nsUnicodeToCP949RegSelf, nsUnicodeToCP949UnRegSelf
   }
 };
 

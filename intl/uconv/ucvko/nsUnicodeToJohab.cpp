@@ -27,6 +27,11 @@
 // Global functions and data [declaration]
 
 
+static const PRUint16 gAsciiShiftTable[] =  {
+  0, u1ByteCharset,  
+  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
+};
+
 static const PRUint16 gJohabSymbolShiftTable[] =  {
   0, uJohabSymbolCharset,  
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
@@ -36,21 +41,23 @@ static const PRUint16 gJohabHangulShiftTable[] =  {
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
 
-static const PRUint16 *g_JohabMappingTable[2] = {
+static const PRUint16 *g_JohabMappingTable[3] = {
+  g_AsciiMapping,
   g_HangulNullMapping,
   g_ufKSC5601Mapping
 };
 
-static const PRUint16 *g_JohabShiftTable[2] =  {
+static const PRUint16 *g_JohabShiftTable[3] =  {
+  gAsciiShiftTable,
   gJohabHangulShiftTable,
   gJohabSymbolShiftTable
 };
 
 //----------------------------------------------------------------------
-// Class nsUnicodeToEUCKR [implementation]
+// Class nsUnicodeToJohab [implementation]
 
 nsUnicodeToJohab::nsUnicodeToJohab() 
-: nsMultiTableEncoderSupport(2,
+: nsMultiTableEncoderSupport(3,
                         (uShiftTable**) g_JohabShiftTable, 
                         (uMappingTable**) g_JohabMappingTable)
 {
