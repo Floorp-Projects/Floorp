@@ -29,26 +29,16 @@
 
 #ifndef nsISupports_h___
   #include "nsISupports.h"
-    // for |nsresult|, |NS_IF_ADDREF|, et al
+    // for |nsresult|, |NS_ADDREF|, et al
 #endif
 
-
-
-/*
-  To do...
-
-		+ send updated files to Peter Linss (get his approval)
-    + finish `User Manual'
-    + put user manual online
-    + better comments
-*/
 
 
 /* USER MANUAL
 
   See also:
     <http://www.meer.net/ScottCollins/doc/nsCOMPtr.html>, or
-    <http://www.mozilla.org/...?...> [[get a place for this]]
+    <http://www.mozilla.org/...?...> [[still looking for the right place to put this on mozilla]]
 
   What is |nsCOMPtr|?
 
@@ -210,8 +200,6 @@
     as soon as it sees the template declarations.  Bad compiler.  No cookie!
     [[Thanks to mjudge, waterson, and pinkerton on this one.]]
 
-    [[ others ]]
-
 
   Why does |getter_AddRefs| have such a funny name?  I.e., why doesn't it follow our
   naming conventions?
@@ -277,6 +265,14 @@
   typedef bool NSCAP_BOOL;
 #else
   typedef PRBool NSCAP_BOOL;
+#endif
+
+#ifdef NSCAP_FEATURE_DEBUG_MACROS
+	#define NSCAP_ADDREF(ptr)		NS_ADDREF(ptr)
+	#define NSCAP_RELEASE(ptr)	NS_RELEASE(ptr)
+#else
+	#define NSCAP_ADDREF(ptr)		(ptr)->AddRef()
+	#define NSCAP_RELEASE(ptr)	(ptr)->Release()
 #endif
 
 	/*
@@ -362,6 +358,7 @@ struct nsDontAddRef
   };
 
 template <class T>
+inline
 nsDontAddRef<T>
 dont_AddRef( T* aRawPtr )
     /*
@@ -374,6 +371,33 @@ dont_AddRef( T* aRawPtr )
   {
     return nsDontAddRef<T>(aRawPtr);
   }
+
+
+
+
+template <class T>
+struct nsDontQueryInterface
+		/*
+			...
+		*/
+	{
+		explicit
+		nsDontQueryInterface( T* aRawPtr )
+				: mRawPtr(aRawPtr)
+			{
+				// nothing else to do here
+			}
+
+		T* mRawPtr;
+	};
+
+template <class T>
+inline
+nsDontQueryInterface<T>
+dont_QueryInterface( T* aRawPtr )
+	{
+		return nsDontQueryInterface<T>(aRawPtr);
+	}
 
 
 
@@ -402,7 +426,6 @@ class nsCOMPtr
 	      		// ...and |QueryInterface| does the |AddRef| for us
       	}
 
-      explicit
       nsCOMPtr( const nsDontAddRef<T>& aSmartPtr )
           : mRawPtr(aSmartPtr.mRawPtr),
             mIsAwaitingAddRef(0)
@@ -410,18 +433,32 @@ class nsCOMPtr
           // nothing else to do here
         }
 
+			nsCOMPtr( const nsDontQueryInterface<T>& aSmartPtr )
+					: mRawPtr(aSmartPtr.mRawPtr),
+						mIsAwaitingAddRef(0)
+				{
+					if ( mRawPtr )
+						{
+							NSCAP_ADDREF(mRawPtr);
+						}
+				}
+
       nsCOMPtr( const nsCOMPtr<T>& aSmartPtr )
           : mRawPtr(aSmartPtr.mRawPtr),
             mIsAwaitingAddRef(0)
         {
           if ( mRawPtr )
-          	mRawPtr->AddRef();
+          	{
+          		NSCAP_ADDREF(mRawPtr);
+          	}
         }
 
      ~nsCOMPtr()
         {
           if ( mRawPtr && !mIsAwaitingAddRef )
-            mRawPtr->Release();
+          	{
+            	NSCAP_RELEASE(mRawPtr);
+            }
         }
 
 			nsCOMPtr&
@@ -434,7 +471,9 @@ class nsCOMPtr
 					if ( mIsAwaitingAddRef )
 						mIsAwaitingAddRef = 0;
 					else if ( mRawPtr )
-      			mRawPtr->Release();
+						{
+							NSCAP_RELEASE(mRawPtr);
+      			}
 
       		mRawPtr = rawPtr;
       		return *this;
@@ -446,10 +485,33 @@ class nsCOMPtr
         	if ( mIsAwaitingAddRef )
          	 mIsAwaitingAddRef = 0;
           else if ( mRawPtr )
-            mRawPtr->Release();
+          	{
+            	NSCAP_RELEASE(mRawPtr);
+            }
           mRawPtr = rhs.mRawPtr;
           return *this;
         }
+
+			nsCOMPtr&
+			operator=( const nsDontQueryInterface<T>& rhs )
+				{
+					T* rawPtr = rhs.mRawPtr;
+
+					if ( rawPtr )
+						{
+							NSCAP_ADDREF(rawPtr);
+						}
+
+					if ( mIsAwaitingAddRef )
+						mIsAwaitingAddRef = 0;
+					else if ( mRawPtr )
+						{
+							NSCAP_RELEASE(mRawPtr);
+						}
+
+					mRawPtr = rawPtr;
+					return *this;
+				}
 
 			nsCOMPtr&
 			operator=( const nsCOMPtr& rhs )
@@ -457,12 +519,16 @@ class nsCOMPtr
 					T* rawPtr = rhs.mRawPtr;
 
 					if ( rawPtr )
-						rawPtr->AddRef();
+						{
+							NSCAP_ADDREF(rawPtr);
+						}
 
 					if ( mIsAwaitingAddRef )
 						mIsAwaitingAddRef = 0;
 					else if ( mRawPtr )
-						mRawPtr->Release();
+						{
+							NSCAP_RELEASE(mRawPtr);
+						}
 
 					mRawPtr = rawPtr;
 					return *this;
@@ -517,7 +583,9 @@ class nsCOMPtr
       StartAssignment( NSCAP_BOOL awaiting_AddRef )
         {
           if ( mRawPtr && !mIsAwaitingAddRef )
-            mRawPtr->Release();
+          	{
+            	NSCAP_RELEASE(mRawPtr);
+            }
           mIsAwaitingAddRef = awaiting_AddRef;
           mRawPtr = 0;
           return &mRawPtr;
@@ -528,7 +596,7 @@ class nsCOMPtr
         {
           if ( mIsAwaitingAddRef )
             {
-              mRawPtr->AddRef();
+              NSCAP_ADDREF(mRawPtr);
               mIsAwaitingAddRef = 0;
             }
         }
