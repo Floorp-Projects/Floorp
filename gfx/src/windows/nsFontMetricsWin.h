@@ -85,7 +85,6 @@ public:
   virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString,
                            PRUint32 aLength) = 0;
 
-  // XXX return width from DrawString
   virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
                           const PRUnichar* aString, PRUint32 aLength) = 0;
 
@@ -338,39 +337,8 @@ public:
 
 // The following is a workaround for a Japanse Windows 95 problem.
 
-class nsFontWinA;
+class nsFontSubset;
 class nsFontMetricsWinA;
-
-class nsFontSubset : public nsFontWin
-{
-public:
-  nsFontSubset();
-  virtual ~nsFontSubset();
-
-  virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString,
-                           PRUint32 aLength);
-  virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
-                          const PRUnichar* aString, PRUint32 aLength);
-#ifdef MOZ_MATHML
-  virtual nsresult
-  GetBoundingMetrics(HDC                aDC, 
-                     const PRUnichar*   aString,
-                     PRUint32           aLength,
-                     nsBoundingMetrics& aBoundingMetrics);
-#ifdef NS_DEBUG
-  virtual void DumpFontInfo();
-#endif // NS_DEBUG
-#endif
-
-  int Load(HDC aDC, nsFontMetricsWinA* aFontMetricsWin, nsFontWinA* aFont);
-
-  // convert a Unicode string to ANSI within our codepage
-  virtual void Convert(const PRUnichar* aString, PRUint32 aLength,
-                       char** aResult /*IN/OUT*/, int* aResultLength /*IN/OUT*/);
-
-  BYTE     mCharset;
-  PRUint16 mCodePage;
-};
 
 class nsFontWinA : public nsFontWin
 {
