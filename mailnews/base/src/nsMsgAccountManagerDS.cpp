@@ -172,7 +172,7 @@ nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
       
       getRDFService()->GetResource(NC_RDF_ACCOUNTROOT, &kNC_AccountRoot);
 
-      getRDFService()->GetLiteral(NS_ConvertASCIItoUCS2("true").get(),
+      getRDFService()->GetLiteral(NS_LITERAL_STRING("true").get(),
                                   &kTrueLiteral);
       
       // eventually these need to exist in some kind of array
@@ -294,28 +294,28 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       
       nsXPIDLString pageTitle;
       if (source == kNC_PageTitleServer)
-          mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-server").get(),
+          mStringBundle->GetStringFromName(NS_LITERAL_STRING("prefPanel-server").get(),
                                            getter_Copies(pageTitle));
       
       else if (source == kNC_PageTitleCopies)
-          mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-copies").get(),
+          mStringBundle->GetStringFromName(NS_LITERAL_STRING("prefPanel-copies").get(),
                                            getter_Copies(pageTitle));
       else if (source == kNC_PageTitleOfflineAndDiskSpace)
-          mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-offline-and-diskspace").get(),
+          mStringBundle->GetStringFromName(NS_LITERAL_STRING("prefPanel-offline-and-diskspace").get(),
                                            getter_Copies(pageTitle));
       else if (source == kNC_PageTitleDiskSpace)
-          mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-diskspace").get(),
+          mStringBundle->GetStringFromName(NS_LITERAL_STRING("prefPanel-diskspace").get(),
                                            getter_Copies(pageTitle));
       else if (source == kNC_PageTitleAddressing)
-          mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-addressing").get(),
+          mStringBundle->GetStringFromName(NS_LITERAL_STRING("prefPanel-addressing").get(),
                                            getter_Copies(pageTitle));
 
       else if (source == kNC_PageTitleAdvanced)
-          mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-advanced").get(),
+          mStringBundle->GetStringFromName(NS_LITERAL_STRING("prefPanel-advanced").get(),
                                            getter_Copies(pageTitle));
 
       else if (source == kNC_PageTitleSMTP)
-          mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-smtp").get(),
+          mStringBundle->GetStringFromName(NS_LITERAL_STRING("prefPanel-smtp").get(),
                                            getter_Copies(pageTitle));
 
       else {
@@ -336,7 +336,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     else if (source == kNC_PageTitleCopies)
       str = NS_LITERAL_STRING("am-copies.xul");
     else if ((source == kNC_PageTitleOfflineAndDiskSpace) || (source == kNC_PageTitleDiskSpace))
-      str.AssignWithConversion("am-offline.xul");
+      str = NS_LITERAL_STRING("am-offline.xul");
     else if (source == kNC_PageTitleAddressing)
       str = NS_LITERAL_STRING("am-addressing.xul");
     else if (source == kNC_PageTitleAdvanced)
