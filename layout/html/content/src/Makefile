@@ -34,18 +34,38 @@ CPPSRCS=				\
 	nsHTMLDirectory.cpp		\
 	nsHTMLDiv.cpp			\
 	nsHTMLEmbed.cpp			\
+	nsHTMLFont.cpp			\
 	nsHTMLGenericContent.cpp	\
-	nsHTMLHead.cpp			\
 	nsHTMLHR.cpp			\
+	nsHTMLHead.cpp			\
+	nsHTMLHeading.cpp		\
+	nsHTMLHtml.cpp			\
 	nsHTMLInput.cpp			\
+	nsHTMLIns.cpp			\
+	nsHTMLLI.cpp			\
 	nsHTMLLayer.cpp			\
 	nsHTMLLink.cpp			\
+	nsHTMLMap.cpp			\
+	nsHTMLMenu.cpp			\
 	nsHTMLMeta.cpp			\
+	nsHTMLMod.cpp			\
+	nsHTMLOList.cpp			\
 	nsHTMLObject.cpp		\
+	nsHTMLOption.cpp		\
+	nsHTMLParagraph.cpp		\
 	nsHTMLParam.cpp			\
+	nsHTMLPre.cpp			\
+	nsHTMLQuote.cpp			\
 	nsHTMLScript.cpp		\
 	nsHTMLStyle.cpp			\
+	nsHTMLTable.cpp			\
+	nsHTMLTableCaption.cpp		\
+	nsHTMLTableCell.cpp		\
+	nsHTMLTableCol.cpp		\
+	nsHTMLTableRow.cpp		\
+	nsHTMLTableSection.cpp		\
 	nsHTMLTitle.cpp			\
+	nsHTMLUList.cpp			\
 	nsObjectContent.cpp		\
 	$(NULL)
 
