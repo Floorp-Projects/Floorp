@@ -33,9 +33,10 @@ nsLeafFrame::~nsLeafFrame()
 {
 }
 
-NS_METHOD nsLeafFrame::Paint(nsIPresContext& aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect& aDirtyRect)
+NS_IMETHODIMP
+nsLeafFrame::Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect)
 {
   const nsStyleDisplay* disp =
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
@@ -55,44 +56,55 @@ NS_METHOD nsLeafFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsLeafFrame::Reflow(nsIPresContext&      aPresContext,
-                              nsHTMLReflowMetrics& aDesiredSize,
-                              const nsHTMLReflowState& aReflowState,
-                              nsReflowStatus&      aStatus)
+NS_IMETHODIMP
+nsLeafFrame::Reflow(nsIPresContext&      aPresContext,
+                    nsHTMLReflowMetrics& aMetrics,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&      aStatus)
 {
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+                 ("enter nsLeafFrame::Reflow: aMaxSize=%d,%d",
+                  aReflowState.maxSize.width, aReflowState.maxSize.height));
+
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
   // XXX add in code to check for width/height being set via css
   // and if set use them instead of calling GetDesiredSize.
 
 
-  GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
-  AddBordersAndPadding(&aPresContext, aDesiredSize);
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+  AddBordersAndPadding(&aPresContext, aMetrics);
+  if (nsnull != aMetrics.maxElementSize) {
+    aMetrics.maxElementSize->width = aMetrics.width;
+    aMetrics.maxElementSize->height = aMetrics.height;
   }
   aStatus = NS_FRAME_COMPLETE;
+
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+                 ("exit nsLeafFrame::Reflow: size=%d,%d",
+                  aMetrics.width, aMetrics.height));
   return NS_OK;
 }
 
 // XXX how should border&padding effect baseline alignment?
 // => descent = borderPadding.bottom for example
-void nsLeafFrame::AddBordersAndPadding(nsIPresContext* aPresContext,
-                                       nsHTMLReflowMetrics& aDesiredSize)
+void
+nsLeafFrame::AddBordersAndPadding(nsIPresContext* aPresContext,
+                                  nsHTMLReflowMetrics& aMetrics)
 {
   const nsStyleSpacing* space =
     (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin  borderPadding;
   space->CalcBorderPaddingFor(this, borderPadding);
-  aDesiredSize.width += borderPadding.left + borderPadding.right;
-  aDesiredSize.height += borderPadding.top + borderPadding.bottom;
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
+  aMetrics.width += borderPadding.left + borderPadding.right;
+  aMetrics.height += borderPadding.top + borderPadding.bottom;
+  aMetrics.ascent = aMetrics.height;
+  aMetrics.descent = 0;
 }
 
-void nsLeafFrame::GetInnerArea(nsIPresContext* aPresContext,
-                               nsRect& aInnerArea) const
+void
+nsLeafFrame::GetInnerArea(nsIPresContext* aPresContext,
+                          nsRect& aInnerArea) const
 {
   const nsStyleSpacing* space =
     (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
@@ -106,9 +118,10 @@ void nsLeafFrame::GetInnerArea(nsIPresContext* aPresContext,
     (borderPadding.top + borderPadding.bottom);
 }
 
-NS_METHOD nsLeafFrame::ContentChanged(nsIPresContext* aPresContext,
-                                      nsIContent*     aChild,
-                                      nsISupports*    aSubContent)
+NS_IMETHODIMP
+nsLeafFrame::ContentChanged(nsIPresContext* aPresContext,
+                            nsIContent*     aChild,
+                            nsISupports*    aSubContent)
 {
   // Generate a reflow command with this frame as the target frame
   nsIReflowCommand* cmd;
