@@ -1,23 +1,25 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public
+ * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
- *
+ * the License at http://www.mozilla.org/MPL/
+ * 
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *
+ * 
  * The Original Code is mozilla.org code.
- *
+ * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
- *
- * Contributor(s): 
+ * Copyright (C) 1999-2000 Netscape Communications Corporation.
+ * All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Stuart Parmenter <pavlov@netscape.com>
+ *   Mike Pinkerton   <pinkerton@netscape.com>
  */
 
 #include "nsClipboard.h"
@@ -48,24 +50,6 @@ GtkWidget* nsClipboard::sWidget = 0;
 #if defined(DEBUG_mcafee) || defined(DEBUG_pavlov)
 #define DEBUG_CLIPBOARD
 #endif
- 
-enum {
-  TARGET_NONE,
-  TARGET_TEXT_PLAIN,
-  TARGET_TEXT_XIF,
-  TARGET_TEXT_UNICODE,
-  TARGET_TEXT_HTML,
-  TARGET_AOLMAIL,
-  TARGET_IMAGE_PNG,
-  TARGET_IMAGE_JPEG,
-  TARGET_IMAGE_GIF,
-  // compatibility types
-  TARGET_UTF8,
-  TARGET_UNKNOWN,
-  TARGET_LAST
-};
-
-static GdkAtom sSelTypes[TARGET_LAST];
 
 static GdkAtom GDK_SELECTION_CLIPBOARD;
 
@@ -131,7 +115,7 @@ void __gtk_selection_target_list_remove (GtkWidget *widget)
 nsClipboard::~nsClipboard()
 {
 #ifdef DEBUG_CLIPBOARD
-  printf("nsClipboard::~nsClipboard()\n");  
+  g_print("nsClipboard::~nsClipboard()\n");  
 #endif /* DEBUG_CLIPBOARD */
 
   // Remove all our event handlers:
@@ -186,18 +170,6 @@ void nsClipboard::Init(void)
   g_print("nsClipboard::Init\n");
 #endif
 
-  sSelTypes[TARGET_NONE]          = GDK_NONE;
-  sSelTypes[TARGET_TEXT_PLAIN]    = gdk_atom_intern(kTextMime, FALSE);
-  sSelTypes[TARGET_TEXT_XIF]      = gdk_atom_intern(kXIFMime, FALSE);
-  sSelTypes[TARGET_TEXT_UNICODE]  = gdk_atom_intern(kUnicodeMime, FALSE);
-  sSelTypes[TARGET_UTF8]          = gdk_atom_intern("UTF8_STRING", FALSE);
-  sSelTypes[TARGET_TEXT_HTML]     = gdk_atom_intern(kHTMLMime, FALSE);
-  sSelTypes[TARGET_AOLMAIL]       = gdk_atom_intern(kAOLMailMime, FALSE);
-  sSelTypes[TARGET_IMAGE_PNG]     = gdk_atom_intern(kPNGImageMime, FALSE);
-  sSelTypes[TARGET_IMAGE_JPEG]    = gdk_atom_intern(kJPEGImageMime, FALSE);
-  sSelTypes[TARGET_IMAGE_GIF]     = gdk_atom_intern(kGIFImageMime, FALSE);
-  // compatibility with other apps
-
   GDK_SELECTION_CLIPBOARD         = gdk_atom_intern("CLIPBOARD", FALSE);
 
   // create invisible widget to use for the clipboard
@@ -229,7 +201,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData( PRInt32 aWhichClipboard )
   mIgnoreEmptyNotification = PR_TRUE;
 
 #ifdef DEBUG_CLIPBOARD
-  printf("  nsClipboard::SetNativeClipboardData()\n");
+  g_print("  nsClipboard::SetNativeClipboardData()\n");
 #endif /* DEBUG_CLIPBOARD */
 
   // make sure we have a good transferable
@@ -270,10 +242,9 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData( PRInt32 aWhichClipboard )
     if ( currentFlavor ) {
       nsXPIDLCString flavorStr;
       currentFlavor->ToString(getter_Copies(flavorStr));
-      gint format = GetFormat(flavorStr);
 
       // add these types as selection targets
-      RegisterFormat(format);
+      RegisterFormat(flavorStr, mSelectionAtom);
     }
   }
 
@@ -282,121 +253,6 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData( PRInt32 aWhichClipboard )
   return NS_OK;
 }
 
-void nsClipboard::AddTarget(GdkAtom aAtom)
-{
-  gtk_selection_add_target(sWidget,
-                           mSelectionAtom,
-                           aAtom, aAtom);
-}
-
-gint nsClipboard::GetFormat(const char* aMimeStr)
-{
-  gint type = TARGET_NONE;
-  nsCAutoString mimeStr ( CBufDescriptor(aMimeStr, PR_TRUE, PL_strlen(aMimeStr)+1) );
-#ifdef DEBUG_CLIPBOARD
-  g_print("  nsClipboard::GetFormat(%s)\n", aMimeStr);
-#endif
-  if (mimeStr.Equals(kTextMime)) {
-    type = TARGET_TEXT_PLAIN;
-  } else if (mimeStr.Equals("STRING")) {
-    type = TARGET_TEXT_PLAIN;
-  } else if (mimeStr.Equals(kXIFMime)) {
-    type = TARGET_TEXT_XIF;
-  } else if (mimeStr.Equals(kUnicodeMime)) {
-    type = TARGET_TEXT_UNICODE;
-  } else if (mimeStr.Equals(kHTMLMime)) {
-    type = TARGET_TEXT_HTML;
-  } else if (mimeStr.Equals(kAOLMailMime)) {
-    type = TARGET_AOLMAIL;
-  } else if (mimeStr.Equals(kPNGImageMime)) {
-    type = TARGET_IMAGE_PNG;
-  } else if (mimeStr.Equals(kJPEGImageMime)) {
-    type = TARGET_IMAGE_JPEG;
-  } else if (mimeStr.Equals(kGIFImageMime)) {
-    type = TARGET_IMAGE_GIF;
-  }
-
-#ifdef WE_DO_DND
-  else if (mimeStr.Equals(kDropFilesMime)) {
-    format = CF_HDROP;
-  } else {
-    format = ::RegisterClipboardFormat(aMimeStr);
-  }
-#endif
-  return type;
-}
-
-void nsClipboard::RegisterFormat(gint format)
-{
-#ifdef DEBUG_CLIPBOARD
-  g_print("  nsClipboard::RegisterFormat(%s)\n", gdk_atom_name(sSelTypes[format]));
-#endif
-
-  /* when doing the selection_add_target, each case should have the same last parameter
-     which matches the case match */
-  switch(format)
-  {
-  case TARGET_TEXT_PLAIN:
-    // text/plain (default)
-    AddTarget(sSelTypes[format]);
-
-    // STRING (what X uses)
-    AddTarget(GDK_SELECTION_TYPE_STRING);
-    break;
-
-
-  case TARGET_TEXT_XIF:
-    // text/xif (default)
-    AddTarget(sSelTypes[format]);
-    break;
-
-
-  case TARGET_TEXT_UNICODE:
-    // STRING (what X uses) we will do a conversion internally
-    AddTarget(GDK_SELECTION_TYPE_STRING);
-
-    // text/unicode (default)
-    AddTarget(sSelTypes[format]);
-
-    // UTF8 (what X uses)
-    AddTarget(sSelTypes[TARGET_UTF8]);
-    break;
-
-  case TARGET_TEXT_HTML:
-    // text/html (default)
-    AddTarget(sSelTypes[format]);
-    break;
-
-
-  case TARGET_AOLMAIL:
-    // text/aolmail (default)
-    AddTarget(sSelTypes[format]);
-    break;
-
-
-  case TARGET_IMAGE_PNG:
-    // image/png (default)
-    AddTarget(sSelTypes[format]);
-    break;
-
-
-  case TARGET_IMAGE_JPEG:
-    // image/jpeg (default)
-    AddTarget(sSelTypes[format]);
-    break;
-
-
-  case TARGET_IMAGE_GIF:
-    // image/gif (default)
-    AddTarget(sSelTypes[format]);
-    break;
-
-
-  default:
-    // if we don't match something above, then just add it like its something we know about...
-    AddTarget(sSelTypes[format]);
-  }
-}
 
 PRBool nsClipboard::DoRealConvert(GdkAtom type)
 {
@@ -418,15 +274,19 @@ PRBool nsClipboard::DoRealConvert(GdkAtom type)
                         type,
                         GDK_CURRENT_TIME);
 
+  gtk_grab_add(sWidget);
+
   // Now we need to wait until the callback comes in ...
   // i is in case we get a runaway (yuck).
 #ifdef DEBUG_CLIPBOARD
-  printf("      Waiting for the callback... mBlocking = %d\n", mBlocking);
+  g_print("      Waiting for the callback... mBlocking = %d\n", mBlocking);
 #endif /* DEBUG_CLIPBOARD */
   for (e=0; mBlocking == PR_TRUE && e < 1000; ++e)
   {
     gtk_main_iteration_do(PR_TRUE);
   }
+
+  gtk_grab_remove(sWidget);
 
 #ifdef DEBUG_CLIPBOARD
   g_print("    }\n");
@@ -438,68 +298,6 @@ PRBool nsClipboard::DoRealConvert(GdkAtom type)
   return PR_FALSE;
 }
 
-/* return PR_TRUE if we have converted or PR_FALSE if we havn't and need to keep being called */
-PRBool nsClipboard::DoConvert(gint format)
-{
-#ifdef DEBUG_CLIPBOARD
-  g_print("  nsClipboard::DoConvert(%s)\n", gdk_atom_name(sSelTypes[format]));
-#endif
-
-  /* when doing the selection_add_target, each case should have the same last parameter
-     which matches the case match */
-  PRBool r = PR_FALSE;
-
-  switch(format)
-  {
-  case TARGET_TEXT_PLAIN:
-    r = DoRealConvert(sSelTypes[format]);
-    if (r) return r;
-    r = DoRealConvert(GDK_SELECTION_TYPE_STRING);
-    if (r) return r;
-    break;
-
-  case TARGET_TEXT_XIF:
-    r = DoRealConvert(sSelTypes[format]);
-    if (r) return r;
-    break;
-
-  case TARGET_TEXT_UNICODE:
-    r = DoRealConvert(sSelTypes[format]);
-    if (r) return r;
-    r = DoRealConvert(sSelTypes[TARGET_UTF8]);
-    if (r) return r;
-    break;
-
-  case TARGET_TEXT_HTML:
-    r = DoRealConvert(sSelTypes[format]);
-    if (r) return r;
-    break;
-
-  case TARGET_AOLMAIL:
-    r = DoRealConvert(sSelTypes[format]);
-    if (r) return r;
-    break;
-
-  case TARGET_IMAGE_PNG:
-    r = DoRealConvert(sSelTypes[format]);
-    if (r) return r;
-    break;
-
-  case TARGET_IMAGE_JPEG:
-    r = DoRealConvert(sSelTypes[format]);
-    if (r) return r;
-    break;
-
-  case TARGET_IMAGE_GIF:
-    r = DoRealConvert(sSelTypes[format]);
-    if (r) return r;
-    break;
-
-  default:
-    g_print("DoConvert called with bogus format\n");
-  }
-  return r;
-}
 
 //-------------------------------------------------------------------------
 //
@@ -512,7 +310,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
 {
 
 #ifdef DEBUG_CLIPBOARD
-  printf("nsClipboard::GetNativeClipboardData()\n");
+  g_print("nsClipboard::GetNativeClipboardData()\n");
 #endif /* DEBUG_CLIPBOARD */
 
   // make sure we have a good transferable
@@ -540,8 +338,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
     if ( currentFlavor ) {
       nsXPIDLCString flavorStr;
       currentFlavor->ToString ( getter_Copies(flavorStr) );
-      gint format = GetFormat(flavorStr);
-      if (DoConvert(format)) {
+      if (DoConvert(flavorStr)) {
         foundFlavor = flavorStr;
         foundData = PR_TRUE;
         break;
@@ -551,8 +348,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
   if ( !foundData ) {
     // if we still haven't found anything yet and we're asked to find text/unicode, then
     // try to give them text plain if it's there.
-    gint format = GetFormat(kTextMime);
-    if (DoConvert(format)) {
+    if (DoConvert(kTextMime)) {
        const char* castedText = NS_REINTERPRET_CAST(char*, mSelectionData.data);          
        PRUnichar* convertedText = nsnull;
        PRInt32 convertedTextLen = 0;
@@ -563,14 +359,14 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
          nsAllocator::Free(mSelectionData.data);
          mSelectionData.data = NS_REINTERPRET_CAST(guchar*, convertedText);
          mSelectionData.length = convertedTextLen * 2;
-		 foundFlavor = kUnicodeMime;
+         foundFlavor = kUnicodeMime;
          foundData = PR_TRUE;
        }
      } // if plain text data on clipboard
   }
   
 #ifdef DEBUG_CLIPBOARD
-  printf("  Got the callback: '%s', %d\n",
+  g_print("  Got the callback: '%s', %d\n",
          mSelectionData.data, mSelectionData.length);
 #endif /* DEBUG_CLIPBOARD */
 
@@ -612,7 +408,7 @@ nsClipboard::SelectionReceivedCB (GtkWidget        *aWidget,
                                   guint             aTime)
 {
 #ifdef DEBUG_CLIPBOARD
-  printf("      nsClipboard::SelectionReceivedCB\n      {\n");
+  g_print("      nsClipboard::SelectionReceivedCB\n      {\n");
 #endif /* DEBUG_CLIPBOARD */
   nsClipboard *cb =(nsClipboard *)gtk_object_get_data(GTK_OBJECT(aWidget),
                                                       "cb");
@@ -638,68 +434,49 @@ void
 nsClipboard::SelectionReceiver (GtkWidget *aWidget,
                                 GtkSelectionData *aSD)
 {
-  gint type;
-
   mBlocking = PR_FALSE;
 
   if (aSD->length < 0)
   {
 #ifdef DEBUG_CLIPBOARD
-    printf("        Error retrieving selection: length was %d\n", aSD->length);
+    g_print("        Error retrieving selection: length was %d\n", aSD->length);
 #endif
     return;
   }
 
-  type = TARGET_NONE;
-  for (int i=0; i < TARGET_LAST; i++)
-  {
-    if (sSelTypes[i] == aSD->type)
-    {
-      type = i;
-      break;
-    }
-  }
+  nsCAutoString type(gdk_atom_name(aSD->type));
 
-  switch (type)
-  {
-  case TARGET_UTF8:
-    {
-      mSelectionData = *aSD;
+  if (type.Equals("UTF8_STRING")) {
+    mSelectionData = *aSD;
 
-      static const PRUnichar unicodeFormatter[] = {
-        (PRUnichar)'%',
-        (PRUnichar)'s',
-        (PRUnichar)0,
-      };
-      // convert aSD->data (UTF8) to Unicode and place the unicode data in mSelectionData.data
-      PRUnichar *unicodeString = nsTextFormatter::smprintf(unicodeFormatter, aSD->data);
+    static const PRUnichar unicodeFormatter[] = {
+      (PRUnichar)'%',
+      (PRUnichar)'s',
+      (PRUnichar)0,
+    };
+    // convert aSD->data (UTF8) to Unicode and place the unicode data in mSelectionData.data
+    PRUnichar *unicodeString = nsTextFormatter::smprintf(unicodeFormatter, aSD->data);
 
-      if (!unicodeString) // this would be bad wouldn't it?
-        return;
+    if (!unicodeString) // this would be bad wouldn't it?
+      return;
 
-      int len = sizeof(unicodeString);
-      mSelectionData.data = g_new(guchar, len + 2);
-      memcpy(mSelectionData.data,
-             unicodeString,
-             len);
-      nsTextFormatter::smprintf_free(unicodeString);
-      mSelectionData.type = TARGET_TEXT_UNICODE;
-      mSelectionData.length = len;
-    }
-    break;
+    int len = sizeof(unicodeString);
+    mSelectionData.data = g_new(guchar, len + 2);
+    memcpy(mSelectionData.data,
+           unicodeString,
+           len);
+    nsTextFormatter::smprintf_free(unicodeString);
+    mSelectionData.type = gdk_atom_intern(kUnicodeMime, FALSE);
+    mSelectionData.length = len;
 
-  case GDK_TARGET_STRING:
-  case TARGET_TEXT_PLAIN:
-  case TARGET_TEXT_XIF:
-  case TARGET_TEXT_UNICODE:
-  case TARGET_TEXT_HTML:
+  } else if (type.Equals("STRING") || type.Equals(kTextMime)) {
 #ifdef DEBUG_CLIPBOARD
-    g_print("        Copying mSelectionData pointer -- ");
+    g_print("        Copying mSelectionData pointer -- \n");
 #endif
     mSelectionData = *aSD;
     mSelectionData.data = NS_REINTERPRET_CAST(guchar*, nsAllocator::Alloc(aSD->length + 1));
 #ifdef DEBUG_CLIPBOARD
-    g_print("        Data = %s\n    Length = %i\n", aSD->data, aSD->length);
+    g_print("         Data = %s\n         Length = %i\n", aSD->data, aSD->length);
 #endif
     memcpy(mSelectionData.data,
            aSD->data,
@@ -708,16 +485,14 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
     // and so we can print the string for debugging:
     mSelectionData.data[aSD->length] = '\0';
     mSelectionData.length = aSD->length;
-    return;
 
-  default:
+  } else {
     mSelectionData = *aSD;
     mSelectionData.data = g_new(guchar, aSD->length + 1);
     memcpy(mSelectionData.data,
            aSD->data,
            aSD->length);
     mSelectionData.length = aSD->length;
-    return;
   }
 }
 
@@ -733,7 +508,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
 NS_IMETHODIMP nsClipboard::ForceDataToClipboard( PRInt32 aWhichClipboard )
 {
 #ifdef DEBUG_CLIPBOARD
-  printf("  nsClipboard::ForceDataToClipboard()\n");
+  g_print("  nsClipboard::ForceDataToClipboard()\n");
 #endif /* DEBUG_CLIPBOARD */
 
   // make sure we have a good transferable
@@ -778,7 +553,7 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
     }
   }
 #ifdef DEBUG_CLIPBOARD
-  printf("nsClipboard::HasDataMatchingFlavors() called -- returning %i\n", *outResult);
+  g_print("nsClipboard::HasDataMatchingFlavors() called -- returning %i\n", *outResult);
 #endif
 
 #else
@@ -803,11 +578,10 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
                                  GtkSelectionData *aSelectionData,
                                  guint            aInfo,
                                  guint            aTime)
-{ 
+{
 #ifdef DEBUG_CLIPBOARD
-  printf("nsClipboard::SelectionGetCB\n"); 
-#endif /* DEBUG_CLIPBOARD */
-
+  g_print("nsClipboard::SelectionGetCB\n"); 
+#endif
   nsClipboard *cb = (nsClipboard *)gtk_object_get_data(GTK_OBJECT(widget),
                                                        "cb");
 
@@ -817,70 +591,33 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
 
   // Make sure we have a transferable:
   if (!cb->mTransferable) {
-    printf("Clipboard has no transferable!\n");
+    g_print("Clipboard has no transferable!\n");
     return;
   }
-
 #ifdef DEBUG_CLIPBOARD
   g_print("  aInfo == %d -", aInfo);
 #endif
-
   char* dataFlavor = nsnull;
-
-  // switch aInfo (atom) to our enum
-  int type = (int)aInfo;
-  for (int i=0; i < TARGET_LAST; i++)
-  {
-    if (sSelTypes[i] == aInfo)
-    {
-      type = i;
-      break;
-    }
-  }
+  nsCAutoString type(gdk_atom_name(aInfo));
 
   PRBool needToDoConversionToPlainText = PR_FALSE;
-  switch(type)
-    {
-    case GDK_TARGET_STRING:
-    case TARGET_TEXT_PLAIN:
-      // if someone was asking for text/plain, lookup unicode instead so we can convert it.
-      dataFlavor = kUnicodeMime;
-      needToDoConversionToPlainText = PR_TRUE;
-      break;
-    case TARGET_TEXT_XIF:
-      dataFlavor = kXIFMime;
-      break;
-    case TARGET_TEXT_UNICODE:
-    case TARGET_UTF8:
-      dataFlavor = kUnicodeMime;
-      break;
-    case TARGET_TEXT_HTML:
-      dataFlavor = kHTMLMime;
-      break;
-    case TARGET_AOLMAIL:
-      dataFlavor = kAOLMailMime;
-      break;
-    case TARGET_IMAGE_PNG:
-      dataFlavor = kPNGImageMime;
-      break;
-    case TARGET_IMAGE_JPEG:
-      dataFlavor = kJPEGImageMime;
-      break;
-    case TARGET_IMAGE_GIF:
-      dataFlavor = kGIFImageMime;
-      break;
-    default:
-      {
-        /* handle outside things */
-      }
-    }
+
+  if (type.Equals("STRING")) {
+    // if someone was asking for text/plain, lookup unicode instead so we can convert it.
+    dataFlavor = kUnicodeMime;
+    needToDoConversionToPlainText = PR_TRUE;
+  } else if (type.Equals("UTF8_STRING")) {
+    // XXX fixme -- need to do conversion here
+    dataFlavor = kUnicodeMime;
+  } else {
+    dataFlavor = type;
+  }
 #ifdef DEBUG_CLIPBOARD
   g_print("- aInfo is for %s\n", gdk_atom_name(aInfo));
 #endif
-      
   // Get data out of transferable.
   nsCOMPtr<nsISupports> genericDataWrapper;
-  rv = cb->mTransferable->GetTransferData(dataFlavor, 
+  rv = cb->mTransferable->GetTransferData(dataFlavor,
                                           getter_AddRefs(genericDataWrapper),
                                           &dataLength);
   nsPrimitiveHelpers::CreateDataFromPrimitive ( dataFlavor, genericDataWrapper, &clipboardData, dataLength );
@@ -913,7 +650,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
   }
   else
     printf("Transferable didn't support data flavor %s (type = %d)\n",
-           dataFlavor ? dataFlavor : "None", type);
+           dataFlavor ? dataFlavor : "None", aInfo);
 }
 
 
@@ -929,7 +666,7 @@ void nsClipboard::SelectionClearCB(GtkWidget *aWidget,
                                    gpointer aData)
 {
 #ifdef DEBUG_CLIPBOARD
-  printf("  nsClipboard::SelectionClearCB\n");
+  g_print("  nsClipboard::SelectionClearCB\n");
 #endif /* DEBUG_CLIPBOARD */
 
   nsClipboard *cb = (nsClipboard *)gtk_object_get_data(GTK_OBJECT(aWidget),
@@ -953,7 +690,7 @@ nsClipboard::SelectionRequestCB (GtkWidget *aWidget,
                                  gpointer aData)
 {
 #ifdef DEBUG_CLIPBOARD
-  printf("  nsClipboard::SelectionRequestCB\n");
+  g_print("  nsClipboard::SelectionRequestCB\n");
 #endif /* DEBUG_CLIPBOARD */
 }
 
@@ -970,6 +707,66 @@ nsClipboard::SelectionNotifyCB (GtkWidget *aWidget,
                                 gpointer aData)
 {
 #ifdef DEBUG_CLIPBOARD
-  printf("  nsClipboard::SelectionNotifyCB\n");
+  g_print("  nsClipboard::SelectionNotifyCB\n");
 #endif /* DEBUG_CLIPBOARD */
+}
+
+
+
+
+
+/* helper functions*/
+
+
+
+void nsClipboard::AddTarget(GdkAtom aAtom, GdkAtom aSelectionAtom)
+{
+  gtk_selection_add_target(sWidget, aSelectionAtom, aAtom, aAtom);
+}
+
+void nsClipboard::RegisterFormat(const char *aMimeStr, GdkAtom aSelectionAtom)
+{
+#ifdef DEBUG_CLIPBOARD
+  g_print("  nsClipboard::RegisterFormat(%s)\n", aMimeStr);
+#endif
+  nsCAutoString mimeStr(aMimeStr);
+
+  GdkAtom atom = gdk_atom_intern(aMimeStr, FALSE);
+
+  // for Text and Unicode we want to add some extra types to the X clipboard
+  if (mimeStr.Equals(kTextMime)) {
+    AddTarget(GDK_SELECTION_TYPE_STRING, aSelectionAtom);    // STRING -- we will convert to unicode internally
+  } else if (mimeStr.Equals(kUnicodeMime)) {
+    AddTarget(gdk_atom_intern("UTF8_STRING", FALSE), aSelectionAtom);
+    AddTarget(GDK_SELECTION_TYPE_STRING, aSelectionAtom);    // STRING -- we will convert to unicode internally
+  }
+
+  AddTarget(atom, aSelectionAtom);
+}
+
+/* return PR_TRUE if we have converted or PR_FALSE if we havn't and need to keep being called */
+PRBool nsClipboard::DoConvert(const char *aMimeStr)
+{
+#ifdef DEBUG_CLIPBOARD
+  g_print("  nsClipboard::DoConvert(%s)\n", aMimeStr);
+#endif
+  /* when doing the selection_add_target, each case should have the same last parameter
+     which matches the case match */
+  PRBool r = PR_FALSE;
+
+  nsCAutoString mimeStr(aMimeStr);
+
+  if (mimeStr.Equals(kTextMime)) {
+    r = DoRealConvert(GDK_SELECTION_TYPE_STRING);
+    if (r) return r;
+  } else if (mimeStr.Equals(kUnicodeMime)) {
+    r = DoRealConvert(gdk_atom_intern("UTF_STRING", FALSE));
+    if (r) return r;
+  }
+
+  GdkAtom atom = gdk_atom_intern(aMimeStr, FALSE);
+  r = DoRealConvert(atom);
+  if (r) return r;
+
+  return r;
 }
