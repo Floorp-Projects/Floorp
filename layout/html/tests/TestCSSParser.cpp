@@ -28,16 +28,25 @@
 #include "plevent.h"
 #include "nsINetService.h"
 #include "nsRepository.h"
+#include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
+#include "nsXPComCIID.h"
+
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
+#define XPCOM_DLL  "xpcom32.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
 #define NETLIB_DLL "libnetlib.so"
+#define XPCOM_DLL  "libxpcom.so"
 #endif
 #endif
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 // XXX end bad code
 
 static void Usage(void)
@@ -47,12 +56,10 @@ static void Usage(void)
 
 int main(int argc, char** argv)
 {
-#ifdef XP_PC
-  PL_InitializeEventsLib("");
-#endif
-
+  nsRepository::RegisterFactory(kEventQueueServiceCID, XPCOM_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
+  nsresult rv;
   PRBool verbose = PR_FALSE;
   nsString* string = nsnull;
   int i;
@@ -77,9 +84,19 @@ int main(int argc, char** argv)
       break;
   }
 
+  // Create the Event Queue for this thread...
+  nsIEventQueueService* pEventQService = nsnull;
+  rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                    kIEventQueueServiceIID,
+                                    (nsISupports **)&pEventQService);
+  if (NS_SUCCEEDED(rv)) {
+    // XXX: What if this fails?
+    rv = pEventQService->CreateThreadEventQueue();
+  }
+
   // Create parser
   nsICSSParser* css;
-  nsresult rv = NS_NewCSSParser(&css);
+  rv = NS_NewCSSParser(&css);
   if (NS_OK != rv) {
     printf("can't create css parser: %d\n", rv);
     return -1;
@@ -147,6 +164,12 @@ int main(int argc, char** argv)
   }
 
   css->Release();
+
+  /* Release the event queue for the thread */
+  if (nsnull != pEventQService) {
+    pEventQService->DestroyThreadEventQueue();
+    nsServiceManager::ReleaseService(kEventQueueServiceCID, pEventQService);
+  }
 
   return 0;
 }
