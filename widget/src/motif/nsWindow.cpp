@@ -1598,3 +1598,30 @@ NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
   return NS_OK;
 }
 
+/**
+ * 
+ *
+ **/
+NS_METHOD nsWindow::GetClientBounds(nsRect &aRect)
+{
+  return GetBounds(aRect);
+}
+
+
+/**
+ * Calculates the border width and height  
+ *
+ **/
+NS_METHOD nsWindow::GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight)
+{
+  nsRect rectWin;
+  nsRect rectClient;
+  GetBounds(rectWin);
+  GetClientBounds(rectClient);
+
+  aWidth  = rectWin.width - rectClient.width;
+  aHeight = rectWin.height - rectClient.height;
+
+  return NS_OK;
+}
+
