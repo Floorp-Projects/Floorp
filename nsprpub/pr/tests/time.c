@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
 #define DEFAULT_COUNT 100000
 PRInt32 count;
@@ -79,7 +80,6 @@ static void timeGethrtime(void)
         rv = ftime();
 }
 
-#include <sys/time.h>
 static void timeGettimeofday(void)
 {
     PRInt32 index = count;

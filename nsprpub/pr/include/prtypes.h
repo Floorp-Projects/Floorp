@@ -33,7 +33,11 @@
 #ifndef prtypes_h___
 #define prtypes_h___
 
+#ifdef MDCPUCFG
+#include MDCPUCFG
+#else
 #include "prcpucfg.h"
+#endif
 
 #include <stddef.h>
 
@@ -58,6 +62,12 @@
 **
 ***********************************************************************/
 #if defined(WIN32)
+
+#if defined(__GNUC__)
+#undef _declspec
+#define _declspec(x) __declspec(x)
+#endif
+
 #define PR_EXTERN(__type) extern _declspec(dllexport) __type
 #define PR_IMPLEMENT(__type) _declspec(dllexport) __type
 #define PR_EXTERN_DATA(__type) extern _declspec(dllexport) __type
@@ -258,7 +268,7 @@ typedef unsigned long PRUint64;
 #elif defined(WIN16)
 typedef __int64 PRInt64;
 typedef unsigned __int64 PRUint64;
-#elif defined(WIN32)
+#elif defined(WIN32) && !defined(__GNUC__)
 typedef __int64  PRInt64;
 typedef unsigned __int64 PRUint64;
 #else

@@ -171,9 +171,9 @@ and to ensure that no more events will be delivered for that owner.
 #include "prmon.h"
 
 /* For HWND */
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__MINGW32__)
 #include <windef.h>
-#elif defined(WIN16)
+#elif defined(WIN16) || defined(__MINGW32__)
 #include <windows.h>
 #elif defined(XP_OS2)
 #include <os2.h>

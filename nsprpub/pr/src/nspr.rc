@@ -24,8 +24,9 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #ifndef WIN16
+#if !defined(__MINGW32__)
 #include "afxres.h"
-
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 

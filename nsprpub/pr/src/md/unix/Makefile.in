@@ -15,14 +15,30 @@
 # Reserved.
 #
 
-# This makefile appends to the variable OBJS the platform-dependent
-# object modules that will be part of the nspr20 library.
+MOD_DEPTH	= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(MOD_DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+ifndef USE_AUTOCONF
+
+# Disable optimization of the nspr on SunOS4.1.3
+ifeq ($(OS_ARCH),SunOS)
+ifeq ($(OS_RELEASE),4.1.3_U1)
+OPTIMIZER =
+endif
+endif
+
+endif # ! USE_AUTOCONF
 
 CSRCS =          \
 	unix.c    \
-	unix_errors.c \
+	unix_errors.c    \
 	uxproces.c \
-	uxshm.c \
 	uxwrap.c \
 	uxpoll.c \
 	$(NULL)
@@ -31,12 +47,8 @@ PTH_USER_CSRCS =          \
 	pthreads_user.c \
 	$(NULL)
 
-ifdef USE_AUTOCONF
+ifndef USE_AUTOCONF
 
-CSRCS	+= $(PR_MD_CSRCS)
-ASFILES += $(PR_MD_ASFILES)
-
-else # ! USE_AUTOCONF
 IRIX_CSRCS =	 \
 	irix.c	 \
 	$(NULL)
@@ -62,8 +74,8 @@ NETBSD_CSRCS = \
 	$(NULL)
 
 OPENBSD_CSRCS = \
-	openbsd.c \
-	$(NULL)
+       openbsd.c \
+       $(NULL)
 
 BSDI_CSRCS = \
 	bsdi.c \
@@ -73,12 +85,12 @@ HPUX_CSRCS = \
 	hpux.c \
 	$(NULL)
 
+OPENVMS_CSRCS = \
+       openvms.c \
+       $(NULL)
+
 OSF1_CSRCS = \
 	osf1.c \
-	$(NULL)
-
-OPENVMS_CSRCS = \
-	openvms.c \
 	$(NULL)
 
 LINUX_CSRCS = \
@@ -90,8 +102,8 @@ UNIXWARE_CSRCS = \
 	$(NULL)
 
 RELIANTUNIX_CSRCS = \
-	reliantunix.c \
-	$(NULL)
+      reliantunix.c \
+      $(NULL)
 
 RHAPSODY_CSRCS = \
 	rhapsody.c \
@@ -124,14 +136,13 @@ DGUX_CSRCS = \
 QNX_CSRCS = \
 	qnx.c \
 	$(NULL)
-
-NTO_CSRCS = \
-	nto.c \
-	$(NULL)
+endif # !USE_AUTOCONF
 
 ifeq ($(PTHREADS_USER),1)
 CSRCS += $(PTH_USER_CSRCS)
 endif
+
+ifndef USE_AUTOCONF
 
 ifeq ($(OS_ARCH),IRIX)
 CSRCS += $(IRIX_CSRCS)
@@ -163,11 +174,11 @@ endif
 ifeq ($(OS_ARCH),HP-UX)
 CSRCS += $(HPUX_CSRCS)
 endif
-ifeq ($(OS_ARCH),OSF1)
-CSRCS += $(OSF1_CSRCS)
-endif
 ifeq ($(OS_ARCH),OpenVMS)
 CSRCS += $(OPENVMS_CSRCS)
+endif
+ifeq ($(OS_ARCH),OSF1)
+CSRCS += $(OSF1_CSRCS)
 endif
 ifeq ($(OS_ARCH),Linux)
 CSRCS += $(LINUX_CSRCS)
@@ -200,13 +211,9 @@ ifeq ($(OS_ARCH),DGUX)
 CSRCS += $(DGUX_CSRCS)
 endif
 ifeq ($(OS_ARCH),QNX)
-ifeq ($(OS_TARGET),NTO)
-CSRCS += $(NTO_CSRCS)
-else
 CSRCS += $(QNX_CSRCS)
 endif
-endif
- 
+
 #
 # Some Unix platforms have an assembly language file.
 # E.g., AIX 3.2, Solaris (both sparc and x86).
@@ -223,10 +230,7 @@ ifeq ($(OS_ARCH),SunOS)
     else
 	ifneq ($(OS_RELEASE),4.1.3_U1)
 	ifneq ($(LOCAL_THREADS_ONLY),1)
-            ASFILES = os_$(OS_ARCH).s
-            ifneq ($(USE_64),1)
-            ASFILES += os_$(OS_ARCH)_32.s
-            endif
+		ASFILES = os_$(OS_ARCH).s
 	endif
 	endif
     endif
@@ -238,20 +242,71 @@ ifeq ($(OS_ARCH), SINIX)
     endif
 endif
 
-ifeq ($(OS_ARCH), IRIX)
-    ASFILES   = os_Irix.s
-endif
-
 ifeq ($(OS_ARCH)$(OS_RELEASE),BSD_OS2.1)
     ASFILES = os_BSD_386_2.s
 endif
 
-endif # !USE_AUTOCONF
-
-ifeq ($(PTHREADS_USER),1)
-CSRCS += $(PTH_USER_CSRCS)
+ifeq ($(OS_ARCH), IRIX)
+    ASFILES   = os_Irix.s
 endif
 
-OBJS += $(addprefix md/unix/$(OBJDIR)/,$(CSRCS:.c=.$(OBJ_SUFFIX)))  \
-	$(addprefix md/unix/$(OBJDIR)/,$(ASFILES:.s=.$(OBJ_SUFFIX)))
+TARGETS		= $(OBJS)
 
+ifeq ($(OS_ARCH),AIX)
+ifeq (,$(filter-out 3.2 4.1,$(OS_RELEASE)))
+ifneq ($(USE_PTHREADS), 1)
+#TARGETS		+= $(OBJDIR)/aixwrap.$(OBJ_SUFFIX)
+endif
+endif
+endif
+
+ifeq ($(OS_ARCH),SunOS)
+	ifneq ($(OS_RELEASE),4.1.3_U1)
+		ifeq ($(OS_TEST),sun4u)
+			LIBRARY_NAME = $(ULTRASPARC_LIBRARY)
+			LIBRARY_VERSION = $(MOD_VERSION)
+			ULTRASPARC_ASFILES = os_$(OS_ARCH)_ultrasparc.s
+			ULTRASPARC_ASOBJS = $(addprefix $(OBJDIR)/,$(ULTRASPARC_ASFILES:.s=.$(OBJ_SUFFIX)))
+			TARGETS		+= $(ULTRASPARC_ASOBJS) $(SHARED_LIBRARY)
+			RELEASE_LIBS = $(SHARED_LIBRARY)
+		endif
+	endif
+endif
+
+else # USE_AUTOCONF
+
+CSRCS += $(PR_MD_CSRCS)
+ASFILES += $(PR_MD_ASFILES)
+
+TARGETS = $(OBJS)
+
+endif # ! USE_AUTOCONF
+
+INCLUDES = -I$(DIST)/include -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
+
+include $(topsrcdir)/config/rules.mk
+
+export:: $(TARGETS)
+#ifeq ($(OS_ARCH),AIX)
+#ifeq (,$(filter-out 3.2 4.1,$(OS_RELEASE)))
+#ifneq ($(USE_PTHREADS), 1)
+#	$(INSTALL) -m 444 $(OBJDIR)/aixwrap.$(OBJ_SUFFIX) $(DIST)/lib
+#endif
+#endif
+#endif
+
+ifndef USE_AUTOCONF
+ifeq ($(OS_ARCH),SunOS)
+ifneq ($(OS_RELEASE),4.1.3_U1)
+ifeq ($(OS_TEST),sun4u)
+$(SHARED_LIBRARY): $(ULTRASPARC_ASOBJS)
+	$(LD) -G -z text -o $@ $(ULTRASPARC_ASOBJS)
+	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(DIST)/lib
+
+$(ULTRASPARC_ASOBJS): $(ULTRASPARC_ASFILES)
+	/usr/ccs/bin/as -o $@ -K PIC -P -D_ASM -D__STDC__=0 -xarch=v8plus $<
+endif
+endif
+endif
+endif #!USE_AUTOCONF
+install:: export
