@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.24 $ $Date: 2002/06/24 22:36:53 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.25 $ $Date: 2002/06/24 23:54:16 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -1662,7 +1662,7 @@ loser:
     return PR_FAILURE;
 }
 
-NSS_IMPLEMENT PRStatus
+NSS_IMPLEMENT PRBool
 nssToken_IsPrivateKeyAvailable
 (
   NSSToken *token,
