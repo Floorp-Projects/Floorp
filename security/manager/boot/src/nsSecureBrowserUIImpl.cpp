@@ -141,8 +141,8 @@ static PLDHashTableOps gMapOps = {
 
 
 nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
-  : mIsViewSource(PR_FALSE),
-    mPreviousSecurityState(lis_no_security)
+  : mPreviousSecurityState(lis_no_security),
+    mIsViewSource(PR_FALSE)
 {
   mTransferringRequests.ops = nsnull;
   mNewToplevelSecurityState = STATE_IS_INSECURE;
@@ -1122,20 +1122,22 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
                                         nsIRequest* aRequest,
                                         nsIURI* aLocation)
 {
-  mCurrentURI = aLocation;
-
-  if (mCurrentURI)
+  if (aLocation)
   {
     PRBool vs;
-    
-    if (NS_SUCCEEDED(mCurrentURI->SchemeIs("view-source", &vs)) && vs)
-    {
+
+    nsresult rv = aLocation->SchemeIs("view-source", &vs);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (vs) {
       PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
              ("SecureUI:%p: OnLocationChange: view-source\n", this));
-
-      mIsViewSource = PR_TRUE;
     }
+
+    mIsViewSource = vs;
   }
+
+  mCurrentURI = aLocation;
 
   return NS_OK;
 }

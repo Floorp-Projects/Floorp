@@ -105,13 +105,13 @@ protected:
     lis_high_security
   };
 
-  PRBool mIsViewSource;
-
   lockIconState mPreviousSecurityState;
 
   void ResetStateTracking();
   PRUint32 mNewToplevelSecurityState;
-  PRBool mNewToplevelSecurityStateKnown;
+  PRPackedBool mNewToplevelSecurityStateKnown;
+  PRPackedBool mIsViewSource;
+
   nsXPIDLString mInfoTooltip;
   PRInt32 mDocumentRequestsInProgress;
   PRInt32 mSubRequestsInProgress;
