@@ -240,6 +240,8 @@ function loadCalendarEventDialog()
    else
        setFieldValue( "repeat-length-units", "weeks" );
 
+   setFieldValue( "repeat-end-date-picker", new Date( gEvent.recurEnd.getTime() ) );
+   
    setFieldValue( "repeat-forever-radio", (gEvent.recurForever != undefined && gEvent.recurForever != false), "selected" );
    
    setFieldValue( "repeat-until-radio", ( (gEvent.recurForever == undefined || gEvent.recurForever == false ) && gEvent.recurCount == 0), "selected" );
