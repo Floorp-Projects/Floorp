@@ -1136,8 +1136,7 @@ nsresult nsProfile::CreateUserDirectories(nsILocalFile *profileDir)
         NEW_NEWS_DIR_NAME,
         NEW_IMAPMAIL_DIR_NAME,
         NEW_MAIL_DIR_NAME,
-        "Cache",
-        "Chrome"
+        "Cache"
     };
     
     for (int i = 0; i < sizeof(subDirNames) / sizeof(char *); i++)
@@ -1965,7 +1964,7 @@ nsProfile::IsRegStringSet(const PRUnichar *profileName, char **regString)
 // File Name Defines
 
 #define PREFS_FILE_50_NAME          "prefs.js"
-#define USER_CHROME_DIR_50_NAME     "Chrome"
+#define USER_CHROME_DIR_50_NAME     "chrome"
 #define LOCAL_STORE_FILE_50_NAME    "localstore.rdf"
 #define HISTORY_FILE_50_NAME        "history.dat"
 #define PANELS_FILE_50_NAME         "panels.rdf"
