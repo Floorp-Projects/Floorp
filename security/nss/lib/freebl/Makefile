@@ -68,6 +68,55 @@ ifneq ($(OS_ARCH),WINNT)
 endif
 endif
 
+ifeq ($(OS_ARCH),IRIX)
+ifeq ($(USE_N32),1)
+    ASFILES  = mpi_mips.s
+    ASFLAGS = -O -OPT:Olimit=4000 -dollar -fullwarn -xansi -n32 -mips3 -exceptions 
+    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
+else
+endif
+endif
+
+ifeq ($(OS_TARGET),Linux)
+ifeq ($(CPU_ARCH),x86)
+    ASFILES  = mpi_x86.s
+    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D
+endif
+endif
+
+ifeq ($(OS_ARCH), HP-UX)
+ifdef USE_64
+else
+    DEFINES += -DMP_NO_MP_WORD
+endif
+endif
+
+# Note: -xarch=v8 or v9 is now done in coreconf
+ifeq ($(OS_TARGET),SunOS)
+ifeq ($(CPU_ARCH),sparc)
+    OS_CFLAGS += -xchip=ultra2
+ifeq ($(OS_RELEASE),5.5.1)
+    SYSV_SPARC = 1
+endif
+ifeq ($(OS_RELEASE),5.6)
+    SYSV_SPARC = 1
+endif
+ifeq ($(OS_RELEASE),5.7)
+    SYSV_SPARC = 1
+endif
+ifeq ($(OS_RELEASE),5.8)
+    SYSV_SPARC = 1
+endif
+ifeq ($(SYSV_SPARC),1)
+ifdef USE_64
+else
+    DEFINES += -DMP_NO_MP_WORD
+endif
+endif
+endif
+endif
+
+
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################
@@ -98,10 +147,13 @@ private_export::
 
 endif
 
+mp%.h : mpi/mp%.h
+	cd mpi; cp $@ ..
+
 mp%.c : mpi/mp%.c
 	cd mpi; cp $@ ..
 
-mp%.h : mpi/mp%.h
+mp%.s : mpi/mp%.s
 	cd mpi; cp $@ ..
 
 logtab.h : mpi/logtab.h
@@ -110,13 +162,14 @@ logtab.h : mpi/logtab.h
 primes.c : mpi/primes.c
 	cd mpi; cp $@ ..
 
-.PRECIOUS : $(MPI_SRCS) $(MPI_HDRS)
+.PRECIOUS : $(MPI_SRCS) $(MPI_HDRS) $(ASFILES)
 
-ALL_TRASH += $(MPI_SRCS) $(MPI_HDRS) primes.c
+ALL_TRASH += $(MPI_SRCS) $(MPI_HDRS) $(ASFILES) primes.c
 
 DEFINES += -DMP_API_COMPATIBLE
 
 MPI_OBJS = $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(MPI_SRCS:.c=$(OBJ_SUFFIX)))
+#MPI_OBJS += $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(DH_SRCS:.c=$(OBJ_SUFFIX)))
 
 $(MPI_OBJS): $(MPI_HDRS) primes.c
 
