@@ -92,6 +92,7 @@
 #include "nsImapCore.h"
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
+#include "nsMsgSimulateError.h"
 
 // Defines....
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
@@ -864,6 +865,7 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
 	    char *outCString = nsnull;
       rv = nsMsgI18NSaveAsCharset(contentType, m_compFields->GetCharacterSet(), 
                                   msgBody.get(), &outCString);
+      SET_SIMULATED_ERROR(SIMULATED_SEND_ERROR_14, rv, NS_ERROR_UENC_NOMAPPING);
 	    if (NS_SUCCEEDED(rv) && nsnull != outCString) 
 	    {
         // body contains multilingual data, confirm send to the user
@@ -920,26 +922,36 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
   rv = _SendMsg(deliverMode, identity, entityConversionDone);
 	if (NS_FAILED(rv))
 	{
-    if (rv != NS_ERROR_BUT_DONT_SHOW_ALERT)
-      if (NS_FAILED(nsMsgDisplayMessageByID(prompt, rv)))
+    nsCOMPtr<nsIMsgSendReport> sendReport;
+    if (mMsgSend)
+      mMsgSend->GetSendReport(getter_AddRefs(sendReport));
+    if (sendReport)
+    {
+      nsresult theError;
+      sendReport->DisplayReport(prompt, PR_TRUE, PR_TRUE, &theError);
+    }
+    else
+    {
+      /* If we come here it's because we got an error before we could intialize a
+         send report! Let's try our best...
+      */
+      switch (deliverMode)
       {
-        /* If we come here it's because we have an unknown error and we need to warm the user
-           Let's try our best...
-        */
-        switch (deliverMode)
-        {
-          case nsIMsgCompDeliverMode::SaveAsDraft:
-            nsMsgDisplayMessageByID(prompt, NS_MSG_UNABLE_TO_SAVE_DRAFT);
-            break;
-          case nsIMsgCompDeliverMode::SaveAsTemplate:
-            nsMsgDisplayMessageByID(prompt, NS_MSG_UNABLE_TO_SAVE_TEMPLATE);
-            break;
+        case nsIMsgCompDeliverMode::Later:
+          nsMsgDisplayMessageByID(prompt, NS_MSG_UNABLE_TO_SEND_LATER);
+          break;
+        case nsIMsgCompDeliverMode::SaveAsDraft:
+          nsMsgDisplayMessageByID(prompt, NS_MSG_UNABLE_TO_SAVE_DRAFT);
+          break;
+        case nsIMsgCompDeliverMode::SaveAsTemplate:
+          nsMsgDisplayMessageByID(prompt, NS_MSG_UNABLE_TO_SAVE_TEMPLATE);
+          break;
 
-          default:
-            nsMsgDisplayMessageByID(prompt, NS_ERROR_SEND_FAILED);
-            break;
-        }
+        default:
+          nsMsgDisplayMessageByID(prompt, NS_ERROR_SEND_FAILED);
+          break;
       }
+    }
 
     if (progress)
       progress->CloseProgressDialog(PR_TRUE);

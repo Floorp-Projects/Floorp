@@ -384,7 +384,8 @@ private:
   // will set m_attachment1_body & m_attachment1_body_length;
   nsresult EnsureLineBreaks(const char *body, PRUint32 body_len);
 
-  nsCString               mSmtpPassword;                // store the smtp Password use during a send
+  nsCOMPtr<nsIMsgSendReport>  mSendReport;
+  nsCString                   mSmtpPassword;            // store the smtp Password use during a send
 };
 
 // 

@@ -52,6 +52,7 @@
 #include "nsEscape.h"
 #include "nsMsgUtils.h"
 #include "nsIPipe.h"
+#include "nsMsgSimulateError.h"
 
 #include "nsISSLSocketControl.h"
 /* sigh, cmtcmn.h, included from nsIPSMSocketInfo.h, includes windows.h, which includes winuser.h,
@@ -548,7 +549,7 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 	 * we don't care
 	 */
 
-	if(!((const char *)emailAddress))
+	if(!((const char *)emailAddress) || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_16))
 	{
 		m_urlErrorState = NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS;
 		return(NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS);
@@ -911,7 +912,7 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
     PRInt32 passwordLength = nsCRT::strlen((const char *) origPassword);
     if (!(const char*) origPassword || passwordLength == 0)
 	    return NS_ERROR_SMTP_PASSWORD_UNDEFINED;
-	password.Assign((const char*) origPassword);
+	  password.Assign((const char*) origPassword);
   }
   else
     password.Assign(mLogonCookie);
@@ -955,7 +956,7 @@ PRInt32 nsSmtpProtocol::SendMailResponse()
 	PRInt32 status = 0;
 	nsCAutoString buffer;
 
-    if(m_responseCode != 250)
+  if(m_responseCode != 250 || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_11))
 	{
 		nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_FROM_COMMAND, (const char*)m_responseText);
 		NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
@@ -1018,11 +1019,11 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
 
 	if(m_responseCode != 250 && m_responseCode != 251)
 	{
-                nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_RCPT_COMMAND, (const char*)m_responseText);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
+    nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_RCPT_COMMAND, (const char*)m_responseText);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
-                m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
-                return(NS_ERROR_SENDING_RCPT_COMMAND);
+    m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
+    return(NS_ERROR_SENDING_RCPT_COMMAND);
 	}
 
 	if(m_addressesLeft > 0)
@@ -1049,28 +1050,28 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
 
 PRInt32 nsSmtpProtocol::SendData(nsIURI *url, const char *dataBuffer, PRBool aSuppressLogging)
 {
-    if (!dataBuffer) return -1;
+  if (!dataBuffer) return -1;
 
-    if (!aSuppressLogging) {
-        PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Send: %s", dataBuffer));
-    } else {
-        PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("Logging suppressed for this command (it probably contained authentication information)"));
-    }
-    return nsMsgAsyncWriteProtocol::SendData(url, dataBuffer);
+  if (!aSuppressLogging) {
+      PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Send: %s", dataBuffer));
+  } else {
+      PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("Logging suppressed for this command (it probably contained authentication information)"));
+  }
+  return nsMsgAsyncWriteProtocol::SendData(url, dataBuffer);
 }
 
 
 PRInt32 nsSmtpProtocol::SendDataResponse()
 {
-    PRInt32 status = 0;
-    char * command=0;   
+  PRInt32 status = 0;
+  char * command=0;   
 
-    if((m_responseCode != 354) && (m_responseCode != 250)) {
-                nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_DATA_COMMAND, (const char*)m_responseText);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
+  if((m_responseCode != 354) && (m_responseCode != 250)) {
+    nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_DATA_COMMAND, (const char*)m_responseText);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
-                m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
-                return(NS_ERROR_SENDING_DATA_COMMAND);
+    m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
+    return(NS_ERROR_SENDING_DATA_COMMAND);
 	}
 #ifdef UNREADY_CODE
 #ifdef XP_UNIX
@@ -1207,15 +1208,15 @@ PRInt32 nsSmtpProtocol::SendPostData()
 PRInt32 nsSmtpProtocol::SendMessageResponse()
 {
 
-    if((m_responseCode != 354) && (m_responseCode != 250)) {
-                nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_MESSAGE, (const char*)m_responseText);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
+  if(((m_responseCode != 354) && (m_responseCode != 250)) || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_12)) {
+    nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_MESSAGE, (const char*)m_responseText);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
-                m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
-                return(NS_ERROR_SENDING_MESSAGE);
+    m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
+    return(NS_ERROR_SENDING_MESSAGE);
 	}
 
-    UpdateStatus(SMTP_PROGRESS_MAILSENT);
+  UpdateStatus(SMTP_PROGRESS_MAILSENT);
 
     /* else */
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
@@ -1304,7 +1305,7 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer )
 					PR_FREEIF (addrs1);
 				}
 
-				if (m_addressesLeft == 0 || addrs2 == nsnull) // hmm no addresses to send message to...
+				if (m_addressesLeft == 0 || addrs2 == nsnull || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_8)) // hmm no addresses to send message to...
 				{
 					m_nextState = SMTP_ERROR_DONE;
 					ClearFlag(SMTP_PAUSE_FOR_READ);

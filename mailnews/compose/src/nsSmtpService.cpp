@@ -42,6 +42,7 @@
 #include "nsMsgComposeStringBundle.h"
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
+#include "nsMsgSimulateError.h"
 
 typedef struct _findServerByKeyEntry {
     const char *key;
@@ -128,7 +129,7 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 		smtpServer->GetHostname(getter_Copies(smtpHostName));
 		smtpServer->GetUsername(getter_Copies(smtpUserName));
 
-    if ((const char*)smtpHostName && (const char*)smtpHostName[0] != 0) 
+    if ((const char*)smtpHostName && (const char*)smtpHostName[0] != 0 && !CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_10)) 
 		{
       rv = NS_MsgBuildSmtpUrl(aFilePath, smtpHostName, smtpUserName,
                               aRecipients, aSenderIdentity, aUrlListener, aStatusFeedback, 

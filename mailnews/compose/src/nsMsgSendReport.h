@@ -18,21 +18,47 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Jean-Francois Ducarroz <ducarroz@netscape.com>
  */
 
-#ifndef _nsMsgPrompts_H_
-#define _nsMsgPrompts_H_
+#ifndef __nsMsgSendReport_h__
+#define __nsMsgSendReport_h__
 
-#include "nscore.h"
-#include "nsError.h"
+#include "nsIMsgSendReport.h"
 #include "nsString.h"
+#include "nsCOMPtr.h"
 
-class nsIPrompt;
+class nsMsgProcessReport : public nsIMsgProcessReport
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMSGPROCESSREPORT
 
-nsresult      nsMsgBuildErrorMessageByID(PRInt32 msgID, nsString& retval, nsString* param0 = nsnull, nsString* param1 = nsnull);
-nsresult      nsMsgDisplayMessageByID(nsIPrompt * aPrompt, PRInt32 msgID, const PRUnichar * windowTitle = nsnull);
-nsresult      nsMsgDisplayMessageByString(nsIPrompt * aPrompt, const PRUnichar * msg, const PRUnichar * windowTitle = nsnull);
-nsresult      nsMsgAskBooleanQuestionByID(nsIPrompt * aPrompt, PRInt32 msgID, PRBool *answer, const PRUnichar * windowTitle = nsnull);
-nsresult      nsMsgAskBooleanQuestionByString(nsIPrompt * aPrompt, const PRUnichar * msg, PRBool *answer, const PRUnichar * windowTitle = nsnull);
+  nsMsgProcessReport();
+  virtual ~nsMsgProcessReport();
 
-#endif /* _nsMsgPrompts_H_ */
+private:
+  PRBool    mProceeded;
+  nsresult  mError;
+  nsString  mMessage;
+};
+
+
+class nsMsgSendReport : public nsIMsgSendReport
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMSGSENDREPORT
+
+  nsMsgSendReport();
+  virtual ~nsMsgSendReport();
+
+private:
+  #define SEND_LAST_PROCESS  process_FCC
+  nsCOMPtr<nsIMsgProcessReport> mProcessReport[SEND_LAST_PROCESS + 1];
+  PRInt32 mDeliveryMode;
+  PRInt32 mCurrentProcess;
+  PRBool mAlreadyDisplayReport;
+};
+
+#endif

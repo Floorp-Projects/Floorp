@@ -35,6 +35,8 @@ EXPORTS=    nsSmtpUrl.h \
             nsMsgCompUtils.h \
             nsMsgDeliveryListener.h \
             nsMsgSend.h \
+            nsMsgSendReport.h \
+            nsMsgSimulateError.h \
             nsMsgAttachmentHandler.h \
 			      nsMsgComposeService.h \
 			      nsMsgComposeParams.h \
@@ -61,6 +63,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj \
             .\$(OBJDIR)\nsSmtpProtocol.obj \
             .\$(OBJDIR)\nsMsgSend.obj \
             .\$(OBJDIR)\nsMsgSendPart.obj \
+            .\$(OBJDIR)\nsMsgSendReport.obj \
             .\$(OBJDIR)\nsSmtpService.obj \
             .\$(OBJDIR)\nsMsgComposeService.obj \
             .\$(OBJDIR)\nsMsgComposeParams.obj \

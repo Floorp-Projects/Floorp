@@ -71,14 +71,11 @@ var progressListener = {
     
     onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
     {
-
-      var overallProgress = aCurTotalProgress;
-
       // Calculate percentage.
       var percent;
-      if ( aMaxTotalProgress != "-1" ) 
+      if ( aMaxTotalProgress > 0 ) 
       {
-        percent = parseInt( (overallProgress*100)/aMaxTotalProgress + .5 );
+        percent = parseInt( (aCurTotalProgress*100)/aMaxTotalProgress + .5 );
         if ( percent > 100 )
           percent = 100;
         
@@ -86,19 +83,19 @@ var progressListener = {
         
         // Advance progress meter.
         dialog.progress.setAttribute( "value", percent );
+
+        // Update percentage label on progress meter.
+        var percentMsg = getString( "progressText" );
+        percentMsg = replaceInsert( percentMsg, 1, percent );
+        dialog.progressText.setAttribute("value", percentMsg);
       } 
       else 
       {
-        percent = "??";
-
         // Progress meter should be barber-pole in this case.
         dialog.progress.setAttribute( "mode", "undetermined" );
+        // Update percentage label on progress meter.
+        dialog.progressText.setAttribute("value", "");
       }
-
-      // Update percentage label on progress meter.
-      var percentMsg = getString( "progressText" );
-      percentMsg = replaceInsert( percentMsg, 1, percent );
-      dialog.progressText.setAttribute("value", percentMsg);
     },
 
 	  onLocationChange: function(aWebProgress, aRequest, aLocation)

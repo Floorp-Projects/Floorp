@@ -37,6 +37,7 @@ CPPSRCS		= \
 		nsSmtpProtocol.cpp \
 		nsMsgSend.cpp \
 		nsMsgSendPart.cpp \
+		nsMsgSendReport.cpp \
 		nsSmtpService.cpp \
 		nsMsgCreate.cpp \
 		nsMsgCopy.cpp \
@@ -83,6 +84,8 @@ EXPORTS		= \
 		nsMsgRecipientArray.h \
 		nsURLFetcher.h \
 		nsMsgSend.h \
+		nsMsgSendReport.h \
+		nsMsgSimulateError.h \
 		nsSmtpServer.h \
 		nsSmtpDataSource.h \
 		nsSmtpDelegateFactory.h \

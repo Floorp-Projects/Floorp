@@ -1,0 +1,63 @@
+/* -*- Mode: idl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+*/
+
+#include "nsISupports.idl"
+#include "nsIPrompt.idl"
+
+
+[scriptable, uuid(2247c280-7f7f-11d5-9daa-994d49414e7c)]
+interface nsIMsgProcessReport : nsISupports {
+
+  attribute boolean proceeded;
+  attribute nsresult error;
+  attribute wstring message;
+  
+  void reset();
+};
+
+[scriptable, uuid(2247c281-7f7f-11d5-9daa-994d49414e7c)]
+interface nsIMsgSendReport : nsISupports {
+
+  const long process_Current = -1;
+  const long process_BuildMessage = 0;
+  const long process_NNTP = 1;
+  const long process_SMTP = 2;
+  const long process_Copy = 3;
+  const long process_FCC = 4;
+  
+  attribute long deliveryMode;      /* see nsMsgDeliverMode in nsIMsgSend.idl for valid value */
+  attribute long currentProcess;
+
+  void reset();
+  
+  void setProceeded(in long process, in boolean proceeded);
+  void setError(in long process, in nsresult error, in boolean overwriteError);
+  void setMessage(in long process, in wstring message, in boolean overwriteMessage);
+  
+  nsIMsgProcessReport getProcessReport(in long process);
+  
+  /* Display Report will ananlyze data collected during the send and will show the most appropriate error.
+     Also it will return the error code. In case of no error or if the error has been canceld, it will return
+     NS_OK.
+  */
+  nsresult displayReport(in nsIPrompt prompt, in boolean showErrorOnly, in boolean dontShowReportTwice);
+};

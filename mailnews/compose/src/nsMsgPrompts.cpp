@@ -19,9 +19,10 @@
  *
  * Contributor(s): 
  */
+#include "nsMsgPrompts.h"
+
 #include "nsMsgCopy.h"
 #include "nsIPref.h"
-#include "nsMsgPrompts.h"
 #include "nsIMsgStringService.h"
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
@@ -30,7 +31,7 @@
 #include "nsMsgCompCID.h"
 
 nsresult
-nsMsgDisplayMessageByID(nsIPrompt * aPrompt, PRInt32 msgID)
+nsMsgBuildErrorMessageByID(PRInt32 msgID, nsString& retval, nsString* param0, nsString* param1)
 {
   nsresult rv;
 
@@ -40,13 +41,41 @@ nsMsgDisplayMessageByID(nsIPrompt * aPrompt, PRInt32 msgID)
   if (composebundle)
   {
     composebundle->GetStringByID(msgID, getter_Copies(msg));
-    rv = nsMsgDisplayMessageByString(aPrompt, msg);
+    retval = msg;
+
+    nsString target;
+    if (param0)
+    {
+      target.AssignWithConversion("%P0%");
+      retval.ReplaceSubstring(target, *param0);
+    }
+    if (param1)
+    {
+      target.AssignWithConversion("%P1%");
+      retval.ReplaceSubstring(target, *param1);
+    }
   }
   return rv;
 }
 
 nsresult
-nsMsgDisplayMessageByString(nsIPrompt * aPrompt, const PRUnichar * msg)
+nsMsgDisplayMessageByID(nsIPrompt * aPrompt, PRInt32 msgID, const PRUnichar * windowTitle)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIMsgStringService> composebundle (do_GetService(NS_MSG_COMPOSESTRINGSERVICE_CONTRACTID, &rv));
+  nsXPIDLString msg;
+
+  if (composebundle)
+  {
+    composebundle->GetStringByID(msgID, getter_Copies(msg));
+    rv = nsMsgDisplayMessageByString(aPrompt, msg, windowTitle);
+  }
+  return rv;
+}
+
+nsresult
+nsMsgDisplayMessageByString(nsIPrompt * aPrompt, const PRUnichar * msg, const PRUnichar * windowTitle)
 {
   nsresult rv;
   nsCOMPtr<nsIPrompt> prompt = aPrompt;
@@ -62,12 +91,12 @@ nsMsgDisplayMessageByString(nsIPrompt * aPrompt, const PRUnichar * msg)
   }
   
   if (prompt)
-    rv = prompt->Alert(nsnull, msg);
+    rv = prompt->Alert(windowTitle, msg);
   return NS_OK;
 }
 
 nsresult
-nsMsgAskBooleanQuestionByID(nsIPrompt * aPrompt, PRInt32 msgID, PRBool *answer)
+nsMsgAskBooleanQuestionByID(nsIPrompt * aPrompt, PRInt32 msgID, PRBool *answer, const PRUnichar * windowTitle)
 {
   nsCOMPtr<nsIMsgStringService> composebundle (do_GetService(NS_MSG_COMPOSESTRINGSERVICE_CONTRACTID));
   nsXPIDLString msg;
@@ -75,14 +104,14 @@ nsMsgAskBooleanQuestionByID(nsIPrompt * aPrompt, PRInt32 msgID, PRBool *answer)
   if (composebundle)
   {
     composebundle->GetStringByID(msgID, getter_Copies(msg));
-    nsMsgAskBooleanQuestionByString(aPrompt, msg, answer);
+    nsMsgAskBooleanQuestionByString(aPrompt, msg, answer, windowTitle);
   }
 
   return NS_OK;
 }     
 
 nsresult
-nsMsgAskBooleanQuestionByString(nsIPrompt * aPrompt, const PRUnichar * msg, PRBool *answer)
+nsMsgAskBooleanQuestionByString(nsIPrompt * aPrompt, const PRUnichar * msg, PRBool *answer, const PRUnichar * windowTitle)
 {
   nsresult rv;
   PRInt32 result;
@@ -100,7 +129,7 @@ nsMsgAskBooleanQuestionByString(nsIPrompt * aPrompt, const PRUnichar * msg, PRBo
 
   if (dialog) 
   {
-    rv = dialog->Confirm(nsnull, msg, &result);
+    rv = dialog->Confirm(windowTitle, msg, &result);
     if (result == 1) 
       *answer = PR_TRUE;
     else 

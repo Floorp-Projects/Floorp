@@ -162,6 +162,9 @@ interface nsIMsgCompose : nsISupports {
   */
   void ResetNodeEventHandlers(in nsIDOMNode node);
 
+  /* Retreive the message send object */
+  readonly attribute nsIMsgSend messageSend;
+  
 	/* ... */
   attribute nsIEditorShell editor;
 
@@ -209,11 +212,8 @@ interface nsIMsgCompose : nsISupports {
   [noscript] void notifyStateListeners(in TStateListenerNotification aNotificationType, in nsresult aResult);
 
   /* Retreive the progress object */
-  [noscript] nsIMsgProgress getProgress();
+  readonly attribute nsIMsgProgress progress;
   
-  /* Retreive the message send object */
-  [noscript] nsIMsgSend getMessageSend();
-
   /* Retreive the external send listener */
   nsIMsgSendListener getExternalSendListener();
   

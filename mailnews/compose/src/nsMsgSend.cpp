@@ -75,6 +75,8 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIDocumentEncoder.h"    // for editor output flags
 #include "nsILoadGroup.h"
+#include "nsMsgSendReport.h"
+#include "nsMsgSimulateError.h"
 
 
 // use these macros to define a class IID for our component. Our object currently 
@@ -189,6 +191,8 @@ nsMsgComposeAndSend::nsMsgComposeAndSend() :
   mCompFieldLocalAttachments = 0;
   mCompFieldRemoteAttachments = 0;
   mMessageWarningSize = 0;
+  
+  NS_NEWXPCOM(mSendReport, nsMsgSendReport);
 
   NS_INIT_REFCNT();
 }
@@ -198,6 +202,7 @@ nsMsgComposeAndSend::~nsMsgComposeAndSend()
 #if defined(DEBUG_ducarroz)
   printf("DISPOSE nsMsgComposeAndSend: %x\n", this);
 #endif
+  mSendReport = nsnull;
 	Clear();
 }
 
@@ -567,6 +572,14 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 		nsOutputFileStream tempfile(*mHTMLFileSpec, kDefaultMode, 00600);
 		if (! tempfile.is_open()) 
     {
+      if (mSendReport)
+      {
+        nsAutoString error_msg;
+        nsAutoString path;
+        mHTMLFileSpec->GetNativePathString(path);
+        nsMsgBuildErrorMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE, error_msg, &path, nsnull);
+        mSendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg.get(), PR_FALSE);
+      }
 			status = NS_MSG_UNABLE_TO_OPEN_TMP_FILE;
 			goto FAIL;
 		}
@@ -638,11 +651,17 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 		goto FAILMEM;
 
   mOutputFile = new nsOutputFileStream(*mTempFileSpec, kDefaultMode, 00600);
-	if (! mOutputFile->is_open()) 
+	if (! mOutputFile->is_open() || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_4)) 
   {
 		status = NS_MSG_UNABLE_TO_OPEN_TMP_FILE;
-    if (mGUINotificationEnabled)
-      nsMsgDisplayMessageByID(promptObject, NS_MSG_UNABLE_TO_OPEN_TMP_FILE);
+    if (mSendReport)
+    {
+      nsAutoString error_msg;
+      nsAutoString path;
+      mTempFileSpec->GetNativePathString(path);
+      nsMsgBuildErrorMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE, error_msg, &path, nsnull);
+      mSendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg.get(), PR_FALSE);
+    }
 		goto FAIL;
 	}
   
@@ -1091,7 +1110,8 @@ FAIL:
 		if (status < 0) 
 		{
 			m_status = status;
-			Fail (status, nsnull);
+      nsresult ignoreMe;
+			Fail (status, nsnull, &ignoreMe);
 		}
 	}
 
@@ -1214,7 +1234,7 @@ mime_write_message_body(nsIMsgSend *state, char *buf, PRInt32 size)
 
   nsOutputFileStream * output;
   state->GetOutputStream(&output);
-  if (!output)
+  if (!output || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_9))
     return NS_MSG_ERROR_WRITING_FILE;
     
   if (PRInt32(output->write(buf, size)) < size) 
@@ -1512,7 +1532,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
   // what we got before. It always should, BUT If it doesn't, 
   // we will have memory problems and we should just return 
   // with an error.
-  if (multipartCount != mMultipartRelatedAttachmentCount) {
+  if ((multipartCount != mMultipartRelatedAttachmentCount) || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_17)) {
     return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
   }
   
@@ -2682,6 +2702,10 @@ nsMsgComposeAndSend::Init(
   // Tell the user we are assembling the message...
   mComposeBundle->GetStringByID(NS_MSG_ASSEMBLING_MESSAGE, getter_Copies(msg));
   SetStatusMessage( msg );
+  if (mSendReport)
+    mSendReport->SetCurrentProcess(nsIMsgSendReport::process_BuildMessage);
+
+  RETURN_SIMULATED_ERROR(SIMULATED_SEND_ERROR_1, NS_ERROR_FAILURE);
 
   // 
   // The Init() method should initialize a send operation for full
@@ -2845,7 +2869,8 @@ nsMsgComposeAndSend::DeliverMessage()
   // if this is a mongo email...we should have a way to warn the user that
   // they are about to do something they may not want to do.
   //
-  if ( (mMessageWarningSize > 0) && (mTempFileSpec->GetFileSize() > mMessageWarningSize) && (mGUINotificationEnabled))
+  if (((mMessageWarningSize > 0) && (mTempFileSpec->GetFileSize() > mMessageWarningSize) && (mGUINotificationEnabled)) ||
+      CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_15))
   {
     PRBool abortTheSend = PR_FALSE;
     
@@ -2864,7 +2889,8 @@ nsMsgComposeAndSend::DeliverMessage()
         nsMsgAskBooleanQuestionByString(prompt, printfString, &abortTheSend);
         if (!abortTheSend)
         {
-          Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, printfString);
+          nsresult ignoreMe;
+          Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, printfString, &ignoreMe);
           PR_FREEIF(printfString);
           return NS_ERROR_FAILURE;
         }
@@ -2924,6 +2950,9 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 						   (mCompFields->GetBcc() ? PL_strlen (mCompFields->GetBcc()) + 10 : 0) +
 						   10);
   
+  if (mSendReport)
+    mSendReport->SetCurrentProcess(nsIMsgSendReport::process_SMTP);
+
   nsCOMPtr<nsIPrompt> promptObject;
   GetDefaultPrompt(getter_AddRefs(promptObject));
 
@@ -2932,7 +2961,8 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     nsXPIDLString eMsg; 
     mComposeBundle->GetStringByID(NS_ERROR_OUT_OF_MEMORY, getter_Copies(eMsg));
     
-    Fail(NS_ERROR_OUT_OF_MEMORY, eMsg);
+    nsresult ignoreMe;
+    Fail(NS_ERROR_OUT_OF_MEMORY, eMsg, &ignoreMe);
     NotifyListenerOnStopSending(nsnull, NS_ERROR_OUT_OF_MEMORY, nsnull, nsnull);
     return NS_ERROR_OUT_OF_MEMORY;
 	}
@@ -3001,11 +3031,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     nsMsgDeliveryListener * aListener = new nsMsgDeliveryListener(SendDeliveryCallback, nsMailDelivery, this);
     nsCOMPtr<nsIUrlListener> uriListener = do_QueryInterface(aListener);
     if (!uriListener)
-    {
-      if (mGUINotificationEnabled)
-        nsMsgDisplayMessageByID(promptObject, NS_ERROR_SENDING_MESSAGE);
       return NS_ERROR_OUT_OF_MEMORY;
-    }
 
     // Note: Don't do a SetMsgComposeAndSendObject since we are in the same thread, and
     // using callbacks for notification
@@ -3020,8 +3046,8 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     // to the top most mail window...after all, that's where we are going to be sending status
     // update information too....
 
-      nsCOMPtr<nsIInterfaceRequestor> callbacks;
-      GetNotificationCallbacks(getter_AddRefs(callbacks));
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    GetNotificationCallbacks(getter_AddRefs(callbacks));
 
     // Tell the user we are sending the message!
     nsXPIDLString msg; 
@@ -3044,6 +3070,10 @@ nsMsgComposeAndSend::DeliverFileAsNews()
   nsresult rv = NS_OK;
   if (!(mCompFields->GetNewsgroups()))
     return rv;
+  
+  if (mSendReport)
+    mSendReport->SetCurrentProcess(nsIMsgSendReport::process_NNTP);
+
   nsCOMPtr<nsIPrompt> promptObject;
   GetDefaultPrompt(getter_AddRefs(promptObject));
 
@@ -3054,11 +3084,7 @@ nsMsgComposeAndSend::DeliverFileAsNews()
     nsMsgDeliveryListener * aListener = new nsMsgDeliveryListener(SendDeliveryCallback, nsNewsDelivery, this);
     nsCOMPtr<nsIUrlListener> uriListener = do_QueryInterface(aListener);
     if (!uriListener)
-    {
-      if (mGUINotificationEnabled)
-        nsMsgDisplayMessageByID(promptObject, NS_ERROR_SENDING_MESSAGE);
       return NS_ERROR_OUT_OF_MEMORY;
-    }
 
   // Note: Don't do a SetMsgComposeAndSendObject since we are in the same thread, and
   // using callbacks for notification
@@ -3096,31 +3122,27 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 }
 
 NS_IMETHODIMP 
-nsMsgComposeAndSend::Fail(nsresult failure_code, const PRUnichar * error_msg)
+nsMsgComposeAndSend::Fail(nsresult failure_code, const PRUnichar * error_msg, nsresult *_retval)
 {
+  NS_ENSURE_ARG(_retval);
+  *_retval = failure_code;
+  
   if (NS_FAILED(failure_code))
   {
-    // in certain cases, we've already shown the alert
-    // and we don't need to show another alert here.
-    if (failure_code != NS_ERROR_BUT_DONT_SHOW_ALERT &&  failure_code != NS_ERROR_ABORT)
-      if (mGUINotificationEnabled)
-      {
-        if (mLastErrorReported == NS_OK) //Avoid to report several time a failure error!
-        {
-          nsCOMPtr<nsIPrompt> prompt;
-          GetDefaultPrompt(getter_AddRefs(prompt));
-
-  	      if (!error_msg)
-  	      {
-           if (NS_FAILED(nsMsgDisplayMessageByID(prompt, failure_code)))
-              nsMsgDisplayMessageByID(prompt, NS_ERROR_SEND_FAILED);
-  	      }
-  	      else
-  	        nsMsgDisplayMessageByString(prompt, error_msg);
-	        
-	        mLastErrorReported = failure_code;
-	      }
-      }
+    nsCOMPtr<nsIPrompt> prompt;
+    GetDefaultPrompt(getter_AddRefs(prompt));
+      
+    if (mSendReport)
+    {
+      mSendReport->SetError(nsIMsgSendReport::process_Current, failure_code, PR_FALSE);
+      mSendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg, PR_FALSE);
+      mSendReport->DisplayReport(prompt, PR_TRUE, PR_TRUE, _retval);
+    }
+    else
+    {
+      if (failure_code != NS_ERROR_BUT_DONT_SHOW_ALERT)
+        nsMsgDisplayMessageByID(prompt, NS_ERROR_SEND_FAILED);
+    }
   }
 
   if (m_attachments_done_callback)
@@ -3154,7 +3176,7 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsIURI * aUri, nsresult aExitCode,
     nsXPIDLString eMsg; 
     mComposeBundle->GetStringByID(aExitCode, getter_Copies(eMsg));
     
-    Fail(aExitCode, eMsg);
+    Fail(aExitCode, eMsg, &aExitCode);
     NotifyListenerOnStopSending(nsnull, aExitCode, nsnull, nsnull);
     return;
   }
@@ -3242,6 +3264,9 @@ nsMsgComposeAndSend::DoFcc()
     NotifyListenerOnStopCopy(NS_OK);  // For closure of compose window...
     return NS_OK;
   }
+
+  if (mSendReport)
+    mSendReport->SetCurrentProcess(nsIMsgSendReport::process_Copy);
 
   //
   // If we are here, then we need to save off the FCC file to save and
@@ -3392,6 +3417,9 @@ nsMsgComposeAndSend::NotifyListenerOnStopCopy(nsresult aStatus)
   //
   if ( NS_SUCCEEDED(aStatus) && (mNeedToPerformSecondFCC) )
   {
+    if (mSendReport)
+      mSendReport->SetCurrentProcess(nsIMsgSendReport::process_FCC);
+
     mNeedToPerformSecondFCC = PR_FALSE;
 
     const char *fcc2 = mCompFields->GetFcc2();
@@ -3403,26 +3431,7 @@ nsMsgComposeAndSend::NotifyListenerOnStopCopy(nsresult aStatus)
                               fcc2, 
                               mCompFields->GetNewspostUrl());
       if (NS_FAILED(rv))
-      {
-        //
-        // If we hit here, the copy operation FAILED and we should at least tell the
-        // user that it did fail but the send operation has already succeeded.
-        //
-        PRBool oopsGiveMeBackTheComposeWindow = PR_FALSE;
-
-        nsXPIDLString eMsg; 
-        mComposeBundle->GetStringByID(NS_MSG_FAILED_COPY_OPERATION, getter_Copies(eMsg));
-        Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
-
-        if (mGUINotificationEnabled)
-        {
-          nsMsgAskBooleanQuestionByString(prompt, eMsg, &oopsGiveMeBackTheComposeWindow);
-          if (!oopsGiveMeBackTheComposeWindow)
-            aStatus = NS_OK;
-          else
-            aStatus = NS_ERROR_FAILURE;
-        }
-      }
+        Fail(rv, nsnull, &aStatus);
       else
         return NS_OK;
     }
@@ -3434,31 +3443,7 @@ nsMsgComposeAndSend::NotifyListenerOnStopCopy(nsresult aStatus)
     // user that it did fail but the send operation has already succeeded. This only if
     // we are sending the message and not just saving it!
     
-	  if ( m_deliver_mode != nsMsgSaveAsDraft && m_deliver_mode != nsMsgSaveAsTemplate ) 
-    {
-      PRBool oopsGiveMeBackTheComposeWindow = PR_FALSE;
-
-      nsXPIDLString eMsg; 
-      mComposeBundle->GetStringByID(NS_MSG_FAILED_COPY_OPERATION, getter_Copies(eMsg));
-      Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
-
-      if (mGUINotificationEnabled)
-      {
-        nsMsgAskBooleanQuestionByString(prompt, eMsg, &oopsGiveMeBackTheComposeWindow);
-        if (!oopsGiveMeBackTheComposeWindow)
-    	    aStatus = NS_OK;
-      }
-    }
-    else
-    {
-      nsXPIDLString eMsg; 
-      if (m_deliver_mode == nsMsgSaveAsTemplate)
-        mComposeBundle->GetStringByID(NS_MSG_UNABLE_TO_SAVE_TEMPLATE, getter_Copies(eMsg));
-      else
-        mComposeBundle->GetStringByID(NS_MSG_UNABLE_TO_SAVE_DRAFT, getter_Copies(eMsg));
-      Fail(aStatus, eMsg);
-      aStatus = NS_ERROR_BUT_DONT_SHOW_ALERT;
-    }
+    Fail(aStatus, nsnull, &aStatus);
   }
 
   // If we are here, its real cleanup time! 
@@ -3529,6 +3514,11 @@ nsMsgComposeAndSend::CreateAndSendMessage(
               )
 {
   nsresult      rv;
+  
+  
+  /* First thing to do is to reset the send errors report */
+  mSendReport->Reset();
+  mSendReport->SetDeliveryMode(mode);
 
   mParentWindow = parentWindow;
   mSendProgress = progress;
@@ -3551,10 +3541,10 @@ nsMsgComposeAndSend::CreateAndSendMessage(
 					attachments, preloaded_attachments,
           password);
 
-	if (NS_SUCCEEDED(rv))
-		return NS_OK;
-  else
-    return rv;
+	if (NS_FAILED(rv) && mSendReport)
+    mSendReport->SetError(nsIMsgSendReport::process_Current, rv, PR_FALSE);
+
+  return rv;
 }
 
 nsresult
@@ -3571,6 +3561,10 @@ nsMsgComposeAndSend::SendMessageFile(
               )
 {
   nsresult      rv;
+
+  /* First thing to do is to reset the send errors report */
+  mSendReport->Reset();
+  mSendReport->SetDeliveryMode(mode);
 
   if (!fields)
     return NS_ERROR_INVALID_ARG;
@@ -3615,10 +3609,13 @@ nsMsgComposeAndSend::SendMessageFile(
 					    nsnull, nsnull,
               password);
 
-  if (NS_SUCCEEDED(rv))
-    return DeliverMessage();
-  else
-    return rv;
+	if (NS_SUCCEEDED(rv))
+    rv = DeliverMessage();
+
+	if (NS_FAILED(rv) && mSendReport)
+    mSendReport->SetError(nsIMsgSendReport::process_Current, rv, PR_FALSE);
+
+  return rv;
 }
 
 nsMsgAttachmentData *
@@ -3767,6 +3764,8 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
     mSendProgress->GetProcessCanceledByUser(&canceled);
     if (canceled)
       return NS_ERROR_ABORT;
+    else
+      mSendProgress->OnProgressChange(nsnull, nsnull, 0, 0, 0, -1);
   }
 
   //
@@ -3796,23 +3795,16 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   delete tFileSpec;
   if (! tempOutfile.is_open()) 
   {	  
-    // Need to determine what type of operation failed and set status accordingly. 
-    switch (mode)
+    if (mSendReport)
     {
-    case nsMsgQueueForLater:
-      status = NS_MSG_UNABLE_TO_SEND_LATER;
-      break;
-    case nsMsgSaveAsDraft:
-      status = NS_MSG_UNABLE_TO_SAVE_DRAFT;
-      break;
-    case nsMsgSaveAsTemplate:
-      status = NS_MSG_UNABLE_TO_SAVE_TEMPLATE;
-      break;
-    case nsMsgDeliverNow:
-    default:
-      status = NS_MSG_COULDNT_OPEN_FCC_FOLDER;
-      break;
+      nsAutoString error_msg;
+      nsAutoString path;
+      tFileSpec->GetNativePathString(path);
+      nsMsgBuildErrorMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE, error_msg, &path, nsnull);
+      mSendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg.get(), PR_FALSE);
     }
+    status = NS_MSG_UNABLE_TO_OPEN_TMP_FILE;
+
     NS_RELEASE(mCopyFileSpec);
     return status;
   }
@@ -3821,8 +3813,16 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   // Get our files ready...
   //
   nsInputFileStream inputFile(*input_file);
-  if (!inputFile.is_open())
+  if (!inputFile.is_open() || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_2))
 	{
+	  if (mSendReport)
+	  {
+      nsAutoString error_msg;
+      nsAutoString path;
+      input_file->GetNativePathString(path);
+      nsMsgBuildErrorMessageByID(NS_MSG_UNABLE_TO_OPEN_FILE, error_msg, &path, nsnull);
+      mSendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg.get(), PR_FALSE);
+    }
 	  status = NS_MSG_UNABLE_TO_OPEN_FILE;
 	  goto FAIL;
 	}
@@ -4208,6 +4208,16 @@ nsresult
 nsMsgComposeAndSend::SetGUINotificationState(PRBool aEnableFlag)
 {
   mGUINotificationEnabled = aEnableFlag;
+  return NS_OK;
+}
+
+/* readonly attribute nsIMsgSendReport sendReport; */
+NS_IMETHODIMP
+nsMsgComposeAndSend::GetSendReport(nsIMsgSendReport * *aSendReport)
+{
+  NS_ENSURE_ARG_POINTER(aSendReport);
+  *aSendReport = mSendReport;
+  NS_IF_ADDREF(*aSendReport);
   return NS_OK;
 }
 

@@ -40,6 +40,8 @@
 #include "nsMsgPrompts.h"
 #include "nsTextFormatter.h"
 #include "nsIPrompt.h"
+#include "nsMsgSimulateError.h"
+
 
 static  NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -461,18 +463,31 @@ nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
     m_override_type = PL_strdup(MESSAGE_RFC822);
     if (!mFileSpec) 
     {
-        rv = NS_ERROR_FAILURE;
-        goto done;
+      rv = NS_ERROR_FAILURE;
+      goto done;
     }
 
     nsCOMPtr<nsILocalFile> localFile;
     nsCOMPtr<nsIOutputStream> outputStream;
     NS_FileSpecToIFile(mFileSpec, getter_AddRefs(localFile));
     rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), localFile, -1, 00600);
-    if (NS_FAILED(rv) || !outputStream)
+    if (NS_FAILED(rv) || !outputStream || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_3))
     {
-        rv =  NS_MSG_UNABLE_TO_OPEN_TMP_FILE;
-        goto done;
+      if (m_mime_delivery_state)
+      {
+        nsCOMPtr<nsIMsgSendReport> sendReport;
+        m_mime_delivery_state->GetSendReport(getter_AddRefs(sendReport));
+        if (sendReport)
+        {
+          nsAutoString error_msg;
+          nsAutoString path;
+          mFileSpec->GetNativePathString(path);
+          nsMsgBuildErrorMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE, error_msg, &path, nsnull);
+          sendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg.get(), PR_FALSE);
+        }
+      }
+      rv =  NS_MSG_UNABLE_TO_OPEN_TMP_FILE;
+      goto done;
     }
     mOutFile = do_QueryInterface(outputStream);
     
@@ -564,8 +579,21 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
   nsCOMPtr<nsIOutputStream> outputStream;
   NS_FileSpecToIFile(mFileSpec, getter_AddRefs(localFile));
   status = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), localFile, -1, 00600);
-  if (NS_FAILED(status) || !outputStream)
+  if (NS_FAILED(status) || !outputStream || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_3))
   {
+    if (m_mime_delivery_state)
+    {
+      nsCOMPtr<nsIMsgSendReport> sendReport;
+      m_mime_delivery_state->GetSendReport(getter_AddRefs(sendReport));
+      if (sendReport)
+      {
+        nsAutoString error_msg;
+        nsAutoString path;
+        mFileSpec->GetNativePathString(path);
+        nsMsgBuildErrorMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE, error_msg, &path, nsnull);
+        sendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg.get(), PR_FALSE);
+      }
+    }
     delete mFileSpec;
     mFileSpec = nsnull;
     return NS_MSG_UNABLE_TO_OPEN_TMP_FILE; 
@@ -742,7 +770,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 	        // we got the encode data, so call the next stream to write it to the disk.
 	        //
 	        if (obj->fileStream->write(obj->buff, count) != count)
-		        status = NS_MSG_UNABLE_TO_OPEN_TMP_FILE;
+		        status = NS_MSG_ERROR_WRITING_FILE;
         }
       } 
       
@@ -966,7 +994,8 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
     {
       status = NS_ERROR_ABORT;
       m_mime_delivery_state->SetStatus(status);
-      m_mime_delivery_state->Fail(status, 0);
+      nsresult ignoreMe;
+      m_mime_delivery_state->Fail(status, nsnull, &ignoreMe);
       m_mime_delivery_state->NotifyListenerOnStopSending(nsnull, status, 0, nsnull);
       SetMimeDeliveryState(nsnull);
       return status;
@@ -1089,7 +1118,8 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 		  int status = next->SnarfAttachment(mCompFields);
 		  if (NS_FAILED(status))
 			{
-			  m_mime_delivery_state->Fail(status, 0);
+        nsresult ignoreMe;
+			  m_mime_delivery_state->Fail(status, nsnull, &ignoreMe);
 			  m_mime_delivery_state->NotifyListenerOnStopSending(nsnull, status, 0, nsnull);
 			  SetMimeDeliveryState(nsnull);
 			  return NS_ERROR_UNEXPECTED;
@@ -1105,7 +1135,8 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 		// the exit routine and terminating the delivery.
 	  if (NS_FAILED(status))
 		{
-		  m_mime_delivery_state->Fail(status, aMsg);
+      nsresult ignoreMe;
+		  m_mime_delivery_state->Fail(status, aMsg, &ignoreMe);
 		  m_mime_delivery_state->NotifyListenerOnStopSending(nsnull, status, aMsg, nsnull);
 			SetMimeDeliveryState(nsnull);
 	    return NS_ERROR_UNEXPECTED;
@@ -1115,7 +1146,8 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 		  status = m_mime_delivery_state->GatherMimeAttachments ();
 	    if (NS_FAILED(status))
 	    {
-	      m_mime_delivery_state->Fail(status, aMsg);
+        nsresult ignoreMe;
+	      m_mime_delivery_state->Fail(status, aMsg, &ignoreMe);
 			  m_mime_delivery_state->NotifyListenerOnStopSending(nsnull, status, aMsg, nsnull);
 			  SetMimeDeliveryState(nsnull);
 			  return NS_ERROR_UNEXPECTED;
@@ -1128,7 +1160,8 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 		// then report that error and continue 
 	  if (NS_FAILED(status))
 		{
-		  m_mime_delivery_state->Fail(status, aMsg);
+      nsresult ignoreMe;
+		  m_mime_delivery_state->Fail(status, aMsg, &ignoreMe);
 		}
 	}
 

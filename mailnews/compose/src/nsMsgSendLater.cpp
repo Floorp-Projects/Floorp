@@ -52,6 +52,7 @@
 #include "nsISmtpUrl.h"
 #include "nsIChannel.h"
 #include "prlog.h"
+#include "nsMsgSimulateError.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
@@ -59,26 +60,6 @@ static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
 static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID); 
 static NS_DEFINE_CID(kISupportsArrayCID, NS_SUPPORTSARRAY_CID);
-
-//
-// This function will be used by the factory to generate the 
-// nsMsgComposeAndSend Object....
-//
-nsresult NS_NewMsgSendLater(const nsIID &aIID, void ** aInstancePtrResult)
-{
-	/* note this new macro for assertions...they can take a string describing the assertion */
-	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
-	if (nsnull != aInstancePtrResult)
-	{
-		nsMsgSendLater *pSendLater = new nsMsgSendLater();
-		if (pSendLater)
-			return pSendLater->QueryInterface(NS_GET_IID(nsIMsgSendLater), aInstancePtrResult);
-		else
-			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
-	}
-	else
-		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
-}
 
 NS_IMPL_ISUPPORTS2(nsMsgSendLater, nsIMsgSendLater, nsIStreamListener)
 
@@ -154,6 +135,7 @@ nsMsgSendLater::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult s
 
   // See if we succeeded on reading the message from the message store?
   //
+  SET_SIMULATED_ERROR(SIMULATED_SEND_ERROR_13, status, NS_ERROR_FAILURE);
   if (NS_SUCCEEDED(status))
   {
     // Now, so some analysis on the identity for this particular message!
@@ -421,8 +403,20 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
     }
     else
     {
-      // shame we can't get access to a prompt interface from here...=(
-      nsMsgDisplayMessageByID(nsnull, NS_ERROR_SEND_FAILED);
+/*TODO
+      if (mSendReport)
+      {
+        // shame we can't get access to a prompt interface from here...=(
+        mSendReport->SetError(nsIMsgSendReport::process_Current, aStatus, PR_FALSE);
+        mSendReport->DisplayReport(nsnull, PR_TRUE, PR_TRUE, &aStatus);
+      }
+      else
+*/
+      {
+        // shame we can't get access to a prompt interface from here...=(
+        if (aStatus != NS_ERROR_BUT_DONT_SHOW_ALERT &&  aStatus != NS_ERROR_ABORT)
+          nsMsgDisplayMessageByID(nsnull, NS_ERROR_SEND_FAILED);
+      }  
     }
 
     // Regardless, we will still keep trying to send the rest...

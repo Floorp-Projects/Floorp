@@ -43,6 +43,7 @@
 #include "prcmon.h"
 #include "nsIMsgImapMailFolder.h"
 #include "nsIEventQueueService.h"
+#include "nsMsgSimulateError.h"
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -201,7 +202,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
     rv = GetUnsentMessagesFolder(aUserIdentity, getter_AddRefs(dstFolder), &waitForUrl);
     isDraft = PR_FALSE;
     if (!dstFolder || NS_FAILED(rv)) {
-        return NS_MSG_UNABLE_TO_SEND_LATER;
+      return NS_MSG_UNABLE_TO_SEND_LATER;
     } 
   }
   else if (aMode == nsIMsgSend::nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
@@ -209,15 +210,15 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
     rv = GetDraftsFolder(aUserIdentity, getter_AddRefs(dstFolder), &waitForUrl);
     isDraft = PR_TRUE;
     if (!dstFolder || NS_FAILED(rv)) {
-	return NS_MSG_UNABLE_TO_SAVE_DRAFT;
+	    return NS_MSG_UNABLE_TO_SAVE_DRAFT;
     } 
   }
   else if (aMode == nsIMsgSend::nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
   {
     rv = GetTemplatesFolder(aUserIdentity, getter_AddRefs(dstFolder), &waitForUrl);
     isDraft = PR_FALSE;
-    if (!dstFolder || NS_FAILED(rv)) {
-	return NS_MSG_UNABLE_TO_SAVE_TEMPLATE;
+    if (!dstFolder || NS_FAILED(rv) || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_5)) {
+	    return NS_MSG_UNABLE_TO_SAVE_TEMPLATE;
     } 
   }
   else // SaveInSentFolder (Sent) -  nsMsgDeliverNow
@@ -225,7 +226,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
     rv = GetSentFolder(aUserIdentity, getter_AddRefs(dstFolder), &waitForUrl);
     isDraft = PR_FALSE;
     if (!dstFolder || NS_FAILED(rv)) {
-	return NS_MSG_COULDNT_OPEN_FCC_FOLDER;
+	    return NS_MSG_COULDNT_OPEN_FCC_FOLDER;
     }
   }
 
@@ -411,6 +412,8 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
 {
   nsresult                  rv = NS_OK;
 
+  RETURN_SIMULATED_ERROR(SIMULATED_SEND_ERROR_5, NS_ERROR_FAILURE)
+  
   if (!msgFolder) return NS_ERROR_NULL_POINTER;
 
   if (!aFolderURI || (PL_strlen(aFolderURI) == 0)) {

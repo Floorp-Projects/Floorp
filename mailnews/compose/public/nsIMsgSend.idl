@@ -36,6 +36,7 @@
 #include "nsIMsgSendListener.idl"
 #include "nsIEditorShell.idl"
 #include "nsIMsgProgress.idl"
+#include "nsIMsgSendReport.idl"
 #include "domstubs.idl"
 #include "nsIPrompt.idl"
 #include "MailNewsTypes2.idl"
@@ -203,10 +204,13 @@ interface nsIMsgSend : nsISupports
     void abort();
     
     /* Report a send failure */
-    void fail(in nsresult failure_code, in wstring error_msg);
+    nsresult fail(in nsresult failure_code, in wstring error_msg);
 
     /* Disable UI notification (alert message) */
     void setGUINotificationState(in PRBool aEnableFlag);
+    
+    /* retreive the last send process report*/
+    readonly attribute nsIMsgSendReport sendReport; 
     
     /* methods for send listener ... */
     [noscript] void notifyListenerOnStartSending(in string aMsgID, in unsigned long aMsgSize);
