@@ -889,7 +889,7 @@ nsBrowserInstance::SetContentWindow(nsIDOMWindow* aWin)
 
   mContentWindow = aWin;
   // NS_ADDREF(aWin); WE DO NOT OWN THIS
-
+  nsresult rv;
 
   // we do not own the script context, so don't addref it
   nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(aWin));
@@ -930,10 +930,10 @@ nsBrowserInstance::SetContentWindow(nsIDOMWindow* aWin)
     if (APP_DEBUG) {
       printf("Attaching to Content WebShell [%s]\n", (const char *)str);
     }
-    nsCOMPtr<nsIUrlbarHistory>  ubHistory(do_CreateInstance(NS_URLBARHISTORY_PROGID));
+    nsCOMPtr<nsIUrlbarHistory>  ubHistory = do_GetService(NS_URLBARHISTORY_PROGID, &rv);
+	
 	NS_ENSURE_TRUE(ubHistory, NS_ERROR_FAILURE);
 	mUrlbarHistory = ubHistory;
-
   }
 
   return NS_OK;
