@@ -733,25 +733,19 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 	dump("This is before the search " + searchStr + "\n");
 	if ((window._content.location.href == searchStr) || (searchStr == '')) 
 	{
-		if (!(defaultSearchURL == fallbackDefaultSearchURL)) {
 		//	window._content.location.href = defaultSearchURL;
 		// Call in to BrowserAppCore instead of replacing 
 		// the url in the content area so that B/F buttons work right
-		    if (appCore)
-			  appCore.loadUrl(defaultSearchURL);
-			else
-			  dump("BrowserAppCore is not initialised\n");
-		}
-		else
-		{
-			//window._content.location.href = "http://search.netscape.com/"
-			// Call in to BrowserAppCore instead of replacing 
-		    // the url in the content area so that B/F buttons work right
-			if (appCore)
-			   appCore.loadUrl("http://search.netscape.com/");
-			else
-			   dump("BrowserAppCore is not initialised\n");
-		}
+
+		// There used to be an 'if' case to see if defaultSearchURL == fallbackDefaultSearchURL
+		// and if so, call appCore.loadUrl("http://search.netscape.com/").
+		// Removed 'if' case, set fallbackDefaultSearchURL to "http://search.netscape.com/" and
+		// always use defaultSearchURL. I assert that this new way of handling things is
+		// functionally equivalent to the old way.
+    if (appCore)
+	    appCore.loadUrl(defaultSearchURL);
+    else
+      dump("BrowserAppCore is not initialised\n");
 	}
 	else
 	{
