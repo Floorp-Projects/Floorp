@@ -24,6 +24,9 @@
 #include "nsIServiceManager.h"
 #include "nsIImageManager.h"
 #include "plevent.h"
+#include "prinit.h"
+#include "prlog.h"
+#include "dlfcn.h"
 
 static nsNativeViewerApp* gTheApp;
 
@@ -168,29 +171,26 @@ int main(int argc, char **argv)
   nsresult rv = NS_InitXPCOM(nsnull, nsnull, nsnull);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
   if (NS_SUCCEEDED(rv)) {
-    // Hack to get il_ss set so it doesn't fail in xpcompat.c
-    nsIImageManager *manager;
-    NS_NewImageManager(&manager);
-
-    gTheApp = new nsNativeViewerApp();
-
     // The toolkit service in mozilla will look in the environment
     // to determine which toolkit to use.  Yes, it is a dumb hack to
     // force it here, but we have no choice because of toolkit specific
     // code linked into the viewer.
     putenv("MOZ_TOOLKIT=gtk");
 
+    gTheApp = new nsNativeViewerApp();
     gTheApp->Initialize(argc, argv);
     gTheApp->Run();
-
-    manager->FlushCache();
-    NS_RELEASE(manager);
-
     delete gTheApp;
+
+    NS_FreeImageManager();
 
     // Shutdown XPCOM
     rv = NS_ShutdownXPCOM(nsnull);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+
+    // Shutdown NSPR
+    PR_LogFlush();
+    PR_Cleanup();
   }
 
   return 0;
