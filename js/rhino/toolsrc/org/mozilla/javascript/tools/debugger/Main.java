@@ -52,6 +52,7 @@ import java.io.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import java.lang.reflect.Method;
+import java.net.URL;
 
 class MessageDialogWrapper {
 
@@ -2427,7 +2428,32 @@ public class Main extends JFrame implements Debugger, ContextListener {
     Hashtable functionNames = new Hashtable();
 
     ScriptItem getScriptItem(DebuggableScript fnOrScript) {
-        return (ScriptItem)scriptItems.get(fnOrScript);
+        ScriptItem item = (ScriptItem)scriptItems.get(fnOrScript);
+        if (item == null) {
+            String url = getNormilizedUrl(fnOrScript);
+            SourceInfo si = (SourceInfo)sourceNames.get(url);
+            if (si == null) {
+                if (!fnOrScript.isGeneratedScript()) {
+                    // Not eval or Function, try to load it from URL
+                    String source = null;
+                    try {
+                        InputStream is = openSource(url);
+                        try { source = readSource(is); }
+                        finally { is.close(); }
+                    } catch (IOException ex) {
+                        System.err.println
+                            ("Failed to load source from "+url+": "+ ex);
+                    }
+                    if (source != null) {
+                        si = registerSource(url, source);
+                    }
+                }
+            }
+            if (si != null) {
+                item = registerScript(si, fnOrScript);
+            }
+        }
+        return item;
     }
 
     /* Debugger Interface */
@@ -2435,29 +2461,9 @@ public class Main extends JFrame implements Debugger, ContextListener {
     public void handleCompilationDone(Context cx, DebuggableScript fnOrScript,
                                       String source)
     {
-        String sourceName = getNormilizedUrl(fnOrScript);
-
-        SourceInfo si;
-        synchronized (sourceNames) {
-            si = (SourceInfo)sourceNames.get(sourceName);
-            if (si != null) {
-                si.setSource(source);
-            }else {
-                si = new SourceInfo(sourceName, source);
-                sourceNames.put(sourceName, si);
-            }
-        }
-
-        ScriptItem item = new ScriptItem(fnOrScript, si);
-        si.updateLineInfo(item);
-
-        scriptItems.put(fnOrScript, item);
-
-        String name = fnOrScript.getFunctionName();
-        if (name != null && name.length() > 0 && !name.equals("anonymous")) {
-            functionNames.put(name, item);
-        }
-        loadedFile(si);
+         String sourceUrl = getNormilizedUrl(fnOrScript);
+         SourceInfo si = registerSource(sourceUrl, source);
+         registerScript(si, fnOrScript);
     }
 
     String getNormilizedUrl(DebuggableScript fnOrScript) {
@@ -2511,6 +2517,95 @@ public class Main extends JFrame implements Debugger, ContextListener {
         }
         return url;
     }
+
+    private static InputStream openSource(String sourceUrl)
+        throws IOException
+    {
+        int hash = sourceUrl.indexOf('#');
+        if (hash >= 0) {
+            sourceUrl = sourceUrl.substring(0, hash);
+        }
+        if (sourceUrl.indexOf(':') < 0) {
+            // Can be a file name
+            try {
+                if (sourceUrl.startsWith("~/")) {
+                    String home = System.getProperty("user.home");
+                    if (home != null) {
+                        String pathFromHome = sourceUrl.substring(2);
+                        File f = new File(new File(home), pathFromHome);
+                        if (f.exists()) {
+                            return new FileInputStream(f);
+                        }
+                    }
+                }
+                File f = new File(sourceUrl);
+                if (f.exists()) {
+                    return new FileInputStream(f);
+                }
+            } catch (SecurityException ex) { }
+            // No existing file, assume missed http://
+            if (sourceUrl.startsWith("//")) {
+                sourceUrl = "http:" + sourceUrl;
+            } else if (sourceUrl.startsWith("/")) {
+                sourceUrl = "http://127.0.0.1" + sourceUrl;
+            } else {
+                sourceUrl = "http://" + sourceUrl;
+            }
+        }
+
+        return (new java.net.URL(sourceUrl)).openStream();
+    }
+
+    private static String readSource(InputStream is) throws IOException {
+        byte[] buffer = new byte[4096];
+        int offset = 0;
+        for (;;) {
+            int n = is.read(buffer, 0, buffer.length - offset);
+            if (n < 0) { break; }
+            offset += n;
+            if (offset == buffer.length) {
+                byte[] tmp = new byte[buffer.length * 2];
+                System.arraycopy(buffer, 0, tmp, 0, offset);
+                buffer = tmp;
+            }
+        }
+        return new String(buffer, 0, offset);
+    }
+
+    private SourceInfo registerSource(String sourceUrl, String source) {
+        SourceInfo si;
+        synchronized (sourceNames) {
+            si = (SourceInfo)sourceNames.get(sourceUrl);
+            if (si == null) {
+                si = new SourceInfo(sourceUrl, source);
+                sourceNames.put(sourceUrl, si);
+            }
+        }
+        return si;
+    }
+
+    private ScriptItem registerScript(SourceInfo si,
+                                      DebuggableScript fnOrScript)
+    {
+        ScriptItem item;
+        synchronized (scriptItems) {
+            item = (ScriptItem)scriptItems.get(fnOrScript);
+            if (item == null) {
+                item = new ScriptItem(fnOrScript, si);
+                si.updateLineInfo(item);
+                scriptItems.put(fnOrScript, item);
+            }
+        }
+
+        String name = fnOrScript.getFunctionName();
+        if (name != null && name.length() > 0 && !name.equals("anonymous")) {
+            functionNames.put(name, item);
+        }
+
+        loadedFile(si);
+        return item;
+    }
+
 
     void handleBreakpointHit(Context cx) {
         breakFlag = false;
