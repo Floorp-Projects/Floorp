@@ -220,15 +220,19 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
       kidReflowState.availableHeight = maxSize.height;
 
       // Get the child's desired size
-      ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, mPD->mReflowMargin.left, mPD->mReflowMargin.top, 0, aStatus);
+      ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, 
+                  mPD->mReflowMargin.left+mPD->mExtraMargin.left, 
+                  mPD->mReflowMargin.top+mPD->mExtraMargin.top, 0, aStatus);
+
+      // Place and size the child
+      FinishReflowChild(frame, aPresContext, aDesiredSize, 
+                        mPD->mReflowMargin.left+mPD->mExtraMargin.left, 
+                        mPD->mReflowMargin.top+mPD->mExtraMargin.top, 0);
 
       // Make sure the child is at least as tall as our max size (the containing window)
       if (aDesiredSize.height < aReflowState.availableHeight) {
         aDesiredSize.height = aReflowState.availableHeight;
       }
-
-      // Place and size the child
-      FinishReflowChild(frame, aPresContext, aDesiredSize, mPD->mReflowMargin.left, mPD->mReflowMargin.top, 0);
 
       // Is the frame complete?
       if (NS_FRAME_IS_COMPLETE(aStatus)) {
@@ -561,56 +565,6 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     rect = mRect;
   }
 
-#ifdef DEBUG_PRINTING
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    nsRect pr = rect;
-    pr.x = 0;
-    pr.y = 0;
-    nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
-    nsRect  pageSize;
-    nsRect  adjSize;
-    aPresContext->GetPageDim(&pageSize, &adjSize);
-    if (ppContext && pageSize == adjSize) {
-      pr.width  -= mPD->mShadowSize.width;
-      pr.height -= mPD->mShadowSize.height;
-
-      // paint just the page
-      aRenderingContext.SetColor(NS_RGB(192,208,240));
-      aRenderingContext.FillRect(pr);
-      pr.Deflate(mPD->mReflowMargin);
-      aRenderingContext.SetColor(NS_RGB(255,255,255));
-      aRenderingContext.FillRect(pr);
-    } else {
-      nsRect pr = rect;
-      aRenderingContext.SetColor(NS_RGB(255,255,255));
-      pr.x = 0;
-      pr.y = 0;
-      aRenderingContext.FillRect(rect);
-      aRenderingContext.SetColor(NS_RGB(0,0,0));
-      mPD->mPrintOptions->GetMarginInTwips(mMargin);
-      rect.Deflate(mMargin);
-      aRenderingContext.DrawRect(mRect);
-    }
-    
-    if (mPD->mShadowSize.width > 0 && mPD->mShadowSize.height > 0) {
-      aRenderingContext.SetColor(NS_RGB(0,0,0));
-      nsRect r(0,0, mRect.width, mRect.height);
-      nsRect shadowRect;
-      shadowRect.x = r.x + r.width - mPD->mShadowSize.width;
-      shadowRect.y = r.y + mPD->mShadowSize.height;
-      shadowRect.width  = mPD->mShadowSize.width;
-      shadowRect.height = r.height - mPD->mShadowSize.height;
-      aRenderingContext.FillRect(shadowRect);
-
-      shadowRect.x = r.x + mPD->mShadowSize.width;
-      shadowRect.y = r.y + r.height - mPD->mShadowSize.height;
-      shadowRect.width  = r.width - mPD->mShadowSize.width;
-      shadowRect.height = mPD->mShadowSize.height;
-      aRenderingContext.FillRect(shadowRect);
-    }
-
-  }
-#else
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
     if (ppContext) {
@@ -639,7 +593,6 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
       }
     }
   }
-#endif
 
   nsresult rv = nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
@@ -661,10 +614,11 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
     {
-    nsRect rct(0, 0, mRect.width, mRect.height);
+    nsRect rct = rect;
     // XXX Paint a one-pixel border around the page so it's easy to see where
     // each page begins and ends when we're
     rct.Deflate(mMargin);
+    rct.Deflate(mPD->mExtraMargin);
     //float   p2t;
     //aPresContext->GetPixelsToTwips(&p2t);
     //rect.Deflate(NSToCoordRound(p2t), NSToCoordRound(p2t));
