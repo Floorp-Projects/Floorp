@@ -54,7 +54,8 @@ static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static char * PromptUserCallback(void *arg, char *prompt, int isPasswd);
 static char * FilePathPromptCallback(void *arg, char *prompt, char *fileRegEx, CMUint32 shouldFileExist);
 static void   ApplicationFreeCallback(char *userInput);
-static void * CartmanUIHandler(uint32 resourceID, void* clientContext, uint32 width, uint32 height, char* urlStr, void *data);
+static void * CartmanUIHandler(uint32 resourceID, void* clientContext, uint32 width, uint32 height, PRBool isModel,
+                 char* urlStr, void *data);
 extern "C" void CARTMAN_UIEventLoop(void *data);
 
 
@@ -265,7 +266,7 @@ PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, const char *pickledStatus, con
         return PR_FAILURE;
 
     /* Fire the URL up in a window of its own. */
-    pwin = CartmanUIHandler(advRID, nsnull, width, height, (char*)urlItem.data, NULL);
+    pwin = CartmanUIHandler(advRID, nsnull, width, height, PR_FALSE, (char*)urlItem.data, NULL);
     
     //allocated by cmt, we can free with free:
     free(urlItem.data);
@@ -275,7 +276,7 @@ PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, const char *pickledStatus, con
 
 
 
-void* CartmanUIHandler(uint32 resourceID, void* clientContext, uint32 width, uint32 height, char* urlStr, void *data)
+void* CartmanUIHandler(uint32 resourceID, void* clientContext, uint32 width, uint32 height, PRBool isModal, char* urlStr, void *data)
 {
     nsresult rv = NS_OK;
     
