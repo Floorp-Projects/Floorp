@@ -171,6 +171,9 @@ function delayedOnLoadAddressBook()
   // this listener only cares when a directory is removed
   addrbookSession.addAddressBookListener(gAddressBookAbListener, Components.interfaces.nsIAbListener.directoryRemoved);
 
+  var dirTree = GetDirTree();
+  dirTree.addEventListener("click",DirPaneClick,true);
+
   // initialize the customizeDone method on the customizeable toolbar
   var toolbox = document.getElementById("ab-toolbox");
   toolbox.customizeDone = MailToolboxCustomizeDone;

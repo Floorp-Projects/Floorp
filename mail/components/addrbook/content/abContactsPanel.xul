@@ -58,6 +58,10 @@
   <popup id="cardProperties">
     <menuitem label="&deleteAddrBookCard.label;" accesskey="&deleteAddrBookCard.accesskey;" oncommand="AbDelete();"/>
     <menuitem label="&addrBookCardProperties.label;" accesskey="&addrBookCardProperties.accesskey;" oncommand="AbEditSelectedCard();"/>
+    <menuseparator/>
+    <menuitem label="&addtoToFieldMenu.label;" oncommand="addSelectedAddresses('addr_to');"/>
+    <menuitem label="&addtoCcFieldMenu.label;" oncommand="addSelectedAddresses('addr_cc');"/>
+    <menuitem label="&addtoBccFieldMenu.label;" oncommand="addSelectedAddresses('addr_bcc');"/>
   </popup>
       
   <vbox id="results_box" flex="1">   

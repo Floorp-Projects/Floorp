@@ -1,6 +1,11 @@
 
 <!ENTITY addressbookPicker.label            "Addressbook:">
 <!ENTITY searchInput.label                  "Search For:">
+
+<!ENTITY addtoToFieldMenu.label             "Add to To field">
+<!ENTITY addtoCcFieldMenu.label             "Add to Cc field">
+<!ENTITY addtoBccFieldMenu.label            "Add to Bcc field">
+
 <!ENTITY toButton.label                     "Add to To:">
 <!ENTITY ccButton.label                     "Add to Cc:">
 

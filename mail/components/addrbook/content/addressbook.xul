@@ -411,7 +411,6 @@
             flags="dont-build-content"
             hidecolumnpicker="true"
             onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('addrbook-select');"
-            onclick="DirPaneClick(event);"
             ondblclick="DirPaneDoubleClick(event);"
             onblur="goOnEvent(this,'blur')">
  
