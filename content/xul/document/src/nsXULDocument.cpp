@@ -1839,6 +1839,8 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
 
     // Now that the contents have been created, perform broadcaster
     // hookups if any of the children are observes nodes.
+    // XXX: Initial sync-up doesn't work, since no document observer exists
+    // yet.
     PRInt32 childCount;
     aElement->ChildCount(childCount);
     for (PRInt32 j = 0; j < childCount; j++)
