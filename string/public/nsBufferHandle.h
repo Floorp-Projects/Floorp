@@ -143,7 +143,7 @@ class nsXXXBufferHandle
             mStorageStart(aStorageStart),
             mStorageEnd(aStorageEnd)
         {
-          mFlags |= kIsStorageDefinedSeparately;
+          this->mFlags |= kIsStorageDefinedSeparately;
         }
 
       void          StorageStart( CharT* aNewStorageStart )       { mStorageStart = aNewStorageStart; }
@@ -170,7 +170,7 @@ nsSharedBufferHandle<CharT>::~nsSharedBufferHandle()
 
     if ( !(mFlags & kIsSingleAllocationWithBuffer) )
       {
-        CharT* string_storage = mDataStart;
+        CharT* string_storage = this->mDataStart;
         if ( mFlags & kIsStorageDefinedSeparately )
           string_storage = NS_REINTERPRET_CAST(nsXXXBufferHandle<CharT>*, this)->StorageStart();
         nsMemory::Free(string_storage);
