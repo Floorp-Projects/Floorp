@@ -213,9 +213,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         // We didn't get the right interface, so clean up  
         delete inst;  
     }  
-    else {
-        NS_RELEASE(inst);
-    }
 
     return res;  
 }  
