@@ -553,7 +553,7 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:rdf:brprof:public:MANIFEST",						"$distdirectory:brprof:");
     
     #CHROME
-	_InstallFromManifest(":mozilla:rdf:chrome:public:MANIFEST",                      "$distdirectory:chrome:");
+	_InstallFromManifest(":mozilla:rdf:chrome:public:MANIFEST",                      "$distdirectory:idl:");
     
 	#EDITOR
 	_InstallFromManifest(":mozilla:editor:idl:MANIFEST",								"$distdirectory:idl:");
@@ -856,7 +856,9 @@ sub BuildIDLProjects()
 		
 	BuildIDLProject(":mozilla:rdf:macbuild:RDFIDL.mcp",								"rdf");
 	BuildIDLProject(":mozilla:rdf:tests:domds:macbuild:DOMDataSourceIDL.mcp",		"domds");
-	
+
+    BuildIDLProject(":mozilla:rdf:chrome:build:chromeIDL.mcp",                      "chrome");
+    	
 	BuildIDLProject(":mozilla:xpinstall:macbuild:xpinstallIDL.mcp",            		"xpinstall");
 	BuildIDLProject(":mozilla:extensions:wallet:macbuild:walletIDL.mcp","wallet");
 	BuildIDLProject(":mozilla:xpfe:components:bookmarks:macbuild:BookmarksIDL.mcp",	"bookmarks");
