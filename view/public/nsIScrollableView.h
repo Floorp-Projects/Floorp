@@ -60,7 +60,7 @@ public:
    * @param aWidth return value for width of container
    * @param aHeight return value for height of container
    */
-  NS_IMETHOD  GetContainerSize(nscoord *aWidth, nscoord *aHeight) = 0;
+  NS_IMETHOD  GetContainerSize(nscoord *aWidth, nscoord *aHeight) const = 0;
 
   /**
    * Set the view that we are scrolling within the scrolling view. 
@@ -71,12 +71,7 @@ public:
    * Get the view that we are scrolling within the scrolling view. 
    * @result child view
    */
-  NS_IMETHOD  GetScrolledView(nsIView *&aScrolledView) = 0;
-
-  /**
-   * Get the position of the scrolled view.
-   */
-  NS_IMETHOD  GetScrollPosition(nscoord &aX, nscoord& aY) = 0;
+  NS_IMETHOD  GetScrolledView(nsIView *&aScrolledView) const = 0;
 
   /**
    * Select whether quality level should be displayed in view frame
@@ -88,7 +83,7 @@ public:
    * Query whether quality level should be displayed in view frame
    * @return if PR_TRUE, quality level will be displayed, else hidden
    */
-  NS_IMETHOD  GetShowQuality(PRBool &aShow) = 0;
+  NS_IMETHOD  GetShowQuality(PRBool &aShow) const = 0;
 
   /**
    * Select whether quality level should be displayed in view frame
@@ -108,7 +103,12 @@ public:
    * only when necessary.
    * @return current scrollbar selection
    */
-  NS_IMETHOD  GetScrollPreference(nsScrollPreference& aScrollPreference) = 0;
+  NS_IMETHOD  GetScrollPreference(nsScrollPreference& aScrollPreference) const = 0;
+
+  /**
+   * Get the position of the scrolled view.
+   */
+  NS_IMETHOD  GetScrollPosition(nscoord &aX, nscoord& aY) const = 0;
 
   /**
    * Scroll the view to the given x,y, update's the scrollbar's thumb
@@ -122,13 +122,14 @@ public:
   NS_IMETHOD ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags) = 0;
 
   /**
-   * get the size of the content display area in the view. it can be different
-   * from the bounds of the view.
-   * @param aWidth out parameter for width of clip area
-   * @param aHeight out parameter for height of clip area
-   * @return error status
+   * Set the amount to inset when positioning the scrollbars and clip view
    */
-  NS_IMETHOD GetClipSize(nscoord *aWidth, nscoord *aHeight) = 0;
+  NS_IMETHOD SetControlInsets(const nsMargin &aInsets) = 0;
+
+  /**
+   * Get the amount to inset when positioning the scrollbars and clip view
+   */
+  NS_IMETHOD GetControlInsets(nsMargin &aInsets) const = 0;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
