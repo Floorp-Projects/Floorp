@@ -732,7 +732,10 @@ nsNSSCertificate::MarkForPermDeletion()
 {
   // make sure user is logged in to the token
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
-  if (!PK11_IsLoggedIn(mCert->slot, ctx))
+
+  if (PK11_NeedLogin(mCert->slot)
+      && !PK11_NeedUserInit(mCert->slot)
+      && !PK11_IsInternal(mCert->slot))
   {
     if (SECSuccess != PK11_Authenticate(mCert->slot, PR_TRUE, ctx))
     {
