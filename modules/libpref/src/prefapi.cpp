@@ -2049,7 +2049,7 @@ pref_addChild(PLHashEntry *he, int i, void *arg)
 		PRUint32 parentlen = PL_strlen(pcs->parent);
 		char* substring;
 
-		strncpy(buf, he->key, PR_MIN(512, PL_strlen(he->key) + 1));
+		strncpy(buf, he->key, PR_MIN(512, PL_strlen(he->key) + 2));
 		nextdelim = buf + parentlen;
 		if (parentlen < PL_strlen(buf))
 		{
@@ -2059,6 +2059,9 @@ pref_addChild(PLHashEntry *he, int i, void *arg)
 			{
 				*nextdelim = ';';
 				*(nextdelim + 1) = '\0';
+			} else {
+				/* otherwise, ensure string always ends with a ';' character so strtok will be happy. */
+				strcat(buf, ";");
 			}
 		}
 
