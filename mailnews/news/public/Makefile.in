@@ -33,6 +33,7 @@ XPIDLSRCS= \
 		nsINNTPNewsgroup.idl \
 		nsINNTPNewsgroupList.idl \
 		nsINntpIncomingServer.idl \
+		nsINntpService.idl \
 		$(NULL)
 
 EXPORTS= \

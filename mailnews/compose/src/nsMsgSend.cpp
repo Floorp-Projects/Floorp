@@ -24,6 +24,7 @@
 #include "xp_time.h"
 #include "nsMsgSendFact.h"
 #include "nsMsgBaseCID.h"
+#include "nsMsgNewsCID.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsINetService.h"
 #include "nsISmtpService.h"  // for actually sending the message...

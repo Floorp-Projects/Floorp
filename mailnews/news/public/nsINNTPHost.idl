@@ -19,7 +19,7 @@
 #include "nsINNTPNewsgroupList.idl"
 #include "nsINNTPNewsgroup.idl"
 
-[object, uuid(6b128da0-d74f-11d2-b7f9-00805f05ffa5)]
+[scriptable, uuid(6b128da0-d74f-11d2-b7f9-00805f05ffa5)]
 interface nsINNTPHost : nsISupports {
 
     attribute boolean supportsExtensions;

@@ -23,7 +23,7 @@
  * I had to change the type below to a string temporarily */
 #include "nsINNTPHost.idl"
 
-[object, uuid(921AC214-96B5-11d2-B7EB-00805F05FFA5)]
+[scriptable, uuid(921AC214-96B5-11d2-B7EB-00805F05FFA5)]
 interface nsINNTPArticleList : nsISupports {
 
     void Init(in nsINNTPHost newsHost,

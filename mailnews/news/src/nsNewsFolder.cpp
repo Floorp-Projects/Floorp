@@ -36,6 +36,7 @@
 #include "nsRDFCID.h"
 #include "nsFileStream.h"
 #include "nsMsgDBCID.h"
+#include "nsMsgNewsCID.h"
 #include "nsNewsMessage.h"
 #include "nsMsgUtils.h"
 #include "nsNewsUtils.h"
@@ -1115,7 +1116,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
 #ifdef DEBUG_NEWS
     printf("Getting new news articles....\n");
 #endif
-    rv = nntpService->GetNewNews(nsnull,nntpServer,nsnull,mURI);
+    rv = nntpService->GetNewNews(nsnull, nntpServer, mURI, nsnull);
   }
   return rv;
 

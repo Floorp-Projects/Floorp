@@ -32,12 +32,13 @@ public:
   ////////////////////////////////////////////////////////////////////////////////////////
   // we suppport the nsINntpService Interface 
   ////////////////////////////////////////////////////////////////////////////////////////
-  NS_IMETHOD RunNewsUrl (const nsString& urlString, nsISupports * aConsumer, 
-                         nsIUrlListener * aUrlListener, nsIURL ** aURL);
-  
-  NS_IMETHOD PostMessage(nsFilePath &pathToFile, const char *subject, const char *newsgroup, nsIUrlListener * aUrlListener, nsIURL ** aURL);
+  NS_IMETHOD PostMessage(nsFilePath &pathToFile, const char *subject, const char *newsgroup, nsIUrlListener * aUrlListener, nsIURL **_retval);
 
-  NS_IMETHOD GetNewNews(nsIUrlListener * aUrlListener, nsINntpIncomingServer *nntpServer, nsIURL ** aURL, const char *uri);
+  NS_IMETHOD RunNewsUrl (nsString& urlString, nsISupports * aConsumer, nsIUrlListener * aUrlListener, nsIURL **_retval);
+
+  NS_IMETHOD GetNewNews(nsIUrlListener * aUrlListener, nsINntpIncomingServer *nntpServer, const char *uri, nsIURL **_retval);
+
+  
 
   ////////////////////////////////////////////////////////////////////////////////////////
   // we suppport the nsIMsgMessageService Interface 

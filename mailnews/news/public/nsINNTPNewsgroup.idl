@@ -27,7 +27,7 @@
 #include "nsISupports.idl"
 #include "nsINNTPNewsgroupList.idl"
 
-[object, uuid(1A39CD90-ACAF-11d2-B7EE-00805F05FFA5)]
+[scriptable, uuid(1A39CD90-ACAF-11d2-B7EE-00805F05FFA5)]
 interface nsINNTPNewsgroup : nsISupports {
   
   attribute string name;

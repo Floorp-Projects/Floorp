@@ -103,8 +103,7 @@ nsresult nsNntpService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 ////////////////////////////////////////////////////////////////////////////////////////
 // nsIMsgMessageService support
 ////////////////////////////////////////////////////////////////////////////////////////
-nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
-										  nsIUrlListener * aUrlListener, nsIURL ** aURL)
+nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
   nsresult rv = NS_OK;
 
@@ -231,7 +230,7 @@ nsresult nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListen
 ////////////////////////////////////////////////////////////////////////////////////////
 // nsINntpService support
 ////////////////////////////////////////////////////////////////////////////////////////
-nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject, const char *newsgroupName, nsIUrlListener * aUrlListener, nsIURL ** aURL)
+nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject, const char *newsgroupName, nsIUrlListener * aUrlListener, nsIURL **_retval)
 {
 #ifdef DEBUG_NEWS
 	printf("nsNntpService::PostMessage(%s,%s,%s,??,??)\n",(const char *)pathToFile,subject,newsgroupName);
@@ -352,8 +351,8 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
                 //delete nntpProtocol?
 			}
 			
-			if (aURL)
-				*aURL = nntpUrl; // transfer ref count
+			if (_retval)
+				*_retval = nntpUrl; // transfer ref count
 			else 
 				NS_RELEASE(nntpUrl);
 		}
@@ -365,8 +364,7 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
 }
 
 nsresult 
-nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer, 
-										nsIUrlListener *aUrlListener, nsIURL ** aURL)
+nsNntpService::RunNewsUrl(nsString& urlString, nsISupports * aConsumer, nsIUrlListener *aUrlListener, nsIURL **_retval)
 {
 #ifdef DEBUG_NEWS
     printf("nsNntpService::RunNewsUrl(%s,...)\n", (const char *)nsAutoCString(urlString));
@@ -430,8 +428,8 @@ nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer,
                 //delete nntpProtocol;
 			}
 
-			if (aURL)
-				*aURL = nntpUrl; // transfer ref count
+			if (_retval)
+				*_retval = nntpUrl; // transfer ref count
 			else 
 				NS_RELEASE(nntpUrl);
 		}
@@ -440,10 +438,7 @@ nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer,
 	return rv;
 }
 
-nsresult nsNntpService::GetNewNews(nsIUrlListener * aUrlListener,
-                                   nsINntpIncomingServer *nntpServer,
-                                   nsIURL ** aURL,
-								   const char *uri)
+nsresult nsNntpService::GetNewNews(nsIUrlListener * aUrlListener, nsINntpIncomingServer *nntpServer, const char *uri, nsIURL **_retval)
 {
   if (!uri) {
 	return NS_ERROR_NULL_POINTER;
@@ -483,7 +478,8 @@ nsresult nsNntpService::GetNewNews(nsIUrlListener * aUrlListener,
   }
 #endif
 
-  rv = RunNewsUrl(uri, nsnull, aUrlListener, aURL);
+  nsString uriStr(uri);
+  rv = RunNewsUrl(uriStr, nsnull, aUrlListener, _retval);
   
   NS_UNLOCK_INSTANCE();
   return rv;

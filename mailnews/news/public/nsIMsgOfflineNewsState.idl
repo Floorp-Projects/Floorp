@@ -23,7 +23,7 @@
 #include "nsISupports.idl"
 #include "nsINNTPNewsgroup.idl"
 
-[object, uuid(921AC210-96B5-11d2-B7EB-00805F05FFA5)]
+[scriptable, uuid(921AC210-96B5-11d2-B7EB-00805F05FFA5)]
 interface nsIMsgOfflineNewsState : nsISupports {
 
   attribute nsINNTPNewsgroup newsgroup;
