@@ -39,6 +39,7 @@
 
 #include <stdlib.h>
 #include "prtypes.h"
+#include "nsQuickSort.h"
 
 #if !defined(DEBUG) && (defined(__cplusplus) || defined(__gcc))
 # ifndef INLINE
