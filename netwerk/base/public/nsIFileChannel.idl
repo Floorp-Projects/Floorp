@@ -46,6 +46,10 @@ interface nsIFile;
 [scriptable, uuid(d26b2e2e-1dd1-11b2-88f3-8545a7ba7949)]
 interface nsIFileURL : nsIURL
 {
+    /**
+     * setter clones and getter references, meaning that you must clone the
+     * resulting nsIFile if you wish to modify it.
+     */
     attribute nsIFile file;
 };
 
