@@ -20,6 +20,7 @@ DEPTH=..\..\..\..
 FILES=\
         bm-panel.xul                    \
         bm-props.xul                    \
+        bm-props.js                     \
         bookmark-folder-closed.gif      \
         bookmark-folder-open.gif        \
         bookmark-item.gif               \
