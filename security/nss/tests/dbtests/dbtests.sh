@@ -123,9 +123,18 @@ dbtest_main()
     dbtest -r -d ./non_existant_dir
     ret=$?
     if [ $ret -ne 45 ]; then
-      html_failed "<TR><TD> dbtest readonly succeeded in a nonexisting directory $ret"
+      html_failed "<TR><TD> Dbtest readonly succeeded in a nonexisting directory $ret"
     else
-      html_passed "<TR><TD> dbtest readonly failed in a nonexisting dir $ret" 
+      html_passed "<TR><TD> Dbtest readonly failed in a nonexisting dir $ret" 
+    fi
+
+    Echo "test force opening the database in a nonexisting directory"
+    dbtest -f -d ./non_existant_dir
+    ret=$?
+    if [ $ret -ne 0 ]; then
+      html_failed "<TR><TD> Dbtest force failed in a nonexisting directory $ret"
+    else
+      html_passed "<TR><TD> Dbtest force succeeded in a nonexisting dir $ret"
     fi
 
     Echo "test opening the database readonly in an empty directory"
@@ -133,23 +142,33 @@ dbtest_main()
     tstclnt -h  ${HOST}  -d $EMPTY_DIR 
     ret=$?
     if [ $ret -ne 1 ]; then
-      html_failed "<TR><TD> tstclnt succeded in an empty directory $ret"
+      html_failed "<TR><TD> Tstclnt succeded in an empty directory $ret"
     else
-      html_passed "<TR><TD> tstclnt failed in an empty dir $ret"
+      html_passed "<TR><TD> Tstclnt failed in an empty dir $ret"
     fi
     dbtest -r -d $EMPTY_DIR
     ret=$?
     if [ $ret -ne 45 ]; then
-      html_failed "<TR><TD> dbtest readonly succeeded in an empty directory $ret"
+      html_failed "<TR><TD> Dbtest readonly succeeded in an empty directory $ret"
     else
-      html_passed "<TR><TD> dbtest readonly failed in an empty dir $ret" 
+      html_passed "<TR><TD> Dbtest readonly failed in an empty dir $ret" 
     fi
+    rm -rf $EMPTY_DIR/* 2>/dev/null
     certutil -D -n xxxx -d $EMPTY_DIR #created DB
     ret=$?
     if [ $ret -ne 255 ]; then 
         html_failed "<TR><TD> Certutil succeeded in deleting a cert in an empty directory $ret"
     else
         html_passed "<TR><TD> Certutil failed in an empty dir $ret"
+    fi
+    rm -rf $EMPTY_DIR/* 2>/dev/null
+    Echo "test force opening the database  readonly in a empty directory"
+    dbtest -r -f -d $EMPTY_DIR
+    ret=$?
+    if [ $ret -ne 0 ]; then
+      html_failed "<TR><TD> Dbtest force readonly failed in an empty directory $ret"
+    else
+      html_passed "<TR><TD> Dbtest force readonly succeeded in an empty dir $ret"
     fi
 
     Echo "test opening the database r/w in a readonly directory"
@@ -160,9 +179,9 @@ dbtest_main()
     dbtest -d $RONLY_DIR
     ret=$?
     if [ $ret -ne 45 ]; then
-      html_failed "<TR><TD> dbtest r/w succeeded in an readonly directory $ret"
+      html_failed "<TR><TD> Dbtest r/w succeeded in an readonly directory $ret"
     else
-      html_passed "<TR><TD> dbtest r/w failed in an readonly dir $ret" 
+      html_passed "<TR><TD> Dbtest r/w failed in an readonly dir $ret" 
     fi
     certutil -D -n "TestUser" -d .
     ret=$?
@@ -177,18 +196,18 @@ dbtest_main()
     dbtest -d $RONLY_DIR -r
     ret=$?
     if [ $ret -ne 0 ]; then
-      html_failed "<TR><TD> dbtest ronly failed in a readonly directory $ret"
+      html_failed "<TR><TD> Dbtest readonly failed in a readonly directory $ret"
     else
-      html_passed "<TR><TD> dbtest ronly succeeded in a readonly dir $ret" 
+      html_passed "<TR><TD> Dbtest readonly succeeded in a readonly dir $ret" 
     fi
 
     Echo "test force opening the database  r/w in a readonly directory"
     dbtest -d $RONLY_DIR -f
     ret=$?
     if [ $ret -ne 0 ]; then
-      html_failed "<TR><TD> dbtest force failed in a readonly directory $ret"
+      html_failed "<TR><TD> Dbtest force failed in a readonly directory $ret"
     else
-      html_passed "<TR><TD> dbtest force succeeded in a readonly dir $ret"
+      html_passed "<TR><TD> Dbtest force succeeded in a readonly dir $ret"
     fi
 
     Echo "ls -l $RONLY_DIR"
