@@ -138,7 +138,7 @@
                         <hbox class="field-label-box-class" pack="end">
                             <description>&calendar.server.dialog.password.label;</description>
                         </hbox>
-                        <textbox flex="1" id="server-password-textbox"/>
+                        <textbox flex="1" id="server-password-textbox" type="password"/>
                     </row>
 						  
 						  <!-- Publish Automatically -->    
