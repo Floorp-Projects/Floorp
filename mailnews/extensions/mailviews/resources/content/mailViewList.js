@@ -142,3 +142,9 @@ function updateButtons()
   gEditButton.disabled = selectedIndex < 0;
   gDeleteButton.disabled = selectedIndex < 0;
 }
+
+function doHelpButton()
+{
+  openHelp("message-views-using");
+}
+

@@ -130,3 +130,9 @@ function onEnterInSearchTerm()
 {
   // no-op for us...
 }
+
+function doHelpButton()
+{
+  openHelp("message-views-create-new");
+}
+

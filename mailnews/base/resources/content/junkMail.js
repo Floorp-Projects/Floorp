@@ -219,7 +219,5 @@ function conditionallyEnableUI(id)
 
 function doHelpButton()
 {
-  // implement help
-
-  return false; // don't close the top-level window
+  openHelp("mail-junk-controls");
 }
