@@ -196,7 +196,7 @@ void nsDocLoader::DoAction(PRInt32 aDocNum)
   {
     nsString* url = (nsString*)mURLList->ElementAt(aDocNum);
     if (url)
-      mWebWidget->LoadURL(*url);
+      mWebWidget->LoadURL(*url, nsnull);
   }
 }
 
