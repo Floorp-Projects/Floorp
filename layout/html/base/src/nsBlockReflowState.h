@@ -1613,7 +1613,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
                            NS_BLOCK_MARGIN_ROOT & mState);
 
   if (eReflowReason_Resize != aReflowState.reason) {
-    //RenumberLists(aPresContext);
+    RenumberLists(aPresContext);
   }
 
   nsresult rv = NS_OK;
