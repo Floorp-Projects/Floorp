@@ -39,7 +39,7 @@ var vxHistory =
 };
 
 var vfdFocusObserver = {
-  Observe: function (aSubject, aTopic, aData) 
+  observe: function (aSubject, aTopic, aData) 
   {
     // only update if we need to switch datasources. 
     _ddf(aData.mDocumentID, vxHistory.mDocumentID);

@@ -779,7 +779,7 @@ function Redo()
     messenger.Redo(msgWindow);
 }
 var mailOfflineObserver = {
-  Observe: function(subject, topic, state) {
+  observe: function(subject, topic, state) {
     // sanity checks
     if (topic != "network:offline-status-changed") return;
     MailOfflineStateChanged(state == "offline");

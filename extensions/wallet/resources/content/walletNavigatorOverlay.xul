@@ -65,7 +65,7 @@
 
     function navObserver() {
     }
-    navObserver.prototype.Observe = function (subject, message, contextUrl) {
+    navObserver.prototype.observe = function (subject, message, contextUrl) {
       if (message == 'EndDocumentLoad') {
         initToolbarItems()
       }

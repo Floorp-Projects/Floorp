@@ -4,7 +4,7 @@ const observerClazz = Components.classes["@mozilla.org/observer-service;1"];
 var observerService = observerClazz.getService(observerInterface);
 
 var observer1 =  {
-    Observe : function(aSubject, aTopic, someData) {
+    observe : function(aSubject, aTopic, someData) {
       print("observer1 notified for: "+aTopic+" with: "+someData);  
     },
     QueryInterface: function (iid) {
@@ -16,7 +16,7 @@ var observer1 =  {
 }
 
 var observer2 =  {
-    Observe : function(aSubject, aTopic, someData) {
+    observe : function(aSubject, aTopic, someData) {
       print("observer2 notified for: "+aTopic+" with: "+someData);  
     }
 }

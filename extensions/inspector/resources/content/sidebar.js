@@ -115,7 +115,7 @@ InspectorSidebar.prototype =
 };
 
 var NavLoadObserver = {
-  Observe: function(aWindow)
+  observe: function(aWindow)
   {
     inspector.setTargetWindow(aWindow);
   }

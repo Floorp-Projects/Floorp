@@ -541,7 +541,7 @@ function updateEditItems() {
 }
 
 var messageComposeOfflineObserver = {
-  Observe: function(subject, topic, state) {
+  observe: function(subject, topic, state) {
     // sanity checks
     if (topic != "network:offline-status-changed") return;
     if (state == "offline")
@@ -607,7 +607,7 @@ function MessageComposeOfflineStateChanged(goingOffline)
 }
 
 var directoryServerObserver = {
-  Observe: function(subject, topic, value) {
+  observe: function(subject, topic, value) {
       try {
           setupLdapAutocompleteSession();
       } catch (ex) {
