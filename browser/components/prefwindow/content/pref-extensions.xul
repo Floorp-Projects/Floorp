@@ -45,6 +45,7 @@
       onload="parent.initPanel('chrome://browser/content/pref/pref-extensions.xul'); Startup()"
       headertitle="&lHeader;">
 
+  <stringbundle id="bundle_prefutilities" src="chrome://browser/locale/pref/prefutilities.properties"/>
   <script type="application/x-javascript" src="chrome://browser/content/pref/pref-extensions.js"/>
 
   <vbox flex="1">
