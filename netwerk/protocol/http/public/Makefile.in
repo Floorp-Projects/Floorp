@@ -22,10 +22,14 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-EXPORTS =                           \
-        nsIHttpEventSink.h          \
-        nsIHTTPConnection.h \
-        nsIHTTPHandler.h \
+EXPORTS =                       \
+        nsIHttpEventSink.h      \
+        nsIHTTPConnection.h 	\
+        nsIHTTPHandler.h 	\
+	nsHTTPEnums.h		\
+        nsIHTTPCommonHeaders.h 	\
+        nsIHTTPRequest.h 	\
+        nsIHTTPResponse.h 	\
         $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
