@@ -26,6 +26,15 @@
 #elif defined(XP_UNIX)
 #include <sys/mman.h>
 #include <fcntl.h>
+
+#ifndef MAP_FAILED
+#if defined (__STDC__) && __STDC__
+#define MAP_FAILED	((void *) -1)
+#else
+#define MAP_FAILED	((char *) -1)
+#endif
+#endif
+
 #endif
 
 /******************************************************************************/
