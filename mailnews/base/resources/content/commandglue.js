@@ -240,10 +240,29 @@ function RerootFolder(uri, newFolder, isThreaded, sortID)
 
   folder.setAttribute('ref', uri);
   
+  UpdateStatusMessageCounts(newFolder);
+
   var afterFolderLoadTime = new Date();
   var timeToLoad = (afterFolderLoadTime.getTime() - gBeforeFolderLoadTime.getTime())/1000;
   if(showPerformance)
 	  dump("Time to load " + uri + " is " +  timeToLoad + " seconds\n");
+}
+
+
+function UpdateStatusMessageCounts(folder)
+{
+	var unreadElement = GetUnreadCountElement();
+	var totalElement = GetTotalCountElement();
+	if(folder && unreadElement && totalElement)
+	{
+		var numUnread = folder.getNumUnread(false);
+		var numTotal = folder.getTotalMessages(false);
+
+		unreadElement.setAttribute("value", numUnread);
+		totalElement.setAttribute("value", numTotal);
+
+	}
+
 }
 
 function SortThreadPane(column, sortKey)

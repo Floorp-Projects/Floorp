@@ -624,6 +624,20 @@ NS_IMETHODIMP nsMsgMessageDataSource::OnItemPropertyChanged(nsISupports *item, c
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgMessageDataSource::OnItemIntPropertyChanged(nsISupports *item, const char *property,
+														   PRInt32 oldValue, PRInt32 newValue)
+{
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMessageDataSource::OnItemBoolPropertyChanged(nsISupports *item, const char *property,
+														   PRBool oldValue, PRBool newValue)
+{
+
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgMessageDataSource::OnItemPropertyFlagChanged(nsISupports *item, const char *property,
 									   PRUint32 oldFlag, PRUint32 newFlag)
 {
@@ -1144,20 +1158,6 @@ nsMsgMessageDataSource::DoMarkMessagesFlagged(nsISupportsArray *messages, PRBool
 			return rv;
 	}
 	return rv;
-}
-
-nsresult nsMsgMessageDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
-													  nsIRDFResource *propertyResource,
-													  const char *oldValue, const char *newValue)
-{
-	nsCOMPtr<nsIRDFNode> oldValueNode, newValueNode;
-	nsString oldValueStr = oldValue;
-	nsString newValueStr = newValue;
-	createNode(oldValueStr,getter_AddRefs(oldValueNode), getRDFService());
-	createNode(newValueStr, getter_AddRefs(newValueNode), getRDFService());
-	NotifyObservers(resource, propertyResource, oldValueNode, PR_FALSE);
-	NotifyObservers(resource, propertyResource, newValueNode, PR_TRUE);
-	return NS_OK;
 }
 
 

@@ -42,11 +42,11 @@
 			  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
 			  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
 	          ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+			  HasUnreadMessages="rdf:http://home.netscape.com/NC-rdf#HasUnreadMessages"
+			  SubfoldersHaveUnreadMesages="rdf:http://home.netscape.com/NC-rdf#SubfoldersHaveUnreadMessages"
 			  persist="threaded">
 		  	  <treerow >
 					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#FolderTreeName"/>
-					<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
-					<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
 		  		</treerow>
 			</treeitem>
 	       </treechildren>
@@ -54,14 +54,8 @@
 	  </template>
 
 	  <treecol persist="width" width="3*" id="FolderColumn" rdf:resource="http://home.netscape.com/NC-rdf#FolderTreeName"/>
-	  <treecol persist="width" width="1*" id="TotalUnreadCol" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
-	  <treecol persist="width" width="1*" id="TotalMsgCol" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
-
           <treehead>
             <treerow>
-              <treecell value="&nameColumn.label;"/>
-              <treecell value="&unreadColumn.label;"/>
-              <treecell value="&totalColumn.label;"/>
             </treerow>
           </treehead>
 	</tree>

@@ -57,6 +57,14 @@ interface nsIMsgMailSession : nsISupports {
                                        in string property,
                                        in string oldValue,
                                        in string newValue);
+  void NotifyFolderItemIntPropertyChanged(in nsISupports item,
+                                       in string property,
+                                       in long oldValue,
+                                       in long newValue);
+  void NotifyFolderItemBoolPropertyChanged(in nsISupports item,
+                                       in string property,
+                                       in boolean oldValue,
+                                       in boolean newValue);
   void NotifyFolderItemPropertyFlagChanged(in nsISupports item,
                                            in string property,
                                            in unsigned long oldValue,

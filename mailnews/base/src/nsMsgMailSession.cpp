@@ -177,6 +177,49 @@ nsMsgMailSession::NotifyFolderItemPropertyChanged(nsISupports *item,
 }
 
 NS_IMETHODIMP
+nsMsgMailSession::NotifyFolderItemIntPropertyChanged(nsISupports *item,
+                                                  const char *property,
+                                                  PRInt32 oldValue,
+                                                  PRInt32 newValue)
+{
+	nsresult rv;
+	PRUint32 count;
+	rv = mListeners->Count(&count);
+	if (NS_FAILED(rv)) return rv;
+
+	
+	for(PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
+		listener->OnItemIntPropertyChanged(item, property, oldValue, newValue);
+	}
+
+	return NS_OK;
+
+}
+
+NS_IMETHODIMP
+nsMsgMailSession::NotifyFolderItemBoolPropertyChanged(nsISupports *item,
+                                                  const char *property,
+                                                  PRBool oldValue,
+                                                  PRBool newValue)
+{
+	nsresult rv;
+	PRUint32 count;
+	rv = mListeners->Count(&count);
+	if (NS_FAILED(rv)) return rv;
+
+	
+	for(PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
+		listener->OnItemBoolPropertyChanged(item, property, oldValue, newValue);
+	}
+
+	return NS_OK;
+
+}
+NS_IMETHODIMP
 nsMsgMailSession::NotifyFolderItemPropertyFlagChanged(nsISupports *item,
                                                       const char *property,
                                                       PRUint32 oldValue,

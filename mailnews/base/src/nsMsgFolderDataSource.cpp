@@ -66,6 +66,8 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_TotalMessages= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_TotalUnreadMessages= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Charset = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_BiffState = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_HasUnreadMessages = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_SubfoldersHaveUnreadMessages = nsnull;
 
 // commands
 nsIRDFResource* nsMsgFolderDataSource::kNC_Delete= nsnull;
@@ -113,6 +115,8 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_TotalUnreadMessages, refcnt);
 		NS_RELEASE2(kNC_Charset, refcnt);
 		NS_RELEASE2(kNC_BiffState, refcnt);
+		NS_RELEASE2(kNC_HasUnreadMessages, refcnt);
+		NS_RELEASE2(kNC_SubfoldersHaveUnreadMessages, refcnt);
 
 		NS_RELEASE2(kNC_Delete, refcnt);
 		NS_RELEASE2(kNC_NewFolder, refcnt);
@@ -156,6 +160,8 @@ nsresult nsMsgFolderDataSource::Init()
     rdf->GetResource(NC_RDF_TOTALUNREADMESSAGES, &kNC_TotalUnreadMessages);
     rdf->GetResource(NC_RDF_CHARSET, &kNC_Charset);
     rdf->GetResource(NC_RDF_BIFFSTATE, &kNC_BiffState);
+    rdf->GetResource(NC_RDF_HASUNREADMESSAGES, &kNC_HasUnreadMessages);
+    rdf->GetResource(NC_RDF_SUBFOLDERSHAVEUNREADMESSAGES, &kNC_SubfoldersHaveUnreadMessages);
     
 	rdf->GetResource(NC_RDF_DELETE, &kNC_Delete);
     rdf->GetResource(NC_RDF_NEWFOLDER, &kNC_NewFolder);
@@ -168,12 +174,24 @@ nsresult nsMsgFolderDataSource::Init()
     rdf->GetResource(NC_RDF_RENAME, &kNC_Rename);
     rdf->GetResource(NC_RDF_EMPTYTRASH, &kNC_EmptyTrash);
   }
+	CreateLiterals(rdf);
 	rv = CreateArcsOutEnumerator();
 
 	if(NS_FAILED(rv)) return rv;
 
 	mInitialized = PR_TRUE;
 	return nsMsgRDFDataSource::Init();
+}
+
+nsresult nsMsgFolderDataSource::CreateLiterals(nsIRDFService *rdf)
+{
+
+	nsAutoString str = "true";
+	createNode(str, getter_AddRefs(kTrueLiteral), rdf);
+	str = "false";
+	createNode(str, getter_AddRefs(kFalseLiteral), rdf);
+	return NS_OK;
+
 }
 
 void nsMsgFolderDataSource::Close()
@@ -715,20 +733,33 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemPropertyChanged(nsISupports *item, co
 														   const char *oldValue, const char *newValue)
 
 {
-	nsresult rv;
-	nsCOMPtr<nsIRDFResource> resource(do_QueryInterface(item, &rv));
+	return NS_OK;
+}
 
-	if(NS_SUCCEEDED(rv))
+NS_IMETHODIMP nsMsgFolderDataSource::OnItemIntPropertyChanged(nsISupports *item, const char *property,
+														   PRInt32 oldValue, PRInt32 newValue)
+{
+	//We only care about folder changes
+	nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(item);
+	if(folder)
 	{
+
 		if(PL_strcmp("TotalMessages", property) == 0)
 		{
-			NotifyPropertyChanged(resource, kNC_TotalMessages, oldValue, newValue);
+			OnTotalMessagePropertyChanged(folder, oldValue, newValue);
 		}
 		else if(PL_strcmp("TotalUnreadMessages", property) == 0)
 		{
-			NotifyPropertyChanged(resource, kNC_TotalUnreadMessages, oldValue, newValue);
+			OnUnreadMessagePropertyChanged(folder, oldValue, newValue);
 		}
+
 	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolderDataSource::OnItemBoolPropertyChanged(nsISupports *item, const char *property,
+														   PRBool oldValue, PRBool newValue)
+{
 
 	return NS_OK;
 }
@@ -768,19 +799,6 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnFolderLoaded(nsIFolder *folder)
 	return rv;
 }
 
-nsresult nsMsgFolderDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
-													  nsIRDFResource *propertyResource,
-													  const char *oldValue, const char *newValue)
-{
-	nsCOMPtr<nsIRDFNode> oldValueNode, newValueNode;
-	nsString oldValueStr = oldValue;
-	nsString newValueStr = newValue;
-	createNode(oldValueStr,getter_AddRefs(oldValueNode), getRDFService());
-	createNode(newValueStr, getter_AddRefs(newValueNode), getRDFService());
-	NotifyObservers(resource, propertyResource, oldValueNode, PR_FALSE);
-	NotifyObservers(resource, propertyResource, newValueNode, PR_TRUE);
-	return NS_OK;
-}
 
 nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
                                                  nsIRDFResource* property,
@@ -810,6 +828,10 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 		rv = createCharsetNode(folder, target);
 	else if ((kNC_BiffState == property))
 		rv = createBiffStateNode(folder, target);
+	else if ((kNC_HasUnreadMessages == property))
+		rv = createHasUnreadMessagesNode(folder, target);
+	else if ((kNC_SubfoldersHaveUnreadMessages == property))
+		rv = createSubfoldersHaveUnreadMessagesNode(folder, target);
 	else if ((kNC_Child == property))
 		rv = createFolderChildNode(folder, target);
 	else if ((kNC_MessageChild == property))
@@ -827,7 +849,7 @@ nsresult nsMsgFolderDataSource::createFolderNameNode(nsIMsgFolder *folder,
   nsXPIDLString name;
   nsresult rv = folder->GetName(getter_Copies(name));
   if (NS_FAILED(rv)) return rv;
-  nsString nameString(name);
+  nsAutoString nameString(name);
 	if(sort)
 	{
 		CreateNameSortString(folder, nameString);
@@ -841,31 +863,54 @@ nsresult nsMsgFolderDataSource::createFolderTreeNameNode(nsIMsgFolder *folder,
                                                      nsIRDFNode **target, PRBool sort)
 {
 
-  nsXPIDLString name;
-  nsresult rv = folder->GetAbbreviatedName(getter_Copies(name));
-  if (NS_FAILED(rv)) return rv;
-  nsString nameString(name);
+	nsXPIDLString name;
+	nsresult rv = folder->GetAbbreviatedName(getter_Copies(name));
+	if (NS_FAILED(rv)) return rv;
+	nsAutoString nameString(name);
 	if(sort)
 	{
 		CreateNameSortString(folder, nameString);
+	}
+	else
+	{
+		PRInt32 unreadMessages;
+
+		nsresult rv;
+		rv = folder->GetNumUnread(PR_FALSE, &unreadMessages);
+		if(NS_SUCCEEDED(rv)) 
+		{
+			CreateUnreadMessagesNameString(unreadMessages, nameString);	
+		}
+
 	}
 	createNode(nameString, target, getRDFService());
   return NS_OK;
 }
 
-nsresult nsMsgFolderDataSource::CreateNameSortString(nsIMsgFolder *folder, nsString &name)
+nsresult nsMsgFolderDataSource::CreateNameSortString(nsIMsgFolder *folder, nsAutoString &name)
 {
 	PRInt32 order;
 	nsresult rv = GetFolderSortOrder(folder, &order);
 	if(NS_FAILED(rv))
 		return rv;
-	char * orderString = PR_smprintf("%d", order);
-	if(!orderString)
-		return NS_ERROR_OUT_OF_MEMORY;
+
+	nsAutoString orderString;
+	orderString.Append(order);
 
 	name.Insert(orderString, 0);
-	PR_smprintf_free(orderString);
 
+	return NS_OK;
+}
+
+nsresult nsMsgFolderDataSource::CreateUnreadMessagesNameString(PRInt32 unreadMessages, nsAutoString &nameString)
+{
+	//Only do this if unread messages are positive
+	if(unreadMessages > 0)
+	{
+		nameString.Append(" (");
+		nameString.Append(unreadMessages);
+		nameString.Append(')');
+	}
 	return NS_OK;
 }
 
@@ -877,7 +922,7 @@ nsMsgFolderDataSource::createFolderSpecialNode(nsIMsgFolder *folder,
   nsresult rv = folder->GetFlags(&flags);
   if(NS_FAILED(rv)) return rv;
   
-  nsString specialFolderString;
+  nsAutoString specialFolderString;
   
   if(flags & MSG_FOLDER_FLAG_INBOX)
     specialFolderString = "Inbox";
@@ -924,10 +969,13 @@ nsMsgFolderDataSource::createFolderIsServerNode(nsIMsgFolder* folder,
   rv = folder->GetIsServer(&isServer);
   if (NS_FAILED(rv)) return rv;
 
+  *target = nsnull;
+
   if (isServer)
-    createNode("true", target, getRDFService());
+	*target = kTrueLiteral;
   else
-    createNode("false", target, getRDFService());
+    *target = kFalseLiteral;
+  NS_IF_ADDREF(*target);
   return NS_OK;
 }
 
@@ -950,18 +998,8 @@ nsMsgFolderDataSource::createTotalMessagesNode(nsIMsgFolder *folder,
 		rv = folder->GetTotalMessages(PR_FALSE, &totalMessages);
 		if(NS_FAILED(rv)) return rv;
 	}
-	if(totalMessages >= 0)
-		rv = createNode(totalMessages, target, getRDFService());
-	else if(totalMessages == -1)
-	{
-		nsString unknownMessages("???");
-		createNode(unknownMessages, target, getRDFService());
-	}
-	else if(totalMessages == -2)
-	{
-		nsString unknownMessages("");
-		createNode(unknownMessages, target, getRDFService());
-	}
+	GetNumMessagesNode(totalMessages, target);
+
 	return rv;
 }
 
@@ -969,7 +1007,7 @@ nsresult
 nsMsgFolderDataSource::createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **target)
 {
 	PRUnichar *charset;
-	nsString charsetStr;
+	nsAutoString charsetStr;
 	nsresult rv = folder->GetCharset(&charset);
 	//We always need to return a value
 	if(NS_SUCCEEDED(rv))
@@ -991,7 +1029,7 @@ nsMsgFolderDataSource::createBiffStateNode(nsIMsgFolder *folder, nsIRDFNode **ta
 
 	nsCAutoString biffString;
 	GetBiffStateString(biffState, biffString);
-	nsString uniStr = biffString;
+	nsAutoString uniStr = biffString;
 	createNode(uniStr, target, getRDFService());
 	return NS_OK;
 }
@@ -1027,22 +1065,137 @@ nsMsgFolderDataSource::createUnreadMessagesNode(nsIMsgFolder *folder,
 		rv = folder->GetNumUnread(PR_FALSE, &totalUnreadMessages);
 		if(NS_FAILED(rv)) return rv;
 	}
-	if(totalUnreadMessages >=0)
-		rv = createNode(totalUnreadMessages, target, getRDFService());
-	else if(totalUnreadMessages == -1)
-	{
-		nsString unknownMessages("???");
-		createNode(unknownMessages, target, getRDFService());
-	}
-	else if(totalUnreadMessages == -2)
-	{
-		nsString unknownMessages("");
-		createNode(unknownMessages, target, getRDFService());
-	}
+	GetNumMessagesNode(totalUnreadMessages, target);
+
 
 	return NS_OK;
 }
 
+nsresult
+nsMsgFolderDataSource::createHasUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target)
+{
+
+	nsresult rv;
+
+	PRBool isServer;
+	rv = folder->GetIsServer(&isServer);
+	if (NS_FAILED(rv)) return rv;
+
+	*target = kFalseLiteral;
+
+	PRInt32 totalUnreadMessages;
+	if(!isServer)
+	{
+		rv = folder->GetNumUnread(PR_FALSE, &totalUnreadMessages);
+		if(NS_FAILED(rv)) return rv;
+		if(totalUnreadMessages > 0)
+			*target = kTrueLiteral;
+		else
+			*target = kFalseLiteral;
+	}
+	NS_IF_ADDREF(*target);
+	return NS_OK;
+}
+
+nsresult
+nsMsgFolderDataSource::OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue)
+{
+	nsCOMPtr<nsIRDFResource> folderResource = do_QueryInterface(folder);
+	if(folderResource)
+	{
+		//First send a regular unread message changed notification
+		nsCOMPtr<nsIRDFNode> oldNode;
+		nsCOMPtr<nsIRDFNode> newNode;
+
+		GetNumMessagesNode(oldValue, getter_AddRefs(oldNode));
+		GetNumMessagesNode(newValue, getter_AddRefs(newNode));
+		NotifyPropertyChanged(folderResource, kNC_TotalUnreadMessages, oldNode, newNode);
+	
+		//Now see if hasUnreadMessages has changed
+		nsCOMPtr<nsIRDFNode> oldHasUnreadMessages;
+		nsCOMPtr<nsIRDFNode> newHasUnreadMessages;
+		if(oldValue <=0 && newValue >0)
+		{
+			oldHasUnreadMessages = kFalseLiteral;
+			newHasUnreadMessages = kTrueLiteral;
+			NotifyPropertyChanged(folderResource, kNC_HasUnreadMessages, oldHasUnreadMessages, newHasUnreadMessages);
+		}
+		else if(oldValue > 0 && newValue <= 0)
+		{
+			oldHasUnreadMessages = kTrueLiteral;
+			newHasUnreadMessages = kFalseLiteral;
+			NotifyPropertyChanged(folderResource, kNC_HasUnreadMessages, oldHasUnreadMessages, newHasUnreadMessages);
+		}
+		//We will have to change the folderTreeName also
+
+		nsXPIDLString name;
+		nsresult rv = folder->GetAbbreviatedName(getter_Copies(name));
+		if (NS_SUCCEEDED(rv)) 
+		{
+			nsAutoString oldNameString(name);
+			nsAutoString newNameString(name);
+			
+			CreateUnreadMessagesNameString(oldValue, oldNameString);	
+			CreateUnreadMessagesNameString(newValue, newNameString);	
+			
+			nsCOMPtr<nsIRDFNode> oldNameNode;
+			nsCOMPtr<nsIRDFNode> newNameNode;
+			createNode(oldNameString, getter_AddRefs(oldNameNode), getRDFService());
+			createNode(newNameString, getter_AddRefs(newNameNode), getRDFService());
+
+			NotifyPropertyChanged(folderResource, kNC_FolderTreeName, oldNameNode, newNameNode);
+			
+		}
+
+	}
+	return NS_OK;
+}
+
+
+nsresult
+nsMsgFolderDataSource::OnTotalMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue)
+{
+	nsCOMPtr<nsIRDFResource> folderResource = do_QueryInterface(folder);
+	if(folderResource)
+	{
+		//First send a regular unread message changed notification
+		nsCOMPtr<nsIRDFNode> oldNode;
+		nsCOMPtr<nsIRDFNode> newNode;
+
+		GetNumMessagesNode(oldValue, getter_AddRefs(oldNode));
+		GetNumMessagesNode(newValue, getter_AddRefs(newNode));
+		NotifyPropertyChanged(folderResource, kNC_TotalMessages, oldNode, newNode);
+	}
+	return NS_OK;
+}
+
+nsresult 
+nsMsgFolderDataSource::GetNumMessagesNode(PRInt32 numMessages, nsIRDFNode **node)
+{
+
+	if(numMessages >0)
+		createNode(numMessages, node, getRDFService());
+	else if(numMessages == -1)
+	{
+		nsAutoString unknownMessages("???");
+		createNode(unknownMessages, node, getRDFService());
+	}
+	else
+	{
+		nsAutoString unknownMessages("");
+		createNode(unknownMessages, node, getRDFService());
+	}
+	return NS_OK;
+}
+
+nsresult
+nsMsgFolderDataSource::createSubfoldersHaveUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target)
+{
+	nsAutoString unknownMessages("true");
+	createNode(unknownMessages, target, getRDFService());
+
+	return NS_OK;
+}
 nsresult
 nsMsgFolderDataSource::createFolderChildNode(nsIMsgFolder *folder,
                                              nsIRDFNode **target)
@@ -1262,7 +1415,8 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
            (kNC_TotalMessages == property) ||
            (kNC_TotalUnreadMessages == property) ||
            (kNC_Charset == property) ||
-           (kNC_BiffState == property))
+           (kNC_BiffState == property) ||
+		   (kNC_HasUnreadMessages == property))
 	{
 		nsCOMPtr<nsIRDFResource> folderResource(do_QueryInterface(folder, &rv));
 

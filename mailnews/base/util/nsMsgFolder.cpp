@@ -995,28 +995,27 @@ PRInt32 nsMsgFolder::GetNumPendingTotalMessages()
 	
 void nsMsgFolder::ChangeNumPendingUnread(PRInt32 delta)
 {
-	if (delta)
+	if(delta)
 	{
-		char *oldUnreadMessagesStr = PR_smprintf("%d", mNumUnreadMessages + mNumPendingUnreadMessages);
+		PRInt32 oldUnreadMessages = mNumUnreadMessages + mNumPendingUnreadMessages;
 		mNumPendingUnreadMessages += delta;
-		char *unreadMessagesStr = PR_smprintf("%d",mNumUnreadMessages + mNumPendingUnreadMessages);
-		NotifyPropertyChanged("TotalUnreadMessages", oldUnreadMessagesStr, unreadMessagesStr);
-		PR_smprintf_free(unreadMessagesStr);
-		PR_smprintf_free(oldUnreadMessagesStr);
+		PRInt32 newUnreadMessages = mNumUnreadMessages + mNumPendingUnreadMessages;
+
+		NotifyIntPropertyChanged("TotalUnreadMessages", oldUnreadMessages, newUnreadMessages);
 	}
 }
 
 void nsMsgFolder::ChangeNumPendingTotalMessages(PRInt32 delta)
 {
-	if (delta)
+	if(delta)
 	{
-		char *oldTotalMessagesStr = PR_smprintf("%d", mNumTotalMessages + mNumPendingTotalMessages);
+		PRInt32 oldTotalMessages = mNumTotalMessages + mNumPendingTotalMessages;
 		mNumPendingTotalMessages += delta;
-		char *totalMessagesStr = PR_smprintf("%d",mNumTotalMessages + mNumPendingTotalMessages);
-		NotifyPropertyChanged("TotalMessages", oldTotalMessagesStr, totalMessagesStr);
-		PR_smprintf_free(totalMessagesStr);
-		PR_smprintf_free(oldTotalMessagesStr);
+		PRInt32 newTotalMessages = mNumTotalMessages + mNumPendingTotalMessages;
+
+		NotifyIntPropertyChanged("TotalMessages", oldTotalMessages, newTotalMessages);
 	}
+
 }
 
 #ifdef HAVE_DB	
@@ -1698,6 +1697,56 @@ nsresult nsMsgFolder::NotifyPropertyChanged(char *property, char *oldValue, char
 		NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
 		if(NS_SUCCEEDED(rv))
 			mailSession->NotifyFolderItemPropertyChanged(supports, property, oldValue, newValue);
+
+	}
+
+	return NS_OK;
+
+}
+
+nsresult nsMsgFolder::NotifyIntPropertyChanged(char *property, PRInt32 oldValue, PRInt32 newValue)
+{
+	nsCOMPtr<nsISupports> supports;
+	if(NS_SUCCEEDED(QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(supports))))
+	{
+		PRInt32 i;
+		for(i = 0; i < mListeners->Count(); i++)
+		{
+			//Folderlistener's aren't refcounted.
+			nsIFolderListener* listener =(nsIFolderListener*)mListeners->ElementAt(i);
+			listener->OnItemIntPropertyChanged(supports, property, oldValue, newValue);
+		}
+
+		//Notify listeners who listen to every folder
+		nsresult rv;
+		NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+		if(NS_SUCCEEDED(rv))
+			mailSession->NotifyFolderItemIntPropertyChanged(supports, property, oldValue, newValue);
+
+	}
+
+	return NS_OK;
+
+}
+
+nsresult nsMsgFolder::NotifyBoolPropertyChanged(char *property, PRBool oldValue, PRBool newValue)
+{
+	nsCOMPtr<nsISupports> supports;
+	if(NS_SUCCEEDED(QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(supports))))
+	{
+		PRInt32 i;
+		for(i = 0; i < mListeners->Count(); i++)
+		{
+			//Folderlistener's aren't refcounted.
+			nsIFolderListener* listener =(nsIFolderListener*)mListeners->ElementAt(i);
+			listener->OnItemBoolPropertyChanged(supports, property, oldValue, newValue);
+		}
+
+		//Notify listeners who listen to every folder
+		nsresult rv;
+		NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+		if(NS_SUCCEEDED(rv))
+			mailSession->NotifyFolderItemBoolPropertyChanged(supports, property, oldValue, newValue);
 
 	}
 

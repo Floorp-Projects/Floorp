@@ -151,10 +151,6 @@ protected:
 	nsresult DoMarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
 	nsresult DoMarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged);
 
-	nsresult NotifyPropertyChanged(nsIRDFResource *resource,
-								  nsIRDFResource *propertyResource,
-								  const char *oldValue, const char *newValue);
-
 	nsresult DoMessageHasAssertion(nsIMessage *message, nsIRDFResource *property, nsIRDFNode *target,
 													 PRBool tv, PRBool *hasAssertion);
 

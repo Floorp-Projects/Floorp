@@ -36,6 +36,8 @@ var messageDSProgID        = datasourceProgIDPrefix + "mailnewsmessages";
 var gFolderTree;
 var gThreadTree;
 var gThreadAndMessagePaneSplitter = null;
+var gUnreadCount = null;
+var gTotalCount = null;
 
 var gCurrentLoadingFolderURI;
 var gCurrentLoadingFolderIsThreaded = false;
@@ -69,6 +71,36 @@ var folderListener = {
 	OnItemRemoved: function(parentItem, item, view){},
 
 	OnItemPropertyChanged: function(item, property, oldValue, newValue) {},
+
+	OnItemIntPropertyChanged: function(item, property, oldValue, newValue)
+	{
+		if(property == "TotalMessages" || property == "TotalUnreadMessages")
+		{
+			folder = item.QueryInterface(Components.interfaces.nsIMsgFolder);
+			if(folder)
+			{
+				var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
+				if(folderResource)
+				{
+					var folderURI = folderResource.Value;
+					var currentLoadedFolder = GetThreadTreeFolder();
+					var currentURI = currentLoadedFolder.getAttribute('ref');
+					if(currentURI == folderURI)
+					{
+						UpdateStatusMessageCounts(folder);
+					}
+				}
+
+
+			}
+
+
+
+		}
+	
+	},
+
+	OnItemBoolPropertyChanged: function(item, property, oldValue, newValue) {},
 
 	OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
 
@@ -367,6 +399,20 @@ function GetThreadAndMessagePaneSplitter()
 	return splitter;
 }
 
+function GetUnreadCountElement()
+{
+	if(gUnreadCount) return gUnreadCount;
+	var unreadCount = document.getElementById('unreadMessageCount');
+	gUnreadCount = unreadCount;
+	return unreadCount;
+}
+function GetTotalCountElement()
+{
+	if(gTotalCount) return gTotalCount;
+	var totalCount = document.getElementById('totalMessageCount');
+	gTotalCount = totalCount;
+	return totalCount;
+}
 function IsThreadAndMessagePaneSplitterCollapsed()
 {
 	var splitter = GetThreadAndMessagePaneSplitter();

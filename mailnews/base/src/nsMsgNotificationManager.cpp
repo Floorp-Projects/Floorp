@@ -178,6 +178,20 @@ NS_IMETHODIMP nsMsgNotificationManager::OnItemPropertyChanged(nsISupports *item,
 	return rv;
 }
 
+NS_IMETHODIMP nsMsgNotificationManager::OnItemIntPropertyChanged(nsISupports *item, const char *property,
+														   PRInt32 oldValue, PRInt32 newValue)
+{
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgNotificationManager::OnItemBoolPropertyChanged(nsISupports *item, const char *property,
+														   PRBool oldValue, PRBool newValue)
+{
+
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgNotificationManager::OnItemPropertyFlagChanged(nsISupports *item, const char *property, PRUint32 oldFlag, PRUint32 newFlag)
 
 {

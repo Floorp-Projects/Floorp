@@ -250,6 +250,8 @@ Rights Reserved.
 
 <!-- Statusbar -->
 <!ENTITY  statusText.label "Document: Done">
+<!ENTITY  unreadCountText.label "Unread: ">
+<!ENTITY  totalCountText.label " Total: ">
 
 <!-- Destination for click on throbber button -->
 <!ENTITY throbber.url "http://www.mozilla.org/mailnews"> 

@@ -364,6 +364,30 @@ nsMsgRDFDataSource::getRDFService()
     return mRDFService;
 }
 
+nsresult nsMsgRDFDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
+													  nsIRDFResource *propertyResource,
+													  const char *oldValue, const char *newValue)
+{
+	nsCOMPtr<nsIRDFNode> oldValueNode, newValueNode;
+	nsString oldValueStr = oldValue;
+	nsString newValueStr = newValue;
+	createNode(oldValueStr,getter_AddRefs(oldValueNode), getRDFService());
+	createNode(newValueStr, getter_AddRefs(newValueNode), getRDFService());
+	NotifyPropertyChanged(resource, propertyResource, oldValueNode, newValueNode);
+	return NS_OK;
+}
+
+nsresult nsMsgRDFDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
+													  nsIRDFResource *propertyResource,
+													  nsIRDFNode *oldNode, nsIRDFNode *newNode)
+{
+
+	NotifyObservers(resource, propertyResource, oldNode, PR_FALSE);
+	NotifyObservers(resource, propertyResource, newNode, PR_TRUE);
+	return NS_OK;
+
+}
+
 nsresult nsMsgRDFDataSource::NotifyObservers(nsIRDFResource *subject,
                                                 nsIRDFResource *property,
                                                 nsIRDFNode *object,

@@ -558,6 +558,10 @@ Rights Reserved.
 		  <titledbutton id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;">
               <observes element="Messenger:Status" attribute="value" onbroadcast="onStatus()"/>         
 		  </titledbutton>
+		  <titledbutton value="&unreadCountText.label;"/>
+		  <titledbutton id="unreadMessageCount" style="min-width: 5px"/>
+		  <titledbutton value="&totalCountText.label;"/>
+		  <titledbutton id="totalMessageCount" style="min-width: 5px"/>
 		 </box>
 
       </box>

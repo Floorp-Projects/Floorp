@@ -878,20 +878,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::UpdateSummaryTotals(PRBool force)
 	//Need to notify listeners that total count changed.
 	if(oldTotalMessages != mNumTotalMessages)
 	{
-		char *oldTotalMessagesStr = PR_smprintf("%d", oldTotalMessages);
-		char *totalMessagesStr = PR_smprintf("%d",mNumTotalMessages);
-		NotifyPropertyChanged("TotalMessages", oldTotalMessagesStr, totalMessagesStr);
-		PR_smprintf_free(totalMessagesStr);
-		PR_smprintf_free(oldTotalMessagesStr);
+		NotifyIntPropertyChanged("TotalMessages", oldTotalMessages, mNumTotalMessages);
 	}
 
 	if(oldUnreadMessages != mNumUnreadMessages)
 	{
-		char *oldUnreadMessagesStr = PR_smprintf("%d", oldUnreadMessages);
-		char *totalUnreadMessages = PR_smprintf("%d",mNumUnreadMessages);
-		NotifyPropertyChanged("TotalUnreadMessages", oldUnreadMessagesStr, totalUnreadMessages);
-		PR_smprintf_free(totalUnreadMessages);
-		PR_smprintf_free(oldUnreadMessagesStr);
+		NotifyIntPropertyChanged("TotalUnreadMessages", oldUnreadMessages, mNumUnreadMessages);
 	}
 
 	return NS_OK;

@@ -218,6 +218,8 @@ public:
 
 protected:
 	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
+	nsresult NotifyIntPropertyChanged(char *property, PRInt32 oldValue, PRInt32 newValue);
+	nsresult NotifyBoolPropertyChanged(char *property, PRBool oldValue, PRBool newValue);
 	nsresult NotifyPropertyFlagChanged(nsISupports *item, char *property, PRUint32 oldValue,
 												PRUint32 newValue);
 	nsresult NotifyItemAdded(nsISupports *parentItem, nsISupports *item, const char *viewString);

@@ -109,9 +109,6 @@ public:
                        nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 protected:
 
-	nsresult NotifyPropertyChanged(nsIRDFResource *resource, nsIRDFResource *propertyResource,
-									const char *oldValue, const char *newValue);
-
 	nsresult  GetSenderName(nsAutoString& sender, nsAutoString *senderUserName);
 
 	nsresult createFolderNode(nsIMsgFolder *folder, nsIRDFResource* property,
@@ -127,6 +124,8 @@ protected:
 	nsresult createUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createBiffStateNode(nsIMsgFolder *folder, nsIRDFNode **target);
+	nsresult createHasUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
+	nsresult createSubfoldersHaveUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
 
 	nsresult createFolderChildNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createFolderMessageNode(nsIMsgFolder *folder, nsIRDFNode **target);
@@ -152,13 +151,20 @@ protected:
 
 	nsresult GetBiffStateString(PRUint32 biffState, nsCAutoString & biffStateStr);
 
-	nsresult CreateNameSortString(nsIMsgFolder *folder, nsString &name);
+	nsresult CreateNameSortString(nsIMsgFolder *folder, nsAutoString &name);
+	nsresult CreateUnreadMessagesNameString(PRInt32 unreadMessages, nsAutoString &nameString);
 	nsresult GetFolderSortOrder(nsIMsgFolder *folder, PRInt32* order);
 
 	nsresult CreateArcsOutEnumerator();
 
 	nsresult OnItemAddedOrRemoved(nsISupports *parentItem, nsISupports *item,
 		const char* viewString, PRBool added);
+
+	nsresult OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue);
+	nsresult OnTotalMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue);
+	nsresult GetNumMessagesNode(PRInt32 numMessages, nsIRDFNode **node);
+
+	nsresult CreateLiterals(nsIRDFService *rdf);
 
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_MessageChild;
@@ -176,6 +182,8 @@ protected:
   static nsIRDFResource* kNC_TotalUnreadMessages;
   static nsIRDFResource* kNC_Charset;
   static nsIRDFResource* kNC_BiffState;
+  static nsIRDFResource* kNC_HasUnreadMessages;
+  static nsIRDFResource* kNC_SubfoldersHaveUnreadMessages;
 
   // commands
   static nsIRDFResource* kNC_Delete;
@@ -187,6 +195,10 @@ protected:
   static nsIRDFResource* kNC_Compact;
   static nsIRDFResource* kNC_Rename;
   static nsIRDFResource* kNC_EmptyTrash;
+
+  //Cached literals
+  nsCOMPtr<nsIRDFNode> kTrueLiteral;
+  nsCOMPtr<nsIRDFNode> kFalseLiteral;
 
   static nsrefcnt gFolderResourceRefCnt;
 

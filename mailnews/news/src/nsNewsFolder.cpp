@@ -229,6 +229,7 @@ nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child, char *set
 	nsCOMPtr<nsISupports> folderSupports(do_QueryInterface(folder));
 	if(folderSupports)
 		mSubFolders->AppendElement(folderSupports);
+	folder->SetParent(this);
 	*child = folder;
 	folder->SetParent(this);
 	NS_ADDREF(*child);
@@ -716,20 +717,12 @@ NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals(PRBool force)
 	//Need to notify listeners that total count changed.
 	if(oldTotalMessages != mNumTotalMessages)
 	{
-		char *oldTotalMessagesStr = PR_smprintf("%d", oldTotalMessages);
-		char *totalMessagesStr = PR_smprintf("%d",mNumTotalMessages);
-		NotifyPropertyChanged("TotalMessages", oldTotalMessagesStr, totalMessagesStr);
-		PR_FREEIF(totalMessagesStr);
-		PR_FREEIF(oldTotalMessagesStr);
+		NotifyIntPropertyChanged("TotalMessages", oldTotalMessages, mNumTotalMessages);
 	}
 
 	if(oldUnreadMessages != mNumUnreadMessages)
 	{
-		char *oldUnreadMessagesStr = PR_smprintf("%d", oldUnreadMessages);
-		char *totalUnreadMessages = PR_smprintf("%d",mNumUnreadMessages);
-		NotifyPropertyChanged("TotalUnreadMessages", oldUnreadMessagesStr, totalUnreadMessages);
-		PR_FREEIF(totalUnreadMessages);
-		PR_FREEIF(oldUnreadMessagesStr);
+		NotifyIntPropertyChanged("TotalUnreadMessages", oldUnreadMessages, mNumUnreadMessages);
 	}
 
 	return NS_OK;

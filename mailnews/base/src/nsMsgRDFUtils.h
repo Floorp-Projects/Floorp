@@ -43,7 +43,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_DATE					NC_NAMESPACE_URI "Date"
 #define NC_RDF_STATUS				NC_NAMESPACE_URI "Status"
 #define NC_RDF_FLAGGED				NC_NAMESPACE_URI "Flagged"
-#define NC_RDF_PRIORITY			NC_NAMESPACE_URI "Priority"
+#define NC_RDF_PRIORITY				NC_NAMESPACE_URI "Priority"
 #define NC_RDF_SIZE					NC_NAMESPACE_URI "Size"
 
 #define NC_RDF_CHILD				NC_NAMESPACE_URI "child"
@@ -52,12 +52,14 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_FOLDERTREENAME		NC_NAMESPACE_URI "FolderTreeName"
 #define NC_RDF_FOLDER				NC_NAMESPACE_URI "Folder"
 #define NC_RDF_SPECIALFOLDER		NC_NAMESPACE_URI "SpecialFolder"
-#define NC_RDF_SERVERTYPE   NC_NAMESPACE_URI "ServerType"
-#define NC_RDF_ISSERVER   NC_NAMESPACE_URI "IsServer"
+#define NC_RDF_SERVERTYPE			NC_NAMESPACE_URI "ServerType"
+#define NC_RDF_ISSERVER				NC_NAMESPACE_URI "IsServer"
 #define NC_RDF_TOTALMESSAGES		NC_NAMESPACE_URI "TotalMessages"
 #define NC_RDF_TOTALUNREADMESSAGES	NC_NAMESPACE_URI "TotalUnreadMessages"
 #define NC_RDF_CHARSET				NC_NAMESPACE_URI "Charset"
 #define NC_RDF_BIFFSTATE			NC_NAMESPACE_URI "BiffState"
+#define NC_RDF_HASUNREADMESSAGES	NC_NAMESPACE_URI "HasUnreadMessages"
+#define NC_RDF_SUBFOLDERSHAVEUNREADMESSAGES NC_NAMESPACE_URI "SubfoldersHaveUnreadMessages"
 
 //Sort Properties
 #define NC_RDF_SUBJECT_COLLATION_SORT	NC_NAMESPACE_URI "Subject?collation=true"
