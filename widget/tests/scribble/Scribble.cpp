@@ -522,10 +522,10 @@ nsresult CreateApplication(int * argc, char ** argv)
         return res;
     }
 
-    printf("Going to create teh event queue\n");
+    printf("Going to create the event queue\n");
     res = scribbleData.mEventQService->CreateThreadEventQueue();
     if (NS_OK != res) {
-        NS_ASSERTION(PR_FALSE, "Could not create the event queu for the thread");
+        NS_ASSERTION(PR_FALSE, "Could not create the event queue for the thread");
 	return res;
     }
 
