@@ -55,13 +55,13 @@ SRCS_IN_OBJDIR	= 1
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DREGISTER_PROXY_DLL -DUNICODE -D_UNICODE
+DEFINES += -DREGISTER_PROXY_DLL -DUNICODE -D_UNICODE -D_WIN32_WINNT=0x400
 
 $(MIDL_GENERATED_FILES): done_gen
 
 done_gen: msgMapi.idl
 	$(RM) $(SRCDIR_CSRCS)
-	$(MIDL) $(UNICODE_FLAGS) $(srcdir)/msgMapi.idl
+	$(MIDL) $(MIDL_FLAGS) $(UNICODE_FLAGS) $(srcdir)/msgMapi.idl
 	touch $@
 
 export:: done_gen

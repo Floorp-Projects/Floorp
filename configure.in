@@ -361,8 +361,24 @@ case "$target" in
         _MIDL_MAJOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $ 1 }'`
         _MIDL_MINOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $ 2 }'`
         _MIDL_REV_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $ 3 }'`
-        if test "$_MIDL_MAJOR_VERSION" != "5" -a "$_MIDL_FULL_VERSION" != "6.00.0347"; then
-            AC_MSG_ERROR([Midl version $_MIDL_FULL_VERSION was found.  Midl version must be 5.x.x (VC6*) or 6.00.0347 (VC7).])
+         if test "$_MIDL_MAJOR_VERSION" != "5" -a "$_MIDL_FULL_VERSION" != "6.00.0347" -a "$_MIDL_FULL_VERSION" != "6.00.0361"; then
+             AC_MSG_ERROR([Midl version $_MIDL_FULL_VERSION was found.  Midl version must be 5.x.x (VC6*) or 6.00.0347 (VC7) or 6.00.0361 (VC.net 2003).])
+         fi
+
+         # Add flags if necessary
+         AC_MSG_CHECKING([for midl flags])
+         if test \( "$_MIDL_MAJOR_VERSION" -gt "6" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" -gt "0" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" = "00" -a "$_MIDL_REV_VERSION" -gt "359" \); then
+             # Starting with MIDL version 6.0.359, the MIDL compiler
+             # generates /Oicf /robust stubs by default, which is not
+             # compatible with versions of Windows older than Win2k.
+             # This switches us back to the old behaviour. When we drop
+             # support for Windows older than Win2k, we should remove
+             # this.
+             MIDL_FLAGS="${MIDL_FLAGS} /no_robust"
+             AC_MSG_RESULT([need /no_robust])
+         else
+             MIDL_FLAGS="${MIDL_FLAGS}"
+             AC_MSG_RESULT([none needed])
         fi
     else
         # Check w32api version
@@ -402,6 +418,8 @@ case "$target" in
     fi # !GNU_CC
     ;;
 esac
+
+AC_SUBST(MIDL_FLAGS)
 
 if test -n "$_WIN32_MSVC"; then
     SKIP_PATH_CHECKS=1
