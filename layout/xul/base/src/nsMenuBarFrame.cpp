@@ -596,6 +596,7 @@ NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
     aMenuItem->MenuIsDisabled(isDisabled);
     if (wasOpen&&!isDisabled)
       aMenuItem->OpenMenu(PR_TRUE);
+    ClearRecentlyRolledUp();
   }
 
   mCurrentMenu = aMenuItem;
