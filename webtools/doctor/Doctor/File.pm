@@ -11,7 +11,6 @@ use Doctor qw(:DEFAULT %CONFIG $template);
 use File::Temp qw(tempfile);
 
 # doesn't import "diff" to prevent conflicts with our own
-# ??? perhaps that means we should inherit?
 use Text::Diff ();
 
 sub new {
@@ -83,7 +82,45 @@ sub spec {
     # The spec can only be set once.
     if (@_ && !$self->{_spec}) {
         $self->{_spec} = shift;
-        $self->_normalize();
+
+        # Canonicalize the spec:
+
+        # URL -> Spec Conversion
+
+        # Remove the absolute URI for files on the web site (if any)
+        # from the beginning of the path.
+        if ($CONFIG{WEB_BASE_URI_PATTERN}) {
+            $self->{_spec} =~ s/^$CONFIG{WEB_BASE_URI_PATTERN}//i;
+        }
+        else {
+            $self->{_spec} =~ s/^\Q$CONFIG{WEB_BASE_URI}\E//i;
+        }
+
+        # Entire Spec Issues
+
+        # Collapse multiple consecutive slashes (i.e. dir//file.txt) into one.
+        $self->{_spec} =~ s:/{2,}:/:;
+
+        # Beginning of Spec Issues
+
+        # Remove a preceding slash.
+        $self->{_spec} =~ s:^/::;
+
+        # Add the base path of the file in the CVS repository if necessary.
+        # (i.e. if the user entered a URL or a path based on the URL).
+        if ($self->{_spec} !~ /^\Q$CONFIG{WEB_BASE_PATH}\E/) {
+            $self->{_spec} = $CONFIG{WEB_BASE_PATH} . $self->{_spec};
+        }
+
+        # End of Spec Issues
+
+        # If the filename (the last name in the path) contains no period,
+        # it is probably a directory, so add a slash.
+        if ($self->{_spec} =~ m:^[^\./]+$: || $self->{_spec} =~ m:/[^\./]+$:) { $self->{_spec} .= "/" }
+
+        # If the file ends with a forward slash, it is a directory,
+        # so add the name of the default file.
+        if ($self->{_spec} =~ m:/$:) { $self->{_spec} .= "index.html" }
     }
     return $self->{_spec};
 }
@@ -126,55 +163,6 @@ sub relative_spec {
       || return undef;
     $self->spec =~ /^\Q$CONFIG{WEB_BASE_PATH}\E(.*)$/;
     return $1;
-}
-
-# XXX This should just be part of the spec getter/setter.
-sub _normalize {
-    my $self = shift;
-
-    # Make sure a path was entered.
-    $self->{_spec}
-      || die("empty file spec");
-
-    # URL -> Path Conversion
-  
-    # Remove the absolute URI for files on the web site (if any)
-    # from the beginning of the path.
-    if ($CONFIG{WEB_BASE_URI_PATTERN}) {
-        $self->{_spec} =~ s/^$CONFIG{WEB_BASE_URI_PATTERN}//i;
-    }
-    else {
-        $self->{_spec} =~ s/^\Q$CONFIG{WEB_BASE_URI}\E//i;
-    }
-  
-  
-    # Entire Path Issues
-  
-    # Collapse multiple consecutive slashes (i.e. dir//file.txt) into one.
-    $self->{_spec} =~ s:/{2,}:/:;
-  
-  
-    # Beginning of Path Issues
-  
-    # Remove a preceding slash.
-    $self->{_spec} =~ s:^/::;
-  
-    # Add the base path of the file in the CVS repository if necessary.
-    # (i.e. if the user entered a URL or a path based on the URL).
-    if ($self->{_spec} !~ /^\Q$CONFIG{WEB_BASE_PATH}\E/) {
-        $self->{_spec} = $CONFIG{WEB_BASE_PATH} . $self->{_spec};
-    }
-  
-  
-    # End of Path Issues
-  
-    # If the filename (the last name in the path) contains no period,
-    # it is probably a directory, so add a slash.
-    if ($self->{_spec} =~ m:^[^\./]+$: || $self->{_spec} =~ m:/[^\./]+$:) { $self->{_spec} .= "/" }
-  
-    # If the file ends with a forward slash, it is a directory,
-    # so add the name of the default file.
-    if ($self->{_spec} =~ m:/$:) { $self->{_spec} .= "index.html" }
 }
 
 sub add {
@@ -229,7 +217,6 @@ sub patch {
 sub checkout {
     my $self = shift;
 
-    # XXX Define a config constant incorporating username, password, and server.
     my @args = ("-d", 
                 ":pserver:$CONFIG{READ_CVS_USERNAME}:$CONFIG{READ_CVS_PASSWORD}\@$CONFIG{READ_CVS_SERVER}", 
                 "checkout", 
@@ -290,8 +277,6 @@ sub commit {
   
     return ($rv, $output, $errors);
 }
-
-
 
 sub diff {
     my $self = shift;

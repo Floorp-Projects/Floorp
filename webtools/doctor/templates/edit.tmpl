@@ -50,8 +50,6 @@
     <form id="form" method="post" action="doctor.cgi" enctype="multipart/form-data">
       <input id="file"          type="hidden" name="file"         value="[% file.spec FILTER html %]">
       <input id="version"       type="hidden" name="version"      value="[% version %]">
-      <input id="line_endings"  type="hidden" name="line_endings" value="[% line_endings %]">
-      <input id="is_new"        type="hidden" name="is_new"       value="[% is_new %]">
   
       <div id="bannernav">
         Doctor - [% is_new ? "create" : "edit" %]
