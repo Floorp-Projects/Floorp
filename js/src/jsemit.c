@@ -4162,8 +4162,8 @@ js_AddToSrcNoteDelta(JSContext *cx, JSCodeGenerator *cg, jssrcnote *sn,
     intN index;
 
     /*
-     * Called only from OptimizeSpanDeps to add to main script note deltas,
-     * and only by a small positive amount.
+     * Called only from OptimizeSpanDeps and js_FinishTakingSrcNotes to add to
+     * main script note deltas, and only by a small positive amount.
      */
     JS_ASSERT(cg->current == &cg->main);
     JS_ASSERT((unsigned) delta < (unsigned) SN_XDELTA_LIMIT);
@@ -4304,6 +4304,7 @@ JSBool
 js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg, jssrcnote *notes)
 {
     uintN prologCount, mainCount, totalCount;
+    ptrdiff_t offset, delta;
 
     JS_ASSERT(cg->current == &cg->main);
 
@@ -4314,6 +4315,21 @@ js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg, jssrcnote *notes)
             return JS_FALSE;
         prologCount = cg->prolog.noteCount;
         CG_SWITCH_TO_MAIN(cg);
+    } else {
+        /*
+         * Either no prolog srcnotes, or no line number change over prolog.
+         * We don't need a SRC_SETLINE, but we may need to adjust the offset
+         * of the first main note, by adding to its delta and possibly even
+         * prepending SRC_XDELTA notes to it.
+         */
+        offset = CG_PROLOG_OFFSET(cg) - cg->prolog.lastNoteOffset;
+        JS_ASSERT(offset >= 0);
+        while (offset > 0) {
+            delta = JS_MIN(offset, SN_XDELTA_MASK);
+            if (!js_AddToSrcNoteDelta(cx, cg, cg->main.notes, delta))
+                return JS_FALSE;
+            offset -= delta;
+        }
     }
 
     mainCount = cg->main.noteCount;
