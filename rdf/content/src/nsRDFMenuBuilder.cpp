@@ -301,6 +301,9 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
         }
     }
 
+    // XXX: This is a hack until the menu folks get their act together.
+    menuItem->SetAttribute(kNameSpaceID_None, kOpenAtom, "true", PR_FALSE);
+      
     if (NS_FAILED(rv) && (rv != NS_ERROR_RDF_CURSOR_EMPTY)) {
         NS_ERROR("error advancing cursor");
         return rv;
