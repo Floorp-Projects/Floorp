@@ -387,17 +387,13 @@ nsFontMetricsXft::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     // Hang onto the device context
     mDeviceContext = aContext;
 
-    mPointSize = NSTwipsToFloatPoints(mFont->size);
+    float app2dev = mDeviceContext->AppUnitsToDevUnits();
+    mPixelSize = NSTwipsToFloatPixels(mFont->size, app2dev);
 
-    // pixels -> twips ; twips -> points
-    float dev2app;
-    dev2app = mDeviceContext->DevUnitsToAppUnits();
-    nscoord screenTwips = NSIntPixelsToTwips(gdk_screen_height(), dev2app);
-    nscoord screenPoints = NSTwipsToIntPoints(screenTwips);
-
-    // Make sure to clamp the point size to something reasonable so we
+    // Make sure to clamp the pixel size to something reasonable so we
     // don't make the X server blow up.
-    mPointSize = PR_MIN(screenPoints * FONT_MAX_FONT_SCALE, mPointSize);
+    nscoord screenPixels = gdk_screen_height();
+    mPixelSize = PR_MIN(screenPixels * FONT_MAX_FONT_SCALE, mPixelSize);
 
     // enumerate over the font names passed in
     mFont->EnumerateFamilies(nsFontMetricsXft::EnumFontCallback, this);
@@ -446,22 +442,17 @@ nsFontMetricsXft::Init(const nsFont& aFont, nsIAtom* aLangGroup,
         if (minimum < 0)
             minimum = 0;
 
-        // convert the minimum size into points
-        float P2T;
-        P2T = mDeviceContext->DevUnitsToAppUnits();
-        minimum = NSTwipsToIntPoints(NSFloatPixelsToTwips(minimum, P2T));
-
-        if (mPointSize < minimum)
-            mPointSize = minimum;
+        if (mPixelSize < minimum)
+            mPixelSize = minimum;
     }
 
-    // Make sure that the point size is at least greater than zero
-    if (mPointSize < 1) {
+    // Make sure that the pixel size is at least greater than zero
+    if (mPixelSize < 1) {
 #ifdef DEBUG
-        printf("*** Warning: nsFontMetricsXft was passed a point size of %d\n",
-               mPointSize);
+        printf("*** Warning: nsFontMetricsXft was passed a pixel size of %d\n",
+               mPixelSize);
 #endif
-        mPointSize = 1;
+        mPixelSize = 1;
     }
     if (!gInitialized) {
         nsServiceManager::GetService(kCharsetConverterManagerCID,
@@ -1085,8 +1076,8 @@ nsFontMetricsXft::SetupFCPattern(void)
             printf("\tadding generic family: %s\n", mGenericFont->get());
         }
 
-        // point size
-        printf("\tpoint,pixel size: %f,%d\n", mPointSize, mFont->size);
+        // pixel size
+        printf("\tpixel,twip size: %f,%d\n", mPixelSize, mFont->size);
 
         // slant type
         printf("\tslant: ");
@@ -1109,7 +1100,10 @@ nsFontMetricsXft::SetupFCPattern(void)
     }        
 
     // add the point size
-    FcPatternAddDouble(mPattern, FC_SIZE, mPointSize);
+    // We've done some round-tripping of floating point numbers so they
+    // might not be quite right.  Since Xft rounds down, add a little,
+    // so we don't go from 9.00000 to 8.99999 to 8.
+    FcPatternAddDouble(mPattern, FC_PIXEL_SIZE, mPixelSize + 0.000001);
 
     // Add the slant type
     FcPatternAddInteger(mPattern, FC_SLANT,
@@ -1249,8 +1243,7 @@ nsFontMetricsXft::SetupMiniFont(void)
 
     FcPatternAddString(pattern, FC_FAMILY, (FcChar8 *)"monospace");
 
-    FcPatternAddInteger(pattern, FC_SIZE, 
-                        (int)(0.5 * mPointSize));
+    FcPatternAddInteger(pattern, FC_PIXEL_SIZE, int(0.5 * mPixelSize));
 
     FcPatternAddInteger(pattern, FC_WEIGHT,
                         CalculateWeight(mFont->weight));

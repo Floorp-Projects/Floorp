@@ -978,10 +978,18 @@ nsSystemFontsGTK::GetSystemFontInfo(GtkWidget *aWidget, nsFont* aFont,
 #endif /* MOZ_ENABLE_COREXFONTS */
   aFont->weight = pango_font_description_get_weight(desc);
 
-  gint size;
-  size = pango_font_description_get_size(desc);
-
-  aFont->size = NSIntPointsToTwips(size / PANGO_SCALE);
+  float size = float(pango_font_description_get_size(desc) / PANGO_SCALE);
+#ifdef MOZ_ENABLE_XFT
+  if (NS_IsXftEnabled()) {
+    PRInt32 dpi = GetXftDPI();
+    if (dpi != 0) {
+      // pixels/inch * twips/pixel * inches/twip == 1, except it isn't, since
+      // our idea of dpi may be different from Xft's.
+      size *= float(dpi) * aPixelsToTwips * (1.0f/1440.0f);
+    }
+  }
+#endif /* MOZ_ENABLE_XFT */
+  aFont->size = NSFloatPointsToTwips(size);
   
   pango_font_description_free(desc);
 
