@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include <iostream.h>
+#include "nsXPCOM.h"
 #include "nsIComponentManager.h"
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
@@ -44,35 +45,15 @@
 #include "nsReadableUtils.h"
 #include "nsII18nCompatibility.h"
 
-
 static NS_DEFINE_CID(kI18nCompatibilityCID, NS_I18NCOMPATIBILITY_CID);
-
-#ifdef XP_PC
-#define DLL_NAME "intlcmpt.dll"
-#else
-#ifdef XP_MAC
-#define DLL_NAME "INTLCMPT_DLL"
-#else
-#endif
-#define DLL_NAME "intlcmpt"MOZ_DLL_SUFFIX
-#endif
-
-extern "C" void NS_SetupRegistry()
-{
-  nsComponentManager::RegisterComponent(kI18nCompatibilityCID,  NULL, NULL, DLL_NAME, PR_FALSE, PR_FALSE);
-}
-
-#undef DLL_NAME
-
 
 int main(int argc, char** argv) {
   nsresult rv;
 
-  NS_SetupRegistry();
+  NS_InitXPCOM2(nsnull, nsnull, nsnull);
 
-  nsCOMPtr <nsII18nCompatibility> I18nCompatibility;
-  rv = nsComponentManager::CreateInstance(kI18nCompatibilityCID, NULL, 
-                                          NS_GET_IID(nsII18nCompatibility), getter_AddRefs(I18nCompatibility));
+  nsCOMPtr<nsII18nCompatibility> I18nCompatibility =
+      do_CreateInstance(kI18nCompatibilityCID, &rv);
   if (NS_SUCCEEDED(rv)) {
     PRUint16 csid = 0;
     PRUnichar *charsetUni = NULL;

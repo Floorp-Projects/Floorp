@@ -22,6 +22,7 @@
 
 #include <ctype.h>      // for isdigit()
 
+#include "nsXPCOM.h"
 #include "nsParserCIID.h"
 #include "nsIParser.h"
 #include "nsIHTMLContentSink.h"
@@ -30,17 +31,6 @@
 #include "nsIHTMLToTextSink.h"
 #include "nsIComponentManager.h"
 #include "nsReadableUtils.h"
-
-extern "C" void NS_SetupRegistry();
-
-#ifdef XP_PC
-#define PARSER_DLL "gkparser.dll"
-#endif
-#ifdef XP_MAC
-#endif
-#if defined(XP_UNIX) || defined(XP_BEOS)
-#define PARSER_DLL "libhtmlpars"MOZ_DLL_SUFFIX
-#endif
 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
@@ -298,8 +288,8 @@ Usage: %s [-i intype] [-o outtype] [-f flags] [-w wrapcol] [-c comparison_file] 
   }
   else file = stdin;
 
+  NS_InitXPCOM2(nsnull, nsnull, nsnull);
   nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, 0);
-  NS_SetupRegistry();
 
   // Read in the string: very inefficient, but who cares?
   nsString inString;

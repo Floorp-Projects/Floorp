@@ -49,7 +49,6 @@ XPIDLSRCS	= nsIWindowCreator.idl \
                   $(NULL)
 
 CPPSRCS         = \
-                nsSetupRegistry.cpp \
                 nsEmbedAPI.cpp \
                 $(NULL)
 

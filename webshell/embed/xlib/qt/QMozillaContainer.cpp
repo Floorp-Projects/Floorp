@@ -48,13 +48,6 @@ static NS_DEFINE_IID(kIPrefIID,               NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID,                NS_PREF_CID);
 
 
-
-
-
-//-----------------------------------------------------------------------------
-extern "C" void NS_SetupRegistry();
-
-
 // XXX ----------------------------------------------------------------
 // XXX
 // XXX QMozillaWidget is used to bind the windows created by Mozilla
@@ -236,13 +229,7 @@ int QMozillaContainer::init()
   xlib_rgb_init( qt_xdisplay(), DefaultScreenOfDisplay( qt_xdisplay() ) );
 
   //////////////////////////////////////////////////////////////////////
-  //
   // Toolkit Service setup
-  // 
-  // Note: This must happend before NS_SetupRegistry() is called so
-  //       that the toolkit specific xpcom components can be registered
-  //       as needed.
-  //
   //////////////////////////////////////////////////////////////////////
   nsresult   rv;
 
@@ -267,13 +254,6 @@ int QMozillaContainer::init()
   // End toolkit service setup
   //////////////////////////////////////////////////////////////////////
 
-
-  //////////////////////////////////////////////////////////////////////
-  //
-  // Setup the registry
-  //
-  //////////////////////////////////////////////////////////////////////
-  NS_SetupRegistry();
 
   printf("Creating event queue.\n");
     

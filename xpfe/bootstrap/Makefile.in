@@ -90,7 +90,6 @@ endif
 
 CPPSRCS		= \
 		nsAppRunner.cpp \
-		nsSetupRegistry.cpp \
 		nsWindowCreator.cpp \
 		nsSigHandlers.cpp \
 		showOSAlert.cpp \

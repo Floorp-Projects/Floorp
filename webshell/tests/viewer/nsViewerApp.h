@@ -82,7 +82,6 @@ protected:
 
   nsresult InitializeWindowCreator();
   void Destroy();
-  nsresult AutoregisterComponents();
 
   nsIAppShell* mAppShell;
   nsIPref* mPrefs;

@@ -1,6 +1,7 @@
 #include "nsILocalFile.h"
 
 #include <stdio.h>
+#include "nsXPCOM.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIMemory.h"
@@ -61,12 +62,6 @@ void GetPaths(nsILocalFile* file)
     VerifyResult(rv);
     
     printf("filepath: %s\n", (const char *)pathName);
-}
-
-extern "C" void
-NS_SetupRegistry()
-{
-  nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL);
 }
 
 void InitTest(const char* creationPath, const char* appendPath)
@@ -319,7 +314,9 @@ DeletionTest(const char* creationPath, const char* appendPath, PRBool recursive)
 
 int main(void)
 {
-    NS_SetupRegistry();
+    NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
+                                     NULL);
 
 
 #ifdef XP_PC

@@ -59,7 +59,6 @@ GARBAGE=$(GARBAGE) $(EXTRA_LIBS_LIST_FILE) $(SEDCMDS) nsStaticComponents.cpp
 
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsAppRunner.obj            \
- .\$(OBJDIR)\nsSetupRegistry.obj        \
  .\$(OBJDIR)\nsWindowCreator.obj        \
  .\$(OBJDIR)\nsNativeAppSupportBase.obj \
  .\$(OBJDIR)\nsNativeAppSupportWin.obj  \

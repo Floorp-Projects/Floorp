@@ -74,7 +74,6 @@ OBJS =                                      \
 	.\$(OBJDIR)\nsXPBaseWindow.obj     \
 	.\$(OBJDIR)\nsBrowserWindow.obj     \
 	.\$(OBJDIR)\nsEditorMode.obj        \
-	.\$(OBJDIR)\nsSetupRegistry.obj     \
 	.\$(OBJDIR)\nsThrobber.obj     \
 	.\$(OBJDIR)\nsViewerApp.obj         \
 	.\$(OBJDIR)\nsWebCrawler.obj        \

@@ -30,7 +30,6 @@ PROGRAM		= embed_xlib_into_gtk
 
 CPPSRCS		= \
 		nsEmbedXlibIntoGtk.cpp \
-		nsSetupRegistry.cpp \
 		$(NULL)
 
 LIBS		= \

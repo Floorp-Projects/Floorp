@@ -37,6 +37,7 @@
 
 #include <stdio.h>
 
+#include "nsXPCOM.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
@@ -59,14 +60,6 @@ static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
 static NS_DEFINE_IID(kSoftwareUpdateCID, NS_SoftwareUpdate_CID);
 /*********************************************/
 
-
-extern "C" void
-NS_SetupRegistry()
-{
-    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
-                                     nsnull /* default */);
-}
-  /***************************************************************************/
 
 static void
 xpinstall_usage(int argc, char *argv[])
@@ -104,9 +97,9 @@ main(int argc, char **argv)
     }
 
 
-
-    NS_SetupRegistry();
-    
+    NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
+                                     nsnull /* default */);
     
 
     nsresult rv = nsComponentManager::CreateInstance(kSoftwareUpdateCID, 
