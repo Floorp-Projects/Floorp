@@ -1196,6 +1196,7 @@ sub MakeResourceAliases()
 	my($profile_dir) = "$resource_dir" . "profile:";
 	my($profile_chrome_dir) = "$chrome_dir" . "Profile";
 	_InstallResources(":mozilla:profile:resources:MANIFEST",							"$profile_dir");
+	_InstallResources(":mozilla:profile:pref-migrator:resources:MANIFEST",							"$profile_dir");
 	_InstallResources(":mozilla:profile:resources:locale:en-US:MANIFEST",				"$profile_chrome_dir:locale:en-US:", 0);
 
 	# need to duplicate this line if more files in default profile folder
@@ -1216,9 +1217,6 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:modules:libpref:src:init:MANIFEST",						"$default_pref_dir", 0);
 	_InstallResources(":mozilla:modules:libpref:src:mac:MANIFEST",						"$default_pref_dir", 0);
 
-	my($prefmigrator_dir) = "$resource_dir" . "pref-migrator:";
-	BuildFolderResourceAliases(":mozilla:profile:pref-migrator:resources:",				"$resource_dir");
-	
 	# NOTE: this will change as we move the toolbar/appshell chrome files to a real place
 	 my($navigator_chrome_dir) = "$chrome_dir" . "Navigator";
     _InstallResources(":mozilla:xpfe:browser:resources:content:MANIFEST",             "$navigator_chrome_dir:content:default");
