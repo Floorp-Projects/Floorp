@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -112,10 +112,10 @@ public:
   NS_IMETHOD Exit();
   NS_IMETHOD ViewAllMessages(nsIRDFCompositeDataSource *databsae);
   NS_IMETHOD ViewUnreadMessages(nsIRDFCompositeDataSource *databsae);
-	NS_IMETHOD ViewAllThreadMessages(nsIRDFCompositeDataSource *database);
-	NS_IMETHOD NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement,
+  NS_IMETHOD ViewAllThreadMessages(nsIRDFCompositeDataSource *database);
+  NS_IMETHOD NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement,
 						const char *name);
-
+  NS_IMETHOD AccountManager(nsIDOMWindow *parent);
 
 
 private:
@@ -824,6 +824,14 @@ nsMsgAppCore::NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *p
 	NS_IF_RELEASE(resource);
 	NS_IF_RELEASE(parentFolder);
 	return rv;
+}
+
+NS_IMETHODIMP
+nsMsgAppCore::AccountManager(nsIDOMWindow *parent)
+{
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+
 }
 
 //  to load the webshell!

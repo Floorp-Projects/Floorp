@@ -654,6 +654,50 @@ MsgAppCoreNewFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
   return JS_TRUE;
 }
+
+
+//
+// Native method ShowWindow
+//
+PR_STATIC_CALLBACK(JSBool)
+MsgAppCoreAccountManager(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMWindowPtr b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIWindowIID,
+                                           "Window",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->AccountManager(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function AccountManager requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for MsgAppCore
@@ -699,6 +743,7 @@ static JSFunctionSpec MsgAppCoreMethods[] =
   {"ViewUnreadMessages", MsgAppCoreViewUnreadMessages, 1},
   {"ViewAllThreadMessages", MsgAppCoreViewAllThreadMessages, 1},
   {"NewFolder",			MsgAppCoreNewFolder, 3},
+  {"AccountManager",	MsgAppCoreAccountManager, 1},
   {0}
 };
 

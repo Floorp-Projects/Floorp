@@ -11,11 +11,12 @@
 #include "nsIDOMXULElement.h" /* interface nsIDOMXULElement */
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsRDFInterfaces.h" /* interface nsRDFInterfaces */
+#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
-#include "nsID.h" /* interface nsID */
 #include "nsIDOMXULTreeElement.h" /* interface nsIDOMXULTreeElement */
 #include "nsIDOMBaseAppCore.h" /* interface nsIDOMBaseAppCore */
 #include "nsIDOMNodeList.h" /* interface nsIDOMNodeList */
+#include "nsISimpleEnumerator.h" /* interface nsISimpleEnumerator */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
@@ -68,6 +69,9 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
 
   /* void NewFolder (in nsIRDFCompositeDataSource database, in nsIDOMXULElement parentFolderElement, in string name); */
   NS_IMETHOD NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement, const char *name) = 0;
+
+  /* void AccountManager (in nsIDOMWindow parent); */
+  NS_IMETHOD AccountManager(nsIDOMWindow *parent) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
