@@ -964,6 +964,16 @@ nsMsgComposeAndSend::GatherMimeAttachments()
         }
         plainpart->SetEncoderData(plaintext_enc);
       }
+      else if (!PL_strcasecmp(m_plaintext->m_encoding, ENCODING_BASE64))
+      {
+        MimeEncoderData *plaintext_enc = MIME_B64EncoderInit(mime_encoder_output_fn, this);
+        if (!plaintext_enc)
+        {
+          status = NS_ERROR_OUT_OF_MEMORY;
+          goto FAIL;
+        }
+        plainpart->SetEncoderData(plaintext_enc);
+      }
     }
     else 
     {
