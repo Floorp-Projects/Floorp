@@ -57,6 +57,7 @@ ImageManagerImpl::ImageManagerImpl()
   NS_NewImageSystemServices(&mSS);
   NS_ADDREF(mSS);
   IL_Init(mSS);
+  IL_SetCacheSize(2048L * 1024L);
 }
 
 ImageManagerImpl::~ImageManagerImpl()
