@@ -26,20 +26,33 @@ nsNativeRegionPool sNativeRegionPool;
 
 nsNativeRegionPool::nsNativeRegionPool()
 {
-	for (short i = 0; i < kRegionPoolCount; i ++)
-	{
-		mRegionArray[i].mRegion = ::NewRgn();
-		mRegionArray[i].mFree = PR_TRUE;
-	}
+	mRegionSlots = nsnull;
+	mEmptySlots = nsnull;
 }
 
 //------------------------------------------------------------------------
 
 nsNativeRegionPool::~nsNativeRegionPool()
 {
-	for (short i = 0; i < kRegionPoolCount; i ++)
-	{
-		::DisposeRgn(mRegionArray[i].mRegion);
+	// Release all of the regions.
+	if (mRegionSlots != nsnull) {
+		nsRegionSlot* slot = mRegionSlots;
+		while (slot != nsnull) {
+			::DisposeRgn(slot->mRegion);
+			nsRegionSlot* next = slot->mNext;
+			delete slot;
+			slot = next;
+		}
+	}
+	
+	// Release all empty slots.
+	if (mEmptySlots != nsnull) {
+		nsRegionSlot* slot = mEmptySlots;
+		while (slot != nsnull) {
+			nsRegionSlot* next = slot->mNext;
+			delete slot;
+			slot = next;
+		}
 	}
 }
 
@@ -47,31 +60,42 @@ nsNativeRegionPool::~nsNativeRegionPool()
 
 RgnHandle nsNativeRegionPool::GetNewRegion()
 {
-	for (short i = 0; i < kRegionPoolCount; i ++)
-	{
-		if (mRegionArray[i].mFree)
-		{
-			mRegionArray[i].mFree = PR_FALSE;
-			return mRegionArray[i].mRegion;
-		}
+	nsRegionSlot* slot = mRegionSlots;
+	if (slot != nsnull) {
+		RgnHandle region = slot->mRegion;
+
+		// remove this slot from the free list.
+		mRegionSlots = slot->mNext;
+		
+		// transfer this slot to the empty slot list for reuse.
+		slot->mRegion = nsnull;
+		slot->mNext = mEmptySlots;
+		mEmptySlots = slot;
+		
+		// initialize the region. 
+		::SetEmptyRgn(region);
+		return region;
 	}
-	return (::NewRgn());	// we overflew the pool: return a new region
+	
+	// return a fresh new region. a slot will be created to hold it
+	// if and when the region is released.
+	return (::NewRgn());
 }
 
 //------------------------------------------------------------------------
 
 void nsNativeRegionPool::ReleaseRegion(RgnHandle aRgnHandle)
 {
-	for (short i = 0; i < kRegionPoolCount; i ++)
-	{
-		if (mRegionArray[i].mRegion == aRgnHandle)
-		{
-			::SetEmptyRgn(mRegionArray[i].mRegion);
-			mRegionArray[i].mFree = PR_TRUE;
-			return;
-		}
-	}
-	::DisposeRgn(aRgnHandle);	// we overflew the pool: delete the GraphicState
+	nsRegionSlot* slot = mEmptySlots;
+	if (slot != nsnull)
+		mEmptySlots = slot->mNext;
+	else
+		slot = new nsRegionSlot;
+	
+	// put this region on the region list.
+	slot->mRegion = aRgnHandle;
+	slot->mNext = mRegionSlots;
+	mRegionSlots = slot;
 }
 
 
@@ -82,7 +106,7 @@ static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 
 //---------------------------------------------------------------------
 
-nsRegionMac :: nsRegionMac()
+nsRegionMac::nsRegionMac()
 {
   NS_INIT_REFCNT();
 	mRegion = nsnull;
@@ -91,7 +115,7 @@ nsRegionMac :: nsRegionMac()
 
 //---------------------------------------------------------------------
 
-nsRegionMac :: ~nsRegionMac()
+nsRegionMac::~nsRegionMac()
 {
   if (mRegion)
     sNativeRegionPool.ReleaseRegion(mRegion); //::DisposeRgn(mRegion);
@@ -104,7 +128,7 @@ NS_IMPL_RELEASE(nsRegionMac);
 
 //---------------------------------------------------------------------
 
-nsresult nsRegionMac :: Init(void)
+nsresult nsRegionMac::Init(void)
 {
 	mRegion = sNativeRegionPool.GetNewRegion(); //::NewRgn();
   mRegionType = eRegionComplexity_empty;
@@ -113,7 +137,7 @@ nsresult nsRegionMac :: Init(void)
 
 //---------------------------------------------------------------------
 
-void nsRegionMac :: SetTo(const nsIRegion &aRegion)
+void nsRegionMac::SetTo(const nsIRegion &aRegion)
 {
 	nsRegionMac* pRegion = (nsRegionMac*)&aRegion;
 	::CopyRgn(pRegion->mRegion, mRegion);
@@ -122,7 +146,7 @@ void nsRegionMac :: SetTo(const nsIRegion &aRegion)
 
 //---------------------------------------------------------------------
 
-void nsRegionMac :: SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+void nsRegionMac::SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
 	::SetRectRgn(mRegion, aX, aY, aX + aWidth, aY + aHeight);
   SetRegionType();
@@ -130,7 +154,7 @@ void nsRegionMac :: SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeigh
 
 //---------------------------------------------------------------------
 
-void nsRegionMac :: Intersect(const nsIRegion &aRegion)
+void nsRegionMac::Intersect(const nsIRegion &aRegion)
 {
   nsRegionMac* pRegion = (nsRegionMac*)&aRegion;
   ::SectRgn(mRegion, pRegion->mRegion, mRegion);
@@ -139,7 +163,7 @@ void nsRegionMac :: Intersect(const nsIRegion &aRegion)
 
 //---------------------------------------------------------------------
 
-void nsRegionMac :: Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+void nsRegionMac::Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
 	RgnHandle rectRgn = sNativeRegionPool.GetNewRegion(); //::NewRgn();
 	::SetRectRgn(rectRgn, aX, aY, aX + aWidth, aY + aHeight);
@@ -150,7 +174,7 @@ void nsRegionMac :: Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aH
 
 //---------------------------------------------------------------------
 
-void nsRegionMac :: Union(const nsIRegion &aRegion)
+void nsRegionMac::Union(const nsIRegion &aRegion)
 {
 	nsRegionMac* pRegion = (nsRegionMac*)&aRegion;
   ::UnionRgn(mRegion, pRegion->mRegion, mRegion);
@@ -159,7 +183,7 @@ void nsRegionMac :: Union(const nsIRegion &aRegion)
 
 //---------------------------------------------------------------------
 
-void nsRegionMac :: Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+void nsRegionMac::Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
 	RgnHandle rectRgn = sNativeRegionPool.GetNewRegion(); //::NewRgn();
 	::SetRectRgn(rectRgn, aX, aY, aX + aWidth, aY + aHeight);
@@ -170,7 +194,7 @@ void nsRegionMac :: Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeigh
 
 //---------------------------------------------------------------------
 
-void nsRegionMac :: Subtract(const nsIRegion &aRegion)
+void nsRegionMac::Subtract(const nsIRegion &aRegion)
 {
 	nsRegionMac* pRegion = (nsRegionMac*)&aRegion;
   ::DiffRgn(mRegion, pRegion->mRegion, mRegion);
@@ -179,7 +203,7 @@ void nsRegionMac :: Subtract(const nsIRegion &aRegion)
 
 //---------------------------------------------------------------------
 
-void nsRegionMac :: Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+void nsRegionMac::Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
 	RgnHandle rectRgn = sNativeRegionPool.GetNewRegion(); //::NewRgn();
 	::SetRectRgn(rectRgn, aX, aY, aX + aWidth, aY + aHeight);
@@ -190,7 +214,7 @@ void nsRegionMac :: Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHe
 
 //---------------------------------------------------------------------
 
-PRBool nsRegionMac :: IsEmpty(void)
+PRBool nsRegionMac::IsEmpty(void)
 {
   if (mRegionType == eRegionComplexity_empty)
     return PR_TRUE;
@@ -200,7 +224,7 @@ PRBool nsRegionMac :: IsEmpty(void)
 
 //---------------------------------------------------------------------
 
-PRBool nsRegionMac :: IsEqual(const nsIRegion &aRegion)
+PRBool nsRegionMac::IsEqual(const nsIRegion &aRegion)
 {
   nsRegionMac* pRegion = (nsRegionMac*)&aRegion;
   return(::EqualRgn(mRegion, pRegion->mRegion));
@@ -208,7 +232,7 @@ PRBool nsRegionMac :: IsEqual(const nsIRegion &aRegion)
 
 //---------------------------------------------------------------------
 
-void nsRegionMac :: GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
+void nsRegionMac::GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
 {
 #if TARGET_CARBON
   Rect macRect;
@@ -225,14 +249,14 @@ void nsRegionMac :: GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PR
 
 //---------------------------------------------------------------------
 
-void nsRegionMac :: Offset(PRInt32 aXOffset, PRInt32 aYOffset)
+void nsRegionMac::Offset(PRInt32 aXOffset, PRInt32 aYOffset)
 {
   ::OffsetRgn(mRegion, aXOffset, aYOffset);
 }
 
 //---------------------------------------------------------------------
 
-PRBool nsRegionMac :: ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+PRBool nsRegionMac::ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
 	Rect macRect;
 	::SetRect(&macRect, aX, aY, aX + aWidth, aY + aHeight);
@@ -241,7 +265,7 @@ PRBool nsRegionMac :: ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt
 
 //---------------------------------------------------------------------
 
-NS_IMETHODIMP nsRegionMac :: GetRects(nsRegionRectSet **aRects)
+NS_IMETHODIMP nsRegionMac::GetRects(nsRegionRectSet **aRects)
 {
   nsRegionRectSet *rects;
 
@@ -417,7 +441,7 @@ NS_IMETHODIMP nsRegionMac :: GetRects(nsRegionRectSet **aRects)
 
 //---------------------------------------------------------------------
 
-NS_IMETHODIMP nsRegionMac :: FreeRects(nsRegionRectSet *aRects)
+NS_IMETHODIMP nsRegionMac::FreeRects(nsRegionRectSet *aRects)
 {
   if (nsnull != aRects)
     PR_Free((void *)aRects);
@@ -428,14 +452,14 @@ NS_IMETHODIMP nsRegionMac :: FreeRects(nsRegionRectSet *aRects)
 //---------------------------------------------------------------------
 
 
-NS_IMETHODIMP nsRegionMac :: GetNativeRegion(void *&aRegion) const
+NS_IMETHODIMP nsRegionMac::GetNativeRegion(void *&aRegion) const
 {
   aRegion = (void *)mRegion;
   return NS_OK;
 }
 
 
-nsresult nsRegionMac :: SetNativeRegion(void *aRegion)
+nsresult nsRegionMac::SetNativeRegion(void *aRegion)
 {
   if (aRegion)
   {
@@ -451,7 +475,7 @@ nsresult nsRegionMac :: SetNativeRegion(void *aRegion)
 
 //---------------------------------------------------------------------
 
-NS_IMETHODIMP nsRegionMac :: GetRegionComplexity(nsRegionComplexity &aComplexity) const
+NS_IMETHODIMP nsRegionMac::GetRegionComplexity(nsRegionComplexity &aComplexity) const
 {
   aComplexity = mRegionType;
   return NS_OK;
@@ -460,7 +484,7 @@ NS_IMETHODIMP nsRegionMac :: GetRegionComplexity(nsRegionComplexity &aComplexity
 //---------------------------------------------------------------------
 
 
-void nsRegionMac :: SetRegionType()
+void nsRegionMac::SetRegionType()
 {
   if (::EmptyRgn(mRegion) == PR_TRUE)
     mRegionType = eRegionComplexity_empty;
@@ -479,7 +503,7 @@ void nsRegionMac :: SetRegionType()
 //---------------------------------------------------------------------
 
 
-void nsRegionMac :: SetRegionEmpty()
+void nsRegionMac::SetRegionEmpty()
 {
   ::SetEmptyRgn(mRegion);
   SetRegionType();
@@ -488,7 +512,7 @@ void nsRegionMac :: SetRegionEmpty()
 //---------------------------------------------------------------------
 
 
-RgnHandle nsRegionMac :: CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+RgnHandle nsRegionMac::CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
 	RgnHandle rectRgn = sNativeRegionPool.GetNewRegion(); //::NewRgn();
 	::SetRectRgn(rectRgn, aX, aY, aX + aWidth, aY + aHeight);
