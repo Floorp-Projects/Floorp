@@ -25,7 +25,7 @@ class nsISupportsArray;
 class nsIDataFlavor;
 
 /**
- * Native Win32 DataFlavor wrapper
+ * DataFlavor wrapper
  */
 
 class nsDataFlavor : public nsIDataFlavor
