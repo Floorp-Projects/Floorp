@@ -23,7 +23,6 @@
 #include "nsIFrame.h"
 #include "nsHashtable.h"
 
-
 static NS_DEFINE_IID(kIStyleSetIID, NS_ISTYLE_SET_IID);
 
 class ContextKey : public nsHashKey {
@@ -196,6 +195,14 @@ public:
                                            nsIContent* aContent,
                                            nsIFrame* aParentFrame);
 
+  virtual nsIStyleContext* ResolvePseudoStyleFor(nsIPresContext* aPresContext,
+                                                 nsIAtom* aPseudoTag,
+                                                 nsIFrame* aParentFrame);
+
+  virtual nsIStyleContext* ProbePseudoStyleFor(nsIPresContext* aPresContext,
+                                               nsIAtom* aPseudoTag,
+                                               nsIFrame* aParentFrame);
+
   // xxx style rules enumeration
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0);
@@ -208,12 +215,20 @@ private:
 protected:
   virtual ~StyleSetImpl();
   PRBool EnsureArray(nsISupportsArray** aArray);
+  nsIStyleContext* GetContext(nsIPresContext* aPresContext, nsIFrame* aParentFrame, 
+                              nsIStyleContext* aParentContext, nsISupportsArray* aRules);
   PRInt32 RulesMatching(nsISupportsArray* aSheets,
                         nsIPresContext* aPresContext,
                         nsIContent* aContent,
                         nsIFrame* aParentFrame,
                         nsISupportsArray* aResults);
+  PRInt32 RulesMatching(nsISupportsArray* aSheets,
+                        nsIPresContext* aPresContext,
+                        nsIAtom* aPseudoTag,
+                        nsIFrame* aParentFrame,
+                        nsISupportsArray* aResults);
   void  List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets);
+  void  ListContexts(FILE* out, PRInt32 aIndent);
 
   nsISupportsArray* mOverrideSheets;
   nsISupportsArray* mDocSheets;
@@ -445,13 +460,33 @@ PRInt32 StyleSetImpl::RulesMatching(nsISupportsArray* aSheets,
   return ruleCount;
 }
 
+nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, nsIFrame* aParentFrame, 
+                                          nsIStyleContext* aParentContext, nsISupportsArray* aRules)
+{
+  // check for cached ruleSet to context or create
+  ContextKey tempKey(aParentContext, aRules);
+  nsIStyleContext*  result = (nsIStyleContext*)mStyleContexts.Get(&tempKey);
+  if (nsnull == result) {
+    if (NS_OK == NS_NewStyleContext(&result, aRules, aPresContext, aParentFrame)) {
+      tempKey.SetContext(result);
+      mStyleContexts.Put(&tempKey, result);  // hashtable clones key, so this is OK (table gets first ref)
+      NS_ADDREF(result);  // add ref for the caller
+//fprintf(stdout, "+");
+    }
+  }
+  else {
+    NS_ADDREF(result);
+//fprintf(stdout, "-");
+  }
+  return result;
+}
+
 nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
                                                nsIContent* aContent,
                                                nsIFrame* aParentFrame)
 {
   nsIStyleContext*  result = nsnull;
-
-  nsIStyleContext* parentContext = nsnull;
+  nsIStyleContext*  parentContext = nsnull;
   
   if (nsnull != aParentFrame) {
     aParentFrame->GetStyleContext(aPresContext, parentContext);
@@ -468,21 +503,96 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
     ruleCount += RulesMatching(mDocSheets, aPresContext, aContent, aParentFrame, rules);
     ruleCount += RulesMatching(mBackstopSheets, aPresContext, aContent, aParentFrame, rules);
 
-    // then check for cached ruleSet to context or create
-    ContextKey tempKey(parentContext, rules);
-    result = (nsIStyleContext*)mStyleContexts.Get(&tempKey);
-    if (nsnull == result) {
-      if (NS_OK == NS_NewStyleContext(&result, rules, aPresContext, aContent, aParentFrame)) {
-        tempKey.SetContext(result);
-        mStyleContexts.Put(&tempKey, result);  // hashtable clones key, so this is OK (table gets first ref)
-        NS_ADDREF(result);  // add ref for the caller
-//fprintf(stdout, "+");
-      }
+    result = GetContext(aPresContext, aParentFrame, parentContext, rules);
+
+    NS_RELEASE(rules);
+  }
+
+  NS_IF_RELEASE(parentContext);
+
+  return result;
+}
+
+
+PRInt32 StyleSetImpl::RulesMatching(nsISupportsArray* aSheets,
+                                    nsIPresContext* aPresContext,
+                                    nsIAtom* aPseudoTag,
+                                    nsIFrame* aParentFrame,
+                                    nsISupportsArray* aResults)
+{
+  PRInt32 ruleCount = 0;
+
+  if (nsnull != aSheets) {
+    PRInt32 sheetCount = aSheets->Count();
+    PRInt32 index;
+    for (index = 0; index < sheetCount; index++) {
+      nsIStyleSheet* sheet = (nsIStyleSheet*)aSheets->ElementAt(index);
+      ruleCount += sheet->RulesMatching(aPresContext, aPseudoTag, aParentFrame,
+                                        aResults);
+      NS_RELEASE(sheet);
     }
-    else {
-      NS_ADDREF(result);
-//fprintf(stdout, "-");
+  }
+  return ruleCount;
+}
+
+nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContext,
+                                                     nsIAtom* aPseudoTag,
+                                                     nsIFrame* aParentFrame)
+{
+  nsIStyleContext*  result = nsnull;
+  nsIStyleContext*  parentContext = nsnull;
+  
+  if (nsnull != aParentFrame) {
+    aParentFrame->GetStyleContext(aPresContext, parentContext);
+    NS_ASSERTION(nsnull != parentContext, "parent must have style context");
+  }
+
+  // want to check parent frame's context for cached child context first
+
+  // then do a brute force rule search
+
+  nsISupportsArray*  rules = nsnull;
+  if (NS_OK == NS_NewISupportsArray(&rules)) {
+    PRInt32 ruleCount = RulesMatching(mOverrideSheets, aPresContext, aPseudoTag, aParentFrame, rules);
+    ruleCount += RulesMatching(mDocSheets, aPresContext, aPseudoTag, aParentFrame, rules);
+    ruleCount += RulesMatching(mBackstopSheets, aPresContext, aPseudoTag, aParentFrame, rules);
+
+    result = GetContext(aPresContext, aParentFrame, parentContext, rules);
+
+    NS_RELEASE(rules);
+  }
+
+  NS_IF_RELEASE(parentContext);
+
+  return result;
+}
+
+nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
+                                                   nsIAtom* aPseudoTag,
+                                                   nsIFrame* aParentFrame)
+{
+  nsIStyleContext*  result = nsnull;
+  nsIStyleContext*  parentContext = nsnull;
+  
+  if (nsnull != aParentFrame) {
+    aParentFrame->GetStyleContext(aPresContext, parentContext);
+    NS_ASSERTION(nsnull != parentContext, "parent must have style context");
+  }
+
+  // want to check parent frame's context for cached child context first
+
+  // then do a brute force rule search
+
+  nsISupportsArray*  rules = nsnull;
+  if (NS_OK == NS_NewISupportsArray(&rules)) {
+    PRInt32 ruleCount = RulesMatching(mOverrideSheets, aPresContext, aPseudoTag, aParentFrame, rules);
+    ruleCount += RulesMatching(mDocSheets, aPresContext, aPseudoTag, aParentFrame, rules);
+    ruleCount += RulesMatching(mBackstopSheets, aPresContext, aPseudoTag, aParentFrame, rules);
+
+    if (0 < ruleCount) {
+      result = GetContext(aPresContext, aParentFrame, parentContext, rules);
     }
+
     NS_RELEASE(rules);
   }
 
@@ -510,6 +620,135 @@ void StyleSetImpl::List(FILE* out, PRInt32 aIndent)
   List(out, aIndent, mOverrideSheets);
   List(out, aIndent, mDocSheets);
   List(out, aIndent, mBackstopSheets);
+}
+
+struct ContextNode {
+  nsIStyleContext*  mContext;
+  ContextNode*      mNext;
+  ContextNode*      mChild;
+  ContextNode(nsIStyleContext* aContext)
+  {
+    mContext = aContext;
+    mNext = nsnull;
+    mChild = nsnull;
+  }
+  ~ContextNode(void)
+  {
+    if (nsnull != mNext) {
+      delete mNext;
+    }
+    if (nsnull != mChild) {
+      delete mChild;
+    }
+  }
+};
+
+static ContextNode*  gRootNode;
+
+static ContextNode* FindNode(nsIStyleContext* aContext, ContextNode* aStart)
+{
+  ContextNode* node = aStart;
+  while (nsnull != node) {
+    if (node->mContext == aContext) {
+      return node;
+    }
+    if (nsnull != node->mChild) {
+      ContextNode* result = FindNode(aContext, node->mChild);
+      if (nsnull != result) {
+        return result;
+      }
+    }
+    node = node->mNext;
+  }
+  return nsnull;
+}
+
+PRBool GatherContexts(nsHashKey *aKey, void *aData)
+{
+  PRBool  result = PR_TRUE;
+
+  nsIStyleContext* context = (nsIStyleContext*)aData;
+  nsIStyleContext* parent = context->GetParent();
+  ContextNode* node = new ContextNode(context);
+
+  if (nsnull == gRootNode) {
+    gRootNode = node;
+  }
+  else {
+    if (nsnull == parent) { // found real root, replace temp
+      node->mNext = gRootNode;  // orphan the old root
+      gRootNode = node;
+    }
+    else {
+      ContextNode*  parentNode = FindNode(parent, gRootNode);
+      if (nsnull == parentNode) { // hang orhpans off root
+        node->mNext = gRootNode->mNext;
+        gRootNode->mNext = node;
+      }
+      else {
+        node->mNext = parentNode->mChild;
+        parentNode->mChild = node;
+      }
+    }
+  }
+  // graft orphans
+  ContextNode*  prevOrphan = nsnull;
+  ContextNode*  orphan = gRootNode;
+  while (nsnull != orphan) {
+    nsIStyleContext*  orphanParent = orphan->mContext->GetParent();
+    if (orphanParent == context) {  // found our child
+      if (orphan == gRootNode) {
+        gRootNode = orphan->mNext;
+        orphan->mNext = node->mChild;
+        node->mChild = orphan;
+        orphan = gRootNode;
+      }
+      else {
+        ContextNode* foundling = orphan;
+        orphan = orphan->mNext;
+        prevOrphan->mNext = orphan;
+        foundling->mNext = node->mChild;
+        node->mChild = foundling;
+      }
+    }
+    else {
+      prevOrphan = orphan;
+      orphan = orphan->mNext;
+    }
+    NS_IF_RELEASE(orphanParent);
+  }
+  NS_IF_RELEASE(parent);
+  return result;
+}
+
+static PRInt32 ListNode(ContextNode* aNode, FILE* out, PRInt32 aIndent) 
+{
+  PRInt32 count = 0;
+  ContextNode* node = aNode;
+  while (nsnull != node) {
+    node->mContext->List(out, aIndent);
+    count++;
+    if (nsnull != node->mChild) {
+      nsIStyleContext* childParent = node->mChild->mContext->GetParent();
+      NS_ASSERTION(childParent == node->mContext, "broken graph");
+      NS_RELEASE(childParent);
+      count += ListNode(node->mChild, out, aIndent + 1);
+    }
+    node = node->mNext;
+  }
+  return count;
+}
+
+void StyleSetImpl::ListContexts(FILE* out, PRInt32 aIndent)
+{
+  mStyleContexts.Enumerate(GatherContexts);
+  NS_ASSERTION(gRootNode->mNext == nsnull, "dangling orphan");
+
+  PRInt32 listCount = ListNode(gRootNode, out, aIndent);
+  NS_ASSERTION(listCount == mStyleContexts.Count(), "graph incomplete");
+
+  delete gRootNode;
+  gRootNode = nsnull;
 }
 
 
