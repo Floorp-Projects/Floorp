@@ -202,6 +202,9 @@ void edt_InitBitArrays() {
         P_NOLAYER,     //cmanske - added 9/4/97
         P_COLORMAP,
         P_EMBED,
+#ifdef SHACK
+		P_BUILTIN,
+#endif /* SHACK */
         P_FORM,
         P_INPUT,
         P_OPTION,
@@ -335,6 +338,9 @@ void edt_InitBitArrays() {
         P_INLINEINPUTTHICK,
         P_INLINEINPUTDOTTED,
         P_NOLAYER,
+#ifdef SHACK
+		P_BUILTIN,
+#endif /* SHACK */
         BIT_ARRAY_END );
 
     edt_setTextContainer = new CBitArray( size,
@@ -1048,6 +1054,9 @@ static char *loTypeNames[] = {
     "LO_TABLE",
     "LO_CELL",
     "LO_EMBED",
+#ifdef SHACK
+	"LO_BUILTIN",
+#endif /* SHACK */
 };
 
 //
