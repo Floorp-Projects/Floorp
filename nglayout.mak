@@ -147,7 +147,16 @@ libs:: libs_dist libs_nglayout
 
 install:: install_dist install_nglayout
 
-depend:: depend_dist depend_nglayout
+makedep.exe: $(MOZ_SRC)\mozilla\config\makedep.cpp
+        cd $(MOZ_SRC)\mozilla\config
+!if "$(WINOS)" != "WINNT"
+    @$(W95MAKE) makefile.win export
+!else
+    $(NMAKE) -f makefile.win export
+!endif
+        cd $(MOZ_SRC)\$(MOZ_TOP)
+
+depend:: makedep.exe depend_dist depend_nglayout
 
 clobber:: clobber_dist clobber_nglayout
 	cd $(MOZ_SRC)\$(MOZ_TOP)
