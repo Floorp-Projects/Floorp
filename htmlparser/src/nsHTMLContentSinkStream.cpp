@@ -30,7 +30,7 @@
 #include "nsHTMLContentSinkStream.h"
 #include "nsHTMLTokens.h"
 #include <iostream.h>
-#include "nsstring.h"
+#include "nsString.h"
 #include "nsParserTypes.h"
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);                 
@@ -463,7 +463,6 @@ PRInt32 CHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode){
       default:
         //this is the hard one. You have to decode aNode manually.
         {
-          const nsString& name=aNode.GetName();
           const char* tagName= GetTagName(nodeType);
           OpenTagWithAttributes(tagName,aNode,mTabLevel,*mOutput,PR_TRUE);
         }
@@ -511,7 +510,6 @@ PRInt32 CHTMLContentSinkStream::CloseContainer(const nsIParserNode& aNode){
 
       default:
         {
-          const nsString& name=aNode.GetName();
           const char* tagName= GetTagName(nodeType);
           //(*mOutput) << endl;
           CloseTag(tagName,mTabLevel,*mOutput);

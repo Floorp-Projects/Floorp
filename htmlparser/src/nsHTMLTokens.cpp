@@ -39,8 +39,6 @@ static nsAutoString gWhitespace(" \t\b");
 static nsAutoString gOperatorChars("/?.<>[]{}~^+=-!%&*(),|:");
 static const char*  gUserdefined = "userdefined";
 
-//debug error messages...
-static const char* kNullScanner = "Error: Scanner is null.";
 
 const PRInt32 kMAXNAMELEN=10;
 struct StrToUnicodeStruct

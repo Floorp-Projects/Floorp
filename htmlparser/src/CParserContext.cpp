@@ -42,8 +42,8 @@ CTokenDeallocator gTokenDeallocator;
 CParserContext::CParserContext(CScanner* aScanner,
                                CParserContext* aPreviousContext,
                                nsIStreamObserver* aListener) :
-  mTokenDeque(gTokenDeallocator),
-  mSourceType()
+  mSourceType(),
+  mTokenDeque(gTokenDeallocator)
 {
   mScanner=aScanner;
   mPrevContext=aPreviousContext;
