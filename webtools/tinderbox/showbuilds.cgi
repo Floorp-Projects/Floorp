@@ -996,11 +996,12 @@ sub do_hdml {
 
 sub do_vxml {
   print "Content-type: text/vxml\n\n";
-  print '<?xml version="1.0"?><!DOCTYPE vxml PUBLIC "-//Tellme Networks//Voice Markup Language 1.0//EN" "http://resources.tellme.com/toolbox/vxml-tellme.dtd">\n\n';
+  print '<?xml version="1.0"?><!DOCTYPE vxml PUBLIC "-//Tellme Networks//Voice Markup Language 1.0//EN" "http://resources.tellme.com/toolbox/vxml-tellme.dtd">';
+  print "\n\n";
 
   %state_symbols = (success=>'green',busted=>'red',testfailed=>'test failed');
 
-  print '<vxml><form id="tinderbox"><block>\n\n';
+  print '<vxml><form id="tinderbox"><block>'."\n\n";
 
   if (is_tree_state_available()) {
     print "<audio>$::tree is " .
@@ -1014,5 +1015,5 @@ sub do_vxml {
     print "<audio>$buildname is $state_symbols{$build{$buildname}} </audio>\n";
   }
   print "<pause>1000</pause><audio>adios</audio>\n\n";
-  print '<disconnect/>\n</block></form></vxml>';
+  print "<disconnect/>\n</block></form></vxml>";
 }
