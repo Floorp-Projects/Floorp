@@ -955,22 +955,20 @@ nsStyleStruct* StyleContextImpl::GetMutableStyleData(nsStyleStructID aSID)
 }
 
 struct MapStyleData {
-  MapStyleData(nsIStyleContext* aStyleContext, nsIPresContext* aPresContext, nsIContent* aContent)
+  MapStyleData(nsIStyleContext* aStyleContext, nsIPresContext* aPresContext)
   {
     mStyleContext = aStyleContext;
     mPresContext = aPresContext;
-    mContent = aContent;
   }
   nsIStyleContext*  mStyleContext;
   nsIPresContext*   mPresContext;
-  nsIContent*       mContent;
 };
 
 PRBool MapStyleRule(nsISupports* aRule, void* aData)
 {
   nsIStyleRule* rule = (nsIStyleRule*)aRule;
   MapStyleData* data = (MapStyleData*)aData;
-  rule->MapStyleInto(data->mStyleContext, data->mPresContext, data->mContent);
+  rule->MapStyleInto(data->mStyleContext, data->mPresContext);
   return PR_TRUE;
 }
 
@@ -997,7 +995,7 @@ void StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
   }
 
   if ((nsnull != mRules) && (0 < mRules->Count())) {
-    MapStyleData  data(this, aPresContext, mContent);
+    MapStyleData  data(this, aPresContext);
     mRules->EnumerateForwards(MapStyleRule, &data);
   }
   if (-1 == mDataCode) {
@@ -1017,7 +1015,7 @@ void StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
     mDisplay.ResetFrom(nsnull, aPresContext);
 
     if ((nsnull != mRules) && (0 < mRules->Count())) {
-      MapStyleData  data(this, aPresContext, mContent);
+      MapStyleData  data(this, aPresContext);
       mRules->EnumerateForwards(MapStyleRule, &data);
     }
   }
