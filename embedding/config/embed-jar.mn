@@ -23,7 +23,7 @@ locale/XXXX/necko/necko.properties, XXXX/locale/XXXX/necko/necko.properties
 locale/XXXX/necko/redirect_loop.dtd, XXXX/locale/XXXX/necko/redirect_loop.dtd
 locale/XXXX/communicator/contents.rdf, XXXX/locale/XXXX/communicator/contents.rdf
 locale/XXXX/communicator/security.properties, XXXX/locale/XXXX/communicator/security.properties
-locale/XXXX/communicator/security/security.properties, XXXX/locale/XXXX/communicator/security/security.properties
+locale/XXXX/communicator/security/caps.properties, XXXX/locale/XXXX/communicator/security/caps.properties
 locale/XXXX/navigator, XXXX/locale/XXXX/navigator
 locale/XXXX/navigator-platform, en-unix/locale/XXXX/navigator-platform
 locale/XXXX/global-platform, en-unix/locale/XXXX/global-platform
