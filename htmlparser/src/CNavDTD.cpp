@@ -145,7 +145,7 @@ static char gHeadingTags[]={
  *  @return  PR_TRUE if parent can contain child
  */
 PRBool CNavDTD::CanContainFormElement(PRInt32 aParent,PRInt32 aChild) const {
-  PRBool result=(mParser) ? mParser->HasOpenForm() : PR_FALSE;
+  PRBool result=(mParser) ? mParser->HasOpenContainer(eHTMLTag_form) : PR_FALSE;
   return result;
 }
 
@@ -608,7 +608,7 @@ PRBool CNavDTD::CanOmit(PRInt32 aParent,PRInt32 aChild) const {
     case eHTMLTag_input:        case eHTMLTag_isindex:
     case eHTMLTag_label:        case eHTMLTag_legend:
     case eHTMLTag_select:       case eHTMLTag_textarea:
-      if(PR_FALSE==mParser->HasOpenForm())
+      if(PR_FALSE==mParser->HasOpenContainer(eHTMLTag_form))
         result=PR_TRUE; 
       break;
 
@@ -631,7 +631,6 @@ PRBool CNavDTD::CanOmit(PRInt32 aParent,PRInt32 aChild) const {
     default:
       if(eHTMLTag_unknown==aParent)
         result=PR_FALSE;
-//        result=PRBool(eHTMLTag_html!=aChild);
       break;
   } //switch
   return result;
@@ -672,7 +671,7 @@ PRBool CNavDTD::CanOmitEndTag(PRInt32 aParent,PRInt32 aChild) const {
     case eHTMLTag_input:        case eHTMLTag_isindex:
     case eHTMLTag_label:        case eHTMLTag_legend:
     case eHTMLTag_textarea:
-      if(PR_FALSE==mParser->HasOpenForm())
+      if(PR_FALSE==mParser->HasOpenContainer(aChild))
         result=PR_TRUE; 
       break;
 
@@ -693,8 +692,7 @@ PRBool CNavDTD::CanOmitEndTag(PRInt32 aParent,PRInt32 aChild) const {
       break;
 
     default:
-      if(aChild!=aParent)
-        result=PR_TRUE;
+      result=(!mParser->HasOpenContainer(aChild));
       break;
   } //switch
   return result;

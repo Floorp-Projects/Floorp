@@ -55,7 +55,7 @@ class nsIParser : public nsISupports {
     virtual PRBool          Parse(nsIURL* aURL)=0;
     virtual PRBool          ResumeParse()=0;
     virtual PRInt32         GetStack(PRInt32* aStackPtr)=0;
-    virtual PRBool          HasOpenForm() const=0;
+    virtual PRBool          HasOpenContainer(PRInt32 aContainer) const=0;
 };
 
 extern NS_HTMLPARS nsresult NS_NewHTMLParser(nsIParser** aInstancePtrResult);

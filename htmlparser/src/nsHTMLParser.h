@@ -88,7 +88,7 @@ friend class CTokenHandler;
     virtual PRBool              Parse(nsIURL* aURL,eParseMode aMode);
     virtual PRBool              ResumeParse();
     virtual PRInt32             GetStack(PRInt32* aStackPtr);
-    virtual PRBool              HasOpenForm() const;
+    virtual PRBool              HasOpenContainer(PRInt32 aContainer) const;
 
 
             PRBool              HandleStartToken(CToken* aToken);
