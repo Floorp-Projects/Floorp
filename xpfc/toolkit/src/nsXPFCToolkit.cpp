@@ -34,7 +34,6 @@ nsXPFCToolkit :: nsXPFCToolkit()
     gXPFCToolkit = (nsXPFCToolkit *)this;
 
   mApplicationShell = nsnull;
-  mObserverManager  = nsnull;
   mCanvasManager    = nsnull;
 
 }
@@ -71,17 +70,6 @@ nsresult nsXPFCToolkit::Init(nsIApplicationShell * aApplicationShell)
   mCanvasManager->Init();
 
   return NS_OK;
-}
-
-nsresult nsXPFCToolkit::SetObserverManager(nsIXPFCObserverManager * aObserverManager)
-{
-  mObserverManager = aObserverManager;
-  return NS_OK;
-}
-
-nsIXPFCObserverManager * nsXPFCToolkit::GetObserverManager()
-{
-  return (mObserverManager);
 }
 
 nsresult nsXPFCToolkit::SetApplicationShell(nsIApplicationShell * aApplicationShell)

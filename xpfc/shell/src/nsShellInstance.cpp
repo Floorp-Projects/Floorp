@@ -146,28 +146,14 @@ nsresult nsShellInstance::Init()
   return res;
 }
 
-static nsITimer* gNetTimer;
-
-static void
-PollNet(nsITimer *aTimer, void *aClosure)
-{
-  NET_PollSockets();
-  NS_IF_RELEASE(gNetTimer);
-  if (NS_OK == NS_NewTimer(&gNetTimer)) {
-    gNetTimer->Init(PollNet, nsnull, 1000 / 50);
-  }
-}
-
 nsresult nsShellInstance::Run()
 {
 
 #ifdef NS_WIN32
   MSG msg;
-  PollNet(0, 0);
   while (GetMessage(&msg, NULL, 0, 0)) {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
-      NET_PollSockets();
   }
   return ((nsresult)msg.wParam);
 #elif NS_UNIX
