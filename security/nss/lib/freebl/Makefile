@@ -93,6 +93,13 @@ ifeq ($(CPU_ARCH),x86)
 endif
 endif
 
+ifeq ($(OS_ARCH),AIX)
+DEFINES += -DMP_USE_UINT_DIGIT
+ifndef USE_64
+DEFINES += -DMP_USE_LONG_LONG_MULTIPLY
+endif
+endif
+
 ifeq ($(OS_ARCH), HP-UX)
 ifdef USE_PURE_32
 # build for DA1.1 (HP PA 1.1) pure 32 bit model
