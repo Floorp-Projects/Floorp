@@ -1177,6 +1177,15 @@ nsresult nsParser::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
 nsresult nsParser::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
 #endif
 {
+  if(eOnStart==mParserContext->mStreamListenerState) {
+    //If you're here, then OnDataAvailable() never got called. 
+    //Prior to necko, we never dealt with this case, but the problem may have existed.
+    //What we'll do (for now at least) is construct the worlds smallest HTML document.
+    nsAutoString  temp("<BODY></BODY>");
+    mParserContext->mScanner->Append(temp);
+    nsresult result=ResumeParse(nsnull, PR_TRUE);    
+  }
+
   mParserContext->mStreamListenerState=eOnStop;
   mStreamStatus=status;
 
