@@ -25,9 +25,6 @@
 #ifndef _NS_XINSTALLER_H_
 #define _NS_XINSTALLER_H_
 
-#include <gtk/gtk.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "XIDefines.h"
 #include "XIErrors.h"
 
