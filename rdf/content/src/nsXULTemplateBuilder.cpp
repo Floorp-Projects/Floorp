@@ -721,6 +721,17 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
 
     nsresult rv;
 
+    // Create the current resource's contents from the template, if
+    // appropriate
+    nsAutoString templateID;
+    rv = aElement->GetAttribute(kNameSpaceID_None, kTemplateAtom, templateID);
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+        rv = CreateTemplateContents(aElement, templateID);
+        if (NS_FAILED(rv)) return rv;
+    }
+
     nsCOMPtr<nsIRDFResource> resource;
     rv = gXULUtils->GetElementRefResource(aElement, getter_AddRefs(resource));
     if (NS_SUCCEEDED(rv)) {
@@ -728,16 +739,6 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
         // to something in the graph, so we need to go to the graph to
         // create its contents.
         rv = CreateContainerContents(aElement, resource, PR_FALSE);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    nsAutoString templateID;
-    rv = aElement->GetAttribute(kNameSpaceID_None, kTemplateAtom, templateID);
-    if (NS_FAILED(rv)) return rv;
-
-    // Hmm, this isn't a template node after all. Not sure _what_ it is.
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        rv = CreateTemplateContents(aElement, templateID);
         if (NS_FAILED(rv)) return rv;
     }
 
