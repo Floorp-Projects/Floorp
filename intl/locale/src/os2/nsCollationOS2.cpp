@@ -148,7 +148,7 @@ nsresult nsCollationOS2::Initialize(nsILocale *locale)
       UniStrncpy((UniChar *)mappedCharset, pmCodepage, cpLen);
       UniFreeMem(pmCodepage);
       UniFreeLocaleObject(locObj);
-      PRUint32  mpLen = UniStrlen(mappedCharset);
+      PRUint32  mpLen = UniStrlen(NS_REINTERPRET_CAST(const UniChar *, mappedCharset));
 
       if (NS_SUCCEEDED(ret) && mappedCharset) {
         mCharset.Assign((PRUnichar*)mappedCharset, mpLen);
@@ -175,7 +175,7 @@ nsresult nsCollationOS2::GetSortKeyLen(const nsCollationStrength strength,
   int ret = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"", &locObj);
   if (ret != ULS_SUCCESS)
     return NS_ERROR_FAILURE;
-  int uLen = UniStrxfrm(locObj, NULL, stringNormalized.GetUnicode(), 0);
+  int uLen = UniStrxfrm(locObj, NULL, NS_REINTERPRET_CAST(const UniChar *, stringNormalized.GetUnicode()), 0);
   UniFreeLocaleObject(locObj);
   
   *outLen = (uLen < 1) ? 0 : (PRUint32)uLen;
@@ -198,8 +198,8 @@ nsresult nsCollationOS2::CreateRawSortKey(const nsCollationStrength strength,
   if (ret != ULS_SUCCESS)
     return NS_ERROR_FAILURE;
 
-  int length = UniStrlen(stringNormalized.GetUnicode());
-  int uLen = UniStrxfrm(locObj, (UniChar*)key, stringNormalized.GetUnicode(), length);
+  int length = UniStrlen(NS_REINTERPRET_CAST(const UniChar *,stringNormalized.GetUnicode()));
+  int uLen = UniStrxfrm(locObj, (UniChar*)key, NS_REINTERPRET_CAST(const UniChar *,stringNormalized.GetUnicode()), length);
   *outLen = (uLen < 1) ? 0 : (PRUint32)uLen;
   UniFreeLocaleObject(locObj);
 
