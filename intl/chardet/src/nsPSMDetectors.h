@@ -54,6 +54,7 @@
 #include "nsUCS2LEVerifier.h"
 #include "nsBIG5Verifier.h"
 #include "nsGB2312Verifier.h"
+#include "nsGB18030Verifier.h"
 #include "nsEUCTWVerifier.h"
 #include "nsEUCKRVerifier.h"
 //---- end verifiers
@@ -162,17 +163,17 @@ extern nsEUCStatistics *gZhTwStatisticsSet[];
 #define KO_DETECTOR_NUM_VERIFIERS 6
 extern nsVerifier *gKoVerifierSet[];
 
-#define ZHCN_DETECTOR_NUM_VERIFIERS 7
+#define ZHCN_DETECTOR_NUM_VERIFIERS 8
 extern nsVerifier *gZhCnVerifierSet[];
 
 #define JA_DETECTOR_NUM_VERIFIERS 7
 extern nsVerifier *gJaVerifierSet[];
 
-#define ZH_DETECTOR_NUM_VERIFIERS 9
+#define ZH_DETECTOR_NUM_VERIFIERS 10
 extern nsVerifier *gZhVerifierSet[];
 extern nsEUCStatistics *gZhStatisticsSet[];
 
-#define CJK_DETECTOR_NUM_VERIFIERS 14
+#define CJK_DETECTOR_NUM_VERIFIERS 15
 extern nsVerifier *gCJKVerifierSet[];
 extern nsEUCStatistics *gCJKStatisticsSet[];
 

@@ -114,6 +114,7 @@ nsVerifier *gKoVerifierSet[KO_DETECTOR_NUM_VERIFIERS] = {
 nsVerifier *gZhCnVerifierSet[ZHCN_DETECTOR_NUM_VERIFIERS] = {
       &nsUTF8Verifier,
       &nsGB2312Verifier,
+      &nsGB18030Verifier,
       &nsISO2022CNVerifier,
       &nsHZVerifier,
       &nsCP1252Verifier,
@@ -138,6 +139,7 @@ nsVerifier *gJaVerifierSet[JA_DETECTOR_NUM_VERIFIERS] = {
 nsVerifier *gZhVerifierSet[ZH_DETECTOR_NUM_VERIFIERS] = {
       &nsUTF8Verifier,
       &nsGB2312Verifier,
+      &nsGB18030Verifier,
       &nsBIG5Verifier,
       &nsISO2022CNVerifier,
       &nsHZVerifier,
@@ -171,6 +173,7 @@ nsVerifier *gCJKVerifierSet[CJK_DETECTOR_NUM_VERIFIERS] = {
       &nsBIG5Verifier,
       &nsEUCTWVerifier,
       &nsGB2312Verifier,
+      &nsGB18030Verifier,
       &nsISO2022CNVerifier,
       &nsHZVerifier,
       &nsCP1252Verifier,
