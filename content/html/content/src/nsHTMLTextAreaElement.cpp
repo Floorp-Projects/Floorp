@@ -286,13 +286,19 @@ nsHTMLTextAreaElement::Select()
   // If the DOM event was not canceled (e.g. by a JS event handler
   // returning false)
   if (status == nsEventStatus_eIgnore) {
-    presContext->EventStateManager()->SetContentState(this,
-                                                      NS_EVENT_STATE_FOCUS);
+    PRBool shouldFocus = ShouldFocus(this);
+
+    if (shouldFocus) {
+      presContext->EventStateManager()->SetContentState(this,
+                                                        NS_EVENT_STATE_FOCUS);
+    }
 
     nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
     if (formControlFrame) {
-      formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+      if (shouldFocus) {
+        formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+      }
 
       // Now Select all the text!
       SelectAll(presContext);
