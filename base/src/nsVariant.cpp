@@ -56,7 +56,7 @@ nsVariant::~nsVariant()
 {
     switch (mType) {
       case nsVariantType_voidPtr:
-        delete (void*)mValue;
+        delete mValue;
         break;
       case nsVariantType_charPtr:
         nsCRT::free(mValue.mUnion._charPtr);
