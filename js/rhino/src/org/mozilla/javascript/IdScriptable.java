@@ -318,7 +318,8 @@ public abstract class IdScriptable extends ScriptableObject
      */
     protected Object getIdValue(int id)
     {
-        IdFunction f = newIdFunction(id, getParentScope());
+        Scriptable scope = ScriptableObject.getTopLevelScope(this);
+        IdFunction f = newIdFunction(id, scope);
         return cacheIdValue(id, f);
     }
 
@@ -446,7 +447,8 @@ public abstract class IdScriptable extends ScriptableObject
     protected void addIdFunctionProperty
         (Scriptable obj, int id, boolean sealed)
     {
-        IdFunction f = newIdFunction(id, getParentScope());
+        Scriptable scope = ScriptableObject.getTopLevelScope(this);
+        IdFunction f = newIdFunction(id, scope);
         if (sealed) { f.sealObject(); }
         defineProperty(obj, getIdName(id), f, DONTENUM);
     }
@@ -456,20 +458,22 @@ public abstract class IdScriptable extends ScriptableObject
      * when converting script thisObj to a particular type is not possible.
      * Possible usage would be to have a private function like realThis:
      * <pre>
-        private static NativeSomething realThis(Scriptable thisObj,
-                                                IdFunction f)
-        {
-            if (!(thisObj instanceof NativeSomething))
-                throw incompatibleCallError(f);
-            return (NativeSomething)thisObj;
-       }
-    * </pre>
-    * Note that although such function can be implemented universally via
-    * java.lang.Class.isInstance(), it would be much more slower.
-    * @param readOnly specify if the function f does not change state of object.
-    * @return Scriptable object suitable for a check by the instanceof operator.
-    * @throws RuntimeException if no more instanceof target can be found
-    */
+     *  private static NativeSomething realThis(Scriptable thisObj,
+     *                                          IdFunction f)
+     *  {
+     *      if (!(thisObj instanceof NativeSomething))
+     *          throw incompatibleCallError(f);
+     *      return (NativeSomething)thisObj;
+     * }
+     * </pre>
+     * Note that although such function can be implemented universally via
+     * java.lang.Class.isInstance(), it would be much more slower.
+     * @param readOnly specify if the function f does not change state of
+     * object.
+     * @return Scriptable object suitable for a check by the instanceof
+     * operator.
+     * @throws RuntimeException if no more instanceof target can be found
+     */
     protected static EcmaError incompatibleCallError(IdFunction f)
     {
         throw ScriptRuntime.typeError1("msg.incompat.call",

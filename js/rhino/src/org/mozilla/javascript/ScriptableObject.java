@@ -1267,13 +1267,15 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @param obj a JavaScript object
      * @return the corresponding global scope
      */
-    public static Scriptable getTopLevelScope(Scriptable obj) {
-        Scriptable next = obj;
-        do {
-            obj = next;
-            next = obj.getParentScope();
-        } while (next != null);
-        return obj;
+    public static Scriptable getTopLevelScope(Scriptable obj)
+    {
+        for (;;) {
+            Scriptable parent = obj.getParentScope();
+            if (parent == null) {
+                return obj;
+            }
+            obj = parent;
+        }
     }
 
     /**

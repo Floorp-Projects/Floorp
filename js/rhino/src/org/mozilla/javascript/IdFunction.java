@@ -42,6 +42,7 @@ public class IdFunction extends BaseFunction
     public IdFunction(IdFunctionMaster master, Object tag, int id,
                       String name, int arity, Scriptable scope)
     {
+        if (scope == null) throw new IllegalArgumentException();
         this.functionName = name;
         this.master = master;
         this.tag = tag;
