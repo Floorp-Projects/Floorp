@@ -127,7 +127,7 @@ public:
     virtual void PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete);
 	virtual void AddXMozillaStatusLine(uint16 flags);	// for XSender auth info
     
-    virtual void		SetMailboxDiscoveryStatus(EMailboxDiscoverStatus status);
+    virtual void SetMailboxDiscoveryStatus(EMailboxDiscoverStatus status);
     virtual EMailboxDiscoverStatus GetMailboxDiscoveryStatus();
     
 	virtual void ProcessMailboxUpdate(PRBool handlePossibleUndo);
@@ -374,6 +374,15 @@ private:
 	void OnDeleteFolder(const char * aSourceMailbox);
 	void OnRenameFolder(const char * aSourceMailbox);
 	void OnMoveFolderHierarchy(const char * aSourceMailbox);
+	void FindMailboxesIfNecessary();
+	void CreateMailbox(const char *mailboxName);
+	PRBool CreateMailboxRespectingSubscriptions(const char *mailboxName);
+	char * CreatePossibleTrashName(const char *prefix);
+	PRBool FolderNeedsACLInitialized(const char *folderName);
+	void DiscoverMailboxList();
+	void MailboxDiscoveryFinished();
+	void Lsub(const char *mailboxPattern, PRBool addDirectoryIfNecessary);
+	void List(const char *mailboxPattern, PRBool addDirectoryIfNecessary);
 
 
 	// End Process AuthenticatedState Url helper methods

@@ -745,9 +745,7 @@ void nsImapProtocol::ProcessCurrentURL()
 
     if (!DeathSignalReceived() && (GetConnectionStatus() >= 0))
     {
-#if 0
 		FindMailboxesIfNecessary();
-#endif
 		nsIImapUrl::nsImapState imapState;
 		m_runningUrl->GetRequiredImapState(&imapState);
 		if (imapState == nsIImapUrl::nsImapAuthenticatedState)
@@ -4092,6 +4090,411 @@ void nsImapProtocol::OnMoveFolderHierarchy(const char * aSourceMailbox)
     else
     	HandleMemoryFailure();
 #endif
+}
+
+void nsImapProtocol::FindMailboxesIfNecessary()
+{
+    //PR_EnterMonitor(fFindingMailboxesMonitor);
+    // biff should not discover mailboxes
+	char * imapUserName = GetImapUserName();
+	PRBool foundMailboxesAlready = PR_FALSE;
+	nsIImapUrl::nsImapAction imapAction;
+	nsresult rv = NS_OK;
+
+	rv = m_runningUrl->GetImapAction(&imapAction);
+	rv = m_hostSessionList->GetHaveWeEverDiscoveredFoldersForHost(GetImapHostName(), GetImapUserName(), foundMailboxesAlready);
+    if (NS_SUCCEEDED(rv) && !foundMailboxesAlready &&
+		(imapAction != nsIImapUrl::nsImapBiff) &&
+		(imapAction != nsIImapUrl::nsImapDiscoverAllBoxesUrl) &&
+		(imapAction != nsIImapUrl::nsImapUpgradeToSubscription) /* &&
+		!GetSubscribingNow() */)
+    {
+		DiscoverMailboxList();
+
+		// If we decide to do it, here is where we should check to see if
+		// a namespace exists (personal namespace only?) and possibly
+		// create it if it doesn't exist.
+	}
+    //PR_ExitMonitor(fFindingMailboxesMonitor);
+}
+
+
+// DiscoverMailboxList() is used to actually do the discovery of folders
+// for a host.  This is used both when we initially start up (and re-sync)
+// and also when the user manually requests a re-sync, by collapsing and
+// expanding a host in the folder pane.  This is not used for the subscribe
+// pane.
+// DiscoverMailboxList() also gets the ACLs for each newly discovered folder
+void nsImapProtocol::DiscoverMailboxList()
+{
+	PRBool usingSubscription = PR_FALSE;
+	SetMailboxDiscoveryStatus(eContinue);
+	if (GetServerStateParser().ServerHasACLCapability())
+		m_hierarchyNameState = kListingForInfoAndDiscovery;
+	else
+		m_hierarchyNameState = kNoOperationInProgress;
+
+	// Pretend that the Trash folder doesn't exist, so we will rediscover it if we need to.
+	m_hostSessionList->SetOnlineTrashFolderExistsForHost(GetImapHostName(), GetImapUserName(), PR_FALSE);
+	m_hostSessionList->GetHostIsUsingSubscription(GetImapHostName(), GetImapUserName(), usingSubscription);
+
+	// iterate through all namespaces and LSUB them.
+	PRUint32 count = 0;
+	m_hostSessionList->GetNumberOfNamespacesForHost(GetImapHostName(), GetImapUserName(), count);
+	for (PRUint32 i = 0; i < count; i++ )
+	{
+		nsIMAPNamespace * ns = nsnull;
+		m_hostSessionList->GetNamespaceNumberForHost(GetImapHostName(), GetImapUserName(),i,ns);
+		if (ns)
+		{
+			const char *prefix = ns->GetPrefix();
+			if (prefix)
+			{
+				// mscott -> WARNING!!! i where are we going to get this global variable for unusued name spaces from??? *wince*
+				if (/* !gHideUnusedNamespaces && */ *prefix && PL_strcasecmp(prefix, "INBOX."))	// only do it for non-empty namespace prefixes, and for non-INBOX prefix
+				{
+					// Explicitly discover each Namespace, so that we can create subfolders of them,
+					mailbox_spec *boxSpec = (mailbox_spec *) PR_CALLOC(sizeof(mailbox_spec));
+					if (boxSpec)
+					{
+						boxSpec->folderSelected = PR_FALSE;
+						boxSpec->hostName = GetImapHostName();
+						boxSpec->connection = this;
+						boxSpec->flagState = nsnull;
+						boxSpec->discoveredFromLsub = PR_TRUE;
+						boxSpec->onlineVerified = PR_TRUE;
+						boxSpec->box_flags = kNoselect;
+						boxSpec->hierarchySeparator = ns->GetDelimiter();
+						m_runningUrl->AllocateCanonicalPath(ns->GetPrefix(), ns->GetDelimiter(), &boxSpec->allocatedPathName);
+						boxSpec->namespaceForFolder = ns;
+						boxSpec->folderIsNamespace = PR_TRUE;
+
+						switch (ns->GetType())
+						{
+						case kPersonalNamespace:
+							boxSpec->box_flags |= kPersonalMailbox;
+							break;
+						case kPublicNamespace:
+							boxSpec->box_flags |= kPublicMailbox;
+							break;
+						case kOtherUsersNamespace:
+							boxSpec->box_flags |= kOtherUsersMailbox;
+							break;
+						default:	// (kUnknownNamespace)
+							break;
+						}
+
+						DiscoverMailboxSpec(boxSpec);
+					}
+					else
+						HandleMemoryFailure();
+				}
+
+				// now do the folders within this namespace
+				nsString2 pattern(eOneByte);
+				nsString2 pattern2(eOneByte);
+				if (usingSubscription)
+				{
+					pattern.Append(prefix);
+					pattern.Append("*");
+				}
+				else
+				{
+					pattern.Append(prefix);
+					pattern.Append("%"); // mscott just need one percent right?
+					// pattern = PR_smprintf("%s%%", prefix);
+					char delimiter = ns->GetDelimiter();
+					if (delimiter)
+					{
+						// delimiter might be NIL, in which case there's no hierarchy anyway
+						pattern2 = prefix;
+						pattern2 += "%";
+						pattern2 += delimiter;
+						pattern2 += "%";
+						pattern2 = PR_smprintf("%s%%%c%%", prefix, delimiter);
+					}
+				}
+
+
+				if (usingSubscription) // && !GetSubscribingNow())	should never get here from subscribe pane
+					Lsub(pattern.GetBuffer(), PR_TRUE);
+				else
+				{
+					List(pattern.GetBuffer(), PR_TRUE);
+					List(pattern2.GetBuffer(), TRUE);
+				}
+			}
+		}
+	}
+
+	// explicitly LIST the INBOX if (a) we're not using subscription, or (b) we are using subscription and
+	// the user wants us to always show the INBOX.
+	PRBool listInboxForHost = PR_FALSE;
+	m_hostSessionList->GetShouldAlwaysListInboxForHost(GetImapHostName(), GetImapUserName(), listInboxForHost);
+	if (!usingSubscription || listInboxForHost) 
+		List("INBOX", PR_TRUE);
+
+	m_hierarchyNameState = kNoOperationInProgress;
+
+	MailboxDiscoveryFinished();
+
+	// Get the ACLs for newly discovered folders
+	if (GetServerStateParser().ServerHasACLCapability())
+	{
+		PRInt32 total = m_listedMailboxList.Count(), count = 0;
+		GetServerStateParser().SetReportingErrors(FALSE);
+		if (total)
+		{
+#ifdef UNREADY_CODE
+			ProgressEventFunction_UsingId(MK_IMAP_GETTING_ACL_FOR_FOLDER);
+#endif
+			nsIMAPMailboxInfo * mb = nsnull;
+			do
+			{
+				mb = (nsIMAPMailboxInfo *) m_listedMailboxList[0]; // get top element
+				m_listedMailboxList.RemoveElementAt(0); // XP_ListRemoveTopObject(fListedMailboxList);
+				if (mb)
+				{
+					if (FolderNeedsACLInitialized(mb->GetMailboxName()))
+					{
+						char *onlineName = nsnull;
+						m_runningUrl->AllocateServerPath(mb->GetMailboxName(), mb->GetDelimiter(), &onlineName);
+						if (onlineName)
+						{
+							OnRefreshACLForFolder(onlineName);
+							PR_Free(onlineName);
+						}
+					}
+#ifdef UNREADY_CODE
+					PercentProgressUpdateEvent(NULL, (count*100)/total);
+#endif
+					delete mb;	// this is the last time we're using the list, so delete the entries here
+					count++;
+				}
+			} while (mb && !DeathSignalReceived());
+		}
+	}
+}
+
+PRBool nsImapProtocol::FolderNeedsACLInitialized(const char *folderName)
+{
+	FolderQueryInfo *value = (FolderQueryInfo *)PR_MALLOC(sizeof(FolderQueryInfo));
+	PRBool rv = PR_FALSE;
+
+	if (!value) return PR_FALSE;
+
+	value->name = PL_strdup(folderName);
+	if (!value->name)
+	{
+		PR_Free(value);
+		return PR_FALSE;
+	}
+
+	value->hostName = PL_strdup(GetImapHostName());
+	if (!value->hostName)
+	{
+		PR_Free(value->name);
+		PR_Free(value);
+		return PR_FALSE;
+	}
+
+	// mscott - big hack...where do we get a IMAPACLRights object from??????
+	m_imapExtension->FolderNeedsACLInitialized(this, /* value */ nsnull);
+	WaitForFEEventCompletion();
+	//TImapFEEvent *folderACLInitEvent = 
+	//    new TImapFEEvent(MOZTHREAD_FolderNeedsACLInitialized,               // function to call
+	//                    this,                                              // access to current entry/context
+	//                    value, FALSE);
+
+	rv = value->rv;
+	PR_Free(value->hostName);
+	PR_Free(value->name);
+	PR_Free(value);
+	return rv;
+}
+
+void nsImapProtocol::MailboxDiscoveryFinished()
+{
+    if (!DeathSignalReceived() && !GetSubscribingNow() &&
+		((m_hierarchyNameState == kNoOperationInProgress) || 
+		 (m_hierarchyNameState == kListingForInfoAndDiscovery)))
+    {
+		nsIMAPNamespace *ns = nsnull;
+		m_hostSessionList->GetDefaultNamespaceOfTypeForHost(GetImapHostName(),GetImapUserName(), kPersonalNamespace, ns);
+		const char *personalDir = ns ? ns->GetPrefix() : 0;
+		
+		PRBool trashFolderExists = PR_FALSE;
+		PRBool usingSubscription = PR_FALSE;
+		m_hostSessionList->GetOnlineTrashFolderExistsForHost(GetImapHostName(), GetImapUserName(), trashFolderExists);
+		m_hostSessionList->GetHostIsUsingSubscription(GetImapHostName(), GetImapUserName(),usingSubscription);
+		if (!trashFolderExists && GetDeleteIsMoveToTrash() && usingSubscription)
+		{
+			// maybe we're not subscribed to the Trash folder
+			if (personalDir)
+			{
+				char *originalTrashName = CreatePossibleTrashName(personalDir);
+				m_hierarchyNameState = kDiscoverTrashFolderInProgress;
+				List(originalTrashName, PR_TRUE);
+				m_hierarchyNameState = kNoOperationInProgress;
+			}
+		}
+
+		// There is no Trash folder (either LIST'd or LSUB'd), and we're using the
+		// Delete-is-move-to-Trash model, and there is a personal namespace
+		if (!trashFolderExists && GetDeleteIsMoveToTrash() && ns)
+    	{
+    		char *trashName = CreatePossibleTrashName(ns->GetPrefix());
+    		if (trashName)
+			{
+				char *onlineTrashName = nsnull;
+				m_runningUrl->AllocateServerPath(trashName, ns->GetDelimiter(), &onlineTrashName);
+				if (onlineTrashName)
+				{
+    				GetServerStateParser().SetReportingErrors(FALSE);
+    				PRBool created = CreateMailboxRespectingSubscriptions(onlineTrashName);
+    				GetServerStateParser().SetReportingErrors(TRUE);
+    				
+    				// force discovery of new trash folder.
+    				if (created)
+					{
+						m_hierarchyNameState = kDiscoverTrashFolderInProgress;
+    					List(onlineTrashName, PR_FALSE);
+						m_hierarchyNameState = kNoOperationInProgress;
+					}
+    				else
+						m_hostSessionList->SetOnlineTrashFolderExistsForHost(GetImapHostName(), GetImapUserName(), PR_TRUE);
+					PR_Free(onlineTrashName);
+				}
+   				PR_FREEIF(trashName);
+			} // if trash name
+		} //if trashg folder doesn't exist
+		m_hostSessionList->SetHaveWeEverDiscoveredFoldersForHost(GetImapHostName(), GetImapUserName(), PR_TRUE);
+
+		// notify front end that folder discovery is complete....
+		m_imapMailFolder->MailboxDiscoveryDone(this);
+    }
+}
+
+// returns TRUE is the create succeeded (regardless of subscription changes)
+PRBool nsImapProtocol::CreateMailboxRespectingSubscriptions(const char *mailboxName)
+{
+	CreateMailbox(mailboxName);
+	PRBool rv = GetServerStateParser().LastCommandSuccessful();
+	if (rv)
+	{
+		// mscott hack alert!!! what are we going to do about auto subscribe??????
+		PRBool fAutoSubscribe = PR_TRUE;
+		if (fAutoSubscribe) // auto-subscribe is on
+		{
+			// create succeeded - let's subscribe to it
+			PRBool reportingErrors = GetServerStateParser().GetReportingErrors();
+			GetServerStateParser().SetReportingErrors(FALSE);
+			OnSubscribe(mailboxName);
+			GetServerStateParser().SetReportingErrors(reportingErrors);
+		}
+	}
+	return (rv);
+}
+
+void nsImapProtocol::CreateMailbox(const char *mailboxName)
+{
+#ifdef UNREADY_CODE
+    ProgressEventFunction_UsingId (MK_IMAP_STATUS_CREATING_MAILBOX);
+#endif
+
+    IncrementCommandTagNumber();
+    
+    char *escapedName = CreateEscapedMailboxName(mailboxName);
+	nsString2 command(GetServerCommandTag(), eOneByte);
+	command += " create \"";
+	command += escapedName;
+	command += "\""CRLF;
+               
+    PR_FREEIF( escapedName);
+
+	SendData(command.GetBuffer());
+	ParseIMAPandCheckForNewMail();
+}
+
+char * nsImapProtocol::CreatePossibleTrashName(const char *prefix)
+{
+	// mscott we used to have a localized global string for the trash name...
+	// I haven't don't localization stuff yet so I'm going to do a bad thing and just
+	// use a string literal....(only temporary!!!!! =))...
+
+//	IMAP_LoadTrashFolderName();
+	nsString2 returnTrash(prefix, eOneByte);
+
+	returnTrash += "Trash";
+	return PL_strdup(returnTrash.GetBuffer());
+}
+
+void nsImapProtocol::Lsub(const char *mailboxPattern, PRBool addDirectoryIfNecessary)
+{
+#ifdef UNREADY_CODE
+    ProgressEventFunction_UsingId (MK_IMAP_STATUS_LOOKING_FOR_MAILBOX);
+#endif
+
+    IncrementCommandTagNumber();
+
+	char *boxnameWithOnlineDirectory = nsnull;
+	if (addDirectoryIfNecessary)
+		m_runningUrl->AddOnlineDirectoryIfNecessary(mailboxPattern, &boxnameWithOnlineDirectory);
+
+    char *escapedPattern = CreateEscapedMailboxName(boxnameWithOnlineDirectory ? 
+													boxnameWithOnlineDirectory :
+													mailboxPattern);
+
+	nsString2 command (GetServerCommandTag(), eOneByte);
+	command += " lsub \"\" \"";
+	command += escapedPattern;
+	command += "\""CRLF;
+
+//    PR_snprintf(GetOutputBuffer(),                              // string to create
+//            kOutputBufferSize,                              // max size
+//            "%s lsub \"\" \"%s\"" CRLF,                   // format string
+//            GetServerCommandTag(),                  // command tag
+//            escapedPattern);
+            
+    PR_FREEIF( escapedPattern);
+	PR_FREEIF(boxnameWithOnlineDirectory);
+
+	SendData(command.GetBuffer());
+	ParseIMAPandCheckForNewMail();
+}
+
+void nsImapProtocol::List(const char *mailboxPattern, PRBool addDirectoryIfNecessary)
+{
+#ifdef UNREADY_CODE
+    ProgressEventFunction_UsingId (MK_IMAP_STATUS_LOOKING_FOR_MAILBOX);
+#endif
+
+    IncrementCommandTagNumber();
+
+	char *boxnameWithOnlineDirectory = nsnull;
+	if (addDirectoryIfNecessary)
+		m_runningUrl->AddOnlineDirectoryIfNecessary(mailboxPattern, &boxnameWithOnlineDirectory);
+
+    char *escapedPattern = CreateEscapedMailboxName(boxnameWithOnlineDirectory ? 
+													boxnameWithOnlineDirectory :
+													mailboxPattern);
+
+	nsString2 command (GetServerCommandTag(), eOneByte);
+	command += " list \"\" \"";
+	command += escapedPattern;
+	command += "\""CRLF;
+
+//    PR_snprintf(GetOutputBuffer(),                              // string to create
+//            kOutputBufferSize,                              // max size
+//            "%s list \"\" \"%s\"" CRLF,                   // format string
+//            GetServerCommandTag(),                  // command tag
+//            escapedPattern);
+            
+    PR_FREEIF( escapedPattern);
+	PR_FREEIF(boxnameWithOnlineDirectory);
+
+	SendData(command.GetBuffer());  
+	ParseIMAPandCheckForNewMail();
 }
 
 void nsImapProtocol::ProcessAuthenticatedStateURL()
