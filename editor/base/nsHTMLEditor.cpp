@@ -1317,14 +1317,17 @@ NS_IMETHODIMP nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
   //Kinda sad to waste memory just to force lower case
   nsAutoString tag = aParagraphFormat;
   tag.ToLowerCase();
-  if (tag == "normal" || tag == "p") {
-    res = RemoveParagraphStyle();
-  } else if (tag == "li") {
+  if (tag == "normal") 
+  {
+    res = InsertBasicBlock("p");
+  } 
+  else if (tag == "li") 
+  {
     res = InsertList("ul");
-  } else if (tag[0] == 'h') {
-    res = InsertHeader(tag);
-  } else {
-    res = ReplaceBlockParent(tag);
+  } 
+  else 
+  {
+    res = InsertBasicBlock(tag);
   }
   return res;
 }
@@ -1646,6 +1649,7 @@ nsHTMLEditor::InsertList(const nsString& aListType)
     // XXX - revisit when layout is fixed
     res = selection->Collapse(newItem,0);
     if (NS_FAILED(res)) return res;
+#if 0    
     nsAutoString theText(" ");
     res = InsertText(theText);
     if (NS_FAILED(res)) return res;
@@ -1654,6 +1658,7 @@ nsHTMLEditor::InsertList(const nsString& aListType)
     if (NS_FAILED(res)) return res;
     res = selection->Collapse(node,0);
     if (NS_FAILED(res)) return res;
+#endif
   }
 
   return res;
@@ -1661,13 +1666,13 @@ nsHTMLEditor::InsertList(const nsString& aListType)
 
 
 NS_IMETHODIMP
-nsHTMLEditor::InsertHeader(const nsString& aHeaderType)
+nsHTMLEditor::InsertBasicBlock(const nsString& aBlockType)
 {
 #ifdef ENABLE_JS_EDITOR_LOG
   nsAutoJSEditorLogLock logLock(mJSEditorLog);
 
   if (mJSEditorLog)
-    mJSEditorLog->InsertHeader(aHeaderType);
+    mJSEditorLog->InsertBasicBlock(aBlockType);
 #endif // ENABLE_JS_EDITOR_LOG
 
   nsresult res;
@@ -1680,7 +1685,8 @@ nsHTMLEditor::InsertHeader(const nsString& aHeaderType)
   
   // pre-process
   nsEditor::GetSelection(getter_AddRefs(selection));
-  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kMakeHeader);
+  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kMakeBasicBlock);
+  ruleInfo.blockType = &aBlockType;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel);
   if (cancel || (NS_FAILED(res))) return res;
 
@@ -1700,12 +1706,12 @@ nsHTMLEditor::InsertHeader(const nsString& aHeaderType)
   
   if (isCollapsed)
   {
-    // have to find a place to put the header
+    // have to find a place to put the block
     nsCOMPtr<nsIDOMNode> parent = node;
     nsCOMPtr<nsIDOMNode> topChild = node;
     nsCOMPtr<nsIDOMNode> tmp;
     
-    while ( !CanContainTag(parent, aHeaderType))
+    while ( !CanContainTag(parent, aBlockType))
     {
       parent->GetParentNode(getter_AddRefs(tmp));
       if (!tmp) return NS_ERROR_FAILURE;
@@ -1720,9 +1726,23 @@ nsHTMLEditor::InsertHeader(const nsString& aHeaderType)
       if (NS_FAILED(res)) return res;
     }
 
-    // make a header
-    nsCOMPtr<nsIDOMNode> newHeader;
-    res = CreateNode(aHeaderType, parent, offset, getter_AddRefs(newHeader));
+    // make a block
+    nsCOMPtr<nsIDOMNode> newBlock;
+    res = CreateNode(aBlockType, parent, offset, getter_AddRefs(newBlock));
+    if (NS_FAILED(res)) return res;
+    
+    // xxx
+    
+    // put a space in it so layout will draw it
+    res = selection->Collapse(newBlock,0);
+    if (NS_FAILED(res)) return res;
+    nsAutoString theText(nbsp);
+    res = InsertText(theText);
+    if (NS_FAILED(res)) return res;
+    // reposition selection to before the space character
+    res = GetStartNodeAndOffset(selection, &node, &offset);
+    if (NS_FAILED(res)) return res;
+    res = selection->Collapse(node,0);
     if (NS_FAILED(res)) return res;
   }
 

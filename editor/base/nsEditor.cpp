@@ -3153,7 +3153,8 @@ nsEditor::GetTag(nsIDOMNode *aNode)
   }
   
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  content->GetTag(*getter_AddRefs(atom));
+  if (content)
+    content->GetTag(*getter_AddRefs(atom));
 
   return atom;
 }
@@ -3407,7 +3408,7 @@ nsEditor::NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir)
   	if (NS_FAILED(iter->CurrentNode(getter_AddRefs(content)))) return nullNode;
     // ignore nodes that aren't elements or text, or that are the block parent 
     node = do_QueryInterface(content);
-    if (node && IsTextOrElementNode(node) && (node != blockParent) && (node!=nsCOMPtr<nsIDOMNode>(dont_QueryInterface(aNode))))
+    if (node && IsTextOrElementNode(node) && (node != blockParent) && (node.get() != aNode))
       return node;
     
     if (aDir == kIterForward)
@@ -3680,7 +3681,7 @@ nsEditor::SplitNodeDeep(nsIDOMNode *aNode,
     if (!nodeAsText || (offset && (offset != textLen)))
     {
       bDoSplit = PR_TRUE;
-      nsresult res = SplitNode(nodeToSplit, offset, getter_AddRefs(tempNode));
+      res = SplitNode(nodeToSplit, offset, getter_AddRefs(tempNode));
       if (NS_FAILED(res)) return res;
     }
 

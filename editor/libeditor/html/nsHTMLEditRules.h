@@ -39,12 +39,6 @@ public:
 
 protected:
 
-  enum IterDirection
-  {
-    kIterForward,
-    kIterBackward
-  };
-
   enum RulesEndpoint
   {
     kStart,
@@ -66,9 +60,7 @@ protected:
   nsresult WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult WillAlign(nsIDOMSelection *aSelection, const nsString *alignType, PRBool *aCancel);
-  nsresult WillMakeHeader(nsIDOMSelection *aSelection, PRBool *aCancel);
-  nsresult WillMakeAddress(nsIDOMSelection *aSelection, PRBool *aCancel);
-  nsresult WillMakePRE(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult WillMakeBasicBlock(nsIDOMSelection *aSelection, const nsString *aBlockType, PRBool *aCancel);
 
   nsresult InsertTab(nsIDOMSelection *aSelection, PRBool *aCancel, PlaceholderTxn **aTxn, nsString *outString);
   nsresult InsertSpace(nsIDOMSelection *aSelection, PRBool *aCancel, PlaceholderTxn **aTxn, nsString *outString);
@@ -84,6 +76,7 @@ protected:
   static PRBool IsHeader(nsIDOMNode *aNode);
   static PRBool IsParagraph(nsIDOMNode *aNode);
   static PRBool IsListItem(nsIDOMNode *aNode);
+  static PRBool IsList(nsIDOMNode *aNode);
   static PRBool IsUnorderedList(nsIDOMNode *aNode);
   static PRBool IsOrderedList(nsIDOMNode *aNode);
   static PRBool IsBreak(nsIDOMNode *aNode);
@@ -94,19 +87,24 @@ protected:
   nsresult IsEmptyBlock(nsIDOMNode *aNode, PRBool *outIsEmptyBlock);
   PRBool IsFirstNode(nsIDOMNode *aNode);
   PRBool IsLastNode(nsIDOMNode *aNode);
+
   nsresult GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt32 aOffset, 
                             PRInt32 actionID, nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset);
-
   nsresult GetPromotedRanges(nsIDOMSelection *inSelection, 
                              nsCOMPtr<nsISupportsArray> *outArrayOfRanges, 
                              PRInt32 inOperationType);
-  static nsresult GetNodesForOperation(nsISupportsArray *inArrayOfRanges, 
+  nsresult GetNodesForOperation(nsISupportsArray *inArrayOfRanges, 
                                    nsCOMPtr<nsISupportsArray> *outArrayOfNodes, 
                                    PRInt32 inOperationType);
-  static nsresult MakeTransitionList(nsISupportsArray *inArrayOfNodes, 
+  nsresult GetChildNodesForOperation(nsIDOMNode *inNode, 
+                                   nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
+  nsresult MakeTransitionList(nsISupportsArray *inArrayOfNodes, 
                                    nsVoidArray *inTransitionArray);
-  
-  nsresult ReplaceContainer(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, nsString &aNodeType);
+                                   
+  nsresult ShouldMakeEmptyBlock(nsIDOMSelection *aSelection, const nsString *blockTag, PRBool *outMakeEmpty);
+  nsresult ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString *aBlockTag);
+
+  nsresult ReplaceContainer(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, const nsString &aNodeType);
   nsresult RemoveContainer(nsIDOMNode *inNode);
   nsresult InsertContainerAbove(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, nsString &aNodeType);
 

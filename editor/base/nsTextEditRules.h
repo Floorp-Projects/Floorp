@@ -73,9 +73,7 @@ public:
     kIndent          = 3002,
     kOutdent         = 3003,
     kAlign           = 3004,
-    kMakeHeader      = 3005,
-    kMakeAddress     = 3006,
-    kMakePRE         = 3007,
+    kMakeBasicBlock  = 3005,
     kInsertElement   = 3008
   };
   
@@ -179,6 +177,7 @@ class nsTextRulesInfo : public nsRulesInfo
     collapsedAction(nsIEditor::eDeleteNext),
     bOrdered(PR_FALSE),
     alignType(0),
+    blockType(0),
     insertElement(0)
     {};
 
@@ -199,6 +198,9 @@ class nsTextRulesInfo : public nsRulesInfo
   
   // kAlign
   const nsString *alignType;
+  
+  // kMakeBasicBlock
+  const nsString *blockType;
   
   // kInsertElement
   const nsIDOMElement* insertElement;
