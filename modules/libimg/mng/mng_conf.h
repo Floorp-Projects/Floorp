@@ -2,7 +2,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_conf.h                copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.2                                                      * */
+/* * version   : 0.9.0                                                      * */
 /* *                                                                        * */
 /* * purpose   : main configuration file                                    * */
 /* *                                                                        * */

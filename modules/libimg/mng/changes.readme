@@ -1,5 +1,25 @@
 -----------------------------------------------------------
 
+0.9.0 (June 30th 2000)
+----------------------
+
+in short:
+
+This is the first beta!!! Yippee!!!
+
+Thanks to all the people who helped to guide me in the right direction.
+You know who you are!
+
+A special thanks to the guys with early implementations, who stood by and
+put up with my whims :-)
+
+changes over 0.5.3:
+
+- updated mngplg to 0.4.1 (the latest & greatest)
+- changed refresh parameters to 'x,y,width,height'
+
+-----------------------------------------------------------
+
 0.5.3 (never released)
 ----------------------
 
@@ -18,7 +38,7 @@ Thanks to Aleks Jakulin for helping to iron out some 64-bit platform issues!
 - added support for most common delta-image options
 - added an animation-speed modifier
 - added an image-level parameter for the processtext callback
-- updated mngplg to 0.3.0 (supports JNG & full color-correction!)
+- updated mngplg to 0.4.0 (supports JNG, full CMS, and other enhancements!)
 - fixed a lot of small things
 - added support for PPLT chunk
 - fixed to support 64-bit platforms
@@ -35,7 +55,7 @@ core:
 - changed the version parameters (obviously)
 - added update-region parms for refresh calback
 - added Needrefresh parameter
-- added initialization of update-region for refresh        
+- added initialization of update-region for refresh
 - added initialization of Needrefresh parameter
 - changed progressive-display processing                  
 - added tracecodes for tracing JPEG progression           
@@ -81,8 +101,10 @@ samples:
 
 contrib:
 - updated mngplg to 0.3.0 (supports JNG & full color-correction!)
+- updated mngplg to 0.4.0 (Jason is picking up the pace ;-)
 
 doc:
+- added rpm directory with rpm spec-file (contributed by MATSUURA Takanori)
 
 makefiles:
 - changed makefile.linux to reflect versionnr for shared-lib

@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_callback_xs.c         copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.1                                                      * */
+/* * version   : 0.9.0                                                      * */
 /* *                                                                        * */
 /* * purpose   : callback get/set interface (implementation)                * */
 /* *                                                                        * */

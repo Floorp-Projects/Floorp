@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_display.c             copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.3                                                      * */
+/* * version   : 0.9.0                                                      * */
 /* *                                                                        * */
 /* * purpose   : Display management (implementation)                        * */
 /* *                                                                        * */
@@ -67,6 +67,9 @@
 /* *             0.5.3 - 06/29/2000 - G.Juyn                                * */
 /* *             - swapped refresh parameters                               * */
 /* *                                                                        * */
+/* *             0.9.0 - 06/30/2000 - G.Juyn                                * */
+/* *             - changed refresh parameters to 'x,y,width,height'         * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #include "libmng.h"
@@ -108,7 +111,8 @@ mng_retcode display_progressive_refresh (mng_datap  pData,
   {
     if (!pData->fRefresh (((mng_handle)pData),
                           pData->iUpdateleft,  pData->iUpdatetop,
-                          pData->iUpdateright, pData->iUpdatebottom))
+                          pData->iUpdateright - pData->iUpdateleft,
+                          pData->iUpdatebottom - pData->iUpdatetop))
       MNG_ERROR (pData, MNG_APPMISCERROR)
 
     pData->iUpdateleft   = 0;          /* reset update-region */
@@ -156,7 +160,8 @@ mng_retcode interframe_delay (mng_datap pData)
     if ((pData->iUpdatetop < pData->iUpdatebottom) && (pData->iUpdateleft < pData->iUpdateright))
       if (!pData->fRefresh (((mng_handle)pData),
                             pData->iUpdateleft,  pData->iUpdatetop,
-                            pData->iUpdateright, pData->iUpdatebottom))
+                            pData->iUpdateright - pData->iUpdateleft,
+                            pData->iUpdatebottom - pData->iUpdatetop))
         MNG_ERROR (pData, MNG_APPMISCERROR)
 
     pData->iUpdateleft   = 0;          /* reset update-region */
