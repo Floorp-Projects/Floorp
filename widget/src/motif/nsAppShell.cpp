@@ -17,6 +17,16 @@
  */
 
 #include "nsAppShell.h"
+#include "nsIAppShell.h"
+
+//-------------------------------------------------------------------------
+//
+// nsISupports implementation macro
+//
+//-------------------------------------------------------------------------
+NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
+NS_IMPL_ISUPPORTS(nsAppShell,kIAppShellIID);
+
 
 //-------------------------------------------------------------------------
 //
@@ -61,7 +71,7 @@ void nsAppShell::Exit()
 // nsAppShell constructor
 //
 //-------------------------------------------------------------------------
-nsAppShell::nsAppShell(nsISupports *aOuter) : nsObject(aOuter)  
+nsAppShell::nsAppShell()
 { 
 }
 
@@ -72,24 +82,6 @@ nsAppShell::nsAppShell(nsISupports *aOuter) : nsObject(aOuter)
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
-}
-
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsAppShell::QueryObject(const nsIID& aIID, void** aInstancePtr)
-{
-    nsresult result = NS_NOINTERFACE;
-    static NS_DEFINE_IID(kInsAppShellIID, NS_IAPPSHELL_IID);
-    if (result == NS_NOINTERFACE && aIID.Equals(kInsAppShellIID)) {
-        *aInstancePtr = (void*) ((nsIAppShell*)this);
-        AddRef();
-        result = NS_OK;
-    }
-
-    return result;
 }
 
 //-------------------------------------------------------------------------
