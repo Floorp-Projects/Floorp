@@ -1549,8 +1549,6 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
   nsCRMFObject *newObject = new nsCRMFObject();
   if (newObject == nsnull) {
     JS_ReportError(cx, "%s%s\n", JS_ERROR, "could not create crmf JS object");
-    if (slot)
-      PK11_FreeSlot(slot);
 
     nsFreeKeyPairInfo(keyids,numRequests);
     return NS_ERROR_OUT_OF_MEMORY;
