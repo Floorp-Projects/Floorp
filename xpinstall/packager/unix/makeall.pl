@@ -94,26 +94,12 @@ sub MakeConfigFile
   }
 }
 
-sub MakeJsFile
-{
-  my($componentName) = @_;
-
-  # Make .js file
-  if(system("perl makejs.pl $componentName.jst $inDefaultVersion $inStagePath/$componentName") != 0)
-  {
-    exit(1);
-  }
-}
-
 sub MakeXpiFile
 {
   my($componentName) = @_;
 
-  # Make .js file
-  MakeJsFile($componentName);
-
   # Make .xpi file
-  if(system("perl makexpi.pl $componentName $inStagePath $inDistPath") != 0)
+  if(system("perl makexpi.pl $componentName $inStagePath $inDistPath $inDefaultVersion") != 0)
   {
     exit(1);
   }
