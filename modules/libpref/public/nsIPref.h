@@ -19,7 +19,6 @@
 #ifndef nsIPref_h__
 #define nsIPref_h__
 
-#include "xp_core.h"
 #include "jsapi.h"
 #include "nsISupports.h"
 
@@ -61,12 +60,12 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPREF_IID)
 
   // Initialize/shutdown
-  NS_IMETHOD Startup(char *filename) = 0;
+  NS_IMETHOD Startup(const char *filename) = 0;
   NS_IMETHOD Shutdown() = 0;
 
   // Config file input
-  NS_IMETHOD ReadUserJSFile(char *filename) = 0;
-  NS_IMETHOD ReadLIJSFile(char *filename) = 0;
+  NS_IMETHOD ReadUserJSFile(const char *filename) = 0;
+  NS_IMETHOD ReadLIJSFile(const char *filename) = 0;
 
   // JS stuff
   NS_IMETHOD GetConfigContext(JSContext **js_context) = 0;
@@ -81,54 +80,54 @@ public:
   // Getters
   NS_IMETHOD GetCharPref(const char *pref, 
 			 char * return_buf, int * buf_length) = 0;
-  NS_IMETHOD GetIntPref(const char *pref, int32 * return_int) = 0;	
-  NS_IMETHOD GetBoolPref(const char *pref, XP_Bool *return_val) = 0;	
+  NS_IMETHOD GetIntPref(const char *pref, PRInt32 * return_int) = 0;	
+  NS_IMETHOD GetBoolPref(const char *pref, PRBool *return_val) = 0;	
   NS_IMETHOD GetBinaryPref(const char *pref, 
 			 void * return_val, int * buf_length) = 0;	
   NS_IMETHOD GetColorPref(const char *pref_name,
 			uint8 *red, uint8 *green, uint8 *blue) = 0;
-  NS_IMETHOD GetColorPrefDWord(const char *pref_name, uint32 *colorref) = 0;
+  NS_IMETHOD GetColorPrefDWord(const char *pref_name, PRUint32 *colorref) = 0;
   NS_IMETHOD GetRectPref(const char *pref_name, 
-			 int16 *left, int16 *top, 
-			 int16 *right, int16 *bottom) = 0;
+			 PRInt16 *left, PRInt16 *top, 
+			 PRInt16 *right, PRInt16 *bottom) = 0;
 
   // Setters
   NS_IMETHOD SetCharPref(const char *pref,const char* value) = 0;
-  NS_IMETHOD SetIntPref(const char *pref,int32 value) = 0;
+  NS_IMETHOD SetIntPref(const char *pref,PRInt32 value) = 0;
   NS_IMETHOD SetBoolPref(const char *pref,PRBool value) = 0;
   NS_IMETHOD SetBinaryPref(const char *pref,void * value, long size) = 0;
   NS_IMETHOD SetColorPref(const char *pref_name, 
 			  uint8 red, uint8 green, uint8 blue) = 0;
-  NS_IMETHOD SetColorPrefDWord(const char *pref_name, uint32 colorref) = 0;
+  NS_IMETHOD SetColorPrefDWord(const char *pref_name, PRUint32 colorref) = 0;
   NS_IMETHOD SetRectPref(const char *pref_name, 
-			 int16 left, int16 top, int16 right, int16 bottom) = 0;
+			 PRInt16 left, PRInt16 top, PRInt16 right, PRInt16 bottom) = 0;
 
   // Get Defaults
   NS_IMETHOD GetDefaultCharPref(const char *pref, 
 				char * return_buf, int * buf_length) = 0;
-  NS_IMETHOD GetDefaultIntPref(const char *pref, int32 * return_int) = 0;
-  NS_IMETHOD GetDefaultBoolPref(const char *pref, XP_Bool *return_val) = 0;
+  NS_IMETHOD GetDefaultIntPref(const char *pref, PRInt32 * return_int) = 0;
+  NS_IMETHOD GetDefaultBoolPref(const char *pref, PRBool *return_val) = 0;
   NS_IMETHOD GetDefaultBinaryPref(const char *pref, 
 				  void * return_val, int * buf_length) = 0;
   NS_IMETHOD GetDefaultColorPref(const char *pref_name, 
 				 uint8 *red, uint8 *green, uint8 *blue) = 0;
   NS_IMETHOD GetDefaultColorPrefDWord(const char *pref_name, 
-				      uint32 *colorref) = 0;
+				      PRUint32 *colorref) = 0;
   NS_IMETHOD GetDefaultRectPref(const char *pref_name, 
-				int16 *left, int16 *top, 
-				int16 *right, int16 *bottom) = 0;
+				PRInt16 *left, PRInt16 *top, 
+				PRInt16 *right, PRInt16 *bottom) = 0;
 
   // Set defaults
   NS_IMETHOD SetDefaultCharPref(const char *pref,const char* value) = 0;
-  NS_IMETHOD SetDefaultIntPref(const char *pref,int32 value) = 0;
+  NS_IMETHOD SetDefaultIntPref(const char *pref,PRInt32 value) = 0;
   NS_IMETHOD SetDefaultBoolPref(const char *pref,PRBool value) = 0;
   NS_IMETHOD SetDefaultBinaryPref(const char *pref,
 				  void * value, long size) = 0;
   NS_IMETHOD SetDefaultColorPref(const char *pref_name, 
 				 uint8 red, uint8 green, uint8 blue) = 0;
   NS_IMETHOD SetDefaultRectPref(const char *pref_name, 
-				int16 left, int16 top, 
-				int16 right, int16 bottom) = 0;
+				PRInt16 left, PRInt16 top, 
+				PRInt16 right, PRInt16 bottom) = 0;
   
   // Copy prefs
   NS_IMETHOD CopyCharPref(const char *pref, char ** return_buf) = 0;
@@ -146,7 +145,7 @@ public:
 			 const char *path, PRBool set_default) = 0;
 
   // Pref info
-  NS_IMETHOD PrefIsLocked(const char *pref_name, XP_Bool *res) = 0;
+  NS_IMETHOD PrefIsLocked(const char *pref_name, PRBool *res) = 0;
 
   // Save pref files
   NS_IMETHOD SavePrefFile(void) = 0;
@@ -160,6 +159,9 @@ public:
   NS_IMETHOD UnregisterCallback( const char* domain,
 				 PrefChangedFunc callback, 
 				 void* instance_data ) = 0;
+
+  NS_IMETHOD CopyPrefsTree(const char *srcRoot, const char *destRoot) = 0;
+  NS_IMETHOD DeleteBranch(const char *branchName) = 0;
 };
 
 #endif /* nsIPref_h__ */
