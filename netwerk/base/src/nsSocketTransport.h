@@ -153,8 +153,8 @@ public:
     
     nsresult CheckForTimeout (PRIntervalTime aCurrentTime);
     
-    // Close this socket either right away or once done with the transaction. 
-    nsresult CloseConnection(PRBool bNow=PR_TRUE);
+    // Close this socket
+    nsresult CloseConnection();
     
     // Access methods used by the socket transport service...
     PRFileDesc* GetSocket(void)      { return mSocketFD;    }
@@ -163,8 +163,8 @@ public:
     
     static nsSocketTransport* GetInstance(PRCList* qp) { return (nsSocketTransport*)((char*)qp - offsetof(nsSocketTransport, mListLink)); }
     
-    PRBool CanBeReused(void) { return 
-        (mCurrentState != eSocketState_Error) && !mCloseConnectionOnceDone;}
+    PRBool CanBeReused() { return 
+        (mCurrentState != eSocketState_Error) && !mClosePending;}
 
     //
     // request helpers
@@ -173,6 +173,13 @@ public:
     nsresult Dispatch(nsSocketRequest *);
     nsresult OnProgress(nsSocketRequest *, nsISupports *ctxt, PRUint32 offset);
     nsresult OnStatus(nsSocketRequest *, nsISupports *ctxt, nsresult message);
+
+    //
+    // blocking stream helpers
+    //
+    PRFileDesc *GetConnectedSocket(); // do the connection if necessary
+    void ReleaseSocket(PRFileDesc *); // allow the socket to be closed if pending
+    void ClearSocketBS(nsSocketBS *); // clears weak reference to blocking stream
 
 protected:
     nsresult doConnection(PRInt16 aSelectFlags);
@@ -233,7 +240,7 @@ protected:
     PRPackedBool                    mSSLProxy;
 
     /* put all the packed bools together so we save space */
-    PRPackedBool                    mCloseConnectionOnceDone;
+    PRPackedBool                    mClosePending;
     PRPackedBool                    mWasConnected;
 
     nsSocketTransportService*       mService;
@@ -243,20 +250,20 @@ protected:
     nsresult                        mStatus;
 
     PRFileDesc*                     mSocketFD;
+    PRUint32                        mSocketRef;  // if non-zero, keep the socket open unless there is an error
+    PRUint32                        mSocketLock; // if non-zero, do not close the socket even if there is an error
     PRUint32                        mSocketTypeCount;
     char*                          *mSocketTypes;
 
     PRInt32                         mBytesExpected;
-    PRUint32                        mReuseCount;
-    PRUint32                        mLastReuseCount;
 
     PRUint32                        mBufferSegmentSize;
     PRUint32                        mBufferMaxSize;
     
     PRUint32                        mIdleTimeoutInSeconds;
 
-    nsSocketBIS                    *mBIS;
-    nsSocketBOS                    *mBOS;
+    nsSocketBIS                    *mBIS;  // weak reference
+    nsSocketBOS                    *mBOS;  // weak reference
     nsSocketReadRequest            *mReadRequest;
     nsSocketWriteRequest           *mWriteRequest;
 };
@@ -270,14 +277,20 @@ public:
     nsSocketBS();
     virtual ~nsSocketBS();
 
-    void SetTransport(nsSocketTransport *);
-    void SetSocket(PRFileDesc *aSock) { mSock = aSock; }
+    nsresult Init();
 
-    nsresult Poll(PRInt16 event);
+    void SetTransport(nsSocketTransport *);
+
+protected: 
+    PRFileDesc *GetSocket();
+    void ReleaseSocket(PRFileDesc *);
+
+    nsresult GetTransport(nsSocketTransport **); // get an owning reference to the transport
+    nsresult Poll(PRFileDesc *sock, PRInt16 event);
 
 protected:
-    nsSocketTransport *mTransport;
-    PRFileDesc        *mSock;
+    nsSocketTransport *mTransport;     // strong reference
+    PRLock            *mTransportLock; // protects access to mTransport
 };
 
 /**
@@ -396,6 +409,7 @@ protected:
     PRIntn                      mSuspendCount;
     PRPackedBool                mCanceled;
     PRPackedBool                mStartFired;
+    PRPackedBool                mStopFired;
 };
 
 /**

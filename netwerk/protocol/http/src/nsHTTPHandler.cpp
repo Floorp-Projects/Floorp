@@ -1135,6 +1135,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
             } /* for */
         } /* count > 0 */
     }
+    nsCOMPtr<nsISocketTransport> socketTrans;
     // if we didn't find any from the keep-alive idlelist
     if (!trans)
     {
@@ -1188,17 +1189,24 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
         trans->SetNotificationCallbacks(callbacks,
                                         (loadFlags & nsIChannel::LOAD_BACKGROUND));
 
-        nsCOMPtr<nsISocketTransport> socketTrans = do_QueryInterface(trans, &rv);
+        socketTrans = do_QueryInterface(trans, &rv);
         if (NS_SUCCEEDED(rv)) {
             socketTrans->SetSocketTimeout(mRequestTimeout);
             socketTrans->SetSocketConnectTimeout(mConnectTimeout);
         }
     }
+    else
+        socketTrans = do_QueryInterface(trans);
 
     // Put it in the table...
     // XXX this method incorrectly returns a bool
     rv = mTransportList->AppendElement(trans) ? NS_OK : NS_ERROR_FAILURE;  
     if (NS_FAILED(rv)) return rv;
+
+    // Ensure a reference to the underlying socket.  This is done regardless
+    // of whether or not this socket will be reused.
+    if (socketTrans)
+        socketTrans->SetReuseConnection(PR_TRUE);
 
     *o_pTrans = trans;
     NS_IF_ADDREF(*o_pTrans);
@@ -1285,11 +1293,17 @@ nsHTTPHandler::ReleaseTransport (nsITransport* i_pTrans  ,
     PRInt32 port    = -1;
     nsXPIDLCString  host;
 
-    // Get the address of the socket transport
     {
         nsCOMPtr<nsISocketTransport> socketTrans = do_QueryInterface(i_pTrans);
-        socketTrans->GetHost(getter_Copies(host));
-        socketTrans->GetPort(&port);
+        if (socketTrans) {
+            // Get the address of the socket transport
+            socketTrans->GetHost(getter_Copies(host));
+            socketTrans->GetPort(&port);
+
+            // Drop one reference to the underlying socket.  If this is NOT a keep-alive
+            // connection, then this will cause the socket to close.
+            socketTrans->SetReuseConnection(PR_FALSE);
+        }         
     }
     if (port == -1)
         GetDefaultPort (&port);
