@@ -26,6 +26,7 @@ classic.jar:
 comm.jar:
 +   content/navigator/viewSource.xul                (content/viewSource.xul)
 +   content/navigator/contents.rdf                  (content/navigator.rdf)
++   content/communicator/askViewZoom.xul            (content/askViewZoom.xul)
     content/help/contents.rdf                       (content/help.rdf)
     content/help/contextHelp.js                     (content/contextHelp.js)
 
@@ -37,7 +38,8 @@ toolkit.jar:
 +   content/global/xul.css                          (content/xul.css) 
 +   content/communicator/nsContextMenu.js           (content/nsContextMenu.js)
 +   content/communicator/tasksOverlay.xul           (content/tasksOverlay.xul)
-+   content/communicator/utilityOverlay.xul         (content/utilityOverlay.xul) 
++   content/communicator/utilityOverlay.xul         (content/utilityOverlay.xul)
++   content/global/finddialog.xul                   (content/finddialog.xul) 
 
 
 en-US.jar:
