@@ -1376,7 +1376,7 @@ nsVariant::nsVariant()
             {nsIDataType::VTYPE_STRING_SIZE_IS    , TD_PSTRING_SIZE_IS  },
             {nsIDataType::VTYPE_WSTRING_SIZE_IS   , TD_PWSTRING_SIZE_IS }
         };
-        static const length = sizeof(array)/sizeof(array[0]);
+        static const int length = sizeof(array)/sizeof(array[0]);
         static PRBool inited = PR_FALSE;
         if(!inited)
         {
