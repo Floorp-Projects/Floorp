@@ -138,7 +138,7 @@ ac_help="$ac_help
   --disable-jar-packaging Disable jar packaging of chrome (Deprecated) "
 ac_help="$ac_help
   --enable-chrome-format=[jar|flat|both]
-                          Select format of chrome files (defaults to both)"
+                          Select format of chrome files (defaults to jar)"
 ac_help="$ac_help
   --disable-md            Do not use compiler-based dependencies "
 ac_help="$ac_help

@@ -3437,7 +3437,7 @@ MOZ_ARG_DISABLE_BOOL(jar-packaging,
 
 MOZ_ARG_ENABLE_STRING(chrome-format,
 [  --enable-chrome-format=[jar|flat|both]
-                          Select format of chrome files (defaults to both)],
+                          Select format of chrome files (defaults to jar)],
     MOZ_CHROME_FILE_FORMAT=`echo $enableval | tr A-Z a-z`)
 
 if test -z "$MOZ_CHROME_FILE_FORMAT"; then
