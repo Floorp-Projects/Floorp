@@ -46,16 +46,16 @@
     <column flex="1"/>
     <rows autostretch="always" >
       <row flex="1">
-        <tabcontrol flex="1" orient="vertical">
-          <tabbox orient="horizontal">
+        <tabbox flex="1" orient="vertical">
+          <tabs orient="horizontal">
             <tab id="general_tab" label="&certmgr.detail.general_tab.title;" />
             <tab id="prettyprint_tab" label="&certmgr.detail.prettyprint_tab.title;" />
-          </tabbox>
-          <tabpanel flex="1">
+          </tabs>
+          <tabpanels flex="1">
             <box id="general_info" flex="1"/>
             <box id="certPrettyPrint" flex ="1" />
-          </tabpanel>
-        </tabcontrol>
+          </tabpanels>
+        </tabbox>
       </row>
       <row>
         <box orient="horizontal" flex="1">
