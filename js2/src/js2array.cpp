@@ -75,6 +75,7 @@ js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 newLength)
     uint32 length = getLength(meta, obj);
     if (newLength < length) {
         // need to delete all the elements above the new length
+        // XXX (But only for array instances!) XXX
         LookupKind lookup(false, JS2VAL_NULL);
         bool deleteResult;
         for (uint32 i = newLength; i < length; i++) {

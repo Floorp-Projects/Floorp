@@ -66,8 +66,8 @@ js2val String_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val 
         strInst->mValue = meta->engine->allocStringPtr(meta->toString(argv[0]));
     else
         strInst->mValue = meta->engine->allocStringPtr("");
-    Multiname mn(meta->engine->length_StringAtom, meta->publicNamespace);
-    meta->writeDynamicProperty(JS2VAL_TO_OBJECT(thatValue), &mn, true, meta->engine->allocNumber(strInst->mValue->length()), RunPhase);
+    const DynamicPropertyMap::value_type e(*meta->engine->length_StringAtom, DynamicPropertyValue(meta->engine->allocNumber(strInst->mValue->length()), DynamicPropertyValue::PERMANENT));
+    strInst->dynamicProperties.insert(e);
     JS2Object::removeRoot(ri);
     return thatValue;
 }
@@ -278,76 +278,76 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
 
     if (meta->objectType(searchValue) != meta->regexpClass) {
         RegExpInstance *reInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(searchValue)); 
-	REState *pState = reInst->mRegExp;
-	REMatchState *match;
-	String newString;
+        REState *pState = reInst->mRegExp;
+        REMatchState *match;
+        String newString;
         int32 lastIndex = 0;
 
-	while (true) {
+    while (true) {
             match = REExecute(pState, S->begin(), lastIndex, toInt32(S->length()), false);
-	    if (match) {
-		String insertString;
-		uint32 start = 0;
-		while (true) {
-                    // look for '$' in the replacement string and interpret it as necessary
-		    uint32 dollarPos = replaceStr->find('$', start);
-		    if ((dollarPos != String::npos) && (dollarPos < (replaceStr->length() - 1))) {
-			uint32 skip;
-			insertString += replaceStr->substr(start, dollarPos - start);
-			insertString += interpretDollar(meta, replaceStr, dollarPos, S, match, skip);
-			start = dollarPos + skip;
-		    }
-		    else {
-                        // otherwise, absorb the entire replacement string
-			insertString += replaceStr->substr(start, replaceStr->length() - start);
-			break;
-		    }
-		}
+            if (match) {
+            String insertString;
+            uint32 start = 0;
+            while (true) {
+                        // look for '$' in the replacement string and interpret it as necessary
+                uint32 dollarPos = replaceStr->find('$', start);
+                if ((dollarPos != String::npos) && (dollarPos < (replaceStr->length() - 1))) {
+                    uint32 skip;
+                    insertString += replaceStr->substr(start, dollarPos - start);
+                    insertString += interpretDollar(meta, replaceStr, dollarPos, S, match, skip);
+                    start = dollarPos + skip;
+                }
+                else {
+                            // otherwise, absorb the entire replacement string
+                    insertString += replaceStr->substr(start, replaceStr->length() - start);
+                    break;
+                }
+            }
                 // grab everything preceding the match
-		newString += S->substr(toUInt32(lastIndex), toUInt32(match->startIndex) - lastIndex);
-                // and then add the replacement string
-		newString += insertString;
-	    }
-	    else
-		break;
-	    lastIndex = match->endIndex;        // use lastIndex to grab remainder after break
-	    if ((pState->flags & RE_GLOBAL) == 0)
-		break;
-	}
-        newString += S->substr(toUInt32(lastIndex), toUInt32(S->length()) - lastIndex);
-	if ((pState->flags & RE_GLOBAL) == 0)
-            reInst->setLastIndex(meta, meta->engine->allocNumber((float64)lastIndex));
+            newString += S->substr(toUInt32(lastIndex), toUInt32(match->startIndex) - lastIndex);
+                    // and then add the replacement string
+            newString += insertString;
+        }
+        else
+            break;
+        lastIndex = match->endIndex;        // use lastIndex to grab remainder after break
+        if ((pState->flags & RE_GLOBAL) == 0)
+        break;
+    }
+    newString += S->substr(toUInt32(lastIndex), toUInt32(S->length()) - lastIndex);
+    if ((pState->flags & RE_GLOBAL) == 0)
+        reInst->setLastIndex(meta, meta->engine->allocNumber((float64)lastIndex));
         return meta->engine->allocString(newString);
     }
     else {
         const String *searchStr = meta->toString(searchValue);
-	REMatchState match;
+        REMatchState match;
         uint32 pos = S->find(*searchStr, 0);
-	if (pos == String::npos)
+        if (pos == String::npos)
             return STRING_TO_JS2VAL(S);
-	match.startIndex = (int32)pos;
-	match.endIndex = match.startIndex + (int32)searchStr->length();
-	match.parenCount = 0;
-	String insertString;
-	String newString;
-	uint32 start = 0;
-	while (true) {
-	    uint32 dollarPos = replaceStr->find('$', start);
-	    if ((dollarPos != String::npos) && (dollarPos < (replaceStr->length() - 1))) {
-		uint32 skip;
-		insertString += replaceStr->substr(start, dollarPos - start);
-		insertString += interpretDollar(meta, replaceStr, dollarPos, S, &match, skip);
-		start = dollarPos + skip;
-	    }
-	    else {
-		insertString += replaceStr->substr(start, replaceStr->length() - start);
-		break;
-	    }
-	}
-	newString += S->substr(0, (uint32)match.startIndex);
-	newString += insertString;
-	uint32 index = (uint32)match.endIndex;
-	newString += S->substr(index, S->length() - index);
+        match.startIndex = (int32)pos;
+        match.endIndex = match.startIndex + (int32)searchStr->length();
+        match.parenCount = 0;
+        String insertString;
+        String newString;
+        uint32 start = 0;
+        while (true) {
+            uint32 dollarPos = replaceStr->find('$', start);
+            if ((dollarPos != String::npos) && (dollarPos < (replaceStr->length() - 1))) {
+                uint32 skip;
+                insertString += replaceStr->substr(start, dollarPos - start);
+                insertString += interpretDollar(meta, replaceStr, dollarPos, S, &match, skip);
+                start = dollarPos + skip;
+            }
+            else {
+                insertString += replaceStr->substr(start, replaceStr->length() - start);
+                break;
+            }
+        }
+        newString += S->substr(0, (uint32)match.startIndex);
+        newString += insertString;
+        uint32 index = (uint32)match.endIndex;
+        newString += S->substr(index, S->length() - index);
         return meta->engine->allocString(newString);
     }
 }
@@ -791,7 +791,11 @@ void initStringObject(JS2Metadata *meta)
         { NULL }
     };
 
-    meta->stringClass->prototype = new StringInstance(meta, meta->objectClass->prototype, meta->stringClass);
+    StringInstance *strInst = new StringInstance(meta, meta->objectClass->prototype, meta->stringClass);
+    meta->stringClass->prototype = strInst;
+    strInst->mValue = meta->engine->allocStringPtr("");
+    const DynamicPropertyMap::value_type e(*meta->engine->length_StringAtom, DynamicPropertyValue(meta->engine->allocNumber(strInst->mValue->length()), DynamicPropertyValue::PERMANENT));
+    strInst->dynamicProperties.insert(e);
     meta->initBuiltinClass(meta->stringClass, &prototypeFunctions[0], &staticFunctions[0], String_Constructor, String_Call);
 
 }

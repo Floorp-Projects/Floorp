@@ -82,7 +82,6 @@
 
                         if (fWrap->code) {  // native code, pass pointer to argument base
                             a = fWrap->code(meta, a, base(argCount), argCount);
-                            meta->env->removeTopFrame();
                             pop(argCount + 1);
                             push(a);
                         }
