@@ -67,6 +67,7 @@ export::
 	ln -fs $(srcdir)/src
 	ln -fs $(srcdir)/resources
 	ln -fs $(srcdir)/PreferencePanes
+	ln -fs $(srcdir)/Info-*_Upgraded_.plist .
 endif
 
 libs::
