@@ -460,12 +460,14 @@ CSS_PROP_SVG(stroke-width, stroke_width, StrokeWidth, NS_STYLE_HINT_VISUAL, SVG,
 // the style structs but not in the nsCSS* structs should define
 // |CSS_PROP_INCLUDE_NOT_CSS|.  (Some of these are also in nsRuleData*,
 // and a distinction might be needed at some point.)
+// The first 4 parameters don't matter, but some compilers don't like
+// empty arguments to macros.
 #ifdef CSS_PROP_INCLUDE_NOT_CSS
-CSS_PROP_VISIBILITY(, , , , Display, mLang, eCSSType_Value, PR_FALSE)
-CSS_PROP_TABLE(, , , , Table, mFrame, eCSSType_Value, PR_FALSE)
-CSS_PROP_TABLE(, , , , Table, mRules, eCSSType_Value, PR_FALSE)
-CSS_PROP_TABLE(, , , , Table, mCols, eCSSType_Value, PR_FALSE)
-CSS_PROP_TABLE(, , , , Table, mSpan, eCSSType_Value, PR_FALSE)
+CSS_PROP_VISIBILITY(X, X, X, X, Display, mLang, eCSSType_Value, PR_FALSE)
+CSS_PROP_TABLE(X, X, X, X, Table, mFrame, eCSSType_Value, PR_FALSE)
+CSS_PROP_TABLE(X, X, X, X, Table, mRules, eCSSType_Value, PR_FALSE)
+CSS_PROP_TABLE(X, X, X, X, Table, mCols, eCSSType_Value, PR_FALSE)
+CSS_PROP_TABLE(X, X, X, X, Table, mSpan, eCSSType_Value, PR_FALSE)
 #endif /* defined(CSS_PROP_INCLUDE_NOT_CSS) */
 
 #ifdef USED_CSS_PROP
