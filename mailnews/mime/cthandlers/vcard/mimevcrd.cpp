@@ -1730,9 +1730,11 @@ static int WriteLineToStream (MimeObject *obj, const char *line)
 {
 	int     status = 0;
 	char    *htmlLine;
-	int     htmlLen ;
+	int     htmlLen =0;
 
-  htmlLen = nsCRT::strlen(line) + nsCRT::strlen("<DT></DT>") + 1;;
+    if (line) htmlLen += nsCRT::strlen(line);
+    
+    htmlLen += nsCRT::strlen("<DT></DT>") + 1;
 
 	htmlLine = (char *) PR_MALLOC (htmlLen);
 	if (htmlLine)
