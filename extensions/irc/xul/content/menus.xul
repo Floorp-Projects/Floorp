@@ -129,14 +129,12 @@
         modifiers="accel shift" key="S"/>
 
       <!-- View:Show/Hide keys -->
-      <key id="key_toggletabstrip" observes="cmd_toggletabstrip"
-        modifiers="accel" key="T"/>
+      <key id="key_toggletabstrip"/>
       <key id="key_togglelist" observes="cmd_togglelist"
         modifiers="accel" key="L"/>
       <key id="key_toggleheader" observes="cmd_toggleheader"
         modifiers="accel" key="H"/>
-      <key id="key_togglestatus" observes="cmd_togglestatus"
-        modifiers="accel" key="B"/>
+      <key id="key_togglestatus"/>
       
       <!-- Tasks keys -->
       <keyset id="tasksKeys"/>
