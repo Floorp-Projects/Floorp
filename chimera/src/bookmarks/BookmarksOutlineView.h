@@ -18,37 +18,14 @@
 * Rights Reserved.
 *
 * Contributor(s):
-*   David Hyatt <hyatt@netscape.com> (Original Author)
+*   Joe Hewitt <hewitt@netscape.com> (Original Author)
 */
 
 #import <AppKit/AppKit.h>
+#import "CHExtendedOutlineView.h"
 
-class nsIDOMElement;
+@interface CHBookmarksOutlineView : CHExtendedOutlineView {
 
-class BookmarksService;
-class CHBookmarksButton;
-
-@interface CHBookmarksToolbar : NSView {
-  BookmarksService* mBookmarks;
-  NSMutableArray* mButtons;
-  CHBookmarksButton* mDragInsertionButton;
-  int mDragInsertionPosition;
 }
-
--(void)initializeToolbar;
-
-// Called to construct the initial set of personal toolbar buttons.
--(void)buildButtonList;
--(void)addButton: (nsIDOMElement*)aElt atIndex: (int)aIndex;
--(void)removeButton: (nsIDOMElement*)aElt;
-
-// Called to lay out the buttons on the toolbar.
--(void)reflowButtons;
--(void)reflowButtonsStartingAtIndex: (int)aIndex;
-
--(void)showBookmarksToolbar: (BOOL)aShow;
-
-- (void) setButtonInsertionPoint:(NSPoint)aPoint;
-- (NSRect)insertionRectForButton:(NSView*)aButton position:(int)aPosition;
 
 @end

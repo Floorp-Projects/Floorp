@@ -12,24 +12,20 @@
 *
 * The Original Code is the Mozilla browser.
 *
-* The Initial Developer of the Original Code is Matt Judy. Portions
-* of code @2002 nibfile.com.
+* The Initial Developer of the Original Code is Netscape
+* Communications Corporation. Portions created by Netscape are
+* Copyright (C) 2002 Netscape Communications Corporation. All
+* Rights Reserved.
+*
+* Contributor(s):
+*   Joe Hewitt <hewitt@netscape.com> (Original Author)
 */
 
 #import <Cocoa/Cocoa.h>
 
-
-@interface CHExtendedTabView : NSTabView
+@interface CHPageProxyIcon : NSImageView
 {
-  BOOL autoHides;
+
 }
-
-//  Behavior: Autohiding overrides the default tab visibility state.
-//            To switch back to usual tabView behavior, setAutoHides:NO.
-//			  Initial value is read from defaults.
-- (BOOL)autoHides;
-- (void)setAutoHides:(BOOL)newSetting;
-
--(void)addTabForURL:(NSString*)aURL;
 
 @end

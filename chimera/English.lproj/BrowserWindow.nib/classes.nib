@@ -73,6 +73,11 @@
             SUPERCLASS = NSTableView; 
         }, 
         {CLASS = CHAutoCompleteTextField; LANGUAGE = ObjC; SUPERCLASS = NSTextField; }, 
+        {
+            CLASS = CHBookmarksOutlineView; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = CHExtendedOutlineView; 
+        }, 
         {CLASS = CHBookmarksToolbar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
         {CLASS = CHExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
         {CLASS = CHExtendedTabView; LANGUAGE = ObjC; SUPERCLASS = NSTabView; }, 
@@ -82,6 +87,7 @@
             SUPERCLASS = CHRDFOutlineViewDataSource; 
         }, 
         {CLASS = CHLocationBar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {CLASS = CHPageProxyIcon; LANGUAGE = ObjC; SUPERCLASS = NSImageView; }, 
         {
             CLASS = CHRDFOutlineViewDataSource; 
             LANGUAGE = ObjC; 
