@@ -22,7 +22,7 @@
 #   files that have been removed from the build.
 #    
 # Usage:
-#   mddepend.pl <dependency files>
+#   mddepend.pl <output_file> <dependency_files...>
 #
 # Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
 
@@ -32,26 +32,26 @@ $outfile = shift @ARGV;
 # Parse dependency files
 while ($line = <>) {
   chomp $line;
-  ($obj,$rest) = split /:\s+/o, $line, 2;
+  ($obj,$rest) = split /:\s+/, $line, 2;
   next if $obj eq '';
 
-  if ($line =~ /\\$/o) {
+  if ($line =~ /\\$/) {
     chop $rest;
     $hasSlash = 1;
   } else {
     $hasSlash = 0;
   }
-  $deps = [ $obj, split /\s+/o, $rest ];
+  $deps = [ $obj, split /\s+/, $rest ];
 
   while ($hasSlash and $line = <>) {
     chomp $line;
-    if ($line =~ /\\$/o) {
+    if ($line =~ /\\$/) {
       chop $line;
     } else {
       $hasSlash = 0;
     }
-    $line =~ s/^\s+//o;
-    push @{$deps}, split /\s+/o, $line;
+    $line =~ s/^\s+//;
+    push @{$deps}, split /\s+/, $line;
   }
   push @alldeps, $deps;
 }
@@ -67,39 +67,43 @@ foreach $deps (@alldeps) {
       $dep_mtime = (stat $dep_file)[9];
       $modtimes{$dep_file} = $dep_mtime;
     }
-    if ($dep_mtime eq '' or $dep_mtime > $mtime) {
+    if ($dep_mtime ne '' and $dep_mtime > $mtime) {
       print "$obj($mtime) older than $dep_file($dep_mtime)\n" if $debug;
       push @objs, $obj;
+      # Object will be marked for rebuild. No need to check other dependencies.
       last;
     }
   }
 }
 
 # Output objects to rebuild (if needed).
-if ($#objs > 0) {
+if (@objs) {
   $new_output = "@objs: FORCE\n";
 
   # Read in the current dependencies file.
-  open(OLD, "<$outfile") and $old_output = <OLD>;
+  open(OLD, "<$outfile")
+    and $old_output = <OLD>;
   close(OLD);
 
   # Only write out the dependencies if they are different.
   if ($new_output ne $old_output) {
     open(OUT, ">$outfile") and print OUT "$new_output";
-    print "Updating dependencies file, $outfile.\n";
+    print "Updating dependencies file, $outfile\n";
     if ($debug) {
-      print "new: $new_output.\n";
-      print "was: $old_output.\n" if $old_output ne '';
+      print "new: $new_output\n";
+      print "was: $old_output\n" if $old_output ne '';
     }
   }
 } elsif (-s $outfile) {
+  # Remove the old dependencies because all objects are up to date.
+  print "Removing old dependencies file, $outfile\n";
+
   if ($debug) {
-    open(OLD, "<$outfile") and $old_output = <OLD>;
+    open(OLD, "<$outfile")
+      and $old_output = <OLD>;
     close(OLD);
+    print "was: $old_output\n";
   }
 
-  # Remove the old dependencies because all objects are up to date.
   unlink $outfile;
-  print "Removing old dependencies file, $outfile.\n";
-  print "was: $old_output.\n" if $debug;
 }
