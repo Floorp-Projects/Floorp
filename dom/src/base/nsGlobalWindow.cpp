@@ -1056,54 +1056,26 @@ GlobalWindowImpl::SetLocation(jsval aLocation)
 NS_IMETHODIMP    
 GlobalWindowImpl::GetTitle(nsAWritableString& aTitle)
 {
-  aTitle.Truncate();
-
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
-  if (docShellAsItem) {
-    // See if we're a chrome shell.
-    PRInt32 type;
-    docShellAsItem->GetItemType(&type);
-    if(type == nsIDocShellTreeItem::typeChrome) {
-      nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-      GetTreeOwner(getter_AddRefs(treeOwner));
-      if (treeOwner) {
-        nsCOMPtr<nsIDocShellTreeItem> primaryContent;
-        treeOwner->GetPrimaryContentShell(getter_AddRefs(primaryContent));
-        nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(primaryContent));
-        if (docShellAsWin) {
-          nsXPIDLString title;
-          docShellAsWin->GetTitle(getter_Copies(title));
-          aTitle.Assign(title);
-        }
-      }
-    }
-  }
-
+  aTitle = mTitle;
   return NS_OK;
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::SetTitle(const nsAReadableString& aTitle)
 {
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
-  if(docShellAsItem) {
+  mTitle = aTitle;
+  if(mDocShell) {
     // See if we're a chrome shell.
     PRInt32 type;
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
     docShellAsItem->GetItemType(&type);
     if(type == nsIDocShellTreeItem::typeChrome) {
-      nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-      GetTreeOwner(getter_AddRefs(treeOwner));
-      if (treeOwner) {
-        nsCOMPtr<nsIDocShellTreeItem> primaryContent;
-        treeOwner->GetPrimaryContentShell(getter_AddRefs(primaryContent));
-        nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(primaryContent));
-        if (docShellAsWin) {
-          docShellAsWin->SetTitle(nsPromiseFlatString(aTitle).get());
-        }
+      nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
+      if(docShellAsWin) {
+        docShellAsWin->SetTitle(nsPromiseFlatString(mTitle));
       }
     }
   }
-  
   return NS_OK;
 }
 

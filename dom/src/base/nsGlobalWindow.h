@@ -248,6 +248,7 @@ protected:
    PRBool                        mFirstDocumentLoad;
    nsString                      mStatus;
    nsString                      mDefaultStatus;
+   nsString                      mTitle;
 
    nsIScriptGlobalObjectOwner*   mGlobalObjectOwner; // Weak Reference
    nsIDocShell*                  mDocShell;  // Weak Reference
