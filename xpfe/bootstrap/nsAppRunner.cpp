@@ -766,11 +766,16 @@ static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
 
         rv = prefs->ResetPrefs(); 
         if (NS_FAILED(rv)) return rv; 
+        rv = prefs->ReadConfigFile(); 
+        if (NS_FAILED(rv)) return rv; 
         rv = prefs->ReadUserPrefs(nsnull); 
         if (NS_FAILED(rv)) return rv; 
     } 
     else 
-    { 
+    {
+        rv = prefs->ReadConfigFile(); 
+        if (NS_FAILED(rv)) return rv; 
+
         nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get profile manager");
         if (NS_FAILED(rv)) return rv;

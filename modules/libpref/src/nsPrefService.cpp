@@ -53,7 +53,6 @@ class nsIFileSpec;	// needed for prefapi_private_data.h inclusion
 
 // Prototypes
 static nsresult nsIFileToFileSpec(nsIFile* inFile, nsIFileSpec **aFileSpec);
-static PRBool   verifyFileHash(char* buf, long buflen);
 static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal, PRBool aVerifyHash,
                         PRBool aIsGlobalContext, PRBool aSkipFirstLine);
 static nsresult openPrefFileSpec(nsIFileSpec* aFilespec, PRBool aIsErrorFatal, PRBool aVerifyHash,
@@ -148,8 +147,64 @@ NS_IMETHODIMP nsPrefService::Observe(nsISupports *aSubject, const PRUnichar *aTo
 
 NS_IMETHODIMP nsPrefService::ReadConfigFile()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIFile> lockPrefFile;
+  nsXPIDLCString lockFileName;
+  nsXPIDLCString lockVendor;
+  PRUint32 fileNameLen = 0;
+  PRUint32 vendorLen = 0;
+    
+  // This preference is set in the all.js or all-ns.js (depending whether running mozilla or netscp6)
+  // default - preference is commented out, so it doesn't exist
+  rv = mRootBranch->GetCharPref("general.config.filename", getter_Copies(lockFileName));
+  if(NS_FAILED(rv))
+    return NS_OK;
+    // If the lockFileName is NULL return ok, because no lockFile will be used
+
+  rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, getter_AddRefs(lockPrefFile));
+  if (NS_SUCCEEDED(rv))
+  {
+
+#ifdef XP_MAC
+    lockPrefFile->Append("Essential Files");
+#endif
+        
+    if (NS_SUCCEEDED(lockPrefFile->Append(lockFileName)))
+    {
+      if (NS_FAILED(openPrefFile(lockPrefFile, PR_FALSE, PR_TRUE, PR_FALSE, PR_TRUE)))
+        return NS_ERROR_FAILURE;
+      // failure here means problem within the config file script
+    }
+  }
+
+  //  Once the config file is read, we should check that the vendor name is consistent
+  //  By checking for the vendor name after reading the config file we allow for the
+  //  preference to be set (and locked) by the creator of the cfg file meaning the 
+  //  file can not be renamed (successfully).
+  rv = mRootBranch->GetCharPref("general.config.filename", getter_Copies(lockFileName));
+  if(NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+    // There is NO REASON we should ever get here. This is POST reading of the config file.
+
+  rv = mRootBranch->GetCharPref("general.config.vendor", getter_Copies(lockVendor));
+  if(NS_FAILED(rv))
+    return NS_OK;
+    // if the vendor is null (default) ignore this check
+
+  fileNameLen = PL_strlen(lockFileName);
+  vendorLen = PL_strlen(lockVendor);
+
+  //  lockVendor and lockFileName should be the same with the addtion of .cfg to the filename
+  //  by checking this post reading of the cfg file this value can be set within the cfg file
+  //  adding a level of security.
+  if (PL_strncmp(lockFileName, lockVendor, fileNameLen -4) != 0)
+    return NS_ERROR_FAILURE;
+
+  return rv;
+} // nsPref::ReadConfigFile
+
+
+
 
 NS_IMETHODIMP nsPrefService::ReadUserPrefs(nsIFile *aFile)
 {
@@ -341,12 +396,12 @@ static nsresult openPrefFileSpec(nsIFileSpec* aFilespec, PRBool aIsErrorFatal, P
     return rv;
 
   long fileLength = PL_strlen(readBuf);
-  if (aVerifyHash && !verifyFileHash(readBuf, fileLength)) {
-    rv = NS_ERROR_FAILURE;
-    if (aIsErrorFatal) {
-      PR_Free(readBuf);
-      return rv;
-    }
+  if (aVerifyHash) {
+    const int obscure_value = 7;
+    // Unobscure file by subtracting some value from every char. 
+    long i;
+    for (i = 0; i < fileLength; i++)
+      readBuf[i] -= obscure_value;
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -438,69 +493,6 @@ static nsresult nsIFileToFileSpec(nsIFile* inFile, nsIFileSpec **aFileSpec)
    
    return NS_OK;
 }
-
-//----------------------------------------------------------------------------------------
-// Computes the MD5 hash of the given buffer (not including the first line)
-//   and verifies the first line of the buffer expresses the correct hash in the form:
-//   // xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx
-//   where each 'xx' is a hex value. */
-//----------------------------------------------------------------------------------------
-PRBool verifyFileHash(char* buf, long buflen)
-//----------------------------------------------------------------------------------------
-{
-
-  PRBool success = PR_FALSE;
-  const int obscure_value = 7;
-  const long hash_length = 51;		/* len = 48 chars of MD5 + // + EOL */
-  unsigned char *digest;
-  char szHash[64];
-   
-  /* Unobscure file by subtracting some value from every char. */
-  long i;
-  for (i = 0; i < buflen; i++)
-    buf[i] -= obscure_value;
-
-  if (buflen >= hash_length) {
-    const unsigned char magic_key[] = "VonGloda5652TX75235ISBN";
-    unsigned char *pStart = (unsigned char*) buf + hash_length;
-    unsigned int len;
-       
-    nsresult rv;
-
-    NS_WITH_SERVICE(nsISignatureVerifier, verifier, SIGNATURE_VERIFIER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return success; // No signature verifier available
-       
-    //-- Calculate the digest
-    PRUint32 id;
-    rv = verifier->HashBegin(nsISignatureVerifier::MD5, &id);
-    if (NS_FAILED(rv)) return success;
-
-    rv = verifier->HashUpdate(id, (const char*)magic_key, sizeof(magic_key));
-    if (NS_FAILED(rv)) return success;
-
-    rv = verifier->HashUpdate(id, (const char*)pStart, (unsigned int)(buflen - hash_length));
-    if (NS_FAILED(rv)) return success;
-  
-    digest = (unsigned char*)PR_MALLOC(nsISignatureVerifier::MD5_LENGTH);
-    if (digest == nsnull) return success;
-
-    rv = verifier->HashEnd(id, &digest, &len, nsISignatureVerifier::MD5_LENGTH);
-    if (NS_FAILED(rv)) { PR_FREEIF(digest); return success; }
-
-    PR_snprintf(szHash, 64, "%x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
-    (int)digest[0],(int)digest[1],(int)digest[2],(int)digest[3],
-    (int)digest[4],(int)digest[5],(int)digest[6],(int)digest[7],
-    (int)digest[8],(int)digest[9],(int)digest[10],(int)digest[11],
-    (int)digest[12],(int)digest[13],(int)digest[14],(int)digest[15]);
-
-    success = ( PL_strncmp((const char*) buf + 3, szHash, (PRUint32)(hash_length - 4)) == 0 );
-
-    PR_FREEIF(digest);
- 
-  }
-  return success;
-}
-
 
 /*
  * some stuff that gets called from Pref_Init()
