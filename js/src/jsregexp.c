@@ -2266,6 +2266,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
     }
 
     res = &cx->regExpStatics;
+    res->input = str;
     JS_ASSERT(state.parenCount <= re->parenCount);
     if (state.parenCount == 0) {
 	res->parenCount = 0;
