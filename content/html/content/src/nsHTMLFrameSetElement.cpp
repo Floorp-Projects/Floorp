@@ -91,9 +91,6 @@ private:
   nsresult ParseRowCol(const nsAString& aValue,
                        PRInt32&         aNumSpecs,
                        nsFramesetSpec** aSpecs);
-  PRInt32 ParseRowColSpec(nsString&       aSpec, 
-                          PRInt32         aMaxNumValues,
-                          nsFramesetSpec* aSpecs);
 
   /**
    * The number of size specs in our "rows" attr
@@ -111,33 +108,24 @@ private:
   /**
    * The parsed representation of the "rows" attribute
    */
-  nsFramesetSpec*  mRowSpecs;  // parsed, non-computed dimensions
+  nsAutoArrayPtr<nsFramesetSpec>  mRowSpecs; // parsed, non-computed dimensions
   /**
    * The parsed representation of the "cols" attribute
    */
-  nsFramesetSpec*  mColSpecs;  // parsed, non-computed dimensions
-
-  static PRInt32 gMaxNumRowColSpecs;
+  nsAutoArrayPtr<nsFramesetSpec>  mColSpecs; // parsed, non-computed dimensions
 };
-
-PRInt32 nsHTMLFrameSetElement::gMaxNumRowColSpecs = 25;
-
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(FrameSet)
 
 
 nsHTMLFrameSetElement::nsHTMLFrameSetElement(nsINodeInfo *aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo), mNumRows(0), mNumCols(0),
-    mCurrentRowColHint(NS_STYLE_HINT_REFLOW), mRowSpecs(nsnull),
-    mColSpecs(nsnull)
+    mCurrentRowColHint(NS_STYLE_HINT_REFLOW)
 {
 }
 
 nsHTMLFrameSetElement::~nsHTMLFrameSetElement()
 {
-  delete [] mRowSpecs;
-  delete [] mColSpecs;
-  mRowSpecs = mColSpecs = nsnull;
 }
 
 
@@ -178,11 +166,7 @@ nsHTMLFrameSetElement::SetAttr(PRInt32 aNameSpaceID,
    */
   if (aAttribute == nsHTMLAtoms::rows && aNameSpaceID == kNameSpaceID_None) {
     PRInt32 oldRows = mNumRows;
-    delete [] mRowSpecs;
-    mRowSpecs = nsnull;
-    mNumRows = 0;
-
-    ParseRowCol(aValue, mNumRows, &mRowSpecs);
+    ParseRowCol(aValue, mNumRows, getter_Transfers(mRowSpecs));
     
     if (mNumRows != oldRows) {
       mCurrentRowColHint = NS_STYLE_HINT_FRAMECHANGE;
@@ -190,11 +174,7 @@ nsHTMLFrameSetElement::SetAttr(PRInt32 aNameSpaceID,
   } else if (aAttribute == nsHTMLAtoms::cols &&
              aNameSpaceID == kNameSpaceID_None) {
     PRInt32 oldCols = mNumCols;
-    delete [] mColSpecs;
-    mColSpecs = nsnull;
-    mNumCols = 0;
-
-    ParseRowCol(aValue, mNumCols, &mColSpecs);
+    ParseRowCol(aValue, mNumCols, getter_Transfers(mColSpecs));
 
     if (mNumCols != oldCols) {
       mCurrentRowColHint = NS_STYLE_HINT_FRAMECHANGE;
@@ -220,7 +200,8 @@ nsHTMLFrameSetElement::GetRowSpec(PRInt32 *aNumValues,
   if (!mRowSpecs) {
     const nsAttrValue* value = GetParsedAttr(nsHTMLAtoms::rows);
     if (value && value->Type() == nsAttrValue::eString) {
-      nsresult rv = ParseRowCol(value->GetStringValue(), mNumRows, &mRowSpecs);
+      nsresult rv = ParseRowCol(value->GetStringValue(), mNumRows,
+                                getter_Transfers(mRowSpecs));
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -253,7 +234,8 @@ nsHTMLFrameSetElement::GetColSpec(PRInt32 *aNumValues,
   if (!mColSpecs) {
     const nsAttrValue* value = GetParsedAttr(nsHTMLAtoms::cols);
     if (value && value->Type() == nsAttrValue::eString) {
-      nsresult rv = ParseRowCol(value->GetStringValue(), mNumCols, &mColSpecs);
+      nsresult rv = ParseRowCol(value->GetStringValue(), mNumCols,
+                                getter_Transfers(mColSpecs));
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -306,129 +288,112 @@ nsHTMLFrameSetElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   return retval;
 }
 
+/**
+ * Translate a "rows" or "cols" spec into an array of nsFramesetSpecs
+ */
 nsresult
 nsHTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
                                    PRInt32& aNumSpecs,
                                    nsFramesetSpec** aSpecs) 
 {
-  NS_ASSERTION(!*aSpecs, "Someone called us with a pointer to an already allocated array of specs!");
-  
-  if (!aValue.IsEmpty()) {
-    nsAutoString rowsCols(aValue);
-    nsFramesetSpec* specs = new nsFramesetSpec[gMaxNumRowColSpecs];
-    if (!specs) {
-      *aSpecs = nsnull;
-      aNumSpecs = 0;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    aNumSpecs = ParseRowColSpec(rowsCols, gMaxNumRowColSpecs, specs);
-    *aSpecs = new nsFramesetSpec[aNumSpecs];
-    if (!*aSpecs) {
-      aNumSpecs = 0;
-      delete [] specs;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    for (PRInt32 i = 0; i < aNumSpecs; ++i) {
-      (*aSpecs)[i] = specs[i];
-    }
-    delete [] specs;
+  if (aValue.IsEmpty()) {
+    aNumSpecs = 0;
+    *aSpecs = nsnull;
+    return NS_OK;
   }
 
-  return NS_OK;
-}
-
-/**
- * Translate a "rows" or "cols" spec into an array of nsFramesetSpecs
- */
-PRInt32 
-nsHTMLFrameSetElement::ParseRowColSpec(nsString&       aSpec, 
-                                       PRInt32         aMaxNumValues, 
-                                       nsFramesetSpec* aSpecs) 
-{
   static const PRUnichar sAster('*');
   static const PRUnichar sPercent('%');
   static const PRUnichar sComma(',');
 
+  nsAutoString spec(aValue);
   // remove whitespace (Bug 33699) and quotation marks (bug 224598)
   // also remove leading/trailing commas (bug 31482)
-  aSpec.StripChars(" \n\r\t\"\'");
-  aSpec.Trim(",");
+  spec.StripChars(" \n\r\t\"\'");
+  spec.Trim(",");
   
   // Count the commas 
-  PRInt32 commaX = aSpec.FindChar(sComma);
+  PRInt32 commaX = spec.FindChar(sComma);
   PRInt32 count = 1;
-  while (commaX >= 0) {
+  while (commaX != kNotFound) {
     count++;
-    commaX = aSpec.FindChar(sComma, commaX + 1);
+    commaX = spec.FindChar(sComma, commaX + 1);
   }
 
-  if (count > aMaxNumValues) {
-    NS_ASSERTION(0, "Not enough space for values");
-    count = aMaxNumValues;
+  nsFramesetSpec* specs = new nsFramesetSpec[count];
+  if (!specs) {
+    *aSpecs = nsnull;
+    aNumSpecs = 0;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  // Pre-grab the compat mode; we may need it later in the loop.
+  nsCompatibility mode = eCompatibility_FullStandards;
+  nsCOMPtr<nsIHTMLDocument> htmlDocument =
+    do_QueryInterface(GetOwnerDoc());
+  if (htmlDocument) {
+    mode = htmlDocument->GetCompatibilityMode();
+  }
+      
   // Parse each comma separated token
 
   PRInt32 start = 0;
-  PRInt32 specLen = aSpec.Length();
+  PRInt32 specLen = spec.Length();
 
   for (PRInt32 i = 0; i < count; i++) {
     // Find our comma
-    commaX = aSpec.FindChar(sComma, start);
-    PRInt32 end = (commaX < 0) ? specLen : commaX;
+    commaX = spec.FindChar(sComma, start);
+    NS_ASSERTION(i == count - 1 || commaX != kNotFound,
+                 "Failed to find comma, somehow");
+    PRInt32 end = (commaX == kNotFound) ? specLen : commaX;
 
     // Note: If end == start then it means that the token has no
-    // data in it other than a terminating comma (or the end of the spec)
-    aSpecs[i].mUnit = eFramesetUnit_Fixed;
+    // data in it other than a terminating comma (or the end of the spec).
+    // So default to a fixed width of 0.
+    specs[i].mUnit = eFramesetUnit_Fixed;
+    specs[i].mValue = 0;
     if (end > start) {
       PRInt32 numberEnd = end;
-      PRUnichar ch = aSpec.CharAt(numberEnd - 1);
+      PRUnichar ch = spec.CharAt(numberEnd - 1);
       if (sAster == ch) {
-        aSpecs[i].mUnit = eFramesetUnit_Relative;
+        specs[i].mUnit = eFramesetUnit_Relative;
         numberEnd--;
       } else if (sPercent == ch) {
-        aSpecs[i].mUnit = eFramesetUnit_Percent;
+        specs[i].mUnit = eFramesetUnit_Percent;
         numberEnd--;
         // check for "*%"
         if (numberEnd > start) {
-          ch = aSpec.CharAt(numberEnd - 1);
+          ch = spec.CharAt(numberEnd - 1);
           if (sAster == ch) {
-            aSpecs[i].mUnit = eFramesetUnit_Relative;
+            specs[i].mUnit = eFramesetUnit_Relative;
             numberEnd--;
           }
         }
       }
 
       // Translate value to an integer
-      nsString token;
-      aSpec.Mid(token, start, numberEnd - start);
+      nsAutoString token;
+      spec.Mid(token, start, numberEnd - start);
 
       // Treat * as 1*
-      if ((eFramesetUnit_Relative == aSpecs[i].mUnit) &&
+      if ((eFramesetUnit_Relative == specs[i].mUnit) &&
         (0 == token.Length())) {
-        aSpecs[i].mValue = 1;
+        specs[i].mValue = 1;
       }
       else {
         // Otherwise just convert to integer.
         PRInt32 err;
-        aSpecs[i].mValue = token.ToInteger(&err);
+        specs[i].mValue = token.ToInteger(&err);
         if (err) {
-          aSpecs[i].mValue = 0;
+          specs[i].mValue = 0;
         }
       }
 
       // Treat 0* as 1* in quirks mode (bug 40383)
-      nsCompatibility mode = eCompatibility_FullStandards;
-      nsCOMPtr<nsIHTMLDocument> htmlDocument =
-        do_QueryInterface(GetOwnerDoc());
-      if (htmlDocument) {
-        mode = htmlDocument->GetCompatibilityMode();
-      }
-      
       if (eCompatibility_NavQuirks == mode) {
-        if ((eFramesetUnit_Relative == aSpecs[i].mUnit) &&
-          (0 == aSpecs[i].mValue)) {
-          aSpecs[i].mValue = 1;
+        if ((eFramesetUnit_Relative == specs[i].mUnit) &&
+          (0 == specs[i].mValue)) {
+          specs[i].mValue = 1;
         }
       }
         
@@ -436,21 +401,26 @@ nsHTMLFrameSetElement::ParseRowColSpec(nsString&       aSpec,
       // Nav resized absolute and relative frames to "1" and
       // percent frames to an even percentage of the width
       //
-      //if ((eCompatibility_NavQuirks == aMode) && (aSpecs[i].mValue <= 0)) {
-      //  if (eFramesetUnit_Percent == aSpecs[i].mUnit) {
-      //    aSpecs[i].mValue = 100 / count;
+      //if ((eCompatibility_NavQuirks == aMode) && (specs[i].mValue <= 0)) {
+      //  if (eFramesetUnit_Percent == specs[i].mUnit) {
+      //    specs[i].mValue = 100 / count;
       //  } else {
-      //    aSpecs[i].mValue = 1;
+      //    specs[i].mValue = 1;
       //  }
       //} else {
 
       // In standards mode, just set negative sizes to zero
-      if (aSpecs[i].mValue < 0) {
-        aSpecs[i].mValue = 0;
+      if (specs[i].mValue < 0) {
+        specs[i].mValue = 0;
       }
       start = end + 1;
     }
   }
-  return count;
+
+  aNumSpecs = count;
+  // Transfer ownership to caller here
+  *aSpecs = specs;
+  
+  return NS_OK;
 }
 
