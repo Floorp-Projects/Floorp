@@ -547,6 +547,16 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
     aUrl->GetScheme(&pageScheme);                                               
     aUrl->GetSpec(&pageURLString);
 
+    // Truncate the URL name at "#" named anchor and "?" query appendages
+    char* temp = pageURLString;
+    while (temp && *temp)
+    {
+      if ( *temp == '#' || *temp == '?')
+        *temp = '\0';
+      else
+        temp++;
+    }
+
 #if DEBUG
     printf("PrepareDocumentForEditing: Editor is editing %s\n", pageURLString ? pageURLString : "");
 #endif

@@ -2558,41 +2558,191 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTMLWithCharset(const nsString& aInputString,
   return res;
 }
 
+// This is mostly like InsertHTMLWithCharset, 
+//  but we can't use that because it is selection-based and 
+//  the rules code won't let us edit under the <head> node
 NS_IMETHODIMP
-nsHTMLEditor::RebuildDocumentFromSource(const nsString& aSourceString)
+nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsString &aSourceToInsert)
 {
-  // First, make sure there are no return chars in the document.
-  // Bad things happen if you insert returns (instead of dom newlines, \n)
-  // into an editor document.
-  nsAutoString sourceString (aSourceString);  // hope this does copy-on-write
- 
-  // Windows linebreaks: Map CRLF to LF:
-  sourceString.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
-                                NS_LITERAL_STRING("\n"));
- 
-  // Mac linebreaks: Map any remaining CR to LF:
-  sourceString.ReplaceSubstring(NS_LITERAL_STRING("\r"),
-                                NS_LITERAL_STRING("\n"));
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_NULL_POINTER;
 
   ForceCompositionEnd();
 
-  // Get the document we want to replace
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  // Do not use nsAutoRules -- rules code won't let us insert in <head>
+  // Use the head node as a parent and delete/insert directly
+  nsCOMPtr<nsIDOMNodeList>nodeList; 
+  nsAutoString headTag; headTag.AssignWithConversion("head"); 
 
-  nsCOMPtr<nsIDocument> document;
-  nsresult res = ps->GetDocument(getter_AddRefs(document));
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
+  if (!doc) return NS_ERROR_NOT_INITIALIZED;
+  res = doc->GetElementsByTagName(headTag, getter_AddRefs(nodeList));
+  if (NS_FAILED(res)) return res;
+  if (!nodeList) return NS_ERROR_NULL_POINTER;
+
+  PRUint32 count; 
+  nodeList->GetLength(&count);
+  if (count < 1) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> headNode;
+  res = nodeList->Item(0, getter_AddRefs(headNode)); 
+  if (NS_FAILED(res)) return res;
+  if (!headNode) return NS_ERROR_NULL_POINTER;
+
+  // First, make sure there are no return chars in the source.
+  // Bad things happen if you insert returns (instead of dom newlines, \n)
+  // into an editor document.
+  nsAutoString inputString (aSourceToInsert);  // hope this does copy-on-write
+ 
+  // Windows linebreaks: Map CRLF to LF:
+  inputString.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
+                               NS_LITERAL_STRING("\n"));
+ 
+  // Mac linebreaks: Map any remaining CR to LF:
+  inputString.ReplaceSubstring(NS_LITERAL_STRING("\r"),
+                               NS_LITERAL_STRING("\n"));
+
+  nsAutoEditBatch beginBatching(this);
+
+  res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_NULL_POINTER;
+
+  // Get the first range in the selection, for context:
+  nsCOMPtr<nsIDOMRange> range;
+  res = selection->GetRangeAt(0, getter_AddRefs(range));
+  if (NS_FAILED(res))
+    return res;
+
+  nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(range));
+  if (!nsrange)
+    return NS_ERROR_NO_INTERFACE;
+  nsCOMPtr<nsIDOMDocumentFragment> docfrag;
+  res = nsrange->CreateContextualFragment(inputString,
+                                          getter_AddRefs(docfrag));
+  if (NS_FAILED(res))
+  {
+#ifdef DEBUG
+    printf("Couldn't create contextual fragment: error was %d\n", res);
+#endif
+    return res;
+  }
+  if (!docfrag) return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMNode> child;
+
+  // First delete all children in head
+  do {
+    res = headNode->GetFirstChild(getter_AddRefs(child));
+    if (NS_FAILED(res)) return res;
+    if (child)
+    {
+      res = DeleteNode(child);
+      if (NS_FAILED(res)) return res;
+    }
+  } while (child);
+
+  // Now insert the new nodes
+  PRInt32 offsetOfNewNode = 0;
+  nsCOMPtr<nsIDOMNode> fragmentAsNode (do_QueryInterface(docfrag));
+
+  // Loop over the contents of the fragment and move into the document
+  do {
+    res = fragmentAsNode->GetFirstChild(getter_AddRefs(child));
+    if (NS_FAILED(res)) return res;
+    if (child)
+    {
+      res = InsertNode(child, headNode, offsetOfNewNode++);
+      if (NS_FAILED(res)) return res;
+    }
+  } while (child);
+
+  return res;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::RebuildDocumentFromSource(const nsString& aSourceString)
+{
+  ForceCompositionEnd();
+
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
 
-  nsCOMPtr<nsIParser>  theParser; 
-  res = nsComponentManager::CreateInstance(kCParserCID,  nsnull,  kCParserIID, getter_AddRefs(theParser)); 
-
+  nsCOMPtr<nsIDOMElement> bodyElement;
+  res = GetRootElement(getter_AddRefs(bodyElement));
   if (NS_FAILED(res)) return res;
+  if (!bodyElement) return NS_ERROR_NULL_POINTER;
+
+  // Find where the <body> tag starts.
+  // If user mangled that, then abort
+  PRInt32 bodyStart = aSourceString.Find(NS_LITERAL_STRING("<body"), PR_TRUE);
+  if (bodyStart == -1) return NS_ERROR_FAILURE;
+
+  PRInt32 headStart = aSourceString.Find(NS_LITERAL_STRING("<head"), PR_TRUE);
+  if (headStart == -1) return NS_ERROR_FAILURE;
+
+  // Find the index after "<head>"
+  PRInt32 headEnd = aSourceString.Find(NS_LITERAL_STRING("</head"), PR_TRUE);
+
+  // We'll be forgiving and assume head ends before body
+  if (headEnd == -1) headEnd = bodyStart;
+  nsAutoString headString;
+  aSourceString.Mid(headString, headStart, (headEnd - headStart));
   
-  // Parse the string to rebuild the document
-  // Last 2 params: enableVerify and "this is the last chunk to parse"
-  return theParser->Parse(sourceString, (void*)document.get(), NS_ConvertASCIItoUCS2("text/html"), PR_TRUE, PR_TRUE); 
+  nsAutoString bodyString;
+  aSourceString.Mid(bodyString, bodyStart, (aSourceString.Length() - bodyStart - 1));
+  
+  // Time to change the document
+  nsAutoEditBatch beginBatching(this);
+
+  // Try to replace body contents first
+  res = SelectAll();
+  if (NS_FAILED(res)) return res;
+
+  res = InsertHTML(bodyString);
+  if (NS_FAILED(res)) return res;
+  selection->Collapse(bodyElement, 0);
+
+  res = ReplaceHeadContentsWithHTML(headString);
+  if (NS_FAILED(res)) return res;
+
+  // Now we must copy attributes user might have edited on the <body> tag
+  //  because InsertHTML (actually, CreateContextualFragment()) 
+  //  will never return a body node in the DOM fragment
+  nsAutoString bodyTag;
+  // Truncate at the end of the body tag
+  PRInt32 bodyTagEnd = bodyString.FindChar((PRUnichar)'>', PR_FALSE, 5);
+  if (bodyTagEnd == -1) return NS_ERROR_FAILURE;
+  bodyString.Truncate(bodyTagEnd+1);
+  
+  // Kludge of the year: fool the parser by replacing "body" with "div" so we get a node
+  bodyString.ToLowerCase();
+  bodyString.ReplaceSubstring(NS_LITERAL_STRING("body"), NS_LITERAL_STRING("div"));
+
+  nsCOMPtr<nsIDOMRange> range;
+  res = selection->GetRangeAt(0, getter_AddRefs(range));
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(range));
+  if (!nsrange) return NS_ERROR_NO_INTERFACE;
+
+  nsCOMPtr<nsIDOMDocumentFragment> docfrag;
+  res = nsrange->CreateContextualFragment(bodyString, getter_AddRefs(docfrag));
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIDOMNode> fragmentAsNode (do_QueryInterface(docfrag));
+  if (!fragmentAsNode) return NS_ERROR_NULL_POINTER;
+  
+  nsCOMPtr<nsIDOMNode> child;
+  res = fragmentAsNode->GetFirstChild(getter_AddRefs(child));
+  if (NS_FAILED(res)) return res;
+  if (!child) return NS_ERROR_NULL_POINTER;
+  
+  // Copy all attributes from the div child to current body element
+  return CloneAttributes(bodyElement, child);
 }
 
 NS_IMETHODIMP nsHTMLEditor::InsertBreak()
@@ -5808,24 +5958,6 @@ nsHTMLEditor::GetHeadContentsAsHTML(nsString& aOutputString)
   }
   return res;
 }
-
-NS_IMETHODIMP
-nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsString &aSourceToInsert)
-{
-  nsCOMPtr<nsIDOMSelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
-  if (!selection) return NS_ERROR_NULL_POINTER;
-
-  // Save current selection
-  nsAutoSelectionReset selectionResetter(selection, this);
-  
-  res = SetSelectionAroundHeadChildren(selection, mDocWeak);
-  if (NS_FAILED(res)) return res;
-
-  return InsertHTML(aSourceToInsert);
-}
-
 
 NS_IMETHODIMP
 nsHTMLEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
