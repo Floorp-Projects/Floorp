@@ -36,7 +36,7 @@
 
 
 #include "nsCookiePromptService.h"
-#include "nsCookie.h"
+#include "nsICookie.h"
 #include "nsICookieAcceptDialog.h"
 #include "nsIDOMWindow.h"
 #include "nsIWindowWatcher.h"
