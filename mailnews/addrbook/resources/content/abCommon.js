@@ -240,6 +240,7 @@ function DirPaneSelectionChange()
       ClearResultsTreeSelection();
       resultsTree.setAttribute("ref", null);
     }
+  }
 }
 
 function ChangeDirectoryByDOMNode(dirNode)
