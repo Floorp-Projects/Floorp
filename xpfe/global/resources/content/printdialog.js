@@ -30,11 +30,10 @@ var gOriginalNumCopies = 1;
 var paramBlock;
 var gPrintSettings = null;
 var gPrinterName   = "";
-var gPrintToFile   = false;
 
 var default_file       = "mozilla.ps";
 var gPrintSetInterface = Components.interfaces.nsIPrintSettings;
-var doDebug            = true;
+var doDebug            = false;
 
 //---------------------------------------------------
 function initDialog()
@@ -103,6 +102,20 @@ function stripTrailingWhitespace(element)
 }
 
 //---------------------------------------------------
+function doEnablePrintToFile(value)
+{
+  if (value) {
+    dialog.fileLabel.removeAttribute("disabled");
+    dialog.fileInput.removeAttribute("disabled");
+    dialog.chooseButton.removeAttribute("disabled");
+  } else {
+    dialog.fileLabel.setAttribute("disabled","true");
+    dialog.fileInput.setAttribute("disabled","true");
+    dialog.chooseButton.setAttribute("disabled","true");
+  }
+}
+
+//---------------------------------------------------
 function listElement(aListElement)
   {
     this.listElement = aListElement;
@@ -151,6 +164,7 @@ listElement.prototype =
             dialog.propertiesButton.setAttribute("disabled","true");
             dialog.fileRadio.setAttribute("disabled","true");
             dialog.printButton.setAttribute("disabled","true");
+            doEnablePrintToFile(false);
           }
 
           this.listElement.appendChild(popupNode); 
@@ -168,7 +182,6 @@ function getPrinters()
   var strDefaultPrinterName = selectElement.appendPrinterNames(printerEnumerator);
 
   selectElement.listElement.value = strDefaultPrinterName;
-  dialog.fileRadio.selected = true;
 }
 
 //---------------------------------------------------
@@ -212,6 +225,7 @@ function loadDialog()
   var print_selection_radio_enabled = false;
   var print_frametype     = gPrintSetInterface.kSelectedFrame;
   var print_howToEnableUI = gPrintSetInterface.kFrameEnableNone;
+  var print_tofile        = "";
 
   try {
     printService = Components.classes["@mozilla.org/gfx/printoptions;1"];
@@ -225,7 +239,7 @@ function loadDialog()
 
   if (gPrintSettings) {
     gPrinterName        = gPrintSettings.printerName;
-    gPrintToFile        = gPrintSettings.printToFile;
+    print_tofile        = gPrintSettings.printToFile;
     gOriginalNumCopies  = gPrintSettings.numCopies;
 
     print_copies        = gPrintSettings.numCopies;
@@ -235,10 +249,18 @@ function loadDialog()
     print_selection_radio_enabled = gPrintSettings.GetPrintOptions(gPrintSetInterface.kEnableSelectionRB);
   }
 
+  if (print_tofile) {
+    dialog.destGroup.selectedItem = dialog.fileRadio;
+    doEnablePrintToFile(true);
+  } else {
+    dialog.destGroup.selectedItem = dialog.printerRadio;
+    doEnablePrintToFile(false);
+  }
+
   if (doDebug) {
     dump("loadDialog*********************************************\n");
     dump("toFileName              ["+print_file+"]\n");
-    dump("printToFile             "+gPrintToFile+"\n");
+    dump("print_tofile            "+print_tofile+"\n");
     dump("print_frame             "+print_frametype+"\n");
     dump("print_howToEnableUI     "+print_howToEnableUI+"\n");
     dump("selection_radio_enabled "+print_selection_radio_enabled+"\n");
