@@ -81,11 +81,11 @@ nsCookieService::GetCookieString(nsIURI *aURL, nsString& aCookie) {
   if (NS_FAILED(rv)) return rv;
   char *cookie = COOKIE_GetCookie((char *)(const char *)spec);
   if (nsnull != cookie) {
-    aCookie.SetString(cookie);
+    aCookie.Assign(cookie);
     nsCRT::free(cookie);
   } else {
     // No Cookie isn't an error condition.
-    aCookie.SetString("");
+    aCookie.Truncate();
   }
   return NS_OK;
 }
@@ -100,11 +100,11 @@ nsCookieService::GetCookieStringFromHTTP(nsIURI *aURL, nsIURI *aFirstURL, nsStri
   if (NS_FAILED(rv)) return rv;
   char *cookie = COOKIE_GetCookieFromHttp((char *)(const char *)spec, (char *)(const char *)firstSpec);
   if (nsnull != cookie) {
-    aCookie.SetString(cookie);
+    aCookie.Assign(cookie);
     nsCRT::free(cookie);
   } else {
     // No Cookie isn't an error condition.
-    aCookie.SetString("");
+    aCookie.Truncate();
   }
   return NS_OK;
 }
