@@ -29,7 +29,7 @@
  *
  * @author Tim Rowley <tor@cs.brown.edu>
  * @author Stuart Parmenter <pavlov@netscape.com>
- * @version 1.2
+ * @version 0.1
  * @see "gfx2"
  */
 [scriptable, uuid(51cc27a8-1dd2-11b2-a1aa-dad33ab193b4)]
@@ -38,8 +38,8 @@ interface nsIImageFrame : nsISupports
   /**
    * Create a new \a aWidth x \a aHeight sized image.
    *
-   * @param aX The offset from the nsIImageContainer parent at (0,0)
-   * @param aY The offset from the nsIImageContainer parent at (0,0)
+   * @param aX The x-offset from the origin of the nsIImageContainer parent.
+   * @param aY The y-offset from the origin of the nsIImageContainer parent.
    * @param aWidth The width of the image to create.
    * @param aHeight The height of the image to create.
    * @param aFormat the width of the image to create.
@@ -54,12 +54,12 @@ interface nsIImageFrame : nsISupports
 
 
   /**
-   * The width of the image.
+   * The x-offset of the image.
    */
   readonly attribute gfx_coord x;
 
   /**
-   * The width of the image.
+   * The y-offset of the image.
    */
   readonly attribute gfx_coord y;
 
@@ -74,7 +74,7 @@ interface nsIImageFrame : nsISupports
   readonly attribute gfx_dimension height;
 
   /**
-   * The width of the image.
+   * The rectangle this frame ocupies.
    */
   [noscript] readonly attribute nsRect2 rect;
 
