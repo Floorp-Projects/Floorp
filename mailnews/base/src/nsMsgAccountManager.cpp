@@ -1623,6 +1623,24 @@ NS_IMETHODIMP nsMsgAccountManager::NotifyServerUnloaded(nsIMsgIncomingServer *se
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgAccountManager::NotifyServerChanged(nsIMsgIncomingServer *server)
+{
+	nsresult rv;
+	PRUint32 count;
+	rv = m_incomingServerListeners->Count(&count);
+	if (NS_FAILED(rv)) return rv;
+
+	
+	for(PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsIIncomingServerListener> listener = 
+			getter_AddRefs((nsIIncomingServerListener*)m_incomingServerListeners->ElementAt(i));
+		listener->OnServerChanged(server);
+	}
+
+	return NS_OK;
+}
+
 NS_IMETHODIMP
 nsMsgAccountManager::FindServer(const char* username,
                                 const char* hostname,

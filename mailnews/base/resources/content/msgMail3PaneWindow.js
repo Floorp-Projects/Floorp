@@ -350,6 +350,65 @@ function IsCurrentLoadedFolder(folder)
 	return false;
 }
 
+function ServerContainsFolder(server, folder)
+{
+  if (!folder || !server)
+    return false;
+
+  return server.equals(folder.server);
+}
+
+function SelectServer(server)
+{
+  SelectFolder(server.RootFolder.URI);
+}
+
+// we have this incoming server listener in case we need to
+// alter the folder pane selection when a server is removed
+// or changed (currently, when the real username or real hostname change)
+var gThreePaneIncomingServerListener = {
+    onServerLoaded: function(server) {},
+    onServerUnloaded: function(server) {
+      var selectedFolders = GetSelectedMsgFolders();
+      for (var i = 0; i < selectedFolders.length; i++) {
+        if (ServerContainsFolder(server, selectedFolders[i])) {
+          SelectServer(accountManager.defaultAccount.incomingServer);
+          // we've made a new selection, we're done
+          return;
+        }
+      }
+   
+      // if nothing is selected at this point, better go select the default
+      // this could happen if nothing was selected when the server was removed
+      selectedFolders = GetSelectedMsgFolders();
+      if (selectedFolders.length == 0) {
+        SelectServer(accountManager.defaultAccount.incomingServer);
+      }
+    },
+    onServerChanged: function(server) {
+      // if the current selected folder is on the server that changed
+      // and that server is an imap or news server, 
+      // we need to update the selection. 
+      // on those server types, we'll be reconnecting to the server
+      // and our currently selected folder will need to be reloaded
+      // or worse, be invalid.
+      if (server.type != "imap" && server.type !="nntp")
+        return;
+
+      var selectedFolders = GetSelectedMsgFolders();
+      for (var i = 0; i < selectedFolders.length; i++) {
+        // if the selected item is a server, we don't have to update
+        // the selection
+        if (!(selectedFolders[i].isServer) && ServerContainsFolder(server, selectedFolders[i])) {
+          SelectServer(server);
+          // we've made a new selection, we're done
+          return;
+        }
+      }
+    }
+}
+
+
 /* Functions related to startup */
 function OnLoadMessenger()
 {
@@ -374,6 +433,7 @@ function OnLoadMessenger()
   InitPanes();
 
   accountManager.SetSpecialFoldersForIdentities();
+  accountManager.addIncomingServerListener(gThreePaneIncomingServerListener);
 
   AddToSession();
   //need to add to session before trying to load start folder otherwise listeners aren't
@@ -441,6 +501,7 @@ function OnLoadMessenger()
 
 function OnUnloadMessenger()
 {
+  accountManager.removeIncomingServerListener(gThreePaneIncomingServerListener);
   OnMailWindowUnload();
 }
 

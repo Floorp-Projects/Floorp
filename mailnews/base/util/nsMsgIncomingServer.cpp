@@ -1109,7 +1109,7 @@ NS_IMETHODIMP
 nsMsgIncomingServer::SetPort(PRInt32 aPort)
 {
     nsresult rv;
-    
+ 
     nsCOMPtr<nsIMsgProtocolInfo> protocolInfo;
     rv = getProtocolInfo(getter_AddRefs(protocolInfo));
     NS_ENSURE_SUCCESS(rv, rv);

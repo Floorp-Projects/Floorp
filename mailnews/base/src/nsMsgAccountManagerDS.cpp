@@ -1015,6 +1015,12 @@ nsMsgAccountManagerDataSource::OnServerUnloaded(nsIMsgIncomingServer* aServer)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsMsgAccountManagerDataSource::OnServerChanged(nsIMsgIncomingServer *server)
+{
+  return NS_OK;
+}
+
 nsresult
 nsMsgAccountManagerDataSource::OnItemPropertyChanged(nsISupports *, nsIAtom *, char const *, char const *)
 {

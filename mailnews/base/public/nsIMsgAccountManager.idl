@@ -151,12 +151,13 @@ interface nsIMsgAccountManager : nsISupports {
   void removeRootFolderListener(in nsIFolderListener listener);
 
   // these are going away in favor of add/removeRootFolderListener
-  void AddIncomingServerListener(in nsIIncomingServerListener serverListener);
-  void RemoveIncomingServerListener(in nsIIncomingServerListener serverListener);
+  void addIncomingServerListener(in nsIIncomingServerListener serverListener);
+  void removeIncomingServerListener(in nsIIncomingServerListener serverListener);
 
   // these are going away in favor of nsIFolder::NotifyEvent(in nsIAtom event);
-  void NotifyServerLoaded(in nsIMsgIncomingServer server);
-  void NotifyServerUnloaded(in nsIMsgIncomingServer server);
+  void notifyServerLoaded(in nsIMsgIncomingServer server);
+  void notifyServerUnloaded(in nsIMsgIncomingServer server);
+  void notifyServerChanged(in nsIMsgIncomingServer server);
 
   // force account info out to prefs file
   void saveAccountInfo();
