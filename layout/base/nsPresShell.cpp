@@ -397,30 +397,24 @@ static PRBool gAsyncReflowDuringDocLoad = PR_FALSE;
 static const size_t gMaxRecycledSize = 400;
 
 #define MARK_INCREMENT 50
-#define BLOCK_INCREMENT 2048
+#define BLOCK_INCREMENT 4044 /* a bit under 4096, for malloc overhead */
 
 /**A block of memory that the stack will 
  * chop up and hand out
  */
 struct StackBlock {
    
-   // a block of memory
-   void* mBlock;
+   // a block of memory.  Note that this must be first so that it will
+   // be aligned.
+   char mBlock[BLOCK_INCREMENT];
 
    // another block of memory that would only be created
    // if our stack overflowed. Yes we have the ability
    // to grow on a stack overflow
    StackBlock* mNext;
-   StackBlock()
-   {
-      mBlock = PR_Malloc(BLOCK_INCREMENT);
-      mNext = nsnull;
-   }
 
-   ~StackBlock()
-   {
-     PR_Free(mBlock);
-   }
+   StackBlock() : mNext(nsnull) { }
+   ~StackBlock() { }
 };
 
 /* we hold an array of marks. A push pushes a mark on the stack
@@ -543,7 +537,7 @@ StackArena::Allocate(size_t aSize, void** aResult)
   }
 
   // return the chunk they need.
-  *aResult = ((char*)mCurBlock->mBlock) + mPos;
+  *aResult = mCurBlock->mBlock + mPos;
   mPos += aSize;
 
   return NS_OK;
