@@ -62,7 +62,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
-
+#include "nsContentUtils.h"
 
 class nsBulletListener : public imgIDecoderObserver
 {
@@ -153,8 +153,10 @@ nsBulletFrame::Init(nsIPresContext*  aPresContext,
       NS_RELEASE(listener);
     }
 
-    // XXX: initialDocumentURI is NULL !
-    il->LoadImage(imgURI, nsnull, documentURI, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(mImageRequest));
+    if (imgURI && nsContentUtils::CanLoadImage(imgURI, doc, doc)) {
+      // XXX: initialDocumentURI is NULL !
+      il->LoadImage(imgURI, nsnull, documentURI, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(mImageRequest));
+    }
   }
 
   return NS_OK;
