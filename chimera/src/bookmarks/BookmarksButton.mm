@@ -34,6 +34,7 @@
     if ( (self = [super initWithFrame:frame]) ) {
         mElement = nsnull;
         [self setBezelStyle: NSRegularSquareBezelStyle];
+        [self setButtonType: NSMomentaryChangeButton];
         [self setBordered: NO];
         [self setImagePosition: NSImageLeft];
         [self setRefusesFirstResponder: YES];
@@ -138,7 +139,11 @@
   // XXX mouseDragged is never called because buttons cancel dragging while you mouse down 
   //     I have to fix this in an ugly way, by doing the "click" stuff myself and never relying
   //     on the superclass for that.  Bah!
-  BookmarksService::DragBookmark(mElement, self, aEvent);
+
+  //  perhaps you could just implement mouseUp to perform the action (which should be the case
+  //  things shouldn't happen on mouse down)  Then does mouseDragged get overridden?
+
+  //   BookmarksService::DragBookmark(mElement, self, aEvent);
 }
 
 @end

@@ -309,18 +309,82 @@
 
 - (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
 {
-  return YES;
+  BookmarkItem* parent;
+  int index = 0;
+  NSArray *draggedItems = [[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"];
+
+  // If we are dropping into a folder
+  if (mDragInsertionPosition == BookmarksService::CHInsertInto) {
+    nsCOMPtr<nsIDOMElement> parentElt = [mDragInsertionButton element];
+    nsCOMPtr<nsIContent> parentContent(do_QueryInterface(parentElt));
+    parent = BookmarksService::GetWrapperFor(parentContent);
+    index = 0;
+  }
+
+  // If we are dropping onto the toolbar directly
+  else if (mDragInsertionPosition == BookmarksService::CHInsertBefore ||
+           mDragInsertionPosition == BookmarksService::CHInsertAfter) {
+    nsCOMPtr<nsIDOMElement> rootElt = BookmarksService::gToolbarRoot;
+    nsCOMPtr<nsIContent> rootContent(do_QueryInterface(rootElt));
+    parent = BookmarksService::GetWrapperFor(rootContent);
+    index = [mButtons indexOfObject: mDragInsertionButton];
+    if (index == NSNotFound)
+      rootContent->ChildCount(index);
+    else if (mDragInsertionPosition == BookmarksService::CHInsertAfter)
+      index++;
+    } else {
+      mDragInsertionButton = nil;
+      mDragInsertionPosition = BookmarksService::CHInsertNone;
+      [self setNeedsDisplay:YES];
+      return NO;
+    }
+
+    bool valid = BookmarksService::IsBookmarkDropValid(parent, index, draggedItems);
+    if (!valid) {
+      mDragInsertionButton = nil;
+      mDragInsertionPosition = BookmarksService::CHInsertNone;
+      [self setNeedsDisplay:YES];
+    }
+
+  return valid;
 }
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
-  BookmarksService::CompleteBookmarkDrag([sender draggingPasteboard], BookmarksService::gToolbarRoot, 
-                                         mDragInsertionButton ? [mDragInsertionButton element] : nil,
-                                         mDragInsertionPosition);
-  
+  BookmarkItem* parent;
+  int index = 0;
+  NSArray *draggedItems = [[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"];
+
+  // If we are dropping into a folder
+  if (mDragInsertionPosition == BookmarksService::CHInsertInto) {
+    nsCOMPtr<nsIDOMElement> parentElt = [mDragInsertionButton element];
+    nsCOMPtr<nsIContent> parentContent(do_QueryInterface(parentElt));
+    parent = BookmarksService::GetWrapperFor(parentContent);
+    index = 0;
+  }
+
+  // If we are dropping onto the toolbar directly
+  else if (mDragInsertionPosition == BookmarksService::CHInsertBefore ||
+           mDragInsertionPosition == BookmarksService::CHInsertAfter) {
+    nsCOMPtr<nsIDOMElement> rootElt = BookmarksService::gToolbarRoot;
+    nsCOMPtr<nsIContent> rootContent(do_QueryInterface(rootElt));
+    parent = BookmarksService::GetWrapperFor(rootContent);
+    index = [mButtons indexOfObject: mDragInsertionButton];
+    if (index == NSNotFound)
+      rootContent->ChildCount(index);
+    else if (mDragInsertionPosition == BookmarksService::CHInsertAfter)
+      index++;
+    } else {
+      mDragInsertionButton = nil;
+      mDragInsertionPosition = BookmarksService::CHInsertNone;
+      [self setNeedsDisplay:YES];
+      return NO;
+    }
+
+  BookmarksService::PerformBookmarkDrop(parent, index, draggedItems);
+
   mDragInsertionButton = nil;
   mDragInsertionPosition = BookmarksService::CHInsertNone;
-
   [self setNeedsDisplay:YES];
 
   return YES;    
@@ -329,14 +393,11 @@
 - (NSRect)insertionRectForButton:(NSView*)aButton position:(int) aPosition
 {
   if (aPosition == BookmarksService::CHInsertInto) {
-    return NSMakeRect([aButton frame].origin.x, [aButton frame].origin.y,
-                      [aButton frame].size.width, [aButton frame].size.height);
+    return NSMakeRect([aButton frame].origin.x, [aButton frame].origin.y, [aButton frame].size.width, [aButton frame].size.height);
   } else if (aPosition == BookmarksService::CHInsertAfter) {
-    return NSMakeRect([aButton frame].origin.x+[aButton frame].size.width, [aButton frame].origin.y,
-                      2, [aButton frame].size.height);
+    return NSMakeRect([aButton frame].origin.x+[aButton frame].size.width, [aButton frame].origin.y, 2, [aButton frame].size.height);
   } else {// if (aPosition == BookmarksService::CHInsertBefore) {
-    return NSMakeRect([aButton frame].origin.x - 2, [aButton frame].origin.y,
-                      2, [aButton frame].size.height);
+    return NSMakeRect([aButton frame].origin.x - 2, [aButton frame].origin.y, 2, [aButton frame].size.height);
   }
 }
 
