@@ -214,6 +214,7 @@ private:
   nsresult CommonInit (void);
   nsresult SetupPS (void);
   LONG     GetGPIColor (void);
+  void     PushClipState(void);
 
 
   // Colour/font setting; call before drawing things.

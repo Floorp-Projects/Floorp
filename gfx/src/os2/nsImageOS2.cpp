@@ -475,7 +475,7 @@ nsresult nsImageOS2::Optimize( nsIDeviceContext* aContext)
 
 void nsImageOS2::CreateBitmaps( nsDrawingSurfaceOS2 *surf)
 {
-   mBitmap = GFX (::GpiCreateBitmap (surf->GetPS (), (PBITMAPINFOHEADER2)mInfo,
+   mBitmap = GFX (::GpiCreateBitmap (surf->GetPS(), (PBITMAPINFOHEADER2)mInfo,
                                      CBM_INIT, (PBYTE)mImageBits, mInfo),
                   GPI_ERROR);
 
@@ -484,7 +484,7 @@ void nsImageOS2::CreateBitmaps( nsDrawingSurfaceOS2 *surf)
       if( mAlphaDepth == 1)
       {
          MONOBITMAPINFO maskInfo( mInfo);
-         mABitmap = GFX (::GpiCreateBitmap (surf->GetPS (), maskInfo, CBM_INIT,
+         mABitmap = GFX (::GpiCreateBitmap (surf->GetPS(), maskInfo, CBM_INIT,
                                             (PBYTE)mAlphaBits, maskInfo),
                          GPI_ERROR);
       }
@@ -710,10 +710,114 @@ PRBool nsImageOS2::SlowTile (nsIRenderingContext& aContext, nsDrawingSurface aSu
 }
 
 #ifdef USE_IMG2
+void nsImageOS2::NS2PM_ININ( const nsRect &in, RECTL &rcl)
+{
+  PRUint32 ulHeight = GetHeight ();
+
+  rcl.xLeft = in.x;
+  rcl.xRight = in.x + in.width - 1;
+  rcl.yTop = ulHeight - in.y - 1;
+  rcl.yBottom = rcl.yTop - in.height + 1;
+}
+
+
+// ---------------------------------------------------
+//	Update mImageBits with content of new mBitmap
+//
+NS_IMETHODIMP nsImageOS2::UpdateImageBits( HPS mPS )
+{
+  BITMAPINFOHEADER2 rawInfo = { 0 };
+  rawInfo.cbFix   = sizeof (BITMAPINFOHEADER2);
+  rawInfo.cPlanes = 1;
+  rawInfo.cBitCount = mInfo->cBitCount;
+
+  int RawDataSize = mInfo->cy * RASWIDTH (mInfo->cx, mInfo->cBitCount);
+  PRUint8* pRawBitData = (PRUint8*)malloc (RawDataSize);
+
+  if (pRawBitData)
+  {
+    GFX (::GpiQueryBitmapBits (mPS, 0, mInfo->cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&rawInfo), GPI_ALTERROR);
+    free (mImageBits);
+    mImageBits = pRawBitData;
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_OUT_OF_MEMORY;
+}
+
 NS_IMETHODIMP nsImageOS2::DrawToImage(nsIImage* aDstImage,
                                       nscoord aDX, nscoord aDY,
                                       nscoord aDWidth, nscoord aDHeight)
 {
-  return NS_ERROR_FAILURE;
+  HBITMAP oldBitmap;
+  int rc = NS_OK;
+
+  DEVOPENSTRUC dop = { 0, 0, 0, 0, 0 };
+  SIZEL sizel = { 0, 0 };
+
+  if (mInfo == nsnull || aDWidth < 0 || aDHeight < 0) 
+    return NS_ERROR_FAILURE;
+
+  if (0 == aDWidth || 0 == aDHeight)
+    return NS_OK;
+
+  // Create a memory DC that is compatible with the screen
+  HDC destDC = GFX (::DevOpenDC( 0/*hab*/, OD_MEMORY, "*", 5,
+                      (PDEVOPENDATA) &dop, (HDC)0), DEV_ERROR);
+
+  // create the PS
+  HPS destPS = GFX (::GpiCreatePS (0/*hab*/, destDC, &sizel,
+                                  PU_PELS | GPIT_MICRO | GPIA_ASSOC), GPI_ERROR);
+
+  nsImageOS2* destImg = NS_STATIC_CAST(nsImageOS2*, aDstImage); 
+
+  if(!destImg->mBitmap)
+  {
+    destImg->mBitmap = GFX (::GpiCreateBitmap (destPS,
+                                (PBITMAPINFOHEADER2)destImg->mInfo,
+                                CBM_INIT, (PBYTE)destImg->mImageBits,
+                                destImg->mInfo),
+                            GPI_ERROR);
+    destImg->mIsOptimized = PR_TRUE;
+  }
+
+  oldBitmap = GFX (::GpiSetBitmap (destPS, destImg->mBitmap), HBM_ERROR);
+
+  nsRect trect( aDX, aDY, aDWidth, aDHeight);
+  RECTL  rcl;
+  destImg->NS2PM_ININ (trect, rcl);
+
+  // Set up blit coord array
+  POINTL aptl[ 4] = { { rcl.xLeft, rcl.yBottom },
+                      { rcl.xRight, rcl.yTop },
+                      { 0, mInfo->cy - mNaturalHeight },
+                      { mNaturalWidth, mInfo->cy } };
+
+  if( 1==mAlphaDepth && mAlphaBits){
+    // Apply mask to target, clear pels we will fill in from the image
+    MONOBITMAPINFO MaskBitmapInfo (mInfo);
+    GFX (::GpiDrawBits (destPS, mAlphaBits, MaskBitmapInfo, 4, aptl, ROP_SRCAND,
+                        BBO_IGNORE), GPI_ERROR);
+
+    // Now combine image with target
+    GFX (::GpiDrawBits (destPS, mImageBits, mInfo, 4, aptl, ROP_SRCPAINT, 
+                        BBO_IGNORE), GPI_ERROR);
+  } else {
+    // alpha depth of 8 not used (yet?)
+    NS_ASSERTION( mAlphaDepth != 8, "Alpha depth of 8 not implemented in DrawToImage" );
+
+    // no transparency, just blit it
+    GFX (::GpiDrawBits (destPS, mImageBits, mInfo, 4, aptl, ROP_SRCCOPY,
+                        BBO_IGNORE), GPI_ERROR);
+  }
+
+  rc = destImg->UpdateImageBits (destPS);
+
+  GFX (::GpiSetBitmap (destPS, oldBitmap), HBM_ERROR);
+
+  GFX (::GpiDestroyPS (destPS), FALSE);
+  GFX (::DevCloseDC (destDC), DEV_ERROR);
+
+  return rc;
 }
 #endif

@@ -218,6 +218,8 @@ public:
   static PRUint8      FAST_BLEND (PRUint8 Source, PRUint8 Dest, PRUint8 Alpha) { return gBlenderLookup [(Alpha << 8) + Source] + 
                                                                                         gBlenderLookup [((255 - Alpha) << 8) + Dest]; }
 
+  NS_IMETHODIMP UpdateImageBits( HPS mPS );
+  void NS2PM_ININ( const nsRect &in, RECTL &rcl);
   void CreateBitmaps( nsDrawingSurfaceOS2 *surf);
 
   PRBool  SlowTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,nscoord aWidth,nscoord aHeight);
