@@ -701,6 +701,43 @@ GlobalWindowImpl::Close()
 }
 
 NS_IMETHODIMP
+GlobalWindowImpl::Forward()
+{
+  if (NS_OK == mWebShell->CanForward())
+    mWebShell->Forward();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::Back()
+{
+  if (NS_OK == mWebShell->CanBack())
+    mWebShell->Back();
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::Home()
+{
+  // XXX: This should look in the preferences to find the home URL. 
+  // Temporary hardcoded to www.netscape.com
+  nsString homeURL("http://www.netscape.com");
+  PRUnichar* urlToLoad = homeURL.ToNewUnicode();
+  mWebShell->LoadURL(urlToLoad);
+  delete urlToLoad;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::Stop()
+{
+  mWebShell->Stop();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 GlobalWindowImpl::MoveTo(PRInt32 aXPos, PRInt32 aYPos)
 {
   nsIBrowserWindow *mBrowser;
