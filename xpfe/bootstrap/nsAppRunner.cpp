@@ -35,6 +35,7 @@
 #include "nsICmdLineService.h"
 #include "nsIAppShellService.h"
 #include "nsIAppShellComponent.h"
+#include "nsIAppStartupNotifier.h"
 #include "nsIObserverService.h"
 #include "nsAppShellCIDs.h"
 #include "prprf.h"
@@ -259,7 +260,10 @@ static nsresult OpenWindow(const char *urlstr, const PRUnichar *args)
   return rv;
 }
 
-static nsresult OpenChromeURL( const char * urlstr, PRInt32 height = NS_SIZETOCONTENT, PRInt32 width = NS_SIZETOCONTENT )
+static nsresult
+OpenChromeURL( const char * urlstr,
+               PRInt32 height = NS_SIZETOCONTENT,
+               PRInt32 width = NS_SIZETOCONTENT )
 {
 #ifdef DEBUG_CMD_LINE
     printf("OpenChromeURL(%s,%d,%d)\n",urlstr,height,width);
@@ -276,7 +280,8 @@ static nsresult OpenChromeURL( const char * urlstr, PRInt32 height = NS_SIZETOCO
 
    nsCOMPtr<nsIXULWindow> newWindow;
  	rv = appShell->CreateTopLevelWindow(nsnull, url,
-                                      PR_TRUE, PR_TRUE, nsIWebBrowserChrome::CHROME_ALL,
+                                      PR_TRUE, PR_TRUE,
+                                      nsIWebBrowserChrome::CHROME_ALL,
                                       width, height,
                                       getter_AddRefs(newWindow));
   return rv;
@@ -359,16 +364,20 @@ nsresult LaunchApplication(const char *contractID, PRInt32 height, PRInt32 width
     nsXPIDLString defaultArgs;
     rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
     if (NS_FAILED(rv)) return rv;
-    rv = OpenWindow((const char *)chromeUrlForTask, defaultArgs);
+    rv = OpenWindow(chromeUrlForTask, defaultArgs);
   }
   else {
-    rv = OpenChromeURL((const char *)chromeUrlForTask, height, width);
+    rv = OpenChromeURL(chromeUrlForTask, height, width);
   }
 
   return rv;
 }
 
-static nsresult LaunchApplicationWithArgs(const char *commandLineArg, nsICmdLineService *cmdLineArgs, const char *contractID, PRInt32 height, PRInt32 width)
+static nsresult
+LaunchApplicationWithArgs(const char *commandLineArg,
+                          nsICmdLineService *cmdLineArgs,
+                          const char *contractID,
+                          PRInt32 height, PRInt32 width)
 {
   if (!contractID || !commandLineArg || !cmdLineArgs)
     return NS_ERROR_FAILURE;
@@ -405,17 +414,17 @@ static nsresult LaunchApplicationWithArgs(const char *commandLineArg, nsICmdLine
         if (NS_FAILED(rv)) return rv;
 
         if (openWindowWithArgs) {
-          nsString cmdArgs; cmdArgs.AssignWithConversion(NS_STATIC_CAST(const char *, cmdResult));
+          nsString cmdArgs; cmdArgs.AssignWithConversion(cmdResult);
 #ifdef DEBUG_CMD_LINE
           printf("opening %s with %s\n",(const char *)chromeUrlForTask,"OpenWindow");
 #endif /* DEBUG_CMD_LINE */
-          rv = OpenWindow((const char *)chromeUrlForTask, cmdArgs.GetUnicode());
+          rv = OpenWindow(chromeUrlForTask, cmdArgs.GetUnicode());
         }
         else {
 #ifdef DEBUG_CMD_LINE
           printf("opening %s with %s\n",(const char *)cmdResult,"OpenChromeURL");
 #endif /* DEBUG_CMD_LINE */
-          rv = OpenChromeURL((const char *)cmdResult,height, width);
+          rv = OpenChromeURL(cmdResult,height, width);
           if (NS_FAILED(rv)) return rv;
         }
       }
@@ -424,19 +433,19 @@ static nsresult LaunchApplicationWithArgs(const char *commandLineArg, nsICmdLine
         rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
         if (NS_FAILED(rv)) return rv;
 
-        rv = OpenWindow((const char *)chromeUrlForTask, defaultArgs);
+        rv = OpenWindow(chromeUrlForTask, defaultArgs);
         if (NS_FAILED(rv)) return rv;
       }
     }
   }
   else {
     if (NS_SUCCEEDED(rv) && (const char*)cmdResult) {
-      if (PL_strcmp("1",(const char *)cmdResult) == 0) {
-        rv = OpenChromeURL((const char *)chromeUrlForTask,height, width);
+      if (PL_strcmp("1",cmdResult) == 0) {
+        rv = OpenChromeURL(chromeUrlForTask,height, width);
         if (NS_FAILED(rv)) return rv;
       }
       else {
-        rv = OpenChromeURL((const char *)cmdResult, height, width);
+        rv = OpenChromeURL(cmdResult, height, width);
         if (NS_FAILED(rv)) return rv;
       }
     }
@@ -543,7 +552,7 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
   else {
     PRInt32 argc = 0;
     rv = cmdLineArgs->GetArgc(&argc);
-	if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
 
     NS_ASSERTION(argc > 1, "we shouldn't be here if there were no command line arguments");
     if (argc <= 1) return NS_ERROR_FAILURE;
@@ -629,7 +638,7 @@ static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
     rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
     if (NS_FAILED(rv)) return rv;
 
-    rv = OpenChromeURL((const char *)chromeUrlForTask, height, width );
+    rv = OpenChromeURL(chromeUrlForTask, height, width );
     if (NS_FAILED(rv)) return rv;
 
     return rv;
@@ -909,6 +918,14 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   }
 
   // Start up the core services:
+
+  // Please do not add new things to main1() - please hook into the
+  // nsIAppStartupNotifier service.
+  nsCOMPtr<nsIObserver> startupNotifier = do_CreateInstance(NS_APPSTARTUPNOTIFIER_CONTRACTID, &rv);
+  if(NS_FAILED(rv))
+    return rv;
+  startupNotifier->Observe(nsnull, APPSTARTUP_TOPIC, nsnull);
+
   
   // Initialize the cmd line service
   nsCOMPtr<nsICmdLineService> cmdLineArgs(do_GetService(kCmdLineServiceCID, &rv));
