@@ -86,6 +86,9 @@
 #include "nsISocketTransportService.h"
 #include "nsIFileTransportService.h"
 
+#if TARGET_CARBON && !XP_MACOSX
+#include "MenuSharing.h"
+#endif
 
 #ifndef topLeft
 #define topLeft(r)  (((Point *) &(r))[0])
@@ -189,6 +192,22 @@ static long ConvertOSMenuResultToPPMenuResult(long menuResult)
 }
 
 #pragma mark -
+#if TARGET_CARBON && !XP_MACOSX
+#pragma mark MenuSharingToolkitSupport
+//=================================================================
+static pascal void ErrorDialog (Str255 s)
+{
+  //ParamText (s, "\p", "\p", "\p"); 
+  //Alert (kMenuSharingAlertID, nil);
+}
+	
+//=================================================================
+static pascal void EventFilter (EventRecord *ev)
+{
+  // Hrm, prolly should do _something_ here
+}
+#pragma mark -
+#endif
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -214,6 +233,11 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit)
 
   // startup the watch cursor idle time vbl task
   nsWatchTask::GetTask().Start();
+
+#if TARGET_CARBON && !XP_MACOSX
+  // added to support Menu Sharing API.  Initializes the Menu Sharing API.
+  InitSharedMenus (ErrorDialog, EventFilter);
+#endif
 }
 
 //=================================================================
@@ -982,6 +1006,14 @@ void  nsMacMessagePump::DoIdle(EventRecord &anEvent)
 {
   // send mouseMove event
   static Point  lastWhere = {0, 0};
+
+#if TARGET_CARBON && !XP_MACOSX
+  if ( nsToolkit::IsAppInForeground() )
+  {
+    // Shared Menu support - note we hardcode first menu ID available as 31000
+    CheckSharedMenus(31000);
+  }
+#endif    
 
   if (*(long*)&lastWhere == *(long*)&anEvent.where)
     return;
