@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?> <!-- -*- tab-width: 4; indent-tabs-mode: nil -*- -->
 
 <!-- The contents of this file are subject to the Netscape Public
 License Version 1.1 (the "License"); you may not use this file
@@ -25,21 +25,53 @@ Contributor(s): ______________________________________. -->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 
-
 <!DOCTYPE window SYSTEM "chrome://global/locale/console.dtd" >
 
-<window id="console-top" xmlns:html="http://www.w3.org/TR/REC-html40"
+<window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&console.title;"
         onload="onLoadJSConsole()"
         onunload="onUnloadJSConsole()"
         windowtype="global:console"
-        align="vertical" width="640" height="480"> 
-                  
+        align="vertical"
+        width="640" height="480"
+        screenX="10" screenY="10"
+        persist="screenX screenY width height"
+> 
+
+<html:script src="chrome://global/content/strres.js"></html:script>
 <html:script src="chrome://global/content/globalOverlay.js"></html:script>
 <html:script src="chrome://global/content/console.js"></html:script>
 
+<broadcasterset>
+        <broadcaster id="cmd_quit"/>
+</broadcasterset>
+
+<menubar id="main-menubar" class="chromeclass-menubar">
+
+        <menu id="menu_File">
+                <menupopup id="menu_FilePopup">
+                        <menuitem id="menu_close" oncommand="window.close()"/>
+                </menupopup>
+        </menu>
+
+        <menu id="menu_Edit">
+                <menupopup id="dummyid">
+                        <menuitem id="menu_cut" disabled="true"/>
+                        <menuitem id="menu_copy" disabled="true"/>
+                        <menuitem id="menu_paste" disabled="true"/>
+                </menupopup>
+        </menu>
+
+        <!-- tasks menu filled from tasksOverlay -->
+        <menu accesskey="t" id="tasksMenu"/>
+
+        <!-- help menu filled from globalOverlay -->
+        <menu accesskey="h" id="menu_Help"/>
+</menubar>
+
 <box align="vertical" id="console" style="overflow:auto" flex="1"/>
+
 <toolbar id="taskbar"/>
- 
+
 </window>
