@@ -113,7 +113,7 @@ tabpanels {
    padding        : 2px;
    padding-left   : 4px;
    font-family    : Arial, Helvetica;
-   -moz-box-align : center;
+   -moz-box-align           : start;
 }
 
 /*--------------------------------------------------------------------
