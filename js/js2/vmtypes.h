@@ -207,13 +207,13 @@ namespace VM {
 
         virtual Formatter& print(Formatter& f)
         {
-            f << opcodeNames[mOpcode] << "\tR" << mOp1.first << ", R" << mOp2.first << ", R" << mOp3.first;
+            f << opcodeNames[mOpcode] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
             return f;
         }
         
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers)
         {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first] << ", " << "R" << mOp3.first << '=' << registers[mOp3.first];
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
             return f;
         }
     };
@@ -223,13 +223,13 @@ namespace VM {
         Unary(ICodeOp aOpcode, TypedRegister aDest, TypedRegister aSrc) :
             Instruction_2<TypedRegister, TypedRegister>(aOpcode, aDest, aSrc) {}
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[mOpcode] << "\tR" << mOp1.first << ", R" << mOp2.first;
+            f << opcodeNames[mOpcode] << "\t" << mOp1 << ", " << mOp2;
             return f;
         }
 
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers)
         {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first);
             return f;
         }
     };
@@ -240,19 +240,13 @@ namespace VM {
                        TypedRegister aR = TypedRegister(NotARegister, &Any_Type) ) :
             Instruction_2<Label*, TypedRegister>(aOpcode, aLabel, aR) {}
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[mOpcode] << "\tOffset " << mOp1->mOffset;
-            if (mOp2.first == NotARegister) {
-                f << ", R~";
-            } else {
-                f << ", R" << mOp2.first;
-            }
+            f << opcodeNames[mOpcode] << "\tOffset " << mOp1->mOffset << ", " << mOp2;
             return f;
         }
 
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers)
         {
-            if (mOp2.first != NotARegister)
-                f << "R" << mOp2.first << '=' << registers[mOp2.first];
+            f << getRegisterValue(registers, mOp2.first);
             return f;
         }
 
