@@ -35,11 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-import org.mozilla.xpcom.*;
+#include "nsISupports.idl"
 
-public interface IFoo extends nsISupports {
-  public static final String IFOO_IID =
-    "{9e70a320-be02-11d1-8031-006008159b5a}";
-
-  public int id();
-}
+[scriptable, uuid(9e70a320-be02-11d1-8031-006008159b5a)]
+interface IFoo : nsISupports
+{
+  readonly attribute long id;
+};

@@ -37,7 +37,6 @@
 
 import org.mozilla.xpcom.*;
 
-
 public class Foo implements IFoo {
 
   static int gCount;
@@ -63,7 +62,7 @@ public class Foo implements IFoo {
   }
 
   // IFoo implementation
-  public int id()
+  public int getId()
   {
     return mID;
   }
