@@ -664,7 +664,11 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetState(PRUint32 *aState)
   // to get the accessible state from. Doesn't add to cache
   // because Init() is not called.
   nsHTMLTextFieldAccessible tempAccessible(inputField, mWeakShell);
-  return tempAccessible.GetState(aState);
+  nsresult rv = tempAccessible.GetState(aState);
+  if (gLastFocusedNode == mDOMNode) {
+    *aState |= STATE_FOCUSED;
+  }
+  return rv;
 }
 
 

@@ -138,6 +138,28 @@ NS_IMETHODIMP nsRootAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsRootAccessible::GetState(PRUint32 *aState) 
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  if (mDOMNode) {
+    rv = nsDocAccessibleWrap::GetState(aState);
+  }
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  NS_ASSERTION(mDocument, "mDocument should not be null unless mDOMNode is");
+  if (gLastFocusedNode) {
+    nsCOMPtr<nsIDOMDocument> rootAccessibleDoc(do_QueryInterface(mDocument));
+    nsCOMPtr<nsIDOMDocument> focusedDoc;
+    gLastFocusedNode->GetOwnerDocument(getter_AddRefs(focusedDoc));
+    if (rootAccessibleDoc == focusedDoc) {
+      *aState |= STATE_FOCUSED;
+    }
+  }
+  return NS_OK;
+}
+
 void
 nsRootAccessible::GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget)
 {
@@ -258,8 +280,8 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *focusAccessible, 
 {
   if (focusAccessible && focusNode && gLastFocusedNode != focusNode) {
     nsCOMPtr<nsPIAccessible> privateFocusAcc(do_QueryInterface(focusAccessible));
-    privateFocusAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, focusAccessible, nsnull);
     NS_IF_RELEASE(gLastFocusedNode);
+    gLastFocusedNode = nsnull;
     PRUint32 role = ROLE_NOTHING;
     focusAccessible->GetRole(&role);
     if (role != ROLE_MENUITEM && role != ROLE_LISTITEM) {
@@ -267,6 +289,7 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *focusAccessible, 
       gLastFocusedNode = focusNode;
       NS_ADDREF(gLastFocusedNode);
     }
+    privateFocusAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, focusAccessible, nsnull);
     if (mCaretAccessible)
       mCaretAccessible->AttachNewSelectionListener(focusNode);
   }
@@ -542,15 +565,18 @@ void nsRootAccessible::GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNo
     nsCOMPtr<nsIDOMEventTarget> domEventTarget;
     nsevent->GetOriginalTarget(getter_AddRefs(domEventTarget));
     nsCOMPtr<nsIContent> content(do_QueryInterface(domEventTarget));
-    if (content && content->IsContentOfType(nsIContent::eHTML)) {
-      // Kind of a hack. If we're on an HTML element we want to make sure that it wasn't
-      // inserted via XBL. In that case we want the "original explicit event target".
-      // The difference is not 100% clear from the API docs, 
-      // but this combination gets the following important cases correct:
+    nsIContent *bindingParent;
+    if (content && content->IsContentOfType(nsIContent::eHTML) &&
+      (bindingParent = content->GetBindingParent()) != nsnull) {
+      // Use binding parent when the event occurs in 
+      // anonymous HTML content.
+      // This gets the following important cases correct:
       // 1. Inserted <dialog> buttons like OK, Cancel, Help.
       // 2. XUL menulists and comboboxes.
       // 3. The focused radio button in a group.
-      nsevent->GetExplicitOriginalTarget(getter_AddRefs(domEventTarget));
+      CallQueryInterface(bindingParent, aTargetNode);
+      NS_ASSERTION(*aTargetNode, "No target node for binding parent of anonymous event target");
+      return;
     }
     if (domEventTarget) {
       CallQueryInterface(domEventTarget, aTargetNode);

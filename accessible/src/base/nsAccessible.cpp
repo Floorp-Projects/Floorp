@@ -565,8 +565,10 @@ NS_IMETHODIMP nsAccessible::GetState(PRUint32 *aState)
     else { 
       *aState |= STATE_FOCUSABLE;
       nsCOMPtr<nsIDOMNode> focusedNode;
-      if (NS_SUCCEEDED(GetFocusedNode(mDOMNode, getter_AddRefs(focusedNode))) && focusedNode == mDOMNode)
+      if (gLastFocusedNode == mDOMNode ||
+        (NS_SUCCEEDED(GetFocusedNode(mDOMNode, getter_AddRefs(focusedNode))) && focusedNode == mDOMNode)) {
         *aState |= STATE_FOCUSED;
+      }
     }
   }
 
