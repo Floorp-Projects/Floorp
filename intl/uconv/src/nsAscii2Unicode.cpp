@@ -74,6 +74,8 @@ public:
       PRInt32 * aDestLength);
   NS_IMETHOD Reset();
   NS_IMETHOD SetInputErrorBehavior(PRInt32 aBehavior);
+
+
 };
 
 //----------------------------------------------------------------------
