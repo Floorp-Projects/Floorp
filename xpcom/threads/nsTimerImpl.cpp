@@ -344,6 +344,10 @@ void nsTimerImpl::SetDelayInternal(PRUint32 aDelay)
 
   mTimeout = now + PR_MillisecondsToInterval(mDelay);
 
+  if (mTimeout < now) { // we overflowed
+    mTimeout = PRIntervalTime(-1);
+  }
+          
 #ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
     if (mStart == 0)
