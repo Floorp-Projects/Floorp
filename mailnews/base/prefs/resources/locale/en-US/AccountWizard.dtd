@@ -1,8 +1,7 @@
 <!-- Entities for AccountWizard -->
 
 <!ENTITY windowTitle.label "Account Wizard">
-<!ENTITY accountWizard.width "500">
-<!ENTITY accountWizard.height "380">
+<!ENTITY accountWizard.size "width: 40em; height: 30em;">
 
 <!-- Entities for Account Type page -->
 
@@ -11,7 +10,7 @@
 <!ENTITY accountTypeDesc.label "This Wizard will collect the information necessary to set up a Mail or Newsgroup account. If you do not know the information requested, please contact your System Administrator or Internet Service Provider.">
 <!ENTITY accountTypeDirections.label "Select the type of account you would like to set up:">
 <!ENTITY accountTypeMail.label "Email account">
-<!ENTITY accountTypeMail.accesskey "E">
+<!ENTITY accountTypeMail.accesskey "m">
 <!ENTITY accountTypeNews.label "Newsgroup account">
 <!ENTITY accountTypeNews.accesskey "w">
 

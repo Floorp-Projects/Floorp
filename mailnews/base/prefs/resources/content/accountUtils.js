@@ -211,10 +211,10 @@ function msgOpenAccountWizard()
   // was called with callback or not.
   if (gReturnmycall)
       window.openDialog("chrome://messenger/content/AccountWizard.xul",
-                        "AccountWizard", "chrome,modal,titlebar,resizable", {okCallback:WizCallback});
+                        "AccountWizard", "chrome,modal,titlebar,centerscreen", {okCallback:WizCallback});
   else
       window.openDialog("chrome://messenger/content/AccountWizard.xul",
-                        "AccountWizard", "chrome,modal,titlebar,resizable");
+                        "AccountWizard", "chrome,modal,titlebar,centerscreen");
 
   loadInboxForNewAccount();
 
