@@ -290,12 +290,11 @@
 
   <binding id="menubutton-dual-ex" extends="chrome://global/content/menulistBindings.xml#menubutton-dual-top">
     <content includes="menupopup">
-      <xul:button class="menubutton-dual-ex-button top" allowevents="true" autostretch="never" align="center"
+      <xul:button class="menubutton-dual-ex-button top" allowevents="true"
                   inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey,disabled"
                   onmouseover="this.parentNode.buttonover = true;"
                   onmouseout="this.parentNode.buttonover = false;"
-                  onmousedown="this.parentNode.buttondown = true;"
-                  onmouseup="this.parentNode.buttondown = false;"/>
+                  onmousedown="this.parentNode.buttondown = true; this.parentNode.captureMouseUp();"/>
       <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" valign="middle" inherits="disabled">
         <xul:image class="menubutton-dropmarker" inherits="disabled"/>
       </xul:box>
@@ -312,10 +311,9 @@
             this._pendingActive = true;
           } 
           else {
-            if (this._pendingActive && this._buttonIsDown) {
+            if (this._pendingActive) {
               this.setAttribute("buttondown", "true");
               this._pendingActive = false;
-              this._buttonIsDown = false;
             }
           }
           this.setAttribute("buttonover", val);
@@ -328,19 +326,50 @@
           return this.getAttribute("buttondown");
         </getter>
         <setter>
-          if (val) this._buttonIsDown = true;
           this.setAttribute("buttondown", val);
           return val;
         </setter>
       </property>
       <property name="_pendingActive">false</property>
       <property name="_buttonIsDown">false</property>
+      
+      <property name="_globalMouseUpHandler" readonly="true">
+      <![CDATA[
+          var fn = function(aEvent)
+          {
+            var btn = document.__MenubuttonDualExMouseDown__;
+            btn.onMouseReallyUp();
+            document.removeEventListener("mouseup", btn._globalMouseUpHandler, true);
+            document.__MenubuttonDualExMouseDown__ = null;
+          };
+          fn;
+      ]]>
+      </property>
+      
+      <method name="captureMouseUp">
+        <body>
+        <![CDATA[
+          document.__MenubuttonDualExMouseDown__ = this;
+          document.addEventListener("mouseup", this._globalMouseUpHandler, true);
+        ]]>
+        </body>
+      </method>
+      
+      <method name="onMouseReallyUp">
+        <body>
+        <![CDATA[
+          this._pendingActive = false;
+          this.buttondown = false;
+        ]]>
+        </body>
+      </method>
+      
     </implementation>
   </binding>
   
   <binding id="menubutton-dual-ex-left" extends="chrome://global/content/menulistBindings.xml#menubutton-dual-ex">
     <content excludes="menupopup">
-      <xul:button class="menubutton-dual-ex-button left" allowevents="true" autostretch="never" 
+      <xul:button class="menubutton-dual-ex-button left" allowevents="true"
                   inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey,disabled"
                   onmouseover="this.parentNode.buttonover = true;"
                   onmouseout="this.parentNode.buttonover = false;"
