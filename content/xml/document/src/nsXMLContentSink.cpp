@@ -801,7 +801,7 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
   if (popContent) {
     content = getter_AddRefs(PopContent());
     if (content) {
-      if (mDocElement == content) {
+      if (mDocElement == content.get()) {
         mState = eXMLContentSinkState_InEpilog;
       }
     }
