@@ -2687,7 +2687,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsgroups()
 	m_nextState = NEWS_DONE;
     ClearFlag(NNTP_PAUSE_FOR_READ);
 
-	NNTP_LOG_NOTE(("about to display newsgroups. path: %s",m_path));
+	PR_LOG(NNTP,PR_LOG_ALWAYS,("about to display newsgroups. path: %s",m_path));
 
 #if 0
 	/* #### Now ignoring "news:alt.fan.*"
@@ -3273,7 +3273,7 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
   if(!line)
 	return status;
 
-  NNTP_LOG_NOTE(("read_group_body: got line: %s|",line));
+  PR_LOG(NNTP,PR_LOG_ALWAYS,("read_group_body: got line: %s|",line));
 
   /* End of body? */
   if (line[0]=='.' && line[1]=='\0')
@@ -4949,7 +4949,6 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
 	if (m_newsgroupList)
 	{
 		int status;
-        nsresult rv;
        /* XXX - how/when to Release() this? */
         rv = m_newsgroupList->FinishXOVERLINE(0,&status);
 		NS_ASSERTION(NS_SUCCEEDED(rv), "FinishXOVERLINE failed");
