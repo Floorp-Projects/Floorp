@@ -376,6 +376,13 @@ function SelectFolder(folderUri)
 	gCurrentFolderUri = folderUri;
 }
 
+function SelectMessage(messageUri)
+{
+  var msgHdr = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri)
+  gDBView.loadMessageByMsgKey(msgHdr.messageKey);
+}
+ 
+
 function ReloadMessage()
 {
   gDBView.reloadMessage();
