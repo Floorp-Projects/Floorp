@@ -59,7 +59,7 @@ protected:
 	nsIMdbStore				*GetStore() {return m_mdbStore;}
 
 	nsFileSpec		m_dbFileSpec;
-	nsCOMPtr <nsISupportsArray> m_cacheElements;
+	nsISupportsArray	*m_cacheElements;
 
 	nsString2			m_dbName;
 	// mdb stuff

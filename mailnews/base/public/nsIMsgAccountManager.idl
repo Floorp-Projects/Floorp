@@ -22,6 +22,8 @@
 #include "nsIMsgIncomingServer.idl"
 #include "nsISupportsArray.idl"
 
+interface nsIMsgFolderCache;
+
 [scriptable, uuid(6ed2cc00-e623-11d2-b7fc-00805f05ffa5)]
 interface nsIMsgAccountManager : nsISupports {
 
@@ -93,6 +95,8 @@ interface nsIMsgAccountManager : nsISupports {
 
   /* unload accounts frees all the account manager data structures */
   void UnloadAccounts();
+
+  void WriteToFolderCache(in nsIMsgFolderCache folderCache);
 
   /* search for 4.x prefs, and migrate to 5.0 prefs */
   void MigratePrefs();

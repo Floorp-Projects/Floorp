@@ -45,6 +45,7 @@ public:
 	NS_IMETHOD SetURI(char *aURI);
 
 	void		SetMDBRow(nsIMdbRow	*row);
+	void		SetOwningCache(nsMsgFolderCache *owningCache);
 protected:
 	nsIMdbRow	*m_mdbRow;
 

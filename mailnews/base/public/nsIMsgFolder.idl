@@ -36,6 +36,8 @@ interface nsITransactionManager;
 interface nsIMsgDatabase;
 interface nsMsgKeyArray;
 
+interface nsIMsgFolderCacheElement;
+
 [scriptable, uuid(85e39ff0-b248-11d2-b7ef-00805f05ffa5)]
 interface nsIMsgFolder : nsIFolder {
 
@@ -140,6 +142,8 @@ interface nsIMsgFolder : nsIFolder {
 
 	nsIMessage CreateMessageFromMsgDBHdr(in nsIMsgDBHdr msgDBHdr);
 	void GetNewMessages();
+
+	void WriteToFolderCache(in nsIMsgFolderCacheElement folderCacheElem);
 	attribute wstring charset;
 	attribute unsigned long BiffState;
 	attribute long NumNewMessages;

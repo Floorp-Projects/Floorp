@@ -26,7 +26,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDBChangeListener.h"
 
-
+class nsIMsgFolderCacheElement;
  /* 
   * nsMsgDBFolder
   * class derived from nsMsgFolder for those folders that use an nsIMsgDatabase
@@ -57,10 +57,13 @@ public:
 
 	NS_DECL_ISUPPORTS_INHERITED
 
+	NS_IMETHOD WriteToFolderCache(nsIMsgFolderCacheElement *element);
+
 protected:
 	virtual nsresult ReadDBFolderInfo(PRBool force);
 	virtual nsresult GetDatabase() = 0;
 	virtual nsresult SendFlagNotifications(nsISupports *item, PRUint32 oldFlags, PRUint32 newFlags);
+	nsresult ReadFromFolderCache(nsIMsgFolderCacheElement *element);
 
 protected:
 	nsCOMPtr<nsIMsgDatabase> mDatabase;  

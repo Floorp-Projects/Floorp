@@ -19,9 +19,13 @@
 #include "nsMsgDBFolder.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIPref.h"
-
+#include "nsIMsgFolderCache.h"
+#include "nsIMsgFolderCacheElement.h"
+#include "nsIMsgMailSession.h"
+#include "nsMsgBaseCID.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 NS_IMPL_ADDREF_INHERITED(nsMsgDBFolder, nsMsgFolder)
 NS_IMPL_RELEASE_INHERITED(nsMsgDBFolder, nsMsgFolder)
@@ -170,7 +174,35 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 	// the DBs all the time, if we have to open it once, get everything
 	// we might need while we're here
 
-	nsresult result= NS_OK;
+	nsresult result;
+
+	nsCOMPtr <nsIMsgFolderCache> folderCache;
+
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &result); 
+	if(NS_SUCCEEDED(result))
+	{
+		result = mailSession->GetFolderCache(getter_AddRefs(folderCache));
+		if (NS_SUCCEEDED(result) && folderCache)
+		{
+			char *uri;
+
+			result = GetURI(&uri);
+			if (NS_SUCCEEDED(result) && uri)
+			{
+				nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
+				result = folderCache->GetCacheElement(uri, PR_FALSE, getter_AddRefs(cacheElement));
+				if (NS_SUCCEEDED(result) && cacheElement)
+				{
+					result = ReadFromFolderCache(cacheElement);
+				}
+				PR_Free(uri);
+			}
+
+		}
+	}
+//	if (m_master->InitFolderFromCache (this))
+//		return err;
+
 	if (force || !(mPrefFlags & MSG_FOLDER_PREF_CACHED))
     {
         nsCOMPtr<nsIDBFolderInfo> folderInfo;
@@ -310,3 +342,35 @@ NS_IMETHODIMP nsMsgDBFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *
     }
     return NS_OK;
 }
+
+nsresult nsMsgDBFolder::ReadFromFolderCache(nsIMsgFolderCacheElement *element)
+{
+	nsresult rv = NS_OK;
+	char *charset;
+
+	element->GetInt32Property("flags", &mPrefFlags);
+	element->GetInt32Property("totalMsgs", &mNumTotalMessages);
+	element->GetInt32Property("totalUnreadMsgs", &mNumUnreadMessages);
+
+	element->GetStringProperty("charset", &charset);
+
+	mCharset = charset;
+	PR_FREEIF(charset);
+
+    mPrefFlags |= MSG_FOLDER_PREF_CACHED;
+	return rv;
+}
+
+NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCache(nsIMsgFolderCacheElement *element)
+{
+	nsresult rv = NS_OK;
+
+	element->SetInt32Property("flags", mPrefFlags);
+	element->SetInt32Property("totalMsgs", mNumTotalMessages);
+	element->SetInt32Property("totalUnreadMsgs", mNumUnreadMessages);
+
+	element->SetStringProperty("charset", nsAutoString(mCharset, eOneByte).GetBuffer());
+
+	return rv;
+}
+

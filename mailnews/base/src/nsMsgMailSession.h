@@ -33,6 +33,8 @@
 
 #include "nsIMsgAccountManager.h"
 
+class nsIMsgFolderCache;
+
 class nsMsgMailSession : public nsIMsgMailSession
 {
 public:
@@ -54,9 +56,11 @@ public:
 	NS_IMETHOD NotifyFolderItemAdded(nsIFolder *folder, nsISupports *item);
 	NS_IMETHOD NotifyFolderItemDeleted(nsIFolder *folder, nsISupports *item);
 
+	NS_IMETHOD GetFolderCache(nsIMsgFolderCache **aFolderCache);
 	nsresult Init();
 protected:
   nsIMsgAccountManager *m_accountManager;
+  nsIMsgFolderCache		*m_msgFolderCache;
 	nsVoidArray *mListeners; 
 
 };

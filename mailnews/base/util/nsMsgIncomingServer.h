@@ -21,6 +21,9 @@
 #include "msgCore.h"
 #include "nsIFolder.h"
 #include "nsCOMPtr.h"
+
+class nsIMsgFolderCache;
+
 /*
  * base class for nsIMsgIncomingServer - derive your class from here
  * if you want to get some free implementation
@@ -81,7 +84,7 @@ class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer {
   NS_IMETHOD SetRootFolder(nsIFolder * aRootFolder);
 
   NS_IMETHOD PerformBiff();
-
+  NS_IMETHOD WriteToFolderCache(nsIMsgFolderCache *folderCache);
 private:
   nsIPref *m_prefs;
   char *m_serverKey;

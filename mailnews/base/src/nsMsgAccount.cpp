@@ -28,6 +28,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsIPref.h"
 #include "nsCOMPtr.h"
+#include "nsIMsgFolderCache.h"
 
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);

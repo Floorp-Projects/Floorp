@@ -24,10 +24,14 @@
 #include "nsMsgLocalCID.h"
 #include "nsMsgBaseCID.h"
 #include "nsCOMPtr.h"
+#include "nsMsgFolderCache.h"
+#include "nsIProfile.h"
 
 NS_IMPL_ISUPPORTS(nsMsgMailSession, nsCOMTypeInfo<nsIMsgMailSession>::GetIID());
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
+static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
+static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 //static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 //static NS_DEFINE_CID(kPop3IncomingServerCID, NS_POP3INCOMINGSERVER_CID);
 //static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -36,6 +40,7 @@ static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 nsMsgMailSession::nsMsgMailSession():
   mRefCnt(0),
   m_accountManager(0),
+  m_msgFolderCache(0),
   mListeners(nsnull)
 {
 	NS_INIT_REFCNT();
@@ -45,10 +50,15 @@ nsMsgMailSession::nsMsgMailSession():
 nsMsgMailSession::~nsMsgMailSession()
 {
   if(m_accountManager)
+  {
+	  if (m_msgFolderCache)
+		m_accountManager->WriteToFolderCache(m_msgFolderCache);
 	  m_accountManager->UnloadAccounts();
+  }
 
   NS_IF_RELEASE(m_accountManager);
 
+  NS_IF_RELEASE(m_msgFolderCache);
   if (mListeners) 
 	{
 		delete mListeners;
@@ -72,6 +82,34 @@ nsresult nsMsgMailSession:: Init()
 	mListeners = new nsVoidArray();
 	if(!mListeners)
 		return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = nsComponentManager::CreateInstance(kMsgFolderCacheCID,
+                                            NULL,
+                                            nsCOMTypeInfo<nsIMsgFolderCache>::GetIID(),
+                                            (void **)&m_msgFolderCache);
+    if (NS_FAILED(rv))
+		return rv;
+
+	nsFileSpec profileDir;
+    nsCOMPtr <nsIFileSpec> cacheFile;
+  
+	NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+	if (NS_FAILED(rv)) 
+		return 0;
+
+	rv = profile->GetCurrentProfileDir(&profileDir);
+	if (NS_FAILED(rv)) 
+		return 0;
+
+    nsFileSpec folderCache(profileDir);
+
+    folderCache += "panacea.dat";
+
+    rv = NS_NewFileSpecWithSpec(folderCache, getter_AddRefs(cacheFile));
+    if (NS_FAILED(rv)) 
+		return rv;
+
+	m_msgFolderCache->Init(cacheFile);
 
 	return NS_OK;
 
@@ -115,6 +153,15 @@ nsresult nsMsgMailSession::GetAccountManager(nsIMsgAccountManager* *aAM)
   
   *aAM = m_accountManager;
   NS_IF_ADDREF(*aAM);
+  return NS_OK;
+}
+
+nsresult nsMsgMailSession::GetFolderCache(nsIMsgFolderCache* *aFolderCache)
+{
+  if (!aFolderCache) return NS_ERROR_NULL_POINTER;
+  
+  *aFolderCache = m_msgFolderCache;
+  NS_IF_ADDREF(*aFolderCache);
   return NS_OK;
 }
 

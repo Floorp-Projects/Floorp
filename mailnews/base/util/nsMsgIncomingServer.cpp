@@ -25,6 +25,10 @@
 
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
+#include "nsCOMPtr.h"
+#include "nsIMsgFolder.h"
+#include "nsIMsgFolderCache.h"
+#include "nsIMsgFolderCacheElement.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
@@ -92,6 +96,46 @@ nsMsgIncomingServer::PerformBiff()
 	//This had to be implemented in the derived class, but in case someone doesn't implement it
 	//just return not implemented.
 	return NS_ERROR_NOT_IMPLEMENTED;	
+}
+
+NS_IMETHODIMP nsMsgIncomingServer::WriteToFolderCache(nsIMsgFolderCache *folderCache)
+{
+	if (m_rootFolder)
+	{
+		nsCOMPtr <nsIEnumerator> aEnumerator;
+
+		nsresult rv = m_rootFolder->GetSubFolders(getter_AddRefs(aEnumerator));
+		if(NS_FAILED(rv)) return rv;
+
+		nsCOMPtr<nsISupports> aItem;
+		nsCOMPtr<nsIMsgFolder> trashFolder;
+
+		rv = aEnumerator->First();
+		while(NS_SUCCEEDED(rv))
+		{
+			rv = aEnumerator->CurrentItem(getter_AddRefs(aItem));
+			if (NS_FAILED(rv)) break;
+			nsCOMPtr<nsIMsgFolder> aMsgFolder(do_QueryInterface(aItem, &rv));
+			if (NS_SUCCEEDED(rv))
+			{
+				char *uri = nsnull;
+				rv = aMsgFolder->GetURI(&uri);
+				if (NS_FAILED(rv)) 
+					break;
+
+				if (folderCache)
+				{
+					nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
+					rv = folderCache->GetCacheElement(uri, PR_TRUE, getter_AddRefs(cacheElement));
+					if (NS_SUCCEEDED(rv) && cacheElement)
+						rv = aMsgFolder->WriteToFolderCache(cacheElement);
+				}
+			    PR_FREEIF(uri);
+			}
+			rv = aEnumerator->Next();
+		}
+	}
+	return NS_OK;
 }
 
 char *

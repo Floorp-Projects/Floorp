@@ -46,6 +46,7 @@ nsMsgFolderCache::~nsMsgFolderCache()
 	if (gMDBFactory)
 		gMDBFactory->CutStrongRef(GetEnv());
 	gMDBFactory = nsnull;
+	NS_RELEASE(m_cacheElements);
 	if (m_mdbEnv)
 		m_mdbEnv->CutStrongRef(m_mdbEnv); //??? is this right?
 }
@@ -254,9 +255,9 @@ NS_IMETHODIMP nsMsgFolderCache::Init(nsIFileSpec *dbFileSpec)
 	if (!dbFileSpec)
 		return NS_ERROR_NULL_POINTER;
 
-	nsresult rv = NS_NewISupportsArray(getter_AddRefs(m_cacheElements));
+	nsresult rv = NS_NewISupportsArray(&m_cacheElements);
 
-	if (NS_SUCCEEDED(rv))
+	if (NS_SUCCEEDED(rv) && m_cacheElements)
 	{
 		rv = dbFileSpec->GetFileSpec(&m_dbFileSpec);
 
@@ -345,7 +346,8 @@ nsMsgFolderCache::FindCacheElementByURI(nsISupports *aElement, void *data)
 {
 	nsresult rv;
 	nsCOMPtr<nsIMsgFolderCacheElement> cacheElement = do_QueryInterface(aElement, &rv);
-	if (NS_FAILED(rv)) return PR_TRUE;
+	if (NS_FAILED(rv)) 
+		return PR_TRUE;
 
 	findCacheElementByURIEntry *entry = (findCacheElementByURIEntry *) data;
 
@@ -371,6 +373,7 @@ nsresult nsMsgFolderCache::AddCacheElement(const char *uri, nsIMdbRow *row, nsIM
 	if (cacheElement)
 	{
 		cacheElement->SetMDBRow(row);
+		cacheElement->SetOwningCache(this);
 		// if caller didn't pass in URI, try to get it from row.
 		if (!uri)
 		{
@@ -385,7 +388,10 @@ nsresult nsMsgFolderCache::AddCacheElement(const char *uri, nsIMdbRow *row, nsIM
 		if(supports)
 			m_cacheElements->AppendElement(supports);
 		if (result)
+		{
 			*result = cacheElement;
+			NS_ADDREF(*result);
+		}
 		return NS_OK;
 	}
 	else

@@ -19,7 +19,7 @@
 #include "nsISupports.idl"
 
 interface nsIFolder;
-
+interface nsIMsgFolderCache;
 /*
  * Interface for incoming mail/news host
  * this is the base interface for all mail server types (imap, pop, nntp, etc)
@@ -71,4 +71,8 @@ interface nsIMsgIncomingServer : nsISupports {
 
   /* do a biff */
   void PerformBiff();
+
+  void WriteToFolderCache(in nsIMsgFolderCache folderCache);
+
+
 };

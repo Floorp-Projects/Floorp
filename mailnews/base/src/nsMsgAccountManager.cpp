@@ -36,6 +36,8 @@
 #include "prprf.h"
 #include "nsINetSupportDialogService.h"
 
+#include "nsIMsgFolderCache.h"
+
 // this should eventually be moved to the pop3 server for upgrading
 #include "nsIPop3IncomingServer.h"
 // this should eventually be moved to the imap server for upgrading
@@ -132,6 +134,7 @@ public:
   NS_IMETHOD LoadAccounts();
   NS_IMETHOD UnloadAccounts();
   NS_IMETHOD MigratePrefs();
+  NS_IMETHOD WriteToFolderCache(nsIMsgFolderCache *folderCache);
 
   /* nsIMsgIdentity GetIdentityByKey (in string key); */
   NS_IMETHOD GetIdentityByKey(const char *key, nsIMsgIdentity **_retval);
@@ -174,6 +177,9 @@ private:
                                    void *closure);
 
   static PRBool hashTableRemoveAccount(nsHashKey *aKey, void *aData,
+                                       void *closure);
+
+  static PRBool hashTableWriteFolderCache(nsHashKey *aKey, void *aData,
                                        void *closure);
 
   static PRBool findIdentitiesForServer(nsHashKey *aKey,
@@ -553,6 +559,24 @@ nsMsgAccountManager::hashTableRemoveAccount(nsHashKey *aKey, void *aData,
   return PR_TRUE;
 }
 
+
+// enumaration for writing out accounts to folder cache.
+PRBool nsMsgAccountManager::hashTableWriteFolderCache(nsHashKey *aKey, void *aData, void *closure)
+{
+	nsIMsgAccount* account = (nsIMsgAccount *)aData;
+	nsIMsgFolderCache *folderCache = (nsIMsgFolderCache *) closure;
+
+	nsCOMPtr <nsIMsgIncomingServer> server;
+
+	account->GetIncomingServer(getter_AddRefs(server));
+
+	server->WriteToFolderCache(folderCache);
+	
+	return PR_TRUE;
+
+}
+
+
 /* readonly attribute nsISupportsArray accounts; */
 NS_IMETHODIMP
 nsMsgAccountManager::GetAccounts(nsISupportsArray **_retval)
@@ -741,6 +765,14 @@ nsMsgAccountManager::UnloadAccounts()
   m_accountsLoaded = PR_FALSE;
   return NS_OK;
 }
+
+
+NS_IMETHODIMP nsMsgAccountManager::WriteToFolderCache(nsIMsgFolderCache *folderCache)
+{
+	m_accounts->Enumerate(hashTableWriteFolderCache, folderCache);
+	return folderCache->Close();
+}
+
 nsresult
 nsMsgAccountManager::MigratePrefs()
 {
