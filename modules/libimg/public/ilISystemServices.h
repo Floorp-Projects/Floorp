@@ -36,6 +36,8 @@ typedef void (*ilTimeoutCallbackFunction) (void * closure);
 class ilISystemServices : public nsISupports {
 public:
 
+  NS_DEFINE_STATIC_IID_ACCESSOR(IL_ISYSTEMSERVICES_IID)
+
   virtual void * SetTimeout(ilTimeoutCallbackFunction aFunc, 
 			  void * aClosure, PRUint32 aMsecs)=0;
 
