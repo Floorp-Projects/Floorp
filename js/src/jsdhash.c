@@ -152,7 +152,7 @@ JS_DHashTableFinish(JSDHashTable *table)
 #define MARK_ENTRY_FREE(entry)      ((entry)->keyHash = 0)
 #define MARK_ENTRY_REMOVED(entry)   ((entry)->keyHash = 1)
 #define ENTRY_IS_LIVE(entry)        ((entry)->keyHash >= 2)
-#define ENSURE_LIVE_KEYHASH(hash0)  if (hash0 < 2) hash0 = 2; else
+#define ENSURE_LIVE_KEYHASH(hash0)  if (hash0 < 2) hash0 -= 2; else
 
 /* Compute the address of the indexed entry in table. */
 #define ADDRESS_ENTRY(table, index) \
@@ -166,7 +166,7 @@ SearchTable(JSDHashTable *table, const void *key, JSDHashNumber keyHash)
     JSDHashEntryHdr *entry;
     JSDHashMatchEntry matchEntry;
 
-    METER(table->stats.lookups++);
+    METER(table->stats.searches++);
 
     /* Compute the primary hash address. */
     hashShift = table->hashShift;
@@ -223,9 +223,15 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
     keyHash *= JS_DHASH_GOLDEN_RATIO;
     entry = SearchTable(table, key, keyHash);
 
-    if (op == JS_DHASH_ADD) {
+    switch (op) {
+      case JS_DHASH_LOOKUP:
+        METER(table->stats.lookups++);
+        break;
+
+      case JS_DHASH_ADD:
         if (JS_DHASH_ENTRY_IS_FREE(entry)) {
             /* Initialize the entry, indicating that it's no longer free. */
+            METER(table->stats.addMisses++);
             entry->keyHash = keyHash;
             table->entryCount++;
 
@@ -237,9 +243,13 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
                 capacity = size << 1;
             }
         }
-    } else if (op == JS_DHASH_REMOVE) {
+        METER(else table->stats.addHits++);
+        break;
+
+      case JS_DHASH_REMOVE:
         if (JS_DHASH_ENTRY_IS_BUSY(entry)) {
             /* Clear this entry and mark it as "removed". */
+            METER(table->stats.removeHits++);
             table->ops->clearEntry(table, entry);
             MARK_ENTRY_REMOVED(entry);
             table->removedCount++;
@@ -253,7 +263,12 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
                 capacity = size >> 1;
             }
         }
+        METER(else table->stats.removeMisses++);
         entry = NULL;
+        break;
+
+      default:
+        JS_ASSERT(0);
     }
 
     if (change) {
@@ -264,7 +279,7 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
             /* If we just grabbed the last free entry, undo and fail hard. */
             if (op == JS_DHASH_ADD &&
                 table->entryCount + table->removedCount == size) {
-                METER(table->stats.badAdds++);
+                METER(table->stats.addFailures++);
                 MARK_ENTRY_FREE(entry);
                 table->entryCount--;
                 entry = NULL;
@@ -319,11 +334,12 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
     n = JS_BIT(table->sizeLog2);
     for (i = j = 0; i < n; i++) {
         entry = (JSDHashEntryHdr *)entryAddr;
-        if (JS_DHASH_ENTRY_IS_BUSY(entry)) {
+        if (ENTRY_IS_LIVE(entry)) {
             op = etor(table, entry, j++, arg);
             if (op & JS_DHASH_REMOVE) {
+                METER(table->stats.removeEnums++);
                 table->ops->clearEntry(table, entry);
-                MARK_ENTRY_FREE(entry);
+                MARK_ENTRY_REMOVED(entry);
                 table->removedCount++;
                 table->entryCount--;
             }
@@ -334,3 +350,100 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
     }
     return j;
 }
+
+#ifdef JS_DHASHMETER
+#include <math.h>
+#include <stdio.h>
+
+JS_PUBLIC_API(void)
+JS_DHashTableDumpMeter(JSDHashTable *table, JSDHashEnumerator dump, FILE *fp)
+{
+    char *entryAddr;
+    uint32 entrySize, entryCount;
+    uint32 i, tableSize, chainLen, maxChainLen, chainCount;
+    JSDHashNumber hash1, hash2, saveHash1, maxChainHash1, maxChainHash2;
+    double sqsum, mean, variance, sigma;
+    JSDHashEntryHdr *entry, *probe;
+
+    entryAddr = table->entryStore;
+    entrySize = table->entrySize;
+    tableSize = JS_BIT(table->sizeLog2);
+    chainCount = maxChainLen = 0;
+    hash2 = 0;
+    sqsum = 0;
+
+    for (i = 0; i < tableSize; i++) {
+        entry = (JSDHashEntryHdr *)entryAddr;
+        entryAddr += entrySize;
+        if (!ENTRY_IS_LIVE(entry))
+            continue;
+        hash1 = saveHash1 = HASH1(entry->keyHash, table->hashShift);
+        probe = ADDRESS_ENTRY(table, hash1);
+        chainLen = 1;
+        if (probe == entry) {
+            /* Start of a (possibly unit-length) chain. */
+            chainCount++;
+        } else {
+            hash2 = HASH2(entry->keyHash, table->sizeLog2, table->hashShift);
+            do {
+                chainLen++;
+                hash1 -= hash2;
+                hash1 &= table->sizeMask;
+                probe = ADDRESS_ENTRY(table, hash1);
+            } while (probe != entry);
+        }
+        sqsum += chainLen * chainLen;
+        if (chainLen > maxChainLen) {
+            maxChainLen = chainLen;
+            maxChainHash1 = saveHash1;
+            maxChainHash2 = hash2;
+        }
+    }
+
+    entryCount = table->entryCount;
+    mean = (double)entryCount / chainCount;
+    variance = chainCount * sqsum - entryCount * entryCount;
+    if (variance < 0 || chainCount == 1)
+        variance = 0;
+    else
+        variance /= chainCount * (chainCount - 1);
+    sigma = sqrt(variance);
+
+    fprintf(fp, "Double hashing statistics:\n");
+    fprintf(fp, "    table size (in entries): %u\n", tableSize);
+    fprintf(fp, "          number of entries: %u\n", table->entryCount);
+    fprintf(fp, "  number of removed entries: %u\n", table->removedCount);
+    fprintf(fp, "         number of searches: %u\n", table->stats.searches);
+    fprintf(fp, "             number of hits: %u\n", table->stats.hits);
+    fprintf(fp, "           number of misses: %u\n", table->stats.misses);
+    fprintf(fp, "      mean steps per search: %g\n", (double)table->stats.steps
+                                                     / table->stats.searches);
+    fprintf(fp, "     mean hash chain length: %g\n", mean);
+    fprintf(fp, "         standard deviation: %g\n", sigma);
+    fprintf(fp, "  maximum hash chain length: %u\n", maxChainLen);
+    fprintf(fp, "          number of lookups: %u\n", table->stats.lookups);
+    fprintf(fp, " adds that made a new entry: %u\n", table->stats.addMisses);
+    fprintf(fp, "   adds that found an entry: %u\n", table->stats.addHits);
+    fprintf(fp, "               add failures: %u\n", table->stats.addFailures);
+    fprintf(fp, "             useful removes: %u\n", table->stats.removeHits);
+    fprintf(fp, "            useless removes: %u\n", table->stats.removeMisses);
+    fprintf(fp, "  removes while enumerating: %u\n", table->stats.removeEnums);
+    fprintf(fp, "            number of grows: %u\n", table->stats.grows);
+    fprintf(fp, "          number of shrinks: %u\n", table->stats.shrinks);
+
+    if (maxChainLen && hash2) {
+        fputs("Maximum hash chain:\n", fp);
+        hash1 = maxChainHash1;
+        hash2 = maxChainHash2;
+        entry = ADDRESS_ENTRY(table, hash1);
+        i = 0;
+        do {
+            if (dump(table, entry, i++, fp) != JS_DHASH_NEXT)
+                break;
+            hash1 -= hash2;
+            hash1 &= table->sizeMask;
+            entry = ADDRESS_ENTRY(table, hash1);
+        } while (JS_DHASH_ENTRY_IS_BUSY(entry));
+    }
+}
+#endif /* JS_DHASHMETER */
