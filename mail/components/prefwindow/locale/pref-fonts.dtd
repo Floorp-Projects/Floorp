@@ -86,7 +86,7 @@
 
 <!ENTITY sendDefaultCharset.label             "Outgoing Mail:">
 <!ENTITY sendDefaultCharset.accesskey         "u">
-<!ENTITY languagesTitle.label				  "Languages">
+<!ENTITY languagesTitle.label		      "Character encodings">
 <!ENTITY composingDescription.label           "Set the default character encodings for sending and receiving mail">
 
 <!ENTITY viewDefaultCharsetList.label         "Incoming Mail:">
