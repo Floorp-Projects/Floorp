@@ -59,6 +59,7 @@
 #include "nsIURI.h"
 #include "nsIXMLContent.h"
 #include "nsIXULContent.h"
+#include "nsIBoxObject.h"
 #include "nsXULAttributes.h"
 #include "nsIChromeEventHandler.h"
 
@@ -343,10 +344,7 @@ protected:
     static nsIAtom*             kRefAtom;
     static nsIAtom*             kSelectedAtom;
     static nsIAtom*             kStyleAtom;
-    static nsIAtom*             kTitledButtonAtom;
     static nsIAtom*             kCheckboxAtom;
-    static nsIAtom*             kRadioAtom;
-    static nsIAtom*             kRadioGroupAtom;
     static nsIAtom*             kTooltipAtom;
     static nsIAtom*             kTreeAtom;
     static nsIAtom*             kTreeCellAtom;
@@ -360,9 +358,9 @@ protected:
     static nsIAtom*             kEditorAtom;
     static nsIAtom*             kWidthAtom;
     static nsIAtom*             kWindowAtom;
-    static nsIAtom*             kMenuButtonAtom;
     static nsIAtom*             kMenuListAtom;
-    static nsIAtom*             kTextFieldAtom;
+    static nsIAtom*             kMenuAtom;
+    static nsIAtom*             kPopupSetAtom;
 
 public:
     static nsresult
@@ -568,6 +566,9 @@ protected:
 
     // Whether or not we're anonymous
     PRBool                              mIsAnonymous;
+
+    // Our primary layout object (a wrapper for the Gecko "frame" object)
+    nsCOMPtr<nsIBoxObject>              mBoxObject;          // [OWNER]
 
     // Lazily instantiated if/when object is mutated. Instantiating
     // the mSlots makes an nsXULElement 'heavyweight'.

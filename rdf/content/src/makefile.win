@@ -50,11 +50,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsJSXULIFrameElement.obj      \
         .\$(OBJDIR)\nsJSXULBrowserElement.obj     \
         .\$(OBJDIR)\nsJSXULEditorElement.obj      \
-        .\$(OBJDIR)\nsJSXULTitledButtonElement.obj      \
-		.\$(OBJDIR)\nsJSXULCheckboxElement.obj      \
-		.\$(OBJDIR)\nsJSXULRadioElement.obj      \
-		.\$(OBJDIR)\nsJSXULRadioGroupElement.obj      \
-		.\$(OBJDIR)\nsJSXULMenuListElement.obj    \
+        .\$(OBJDIR)\nsJSXULMenuListElement.obj    \
         .\$(OBJDIR)\nsRDFDOMNodeList.obj          \
         .\$(OBJDIR)\nsXULElement.obj              \
         .\$(OBJDIR)\nsXULContentUtils.obj         \
@@ -67,12 +63,8 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsXULBrowserElement.obj       \
         .\$(OBJDIR)\nsXULEditorElement.obj        \
         .\$(OBJDIR)\nsXULPopupElement.obj         \
-		.\$(OBJDIR)\nsXULTitledButtonElement.obj         \
-		.\$(OBJDIR)\nsXULMenuListElement.obj      \
-		.\$(OBJDIR)\nsXULCheckboxElement.obj         \
-		.\$(OBJDIR)\nsXULRadioElement.obj         \
-		.\$(OBJDIR)\nsXULRadioGroupElement.obj         \
-	$(NULL)
+	      .\$(OBJDIR)\nsXULMenuListElement.obj      \
+	      $(NULL)
 
 # XXX we are including layout\html\base\src to get HTML elements
 # constructed directly from Raptor. The hope is that this'll

@@ -40,8 +40,9 @@
 #include "nsIDOMXULElement.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsIRDFResource.h"
-#include "nsIDOMNodeList.h"
+#include "nsIBoxObject.h"
 #include "nsIControllers.h"
+#include "nsIDOMNodeList.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -53,8 +54,9 @@ static NS_DEFINE_IID(kIRDFCompositeDataSourceIID, NS_IRDFCOMPOSITEDATASOURCE_IID
 static NS_DEFINE_IID(kIXULElementIID, NS_IDOMXULELEMENT_IID);
 static NS_DEFINE_IID(kIXULTemplateBuilderIID, NS_IXULTEMPLATEBUILDER_IID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
+static NS_DEFINE_IID(kIBoxObjectIID, NS_IBOXOBJECT_IID);
 static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
+static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
 //
 // XULElement property ids
@@ -67,7 +69,7 @@ enum XULElement_slots {
   XULELEMENT_BUILDER = -5,
   XULELEMENT_RESOURCE = -6,
   XULELEMENT_CONTROLLERS = -7,
-  XULELEMENT_ANONYMOUSCONTENT = -8
+  XULELEMENT_BOXOBJECT = -8
 };
 
 /***********************************************************************/
@@ -179,15 +181,15 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case XULELEMENT_ANONYMOUSCONTENT:
+      case XULELEMENT_BOXOBJECT:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_ANONYMOUSCONTENT, PR_FALSE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_BOXOBJECT, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
-          nsIDOMNodeList* prop;
-          rv = a->GetAnonymousContent(&prop);
+          nsIBoxObject* prop;
+          rv = a->GetBoxObject(&prop);
           if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            // get the js object; n.b., this will do a release on 'prop'
+            nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsIBoxObject), cx, obj, vp);
           }
         }
         break;
@@ -607,7 +609,7 @@ static JSPropertySpec XULElementProperties[] =
   {"builder",    XULELEMENT_BUILDER,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"resource",    XULELEMENT_RESOURCE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"controllers",    XULELEMENT_CONTROLLERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"anonymousContent",    XULELEMENT_ANONYMOUSCONTENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"boxObject",    XULELEMENT_BOXOBJECT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

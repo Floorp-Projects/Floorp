@@ -111,11 +111,9 @@
 #include "nsXULEditorElement.h"
 #include "nsXULTreeElement.h"
 #include "nsXULPopupElement.h"
-#include "nsXULTitledButtonElement.h"
-#include "nsXULCheckboxElement.h"
-#include "nsXULRadioElement.h"
-#include "nsXULRadioGroupElement.h"
 #include "nsXULMenuListElement.h"
+#include "nsIBoxObject.h"
+#include "nsPIBoxObject.h"
 #include "nsXULDocument.h"
 
 // Used for the temporary DOM Level2 hack
@@ -308,7 +306,6 @@ nsIAtom*             nsXULElement::kMenuPopupAtom;
 nsIAtom*             nsXULElement::kRefAtom;
 nsIAtom*             nsXULElement::kSelectedAtom;
 nsIAtom*             nsXULElement::kStyleAtom;
-nsIAtom*             nsXULElement::kTitledButtonAtom;
 nsIAtom*             nsXULElement::kTooltipAtom;
 nsIAtom*             nsXULElement::kTreeAtom;
 nsIAtom*             nsXULElement::kTreeCellAtom;
@@ -322,12 +319,9 @@ nsIAtom*             nsXULElement::kBrowserAtom;
 nsIAtom*             nsXULElement::kEditorAtom;
 nsIAtom*             nsXULElement::kWidthAtom;
 nsIAtom*             nsXULElement::kWindowAtom;
-nsIAtom*             nsXULElement::kCheckboxAtom;
-nsIAtom*             nsXULElement::kRadioAtom;
-nsIAtom*             nsXULElement::kRadioGroupAtom;
 nsIAtom*             nsXULElement::kMenuListAtom;
-nsIAtom*             nsXULElement::kMenuButtonAtom;
-nsIAtom*             nsXULElement::kTextFieldAtom;
+nsIAtom*             nsXULElement::kMenuAtom;
+nsIAtom*             nsXULElement::kPopupSetAtom;
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
 PRUint32             nsXULPrototypeAttribute::gNumElements;
@@ -392,7 +386,6 @@ nsXULElement::Init()
         kRefAtom            = NS_NewAtom("ref");
         kSelectedAtom       = NS_NewAtom("selected");
         kStyleAtom          = NS_NewAtom("style");
-        kTitledButtonAtom   = NS_NewAtom("titledbutton");
         kTooltipAtom        = NS_NewAtom("tooltip");
         kTreeAtom           = NS_NewAtom("tree");
         kTreeCellAtom       = NS_NewAtom("treecell");
@@ -406,13 +399,10 @@ nsXULElement::Init()
         kEditorAtom         = NS_NewAtom("editor");
         kWidthAtom          = NS_NewAtom("width");
         kWindowAtom         = NS_NewAtom("window");
-        kCheckboxAtom       = NS_NewAtom("checkbox");
-        kRadioAtom          = NS_NewAtom("radio");
-        kRadioGroupAtom     = NS_NewAtom("radiogroup");
         kMenuListAtom       = NS_NewAtom("menulist");
-        kMenuButtonAtom     = NS_NewAtom("menubutton");
-        kTextFieldAtom      = NS_NewAtom("textfield");
-
+        kMenuAtom           = NS_NewAtom("menu");
+        kPopupSetAtom       = NS_NewAtom("popupset");
+        
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                 nsnull,
                                                 kINameSpaceManagerIID,
@@ -476,7 +466,6 @@ nsXULElement::~nsXULElement()
         NS_IF_RELEASE(kRefAtom);
         NS_IF_RELEASE(kSelectedAtom);
         NS_IF_RELEASE(kStyleAtom);
-        NS_IF_RELEASE(kTitledButtonAtom);
         NS_IF_RELEASE(kTooltipAtom);
         NS_IF_RELEASE(kTreeAtom);
         NS_IF_RELEASE(kTreeCellAtom);
@@ -490,12 +479,9 @@ nsXULElement::~nsXULElement()
         NS_IF_RELEASE(kEditorAtom);
         NS_IF_RELEASE(kWidthAtom);
         NS_IF_RELEASE(kWindowAtom);
-        NS_IF_RELEASE(kCheckboxAtom);
-        NS_IF_RELEASE(kRadioAtom);
-        NS_IF_RELEASE(kRadioGroupAtom);
         NS_IF_RELEASE(kMenuListAtom);
-        NS_IF_RELEASE(kMenuButtonAtom);
-        NS_IF_RELEASE(kTextFieldAtom);
+        NS_IF_RELEASE(kMenuAtom);
+        NS_IF_RELEASE(kPopupSetAtom);
         
         NS_IF_RELEASE(gNameSpaceManager);
 
@@ -759,90 +745,6 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
             if (NS_FAILED(rv)) return rv;
 
             if ((mSlots->mInnerXULElement = new nsXULBrowserElement(this)) == nsnull)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        return InnerXULElement()->QueryInterface(iid, result);
-      }
-      else
-        return NS_NOINTERFACE;
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMXULTitledButtonElement)) &&
-             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
-      nsCOMPtr<nsIAtom> tag;
-      PRInt32 dummy;
-      NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
-      if (tag.get() == kTitledButtonAtom) {
-        // We delegate XULTitledButtonElement APIs to an aggregate object
-        if (! InnerXULElement()) {
-            rv = EnsureSlots();
-            if (NS_FAILED(rv)) return rv;
-
-            if ((mSlots->mInnerXULElement = new nsXULTitledButtonElement(this)) == nsnull)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        return InnerXULElement()->QueryInterface(iid, result);
-      }
-      else
-        return NS_NOINTERFACE;
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMXULCheckboxElement)) &&
-             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
-      nsCOMPtr<nsIAtom> tag;
-      PRInt32 dummy;
-      NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
-      if (tag.get() == kCheckboxAtom) {
-        // We delegate XULCheckboxElement APIs to an aggregate object
-        if (! InnerXULElement()) {
-            rv = EnsureSlots();
-            if (NS_FAILED(rv)) return rv;
-
-            if ((mSlots->mInnerXULElement = new nsXULCheckboxElement(this)) == nsnull)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        return InnerXULElement()->QueryInterface(iid, result);
-      }
-      else
-        return NS_NOINTERFACE;
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMXULRadioElement)) &&
-             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
-      nsCOMPtr<nsIAtom> tag;
-      PRInt32 dummy;
-      NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
-      if (tag.get() == kRadioAtom) {
-        // We delegate XULRadioElement APIs to an aggregate object
-        if (! InnerXULElement()) {
-            rv = EnsureSlots();
-            if (NS_FAILED(rv)) return rv;
-
-            if ((mSlots->mInnerXULElement = new nsXULRadioElement(this)) == nsnull)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        return InnerXULElement()->QueryInterface(iid, result);
-      }
-      else
-        return NS_NOINTERFACE;
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMXULRadioGroupElement)) &&
-             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))) {
-      nsCOMPtr<nsIAtom> tag;
-      PRInt32 dummy;
-      NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
-      if (tag.get() == kRadioGroupAtom) {
-        // We delegate XULRadioElement APIs to an aggregate object
-        if (! InnerXULElement()) {
-            rv = EnsureSlots();
-            if (NS_FAILED(rv)) return rv;
-
-            if ((mSlots->mInnerXULElement = new nsXULRadioGroupElement(this)) == nsnull)
                 return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -2209,22 +2111,6 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
             fn = NS_NewScriptXULBrowserElement;
             rootname = "nsXULBrowserElement::mScriptObject";
         }
-        else if (tag.get() == kTitledButtonAtom) {
-            fn = NS_NewScriptXULTitledButtonElement;
-            rootname = "nsXULTitledButtonElement::mScriptObject";
-        }
-        else if (tag.get() == kCheckboxAtom) {
-            fn = NS_NewScriptXULCheckboxElement;
-            rootname = "nsXULCheckboxElement::mScriptObject";
-        }
-        else if (tag.get() == kRadioAtom) {
-            fn = NS_NewScriptXULRadioElement;
-            rootname = "nsXULRadioElement::mScriptObject";
-        }
-        else if (tag.get() == kRadioGroupAtom) {
-            fn = NS_NewScriptXULRadioGroupElement;
-            rootname = "nsXULRadioGroupElement::mScriptObject";
-        }
         else if (tag.get() == kMenuListAtom) {
             fn = NS_NewScriptXULMenuListElement;
             rootname = "nsXULMenuListElement::mScriptObject";
@@ -2494,6 +2380,12 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileE
         }
 
         mDocument = aDocument; // not refcounted
+
+        if (mBoxObject) {
+          nsCOMPtr<nsPIBoxObject> privateBox(do_QueryInterface(mBoxObject));
+          if (privateBox)
+            privateBox->SetDocument(mDocument);
+        }
 
         if (mDocument) {
             // Add a named reference to the script object.
@@ -4294,49 +4186,55 @@ nsXULElement::GetControllers(nsIControllers** aResult)
     return NS_OK;
 }
 
-nsresult
-nsXULElement::GetAnonymousContent(nsIDOMNodeList** aResult)
+NS_IMETHODIMP
+nsXULElement::GetBoxObject(nsIBoxObject** aResult)
 {
-  nsresult rv;
-  nsRDFDOMNodeList* elements;
-  // Addref happens on following line in the Create call.
-  if (NS_FAILED(rv = nsRDFDOMNodeList::Create(&elements))) {
-    NS_ERROR("unable to create node list");
-    return rv;
+  if (mBoxObject) {
+    *aResult = mBoxObject;
+    NS_ADDREF(*aResult);
+    return NS_OK;
   }
 
-  *aResult = elements;
-
-  // Use the XBL service to get a content list.
-  NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-  if (!xblService)
-    return rv;
-
-  // Retrieve the anonymous content that we should build.
-  nsCOMPtr<nsISupportsArray> anonymousItems;
-  nsCOMPtr<nsIContent> childElement;
-  PRBool dummy;
-  xblService->GetContentList(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(anonymousItems), 
-                             getter_AddRefs(childElement), &dummy);
-  
-  if (!anonymousItems)
+  // We need to create our object.
+  *aResult = nsnull;
+  if (!mDocument)
     return NS_OK;
 
-  PRUint32 count = 0;
-  anonymousItems->Count(&count);
+  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(mDocument->GetShellAt(0));
+  if (!shell)
+    return NS_OK;
 
-  for (PRUint32 i=0; i < count; i++)
-  {
-    // get our child's content and set its parent to our content
-    nsCOMPtr<nsISupports> node;
-    anonymousItems->GetElementAt(i,getter_AddRefs(node));
+  nsresult rv;
+  PRInt32 dummy;
+  nsCOMPtr<nsIAtom> tag;
+  NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+  xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
+  
+  nsCAutoString progID("component://netscape/layout/xul-boxobject");
+  if (tag.get() == kBrowserAtom)
+    progID += "-browser";
+  else if (tag.get() == kEditorAtom)
+    progID += "-editor";
+  else if (tag.get() == kIFrameAtom)
+    progID += "-iframe";
+  else if (tag.get() == kMenuAtom)
+    progID += "-menu";
+  else if (tag.get() == kPopupSetAtom)
+    progID += "-popupset";
+  else if (tag.get() == kTreeAtom)
+    progID += "-tree";
 
-    nsCOMPtr<nsIDOMNode> content(do_QueryInterface(node));
-    
-    if (content)
-      elements->AppendNode(content);
-  }
+  mBoxObject = do_CreateInstance(progID);
+  if (mBoxObject)
+    return NS_OK;
 
+  nsCOMPtr<nsPIBoxObject> privateBox(do_QueryInterface(mBoxObject));
+  if (NS_FAILED(rv = privateBox->Init(NS_STATIC_CAST(nsIStyledContent*, this), shell)))
+    return rv;
+
+  *aResult = mBoxObject;
+  NS_ADDREF(*aResult);
+ 
   return NS_OK;
 }
 
@@ -4459,7 +4357,7 @@ nsXULElement::Click()
     nsCOMPtr<nsIPresShell> shell; // Strong
     nsCOMPtr<nsIPresContext> context;
     nsAutoString tagName;
-    PRBool isButton = NodeInfo()->Equals(NS_ConvertASCIItoUCS2("titledbutton"));
+    PRBool isButton = NodeInfo()->Equals(NS_ConvertASCIItoUCS2("button"));
 
     for (PRInt32 i=0; i<numShells; i++) {
       shell = getter_AddRefs(doc->GetShellAt(i));
