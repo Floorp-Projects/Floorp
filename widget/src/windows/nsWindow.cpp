@@ -49,11 +49,6 @@
 #include "prtime.h"
 #include "nsIRenderingContextWin.h"
 
-#include "nsIMenu.h"
-#include "nsMenu.h"
-#include "nsIMenuItem.h"
-#include "nsIMenuListener.h"
-#include "nsMenuItem.h"
 #include <imm.h>
 #ifdef MOZ_AIMM
 #include "aimm.h"
@@ -2270,7 +2265,16 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               result = OnKeyUp(wParam, (HIWORD(lParam) ));
 			      else
 				      result = PR_FALSE;
-
+            // Let's consume the ALT key up so that we don't go into
+             // a menu bar if we don't have one.
+             // XXX This will cause a tiny breakage in viewer... namely
+             // that hitting ALT by itself in viewer won't move you into
+             // the menu.  ALT+shortcut key will still work, though, so
+             // I figure this is ok.
+             if (wParam == NS_VK_ALT) {
+               result = PR_TRUE;
+               *aRetValue = 0;
+             }
             break;
 
         // Let ths fall through if it isn't a key pad

@@ -29,23 +29,17 @@
 
 
 struct nsRect;
-class nsITextAreaWidget;
 class nsIFileWidget;
 class nsIAppShell;
 class nsIButton;
-class nsIComboBox;
 class nsIEventListener;
 class nsILabel;
-class nsIListBox;
-class nsIListWidget;
 class nsILookAndFeel;
 class nsIMouseListener;
-class nsITabWidget;
 class nsIToolkit;
 class nsIWidget;
 class nsICheckButton;
 class nsIScrollbar;
-class nsIRadioButton;
 class nsITooltipWidget;
 class nsITextWidget;
 class nsIBrowserWindow;
@@ -69,13 +63,6 @@ NS_CreateCheckButton( nsISupports* aParent,
 											const nsFont* aFont = nsnull);
 
 extern nsresult 
-NS_CreateRadioButton( nsISupports* aParent, 
-											nsIRadioButton* aButton, 
-											const nsRect& aRect, 
-											EVENT_CALLBACK aHandleEventFunction,
-											const nsFont* aFont = nsnull);
-
-extern nsresult 
 NS_CreateLabel( nsISupports* aParent,	
                 nsILabel* aLabel, 
                 const nsRect& aRect, 
@@ -90,38 +77,8 @@ NS_CreateTextWidget(nsISupports* aParent,
                     const nsFont* aFont = nsnull);
 
 extern nsresult 
-NS_CreateTextAreaWidget(nsISupports* aParent,	
-                    nsITextAreaWidget* aWidget, 
-                    const nsRect& aRect, 
-                    EVENT_CALLBACK aHandleEventFunction,
-                    const nsFont* aFont = nsnull);
-
-extern nsresult 
 NS_CreateTooltipWidget(nsISupports* aParent,	
                       nsITooltipWidget* aWidget, 
-                      const nsRect& aRect, 
-                      EVENT_CALLBACK aHandleEventFunction,
-                      const nsFont* aFont = nsnull);
-
-
-extern nsresult 
-NS_CreateListBox(nsISupports* aParent,	
-                      nsIListBox* aWidget, 
-                      const nsRect& aRect, 
-                      EVENT_CALLBACK aHandleEventFunction,
-                      const nsFont* aFont = nsnull);
-
-
-extern nsresult 
-NS_CreateComboBox(nsISupports* aParent,	
-                      nsIComboBox* aWidget, 
-                      const nsRect& aRect, 
-                      EVENT_CALLBACK aHandleEventFunction,
-                      const nsFont* aFont = nsnull);
-
-extern nsresult 
-NS_CreateTabWidget(nsISupports* aParent,	
-                      nsITabWidget* aWidget, 
                       const nsRect& aRect, 
                       EVENT_CALLBACK aHandleEventFunction,
                       const nsFont* aFont = nsnull);
