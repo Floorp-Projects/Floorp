@@ -287,10 +287,10 @@ nsMsgDatabase::ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
   element->mKey = nsMsgKey_None; // eh?
 }
 
-extern CRT_CALL PLDHashNumber
+extern PLDHashNumber CRT_CALL
 PL_DHashStringKey(PLDHashTable *table, const void *key);
 
-extern CRT_CALL void
+extern void CRT_CALL
 PL_DHashFinalizeStub(PLDHashTable *table);
 
 #endif // USE_PLD_HASHTABLE
