@@ -1444,12 +1444,10 @@ PRInt32
 wallet_PutLine(nsOutputFileStream strm, const nsString& aLine, PRBool obscure)
 {
   /* allocate a buffer from the heap */
-  char * cp = new char[aLine.Length() + 1];
+  char * cp = aLine.ToNewCString();
   if (! cp) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    return NS_ERROR_FAILURE;
   }
-
-  aLine.ToCString(cp, aLine.Length() + 1);
 
   /* output each character */
   char* p = cp;
@@ -1458,7 +1456,7 @@ wallet_PutLine(nsOutputFileStream strm, const nsString& aLine, PRBool obscure)
   }
   strm.put('\n'^(obscure ? Wallet_GetKey() : (char)0));
 
-  delete[] cp;
+  nsCRT::free(cp);
   return 0;
 }
 

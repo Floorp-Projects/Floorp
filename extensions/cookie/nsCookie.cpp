@@ -322,18 +322,17 @@ nsresult
 cookie_Put(nsOutputFileStream strm, const nsString& aLine)
 {
   /* allocate a buffer from the heap */
-  char * cp = new char[aLine.Length() + 1];
+  char * cp = aLine.ToNewCString();
   if (! cp) {
     return NS_ERROR_FAILURE;
   }
-  aLine.ToCString(cp, aLine.Length() + 1);
 
   /* output each character */
   char* p = cp;
   while (*p) {
     strm.put(*(p++));
   }
-  delete[] cp;
+  nsCRT::free(cp);
   return NS_OK;
 }
 
