@@ -66,13 +66,13 @@ NS_IMETHODIMP nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, nsI
     // Eliminate embedded newlines, which single-line text fields now allow:
     uriString.StripChars("\r\n");
 
-    // Just try to create an URL out of it
-    NS_NewURI(aURI, uriString, nsnull);
+    // Check for if it is a file URL
+    FileURIFixup(uriString.GetUnicode(), aURI);
     if(*aURI)
         return NS_OK;
 
-    // Check for if it is a file URL
-    FileURIFixup(uriString.GetUnicode(), aURI);
+    // Just try to create an URL out of it
+    NS_NewURI(aURI, uriString, nsnull);
     if(*aURI)
         return NS_OK;
 
