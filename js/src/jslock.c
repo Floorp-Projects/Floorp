@@ -707,15 +707,15 @@ DestroyFatlock(JSFatLock *fl)
 }
 
 static JSFatLock *
-ListOfFatlocks(int l)
+ListOfFatlocks(int listc)
 {
     JSFatLock *m;
     JSFatLock *m0;
     int i;
 
-    JS_ASSERT(l>0);
+    JS_ASSERT(listc>0);
     m0 = m = NewFatlock();
-    for (i=1; i<l; i++) {
+    for (i=1; i<listc; i++) {
         m->next = NewFatlock();
         m = m->next;
     }
@@ -734,6 +734,7 @@ DeleteListOfFatlocks(JSFatLock *m)
 
 static JSFatLockTable *fl_list_table = NULL;
 static uint32          fl_list_table_len = 0;
+static uint32          fl_list_chunk_len = 0;
 
 static JSFatLock *
 GetFatlock(void *id)
@@ -743,9 +744,10 @@ GetFatlock(void *id)
     uint32 i = GLOBAL_LOCK_INDEX(id);
     if (fl_list_table[i].free == NULL) {
 #ifdef DEBUG
-        printf("Ran out of fat locks!\n");
+        if (fl_list_table[i].taken)
+            printf("Ran out of fat locks!\n");
 #endif
-        fl_list_table[i].free = ListOfFatlocks(10);
+        fl_list_table[i].free = ListOfFatlocks(fl_list_chunk_len);
     }
     m = fl_list_table[i].free;
     fl_list_table[i].free = m->next;
@@ -779,7 +781,7 @@ PutFatlock(JSFatLock *m, void *id)
 #endif /* !NSPR_LOCK */
 
 JSBool
-js_SetupLocks(int l, int g)
+js_SetupLocks(int listc, int globc)
 {
 #ifndef NSPR_LOCK
     uint32 i;
@@ -787,12 +789,12 @@ js_SetupLocks(int l, int g)
     if (global_locks)
         return JS_TRUE;
 #ifdef DEBUG
-    if (l > 10000 || l < 0) /* l == number of initially allocated fat locks */
-        printf("Bad number %d in js_SetupLocks()!\n", l);
-    if (g > 100 || g < 0)   /* g equals number of global locks */
-        printf("Bad number %d in js_SetupLocks()!\n", l);
+    if (listc > 10000 || listc < 0) /* listc == fat lock list chunk length */
+        printf("Bad number %d in js_SetupLocks()!\n", listc);
+    if (globc > 100 || globc < 0)   /* globc == number of global locks */
+        printf("Bad number %d in js_SetupLocks()!\n", listc);
 #endif
-    global_locks_log2 = JS_CeilingLog2(g);
+    global_locks_log2 = JS_CeilingLog2(globc);
     global_locks_mask = JS_BITMASK(global_locks_log2);
     global_lock_count = JS_BIT(global_locks_log2);
     global_locks = (PRLock **) malloc(global_lock_count * sizeof(PRLock*));
@@ -812,15 +814,9 @@ js_SetupLocks(int l, int g)
         return JS_FALSE;
     }
     fl_list_table_len = global_lock_count;
-    for (i = 0; i < global_lock_count; i++) {
-        fl_list_table[i].free = ListOfFatlocks(l);
-        if (!fl_list_table[i].free) {
-            fl_list_table_len = i;
-            js_CleanupLocks();
-            return JS_FALSE;
-        }
-        fl_list_table[i].taken = NULL;
-    }
+    for (i = 0; i < global_lock_count; i++)
+        fl_list_table[i].free = fl_list_table[i].taken = NULL;
+    fl_list_chunk_len = listc;
 #endif /* !NSPR_LOCK */
     return JS_TRUE;
 }
