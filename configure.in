@@ -1648,6 +1648,10 @@ if test -n "$CROSS_COMPILE"; then
     fi
     HOST_LIBIDL_CFLAGS=`${HOST_LIBIDL_CONFIG} --cflags`
     HOST_LIBIDL_LIBS=`${HOST_LIBIDL_CONFIG} --libs`
+    if test "$OS_TARGET" = "POSIX_for_OpenVMS_AXP"; then
+      LIBIDL_CFLAGS=`${LIBIDL_CONFIG}-VMS --cflags`
+      LIBIDL_LIBS=`${LIBIDL_CONFIG}-VMS --libs`
+    fi
 fi
 
 AC_SUBST(GLIB_CFLAGS)
