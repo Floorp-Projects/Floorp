@@ -219,6 +219,10 @@ DEFINES += -DSPLASH_XPM=\"$(SPLASH_XPM)\"
 LIBS += $(MOZ_GTK2_LIBS)
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),xlib)
+LIBS += $(MOZ_XLIB_LDFLAGS)
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 REQUIRES += xpconnect intl appcomps
 ifdef MOZ_PHOENIX
