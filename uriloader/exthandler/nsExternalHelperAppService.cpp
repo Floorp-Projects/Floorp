@@ -1422,6 +1422,11 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
     nsAutoString msgId;
     switch(rv)
     {
+    case NS_ERROR_OUT_OF_MEMORY:
+        // No memory
+        msgId = NS_LITERAL_STRING("noMemory");
+        break;
+
     case NS_ERROR_FILE_DISK_FULL:
     case NS_ERROR_FILE_NO_DEVICE_SPACE:
         // Out of space on target volume.
@@ -1439,6 +1444,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
         break;
 
     case NS_ERROR_FILE_NOT_FOUND:
+    case NS_ERROR_FILE_UNRECOGNIZED_PATH:
         // Helper app not found, let's verify this happened on launch
         if (type == kLaunchError) {
           msgId = NS_LITERAL_STRING("helperAppNotFound");
