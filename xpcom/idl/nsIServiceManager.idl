@@ -23,17 +23,9 @@
 #define NS_ERROR_SERVICE_NOT_FOUND      NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCOM, 22)
 #define NS_ERROR_SERVICE_IN_USE         NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCOM, 23)
 
-#define NS_ISERVICEMANAGER_IID                       \
-{ /* cf0df3b0-3401-11d2-8163-006008119d7a */         \
-    0xcf0df3b0,                                      \
-    0x3401,                                          \
-    0x11d2,                                          \
-    {0x81, 0x63, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
-
-
 %}
 
+[object, uuid(cf0df3b0-3401-11d2-8163-006008119d7a)]
 interface nsIServiceManager : nsISupports {
 
     /* ProgID related stuff */

@@ -18,7 +18,7 @@
 
 #include "nsISupports.idl"
 
-[object, uid(791eafa0-b9e6-11d1-8031-006008159b5a)]
+[object, uuid(791eafa0-b9e6-11d1-8031-006008159b5a)]
 interface nsISupportsArray : nsISupports {
   /* most of this is too complex to represent in IDL right now */
   

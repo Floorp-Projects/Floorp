@@ -43,4 +43,6 @@ typedef unsigned long   nsrefcnt;
 ]
 interface nsISupports {
   void QueryInterface(in nsID uuid, out nsQIResult result);
+  [notxpcom] void AddRef();
+  [notxpcom] void Release();
 };

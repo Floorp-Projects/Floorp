@@ -18,7 +18,7 @@
 
 #include "nsISupports.idl"
 
-
+[object, uuid(19997C41-A343-11d1-B665-00805F8A2676)]
 interface nsIFactory :  nsISupports {
 
   voidStar CreateInstance(in nsISupports aOuter,
