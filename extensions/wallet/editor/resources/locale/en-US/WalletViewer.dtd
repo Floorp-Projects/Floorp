@@ -24,6 +24,9 @@
 <!ENTITY urlspecific.label "URL-Specific">
 <!ENTITY experimental.label "Experimental">
 
+<!-- WalletViewer.xul -->
+<!ENTITY removeall.label "Remove All Saved Data">
+
 <!-- WalletName.xul -->
 <!ENTITY name.title "Name">
 <!ENTITY namePrefix.label "Prefix:">

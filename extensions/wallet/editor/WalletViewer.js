@@ -343,6 +343,27 @@ nsWalletViewer.prototype =
     walletViewerInterface.SetValue(output, window);
   }
 
+  /* clear all data */
+  function ClearAll() {
+
+    // clear out all values from database
+    schemaToValue = [];
+
+    // clear out values on current page
+    var elementIDs = window.frames[hWalletViewer.contentFrame]._elementIDs;
+    for(var i = 0; i < elementIDs.length; i++) {
+      var menuList = window.frames[hWalletViewer.contentFrame].document.getElementById(elementIDs[i]);
+      var menuPopup = menuList.firstChild;
+
+      // remove all menuItems except for last one
+      while (menuPopup.childNodes.length > 1) {
+        menuPopup.removeChild(menuPopup.firstChild);
+      }
+      menuList.removeAttribute("label");
+      menuList.selectedItem = menuPopup.firstChild;
+    }
+  }
+
   /* get the wallet input data */
   function FetchInput() {
     /*  get wallet data into a list */
