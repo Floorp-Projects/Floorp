@@ -51,6 +51,10 @@
 #include "nsIScrollableFrame.h" //to turn off scroll bars
 #include "nsFormControlFrame.h" //for registering accesskeys
 #include "nsIDeviceContext.h" // to measure fonts
+#include "nsIPresState.h" //for saving state
+#include "nsLinebreakConverter.h" //to strip out carriage returns
+
+#include "..\..\..\xul\content\src\nsXULAtoms.h"//debugging
 
 #include "nsIContent.h"
 #include "nsIAtom.h"
@@ -484,6 +488,10 @@ nsGfxTextControlFrame2::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   if (aIID.Equals(NS_GET_IID(nsIGfxTextControlFrame2))) {
     *aInstancePtr = (void*)(nsIGfxTextControlFrame2*) this;
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
+    *aInstancePtr = (void*)(nsIStatefulFrame*) this;
     return NS_OK;
   }
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
@@ -1013,6 +1021,7 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
   if (content)
   {
     content->SetAttribute(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertToString(DIV_STRING), PR_FALSE);
+    //content->SetAttribute(kNameSpaceID_None,nsXULAtoms::debug, NS_ConvertToString("true"), PR_FALSE);
     aChildList.AppendElement(content);
 
 //make the editor
@@ -1116,15 +1125,6 @@ NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresConte
   nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, child,
                                    availSize);
-  kidReflowState.mComputedWidth = aReflowState.mComputedWidth;
-  kidReflowState.mComputedHeight = aReflowState.mComputedHeight;
-
-
-  if (kidReflowState.mComputedWidth != NS_INTRINSICSIZE)
-      kidReflowState.mComputedWidth -= (kidReflowState.mComputedBorderPadding.left + kidReflowState.mComputedBorderPadding.right);
-
-  if (kidReflowState.mComputedHeight != NS_INTRINSICSIZE)
-      kidReflowState.mComputedHeight -= (kidReflowState.mComputedBorderPadding.top + kidReflowState.mComputedBorderPadding.bottom);
 
   if (aReflowState.reason == eReflowReason_Incremental)
   {
@@ -1227,15 +1227,26 @@ NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresConte
     }
   }
 
-
   nsHTMLReflowMetrics kidReflowDesiredSize(0,0);
-  
+
+  kidReflowState.mComputedWidth = aDesiredSize.width;
+  kidReflowState.mComputedHeight = aDesiredSize.height;
+
+  if (kidReflowState.mComputedWidth != NS_INTRINSICSIZE)
+      kidReflowState.mComputedWidth -= (kidReflowState.mComputedBorderPadding.left + kidReflowState.mComputedBorderPadding.right);
+
+  if (kidReflowState.mComputedHeight != NS_INTRINSICSIZE)
+      kidReflowState.mComputedHeight -= (kidReflowState.mComputedBorderPadding.top + kidReflowState.mComputedBorderPadding.bottom);
+
+
   rv = ReflowChild(child, aPresContext, kidReflowDesiredSize, kidReflowState, 0, 0, 0, aStatus);
  // Place and size the child.
   FinishReflowChild(child, aPresContext, kidReflowDesiredSize, aReflowState.mComputedBorderPadding.left,
                     aReflowState.mComputedBorderPadding.top, 0);
 
   aStatus = NS_FRAME_COMPLETE;
+
+ // printf("width=%d, height=%d, ascent=%d\n", aDesiredSize.width, aDesiredSize.height, aDesiredSize.ascent);
 
   return rv;
 }
@@ -1853,8 +1864,37 @@ nsGfxTextControlFrame2::GetWidthInCharacters() const
   return DEFAULT_COLUMN_WIDTH;
 }
 
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType)
+{
+  *aStateType = nsIStatefulFrame::eTextType;
+  return NS_OK;
+}
 
-//EVENT LISTENERS
+NS_IMETHODIMP
+nsGfxTextControlFrame2::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
+{
+  // Construct a pres state.
+  NS_NewPresState(aState); // The addref happens here.
+  
+  nsString theString;
+  nsresult res = GetProperty(nsHTMLAtoms::value, theString);
+  if (NS_FAILED(res))
+    return res;
+    
+  res = nsLinebreakConverter::ConvertStringLineBreaks(theString,
+           nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakContent);
+  NS_ASSERTION(NS_SUCCEEDED(res), "Converting linebreaks failed!");  
+  
+  (*aState)->SetStateProperty(NS_ConvertASCIItoUCS2("value"), theString);
+  return res;
+}
 
-/*=============== nsIFocusListener ======================*/
-
+NS_IMETHODIMP
+nsGfxTextControlFrame2::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
+{
+  nsAutoString stateString;
+  aState->GetStateProperty(NS_ConvertASCIItoUCS2("value"), stateString);
+  nsresult res = SetProperty(aPresContext, nsHTMLAtoms::value, stateString);
+  return res;
+}

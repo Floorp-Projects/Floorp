@@ -47,8 +47,11 @@ class nsTextAreaSelectionImpl;
 
 
 class nsGfxTextControlFrame2 : public nsHTMLContainerFrame,
-                           public nsIAnonymousContentCreator, public nsIFormControlFrame,
-                           public nsIGfxTextControlFrame2
+                               public nsIAnonymousContentCreator,
+                               public nsIFormControlFrame,
+                               public nsIGfxTextControlFrame2,
+                               public nsIStatefulFrame
+
 {
 public:
   nsGfxTextControlFrame2();
@@ -198,6 +201,12 @@ protected:
                                nsIFrame**        aFrame);
 
   PRInt32 GetWidthInCharacters() const;
+
+//nsIStatefulFrame
+  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
+
 
 private:
   nsCOMPtr<nsIEditor> mEditor;
