@@ -124,7 +124,13 @@ public class ScriptRuntime {
             scope = new NativeObject();
         }
         scope.associateValue(LIBRARY_SCOPE_KEY, scope);
-        scope.associateValue(CONTEXT_FACTORY_KEY, cx.getFactory());
+        ContextFactory factory = cx.getFactory();
+        if (factory == null) {
+            // factory is null for Context asociated with the current thread
+            // via Context.enter()
+            factory = ContextFactory.getGlobal();
+        }
+        scope.associateValue(CONTEXT_FACTORY_KEY, factory);
         (new ClassCache()).associate(scope);
 
         BaseFunction.init(cx, scope, sealed);
