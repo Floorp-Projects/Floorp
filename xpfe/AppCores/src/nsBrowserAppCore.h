@@ -42,7 +42,6 @@ class nsIScriptContext;
 class nsIDOMWindow;
 class nsIURI;
 class nsIWebShellWindow;
-class nsIGlobalHistory;
 class nsIFindComponent;
 
 
@@ -216,7 +215,6 @@ class nsBrowserAppCore : public nsBaseAppCore,
     nsIWebShell *       mWebShell;									// weak reference
     nsIWebShell *       mContentAreaWebShell;				// weak reference
 
-    nsIGlobalHistory*   mGHistory;			           // this is a service
 	  nsISessionHistory*  mSHistory;			           // this is a service
 
     nsCOMPtr<nsISupports>  mSearchContext;				// at last, something we really own

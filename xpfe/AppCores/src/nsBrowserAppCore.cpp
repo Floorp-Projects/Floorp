@@ -156,7 +156,6 @@ nsBrowserAppCore::nsBrowserAppCore()
   mWebShellWin          = nsnull;
   mWebShell             = nsnull;
   mContentAreaWebShell  = nsnull;
-  mGHistory             = nsnull;
   mSHistory             = nsnull;
   IncInstanceCount();
   NS_INIT_REFCNT();
@@ -173,11 +172,6 @@ nsBrowserAppCore::~nsBrowserAppCore()
   //NS_IF_RELEASE(mWebShellWin);
   //NS_IF_RELEASE(mWebShell);
   //NS_IF_RELEASE(mContentAreaWebShell);
-
-  if (nsnull != mGHistory) {
-    nsServiceManager::ReleaseService(kCGlobalHistoryCID, mGHistory);
-  }
- 
   NS_IF_RELEASE(mSHistory);
 
   DecInstanceCount();  
@@ -302,11 +296,6 @@ nsBrowserAppCore::Init(const nsString& aId)
 	  appCoreManager->Add((nsIDOMBaseAppCore *)(nsBaseAppCore *)this);
     nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoreManager);
   }
-
-  // Get the Global history service  
-  rv = nsServiceManager::GetService(kCGlobalHistoryCID, kIGlobalHistoryIID,
-					(nsISupports **)&mGHistory);
-  if (NS_FAILED(rv)) return rv;
 
   rv = nsComponentManager::CreateInstance(kCSessionHistoryCID,
                                           nsnull,
@@ -1195,24 +1184,6 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, PR
   // XXX Ignore rv for now. They are using nsIEnumerator instead of
   // nsISimpleEnumerator.
 
-  // Update global history.
-  //NS_ASSERTION(mGHistory != nsnull, "history not initialized");
-  if (mGHistory && mWebShell) {
-    nsresult rv;
-
-    do {
-      rv = mGHistory->AddPage(url, /* XXX referrer? */ nsnull, PR_Now());
-      if (NS_FAILED(rv)) break;
-
-      const PRUnichar* title;
-      rv = mWebShell->GetTitle(&title);
-      if (NS_FAILED(rv)) break;
-
-      rv = mGHistory->SetPageTitle(url, title);
-      if (NS_FAILED(rv)) break;
-    } while (0);
-  }
-
 done:
   // Stop the throbber and set the urlbar string
 	if (aStatus == NS_OK)
@@ -1702,11 +1673,6 @@ NS_IMETHODIMP
 nsBrowserAppCore::Close()
 { 
   EndObserving();
-
-  if (nsnull != mGHistory) {
-    nsServiceManager::ReleaseService(kCGlobalHistoryCID, mGHistory);
-  }
-  mGHistory = nsnull;
 
   // Undo other stuff we did in SetContentWindow.
   if ( mContentAreaWebShell ) {
