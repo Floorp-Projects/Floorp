@@ -109,12 +109,7 @@ MyScriptable::DefaultValue(JSContext *cx, JSObject *obj,
 class nsTestXPCFoo : public nsITestXPCFoo2
 {
     NS_DECL_ISUPPORTS
-    NS_IMETHOD Test(int p1, int p2, int* retval);
-    NS_IMETHOD Test2();
-
-    /* attribute string Foo; */
-    NS_IMETHOD GetFoo(char * *aFoo);
-    NS_IMETHOD SetFoo(char * aFoo);
+    NS_DECL_NSITESTXPCFOO
 
     nsTestXPCFoo();
     virtual ~nsTestXPCFoo();
@@ -204,80 +199,7 @@ class MyEcho : public nsIEcho
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_IMETHOD SetReceiver(nsIEcho* aReceiver);
-    NS_IMETHOD SendOneString(const char* str);
-    NS_IMETHOD In2OutOneInt(int input, int* output);
-    NS_IMETHOD In2OutAddTwoInts(int input1,
-                                int input2,
-                                int* output1,
-                                int* output2,
-                                int* result);
-    NS_IMETHOD In2OutOneString(const char* input, char** output);
-    NS_IMETHOD SimpleCallNoEcho();
-    NS_IMETHOD SendManyTypes(PRUint8              p1,
-                             PRInt16             p2,
-                             PRInt32             p3,
-                             PRInt64             p4,
-                             PRUint8              p5,
-                             PRUint16            p6,
-                             PRUint32            p7,
-                             PRUint64            p8,
-                             float             p9,
-                             double            p10,
-                             PRBool            p11,
-                             char              p12,
-                             PRUnichar         p13,
-                             const nsID*       p14,
-                             const char*       p15,
-                             const PRUnichar*  p16);
-    NS_IMETHOD SendInOutManyTypes(PRUint8*    p1,
-                                  PRInt16*   p2,
-                                  PRInt32*   p3,
-                                  PRInt64*   p4,
-                                  PRUint8*    p5,
-                                  PRUint16*  p6,
-                                  PRUint32*  p7,
-                                  PRUint64*  p8,
-                                  float*   p9,
-                                  double*  p10,
-                                  PRBool*  p11,
-                                  char*    p12,
-                                  PRUnichar*  p13,
-                                  nsID**   p14,
-                                  char**   p15,
-                                  PRUnichar** p16);
-    NS_IMETHOD MethodWithNative(int p1, void* p2);
-
-    NS_IMETHOD ReturnCode(int code);
-
-    NS_IMETHOD FailInJSTest(int fail);
-
-    /* void SharedTest ([shared, retval] out string str); */
-    NS_IMETHOD SharedString(const char **str);
-
-    /* void ReturnCode_NS_OK (); */
-    NS_IMETHOD ReturnCode_NS_OK();
-
-    /* void ReturnCode_NS_ERROR_NULL_POINTER (); */
-    NS_IMETHOD ReturnCode_NS_ERROR_NULL_POINTER();
-
-    /* void ReturnCode_NS_ERROR_UNEXPECTED (); */
-    NS_IMETHOD ReturnCode_NS_ERROR_UNEXPECTED();
-
-    /* void ReturnCode_NS_ERROR_OUT_OF_MEMORY (); */
-    NS_IMETHOD ReturnCode_NS_ERROR_OUT_OF_MEMORY();
-
-    /* nsISupports ReturnInterface (in nsISupports obj); */
-    NS_IMETHOD ReturnInterface(nsISupports *obj, nsISupports **_retval);
-
-    /* nsIJSStackFrameLocation GetStack (); */
-    NS_IMETHOD GetStack(nsIJSStackFrameLocation **_retval);
-
-    /* void SetReceiverReturnOldReceiver (inout nsIEcho aReceiver); */
-    NS_IMETHOD SetReceiverReturnOldReceiver(nsIEcho **aReceiver);
-
-    /* void MethodWithForwardDeclaredParam (in nsITestXPCSomeUselessThing sut); */
-    NS_IMETHOD MethodWithForwardDeclaredParam(nsITestXPCSomeUselessThing *sut);
+    NS_DECL_NSIECHO
 
     MyEcho();
 private:
@@ -532,23 +454,7 @@ public:
               VETO_ALL
             };
 
-  /* void CanCreateWrapper (in JSContext aJSContext, in nsIIDRef aIID, in nsISupports aObj); */
-  NS_IMETHOD CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj);
-
-  /* void CanCreateInstance (in JSContext aJSContext, in nsCIDRef aCID); */
-  NS_IMETHOD CanCreateInstance(JSContext * aJSContext, const nsCID & aCID);
-
-  /* void CanGetService (in JSContext aJSContext, in nsCIDRef aCID); */
-  NS_IMETHOD CanGetService(JSContext * aJSContext, const nsCID & aCID);
-
-  /* void CanCallMethod (in JSContext aJSContext, in nsIIDRef aIID, in nsISupports aObj, in nsIInterfaceInfo aInterfaceInfo, in PRUint16 aMethodIndex, [const] in jsid aName); */
-  NS_IMETHOD CanCallMethod(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName);
-
-  /* void CanGetProperty (in JSContext aJSContext, in nsIIDRef aIID, in nsISupports aObj, in nsIInterfaceInfo aInterfaceInfo, in PRUint16 aMethodIndex, [const] in jsid aName); */
-  NS_IMETHOD CanGetProperty(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName);
-
-  /* void CanSetProperty (in JSContext aJSContext, in nsIIDRef aIID, in nsISupports aObj, in nsIInterfaceInfo aInterfaceInfo, in PRUint16 aMethodIndex, [const] in jsid aName); */
-  NS_IMETHOD CanSetProperty(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName);
+  NS_DECL_NSIXPCSECURITYMANAGER
 
   void SetMode(Mode mode) {mMode = mode;}
 

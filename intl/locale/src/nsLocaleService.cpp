@@ -116,12 +116,8 @@ public:
 	//
 	// nsILocaleService
 	//
-	NS_IMETHOD NewLocale(const PRUnichar *aLocale, nsILocale **_retval);
-	NS_IMETHOD NewLocaleObject(nsILocaleDefinition *localeDefinition, nsILocale **_retval);
-	NS_IMETHOD GetSystemLocale(nsILocale **_retval);
-	NS_IMETHOD GetApplicationLocale(nsILocale **_retval);
-	NS_IMETHOD GetLocaleFromAcceptLanguage(const char *acceptLanguage, nsILocale **_retval);
-	NS_IMETHOD GetLocaleComponentForUserAgent(PRUnichar **_retval);
+    NS_DECL_NSILOCALESERVICE
+
 	//
 	// implementation methods
 	//

@@ -47,34 +47,8 @@ struct nsJVMManager : public nsIJVMManager, public nsIThreadManager, public nsIL
 public:
 
     NS_DECL_AGGREGATED
-    
-    /* from nsIJVMManager: */
-    
-    /**
-     * Creates a proxy JNI with an optional secure environment (which can be NULL).
-     * There is a one-to-one correspondence between proxy JNIs and threads, so
-     * calling this method multiple times from the same thread will return
-     * the same proxy JNI.
-     */
-	NS_IMETHOD
-	CreateProxyJNI(nsISecureEnv* inSecureEnv, JNIEnv** outProxyEnv);
-	
-	/**
-	 * Returns the proxy JNI associated with the current thread, or NULL if no
-	 * such association exists.
-	 */
-	NS_IMETHOD
-	GetProxyJNI(JNIEnv** outProxyEnv);
 
-	/**
-	 * Returns whether or not Java is enabled.
-	 */
-	NS_IMETHOD
-	IsJavaEnabled(PRBool* outEnabled);
-
-    NS_METHOD
-    ShowJavaConsole(void);
-
+    NS_DECL_NSIJVMMANAGER    
     
     /* from nsIThreadManager: */
     

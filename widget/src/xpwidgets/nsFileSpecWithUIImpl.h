@@ -35,16 +35,7 @@ class nsFileSpecWithUIImpl
 	nsFileSpecWithUIImpl();
 	virtual ~nsFileSpecWithUIImpl();
 
-	NS_IMETHOD chooseOutputFile(const char *windowTitle, const char *suggestedLeafName);
-
-	NS_IMETHOD chooseFile(const char *title, char **_retval);
-
-	NS_IMETHOD chooseInputFile(
-		const char *title,
-		nsIFileSpecWithUI::StandardFilterMask standardFilterMask,
-		const char *extraFilterTitle, const char *extraFilter);
-
-	NS_IMETHOD chooseDirectory(const char *title);
+  NS_DECL_NSIFILESPECWITHUI
 	
 	//------------------
 	// INHERITED/FORWARDED METHODS

@@ -65,15 +65,7 @@ public:
   virtual ~nsStringBundle();
 
   NS_DECL_ISUPPORTS
-
-  /* void GetStringFromID (in long aID, out wstring aResult); */
-  NS_IMETHOD GetStringFromID(PRInt32 aID, PRUnichar **aResult);
-
-  /* void GetStringFromName ([const] in wstring aName, out wstring aResult); */
-  NS_IMETHOD GetStringFromName(const PRUnichar *aName, PRUnichar **aResult);
-
-  /* void GetEnumeration (out nsIBidirectionalEnumerator elements); */
-  NS_IMETHOD GetEnumeration(nsIBidirectionalEnumerator **elements);
+  NS_DECL_NSISTRINGBUNDLE
 
   nsIPersistentProperties* mProps;
 
@@ -361,12 +353,7 @@ public:
   virtual ~nsStringBundleService();
 
   NS_DECL_ISUPPORTS
-
-  /* void CreateBundle ([const] in string aURLSpec, in nsILocale aLocale, out nsIStringBundle aResult); */
-  NS_IMETHOD CreateBundle(const char *aURLSpec, nsILocale * aLocale, 
-                          nsIStringBundle **aResult);
-  /* void CreateXPCBundle ([const] in string aURLSpec, [const] in wstring aLocaleName, out nsIStringBundle aResult); */
-  NS_IMETHOD CreateXPCBundle(const char *aURLSpec, const PRUnichar *aLocaleName, nsIStringBundle **aResult);  
+  NS_DECL_NSISTRINGBUNDLESERVICE
 };
 
 nsStringBundleService::nsStringBundleService()

@@ -42,12 +42,13 @@ interface nsIFileSpec;
 
 [scriptable, uuid(a22ad7b0-ca86-11d1-a9a4-00805f8a7ac4)]
 interface nsIPref : nsISupports {
-
+  // Initialize/shutdown
   void StartUp();
   void ReadUserPrefs();
   void ReadUserPrefsFrom(in nsIFileSpec spec);
   void ShutDown();
 
+  // Config file input
   void ReadUserJSFile(in nsIFileSpec filename);
   void ReadLIJSFile(in nsIFileSpec filename);
 
@@ -129,8 +130,10 @@ interface nsIPref : nsISupports {
   /* pref attributes */
   boolean PrefIsLocked(in string pref);
 
+  /* save pref values */
   void SavePrefFile();
 
+  /* callbacks */
   [noscript] void RegisterCallback(in string domain,
                         in PrefChangedFunc callback,
                         in voidStar closure);

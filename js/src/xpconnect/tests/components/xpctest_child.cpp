@@ -29,8 +29,7 @@ class xpctestOther : public nsIXPCTestOther
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD method3(PRInt16 i, PRInt16 j, PRInt16 k);
+    NS_DECL_NSIXPCTESTOTHER
 
     xpctestOther();
 };
@@ -39,10 +38,8 @@ class xpctestChild : public nsIXPCTestChild, public xpctestOther
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
-
-    NS_IMETHOD method1(PRInt16 i);
-    NS_IMETHOD method1a(nsIXPCTestParent *foo);
-    NS_IMETHOD method2(PRInt16 i, PRInt16 j);
+    NS_DECL_NSIXPCTESTPARENT
+    NS_DECL_NSIXPCTESTCHILD
 
     xpctestChild();
 };
@@ -92,9 +89,8 @@ class xpctestParent : public nsIXPCTestParent
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIXPCTESTPARENT
 
-    NS_IMETHOD method1(PRInt16 i);
-    NS_IMETHOD method1a(nsIXPCTestParent *foo);
     xpctestParent();
 };
 
@@ -103,8 +99,7 @@ class xpctestChild : public xpctestParent, public nsIXPCTestChild
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD method2(PRInt16 i, PRInt16 j);
+    NS_DECL_NSIXPCTESTCHILD
 
     xpctestChild();
 };
@@ -129,10 +124,8 @@ class xpctestChild : public nsIXPCTestChild
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD method1(PRInt16 i);
-    NS_IMETHOD method1a(nsIXPCTestParent *foo);
-    NS_IMETHOD method2(PRInt16 i, PRInt16 j);
+    NS_DECL_NSIXPCTESTPARENT
+    NS_DECL_NSIXPCTESTCHILD
 
     xpctestChild();
 };

@@ -46,13 +46,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIAccount interface
-	NS_IMETHOD SetDialerConfig(const char* aValue);
-	NS_IMETHOD GetAcctConfig(char **_retval);
-	NS_IMETHOD GetModemConfig(char **_retval);
-	NS_IMETHOD GetSiteName(char **_retval);
-	NS_IMETHOD GetPhone(char **_retval);
-	NS_IMETHOD LoadValues(void);
-	NS_IMETHOD CheckForDun(char **_retval);
+    NS_DECL_NSIACCOUNTSERVICES
 
 private:
 	nsIAccount *mAccount;
