@@ -34,6 +34,7 @@
 #include "nsIStyleContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
+#include "nsUnitConversion.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
@@ -76,15 +77,11 @@ CellData::~CellData()
  *
  * BUGS:
  * <ul>
- * <li>Enabling css1 margins on tables, rows, cells causes things to not
- * fit. why?
  * <li>centering (etc.) is leaking into table cell's from the outer environment
  * </ul>
  *
  * TODO:
  * <ul>
- * <li>as table border gets wider, the table gets narrower (somebody is over
- * subtracting the table border.
  * <li>colspan creating empty cells on rows w/o matching cells
  * <li>draw table borders ala navigator
  * <li>border sizing
@@ -92,25 +89,15 @@ CellData::~CellData()
  * <li>draw cell borders ala navigator
  * <li>cellspacing
  * <li>colspan not the last cell
- * <li>rowspan
  * <li>floaters in table cells
  * <ul>
  * <li>rowspan truncation (rowspan sticking out past the bottom of the table)
  * <li>effect on subsequent row structure
  * </ul>
- * <li>eliminate TableRow and TableRowLayoutDelegate's
  * <li>inherit table border color ala nav4 (use inherited text color) when
  * the border is enabled and the bordercolor value nsnull.
  * </ul>
  *
- * HTML4:
- * <ul>
- * <li>borders
- * <li>table frame
- * <li>colgroup
- * <li>col
- * <li>thead, tfoot, tbody
- * </ul>
  *
  * CSS1:
  * <ul>
@@ -132,19 +119,10 @@ CellData::~CellData()
  * <li>watch it
  * </ul>
  *
- * Eventually:
- * <ul>
- * <li>splitting tables across pages
- * </ul>
- *
- * And the hardest of all:
- * <ul>
- * <li>column sizing
- * </ul>
  */
 
 /** constructor
-  * I do not addref aTag because my superclass does that for me
+  * I do not check or addref aTag because my superclass does that for me
   */
 nsTablePart::nsTablePart(nsIAtom* aTag)
   : nsHTMLContainer(aTag),
@@ -155,9 +133,9 @@ nsTablePart::nsTablePart(nsIAtom* aTag)
 }
 
 /** constructor
-  * I do not addref aTag because my superclass does that for me
+  * I do not check or addref aTag because my superclass does that for me
   */
-nsTablePart::nsTablePart (nsIAtom* aTag, int aColumnCount)
+nsTablePart::nsTablePart (nsIAtom* aTag, PRInt32 aColumnCount)
   : nsHTMLContainer(aTag),
     mColCount(aColumnCount),
     mSpecifiedColCount(0),
@@ -175,20 +153,14 @@ nsTablePart::~nsTablePart()
   }
 }
 
-/**
-  */
-/*
-nsTablePart::void compact() {
-  compact();
-}
-*/
-
+// for debugging only
 nsrefcnt nsTablePart::AddRef(void)
 {
   if (gsNoisyRefs==PR_TRUE) printf("Add Ref: nsTablePart cnt = %d \n",mRefCnt+1);
   return ++mRefCnt;
 }
 
+// for debugging only
 nsrefcnt nsTablePart::Release(void)
 {
   if (gsNoisyRefs==PR_TRUE) printf("Release: nsTablePart cnt = %d \n",mRefCnt-1);
@@ -200,9 +172,7 @@ nsrefcnt nsTablePart::Release(void)
   return mRefCnt;
 }
 
-/**
-  */
-int nsTablePart::GetMaxColumns ()
+PRInt32 nsTablePart::GetMaxColumns ()
 {
   if (nsnull == mCellMap)
   {
@@ -212,13 +182,13 @@ int nsTablePart::GetMaxColumns ()
 }
 
   // XXX what do rows with no cells turn into?
-/**
-  */
-int nsTablePart::GetRowCount ()
+PRInt32 nsTablePart::GetRowCount ()
 {
+  // if we've already built the cellMap, ask it for the row count
   if (nsnull != mCellMap)
     return mCellMap->GetRowCount();
 
+  // otherwise, we need to compute it by walking our children
   int rowCount = 0;
   int index = ChildCount ();
   while (0 < index)
@@ -233,9 +203,8 @@ int nsTablePart::GetRowCount ()
   return rowCount;
 }
   
-/** counts columns in column groups
-  */
-int nsTablePart::GetSpecifiedColumnCount ()
+/* counts columns in column groups */
+PRInt32 nsTablePart::GetSpecifiedColumnCount ()
 {
   if (mSpecifiedColCount < 0)
   {
@@ -257,24 +226,22 @@ int nsTablePart::GetSpecifiedColumnCount ()
   return mSpecifiedColCount;
 }
 
-
+// returns the actual cell map, not a copy, so don't mess with it!
 nsCellMap*  nsTablePart::GetCellMap() const
 {
   return mCellMap;
 }
 
 
-/**
-  */
+/* call when the cell structure has changed.  mCellMap will be rebuilt on demand. */
 void nsTablePart::ResetCellMap ()
 {
-  if (mCellMap)
+  if (nsnull==mCellMap)
     delete mCellMap;
   mCellMap = nsnull; // for now, will rebuild when needed
 }
 
-/**
-  */
+/* call when column structure has changed. */
 void nsTablePart::ResetColumns ()
 {
   mSpecifiedColCount = -1;
@@ -361,6 +328,7 @@ void nsTablePart::NotifyContentComplete()
   */
 PRBool nsTablePart::AppendChild (nsIContent * aContent)
 {
+  NS_PRECONDITION(nsnull!=aContent, "bad arg");
   PRBool result = PR_FALSE;
   PRBool newCells = PR_FALSE;
   PRBool contentHandled = PR_FALSE;
@@ -402,6 +370,7 @@ PRBool nsTablePart::AppendChild (nsIContent * aContent)
           {  
             group = (nsTableRowGroup *)content;
             NS_ADDREF(group);                     // group: REFCNT++
+            // SEC: this code might be a space leak for tables >1 row group
           }
         }
         NS_RELEASE(child);                        // child: REFCNT--
@@ -488,11 +457,12 @@ PRBool nsTablePart::AppendChild (nsIContent * aContent)
   return result;
 }
 
-/**
-  */
-  /* SEC: why can we only insertChildAt (captions or groups) ? */
-PRBool nsTablePart::InsertChildAt(nsIContent * aContent, int aIndex)
+/* SEC: why can we only insertChildAt (captions or groups) ? */
+PRBool nsTablePart::InsertChildAt(nsIContent * aContent, PRInt32 aIndex)
 {
+  NS_PRECONDITION(nsnull!=aContent, "bad arg");
+  // aIndex checked in nsHTMLContainer
+
   PRBool result = PR_FALSE;
   nsTableContent *tableContent = (nsTableContent *)aContent;
   const int contentType = tableContent->GetType();
@@ -510,10 +480,13 @@ PRBool nsTablePart::InsertChildAt(nsIContent * aContent, int aIndex)
   return result;
 }
 
-/**
-  */
-PRBool nsTablePart::ReplaceChildAt (nsIContent *aContent, int aIndex)
+PRBool nsTablePart::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex)
 {
+  NS_PRECONDITION(nsnull!=aContent, "bad aContent arg to ReplaceChildAt");
+  NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to ReplaceChildAt");
+  if ((nsnull==aContent) || !(0<=aIndex && aIndex<ChildCount()))
+    return PR_FALSE;
+
   PRBool result = PR_FALSE;
   nsTableContent *tableContent = (nsTableColGroup *)aContent;
   const int contentType = tableContent->GetType();
@@ -536,11 +509,15 @@ PRBool nsTablePart::ReplaceChildAt (nsIContent *aContent, int aIndex)
 }
 
 /**
- * Remove a child at the given position. The method is ignored if
+ * Remove a child at the given position. The method is a no-op if
  * the index is invalid (too small or too large).
  */
-PRBool nsTablePart::RemoveChildAt (int aIndex)
+PRBool nsTablePart::RemoveChildAt (PRInt32 aIndex)
 {
+  NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to RemoveChildAt");
+  if (!(0<=aIndex && aIndex<ChildCount()))
+    return PR_FALSE;
+
   nsIContent * lastChild = ChildAt (aIndex);    // lastChild: REFCNT++
   PRBool result = nsHTMLContainer::RemoveChildAt (aIndex);
   if (result)
@@ -729,9 +706,8 @@ PRBool nsTablePart::AppendCaption(nsTableCaption *aContent)
   return result;
 }
 
-/**
-  */
-int nsTablePart::NextRowGroup (int aStartIndex)
+/* return the index of the first row group after aStartIndex */
+PRInt32 nsTablePart::NextRowGroup (PRInt32 aStartIndex)
 {
   int index = aStartIndex;
   int count = ChildCount ();
@@ -920,10 +896,11 @@ void nsTablePart::DumpCellMap () const
     printf ("[nsnull]");
 }
 
-void nsTablePart::BuildCellIntoMap (nsTableCell *aCell, int aRowIndex, int aColIndex)
+void nsTablePart::BuildCellIntoMap (nsTableCell *aCell, PRInt32 aRowIndex, PRInt32 aColIndex)
 {
-  //SEC Assert.Assertion (aColIndex < mColCount);
-  //SEC Assert.Assertion (nsnull!=aCell);
+  NS_PRECONDITION (nsnull!=aCell, "bad cell arg");
+  NS_PRECONDITION (aColIndex < mColCount, "bad column index arg");
+  NS_PRECONDITION (aRowIndex < GetRowCount(), "bad row index arg");
 
   // Setup CellMap for this cell
   int rowSpan = GetEffectiveRowSpan (aRowIndex, aCell);
@@ -985,7 +962,7 @@ void nsTablePart::BuildCellIntoMap (nsTableCell *aCell, int aRowIndex, int aColI
   }
 }
 
-void nsTablePart::GrowCellMap (int aColCount)
+void nsTablePart::GrowCellMap (PRInt32 aColCount)
 {
   if (nsnull!=mCellMap)
   {
@@ -997,9 +974,11 @@ void nsTablePart::GrowCellMap (int aColCount)
   }
 }
 
-int nsTablePart::GetEffectiveRowSpan (int aRowIndex, nsTableCell *aCell)
+PRInt32 nsTablePart::GetEffectiveRowSpan (PRInt32 aRowIndex, nsTableCell *aCell)
 {
-  //SEC Assert.Assertion (nsnull!=aCell)
+  NS_PRECONDITION (nsnull!=aCell, "bad cell arg");
+  NS_PRECONDITION (0<=aRowIndex && aRowIndex<GetRowCount(), "bad row index arg");
+
   int rowSpan = aCell->GetRowSpan ();
   int rowCount = GetRowCount ();
   if (rowCount < (aRowIndex + rowSpan))
@@ -1063,6 +1042,9 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
                                     nsIPresContext* aPresContext)
 {
+  NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
+  NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
+
   float p2t;
   nsHTMLValue value;
 
@@ -1094,6 +1076,10 @@ void nsTablePart::GetTableBorder(nsIHTMLContent* aContent,
                                  nsIPresContext* aPresContext,
                                  PRBool aForCell)
 {
+  NS_PRECONDITION(nsnull!=aContent, "bad content arg");
+  NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
+  NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
+
   nsHTMLValue value;
 
   aContent->GetAttribute(nsHTMLAtoms::border, value);
@@ -1103,10 +1089,10 @@ void nsTablePart::GetTableBorder(nsIHTMLContent* aContent,
     nsStyleSpacing* spacing = (nsStyleSpacing*)
       aContext->GetData(kStyleSpacingSID);
     float p2t = aPresContext->GetPixelsToTwips();
-    nscoord pixels = aForCell
-      ? nscoord(p2t * 1)
-      : nscoord(p2t * value.GetIntValue());
-    nscoord two = nscoord(p2t * 2);
+    nscoord twips = aForCell
+      ? nscoord(NS_INT_PIXELS_TO_TWIPS(1, p2t))
+      : nscoord(NS_INT_PIXELS_TO_TWIPS(value.GetIntValue(), p2t));
+    nscoord two = nscoord(NS_INT_PIXELS_TO_TWIPS(2,p2t));
 
 #if 0
     // XXX do I need to do this or can I assert that it's zero?
@@ -1116,25 +1102,25 @@ void nsTablePart::GetTableBorder(nsIHTMLContent* aContent,
     spacing->mBorderPadding.left -= spacing->mBorder.left;
 #endif
 
-    spacing->mBorder.top = pixels;
-    spacing->mBorder.right = pixels;
-    spacing->mBorder.bottom = pixels;
-    spacing->mBorder.left = pixels;
+    spacing->mBorder.top = twips;
+    spacing->mBorder.right = twips;
+    spacing->mBorder.bottom = twips;
+    spacing->mBorder.left = twips;
 
     spacing->mPadding.top = two;
     spacing->mPadding.right = two;
     spacing->mPadding.bottom = two;
     spacing->mPadding.left = two;
 
-    spacing->mBorderPadding.top += pixels + two;
-    spacing->mBorderPadding.right += pixels + two;
-    spacing->mBorderPadding.bottom += pixels + two;
-    spacing->mBorderPadding.left += pixels + two;
+    spacing->mBorderPadding.top += twips + two;
+    spacing->mBorderPadding.right += twips + two;
+    spacing->mBorderPadding.bottom += twips + two;
+    spacing->mBorderPadding.left += twips + two;
 
-    border->mSize.top = pixels;
-    border->mSize.right = pixels;
-    border->mSize.bottom = pixels;
-    border->mSize.left = pixels;
+    border->mSize.top = twips;
+    border->mSize.right = twips;
+    border->mSize.bottom = twips;
+    border->mSize.left = twips;
 
     if (border->mStyle[0] == NS_STYLE_BORDER_STYLE_NONE) {
       border->mStyle[0] = NS_STYLE_BORDER_STYLE_SOLID;

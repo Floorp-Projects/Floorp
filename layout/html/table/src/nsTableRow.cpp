@@ -38,7 +38,7 @@ static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsNoisyRefs = PR_FALSE;
 #endif
 
-
+// nsTableContent checks aTag
 nsTableRow::nsTableRow(nsIAtom* aTag)
   : nsTableContent(aTag),
   mRowGroup(0),
@@ -46,6 +46,7 @@ nsTableRow::nsTableRow(nsIAtom* aTag)
 {
 }
 
+// nsTableContent checks aTag
 nsTableRow::nsTableRow(nsIAtom* aTag, PRBool aImplicit)
   : nsTableContent(aTag),
   mRowGroup(0),
@@ -79,6 +80,7 @@ void nsTableRow::SetRowGroup (nsTableRowGroup * aRowGroup)
 
 PRInt32 nsTableRow::GetRowIndex ()
 {
+  NS_PRECONDITION(0<=mRowIndex, "bad mRowIndex");
   return mRowIndex;
 }
 
@@ -118,7 +120,6 @@ PRInt32 nsTableRow::GetMaxColumns()
 
 void nsTableRow::ResetCellMap ()
 {
-  // SEC Assert.Assertion(nsnull!=mTable)
   if (nsnull != mRowGroup)
   {
     mRowGroup->ResetCellMap ();
@@ -183,9 +184,10 @@ PRBool nsTableRow::InsertChildAt (nsIContent *aContent, int aIndex)
 PRBool nsTableRow::ReplaceChildAt (nsIContent *aContent, int aIndex)
 {
   PRBool result = PR_FALSE;
-  // SEC Assert.PreCondition (nsnull!=aContent);
-  // SEC Assert.PreCondition (aIndex in range);
-  if ((nsnull==aContent) || /*(aIndex not in range)*/PR_FALSE)
+
+  NS_PRECONDITION(nsnull!=aContent, "bad aContent arg to ReplaceChildAt");
+  NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to ReplaceChildAt");
+  if ((nsnull==aContent) || !(0<=aIndex && aIndex<ChildCount()))
     return PR_FALSE;
   else
   {
@@ -217,8 +219,11 @@ PRBool nsTableRow::ReplaceChildAt (nsIContent *aContent, int aIndex)
  */
 PRBool nsTableRow::RemoveChildAt (int aIndex)
 {
+  NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to ReplaceChildAt");
+  if (!(0<=aIndex && aIndex<ChildCount()))
+    return PR_FALSE;
+  
   PRBool result = PR_FALSE;
-  //Assert aIndex in range
   nsIContent * oldChild = ChildAt (aIndex);   // oldChild: REFCNT++
   if (nsnull!=oldChild)
   {
@@ -234,6 +239,7 @@ PRBool nsTableRow::RemoveChildAt (int aIndex)
   return result;
 }
 
+// nsTableRowFrame checks args
 nsIFrame* nsTableRow::CreateFrame(nsIPresContext* aPresContext,
                                   PRInt32 aIndexInParent,
                                   nsIFrame* aParentFrame)

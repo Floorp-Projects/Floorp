@@ -87,7 +87,7 @@ public:
     * @param aTag         the HTML tag that caused this content node to be instantiated
     * @param aColumnCount the number of columns in this table
     */
-  nsTablePart(nsIAtom* aTag, int aColumnCount);
+  nsTablePart(nsIAtom* aTag, PRInt32 aColumnCount);
 
   // For debugging purposes only
   NS_IMETHOD_(nsrefcnt) AddRef();
@@ -123,18 +123,18 @@ public:
     * calls SetStartColumnIndex on each nsTableColumn<br>
     * sets mSpecifiedColCount.<br>
     */
-  virtual int GetSpecifiedColumnCount ();
+  virtual PRInt32 GetSpecifiedColumnCount ();
 
   /** returns the number of rows in this table.
     * if mCellMap has been created, it is asked for the number of rows.<br>
     * otherwise, the content is enumerated and the rows are counted.
     */
-  virtual int GetRowCount();
+  virtual PRInt32 GetRowCount();
 
   /** returns the actual number of columns in this table.<br>
     * as a side effect, will call BuildCellMap to constuct mCellMap if needed.
     */
-  virtual int GetMaxColumns();
+  virtual PRInt32 GetMaxColumns();
 
 
 /* overrides from nsHTMLContainer */
@@ -171,7 +171,7 @@ protected:
     * @return  the row span, correcting for row spans that extend beyond the bottom
     *          of the table.
     */
-  virtual int  GetEffectiveRowSpan(int aRowIndex, nsTableCell *aCell);
+  virtual PRInt32  GetEffectiveRowSpan(PRInt32 aRowIndex, nsTableCell *aCell);
 
   /** build as much of the CellMap as possible from the info we have so far 
     */
@@ -179,7 +179,7 @@ protected:
 
   /** called whenever the number of columns changes, to increase the storage in mCellMap 
     */
-  virtual void GrowCellMap(int aColCount);
+  virtual void GrowCellMap(PRInt32 aColCount);
 
   /** called every time we discover we have a new cell to add to the table.
     * This could be because we got actual cell content, because of rowspan/colspan attributes, etc.
@@ -189,11 +189,11 @@ protected:
     * @param aRowIndex the row into which the cell is to be inserted
     * @param aColIndex the col into which the cell is to be inserted
     */
-  virtual void BuildCellIntoMap (nsTableCell *aCell, int aRowIndex, int aColIndex);
+  virtual void BuildCellIntoMap (nsTableCell *aCell, PRInt32 aRowIndex, PRInt32 aColIndex);
 
   /** returns the index of the first child after aStartIndex that is a row group 
     */
-  virtual int  NextRowGroup (int aStartIndex);
+  virtual PRInt32 NextRowGroup (PRInt32 aStartIndex);
 
   /** obsolete! */
   virtual void ReorderChildren();
@@ -225,8 +225,8 @@ public:
 
 private:
 
-  int mColCount;
-  int mSpecifiedColCount;
+  PRInt32 mColCount;
+  PRInt32 mSpecifiedColCount;
   nsCellMap* mCellMap;
   static nsIAtom *kDefaultTag;
 };
