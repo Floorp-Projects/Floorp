@@ -281,7 +281,7 @@ class ConvertToUpperCase
       PRUint32
       write( const CharT* aSource, PRUint32 aSourceLength )
         {
-          for ( int i=0; i<aSourceLength; ++i )
+          for ( PRUint32 i=0; i<aSourceLength; ++i )
             NS_CONST_CAST(CharT*, aSource)[i] = nsCRT::ToUpper(aSource[i]);
           return aSourceLength;
         }
@@ -318,7 +318,7 @@ class ConvertToLowerCase
       PRUint32
       write( const CharT* aSource, PRUint32 aSourceLength )
         {
-          for ( int i=0; i<aSourceLength; ++i )
+          for ( PRUint32 i=0; i<aSourceLength; ++i )
             NS_CONST_CAST(CharT*, aSource)[i] = nsCRT::ToLower(aSource[i]);
           return aSourceLength;
         }
