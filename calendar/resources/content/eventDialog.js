@@ -287,11 +287,11 @@ function onOKCommand()
    gEvent.alarmLength = getFieldValue( "alarm-length-field" );
    gEvent.alarmUnits  = getFieldValue( "alarm-length-units", "value" );  
 
-   debug( "!!!-->in calendarEventDialog.js, alarmUnits is "+gEvent.alarmUnits );
+   dump( "!!!-->in calendarEventDialog.js, alarmUnits is "+gEvent.alarmUnits );
    if ( getFieldValue( "alarm-email-checkbox", "checked" ) ) 
    {
       gEvent.alarmEmailAddress = getFieldValue( "alarm-email-field", "value" );
-      debug( "!!!-->in calendarEventDialog.js, alarmEmailAddress is "+gEvent.alarmEmailAddress );
+      dump( "!!!-->in calendarEventDialog.js, alarmEmailAddress is "+gEvent.alarmEmailAddress );
    }
    else
    {
@@ -1381,11 +1381,4 @@ function formatTime( time )
 {
    var timeString = opener.gCalendarWindow.dateFormater.getFormatedTime( time );
    return timeString;
-}
-
-
-function debug( Text )
-{
-   dump( "\n"+ Text + "\n");
-
 }

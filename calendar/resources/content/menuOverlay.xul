@@ -143,7 +143,7 @@
    <menu id="windowMenu"/>
   
    <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help">
-      <menupopup>
+      <menupopup id="helpPopup">
          <menuitem id="calendar-about-menu-item" label="&calendar.about.label;" accesskey="&calendar.about.accesskey;" oncommand="alertCalendarVersion()"/>
       </menupopup>
    </menu>      

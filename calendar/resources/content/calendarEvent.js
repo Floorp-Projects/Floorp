@@ -613,11 +613,11 @@ CalendarAlarmObserver.prototype.onDeleteItem = function( calendarEvent )
 
 CalendarAlarmObserver.prototype.onAlarm = function( calendarEvent )
 {
-    debug( "caEvent.alarmWentOff is "+ calendarEvent );
+    dump( "caEvent.alarmWentOff is "+ calendarEvent );
     
     if( this.addToPending )
     {
-        debug( "defering alarm "+ calendarEvent );
+        dump( "defering alarm "+ calendarEvent );
         this.pendingAlarmList.push( calendarEvent );
     }
     else
@@ -628,7 +628,7 @@ CalendarAlarmObserver.prototype.onAlarm = function( calendarEvent )
 
 CalendarAlarmObserver.prototype.fireAlarm = function( calendarEvent )
 {
-   debug( "Fire alarm "+ calendarEvent );
+   dump( "Fire alarm "+ calendarEvent );
    
    if( gCalendarWindow.calendarPreferences.getPref( "alarmsplaysound" ) )
    {
@@ -643,10 +643,3 @@ CalendarAlarmObserver.prototype.fireAlarm = function( calendarEvent )
       // TO DO
    }
 }
-
-
-function debug( str )
-{
-    dump( "\n CalendarEvent.js DEBUG: "+ str + "\n");
-}
-
