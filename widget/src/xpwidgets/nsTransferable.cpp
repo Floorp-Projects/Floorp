@@ -35,8 +35,8 @@ NS_IMPL_ADDREF(nsTransferable)
 NS_IMPL_RELEASE(nsTransferable)
 
 // million bytes
-  //#define LARGE_DATASET_SIZE 1000000 
-#define LARGE_DATASET_SIZE 10 
+#define LARGE_DATASET_SIZE 1000000 
+//#define LARGE_DATASET_SIZE 10 
 
 struct DataStruct {
   DataStruct (const nsString & aString)
