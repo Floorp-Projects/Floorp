@@ -56,6 +56,10 @@ Contributor(s): ______________________________________. -->
   <script type="application/x-javascript" src="chrome://navigator/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/navigator.js"/>
 
+  <!-- Shared Bookmarks Utility Library -->
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksMenu.js"/>
+
   <stringbundleset id="stringbundleset"/>
 
   <!-- keys are appended from the overlay -->
@@ -75,6 +79,8 @@ Contributor(s): ______________________________________. -->
   </commandset>
 
   <broadcasterset id="navBroadcasters"/>
+
+  <template id="bookmarksMenuTemplate"/>
 
   <!-- it's the whole navigator.xul menubar! hidden windows need to
        have a menubar for situations where they're the only window remaining
