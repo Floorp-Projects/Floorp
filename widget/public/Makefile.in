@@ -34,7 +34,6 @@ EXPORTS		= \
 		nsIMenuBar.h \
 		nsIMenu.h \
 		nsIMenuItem.h \
-		nsIPopUpMenu.h \
 		nsStringUtil.h \
 		nsIWidget.h \
 		nsIKBStateControl.h \
@@ -70,7 +69,6 @@ XPIDLSRCS	= \
 		nsIClipboardDragDropHookList.idl \
 		nsIDragSession.idl \
 		nsIDragService.idl \
-		nsIDragTracker.idl \
 		nsIFormatConverter.idl \
 		nsIClipboard.idl \
 		nsIClipboardHelper.idl \
