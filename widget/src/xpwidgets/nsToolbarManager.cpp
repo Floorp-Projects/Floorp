@@ -195,7 +195,6 @@ NS_METHOD nsToolbarManager::AddTabToManager(nsIToolbar *    aToolbar,
 
   nsIWidget * widget;
 	if (NS_OK == tab->QueryInterface(kIWidgetIID,(void**)&widget)) {
-printf("Adding tab to Toolbar\n");
 	  widget->Create(parent, rt, NULL, NULL);
 	  widget->Show(PR_TRUE);
 
@@ -264,7 +263,6 @@ NS_METHOD nsToolbarManager::AddTabToToolbar(nsIToolbar * aToolbar)
   // and it can be put into the generic ToolbarItemHolder
   nsIWidget * widget;
 	if (NS_OK == tab->QueryInterface(kIWidgetIID,(void**)&widget)) {
-printf("Adding tab to Toolbar\n");
 	  widget->Create(parent, rt, NULL, NULL);
 	  widget->Show(PR_TRUE);
 	  widget->SetClientData((void *)parent);
@@ -297,15 +295,12 @@ printf("Adding tab to Toolbar\n");
 //--------------------------------------------------------------------
 NS_METHOD nsToolbarManager::AddToolbar(nsIToolbar* aToolbar)
 {
-printf("In AddTabToToolbar\n");
   mToolbars[mNumToolbars] = aToolbar;
   mNumToolbars++;
 
   // XXX should check here to make sure it isn't already added
   aToolbar->SetToolbarManager(this);
-printf("Before AddTabToToolbar\n");
   AddTabToToolbar(aToolbar);
-printf("After AddTabToToolbar\n");
   NS_ADDREF(aToolbar);
 
   return NS_OK;    
