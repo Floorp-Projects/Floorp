@@ -45,7 +45,7 @@ status = inSection(1);
 arr = Array();
 tryThis('arr.length = new Number(1);');
 actual = arr.length;
-expect = 111;
+expect = 1;
 addThis();
 
 status = inSection(2);
@@ -59,14 +59,14 @@ status = inSection(3);
 arr = Array();
 tryThis('arr.length = new Number(17);');
 actual = arr.length;
-expect = 1;
+expect = 17;
 addThis();
 
 status = inSection(4);
 arr = Array(5);
 tryThis('arr.length = new Number(17);');
 actual = arr.length;
-expect = 1;
+expect = 17;
 addThis();
 
 
@@ -91,14 +91,14 @@ addThis();
 arr = new Array();
 tryThis('arr.length = new Number(17);');
 actual = arr.length;
-expect = 1;
+expect = 17;
 addThis();
 
 status = inSection(7);
 arr = new Array(5);
 tryThis('arr.length = new Number(17);');
 actual = arr.length;
-expect = 1;
+expect = 17;
 addThis();
 
 
