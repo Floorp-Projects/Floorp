@@ -80,7 +80,7 @@ nsresult nsObject::QueryInterface(const nsIID& aIID, void** aInstancePtr)
  */
 nsrefcnt nsObject::AddRef(void)
 {
-    return mOuter->AddRef();
+  return NS_ADDREF(mOuter);
 }
 
 /**
@@ -88,7 +88,10 @@ nsrefcnt nsObject::AddRef(void)
  */
 nsrefcnt nsObject::Release(void)
 {
-    return NS_RELEASE(mOuter);
+//  nsrefcnt rc;
+//  NS_RELEASE2(mOuter, rc);
+//  return rc;
+  return NS_RELEASE(mOuter);
 }
 
 /**
