@@ -127,7 +127,7 @@ Confirmation Message=There was an error encountered during installation of $Prod
 ;
 [Locate Previous Product Path0]
 HRoot=HKEY_LOCAL_MACHINE
-HKey=[Product CurrentVersion]\Main
+HKey=SOFTWARE\$CompanyName$\$ProductName$\$UserAgent$\Main
 Name=Install Directory
 Decrypt HKey=TRUE
 Contains Filename=FALSE
