@@ -295,12 +295,24 @@ nsTreeFrame::Destroy(nsIPresContext& aPresContext)
 
 NS_IMETHODIMP
 nsTreeFrame::Reflow(nsIPresContext&          aPresContext,
-							      nsHTMLReflowMetrics&     aMetrics,
+							      nsHTMLReflowMetrics&     aDesiredSize,
 							      const nsHTMLReflowState& aReflowState,
 							      nsReflowStatus&          aStatus)
 {
   mSlatedForReflow = PR_FALSE;
-  return nsTableFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
+  nsresult rv = nsTableFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  
+  if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) 
+    aDesiredSize.width = aReflowState.mComputedWidth + 
+       aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
+  
+  if (aReflowState.mComputedHeight != NS_UNCONSTRAINEDSIZE)
+    aDesiredSize.height = aReflowState.mComputedHeight +
+       aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+
+  aDesiredSize.ascent = aDesiredSize.height;
+
+  return rv;
 }
 
 NS_IMETHODIMP

@@ -366,6 +366,8 @@ nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpward
 void
 nsTreeRowGroupFrame::ComputeVisibleRowCount(PRInt32& aCount, nsIContent* aParent)
 {
+  // XXX Check for visibility collapse and for display none on all objects.
+  // ARGH!
   PRInt32 childCount;
   aParent->ChildCount(childCount);
 
@@ -380,29 +382,15 @@ nsTreeRowGroupFrame::ComputeVisibleRowCount(PRInt32& aCount, nsIContent* aParent
     else if (tag.get() == nsXULAtoms::treeitem) {
       // Descend into this row group and try to find the next row.
       ComputeVisibleRowCount(aCount, childContent);
-
+    }
+    else if (tag.get() == nsXULAtoms::treechildren) {
       // If it's open, descend into its treechildren.
       nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
       nsString isOpen;
-      childContent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
-      if (isOpen == "true") {
-        // Find the <treechildren> node.
-        PRInt32 childContentCount;
-        nsCOMPtr<nsIContent> grandChild;
-        childContent->ChildCount(childContentCount);
-
-        PRInt32 j;
-        for (j = childContentCount-1; j >= 0; j--) {
-          
-          childContent->ChildAt(j, *getter_AddRefs(grandChild));
-          nsCOMPtr<nsIAtom> grandChildTag;
-          grandChild->GetTag(*getter_AddRefs(grandChildTag));
-          if (grandChildTag.get() == nsXULAtoms::treechildren)
-            break;
-        }
-        if (j >= 0 && grandChild)
-          ComputeVisibleRowCount(aCount, grandChild);
-      }
+      nsCOMPtr<nsIContent> parent;
+      childContent->GetParent(*getter_AddRefs(parent));
+      parent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
+      ComputeVisibleRowCount(aCount, childContent);
     }
   }
 }
@@ -618,6 +606,61 @@ void nsTreeRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
   }
 }
 
+NS_IMETHODIMP
+nsTreeRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
+                                      nsHTMLReflowMetrics& aDesiredSize,
+                                      RowGroupReflowState& aReflowState,
+                                      nsReflowStatus&      aStatus,
+                                      nsIFrame *           aNextFrame)
+{
+  if (aNextFrame && (aNextFrame == mScrollbar)) {
+    nsresult rv;
+    // Recover the state as if aNextFrame is about to be reflowed
+    RecoverState(aReflowState, aNextFrame);
+
+    // Remember the old rect
+    nsRect  oldKidRect;
+    aNextFrame->GetRect(oldKidRect);
+
+    // Pass along the reflow command
+    nsHTMLReflowState   kidReflowState(aPresContext, aReflowState.reflowState,
+                                       aNextFrame, aReflowState.availSize);
+    kidReflowState.mComputedHeight = mRowGroupHeight;
+    nsHTMLReflowMetrics desiredSize(nsnull);
+
+    rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+
+    nscoord xpos = 0;
+
+    // Lose the width of the scrollbar as far as the rows are concerned.
+    if (aReflowState.availSize.width != NS_UNCONSTRAINEDSIZE) {
+      xpos = aReflowState.availSize.width - desiredSize.width;
+      /*aReflowState.availSize.width -= desiredSize.width;
+      if (aReflowState.availSize.width < 0)
+        aReflowState.availSize.width = 0;*/ 
+    }
+
+    // Place the child
+    nsRect kidRect (xpos, 0, desiredSize.width, mRowGroupHeight);
+    mScrollbar->SetRect(kidRect);
+
+    // Return our desired width
+    aDesiredSize.width = aReflowState.reflowState.availableWidth;
+
+    if (mNextInFlow) {
+      aStatus = NS_FRAME_NOT_COMPLETE;
+    }
+
+    return rv;
+  }
+ 
+  return nsTableRowGroupFrame::IR_TargetIsChild(aPresContext,
+                                      aDesiredSize,
+                                      aReflowState,
+                                      aStatus,
+                                      aNextFrame);
+}
+
 NS_IMETHODIMP 
 nsTreeRowGroupFrame::ReflowBeforeRowLayout(nsIPresContext&      aPresContext,
                                            nsHTMLReflowMetrics& aDesiredSize,
@@ -651,6 +694,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
     }
   }
 
+  mRowCount = 0;
   ComputeVisibleRowCount(mRowCount, mContent); // XXX This sucks! Needs to be cheap!
 
   if (mShouldHaveScrollbar && (mRowGroupHeight != NS_UNCONSTRAINEDSIZE) &&

@@ -39,6 +39,7 @@ CPPSRCS=					\
 	nsTreeOuterFrame.cpp \
 	nsTreeFrame.cpp			\
 	nsTreeRowGroupFrame.cpp \
+	nsTreeRowFrame.cpp \
 	nsTreeIndentationFrame.cpp \
 	nsTreeCellFrame.cpp \
 	nsTreeTwistyListener.cpp \
@@ -70,6 +71,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsToolbarFrame.obj		\
 	.\$(OBJDIR)\nsTreeOuterFrame.obj \
 	.\$(OBJDIR)\nsTreeFrame.obj	\
+	.\$(OBJDIR)\nsTreeRowFrame.obj \
 	.\$(OBJDIR)\nsTreeRowGroupFrame.obj \
 	.\$(OBJDIR)\nsTreeIndentationFrame.obj \
 	.\$(OBJDIR)\nsTreeCellFrame.obj \
