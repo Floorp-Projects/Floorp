@@ -761,10 +761,15 @@ PRInt32 nsSmtpProtocol::SendTLSResponse()
   nsresult rv = NS_OK;
   if (m_responseCode == 220) 
   {
-
       nsCOMPtr<nsISupports> secInfo;
-      nsCOMPtr<nsIChannel> channel = do_QueryInterface(m_request);
-      rv = channel->GetSecurityInfo(getter_AddRefs(secInfo));
+      nsCOMPtr<nsITransport> trans;
+      nsCOMPtr<nsITransportRequest> transReq = do_QueryInterface(m_request, &rv);
+      if (NS_FAILED(rv)) return rv;
+
+      rv = transReq->GetTransport(getter_AddRefs(trans));
+      if (NS_FAILED(rv)) return rv;
+
+      rv = trans->GetSecurityInfo(getter_AddRefs(secInfo));
 
       if (NS_SUCCEEDED(rv) && secInfo) {
           nsCOMPtr<nsISSLSocketControl> sslControl = do_QueryInterface(secInfo, &rv);
