@@ -216,8 +216,12 @@ void NP_EXPORT
 _releaseobject(NPObject* npobj);
 
 bool NP_EXPORT
-_call(NPP npp, NPObject* npobj, NPIdentifier method, const NPVariant *args,
-      uint32_t argCount, NPVariant *result);
+_invoke(NPP npp, NPObject* npobj, NPIdentifier method, const NPVariant *args,
+        uint32_t argCount, NPVariant *result);
+
+bool NP_EXPORT
+_invokeDefault(NPP npp, NPObject* npobj, const NPVariant *args,
+               uint32_t argCount, NPVariant *result);
 
 bool NP_EXPORT
 _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result);

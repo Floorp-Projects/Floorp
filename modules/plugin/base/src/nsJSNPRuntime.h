@@ -80,6 +80,8 @@ protected:
   static bool NP_Invoke(NPObject *obj, NPIdentifier method,
                         const NPVariant *args, uint32_t argCount,
                         NPVariant *result);
+  static bool NP_InvokeDefault(NPObject *obj, const NPVariant *args,
+                               uint32_t argCount, NPVariant *result);
   static bool NP_HasProperty(NPObject * obj, NPIdentifier property);
   static bool NP_GetProperty(NPObject *obj, NPIdentifier property,
                              NPVariant *result);

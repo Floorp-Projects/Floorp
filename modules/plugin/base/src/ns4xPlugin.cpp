@@ -350,8 +350,11 @@ ns4xPlugin::CheckClassInitialized(void)
   CALLBACKS.releaseobject =
     NewNPN_ReleaseObjectProc(FP2TV(_releaseobject));
 
-  CALLBACKS.call =
-    NewNPN_CallProc(FP2TV(_call));
+  CALLBACKS.invoke =
+    NewNPN_InvokeProc(FP2TV(_invoke));
+
+  CALLBACKS.invokeDefault =
+    NewNPN_InvokeDefaultProc(FP2TV(_invokeDefault));
 
   CALLBACKS.evaluate =
     NewNPN_EvaluateProc(FP2TV(_evaluate));
@@ -1507,8 +1510,8 @@ _releaseobject(NPObject* npobj)
 }
 
 bool NP_EXPORT
-_call(NPP npp, NPObject* npobj, NPIdentifier method, const NPVariant *args,
-      uint32_t argCount, NPVariant *result)
+_invoke(NPP npp, NPObject* npobj, NPIdentifier method, const NPVariant *args,
+        uint32_t argCount, NPVariant *result)
 {
   if (!npp || !npobj || !npobj->_class || !npobj->_class->invoke)
     return false;
@@ -1517,6 +1520,19 @@ _call(NPP npp, NPObject* npobj, NPIdentifier method, const NPVariant *args,
   NPPAutoPusher nppPusher(npp);
 
   return npobj->_class->invoke(npobj, method, args, argCount, result);
+}
+
+bool NP_EXPORT
+_invokeDefault(NPP npp, NPObject* npobj, const NPVariant *args,
+               uint32_t argCount, NPVariant *result)
+{
+  if (!npp || !npobj || !npobj->_class || !npobj->_class->invokeDefault)
+    return false;
+
+  NPPExceptionAutoHolder nppExceptionHolder;
+  NPPAutoPusher nppPusher(npp);
+
+  return npobj->_class->invokeDefault(npobj, args, argCount, result);
 }
 
 bool NP_EXPORT

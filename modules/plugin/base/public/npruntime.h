@@ -281,6 +281,10 @@ typedef bool (*NPHasMethodFunctionPtr)(NPObject *npobj, NPIdentifier name);
 typedef bool (*NPInvokeFunctionPtr)(NPObject *npobj, NPIdentifier name,
                                     const NPVariant *args, uint32_t argCount,
                                     NPVariant *result);
+typedef bool (*NPInvokeDefaultFunctionPtr)(NPObject *npobj,
+                                           const NPVariant *args,
+                                           uint32_t argCount,
+                                           NPVariant *result);
 typedef bool (*NPHasPropertyFunctionPtr)(NPObject *npobj, NPIdentifier name);
 typedef bool (*NPGetPropertyFunctionPtr)(NPObject *npobj, NPIdentifier name,
                                          NPVariant *result);
@@ -315,6 +319,7 @@ struct NPClass
     NPInvalidateFunctionPtr invalidate;
     NPHasMethodFunctionPtr hasMethod;
     NPInvokeFunctionPtr invoke;
+    NPInvokeDefaultFunctionPtr invokeDefault;
     NPHasPropertyFunctionPtr hasProperty;
     NPGetPropertyFunctionPtr getProperty;
     NPSetPropertyFunctionPtr setProperty;
@@ -363,8 +368,10 @@ void NPN_ReleaseObject(NPObject *npobj);
     on which the plugin was initialized.
 */
 
-bool NPN_Call(NPP npp, NPObject *npobj, NPIdentifier methodName,
-              const NPVariant *args, uint32_t argCount, NPVariant *result);
+bool NPN_Invoke(NPP npp, NPObject *npobj, NPIdentifier methodName,
+                const NPVariant *args, uint32_t argCount, NPVariant *result);
+bool NPN_InvokeDefault(NPP npp, NPObject *npobj, const NPVariant *args,
+                       uint32_t argCount, NPVariant *result);
 bool NPN_Evaluate(NPP npp, NPObject *npobj, NPString *script,
                   NPVariant *result);
 bool NPN_GetProperty(NPP npp, NPObject *npobj, NPIdentifier propertyName,

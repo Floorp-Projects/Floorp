@@ -866,6 +866,9 @@ public:
                         JSObject *obj);
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
+  NS_IMETHOD Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                  JSObject *obj, PRUint32 argc, jsval *argv, jsval *vp,
+                  PRBool *_retval);
 };
 
 

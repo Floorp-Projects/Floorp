@@ -37,7 +37,7 @@
 
 
 /*
- *  npupp.h $Revision: 3.18 $
+ *  npupp.h $Revision: 3.19 $
  *  function call mecahnics needed by platform specific glue code.
  */
 
@@ -1300,13 +1300,13 @@ typedef void (* NP_LOADDS NPN_ReleaseObjectUPP)(NPObject *obj);
 
 #endif
 
-/* NPN_Call */
+/* NPN_Invoke */
 
 #if _NPUPP_USE_UPP_
 
-typedef UniversalProcPtr NPN_CallUPP;
+typedef UniversalProcPtr NPN_InvokeUPP;
 enum {
-	uppNPN_CallProcInfo = kThinkCStackBased
+	uppNPN_InvokeProcInfo = kThinkCStackBased
 		| STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(NPP)))
 		| STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(NPObject*)))
 		| STACK_ROUTINE_PARAMETER(3, SIZE_CODE(sizeof(NPIdentifier)))
@@ -1316,18 +1316,48 @@ enum {
 		| RESULT_SIZE(SIZE_CODE(sizeof(bool)))
 };
 
-#define NewNPN_CallProc(FUNC)		\
-		(NPN_CallUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_CallProcInfo, GetCurrentArchitecture())
-#define CallNPN_CallProc(FUNC, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)		\
-		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_CallProcInfo, (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6))
+#define NewNPN_InvokeProc(FUNC)		\
+		(NPN_InvokeUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_InvokeProcInfo, GetCurrentArchitecture())
+#define CallNPN_InvokeProc(FUNC, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)		\
+		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_InvokeProcInfo, (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6))
 
 #else
 
-typedef bool (* NP_LOADDS NPN_CallUPP)(NPP npp, NPObject* obj, NPIdentifier methodName, const NPVariant *args, uint32_t argCount, NPVariant *result);
-#define NewNPN_CallProc(FUNC)		\
-		((NPN_CallUPP) (FUNC))
-#define CallNPN_CallProc(FUNC, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)		\
+typedef bool (* NP_LOADDS NPN_InvokeUPP)(NPP npp, NPObject* obj, NPIdentifier methodName, const NPVariant *args, uint32_t argCount, NPVariant *result);
+#define NewNPN_InvokeProc(FUNC)		\
+		((NPN_InvokeUPP) (FUNC))
+#define CallNPN_InvokeProc(FUNC, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)		\
 		(*(FUNC))((ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6))
+
+#endif
+
+/* NPN_InvokeDefault */
+
+#if _NPUPP_USE_UPP_
+
+typedef UniversalProcPtr NPN_InvokeDefaultUPP;
+enum {
+	uppNPN_InvokeDefaultProcInfo = kThinkCStackBased
+		| STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(NPP)))
+		| STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(NPObject*)))
+		| STACK_ROUTINE_PARAMETER(4, SIZE_CODE(sizeof(const NPVariant*)))
+		| STACK_ROUTINE_PARAMETER(5, SIZE_CODE(sizeof(uint32_t)))
+		| STACK_ROUTINE_PARAMETER(6, SIZE_CODE(sizeof(NPVariant*)))
+		| RESULT_SIZE(SIZE_CODE(sizeof(bool)))
+};
+
+#define NewNPN_InvokeDefaultProc(FUNC)		\
+		(NPN_InvokeDefaultUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_InvokeDefaultProcInfo, GetCurrentArchitecture())
+#define CallNPN_InvokeDefaultProc(FUNC, ARG1, ARG2, ARG3, ARG4, ARG5)		\
+		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_InvokeDefaultProcInfo, (ARG1), (ARG2), (ARG3), (ARG4), (ARG5))
+
+#else
+
+typedef bool (* NP_LOADDS NPN_InvokeDefaultUPP)(NPP npp, NPObject* obj, const NPVariant *args, uint32_t argCount, NPVariant *result);
+#define NewNPN_InvokeDefaultProc(FUNC)		\
+		((NPN_InvokeDefaultUPP) (FUNC))
+#define CallNPN_InvokeDefaultProc(FUNC, ARG1, ARG2, ARG3, ARG4, ARG5)		\
+		(*(FUNC))((ARG1), (ARG2), (ARG3), (ARG4), (ARG5))
 
 #endif
 
@@ -1620,7 +1650,8 @@ typedef struct _NPNetscapeFuncs {
     NPN_CreateObjectUPP createobject;
     NPN_RetainObjectUPP retainobject;
     NPN_ReleaseObjectUPP releaseobject;
-    NPN_CallUPP call;
+    NPN_InvokeUPP invoke;
+    NPN_InvokeDefaultUPP invokeDefault;
     NPN_EvaluateUPP evaluate;
     NPN_GetPropertyUPP getproperty;
     NPN_SetPropertyUPP setproperty;
