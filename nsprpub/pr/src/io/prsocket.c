@@ -852,6 +852,48 @@ PR_NTFast_UpdateAcceptContext(PRFileDesc *socket, PRFileDesc *acceptSocket)
 }
 #endif /* WINNT */
 
+static PRInt32 PR_CALLBACK SocketSendFile(
+    PRFileDesc *sd, PRSendFileData *sfd,
+    PRTransmitFileFlags flags, PRIntervalTime timeout)
+{
+	PRInt32 rv;
+	PRThread *me = _PR_MD_CURRENT_THREAD();
+
+	if (_PR_PENDING_INTERRUPT(me)) {
+		me->flags &= ~_PR_INTERRUPT;
+		PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+		return -1;
+	}
+	if (_PR_IO_PENDING(me)) {
+		PR_SetError(PR_IO_PENDING_ERROR, 0);
+		return -1;
+	}
+	/* The socket must be in blocking mode. */
+	if (sd->secret->nonblocking) {
+		PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+		return -1;
+	}
+#if defined(WINNT)
+	rv = _PR_MD_SENDFILE(sd, sfd, flags, timeout);
+	if ((rv >= 0) && (flags == PR_TRANSMITFILE_CLOSE_SOCKET)) {
+		/*
+		 * This should be kept the same as SocketClose, except
+		 * that _PR_MD_CLOSE_SOCKET(sd->secret->md.osfd) should
+		 * not be called because the socket will be recycled.
+		 */
+		PR_FreeFileDesc(sd);
+	}
+#else
+#if defined(XP_UNIX)
+	rv = _PR_UnixSendFile(sd, sfd, flags, timeout);
+#else	/* XP_UNIX */
+	rv = _PR_EmulateSendFile(sd, sfd, flags, timeout);
+#endif	/* XP_UNIX */
+#endif	/* WINNT */
+
+	return rv;
+}
+
 static PRInt32 PR_CALLBACK SocketTransmitFile(PRFileDesc *sd, PRFileDesc *fd, 
 const void *headers, PRInt32 hlen, PRTransmitFileFlags flags,
 PRIntervalTime timeout)
@@ -866,7 +908,7 @@ PRIntervalTime timeout)
 	sfd.trailer = NULL;
 	sfd.tlen = 0;
 
-	return(PR_SendFile(sd, &sfd, flags, timeout));
+	return(SocketSendFile(sd, &sfd, flags, timeout));
 }
 
 static PRStatus PR_CALLBACK SocketGetName(PRFileDesc *fd, PRNetAddr *addr)
@@ -1049,7 +1091,13 @@ static PRIOMethods tcpMethods = {
 	SocketGetSockOpt,
 	SocketSetSockOpt,
 	_PR_SocketGetSocketOption,
-	_PR_SocketSetSocketOption
+	_PR_SocketSetSocketOption,
+    SocketSendFile, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt
 };
 
 static PRIOMethods udpMethods = {
@@ -1082,7 +1130,13 @@ static PRIOMethods udpMethods = {
 	SocketGetSockOpt,
 	SocketSetSockOpt,
 	_PR_SocketGetSocketOption,
-	_PR_SocketSetSocketOption
+	_PR_SocketSetSocketOption,
+    (PRSendfileFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt
 };
 
 
@@ -1116,7 +1170,13 @@ static PRIOMethods socketpollfdMethods = {
     (PRGetsockoptFN)_PR_InvalidStatus,    
     (PRSetsockoptFN)_PR_InvalidStatus,    
     (PRGetsocketoptionFN)_PR_InvalidStatus,
-    (PRSetsocketoptionFN)_PR_InvalidStatus
+    (PRSetsocketoptionFN)_PR_InvalidStatus,
+    (PRSendfileFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt
 };
 
 PR_IMPLEMENT(const PRIOMethods*) PR_GetTCPMethods()
@@ -1869,46 +1929,4 @@ out_of_memory:
 
 #endif /* !defined(NEED_SELECT) */
     
-}
-
-PR_IMPLEMENT(PRInt32) PR_SendFile(
-    PRFileDesc *sd, PRSendFileData *sfd,
-    PRTransmitFileFlags flags, PRIntervalTime timeout)
-{
-	PRInt32 rv;
-	PRThread *me = _PR_MD_CURRENT_THREAD();
-
-	if (_PR_PENDING_INTERRUPT(me)) {
-		me->flags &= ~_PR_INTERRUPT;
-		PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
-		return -1;
-	}
-	if (_PR_IO_PENDING(me)) {
-		PR_SetError(PR_IO_PENDING_ERROR, 0);
-		return -1;
-	}
-	/* The socket must be in blocking mode. */
-	if (sd->secret->nonblocking) {
-		PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-		return -1;
-	}
-#if defined(WINNT)
-	rv = _PR_MD_SENDFILE(sd, sfd, flags, timeout);
-	if ((rv >= 0) && (flags == PR_TRANSMITFILE_CLOSE_SOCKET)) {
-		/*
-		 * This should be kept the same as SocketClose, except
-		 * that _PR_MD_CLOSE_SOCKET(sd->secret->md.osfd) should
-		 * not be called because the socket will be recycled.
-		 */
-		PR_FreeFileDesc(sd);
-	}
-#else
-#if defined(XP_UNIX)
-	rv = _PR_UnixSendFile(sd, sfd, flags, timeout);
-#else	/* XP_UNIX */
-	rv = _PR_EmulateSendFile(sd, sfd, flags, timeout);
-#endif	/* XP_UNIX */
-#endif	/* WINNT */
-
-	return rv;
 }

@@ -155,6 +155,7 @@ static PRInt64 PR_CALLBACK FileAvailable64(PRFileDesc *fd)
     return result;
 }
 
+#ifndef WIN32
 static PRInt32 PR_CALLBACK PipeAvailable(PRFileDesc *fd)
 {
 	PRInt32 rv;
@@ -168,6 +169,7 @@ static PRInt64 PR_CALLBACK PipeAvailable64(PRFileDesc *fd)
     LL_I2L(rv, _PR_MD_PIPEAVAILABLE(fd));
 	return rv;		
 }
+#endif
 
 static PRStatus PR_CALLBACK FileInfo(PRFileDesc *fd, PRFileInfo *info)
 {
@@ -262,7 +264,13 @@ static PRIOMethods _pr_fileMethods = {
     (PRGetsockoptFN)_PR_InvalidStatus,	
     (PRSetsockoptFN)_PR_InvalidStatus,	
     (PRGetsocketoptionFN)_PR_InvalidStatus,	
-    (PRSetsocketoptionFN)_PR_InvalidStatus
+    (PRSetsocketoptionFN)_PR_InvalidStatus,
+    (PRSendfileFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt
 };
 
 PR_IMPLEMENT(const PRIOMethods*) PR_GetFileMethods(void)
@@ -305,7 +313,13 @@ static PRIOMethods _pr_pipeMethods = {
     (PRGetsockoptFN)_PR_InvalidStatus,	
     (PRSetsockoptFN)_PR_InvalidStatus,	
     (PRGetsocketoptionFN)_PR_InvalidStatus,	
-    (PRSetsocketoptionFN)_PR_InvalidStatus
+    (PRSetsocketoptionFN)_PR_InvalidStatus,
+    (PRSendfileFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt
 };
 
 PR_IMPLEMENT(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode)

@@ -2389,6 +2389,45 @@ static PRInt32 pt_HPUXSendFile(PRFileDesc *sd, PRSendFileData *sfd,
 
 #endif  /* HPUX11 */
 
+#ifdef AIX
+extern	int _pr_aix_send_file_use_disabled;
+#endif
+
+static PRInt32 pt_SendFile(
+    PRFileDesc *sd, PRSendFileData *sfd,
+    PRTransmitFileFlags flags, PRIntervalTime timeout)
+{
+    if (pt_TestAbort()) return -1;
+    /* The socket must be in blocking mode. */
+    if (sd->secret->nonblocking)
+    {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return -1;
+    }
+#ifdef HPUX11
+    return(pt_HPUXSendFile(sd, sfd, flags, timeout));
+#elif defined(AIX)
+#ifdef HAVE_SEND_FILE
+	/*
+	 * A bug in AIX 4.3.2 results in corruption of data transferred by
+	 * send_file(); AIX patch PTF U463956 contains the fix.  A user can
+	 * disable the use of send_file function in NSPR, when this patch is
+	 * not installed on the system, by setting the envionment variable
+	 * NSPR_AIX_SEND_FILE_USE_DISABLED to 1.
+	 */
+	if (_pr_aix_send_file_use_disabled)
+		return(_PR_UnixSendFile(sd, sfd, flags, timeout));
+	else
+    	return(pt_AIXSendFile(sd, sfd, flags, timeout));
+#else
+	return(_PR_UnixSendFile(sd, sfd, flags, timeout));
+    /* return(pt_AIXDispatchSendFile(sd, sfd, flags, timeout));*/
+#endif /* HAVE_SEND_FILE */
+#else
+	return(_PR_UnixSendFile(sd, sfd, flags, timeout));
+#endif
+}
+
 static PRInt32 pt_TransmitFile(
     PRFileDesc *sd, PRFileDesc *fd, const void *headers,
     PRInt32 hlen, PRTransmitFileFlags flags, PRIntervalTime timeout)
@@ -2403,7 +2442,7 @@ static PRInt32 pt_TransmitFile(
 	sfd.trailer = NULL;
 	sfd.tlen = 0;
 
-	return(PR_SendFile(sd, &sfd, flags, timeout));
+	return(pt_SendFile(sd, &sfd, flags, timeout));
 }  /* pt_TransmitFile */
 
 /*
@@ -2864,7 +2903,13 @@ static PRIOMethods _pr_file_methods = {
     (PRGetsockoptFN)_PR_InvalidStatus,    
     (PRSetsockoptFN)_PR_InvalidStatus,    
     (PRGetsocketoptionFN)_PR_InvalidStatus,
-    (PRSetsocketoptionFN)_PR_InvalidStatus
+    (PRSetsocketoptionFN)_PR_InvalidStatus,
+    (PRSendfileFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt
 };
 
 static PRIOMethods _pr_pipe_methods = {
@@ -2897,7 +2942,13 @@ static PRIOMethods _pr_pipe_methods = {
     (PRGetsockoptFN)_PR_InvalidStatus,    
     (PRSetsockoptFN)_PR_InvalidStatus,    
     (PRGetsocketoptionFN)_PR_InvalidStatus,
-    (PRSetsocketoptionFN)_PR_InvalidStatus
+    (PRSetsocketoptionFN)_PR_InvalidStatus,
+    (PRSendfileFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt
 };
 
 static PRIOMethods _pr_tcp_methods = {
@@ -2930,7 +2981,13 @@ static PRIOMethods _pr_tcp_methods = {
     pt_GetSockOpt,
     pt_SetSockOpt,
     pt_GetSocketOption,
-    pt_SetSocketOption
+    pt_SetSocketOption,
+    pt_SendFile, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt
 };
 
 static PRIOMethods _pr_udp_methods = {
@@ -2963,7 +3020,13 @@ static PRIOMethods _pr_udp_methods = {
     pt_GetSockOpt,
     pt_SetSockOpt,
     pt_GetSocketOption,
-    pt_SetSocketOption
+    pt_SetSocketOption,
+    (PRSendfileFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt
 };
 
 
@@ -2997,7 +3060,13 @@ static PRIOMethods _pr_socketpollfd_methods = {
     (PRGetsockoptFN)_PR_InvalidStatus,    
     (PRSetsockoptFN)_PR_InvalidStatus,    
     (PRGetsocketoptionFN)_PR_InvalidStatus,
-    (PRSetsocketoptionFN)_PR_InvalidStatus
+    (PRSetsocketoptionFN)_PR_InvalidStatus,
+    (PRSendfileFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt, 
+    (PRReservedFN)_PR_InvalidInt
 };
 
 #if defined(_PR_FCNTL_FLAGS)
@@ -4155,45 +4224,6 @@ retry:
         pt_MapError(_PR_MD_MAP_SELECT_ERROR, errno);
     }
     return rv;
-}
-
-#ifdef AIX
-extern	int _pr_aix_send_file_use_disabled;
-#endif
-
-PR_IMPLEMENT(PRInt32) PR_SendFile(
-    PRFileDesc *sd, PRSendFileData *sfd,
-    PRTransmitFileFlags flags, PRIntervalTime timeout)
-{
-    if (pt_TestAbort()) return -1;
-    /* The socket must be in blocking mode. */
-    if (sd->secret->nonblocking)
-    {
-        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-        return -1;
-    }
-#ifdef HPUX11
-    return(pt_HPUXSendFile(sd, sfd, flags, timeout));
-#elif defined(AIX)
-#ifdef HAVE_SEND_FILE
-	/*
-	 * A bug in AIX 4.3.2 results in corruption of data transferred by
-	 * send_file(); AIX patch PTF U463956 contains the fix.  A user can
-	 * disable the use of send_file function in NSPR, when this patch is
-	 * not installed on the system, by setting the envionment variable
-	 * NSPR_AIX_SEND_FILE_USE_DISABLED to 1.
-	 */
-	if (_pr_aix_send_file_use_disabled)
-		return(_PR_UnixSendFile(sd, sfd, flags, timeout));
-	else
-    	return(pt_AIXSendFile(sd, sfd, flags, timeout));
-#else
-	return(_PR_UnixSendFile(sd, sfd, flags, timeout));
-    /* return(pt_AIXDispatchSendFile(sd, sfd, flags, timeout));*/
-#endif /* HAVE_SEND_FILE */
-#else
-	return(_PR_UnixSendFile(sd, sfd, flags, timeout));
-#endif
 }
 #endif /* defined(_PR_PTHREADS) */
 
