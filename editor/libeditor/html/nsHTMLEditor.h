@@ -81,6 +81,11 @@ public:
   NS_IMETHOD ScrollDown(nsIAtom *aIncrement);
   NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin);
 
+// cut, copy & paste
+  NS_IMETHOD Cut();
+  NS_IMETHOD Copy();
+  NS_IMETHOD Paste();
+
 // Input/Output
   NS_IMETHOD Insert(nsIInputStream *aInputStream);
   NS_IMETHOD OutputText(nsString& aOutputString);

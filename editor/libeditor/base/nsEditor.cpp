@@ -777,6 +777,21 @@ NS_IMETHODIMP nsEditor::SelectAll()
   return result;
 }
 
+NS_IMETHODIMP nsEditor::Cut()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsEditor::Copy()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsEditor::Paste()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsString & nsIEditor::GetTextNodeTag()
 {
   static nsString gTextNodeTag("special text node tag");

@@ -208,6 +208,21 @@ NS_IMETHODIMP nsHTMLEditor::ScrollIntoView(PRBool aScrollToBegin)
   return Inherited::ScrollIntoView(aScrollToBegin);
 }
 
+NS_IMETHODIMP nsHTMLEditor::Cut()
+{
+  return Inherited::Cut();
+}
+
+NS_IMETHODIMP nsHTMLEditor::Copy()
+{
+  return Inherited::Copy();
+}
+
+NS_IMETHODIMP nsHTMLEditor::Paste()
+{
+  return Inherited::Paste();
+}
+
 NS_IMETHODIMP nsHTMLEditor::Insert(nsIInputStream *aInputStream)
 {
   return Inherited::Insert(aInputStream);

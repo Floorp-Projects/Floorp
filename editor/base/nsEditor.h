@@ -155,6 +155,13 @@ public:
 
   NS_IMETHOD SelectAll();
 
+  NS_IMETHOD Cut();
+  
+  NS_IMETHOD Copy();
+  
+  NS_IMETHOD Paste();
+
+
 /*END nsIEditor interfaces*/
 
 

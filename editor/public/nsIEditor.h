@@ -307,6 +307,25 @@ public:
   /** sets the document selection to the entire contents of the document */
   NS_IMETHOD SelectAll()=0;
 
+  /** cut the currently selected text, putting it into the OS clipboard
+    * What if no text is selected?
+    * What about mixed selections?
+    * What are the clipboard formats?
+   */
+  NS_IMETHOD Cut()=0;
+
+  /** copy the currently selected text, putting it into the OS clipboard
+    * What if no text is selected?
+    * What about mixed selections?
+    * What are the clipboard formats?
+   */
+  NS_IMETHOD Copy()=0;
+  
+  /** paste the text in the OS clipboard at the cursor position, replacing
+    * the selected text (if any)
+   */
+  NS_IMETHOD Paste()=0;
+
 };
 
 #endif //nsIEditor_h__
