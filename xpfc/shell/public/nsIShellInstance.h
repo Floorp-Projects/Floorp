@@ -29,7 +29,7 @@ class nsIApplicationShell;
 class nsIPref;
 class nsIAppShell;
 class nsIStreamManager;
-class nsIToolbarManager;
+class nsIXPFCToolbarManager;
 
 #define NS_IXPFC_SHELL_INSTANCE_IID      \
  { 0xbf88e640, 0xdf99, 0x11d1, \
@@ -129,9 +129,9 @@ public:
 
   /**
    * Get Toolbar Manager
-   * @result An nsIToolbarManager pointer
+   * @result An nsIXPFCToolbarManager pointer
    */
-  NS_IMETHOD_(nsIToolbarManager *) GetToolbarManager() = 0; 
+  NS_IMETHOD_(nsIXPFCToolbarManager *) GetToolbarManager() = 0; 
 
   /**
    * Launch an application

@@ -263,7 +263,7 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
 }
 
 
-nsresult nsCalendarContainer::SetMenuBar(nsIMenuBar * aMenuBar)
+nsresult nsCalendarContainer::SetMenuBar(nsIXPFCMenuBar * aMenuBar)
 {  
   mMenuManager->SetMenuBar(aMenuBar);
 
@@ -291,7 +291,7 @@ nsIMenuManager * nsCalendarContainer::GetMenuManager()
 
 }
 
-nsresult nsCalendarContainer::SetToolbarManager(nsIToolbarManager * aToolbarManager)
+nsresult nsCalendarContainer::SetToolbarManager(nsIXPFCToolbarManager * aToolbarManager)
 {  
   mToolbarManager = aToolbarManager;
 
@@ -301,7 +301,7 @@ nsresult nsCalendarContainer::SetToolbarManager(nsIToolbarManager * aToolbarMana
 
 }
 
-nsIToolbarManager * nsCalendarContainer::GetToolbarManager()
+nsIXPFCToolbarManager * nsCalendarContainer::GetToolbarManager()
 {  
   return (mToolbarManager);
 }
@@ -393,11 +393,11 @@ nsresult nsCalendarContainer::ShowDialog(nsIXPFCDialog * aDialog)
 
 nsresult nsCalendarContainer::UpdateMenuBar()
 {  
-  static NS_DEFINE_IID(kCIMenuContainerIID, NS_IMENUCONTAINER_IID);
+  static NS_DEFINE_IID(kCIXPFCMenuContainerIID, NS_IXPFCMENUCONTAINER_IID);
 
-  nsIMenuContainer * container = nsnull;
+  nsIXPFCMenuContainer * container = nsnull;
 
-  nsresult res = mMenuManager->GetMenuBar()->QueryInterface(kCIMenuContainerIID,(void**)&container);
+  nsresult res = mMenuManager->GetMenuBar()->QueryInterface(kCIXPFCMenuContainerIID,(void**)&container);
 
   if (res == NS_OK)
   {

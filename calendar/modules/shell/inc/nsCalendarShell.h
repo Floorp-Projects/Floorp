@@ -79,9 +79,9 @@ public:
   NS_IMETHOD_(NSCalendar *) GetNSCalendar() ;
 
   // nsIAppShell interfaces
-  virtual void Create(int* argc, char ** argv) ;
-  virtual void SetDispatchListener(nsDispatchListener* aDispatchListener) ;
-  virtual void Exit();
+  NS_IMETHOD Create(int* argc, char ** argv) ;
+  NS_IMETHOD SetDispatchListener(nsDispatchListener* aDispatchListener) ;
+  NS_IMETHOD Exit();
   virtual nsresult Run();
   virtual void* GetNativeData(PRUint32 aDataType) ;
 

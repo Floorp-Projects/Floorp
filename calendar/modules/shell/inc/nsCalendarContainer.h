@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 #include "nsICalendarContainer.h"
-#include "nsIMenuBar.h"
+#include "nsIXPFCMenuBar.h"
 #include "nsString.h"
 #include "nsICalendarShell.h"
 #include "nsICalendarWidget.h"
@@ -52,7 +52,7 @@ public:
   NS_IMETHOD SetTitle(const nsString& aTitle) ;
   NS_IMETHOD GetTitle(nsString& aResult) ;
 
-  NS_IMETHOD SetMenuBar(nsIMenuBar * aMenuBar) ;
+  NS_IMETHOD SetMenuBar(nsIXPFCMenuBar * aMenuBar) ;
   NS_IMETHOD UpdateMenuBar();
 
   NS_IMETHOD_(nsICalendarWidget *) GetDocumentWidget();
@@ -69,8 +69,8 @@ public:
   NS_IMETHOD SetApplicationShell(nsIApplicationShell* aShell);
   NS_IMETHOD GetApplicationShell(nsIApplicationShell*& aResult);
 
-  NS_IMETHOD SetToolbarManager(nsIToolbarManager * aToolbarManager);
-  NS_IMETHOD_(nsIToolbarManager *) GetToolbarManager();
+  NS_IMETHOD SetToolbarManager(nsIXPFCToolbarManager * aToolbarManager);
+  NS_IMETHOD_(nsIXPFCToolbarManager *) GetToolbarManager();
   NS_IMETHOD AddToolbar(nsIXPFCToolbar * aToolbar);
   NS_IMETHOD RemoveToolbar(nsIXPFCToolbar * aToolbar);
   NS_IMETHOD UpdateToolbars();
@@ -88,7 +88,7 @@ public:
 
 private:
   nsIMenuManager * mMenuManager;
-  nsIToolbarManager * mToolbarManager;
+  nsIXPFCToolbarManager * mToolbarManager;
   nsICalendarWidget * mCalendarWidget;
   nsIXPFCCanvas * mRootCanvas;
   nsICalToolkit * mToolkit;

@@ -20,10 +20,10 @@
 #define nsIMenuManager_h___
 
 #include "nsISupports.h"
-#include "nsIMenuContainer.h"
+#include "nsIXPFCMenuContainer.h"
 #include "nsIXPFCCommandReceiver.h"
 
-class nsIMenuBar;
+class nsIXPFCMenuBar;
 
 //5e1180e0-30a9-11d2-9247-00805f8a7ab6
 #define NS_IMENU_MANAGER_IID   \
@@ -36,10 +36,10 @@ class nsIMenuManager : public nsISupports
 public:
 
   NS_IMETHOD                 Init() = 0 ;
-  NS_IMETHOD                 SetMenuBar(nsIMenuBar * aMenuBar) = 0;
-  NS_IMETHOD_(nsIMenuBar *)  GetMenuBar() = 0;
-  NS_IMETHOD                 AddMenuContainer(nsIMenuContainer * aMenuContainer) = 0;
-  NS_IMETHOD_(nsIMenuItem *) MenuItemFromID(PRUint32 aID) = 0;
+  NS_IMETHOD                 SetMenuBar(nsIXPFCMenuBar * aMenuBar) = 0;
+  NS_IMETHOD_(nsIXPFCMenuBar *)  GetMenuBar() = 0;
+  NS_IMETHOD                 AddMenuContainer(nsIXPFCMenuContainer * aMenuContainer) = 0;
+  NS_IMETHOD_(nsIXPFCMenuItem *) MenuItemFromID(PRUint32 aID) = 0;
   NS_IMETHOD_(PRUint32)      GetID() = 0;
   NS_IMETHOD_(nsIXPFCCommandReceiver*) GetDefaultReceiver() = 0;
   NS_IMETHOD SetDefaultReceiver(nsIXPFCCommandReceiver* aReceiver) = 0;

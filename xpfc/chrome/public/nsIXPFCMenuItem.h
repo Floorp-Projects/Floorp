@@ -16,19 +16,19 @@
  * Reserved.
  */
 
-#ifndef nsIMenuItem_h___
-#define nsIMenuItem_h___
+#ifndef nsIXPFCMenuItem_h___
+#define nsIXPFCMenuItem_h___
 
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIXPFCCommandReceiver.h"
 
 // 8a400b00-2cbe-11d2-9246-00805f8a7ab6
-#define NS_IMENUITEM_IID      \
+#define NS_IXPFCMENUITEM_IID      \
  { 0x8a400b00, 0x2cbe, 0x11d2, \
    {0x92, 0x46, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6} }
 
-class nsIMenuContainer;
+class nsIXPFCMenuContainer;
 
 enum nsAlignmentStyle 
 {   
@@ -38,13 +38,13 @@ enum nsAlignmentStyle
 }; 
 
 
-class nsIMenuItem : public nsISupports 
+class nsIXPFCMenuItem : public nsISupports 
 {
 
 public:
 
   /**
-   * Initialize the MenuBar
+   * Initialize the XPFCMenuBar
    * @result The result of the initialization, NS_Ok if no errors
    */
   NS_IMETHOD Init() = 0;
@@ -58,8 +58,8 @@ public:
   NS_IMETHOD SetCommand(nsString& aLabel) = 0;
   NS_IMETHOD_(nsString&) GetCommand() = 0;
 
-  NS_IMETHOD_(nsIMenuContainer *) GetParent() = 0;
-  NS_IMETHOD SetParent(nsIMenuContainer * aMenuContainer) = 0;
+  NS_IMETHOD_(nsIXPFCMenuContainer *) GetParent() = 0;
+  NS_IMETHOD SetParent(nsIXPFCMenuContainer * aMenuContainer) = 0;
 
   NS_IMETHOD_(PRBool) IsSeparator() = 0;
   NS_IMETHOD_(nsAlignmentStyle) GetAlignmentStyle() = 0;
@@ -76,5 +76,5 @@ public:
   NS_IMETHOD SetEnabled(PRBool aEnable) = 0;
 };
 
-#endif /* nsIMenuItem_h___ */
+#endif /* nsIXPFCMenuItem_h___ */
 

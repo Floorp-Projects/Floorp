@@ -17,7 +17,7 @@
  */
 
 #include "nscore.h"
-#include "nsMenuItem.h"
+#include "nsXPFCMenuItem.h"
 #include "nsIXMLParserObject.h"
 #include "nsXPFCActionCommand.h"
 #include "nsRepository.h"
@@ -25,7 +25,7 @@
 
 static NS_DEFINE_IID(kIXMLParserObjectIID, NS_IXML_PARSER_OBJECT_IID);
 
-nsMenuItem::nsMenuItem()
+nsXPFCMenuItem::nsXPFCMenuItem()
 {
   NS_INIT_REFCNT();
   mName = "Item";
@@ -39,23 +39,23 @@ nsMenuItem::nsMenuItem()
   mEnabled = PR_TRUE;
 }
 
-nsMenuItem::~nsMenuItem()
+nsXPFCMenuItem::~nsXPFCMenuItem()
 {
 }
 
-NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
+NS_DEFINE_IID(kIXPFCMenuItemIID, NS_IXPFCMENUITEM_IID);
 
-NS_IMPL_ADDREF(nsMenuItem)
-NS_IMPL_RELEASE(nsMenuItem)
+NS_IMPL_ADDREF(nsXPFCMenuItem)
+NS_IMPL_RELEASE(nsXPFCMenuItem)
 
-nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+nsresult nsXPFCMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {                                                                        
 
   if (NULL == aInstancePtr) {                                            
     return NS_ERROR_NULL_POINTER;                                        
   }                                                                      
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-  static NS_DEFINE_IID(kClassIID, kIMenuItemIID);                         
+  static NS_DEFINE_IID(kClassIID, kIXPFCMenuItemIID);                         
 
   if (aIID.Equals(kClassIID)) {                                          
     *aInstancePtr = (void*) this;                                        
@@ -77,12 +77,12 @@ nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 }
 
-nsresult nsMenuItem::Init()
+nsresult nsXPFCMenuItem::Init()
 {
   return NS_OK;
 }
 
-nsresult nsMenuItem :: SetParameter(nsString& aKey, nsString& aValue)
+nsresult nsXPFCMenuItem :: SetParameter(nsString& aKey, nsString& aValue)
 {
   if (aKey == "name") {
 
@@ -133,95 +133,95 @@ nsresult nsMenuItem :: SetParameter(nsString& aKey, nsString& aValue)
   return NS_OK;
 }
 
-PRBool nsMenuItem::IsSeparator()
+PRBool nsXPFCMenuItem::IsSeparator()
 {
   return (mSeparator);
 }
 
-nsAlignmentStyle nsMenuItem::GetAlignmentStyle()
+nsAlignmentStyle nsXPFCMenuItem::GetAlignmentStyle()
 {
   return (mAlignmentStyle);
 }
 
-nsresult nsMenuItem::SetAlignmentStyle(nsAlignmentStyle aAlignmentStyle)
+nsresult nsXPFCMenuItem::SetAlignmentStyle(nsAlignmentStyle aAlignmentStyle)
 {
   mAlignmentStyle = aAlignmentStyle;
   return NS_OK;
 }
 
-PRBool nsMenuItem::GetEnabled()
+PRBool nsXPFCMenuItem::GetEnabled()
 {
   return (mEnabled);
 }
 
-nsresult nsMenuItem::SetEnabled(PRBool aEnable)
+nsresult nsXPFCMenuItem::SetEnabled(PRBool aEnable)
 {
   mEnabled = aEnable;
   return NS_OK;
 }
 
-nsresult nsMenuItem :: SetName(nsString& aName)
+nsresult nsXPFCMenuItem :: SetName(nsString& aName)
 {
   mName = aName;
   return NS_OK;
 }
 
-nsString& nsMenuItem :: GetName()
+nsString& nsXPFCMenuItem :: GetName()
 {
   return (mName);
 }
 
-nsresult nsMenuItem :: SetCommand(nsString& aCommand)
+nsresult nsXPFCMenuItem :: SetCommand(nsString& aCommand)
 {
   mCommand = aCommand;
   return NS_OK;
 }
 
-nsString& nsMenuItem :: GetCommand()
+nsString& nsXPFCMenuItem :: GetCommand()
 {
   return (mCommand);
 }
 
-nsresult nsMenuItem :: SetLabel(nsString& aLabel)
+nsresult nsXPFCMenuItem :: SetLabel(nsString& aLabel)
 {
   mLabel = aLabel;
   return NS_OK;
 }
 
-nsString& nsMenuItem :: GetLabel()
+nsString& nsXPFCMenuItem :: GetLabel()
 {
   return (mLabel);
 }
 
-nsIMenuContainer * nsMenuItem::GetParent()
+nsIXPFCMenuContainer * nsXPFCMenuItem::GetParent()
 {
   return (mParent);
 }
 
-nsresult nsMenuItem::SetParent(nsIMenuContainer * aParent)
+nsresult nsXPFCMenuItem::SetParent(nsIXPFCMenuContainer * aParent)
 {
   mParent = aParent;
   return NS_OK;
 }
 
-nsresult nsMenuItem :: SetMenuID(PRUint32 aID)
+nsresult nsXPFCMenuItem :: SetMenuID(PRUint32 aID)
 {
   mID = aID;
   return NS_OK;
 }
 
-PRUint32 nsMenuItem :: GetMenuID()
+PRUint32 nsXPFCMenuItem :: GetMenuID()
 {
   return (mID);
 }
 
-nsresult nsMenuItem::SetReceiver(nsIXPFCCommandReceiver * aReceiver)
+nsresult nsXPFCMenuItem::SetReceiver(nsIXPFCCommandReceiver * aReceiver)
 {
   mReceiver = aReceiver;
   return NS_OK;
 }
 
-nsresult nsMenuItem :: SendCommand()
+nsresult nsXPFCMenuItem :: SendCommand()
 {
   if (mReceiver == nsnull)
     return NS_OK;

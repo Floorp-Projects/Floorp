@@ -45,9 +45,9 @@ static NS_DEFINE_IID(kCApplicationShellIID, NS_IAPPLICATIONSHELL_CID);
 
 static NS_DEFINE_IID(kIShellInstanceIID, NS_IXPFC_SHELL_INSTANCE_IID);
 static NS_DEFINE_IID(kCShellInstanceCID, NS_XPFC_SHELL_INSTANCE_CID);
-static NS_DEFINE_IID(kCMenuBarCID, NS_MENUBAR_CID);
-static NS_DEFINE_IID(kCMenuContainerCID, NS_MENUCONTAINER_CID);
-static NS_DEFINE_IID(kCMenuItemCID, NS_MENUITEM_CID);
+static NS_DEFINE_IID(kCXPFCMenuBarCID, NS_XPFCMENUBAR_CID);
+static NS_DEFINE_IID(kCXPFCMenuContainerCID, NS_XPFCMENUCONTAINER_CID);
+static NS_DEFINE_IID(kCXPFCMenuItemCID, NS_XPFCMENUITEM_CID);
 static NS_DEFINE_IID(kCMenuManagerCID, NS_MENU_MANAGER_CID);
 static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kCXPFCToolbarCID, NS_XPFC_TOOLBAR_CID);
@@ -58,7 +58,7 @@ static NS_DEFINE_IID(kCXPButtonCID, NS_XP_BUTTON_CID);
 static NS_DEFINE_IID(kCXPItemCID, NS_XP_ITEM_CID);
 static NS_DEFINE_IID(kCXPFCTextWidgetCID, NS_XPFC_TEXTWIDGET_CID);
 static NS_DEFINE_IID(kCXPFCTabWidgetCID, NS_XPFC_TABWIDGET_CID);
-static NS_DEFINE_IID(kCToolbarManagerCID, NS_TOOLBAR_MANAGER_CID);
+static NS_DEFINE_IID(kCXPFCToolbarManagerCID, NS_XPFCTOOLBAR_MANAGER_CID);
 static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
 static NS_DEFINE_IID(kCVectorIteratorCID, NS_VECTOR_ITERATOR_CID);
 static NS_DEFINE_IID(kCstackCID, NS_STACK_CID);
@@ -89,16 +89,16 @@ void main(int argc, char **argv)
 
     // Let get a ShellInstance for this Application instance
     nsRepository::RegisterFactory(kCShellInstanceCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCMenuBarCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCMenuContainerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCMenuItemCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCXPFCMenuBarCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCXPFCMenuContainerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCXPFCMenuItemCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCMenuManagerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCXPFCToolbarCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCXPFCDialogCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCXPFCButtonCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCXPFCTextWidgetCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCXPFCTabWidgetCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCToolbarManagerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCXPFCToolbarManagerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCStreamManagerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCStreamObjectCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCVectorCID, XPFC_DLL, PR_FALSE, PR_FALSE);

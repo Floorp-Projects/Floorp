@@ -95,8 +95,8 @@ nsresult nsxpfcFactory::CreateInstance(nsISupports *aOuter,
   } else if (mClassID.Equals(kCXPFolderCanvas)) {
     nsXPFolderCanvas * canvas = (nsXPFolderCanvas *)new nsXPFolderCanvas(aOuter);
     canvas->QueryInterface(kISupportsIID,(void **)&inst);
-  } else if (mClassID.Equals(kCMenuContainer)) {
-    inst = (nsISupports *)(nsIMenuContainer *)new nsMenuContainer();
+  } else if (mClassID.Equals(kCXPFCMenuContainer)) {
+    inst = (nsISupports *)(nsIXPFCMenuContainer *)new nsXPFCMenuContainer();
   } else if (mClassID.Equals(kCXPFCToolbar)) {
     inst = (nsISupports *)(nsIXPFCToolbar *)new nsXPFCToolbar(aOuter);
   } else if (mClassID.Equals(kCXPFCDialog)) {
@@ -115,14 +115,14 @@ nsresult nsxpfcFactory::CreateInstance(nsISupports *aOuter,
     inst = (nsISupports *)(nsIXPFCTabWidget *)new nsXPFCTabWidget(aOuter);
   } else if (mClassID.Equals(kCMenuManager)) {
     inst = (nsISupports *)(nsIMenuManager *)new nsMenuManager();
-  } else if (mClassID.Equals(kCToolbarManager)) {
-    inst = (nsISupports *)(nsIToolbarManager *)new nsToolbarManager();
+  } else if (mClassID.Equals(kCXPFCToolbarManager)) {
+    inst = (nsISupports *)(nsIXPFCToolbarManager *)new nsXPFCToolbarManager();
   } else if (mClassID.Equals(kCStreamManager)) {
     inst = (nsISupports *)(nsIStreamManager *)new nsStreamManager();
   } else if (mClassID.Equals(kCStreamObject)) {
     inst = (nsISupports *)(nsIStreamObject *)new nsStreamObject();
-  } else if (mClassID.Equals(kCMenuItem)) {
-    inst = (nsISupports *)(nsIMenuItem *)new nsMenuItem();
+  } else if (mClassID.Equals(kCXPFCMenuItem)) {
+    inst = (nsISupports *)(nsIXPFCMenuItem *)new nsXPFCMenuItem();
   } else if (mClassID.Equals(kCXPFCDTD)) {
     inst = (nsISupports *)new nsXPFCXMLDTD();
   } else if (mClassID.Equals(kCXPFCContentSink)) {

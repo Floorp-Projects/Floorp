@@ -17,23 +17,23 @@
  */
 
 #include "nscore.h"
-#include "nsMenuContainerWin.h"
+#include "nsXPFCMenuContainerWin.h"
 #include "windows.h"
 
-static NS_DEFINE_IID(kCIMenuContainerIID, NS_IMENUCONTAINER_IID);
-static NS_DEFINE_IID(kCIMenuItemIID, NS_IMENUITEM_IID);
+static NS_DEFINE_IID(kCIXPFCMenuContainerIID, NS_IXPFCMENUCONTAINER_IID);
+static NS_DEFINE_IID(kCIXPFCMenuItemIID, NS_IXPFCMENUITEM_IID);
 
-nsMenuContainerWin::nsMenuContainerWin() : nsMenuContainer()
+nsXPFCMenuContainerWin::nsXPFCMenuContainerWin() : nsXPFCMenuContainer()
 {
   mHwnd = nsnull;
   mMenu = nsnull;
 }
 
-nsMenuContainerWin::~nsMenuContainerWin()
+nsXPFCMenuContainerWin::~nsXPFCMenuContainerWin()
 {
 }
 
-void* nsMenuContainerWin::GetNativeHandle()
+void* nsXPFCMenuContainerWin::GetNativeHandle()
 {
   if (mMenu != nsnull)
     return ((void*)mMenu);
@@ -45,7 +45,7 @@ void* nsMenuContainerWin::GetNativeHandle()
 
 }
 
-nsresult nsMenuContainerWin :: AddMenuItem(nsIMenuItem * aMenuItem)
+nsresult nsXPFCMenuContainerWin :: AddMenuItem(nsIXPFCMenuItem * aMenuItem)
 {
   if (mMenu == nsnull)
     mMenu = ::CreatePopupMenu();
@@ -71,13 +71,13 @@ nsresult nsMenuContainerWin :: AddMenuItem(nsIMenuItem * aMenuItem)
 }
 
 
-nsresult nsMenuContainerWin :: Update()
+nsresult nsXPFCMenuContainerWin :: Update()
 {
 
   nsresult res;
   nsIIterator * iterator = nsnull;
-  nsIMenuItem * item;
-  nsIMenuContainer * container;
+  nsIXPFCMenuItem * item;
+  nsIXPFCMenuContainer * container;
 
   res = mChildMenus->CreateIterator(&iterator);
 
@@ -88,9 +88,9 @@ nsresult nsMenuContainerWin :: Update()
 
   while(!(iterator->IsDone()))
   {
-    item = (nsIMenuItem *) iterator->CurrentItem();    
+    item = (nsIXPFCMenuItem *) iterator->CurrentItem();    
 
-    res = item->QueryInterface(kCIMenuContainerIID, (void**)&container);
+    res = item->QueryInterface(kCIXPFCMenuContainerIID, (void**)&container);
 
     if (NS_OK == res)
     {
@@ -119,9 +119,9 @@ nsresult nsMenuContainerWin :: Update()
     if (GetParent() && GetParent()->GetNativeHandle())
     {
 
-      nsIMenuItem * container_item = nsnull;
+      nsIXPFCMenuItem * container_item = nsnull;
 
-      res = GetParent()->QueryInterface(kCIMenuItemIID,(void**)&container_item);
+      res = GetParent()->QueryInterface(kCIXPFCMenuItemIID,(void**)&container_item);
 
       if (res == NS_OK)
       {
@@ -147,7 +147,7 @@ nsresult nsMenuContainerWin :: Update()
   return NS_OK;
 }
 
-nsresult nsMenuContainerWin :: SetShellContainer(nsIShellInstance * aShellInstance,
+nsresult nsXPFCMenuContainerWin :: SetShellContainer(nsIShellInstance * aShellInstance,
                                                 nsIWebViewerContainer * aWebViewerContainer)
 {
 
@@ -155,5 +155,5 @@ nsresult nsMenuContainerWin :: SetShellContainer(nsIShellInstance * aShellInstan
   mMenu = ::CreateMenu();
   ::SetMenu(mHwnd, mMenu);
 
-  return (nsMenuContainer::SetShellContainer(aShellInstance,aWebViewerContainer));
+  return (nsXPFCMenuContainer::SetShellContainer(aShellInstance,aWebViewerContainer));
 }

@@ -19,7 +19,7 @@
 #include "nsMenuManager.h"
 #include "nsxpfcCIID.h"
 #include "nsxpfcutil.h"
-#include "nsIMenuBar.h"
+#include "nsIXPFCMenuBar.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCMenuManagerCID, NS_MENU_MANAGER_CID);
@@ -67,14 +67,14 @@ nsresult nsMenuManager :: Init()
   return NS_OK ;
 }
 
-nsresult nsMenuManager :: SetMenuBar(nsIMenuBar * aMenuBar)
+nsresult nsMenuManager :: SetMenuBar(nsIXPFCMenuBar * aMenuBar)
 {
   mMenuBar = aMenuBar;
   NS_ADDREF(mMenuBar);
   return NS_OK ;
 }
 
-nsIMenuBar * nsMenuManager :: GetMenuBar()
+nsIXPFCMenuBar * nsMenuManager :: GetMenuBar()
 {
   return (mMenuBar) ;
 }
@@ -90,15 +90,15 @@ nsresult nsMenuManager :: SetDefaultReceiver(nsIXPFCCommandReceiver * aReceiver)
   return (NS_OK) ;
 }
 
-nsresult nsMenuManager::AddMenuContainer(nsIMenuContainer * aMenuContainer)
+nsresult nsMenuManager::AddMenuContainer(nsIXPFCMenuContainer * aMenuContainer)
 {
   mMenuContainers->Append(aMenuContainer);
   return NS_OK;
 }
 
-nsIMenuItem * nsMenuManager::MenuItemFromID(PRUint32 aID)
+nsIXPFCMenuItem * nsMenuManager::MenuItemFromID(PRUint32 aID)
 {
-  nsIMenuItem * item = nsnull;
+  nsIXPFCMenuItem * item = nsnull;
 
   if (mMenuBar)
     item = mMenuBar->MenuItemFromID(aID);

@@ -16,29 +16,36 @@
  * Reserved.
  */
 
-#ifndef nsIMenuBar_h___
-#define nsIMenuBar_h___
+#ifndef __NS_XPFCMENU_CONTAINER_UNIX
+#define __NS_XPFCMENU_CONTAINER_UNIX
 
-#include "nsISupports.h"
-#include "nsIShellInstance.h"
-#include "nsIMenuItem.h"
-#include "nsIMenuContainer.h"
-#include "nsIWebViewerContainer.h"
+#include "nsXPFCMenuContainer.h"
 
-// 52fb95f0-2cbe-11d2-9246-00805f8a7ab6
-#define NS_IMENUBAR_IID      \
- { 0x52fb95f0, 0x2cbe, 0x11d2, \
-   {0x92, 0x46, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6} }
+#include <Xm/Xm.h>
+#include <Xm/CascadeBG.h>
+#include <Xm/PushBG.h>
+#include <Xm/SeparatoG.h>
+#include <Xm/RowColumn.h>
+#include <Xm/CascadeBG.h>
 
-class nsIMenuBar : public nsISupports
+class nsXPFCMenuContainerUnix : public nsXPFCMenuContainer
 {
 
 public:
 
-  NS_IMETHOD SetShellContainer(nsIShellInstance * aShellInstance,
-                              nsIWebViewerContainer * aWebViewerContainer) = 0 ;
-  NS_IMETHOD_(nsIMenuItem *) MenuItemFromID(PRUint32 aID) = 0;
+  nsXPFCMenuContainerUnix();
+
+protected:
+  virtual ~nsXPFCMenuContainerUnix();
+
+  NS_IMETHOD SetShellInstance(nsIShellInstance * aShellInstance)  ;
+  NS_IMETHOD AddMenuItem(nsIXPFCMenuItem * aMenuItem);
+  NS_IMETHOD_(void*) GetNativeHandle();
+  NS_IMETHOD Update() ;
+
+private:
+  Widget mMenuBar;
+
 };
 
-#endif /* nsIMenuBar_h___ */
-
+#endif

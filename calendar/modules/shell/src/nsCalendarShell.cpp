@@ -698,17 +698,17 @@ NSCalendar * nsCalendarShell::GetNSCalendar()
 }
 
 
-void nsCalendarShell::Create(int* argc, char ** argv)
+nsresult nsCalendarShell::Create(int* argc, char ** argv)
 {
-  return;
+  return NS_OK;
 }
-void nsCalendarShell::Exit()
+nsresult nsCalendarShell::Exit()
 {
   NS_IF_RELEASE(mDocumentContainer);
 
   NLS_Terminate();
 
-  return;
+  return NS_OK;
 }
 
 nsresult nsCalendarShell::Run()
@@ -717,9 +717,9 @@ nsresult nsCalendarShell::Run()
   return NS_OK;
 }
 
-void nsCalendarShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
+nsresult nsCalendarShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 {
-  return ;
+  return NS_OK;
 }
 void* nsCalendarShell::GetNativeData(PRUint32 aDataType)
 {

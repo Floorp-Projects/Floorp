@@ -50,7 +50,7 @@
 #define CAL_STRING_PANEL                          "panel"
 #define CAL_STRING_RESOURCE_UI_MENUBAR            "resource://res/ui/menubar.ui"
 #define CAL_STRING_RESOURCE_UI_TOOLBAR            "resource://res/ui/toolbar.ui"
-#define CAL_STRING_RESOURCE_UI_CALENDAR           "resource://res/ui/julian.cal"
+#define CAL_STRING_RESOURCE_UI_CALENDAR           "resource://res/ui/trex.ui"
 #define CAL_STRING_RULE                           "rule"
 #define CAL_STRING_SECOND                         "second"
 #define CAL_STRING_SETBACKGROUNDCOLOR             "setbackgroundcolor"

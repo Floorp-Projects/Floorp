@@ -17,7 +17,7 @@
  */
 
 #include "nsxpfcFactory.h"
-#include "nsMenuContainerUnix.h"
+#include "nsXPFCMenuContainerUnix.h"
 
 class nsxpfcFactoryUnix : public nsxpfcFactory
 {   
@@ -53,10 +53,10 @@ nsresult nsxpfcFactoryUnix::CreateInstance(nsISupports *aOuter,
   
   nsISupports *inst = nsnull;
 
-  if (mClassID.Equals(kCMenuBar)) {
-    inst = (nsISupports *)(nsIMenuBar *)new nsMenuContainerUnix();
-  } else if (mClassID.Equals(kCMenuContainer)) {
-    inst = (nsISupports *)(nsIMenuContainer *)new nsMenuContainerUnix();
+  if (mClassID.Equals(kCXPFCMenuBar)) {
+    inst = (nsISupports *)(nsIXPFCMenuBar *)new nsXPFCMenuContainerUnix();
+  } else if (mClassID.Equals(kCXPFCMenuContainer)) {
+    inst = (nsISupports *)(nsIXPFCMenuContainer *)new nsXPFCMenuContainerUnix();
   }
 
   if (inst == NULL)

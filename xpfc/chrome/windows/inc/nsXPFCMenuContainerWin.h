@@ -16,27 +16,30 @@
  * Reserved.
  */
 
-#ifndef nsIToolbarManager_h___
-#define nsIToolbarManager_h___
+#ifndef __NS_XPFCMENU_CONTAINER_WIN
+#define __NS_XPFCMENU_CONTAINER_WIN
 
-#include "nsISupports.h"
-#include "nsIXPFCCommandReceiver.h"
+#include "nsXPFCMenuContainer.h"
+#include "windows.h"
 
-class nsIXPFCToolbar;
-
-//ba72e190-35f1-11d2-9248-00805f8a7ab6
-#define NS_ITOOLBAR_MANAGER_IID   \
-{ 0xba72e190, 0x35f1, 0x11d2,    \
-{ 0x92, 0x48, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6 } }
-
-class nsIToolbarManager : public nsISupports
+class nsXPFCMenuContainerWin : public nsXPFCMenuContainer
 {
 
 public:
 
-  NS_IMETHOD                        Init() = 0 ;
-  NS_IMETHOD                        AddToolbar(nsIXPFCToolbar * aToolbar) = 0;
+  nsXPFCMenuContainerWin();
 
+protected:
+  virtual ~nsXPFCMenuContainerWin();
+
+  NS_IMETHOD SetShellContainer(nsIShellInstance * aShellInstance,nsIWebViewerContainer * aWebViewerContainer)  ;
+  NS_IMETHOD AddMenuItem(nsIXPFCMenuItem * aMenuItem);
+  NS_IMETHOD_(void*) GetNativeHandle();
+  NS_IMETHOD Update() ;
+
+protected:
+  HMENU mMenu;
+  HWND mHwnd;
 };
 
-#endif /* nsIToolbarManager_h___ */
+#endif

@@ -27,7 +27,7 @@
 class nsIPref;
 class nsIAppShell;
 class nsIStreamManager;
-class nsIToolbarManager;
+class nsIXPFCToolbarManager;
 class nsIDeviceContext;
 
 
@@ -138,7 +138,7 @@ public:
 
   NS_IMETHOD_(nsIStreamManager *) GetStreamManager(); 
 
-  NS_IMETHOD_(nsIToolbarManager *) GetToolbarManager(); 
+  NS_IMETHOD_(nsIXPFCToolbarManager *) GetToolbarManager(); 
 
   NS_IMETHOD_(EVENT_CALLBACK) GetShellEventCallback() ;
 
@@ -151,7 +151,7 @@ private:
   nsIWidget *                 mApplicationWindow ;
   nsIPref *                   mPref;
   nsIStreamManager *          mStreamManager;
-  nsIToolbarManager *         mToolbarManager;
+  nsIXPFCToolbarManager *         mToolbarManager;
   nsIDeviceContext *          mDeviceContext;
 
 };

@@ -16,36 +16,27 @@
  * Reserved.
  */
 
-#ifndef __NS_MENU_CONTAINER_UNIX
-#define __NS_MENU_CONTAINER_UNIX
+#ifndef nsIXPFCToolbarManager_h___
+#define nsIXPFCToolbarManager_h___
 
-#include "nsMenuContainer.h"
+#include "nsISupports.h"
+#include "nsIXPFCCommandReceiver.h"
 
-#include <Xm/Xm.h>
-#include <Xm/CascadeBG.h>
-#include <Xm/PushBG.h>
-#include <Xm/SeparatoG.h>
-#include <Xm/RowColumn.h>
-#include <Xm/CascadeBG.h>
+class nsIXPFCToolbar;
 
-class nsMenuContainerUnix : public nsMenuContainer
+//ba72e190-35f1-11d2-9248-00805f8a7ab6
+#define NS_IXPFCTOOLBAR_MANAGER_IID   \
+{ 0xba72e190, 0x35f1, 0x11d2,    \
+{ 0x92, 0x48, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6 } }
+
+class nsIXPFCToolbarManager : public nsISupports
 {
 
 public:
 
-  nsMenuContainerUnix();
-
-protected:
-  virtual ~nsMenuContainerUnix();
-
-  NS_IMETHOD SetShellInstance(nsIShellInstance * aShellInstance)  ;
-  NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem);
-  NS_IMETHOD_(void*) GetNativeHandle();
-  NS_IMETHOD Update() ;
-
-private:
-  Widget mMenuBar;
+  NS_IMETHOD                        Init() = 0 ;
+  NS_IMETHOD                        AddToolbar(nsIXPFCToolbar * aToolbar) = 0;
 
 };
 
-#endif
+#endif /* nsIXPFCToolbarManager_h___ */

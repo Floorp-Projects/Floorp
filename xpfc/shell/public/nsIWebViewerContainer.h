@@ -21,9 +21,9 @@
 #include "nsIContentViewer.h"
 #include "nsIParser.h"
 #include "nsIMenuManager.h"
-#include "nsIMenuBar.h"
+#include "nsIXPFCMenuBar.h"
 #include "nsIWebShell.h"
-#include "nsIToolbarManager.h"
+#include "nsIXPFCToolbarManager.h"
 #include "nsIXPFCToolbar.h"
 #include "nsIXPFCDialog.h"
 #include "nsIApplicationShell.h"
@@ -42,11 +42,11 @@ public:
 
   NS_IMETHOD SetMenuManager(nsIMenuManager * aMenuManager) = 0;
   NS_IMETHOD_(nsIMenuManager *) GetMenuManager() = 0;
-  NS_IMETHOD SetMenuBar(nsIMenuBar * aMenuBar) = 0;
+  NS_IMETHOD SetMenuBar(nsIXPFCMenuBar * aMenuBar) = 0;
   NS_IMETHOD UpdateMenuBar() = 0;
 
-  NS_IMETHOD SetToolbarManager(nsIToolbarManager * aToolbarManager) = 0;
-  NS_IMETHOD_(nsIToolbarManager *) GetToolbarManager() = 0;
+  NS_IMETHOD SetToolbarManager(nsIXPFCToolbarManager * aToolbarManager) = 0;
+  NS_IMETHOD_(nsIXPFCToolbarManager *) GetToolbarManager() = 0;
   NS_IMETHOD AddToolbar(nsIXPFCToolbar * aToolbar) = 0;
   NS_IMETHOD RemoveToolbar(nsIXPFCToolbar * aToolbar) = 0;
   NS_IMETHOD UpdateToolbars() = 0;

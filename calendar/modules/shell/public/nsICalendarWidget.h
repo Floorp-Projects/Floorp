@@ -21,7 +21,7 @@
 #include "nsIContentViewer.h"
 #include "nsIParser.h"
 #include "nsIXPFCCanvas.h"
-#include "nsIMenuBar.h"
+#include "nsIXPFCMenuBar.h"
 
 class nsIPostData;
 class nsICalendarShell;
