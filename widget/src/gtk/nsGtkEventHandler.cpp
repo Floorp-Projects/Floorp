@@ -137,9 +137,9 @@ int nsConvertKey(int keysym)
 
 //==============================================================
 void InitAllocationEvent(GtkAllocation *aAlloc,
-                            gpointer   p,
-                            nsSizeEvent &anEvent,
-                            PRUint32   aEventType)
+                         gpointer   p,
+                         nsSizeEvent &anEvent,
+                         PRUint32   aEventType)
 {
   anEvent.message = aEventType;
   anEvent.widget  = (nsWidget *) p;
@@ -147,15 +147,20 @@ void InitAllocationEvent(GtkAllocation *aAlloc,
   anEvent.eventStructType = NS_SIZE_EVENT;
 
   if (aAlloc != nsnull) {
-    nsRect *foo = new nsRect(aAlloc->x, aAlloc->y, aAlloc->width, aAlloc->height);
+    // HACK
+    //    nsRect *foo = new nsRect(aAlloc->x, aAlloc->y, aAlloc->width, aAlloc->height);
+    nsRect *foo = new nsRect(0, 0, aAlloc->width, aAlloc->height);
     anEvent.windowSize = foo;
-    anEvent.point.x = aAlloc->x;
-    anEvent.point.y = aAlloc->y;
+    //    anEvent.point.x = aAlloc->x;
+    //    anEvent.point.y = aAlloc->y;
+    // HACK
+    anEvent.point.x = 0;
+    anEvent.point.y = 0;
     anEvent.mWinWidth = aAlloc->width;
     anEvent.mWinHeight = aAlloc->height;
   }
-// this usually returns 0
-  anEvent.time = 0;
+
+  anEvent.time = PR_IntervalNow();
 }
 
 //==============================================================
@@ -185,16 +190,25 @@ void InitConfigureEvent(GdkEventConfigure *aConf,
 
 //==============================================================
 void InitExposeEvent(GdkEventExpose *aGEE,
-                            gpointer   p,
-                            nsPaintEvent &anEvent,
-                            PRUint32   aEventType)
+                     gpointer   p,
+                     nsPaintEvent &anEvent,
+                     PRUint32   aEventType)
 {
   anEvent.message = aEventType;
   anEvent.widget  = (nsWidget *) p;
 
   anEvent.eventStructType = NS_PAINT_EVENT;
 
-  if (aGEE != nsnull) {
+  if (aGEE != nsnull)
+  {
+#ifdef DEBUG_EVENTS
+    g_print("expose event: x = %i , y = %i , w = %i , h = %i\n",
+            aGEE->area.x, aGEE->area.y,
+            aGEE->area.width, aGEE->area.height);
+#endif
+    anEvent.point.x = aGEE->area.x;
+    anEvent.point.y = aGEE->area.y;
+
     nsRect *rect = new nsRect(aGEE->area.x, aGEE->area.y,
                               aGEE->area.width, aGEE->area.height);
     anEvent.rect = rect;
@@ -317,68 +331,15 @@ void UninitKeyEvent(GdkEventKey *aGEK,
   =============================================================
   ==============================================================*/
 
-// this function will clear the queue of any resize
-// or move events
-static gint
-idle_resize_cb(gpointer data)
-{
-  EventInfo *info = (EventInfo *)data;
-  //  g_print("idle_resize_cb: sending event for %p\n",
-  //          info->widget);
-  info->widget->OnResize(*info->rect);
-  NS_RELEASE(info->widget);
-  delete info->rect;
-  g_free(info);
-
-  // this will return 0 if the list is
-  // empty.  that will remove this idle timeout.
-  // if it's > 1 then it will be restarted and
-  // this will be run again.
-  return PR_FALSE;
-}
-
 void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
 {
   nsWindow *widget = (nsWindow *)p;
-  EventInfo *eventinfo = 0;
-  GtkAllocation *old_size = 0;
-  PRBool send_event = PR_FALSE;
+  nsSizeEvent event;
 
-  old_size = (GtkAllocation *) gtk_object_get_data(GTK_OBJECT(w), "mozilla.old_size");
-  // see if we need to allocate this - this may be the first time
-  // the size allocation has happened.
-  if (!old_size) { 
-    old_size = (GtkAllocation *) g_malloc(sizeof(GtkAllocation));
-    old_size->x = alloc->x;
-    old_size->y = alloc->y;
-    old_size->width = alloc->width;
-    old_size->height = alloc->height;
-    gtk_object_set_data(GTK_OBJECT(w), "mozilla.old_size", old_size);
-    send_event = PR_TRUE;
-  }
-  // only send an event if we've actually changed sizes.
-  else if ((old_size->x != alloc->x) ||
-           (old_size->y != alloc->y) ||
-           (old_size->width != alloc->width) ||
-           (old_size->height != alloc->height)) {
-    old_size->x = alloc->x;
-    old_size->y = alloc->y;
-    old_size->width = alloc->width;
-    old_size->height = alloc->height;
-    send_event = PR_TRUE;
-  }
-  // send it out.
-  if (send_event == PR_TRUE) {
-    eventinfo = (EventInfo *)g_malloc(sizeof(struct EventInfo));
-    eventinfo->rect = new nsRect();
-    eventinfo->rect->x = alloc->x;
-    eventinfo->rect->y = alloc->y;
-    eventinfo->rect->width = alloc->width;
-    eventinfo->rect->height = alloc->height;
-    eventinfo->widget = widget;
-    NS_ADDREF(widget);
-    gtk_idle_add(idle_resize_cb, eventinfo);
-  }
+  InitAllocationEvent(alloc, p, event, NS_SIZE);
+  NS_ADDREF(widget);
+  widget->OnResize(event);
+  NS_RELEASE(widget);
 }
 
 #if 0
@@ -602,6 +563,12 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   nsWindow* win = (nsWindow*)p;
   int isModifier;
 
+  // work around for annoying things.
+  if (event->keyval == GDK_Tab)
+    if (event->state & GDK_CONTROL_MASK)
+      if (event->state & GDK_MOD1_MASK)
+        return PR_FALSE;
+
   // Don't pass shift, control and alt as key press events
   if (event->keyval == GDK_Shift_L
       || event->keyval == GDK_Shift_R
@@ -624,7 +591,9 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   // gtk returns a character value for them
   //
   isModifier = event->state &(GDK_CONTROL_MASK|GDK_MOD1_MASK);
+#ifdef DEBUG_EVENTS
   if (isModifier) printf("isModifier\n");
+#endif
   if (event->length && !isModifier) {
      InitKeyPressEvent(event,p,kevent);
      win->OnKey(kevent);

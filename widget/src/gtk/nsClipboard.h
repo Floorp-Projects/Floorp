@@ -51,6 +51,8 @@ protected:
 
   PRBool            mIgnoreEmptyNotification;
 
+  void AddTarget(GdkAtom aAtom);
+
   gint GetFormat(const nsString & aMimeStr);
   void RegisterFormat(gint format);
 

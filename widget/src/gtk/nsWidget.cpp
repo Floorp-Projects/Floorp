@@ -43,6 +43,7 @@ gint nsWidget::sButtonMotionWidgetX = -1;
 gint nsWidget::sButtonMotionWidgetY = -1;
 
 //#define DBG 1
+#undef DEBUG_pavlov
 
 nsWidget::nsWidget()
 {
@@ -404,36 +405,34 @@ NS_METHOD nsWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
 // Send a resize message to the listener
 //
 //-------------------------------------------------------------------------
+PRBool nsWidget::OnResize(nsSizeEvent event)
+{
+  return DispatchWindowEvent(&event);
+}
+
+
 PRBool nsWidget::OnResize(nsRect &aRect)
 {
-    // call the event callback
-#if 0
-    printf("nsWidget::OnResize %s (%p)\n",
-           mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)",
-           this);
-#endif
-    if (mEventCallback) {
-        nsSizeEvent event;
-        InitEvent(event, NS_SIZE);
-        event.windowSize = &aRect;
-        event.eventStructType = NS_SIZE_EVENT;
-        if (mWidget) {
-            event.point.x = mWidget->allocation.x;
-            event.point.y = mWidget->allocation.y;
-            event.mWinWidth = mWidget->allocation.width;
-            event.mWinHeight = mWidget->allocation.height;
-        } else {
-            event.point.x = 0;
-            event.point.y = 0;
-            event.mWinWidth = 0;
-            event.mWinHeight = 0;
-        }
-        event.time = 0;
-        PRBool result = DispatchWindowEvent(&event);
-        return result;
-    }
-    return PR_FALSE;
+  nsSizeEvent event;
+
+  InitEvent(event, NS_SIZE);
+  event.eventStructType = NS_SIZE_EVENT;
+
+  nsRect *foo = new nsRect(0, 0, aRect.width, aRect.height);
+  event.windowSize = foo;
+
+  event.point.x = 0;
+  event.point.y = 0;
+  event.mWinWidth = aRect.width;
+  event.mWinHeight = aRect.height;
+  
+  NS_ADDREF_THIS();
+  PRBool result = OnResize(event);
+  NS_RELEASE_THIS();
+
+  return result;
 }
+
 
 //------
 // Move
@@ -1098,10 +1097,8 @@ PRBool nsWidget::DispatchFocus(nsGUIEvent &aEvent)
 #undef TRACE_EVENTS_PAINT
 #undef TRACE_EVENTS_CROSSING
 
-#if 0
 #ifdef DEBUG_pavlov
 #define EVENT_SPAM
-#endif
 #endif
 
 #if defined(EVENT_SPAM)
@@ -2172,8 +2169,6 @@ nsWidget::ButtonReleaseSignal(GtkWidget *      aWidget,
 nsWidget::RealizeSignal(GtkWidget *      aWidget,
                         gpointer         aData)
 {
-  printf("nsWidget::RealizeSignal(%p)\n",aData);
-  
   NS_ASSERTION( nsnull != aWidget, "widget is null");
   
   nsWidget * widget = (nsWidget *) aData;
