@@ -570,23 +570,6 @@ XULContentSinkImpl::SetParser(nsIParser* aParser)
     return NS_OK;
 }
 
-static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aParams)
-{
-  aType.Truncate();
-  aParams.Truncate();
-  PRInt32 semiIndex = aValue.FindChar(PRUnichar(';'));
-  if (-1 != semiIndex) {
-    aValue.Left(aType, semiIndex);
-    aValue.Right(aParams, (aValue.Length() - semiIndex) - 1);
-    aParams.StripWhitespace();
-  }
-  else {
-    aType = aValue;
-  }
-  aType.StripWhitespace();
-}
-
-
 nsresult
 XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
                                      const nsString& aHref,
@@ -605,9 +588,9 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
         }
     }
 
-    nsAutoString  mimeType;
-    nsAutoString  params;
-    SplitMimeType(aType, mimeType, params);
+    nsAutoString mimeType;
+    nsAutoString params;
+    nsParserUtils::SplitMimeType(aType, mimeType, params);
 
     if ((mimeType.IsEmpty()) || mimeType.EqualsIgnoreCase(kCSSType)) {
         nsCOMPtr<nsIURI> url;
@@ -1456,7 +1439,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
           nsAutoString  type(aAttributes[1]);
           nsAutoString  mimeType;
           nsAutoString  params;
-          SplitMimeType(type, mimeType, params);
+          nsParserUtils::SplitMimeType(type, mimeType, params);
 
           isJavaScript = mimeType.EqualsIgnoreCase("application/x-javascript") ||
                          mimeType.EqualsIgnoreCase("text/javascript");

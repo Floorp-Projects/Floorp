@@ -39,90 +39,66 @@
 #include "nsParserUtils.h"
 #include "nsIParser.h" // for kQuote et. al.
 #include "jsapi.h"
+#include "nsReadableUtils.h"
 
-// This method starts at aOffSet in aStr and tries to find aChar. It keeps 
-// skipping whitespace till it finds aChar or some other non-whitespace character.  If
-// it finds aChar, it returns aChar's offset.  If it finds some other non-whitespace character
-// or runs into the end of the string, it returns -1.
-static PRInt32
-FindWhileSkippingWhitespace(nsString& aStr, PRUnichar aChar, PRInt32 aOffset)
-{
-  PRInt32 i = aOffset;
-  PRUnichar ch = aStr.CharAt(i);
-  PRInt32 index = -1;
+PRBool
+nsParserUtils::GetQuotedAttributeValue(const nsAString& aSource,
+                                       const nsAString& aAttribute,
+                                       nsAString& aValue)
+{  
+  aValue.Truncate();
+  nsAString::const_iterator start, end;
+  aSource.BeginReading(start);
+  aSource.EndReading(end);
+  nsAString::const_iterator iter(end);
 
-  while (ch == '\n' || ch == '\t' || ch == '\r') {
-    ch = aStr.CharAt(++i);
+  while (start != end) {
+    if (FindInReadable(aAttribute, start, iter)) {
+      // walk past any whitespace
+      while (iter != end && nsCRT::IsAsciiSpace(*iter)) {
+        ++iter;
+      }
+
+      if (iter == end)
+        break;
+      
+      // valid name="value" pair?
+      if (*iter != '=') {
+        start = iter;
+        iter = end;
+        continue;
+      }
+      // move past the =
+      ++iter;
+
+      while (iter != end && nsCRT::IsAsciiSpace(*iter)) {
+        ++iter;
+      }
+      
+      if (iter == end)
+        break;
+
+      PRUnichar q = *iter;
+      if (q != '"' && q != '\'') {
+        start = iter;
+        iter = end;
+        continue;
+      }
+
+      // point to the first char of the value
+      ++iter;
+      start = iter;
+      if (FindCharInReadable(q, iter, end)) {
+        aValue = Substring(start, iter);
+        return PR_TRUE;
+      }
+
+      // we've run out of string.  Just return...
+      break;
+    }
   }
 
-  if (ch == aChar)
-    index = i;
-
-  return index;
-}
-
-
-nsresult
-nsParserUtils::GetQuotedAttributeValue(nsString& aSource,
-                                       const nsAFlatString& aAttribute,
-                                       nsString& aValue)
-{  
-  PRInt32 startOfAttribute = 0;     // Index into aSource where the attribute name starts
-  PRInt32 startOfValue = 0;         // Index into aSource where the attribute value starts
-  PRInt32 posnOfValueDelimiter = 0; 
-  nsresult result = NS_ERROR_FAILURE;
-
-  // While there are more characters to look at
-  while (startOfAttribute != -1) {
-    // Find the attribute starting at offset
-    startOfAttribute = aSource.Find(aAttribute, startOfAttribute);
-    // If attribute found
-    if (startOfAttribute != -1) { 
-      // Find the '=' character while skipping whitespace
-      startOfValue = FindWhileSkippingWhitespace(aSource, '=', startOfAttribute + aAttribute.Length());
-      // If '=' found
-      if (startOfValue != -1) {
-        PRUnichar delimiter = kQuote;
-        // Find the quote or apostrophe while skipping whitespace
-        posnOfValueDelimiter = FindWhileSkippingWhitespace(aSource, kQuote, startOfValue + 1);
-        if (posnOfValueDelimiter == -1) {
-          posnOfValueDelimiter = FindWhileSkippingWhitespace(aSource, kApostrophe, startOfValue + 1);
-          delimiter = kApostrophe;
-        }
-        // If quote or apostrophe found
-        if (posnOfValueDelimiter != -1) {
-          startOfValue = posnOfValueDelimiter + 1;
-          // Find the ending quote or apostrophe
-          posnOfValueDelimiter = aSource.FindChar(delimiter, startOfValue);
-          // If found
-          if (posnOfValueDelimiter != -1) {
-            // Set the value of the attibute and exit the loop
-            // The attribute value starts at startOfValue and ends at (posnOfValueDelimiter - 1)
-            aSource.Mid(aValue, startOfValue, posnOfValueDelimiter - startOfValue);
-            result = NS_OK;
-            break;
-          }
-          else {
-            // Try to find the attribute in the remainder of the string
-            startOfAttribute++;
-            continue;
-          } // Endif found  
-        }
-        else {
-          // Try to find the attribute in the remainder of the string
-          startOfAttribute++;
-          continue;
-        } // Endif quote or apostrophe found
-      } 
-      else {
-        // Try to find the attribute in the remainder of the string
-        startOfAttribute++;
-        continue;
-      } // Endif '=' found
-    } // Endif attribute found
-  } // End while
-  
-  return result;
+  return PR_FALSE;
 }
 
 
@@ -164,3 +140,20 @@ nsParserUtils::IsJavaScriptLanguage(const nsString& aName, const char* *aVersion
   return PR_TRUE;
 }
 
+void
+nsParserUtils::SplitMimeType(const nsAString& aValue, nsString& aType,
+                             nsString& aParams)
+{
+  aType.Truncate();
+  aParams.Truncate();
+  PRInt32 semiIndex = aValue.FindChar(PRUnichar(';'));
+  if (-1 != semiIndex) {
+    aValue.Left(aType, semiIndex);
+    aValue.Right(aParams, (aValue.Length() - semiIndex) - 1);
+    aParams.StripWhitespace();
+  }
+  else {
+    aType = aValue;
+  }
+  aType.StripWhitespace();
+}

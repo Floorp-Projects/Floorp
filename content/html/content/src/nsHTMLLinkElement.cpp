@@ -59,6 +59,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEventTarget.h"
+#include "nsParserUtils.h"
 
 class nsHTMLLinkElement : public nsGenericHTMLLeafElement,
                           public nsIDOMHTMLLinkElement,
@@ -91,7 +92,7 @@ public:
 
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers) {
-    nsIDocument *oldDoc = mDocument;
+    nsCOMPtr<nsIDocument> oldDoc = mDocument;
 
     nsAutoString rel;
     nsAutoString rev;
@@ -103,7 +104,9 @@ public:
     // Do the removal and addition into the new doc.
     nsresult rv = nsGenericHTMLLeafElement::SetDocument(aDocument, aDeep,
                                                         aCompileEventHandlers);
-    UpdateStyleSheet(PR_TRUE, oldDoc);
+    if (NS_SUCCEEDED(rv)) {
+      UpdateStyleSheet(oldDoc);
+    }
 		
     CreateAndDispatchEvent(mDocument, rel, rev, NS_LITERAL_STRING("DOMLinkAdded"));
 
@@ -142,7 +145,9 @@ public:
                      const nsAString& aValue, PRBool aNotify) {
     nsresult rv = nsGenericHTMLLeafElement::SetAttr(aNameSpaceID, aName,
                                                     aValue, aNotify);
-    UpdateStyleSheet(aNotify);
+    if (NS_SUCCEEDED(rv)) {
+      UpdateStyleSheet();
+    }
     return rv;
   }
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
@@ -171,7 +176,9 @@ public:
     nsresult rv = nsGenericHTMLLeafElement::UnsetAttr(aNameSpaceID,
                                                       aAttribute,
                                                       aNotify);
-    UpdateStyleSheet(aNotify);
+    if (NS_SUCCEEDED(rv)) {
+      UpdateStyleSheet();
+    }
     return rv;
   }
 
@@ -183,11 +190,12 @@ public:
 #endif
 
 protected:
-  virtual void GetStyleSheetInfo(nsAString& aUrl,
-                                 nsAString& aTitle,
+  virtual void GetStyleSheetURL(PRBool* aIsInline,
+                                nsAString& aUrl);
+  virtual void GetStyleSheetInfo(nsAString& aTitle,
                                  nsAString& aType,
                                  nsAString& aMedia,
-                                 PRBool* aDoBlock);
+                                 PRBool* aIsAlternate);
  
   // The cached visited state
   nsLinkState mLinkState;
@@ -340,7 +348,9 @@ nsHTMLLinkElement::SetHref(const nsAString& aValue)
                                                   nsHTMLAtoms::href,
                                                   aValue,
                                                   PR_TRUE);
-  UpdateStyleSheet(PR_TRUE);
+  if (NS_SUCCEEDED(rv)) {
+    UpdateStyleSheet();
+  }
   return rv;
 }
 
@@ -386,7 +396,7 @@ nsHTMLLinkElement::GetHrefCString(char* &aBuf)
   nsAutoString relURLSpec;
 
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLLeafElement::GetAttr(kNameSpaceID_HTML,
+      nsGenericHTMLLeafElement::GetAttr(kNameSpaceID_None,
                                         nsHTMLAtoms::href, relURLSpec)) {
     // Clean up any leading or trailing whitespace
     relURLSpec.Trim(" \t\n\r");
@@ -417,42 +427,40 @@ nsHTMLLinkElement::GetHrefCString(char* &aBuf)
 }
 
 void
-nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aUrl,
-                                     nsAString& aTitle,
+nsHTMLLinkElement::GetStyleSheetURL(PRBool* aIsInline,
+                                    nsAString& aUrl)
+{
+  *aIsInline = PR_FALSE;
+  GetHref(aUrl);
+  return;
+}
+
+void
+nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
                                      nsAString& aType,
                                      nsAString& aMedia,
                                      PRBool* aIsAlternate)
 {
-  nsresult rv = NS_OK;
-
-  aUrl.Truncate();
   aTitle.Truncate();
   aType.Truncate();
   aMedia.Truncate();
   *aIsAlternate = PR_FALSE;
 
-  nsAutoString href, rel, title, type;
-
-  GetHref(href);
-  if (href.IsEmpty()) {
-    // if href is empty then just bail
+  nsAutoString rel;
+  nsStringArray linkTypes(4);
+  GetAttr(kNameSpaceID_None, nsHTMLAtoms::rel, rel);
+  nsStyleLinkElement::ParseLinkTypes(rel, linkTypes);
+  // Is it a stylesheet link?
+  if (linkTypes.IndexOf(NS_LITERAL_STRING("stylesheet")) < 0) {
     return;
   }
 
-  GetAttribute(NS_LITERAL_STRING("rel"), rel);
-  rel.CompressWhitespace();
-
-  nsStringArray linkTypes(4);
-  nsStyleLinkElement::ParseLinkTypes(rel, linkTypes);
-  // is it a stylesheet link?
-  if (linkTypes.IndexOf(NS_LITERAL_STRING("stylesheet")) < 0)
-    return;
-
-  GetAttribute(NS_LITERAL_STRING("title"), title);
+  nsAutoString title;
+  GetAttr(kNameSpaceID_None, nsHTMLAtoms::title, title);
   title.CompressWhitespace();
   aTitle.Assign(title);
 
-  // if alternate, does it have title?
+  // If alternate, does it have title?
   if (-1 != linkTypes.IndexOf(NS_LITERAL_STRING("alternate"))) {
     if (aTitle.IsEmpty()) { // alternates must have title
       return;
@@ -461,15 +469,13 @@ nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aUrl,
     }
   }
 
-  GetAttribute(NS_LITERAL_STRING("media"), aMedia);
+  GetAttr(kNameSpaceID_None, nsHTMLAtoms::media, aMedia);
   ToLowerCase(aMedia); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
-
-  GetAttribute(NS_LITERAL_STRING("type"), type);
-  aType.Assign(type);
 
   nsAutoString mimeType;
   nsAutoString notUsed;
-  nsStyleLinkElement::SplitMimeType(type, mimeType, notUsed);
+  GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aType);
+  nsParserUtils::SplitMimeType(aType, mimeType, notUsed);
   if (!mimeType.IsEmpty() && !mimeType.EqualsIgnoreCase("text/css")) {
     return;
   }
@@ -477,26 +483,6 @@ nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aUrl,
   // If we get here we assume that we're loading a css file, so set the
   // type to 'text/css'
   aType.Assign(NS_LITERAL_STRING("text/css"));
-  
-  nsCOMPtr<nsIURI> url, base;
-
-  nsCOMPtr<nsIURI> baseURL;
-  GetBaseURL(*getter_AddRefs(baseURL));
-  rv = NS_MakeAbsoluteURI(aUrl, href, baseURL);
-
-  if (!*aIsAlternate) {
-    if (!aTitle.IsEmpty()) {  // possibly preferred sheet
-      nsAutoString prefStyle;
-      mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle,
-                               prefStyle);
-
-      if (prefStyle.IsEmpty()) {
-        mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle,
-                                 title);
-      }
-    }
-  }
 
   return;
 }
-

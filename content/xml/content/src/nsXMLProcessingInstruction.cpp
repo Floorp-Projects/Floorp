@@ -47,11 +47,11 @@
 #include "nsGenericElement.h"
 #include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
-#include "nsString.h"
+#include "nsAString.h"
 #include "nsXPIDLString.h"
 #include "nsUnicharUtils.h"
 #include "nsStyleLinkElement.h"
-
+#include "nsParserUtils.h"
 #include "nsNetUtil.h"
 
 
@@ -77,7 +77,9 @@ public:
   }
   NS_IMETHOD SetNodeValue(const nsAString& aNodeValue) {
     nsresult rv = nsGenericDOMDataNode::SetNodeValue(aNodeValue);
-    UpdateStyleSheet(PR_TRUE);
+    if (NS_SUCCEEDED(rv)) {
+      UpdateStyleSheet();
+    }
     return rv;
   }
   NS_IMETHOD GetNodeType(PRUint16* aNodeType);
@@ -164,10 +166,12 @@ public:
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers)
   {
-    nsIDocument *oldDoc = mDocument;
+    nsCOMPtr<nsIDocument> oldDoc = mDocument;
     nsresult rv = nsGenericDOMDataNode::SetDocument(aDocument, aDeep,
                                                     aCompileEventHandlers);
-    UpdateStyleSheet(PR_TRUE, oldDoc);
+    if (NS_SUCCEEDED(rv)) {
+      UpdateStyleSheet(oldDoc);
+    }
     return rv;
   }
   NS_IMETHOD GetTag(nsIAtom*& aResult) const;
@@ -182,8 +186,9 @@ public:
   NS_IMETHOD GetCharset(nsAString& aCharset);
 
 protected:
-  void GetStyleSheetInfo(nsAString& aUrl,
-                         nsAString& aTitle,
+  void GetStyleSheetURL(PRBool* aIsInline,
+                        nsAString& aUrl);
+  void GetStyleSheetInfo(nsAString& aTitle,
                          nsAString& aType,
                          nsAString& aMedia,
                          PRBool* aIsAlternate);
@@ -244,7 +249,9 @@ NS_IMETHODIMP
 nsXMLProcessingInstruction::SetData(const nsAString& aData)
 {
   nsresult rv = nsGenericDOMDataNode::SetData(aData);
-  UpdateStyleSheet(PR_TRUE);
+  if (NS_SUCCEEDED(rv)) {
+    UpdateStyleSheet();
+  }
   return rv;
 }
 
@@ -261,60 +268,7 @@ nsXMLProcessingInstruction::GetAttrValue(const nsAString& aAttr,
   nsAutoString data;
 
   GetData(data);
-  aValue.Truncate();
-  nsAString::const_iterator start, end;
-  data.BeginReading(start);
-  data.EndReading(end);
-  nsAString::const_iterator iter(end);
-
-  while (start != end) {
-
-    if (FindInReadable(aAttr, start, iter)) {
-      // walk past any whitespace
-      while (iter != end && nsCRT::IsAsciiSpace(*iter)) {
-        ++iter;
-      }
-
-      if (iter == end)
-        break;
-      
-      // valid name="value" pair?
-      if (*iter != '=') {
-        start = iter;
-        iter = end;
-        continue;
-      }
-      // move past the =
-      ++iter;
-
-      while (iter != end && nsCRT::IsAsciiSpace(*iter)) {
-        ++iter;
-      }
-      
-      if (iter == end)
-        break;
-
-      PRUnichar q = *iter;
-      if (q != '"' && q != '\'') {
-        start = iter;
-        iter = end;
-        continue;
-      }
-
-      // point to the first char of the value
-      ++iter;
-      start = iter;
-      if (FindCharInReadable(q, iter, end)) {
-        aValue = Substring(start, iter);
-        return PR_TRUE;
-      }
-
-      // we've run out of string.  Just return...
-      break;
-    }
-  }
-
-  return PR_FALSE;
+  return nsParserUtils::GetQuotedAttributeValue(data, aAttr, aValue);
 }
 
 NS_IMETHODIMP
@@ -441,15 +395,33 @@ nsXMLProcessingInstruction::GetCharset(nsAString& aCharset)
 }
 
 void
-nsXMLProcessingInstruction::GetStyleSheetInfo(nsAString& aUrl,
-                                              nsAString& aTitle,
+nsXMLProcessingInstruction::GetStyleSheetURL(PRBool* aIsInline,
+                                             nsAString& aUrl)
+{
+  *aIsInline = PR_FALSE;
+  aUrl.Truncate();
+
+  nsAutoString href;
+  GetAttrValue(NS_LITERAL_STRING("href"), href);
+  if (href.IsEmpty()) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> url, baseURL;
+  if (mDocument) {
+    mDocument->GetBaseURL(*getter_AddRefs(baseURL));
+  }
+  NS_MakeAbsoluteURI(aUrl, href, baseURL);
+}
+
+void
+nsXMLProcessingInstruction::GetStyleSheetInfo(nsAString& aTitle,
                                               nsAString& aType,
                                               nsAString& aMedia,
                                               PRBool* aIsAlternate)
 {
   nsresult rv = NS_OK;
 
-  aUrl.Truncate();
   aTitle.Truncate();
   aType.Truncate();
   aMedia.Truncate();
@@ -460,16 +432,11 @@ nsXMLProcessingInstruction::GetStyleSheetInfo(nsAString& aUrl,
   }
 
   // xml-stylesheet PI is special only in prolog
-  if (!InProlog(this))
-    return;
-
-  nsAutoString href, title, type, media, alternate;
-
-  GetAttrValue(NS_LITERAL_STRING("href"), href);
-  if (href.IsEmpty()) {
-    // if href is empty then just bail
+  if (!InProlog(this)) {
     return;
   }
+
+  nsAutoString title, type, media, alternate;
 
   GetAttrValue(NS_LITERAL_STRING("title"), title);
   title.CompressWhitespace();
@@ -494,7 +461,7 @@ nsXMLProcessingInstruction::GetStyleSheetInfo(nsAString& aUrl,
 
   nsAutoString mimeType;
   nsAutoString notUsed;
-  SplitMimeType(type, mimeType, notUsed);
+  nsParserUtils::SplitMimeType(type, mimeType, notUsed);
   if (!mimeType.IsEmpty() && !mimeType.EqualsIgnoreCase("text/css")) {
     aType.Assign(type);
     return;
@@ -503,23 +470,6 @@ nsXMLProcessingInstruction::GetStyleSheetInfo(nsAString& aUrl,
   // If we get here we assume that we're loading a css file, so set the
   // type to 'text/css'
   aType.Assign(NS_LITERAL_STRING("text/css"));
-
-  nsCOMPtr<nsIURI> url, baseURL;
-  if (mDocument) {
-    mDocument->GetBaseURL(*getter_AddRefs(baseURL));
-  }
-  rv = NS_MakeAbsoluteURI(aUrl, href, baseURL);
-
-  if (!*aIsAlternate) {
-    if (!aTitle.IsEmpty()) {  // possibly preferred sheet
-      nsAutoString prefStyle;
-      mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, prefStyle);
-
-      if (prefStyle.IsEmpty()) {
-        mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, title);
-      }
-    }
-  }
 
   return;
 }

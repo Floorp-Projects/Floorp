@@ -780,11 +780,11 @@ nsXMLContentSink::ProcessBASETag()
   if (mDocument) {
     nsAutoString value;
   
-    if (NS_CONTENT_ATTR_HAS_VALUE == mBaseElement->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::target, value)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mBaseElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, value)) {
       mDocument->SetBaseTarget(value);
     }
 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mBaseElement->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::href, value)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mBaseElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, value)) {
       nsCOMPtr<nsIURI> baseURI;
       rv = NS_NewURI(getter_AddRefs(baseURI), value);
       if (NS_SUCCEEDED(rv)) {
@@ -1089,10 +1089,10 @@ nsXMLContentSink::ProcessMETATag()
 
   // set any HTTP-EQUIV data into document's header data as well as url
   nsAutoString header;
-  mMetaElement->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::httpEquiv, header);
+  mMetaElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::httpEquiv, header);
   if (!header.IsEmpty()) {
     nsAutoString result;
-    mMetaElement->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
+    mMetaElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::content, result);
     if (!result.IsEmpty()) {
       ToLowerCase(header);
       nsCOMPtr<nsIAtom> fieldAtom(dont_AddRef(NS_NewAtom(header)));
@@ -1639,10 +1639,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
     result = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo, PR_TRUE);
     content = do_QueryInterface(htmlContent);
 
-    if (tagAtom.get() == nsHTMLAtoms::style) {
-      mStyleElement = htmlContent;
-    } 
-    else if (tagAtom.get() == nsHTMLAtoms::base) {
+    if (tagAtom == nsHTMLAtoms::base) {
       if (!mBaseElement) {
         mBaseElement = htmlContent; // The first base wins
       }
@@ -1709,7 +1706,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
      
     if (ssle) {
       ssle->SetEnableUpdates(PR_TRUE);
-      result = ssle->UpdateStyleSheet(PR_TRUE, mDocument, mStyleSheetCount);
+      result = ssle->UpdateStyleSheet(nsnull, mStyleSheetCount);
       if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK)) {
         if (result == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
           mParser->BlockParser();
@@ -1755,13 +1752,7 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
         }
         mInTitle = PR_FALSE;
       }
-    } else if (tagAtom.get() == nsHTMLAtoms::style) {
-      if (mStyleElement) {
-        result = ProcessSTYLETag();
-        mStyleElement=nsnull;
-        mStyleText.Truncate();
-      }
-    } else if (tagAtom.get() == nsHTMLAtoms::base) {
+    } else if (tagAtom == nsHTMLAtoms::base) {
       if (mBaseElement) {
         result = ProcessBASETag();
       }
@@ -1840,8 +1831,6 @@ nsXMLContentSink::HandleCDataSection(const PRUnichar *aData,
   
   if (mInTitle) {
     mTitleText.Append(aData, aLength);
-  } else if (mStyleElement) {
-    mStyleText.Append(aData, aLength);
   }
   
   result = NS_NewXMLCDATASection(&cdata);
@@ -1961,7 +1950,7 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 
     if (ssle) {
       ssle->SetEnableUpdates(PR_TRUE);
-      result = ssle->UpdateStyleSheet(PR_TRUE, mDocument, mStyleSheetCount);
+      result = ssle->UpdateStyleSheet(nsnull, mStyleSheetCount);
       if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK))
         mStyleSheetCount++; // This count may not reflect the real stylesheet count
     }
@@ -1973,7 +1962,7 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
       return result;
     }
 
-    // If it's a XSL stylesheet PI...
+    // If it's not a CSS stylesheet PI...
     nsAutoString type;
     nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("type"), type);
     if (mState == eXMLContentSinkState_InProlog && 
@@ -2202,8 +2191,6 @@ nsXMLContentSink::AddText(const PRUnichar* aText,
 
   if (mInTitle) {
     mTitleText.Append(aText,aLength);
-  } else if (mStyleElement) {
-    mStyleText.Append(aText,aLength);
   }
 
   // Create buffer when we first need it
@@ -2251,69 +2238,6 @@ nsXMLContentSink::AddText(const PRUnichar* aText,
   }
 
   return NS_OK;
-}
-
-nsresult
-nsXMLContentSink::ProcessSTYLETag()
-{
-  nsresult rv = NS_OK;
-  
-  nsAutoString title; 
-  nsAutoString type; 
-  nsAutoString media; 
-
-  mStyleElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::title, title);
-  title.CompressWhitespace();
-
-  mStyleElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
-  type.StripWhitespace();
-
-  mStyleElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::media, media);
-  ToLowerCase(media);
-
-  nsAutoString  mimeType;
-  nsAutoString  params;
-  nsStyleLinkElement::SplitMimeType(type, mimeType, params);
-
-  PRBool blockParser = PR_FALSE;//kBlockByDefault;
-
-  if (mimeType.IsEmpty() || mimeType.EqualsIgnoreCase("text/css")) { 
-    if (!title.IsEmpty()) {  // possibly preferred sheet
-      nsAutoString preferredStyle;
-      mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, preferredStyle);
-      if (preferredStyle.IsEmpty()) {
-        mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, title);
-      }
-    }
-
-    PRBool doneLoading = PR_FALSE;
-
-    nsIUnicharInputStream* uin = nsnull;
-
-    // Create a string to hold the data and wrap it up in a unicode
-    // input stream.
-    rv = NS_NewStringUnicharInputStream(&uin, new nsString(mStyleText));
-    if (NS_OK != rv) {
-      return rv;
-    }
-
-    // Now that we have a url and a unicode input stream, parse the
-    // style sheet.
-    rv = mCSSLoader->LoadInlineStyle(mStyleElement, uin, title, media, kNameSpaceID_Unknown,
-                                     mStyleSheetCount++, 
-                                     ((blockParser) ? mParser : nsnull),
-                                     doneLoading, this);
-    NS_RELEASE(uin);
-
-    if (NS_SUCCEEDED(rv) && blockParser && (! doneLoading)) {
-      if (mParser) {
-        mParser->BlockParser();
-      }
-      rv = NS_ERROR_HTMLPARSER_BLOCK;
-    }
-  }//if (mimeType.IsEmpty() || mimeType.EqualsIgnoreCase("text/css"))
-
-  return rv;
 }
 
 nsresult
