@@ -543,7 +543,7 @@ void nsRenderingContextMac :: SetFont(const nsFont& aFont)
 
 const nsFont& nsRenderingContextMac :: GetFont()
 {
-  const nsFont* font;
+  const nsFont* font = nsnull;
   //mFontMetrics->GetFont(font);
   return *font;
 }
@@ -881,7 +881,11 @@ PRInt32 y = aY;
 	SetPort(mCurrentSurface);
   // Substract xFontStruct ascent since drawing specifies baseline
   if (mFontMetrics)
-      y += mFontMetrics->GetMaxAscent();
+  {
+  	nscoord ascent = 0;
+  	mFontMetrics->GetMaxAscent(ascent);
+  	y += ascent;
+  }
 
   mTMatrix->TransformCoord(&x,&y);
 	
@@ -891,15 +895,19 @@ PRInt32 y = aY;
 
   if (mFontMetrics)
   {
-    PRUint8 deco = mFontMetrics->GetFont().decorations;
+    const nsFont* font;
+    mFontMetrics->GetFont(font);
+    PRUint8 deco = font->decorations;
 
     if (deco & NS_FONT_DECORATION_OVERLINE)
       DrawLine(aX, aY, aX + aWidth, aY);
 
     if (deco & NS_FONT_DECORATION_UNDERLINE)
     {
-      nscoord ascent = mFontMetrics->GetMaxAscent();
-      nscoord descent = mFontMetrics->GetMaxDescent();
+      nscoord ascent = 0;
+      nscoord descent = 0;
+      mFontMetrics->GetMaxAscent(ascent);
+      mFontMetrics->GetMaxDescent(descent);
 
       DrawLine(aX, aY + ascent + (descent >> 1),
                aX + aWidth, aY + ascent + (descent >> 1));
@@ -907,7 +915,8 @@ PRInt32 y = aY;
 
     if (deco & NS_FONT_DECORATION_LINE_THROUGH)
     {
-      nscoord height = mFontMetrics->GetHeight();
+      nscoord height = 0;
+      mFontMetrics->GetHeight(height);
 
       DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
     }
@@ -928,8 +937,11 @@ PRInt32 y = aY;
 	
   // Substract xFontStruct ascent since drawing specifies baseline
   if (mFontMetrics)
-      y += mFontMetrics->GetMaxAscent();
-
+  {
+  	nscoord ascent = 0;
+  	mFontMetrics->GetMaxAscent(ascent);
+    y += ascent;
+	}
   mTMatrix->TransformCoord(&x, &y);
 
 	::MoveTo(x,y);
@@ -937,15 +949,19 @@ PRInt32 y = aY;
 
   if (mFontMetrics)
   {
-    PRUint8 deco = mFontMetrics->GetFont().decorations;
+    const nsFont* font = nsnull;
+    mFontMetrics->GetFont(font);
+    PRUint8 deco = font->decorations;
 
     if (deco & NS_FONT_DECORATION_OVERLINE)
       DrawLine(aX, aY, aX + aWidth, aY);
 
     if (deco & NS_FONT_DECORATION_UNDERLINE)
     {
-      nscoord ascent = mFontMetrics->GetMaxAscent();
-      nscoord descent = mFontMetrics->GetMaxDescent();
+      nscoord ascent = 0;
+      nscoord descent = 0;
+      mFontMetrics->GetMaxDescent(ascent);
+      mFontMetrics->GetMaxAscent(descent);
 
       DrawLine(aX, aY + ascent + (descent >> 1),
                aX + aWidth, aY + ascent + (descent >> 1));
@@ -953,7 +969,9 @@ PRInt32 y = aY;
 
     if (deco & NS_FONT_DECORATION_LINE_THROUGH)
     {
-      nscoord height = mFontMetrics->GetHeight();
+    	
+      nscoord height = 0;
+      mFontMetrics->GetHeight(height);
 
       DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
     }

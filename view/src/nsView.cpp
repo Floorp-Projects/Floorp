@@ -34,6 +34,9 @@
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
+static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
+
+
 //#define SHOW_VIEW_BORDERS
 //#define HIDE_ALL_WIDGETS
 

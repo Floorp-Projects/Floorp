@@ -137,6 +137,8 @@ static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
 static const char* gsAOLFormat = "AOLMAIL";
 static const char* gsHTMLFormat = "text/html";
 
+static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
+
 //----------------------------------------------------------------------
 
 nsVoidArray nsBrowserWindow::gBrowsers;
