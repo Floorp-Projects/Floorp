@@ -725,6 +725,7 @@ pref("mousewheel.withaltkey.numlines",1);
 pref("mousewheel.withaltkey.sysnumlines",false);
 
 pref("profile.confirm_automigration",true);
+pref("profile.allow_automigration", false);   // setting to false bypasses automigration in the profile code
 
 // the amount of time (in seconds) that must elapse
 // before we think your mozilla profile is defunct

@@ -113,7 +113,6 @@ pref("mail.check_time",                     10);
 pref("mail.pop_name",                       "");
 pref("mail.remember_password",              false);
 pref("mail.pop_password",                   "");
-pref("mail.auto_quote",                     true);
 pref("mail.fixed_width_messages",           true);
 pref("mail.citation_color",                 ""); // quoted color
 pref("mail.quoted_style",                   0); // 0=plain, 1=bold, 2=italic, 3=bolditalic
@@ -181,8 +180,6 @@ pref("news.mark_old_read",                  false);
 pref("mailnews.wraplength",                 72);
 pref("mail.compose.wrap_to_window_width",   false);
 
-pref("mailnews.reply_on_top",               0); // 0=bottom 1=top 2=select+bottom 3=select+top
-
 // 0=no header, 1="<author> wrote:", 2="On <date> <author> wrote:", 3="<author> wrote On <date>:", 4=user specified
 pref("mailnews.reply_header_type",          1);
 // locale which affects date format, set empty string to use application default locale
@@ -212,6 +209,8 @@ pref("mailnews.search_date_format",        "chrome://messenger/locale/messenger.
 pref("mailnews.search_date_separator",     "chrome://messenger/locale/messenger.properties");
 
 pref("mailnews.language_sensitive_font",    true);
+
+pref("mailnews.quotingPrefs.version",       0);  // used to decide whether to migrate global quoting prefs
 
 pref("offline.news.download.unread_only",   true);
 pref("offline.news.download.by_date",       true);
@@ -309,6 +308,8 @@ pref("mail.identity.default.draft_folder","mailbox://nobody@Local%20Folders/Draf
 pref("mail.identity.default.stationery_folder","mailbox://nobody@Local%20Folders/Templates");
 pref("mail.identity.default.directoryServer","");
 pref("mail.identity.default.overrideGlobal_Pref", false);
+pref("mail.identity.default.auto_quote", true);
+pref("mail.identity.default.reply_on_top", 0); // 0=bottom 1=top 2=select
 
 // by default, only collect addresses the user sends to (outgoing)
 // incoming is all spam anyways
