@@ -1184,7 +1184,7 @@ void nsTableCellFrame::SetCollapseOffsetX(nsIPresContext* aPresContext,
                                           nscoord         aXOffset)
 {
   // Get the frame property (creating a point struct if necessary)
-  nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::collapseOffsetProperty, PR_TRUE);
+  nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::collapseOffsetProperty, aXOffset != 0);
 
   if (offset) {
     offset->x = aXOffset;
@@ -1195,7 +1195,7 @@ void nsTableCellFrame::SetCollapseOffsetY(nsIPresContext* aPresContext,
                                           nscoord         aYOffset)
 {
   // Get the property (creating a point struct if necessary)
-  nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::collapseOffsetProperty, PR_TRUE);
+  nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::collapseOffsetProperty, aYOffset != 0);
 
   if (offset) {
     offset->y = aYOffset;
