@@ -129,7 +129,7 @@ namespace JavaScript {
         GenericHashEntry **nextBucket;  // Next bucket; pointer past end of vector of hash buckets if done
     public:
         explicit GenericHashTableIterator(GenericHashTable &ht);
-        ~GenericHashTableIterator() {ht.maybeShrink(); DEBUG_ONLY(--ht.nReferences);}
+        virtual ~GenericHashTableIterator() {ht.maybeShrink(); DEBUG_ONLY(--ht.nReferences);}
 
         // Return true if there are entries left.
         operator bool() const {return entry != 0;}
@@ -141,26 +141,6 @@ namespace JavaScript {
 //
 // Hash Tables
 //
-    // An iterator to be used for all the entries in the hashtable
-    // What's wrong with the one inside HashTable<>? I just couldn't
-    // get it to work with MSVC.
-    template<class Data, class Key, class H = Hash<Key> >
-    class TableIterator: public GenericHashTableIterator {
-      public:
-        explicit TableIterator(GenericHashTable &ht): GenericHashTableIterator(ht) {}
-      public:
-
-        // Go to next entry.
-        TableIterator &operator++() {return *static_cast<TableIterator*>(&GenericHashTableIterator::operator++());}
-        TableIterator &operator++(int) {return *static_cast<TableIterator*>(&GenericHashTableIterator::operator++());}
-        // Return current entry's data.
-        Data &operator*() const;
-        
-        void erase();
-        void end()  { entry = 0; }
-    };
-
-
     template<class Data, class Key, class H = Hash<Key> >
     class HashTable: private GenericHashTable {
         H hasher; // Hash function
@@ -238,8 +218,6 @@ namespace JavaScript {
             Iterator &operator++() {return *static_cast<Iterator*>(&GenericHashTableIterator::operator++());}
             // Return current entry's data.
             Data &operator*() const {ASSERT(entry); return static_cast<Entry *>(entry)->data;}
-            
-            void erase();            
         };
 
         HashTable(uint32 nEntriesDefault = 0, const H &hasher = H()): GenericHashTable(nEntriesDefault), hasher(hasher) {}
@@ -253,9 +231,6 @@ namespace JavaScript {
         
         friend class Reference;
         friend class Iterator;
-
-        TableIterator<Data, Key, H> begin();
-        TableIterator<Data, Key, H> end();
 
         // return number of entries in the table
         uint32 size()    { return nEntries; }
@@ -470,31 +445,6 @@ namespace JavaScript {
         else
             return 0;
     }
-
-    // Return an iterator to the first entry in the table
-    template<class Data, class Key, class H>
-    TableIterator<Data, Key, H> HashTable<Data, Key, H>::begin()
-    {
-        return TableIterator<Data, Key, H>(*this);
-    }
-
-    // Return an iterator to the last entry in the table
-    template<class Data, class Key, class H>
-    TableIterator<Data, Key, H> HashTable<Data, Key, H>::end()
-    {
-        TableIterator<Data, Key, H> e(*this);
-        e.end();
-        return e;
-    }
-    
-    // Return the data associated with the current iterator position
-    template<class Data, class Key, class H>
-    Data &TableIterator<Data, Key, H>::operator*() const 
-    {
-        ASSERT(entry); 
-        return static_cast<HashTable<Data, Key, H>::Entry *>(entry)->data;
-    }
-
 
 
 }

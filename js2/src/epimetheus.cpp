@@ -250,7 +250,7 @@ void printLocalBindings(LocalBindingMap *lMap, ValueList *frameSlots)
 {
     stdOut << " Local Bindings:\n";   
 
-    for (LocalBindingIterator bi = lMap->begin(), bend = lMap->end(); (bi != bend); bi++) {
+    for (LocalBindingIterator bi(*lMap); bi; ++bi) {
         LocalBindingEntry &lbe = *bi;
         for (LocalBindingEntry::NS_Iterator i = lbe.begin(), end = lbe.end(); (i != end); i++) {
             LocalBindingEntry::NamespaceBinding ns = *i;
@@ -309,7 +309,7 @@ void printInstanceVariables(JS2Class *c, Slot *slots)
     if (c->super)
         printInstanceVariables(c->super, slots);
 
-    for (InstanceBindingIterator rib = c->instanceBindings.begin(), riend = c->instanceBindings.end(); (rib != riend); rib++) {
+    for (InstanceBindingIterator rib(c->instanceBindings); rib; ++rib) {
         InstanceBindingEntry &ibe = *rib;
         for (InstanceBindingEntry::NS_Iterator i = ibe.begin(), end = ibe.end(); (i != end); i++) {
             InstanceBindingEntry::NamespaceBinding ns = *i;
@@ -369,7 +369,7 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                     stdOut << " slotCount = " << c->slotCount << "\n";
                     printLocalBindings(&c->localBindings, c->frameSlots);
                     stdOut << " Instance Bindings:\n";                    
-                    for (InstanceBindingIterator rib = c->instanceBindings.begin(), riend = c->instanceBindings.end(); (rib != riend); rib++) {
+                    for (InstanceBindingIterator rib(c->instanceBindings); rib; ++rib) {
                         InstanceBindingEntry &ibe = *rib;
                         for (InstanceBindingEntry::NS_Iterator i = ibe.begin(), end = ibe.end(); (i != end); i++) {
                             InstanceBindingEntry::NamespaceBinding ns = *i;

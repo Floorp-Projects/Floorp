@@ -656,7 +656,7 @@ public:
 // A LocalBindingMap maps names to a list of LocalBindings. Each LocalBinding in the list
 // will have the same QualifiedName.name, but (potentially) different QualifiedName.namespace values
 typedef HashTable<LocalBindingEntry, const StringAtom &> LocalBindingMap;
-typedef TableIterator<LocalBindingEntry, const StringAtom &> LocalBindingIterator;
+typedef HashTable<LocalBindingEntry, const StringAtom &>::Iterator LocalBindingIterator;
 
 
 class InstanceBindingEntry {
@@ -680,7 +680,7 @@ public:
 
 
 typedef HashTable<InstanceBindingEntry, const StringAtom &> InstanceBindingMap;
-typedef TableIterator<InstanceBindingEntry, const StringAtom &> InstanceBindingIterator;
+typedef HashTable<InstanceBindingEntry, const StringAtom &>::Iterator InstanceBindingIterator;
 
 
 // A frame contains bindings defined at a particular scope in a program. A frame is either the top-level system frame, 

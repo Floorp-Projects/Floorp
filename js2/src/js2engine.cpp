@@ -1247,7 +1247,7 @@ namespace MetaData {
         if (lMap) {
             nameList = new const String *[lMap->size()];
             length = 0;
-            for (LocalBindingIterator bi = lMap->begin(), bend = lMap->end(); (bi != bend); bi++) {
+            for (LocalBindingIterator bi(*lMap); bi; ++bi) {
                 LocalBindingEntry &lbe = *bi;
                 for (LocalBindingEntry::NS_Iterator i = lbe.begin(), end = lbe.end(); (i != end); i++) {
                     LocalBindingEntry::NamespaceBinding ns = *i;

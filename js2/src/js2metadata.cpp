@@ -3174,11 +3174,11 @@ doUnary:
     {
         singularFrame->localBindings.clear();
 
-        for (LocalBindingIterator bi = pluralFrame->localBindings.begin(), bend = pluralFrame->localBindings.end(); (bi != bend); bi++) {
+        for (LocalBindingIterator bi(pluralFrame->localBindings); bi; ++bi) {
             LocalBindingEntry &lbe = *bi;
             lbe.clear();
         }
-        for (LocalBindingIterator bi2 = pluralFrame->localBindings.begin(), bend2 = pluralFrame->localBindings.end(); (bi2 != bend2); bi2++) {
+        for (LocalBindingIterator bi2(pluralFrame->localBindings); bi; ++bi) {
             LocalBindingEntry &lbe = *bi2;
             LocalBindingEntry *new_lbe = &singularFrame->localBindings.insert(lbe.name);
 
@@ -4948,7 +4948,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     JS2Class::~JS2Class()            
     {
-        for (InstanceBindingIterator rib = instanceBindings.begin(), riend = instanceBindings.end(); (rib != riend); rib++) {
+        for (InstanceBindingIterator rib(instanceBindings); rib; ++rib) {
             InstanceBindingEntry &ibe = *rib;
             for (InstanceBindingEntry::NS_Iterator i = ibe.begin(), end = ibe.end(); (i != end); i++) {
                 InstanceBindingEntry::NamespaceBinding ns = *i;
@@ -4967,7 +4967,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         GCMARKOBJECT(privateNamespace)
         GCMARKOBJECT(init)
         GCMARKVALUE(defaultValue);
-        for (InstanceBindingIterator rib = instanceBindings.begin(), riend = instanceBindings.end(); (rib != riend); rib++) {
+        for (InstanceBindingIterator rib(instanceBindings); rib; ++rib) {
             InstanceBindingEntry &ibe = *rib;
             for (InstanceBindingEntry::NS_Iterator i = ibe.begin(), end = ibe.end(); (i != end); i++) {
                 InstanceBindingEntry::NamespaceBinding ns = *i;
@@ -5039,7 +5039,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     {
         if (type->super)
             initializeSlots(type->super);
-        for (InstanceBindingIterator rib = type->instanceBindings.begin(), riend = type->instanceBindings.end(); (rib != riend); rib++) {
+        for (InstanceBindingIterator rib(type->instanceBindings); rib; ++rib) {
             InstanceBindingEntry &ibe = *rib;
             for (InstanceBindingEntry::NS_Iterator i = ibe.begin(), end = ibe.end(); (i != end); i++) {
                 InstanceBindingEntry::NamespaceBinding ns = *i;
@@ -5078,7 +5078,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 GCMARKVALUE(fixedSlots[i].value);
             }
         }
-        for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
+        for (LocalBindingIterator bi(localBindings); bi; ++bi) {
             LocalBindingEntry &lbe = *bi;
             for (LocalBindingEntry::NS_Iterator i = lbe.begin(), end = lbe.end(); (i != end); i++) {
                 LocalBindingEntry::NamespaceBinding ns = *i;
@@ -5089,7 +5089,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     SimpleInstance::~SimpleInstance()
     {
-        for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
+        for (LocalBindingIterator bi(localBindings); bi; ++bi) {
             LocalBindingEntry &lbe = *bi;
             for (LocalBindingEntry::NS_Iterator i = lbe.begin(), end = lbe.end(); (i != end); i++) {
                 LocalBindingEntry::NamespaceBinding ns = *i;
@@ -5216,7 +5216,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     NonWithFrame::~NonWithFrame()
     {
-        for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
+        for (LocalBindingIterator bi(localBindings); bi; ++bi) {
             LocalBindingEntry &lbe = *bi;
             for (LocalBindingEntry::NS_Iterator i = lbe.begin(), end = lbe.end(); (i != end); i++) {
                 LocalBindingEntry::NamespaceBinding ns = *i;
@@ -5231,7 +5231,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     void NonWithFrame::markChildren()
     {
         GCMARKOBJECT(pluralFrame)
-        for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
+        for (LocalBindingIterator bi(localBindings); bi; ++bi) {
             LocalBindingEntry &lbe = *bi;
             for (LocalBindingEntry::NS_Iterator i = lbe.begin(), end = lbe.end(); (i != end); i++) {
                 LocalBindingEntry::NamespaceBinding ns = *i;
@@ -5257,7 +5257,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         NonWithFrame::markChildren();
         GCMARKVALUE(super);
         GCMARKOBJECT(internalNamespace)
-        for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
+        for (LocalBindingIterator bi(localBindings); bi; ++bi) {
             LocalBindingEntry &lbe = *bi;
             for (LocalBindingEntry::NS_Iterator i = lbe.begin(), end = lbe.end(); (i != end); i++) {
                 LocalBindingEntry::NamespaceBinding ns = *i;
