@@ -82,9 +82,15 @@ import org.mozilla.javascript.debug.*;
  * @author Brendan Eich
  */
 
-public class Context {
+public class Context
+{
     public static final String languageVersionProperty = "language version";
     public static final String errorReporterProperty   = "error reporter";
+
+    /**
+     * Convinient value to use as zero-length argument array object.
+     */
+    public static final Object[] emptyArgs = ScriptRuntime.emptyArgs;
 
     /**
      * Create a new Context.
@@ -1309,6 +1315,47 @@ public class Context {
                                       Class staticType)
     {
         return ScriptRuntime.toObject(scope, value);
+    }
+
+    /**
+     * Convenient method to convert java value to its closest representation
+     * in JavaScript.
+     * <p>
+     * If value is an instance of String, Number, Boolean, Function or
+     * Scriptable, it is returned as it and will be treated as the corresponding
+     * JavaScript type of string, number, boolean, function and object.
+     * <p>
+     * Note that for Number instances during any arithmetic operation in
+     * JavaScript the engine will always use the result of
+     * <tt>Number.doubleValue()</tt> resulting in a precision loss if
+     * the number can not fit into double.
+     * <p>
+     * If value is an instance of Character, it will be converted to string of
+     * length 1 and its JavaScript type will be string.
+     * <p>
+     * The rest of values will be wrapped as LiveConnect objects
+     * by calling {@link WrapFactory#warp(Context cx, Scriptable scope,
+     * Object obj, Class staticType)} as in:
+     * <pre>
+     *    return contextInstance.getWrapFactory().wrap(contextInstance, scope,
+     *                                                 value, null);
+     * </pre>
+     *
+     * @param value any Java object
+     * @param scope top scope object
+     * @return value suitable to pass to any API that takes JavaScript values.
+     */
+    public Object javaToJS(Object value, Scriptable scope)
+    {
+        if (value instanceof String || value instanceof Number
+            || value instanceof Boolean || value instanceof Scriptable)
+        {
+            return value;
+        } else if (value instanceof Character) {
+            return String.valueOf(((Character)value).charValue());
+        } else {
+            return getWrapFactory().wrap(this, scope, value, null);
+        }
     }
 
     /**
