@@ -1165,12 +1165,41 @@ Image_CheckForPermission(char * hostname, char * firstHostname, PRBool &permissi
   }
 
   /* try to make a decision based on pref settings */
-  if ((image_GetBehaviorPref() == COOKIE_DontUse)  ||
-      (image_GetBehaviorPref() == COOKIE_DontAcceptForeign &&
-//      PL_strcmp(hostname, firstHostname))) {
-        !cookie_SameDomain(hostname, firstHostname))) {
+  if ((image_GetBehaviorPref() == COOKIE_DontUse)) {
     permission = PR_FALSE;
     return NS_OK;
+  }
+  if (image_GetBehaviorPref() == COOKIE_DontAcceptForeign) {
+    /* compare tails of names checking to see if they have a common domain */
+    /* we do this by comparing the tails of both names where each tail includes at least one dot */
+    PRInt32 dotcount = 0;
+    char * tailHostname = hostname + PL_strlen(hostname) - 1;
+    while (tailHostname > hostname) { 
+      if (*tailHostname == '.') {
+        dotcount++;
+      }
+      if (dotcount == 2) {
+        tailHostname++;
+        break;
+      }
+      tailHostname--;
+    }
+    dotcount = 0;
+    char * tailFirstHostname = firstHostname + PL_strlen(firstHostname) - 1;
+    while (tailFirstHostname > firstHostname) { 
+      if (*tailFirstHostname == '.') {
+        dotcount++;
+      }
+      if (dotcount == 2) {
+        tailFirstHostname++;
+        break;
+      }
+      tailFirstHostname--;
+    }
+    if (PL_strcmp(tailFirstHostname, tailHostname)) {
+      permission = PR_FALSE;
+      return NS_OK;
+    }
   }
 
   /* use common routine to make decision */
@@ -2645,8 +2674,21 @@ CookieCompare (cookie_CookieStruct * cookie1, cookie_CookieStruct * cookie2) {
     return 1;
   }
 
-  /* if host names are equal, make decision based on cookie name */
-  return (PL_strcmp (cookie1->name, cookie2->name));
+  /* if host names are equal, make decision based on cookie name if they are unequal */
+  if (PL_strcmp (cookie1->name, cookie2->name) < 0) {
+    return -1;
+  }
+  if (PL_strcmp (cookie1->name, cookie2->name) > 0) {
+    return 1;
+  }
+
+  
+  /* if host and cookie names are equal, make decision based on path */
+  /*    It may seem like this should never happen but it does.
+   *    Go to groups.aol.com and you will get two cookies with
+   *    identical host and cookie names but different paths
+   */
+  return (PL_strcmp (cookie1->path, cookie2->path));
 }
 
 /*
