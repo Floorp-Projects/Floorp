@@ -21,6 +21,7 @@
 #include "mozIRegistry.h"
 #include "nsIEnumerator.h"
 #include "nsIFactory.h"
+#include "prmem.h"
 
 // Hack to get to mozRegistry implementation.                                                                                       
 extern "C" NS_EXPORT nsresult
@@ -28,6 +29,7 @@ mozRegistry_GetFactory(const nsCID &cid, nsISupports* servMgr, nsIFactory** aFac
 
 static void display( mozIRegistry *reg, mozIRegistry::Key root, const char *name );
 static void displayValues( mozIRegistry *reg, mozIRegistry::Key root );
+static void printString( const char *value, int indent );
 
 int main( int argc, char *argv[] ) {
     // Get mozRegistry factory.
@@ -110,6 +112,7 @@ void display( mozIRegistry *reg, mozIRegistry::Key root, const char *rootName ) 
                         rv = reg->GetSubtree( root, name, &key );
                         if ( rv == NS_OK ) {
                             displayValues( reg, key );
+                            printf( "\n" );
                         } else {
                             printf( "Error getting key, rv=0x%08X\n", (int)rv );
                         }
@@ -174,7 +177,42 @@ static void displayValues( mozIRegistry *reg, mozIRegistry::Key root ) {
                         // Print name:
                         printf( "\t\t%s", name );
                         // Get info about this value.
-                        // Print value contents.
+                        mozIRegistry::ValueInfo info;
+                        rv = reg->GetValueInfo( root, name, &info );
+                        if ( rv == NS_OK ) {
+                            // Print value contents.
+                            switch ( info.type ) {
+                                case mozIRegistry::String: {
+                                        char *value;
+                                        rv = reg->GetString( root, name, &value );
+                                        if ( rv == NS_OK ) {
+                                            printString( value, strlen(name) );
+                                            PR_Free( value );
+                                        } else {
+                                            printf( "\t Error getting string value, rv=0x%08X", (int)rv );
+                                        }
+                                    }
+                                    break;
+
+                                case mozIRegistry::Int32:
+                                    printf( "\t= Int32" );
+                                    break;
+
+                                case mozIRegistry::Bytes:
+                                    printf( "\t= Bytes" );
+                                    break;
+
+                                case mozIRegistry::File:
+                                    printf( "\t= File (?)" );
+                                    break;
+
+                                default:
+                                    printf( "\t= ? (unknown type=0x%02X)", (int)info.type );
+                                    break;
+                            }
+                        } else {
+                            printf( "\t= ? (error getting value, rv=0x%08X)", (int)rv );
+                        }
                         printf("\n");
                     } else {
                         printf( "Error getting value name, rv=0x%08X\n", (int)rv );
@@ -205,5 +243,11 @@ static void displayValues( mozIRegistry *reg, mozIRegistry::Key root ) {
     } else {
         printf( "\t\tError enumerating values, rv=0x%08X\n", (int)rv );
     }
+    return;
+}
+
+static void printString( const char *value, int indent ) {
+    // For now, just dump contents.
+    printf( "\t = %s", value );
     return;
 }
