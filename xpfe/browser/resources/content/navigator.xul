@@ -169,14 +169,16 @@ Contributor(s): ______________________________________. -->
                  onblur="URLBarBlurHandler(event);">
           <deck id="page-proxy-deck">
             <image id="page-proxy-button"
-                   ondraggesture="PageProxyDragGesture(event);"/>
+                   ondraggesture="PageProxyDragGesture(event);"
+                   tooltiptext="&proxyIcon.tooltip;"/>
             <image id="page-proxy-favicon" validate="never"
                    ondraggesture="PageProxyDragGesture(event);"
                    onload="this.parentNode.selectedIndex = 1;
                            event.stopPropagation();
                            event.preventBubble();
                            HandleBookmarkIcon(this.src, true);"
-                   onerror="gBrowser.addToMissedIconCache(this.src); HandleBookmarkIcon(this.src, false);"/>
+                   onerror="gBrowser.addToMissedIconCache(this.src); HandleBookmarkIcon(this.src, false);"
+                   tooltiptext="&proxyIcon.tooltip;"/>
           </deck>
 
           <menupopup id="ubhist-popup" class="autocomplete-history-popup"
