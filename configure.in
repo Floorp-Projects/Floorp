@@ -2246,9 +2246,11 @@ dnl Assume life sucks
 MOZ_MONOLITHIC_TOOLKIT=1
 
 dnl The following are the only platforms I tested  -ramiro
+dnl OpenVMS added by Colin Blake
 case "$target" in
     *-*-linux*)   MOZ_MONOLITHIC_TOOLKIT= ;;
     *-*-solaris*) MOZ_MONOLITHIC_TOOLKIT= ;;
+    *-openvms*)   MOZ_MONOLITHIC_TOOLKIT= ;;
 esac
 
 
