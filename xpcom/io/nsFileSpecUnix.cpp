@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include "nsError.h"
+#include "prio.h"   /* for PR_Rename */
 
 #if defined(SCO_SV)
 #define _SVID3  /* for statvfs.h */
