@@ -19,6 +19,7 @@
 # Contributor(s): 
 #   Hubbie Shaw
 #   Doug Turner <dougt@netscape.com>
+#   Terry Hayes <thayes@netscape.com>
 # 
 
 MODULE = psmglue
@@ -36,6 +37,7 @@ XPIDLSRCS = \
 	nsISecureBrowserUI.idl \
     nsIPSMSocketInfo.idl \
 	nsISSLSocketProvider.idl \
+	nsISecretDecoderRing.idl \
 	$(NULL)
 
 PREF_JS_EXPORTS	= $(srcdir)/psm-glue.js
