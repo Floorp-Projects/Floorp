@@ -973,6 +973,7 @@ public:
    * Find the closest ancestor (excluding |this| !) that has a view
    */
   nsIFrame* GetAncestorWithView() const;
+  virtual nsIFrame* GetAncestorWithViewExternal() const;
 
   /**
    * Returns the offset from this frame to the closest geometric parent that
@@ -1272,7 +1273,7 @@ public:
   nsresult SetView(nsIPresContext* aPresContext, nsIView* aView) { return SetView(aView); }
   nsIView* GetClosestView(nsIPresContext* aPresContext) const { return GetClosestView(); }
   nsresult GetParentWithView(nsIPresContext* aPresContext, nsIFrame** aParent) const {
-    *aParent = GetAncestorWithView();
+    *aParent = GetAncestorWithViewExternal();
     return NS_OK;
   }
   PRBool AreAncestorViewsVisible(nsIPresContext* aPresContext) const {

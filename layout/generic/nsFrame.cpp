@@ -2460,6 +2460,11 @@ nsIFrame::SetView(nsIView* aView)
   return NS_OK;
 }
 
+nsIFrame* nsIFrame::GetAncestorWithViewExternal() const
+{
+  return GetAncestorWithView();
+}
+
 // Find the first geometric parent that has a view
 nsIFrame* nsIFrame::GetAncestorWithView() const
 {
