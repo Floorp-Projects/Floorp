@@ -33,9 +33,12 @@ public:
 
   // nsIEventQueue interface...
 	NS_IMETHOD_(PRStatus) PostEvent(PLEvent* aEvent);
-	NS_IMETHOD PostSynchronousEvent(PLEvent* aEvent);
+	NS_IMETHOD PostSynchronousEvent(PLEvent* aEvent, void** aResult);
+
   NS_IMETHOD ProcessPendingEvents();
-	NS_IMETHOD EventAvailable(PRBool& aResult);
+	NS_IMETHOD EventLoop();
+
+  NS_IMETHOD EventAvailable(PRBool& aResult);
 	NS_IMETHOD GetEvent(PLEvent** aResult);
 
   NS_IMETHOD_(PRInt32) GetEventQueueSelectFD();
