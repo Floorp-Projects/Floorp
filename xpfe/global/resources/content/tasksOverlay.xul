@@ -84,7 +84,7 @@
         </menupopup>
       </menu>
 
-      <toolbar id="taskbar" chromeclass="status" persist="collapsed">
+      <toolbar id="taskbar" class="chromeclass-status" persist="collapsed">
         <box id="taskButtons" align="horizontal">
           <titledbutton class="toolbar-flat taskbutton" align="left" id="mini-nav" value="" onclick="toNavigator();"/>
           <titledbutton class="toolbar-flat taskbutton" align="left" id="mini-mail" value="" onclick="toMessengerWindow()"/>

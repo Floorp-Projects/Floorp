@@ -40,21 +40,24 @@
     </content>
   </binding>
 
-  <binding id="menusOnMenuBar">
+  <binding id="menu-menubar">
+    <content excludes="template,observes,menupopup">
+      <xul:text class="menubar-text" inherits="value,accesskey,crop" crop="right"/>
+    </content>
+  </binding>
+
+  <binding id="menu-menubar-iconic">
     <content excludes="template,observes,menupopup">
       <xul:image class="menubar-left"/>
       <xul:text class="menubar-text" inherits="value,accesskey,crop" crop="right"/>
     </content>
   </binding>
 
-  <binding id="menus">
+  <binding id="menu">
     <content autostretch="never" excludes="template,observes,menupopup">
-      <xul:box class="menu-left" orient="vertical" autostretch="never">
-        <xul:image/>
-      </xul:box>
       <xul:text class="menu-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
       <xul:text class="menu-accel" inherits="acceltext:value"/>
-      <xul:box orient="vertical" autostretch="never" class="menu-right">
+      <xul:box orient="vertical" autostretch="never" class="menu-right" inherits="menuactive,disabled">
         <xul:image/>
       </xul:box>
     </content>
@@ -63,6 +66,49 @@
                             onget="return this.getAttribute('data');"/>
     </interface>  
   </binding>
+
+  <binding id="menuitem">
+    <content autostretch="never" excludes="template,observes,menupopup">
+      <xul:text class="menu-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
+      <xul:text class="menu-accel" inherits="acceltext:value"/>
+    </content>
+    <interface>
+      <property name="data" onset="this.setAttribute('data',val); return val;"
+                            onget="return this.getAttribute('data');"/>
+    </interface>  
+  </binding>
+
+  <binding id="menuitem-iconic">
+    <content autostretch="never" excludes="template,observes,menupopup">
+      <xul:box class="menu-iconic-left" orient="vertical" autostretch="never" inherits="selected,menuactive,disabled">
+        <xul:image/>
+      </xul:box>
+      <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
+      <xul:text class="menu-iconic-accel" inherits="acceltext:value"/>
+    </content>
+    <interface>
+      <property name="data" onset="this.setAttribute('data',val); return val;"
+                            onget="return this.getAttribute('data');"/>
+    </interface>  
+  </binding>
+
+  <binding id="menu-iconic">
+    <content autostretch="never" excludes="template,observes,menupopup">
+      <xul:box class="menu-iconic-left" orient="vertical" autostretch="never">
+        <xul:image/>
+      </xul:box>
+      <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
+      <xul:text class="menu-iconic-accel" inherits="acceltext:value"/>
+      <xul:box orient="vertical" autostretch="never" class="menu-right" inherits="menuactive,disabled">
+        <xul:image/>
+      </xul:box>
+    </content>
+    <interface>
+      <property name="data" onset="this.setAttribute('data',val); return val;"
+                            onget="return this.getAttribute('data');"/>
+    </interface>  
+  </binding>
+
 
   <binding id="menulist">
     <content excludes="template,observes,menupopup">
