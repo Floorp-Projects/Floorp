@@ -98,14 +98,20 @@ public:
 
 protected:
   nsresult GetAccessInfoEntry(const char* aKey, AccessInfoEntry** aEntry);
-  nsresult GetDocument(const char* aDeclFilePath, nsIDOMDocument** aDocument);
+  nsresult GetDocument(const nsACString& aDeclFilePath,
+                       nsIDOMDocument** aDocument);
   nsresult GetCodebaseURI(nsIURI** aCodebase);
-  nsresult CreateEntry(const char* aKey, const PRBool aIsDelegated, AccessInfoEntry** aEntry);
-  nsresult CreateEntry(nsIDOMDocument* aDocument, const PRBool aIsDelegated, AccessInfoEntry** aAccessInfoEntry);
-  nsresult CreateEntry(nsIDOMNodeList* aAllowList, AccessInfoEntry** aAccessInfoEntry);
-  nsresult CreateEntry(const PRInt32 aFlags, AccessInfoEntry** aAccessInfoEntry);
+  nsresult CreateEntry(const char* aKey, const PRBool aIsDelegated,
+                       AccessInfoEntry** aEntry);
+  nsresult CreateEntry(nsIDOMDocument* aDocument, const PRBool aIsDelegated,
+                       AccessInfoEntry** aAccessInfoEntry);
+  nsresult CreateEntry(nsIDOMNodeList* aAllowList,
+                       AccessInfoEntry** aAccessInfoEntry);
+  nsresult CreateEntry(const PRInt32 aFlags,
+                       AccessInfoEntry** aAccessInfoEntry);
   nsresult CreateDelegatedEntry(AccessInfoEntry** aAccessInfoEntry);
-  nsresult CheckAccess(AccessInfoEntry* aAccessInfoEntry, const nsAString& aRequestType, PRBool* aAccessGranted);
+  nsresult CheckAccess(AccessInfoEntry* aAccessInfoEntry,
+                       const nsAString& aRequestType, PRBool* aAccessGranted);
   nsresult ValidateDocument(nsIDOMDocument* aDocument, PRBool* aIsValid);
   nsresult IsPublicService(const char* aHost, PRBool* aReturn);
   

@@ -224,7 +224,7 @@ nsPolicyReference::SetupPolicyListener(nsIPolicyListener* aListener)
 }
 
 nsresult
-nsPolicyReference::Load(const char* aURI)
+nsPolicyReference::Load(const nsACString& aURI)
 {
   NS_ASSERTION(aURI, "no uri to load");
 
@@ -240,10 +240,12 @@ nsPolicyReference::Load(const char* aURI)
     target->AddEventListener(NS_LITERAL_STRING("load"), this, PR_FALSE);
   }
 
-  result = mXMLHttpRequest->OpenRequest("GET", aURI, PR_TRUE, nsnull, nsnull);
+  const nsAString& empty = EmptyString();
+  result = mXMLHttpRequest->OpenRequest(NS_LITERAL_CSTRING("GET"),
+                                        aURI, PR_TRUE, empty, empty);
   NS_ENSURE_SUCCESS(result, result);
    
-  mXMLHttpRequest->OverrideMimeType("text/xml");
+  mXMLHttpRequest->OverrideMimeType(NS_LITERAL_CSTRING("text/xml"));
 
   return mXMLHttpRequest->Send(nsnull);
 

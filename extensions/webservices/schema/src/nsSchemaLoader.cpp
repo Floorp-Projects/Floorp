@@ -856,15 +856,15 @@ nsSchemaLoader::Load(const nsAString& schemaURI,
     return rv;
   }
 
-  rv = request->OpenRequest("GET",
-                            spec.get(),
-                            PR_FALSE, nsnull, nsnull);
+  const nsAString& empty = EmptyString();
+  rv = request->OpenRequest(NS_LITERAL_CSTRING("GET"), spec, PR_FALSE, empty,
+                            empty);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   // Force the mimetype of the returned stream to be xml.
-  rv = request->OverrideMimeType("text/xml");
+  rv = request->OverrideMimeType(NS_LITERAL_CSTRING("text/xml"));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -912,15 +912,15 @@ nsSchemaLoader::LoadAsync(const nsAString& schemaURI,
     return rv;
   }
 
-  rv = request->OpenRequest("GET",
-                            spec.get(),
-                            PR_TRUE, nsnull, nsnull);
+  const nsAString& empty = EmptyString();
+  rv = request->OpenRequest(NS_LITERAL_CSTRING("GET"), spec, PR_TRUE, empty,
+                            empty);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   // Force the mimetype of the returned stream to be xml.
-  rv = request->OverrideMimeType("text/xml");
+  rv = request->OverrideMimeType(NS_LITERAL_CSTRING("text/xml"));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1163,9 +1163,7 @@ nsSchemaLoader::ProcessElement(nsSchema* aSchema,
     nsSchemaElement* elementInst;
     const nsAString& empty = EmptyString();
 
-
-    rv = aElement->GetAttributeNS(empty, NS_LITERAL_STRING("name"), 
-                                  value);
+    rv = aElement->GetAttributeNS(empty, NS_LITERAL_STRING("name"), value);
     
     if (NS_FAILED(rv))
       return rv;
@@ -1190,7 +1188,7 @@ nsSchemaLoader::ProcessElement(nsSchema* aSchema,
                                   fixedValue);
     if (NS_FAILED(rv))
       return rv;
-    
+
     elementInst->SetConstraints(defaultValue, fixedValue);
 
     rv = aElement->GetAttributeNS(empty, NS_LITERAL_STRING("nillable"), value);

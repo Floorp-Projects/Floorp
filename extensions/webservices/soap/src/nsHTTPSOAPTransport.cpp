@@ -71,13 +71,12 @@ NS_IMPL_ISUPPORTS1_CI(nsHTTPSOAPTransport, nsISOAPTransport)
 #define DEBUG_DUMP_DOCUMENT(message,doc) \
   { \
           nsresult rcc;\
-          nsXPIDLString serial;\
+          nsAutoString serial;\
           nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rcc));\
           if (NS_FAILED(rcc)) return rcc;  \
-          rcc = serializer->SerializeToString(doc, getter_Copies(serial));\
+          rcc = serializer->SerializeToString(doc, serial);\
           if (NS_FAILED(rcc)) return rcc;\
-          nsAutoString result(serial);\
-          printf(message ":\n%s\n", NS_ConvertUCS2toUTF8(result).get());\
+          printf(message ":\n%s\n", NS_ConvertUTF16toUTF8(serial).get());\
   }
 //  Availble from the debugger...
 nsresult DebugPrintDOM(nsIDOMNode * node)
@@ -339,11 +338,14 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall, nsISOAPResponse
   if (NS_FAILED(rv))
     return rv;
 
-  rv = request->OverrideMimeType("text/xml");
+  rv = request->OverrideMimeType(NS_LITERAL_CSTRING("text/xml"));
   if (NS_FAILED(rv))
     return rv;
-  rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(),
-                            PR_FALSE, nsnull, nsnull);
+
+  const nsAString& empty = EmptyString();
+  rv = request->OpenRequest(NS_LITERAL_CSTRING("POST"),
+                            NS_ConvertUTF16toUTF8(uri), PR_FALSE, empty,
+                            empty);
   if (NS_FAILED(rv))
     return rv;
 
@@ -360,8 +362,8 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall, nsISOAPResponse
     if (action.IsEmpty())
       action = NS_LITERAL_STRING(" ");
 
-    rv = request->SetRequestHeader("SOAPAction",
-                                   NS_ConvertUCS2toUTF8(action).get());
+    rv = request->SetRequestHeader(NS_LITERAL_CSTRING("SOAPAction"),
+                                   NS_ConvertUTF16toUTF8(action));
     if (NS_FAILED(rv))
       return rv;
   }
@@ -547,11 +549,13 @@ NS_IMETHODIMP
     return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_TRANSPORT_URI", "No transport URI was specified.");
 
   DEBUG_DUMP_DOCUMENT("Asynchronous Request", messageDocument)
-  rv = request->OverrideMimeType("text/xml");
+  rv = request->OverrideMimeType(NS_LITERAL_CSTRING("text/xml"));
   if (NS_FAILED(rv))
     return rv;
-  rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(),
-                            PR_TRUE, nsnull, nsnull);
+
+  const nsAString& empty = EmptyString();
+  rv = request->OpenRequest(NS_LITERAL_CSTRING("POST"),
+                            NS_ConvertUTF16toUTF8(uri), PR_TRUE, empty, empty);
   if (NS_FAILED(rv))
     return rv;
 
@@ -569,8 +573,8 @@ NS_IMETHODIMP
     if (action.IsEmpty())
       action = NS_LITERAL_STRING(" ");
 
-    rv = request->SetRequestHeader("SOAPAction",
-                                   NS_ConvertUCS2toUTF8(action).get());
+    rv = request->SetRequestHeader(NS_LITERAL_CSTRING("SOAPAction"),
+                                   NS_ConvertUTF16toUTF8(action));
     if (NS_FAILED(rv))
       return rv;
   }

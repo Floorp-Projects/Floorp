@@ -70,7 +70,7 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent  *aEvent);
 
 protected:
-  nsresult Load(const char* aURI);
+  nsresult Load(const nsACString& aURI);
   nsresult ProcessPolicyReferenceFile(nsIDOMDocument* aDocument, char** aLocation);
   nsresult ProcessPolicyRefElement(nsIDOMDocument* aDocument, nsIDOMNodeList* aNodeList, nsAString& aPolicyLocation);
   nsresult ProcessPolicyRefChildren(nsIDOMNode* aNode);

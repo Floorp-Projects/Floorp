@@ -377,14 +377,12 @@ nsXMLHttpRequest::DetectCharset(nsACString& aCharset)
 }
 
 nsresult
-nsXMLHttpRequest::ConvertBodyToText(PRUnichar **aOutBuffer)
+nsXMLHttpRequest::ConvertBodyToText(nsAString& aOutBuffer)
 {
   // This code here is basically a copy of a similar thing in
   // nsScanner::Append(const char* aBuffer, PRUint32 aLen).
   // If we get illegal characters in the input we replace 
   // them and don't just fail.
-
-  *aOutBuffer = nsnull;
 
   PRInt32 dataLen = mResponseBody.Length();
   if (!dataLen)
@@ -404,13 +402,13 @@ nsXMLHttpRequest::ConvertBodyToText(PRUnichar **aOutBuffer)
   }
 
   if (dataCharset.Equals(NS_LITERAL_CSTRING("ASCII"))) {
-    *aOutBuffer = ToNewUnicode(nsDependentCString(mResponseBody.get(),dataLen));
-    if (!*aOutBuffer)
-      return NS_ERROR_OUT_OF_MEMORY;
+    CopyASCIItoUTF16(mResponseBody, aOutBuffer);
+
     return NS_OK;
   }
 
-  nsCOMPtr<nsICharsetConverterManager> ccm(do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID,&rv));
+  nsCOMPtr<nsICharsetConverterManager> ccm =
+    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return rv;
 
@@ -464,31 +462,24 @@ nsXMLHttpRequest::ConvertBodyToText(PRUnichar **aOutBuffer)
     }
   } while ( NS_FAILED(rv) && (dataLen > 0) );
 
-  outBuffer[totalChars] = '\0';
-  *aOutBuffer = outBuffer;
+  aOutBuffer.Assign(outBuffer, totalChars);
 
   return NS_OK;
 }
 
-/* readonly attribute wstring responseText; */
-NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(PRUnichar **aResponseText)
+/* readonly attribute AString responseText; */
+NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(nsAString& aResponseText)
 {
-  NS_ENSURE_ARG_POINTER(aResponseText);
-  *aResponseText = nsnull;
-  
+  nsresult rv = NS_OK;
+
+  aResponseText.Truncate();
+
   if (mState & (XML_HTTP_REQUEST_COMPLETED |
                 XML_HTTP_REQUEST_INTERACTIVE)) {
-    // First check if we can represent the data as a string - if it contains
-    // nulls we won't try. 
-    if (mResponseBody.FindChar('\0') >= 0)
-      return NS_OK;
-
-    nsresult rv = ConvertBodyToText(aResponseText);
-    if (NS_FAILED(rv))
-      return rv;
+    rv = ConvertBodyToText(aResponseText);
   }
 
-  return NS_OK;
+  return rv;
 }
 
 /* readonly attribute unsigned long status; */
@@ -505,24 +496,21 @@ nsXMLHttpRequest::GetStatus(PRUint32 *aStatus)
   return NS_OK;
 }
 
-/* readonly attribute string statusText; */
+/* readonly attribute AUTF8String statusText; */
 NS_IMETHODIMP 
-nsXMLHttpRequest::GetStatusText(char * *aStatusText)
+nsXMLHttpRequest::GetStatusText(nsACString& aStatusText)
 {
-  NS_ENSURE_ARG_POINTER(aStatusText);
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
 
-  *aStatusText = nsnull;
+  aStatusText.Truncate();
+
+  nsresult rv = NS_OK;
 
   if (httpChannel) {
-    nsCAutoString text;
-    nsresult rv = httpChannel->GetResponseStatusText(text);
-    if (NS_FAILED(rv)) return rv;
-    *aStatusText = ToNewCString(text);
-    return *aStatusText ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    rv = httpChannel->GetResponseStatusText(aStatusText);
   }
-  
-  return NS_OK;
+
+  return rv;
 }
 
 /* void abort (); */
@@ -572,24 +560,21 @@ nsXMLHttpRequest::GetAllResponseHeaders(char **_retval)
   return NS_OK;
 }
 
-/* string getResponseHeader (in string header); */
+/* ACString getResponseHeader (in AUTF8String header); */
 NS_IMETHODIMP 
-nsXMLHttpRequest::GetResponseHeader(const char *header, char **_retval)
+nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
+                                    nsACString& _retval)
 {
-  NS_ENSURE_ARG(header);
-  NS_ENSURE_ARG_POINTER(_retval);
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
+  nsresult rv = NS_OK;
 
-  *_retval = nsnull;
+  _retval.Truncate();
+
   if (httpChannel) {
-    nsCAutoString buf;
-    nsresult rv = httpChannel->GetResponseHeader(nsDependentCString(header), buf);
-    if (NS_FAILED(rv)) return rv;
-    *_retval = ToNewCString(buf);
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    rv = httpChannel->GetResponseHeader(header, _retval);
   }
-  
-  return NS_OK;
+
+  return rv;
 }
 
 nsresult 
@@ -610,25 +595,22 @@ nsXMLHttpRequest::GetLoadGroup(nsILoadGroup **aLoadGroup)
   return NS_OK;
 }
 
-nsresult 
-nsXMLHttpRequest::GetBaseURI(nsIURI **aBaseURI)
+nsIURI *
+nsXMLHttpRequest::GetBaseURI()
 {
-  NS_ENSURE_ARG_POINTER(aBaseURI);
-  *aBaseURI = nsnull;
-
   if (!mScriptContext) {
     mScriptContext = GetCurrentContext();
     if (!mScriptContext) {
-      return NS_OK;
+      return nsnull;
     }
   }
 
   nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
-  if (doc) {
-    NS_IF_ADDREF(*aBaseURI = doc->GetBaseURI());
+  if (!doc) {
+    nsnull;
   }
 
-  return NS_OK;
+  return doc->GetBaseURI();
 }
 
 nsresult
@@ -720,16 +702,16 @@ nsXMLHttpRequest::ClearEventListeners()
   mOnReadystatechangeListener = nsnull;
 }
 
-/* noscript void openRequest (in string method, in string url, in boolean async, in string user, in string password); */
-NS_IMETHODIMP 
-nsXMLHttpRequest::OpenRequest(const char *method, 
-                              const char *url, 
+/* noscript void openRequest (in AUTF8String method, in AUTF8String url, in boolean async, in AString user, in AString password); */
+NS_IMETHODIMP
+nsXMLHttpRequest::OpenRequest(const nsACString& method, 
+                              const nsACString& url, 
                               PRBool async, 
-                              const char *user, 
-                              const char *password)
+                              const nsAString& user, 
+                              const nsAString& password)
 {
-  NS_ENSURE_ARG(method);
-  NS_ENSURE_ARG(url);
+  NS_ENSURE_ARG(!method.IsEmpty());
+  NS_ENSURE_ARG(!url.IsEmpty());
   
   nsresult rv;
   nsCOMPtr<nsIURI> uri; 
@@ -760,15 +742,15 @@ nsXMLHttpRequest::OpenRequest(const char *method,
     mState &= ~XML_HTTP_REQUEST_ASYNC;
   }
 
-  rv = NS_NewURI(getter_AddRefs(uri), url, mBaseURI);
+  rv = NS_NewURI(getter_AddRefs(uri), url, nsnull, GetBaseURI());
   if (NS_FAILED(rv)) return rv;
 
-  if (user) {
+  if (!user.IsEmpty()) {
     nsCAutoString userpass;
-    userpass.Assign(user);
-    if (password) {
-      userpass.Append(":");
-      userpass.Append(password);
+    CopyUTF16toUTF8(user, userpass);
+    if (!password.IsEmpty()) {
+      userpass.Append(':');
+      AppendUTF16toUTF8(password, userpass);
     }
     uri->SetUserPass(userpass);
     authp = PR_TRUE;
@@ -790,7 +772,7 @@ nsXMLHttpRequest::OpenRequest(const char *method,
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
   if (httpChannel) {
-    rv = httpChannel->SetRequestMethod(nsDependentCString(method));
+    rv = httpChannel->SetRequestMethod(method);
   }
 
   ChangeState(XML_HTTP_REQUEST_OPENED);
@@ -798,16 +780,13 @@ nsXMLHttpRequest::OpenRequest(const char *method,
   return rv;
 }
 
-/* void open (in string method, in string url); */
+/* void open (in AUTF8String method, in AUTF8String url); */
 NS_IMETHODIMP 
-nsXMLHttpRequest::Open(const char *method, const char *url)
+nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
 {
-  NS_ENSURE_ARG(url);
-
   nsresult rv;
   PRBool async = PR_TRUE;
-  char* user = nsnull;
-  char* password = nsnull;
+  nsAutoString user, password;
 
   nsCOMPtr<nsIXPCNativeCallContext> cc;
   nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
@@ -828,10 +807,8 @@ nsXMLHttpRequest::Open(const char *method, const char *url)
     rv = cc->GetJSContext(&cx);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
-    GetBaseURI(getter_AddRefs(mBaseURI));
-
     nsCOMPtr<nsIURI> targetURI;
-    rv = NS_NewURI(getter_AddRefs(targetURI), url, mBaseURI);
+    rv = NS_NewURI(getter_AddRefs(targetURI), url, nsnull, GetBaseURI());
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIScriptSecurityManager> secMan = 
@@ -859,23 +836,23 @@ nsXMLHttpRequest::Open(const char *method, const char *url)
 
     if (argc > 2) {
       JSBool asyncBool;
-      JS_ValueToBoolean(cx, argv[2], &asyncBool);
+      ::JS_ValueToBoolean(cx, argv[2], &asyncBool);
       async = (PRBool)asyncBool;
 
       if (argc > 3) {
-        JSString* userStr;
+        JSString* userStr = ::JS_ValueToString(cx, argv[3]);
 
-        userStr = JS_ValueToString(cx, argv[3]);
         if (userStr) {
-          user = JS_GetStringBytes(userStr);
+          user.Assign((PRUnichar *)::JS_GetStringChars(userStr),
+                      ::JS_GetStringLength(userStr));
         }
 
         if (argc > 4) {
-          JSString* passwordStr;
+          JSString* passwordStr = JS_ValueToString(cx, argv[4]);
 
-          passwordStr = JS_ValueToString(cx, argv[4]);
           if (passwordStr) {
-            password = JS_GetStringBytes(passwordStr);
+            password.Assign((PRUnichar *)::JS_GetStringChars(passwordStr),
+                            ::JS_GetStringLength(passwordStr));
           }
         }
       }
@@ -968,11 +945,11 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
  */
 NS_METHOD
 nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
-                void* closure,
-                const char* fromRawSegment,
-                PRUint32 toOffset,
-                PRUint32 count,
-                PRUint32 *writeCount)
+                                   void* closure,
+                                   const char* fromRawSegment,
+                                   PRUint32 toOffset,
+                                   PRUint32 count,
+                                   PRUint32 *writeCount)
 {
   nsXMLHttpRequest* xmlHttpRequest = NS_STATIC_CAST(nsXMLHttpRequest*, closure);
   if (!xmlHttpRequest || !writeCount) {
@@ -1197,7 +1174,8 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   //     if there are no event listeners set and we are doing
   //     an asynchronous call.
 
-  // Ignore argument if method is GET, there is no point in trying to upload anything
+  // Ignore argument if method is GET, there is no point in trying to
+  // upload anything
   nsCAutoString method;
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
 
@@ -1212,7 +1190,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     PRUint16 dataType;
     rv = aBody->GetDataType(&dataType);
     if (NS_FAILED(rv)) 
-      return NS_ERROR_FAILURE;
+      return rv;
 
     switch (dataType) {
     case nsIDataType::VTYPE_INTERFACE:
@@ -1222,19 +1200,19 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
         nsID *iid;
         rv = aBody->GetAsInterface(&iid, getter_AddRefs(supports));
         if (NS_FAILED(rv)) 
-          return NS_ERROR_FAILURE;
-        if (iid) 
+          return rv;
+        if (iid)
           nsMemory::Free(iid);
 
         // document?
         nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(supports));
         if (doc) {
           nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv));
-          if (NS_FAILED(rv)) return NS_ERROR_FAILURE;  
-      
-          rv = serializer->SerializeToString(doc, getter_Copies(serial));
+          if (NS_FAILED(rv)) return rv;  
+
+          rv = serializer->SerializeToString(doc, serial);
           if (NS_FAILED(rv)) 
-            return NS_ERROR_FAILURE;
+            return rv;
         } else {
           // nsISupportsString?
           nsCOMPtr<nsISupportsString> wstr(do_QueryInterface(supports));
@@ -1282,20 +1260,20 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       rv = uploadChannel->SetUploadStream(postDataStream, EmptyCString(), -1);
       // Reset the method to its original value
       if (httpChannel) {
-          httpChannel->SetRequestMethod(method);
+        httpChannel->SetRequestMethod(method);
       }
     }
   }
 
   // Get and initialize a DOMImplementation
-  nsCOMPtr<nsIDOMDOMImplementation> implementation(do_CreateInstance(kIDOMDOMImplementationCID, &rv));
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  
-  if (mBaseURI) {
-    nsCOMPtr<nsIPrivateDOMImplementation> privImpl(do_QueryInterface(implementation));
-    if (privImpl) {
-      privImpl->Init(mBaseURI);
-    }
+  nsCOMPtr<nsIDOMDOMImplementation> implementation =
+    do_CreateInstance(kIDOMDOMImplementationCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIPrivateDOMImplementation> privImpl =
+    do_QueryInterface(implementation);
+  if (privImpl) {
+    privImpl->Init(GetBaseURI());
   }
 
   // Create an empty document from it (resets current document as well)
@@ -1356,7 +1334,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     if (modalEventQueue) {
       mEventQService->PopThreadEventQueue(modalEventQueue);
     }
-    return NS_ERROR_FAILURE;
+    return rv;
   }  
 
   // If we're synchronous, spin an event loop here and wait
@@ -1375,20 +1353,23 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   return NS_OK;
 }
 
-/* void setRequestHeader (in string header, in string value); */
+/* void setRequestHeader (in AUTF8String header, in AUTF8String value); */
 NS_IMETHODIMP 
-nsXMLHttpRequest::SetRequestHeader(const char *header, const char *value)
+nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
+                                   const nsACString& value)
 {
   if (!mChannel)             // open() initializes mChannel, and open()
     return NS_ERROR_FAILURE; // must be called before first setRequestHeader()
+
+  if (!IsASCII(header) || !IsASCII(value)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
 
   if (httpChannel) {
     // We need to set, not add to, the header.
-    return httpChannel->SetRequestHeader(nsDependentCString(header),
-                                         nsDependentCString(value),
-                                         PR_FALSE);
+    return httpChannel->SetRequestHeader(header, value, PR_FALSE);
   }
 
   return NS_OK;
@@ -1417,9 +1398,9 @@ nsXMLHttpRequest::GetReadyState(PRInt32 *aState)
   return NS_OK;
 }
 
-/* void   overrideMimeType(in string mimetype); */
+/* void   overrideMimeType(in AUTF8String mimetype); */
 NS_IMETHODIMP
-nsXMLHttpRequest::OverrideMimeType(const char* aMimeType)
+nsXMLHttpRequest::OverrideMimeType(const nsACString& aMimeType)
 {
   // XXX Should we do some validation here?
   mOverrideMimeType.Assign(aMimeType);

@@ -342,14 +342,16 @@ nsWSDLLoadRequest::LoadDefinition(const nsAString& aURI)
     return rv;
   }
 
-  rv = mRequest->OpenRequest("GET", NS_ConvertUCS2toUTF8(aURI).get(), !mIsSync,
-                             nsnull, nsnull);
+  const nsAString& empty = EmptyString();
+  rv = mRequest->OpenRequest(NS_LITERAL_CSTRING("GET"),
+                             NS_ConvertUTF16toUTF8(aURI), !mIsSync, empty,
+                             empty);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   // Force the mimetype of the returned stream to be xml.
-  rv = mRequest->OverrideMimeType("text/xml");
+  rv = mRequest->OverrideMimeType(NS_LITERAL_CSTRING("text/xml"));
   if (NS_FAILED(rv)) {
     return rv;
   }

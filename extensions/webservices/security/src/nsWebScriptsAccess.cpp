@@ -199,7 +199,7 @@ nsWebScriptsAccess::GetAccessInfoEntry(const char* aKey,
 }
 
 nsresult 
-nsWebScriptsAccess::GetDocument(const char* aDeclFilePath,
+nsWebScriptsAccess::GetDocument(const nsACString& aDeclFilePath,
                                 nsIDOMDocument** aDocument)
 {
   nsresult rv = NS_OK;
@@ -208,11 +208,13 @@ nsWebScriptsAccess::GetDocument(const char* aDeclFilePath,
     mRequest = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
- 
-  rv = mRequest->OpenRequest("GET", aDeclFilePath, PR_FALSE, nsnull, nsnull);
+
+  const nsAString& empty = EmptyString();
+  rv = mRequest->OpenRequest(NS_LITERAL_CSTRING("GET"), aDeclFilePath,
+                             PR_FALSE, empty, empty);
   NS_ENSURE_SUCCESS(rv, rv);
     
-  rv = mRequest->OverrideMimeType("text/xml");
+  rv = mRequest->OverrideMimeType(NS_LITERAL_CSTRING("text/xml"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mRequest->Send(0);
@@ -264,8 +266,8 @@ nsWebScriptsAccess::CreateEntry(const char* aKey,
   // it. Record the extracted info. for this session
   nsCOMPtr<nsIDOMDocument> document;
   nsresult rv = 
-    GetDocument(PromiseFlatCString(nsDependentCString(aKey) + 
-                NS_LITERAL_CSTRING("web-scripts-access.xml")).get(),
+    GetDocument(nsDependentCString(aKey) +
+                NS_LITERAL_CSTRING("web-scripts-access.xml"),
                 getter_AddRefs(document));
   NS_ENSURE_SUCCESS(rv, rv);
   if (document) {
