@@ -153,6 +153,8 @@ interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
     nsIInterfaceInfo FindInterfaceWithName(in JSVal nameID);
 
     void debugDump(in short depth);
+
+    void refreshPrototype();
 };
 
 [uuid(BED52030-BCA6-11d2-BA79-00805F8A5DD7)]

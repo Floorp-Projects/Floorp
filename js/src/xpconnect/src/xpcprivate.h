@@ -135,6 +135,7 @@
 //#define DEBUG_stats_jband 1
 //#define XPC_REPORT_NATIVE_INTERFACE_AND_SET_FLUSHING
 //#define XPC_REPORT_JSCLASS_FLUSHING
+//#define XPC_TRACK_AUTOMARKINGPTR_STATS
 #endif
 
 /***************************************************************************/
@@ -174,17 +175,18 @@ void DEBUG_CheckWrapperThreadSafety(const XPCWrappedNative* wrapper);
 /***************************************************************************/
 // default initial sizes for maps (hashtables)
 
-#define XPC_CONTEXT_MAP_SIZE             16
-#define XPC_JS_MAP_SIZE                  64
-#define XPC_JS_CLASS_MAP_SIZE            64
+#define XPC_CONTEXT_MAP_SIZE                16
+#define XPC_JS_MAP_SIZE                     64
+#define XPC_JS_CLASS_MAP_SIZE               64
 
-#define XPC_NATIVE_MAP_SIZE              64
-#define XPC_NATIVE_PROTO_MAP_SIZE        16
-#define XPC_DYING_NATIVE_PROTO_MAP_SIZE  16
-#define XPC_NATIVE_INTERFACE_MAP_SIZE    64
-#define XPC_NATIVE_SET_MAP_SIZE          64
-#define XPC_NATIVE_JSCLASS_MAP_SIZE      32
-#define XPC_THIS_TRANSLATOR_MAP_SIZE      8
+#define XPC_NATIVE_MAP_SIZE                 64
+#define XPC_NATIVE_PROTO_MAP_SIZE           16
+#define XPC_DYING_NATIVE_PROTO_MAP_SIZE     16
+#define XPC_DETACHED_NATIVE_PROTO_MAP_SIZE  32
+#define XPC_NATIVE_INTERFACE_MAP_SIZE       64
+#define XPC_NATIVE_SET_MAP_SIZE             64
+#define XPC_NATIVE_JSCLASS_MAP_SIZE         32
+#define XPC_THIS_TRANSLATOR_MAP_SIZE         8
 
 /***************************************************************************/
 // data declarations...
@@ -469,6 +471,9 @@ public:
     XPCWrappedNativeProtoMap* GetDyingWrappedNativeProtoMap() const
         {return mDyingWrappedNativeProtoMap;}
 
+    XPCWrappedNativeProtoMap* GetDetachedWrappedNativeProtoMap() const
+        {return mDetachedWrappedNativeProtoMap;}
+
     XPCLock* GetMapLock() const {return mMapLock;}
 
     XPCContext* GetXPCContext(JSContext* cx);
@@ -528,6 +533,8 @@ public:
 
     void DebugDump(PRInt16 depth);
 
+    void SystemIsBeingShutDown(XPCCallContext* ccx);
+
     ~XPCJSRuntime();
 
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
@@ -573,6 +580,7 @@ private:
     IID2ThisTranslatorMap*   mThisTranslatorMap;
     XPCNativeScriptableSharedMap* mNativeScriptableSharedMap;
     XPCWrappedNativeProtoMap* mDyingWrappedNativeProtoMap;
+    XPCWrappedNativeProtoMap* mDetachedWrappedNativeProtoMap;
     XPCLock* mMapLock;
     nsVoidArray mWrappedJSToReleaseArray;
     nsVoidArray mNativesToReleaseArray;
@@ -904,6 +912,8 @@ public:
 
     JSObject*
     GetPrototypeJSObject() const {return mPrototypeJSObject;}
+
+    void RemoveWrappedNativeProtos();
 
     static XPCWrappedNativeScope*
     FindInJSObjectScope(XPCCallContext& ccx, JSObject* obj,
@@ -2890,6 +2900,8 @@ public:
          mTLS = nsnull;
         }
 
+    AutoMarkingPtr* GetNext() {return mNext;}
+    
     virtual void MarkBeforeJSFinalize(JSContext* cx) = 0;
     virtual void MarkAfterJSFinalize() = 0;
 

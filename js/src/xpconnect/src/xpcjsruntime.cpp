@@ -201,6 +201,17 @@ DyingProtoKiller(JSDHashTable *table, JSDHashEntryHdr *hdr,
     return JS_DHASH_REMOVE;
 }
 
+JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+DetachedWrappedNativeProtoMarker(JSDHashTable *table, JSDHashEntryHdr *hdr,
+                                 uint32 number, void *arg)
+{
+    XPCWrappedNativeProto* proto = 
+        (XPCWrappedNativeProto*)((JSDHashEntryStub*)hdr)->key;
+
+    proto->Mark();
+    return JS_DHASH_NEXT;
+}
+
 // static
 JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
 {
@@ -294,6 +305,9 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
 
                 // Do the marking...
                 XPCWrappedNativeScope::MarkAllWrappedNativesAndProtos();
+
+                self->mDetachedWrappedNativeProtoMap->
+                    Enumerate(DetachedWrappedNativeProtoMarker, nsnull);
 
                 // Mark the sets used in the call contexts. There is a small
                 // chance that a wrapper's set will change *while* a call is
@@ -555,6 +569,24 @@ WrappedJSShutdownMarker(JSDHashTable *table, JSDHashEntryHdr *hdr,
     return JS_DHASH_NEXT;
 }
 
+JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+DetachedWrappedNativeProtoShutdownMarker(JSDHashTable *table, JSDHashEntryHdr *hdr,
+                                         uint32 number, void *arg)
+{
+    XPCWrappedNativeProto* proto = 
+        (XPCWrappedNativeProto*)((JSDHashEntryStub*)hdr)->key;
+
+    proto->SystemIsBeingShutDown(*((XPCCallContext*)arg));
+    return JS_DHASH_NEXT;
+}
+
+void XPCJSRuntime::SystemIsBeingShutDown(XPCCallContext* ccx)
+{
+    if(mDetachedWrappedNativeProtoMap)
+        mDetachedWrappedNativeProtoMap->
+            Enumerate(DetachedWrappedNativeProtoShutdownMarker, ccx);
+}
+
 XPCJSRuntime::~XPCJSRuntime()
 {
 #ifdef XPC_DUMP_AT_SHUTDOWN
@@ -674,6 +706,16 @@ XPCJSRuntime::~XPCJSRuntime()
         delete mDyingWrappedNativeProtoMap;
     }
 
+    if(mDetachedWrappedNativeProtoMap)
+    {
+#ifdef XPC_DUMP_AT_SHUTDOWN
+        uint32 count = mDetachedWrappedNativeProtoMap->Count();
+        if(count)
+            printf("deleting XPCJSRuntime with %d live detached XPCWrappedNativeProto\n", (int)count);
+#endif
+        delete mDetachedWrappedNativeProtoMap;
+    }
+
     // unwire the readable/JSString sharing magic
     XPCStringConvert::ShutdownDOMStringFinalizer();
 }
@@ -692,6 +734,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
    mThisTranslatorMap(IID2ThisTranslatorMap::newMap(XPC_THIS_TRANSLATOR_MAP_SIZE)),
    mNativeScriptableSharedMap(XPCNativeScriptableSharedMap::newMap(XPC_NATIVE_JSCLASS_MAP_SIZE)),
    mDyingWrappedNativeProtoMap(XPCWrappedNativeProtoMap::newMap(XPC_DYING_NATIVE_PROTO_MAP_SIZE)),
+   mDetachedWrappedNativeProtoMap(XPCWrappedNativeProtoMap::newMap(XPC_DETACHED_NATIVE_PROTO_MAP_SIZE)),
    mMapLock(XPCAutoLock::NewLock("XPCJSRuntime::mMapLock")),
    mWrappedJSToReleaseArray(),
    mNativesToReleaseArray(),

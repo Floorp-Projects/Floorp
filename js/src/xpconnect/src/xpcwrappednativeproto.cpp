@@ -115,8 +115,15 @@ XPCWrappedNativeProto::JSProtoObjectFinalized(JSContext *cx, JSObject *obj)
     // Map locking is not necessary since we are running gc.
 
     if(IsShared())
-        GetScope()->GetWrappedNativeProtoMap()->Remove(mClassInfo);
+    {
+        // Only remove this proto from the map if it is the one in the map.
+        ClassInfo2WrappedNativeProtoMap* map = 
+            GetScope()->GetWrappedNativeProtoMap();
+        if(map->Find(mClassInfo) == this)
+            map->Remove(mClassInfo);
+    }
 
+    GetRuntime()->GetDetachedWrappedNativeProtoMap()->Remove(this);
     GetRuntime()->GetDyingWrappedNativeProtoMap()->Add(this);
 
     mJSProtoObject = nsnull;
