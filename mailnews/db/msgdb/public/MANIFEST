@@ -24,5 +24,4 @@ nsNewsDatabase.h
 nsDBFolderInfo.h
 nsMsgHdr.h
 nsIDBChangeListener.h
-nsIDBFolderInfo.h
 nsMsgThread.h
