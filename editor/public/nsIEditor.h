@@ -70,5 +70,9 @@ public:
   virtual nsresult GetProperties(PROPERTIES &aProperty)=0;
 };
 
+/*Factory Method to create an Editor*/
+
+extern nsresult NS_InitEditor(nsIEditor **, nsIDOMDocument *);
+
 #endif //nsIEditor_h__
 

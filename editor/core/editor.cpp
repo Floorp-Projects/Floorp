@@ -29,15 +29,56 @@ Editor::Editor()
 }
 
 
+static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
+static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
+static NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
 
 Editor::~Editor()
 {
-  //the autopointers will clear themselves up.
+  //the autopointers will clear themselves up. 
+  //but we need to also remove the listeners or we have a leak
+  COM_auto_ptr<nsIDOMEventReceiver> erP;
+  nsresult t_result = mDomInterfaceP->QueryInterface(kIDOMEventReceiverIID, func_AddRefs(erP));
+  if (NS_SUCCEEDED( t_result )) 
+  {
+    erP->RemoveEventListener(mKeyListenerP, kIDOMKeyListenerIID);
+    erP->RemoveEventListener(mMouseListenerP, kIDOMMouseListenerIID);
+  }
+  else
+    assert(0);
 }
 
 
 
 //BEGIN nsIEditor interface implementations
+
+
+NS_IMPL_ADDREF(Editor)
+
+NS_IMPL_RELEASE(Editor)
+
+
+
+nsresult
+Editor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  static NS_DEFINE_IID(kIEditorIID, NS_IEDITOR_IID);
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*)(nsISupports*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIEditorIID)) {
+    *aInstancePtr = (void*)(nsIEditor*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
 
 
 
@@ -48,10 +89,6 @@ Editor::Init(nsIDOMDocument *aDomInterface)
     return NS_ERROR_ILLEGAL_VALUE;
 
   mDomInterfaceP = aDomInterface;
-
-  static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
-  static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
-  static NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
 
   nsresult t_result = NS_NewEditorKeyListener(func_AddRefs(mKeyListenerP), this);
   if (NS_OK != t_result)
@@ -101,5 +138,35 @@ Editor::MouseClick(int aX,int aY)
 }
 //END Editor Calls from public
 
+
+
 //BEGIN Editor Private methods
 //END Editor Private methods
+
+
+
+//BEGIN FACTORY METHODS
+
+
+
+nsresult 
+NS_InitEditor(nsIEditor ** aInstancePtrResult, nsIDOMDocument *aDomDoc)
+{
+  Editor* editor = new Editor();
+  if (NULL == editor) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsresult result = editor->Init(aDomDoc);
+  if (NS_SUCCEEDED(result))
+  {
+    static NS_DEFINE_IID(kIEditorIID, NS_IEDITOR_IID);
+
+    return editor->QueryInterface(kIEditorIID, (void **) aInstancePtrResult);   
+  }
+  else
+    return result;
+}
+ 
+
+
+//END FACTORY METHODS

@@ -42,8 +42,12 @@ public:
   ~Editor();
 
 /*BEGIN nsIEditor interfaces*/
-  /*see the nsIEditor for more details*/
-  virtual nsresult Init(nsIDOMDocument *aDomInterface);
+/*see the nsIEditor for more details*/
+  
+  /*interfaces for addref and release and queryinterface*/
+  NS_DECL_ISUPPORTS
+
+    virtual nsresult Init(nsIDOMDocument *aDomInterface);
 
   virtual nsresult GetDomInterface(nsIDOMDocument **aDomInterface){*aDomInterface = mDomInterfaceP; return NS_OK;}
 
@@ -71,3 +75,7 @@ public:
 };
 
 
+/*
+factory method(s)
+*/
+nsresult NS_InitEditor(nsIEditor ** aInstancePtrResult, nsIDOMDocument *aDomDoc);
