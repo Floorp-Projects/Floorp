@@ -89,8 +89,8 @@ NS_IMETHODIMP nsWalletlibService::WALLET_DeleteAll() {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_RequestToCapture(nsIPresShell* shell, PRUint32* status) {
-  ::WLLT_RequestToCapture(shell, status);
+NS_IMETHODIMP nsWalletlibService::WALLET_RequestToCapture(nsIPresShell* shell, nsIDOMWindow* win, PRUint32* status) {
+  ::WLLT_RequestToCapture(shell, win, status);
   return NS_OK;
 }
 

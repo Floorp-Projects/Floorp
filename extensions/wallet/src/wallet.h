@@ -60,7 +60,7 @@ extern void
 WLLT_PrefillReturn(const nsString& results);
 
 extern void
-WLLT_RequestToCapture(nsIPresShell* shell, PRUint32* status);
+WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindow * win, PRUint32* status);
 
 extern nsresult
 WLLT_Prefill(nsIPresShell* shell, PRBool quick, PRBool* doPrefillMessage);
@@ -101,6 +101,8 @@ extern char* Wallet_RandomName(char* suffix);
 extern PRBool Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindow* window);
 
 extern PRInt32 Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindow* window);
+
+extern void Wallet_GiveCaveat(nsIDOMWindow* window);
 
 extern nsresult
 Wallet_Encrypt2(const nsString& text, nsString& crypt);

@@ -22,6 +22,7 @@
 
 #include "nsISupports.idl"
 #include "nsIPrompt.idl"
+#include "domstubs.idl"
 
 %{ C++
 #include "nsString.h"
@@ -51,7 +52,7 @@ interface nsIWalletService : nsISupports {
   [noscript]void WALLET_PostEdit(in nsAutoString walletList);
   boolean WALLET_ChangePassword();
   void WALLET_DeleteAll();
-  PRUint32 WALLET_RequestToCapture(in nsIPresShell shell);
+  PRUint32 WALLET_RequestToCapture(in nsIPresShell shell, in nsIDOMWindow win);
   boolean WALLET_Prefill(in nsIPresShell shell, in boolean quick);
   [noscript]void WALLET_PrefillReturn(in nsAutoString results);
   void WALLET_FetchFromNetCenter();

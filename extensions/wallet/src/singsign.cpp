@@ -1912,6 +1912,7 @@ si_RememberSignonData
       data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
 
       if (si_OkToSave(passwordRealm, data2->value, window)) {
+        Wallet_GiveCaveat(window);
         for (j=0; j<signonData->Count(); j++) {
           data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
           nsAutoString value = data2->value;
