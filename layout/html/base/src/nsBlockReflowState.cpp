@@ -660,9 +660,9 @@ void nsBlockFrame::GetAvailSize(nsSize& aResult,
       aResult.width = aState.x - aState.currentBand->rects[0].x;
     }
   } else {
-    // It's a block
-    aResult.width = aState.availSize.width - aKidMol->margin.left -
-                    aKidMol->margin.right;
+    // It's a block. Don't adjust for the left/right margin here. That happens
+    // later on once we know the current left/right edge
+    aResult.width = aState.availSize.width;
   }
 }
 
@@ -1038,21 +1038,14 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
       }
     }
 
-    // Give the block its own local coordinate space.
-    //
-    // XXX This is wrong to have the parent try and account for the kid's
-    // left margin here, because we have to wait until we know what the
-    // left edge is and that means resolving any floaters that impact the
-    // block. If the kid wants to interact with the space manager then it
-    // will have to deal with left/right margins itself
-    nscoord tx = aState.borderPadding.left + aKidMol->margin.left;
-    nscoord ty = aState.y + aState.topMargin;
-
+    // Give the block its own local coordinate space.. Note: ReflowChild()
+    // will adjust for the child's left/right margin after determining the
+    // current left/right edge
+    aState.spaceManager->Translate(aState.borderPadding.left, 0);
     // Give the block-level element the opportunity to use the space manager
-    aState.spaceManager->Translate(tx, ty);
-    status = ReflowChild(aKidFrame, aCX, aState.spaceManager, kidAvailSize,
+    status = ReflowChild(aKidFrame, aCX, kidMol, aState.spaceManager, kidAvailSize,
                          kidRect, pKidMaxElementSize);
-    aState.spaceManager->Translate(-tx, -ty);
+    aState.spaceManager->Translate(-aState.borderPadding.left, 0);
 
     // For first children, we skip all the fit checks because we must
     // fit at least one child for a parent to figure what to do with us.

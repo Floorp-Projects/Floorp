@@ -20,6 +20,8 @@
 
 #include "nsSplittableFrame.h"
 
+struct nsStyleMolecule;
+
 /**
  * Implementation of a container frame. Supports being used a pseudo-
  * frame (a frame that maps the same content as its parent).
@@ -229,10 +231,15 @@ protected:
    * used to reflow the child; otherwise interface nsIFrame is used. If the
    * child is splittable then  runaround is done using continuing frames.
    *
+   * XXX This function needs to account for left/right margins so the caller
+   * should not adjust the max size to account for left/right margins -or-
+   * translate the space manager coordinate space
+   *
    * @see nsIRunaround
    */
   ReflowStatus ReflowChild(nsIFrame*        aKidFrame,
                            nsIPresContext*  aPresContext,
+                           nsStyleMolecule* aKidMol,
                            nsISpaceManager* aSpaceManager,
                            const nsSize&    aMaxSize,
                            nsRect&          aDesiredRect,
