@@ -150,7 +150,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
   
 <hbox id="ConsoleBox" class="console-box" flex="1" context="ConsoleContext"/>
 
-<iframe id="Evaluator" style="height: 0px" />
+<iframe id="Evaluator" collapsed="true"/>
 
 </window>
 
