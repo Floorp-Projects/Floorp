@@ -3357,8 +3357,26 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
   PRBool isBlockFrame = PR_FALSE;
   nsresult rv;
 
-  PRBool docElemIsTable = display->mDisplay == NS_STYLE_DISPLAY_TABLE ||
-                          display->mDisplay == NS_STYLE_DISPLAY_INLINE_TABLE;
+  // CSS2.1 section 9.2.4 specifies fixups for the 'display' property
+  // of the root element.  We can't implement them in nsRuleNode because
+  // it doesn't (and shouldn't, for nodes that can have siblings) know
+  // the content node.  So do them here if needed, by changing the style
+  // data, so that other code doesn't get confused by looking at the style
+  // data.
+  if (display->mDisplay != NS_STYLE_DISPLAY_NONE &&
+      display->mDisplay != NS_STYLE_DISPLAY_BLOCK &&
+      display->mDisplay != NS_STYLE_DISPLAY_TABLE) {
+    nsStyleDisplay *mutable_display = NS_STATIC_CAST(nsStyleDisplay*,
+      styleContext->GetUniqueStyleData(eStyleStruct_Display));
+    display = mutable_display;
+
+    if (mutable_display->mDisplay == NS_STYLE_DISPLAY_INLINE_TABLE)
+      mutable_display->mDisplay = NS_STYLE_DISPLAY_TABLE;
+    else
+      mutable_display->mDisplay = NS_STYLE_DISPLAY_BLOCK;
+  }
+
+  PRBool docElemIsTable = display->mDisplay == NS_STYLE_DISPLAY_TABLE;
 
   if (docElemIsTable) {
     // if the document is a table then just populate it.
