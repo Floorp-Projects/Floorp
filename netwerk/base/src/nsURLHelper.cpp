@@ -80,34 +80,36 @@ nsURLEscape(const char* str, PRInt16 mask, nsCString &result)
     for (i = 0; i < len; i++)
     {
 
-        c1[0] = *(src+1);
-        c2[0] = *(src+2);
-        unsigned char c = *src++;
+      c1[0] = *(src+1);
+      c2[0] = *(src+2);
+      unsigned char c = *src++;
 
-        /* if the char has not to be escaped or whatever follows % is 
-           a valid escaped string, just copy the char */
-        if (IS_OK(c) || (c == HEX_ESCAPE && (pc1) && (pc2) &&
-           PL_strpbrk(pc1, CheckHexChars) != 0 &&  
-           PL_strpbrk(pc2, CheckHexChars) != 0)) {
-		    tempBuffer[tempBufferPos++]=c;
-        }
-        else 
-            /* do the escape magic */
-        {
+      /* if the char has not to be escaped or whatever follows % is 
+         a valid escaped string, just copy the char */
+      if (IS_OK(c) || (c == HEX_ESCAPE && (pc1) && (pc2) &&
+         PL_strpbrk(pc1, CheckHexChars) != 0 &&  
+         PL_strpbrk(pc2, CheckHexChars) != 0)) {
+		  tempBuffer[tempBufferPos++]=c;
+      }
+      else 
+          /* do the escape magic */
+      {
 		    tempBuffer[tempBufferPos++] = HEX_ESCAPE;
-            tempBuffer[tempBufferPos++] = hexChars[c >> 4];	/* high nibble */
-            tempBuffer[tempBufferPos++] = hexChars[c & 0x0f]; /* low nibble */
-        }
- 		if(tempBufferPos == 96)
+        tempBuffer[tempBufferPos++] = hexChars[c >> 4];	/* high nibble */
+        tempBuffer[tempBufferPos++] = hexChars[c & 0x0f]; /* low nibble */
+      }
+ 	  
+    if(tempBufferPos >= sizeof(tempBuffer) - 4)
  		{
  			tempBuffer[tempBufferPos] = '\0';
- 	        result += tempBuffer;
+ 	    result += tempBuffer;
  			tempBufferPos = 0;
  		}
 	}
- 	tempBuffer[tempBufferPos] = '\0';
+ 	
+  tempBuffer[tempBufferPos] = '\0';
  	result += tempBuffer;
-    return NS_OK;
+  return NS_OK;
 }
 
 /* helper call function */
