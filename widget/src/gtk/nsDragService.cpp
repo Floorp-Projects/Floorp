@@ -592,6 +592,12 @@ nsDragService::IsDataFlavorSupported (const char *aDataFlavor,
       PR_LOG(sDragLm, PR_LOG_DEBUG, ("good!\n"));
       *_retval = PR_TRUE;
     }
+    // check for automatic text/uri-list -> text/x-moz-url mapping
+    if (*_retval == PR_FALSE && name && (strcmp(name, gTextUriListType) == 0) &&
+        (strcmp(aDataFlavor, kURLMime) == 0)) {
+      PR_LOG(sDragLm, PR_LOG_DEBUG, ("good! ( it's text/uri-list and we're checking against text/x-moz-url )\n"));
+      *_retval = PR_TRUE;
+    }
     // check for automatic _NETSCAPE_URL -> text/x-moz-url mapping
     if (*_retval == PR_FALSE && name && (strcmp(name, gMozUrlType) == 0) &&
         (strcmp(aDataFlavor, kURLMime) == 0)) {
@@ -702,6 +708,13 @@ nsDragService::IsTargetContextList(void)
   if (!mTargetDragContext)
     return retval;
 
+  // gMimeListType drags only work for drags within a single process.
+  // The gtk_drag_get_source_widget() function will return NULL if the
+  // source of the drag is another app, so we use it to check if a
+  // gMimeListType drop will work or not.
+  if (gtk_drag_get_source_widget(mTargetDragContext) == NULL)
+    return retval;
+
   GList *tmp;
 
   // walk the list of context targets and see if one of them is a list
@@ -770,22 +783,65 @@ nsDragService::GetSourceList(void)
 
   mSourceDataItems->Count(&numDragItems);
 
-  // Check to see if we're dragging > 1 item.  If we are then we use
-  // an internal only type.
+  // Check to see if we're dragging > 1 item.
   if (numDragItems > 1) {
-    GtkTargetList *multiTargetList = 0;
+    // as the Xdnd protocol only supports a single item (or is it just
+    // gtk's implementation?), we don't advertise all flavours listed
+    // in the nsITransferable.
+
+    // the aplication/x-moz-internal-item-list format, which preserves
+    // all information for drags within the same mozilla instance.
     GdkAtom listAtom = gdk_atom_intern(gMimeListType, FALSE);
-    GtkTargetEntry target;
-    target.target = (gchar*)gMimeListType;
-    target.flags = 0;
-    target.info = listAtom;
-    multiTargetList = gtk_target_list_new(&target, 1);
-    return multiTargetList;
-  }
-  
-  for (unsigned int itemIndex = 0; itemIndex < numDragItems; ++itemIndex) {
+    GtkTargetEntry *listTarget = (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
+    listTarget->target = g_strdup(gMimeListType);
+    listTarget->flags = 0;
+    listTarget->info = listAtom;
+    PR_LOG(sDragLm, PR_LOG_DEBUG, ("automatically adding target %s with id %ld\n", 
+                                   listTarget->target, listAtom));
+    targetArray.AppendElement(listTarget);
+
+    // check what flavours are supported so we can decide what other
+    // targets to advertise.
     nsCOMPtr<nsISupports> genericItem;
-    mSourceDataItems->GetElementAt(itemIndex, getter_AddRefs(genericItem));
+    mSourceDataItems->GetElementAt(0, getter_AddRefs(genericItem));
+    nsCOMPtr<nsITransferable> currItem (do_QueryInterface(genericItem));
+
+    if (currItem) {
+      nsCOMPtr <nsISupportsArray> flavorList;
+      currItem->FlavorsTransferableCanExport(getter_AddRefs(flavorList));
+      if (flavorList) {
+        PRUint32 numFlavors;
+        flavorList->Count( &numFlavors );
+        for (PRUint32 flavorIndex = 0; flavorIndex < numFlavors ;
+             ++flavorIndex ) {
+          nsCOMPtr<nsISupports> genericWrapper;
+          flavorList->GetElementAt(flavorIndex, getter_AddRefs(genericWrapper));
+          nsCOMPtr<nsISupportsString> currentFlavor;
+          currentFlavor = do_QueryInterface(genericWrapper);
+          if (currentFlavor) {
+            nsXPIDLCString flavorStr;
+            currentFlavor->ToString ( getter_Copies(flavorStr) );
+
+            // check if text/x-moz-url is supported.  If so, advertise
+            // text/uri-list.
+            if (strcmp(flavorStr, kURLMime) == 0) {
+              listAtom = gdk_atom_intern(gTextUriListType, FALSE);
+              listTarget = (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
+              listTarget->target = g_strdup(gTextUriListType);
+              listTarget->flags = 0;
+              listTarget->info = listAtom;
+              PR_LOG(sDragLm, PR_LOG_DEBUG, ("automatically adding target %s with id %ld\n", 
+                                             listTarget->target, listAtom));
+              targetArray.AppendElement(listTarget);
+            }
+
+          }
+        } // foreach flavor in item
+      } // if valid flavor list
+    } // if item is a transferable
+  } else if (numDragItems == 1) {
+    nsCOMPtr<nsISupports> genericItem;
+    mSourceDataItems->GetElementAt(0, getter_AddRefs(genericItem));
     nsCOMPtr<nsITransferable> currItem (do_QueryInterface(genericItem));
     if (currItem) {
       nsCOMPtr <nsISupportsArray> flavorList;
@@ -814,8 +870,7 @@ nsDragService::GetSourceList(void)
             // Check to see if this is text/unicode.  If it is, add
             // text/plain since we automatically support text/plain if
             // we support text/unicode.
-            if (strcmp(flavorStr, kUnicodeMime) == 0)
-            {
+            if (strcmp(flavorStr, kUnicodeMime) == 0) {
               // get the atom for the unicode string
               GdkAtom plainAtom = gdk_atom_intern(kTextMime, FALSE);
               GtkTargetEntry *plainTarget = (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
@@ -828,8 +883,7 @@ nsDragService::GetSourceList(void)
             }
             // Check to see if this is the x-moz-url type.  If it is,
             // add _NETSCAPE_URL this is a type used by everybody.
-            if (strcmp(flavorStr, kURLMime) == 0)
-            {
+            if (strcmp(flavorStr, kURLMime) == 0) {
               // get the atom name for it
               GdkAtom urlAtom = gdk_atom_intern(gMozUrlType, FALSE);
               GtkTargetEntry *urlTarget = (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
@@ -841,10 +895,10 @@ nsDragService::GetSourceList(void)
               targetArray.AppendElement(urlTarget);
             }
           }
-        } // foreach flavor in item              
+        } // foreach flavor in item
       } // if valid flavor list
     } // if item is a transferable
-  }
+  } // if it is a single item drag
 
   // get all the elements that we created.
   targetCount = targetArray.Count();
@@ -878,6 +932,65 @@ nsDragService::SourceEndDrag(void)
   mSourceDataItems = 0;
 }
 
+static void
+CreateUriList(nsISupportsArray *items, gchar **text, gint *length)
+{
+  PRUint32 i, count;
+  GString *uriList = g_string_new(NULL);
+
+  items->Count(&count);
+  for (i = 0; i < count; i++) {
+    nsCOMPtr<nsISupports> genericItem;
+    items->GetElementAt(i, getter_AddRefs(genericItem));
+    nsCOMPtr<nsITransferable> item;
+    item = do_QueryInterface(genericItem);
+
+    if (item) {
+      PRUint32 tmpDataLen = 0;
+      void    *tmpData = NULL;
+      nsresult rv = 0;
+      nsCOMPtr<nsISupports> data;
+      rv = item->GetTransferData(kURLMime, getter_AddRefs(data), &tmpDataLen);
+
+      if (NS_SUCCEEDED(rv)) {
+        nsPrimitiveHelpers::CreateDataFromPrimitive (kURLMime, data,
+                                                     &tmpData, tmpDataLen);
+        char* plainTextData = nsnull;
+        PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, tmpData);
+        PRInt32 plainTextLen = 0;
+        nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText(castedUnicode, 
+                                                              tmpDataLen / 2, 
+                                                              &plainTextData,
+                                                              &plainTextLen);
+        if (plainTextData) {
+          PRInt32 j;
+
+          // text/x-moz-url is of form url + "\n" + title.  We just
+          // want the url.
+          for (j = 0; j < plainTextLen; j++)
+            if (plainTextData[j] == '\n' || plainTextData[j] == '\r') {
+              plainTextData[j] = '\0';
+              break;
+            }
+          g_string_append(uriList, plainTextData);
+          g_string_append(uriList, "\r\n");
+          // this wasn't allocated with glib
+          free(plainTextData);
+        }
+        if (tmpData) {
+          // this wasn't allocated with glib
+          free(tmpData);
+        }
+      }
+    }
+  }
+
+  *text = uriList->str;
+  *length = uriList->len + 1;
+  g_string_free(uriList, FALSE); // don't free the data
+}
+
+
 void
 nsDragService::SourceDataGet(GtkWidget        *aWidget,
                              GdkDragContext   *aContext,
@@ -903,6 +1016,20 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
   if (!mSourceDataItems) {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("Failed to get our data items\n"));
   }
+
+  if (strcmp(mimeFlavor, gTextUriListType) == 0) {
+    // fall back for text/uri-list
+    gchar *uriList;
+    gint length;
+
+    CreateUriList(mSourceDataItems, &uriList, &length);
+
+    gtk_selection_data_set(aSelectionData, aSelectionData->target,
+                           8, (guchar *)uriList, length);
+    g_free(uriList);
+    return;
+  }
+
   nsCOMPtr<nsISupports> genericItem;
   mSourceDataItems->GetElementAt(0, getter_AddRefs(genericItem));
   nsCOMPtr<nsITransferable> item;
