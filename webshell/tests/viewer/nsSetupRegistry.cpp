@@ -237,7 +237,7 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCMenuItemCID,      NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCContextMenuCID,   NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kSoundCID,   "Sound Services", "component://netscape/sound", WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kFileSpecWithUICID,   NS_FILESPECWITHUI_CLASSNAME, NS_FILESPECWITHUI_PROGID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kFileSpecWithUICID,   NS_FILESPECWITHUI_CLASSNAME, NS_FILESPECWITHUI_PROGID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
   // GFXWIN
   nsComponentManager::RegisterComponentLib(kCRenderingContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
