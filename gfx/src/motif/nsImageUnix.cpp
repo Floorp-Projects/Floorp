@@ -71,10 +71,10 @@ nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsM
 
 printf("******************\nWidth %d  Height %d  Depth %d mSizeImage %d\n", 
                   mWidth, mHeight, mDepth, mSizeImage);
-  //mImageBits = (PRUint8*) new PRUint8[mSizeImage];
-  char * buf =  (char*) malloc(mSizeImage+1);
-  printf("Buf address %x\n", buf);
-  mImageBits = buf;
+  mImageBits = (PRUint8*) new PRUint8[mSizeImage];
+  //char * buf =  (char*) malloc(mSizeImage+1);
+  //printf("Buf address %x\n", buf);
+  //mImageBits = buf;
   if (mImageBits == nsnull) {
     printf("Bits are null!\n");
   }
