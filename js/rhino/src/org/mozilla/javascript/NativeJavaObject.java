@@ -218,8 +218,6 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         // if to is a primitive, from must be assignableFrom
         // the wrapper class.
         if (to.isPrimitive()) {
-            if (ScriptRuntime.NumberClass.isAssignableFrom(from))
-                return CONVERSION_TRIVIAL;
             if (to == Boolean.TYPE)
                 return from == ScriptRuntime.BooleanClass
                        ? CONVERSION_TRIVIAL
@@ -234,6 +232,8 @@ public class NativeJavaObject implements Scriptable, Wrapper {
                 }
                 return CONVERSION_NONE;
             }
+            if (ScriptRuntime.NumberClass.isAssignableFrom(from))
+                return CONVERSION_TRIVIAL;
             return CONVERSION_NONTRIVIAL;
         }
         if (to == ScriptRuntime.CharacterClass) {
