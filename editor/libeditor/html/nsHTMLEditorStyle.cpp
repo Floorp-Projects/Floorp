@@ -107,11 +107,8 @@
 // Misc
 #include "nsEditorUtils.h"
 
-static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
-static NS_DEFINE_CID(kCRangeCID,      NS_RANGE_CID);
-static NS_DEFINE_CID(kCDOMSelectionCID,      NS_DOMSELECTION_CID);
 
 #if defined(NS_DEBUG) && defined(DEBUG_buster)
 static PRBool gNoisy = PR_FALSE;
@@ -753,60 +750,6 @@ PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
   }
   // if we made it through all of them without finding a real attribute
   // other than aAttribute, then return PR_TRUE
-  return PR_TRUE;
-}
-
-PRBool 
-nsHTMLEditor::HasMatchingAttributes(nsIDOMNode *aNode1, 
-                                    nsIDOMNode *aNode2)
-{
-  if (!aNode1  || !aNode2) return PR_FALSE;  // ooops
-  nsCOMPtr<nsIContent> content1 = do_QueryInterface(aNode1);
-  if (!content1) return PR_FALSE;  // ooops
-  nsCOMPtr<nsIContent> content2 = do_QueryInterface(aNode2);
-  if (!content2) return PR_FALSE;  // ooops
-  
-  PRInt32 attrCount, i, nameSpaceID, realCount1=0, realCount2=0;
-  nsCOMPtr<nsIAtom> attrName, prefix;
-  nsresult res, res2;
-  content1->GetAttrCount(attrCount);
-  nsAutoString attrString, tmp, attrVal1, attrVal2;
-  
-  for (i=0; i<attrCount; i++)
-  {
-    content1->GetAttrNameAt(i, nameSpaceID, *getter_AddRefs(attrName),
-                            *getter_AddRefs(prefix));
-    if (!attrName) continue;  // ooops
-    attrName->ToString(attrString);
-    // if it's a special _moz... attribute, keep going
-    attrString.Left(tmp,4);
-    if (tmp.Equals(NS_LITERAL_STRING("_moz"))) continue;
-    // otherwise, it's another attribute, so count it
-    realCount1++;
-    // and compare it to element2's attributes
-    res = content1->GetAttr(nameSpaceID, attrName, attrVal1);
-    res2 = content2->GetAttr(nameSpaceID, attrName, attrVal2);
-    if (res != res2) return PR_FALSE;
-    if (!attrVal1.EqualsIgnoreCase(attrVal2)) return PR_FALSE;
-  }
-
-  content2->GetAttrCount(attrCount);
-  for (i=0; i<attrCount; i++)
-  {
-    content2->GetAttrNameAt(i, nameSpaceID, *getter_AddRefs(attrName),
-                            *getter_AddRefs(prefix));
-    if (!attrName) continue;  // ooops
-    attrName->ToString(attrString);
-    // if it's a special _moz... attribute, keep going
-    attrString.Left(tmp,4);
-    if (tmp.Equals(NS_LITERAL_STRING("_moz"))) continue;
-    // otherwise, it's another attribute, so count it
-    realCount2++;
-  }
-
-  if (realCount1 != realCount2) return PR_FALSE; 
-  // otherwise, attribute counts match, and we already compared them 
-  // when going through the first list, so we're done.
   return PR_TRUE;
 }
 
@@ -1668,9 +1611,9 @@ nsHTMLEditor::RelativeFontChangeHelper( PRInt32 aSizeChange,
   PRInt32 j;
   PRUint32 childCount;
   nsCOMPtr<nsIDOMNode> childNode;
-  nsAutoString attr(NS_LITERAL_STRING("size"));
   
   // if this is a font node with size, put big/small inside it
+  NS_NAMED_LITERAL_STRING(attr, "size");
   if (NodeIsType(aNode, nsIEditProperty::font) && HasAttr(aNode, &attr))
   {
     // cycle through children and adjust relative font size
@@ -1803,11 +1746,10 @@ nsHTMLEditor::GetFontFaceState(PRBool *aMixed, nsAWritableString &outFace)
   outFace.SetLength(0);
 
   nsresult res;
-  nsAutoString faceStr(NS_LITERAL_STRING("face"));
   PRBool first, any, all;
   
-  
-  res = GetInlinePropertyBase(nsIEditProperty::font, &faceStr, nsnull, &first, &any, &all, &outFace);
+  NS_NAMED_LITERAL_STRING(attr, "face");
+  res = GetInlinePropertyBase(nsIEditProperty::font, &attr, nsnull, &first, &any, &all, &outFace);
   if (NS_FAILED(res)) return res;
   if (any && !all) return res; // mixed
   if (all)
@@ -1843,7 +1785,7 @@ nsHTMLEditor::GetFontColorState(PRBool *aMixed, nsAWritableString &aOutColor)
   aOutColor.SetLength(0);
   
   nsresult res;
-  nsAutoString colorStr(NS_LITERAL_STRING("color"));
+  NS_NAMED_LITERAL_STRING(colorStr, "color");
   PRBool first, any, all;
   
   res = GetInlinePropertyBase(nsIEditProperty::font, &colorStr, nsnull, &first, &any, &all, &aOutColor);
