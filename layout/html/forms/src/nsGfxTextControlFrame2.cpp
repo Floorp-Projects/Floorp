@@ -528,6 +528,7 @@ public:
   NS_IMETHOD ScrollLine(PRBool aForward){return NS_OK;}//*
   NS_IMETHOD ScrollHorizontal(PRBool aLeft){return NS_OK;}//*
   NS_IMETHOD SelectAll(void);
+  NS_IMETHOD CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, PRBool *_retval);
 
   //NSIFRAMSELECTION INTERFACES
   NS_IMETHOD Init(nsIFocusTracker *aTracker, nsIContent *aLimiter) ;
@@ -762,6 +763,20 @@ nsTextInputSelectionImpl::SelectAll()
   if (mFrameSelection)
     return mFrameSelection->SelectAll();
   return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP
+nsTextInputSelectionImpl::CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, PRBool *_retval)
+{
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsresult result;
+  nsCOMPtr<nsISelectionController> shell = do_QueryReferent(mPresShellWeak, &result);
+  if (shell)
+  {
+    return shell->CheckVisibility(node,startOffset,EndOffset, _retval);
+  }
+  return NS_ERROR_FAILURE;
+
 }
 
 
