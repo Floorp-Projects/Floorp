@@ -86,6 +86,10 @@ tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow > 
   border-bottom-color: #000000;
 }
 
+.tree-cell-text {
+  margin: 0px !important;
+}
+
 /* ::::: iconic treecell ::::: */
 
 .tree-cell-icon,
@@ -131,6 +135,10 @@ treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-ico
 
 .treecell-header-image-box {
   padding: 0px 1px 0px 1px;
+}
+
+.tree-header-text {
+  margin: 0px !important;
 }
 
 .treecell-header:hover:active,

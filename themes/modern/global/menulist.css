@@ -47,6 +47,10 @@ menulist {
   padding: 3px 2px 3px 2px;
 }
 
+.menulist-text-mid {
+  margin: 0px !important;
+}
+
 .menulist-icon-mid {
   padding-right: 3px;
 }

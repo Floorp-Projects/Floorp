@@ -119,6 +119,7 @@ tab {
 }
 
 .tab-text {
+  margin: 0px !important;
   padding: 3px 0px 3px 0px;
 }
 

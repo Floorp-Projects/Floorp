@@ -102,6 +102,10 @@ outlinercol {
   color: #000000;
 }
 
+.outlinercol-text {
+  margin: 0px !important;
+}
+
 /* ::::: column drag and drop styles ::::: */
 
 outlinercol[dragging="true"] {
