@@ -535,7 +535,7 @@ GenerateType3Msg(const nsString &domain,
     ucsDomainBuf = domain;
     domainPtr = ucsDomainBuf.get();
     domainLen = ucsDomainBuf.Length() * 2;
-    WriteUnicodeLE(domainPtr, (const PRUnichar *) domainPtr, domainLen);
+    WriteUnicodeLE((void *) domainPtr, (const PRUnichar *) domainPtr, domainLen);
 #else
     domainPtr = domain.get();
     domainLen = domain.Length() * 2;
@@ -557,7 +557,7 @@ GenerateType3Msg(const nsString &domain,
     ucsUserBuf = username;
     userPtr = ucsUserBuf.get();
     userLen = ucsUserBuf.Length() * 2;
-    WriteUnicodeLE(userPtr, (const PRUnichar *) userPtr, userLen);
+    WriteUnicodeLE((void *) userPtr, (const PRUnichar *) userPtr, userLen);
 #else
     userPtr = username.get();
     userLen = username.Length() * 2;
@@ -584,7 +584,7 @@ GenerateType3Msg(const nsString &domain,
     hostPtr = ucsHostBuf.get();
     hostLen = ucsHostBuf.Length() * 2;
 #ifdef IS_BIG_ENDIAN
-    WriteUnicodeLE(hostPtr, (const PRUnichar *) hostPtr, hostLen);
+    WriteUnicodeLE((void *) hostPtr, (const PRUnichar *) hostPtr, hostLen);
 #endif
   }
   else
