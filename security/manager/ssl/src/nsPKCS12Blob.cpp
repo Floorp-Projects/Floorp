@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.2 2001/03/20 22:41:35 bryner%uiuc.edu Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.3 2001/03/21 00:57:38 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -134,6 +134,14 @@ nsPKCS12Blob::ImportFromFile(nsILocalFile *file)
   // XXX fix this later by getting it from mToken
   int count = 0;
   slot = PK11_GetInternalKeySlot();
+  if (PK11_NeedLogin(slot)) {
+    PK11_Logout(slot);
+  }
+  nsCOMPtr<nsIInterfaceRequestor>uiContext = new PipUIContext();
+  rv = setPassword(slot, uiContext);
+  if (NS_FAILED(rv))
+    goto finish;
+      
   PK11_Authenticate(slot, PR_TRUE, &count);
 #if 0
   // init slot
@@ -294,8 +302,8 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file)
     goto finish;
   }
   for (i=0; i<numCerts; i++) {
-    nsCOMPtr<nsNSSCertificate> cert;
-    nrv = mCertArray->GetElementAt(i, getter_AddRefs(cert));
+    nsNSSCertificate *cert;
+    nrv = mCertArray->GetElementAt(i, &NS_STATIC_CAST(nsISupports*,cert));
     if (NS_FAILED(nrv)) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("FAILED getting el %d", i));
       goto finish;
@@ -328,6 +336,7 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file)
       goto finish;
     }
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("added %s", cert->GetCert()->nickname));
+    NS_RELEASE(cert);
   }
   //  XXX cheating
   this->__mTmp = NULL;
@@ -510,6 +519,12 @@ nsPKCS12Blob::digest_open(void *arg, PRBool reading)
     nsXPIDLCString pathBuf;
     tmpFile->GetPath(getter_Copies(pathBuf));
     cx->__mTmpFilePath = PL_strdup(pathBuf.get());
+#ifdef XP_MAC
+    char *unixPath = nsnull;
+    ConvertMacPathToUnixPath(cx->__mTmpFilePath, &unixPath);
+    nsMemory::Free(cx->__mTmpFilePath);
+    cx->__mTmpFilePath = unixPath;
+#endif    
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("opened temp %s", cx->__mTmpFilePath));
 #if 0
       rv = tmpFile->CreateUnique(PIP_PKCS12_TMPFILENAME, 

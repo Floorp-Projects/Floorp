@@ -126,24 +126,9 @@ Encrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
   if (!slot) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
 
   /* Make sure token is initialized. */
-  if (PK11_NeedUserInit(slot)) { 
-    nsITokenPasswordDialogs *dialogs;
-    PRBool canceled;
-    NS_ConvertUTF8toUCS2 tokenName(PK11_GetTokenName(slot));
-
-    rv = getNSSDialogs((void**)&dialogs,
-                       NS_GET_IID(nsITokenPasswordDialogs));
-
-    if (NS_FAILED(rv)) goto loser;
-
-    rv = dialogs->SetPassword(ctx,
-                              tokenName.get(),
-                              &canceled);
-    NS_RELEASE(dialogs);
-    if (NS_FAILED(rv)) goto loser;
-
-    if (canceled) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
-  }
+  rv = setPassword(slot, ctx);
+  if (NS_FAILED(rv))
+    goto loser;
 
   s = PK11_Authenticate(slot, PR_TRUE, ctx);
   if (s != SECSuccess) { rv = NS_ERROR_FAILURE; goto loser; }

@@ -66,7 +66,6 @@ static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 PRBool nsNSSComponent::mNSSInitialized = PR_FALSE;
 
 #ifdef XP_MAC
-extern OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath);
 
 OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath)
 {
@@ -627,6 +626,33 @@ getNSSDialogs(void **_result, REFNSIID aIID)
 
   NS_RELEASE(result);
 
+  return rv;
+}
+
+nsresult
+setPassword(PK11SlotInfo *slot, nsIInterfaceRequestor *ctx)
+{
+  nsresult rv = NS_OK;
+  
+  if (PK11_NeedUserInit(slot)) {
+    nsITokenPasswordDialogs *dialogs;
+    PRBool canceled;
+    NS_ConvertUTF8toUCS2 tokenName(PK11_GetTokenName(slot));
+
+    rv = getNSSDialogs((void**)&dialogs,
+                       NS_GET_IID(nsITokenPasswordDialogs));
+
+    if (NS_FAILED(rv)) goto loser;
+
+    rv = dialogs->SetPassword(ctx,
+                              tokenName.get(),
+                              &canceled);
+    NS_RELEASE(dialogs);
+    if (NS_FAILED(rv)) goto loser;
+
+    if (canceled) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
+  }
+ loser:
   return rv;
 }
 
