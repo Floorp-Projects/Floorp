@@ -601,6 +601,7 @@ public:
   NS_IMETHOD EnsureData(const nsID& aSID, nsCSSStruct** aData);
 
   NS_IMETHOD AppendValue(PRInt32 aProperty, const nsCSSValue& aValue);
+  NS_IMETHOD AppendStructValue(PRInt32 aProperty, void* aStruct);
   NS_IMETHOD SetValueImportant(PRInt32 aProperty);
   NS_IMETHOD AppendComment(const nsString& aComment);
 
@@ -1240,7 +1241,7 @@ CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aValue)
     case PROP_BORDER_COLOR:
     case PROP_BORDER_STYLE:
     case PROP_BORDER_WIDTH:
-      NS_ERROR("can't query for shorthand properties");
+      NS_ERROR("can't append shorthand properties");
     default:
       result = NS_ERROR_ILLEGAL_VALUE;
       break;
@@ -1262,6 +1263,79 @@ CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aValue)
   }
   return result;
 }
+
+NS_IMETHODIMP
+CSSDeclarationImpl::AppendStructValue(PRInt32 aProperty, void* aStruct)
+{
+  NS_ASSERTION(nsnull != aStruct, "must have struct");
+  if (nsnull == aStruct) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsresult result = NS_OK;
+  switch (aProperty) {
+    case PROP_CURSOR:
+      CSS_ENSURE(Color) {
+        CSS_IF_DELETE(mColor->mCursor);
+        mColor->mCursor = (nsCSSValueList*)aStruct;
+      }
+      break;
+
+    case PROP_TEXT_SHADOW:
+      CSS_ENSURE(Text) {
+        CSS_IF_DELETE(mText->mTextShadow);
+        mText->mTextShadow = (nsCSSShadow*)aStruct;
+      }
+      break;
+
+    case PROP_CONTENT:
+      CSS_ENSURE(Content) {
+        CSS_IF_DELETE(mContent->mContent);
+        mContent->mContent = (nsCSSValueList*)aStruct;
+      }
+      break;
+
+    case PROP_COUNTER_INCREMENT:
+      CSS_ENSURE(Content) {
+        CSS_IF_DELETE(mContent->mCounterIncrement);
+        mContent->mCounterIncrement = (nsCSSCounterData*)aStruct;
+      }
+      break;
+
+    case PROP_COUNTER_RESET:
+      CSS_ENSURE(Content) {
+        CSS_IF_DELETE(mContent->mCounterReset);
+        mContent->mCounterReset = (nsCSSCounterData*)aStruct;
+      }
+      break;
+
+    case PROP_QUOTES:
+      CSS_ENSURE(Content) {
+        CSS_IF_DELETE(mContent->mQuotes);
+        mContent->mQuotes = (nsCSSQuotes*)aStruct;
+      }
+      break;
+
+    default:
+      NS_ERROR("not a struct property");
+      result = NS_ERROR_ILLEGAL_VALUE;
+      break;
+  }
+
+  if (NS_OK == result) {
+    if (nsnull == mOrder) {
+      mOrder = new nsVoidArray();
+    }
+    if (nsnull != mOrder) {
+      PRInt32 index = mOrder->IndexOf((void*)aProperty);
+      if (-1 != index) {
+        mOrder->RemoveElementAt(index);
+      }
+      mOrder->AppendElement((void*)aProperty);
+    }
+  }
+  return result;
+}
+
 
 #define CSS_ENSURE_IMPORTANT(data)            \
   if (nsnull == mImportant->m##data) {        \
@@ -2496,6 +2570,18 @@ PRBool CSSDeclarationImpl::AppendValueToString(PRInt32 aProperty, const nsCSSVal
           aResult.Append(' ');
         }
         aResult.Append(nsCSSProps::LookupProperty(aProperty, NS_STYLE_PLAY_DURING_REPEAT));
+      }
+    }
+    else if (PROP_MARKS == aProperty) {
+      PRInt32 intValue = aValue.GetIntValue();
+      if ((NS_STYLE_PAGE_MARKS_CROP & intValue) != 0) {
+        aResult.Append(nsCSSProps::LookupProperty(aProperty, NS_STYLE_PAGE_MARKS_CROP));
+      }
+      if ((NS_STYLE_PAGE_MARKS_REGISTER & intValue) != 0) {
+        if ((NS_STYLE_PAGE_MARKS_CROP & intValue) != 0) {
+          aResult.Append(' ');
+        }
+        aResult.Append(nsCSSProps::LookupProperty(aProperty, NS_STYLE_PAGE_MARKS_REGISTER));
       }
     }
     else {

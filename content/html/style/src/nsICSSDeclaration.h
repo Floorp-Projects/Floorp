@@ -319,6 +319,7 @@ public:
   NS_IMETHOD EnsureData(const nsID& aSID, nsCSSStruct** aData) = 0;
 
   NS_IMETHOD AppendValue(PRInt32 aProperty, const nsCSSValue& aValue) = 0;
+  NS_IMETHOD AppendStructValue(PRInt32 aProperty, void* aStruct) = 0;
   NS_IMETHOD SetValueImportant(PRInt32 aProperty) = 0;
   NS_IMETHOD AppendComment(const nsString& aComment) = 0;
 
