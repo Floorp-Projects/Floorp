@@ -211,7 +211,10 @@ CSSStyleDeclarationGetPropertyValue(JSContext *cx, JSObject *obj, uintN argc, js
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.getpropertyvalue", &ok);
     if (!ok) {
@@ -220,16 +223,17 @@ CSSStyleDeclarationGetPropertyValue(JSContext *cx, JSObject *obj, uintN argc, js
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function getPropertyValue requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -238,10 +242,6 @@ CSSStyleDeclarationGetPropertyValue(JSContext *cx, JSObject *obj, uintN argc, js
     }
 
     nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function getPropertyValue requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -262,7 +262,10 @@ CSSStyleDeclarationGetPropertyPriority(JSContext *cx, JSObject *obj, uintN argc,
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.getpropertypriority", &ok);
     if (!ok) {
@@ -271,16 +274,17 @@ CSSStyleDeclarationGetPropertyPriority(JSContext *cx, JSObject *obj, uintN argc,
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function getPropertyPriority requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -289,10 +293,6 @@ CSSStyleDeclarationGetPropertyPriority(JSContext *cx, JSObject *obj, uintN argc,
     }
 
     nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function getPropertyPriority requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -314,7 +314,10 @@ CSSStyleDeclarationSetProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.setproperty", &ok);
     if (!ok) {
@@ -323,21 +326,20 @@ CSSStyleDeclarationSetProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 3) {
+  {
+    if (argc < 3) {
+      JS_ReportError(cx, "Function setProperty requires 3 parameters");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
-
     nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
 
     if (NS_OK != nativeThis->SetProperty(b0, b1, b2)) {
@@ -345,10 +347,6 @@ CSSStyleDeclarationSetProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function setProperty requires 3 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -369,7 +367,10 @@ CSSStyleDeclarationItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.item", &ok);
     if (!ok) {
@@ -378,16 +379,17 @@ CSSStyleDeclarationItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function item requires 1 parameter");
+      return JS_FALSE;
+    }
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
       JS_ReportError(cx, "Parameter must be a number");
@@ -399,10 +401,6 @@ CSSStyleDeclarationItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
 
     nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function item requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;

@@ -375,7 +375,10 @@ LocationToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "location.tostring", &ok);
     if (!ok) {
@@ -384,26 +387,19 @@ LocationToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  {
 
     if (NS_OK != nativeThis->ToString(nativeRet)) {
       return JS_FALSE;
     }
 
     nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function toString requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -428,7 +424,10 @@ NSLocationReload(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "nslocation.reload", &ok);
     if (!ok) {
@@ -437,26 +436,19 @@ NSLocationReload(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  {
 
     if (NS_OK != nativeThis->Reload(cx, argv+0, argc-0)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function reload requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -481,7 +473,10 @@ NSLocationReplace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "nslocation.replace", &ok);
     if (!ok) {
@@ -490,26 +485,19 @@ NSLocationReplace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  {
 
     if (NS_OK != nativeThis->Replace(cx, argv+0, argc-0)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function replace requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;

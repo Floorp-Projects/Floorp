@@ -22,7 +22,7 @@
 		void 		collapse(in Node parentNode, in long offset);
 		void		extend(in Node parentNode, in long offset);
 
-		void		containsNode(in Node node, in boolean recursive, out boolean aYes);
+		boolean	containsNode(in Node node, in boolean recursive);
 
 		void		deleteFromDocument();
 

@@ -272,7 +272,10 @@ CSSStyleSheetInsertRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.insertrule", &ok);
     if (!ok) {
@@ -281,19 +284,19 @@ CSSStyleSheetInsertRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  {
+    if (argc < 2) {
+      JS_ReportError(cx, "Function insertRule requires 2 parameters");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
     if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
       JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
@@ -304,10 +307,6 @@ CSSStyleSheetInsertRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
 
     *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else {
-    JS_ReportError(cx, "Function insertRule requires 2 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -327,7 +326,10 @@ CSSStyleSheetDeleteRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.deleterule", &ok);
     if (!ok) {
@@ -336,16 +338,17 @@ CSSStyleSheetDeleteRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function deleteRule requires 1 parameter");
+      return JS_FALSE;
+    }
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
       JS_ReportError(cx, "Parameter must be a number");
@@ -357,10 +360,6 @@ CSSStyleSheetDeleteRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function deleteRule requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;

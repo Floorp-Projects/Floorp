@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -30,6 +31,7 @@
 #include "nsIDOMRDFCore.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIComponentManager.h"
+#include "nsIJSNativeInitializer.h"
 #include "nsDOMCID.h"
 
 
@@ -50,7 +52,7 @@ NS_DEF_PTR(nsIDOMRDFCore);
 PR_STATIC_CALLBACK(JSBool)
 GetRDFCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMRDFCore *a = (nsIDOMRDFCore*)JS_GetPrivate(cx, obj);
+  nsIDOMRDFCore *a = (nsIDOMRDFCore*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -58,11 +60,18 @@ GetRDFCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok = PR_FALSE;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -78,7 +87,7 @@ GetRDFCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetRDFCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMRDFCore *a = (nsIDOMRDFCore*)JS_GetPrivate(cx, obj);
+  nsIDOMRDFCore *a = (nsIDOMRDFCore*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -86,11 +95,18 @@ SetRDFCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok = PR_FALSE;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -136,20 +152,38 @@ ResolveRDFCore(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 RDFCoreDoSort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRDFCore *nativeThis = (nsIDOMRDFCore*)JS_GetPrivate(cx, obj);
-//  JSBool rBool = JS_FALSE;
+  nsIDOMRDFCore *nativeThis = (nsIDOMRDFCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNodePtr b0;
   nsAutoString b1;
   nsAutoString b2;
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "rdfcore.dosort", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 3) {
+  {
+    if (argc < 3) {
+      JS_ReportError(cx, "Function doSort requires 3 parameters");
+      return JS_FALSE;
+    }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kINodeIID,
@@ -158,9 +192,7 @@ RDFCoreDoSort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
                                            argv[0])) {
       return JS_FALSE;
     }
-
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
-
     nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
 
     if (NS_OK != nativeThis->DoSort(b0, b1, b2)) {
@@ -168,10 +200,6 @@ RDFCoreDoSort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function doSort requires 3 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -184,7 +212,7 @@ RDFCoreDoSort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 //
 JSClass RDFCoreClass = {
   "RDFCore", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetRDFCoreProperty,
@@ -227,8 +255,10 @@ RDFCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   nsIScriptNameSpaceManager* manager;
   nsIDOMRDFCore *nativeThis;
   nsIScriptObjectOwner *owner = nsnull;
+  nsIJSNativeInitializer* initializer = nsnull;
 
   static NS_DEFINE_IID(kIDOMRDFCoreIID, NS_IDOMRDFCORE_IID);
+  static NS_DEFINE_IID(kIJSNativeInitializerIID, NS_IJSNATIVEINITIALIZER_IID);
 
   result = context->GetNameSpaceManager(&manager);
   if (NS_OK != result) {
@@ -249,7 +279,16 @@ RDFCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_FALSE;
   }
 
-  // XXX We should be calling Init() on the instance
+  result = nativeThis->QueryInterface(kIJSNativeInitializerIID, (void **)&initializer);
+  if (NS_OK == result) {
+    result = initializer->Initialize(cx, argc, argv);
+    NS_RELEASE(initializer);
+
+    if (NS_OK != result) {
+      NS_RELEASE(nativeThis);
+      return JS_FALSE;
+    }
+  }
 
   result = nativeThis->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);
   if (NS_OK != result) {

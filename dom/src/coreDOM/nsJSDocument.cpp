@@ -283,7 +283,10 @@ DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.createelement", &ok);
     if (!ok) {
@@ -292,16 +295,17 @@ DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function createElement requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -310,10 +314,6 @@ DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function createElement requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -333,7 +333,10 @@ DocumentCreateDocumentFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.createdocumentfragment", &ok);
     if (!ok) {
@@ -342,26 +345,19 @@ DocumentCreateDocumentFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  {
 
     if (NS_OK != nativeThis->CreateDocumentFragment(&nativeRet)) {
       return JS_FALSE;
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function createDocumentFragment requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -382,7 +378,10 @@ DocumentCreateTextNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.createtextnode", &ok);
     if (!ok) {
@@ -391,16 +390,17 @@ DocumentCreateTextNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function createTextNode requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -409,10 +409,6 @@ DocumentCreateTextNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function createTextNode requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -433,7 +429,10 @@ DocumentCreateComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.createcomment", &ok);
     if (!ok) {
@@ -442,16 +441,17 @@ DocumentCreateComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function createComment requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -460,10 +460,6 @@ DocumentCreateComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function createComment requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -484,7 +480,10 @@ DocumentCreateCDATASection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.createcdatasection", &ok);
     if (!ok) {
@@ -493,16 +492,17 @@ DocumentCreateCDATASection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function createCDATASection requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -511,10 +511,6 @@ DocumentCreateCDATASection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function createCDATASection requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -536,7 +532,10 @@ DocumentCreateProcessingInstruction(JSContext *cx, JSObject *obj, uintN argc, js
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.createprocessinginstruction", &ok);
     if (!ok) {
@@ -545,19 +544,19 @@ DocumentCreateProcessingInstruction(JSContext *cx, JSObject *obj, uintN argc, js
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  {
+    if (argc < 2) {
+      JS_ReportError(cx, "Function createProcessingInstruction requires 2 parameters");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
     if (NS_OK != nativeThis->CreateProcessingInstruction(b0, b1, &nativeRet)) {
@@ -565,10 +564,6 @@ DocumentCreateProcessingInstruction(JSContext *cx, JSObject *obj, uintN argc, js
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function createProcessingInstruction requires 2 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -589,7 +584,10 @@ DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.createattribute", &ok);
     if (!ok) {
@@ -598,16 +596,17 @@ DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function createAttribute requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -616,10 +615,6 @@ DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function createAttribute requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -640,7 +635,10 @@ DocumentCreateEntityReference(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.createentityreference", &ok);
     if (!ok) {
@@ -649,16 +647,17 @@ DocumentCreateEntityReference(JSContext *cx, JSObject *obj, uintN argc, jsval *a
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function createEntityReference requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -667,10 +666,6 @@ DocumentCreateEntityReference(JSContext *cx, JSObject *obj, uintN argc, jsval *a
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function createEntityReference requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -691,7 +686,10 @@ DocumentGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.getelementsbytagname", &ok);
     if (!ok) {
@@ -700,16 +698,17 @@ DocumentGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function getElementsByTagName requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -718,10 +717,6 @@ DocumentGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function getElementsByTagName requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -749,7 +744,10 @@ NSDocumentCreateElementWithNameSpace(JSContext *cx, JSObject *obj, uintN argc, j
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "nsdocument.createelementwithnamespace", &ok);
     if (!ok) {
@@ -758,19 +756,19 @@ NSDocumentCreateElementWithNameSpace(JSContext *cx, JSObject *obj, uintN argc, j
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  {
+    if (argc < 2) {
+      JS_ReportError(cx, "Function createElementWithNameSpace requires 2 parameters");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
     if (NS_OK != nativeThis->CreateElementWithNameSpace(b0, b1, &nativeRet)) {
@@ -778,10 +776,6 @@ NSDocumentCreateElementWithNameSpace(JSContext *cx, JSObject *obj, uintN argc, j
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function createElementWithNameSpace requires 2 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -807,7 +801,10 @@ NSDocumentCreateRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "nsdocument.createrange", &ok);
     if (!ok) {
@@ -816,26 +813,19 @@ NSDocumentCreateRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  {
 
     if (NS_OK != nativeThis->CreateRange(&nativeRet)) {
       return JS_FALSE;
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function createRange requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -861,7 +851,10 @@ EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "eventcapturer.captureevent", &ok);
     if (!ok) {
@@ -870,16 +863,17 @@ EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function captureEvent requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -888,10 +882,6 @@ EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function captureEvent requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -917,7 +907,10 @@ EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "eventcapturer.releaseevent", &ok);
     if (!ok) {
@@ -926,16 +919,17 @@ EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function releaseEvent requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -944,10 +938,6 @@ EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function releaseEvent requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;

@@ -317,7 +317,10 @@ NavigatorJavaEnabled(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "navigator.javaenabled", &ok);
     if (!ok) {
@@ -326,26 +329,19 @@ NavigatorJavaEnabled(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  {
 
     if (NS_OK != nativeThis->JavaEnabled(&nativeRet)) {
       return JS_FALSE;
     }
 
     *rval = BOOLEAN_TO_JSVAL(nativeRet);
-  }
-  else {
-    JS_ReportError(cx, "Function javaEnabled requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;

@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -30,6 +31,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIComponentManager.h"
+#include "nsIJSNativeInitializer.h"
 #include "nsDOMCID.h"
 
 
@@ -50,7 +52,7 @@ NS_DEF_PTR(nsIDOMWindow);
 PR_STATIC_CALLBACK(JSBool)
 GetToolkitCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMToolkitCore *a = (nsIDOMToolkitCore*)JS_GetPrivate(cx, obj);
+  nsIDOMToolkitCore *a = (nsIDOMToolkitCore*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -58,11 +60,18 @@ GetToolkitCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok = PR_FALSE;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -78,7 +87,7 @@ GetToolkitCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetToolkitCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMToolkitCore *a = (nsIDOMToolkitCore*)JS_GetPrivate(cx, obj);
+  nsIDOMToolkitCore *a = (nsIDOMToolkitCore*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -86,11 +95,18 @@ SetToolkitCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok = PR_FALSE;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -136,21 +152,39 @@ ResolveToolkitCore(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 ToolkitCoreShowDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)JS_GetPrivate(cx, obj);
+  nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsAutoString b0;
   nsIDOMWindowPtr b1;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "toolkitcore.showdialog", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  {
+    if (argc < 2) {
+      JS_ReportError(cx, "Function ShowDialog requires 2 parameters");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
                                            kIWindowIID,
                                            "Window",
@@ -165,10 +199,6 @@ ToolkitCoreShowDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
     *rval = JSVAL_VOID;
   }
-  else {
-    JS_ReportError(cx, "Function ShowDialog requires 2 parameters");
-    return JS_FALSE;
-  }
 
   return JS_TRUE;
 }
@@ -180,21 +210,39 @@ ToolkitCoreShowDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 PR_STATIC_CALLBACK(JSBool)
 ToolkitCoreShowWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)JS_GetPrivate(cx, obj);
+  nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsAutoString b0;
   nsIDOMWindowPtr b1;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "toolkitcore.showwindow", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  {
+    if (argc < 2) {
+      JS_ReportError(cx, "Function ShowWindow requires 2 parameters");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
                                            kIWindowIID,
                                            "Window",
@@ -209,10 +257,6 @@ ToolkitCoreShowWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
     *rval = JSVAL_VOID;
   }
-  else {
-    JS_ReportError(cx, "Function ShowWindow requires 2 parameters");
-    return JS_FALSE;
-  }
 
   return JS_TRUE;
 }
@@ -224,22 +268,40 @@ ToolkitCoreShowWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 PR_STATIC_CALLBACK(JSBool)
 ToolkitCoreShowWindowWithArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)JS_GetPrivate(cx, obj);
+  nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsAutoString b0;
   nsIDOMWindowPtr b1;
   nsAutoString b2;
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "toolkitcore.showwindowwithargs", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 3) {
+  {
+    if (argc < 3) {
+      JS_ReportError(cx, "Function ShowWindowWithArgs requires 3 parameters");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
                                            kIWindowIID,
                                            "Window",
@@ -247,7 +309,6 @@ ToolkitCoreShowWindowWithArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *a
                                            argv[1])) {
       return JS_FALSE;
     }
-
     nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
 
     if (NS_OK != nativeThis->ShowWindowWithArgs(b0, b1, b2)) {
@@ -255,10 +316,6 @@ ToolkitCoreShowWindowWithArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *a
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function ShowWindowWithArgs requires 3 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -271,21 +328,39 @@ ToolkitCoreShowWindowWithArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 PR_STATIC_CALLBACK(JSBool)
 ToolkitCoreShowModalDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)JS_GetPrivate(cx, obj);
+  nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsAutoString b0;
   nsIDOMWindowPtr b1;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "toolkitcore.showmodaldialog", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  {
+    if (argc < 2) {
+      JS_ReportError(cx, "Function ShowModalDialog requires 2 parameters");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
                                            kIWindowIID,
                                            "Window",
@@ -300,10 +375,6 @@ ToolkitCoreShowModalDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
     *rval = JSVAL_VOID;
   }
-  else {
-    JS_ReportError(cx, "Function ShowModalDialog requires 2 parameters");
-    return JS_FALSE;
-  }
 
   return JS_TRUE;
 }
@@ -315,17 +386,36 @@ ToolkitCoreShowModalDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 PR_STATIC_CALLBACK(JSBool)
 ToolkitCoreCloseWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)JS_GetPrivate(cx, obj);
+  nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMWindowPtr b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "toolkitcore.closewindow", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function CloseWindow requires 1 parameter");
+      return JS_FALSE;
+    }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kIWindowIID,
@@ -341,10 +431,6 @@ ToolkitCoreCloseWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
     *rval = JSVAL_VOID;
   }
-  else {
-    JS_ReportError(cx, "Function CloseWindow requires 1 parameters");
-    return JS_FALSE;
-  }
 
   return JS_TRUE;
 }
@@ -356,7 +442,7 @@ ToolkitCoreCloseWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 //
 JSClass ToolkitCoreClass = {
   "ToolkitCore", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetToolkitCoreProperty,
@@ -403,8 +489,10 @@ ToolkitCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   nsIScriptNameSpaceManager* manager;
   nsIDOMToolkitCore *nativeThis;
   nsIScriptObjectOwner *owner = nsnull;
+  nsIJSNativeInitializer* initializer = nsnull;
 
   static NS_DEFINE_IID(kIDOMToolkitCoreIID, NS_IDOMTOOLKITCORE_IID);
+  static NS_DEFINE_IID(kIJSNativeInitializerIID, NS_IJSNATIVEINITIALIZER_IID);
 
   result = context->GetNameSpaceManager(&manager);
   if (NS_OK != result) {
@@ -425,7 +513,16 @@ ToolkitCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_FALSE;
   }
 
-  // XXX We should be calling Init() on the instance
+  result = nativeThis->QueryInterface(kIJSNativeInitializerIID, (void **)&initializer);
+  if (NS_OK == result) {
+    result = initializer->Initialize(cx, argc, argv);
+    NS_RELEASE(initializer);
+
+    if (NS_OK != result) {
+      NS_RELEASE(nativeThis);
+      return JS_FALSE;
+    }
+  }
 
   result = nativeThis->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);
   if (NS_OK != result) {

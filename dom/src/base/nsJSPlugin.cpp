@@ -266,7 +266,10 @@ PluginItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "plugin.item", &ok);
     if (!ok) {
@@ -275,16 +278,17 @@ PluginItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function item requires 1 parameter");
+      return JS_FALSE;
+    }
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
       JS_ReportError(cx, "Parameter must be a number");
@@ -296,10 +300,6 @@ PluginItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function item requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -320,7 +320,10 @@ PluginNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "plugin.nameditem", &ok);
     if (!ok) {
@@ -329,16 +332,17 @@ PluginNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function namedItem requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -347,10 +351,6 @@ PluginNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function namedItem requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;

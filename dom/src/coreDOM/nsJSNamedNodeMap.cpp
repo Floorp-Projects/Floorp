@@ -185,7 +185,10 @@ NamedNodeMapGetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "namednodemap.getnameditem", &ok);
     if (!ok) {
@@ -194,16 +197,17 @@ NamedNodeMapGetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function getNamedItem requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -212,10 +216,6 @@ NamedNodeMapGetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function getNamedItem requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -236,7 +236,10 @@ NamedNodeMapSetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "namednodemap.setnameditem", &ok);
     if (!ok) {
@@ -245,16 +248,17 @@ NamedNodeMapSetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function setNamedItem requires 1 parameter");
+      return JS_FALSE;
+    }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kINodeIID,
@@ -269,10 +273,6 @@ NamedNodeMapSetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function setNamedItem requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -293,7 +293,10 @@ NamedNodeMapRemoveNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "namednodemap.removenameditem", &ok);
     if (!ok) {
@@ -302,16 +305,17 @@ NamedNodeMapRemoveNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function removeNamedItem requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -320,10 +324,6 @@ NamedNodeMapRemoveNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function removeNamedItem requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -344,7 +344,10 @@ NamedNodeMapItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "namednodemap.item", &ok);
     if (!ok) {
@@ -353,16 +356,17 @@ NamedNodeMapItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function item requires 1 parameter");
+      return JS_FALSE;
+    }
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
       JS_ReportError(cx, "Parameter must be a number");
@@ -374,10 +378,6 @@ NamedNodeMapItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function item requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;

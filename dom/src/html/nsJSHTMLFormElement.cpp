@@ -449,7 +449,10 @@ HTMLFormElementSubmit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.submit", &ok);
     if (!ok) {
@@ -458,26 +461,19 @@ HTMLFormElementSubmit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  {
 
     if (NS_OK != nativeThis->Submit()) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function submit requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -496,7 +492,10 @@ HTMLFormElementReset(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.reset", &ok);
     if (!ok) {
@@ -505,26 +504,19 @@ HTMLFormElementReset(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  {
 
     if (NS_OK != nativeThis->Reset()) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function reset requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -551,7 +543,10 @@ NSHTMLFormElementNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "nshtmlformelement.nameditem", &ok);
     if (!ok) {
@@ -560,16 +555,17 @@ NSHTMLFormElementNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function namedItem requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -578,10 +574,6 @@ NSHTMLFormElementNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function namedItem requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;

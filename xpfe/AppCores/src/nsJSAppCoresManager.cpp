@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -47,7 +48,7 @@ NS_DEF_PTR(nsIDOMBaseAppCore);
 PR_STATIC_CALLBACK(JSBool)
 GetAppCoresManagerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMAppCoresManager *a = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
+  nsIDOMAppCoresManager *a = (nsIDOMAppCoresManager*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -55,11 +56,18 @@ GetAppCoresManagerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok = PR_FALSE;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -75,7 +83,7 @@ GetAppCoresManagerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetAppCoresManagerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMAppCoresManager *a = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
+  nsIDOMAppCoresManager *a = (nsIDOMAppCoresManager*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -83,11 +91,18 @@ SetAppCoresManagerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok = PR_FALSE;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -133,26 +148,37 @@ ResolveAppCoresManager(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 AppCoresManagerStartup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
+  nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "appcoresmanager.startup", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  {
 
     if (NS_OK != nativeThis->Startup()) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function Startup requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -165,26 +191,37 @@ AppCoresManagerStartup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 PR_STATIC_CALLBACK(JSBool)
 AppCoresManagerShutdown(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
+  nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "appcoresmanager.shutdown", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  {
 
     if (NS_OK != nativeThis->Shutdown()) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function Shutdown requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -197,17 +234,36 @@ AppCoresManagerShutdown(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 PR_STATIC_CALLBACK(JSBool)
 AppCoresManagerAdd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
+  nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMBaseAppCorePtr b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "appcoresmanager.add", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function Add requires 1 parameter");
+      return JS_FALSE;
+    }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kIBaseAppCoreIID,
@@ -223,10 +279,6 @@ AppCoresManagerAdd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 
     *rval = JSVAL_VOID;
   }
-  else {
-    JS_ReportError(cx, "Function Add requires 1 parameters");
-    return JS_FALSE;
-  }
 
   return JS_TRUE;
 }
@@ -238,17 +290,36 @@ AppCoresManagerAdd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 PR_STATIC_CALLBACK(JSBool)
 AppCoresManagerRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
+  nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMBaseAppCorePtr b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "appcoresmanager.remove", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function Remove requires 1 parameter");
+      return JS_FALSE;
+    }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kIBaseAppCoreIID,
@@ -264,10 +335,6 @@ AppCoresManagerRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
     *rval = JSVAL_VOID;
   }
-  else {
-    JS_ReportError(cx, "Function Remove requires 1 parameters");
-    return JS_FALSE;
-  }
 
   return JS_TRUE;
 }
@@ -279,18 +346,37 @@ AppCoresManagerRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 PR_STATIC_CALLBACK(JSBool)
 AppCoresManagerFind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
+  nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMBaseAppCore* nativeRet;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "appcoresmanager.find", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function Find requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -299,10 +385,6 @@ AppCoresManagerFind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function Find requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -315,7 +397,7 @@ AppCoresManagerFind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 //
 JSClass AppCoresManagerClass = {
   "AppCoresManager", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetAppCoresManagerProperty,
@@ -363,7 +445,7 @@ AppCoresManager(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 //
 // AppCoresManager class initialization
 //
-nsresult NS_InitAppCoresManagerClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitAppCoresManagerClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

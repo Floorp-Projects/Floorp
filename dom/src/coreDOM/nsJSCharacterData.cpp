@@ -205,7 +205,10 @@ CharacterDataSubstringData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "characterdata.substringdata", &ok);
     if (!ok) {
@@ -214,22 +217,22 @@ CharacterDataSubstringData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  {
+    if (argc < 2) {
+      JS_ReportError(cx, "Function substringData requires 2 parameters");
+      return JS_FALSE;
+    }
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
       JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
     }
-
     if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
       JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
@@ -240,10 +243,6 @@ CharacterDataSubstringData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     }
 
     nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function substringData requires 2 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -263,7 +262,10 @@ CharacterDataAppendData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "characterdata.appenddata", &ok);
     if (!ok) {
@@ -272,16 +274,17 @@ CharacterDataAppendData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function appendData requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -290,10 +293,6 @@ CharacterDataAppendData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function appendData requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -314,7 +313,10 @@ CharacterDataInsertData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "characterdata.insertdata", &ok);
     if (!ok) {
@@ -323,22 +325,22 @@ CharacterDataInsertData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  {
+    if (argc < 2) {
+      JS_ReportError(cx, "Function insertData requires 2 parameters");
+      return JS_FALSE;
+    }
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
       JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
     }
-
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
     if (NS_OK != nativeThis->InsertData(b0, b1)) {
@@ -346,10 +348,6 @@ CharacterDataInsertData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function insertData requires 2 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -370,7 +368,10 @@ CharacterDataDeleteData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "characterdata.deletedata", &ok);
     if (!ok) {
@@ -379,22 +380,22 @@ CharacterDataDeleteData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  {
+    if (argc < 2) {
+      JS_ReportError(cx, "Function deleteData requires 2 parameters");
+      return JS_FALSE;
+    }
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
       JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
     }
-
     if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
       JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
@@ -405,10 +406,6 @@ CharacterDataDeleteData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function deleteData requires 2 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -430,7 +427,10 @@ CharacterDataReplaceData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "characterdata.replacedata", &ok);
     if (!ok) {
@@ -439,27 +439,26 @@ CharacterDataReplaceData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 3) {
+  {
+    if (argc < 3) {
+      JS_ReportError(cx, "Function replaceData requires 3 parameters");
+      return JS_FALSE;
+    }
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
       JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
     }
-
     if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
       JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
     }
-
     nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
 
     if (NS_OK != nativeThis->ReplaceData(b0, b1, b2)) {
@@ -467,10 +466,6 @@ CharacterDataReplaceData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function replaceData requires 3 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;

@@ -215,7 +215,10 @@ WindowCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "windowcollection.item", &ok);
     if (!ok) {
@@ -224,16 +227,17 @@ WindowCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function item requires 1 parameter");
+      return JS_FALSE;
+    }
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
       JS_ReportError(cx, "Parameter must be a number");
@@ -245,10 +249,6 @@ WindowCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function item requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -269,7 +269,10 @@ WindowCollectionNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "windowcollection.nameditem", &ok);
     if (!ok) {
@@ -278,16 +281,17 @@ WindowCollectionNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function namedItem requires 1 parameter");
+      return JS_FALSE;
+    }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -296,10 +300,6 @@ WindowCollectionNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function namedItem requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
