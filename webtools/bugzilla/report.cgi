@@ -198,7 +198,7 @@ foreach my $tbl (@tbl_names) {
         push(@tbl_data, \@col_data);
     }
     
-    push(@image_data, \@tbl_data);
+    unshift(@image_data, \@tbl_data);
 }
 
 $vars->{'col_field'} = $col_field;
