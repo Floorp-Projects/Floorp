@@ -110,8 +110,7 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 #define NS_MSG_CANT_CREATE_FOLDER NS_MSG_GENERATE_FAILURE(12)
 
 #ifdef XP_MAC
-#  define LINEBREAK             "\012"		/* ducarroz: it must be defined to \012 to avoid
-														 definition conflit with fe_proto.h */
+#  define LINEBREAK             "\012"
 #  define LINEBREAK_LEN 1
 #else
 #  ifdef XP_WIN
@@ -121,6 +120,21 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 #    ifdef XP_UNIX
 #      define LINEBREAK         "\012"
 #      define LINEBREAK_LEN     1
+#    endif /* XP_UNIX */
+#  endif /* XP_WIN */
+#endif /* XP_MAC */
+
+#ifdef XP_MAC
+#  define MSG_LINEBREAK             "\015"
+#  define MSG_LINEBREAK_LEN 1
+#else
+#  ifdef XP_WIN
+#    define MSG_LINEBREAK           "\015\012"
+#    define MSG_LINEBREAK_LEN       2
+#  else
+#    ifdef XP_UNIX
+#      define MSG_LINEBREAK         "\012"
+#      define MSG_LINEBREAK_LEN     1
 #    endif /* XP_UNIX */
 #  endif /* XP_WIN */
 #endif /* XP_MAC */
