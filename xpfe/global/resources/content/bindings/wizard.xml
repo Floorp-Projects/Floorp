@@ -39,9 +39,21 @@
       <field name="_pageStack">null</field>
       <field name="_currentPage">null</field>
 
+      <property name="wizardPages">
+        <getter>
+        <![CDATA[
+          var xulns = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          return this.getElementsByTagNameNS(xulns, "wizardpage");
+        ]]>
+        </getter>
+      </property>
+
       <property name="currentPage" onget="return this._currentPage">
         <setter>
         <![CDATA[
+          if (!val)
+            return val;
+            
           this._currentPage = val;
                     
           if (this.onFirstPage) {
@@ -78,7 +90,7 @@
           if (val < 0 || val >= this.pageCount)
             return this._pageIndex;
 
-          this.currentPage = this.childNodes[val];
+          this.currentPage = this.wizardPages[val];
         ]]>
         </setter>
       </property>
@@ -153,11 +165,11 @@
         window.addEventListener("close", this._closeHandler, false);
         
         // start off on the first page
-        this.pageCount = this.childNodes.length;
-        this.advance(this.childNodes[0].pageid);
+        this.pageCount = this.wizardPages.length;
+        this.advance();
         
         // give focus to the first focusable element in the dialog
-        window.addEventListener("load", this.setInitialFocus, false);
+        window.addEventListener("load", this._setInitialFocus, false);
       ]]></constructor>
 
       <method name="getPageById">
@@ -205,16 +217,21 @@
             if (aPageId)
               page = this.getPageById(aPageId);
             else {
-              if (this._accessMethod == "random")
-                page = this.getPageById(this.currentPage.next);
-              else
-                page = this.childNodes[this.currentPage.pageIndex+1];
+              if (this.currentPage) {
+                if (this._accessMethod == "random")
+                  page = this.getPageById(this.currentPage.next);
+                else
+                  page = this.wizardPages[this.currentPage.pageIndex+1];
+              } else
+                page = this.wizardPages[0];
             }
 
-            this._pageStack.push(page);
-            this.setAttribute("pagestep", this._pageStack.length);
-
-            this.currentPage = page;
+            if (page) {
+              this._pageStack.push(page);
+              this.setAttribute("pagestep", this._pageStack.length);
+  
+              this.currentPage = page;
+            }
           }
         ]]></body>
       </method>
@@ -241,7 +258,7 @@
       </method>
       
       <method name="_setInitialFocus">
-        <parameter name="event"/>
+        <parameter name="aEvent"/>
         <body>
         <![CDATA[
           if (!document.commandDispatcher.focusedElement)
@@ -268,9 +285,10 @@
       <method name="_initPages">
         <body><![CDATA[
           var meth = "sequential";
-          for (var i = 0; i < this.childNodes.length; ++i) {
-            var page = this.childNodes[i];
-            page._pageIndex = i;
+          var pages = this.wizardPages;
+          for (var i = 0; i < pages.length; ++i) {
+            var page = pages[i];
+            page.pageIndex = i;
             if (page.next != "")
               meth = "random";
           }
@@ -351,14 +369,15 @@
 
   <binding id="wizardpage" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
     <implementation>
+      <field name="pageIndex">null</field>
+      
       <property name="pageid" onget="return this.getAttribute('pageid');"
                               onset="this.setAttribute('pageid', val);"/>
 
-      <property name="pageIndex" onget="return this._pageIndex;"/>
-
       <property name="next"   onget="return this.getAttribute('next');"
-                              onset="this.setAttribute('next', val); 
-                                     this.parentNode._accessType = 'random';"/>
+                              onset="this.setAttribute('next', val);
+                                     this.parentNode._accessMethod = 'random';
+                                     return val;"/>
     </implementation>
   </binding>
 
