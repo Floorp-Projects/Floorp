@@ -1093,6 +1093,28 @@
       primary email address. On most directory servers available, this is
       "mail", but you may need to change this.
       </para>      
+
+      <para>You can also try using <ulink url="http://www.openldap.org/">
+      OpenLDAP</ulink> with Bugzilla, using any of a number of administration
+      tools.  You should apply the patch attached this bug:
+      <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=158630">
+      http://bugzilla.mozilla.org/show_bug.cgi?id=158630</ulink>, then set
+      the following object classes for your users:
+
+      <orderedlist>
+      <listitem><para>objectClass: person</para></listitem>
+      <listitem><para>objectClass: organizationalPerson</para></listitem>
+      <listitem><para>objectClass: inetOrgPerson</para></listitem>
+      <listitem><para>objectClass: top</para></listitem>
+      <listitem><para>objectClass: posixAccount</para></listitem>
+      <listitem><para>objectClass: shadowAccount</para></listitem>
+      </orderedlist>
+
+      Please note that this patch <emphasis>has not</emphasis> yet been
+      accepted by the Bugzilla team, and so you may need to do some
+      manual tweaking.  That said, it looks like Net::LDAP is probably
+      the way to go in the future.
+      </para>
     </section>
     
     <section id="content-type"
