@@ -2238,6 +2238,6 @@ function loadThrobberUrl(urlPref)
     var url;
     try {
         url = gPrefs.getComplexValue(urlPref, Components.interfaces.nsIPrefLocalizedString).data;
-        messenger.loadURL(window, url);  
+        messenger.launchExternalURL(url);  
     } catch (ex) {}
 }

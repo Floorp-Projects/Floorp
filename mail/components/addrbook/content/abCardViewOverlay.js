@@ -487,7 +487,7 @@ function MapIt(id)
   try {
     var messenger = Components.classes["@mozilla.org/messenger;1"].createInstance();
     messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
-    messenger.loadURL(window, button.getAttribute('url'));  
+    messenger.launchExternalURL(button.getAttribute('url'));  
   } catch (ex) {}
 }
 
@@ -512,7 +512,7 @@ function openLink(id)
   try {
     var messenger = Components.classes["@mozilla.org/messenger;1"].createInstance();
     messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
-    messenger.loadURL(window, document.getElementById(id).getAttribute("href"));  
+    messenger.launchExternalURL(document.getElementById(id).getAttribute("href"));  
   } catch (ex) {}
 
   // return false, so we don't load the href in the addressbook window

@@ -63,6 +63,17 @@
           versionField.value = hidversionField.value;
           versionField.width = hidversionField.width;
         }
+
+        function loadExternalLink() {
+          try {
+            var messenger = Components.classes["@mozilla.org/messenger;1"].createInstance();
+            messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
+            messenger.launchExternalURL(document.getElementById('copyrightLink').getAttribute("href"));  
+          } catch (ex) {}
+
+          // return false, so we don't load the href in the about dialog
+          return false;
+        }
       ]]>
     </script>
 
@@ -78,7 +89,7 @@
 
       <separator class="thin"/>
 
-      <html:a href="&copyrightLink;" style="display: block; color: blue; text-decoration: underline;" tabindex="3">&copyright;</html:a>
+      <html:a id="copyrightLink" onclick="return loadExternalLink();" href="&copyrightLink;" style="display: block; color: blue; text-decoration: underline;" tabindex="3">&copyright;</html:a>
     </vbox>
     <separator class="groove"/>
     
