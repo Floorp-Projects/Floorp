@@ -73,6 +73,7 @@ XUL_ATOM(toolbox, "toolbox")
 XUL_ATOM(image, "image")
 XUL_ATOM(validate, "validate")
 XUL_ATOM(description, "description")
+XUL_ATOM(gripper, "gripper")
 
   // The tree atoms
 XUL_ATOM(allowevents, "allowevents") // Lets events be handled on the cell contents or in menus.
