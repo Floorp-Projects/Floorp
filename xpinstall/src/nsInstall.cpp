@@ -88,6 +88,8 @@ static NS_DEFINE_CID(kCommonDialogsCID, NS_CommonDialog_CID);
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
+
+#define kInstallLocaleProperties "chrome://global/locale/commonDialogs.properties"
 	
 MOZ_DECL_CTOR_COUNTER(nsInstallInfo)
 
@@ -2442,6 +2444,28 @@ nsInstall::SetInstallArguments(const nsString& args)
 void nsInstall::GetInstallURL(nsString& url)        { url = mInstallURL; }
 void nsInstall::SetInstallURL(const nsString& url)  { mInstallURL = url; }
 
+//-----------------------------------------------------------------------------
+// GetTranslatedString :
+// This is a utility function that translates "Alert" or 
+// "Confirm" to pass as the title to the CommonDialogs Alert and Confirm 
+// functions as the title.  If you pass nsnull as the title, you get garbage
+// instead of a blank title.
+//-----------------------------------------------------------------------------
+PRUnichar *GetTranslatedString(const PRUnichar* aString)
+{
+    nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
+    nsCOMPtr<nsIStringBundle> stringBundle;
+    nsILocale* locale = nsnull;
+    PRUnichar* translatedString;
+
+    nsresult rv = stringService->CreateBundle(kInstallLocaleProperties, locale, getter_AddRefs(stringBundle));
+    if (NS_FAILED(rv)) return nsnull;
+
+    rv = stringBundle->GetStringFromName(aString, &translatedString);
+    if (NS_FAILED(rv)) return nsnull;
+
+    return translatedString;
+}
 
 PRInt32    
 nsInstall::Alert(nsString& string)
@@ -2452,7 +2476,9 @@ nsInstall::Alert(nsString& string)
     if (NS_FAILED(res)) 
         return res;
 
-    return dialog->Alert(mParent, nsnull, string.GetUnicode());
+    PRUnichar *title = GetTranslatedString(NS_ConvertASCIItoUCS2("Alert").get());
+
+    return dialog->Alert(mParent, title, string.GetUnicode());
 }
 
 PRInt32    
@@ -2464,8 +2490,10 @@ nsInstall::Confirm(nsString& string, PRBool* aReturn)
     NS_WITH_PROXIED_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, NS_UI_THREAD_EVENTQ, &res);
     if (NS_FAILED(res)) 
         return res;
+
+    PRUnichar *title = GetTranslatedString(NS_ConvertASCIItoUCS2("Confirm").get());
     
-    return dialog->Confirm(mParent, nsnull, string.GetUnicode(), aReturn);
+    return dialog->Confirm(mParent, title, string.GetUnicode(), aReturn);
 }
 
 
