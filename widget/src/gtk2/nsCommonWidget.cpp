@@ -202,7 +202,7 @@ nsCommonWidget::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent,
         ? PR_TRUE : PR_FALSE;
     aEvent.isMeta    = (aGdkEvent->state & GDK_MOD4_MASK)
         ? PR_TRUE : PR_FALSE;
-    
+    aEvent.time      = aGdkEvent->time;
 }
 
 void
