@@ -69,9 +69,10 @@ _IMGCB_NewPixmap(IMGCB* img_cb, jint op, void *dpy_cx, jint width, jint height,
   unsigned int visual_depth;
   fe_Drawable *fe_drawable;
 
+  /*
   printf ("_IMGCB_NewPixmap (context %p, image %p, width %d, height %d)\n",
 	  context, image, (int) width, (int) height);
-
+  */
   /* Allocate the client data structures for the IL_Pixmaps. */
   img_client_data = XP_NEW_ZAP(fe_PixmapClientData);
   if (!img_client_data) {
@@ -143,9 +144,11 @@ _IMGCB_NewPixmap(IMGCB* img_cb, jint op, void *dpy_cx, jint width, jint height,
                    img_header->width,
                    img_header->height,
                    visual_depth);
+  /*
   printf("\tNewpixmap: width, height = %d, %d\n",
          img_header->width,
 	 img_header->height);
+  */
   if (mask)
     {
       mask_client_data->gdk_pixmap =
@@ -153,9 +156,11 @@ _IMGCB_NewPixmap(IMGCB* img_cb, jint op, void *dpy_cx, jint width, jint height,
                        mask_header->width,
                        mask_header->height,
                        1);
+      /*
       printf("Newbitmap: width, height = %d, %d\n",
              mask_header->width,
              mask_header->height);
+      */
     }
   
   /* Fill in the pixmap client_data. */
@@ -189,10 +194,10 @@ _IMGCB_UpdatePixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* pixmap,
   GdkGC       *gdk_gc;
   GdkGCValues *gdkgc_values;
 
-
+  /*
   printf ("_IMGCB_UpdatePixmap (context %p, image %p, width %d, height %d)\n",
 	  context, pixmap, (int)width, (int)height) ;
-
+  */
   if (!context)
     return;
 
@@ -283,7 +288,7 @@ _IMGCB_DestroyPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* pixmap)
 {
   fe_PixmapClientData *pixmap_client_data;
 
-  printf ("_IMGCB_DestroyPixmap\n");
+  /* printf ("_IMGCB_DestroyPixmap\n"); */
   pixmap_client_data = (fe_PixmapClientData *)pixmap->client_data;
   if (!pixmap_client_data)
     return;
@@ -322,9 +327,10 @@ _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
   XP_Bool tiling_required = FALSE;
   GdkWindow * window = (GdkWindow *)fe_drawable->drawable;
 
+  /*
   printf ("_IMGCB_DisplayPixmap (context %p, image %p, width %d, height %d)\n",
 	  context, image, (int)width, (int)height);
-
+  */
 				/* Check for zero display area. */
   if (width == 0 || height == 0)
     return;
@@ -358,37 +364,34 @@ _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
   /* Do the actual drawing.  There are several cases to be dealt with:
      transparent vs non-transparent, tiled vs non-tiled and clipped by
      compositor's clip region vs not clipped. */
-  
+
+  /*
   printf("Display: mask %p, tiling %d, clip %p\n", mask,
          tiling_required, fe_drawable->clip_region);
-  
+  */
   
   gc = gdk_gc_new(window);
   if (mask)
     {
       gdk_gc_set_clip_mask(gc, mask_x_pixmap);
-      gdk_gc_set_clip_origin(gc, rect_x_offset, rect_y_offset);
+      gdk_gc_set_clip_origin(gc, img_x_offset, img_y_offset);
     }
-  
-#if 0
-  if (fe_drawable->clip_region) { /* This is a bad hack */
-      GdkRegionPrivate * hack = gdk_region_new();
-      FE_CopyRegion((Region)fe_drawable->clip_region, 
-                    hack->xregion );
-      gdk_gc_set_clip_region(gc, hack);
-      gdk_region_destroy(hack);
-  }
-#endif
-
+  else if (fe_drawable->clip_region)
+    {
+      /*printf("draw_pixmap: using clip region at %p\n", fe_drawable->clip_region); */
+      gdk_gc_set_clip_region(gc, *(GdkRegion **)fe_drawable->clip_region);
+    }
   if (tiling_required) 
     gdk_draw_rectangle(drawable, gc, TRUE,
                        rect_x_offset, rect_y_offset, width,
                        height);
   else {
+    /*
     printf("draw_pixmap (xo %d, yo %d, rxo %d, ryo %d, w %d, h %d)\n",
            x_offset, y_offset,
            rect_x_offset, rect_y_offset,
            width, height);
+    */
     gdk_draw_pixmap(drawable, gc, img_x_pixmap,
                     x_offset, y_offset,
                     rect_x_offset, rect_y_offset,
