@@ -311,6 +311,8 @@ _XFE_WIDGET_CLASS_RECORD(toolscroll,ToolScroll) =
 		NULL,									/* draw_background		*/
 		XfeInheritDrawShadow,					/* draw_shadow			*/
 		DrawComponents,							/* draw_components		*/
+		False,									/* count_layable_children*/
+		NULL,									/* child_is_layable		*/
 		NULL,									/* extension          	*/
 	},
 

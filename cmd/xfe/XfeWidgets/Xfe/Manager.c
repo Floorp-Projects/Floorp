@@ -45,6 +45,8 @@
 #define MESSAGE13 "The XmNborderWidth of a child cannot be set explicitly."
 #define MESSAGE14 "Cannot accept new child '%s'."
 #define MESSAGE15 "XmNnumPrivateComponents is a read-only resource."
+#define MESSAGE16 "XmNlayableChildren is a read-only resource."
+#define MESSAGE17 "XmNnumLayableChildren is a read-only resource."
 
 #define MIN_LAYOUT_WIDTH	10
 #define MIN_LAYOUT_HEIGHT	10
@@ -312,6 +314,26 @@ static XtResource resources[] =
 		(XtPointer) 0
     },
 
+	/* Layable children resources */
+	{ 
+		XmNnumLayableChildren,
+		XmCReadOnly,
+		XmRCardinal,
+		sizeof(Cardinal),
+		XtOffsetOf(XfeManagerRec , xfe_manager . num_layable_children),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
+	{ 
+		XmNlayableChildren,
+		XmCReadOnly,
+		XmRWidgetList,
+		sizeof(WidgetList),
+		XtOffsetOf(XfeManagerRec , xfe_manager . layable_children),
+		XmRImmediate, 
+		(XtPointer) NULL
+    },
+
 	/* Popup children resources */
     { 
 		XmNnumPopupChildren,
@@ -538,7 +560,9 @@ _XFE_WIDGET_CLASS_RECORD(manager,Manager) =
 		NULL,									/* draw_background		*/
 		DrawShadow,								/* draw_shadow			*/
 		NULL,									/* draw_components		*/
-		NULL									/* extension			*/
+		False,									/* count_layable_children*/
+		NULL,									/* child_is_layable		*/
+		NULL,									/* extension			*/
     },
 };
 
@@ -608,6 +632,12 @@ ClassPartInit(WidgetClass wc)
    
     _XfeResolve(cc,sc,xfe_manager_class,draw_components,
 				XfeInheritDrawComponents);
+
+    _XfeResolve(cc,sc,xfe_manager_class,count_layable_children,
+				XfeInheritCountLayableChildren);
+
+    _XfeResolve(cc,sc,xfe_manager_class,child_is_layable,
+				XfeInheritChildIsLayable);
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -653,6 +683,12 @@ Destroy(Widget w)
     /* XtRemoveAllCallbacks(w,XmNlayoutCallback); */
     /* XtRemoveAllCallbacks(w,XmNresizeCallback); */
     /* XtRemoveAllCallbacks(w,XmNexposeCallback); */
+
+	/* Free the layable children list */
+	if (_XfemLayableChildren(w) != NULL)
+	{
+		XtFree((char *) _XfemLayableChildren(w));
+	}
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -755,6 +791,22 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 		_XfemNumPrivateComponents(nw) = _XfemNumPrivateComponents(ow);
       
 		_XfeWarning(nw,MESSAGE15);
+	}
+
+	/* num_layable_children */
+	if (_XfemNumLayableChildren(nw) != _XfemNumLayableChildren(ow))
+	{
+		_XfemNumLayableChildren(nw) = _XfemNumLayableChildren(ow);
+      
+		_XfeWarning(nw,MESSAGE17);
+	}
+
+	/* layable_children */
+	if (_XfemLayableChildren(nw) != _XfemLayableChildren(ow))
+	{
+		_XfemLayableChildren(nw) = _XfemLayableChildren(ow);
+      
+		_XfeWarning(nw,MESSAGE16);
 	}
 
 	/* height */
@@ -1834,132 +1886,21 @@ _XfeManagerDrawShadow(Widget		w,
 	}
 }
 /*----------------------------------------------------------------------*/
-
-/* Public Functions */
-/*----------------------------------------------------------------------*/
-void
-XfeManagerLayout(Widget w)
+/* extern */ Boolean
+_XfeManagerChildIsLayable(Widget child)
 {
-	assert( _XfeIsAlive(w) );
-	assert( XfeIsManager(w) );
+	Widget					w = _XfeParent(child);
+	XfeManagerWidgetClass	mc = (XfeManagerWidgetClass) XtClass(w);
+	Boolean					filter = True;
 
-	XfeResize(w);
-
-#if 0	
-   /* Setup the max children dimensions */
-	_XfeManagerChildrenInfo(w,
-							&_XfemMaxChildWidth(w),
-							&_XfemMaxChildHeight(w),
-							&_XfemTotalChildrenWidth(w),
-							&_XfemTotalChildrenHeight(w),
-							&_XfemNumManaged(w),
-							&_XfemNumComponents(w));
-	
-
-	/* Make sure some components exist */
-	if (!_XfemNumComponents(w))
+	if (mc->xfe_manager_class.delete_child != NULL)
 	{
-		return;
+		filter = (*mc->xfe_manager_class.delete_child)(child);
 	}
 	
-	/* Layout the components */
-	_XfeManagerLayoutComponents(w);
-	
-	/* Layout the children */
-	_XfeManagerLayoutChildren(w);
-#endif
+	return (filter && _XfeChildIsShown(child) && _XfeIsRealized(child));
 }
 /*----------------------------------------------------------------------*/
-void
-XfeManagerSetChildrenValues(Widget		w,
-							ArgList		args,
-							Cardinal	count,
-							Boolean		only_managed)
-{
-	Cardinal i;
-   
-	assert(w != NULL);
-   
-	/* Make sure its a Manager */
-	if (!XfeIsManager(w))
-	{
-		_XfeWarning(w,MESSAGE5);
-		return;
-	}
-
-	_XfemIgnoreConfigure(w) = True;
-
-	/* Iterate through all the items */
-	for (i = 0; i < _XfemNumChildren(w); i++)
-	{
-		Widget obj = _XfemChildren(w)[i];
-
-		if (_XfeIsAlive(obj))
-		{
-			if (only_managed && XtIsManaged(obj))
-			{
-				XtSetValues(obj,args,count);
-			}
-			else
-			{
-				XtSetValues(obj,args,count);
-			}
-		}
-	}
-   
-	_XfemIgnoreConfigure(w) = False;
-
-/*    XfeConfigure(w); */
-}
-/*----------------------------------------------------------------------*/
-void
-XfeManagerApply(Widget				w,
-				XfeManagerApplyProc	proc,
-				XtPointer			data,
-				Boolean				only_managed)
-{
-   Cardinal i;
-
-   assert(w != NULL);
-
-   /* Make sure its a Manager */
-   if (!XfeIsManager(w))
-   {
-      _XfeWarning(w,MESSAGE5);
-
-      return;
-   }
-
-	/* Show the action button as needed */
-	_XfemIgnoreConfigure(w) = True;
-
-   /* Iterate through all the items */
-   for (i = 0; i < _XfemNumChildren(w); i++)
-   {
-	   Widget child = _XfemChildren(w)[i];
-	   
-	   if (child && 
-		   _XfeIsAlive(child) && 
-		   !_XfeManagerPrivateComponent(child))
-	   {
-		   if (only_managed)
-		   {
-			   if (XtIsManaged(child))
-			   {
-				   proc(w,child,data);
-			   }
-		   }
-		   else
-		   {
-			   proc(w,child,data);
-		   }
-	   }
-   }
-
-	_XfemIgnoreConfigure(w) = False;
-
-	XfeManagerLayout(w);
-}
 
 
 /*----------------------------------------------------------------------*/
@@ -2216,5 +2157,208 @@ _XfeManagerComponentInfo(Widget				w,
 	{
 		*max_height_out = max_height;
 	}
+}
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Name:		_XfeManagerGetLayableChildren()							*/
+/*																		*/
+/* Purpose:		Obtain a list of layable children						*/
+/*																		*/
+/* Ret Val:		void													*/
+/*																		*/
+/* Args in:		w					The manager widget.					*/
+/*																		*/
+/* Args out:	layable_children_out		Array of layable children	*/
+/*				num_layable_children_out	Size of the array			*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ void
+layable_children(Widget				w,
+				 WidgetList *		layable_children_out,
+				 Cardinal *			num_layable_children_out)
+{
+	Widget				child;
+	Cardinal			i;
+	WidgetList			layable_children = NULL;
+	Cardinal			num_layable_children = 0;
+
+	assert( XfeIsManager(w) );
+	assert( layable_children_out != NULL );
+	assert( num_layable_children_out != NULL );
+	assert( XfeIsManager(w) );
+
+	
+
+	*layable_children_out = layable_children;
+	*num_layable_children_out = num_layable_children;
+
+#if 0
+	/* Iterate through all the items */
+	for (i = 0; i < _XfemNumChildren(w); i++)
+	{
+		child = _XfemChildren(w)[i];
+
+		/* Check for private components */
+		if (_XfeManagerPrivateComponent(child) &&
+			XtIsManaged(child) && 
+			_XfeIsAlive(child))
+		{
+			/* Keep track of largest width */
+			if (_XfeWidth(child) > max_width)
+			{
+				max_width = _XfeWidth(child);
+			}
+
+			/* Keep track of largest height */
+			if (_XfeHeight(child) > max_height)
+			{
+				max_height = _XfeHeight(child);
+			}
+		}
+	}
+
+	/* Assign only required arguments */
+	if (max_width_out) 
+	{
+		*max_width_out = max_width;
+	}
+
+	if (max_height_out) 
+	{
+		*max_height_out = max_height;
+	}
+#endif
+}
+/*----------------------------------------------------------------------*/
+
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeManager public functions											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+void
+XfeManagerLayout(Widget w)
+{
+	assert( _XfeIsAlive(w) );
+	assert( XfeIsManager(w) );
+
+	XfeResize(w);
+
+#if 0	
+   /* Setup the max children dimensions */
+	_XfeManagerChildrenInfo(w,
+							&_XfemMaxChildWidth(w),
+							&_XfemMaxChildHeight(w),
+							&_XfemTotalChildrenWidth(w),
+							&_XfemTotalChildrenHeight(w),
+							&_XfemNumManaged(w),
+							&_XfemNumComponents(w));
+	
+
+	/* Make sure some components exist */
+	if (!_XfemNumComponents(w))
+	{
+		return;
+	}
+	
+	/* Layout the components */
+	_XfeManagerLayoutComponents(w);
+	
+	/* Layout the children */
+	_XfeManagerLayoutChildren(w);
+#endif
+}
+/*----------------------------------------------------------------------*/
+void
+XfeManagerSetChildrenValues(Widget		w,
+							ArgList		args,
+							Cardinal	count,
+							Boolean		only_managed)
+{
+	Cardinal i;
+   
+	assert(w != NULL);
+   
+	/* Make sure its a Manager */
+	if (!XfeIsManager(w))
+	{
+		_XfeWarning(w,MESSAGE5);
+		return;
+	}
+
+	_XfemIgnoreConfigure(w) = True;
+
+	/* Iterate through all the items */
+	for (i = 0; i < _XfemNumChildren(w); i++)
+	{
+		Widget obj = _XfemChildren(w)[i];
+
+		if (_XfeIsAlive(obj))
+		{
+			if (only_managed && XtIsManaged(obj))
+			{
+				XtSetValues(obj,args,count);
+			}
+			else
+			{
+				XtSetValues(obj,args,count);
+			}
+		}
+	}
+   
+	_XfemIgnoreConfigure(w) = False;
+
+/*    XfeConfigure(w); */
+}
+/*----------------------------------------------------------------------*/
+void
+XfeManagerApply(Widget				w,
+				XfeManagerApplyProc	proc,
+				XtPointer			data,
+				Boolean				only_managed)
+{
+   Cardinal i;
+
+   assert(w != NULL);
+
+   /* Make sure its a Manager */
+   if (!XfeIsManager(w))
+   {
+      _XfeWarning(w,MESSAGE5);
+
+      return;
+   }
+
+	/* Show the action button as needed */
+	_XfemIgnoreConfigure(w) = True;
+
+   /* Iterate through all the items */
+   for (i = 0; i < _XfemNumChildren(w); i++)
+   {
+	   Widget child = _XfemChildren(w)[i];
+	   
+	   if (child && 
+		   _XfeIsAlive(child) && 
+		   !_XfeManagerPrivateComponent(child))
+	   {
+		   if (only_managed)
+		   {
+			   if (XtIsManaged(child))
+			   {
+				   proc(w,child,data);
+			   }
+		   }
+		   else
+		   {
+			   proc(w,child,data);
+		   }
+	   }
+   }
+
+	_XfemIgnoreConfigure(w) = False;
+
+	XfeManagerLayout(w);
 }
 /*----------------------------------------------------------------------*/

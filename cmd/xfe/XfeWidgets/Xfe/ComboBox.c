@@ -575,6 +575,8 @@ _XFE_WIDGET_CLASS_RECORD(combobox,ComboBox) =
 		NULL,									/* draw_background		*/
 		DrawShadow,								/* draw_shadow			*/
 		DrawComponents,							/* draw_components		*/
+		False,									/* count_layable_children*/
+		NULL,									/* child_is_layable		*/
 		NULL,									/* extension			*/
     },
 

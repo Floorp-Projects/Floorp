@@ -46,19 +46,62 @@ extern "C" {
 typedef struct
 {
 	XfeBitGravityType	bit_gravity;			/* bit_gravity			*/
+
 	XfeGeometryProc		preferred_geometry;		/* preferred_geometry	*/
 	XfeGeometryProc		minimum_geometry;		/* minimum_geometry		*/
+
 	XtWidgetProc		update_rect;			/* update_rect			*/
+
 	XfeChildFunc		accept_child;			/* accept_child			*/
 	XfeChildFunc		insert_child;			/* insert_child			*/
 	XfeChildFunc		delete_child;			/* delete_child			*/
 	XtWidgetProc		change_managed;			/* change_managed	    */
+
 	XfePrepareProc		prepare_components;		/* prepare_components	*/
+
 	XtWidgetProc		layout_components;		/* layout_components	*/
 	XtWidgetProc		layout_children;		/* layout_children	    */
+
 	XfeExposeProc		draw_background;		/* draw_background		*/
 	XfeExposeProc		draw_shadow;			/* draw_shadow		    */
 	XfeExposeProc		draw_components;		/* draw_components		*/
+
+	/*
+	 * Layable children support.
+	 *
+	 * If the widget class sets the 'count_layable_children' field to
+	 * 'True', then a read-only list of layable children will be allocated
+	 * and maintained by the XfeManager super class.  This list can be
+	 * accessed via the XmNlayableChildren and XmNnumLayableChildren.
+	 *
+	 * The purpose of these two fields is to give the sub class widget
+	 * writer the ability to control children layout in detail.  The feature
+	 * is optional so that sub classes of XfeManager that don't need detailed
+	 * layout control will not suffer a runtime resource and performance
+	 * penalty.
+	 *
+	 * The 'child_is_layable' is used to determine whether a child is
+	 * layable.  By default all children that comply with the following
+	 * are considered layable:
+	 *
+	 * 1.  _XfeIsAlive(child)
+	 * 2.  _XfeIsRealized(child)
+	 * 3.  _XfeIsManaged(child)
+	 * 4.  !_XfemNumPrivateComponents(child)
+     *
+     * The XfeManager class does not define an 'child_is_layable' method
+     * by default.  Thus, all children that comply with the above
+     * conditions are considered layable.  
+     *
+     * A sub class can further filter which children are layable by
+     * defining an 'child_is_layable' method.  If defined, this method 
+     * will be invoked as needed by the XfeManager class.  If should 
+     * return 'True' if the given child is layable, or 'False' otherwise.
+	 *
+	 */
+	Boolean				count_layable_children;
+	XfeChildFunc		child_is_layable;
+
 	XtPointer			extension;				/* extension			*/
 
 } XfeManagerClassPart;
@@ -119,6 +162,10 @@ typedef struct _XfeManagerPart
 
 	/* Private Component resources */
 	Cardinal			num_private_components;	/* Num private components*/
+
+	/* Layable children resources */
+	Cardinal			num_layable_children;	/* Num layable children	*/
+	WidgetList			layable_children;		/* Layable children		*/
 
 	/* Private Data Members */
 	int					config_flags;			/* Require Geometry		*/
@@ -245,6 +292,9 @@ _XfeManagerDrawShadow			(Widget			w,
 								 Region			region,
 								 XRectangle *	clip_rect);
 /*----------------------------------------------------------------------*/
+extern Boolean
+_XfeManagerChildIsLayable		(Widget			child);
+/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -272,7 +322,15 @@ _XfeManagerComponentInfo		(Widget			w,
 /*																		*/
 /*----------------------------------------------------------------------*/
 #define _XfeManagerAccessBitGravity(w) \
-(((XfeManagerWidgetClass) XtClass(w))->xfe_manager_class.bit_gravity)
+(((XfeManagerWidgetClass) XtClass(w))->xfe_manager_class . bit_gravity)
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeManagerWidgetClass bit_gravity access macro						*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define _XfeManagerTrackLayableChildren(w) \
+(((XfeManagerWidgetClass) XtClass(w))->xfe_manager_class . count_layable_children)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -474,6 +532,12 @@ _XfeManagerComponentInfo		(Widget			w,
 /*----------------------------------------------------------------------*/
 #define _XfemNumPrivateComponents(w) \
 (((XfeManagerWidget) (w))->xfe_manager . num_private_components)
+/*----------------------------------------------------------------------*/
+#define _XfemLayableChildren(w) \
+(((XfeManagerWidget) (w))->xfe_manager . layable_children)
+/*----------------------------------------------------------------------*/
+#define _XfemNumLayableChildren(w) \
+(((XfeManagerWidget) (w))->xfe_manager . num_layable_children)
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/

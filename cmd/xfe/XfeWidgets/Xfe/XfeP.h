@@ -114,6 +114,7 @@ typedef int	XfeBitGravityType;
 #define XfeInheritArmTimeout				((XtTimerCallbackProc)	_XtInherit)
 #define XfeInheritBitGravity				((XfeBitGravityType)	_XtInherit)
 #define XfeInheritChangeManaged				((XtWidgetProc)			_XtInherit)
+#define XfeInheritChildIsLayable			((XfeChildFunc)			_XtInherit)
 #define XfeInheritClickTimeout				((XtTimerCallbackProc)	_XtInherit)
 #define XfeInheritDeleteChild				((XfeChildFunc)			_XtInherit)
 #define XfeInheritDescendantDragEnd			((XfeOrientedProc)		_XtInherit)
@@ -152,6 +153,7 @@ typedef int	XfeBitGravityType;
 #define XfeInheritMotion					((XfeOrientedProc)		_XtInherit)
 #define XfeInheritPreferredGeometry			((XfeGeometryProc)		_XtInherit)
 #define XfeInheritToggleSelection			((XtWidgetProc)			_XtInherit)
+#define XfeInheritCountLayableChildren		((Boolean)				_XtInherit)
 #define XfeInheritUpdateRect				((XtWidgetProc)			_XtInherit)
 
 /*----------------------------------------------------------------------*/

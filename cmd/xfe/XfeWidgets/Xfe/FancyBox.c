@@ -531,6 +531,8 @@ _XFE_WIDGET_CLASS_RECORD(fancybox,FancyBox) =
 		NULL,									/* draw_background		*/
 		XfeInheritDrawShadow,					/* draw_shadow			*/
 		XfeInheritDrawComponents,				/* draw_components		*/
+		False,									/* count_layable_children*/
+		NULL,									/* child_is_layable		*/
 		NULL,									/* extension			*/
     },
 

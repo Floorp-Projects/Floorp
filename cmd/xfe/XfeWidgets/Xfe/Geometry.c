@@ -29,7 +29,7 @@
 #include <Xfe/PrimitiveP.h>
 #include <Xfe/ManagerP.h>
 
-#if 1
+#if 0
 #ifdef DEBUG_ramiro
 #define DEBUG_DIMENSIONS 1
 #endif
@@ -345,11 +345,12 @@ _XfeConfigureWidget(Widget w,int x,int y,int width,int height)
      * 
      * These assertions help me find such problems.
      */
+#if 0
 #ifdef DEBUG_ramiro
 	assert( width >= 0 );
 	assert( height >= 0 );
 #endif
-
+#endif
 	/* Ignore this request if width or height are 0.
      *
      * The right thing would be for the above asserts to catch 0 as well.
