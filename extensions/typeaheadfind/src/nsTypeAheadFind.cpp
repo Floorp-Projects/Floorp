@@ -97,6 +97,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIObserverService.h"
 #include "nsLayoutAtoms.h"
+#include "nsIPrintPreviewContext.h"
 
 #include "nsIPrivateTextEvent.h"
 #include "nsIPrivateCompositionEvent.h"
@@ -2117,7 +2118,7 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
 
   NS_ADDREF(*aTargetContent = targetContent);
 
-  // ---------- Is the keytroke in a new window? -------------------
+  // ---------- Is the keystroke in a new window? -------------------
 
   nsCOMPtr<nsIDocument> doc;
   if (NS_FAILED(targetContent->GetDocument(*getter_AddRefs(doc))) || !doc) {
@@ -2147,7 +2148,23 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
   if (!presShell) {
     return NS_OK;
   }
+
   nsCOMPtr<nsIPresShell> lastShell(do_QueryReferent(mFocusedWeakShell));
+
+  nsCOMPtr<nsIPresContext> presContext;
+  presShell->GetPresContext(getter_AddRefs(presContext));
+  nsCOMPtr<nsIPrintPreviewContext> printPreview(do_QueryInterface(presContext));
+  if (printPreview) {
+    // Typeaheadfind is not designed to work in print preview.
+    // You can't navigate through the links there.
+    if (lastShell != presShell) {
+      mFocusedWeakShell = do_GetWeakReference(presShell);
+      CancelFind();
+      DisplayStatus(PR_FALSE, nsnull, PR_TRUE, NS_LITERAL_STRING("").get());  // Clear status
+    }
+    return NS_OK;
+  }
+  
   if (lastShell != presShell) {
     // Same window, but a new document, so start fresh
     UseInWindow(domWin);
