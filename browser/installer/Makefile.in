@@ -73,3 +73,21 @@ libs::
 	@if [ ! -d $(DEPTH)/installer ]; then \
 	  mkdir $(DEPTH)/installer; \
 	fi
+
+# Rename the archive after it's created, so that we can differentiate between
+# the gtk1 and gtk2 packages on ftp, and so the Windows package has a
+# friendlier name.
+
+ifeq ($(OS_ARCH)_$(TARGET_CPU)_$(MOZ_WIDGET_TOOLKIT)_$(MOZ_ENABLE_XFT), Linux_i686_gtk2_1)
+PACKAGE_NAME = firefox-i686-linux-gtk2+xft.tar.gz
+else
+ifeq ($(OS_ARCH), WINNT)
+PACKAGE_NAME = Firefox-win32.zip
+endif
+endif
+
+ifdef PACKAGE_NAME
+libs:: $(PACKAGE)
+	@rm -f $(DIST)/$(PACKAGE_NAME)
+	@mv $(DIST)/$(PACKAGE) $(DIST)/$(PACKAGE_NAME)
+endif
