@@ -305,6 +305,10 @@ public:
 
   // nsBlockFrame
   void TakeRunInFrames(nsBlockFrame* aRunInFrame);
+  PRBool ShouldPlaceBullet(LineData* aLine);
+  void PlaceBullet(nsBlockReflowState& aState,
+                   nscoord aMaxAscent,
+                   nscoord aTopMargin);
 
 #ifdef DO_SELECTION
   NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
@@ -468,7 +472,7 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
   NS_IMETHOD ListTag(FILE* out) const;
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
 
   // nsIHTMLReflow
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
@@ -516,7 +520,7 @@ BulletFrame::ListTag(FILE* out) const
 }
 
 NS_IMETHODIMP
-BulletFrame::List(FILE* out, PRInt32 aIndent) const
+BulletFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
 {
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
@@ -1782,6 +1786,9 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
     if (PR_TRUE==outputMe)
       fputs("<\n", out);
     aIndent++;
+    if (nsnull != mBullet) {
+      mBullet->List(out, aIndent, aFilter);
+    }
     LineData* line = mLines;
     while (nsnull != line) {
       line->List(out, aIndent, aFilter, outputMe);
@@ -3544,6 +3551,22 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       newY = aState.mY;
     }
   }
+  else if ((nsnull != mBullet) && ShouldPlaceBullet(aLine)) {
+    const nsStyleFont* font;
+    rv = aFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&) font);
+    if (NS_SUCCEEDED(rv) && (nsnull != font)) {
+      nsIRenderingContext& rc = *aState.rendContext;
+      rc.SetFont(font->mFont);
+      nscoord firstLineAscent = 0;
+      nsIFontMetrics* fm;
+      rv = rc.GetFontMetrics(fm);
+      if (NS_SUCCEEDED(rv) && (nsnull != fm)) {
+        fm->GetMaxAscent(firstLineAscent);
+        NS_RELEASE(fm);
+      }
+      PlaceBullet(aState, firstLineAscent, topMargin);
+    }
+  }
   aState.mY = newY;
 
   // Apply collapsed top-margin value
@@ -4097,40 +4120,9 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
   // Now that we know the line is staying put, put in the outside
   // bullet if we have one.
-  if ((nsnull == mPrevInFlow) && (aLine == mLines) && (nsnull != mBullet)) {
-    const nsStyleList* list;
-    GetStyleData(eStyleStruct_List, (const nsStyleStruct*&)list);
-    if (NS_STYLE_LIST_STYLE_POSITION_OUTSIDE == list->mListStylePosition) {
-      // Reflow the bullet now
-      nsSize availSize;
-      availSize.width = NS_UNCONSTRAINEDSIZE;
-      availSize.height = NS_UNCONSTRAINEDSIZE;
-      nsHTMLReflowState reflowState(aState.mPresContext, mBullet, aState,
-                                    availSize, &aState.mLineLayout);
-      nsHTMLReflowMetrics metrics(nsnull);
-      nsIHTMLReflow* htmlReflow;
-      if (NS_OK == mBullet->QueryInterface(kIHTMLReflowIID, (void**) &htmlReflow)) {
-        nsReflowStatus  status;
-        htmlReflow->WillReflow(aState.mPresContext);
-        htmlReflow->Reflow(aState.mPresContext, metrics, reflowState, status);
-        htmlReflow->DidReflow(aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
-      }
-
-      // Place the bullet now; use its right margin to distance it
-      // from the rest of the frames in the line
-      nsMargin margin;
-      const nsStyleSpacing* spacing;
-      mBullet->GetStyleData(eStyleStruct_Spacing,
-                            (const nsStyleStruct*&) spacing);
-      spacing->CalcMarginFor(mBullet, margin);
-      nscoord x = aState.mBorderPadding.left - margin.right -
-        metrics.width;
-      // XXX This calculation is wrong, especially if
-      // vertical-alignment occurs on the line!
-      nscoord y = aState.mBorderPadding.top + maxAscent -
-        metrics.ascent + topMargin;
-      mBullet->SetRect(nsRect(x, y, metrics.width, metrics.height));
-    }
+  if ((nsnull == mPrevInFlow) && (nsnull != mBullet) &&
+      ShouldPlaceBullet(aLine)) {
+    PlaceBullet(aState, maxAscent, topMargin);
   }
 
   // Update max-element-size
@@ -4209,6 +4201,67 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   aState.GetAvailableSpace();
 
   return PR_TRUE;
+}
+
+PRBool
+nsBlockFrame::ShouldPlaceBullet(LineData* aLine)
+{
+  PRBool ok = PR_FALSE;
+  const nsStyleList* list;
+  GetStyleData(eStyleStruct_List, (const nsStyleStruct*&)list);
+  if (NS_STYLE_LIST_STYLE_POSITION_OUTSIDE == list->mListStylePosition) {
+    LineData* line = mLines;
+    while (nsnull != line) {
+      if (line->mBounds.height > 0) {
+        if (aLine == line) {
+          ok = PR_TRUE;
+          break;
+        }
+      }
+      if (aLine == line) {
+        break;
+      }
+      line = line->mNext;
+    }
+  }
+  return ok;
+}
+
+void
+nsBlockFrame::PlaceBullet(nsBlockReflowState& aState,
+                          nscoord aMaxAscent,
+                          nscoord aTopMargin)
+{
+  // Reflow the bullet now
+  nsSize availSize;
+  availSize.width = NS_UNCONSTRAINEDSIZE;
+  availSize.height = NS_UNCONSTRAINEDSIZE;
+  nsHTMLReflowState reflowState(aState.mPresContext, mBullet, aState,
+                                availSize, &aState.mLineLayout);
+  nsHTMLReflowMetrics metrics(nsnull);
+  nsIHTMLReflow* htmlReflow;
+  nsresult rv = mBullet->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
+  if (NS_SUCCEEDED(rv)) {
+    nsReflowStatus  status;
+    htmlReflow->WillReflow(aState.mPresContext);
+    htmlReflow->Reflow(aState.mPresContext, metrics, reflowState, status);
+    htmlReflow->DidReflow(aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
+  }
+
+  // Place the bullet now; use its right margin to distance it
+  // from the rest of the frames in the line
+  nsMargin margin;
+  const nsStyleSpacing* spacing;
+  mBullet->GetStyleData(eStyleStruct_Spacing,
+                        (const nsStyleStruct*&) spacing);
+  spacing->CalcMarginFor(mBullet, margin);
+  nscoord x = aState.mBorderPadding.left - margin.right -
+    metrics.width;
+  // XXX This calculation may be wrong, especially if
+  // vertical-alignment occurs on the line!
+  nscoord y = aState.mBorderPadding.top + aMaxAscent -
+    metrics.ascent + aTopMargin;
+  mBullet->SetRect(nsRect(x, y, metrics.width, metrics.height));
 }
 
 static nsresult
