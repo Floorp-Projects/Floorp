@@ -72,6 +72,7 @@ protected:
 class nsSelect : public nsInput 
 {
 public:
+  typedef nsInput super;
   nsSelect (nsIAtom* aTag, nsIFormManager* aFormMan);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
@@ -105,6 +106,8 @@ protected:
 class nsOption : public nsInput 
 {
 public:
+  typedef nsInput super;
+
   nsOption (nsIAtom* aTag);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
@@ -316,7 +319,7 @@ void nsSelect::SetAttribute(nsIAtom* aAttribute,
     mMultiple = PR_TRUE;
   }
   else {
-    nsInput::SetAttribute(aAttribute, aValue);
+    super::SetAttribute(aAttribute, aValue);
   }
 }
 
@@ -328,7 +331,7 @@ nsContentAttr nsSelect::GetAttribute(nsIAtom* aAttribute,
     return GetCacheAttribute(mMultiple, aResult);
   }
   else {
-    return nsInput::GetAttribute(aAttribute, aResult);
+    return super::GetAttribute(aAttribute, aResult);
   }
 }
 
@@ -338,8 +341,8 @@ nsSelect::IsComboBox()
   PRBool  multiple;
   PRInt32 size;
 
-  nsInput::GetAttribute(nsHTMLAtoms::size, size);
-  nsInput::GetAttribute(nsHTMLAtoms::multiple, multiple);
+  super::GetAttribute(nsHTMLAtoms::size, size);
+  super::GetAttribute(nsHTMLAtoms::multiple, multiple);
 
   PRBool result = (!multiple && (size <= 1)) ? PR_TRUE : PR_FALSE;
   return result;
@@ -349,7 +352,7 @@ PRInt32
 nsSelect::GetMaxNumValues()
 {
   PRBool isMultiple;
-  nsInput::GetAttribute(nsHTMLAtoms::multiple, isMultiple);
+  super::GetAttribute(nsHTMLAtoms::multiple, isMultiple);
 
   if (isMultiple) {
     return ChildCount();
@@ -414,7 +417,7 @@ void
 nsSelect::Reset() 
 {
   PRBool allowMultiple;
-  nsInput::GetAttribute(nsHTMLAtoms::multiple, allowMultiple);
+  super::GetAttribute(nsHTMLAtoms::multiple, allowMultiple);
   PRBool haveSelection = PR_FALSE;
   PRInt32 numChildren = ChildCount();
 
@@ -476,7 +479,7 @@ void nsOption::SetAttribute(nsIAtom* aAttribute,
     mSelected = PR_TRUE;
   }
   else {
-    nsInput::SetAttribute(aAttribute, aValue);
+    super::SetAttribute(aAttribute, aValue);
   }
 }
 
@@ -488,7 +491,7 @@ nsContentAttr nsOption::GetAttribute(nsIAtom* aAttribute,
     return GetCacheAttribute(mSelected, aResult);
   }
   else {
-    return nsInput::GetAttribute(aAttribute, aResult);
+    return super::GetAttribute(aAttribute, aResult);
   }
 }
 
@@ -528,7 +531,7 @@ nsOption::GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues, nsString* aValue
   }
 
   nsString valAttr;
-  nsContentAttr stat = nsInput::GetAttribute(nsHTMLAtoms::value, valAttr);
+  nsContentAttr stat = super::GetAttribute(nsHTMLAtoms::value, valAttr);
   if (eContentAttr_HasValue == stat) {
     aValues[0] = valAttr;
     aNumValues = 1;

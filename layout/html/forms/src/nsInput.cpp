@@ -34,6 +34,10 @@
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include "nsHTMLForms.h"
+#include "nsStyleConsts.h"
+
+static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
+static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 
 // Note: we inherit a base class operator new that zeros our memory
 nsInput::nsInput(nsIAtom* aTag, nsIFormManager* aManager)
@@ -44,7 +48,8 @@ nsInput::nsInput(nsIAtom* aTag, nsIFormManager* aManager)
     NS_ADDREF(mFormMan);
     mFormMan->AddFormControl(&mControl);
   }
-  mSize = CSS_NOTSET; // not set
+  mSize  = ATTR_NOTSET; 
+  mAlign = ATTR_NOTSET;
 }
 
 nsInput::~nsInput()
@@ -60,6 +65,28 @@ nsInput::~nsInput()
     // prevent mFormMan from decrementing its ref count on us
     mFormMan->RemoveFormControl(&mControl, PR_FALSE); 
     NS_RELEASE(mFormMan);
+  }
+}
+
+void nsInput::MapAttributesInto(nsIStyleContext* aContext, 
+                                nsIPresContext* aPresContext)
+{
+  if (ATTR_NOTSET != mAlign) {
+    nsStyleDisplay* display = (nsStyleDisplay*)
+      aContext->GetData(kStyleDisplaySID);
+    nsStyleText* text = (nsStyleText*)
+      aContext->GetData(kStyleTextSID);
+    switch (mAlign) {
+    case NS_STYLE_TEXT_ALIGN_LEFT:
+      display->mFloats = NS_STYLE_FLOAT_LEFT;
+      break;
+    case NS_STYLE_TEXT_ALIGN_RIGHT:
+      display->mFloats = NS_STYLE_FLOAT_RIGHT;
+      break;
+    default:
+      text->mVerticalAlignFlags = mAlign;
+      break;
+    }
   }
 }
 
@@ -223,13 +250,16 @@ void nsInput::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     CacheAttribute(aValue, mName);
   } 
   else if (aAttribute == nsHTMLAtoms::size) {
-    CacheAttribute(aValue, CSS_NOTSET, mSize);
+    CacheAttribute(aValue, ATTR_NOTSET, mSize);
   } 
   else if (aAttribute == nsHTMLAtoms::value) {
     CacheAttribute(aValue, mValue);
   } 
+  else if (aAttribute == nsHTMLAtoms::align) {
+    CacheAttribute(aValue, ATTR_NOTSET, mAlign);
+  } 
   else {
-    nsHTMLContainer::SetAttribute(aAttribute, aValue); // YYY remove this
+    super::SetAttribute(aAttribute, aValue); 
   }
 }
 
@@ -248,7 +278,7 @@ nsContentAttr nsInput::GetCacheAttribute(nsString* const& aLoc, nsHTMLValue& aVa
 nsContentAttr nsInput::GetCacheAttribute(PRInt32 aLoc, nsHTMLValue& aValue) const
 {
   aValue.Reset();
-  if (aLoc <= CSS_NOTSET) {
+  if (aLoc <= ATTR_NOTSET) {
     return eContentAttr_NotThere;
   } 
   else {
@@ -334,8 +364,11 @@ nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute,
   else if (aAttribute == nsHTMLAtoms::value) {
     return GetCacheAttribute(mValue, aValue);
   }
+  else if (aAttribute == nsHTMLAtoms::align) {
+    return GetCacheAttribute(mAlign, aValue);
+  }
   else {
-    return eContentAttr_NotThere;
+    return super::GetAttribute(aAttribute, aValue);
   }
 }
 

@@ -44,6 +44,7 @@
 #include "nsITextWidget.h"  //remove this
 #include "nsISupports.h"
 #include "nsHTMLForms.h"
+#include "nsStyleConsts.h"
 
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
@@ -372,26 +373,40 @@ void nsInputFrame::GetStyleSize(nsIPresContext& aPresContext,
 {
   nsInput* input;
   GetContent((nsIContent *&) input); // this must be an nsInput
-  nsStylePosition* position = (nsStylePosition*)
+  nsStylePosition* pos = (nsStylePosition*) 
     mStyleContext->GetData(kStylePositionSID);
 
-//printf("\n ** %d %d", mol->fixedWidth, mol->proportionalWidth);
-  // set the width, height
-#if 0
-  aSize.width = mol->fixedWidth;
-  if ((CSS_NOTSET == aSize.width) && (CSS_NOTSET != mol->proportionalWidth)) {
-    aSize.width = (aMaxSize.width * mol->proportionalWidth) / 100;
-  }
-  aSize.height = mol->fixedHeight;
-  if ((CSS_NOTSET == aSize.height) && (CSS_NOTSET != mol->proportionalHeight)) {
-    aSize.height = (aMaxSize.height * mol->proportionalHeight) / 100;
-  }
-#else
-  aSize.width = -1;
-  aSize.height = -1;
-#endif
-
+  aSize.width  = GetStyleDim(aPresContext, aMaxSize, 
+                             pos->mWidthFlags, pos->mWidth);
+  aSize.height = GetStyleDim(aPresContext, aMaxSize, 
+                             pos->mHeightFlags, pos->mHeight);
   NS_RELEASE(input);
+}
+
+PRInt32 
+nsInputFrame::GetStyleDim(nsIPresContext& aPresContext, const nsSize& aMaxSize, 
+                          PRInt8 aFlags, PRInt32 aVal)
+{
+  // Peter, can you help. 
+  PRInt32 result = 0;
+  switch (aFlags) {
+    case NS_STYLE_POSITION_VALUE_LENGTH:
+    case NS_STYLE_POSITION_VALUE_AUTO:
+    case NS_STYLE_POSITION_VALUE_INHERIT:
+      result = aVal;
+      break;
+    case NS_STYLE_POSITION_VALUE_PERCENT:
+    case NS_STYLE_POSITION_VALUE_PROPORTIONAL:
+      result = (aMaxSize.width * aVal) / 100;
+      break;
+    //default:
+  }
+
+  if (result <= 0) {
+    result = -1;
+  }
+
+  return result;
 }
 
 PRInt32 
@@ -491,7 +506,7 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
     }
   }
 
-  PRInt32 rowAttr = CSS_NOTSET;
+  PRInt32 rowAttr = ATTR_NOTSET;
   nsContentAttr rowStatus = eContentAttr_NotThere;
   if (nsnull != aSpec.mRowSizeAttr) {
     rowStatus = content->GetAttribute(aSpec.mRowSizeAttr, rowAttr);

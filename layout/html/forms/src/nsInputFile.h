@@ -27,6 +27,7 @@ class nsString;
 
 class nsInputFile : public nsInput {
 public:
+  typedef nsInput super;
   nsInputFile (nsIAtom* aTag, nsIFormManager* aManager);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,

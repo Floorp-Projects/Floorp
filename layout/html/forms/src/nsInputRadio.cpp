@@ -209,7 +209,7 @@ void nsInputRadio::SetAttribute(nsIAtom* aAttribute,
     mChecked = PR_TRUE;
   }
   else {
-    nsInput::SetAttribute(aAttribute, aValue);
+    super::SetAttribute(aAttribute, aValue);
   }
 }
 
@@ -221,7 +221,7 @@ nsContentAttr nsInputRadio::GetAttribute(nsIAtom* aAttribute,
     return GetCacheAttribute(mChecked, aResult);
   }
   else {
-    return nsInput::GetAttribute(aAttribute, aResult);
+    return super::GetAttribute(aAttribute, aResult);
   }
 }
 
