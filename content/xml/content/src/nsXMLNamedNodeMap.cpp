@@ -159,7 +159,8 @@ nsXMLNamedNodeMap::GetNamedItem(const nsAReadableString& aName, nsIDOMNode** aRe
   mArray->Count(&count);
 
   for (i = 0; i < count; i++) {
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mArray->ElementAt(i)));
+    nsCOMPtr<nsISupports> supports_node(dont_AddRef(mArray->ElementAt(i)));
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(supports_node));
 
     if (!node)
       break;
@@ -194,7 +195,8 @@ nsXMLNamedNodeMap::SetNamedItem(nsIDOMNode* aArg, nsIDOMNode** aReturn)
     mArray->Count(&count);
 
     for (i = 0; i < count; i++) {
-      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mArray->ElementAt(i)));
+      nsCOMPtr<nsISupports> supports_node(dont_AddRef(mArray->ElementAt(i)));
+      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(supports_node));
 
       if (!node)
         break;
@@ -239,7 +241,8 @@ nsXMLNamedNodeMap::RemoveNamedItem(const nsAReadableString& aName, nsIDOMNode** 
   mArray->Count(&count);
 
   for (i = 0; i < count; i++) {
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mArray->ElementAt(i)));
+    nsCOMPtr<nsISupports> supports_node(dont_AddRef(mArray->ElementAt(i)));
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(supports_node));
 
     if (!node)
       break;
@@ -270,7 +273,8 @@ nsXMLNamedNodeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 
   mArray->Count(&count);
   if (mArray && aIndex < count) {
-    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mArray->ElementAt(aIndex)));
+    nsCOMPtr<nsISupports> supports_node(dont_AddRef(mArray->ElementAt(aIndex)));
+    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(supports_node));
 
     *aReturn = domNode;
   } else
