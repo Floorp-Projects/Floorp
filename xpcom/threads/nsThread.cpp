@@ -375,6 +375,10 @@ nsThreadPool::DispatchRequest(nsIRunnable* runnable)
     nsresult rv;
     PR_EnterMonitor(mRequestMonitor);
 
+#if defined(PR_LOGGING)
+    nsIThread* th;
+    nsIThread::GetCurrent(&th);
+#endif
     if (mShuttingDown) {
         rv = NS_ERROR_FAILURE;
     }
@@ -384,6 +388,8 @@ nsThreadPool::DispatchRequest(nsIRunnable* runnable)
         if (NS_SUCCEEDED(rv))
             PR_Notify(mRequestMonitor);
     }
+    PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+           ("nsIThreadPool thread %p dispatching %p status %x\n", th, runnable, rv));
     PR_ExitMonitor(mRequestMonitor);
     return rv;
 }
@@ -395,6 +401,10 @@ nsThreadPool::GetRequest()
     nsIRunnable* request = nsnull;
  
     PR_EnterMonitor(mRequestMonitor);
+#if defined(PR_LOGGING)
+    nsIThread* th;
+    nsIThread::GetCurrent(&th);
+#endif
 
     PRUint32 cnt;
     while (PR_TRUE) {
@@ -406,10 +416,6 @@ nsThreadPool::GetRequest()
             rv = NS_ERROR_FAILURE;
             break;
         }
-#if defined(PR_LOGGING)
-        nsIThread* th;
-        nsIThread::GetCurrent(&th);
-#endif
         PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
                ("nsIThreadPool thread %p waiting\n", th));
         PRStatus status = PR_Wait(mRequestMonitor, PR_INTERVAL_NO_TIMEOUT);
@@ -428,6 +434,8 @@ nsThreadPool::GetRequest()
         PRBool removed = mRequests->RemoveElementAt(0);
         NS_ASSERTION(removed, "nsISupportsArray broken");
     }
+    PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+           ("nsIThreadPool thread %p got request %p\n", th, request));
     PR_ExitMonitor(mRequestMonitor);
     return request;
 }
@@ -461,6 +469,13 @@ nsThreadPool::Shutdown()
     nsresult rv = NS_OK;
     PRUint32 count = 0;
     PRUint32 i;
+
+#if defined(PR_LOGGING)
+    nsIThread* th;
+    nsIThread::GetCurrent(&th);
+#endif
+    PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+           ("nsIThreadPool thread %p shutting down\n", th));
 
     mShuttingDown = PR_TRUE;
     ProcessPendingRequests();
@@ -544,18 +559,21 @@ nsThreadPoolRunnable::Run()
 #endif
     while ((request = mPool->GetRequest()) != nsnull) {
         PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-               ("nsIThreadPool thread %p running %p\n", th, this));
+               ("nsIThreadPool thread %p running %p\n", th, request));
         rv = request->Run();
         NS_ASSERTION(NS_SUCCEEDED(rv), "runnable failed");
-        NS_RELEASE(request);
 
         // let the thread pool know we've finished a run
         PR_CEnterMonitor(mPool);
         PR_CNotify(mPool);
         PR_CExitMonitor(mPool);
+        PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+               ("nsIThreadPool thread %p completed %p status=%x\n",
+                th, request, rv));
+        NS_RELEASE(request);
     }
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-           ("nsIThreadPool thread %p quitting %x\n", th, this));
+           ("nsIThreadPool thread %p quitting %p\n", th, this));
     return rv;
 }
 
