@@ -74,6 +74,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 
 #include "nsIMsgAccountManager.h"
+#include "nsIPasswordManager.h"
 
 #ifdef DEBUG_sspitzer
 #define DEBUG_MSGINCOMING_SERVER
@@ -1579,4 +1580,50 @@ NS_IMETHODIMP nsMsgIncomingServer::SetIntAttribute(const char *aName, PRInt32 va
 NS_IMETHODIMP nsMsgIncomingServer::GetIntAttribute(const char *aName, PRInt32 *val)
 {
   return GetIntValue(aName, val);
+}
+
+// Check if the password is available and return a boolean indicating whether 
+// it is being authenticated or not.
+NS_IMETHODIMP 
+nsMsgIncomingServer::GetIsAuthenticated(PRBool *isAuthenticated)
+{
+  nsresult rv = NS_OK;
+  NS_ENSURE_ARG_POINTER(isAuthenticated);
+
+  *isAuthenticated = PR_FALSE;
+  // If the password is empty, check to see if it is stored and to be retrieved
+  if (m_password.IsEmpty()) {
+    nsCOMPtr <nsIPasswordManager> passwordMgr = do_GetService(NS_PASSWORDMANAGER_CONTRACTID, &rv);
+    if(NS_SUCCEEDED(rv) && passwordMgr) {
+
+      // Get the current server URI
+      nsXPIDLCString currServerUri;
+      rv = GetServerURI(getter_Copies(currServerUri));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Obtain the server URI which is in the format <protocol>://<userid>@<hostname>.
+      // Password manager uses the same format when it stores the password on user's request.
+      char* hostURI;
+      hostURI = ToNewCString(currServerUri);
+
+      nsXPIDLString userName;
+      nsXPIDLString password;
+
+      // Get password entry corresponding to the host URI we are passing in.
+      rv = passwordMgr->FindPasswordEntry(&hostURI, getter_Copies(userName), getter_Copies(password));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // release hostURI
+      nsMemory::Free(hostURI);
+
+      // If a match is found, password element is filled in. Convert the
+      // obtained password and store it for the session.
+      if (!password.IsEmpty()) {
+        rv = SetPassword(NS_ConvertUCS2toUTF8(password).get());
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+  }
+  *isAuthenticated = !m_password.IsEmpty();
+  return rv;
 }

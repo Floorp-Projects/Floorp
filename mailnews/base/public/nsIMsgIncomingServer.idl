@@ -324,6 +324,14 @@ interface nsIMsgIncomingServer : nsISupports {
 
   long getIntAttribute(in string name);
   void setIntAttribute(in string name, in long value);
+
+  /** 
+   * If the password for the server is available either via authentication 
+   * in the current session or from password manager stored entries, return
+   * true. Otherwise, return false. If password is obtained from password 
+   * manager, set the password member variable.
+   */ 
+  readonly attribute boolean isAuthenticated;
 };
 
 %{C++

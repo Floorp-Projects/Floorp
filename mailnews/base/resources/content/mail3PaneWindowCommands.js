@@ -472,7 +472,6 @@ var DefaultController =
 				MsgGetMessage();
 				break;
       case "cmd_getMsgsForAuthAccounts":
-        MsgGetMessage();
         MsgGetMessagesForAllAuthenticatedAccounts();
         break;
 			case "cmd_getNextNMessages":
