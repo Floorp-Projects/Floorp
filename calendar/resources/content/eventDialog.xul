@@ -90,7 +90,9 @@
  <popup  id="oe-date-picker-popup"  position="after_start" oncommand="onDatePick( this )" value=""/>
  <popup  id="oe-time-picker-popup"  position="after_start" oncommand="onTimePick( this )" value=""/>
 
-<!-- The dialog -->
+ <keyset id="dialogKeys"/>
+
+  <!-- The dialog -->
     
     <!-- dialog-box: from dialogOverlay.xul -->
     
