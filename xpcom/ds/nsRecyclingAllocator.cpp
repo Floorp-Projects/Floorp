@@ -122,6 +122,10 @@ nsRecyclingAllocator::~nsRecyclingAllocator()
             if (claimed && mMemBucket[i].ptr)
                 free(mMemBucket[i].ptr);
         }
+
+    // Free memory for buckets
+    if (mMemBucket)
+        free(mMemBucket);
 }
 
 // Allocation and free routines
@@ -159,7 +163,8 @@ nsRecyclingAllocator::Malloc(PRUint32 bytes, PRBool zeroit)
             // Let go of any freeAllocatedBucket that we claimed
             if (availableBucketIndex >= 0)
                 Unclaim(availableBucketIndex);
-            memset(ptr, bytes, 0);
+            if (zeroit)
+                memset(ptr, bytes, 0);
             return ptr;
         }
         // Meanwhile, remember a free allocated bucket.
@@ -193,8 +198,22 @@ nsRecyclingAllocator::Malloc(PRUint32 bytes, PRBool zeroit)
     ptr = zeroit ? calloc(1, bytes) : malloc(bytes);
 
     // Take care of no memory and no free slot situation
-    if (!ptr || mNAllocations == (PRInt32)mNBucket)
+    if (!ptr || mNAllocations == (PRInt32)mNBucket) 
+    {
+#ifdef DEBUG_dp
+        // Warn if we are failing over to malloc and not storing it
+        // This says we have a misdesigned memory pool. The intent was
+        // once the pool was full, we would never fail over to calloc.
+        printf("nsRecyclingAllocator(%s) malloc %d - FAILOVER 0x%p Memory pool has sizes: ",
+               mId, bytes, ptr);
+        for (i = 0; i < mNBucket; i++)
+        {
+            printf("%d ", mMemBucket[i].size);
+        }
+        printf("\n");
+#endif
         return ptr;
+    }
   
     // Find a free unallocated bucket and store allocation
     for (i = 0; i < mNBucket; i++)
