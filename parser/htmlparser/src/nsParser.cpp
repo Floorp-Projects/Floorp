@@ -2096,19 +2096,11 @@ static PRBool DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
  return oCharset.Length() > 0;
 }
 
-static const char kHTTPEquivStr[] = "http-equiv";
-static const PRInt32 kHTTPEquivStrLen = sizeof(kHTTPEquivStr)-1;
-static const char kContentTypeStr[] = "Content-Type";
-static const PRInt32 kContentTypeStrLen = sizeof(kContentTypeStr)-1;
-static const char kContentStr[] = "content";
-static const PRInt32 kContentStrLen = sizeof(kContentStr)-1;
-static const char kCharsetStr[] = "charset";
-static const PRInt32 kCharsetStrLen = sizeof(kCharsetStr)-1;
-
-inline const char GetNextChar(nsReadingIterator<char>& aStart,
-                              nsReadingIterator<char>& aEnd)
+inline const char GetNextChar(nsACString::const_iterator& aStart,
+                              nsACString::const_iterator& aEnd)
 {
-  return (aStart != aEnd) ? *(++aStart) : '\0';
+  NS_ASSERTION(aStart != aEnd, "end of buffer");
+  return (++aStart != aEnd) ? *aStart : '\0';
 }
 
 PRBool 
@@ -2130,13 +2122,14 @@ nsParser::DetectMetaTag(const char* aBytes,
   // META tag in this block, looking upto 2k into it.
   const nsASingleFragmentCString& str =
       Substring(aBytes, aBytes + PR_MIN(aLen, 2048));
-  nsReadingIterator<char> begin, end;
+  // XXXldb Should be const_char_iterator when FindInReadable supports it.
+  nsACString::const_iterator begin, end;
   
   str.BeginReading(begin);
   str.EndReading(end);
-  nsReadingIterator<char> currPos(begin);
-  nsReadingIterator<char> tokEnd;
-  nsReadingIterator<char> tagEnd(begin);
+  nsACString::const_iterator currPos(begin);
+  nsACString::const_iterator tokEnd;
+  nsACString::const_iterator tagEnd(begin);
   
   while (currPos != end) {
     if (!FindCharInReadable('<', currPos, end)) 
@@ -2153,13 +2146,12 @@ nsParser::DetectMetaTag(const char* aBytes,
             GetNextChar(currPos, end) == '-') {
           foundMatch = !foundMatch; // toggle until we've matching "--"
         }
-        else if (foundMatch && *currPos == '>') {
-          foundMDC = PR_TRUE; // found comment end delimiter.
-          if (currPos != end) 
-            ++currPos;
-        }
         else if (currPos == end) {
           return PR_FALSE; // Couldn't find --[*s]> in this buffer
+        }
+        else if (foundMatch && *currPos == '>') {
+          foundMDC = PR_TRUE; // found comment end delimiter.
+          ++currPos;
         }
       }
       continue; // continue searching for META tag.
