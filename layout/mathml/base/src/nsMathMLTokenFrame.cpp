@@ -205,7 +205,7 @@ printf("\n");
   mBoundingMetrics = aDesiredSize.mBoundingMetrics;
 
   // place and size children
-  FinalizeReflow(aPresContext, *aReflowState.rendContext, aDesiredSize);
+  FinalizeReflow(*aReflowState.rendContext, aDesiredSize);
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
@@ -216,13 +216,12 @@ printf("\n");
 // pass, it is not computed here because our children may be text frames
 // that do not implement the GetBoundingMetrics() interface.
 nsresult
-nsMathMLTokenFrame::Place(nsPresContext*      aPresContext,
-                          nsIRenderingContext& aRenderingContext,
+nsMathMLTokenFrame::Place(nsIRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
   nsCOMPtr<nsIFontMetrics> fm =
-    aPresContext->GetMetricsFor(GetStyleFont()->mFont);
+    GetPresContext()->GetMetricsFor(GetStyleFont()->mFont);
   nscoord ascent, descent;
   fm->GetMaxAscent(ascent);
   fm->GetMaxDescent(descent);
@@ -244,7 +243,7 @@ nsMathMLTokenFrame::Place(nsPresContext*      aPresContext,
 
       // place and size the child; (dx,0) makes the caret happy - bug 188146
       dy = rect.IsEmpty() ? 0 : aDesiredSize.ascent - rect.y;
-      FinishReflowChild(childFrame, aPresContext, nsnull, childSize, dx, dy, 0);
+      FinishReflowChild(childFrame, GetPresContext(), nsnull, childSize, dx, dy, 0);
       dx += rect.width;
       childFrame = childFrame->GetNextSibling();
     }

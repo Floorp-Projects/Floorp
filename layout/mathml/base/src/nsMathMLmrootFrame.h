@@ -65,7 +65,7 @@ public:
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  TransmitAutomaticData(nsPresContext* aPresContext);
+  TransmitAutomaticData();
 
   NS_IMETHOD
   Reflow(nsPresContext*          aPresContext,

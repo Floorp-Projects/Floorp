@@ -76,7 +76,7 @@ nsMathMLmsupFrame::~nsMathMLmsupFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmsupFrame::TransmitAutomaticData(nsPresContext* aPresContext)
+nsMathMLmsupFrame::TransmitAutomaticData()
 {
   // if our base is an embellished operator, its flags bubble to us
   nsIFrame* baseFrame = mFrames.FirstChild();
@@ -89,7 +89,7 @@ nsMathMLmsupFrame::TransmitAutomaticData(nsPresContext* aPresContext)
   // "false", within superscript, but leaves both attributes unchanged within base.
   // 2. The TeXbook (Ch 17. p.141) says the superscript *inherits* the compression,
   // so we don't set the compression flag. Our parent will propagate its own.
-  UpdatePresentationDataFromChildAt(aPresContext, 1, -1, 1,
+  UpdatePresentationDataFromChildAt(1, -1, 1,
     ~NS_MATHML_DISPLAYSTYLE,
      NS_MATHML_DISPLAYSTYLE);
 
@@ -97,8 +97,7 @@ nsMathMLmsupFrame::TransmitAutomaticData(nsPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsMathMLmsupFrame::Place(nsPresContext*      aPresContext,
-                         nsIRenderingContext& aRenderingContext,
+nsMathMLmsupFrame::Place(nsIRenderingContext& aRenderingContext,
                          PRBool               aPlaceOrigin,
                          nsHTMLReflowMetrics& aDesiredSize)
 {
@@ -112,11 +111,11 @@ nsMathMLmsupFrame::Place(nsPresContext*      aPresContext,
                    nsMathMLAtoms::superscriptshift_, value)) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
-      supScriptShift = CalcLength(aPresContext, mStyleContext, cssValue);
+      supScriptShift = CalcLength(GetPresContext(), mStyleContext, cssValue);
     }
   }
 
-  return nsMathMLmsupFrame::PlaceSuperScript(aPresContext, 
+  return nsMathMLmsupFrame::PlaceSuperScript(GetPresContext(), 
                                              aRenderingContext,
                                              aPlaceOrigin,
                                              aDesiredSize,
@@ -159,8 +158,7 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
     // report an error, encourage people to get their markups in order
     NS_WARNING("invalid markup");
     return NS_STATIC_CAST(nsMathMLContainerFrame*, 
-                          aFrame)->ReflowError(aPresContext, 
-                                               aRenderingContext, 
+                          aFrame)->ReflowError(aRenderingContext, 
                                                aDesiredSize);
   }
   GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
@@ -168,7 +166,7 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
 
   // get the supdrop from the supscript font
   nscoord supDrop;
-  GetSupDropFromChild(aPresContext, supScriptFrame, supDrop);
+  GetSupDropFromChild(supScriptFrame, supDrop);
   // parameter u, Rule 18a, App. G, TeXbook
   nscoord minSupScriptShift = bmBase.ascent - supDrop;
 

@@ -51,8 +51,7 @@ public:
   friend nsresult NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
-  InheritAutomaticData(nsPresContext* aPresContext,
-                       nsIFrame*       aParent);
+  InheritAutomaticData(nsIFrame* aParent);
 
   NS_IMETHOD
   Reflow(nsPresContext*          aPresContext,
@@ -84,7 +83,7 @@ private:
 
   // helpers to process the attributes
   void
-  ProcessAttributes(nsPresContext* aPresContext);
+  ProcessAttributes();
 
   static PRBool
   ParseAttribute(nsString&   aString,

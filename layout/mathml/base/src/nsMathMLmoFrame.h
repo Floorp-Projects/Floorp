@@ -67,11 +67,10 @@ public:
         PRUint32             aFlags = 0);
 
   NS_IMETHOD
-  InheritAutomaticData(nsPresContext* aPresContext,
-                       nsIFrame*       aParent);
+  InheritAutomaticData(nsIFrame* aParent);
 
   NS_IMETHOD
-  TransmitAutomaticData(nsPresContext* aPresContext);
+  TransmitAutomaticData();
 
   NS_IMETHOD
   Reflow(nsPresContext*          aPresContext,
@@ -92,8 +91,7 @@ public:
   // This method is called by the parent frame to ask <mo> 
   // to stretch itself.
   NS_IMETHOD
-  Stretch(nsPresContext*      aPresContext,
-          nsIRenderingContext& aRenderingContext,
+  Stretch(nsIRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
           nsHTMLReflowMetrics& aDesiredStretchSize);
@@ -117,12 +115,11 @@ protected:
   // our default data that may come from there, and to complete the setup
   // using attributes that we may have
   void
-  ProcessOperatorData(nsPresContext* aPresContext);
+  ProcessOperatorData();
 
   // helper to double check thar our char should be rendered as a selected char
   PRBool
-  IsFrameInSelection(nsPresContext* aPresContext,
-                     nsIFrame*       aFrame);
+  IsFrameInSelection(nsIFrame* aFrame);
 };
 
 #endif /* nsMathMLmoFrame_h___ */

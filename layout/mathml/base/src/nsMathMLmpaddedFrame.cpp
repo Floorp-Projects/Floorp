@@ -90,11 +90,10 @@ nsMathMLmpaddedFrame::~nsMathMLmpaddedFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmpaddedFrame::InheritAutomaticData(nsPresContext* aPresContext,
-                                           nsIFrame*       aParent) 
+nsMathMLmpaddedFrame::InheritAutomaticData(nsIFrame* aParent) 
 {
   // let the base class get the default from our parent
-  nsMathMLContainerFrame::InheritAutomaticData(aPresContext, aParent);
+  nsMathMLContainerFrame::InheritAutomaticData(aParent);
 
   mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
 
@@ -102,7 +101,7 @@ nsMathMLmpaddedFrame::InheritAutomaticData(nsPresContext* aPresContext,
 }
 
 void
-nsMathMLmpaddedFrame::ProcessAttributes(nsPresContext* aPresContext)
+nsMathMLmpaddedFrame::ProcessAttributes()
 {
   /*
   parse the attributes
@@ -378,7 +377,7 @@ nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus)
 {
-  ProcessAttributes(aPresContext);
+  ProcessAttributes();
 
   ///////////////
   // Let the base class format our content like an inferred mrow

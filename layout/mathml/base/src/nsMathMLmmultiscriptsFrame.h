@@ -52,11 +52,10 @@ public:
   friend nsresult NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
-  TransmitAutomaticData(nsPresContext* aPresContext);
+  TransmitAutomaticData();
 
   NS_IMETHOD
-  Place(nsPresContext*      aPresContext,
-        nsIRenderingContext& aRenderingContext,
+  Place(nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
@@ -73,7 +72,7 @@ private:
   nscoord mSupScriptShift;
 
   void
-  ProcessAttributes(nsPresContext* aPresContext);
+  ProcessAttributes();
 };
 
 #endif /* nsMathMLmmultiscriptsFrame_h___ */

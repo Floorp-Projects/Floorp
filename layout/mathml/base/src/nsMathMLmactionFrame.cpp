@@ -332,7 +332,7 @@ nsMathMLmactionFrame::Reflow(nsPresContext*          aPresContext,
     childFrame->SetRect(nsRect(aDesiredSize.descent,aDesiredSize.ascent,
                         aDesiredSize.width,aDesiredSize.height));
     mBoundingMetrics = aDesiredSize.mBoundingMetrics;
-    FinalizeReflow(aPresContext, *aReflowState.rendContext, aDesiredSize);
+    FinalizeReflow(*aReflowState.rendContext, aDesiredSize);
   }
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
@@ -340,8 +340,7 @@ nsMathMLmactionFrame::Reflow(nsPresContext*          aPresContext,
 
 // Only place the selected child ...
 NS_IMETHODIMP
-nsMathMLmactionFrame::Place(nsPresContext*      aPresContext,
-                            nsIRenderingContext& aRenderingContext,
+nsMathMLmactionFrame::Place(nsIRenderingContext& aRenderingContext,
                             PRBool               aPlaceOrigin,
                             nsHTMLReflowMetrics& aDesiredSize)
 {
@@ -352,7 +351,7 @@ nsMathMLmactionFrame::Place(nsPresContext*      aPresContext,
   if (childFrame) {
     GetReflowAndBoundingMetricsFor(childFrame, aDesiredSize, mBoundingMetrics);
     if (aPlaceOrigin) {
-      FinishReflowChild(childFrame, aPresContext, nsnull, aDesiredSize, 0, 0, 0);
+      FinishReflowChild(childFrame, GetPresContext(), nsnull, aDesiredSize, 0, 0, 0);
     }
     mReference.x = 0;
     mReference.y = aDesiredSize.ascent;

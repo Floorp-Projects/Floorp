@@ -103,8 +103,7 @@ public:
   *        of the frame, on output the size after stretching.
   */
   NS_IMETHOD 
-  Stretch(nsPresContext*      aPresContext,
-          nsIRenderingContext& aRenderingContext,
+  Stretch(nsIRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
           nsHTMLReflowMetrics& aDesiredStretchSize) = 0;
@@ -140,8 +139,7 @@ public:
   *        space you want for border/padding in the desired size you return.  
   */
   NS_IMETHOD
-  Place(nsPresContext*      aPresContext,
-        nsIRenderingContext& aRenderingContext,
+  Place(nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize) = 0;
 
@@ -207,11 +205,10 @@ public:
    */
 
   NS_IMETHOD
-  InheritAutomaticData(nsPresContext* aPresContext,
-                       nsIFrame*       aParent) = 0;
+  InheritAutomaticData(nsIFrame* aParent) = 0;
 
   NS_IMETHOD
-  TransmitAutomaticData(nsPresContext* aPresContext) = 0;
+  TransmitAutomaticData() = 0;
 
  /* UpdatePresentationData :
   * Increments the scriptlevel of the frame, and updates its displaystyle and
@@ -243,8 +240,7 @@ public:
   *        update some flags in the frame, leaving the other flags unchanged.
   */
   NS_IMETHOD
-  UpdatePresentationData(nsPresContext* aPresContext,
-                         PRInt32         aScriptLevelIncrement,
+  UpdatePresentationData(PRInt32         aScriptLevelIncrement,
                          PRUint32        aFlagsValues,
                          PRUint32        aFlagsToUpdate) = 0;
 
@@ -279,8 +275,7 @@ public:
   *        for more details about this parameter.
   */
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(nsPresContext* aPresContext,
-                                    PRInt32         aFirstIndex,
+  UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
                                     PRInt32         aScriptLevelIncrement,
                                     PRUint32        aFlagsValues,
@@ -315,8 +310,7 @@ public:
   * http://groups.google.com/groups?selm=3A9192B5.D22B6C38%40maths.uq.edu.au
   */
   NS_IMETHOD
-  ReResolveScriptStyle(nsPresContext* aPresContext,
-                       PRInt32         aParentScriptLevel) = 0;
+  ReResolveScriptStyle(PRInt32 aParentScriptLevel) = 0;
 };
 
 // struct used by a container frame to keep track of its embellishments.

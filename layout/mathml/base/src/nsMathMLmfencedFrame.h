@@ -57,8 +57,7 @@ public:
   GetAdditionalStyleContext(PRInt32 aIndex) const;
 
   NS_IMETHOD
-  InheritAutomaticData(nsPresContext* aPresContext,
-                       nsIFrame*       aParent);
+  InheritAutomaticData(nsIFrame* aParent);
 
   NS_IMETHOD
   SetInitialChildList(nsPresContext* aPresContext,
@@ -86,8 +85,7 @@ public:
 
   // override the base method because we must keep separators in sync
   virtual nsresult
-  ChildListChanged(nsPresContext* aPresContext,
-                   PRInt32         aModType);
+  ChildListChanged(PRInt32 aModType);
 
   // exported routine that both mfenced and mfrac share.
   // mfrac uses this when its bevelled attribute is set.

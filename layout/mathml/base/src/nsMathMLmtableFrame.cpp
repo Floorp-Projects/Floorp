@@ -386,13 +386,12 @@ nsMathMLmtableOuterFrame::~nsMathMLmtableOuterFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmtableOuterFrame::InheritAutomaticData(nsPresContext* aPresContext,
-                                               nsIFrame*       aParent)
+nsMathMLmtableOuterFrame::InheritAutomaticData(nsIFrame* aParent)
 {
   // XXX the REC says that by default, displaystyle=false in <mtable>
 
   // let the base class inherit the scriptlevel and displaystyle from our parent
-  nsMathMLFrame::InheritAutomaticData(aPresContext, aParent);
+  nsMathMLFrame::InheritAutomaticData(aParent);
 
   // see if the displaystyle attribute is there and let it override what we inherited
   nsAutoString value;

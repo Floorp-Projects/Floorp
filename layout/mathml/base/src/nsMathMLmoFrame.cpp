@@ -113,8 +113,7 @@ nsMathMLmoFrame::GetType() const
 // frame's state bit in our child text frame. So we will first check
 // its selected state bit, and use this little helper to double check.
 PRBool
-nsMathMLmoFrame::IsFrameInSelection(nsPresContext* aPresContext,
-                                    nsIFrame*       aFrame)
+nsMathMLmoFrame::IsFrameInSelection(nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "null arg");
   if (!aFrame)
@@ -126,11 +125,12 @@ nsMathMLmoFrame::IsFrameInSelection(nsPresContext* aPresContext,
     return PR_FALSE;
 
   SelectionDetails* details = nsnull;
-  nsIPresShell *shell = aPresContext->GetPresShell();
+  nsIPresShell *shell = GetPresContext()->GetPresShell();
   if (shell) {
     nsCOMPtr<nsIFrameSelection> frameSelection;
     nsCOMPtr<nsISelectionController> selCon;
-    nsresult rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+    nsresult rv = GetSelectionController(GetPresContext(),
+                                         getter_AddRefs(selCon));
     if (NS_SUCCEEDED(rv) && selCon)
       frameSelection = do_QueryInterface(selCon);
     if (!frameSelection)
@@ -173,7 +173,7 @@ nsMathMLmoFrame::Paint(nsPresContext*      aPresContext,
     PRBool isSelected = PR_FALSE;
     nsRect selectedRect;
     nsIFrame* firstChild = mFrames.FirstChild();
-    if (IsFrameInSelection(aPresContext, firstChild)) {
+    if (IsFrameInSelection(firstChild)) {
       selectedRect = firstChild->GetRect();
       isSelected = PR_TRUE;
     }
@@ -284,7 +284,7 @@ nsMathMLmoFrame::ProcessTextData(nsPresContext* aPresContext)
 // called very often. We depend on many things that may change around us.
 // However, we re-use unchanged values.
 void
-nsMathMLmoFrame::ProcessOperatorData(nsPresContext* aPresContext)
+nsMathMLmoFrame::ProcessOperatorData()
 {
   // if we have been here before, we will just use our cached form
   nsOperatorFlags form = NS_MATHML_OPERATOR_GET_FORM(mFlags);
@@ -364,6 +364,8 @@ nsMathMLmoFrame::ProcessOperatorData(nsPresContext* aPresContext)
      return;
   }
 
+  nsPresContext* presContext = GetPresContext();
+
   // beware of bug 133814 - there is a two-way dependency in the
   // embellished hierarchy: our embellished ancestors need to set
   // their flags based on some of our state (set above), and here we
@@ -431,7 +433,7 @@ nsMathMLmoFrame::ProcessOperatorData(nsPresContext* aPresContext)
       // since these values are relative to the 'em' unit, convert to twips now
       nscoord em;
       nsCOMPtr<nsIFontMetrics> fm =
-	aPresContext->GetMetricsFor(GetStyleFont()->mFont);
+	presContext->GetMetricsFor(GetStyleFont()->mFont);
       GetEmHeight(fm, em);
 
       mEmbellishData.leftSpace = NSToCoordRound(lspace * em);
@@ -468,7 +470,7 @@ nsMathMLmoFrame::ProcessOperatorData(nsPresContext* aPresContext)
       if ((eCSSUnit_Number == cssValue.GetUnit()) && !cssValue.GetFloatValue())
         leftSpace = 0;
       else if (cssValue.IsLengthUnit())
-        leftSpace = CalcLength(aPresContext, mStyleContext, cssValue);
+        leftSpace = CalcLength(presContext, mStyleContext, cssValue);
       mFlags |= NS_MATHML_OPERATOR_LEFTSPACE_ATTR;
     }
   }
@@ -484,7 +486,7 @@ nsMathMLmoFrame::ProcessOperatorData(nsPresContext* aPresContext)
       if ((eCSSUnit_Number == cssValue.GetUnit()) && !cssValue.GetFloatValue())
         rightSpace = 0;
       else if (cssValue.IsLengthUnit())
-        rightSpace = CalcLength(aPresContext, mStyleContext, cssValue);
+        rightSpace = CalcLength(presContext, mStyleContext, cssValue);
       mFlags |= NS_MATHML_OPERATOR_RIGHTSPACE_ATTR;
     }
   }
@@ -492,7 +494,7 @@ nsMathMLmoFrame::ProcessOperatorData(nsPresContext* aPresContext)
   // little extra tuning to round lspace & rspace to at least a pixel so that
   // operators don't look as if they are colliding with their operands
   if (leftSpace || rightSpace) {
-    nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
+    nscoord onePixel = presContext->IntScaledPixelsToTwips(1);
     if (leftSpace && leftSpace < onePixel)
       leftSpace = onePixel;
     if (rightSpace && rightSpace < onePixel)
@@ -558,7 +560,7 @@ nsMathMLmoFrame::ProcessOperatorData(nsPresContext* aPresContext)
       else if (eCSSUnit_Percent == unit)
         mMinSize = cssValue.GetPercentValue();
       else if (eCSSUnit_Null != unit) {
-        mMinSize = float(CalcLength(aPresContext, mStyleContext, cssValue));
+        mMinSize = float(CalcLength(presContext, mStyleContext, cssValue));
         mFlags |= NS_MATHML_OPERATOR_MINSIZE_EXPLICIT;
       }
 
@@ -568,7 +570,7 @@ nsMathMLmoFrame::ProcessOperatorData(nsPresContext* aPresContext)
                          nsMathMLAtoms::minsize_, value)) {
           if (ParseNumericValue(value, cssValue)) {
             if (cssValue.IsLengthUnit()) {
-              mMinSize *= float(CalcLength(aPresContext, mStyleContext, cssValue));
+              mMinSize *= float(CalcLength(presContext, mStyleContext, cssValue));
               mFlags |= NS_MATHML_OPERATOR_MINSIZE_EXPLICIT;
             }
           }
@@ -591,7 +593,7 @@ nsMathMLmoFrame::ProcessOperatorData(nsPresContext* aPresContext)
       else if (eCSSUnit_Percent == unit)
         mMaxSize = cssValue.GetPercentValue();
       else if (eCSSUnit_Null != unit) {
-        mMaxSize = float(CalcLength(aPresContext, mStyleContext, cssValue));
+        mMaxSize = float(CalcLength(presContext, mStyleContext, cssValue));
         mFlags |= NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT;
       }
 
@@ -601,7 +603,7 @@ nsMathMLmoFrame::ProcessOperatorData(nsPresContext* aPresContext)
                          nsMathMLAtoms::maxsize_, value)) {
           if (ParseNumericValue(value, cssValue)) {
             if (cssValue.IsLengthUnit()) {
-              mMaxSize *= float(CalcLength(aPresContext, mStyleContext, cssValue));
+              mMaxSize *= float(CalcLength(presContext, mStyleContext, cssValue));
               mFlags |= NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT;
             }
           }
@@ -615,8 +617,7 @@ nsMathMLmoFrame::ProcessOperatorData(nsPresContext* aPresContext)
 //       On input  - it contains our current size
 //       On output - the same size or the new size that we want
 NS_IMETHODIMP
-nsMathMLmoFrame::Stretch(nsPresContext*      aPresContext,
-                         nsIRenderingContext& aRenderingContext,
+nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
                          nsStretchDirection   aStretchDirection,
                          nsBoundingMetrics&   aContainerSize,
                          nsHTMLReflowMetrics& aDesiredStretchSize)
@@ -776,7 +777,7 @@ nsMathMLmoFrame::Stretch(nsPresContext*      aPresContext,
     }
 
     // let the MathMLChar stretch itself...
-    nsresult res = mMathMLChar.Stretch(aPresContext, aRenderingContext,
+    nsresult res = mMathMLChar.Stretch(GetPresContext(), aRenderingContext,
                                        aStretchDirection, container, charSize, stretchHint);
     if (NS_FAILED(res)) {
       // gracefully handle cases where stretching the char failed (i.e., GetBoundingMetrics failed)
@@ -817,7 +818,7 @@ nsMathMLmoFrame::Stretch(nsPresContext*      aPresContext,
 
   // Place our children using the default method
   // This will allow our child text frame to get its DidReflow()
-  Place(aPresContext, aRenderingContext, PR_TRUE, aDesiredStretchSize);
+  Place(aRenderingContext, PR_TRUE, aDesiredStretchSize);
 
   // Fixup for the final height.
   // On one hand, our stretchy height can sometimes be shorter than surrounding
@@ -930,24 +931,23 @@ nsMathMLmoFrame::Stretch(nsPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmoFrame::InheritAutomaticData(nsPresContext* aPresContext,
-                                      nsIFrame*       aParent)
+nsMathMLmoFrame::InheritAutomaticData(nsIFrame* aParent)
 {
   // retain our native direction, it only changes if our text content changes
   nsStretchDirection direction = mEmbellishData.direction;
-  nsMathMLTokenFrame::InheritAutomaticData(aPresContext, aParent);
+  nsMathMLTokenFrame::InheritAutomaticData(aParent);
   mEmbellishData.direction = direction;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMathMLmoFrame::TransmitAutomaticData(nsPresContext* aPresContext)
+nsMathMLmoFrame::TransmitAutomaticData()
 {
   // this will cause us to re-sync our flags from scratch
   // but our returned 'form' is still not final (bug 133429), it will
   // be recomputed to its final value during the next call in Reflow()
   mEmbellishData.coreFrame = nsnull;
-  ProcessOperatorData(aPresContext);
+  ProcessOperatorData();
   return NS_OK;
 }
 
@@ -959,7 +959,7 @@ nsMathMLmoFrame::Reflow(nsPresContext*          aPresContext,
 {
   // certain values use units that depend on our style context, so
   // it is safer to just process the whole lot here
-  ProcessOperatorData(aPresContext);
+  ProcessOperatorData();
   return nsMathMLTokenFrame::Reflow(aPresContext, aDesiredSize,
                                     aReflowState, aStatus);
 }
@@ -973,8 +973,7 @@ nsMathMLmoFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
   // an re-build the automatic data from the parent of our outermost embellished
   // container (we ensure that we are the core, not just a sibling of the core)
 
-  nsPresContext *presContext = aPresShell->GetPresContext();
-  ProcessTextData(presContext);
+  ProcessTextData(GetPresContext());
 
   nsIFrame* target = this;
   nsEmbellishData embellishData;
@@ -984,7 +983,7 @@ nsMathMLmoFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
   } while (embellishData.coreFrame == this);
 
   // we have automatic data to update in the children of the target frame
-  return ReLayoutChildren(presContext, target);
+  return ReLayoutChildren(target);
 }
 
 NS_IMETHODIMP
@@ -1008,7 +1007,7 @@ nsMathMLmoFrame::AttributeChanged(nsIContent*     aContent,
     } while (embellishData.coreFrame == this);
 
     // we have automatic data to update in the children of the target frame
-    return ReLayoutChildren(GetPresContext(), target);
+    return ReLayoutChildren(target);
   }
 
   return nsMathMLTokenFrame::

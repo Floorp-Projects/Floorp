@@ -78,11 +78,10 @@ nsMathMLmstyleFrame::~nsMathMLmstyleFrame()
 
 // mstyle needs special care for its scriptlevel and displaystyle attributes
 NS_IMETHODIMP
-nsMathMLmstyleFrame::InheritAutomaticData(nsPresContext* aPresContext,
-                                          nsIFrame*       aParent) 
+nsMathMLmstyleFrame::InheritAutomaticData(nsIFrame* aParent) 
 {
   // let the base class get the default from our parent
-  nsMathMLContainerFrame::InheritAutomaticData(aPresContext, aParent);
+  nsMathMLContainerFrame::InheritAutomaticData(aParent);
 
   // sync with our current state
   mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
@@ -122,7 +121,7 @@ nsMathMLmstyleFrame::InheritAutomaticData(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmstyleFrame::TransmitAutomaticData(nsPresContext* aPresContext)
+nsMathMLmstyleFrame::TransmitAutomaticData()
 {
   // Nothing particular to do here, the values that we computed in
   // InheritAutomaticData() are the values that we wanted to pass to
@@ -133,8 +132,7 @@ nsMathMLmstyleFrame::TransmitAutomaticData(nsPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsMathMLmstyleFrame::UpdatePresentationData(nsPresContext* aPresContext,
-                                            PRInt32         aScriptLevelIncrement,
+nsMathMLmstyleFrame::UpdatePresentationData(PRInt32         aScriptLevelIncrement,
                                             PRUint32        aFlagsValues,
                                             PRUint32        aFlagsToUpdate)
 {
@@ -174,8 +172,7 @@ nsMathMLmstyleFrame::UpdatePresentationData(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(nsPresContext* aPresContext,
-                                                       PRInt32         aFirstIndex,
+nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
                                                        PRInt32         aLastIndex,
                                                        PRInt32         aScriptLevelIncrement,
                                                        PRUint32        aFlagsValues,
@@ -201,7 +198,7 @@ nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(nsPresContext* aPresConte
   // let the base class worry about the update
   return
     nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(
-      aPresContext, aFirstIndex, aLastIndex, aScriptLevelIncrement,
+      aFirstIndex, aLastIndex, aScriptLevelIncrement,
       aFlagsValues, aFlagsToUpdate); 
 }
 
@@ -216,5 +213,5 @@ nsMathMLmstyleFrame::AttributeChanged(nsIContent*     aContent,
   // them in our subtree. However, our siblings will be re-laid too. We used
   // to have a more speedier but more verbose alternative that didn't re-layout
   // our siblings. See bug 114909 - attachment 67668.
-  return ReLayoutChildren(GetPresContext(), mParent);
+  return ReLayoutChildren(mParent);
 }
