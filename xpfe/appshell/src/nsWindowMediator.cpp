@@ -280,6 +280,8 @@ public:
 
   NS_IMETHOD GetAllCommands(nsIRDFResource* source,
                             nsIEnumerator** commands);
+  NS_IMETHOD GetAllCmds(nsIRDFResource* source,
+                            nsISimpleEnumerator** commands);
 
   NS_IMETHOD IsCommandEnabled(nsISupportsArray* aSources,
                               nsIRDFResource*   aCommand,
@@ -697,6 +699,13 @@ NS_IMETHODIMP nsWindowMediator::Move(nsIRDFResource* aOldSource,
 
 NS_IMETHODIMP nsWindowMediator::GetAllCommands(nsIRDFResource* source,
                                        nsIEnumerator/*<nsIRDFResource>*/** commands)
+{
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsWindowMediator::GetAllCmds(nsIRDFResource* source,
+                                       nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
