@@ -59,9 +59,7 @@
 #include "nsScrollbar.h"
 #include "nsSound.h"
 #include "nsGtkMozRemoteHelper.h"
-#ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
-#endif
 
 #include "nsGtkIMEHelper.h"
 
@@ -81,9 +79,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsGtkXRemoteWidgetHelper)
-#ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-#endif
 
 static nsresult nsHorizScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
@@ -220,13 +216,11 @@ static const nsModuleComponentInfo components[] =
   { NS_IXREMOTEWIDGETHELPER_CLASSNAME,
     NS_GTKXREMOTEWIDGETHELPER_CID,
     NS_IXREMOTEWIDGETHELPER_CONTRACTID,
-    nsGtkXRemoteWidgetHelperConstructor }
-#ifdef IBMBIDI
-    , { "Gtk Bidi Keyboard",
+    nsGtkXRemoteWidgetHelperConstructor },
+  { "Gtk Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
     nsBidiKeyboardConstructor }
-#endif // IBMBIDI
 };
 
 PR_STATIC_CALLBACK(void)

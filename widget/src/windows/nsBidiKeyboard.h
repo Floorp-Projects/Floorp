@@ -34,7 +34,6 @@ public:
   nsBidiKeyboard();
   virtual ~nsBidiKeyboard();
 
-#ifdef IBMBIDI
 protected:
 
   nsresult EnumerateKeyboards();
@@ -44,7 +43,6 @@ protected:
   char mLTRKeyboard[KL_NAMELENGTH];
   char mRTLKeyboard[KL_NAMELENGTH];
   char mCurrentLocaleName[KL_NAMELENGTH];
-#endif // IBMBIDI
 };
 
 

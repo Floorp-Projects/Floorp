@@ -85,9 +85,7 @@
 
 #include "nsSound.h"
 
-#ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
-#endif
 
 #include "nsIGenericFactory.h"
 
@@ -119,9 +117,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragHelperService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
-#ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-#endif
 
 static const nsModuleComponentInfo components[] =
 {
@@ -217,12 +213,10 @@ static const nsModuleComponentInfo components[] =
 		NS_NATIVESCROLLBAR_CID,
 		"@mozilla.org/widget/nativescrollbar;1",
 		nsNativeScrollbarConstructor },
-#ifdef IBMBIDI
 	{	"Gtk Bidi Keyboard",
 		NS_BIDIKEYBOARD_CID,
 		"@mozilla.org/widget/bidikeyboard;1",
 		nsBidiKeyboardConstructor },
-#endif // IBMBIDI
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetMacModule, components)
