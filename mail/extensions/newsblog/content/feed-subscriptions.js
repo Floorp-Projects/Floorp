@@ -38,6 +38,8 @@
 
 const MSG_FOLDER_FLAG_TRASH = 0x0100;
 const IPS = Components.interfaces.nsIPromptService;
+const nsIDragService = Components.interfaces.nsIDragService;
+const kRowIndexUndefined = -1;
 
 var gFeedSubscriptionsWindow = {
   mFeedContainers   : [],
@@ -105,7 +107,7 @@ var gFeedSubscriptionsWindow = {
         return;
 
       var parentIndex = this.getParentIndex(aIndex);
-      if (parentIndex != -1)
+      if (parentIndex != kRowIndexUndefined)
       {
         var parent = this.getItemAtIndex(parentIndex);
         if (parent)
@@ -127,7 +129,6 @@ var gFeedSubscriptionsWindow = {
 
       this.mRowCount--;
       tbo.rowCountChanged(aIndex, -1);
-      tbo.invalidateRow(aIndex);
 
       // now update the selection position
       if (aIndex < gFeedSubscriptionsWindow.mFeedContainers.length)
@@ -180,37 +181,44 @@ var gFeedSubscriptionsWindow = {
     
     canDrop: function (aIndex, aOrientation) 
     { 
-      var dropResult = this.extractURLAndVerifyFlavour();
-      return (aOrientation == Components.interfaces.nsITreeView.DROP_ON) && dropResult.canDrop && dropResult.url; 
+      var dropResult = this.extractDragData();
+      return (aOrientation == Components.interfaces.nsITreeView.DROP_ON) && 
+                              dropResult.canDrop && (dropResult.url || (dropResult.index != kRowIndexUndefined)); 
     },
     
     mDropUrl: "",
     mDropFolderUrl: "",
     drop: function (aIndex, aOrientation) 
     {  
-      var results = this.extractURLAndVerifyFlavour();
-      if (results.canDrop && results.url)
+      var results = this.extractDragData();
+      if (!results.canDrop)
+        return;
+
+      if (results.url)
       {
         var folderItem = this.getItemAtIndex(aIndex);
-
         // don't freeze the app that initiaed the drop just because we are in a loop waiting for the user
         // to dimisss the add feed dialog....
         this.mDropUrl = results.url;
         this.mDropFolderUrl = folderItem.url;
         setTimeout(processDrop, 0);
-      }
+      } 
+      else if (results.index != kRowIndexUndefined)
+        gFeedSubscriptionsWindow.moveFeed(results.index, aIndex);
     },
     
     //  helper function for drag and drop
-    extractURLAndVerifyFlavour: function()
+    extractDragData: function()
     {
       var canDrop = false;
       var urlToDrop;
-      var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService().QueryInterface(Components.interfaces.nsIDragService);
+      var sourceIndex = kRowIndexUndefined;
+      var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService().QueryInterface(nsIDragService);
       var dragSession = dragService.getCurrentSession();
 
       var transfer = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
       transfer.addDataFlavor("text/x-moz-url");
+      transfer.addDataFlavor("text/x-moz-feed-index");
     
       dragSession.getData (transfer, 0);
       var dataObj = new Object();
@@ -226,7 +234,7 @@ var gFeedSubscriptionsWindow = {
         dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);      
         sourceUri = dataObj.data.substring(0, len.value); // pull the URL out of the data object
      
-        if (sourceUri)
+        if (flavor.value == 'text/x-moz-url')
         {
           var uri = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
           uri.spec = sourceUri.split("\n")[0];
@@ -236,10 +244,15 @@ var gFeedSubscriptionsWindow = {
             urlToDrop = uri.spec;
             canDrop = true;
           }
-        } // if sourceUri
+        } 
+        else if (flavor.value == 'text/x-moz-feed-index')
+        {
+          sourceIndex = parseInt(sourceUri);
+          canDrop = true;
+        }
       }  // if dataObj.value
 
-      return { canDrop: canDrop, url: urlToDrop };
+      return { canDrop: canDrop, url: urlToDrop, index: sourceIndex };
     },
 
     getParentIndex: function (aIndex) 
@@ -253,7 +266,7 @@ var gFeedSubscriptionsWindow = {
             return index;
       }
    
-      return -1;
+      return kRowIndexUndefined;
     },    
     hasNextSibling: function (aParentIndex, aIndex) 
     { 
@@ -298,12 +311,11 @@ var gFeedSubscriptionsWindow = {
         gFeedSubscriptionsWindow.mFeedContainers.splice(aIndex + 1, item.children.length);
       else
         for (var i = 0; i < item.children.length; i++)
-          gFeedSubscriptionsWindow.mFeedContainers.splice(aIndex + 1, 0, item.children[i]);
+          gFeedSubscriptionsWindow.mFeedContainers.splice(aIndex + 1 + i, 0, item.children[i]);
 
       // add or remove the children from our view
       item.open = !item.open;
       gFeedSubscriptionsWindow.mTree.treeBoxObject.rowCountChanged(aIndex + 1, delta);
-      gFeedSubscriptionsWindow.mTree.treeBoxObject.invalidateRow(aIndex);
     },    
     cycleHeader: function (aColumn) {},    
     selectionChanged: function () {},    
@@ -367,7 +379,7 @@ var gFeedSubscriptionsWindow = {
 //        this.mFeedContainers[aCurrentLength] = this.makeFeedObject(feed, aCurrentLevel);
 //      else // now add any feed urls for the folder
         folderObject.children.push(this.makeFeedObject(feed, aCurrentLevel + 1));           
-    } 
+    }
 
     return folderObject;
   },
@@ -475,7 +487,7 @@ var gFeedSubscriptionsWindow = {
       // remove the feed from the subscriptions ds
       var feeds = getSubscriptionsList(this.mRSSServer);
       var index = feeds.IndexOf(resource);
-      if (index != -1)
+      if (index != kRowIndexUndefined)
         feeds.RemoveElementAt(index, false);
 
       // remove the feed property string from the folder data base
@@ -588,6 +600,81 @@ var gFeedSubscriptionsWindow = {
     // Also, disable the Add button while we are subscribing.
     document.getElementById('addFeed').setAttribute('disabled', 'true');
     feed.download(true, this.mFeedDownloadCallback);
+  },
+
+  // moves the feed located at aOldFeedIndex to a child of aNewParentIndex
+  moveFeed: function(aOldFeedIndex, aNewParentIndex)
+  {
+    // if the new parent is the same as the current parent, then do nothing
+    if (this.mView.getParentIndex(aOldFeedIndex) == aNewParentIndex)
+      return;
+
+    var currentItem = this.mView.getItemAtIndex(aOldFeedIndex);
+    var currentParentItem = this.mView.getItemAtIndex(this.mView.getParentIndex(aOldFeedIndex));
+    var currentParentResource = rdf.GetResource(currentParentItem.url);
+
+    var newParentItem = this.mView.getItemAtIndex(aNewParentIndex);
+    var newParentResource = rdf.GetResource(newParentItem.url);
+
+    var ds = getSubscriptionsDS(this.mRSSServer);
+    var resource = rdf.GetResource(currentItem.url);
+    var currentFolder = currentParentResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+
+    // unassert the older URI, add an assertion for the new parent URI...
+    ds.Change(resource, FZ_DESTFOLDER, currentParentResource, newParentResource);
+
+    // we need to update the feed url attributes on the databases for each folder
+    updateFolderFeedUrl(currentParentResource.QueryInterface(Components.interfaces.nsIMsgFolder), 
+                        currentItem.url, true); // remove our feed url property from the current folder
+    updateFolderFeedUrl(newParentResource.QueryInterface(Components.interfaces.nsIMsgFolder), 
+                        currentItem.url, false);       // add our feed url property to the new folder
+
+
+    // Finally, update our view layer
+    this.mView.removeItemAtIndex(aOldFeedIndex, 1);
+    if (aNewParentIndex > aOldFeedIndex)
+      aNewParentIndex--;
+    
+    currentItem.level = newParentItem.level + 1;
+    newParentItem.children.push(currentItem);
+    var indexOfNewItem = aNewParentIndex + newParentItem.children.length;;
+
+    if (!newParentItem.open) // force open the container
+      this.mView.toggleOpenState(aNewParentIndex);
+    else
+    {
+      this.mFeedContainers.splice(indexOfNewItem, 0, currentItem);
+      this.mView.mRowCount++;
+      this.mTree.treeBoxObject.rowCountChanged(indexOfNewItem, 1);
+    }
+
+    gFeedSubscriptionsWindow.mTree.view.selection.select(indexOfNewItem)
+  },
+
+  beginDrag: function (aEvent)
+  {
+    // get the selected feed article (if there is one)
+    var seln = this.mView.selection;
+    if (seln.count != 1) 
+      return;
+
+    // only initiate a drag if the item is a feed (i.e. ignore folders/containers)
+    var item = this.mView.getItemAtIndex(seln.currentIndex);
+    if (!item || item.container)
+      return;
+
+    var transfer = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable); 
+    var transArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+    var dragData = Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
+
+    transfer.addDataFlavor("text/x-moz-feed-index"); // i made this flavor type up
+    dragData.data = seln.currentIndex.toString();
+
+    transfer.setTransferData ( "text/x-moz-feed-index", dragData, seln.currentIndex.toString() * 2 );  // doublebyte byte data
+    transArray.AppendElement(transfer.QueryInterface(Components.interfaces.nsISupports));
+
+    var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService().QueryInterface(nsIDragService);
+    dragService.invokeDragSession ( aEvent.target, transArray, null, nsIDragService.DRAGDROP_ACTION_MOVE);
   },
 
   mFeedDownloadCallback:

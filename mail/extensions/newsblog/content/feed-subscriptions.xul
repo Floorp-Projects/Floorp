@@ -79,10 +79,8 @@
       seltype="single">
     <treecols>
       <treecol id="folderNameCol" flex="2" primary="true" hideheader="true"/>
-#      <splitter class="tree-splitter"/>
-#      <treecol id="nameCol" label="&cookiename.label;" flex="1" persist="width"/>
     </treecols>
-    <treechildren id="subscriptionChildren"/>
+    <treechildren id="subscriptionChildren" ondraggesture="gFeedSubscriptionsWindow.beginDrag(event);"/>
   </tree>
 
   <hbox id="rssFeedInfoBox">

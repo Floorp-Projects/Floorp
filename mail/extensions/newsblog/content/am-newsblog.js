@@ -63,6 +63,6 @@ function manageSubscriptions()
   if (lastSubscriptionWindow)
     lastSubscriptionWindow.focus();
   else 
-    window.openDialog("chrome://messenger-newsblog/content/subscriptions.xul", "",
+    window.openDialog("chrome://messenger-newsblog/content/feed-subscriptions.xul", "",
                       "centerscreen,resizable=yes", { server: gIncomingServer});
 }
