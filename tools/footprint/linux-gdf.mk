@@ -62,7 +62,7 @@
 #   <b1> * x + <b0>
 #
 # Where <b1> is the slope and <b0> is the y-intercept.
-LINEAR_REGRESSION=awk -f linear-regression.awk
+LINEAR_REGRESSION=awk -f linear-regression.awk Skip=5
 
 INTERVAL=10
 WATCH=./watch.sh
@@ -99,40 +99,16 @@ linux.gnuplot: linux.gnuplot.in vms.dat
 # Break the raw data file into temporary files that can be processed
 # by gnuplot directly.
 vms.dat: $(OUTFILE)
-	awk 'BEGIN    {$COUNT = 1} \
-             /^[0-9]/ { print $COUNT, $$1; \
-                        $COUNT = $COUNT + 1; \
-                      } \
-             /^ / {print $COUNT, "0"; \
-                              $COUNT = $COUNT + 1; \
-                             }' $? > $@
+	awk -f create_dat.awk TYPE=vms $? > $@
 
 vmd.dat: $(OUTFILE)
-	awk 'BEGIN    {$COUNT = 1} \
-	     /^[0-9]/ { print $COUNT, $$2; \
-                        $COUNT = $COUNT + 1; \
-                      } \
-             /^ / {print $COUNT, "0"; \
-                              $COUNT = $COUNT + 1; \
-                      }' $? > $@
+	awk -f create_dat.awk TYPE=vmd $? > $@
 
 vml.dat: $(OUTFILE)
-	awk 'BEGIN    {$COUNT = 1} \
-	     /^[0-9]/ { print $COUNT, $$3; \
-                        $COUNT = $COUNT + 1; \
-                      } \
-             /^ / {print $COUNT, "0"; \
-                              $COUNT = $COUNT + 1; \
-                      }' $? > $@
+	awk -f create_dat.awk TYPE=vml $? > $@
 
 rss.dat: $(OUTFILE)
-	awk 'BEGIN    {$COUNT = 1} \
-	     /^[0-9]/ { print $COUNT, $$4; \
-                        $COUNT = $COUNT + 1; \
-                      } \
-             /^ / {print $COUNT, "0"; \
-                              $COUNT = $COUNT + 1; \
-                      }' $? > $@
+	awk -f create_dat.awk TYPE=rss $? > $@
 
 # Run $(PROGRAM) to produce $(OUTFILE)
 $(OUTFILE):
