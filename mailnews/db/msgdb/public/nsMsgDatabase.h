@@ -91,6 +91,8 @@ typedef struct _MessageHdrStruct
 class nsMsgDatabase : nsDBChangeAnnouncer
 {
 public:
+	friend class nsMsgHdr;	// use this to get access to cached tokens for hdr fields
+
 	nsMsgDatabase();
 	virtual ~nsMsgDatabase();
 
@@ -108,6 +110,7 @@ public:
 	// create a new message header from a hdrStruct. Caller must release resulting header,
 	// after adding any extra properties they want.
 	virtual nsresult	CreateNewHdr(PRBool *newThread, MessageHdrStruct *hdrStruct, nsMsgHdr **newHdr, PRBool notify = FALSE);
+	virtual nsresult	CreateNewHdr(MessageKey key, nsMsgHdr **newHdr);
 	// extract info from an nsMsgHdr into a MessageHdrStruct
 	virtual nsresult	GetMsgHdrStructFromnsMsgHdr(nsMsgHdr *msgHdr, MessageHdrStruct &hdrStruct);
 
@@ -260,6 +263,7 @@ protected:
 	mdb_token			m_flagsColumnToken;
 	mdb_token			m_priorityColumnToken;
 	mdb_token			m_statusOffsetColumnToken;
+	mdb_token			m_numLinesColumnToken;
 };
 
 #endif

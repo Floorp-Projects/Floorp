@@ -20,13 +20,34 @@
 
 #include "msgCore.h"    // precompiled header...
 
-class nsMsgLineBufferHandler
+// I can't believe I have to have this stupid class, but I can't find
+// anything suitable (nsStrImpl might be, when its done). nsIByteBuffer
+// would do, if I had a stream for input, which I don't.
+
+class nsByteArray 
+{
+public:
+	nsByteArray();
+	virtual ~nsByteArray();
+	PRUint32	GetSize() {return m_bufferSize;}
+	nsresult	GrowBuffer(PRUint32 desired_size, PRUint32 quantum = 1024);
+	nsresult	AppendString(const char *string);
+	nsresult	AppendBuffer(const char *buffer, PRUint32 length);
+	char		*GetBuffer() {return m_buffer;}
+protected:
+	char		*m_buffer;
+	PRUint32	m_bufferSize;
+	PRUint32	m_bufferPos;	// write Pos in m_buffer - where the next byte should go.
+};
+
+
+class nsMsgLineBufferHandler : public nsByteArray
 {
 public:
 	virtual PRInt32 HandleLine(char *line, PRUint32 line_length) = 0;
 };
 
-class nsMsgLineBuffer 
+class nsMsgLineBuffer : nsByteArray
 {
 public:
 	nsMsgLineBuffer(nsMsgLineBufferHandler *handler, PRBool convertNewlinesP);
@@ -36,16 +57,17 @@ public:
 	// Not sure why anyone cares, by NNTPHost seems to want to know the buf pos.
 	PRUint32	GetBufferPos() {return m_bufferPos;}
 
+	virtual PRInt32 EmbeddedLineHandler(char *line, PRUint32 line_length);
+	// flush last line, though it won't be CRLF terminated.
+	virtual PRInt32 FlushLastLine();
 protected:
-	PRInt32 GrowBuffer(PRUint32 desired_size, PRUint32 element_size, PRUint32 quantum);
+	nsMsgLineBuffer(PRBool convertNewlinesP);
+
 	PRInt32 ConvertAndSendBuffer();
 
-
-	char		*m_buffer;
-	PRUint32	m_bufferSize;
 	nsMsgLineBufferHandler *m_handler;
-	PRUint32	m_bufferPos;
 	PRBool		m_convertNewlinesP;
 };
+
 
 #endif

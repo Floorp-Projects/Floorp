@@ -20,14 +20,6 @@
 #include "nsMsgHdr.h"
 #include "nsMsgDatabase.h"
 
-nsMsgHdr::nsMsgHdr()
-{
-	mRefCnt = 1;
-	Init();
-	m_mdb = NULL;
-	m_mdbRow = NULL;
-}
-
 nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, mdbRow *dbRow)
 {
 	mRefCnt = 1;
@@ -139,4 +131,42 @@ nsresult	nsMsgHdr::GetStringReference(PRInt32 refNum, nsString &resultReference)
 time_t		nsMsgHdr::GetDate() 
 {
 	return m_date;
+}
+
+nsresult	nsMsgHdr::SetMessageId(const char *messageId)
+{
+	return SetStringColumn(messageId, m_mdb->m_messageIdColumnToken);
+}
+
+void nsMsgHdr::SetMessageSize(PRUint32 messageSize)
+{
+	SetUInt32Column(m_mdb->m_messageSizeColumnToken, messageSize);
+}
+
+void nsMsgHdr::SetLineCount(PRUint32 lineCount)
+{
+	SetUInt32Column(m_mdb->m_numLinesColumnToken, lineCount);
+}
+
+void nsMsgHdr::SetPriority(const char *priority)
+{
+// ### TODO
+//	m_priority = MSG_GetPriorityFromString(priority);
+	m_priority = MSG_NormalPriority; 
+}
+
+nsresult nsMsgHdr::SetStringColumn(const char *str, mdb_token token)
+{
+	struct mdbYarn yarn;
+	yarn.mYarn_Buf = (void *) (str ? str : "");
+	yarn.mYarn_Size = PL_strlen((const char *) yarn.mYarn_Buf) + 1;
+	yarn.mYarn_Fill = yarn.mYarn_Size;
+	yarn.mYarn_Form = 0;
+	return m_mdbRow->AddColumn(m_mdb->GetEnv(), token, &yarn);
+}
+
+nsresult nsMsgHdr::SetUInt32Column(PRUint32 value, mdb_token token)
+{
+	struct mdbYarn yarn;
+	return m_mdbRow->AddColumn(m_mdb->GetEnv(),  token, nsMsgDatabase::UInt32ToYarn(&yarn, value));
 }

@@ -355,6 +355,7 @@ const char *kMessageSizeColumnName = "size";
 const char *kFlagsColumnName = "flags";
 const char *kPriorityColumnName = "priority";
 const char *kStatusOffsetColumnName = "statusOfset";
+const char *kNumLinesColumnName = "numLines";
 
 struct mdbOid gAllMsgHdrsTableOID;
 
@@ -419,6 +420,7 @@ nsresult nsMsgDatabase::InitMDBInfo()
 			GetStore()->StringToToken(GetEnv(),  kFlagsColumnName, &m_flagsColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kPriorityColumnName, &m_priorityColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kStatusOffsetColumnName, &m_statusOffsetColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kNumLinesColumnName, &m_numLinesColumnToken);
 
 			err = GetStore()->StringToToken(GetEnv(), kMsgHdrsTableKind, &m_hdrTableKindToken); 
 			if (err == NS_OK)
@@ -1046,6 +1048,24 @@ nsresult nsMsgDatabase::ListNextUnread(ListContext **pContext, nsMsgHdr **pResul
 	return dbErr;
 }
 
+nsresult nsMsgDatabase::CreateNewHdr(MessageKey key, nsMsgHdr **pnewHdr)
+{
+	nsresult	err = NS_OK;
+	mdbRow		*hdrRow;
+	struct mdbOid allMsgHdrsTableOID;
+
+	if (!pnewHdr || !m_mdbAllMsgHeadersTable)
+		return NS_ERROR_NULL_POINTER;
+
+	allMsgHdrsTableOID.mOid_Scope = m_hdrRowScopeToken;
+	allMsgHdrsTableOID.mOid_Id = key;
+
+	err  = GetStore()->NewRowWithOid(GetEnv(), m_hdrRowScopeToken,
+		&allMsgHdrsTableOID, &hdrRow);
+	if (err == NS_OK)
+		*pnewHdr = new nsMsgHdr(this, hdrRow);
+	return err;
+}
 
 nsresult nsMsgDatabase::CreateNewHdr(PRBool *newThread, MessageHdrStruct *hdrStruct, nsMsgHdr **pnewHdr, PRBool notify /* = FALSE */)
 {
@@ -1159,7 +1179,7 @@ nsresult nsMsgDatabase::RowCellColumnToUInt32(mdbRow *hdrRow, mdb_token columnTo
 	yarn->mYarn_Buf = str->ToNewCString();
 	yarn->mYarn_Size = PL_strlen((const char *) yarn->mYarn_Buf) + 1;
 	yarn->mYarn_Fill = yarn->mYarn_Size;
-	yarn->mYarn_Form = 0;	// what to do with this? Should be parsed out of the mime2 header?
+	yarn->mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...
 	return yarn;
 }
 

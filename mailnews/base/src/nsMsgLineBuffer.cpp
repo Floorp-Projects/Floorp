@@ -34,18 +34,67 @@
 #  endif /* XP_WIN */
 #endif /* XP_MAC */
 
-nsMsgLineBuffer::nsMsgLineBuffer(nsMsgLineBufferHandler *handler, PRBool convertNewlinesP)
+nsByteArray::nsByteArray()
 {
-	m_handler = handler;
 	m_buffer = NULL;
 	m_bufferSize = 0;
 	m_bufferPos = 0;
+}
+
+nsByteArray::~nsByteArray()
+{
+	PR_FREEIF(m_buffer);
+}
+
+nsresult nsByteArray::GrowBuffer(PRUint32 desired_size, PRUint32 quantum)
+{
+	if (m_bufferSize <= desired_size)
+	{
+		char *new_buf;
+		PRUint32 increment = desired_size - m_bufferSize;
+		if (increment < quantum) /* always grow by a minimum of N bytes */
+			increment = quantum;
+
+
+		new_buf = (m_buffer
+				 ? (char *) PR_REALLOC (m_buffer, (m_bufferSize + increment))
+				 : (char *) PR_MALLOC (m_bufferSize + increment));
+		if (! new_buf)
+			return NS_ERROR_OUT_OF_MEMORY;
+		m_buffer = new_buf;
+		m_bufferSize += increment;
+	}
+  return 0;
+}
+
+nsresult nsByteArray::AppendString(const char *string)
+{
+	PRUint32 strLength = (string) ? PL_strlen(string) : 0;
+	return AppendBuffer(string, strLength);
+
+}
+
+nsresult nsByteArray::AppendBuffer(const char *buffer, PRUint32 length)
+{
+	nsresult ret = NS_OK;
+	if (m_bufferPos + length > m_bufferSize)
+		ret = GrowBuffer(m_bufferPos + length, 1024);
+	if (ret == NS_OK)
+	{
+		memcpy(m_buffer + m_bufferPos, buffer, length);
+		m_bufferPos += length;
+	}
+	return ret;
+}
+
+nsMsgLineBuffer::nsMsgLineBuffer(nsMsgLineBufferHandler *handler, PRBool convertNewlinesP)
+{
+	m_handler = handler;
 	m_convertNewlinesP = convertNewlinesP;
 }
 
 nsMsgLineBuffer::~nsMsgLineBuffer()
 {
-	PR_FREEIF(m_buffer);
 }
 
 PRInt32	nsMsgLineBuffer::BufferInput(const char *net_buffer, PRInt32 net_buffer_size)
@@ -94,7 +143,7 @@ PRInt32	nsMsgLineBuffer::BufferInput(const char *net_buffer, PRInt32 net_buffer_
                         newline++;
 				}
                 newline++;
-			  break;
+				break;
 			}
 		}
         
@@ -106,7 +155,7 @@ PRInt32	nsMsgLineBuffer::BufferInput(const char *net_buffer, PRInt32 net_buffer_
             
             if (desired_size >= m_bufferSize)
             {
-                status = GrowBuffer (desired_size, sizeof(char), 1024);
+                status = GrowBuffer (desired_size, 1024);
                 if (status < 0) 
 					return status;
             }
@@ -133,46 +182,31 @@ PRInt32	nsMsgLineBuffer::BufferInput(const char *net_buffer, PRInt32 net_buffer_
     return 0;
 }
 
-PRInt32 nsMsgLineBuffer::GrowBuffer(PRUint32 desired_size, PRUint32 element_size, PRUint32 quantum)
+PRInt32 nsMsgLineBuffer::EmbeddedLineHandler(char *line, PRUint32 line_length)
 {
-	if (m_bufferSize <= desired_size)
-	{
-		char *new_buf;
-		PRUint32 increment = desired_size - m_bufferSize;
-		if (increment < quantum) /* always grow by a minimum of N bytes */
-			increment = quantum;
-
-
-		new_buf = (m_buffer
-				 ? (char *) PR_REALLOC (m_buffer, (m_bufferSize + increment)
-										* (element_size / sizeof(char)))
-				 : (char *) PR_MALLOC ((m_bufferSize + increment)
-									  * (element_size / sizeof(char))));
-		if (! new_buf)
-			return NS_ERROR_OUT_OF_MEMORY;
-		m_buffer = new_buf;
-		m_bufferSize += increment;
-	}
-  return 0;
+	NS_ASSERTION(FALSE, "must override this method if you don't provide a handler");
+	return 0;
 }
 
 PRInt32 nsMsgLineBuffer::ConvertAndSendBuffer()
 {
     /* Convert the line terminator to the native form.
      */
+
 	char *buf = m_buffer;
-	PRUint32 length = m_bufferSize;
+	PRInt32 length = m_bufferPos - 1;
 
     char* newline;
     
     PR_ASSERT(buf && length > 0);
-    if (!buf || length <= 0) return -1;
+    if (!buf || length <= 0) 
+		return -1;
     newline = buf + length;
     
     PR_ASSERT(newline[-1] == CR || newline[-1] == LF);
-    if (newline[-1] != CR && newline[-1] != LF) return -1;
+    if (newline[-1] != CR && newline[-1] != LF)
+		return -1;
     
-   
     if (!m_convertNewlinesP)
 	{
 	}
@@ -202,6 +236,18 @@ PRInt32 nsMsgLineBuffer::ConvertAndSendBuffer()
 	}
 #endif
     
-    return m_handler->HandleLine(buf, length);
+    return (m_handler) ? m_handler->HandleLine(buf, length) : EmbeddedLineHandler(buf, length);
 }
+
+// If there's still some data (non CRLF terminated) flush it out
+PRInt32 nsMsgLineBuffer::FlushLastLine()
+{
+	char *buf = m_buffer + m_bufferPos;
+	PRInt32 length = m_bufferPos - 1;
+	if (length > 0)
+		return (m_handler) ? m_handler->HandleLine(buf, length) : EmbeddedLineHandler(buf, length);
+	else
+		return 0;
+}
+
 
