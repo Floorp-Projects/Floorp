@@ -117,7 +117,11 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
                 eCursor_arrow_west,
                 eCursor_arrow_west_plus,
                 eCursor_arrow_east,
-                eCursor_arrow_east_plus
+                eCursor_arrow_east_plus,
+                eCursor_crosshair,
+                //Don't know what 'move' cursor should be.  See CSS2.
+                eCursor_move,
+                eCursor_help
                 }; 
 
 

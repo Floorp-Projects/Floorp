@@ -332,8 +332,20 @@ nsEventStateManager::UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint,
   case NS_STYLE_CURSOR_POINTER:
     c = eCursor_hyperlink;
     break;
+  case NS_STYLE_CURSOR_CROSSHAIR:
+    c = eCursor_crosshair;
+    break;
+  case NS_STYLE_CURSOR_MOVE:
+    c = eCursor_move;
+    break;
   case NS_STYLE_CURSOR_TEXT:
     c = eCursor_select;
+    break;
+  case NS_STYLE_CURSOR_WAIT:
+    c = eCursor_wait;
+    break;
+  case NS_STYLE_CURSOR_HELP:
+    c = eCursor_help;
     break;
   case NS_STYLE_CURSOR_N_RESIZE:
   case NS_STYLE_CURSOR_S_RESIZE:
@@ -343,15 +355,10 @@ nsEventStateManager::UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint,
   case NS_STYLE_CURSOR_E_RESIZE:
     c = eCursor_sizeWE;
     break;
+  //These aren't in the CSS2 spec. Don't know what to do with them.
   case NS_STYLE_CURSOR_NE_RESIZE:
-    c = eCursor_select;
-    break;
   case NS_STYLE_CURSOR_NW_RESIZE:
-    c = eCursor_select;
-    break;
   case NS_STYLE_CURSOR_SE_RESIZE:
-    c = eCursor_select;
-    break;
   case NS_STYLE_CURSOR_SW_RESIZE:
     c = eCursor_select;
     break;

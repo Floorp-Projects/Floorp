@@ -26,7 +26,7 @@ LIBRARY_NAME = jsdombase_s
 
 MODULE=dom
 
-REQUIRES = xpcom raptor dom js netlib
+REQUIRES = xpcom raptor dom js netlib caps oji ojiimpl
 
 DEFINES += -D_IMPL_NS_DOM
 

@@ -36,7 +36,8 @@ EXPORTS=nsIScriptContext.h 		\
 	nsIScriptSecurityManager.h 	\
 	nsIScriptNameSetRegistry.h 	\
 	nsIScriptExternalNameSet.h	\
-	nsIScriptNameSpaceManager.h
+	nsIScriptNameSpaceManager.h \
+	nsIScriptGlobalObjectData.h
 
 MODULE=dom 
 

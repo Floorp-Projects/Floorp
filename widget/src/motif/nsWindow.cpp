@@ -929,7 +929,8 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       break;
 
       default:
-        NS_ASSERTION(PR_FALSE, "Invalid cursor type");
+        //XXX Commenting invalid assertion, there are other cursor types.
+        //NS_ASSERTION(PR_FALSE, "Invalid cursor type");
       break;
     }
 
