@@ -17,19 +17,11 @@
  * Copyright (C) 1999 New Dimenstions Consulting, Inc. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *
- *
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
- *
- *
- * depends on utils.js, XPCOM, and the XPCOM component
- *  component://misc/bs/connection
- *
- * sane wrapper around the insane bsIConnection component.  This
- * component needs to be replaced, or at least fixed, so this wrapper
- * will hopefully make it easy to do this in the future.
+ *  Patrick C. Beard <beard@netscape.com, 
+ * 
+ * wrapper for Rhino that uses Java networking.
  *
  */
 
