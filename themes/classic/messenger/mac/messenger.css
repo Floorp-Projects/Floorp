@@ -154,12 +154,13 @@
     list-style-image      : url("chrome://messenger/skin/file-disabled.gif");
   } 
 
-#button-file:hover
+menu:hover > #button-file
   {
     list-style-image      : url("chrome://messenger/skin/file-hover.gif");
   } 
 
-#button-file:hover:active
+menu:hover:active > #button-file,
+menu[open="true"] > #button-file
   {
     list-style-image      : url("chrome://messenger/skin/file-hover-active.gif");
   } 
