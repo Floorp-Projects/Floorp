@@ -1278,6 +1278,7 @@ IL_ChromeAlphaAbuseCheck(il_container *ic)
         else if (alpha[x] == 255)
           num255++;
       }
+#ifdef DEBUG
     if (num000+num255 == header->width*header->height) {
       fprintf(stderr, "CHROME ALPHA ABUSE\n");
       fprintf(stderr, "\tusing an 8-bit alpha channel to represent binary alpha\n");
@@ -1285,6 +1286,7 @@ IL_ChromeAlphaAbuseCheck(il_container *ic)
       fprintf(stderr, "\tnum000=%d num255=%d sum=%d w*h=%d\n",
               num000, num255, num000+num255, header->width*header->height);
     }
+#endif
   } else if (ic->image->header.alpha_bits == 1) {
     PRBool constAlpha=PR_TRUE;
 
@@ -1309,12 +1311,13 @@ IL_ChromeAlphaAbuseCheck(il_container *ic)
           constAlpha = PR_FALSE;
           break;
         }
-    
+#ifdef DEBUG    
     if (constAlpha) {
       fprintf(stderr, "CHROME ALPHA ABUSE\n");
       fprintf(stderr, "\tfully opaque 1-bit alpha mask\n");
       fprintf(stderr, "\t%s\n", ic->url_address);
     }
+#endif
   }
 }
 
