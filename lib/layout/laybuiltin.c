@@ -85,6 +85,24 @@ lo_FormatBuiltin (MWContext *context, lo_DocState *state, PA_Tag *tag)
 }				  
 
 void
+lo_appendParams (LO_BuiltinStruct *builtin,  uint32 param_count, 
+                 char **param_names, char **param_values) {
+  int32 newcount =  builtin->attribute_cnt + param_count;
+  int32 n =   builtin->attribute_cnt;
+  builtin->attribute_list = (char**)XP_REALLOC(builtin->attribute_list, 
+                                              newcount * sizeof(char*));
+  builtin->value_list = (char**)XP_REALLOC(builtin->value_list, 
+                                              newcount * sizeof(char*));
+  while (n < newcount) {
+    *(builtin->attribute_list + n) = XP_STRDUP(*(param_names + n -   builtin->attribute_cnt));
+    *(builtin->value_list + n) = XP_STRDUP(*(param_values + n -   builtin->attribute_cnt));
+    n++;
+  }
+  builtin->attribute_cnt = builtin->attribute_cnt + param_count;
+}
+    
+
+void
 lo_FormatBuiltinObject (MWContext *context, lo_DocState* state,
 						PA_Tag* tag , LO_BuiltinStruct *builtin, Bool streamStarted,
 						uint32 param_count, char **param_names, char **param_values)
@@ -104,6 +122,7 @@ lo_FormatBuiltinObject (MWContext *context, lo_DocState* state,
 	builtin->attribute_cnt = PA_FetchAllNameValues (tag,
 		&(builtin->attribute_list), &(builtin->value_list), CS_FE_ASCII);
 
+    if (param_count > 0) lo_appendParams(builtin, param_count, param_names, param_values);
 	lo_FormatBuiltinInternal (context, state, tag, builtin, TRUE, streamStarted);
 }
 
@@ -124,7 +143,7 @@ lo_FillInBuiltinGeometry(lo_DocState *state,
 	doc_width = state->right_margin - state->left_margin;
 
 	/*
-	 * Get the width parameter, in absolute or percentage.
+	 * Get the width parameter, in absolute or percentage. 
 	 * If percentage, make it absolute.
 	 */
 

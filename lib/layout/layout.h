@@ -1184,9 +1184,7 @@ extern Bool lo_SetNamedSpan(lo_DocState *, PA_Block);
 #endif
 
 extern void lo_AddNameList(lo_DocState *, lo_DocState *);
-#ifdef SHACK
 extern void lo_DisplayBuiltin(MWContext *, LO_BuiltinStruct *);
-#endif
 extern void lo_CheckNameList(MWContext *, lo_DocState *, int32);
 extern int32 lo_StripTextWhitespace(char *, int32);
 extern int32 lo_StripTextNewlines(char *, int32);
@@ -1242,10 +1240,8 @@ extern void lo_RegionToLines (MWContext *, lo_DocState *, int32 x, int32 y,
 	uint32 width, uint32 height, Bool dontCrop,
 	int32* topLine, int32* bottomLine);
 extern int32 lo_PointToLine (MWContext *, lo_DocState *, int32 x, int32 y);
-#ifdef SHACK
 extern void lo_FormatBuiltinObject(MWContext*, lo_DocState*, PA_Tag*, LO_BuiltinStruct*, Bool,
 								 uint32 count, char** names, char** values);
-#endif
 extern void lo_GetLineEnds(MWContext *, lo_DocState *,
 	int32 line, LO_Element** retBegin, LO_Element** retEnd);
 extern void lo_CalcAlignOffsets(lo_DocState *, LO_TextInfo *, intn,
@@ -1320,10 +1316,8 @@ extern void lo_UpdateStateAfterJavaAppLayout( lo_DocState *state, LO_JavaAppStru
 extern void lo_FillInEmbedGeometry(lo_DocState *state, LO_EmbedStruct *embed, Bool relayout);
 extern void lo_LayoutInflowEmbed(MWContext *context, lo_DocState *state, LO_EmbedStruct *embed,
 								   Bool inRelayout, int32 *line_inc, int32 *baseline_inc);
-#ifdef SHACK
-void lo_LayoutInflowBuiltin(MWContext *context, lo_DocState *state, LO_BuiltinStruct *builtin,
+extern void lo_LayoutInflowBuiltin(MWContext *context, lo_DocState *state, LO_BuiltinStruct *builtin,
                             Bool inRelayout, int32 *line_inc, int32 *baseline_inc);
-#endif
 extern void lo_LayoutFloatEmbed(MWContext *context, lo_DocState *state, LO_EmbedStruct *embed, Bool updateFE);
 extern void lo_UpdateStateAfterEmbedLayout( lo_DocState *state, LO_EmbedStruct *embed,
 											  int32 line_inc, int32 baseline_inc );

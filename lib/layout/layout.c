@@ -7589,12 +7589,10 @@ void lo_UpdateStateWhileFlushingLine( MWContext *context, lo_DocState *state )
 		    border_width = tptr->lo_java.objTag.border_width;
 		    break;
 #endif
-#ifdef SHACK
 		  case LO_BUILTIN:
 		    layer = tptr->lo_builtin.layer;
 		    border_width = tptr->lo_builtin.border_width;
 		    break;
-#endif
 		  case LO_EMBED:
 		    layer = tptr->lo_embed.objTag.layer;
 		    border_width = tptr->lo_embed.objTag.border_width;

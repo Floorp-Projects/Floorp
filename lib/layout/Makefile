@@ -26,7 +26,8 @@ CSRCS		= bullet.c \
 		  clipline.c \
 		  layarena.c \
 		  layblock.c \
-		  laycell.c \
+                  laybuiltin.c \
+                  laycell.c \
 		  laycols.c \
 		  laydisp.c \
 		  layembed.c \
@@ -49,7 +50,7 @@ CSRCS		= bullet.c \
 		  laylayer.c \
 		  layrelay.c \
 		  laytrav.c \
-		  $(NULL)
+                  $(NULL)
 
 REQUIRES	= parse style js layer applet nspr security dbm img util jtools edtplug java hook pref libfont lay rdf network htmldlgs
 
@@ -71,11 +72,6 @@ CSRCS		+= layedit.c \
 		  laytext.c \
 		  layutil.c \
 		  $(NULL)
-
-ifdef SHACK
-CSRCS		+= laybuiltin.c \
-		  $(NULL)
-endif
 
 CPPSRCS		= streams.cpp \
 		  fsfile.cpp \

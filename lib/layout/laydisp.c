@@ -318,7 +318,6 @@ lo_DisplayEmbed(MWContext *context, LO_EmbedStruct *embed)
         }
 }
 
-#ifdef SHACK
 void
 lo_DisplayBuiltin(MWContext *context, LO_BuiltinStruct *builtin)
 {
@@ -345,7 +344,6 @@ lo_DisplayBuiltin(MWContext *context, LO_BuiltinStruct *builtin)
             builtin->ele_attrmask |= LO_ELE_DRAWN;
         }
 }
-#endif /* SHACK */
 
 #ifdef JAVA
 void
@@ -750,11 +748,9 @@ lo_DisplayElement(MWContext *context, LO_Element *tptr,
 		lo_DisplayEmbed(context, (LO_EmbedStruct *)tptr);
 		break;
 
-#ifdef SHACK
     case LO_BUILTIN:
 		lo_DisplayBuiltin(context, (LO_BuiltinStruct *)tptr);
 		break;
-#endif /* SHACK */
 
 #ifdef JAVA
     case LO_JAVA:

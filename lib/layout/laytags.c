@@ -6673,6 +6673,8 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 						char *rdfURL = NULL;
 						char *str = NULL;
 
+						if (buff2 == NULL) buff2 = lo_FetchParamValue(context, tag, PARAM_HREF);
+
 						if (buff2 != NULL)
 						{
 							PA_LOCK(str, char *, buff2);

@@ -131,7 +131,6 @@ lo_element_info(LO_Element *ele_list, NET_StreamClass *stream)
 					  }
 				}
 				break;
-#ifdef SHACK
 		    case LO_BUILTIN:
 				{
 					LO_BuiltinStruct *builtin;
@@ -171,7 +170,6 @@ lo_element_info(LO_Element *ele_list, NET_StreamClass *stream)
 					  }
 				}
 			    break;
-#endif /* SHACK */
 
 #ifdef JAVA
 			case LO_JAVA:

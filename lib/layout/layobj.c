@@ -282,7 +282,6 @@ lo_FormatObject(MWContext* context, lo_DocState* state, PA_Tag* tag)
 		}
 #endif /* if 0 */
 
-#ifdef SHACK
 		if (XP_STRNCASECMP(str, "builtin", 7) == 0)
 		{
 			if (type == LO_NONE)
@@ -290,7 +289,6 @@ lo_FormatObject(MWContext* context, lo_DocState* state, PA_Tag* tag)
 			else if (type != LO_BUILTIN)
 				type = LO_UNKNOWN;
 		}
-#endif /* SHACK */
 
 		PA_UNLOCK(buff);
 		XP_FREE(buff);
@@ -331,12 +329,10 @@ lo_FormatObject(MWContext* context, lo_DocState* state, PA_Tag* tag)
 	{
 		object->lo_element.lo_plugin.type = LO_EMBED;
 	}
-#ifdef SHACK
 	else if (type == LO_BUILTIN)
 	{
 		object->lo_element.type = LO_BUILTIN;
 	}
-#endif
 #ifdef JAVA
 	else if (type == LO_JAVA)
 	{
@@ -907,7 +903,6 @@ lo_ProcessObjectTag(MWContext* context, lo_DocState* state, PA_Tag* tag, XP_Bool
 						top->param_values = NULL;
 #endif /* OJI */
 					}
-#ifdef SHACK
 					else if (object->lo_element.type == LO_BUILTIN)
 					{
 						lo_FormatBuiltinObject(context,
@@ -931,7 +926,6 @@ lo_ProcessObjectTag(MWContext* context, lo_DocState* state, PA_Tag* tag, XP_Bool
 						top->param_values = NULL;
 #endif /* OJI */
 					}
-#endif /* SHACK */
 
 #ifdef JAVA
 					else if (object->lo_element.lo_plugin.type == LO_JAVA)

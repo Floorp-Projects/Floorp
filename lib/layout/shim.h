@@ -50,10 +50,8 @@ extern void shim_FE_DisplaySubtext(DocumentContext context,
 			int32 start_pos, int32 end_pos, XP_Bool need_bg);
 extern void shim_FE_DisplayEmbed(DocumentContext context,
 			int iLocation, LO_EmbedStruct *embed);
-#ifdef SHACK
 extern void shim_FE_DisplayBuiltin(DocumentContext context,
 			int iLocation, LO_BuiltinStruct *builtin);
-#endif
 extern void shim_FE_DisplayJavaApp(DocumentContext context,
 			int iLocation, LO_JavaAppStruct *java_app);
 extern void shim_FE_DisplayImage(DocumentContext context,
@@ -95,10 +93,8 @@ extern void shim_FE_FreeEdgeElement(DocumentContext context,
 			LO_EdgeStruct *edge);
 extern void shim_FE_FreeEmbedElement(DocumentContext context,
 			LO_EmbedStruct *embed);
-#ifdef SHACK
 extern void shim_FE_FreeBuiltinElement(DocumentContext context,
 			LO_BuiltinStruct *builtin);
-#endif
 extern void shim_FE_HideJavaAppElement(DocumentContext context,
 			void *session_data);
 extern void shim_FE_FreeImageElement(DocumentContext context,

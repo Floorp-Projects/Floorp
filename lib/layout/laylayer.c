@@ -2103,11 +2103,9 @@ lo_update_embedded_object_window(CL_Layer *layer)
     case LO_EMBED:
 	FE_DisplayEmbed(context, FE_VIEW, &tptr->lo_embed);
 	break;
-#ifdef SHACK
 	case LO_BUILTIN:
 	FE_DisplayBuiltin(context, FE_VIEW, &tptr->lo_builtin);
     break;
-#endif /* SHACK */
 #ifdef JAVA
     case LO_JAVA:
 	FE_DisplayJavaApp(context, FE_VIEW, &tptr->lo_java);
@@ -2160,12 +2158,10 @@ lo_window_layer_visibility_changed(CL_Layer *layer,
 	tptr->lo_embed.objTag.ele_attrmask &= ~LO_ELE_INVISIBLE;
 	tptr->lo_embed.objTag.ele_attrmask |= LO_ELE_INVISIBLE * !visible;
 	break;
-#ifdef SHACK
 	case LO_BUILTIN:
 	tptr->lo_builtin.ele_attrmask &= ~LO_ELE_INVISIBLE;
 	tptr->lo_builtin.ele_attrmask |= LO_ELE_INVISIBLE * !visible;
 	break;
-#endif /* SHACK */
 #ifdef JAVA
     case LO_JAVA:
 	tptr->lo_java.objTag.ele_attrmask &= ~LO_ELE_INVISIBLE;
@@ -2248,7 +2244,6 @@ lo_CreateEmbeddedObjectLayer(MWContext *context,
 	hspace = tptr->lo_embed.objTag.border_horiz_space;
 	is_window = PR_FALSE;
 	break;
-#ifdef SHACK
     case LO_BUILTIN:
 	name = "_BUILTIN";
 	tptr->lo_builtin.ele_attrmask |= LO_ELE_INVISIBLE;
@@ -2256,7 +2251,6 @@ lo_CreateEmbeddedObjectLayer(MWContext *context,
 	hspace = tptr->lo_builtin.border_horiz_space;
 	is_window = PR_TRUE;
 	break;
-#endif
 #ifdef JAVA
     case LO_JAVA:
 	name = "_JAVA_APPLET";
