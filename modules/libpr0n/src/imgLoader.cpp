@@ -200,16 +200,14 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     request = NS_REINTERPRET_CAST(imgRequest*, req.get());
     NS_ADDREF(request);
 
-
+#ifdef MOZ_NEW_CACHE
+    ImageCache::Put(uri, request, getter_AddRefs(entry));
+#endif
 
 #ifdef MOZ_NEW_CACHE
     request->Init(channel, entry);
 #else
     request->Init(channel, nsnull);
-#endif
-
-#ifdef MOZ_NEW_CACHE
-    ImageCache::Put(uri, request, getter_AddRefs(entry));
 #endif
 
     *listener = NS_STATIC_CAST(nsIStreamListener*, request);
