@@ -538,7 +538,11 @@ nsStyleContext::Mark()
 class URICString : public nsCAutoString {
 public:
   URICString(nsIURI* aURI) {
-    aURI->GetSpec(*this);
+    if (aURI) {
+      aURI->GetSpec(*this);
+    } else {
+      Assign("[no background image]");
+    }
   }
 
   URICString& operator=(const URICString& aOther) {
