@@ -124,18 +124,18 @@ Contributor(s): ______________________________________. -->
 
   <toolbox id="navigator-toolbox" class="toolbox-top" deferattached="true">
     <!-- Menu -->
-    <menubar id="main-menubar" persist="collapsed" grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;"/>
+    <menubar id="main-menubar" persist="collapsed" grippytooltip="aTooltip" tooltiptext="&menuBar.tooltip;"/>
 
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" persist="collapsed" 
-             grippytooltip="aTooltip" grippytooltiptext="&navigationBar.tooltip;"
+             grippytooltip="aTooltip" tooltiptext="&navigationBar.tooltip;"
              tbautostretch="always">
       <box id="nav-bar-buttons">
-        <menubutton id="back-button" value="&backButton.label;" buttontooltiptext="&backButton.tooltip;"
+        <menubutton id="back-button" value="&backButton.label;" tooltiptext="&backButton.tooltip;"
                     oncommand="gotoHistoryIndex(event);" buttonaction="BrowserBack();" context="backMenu"
                     class="menubutton-dual toolbar top" crop="right" tooltip="aTooltip" observes="canGoBack">  
        	  <menupopup context="" oncreate="BrowserBackMenu(event);"/>
         </menubutton>
-        <menubutton id="forward-button" value="&forwardButton.label;" buttontooltiptext="&forwardButton.tooltip;"
+        <menubutton id="forward-button" value="&forwardButton.label;" tooltiptext="&forwardButton.tooltip;"
                     oncommand="gotoHistoryIndex(event);" buttonaction="BrowserForward();" context="forwardMenu"
                     class="menubutton-dual toolbar top" crop="right" tooltip="aTooltip" observes="canGoForward">
       	  <menupopup context="" oncreate="BrowserForwardMenu(event);"/>
@@ -175,7 +175,7 @@ Contributor(s): ______________________________________. -->
       </box>
 /* foo */
       <menubutton class="menubutton-dual toolbar top" id="print-button" persist="hidden" value="&printButton.label;" 
-                  crop="right" buttonaction="BrowserPrint()" tooltip="aTooltip" buttontooltiptext="&printButton.tooltip;">  
+                  crop="right" buttonaction="BrowserPrint()" tooltip="aTooltip" tooltiptext="&printButton.tooltip;">  
         <menupopup id="printMenu" popupalign="topright" popupanchor="bottomright">
           <menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" oncommand="BrowserPrint()" default="true"/>
         </menupopup>
