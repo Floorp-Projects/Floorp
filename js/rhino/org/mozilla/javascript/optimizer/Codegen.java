@@ -3042,10 +3042,8 @@ if (true) {
             } else if (op == TokenStream.IN) {
                 generateCodeFromNode(child, node, -1, -1);
                 generateCodeFromNode(child.getNextSibling(), node, -1, -1);
-                aload(variableObjectLocal);
                 addScriptRuntimeInvoke("in",
-                              "(Ljava/lang/Object;Ljava/lang/Object;"
-                              + "Lorg/mozilla/javascript/Scriptable;)","Z");
+                              "(Ljava/lang/Object;Ljava/lang/Object;)","Z");
                 addByteCode(ByteCode.IFNE, trueGOTO);
                 addByteCode(ByteCode.GOTO, falseGOTO);
             } else {
