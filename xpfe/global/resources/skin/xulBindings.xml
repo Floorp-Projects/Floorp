@@ -228,6 +228,11 @@
         <html:input inherits="value,type,maxlength,disabled,size,readonly"/>
       </xul:html>
     </content>
+    <handlers>
+      <handler type="focus" value="dump('****focus!!!'); var v = this.anonymousContent[0]; v.firstChild.focus();"/>
+      <handler type="blur" value="var v = this.anonymousContent[0]; v.firstChild.blur();"/>
+    </handlers>
+
   </binding>
 
   <binding name="textarea" extends="xul:box">
@@ -236,5 +241,9 @@
         <html:textarea inherits="value,disabled,rows,cols,readonly"/>
       </xul:html>
     </content>
+    <handlers>
+      <handler type="focus" value="dump('****focus!!!'); var v = this.anonymousContent[0]; v.firstChild.focus();"/>
+      <handler type="blur" value="var v = this.anonymousContent[0]; v.firstChild.blur();"/>
+    </handlers>
   </binding>
 </bindings>

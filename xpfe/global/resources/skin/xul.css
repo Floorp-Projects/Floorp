@@ -267,6 +267,6 @@ textfield {
   behavior: url(resource:/chrome/xulBindings.xml#textfield);
 }
 
-textarea {
+textfield[multiline="true"] {
   behavior: url(resource:/chrome/xulBindings.xml#textarea);
 }
