@@ -40,7 +40,7 @@ puts "This lets you edit the basic operating parameters of bugzilla.  Be careful
 puts "<p>"
 puts "Any item you check Reset on will get reset to its default value."
 
-puts "<form method=get action=doeditparams.cgi><table>"
+puts "<form method=post action=doeditparams.cgi><table>"
 
 set rowbreak "<tr><td colspan=2><hr></td></tr>"
 puts $rowbreak
@@ -56,6 +56,20 @@ foreach i $param_list {
 	l {
 	    puts "<textarea wrap=hard name=$i rows=10 cols=80>[value_quote $value]</textarea>"
 	}
+        b {
+            if {$value} {
+                set on "checked"
+                set off ""
+            } else {
+                set on ""
+                set off "checked"
+            }
+            puts "<input type=radio name=$i value=1 $on>On "
+            puts "<input type=radio name=$i value=0 $off>Off"
+        }
+        default {
+            puts "<font color=red><blink>Unknown param type $param_type($i)!!!</blink></font>"
+        }
     }
     puts "</td></tr>"
     puts $rowbreak
