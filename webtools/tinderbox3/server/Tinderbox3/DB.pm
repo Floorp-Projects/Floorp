@@ -352,7 +352,7 @@ sub update_bonsai_action {
       check_edit_tree($login, $dbh, $tree, "edit machine");
 
       $dbh->do("INSERT INTO tbox_bonsai (tree_name, display_name, bonsai_url, module, branch, directory, cvsroot) VALUES (?, ?, ?, ?, ?, ?, ?)", undef, $tree, $display_name, $bonsai_url, $module, $branch, $directory, $cvsroot);
-      $bonsai_id = sql_get_last_id($dbh, 'tbox_bonsai_id_seq');
+      $bonsai_id = sql_get_last_id($dbh, 'tbox_bonsai_bonsai_id_seq');
     }
     maybe_commit($dbh);
   } elsif ($action eq "delete_bonsai") {
