@@ -24,6 +24,8 @@
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 
+class nsISupportsArray;
+
 //this is a class that acts as a container for other views and provides
 //automatic management of scrolling of the views it contains.
 
@@ -76,6 +78,9 @@ public:
   
   NS_IMETHOD  GetClipView(const nsIView** aClipView) const;
 
+  NS_IMETHOD  AddScrollPositionListener(nsIScrollPositionListener* aListener);
+  NS_IMETHOD  RemoveScrollPositionListener(nsIScrollPositionListener* aListener);
+
   //locals
   void HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
  
@@ -113,16 +118,17 @@ protected:
 protected:
   nscoord             mSizeX, mSizeY;
   nscoord             mOffsetX, mOffsetY;
-  nsIView             *mClipView;
-  nsIView             *mVScrollBarView;
-  nsIView             *mHScrollBarView;
-  nsIView             *mCornerView;
+  nsIView            *mClipView;
+  nsIView            *mVScrollBarView;
+  nsIView            *mHScrollBarView;
+  nsIView            *mCornerView;
   nsScrollPreference  mScrollPref;
   nsMargin            mInsets;
-  nsITimer            *mScrollingTimer;
+  nsITimer           *mScrollingTimer;
   nscoord             mScrollingDelta;
   PRUint32            mScrollProperties;
   nscoord             mLineHeight;
+  nsISupportsArray   *mListeners;
 };
 
 #endif
