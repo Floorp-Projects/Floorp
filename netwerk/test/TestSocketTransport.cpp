@@ -57,6 +57,8 @@ static nsITimer*       gPeriodicTimer;
 
 void Pump_PLEvents(void)
 {
+  nsresult rv;  
+
   while ( gKeepRunning ) {
 #ifdef WIN32
     MSG msg;
