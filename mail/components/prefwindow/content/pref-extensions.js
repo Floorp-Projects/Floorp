@@ -164,6 +164,14 @@ function installExtension()
   // 1) Prompt the user for the location of the theme to install. Eventually we'll support web locations too.
   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
   fp.init(window, document.getElementById("installExtensions").getAttribute("filepickertitle"), nsIFilePicker.modeOpen);
+  
+  var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService();
+  strBundleService = strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
+
+  var extbundle = strBundleService.createBundle("chrome://communicator/locale/pref/prefutilities.properties");
+  var filterLabel = extbundle.GetStringFromName("extensionFilter");
+  fp.appendFilter(filterLabel, "*.xpi");
+  
   fp.appendFilters(nsIFilePicker.filterAll);
 
   var ret = fp.show();
