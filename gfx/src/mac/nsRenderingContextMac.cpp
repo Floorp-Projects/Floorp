@@ -58,7 +58,7 @@ nsRenderingContextMac::nsRenderingContextMac()
 
   mGSStack					= new nsVoidArray();
   
-  mChanges = kFontChanged | kColorChanged;
+  mChanges					= kEverythingChanged;
 }
 
 
@@ -162,7 +162,7 @@ nsresult nsRenderingContextMac::Init(nsIDeviceContext* aContext, GrafPtr aPort)
 
 //------------------------------------------------------------------------
 
-void	nsRenderingContextMac::SelectDrawingSurface(DrawingSurface* aSurface)
+void	nsRenderingContextMac::SelectDrawingSurface(DrawingSurface* aSurface, PRUint32 aChanges)
 {
 	if (! aSurface)
 		return;
@@ -178,25 +178,31 @@ void	nsRenderingContextMac::SelectDrawingSurface(DrawingSurface* aSurface)
 		  #endif
 		}
 	}
-
+	
+	// if surface is changing, be extra conservative about graphic state changes.
+	if (mCurrentSurface != aSurface)
+		aChanges = kEverythingChanged;
+	
 	mCurrentSurface = aSurface;
 	aSurface->GetGrafPtr(&mPort);
-	mGS		= aSurface->GetGS();
+	mGS = aSurface->GetGS();
 
 	// quickdraw initialization
   ::SetPort(mPort);
 
   ::SetOrigin(-mGS->mOffx, -mGS->mOffy);		// line order...
 
-	::SetClip(mGS->mClipRegion);							// ...does matter
+	if (aChanges & kClippingChanged)
+		::SetClip(mGS->mClipRegion);						// ...does matter
 
 	::PenNormal();
 	::PenMode(patCopy);
 	::TextMode(srcOr);
 
-  this->SetColor(mGS->mColor);
+	if (aChanges & kColorChanged)
+		this->SetColor(mGS->mColor);
 
-	if (mGS->mFontMetrics)
+	if (mGS->mFontMetrics && (aChanges & kFontChanged))
 		SetFont(mGS->mFontMetrics);
 	
 	if (!mContext) return;
@@ -209,16 +215,11 @@ void	nsRenderingContextMac::SelectDrawingSurface(DrawingSurface* aSurface)
 
   mContext->GetDevUnitsToAppUnits(mP2T);
 
-  if (!mGS->mTMatrix)
-  {
- 		mGS->mTMatrix = new nsTransform2D();
-	  if (mGS->mTMatrix)
-	  {
-			// apply the new scaling
-		  float app2dev;
-		  mContext->GetAppUnitsToDevUnits(app2dev);
-	  	mGS->mTMatrix->AddScale(app2dev, app2dev);
-		}
+  if (mGS->mTMatrix.GetType() == MG_2DIDENTITY) {
+		// apply the new scaling
+	  float app2dev;
+	  mContext->GetAppUnitsToDevUnits(app2dev);
+  	mGS->mTMatrix.AddScale(app2dev, app2dev);
 	}
 }
 
@@ -259,11 +260,17 @@ NS_IMETHODIMP nsRenderingContextMac :: PushState(void)
 	if (!gs)
 		return NS_ERROR_OUT_OF_MEMORY;
 
+	// save the current set of graphics changes.
+	mGS->SetChanges(mChanges);
+
 	// copy the current GS into it
 	gs->Duplicate(mGS);
 
 	// put the new GS at the end of the stack
   mGSStack->AppendElement(gs);
+  
+  // reset the graphics changes. this always represents a delta from previous state to current.
+  mChanges = 0;
 
   return NS_OK;
 }
@@ -273,14 +280,16 @@ NS_IMETHODIMP nsRenderingContextMac :: PushState(void)
 NS_IMETHODIMP nsRenderingContextMac :: PopState(PRBool &aClipEmpty)
 {
   PRUint32 cnt = mGSStack->Count();
-  if (cnt > 0) 
-  {
+  if (cnt > 0) {
     // get the GS from the stack
     nsGraphicState* gs = (nsGraphicState *)mGSStack->ElementAt(cnt - 1);
 
 		// copy the GS into the current one and tell the current surface to use it
 		mGS->Duplicate(gs);
-		SelectDrawingSurface(mCurrentSurface);
+		SelectDrawingSurface(mCurrentSurface, mChanges);
+		
+		// restore the current set of changes.
+		mChanges = mGS->GetChanges();
 
     // remove the GS object from the stack and delete it
     mGSStack->RemoveElementAt(cnt - 1);
@@ -356,11 +365,11 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
   PRInt32	x = aSrcX;
   PRInt32	y = aSrcY;
   if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
-    mGS->mTMatrix->TransformCoord(&x, &y);
+    mGS->mTMatrix.TransformCoord(&x, &y);
 
   nsRect dstRect = aDestBounds;
   if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
-    mGS->mTMatrix->TransformCoord(&dstRect.x, &dstRect.y, &dstRect.width, &dstRect.height);
+    mGS->mTMatrix.TransformCoord(&dstRect.x, &dstRect.y, &dstRect.width, &dstRect.height);
 
 	// get the source and destination rectangles
   Rect macSrcRect, macDstRect;
@@ -567,7 +576,7 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRect(const nsRect& aRect, nsClipCo
 {
   nsRect  trect = aRect;
 
-  mGS->mTMatrix->TransformCoord(&trect.x, &trect.y, &trect.width, &trect.height);
+  mGS->mTMatrix.TransformCoord(&trect.x, &trect.y, &trect.width, &trect.height);
 
 	Rect macRect;
 	::SetRect(&macRect, trect.x, trect.y, trect.x + trect.width, trect.y + trect.height);
@@ -606,6 +615,9 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRect(const nsRect& aRect, nsClipCo
 
 	mGS->mClipRegion = clipRgn;
 	aClipEmpty = ::EmptyRgn(clipRgn);
+	
+	// note that the clipping changed.
+	mChanges |= kClippingChanged;
 
   return NS_OK;
 }
@@ -671,6 +683,9 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRegion(const nsIRegion& aRegion, n
 
 	mGS->mClipRegion = clipRgn;
 	aClipEmpty = ::EmptyRgn(clipRgn);
+
+	// note that the clipping changed.
+	mChanges |= kClippingChanged;
 
   return NS_OK;
 }
@@ -796,7 +811,7 @@ NS_IMETHODIMP nsRenderingContextMac :: GetFontMetrics(nsIFontMetrics *&aFontMetr
 // add the passed in translation to the current translation
 NS_IMETHODIMP nsRenderingContextMac :: Translate(nscoord aX, nscoord aY)
 {
-  mGS->mTMatrix->AddTranslation((float)aX,(float)aY);
+  mGS->mTMatrix.AddTranslation((float)aX,(float)aY);
   return NS_OK;
 }
 
@@ -805,7 +820,7 @@ NS_IMETHODIMP nsRenderingContextMac :: Translate(nscoord aX, nscoord aY)
 // add the passed in scale to the current scale
 NS_IMETHODIMP nsRenderingContextMac :: Scale(float aSx, float aSy)
 {
-  mGS->mTMatrix->AddScale(aSx, aSy);
+  mGS->mTMatrix.AddScale(aSx, aSy);
   return NS_OK;
 }
 
@@ -813,7 +828,7 @@ NS_IMETHODIMP nsRenderingContextMac :: Scale(float aSx, float aSy)
 
 NS_IMETHODIMP nsRenderingContextMac :: GetCurrentTransform(nsTransform2D *&aTransform)
 {
-  aTransform = mGS->mTMatrix;
+  aTransform = &mGS->mTMatrix;
   return NS_OK;
 }
 
@@ -825,8 +840,8 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawLine(nscoord aX0, nscoord aY0, nscoor
 {
 	StartDraw();
 
-  mGS->mTMatrix->TransformCoord(&aX0,&aY0);
-  mGS->mTMatrix->TransformCoord(&aX1,&aY1);
+  mGS->mTMatrix.TransformCoord(&aX0,&aY0);
+  mGS->mTMatrix.TransformCoord(&aX1,&aY1);
 	::MoveTo(aX0, aY0);
 	::LineTo(aX1, aY1);
 
@@ -846,14 +861,14 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawPolyline(const nsPoint aPoints[], PRI
 	
   x = aPoints[0].x;
   y = aPoints[0].y;
-  mGS->mTMatrix->TransformCoord((PRInt32*)&x,(PRInt32*)&y);
+  mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
   ::MoveTo(x,y);
 
   for (i = 1; i < aNumPoints; i++){
     x = aPoints[i].x;
     y = aPoints[i].y;
 		
-		mGS->mTMatrix->TransformCoord((PRInt32*)&x,(PRInt32*)&y);
+		mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
 		::LineTo(x,y);
 	}
 
@@ -882,7 +897,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawRect(nscoord aX, nscoord aY, nscoord 
   w = aWidth;
   h = aHeight;
 
-  mGS->mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
 	::SetRect(&therect,x,y,x+w,y+h);
 	::FrameRect(&therect);
 
@@ -920,7 +935,7 @@ NS_IMETHODIMP nsRenderingContextMac::FillRect(nscoord aX, nscoord aY, nscoord aW
   h = aHeight;
 
   // TODO - cps - must debug and fix this 
-  mGS->mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
 
   // beard:  keep rectangle within Quickdraw representable space.
   Rect therect = { pinToShort(y), pinToShort(x),
@@ -946,7 +961,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawPolygon(const nsPoint aPoints[], PRInt3
 	
   x = aPoints[0].x;
   y = aPoints[0].y;
-  mGS->mTMatrix->TransformCoord((PRInt32*)&x,(PRInt32*)&y);
+  mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
   ::MoveTo(x,y);
 
   for (i = 1; i < aNumPoints; i++)
@@ -954,7 +969,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawPolygon(const nsPoint aPoints[], PRInt3
     x = aPoints[i].x;
     y = aPoints[i].y;
 		
-		mGS->mTMatrix->TransformCoord((PRInt32*)&x,(PRInt32*)&y);
+		mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
 		::LineTo(x,y);
 	}
 
@@ -980,14 +995,14 @@ NS_IMETHODIMP nsRenderingContextMac::FillPolygon(const nsPoint aPoints[], PRInt3
 	
   x = aPoints[0].x;
   y = aPoints[0].y;
-  mGS->mTMatrix->TransformCoord((PRInt32*)&x,(PRInt32*)&y);
+  mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
   ::MoveTo(x,y);
 
   for (i = 1; i < aNumPoints; i++)
   {
     x = aPoints[i].x;
     y = aPoints[i].y;
-		mGS->mTMatrix->TransformCoord((PRInt32*)&x,(PRInt32*)&y);
+		mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
 		::LineTo(x,y);
 	}
 
@@ -1020,7 +1035,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawEllipse(nscoord aX, nscoord aY, nscoo
   w = aWidth;
   h = aHeight;
 
-  mGS->mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
   ::SetRect(&therect,x,y,x+w,y+h);
   ::FrameOval(&therect);
 
@@ -1049,7 +1064,7 @@ NS_IMETHODIMP nsRenderingContextMac :: FillEllipse(nscoord aX, nscoord aY, nscoo
   w = aWidth;
   h = aHeight;
 
-  mGS->mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
   ::SetRect(&therect,x,y,x+w,y+h);
   ::PaintOval(&therect);
 
@@ -1080,7 +1095,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawArc(nscoord aX, nscoord aY, nscoord a
   w = aWidth;
   h = aHeight;
   
-  mGS->mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
   ::SetRect(&therect,x,y,x+w,y+h);
   ::FrameArc(&therect,aStartAngle,aEndAngle);
 
@@ -1111,7 +1126,7 @@ NS_IMETHODIMP nsRenderingContextMac :: FillArc(nscoord aX, nscoord aY, nscoord a
   w = aWidth;
   h = aHeight;
   
-  mGS->mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
   ::SetRect(&therect,x,y,x+w,y+h);
   ::PaintArc(&therect,aStartAngle,aEndAngle);
 
@@ -1237,7 +1252,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 		y += ascent;
 	}
 
-  mGS->mTMatrix->TransformCoord(&x,&y);
+  mGS->mTMatrix.TransformCoord(&x,&y);
 
 	::MoveTo(x,y);
   if ( aSpacing == NULL )
@@ -1248,7 +1263,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 		int* spacing = (aLength <= STACK_TREASHOLD ? buffer : new int[aLength]);
 		if (spacing)
 		{
-			mGS->mTMatrix->ScaleXCoords(aSpacing, aLength, spacing);
+			mGS->mTMatrix.ScaleXCoords(aSpacing, aLength, spacing);
 			PRInt32 currentX = x;
 			for (PRInt32 i = 0; i < aLength; i++)
 			{
@@ -1347,8 +1362,8 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawImage(nsIImage *aImage, const nsRect&
 
   nsRect sr = aSRect;
   nsRect dr = aDRect;
-  mGS->mTMatrix->TransformCoord(&sr.x,&sr.y,&sr.width,&sr.height);
-  mGS->mTMatrix->TransformCoord(&dr.x,&dr.y,&dr.width,&dr.height);
+  mGS->mTMatrix.TransformCoord(&sr.x,&sr.y,&sr.width,&sr.height);
+  mGS->mTMatrix.TransformCoord(&dr.x,&dr.y,&dr.width,&dr.height);
   
   nsresult result =  aImage->Draw(*this,mPort,sr.x,sr.y,sr.width,sr.height,
                       dr.x,dr.y,dr.width,dr.height);
@@ -1364,7 +1379,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawImage(nsIImage *aImage, const nsRect&
 	StartDraw();
 
   nsRect tr = aRect;
-  mGS->mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
+  mGS->mTMatrix.TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
   
 	nsresult result = aImage->Draw(*this,mPort,tr.x,tr.y,tr.width,tr.height);
 
