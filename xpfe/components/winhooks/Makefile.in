@@ -60,13 +60,13 @@ JS_SET_MAIL_COMPONENT = nsSetDefaultMail.js
 JS_UNSET_MAIL_COMPONENT = nsUnSetDefaultMail.js
 
 libs::
-	$(MAKE_INSTALL) $(JS_SET_BROWSER_COMPONENT) $(DIST)\bin\components
-	$(MAKE_INSTALL) $(JS_SET_MAIL_COMPONENT) $(DIST)\bin\components
-	$(MAKE_INSTALL) $(JS_UNSET_MAIL_COMPONENT) $(DIST)\bin\components
+	$(INSTALL) $(srcdir)/$(JS_SET_BROWSER_COMPONENT) $(DIST)/bin/components
+	$(INSTALL) $(srcdir)/$(JS_SET_MAIL_COMPONENT) $(DIST)/bin/components
+	$(INSTALL) $(srcdir)/$(JS_UNSET_MAIL_COMPONENT) $(DIST)/bin/components
 
 clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
-	rm -f $(DIST)\bin\components\$(JS_SET_BROWSER_COMPONENT)
-	rm -f $(DIST)\bin\components\$(JS_SET_MAIL_COMPONENT)
-	rm -f $(DIST)\bin\components\$(JS_UNSET_MAIL_COMPONENT)
+	rm -f $(DIST)/lib/$(LIBRARY_NAME).lib
+	rm -f $(DIST)/bin/components/$(JS_SET_BROWSER_COMPONENT)
+	rm -f $(DIST)/bin/components/$(JS_SET_MAIL_COMPONENT)
+	rm -f $(DIST)/bin/components/$(JS_UNSET_MAIL_COMPONENT)
 
