@@ -2036,10 +2036,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
     }
     areaFrame->Init(*aPresContext, aDocElement, parFrame, styleContext, nsnull);
 
-    // Add a mapping from content object to frame. The primary frame is the scroll
-    // frame, because it contains the area frame
-    presShell->SetPrimaryFrameFor(aDocElement, scrollFrame ? scrollFrame : areaFrame);
-
     if (scrollFrame) {
       // If the document element is scrollable, then it needs a view. Otherwise,
       // don't bother, because the root frame has a view and the extra view is
