@@ -212,24 +212,48 @@ nsLDAPOperation::SearchExt(const PRUnichar *base, // base DN to search
  * @param aBaseDn               Base DN to search
  * @param aScope                One of SCOPE_{BASE,ONELEVEL,SUBTREE}
  * @param aFilter               Search filter
+ * @param aAttrCount            Number of attributes we request (0 for all)
+ * @param aAttributes           Array of strings, holding the attributes we need
  * @param aTimeOut              How long to wait
  * @param aSizeLimit            Maximum number of entries to return.
  *
  * XXX doesn't currently handle LDAPControl params
  *
  * void searchExt(in string aBaseDn, in PRInt32 aScope,
- *                in string aFilter, in PRIntervalTime aTimeOut,
+ *                in string aFilter, PRUint32 aAttrCount,
+ *                const char **aAttributes, in PRIntervalTime aTimeOut,
  *                in PRInt32 aSizeLimit);
  */
 NS_IMETHODIMP
 nsLDAPOperation::SearchExt(const PRUnichar *aBaseDn, PRInt32 aScope, 
-                           const PRUnichar *aFilter, PRIntervalTime aTimeOut,
+                           const PRUnichar *aFilter, PRUint32 aAttrCount,
+                           const char **aAttributes, PRIntervalTime aTimeOut,
                            PRInt32 aSizeLimit) 
 {
+    char **attrs = 0;
+
+    // Convert our XPCOM style C-Array to one that the C-SDK will like, i.e.
+    // add a last NULL element.
+    //
+    if (aAttrCount && aAttributes) {
+        attrs = NS_STATIC_CAST(char **,
+                    nsMemory::Alloc((aAttrCount + 1) * sizeof(char *)));
+        if (!attrs) {
+            NS_ERROR("nsLDAPOperation::SearchExt: out of memory ");
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        nsCRT::memcpy(attrs, aAttributes, aAttrCount * sizeof(char *));
+        attrs[aAttrCount] = 0;
+    }
+
     // XXX deal with timeouts
     //
-    int retVal = SearchExt(aBaseDn, aScope, aFilter, 0, 0, 
-        0, 0, 0, aSizeLimit);
+    int retVal = SearchExt(aBaseDn, aScope, aFilter,
+                           attrs, 0, 0, 0, 0, aSizeLimit);
+
+    if (attrs) {
+        nsMemory::Free(attrs);
+    }
 
     switch (retVal) {
 

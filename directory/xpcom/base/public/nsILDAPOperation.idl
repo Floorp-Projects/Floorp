@@ -109,6 +109,8 @@ interface nsILDAPOperation : nsISupports
      * @param aBaseDn           Base DN to search
      * @param aScope            One of SCOPE_{BASE,ONELEVEL,SUBTREE}
      * @param aFilter           Search filter
+     * @param aAttrCount        Number of attributes we request (0 for all)
+     * @param aAttributes       Array of strings, holding the attributes we need
      * @param aTimeOut          How long to wait
      * @param aSizeLimit        Maximum number of entries to return.
      *
@@ -122,8 +124,9 @@ interface nsILDAPOperation : nsISupports
      * XXX doesn't currently handle LDAPControl params
      */
     void searchExt(in wstring aBaseDn, in PRInt32 aScope,
-                   in wstring aFilter, in PRIntervalTime aTimeOut,
-                   in PRInt32 aSizeLimit);
+                   in wstring aFilter, in unsigned long aAttrCount,
+                   [array, size_is(aAttrCount)] in string aAttributes,
+                   in PRIntervalTime aTimeOut, in PRInt32 aSizeLimit);
 
     /**  
      * Cancels an async operation that is in progress.

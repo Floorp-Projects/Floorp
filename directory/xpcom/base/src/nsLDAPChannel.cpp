@@ -791,6 +791,7 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
     rv = mCurrentOperation->SearchExt(NS_ConvertASCIItoUCS2(baseDn).get(),
                                       scope,
                                       NS_ConvertASCIItoUCS2(filter).get(),
+                                      0, 0,
                                       0, LDAP_NO_LIMIT);
     NS_ENSURE_SUCCESS(rv,rv);
     
