@@ -750,8 +750,7 @@ mozXMLTerminal::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
 
 NS_IMETHODIMP
 mozXMLTerminal::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel,
-                              nsresult aStatus,
-                              nsIDocumentLoaderObserver * aObserver)
+                              nsresult aStatus)
 {
 
    return NS_OK;
@@ -759,8 +758,7 @@ mozXMLTerminal::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel
 
 NS_IMETHODIMP
 mozXMLTerminal::OnStartURLLoad(nsIDocumentLoader* loader,
-                                 nsIChannel* channel,
-                                 nsIContentViewer* aViewer)
+                                 nsIChannel* channel)
 {
 
    return NS_OK;

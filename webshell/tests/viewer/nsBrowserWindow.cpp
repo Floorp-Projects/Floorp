@@ -2032,16 +2032,14 @@ nsBrowserWindow::OnStartDocumentLoad(nsIDocumentLoader* loader,
 NS_IMETHODIMP
 nsBrowserWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
                                    nsIChannel* channel,
-                                   nsresult aStatus,
-                                   nsIDocumentLoaderObserver * aObserver)
+                                   nsresult aStatus)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBrowserWindow::OnStartURLLoad(nsIDocumentLoader* loader,
-                                nsIChannel* channel, 
-                                nsIContentViewer* aViewer)
+                                nsIChannel* channel)
 {
   nsresult rv;
 

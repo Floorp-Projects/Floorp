@@ -141,11 +141,9 @@ public:
                                  const char* aCommand);
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader,
                                nsIChannel* channel,
-                               nsresult aStatus,
-							   nsIDocumentLoaderObserver * aObserver);
+                               nsresult aStatus);
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader,
-                            nsIChannel* channel, 
-                            nsIContentViewer* aViewer);
+                            nsIChannel* channel);
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
                                nsIChannel* channel,
                                PRUint32 aProgress, 
@@ -175,8 +173,7 @@ CStreamListener::OnStartDocumentLoad(nsIDocumentLoader* loader,
 NS_IMETHODIMP
 CStreamListener::OnEndDocumentLoad(nsIDocumentLoader* loader,
                                    nsIChannel* channel,
-                                   nsresult aStatus,
-  						           nsIDocumentLoaderObserver * aObserver)
+                                   nsresult aStatus)
 {
   fputs("done.\n",stdout);
   g_bReadyForNextUrl = PR_TRUE;
@@ -185,8 +182,7 @@ CStreamListener::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 CStreamListener::OnStartURLLoad(nsIDocumentLoader* loader,
-                                nsIChannel* channel, 
-                                nsIContentViewer* aViewer)
+                                nsIChannel* channel)
 {
   return NS_OK;
 }

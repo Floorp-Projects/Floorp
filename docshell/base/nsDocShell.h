@@ -121,8 +121,7 @@ protected:
 
    NS_IMETHOD FireEndDocumentLoad(nsIDocumentLoader* aLoader,
                                   nsIChannel* aChannel,
-                                  nsresult aStatus,
-                                  nsIDocumentLoaderObserver * aObserver);
+                                  nsresult aStatus);
 
    NS_IMETHOD InsertDocumentInDocTree();
    NS_IMETHOD DestroyChildren();

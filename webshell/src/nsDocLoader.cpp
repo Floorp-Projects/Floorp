@@ -19,18 +19,14 @@
  *
  * Contributor(s): 
  */
+#include "nspr.h"
+#include "prlog.h"
+
 #include "nsIDocumentLoader.h"
-#include "nsIWebShell.h"
-#include "prmem.h"
-#include "plstr.h"
 #include "nsString.h"
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
-#include "nsIStreamListener.h"
 #include "nsIFactory.h"
-#include "nsIContentViewerContainer.h"
-#include "nsIContentViewer.h"
-#include "nsITimer.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsVoidArray.h"
 #include "nsIServiceManager.h"
@@ -39,33 +35,19 @@
 #include "nsILoadGroup.h"
 
 #include "nsNetUtil.h"
-#include "nsIURL.h"
 #include "nsIChannel.h"
-#include "nsIHTTPChannel.h"
-#include "nsHTTPEnums.h"
-#include "nsIDNSService.h"
-#include "nsIProgressEventSink.h"
 
 #include "nsIGenericFactory.h"
 #include "nsCOMPtr.h"
 #include "nsCom.h"
-#include "prlog.h"
-#include "prprf.h"
 
 #include "nsWeakReference.h"
 
-#include "nsIStreamConverterService.h"
-#include "nsIStreamConverter.h"
-static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
-
-#include <iostream.h>
-
-#include "nsIPref.h"
-#include "nsIURIContentListener.h"
 #include "nsIURILoader.h"
 #include "nsCURILoader.h"
 
 // XXX ick ick ick
+#include "nsIContentViewerContainer.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
@@ -92,7 +74,6 @@ static NS_DEFINE_IID(kIDocumentLoaderIID,          NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIDocumentLoaderFactoryIID,   NS_IDOCUMENTLOADERFACTORY_IID);
 static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDocumentIID,                NS_IDOCUMENT_IID);
-static NS_DEFINE_IID(kIStreamListenerIID,          NS_ISTREAMLISTENER_IID);
 
 static NS_DEFINE_IID(kIContentViewerContainerIID,  NS_ICONTENT_VIEWER_CONTAINER_IID);
 static NS_DEFINE_CID(kGenericFactoryCID,           NS_GENERICFACTORY_CID);
@@ -143,7 +124,7 @@ public:
     NS_IMETHOD GetContentViewerContainer(PRUint32 aDocumentID, 
                                          nsIContentViewerContainer** aResult);
 
-	NS_IMETHOD GetLoadGroup(nsILoadGroup** aResult);
+    NS_IMETHOD GetLoadGroup(nsILoadGroup** aResult);
 
     NS_IMETHOD Destroy();
 
@@ -165,8 +146,7 @@ protected:
                                nsresult aStatus);
 							   
     void FireOnStartURLLoad(nsDocLoaderImpl* aLoadInitiator,
-                            nsIChannel* channel, 
-                            nsIContentViewer* aViewer);
+                            nsIChannel* channel);
 
     void FireOnEndURLLoad(nsDocLoaderImpl* aLoadInitiator,
                           nsIChannel* channel, nsresult aStatus);
@@ -636,13 +616,7 @@ nsDocLoaderImpl::OnStartRequest(nsIChannel *aChannel, nsISupports *aCtxt)
             FireOnStartDocumentLoad(this, uri);
         } 
         else {
-          nsCOMPtr<nsIContentViewer> viewer;
-          nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mContainer));
-          NS_ENSURE_TRUE(webShell, NS_ERROR_FAILURE);
-  
-          webShell->GetContentViewer(getter_AddRefs(viewer));
-
-          FireOnStartURLLoad(this, aChannel, viewer);
+          FireOnStartURLLoad(this, aChannel);
         }
     }
     return NS_OK;
@@ -835,7 +809,7 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
       continue;
     }
 
-    observer->OnEndDocumentLoad(aLoadInitiator, aDocChannel, aStatus, observer);
+    observer->OnEndDocumentLoad(aLoadInitiator, aDocChannel, aStatus);
   }
 
   /*
@@ -848,8 +822,7 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
 
 
 void nsDocLoaderImpl::FireOnStartURLLoad(nsDocLoaderImpl* aLoadInitiator,
-                                         nsIChannel* aChannel,
-                                         nsIContentViewer* aViewer)
+                                         nsIChannel* aChannel)
 {
 #if defined(DEBUG)
   nsCOMPtr<nsIURI> uri;
@@ -864,8 +837,8 @@ void nsDocLoaderImpl::FireOnStartURLLoad(nsDocLoaderImpl* aLoadInitiator,
       if (aLoadInitiator == this) {
         PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
                ("DocLoader:%p: ++ Firing OnStartURLLoad(...)"
-                "\tURI: %s Viewer: %x\n", 
-                this, buffer, aViewer));
+                "\tURI: %s\n", 
+                this, buffer));
       } else {
         PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
                ("DocLoader:%p: --   Propagating OnStartURLLoad(...)."
@@ -896,14 +869,14 @@ void nsDocLoaderImpl::FireOnStartURLLoad(nsDocLoaderImpl* aLoadInitiator,
       continue;
     }
 
-    observer->OnStartURLLoad(aLoadInitiator, aChannel, aViewer);
+    observer->OnStartURLLoad(aLoadInitiator, aChannel);
   }
 
   /*
    * Finally notify the parent...
    */
   if (mParent) {
-    mParent->FireOnStartURLLoad(aLoadInitiator, aChannel, aViewer);
+    mParent->FireOnStartURLLoad(aLoadInitiator, aChannel);
   }
 }
 

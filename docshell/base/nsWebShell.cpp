@@ -311,11 +311,9 @@ public:
                                  const char* aCommand);
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader,
                                nsIChannel* channel,
-                               nsresult aStatus,
-                               nsIDocumentLoaderObserver * );
+                               nsresult aStatus);
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader,
-                            nsIChannel* channel,
-                            nsIContentViewer* aViewer);
+                            nsIChannel* channel);
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
                                nsIChannel* channel, PRUint32 aProgress,
                                PRUint32 aProgressMax);
@@ -1574,7 +1572,7 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
                   mReferrer = aReferrer;
               }
 		          // Pass on status of scrolling/anchor visit to docloaderobserver
-              rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv, this);
+              rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv);
 		          return rv;		   
            }
            else if (aType == nsISessionHistory::LOAD_HISTORY)
@@ -1594,14 +1592,14 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
                 }
                 mProcessedEndDocumentLoad = PR_FALSE;
 		            // Pass on status of scrolling/anchor visit to docloaderobserver
-                rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv, this);
+                rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv);
 		            return rv;		   
               }
            }
 #if 0        		   
 		   mProcessedEndDocumentLoad = PR_FALSE;
 		   // Pass on status of scrolling/anchor visit to docloaderobserver
-           rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv, this);
+           rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv);
 		   return rv;		   
 #endif /* 0 */
         }  // NS_SUCCEEDED(rv) && presShell
@@ -2950,8 +2948,7 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
 NS_IMETHODIMP
 nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
                               nsIChannel* channel,
-                              nsresult aStatus,
-                              nsIDocumentLoaderObserver * aWebShell)
+                              nsresult aStatus)
 {
 #ifdef MOZ_PERF_METRICS
   MOZ_TIMER_DEBUGLOG(("Stop: nsWebShell::OnEndDocumentLoad(), this=%p\n", this));
@@ -3041,7 +3038,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
      * Fire the OnEndDocumentLoad of the DocLoaderobserver
      */
     if (dlObserver && (nsnull != aURL)) {
-       dlObserver->OnEndDocumentLoad(mDocLoader, channel, aStatus, aWebShell);
+       dlObserver->OnEndDocumentLoad(mDocLoader, channel, aStatus);
     }
 
     if ( (mDocLoader == loader) && (aStatus == NS_ERROR_UNKNOWN_HOST) ) {
@@ -3107,8 +3104,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
-                           nsIChannel* channel,
-                           nsIContentViewer* aViewer)
+                           nsIChannel* channel)
 {
   nsresult rv;
 
@@ -3129,7 +3125,7 @@ nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
    */
   if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver))
   {
-    mDocLoaderObserver->OnStartURLLoad(mDocLoader, channel, aViewer);
+    mDocLoaderObserver->OnStartURLLoad(mDocLoader, channel);
   }
   return NS_OK;
 }
@@ -4016,7 +4012,7 @@ NS_IMETHODIMP nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc,
   // (7) fire end document load notification
 	mProcessedEndDocumentLoad = PR_FALSE;
   nsresult rv = NS_OK;
-  NS_ENSURE_SUCCESS(OnEndDocumentLoad(mDocLoader, dummyChannel, rv, this), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(OnEndDocumentLoad(mDocLoader, dummyChannel, rv), NS_ERROR_FAILURE);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);  // test the resulting out-param separately
 
   return NS_OK;
