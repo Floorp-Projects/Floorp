@@ -360,7 +360,7 @@ void PR_InitMemory(void) {
 
 #if TARGET_CARBON
 extern OTClientContextPtr	clientContext;
-#define CLOSE_OPEN_TRANSPORT()	CloseOpenTransport(clientContext)
+#define CLOSE_OPEN_TRANSPORT()	CloseOpenTransportInContext(clientContext)
 
 #else
 
@@ -755,7 +755,7 @@ extern long _MD_GetArchitecture(char *buf, long count)
 {
 	long	len;
 	
-#if defined(GENERATINGPOWERPC) && GENERATINGPOWERPC	
+#if defined(TARGET_CPU_PPC) && TARGET_CPU_PPC	
 	len = PR_snprintf(buf, count, "PowerPC");
 #else
 	len = PR_snprintf(buf, count, "Motorola68k");
