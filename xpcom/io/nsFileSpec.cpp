@@ -361,7 +361,7 @@ char* nsSimpleCharString::GetLeaf(char inSeparator) const
     return result;
 } // nsSimpleCharString::GetLeaf
 
-#if defined(XP_UNIX) || defined(XP_PC)
+#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
 
 //----------------------------------------------------------------------------------------
 void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
@@ -440,6 +440,8 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
 #include "nsFileSpecWin.cpp" // Windows-specific implementations
 #elif defined(XP_MAC)
 #include "nsFileSpecMac.cpp" // Macintosh-specific implementations
+#elif defined(XP_BEOS)
+#include "nsFileSpecBeOS.cpp" // BeOS-specific implementations
 #elif defined(XP_UNIX)
 #include "nsFileSpecUnix.cpp" // Unix-specific implementations
 #endif
@@ -664,7 +666,7 @@ nsFilePath::nsFilePath(const nsFileURL& inOther)
 }
 #endif
 
-#ifdef XP_UNIX
+#if defined XP_UNIX || defined XP_BEOS
 //----------------------------------------------------------------------------------------
 nsFilePath::nsFilePath(const nsFileSpec& inOther)
 //----------------------------------------------------------------------------------------
@@ -679,7 +681,7 @@ nsFilePath::~nsFilePath()
 {
 }
 
-#ifdef XP_UNIX
+#if defined XP_UNIX || defined XP_BEOS
 //----------------------------------------------------------------------------------------
 void nsFilePath::operator = (const nsFileSpec& inOther)
 //----------------------------------------------------------------------------------------
@@ -859,7 +861,7 @@ void nsFileSpec::operator = (const nsPersistentFileDescriptor& inDescriptor)
 //                                UNIX & WIN nsFileSpec implementation
 //========================================================================================
 
-#ifdef XP_UNIX
+#if defined XP_UNIX || defined XP_BEOS
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
@@ -869,7 +871,7 @@ nsFileSpec::nsFileSpec(const nsFilePath& inPath)
 }
 #endif // XP_UNIX
 
-#ifdef XP_UNIX
+#if defined XP_UNIX || defined XP_BEOS
 //----------------------------------------------------------------------------------------
 void nsFileSpec::operator = (const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
@@ -879,7 +881,7 @@ void nsFileSpec::operator = (const nsFilePath& inPath)
 }
 #endif //XP_UNIX
 
-#if defined(XP_UNIX) || defined(XP_PC)
+#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
@@ -889,7 +891,7 @@ nsFileSpec::nsFileSpec(const nsFileSpec& inSpec)
 }
 #endif //XP_UNIX
 
-#if defined(XP_UNIX) || defined(XP_PC)
+#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const char* inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
@@ -901,7 +903,7 @@ nsFileSpec::nsFileSpec(const char* inString, PRBool inCreateDirs)
 }
 #endif //XP_UNIX,PC
 
-#if defined(XP_UNIX) || defined(XP_PC)
+#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const nsString& inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
@@ -919,7 +921,7 @@ nsFileSpec::~nsFileSpec()
 {
 }
 
-#if defined(XP_UNIX) || defined(XP_PC)
+#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
 //----------------------------------------------------------------------------------------
 void nsFileSpec::operator = (const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
@@ -930,7 +932,7 @@ void nsFileSpec::operator = (const nsFileSpec& inSpec)
 #endif //XP_UNIX
 
 
-#if defined(XP_UNIX) || defined(XP_PC)
+#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
 //----------------------------------------------------------------------------------------
 void nsFileSpec::operator = (const char* inString)
 //----------------------------------------------------------------------------------------

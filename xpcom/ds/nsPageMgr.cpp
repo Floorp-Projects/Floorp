@@ -23,6 +23,8 @@
 #include <windows.h>
 #elif defined(XP_MAC)
 #include <stdlib.h>
+#elif defined(XP_BEOS)
+#include <fcntl.h>
 #elif defined(XP_UNIX)
 #include <sys/mman.h>
 #include <fcntl.h>
@@ -278,7 +280,36 @@ nsPageMgr::InitPages(nsPageCount minPages, nsPageCount maxPages)
         TempDisposeHandle(h, &err);
     }
     return PR_FAILURE;
-    
+
+#elif defined(XP_BEOS)
+
+    nsPage* addr = NULL;
+    nsPageCount size = maxPages;
+
+#if (1L<<NS_PAGEMGR_PAGE_BITS) != B_PAGE_SIZE
+#error can only work with 4096 byte pages
+#endif
+    while(addr == NULL)
+	{
+        /* let the system place the heap */
+		if((mAid = create_area("MozillaHeap", (void **)&addr, B_ANY_ADDRESS,
+			size << NS_PAGEMGR_PAGE_BITS, B_NO_LOCK,
+			B_READ_AREA | B_WRITE_AREA)) < 0)
+		{
+			addr = NULL;
+            size--;
+            if (size < minPages) {
+                return PR_FAILURE;
+            }
+        }
+    }
+    PR_ASSERT(NS_PAGEMGR_IS_ALIGNED(addr, NS_PAGEMGR_PAGE_BITS));
+    mMemoryBase = addr;
+    mPageCount = size;
+    mBoundary = addr;
+
+    return PR_SUCCESS;
+
 #else
 
     nsPage* addr = NULL;
@@ -334,6 +365,10 @@ nsPageMgr::FinalizePages()
         }
     }
 
+#elif defined(XP_BEOS)
+
+	delete_area(mAid);
+
 #else
     munmap((caddr_t)mMemoryBase, mPageCount << NS_PAGEMGR_PAGE_BITS);
 #endif
@@ -366,6 +401,9 @@ nsPageMgr::nsPageMgr()
       mSegMap(nsnull),
       mSegTable(nsnull),
       mSegTableCount(0),
+#endif
+#if defined(XP_BEOS)
+      mAid(B_ERROR),
 #endif
       mPageCount(0)
 {

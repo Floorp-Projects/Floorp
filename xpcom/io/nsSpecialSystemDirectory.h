@@ -93,6 +93,10 @@ class NS_COM nsSpecialSystemDirectory : public nsFileSpec
         ,   Unix_LocalDirectory       =   301
         ,   Unix_LibDirectory         =   302
         ,   Unix_HomeDirectory        =   303
+
+        ,   BeOS_SettingsDirectory    =   401
+        ,   BeOS_HomeDirectory        =   402
+        ,   BeOS_DesktopDirectory     =   403
         };
 
                     //nsSpecialSystemDirectory();

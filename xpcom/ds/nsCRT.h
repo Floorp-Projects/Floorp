@@ -39,7 +39,7 @@
 #    define NS_LINEBREAK           "\015\012"
 #    define NS_LINEBREAK_LEN       2
 #  else
-#    ifdef XP_UNIX
+#    if defined(XP_UNIX) || defined(XP_BEOS)
 #      define NS_LINEBREAK         "\012"
 #      define NS_LINEBREAK_LEN     1
 #    endif /* XP_UNIX */

@@ -20,6 +20,11 @@
 #include "prlog.h"
 #include "prinit.h"
 
+#if defined(XP_BEOS)
+/* For DEBUGGER macros */
+#include <Debug.h>
+#endif
+
 #if defined(XP_UNIX)
 /* for abort() */
 #include <stdlib.h>
@@ -96,6 +101,12 @@ NS_COM void nsDebug::Abort(const char* aFile, PRIntn aLine)
   ExitToShell();
 #elif defined(XP_UNIX)
   PR_Abort();
+#elif defined(XP_BEOS)
+  {
+	char buf[2000];
+	sprintf(buf, "Abort: at file %s, line %d", aFile, aLine);
+	DEBUGGER(buf);
+  } 
 #endif
 }
 
@@ -110,6 +121,12 @@ NS_COM void nsDebug::Break(const char* aFile, PRIntn aLine)
   ::DebugBreak();
 #elif defined(XP_UNIX) && !defined(UNIX_CRASH_ON_ASSERT)
   fprintf(stderr, "\07");  fflush(stderr);
+#elif defined(XP_BEOS)
+  {
+	char buf[2000];
+	sprintf(buf, "Break: at file %s, line %d", aFile, aLine);
+	DEBUGGER(buf);
+  }
 #else
   Abort(aFile, aLine);
 #endif

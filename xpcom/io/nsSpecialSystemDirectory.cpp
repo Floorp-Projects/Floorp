@@ -40,6 +40,14 @@
 #include <stdlib.h>
 #include <sys/param.h>
 #include "prenv.h"
+#elif defined(XP_BEOS)
+#include <FindDirectory.h>
+#include <Path.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/param.h>
+#include <OS.h>
+#include <image.h>
 #endif
 
 #include "plstr.h"
@@ -194,6 +202,33 @@ static void GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
         }
     }
 
+#elif defined(XP_BEOS)
+
+    char *moz5 = getenv("MOZILLA_FIVE_HOME");
+    if (moz5)
+    {
+        aFileSpec = moz5;
+        return;
+    }
+    else
+    {
+      static char buf[MAXPATHLEN];
+      int32 cookie = 0;
+      image_info info;
+      char *p;
+      *buf = 0;
+      if(get_next_image_info(0, &cookie, &info) == B_OK)
+      {
+        strcpy(buf, info.name);
+        if((p = strrchr(buf, '/')) != 0)
+        {
+          *p = 0;
+          aFileSpec = buf;
+          return;
+        }
+      }
+    }
+
 #endif
 
     NS_ERROR("unable to get current process directory");
@@ -258,7 +293,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
 #elif defined(XP_MAC)
             *this = kTemporaryFolderType;
         
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_BEOS)
             *this = "/tmp/";
 #endif
         break;
@@ -527,6 +562,37 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             *this = PR_GetEnv("HOME");
             break;
 
+#endif        
+
+#ifdef XP_BEOS
+        case BeOS_SettingsDirectory:
+		{
+			BPath p;
+			if(find_directory(B_USER_SETTINGS_DIRECTORY, &p) == B_OK)
+				*this = p.Path();
+			else
+	            *this = "/boot/home/config/settings";
+            break;
+		}
+
+        case BeOS_HomeDirectory:
+		{
+			BPath p;
+			if(find_directory(B_USER_DIRECTORY, &p) == B_OK)
+				*this = p.Path();
+			else
+	            *this = "/boot/home";
+            break;
+		}
+
+        case BeOS_DesktopDirectory:
+		{
+			BPath p;
+			if(find_directory(B_DESKTOP_DIRECTORY, &p) == B_OK)
+				*this = p.Path();
+			else
+	            *this = "/boot/home/Desktop";
+		}
 #endif        
 
         default:
