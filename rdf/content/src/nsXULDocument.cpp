@@ -695,15 +695,11 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
     rv = PrepareStyleSheets(mDocumentURL);
     if (NS_FAILED(rv)) return rv;
 
-    // Get the content type, if possible, to see if it's a cached XUL
-    // load. We explicitly ignore failure at this point, because
-    // certain hacks (cough, the directory viewer) need to be able to
-    // StartDocumentLoad() before the channel's content type has been
-    // detected.
     nsXPIDLCString contentType;
-    (void) aChannel->GetContentType(getter_Copies(contentType));
+    rv = aChannel->GetContentType(getter_Copies(contentType));
+    if (NS_FAILED(rv)) return rv;
 
-    if (contentType && PL_strcmp(contentType, "text/cached-xul") == 0) {
+    if (PL_strcmp("text/cached-xul", (const char*) contentType) == 0) {
         // Look in the chrome cache: we've got this puppy loaded
         // already.
         nsCOMPtr<nsIXULPrototypeDocument> proto;
@@ -2496,6 +2492,11 @@ nsXULDocument::GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP    
+nsXULDocument::GetCharacterSet(nsString& aCharacterSet)
+{
+  return GetDocumentCharacterSet(aCharacterSet);
+}
 
 NS_IMETHODIMP
 nsXULDocument::CreateElementWithNameSpace(const nsString& aTagName,
@@ -3447,16 +3448,53 @@ nsXULDocument::StartLayout(void)
       if (! webShellContainer)
           return NS_ERROR_UNEXPECTED;
 
+      PRBool intrinsic = PR_FALSE;
       nsCOMPtr<nsIBrowserWindow> browser;
       browser = do_QueryInterface(webShellContainer);
+      if (browser) {
+          browser->IsIntrinsicallySized(intrinsic);
+      }
+      else {
+          // XXX we're XUL embedded inside an iframe?
+      }
 
       nsRect r;
       cx->GetVisibleArea(r);
+      if (intrinsic) {
+        // Flow at an unconstrained width and height
+        r.width = NS_UNCONSTRAINEDSIZE;
+        r.height = NS_UNCONSTRAINEDSIZE;
+      }
 
-      // Trigger a refresh before the call to InitialReflow(), because
-      // the view manager's UpdateView() function is dropping dirty rects if
-      // refresh is disabled rather than accumulating them until refresh is
-      // enabled and then triggering a repaint...
+      if (browser) {
+        // We're top-level.
+        // See if we have attributes on our root tag that set the width and height.
+        // read "height" attribute// Convert r.width and r.height to twips.
+        float p2t;
+        cx->GetPixelsToTwips(&p2t);
+
+        nsCOMPtr<nsIDOMElement> windowElement = do_QueryInterface(mRootContent);
+        nsString sizeString;
+        PRInt32 specSize;
+        PRInt32 errorCode;
+        if (NS_SUCCEEDED(windowElement->GetAttribute("height", sizeString))) {
+          specSize = sizeString.ToInteger(&errorCode);
+          if (NS_SUCCEEDED(errorCode) && specSize > 0)
+            r.height = NSIntPixelsToTwips(specSize, p2t);
+        }
+
+        // read "width" attribute
+        if (NS_SUCCEEDED(windowElement->GetAttribute("width", sizeString))) {
+          specSize = sizeString.ToInteger(&errorCode);
+          if (NS_SUCCEEDED(errorCode) || specSize > 0)
+            r.width = NSIntPixelsToTwips(specSize, p2t);
+        }
+      }
+
+      cx->SetVisibleArea(r);
+
+      // XXX Copy of the code below. See XXX below for details...
+      // Now trigger a refresh
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));
       if (vm) {
@@ -3472,6 +3510,53 @@ nsXULDocument::StartLayout(void)
       }
 
       shell->InitialReflow(r.width, r.height);
+
+      if (browser) {
+        // We're top level.
+        // Retrieve the answer.
+        cx->GetVisibleArea(r);
+
+        // Perform the resize
+        PRInt32 chromeX,chromeY,chromeWidth,chromeHeight;
+        nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(webShell));
+        NS_ABORT_IF_FALSE(docShellWin, "QI Failed!!!!");
+        docShellWin->GetPositionAndSize(&chromeX, &chromeY, &chromeWidth,
+         &chromeHeight);
+
+        float t2p;
+        cx->GetTwipsToPixels(&t2p);
+        PRInt32 width = PRInt32((float)r.width*t2p);
+        PRInt32 height = PRInt32((float)r.height*t2p);
+
+        PRInt32 widthDelta = width - chromeWidth;
+        PRInt32 heightDelta = height - chromeHeight;
+
+        nsRect windowBounds;
+        browser->GetWindowBounds(windowBounds);
+        browser->SizeWindowTo(windowBounds.width + widthDelta,
+                              windowBounds.height + heightDelta);
+      }
+
+      // XXX Moving this call up before the call to InitialReflow(), because
+      // the view manager's UpdateView() function is dropping dirty rects if
+      // refresh is disabled rather than accumulating them until refresh is
+      // enabled and then triggering a repaint...
+#if 0
+      // Now trigger a refresh
+      nsCOMPtr<nsIViewManager> vm;
+      shell->GetViewManager(getter_AddRefs(vm));
+      if (vm) {
+        nsCOMPtr<nsIContentViewer> contentViewer;
+        nsresult rv = webShell->GetContentViewer(getter_AddRefs(contentViewer));
+        if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
+          PRBool enabled;
+          contentViewer->GetEnableRendering(&enabled);
+          if (enabled) {
+            vm->EnableRefresh();
+          }
+        }
+      }
+#endif
 
       // Start observing the document _after_ we do the initial
       // reflow. Otherwise, we'll get into an trouble trying to

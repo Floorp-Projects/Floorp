@@ -29,6 +29,7 @@
      readonly attribute long width;
      readonly attribute long height;
      readonly attribute StyleSheetCollection styleSheets;
+     readonly attribute DOMString characterSet;
      Element                   createElementWithNameSpace(in DOMString tagName,
                                                           in DOMString nameSpace)
                                                           raises(DOMException);     Range                     createRange();
