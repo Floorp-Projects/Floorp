@@ -190,6 +190,8 @@ nsImapMailFolder::nsImapMailFolder() :
     m_downloadMessageForOfflineUse(PR_FALSE),
     m_downloadingFolderForOfflineUse(PR_FALSE)
 {
+        MOZ_COUNT_CTOR(nsImapMailFolder); // double count these for now.
+
     m_appendMsgMonitor = nsnull;  // since we're not using this (yet?) make it null.
                 // if we do start using it, it should be created lazily
 
@@ -211,6 +213,7 @@ nsImapMailFolder::nsImapMailFolder() :
 
 nsImapMailFolder::~nsImapMailFolder()
 {
+  MOZ_COUNT_DTOR(nsImapMailFolder);
     if (m_appendMsgMonitor)
         PR_DestroyMonitor(m_appendMsgMonitor);
 
@@ -668,7 +671,8 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
   else if (NS_SUCCEEDED(rv))  // tell the front end that the folder is loaded if we're not going to 
   {                           // actually run a url.
     NotifyFolderEvent(mFolderLoadedAtom);
-    rv = AutoCompact(msgWindow);  
+    if (msgWindow) // don't do this w/o a msgWindow, since it asserts annoyingly
+      rv = AutoCompact(msgWindow);  
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -2877,6 +2881,12 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
               msgHdr->SetPriority(filterPriority);
           }
         break;
+      case nsMsgFilterAction::Label:
+        {
+            nsMsgLabelValue filterLabel;
+            filter->GetActionLabel(&filterLabel);
+            msgHdr->SetLabel(filterLabel);
+        }
       default:
         break;
       }
@@ -4495,7 +4505,7 @@ NS_IMETHODIMP
 nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
                                  PRUint32 aMsgId, const PRUnichar *extraInfo)
 {
-  PRUnichar *progressMsg=nsnull;
+  nsXPIDLString progressMsg;
 
   nsCOMPtr<nsIMsgIncomingServer> server;
   nsresult rv = GetServer(getter_AddRefs(server));
@@ -4503,12 +4513,12 @@ nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
   {
     nsCOMPtr<nsIImapServerSink> serverSink = do_QueryInterface(server);
     if (serverSink)
-      serverSink->GetImapStringByID(aMsgId, &progressMsg);
+      serverSink->GetImapStringByID(aMsgId, getter_Copies(progressMsg));
   }
-  if (!progressMsg)
-    IMAPGetStringByID(aMsgId, &progressMsg);
+  if (progressMsg.IsEmpty())
+    IMAPGetStringByID(aMsgId, getter_Copies(progressMsg));
 
-  if (aProtocol && progressMsg)
+  if (aProtocol && !progressMsg.IsEmpty())
   {
     nsCOMPtr <nsIImapUrl> imapUrl;
     aProtocol->GetRunningImapURL(getter_AddRefs(imapUrl));
@@ -4518,15 +4528,11 @@ nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
       {
         PRUnichar *printfString = nsTextFormatter::smprintf(progressMsg, extraInfo);
         if (printfString)
-        {
-          progressMsg = nsCRT::strdup(printfString);  
-          nsTextFormatter::smprintf_free(printfString);
-        }
+          progressMsg.Adopt(printfString);  
       }
       DisplayStatusMsg(imapUrl, progressMsg);
     }
   }
-  PR_FREEIF(progressMsg);
   return NS_OK;
 }
 
