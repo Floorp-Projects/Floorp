@@ -28,8 +28,20 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "FullPath.h"
-#include "net.h"
 #include "xp_mem.h" // for XP_FREE
+
+
+/*
+ * valid mask values for NET_Escape() and NET_EscapedSize().
+ */
+#define URL_XALPHAS     (unsigned char) 1
+#define URL_XPALPHAS    (unsigned char) 2
+#define URL_PATH        (unsigned char) 4
+
+char * NET_Escape (const char * str, int mask);
+char * NET_EscapeBytes (const char * str, int32 len, int mask, int32 * out_len);
+int NET_UnEscapeCnt (char * str);
+char * NET_UnEscape (char * str);
 
 // Returns a full pathname to the given file
 // Returned value is allocated with XP_ALLOC, and must be freed with XP_FREE
@@ -309,7 +321,7 @@ static int netCharType[256] =
 
 #define IS_OK(C) (netCharType[((unsigned int) (C))] & (mask))
 
-PUBLIC char *
+char *
 NET_Escape (const char * str, int mask)
 {
     if(!str)
@@ -317,7 +329,7 @@ NET_Escape (const char * str, int mask)
     return NET_EscapeBytes (str, (int32)PL_strlen(str), mask, NULL);
 }
 
-PUBLIC char *
+char *
 NET_EscapeBytes (const char * str, int32 len, int mask, int32 * out_len)
 {
     register const unsigned char *src;
@@ -372,7 +384,7 @@ NET_EscapeBytes (const char * str, int32 len, int mask, int32 * out_len)
      ((C >= 'A' && C <= 'F') ? C - 'A' + 10 : \
      ((C >= 'a' && C <= 'f') ? C - 'a' + 10 : 0)))
 
-PUBLIC int
+int
 NET_UnEscapeCnt (char * str)
 {
     register char *src = str;
@@ -405,7 +417,7 @@ NET_UnEscapeCnt (char * str)
 
 } /* NET_UnEscapeCnt */
 
-PUBLIC char *
+char *
 NET_UnEscape(char * str)
 {
 	(void)NET_UnEscapeCnt(str);
