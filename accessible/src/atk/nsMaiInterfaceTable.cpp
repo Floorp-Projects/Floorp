@@ -428,16 +428,12 @@ getRowDescriptionCB(AtkTable *aTable, gint aRow)
                        accWrap->GetMaiInterface(MAI_INTERFACE_TABLE));
     NS_ENSURE_TRUE(maiTable, nsnull);
 
-    const char *description = maiTable->GetRowDescription();
-    if (!description) {
-        nsAutoString autoStr;
-        nsresult rv = accTable->GetRowDescription(aRow, autoStr);
-        NS_ENSURE_SUCCESS(rv, nsnull);
+    nsAutoString autoStr;
+    nsresult rv = accTable->GetRowDescription(aRow, autoStr);
+    NS_ENSURE_SUCCESS(rv, nsnull);
 
-        maiTable->SetRowDescription(autoStr);
-        description = maiTable->GetRowDescription();
-    }
-    return description;
+    maiTable->SetRowDescription(autoStr);
+    return maiTable->GetRowDescription();
 }
 
 AtkObject*
