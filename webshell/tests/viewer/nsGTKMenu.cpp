@@ -54,6 +54,8 @@ GtkItemFactoryEntry menu_items[] =
   { "/File/Samples/demo #11",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_DEMO11,		nsnull },
   { "/File/Samples/demo #12",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_DEMO12,		nsnull },
   { "/File/Samples/demo #13",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_DEMO13,		nsnull },
+  { "/File/Samples/demo #14",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_DEMO14,		nsnull },
+  { "/File/Samples/demo #15",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_DEMO15,		nsnull },
   { "/File/_Test Sites",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_TOP100,		nsnull },
   { "/File/XPToolkit Tests",		nsnull,	nsnull,			0,			"<Branch>" },
   { "/File/XPToolkit Tests/Toolbar Test 1",       nsnull, (GIFC)gtk_ifactory_cb,  VIEWER_XPTOOLKITTOOLBAR1,     nsnull },
