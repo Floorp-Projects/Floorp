@@ -345,11 +345,14 @@ function AbDeleteDirectory()
 
 function clickResultsTree(event)
 {
+    // we only care about button 0 (left click) events
+    if (event.button != 0) return;
+
     if (event.target.localName != "treecell" &&
         event.target.localName != "treeitem")
         return;
 
-	if ( event.detail == 2 ) top.AbEditCard();
+    if ( event.detail == 2 ) top.AbEditCard();
 }
 
 function UpdateAddDeleteCounts()
