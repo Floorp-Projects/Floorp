@@ -12,8 +12,8 @@ A * {text-decoration: inherit}
 .mod-date {font-size: smaller; font-style: italic; text-align: right}
 .sub {font-size: 70%}
 .sub-num {font-size: 70%; font-style: normal}
-.syntax {margin-left: 0.5in}
-.indent {margin-left: 0.5in}
+.syntax {margin-left: 36pt}
+.indent {margin-left: 36pt}
 .issue {color: #FF0000}
 .small-caps {font-variant: small-caps}
 
@@ -33,10 +33,11 @@ DT {font-style: italic; margin-top: 3pt}
 .grammar-argument {margin-left: 18pt; margin-top: 6pt; margin-bottom: 6pt}
 .semantic-comment {margin-left: 9pt; margin-top: 9pt; margin-bottom: 0pt}
 
-.algorithm {margin-left: 9pt; margin-top: 6pt; margin-bottom: 6pt}
-.algorithm-next {margin-left: 27pt; margin-bottom: 6pt}
 .stmt {margin-left: 36pt; text-indent: -36pt}
 .lvl {margin-left: 18pt}
+.algorithm {margin-left: 9pt; margin-top: 6pt; margin-bottom: 6pt}
+.algorithm-next {margin-left: 27pt; margin-bottom: 6pt}
+.algorithm-indent {margin-left: 36pt; margin-top: 6pt; margin-bottom: 6pt}
 .algorithm-stmt {margin-left: 45pt; text-indent: -36pt; margin-top: 6pt; margin-bottom: 6pt}
 .algorithm-next-stmt {margin-left: 63pt; text-indent: -36pt; margin-bottom: 6pt}
 
@@ -46,7 +47,7 @@ VAR, VAR A:link, VAR A:visited {font-family: Georgia, Palatino, "Times New Roman
 A:hover VAR, VAR A:hover {color: #003300}
 A:active VAR, VAR A:active {color: #00FF00}
 CODE, PRE {font-family: "Courier New", Courier, mono; color: #0000FF}
-PRE {margin-left: 0.5in}
+PRE {margin-left: 36pt}
 A:hover CODE {color: #3333CC}
 A:active CODE {color: #6666FF}
 .control, A.control:link, A.control:visited {font-family: "Times New Roman", Times, serif; font-weight: normal; color: #000099}
