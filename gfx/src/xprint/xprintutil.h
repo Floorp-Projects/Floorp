@@ -48,7 +48,11 @@
 #include <prmem.h>
 #include <prthread.h>
 #define XPU_USE_NSPR 1
-#define XPU_USE_THREADS 1
+/*
+ * Disabled for now - Threaded codepath does not work properly always.
+ * See bug 134570 ("Print-to-file not working with threaded XprintUtil")
+ * #define XPU_USE_THREADS 1
+ */
 #endif /* USE_MOZILLA_TYPES */
 
 #ifdef DEBUG
