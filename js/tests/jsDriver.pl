@@ -215,8 +215,8 @@ sub execute_tests {
 
             # watch for testcase to proclaim what exit code it expects to
             # produce (0 by default)
-            if ($line =~ /expect(ed)?\s*exit\s*code\s*\:?\s*(\n+)/i) {
-                $expected_exit = $1;
+            if ($line =~ /expect(ed)?\s*exit\s*code\s*\:?\s*(\d+)/i) {
+                $expected_exit = $2;
                 &dd ("Test case expects exit code $expected_exit");
             }
 
