@@ -189,7 +189,8 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         if (methods.length == 0) {
             throw new RuntimeException("No methods defined for call");
         }
-
+        Object[] origArgs = args;
+        args = unwrapArgs(args);
         Method meth = (Method) findFunction(methods, args);
         if (meth == null) {
             Class c = methods[0].getDeclaringClass();
@@ -204,7 +205,15 @@ public class NativeJavaMethod extends NativeFunction implements Function {
 
         // First, we marshall the args.
         for (int i = 0; i < args.length; i++) {
-            args[i] = NativeJavaObject.coerceType(paramTypes[i], args[i], true);
+            Object arg = args[i];
+            Object coerced = NativeJavaObject.coerceType(paramTypes[i], arg,
+                                                         true);
+            if (coerced != arg) {
+                if (origArgs == args) {
+                    args = (Object[])args.clone();
+                }
+                args[i] = coerced;
+            }
         }
         Object javaObject;
         if (Modifier.isStatic(meth.getModifiers())) {
@@ -312,6 +321,32 @@ public class NativeJavaMethod extends NativeFunction implements Function {
     }
 
     /**
+     * If args arrray contains instances of {@link Wrapper}, return a new array
+     * with all such objects unwrapped, otherwise return the original array.
+     */
+    static Object[] unwrapArgs(Object[] args)
+    {
+        Object[] result = args;
+        for (int i = 0, N = args.length; i != N; ++i) {
+            Object arg = args[i];
+            if (arg instanceof Wrapper) {
+                Object unwrapped = ((Wrapper)arg).unwrap();
+                if (!(unwrapped instanceof Number)) {
+                    // Since numbers are internally represented as
+                    // java.lang.Double, etc. then java.lang.Doubles are
+                    // distinquished by being wrapped. Thus don't unwrap
+                    // here or we'll get overloading wrong.
+                    if (result == args) {
+                        result = (Object[])args.clone();
+                    }
+                    result[i] = unwrapped;
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
      * Find the correct function to call given the set of methods
      * or constructors and the arguments.
      * If no function can be found to call, return null.
@@ -320,20 +355,6 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         if (methodsOrCtors.length == 0)
             return null;
         boolean hasMethods = methodsOrCtors[0] instanceof Method;
-        // Wrapper support
-        for (int i=0; i < args.length; i++) {
-            Object arg = args[i];
-            if (arg instanceof Wrapper) {
-                arg = ((Wrapper)arg).unwrap();
-                if (!(arg instanceof Number)) {
-                    // Since numbers are internally represented as
-                    // java.lang.Double, etc. then java.lang.Doubles are
-                    // distinquished by being wrapped. Thus don't unwrap
-                    // here or we'll get overloading wrong.
-                    args[i] = arg;
-                }
-            }
-        }
 
         Member  bestFit = null;
         Class[] bestFitTypes = null;

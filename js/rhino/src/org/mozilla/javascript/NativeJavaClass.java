@@ -173,6 +173,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
                Modifier.isAbstract(modifiers)))
         {
             Constructor[] ctors = members.getConstructors();
+            args = NativeJavaMethod.unwrapArgs(args);
             Member member = NativeJavaMethod.findFunction(ctors, args);
             Constructor ctor = (Constructor) member;
             if (ctor == null) {
