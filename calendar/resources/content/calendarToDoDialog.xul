@@ -158,29 +158,59 @@
                     </row>
             
                     <!-- Priority -->    
-                    <row align="center" collapsed="true">
+                    <row align="center">
                         <hbox class="field-label-box-class" pack="end">
                             <label value="&newtodo.priority.label;"/>
                         </hbox>
-                        <menulist>
+                        <hbox>
+                            <menulist id="priority-levels">
                           <menupopup>
-                              <menuitem label="1" value="1"/>
-                              <menuitem label="2" value="2"/>
-                              <menuitem label="3" value="3"/>
-                              <menuitem label="4" value="4"/>
-                              <menuitem label="5" value="5"/>
+                                    <menuitem label="&priority.level.none;" value="0"/>
+                                    <menuitem label="&priority.level.low;" value="9"/>
+                                    <menuitem label="&priority.level.medium;" value="5"/>
+                                    <menuitem label="&priority.level.high;" value="1"/>
                           </menupopup>
                         </menulist>
+                        </hbox>
                     </row>
             
                     <!-- Completed -->    
                     <row align="center">
-                        <label value="&newtodo.completed.label;" for="completed-checkbox"/>
+                        <label value="&newtodo.completed.label;" for="completed-checkbox" pack="end"/>
                         <hbox align="center">
                            <checkbox id="completed-checkbox" oncommand="updateCompletedItemEnabled()"/>
                            <textbox disabled="true" class="date-text-class" id="completed-date-text" readonly="true" value=""      onmousedown="prepareDatePicker('completed-date-text')" popup="oe-date-picker-popup" position="after_start"/>
                            <image disabled="true" id="completed-date-button" class="event-date-button-class" onmousedown="prepareDatePicker('completed-date-text')" popup="oe-date-picker-popup" position="after_start"/>
+                            <spacer minwidth="30px"/>  
+                            <menulist  id="percent-complete-menulist" editable="true" oncommand="percentCompleteCommand()">
+                                <menupopup>
+                                    <menuitem label="0" value="0"/>
+                                    <menuitem label="10" value="10"/>
+                                    <menuitem label="20" value="20"/>
+                                    <menuitem label="30" value="30"/>
+                                    <menuitem label="40" value="40"/>
+                                    <menuitem label="50" value="50"/>
+                                    <menuitem label="60" value="60"/>
+                                    <menuitem label="70" value="70"/>
+                                    <menuitem label="80" value="80"/>
+                                    <menuitem label="90" value="90"/>
+                                    <menuitem label="100" value="100"/>
+                                </menupopup>
+                            </menulist>
+                            <label id="percent-complete-text" value="&newtodo.percentcomplete.label;"/>
                         </hbox>
+                    </row>
+
+                    <!-- Categories -->    
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
+                            <label value="&newtodo.categories.label;"/>
+                        </hbox>
+                        <menulist id="categories-field" flex="1">
+                            <menupopup id="categories-menulist-menupopup">
+                                <menuitem label="&priority.level.none;" value="0"/>
+                            </menupopup>                        
+                        </menulist>
                     </row>
 
                     <!-- Alarm -->    

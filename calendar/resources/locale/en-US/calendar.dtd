@@ -55,6 +55,15 @@
 <!ENTITY repeat.units.months.singular   "Month" >
 <!ENTITY repeat.units.years.singular    "Year" >
 
+<!ENTITY priority.level.none     "None" >
+<!ENTITY priority.level.low      "Low" >
+<!ENTITY priority.level.medium   "Medium" >
+<!ENTITY priority.level.high     "High" >
+
+<!ENTITY tasks.category.business "Business" >
+<!ENTITY tasks.category.personal "Personal" >
+<!ENTITY tasks.category.family   "Family" >
+<!ENTITY tasks.category.unfiled  "Unfiled" >
 
 <!ENTITY newevent.title.label        "Title" >
 <!ENTITY newevent.location.label     "Location" >
@@ -97,6 +106,8 @@
 <!ENTITY newtodo.duedate.label "Due Date">
 <!ENTITY newtodo.startdate.label "Start Date">
 <!ENTITY newtodo.priority.label "Priority">
+<!ENTITY newtodo.percentcomplete.label "&#37; complete">
+<!ENTITY newtodo.categories.label "Categories">
 <!ENTITY newtodo.starttime.warning "Your start date occurs after your due date.">
 
 <!ENTITY calendar.confirm.deleteevent "Are you sure you want to delete this event titled: " >        

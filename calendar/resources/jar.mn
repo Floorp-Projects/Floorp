@@ -43,6 +43,7 @@ calendar.jar:
     locale/en-US/calendar/calendarMenuOverlay.dtd (locale/en-US/calendarMenuOverlay.dtd)
     locale/en-US/calendar/calendarOverlay.dtd  (locale/en-US/calendarOverlay.dtd) 
     locale/en-US/calendar/calendarPrefs.dtd  (locale/en-US/calendarPrefs.dtd) 
+    locale/en-US/calendar/categories.properties  (locale/en-US/categories.properties) 
     locale/en-US/calendar/contactsSelectAddressesDialog.dtd (locale/en-US/contactsSelectAddressesDialog.dtd)
     locale/en-US/calendar/contents.rdf (locale/en-US/contents.rdf)
     locale/en-US/calendar/dateFormat.properties (locale/en-US/dateFormat.properties)

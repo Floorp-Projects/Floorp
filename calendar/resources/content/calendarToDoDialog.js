@@ -129,6 +129,10 @@ function loadCalendarToDoDialog()
    
    setDateFieldValue( "start-date-text", startDate );
 
+   setFieldValue( "priority-levels", gToDo.priority );
+   
+   setFieldValue( "percent-complete-menulist", gToDo.percent );
+
    if( gToDo.completed.getTime() > 0 )
    {
       var completedDate = new Date( gToDo.completed.getTime() );
@@ -158,6 +162,24 @@ function loadCalendarToDoDialog()
    setFieldValue( "alarm-length-field", gToDo.alarmLength );
    setFieldValue( "alarm-length-units", gToDo.alarmUnits );
 
+
+   // Load default categories
+   this.categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/categories.properties");
+   var categoriesString = this.categoriesStringBundle.GetStringFromName("categories" );
+   var categoriesList = categoriesString.split( "," );
+   
+   var oldMenulist = document.getElementById( "categories-menulist-menupopup" );
+   while( oldMenulist.hasChildNodes() )
+      oldMenulist.removeChild( oldMenulist.lastChild );
+   
+   for (var i = 0; i < categoriesList.length ; i++)
+   {
+      document.getElementById( "categories-field" ).appendItem(categoriesList[i], "Categories-"+categoriesList[i]);
+   }
+
+   document.getElementById( "categories-field" ).selectedIndex = -1;
+   setFieldValue( "categories-field", gToDo.categories );
+   
    // update enabling and disabling
    
    updateAlarmItemEnabled();
@@ -206,8 +228,20 @@ function onOKCommand()
    gToDo.alarmLength = getFieldValue( "alarm-length-field" );
    gToDo.alarmUnits  = getFieldValue( "alarm-length-units", "value" );  
 
+   gToDo.priority    = getFieldValue( "priority-levels", "value" );
    var completed = getFieldValue( "completed-checkbox", "checked" );
 
+   gToDo.categories  = getFieldValue( "categories-field", "value" );
+
+   var percentcomplete = getFieldValue( "percent-complete-menulist" );
+   percentcomplete =  parseInt( percentcomplete );
+   if(percentcomplete > 100)
+      percentcomplete = 100;
+   else if(percentcomplete < 0)
+      percentcomplete = 0;
+      
+   gToDo.percent = percentcomplete;
+   
    if( completed )
    {
       //get the time for the completed event
@@ -216,9 +250,15 @@ function onOKCommand()
       gToDo.completed.year = completedDate.getYear() + 1900;
       gToDo.completed.month = completedDate.getMonth();
       gToDo.completed.day = completedDate.getDate();
+      gToDo.status = gToDo.ICAL_STATUS_COMPLETED;
    }
    else
       gToDo.completed.clear();
+      if (percentcomplete == 0)
+         gToDo.status = gToDo.ICAL_STATUS_NEEDSACTION;
+      else
+         gToDo.status = gToDo.ICAL_STATUS_INPROCESS;
+
 
    dump( "!!!-->in calendarEventDialog.js, alarmUnits is "+gToDo.alarmUnits );
    if ( getFieldValue( "alarm-email-checkbox", "checked" ) ) 
@@ -358,12 +398,30 @@ function updateCompletedItemEnabled()
    {
       setFieldValue( "completed-date-text", false, "disabled" );
       setFieldValue( "completed-date-button", false, "disabled" );
+      setFieldValue( "percent-complete-menulist", "100" );
+      setFieldValue( "percent-complete-menulist", true, "disabled" );
+      setFieldValue( "percent-complete-text", true, "disabled" );
    }
    else
    {
       setFieldValue( "completed-date-text", true, "disabled" );
       setFieldValue( "completed-date-button", true, "disabled" );
+      setFieldValue( "percent-complete-menulist", false, "disabled" );
+      setFieldValue( "percent-complete-text", false, "disabled" );
+      if( getFieldValue( "percent-complete-menulist" ) == 100 )
+         setFieldValue( "percent-complete-menulist", "0" );
    }
+   }
+
+function percentCompleteCommand()
+{
+   var percentcompletemenu = "percent-complete-menulist";
+   var percentcomplete = getFieldValue( "percent-complete-menulist" );
+   percentcomplete =  parseInt( percentcomplete );
+   if( percentcomplete == 100)
+      setFieldValue( "completed-checkbox", "true", "checked" );
+     
+   updateCompletedItemEnabled();
 }
 
 
