@@ -527,6 +527,7 @@ xfeCmdAnonymousMode                                                anonymousMode
 xfeCmdToggleReceipt                                                toggleReceipt
 xfeCmdViewCookies                                                  viewCookies
 xfeCmdViewSignons                                                  viewSignons
+xfeCmdViewSiteInfo                                                 viewSiteInfo
 xfeCmdViewReceipts                                                 viewReceipts
 xfeCmdPrivacyTutorial                                              privacyTutorial
 

@@ -2293,6 +2293,9 @@ Show security information for this page
 *menuBar*viewSignons.labelString:		Display Signons
 *menuBar*viewSignons.mnemonic:			S
 
+*menuBar*viewSiteInfo.labelString:		Display Site Info
+*menuBar*viewSiteInfo.mnemonic:			I
+
 *menuBar*viewReceipts.labelString:		Display Receipts
 *menuBar*viewReceipts.mnemonic:			R
 

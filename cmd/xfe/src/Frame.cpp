@@ -197,6 +197,7 @@ MenuSpec XFE_Frame::privacytools_submenu_spec[] = {
 #ifdef SingleSignon
 	{ xfeCmdViewSignons,		PUSHBUTTON },
 #endif
+	{ xfeCmdViewSiteInfo,		PUSHBUTTON },
 #ifdef TRANSACTION_RECEIPTS
 	{ xfeCmdViewReceipts,		PUSHBUTTON },
 #endif
@@ -3282,6 +3283,7 @@ XFE_Frame::isCommandEnabled(CommandType cmd,
 #ifdef SingleSignon
              (cmd == xfeCmdViewSignons) ||
 #endif
+             (cmd == xfeCmdViewSiteInfo) ||
              (cmd == xfeCmdPrivacyTutorial))
         {
             return TRUE;
@@ -3704,6 +3706,10 @@ XFE_Frame::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
             SI_DisplaySignonInfoAsHTML(m_context);
         }
 #endif
+    else if (cmd == xfeCmdViewSiteInfo)
+        {
+            PRVCY_SiteInfo(m_context);
+        }
     else if (cmd == xfeCmdAnonymousMode)
         {
             PRVCY_ToggleAnonymous();
@@ -3767,6 +3773,7 @@ XFE_Frame::handlesCommand(CommandType cmd,
 #ifdef SingleSignon
 		|| cmd == xfeCmdViewSignons
 #endif
+		|| cmd == xfeCmdViewSiteInfo
 		|| cmd == xfeCmdViewReceipts
 		|| cmd == xfeCmdPrivacyTutorial
 #ifdef MOZ_TASKBAR
