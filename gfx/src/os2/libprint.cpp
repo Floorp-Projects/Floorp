@@ -377,8 +377,9 @@ MRESULT EXPENTRY prnDlgProc( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
          WinSetWindowPtr( hwnd, 0, pData);
    
          /* set up the dialog */
-         WinSetPresParam( hwnd, PP_FONTNAMESIZE, 7, "8.Helv");
-         WinEnableWindow( WinWindowFromID( hwnd, IDB_HELP), FALSE);
+//         WinSetPresParam( hwnd, PP_FONTNAMESIZE, 7, "8.Helv");
+//         WinEnableWindow( WinWindowFromID( hwnd, IDB_HELP), FALSE);
+         WinShowWindow( WinWindowFromID( hwnd, IDB_HELP), FALSE);
          WinSendMsg( hwnd, WM_SETICON, MPFROMLONG(pData->hPointer), 0);
 
          /* populate listbox */
