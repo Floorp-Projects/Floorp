@@ -16,17 +16,18 @@
 # Reserved.
 #
 
-# find-mozconfig.sh - Loads options from mozconfig.sh onto configure's
-#    command-line. The mozconfig.sh file is searched for in the 
+# find-mozconfig.sh - Loads options from .mozconfig onto configure's
+#    command-line. The .mozconfig file is searched for in the 
 #    order:
 #       if $MOZCONFIG is set, use that.
-#       Otherwise, use $TOPSRCDIR/mozconfig.sh
-#       Otherwise, use $HOME/.mozconfig.sh
+#       Otherwise, use $TOPSRCDIR/.mozconfig
+#       Otherwise, use $HOME/.mozconfig
 #
 topsrcdir=`cd \`dirname $0\`/../..; pwd`
 
 for _config in $MOZCONFIG \
                $MOZ_MYCONFIG \
+               $topsrcdir/.mozconfig \
                $topsrcdir/mozconfig \
                $topsrcdir/mozconfig.sh \
                $topsrcdir/myconfig.sh \

@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-# mozconfig2defs.sh - Translates mozconfig.sh into options for client.mk.
+# mozconfig2defs.sh - Translates .mozconfig into options for client.mk.
 #    Prints defines to stdout.
 #
 # See load-mozconfig.sh for more details
