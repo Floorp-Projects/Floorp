@@ -27,6 +27,8 @@
 		//#include "SparcCpu.h"
 #elif defined(GENERATE_FOR_HPPA)
 		#include "HPPACpu.h"
+#else
+        #error "Architecture not supported"
 #endif
 
 #ifndef CPU_IS_SUPPORTED
