@@ -90,6 +90,9 @@ nsTextEditorKeyListener::ProcessEvent(nsIDOMEvent* aEvent)
 }
 
 
+//#define HAVE_EVENT_CHARCODE				// on when we have the charCode in the event
+
+#ifndef HAVE_EVENT_CHARCODE
 
 nsresult
 nsTextEditorKeyListener::GetCharFromKeyCode(PRUint32 aKeyCode, PRBool aIsShift, char *aChar)
@@ -118,15 +121,14 @@ nsTextEditorKeyListener::GetCharFromKeyCode(PRUint32 aKeyCode, PRBool aIsShift, 
   return NS_ERROR_FAILURE;
 }
 
-
+#endif /* HAVE_EVENT_CHARCODE */
 
 nsresult
 nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
   PRUint32 keyCode;
-  PRBool isShift;
-  PRBool ctrlKey;
-  char character;
+  PRBool   isShift;
+  PRBool   ctrlKey;
   
   if (NS_SUCCEEDED(aKeyEvent->GetKeyCode(&keyCode)) && 
       NS_SUCCEEDED(aKeyEvent->GetShiftKey(&isShift)) &&
@@ -147,10 +149,23 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 
       case nsIDOMEvent::VK_RETURN:
         // Need to implement creation of either <P> or <BR> nodes.
+        // Enter key?
         mEditor->InsertBreak();
         break;
+        
       default:
         {
+          nsAutoString  key;
+#ifdef HAVE_EVENT_CHARCODE
+          PRUint32     character;
+          // do we convert to Unicode here, or has this already been done? (sfraser)
+          if (NS_SUCCEEDED(aKeyEvent->GetCharCode(&character)))
+          {
+            key += character;
+            mEditor->InsertText(key);
+          }
+#else
+          char character;
           // XXX Replace with x-platform NS-virtkeycode transform.
           if (NS_OK == GetCharFromKeyCode(keyCode, isShift, & character)) {
             nsAutoString key;
@@ -160,6 +175,7 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
             }
             mEditor->InsertText(key);
           }
+#endif
         }
         break;
       }
