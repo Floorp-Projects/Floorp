@@ -1632,18 +1632,20 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
 
   nsCOMPtr<nsIContent> parent( do_QueryInterface(aParentNode) );
   nsCOMPtr<nsIContent> removed( do_QueryInterface(aRemovedNode) );
+
+  // any ranges in the content subtree rooted by aRemovedNode need to
+  // have the enclosed endpoints promoted up to the parentNode/offset
+  nsCOMPtr<nsIDOMNode> domNode;
+  nsresult res = GetDOMNodeFromContent(parent, &domNode);
+  if (NS_FAILED(res))  return res;
+  if (!domNode) return NS_ERROR_UNEXPECTED;
+  res = PopRanges(domNode, aOffset, removed);
+
   // quick return if no range list
   nsVoidArray *theRangeList;
   parent->GetRangeList(theRangeList);
   if (!theRangeList) return NS_OK;
   
-  nsCOMPtr<nsIDOMNode> domNode;
-  nsresult res;
-  
-  res = GetDOMNodeFromContent(parent, &domNode);
-  if (NS_FAILED(res))  return res;
-  if (!domNode) return NS_ERROR_UNEXPECTED;
-
   PRInt32		loop = 0;
   nsRange* theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))); 
   while (theRange)
@@ -1671,10 +1673,6 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
     theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)));
   }
   
-  // any ranges in the content subtree rooted by aRemovedNode need to
-  // have the enclosed endpoints promoted up to the parentNode/offset
-  res = PopRanges(domNode, aOffset, removed);
-
   return NS_OK;
 }
   
