@@ -31,3 +31,11 @@ DIRS= public nglsrc
 #//
 #//------------------------------------------------------------------------
 include <$(DEPTH)\config\rules.mak>
+
+export::
+	mkdir $(DIST)\bin\plugins
+
+clobber::
+	rmdir $(DIST)\bin\plugins
+
+
