@@ -32,7 +32,7 @@ LIBRARY_NAME = raptorbasewidget_s
 ifeq ($(OS_TARGET),Rhapsody)
 INCLUDES += -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor -I$(srcdir)/../rhapsody
 else
-INCLUDES += -I$(srcdir)/../public -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor -I$(srcdir)/../motif -I$(srcdir)/.
+INCLUDES += -I$(srcdir)/../public -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor -I$(srcdir)/../$(MOZ_TOOLKIT) -I$(srcdir)/.
 endif
 
 CPPSRCS=nsBaseWidget.cpp                \
