@@ -23,6 +23,7 @@
 #include "icodegenerator.h"
 
 #include <iomanip>
+#include <stdexcept>
 
 namespace JS = JavaScript;
 using namespace JavaScript;
@@ -115,8 +116,17 @@ int32 ICodeGenerator::getLabel()
 
 void ICodeGenerator::setLabel(int32 label)
 {
-    labels.at(label)->itsBase = iCode;
-    labels.at(label)->itsOffset = iCode->size();
+    Label* l;
+#ifdef __GNUC__
+    // libg++'s vector class doesn't have at():
+    if (label >= labels.size())
+        throw std::out_of_range("label out of range");
+    l = labels[label];
+#else
+    l = labels.at(label);
+#endif
+    l->itsBase = iCode;
+    l->itsOffset = iCode->size();
 }
 
 

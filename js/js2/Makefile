@@ -3,6 +3,7 @@ CFLAGS = -g -ggdb -DDEBUG -DXP_UNIX -Wall -W -Wpointer-arith -Wbad-function-cast
 	-Wstrict-prototypes -Wmissing-prototypes -Wno-non-virtual-dtor
 
 objs = 	hash.o \
+	icodegenerator.o \
 	js2.o \
 	numerics.o \
 	parser.o \
