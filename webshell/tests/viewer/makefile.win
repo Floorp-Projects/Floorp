@@ -150,7 +150,9 @@ install:: $(PROGRAM)
 	$(MAKE_INSTALL) samples\test_pr.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test_gfx.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\toolbarTest1.xul $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\treeTest1.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\xulTest.css $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\treeTest1.css $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) throbber\anims00.gif $(DIST)\bin\res\throbber
 	$(MAKE_INSTALL) throbber\anims01.gif $(DIST)\bin\res\throbber
 	$(MAKE_INSTALL) throbber\anims02.gif $(DIST)\bin\res\throbber
