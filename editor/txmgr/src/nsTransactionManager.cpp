@@ -81,7 +81,7 @@ NS_IMPL_RELEASE(nsTransactionManager)
 
 #endif
 
-nsresult
+NS_IMETHODIMP
 nsTransactionManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr) {
@@ -101,7 +101,7 @@ nsTransactionManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTransactionManager::Do(nsITransaction *aTransaction)
 {
   nsresult result;
@@ -143,7 +143,7 @@ nsTransactionManager::Do(nsITransaction *aTransaction)
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTransactionManager::Undo()
 {
   nsresult result       = NS_OK;
@@ -222,7 +222,7 @@ nsTransactionManager::Undo()
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTransactionManager::Redo()
 {
   nsresult result       = NS_OK;
@@ -301,7 +301,7 @@ nsTransactionManager::Redo()
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTransactionManager::Clear()
 {
   nsresult result;
@@ -322,7 +322,7 @@ nsTransactionManager::Clear()
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTransactionManager::BeginBatch()
 {
   nsresult result;
@@ -358,7 +358,7 @@ nsTransactionManager::BeginBatch()
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTransactionManager::EndBatch()
 {
   nsTransactionItem *tx = 0;
@@ -417,7 +417,7 @@ nsTransactionManager::EndBatch()
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTransactionManager::GetNumberOfUndoItems(PRInt32 *aNumItems)
 {
   nsresult result;
@@ -429,7 +429,7 @@ nsTransactionManager::GetNumberOfUndoItems(PRInt32 *aNumItems)
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTransactionManager::GetNumberOfRedoItems(PRInt32 *aNumItems)
 {
   nsresult result;
@@ -441,7 +441,7 @@ nsTransactionManager::GetNumberOfRedoItems(PRInt32 *aNumItems)
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
 {
   PRInt32 numUndoItems  = 0, numRedoItems = 0, total = 0;
@@ -543,7 +543,7 @@ nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTransactionManager::PeekUndoStack(nsITransaction **aTransaction)
 {
   nsTransactionItem *tx = 0;
@@ -570,7 +570,7 @@ nsTransactionManager::PeekUndoStack(nsITransaction **aTransaction)
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTransactionManager::PeekRedoStack(nsITransaction **aTransaction)
 {
   nsTransactionItem *tx = 0;
@@ -597,7 +597,7 @@ nsTransactionManager::PeekRedoStack(nsITransaction **aTransaction)
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTransactionManager::Write(nsIOutputStream *aOutputStream)
 {
   PRUint32 len;
@@ -614,7 +614,7 @@ nsTransactionManager::Write(nsIOutputStream *aOutputStream)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTransactionManager::AddListener(nsITransactionListener *aListener)
 {
   if (!aListener)
@@ -643,7 +643,7 @@ nsTransactionManager::AddListener(nsITransactionListener *aListener)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTransactionManager::RemoveListener(nsITransactionListener *aListener)
 {
   if (!aListener)

@@ -52,24 +52,24 @@ public:
    * stack is pruned or when the transaction manager is destroyed.
    * @param aTransaction the transaction to do.
    */
-  virtual nsresult Do(nsITransaction *aTransaction) = 0;
+  NS_IMETHOD Do(nsITransaction *aTransaction) = 0;
 
   /**
    * Pops the topmost transaction on the undo stack, calls it's Undo() method,
    * then pushes it on the redo stack.
    */
-  virtual nsresult Undo(void) = 0;
+  NS_IMETHOD Undo(void) = 0;
 
   /**
    * Pops the topmost transaction on the redo stack, calls it's Redo() method,
    * then pushes it on the undo stack.
    */
-  virtual nsresult Redo(void) = 0;
+  NS_IMETHOD Redo(void) = 0;
 
   /**
    * Clears the undo and redo stacks.
    */
-  virtual nsresult Clear(void) = 0;
+  NS_IMETHOD Clear(void) = 0;
 
   /**
    * Turns on the transaction manager's batch mode, forcing all transactions
@@ -78,24 +78,24 @@ public:
    * execute and group together several independent transactions so they
    * can be undone with a single call to Undo().
    */
-  virtual nsresult BeginBatch() = 0;
+  NS_IMETHOD BeginBatch() = 0;
 
   /**
    * Turns off the transaction manager's batch mode.
    */
-  virtual nsresult EndBatch() = 0;
+  NS_IMETHOD EndBatch() = 0;
 
   /**
    * Returns the number of items on the undo stack.
    * @param aNumItems will contain number of items.
    */
-  virtual nsresult GetNumberOfUndoItems(PRInt32 *aNumItems) = 0;
+  NS_IMETHOD GetNumberOfUndoItems(PRInt32 *aNumItems) = 0;
 
   /**
    * Returns the number of items on the redo stack.
    * @param aNumItems will contain number of items.
    */
-  virtual nsresult GetNumberOfRedoItems(PRInt32 *aNumItems) = 0;
+  NS_IMETHOD GetNumberOfRedoItems(PRInt32 *aNumItems) = 0;
 
   /**
    * Sets the maximum number of transaction items the transaction manager will
@@ -110,19 +110,19 @@ public:
    * stacks if the value specified is less than the number of items that exist
    * on both the undo and redo stacks.
    */
-  virtual nsresult SetMaxTransactionCount(PRInt32 aMaxCount) = 0;
+  NS_IMETHOD SetMaxTransactionCount(PRInt32 aMaxCount) = 0;
 
   /**
    * Returns a pointer to the transaction at the top of the undo stack.
    * @param aTransaction will contain pointer to the transaction.
    */
-  virtual nsresult PeekUndoStack(nsITransaction **aTransaction) = 0;
+  NS_IMETHOD PeekUndoStack(nsITransaction **aTransaction) = 0;
 
   /**
    * Returns a pointer to the transaction at the top of the redo stack.
    * @param aTransaction will contain pointer to the transaction.
    */
-  virtual nsresult PeekRedoStack(nsITransaction **aTransaction) = 0;
+  NS_IMETHOD PeekRedoStack(nsITransaction **aTransaction) = 0;
 
   /**
    * Writes a stream representation of the transaction manager and it's
@@ -130,7 +130,7 @@ public:
    * execution stacks.
    * @param aOutputStream the stream to write to.
    */
-  virtual nsresult Write(nsIOutputStream *aOutputStream) = 0;
+  NS_IMETHOD Write(nsIOutputStream *aOutputStream) = 0;
 
   /**
    * Adds a listener to the transaction manager's notification list. Listeners
@@ -139,7 +139,7 @@ public:
    * The listener's AddRef() method is called.
    * @param aListener the lister to add.
    */
-  virtual nsresult AddListener(nsITransactionListener *aListener) = 0;
+  NS_IMETHOD AddListener(nsITransactionListener *aListener) = 0;
 
   /**
    * Removes a listener from the transaction manager's notification list.
@@ -147,7 +147,7 @@ public:
    * The listener's Release() method is called.
    * @param aListener the lister to remove.
    */
-  virtual nsresult RemoveListener(nsITransactionListener *aListener) = 0;
+  NS_IMETHOD RemoveListener(nsITransactionListener *aListener) = 0;
 };
 
 #endif // nsITransactionManager_h__
