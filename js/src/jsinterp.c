@@ -606,8 +606,8 @@ ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
          * The alert should display "true".
          */
         JS_ASSERT(!(fp->flags & JSFRAME_CONSTRUCTING));
-        parent = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(fp->argv[-2]));
-        if (!parent) {
+        if (JSVAL_IS_PRIMITIVE(fp->argv[-2]) ||
+            !(parent = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(fp->argv[-2])))) {
             thisp = cx->globalObject;
         } else {
             /* walk up to find the top-level object */
@@ -3053,12 +3053,14 @@ js_Interpret(JSContext *cx, jsval *result)
             i = (jsint) GET_ATOM_INDEX(pc);
             rval = INT_TO_JSVAL(i);
             PUSH_OPND(rval);
+            obj = NULL;
             break;
 
           case JSOP_NUMBER:
           case JSOP_STRING:
             atom = GET_ATOM(cx, script, pc);
             PUSH_OPND(ATOM_KEY(atom));
+            obj = NULL;
             break;
 
           case JSOP_OBJECT:
@@ -3177,14 +3179,17 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_ZERO:
             PUSH_OPND(JSVAL_ZERO);
+            obj = NULL;
             break;
 
           case JSOP_ONE:
             PUSH_OPND(JSVAL_ONE);
+            obj = NULL;
             break;
 
           case JSOP_NULL:
             PUSH_OPND(JSVAL_NULL);
+            obj = NULL;
             break;
 
           case JSOP_THIS:
@@ -3194,10 +3199,12 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_FALSE:
             PUSH_OPND(JSVAL_FALSE);
+            obj = NULL;
             break;
 
           case JSOP_TRUE:
             PUSH_OPND(JSVAL_TRUE);
+            obj = NULL;
             break;
 
 #if JS_HAS_SWITCH_STATEMENT

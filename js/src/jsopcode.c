@@ -2603,6 +2603,11 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     op = (JSOp) *pc;
     if (op == JSOP_TRAP)
         op = JS_GetTrapOpcode(cx, script, pc);
+
+    /* XXX handle null as a special case, to avoid calling null "object" */
+    if (op == JSOP_NULL)
+        return ATOM_TO_STRING(cx->runtime->atomState.nullAtom);
+
     cs = &js_CodeSpec[op];
     format = cs->format;
     mode = (format & JOF_MODEMASK);
