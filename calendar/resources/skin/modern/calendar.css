@@ -44,7 +44,6 @@
 
 #calendar-top-box
 {
-   /*background-color        : #F267B9;*/
    overflow:auto;
 }
 
@@ -1033,8 +1032,13 @@
    border-top           : 1px solid #2085c4;
    border-left          : 1px solid #2085c4;
    border-right         : 1px solid #2085c4;
-   min-height       		: 15px;
+   min-height       		: 25px;
 } 
+
+#weekview-daynumber-spacer-left
+{
+   width                : 122px;
+}
 
 .all-day-content-box-text-title
 {
@@ -1093,7 +1097,6 @@
 {
    background-color        : -moz-Dialog; 
 }
-
 
 .unifinder-treecell-box-class
 {
