@@ -160,7 +160,7 @@ public:
   NS_IMETHOD IsRenderingOnlySelection(PRBool* aResult);
 
 #ifdef MOZ_REFLOW_PERF
-  NS_IMETHOD CountReflows(const char * aName, PRUint32 aType);
+  NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame);
 #endif
 
   // nsIObserver method

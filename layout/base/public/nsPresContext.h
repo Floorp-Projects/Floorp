@@ -380,7 +380,7 @@ public:
   NS_IMETHOD IsRenderingOnlySelection(PRBool* aResult) = 0;
 
 #ifdef MOZ_REFLOW_PERF
-  NS_IMETHOD CountReflows(const char * aName, PRUint32 aType) = 0;
+  NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame) = 0;
 #endif
 };
 
@@ -403,7 +403,7 @@ extern NS_LAYOUT nsresult
 
 #ifdef MOZ_REFLOW_PERF
 #define DO_GLOBAL_REFLOW_COUNT(_name, _type) \
-  aPresContext->CountReflows((_name), (_type)); 
+  aPresContext->CountReflows((_name), (_type), (nsIFrame*)this); 
 #else
 #define DO_GLOBAL_REFLOW_COUNT(_name, _type)
 #endif // MOZ_REFLOW_PERF

@@ -1333,10 +1333,10 @@ nsPresContext::IsRenderingOnlySelection(PRBool* aResult)
 
 #ifdef MOZ_REFLOW_PERF
 NS_IMETHODIMP
-nsPresContext::CountReflows(const char * aName, PRUint32 aType)
+nsPresContext::CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame)
 {
   if (mShell) {
-    mShell->CountReflows(aName, aType);
+    mShell->CountReflows(aName, aType, aFrame);
   }
   return NS_OK;
 }
