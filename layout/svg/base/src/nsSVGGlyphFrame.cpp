@@ -743,10 +743,7 @@ nsSVGGlyphFrame::GetHighlight(PRUint32 *charnum, PRUint32 *nchars, nscolor *fore
 
   // The selection ranges are relative to the uncompressed text in
   // the content element. We'll need the text fragment:
-  const nsTextFragment*fragment=nsnull;
-  tc->GetText(&fragment);
-  NS_ASSERTION(fragment, "null text fragment");
-
+  const nsTextFragment *fragment = tc->Text();
   
   // get the selection details 
   SelectionDetails *details = nsnull;
@@ -770,10 +767,7 @@ nsSVGGlyphFrame::GetHighlight(PRUint32 *charnum, PRUint32 *nchars, nscolor *fore
       return NS_ERROR_FAILURE;
     }
 
-    PRInt32 length;
-    tc->GetTextLength(&length);
-    
-    frameSelection->LookUpSelection(mContent, 0, length,
+    frameSelection->LookUpSelection(mContent, 0, fragment->GetLength(),
                                     &details, PR_FALSE);
   }
 
@@ -914,17 +908,16 @@ nsSVGGlyphFrame::BuildGlyphFragmentTree(PRUint32 charNum, PRBool lastBranch)
   mCharOffset = charNum;
   nsCOMPtr<nsITextContent> tc = do_QueryInterface(mContent);
 
-  PRInt32 length;
-  tc->GetTextLength(&length);
-  if (length==0) {
+  if (tc->TextLength() == 0) {
 #ifdef DEBUG
     printf("Glyph frame with zero length text\n");
 #endif
     mCharacterData = NS_LITERAL_STRING("");
     return charNum;
   }
-  
-  tc->CopyText(mCharacterData);
+
+  mCharacterData.Truncate();
+  tc->AppendTextTo(mCharacterData);
   mCharacterData.CompressWhitespace(charNum==0, lastBranch);
 
   return charNum+mCharacterData.Length();

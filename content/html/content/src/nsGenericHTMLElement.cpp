@@ -3042,8 +3042,8 @@ nsGenericHTMLElement::ReplaceContentsWithText(const nsAString& aText,
     rv = NS_NewTextNode(getter_AddRefs(text));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = text->SetText(aText, PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
+    text->SetText(aText, PR_TRUE);
+
     rv = InsertChildAt(text, 0, aNotify, PR_FALSE);
   }    
       

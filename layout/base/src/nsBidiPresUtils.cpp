@@ -280,7 +280,7 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
         if (NS_FAILED(mSuccess) || (!textContent) ) {
           break;
         }
-        textContent->GetText(&fragment);
+        fragment = textContent->Text();
         if (!fragment) {
           mSuccess = NS_ERROR_FAILURE;
           break;
@@ -314,15 +314,16 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
     }
     else {
       frame->SetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
-                             (void *)embeddingLevel);
+                             NS_INT32_TO_PTR(embeddingLevel));
       frame->SetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel,
-                             (void *)paraLevel);
+                             NS_INT32_TO_PTR(paraLevel));
       if (isTextFrame) {
         PRInt32 typeLimit = PR_MIN(logicalLimit, lineOffset + fragmentLength);
         CalculateCharType(lineOffset, typeLimit, logicalLimit, runLength,
                            runCount, charType, prevType);
         // IBMBIDI - Egypt - Start
-        frame->SetBidiProperty(aPresContext,nsLayoutAtoms::charType,(void*)charType);
+        frame->SetBidiProperty(aPresContext,nsLayoutAtoms::charType,
+                               NS_INT32_TO_PTR(charType));
         // IBMBIDI - Egypt - End
 
         if ( (runLength > 0) && (runLength < fragmentLength) ) {
@@ -446,7 +447,6 @@ nsBidiPresUtils::CreateBlockBuffer(nsIPresContext* aPresContext)
   nsIFrame*                 frame;
   nsIContent*               prevContent = nsnull;
   nsCOMPtr<nsITextContent>  textContent;
-  const nsTextFragment*     frag;
   PRUint32                  i;
   PRUint32                  count = mLogicalFrames.Count();
 
@@ -468,12 +468,7 @@ nsBidiPresUtils::CreateBlockBuffer(nsIPresContext* aPresContext)
       if ( (NS_FAILED(mSuccess) ) || (!textContent) ) {
         break;
       }
-      textContent->GetText(&frag);
-      if (!frag) {
-        mSuccess = NS_ERROR_FAILURE;
-        break;
-      }
-      frag->AppendTo(mBuffer);
+      textContent->Text()->AppendTo(mBuffer);
     }
     else if (nsLayoutAtoms::brFrame == frameType) { // break frame
       // Append line separator

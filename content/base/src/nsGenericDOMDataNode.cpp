@@ -353,7 +353,9 @@ nsGenericDOMDataNode::SetData(const nsAString& aData)
 
   nsCOMPtr<nsITextContent> textContent = do_QueryInterface(this);
 
-  return SetText(aData, PR_TRUE);
+  SetText(aData, PR_TRUE);
+
+  return NS_OK;
 }
 
 nsresult
@@ -399,7 +401,6 @@ nsresult
 nsGenericDOMDataNode::AppendData(const nsAString& aData)
 {
 #if 1
-  nsresult rv = NS_OK;
   PRInt32 length = 0;
 
   // See bugzilla bug 77585.
@@ -411,7 +412,7 @@ nsGenericDOMDataNode::AppendData(const nsAString& aData)
     // to issues with dependent concatenation and sliding (sub)strings
     // we'll just have to copy for now. See bug 121841 for details.
     old_data.Append(aData);
-    rv = SetText(old_data, PR_FALSE);
+    SetText(old_data, PR_FALSE);
   } else {
     // We know aData and the current data is ASCII, so use a
     // nsC*String, no need for any fancy unicode stuff here.
@@ -419,17 +420,15 @@ nsGenericDOMDataNode::AppendData(const nsAString& aData)
     mText.AppendTo(old_data);
     length = old_data.Length();
     old_data.AppendWithConversion(aData);
-    rv = SetText(old_data.get(), old_data.Length(), PR_FALSE);
+    SetText(old_data.get(), old_data.Length(), PR_FALSE);
   }
-
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // Trigger a reflow
   if (mDocument) {
     mDocument->CharacterDataChanged(this, PR_TRUE);
   }
 
-  return rv;
+  return NS_OK;
 #else
   return ReplaceData(mText.GetLength(), 0, aData);
 #endif
@@ -453,8 +452,6 @@ nsresult
 nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
                                   const nsAString& aData)
 {
-  nsresult result = NS_OK;
-
   // sanitize arguments
   PRUint32 textLength = mText.GetLength();
   if (aOffset > textLength) {
@@ -494,10 +491,10 @@ nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
   // Null terminate the new buffer...
   to[newLength] = (PRUnichar)0;
 
-  result = SetText(to, newLength, PR_TRUE);
+  SetText(to, newLength, PR_TRUE);
   delete [] to;
 
-  return result;
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -977,9 +974,8 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
 {
   nsresult rv = NS_OK;
   nsAutoString cutText;
-  PRUint32 length;
+  PRUint32 length = TextLength();
 
-  GetLength(&length);
   if (aOffset > length) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
@@ -999,76 +995,51 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
    * same class as this node!
    */
 
-  nsCOMPtr<nsITextContent> newContent;
-  rv = CloneContent(PR_FALSE, getter_AddRefs(newContent));
-  if (NS_FAILED(rv)) {
-    return rv;
+  nsCOMPtr<nsITextContent> newContent = CloneContent(PR_FALSE);
+  if (!newContent) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  newContent->SetText(cutText, PR_TRUE);
 
-  nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(newContent, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
+  nsIContent* parent = GetParent();
+
+  if (parent) {
+    PRInt32 index = parent->IndexOf(this);
+
+    nsCOMPtr<nsIContent> content(do_QueryInterface(newContent));
+
+    parent->InsertChildAt(content, index+1, PR_TRUE, PR_FALSE);
   }
 
-  rv = newNode->SetNodeValue(cutText);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsIContent* parentNode = GetParent();
-
-  if (parentNode) {
-    PRInt32 index = parentNode->IndexOf(this);
-
-    nsCOMPtr<nsIContent> content(do_QueryInterface(newNode));
-
-    parentNode->InsertChildAt(content, index+1, PR_TRUE, PR_FALSE);
-  }
-
-  return CallQueryInterface(newNode, aReturn);
+  return CallQueryInterface(newContent, aReturn);
 }
 
 //----------------------------------------------------------------------
 
 // Implementation of the nsITextContent interface
 
-NS_IMETHODIMP
-nsGenericDOMDataNode::GetText(const nsTextFragment** aFragmentsResult)
+const nsTextFragment *
+nsGenericDOMDataNode::Text()
 {
-  *aFragmentsResult = &mText;
-  return NS_OK;
+  return &mText;
 }
 
-NS_IMETHODIMP
-nsGenericDOMDataNode::GetTextLength(PRInt32* aLengthResult)
+PRUint32
+nsGenericDOMDataNode::TextLength()
 {
-  if (!aLengthResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aLengthResult = mText.GetLength();
-
-  return NS_OK;
+  return mText.GetLength();
 }
 
-NS_IMETHODIMP
-nsGenericDOMDataNode::CopyText(nsAString& aResult)
-{
-  return GetData(aResult);
-}
-
-NS_IMETHODIMP
+void
 nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
-                              PRInt32 aLength,
+                              PRUint32 aLength,
                               PRBool aNotify)
 {
-  NS_PRECONDITION((aLength >= 0) && aBuffer, "bad args");
-  if (aLength < 0) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
   if (!aBuffer) {
-    return NS_ERROR_NULL_POINTER;
+    NS_ERROR("Null buffer passed to SetText()!");
+
+    return;
   }
 
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
@@ -1102,19 +1073,16 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
   if (aNotify && mDocument) {
     mDocument->CharacterDataChanged(this, PR_FALSE);
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGenericDOMDataNode::SetText(const char* aBuffer, PRInt32 aLength,
+void
+nsGenericDOMDataNode::SetText(const char* aBuffer, PRUint32 aLength,
                               PRBool aNotify)
 {
-  NS_PRECONDITION((aLength >= 0) && aBuffer, "bad args");
-  if (aLength < 0) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
   if (!aBuffer) {
-    return NS_ERROR_NULL_POINTER;
+    NS_ERROR("Null buffer passed to SetText()!");
+
+    return;
   }
 
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
@@ -1145,11 +1113,9 @@ nsGenericDOMDataNode::SetText(const char* aBuffer, PRInt32 aLength,
   if (aNotify && mDocument) {
     mDocument->CharacterDataChanged(this, PR_FALSE);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsGenericDOMDataNode::SetText(const nsAString& aStr,
                               PRBool aNotify)
 {
@@ -1183,12 +1149,10 @@ nsGenericDOMDataNode::SetText(const nsAString& aStr,
   if (aNotify && mDocument) {
     mDocument->CharacterDataChanged(this, PR_FALSE);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGenericDOMDataNode::IsOnlyWhitespace(PRBool* aResult)
+PRBool
+nsGenericDOMDataNode::IsOnlyWhitespace()
 {
   nsTextFragment& frag = mText;
   if (frag.Is2b()) {
@@ -1199,9 +1163,7 @@ nsGenericDOMDataNode::IsOnlyWhitespace(PRBool* aResult)
       PRUnichar ch = *cp++;
 
       if (!XP_IS_SPACE(ch)) {
-        *aResult = PR_FALSE;
-
-        return NS_OK;
+        return PR_FALSE;
       }
     }
   } else {
@@ -1213,29 +1175,15 @@ nsGenericDOMDataNode::IsOnlyWhitespace(PRBool* aResult)
       ++cp;
 
       if (!XP_IS_SPACE(ch)) {
-        *aResult = PR_FALSE;
-
-        return NS_OK;
+        return PR_FALSE;
       }
     }
   }
 
-  *aResult = PR_TRUE;
-
-  return NS_OK;
+  return PR_TRUE;
 }
 
-NS_IMETHODIMP
-nsGenericDOMDataNode::CloneContent(PRBool aCloneText, nsITextContent** aClone)
-{
-  NS_ERROR("Override me!");
-
-  *aClone = nsnull;
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
+void
 nsGenericDOMDataNode::AppendTextTo(nsAString& aResult)
 {
   if (mText.Is2b()) {
@@ -1244,8 +1192,6 @@ nsGenericDOMDataNode::AppendTextTo(nsAString& aResult)
     const char *str = mText.Get1b();
     AppendASCIItoUTF16(Substring(str, str + mText.GetLength()), aResult);
   }
-
-  return NS_OK;
 }
 
 void

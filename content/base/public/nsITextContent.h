@@ -56,56 +56,48 @@ public:
   /**
    * Get direct access (but read only) to the text in the text content.
    */
-  NS_IMETHOD GetText(const nsTextFragment** aFragmentsResult) = 0;
+  virtual const nsTextFragment *Text() = 0;
 
   /**
    * Get the length of the text content.
    */
-  NS_IMETHOD GetTextLength(PRInt32* aLengthResult) = 0;
-
-  /**
-   * Make a copy of the text content in aResult.
-   */
-  NS_IMETHOD CopyText(nsAString& aResult) = 0;
+  virtual PRUint32 TextLength() = 0;
 
   /**
    * Set the text to the given value. If aNotify is PR_TRUE then
    * the document is notified of the content change.
    */
-  NS_IMETHOD SetText(const PRUnichar* aBuffer,
-                     PRInt32 aLength,
-                     PRBool aNotify) = 0;
+  virtual void SetText(const PRUnichar* aBuffer, PRUint32 aLength,
+                       PRBool aNotify) = 0;
 
   /**
    * Set the text to the given value. If aNotify is PR_TRUE then
    * the document is notified of the content change.
    */
-  NS_IMETHOD SetText(const nsAString& aStr,
-                     PRBool aNotify) = 0;
+  virtual void SetText(const nsAString& aStr, PRBool aNotify) = 0;
 
   /**
    * Set the text to the given value. If aNotify is PR_TRUE then
    * the document is notified of the content change.
    */
-  NS_IMETHOD SetText(const char* aBuffer,
-                     PRInt32 aLength,
-                     PRBool aNotify) = 0;
+  virtual void SetText(const char* aBuffer, PRUint32 aLength,
+                       PRBool aNotify) = 0;
 
   /**
    * Query method to see if the frame is nothing but whitespace
    */
-  NS_IMETHOD IsOnlyWhitespace(PRBool* aResult) = 0;
+  virtual PRBool IsOnlyWhitespace() = 0;
 
   /**
    * Clone this content node. Unlike the nsIDOMNode equivalent, this
    * method allows you to specify whether to copy the text as well.
    */
-  NS_IMETHOD CloneContent(PRBool aCloneText, nsITextContent** aClone) = 0;
+  virtual already_AddRefed<nsITextContent> CloneContent(PRBool aCloneText) = 0;
 
   /**
    * Append the text content to aResult.
    */
-  NS_IMETHOD AppendTextTo(nsAString& aResult) = 0;
+  virtual void AppendTextTo(nsAString& aResult) = 0;
 };
 
 // XXX These belong elsewhere

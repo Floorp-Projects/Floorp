@@ -3307,15 +3307,10 @@ static PRBool IsSignificantChild(nsIContent* aChild, PRBool aAcceptNonWhitespace
 
   if (aAcceptNonWhitespaceText) {
     if (tag == nsLayoutAtoms::textTagName) {  // skip only whitespace text
-      nsITextContent* text = nsnull;
-      if (NS_SUCCEEDED(aChild->QueryInterface(NS_GET_IID(nsITextContent), (void**)&text))) {
-        PRBool  isWhite;
-        text->IsOnlyWhitespace(&isWhite);
-        NS_RELEASE(text);
-        if (! isWhite) {
-          return PR_TRUE;
-        }
-      }
+      nsCOMPtr<nsITextContent> text = do_QueryInterface(aChild);
+
+      if (text && !text->IsOnlyWhitespace())
+        return PR_TRUE;
     }
   }
 

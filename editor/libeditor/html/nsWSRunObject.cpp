@@ -707,9 +707,7 @@ nsWSRunObject::GetWSNodes()
   if (mHTMLEditor->IsTextNode(mNode))
   {
     nsCOMPtr<nsITextContent> textNode(do_QueryInterface(mNode));
-    const nsTextFragment *textFrag;
-    res = textNode->GetText(&textFrag);
-    NS_ENSURE_SUCCESS(res, res);
+    const nsTextFragment *textFrag = textNode->Text();
     
     res = PrependNodeToList(mNode);
     NS_ENSURE_SUCCESS(res, res);
@@ -770,11 +768,8 @@ nsWSRunObject::GetWSNodes()
         NS_ENSURE_SUCCESS(res, res);
         nsCOMPtr<nsITextContent> textNode(do_QueryInterface(priorNode));
         if (!textNode) return NS_ERROR_NULL_POINTER;
-        const nsTextFragment *textFrag;
-        res = textNode->GetText(&textFrag);
-        PRInt32 len;
-        res = textNode->GetTextLength(&len);
-        NS_ENSURE_SUCCESS(res, res);
+        const nsTextFragment *textFrag = textNode->Text();
+        PRUint32 len = textNode->TextLength();
 
         if (len < 1)
         {
@@ -844,11 +839,9 @@ nsWSRunObject::GetWSNodes()
   {
     // dont need to put it on list. it already is from code above
     nsCOMPtr<nsITextContent> textNode(do_QueryInterface(mNode));
-    const nsTextFragment *textFrag;
-    res = textNode->GetText(&textFrag);
-    NS_ENSURE_SUCCESS(res, res);
-    PRInt32 len;
-    textNode->GetTextLength(&len);
+    const nsTextFragment *textFrag = textNode->Text();
+
+    PRUint32 len = textNode->TextLength();
     if (mOffset<len)
     {
       PRInt32 pos;
@@ -907,12 +900,8 @@ nsWSRunObject::GetWSNodes()
         NS_ENSURE_SUCCESS(res, res);
         nsCOMPtr<nsITextContent> textNode(do_QueryInterface(nextNode));
         if (!textNode) return NS_ERROR_NULL_POINTER;
-        const nsTextFragment *textFrag;
-        res = textNode->GetText(&textFrag);
-        NS_ENSURE_SUCCESS(res, res);
-        PRInt32 len;
-        res = textNode->GetTextLength(&len);
-        NS_ENSURE_SUCCESS(res, res);
+        const nsTextFragment *textFrag = textNode->Text();
+        PRUint32 len = textNode->TextLength();
 
         if (len < 1)
         {
@@ -1675,11 +1664,7 @@ nsWSRunObject::GetCharAfter(WSPoint &aPoint, WSPoint *outPoint)
   if (idx == -1) return NS_OK;  // can't find point, but it's not an error
   PRInt32 numNodes = mNodeArray.Count();
   
-  PRInt32 len;
-  nsresult res = aPoint.mTextNode->GetTextLength(&len);
-  NS_ENSURE_SUCCESS(res, res);
-  
-  if (aPoint.mOffset < len)
+  if (aPoint.mOffset < aPoint.mTextNode->TextLength())
   {
     *outPoint = aPoint;
     outPoint->mChar = GetCharAt(aPoint.mTextNode, aPoint.mOffset);
@@ -1721,9 +1706,9 @@ nsWSRunObject::GetCharBefore(WSPoint &aPoint, WSPoint *outPoint)
     nsIDOMNode* node = mNodeArray[idx-1];
     if (!node) return NS_ERROR_FAILURE;
     outPoint->mTextNode = do_QueryInterface(node);
-    PRInt32 len;
-    res = outPoint->mTextNode->GetTextLength(&len);
-    NS_ENSURE_SUCCESS(res, res);
+
+    PRUint32 len = outPoint->mTextNode->TextLength();
+
     if (len)
     {
       outPoint->mOffset = len-1;
@@ -1920,14 +1905,10 @@ nsWSRunObject::GetCharAt(nsITextContent *aTextNode, PRInt32 aOffset)
   if (!aTextNode)
     return 0;
     
-  const nsTextFragment *textFrag;
-  nsresult res = aTextNode->GetText(&textFrag);
-  NS_ENSURE_SUCCESS(res, 0);
+  const nsTextFragment *textFrag = aTextNode->Text();
   
-  PRInt32 len = textFrag->GetLength();
-  if (!len) 
-    return 0;
-  if (aOffset>=len) 
+  PRUint32 len = textFrag->GetLength();
+  if (aOffset < 0 || aOffset>=len) 
     return 0;
     
   return textFrag->CharAt(aOffset);
@@ -1979,14 +1960,12 @@ nsWSRunObject::GetWSPointAfter(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outP
   
   if (cmp < 0)
   {
-    WSPoint point(textNode,0,0);
+    WSPoint point(textNode, 0, 0);
     return GetCharAfter(point, outPoint);
   }
   else
   {
-    PRInt32 len;
-    textNode->GetTextLength(&len);
-    WSPoint point(textNode,len,0);
+    WSPoint point(textNode, textNode->TextLength(), 0);
     return GetCharAfter(point, outPoint);
   }
   
@@ -2039,9 +2018,7 @@ nsWSRunObject::GetWSPointBefore(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *out
   
   if (cmp > 0)
   {
-    PRInt32 len;
-    textNode->GetTextLength(&len);
-    WSPoint point(textNode,len,0);
+    WSPoint point(textNode, textNode->TextLength(), 0);
     return GetCharBefore(point, outPoint);
   }
   else

@@ -75,7 +75,7 @@ CompressWhitespace(nsIContent* aContent)
     nsCOMPtr<nsITextContent> tc(do_QueryInterface(aContent->GetChildAt(kid)));
     if (tc && tc->IsContentOfType(nsIContent::eTEXT)) {
       nsAutoString text;
-      tc->CopyText(text);
+      tc->AppendTextTo(text);
       text.CompressWhitespace();
       tc->SetText(text, PR_FALSE); // not meant to be used if notify is needed
     }

@@ -102,35 +102,30 @@ nsXMLContentSerializer::AppendTextData(nsIDOMNode* aNode,
 {
   nsCOMPtr<nsITextContent> content(do_QueryInterface(aNode));
   if (!content) return NS_ERROR_FAILURE;
-  
-  const nsTextFragment* frag;
-  content->GetText(&frag);
 
-  if (frag) {
-    PRInt32 endoffset = (aEndOffset == -1) ? frag->GetLength() : aEndOffset;
-    PRInt32 length = endoffset - aStartOffset;
-    
-    NS_ASSERTION(aStartOffset >= 0, "Negative start offset for text fragment!");
-    NS_ASSERTION(aStartOffset <= endoffset, "A start offset is beyond the end of the text fragment!");
+  const nsTextFragment* frag = content->Text();
 
-    if (length <= 0) {
-      return NS_OK;  // XXX Zero is a legal value, maybe non-zero values should
-                     //     be an error.
-    }
+  PRInt32 endoffset = (aEndOffset == -1) ? frag->GetLength() : aEndOffset;
+  PRInt32 length = endoffset - aStartOffset;
+
+  NS_ASSERTION(aStartOffset >= 0, "Negative start offset for text fragment!");
+  NS_ASSERTION(aStartOffset <= endoffset, "A start offset is beyond the end of the text fragment!");
+
+  if (length <= 0) {
+    // XXX Zero is a legal value, maybe non-zero values should be an
+    // error.
+
+    return NS_OK;
+  }
     
-    if (frag->Is2b()) {
-      const PRUnichar *strStart = frag->Get2b() + aStartOffset;
-      AppendToString(Substring(strStart, strStart + length),
-                     aStr,
-                     aTranslateEntities,
-                     aIncrColumn);
-    }
-    else {
-      AppendToString(NS_ConvertASCIItoUCS2(frag->Get1b()+aStartOffset, length),
-                     aStr,
-                     aTranslateEntities,
-                     aIncrColumn);
-    }
+  if (frag->Is2b()) {
+    const PRUnichar *strStart = frag->Get2b() + aStartOffset;
+    AppendToString(Substring(strStart, strStart + length), aStr,
+                   aTranslateEntities, aIncrColumn);
+  }
+  else {
+    AppendToString(NS_ConvertASCIItoUCS2(frag->Get1b()+aStartOffset, length),
+                   aStr, aTranslateEntities, aIncrColumn);
   }
 
   return NS_OK;

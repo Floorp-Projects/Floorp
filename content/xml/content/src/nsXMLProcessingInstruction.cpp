@@ -165,6 +165,14 @@ nsXMLProcessingInstruction::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
+already_AddRefed<nsITextContent> 
+nsXMLProcessingInstruction::CloneContent(PRBool aCloneText)
+{
+  NS_ERROR("Huh, this shouldn't be called!");
+
+  return nsnull;
+}
+
 #ifdef DEBUG
 void
 nsXMLProcessingInstruction::List(FILE* out, PRInt32 aIndent) const

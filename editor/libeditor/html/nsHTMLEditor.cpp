@@ -155,11 +155,11 @@ nsHTMLEditor::nsHTMLEditor()
 , mIsObjectResizingEnabled(PR_TRUE)
 , mIsResizing(PR_FALSE)
 , mIsAbsolutelyPositioningEnabled(PR_TRUE)
+, mResizedObjectIsAbsolutelyPositioned(PR_FALSE)
 , mGrabberClicked(PR_FALSE)
 , mIsMoving(PR_FALSE)
-, mResizedObjectIsAbsolutelyPositioned(PR_FALSE)
-, mIsInlineTableEditingEnabled(PR_TRUE)
 , mSnapToGridEnabled(PR_FALSE)
+, mIsInlineTableEditingEnabled(PR_TRUE)
 , mGridSize(0)
 {
   mBoldAtom = do_GetAtom("b");
@@ -5305,12 +5305,11 @@ nsHTMLEditor::IsVisTextNode( nsIDOMNode *aNode,
   *outIsEmptyNode = PR_TRUE;
   nsresult res = NS_OK;
 
-  PRUint32 length = 0;
-  nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(aNode);
+  nsCOMPtr<nsITextContent> textContent = do_QueryInterface(aNode);
   // callers job to only call us with text nodes
-  if (!nodeAsText) 
+  if (!textContent) 
     return NS_ERROR_NULL_POINTER;
-  nodeAsText->GetLength(&length);
+  PRUint32 length = textContent->TextLength();
   if (aSafeToAskFrames)
   {
     nsCOMPtr<nsISelectionController> selCon;
@@ -5333,10 +5332,7 @@ nsHTMLEditor::IsVisTextNode( nsIDOMNode *aNode,
   }
   else if (length)
   {
-    nsCOMPtr<nsITextContent> tc = do_QueryInterface(nodeAsText);
-    PRBool justWS = PR_FALSE;
-    tc->IsOnlyWhitespace(&justWS);
-    if (justWS)
+    if (textContent->IsOnlyWhitespace())
     {
       nsWSRunObject wsRunObj(this, aNode, 0);
       nsCOMPtr<nsIDOMNode> visNode;

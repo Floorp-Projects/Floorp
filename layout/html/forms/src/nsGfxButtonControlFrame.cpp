@@ -209,7 +209,7 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     // set the value of the text node and add it to the child list
     mTextContent = do_QueryInterface(labelContent, &result);
     if (NS_SUCCEEDED(result) && mTextContent) {
-      mTextContent->SetText(value.get(), value.Length(), PR_TRUE);
+      mTextContent->SetText(value, PR_TRUE);
       aChildList.AppendElement(mTextContent);
     }
   }
@@ -329,7 +329,7 @@ nsGfxButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
       if (NS_CONTENT_ATTR_HAS_VALUE != mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value)) {
         value.Truncate();
       }
-      rv = mTextContent->SetText(value.get(), value.Length(), PR_TRUE);
+      mTextContent->SetText(value, PR_TRUE);
     } else {
       rv = NS_ERROR_UNEXPECTED;
     }

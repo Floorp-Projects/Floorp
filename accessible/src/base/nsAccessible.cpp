@@ -1027,11 +1027,9 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
         }
       }
 
-      PRInt32 origLength;
-      textContent->GetTextLength(&origLength);
-      if (origLength > 0) {
+      if (textContent->TextLength() > 0) {
         nsAutoString text;
-        textContent->CopyText(text);
+        textContent->AppendTextTo(text);
         text.CompressWhitespace();
         if (!text.IsEmpty())
           aFlatString->Append(text);

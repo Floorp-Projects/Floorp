@@ -1669,15 +1669,15 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresShell    *aPresShell,
 }
 
 static PRBool
-IsOnlyWhiteSpace(nsIContent* aContent)
+IsOnlyWhitespace(nsIContent* aContent)
 {
   PRBool onlyWhiteSpace = PR_FALSE;
   if (aContent->IsContentOfType(nsIContent::eTEXT)) {
     nsCOMPtr<nsITextContent> textContent = do_QueryInterface(aContent);
-    if (textContent) {
-      textContent->IsOnlyWhitespace(&onlyWhiteSpace);
-    }
+
+    onlyWhiteSpace = textContent->IsOnlyWhitespace();
   }
+
   return onlyWhiteSpace;
 }
     
@@ -2925,7 +2925,7 @@ nsCSSFrameConstructor::MustGeneratePseudoParent(nsIPresContext*  aPresContext,
   // check tags first
 
   if ((nsLayoutAtoms::textTagName == aTag)) {
-    return !IsOnlyWhiteSpace(aContent);
+    return !IsOnlyWhitespace(aContent);
   }
 
   // exclude tags
@@ -3009,7 +3009,7 @@ NeedFrameFor(nsIFrame*   aParentFrame,
 {
   // don't create a whitespace frame if aParentFrame doesn't want it
   if ((NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE & aParentFrame->GetStateBits())
-      && IsOnlyWhiteSpace(aChildContent)) {
+      && IsOnlyWhitespace(aChildContent)) {
     return PR_FALSE;
   }
   return PR_TRUE;
@@ -4470,7 +4470,7 @@ nsCSSFrameConstructor::ConstructTextFrame(nsIPresShell*            aPresShell,
                                           nsFrameItems&            aFrameItems)
 {
   // process pending pseudo frames. whitespace doesn't have an effect.
-  if (!aState.mPseudoFrames.IsEmpty() && !IsOnlyWhiteSpace(aContent))
+  if (!aState.mPseudoFrames.IsEmpty() && !IsOnlyWhitespace(aContent))
     ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems);
 
   nsIFrame* newFrame = nsnull;
@@ -10263,17 +10263,8 @@ HasDisplayableChildren(nsIPresContext* aPresContext, nsIFrame* aContainerFrame)
     if (frame->GetType() != nsLayoutAtoms::textFrame)
       return PR_TRUE;
 
-    nsCOMPtr<nsITextContent> text = do_QueryInterface(frame->GetContent());
-    NS_ASSERTION(text != nsnull, "oops, not an nsITextContent");
-    if (! text)
-      return PR_TRUE;
-    
-    // Is it only whitespace?
-    PRBool onlyWhitespace;
-    text->IsOnlyWhitespace(&onlyWhitespace);
-    
-    // If not, then we have displayable content here.
-    if (! onlyWhitespace)
+    // If not only whitespace, then we have displayable content here.
+    if (! IsOnlyWhitespace(frame->GetContent()))
       return PR_TRUE;
     
     // Otherwise, on to the next frame...
@@ -11883,8 +11874,7 @@ NeedFirstLetterContinuation(nsIContent* aContent)
   if (aContent) {
     nsCOMPtr<nsITextContent> tc(do_QueryInterface(aContent));
     if (tc) {
-      const nsTextFragment* frag = nsnull;
-      tc->GetText(&frag);
+      const nsTextFragment* frag = tc->Text();
       PRInt32 flc = FirstLetterCount(frag);
       PRInt32 tl = frag->GetLength();
       if (flc < tl) {
@@ -11900,14 +11890,8 @@ static PRBool IsFirstLetterContent(nsIContent* aContent)
   PRBool result = PR_FALSE;
 
   nsCOMPtr<nsITextContent> textContent = do_QueryInterface(aContent);
-  if (textContent) {
-    PRInt32 textLength;
-    textContent->GetTextLength(&textLength);
-    if (textLength) {
-      PRBool onlyWhiteSpace;
-      textContent->IsOnlyWhitespace(&onlyWhiteSpace);
-      result = !onlyWhiteSpace;
-    }
+  if (textContent && textContent->TextLength()) {
+    result = !textContent->IsOnlyWhitespace();
   }
 
   return result;

@@ -222,18 +222,15 @@ public:
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
   // nsITextContent
-  NS_IMETHOD SplitText(PRUint32 aOffset, nsIDOMText** aReturn);
-
-  NS_IMETHOD GetText(const nsTextFragment** aFragmentsResult);
-  NS_IMETHOD GetTextLength(PRInt32* aLengthResult);
-  NS_IMETHOD CopyText(nsAString& aResult);
-  NS_IMETHOD SetText(const PRUnichar* aBuffer, PRInt32 aLength,
-                     PRBool aNotify);
-  NS_IMETHOD SetText(const nsAString& aStr, PRBool aNotify);
-  NS_IMETHOD SetText(const char* aBuffer, PRInt32 aLength, PRBool aNotify);
-  NS_IMETHOD IsOnlyWhitespace(PRBool* aResult);
-  NS_IMETHOD CloneContent(PRBool aCloneText, nsITextContent** aClone);
-  NS_IMETHOD AppendTextTo(nsAString& aResult);
+  virtual const nsTextFragment *Text();
+  virtual PRUint32 TextLength();
+  virtual void SetText(const PRUnichar* aBuffer, PRUint32 aLength,
+                       PRBool aNotify);
+  virtual void SetText(const nsAString& aStr, PRBool aNotify);
+  virtual void SetText(const char* aBuffer, PRUint32 aLength,
+                       PRBool aNotify);
+  virtual PRBool IsOnlyWhitespace();
+  virtual void AppendTextTo(nsAString& aResult);
 
   //----------------------------------------
 
@@ -242,6 +239,8 @@ public:
 #endif
 
 protected:
+  nsresult SplitText(PRUint32 aOffset, nsIDOMText** aReturn);
+
   nsTextFragment mText;
 
 private:

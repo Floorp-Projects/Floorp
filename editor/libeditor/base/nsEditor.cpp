@@ -3710,7 +3710,7 @@ nsEditor::IsEmptyTextContent(nsIContent* aContent)
   PRBool result = PR_FALSE;
   nsCOMPtr<nsITextContent> tc(do_QueryInterface(aContent));
   if (tc) {
-    tc->IsOnlyWhitespace(&result);
+    result = tc->IsOnlyWhitespace();
   }
   return result;
 }
