@@ -1,0 +1,63 @@
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is mozilla.org code.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications, Inc.  Portions created by Netscape are
+# Copyright (C) 2001, Mozilla.  All Rights Reserved.
+# 
+# Contributor(s):
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= embedcomponents
+LIBRARY_NAME	= embedcomponents
+IS_COMPONENT	= 1
+REQUIRES	= xpcom windowwatcher_s
+
+CPPSRCS		= nsModule.cpp
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+EXTRA_DSO_LIBS	= windowwatcher_s
+
+ifdef MOZ_PERF_METRICS
+EXTRA_DSO_LIBS	+= mozutil_s
+endif
+
+else
+
+SHARED_LIBRARY_LIBS = \
+	$(DIST)/lib/libwindowwatcher_s.$(LIB_SUFFIX) \
+	$(NULL)
+
+ifdef MOZ_PERF_METRICS
+SHARED_LIBRARY_LIBS	+= $(DIST)/lib/libmozutil_s.$(LIB_SUFFIX)
+endif
+
+endif
+
+LOCAL_INCLUDES	= \
+	-I$(srcdir)/../windowwatcher/src  \
+	$(NULL)
+
+EXTRA_DSO_LDOPTS = \
+	$(EXTRA_DSO_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(MOZ_JS_LIBS) \
+	$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+

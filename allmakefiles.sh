@@ -700,6 +700,11 @@ embedding/browser/gtk/tests/Makefile
 embedding/browser/photon/Makefile
 embedding/browser/photon/src/Makefile
 embedding/browser/photon/tests/Makefile
+embedding/components/Makefile
+embedding/components/build/Makefile
+embedding/components/windowwatcher/Makefile
+embedding/components/windowwatcher/public/Makefile
+embedding/components/windowwatcher/src/Makefile
 embedding/config/Makefile
 embedding/tests/gtkEmbed/Makefile
 "
