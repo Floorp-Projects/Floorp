@@ -45,6 +45,7 @@ typedef struct MacLibrary
 #define PLUGIN_DLL		"PLUGIN_DLL"
 #define PREF_DLL		"PREF_DLL"
 #define PARSER_DLL		"PARSER_DLL"
+#define DOM_DLL    		"DOM_DLL"
 
 #ifdef IMPL_MAC_REPOSITORY
 
@@ -55,6 +56,7 @@ extern "C" nsresult		NSGetFactory_WEB_DLL(const nsCID &, nsIFactory **);
 //extern "C" nsresult		NSGetFactory_PLUGIN_DLL(const nsCID &, nsIFactory **);
 extern "C" nsresult		NSGetFactory_PREF_DLL(const nsCID &, nsIFactory **);
 extern "C" nsresult		NSGetFactory_PARSER_DLL(const nsCID &, nsIFactory **);
+extern "C" nsresult		NSGetFactory_DOM_DLL(const nsCID &, nsIFactory **);
 
 extern "C" PRBool		NSCanUnload_PREF_DLL(void);
 
@@ -67,6 +69,7 @@ static MacLibrary	libraries[] = {
 	//PLUGIN_DLL,		NSGetFactory_PLUGIN_DLL,	NULL,
 	PREF_DLL,		NSGetFactory_PREF_DLL,		NSCanUnload_PREF_DLL,
 	PARSER_DLL,		NSGetFactory_PARSER_DLL,	NULL,
+	DOM_DLL,		NSGetFactory_DOM_DLL,		NULL,
 	NULL};
 
 static void* FindMacSymbol(char* libName, const char *symbolName)
