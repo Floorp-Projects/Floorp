@@ -220,6 +220,7 @@ tree {
 
 tree > treechildren {
  behavior: url("chrome://global/content/treeBindings.xml#treerows");
+ /* overflow: auto; */
 }
 
 treeitem { 
