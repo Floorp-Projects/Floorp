@@ -1369,7 +1369,7 @@ PRInt32 nsHTMLParser::CloseContainer(const nsIParserNode& aNode){
       break;
 
     case eHTMLTag_head:
-      result=CloseHead(aNode); 
+      //result=CloseHead(aNode); 
       break;
 
     case eHTMLTag_body:
