@@ -45,7 +45,7 @@ switch ('1')
   case '1':
     actual += 'b';
 }
-status = 'Section A: the string literal "1" as a duplicate label';
+status = 'Section A of test: the string literal "1" as a duplicate label';
 expect = 'ab';
 addThis();
 
@@ -59,7 +59,7 @@ switch (1)
   case 1:
     actual += 'b';
 }
-status = 'Section B: the numeric literal 1 as a duplicate label';
+status = 'Section B of test: the numeric literal 1 as a duplicate label';
 expect = 'ab';
 addThis();
 
@@ -78,7 +78,7 @@ function tryThis(x)
       actual += 'b';
   }
 }
-status = 'Section C: the numeric literal 1 as a duplicate label, via a function parameter';
+status = 'Section C of test: the numeric literal 1 as a duplicate label, via a function parameter';
 expect = 'ab';
 addThis();
 
