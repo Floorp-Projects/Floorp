@@ -50,7 +50,7 @@ NS_IMPL_ISUPPORTS(nsFileTransportService, nsIFileTransportService::GetIID());
 
 NS_IMETHODIMP
 nsFileTransportService::AsyncRead(PLEventQueue* appEventQueue,
-                                  nsIProtocolConnection* connection,
+                                  nsISupports* context,
                                   nsIStreamListener* listener,
                                   const char* path, 
                                   nsITransport* *result)
@@ -59,7 +59,7 @@ nsFileTransportService::AsyncRead(PLEventQueue* appEventQueue,
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = trans->Init(path, listener, appEventQueue, connection);
+    nsresult rv = trans->Init(path, listener, appEventQueue, context);
     if (NS_FAILED(rv)) {
         delete trans;
         return rv;
@@ -78,7 +78,7 @@ nsFileTransportService::AsyncRead(PLEventQueue* appEventQueue,
 
 NS_IMETHODIMP
 nsFileTransportService::AsyncWrite(PLEventQueue* appEventQueue,
-                                   nsIProtocolConnection* connection,
+                                   nsISupports* context,
                                    nsIStreamObserver* observer,
                                    const char* path,
                                    nsITransport* *result)

@@ -24,7 +24,6 @@
 #include "plevent.h"
 
 class nsFileTransportService;
-class nsIProtocolConnection;
 class nsIInputStream;
 class nsIString;
 
@@ -50,13 +49,13 @@ public:
     nsresult Init(const char* path,
                   nsIStreamListener* listener,
                   PLEventQueue* appEventQueue,
-                  nsIProtocolConnection* connection);
+                  nsISupports* context);
 
 protected:
-    nsIProtocolConnection*      mConnection;
-    char*                       mPath;
-    nsIStreamListener*          mListener;
-    PRBool                      mCanceled;
+    nsISupports*        mContext;
+    char*               mPath;
+    nsIStreamListener*  mListener;
+    PRBool              mCanceled;
     
 };
 

@@ -24,7 +24,6 @@
 
 class nsIStreamObserver;
 class nsIStreamListener;
-class nsIProtocolConnection;
 class nsITransport;
 
 #define NS_IFILETRANSPORTSERVICE_IID                 \
@@ -50,13 +49,13 @@ public:
 
 
     NS_IMETHOD AsyncRead(PLEventQueue* appEventQueue,
-                         nsIProtocolConnection* connection,
+                         nsISupports* context,
                          nsIStreamListener* listener,
                          const char* path, 
                          nsITransport* *result) = 0;
 
     NS_IMETHOD AsyncWrite(PLEventQueue* appEventQueue,
-                          nsIProtocolConnection* connection,
+                          nsISupports* context,
                           nsIStreamObserver* observer,
                           const char* path,
                           nsITransport* *result) = 0;

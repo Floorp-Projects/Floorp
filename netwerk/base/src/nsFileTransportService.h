@@ -36,12 +36,12 @@ public:
 
     // nsIFileTransportService methods:
     NS_IMETHOD AsyncRead(PLEventQueue* appEventQueue,
-                         nsIProtocolConnection* connection,
+                         nsISupports* context,
                          nsIStreamListener* listener,
                          const char* path, 
                          nsITransport* *result);
     NS_IMETHOD AsyncWrite(PLEventQueue* appEventQueue,
-                          nsIProtocolConnection* connection,
+                          nsISupports* context,
                           nsIStreamObserver* observer,
                           const char* path,
                           nsITransport* *result);

@@ -17,7 +17,6 @@
  */
 
 #include "nsIStreamListener.h"
-#include "nsIProtocolConnection.h"
 #include "nsIInputStream.h"
 #include "nsIString.h"
 #include "nsCRT.h"
@@ -28,11 +27,11 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIStreamListener methods:
-    NS_IMETHOD OnStartBinding(nsIProtocolConnection* connection);
-    NS_IMETHOD OnDataAvailable(nsIProtocolConnection* connection,
+    NS_IMETHOD OnStartBinding(nsISupports* context);
+    NS_IMETHOD OnDataAvailable(nsISupports* context,
                                nsIInputStream *aIStream, 
                                PRUint32 aLength);
-    NS_IMETHOD OnStopBinding(nsIProtocolConnection* connection,
+    NS_IMETHOD OnStopBinding(nsISupports* context,
                              nsresult aStatus,
                              nsIString* aMsg);
 
@@ -60,7 +59,7 @@ class nsStreamListenerEvent : public PLEvent
 {
 public:
     nsStreamListenerEvent(nsMarshalingStreamListener* listener,
-                          nsIProtocolConnection* connection);
+                          nsISupports* context);
     virtual ~nsStreamListenerEvent();
 
     nsresult Fire(PLEventQueue* aEventQ);
@@ -72,23 +71,23 @@ protected:
     static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
 
     nsMarshalingStreamListener* mListener;
-    nsIProtocolConnection*      mConnection;
+    nsISupports*                mContext;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsStreamListenerEvent::nsStreamListenerEvent(nsMarshalingStreamListener* listener,
-                                             nsIProtocolConnection* connection)
-    : mListener(listener), mConnection(connection)
+                                             nsISupports* context)
+    : mListener(listener), mContext(context)
 {
     NS_ADDREF(mListener);
-    NS_ADDREF(mConnection);
+    NS_IF_ADDREF(mContext);
 }
 
 nsStreamListenerEvent::~nsStreamListenerEvent()
 {
     NS_RELEASE(mListener);
-    NS_RELEASE(mConnection);
+    NS_IF_RELEASE(mContext);
 }
 
 void PR_CALLBACK nsStreamListenerEvent::HandlePLEvent(PLEvent* aEvent)
@@ -137,8 +136,8 @@ class nsOnStartBindingEvent : public nsStreamListenerEvent
 {
 public:
     nsOnStartBindingEvent(nsMarshalingStreamListener* listener, 
-                          nsIProtocolConnection* connection)
-        : nsStreamListenerEvent(listener, connection), mContentType(nsnull) {}
+                          nsISupports* context)
+        : nsStreamListenerEvent(listener, context), mContentType(nsnull) {}
     virtual ~nsOnStartBindingEvent();
 
     NS_IMETHOD HandleEvent();
@@ -156,17 +155,17 @@ nsOnStartBindingEvent::~nsOnStartBindingEvent()
 NS_IMETHODIMP
 nsOnStartBindingEvent::HandleEvent()
 {
-    return mListener->GetReceiver()->OnStartBinding(mConnection);
+    return mListener->GetReceiver()->OnStartBinding(mContext);
 }
 
 NS_IMETHODIMP 
-nsMarshalingStreamListener::OnStartBinding(nsIProtocolConnection* connection)
+nsMarshalingStreamListener::OnStartBinding(nsISupports* context)
 {
     nsresult rv = GetStatus();
     if (NS_FAILED(rv)) return rv;
 
     nsOnStartBindingEvent* event = 
-        new nsOnStartBindingEvent(this, connection);
+        new nsOnStartBindingEvent(this, context);
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -185,8 +184,8 @@ class nsOnDataAvailableEvent : public nsStreamListenerEvent
 {
 public:
     nsOnDataAvailableEvent(nsMarshalingStreamListener* listener, 
-                           nsIProtocolConnection* connection)
-        : nsStreamListenerEvent(listener, connection),
+                           nsISupports* context)
+        : nsStreamListenerEvent(listener, context),
           mIStream(nsnull), mLength(0) {}
     virtual ~nsOnDataAvailableEvent();
 
@@ -215,11 +214,11 @@ nsOnDataAvailableEvent::Init(nsIInputStream* aIStream, PRUint32 aLength)
 NS_IMETHODIMP
 nsOnDataAvailableEvent::HandleEvent()
 {
-    return mListener->GetReceiver()->OnDataAvailable(mConnection, mIStream, mLength);
+    return mListener->GetReceiver()->OnDataAvailable(mContext, mIStream, mLength);
 }
 
 NS_IMETHODIMP 
-nsMarshalingStreamListener::OnDataAvailable(nsIProtocolConnection* connection,
+nsMarshalingStreamListener::OnDataAvailable(nsISupports* context,
                                             nsIInputStream *aIStream, 
                                             PRUint32 aLength)
 {
@@ -227,7 +226,7 @@ nsMarshalingStreamListener::OnDataAvailable(nsIProtocolConnection* connection,
     if (NS_FAILED(rv)) return rv;
 
     nsOnDataAvailableEvent* event = 
-        new nsOnDataAvailableEvent(this, connection);
+        new nsOnDataAvailableEvent(this, context);
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -248,8 +247,8 @@ class nsOnStopBindingEvent : public nsStreamListenerEvent
 {
 public:
     nsOnStopBindingEvent(nsMarshalingStreamListener* listener, 
-                         nsIProtocolConnection* connection)
-        : nsStreamListenerEvent(listener, connection),
+                         nsISupports* context)
+        : nsStreamListenerEvent(listener, context),
           mStatus(NS_OK), mMessage(nsnull) {}
     virtual ~nsOnStopBindingEvent();
 
@@ -277,11 +276,11 @@ nsOnStopBindingEvent::Init(nsresult status, nsIString* aMsg)
 NS_IMETHODIMP
 nsOnStopBindingEvent::HandleEvent()
 {
-    return mListener->GetReceiver()->OnStopBinding(mConnection, mStatus, mMessage);
+    return mListener->GetReceiver()->OnStopBinding(mContext, mStatus, mMessage);
 }
 
 NS_IMETHODIMP 
-nsMarshalingStreamListener::OnStopBinding(nsIProtocolConnection* connection,
+nsMarshalingStreamListener::OnStopBinding(nsISupports* context,
                                           nsresult aStatus,
                                           nsIString* aMsg)
 {
@@ -289,7 +288,7 @@ nsMarshalingStreamListener::OnStopBinding(nsIProtocolConnection* connection,
     if (NS_FAILED(rv)) return rv;
 
     nsOnStopBindingEvent* event = 
-        new nsOnStopBindingEvent(this, connection);
+        new nsOnStopBindingEvent(this, context);
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
