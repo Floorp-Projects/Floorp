@@ -73,10 +73,7 @@ ifndef topsrcdir
 topsrcdir		= $(DEPTH)
 endif
 
-#
-# Common rules used by lots of makefiles...
-#
-ifndef NS_CONFIG_MK
+ifndef INCLUDED_CONFIG_MK
 include $(topsrcdir)/config/config.mk
 endif
 
@@ -94,12 +91,12 @@ endif
 
 REPORT_BUILD = @echo $(notdir $<)
 
+# ELOG prints out failed command when building silently (gmake -s).
 ifneq (,$(findstring s,$(MAKEFLAGS)))
-	ELOG := exec sh $(topsrcdir)/build/autoconf/print-failed-commands.sh
+  ELOG := exec sh $(BUILD_TOOLS)/print-failed-commands.sh
 else
-	ELOG :=
+  ELOG :=
 endif
-
 
 #
 # Library rules
@@ -186,28 +183,29 @@ PACKAGE			= .
 endif
 
 ifdef JAVA_OR_NSJVM
-ALL_TRASH		= $(TARGETS) $(OBJS) LOGS TAGS $(GARBAGE) a.out \
-			  $(NOSUCHFILE) $(JDK_HEADER_CFILES) $(JDK_STUB_CFILES) \
-			  $(JRI_HEADER_CFILES) $(JRI_STUB_CFILES) $(JMC_STUBS) \
-			  $(JMC_HEADERS) $(JMC_EXPORT_FILES) so_locations \
-			  _gen _jmc _jri _stubs $(MDDEPDIR) \
-                          $(wildcard gts_tmp_*) $(PROGOBJS) \
-			  $(wildcard $(JAVA_DESTPATH)/$(PACKAGE)/*.class)
+ALL_TRASH = \
+	$(GARBAGE) $(TARGETS) $(OBJS) $(PROGOBJS) LOGS TAGS a.out \
+	$(JDK_HEADER_CFILES) $(JDK_STUB_CFILES) \
+	$(JRI_HEADER_CFILES) $(JRI_STUB_CFILES) $(JMC_STUBS) \
+	$(JMC_HEADERS) $(JMC_EXPORT_FILES) \
+	 so_locations _gen _stubs _jmc _jri \
+	$(wildcard gts_tmp_*) \
+	$(wildcard $(JAVA_DESTPATH)/$(PACKAGE)/*.class)
 else
-ALL_TRASH		= $(TARGETS) $(OBJS) LOGS TAGS $(GARBAGE) a.out \
-			  $(NOSUCHFILE) $(JMC_STUBS) so_locations \
-			  _gen _stubs $(MDDEPDIR) $(wildcard gts_tmp_*) \
-                          $(PROGOBJS) $(LIBRARY:%.a=.%.timestamp)
+ALL_TRASH = \
+	$(GARBAGE) $(TARGETS) $(OBJS) $(PROGOBJS) LOGS TAGS a.out \
+	so_locations _gen _stubs \
+	$(wildcard gts_tmp_*) $(LIBRARY:%.a=.%.timestamp)
 endif
 
 ifdef JAVA_OR_NSJVM
 ifdef JDIRS
-ALL_TRASH		+= $(addprefix $(JAVA_DESTPATH)/,$(JDIRS))
+GARBAGE			+= $(addprefix $(JAVA_DESTPATH)/,$(JDIRS))
 endif
 endif
 
 ifdef QTDIR
-ALL_TRASH		+= $(MOCSRCS)
+GARBAGE			+= $(MOCSRCS)
 endif
 
 #
@@ -216,7 +214,7 @@ endif
 #
 ifeq ($(OS_ARCH),SunOS)
 ifeq ($(GNU_CXX),)
-ALL_TRASH += SunWS_cache
+GARBAGE += SunWS_cache
 endif
 endif
 
@@ -234,25 +232,16 @@ JDK_STUB_DIR		= _stubs
 XPIDL_GEN_DIR		= _xpidlgen
 
 ifdef MOZ_UPDATE_XTERM
-UPDATE_TITLE = echo "]2;gmake: $@ in $(shell $(topsrcdir)/build/autoconf/print-depth-path.sh)/$$d";
-endif
-
-ifndef BUILD_OFFICIAL
-# Without "set -e", shell loops continue past errors.
-EXIT_ON_ERROR := set -e;
-else
-# "Official" build only: Continue past errors.
-EXIT_ON_ERROR :=
-PRINT_TIMESTAMP := date;
+UPDATE_TITLE = echo "]2;gmake: $@ in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$$d";
 endif
 
 ifdef DIRS
+EXIT_ON_ERROR := set -e; # Shell loops continue past errors without this.
 LOOP_OVER_DIRS = \
     @$(EXIT_ON_ERROR) \
     for d in $(DIRS); do \
         $(UPDATE_TITLE) \
         $(MAKE) -C $$d $@; \
-        $(PRINT_TIMESTAMP) \
     done
 endif
 
@@ -276,11 +265,13 @@ MAKE_DIRS		=
 ifdef COMPILER_DEPEND
 ifdef OBJS
 MAKE_DIRS		+= $(MDDEPDIR)
+GARBAGE			+= $(MDDEPDIR)
 endif
 endif
 
 ifneq ($(XPIDLSRCS),)
 MAKE_DIRS		+= $(XPIDL_GEN_DIR)
+GARBAGE			+= $(XPIDL_GEN_DIR)
 endif
 
 #
@@ -315,6 +306,7 @@ BEOS_LIB_LIST		= $(shell cat $(DEPTH)/dependencies.beos/$(LIBRARY_NAME).dependen
 BEOS_LINK_LIBS		= $(foreach lib,$(BEOS_LIB_LIST),$(shell $(topsrcdir)/config/beos/checklib.sh $(DIST)/bin $(lib)))
 LDFLAGS			+= -L$(DIST)/bin $(BEOS_LINK_LIBS) $(NSPR_LIBS)
 EXTRA_DSO_LDOPTS	+= -L$(DIST)/bin $(BEOS_LINK_LIBS) $(NSPR_LIBS)
+GARBAGE			+= dependencies.beos
 endif
 endif
 
@@ -351,7 +343,7 @@ all:: export libs install
 alldep:: export depend libs install
 
 # Do everything from scratch
-everything:: realclean alldep
+everything:: clean alldep
 
 ifdef ALL_PLATFORMS
 all_platforms:: $(NFSPWD)
@@ -482,24 +474,15 @@ run_viewer: $(DIST)/bin/viewer
 	LD_LIBRARY_PATH=".:$(LIBS_PATH):$$LD_LIBRARY_PATH" \
 	viewer
 
-run_apprunner: $(DIST)/bin/apprunner
-	cd $(DIST)/bin; \
-	MOZILLA_FIVE_HOME=`pwd` \
-	LD_LIBRARY_PATH=".:$(LIBS_PATH):$$LD_LIBRARY_PATH" \
-	apprunner
-
-clean clobber:: $(SUBMAKEFILES)
+clean clobber realclean clobber_all:: $(SUBMAKEFILES)
 	rm -rf $(ALL_TRASH)
 	+$(LOOP_OVER_DIRS)
 
-realclean clobber_all:: $(SUBMAKEFILES)
-	rm -rf $(wildcard *.OBJ) dist dependencies.beos $(ALL_TRASH)
-	+$(LOOP_OVER_DIRS)
-
 distclean:: $(SUBMAKEFILES)
-	rm -rf $(wildcard *.OBJ) dist $(ALL_TRASH) $(wildcard *.map) \
-	Makefile config.log config.cache depend.mk .md .deps \
-	.HSancillary _xpidlgen dependencies.beos
+	rm -rf $(ALL_TRASH) \
+	$(wildcard *.map) \
+	$(basename $(wildcard Makefile.in)) \
+	.HSancillary
 	+$(LOOP_OVER_DIRS)
 
 alltags:
@@ -794,12 +777,12 @@ endif #STRICT_CPLUSPLUS_SUFFIX
 # Note: Passing depth to make-makefile is optional.
 #       It saves the script some work, though.
 Makefile: Makefile.in
-	@$(PERL) $(topsrcdir)/build/autoconf/make-makefile -d $(DEPTH)
+	@$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) 
 
 ifdef SUBMAKEFILES
 # VPATH does not work on some machines in this case, so add $(srcdir)
 $(SUBMAKEFILES): % : $(srcdir)/%.in
-	@$(PERL) $(topsrcdir)/build/autoconf/make-makefile -d $(DEPTH) $@
+	@$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) $@
 endif
 
 ###############################################################################
@@ -1116,82 +1099,35 @@ endif
 #   CHROME_SKIN_DIR - Like above, but for skin files
 #   CHROME_L10N_DIR - Like above, but for localization files
 ifneq ($(CHROME_DIR),)
-
-# Figure out root of chrome dist dir.
-CHROME_DIST=$(DIST)/bin/chrome/$(CHROME_DIR)
+CHROME_DIST := $(DIST)/bin/chrome/$(CHROME_DIR)
 
 # Content
 ifneq ($(CHROME_CONTENT),)
-
-# Content goes to CHROME_DIR unless specified otherwise.
-ifeq ($(CHROME_CONTENT_DIR),)
-CHROME_CONTENT_DIR	= .
+ifeq ($(CHROME_CONTENT_DIR),) # Use CHROME_DIR unless specified otherwise.
+CHROME_CONTENT_DIR := content/default
 endif
-
-# Export content files by copying to dist.
-install:: $(addprefix "INSTALL-", $(CHROME_CONTENT))
-
-# Pseudo-target specifying how to install content files.
-$(addprefix "INSTALL-", $(CHROME_CONTENT)) :
-	$(INSTALL) $(subst "INSTALL-",,$(CHROME_SOURCE_DIR)/$@) $(CHROME_DIST)/$(CHROME_CONTENT_DIR)/$(subst "INSTALL-",,$(@D))
-
-# Clobber content files.
-clobber:: $(addprefix "CLOBBER-", $(CHROME_CONTENT))
-
-# Pseudo-target specifying how to clobber content files.
-$(addprefix "CLOBBER-", $(CHROME_CONTENT)) :
-	-$(RM) $(CHROME_DIST)/$(CHROME_CONTENT_DIR)/$(subst "CLOBBER-",,$@)
-
+install::
+	$(INSTALL) $(addprefix $(srcdir)/, $(CHROME_CONTENT)) $(CHROME_DIST)/$(CHROME_CONTENT_DIR)
 endif
 # content
 
 # Skin
 ifneq ($(CHROME_SKIN),)
-
-# Skin goes to CHROME_DIR unless specified otherwise.
-ifeq ($(CHROME_SKIN_DIR),)
-CHROME_SKIN_DIR		= .
+ifeq ($(CHROME_SKIN_DIR),) # Use CHROME_DIR unless specified otherwise.
+CHROME_SKIN_DIR := skin/default
 endif
-
-# Export content files by copying to dist.
-install:: $(addprefix "INSTALL-", $(CHROME_SKIN))
-
-# Pseudo-target specifying how to install chrome files.
-$(addprefix "INSTALL-", $(CHROME_SKIN)) :
-	$(INSTALL) $(subst "INSTALL-",,$(CHROME_SOURCE_DIR)/$@) $(CHROME_DIST)/$(CHROME_SKIN_DIR)/$(subst "INSTALL-",,$(@D))
-
-# Clobber content files.
-clobber:: $(addprefix "CLOBBER-", $(CHROME_SKIN))
-
-# Pseudo-target specifying how to clobber content files.
-$(addprefix "CLOBBER-", $(CHROME_SKIN)) :
-	-$(RM) $(CHROME_DIST)/$(CHROME_SKIN_DIR)/$(subst "CLOBBER-",,$@)
-
+install::
+	$(INSTALL) $(addprefix $(srcdir)/, $(CHROME_SKIN)) $(CHROME_DIST)/$(CHROME_SKIN_DIR)
 endif
 # skin
 
 # Localization.
 ifneq ($(CHROME_L10N),)
-
-# L10n goes to CHROME_DIR unless specified otherwise.
-ifeq ($(CHROME_L10N_DIR),)
-CHROME_L10N_DIR		= .
+ifeq ($(CHROME_L10N_DIR),) # Use CHROME_DIR unless specified otherwise.
+CHROME_L10N_DIR := locale/en-US
 endif
-
-# Export l10n files by copying to dist.
-install:: $(addprefix "INSTALL-", $(CHROME_L10N))
-
-# Pseudo-target specifying how to install l10n files.
-$(addprefix "INSTALL-", $(CHROME_L10N)) :
-	$(INSTALL) $(subst "INSTALL-",,$(CHROME_SOURCE_DIR)/$@) $(CHROME_DIST)/$(CHROME_L10N_DIR)/$(subst "INSTALL-",,$(@D))
-
-# Clobber l10n files.
-clobber:: $(addprefix "CLOBBER-", $(CHROME_L10N))
-
-# Pseudo-target specifying how to clobber l10n files.
-$(addprefix "CLOBBER-", $(CHROME_L10N)) :
-	-$(RM) $(CHROME_DIST)/$(CHROME_L10N_DIR)/$(subst "CLOBBER-",,$@)
-
+install::
+	$(INSTALL) $(addprefix $(srcdir)/, $(CHROME_L10N)) $(CHROME_DIST)/$(CHROME_L10N_DIR)
 endif
 # localization
 
@@ -1317,7 +1253,7 @@ ifdef PERL
 # because it handles the case when header files are removed from the build.
 # 'make' would complain that there is no way to build missing headers.
 $(MDDEPDIR)/.all.pp: FORCE
-	@$(PERL) $(topsrcdir)/config/mddepend.pl $@ $(MDDEPEND_FILES) 
+	@$(PERL) $(BUILD_TOOLS)/mddepend.pl $@ $(MDDEPEND_FILES) 
 -include $(MDDEPDIR)/.all.pp
 else
 include $(MDDEPEND_FILES)
@@ -1400,4 +1336,3 @@ echo-module-name:
 
 echo-module-filelist:
 	@$(topsrcdir)/build/package/rpm/print-module-filelist.sh
-
