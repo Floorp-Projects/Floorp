@@ -52,7 +52,12 @@ public:
 
     // Finally our own methods...
 
+    nsresult            GetContentType(char* *o_ContentType);
+    nsresult            SetContentType(const char* i_ContentType);
+    nsresult            GetCharset(char* *o_Charset);
+    nsresult            SetCharset(const char* i_Charset);
     nsresult            GetContentLength(PRInt32* o_Value);
+    nsresult            SetContentLength(PRInt32 i_Value);
     nsresult            GetStatus(PRUint32* o_Value);
     nsresult            GetStatusString(char* *o_String);
     nsresult            GetServer(char* *o_String);
@@ -65,12 +70,19 @@ public:
     nsresult            SetStatus(PRInt32 i_Value) { mStatus = i_Value; return NS_OK;};
     nsresult            SetStatusString(const char* i_Value);
 
+    nsresult            ParseStatusLine(nsCString& aStatusLine);
+    nsresult            ParseHeader(nsCString& aHeaderString);
+    nsresult            ProcessHeader(nsIAtom* aHeader, nsCString& aValue);
+
 protected:
     virtual ~nsHTTPResponse();
 
     HTTPVersion                 mServerVersion;
     nsCString                   mStatusString;
+    nsCString                   mContentType;
+    nsCString                   mCharset;
     PRUint32                    mStatus;
+    PRInt32                     mContentLength;
 
     nsHTTPHeaderArray           mHeaders;
 };

@@ -23,7 +23,6 @@
 #ifndef _nsHTTPResponseListener_h_
 #define _nsHTTPResponseListener_h_
 
-#define NSPIPE2
 
 #include "nsIChannel.h"
 #include "nsIStreamListener.h"
@@ -31,11 +30,7 @@
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
 
-#ifndef NSPIPE2
-class nsIBuffer;
-#else
 class nsIBufferInputStream;
-#endif
 class nsHTTPResponse;
 class nsHTTPChannel;
 
@@ -73,23 +68,15 @@ protected:
     // nsHTTPResponseListener methods...
     nsresult FireOnHeadersAvailable();
 
-#ifndef NSPIPE2
-    nsresult ParseStatusLine(nsIBuffer* aBuffer, PRUint32 aLength,
-                             PRUint32 *aBytesRead);
-
-    nsresult ParseHTTPHeader(nsIBuffer* aBuffer, PRUint32 aLength, 
-                             PRUint32* aBytesRead);
-#else
     nsresult ParseStatusLine(nsIBufferInputStream* in, PRUint32 aLength,
                              PRUint32 *aBytesRead);
 
     nsresult ParseHTTPHeader(nsIBufferInputStream* in, PRUint32 aLength, 
                              PRUint32* aBytesRead);
-#endif
 
     nsresult FinishedResponseHeaders();
 
-    nsresult ProcessHeader(nsIAtom* aHeader, nsCString& aValue);
+    nsresult ProcessHeader(nsIAtom* aHeader, nsCString& aValue, nsHTTPResponse& aResponse);
     nsresult ProcessStatusCode();
     nsresult ProcessRedirection(PRInt32 aStatusCode);
 	nsresult ProcessAuthentication(PRInt32 aStatusCode);
@@ -101,7 +88,9 @@ protected:
     nsCOMPtr<nsIStreamListener> mConsumer;
     PRBool              	    mFirstLineParsed;
     PRBool              	    mHeadersDone;
-    PRBool                      mDataOnly; // we're only listening for data
+    PRBool                    mAsyncReadAfterAsyncOpen; // we're only listening for data
+    PRBool                    mFiredOnHeadersAvailable; // Called OnHeadersAvailable()
+    PRBool                    mFiredOpenOnStartRequest; // Called mOpenObserver->OnStartRequest
     PRUint32            	    mReadLength; // Already read
     nsHTTPResponse*     	    mResponse;
     nsCOMPtr<nsISupports> 	    mResponseContext;
