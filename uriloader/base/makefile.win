@@ -34,7 +34,6 @@ XPIDLSRCS=						\
 		.\nsIURIContentListener.idl		\
 		.\nsIURILoader.idl			\
     .\nsIDocumentLoader.idl \
-    .\nsIDocumentLoaderObserver.idl \
     .\nsIWebProgress.idl \
     .\nsIWebProgressListener.idl \
 		$(NULL)

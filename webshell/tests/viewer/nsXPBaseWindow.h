@@ -32,7 +32,6 @@
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
-#include "nsIDocumentLoaderObserver.h"
 #include "nsIDOMMouseListener.h"
 
 class nsViewerApp;

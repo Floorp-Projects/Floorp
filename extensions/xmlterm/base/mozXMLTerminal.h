@@ -28,6 +28,7 @@
 #include "nsWeakReference.h"
 #include "nsWeakPtr.h"
 #include "nsString.h"
+#include "nsIWebProgressListener.h"
 
 #include "mozXMLT.h"
 
@@ -39,7 +40,7 @@
 
 
 class mozXMLTerminal : public mozIXMLTerminal,
-                       public nsIDocumentLoaderObserver,
+                       public nsIWebProgressListener,
                        public nsIObserver,
                        public nsSupportsWeakReference
 {
@@ -50,6 +51,9 @@ class mozXMLTerminal : public mozIXMLTerminal,
 
   // nsISupports interface
   NS_DECL_ISUPPORTS
+
+  // nsIWebProgressListener interface
+  NS_DECL_NSIWEBPROGRESSLISTENER
 
   // mozIXMLTerminal interface
 
@@ -95,8 +99,6 @@ class mozXMLTerminal : public mozIXMLTerminal,
   NS_IMETHOD ScreenSize(PRInt32& rows, PRInt32& cols,
                         PRInt32& xPixels, PRInt32& yPixels);
 
-  // nsIDocumentLoaderObserver interface
-  NS_DECL_NSIDOCUMENTLOADEROBSERVER
 
   // nsIObserver interface
   NS_IMETHOD Observe(nsISupports *aSubject, const PRUnichar *aTopic,

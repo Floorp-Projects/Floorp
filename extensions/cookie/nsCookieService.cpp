@@ -32,6 +32,7 @@
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
 #include "nsIDocumentLoader.h"
+#include "nsIWebProgress.h"
 #include "nsCURILoader.h"
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
@@ -43,7 +44,7 @@ static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 // nsCookieService Implementation
 
 NS_IMPL_ISUPPORTS4(nsCookieService, nsICookieService,
-                   nsIObserver, nsIDocumentLoaderObserver, nsISupportsWeakReference);
+                   nsIObserver, nsIWebProgressListener, nsISupportsWeakReference);
 
 nsCookieService::nsCookieService()
 {
@@ -71,7 +72,9 @@ nsresult nsCookieService::Init()
   // Register as an observer for the document loader  
   NS_WITH_SERVICE(nsIDocumentLoader, docLoaderService, kDocLoaderServiceCID, &rv)
   if (NS_SUCCEEDED(rv) && docLoaderService) {
-    docLoaderService->AddObserver((nsIDocumentLoaderObserver*)this);
+    nsCOMPtr<nsIWebProgress> progress(do_QueryInterface(docLoaderService));
+    if (progress)
+        (void) progress->AddProgressListener((nsIWebProgressListener*)this);
   } else {
     NS_ASSERTION(PR_FALSE, "Could not get nsIDocumentLoader");
   }
@@ -79,47 +82,56 @@ nsresult nsCookieService::Init()
   return NS_OK;
 }
 
+// nsIWebProgressListener implementation
 NS_IMETHODIMP
-nsCookieService::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, const char* aCommand)
+nsCookieService::OnProgressChange(nsIWebProgress *aProgress,
+                                  nsIRequest *aRequest, 
+                                  PRInt32 curSelfProgress, 
+                                  PRInt32 maxSelfProgress, 
+                                  PRInt32 curTotalProgress, 
+                                  PRInt32 maxTotalProgress)
 {
-  return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsCookieService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIRequest *request, nsresult aStatus)
+NS_IMETHODIMP 
+nsCookieService::OnStateChange(nsIWebProgress* aWebProgress, 
+                               nsIRequest *aRequest, 
+                               PRInt32 progressStateFlags, 
+                               nsresult aStatus)
 {
-  COOKIE_Write();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCookieService::OnStartURLLoad
-  (nsIDocumentLoader* loader, nsIRequest *request)
-{
- return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCookieService::OnProgressURLLoad
-  (nsIDocumentLoader* loader, nsIRequest *request, PRUint32 aProgress, PRUint32 aProgressMax)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCookieService::OnStatusURLLoad
-  (nsIDocumentLoader* loader, nsIRequest *request, nsString& aMsg)
-{
-  return NS_OK;
+    if (progressStateFlags & STATE_IS_DOCUMENT)
+        if (progressStateFlags & STATE_STOP)
+            COOKIE_Write();
+    return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsCookieService::OnEndURLLoad
-  (nsIDocumentLoader* loader, nsIRequest *request, nsresult aStatus)
+/* void onLocationChange (in nsIURI location); */
+NS_IMETHODIMP nsCookieService::OnLocationChange(nsIWebProgress* aWebProgress,
+                                                     nsIRequest* aRequest,
+                                                     nsIURI *location)
 {
-  return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP 
+nsCookieService::OnStatusChange(nsIWebProgress* aWebProgress,
+                                     nsIRequest* aRequest,
+                                     nsresult aStatus,
+                                     const PRUnichar* aMessage)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsCookieService::OnSecurityChange(nsIWebProgress *aWebProgress, 
+                                       nsIRequest *aRequest, 
+                                       PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 NS_IMETHODIMP
 nsCookieService::GetCookieString(nsIURI *aURL, char ** aCookie) {

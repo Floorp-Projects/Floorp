@@ -87,7 +87,6 @@
 
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
-#include "nsIDocumentLoaderObserver.h" 
 #include "nsIStreamListener.h"
 #include "nsUnitConversion.h"
 #include "nsVoidArray.h"

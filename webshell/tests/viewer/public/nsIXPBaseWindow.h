@@ -29,7 +29,6 @@ class nsIFactory;
 class nsIWebShell;
 class nsString;
 class nsIPresShell;
-class nsIDocumentLoaderObserver;
 class nsIDOMElement;
 class nsIDOMNode;
 class nsIWindowListener;

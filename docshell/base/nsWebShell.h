@@ -121,12 +121,6 @@ public:
 
     NS_IMETHOD SetURL(const PRUnichar* aURL);
 
-    // XXX: Temporary - until I can get rid of SetDocLoaderObserver :-)
-    NS_IMETHOD OnStateChange(nsIWebProgress *aProgress,
-        nsIRequest *aRequest,
-        PRInt32 aStateFlags,
-        nsresult aStatus);
-
 protected:
     void GetRootWebShellEvenIfChrome(nsIWebShell** aResult);
     void InitFrameData();

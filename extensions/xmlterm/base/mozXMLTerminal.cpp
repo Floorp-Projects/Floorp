@@ -34,7 +34,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDocumentViewer.h"
-#include "nsIDocumentLoaderObserver.h"
 #include "nsIObserver.h"
 
 #include "nsIPresContext.h"
@@ -60,6 +59,8 @@
 #include "mozIXMLTermSuspend.h"
 
 #include "nsIWebNavigation.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIWebProgress.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -143,7 +144,7 @@ NS_INTERFACE_MAP_BEGIN(mozXMLTerminal)
 		*/
 	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozIXMLTerminal)
 	NS_INTERFACE_MAP_ENTRY(mozIXMLTerminal)
-	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
+	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
 	NS_INTERFACE_MAP_ENTRY(nsIObserver)
 	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
@@ -253,7 +254,10 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
     XMLT_LOG(mozXMLTerminal::Init,22,("setting DocLoaderObs\n"));
 
     // About to create owning reference to this
-    result = aDocShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*)this);
+    nsCOMPtr<nsIWebProgress> progress(do_GetInterface(aDocShell, &result));
+    if (NS_FAILED(result)) return result;
+
+    result = progress->AddProgressListener((nsIWebProgressListener*)this);
     if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
 
@@ -343,11 +347,6 @@ NS_IMETHODIMP mozXMLTerminal::Finalize(void)
     mLineTermAux = nsnull;
   }
 
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
-  if (docShell) {
-    // Stop observing document loading
-    docShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)nsnull);
-  }
   mDocShell = nsnull;
 
   mPresShell = nsnull;
@@ -1049,53 +1048,53 @@ NS_IMETHODIMP mozXMLTerminal::Resize(void)
   return NS_OK;
 }
 
-
-// nsIDocumentLoaderObserver methods
+// nsIWebProgressListener methods
 NS_IMETHODIMP
-mozXMLTerminal::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
-                                const char* aCommand)
-{
-   return NS_OK;
+mozXMLTerminal::OnStateChange(nsIWebProgress* aWebProgress, 
+                   nsIRequest *aRequest, 
+                   PRInt32 progressStateFlags, 
+                   nsresult aStatus) {
+    if (progressStateFlags & nsIWebProgressListener::STATE_IS_REQUEST)
+        if (progressStateFlags & nsIWebProgressListener::STATE_START) {
+            XMLT_LOG(mozXMLTerminal::OnStateChange,20,("\n"));
+
+            // Activate XMLTerm
+            Activate();
+        }
+    return NS_OK;
+
 }
 
 NS_IMETHODIMP
-mozXMLTerminal::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIRequest* request,
-                              nsresult aStatus)
-{
-
-   return NS_OK;
+mozXMLTerminal::OnProgressChange(nsIWebProgress *aWebProgress,
+                                     nsIRequest *aRequest,
+                                     PRInt32 aCurSelfProgress,
+                                     PRInt32 aMaxSelfProgress,
+                                     PRInt32 aCurTotalProgress,
+                                     PRInt32 aMaxTotalProgress) {
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-mozXMLTerminal::OnStartURLLoad(nsIDocumentLoader* loader,
-                                 nsIRequest* request)
-{
-
-   return NS_OK;
+mozXMLTerminal::OnLocationChange(nsIWebProgress* aWebProgress,
+                      nsIRequest* aRequest,
+                      nsIURI *location) {
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
 NS_IMETHODIMP
-mozXMLTerminal::OnProgressURLLoad(nsIDocumentLoader* loader,
-                                    nsIRequest* request, PRUint32 aProgress, 
-                                    PRUint32 aProgressMax)
-{
-  return NS_OK;
+mozXMLTerminal::OnStatusChange(nsIWebProgress* aWebProgress,
+                    nsIRequest* aRequest,
+                    nsresult aStatus,
+                    const PRUnichar* aMessage) {
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-mozXMLTerminal::OnStatusURLLoad(nsIDocumentLoader* loader,
-                                  nsIRequest* request, nsString& aMsg)
-{
-  return NS_OK;
-}
 
 NS_IMETHODIMP
-mozXMLTerminal::OnEndURLLoad(nsIDocumentLoader* loader,
-                               nsIRequest* request, nsresult aStatus)
-{
-  XMLT_LOG(mozXMLTerminal::OnEndURLLoad,20,("\n"));
-
-  // Activate XMLTerm
-  Activate();
-  return NS_OK;
+mozXMLTerminal::OnSecurityChange(nsIWebProgress *aWebProgress, 
+                      nsIRequest *aRequest, 
+                      PRInt32 state) {
+    return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -59,7 +59,6 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserContainer)
 	NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
     NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
     NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
 	NS_INTERFACE_MAP_ENTRY(nsIPrompt)
     NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
@@ -212,7 +211,77 @@ NS_IMETHODIMP CWebBrowserContainer::OnProgressChange(nsIWebProgress *aProgress, 
 /* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest request, in long progressStateFlags, in unsinged long aStatus); */
 NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, nsIRequest *aRequest, PRInt32 progressStateFlags, nsresult aStatus)
 {
-	NG_TRACE(_T("CWebBrowserContainer::OnStateChange(...)\n"));
+	nsresult rv = NS_OK;
+
+    NG_TRACE(_T("CWebBrowserContainer::OnStateChange(...)\n"));
+
+    // determine whether or not the document load has started or stopped.
+    if (progressStateFlags & STATE_IS_DOCUMENT)
+    {
+        if (progressStateFlags & STATE_START)
+        {
+            NG_TRACE(_T("CWebBrowserContainer::OnStateChange->Doc Start(...,  \"\")\n"));
+
+            nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+            if (channel)
+            {
+                nsCOMPtr<nsIURI> uri;
+                rv = channel->GetURI(getter_AddRefs(uri));
+                if (NS_SUCCEEDED(rv))
+                {
+	                nsXPIDLCString aURI;
+	                uri->GetSpec(getter_Copies(aURI));
+	                NG_TRACE(_T("CWebBrowserContainer::OnStateChange->Doc Start(..., %s, \"\")\n"), A2CT(aURI));
+                }
+            }
+
+	        //Fire a DownloadBegin
+	        m_pEvents1->Fire_DownloadBegin();
+	        m_pEvents2->Fire_DownloadBegin();
+        }
+        else if (progressStateFlags & STATE_STOP)
+        {
+	        NG_TRACE(_T("CWebBrowserContainer::OnStateChange->Doc Stop(...,  \"\")\n"));
+
+            if (m_pOwner->mIERootDocument)
+            {
+                // allow to keep old document around
+                m_pOwner->mIERootDocument->Release();
+                m_pOwner->mIERootDocument = NULL;
+            }
+
+	        //Fire a DownloadComplete
+	        m_pEvents1->Fire_DownloadComplete();
+	        m_pEvents2->Fire_DownloadComplete();
+
+	        nsCOMPtr<nsIURI> pURI;
+
+            nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(aRequest);
+            if (!aChannel) return NS_ERROR_NULL_POINTER;
+
+            rv = aChannel->GetURI(getter_AddRefs(pURI));
+	        if (NS_FAILED(rv)) return rv;
+
+	        nsXPIDLCString aURI;
+	        rv = pURI->GetSpec(getter_Copies(aURI));
+            if (NS_FAILED(rv)) return rv;
+
+	        USES_CONVERSION;
+	        BSTR bstrURI = SysAllocString(A2OLE((const char *) aURI)); 
+		        
+	        // Fire a DocumentComplete event
+	        CComVariant vURI(bstrURI);
+	        m_pEvents2->Fire_DocumentComplete(m_pOwner, &vURI);
+	        SysFreeString(bstrURI);
+
+	        //Fire a StatusTextChange event
+	        BSTR bstrStatus = SysAllocString(A2OLE((CHAR *) "Done"));
+	        m_pEvents1->Fire_StatusTextChange(bstrStatus);
+	        m_pEvents2->Fire_StatusTextChange(bstrStatus);
+            SysFreeString(bstrStatus);
+        }
+
+    }
 
     if (progressStateFlags & STATE_IS_NETWORK)
     {
@@ -293,6 +362,13 @@ CWebBrowserContainer::OnStatusChange(nsIWebProgress* aWebProgress,
                                      nsresult aStatus,
                                      const PRUnichar* aMessage)
 {
+	NG_TRACE(_T("CWebBrowserContainer::OnStatusChange(...,  \"\")\n"));
+
+	BSTR bstrStatus = SysAllocString(W2OLE((PRUnichar *) aMessage));
+	m_pEvents1->Fire_StatusTextChange(bstrStatus);
+	m_pEvents2->Fire_StatusTextChange(bstrStatus);
+    SysFreeString(bstrStatus);
+
     return NS_OK;
 }
 
@@ -701,123 +777,6 @@ CWebBrowserContainer::OnStopRequest(nsIRequest *request, nsISupports* aContext, 
 
 	return NS_OK;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-// nsIDocumentLoaderObserver implementation 
-
-
-NS_IMETHODIMP
-CWebBrowserContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* pURI, const char* aCommand)
-{
-	nsXPIDLCString aURI;
-	pURI->GetSpec(getter_Copies(aURI));
-	NG_TRACE(_T("CWebBrowserContainer::OnStartDocumentLoad(..., %s, \"%s\")\n"), A2CT(aURI), A2CT(aCommand));
-
-	//Fire a DownloadBegin
-	m_pEvents1->Fire_DownloadBegin();
-	m_pEvents2->Fire_DownloadBegin();
-
-	return NS_OK; 
-} 
-
-
-// we need this to fire the document complete 
-NS_IMETHODIMP
-CWebBrowserContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIRequest *request, nsresult aStatus)
-{
-	NG_TRACE(_T("CWebBrowserContainer::OnEndDocumentLoad(...,  \"\")\n"));
-
-    if (m_pOwner->mIERootDocument)
-    {
-        // allow to keep old document around
-        m_pOwner->mIERootDocument->Release();
-        m_pOwner->mIERootDocument = NULL;
-    }
-
-	//Fire a DownloadComplete
-	m_pEvents1->Fire_DownloadComplete();
-	m_pEvents2->Fire_DownloadComplete();
-
-	char* aString = nsnull;    
-    nsIURI* pURI = nsnull;
-
-    nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-    if (!aChannel) return NS_ERROR_NULL_POINTER;
-
-    aChannel->GetURI(&pURI);
-	if (pURI == nsnull)
-	{
-		return NS_ERROR_NULL_POINTER;
-	}
-	nsXPIDLCString aURI;
-	pURI->GetSpec(getter_Copies(aURI));
-	NS_RELEASE(pURI);
-
-	USES_CONVERSION;
-	BSTR bstrURI = SysAllocString(A2OLE((const char *) aURI)); 
-		
-	// Fire a DocumentComplete event
-	CComVariant vURI(bstrURI);
-	m_pEvents2->Fire_DocumentComplete(m_pOwner, &vURI);
-	SysFreeString(bstrURI);
-
-	//Fire a StatusTextChange event
-	BSTR bstrStatus = SysAllocString(A2OLE((CHAR *) "Done"));
-	m_pEvents1->Fire_StatusTextChange(bstrStatus);
-	m_pEvents2->Fire_StatusTextChange(bstrStatus);
-    SysFreeString(bstrStatus);
-
-	return NS_OK; 
-} 
-
-
-NS_IMETHODIMP
-CWebBrowserContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIRequest *request)
-{ 
-	NG_TRACE(_T("CWebBrowserContainer::OnStartURLLoad(...,  \"\")\n"));
-
-	//NOTE: This appears to get fired once for each individual item on a page.
-
-	return NS_OK; 
-} 
-
-
-NS_IMETHODIMP
-CWebBrowserContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIRequest *request, PRUint32 aProgress, PRUint32 aProgressMax)
-{ 
-	USES_CONVERSION;
-	NG_TRACE(_T("CWebBrowserContainer::OnProgress(..., \"%d\", \"%d\")\n"), (int) aProgress, (int) aProgressMax);
-
-	return NS_OK;
-} 
-
-
-NS_IMETHODIMP
-CWebBrowserContainer::OnStatusURLLoad(nsIDocumentLoader* loader, nsIRequest *request, nsString& aMsg)
-{ 
-	NG_TRACE(_T("CWebBrowserContainer::OnStatusURLLoad(...,  \"\")\n"));
-	
-	//NOTE: This appears to get fired for each individual item on a page, indicating the status of that item.
-	BSTR bstrStatus = SysAllocString(W2OLE((PRUnichar *) aMsg.GetUnicode()));
-	m_pEvents1->Fire_StatusTextChange(bstrStatus);
-	m_pEvents2->Fire_StatusTextChange(bstrStatus);
-    SysFreeString(bstrStatus);
-	
-	return NS_OK; 
-} 
-
-
-NS_IMETHODIMP
-CWebBrowserContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIRequest *request, nsresult aStatus)
-{
-	NG_TRACE(_T("CWebBrowserContainer::OnEndURLLoad(...,  \"\")\n"));
-
-	//NOTE: This appears to get fired once for each individual item on a page.
-
-	return NS_OK; 
-} 
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsICommandHandler implementation
