@@ -26,16 +26,18 @@
 #include <TextUtils.h>
 #include "nsIComponentManager.h"
 #include "nsLocaleCID.h"
+#include "nsILocaleService.h"
+#include "nsIPlatformCharset.h"
 #include "nsIMacLocale.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "plstr.h"
+#include "prmem.h"
 
 static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
-static NS_DEFINE_IID(kMacLocaleFactoryCID, NS_MACLOCALEFACTORY_CID);
-static NS_DEFINE_IID(kIMacLocaleIID, NS_IMACLOCALE_IID);
-
+static NS_DEFINE_CID(kMacLocaleFactoryCID, NS_MACLOCALEFACTORY_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -215,6 +217,86 @@ static void AbbrevWeekdayString(DateTimeRec &dateTime, Str255 weekdayString, Int
 
 NS_IMPL_ISUPPORTS(nsDateTimeFormatMac, kIDateTimeFormatIID);
 
+nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
+{
+  PRUnichar *aLocaleUnichar = NULL;
+  nsString aCategory("NSILOCALE_TIME");
+  nsresult res;
+
+  // use cached info if match with stored locale
+  if (NULL == locale) {
+    if (mLocale.Length() && mLocale.EqualsIgnoreCase(mAppLocale)) {
+      return NS_OK;
+    }
+  }
+  else {
+    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+    if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
+      if (mLocale.Length() && mLocale.EqualsIgnoreCase(aLocaleUnichar)) {
+        nsAllocator::Free(aLocaleUnichar);
+        return NS_OK;
+      }
+      nsAllocator::Free(aLocaleUnichar);
+    }
+  }
+
+  mScriptcode = smSystemScript;
+  mLangcode = langEnglish;
+  mRegioncode = verUS;
+  mCharset.SetString("ISO-8859-1");
+  
+
+  // get locale string, use app default if no locale specified
+  if (NULL == locale) {
+    nsILocaleService *localeService;
+
+    res = nsComponentManager::CreateInstance(kLocaleServiceCID, NULL, 
+                                             nsILocaleService::GetIID(), (void**)&localeService);
+    if (NS_SUCCEEDED(res)) {
+      nsILocale *appLocale;
+      res = localeService->GetApplicationLocale(&appLocale);
+	    localeService->Release();
+      if (NS_SUCCEEDED(res)) {
+        res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+        if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
+          mAppLocale.SetString(aLocaleUnichar); // cache app locale name
+        }
+        appLocale->Release();
+      }
+    }
+  }
+  else {
+    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+  }
+
+  // Get a script code and charset name from locale, if available
+  if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
+    mLocale.SetString(aLocaleUnichar); // cache locale name
+    nsAllocator::Free(aLocaleUnichar);
+
+    nsCOMPtr <nsIMacLocale> macLocale;
+    res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, 
+                                             nsIMacLocale::GetIID(), getter_AddRefs(macLocale));
+    if (NS_SUCCEEDED(res)) {
+      res = macLocale->GetPlatformLocale(&mLocale, &mScriptcode, &mLangcode, &mRegioncode);
+    }
+
+    nsCOMPtr <nsIPlatformCharset> platformCharset;
+    res = nsComponentManager::CreateInstance(kPlatformCharsetCID, NULL, 
+                                             nsIPlatformCharset::GetIID(), getter_AddRefs(platformCharset));
+    if (NS_SUCCEEDED(res)) {
+      PRUnichar* mappedCharset = NULL;
+      res = platformCharset->GetDefaultCharsetForLocale(mLocale.GetUnicode(), &mappedCharset);
+      if (NS_SUCCEEDED(res) && mappedCharset) {
+        mCharset.SetString(mappedCharset);
+        nsAllocator::Free(mappedCharset);
+      }
+    }
+  }
+  
+  return res;
+}
+
 // performs a locale sensitive date formatting operation on the time_t parameter
 nsresult nsDateTimeFormatMac::FormatTime(nsILocale* locale, 
                                       const nsDateFormatSelector  dateFormatSelector, 
@@ -235,12 +317,11 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   DateTimeRec macDateTime;
   Str255 timeString, dateString;
   int32 dateTime;	
-  short scriptcode = smSystemScript;
-  short langcode = langEnglish;
-  short regioncode = verUS;
-  nsString aCharset("ISO-8859-1");	//TODO: should be "MacRoman", need to get this from locale
   nsresult res;
 
+  // set up locale data
+  (void) Initialize(locale);
+  
   // return, nothing to format
   if (dateFormatSelector == kDateFormatNone && timeFormatSelector == kTimeFormatNone) {
     stringOut.SetString("");
@@ -273,28 +354,8 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
 
   ::DateToSeconds( &macDateTime, (unsigned long *) &dateTime);
   
-
-  // Get a script code and a charset name
-  if (locale != nsnull) {
-    PRUnichar *aLocaleUnichar; 
-    nsString aLocale;
-    nsString aCategory("NSILOCALE_TIME");
-    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
-    if (NS_SUCCEEDED(res)) {
-      aLocale.SetString(aLocaleUnichar);
-      //TODO: Get a charset name from a script code.
-      nsCOMPtr <nsIMacLocale> macLocale;
-      res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, kIMacLocaleIID, getter_AddRefs(macLocale));
-      if (NS_SUCCEEDED(res)) {
-        res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode, &regioncode);
-      }
-    }    
-  }
-  if (smJapanese == scriptcode)
-  	aCharset.SetString("Shift_JIS");	//Temporary until bug5561 fix: make Japanese testable.
-
-  Handle itl1Handle = (Handle) GetItl1Resource(scriptcode, regioncode);
-  Handle itl0Handle = (Handle) GetItl0Resource(scriptcode, regioncode);
+  Handle itl1Handle = (Handle) GetItl1Resource(mScriptcode, mRegioncode);
+  Handle itl0Handle = (Handle) GetItl0Resource(mScriptcode, mRegioncode);
   NS_ASSERTION(itl1Handle && itl0Handle, "failed to get itl handle");
 
   // get time string
@@ -352,7 +413,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res);
   if(NS_SUCCEEDED(res) && ccm) {
     nsCOMPtr <nsIUnicodeDecoder> decoder;
-    res = ccm->GetUnicodeDecoder(&aCharset, getter_AddRefs(decoder));
+    res = ccm->GetUnicodeDecoder(&mCharset, getter_AddRefs(decoder));
     if(NS_SUCCEEDED(res) && decoder) {
       PRInt32 unicharLength = 0;
       PRInt32 srcLength = (PRInt32) PL_strlen(aBuffer);

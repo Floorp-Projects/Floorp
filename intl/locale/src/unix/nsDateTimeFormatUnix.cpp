@@ -23,17 +23,96 @@
 #include "nsDateTimeFormatUnix.h"
 #include "nsIComponentManager.h"
 #include "nsLocaleCID.h"
+#include "nsILocaleService.h"
+#include "nsIPlatformCharset.h"
 #include "nsIPosixLocale.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 
 static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
-static NS_DEFINE_IID(kPosixLocaleFactoryCID, NS_POSIXLOCALEFACTORY_CID);
-static NS_DEFINE_IID(kIPosixLocaleIID, NS_IPOSIXLOCALE_IID);
+static NS_DEFINE_CID(kPosixLocaleFactoryCID, NS_POSIXLOCALEFACTORY_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_IID(kICharsetConverterManagerIID, NS_ICHARSETCONVERTERMANAGER_IID);
+static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 
 NS_IMPL_ISUPPORTS(nsDateTimeFormatUnix, kIDateTimeFormatIID);
+
+// init this interface to a specified locale
+nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
+{
+  PRUnichar *aLocaleUnichar = NULL;
+  nsString aCategory("NSILOCALE_TIME");
+  nsresult res = NS_OK;
+
+  // use cached info if match with stored locale
+  if (NULL == locale) {
+    if (mLocale.Length() && mLocale.EqualsIgnoreCase(mAppLocale)) {
+      return NS_OK;
+    }
+  }
+  else {
+    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+    if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
+      if (mLocale.Length() && mLocale.EqualsIgnoreCase(aLocaleUnichar)) {
+        nsAllocator::Free(aLocaleUnichar);
+        return NS_OK;
+      }
+      nsAllocator::Free(aLocaleUnichar);
+    }
+  }
+
+  mCharset.SetString("ISO-8859-1");
+  PL_strncpy(mPlatformLocale, "en_US", kPlatformLocaleLength+1);
+
+  // get locale name string, use app default if no locale specified
+  if (NULL == locale) {
+    nsILocaleService *localeService;
+
+    res = nsComponentManager::CreateInstance(kLocaleServiceCID, NULL, 
+                                             nsILocaleService::GetIID(), (void**)&localeService);
+    if (NS_SUCCEEDED(res)) {
+      nsILocale *appLocale;
+      res = localeService->GetApplicationLocale(&appLocale);
+	    localeService->Release();
+      if (NS_SUCCEEDED(res)) {
+        res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+        if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
+          mAppLocale.SetString(aLocaleUnichar); // cache app locale name
+        }
+        appLocale->Release();
+      }
+    }
+  }
+  else {
+    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+  }
+
+  if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
+    mLocale.SetString(aLocaleUnichar); // cache locale name
+    nsAllocator::Free(aLocaleUnichar);
+
+    nsCOMPtr <nsIPosixLocale> posixLocale;
+    res = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID, NULL, 
+                                             nsIPosixLocale::GetIID(), getter_AddRefs(posixLocale));
+    if (NS_SUCCEEDED(res)) {
+      res = posixLocale->GetPlatformLocale(&mLocale, mPlatformLocale, kPlatformLocaleLength+1);
+    }
+
+    nsCOMPtr <nsIPlatformCharset> platformCharset;
+    res = nsComponentManager::CreateInstance(kPlatformCharsetCID, NULL, 
+                                             nsIPlatformCharset::GetIID(), getter_AddRefs(platformCharset));
+    if (NS_SUCCEEDED(res)) {
+      PRUnichar* mappedCharset = NULL;
+      res = platformCharset->GetDefaultCharsetForLocale(mLocale.GetUnicode(), &mappedCharset);
+      if (NS_SUCCEEDED(res) && mappedCharset) {
+        mCharset.SetString(mappedCharset);
+        nsAllocator::Free(mappedCharset);
+      }
+    }
+  }
+
+  return res;
+}
 
 nsresult nsDateTimeFormatUnix::FormatTime(nsILocale* locale, 
                                       const nsDateFormatSelector  dateFormatSelector, 
@@ -52,32 +131,13 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
                                         nsString& stringOut) 
 {
 #define NSDATETIME_FORMAT_BUFFER_LEN  80
-#define kPlatformLocaleLength 64
   char strOut[NSDATETIME_FORMAT_BUFFER_LEN];
   char fmtD[NSDATETIME_FORMAT_BUFFER_LEN], fmtT[NSDATETIME_FORMAT_BUFFER_LEN];
-  char platformLocale[kPlatformLocaleLength+1];
-  nsString aCharset("ISO-8859-1");	//TODO: need to get this from locale
   nsresult res;
+
   
-  PL_strncpy(platformLocale, "en_US", kPlatformLocaleLength+1);
-  if (locale != nsnull) {
-    PRUnichar *aLocaleUnichar;
-    nsString aLocale;
-    nsString aCategory("NSILOCALE_TIME");
-
-    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
-    if (NS_FAILED(res)) {
-      return res;
-    }
-    aLocale.SetString(aLocaleUnichar);
-
-    nsCOMPtr <nsIPosixLocale> posixLocale;
-    res = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID, NULL, kIPosixLocaleIID, getter_AddRefs(posixLocale));
-    if (NS_FAILED(res)) {
-      return res;
-    }
-    res = posixLocale->GetPlatformLocale(&aLocale, platformLocale, kPlatformLocaleLength+1);
-  }
+  // set up locale data
+  (void) Initialize(locale);
 
   // set date format
   switch (dateFormatSelector) {
@@ -123,7 +183,7 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
 
   // generate data/time string
   char *old_locale = setlocale(LC_TIME, NULL);
-  (void) setlocale(LC_TIME, platformLocale);
+  (void) setlocale(LC_TIME, mPlatformLocale);
   if (PL_strlen(fmtD) && PL_strlen(fmtT)) {
     PL_strncat(fmtD, " ", NSDATETIME_FORMAT_BUFFER_LEN);
     PL_strncat(fmtD, fmtT, NSDATETIME_FORMAT_BUFFER_LEN);
@@ -144,7 +204,7 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
   NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res);
   if(NS_SUCCEEDED(res) && ccm) {
     nsCOMPtr<nsIUnicodeDecoder> decoder;
-    res = ccm->GetUnicodeDecoder(&aCharset, getter_AddRefs(decoder));
+    res = ccm->GetUnicodeDecoder(&mCharset, getter_AddRefs(decoder));
     if (NS_SUCCEEDED(res) && decoder) {
       PRInt32 unicharLength = 0;
       PRInt32 srcLength = (PRInt32) PL_strlen(strOut);
