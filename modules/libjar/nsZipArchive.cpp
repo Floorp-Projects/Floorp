@@ -40,7 +40,9 @@
 #define ZFILE_CREATE    PR_WRONLY | PR_CREATE_FILE
 #define READTYPE  PRInt32
 #else
+#ifdef WIN32
 #include "windows.h"
+#endif
 #include "zipstub.h"
 #undef NETSCAPE       // undoes prtypes damage in zlib.h
 #define ZFILE_CREATE  "wb"
@@ -751,7 +753,7 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
     else
       zerr = Z_STREAM_END;
 
-#ifdef STANDALONE 
+#if defined STANDALONE && defined WIN32
     while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
     {
       TranslateMessage(&msg);
