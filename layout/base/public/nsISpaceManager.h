@@ -132,8 +132,39 @@ public:
   /**
    * Add a rectangular region of unavailable space. The space is relative to
    * the local coordinate system.
+   *
+   * The region is tagged with a frame, which is used to identify the region.
+   * The frame must not be NULL
+   *
+   * Returns PR_TRUE if successful and PR_FALSE otherwise, e.g. there is already
+   * a region tagged with aFrame
    */
-  virtual void AddRectRegion(const nsRect& aUnavailableSpace, nsIFrame* aFrame) = 0;
+  virtual PRBool AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace) = 0;
+
+  /**
+   * Reshape the rectangular region associated with aFrame. The new space is
+   * relative to the local coordinate system.
+   *
+   * Returns PR_TRUE if successful and PR_FALSE otherwise, e.g. there is no region
+   * tagged with aFrame
+   */
+  virtual PRBool ReshapeRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace) = 0;
+
+  /**
+   * Offset the region associated with aFrame by the specified amount.
+   *
+   * Returns PR_TRUE if successful and PR_FALSE otherwise, e.g. there is no region
+   * tagged with aFrame
+   */
+  virtual PRBool OffsetRegion(nsIFrame* aFrame, nscoord dx, nscoord dy) = 0;
+
+  /**
+   * Remove the region associated with aFrane.
+   *
+   * Returns PR_TRUE if successful and PR_FALSE otherwise, e.g. there is no region
+   * tagged with aFrame
+   */
+  virtual PRBool RemoveRegion(nsIFrame* aFrame) = 0;
 
   /**
    * Clears the list of regions representing the unavailable space.
