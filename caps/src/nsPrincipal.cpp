@@ -205,7 +205,8 @@ static nsVector* getTempCertificates(const unsigned char **certChain,
   cert = (CERTCertificate *)certArray->Get(0);
   rv = CERT_VerifyCert(handle, cert, PR_TRUE, 
                        certUsageObjectSigner,
-                       PR_FALSE, NULL, NULL);
+                       (int64)PR_FALSE, (void *)NULL, 
+                       (CERTVerifyLog *)NULL);
   if (rv != SECSuccess) {
      // Free the certificates and mark this principal as not trusted.
      destroyCertificates(certArray);
