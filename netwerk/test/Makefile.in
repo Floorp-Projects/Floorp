@@ -49,7 +49,6 @@ CPPSRCS		= \
         TestHttp.cpp \
 		urltest.cpp \
 		TestFileInput2.cpp \
-		TestRes.cpp \
 		TestCallbacks.cpp \
 		TestDBMAccess.cpp \
 		TestMCTransport.cpp \
