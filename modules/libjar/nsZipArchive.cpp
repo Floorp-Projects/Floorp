@@ -548,7 +548,14 @@ PRInt32 nsZipArchive::CopyItemToDisk( const nsZipItem* aItem, const char* aOutna
     return ZIP_ERR_MEMORY;
 
   //-- find start of file in archive
+
+#ifndef STANDALONE 
   if ( PR_Seek( mFd, aItem->offset, PR_SEEK_SET ) != (PRInt32)aItem->offset )
+#else
+  // For standalone, PR_Seek() is stubbed with fseek(), which returns 0
+  // if successfull, otherwise a non-zero.
+  if ( PR_Seek( mFd, aItem->offset, PR_SEEK_SET ) != 0)
+#endif
   {
     status = ZIP_ERR_CORRUPT;
     goto cleanup;
@@ -658,7 +665,13 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
   }
 
   //-- find start of file in archive
+#ifndef STANDALONE 
   if ( PR_Seek( mFd, aItem->offset, PR_SEEK_SET ) != (PRInt32)aItem->offset )
+#else
+  // For standalone, PR_Seek() is stubbed with fseek(), which returns 0
+  // if successfull, otherwise a non-zero.
+  if ( PR_Seek( mFd, aItem->offset, PR_SEEK_SET ) != 0)
+#endif
   {
     status = ZIP_ERR_CORRUPT;
     goto cleanup;
