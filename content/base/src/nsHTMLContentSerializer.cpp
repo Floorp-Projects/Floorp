@@ -39,8 +39,10 @@
 #include "nsHTMLContentSerializer.h"
 
 #include "nsIDOMElement.h"
+#include "nsIDOMText.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
@@ -57,6 +59,8 @@
 #include "nsIHTMLContent.h"
 #include "nsIParserService.h"
 #include "nsContentUtils.h"
+#include "nsILineBreakerFactory.h"
+#include "nsLWBrkCIID.h"
 
 #define kIndentStr NS_LITERAL_STRING("  ")
 #define kLessThan NS_LITERAL_STRING("<")
@@ -64,6 +68,7 @@
 #define kEndTag NS_LITERAL_STRING("</")
 
 static const char kMozStr[] = "moz";
+static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
 
 static const PRInt32 kLongLineLen = 128;
 
@@ -78,12 +83,14 @@ nsresult NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer)
 }
 
 nsHTMLContentSerializer::nsHTMLContentSerializer()
+: mIndent(0),
+  mColPos(0),
+  mInBody(PR_FALSE),
+  mAddSpace(PR_FALSE),
+  mMayIgnoreLineBreakSequence(PR_FALSE),
+  mInCDATA(PR_FALSE),
+  mNeedLineBreaker(PR_TRUE)
 {
-  mColPos = 0;
-  mIndent = 0;
-  mAddSpace = PR_FALSE;
-  mInBody = PR_FALSE;
-  mInCDATA = PR_FALSE;
 }
 
 nsHTMLContentSerializer::~nsHTMLContentSerializer()
@@ -151,6 +158,28 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
 {
   NS_ENSURE_ARG(aText);
 
+  if (mNeedLineBreaker) {
+    mNeedLineBreaker = PR_FALSE;
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aText->GetOwnerDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
+    if (document) {
+      document->GetLineBreaker(getter_AddRefs(mLineBreaker));
+    }
+
+    if (!mLineBreaker) {
+      nsresult rv;
+      nsCOMPtr<nsILineBreakerFactory> lf(do_GetService(kLWBrkCID, &rv));
+      if (NS_SUCCEEDED(rv)) {
+        rv = lf->GetBreaker(nsString(), getter_AddRefs(mLineBreaker));
+        // Ignore result value.
+        // If we are unable to obtain a line breaker,
+        // we will use our simple fallback logic.
+      }
+    }
+  }
+
   nsAutoString data;
 
   nsresult rv;
@@ -186,6 +215,236 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
   }
 
   return NS_OK;
+}
+
+void nsHTMLContentSerializer::AppendWrapped_WhitespaceSequence(
+                               nsASingleFragmentString::const_char_iterator &aPos,
+                               const nsASingleFragmentString::const_char_iterator aEnd,
+                               const nsASingleFragmentString::const_char_iterator aSequenceStart,
+                               PRBool &aMayIgnoreStartOfLineWhitespaceSequence,
+                               nsAString &aOutputStr)
+{
+  // Handle the complete sequence of whitespace.
+  // Continue to iterate until we find the first non-whitespace char.
+  // Updates "aPos" to point to the first unhandled char.
+  // Also updates the aMayIgnoreStartOfLineWhitespaceSequence flag,
+  // as well as the other "global" state flags.
+
+  PRBool sawBlankOrTab = PR_FALSE;
+  PRBool leaveLoop = PR_FALSE;
+
+  do {
+    switch (*aPos) {
+      case ' ':
+      case '\t':
+        sawBlankOrTab = PR_TRUE;
+        // no break
+      case '\n':
+        ++aPos;
+        // do not increase mColPos,
+        // because we will reduce the whitespace to a single char
+        break;
+      default:
+        leaveLoop = PR_TRUE;
+        break;
+    }
+  } while (!leaveLoop && aPos < aEnd);
+
+  if (mAddSpace) {
+    // if we had previously been asked to add space,
+    // our situation has not changed
+  }
+  else if (!sawBlankOrTab && mMayIgnoreLineBreakSequence) {
+    // nothing to do
+    mMayIgnoreLineBreakSequence = PR_FALSE;
+  }
+  else if (aMayIgnoreStartOfLineWhitespaceSequence) {
+    // nothing to do
+    aMayIgnoreStartOfLineWhitespaceSequence = PR_FALSE;
+  }
+  else {
+    if (sawBlankOrTab) {
+      if (mColPos + 1 >= mMaxColumn) {
+        // no much sense in delaying, we only have one slot left,
+        // let's write a break now
+        aOutputStr.Append(mLineBreak);
+        mColPos = 0;
+      }
+      else {
+        // do not write out yet, we may write out either a space or a linebreak
+        // let's delay writing it out until we know more
+
+        mAddSpace = PR_TRUE;
+        ++mColPos; // eat a slot of available space
+      }
+    }
+    else {
+      // Asian text usually does not contain spaces, therefore we should not
+      // transform a linebreak into a space.
+      // Since we only saw linebreaks, but no spaces or tabs,
+      // let's write a linebreak now.
+      aOutputStr.Append(mLineBreak);
+      mMayIgnoreLineBreakSequence = PR_TRUE;
+      mColPos = 0;
+    }
+  }
+}
+
+void nsHTMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
+                               nsASingleFragmentString::const_char_iterator &aPos,
+                               const nsASingleFragmentString::const_char_iterator aEnd,
+                               const nsASingleFragmentString::const_char_iterator aSequenceStart,
+                               PRBool &aMayIgnoreStartOfLineWhitespaceSequence,
+                               nsAString& aOutputStr)
+{
+  mMayIgnoreLineBreakSequence = PR_FALSE;
+  aMayIgnoreStartOfLineWhitespaceSequence = PR_FALSE;
+
+  // Handle the complete sequence of non-whitespace in this block
+  // Iterate until we find the first whitespace char or an aEnd condition
+  // Updates "aPos" to point to the first unhandled char.
+  // Also updates the aMayIgnoreStartOfLineWhitespaceSequence flag,
+  // as well as the other "global" state flags.
+
+  PRBool thisSequenceStartsAtBeginningOfLine = !mColPos;
+  PRBool onceAgainBecauseWeAddedBreakInFront;
+  PRBool foundWhitespaceInLoop;
+
+  do {
+    onceAgainBecauseWeAddedBreakInFront = PR_FALSE;
+    foundWhitespaceInLoop = PR_FALSE;
+
+    do {
+      if (*aPos == ' ' || *aPos == '\t' || *aPos == '\n') {
+        foundWhitespaceInLoop = PR_TRUE;
+        break;
+      }
+
+      ++aPos;
+      ++mColPos;
+    } while (mColPos < mMaxColumn && aPos < aEnd);
+
+    if (aPos == aEnd || foundWhitespaceInLoop) {
+      // there is enough room for the complete block we found
+
+      if (mAddSpace) {
+        aOutputStr.Append(PRUnichar(' '));
+        mAddSpace = PR_FALSE;
+      }
+
+      aOutputStr.Append(aSequenceStart, aPos - aSequenceStart);
+      // We have not yet reached the max column, we will continue to
+      // fill the current line in the next outer loop iteration.
+    }
+    else { // mColPos == mMaxColumn
+      if (!thisSequenceStartsAtBeginningOfLine && mAddSpace) {
+        // We can avoid to wrap.
+
+        aOutputStr.Append(mLineBreak);
+        mAddSpace = PR_FALSE;
+        aPos = aSequenceStart;
+        mColPos = 0;
+        thisSequenceStartsAtBeginningOfLine = PR_TRUE;
+        onceAgainBecauseWeAddedBreakInFront = PR_TRUE;
+      }
+      else {
+        // we must wrap
+
+        PRBool foundWrapPosition = PR_FALSE;
+
+        if (mLineBreaker) { // we have a line breaker helper object
+          PRUint32 wrapPosition;
+          PRBool needMoreText;
+          nsresult rv;
+
+          rv = mLineBreaker->Prev(aSequenceStart,
+                                  (aEnd - aSequenceStart),
+                                  (aPos - aSequenceStart) + 1,
+                                  &wrapPosition,
+                                  &needMoreText);
+          if (NS_SUCCEEDED(rv) && !needMoreText && wrapPosition > 0) {
+            foundWrapPosition = PR_TRUE;
+          }
+          else {
+            rv = mLineBreaker->Next(aSequenceStart,
+                                    (aEnd - aSequenceStart),
+                                    (aPos - aSequenceStart),
+                                    &wrapPosition,
+                                    &needMoreText);
+            if (NS_SUCCEEDED(rv) && !needMoreText && wrapPosition > 0) {
+              foundWrapPosition = PR_TRUE;
+            }
+          }
+
+          if (foundWrapPosition) {
+            if (mAddSpace) {
+              aOutputStr.Append(PRUnichar(' '));
+              mAddSpace = PR_FALSE;
+            }
+
+            aOutputStr.Append(aSequenceStart, wrapPosition);
+            aOutputStr.Append(mLineBreak);
+            aPos = aSequenceStart + wrapPosition;
+            mColPos = 0;
+            aMayIgnoreStartOfLineWhitespaceSequence = PR_TRUE;
+            mMayIgnoreLineBreakSequence = PR_TRUE;
+          }
+        }
+
+        if (!mLineBreaker || !foundWrapPosition) {
+          // try some simple fallback logic
+          // go forward up to the next whitespace position,
+          // in the worst case this will be all the rest of the data
+
+          do {
+            if (*aPos == ' ' || *aPos == '\t' || *aPos == '\n') {
+              break;
+            }
+
+            ++aPos;
+            ++mColPos;
+          } while (aPos < aEnd);
+
+          if (mAddSpace) {
+            aOutputStr.Append(PRUnichar(' '));
+            mAddSpace = PR_FALSE;
+          }
+
+          aOutputStr.Append(aSequenceStart, aPos - aSequenceStart);
+        }
+      }
+    }
+  } while (onceAgainBecauseWeAddedBreakInFront);
+}
+
+void 
+nsHTMLContentSerializer::AppendToStringWrapped(const nsASingleFragmentString& aStr,
+                                               nsAString& aOutputStr,
+                                               PRBool aTranslateEntities)
+{
+  nsASingleFragmentString::const_char_iterator pos, end, sequenceStart;
+
+  aStr.BeginReading(pos);
+  aStr.EndReading(end);
+
+  // if the current line already has text on it, such as a tag,
+  // leading whitespace is significant
+
+  PRBool mayIgnoreStartOfLineWhitespaceSequence = !mColPos;
+
+  while (pos < end) {
+    sequenceStart = pos;
+
+    // if beginning of a whitespace sequence
+    if (*pos == ' ' || *pos == '\n' || *pos == '\t') {
+      AppendWrapped_WhitespaceSequence(pos, end, sequenceStart, 
+        mayIgnoreStartOfLineWhitespaceSequence, aOutputStr);
+    }
+    else { // any other non-whitespace char
+      AppendWrapped_NonWhitespaceSequence(pos, end, sequenceStart, 
+        mayIgnoreStartOfLineWhitespaceSequence, aOutputStr);
+    }
+  }
 }
 
 NS_IMETHODIMP
@@ -429,6 +688,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   if (name.get() == nsHTMLAtoms::br && mPreLevel > 0
       && (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre)) {
     AppendToString(mLineBreak, aStr);
+    mMayIgnoreLineBreakSequence = PR_TRUE;
     mColPos = 0;
     return NS_OK;
   }
@@ -439,6 +699,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
   if (LineBreakBeforeOpen(name, hasDirtyAttr)) {
     AppendToString(mLineBreak, aStr);
+    mMayIgnoreLineBreakSequence = PR_TRUE;
     mColPos = 0;
     mAddSpace = PR_FALSE;
   }
@@ -501,6 +762,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
   if (LineBreakAfterOpen(name, hasDirtyAttr)) {
     AppendToString(mLineBreak, aStr);
+    mMayIgnoreLineBreakSequence = PR_TRUE;
     mColPos = 0;
   }
 
@@ -570,6 +832,7 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
 
   if (LineBreakBeforeClose(name, hasDirtyAttr)) {
     AppendToString(mLineBreak, aStr);
+    mMayIgnoreLineBreakSequence = PR_TRUE;
     mColPos = 0;
     mAddSpace = PR_FALSE;
   }
@@ -586,6 +849,7 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
 
   if (LineBreakAfterClose(name, hasDirtyAttr)) {
     AppendToString(mLineBreak, aStr);
+    mMayIgnoreLineBreakSequence = PR_TRUE;
     mColPos = 0;
   }
 
@@ -621,152 +885,6 @@ nsHTMLContentSerializer::AppendToString(const PRUnichar aChar,
   mColPos += 1;
 
   aOutputStr.Append(aChar);
-}
-
-void 
-nsHTMLContentSerializer::AppendToStringWrapped(const nsASingleFragmentString& aStr,
-                                               nsAString& aOutputStr,
-                                               PRBool aTranslateEntities)
-{
-  // indicates a space has been seen, position is stored in lastSpace
-  PRBool    spaceSeen = PR_FALSE;
-
-  // indicates non-whitespace has been seen, position is stored in lastChar
-  PRBool    charSeen = PR_FALSE;
-
-  PRBool    addLineBreak = PR_FALSE;
-
-  nsASingleFragmentString::const_char_iterator pos, end, segStart, lastSpace, lastChar;
-
-  aStr.BeginReading(pos);
-  aStr.EndReading(end);
-  if (pos == end) {
-    return;
-  }
-
-  // if the current line already has text on it, such as a tag,
-  // leading whitespace is significant, so add a space back
-  // after skipping over the whitespace
-  if ((mColPos > 0) && (*pos == ' ' || *pos == '\n')) {
-    mAddSpace = PR_TRUE;
-  }
-
-  for (;;) {
-
-    // skip leading spaces
-    while (*pos == ' ' || *pos == '\n') {
-      ++pos;
-      if (pos == end) {
-        return;
-      }
-      lastSpace = pos;
-    }
-    segStart = pos;
-    lastChar = pos;
-    spaceSeen = PR_FALSE;
-    charSeen = PR_TRUE;
-
-    if (addLineBreak) {
-      aOutputStr.Append(mLineBreak);
-      mAddSpace = PR_FALSE;
-      mColPos = 0;
-    }
-
-    while (mColPos < mMaxColumn) {
-      PRUnichar c = *pos;
-
-      if (c == ' ') {
-        lastSpace = pos;
-        spaceSeen = PR_TRUE;
-      }
-      else if (c == '\n') {
-        if (charSeen) {
-          if (mAddSpace) {
-            aOutputStr.Append(PRUnichar(' '));
-          }
-
-          aOutputStr.Append(segStart, lastChar - segStart + 1);
-          charSeen = PR_FALSE;
-        }
-        mAddSpace = PR_TRUE;
-        segStart = pos;
-        spaceSeen = PR_FALSE;
-        ++segStart;
-      }
-      else {
-        lastChar = pos;
-        charSeen = PR_TRUE;
-      }
-
-      ++pos;
-      ++mColPos;
-
-      if (pos == end) {
-        if (!charSeen || pos == segStart) {
-          // nothing to append, or nothing meaningful to append
-          return;
-        }
-        if (mAddSpace) {
-          aOutputStr.Append(PRUnichar(' '));
-          mAddSpace = PR_FALSE;
-        }
-
-        aOutputStr.Append(segStart, lastChar - segStart + 1);
-
-        // if the string ended in whitespace, set mAddSpace to true
-        if (pos != lastChar+1) {
-          mAddSpace = PR_TRUE;
-        }
-        return;
-      }
-    }
-
-    if (spaceSeen) {
-      if (mAddSpace) {
-        aOutputStr.Append(PRUnichar(' '));
-        mAddSpace = PR_FALSE;
-      }
-
-      // write up to the last space encountered
-      aOutputStr.Append(segStart, lastSpace - segStart);
-
-      // back up to that wrapping point for the next run through the loop
-      pos = lastSpace;
-      // add a line break before any more text
-      addLineBreak = PR_TRUE;
-    }
-    else {
-
-      // if we're past the wrapping width with no place to wrap at,
-      // find the next whitespace and wrap there
-      while (pos != end && *pos != ' ' && *pos != '\n') {
-        ++pos;
-      }
-
-      if (mAddSpace) {
-        // whitespace was needed before the next segment, so we can put
-        // a newline instead of a space, and avoid getting a lone line
-        aOutputStr.Append(mLineBreak);
-        addLineBreak = PR_FALSE;
-
-        mColPos = pos - segStart;
-
-        // if the string doesn't end in whitespace, set mAddSpace to false
-        if (pos == end) {
-          mAddSpace = PR_FALSE;
-        }
-      }
-      else {
-        // no choice but to write a long line and wrap immediately after it
-        addLineBreak = PR_TRUE;
-      }
-      aOutputStr.Append(segStart, pos - segStart);
-
-      if (pos == end) {
-        return;
-      }
-    }
-  }
 }
 
 static PRUint16 kValNBSP = 160;
