@@ -1253,7 +1253,7 @@ class nsLineList {
     void splice(iterator position, self_type& x, iterator i)
     {
       NS_ASSERTION(!x.empty(), "Can't insert from empty list.");
-      NS_ASSERTION(position != i && position != i->_mNext,
+      NS_ASSERTION(position != i && position.mCurrent != i->_mNext,
                    "We don't check for this case.");
 
       // remove from |x|
