@@ -496,12 +496,14 @@ BOOL bothFromSameWindow( HWND hwnd1, HWND hwnd2 )
    return (hwnd1 == hwnd2);
 }
 
+extern "C" {
 PVOID APIENTRY WinQueryProperty(HWND hwnd, PCSZ  pszNameOrAtom);
 
 PVOID APIENTRY WinRemoveProperty(HWND hwnd, PCSZ  pszNameOrAtom);
 
 BOOL  APIENTRY WinSetProperty(HWND hwnd, PCSZ  pszNameOrAtom,
                               PVOID pvData, ULONG ulFlags);
+}
 
 static PCSZ GetNSWindowPropName() {
   static ATOM atom = 0;
