@@ -104,7 +104,8 @@ public:
 
   NS_IMETHOD CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
                          PRInt32 aXPos, PRInt32 aYPos, 
-                         const nsString& aPopupType, const nsString& aPopupAlignment,
+                         const nsString& aPopupType, const nsString& anAnchorAlignment,
+                         const nsString& aPopupAlignment,
                          nsIDOMWindow* aWindow) = 0;
 
   /**

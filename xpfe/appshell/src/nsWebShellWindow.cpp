@@ -968,7 +968,8 @@ nsWebShellWindow::ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow**
 NS_IMETHODIMP
 nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
                               PRInt32 aXPos, PRInt32 aYPos, 
-                              const nsString& aPopupType, const nsString& aPopupAlignment,
+                              const nsString& aPopupType, const nsString& anAnchorAlignment,
+                              const nsString& aPopupAlignment,
                               nsIDOMWindow* aWindow)
 {
   nsresult rv = NS_OK;

@@ -240,7 +240,8 @@ public:
   NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode);
   NS_IMETHOD CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
                          PRInt32 aXPos, PRInt32 aYPos, 
-                         const nsString& aPopupType, const nsString& aPopupAlignment,
+                         const nsString& aPopupType, const nsString& anAnchorAlignment, 
+                         const nsString& aPopupAlignment,
                          nsIDOMWindow* aWindow);
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
@@ -1962,11 +1963,13 @@ nsWebShell::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode)
 NS_IMETHODIMP
 nsWebShell::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
                          PRInt32 aXPos, PRInt32 aYPos, 
-                         const nsString& aPopupType, const nsString& aPopupAlignment,
+                         const nsString& aPopupType, const nsString& anAnchorAlignment, 
+                         const nsString& aPopupAlignment,
                          nsIDOMWindow* aWindow)
 {
   if (nsnull != mContainer) {
-    return mContainer->CreatePopup(aElement, aPopupContent, aXPos, aYPos, aPopupType, aPopupAlignment,
+    return mContainer->CreatePopup(aElement, aPopupContent, aXPos, aYPos, aPopupType, 
+                                   anAnchorAlignment, aPopupAlignment,
                                    aWindow);
   }
   return NS_OK;

@@ -355,7 +355,9 @@ GtkMozillaContainer::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* fra
 NS_IMETHODIMP
 GtkMozillaContainer::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
                                  PRInt32 aXPos, PRInt32 aYPos, 
-                                 const nsString& aPopupType, const nsString& aPopupAlignment,
+                                 const nsString& aPopupType, 
+                                 const nsString& anAnchorAlignment,
+                                 const nsString& aPopupAlignment,
                                  nsIDOMWindow* aWindow)
 {
   printf("CreatePopup\n");
