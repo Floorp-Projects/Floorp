@@ -68,6 +68,7 @@ include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+=	\
 		-I$(DIST)/public/security \
+		-I$(DIST)/private/security \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
