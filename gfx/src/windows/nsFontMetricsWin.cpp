@@ -61,6 +61,8 @@
 #include "nsUnicharUtils.h"
 #include "nsUnicodeRange.h"
 
+#define DEFAULT_TTF_SYMBOL_ENCODING "windows-1252"
+
 #define NOT_SETUP 0x33
 static PRBool gIsWIN95OR98 = NOT_SETUP;
 
@@ -1166,6 +1168,26 @@ GetEncoding(const char* aFontName, nsString& aValue)
 // converter for the font whose name is given. The caller holds a reference
 // to the converter, and should take care of the release...
 static nsresult
+GetConverterCommon(nsString& aEncoding, nsIUnicodeEncoder** aConverter)
+{
+  *aConverter = nsnull;
+  nsCOMPtr<nsIAtom> charset;
+  nsresult rv = gCharsetManager->GetCharsetAtom(aEncoding.get(), getter_AddRefs(charset));
+  if (NS_FAILED(rv)) return rv;
+  rv = gCharsetManager->GetUnicodeEncoder(charset, aConverter);
+  if (NS_FAILED(rv)) return rv;
+  return (*aConverter)->SetOutputErrorBehavior((*aConverter)->kOnError_Replace, nsnull, '?');
+}
+
+static nsresult
+GetDefaultConverterForTTFSymbolEncoding(nsIUnicodeEncoder** aConverter)
+{
+  nsAutoString value;
+  value.AssignWithConversion(DEFAULT_TTF_SYMBOL_ENCODING);
+  return GetConverterCommon(value, aConverter);
+}
+
+static nsresult
 GetConverter(const char* aFontName, nsIUnicodeEncoder** aConverter)
 {
   *aConverter = nsnull;
@@ -1173,14 +1195,7 @@ GetConverter(const char* aFontName, nsIUnicodeEncoder** aConverter)
   nsAutoString value;
   nsresult rv = GetEncoding(aFontName, value);
   if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIAtom> charset;
-  rv = gCharsetManager->GetCharsetAtom(value.get(), getter_AddRefs(charset));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = gCharsetManager->GetUnicodeEncoder(charset, aConverter);
-  if (NS_FAILED(rv)) return rv;
-  return (*aConverter)->SetOutputErrorBehavior((*aConverter)->kOnError_Replace, nsnull, '?');
+  return GetConverterCommon(value, aConverter);
 }
 
 // This function uses the charset converter manager to fill the map for the
@@ -1190,11 +1205,14 @@ GetCCMapThroughConverter(const char* aFontName)
 {
   // see if we know something about the converter of this font 
   nsCOMPtr<nsIUnicodeEncoder> converter;
-  if (NS_SUCCEEDED(GetConverter(aFontName, getter_AddRefs(converter)))) {
+  // we don't check "familyNameQuirks" here because we are only generating CCMAP.
+  // the flag will be checked later when the font is about to be loaded.
+  if (NS_SUCCEEDED(GetConverter(aFontName, getter_AddRefs(converter))) ||
+      NS_SUCCEEDED(GetDefaultConverterForTTFSymbolEncoding(getter_AddRefs(converter)))) {
     nsCOMPtr<nsICharRepresentable> mapper(do_QueryInterface(converter));
     if (mapper)
       return MapperToCCMap(mapper);
-  }
+  } 
   return nsnull;
 }
 
@@ -2078,9 +2096,11 @@ nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
           }
           else if (eFontType_NonUnicode == fontType) {
             nsCOMPtr<nsIUnicodeEncoder> converter;
-            if (NS_SUCCEEDED(GetConverter(logFont.lfFaceName, getter_AddRefs(converter)))) {
+            if (NS_SUCCEEDED(GetConverter(logFont.lfFaceName, getter_AddRefs(converter))))
               font = new nsFontWinNonUnicode(&logFont, hfont, ccmap, converter);
-            }
+            else if (mFont.familyNameQuirks)
+              if (NS_SUCCEEDED(GetDefaultConverterForTTFSymbolEncoding(getter_AddRefs(converter))))
+                font = new nsFontWinNonUnicode(&logFont, hfont, ccmap, converter);
           }
         }
       }
