@@ -72,7 +72,16 @@ BOOL Config(CString globalsName, CString DialogTitle, WIDGET* curWidget)
 
 	SetGlobal(globalsName, configField);
 	SetGlobal(targetWid, configField);
-	
+
+	// Making custom config point to files in its own workspace
+	SetGlobal("LargeAnimPath", newDir + "\\Workspace\\AnimLogo\\animlogo32.gif");
+	SetGlobal("LargeStillPath", newDir + "\\Workspace\\AnimLogo\\staticlogo32.gif");
+	SetGlobal("ReadMeFile", newDir + "\\Workspace\\readme.txt");
+	SetGlobal("SidebarPath", newDir + "\\Workspace\\Sidebar\\panels.rdf");
+	SetGlobal("CustomBookmarkFile", newDir + "\\Workspace\\Bkmarks\\bookmarks.html");
+	SetGlobal("ShellBgBitmap", newDir + "\\Workspace\\Autorun\\Shell\\bmps\\install.bmp");
+	SetGlobal("ShellInstallTextFile", newDir + "\\Workspace\\Autorun\\install.txt");
+
 	IsSameCache = FALSE;
 
 	return TRUE;
