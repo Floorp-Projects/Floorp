@@ -1119,7 +1119,7 @@ NS_IMETHODIMP
 nsHTMLInputElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                              PRInt32& aHint) const
 {
-  if ((aAttribute == nsHTMLAtoms::align)) {
+  if ((aAttribute == nsHTMLAtoms::align) || (aAttribute == nsHTMLAtoms::value)) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
   else if ((aAttribute == nsHTMLAtoms::type)) {
