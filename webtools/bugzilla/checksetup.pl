@@ -924,17 +924,15 @@ END
     if (-e 'data/template') {
         print "Removing existing compiled templates ...\n" unless $silent;
 
-        # If File::Path::rmtree reported errors, then I'd use that
-        use File::Find;
-        sub remove {
-            return if $_ eq ".";
-            if (-d $_) {
-                rmdir $_ || die "Couldn't rmdir $_: $!\n";
-            } else {
-                unlink $_ || die "Couldn't unlink $_: $!\n";
-            }
-        }
-        finddepth(\&remove, 'data/template');
+       File::Path::rmtree('data/template');
+
+       #Check that the directory was really removed
+       if(-e 'data/template') {
+           print "\n\n";
+           print "The data/template directory could not be removed. Please\n";
+           print "remove it manually and rerun checksetup.pl.\n\n";
+           exit;
+       }
     }
 
     # Precompile stuff. This speeds up initial access (so the template isn't
@@ -994,7 +992,7 @@ END
 
         use Cwd;
 
-        $::baseDir = getcwd();
+        $::baseDir = cwd();
 
         # Don't hang on templates which use the CGI library
         eval("use CGI qw(-no_debug)");
