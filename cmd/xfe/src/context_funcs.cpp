@@ -791,7 +791,12 @@ fe_SetURLString (MWContext *context, URL_Struct *url)
 {
   XFE_Frame *f = ViewGlue_getFrame(XP_GetNonGridContext(context));
 
+#ifdef ENDER
+  if (f && !(context->type == MWContextEditor
+	  && EDITOR_CONTEXT_DATA(context)->embedded))
+#else
   if (f)
+#endif
     f->notifyInterested(XFE_HTMLView::newURLLoading, url);
 }
 

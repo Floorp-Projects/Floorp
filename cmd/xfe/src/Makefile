@@ -262,6 +262,7 @@ CPPSRCS		+= \
 		  EditorView.cpp \
 		  EditRecentMenu.cpp \
 		  EditTableDialog.cpp \
+		  EmbeddedEditor.cpp \
 		  EmbeddedEditorView.cpp \
 		  PrefsDialogEditor.cpp \
 		  SpellHandler.cpp \

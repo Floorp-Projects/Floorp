@@ -22,7 +22,7 @@
  *  EditorToolbar.cpp --- Toolbar for Editor and HTML Mail Compose.
  *
  *  Created: David Williams <djw@netscape.com>, Feb-7-1997
- *  RCSID: "$Id: EditorToolbar.cpp,v 3.4 1998/08/25 23:10:26 akkana%netscape.com Exp $"
+ *  RCSID: "$Id: EditorToolbar.cpp,v 3.5 1998/09/16 18:26:05 kin%netscape.com Exp $"
  *
  *----------------------------------------------------------------------------
  */
@@ -793,7 +793,12 @@ XFE_AlignmentMenu::update(XFE_Component* dispatcher)
 	//    Do we have a command handler?
 	//
 	if (!m_cmd_handler)
+    {
+      if (dispatcher->isClassOf("Frame"))
 		m_cmd_handler = getParentFrame()->getCommand(m_cmd_id);
+      else if (dispatcher->isClassOf("View"))
+		m_cmd_handler = ((XFE_View *)dispatcher)->getCommand(m_cmd_id);
+    }
 
 	if (m_cmd_handler != NULL)
     {
@@ -903,7 +908,7 @@ public:
 	void setValue(LO_Color* color);
 	void update(XFE_Component* dispatcher = 0);
 protected:
-	void instanciateMenu();
+	void instanciateMenu(XFE_Component* dispatcher = 0);
 	Widget m_arrow;
 	Widget m_label;
 	Widget m_popup;
@@ -1109,15 +1114,20 @@ cm_picker_cb(Widget /*widget*/, XtPointer closure, XtPointer /*cbd*/)
 }
 
 void
-XFE_ColorMenu::instanciateMenu()
+XFE_ColorMenu::instanciateMenu(XFE_Component *dispatcher)
 {
 	Widget     parent = XtParent(m_widget);
-	XFE_Frame* frame = getParentFrame();
+
+	if (!dispatcher)
+		dispatcher = getParentFrame();
 
 	//
 	//    Do we have a command handler?
 	//
-	m_cmd_handler = frame->getCommand(m_cmd_id);
+    if (dispatcher->isClassOf("Frame"))
+		m_cmd_handler = ((XFE_Frame *)dispatcher)->getCommand(m_cmd_id);
+    else if (dispatcher->isClassOf("View"))
+		m_cmd_handler = ((XFE_View *)dispatcher)->getCommand(m_cmd_id);
 
 	if (!m_cmd_handler)
 		return;
@@ -1130,7 +1140,7 @@ XFE_ColorMenu::instanciateMenu()
     XtSetArg(args[n], XtNoverrideRedirect, TRUE); n++;
     XtSetArg(args[n], XtNallowShellResize, TRUE); n++;
     XtSetArg(args[n], XtNsaveUnder, TRUE); n++;
-    XtSetArg(args[n], XtNtransientFor, frame->getBaseWidget()); n++;
+    XtSetArg(args[n], XtNtransientFor, getParentFrame()->getBaseWidget()); n++;
 
 	Widget shell = XtCreatePopupShell("setColorsPopup", 
 									  transientShellWidgetClass,
@@ -1293,10 +1303,15 @@ XFE_ColorMenu::update(XFE_Component* dispatcher)
 	//    Do we have a command handler?
 	//
 	if (!m_cmd_handler)
+    {
+      if (dispatcher->isClassOf("Frame"))
 		m_cmd_handler = getParentFrame()->getCommand(m_cmd_id);
+      else if (dispatcher->isClassOf("View"))
+		m_cmd_handler = ((XFE_View *)dispatcher)->getCommand(m_cmd_id);
+    }
 
 	if (!m_popup)
-		instanciateMenu();
+		instanciateMenu(dispatcher);
 
 	Pixel pixel;
 
@@ -1367,14 +1382,14 @@ make_toolbar(Widget parent, char* name,
 	return toolbar;
 }
 
-XFE_EditorToolbar::XFE_EditorToolbar(XFE_Component* parent_frame,
+XFE_EditorToolbar::XFE_EditorToolbar(XFE_Component* top_level,
 									 XFE_Toolbox *	parent_toolbox,
 									 char*        name,
 									 ToolbarSpec* spec,
 									 Boolean      do_frame) :
-	XFE_ToolboxItem(parent_frame,parent_toolbox)
+	XFE_ToolboxItem(top_level,parent_toolbox)
 {
-	m_toplevel = parent_frame;
+	m_toplevel = top_level;
 	m_update_list = NULL;
 
     m_cmdDispatcher = 0;
@@ -1395,11 +1410,11 @@ XFE_EditorToolbar::XFE_EditorToolbar(XFE_Component* parent_frame,
 	addDragWidget(getBaseWidget());
 	addDragWidget(getChildrenManager());
 
-	parent_frame->registerInterest(XFE_View::chromeNeedsUpdating,
+	top_level->registerInterest(XFE_View::chromeNeedsUpdating,
 								   this,
 								   chrome_update_cb);
 
-	parent_frame->registerInterest(XFE_View::commandNeedsUpdating,
+	top_level->registerInterest(XFE_View::commandNeedsUpdating,
 								   this,
 								   command_update_cb);
 	installDestroyHandler();
