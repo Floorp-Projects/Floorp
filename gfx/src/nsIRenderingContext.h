@@ -119,15 +119,16 @@ public:
    * @param aRect The rectangle to set the clipping rectangle to
    * @param aCombine how to combine this rect with the current clip region.
    *        see the bottom of nsIRenderingContext.h
+   * @return PR_TRUE if the clip region is now empty, else PR_FALSE
    */
-  virtual void SetClipRect(const nsRect& aRect, nsClipCombine aCombine) = 0;
+  virtual PRBool SetClipRect(const nsRect& aRect, nsClipCombine aCombine) = 0;
 
   /**
    * Gets the bounds of the clip region of the RenderingContext
    * @param aRect out parameter to contain the clip region bounds
    *        for the RenderingContext
-   * @return PR_TRUE if the rendering context has a cliprect set
-   *         (i.e. this is the exact clip rect, not a clip region bounds)
+   * @return PR_TRUE if the rendering context has a local cliprect set
+   *         else aRect is undefined
    */
   virtual PRBool GetClipRect(nsRect &aRect) = 0;
 
@@ -136,8 +137,9 @@ public:
    * @param aRegion The region to set the clipping area to
    * @param aCombine how to combine this region with the current clip region.
    *        see the bottom of nsIRenderingContext.h
+   * @return PR_TRUE if the clip region is now empty, else PR_FALSE
    */
-  virtual void SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine) = 0;
+  virtual PRBool SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine) = 0;
 
   /**
    * Gets the current clipping region for the RenderingContext

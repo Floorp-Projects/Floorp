@@ -68,9 +68,9 @@ public:
 
   virtual PRBool IsVisibleRect(const nsRect& aRect);
 
-  virtual void SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
+  virtual PRBool SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
   virtual PRBool GetClipRect(nsRect &aRect);
-  virtual void SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine);
+  virtual PRBool SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine);
   virtual void GetClipRegion(nsIRegion **aRegion);
 
   virtual void SetColor(nscolor aColor);

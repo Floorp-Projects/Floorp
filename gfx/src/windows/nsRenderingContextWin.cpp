@@ -402,9 +402,10 @@ PRBool nsRenderingContextWin :: IsVisibleRect(const nsRect& aRect)
   return PR_TRUE;
 }
 
-void nsRenderingContextWin :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
+PRBool nsRenderingContextWin :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
 {
   nsRect  trect = aRect;
+  int     cliptype;
 
   mStates->mLocalClip = aRect;
 
@@ -419,10 +420,10 @@ void nsRenderingContextWin :: SetClipRect(const nsRect& aRect, nsClipCombine aCo
   {
     PushClipState();
 
-    ::IntersectClipRect(mDC, trect.x,
-                             trect.y,
-                             trect.XMost(),
-                             trect.YMost());
+    cliptype = ::IntersectClipRect(mDC, trect.x,
+                                   trect.y,
+                                   trect.XMost(),
+                                   trect.YMost());
   }
   else if (aCombine == nsClipCombine_kUnion)
   {
@@ -433,17 +434,17 @@ void nsRenderingContextWin :: SetClipRect(const nsRect& aRect, nsClipCombine aCo
                                     trect.XMost(),
                                     trect.YMost());
 
-    ::ExtSelectClipRgn(mDC, tregion, RGN_OR);
+    cliptype = ::ExtSelectClipRgn(mDC, tregion, RGN_OR);
     ::DeleteObject(tregion);
   }
   else if (aCombine == nsClipCombine_kSubtract)
   {
     PushClipState();
 
-    ::ExcludeClipRect(mDC, trect.x,
-                           trect.y,
-                           trect.XMost(),
-                           trect.YMost());
+    cliptype = ::ExcludeClipRect(mDC, trect.x,
+                                 trect.y,
+                                 trect.XMost(),
+                                 trect.YMost());
   }
   else if (aCombine == nsClipCombine_kReplace)
   {
@@ -453,11 +454,16 @@ void nsRenderingContextWin :: SetClipRect(const nsRect& aRect, nsClipCombine aCo
                                     trect.y,
                                     trect.XMost(),
                                     trect.YMost());
-    ::SelectClipRgn(mDC, tregion);
+    cliptype = ::SelectClipRgn(mDC, tregion);
     ::DeleteObject(tregion);
   }
   else
     NS_ASSERTION(FALSE, "illegal clip combination");
+
+  if (cliptype == NULLREGION)
+    return PR_TRUE;
+  else
+    return PR_FALSE;
 }
 
 PRBool nsRenderingContextWin :: GetClipRect(nsRect &aRect)
@@ -471,11 +477,11 @@ PRBool nsRenderingContextWin :: GetClipRect(nsRect &aRect)
     return PR_FALSE;
 }
 
-void nsRenderingContextWin :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine)
+PRBool nsRenderingContextWin :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine)
 {
   nsRegionWin *pRegion = (nsRegionWin *)&aRegion;
-  HRGN hrgn = pRegion->GetHRGN();
-  int cmode;
+  HRGN        hrgn = pRegion->GetHRGN();
+  int         cmode, cliptype;
 
   switch (aCombine)
   {
@@ -501,8 +507,15 @@ void nsRenderingContextWin :: SetClipRegion(const nsIRegion& aRegion, nsClipComb
   {
     mStates->mFlags &= ~FLAG_LOCAL_CLIP_VALID;
     PushClipState();
-    ::ExtSelectClipRgn(mDC, hrgn, cmode);
+    cliptype = ::ExtSelectClipRgn(mDC, hrgn, cmode);
   }
+  else
+    return PR_FALSE;
+
+  if (cliptype == NULLREGION)
+    return PR_TRUE;
+  else
+    return PR_FALSE;
 }
 
 void nsRenderingContextWin :: GetClipRegion(nsIRegion **aRegion)
