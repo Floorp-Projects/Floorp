@@ -781,8 +781,11 @@ nsFileTransport::Process(void)
       case READING: {
           NS_ASSERTION(mTransferAmount >= 0, "bad mTransferAmount in READING");
           PRUint32 writeAmt;
-          // and feed the buffer to the application via the buffer stream:
-          mStatus = mBufferOutputStream->WriteFrom(mSource, mTransferAmount, &writeAmt);
+          // Feed the buffer to the application via the buffer
+          // stream. Note that mTransferAmount can be zero, in which
+          // case, we'll just take as much data as the buffer can give
+          // us.
+          mStatus = mBufferOutputStream->WriteFrom(mSource, mTransferAmount ? mTransferAmount : -1, &writeAmt);
           PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                  ("nsFileTransport: READING [this=%x %s] amt=%d status=%x",
                   this, (const char*)mSpec, writeAmt, mStatus));
@@ -794,7 +797,9 @@ nsFileTransport::Process(void)
               mState = END_READ;
               return;
           }
-          mTransferAmount -= writeAmt;
+          if (mTransferAmount) {
+              mTransferAmount -= writeAmt;
+          }
           PRUint32 offset = mOffset;
           mOffset += writeAmt;
           if (mListener) {
@@ -812,11 +817,6 @@ nsFileTransport::Process(void)
                                       mTotalAmount - mTransferAmount,
                                       mTotalAmount);
               NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected OnProgress failure");
-          }
-
-          if (mTransferAmount == 0) {
-              mState = END_READ;
-              return;
           }
 
           // stay in the READING state
