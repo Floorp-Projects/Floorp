@@ -1483,11 +1483,11 @@ nsXULElement::SetAttributeNS(const nsString& aNamespaceURI,
 {
     nsCOMPtr<nsINodeInfoManager> nimgr;
     nsresult rv = NodeInfo()->GetNodeInfoManager(*getter_AddRefs(nimgr));
-    NS_ENSURE_TRUE(rv, rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsINodeInfo> ni;
     rv = nimgr->GetNodeInfo(aQualifiedName, aNamespaceURI, *getter_AddRefs(ni));
-    NS_ENSURE_TRUE(rv, rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return SetAttribute(ni, aValue, PR_TRUE);
 }
