@@ -26,6 +26,62 @@ function buildDialog()
 {
   var toolbar = window.opener.document.getElementById("nav-bar");
   var cloneToolbarBox = document.getElementById("cloned-bar-container");
+
+  var paletteBox = document.getElementById("palette-box");
+
   var newToolbar = toolbar.cloneNode(true);
   cloneToolbarBox.appendChild(newToolbar);
+
+  // Now build up a palette of items.
+  var currentRow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                            "hbox");
+  currentRow.setAttribute("class", "paletteRow");
+
+  var rowSlot = 0;
+  var rowMax = 4;
+
+  var node = toolbar.palette.firstChild;
+  while (node) {
+    var paletteItem = node.cloneNode(true);
+    if (rowSlot == rowMax) {
+      // Append the old row.
+      paletteBox.appendChild(currentRow);
+
+      // Make a new row.
+      currentRow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                            "hbox");
+      currentRow.setAttribute("class", "paletteRow");
+      rowSlot = 0;
+    } 
+
+    rowSlot++;
+    // Create an enclosure for the item.
+    var enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                            "toolbarpaletteitem");
+    enclosure.setAttribute("align", "center");
+    enclosure.setAttribute("pack", "center");
+    enclosure.setAttribute("flex", "1");
+    enclosure.setAttribute("width", "0");
+    enclosure.setAttribute("minheight", "0");
+    enclosure.setAttribute("minwidth", "0");
+    
+    enclosure.appendChild(paletteItem);
+    currentRow.appendChild(enclosure);
+
+    node = node.nextSibling;
+  }
+
+  if (currentRow) { 
+    // Remaining flex
+    var remainingFlex = rowMax - rowSlot;
+    if (remainingFlex > 0) {
+      var spring = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                            "spacer");
+      spring.setAttribute("flex", remainingFlex);
+      currentRow.appendChild(spring);
+    }
+
+    paletteBox.appendChild(currentRow);
+  }
+
 }

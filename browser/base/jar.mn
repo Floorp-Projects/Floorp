@@ -8,6 +8,7 @@ browser.jar:
         content/browser/utilityOverlay.js            (content/utilityOverlay.js)
         content/browser/customizeToolbar.xul         (content/customizeToolbar.xul)
         content/browser/customizeToolbar.js          (content/customizeToolbar.js)
+        content/browser/customizeToolbar.css         (content/customizeToolbar.css)
 
 classic.jar:
         skin/classic/browser/browser.css             (skin/browser.css)
