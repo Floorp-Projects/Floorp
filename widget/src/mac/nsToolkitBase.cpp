@@ -92,6 +92,8 @@ nsToolkitBase::Init(PRThread * aThread)
   nsresult rv = InitEventQueue(aThread);
   if (NS_FAILED(rv)) return rv;
 
+  nsWidgetAtoms::RegisterAtoms();
+
   mInited = true;
 
   RegisterForSleepWakeNotifcations();
