@@ -365,7 +365,11 @@ nsresult nsSocketTransport::CheckForTimeout (PRIntervalTime aCurrentTime)
     // Enter the socket transport lock...
     nsAutoMonitor mon(mMonitor);
     
-    idleInterval = aCurrentTime - mLastActiveTime;
+    if (aCurrentTime > mLastActiveTime) {
+        idleInterval = aCurrentTime - mLastActiveTime;
+    } else {
+        idleInterval = 0;
+    }
     
     if (mSocketConnectTimeout != PR_INTERVAL_NO_TIMEOUT && mCurrentState  == eSocketState_WaitConnect
         && idleInterval >= mSocketConnectTimeout
