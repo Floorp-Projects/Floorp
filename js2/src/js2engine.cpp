@@ -525,11 +525,11 @@ namespace MetaData {
                     pc += sizeof(int32);
                     int32 offset2 = BytecodeContainer::getOffset(pc);
                     pc += sizeof(int32);
-                    if (offset1 == NotALabel)
+                    if (offset1 == (int32)NotALabel)
                         stdOut << "no finally; ";
                     else
                         stdOut << "(finally) " << offset1 << " --> " << (pc - start) + offset1 << "; ";
-                    if (offset2 == -1)
+                    if (offset2 == (int32)NotALabel)
                         stdOut << "no catch;";
                     else
                         stdOut << "(catch) " << offset2 << " --> " << (pc - start) + offset2;
