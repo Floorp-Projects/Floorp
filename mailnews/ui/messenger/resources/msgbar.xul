@@ -1,0 +1,104 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+<!DOCTYPE window> 
+
+<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
+			xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script language="JavaScript">
+function StartUp()
+{
+	dump("StartUp: MsgAppCore\n");
+   var appCore = XPAppCoresManager.Find("MsgAppCore");
+   if (appCore == null) {
+	 dump("StartUp: Creating AppCore\n");
+     appCore = new MsgAppCore();
+   }
+   dump("AppCore probably found\n");
+   if (appCore != null) {
+	  dump("Initializing AppCore and setting Window\n");
+      appCore.Init("MsgAppCore");
+      appCore.SetWindow(window);
+   }
+}
+
+function OpenURL(url)
+{
+	dump("\n\nOpenURL from XUL\n\n\n");
+	var appCore = new MsgAppCore();
+	if (appCore != null) {
+	  dump("Initializing AppCore and setting Window\n");
+      appCore.Init("MsgAppCore");
+      appCore.SetWindow(window);
+	  appCore.OpenURL(url);
+   }
+}
+
+</html:script>
+
+  <xul:menubar>
+    <xul:menu name="File">
+      <xul:menuitem name="New Message" onClick="NewMessage();"/>
+      <separator/>
+      <xul:menuitem name="Get New Message" onClick="GetMessage();"/>
+      <xul:menuitem name="Subscribe" onClick="Subscribe();"/>
+      <separator/>
+      <xul:menuitem name="Rename Folder.." onClick="RenameFolder();"/>
+      <xul:menuitem name="Empty Trash" onClick="EmptyTrash();"/>
+      <separator/>
+      <xul:menuitem name="Print" onClick="Print();"/>
+      <separator/>
+      <xul:menuitem name="Close" onClick="Close();"/>
+      <xul:menuitem name="Exit" onClick="Exit();"/>
+    </xul:menu>
+    <xul:menu name="Edit">
+      <xul:menuitem name="Delete Message" onClick="DeleteMessage();"/>
+    </xul:menu>
+    <xul:menu name="View">
+      <xul:menuitem name="View Attachments Inline" onClick="ViewAttachInline();"/>
+      <xul:menuitem name="Wrap Long Lines" onClick="WrapLongLines();"/>
+      <separator/>
+      <xul:menuitem name="Page Source" onClick="ViewPageSource();"/>
+      <xul:menuitem name="Page Info" onClick="ViewPageInfo();"/>
+    </xul:menu>
+    <xul:menu name="Go">
+      <xul:menuitem name="Next Message" onClick="NextMessage();"/>
+      <xul:menuitem name="Next Unread Message" onClick="NextUnreadMessage();"/>
+    </xul:menu>
+    <xul:menu name="Message">
+      <xul:menuitem name="New Message" onClick="NewMessage();"/>
+      <xul:menuitem name="Reply" onClick="ReplyMessage();"/>
+      <xul:menuitem name="Forward" onClick="ForwardMessage();"/>
+     </xul:menu>
+    <xul:menu name="Demo">
+      <xul:menuitem name="News Message 1" onClick="OpenURL('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com');"/>
+      <xul:menuitem name="News Message 2" onClick="OpenURL('news://news.mozilla.org:119/36BC8178.5BE93104@netscape.com');"/>
+    </xul:menu>
+  </xul:menubar>
+
+    <xul:toolbar>
+          <html:button onClick="GetMessage();" style="background-color:rgb(192,192,192);">
+                          <html:img src="getmsg.gif"/><html:BR/>Get Msg
+          </html:button>
+          <html:button onClick="NewMessage();" style="background-color:rgb(192,192,192);">
+                          <html:img src="newmsg.gif"/><html:BR/>New Msg
+          </html:button>
+          <html:button onClick="ReplyMessage();" style="background-color:rgb(192,192,192);">
+                          <html:img src="replymsg.gif"/><html:BR/>Reply
+          </html:button>
+          <html:button onClick="ForwardMessage();" style="background-color:rgb(192,192,192);">
+                          <html:img src="fwdmsg.gif"/><html:BR/>Forward
+          </html:button>
+          <html:button onClick="DeleteMessage();" style="background-color:rgb(192,192,192);">
+                          <html:img src="delmsg.gif"/><html:BR/>Delete
+          </html:button>
+          <html:button onClick="OpenURL('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com');" style="background-color:rgb(192,192,192);">
+                          <html:img src="getmsg.gif"/><html:BR/>Load Msg
+          </html:button>
+          <html:a style="position:relative; direction:rtl; right:3; top: 2px;" href="http://www.netscape.com">
+                  <html:img alt="Throbber!" border=0 src="resource:/res/throbber/anims00.gif"/>
+          </html:a>
+    </xul:toolbar>
+    
+</xul:window>
+
