@@ -185,7 +185,8 @@ static const PRUint32 kLazyWriteTimeout = 2000; //msec
 NS_IMPL_ISUPPORTS3(nsPermissionManager, nsIPermissionManager, nsIObserver, nsISupportsWeakReference)
 
 nsPermissionManager::nsPermissionManager()
- : mHostCount(0)
+ : mHostCount(0),
+   mChangedList(PR_FALSE)
 {
 }
 
