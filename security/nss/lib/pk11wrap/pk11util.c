@@ -336,6 +336,15 @@ SECMOD_DeleteInternalModule(char *name) {
     	    newModule = SECMOD_CreateModule(NULL, SECMOD_FIPS_NAME,
 				NULL, SECMOD_FIPS_FLAGS);
 	}
+	if (newModule) {
+	    newModule->libraryParams = 
+	     PORT_ArenaStrdup(newModule->arena,mlp->module->libraryParams);
+	    rv = SECMOD_AddModule(newModule);
+	    if (rv != SECSuccess) {
+		SECMOD_DestroyModule(newModule);
+		newModule = NULL;
+	    }
+	}
 	if (newModule == NULL) {
 	    SECMODModuleList *last = NULL,*mlp2;
 	   /* we're in pretty deep trouble if this happens...Security
@@ -354,15 +363,12 @@ SECMOD_DeleteInternalModule(char *name) {
 	   SECMOD_ReleaseWriteLock(moduleLock);
 	   return SECFailure; 
 	}
-	newModule->libraryParams = 
-	     PORT_ArenaStrdup(newModule->arena,mlp->module->libraryParams);
 	pendingModule = oldModule = internalModule;
 	internalModule = NULL;
 	SECMOD_DestroyModule(oldModule);
  	SECMOD_DeletePermDB(mlp->module);
 	SECMOD_DestroyModuleListElement(mlp);
 	internalModule = newModule; /* adopt the module */
-	SECMOD_AddModule(internalModule);
     }
     return rv;
 }
