@@ -24,10 +24,21 @@ RANLIB = echo
 #.c.o:
 #      $(CC) -c -MD $*.d $(CFLAGS) $<
 
-CPU_ARCH = x86 # XXX fixme
+CPU_ARCH = $(shell uname -m)
+ifeq (86,$(findstring 86,$(CPU_ARCH)))
+CPU_ARCH = x86
+endif
 GFX_ARCH = x
 
 OS_CFLAGS = -DXP_UNIX -DSVR4 -DSYSV -D_BSD_SOURCE -DPOSIX_SOURCE -DLINUX
 OS_LIBS = -lm -lc
 
 ASFLAGS += -x assembler-with-cpp
+
+ifeq ($(CPU_ARCH),alpha)
+
+# Ask the C compiler on alpha linux to let us work with denormalized
+# double values, which are required by the ECMA spec.
+
+OS_CFLAGS += -mieee
+endif
