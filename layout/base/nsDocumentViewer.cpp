@@ -67,6 +67,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
+#include "nsIDocShellTreeOwner.h"
 #include "nsIDocShell.h"
 #include "nsIFrameDebug.h"
 
@@ -1558,72 +1559,48 @@ NS_IMETHODIMP DocumentViewerImpl::SetHintCharacterSet(const PRUnichar* aHintChar
   return NS_OK;
 }
 
-// XXX: poor error checking
 NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
 {
+   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mContainer));
+   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 
-  // XXX: for now, just call the webshell's SizeToContent
-  nsCOMPtr<nsIWebShell> webShell;
-  webShell = do_QueryInterface(mContainer);
-  if (webShell)  
-  {
-    return webShell->SizeToContent();
-  }
-  else {
-    return NS_ERROR_FAILURE;
-  }
+   nsCOMPtr<nsIDocShellTreeItem> docShellParent;
+   docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
 
-#ifdef NEW_DOCSHELL_INTERFACES
+   // It's only valid to access this from a top frame.  Doesn't work from 
+   // sub-frames.
+   if(docShellParent)
+      return NS_ERROR_FAILURE;
 
-  // get the presentation shell
-  nsCOMPtr<nsIPresShell> presShell;
-  NS_ENSURE_SUCCESS(GetPresShell(*(getter_AddRefs(presShell))), NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+   nsCOMPtr<nsIPresShell> presShell;
+   GetPresShell(*getter_AddRefs(presShell));
+   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-  nsRect  shellArea;
-  PRInt32 width, height;
-  float   pixelScale;
-  NS_ENSURE_SUCCESS(presShell->ResizeReflow(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE), 
-                    NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(presShell->ResizeReflow(NS_UNCONSTRAINEDSIZE,
+      NS_UNCONSTRAINEDSIZE), NS_ERROR_FAILURE);
 
-  // so how big is it?
-  nsCOMPtr<nsIPresContext> presContext;
-  NS_ENSURE_SUCCESS(GetPresContext(*(getter_AddRefs(presContext))), 
-                    NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
-  presContext->GetVisibleArea(shellArea);
-  presContext->GetTwipsToPixels(&pixelScale);
-  width = PRInt32((float)shellArea.width*pixelScale);
-  height = PRInt32((float)shellArea.height*pixelScale);
+   nsCOMPtr<nsIPresContext> presContext;
+   GetPresContext(*getter_AddRefs(presContext));
+   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-  // if we're the outermost webshell for this window, size the window
-  /* XXX: how do we do this now?
-  if (mContainer) 
-  {
-    nsCOMPtr<nsIBrowserWindow> browser = do_QueryInterface(mContainer);
-    if (browser) 
-    {
-      nsCOMPtr<nsIDocShell> browserWebShell;
-      PRInt32 oldX, oldY, oldWidth, oldHeight,
-              widthDelta, heightDelta;
-      nsRect  windowBounds;
+   nsRect  shellArea;
+   PRInt32 width, height;
+   float   pixelScale;
 
-      GetBounds(oldX, oldY, oldWidth, oldHeight);
-      widthDelta = width - oldWidth;
-      heightDelta = height - oldHeight;
-      browser->GetWindowBounds(windowBounds);
-      browser->SizeWindowTo(windowBounds.width + widthDelta,
-                            windowBounds.height + heightDelta,
-                            PR_FALSE, PR_FALSE);
-    }
-  }
-  */
-  NS_ASSERTION(PR_FALSE, "NOT YET IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
-  //return NS_OK;
+   // so how big is it?
+   presContext->GetVisibleArea(shellArea);
+   presContext->GetTwipsToPixels(&pixelScale);
+   width = PRInt32((float)shellArea.width*pixelScale);
+   height = PRInt32((float)shellArea.height*pixelScale);
 
-#endif
+   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+   docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
+   NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
 
+   NS_ENSURE_SUCCESS(treeOwner->SizeShellTo(docShellAsItem, width, height),
+      NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 // nsIDOMSelectionListener interface
 NS_IMETHODIMP DocumentViewerImpl::NotifySelectionChanged(void)
