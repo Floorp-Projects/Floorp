@@ -83,19 +83,7 @@ ifeq ($(MOZ_GFX_TOOLKIT),os2)
 LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/os2 
 endif
 
-ifeq ($(MOZ_GFX_TOOLKIT),gtk)
-LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/gtk 
-endif
-
-ifeq ($(MOZ_GFX_TOOLKIT),xlib)
-LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/gtk 
-endif
-
-ifeq ($(MOZ_GFX_TOOLKIT),beos)
-LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/gtk 
-endif
-
-ifeq ($(MOZ_GFX_TOOLKIT),qt)
+ifneq (,$(filter gtk gtk2 xlib beos qt, $(MOZ_WIDGET_TOOLKIT)))
 LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/gtk 
 endif
 
