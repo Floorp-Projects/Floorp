@@ -67,19 +67,8 @@ nsMsgMailSession::~nsMsgMailSession()
 
 }
 
-nsresult nsMsgMailSession:: Init()
+nsresult nsMsgMailSession::Init()
 {
-	nsresult rv;
-
-    rv = nsComponentManager::CreateInstance(kMsgAccountManagerCID,
-                                            NULL,
-                                            nsCOMTypeInfo<nsIMsgAccountManager>::GetIID(),
-                                            (void **)&m_accountManager);
-    if (NS_FAILED(rv))
-		return rv;
-
-    m_accountManager->LoadAccounts();
-
 	mListeners = new nsVoidArray();
 	if(!mListeners)
 		return NS_ERROR_OUT_OF_MEMORY;
@@ -91,11 +80,14 @@ nsresult nsMsgMailSession:: Init()
 // nsIMsgMailSession
 nsresult nsMsgMailSession::GetCurrentIdentity(nsIMsgIdentity ** aIdentity)
 {
-  nsresult rv=NS_ERROR_UNEXPECTED;
-  nsCOMPtr<nsIMsgAccount> defaultAccount;
+  nsresult rv;
 
-  if (m_accountManager)
-    rv = m_accountManager->GetDefaultAccount(getter_AddRefs(defaultAccount));
+  nsCOMPtr<nsIMsgAccountManager> accountManager;
+  rv = GetAccountManager(getter_AddRefs(accountManager));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIMsgAccount> defaultAccount;
+  rv = accountManager->GetDefaultAccount(getter_AddRefs(defaultAccount));
   if (NS_FAILED(rv)) return rv;
   
   rv = defaultAccount->GetDefaultIdentity(aIdentity);
@@ -108,10 +100,13 @@ nsresult nsMsgMailSession::GetCurrentIdentity(nsIMsgIdentity ** aIdentity)
 nsresult nsMsgMailSession::GetCurrentServer(nsIMsgIncomingServer ** aServer)
 {
   nsresult rv=NS_ERROR_UNEXPECTED;
-  nsCOMPtr<nsIMsgAccount> defaultAccount;
-  if (m_accountManager)
-    rv = m_accountManager->GetDefaultAccount(getter_AddRefs(defaultAccount));
 
+  nsCOMPtr<nsIMsgAccountManager> accountManager;
+  rv = GetAccountManager(getter_AddRefs(accountManager));
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIMsgAccount> defaultAccount;
+  rv = accountManager->GetDefaultAccount(getter_AddRefs(defaultAccount));
   if (NS_FAILED(rv)) return rv;
 
   //if successful aServer will be addref'd by GetIncomingServer
@@ -123,7 +118,17 @@ nsresult nsMsgMailSession::GetCurrentServer(nsIMsgIncomingServer ** aServer)
 nsresult nsMsgMailSession::GetAccountManager(nsIMsgAccountManager* *aAM)
 {
   if (!aAM) return NS_ERROR_NULL_POINTER;
-  
+
+  if (!m_accountManager) {
+    nsresult rv;
+    rv = nsComponentManager::CreateInstance(kMsgAccountManagerCID,
+                                            NULL,
+                                            NS_GET_IID(nsIMsgAccountManager),
+                                            (void **)&m_accountManager);
+    if (NS_FAILED(rv)) return rv;
+    m_accountManager->LoadAccounts();
+  }
+    
   *aAM = m_accountManager;
   NS_IF_ADDREF(*aAM);
   return NS_OK;
