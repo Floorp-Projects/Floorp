@@ -52,12 +52,9 @@
 
 #ifdef XP_PC
 #include <direct.h>
-#include "nsIPrefMigration.h"
 #endif
 
-#ifdef XP_MAC
 #include "nsIPrefMigration.h"
-#endif
 
 // included for XPlatform coding 
 #include "nsFileStream.h"
@@ -120,17 +117,14 @@ static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 #ifndef NECKO
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 #else
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 
-
-#if defined(XP_PC) || defined(XP_MAC)
 static NS_DEFINE_IID(kIPrefMigration_IID, NS_IPrefMigration_IID);
 static NS_DEFINE_CID(kPrefMigration_CID, NS_PrefMigration_CID);
-#endif
 
 class nsProfile: public nsIProfile,
                  public nsIShutdownListener
