@@ -565,14 +565,16 @@ calendarManager.prototype.refreshAllRemoteCalendars = function calMan_refreshAll
       //check their remote attribute, if its true, call retrieveAndSaveRemoteCalendar()
       if( SubNodes[i].getAttribute( "http://home.netscape.com/NC-rdf#remote" ) == "true" )
       {
-         throbberElement.setAttribute("busy", "true")
+         if (throbberElement)
+            throbberElement.setAttribute("busy", "true")
          this.retrieveAndSaveRemoteCalendar( SubNodes[i] );
          gNextSubNodeToRefresh = i+1;
          return;
       }
    }
    gNextSubNodeToRefresh = 0;
-   throbberElement.setAttribute("busy", "false")
+   if (throbberElement)
+      throbberElement.setAttribute("busy", "false")
 }
 
 /*
