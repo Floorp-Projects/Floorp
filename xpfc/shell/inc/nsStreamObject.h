@@ -18,11 +18,11 @@
 
 #include "nscore.h"
 #include "nsIFactory.h"
-#include "nsIVector.h"
-#include "nsIIterator.h"
-#include "nsIStreamManager.h"
+#include "nsIStreamObject.h"
+#include "nsIStreamListener.h"
 
-class nsStreamManager : public nsIStreamManager 
+class nsStreamObject : public nsIStreamObject,
+                       public nsIStreamListener
 {
 public:
 
@@ -30,8 +30,8 @@ public:
    * Constructor and Destructor
    */
 
-  nsStreamManager();
-  ~nsStreamManager();
+  nsStreamObject();
+  ~nsStreamObject();
 
   /**
    * ISupports Interface
@@ -44,21 +44,24 @@ public:
    */
   NS_IMETHOD Init();
 
-  NS_IMETHOD LoadURL(nsIWebViewerContainer * aWebViewerContainer,
-                     const nsString& aURLSpec, 
-                     nsIPostData * aPostData,
-                     nsIID *aDTDIID = nsnull,
-                     nsIID *aSinkIID = nsnull);
+  NS_IMETHOD OnStartBinding(nsIURL * aURL, const char *aContentType);
+  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
+  NS_IMETHOD OnStatus(nsIURL* aURL, const nsString &aMsg) ;
+  NS_IMETHOD OnStopBinding(nsIURL * aURL, 
+			               PRInt32 aStatus, 
+			               const nsString &aMsg);
 
-private:
-  nsIURL * mUrl;
-  nsIDTD * mDTD;
-  nsIContentSink * mSink;
-  nsIVector * mStreamObjects;
+  NS_IMETHOD GetBindInfo(nsIURL * aURL);
+  NS_IMETHOD OnDataAvailable(nsIURL * aURL,
+      			             nsIInputStream *aIStream, 
+                             PRInt32 aLength);
 
 public:
   nsIParser * mParser;
-
+  nsIURL * mUrl;
+  nsIDTD * mDTD;
+  nsIContentSink * mSink;
+  nsIStreamListener * mStreamListener;
 };
 
 

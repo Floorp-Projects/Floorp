@@ -15,6 +15,7 @@ EXPORTS = \
 	nsIShellInstance.h \
     nsIWebViewerContainer.h\
     nsIStreamManager.h \
+    nsIStreamObject.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \

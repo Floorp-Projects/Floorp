@@ -40,6 +40,7 @@
 #include "nsMenuManager.h"
 #include "nsToolbarManager.h"
 #include "nsStreamManager.h"
+#include "nsStreamObject.h"
 #include "nsVector.h"
 #include "nsVectorIterator.h"
 #include "nsStack.h"
@@ -63,6 +64,8 @@ static NS_DEFINE_IID(kCMenuContainer,             NS_MENUCONTAINER_CID);
 static NS_DEFINE_IID(kCMenuManager,               NS_MENU_MANAGER_CID);
 static NS_DEFINE_IID(kCStreamManager,             NS_STREAM_MANAGER_CID);
 static NS_DEFINE_IID(kIStreamManager,             NS_ISTREAM_MANAGER_IID);
+static NS_DEFINE_IID(kCStreamObject,              NS_STREAM_OBJECT_CID);
+static NS_DEFINE_IID(kIStreamObject,              NS_ISTREAM_OBJECT_IID);
 static NS_DEFINE_IID(kCXPFCDTD,                   NS_IXPFCXML_DTD_IID);
 static NS_DEFINE_IID(kCXPFCContentSink,           NS_XPFCXMLCONTENTSINK_IID);
 static NS_DEFINE_IID(kCXPFCToolbar,               NS_XPFC_TOOLBAR_CID);
