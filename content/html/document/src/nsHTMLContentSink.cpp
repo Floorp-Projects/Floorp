@@ -202,8 +202,7 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 #define NS_SINK_FLAG_FRAMES_ENABLED       0x10
 #define NS_SINK_FLAG_CAN_INTERRUPT_PARSER 0x20 //Interrupt parsing when mMaxTokenProcessingTime is exceeded
 #define NS_SINK_FLAG_DYNAMIC_LOWER_VALUE  0x40 // Lower the value for mNotificationInterval and mMaxTokenProcessingTime
-#define NS_SINK_FLAG_IS_BASE_HREF_SET     0x80 //Set a flag as soon as Base Href is set for the document
-#define NS_SINK_FLAG_FORM_ON_STACK        0x100
+#define NS_SINK_FLAG_FORM_ON_STACK        0x80
 
 #define NS_DELAY_FOR_WINDOW_CREATION  500000  // 1/2 second fudge factor for window creation
 #define NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE 200 //200 determined empirically to provide good user response without
@@ -4062,18 +4061,13 @@ HTMLContentSink::ProcessBaseHref(const nsAString& aBaseHref)
   rv = NS_NewURI(getter_AddRefs(baseHrefURI), aBaseHref, nsnull);
   if (NS_FAILED(rv)) return;
 
-  // Setting "BASE URL" from the last BASE tag appearing in HEAD or if there is
-  // no BASE tag inside HEAD, then the first one appearing in BODY, if there 
-  // is any.
-
-  if (!(mFlags & NS_SINK_FLAG_IS_BASE_HREF_SET)  || nsnull == mBody) {  // Either it's a BASE tag inside HEAD
-                                             // or the first BASE tag inside BODY
+  // Setting "BASE URL" from the last BASE tag appearing in HEAD.
+  if (!mBody) {
     rv = mDocument->SetBaseURL(baseHrefURI); // The document checks if it is legal to set this base
     if (NS_SUCCEEDED(rv)) {
       NS_RELEASE(mDocumentBaseURL);
       mDocument->GetBaseURL(mDocumentBaseURL);
     }
-    mFlags |= NS_SINK_FLAG_IS_BASE_HREF_SET;
   }
   else {  // NAV compatibility quirk
     nsCOMPtr<nsIScriptSecurityManager> securityManager = 
