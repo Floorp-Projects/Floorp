@@ -84,6 +84,14 @@ nsHTMLContentSerializer::nsHTMLContentSerializer()
 
 nsHTMLContentSerializer::~nsHTMLContentSerializer()
 {
+  NS_ASSERTION(mOLStateStack.Count() == 0, "Expected OL State stack to be empty");
+  if (mOLStateStack.Count() > 0){
+    for (PRInt32 i = 0; i < mOLStateStack.Count(); i++){
+      olState* state = (olState*)mOLStateStack[i];
+      delete state;
+      mOLStateStack.RemoveElementAt(i);
+    }
+  }
 }
 
 nsresult
@@ -101,7 +109,7 @@ nsHTMLContentSerializer::GetParserService(nsIParserService** aParserService)
 
 NS_IMETHODIMP 
 nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
-                              nsIAtom* aCharSet)
+                              nsIAtom* aCharSet, PRBool aIsCopying)
 {
   mFlags = aFlags;
   if (!aWrapColumn) {
@@ -111,6 +119,8 @@ nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
     mMaxColumn = aWrapColumn;
   }
 
+  mIsCopying = aIsCopying;
+  mIsFirstChildOfOL = PR_FALSE;
   mDoFormat = (mFlags & nsIDocumentEncoder::OutputFormatted) ? PR_TRUE
                                                              : PR_FALSE;
   mBodyOnly = (mFlags & nsIDocumentEncoder::OutputBodyOnly) ? PR_TRUE
@@ -346,6 +356,11 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
         continue;
     }
 
+    if ( mIsCopying && mIsFirstChildOfOL && (aTagName == nsHTMLAtoms::li) && 
+         (attrName.get() == nsHTMLAtoms::value)){
+      // This is handled separately in SerializeLIValueAttribute()
+      continue;
+    }
     PRBool isJS = IsJavaScript(attrName, valueStr);
     
     if (((attrName.get() == nsHTMLAtoms::href) || 
@@ -434,6 +449,40 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   name->GetUnicode(&sharedName);
   AppendToString(sharedName, -1, aStr);
 
+  // Need to keep track of OL and LI elements in order to get ordinal number 
+  // for the LI.
+  if (mIsCopying && name.get() == nsHTMLAtoms::ol){
+    // We are copying and current node is an OL;
+    // Store it's start attribute value in olState->startVal.
+    nsAutoString start;
+    PRInt32 startAttrVal = 0;
+    aElement->GetAttribute(NS_LITERAL_STRING("start"), start);
+    if (!start.IsEmpty()){
+      PRInt32 rv = 0;
+      startAttrVal = start.ToInteger(&rv);
+      //If OL has "start" attribute, first LI element has to start with that value
+      //Therefore subtracting 1 as all the LI elements are incrementing it before using it;
+      //In failure of ToInteger(), default StartAttrValue to 0.
+      if (NS_SUCCEEDED(rv))
+        startAttrVal--; 
+      else
+        startAttrVal = 0;
+    }
+    olState* state = new olState(startAttrVal, PR_TRUE);
+    if (state)
+      mOLStateStack.AppendElement(state);
+  }
+
+  if (mIsCopying && name.get() == nsHTMLAtoms::li) {
+    mIsFirstChildOfOL = IsFirstChildOfOL(aElement);
+    if (mIsFirstChildOfOL){
+      // If OL is parent of this LI, serialize attributes in different manner.
+      SerializeLIValueAttribute(aElement, aStr);
+    }
+  }
+
+  // Even LI passed above have to go through this 
+  // for serializing attributes other than "value".
   SerializeAttributes(content, name, aStr);
 
   AppendToString(kGreaterThan, aStr);
@@ -482,6 +531,17 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
     mPreLevel--;
   }
 
+  if (mIsCopying && (name.get() == nsHTMLAtoms::ol)){
+    NS_ASSERTION((mOLStateStack.Count() > 0), "Cannot have an empty OL Stack");
+    /* Though at this point we must always have an state to be deleted as all 
+    the OL opening tags are supposed to push an olState object to the stack*/
+    if (mOLStateStack.Count() > 0) {
+      olState* state = (olState*)mOLStateStack.ElementAt(mOLStateStack.Count() -1);
+      mOLStateStack.RemoveElementAt(mOLStateStack.Count() -1);
+      delete state;
+    }
+  }
+  
   const PRUnichar* sharedName;
   name->GetUnicode(&sharedName);
 
@@ -1001,4 +1061,103 @@ nsHTMLContentSerializer::HasLongLines(const nsString& text, PRInt32& aLastNewlin
     start = eol+1;
   }
   return rv;
+}
+
+void 
+nsHTMLContentSerializer::SerializeLIValueAttribute(nsIDOMElement* aElement,
+                                                   nsAWritableString& aStr)
+{
+  // We are copying and we are at the "first" LI node of OL in selected range.
+  // It may not be the first LI child of OL but it's first in the selected range.
+  // Note that we get into this condition only once per a OL.
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
+  PRBool found = PR_FALSE;
+  nsIDOMNode* currNode = node;
+  nsAutoString valueStr;
+  PRInt32 offset = 0;
+  olState defaultOLState(0, PR_FALSE);
+  olState* state = nsnull;
+  if (mOLStateStack.Count() > 0) 
+    state = (olState*)mOLStateStack.ElementAt(mOLStateStack.Count()-1);
+  /* Though we should never reach to a "state" as null or mOLStateStack.Count() == 0 
+  at this point as all LI are supposed to be inside some OL and OL tag should have 
+  pushed a state to the olStateStack.*/
+  if (!state || mOLStateStack.Count() == 0)
+    state = &defaultOLState;
+  PRInt32 startVal = state->startVal;
+  state->isFirstListItem = PR_FALSE;
+  // Traverse previous siblings until we find one with "value" attribute.
+  // offset keeps track of how many previous siblings we had tocurrNode traverse.
+  while (currNode && !found) {
+    nsCOMPtr<nsIDOMElement> currElement = do_QueryInterface(currNode);
+    // currElement may be null if it were a text node.
+    if (currElement) {
+      nsAutoString tagName;
+      currElement->GetTagName(tagName);
+      if (tagName.EqualsIgnoreCase("LI")) {
+        currElement->GetAttribute(NS_LITERAL_STRING("value"), valueStr);
+        if (valueStr.IsEmpty())
+          offset++;
+        else {
+          found = PR_TRUE;
+          PRInt32 rv = 0;
+          startVal = valueStr.ToInteger(&rv); 
+        }
+      }
+    }
+    currNode->GetPreviousSibling(&currNode);
+  }
+  // If LI was not having "value", Set the "value" attribute for it.
+  // Note that We are at the first LI in the selected range of OL.
+  if (offset == 0 && found) {
+    // offset = 0 => LI itself has the value attribute and we did not need to traverse back.
+    // Just serialize value attribute like other tags.
+    SerializeAttr(nsAutoString(), NS_LITERAL_STRING("value"), valueStr, aStr, PR_FALSE);
+  }
+  else if (offset == 1 && !found) {
+    /*(offset = 1 && !found) means either LI is the first child node of OL 
+    and LI is not having "value" attribute. 
+    In that case we would not like to set "value" attribute to reduce the changes.
+    */
+     //do nothing...
+  }
+  else if (offset > 0) {
+    // Set value attribute.
+    nsAutoString valueStr;
+
+    //As serializer needs to use this valueAttr we are creating here, 
+    valueStr.AppendInt(startVal + offset);
+    SerializeAttr(nsAutoString(), NS_LITERAL_STRING("value"), valueStr, aStr, PR_FALSE);
+  }
+}
+
+PRBool
+nsHTMLContentSerializer::IsFirstChildOfOL(nsIDOMElement* aElement){
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
+  nsIDOMNode* parentNode;
+  nsAutoString parentName;
+  node->GetParentNode(&parentNode);
+  if (parentNode)
+    parentNode->GetNodeName(parentName);
+  else
+    return PR_FALSE;
+  
+  if (parentName.EqualsIgnoreCase("OL")) {
+    olState defaultOLState(0, PR_FALSE);
+    olState* state;
+    if (mOLStateStack.Count() > 0) 
+      state = (olState*)mOLStateStack.ElementAt(mOLStateStack.Count()-1);
+    /* Though we should never reach to a "state" as null at this point as 
+    all LI are supposed to be inside some OL and OL tag should have pushed
+    a state to the mOLStateStack.*/
+    if (!state || mOLStateStack.Count() == 0)
+      state = &defaultOLState;
+    
+    if (state->isFirstListItem)
+      return PR_TRUE;
+
+    return PR_FALSE;
+  }
+  else
+    return PR_FALSE;
 }

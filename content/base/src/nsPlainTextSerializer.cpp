@@ -148,7 +148,7 @@ NS_IMPL_ISUPPORTS4(nsPlainTextSerializer,
 
 NS_IMETHODIMP 
 nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
-                            nsIAtom* aCharSet)
+                            nsIAtom* aCharSet, PRBool aIsCopying)
 {
 #ifdef DEBUG
   // Check if the major control flags are set correctly.
@@ -222,7 +222,7 @@ NS_IMETHODIMP
 nsPlainTextSerializer::Initialize(nsAWritableString* aOutString,
                                   PRUint32 aFlags, PRUint32 aWrapCol)
 {
-  nsresult rv = Init(aFlags, aWrapCol, nsnull);
+  nsresult rv = Init(aFlags, aWrapCol, nsnull, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // XXX This is wrong. It violates XPCOM string ownership rules.
@@ -639,15 +639,30 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
   }
   else if (type == eHTMLTag_ol) {
     EnsureVerticalSpace(mULCount + mOLStackIndex == 0 ? 1 : 0);
-         // Must end the current line before we change indention
+    // Must end the current line before we change indention
     if (mOLStackIndex < OLStackSize) {
-      mOLStack[mOLStackIndex++] = 1;  // XXX should get it from the node!
+      nsAutoString startAttr;
+      PRInt32 startVal = 1;
+      if(NS_SUCCEEDED(GetAttributeValue(nsHTMLAtoms::start, startAttr))){
+        PRInt32 rv = 0;
+        startVal = startAttr.ToInteger(&rv);
+        if (NS_FAILED(rv))
+          startVal = 1;
+      }
+      mOLStack[mOLStackIndex++] = startVal;
     }
     mIndent += kIndentSizeList;  // see ul
   }
   else if (type == eHTMLTag_li) {
     if (mTagStackIndex > 1 && mTagStack[mTagStackIndex-2] == eHTMLTag_ol) {
       if (mOLStackIndex > 0) {
+        nsAutoString valueAttr;
+        if(NS_SUCCEEDED(GetAttributeValue(nsHTMLAtoms::value, valueAttr))){
+          PRInt32 rv = 0;
+          PRInt32 valueAttrVal = valueAttr.ToInteger(&rv);
+          if (NS_SUCCEEDED(rv))
+            mOLStack[mOLStackIndex-1] = valueAttrVal;
+        }
         // This is what nsBulletFrame does for OLs:
         mInIndentString.AppendInt(mOLStack[mOLStackIndex-1]++, 10);
       }
