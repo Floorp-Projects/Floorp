@@ -21,7 +21,7 @@
 
 	<html:script src="shared.js" />
 
-	<tree id="findresultstree" style="height: 100%" flex="100%" datasources="rdf:bookmarks rdf:find" ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
+	<tree id="findresultstree" style="height: 100%" flex="100%" datasources="rdf:bookmarks rdf:history rdf:find" ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
 		<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" />
 		<treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
 		<treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
