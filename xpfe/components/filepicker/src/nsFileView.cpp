@@ -130,8 +130,8 @@ nsFileView::~nsFileView()
 nsresult
 nsFileView::Init()
 {
-  mDirectoryAtom = NS_NewAtom("directory");
-  mFileAtom = NS_NewAtom("file");
+  mDirectoryAtom = dont_AddRef(NS_NewAtom("directory"));
+  mFileAtom = dont_AddRef(NS_NewAtom("file"));
   NS_NewISupportsArray(getter_AddRefs(mFileList));
   NS_NewISupportsArray(getter_AddRefs(mDirList));
   NS_NewISupportsArray(getter_AddRefs(mFilteredFiles));
@@ -142,28 +142,22 @@ nsFileView::Init()
 
 // nsISupports implementation
 
-NS_INTERFACE_MAP_BEGIN(nsFileView)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFileView)
-  NS_INTERFACE_MAP_ENTRY(nsIFileView)
-  NS_INTERFACE_MAP_ENTRY(nsIOutlinerView)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsFileView)
-NS_IMPL_RELEASE(nsFileView)
-
+NS_IMPL_ISUPPORTS2(nsFileView, nsIOutlinerView, nsIFileView);
 
 // nsIFileView implementation
 
 NS_IMETHODIMP
 nsFileView::SetShowHiddenFiles(PRBool aShowHidden)
 {
-  mShowHiddenFiles = aShowHidden;
+  if (aShowHidden != mShowHiddenFiles) {
+    mShowHiddenFiles = aShowHidden;
 
-  // This could be better optimized, but since the hidden
-  // file functionality is not currently used, this will be fine.
-  SetDirectory(mDirectoryPath);
-
-  return NS_OK;
+    // This could be better optimized, but since the hidden
+    // file functionality is not currently used, this will be fine.
+    SetDirectory(mDirectoryPath);
+    
+    return NS_OK;
+  }
 }
 
 NS_IMETHODIMP
@@ -347,16 +341,12 @@ nsFileView::GetSelectedFile(nsIFile** aFile)
   if (0 <= currentIndex) {
     PRUint32 dirCount;
     mDirList->Count(&dirCount);
-    if (currentIndex < (PRInt32) dirCount) {
-      nsCOMPtr<nsISupports> elem = dont_AddRef(mDirList->ElementAt(currentIndex));
-      CallQueryInterface(elem, aFile);
-    } else {
-      PRUint32 fileCount;
-      mFilteredFiles->Count(&fileCount);
-      if ((currentIndex - dirCount) < fileCount) {
-        nsCOMPtr<nsISupports> elem = dont_AddRef(mFilteredFiles->ElementAt(currentIndex - dirCount));
-        CallQueryInterface(elem, aFile);
-      }
+    if (currentIndex < (PRInt32) dirCount)
+      mDirList->QueryElementAt(currentIndex, NS_GET_IID(nsIFile), aFile)
+    else {
+      if (currentIndex < mTotalRows)
+        mFilteredFiles->QueryElementAt(currentIndex - dirCount,
+                                       NS_GET_IID(nsIFile), aFile);
     }
   }
 
@@ -401,12 +391,10 @@ nsFileView::GetCellProperties(PRInt32 aRow, const PRUnichar* aColID,
 {
   PRUint32 dirCount;
   mDirList->Count(&dirCount);
-  PRUint32 fileCount;
-  mFilteredFiles->Count(&fileCount);
 
   if (aRow < (PRInt32) dirCount)
     aProperties->AppendElement(mDirectoryAtom);
-  else if ((aRow - dirCount) < fileCount)
+  else if (aRow < mTotalRows)
     aProperties->AppendElement(mFileAtom);
 
   return NS_OK;
@@ -512,7 +500,7 @@ nsFileView::GetCellText(PRInt32 aRow, const PRUnichar* aColID,
   if (aRow < (PRInt32) dirCount) {
     isDirectory = PR_TRUE;
     curFile = do_QueryElementAt(mDirList, aRow);
-  } else if ((aRow - dirCount) < fileCount) {
+  } else if (aRow < mTotalRows) {
     isDirectory = PR_FALSE;
     curFile = do_QueryElementAt(mFilteredFiles, aRow - dirCount);
   } else {
@@ -530,7 +518,8 @@ nsFileView::GetCellText(PRInt32 aRow, const PRUnichar* aColID,
     mDateFormatter->FormatPRTime(nsnull, kDateFormatShort, kTimeFormatSeconds,
                                  lastModDate * 1000, dateString);
     *aCellText = ToNewUnicode(dateString);
-  } else if (NS_LITERAL_STRING("FileSizeColumn").Equals(aColID)) {
+  } else {
+    // file size
     if (isDirectory)
       *aCellText = ToNewUnicode(NS_LITERAL_STRING(""));
     else {
@@ -538,8 +527,7 @@ nsFileView::GetCellText(PRInt32 aRow, const PRUnichar* aColID,
       curFile->GetFileSize(&fileSize);
       *aCellText = ToNewUnicode(nsPrintfCString("%lld", fileSize));
     }
-  } else
-    *aCellText = ToNewUnicode(NS_LITERAL_STRING(""));
+  }
 
   return NS_OK;
 }
@@ -619,21 +607,22 @@ nsFileView::FilterFiles()
   mFilteredFiles->Clear();
   PRInt32 filterCount = mCurrentFilters.Count();
 
+  nsCOMPtr<nsIFile> file;
   for (PRUint32 i = 0; i < count; ++i) {
-    nsCOMPtr<nsIFile> aFile = do_QueryElementAt(mFileList, i);
+    file = do_QueryElementAt(mFileList, i);
     PRBool isHidden = PR_FALSE;
     if (!mShowHiddenFiles)
-      aFile->IsHidden(&isHidden);
+      file->IsHidden(&isHidden);
     
     nsXPIDLString unicodeLeafName;
-    aFile->GetUnicodeLeafName(getter_Copies(unicodeLeafName));
+    file->GetUnicodeLeafName(getter_Copies(unicodeLeafName));
     
     if (!isHidden) {
-      for (PRInt32 i = 0; i < filterCount; ++i) {
+      for (PRInt32 j = 0; j < filterCount; ++j) {
         if (NS_WildCardMatch(unicodeLeafName.get(),
-                             (const PRUnichar*) mCurrentFilters.ElementAt(i),
+                             (const PRUnichar*) mCurrentFilters.ElementAt(j),
                              PR_TRUE) == MATCH) {
-          mFilteredFiles->AppendElement(aFile);
+          mFilteredFiles->AppendElement(file);
           ++filteredFiles;
           break;
         }
@@ -733,10 +722,8 @@ nsFileView::SortArray(nsISupportsArray* aArray)
   // the array is alive.
   nsIFile** array = new nsIFile*[count];
   PRUint32 i;
-  for (i = 0; i < count; ++i) {
-    nsCOMPtr<nsISupports> item = aArray->ElementAt(i);
-    CallQueryInterface(item, &(array[i]));
-  }
+  for (i = 0; i < count; ++i)
+    aArray->QueryElementAt(i, NS_GET_IID(nsIFile), &(array[i]));
 
   NS_QuickSort(array, count, sizeof(nsIFile*), compareFunc, nsnull);
 
