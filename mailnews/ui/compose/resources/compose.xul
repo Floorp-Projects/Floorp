@@ -11,7 +11,7 @@
 	#toolbar {
 		position: fixed;
 		width: 100%;
-		height: 75px;
+		height: 60px;
 		top: 0;
 		right: 0;
 		bottom: auto;
@@ -60,9 +60,7 @@
 	{
 		dump("SendMessage!\n");
 		if (appCore != null) {
-			appCore.SendMessage(document.getElementById('msgFrom').value, 
-					   document.getElementById('msgSmtp').value, 
-					   document.getElementById('msgTo').value, 
+			appCore.SendMessage(document.getElementById('msgTo').value, 
 					   document.getElementById('msgCc').value, 
 					   document.getElementById('msgBcc').value, 
 					   document.getElementById('msgSubject').value, 
@@ -154,26 +152,22 @@
  		<titledbutton src="resource:/res/toolbar/Mail_Options.gif" align="bottom" value="Option" onClick="Options()">	
 		</titledbutton>
 
- 		<titledbutton src="resource:/res/toolbar/TB_Spelling.gif" align="bottom" value="Spelling" onClick="Spelling()">	
+ 		<titledbutton src="resource:/res/toolbar/Mail_Spelling.gif" align="bottom" value="Spelling" onClick="Spelling()">	
 		</titledbutton>
 
- 		<titledbutton src="resource:/res/toolbar/TB_Save.gif" align="bottom" value="Save" onClick="SaveMessage()">	
+ 		<titledbutton src="resource:/res/toolbar/Mail_Save.gif" align="bottom" value="Save" onClick="SaveMessage()">	
 		</titledbutton>
 
  		<titledbutton src="resource:/res/toolbar/TB_Stop.gif" align="bottom" value="Stop" onClick="Stop()">	
 		</titledbutton>
 	</toolbar>
 	<toolbar>
-		From:<html:input id="msgFrom" style="vertical-align: center" type="text" 
-			style="width:200px;" value="qatest02@netscape.com" /> 
-		Smtp:<html:input id="msgSmtp" style="vertical-align: center" type="text" 
-			style="width:200px;" value="nsmail-1.mcom.com" />
-		<html:br/>
 		To:<html:input id="msgTo" style="vertical-align: center" type="text" 
 			style="width:200px;" />   
 		<html:br/>
 		Cc:<html:input id="msgCc" style="vertical-align: center" type="text" 
 			style="width:200px;" />   
+		<html:br/>
 		Bcc:<html:input id="msgBcc" style="vertical-align: center" type="text" 
 			style="width:200px;" />   
 	</toolbar>
