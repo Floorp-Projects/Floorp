@@ -110,13 +110,28 @@ interface nsICharsetConverterManager : nsISupports
     AString getCharsetTitle(in string charset);
 
     /**
-     * Get some data about the given charset.
+     * Get some data about the given charset. This includes whether the 
+     * character encoding may be used for certain purposes, if it is 
+     * multi-byte, and the language code for it. See charsetData.properties
+     * for the source of this data. Some known property names:
+     *    notForBrowser  - not to be used in the bowser.
+     *    notForOutgoing - not to be used for exporting files.
+     *    LangGroup      - language code for charset, e.g. 'he' and 'zh-CN'.
+     *    isMultibyte    - is this a multi-byte charset?
+     * 
+     * @param charset name of the character encoding, e.g. 'iso-8859-15'.
+     * @param prop property desired for the character encoding.
+     * @return the value of the property, for the character encoding.
      */
     AString getCharsetData(in string charset, 
                            in wstring prop);
 
     /**
-     * Get the language group for the given charset.
+     * Get the language group for the given charset. This is similar to 
+     * calling <tt>getCharsetData</tt> with the <tt>prop</tt> "LangGroup".
+     * 
+     * @param charset name of the character encoding, e.g. 'iso-8859-15'.
+     * @return the language code for the character encoding.
      */
     nsIAtom getCharsetLangGroup(in string charset);
     nsIAtom getCharsetLangGroupRaw(in string charset);
