@@ -2103,10 +2103,10 @@ nsMsgIncomingServer::SetSpamSettings(nsISpamSettings *aSpamSettings)
       // remove the MSG_FOLDER_FLAG_JUNK on the old junk folder
       // XXX TODO
       // JUNK MAIL RELATED
-      // in SetFlag, we need to make sure that this folder
+      // (in ClearFlag?) we need to make sure that this folder
       // is not a the junk folder for another account
       // the same goes for set flag.  have fun with all that.
-      oldJunkFolder->SetFlag(~MSG_FOLDER_FLAG_JUNK);
+      oldJunkFolder->ClearFlag(MSG_FOLDER_FLAG_JUNK);
     }
   }
 
