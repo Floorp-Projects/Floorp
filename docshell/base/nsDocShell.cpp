@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 3 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -60,6 +60,7 @@
 #include "nsILocaleService.h"
 #include "nsIPlatformCharset.h"
 #include "nsITimer.h"
+#include "nsIFileStream.h"
 
 // For reporting errors with the console service.
 // These can go away if error reporting is propagated up past nsDocShell.
@@ -936,9 +937,13 @@ NS_IMETHODIMP nsDocShell::FindChildWithName(const PRUnichar *aName,
 
 NS_IMETHODIMP nsDocShell::GetCanGoBack(PRBool* aCanGoBack)
 {
-   NS_ENSURE_STATE(mSessionHistory);  
    NS_ENSURE_ARG_POINTER(aCanGoBack);
    *aCanGoBack = PR_FALSE;
+   if (mSessionHistory == nsnull) {
+      return NS_OK;
+   }
+   
+   NS_ENSURE_STATE(mSessionHistory);  
 
    PRInt32 index = -1;
    NS_ENSURE_SUCCESS(mSessionHistory->GetIndex(&index), NS_ERROR_FAILURE);
@@ -950,9 +955,13 @@ NS_IMETHODIMP nsDocShell::GetCanGoBack(PRBool* aCanGoBack)
 
 NS_IMETHODIMP nsDocShell::GetCanGoForward(PRBool* aCanGoForward)
 {
-   NS_ENSURE_STATE(mSessionHistory);  
    NS_ENSURE_ARG_POINTER(aCanGoForward);
    *aCanGoForward = PR_FALSE;
+   if (mSessionHistory == nsnull) {
+      return NS_OK;
+   }
+
+   NS_ENSURE_STATE(mSessionHistory);  
 
    PRInt32 index = -1;
    PRInt32 count = -1;
@@ -968,6 +977,9 @@ NS_IMETHODIMP nsDocShell::GetCanGoForward(PRBool* aCanGoForward)
 
 NS_IMETHODIMP nsDocShell::GoBack()
 {
+   if (mSessionHistory == nsnull) {
+      return NS_OK;
+   }
    nsCOMPtr<nsIDocShellTreeItem> root;
    GetSameTypeRootTreeItem(getter_AddRefs(root));
    if(root.get() != NS_STATIC_CAST(nsIDocShellTreeItem*, this))
@@ -993,6 +1005,9 @@ NS_IMETHODIMP nsDocShell::GoBack()
 
 NS_IMETHODIMP nsDocShell::GoForward()
 {
+   if (mSessionHistory == nsnull) {
+      return NS_OK;
+   }
    nsCOMPtr<nsIDocShellTreeItem> root;
    GetSameTypeRootTreeItem(getter_AddRefs(root));
    if(root.get() != NS_STATIC_CAST(nsIDocShellTreeItem*, this))
@@ -2286,27 +2301,59 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
    const char* aWindowTarget, nsIInputStream* aPostData, loadType aLoadType)
 {
-   PRBool wasAnchor = PR_FALSE;
-   NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor), NS_ERROR_FAILURE);
-   if(wasAnchor)
-      {
-      SetCurrentURI(aURI);
-      return NS_OK;
-      }
+    PRBool wasAnchor = PR_FALSE;
+    NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor), NS_ERROR_FAILURE);
+    if(wasAnchor)
+    {
+        mLoadType = aLoadType;
+
+        PRBool updateHistory = PR_TRUE;
+
+        // Determine if this type of load should update history   
+        switch(mLoadType)
+        {
+        case loadHistory:
+        case loadReloadNormal:
+        case loadReloadBypassCache:
+        case loadReloadBypassProxy:
+        case loadReloadBypassProxyAndCache:
+            updateHistory = PR_FALSE;
+            break;
+        }
+
+        if (updateHistory)
+        {
+            UpdateCurrentSessionHistory();
+            UpdateCurrentGlobalHistory();
+            PRBool shouldAdd = PR_FALSE;
+
+            ShouldAddToSessionHistory(aURI, &shouldAdd);
+            if(shouldAdd)
+                AddToSessionHistory(aURI, nsnull);
+
+            shouldAdd = PR_FALSE;
+            ShouldAddToGlobalHistory(aURI, &shouldAdd);
+            if(shouldAdd)
+                AddToGlobalHistory(aURI);
+        }
+
+        SetCurrentURI(aURI);
+        return NS_OK;
+    }
    
-   NS_ENSURE_SUCCESS(StopCurrentLoads(), NS_ERROR_FAILURE);
-   // Cancel any timers that were set for this loader.
-   CancelRefreshURITimers();
+    NS_ENSURE_SUCCESS(StopCurrentLoads(), NS_ERROR_FAILURE);
+    // Cancel any timers that were set for this loader.
+    CancelRefreshURITimers();
 
-   mLoadType = aLoadType;
+    mLoadType = aLoadType;
 
-   nsURILoadCommand  loadCmd = nsIURILoader::viewNormal;
-   if(loadLink == aLoadType)
-      loadCmd = nsIURILoader::viewUserClick;
-   NS_ENSURE_SUCCESS(DoURILoad(aURI, aReferrer, loadCmd, aWindowTarget, 
-      aPostData), NS_ERROR_FAILURE);
+    nsURILoadCommand  loadCmd = nsIURILoader::viewNormal;
+    if(loadLink == aLoadType)
+        loadCmd = nsIURILoader::viewUserClick;
+    NS_ENSURE_SUCCESS(DoURILoad(aURI, aReferrer, loadCmd, aWindowTarget, 
+        aPostData), NS_ERROR_FAILURE);
 
-   return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::CreateFixupURI(const PRUnichar* aStringURI, 
@@ -2603,6 +2650,15 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
       // right now, this is only done for http channels.....
       if(aPostData)
          {
+         // XXX it's a bit of a hack to rewind the postdata stream here but
+         // it has to be done in case the post data is being reused multiple
+         // times.
+         nsCOMPtr<nsIRandomAccessStore> postDataRandomAccess(do_QueryInterface(aPostData));
+         if (postDataRandomAccess)
+         {
+             postDataRandomAccess->Seek(PR_SEEK_SET, 0);
+         }
+
 	     nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
          httpChannel->SetRequestMethod(method);
          httpChannel->SetUploadStream(aPostData);
@@ -2627,11 +2683,112 @@ NS_IMETHODIMP nsDocShell::StopCurrentLoads()
 
 NS_IMETHODIMP nsDocShell::ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor)
 {
-   *aWasAnchor = PR_FALSE;
+    NS_ASSERTION(aURI, "null uri arg");
+    NS_ASSERTION(aURI, "null anchor arg");
 
-   //XXXTAB Implement this
-   return NS_OK;
+    if (aURI == nsnull || aWasAnchor == nsnull)
+    {
+        return NS_ERROR_FAILURE;
+    }
+
+    *aWasAnchor = PR_FALSE;
+ 
+    if (!mCurrentURI)
+    {
+        return NS_OK;
+    }
+
+    nsresult rv;
+
+    // NOTE: we assume URIs are absolute for comparison purposes
+
+    nsXPIDLCString currentSpec;
+    NS_ENSURE_SUCCESS(mCurrentURI->GetSpec(getter_Copies(currentSpec)), NS_ERROR_FAILURE);
+ 
+    nsXPIDLCString newSpec;
+    NS_ENSURE_SUCCESS(aURI->GetSpec(getter_Copies(newSpec)), NS_ERROR_FAILURE);
+
+    // Search for hash marks in the current URI and the new URI and
+    // take a copy of everything to the left of the hash for
+    // comparison.
+
+    const char kHash = '#';
+
+    // Split the new URI into a left and right part
+    nsAutoString sNew; sNew.AssignWithConversion(newSpec);
+    nsAutoString sNewLeft;
+    nsAutoString sNewRef;
+    PRInt32 hashNew = sNew.FindChar(kHash);
+    if (hashNew == 0)
+    {
+        return NS_OK; // Strange URI 
+    }
+    else if (hashNew > 0)
+    {
+        sNew.Left(sNewLeft, hashNew);
+        sNew.Right(sNewRef, sNew.Length() - hashNew - 1);
+    }
+    else
+    {
+        sNewLeft = sNew;
+    }
+
+    // Split the current URI in a left and right part
+    nsAutoString sCurrent; sCurrent.AssignWithConversion(currentSpec);
+    nsAutoString sCurrentLeft;
+    PRInt32 hashCurrent = sCurrent.FindChar(kHash);
+    if (hashCurrent == 0)
+    {
+        return NS_OK; // Strange URI 
+    }
+    else if (hashCurrent > 0)
+    {
+        sCurrent.Left(sCurrentLeft, hashCurrent);
+    }
+    else
+    {
+        sCurrentLeft = sCurrent;
+    }
+
+    // Compare the URIs.
+    //
+    // NOTE: this is case sensitive so it won't pick up www.ABC.com and
+    // www.abc.com being the same. It's not possible to do a case-insensitive
+    // comparison because some parts of the URI are case sensitive, and some
+    // are not. e.g. the paths "/Something" and "/something" are two
+    // different places on Unix.
+ 
+    if (sCurrentLeft.CompareWithConversion(sNewLeft, PR_FALSE, -1) != 0)
+    {
+        return NS_OK; // URIs not the same
+    }
+
+    // Both the new and current URIs refer to the same page. We can now
+    // browse to the hash stored in the new URI.
+
+    if (!sNewRef.IsEmpty())
+    {
+        nsCOMPtr<nsIPresShell> shell = nsnull;
+        rv = GetPresShell(getter_AddRefs(shell));
+        if (NS_SUCCEEDED(rv) && shell)
+        {
+            rv = shell->GoToAnchor(sNewRef);
+            if (NS_SUCCEEDED(rv))
+            {
+                *aWasAnchor = PR_TRUE;
+            }
+        }
+    }
+    else
+    {
+        // A bit of a hack - scroll to the top of the page.
+        SetCurScrollPos(ScrollOrientation_Y, 0);
+        *aWasAnchor = PR_TRUE;
+    }
+
+    return NS_OK;
 }
+
 
 NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIChannel* aChannel)
 {
@@ -2671,7 +2828,7 @@ NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIChannel* aChannel)
 
       ShouldAddToSessionHistory(uri, &shouldAdd);
       if(shouldAdd)
-         AddToSessionHistory(uri);
+         AddToSessionHistory(uri, aChannel);
 
       shouldAdd = PR_FALSE;
       ShouldAddToGlobalHistory(uri, &shouldAdd);
@@ -2753,34 +2910,44 @@ NS_IMETHODIMP nsDocShell::ShouldPersistInSessionHistory(nsIURI* aURI,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::AddToSessionHistory(nsIURI* aURI)
+NS_IMETHODIMP nsDocShell::AddToSessionHistory(nsIURI *aURI, nsIChannel *aChannel)
 {
-   PRBool shouldPersist = PR_FALSE;
-   ShouldPersistInSessionHistory(aURI, &shouldPersist);
+    PRBool shouldPersist = PR_FALSE;
+    ShouldPersistInSessionHistory(aURI, &shouldPersist);
 
-   nsCOMPtr<nsISHEntry> entry;
-   if(loadNormalReplace == mLoadType)
-      {
-      PRInt32 index = 0;
-      mSessionHistory->GetIndex(&index);
-      mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(entry));
-      }
+    nsCOMPtr<nsISHEntry> entry;
+    if(loadNormalReplace == mLoadType)
+    {
+        PRInt32 index = 0;
+        mSessionHistory->GetIndex(&index);
+        mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(entry));
+    }
 
-   if(!entry)
-      entry = do_CreateInstance(NS_SHENTRY_PROGID);
-   NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
+    if(!entry)
+        entry = do_CreateInstance(NS_SHENTRY_PROGID);
+    NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsIInputStream> inputStream;  // XXX Need to get this from somewhere
-   nsCOMPtr<nsILayoutHistoryState> layoutState; // XXX Need to get this from somewhere
+    // Get the post data
+    nsCOMPtr<nsIInputStream> inputStream;
+    if (aChannel)
+    {
+        nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
+        if(httpChannel)
+        {
+            httpChannel->GetUploadStream(getter_AddRefs(inputStream));
+        }
+    }
 
-   //Title is set in nsDocShell::SetTitle()
-   NS_ENSURE_SUCCESS(entry->Create(aURI, nsnull, nsnull, 
-      inputStream, layoutState), NS_ERROR_FAILURE);
+    nsCOMPtr<nsILayoutHistoryState> layoutState; // XXX Need to get this from somewhere
 
-   NS_ENSURE_SUCCESS(mSessionHistory->AddEntry(entry, shouldPersist),
-      NS_ERROR_FAILURE);
+    //Title is set in nsDocShell::SetTitle()
+    NS_ENSURE_SUCCESS(entry->Create(aURI, nsnull, nsnull, 
+            inputStream, layoutState), NS_ERROR_FAILURE);
 
-   return NS_OK;
+    NS_ENSURE_SUCCESS(mSessionHistory->AddEntry(entry, shouldPersist),
+            NS_ERROR_FAILURE);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::UpdateCurrentSessionHistory()
