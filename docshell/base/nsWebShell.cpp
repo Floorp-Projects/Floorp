@@ -3242,15 +3242,25 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
             // Try our www.*.com trick.
             nsCAutoString retryHost;
-            if (-1 == dotLoc) {
-                retryHost = "www.";
-                retryHost += hostStr;
-                retryHost += ".com";
-            } else {
-                PRInt32 hostLen = hostStr.Length();
-                if ( ((hostLen - dotLoc) == 3) || ((hostLen - dotLoc) == 4) ) {
+            nsXPIDLCString scheme;
+            rv = aURL->GetScheme(getter_Copies(scheme));
+            if (NS_FAILED(rv)) return rv;
+
+            PRUint32 schemeLen = PL_strlen((const char*)scheme);
+            CBufDescriptor schemeBuf((const char*)scheme, PR_TRUE, schemeLen+1, schemeLen);
+            nsCAutoString schemeStr(schemeBuf);
+
+            if (schemeStr.Find("http") == 0) {
+                if (-1 == dotLoc) {
                     retryHost = "www.";
                     retryHost += hostStr;
+                    retryHost += ".com";
+                } else {
+                    PRInt32 hostLen = hostStr.Length();
+                    if ( ((hostLen - dotLoc) == 3) || ((hostLen - dotLoc) == 4) ) {
+                        retryHost = "www.";
+                        retryHost += hostStr;
+                    }
                 }
             }
 
