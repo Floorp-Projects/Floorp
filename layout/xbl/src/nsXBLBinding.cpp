@@ -48,11 +48,11 @@ public:
 // Static members
   static PRUint32 gRefCnt;
   
-  static nsIAtom* nsXBLBinding::kContentAtom;
-  static nsIAtom* nsXBLBinding::kInterfaceAtom;
-  static nsIAtom* nsXBLBinding::kHandlersAtom;
-  static nsIAtom* nsXBLBinding::kExcludesAtom;
-  static nsIAtom* nsXBLBinding::kInheritsAtom;
+  static nsIAtom* kContentAtom;
+  static nsIAtom* kInterfaceAtom;
+  static nsIAtom* kHandlersAtom;
+  static nsIAtom* kExcludesAtom;
+  static nsIAtom* kInheritsAtom;
 
 // Internal member functions
 protected:
