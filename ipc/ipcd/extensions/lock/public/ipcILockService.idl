@@ -37,8 +37,6 @@
 
 #include "nsISupports.idl"
 
-interface ipcILockNotify;
-
 /**
  * This service provides named interprocess locking.
  */
