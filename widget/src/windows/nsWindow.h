@@ -459,8 +459,8 @@ protected:
 	static UINT		gCurrentKeyboardCP;
 	static HKL		gKeyboardLayout;
 
-  PRBool  mIsInMouseCapture;
-
+    PRBool  mIsInMouseCapture;
+    PRBool  mIsInMouseWheelProcessing;
 
     // Drag & Drop
     nsNativeDragTarget * mNativeDragTarget;
