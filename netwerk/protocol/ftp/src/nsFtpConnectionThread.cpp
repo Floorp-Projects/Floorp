@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Bradley Baetz <bbaetz@cs.mcgill.ca>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -104,7 +104,7 @@ public:
     
     PRUint32 GetBytesTransfered() {return mBytesTransfered;} ;
     void Uploading(PRBool value);
-
+    void RetryConnection();
 
 protected:
 
@@ -117,6 +117,7 @@ protected:
     PRUint32 mBytesTransfered;
     PRPackedBool   mDelayedOnStartFired;
     PRPackedBool   mUploading;
+    PRPackedBool   mRetrying;
     
     nsresult DelayedOnStartRequest(nsIRequest *request, nsISupports *ctxt);
 };
@@ -141,7 +142,7 @@ DataRequestForwarder::DataRequestForwarder()
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder CREATED\n", this));
         
     mBytesTransfered = 0;
-    mUploading = mDelayedOnStartFired = PR_FALSE;
+    mRetrying = mUploading = mDelayedOnStartFired = PR_FALSE;
     NS_INIT_ISUPPORTS();
 }
 
@@ -239,11 +240,28 @@ DataRequestForwarder::DelayedOnStartRequest(nsIRequest *request, nsISupports *ct
     return mListener->OnStartRequest(this, ctxt); 
 }
 
+void
+DataRequestForwarder::RetryConnection()
+{
+    // The problem here is that if we send a second PASV, our listener would
+    // get an OnStop from the socket transport, and fail. So we temporarily
+    // suspend notifications
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder RetryConnection \n", this));
+
+    mRetrying = PR_TRUE;
+}
+
 NS_IMETHODIMP 
 DataRequestForwarder::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
     NS_ASSERTION(mListener, "No Listener Set.");
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder OnStartRequest \n", this)); 
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder OnStartRequest \n[mRetrying=%d]", this, mRetrying)); 
+
+    if (mRetrying) {
+        mRetrying = PR_FALSE;
+        return NS_OK;
+    }
+
     if (!mListener)
         return NS_ERROR_NOT_INITIALIZED;
 
@@ -256,7 +274,10 @@ DataRequestForwarder::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 NS_IMETHODIMP
 DataRequestForwarder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode)
 {
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder OnStopRequest [status=%x]\n", this, statusCode)); 
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder OnStopRequest [status=%x, mRetrying=%d]\n", this, statusCode, mRetrying)); 
+
+    if (mRetrying)
+        return NS_OK;
     
     nsCOMPtr<nsITransportRequest> trequest(do_QueryInterface(request));
     if (trequest)
@@ -992,8 +1013,9 @@ nsFtpState::S_pass() {
             nsMemory::Free(anonPassword);
         }
         else {
-            // default to 
-            passwordStr.Append("mozilla@");
+            // We need to default to a valid email address - bug 101027
+            // example.com is reserved (rfc2606), so use that
+            passwordStr.Append("mozilla@example.com");
         }
     } else {
         if (!mPassword.Length() || mRetryPass) {
@@ -1305,6 +1327,14 @@ nsFtpState::R_retr() {
 
     if (mResponseCode/100 == 5) {
         mRETRFailed = PR_TRUE;
+        
+        // We need to kill off the existing connection - see bug 101128
+        mDRequestForwarder->RetryConnection();
+        nsCOMPtr<nsISocketTransport> st = do_QueryInterface(mDPipe);
+        if (st)
+            st->SetReuseConnection(PR_FALSE);
+        mDPipe = 0;
+
         return FTP_S_PASV;
     }
 
@@ -1913,13 +1943,11 @@ nsFtpState::StopProcessing() {
         NS_ASSERTION(mPrompter, "no prompter!");
         if (mPrompter)
             (void) mPrompter->Alert(nsnull, text.get());
-   }
-    
-    nsresult broadcastErrorCode = NS_OK;
-    if ( NS_FAILED(mControlStatus) || NS_FAILED(mInternalError)) {
-        // Lets mask the FTP error code so that a client does not have to parse it
-        broadcastErrorCode = NS_BINDING_ABORTED;
     }
+    
+    nsresult broadcastErrorCode = mControlStatus;
+    if ( NS_SUCCEEDED(broadcastErrorCode))
+        broadcastErrorCode = mInternalError;
 
     if (mFireCallbacks && mChannel) {
         nsCOMPtr<nsIStreamListener> channelListener = do_QueryInterface(mChannel);
