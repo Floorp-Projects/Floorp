@@ -145,7 +145,7 @@ nsSVGElement::ChildCount(PRInt32& aResult) const
 NS_IMETHODIMP
 nsSVGElement::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 {
-  nsIContent *child = (nsIContent *)mChildren.ElementAt(aIndex);
+  nsIContent *child = (nsIContent *)mChildren.SafeElementAt(aIndex);
   if (nsnull != child) {
     NS_ADDREF(child);
   }
