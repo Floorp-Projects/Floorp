@@ -106,6 +106,10 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
       }
 
       if (NS_FAILED(rv)) return rv;
+
+      if (m_bHeadersDone) {
+        FireOnHeadersAvailable();
+      }
     }
 
     NS_ASSERTION(m_pConsumer, "No Stream Listener!");
