@@ -47,7 +47,7 @@
     testcases[tc++] = new TestCase(
         SECTION,
         "function MyDate() { this.foo = \"bar\"; }; "+
-        "dMyDate.prototype = new Date(); " +
+        "MyDate.prototype = new Date(); " +
         "new MyDate().toString()",
         "error",
         new MyDate().toString() );
