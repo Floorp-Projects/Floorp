@@ -70,25 +70,31 @@
 
 #define MAX_ARRAY_DIMENSIONS 100
 
+class nsSOAPEncoderStub : public nsISOAPEncoder,
+                          public nsISOAPDecoder
+{
+public:
+  NS_DECL_ISUPPORTS
+protected:
+  PRUint16 mSOAPVersion;
+};
+
+NS_IMPL_ISUPPORTS2(nsSOAPEncoderStub, nsISOAPEncoder, nsISOAPDecoder)
+
 //
 // Macros to declare and implement the default encoder classes
 //
 
 #define DECLARE_ENCODER(name) \
-class ns##name##Encoder : \
-  public nsISOAPEncoder, \
-  public nsISOAPDecoder \
+class ns##name##Encoder : public nsSOAPEncoderStub \
 {\
 public:\
   ns##name##Encoder();\
   ns##name##Encoder(PRUint16 aSOAPVersion);\
   virtual ~ns##name##Encoder();\
-  PRUint16 mSOAPVersion;\
-  NS_DECL_ISUPPORTS\
   NS_DECL_NSISOAPENCODER\
   NS_DECL_NSISOAPDECODER\
 };\
-NS_IMPL_ISUPPORTS2(ns##name##Encoder,nsISOAPEncoder,nsISOAPDecoder) \
 ns##name##Encoder::ns##name##Encoder(PRUint16 aSOAPVersion) {mSOAPVersion=aSOAPVersion;}\
 ns##name##Encoder::~ns##name##Encoder() {}
 
@@ -120,7 +126,6 @@ ns##name##Encoder::~ns##name##Encoder() {}
 #define REGISTER_ENCODER(name,type,uri) \
 {\
   ns##name##Encoder *handler = new ns##name##Encoder(version);\
-  nsAutoString encodingKey;\
   SOAPEncodingKey(uri, gSOAPStrings->k##name##type##Type, encodingKey);\
   SetEncoder(encodingKey, handler); \
   SetDecoder(encodingKey, handler); \
@@ -135,6 +140,7 @@ ns##name##Encoder::~ns##name##Encoder() {}
     SetDefaultEncoder(handler);\
     SetDefaultDecoder(handler);\
   }\
+  nsAutoString encodingKey;\
   REGISTER_SCHEMA_ENCODER(AnyType) \
   REGISTER_SCHEMA_ENCODER(AnySimpleType) \
   REGISTER_SOAP_ENCODER(Array)\
@@ -574,7 +580,6 @@ NS_IMETHODIMP
   *aReturnValue = nsnull;
   if (aSource == nsnull) {
     nsAutoString ns;
-    nsCOMPtr<nsIDOMElement> cloneable;
     nsresult rc = aEncoding->GetExternalSchemaURI(gSOAPStrings->kXSIURI, ns);
     if (NS_FAILED(rc))
       return rc;
