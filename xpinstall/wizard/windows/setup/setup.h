@@ -47,7 +47,7 @@ typedef int PRInt32;
 #include <direct.h>
 #include <tchar.h>
 #include <commctrl.h>
-#include "setuprsc\\setuprsc.h"
+#include "setuprsc.h"
 #include "resource.h"
 #include "sdinst.h"
 #include "zipfile.h"
