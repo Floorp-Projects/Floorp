@@ -1177,8 +1177,10 @@ int gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
         {
             GIF_RGB* map;
             int i;
+#ifdef DEBUG_dp
             printf("DEBUG: global_colormap - %d [%d x %d]\n", gs->global_colormap_size * sizeof(GIF_RGB),
                    gs->global_colormap_size, sizeof(GIF_RGB));
+#endif
 
             if(!(map = (GIF_RGB*)PR_Calloc(gs->global_colormap_size,
                                           sizeof(GIF_RGB))))
