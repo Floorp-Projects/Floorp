@@ -4,6 +4,7 @@ Include Internet Setup=0
 FTPLocation=ftp://
 OrganizationName=
 AnimatedLogoURL=http://home.netscape.com
+AnimatedLogoTooltip=Go to the Netscape home page
 LargeAnimPath=%Root%Configs\MyIsp\Workspace\AnimLogo\animlogo32.gif
 LargeStillPath=%Root%Configs\MyIsp\Workspace\AnimLogo\staticlogo32.gif
 CompanyName=MyIsp
