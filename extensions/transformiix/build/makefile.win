@@ -46,7 +46,7 @@ LCFLAGS = \
         $(NULL)
 
 LINCS= -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
-      -I..\source\xml\dom \
+      -I..\source\xml\dom -I..\source\xml\util \
       -I..\source\xpath -I..\source\xslt\util -I..\source\xml -I..\source\xslt \
       -I..\source\base -I..\source\net -I..\source\xml\parser
       
