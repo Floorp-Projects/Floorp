@@ -114,7 +114,6 @@ nsGfxListControlFrame::nsGfxListControlFrame()
   mIsAllContentHere   = PR_FALSE;
   mIsAllFramesHere    = PR_FALSE;
   mHasBeenInitialized = PR_FALSE;
-  mMainChild          = nsnull;
 }
 
 //---------------------------------------------------------
@@ -314,6 +313,20 @@ nsGfxListControlFrame::Reflow(nsIPresContext&          aPresContext,
         mHasBeenInitialized = PR_TRUE;
         InitSelectionCache(-1); // Reset sel cache so as not to send event
         Reset(mPresContext);
+        // reflow if initialized in reflow
+        nsCOMPtr<nsIReflowCommand> cmd;
+        nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(cmd), this, nsIReflowCommand::StyleChanged);
+        if (NS_FAILED(rv)) { return rv; }
+        if (!cmd) { return NS_ERROR_NULL_POINTER; }
+        nsCOMPtr<nsIPresShell> shell;
+        rv = mPresContext->GetShell(getter_AddRefs(shell));
+        if (NS_FAILED(rv)) { return rv; }
+        if (!shell) { return NS_ERROR_NULL_POINTER; }
+        rv = shell->EnterReflowLock();
+        if (NS_FAILED(rv)) { return rv; }
+        rv = shell->AppendReflowCommand(cmd);
+        // must do this next line regardless of result of AppendReflowCommand
+        shell->ExitReflowLock(PR_TRUE, PR_TRUE);
       }
     }
 
@@ -1107,13 +1120,8 @@ nsGfxListControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
     }
   }
 
-  if (nsnull == mMainChild) {
-    return NS_ERROR_FAILURE;
-  }
-
   mContentFrame = aChildList;
   nsresult rv = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-  //rv= mMainChild->SetInitialChildList(aPresContext, aListName, aChildList);
 
   // If all the content is here now check
   // to see if all the frames have been created
@@ -1551,6 +1559,9 @@ nsGfxListControlFrame::Reset(nsIPresContext* aPresContext)
   }
 
   InitSelectionCache(numOptions);
+  if (mComboboxFrame) {
+    mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
+  }
 
 } 
 
@@ -1810,6 +1821,7 @@ nsGfxListControlFrame::ToggleSelected(PRInt32 aIndex)
 //----------------------------------------------------------------------
 PRBool nsGfxListControlFrame::CheckIfAllFramesHere()
 {
+#if 0
   // Get the number of optgroups and options
   PRInt32 numContentItems = 0;
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
@@ -1836,7 +1848,9 @@ PRBool nsGfxListControlFrame::CheckIfAllFramesHere()
   }
   // now make sure we have a frame each piece of content
   mIsAllFramesHere = numFrames == numContentItems;
-
+#else
+  mIsAllFramesHere = PR_TRUE;
+#endif
   return mIsAllFramesHere;
 }
 
@@ -1844,16 +1858,17 @@ NS_IMETHODIMP
 nsGfxListControlFrame::DoneAddingContent(PRBool aIsDone)
 {
   mIsAllContentHere = aIsDone;
-
-  // Here we check to see if all the frames have been created 
-  // for all the content.
-  // If so, then we can initialize;
-  if (mIsAllFramesHere == PR_FALSE) {
-    // if all the frames are now present we can initalize
-    if (CheckIfAllFramesHere() && mPresContext) {
-      mHasBeenInitialized = PR_TRUE;
-      InitSelectionCache(-1); // Reset select cache so as not to send event
-      Reset(mPresContext);
+  if (mIsAllContentHere) {
+    // Here we check to see if all the frames have been created 
+    // for all the content.
+    // If so, then we can initialize;
+    if (mIsAllFramesHere == PR_FALSE) {
+      // if all the frames are now present we can initalize
+      if (CheckIfAllFramesHere() && mPresContext) {
+        mHasBeenInitialized = PR_TRUE;
+        InitSelectionCache(-1); // Reset select cache so as not to send event
+        Reset(mPresContext);
+      }
     }
   }
   return NS_OK;
