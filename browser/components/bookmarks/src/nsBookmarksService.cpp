@@ -2835,6 +2835,24 @@ nsBookmarksService::CloneResource(nsIRDFResource* aSource,
     return NS_OK;
 }
 
+//XXXpch: useless callers of AddBookmarkImmediately and IsBookmarked in nsInternetSearchService.cpp
+//to be removed RSN
+
+NS_IMETHODIMP
+nsBookmarksService::AddBookmarkImmediately(const char *aURI,
+                                           const PRUnichar *aTitle, 
+                                           PRInt32 aBookmarkType, 
+                                           const PRUnichar *aCharset)
+{
+    return NS_OK;
+}
+NS_IMETHODIMP
+nsBookmarksService::IsBookmarked(const char* aURL, PRBool* aIsBookmarked)
+{
+    *aIsBookmarked = PR_FALSE;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsBookmarksService::IsBookmarkedResource(nsIRDFResource *bookmark, PRBool *isBookmarkedFlag)
 {
