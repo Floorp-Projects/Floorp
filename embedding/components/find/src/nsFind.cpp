@@ -89,8 +89,6 @@ nsFind::nsFind()
   , mCaseSensitive(PR_FALSE)
   , mIterOffset(0)
 {
-  NS_INIT_ISUPPORTS();
-
   // Initialize the atoms if they aren't already:
   if (sInstanceCount <= 0)
   {

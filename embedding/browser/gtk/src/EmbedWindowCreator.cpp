@@ -28,7 +28,6 @@
 
 EmbedWindowCreator::EmbedWindowCreator(void)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 EmbedWindowCreator::~EmbedWindowCreator()

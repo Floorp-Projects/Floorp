@@ -59,8 +59,6 @@ nsFilteredContentIterator::nsFilteredContentIterator(nsITextServicesFilter* aFil
   mIsOutOfRange(PR_FALSE),
   mDirection(eDirNotSet)
 {
-  NS_INIT_ISUPPORTS();
-
   nsComponentManager::CreateInstance(kCContentIteratorCID,
                                      nsnull,
                                      NS_GET_IID(nsIContentIterator),

@@ -98,7 +98,6 @@ PrefObserver *PrefObserver::sPrefObserver = nsnull;
 PrefObserver::PrefObserver() :
     mHostingFlags(kDefaultHostingFlags)
 {
-    NS_INIT_ISUPPORTS();
     nsresult rv = NS_OK;
     mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     NS_ASSERTION(mPrefService, "where is the pref service?");

@@ -174,8 +174,6 @@ nsHTMLEditor::nsHTMLEditor()
 , mSelectedCellIndex(0)
 , mHTMLCSSUtils(nsnull)
 {
-// Done in nsEditor
-// NS_INIT_ISUPPORTS();
   mBoldAtom = getter_AddRefs(NS_NewAtom("b"));
   mItalicAtom = getter_AddRefs(NS_NewAtom("i"));
   mUnderlineAtom = getter_AddRefs(NS_NewAtom("u"));

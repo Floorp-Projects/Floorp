@@ -35,7 +35,6 @@ GtkWidget *EmbedWindow::sTipWindow = nsnull;
 
 EmbedWindow::EmbedWindow(void)
 {
-  NS_INIT_ISUPPORTS();
   mOwner       = nsnull;
   mVisibility  = PR_FALSE;
   mIsModal     = PR_FALSE;

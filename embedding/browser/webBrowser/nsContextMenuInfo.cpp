@@ -46,7 +46,6 @@ NS_IMPL_ISUPPORTS1(nsContextMenuInfo, nsIContextMenuInfo)
 nsContextMenuInfo::nsContextMenuInfo() :
   mCachedBGImageRequestNode(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsContextMenuInfo::~nsContextMenuInfo()

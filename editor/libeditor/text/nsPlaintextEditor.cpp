@@ -139,8 +139,6 @@ nsPlaintextEditor::nsPlaintextEditor()
 , mMaxTextLength(-1)
 , mInitTriggerCounter(0)
 {
-// Done in nsEditor
-// NS_INIT_ISUPPORTS();
 } 
 
 nsPlaintextEditor::~nsPlaintextEditor()

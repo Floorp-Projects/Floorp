@@ -68,8 +68,6 @@ nsPrintSettings::nsPrintSettings() :
   mPrintPageDelay(500),
   mPrintSilent(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
-
   /* member initializers and constructor code */
   nscoord halfInch = NS_INCHES_TO_TWIPS(0.5);
   mMargin.SizeTo(halfInch, halfInch, halfInch, halfInch);

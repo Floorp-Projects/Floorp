@@ -53,7 +53,6 @@ CWebBrowserContainer::CWebBrowserContainer(CMozillaBrowser *pOwner) :
     mEvents2(mOwner),
     mVisible(PR_TRUE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 

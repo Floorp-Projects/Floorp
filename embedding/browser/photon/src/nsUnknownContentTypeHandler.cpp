@@ -52,7 +52,6 @@
 #include <photon/PtWebClient.h>
 
 nsUnknownContentTypeHandler::nsUnknownContentTypeHandler( ) {
-	NS_INIT_ISUPPORTS();
 	}
 
 nsUnknownContentTypeHandler::~nsUnknownContentTypeHandler( ) { }
@@ -164,7 +163,6 @@ PtWidget_t *nsUnknownContentTypeHandler::GetWebBrowser(nsIDOMWindow *aWindow)
 NS_IMPL_ISUPPORTS2(nsWebProgressListener, nsIWebProgressListener, nsISupportsWeakReference);
 
 nsWebProgressListener::nsWebProgressListener() {
-  NS_INIT_ISUPPORTS();
 	}
 
 nsWebProgressListener::~nsWebProgressListener() { }

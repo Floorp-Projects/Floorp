@@ -93,7 +93,6 @@ nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull),
    mParent(nsnull),
    mListenerArray(nsnull)
 {
-    NS_INIT_ISUPPORTS();
     mInitInfo = new nsWebBrowserInitInfo();
     mWWatch = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
     NS_ASSERTION(mWWatch, "failed to get WindowWatcher");

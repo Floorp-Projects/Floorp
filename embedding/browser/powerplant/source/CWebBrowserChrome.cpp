@@ -62,7 +62,6 @@ CWebBrowserChrome::CWebBrowserChrome() :
    mBrowserWindow(nsnull), mBrowserShell(nsnull),
    mPreviousBalloonState(false), mInModalLoop(false)
 {
-	NS_INIT_ISUPPORTS();
 }
 
 CWebBrowserChrome::~CWebBrowserChrome()

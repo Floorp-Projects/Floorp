@@ -66,7 +66,6 @@ NS_IMPL_ISUPPORTS1(CPromptService, nsIPromptService)
 
 CPromptService::CPromptService()
 {
-	NS_INIT_ISUPPORTS();
 }
 
 CPromptService::~CPromptService()

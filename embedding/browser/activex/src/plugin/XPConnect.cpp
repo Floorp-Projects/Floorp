@@ -77,7 +77,6 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 nsScriptablePeer::nsScriptablePeer() :
     mTearOff(new nsScriptablePeerTearOff(this))
 {
-    NS_INIT_ISUPPORTS();
     NS_ASSERTION(mTearOff, "can't create tearoff");
     MozAxPlugin::AddRef();
 }

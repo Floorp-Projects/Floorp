@@ -82,7 +82,6 @@ nsGroupsEnumerator::nsGroupsEnumerator(nsHashtable& inHashTable)
 ,	mGroupNames(nsnull)
 ,	mInitted(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 
@@ -187,7 +186,6 @@ nsNamedGroupEnumerator::nsNamedGroupEnumerator(nsVoidArray* inArray)
 :	mGroupArray(inArray)
 ,	mIndex(-1)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsNamedGroupEnumerator::~nsNamedGroupEnumerator()
@@ -240,7 +238,6 @@ NS_IMPL_ISUPPORTS1(nsControllerCommandGroup, nsIControllerCommandGroup)
 
 nsControllerCommandGroup::nsControllerCommandGroup()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsControllerCommandGroup::~nsControllerCommandGroup()

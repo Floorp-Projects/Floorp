@@ -27,7 +27,6 @@
 nsWebBrowserContentPolicy::nsWebBrowserContentPolicy()
 {
     MOZ_COUNT_CTOR(nsWebBrowserContentPolicy);
-    NS_INIT_ISUPPORTS();
 }
 
 nsWebBrowserContentPolicy::~nsWebBrowserContentPolicy()

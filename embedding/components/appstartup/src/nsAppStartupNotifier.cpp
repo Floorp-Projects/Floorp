@@ -49,7 +49,6 @@ NS_IMPL_ISUPPORTS1(nsAppStartupNotifier, nsIObserver)
 
 nsAppStartupNotifier::nsAppStartupNotifier()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsAppStartupNotifier::~nsAppStartupNotifier()

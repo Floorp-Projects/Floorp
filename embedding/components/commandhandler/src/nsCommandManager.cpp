@@ -62,7 +62,6 @@
 nsCommandManager::nsCommandManager()
 : mWindow(nsnull)
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 
