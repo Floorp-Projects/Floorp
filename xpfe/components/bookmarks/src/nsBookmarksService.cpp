@@ -1037,9 +1037,10 @@ BookmarkParser::ParseBookmark(const nsString &aLine, const nsCOMPtr<nsIRDFContai
 		}
 	}
 
-	// 7. Parse the shortcut URL
+	// 7. Parse the shortcut URL (and always lowercase them before storing internally)
 	nsAutoString	shortcut;
 	ParseAttribute(aLine, kShortcutURLEquals, sizeof(kShortcutURLEquals) -1, shortcut);
+	shortcut.ToLowerCase();
 
 	// 8. Parse the schedule
 	nsAutoString	schedule;
@@ -2927,8 +2928,12 @@ nsBookmarksService::FindShortcut(const PRUnichar *aUserInput, char **aShortcutUR
 
 	nsresult rv;
 
+	// shortcuts are always lowercased internally
+	nsAutoString		shortcut(aUserInput);
+	shortcut.ToLowerCase();
+
 	nsCOMPtr<nsIRDFLiteral> literalTarget;
-	rv = gRDF->GetLiteral(aUserInput, getter_AddRefs(literalTarget));
+	rv = gRDF->GetLiteral(shortcut.GetUnicode(), getter_AddRefs(literalTarget));
 	if (NS_FAILED(rv)) return rv;
 
 	if (rv != NS_RDF_NO_VALUE)
