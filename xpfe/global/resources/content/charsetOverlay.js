@@ -46,7 +46,7 @@ function ComposerMultiplexHandler(event)
   var charset;
 
   if (name == 'detectorGroup') {
-    SelectDetector(event, true);
+    ComposerSelectDetector(event, true);
   } else if (name == 'charsetGroup') {
     charset = node.getAttribute('id');
     charset = charset.substring('charset.'.length, charset.length)
@@ -83,6 +83,28 @@ function SelectDetector(event, doReload)
     if (pref) {
         pref.SetCharPref("intl.charset.detector", prefvalue);
         if (doReload) window.content.location.reload();
+    }
+}
+
+function ComposerSelectDetector(event)
+{
+    //dump("Charset Detector menu item pressed: " + event.target.getAttribute('id') + "\n");
+
+    var uri =  event.target.getAttribute("id");
+    var prefvalue = uri.substring('chardet.'.length, uri.length);
+    if("off" == prefvalue) { // "off" is special value to turn off the detectors
+        prefvalue = "";
+    }
+
+    var pref = Components.classes['component://netscape/preferences'];
+    if (pref) {
+        pref = pref.getService();
+        pref = pref.QueryInterface(Components.interfaces.nsIPref);
+    }
+
+    if (pref) {
+        pref.SetCharPref("intl.charset.detector", prefvalue);
+          editorShell.LoadUrl(editorShell.editorDocument.location);    
     }
 }
 
