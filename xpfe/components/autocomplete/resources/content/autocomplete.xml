@@ -859,10 +859,15 @@
               break;
 
             case KeyEvent.DOM_VK_DOWN:
-              if (aEvent.altKey && !aEvent.ctrlKey && !aEvent.shiftKey && !this.hideHistory) {
+              if (!aEvent.altKey)
+                break;
+            case KeyEvent.DOM_VK_F4:
+              if (!aEvent.ctrlKey && !aEvent.shiftKey && !this.hideHistory) {
                 var historyPopup = this.getElementsByTagName("menupopup").item(0);
                 if (historyPopup)
                   historyPopup.showPopup();
+                else
+                  historyPopup.hidePopup();
                 break;
               }
             case KeyEvent.DOM_VK_PAGE_UP:
