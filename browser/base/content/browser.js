@@ -275,7 +275,7 @@ function Startup()
     // wire up global history.  the same applies here.
     var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
                                   .getService(Components.interfaces.nsIGlobalHistory);
-    getBrowser().docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).globalHistory = globalHistory;
+    gBrowser.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).globalHistory = globalHistory;
 
     const selectedBrowser = gBrowser.selectedBrowser;
     if (selectedBrowser.securityUI)
