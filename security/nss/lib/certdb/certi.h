@@ -33,7 +33,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.6 2002/09/11 01:08:06 jpierre%netscape.com Exp $
+ * $Id: certi.h,v 1.7 2002/10/05 02:24:23 jpierre%netscape.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -178,6 +178,9 @@ struct CRLCacheStr {
        indexed by issuer DER subject */
     PLHashTable* issuers;
 };
+
+SECStatus InitCRLCache(void);
+SECStatus ShutdownCRLCache(void);
 
 #endif /* _CERTI_H_ */
 
