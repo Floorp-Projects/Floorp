@@ -197,7 +197,7 @@ set to 1. This won't be a problem if your module only returns 1
 *** PartedChannel($event, $channel)
 
  Called after the bot has left a channel, for example if the bot has 
- been /hicked.
+ been /kicked.
 
  No special return values. Always call inherited the function, as this
  is where the autopart function is implemented.
@@ -543,7 +543,7 @@ recommended.
  Example:
     $self->registerVariables(
         [ 'ftpDelay', 1, 1, 60 ],
-        [ 'ftpsite', 1, 1, 'ftp.mozilla.org' ],
+        [ 'ftpSite', 1, 1, 'ftp.mozilla.org' ],
     );
 
 
@@ -700,7 +700,7 @@ recommended.
  Set the bot's 'away' flag. A blank message will mark the bot as
  back. Note: If you need this you are doing something wrong!!!
  Remember that you should not be doing any lengthy processes since if
- you are away for any length of time, the bot will be kicked!
+ you are away for any length of time, the bot will be disconnected!
 
  Also note that in 2.0 this is not throttled, so DO NOT call this
  repeatedly, or put yourself in any position where you allow IRC

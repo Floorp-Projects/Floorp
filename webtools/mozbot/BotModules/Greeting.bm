@@ -17,7 +17,7 @@ sub Help {
     return {
         '' => 'A polite module for saying hello and goodbye and so on.',
         'hi' => 'To greet the bot.',
-        'bye' => 'To say good bye to the bot.',
+        'bye' => 'To say goodbye to the bot.',
         'ping' => 'To check the bot is alive.',
         'uptime' => 'Gives the amount of time that the bot has been active.',
     };

@@ -74,7 +74,11 @@ See the "Administration" section for instructions on how to change the
 administration password (important!).
 
 Note: Passwords are printed in clear text on the console and in the
-log files. Secure them accordingly.
+log files. Secure them accordingly. Of course, IRC is an inherently
+insecure protocol anyway, and any machine between your IRC client's
+and your bot's, going through the IRC network's servers, will have
+access to the passwords. For this reason, change them often, and don't
+use passwords that you use for important things here.
 
 The default setting is for mozbot to run with taint checking
 enabled. I *STRONGLY* recommend not changing this.
@@ -189,7 +193,6 @@ Now authenticate yourself again, as the new user:
 The moment you authenticate as the new admin, the default admin
 account is deleted.
 
-
 You are now in a position to add the modules you want and to put the
 bot in the channels you want it in.
 
@@ -214,7 +217,7 @@ the following message:
    /msg mozbot shutup please
 
 It should respond within a few seconds. You can authenticate while it
-is speaking, that is no problem.
+is speaking, that's not a problem.
 
 
 VARIABLES

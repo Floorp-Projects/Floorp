@@ -45,7 +45,7 @@ sub Told {
             }
             $self->directSay($event, 'End of wishes.');
         } else {
-            $self->directSay($event, 'Noone has wished for anything!');
+            $self->directSay($event, 'No-one has wished for anything!');
         }
         $self->channelSay($event, "$event->{'from'}: wishlist /msg'ed");
     } else {

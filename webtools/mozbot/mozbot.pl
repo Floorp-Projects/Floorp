@@ -130,11 +130,11 @@ $|++;
 
 # internal 'constants'
 my $NAME = 'mozbot';
-my $VERSION = q$Revision: 2.0 $;
+my $VERSION = q$Revision: 2.1 $;
 my $USERNAME = "pid-$$";
 my $LOGFILEPREFIX;
 
-# adjust the version constants
+# adjust the version constant
 $VERSION =~ /([0-9.]+)/;
 $VERSION = $1;
 
@@ -1448,7 +1448,7 @@ sub getModule {
 }
 
 # tellAdmin - may try to talk to an admin.
-# NO GUARENTEES! This will PROBABLY NOT reach anyone!
+# NO GUARANTEES! This will PROBABLY NOT reach anyone!
 sub tellAdmin {
     my $self = shift;
     my ($event, $data) = @_;
@@ -1965,7 +1965,7 @@ sub Set {
         } elsif (ref($self->{$variable}) eq 'HASH') {
             if ($value =~ /^\+(.)(.*)\1(.*)$/so) {
                 $self->{$variable}->{$2} = $3;
-                return -2 if $1 =~ /[a-zA-Z]/os;
+                return -2 if $1 =~ /[a-zA-Z]/so;
             } elsif ($value =~ /^\-(.*)$/so) {
                 # XXX no feedback if nothing is done
                 delete($self->{$variable}->{$1});
@@ -2101,8 +2101,8 @@ sub Help {
             'restart' => 'Shuts the bot down completely then restarts it, so that any source changes take effect.',
             'cycle' => 'Makes the bot disconnect from the server then try to reconnect.',
             'vars' => 'Manage variables: vars [<module> [<variable> [\'<value>\']]], say \'vars\' for more details.',
-            'join' => 'Makes the bot attempt to join a channel. You can also use /invite. Syntax: join <channel>',
-            'part' => 'Makes the leave a channel. The same affect can be achieved using /kick. Syntax: part <channel>',
+            'join' => 'Makes the bot attempt to join a channel. The same effect can be achieved using /invite. Syntax: join <channel>',
+            'part' => 'Makes the bot leave a channel. The same effect can be achieved using /kick. Syntax: part <channel>',
             'load' => 'Loads a module from disk, if it is not already loaded: load <module>',
             'unload' => 'Unloads a module from memory: load <module>',
             'reload' => 'Unloads and then loads a module: reload <module>',
@@ -2370,7 +2370,7 @@ sub Invited {
     # on the server should the bot join first.
     my $channel = lc($channelName);
     if (grep($_ eq $channel, @channels)) {
-        $self->directSay($event, "I think already *in* channel $channel! If this is not the case please make me part and then rejoin.");
+        $self->directSay($event, "I think I'm already *in* channel $channel! If this is not the case please make me part and then rejoin.");
     } else {
         if ($self->isAdmin($event) || $self->{'allowInviting'}) {
             $self->debug("Joining $channel, since I was invited.");
@@ -2561,7 +2561,7 @@ sub Told {
         } else {
             $self->directSay($event, "Help topics for $NAME $VERSION ($helpline):");
             $self->say($event, "$event->{'from'}: help info /msg'ed") if ($event->{'channel'});
-            local @" = ', ';
+            local @" = ', '; # to reset font-lock: " 
             my @helplist;
             foreach my $module (@modules) {
                 my %commands = %{$module->Help($event)};
@@ -2653,6 +2653,7 @@ sub SpottedQuit {
     my $self = shift;
     my ($event, $who, $why) = @_;
     delete($authenticatedUsers{$event->{'user'}});
+    # XXX this doesn't deal with a user who has authenticated twice.
     return $self->SUPER::SpottedQuit(@_);
 }
 

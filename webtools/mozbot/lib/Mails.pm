@@ -19,7 +19,7 @@
 #
 # Contributor(s): Harrison Page <harrison@netscape.com>
 #                 Terry Weissman <terry@mozilla.org>
-#                 Ian Hickson <py8ieh=mozbot@bath.ac.uk>
+#                 Ian Hickson <mozbot@hixie.ch>
 
 package Mails;
 use strict;
