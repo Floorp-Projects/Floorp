@@ -27,18 +27,21 @@
 
 #include <Sound.h>
 
-class nsSound : public nsISound {
- public: 
-
-  nsSound();
-  virtual ~nsSound();
-  void PlaySound(Ptr waveDataPtr, long waveDataSize);
-  char *mPlayBuf;
-  char *mBuffer;
-  PRInt32 mBufferSize;
+class nsSound : public nsISound
+{
+public: 
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISOUND
+
+
+          nsSound();
+  virtual ~nsSound();
+
+protected:
+
+  nsresult    PlaySound(Handle waveDataHandle, long waveDataSize);
+  
 };
 
 #endif /* __nsSound_h__ */

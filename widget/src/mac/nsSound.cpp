@@ -20,11 +20,9 @@
  * Contributor(s): 
  */
 
-
 #include "nscore.h"
 #include "nsIAllocator.h"
 #include "plstr.h"
-#include "stdio.h"
 
 #include "nsSound.h"
 #include "nsIURI.h"
@@ -43,10 +41,6 @@ nsSound::nsSound()
 
 nsSound::~nsSound()
 {
-        if (mPlayBuf)
-                PR_Free( mPlayBuf );
-        if (mBuffer)
-                PR_Free( mBuffer );
 }
 
 nsresult NS_NewSound(nsISound** aSound)
@@ -62,19 +56,8 @@ nsresult NS_NewSound(nsISound** aSound)
     return NS_ERROR_OUT_OF_MEMORY;
 
   mySound = (nsSound **) aSound;
-  (*mySound)->mBufferSize = 4098;
-  (*mySound)->mBuffer = (char *) PR_Malloc( (*mySound)->mBufferSize );
-  if ( (*mySound)->mBuffer == (char *) NULL )
-        return NS_ERROR_OUT_OF_MEMORY;
-  (*mySound)->mPlayBuf = (char *) NULL;
   
   NS_ADDREF(*aSound);
-  return NS_OK;
-}
-
-// not currently used.. may go away
-NS_METHOD nsSound::Init(void)
-{
   return NS_OK;
 }
 
@@ -86,69 +69,93 @@ NS_METHOD nsSound::Beep()
   return NS_OK;
 }
 
+
+#define kReadBufferSize		(4 * 1024)
+
+// this currently does no cacheing of the sound buffer. It should
 NS_METHOD nsSound::Play(nsIURI *aURI)
 {
   nsresult rv;
-  nsIInputStream *inputStream;
-  PRUint32 totalLen = 0;
-  PRUint32 len;
+  nsCOMPtr<nsIInputStream> inputStream;
 
-  if ( mPlayBuf ) {
-          PR_Free( this->mPlayBuf );
-          this->mPlayBuf = (char *) NULL;
+  rv = NS_OpenURI(getter_AddRefs(inputStream), aURI);
+  if (NS_FAILED(rv)) return rv;
+  
+  PRUint32 handleLen = kReadBufferSize;
+
+  Handle dataHandle = ::NewHandle(handleLen);  
+  if (dataHandle == NULL)
+  {
+    OSErr err;
+    dataHandle = ::TempNewHandle(handleLen, &err);
+    if (!dataHandle) return NS_ERROR_OUT_OF_MEMORY;
   }
-  rv = NS_OpenURI(&inputStream, aURI);
-  if (NS_FAILED(rv))
-          return rv;
-  do {
-        rv = inputStream->Read(this->mBuffer, this->mBufferSize, &len);
-        if ( len ) {
-                totalLen += len;
-                if ( this->mPlayBuf == (char *) NULL ) {
-                        this->mPlayBuf = (char *) PR_Malloc( len );
-                        if ( this->mPlayBuf == (char *) NULL ) {
-                                        NS_IF_RELEASE( inputStream );
-                                        return NS_ERROR_OUT_OF_MEMORY;
-                        }
-                        memcpy( this->mPlayBuf, this->mBuffer, len );
-                }
-                else {
-                        this->mPlayBuf = (char *) PR_Realloc( this->mPlayBuf, totalLen );
-                        if ( this->mPlayBuf == (char *) NULL ) {
-                                        NS_IF_RELEASE( inputStream );
-                                        return NS_ERROR_OUT_OF_MEMORY;
-                        }
-                        memcpy( this->mPlayBuf + (totalLen - len), this->mBuffer, len );
-                }
-        }
-  } while (len > 0);
-  if ( this->mPlayBuf != (char *) NULL )
-        PlaySound(this->mPlayBuf, totalLen);
-        
-  NS_IF_RELEASE( inputStream );
+
+  PRUint32 len = 0;
+  PRUint32 writeOffset = 0;
+  
+  do
+  {
+    ::HLock(dataHandle);
+    rv = inputStream->Read(*dataHandle + writeOffset, kReadBufferSize, &len);
+    ::HUnlock(dataHandle);
+    
+    writeOffset += len;
+    
+    // resize the handle in preparation for more
+    if (len > 0)
+    {
+      ::SetHandleSize(dataHandle, writeOffset + kReadBufferSize);
+      OSErr err = ::MemError();
+      if (err != noErr)
+      {
+        ::DisposeHandle(dataHandle);
+        return NS_ERROR_OUT_OF_MEMORY;
+      }    
+    }
+    
+  }
+  while(len > 0);
+  
+  // resize the handle to the final size
+  if (::GetHandleSize(dataHandle) != writeOffset)
+  {
+    ::SetHandleSize(dataHandle, writeOffset);
+  }
+  
+  rv = PlaySound(dataHandle, writeOffset);
+  
+  ::DisposeHandle(dataHandle);
   return NS_OK;
 }
 
-void nsSound::PlaySound(Ptr waveDataPtr, long waveDataSize)
+nsresult nsSound::PlaySound(Handle waveDataHandle, long waveDataSize)
 {
-  Handle                  myHandle, dataRef = nil;
-  Movie                   movie;
-  MovieImportComponent    miComponent;
+  Handle                  dataRef = nil;
+  Movie                   movie = nil;
+  MovieImportComponent    miComponent = nil;
   Track                   targetTrack = nil;
   TimeValue               addedDuration = 0;
   long                    outFlags = 0;
-  OSErr                   err;
-  ComponentResult         result;
-
-  myHandle = NewHandleClear((Size)waveDataSize);
-  BlockMove(waveDataPtr, *myHandle, waveDataSize);
-
-  err = PtrToHand(&myHandle, &dataRef, sizeof(Handle));
-
-  miComponent = OpenDefaultComponent(MovieImportType, kQTFileTypeWave);
-  movie = NewMovie(0);
-
-  result = MovieImportDataRef(miComponent,
+  OSErr                   err = noErr;
+  ComponentResult         compErr = noErr;
+  
+  err = ::PtrToHand(&waveDataHandle, &dataRef, sizeof(Handle));
+  if (err != noErr) goto bail;
+  
+  miComponent = ::OpenDefaultComponent(MovieImportType, kQTFileTypeWave);
+  if (!miComponent) {
+    err = paramErr;
+    goto bail;
+  }
+  
+  movie = ::NewMovie(0);
+  if (!movie) {
+    err = paramErr;
+    goto bail;
+  }
+  
+  compErr = ::MovieImportDataRef(miComponent,
                               dataRef,
                               HandleDataHandlerSubType,
                               movie,
@@ -159,12 +166,31 @@ void nsSound::PlaySound(Ptr waveDataPtr, long waveDataSize)
                               movieImportCreateTrack,
                               &outFlags);
 
-  SetMovieVolume(movie, kFullVolume);
-  GoToBeginningOfMovie(movie);
-  StartMovie(movie);
-  while (!IsMovieDone(movie))
-    {
-    MoviesTask(movie, 0);
-    err = GetMoviesError();
-    }
+  if (compErr != noErr) {
+    err = compErr;
+    goto bail;
+  }
+  
+  ::SetMovieVolume(movie, kFullVolume);
+  ::GoToBeginningOfMovie(movie);
+  ::StartMovie(movie);
+
+  while (! ::IsMovieDone(movie))
+  {
+    ::MoviesTask(movie, 0);
+    err = ::GetMoviesError();
+  }
+
+bail:		// gasp, a goto label
+
+  if (dataRef)
+    ::DisposeHandle(dataRef);
+  
+  if (miComponent)
+    ::CloseComponent(miComponent);
+  
+  if (movie)
+    ::DisposeMovie(movie);
+  
+  return (err == noErr) ? NS_OK : NS_ERROR_FAILURE;
 }
