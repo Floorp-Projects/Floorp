@@ -8,12 +8,12 @@ XMLTERM_CHROME="xmlterm.xul"
 MOZILLA_BIN="./mozilla-bin"
 
 # Determine command prefix
-PREFIX=$(dirname $0)
+PREFIX=`dirname $0`
 
 if [ "$PREFIX" = "." ]
 then
    # Assume running in dist/bin or package directory (useful for testing)
-   MOZILLA_DIR=$(pwd)
+   MOZILLA_DIR=`pwd`
 
 else
    MOZILLA_DIR=""
@@ -21,7 +21,7 @@ else
    if [ -f /bin/rpm -a -f /usr/bin/xmlterm ]
    then
       # Try to find installation directory using RPM
-      MOZILLA_DIR=$(rpm -q --queryformat "%{INSTALLPREFIX}" xmlterm)
+      MOZILLA_DIR=`rpm -q --queryformat "%{INSTALLPREFIX}" xmlterm`
    fi
 
    if [ ${#MOZILLA_DIR} -eq 0 ]

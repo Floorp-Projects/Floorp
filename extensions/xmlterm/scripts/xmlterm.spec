@@ -24,7 +24,7 @@ AutoReqProv: no
 rm -fr xmlterm.tgz package
 tar czvhf xmlterm.tgz \
           -C /home/svn/mozilla/dist/bin \
-             INSTALL.xmlterm xmlterm xcat xls geckoterm menuhack \
+             INSTALL.xmlterm xmlterm xcat xls menuhack \
              components/libxmlterm.so \
              components/xmlterm.xpt \
              chrome/xmlterm
@@ -48,17 +48,17 @@ then
 fi
 
 %post
-for FILE in xmlterm xcat xls geckoterm
+for FILE in xmlterm xcat xls
 do
    ln -s $RPM_INSTALL_PREFIX/$FILE /usr/bin/$FILE
 done
 
 cd $RPM_INSTALL_PREFIX
 rm -f component.reg
-##./menuhack
+./menuhack
 
 %postun
-for FILE in xmlterm xcat xls geckoterm
+for FILE in xmlterm xcat xls
 do
    rm /usr/bin/$FILE
 done
@@ -69,7 +69,6 @@ done
 /usr/src/redhat/BUILD/package/xmlterm
 /usr/src/redhat/BUILD/package/xcat
 /usr/src/redhat/BUILD/package/xls
-/usr/src/redhat/BUILD/package/geckoterm
 /usr/src/redhat/BUILD/package/menuhack
 /usr/src/redhat/BUILD/package/components/libxmlterm.so
 /usr/src/redhat/BUILD/package/components/xmlterm.xpt

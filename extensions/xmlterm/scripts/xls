@@ -1,18 +1,16 @@
 #!/usr/bin/perl
 # xls: an XMLterm wrapper for the UNIX "ls" command
-# Usage: xls  [-c|--cols] [-h|help] [-n||--noicons] [-w|--window]
+# Usage: xls  [-c|--cols] [-h|help] [-t||--text] [-w|--window] <files>
 
 use Cwd;
 use Getopt::Long;
 
 Getopt::Long::config('bundling');
 
-my $options = "@ARGV";
-
-&GetOptions("cols|c=i", "help|h!", "noicons|n!", "window|w!");
+&GetOptions("cols|c=i", "help|h!", "text|t!", "window|w!");
 
 if ($opt_help) {
-    print "Usage: xls [-c|--cols] [-n||--noicons] [-w|--window]\n";
+    print "Usage: xls [-c|--cols] [-t||--text] [-w|--window] [<files>]\n";
     exit;
 }
 
@@ -27,17 +25,29 @@ my %img;
 my $ncols = 5;
 $ncols = $opt_cols if ($opt_cols);
 
-my $cookie = $ENV{LTERM_COOKIE};           # XMLTerm cookie
-print "\e{S$cookie\a";                     # HTML stream escape sequence
-print "<TABLE FRAME=none BORDER=0>";
-print "<COLGROUP COLSPAN=$ncols WIDTH=1*>";
-
 my $dir = cwd();
 my $rowimg = "";
 my $rowtxt = "";
 my $nfile = 0;
 
-foreach $file (glob("*")) {        # for each file in current directory
+my $filelist;
+
+if (@ARGV) {
+    if ((@ARGV == 1) && (-d $ARGV[0])) {
+        @filelist = glob("$ARGV[0]/*");    # specified directory
+    } else {
+        @filelist = @ARGV;                 # specified file(s)
+    }
+} else {
+    @filelist = glob("*");                 # all files in current directory
+}
+
+my $cookie = $ENV{LTERM_COOKIE};           # XMLTerm cookie
+print "\e{S$cookie\a";                     # HTML stream escape sequence
+print "<TABLE FRAME=none BORDER=0>";
+print "<COLGROUP COLSPAN=$ncols WIDTH=1*>";
+
+foreach $file (@filelist) {        # for each file in the list
     $file =~ m%\A(.*?) (\.[^/.]*)?\Z%x # Deconstruct file name
         or die "xls: Internal error; unable to deconstruct file name\n";
 
@@ -45,9 +55,9 @@ foreach $file (glob("*")) {        # for each file in current directory
 
     my $sendcmd;
     if ($opt_window) {
-        $sendcmd = "createln";
-    } else {
         $sendcmd = "exec";
+    } else {
+        $sendcmd = "execwin";
     }
 
     my ($filetype, $fileimg, $sendtxt1, $sendtxt2);
@@ -55,8 +65,8 @@ foreach $file (glob("*")) {        # for each file in current directory
     if (-d $file) {                     # directory
         $filetype = "directory";
         $fileimg  = "$imgdir/$img{$filetype}";
-        $sendtxt1  = "cd $dir/$file; xls $options";
-        $sendtxt2  = "cd $file; xls $options";
+        $sendtxt1  = "cd $dir/$file; xls";
+        $sendtxt2  = "cd $file; xls";
 
     } elsif (-x $file) {                # executable
         $filetype = "executable";
@@ -88,11 +98,13 @@ foreach $file (glob("*")) {        # for each file in current directory
         my $nurl = 0;
         while ( m%\b                              # URL word boundary
                  (http|file|mailto):              # protocol
-                 (//)?                            # slashpair
-                 (?:([\w.]+)@)?                   # username
-                 ([\w\-]+(?:\.[\w\-]+)*)?         # host
-                 (?::(\d+))?                      # port
-                 (/\S*?)                          # pathname
+                 (?=/)                            # lookahead
+                 (?://                            # slashpair
+                   (?:([\w.]+)@)?                 # username
+                   ([\w\-]+(?:\.[\w\-]+)*)?       # host
+                   (?::(\d+))?                    # port
+                 )?
+                 (/|/[^/\s]\S*?)?                 # pathname
                  (?=>|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # URL terminator (look ahead)
                  %x ) {
             $urlvals[$nurl] = $&;
@@ -142,7 +154,7 @@ foreach $file (glob("*")) {        # for each file in current directory
     $nfile++;
 
     if (($nfile % $ncols) == 0) {       # print complete table row
-        print "<TR CLASS='icons'>$rowimg" unless $opt_noicons;
+        print "<TR CLASS='icons'>$rowimg" unless $opt_text;
         print "<TR>$rowtxt";
         $rowimg = "";
         $rowtxt = "";
@@ -151,10 +163,15 @@ foreach $file (glob("*")) {        # for each file in current directory
 }
 
 if ($rowtxt) {
-    print "<TR CLASS='icons'>$rowimg" unless $opt_noicons;
+    print "<TR CLASS='icons'>$rowimg" unless $opt_text;
     print "<TR>$rowtxt";
 }
 
 print "</TABLE>";
+print "<div class='beginner'>";
+print "Double-click on file/directory name to execute file/open directory.";
+print "<span class='noicons'><br>Set <b>Icons</b> setting to <em>on</em> to enable icon display.</span>";
+print "<span class='icons'><br>Set <b>Icons</b> setting to <em>off</em> to disable icon display.</span>";
+print "</div>";
 print "\000";                           # Terminate HTML stream
 

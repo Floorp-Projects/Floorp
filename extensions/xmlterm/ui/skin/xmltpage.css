@@ -40,25 +40,25 @@ SPAN.inversestyle    { font-weight: bold; margin: 0;
                         padding-top: 0; padding-bottom: 0 }
 
 /* Forms */
-FORM { margin: 0; padding-top: 0; padding-bottom: 0 }
+FORM             { margin: 0; padding-top: 0; padding-bottom: 0 }
 SPAN.formhead    { font-family: sans-serif; font-weight: bold }
 
 /* Tips */
-SPAN.tipdata     { font-family: sans-serif }
+SPAN.tipdata     { font-family: sans-serif; background-color: #DDDDDD }
 TABLE.tiptable   { background-color: #DDDDDD }
 DIV.tipelement   { font-family: sans-serif }
 
 /* Help links */
 SPAN.helphighlight { font-family: sans-serif; color: green; cursor: hand }
 SPAN.helplink      { font-family: sans-serif; color: blue; cursor: hand;
-                     text-decoration: underline}
+                     text-decoration: underline }
 
 /* Level style */
 DIV.intermediate {display: block}
 DIV.beginner     {display: none}
 
 /* Icons style */
-TR.icons     {display: none}
-IMG.icons    {display: none}
-SPAN.icons   {display: none}
 SPAN.noicons {display: inline}
+SPAN.icons   {display: none}
+IMG.icons    {display: none}
+TR.icons     {display: none}
