@@ -1063,6 +1063,12 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
 	char            *hdrs = 0;
 	nsMsgSendPart   *part = nsnull;
 
+  // If this was one of those dead parts from a quoted web page, 
+  // then just return safely.
+  //
+  if (ma->m_bogus_attachment)
+    return 0;
+
 	// If at this point we *still* don't have a content-type, then
 	// we're never going to get one.
 	if (ma->m_type == nsnull) 
@@ -2201,6 +2207,17 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
         continue;
       }
     
+      //
+      //  IF we get here and the URL is NULL, just dec the pending count and move on!!!
+      //
+      if (!m_attachments[i].mURL)
+      {
+        m_attachments[i].m_bogus_attachment = PR_TRUE;
+        m_attachments[i].m_done = PR_TRUE;
+        m_attachment_pending_count--;
+        continue;
+      }
+
       //
       // This only returns a failure code if NET_GetURL was not called
       // (and thus no exit routine was or will be called.) 

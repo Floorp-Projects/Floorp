@@ -83,6 +83,7 @@ public:
   nsOutputFileStream    *mOutFile;          // The temp file stream pointer
   nsURLFetcher          *mFetcher;          // The URL Fetcher
   nsMsgCompFields       *mCompFields;       // Message composition fields for the sender
+  PRBool                m_bogus_attachment; // This is to catch problem children...
 
 #ifdef XP_MAC
   nsFileSpec            *mAppleFileSpec;    // The temp file holds the appledouble
