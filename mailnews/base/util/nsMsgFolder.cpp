@@ -2018,6 +2018,9 @@ NS_IMETHODIMP nsMsgFolder::SetBiffState(PRUint32 aBiffState)
     // Get the server and notify it and not inbox.
   if(oldBiffState != aBiffState) 
   {
+    if (aBiffState == nsMsgBiffState_NoMail)
+      SetNumNewMessages(0); 
+
     // we don't distinguish between unknown and noMail for servers
     if (! (oldBiffState == nsMsgBiffState_Unknown && aBiffState == nsMsgBiffState_NoMail))
     {
