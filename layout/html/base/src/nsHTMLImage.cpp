@@ -129,21 +129,38 @@ nsHTMLImageLoader::nsHTMLImageLoader()
   mImageLoader = nsnull;
   mLoadImageFailed = PR_FALSE;
   mLoadBrokenImageFailed = PR_FALSE;
+  mURLSpec = nsnull;
 }
 
 nsHTMLImageLoader::~nsHTMLImageLoader()
 {
   NS_IF_RELEASE(mImageLoader);
+  if (nsnull != mURLSpec) {
+    delete mURLSpec;
+  }
 }
 
 nsIImage*
-nsHTMLImageLoader:: GetImage()
+nsHTMLImageLoader::GetImage()
 {
   nsIImage* image = nsnull;
   if (nsnull != mImageLoader) {
     mImageLoader->GetImage(image);
   }
   return image;
+}
+
+nsresult
+nsHTMLImageLoader::SetURL(const nsString& aURLSpec)
+{
+  if (nsnull != mURLSpec) {
+    delete mURLSpec;
+  }
+  mURLSpec = new nsString(aURLSpec);
+  if (nsnull == mURLSpec) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -154,40 +171,29 @@ nsHTMLImageLoader::LoadImage(nsIPresContext* aPresContext,
 {
   aLoadStatus = NS_IMAGE_LOAD_STATUS_NONE;
 
-  // Get absolute url
+  // Get absolute url the first time through
   nsresult rv;
   nsAutoString src;
-  if (mLoadImageFailed) {
+  if (mLoadImageFailed || (nsnull == mURLSpec)) {
     src.Append(BROKEN_IMAGE_URL);
   } else {
-    nsAutoString srcParam;
-    nsIContent* content;
-    aForFrame->GetContent(content);
-    if (eContentAttr_HasValue != content->GetAttribute("SRC", srcParam)) {
-      NS_RELEASE(content);
-      src.Append(BROKEN_IMAGE_URL);
-      mLoadImageFailed = PR_TRUE;
-    }
-    else {
-      NS_RELEASE(content);
-      nsAutoString baseURL;
+    nsAutoString baseURL;
 
-      // Get documentURL
-      nsIPresShell* shell;
-      shell = aPresContext->GetShell();
-      nsIDocument* doc = shell->GetDocument();
-      nsIURL* docURL = doc->GetDocumentURL();
+    // Get documentURL
+    nsIPresShell* shell;
+    shell = aPresContext->GetShell();
+    nsIDocument* doc = shell->GetDocument();
+    nsIURL* docURL = doc->GetDocumentURL();
 
-      // Create an absolute URL
-      nsresult rv = NS_MakeAbsoluteURL(docURL, baseURL, srcParam, src);
+    // Create an absolute URL
+    nsresult rv = NS_MakeAbsoluteURL(docURL, baseURL, *mURLSpec, src);
 
-      // Release references
-      NS_RELEASE(shell);
-      NS_RELEASE(docURL);
-      NS_RELEASE(doc);
-      if (NS_OK != rv) {
-        return rv;
-      }
+    // Release references
+    NS_RELEASE(shell);
+    NS_RELEASE(docURL);
+    NS_RELEASE(doc);
+    if (NS_OK != rv) {
+      return rv;
     }
   }
 
@@ -353,6 +359,11 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
                            nsReflowMetrics& aDesiredSize,
                            const nsSize& aMaxSize)
 {
+  // Setup url before starting the image load
+  nsAutoString src;
+  if (eContentAttr_HasValue == mContent->GetAttribute("SRC", src)) {
+    mImageLoader.SetURL(src);
+  }
   mImageLoader.GetDesiredSize(aPresContext, this, aDesiredSize, aMaxSize);
 }
 
