@@ -26,6 +26,8 @@
 
 [% button_name = "Search" %]
 
+<form method="get" action="buglist.cgi" name="queryform">
+
 [% PROCESS search/form.html.tmpl %]
 
 [% PROCESS search/knob.html.tmpl %]
