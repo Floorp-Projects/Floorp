@@ -33,6 +33,9 @@
 #include <Xfe/Button.h>
 #include <Xfe/Cascade.h>
 
+#include <Xfe/ComboBox.h>
+#include <Xfe/FancyBox.h>
+
 #include <Xm/Separator.h>
 #include <Xm/SeparatoG.h>
 #include <Xm/TextF.h>
@@ -129,6 +132,7 @@ static void		LayoutVertical		(Widget,Boolean,Dimension *,Dimension *);
 
 static Boolean	IsValidChild		(Widget);
 static Boolean	IsButtonChild		(Widget);
+static Boolean	IsComboBoxChild		(Widget);
 static Boolean	IsSeparatorChild	(Widget);
 static void		InvokeCallbacks		(Widget,XtCallbackList,Widget,int,XEvent *);
 static Boolean	AllowForceDimension	(Widget);
@@ -478,7 +482,10 @@ static XtResource constraint_resources[] =
 		sizeof(Boolean),
 		XtOffsetOf(XfeToolBarConstraintRec , xfe_tool_bar . force_dimension_to_max),
 		XmRImmediate,
-		(XtPointer) True
+
+		/* A HACK until I fix this crap -re */
+		(XtPointer) False
+/* 		(XtPointer) True */
     },
 };   
 
@@ -1159,7 +1166,7 @@ ConstraintSetValues(Widget oc,Widget rc,Widget nc,ArgList av,Cardinal * ac)
 static Boolean
 AcceptDynamicChild(Widget child)
 {
-	return IsValidChild(child);
+ 	return IsValidChild(child);
 }
 /*----------------------------------------------------------------------*/
 static Boolean
@@ -1277,20 +1284,25 @@ GetChildDimensions(Widget child,Dimension * width_out,Dimension * height_out)
 	int							width = 0;
 	int							height = 0;
 	XfeToolBarConstraintPart *	cp = _XfeToolBarConstraintPart(child);
-	Boolean						force_dimension;
+	Boolean						force_dimension = False;
 
 	assert( width_out != NULL );
 	assert( height_out != NULL );
 
+#if 0
 	if (cp->force_dimension_to_max)
 	{
- 		force_dimension = AllowForceDimension(child);
+/*  		force_dimension = AllowForceDimension(child); */
+
+		/* A HACK until I fix this crap -re */
+		force_dimension = False;
 	}
+#endif
 
 	/* Horizontal */
     if (_XfeOrientedOrientation(w) == XmHORIZONTAL)
 	{
-		if (IsButtonChild(child))
+		if (IsButtonChild(child) || IsComboBoxChild(child))
 		{
 			/* The button's width */
 			width = 
@@ -1318,7 +1330,7 @@ GetChildDimensions(Widget child,Dimension * width_out,Dimension * height_out)
 	/* Vertical */
 	else if (_XfeOrientedOrientation(w) == XmVERTICAL)
 	{
-		if (IsButtonChild(child))
+		if (IsButtonChild(child) || IsComboBoxChild(child))
 		{
 			/* The button's width */
 			width = 
@@ -1857,13 +1869,21 @@ LayoutVertical(Widget		w,
 static Boolean
 IsValidChild(Widget child)
 {
-	return (IsButtonChild(child) || IsSeparatorChild(child));
+	return (IsButtonChild(child) || 
+			IsSeparatorChild(child) ||
+			IsComboBoxChild(child));
 }
 /*----------------------------------------------------------------------*/
 static Boolean
 IsButtonChild(Widget child)
 {
 	return (XfeIsButton(child) || XfeIsCascade(child));
+}
+/*----------------------------------------------------------------------*/
+static Boolean
+IsComboBoxChild(Widget child)
+{
+	return (XfeIsComboBox(child) || XfeIsFancyBox(child));
 }
 /*----------------------------------------------------------------------*/
 static Boolean

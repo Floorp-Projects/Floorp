@@ -46,6 +46,7 @@ CSRCS			= \
 
 REQUIRES		= \
 				XfeToolBar \
+				XfeComboBox \
 				XfeWidgets
 
 EXPORTS			= \
