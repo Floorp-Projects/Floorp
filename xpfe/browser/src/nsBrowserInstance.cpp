@@ -489,11 +489,6 @@ nsBrowserInstance::ReinitializeContentVariables()
     if (webShell) {
       mContentAreaDocShellWeak = getter_AddRefs(NS_GetWeakReference(docShell)); // Weak reference
 
-      nsCOMPtr<nsIDocShellHistory> dsHistory(do_QueryInterface(docShell));
-      nsCOMPtr<nsIGlobalHistory> history(do_GetService(kCGlobalHistoryCID));
-      if (dsHistory)
-        dsHistory->SetGlobalHistory(history);
-
       if (APP_DEBUG) {
         nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
         nsXPIDLString name;
