@@ -711,6 +711,10 @@ Rights Reserved.
                   label="&copyImageCmd.label;"
                   accesskey="&copyImageCmd.accesskey;"
                   command="cmd_copyImageLocation"/>
+        <menuitem id="context-copyemail"
+                  label="&copyEmailCmd.label;"
+                  accesskey="&copyEmailCmd.accesskey;"
+                  oncommand="gMessagePaneContextMenu.copyEmail();"/>
         <menuseparator id="messagePaneContext-sep-copy"/>
         <menuitem id="context-savelink"
                   label="&saveLinkCmd.label;"
