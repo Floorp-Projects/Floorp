@@ -344,20 +344,46 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
   nscoord x = mX;
   nscoord y = mY;
   if (0 == mMetrics.height) {
-    // For empty blocks we revert the y coordinate back so that the
-    // top margin is no longer applied.
-    y = mSpace.y;
     if (IsHTMLParagraph(mFrame)) {
       // Special "feature" for HTML compatability - empty paragraphs
       // collapse into nothingness, including their margins.
       *aBottomMarginResult = 0;
+#ifdef NOISY_VERTICAL_MARGINS
+      printf("  ");
+      nsFrame::ListTag(stdout, mOuterReflowState.frame);
+      printf(": ");
+      nsFrame::ListTag(stdout, mFrame);
+      printf(" -- zapping top & bottom margin; y=%d spaceY=%d\n",
+             y, mSpace.y);
+#endif
     }
     else {
       // Collapse the bottom margin with the top margin that was already
       // applied.
       nscoord newBottomMargin = MaxMargin(collapsedBottomMargin, mTopMargin);
       *aBottomMarginResult = newBottomMargin;
+#ifdef NOISY_VERTICAL_MARGINS
+      printf("  ");
+      nsFrame::ListTag(stdout, mOuterReflowState.frame);
+      printf(": ");
+      nsFrame::ListTag(stdout, mFrame);
+      printf(" -- collapsing top & bottom margin together; y=%d spaceY=%d\n",
+             y, mSpace.y);
+#endif
     }
+
+    // For empty blocks we revert the y coordinate back so that the
+    // top margin is no longer applied.
+    nsIHTMLReflow* htmlReflow;
+    nsresult rv = mFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
+    if (NS_SUCCEEDED(rv)) {
+      // XXX This isn't good enough. What if the floater was placed
+      // downward, just below another floater?
+      nscoord dy = mSpace.y - mY;
+      htmlReflow->MoveInSpaceManager(mPresContext,
+                                     mOuterReflowState.spaceManager, 0, dy);
+    }
+    y = mSpace.y;
 
     // Empty blocks do not have anything special done to them and they
     // always fit.
