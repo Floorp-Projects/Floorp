@@ -73,6 +73,7 @@ viewer:Components:EditorCore.shlb
 viewer:Components:EditorTxmgr.shlb 
 viewer:Components:file.shlb 
 viewer:Components:FindComponent.shlb 
+viewer:Components:finger.shlb
 viewer:Components:ftp.shlb 
 viewer:Components:ftp.xpt 
 viewer:Components:gfx.xpt 

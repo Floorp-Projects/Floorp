@@ -92,6 +92,7 @@ bin\components\nkcache.dll
 bin\components\nkcache.xpt
 bin\components\nkdata.dll
 bin\components\nkfile.dll
+bin\components\nkfinger.dll
 bin\components\nkftp.dll
 bin\components\nkhttp.dll
 bin\components\nkjar.dll

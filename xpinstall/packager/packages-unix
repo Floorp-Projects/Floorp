@@ -73,6 +73,7 @@ bin/components/libnecko.so
 bin/components/libnecko_about.so
 bin/components/libnecko_data.so
 bin/components/libnecko_file.so
+bin/components/libnecko_finger.so
 bin/components/libnecko_ftp.so
 bin/components/libnecko_http.so
 bin/components/libnecko_jar.so
