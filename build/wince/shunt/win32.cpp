@@ -1028,6 +1028,22 @@ MOZCE_SHUNT_API UINT mozce_GetACP(void)
     return GetACP();
 }
 
+
+
+MOZCE_SHUNT_API DWORD mozce_ExpandEnvironmentStrings(LPCTSTR lpSrc, LPTSTR lpDst, DWORD nSize)
+{
+#ifdef DEBUG
+    printf("mozce_ExpandEnvironmentStrings called\n");
+#endif
+
+    return 0;
+}
+
+MOZCE_SHUNT_API BOOL mozce_GdiFlush(void)
+{
+    return TRUE;
+}
+
 #if 0
 {
 #endif
