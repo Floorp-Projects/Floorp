@@ -22,6 +22,7 @@
 #                 David Gardiner <david.gardiner@unisa.edu.au>
 #                 Matthias Radestock <matthias@sorted.org>
 #                 Gervase Markham <gerv@gerv.net>
+#                 Byron Jones <bugzilla@glob.com.au>
 
 use strict;
 use lib ".";
@@ -395,16 +396,32 @@ if (($::FORM{'query_format'} || $::FORM{'format'} || "") eq "create-series") {
 # Add in the defaults.
 $vars->{'default'} = \%default;
 
-$vars->{'format'} = $::FORM{'format'};
-$vars->{'query_format'} = $::FORM{'query_format'};
+$vars->{'format'} = $cgi->param('format');
+$vars->{'query_format'} = $cgi->param('query_format');
+
+# Set default page to "specific" if none proviced
+if (!($cgi->param('query_format') || $cgi->param('format'))) {
+    if (defined $cgi->cookie('DEFAULTFORMAT')) {
+        $vars->{'format'} = $cgi->cookie('DEFAULTFORMAT');
+    } else {
+        $vars->{'format'} = 'specific';
+    }
+}
+
+# Set cookie from format unless it's a report
+if ($vars->{'format'} !~ /^report-/i) {
+    $cgi->send_cookie(-name => 'DEFAULTFORMAT',
+                      -value => $vars->{'format'},
+                      -expires => "Fri, 01-Jan-2038 00:00:00 GMT");
+}
 
 # Generate and return the UI (HTML page) from the appropriate template.
 # If we submit back to ourselves (for e.g. boolean charts), we need to
 # preserve format information; hence query_format taking priority over
 # format.
 my $format = GetFormat("search/search", 
-                       $::FORM{'query_format'} || $::FORM{'format'}, 
-                       $::FORM{'ctype'});
+                       $vars->{'query_format'} || $vars->{'format'}, 
+                       $cgi->param('ctype'));
 
 print $cgi->header($format->{'ctype'});
 

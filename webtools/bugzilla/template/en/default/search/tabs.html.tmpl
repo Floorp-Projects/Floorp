@@ -26,10 +26,10 @@
   #   description: string. Description of the tab (used in tab title).
   #%]
 
-[% tabs = [ { name => '__DEFAULT__', description => "Advanced Search" },
-            { name => 'specific', description => "Find a Specific $terms.Bug " } ] %]
+[% tabs = [ { name => 'specific', description => "Find a Specific $terms.Bug " },
+            { name => 'advanced', description => "Advanced Search" } ] %]
 
-[% current_tab = query_format || format || "__DEFAULT__" %]
+[% current_tab = query_format || format || "advanced" %]
 
 <center>
   <table cellspacing="0" cellpadding="10" border="0" width="100%">
@@ -43,9 +43,7 @@
           </td>
         [% ELSE %]
           <td align="center" bgcolor="#BBBBEE" class="unselected_tab">
-            <a href="query.cgi
-              [% IF tab.name != "__DEFAULT__" %]?format=[% tab.name %][% END %]"
-            >
+            <a href="query.cgi?format=[% tab.name %]" >
               [% tab.description %]
             </a>
           </td>
