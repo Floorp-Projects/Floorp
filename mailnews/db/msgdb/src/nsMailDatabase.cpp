@@ -292,7 +292,8 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
 					}
 					fileStream->seek(position);
 					// We are filing out old Cheddar flags here
-					PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS_FORMAT, flags);
+					PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS_FORMAT,
+                                flags & 0x0000FFFF);
 					fileStream->write(buf, PL_strlen(buf));
 					fileStream->flush();
 
