@@ -44,7 +44,7 @@ import javax.swing.event.DocumentListener;
 
 public class TextCellEditor extends JTextField implements CellEditor,
 DocumentListener {
-  MyCellEditorListener fListener;
+  CellEditorListener fListener;
   boolean fSelected, fStopping;
   Dimension fSize = new Dimension();
 
@@ -76,11 +76,9 @@ DocumentListener {
   }
 
   public boolean isCellEditable(EventObject aEvent) {
-    if (aEvent instanceof MouseEvent) {
-      return (((MouseEvent) aEvent).getID() == MouseEvent.MOUSE_RELEASED &&
-              fSelected);
-    }
-    return false;
+    return ((aEvent instanceof MouseEvent)
+            && (((MouseEvent)aEvent).getID() == MouseEvent.MOUSE_RELEASED
+                && fSelected));
   }
 
   public boolean shouldSelectCell(EventObject aEvent) {
@@ -107,7 +105,7 @@ DocumentListener {
   }
 
   public void addCellEditorListener(CellEditorListener aListener) {
-    fListener = (MyCellEditorListener) aListener;
+    fListener = aListener;
   }
 
   public void removeCellEditorListener(CellEditorListener aListener) {
