@@ -436,6 +436,14 @@ function OnCreateAlignmentPopup()
   
 // --------------------------- Debug stuff ---------------------------
 
+function EditorApplyStyleSheet(url)
+{
+  if (window.editorShell)
+  {
+    window.editorShell.ApplyStyleSheet(url);
+  }
+}
+
 function EditorExecuteScript(fileSpec)
 {
   fileSpec.openStreamForReading();

@@ -122,6 +122,9 @@ public:
   NS_IMETHOD GetBodyWrapWidth(PRInt32 *aWrapColumn);
   NS_IMETHOD SetBodyWrapWidth(PRInt32 aWrapColumn);
 
+// Miscellaneous
+  NS_IMETHOD ApplyStyleSheet(const nsString& aURL);
+
 // Logging methods
 
   NS_IMETHOD StartLogging(nsIFileSpec *aLogFile);

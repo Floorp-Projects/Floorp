@@ -51,12 +51,20 @@
 #include "nsIStyleContext.h"
 #include "nsIEditActionListener.h"
 
+#include "nsICSSLoader.h"
+#include "nsICSSStyleSheet.h"
+#include "nsIHTMLContentContainer.h"
+#include "nsIStyleSet.h"
+#include "nsIDocumentObserver.h"
+
 
 #ifdef NECKO
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#else
+#include "nsIURL.h"
 #endif // NECKO
 
 #include "nsEditorShell.h"
@@ -1330,6 +1338,117 @@ NS_IMETHODIMP nsEditor::InsertAsQuotation(const nsString& aQuotedText)
   printf("nsEditor::PasteAsQuotation() not meaningful, shouldn't be here\n");
 #endif
   return InsertText(aQuotedText);
+}
+
+extern "C" void
+ApplyStyleSheetToPresShellDocument(nsICSSStyleSheet* aSheet, void *aData)
+{
+  nsresult rv;
+
+  nsIPresShell *presShell = (nsIPresShell *)aData;
+
+  if (presShell) {
+    nsCOMPtr<nsIStyleSet> styleSet;
+
+    rv = presShell->GetStyleSet(getter_AddRefs(styleSet));
+
+    if (NS_SUCCEEDED(rv) && styleSet) {
+      styleSet->AppendOverrideStyleSheet(aSheet);
+
+      nsCOMPtr<nsIDocumentObserver> observer = do_QueryInterface(presShell);
+      nsCOMPtr<nsIStyleSheet> styleSheet     = do_QueryInterface(aSheet);
+      nsCOMPtr<nsIDocument> document;
+
+      rv = presShell->GetDocument(getter_AddRefs(document));
+
+      if (NS_SUCCEEDED(rv) && document && observer && styleSheet)
+        rv = observer->StyleSheetAdded(document, styleSheet);
+    }
+  }
+}
+
+NS_IMETHODIMP nsEditor::ApplyStyleSheet(const nsString& aURL)
+{
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->ApplyStyleSheet(aURL);
+#endif // ENABLE_JS_EDITOR_LOG
+
+  // XXX: Note that this is not an undo-able action yet!
+
+  nsresult rv   = NS_OK;
+  nsIURI* uaURL = 0;
+
+#ifndef NECKO
+  rv = NS_NewURL(&uaURL, aURL);
+#else
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIURI *uri = nsnull;
+  rv = service->NewURI(aURL, nsnull, &uri);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&uaURL);
+  NS_RELEASE(uri);
+#endif // NECKO
+
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIDocument> document;
+
+    rv = mPresShell->GetDocument(getter_AddRefs(document));
+
+    if (NS_SUCCEEDED(rv)) {
+      if (document) {
+        nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
+
+        if (container) {
+          nsICSSLoader *cssLoader         = 0;
+          nsICSSStyleSheet *cssStyleSheet = 0;
+
+          rv = container->GetCSSLoader(cssLoader);
+
+          if (NS_SUCCEEDED(rv)) {
+            if (cssLoader) {
+              PRBool complete;
+
+              rv = cssLoader->LoadAgentSheet(uaURL, cssStyleSheet, complete,
+                                             ApplyStyleSheetToPresShellDocument,
+                                             mPresShell);
+
+              if (NS_SUCCEEDED(rv)) {
+                if (complete) {
+                  if (cssStyleSheet) {
+                    ApplyStyleSheetToPresShellDocument(cssStyleSheet,
+                                                       mPresShell);
+                  }
+                  else
+                    rv = NS_ERROR_NULL_POINTER;
+                }
+                    
+                //
+                // If not complete, we will be notified later
+                // with a call to AddStyleSheetToEditorDocument().
+                //
+              }
+            }
+            else
+              rv = NS_ERROR_NULL_POINTER;
+          }
+        }
+        else
+          rv = NS_ERROR_NULL_POINTER;
+      }
+      else
+        rv = NS_ERROR_NULL_POINTER;
+    }
+
+    NS_RELEASE(uaURL);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP

@@ -229,6 +229,8 @@ public:
 
   NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText);
 
+  NS_IMETHOD ApplyStyleSheet(const nsString& aURL);
+
   NS_IMETHOD AddEditActionListener(nsIEditActionListener *aListener);
 
   NS_IMETHOD RemoveEditActionListener(nsIEditActionListener *aListener);

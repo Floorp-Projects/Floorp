@@ -108,6 +108,8 @@ public:
   NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride, PRBool aSelectionOnly)=0;
   NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride, PRBool aSelectionOnly)=0;
 
+  NS_IMETHOD ApplyStyleSheet(const nsString& aURL)=0;
+
 // Miscellaneous Methods
   /** Set the background color of the selected table cell, row, columne, or table,
     * or the document background if not in a table
