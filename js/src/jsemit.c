@@ -2374,6 +2374,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     off = -1;
     if (switchOp == JSOP_CONDSWITCH) {
         intN caseNoteIndex = -1;
+        JSBool beforeCases = JS_TRUE;
 
         /* Emit code for evaluating cases and jumping to case statements. */
         for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
@@ -2387,8 +2388,10 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                     return JS_FALSE;
                 }
             }
-            if (pn3->pn_type == TOK_DEFAULT)
+            if (!pn4) {
+                JS_ASSERT(pn3->pn_type == TOK_DEFAULT);
                 continue;
+            }
             caseNoteIndex = js_NewSrcNote2(cx, cg, SRC_PCDELTA, 0);
             if (caseNoteIndex < 0)
                 return JS_FALSE;
@@ -2396,12 +2399,13 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             if (off < 0)
                 return JS_FALSE;
             pn3->pn_offset = off;
-            if (pn3 == pn2->pn_head) {
+            if (beforeCases) {
                 /* Switch note's second offset is to first JSOP_CASE. */
                 if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 1,
                                          off - top)) {
                     return JS_FALSE;
                 }
+                beforeCases = JS_FALSE;
             }
         }
 
