@@ -31,7 +31,8 @@ DIRS	= \
 	cnvts		\
 	mimetype	\
 	main		\
-	protocol
+	protocol        \
+	util
 
 DIRS	+= public module
 
