@@ -2261,6 +2261,13 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
     }
   }
 
+  // If we don't have to use document fonts, then we are only entitled
+  // to use the user's default variable-width font and fixed-width font
+  if (!useDocumentFonts && !chromeOverride) {
+    if (generic != kGenericFont_moz_fixed)
+      generic = kGenericFont_NONE;
+  }
+
   // Now compute our font struct
   if (generic == kGenericFont_NONE) {
     // continue the normal processing
