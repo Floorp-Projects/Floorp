@@ -788,45 +788,52 @@ void nsMacEventHandler::InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& a
 	// nsKeyEvent parts
 	//
 	if (message == NS_KEY_PRESS 
-	&& !IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8) )
+		&& !IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8) )
 	{
-	  if ( aKeyEvent.isControl )
-	  {
-	    aKeyEvent.charCode = (aOSEvent.message & charCodeMask);
-	    if ( aKeyEvent.charCode <= 26 )
-	    {
-	      if ( aKeyEvent.isShift )
-	        aKeyEvent.charCode += 'A' - 1;
-	      else
-	        aKeyEvent.charCode += 'a' - 1;
-	    }
-	  }
-	  else
- 	  if ( !aKeyEvent.isMeta)
-    {
-      aKeyEvent.isShift = aKeyEvent.isControl = aKeyEvent.isAlt = aKeyEvent.isMeta = 0;
-    }
+		if ( aKeyEvent.isControl )
+		{
+			aKeyEvent.charCode = (aOSEvent.message & charCodeMask);
+			if ( aKeyEvent.charCode <= 26 )
+			{
+				if ( aKeyEvent.isShift )
+					aKeyEvent.charCode += 'A' - 1;
+				else
+					aKeyEvent.charCode += 'a' - 1;
+			} // if ( aKeyEvent.charCode <= 26 )
     
-    aKeyEvent.keyCode	= 0;
-    aKeyEvent.charCode = ConvertKeyEventToUnicode(aOSEvent);
-	  NS_ASSERTION(0 != aKeyEvent.charCode, "nsMacEventHandler::InitializeKeyEvent: ConvertKeyEventToUnicode returned 0.");
-	}
+			aKeyEvent.keyCode	= 0;
+		} // if ( aKeyEvent.isControl )
+		else // else for if ( aKeyEvent.isControl )
+		{
+			if ( !aKeyEvent.isMeta)
+			{
+				aKeyEvent.isShift = aKeyEvent.isControl = aKeyEvent.isAlt = aKeyEvent.isMeta = 0;
+			} // if ( !aKeyEvent.isMeta)
+    
+			aKeyEvent.keyCode	= 0;
+			aKeyEvent.charCode = ConvertKeyEventToUnicode(aOSEvent);
+			NS_ASSERTION(0 != aKeyEvent.charCode, "nsMacEventHandler::InitializeKeyEvent: ConvertKeyEventToUnicode returned 0.");
+		} // else for if ( aKeyEvent.isControl )
+	} // if (message == NS_KEY_PRESS && !IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8) )
 	else
 	{
-    aKeyEvent.keyCode = ConvertMacToRaptorKeyCode(aOSEvent.message, aOSEvent.modifiers);
-    aKeyEvent.charCode = 0;
-  }
+		aKeyEvent.keyCode = ConvertMacToRaptorKeyCode(aOSEvent.message, aOSEvent.modifiers);
+		aKeyEvent.charCode = 0;
+	} // else for  if (message == NS_KEY_PRESS && !IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8) )
   
   //
   // obscure cursor if appropriate
   //
-  if ( message == NS_KEY_PRESS 
-  && !aKeyEvent.isMeta 
-  && aKeyEvent.keyCode != NS_VK_PAGE_UP && aKeyEvent.keyCode != NS_VK_PAGE_DOWN
-  // also consider:  function keys and sole modifier keys
-  )
+	if ( message == NS_KEY_PRESS 
+		&& !aKeyEvent.isMeta 
+		&& aKeyEvent.keyCode != NS_VK_PAGE_UP && aKeyEvent.keyCode != NS_VK_PAGE_DOWN
+		// also consider:  function keys and sole modifier keys
+	) 
+	{
     ::ObscureCursor();
+  } // if ( message == NS_KEY_PRESS && !aKeyEvent.isMeta && aKeyEvent.keyCode != NS_VK_PAGE_UP && aKeyEvent.keyCode != NS_VK_PAGE_DOWN
 }
+
 
 
 //-------------------------------------------------------------------------
