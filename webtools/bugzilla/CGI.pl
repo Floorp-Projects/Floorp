@@ -1166,8 +1166,19 @@ sub PutHeader {
 }
 
 
+# Putfooter echoes footerhtml and by default prints closing tags
+#
+# param
+#   dontclose (boolean): avoid sending </body></html>
+#
+# Example:
+# Putfooter(); # normal close
+# Putfooter(1); # don't send closing tags
+
 sub PutFooter {
+    my ( $dontclose ) = @_;
     print PerformSubsts(Param("footerhtml"));
+    print "\n</body></html>\n" if ( ! $dontclose );
     SyncAnyPendingShadowChanges();
 }
 
