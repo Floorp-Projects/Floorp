@@ -133,6 +133,21 @@ final class InterpreterData implements Serializable, DebuggableScript
         return itsName;
     }
 
+    public int getParamCount()
+    {
+        return argCount;
+    }
+
+    public int getParamAndVarCount()
+    {
+        return argNames.length;
+    }
+
+    public String getParamOrVarName(int index)
+    {
+        return argNames[index];
+    }
+
     public String getSourceName()
     {
         return itsSourceFile;

@@ -61,6 +61,35 @@ public interface DebuggableScript
     public String getFunctionName();
 
     /**
+     * Get number of declared parameters in function.
+     * Return 0 if this script is not function.
+     *
+     * @see #getParamAndVarCount()
+     * @see #getParamOrVarName(int index)
+     */
+    public int getParamCount();
+
+    /**
+     * Get number of declared parameters and local variables.
+     * Return number of declared global variables if this script is not
+     * function.
+     *
+     * @see #getParamCount()
+     * @see #getParamOrVarName(int index)
+     */
+    public int getParamAndVarCount();
+
+    /**
+     * Get name of a declared parameter or local variable.
+     * <tt>index</tt> should be less then {@link #getParamAndVarCount()}.
+     * If <tt>index &lt; {@link #getParamCount()}</tt>, return the name of
+     * the corresponding parameter, otherwise return the name of variable.
+     * If this script is not function, return the name of the declared
+     * global variable.
+     */
+    public String getParamOrVarName(int index);
+
+    /**
      * Get the name of the source (usually filename or URL)
      * of the script.
      */
