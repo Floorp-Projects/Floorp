@@ -546,7 +546,7 @@ nsUnicodeToJamoTTF::composeHangul(char* aResult)
   rv =  JamoNormalize(mJamos, getter_Copies(buffer), &length);
 
   // safe to cast away const.
-  PRUnichar* text = NS_CONST_CAST(PRUnichar *, buffer.get());
+  PRUnichar* text = buffer.BeginWriting();
   NS_ENSURE_SUCCESS(rv, rv);
 
   text += RenderAsPrecompSyllable(text, &length, aResult);

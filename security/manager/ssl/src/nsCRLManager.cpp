@@ -131,7 +131,7 @@ nsCRLManager::ImportCrl (PRUint8 *aData, PRUint32 aLength, nsIURI * aURI, PRUint
     }
   }
   
-  crl = SEC_NewCrl(CERT_GetDefaultCertDB(), (char*)url.get(), &derCrl,
+  crl = SEC_NewCrl(CERT_GetDefaultCertDB(), NS_CONST_CAST(char*, url.get()), &derCrl,
                    aType);
   
   if (!crl) {

@@ -502,7 +502,7 @@ nsSmtpService::loadSmtpServers()
       }
 
       char *newStr;
-      char *pref = nsCRT::strtok(NS_CONST_CAST(char*,(const char*)serverList), ", ", &newStr);
+      char *pref = nsCRT::strtok(serverList.BeginWriting(), ", ", &newStr);
 
       while (pref) {
         // fix for bug #96207
@@ -550,7 +550,7 @@ nsSmtpService::createKeyedServer(const char *key, nsISmtpServer** aResult)
                                             (void **)getter_AddRefs(server));
     if (NS_FAILED(rv)) return rv;
     
-    server->SetKey(NS_CONST_CAST(char *,key));
+    server->SetKey(key);
     mSmtpServers->AppendElement(server);
 
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));

@@ -463,7 +463,7 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
   // put an extra null at the end
   stringList.Append(kNullCh);
 
-  PRUnichar* start = NS_CONST_CAST(PRUnichar *, stringList.get());
+  PRUnichar* start = stringList.BeginWriting();
   PRUnichar* end   = start;
   PRUnichar* last  = start;
   PRUnichar  endCh;

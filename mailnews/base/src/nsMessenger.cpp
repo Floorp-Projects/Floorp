@@ -767,7 +767,7 @@ nsMessenger::SaveAttachmentToFolder(const char * contentType, const char * url, 
   nsCAutoString unescapedUrl;
   unescapedUrl.Assign(url);
 
-  nsUnescape(NS_CONST_CAST(char*, unescapedUrl.get()));
+  nsUnescape(unescapedUrl.BeginWriting());
   rv = SaveAttachment(fileSpec, unescapedUrl.get(), messageUri, contentType, nsnull);
 
   // before we return, we need to convert our file spec back to a nsIFile to return to the caller

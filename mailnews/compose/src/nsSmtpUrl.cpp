@@ -200,7 +200,7 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
   // Now unescape any fields that need escaped...
 	if (!m_toPart.IsEmpty())
   {
-		nsUnescape(NS_CONST_CAST(char*, m_toPart.get()));
+		nsUnescape(m_toPart.BeginWriting());
     if (mimeConverter)
     {
       if (NS_SUCCEEDED(mimeConverter->DecodeMimeHeader(m_toPart.get(),
@@ -212,7 +212,7 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
   }
 	if (!m_ccPart.IsEmpty())
   {
-		nsUnescape(NS_CONST_CAST(char*, m_ccPart.get()));
+		nsUnescape(m_ccPart.BeginWriting());
     if (mimeConverter)
     {
       if (NS_SUCCEEDED(mimeConverter->DecodeMimeHeader(m_ccPart.get(),
@@ -224,7 +224,7 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
   }
 	if (!m_subjectPart.IsEmpty())
   {
-    nsUnescape(NS_CONST_CAST(char*, m_subjectPart.get()));
+    nsUnescape(m_subjectPart.BeginWriting());
     if (mimeConverter)
     {
       if (NS_SUCCEEDED(mimeConverter->DecodeMimeHeader(m_subjectPart.get(),
@@ -235,12 +235,12 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
     }
   }
 	if (!m_newsgroupPart.IsEmpty())
-		nsUnescape(NS_CONST_CAST(char*, m_newsgroupPart.get()));
+		nsUnescape(m_newsgroupPart.BeginWriting());
 	if (!m_referencePart.IsEmpty())
-		nsUnescape(NS_CONST_CAST(char*, m_referencePart.get()));
+		nsUnescape(m_referencePart.BeginWriting());
 	if (!m_bodyPart.IsEmpty())
   {
-		nsUnescape(NS_CONST_CAST(char*, m_bodyPart.get()));
+		nsUnescape(m_bodyPart.BeginWriting());
     if (mimeConverter)
     {
       if (NS_SUCCEEDED(mimeConverter->DecodeMimeHeader(m_bodyPart.get(),
@@ -252,7 +252,7 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
     }
   }
 	if (!m_newsHostPart.IsEmpty())
-		nsUnescape(NS_CONST_CAST(char*, m_newsHostPart.get()));
+		nsUnescape(m_newsHostPart.BeginWriting());
 
 	return NS_OK;
 }
@@ -304,12 +304,12 @@ nsresult nsMailtoUrl::ParseUrl()
       // now we need to strip off the search part from the
       // to part....
       m_toPart.Cut(startOfSearchPart, numExtraChars);
-      ParseMailtoUrl(NS_CONST_CAST(char*, searchPart.get()));
+      ParseMailtoUrl(searchPart.BeginWriting());
     }
 	}
   else if (!m_toPart.IsEmpty())
   {
-    nsUnescape(NS_CONST_CAST(char*, m_toPart.get()));
+    nsUnescape(m_toPart.BeginWriting());
   }
 
   return rv;
@@ -549,7 +549,7 @@ nsSmtpUrl::SetRecipients(const char * aRecipientsList)
   NS_ENSURE_ARG(aRecipientsList);
   m_toPart = aRecipientsList;
   if (!m_toPart.IsEmpty())
-    nsUnescape(NS_CONST_CAST(char*, m_toPart.get()));
+    nsUnescape(m_toPart.BeginWriting());
   return NS_OK;
 }
 

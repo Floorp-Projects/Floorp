@@ -172,7 +172,7 @@ NS_UnescapeURL(const nsASingleFragmentCString &str, PRInt16 flags, nsACString &r
 inline nsAFlatCString &
 NS_UnescapeURL(nsAFlatCString &str)
 {
-    str.SetLength(nsUnescapeCount((char*)str.get()));
+    str.SetLength(nsUnescapeCount(str.BeginWriting()));
     return str;
 }
 

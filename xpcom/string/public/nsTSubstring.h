@@ -68,6 +68,13 @@ class nsTSubstring_CharT : public nsTAString_CharT
          * reading iterators
          */
 
+      const_char_iterator BeginReading() const { return mData; }
+      const_char_iterator EndReading() const { return mData + mLength; }
+
+        /**
+         * deprecated reading iterators
+         */
+
       const_iterator& BeginReading( const_iterator& iter ) const
         {
           iter.mStart = mData;
@@ -97,6 +104,13 @@ class nsTSubstring_CharT : public nsTAString_CharT
 
         /**
          * writing iterators
+         */
+      
+      char_iterator BeginWriting() { EnsureMutable(); return mData; }
+      char_iterator EndWriting() { EnsureMutable(); return mData + mLength; }
+
+        /**
+         * deprecated writing iterators
          */
       
       iterator& BeginWriting( iterator& iter )

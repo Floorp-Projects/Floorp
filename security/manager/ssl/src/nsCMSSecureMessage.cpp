@@ -107,7 +107,7 @@ GetCertByPrefID(const char *certID, char **_retval)
   if (NS_FAILED(rv)) goto done;
 
   /* Find a good cert in the user's database */
-  cert = CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(), (char*)nickname.get(), 
+  cert = CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(), NS_CONST_CAST(char*, nickname.get()), 
            certUsageEmailRecipient, PR_TRUE, ctx);
 
   if (!cert) { 

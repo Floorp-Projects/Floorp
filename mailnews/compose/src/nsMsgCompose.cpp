@@ -185,7 +185,7 @@ static void TranslateLineEnding(nsString& data)
   PRUnichar* sPtr;   //Start data pointer
   PRUnichar* ePtr;   //End data pointer
 
-  rPtr = wPtr = sPtr = NS_CONST_CAST(PRUnichar*, data.get());
+  rPtr = wPtr = sPtr = data.BeginWriting();
   ePtr = rPtr + data.Length();
 
   while (rPtr < ePtr)
@@ -2178,7 +2178,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
               nsXPIDLCString email;
               mIdentity->GetEmail(getter_Copies(email));
               addressToBeRemoved += ", ";
-              addressToBeRemoved += NS_CONST_CAST(char*, (const char *)email);
+              addressToBeRemoved += email;
             }
 
             rv= RemoveDuplicateAddresses(_compFields->GetCc(), addressToBeRemoved.get(), PR_TRUE, &resultStr);

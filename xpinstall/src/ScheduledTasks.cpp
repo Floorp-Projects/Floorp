@@ -99,8 +99,8 @@ PRInt32 ReplaceWindowsSystemFile(nsIFile* currentSpec, nsIFile* finalSpec)
         // NOTE: use OEM filenames! Even though it looks like a Windows
         //       .INI file, WININIT.INI is processed under DOS 
         
-        AnsiToOem( (char*)final.get(), (char*)final.get() );
-        AnsiToOem( (char*)current.get(), (char*)current.get() );
+        AnsiToOem( final.BeginWriting(), final.BeginWriting() );
+        AnsiToOem( current.BeginWriting(), current.BeginWriting() );
 
         if ( WritePrivateProfileString( "Rename", final.get(), current.get(), "WININIT.INI" ) )
             err = 0;
@@ -180,7 +180,7 @@ PRInt32 ScheduleFileForDeletion(nsIFile *filename)
 
     nsCAutoString path;
     GetRegFilePath(path);
-    err = NR_RegOpen((char*)path.get(), &reg);
+    err = NR_RegOpen(NS_CONST_CAST(char*, path.get()), &reg);
 
     if ( err == REGERR_OK )
     {
@@ -394,7 +394,7 @@ PRInt32 ReplaceFileNowOrSchedule(nsIFile* aReplacementFile, nsIFile* aDoomedFile
 
         nsCAutoString regFilePath;
         GetRegFilePath(regFilePath);
-        if ( REGERR_OK == NR_RegOpen((char*)regFilePath.get(), &reg) ) 
+        if ( REGERR_OK == NR_RegOpen(NS_CONST_CAST(char*, regFilePath.get()), &reg) ) 
         {
             err = NR_RegAddKey( reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY, &listkey );
             if ( err == REGERR_OK ) 

@@ -191,7 +191,7 @@ printf(" E6\n");
      charset spec. (It assumes that it's on its own line.)
      Most likely not fatally wrong, however. */
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_line(
-                             NS_CONST_CAST(char*, resultCStr.get()),
+                             resultCStr.BeginWriting(),
                              resultCStr.Length(),
                              obj);
 #ifdef DEBUG_BenB

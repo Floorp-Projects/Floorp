@@ -187,6 +187,7 @@ static int assembleCmdLine(char *const *argv, char **cmdLine)
 }
 #endif
 
+// XXXldb |args| has the wrong const-ness
 NS_IMETHODIMP  
 nsProcess::Run(PRBool blocking, const char **args, PRUint32 count, PRUint32 *pid)
 {
@@ -207,7 +208,7 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count, PRUint32 *pid
         my_argv[i+1] = NS_CONST_CAST(char*, args[i]);
     }
     // we need to set argv[0] to the program name.
-    my_argv[0] = NS_CONST_CAST(char*, mTargetPath.get());
+    my_argv[0] = mTargetPath.BeginWriting();
     // null terminate the array
     my_argv[count+1] = NULL;
 

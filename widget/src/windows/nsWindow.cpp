@@ -4379,7 +4379,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             InitEvent(event);
             event.mType      = nsDragDropEventStatus_eDrop;
             event.mIsFileURL = PR_FALSE;
-            event.mURL       = (PRUnichar *)fileStr.get();
+            event.mURL       = fileStr.get();
             DispatchEvent(&event, status);
             NS_RELEASE(event.widget);
 	        }
@@ -5646,7 +5646,7 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
     unicharSize = ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,
       mIMECompString->get(),
       mIMECompString->Length(),
-      (PRUnichar*)mIMECompUnicode->get(),
+      mIMECompUnicode->BeginWriting(),
       unicharSize+1);
     mIMECompUnicode->SetLength(unicharSize);
   }
@@ -5663,7 +5663,7 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
      event.rangeArray = nsnull;
   }
 
-  event.theText = (PRUnichar*)mIMECompUnicode->get();
+  event.theText = mIMECompUnicode->get();
   event.isShift	= mIsShiftDown;
   event.isControl = mIsControlDown;
   event.isMeta	= PR_FALSE;
@@ -6218,7 +6218,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
       long buflen = compStrLen + 1;
       NS_IMM_GETCOMPOSITIONSTRING(hIMEContext,
         GCS_COMPSTR,
-        (char*)mIMECompString->get(),
+        mIMECompString->BeginWriting(),
         buflen, compStrLen);
       mIMECompString->SetLength(compStrLen);
     }

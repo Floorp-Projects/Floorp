@@ -1907,7 +1907,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
       newAttachName.Append(".tmp");
     }
 
-    tmpSpec = nsMsgCreateTempFileSpec(NS_CONST_CAST(char*, newAttachName.get()));
+    tmpSpec = nsMsgCreateTempFileSpec(newAttachName.get());
   }
 
   // This needs to be done so the attachment structure has a handle 

@@ -2427,12 +2427,12 @@ nsMsgDBFolder::parseURI(PRBool needServer)
       nsCAutoString userPass;
       rv = url->GetUserPass(userPass);
       if (NS_SUCCEEDED(rv) && !userPass.IsEmpty())
-        nsUnescape(NS_CONST_CAST(char*,userPass.get()));
+        nsUnescape(userPass.BeginWriting());
 
       nsCAutoString hostName;
       rv = url->GetHost(hostName);
       if (NS_SUCCEEDED(rv) && !hostName.IsEmpty())
-        nsUnescape(NS_CONST_CAST(char*,hostName.get()));
+        nsUnescape(hostName.BeginWriting());
 
       // turn it back into a server:
 

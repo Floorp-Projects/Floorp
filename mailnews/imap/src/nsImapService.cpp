@@ -2373,7 +2373,7 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
 
 			nsCAutoString cStrFolderName(NS_STATIC_CAST(const char *, folderName));
       // Unescape the name before looking for parent path
-      nsUnescape(NS_CONST_CAST(char*, cStrFolderName.get()));
+      nsUnescape(cStrFolderName.BeginWriting());
       PRInt32 leafNameStart = 
             cStrFolderName.RFindChar(hierarchySeparator);
             if (leafNameStart != -1)
@@ -2686,7 +2686,7 @@ NS_IMETHODIMP nsImapService::NewURI(const nsACString &aSpec,
     // now extract lots of fun information...
     nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl);
     //nsCAutoString unescapedSpec(aSpec);
-    // nsUnescape(NS_CONST_CAST(char*, unescapedSpec.get()));
+    // nsUnescape(unescapedSpec.BeginWriting());
 
     // set the spec
     if (aBaseURI) 

@@ -112,6 +112,7 @@ class nsTDependentString_CharT : public nsTString_CharT
         {
           mData = NS_CONST_CAST(char_type*, data);
           mLength = char_traits::length(data);
+          SetDataFlags(F_TERMINATED);
           AssertValid();
         }
 
@@ -119,6 +120,7 @@ class nsTDependentString_CharT : public nsTString_CharT
         {
           mData = NS_CONST_CAST(char_type*, data);
           mLength = length;
+          SetDataFlags(F_TERMINATED);
           AssertValid();
         }
 

@@ -336,7 +336,7 @@ nsresult nsImapUrl::ParseUrl()
   NS_UnescapeURL(imapPartOfUrl);
   if (NS_SUCCEEDED(rv) && !imapPartOfUrl.IsEmpty())
   {
-    ParseImapPart((char*)imapPartOfUrl.get()+1);  // GetPath leaves leading '/' in the path!!!
+    ParseImapPart(imapPartOfUrl.BeginWriting()+1);  // GetPath leaves leading '/' in the path!!!
   }
   
   return NS_OK;

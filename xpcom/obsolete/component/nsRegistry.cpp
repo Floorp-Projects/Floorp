@@ -572,7 +572,7 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid )
 #endif /* DEBUG_dp */
 
     PR_Lock(mregLock);
-    err = NR_RegOpen((char*)regFile.get(), &mReg );
+    err = NR_RegOpen(NS_CONST_CAST(char*, regFile.get()), &mReg );
     PR_Unlock(mregLock);
 
     // Store the registry that was opened for optimizing future opens.

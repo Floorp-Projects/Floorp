@@ -351,7 +351,7 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
 	nsCAutoString mbcsText;
 	Size text_size = ::AEGetDescDataSize(&text);
 	mbcsText.SetCapacity(text_size+1);
-	char* mbcsTextPtr = (char*)mbcsText.get();
+	char* mbcsTextPtr = mbcsText.BeginWriting();
 	err = AEGetDescData(&text, (void *) mbcsTextPtr, text_size);
 	if (err!=noErr) {
 		DisposePtr((Ptr) hiliteRangePtr);
@@ -362,7 +362,7 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
 	nsCAutoString mbcsText;
 	Size text_size = ::GetHandleSize(text.dataHandle);
 	mbcsText.SetCapacity(text_size+1);
-	char* mbcsTextPtr = (char*)mbcsText.get();
+	char* mbcsTextPtr = mbcsText.BeginWriting();
 	strncpy(mbcsTextPtr, *(text.dataHandle), text_size);
 	mbcsTextPtr[text_size]=0;
 #endif
@@ -427,14 +427,14 @@ static OSErr AETextToString(AEDesc &aAEDesc, nsString& aOutString, Size& text_si
 #if TARGET_CARBON
   text_size = ::AEGetDescDataSize(&aAEDesc) / 2;
   aOutString.SetLength(text_size + 1);
-  unicodeTextPtr = (PRUnichar*)aOutString.get();
+  unicodeTextPtr = aOutString.BeginWriting();
   err = AEGetDescData(&aAEDesc, (void *) unicodeTextPtr, text_size * 2);
   if (err!=noErr) 
     return err;
 #else
   text_size = ::GetHandleSize(aAEDesc.dataHandle) / 2;
   aOutString.SetLength(text_size + 1);
-  unicodeTextPtr = (PRUnichar*)aOutString.get();
+  unicodeTextPtr = aOutString.BeginWriting();
   memcpy(unicodeTextPtr, *(aAEDesc.dataHandle), text_size * 2);
 #endif
 
@@ -509,7 +509,7 @@ pascal OSErr nsMacTSMMessagePump::UnicodeUpdateHandler(const AppleEvent *theAppl
     err = AETextToString(text, unicodeText, text_size);
     if (noErr == err)
     {
-      res = eventHandler->UnicodeHandleUpdateInputArea((PRUnichar*)unicodeText.get(), text_size, fixLength / 2, hiliteRangePtr);
+      res = eventHandler->UnicodeHandleUpdateInputArea(unicodeText.get(), text_size, fixLength / 2, hiliteRangePtr);
       NS_ASSERTION(NS_SUCCEEDED(res), "nsMacMessagePump::UnicodeUpdateHandler: HandleUpdated failed.");
       if (NS_FAILED(res))
         err = paramErr;
@@ -565,7 +565,7 @@ pascal OSErr nsMacTSMMessagePump::UnicodeNotFromInputMethodHandler(const AppleEv
   if (noErr == err)
   {
     nsresult res;
-    res = eventHandler->HandleUKeyEvent((PRUnichar*)unicodeText.get(), text_size, event);
+    res = eventHandler->HandleUKeyEvent(unicodeText.get(), text_size, event);
     NS_ASSERTION(NS_SUCCEEDED(res), "nsMacMessagePump::UnicodeNotFromInputMethodHandler: HandleUpdated failed.");
     if (NS_FAILED(res)) {
       err = paramErr;

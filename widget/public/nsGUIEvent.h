@@ -455,7 +455,7 @@ struct nsTextEvent : public nsInputEvent
   {
   }
 
-  PRUnichar*        theText;
+  const PRUnichar*  theText;
   nsTextEventReply  theReply;
   PRUint32          rangeCount;
   nsTextRangeArray  rangeArray;

@@ -123,7 +123,7 @@ MimeInlineTextHTMLAsPlaintext_parse_eof (MimeObject *obj, PRBool abort_p)
   nsCAutoString resultCStr = NS_ConvertUCS2toUTF8(asPlaintext);
   // TODO parse each line independently
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_line(
-                             NS_CONST_CAST(char*, resultCStr.get()),
+                             resultCStr.BeginWriting(),
                              resultCStr.Length(),
                              obj);
 

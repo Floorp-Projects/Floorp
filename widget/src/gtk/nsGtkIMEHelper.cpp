@@ -222,14 +222,14 @@ void nsIMEPreedit::Reset()
   mIMECompAttr->SetCapacity(0);
 }
 
-PRUnichar*
+const PRUnichar*
 nsIMEPreedit::GetPreeditString() const {
-  return (PRUnichar *) mIMECompUnicode->get();
+  return mIMECompUnicode->get();
 }
 
-char*
+const char*
 nsIMEPreedit::GetPreeditFeedback() const {
-  return (char*)mIMECompAttr->get();
+  return mIMECompAttr->get();
 }
 
 int nsIMEPreedit::GetPreeditLength() const {

@@ -1629,7 +1629,7 @@ nsMessengerMigrator::MigrateImapAccounts(nsIMsgIdentity *identity)
   if (!hostList || !*hostList) return NS_OK;  // NS_ERROR_FAILURE?
   
   char *token = nsnull;
-  char *rest = NS_CONST_CAST(char*,(const char*)hostList);
+  char *rest = hostList;
   nsCAutoString str;
 
   PRBool isDefaultAccount = PR_TRUE;

@@ -3644,7 +3644,7 @@ PRBool nsImapProtocol::CheckNewMail()
     {
       nsCAutoString urlSpec;
       mailnewsUrl->GetSpec(urlSpec);
-      nsUnescape(NS_CONST_CAST(char*, urlSpec.get()));
+      nsUnescape(urlSpec.BeginWriting());
       PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s", logMsg, urlSpec.get()));
     }
   }

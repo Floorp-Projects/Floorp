@@ -3098,13 +3098,13 @@ nsMsgLocalMailFolder::GetIncomingServerType()
   rv = url->GetUserPass(userPass);
   if (NS_FAILED(rv)) return "";
   if (!userPass.IsEmpty())
-    nsUnescape(NS_CONST_CAST(char*,userPass.get()));
+    nsUnescape(userPass.BeginWriting());
 
   nsCAutoString hostName;
   rv = url->GetAsciiHost(hostName);
   if (NS_FAILED(rv)) return "";
   if (!hostName.IsEmpty())
-	nsUnescape(NS_CONST_CAST(char*,hostName.get()));
+	nsUnescape(hostName.BeginWriting());
 
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
            do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);

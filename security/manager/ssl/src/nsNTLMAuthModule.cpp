@@ -305,13 +305,13 @@ ZapBuf(void *buf, size_t bufLen)
 static void
 ZapString(nsCString &s)
 {
-  ZapBuf(NS_CONST_CAST(char *, s.get()), s.Length());
+  ZapBuf(s.BeginWriting(), s.Length());
 }
 
 static void
 ZapString(nsString &s)
 {
-  ZapBuf(NS_CONST_CAST(PRUnichar *, s.get()), s.Length() * 2);
+  ZapBuf(s.BeginWriting(), s.Length() * 2);
 }
 
 static const unsigned char LM_MAGIC[] = "KGS!@#$%";

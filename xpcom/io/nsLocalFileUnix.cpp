@@ -289,7 +289,7 @@ NS_IMETHODIMP
 nsLocalFile::CreateAllAncestors(PRUint32 permissions)
 {
     // <jband> I promise to play nice
-    char *buffer = NS_CONST_CAST(char *, mPath.get()),
+    char *buffer = mPath.BeginWriting(),
          *slashp = buffer;
 
 #ifdef DEBUG_NSIFILE
@@ -1169,7 +1169,7 @@ nsLocalFile::GetParent(nsIFile **aParent)
         return  NS_OK;
  
     // <brendan, after jband> I promise to play nice
-    char *buffer   = NS_CONST_CAST(char *, mPath.get()),
+    char *buffer   = mPath.BeginWriting(),
          *slashp   = buffer;
 
     // find the last significant slash in buffer

@@ -804,7 +804,7 @@ mozSanitizingHTMLSerializer::ParseTagPref(const nsCAutoString& tagpref)
     printf(" Attr list: -%s-\n", attrList.get());
 #endif
     char* attrs_lasts;
-    for (char* iAttr = PL_strtok_r(NS_CONST_CAST(char*, attrList.get()),
+    for (char* iAttr = PL_strtok_r(attrList.BeginWriting(),
                                    ",", &attrs_lasts);
          iAttr;
          iAttr = PL_strtok_r(NULL, ",", &attrs_lasts))

@@ -144,7 +144,7 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString& pEncoding,
         rv = searchValue->GetStr(getter_Copies(pchar));
       	if (NS_FAILED(rv) || !pchar)
       		continue;
-        asciiOnly = nsCRT::IsAscii(NS_CONST_CAST(PRUnichar*, pchar.get()));
+        asciiOnly = nsCRT::IsAscii(pchar.get());
 			}
 		}
 	}

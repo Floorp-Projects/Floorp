@@ -1149,7 +1149,7 @@ nsXBLPrototypeBinding::ConstructInterfaceTable(const nsAString& aImpls)
 
     // The user specified at least one attribute.
     NS_ConvertUCS2toUTF8 utf8impl(aImpls);
-    char* str = NS_CONST_CAST(char *, utf8impl.get());
+    char* str = utf8impl.BeginWriting();
     char* newStr;
     // XXX We should use a strtok function that tokenizes PRUnichars
     // so that we don't have to convert from Unicode to ASCII and then back

@@ -1238,7 +1238,7 @@ IsContextMenuKey(const nsKeyEvent& inKeyEvent)
 // HandleUKeyEvent
 //
 //-------------------------------------------------------------------------
-PRBool nsMacEventHandler::HandleUKeyEvent(PRUnichar* text, long charCount, EventRecord& aOSEvent)
+PRBool nsMacEventHandler::HandleUKeyEvent(const PRUnichar* text, long charCount, EventRecord& aOSEvent)
 {
   nsresult result;
   // get the focused widget
@@ -1924,7 +1924,7 @@ nsresult nsMacEventHandler::HandleOffsetToPosition(long offset,Point* thePoint)
 //-------------------------------------------------------------------------
 // See ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/APPLE/CORPCHAR.TXT for detail of IS_APPLE_HINT_IN_PRIVATE_ZONE
 #define IS_APPLE_HINT_IN_PRIVATE_ZONE(u) ((0xF850 <= (u)) && ((u)<=0xF883))
-nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, ScriptCode textScript,long fixedLength,TextRangeArray* textRangeList)
+nsresult nsMacEventHandler::HandleUpdateInputArea(const char* text,Size text_size, ScriptCode textScript,long fixedLength,TextRangeArray* textRangeList)
 {
 #ifdef DEBUG_TSM
 	printf("********************************************************************************\n");
@@ -1978,7 +1978,7 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 	}
 	// Prepare buffer....
 	mIMECompositionStr->SetCapacity(text_size+1);
-	ubuf = (PRUnichar*)mIMECompositionStr->get();
+	ubuf = mIMECompositionStr->BeginWriting();
 	size_t len;
 
 	//====================================================================================================
@@ -2279,7 +2279,7 @@ error:
 }
 
 
-nsresult nsMacEventHandler::UnicodeHandleUpdateInputArea(PRUnichar* text, long charCount,
+nsresult nsMacEventHandler::UnicodeHandleUpdateInputArea(const PRUnichar* text, long charCount,
                                                          long fixedLength, TextRangeArray* textRangeList)
 {
 #ifdef DEBUG_TSM
@@ -2618,7 +2618,7 @@ nsresult nsMacEventHandler::HandleTextEvent(PRUint32 textRangeCount, nsTextRange
 	//
 	nsTextEvent		textEvent(NS_TEXT_TEXT, focusedWidget);
 	textEvent.time = PR_IntervalNow();
-	textEvent.theText = (PRUnichar*)mIMECompositionStr->get();
+	textEvent.theText = mIMECompositionStr->get();
 	textEvent.rangeCount = textRangeCount;
 	textEvent.rangeArray = textRangeArray;
 

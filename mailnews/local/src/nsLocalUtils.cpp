@@ -59,12 +59,12 @@
 // - if no such server exists, behave like an old-style mailbox URL
 // (i.e. return the mail.directory preference or something)
 static nsresult
-nsGetMailboxServer(const char *username, const char *hostname, nsIMsgIncomingServer** aResult)
+nsGetMailboxServer(char *username, char *hostname, nsIMsgIncomingServer** aResult)
 {
   nsresult rv = NS_OK;
 
-  nsUnescape(NS_CONST_CAST(char*,username));
-  nsUnescape(NS_CONST_CAST(char*,hostname));
+  nsUnescape(username);
+  nsUnescape(hostname);
   // retrieve the AccountManager
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
            do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);

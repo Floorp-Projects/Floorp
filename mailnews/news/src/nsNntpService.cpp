@@ -558,7 +558,7 @@ nsNntpService::DecomposeNewsMessageURI(const char * aMessageURI, nsIMsgFolder **
         {
           PRInt32 messageIdLength = questionPos - slashPos - 1;
           messageUri.Mid(messageId, slashPos + 1, messageIdLength);
-          nsUnescape(NS_CONST_CAST(char*, messageId.get()));
+          nsUnescape(messageId.BeginWriting());
           nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
           NS_ENSURE_SUCCESS(rv, rv);
           nsCOMPtr <nsISupportsArray> msgWindows;

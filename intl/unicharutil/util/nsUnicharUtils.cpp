@@ -150,7 +150,7 @@ class CopyToLowerCase
       PRUint32 write( const PRUnichar* aSource, PRUint32 aSourceLength )
         {
           PRUint32 len = PR_MIN(PRUint32(mIter.size_forward()), aSourceLength);
-          PRUnichar* dest = NS_CONST_CAST(PRUnichar*, mIter.get());
+          PRUnichar* dest = mIter.get();
           if (gCaseConv)
               gCaseConv->ToLower(aSource, dest, len);
           else {
@@ -234,7 +234,7 @@ class CopyToUpperCase
       PRUint32 write( const PRUnichar* aSource, PRUint32 aSourceLength )
         {
           PRUint32 len = PR_MIN(PRUint32(mIter.size_forward()), aSourceLength);
-          PRUnichar* dest = NS_CONST_CAST(PRUnichar*, mIter.get());
+          PRUnichar* dest = mIter.get();
           if (gCaseConv)
               gCaseConv->ToUpper(aSource, dest, len);
           else {

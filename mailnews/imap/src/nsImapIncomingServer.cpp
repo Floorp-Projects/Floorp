@@ -1285,13 +1285,13 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       // or the canonical path - one or the other, but be consistent.
       dupFolderPath.ReplaceChar('/', hierarchyDelimiter);
       if (hierarchyDelimiter != '/')
-        nsImapUrl::UnescapeSlashes(NS_CONST_CAST(char*, dupFolderPath.get()));
+        nsImapUrl::UnescapeSlashes(dupFolderPath.BeginWriting());
       
       if (onlineName.IsEmpty()
         || nsCRT::strcmp(onlineName.get(), dupFolderPath.get()))
         imapFolder->SetOnlineName(dupFolderPath.get());
       if (hierarchyDelimiter != '/')
-        nsImapUrl::UnescapeSlashes(NS_CONST_CAST(char*, folderName.get()));
+        nsImapUrl::UnescapeSlashes(folderName.BeginWriting());
       if (NS_SUCCEEDED(CreatePRUnicharStringFromUTF7(folderName.get(), getter_Copies(unicodeName))))
         child->SetPrettyName(unicodeName);
       // Call ConvertFolderName() and HideFolderName() to do special folder name

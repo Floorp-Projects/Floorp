@@ -826,7 +826,7 @@ static nsresult EnumerateMediaString(const nsAString& aStringList, nsStringEnumF
 
   stringList.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)stringList.get();
+  PRUnichar* start = stringList.BeginWriting();
   PRUnichar* end   = start;
 
   while (NS_SUCCEEDED(status) && (kNullCh != *start)) {

@@ -253,7 +253,7 @@ nsMsgAccount::createIdentities()
   // const-casting because nsCRT::strtok whacks the string,
   // but safe because identityKey is a copy
   char* newStr;
-  char* rest = NS_CONST_CAST(char*,identityKey.get());
+  char* rest = identityKey.BeginWriting();
   char* token = nsCRT::strtok(rest, ",", &newStr);
 
   // temporaries used inside the loop
@@ -365,7 +365,7 @@ nsMsgAccount::AddIdentity(nsIMsgIdentity *identity)
       // const-casting because nsCRT::strtok whacks the string,
       // but safe because identityList is a copy
       char *newStr;
-      char *rest = NS_CONST_CAST(char*,identityList.get());
+      char *rest = identityList.BeginWriting();
       char *token = nsCRT::strtok(rest, ",", &newStr);
       
       // look for the identity key that we're adding

@@ -680,7 +680,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 
     // Unescape the name before making FSSpec
     nsCAutoString escapedFilename(src_filename);
-    nsUnescape(NS_CONST_CAST(char*, escapedFilename.get()));
+    nsUnescape(escapedFilename.BeginWriting());
 
     //We need to retrieve the file type and creator...
     nsFileSpec scr_fileSpec(escapedFilename.get());
@@ -1064,7 +1064,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
     if (NS_SUCCEEDED(mURL->GetSpec(turl)) && (turl))
       {
         nsCAutoString unescapeUrl(turl);
-        nsUnescape (NS_CONST_CAST(char*, unescapeUrl.get()));
+        nsUnescape(unescapeUrl.BeginWriting());
         if (unescapeUrl.IsEmpty())
           printfString = nsTextFormatter::smprintf(msg, turl.get());
         else

@@ -104,7 +104,7 @@ nsresult nsMsgI18NConvertFromUnicode(const nsAFlatCString& aCharset,
       if (NS_SUCCEEDED(res)) {
 
         const PRUnichar *originalSrcPtr = inString.get();
-        PRUnichar *currentSrcPtr = NS_CONST_CAST(PRUnichar *, originalSrcPtr);
+        const PRUnichar *currentSrcPtr = originalSrcPtr;
         PRInt32 originalUnicharLength = inString.Length();
         PRInt32 srcLength;
         PRInt32 dstLength;
@@ -165,7 +165,7 @@ nsresult nsMsgI18NConvertToUnicode(const nsAFlatCString& aCharset,
     if(NS_SUCCEEDED(res)) {
 
       const char *originalSrcPtr = inString.get();
-      char *currentSrcPtr = NS_CONST_CAST(char *, originalSrcPtr);
+      const char *currentSrcPtr = originalSrcPtr;
       PRInt32 originalLength = inString.Length();
       PRInt32 srcLength;
       PRInt32 dstLength;
@@ -414,7 +414,7 @@ PRBool nsMsgI18Ncheck_data_in_charset_range(const char *charset, const PRUnichar
     if(NS_SUCCEEDED(res)) {
       const PRUnichar *originalPtr = inString;
       PRInt32 originalLen = nsCRT::strlen(inString);
-      PRUnichar *currentSrcPtr = NS_CONST_CAST(PRUnichar *, originalPtr);
+      const PRUnichar *currentSrcPtr = originalPtr;
       char localBuff[512];
       PRInt32 consumedLen = 0;
       PRInt32 srcLen;

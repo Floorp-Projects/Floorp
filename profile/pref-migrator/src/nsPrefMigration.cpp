@@ -2129,7 +2129,7 @@ nsPrefMigration::RenameAndMove4xImapFilterFiles(nsIFileSpec * profilePath)
   if (!hostList || !*hostList) return NS_OK; 
 
   char *token = nsnull;
-  char *rest = NS_CONST_CAST(char*,(const char*)hostList);
+  char *rest = hostList.BeginWriting();
   nsCAutoString str;
 
   token = nsCRT::strtok(rest, ",", &rest);

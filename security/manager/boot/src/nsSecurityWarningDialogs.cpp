@@ -258,7 +258,7 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
   if (!windowTitle || !message || !cont) return NS_ERROR_FAILURE;
       
   // Replace # characters with newlines to lay out the dialog.
-  PRUnichar* msgchars = NS_CONST_CAST(PRUnichar*, message.get());
+  PRUnichar* msgchars = message.BeginWriting();
   
   PRUint32 i = 0;
   for (i = 0; msgchars[i] != '\0'; i++) {

@@ -557,7 +557,7 @@ mozilla_get_info(PtWidget_t *widget, PtArg_t *argt)
 
 					nsCAutoString specString;
 					url->GetSpec(specString);
-					REMOVE_WHEN_NEW_PT_WEB_strcpy( HistoryReplyBuf[j].url, (char *) specString.get() );
+					REMOVE_WHEN_NEW_PT_WEB_strcpy( HistoryReplyBuf[j].url, specString.get() );
 				}
 			}
 			break;

@@ -379,7 +379,7 @@ AppendMethodForParticle(nsIInterfaceInfoSuperManager* iism,
   // XXX Deal with intercaps in that case?
 
   methodDesc.flags    = params.GetCount() == 1 ? XPT_MD_GETTER : 0;
-  methodDesc.name     = (char*) identifierName.get();
+  methodDesc.name     = NS_CONST_CAST(char*, identifierName.get());
   methodDesc.params   = paramArray;
   methodDesc.result   = defaultResult;
   methodDesc.num_args = (PRUint8) params.GetCount();
@@ -1271,7 +1271,7 @@ nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort,
 
     WSPFactory::XML2C(tempString, tempCString);
 
-    methodDesc.name     = (char*) tempCString.get();
+    methodDesc.name     = NS_CONST_CAST(char*, tempCString.get());
     methodDesc.params   = primaryParamArray;
     methodDesc.result   = defaultResult;
     methodDesc.flags    = 0;
@@ -1283,7 +1283,7 @@ nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort,
     }
 
 
-    methodDesc.name     = (char*) tempCString.get();
+    methodDesc.name     = NS_CONST_CAST(char*, tempCString.get());
     methodDesc.params   = primaryAsyncParamArray;
     methodDesc.result   = defaultResult;
     methodDesc.flags    = 0;
@@ -1296,7 +1296,7 @@ nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort,
 
 
     tempCString.Append("Callback");
-    methodDesc.name     = (char*) tempCString.get();
+    methodDesc.name     = NS_CONST_CAST(char*, tempCString.get());
     methodDesc.params   = listenerParamArray;
     methodDesc.result   = defaultResult;
     methodDesc.flags    = 0;

@@ -417,7 +417,7 @@ nsMsgAccountManager::createKeyedIdentity(const char* key,
                                           getter_AddRefs(identity));
   if (NS_FAILED(rv)) return rv;
   
-  identity->SetKey(NS_CONST_CAST(char *,key));
+  identity->SetKey(key);
   
   nsCStringKey hashKey(key);
 
@@ -730,7 +730,7 @@ nsMsgAccountManager::removeKeyedAccount(const char *key)
   // the one with 'key'
   nsCAutoString newAccountList;
   char *newStr;
-  char *rest = NS_CONST_CAST(char *,(const char*)accountList);
+  char *rest = accountList.BeginWriting();
   
   char *token = nsCRT::strtok(rest, ",", &newStr);
   while (token) {
@@ -1434,7 +1434,7 @@ nsMsgAccountManager::LoadAccounts()
     /* parse accountList and run loadAccount on each string, comma-separated */   
     nsCOMPtr<nsIMsgAccount> account;
     char *newStr;
-    char *rest = NS_CONST_CAST(char*,(const char*)accountList);
+    char *rest = accountList.BeginWriting();
     nsCAutoString str;
 
     char *token = nsCRT::strtok(rest, ",", &newStr);
@@ -1619,7 +1619,7 @@ nsMsgAccountManager::createKeyedAccount(const char* key,
                                           (void **)getter_AddRefs(account));
   
   if (NS_FAILED(rv)) return rv;
-  account->SetKey(NS_CONST_CAST(char*,(const char*)key));
+  account->SetKey(key);
 
   // add to internal nsISupportsArray
   m_accounts->AppendElement(NS_STATIC_CAST(nsISupports*, account));

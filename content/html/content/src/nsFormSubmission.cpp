@@ -1362,7 +1362,7 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
     Conv_06_FE_WithReverse(nsString(aStr),
                            newBuffer,
                            textDirAtSubmit);
-    aStr = (PRUnichar*)newBuffer.get();
+    aStr = newBuffer.get();
     aLen=newBuffer.Length();
   }
   else if (ctrlsModAtSubmit == IBMBIDI_CONTROLSTEXTMODE_LOGICAL
@@ -1371,7 +1371,7 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
     //For 864 file, When it is logical, if LTR then only convert
     //If RTL will mak a reverse for the buffer
     Conv_FE_06(nsString(aStr), newBuffer);
-    aStr = (PRUnichar*)newBuffer.get();
+    aStr = newBuffer.get();
     temp = newBuffer;
     aLen=newBuffer.Length();
     if (textDirAtSubmit == 2) { //RTL
@@ -1383,7 +1383,7 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
         loop--;
       }
     }
-    aStr = (PRUnichar*)temp.get();
+    aStr = temp.get();
   }
   else if (ctrlsModAtSubmit == IBMBIDI_CONTROLSTEXTMODE_VISUAL
           && mCharset.Equals(NS_LITERAL_CSTRING("IBM864"),
@@ -1391,7 +1391,7 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
                   && textDirAtSubmit == IBMBIDI_TEXTDIRECTION_RTL) {
 
     Conv_FE_06(nsString(aStr), newBuffer);
-    aStr = (PRUnichar*)newBuffer.get();
+    aStr = newBuffer.get();
     temp = newBuffer;
     aLen=newBuffer.Length();
     //Now we need to reverse the Buffer, it is by searching the buffer
@@ -1401,7 +1401,7 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
       temp.SetCharAt((PRUnichar)aStr[loop], z);
       loop--;
     }
-    aStr = (PRUnichar*)temp.get();
+    aStr = temp.get();
   }
 
   
