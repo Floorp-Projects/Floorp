@@ -225,5 +225,5 @@ void nsDeviceContextWin :: SetGammaTable(PRUint8 * aTable, float aCurrentGamma, 
   float fgval = (1.0f / aCurrentGamma) * (1.0f / aNewGamma);
 
   for (PRInt32 cnt = 0; cnt < 256; cnt++)
-    aTable[cnt] = (PRUint8)(pow(cnt * (1. / 256.), fgval) * 255.99999999);
+    aTable[cnt] = (PRUint8)(::pow(cnt * (1. / 256.), fgval) * 255.99999999);
 }
