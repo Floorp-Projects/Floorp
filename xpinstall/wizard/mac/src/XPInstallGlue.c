@@ -277,8 +277,8 @@ RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 				  (gControls->cfg->comp[i].selected == true)) ||
 				 (instChoice < gControls->cfg->numSetupTypes-1) )
 			{
-				// if LAUNCHAPP attr wasn't set
-			 	if (!gControls->cfg->comp[i].launchapp)
+				// if LAUNCHAPP and DOWNLOAD_ONLY attr wasn't set
+			 	if (!gControls->cfg->comp[i].launchapp && !gControls->cfg->comp[i].download_only)
 				{
 					HLock(gControls->cfg->comp[i].archive);
 					pcurrArchive = CToPascal(*gControls->cfg->comp[i].archive);
@@ -369,8 +369,8 @@ CountSelectedXPIs()
 				  (gControls->cfg->comp[i].selected == true)) ||
 				 (instChoice < gControls->cfg->numSetupTypes-1) )
 			{
-				// if LAUNCHAPP attr wasn't set
-			 	if (!gControls->cfg->comp[i].launchapp)
+				// if LAUNCHAPP and DOWNLOAD_ONLY attr wasn't set
+			 	if (!gControls->cfg->comp[i].launchapp && !gControls->cfg->comp[i].download_only)
 					numXPIs++;
 			}
 		}

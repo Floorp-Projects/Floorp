@@ -431,7 +431,7 @@ PopulateCompWinKeys(char *cfgText)
 		if (currKey)
 			DisposePtr(currKey);
 		
-		/* attributes (SELECTED|INVISIBLE|LAUNCHAPP|ADDITIONAL) */
+		/* attributes (SELECTED|INVISIBLE|LAUNCHAPP|ADDITIONAL|DOWNLOAD_ONLY) */
 		GetIndString(pkey, rParseKeys, sAttributes);
 		currKey = PascalToC(pkey);
 		Handle attrValH = NewHandleClear(255);
@@ -485,6 +485,15 @@ PopulateCompWinKeys(char *cfgText)
 			}
 			else
 				gControls->cfg->comp[i].additional = false;
+			if (attrType)
+				DisposePtr(attrType);	
+			
+			GetIndString(pkey, rParseKeys, sDOWNLOAD_ONLY);
+			attrType = PascalToC(pkey);
+			if (NULL != strstr(*attrValH, attrType))
+				gControls->cfg->comp[i].download_only = true;
+			else
+				gControls->cfg->comp[i].download_only = false;
 			if (attrType)
 				DisposePtr(attrType);	
 				
