@@ -78,7 +78,7 @@ CPLUSPLUSRUNTIME = -lC -lm
 endif
 endif
 
-INCLUDES += -I$(LDAPSDKDIST)/include -I$(CORE_DEPTH)/../dist/public/I18N
+INCLUDES += -I$(LDAPSDKDIST)/include -I$(CORE_DEPTH)/../dist/public/i18n
 
 ifeq ($(OS_ARCH), SunOS)
 ifeq ($(OS_RELEASE), 5.5.1)
