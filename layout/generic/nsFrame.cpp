@@ -1667,14 +1667,15 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
 // Figure out which view we should point capturing at, given that drag started
 // in this frame.
 static nsIView* GetNearestCapturingView(nsIFrame* aFrame) {
-  nsIView* view;
-  while (aFrame && !(view = aFrame->GetMouseCapturer())) {
+  nsIView* view = nsnull;
+  while (!(view = aFrame->GetMouseCapturer()) && aFrame->GetParent()) {
     aFrame = aFrame->GetParent();
   }
-  if (!aFrame) {
-    return nsnull;
+  if (!view) {
+    // Use the root view. The root frame always has the root view.
+    view = aFrame->GetView();
   }
-
+  NS_ASSERTION(view, "No capturing view found");
   return view;
 }
 
