@@ -1,9 +1,12 @@
 <!-- extracted from globalOverlay.xul -->
 
 <!ENTITY fileMenu.label					"File"> 
+<!ENTITY fileMenu.accesskey				"f">
+
 <!ENTITY pageSetupCmd.label					".Page Setup...">  
 
 <!ENTITY editMenu.label					"Edit"> 
+<!ENTITY editMenu.accesskey				"e"> 
 <!ENTITY undoCmd.label						"Undo">  
 <!ENTITY undoCmd.key						"Z">  
 <!ENTITY cutCmd.label						"Cut">  

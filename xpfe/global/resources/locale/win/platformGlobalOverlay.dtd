@@ -2,6 +2,8 @@
 
 <!ENTITY closeCmd.label						"Close">  
 <!ENTITY closeCmd.key						"W">  
+<!ENTITY closeCmd.accesskey					"c">
+
 <!ENTITY quitApplicationCmd.label			"Exit"> 
 <!ENTITY quitApplicationCmd.key				"Q"> 
 
