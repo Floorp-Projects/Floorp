@@ -262,7 +262,7 @@ protected:
   nsresult CreateDocShell(nsIPresContext* aPresContext);
   nsresult DoLoadURL(nsIPresContext* aPresContext);
   nsresult CreateViewAndWidget(nsIPresContext* aPresContext,
-                               nsIWidget*&     aWidget);
+                               nsIWidget**     aWidget);
 
   virtual ~nsHTMLFrameInnerFrame();
 
@@ -1134,8 +1134,8 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext)
     }
   }
 
-  nsIWidget* widget;
-  rv = CreateViewAndWidget(aPresContext, widget);
+  nsCOMPtr<nsIWidget> widget;
+  rv = CreateViewAndWidget(aPresContext, getter_AddRefs(widget));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1323,7 +1323,7 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
 
 nsresult
 nsHTMLFrameInnerFrame::CreateViewAndWidget(nsIPresContext* aPresContext,
-                                           nsIWidget*&     aWidget)
+                                           nsIWidget**     aWidget)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
   NS_ENSURE_ARG_POINTER(aWidget);
@@ -1367,7 +1367,7 @@ nsHTMLFrameInnerFrame::CreateViewAndWidget(nsIPresContext* aPresContext,
   if (!vis->IsVisible()) {
     view->SetVisibility(nsViewVisibility_kHide);
   }
-  view->GetWidget(aWidget);
+  view->GetWidget(*aWidget);
   return rv;
 }
 
@@ -1394,9 +1394,8 @@ nsHTMLFrameInnerFrame::Init(nsIPresContext*  aPresContext,
   // we do not want to load the document, it is alerady loaded.
   nsCOMPtr<nsIPrintPreviewContext> thePrintPreviewContext = do_QueryInterface(aPresContext);
   if  (thePrintPreviewContext) {
-    nsIWidget* widget;
-    rv = CreateViewAndWidget(aPresContext, widget);
-    NS_IF_RELEASE(widget);
+    nsCOMPtr<nsIWidget> widget;
+    rv = CreateViewAndWidget(aPresContext, getter_AddRefs(widget));
     if (NS_FAILED(rv)) {
       return rv;
     }
