@@ -164,6 +164,12 @@ public:
   NS_IMETHOD GetText(const nsTextFragment*& aFragmentsResult,
                      PRInt32& aNumFragmentsResult)
     { return mInner.GetText(aFragmentsResult, aNumFragmentsResult); }
+  NS_IMETHOD GetTextLength(PRInt32* aLengthResult) {
+    return mInner.GetTextLength(aLengthResult);
+  }
+  NS_IMETHOD CopyText(nsString& aResult) {
+    return mInner.CopyText(aResult);
+  }
   NS_IMETHOD SetText(const PRUnichar* aBuffer,
                      PRInt32 aLength,
                      PRBool aNotify);
@@ -425,7 +431,6 @@ StripCommentDelimiters(nsString& aCommentString)
   static char* kCommentEnd = "->";
   static char* kCommentAlternateEnd = "--!>";
   static char kMinus = '-';
-  static char kExclamation = '!';
 
   offset = aCommentString.Find(kCommentStart);
   offset += strlen(kCommentStart);
