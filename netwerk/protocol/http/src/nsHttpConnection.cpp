@@ -64,6 +64,10 @@ nsHttpConnection::nsHttpConnection()
     LOG(("Creating nsHttpConnection @%x\n", this));
 
     NS_INIT_ISUPPORTS();
+
+    // grab a reference to the handler to ensure that it doesn't go away.
+    nsHttpHandler *handler = nsHttpHandler::get();
+    NS_ADDREF(handler);
 }
 
 nsHttpConnection::~nsHttpConnection()
@@ -77,6 +81,10 @@ nsHttpConnection::~nsHttpConnection()
         PR_DestroyLock(mLock);
         mLock = nsnull;
     }
+
+    // release our reference to the handler
+    nsHttpHandler *handler = nsHttpHandler::get();
+    NS_RELEASE(handler);
 }
 
 nsresult
