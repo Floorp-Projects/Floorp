@@ -559,7 +559,10 @@ nsReplacementPolicy::DeleteOneEntry(nsINetDataCache *aCache)
 
     // It's not possible to rank cache entries by their profitability
     // until all of them are known to the replacement policy.
-    LoadAllRecordsInAllCacheDatabases();
+    rv = LoadAllRecordsInAllCacheDatabases();
+    if(NS_FAILED(rv)) {
+        return rv ;
+    }
 
     i = 0;
     MaybeRerankRecords();
@@ -621,8 +624,10 @@ nsReplacementPolicy::LoadAllRecordsInAllCacheDatabases()
     cacheInfo = mCaches;
     while (cacheInfo) {
         rv = AddAllRecordsInCache(cacheInfo->mCache);
-        if (NS_FAILED(rv)) return rv;
-
+        if (NS_FAILED(rv)) {
+            mLoadedAllDatabaseRecords = PR_FALSE;
+            return rv;
+        }
         cacheInfo = cacheInfo->mNext;
     }
     mLoadedAllDatabaseRecords = PR_TRUE;
@@ -647,7 +652,10 @@ nsReplacementPolicy::Evict(PRUint32 aTargetOccupancy)
 
     // It's not possible to rank cache entries by their profitability
     // until all of them are known to the replacement policy.
-    LoadAllRecordsInAllCacheDatabases();
+    rv = LoadAllRecordsInAllCacheDatabases();
+    if(NS_FAILED(rv)) {
+        return rv ;
+    }
 
     MaybeRerankRecords();
 
