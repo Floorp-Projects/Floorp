@@ -101,7 +101,6 @@ nsDeviceContextOS2::~nsDeviceContextOS2()
 {
   if(mPrintDC)
   {
-     GFX (::GpiAssociate (mPrintPS, 0), FALSE);
      GFX (::GpiDestroyPS (mPrintPS), FALSE);
      PrnCloseDC(mPrintDC);
   }
@@ -162,7 +161,7 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
   mWidth = hcinfo.xPels;
   mHeight = hcinfo.yPels;
   // XXX hsb says there are margin problems, must be from here...
-  printf( "Got surface of size %d x %d pixels\n", mWidth, mHeight);
+  printf( "Got surface of size %d x %d pixels (%d Kb)\n", mWidth, mHeight, mWidth * mHeight * mDepth / 8 / 1024);
   printf( "mPixelScale = %f\n", mPixelScale);
 
   // We need to begin a document now, because the client is entitled at
@@ -307,7 +306,6 @@ nsresult nsDeviceContextOS2::CreateRenderingContext( nsIRenderingContext *&aCont
    nsPrintSurface *surf = new nsPrintSurface;
    if (!surf)
      return NS_ERROR_OUT_OF_MEMORY;
-   NS_ADDREF(surf);
 
    surf->Init( mPrintPS, mWidth, mHeight, 0);
 
@@ -315,7 +313,7 @@ nsresult nsDeviceContextOS2::CreateRenderingContext( nsIRenderingContext *&aCont
 
    if( NS_OK != rc)
    {
-      NS_IF_RELEASE(surf);
+      delete surf;
       NS_IF_RELEASE(pContext);
    }
 

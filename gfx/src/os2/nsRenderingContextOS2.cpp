@@ -52,6 +52,7 @@
 #include "nsFont.h"
 #include "libimg.h"
 #include "prprf.h"
+#include "nsIRenderingContextOS2.h"
 
 
 // helper clip region functions - defined at the bottom of this file.
@@ -198,6 +199,10 @@ nsRenderingContextOS2::QueryInterface( REFNSIID aIID, void **aInstancePtr)
       *aInstancePtr = (void *) (nsIRenderingContext*) this;
    else if( aIID.Equals( ((nsIRenderingContext*)this)->GetIID()))
       *aInstancePtr = (void *) (nsIRenderingContext*)this;
+   else if( aIID.Equals( nsIRenderingContextOS2::GetIID()))
+      *aInstancePtr = (void *) (nsIRenderingContextOS2*) this;
+   else if( aIID.Equals( ((nsIRenderingContextOS2 *)this)->GetIID()))
+      *aInstancePtr = (void *) (nsIRenderingContextOS2*) this;
 
    if( !*aInstancePtr)
       return NS_NOINTERFACE;
@@ -216,26 +221,33 @@ nsRenderingContextOS2::nsRenderingContextOS2()
    mContext = nsnull;
    mSurface = nsnull;
    mPS = 0;
-   mFrontSurface = nsnull;
+   mMainSurface = nsnull;
    mColor = NS_RGB( 0, 0, 0);
    mP2T = 1.0f;
    mStateStack = nsnull;
    mFontMetrics = nsnull;
-   mCurrFontMetrics = nsnull;
-   mCurrDrawingColor = NS_RGB( 0, 0, 0);
-   mAlreadySetDrawingColor = PR_FALSE;
-   mCurrTextColor = NS_RGB( 0, 0, 0);
-   mAlreadySetTextColor = PR_FALSE;
    mLineStyle = nsLineStyle_kSolid;
-   mCurrLineStyle = nsLineStyle_kSolid;
+   mPreservedInitialClipRegion = PR_FALSE;
+   mPaletteMode = PR_FALSE;
 
-   // Other impls want to do a PushState() here.  I can't see why...
-   // PushState();
+   // Need to enforce setting color values for first time. Make cached values different from current ones.
+   mCurrFontMetrics = mFontMetrics + 1;
+   mCurrTextColor   = mColor + 1;
+   mCurrLineColor   = mColor + 1;
+   mCurrLineStyle   = (nsLineStyle)((int)mLineStyle + 1);
+   mCurrFillColor   = mColor + 1;
 }
 
 nsRenderingContextOS2::~nsRenderingContextOS2()
 {
    NS_IF_RELEASE(mContext);
+
+   //destroy the initial GraphicsState
+   if (mPreservedInitialClipRegion == PR_TRUE)
+   {
+      PRBool clipState;
+      PopState (clipState);
+   }
 
    // clear state stack
    GraphicsState *pTemp, *pNext = mStateStack;
@@ -252,14 +264,63 @@ nsRenderingContextOS2::~nsRenderingContextOS2()
    }
 
    // Release surfaces and the palette
-   NS_IF_RELEASE(mFrontSurface);
+   NS_IF_RELEASE(mMainSurface);
    NS_IF_RELEASE(mSurface);
    NS_IF_RELEASE(mFontMetrics);
 }
 
-// I've NS_ADDREF'd as opposed to NS_IF_ADDREF'd 'cos if certain things
-// are null, then we want to know about it straight away.
-// References rule, sigh.
+nsresult nsRenderingContextOS2::SetupPS (void)
+{
+   // If this is a palette device, then select and realize the palette
+   nsPaletteInfo palInfo;
+   mContext->GetPaletteInfo(palInfo);
+
+   LONG BlackColor, WhiteColor;
+
+   if (palInfo.isPaletteDevice && palInfo.palette)
+   {
+      ULONG cclr;
+ 
+      // Select the palette in the background
+      GFX (::GpiSelectPalette (mPS, (HPAL)palInfo.palette), PAL_ERROR);
+
+      if (mDCOwner)
+         GFX (::WinRealizePalette((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW), mPS, &cclr), PAL_ERROR);
+
+      BlackColor = GFX (::GpiQueryColorIndex (mPS, 0, MK_RGB (0x00, 0x00, 0x00)), GPI_ALTERROR);    // CLR_BLACK;
+      WhiteColor = GFX (::GpiQueryColorIndex (mPS, 0, MK_RGB (0xFF, 0xFF, 0xFF)), GPI_ALTERROR);    // CLR_WHITE;
+
+      mPaletteMode = PR_TRUE;
+   }
+   else
+   {
+      GFX (::GpiCreateLogColorTable (mPS, 0, LCOLF_RGB, 0, 0, 0), FALSE);
+
+      BlackColor = MK_RGB (0x00, 0x00, 0x00);
+      WhiteColor = MK_RGB (0xFF, 0xFF, 0xFF);
+
+      mPaletteMode = PR_FALSE;
+   }
+
+   // Set image foreground and background colors. These are used in transparent images for blitting 1-bit masks.
+   // To invert colors on ROP_SRCAND we map 1 to black and 0 to white
+   IMAGEBUNDLE ib;
+   ib.lColor     = BlackColor;           // map 1 in mask to 0x000000 (black) in destination
+   ib.lBackColor = WhiteColor;           // map 0 in mask to 0xFFFFFF (white) in destination
+   ib.usMixMode  = FM_OVERPAINT;
+   ib.usBackMixMode = BM_OVERPAINT;
+   GFX (::GpiSetAttrs (mPS, PRIM_IMAGE, IBB_COLOR | IBB_BACK_COLOR | IBB_MIX_MODE | IBB_BACK_MIX_MODE, 0, (PBUNDLE)&ib), FALSE);
+
+   // Need to enforce setting color values for first time. Make cached values different from current ones.
+   mCurrFontMetrics = mFontMetrics + 1;
+   mCurrTextColor   = mColor + 1;
+   mCurrLineColor   = mColor + 1;
+   mCurrLineStyle   = (nsLineStyle)((int)mLineStyle + 1);
+   mCurrFillColor   = mColor + 1;
+
+   return NS_OK;
+}
+
 nsresult nsRenderingContextOS2::Init( nsIDeviceContext *aContext,
                                       nsIWidget *aWindow)
 {
@@ -278,11 +339,14 @@ nsresult nsRenderingContextOS2::Init( nsIDeviceContext *aContext,
    NS_ADDREF(mSurface);
 
    mDCOwner = aWindow;
+   NS_IF_ADDREF(mDCOwner);
 
    // Grab another reference to the onscreen for later uniformity
-   mFrontSurface = mSurface;
-   NS_ADDREF(mFrontSurface);
+   mMainSurface = mSurface;
+   NS_ADDREF(mMainSurface);
 
+   PushState();
+   mPreservedInitialClipRegion = PR_TRUE;
 
    return CommonInit();
 }
@@ -297,8 +361,11 @@ nsresult nsRenderingContextOS2::Init( nsIDeviceContext *aContext,
    mSurface = (nsDrawingSurfaceOS2 *) aSurface;
    mPS = mSurface->GetPS ();
    NS_ADDREF(mSurface);
-   mFrontSurface = mSurface;
-   NS_ADDREF(mFrontSurface);
+   mMainSurface = mSurface;
+   NS_ADDREF(mMainSurface);
+
+   PushState();
+   mPreservedInitialClipRegion = PR_TRUE;
 
    return CommonInit();
 }
@@ -314,120 +381,36 @@ nsresult nsRenderingContextOS2::CommonInit()
    mTMatrix.AddScale( app2dev, app2dev);
    mContext->GetDevUnitsToAppUnits( mP2T);
 
-  // If this is a palette device, then select and realize the palette
-  nsPaletteInfo palInfo;
-  mContext->GetPaletteInfo(palInfo);
-
-  LONG BlackColor, WhiteColor;
-
-  if (palInfo.isPaletteDevice && palInfo.palette)
-  {
-    ULONG cclr;
- 
-    // Select the palette in the background
-    GFX (::GpiSelectPalette (mPS, (HPAL)palInfo.palette), PAL_ERROR);
-    if (mDCOwner) {
-      ::WinRealizePalette((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW),mPS, &cclr);
-    } /* endif */
-
-    BlackColor = GFX (::GpiQueryColorIndex (mPS, 0, MK_RGB (0x00, 0x00, 0x00)), GPI_ALTERROR);    // CLR_BLACK;
-    WhiteColor = GFX (::GpiQueryColorIndex (mPS, 0, MK_RGB (0xFF, 0xFF, 0xFF)), GPI_ALTERROR);    // CLR_WHITE;
-  }
-  else
-  {
-    GFX (::GpiCreateLogColorTable (mPS, 0, LCOLF_RGB, 0, 0, 0), FALSE);
-
-    BlackColor = MK_RGB (0x00, 0x00, 0x00);
-    WhiteColor = MK_RGB (0xFF, 0xFF, 0xFF);
-  }
-
-  // Set image foreground and background colors. These are used in transparent images for blitting 1-bit masks.
-  // To invert colors on ROP_SRCAND we map 1 to black and 0 to white
-  IMAGEBUNDLE ib;
-  ib.lColor     = BlackColor;           // map 1 in mask to 0x000000 (black) in destination
-  ib.lBackColor = WhiteColor;           // map 0 in mask to 0xFFFFFF (white) in destination
-  ib.usMixMode  = FM_OVERPAINT;
-  ib.usBackMixMode = BM_OVERPAINT;
-  GFX (::GpiSetAttrs (mPS, PRIM_IMAGE, IBB_COLOR | IBB_BACK_COLOR | IBB_MIX_MODE | IBB_BACK_MIX_MODE, 0, (PBUNDLE)&ib), FALSE);
-
-  return NS_OK;
+   return SetupPS ();
 }
 
 // PS & drawing surface management -----------------------------------------
 
 nsresult nsRenderingContextOS2::SelectOffScreenDrawingSurface( nsDrawingSurface aSurface)
 {
-   nsresult rc = NS_ERROR_FAILURE;
-   LONG BlackColor, WhiteColor;
-
-   nsPaletteInfo palInfo;
-   mContext->GetPaletteInfo(palInfo);
-
-
-   if( aSurface)
+   if (aSurface != mSurface)
    {
-      NS_IF_RELEASE(mSurface);
-      mSurface = (nsDrawingSurfaceOS2 *) aSurface;
-      mPS = mSurface->GetPS ();
-      // If this is a palette device, then select and realize the palette
-    
-      if (palInfo.isPaletteDevice && palInfo.palette)
+      if( aSurface)
       {
-        ULONG cclr;
-        // Select the palette in the background
-        GFX (::GpiSelectPalette (mPS, (HPAL)palInfo.palette), PAL_ERROR);
-        if (mDCOwner) {
-          ::WinRealizePalette((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW),mPS, &cclr);
-        } /* endif */
+         NS_IF_RELEASE(mSurface);
+         mSurface = (nsDrawingSurfaceOS2 *) aSurface;
+         mPS = mSurface->GetPS ();
+
+         SetupPS ();
       }
-      else
+      else // deselect current offscreen...
       {
-        GFX (::GpiCreateLogColorTable (mPS, 0, LCOLF_RGB, 0, 0, 0), FALSE);
+         NS_IF_RELEASE(mSurface);
+         mSurface = mMainSurface;
+         mPS = mSurface->GetPS ();
+
+         SetupPS ();
       }
-   }
-   else // deselect current offscreen...
-   {
-      NS_IF_RELEASE(mSurface);
-      mSurface = mFrontSurface;
-      mPS = mSurface->GetPS ();
-      rc = NS_OK;
+
+      NS_ADDREF(mSurface);
    }
 
-   if (palInfo.isPaletteDevice && palInfo.palette)
-   {
-      BlackColor = GFX (::GpiQueryColorIndex (mPS, 0, MK_RGB (0x00, 0x00, 0x00)), GPI_ALTERROR);    // CLR_BLACK;
-      WhiteColor = GFX (::GpiQueryColorIndex (mPS, 0, MK_RGB (0xFF, 0xFF, 0xFF)), GPI_ALTERROR);    // CLR_WHITE;
-   } else
-   {
-      BlackColor = MK_RGB (0x00, 0x00, 0x00);
-      WhiteColor = MK_RGB (0xFF, 0xFF, 0xFF);
-   }
-
-   // Set image foreground and background colors. These are used in transparent images for blitting 1-bit masks.
-   // To invert colors on ROP_SRCAND we map 1 to black and 0 to white
-   IMAGEBUNDLE ib;
-   ib.lColor     = BlackColor;          // map 1 in mask to 0x000000 (black) in destination
-   ib.lBackColor = WhiteColor;          // map 0 in mask to 0xFFFFFF (white) in destination
-   ib.usMixMode  = FM_OVERPAINT;
-   ib.usBackMixMode = BM_OVERPAINT;
-   GFX (::GpiSetAttrs (mPS, PRIM_IMAGE, IBB_COLOR | IBB_BACK_COLOR | IBB_MIX_MODE | IBB_BACK_MIX_MODE, 0, (PBUNDLE)&ib), FALSE);
-
-   // need to force a state refresh because the offscreen is something of
-   // an unknown quantity.
-   SetupDrawingColor( TRUE);
-   SetupFontAndColor( TRUE);
-
-   // Flush the offscreen's font cache because it's being associated with
-   // a new onscreen.
-//
-// Actually I don't think this is necessary.
-//
-//   mSurface->FlushFontCache();
-//
-
-   NS_ADDREF(mSurface);
-
-   return rc;
+   return NS_OK;
 }
 
 // !! This is a bit dodgy; nsDrawingSurface *really* needs to be XP-comified
@@ -460,10 +443,11 @@ nsresult nsRenderingContextOS2::CreateDrawingSurface( nsRect *aBounds,
    nsresult rc = NS_ERROR_FAILURE;
 
    nsOffscreenSurface *surf = new nsOffscreenSurface;
+
    if (!surf)
      return NS_ERROR_OUT_OF_MEMORY;
 
-   rc = surf->Init( mFrontSurface->GetPS (), aBounds->width, aBounds->height, aSurfFlags);
+   rc = surf->Init( mMainSurface->GetPS (), aBounds->width, aBounds->height, aSurfFlags);
 
    if(NS_SUCCEEDED(rc))
    {
@@ -476,6 +460,21 @@ nsresult nsRenderingContextOS2::CreateDrawingSurface( nsRect *aBounds,
    return rc;
 }
 
+NS_IMETHODIMP nsRenderingContextOS2::CreateDrawingSurface(HPS aPS, nsDrawingSurface &aSurface, nsIWidget *aWidget)
+{
+  nsWindowSurface *surf = new nsWindowSurface();
+
+  if (nsnull != surf)
+  {
+    NS_ADDREF(surf);
+    surf->Init(aPS, aWidget);
+  }
+
+  aSurface = (nsDrawingSurface)surf;
+
+  return NS_OK;
+}
+
 nsresult nsRenderingContextOS2::DestroyDrawingSurface( nsDrawingSurface aDS)
 {
    nsDrawingSurfaceOS2 *surf = (nsDrawingSurfaceOS2 *) aDS;
@@ -486,7 +485,7 @@ nsresult nsRenderingContextOS2::DestroyDrawingSurface( nsDrawingSurface aDS)
    if( surf && surf == mSurface)
    {
       NS_RELEASE(mSurface);    // ref. from SelectOffscreen
-      mSurface = mFrontSurface;
+      mSurface = mMainSurface;
       mPS = mSurface->GetPS ();
       NS_ADDREF(mSurface);
    }
@@ -509,25 +508,16 @@ NS_IMETHODIMP nsRenderingContextOS2::LockDrawingSurface( PRInt32 aX, PRInt32 aY,
 {
   PushState();
 
-//DJ  PushClipState();
-
   return mSurface->Lock( aX, aY, aWidth, aHeight, aBits,
                          aStride, aWidthBytes, aFlags);
 }
 
 NS_IMETHODIMP nsRenderingContextOS2::UnlockDrawingSurface()
 {
-  PRBool  clipstate;
-
   mSurface->Unlock();
 
-  PopState(clipstate);
-
-  if (clipstate)
-  {
-    SetupDrawingColor(TRUE);
-    SetupFontAndColor(TRUE);
-  }
+  PRBool clipstate;
+  PopState (clipstate);
 
   return NS_OK;
 }
@@ -596,50 +586,7 @@ nsresult nsRenderingContextOS2::PopState( PRBool &aClipEmpty)
 nsresult nsRenderingContextOS2::Reset()
 {
    // okay, what's this supposed to do?  Empty the state stack?
-   printf( "nsRenderingContext::Reset() -- hmm\n");
    return NS_OK;
-}
-
-// OS/2 - XP coord conversion ----------------------------------------------
-
-// get inclusive-inclusive rect
-void nsRenderingContextOS2::NS2PM_ININ( const nsRect &in, RECTL &rcl)
-{
-   PRUint32 ulHeight;
-   GetTargetHeight( ulHeight);
-
-   rcl.xLeft = in.x;
-   rcl.xRight = in.x + in.width - 1;
-   rcl.yTop = ulHeight - in.y - 1;
-   rcl.yBottom = rcl.yTop - in.height + 1;
-}
-
-void nsRenderingContextOS2::PM2NS_ININ( const RECTL &in, nsRect &out)
-{
-   PRUint32 ulHeight;
-   GetTargetHeight( ulHeight);
-
-   out.x = in.xLeft;
-   out.width = in.xRight - in.xLeft + 1;
-   out.y = ulHeight - in.yTop - 1;
-   out.height = in.yTop - in.yBottom + 1;
-}
-
-// get in-ex rect
-void nsRenderingContextOS2::NS2PM_INEX( const nsRect &in, RECTL &rcl)
-{
-   NS2PM_ININ( in, rcl);
-   rcl.xRight++;
-   rcl.yTop++;
-}
-
-void nsRenderingContextOS2::NS2PM( PPOINTL aPointl, ULONG cPointls)
-{
-   PRUint32 ulHeight;
-   GetTargetHeight( ulHeight);
-
-   for( ULONG i = 0; i < cPointls; i++)
-      aPointl[ i].y = ulHeight - aPointl[ i].y - 1;
 }
 
 // Clip region management --------------------------------------------------
@@ -651,7 +598,7 @@ nsresult nsRenderingContextOS2::IsVisibleRect( const nsRect &aRect,
    mTMatrix.TransformCoord( &trect.x, &trect.y,
                             &trect.width, &trect.height);
    RECTL rcl;
-   NS2PM_ININ( trect, rcl);
+   mSurface->NS2PM_ININ (trect, rcl);
 
    LONG rc = GFX (::GpiRectVisible( mPS, &rcl), RVIS_ERROR);
 
@@ -702,7 +649,7 @@ nsresult nsRenderingContextOS2::SetClipRect( const nsRect& aRect, nsClipCombine 
       {
          case nsClipCombine_kIntersect:
          case nsClipCombine_kSubtract:
-            NS2PM_ININ( trect, rcl);
+            mSurface->NS2PM_ININ (trect, rcl);
             if( aCombine == nsClipCombine_kIntersect)
                lrc = GFX (::GpiIntersectClipRectangle( mPS, &rcl), RGN_ERROR);
             else
@@ -713,7 +660,7 @@ nsresult nsRenderingContextOS2::SetClipRect( const nsRect& aRect, nsClipCombine 
          case nsClipCombine_kReplace:
          {
             // need to create a new region & fiddle with it
-            NS2PM_INEX( trect, rcl);
+            mSurface->NS2PM_INEX (trect, rcl);
             HRGN hrgn = GFX (::GpiCreateRegion( mPS, 1, &rcl), RGN_ERROR);
             if( hrgn && aCombine == nsClipCombine_kReplace)
                lrc = OS2_SetClipRegion( mPS, hrgn);
@@ -747,7 +694,7 @@ nsresult nsRenderingContextOS2::GetClipRect( nsRect &aRect, PRBool &aHasLocalCli
 
    if( rc != RGN_NULL && rc != RGN_ERROR)
    {
-      PM2NS_ININ( rcl, aRect);
+      mSurface->PM2NS_ININ (rcl, aRect);
       brc = PR_TRUE;
    }
 
@@ -760,9 +707,7 @@ nsresult nsRenderingContextOS2::GetClipRect( nsRect &aRect, PRBool &aHasLocalCli
 nsresult nsRenderingContextOS2::SetClipRegion( const nsIRegion &aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
    nsRegionOS2 *pRegion = (nsRegionOS2 *) &aRegion;
-   PRUint32     ulHeight;
-
-   GetTargetHeight( ulHeight);
+   PRUint32     ulHeight = mSurface->GetHeight ();
 
    HRGN hrgn = pRegion->GetHRGN( ulHeight, mPS);
    long cmode = 0;
@@ -816,8 +761,8 @@ nsresult nsRenderingContextOS2::GetClipRegion( nsIRegion **aRegion)
    {
       // There was a clip region, so get it & init.
       HRGN hrgnDummy = 0;
-      PRUint32 ulHeight;
-      GetTargetHeight( ulHeight);
+      PRUint32 ulHeight = mSurface->GetHeight ();
+
       pRegion->Init( hrgnClip, ulHeight, mPS);
       GFX (::GpiSetClipRegion (mPS, hrgnClip, &hrgnDummy), RGN_ERROR);
    }
@@ -932,57 +877,29 @@ nsresult nsRenderingContextOS2::GetCurrentTransform( nsTransform2D *&aTransform)
 
 // Drawing methods ---------------------------------------------------------
 
-// !! this method could do with a rename...
-void nsRenderingContextOS2::SetupDrawingColor( BOOL bForce)
+LONG nsRenderingContextOS2::GetGPIColor (void)
 {
-   if( bForce || mColor != mCurrDrawingColor || !mAlreadySetDrawingColor)
+   LONG gcolor = MK_RGB (mGammaTable [NS_GET_R (mColor)],
+                         mGammaTable [NS_GET_G (mColor)],
+                         mGammaTable [NS_GET_B (mColor)]);
+
+   return (mPaletteMode) ? GFX (::GpiQueryColorIndex (mPS, 0, gcolor), GPI_ALTERROR) :
+                           gcolor ;
+}
+
+void nsRenderingContextOS2::SetupLineColorAndStyle (void)
+{
+   if (mColor != mCurrLineColor)
    {
-      AREABUNDLE areaBundle;
       LINEBUNDLE lineBundle;
+      lineBundle.lColor = GetGPIColor ();
 
+      GFX (::GpiSetAttrs (mPS, PRIM_LINE, LBB_COLOR, 0, (PBUNDLE)&lineBundle), FALSE);
 
-      long gcolor = MK_RGB( mGammaTable[NS_GET_R(mColor)],
-                            mGammaTable[NS_GET_G(mColor)],
-                            mGammaTable[NS_GET_B(mColor)]);
-
-      nsPaletteInfo palInfo;
-      mContext->GetPaletteInfo(palInfo);
-
-      long lColor;
-      if (palInfo.palette)
-         lColor = GFX (::GpiQueryColorIndex (mPS, 0, gcolor), GPI_ALTERROR);
-      else
-         lColor = gcolor;
-
-      long lLineFlags = LBB_COLOR;
-      long lAreaFlags = ABB_COLOR;
-
-      areaBundle.lColor = lColor;
-      lineBundle.lColor = lColor;
-/*
-      if (((nsDeviceContextOS2 *) mContext)->mPrintDC )
-      {
-//         areaBundle.lBackColor = GFX (::GpiQueryColorIndex (mPS, 0, CLR_BACKGROUND), GPI_ALTERROR);
-//         lineBundle.lBackColor = GFX (::GpiQueryColorIndex (mPS, 0, CLR_BACKGROUND), GPI_ALTERROR);
-         areaBundle.lBackColor = GFX (::GpiQueryColorIndex (mPS, 0, MK_RGB (0xFF, 0xFF, 0xFF)), GPI_ALTERROR);
-         lineBundle.lBackColor = GFX (::GpiQueryColorIndex (mPS, 0, MK_RGB (0xFF, 0xFF, 0xFF)), GPI_ALTERROR);
-
-         areaBundle.usMixMode     = FM_OVERPAINT;
-         areaBundle.usBackMixMode = BM_OVERPAINT;
-
-
-         lLineFlags = lLineFlags | LBB_BACK_COLOR ;
-         lAreaFlags = lAreaFlags | ABB_BACK_COLOR | ABB_MIX_MODE | ABB_BACK_MIX_MODE;
-      }
-*/
-      GFX (::GpiSetAttrs (mPS, PRIM_LINE,lLineFlags, 0, (PBUNDLE)&lineBundle), FALSE);
-      GFX (::GpiSetAttrs (mPS, PRIM_AREA,lAreaFlags, 0, (PBUNDLE)&areaBundle), FALSE);
-
-      mCurrDrawingColor = mColor;
-      mAlreadySetDrawingColor = PR_TRUE;
+      mCurrLineColor = mColor;
    }
 
-   if( bForce || mLineStyle != mCurrLineStyle)
+   if (mLineStyle != mCurrLineStyle)
    {
       long ltype = 0;
       switch( mLineStyle)
@@ -1000,9 +917,22 @@ void nsRenderingContextOS2::SetupDrawingColor( BOOL bForce)
    }
 }
 
-void nsRenderingContextOS2::SetupFontAndColor( BOOL bForce)
+void nsRenderingContextOS2::SetupFillColor (void)
 {
-   if( bForce || mFontMetrics != mCurrFontMetrics)
+   if (mColor != mCurrFillColor)
+   {
+      AREABUNDLE areaBundle;
+      areaBundle.lColor = GetGPIColor ();
+
+      GFX (::GpiSetAttrs (mPS, PRIM_AREA, ABB_COLOR, 0, (PBUNDLE)&areaBundle), FALSE);
+
+      mCurrFillColor = mColor;
+   }
+}
+
+void nsRenderingContextOS2::SetupFontAndTextColor (void)
+{
+   if (mFontMetrics != mCurrFontMetrics)
    {
       // select font
       mCurrFontMetrics = mFontMetrics;
@@ -1010,23 +940,10 @@ void nsRenderingContextOS2::SetupFontAndColor( BOOL bForce)
          mSurface->SelectFont( mCurrFontMetrics);
    }
 
-   if( bForce || mColor != mCurrTextColor || !mAlreadySetTextColor)
+   if (mColor != mCurrTextColor)
    {
-
       CHARBUNDLE cBundle;
-
-      long gcolor = MK_RGB( mGammaTable[NS_GET_R(mColor)],
-                            mGammaTable[NS_GET_G(mColor)],
-                            mGammaTable[NS_GET_B(mColor)]);
-
-      nsPaletteInfo palInfo;
-      mContext->GetPaletteInfo(palInfo);
-
-      if (palInfo.palette)
-         cBundle.lColor = GFX (::GpiQueryColorIndex (mPS, 0, gcolor), GPI_ALTERROR);
-      else
-         cBundle.lColor = gcolor;
-
+      cBundle.lColor = GetGPIColor ();
       cBundle.usMixMode = FM_OVERPAINT;
       cBundle.usBackMixMode = BM_LEAVEALONE;
 
@@ -1036,7 +953,6 @@ void nsRenderingContextOS2::SetupFontAndColor( BOOL bForce)
            FALSE);
 
       mCurrTextColor = mColor;
-      mAlreadySetTextColor = PR_TRUE;
    }
 }
 
@@ -1047,7 +963,7 @@ nsresult nsRenderingContextOS2::DrawLine( nscoord aX0, nscoord aY0, nscoord aX1,
 
    POINTL ptls[] = { { (long) aX0, (long) aY0 },
                      { (long) aX1, (long) aY1 } };
-   NS2PM( ptls, 2);
+   mSurface->NS2PM (ptls, 2);
 
    if (ptls[0].x > ptls[1].x)
       ptls[0].x--;
@@ -1059,7 +975,7 @@ nsresult nsRenderingContextOS2::DrawLine( nscoord aX0, nscoord aY0, nscoord aX1,
    else if (ptls[1].y < ptls[0].y)
       ptls[1].y++;
 
-   SetupDrawingColor();
+   SetupLineColorAndStyle ();
 
    GFX (::GpiMove (mPS, ptls), FALSE);
    GFX (::GpiLine (mPS, ptls + 1), GPI_ERROR);
@@ -1107,9 +1023,7 @@ void nsRenderingContextOS2::PMDrawPoly( const nsPoint aPoints[], PRInt32 aNumPoi
       }
 
       // go to os2
-      NS2PM( pts, aNumPoints);
-
-      SetupDrawingColor();
+      mSurface->NS2PM (pts, aNumPoints);
 
       // We draw closed pgons using polyline to avoid filling it.  This works
       // because the API to this class specifies that the last point must
@@ -1123,10 +1037,12 @@ void nsRenderingContextOS2::PMDrawPoly( const nsPoint aPoints[], PRInt32 aNumPoi
          //IBM-AKR changed from boundary and inclusive to be noboundary and 
          //        exclusive to fix bug with text fields, buttons, etc. borders 
          //        being 1 pel too thick.  Bug 56853
+         SetupFillColor ();
          GFX (::GpiPolygons (mPS, 1, &pgon, POLYGON_NOBOUNDARY, POLYGON_EXCL), GPI_ERROR);
       }
       else
       {
+         SetupLineColorAndStyle ();
          GFX (::GpiPolyLine (mPS, aNumPoints - 1, pts + 1), GPI_ERROR);
       }
 
@@ -1166,19 +1082,18 @@ nsresult nsRenderingContextOS2::FillRect( nscoord aX, nscoord aY, nscoord aWidth
 NS_IMETHODIMP
 nsRenderingContextOS2 :: InvertRect(const nsRect& aRect)
 {
-  return InvertRect(aRect.x, aRect.y, aRect.width, aRect.height);
+   return InvertRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 NS_IMETHODIMP
 nsRenderingContextOS2 :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-//  mTMatrix.TransformCoord(&aX, &aY, &aWidth, &aHeight);
-//  ConditionRect(aX, aY, aWidth, aHeight);
-  nsRect tr(aX, aY, aWidth, aHeight);
-  GFX (::GpiSetMix (mPS, FM_XOR), FALSE);
-  PMDrawRect(tr, FALSE);
-  GFX (::GpiSetMix (mPS, FM_DEFAULT), FALSE);
-  return NS_OK;
+   nsRect tr(aX, aY, aWidth, aHeight);
+   LONG CurMix = GFX (::GpiQueryMix (mPS), FM_ERROR);
+   GFX (::GpiSetMix (mPS, FM_XOR), FALSE);
+   PMDrawRect(tr, FALSE);
+   GFX (::GpiSetMix (mPS, CurMix), FALSE);
+   return NS_OK;
 }
 
 void nsRenderingContextOS2::PMDrawRect( nsRect &rect, BOOL fill)
@@ -1186,20 +1101,29 @@ void nsRenderingContextOS2::PMDrawRect( nsRect &rect, BOOL fill)
    mTMatrix.TransformCoord( &rect.x, &rect.y, &rect.width, &rect.height);
 
    RECTL rcl;
-   NS2PM_ININ( rect, rcl);
-
-   SetupDrawingColor();
+   mSurface->NS2PM_ININ (rect, rcl);
 
    GFX (::GpiMove (mPS, (PPOINTL) &rcl), FALSE);
 
    if (rcl.xLeft == rcl.xRight || rcl.yTop == rcl.yBottom)
    {
+      SetupLineColorAndStyle ();
       GFX (::GpiLine (mPS, ((PPOINTL)&rcl) + 1), GPI_ERROR);
    }
    else 
    {
-      long lOps = (fill) ? DRO_FILL : DRO_OUTLINE;
-   
+      long lOps;
+
+      if (fill)
+      {
+         lOps = DRO_FILL;
+         SetupFillColor ();
+      } else
+      {
+         lOps = DRO_OUTLINE;
+         SetupLineColorAndStyle ();
+      }
+
       GFX (::GpiBox (mPS, lOps, ((PPOINTL)&rcl) + 1, 0, 0), GPI_ERROR);
    }
 }
@@ -1272,9 +1196,7 @@ void nsRenderingContextOS2::PMDrawArc( nsRect &rect, PRBool bFilled, PRBool bFul
    mTMatrix.TransformCoord( &rect.x, &rect.y, &rect.width, &rect.height);
 
    RECTL rcl;
-   NS2PM_ININ( rect, rcl);
-
-   SetupDrawingColor();
+   mSurface->NS2PM_ININ (rect, rcl);
 
    // set arc params.
    long lWidth = rect.width / 2;
@@ -1286,6 +1208,12 @@ void nsRenderingContextOS2::PMDrawArc( nsRect &rect, PRBool bFilled, PRBool bFul
    rcl.xLeft += lWidth;
    rcl.yBottom += lHeight;
    GFX (::GpiMove (mPS, (PPOINTL)&rcl), FALSE);
+
+   if (bFilled)
+      SetupFillColor ();
+   else
+      SetupLineColorAndStyle ();
+
 
    if (bFull)
    {
@@ -1366,7 +1294,7 @@ NS_IMETHODIMP nsRenderingContextOS2 :: GetWidth(const char* aString,
 
     SIZEL size;
 
-    SetupFontAndColor();
+    SetupFontAndTextColor ();
     ::GetTextExtentPoint32(mPS, aString, aLength, &size);
     aWidth = NSToCoordRound(float(size.cx) * mP2T);
 
@@ -1405,7 +1333,7 @@ nsRenderingContextOS2::GetWidth(const char *aString,
     aNumCharsFit = 0;
 
     // Setup the font and foreground color
-    SetupFontAndColor();
+    SetupFontAndTextColor ();
 
     // Iterate each character in the string and determine which font to use
     nsFontMetricsOS2* metrics = (nsFontMetricsOS2*)mFontMetrics;
@@ -1565,7 +1493,7 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const char *aString, PRUint32 
   PRInt32 x = aX;
   PRInt32 y = aY;
 
-  SetupFontAndColor();
+  SetupFontAndTextColor ();
 
   INT dxMem[500];
   INT* dx0;
@@ -1579,7 +1507,7 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const char *aString, PRUint32 
   mTMatrix.TransformCoord(&x, &y);
 
   POINTL ptl = { x, y };
-  NS2PM( &ptl, 1);
+  mSurface->NS2PM (&ptl, 1);
 
   ::ExtTextOut(mPS, ptl.x, ptl.y, 0, NULL, aString, aLength, aSpacing ? dx0 : NULL);
 
@@ -1693,26 +1621,48 @@ nsRenderingContextOS2::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord
 
 nsresult nsRenderingContextOS2::CopyOffScreenBits(
                      nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
-                             const nsRect &aDestBounds, PRUint32 aCopyFlags)
+                     const nsRect &aDestBounds, PRUint32 aCopyFlags)
 {
-   NS_ASSERTION( aSrcSurf && mSurface && mFrontSurface, "bad surfaces");
+   NS_ASSERTION( aSrcSurf && mSurface && mMainSurface, "bad surfaces");
 
-   nsDrawingSurfaceOS2 *theSurf = (nsDrawingSurfaceOS2 *) aSrcSurf;
+   nsDrawingSurfaceOS2 *SourceSurf = (nsDrawingSurfaceOS2 *) aSrcSurf;
+   nsDrawingSurfaceOS2 *DestSurf;
+   HPS DestPS;
 
-   nsRect drect( aDestBounds);
-   HPS    hpsTarget = mFrontSurface->GetPS ();
-
-   if( aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
-      hpsTarget = mPS;
-
-   if( aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
+   if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
    {
-      // Set clip region on dest surface to be that from the hps
-      // in the passed-in drawing surface.
-      OS2_SetClipRegion( hpsTarget, OS2_CopyClipRegion( theSurf->GetPS ()));
+      DestSurf = mSurface;
+      DestPS   = mPS;
+   } else
+   {
+      DestSurf = mMainSurface;
+      DestPS   = mMainSurface->GetPS ();
    }
 
-   // Windows wants to select palettes here.  I don't think I do.
+   PRUint32 DestHeight   = DestSurf->GetHeight ();
+   PRUint32 SourceHeight = SourceSurf->GetHeight ();
+
+
+   if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
+   {
+      HRGN SourceClipRegion = OS2_CopyClipRegion (SourceSurf->GetPS ());
+
+      // Currently clip region is in offscreen drawing surface coordinate system.
+      // If offscreen surface have different height than destination surface,
+      // then clipping region should be shifted down by amount of this difference.
+
+      if ( (SourceClipRegion) && (SourceHeight != DestHeight) )
+      {
+         POINTL Offset = { 0, -(SourceHeight - DestHeight) };
+
+         GFX (::GpiOffsetRegion (DestPS, SourceClipRegion, &Offset), FALSE);
+      }
+
+      OS2_SetClipRegion (DestPS, SourceClipRegion);
+   }
+
+
+   nsRect drect( aDestBounds);
 
    if( aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
       mTMatrix.TransformCoord( &aSrcX, &aSrcY);
@@ -1722,24 +1672,13 @@ nsresult nsRenderingContextOS2::CopyOffScreenBits(
                                &drect.width, &drect.height);
 
    // Note rects for GpiBitBlt are in-ex.
-   // Doing coord-conversion by hand to avoid calling GetClientBounds() twice.
-   RECTL   rcls[ 2];
-   PRUint32 ulHeight, ulDummy;
 
-   GetTargetHeight( ulHeight);
+   POINTL Points [3] = { drect.x, DestHeight - drect.y - drect.height,    // TLL
+                         drect.x + drect.width, DestHeight - drect.y,     // TUR
+                         aSrcX, SourceHeight - aSrcY - drect.height };    // SLL
 
-   rcls[0].xLeft = drect.x;
-   rcls[0].xRight = drect.x + drect.width;
-   rcls[0].yTop = ulHeight - drect.y;
-   rcls[0].yBottom = rcls[0].yTop - drect.height;
 
-   if( aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
-      theSurf->GetDimensions( &ulDummy, &ulHeight);
-
-   rcls[1].xLeft = aSrcX;
-   rcls[1].yBottom = ulHeight - aSrcY - drect.height;
-
-   GFX (::GpiBitBlt (hpsTarget, theSurf->GetPS (), 3, (PPOINTL)rcls, ROP_SRCCOPY, BBO_OR), GPI_ERROR);
+   GFX (::GpiBitBlt (DestPS, SourceSurf->GetPS (), 3, Points, ROP_SRCCOPY, BBO_OR), GPI_ERROR);
 
    return NS_OK;
 }

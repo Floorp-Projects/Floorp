@@ -55,25 +55,35 @@ class nsDrawingSurfaceOS2 : public nsIDrawingSurface
    long           mNextID;  // next lcid to allocate
    long           mTopID;   // highest used lcid
 
- public:
+
+ protected:
+   HPS            mPS;      // presentation space for this surface
+   PRInt32        mWidth;   // dimensions of drawing surface
+   PRInt32        mHeight;
+
+
    nsDrawingSurfaceOS2();
    virtual ~nsDrawingSurfaceOS2();
 
-   // nsISupports
    NS_DECL_ISUPPORTS
 
-   // nsIDrawingSurface actually implemented in subclasses
-
-   HPS mPS;               // presentation space for this surface
-
-   void SelectFont( nsIFontMetrics *metrics);
-   void FlushFontCache();
-
-   NS_IMETHOD GetBitmap( HBITMAP &aBitmap); // yuck (for blender, may go)
-   HPS GetPS() {return mPS;};
-
- protected:
    void DisposeFonts();     // MUST be called before disposing of PS
+
+
+ public:
+   nsresult GetDimensions( PRUint32 *aWidth, PRUint32 *aHeight);
+
+   // os/2 methods
+   HPS  GetPS () { return mPS; }
+   void SelectFont (nsIFontMetrics *metrics);
+   void FlushFontCache ();
+   virtual PRUint32 GetHeight () { return mHeight; }
+
+   // Convertion between XP and OS/2 coordinate space.
+   void NS2PM_ININ (const nsRect &in, RECTL &rcl);
+   void NS2PM_INEX (const nsRect &in, RECTL &rcl);
+   void PM2NS_ININ (const RECTL &in, nsRect &out);
+   void NS2PM      (PPOINTL aPointl, ULONG cPointls);
 };
 
 // Offscreen surface. Others depend on this.
@@ -81,8 +91,6 @@ class nsOffscreenSurface : public nsDrawingSurfaceOS2
 {
    HDC     mDC;
    HBITMAP mBitmap;
-   PRInt32 mHeight;
-   PRInt32 mWidth;
 
    PBITMAPINFOHEADER2  mInfoHeader;
    PRUint8            *mBits;
@@ -96,14 +104,13 @@ class nsOffscreenSurface : public nsDrawingSurfaceOS2
 
    // os/2 methods
    NS_IMETHOD Init( HPS aCompatiblePS, PRInt32 aWidth, PRInt32 aHeight, PRUint32 aFlags);
-   NS_IMETHOD GetBitmap( HBITMAP &aBitmap);
+   NS_IMETHOD Init(HPS aPS);
 
    // nsIDrawingSurface methods
    NS_IMETHOD Lock( PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 aHeight,
                     void **aBits, PRInt32 *aStride, PRInt32 *aWidthBytes,
                     PRUint32 aFlags);
    NS_IMETHOD Unlock();
-   NS_IMETHOD GetDimensions( PRUint32 *aWidth, PRUint32 *aHeight);
    NS_IMETHOD IsOffscreen( PRBool *aOffScreen);
    NS_IMETHOD IsPixelAddressable( PRBool *aAddressable);
    NS_IMETHOD GetPixelFormat( nsPixelFormat *aFormat);
@@ -115,10 +122,11 @@ class nsOnscreenSurface : public nsDrawingSurfaceOS2
    nsOffscreenSurface *mProxySurface;
    void                EnsureProxy();
 
- public:
+ protected:
    nsOnscreenSurface();
    virtual ~nsOnscreenSurface();
 
+ public:
    // nsIDrawingSurface methods
    NS_IMETHOD Lock( PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 aHeight,
                     void **aBits, PRInt32 *aStride, PRInt32 *aWidthBytes,
@@ -138,22 +146,21 @@ class nsWindowSurface : public nsOnscreenSurface
    nsWindowSurface();
    virtual ~nsWindowSurface();
 
+   NS_IMETHOD Init(HPS aPS, nsIWidget *aWidget);
    NS_IMETHOD Init( nsIWidget *aOwner);
    NS_IMETHOD GetDimensions( PRUint32 *aWidth, PRUint32 *aHeight);
+
+   virtual PRUint32 GetHeight ();
 };
 
 // Surface for a printer-page
 class nsPrintSurface : public nsOnscreenSurface
 {
-   PRInt32 mHeight;
-   PRInt32 mWidth;
-
  public:
    nsPrintSurface();
    virtual ~nsPrintSurface();
 
    NS_IMETHOD Init( HPS aPS, PRInt32 aWidth, PRInt32 aHeight, PRUint32 aFlags);
-   NS_IMETHOD GetDimensions( PRUint32 *aWidth, PRUint32 *aHeight);
 };
 
 #endif
