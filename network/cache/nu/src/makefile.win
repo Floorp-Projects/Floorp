@@ -54,6 +54,7 @@ OBJS =						\
 	.\$(OBJDIR)\CacheStubs.obj	 	\
 	.\$(OBJDIR)\nsFileStream.obj	\
 	.\$(OBJDIR)\nsMemStream.obj	 	\
+	.\$(OBJDIR)\nsMonitorable.obj   \
 	$(NULL)
 
 LINCS = 			\
