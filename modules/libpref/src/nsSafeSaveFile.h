@@ -41,27 +41,15 @@
 
 class nsSafeSaveFile {
     public:
-        enum PurgeBackupType {
-            kPurgeNone = 0, kPurgeOne = 1, kPurgeAll = 2
-        };
+    	nsSafeSaveFile() {}
+    	~nsSafeSaveFile() {}
 
-    	nsSafeSaveFile(nsIFile *aTargetFile, PRInt32 aNumBackupCopies = 0);
-    	virtual ~nsSafeSaveFile(void);
-
-        nsresult CreateBackup(PurgeBackupType aPurgeType);
-        nsresult RestoreFromBackup(void);
-
-    protected:
-    	nsSafeSaveFile(void) {};
-        nsresult ManageRedundantBackups(void);
-        nsresult PurgeOldestRedundantBackup(void);
+        nsresult Init(nsIFile *aTargetFile, nsIFile **aTempFile);
+        nsresult OnSaveFinished(PRBool aSaveSucceeded, PRBool aBackupTarget);
 
     private:
         nsCOMPtr<nsIFile> mTargetFile;
         PRBool            mTargetFileExists;
-        nsCOMPtr<nsIFile> mBackupFile;
-        nsCString         mBackupFileName; // native charset
-        PRInt32           mBackupNameLen;
-        PRInt32           mBackupCount;
+        nsCOMPtr<nsIFile> mTempFile;
 };
 

@@ -38,207 +38,92 @@
 
 #include "nsSafeSaveFile.h"
 
-
-nsSafeSaveFile::nsSafeSaveFile(nsIFile *aTargetFile, PRInt32 aNumBackupCopies)
- : mBackupNameLen(0),
-   mBackupCount(aNumBackupCopies)
+nsresult nsSafeSaveFile::Init(nsIFile *aTargetFile, nsIFile **aTempFile)
 {
-    nsCAutoString targetFileName;  
-    const char *  temp;
-    nsresult      rv;
-
-    // determine if the target file currently exists
-    // if the target file doesn't exist this object does nothing
-    if (NS_FAILED(aTargetFile->Exists(&mTargetFileExists)))
-        mTargetFileExists = PR_FALSE;
-    if (!mTargetFileExists)
-        return;
-
-    // determine the actual filename (less the extension)
-    rv = aTargetFile->GetNativeLeafName(targetFileName);
-    if (NS_FAILED(rv)) // yikes! out of memory
-        return;
-
-    // keep a reference to the file that will be saved
+  NS_ASSERTION(aTargetFile, "null pointer");
+  NS_ASSERTION(aTempFile, "null pointer");
+  *aTempFile = nsnull;
+  
+  nsresult rv;
+  
+  rv = aTargetFile->Exists(&mTargetFileExists);
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Can't tell if target file exists");
+    mTargetFileExists = PR_TRUE; // Safer to assume it exists - we just do more work.
+  }
+  
+  nsCOMPtr<nsIFile> tempResult;
+  rv = aTargetFile->Clone(getter_AddRefs(tempResult));
+  if (NS_SUCCEEDED(rv) && mTargetFileExists) {
+    PRUint32 perm;
+    if (NS_FAILED(aTargetFile->GetPermissions(&perm))) {
+      NS_ERROR("Can't get permissions of target file");
+      perm = 0700;
+    }
+    rv = tempResult->CreateUnique(nsIFile::NORMAL_FILE_TYPE, perm);
+  }
+  if (NS_SUCCEEDED(rv)) {
+    NS_ADDREF(*aTempFile = tempResult);
     mTargetFile = aTargetFile;
-
-    // determine the file name (less the extension)
-    temp = strrchr(targetFileName.get(), '.');
-    if (temp)
-       mBackupNameLen = temp - targetFileName.get();
-    else
-       mBackupNameLen = targetFileName.Length();
-
-    // save the name of the backup file and its length
-    mBackupFileName = Substring(targetFileName, 0, mBackupNameLen) + NS_LITERAL_CSTRING(".bak");
-    mBackupNameLen = mBackupFileName.Length();
-
-    // create a new file object that points to our backup file... this isn't
-    // absolutely necessary, but it does allow us to easily transistion to a
-    // model where all .bak are stored in a single directory if so desired.
-    rv = aTargetFile->Clone(getter_AddRefs(mBackupFile));
-    if (NS_SUCCEEDED(rv))
-        mBackupFile->SetNativeLeafName(mBackupFileName);
+    mTempFile = tempResult;
+  }
+  return rv;  
 }
 
-nsSafeSaveFile::~nsSafeSaveFile(void)
+nsresult nsSafeSaveFile::OnSaveFinished(PRBool aSaveSucceeded, PRBool aBackupTarget)
 {
-    // if the target file didn't exist nothing was backed up
-    if (mTargetFileExists && mBackupFile) {
-        // if no backups desired, remove the backup file
-        if (mBackupCount == 0) {
-            mBackupFile->Remove(PR_FALSE);
-        }
-    }
-}
+  nsresult rv = NS_OK;
+  
+  if (aSaveSucceeded) {
+    NS_ENSURE_STATE(mTargetFile && mTempFile);
 
-nsresult nsSafeSaveFile::CreateBackup(PurgeBackupType aPurgeType)
-{
-    nsCOMPtr<nsIFile> backupParent;
-    nsresult          rv, rv2;
-    PRBool            bExists;
-
-    // if the target file doesn't exist there is nothing to backup
-    if (!mTargetFileExists)
-        return NS_OK;
-
-    // if a backup file currently exists... do the right thing
-    if (mBackupFile && NS_SUCCEEDED(mBackupFile->Exists(&bExists)) && bExists) {
-        rv = ManageRedundantBackups();
-        if (NS_FAILED(rv))
-            return rv;
+    if (!mTargetFileExists) {
+      // If the target file did not exist when we were initialized, then the
+      // temp file we gave out was actually a reference to the target file.
+      // since we succeeded in writing to the temp file (and hence succeeded
+      // in writing to the target file), there is nothing more to do.
+#ifdef DEBUG      
+      PRBool equal;
+      if (NS_FAILED(mTargetFile->Equals(mTempFile, &equal)) || !equal)
+        NS_ERROR("mTempFile not equal to mTargetFile");
+#endif
+      return NS_OK;      
     }
 
-    // and finally, copy the file (preserves file permissions)
-    rv2 = NS_OK;
-    do {
-        rv = mTargetFile->CopyToNative(nsnull, mBackupFileName);
-        if (NS_SUCCEEDED(rv))
-            break;
-
-        switch (rv) {
-            case NS_ERROR_FILE_DISK_FULL:       // Mac
-            case NS_ERROR_FILE_TOO_BIG:         // Windows
-            case NS_ERROR_FILE_NO_DEVICE_SPACE: // Who knows...
-                if (aPurgeType == kPurgeNone) {
-                    return rv;
-                } if (aPurgeType == kPurgeOne) {
-                    aPurgeType = kPurgeNone;
-                }
-                rv2 = PurgeOldestRedundantBackup();
-                break;
-
-            default:
-                return rv;
-                break;
-        }
-    } while (rv2 == NS_OK);
-
-    return rv;
-}
-
-nsresult nsSafeSaveFile::RestoreFromBackup(void)
-{
-    nsCOMPtr<nsIFile> parentDir;
-    nsCAutoString     fileName;
-    nsresult          rv;
-
-    // if the target file didn't initially exist there is nothing to restore from
-    if (!mTargetFileExists)
-        return NS_ERROR_FILE_NOT_FOUND;
-
-    if (!mBackupFile)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    rv = mTargetFile->GetNativeLeafName(fileName);
-    if (NS_FAILED(rv)) // yikes! out of memory
-        return rv;
-
-    // Ugh, copy only takes a directory and a name, lets "unpackage" our target file...
-    rv = mTargetFile->GetParent(getter_AddRefs(parentDir));
-    if (NS_FAILED(rv))
-        return rv;
-
-    // kill the target... it's bad anyway
-    mTargetFile->Remove(PR_FALSE);
-
-    // and finally, copy the file (preserves file permissions)
-    rv = mBackupFile->CopyToNative(parentDir, fileName);
-    return rv;
-}
-
-nsresult nsSafeSaveFile::ManageRedundantBackups(void)
-{
-    nsCOMPtr<nsIFile> backupFile;
-    nsCAutoString     fileName;
-    nsresult          rv;
-    PRBool            bExists;
-
-    rv = mBackupFile->Clone(getter_AddRefs(backupFile));
-    if (NS_FAILED(rv)) // yikes! out of memory, probably best to not continue
-        return rv;
-
-    if (mBackupCount > 0) {
-        // kill the (oldest) backup copy, if necessary
-        fileName = mBackupFileName;
-        if (mBackupCount > 1)
-            fileName.AppendInt(mBackupCount - 1);
-        backupFile->SetNativeLeafName(fileName);
-    }
-
-    // remove the file as determined by the logic above
-    backupFile->Remove(PR_FALSE);
-
-    // bump any redundant backups up one (i.e. bak -> bak1, bak1 -> bak2, etc.)
-    if (mBackupCount > 1) {
-        PRInt32 backupCount = mBackupCount;
-        fileName = mBackupFileName;
-        while (--backupCount > 0) {
-            if (backupCount > 1)
-                fileName.AppendInt(backupCount - 1);
-            backupFile->SetNativeLeafName(fileName);
-            backupFile->Exists(&bExists);
-            if (bExists) {
-                fileName.Truncate(mBackupNameLen);
-                fileName.AppendInt(backupCount);
-                // fail silently because it's not important enough to bail on the save for
-                backupFile->MoveToNative(0, fileName);
-            }
-            fileName.Truncate(mBackupNameLen);
-        };
-    }
-    return NS_OK;
-}
-
-nsresult nsSafeSaveFile::PurgeOldestRedundantBackup(void)
-{
-    nsCOMPtr<nsIFile> backupFile;
-    nsCAutoString     fileName;
-    nsresult          rv;
-
-    if (!mBackupFile)
-        return NS_ERROR_NULL_POINTER;
-
-    rv = mBackupFile->Clone(getter_AddRefs(backupFile));
-    if (NS_FAILED(rv)) // yikes! out of memory, probably best to not continue
-        return rv;
-
-    // if no redundant backups, nothing to delete
-    if (mBackupCount <= 1)
-        return NS_ERROR_FILE_NOT_FOUND;
-
-    PRInt32 backupCount = mBackupCount;
-    fileName = mBackupFileName;
-    while (--backupCount > 0) {
-        fileName.AppendInt(backupCount);
-        backupFile->SetNativeLeafName(fileName);
-        rv = backupFile->Remove(PR_FALSE);
+    nsCAutoString targetFilename;
+    rv = mTargetFile->GetNativeLeafName(targetFilename);
+    
+    if (aBackupTarget) {
+      // Create a copy of the target before we overwrite it
+      nsCAutoString backupFilename(targetFilename);
+      PRInt32 pos = backupFilename.RFindChar('.');
+      if (pos != -1)
+        backupFilename.Truncate(pos);
+      backupFilename.Append(NS_LITERAL_CSTRING(".bak"));
+      
+      // Find a unique name for the backup by using CreateUnique
+      nsCOMPtr<nsIFile> uniqueFile;
+      rv = mTargetFile->Clone(getter_AddRefs(uniqueFile));
+      if (NS_SUCCEEDED(rv)) {
+        rv = uniqueFile->SetNativeLeafName(backupFilename);
         if (NS_SUCCEEDED(rv)) {
-            return NS_OK;
+          rv = uniqueFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+          if (NS_SUCCEEDED(rv)) {
+            uniqueFile->GetNativeLeafName(backupFilename);
+            uniqueFile->Remove(PR_FALSE);
+            // Finally, move the target to the backup
+            mTargetFile->MoveToNative(nsnull, backupFilename);
+          }
         }
-        fileName.Truncate(mBackupNameLen);
-    };
-
-    return NS_ERROR_FILE_NOT_FOUND;
+      }
+    }
+    
+    if (NS_SUCCEEDED(rv))
+        rv = mTempFile->MoveToNative(nsnull, targetFilename); // This will replace target
+  }
+  else {
+    NS_ENSURE_STATE(mTempFile);
+    rv = mTempFile->Remove(PR_FALSE);
+  }
+  return rv;
 }
-

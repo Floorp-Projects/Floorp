@@ -475,6 +475,7 @@ nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
     NS_LINEBREAK
     NS_LINEBREAK;
 
+  nsCOMPtr<nsIOutputStream> outStreamSink;
   nsCOMPtr<nsIOutputStream> outStream;
   PRUint32                  writeAmount;
   nsresult                  rv;
@@ -491,25 +492,35 @@ nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
 #endif
 
   // execute a "safe" save by saving through a tempfile
-  PRInt32 numCopies = 1;
-  mRootBranch->GetIntPref("backups.number_of_prefs_copies", &numCopies);
-
-  nsSafeSaveFile safeSave(aFile, numCopies);
-  rv = safeSave.CreateBackup(nsSafeSaveFile::kPurgeNone);
+  nsSafeSaveFile safeSave;
+  nsCOMPtr<nsIFile> tempFile;
+  rv = safeSave.Init(aFile, getter_AddRefs(tempFile));
   if (NS_FAILED(rv))
     return rv;
+
+  // this clone of tempFile exists to defeat the stat caching "feature" of
+  // nsLocalFile.  when tempFileClone is opened, nsLocalFile will stat the
+  // file and cache the results.  it will return those cached results when
+  // we later ask tempFile for its size.  as a result we will think that 
+  // we didn't write anything to the file, and our logic here will fail
+  // miserably.  nsLocalFile should probably be fixed to not cache stat
+  // results when returning a writable file descriptor.  see bug 132517.
+  nsCOMPtr<nsIFile> tempFileClone;
+  rv = tempFile->Clone(getter_AddRefs(tempFileClone));
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = NS_NewLocalFileOutputStream(getter_AddRefs(outStreamSink), tempFileClone);
+  if (NS_FAILED(rv)) 
+      return rv;
+  rv = NS_NewBufferedOutputStream(getter_AddRefs(outStream), outStreamSink, 4096);
+  if (NS_FAILED(rv)) 
+      return rv;  
 
   char** valueArray = (char **)PR_Calloc(sizeof(char *), gHashTable.entryCount);
   if (!valueArray)
     return NS_ERROR_OUT_OF_MEMORY;
-
-  rv = NS_NewLocalFileOutputStream(getter_AddRefs(outStream), aFile);
-  if (NS_FAILED(rv)) 
-      return rv;
   
-  // write out the file header
-  rv = outStream->Write(outHeader, sizeof(outHeader) - 1, &writeAmount);
-
   pref_saveArgs saveArgs;
   saveArgs.prefArray = valueArray;
   saveArgs.saveTypes = SAVE_ALL;
@@ -528,6 +539,10 @@ nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
     
   /* Sort the preferences to make a readable file on disk */
   NS_QuickSort(valueArray, gHashTable.entryCount, sizeof(char *), pref_CompareStrings, NULL);
+  
+  // write out the file header
+  rv = outStream->Write(outHeader, sizeof(outHeader) - 1, &writeAmount);
+
   char** walker = valueArray;
   for (PRUint32 valueIdx = 0; valueIdx < gHashTable.entryCount; valueIdx++, walker++) {
     if (*walker) {
@@ -544,15 +559,19 @@ nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
   PR_Free(valueArray);
   outStream->Close();
 
-  // if save failed replace the original file from backup
-  if (NS_FAILED(rv)) {
-    nsresult rv2;
-    rv2 = safeSave.RestoreFromBackup();
-    if (NS_SUCCEEDED(rv2)) {
-      // we failed to write the file, but managed to restore the previous one...
-      rv = NS_OK;
-    }
-  }
+  PRInt64 tempLL;
+  PRUint32 oldFileSize, newFileSize;
+  (void)aFile->GetFileSize(&tempLL); // All impls return 0 for size on failure.
+  LL_L2UI(oldFileSize, tempLL);
+  (void)tempFile->GetFileSize(&tempLL);
+  LL_L2UI(newFileSize, tempLL);
+  
+  // As long as we have succeeded, move the temp file to the actual file.
+  // But, if the new file is only 1/2 the size of the old file (dataloss),
+  // pass TRUE for aBackupTarget, leaving the old file on disk.
+  safeSave.OnSaveFinished(NS_SUCCEEDED(rv),
+                          oldFileSize && ((newFileSize << 1) <= oldFileSize));
+  
   if (NS_SUCCEEDED(rv))
     gDirty = PR_FALSE;
   return rv;
