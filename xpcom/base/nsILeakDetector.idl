@@ -28,5 +28,6 @@
 [scriptable, uuid(a2ec052c-1dd1-11b2-9c92-84be252fe47e)]
 interface nsILeakDetector : nsISupports {
 	void dumpLeaks();
-	void traceObject(in nsISupports object);
+	void traceObject(in nsISupports object, in PRBool verbose);
+	void markObject(in nsISupports object, in PRBool marked);
 };

@@ -31,11 +31,12 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "gc.h"
+
 extern "C" {
 extern FILE *GC_stdout, *GC_stderr;
-extern void GC_gcollect(void);
-extern void GC_clear_roots(void);
-extern void GC_trace_object(void* object);
+extern void GC_trace_object(GC_PTR object, int verbose);
+extern void GC_mark_object(GC_PTR object, GC_word mark);
 }
 
 static nsresult nextLeakFile()
@@ -92,18 +93,24 @@ NS_METHOD nsLeakDetector::DumpLeaks()
 	return nextLeakFile();
 }
 
-NS_METHOD nsLeakDetector::TraceObject(nsISupports* object)
+NS_METHOD nsLeakDetector::TraceObject(nsISupports* object, PRBool verbose)
 {
     FILE* trace = openTraceFile();
     if (trace != NULL) {
         FILE* old_stderr = GC_stderr;
         GC_stderr = trace;
-        GC_trace_object(object);
+        GC_trace_object(object, (verbose ? 1 : 0));
         GC_stderr = old_stderr;
         fclose(trace);
         return NS_OK;
     }
     return NS_ERROR_FAILURE;
+}
+
+NS_METHOD nsLeakDetector::MarkObject(nsISupports* object, PRBool marked)
+{
+    GC_mark_object(object, (marked ? 1 : 0));
+    return NS_OK;
 }
 
 #define NS_CLEAKDETECTOR_CID_STR "bb1ba360-1dd1-11b2-b30e-aa2314429f54"
