@@ -617,7 +617,9 @@ nsFontMetricsOS2::SetFontHandle( HPS aPS, nsFontOS2* aFont )
   // Symbols fonts must be created with codepage 65400,
   // so use 65400 for the fattrs codepage. We still do
   // conversions with the charset codepage
-  if (strcmp(fattrs->szFacename, "Webdings") == 0) {
+  if ((strcmpi(fattrs->szFacename, "Webdings") == 0) ||
+      (strcmpi(fattrs->szFacename, "wingdings") == 0) ||
+      (strcmpi(fattrs->szFacename, "Symbol Set") == 0)) {
     fattrs->usCodePage = 65400;
   } else {
     fattrs->usCodePage = mConvertCodePage;
