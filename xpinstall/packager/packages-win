@@ -167,6 +167,8 @@ bin\components\xpconnect.xpt
 bin\components\xpiflash.dll
 bin\components\xpinstall.xpt
 bin\components\xppref32.dll
+bin\components\autocomp.dll
+bin\components\autocomplete.xpt
 bin\chrome\editor\*
 -bin\chrome\editor\content\EditorInitPage.html
 -bin\chrome\editor\content\EditorInitPagePlain.html
@@ -188,6 +190,7 @@ bin\chrome\htmlBindings.xml
 bin\chrome\platformHTMLBindings.xml
 bin\chrome\xul.css
 bin\chrome\xulBindings.xml
+bin\chrome\autocomplete.xml
 bin\defaults\pref\all.js
 bin\defaults\pref\mailnews.js
 bin\defaults\pref\config.js

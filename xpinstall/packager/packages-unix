@@ -183,6 +183,8 @@ bin/components/uconv.xpt
 bin/components/util.xpt
 bin/components/xpcom_components.xpt
 bin/components/xpcom_threads.xpt
+bin/components/autocomplete.so
+bin/components/autocomplete.xpt
 
 bin/chrome/editor/*
 -bin/chrome/editor/content/EditorInitPage.html
@@ -205,6 +207,7 @@ bin/chrome/htmlBindings.xml
 bin/chrome/platformHTMLBindings.xml
 bin/chrome/xul.css
 bin/chrome/xulBindings.xml
+bin/chrome/autocomplete.xml
 
 bin/defaults/pref/editor.js
 bin/defaults/pref/all.js
