@@ -128,6 +128,9 @@ public:
 protected:
   PRBool IsTableCell(nsIContent * aContent) const;
 
+  virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
+                                          nsHTMLValue& aValue,
+                                          nsString& aResult) const;
 };
 
 #endif
