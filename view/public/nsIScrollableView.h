@@ -38,7 +38,6 @@
 #ifndef nsIScrollableView_h___
 #define nsIScrollableView_h___
 
-#include "nsISupports.h"
 #include "nsCoord.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
@@ -73,9 +72,11 @@ typedef enum {
  * child view created by the scrolling view).
  *
  */
-class nsIScrollableView : public nsISupports {
+class nsIScrollableView {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLABLEVIEW_IID)
+
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) = 0;
 
   /**
    * Create the controls used to allow scrolling. Call this method

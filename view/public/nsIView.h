@@ -38,7 +38,6 @@
 #ifndef nsIView_h___
 #define nsIView_h___
 
-#include "nsISupports.h"
 #include "nsCoord.h"
 #include "nsRect.h"
 #include "nsPoint.h"
@@ -141,10 +140,12 @@ struct nsViewZIndex {
  */
 
 // hack to make egcs / gcc 2.95.2 happy
-class nsIView_base : public nsISupports
+class nsIView_base
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IVIEW_IID)
+
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) = 0;
 };
 
 class nsIView : public nsIView_base
@@ -374,10 +375,6 @@ public:
   PRBool IsRoot() const;
 
   virtual PRBool ExternalIsRoot() const;
-
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
-  NS_IMETHOD_(nsrefcnt) Release(void) = 0;
 
 protected:
   nsViewManager     *mViewManager;
