@@ -64,7 +64,6 @@ CPPSRCS		= \
 		MostRecentUrls.cpp \
 		PrintProgressDialog.cpp       \
 		Preferences.cpp \
-		nsPrintSettingsImpl.cpp       \
 		PrintSetupDialog.cpp       \
 		StdAfx.cpp       \
 		$(NULL)
