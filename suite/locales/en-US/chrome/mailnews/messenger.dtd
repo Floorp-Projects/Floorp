@@ -157,7 +157,7 @@ Rights Reserved.
 <!ENTITY dcharUtf8Cmd.label "Unicode (UTF-8)">
 <!ENTITY dcharIsoCyrCmd.label "Cyrillic (ISO-8859-5)">
 <!ENTITY dcharEcmaCyrCmd.label "Cyrillic (ISO-IR-111)">
-<!ENTITY dcharDosCyrCmd.label "Cyrillic (IBM866)">
+<!ENTITY dcharDosCyrCmd.label "Cyrillic (CP-866)">
 <!ENTITY dcharWinCyrCmd.label "Cyrillic (Windows-1251)">
 <!ENTITY dcharMacCyrCmd.label "Cyrillic (MacCyrillic)">
 <!ENTITY dcharMacUkrCmd.label "Cyrillic/Ukrainian (MacUkrainian)">
