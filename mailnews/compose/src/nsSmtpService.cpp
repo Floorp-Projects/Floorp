@@ -59,6 +59,8 @@
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
 #include "nsMsgSimulateError.h"
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
 
 #define SERVER_DELIMITER ","
 #define APPEND_SERVERS_VERSION_PREF_NAME "append_preconfig_smtpservers.version"
@@ -80,6 +82,64 @@ static NS_DEFINE_CID(kCSmtpUrlCID, NS_SMTPURL_CID);
 static NS_DEFINE_CID(kCMailtoUrlCID, NS_MAILTOURL_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID); 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID); 
+
+
+// function to ensure the spec is encoded in UTF-8
+// if not then use Unicode converter and apply conversions
+// output string is empty if no conversion is necessary
+static nsresult 
+EnsureUTF8Spec(const nsACString &aSpec, const char *aCharset, 
+               nsACString &aUTF8Spec)
+{
+  aUTF8Spec.Truncate(0);
+
+  // assume UTF-8 if the spec contains unescaped non ASCII
+  if (!nsCRT::IsAscii(PromiseFlatCString(aSpec).get())) 
+    return NS_OK;
+
+  nsCAutoString unescapedSpec; 
+  NS_UnescapeURL(PromiseFlatCString(aSpec).get(), aSpec.Length(), 
+                 esc_OnlyNonASCII, unescapedSpec);
+
+  // return if ASCII only or escaped UTF-8
+  if (IsASCII(unescapedSpec) ||
+      unescapedSpec.Equals(NS_ConvertUCS2toUTF8(NS_ConvertUTF8toUCS2(unescapedSpec))))
+    return NS_OK;
+
+
+  nsresult rv;
+  nsCOMPtr<nsICharsetConverterManager2> charsetConverterManager;
+
+  charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIAtom> charsetAtom;
+  rv = charsetConverterManager->GetCharsetAtom2(aCharset, getter_AddRefs(charsetAtom));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
+  rv = charsetConverterManager->GetUnicodeDecoder(charsetAtom, 
+                                                  getter_AddRefs(unicodeDecoder));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 srcLen = unescapedSpec.Length();
+  PRInt32 dstLen;
+  rv = unicodeDecoder->GetMaxLength(unescapedSpec.get(), srcLen, &dstLen);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUnichar *ustr = (PRUnichar *) nsMemory::Alloc(dstLen * sizeof(PRUnichar));
+  NS_ENSURE_TRUE(ustr, NS_ERROR_OUT_OF_MEMORY);
+
+  rv = unicodeDecoder->Convert(unescapedSpec.get(), &srcLen, ustr, &dstLen);
+  if (NS_SUCCEEDED(rv))
+  {
+    NS_ConvertUCS2toUTF8 rawUTF8Spec(ustr, dstLen);
+    NS_EscapeURL(rawUTF8Spec, esc_AlwaysCopy | esc_OnlyNonASCII, aUTF8Spec);
+  }
+  nsMemory::Free(ustr);
+
+  return rv;
+}
 
 // foward declarations...
 nsresult
@@ -503,7 +563,7 @@ NS_IMETHODIMP nsMailtoChannel::Resume()
 // the smtp service is also the protocol handler for mailto urls....
 
 NS_IMETHODIMP nsSmtpService::NewURI(const nsACString &aSpec,
-                                    const char *aOriginCharset, // ignored
+                                    const char *aOriginCharset,
                                     nsIURI *aBaseURI,
                                     nsIURI **_retval)
 {
@@ -516,8 +576,15 @@ NS_IMETHODIMP nsSmtpService::NewURI(const nsACString &aSpec,
 
 	if (NS_SUCCEEDED(rv))
 	{
-    mailtoUrl->SetSpec(aSpec);
-		rv = mailtoUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
+    nsCAutoString utf8Spec;
+    if (aOriginCharset)
+      rv = EnsureUTF8Spec(aSpec, aOriginCharset, utf8Spec);
+
+    if (NS_SUCCEEDED(rv) && !utf8Spec.IsEmpty())
+      mailtoUrl->SetSpec(utf8Spec);
+    else
+      mailtoUrl->SetSpec(aSpec);
+    rv = mailtoUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
 	}
   return rv;
 }
