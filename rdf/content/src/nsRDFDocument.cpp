@@ -39,6 +39,8 @@
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
 #include "nsIEnumerator.h"
+#include "nsIHTMLContentContainer.h"
+#include "nsIHTMLCSSStyleSheet.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsINameSpaceManager.h"
 #include "nsIParser.h"
@@ -79,6 +81,7 @@ static NS_DEFINE_IID(kICollectionIID,         NS_ICOLLECTION_IID);
 static NS_DEFINE_IID(kIContentIID,            NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDTDIID,                NS_IDTD_IID);
 static NS_DEFINE_IID(kIDocumentIID,           NS_IDOCUMENT_IID);
+static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIHTMLStyleSheetIID,     NS_IHTML_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kINameSpaceManagerIID,   NS_INAMESPACEMANAGER_IID);
 static NS_DEFINE_IID(kIParserIID,             NS_IPARSER_IID);
@@ -110,7 +113,7 @@ static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRangeListCID,             NS_RANGELIST_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
 
-static NS_DEFINE_CID(kCRDFHTMLBuilderCID,	    NS_RDFHTMLBUILDER_CID);
+static NS_DEFINE_CID(kRDFXULBuilderCID,         NS_RDFXULBUILDER_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -130,7 +133,8 @@ enum nsContentType {
 class RDFDocumentImpl : public nsIDocument,
                         public nsIRDFDocument,
                         public nsIRDFObserver,
-                        public nsIRDFXMLDataSourceObserver
+                        public nsIRDFXMLDataSourceObserver,
+                        public nsIHTMLContentContainer
 {
 public:
     RDFDocumentImpl();
@@ -286,10 +290,13 @@ public:
     NS_IMETHOD PrologElementAt(PRUint32 aOffset, nsIContent** aContent);
     NS_IMETHOD PrologCount(PRUint32* aCount);
     NS_IMETHOD AppendToProlog(nsIContent* aContent);
-
     NS_IMETHOD EpilogElementAt(PRUint32 aOffset, nsIContent** aContent);
     NS_IMETHOD EpilogCount(PRUint32* aCount);
     NS_IMETHOD AppendToEpilog(nsIContent* aContent);
+
+    // nsIHTMLContentContainer interface
+    NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);
+    NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult);
 
     // nsIRDFDocument interface
 	NS_IMETHOD SetContentType(const char* aContentType);
@@ -356,16 +363,17 @@ protected:
     PRBool                 mDisplaySelection;
     nsVoidArray            mPresShells;
     nsINameSpaceManager*   mNameSpaceManager;
-    nsIStyleSheet*         mAttrStyleSheet;
-    nsIRDFCompositeDataSource*        mDB;
-    nsIRDFService*         mRDFService;
-    nsISupportsArray*      mTreeProperties;
+    nsIHTMLStyleSheet*     mAttrStyleSheet;
+    nsIHTMLCSSStyleSheet*  mInlineStyleSheet;
+    nsIRDFCompositeDataSource* mDB;
+    nsIRDFService*             mRDFService;
+    nsISupportsArray*          mTreeProperties;
     nsIRDFContentModelBuilder* mBuilder;
-    PLHashTable*           mResources;
-    nsIRDFDataSource*      mLocalDataSource;
-    nsIRDFXMLDataSource*   mDocumentDataSource;
+    PLHashTable*               mResources;
+    nsIRDFDataSource*          mLocalDataSource;
+    nsIRDFXMLDataSource*       mDocumentDataSource;
 
-	nsContentType		   mContentType; // The document's type (RDF vs. XUL)
+	nsContentType		       mContentType; // The document's type (RDF vs. XUL)
 };
 
 
@@ -554,6 +562,11 @@ RDFDocumentImpl::QueryInterface(REFNSIID iid, void** result)
         NS_ADDREF(this);
         return NS_OK;
     }
+    else if (iid.Equals(kIHTMLContentContainerIID)) {
+        *result = NS_STATIC_CAST(nsIHTMLContentContainer*, this);
+        NS_ADDREF(this);
+        return NS_OK;
+    }
     return NS_NOINTERFACE;
 }
 
@@ -576,6 +589,10 @@ RDFDocumentImpl::StartDocumentLoad(nsIURL *aURL,
                                    nsIStreamListener **aDocListener,
                                    const char* aCommand)
 {
+    NS_ASSERTION(aURL != nsnull, "null ptr");
+    if (! aURL)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
 
     // Delete references to style sheets - this should be done in superclass...
@@ -617,6 +634,10 @@ RDFDocumentImpl::StartDocumentLoad(nsIURL *aURL,
     // Create a "scratch" in-memory data store to associate with the
     // document to be a catch-all for any doc-specific info that we
     // need to store (e.g., current sort order, etc.)
+    //
+    // XXX This needs to be cloned across windows, and the final
+    // instance needs to be flushed to disk. It may be that this is
+    // really an RDFXML data source...
     if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFInMemoryDataSourceCID,
                                                     nsnull,
                                                     kIRDFDataSourceIID,
@@ -630,10 +651,16 @@ RDFDocumentImpl::StartDocumentLoad(nsIURL *aURL,
     if (NS_FAILED(rv = aURL->GetSpec(&uri)))
         return rv;
 
-    // Now load the actual XML/RDF document data source.
+    // Now load the actual RDF/XML document data source. First, we'll
+    // see if the data source has been loaded and is registered with
+    // the RDF service. If so, do some monkey business to "pretend" to
+    // load it: really, we'll just walk its graph to generate the
+    // content model.
     nsIRDFDataSource* ds;
     if (NS_SUCCEEDED(rv = mRDFService->GetDataSource(uri, &ds))) {
-        if (NS_FAILED(rv = ds->QueryInterface(kIRDFXMLDataSourceIID, (void**) &mDocumentDataSource))) {
+        // Add the RDF/XML data source to our composite data source
+        if (NS_FAILED(rv = ds->QueryInterface(kIRDFXMLDataSourceIID,
+                                              (void**) &mDocumentDataSource))) {
             NS_RELEASE(ds);
             return rv;
         }
@@ -712,35 +739,43 @@ RDFDocumentImpl::StartDocumentLoad(nsIURL *aURL,
         }
     }
     else {
-		// We need to create either a serialized RDF/XML data source, or we
-		// need to make a XUL data source.  Both of these data sources implement the
-		// nsIRDFXMLDataSource interface, which has to do with handling aspects of XML.
+		// We need to create either a serialized RDF/XML data source,
+		// or we need to make a XUL data source.  Both of these data
+		// sources implement the nsIRDFXMLDataSource interface, which
+		// has to do with handling aspects of XML.
 		
-		if (mContentType == TEXT_RDF)
+		if (mContentType == TEXT_RDF) {
 			rv = nsRepository::CreateInstance(kRDFXMLDataSourceCID,
-                                                            nsnull,
-                                                            kIRDFXMLDataSourceIID,
-                                                            (void**) &mDocumentDataSource);
-		else if (mContentType == TEXT_XUL)
-		{
+                                              nsnull,
+                                              kIRDFXMLDataSourceIID,
+                                              (void**) &mDocumentDataSource);
+        }
+		else if (mContentType == TEXT_XUL) {
 			rv = nsRepository::CreateInstance(kXULDataSourceCID,
-                                                            nsnull,
-                                                            kIRDFXMLDataSourceIID,
-                                                            (void**) &mDocumentDataSource);
+                                              nsnull,
+                                              kIRDFXMLDataSourceIID,
+                                              (void**) &mDocumentDataSource);
+
+            NS_VERIFY(NS_SUCCEEDED(rv), "unable to create XUL datasource");
 
 			nsIRDFContentModelBuilder* builder;
-			rv = nsRepository::CreateInstance(kCRDFHTMLBuilderCID,                                                                                                                        
-                                                     nsnull,                     
-                                                     kIRDFContentModelBuilderIID,
-                                                     (void**) &builder);   
-                                                                                                                                             
-			rv = SetContentModelBuilder(builder);    
-		}
+			rv = nsRepository::CreateInstance(kRDFXULBuilderCID,
+                                              nsnull,                     
+                                              kIRDFContentModelBuilderIID,
+                                              (void**) &builder);
 
-		if (rv != NS_OK)
-		{
+            NS_VERIFY(NS_SUCCEEDED(rv), "unable to create XUL content model builder");
+
+			rv = SetContentModelBuilder(builder);
+            NS_VERIFY(NS_SUCCEEDED(rv), "unable to set document content model builder");
+		}
+        else {
+            NS_ERROR("unknown content type");
+        }
+
+		if (rv != NS_OK) {
 			// an error occurred, and we have nothing.
-			PR_ASSERT(0);
+            NS_ERROR("problem constructing data source");
 			return rv;
 		}
 
@@ -755,7 +790,8 @@ RDFDocumentImpl::StartDocumentLoad(nsIURL *aURL,
         // need to load style sheets, etc.
 
         nsIRDFXMLDataSource* doc;
-        if (NS_SUCCEEDED(rv = mDocumentDataSource->QueryInterface(kIRDFXMLDataSourceIID, (void**) &doc))) {
+        if (NS_SUCCEEDED(rv = mDocumentDataSource->QueryInterface(kIRDFXMLDataSourceIID,
+                                                                  (void**) &doc))) {
             doc->AddXMLStreamObserver(this);
             NS_RELEASE(doc);
         }
@@ -1522,6 +1558,45 @@ RDFDocumentImpl::AppendToEpilog(nsIContent* aContent)
 }
 
 ////////////////////////////////////////////////////////////////////////
+//
+
+NS_IMETHODIMP 
+RDFDocumentImpl::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)
+{
+    NS_PRECONDITION(nsnull != aResult, "null ptr");
+    if (nsnull == aResult) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    *aResult = mAttrStyleSheet;
+    if (nsnull == mAttrStyleSheet) {
+        return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
+    }
+    else {
+        NS_ADDREF(mAttrStyleSheet);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+RDFDocumentImpl::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
+{
+    NS_NOTYETIMPLEMENTED("get the inline stylesheet!");
+
+    NS_PRECONDITION(nsnull != aResult, "null ptr");
+    if (nsnull == aResult) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    *aResult = mInlineStyleSheet;
+    if (nsnull == mInlineStyleSheet) {
+        return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
+    }
+    else {
+        NS_ADDREF(mInlineStyleSheet);
+    }
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
 // nsIRDFDocument interface
 
 NS_IMETHODIMP
@@ -1640,6 +1715,7 @@ RDFDocumentImpl::IsTreeProperty(nsIRDFResource* aProperty, PRBool* aResult) cons
     nsAutoString s(p);
     if (s.Equals(NC_NAMESPACE_URI "child") ||
         s.Equals(NC_NAMESPACE_URI "Folder") ||
+		s.Equals(NC_NAMESPACE_URI "Columns") ||
 		s.Equals(RDF_NAMESPACE_URI "child")) {
         *aResult = PR_TRUE;
         return NS_OK;
@@ -1693,8 +1769,14 @@ RDFDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
         return NS_ERROR_NULL_POINTER;
 
     // XXX okay, this is a total hack. for this to work right, we need
-    // to remember what the namespace and the tag were when the
-    // property was created, which we don't do...
+    // to either:
+    //
+    // 1) Remember what the namespace and the tag were when the
+    //    property was created, or
+    //
+    // 2) Iterate the entire set of namespace prefixes to see if the
+    //    specified property's URI has any of them as a substring.
+    //
 
     const char* p;
     aProperty->GetValue(&p);
@@ -1702,24 +1784,62 @@ RDFDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
 
     PRInt32 index;
 
+    // First try to split the namespace using the rightmost '#' or '/'
+    // character.
     if ((index = uri.RFind('#')) < 0) {
         if ((index = uri.RFind('/')) < 0) {
-            NS_ASSERTION(PR_FALSE, "make this smarter!");
+            NS_ERROR("make this smarter!");
+            return NS_ERROR_FAILURE;
         }
     }
 
+    // Using the above info, split the property's URI into a namespace
+    // prefix (that includes the trailing '#' or '/' character) and a
+    // tag.
     nsAutoString tag;
     PRInt32 count = uri.Length() - (index + 1);
     uri.Right(tag, count);
     uri.Cut(index + 1, count);
+
+    // XXX XUL atoms seem to all be in lower case. HTML atoms are in
+    // upper case. This sucks.
+    //tag.ToUpperCase();
  
-    tag.ToUpperCase();
-    *aTag = NS_NewAtom(tag);
+    nsresult rv;
+    PRInt32 nameSpaceID;
+    rv = mNameSpaceManager->GetNameSpaceID(uri, nameSpaceID);
 
-    nsresult rv = mNameSpaceManager->RegisterNameSpace(uri, *aNameSpaceID);
-    NS_ASSERTION(NS_SUCCEEDED(rv) && *aNameSpaceID != kNameSpaceID_Unknown, "unknown namespace");
+    // Did we find one?
+    if (NS_SUCCEEDED(rv) && nameSpaceID != kNameSpaceID_Unknown) {
+        *aNameSpaceID = nameSpaceID;
 
-    return rv;
+        if (nameSpaceID == kNameSpaceID_HTML)
+            tag.ToUpperCase();
+
+        *aTag = NS_NewAtom(tag);
+        return NS_OK;
+    }
+
+    // Nope: so we'll need to be a bit more creative. Let's see
+    // what happens if we remove the rightmost '#' and then try...
+    if (uri.Last() == '#') {
+        uri.Truncate(uri.Length() - 1);
+        rv = mNameSpaceManager->GetNameSpaceID(uri, nameSpaceID);
+
+        if (NS_SUCCEEDED(rv) && nameSpaceID != kNameSpaceID_Unknown) {
+            *aNameSpaceID = nameSpaceID;
+
+            if (nameSpaceID == kNameSpaceID_HTML)
+                tag.ToUpperCase();
+
+            *aTag = NS_NewAtom(tag);
+            return NS_OK;
+        }
+    }
+
+    // Okay, somebody make this code even more convoluted.
+    NS_ERROR("unable to convert URI to namespace/tag pair");
+    return NS_ERROR_FAILURE; // XXX?
 }
 
 
@@ -1728,8 +1848,8 @@ RDFDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
 
 NS_IMETHODIMP
 RDFDocumentImpl::OnAssert(nsIRDFResource* subject,
-                        nsIRDFResource* predicate,
-                        nsIRDFNode* object)
+                          nsIRDFResource* predicate,
+                          nsIRDFNode* object)
 {
     NS_PRECONDITION(mResources != nsnull, "not initialized");
     if (! mResources)
@@ -1750,8 +1870,8 @@ RDFDocumentImpl::OnAssert(nsIRDFResource* subject,
 
 NS_IMETHODIMP
 RDFDocumentImpl::OnUnassert(nsIRDFResource* subject,
-                          nsIRDFResource* predicate,
-                          nsIRDFNode* object)
+                            nsIRDFResource* predicate,
+                            nsIRDFNode* object)
 {
     NS_PRECONDITION(mResources != nsnull, "not initialized");
     if (! mResources)
@@ -1941,14 +2061,16 @@ RDFDocumentImpl::Init(void)
     if (NS_FAILED(rv = NS_NewHeapArena(&mArena, nsnull)))
         return rv;
 
+    // Create a namespace manager so we can manage tags
     if (NS_FAILED(rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
                                                     nsnull,
                                                     kINameSpaceManagerIID,
                                                     (void**) &mNameSpaceManager)))
         return rv;
 
-    static PRInt32 kInitialResourceTableSize = 1023;
-
+    // Create a table for mapping RDF resources to elements in the
+    // content tree.
+static PRInt32 kInitialResourceTableSize = 1023;
     if ((mResources = PL_NewHashTable(kInitialResourceTableSize,
                                       rdf_HashPointer,
                                       PL_CompareValues,
@@ -1957,15 +2079,20 @@ RDFDocumentImpl::Init(void)
                                       nsnull)) == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    // Create a composite data source that'll tie together local and
+    // remote stores.
     if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFCompositeDataSourceCID,
                                                     nsnull,
                                                     kIRDFCompositeDataSourceIID,
                                                     (void**) &mDB)))
         return rv;
 
+    // Make ourselves an observer
     if (NS_FAILED(rv = mDB->AddObserver(this)))
         return rv;
 
+    // Keep the RDF service cached in a member variable to make using
+    // it a bit less painful
     if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
                                                     kIRDFServiceIID,
                                                     (nsISupports**) &mRDFService)))
