@@ -22,7 +22,7 @@
 #include "nsISpaceManager.h"
 #include "nsVoidArray.h"
 #include "nsIAreaFrame.h"
-#include "nsAbsolutelyPositionedContainer.h"
+#include "nsAbsoluteContainingBlock.h"
 
 class nsSpaceManager;
 
@@ -96,8 +96,8 @@ protected:
   virtual ~nsAreaFrame();
 
 private:
-  nsSpaceManager*                 mSpaceManager;
-  nsAbsolutelyPositionedContainer mAbsoluteContainer;
+  nsSpaceManager*           mSpaceManager;
+  nsAbsoluteContainingBlock mAbsoluteContainer;
 };
 
 #endif /* nsAreaFrame_h___ */

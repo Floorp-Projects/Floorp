@@ -26,7 +26,7 @@ LIBRARY_NAME = raptorhtmlbase_s
 
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS=				\
-	nsAbsolutelyPositionedContainer.cpp			\
+	nsAbsoluteContainingBlock.cpp			\
 	nsAreaFrame.cpp			\
 	nsBRFrame.cpp			\
 	nsBlockBandData.cpp		\
