@@ -80,6 +80,7 @@ private:
   nsresult CreateASN1Struct();
   nsresult CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
                                           nsINSSComponent *nssComponent);
+  nsresult GetSortableDate(PRTime aTime, PRUnichar **_aSortableDate);
 };
 
 /* Header file */

@@ -50,13 +50,11 @@ typedef struct treeArrayElStr treeArrayEl;
 struct CompareCacheHashEntry : PLDHashEntryHdr {
   CompareCacheHashEntry();
 
+  enum { max_criterions = 3 };
+
   void *key; // no ownership
-  PRPackedBool mTokenInit;
-  PRPackedBool mIssuerOrgInit;
-  PRPackedBool mOrgInit;
-  nsXPIDLString mToken;
-  nsXPIDLString mIssuerOrg;
-  nsXPIDLString mOrg;
+  PRPackedBool mCritInit[max_criterions];
+  nsXPIDLString mCrit[max_criterions];
 };
 
 class nsCertTree : public nsICertTree
@@ -69,16 +67,27 @@ public:
   nsCertTree();
   virtual ~nsCertTree();
 
+  enum sortCriterion { sort_IssuerOrg, sort_Org, sort_Token, 
+    sort_CommonName, sort_IssuedDateDescending, sort_Email, sort_None };
+
 protected:
   void InitCompareHash();
   void ClearCompareHash();
   void RemoveCacheEntry(void *key);
 
   static CompareCacheHashEntry *getCacheEntry(void *cache, void *aCert);
-  static PRInt32 CmpByToken(void *cache, nsIX509Cert *a, nsIX509Cert *b);
-  static PRInt32 CmpByIssuerOrg(void *cache, nsIX509Cert *a, nsIX509Cert *b);
-  static PRInt32 CmpByOrg(void *cache, nsIX509Cert *a, nsIX509Cert *b);
-  static PRInt32 CmpByTok_IssuerOrg_Org(void *cache, nsIX509Cert *a, nsIX509Cert *b);
+  static void CmpInitCriterion(nsIX509Cert *cert, CompareCacheHashEntry *entry,
+                               sortCriterion crit, PRInt32 level);
+  static PRInt32 CmpByCrit(nsIX509Cert *a, CompareCacheHashEntry *ace, 
+                           nsIX509Cert *b, CompareCacheHashEntry *bce, 
+                           sortCriterion crit, PRInt32 level);
+  static PRInt32 CmpBy(void *cache, nsIX509Cert *a, nsIX509Cert *b, 
+                       sortCriterion c0, sortCriterion c1, sortCriterion c2);
+  static PRInt32 CmpCACert(void *cache, nsIX509Cert *a, nsIX509Cert *b);
+  static PRInt32 CmpWebSiteCert(void *cache, nsIX509Cert *a, nsIX509Cert *b);
+  static PRInt32 CmpUserCert(void *cache, nsIX509Cert *a, nsIX509Cert *b);
+  static PRInt32 CmpEmailCert(void *cache, nsIX509Cert *a, nsIX509Cert *b);
+  nsCertCompareFunc GetCompareFuncFromCertType(PRUint32 aType);
   PRInt32 CountOrganizations();
 
 private:

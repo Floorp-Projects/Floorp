@@ -1285,6 +1285,36 @@ nsNSSCertificate::GetIssuedDate(PRUnichar **_issuedDate)
   return NS_OK;
 }
 
+nsresult
+nsNSSCertificate::GetSortableDate(PRTime aTime, PRUnichar **_aSortableDate)
+{
+  PRExplodedTime explodedTime;
+  PR_ExplodeTime(aTime, PR_GMTParameters, &explodedTime);
+  char datebuf[20]; // 4 + 2 + 2 + 2 + 2 + 2 + 1 = 15
+  if (0 != PR_FormatTime(datebuf, sizeof(datebuf), "%Y%m%d%H%M%S", &explodedTime)) {
+    *_aSortableDate = ToNewUnicode(nsDependentCString(datebuf));
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_OUT_OF_MEMORY;
+}
+
+/* readonly attribute wstring issuedDateSortable; */
+NS_IMETHODIMP
+nsNSSCertificate::GetIssuedDateSortable(PRUnichar **_issuedDate)
+{
+  NS_ENSURE_ARG(_issuedDate);
+  *_issuedDate = nsnull;
+  nsresult rv;
+  PRTime beforeTime;
+  nsCOMPtr<nsIX509CertValidity> validity;
+  rv = this->GetValidity(getter_AddRefs(validity));
+  if (NS_FAILED(rv)) return rv;
+  rv = validity->GetNotBefore(&beforeTime);
+  if (NS_FAILED(rv)) return rv;
+  return GetSortableDate(beforeTime, _issuedDate);
+}
+
 /* readonly attribute wstring expiresDate; */
 NS_IMETHODIMP
 nsNSSCertificate::GetExpiresDate(PRUnichar **_expiresDate)
@@ -1306,6 +1336,22 @@ nsNSSCertificate::GetExpiresDate(PRUnichar **_expiresDate)
                               afterTime, date);
   *_expiresDate = ToNewUnicode(date);
   return NS_OK;
+}
+
+/* readonly attribute wstring expiresDateSortable; */
+NS_IMETHODIMP
+nsNSSCertificate::GetExpiresDateSortable(PRUnichar **_expiresDate)
+{
+  NS_ENSURE_ARG(_expiresDate);
+  *_expiresDate = nsnull;
+  nsresult rv;
+  PRTime afterTime;
+  nsCOMPtr<nsIX509CertValidity> validity;
+  rv = this->GetValidity(getter_AddRefs(validity));
+  if (NS_FAILED(rv)) return rv;
+  rv = validity->GetNotAfter(&afterTime);
+  if (NS_FAILED(rv)) return rv;
+  return GetSortableDate(afterTime, _expiresDate);
 }
 
 NS_IMETHODIMP
