@@ -1432,6 +1432,7 @@ InMemoryDataSource::DoCommand(const char* aCommand,
 
 ////////////////////////////////////////////////////////////////////////
 
+nsresult NS_NewRDFInMemoryDataSource(nsIRDFDataSource** result);
 nsresult
 NS_NewRDFInMemoryDataSource(nsIRDFDataSource** result)
 {
