@@ -88,6 +88,8 @@ nsToolboxFrame :: nsToolboxFrame ( )
       kHiddenAtom(dont_AddRef( NS_NewAtom("hidden")))
 {
 	//*** anything?
+  // we start off vertical
+  mHorizontal = PR_FALSE;
 }
 
 
@@ -137,7 +139,7 @@ nsToolboxFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyle
                                           PRInt32* aLocalChange)
 {
   // this re-resolves |mStyleContext|, so it may change
-  nsresult rv = nsHTMLContainerFrame::ReResolveStyleContext(aPresContext, aParentContext, 
+  nsresult rv = nsBoxFrame::ReResolveStyleContext(aPresContext, aParentContext, 
                                                             aParentChange, aChangeList, aLocalChange); 
   if (NS_FAILED(rv)) {
     return rv;
@@ -158,7 +160,7 @@ nsToolboxFrame::Init(nsIPresContext&  aPresContext,
               nsIStyleContext* aContext,
               nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   UpdateStyles(&aPresContext);
   return rv;
 }
@@ -187,7 +189,7 @@ nsToolboxFrame :: Paint ( nsIPresContext& aPresContext,
                             nsFramePaintLayer aWhichLayer)
 {
   // take care of bg painting, borders and children
-  nsresult retVal = nsHTMLContainerFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
+  nsresult retVal = nsBoxFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
 
   // now draw what makes us special
   DrawGrippies ( aPresContext, aRenderingContext );
@@ -247,20 +249,6 @@ nsToolboxFrame :: DrawGrippy (  nsIPresContext& aPresContext, nsIRenderingContex
 
 } // DrawGrippy
 
-
-//
-// GetSkipSides
-//
-// ***What does this do???
-//
-PRIntn
-nsToolboxFrame :: GetSkipSides() const
-{
-  return 0;
-
-} // GetSkipSides
-
-
 //
 // Reflow
 //
@@ -273,13 +261,15 @@ nsToolboxFrame :: GetSkipSides() const
 // If any toolbar is collapsed, we need to leave extra space at the bottom of
 // the toolbox for a "expando area" in which the grippies that represent the 
 // collapsed toolbars reside.
-// 
+//
+/* 
 NS_IMETHODIMP 
 nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus)
 {
+  
   // Pink you had code here to get you inital pseudo elements. Unfortunately it kind of 
   // messes up boxes. So I put it in the right place. Now the elements are initally
   // loaded in the Init method. -EDV
@@ -517,7 +507,101 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
   return NS_OK;
 
 } // Reflow
+*/
 
+NS_IMETHODIMP 
+nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
+                              nsHTMLReflowMetrics&     aDesiredSize,
+                              const nsHTMLReflowState& aReflowState,
+                              nsReflowStatus&          aStatus)
+{
+  // compute amount (in twips) each toolbar will be offset from the right because of 
+  // the grippy
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  nscoord grippyWidth = kGrippyWidthInPixels * onePixel;   // remember to leave room for the grippy on the right
+  nscoord collapsedGrippyHeight = kCollapsedGrippyHeightInPixels * onePixel;
+
+  // ----see how many collased bars there are ----
+  int collapsedGrippies=0;
+
+  // Get the first child of the toolbox content node and the first child frame of the toolbox
+  unsigned int contentCounter = 0;
+  nsCOMPtr<nsIContent> childContent;
+  mContent->ChildAt(0, *getter_AddRefs(childContent));
+
+  nsIFrame* childFrame = mFrames.FirstChild();
+  
+  while ( childContent ) {      
+    // first determine if the current content node matches the current frame. Make sure we don't
+    // walk off the end of the frame list when we still have content nodes.     
+    nsCOMPtr<nsIContent> currentFrameContent;
+    if ( childFrame )
+       childFrame->GetContent(getter_AddRefs(currentFrameContent));
+
+    // if not hidden continue otherwise add a collapsed grippy
+    if ( childFrame && currentFrameContent && childContent == currentFrameContent ) {
+         childFrame->GetNextSibling(&childFrame);
+    } else {
+       collapsedGrippies++;
+    }
+
+    contentCounter++;
+    mContent->ChildAt(contentCounter, *getter_AddRefs(childContent));
+  }
+
+  // -----set the bottom margin to be the sum of those colapsed bars---
+  // set left to be the width of the grippy
+  mInset = nsMargin(0,0,0,0);
+
+  if (IsHorizontal()) {
+     mInset.top = grippyWidth;
+     mInset.right = collapsedGrippyHeight*collapsedGrippies;
+  } else {
+     mInset.left = grippyWidth;
+     mInset.bottom = collapsedGrippyHeight*collapsedGrippies;
+  }
+
+  // -----flow things-----
+  nsresult result = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+
+  // -----set all the grippy locations-----
+  mNumToolbars = 0;
+  childFrame = mFrames.FirstChild(); 
+  while (nsnull != childFrame) 
+  {    
+      // get the childs rect and figure out the grippy size
+      nsRect rect(0,0,0,0);
+      childFrame->GetRect(rect);
+
+      nsCOMPtr<nsIContent> childContent;
+      childFrame->GetContent ( getter_AddRefs(childContent) );
+      nsRect grippyRect(rect);
+
+      if (IsHorizontal()) {
+          grippyRect.y = 0;
+          grippyRect.height = grippyWidth;
+      } else {
+          grippyRect.x = 0;
+          grippyRect.width = grippyWidth;
+     }
+
+      mGrippies[mNumToolbars].SetProperties ( grippyRect, childContent, PR_FALSE );
+
+      nsresult rv = childFrame->GetNextSibling(&childFrame);
+      NS_ASSERTION(rv == NS_OK,"failed to get next child");
+      mNumToolbars++;
+  }
+
+  return result;
+} // Reflow
+
+void
+nsToolboxFrame::GetInset(nsMargin& margin)
+{
+   margin = mInset;
+}
 
 //
 // GetFrameForPoint

@@ -3,55 +3,9 @@
 
 <!DOCTYPE window> 
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window style="width: 100%; height: 100%" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="Startup()"
-	title="Mozilla">
-
-  <html:style>
-      #header {
-        position: fixed;
-        width: 100%;
-        top: 0;
-        right: 0;
-        bottom: auto;
-        left: 0;
-      }
-      #main {
-        position: fixed;
-        width: auto;
-        height: auto;
-        right: 0;
-        bottom: 40px;
-        left: 0;
-        overflow: auto;
-        padding: 2px .5em;
-        border: solid 0px black;
-      }
-      
-      #footer_bar {
-        position: fixed;
-        width: 100%;
-        height: 20px;
-        top: auto;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        margin-top: auto;
-      }
-      
-      #footer {
-        position: fixed;
-        width: 100%;
-        height: 20px;
-        top: auto;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        margin-top: auto;
-      }
-
-  </html:style>
+        onload="Startup()" title="Mozilla"> 
 
   <html:script>
   function Startup()
@@ -158,16 +112,15 @@
 
   function BrowserEditBookmarks()
   {
-    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-    if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore) {
-        toolkitCore.Init("ToolkitCore");
+    var prefsCore = XPAppCoresManager.Find("PrefsCore");
+    if (!PrefsCore) {
+      PrefsCore = new ToolkitCore();
+      if (PrefsCore) {
+        toolkitCore.Init("PrefsCore");
       }
     }
-    if (toolkitCore) {
-      toolkitCore.ShowWindow("resource:/res/rdf/bookmarks.xul",
-                             window);
+    if (PrefsCore) {
+      PrefsCore.ShowWindow(window);
     }
   }
 
@@ -313,15 +266,16 @@
 
   function DoPreferences()
   {
-    var prefsCore = XPAppCoresManager.Find("PrefsCore");
-    if (!prefsCore) {
-      prefsCore = new PrefsCore();
-      if (prefsCore) {
-        prefsCore.Init("PrefsCore");
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("ToolkitCore");
       }
     }
-    if (prefsCore) {
-      prefsCore.ShowWindow(window);
+    if (toolkitCore) {
+      toolkitCore.ShowWindow("resource:/res/samples/PrefsWindow.html",
+                             window);
     }
   }
 
@@ -556,14 +510,9 @@
 
   </menubar>
   
-  <html:div id="header">
-  <toolbox>
-  	   	 
-    <toolbar id="mainbar">
- 	  <html:table width="100%" cellpadding=0 cellspacing=0><html:tr>
-
-      <html:td valign="middle" width="160">
-
+  <box align="vertical" style="width: 100%; height:100%">
+   <toolbox>
+    <toolbar type="toolbar">
 		  <titledbutton src="resource:/res/toolbar/TB_Back.gif" align="bottom" value="Back" onclick="BrowserBack()">	
 				  <observes element="canGoBack" attribute="disabled"/>			
 	      </titledbutton>
@@ -582,44 +531,71 @@
 				onclick="window.frames[0].stop()">
 	        <observes element="canStop" attribute="disabled"/>
 	      </titledbutton>
-	  </html:td>
 	  
-	  <html:td valign="middle">
-			<html:input id="urlbar" style="width: 100%" type="text" 
+	      <box align="vertical" flex="100%">
+		    <spring flex="100%"/>
+	  		<html:input id="urlbar" type="text" style="min-width: 100px; min-height: 25px"
 			  onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
-	  </html:td>
-	  
-	  <html:td width="80" valign="middle">
+			<spring flex="100%"/>
+	      </box>
 	  <titledbutton src="resource:/res/toolbar/TB_Print.gif" align="bottom" value="Print"  
 				onclick="">
 	        <observes element="canPrint" attribute="disabled"/>
 	      </titledbutton>
+
           <titledbutton id="Throbber" style="list-style-image:url(resource:/res/throbber/anims00.gif);" onclick="window.frames[0].home()">
              <observes element="Browser:Throbber" attribute="busy"/>
           </titledbutton>
-      </html:td>
- 
-      </html:tr></html:table>
-     
-    </toolbar>
-
-	<toolbar onclick="OpenBookmarkURL(event.target)" datasources="rdf:bookmarks" id="NC:PersonalToolbarFolder">
-	<titledbutton src="resource:/res/toolbar/TB_Home.gif" align="right" value="Home" 
-				onclick="BrowserHome()"/>
-	<titledbutton src="resource:/res/toolbar/TB_Netscape.gif" align="right" value="Netscape" 
-				onclick="window.frames[0].location.href='http://my.netscape.com'"/>
 	</toolbar>
-    
-  </toolbox>
-  </html:div>
 
-  <html:div id="main">
-     <html:iframe html:name="content" html:src="BrowserInitPage.html" html:width="100%" html:height="440px"></html:iframe>
-  </html:div>
+    <toolbar type="toolbar">
+    	<titledbutton src="resource:/res/toolbar/TB_Home.gif" align="right" value="Home" 
+			onclick="BrowserHome()"/>
+		<titledbutton src="resource:/res/toolbar/TB_Netscape.gif" align="right" value="Netscape" 
+			onclick="window.frames[0].location.href='http://my.netscape.com'"/>
+		<spring flex="100%"/>
+	</toolbar>
+  </toolbox>
+ 
+  <!-- side tool bar test
+ <box flex="100%">
+
+
+ <toolbox align="horizontal">
+    <toolbar align="vertical">
+		  <titledbutton src="resource:/res/toolbar/TB_Back.gif" align="bottom" value="Back" onclick="BrowserBack()">	
+				  <observes element="canGoBack" attribute="disabled"/>			
+	      </titledbutton>
+
+	      <titledbutton src="resource:/res/toolbar/TB_Forward.gif" align="bottom" value="Forward" 
+				onclick="BrowserForward()">
+				  <observes element="canGoForward" attribute="disabled"/>
+	      </titledbutton>
+
+	      <titledbutton src="resource:/res/toolbar/TB_Reload.gif" align="bottom" value="Reload" 
+				  onclick="window.frames[0].location.reload()">
+				  <observes element="canReload" attribute="disabled"/>
+	      </titledbutton>
+
+	      <titledbutton src="resource:/res/toolbar/TB_Stop.gif" align="bottom" value="Stop" 
+				onclick="window.frames[0].stop()">
+	        <observes element="canStop" attribute="disabled"/>
+	      </titledbutton>
+	</toolbar>
+	</toolbox>
+ 
+
+  <html:iframe html:name="content" html:src="BrowserInitPage.html" flex="100%" style="width: 100px; height: 100px" />
+
+  </box>
+
+  -->
 
   
-<html:div id="footer">
-    <html:script>
+  <html:iframe html:name="content" html:src="BrowserInitPage.html" flex="100%" style="width: 100px; height: 100px" />
+
+ 
+  <html:script>
         var bindCount = 0;
         function onStatus() {
             var status = document.getElementById("Browser:Status");
@@ -627,7 +603,7 @@
                 var text = status.getAttribute("text");
                 var statusText = document.getElementById("statusText");
                 if ( statusText ) {
-                    statusText.childNodes[0].nodeValue = text;
+                    statusText.setAttribute( "value", text );
                 }
                 /*
                 if ( bindCount == 0 ) {
@@ -643,35 +619,21 @@
                 dump("Can't find status broadcaster!\n");
             }
         }
+
         function onSecurity() {
             var security = document.getElementById("Browser:Security");
-            var indicator = document.getElementById("statusbar-indicator");
-            var style = indicator.getAttribute("style");
-            // Strip off current display/width setting.
-            style = style.replace( /display[^;]*;/, "" );
-            style = style.replace( /width[^;]*;/, "" );
+            var indicator = document.getElementById("security-box");
+            var icon = document.getElementById("security-button");
+ 
             if ( security.getAttribute("secure") == "true" ) {
-                // Set indicator to display:normal;
-                style = style + "display:normal;width:120px;";
-                color = "border-top-color:yellow;"
+                indicator.setAttribute("class","secure");
+                icon.setAttribute("class","secure");
             } else {
-                // Set indicator to display:none;
-                style = style + "display:none;width:0%;";
-                color = "border-top-color:rgb(192,192,192);"
+                indicator.setAttribute("class","insecure");
+                icon.setAttribute("class","insecure");
             }
-            indicator.setAttribute("style",style);
-
-            var meter = document.getElementById("statusbar-meter");
-            var text  = document.getElementById("statusbar-text");
-            style = meter.getAttribute("style");
-            style = style.replace( /border-top-color[^;];/, "" );
-            style = style + color;
-            meter.setAttribute("style",style);
-            style = text.getAttribute("style");
-            style = style.replace( /border-top-color[^;];/, "" );
-            style = style + color;
-            text.setAttribute("style",style);
         }
+
         function securityOn() {
             var security = document.getElementById("Browser:Security");
             if ( security.getAttribute("secure") == "false" ) {
@@ -713,7 +675,7 @@
                 // Turn off progress meter.
                 var meter  = document.getElementById("Browser:LoadingProgress");
                 var status = document.getElementById("Browser:Status");
-                status.setAttribute("text","Document: Done");
+                status.setAttribute("value","Document: Done");
                 meter.setAttribute("value","0");
                 meter.setAttribute("mode","normal");
             }
@@ -732,7 +694,7 @@
                 if ( mode == "normal" ) {
                     var status = document.getElementById("Browser:Status");
                     if ( status ) {
-                        status.setAttribute("text","Document: Done");
+                        status.setAttribute("value","Document: Done");
                     }
                 }
             }
@@ -748,6 +710,8 @@
         }
     </html:script>
 
+  <box align="horizontal" id="status-bar">
+ 
     <broadcaster id="Browser:LoadingProgress"/>
     <broadcaster id="Browser:Status"/>
     <broadcaster id="Browser:OnStartBinding"/>
@@ -755,90 +719,53 @@
     <broadcaster id="Browser:Security" secure="false"/>
     <broadcaster id="Browser:Throbber" busy="false"/>
     
-    <html:center>
-    
-    
-    <html:table class="statusbar" style="table-spacing:0;table-padding:0;width:99%;border:1px;">
-        
-        
-        <html:tr>
-        	
-        	
-        	<html:td class="notification" style="width:200px;font-family:sans-serif;font-size:2.5mm;">
-        		<html:div onclick="doTests()">
-        			[Notification Component]
-        		</html:div>
-        	</html:td>
-            
-         
-         <html:td id="statusbar-meter" class="statusbar-meter" onclick="dumpProgress()" style="width:100px;border-top:2px solid;">
-                <progressmeter id="meter" mode="normal" value="0" style="width:100px; height: 16px;">
-                    <!-- <observes element="Browser:LoadingProgress" attribute="value"/> -->
-                    <observes element="Browser:LoadingProgress" attribute="mode"/>
-                    <observes element="Browser:Throbber" attribute="busy" onchange="onProgress()"/>
-                </progressmeter>
-          </html:td>
-          
-          
-          <html:td id="statusbar-text" class="statusbar-text" style="width:*;font-family:sans-serif;font-size:2.5mm;border-top:2px solid;">
-                <html:div id="statusText">
-                    Document: Done
-                    <observes element="Browser:Status" attribute="text" onchange="onStatus()"/>			
-                    <!--
-                    <observes element="Browser:OnStartBinding" attribute="url" onchange="onStartBinding()"/>			
-                    <observes element="Browser:OnStopBinding" attribute="url" onchange="onStopBinding()"/>			
-                    -->
-                </html:div>
-Build ID: 00000000
-          </html:td>
-          
-          <html:td id="statusbar-indicator" class="statusbar-indicator" style="display:none;background-color:yellow;font-family:sans-serif;font-size:8pt;border-top:2px solid yellow;">
-                <html:div onclick="securityOff();">
-                    <html:img src="resource:/res/toolbar/StatusBar-secure.gif" style="vertical-align:middle"/>Secure Conn.
-                </html:div>
-         </html:td>
-         
-         
-        </html:tr>
-        
-        
-    </html:table>
-    
-    
-    </html:center>
-  </html:div>
+    <titledbutton value="[Notification Component]" onclick="doTests()"/>
 
-  <html:div id="footer_bar">
-  	<toolbox>
-  	<toolbar id="taskbar">
-  	 <html:table class="statusbar" style="table-spacing:0;table-padding:0;width:99%;border:1px;">
-        <html:tr>
-        <html:td>
-  	 	<titledbutton align="left" src="resource:/res/toolbar/TB_popup.gif" value="Web" />
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Mail" />
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Chat" />
-  	 	</html:td>
-  	 	<html:td>
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="DayPlanner" />
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Shopping" />
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="My Desk" />
-  	 	</html:td>
-  	 	<html:td>
-  	 	</html:td>
-  	 	<html:td align="right">
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Open Windows" />
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniNav.gif" value="" />
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniMail.gif" value="" onclick="OpenMessenger()"/>
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniAddr.gif" value="" />
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniComp.gif" value="" />
-  	 	</html:td>
-  		</html:tr>
-	</html:table>
- </toolbar>
-  	</toolbox>
-  	
-  </html:div>
+	<box id="security-box" class="insecure" align="horizontal" flex="100%">
+		<box align="vertical" style="width:100px">
+			<spring flex="100%"/>
+			<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
+				<observes element="Browser:LoadingProgress" attribute="mode"/>
+				<observes element="Browser:Throbber" attribute="busy" onchange="onProgress()"/>
+			</progressmeter>
+			<spring flex="100%"/>
+		</box>
 
+		<titledbutton id="statusText" align="right" flex="1%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
+					   <observes element="Browser:Status" attribute="value" onchange="onStatus()"/>			
+		</titledbutton>
 
+		<spring flex="100%"/>
 
+		<titledbutton align="right" value="Build ID: 99032911" style="font-family:sans-serif;font-size:2.5mm">
+		</titledbutton>
+
+		<titledbutton id="security-button" class="insecure" value="Secure Conn" align="right" src="resource:/res/toolbar/StatusBar-secure.gif" onclick="securityOff();"/>
+     </box>
+  </box>
+
+  <toolbox>
+	  <toolbar id="taskbar">
+	  	  <box align="horizontal">
+  	 	     <titledbutton align="left" src="resource:/res/toolbar/TB_popup.gif" value="Web" />
+  	 	     <titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Mail" />
+  	 	     <titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Chat" />
+		  </box>
+		  <spring flex="100%"/>
+	 	  <box align="horizontal">
+  	 		<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="DayPlanner" />
+  	 		<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Shopping" />
+  	 		<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="My Desk" />
+          </box>
+		  <spring flex="100%"/>
+	   	  <box align="horizontal">
+  			<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Open Windows" />
+  	 		<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniNav.gif" value="" />
+  	 		<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniMail.gif" value="" onclick="OpenMessenger()"/>
+  	 		<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniAddr.gif" value="" />
+  	 		<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniComp.gif" value="" />
+	      </box>
+	  </toolbar>
+	</toolbox>
+  </box>
 </window>

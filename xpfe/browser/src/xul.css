@@ -31,18 +31,6 @@ toolbar {
     min-height: 20px;
 }
 
-toolbar#taskbar {
-    display:block;
-    background-color: #666699;
-    border-bottom: solid #333366 1px;
-    border-top: solid #9999AA 1px;
-    border-left: solid #9999AA 1px;
-    border-right: solid #333366 1px;
-    font: 10pt sans-serif;
-    min-height: 16px;
-    color: white;
-}
-
 toolbar[collapsed="true"] {
 	display:none;
 }
@@ -52,6 +40,7 @@ toolbar[hidden="true"] {
 
 toolbox { 
         background-color:darkgray;
+		display: block;
 }
 
 :toolbox-normal {
@@ -78,20 +67,6 @@ toolbox {
 window { 
   background-color:#CCCCCC;
   display: block; 
-}
-
-titledbutton#Throbber
-{
-	list-style-image:url("resource:/res/throbber/anims00.gif");
-}
-
-
-titledbutton#Throbber[busy="true"] {
-	list-style-image:url("resource:/res/throbber/throbbingN.gif");
-}
-
-titledbutton:button-focus {
-	border: none;
 }
 
 broadcaster {
@@ -124,8 +99,11 @@ progressmeter {
 	color: #BBBBCC;
 }
 
-
 titledbutton {
+  display: inline;
+}
+
+toolbar titledbutton {
   display: inline;
   color:black; 
 
@@ -135,15 +113,62 @@ titledbutton {
   font: 2.5mm sans-serif;
 }
 
-toolbar#taskbar titledbutton{
-  color:#CCCCFF; 
-}
-
-titledbutton[pseudoclass~="hover"] {
+toolbar [pseudoclass~="hover"] {
   border: 1px outset white;
 	color:blue;
 	//text-decoration:underline;
   padding: 1px;
+}
+ 
+toolbar titledbutton[pseudoclass~="hover"]:-moz-outline {
+   border : 1px solid black;
+}
+ 
+toolbar titledbutton[pseudoclass~="active"] {
+
+  text-decoration:none;
+  border: 1px inset;
+
+  padding-left: 2px;
+  padding-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+}
+
+toolbar titledbutton[pseudoclass~="active"]:-moz-outline {
+   border : 1px solid black;
+}
+ 
+toolbar titledbutton[disabled] {
+	opacity: 0.5;
+}
+
+/**** Please put all browser specific style here eventually it will be moved 
+      out to another .css file like navigator.xul 
+****/
+
+titledbutton#Throbber
+{
+	list-style-image:url("resource:/res/throbber/anims00.gif");
+}
+
+titledbutton#Throbber[busy="true"] {
+	list-style-image:url("resource:/res/throbber/throbbingN.gif");
+}
+
+toolbar#taskbar titledbutton{
+  color:#CCCCFF; 
+}
+
+toolbar#taskbar titledbutton[pseudoclass~="active"] {
+
+  text-decoration:none;
+  border: 1px inset;
+
+  padding-left: 2px;
+  padding-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 0px;
 }
 
 toolbar#taskbar titledbutton[pseudoclass~="hover"] {
@@ -152,53 +177,37 @@ toolbar#taskbar titledbutton[pseudoclass~="hover"] {
 	//text-decoration:underline;
   padding: 1px;
 }
- 
-titledbutton[pseudoclass~="hover"]:-moz-outline {
-   border : 1px solid black;
-}
- 
-titledbutton[pseudoclass~="active"] {
 
-	text-decoration:none;
-  border: 1px inset;
-
-  padding-left: 2px;
-  padding-right: 0px;
-  padding-top: 2px;
-  padding-bottom: 0px;
+toolbar#taskbar {
+    display:block;
+    background-color: #666699;
+    border-bottom: solid #333366 1px;
+    border-top: solid #9999AA 1px;
+    border-left: solid #9999AA 1px;
+    border-right: solid #333366 1px;
+    font: 10pt sans-serif;
+    min-height: 16px;
+    color: white;
 }
 
-toolbar#taskbar titledbutton[pseudoclass~="active"] {
 
-	text-decoration:none;
-  border: 1px inset;
-
-  padding-left: 2px;
-  padding-right: 0px;
-  padding-top: 2px;
-  padding-bottom: 0px;
+box[class=insecure] {
+   margin-top: 2px;
+   border-top: 0px;
 }
 
-titledbutton[pseudoclass~="active"]:-moz-outline {
-   border : 1px solid black;
-}
- 
-titledbutton:-moz-focus-inner {
+box[class=secure] {
+   border-top: 2px solid yellow;
+   margin-top: 0px;
 }
 
-titledbutton:-moz-focus-outer {
+box#status-bar titledbutton {
+     font: 2.5mm sans-serif;
 }
 
-titledbutton[pseudoclass~="focus"] {
+titledbutton[class=secure] {
+  background-color: yellow;
 }
 
-titledbutton[pseudoclass~="focus"]:-moz-focus-inner {
+titledbutton[class=insecure] {
 }
-
-titledbutton[pseudoclass~="focus"]:-moz-focus-outer {
-}
-
-titledbutton[disabled] {
-	opacity: 0.5;
-}
- 

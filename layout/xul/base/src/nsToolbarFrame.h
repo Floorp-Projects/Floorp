@@ -36,9 +36,9 @@
 //
 
 
-#include "nsBlockFrame.h"
+#include "nsBoxFrame.h"
 
-class nsToolbarFrame : public nsBlockFrame
+class nsToolbarFrame : public nsBoxFrame
 {
 public:
   friend nsresult NS_NewToolbarFrame(nsIFrame*& aNewFrame);

@@ -36,14 +36,18 @@
 //   http://www.mozilla.org/xpfe/DMWSpecNew.html
 //
 
+#ifndef nsToolBoxFrame_h___
+#define nsToolBoxFrame_h___
+
 #include "nsHTMLContainerFrame.h"
 #include "nsIStyleContext.h"
 #include "nsIContent.h"
 #include "nsXULAtoms.h"
 #include "nsCOMPtr.h"
+#include "nsBoxFrame.h"
 
 
-class nsToolboxFrame : public nsHTMLContainerFrame
+class nsToolboxFrame : public nsBoxFrame
 {
 public:
   friend nsresult NS_NewToolboxFrame(nsIFrame*& aNewFrame);
@@ -100,8 +104,6 @@ protected:
   nsToolboxFrame();
   virtual ~nsToolboxFrame();
 
-  PRIntn GetSkipSides() const;
-
   virtual void UpdateStyles(nsIPresContext* aPresContext);
 
   void RefreshStyleContext(nsIPresContext* aPresContext,
@@ -125,6 +127,9 @@ protected:
   nsCOMPtr<nsIStyleContext>    mGrippyNormalStyle;
   nsCOMPtr<nsIStyleContext>    mGrippyRolloverStyle;
   
+  nsMargin mInset;
+  virtual void GetInset(nsMargin& margin);
+
   unsigned long mSumOfToolbarHeights;
   TabInfo  mGrippies[10];          //*** make this a list or something!!!!!!
   unsigned short mNumToolbars;
@@ -139,3 +144,5 @@ protected:
   nsToolboxFrame& operator= ( const nsToolboxFrame& aFrame ) ;  // DO NOT IMPLEMENT
   
 }; // class nsToolboxFrame
+
+#endif
