@@ -22,7 +22,8 @@
  * Sun Microsystems, Inc. All Rights Reserved.
  *
  * Contributor(s):
- *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
+ *	Dr Vipul Gupta <vipul.gupta@sun.com> and
+ *	Douglas Stebila <douglas@stebila.ca>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -36,7 +37,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapit.h,v 1.10 2003/03/29 00:18:18 nelsonb%netscape.com Exp $
+ * $Id: blapit.h,v 1.11 2003/10/17 13:45:33 ian.mcgreer%sun.com Exp $
  */
 
 #ifndef _BLAPIT_H_
@@ -45,6 +46,7 @@
 #include "seccomon.h"
 #include "prlink.h"
 #include "plarena.h"
+#include "ecl-exp.h"
 
 
 /* RC2 operation modes */
@@ -315,6 +317,8 @@ struct ECParamsStr {
     SECItem       order; 
     int           cofactor;
     SECItem       DEREncoding;
+    ECCurveName   name;
+    SECItem       curveOID;
 };
 typedef struct ECParamsStr ECParams;
 
@@ -330,6 +334,7 @@ struct ECPrivateKeyStr {
     ECParams ecParams;   
     SECItem publicValue;   /* encoded ec point */
     SECItem privateValue;  /* private big integer */
+    SECItem version;       /* As per SEC 1, Appendix C, Section C.4 */
 };
 typedef struct ECPrivateKeyStr ECPrivateKey;
 

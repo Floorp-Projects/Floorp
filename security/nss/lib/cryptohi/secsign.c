@@ -18,7 +18,11 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved. 
+ * 
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -32,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: secsign.c,v 1.5 2002/12/12 06:05:17 nelsonb%netscape.com Exp $
+ * $Id: secsign.c,v 1.6 2003/10/17 13:45:33 ian.mcgreer%sun.com Exp $
  */
 
 #include <stdio.h>
@@ -117,6 +121,13 @@ SGN_NewContext(SECOidTag alg, SECKEYPrivateKey *key)
 	signalg = SEC_OID_MISSI_DSS; /* XXX Is there a better algid? */
 	keyType = fortezzaKey;
 	break;
+#ifdef NSS_ENABLE_ECC
+      case SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST:
+	hashalg = SEC_OID_SHA1;
+	signalg = SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST;
+	keyType = ecKey;
+	break;
+#endif /* NSS_ENABLE_ECC */
       /* we don't implement MD4 hashes. 
        * we *CERTAINLY* don't want to sign one! */
       case SEC_OID_PKCS1_MD4_WITH_RSA_ENCRYPTION:
@@ -198,7 +209,6 @@ SGN_End(SGNContext *cx, SECItem *result)
     SECKEYPrivateKey *privKey = cx->key;
     SGNDigestInfo *di = 0;
 
-
     result->data = 0;
     digder.data = 0;
 
@@ -255,8 +265,10 @@ SGN_End(SGNContext *cx, SECItem *result)
 	goto loser;
     }
 
-    if (cx->signalg == SEC_OID_ANSIX9_DSA_SIGNATURE) {
-	rv = DSAU_EncodeDerSig(result, &sigitem);
+    if ((cx->signalg == SEC_OID_ANSIX9_DSA_SIGNATURE) ||
+        (cx->signalg == SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST)) {
+        /* DSAU_EncodeDerSigWithLen works for DSA and ECDSA */
+	rv = DSAU_EncodeDerSigWithLen(result, &sigitem, signatureLen); 
 	PORT_Free(sigitem.data);
 	if (rv != SECSuccess)
 	    goto loser;
@@ -413,6 +425,11 @@ SEC_DerSignData(PRArenaPool *arena, SECItem *result,
 	  case dsaKey:
 	    algID = SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST;
 	    break;
+#ifdef NSS_ENABLE_ECC
+	  case ecKey:
+	    algID = SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST;
+	    break;
+#endif /* NSS_ENABLE_ECC */
 	  default:
 	    return SECFailure;
 	    break;

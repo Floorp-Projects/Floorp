@@ -16,7 +16,11 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ * 
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -463,6 +467,11 @@ pk11_GetPubItem(NSSLOWKEYPublicKey *pubKey) {
     case NSSLOWKEYDHKey:
 	    pubItem = &pubKey->u.dh.publicValue;
 	    break;
+#ifdef NSS_ENABLE_ECC
+    case NSSLOWKEYECKey:
+	    pubItem = &pubKey->u.ec.publicValue;
+	    break;
+#endif /* NSS_ENABLE_ECC */
     default:
 	    break;
     }
@@ -578,6 +587,44 @@ pk11_FindDHPublicKeyAttribute(NSSLOWKEYPublicKey *key, CK_ATTRIBUTE_TYPE type)
     return NULL;
 }
 
+#ifdef NSS_ENABLE_ECC
+static PK11Attribute *
+pk11_FindECPublicKeyAttribute(NSSLOWKEYPublicKey *key, CK_ATTRIBUTE_TYPE type)
+{
+    unsigned char hash[SHA1_LENGTH];
+    CK_KEY_TYPE keyType = CKK_EC;
+
+    switch (type) {
+    case CKA_KEY_TYPE:
+	return pk11_NewTokenAttribute(type,&keyType,sizeof(keyType), PR_TRUE);
+    case CKA_ID:
+	SHA1_HashBuf(hash, key->u.ec.publicValue.data,
+		     key->u.ec.publicValue.len);
+	return pk11_NewTokenAttribute(type,hash,SHA1_LENGTH, PR_TRUE);
+    case CKA_DERIVE:
+    case CKA_VERIFY:
+	return (PK11Attribute *) &pk11_StaticTrueAttr;
+    case CKA_ENCRYPT:
+    case CKA_VERIFY_RECOVER:
+    case CKA_WRAP:
+	return (PK11Attribute *) &pk11_StaticFalseAttr;
+    case CKA_EC_PARAMS:
+        /* XXX Why is the last arg PR_FALSE? */
+	return pk11_NewTokenAttributeSigned(type,
+					key->u.ec.ecParams.DEREncoding.data,
+					key->u.ec.ecParams.DEREncoding.len,
+					PR_FALSE);
+    case CKA_EC_POINT:
+        /* XXX Why is the last arg PR_FALSE? */
+	return pk11_NewTokenAttributeSigned(type,key->u.ec.publicValue.data,
+					key->u.ec.publicValue.len, PR_FALSE);
+    default:
+	break;
+    }
+    return NULL;
+}
+#endif /* NSS_ENABLE_ECC */
+
 static PK11Attribute *
 pk11_FindPublicKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 {
@@ -619,6 +666,10 @@ pk11_FindPublicKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	return pk11_FindDSAPublicKeyAttribute(key,type);
     case NSSLOWKEYDHKey:
 	return pk11_FindDHPublicKeyAttribute(key,type);
+#ifdef NSS_ENABLE_ECC
+    case NSSLOWKEYECKey:
+	return pk11_FindECPublicKeyAttribute(key,type);
+#endif /* NSS_ENABLE_ECC */
     default:
 	break;
     }
@@ -797,6 +848,41 @@ pk11_FindDHPrivateKeyAttribute(NSSLOWKEYPrivateKey *key, CK_ATTRIBUTE_TYPE type)
     return NULL;
 }
 
+#ifdef NSS_ENABLE_ECC
+static PK11Attribute *
+pk11_FindECPrivateKeyAttribute(NSSLOWKEYPrivateKey *key, CK_ATTRIBUTE_TYPE type)
+{
+    unsigned char hash[SHA1_LENGTH];
+    CK_KEY_TYPE keyType = CKK_EC;
+
+    switch (type) {
+    case CKA_KEY_TYPE:
+	return pk11_NewTokenAttribute(type,&keyType,sizeof(keyType), PR_TRUE);
+    case CKA_ID:
+	SHA1_HashBuf(hash,key->u.ec.publicValue.data,key->u.ec.publicValue.len);
+	return pk11_NewTokenAttribute(type,hash,SHA1_LENGTH, PR_TRUE);
+    case CKA_DERIVE:
+    case CKA_SIGN:
+	return (PK11Attribute *) &pk11_StaticTrueAttr;
+    case CKA_DECRYPT:
+    case CKA_SIGN_RECOVER:
+    case CKA_UNWRAP:
+	return (PK11Attribute *) &pk11_StaticFalseAttr;
+    case CKA_VALUE:
+	return (PK11Attribute *) &pk11_StaticNullAttr;
+    case CKA_EC_PARAMS:
+        /* XXX Why is the last arg PR_FALSE? */
+	return pk11_NewTokenAttributeSigned(type,
+					key->u.ec.ecParams.DEREncoding.data,
+					key->u.ec.ecParams.DEREncoding.len,
+					PR_FALSE);
+    default:
+	break;
+    }
+    return NULL;
+}
+#endif /* NSS_ENABLE_ECC */
+
 static PK11Attribute *
 pk11_FindPrivateKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 {
@@ -838,6 +924,10 @@ pk11_FindPrivateKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	return pk11_FindDSAPrivateKeyAttribute(key,type);
     case NSSLOWKEYDHKey:
 	return pk11_FindDHPrivateKeyAttribute(key,type);
+#ifdef NSS_ENABLE_ECC
+    case NSSLOWKEYECKey:
+	return pk11_FindECPrivateKeyAttribute(key,type);
+#endif /* NSS_ENABLE_ECC */
     default:
 	break;
     }

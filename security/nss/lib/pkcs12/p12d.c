@@ -16,7 +16,11 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -2747,6 +2751,11 @@ sec_pkcs12_get_public_value_and_type(sec_PKCS12SafeBag *certBag,
 	case rsaKey:
 	    pubValue = SECITEM_DupItem(&pubKey->u.rsa.modulus);
 	    break;
+#ifdef NSS_ENABLE_ECC
+        case ecKey:
+	    pubValue = SECITEM_DupItem(&pubKey->u.ec.publicValue);
+	    break;
+#endif /* NSS_ENABLE_ECC */
 	default:
 	    pubValue = NULL;
     }

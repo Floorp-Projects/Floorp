@@ -38,7 +38,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi-priv.h,v 1.14 2001/10/17 20:35:34 jpierre%netscape.com Exp $
+ *  $Id: mpi-priv.h,v 1.15 2003/10/17 13:45:36 ian.mcgreer%sun.com Exp $
  */
 #ifndef _MPI_PRIV_H_
 #define _MPI_PRIV_H_ 1
@@ -252,6 +252,16 @@ mp_err   MPI_ASM_DECL s_mpv_div_2dx1d(mp_digit Nhi, mp_digit Nlo,
 /* c += a * b * (MP_RADIX ** offset);  */
 #define s_mp_mul_d_add_offset(a, b, c, off) \
 (s_mpv_mul_d_add_prop(MP_DIGITS(a), MP_USED(a), b, MP_DIGITS(c) + off), MP_OKAY)
+
+typedef struct {
+  mp_int       N;	/* modulus N */
+  mp_digit     n0prime; /* n0' = - (n0 ** -1) mod MP_RADIX */
+  mp_size      b;	/* R == 2 ** b,  also b = # significant bits in N */
+} mp_mont_modulus;
+
+mp_err s_mp_mul_mont(const mp_int *a, const mp_int *b, mp_int *c, 
+	               mp_mont_modulus *mmm);
+mp_err s_mp_redc(mp_int *T, mp_mont_modulus *mmm);
 
 /* }}} */
 #endif

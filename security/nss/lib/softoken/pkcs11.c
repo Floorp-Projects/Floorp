@@ -1068,6 +1068,7 @@ pk11_handlePublicKeyObject(PK11Session *session, PK11Object *object,
 	if ( !pk11_hasAttribute(object, CKA_EC_POINT)) {
 	    return CKR_TEMPLATE_INCOMPLETE;
 	}
+	pubKeyAttr = CKA_EC_POINT;
 	derive = CK_TRUE;    /* for ECDH */
 	verify = CK_TRUE;    /* for ECDSA */
 	encrypt = CK_FALSE;
@@ -1217,6 +1218,9 @@ pk11_handlePrivateKeyObject(PK11Session *session,PK11Object *object,CK_KEY_TYPE 
 	    return CKR_TEMPLATE_INCOMPLETE;
 	}
 	if ( !pk11_hasAttribute(object, CKA_VALUE)) {
+	    return CKR_TEMPLATE_INCOMPLETE;
+	}
+	if ( !pk11_hasAttribute(object, CKA_NETSCAPE_DB)) {
 	    return CKR_TEMPLATE_INCOMPLETE;
 	}
 	encrypt = CK_FALSE;
@@ -1989,10 +1993,12 @@ pk11_mkPrivKey(PK11Object *object, CK_KEY_TYPE key_type, CK_RV *crvp)
 	crv = pk11_Attribute2SSecItem(arena,&privKey->u.ec.privateValue,
 							object,CKA_VALUE);
 	if (crv != CKR_OK) break;
-	/* XXX Why does this break handlePrivateKeyObject ? 
-	crv = pk11_Attribute2SSecItem(arena,&privKey->u.ec.publicValue,
+	crv = pk11_Attribute2SSecItem(arena, &privKey->u.ec.publicValue,
 				      object,CKA_NETSCAPE_DB);
-	*/
+	if (crv != CKR_OK) break;
+        rv = DER_SetUInteger(privKey->arena, &privKey->u.ec.version,
+                          NSSLOWKEY_EC_PRIVATE_KEY_VERSION);
+	if (rv != SECSuccess) crv = CKR_HOST_MEMORY;
 	break;
 #endif /* NSS_ENABLE_ECC */
 

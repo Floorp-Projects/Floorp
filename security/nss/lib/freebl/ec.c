@@ -18,7 +18,8 @@
  * Sun Microsystems, Inc. All Rights Reserved.
  *
  * Contributor(s):
- *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
+ *	Dr Vipul Gupta <vipul.gupta@sun.com> and
+ *	Douglas Stebila <douglas@stebila.ca>, Sun Microsystems Laboratories
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,8 +41,7 @@
 #include "secmpi.h"
 #include "secitem.h"
 #include "ec.h"
-#include "GFp_ecl.h"
-#include "GF2m_ecl.h"
+#include "ecl.h"
 
 #ifdef NSS_ENABLE_ECC
 
@@ -61,136 +61,19 @@ ec_point_at_infinity(SECItem *pointP)
 }
 
 /* 
- * Computes point addition R = P + Q for the curve whose 
- * parameters are encoded in params. Two or more of P, Q, 
- * R may point to the same memory location.
+ * Computes scalar point multiplication pointQ = k1 * G + k2 * pointP for
+ * the curve whose parameters are encoded in params with base point G.
  */
-SECStatus
-ec_point_add(ECParams *params, SECItem *pointP,
-             SECItem *pointQ, SECItem *pointR)
-{
-    mp_int Px, Py, Qx, Qy, Rx, Ry;
-    mp_int irreducible, a;
-    SECStatus rv = SECFailure;
-    mp_err err = MP_OKAY;
-    int len;
-
-#if EC_DEBUG
-    int i;
-
-    printf("ec_point_add: params [len=%d]:", params->DEREncoding.len);
-    for (i = 0; i < params->DEREncoding.len; i++) 
-	    printf("%02x:", params->DEREncoding.data[i]);
-    printf("\n");
-
-    printf("ec_point_add: pointP [len=%d]:", pointP->len);
-    for (i = 0; i < pointP->len; i++) 
-	    printf("%02x:", pointP->data[i]);
-    printf("\n");
-
-    printf("ec_point_add: pointQ [len=%d]:", pointQ->len);
-    for (i = 0; i < pointQ->len; i++) 
-	    printf("%02x:", pointQ->data[i]);
-    printf("\n");
-#endif
-
-    /* NOTE: We only support prime field curves for now */
-    len = (params->fieldID.size + 7) >> 3;
-    if ((pointP->data[0] != EC_POINT_FORM_UNCOMPRESSED) ||
-	(pointP->len != (2 * len + 1)) ||
-	(pointQ->data[0] != EC_POINT_FORM_UNCOMPRESSED) ||
-	(pointQ->len != (2 * len + 1))) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return SECFailure;
-    }
-
-    MP_DIGITS(&Px) = 0;
-    MP_DIGITS(&Py) = 0;
-    MP_DIGITS(&Qx) = 0;
-    MP_DIGITS(&Qy) = 0;
-    MP_DIGITS(&Rx) = 0;
-    MP_DIGITS(&Ry) = 0;
-    MP_DIGITS(&irreducible) = 0;
-    MP_DIGITS(&a) = 0;
-    CHECK_MPI_OK( mp_init(&Px) );
-    CHECK_MPI_OK( mp_init(&Py) );
-    CHECK_MPI_OK( mp_init(&Qx) );
-    CHECK_MPI_OK( mp_init(&Qy) );
-    CHECK_MPI_OK( mp_init(&Rx) );
-    CHECK_MPI_OK( mp_init(&Ry) );
-    CHECK_MPI_OK( mp_init(&irreducible) );
-    CHECK_MPI_OK( mp_init(&a) );
-
-    /* Initialize Px and Py */
-    CHECK_MPI_OK( mp_read_unsigned_octets(&Px, pointP->data + 1, 
-	                                  (mp_size) len) );
-    CHECK_MPI_OK( mp_read_unsigned_octets(&Py, pointP->data + 1 + len, 
-	                                  (mp_size) len) );
-
-    /* Initialize Qx and Qy */
-    CHECK_MPI_OK( mp_read_unsigned_octets(&Qx, pointQ->data + 1, 
-	                                  (mp_size) len) );
-    CHECK_MPI_OK( mp_read_unsigned_octets(&Qy, pointQ->data + 1 + len, 
-	                                  (mp_size) len) );
-
-    /* Set up the curve coefficient */
-    SECITEM_TO_MPINT( params->curve.a, &a );
-
-    /* Compute R = P + Q */
-    if (params->fieldID.type == ec_field_GFp) {
-	SECITEM_TO_MPINT( params->fieldID.u.prime, &irreducible );
-	if (GFp_ec_pt_add(&irreducible, &a, &Px, &Py, &Qx, &Qy, 
-	    &Rx, &Ry) != SECSuccess)
-	    goto cleanup;
-    } else {
-	SECITEM_TO_MPINT( params->fieldID.u.poly, &irreducible );
-	if (GF2m_ec_pt_add(&irreducible, &a, &Px, &Py, &Qx, &Qy, &Rx, &Ry) 
-	    != SECSuccess) 
-	    goto cleanup;
-    }
-
-    /* Construct the SECItem representation of the result */
-    pointR->data[0] = EC_POINT_FORM_UNCOMPRESSED;
-    CHECK_MPI_OK( mp_to_fixlen_octets(&Rx, pointR->data + 1,
-	                              (mp_size) len) );
-    CHECK_MPI_OK( mp_to_fixlen_octets(&Ry, pointR->data + 1 + len,
-	                              (mp_size) len) );
-    rv = SECSuccess;
-
-#if EC_DEBUG
-    printf("ec_point_add: pointR [len=%d]:", pointR->len);
-    for (i = 0; i < pointR->len; i++) 
-	    printf("%02x:", pointR->data[i]);
-    printf("\n");
-#endif
-
-cleanup:
-    mp_clear(&Px);
-    mp_clear(&Py);
-    mp_clear(&Qx);
-    mp_clear(&Qy);
-    mp_clear(&Rx);
-    mp_clear(&Ry);
-    mp_clear(&irreducible);
-    mp_clear(&a);
-    if (err) {
-	MP_TO_SEC_ERROR(err);
-	rv = SECFailure;
-    }
-
-    return rv;
-}
-
-/* 
- * Computes scalar point multiplication pointQ = k * pointP for
- * the curve whose parameters are encoded in params.
- */
-SECStatus
-ec_point_mul(ECParams *params, mp_int *k,
-             SECItem *pointP, SECItem *pointQ)
+SECStatus 
+ec_points_mul(const ECParams *params, const mp_int *k1, const mp_int *k2,
+             const SECItem *pointP, SECItem *pointQ)
 {
     mp_int Px, Py, Qx, Qy;
-    mp_int irreducible, a, b;
+    mp_int Gx, Gy, order, irreducible, a, b;
+#if 0 /* currently don't support non-named curves */
+    unsigned int irr_arr[5];
+#endif
+    ECGroup *group = NULL;
     SECStatus rv = SECFailure;
     mp_err err = MP_OKAY;
     int len;
@@ -199,66 +82,105 @@ ec_point_mul(ECParams *params, mp_int *k,
     int i;
     char mpstr[256];
 
-    printf("ec_point_mul: params [len=%d]:", params->DEREncoding.len);
+    printf("ec_points_mul: params [len=%d]:", params->DEREncoding.len);
     for (i = 0; i < params->DEREncoding.len; i++) 
 	    printf("%02x:", params->DEREncoding.data[i]);
     printf("\n");
 
-    mp_tohex(k, mpstr);
-    printf("ec_point_mul: scalar : %s\n", mpstr);
-    mp_todecimal(k, mpstr);
-    printf("ec_point_mul: scalar : %s (dec)\n", mpstr);
+	if (k1 != NULL) {
+		mp_tohex(k1, mpstr);
+		printf("ec_points_mul: scalar k1: %s\n", mpstr);
+		mp_todecimal(k1, mpstr);
+		printf("ec_points_mul: scalar k1: %s (dec)\n", mpstr);
+	}
 
-    printf("ec_point_mul: pointP [len=%d]:", pointP->len);
-    for (i = 0; i < pointP->len; i++) 
-	    printf("%02x:", pointP->data[i]);
-    printf("\n");
+	if (k2 != NULL) {
+		mp_tohex(k2, mpstr);
+		printf("ec_points_mul: scalar k2: %s\n", mpstr);
+		mp_todecimal(k2, mpstr);
+		printf("ec_points_mul: scalar k2: %s (dec)\n", mpstr);
+	}
+
+	if (pointP != NULL) {
+		printf("ec_points_mul: pointP [len=%d]:", pointP->len);
+		for (i = 0; i < pointP->len; i++) 
+			printf("%02x:", pointP->data[i]);
+		printf("\n");
+	}
 #endif
 
-    /* NOTE: We only support prime field curves for now */
-    len = (params->fieldID.size + 7) >> 3;
-    if ((pointP->data[0] != EC_POINT_FORM_UNCOMPRESSED) ||
-	(pointP->len != (2 * len + 1))) {
-	    return SECFailure;
-    };
-
-    MP_DIGITS(&Px) = 0;
-    MP_DIGITS(&Py) = 0;
-    MP_DIGITS(&Qx) = 0;
-    MP_DIGITS(&Qy) = 0;
-    MP_DIGITS(&irreducible) = 0;
-    MP_DIGITS(&a) = 0;
-    MP_DIGITS(&b) = 0;
-    CHECK_MPI_OK( mp_init(&Px) );
-    CHECK_MPI_OK( mp_init(&Py) );
-    CHECK_MPI_OK( mp_init(&Qx) );
-    CHECK_MPI_OK( mp_init(&Qy) );
-    CHECK_MPI_OK( mp_init(&irreducible) );
-    CHECK_MPI_OK( mp_init(&a) );
-    CHECK_MPI_OK( mp_init(&b) );
-
-    /* Initialize Px and Py */
-    CHECK_MPI_OK( mp_read_unsigned_octets(&Px, pointP->data + 1, 
-	                                  (mp_size) len) );
-    CHECK_MPI_OK( mp_read_unsigned_octets(&Py, pointP->data + 1 + len, 
-	                                  (mp_size) len) );
-
-    /* Set up mp_ints containing the curve coefficients */
-    SECITEM_TO_MPINT( params->curve.a, &a );
-    SECITEM_TO_MPINT( params->curve.b, &b );
-
-    /* Compute Q = k * P */
-    if (params->fieldID.type == ec_field_GFp) {
-	SECITEM_TO_MPINT( params->fieldID.u.prime, &irreducible );
-	if (GFp_ec_pt_mul(&irreducible, &a, &b, &Px, &Py, k, &Qx, &Qy) 
-	    != SECSuccess) 
-	    goto cleanup;
-    } else {
-	SECITEM_TO_MPINT( params->fieldID.u.poly, &irreducible );
-	if (GF2m_ec_pt_mul(&irreducible, &a, &b, &Px, &Py, k, &Qx, &Qy) 
-	    != SECSuccess) {
-	    goto cleanup;
+	/* NOTE: We only support uncompressed points for now */
+	len = (params->fieldID.size + 7) >> 3;
+	if (pointP != NULL) {
+		if ((pointP->data[0] != EC_POINT_FORM_UNCOMPRESSED) ||
+		(pointP->len != (2 * len + 1))) {
+			return SECFailure;
+		};
 	}
+
+	MP_DIGITS(&Px) = 0;
+	MP_DIGITS(&Py) = 0;
+	MP_DIGITS(&Qx) = 0;
+	MP_DIGITS(&Qy) = 0;
+	MP_DIGITS(&Gx) = 0;
+	MP_DIGITS(&Gy) = 0;
+	MP_DIGITS(&order) = 0;
+	MP_DIGITS(&irreducible) = 0;
+	MP_DIGITS(&a) = 0;
+	MP_DIGITS(&b) = 0;
+	CHECK_MPI_OK( mp_init(&Px) );
+	CHECK_MPI_OK( mp_init(&Py) );
+	CHECK_MPI_OK( mp_init(&Qx) );
+	CHECK_MPI_OK( mp_init(&Qy) );
+	CHECK_MPI_OK( mp_init(&Gx) );
+	CHECK_MPI_OK( mp_init(&Gy) );
+	CHECK_MPI_OK( mp_init(&order) );
+	CHECK_MPI_OK( mp_init(&irreducible) );
+	CHECK_MPI_OK( mp_init(&a) );
+	CHECK_MPI_OK( mp_init(&b) );
+
+	if ((k2 != NULL) && (pointP != NULL)) {
+		/* Initialize Px and Py */
+		CHECK_MPI_OK( mp_read_unsigned_octets(&Px, pointP->data + 1, (mp_size) len) );
+		CHECK_MPI_OK( mp_read_unsigned_octets(&Py, pointP->data + 1 + len, (mp_size) len) );
+	}
+
+	/* construct from named params, if possible */
+	if (params->name != ECCurve_noName) {
+		group = ECGroup_fromName(params->name);
+	}
+
+#if 0 /* currently don't support non-named curves */
+	if (group == NULL) {
+		/* Set up mp_ints containing the curve coefficients */
+		CHECK_MPI_OK( mp_read_unsigned_octets(&Gx, params->base.data + 1, 
+										  (mp_size) len) );
+		CHECK_MPI_OK( mp_read_unsigned_octets(&Gy, params->base.data + 1 + len, 
+										  (mp_size) len) );
+		SECITEM_TO_MPINT( params->order, &order );
+		SECITEM_TO_MPINT( params->curve.a, &a );
+		SECITEM_TO_MPINT( params->curve.b, &b );
+		if (params->fieldID.type == ec_field_GFp) {
+			SECITEM_TO_MPINT( params->fieldID.u.prime, &irreducible );
+			group = ECGroup_consGFp(&irreducible, &a, &b, &Gx, &Gy, &order, params->cofactor);
+		} else {
+			SECITEM_TO_MPINT( params->fieldID.u.poly, &irreducible );
+			irr_arr[0] = params->fieldID.size;
+			irr_arr[1] = params->fieldID.k1;
+			irr_arr[2] = params->fieldID.k2;
+			irr_arr[3] = params->fieldID.k3;
+			irr_arr[4] = 0;
+			group = ECGroup_consGF2m(&irreducible, irr_arr, &a, &b, &Gx, &Gy, &order, params->cofactor);
+		}
+	}
+#endif
+	if (group == NULL)
+		goto cleanup;
+
+	if ((k2 != NULL) && (pointP != NULL)) {
+		CHECK_MPI_OK( ECPoints_mul(group, k1, k2, &Px, &Py, &Qx, &Qy) );
+	} else {
+		CHECK_MPI_OK( ECPoints_mul(group, k1, NULL, NULL, NULL, &Qx, &Qy) );
     }
 
     /* Construct the SECItem representation of point Q */
@@ -271,17 +193,21 @@ ec_point_mul(ECParams *params, mp_int *k,
     rv = SECSuccess;
 
 #if EC_DEBUG
-    printf("ec_point_mul: pointQ [len=%d]:", pointQ->len);
+    printf("ec_points_mul: pointQ [len=%d]:", pointQ->len);
     for (i = 0; i < pointQ->len; i++) 
 	    printf("%02x:", pointQ->data[i]);
     printf("\n");
 #endif
 
 cleanup:
+    ECGroup_free(group);
     mp_clear(&Px);
     mp_clear(&Py);
     mp_clear(&Qx);
     mp_clear(&Qy);
+    mp_clear(&Gx);
+    mp_clear(&Gy);
+    mp_clear(&order);
     mp_clear(&irreducible);
     mp_clear(&a);
     mp_clear(&b);
@@ -335,6 +261,9 @@ EC_NewKeyFromSeed(ECParams *ecParams, ECPrivateKey **privKey,
 	return SECFailure;
     }
 
+    /* Set the version number (SEC 1 section C.4 says it should be 1) */
+    SECITEM_AllocItem(arena, &key->version, 1);
+    key->version.data[0] = 1;
 
     /* Copy all of the fields from the ECParams argument to the
      * ECParams structure within the private key.
@@ -366,6 +295,9 @@ EC_NewKeyFromSeed(ECParams *ecParams, ECPrivateKey **privKey,
     key->ecParams.cofactor = ecParams->cofactor;
     CHECK_SEC_OK(SECITEM_CopyItem(arena, &key->ecParams.DEREncoding,
 	&ecParams->DEREncoding));
+    key->ecParams.name = ecParams->name;
+    CHECK_SEC_OK(SECITEM_CopyItem(arena, &key->ecParams.curveOID,
+	&ecParams->curveOID));
 
     len = (ecParams->fieldID.size + 7) >> 3;  
     SECITEM_AllocItem(arena, &key->privateValue, len);
@@ -385,7 +317,7 @@ EC_NewKeyFromSeed(ECParams *ecParams, ECPrivateKey **privKey,
     CHECK_MPI_OK( mp_read_unsigned_octets(&k, key->privateValue.data, 
 	(mp_size) len) );
 
-    rv = ec_point_mul(ecParams, &k, &(ecParams->base), &(key->publicValue));
+    rv = ec_points_mul(ecParams, &k, NULL, NULL, &(key->publicValue));
     if (rv != SECSuccess) goto cleanup;
     *privKey = key;
 
@@ -523,7 +455,7 @@ ECDH_Derive(SECItem  *publicValue,
     }
 
     /* Multiply our private key and peer's public point */
-    if ((ec_point_mul(ecParams, &k, publicValue, &pointQ) != SECSuccess) ||
+    if ((ec_points_mul(ecParams, NULL, &k, publicValue, &pointQ) != SECSuccess) ||
 	ec_point_at_infinity(&pointQ))
 	goto cleanup;
 
@@ -611,6 +543,13 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
     CHECK_MPI_OK( mp_read_unsigned_octets(&k, kb, kblen) );
     /* Make sure k is in the interval [1, n-1] */
     if ((mp_cmp_z(&k) <= 0) || (mp_cmp(&k, &n) >= 0)) {
+#if EC_DEBUG
+        printf("k is outside [1, n-1]\n");
+        mp_tohex(&k, mpstr);
+	printf("k : %s \n", mpstr);
+        mp_tohex(&n, mpstr);
+	printf("n : %s \n", mpstr);
+#endif
 	PORT_SetError(SEC_ERROR_NEED_RANDOM);
 	goto cleanup;
     }
@@ -623,7 +562,7 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
     kGpoint.len = 2*len + 1;
     kGpoint.data = PORT_Alloc(2*len + 1);
     if ((kGpoint.data == NULL) ||
-	(ec_point_mul(ecParams, &k, &(ecParams->base), &kGpoint)
+	(ec_points_mul(ecParams, &k, NULL, NULL, &kGpoint)
 	    != SECSuccess))
 	goto cleanup;
 
@@ -670,6 +609,8 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
     printf("digest: %s (decimal)\n", mpstr);
     mp_todecimal(&r, mpstr);
     printf("r : %s (dec)\n", mpstr);
+    mp_tohex(&r, mpstr);
+    printf("r : %s\n", mpstr);
 #endif
 
     CHECK_MPI_OK( mp_invmod(&k, &n, &k) );      /* k = k**-1 mod n */
@@ -680,6 +621,8 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
 #if EC_DEBUG
     mp_todecimal(&s, mpstr);
     printf("s : %s (dec)\n", mpstr);
+    mp_tohex(&s, mpstr);
+    printf("s : %s\n", mpstr);
 #endif
 
     /*
@@ -740,9 +683,10 @@ ECDSA_SignDigest(ECPrivateKey *key, SECItem *signature, const SECItem *digest)
     SECStatus rv = SECFailure;
 #ifdef NSS_ENABLE_ECC
     int prerr = 0;
-    int n = (key->ecParams.fieldID.size + 7) >> 3;
-    unsigned char mask = bitmask[n * 8 - key->ecParams.fieldID.size];
+    int n = key->ecParams.order.len;
     unsigned char *kseed = NULL;
+    unsigned char *mask;
+    int i;
 
     /* Generate random seed of appropriate size as dictated 
      * by field size.
@@ -752,9 +696,29 @@ ECDSA_SignDigest(ECPrivateKey *key, SECItem *signature, const SECItem *digest)
     do {
         if (RNG_GenerateGlobalRandomBytes(kseed, n) != SECSuccess) 
 	    goto cleanup;
-	*kseed &= mask;
-	rv = ECDSA_SignDigestWithSeed(key, signature, digest, kseed, n);
-	if (rv) prerr = PORT_GetError();
+	/* make sure that kseed is smaller than the curve order */
+	mask = key->ecParams.order.data;
+	for (i = 0; (i < n) && (*mask == 0x00); i++, mask++) {
+#if EC_DEBUG
+	  printf("replacing byte %02x in position %d [n=%d] with zero\n", 
+		 *(kseed + i), i, n);
+#endif
+	  *(kseed + i) = 0x00;
+	}
+
+	if (i == n) {
+	    rv = SECFailure;
+	    prerr = SEC_ERROR_NEED_RANDOM;
+	} else {
+#if EC_DEBUG
+	    printf("replacing byte %02x in position %d [n=%d] with %d\n", 
+		   *(kseed + i), i, n, (*mask - 1));
+#endif
+	    if (*(kseed + i) >= *mask) 
+	        *(kseed + i) = *mask - 1;
+	    rv = ECDSA_SignDigestWithSeed(key, signature, digest, kseed, n);
+	    if (rv) prerr = PORT_GetError();
+	}
     } while ((rv != SECSuccess) && (prerr == SEC_ERROR_NEED_RANDOM));
 
 cleanup:    
@@ -903,11 +867,7 @@ ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature,
     ** Here, A = u1.G     B = u2.Q    and   C = A + B
     ** If the result, C, is the point at infinity, reject the signature
     */
-    if ((ec_point_mul(ecParams, &u1, &ecParams->base, &pointA) 
-	    == SECFailure) ||
-	(ec_point_mul(ecParams, &u2, &key->publicValue, &pointB) 
-	    == SECFailure) ||
-	(ec_point_add(ecParams, &pointA, &pointB, &pointC) == SECFailure) ||
+	if ((ec_points_mul(ecParams, &u1, &u2, &key->publicValue, &pointC) == SECFailure) ||
 	ec_point_at_infinity(&pointC)) {
 	    rv = SECFailure;
 	    goto cleanup;
@@ -921,6 +881,13 @@ ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature,
     ** v = x1 mod n
     */
     CHECK_MPI_OK( mp_mod(&x1, &n, &v) );
+
+#if EC_DEBUG
+    mp_todecimal(&r_, mpstr);
+    printf("r_: %s (dec)\n", mpstr);
+    mp_todecimal(&v, mpstr);
+    printf("v : %s (dec)\n", mpstr);
+#endif
 
     /*
     ** ANSI X9.62, Section 5.4.4, Step 3

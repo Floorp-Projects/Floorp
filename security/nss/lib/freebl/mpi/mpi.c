@@ -21,8 +21,12 @@
  * Copyright (C) 1998, 1999, 2000 Michael J. Fromberger. 
  * All Rights Reserved.
  *
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ * 
  * Contributor(s):
  *	Netscape Communications Corporation 
+ *      Douglas Stebila <douglas@stebila.ca> of Sun Laboratories.
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -35,7 +39,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.39 2002/09/07 02:59:04 jpierre%netscape.com Exp $
+ *  $Id: mpi.c,v 1.40 2003/10/17 13:45:36 ian.mcgreer%sun.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -2768,7 +2772,7 @@ mp_err   s_mp_pad(mp_int *mp, mp_size min)
       if ((res = s_mp_grow(mp, min)) != MP_OKAY)
 	return res;
     } else {
-/*    s_mp_setz(DIGITS(mp) + USED(mp), min - USED(mp)); */
+      s_mp_setz(DIGITS(mp) + USED(mp), min - USED(mp));
     }
 
     /* Increase precision; should already be 0-filled */

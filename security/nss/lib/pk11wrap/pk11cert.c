@@ -16,7 +16,11 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ * 
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -352,6 +356,13 @@ PK11_IsUserCert(PK11SlotInfo *slot, CERTCertificate *cert,
 	    PK11_SETATTRS(&theTemplate,CKA_VALUE, pubKey->u.dh.publicValue.data,
 						pubKey->u.dh.publicValue.len);
 	    break;
+#ifdef NSS_ENABLE_ECC
+	case ecKey:
+	    PK11_SETATTRS(&theTemplate,CKA_EC_POINT, 
+			  pubKey->u.ec.publicValue.data,
+			  pubKey->u.ec.publicValue.len);
+	    break;
+#endif /* NSS_ENABLE_ECC */
 	case keaKey:
 	case fortezzaKey:
 	case nullKey:
@@ -1506,6 +1517,11 @@ PK11_GetPubIndexKeyID(CERTCertificate *cert) {
 	break;
     case dhKey:
         newItem = SECITEM_DupItem(&pubk->u.dh.publicValue);
+	break;
+    case ecKey:
+#ifdef NSS_ENABLE_ECC
+        newItem = SECITEM_DupItem(&pubk->u.ec.publicValue);
+#endif /* NSS_ENABLE_ECC */
 	break;
     case fortezzaKey:
     default:

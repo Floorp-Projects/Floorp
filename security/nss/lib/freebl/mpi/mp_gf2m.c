@@ -37,32 +37,22 @@
  */
 
 #include "mp_gf2m.h"
+#include "mp_gf2m-priv.h"
 #include "mplogic.h"
 #include "mpi-priv.h"
 
-static const mp_digit SQR_tb[16] =
+const mp_digit mp_gf2m_sqr_tb[16] =
 {
       0,     1,     4,     5,    16,    17,    20,    21,
      64,    65,    68,    69,    80,    81,    84,    85
 };
 
-#if defined(MP_USE_UINT_DIGIT)
-#define MP_DIGIT_BITS 32
-
-/* Platform-specific macros for fast binary polynomial squaring. */
-
-#define gf2m_SQR1(w) \
-    SQR_tb[(w) >> 28 & 0xF] << 24 | SQR_tb[(w) >> 24 & 0xF] << 16 | \
-    SQR_tb[(w) >> 20 & 0xF] <<  8 | SQR_tb[(w) >> 16 & 0xF]
-#define gf2m_SQR0(w) \
-    SQR_tb[(w) >> 12 & 0xF] << 24 | SQR_tb[(w) >>  8 & 0xF] << 16 | \
-    SQR_tb[(w) >>  4 & 0xF] <<  8 | SQR_tb[(w)       & 0xF]
-
 /* Multiply two binary polynomials mp_digits a, b.
  * Result is a polynomial with degree < 2 * MP_DIGIT_BITS - 1.
  * Output in two mp_digits rh, rl.
  */
-static void 
+#if MP_DIGIT_BITS == 32
+void 
 s_bmul_1x1(mp_digit *rh, mp_digit *rl, const mp_digit a, const mp_digit b)
 {
     register mp_digit h, l, s;
@@ -93,26 +83,8 @@ s_bmul_1x1(mp_digit *rh, mp_digit *rl, const mp_digit a, const mp_digit b)
 
     *rh = h; *rl = l;
 } 
-#endif
-
-#if defined(MP_USE_LONG_DIGIT) || defined(MP_USE_LONG_LONG_DIGIT)
-#define MP_DIGIT_BITS 64
-#define MP_TOP_BIT 
-
-/* Platform-specific fast binary polynomial squaring. */
-#define gf2m_SQR1(w) \
-    SQR_tb[(w) >> 60 & 0xF] << 56 | SQR_tb[(w) >> 56 & 0xF] << 48 | \
-    SQR_tb[(w) >> 52 & 0xF] << 40 | SQR_tb[(w) >> 48 & 0xF] << 32 | \
-    SQR_tb[(w) >> 44 & 0xF] << 24 | SQR_tb[(w) >> 40 & 0xF] << 16 | \
-    SQR_tb[(w) >> 36 & 0xF] <<  8 | SQR_tb[(w) >> 32 & 0xF]
-#define gf2m_SQR0(w) \
-    SQR_tb[(w) >> 28 & 0xF] << 56 | SQR_tb[(w) >> 24 & 0xF] << 48 | \
-    SQR_tb[(w) >> 20 & 0xF] << 40 | SQR_tb[(w) >> 16 & 0xF] << 32 | \
-    SQR_tb[(w) >> 12 & 0xF] << 24 | SQR_tb[(w) >>  8 & 0xF] << 16 | \
-    SQR_tb[(w) >>  4 & 0xF] <<  8 | SQR_tb[(w)       & 0xF]
-
-/* Multiply two binary polynomials mp_digits a, b, output in rh, rl */
-static void 
+#else
+void 
 s_bmul_1x1(mp_digit *rh, mp_digit *rl, const mp_digit a, const mp_digit b)
 {
     register mp_digit h, l, s;
@@ -153,12 +125,11 @@ s_bmul_1x1(mp_digit *rh, mp_digit *rl, const mp_digit a, const mp_digit b)
 } 
 #endif
 
-#if 0 /* to be used later */
 /* Compute xor-multiply of two binary polynomials  (a1, a0) x (b1, b0)  
  * result is a binary polynomial in 4 mp_digits r[4].
  * The caller MUST ensure that r has the right amount of space allocated.
  */
-static void 
+void 
 s_bmul_2x2(mp_digit *r, const mp_digit a1, const mp_digit a0, const mp_digit b1,
            const mp_digit b0)
 {
@@ -169,9 +140,58 @@ s_bmul_2x2(mp_digit *r, const mp_digit a1, const mp_digit a0, const mp_digit b1,
     s_bmul_1x1(&m1, &m0, a0 ^ a1, b0 ^ b1);
     /* Correction on m1 ^= l1 ^ h1; m0 ^= l0 ^ h0; */
     r[2] ^= m1 ^ r[1] ^ r[3];  /* h0 ^= m1 ^ l1 ^ h1; */
-    r[1] = r[3] ^ r[2] ^ r[0] ^ m1 ^ m0;  /* l1 ^= l0 ^ h0 ^ m0; */
+    r[1]  = r[3] ^ r[2] ^ r[0] ^ m1 ^ m0;  /* l1 ^= l0 ^ h0 ^ m0; */
 }
-#endif /* 0 */
+
+/* Compute xor-multiply of two binary polynomials  (a2, a1, a0) x (b2, b1, b0)  
+ * result is a binary polynomial in 6 mp_digits r[6].
+ * The caller MUST ensure that r has the right amount of space allocated.
+ */
+void 
+s_bmul_3x3(mp_digit *r, const mp_digit a2, const mp_digit a1, const mp_digit a0, 
+	const mp_digit b2, const mp_digit b1, const mp_digit b0)
+{
+	mp_digit zm[4];
+
+	s_bmul_1x1(r+5, r+4, a2, b2);         /* fill top 2 words */
+	s_bmul_2x2(zm, a1, a2^a0, b1, b2^b0); /* fill middle 4 words */
+	s_bmul_2x2(r, a1, a0, b1, b0);        /* fill bottom 4 words */
+
+	zm[3] ^= r[3];
+	zm[2] ^= r[2]; 
+	zm[1] ^= r[1] ^ r[5];
+	zm[0] ^= r[0] ^ r[4];
+
+	r[5]  ^= zm[3];
+	r[4]  ^= zm[2];
+	r[3]  ^= zm[1];
+	r[2]  ^= zm[0];
+}
+
+/* Compute xor-multiply of two binary polynomials  (a3, a2, a1, a0) x (b3, b2, b1, b0)  
+ * result is a binary polynomial in 8 mp_digits r[8].
+ * The caller MUST ensure that r has the right amount of space allocated.
+ */
+void s_bmul_4x4(mp_digit *r, const mp_digit a3, const mp_digit a2, const mp_digit a1, 
+	const mp_digit a0, const mp_digit b3, const mp_digit b2, const mp_digit b1, 
+	const mp_digit b0)
+{
+	mp_digit zm[4];
+
+	s_bmul_2x2(r+4, a3, a2, b3, b2);            /* fill top 4 words */
+	s_bmul_2x2(zm, a3^a1, a2^a0, b3^b1, b2^b0); /* fill middle 4 words */
+	s_bmul_2x2(r, a1, a0, b1, b0);              /* fill bottom 4 words */
+
+	zm[3] ^= r[3] ^ r[7]; 
+	zm[2] ^= r[2] ^ r[6]; 
+	zm[1] ^= r[1] ^ r[5]; 
+	zm[0] ^= r[0] ^ r[4]; 
+
+	r[5]  ^= zm[3];    
+	r[4]  ^= zm[2];
+	r[3]  ^= zm[1];    
+	r[2]  ^= zm[0];
+}
 
 /* Compute addition of two binary polynomials a and b,
  * store result in c; c could be a or b, a and b could be equal; 
@@ -263,6 +283,8 @@ mp_bmul(const mp_int *a, const mp_int *b, mp_int *c)
     mp_size ib, a_used, b_used;
     mp_err res = MP_OKAY;
 
+    MP_DIGITS(&tmp) = 0;
+
     ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
     if (a == c) {
@@ -273,7 +295,7 @@ mp_bmul(const mp_int *a, const mp_int *b, mp_int *c)
     } else if (b == c) {
         MP_CHECKOK( mp_init_copy(&tmp, b) );
         b = &tmp;
-    } else MP_DIGITS(&tmp) = 0;
+    }
 
     if (MP_USED(a) < MP_USED(b)) {
         const mp_int *xch = b;      /* switch a and b if b longer */
@@ -290,6 +312,7 @@ mp_bmul(const mp_int *a, const mp_int *b, mp_int *c)
     /* Outer loop:  Digits of b */
     a_used = MP_USED(a);
     b_used = MP_USED(b);
+	MP_USED(c) = a_used + b_used;
     for (ib = 1; ib < b_used; ib++) {
         b_i = *pb++;
 
@@ -317,7 +340,7 @@ CLEANUP:
  *     f(t) = t^p[0] + t^p[1] + ... + t^p[k]
  * where m = p[0] > p[1] > ... > p[k] = 0.
  */
-int 
+mp_err
 mp_bmod(const mp_int *a, const unsigned int p[], mp_int *r)
 {
     int j, k;
@@ -423,11 +446,12 @@ mp_bsqrmod(const mp_int *a, const unsigned int p[], mp_int *r)
     mp_err res;
 
     ARGCHK(a != NULL && r != NULL, MP_BADARG);
+    MP_DIGITS(&tmp) = 0;
 
     if (a == r) {
         MP_CHECKOK( mp_init_copy(&tmp, a) );
         a = &tmp;
-    } else MP_DIGITS(&tmp) = 0;
+    }
 
     MP_USED(r) = 1; MP_DIGIT(r, 0) = 0;
     MP_CHECKOK( s_mp_pad(r, 2*USED(a)) );
@@ -435,6 +459,7 @@ mp_bsqrmod(const mp_int *a, const unsigned int p[], mp_int *r)
     pa = MP_DIGITS(a);
     pr = MP_DIGITS(r);
     a_used = MP_USED(a);
+	MP_USED(r) = 2 * a_used;
 
     for (ia = 0; ia < a_used; ia++) {
         a_i = *pa++;
@@ -465,6 +490,10 @@ mp_bdivmod(const mp_int *y, const mp_int *x, const mp_int *pp,
     mp_int *a, *b, *u, *v;
     mp_err res = MP_OKAY;
 
+    MP_DIGITS(&aa) = 0;
+    MP_DIGITS(&bb) = 0;
+    MP_DIGITS(&uu) = 0;
+
     MP_CHECKOK( mp_init_copy(&aa, x) );
     MP_CHECKOK( mp_init_copy(&uu, y) );
     MP_CHECKOK( mp_init_copy(&bb, pp) );
@@ -481,7 +510,7 @@ mp_bdivmod(const mp_int *y, const mp_int *x, const mp_int *pp,
         if (mp_isodd(u)) {
             MP_CHECKOK( mp_badd(u, pp, u) );
         }
-        s_mp_div_2(u);
+        s_mp_div2(u);
     }
 
     do {
@@ -541,9 +570,9 @@ mp_bpoly2arr(const mp_int *a, unsigned int p[], int max)
             if (MP_DIGITS(a)[i] & mask) {
                 if (k < max) p[k] = MP_DIGIT_BIT * i + j;
                 k++;
-	    }
+            }
             mask >>= 1;
-	}
+        }
     }
 
     return k;
@@ -566,5 +595,5 @@ mp_barr2poly(const unsigned int p[], mp_int *a)
     MP_CHECKOK( mpl_set_bit(a, 0, 1) );
 	
 CLEANUP:
-    return MP_OKAY;
+    return res;
 }

@@ -16,7 +16,11 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved. 
+ *
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -1235,6 +1239,26 @@ secu_PrintDSAPublicKey(FILE *out, SECKEYPublicKey *pk, char *m, int level)
     SECU_PrintInteger(out, &pk->u.dsa.publicValue, "PublicValue", level+1);
 }
 
+#ifdef NSS_ENABLE_ECC
+static void
+secu_PrintECPublicKey(FILE *out, SECKEYPublicKey *pk, char *m, int level)
+{
+    SECItem curveOID = { siBuffer, NULL, 0};
+
+    SECU_Indent(out, level); fprintf(out, "%s:\n", m);
+    SECU_PrintInteger(out, &pk->u.ec.publicValue, "PublicValue", level+1);
+    /* For named curves, the DEREncodedParams field contains an
+     * ASN Object ID (0x06 is SEC_ASN1_OBJECT_ID).
+     */
+    if ((pk->u.ec.DEREncodedParams.len > 2) &&
+	(pk->u.ec.DEREncodedParams.data[0] == 0x06)) {
+        curveOID.len = pk->u.ec.DEREncodedParams.data[1];
+	curveOID.data = pk->u.ec.DEREncodedParams.data + 2;
+	SECU_PrintObjectID(out, &curveOID, "Curve", level +1);
+    }
+}
+#endif /* NSS_ENABLE_ECC */
+
 static int
 secu_PrintSubjectPublicKeyInfo(FILE *out, PRArenaPool *arena,
 		       CERTSubjectPublicKeyInfo *i,  char *msg, int level)
@@ -1255,10 +1279,15 @@ secu_PrintSubjectPublicKeyInfo(FILE *out, PRArenaPool *arena,
 	    secu_PrintDSAPublicKey(out, pk, "DSA Public Key", level +1);
 	    break;
 
+#ifdef NSS_ENABLE_ECC
+	case ecKey:
+	    secu_PrintECPublicKey(out, pk, "EC Public Key", level +1);
+	    break;
+#endif
+
 	case dhKey:
 	case fortezzaKey:
 	case keaKey:
-	case ecKey:
     	    fprintf(out, "unable to format this SPKI algorithm type\n");
 	    break;
 	default:

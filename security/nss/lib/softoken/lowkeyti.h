@@ -78,6 +78,11 @@ extern const SEC_ASN1Template nsslowkey_DSAPrivateKeyTemplate[];
 extern const SEC_ASN1Template nsslowkey_DSAPrivateKeyExportTemplate[];
 extern const SEC_ASN1Template nsslowkey_DHPrivateKeyTemplate[];
 extern const SEC_ASN1Template nsslowkey_DHPrivateKeyExportTemplate[];
+#ifdef NSS_ENABLE_ECC
+#define NSSLOWKEY_EC_PRIVATE_KEY_VERSION   1  /* as per SECG 1 C.4 */
+extern const SEC_ASN1Template nsslowkey_ECParamsTemplate[];
+extern const SEC_ASN1Template nsslowkey_ECPrivateKeyTemplate[];
+#endif /* NSS_ENABLE_ECC */
 
 extern const SEC_ASN1Template nsslowkey_PrivateKeyInfoTemplate[];
 extern const SEC_ASN1Template nsslowkey_EncryptedPrivateKeyInfoTemplate[];
