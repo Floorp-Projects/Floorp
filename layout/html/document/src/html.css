@@ -455,12 +455,12 @@ form {
 
 /* button */
 input[type=button] {
-  border: 1px solid inactiveborder;
-  background-color: buttonface;
+  border: 1px solid rgb(156, 154, 156);
+  background-color: rgb(192, 192, 192);
 }
 
 input[type=button]:active {
-  border: 1px solid activeborder;
+  border: 1px solid black;
 }
 
 input[type=button]:-moz-buttonlabel {
@@ -540,7 +540,7 @@ input[type=radio]:focus {
 }
 
 input[type=checkbox]:focus {
-  border: 1px inset rgb(153, 153, 153);
+  border: 2px dotted rgb(153, 153, 153);
 }
 
 input[type=image]:focus {
@@ -642,7 +642,7 @@ input[type=checkbox] {
   margin-right:  4px;  
   margin-top:    3px; 
   margin-bottom: 3px;
-  border: 1px outset rgb(153, 153, 153);
+  border: 2px inset rgb(153, 153, 153);
   background-color:rgb(204, 204, 204);
   width:13px;
   height:13px;
@@ -651,7 +651,7 @@ input[type=checkbox] {
 }
 
 input[type=checkbox][disabled] {
-  border: 1px solid;
+  border: 2px solid;
 }
 
 input[type=checkbox]:active {
@@ -663,11 +663,11 @@ input[type=checkbox][disabled]:active {
 }
 
 input[type=checkbox]:hover {
-  border : 1px solid black;
+  border : 2px solid black;
 }
 
 input[type=checkbox][disabled]:hover {
-  border: 1px solid rgb(153, 153, 153);
+  border: 2px solid rgb(153, 153, 153);
 }
 
 input[type="submit"] { 
