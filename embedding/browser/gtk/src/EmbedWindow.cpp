@@ -332,7 +332,9 @@ EmbedWindow::SetTitle(const PRUnichar *aTitle)
 NS_IMETHODIMP
 EmbedWindow::GetSiteWindow(void **aSiteWindow)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  GtkWidget *ownerAsWidget (GTK_WIDGET(mOwner->mOwningWidget));
+  *aSiteWindow = NS_STATIC_CAST(void *, ownerAsWidget);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
