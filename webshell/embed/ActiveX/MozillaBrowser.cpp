@@ -31,6 +31,7 @@ static const std::string c_szPrefsFile     = "prefs.js";
 static const std::string c_szPrefsHomePage = "browser.startup.homepage";
 static const std::string c_szDefaultPage   = "resource://res/MozillaControl.html";
 
+
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
 
@@ -139,6 +140,13 @@ LRESULT CMozillaBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 	{
 		m_pIWebShell->SetBounds(0, 0, LOWORD(lParam), HIWORD(lParam));
     }
+	return 0;
+}
+
+
+LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	// TODO print the current page
 	return 0;
 }
 
@@ -1276,9 +1284,24 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::QueryStatusWB(OLECMDID cmdID, OLECMDF
 		return E_UNEXPECTED;
 	}
 
-	// TODO acknowledge the fact that we support OLECMDID_PRINT
+	if (pcmdf == NULL)
+	{
+		return E_INVALIDARG;
+	}
 
-	return E_NOTIMPL;
+	// Call through to IOleCommandTarget::QueryStatus
+	OLECMD cmd;
+	HRESULT hr;
+	
+	cmd.cmdID = cmdID;
+	cmd.cmdf = 0;
+	hr = QueryStatus(NULL, 1, &cmd, NULL);
+	if (SUCCEEDED(hr))
+	{
+		*pcmdf = (OLECMDF) cmd.cmdf;
+	}
+
+	return hr;
 }
 
 
@@ -1292,13 +1315,10 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::ExecWB(OLECMDID cmdID, OLECMDEXECOPT 
 		return E_UNEXPECTED;
 	}
 
-	// Test which commands are handled
-	if (cmdID == OLECMDID_PRINT)
-	{
-		// TODO print when the client says print!
-	}
-
-	return E_NOTIMPL;
+	// Call through to IOleCommandTarget::Exec
+	HRESULT hr;
+	hr = Exec(NULL, cmdID, cmdexecopt, pvaIn, pvaOut);
+	return hr;
 }
 
 
@@ -1526,17 +1546,126 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Resizable(VARIANT_BOOL Value)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// IOleCommandTarget
+// IOleCommandTarget implementation
+
+// IOleCommandTarget is a (bloody awful and complicated) generic mechanism
+// for querying for and executing commands on an object. It is used in IE
+// for printing, so that a client prints a page of HTML by calling Exec
+// (or ExecWB) on the control using the command OLECMDID_PRINT.
+
+// To keep things open, all supported commands are in the table below which
+// can be extended when and if necessary.
+
+struct OleCommandInfo
+{
+	ULONG    nCmdID;
+	ULONG    nWindowsCmdID;
+	wchar_t *szVerbText;
+	wchar_t *szStatusText;
+};
+
+static OleCommandInfo s_aSupportedCommands[] =
+{
+	{ OLECMDID_PRINT, ID_PRINT, L"Print", L"Print the page" }
+};
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::QueryStatus(const GUID __RPC_FAR *pguidCmdGroup, ULONG cCmds, OLECMD __RPC_FAR prgCmds[], OLECMDTEXT __RPC_FAR *pCmdText)
 {
-	return E_NOTIMPL;
+	// All command groups except the default are ignored
+	if (pguidCmdGroup != NULL)
+	{
+		OLECMDERR_E_UNKNOWNGROUP;
+	}
+
+	if (prgCmds == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	BOOL bTextSet = FALSE;
+
+	// Iterate through list of commands and flag them as supported/unsupported
+	for (ULONG nCmd = 0; nCmd < cCmds; nCmd++)
+	{
+		// Unsupported by default
+		prgCmds[nCmd].cmdf = 0;
+
+		// Search the support command list
+		int nSupportedCount = sizeof(s_aSupportedCommands) / sizeof(s_aSupportedCommands[0]);
+		for (int nSupported = 0; nSupported < nSupportedCount; nSupported++)
+		{
+			if (s_aSupportedCommands[nSupported].nCmdID != prgCmds[nCmd].cmdID)
+			{
+				continue;
+			}
+
+			// Command is supported so flag it
+			prgCmds[nCmd].cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
+
+			// Copy the status/verb text for the first supported command only
+			if (!bTextSet && pCmdText)
+			{
+				// See what text the caller wants
+				wchar_t *pszTextToCopy = NULL;
+				if (pCmdText->cmdtextf & OLECMDTEXTF_NAME)
+				{
+					pszTextToCopy = s_aSupportedCommands[nSupported].szVerbText;
+				}
+				else if (pCmdText->cmdtextf & OLECMDTEXTF_STATUS)
+				{
+					pszTextToCopy = s_aSupportedCommands[nSupported].szStatusText;
+				}
+				
+				// Copy the text
+				pCmdText->cwActual = 0;
+				memset(pCmdText->rgwz, 0, pCmdText->cwBuf * sizeof(wchar_t));
+				if (pszTextToCopy)
+				{
+					// Don't exceed the provided buffer size
+					int nTextLen = wcslen(pszTextToCopy);
+					if (nTextLen > pCmdText->cwBuf)
+					{
+						nTextLen = pCmdText->cwBuf;
+					}
+
+					wcsncpy(pCmdText->rgwz, pszTextToCopy, nTextLen);
+					pCmdText->cwActual = nTextLen;
+				}
+				
+				bTextSet = TRUE;
+			}
+			break;
+		}
+	}
+	
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::Exec(const GUID __RPC_FAR *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT __RPC_FAR *pvaIn, VARIANT __RPC_FAR *pvaOut)
 {
-	return E_NOTIMPL;
+	// All command groups except the default are ignored
+	if (pguidCmdGroup != NULL)
+	{
+		OLECMDERR_E_UNKNOWNGROUP;
+	}
+
+	// Search the support command list
+	int nSupportedCount = sizeof(s_aSupportedCommands) / sizeof(s_aSupportedCommands[0]);
+	for (int nSupported = 0; nSupported < nSupportedCount; nSupported++)
+	{
+		if (s_aSupportedCommands[nSupported].nCmdID != nCmdID)
+		{
+			continue;
+		}
+
+		// Send ourselves a WM_COMMAND windows message with the associated identifier
+		SendMessage(WM_COMMAND, LOWORD(s_aSupportedCommands[nSupported].nWindowsCmdID));
+
+		return S_OK;
+	}
+
+	return OLECMDERR_E_NOTSUPPORTED;
 }
 
