@@ -467,7 +467,7 @@ CreateContentObject(const nsIParserNode& aNode,
     rv = NS_NewBodyPart(aResult, atom);
     break;
   case eHTMLTag_br:
-    rv = NS_NewHTMLBreak(aResult, atom);
+    rv = NS_NewHTMLBR(aResult, atom);
     break;
   case eHTMLTag_caption:
     rv = NS_NewTableCaptionPart(aResult, atom);
@@ -658,12 +658,11 @@ CreateContentObject(const nsIParserNode& aNode,
 
 //----------------------------------------------------------------------
 
-// XXX make sure all slots are initialized
 SinkContext::SinkContext(HTMLContentSink* aSink)
 {
   mSink = aSink;
-  mStack = nsnull;
   mPreAppend = PR_FALSE;
+  mStack = nsnull;
   mStackSize = 0;
   mStackPos = 0;
   mText = nsnull;
