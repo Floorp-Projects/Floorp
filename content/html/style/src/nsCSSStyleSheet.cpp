@@ -1873,18 +1873,7 @@ CSSStyleSheetImpl::GetApplicable(PRBool& aApplicable) const
 NS_IMETHODIMP
 CSSStyleSheetImpl::SetEnabled(PRBool aEnabled)
 {
-  PRBool oldDisabled = mDisabled;
-  mDisabled = !aEnabled;
-
-  if (mDocument && mInner && mInner->mComplete && oldDisabled != mDisabled) {
-    ClearRuleCascades();
-
-    mDocument->BeginUpdate(UPDATE_STYLE);
-    mDocument->SetStyleSheetApplicableState(this, !mDisabled);
-    mDocument->EndUpdate(UPDATE_STYLE);
-  }
-
-  return NS_OK;
+  return CSSStyleSheetImpl::SetDisabled(!aEnabled);
 }
 
 NS_IMETHODIMP
@@ -2446,6 +2435,8 @@ CSSStyleSheetImpl::SetDisabled(PRBool aDisabled)
   mDisabled = aDisabled;
 
   if (mDocument && mInner && mInner->mComplete && oldDisabled != mDisabled) {
+    ClearRuleCascades();
+
     mDocument->BeginUpdate(UPDATE_STYLE);
     mDocument->SetStyleSheetApplicableState(this, !mDisabled);
     mDocument->EndUpdate(UPDATE_STYLE);
