@@ -174,7 +174,7 @@ bin/components/xml-rpc.xpt
 bin/components/nsDictionary.js
 bin/components/nsXmlRpcClient.js
 
-bin/chrome/modern/*
+bin/chrome/skins/*
 bin/chrome/editor/*
 -bin/chrome/editor/content/EditorInitPage.html
 -bin/chrome/editor/content/EditorInitPagePlain.html
