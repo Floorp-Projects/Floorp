@@ -487,9 +487,13 @@ function updateTitle (obj)
         case "IRCServer":
         case "IRCNetwork":
             var serv = "", nick = "";
-            serv  = o.server.connection.host;
-
-            nick = o.server.me.properNick;
+            if (o.server)
+            {
+                serv  = o.server.connection.host;
+                if (o.server.me)
+                    nick = o.server.me.properNick;
+            }
+            
             if (nick) /* user might be disconnected, nick would be undefined */
                 tstring += "user '" + nick + "' ";
             

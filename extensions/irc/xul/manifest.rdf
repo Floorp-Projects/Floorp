@@ -33,6 +33,15 @@
     </chrome:packages>
   </RDF:Description>
 
+  <!-- overlay information -->
+  <RDF:Seq about="urn:mozilla:overlays">
+    <RDF:li resource="chrome://global/content/tasksOverlay.xul"/>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://global/content/tasksOverlay.xul">
+    <RDF:li>chrome://chatzilla/content/chatzillaOverlay.xul</RDF:li>
+  </RDF:Seq>
+
   <!-- skin information -->
   <RDF:Description about="urn:mozilla:skin:modern/1.0"
         chrome:displayName="Modern"
