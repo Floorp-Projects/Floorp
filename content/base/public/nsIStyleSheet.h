@@ -64,6 +64,10 @@ public:
                                 nsIStyleContext* aParentContext,
                                 nsISupportsArray* aResults) = 0;
 
+  // Test if style is dependent on content state
+  NS_IMETHOD  HasStateDependentStyle(nsIPresContext* aPresContext,
+                                     nsIContent*     aContent) = 0;
+
   // XXX style rule enumerations
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
