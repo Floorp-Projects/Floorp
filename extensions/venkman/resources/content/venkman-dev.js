@@ -39,6 +39,7 @@ function initDev()
         [["dumpcontexts",  cmdDumpContexts,  CMD_CONSOLE | CMD_NO_HELP],
          ["dumpfilters",   cmdDumpFilters,   CMD_CONSOLE | CMD_NO_HELP],
          ["dumptree",      cmdDumpTree,      CMD_CONSOLE | CMD_NO_HELP],
+         ["dumpscripts",   cmdDumpScripts,   CMD_CONSOLE | CMD_NO_HELP],
          ["reloadui",      cmdReloadUI,      CMD_CONSOLE | CMD_NO_HELP],
          ["sync-debug",    cmdSyncDebug,     CMD_CONSOLE | CMD_NO_HELP],
          ["testargs",      cmdTestArgs,      CMD_CONSOLE | CMD_NO_HELP],
@@ -116,6 +117,25 @@ function cmdDumpTree(e)
     if (!e.depth)
         e.depth = 0;
     dd(e.tree + ":\n" + tov_formatBranch (eval(e.tree), "", e.depth));
+}
+
+function cmdDumpScripts(e)
+{
+    var nl;
+    
+    if ("frames" in console)
+    {
+        frame = getCurrentFrame();
+        var targetWindow = frame.executionContext.globalObject.getWrappedValue();
+        nl = targetWindow.document.getElementsByTagName("script");
+    }
+    else
+    {
+        nl = document.getElementsByTagName("script");
+    }
+
+    for (var i = 0; i < nl.length; ++i)
+        dd("src: " + nl.item(i).getAttribute ("src"));
 }
 
 function cmdReloadUI()
