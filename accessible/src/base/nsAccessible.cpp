@@ -740,7 +740,7 @@ void nsAccessible::GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame
       // Use next sibling if it exists, or go back up the tree to get the first next-in-flow or next-sibling 
       // within our search
       while (iterFrame) {
-        iterFrame->GetNextInFlow(&iterNextFrame);
+        iterNextFrame = iterFrame->GetNextInFlow();
         if (!iterNextFrame)
           iterNextFrame = iterFrame->GetNextSibling();
         if (iterNextFrame || --depth < 0) 

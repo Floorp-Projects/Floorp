@@ -248,7 +248,7 @@ HasTextFrameDescendant(nsPresContext* aPresContext, nsIFrame* aParent)
 static PRBool 
 HasTextFrameDescendantOrInFlow(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
-  for (nsIFrame *f = aFrame->GetFirstInFlow(); f; f->GetNextInFlow(&f)) {
+  for (nsIFrame *f = aFrame->GetFirstInFlow(); f; f = f->GetNextInFlow()) {
     if (HasTextFrameDescendant(aPresContext, f))
       return PR_TRUE;
   }
@@ -311,8 +311,7 @@ nsHTMLContainerFrame::CreateNextInFlow(nsPresContext* aPresContext,
 {
   aNextInFlowResult = nsnull;
 
-  nsIFrame* nextInFlow;
-  aFrame->GetNextInFlow(&nextInFlow);
+  nsIFrame* nextInFlow = aFrame->GetNextInFlow();
   if (nsnull == nextInFlow) {
     // Create a continuation frame for the child frame and insert it
     // into our lines child list.

@@ -827,8 +827,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   NS_ASSERTION(NS_SUCCEEDED(rv), "reflow dirty lines failed");
   if (NS_FAILED(rv)) return rv;
 
-  nsIFrame* nextInFlow;
-  GetNextInFlow(&nextInFlow);
+  nsIFrame* nextInFlow = GetNextInFlow();
   if (nextInFlow && NS_FRAME_IS_NOT_COMPLETE(state.mReflowStatus)) {
     if (GetOverflowLines() || GetOverflowPlaceholders()) {
       state.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
@@ -1243,7 +1242,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       if (mPrevInFlow) {
         // Reduce the height by the height of prev-in-flows. The last-in-flow will automatically
         // pick up the bottom border/padding, since it was part of the original aMetrics.height.
-        for (nsIFrame* prev = mPrevInFlow; prev; prev->GetPrevInFlow(&prev)) {
+        for (nsIFrame* prev = mPrevInFlow; prev; prev = prev->GetPrevInFlow()) {
           aMetrics.height -= prev->GetRect().height;
           // XXX: All block level next-in-flows have borderPadding.top applied to them (bug 174688). 
           // The following should be removed when this gets fixed. bug 174688 prevents us from honoring 
@@ -1461,8 +1460,7 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
         // of the continuations. This will allow the incremental
         // reflow to arrive at the target frame during the first-pass
         // unconstrained reflow.
-        nsIFrame *prevInFlow;
-        (*iter)->GetPrevInFlow(&prevInFlow);
+        nsIFrame *prevInFlow = (*iter)->GetPrevInFlow();
         if (prevInFlow)
           RetargetInlineIncrementalReflow(iter, line, prevInFlow);
       }
@@ -1507,7 +1505,7 @@ nsBlockFrame::RetargetInlineIncrementalReflow(nsReflowPath::iterator &aTarget,
       break;
 
     *aTarget = aPrevInFlow;
-    aPrevInFlow->GetPrevInFlow(&aPrevInFlow);
+    aPrevInFlow = aPrevInFlow->GetPrevInFlow();
 
 #ifdef DEBUG
     // Paranoia. Ensure that the prev-in-flow is really in the
@@ -1548,7 +1546,7 @@ nsBlockFrame::RetargetInlineIncrementalReflow(nsReflowPath::iterator &aTarget,
       PRInt32 count = lineCount;
       nsIFrame *prevInFlow;
       do {
-        frame->GetPrevInFlow(&prevInFlow);
+        prevInFlow = frame->GetPrevInFlow();
       } while (--count >= 0 && prevInFlow && (frame = prevInFlow));
 
       path->ReplaceElementAt(frame, i);
@@ -2975,8 +2973,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   // apply its top margin because its not significant. Otherwise, dig
   // deeper.
   PRBool applyTopMargin = PR_FALSE;
-  nsIFrame* framePrevInFlow;
-  frame->GetPrevInFlow(&framePrevInFlow);
+  nsIFrame* framePrevInFlow = frame->GetPrevInFlow();
   if (nsnull == framePrevInFlow) {
     applyTopMargin = ShouldApplyTopMargin(aState, aLine);
   }
@@ -4746,8 +4743,7 @@ nsBlockFrame::DoRemoveOutOfFlowFrame(nsPresContext* aPresContext,
                                      nsIFrame*       aFrame)
 {
   // First remove aFrame's next in flow
-  nsIFrame* nextInFlow;
-  aFrame->GetNextInFlow(&nextInFlow);
+  nsIFrame* nextInFlow = aFrame->GetNextInFlow();
   if (nextInFlow) {
     nsBlockFrame::DoRemoveOutOfFlowFrame(aPresContext, nextInFlow);
   }
@@ -4890,8 +4886,7 @@ nsBlockFrame::DoRemoveFrame(nsPresContext* aPresContext,
 
       // Destroy frame; capture its next-in-flow first in case we need
       // to destroy that too.
-      nsIFrame* nextInFlow;
-      aDeletedFrame->GetNextInFlow(&nextInFlow);
+      nsIFrame* nextInFlow = aDeletedFrame->GetNextInFlow();
 #ifdef NOISY_REMOVE_FRAME
       printf("DoRemoveFrame: line=%p frame=", line);
       nsFrame::ListTag(stdout, aDeletedFrame);
@@ -4973,8 +4968,7 @@ void
 nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
                                     nsIFrame*       aNextInFlow)
 {
-  nsIFrame* prevInFlow;
-  aNextInFlow->GetPrevInFlow(&prevInFlow);
+  nsIFrame* prevInFlow = aNextInFlow->GetPrevInFlow();
   NS_PRECONDITION(prevInFlow, "bad next-in-flow");
   NS_PRECONDITION(IsChild(aNextInFlow), "bad geometric parent");
 
@@ -4997,8 +4991,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
                           nsReflowStatus&     aReflowStatus)
 {
   // Delete the placeholder's next in flows, if any
-  nsIFrame* nextInFlow;
-  aPlaceholder->GetNextInFlow(&nextInFlow);
+  nsIFrame* nextInFlow = aPlaceholder->GetNextInFlow();
   if (nextInFlow) {
     // If aPlaceholder's parent is an inline, nextInFlow's will be a block.
     NS_STATIC_CAST(nsHTMLContainerFrame*, nextInFlow->GetParent())
@@ -5025,8 +5018,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   else {
     const nsStyleDisplay* floatDisplay = floatFrame->GetStyleDisplay();
 
-    nsIFrame* prevInFlow;
-    floatFrame->GetPrevInFlow(&prevInFlow);
+    nsIFrame* prevInFlow = floatFrame->GetPrevInFlow();
     // if the float is continued, constrain its width to the prev-in-flow's width
     if (prevInFlow) {
       availWidth = prevInFlow->GetRect().width;
@@ -5168,8 +5160,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   // If the placeholder was continued and its first-in-flow was followed by a 
   // <BR>, then cache the <BR>'s break type in aState.mFloatBreakType so that
   // the next frame after the placeholder can combine that break type with its own
-  nsIFrame* prevPlaceholder = nsnull;
-  aPlaceholder->GetPrevInFlow(&prevPlaceholder);
+  nsIFrame* prevPlaceholder = aPlaceholder->GetPrevInFlow();
   if (prevPlaceholder) {
     // the break occurs only after the last continued placeholder
     PRBool lastPlaceholder = PR_TRUE;
@@ -6155,8 +6146,7 @@ nsBlockFrame::IsChild(nsIFrame* aFrame)
   // and placeholders don't satisfy InSiblingList().  
   PRBool skipLineList    = PR_FALSE;
   PRBool skipSiblingList = PR_FALSE;
-  nsIFrame* prevInFlow;
-  aFrame->GetPrevInFlow(&prevInFlow);
+  nsIFrame* prevInFlow = aFrame->GetPrevInFlow();
   if (prevInFlow) {
     nsFrameState state = aFrame->GetStateBits();
     skipLineList    = (state & NS_FRAME_OUT_OF_FLOW); 
@@ -6359,7 +6349,7 @@ nsBlockFrame::RenumberListsInBlock(nsPresContext* aPresContext,
     }
 
     // Advance to the next continuation
-    aBlockFrame->GetNextInFlow((nsIFrame**) &aBlockFrame);
+    aBlockFrame = NS_STATIC_CAST(nsBlockFrame*, aBlockFrame->GetNextInFlow());
   }
 
   return renumberedABullet;

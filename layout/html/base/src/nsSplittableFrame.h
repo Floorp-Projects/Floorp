@@ -54,9 +54,9 @@ public:
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   // Flow member functions.
-  NS_IMETHOD  GetPrevInFlow(nsIFrame** aPrevInFlow) const;
+  virtual nsIFrame* GetPrevInFlow() const;
   NS_IMETHOD  SetPrevInFlow(nsIFrame*);
-  NS_IMETHOD  GetNextInFlow(nsIFrame** aNextInFlow) const;
+  virtual nsIFrame*  GetNextInFlow() const;
   NS_IMETHOD  SetNextInFlow(nsIFrame*);
 
   /**
@@ -75,9 +75,6 @@ public:
   
   // Detach from previous frame in flow
   static void BreakFromPrevFlow(nsIFrame* aFrame);
-
-  nsIFrame*   GetPrevInFlow();
-  nsIFrame*   GetNextInFlow();
 
 protected:
 #ifdef DEBUG

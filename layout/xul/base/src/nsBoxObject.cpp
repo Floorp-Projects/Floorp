@@ -201,7 +201,7 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
         nsIFrame* next = frame;
         do {
           rcFrame.UnionRect(rcFrame, next->GetRect());
-          next->GetNextInFlow(&next);
+          next = next->GetNextInFlow();
         } while (nsnull != next);
         
 

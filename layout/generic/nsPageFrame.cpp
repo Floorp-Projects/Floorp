@@ -221,15 +221,8 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
         view->GetViewManager()->SetViewChildClipRegion(view, &region);
       }
 
-#ifdef NS_DEBUG
-      // Is the frame complete?
-      if (NS_FRAME_IS_COMPLETE(aStatus)) {
-        nsIFrame* childNextInFlow;
-
-        frame->GetNextInFlow(&childNextInFlow);
-        NS_ASSERTION(nsnull == childNextInFlow, "bad child flow list");
-      }
-#endif
+      NS_ASSERTION(!NS_FRAME_IS_COMPLETE(aStatus) ||
+                   !frame->GetNextInFlow(), "bad child flow list");
     }
     PR_PL(("PageFrame::Reflow %p ", this));
     PR_PL(("[%d,%d][%d,%d]\n", aDesiredSize.width, aDesiredSize.height, aReflowState.availableWidth, aReflowState.availableHeight));

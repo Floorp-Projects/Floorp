@@ -122,8 +122,7 @@ GetNextChildFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
   // If there's no next sibling, then check if the parent frame
   // has a next-in-flow and look there
   if (!nextSibling) {
-    nsIFrame* parent;
-    aFrame->GetParent()->GetNextInFlow(&parent);
+    nsIFrame* parent = aFrame->GetParent()->GetNextInFlow();
 
     if (parent) {
       nextSibling = parent->GetFirstChild(nsnull);
@@ -184,7 +183,7 @@ GetPrevChildFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
   // If there's no previous sibling, then check if the parent frame
   // has a prev-in-flow and look there
   if (!prevSibling) {
-    parent->GetPrevInFlow(&parent);
+    parent = parent->GetPrevInFlow();
 
     if (parent) {
       firstChild = parent->GetFirstChild(nsnull);
@@ -195,8 +194,7 @@ GetPrevChildFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
   
   // Get the first-in-flow
   while (PR_TRUE) {
-    nsIFrame* prevInFlow;
-    prevSibling->GetPrevInFlow(&prevInFlow);
+    nsIFrame* prevInFlow = prevSibling->GetPrevInFlow();
     if (prevInFlow) {
       prevSibling = prevInFlow;
     } else {

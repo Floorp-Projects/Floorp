@@ -933,7 +933,7 @@ nsImageFrame::GetContinuationOffset(nscoord* aWidth) const
   }
 
   if (mPrevInFlow) {
-    for (nsIFrame* prevInFlow = mPrevInFlow ; prevInFlow; prevInFlow->GetPrevInFlow(&prevInFlow)) {
+    for (nsIFrame* prevInFlow = mPrevInFlow ; prevInFlow; prevInFlow = prevInFlow->GetPrevInFlow()) {
       nsRect rect = prevInFlow->GetRect();
       if (aWidth) {
         *aWidth = rect.width;
@@ -1019,12 +1019,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   aMetrics.descent = 0;
 
   if (aMetrics.mComputeMEW) {
-    // If we have a percentage based width, then our MEW is 0
-    if (eStyleUnit_Percent == aReflowState.mStylePosition->mWidth.GetUnit()) {
-      aMetrics.mMaxElementWidth = 0;
-    } else {
-      aMetrics.mMaxElementWidth = aMetrics.width;
-    }
+    aMetrics.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
   }
   
   if (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {

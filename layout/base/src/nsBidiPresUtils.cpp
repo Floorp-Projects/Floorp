@@ -803,7 +803,7 @@ nsBidiPresUtils::RemoveBidiContinuation(nsPresContext* aPresContext,
     frame = aFrame;
     do {
       propTable->DeleteProperty(frame, nsLayoutAtoms::nextBidi);
-      frame->GetPrevInFlow(&frame);
+      frame = frame->GetPrevInFlow();
       if (!frame) {
         break;
       }

@@ -145,8 +145,7 @@ protected:
   {
     NS_PRECONDITION(aFrame, "Need a frame");
 
-    nsIFrame *prevInFlow = nsnull;
-    aFrame->GetPrevInFlow(&prevInFlow);
+    nsIFrame *prevInFlow = aFrame->GetPrevInFlow();
 
     if (!prevInFlow || mFrame != prevInFlow) {
       // Ok, we've got the wrong frame.  We have to start from scratch.
@@ -163,18 +162,17 @@ protected:
   }
 
   void Init(nsIFrame* aFrame)
-  {
-    nsIFrame* inlineFrame;
+  {    
     // Start with the previous flow frame as our continuation point
     // is the total of the widths of the previous frames.
-    aFrame->GetPrevInFlow(&inlineFrame);
+    nsIFrame* inlineFrame = aFrame->GetPrevInFlow();
 
     while (inlineFrame) {
       nsRect rect = inlineFrame->GetRect();
       mContinuationPoint += rect.width;
       mUnbrokenWidth += rect.width;
       mBoundingBox.UnionRect(mBoundingBox, rect);
-      inlineFrame->GetPrevInFlow(&inlineFrame);
+      inlineFrame = inlineFrame->GetPrevInFlow();
     }
 
     // Next add this frame and subsequent frames to the bounding box and
@@ -184,7 +182,7 @@ protected:
       nsRect rect = inlineFrame->GetRect();
       mUnbrokenWidth += rect.width;
       mBoundingBox.UnionRect(mBoundingBox, rect);
-      inlineFrame->GetNextInFlow(&inlineFrame);
+      inlineFrame = inlineFrame->GetNextInFlow();
     }
 
     mFrame = aFrame;

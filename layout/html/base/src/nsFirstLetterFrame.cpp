@@ -292,8 +292,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
   // Create a continuation or remove existing continuations based on
   // the reflow completion status.
   if (NS_FRAME_IS_COMPLETE(aReflowStatus)) {
-    nsIFrame* kidNextInFlow;
-    kid->GetNextInFlow(&kidNextInFlow);
+    nsIFrame* kidNextInFlow = kid->GetNextInFlow();
     if (kidNextInFlow) {
       // Remove all of the childs next-in-flows
       NS_STATIC_CAST(nsContainerFrame*, kidNextInFlow->GetParent())

@@ -131,11 +131,7 @@ nsIFrame*
 nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame, nsPresContext* aPresContext)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
-#ifdef DEBUG
-  nsIFrame* prevInFlow = nsnull;
-  aFrame->GetPrevInFlow(&prevInFlow);
-  NS_ASSERTION(!prevInFlow, "aFrame must be first-in-flow");
-#endif
+  NS_ASSERTION(!aFrame->GetPrevInFlow(), "aFrame must be first-in-flow");
   
   nsIFrame* firstFrame = GetFirstChildFrame(aPresContext, aFrame, aFrame->GetContent());
 

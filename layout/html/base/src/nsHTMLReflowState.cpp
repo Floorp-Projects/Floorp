@@ -1384,8 +1384,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState)
       }
     }
     else if (nsLayoutAtoms::pageContentFrame == frameType) {
-      nsIFrame* prevInFlow;
-      rs->frame->GetPrevInFlow(&prevInFlow);
+      nsIFrame* prevInFlow = rs->frame->GetPrevInFlow();
       // only use the page content frame for a height basis if it is the first in flow
       if (prevInFlow) 
         break;

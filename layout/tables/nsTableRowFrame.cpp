@@ -783,7 +783,7 @@ nscoord CalcHeightFromUnpaginatedHeight(nsPresContext*  aPresContext,
   if (firstInFlow->HasUnpaginatedHeight()) {
     height = firstInFlow->GetUnpaginatedHeight(aPresContext);
     for (nsIFrame* prevInFlow = aRow.GetPrevInFlow(); prevInFlow;
-         prevInFlow->GetPrevInFlow(&prevInFlow)) {
+         prevInFlow = prevInFlow->GetPrevInFlow()) {
       height -= prevInFlow->GetSize().height;
     }
   }
@@ -806,8 +806,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
   GET_PIXELS_TO_TWIPS(aPresContext, p2t);
   PRBool borderCollapse = (((nsTableFrame*)aTableFrame.GetFirstInFlow())->IsBorderCollapse());
 
-  nsIFrame* tablePrevInFlow;
-  aTableFrame.GetPrevInFlow(&tablePrevInFlow);
+  nsIFrame* tablePrevInFlow = aTableFrame.GetPrevInFlow();
   PRBool isPaginated = aPresContext->IsPaginated();
 
   nsresult rv = NS_OK;
@@ -899,8 +898,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
         // the cell wants to be bigger than what was available last time or
         // it is a style change reflow or we are printing, then we must reflow the
         // cell. Otherwise we can skip the reflow.
-        nsIFrame* kidNextInFlow;
-        kidFrame->GetNextInFlow(&kidNextInFlow);
+        nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
         nsSize cellDesiredSize = cellFrame->GetDesiredSize();
         if ((availCellWidth != cellFrame->GetPriorAvailWidth())       ||
             (cellDesiredSize.width > cellFrame->GetPriorAvailWidth()) ||
@@ -1348,9 +1346,7 @@ nsTableRowFrame::IR_TargetIsChild(nsPresContext*          aPresContext,
   if (mNextInFlow) {
     for (nsIFrame* cell = mFrames.FirstChild(); cell;
          cell = cell->GetNextSibling()) {
-      nsIFrame* contFrame;
-  
-      cell->GetNextInFlow(&contFrame);
+      nsIFrame* contFrame = cell->GetNextInFlow();
       if (contFrame) {
         aStatus =  NS_FRAME_NOT_COMPLETE;
         break;

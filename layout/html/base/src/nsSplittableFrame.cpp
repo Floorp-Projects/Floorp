@@ -78,10 +78,9 @@ nsSplittableFrame::IsSplittable(nsSplittableType& aIsSplittable) const
   return NS_OK;
 }
 
-NS_METHOD nsSplittableFrame::GetPrevInFlow(nsIFrame** aPrevInFlow) const
+nsIFrame* nsSplittableFrame::GetPrevInFlow() const
 {
-  *aPrevInFlow = mPrevInFlow;
-  return NS_OK;
+  return mPrevInFlow;
 }
 
 NS_METHOD nsSplittableFrame::SetPrevInFlow(nsIFrame* aFrame)
@@ -90,10 +89,9 @@ NS_METHOD nsSplittableFrame::SetPrevInFlow(nsIFrame* aFrame)
   return NS_OK;
 }
 
-NS_METHOD nsSplittableFrame::GetNextInFlow(nsIFrame** aNextInFlow) const
+nsIFrame* nsSplittableFrame::GetNextInFlow() const
 {
-  *aNextInFlow = mNextInFlow;
-  return NS_OK;
+  return mNextInFlow;
 }
 
 NS_METHOD nsSplittableFrame::SetNextInFlow(nsIFrame* aFrame)
@@ -126,11 +124,8 @@ nsIFrame* nsSplittableFrame::GetLastInFlow() const
 void
 nsSplittableFrame::RemoveFromFlow(nsIFrame* aFrame)
 {
-  nsIFrame* prevInFlow;
-  nsIFrame* nextInFlow;
-
-  aFrame->GetPrevInFlow(&prevInFlow);
-  aFrame->GetNextInFlow(&nextInFlow);
+  nsIFrame* prevInFlow = aFrame->GetPrevInFlow();
+  nsIFrame* nextInFlow = aFrame->GetNextInFlow();
 
   if (prevInFlow) {
     prevInFlow->SetNextInFlow(nextInFlow);
@@ -148,24 +143,12 @@ nsSplittableFrame::RemoveFromFlow(nsIFrame* aFrame)
 void
 nsSplittableFrame::BreakFromPrevFlow(nsIFrame* aFrame)
 {
-  nsIFrame* prevInFlow;
-
-  aFrame->GetPrevInFlow(&prevInFlow);
+  nsIFrame* prevInFlow = aFrame->GetPrevInFlow();
   if (prevInFlow) {
     prevInFlow->SetNextInFlow(nsnull);
     aFrame->SetPrevInFlow(nsnull);
   }
 }
-
-nsIFrame * nsSplittableFrame::GetPrevInFlow() 
-{
-  return mPrevInFlow;
-}
-
-nsIFrame * nsSplittableFrame::GetNextInFlow()
-{
-   return mNextInFlow;
-} 
 
 #ifdef DEBUG
 void
