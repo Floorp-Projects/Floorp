@@ -333,6 +333,8 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     # are "leftovers" - another possibility ${HOSTDIR}/tmp
 
     TMP=${HOSTDIR}      #TMP=${TMP-/tmp}
+    TEMP=${TMP}
+    TMPDIR=${TMP}
 
     CADIR=${HOSTDIR}/CA
     SERVERDIR=${HOSTDIR}/server
