@@ -27,3 +27,9 @@ nsIDocumentStateListener.idl
 nsIEditorService.idl
 nsIEditorController.idl
 nsPIEditorTransaction.idl
+nsIEditor.idl
+nsIHTMLEditor.idl
+nsICiter.idl
+nsIEditActionListener.idl
+nsIEditorIMESupport.idl
+nsIEditorObserver.idl
