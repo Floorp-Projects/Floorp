@@ -2119,6 +2119,12 @@ function OnMsgLoaded(aUrl)
     if (!folder || !msgURI)
       return;
 
+    // If we are in the middle of a delete or move operation, make sure that
+    // if the user clicks on another message then that message stays selected
+    // and the selection does not "snap back" to the message chosen by
+    // SetNextMessageAfterDelete() when the operation completes (bug 243532).
+    gNextMessageViewIndexAfterDelete = -2;
+
     if (/type=x-message-display/.test(msgURI))
       SetUpJunkBar(null);
     else
