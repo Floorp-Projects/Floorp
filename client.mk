@@ -65,7 +65,7 @@ endif
 
 CONFIG_GUESS  := $(wildcard $(TOPSRCDIR)/build/autoconf/config.guess)
 ifdef CONFIG_GUESS
-  CONFIG_GUESS = $(shell $(CONFIG_GUESS))
+  CONFIG_GUESS := $(shell $(CONFIG_GUESS))
 else
   _IS_FIRST_CHECKOUT := 1
 endif
