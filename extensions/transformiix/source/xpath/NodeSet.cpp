@@ -395,6 +395,12 @@ void NodeSet::stringValue(nsAString& aStr)
         XMLDOMUtils::getNodeValue(get(0), aStr);
 }
 
+nsAString*
+NodeSet::stringValuePointer()
+{
+    return nsnull;
+}
+
 /*
  * Makes sure that the mElements buffer contains at least aSize elements.
  * If a new allocation is required the elements are copied over to the new
