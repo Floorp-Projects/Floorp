@@ -18,8 +18,15 @@ browser.jar:
 *   content/browser/pref/pref-privacy.js                   (content/pref-privacy.js)
 *   content/browser/pref/pref-themes.xul                   (content/pref-themes.xul)
 *   content/browser/pref/pref-themes.js                    (content/pref-themes.js)
+*   content/browser/pref/pref-downloads.xul                (content/pref-downloads.xul)
+*   content/browser/pref/pref-downloads.js                 (content/pref-downloads.js)
 *   content/browser/pref/privacyExpanderBindings.css       (content/privacyExpanderBindings.css)
 *   content/browser/pref/privacyExpanderBindings.xml       (content/privacyExpanderBindings.xml)
+*   content/browser/pref/editAction.xul                    (content/editAction.xul)
+*   content/browser/pref/editAction.js                     (content/editAction.js)
+*   content/browser/pref/pref-test.xul                     (content/pref-test.xul)
+*   content/browser/pref/plugins.xul                       (content/plugins.xul)
+*   content/browser/pref/plugins.js                        (content/plugins.js)
 
 en-US.jar:
 *+  locale/en-US/browser/pref/pref-navigator.dtd           (locale/pref-navigator.dtd)
@@ -32,8 +39,14 @@ en-US.jar:
     locale/en-US/browser/pref/pref-fonts.dtd               (locale/pref-fonts.dtd)
     locale/en-US/browser/pref/pref-privacy.dtd             (locale/pref-privacy.dtd)
     locale/en-US/browser/pref/pref-themes.dtd              (locale/pref-themes.dtd)
+    locale/en-US/browser/pref/pref-downloads.dtd           (locale/pref-downloads.dtd)
     locale/en-US/browser/pref/prefutilities.properties     (locale/prefutilities.properties)
+    locale/en-US/browser/pref/editAction.dtd               (locale/editAction.dtd)
+    locale/en-US/browser/pref/plugins.dtd                  (locale/plugins.dtd)
 
 classic.jar:
     skin/classic/browser/pref/pref.css                     (skin/pref.css)
-    skin/classic/browser/pref/Options.png                     (skin/Options.png)
+    skin/classic/browser/pref/Options.png                  (skin/Options.png)
+    skin/classic/browser/pref/dot.gif                      (skin/dot.gif)
+    skin/classic/browser/pref/check.gif                    (skin/check.gif)
+    
