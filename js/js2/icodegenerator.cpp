@@ -1670,7 +1670,8 @@ ICodeModule *ICodeGenerator::genFunction(FunctionStmtNode *f, bool isConstructor
         const StringAtom &initName = mWorld->identifiers["__init__"];     // XXXXXXX
         icg.call(icg.getStatic(mClass, initName), thisValue, &args);   // ok, so it's mis-named
     }
-    icg.genStmt(f->function.body);
+    if (f->function.body)
+        icg.genStmt(f->function.body);
     if (isConstructor) {
         TypedRegister thisValue = TypedRegister(0, mClass);
         icg.returnStmt(thisValue);
