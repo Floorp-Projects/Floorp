@@ -1,0 +1,4 @@
+<!ENTITY dialogCancel.label "Cancel"> 
+<!ENTITY dialogTitle.label "Downloading">
+<!ENTITY currentlyProcessing.text "Netscape Products">
+<!ENTITY downloadBeforeUpdate.text "All items will be downloaded before they are updated.">
