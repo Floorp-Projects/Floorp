@@ -29,7 +29,7 @@ Contributor(s):
 <!ENTITY ListName.label "List Name: ">
 <!ENTITY ListNickName.label "List Nickname: ">
 <!ENTITY ListDescription.label "Description: ">
-<!ENTITY AddressTitle.label "Type names or drag addresses into the mailing list below:">
+<!ENTITY AddressTitle.label "Type email addresses to add them to the mailing list:">
 <!ENTITY RemoveButton.label "Remove">
 <!ENTITY UpButton.label	"Move Up">
 <!ENTITY DownButton.label "Move Down">
