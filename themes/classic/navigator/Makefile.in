@@ -36,7 +36,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	back-disabled.gif \
 	back-hover.gif \
 	back-hover-active.gif \
-	broken.gif \
 	errorl.gif \
 	forward.gif \
 	forward-hover.gif \
@@ -45,7 +44,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	home.gif \
 	location-hover.gif \
 	location.gif \
-	lock.gif \
 	messagel.gif \
 	mynetscape.gif \
 	n-box-persbar.gif \
@@ -60,7 +58,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	stop-disabled.gif \
 	stop-hover.gif \
 	stop-hover-active.gif \
-	unlock.gif \
 	$(NULL)
 
 DIRS		= unix

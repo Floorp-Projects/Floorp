@@ -33,7 +33,6 @@ SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/navigator/skin
 EXPORT_RESOURCE_SAMPLES = \
 	alertl.gif \
 	back.gif \
-	broken.gif \
 	errorl.gif \
 	forward.gif \
 	home.gif \

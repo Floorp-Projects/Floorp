@@ -49,6 +49,7 @@ EXPORT_RESOURCE = \
 		$(srcdir)/document-error.gif \
 		$(srcdir)/lock.gif \
 		$(srcdir)/unlock.gif \
+		$(srcdir)/broken.gif \
 		$(srcdir)/tasksOverlay.css \
 		$(srcdir)/dialogOverlay.css \
 		$(NULL)

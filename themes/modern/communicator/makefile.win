@@ -48,6 +48,7 @@ install::
 	$(MAKE_INSTALL) document-error.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) lock.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) unlock.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) broken.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) tasksOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) dialogOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 
