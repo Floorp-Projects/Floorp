@@ -165,23 +165,6 @@ nsChildView::~nsChildView()
     [mView release];
   }
   
-  // notify the children that we're gone
-//FIXME do we still need this?
-  nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
-  if (children)
-  {
-    children->First();
-    do
-    {
-      nsISupports* child;
-      if (NS_SUCCEEDED(children->CurrentItem(&child)))
-      {
-        nsChildView* childWindow = static_cast<nsChildView*>(static_cast<nsIWidget*>(child));
-        NS_RELEASE(child);
-      }
-    } while (NS_SUCCEEDED(children->Next()));     
-  }
-      
   NS_IF_RELEASE(mTempRenderingContext); 
   NS_IF_RELEASE(mFontMetrics);
   
@@ -1525,48 +1508,6 @@ PRBool nsChildView::PointInWidget(Point aThePoint)
 
   // finally tell whether it's a hit
   return(widgetRect.Contains(aThePoint.h, aThePoint.v));
-}
-
-
-//-------------------------------------------------------------------------
-// FindWidgetHit
-//    Recursively look for the widget hit
-//    @param aParent   -- parent widget. 
-//    @param aThePoint -- a point in local coordinates to test for the hit. 
-//-------------------------------------------------------------------------
-nsChildView*  nsChildView::FindWidgetHit(Point aThePoint)
-{
-  if (!mVisible || !PointInWidget(aThePoint))
-    return nsnull;
-
-  nsChildView* widgetHit = this;
-
-  nsCOMPtr<nsIEnumerator> normalEnum ( getter_AddRefs(GetChildren()) );
-  nsCOMPtr<nsIBidirectionalEnumerator> children ( do_QueryInterface(normalEnum) );
-  if (children)
-  {
-    // traverse through all the nsChildViews to find out who got hit, lowest level of course
-    children->Last();
-    do
-    {
-      nsISupports* child;
-      if (NS_SUCCEEDED(children->CurrentItem(&child)))
-      {
-        nsChildView* childWindow = static_cast<nsChildView*>(static_cast<nsIWidget*>(child));
-        NS_RELEASE(child);
-
-        nsChildView* deeperHit = childWindow->FindWidgetHit(aThePoint);
-        if (deeperHit)
-        {
-          widgetHit = deeperHit;
-          break;
-        }
-      }
-    }
-    while (NS_SUCCEEDED(children->Prev()));
-  }
-
-  return widgetHit;
 }
 
 #pragma mark -

@@ -324,8 +324,8 @@ nsCocoaWindow::nsCocoaWindow()
 nsCocoaWindow::~nsCocoaWindow()
 {
   if ( mWindow && mWindowMadeHere ) {
-    [mWindow release];
-    [mDelegate release];
+    [mWindow autorelease];
+    [mDelegate autorelease];
   }
   
 #if 0
@@ -401,8 +401,6 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     [content setFrame:[[mWindow contentView] frame]];
     [mWindow setContentView:content];
     
-    NSLog(@"New quickdraw view. %@", content);
-
     // register for mouse-moved events. The default is to ignore them for perf reasons.
     [mWindow setAcceptsMouseMovedEvents:YES];
     
