@@ -317,7 +317,6 @@
       <menuitem id="menu_editSendPage" accesskey="&sendPage.accesskey;"    observes="cmd_editSendPage"/>
       <menuseparator />
       <menuitem accesskey="&fileprintsetup.accesskey;"                           observes="cmd_printSetup" />
-      <menuitem accesskey="&fileprintpreview.accesskey;"                         observes="cmd_printPreview"/>
       <menuitem accesskey="&fileprint.accesskey;" id="printMenuItem" key="printkb" observes="cmd_print" value="&printCmd.label;"/>
       <menuseparator />
       <menuitem accesskey="&fileexit.accesskey;"            key="exitkb"         observes="cmd_quit"/>
@@ -624,7 +623,6 @@
  	  <menupopup id="printMenu">
       <menuitem accesskey="&fileprint.accesskey;" key="printkb" value="&printCmd.label;" default="true"/>
       <menuitem accesskey="&fileprintsetup.accesskey;" observes="cmd_printSetup" />
-      <menuitem accesskey="&fileprintpreview.accesskey;" observes="cmd_printPreview"/>
     </menupopup>
   </menubutton>
     
