@@ -65,23 +65,35 @@ struct XPTHeader {
 };
 
 struct XPTInterfaceDirectoryEntry {
-    uint128                     iid;
-    XPTIdentfier                name;
-    XPTInterfaceDescriptor      *interface_descriptor;
+    uint128                iid;
+    char                   *name;
+    XPTInterfaceDescriptor *interface_descriptor;
 };
 
 struct XPTInterfaceDescriptor {
-    XPTInterfaceDescriptorEntry         *parent_interface;
-    uint16                              num_methods;
-    XPTMethodDescriptor                 *method_descriptors;
-    uint16                              num_constants;
-    XPTConstDescriptor                  *const_descriptors;
+    XPTInterfaceDescriptorEntry *parent_interface;
+    uint16                      num_methods;
+    XPTMethodDescriptor         *method_descriptors;
+    uint16                      num_constants;
+    XPTConstDescriptor          *const_descriptors;
 };
 
 struct XPTConstDescriptor {
     char                *name;
     XPTTypeDescriptor   type;
-    char                value[0]; /* really varies according to type */
+    union {
+        int8      i8;
+        uint8     ui8; 
+        int16     i16; 
+        uint16    ui16;
+        int32     i32; 
+        uint32    ui32;
+        int64     i64; 
+        uint64    ui64; 
+        uint16    wch;
+        char      ch; 
+        XPTstring *string;
+    } value; /* varies according to type */
 };
 
 struct XPTMethodDescriptor {
@@ -94,46 +106,48 @@ struct XPTMethodDescriptor {
 };
 
 struct XPTParamDescriptor {
-    uint8               in:1, out:1, retval:1, reserved:5;
-    XPTTypeDescriptor   type;
+    uint8             in:1, out:1, retval:1, reserved:5;
+    XPTTypeDescriptor type;
 };
 
 struct XPTTypeDescriptorPrefix {
-    uint8       is_pointer:1, is_unique_pointer:1, is_reference:1,
-                tag:5;
-};
-
-struct XPTSimpleTypeDescriptor {
-    XPTTypeDescriptorPrefix prefix;
+    uint8 is_pointer:1, is_unique_pointer:1, is_reference:1,
+          tag:5;
 };
 
 struct XPTInterfaceTypeDescriptor {
-    XPTTypeDescriptorPrefix     prefix;
     XPTInterfaceDirectoryEntry *interface;
 };
 
 struct XPTInterfaceIsTypeDescriptor {
-    XPTTypeDescriptorPrefix     prefix;
-    uint8                       argnum;
+    uint8 argnum;
 };
 
+struct XPTTypeDescriptor {
+    XPTTypeDescriptorPrefix prefix;
+    union {
+        XPTInterfaceTypeDescriptor interface;
+        XPTInterfaceIsTypeDescriptor interface_is;
+    } type;
+}
+
 struct XPTString {
-    uint16      length;
-    char        bytes[];
+    uint16 length;
+    char   bytes[];
 };
 
 struct XPTAnnotationPrefix {
-    uint8       is_last:1, tag:7;
-};
-
-struct XPTEmptyAnnotation {
-    XPTAnnotationPrefix     prefix;
+    uint8 is_last:1, tag:7;
 };
 
 struct XPTPrivateAnnotation {
-    XPTAnnotationPrefix         prefix;
-    XPTString                   *creator;
-    XPTString                   *private_data;
+    XPTString *creator;
+    XPTString *private_data;
+};
+
+struct XPTAnnotation {
+    XPTAnnotationPrefix prefix;
+    XPTPrivateAnnotation private;
 };
 
 #endif /* __xpt_struct_h__ */
