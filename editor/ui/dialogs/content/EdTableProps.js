@@ -26,8 +26,6 @@ var tagname = "table"
 var TableElement;
 var CellElement;
 var TabPanel;
-var TablePanel;
-var CellPanel;
 var dialog;
 var globalCellElement;
 var globalTableElement
@@ -79,6 +77,7 @@ function Startup()
   dialog.CaptionSelect = document.getElementById("CaptionSelect");
   dialog.TableInheritColor = document.getElementById("TableInheritColor");
   dialog.TableImageInput = document.getElementById("TableImageInput");
+  dialog.TableImageButton = document.getElementById("TableImageButton");
 //  dialog.TableLeaveLocCheck = document.getElementById("TableLeaveLocCheck");
 
   // Cell Panel
@@ -100,6 +99,7 @@ function Startup()
   dialog.NoWrapCheck = document.getElementById("NoWrapCheck");
   dialog.CellInheritColor = document.getElementById("CellInheritColor");
   dialog.CellImageInput = document.getElementById("CellImageInput");
+  dialog.CellImageButton = document.getElementById("CellImageButton");
 //  dialog.CellLeaveLocCheck = document.getElementById("CellLeaveLocCheck");
 
   TableElement = editorShell.GetElementOrParentByTagName("table", null);
@@ -107,17 +107,19 @@ function Startup()
   var countObj = new Object;
   var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
   var tagName = tagNameObj.value;
+  selectedCellCount = countObj.value;
 
   if (tagNameObj.value == "td")
   {
-dump("*** Found cell around selection\n");
+dump("Cell is selected or is selection parent. Selected Cell count = "+selectedCellCount+"\n");
     CellElement = element;
-  }
-  selectedCellCount = countObj.value;
 
-  // If the count is 0, then we are inside the cell, so select it
-  if (selectedCellCount == 0)
-    editorShell.SelectTableCell();
+    // Be sure at least 1 cell is selected.
+    // If the count is 0, then a cell we are inside the cell.
+    if (selectedCellCount == 0)
+      editorShell.SelectTableCell();
+  }
+
 
   if(!TableElement)
   {
@@ -134,7 +136,6 @@ dump("*** Found cell around selection\n");
   // Starting TabPanel name is passed in
   if (window.arguments[1] == "CellPanel") currentPanel = CellPanel;
 
-
   globalTableElement = TableElement.cloneNode(false);
   if (CellElement)
     globalCellElement = CellElement.cloneNode(false);
@@ -142,7 +143,6 @@ dump("*** Found cell around selection\n");
   // Activate the Cell Panel if requested
   if (currentPanel == CellPanel)
   {
-dump("*** Requested CellPanel for Table Properties dialog.\n");
     // We must have a cell element to start in this panel
     if(!CellElement)
     {
@@ -382,6 +382,27 @@ function SelectPrevious()
 function SelectPrevious()
 {
   //TODO:Implement me!
+}
+
+function ChooseTableImage()
+{
+  // Get a local file, converted into URL format
+  fileName = GetLocalFileURL("img");
+  if (fileName && fileName.length > 0) {
+    dialog.TableImageInput.setAttribute("value",fileName);
+  }
+  // Put focus into the input field
+  dialog.TableImageInput.focus();
+}
+
+function ChooseCellImage()
+{
+  fileName = GetLocalFileURL("img");
+  if (fileName && fileName.length > 0) {
+    dialog.CellImageInput.setAttribute("value",fileName);
+  }
+  // Put focus into the input field
+  dialog.CellImageInput.focus();
 }
 
 function SwitchPanel(newPanel)

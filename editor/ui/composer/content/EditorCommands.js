@@ -41,6 +41,8 @@ var gStyleTags = {
     "italic"     : "i",
     "underline"  : "u"
   };
+
+const nsIFilePicker = Components.interfaces.nsIFilePicker;
   
 function EditorOnLoad() {
     // See if argument was passed.
@@ -249,6 +251,9 @@ function EditorDeleteToEndOfLine()
 
 function FindAndSelectEditorWindowWithURL(urlToMatch)
 {
+  if (!urlToMatch || urlToMatch.length == 0)
+    return false;
+
   // returns true if found; false if an error or not found
   
   var windowManager = Components.classes["component://netscape/rdf/datasource?name=window-mediator"].getService();
@@ -283,30 +288,36 @@ function FindAndSelectEditorWindowWithURL(urlToMatch)
 
 // --------------------------- File menu ---------------------------
 
+
 function EditorOpen()
 {
   dump("In EditorOpen..\n");
-  var filePicker = Components.classes["component://netscape/filespecwithui"].createInstance();
-  filePicker = filePicker.QueryInterface(Components.interfaces.nsIFileSpecWithUI);     
-  
+
+  var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
+  fp.init(window, editorShell.GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
+
+  // While we include "All", include filters that prefer HTML and Text files
+  fp.setFilters(nsIFilePicker.filterText | nsIFilePicker.filterHTML | nsIFilePicker.filterAll);
+
   /* doesn't handle *.shtml files */
   try {
-  	filePicker.chooseInputFile(editorShell.GetString("OpenHTMLFile"), filePicker.eHTMLFiles+filePicker.eTextFiles+filePicker.eAllFiles, 0, 0);
+    fp.show();
     /* need to handle cancel (uncaught exception at present) */
   }
   catch (ex) {
     dump("filePicker.chooseInputFile threw an exception\n");
   }
-    
+
   /* check for already open window and activate it... */
-  var found = FindAndSelectEditorWindowWithURL(filePicker.URLString);
-  if (!found)
-  {
-  /* open new window */
-    window.openDialog( "chrome://editor/content",
-                 "_blank",
-                 "chrome,dialog=no,all",
-                 filePicker.URLString );
+  if (fp.file) {
+    var found = FindAndSelectEditorWindowWithURL(fp.file.path);
+    if (!found) {
+      /* open new window */
+      window.openDialog("chrome://editor/content",
+                        "_blank",
+                        "chrome,dialog=no,all",
+                        fp.file.path);
+    }
   }
 }
 
@@ -335,6 +346,8 @@ function EditorNewPlaintext()
 // returns wasSavedSuccessfully
 function EditorSaveDocument(doSaveAs, doSaveCopy)
 {
+  //TODO: Replace this with nsIFilePicker code.
+  // but should we try to do it all here or just use nsIFilePicker in editorShell code?
   editorShell.saveDocument(doSaveAs, doSaveCopy);
 }
 
@@ -1147,18 +1160,16 @@ function CheckSpelling()
       dump(firstMisspelledWord+"\n");
       if( firstMisspelledWord == "")
       {
-        // No misspelled word - tell user
-        window.openDialog("chrome://editor/content/EdMessage.xul", "_blank", 
-                          "chrome,close,titlebar,modal", "",
-                          editorShell.GetString("NoMisspelledWord"), 
-                          editorShell.GetString("CheckSpelling"));
-      
         spellChecker.CloseSpellChecking();
+
+        // No misspelled word - tell user
+        editorShell.Alert(editorShell.GetString("CheckSpelling"), editorShell.GetString("NoMisspelledWord")); 
       } else {
         dump("We found a MISSPELLED WORD\n");
         // Set spellChecker variable on window
         window.spellChecker = spellChecker;
         window.openDialog("chrome://editor/content/EdSpellCheck.xul", "_blank", "chrome,close,titlebar,modal", "", firstMisspelledWord);
+        editorShell.Alert(editorShell.GetString("CheckSpelling"), editorShell.GetString("CheckSpellingDone")); 
       }
     }
     catch(ex) { 

@@ -73,6 +73,8 @@ function Startup()
     FillSuggestedList();
   } else {
     dump("No misspelled word found\n");
+    // No more words - we're done!
+    Close();
   }
   // Initial replace word is the misspelled word;
   dialog.replaceWordInput.value = misspelledWord;
@@ -91,7 +93,8 @@ function NextWord()
 
   if (misspelledWord == "") {
     dump("FINISHED SPELL CHECKING\n");
-    FillSuggestedList(GetString("NoSuggestedWords"));
+    // Simply close dialog when finished.
+    Close();
   } else {
     FillSuggestedList();
   }

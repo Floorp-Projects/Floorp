@@ -1802,11 +1802,11 @@ nsHTMLEditor::SetCaretAfterTableEdit(nsIDOMElement* aTable, PRInt32 aRow, PRInt3
     {
       if (cell)
       {
-        // Set the caret to just before the first child of the cell?
+        // Set the caret to deepest first child
+        //   but don't go into nested tables
         // TODO: Should we really be placing the caret at the END
         //  of the cell content?
-        selection->Collapse(cell, 0);
-        return NS_OK;
+        return CollapseSelectionToDeepestNonTableFirstChild(selection, cellNode);
       } else {
         // Setup index to find another cell in the 
         //   direction requested, but move in
@@ -1894,31 +1894,35 @@ nsHTMLEditor::GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsS
     if (NS_FAILED(res)) return res;
     selectedNode = nsEditor::GetChildAt(anchorNode, anchorOffset);
     if (!selectedNode)
+    {
       selectedNode = anchorNode;
+      // If anchor doesn't have a child, we can't be selecting a table element,
+      //  so don't do the following:
+    } else {
+      nsAutoString tag;
+      nsEditor::GetTagString(selectedNode,tag);
 
-    nsAutoString tag;
-    nsEditor::GetTagString(selectedNode,tag);
-
-    if (tag == tdName)
-    {
-      tableElement = do_QueryInterface(anchorNode);
-      aTagName = tdName;
-      // Each cell is in its own selection range,
-      //  so count signals multiple-cell selection
-      res = selection->GetRangeCount(&aSelectedCount);
-      if (NS_FAILED(res)) return res;
-    }
-    else if(tag == tableName)
-    {
-      tableElement = do_QueryInterface(anchorNode);
-      aTagName = tableName;
-      aSelectedCount = 1;
-    }
-    else if(tag == trName)
-    {
-      tableElement = do_QueryInterface(anchorNode);
-      aTagName = trName;
-      aSelectedCount = 1;
+      if (tag == tdName)
+      {
+        tableElement = do_QueryInterface(anchorNode);
+        aTagName = tdName;
+        // Each cell is in its own selection range,
+        //  so count signals multiple-cell selection
+        res = selection->GetRangeCount(&aSelectedCount);
+        if (NS_FAILED(res)) return res;
+      }
+      else if(tag == tableName)
+      {
+        tableElement = do_QueryInterface(anchorNode);
+        aTagName = tableName;
+        aSelectedCount = 1;
+      }
+      else if(tag == trName)
+      {
+        tableElement = do_QueryInterface(anchorNode);
+        aTagName = trName;
+        aSelectedCount = 1;
+      }
     }
   }
   if (!tableElement)
