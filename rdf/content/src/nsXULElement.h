@@ -279,6 +279,7 @@ protected:
     static nsIAtom*             kTreeRowAtom;
     static nsIAtom*             kEditorAtom;
     static nsIAtom*             kWindowAtom;
+	static nsIAtom*             kNullAtom;
 
 public:
     static nsresult

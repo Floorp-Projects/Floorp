@@ -246,7 +246,7 @@ nsIAtom*             nsXULElement::kTreeItemAtom;
 nsIAtom*             nsXULElement::kTreeRowAtom;
 nsIAtom*             nsXULElement::kEditorAtom;
 nsIAtom*             nsXULElement::kWindowAtom;
-
+nsIAtom*             nsXULElement::kNullAtom;
 //----------------------------------------------------------------------
 // nsXULElement
 
@@ -294,6 +294,7 @@ nsXULElement::Init()
         kTreeRowAtom        = NS_NewAtom("treerow");
         kEditorAtom         = NS_NewAtom("editor");
         kWindowAtom         = NS_NewAtom("window");
+		kNullAtom           = NS_NewAtom("");
 
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                 nsnull,
@@ -364,6 +365,7 @@ nsXULElement::~nsXULElement()
         NS_IF_RELEASE(kTreeRowAtom);
         NS_IF_RELEASE(kEditorAtom);
         NS_IF_RELEASE(kWindowAtom);
+		NS_IF_RELEASE(kNullAtom);
 
         NS_IF_RELEASE(gNameSpaceManager);
 
@@ -2011,6 +2013,7 @@ nsXULElement::SetAttribute(PRInt32 aNameSpaceID,
 
     nsresult rv = NS_OK;
 
+
     if (! Attributes()) {
         rv = EnsureSlots();
         if (NS_FAILED(rv)) return rv;
@@ -3107,7 +3110,13 @@ nsXULElement::GetID(nsIAtom*& aResult) const
   nsAutoString value;
   GetAttribute(kNameSpaceID_None, kIdAtom, value);
 
-  aResult = NS_NewAtom(value); // The NewAtom call does the AddRef.
+  if (value.Length() > 0)
+	  aResult = NS_NewAtom(value); // The NewAtom call does the AddRef.
+  else
+  {
+	  aResult = kNullAtom;
+	  NS_ADDREF(kNullAtom);
+  }
   return NS_OK;
 }
     
