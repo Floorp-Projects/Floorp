@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -119,6 +118,8 @@ typedef nsIGfxTextControlFrame2 textControlPlace;
 #define BF_CHECKED_CHANGED 3
 #define BF_CHECKED 4
 #define BF_HANDLING_SELECT_EVENT 5
+#define BF_SHOULD_INIT_CHECKED 6
+#define BF_PARSER_CREATING 7
 
 #define GET_BOOLBIT(bitfield, field) (((bitfield) & (0x01 << (field))) \
                                         ? PR_TRUE : PR_FALSE)
@@ -133,7 +134,7 @@ class nsHTMLInputElement : public nsGenericHTMLLeafFormElement,
                            public nsIRadioControlElement
 {
 public:
-  nsHTMLInputElement();
+  nsHTMLInputElement(PRBool aFromParser);
   virtual ~nsHTMLInputElement();
 
   // nsISupports
@@ -161,8 +162,8 @@ public:
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
+  NS_IMETHOD SaveState();
+  NS_IMETHOD RestoreState(nsIPresState* aState);
 
   // nsIContent
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
@@ -212,6 +213,8 @@ public:
     return rv;
   }
 
+  NS_IMETHOD DoneCreatingElement();
+
   // nsITextControlElement
   NS_IMETHOD SetValueGuaranteed(const nsAString& aValue, nsIGfxTextControlFrame2* aFrame);
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
@@ -226,7 +229,6 @@ public:
 
 protected:
   // Helper method
-  void SetPresStateChecked(nsIHTMLContent * aHTMLContent, PRBool aValue);
   NS_IMETHOD SetValueSecure(const nsAString& aValue,
                             nsIGfxTextControlFrame2* aFrame,
                             PRBool aCheckSecurity);
@@ -310,11 +312,12 @@ NS_METHOD NS_GetRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
 
 nsresult
 NS_NewHTMLInputElement(nsIHTMLContent** aInstancePtrResult,
-                       nsINodeInfo *aNodeInfo)
+                       nsINodeInfo *aNodeInfo,
+                       PRBool aFromParser)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsHTMLInputElement* it = new nsHTMLInputElement();
+  nsHTMLInputElement* it = new nsHTMLInputElement(aFromParser);
 
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -335,10 +338,11 @@ NS_NewHTMLInputElement(nsIHTMLContent** aInstancePtrResult,
 }
 
 
-nsHTMLInputElement::nsHTMLInputElement()
+nsHTMLInputElement::nsHTMLInputElement(PRBool aFromParser)
 {
   mType = NS_FORM_INPUT_TEXT; // default value
   mBitField = 0;
+  SET_BOOLBIT(mBitField, BF_PARSER_CREATING, aFromParser);
   mValue = nsnull;
 }
 
@@ -378,7 +382,7 @@ nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  nsHTMLInputElement* it = new nsHTMLInputElement();
+  nsHTMLInputElement* it = new nsHTMLInputElement(PR_FALSE);
 
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -452,10 +456,16 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   //
   if (aName == nsHTMLAtoms::checked &&
       !GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)) {
-    PRBool resetVal;
-    GetDefaultChecked(&resetVal);
-    SetChecked(resetVal);
-    SetCheckedChanged(PR_FALSE);
+    // Delay setting checked if the parser is creating this element (wait until
+    // everything is set)
+    if (GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
+      SET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED, PR_TRUE);
+    } else {
+      PRBool defaultChecked;
+      GetDefaultChecked(&defaultChecked);
+      SetChecked(defaultChecked);
+      SetCheckedChanged(PR_FALSE);
+    }
   }
 }
 
@@ -616,6 +626,7 @@ nsHTMLInputElement::SetValueSecure(const nsAString& aValue,
   GetType(&type);
   if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type ||
       NS_FORM_INPUT_FILE == type) {
+
     if (aCheckSecurity && NS_FORM_INPUT_FILE == type) {
       nsresult rv;
       nsCOMPtr<nsIScriptSecurityManager> securityManager = 
@@ -637,7 +648,6 @@ nsHTMLInputElement::SetValueSecure(const nsAString& aValue,
       }
     }
 
-
     nsIGfxTextControlFrame2* textControlFrame = aFrame;
     nsIFormControlFrame* formControlFrame = textControlFrame;
     if (!textControlFrame) {
@@ -651,7 +661,12 @@ nsHTMLInputElement::SetValueSecure(const nsAString& aValue,
       }
     }
 
+    // File frames always own the value (if the frame is there).
+    // Text frames have a bit that says whether they own the value.
     PRBool frameOwnsValue = PR_FALSE;
+    if (type == NS_FORM_INPUT_FILE && formControlFrame) {
+      frameOwnsValue = PR_TRUE;
+    }
     if (textControlFrame) {
       textControlFrame->OwnsValue(&frameOwnsValue);
     }
@@ -697,20 +712,6 @@ nsHTMLInputElement::GetChecked(PRBool* aChecked)
 {
   *aChecked = GET_BOOLBIT(mBitField, BF_CHECKED);
   return NS_OK;
-}
-
-void
-nsHTMLInputElement::SetPresStateChecked(nsIHTMLContent * aHTMLContent, 
-                                        PRBool aValue)
-{
-  nsCOMPtr<nsIPresState> presState;
-  GetPrimaryPresState(aHTMLContent, getter_AddRefs(presState));
-
-  // Obtain the value property from the presentation state.
-  if (presState) {
-    nsAutoString value; value.AssignWithConversion( aValue ? "1" : "0" );
-    presState->SetStateProperty(NS_LITERAL_STRING("checked"), value);
-  }
 }
 
 NS_IMETHODIMP
@@ -1597,8 +1598,9 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
       if (valueStr.EqualsIgnoreCase(table->tag)) {
         // If the type is being changed to file, set the element value
         // to the empty string. This is for security.
-        if (table->value == NS_FORM_INPUT_FILE)
+        if (table->value == NS_FORM_INPUT_FILE) {
           SetValue(NS_LITERAL_STRING(""));
+        }
         aResult.SetIntValue(table->value, eHTMLUnit_Enumerated);
         mType = table->value;  // set the type of this input
         return NS_CONTENT_ATTR_HAS_VALUE;
@@ -2009,7 +2011,7 @@ nsHTMLInputElement::Reset()
     case NS_FORM_INPUT_FILE:
     {
       // Resetting it to blank should not perform security check
-      rv = SetValueSecure(NS_LITERAL_STRING(""), nsnull, PR_FALSE);
+      rv = SetValueGuaranteed(NS_LITERAL_STRING(""), nsnull);
       break;
     }
     default:
@@ -2234,30 +2236,37 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
 
 
 NS_IMETHODIMP
-nsHTMLInputElement::SaveState(nsIPresContext* aPresContext,
-                              nsIPresState** aState)
+nsHTMLInputElement::SaveState()
 {
   nsresult rv = NS_OK;
 
   PRInt32 type;
   GetType(&type);
   
+  nsCOMPtr<nsIPresState> state;
   switch (type) {
     case NS_FORM_INPUT_CHECKBOX:
     case NS_FORM_INPUT_RADIO:
       {
         PRBool checked = PR_FALSE;
         GetChecked(&checked);
-        rv = GetPrimaryPresState(this, aState);
-        if (*aState) {
-          if (checked) {
-            rv = (*aState)->SetStateProperty(NS_LITERAL_STRING("checked"),
-                                             NS_LITERAL_STRING("t"));
-          } else {
-            rv = (*aState)->SetStateProperty(NS_LITERAL_STRING("checked"),
-                                             NS_LITERAL_STRING("f"));
+        PRBool defaultChecked = PR_FALSE;
+        GetDefaultChecked(&defaultChecked);
+        // Only save if checked != defaultChecked (bug 62713)
+        // (always save if it's a radio button so that the checked
+        // state of all radio buttons is restored)
+        if (type == NS_FORM_INPUT_RADIO || checked != defaultChecked) {
+          rv = GetPrimaryPresState(this, getter_AddRefs(state));
+          if (state) {
+            if (checked) {
+              rv = state->SetStateProperty(NS_LITERAL_STRING("checked"),
+                                           NS_LITERAL_STRING("t"));
+            } else {
+              rv = state->SetStateProperty(NS_LITERAL_STRING("checked"),
+                                           NS_LITERAL_STRING("f"));
+            }
+            NS_ASSERTION(NS_SUCCEEDED(rv), "checked save failed!");
           }
-          NS_ASSERTION(NS_SUCCEEDED(rv), "checked save failed!");
         }
         break;
       }
@@ -2268,19 +2277,19 @@ nsHTMLInputElement::SaveState(nsIPresContext* aPresContext,
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_FILE:
       {
-        nsresult rv = GetPrimaryPresState(this, aState);
-        if (*aState) {
-          nsString value;
-          GetValue(value);
-          // XXX Should use nsAutoString above but ConvertStringLineBreaks
-          // requires mOwnsBuffer!
-          rv = nsLinebreakConverter::ConvertStringLineBreaks(
-                   value,
-                   nsLinebreakConverter::eLinebreakPlatform,
-                   nsLinebreakConverter::eLinebreakContent);
-          NS_ASSERTION(NS_SUCCEEDED(rv), "Converting linebreaks failed!");
-          rv = (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), value);
-          NS_ASSERTION(NS_SUCCEEDED(rv), "value save failed!");
+        if (GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
+          rv = GetPrimaryPresState(this, getter_AddRefs(state));
+          if (state) {
+            nsAutoString value;
+            GetValue(value);
+            rv = nsLinebreakConverter::ConvertStringLineBreaks(
+                     value,
+                     nsLinebreakConverter::eLinebreakPlatform,
+                     nsLinebreakConverter::eLinebreakContent);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "Converting linebreaks failed!");
+            rv = state->SetStateProperty(NS_LITERAL_STRING("v"), value);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "value save failed!");
+          }
         }
         break;
       }
@@ -2290,8 +2299,41 @@ nsHTMLInputElement::SaveState(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::RestoreState(nsIPresContext* aPresContext,
-                                 nsIPresState* aState)
+nsHTMLInputElement::DoneCreatingElement()
+{
+  SET_BOOLBIT(mBitField, BF_PARSER_CREATING, PR_FALSE);
+
+  //
+  // Restore state for checkbox, radio, text and file
+  //
+  PRBool restored = PR_FALSE;
+  switch (mType) {
+    case NS_FORM_INPUT_CHECKBOX:
+    case NS_FORM_INPUT_RADIO:
+    case NS_FORM_INPUT_TEXT:
+    case NS_FORM_INPUT_FILE:
+      restored = RestoreFormControlState(this, this);
+      break;
+  }
+
+  //
+  // If restore does not occur, we initialize .checked using the CHECKED
+  // property.
+  //
+  if (!restored && GET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED)) {
+    PRBool resetVal;
+    GetDefaultChecked(&resetVal);
+    SetChecked(resetVal);
+    SetCheckedChanged(PR_FALSE);
+  }
+
+  SET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED, PR_FALSE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::RestoreState(nsIPresState* aState)
 {
   nsresult rv = NS_OK;
 
@@ -2306,25 +2348,18 @@ nsHTMLInputElement::RestoreState(nsIPresContext* aPresContext,
         rv = aState->GetStateProperty(NS_LITERAL_STRING("checked"), checked);
         // We assume that we are the only ones who saved the state.  Thus we
         // know the exact value that would have been saved.
-        if (checked.Equals(NS_LITERAL_STRING("t"))) {
-          SetChecked(PR_TRUE);
-        } else {
-          SetChecked(PR_FALSE);
-        }
+        SetChecked(checked.Equals(NS_LITERAL_STRING("t")));
 
         break;
       }
 
-    // Never save passwords in session history
-    case NS_FORM_INPUT_PASSWORD:
-      break;
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_FILE:
       {
         nsAutoString value;
-        rv = aState->GetStateProperty(NS_LITERAL_STRING("value"), value);
+        rv = aState->GetStateProperty(NS_LITERAL_STRING("v"), value);
         NS_ASSERTION(NS_SUCCEEDED(rv), "value restore failed!");
-        SetValue(value);
+        SetValueGuaranteed(value, nsnull);
         break;
       }
   }

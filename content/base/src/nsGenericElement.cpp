@@ -2040,6 +2040,12 @@ nsGenericElement::GetListenerManager(nsIEventListenerManager** aResult)
   return rv;
 }
 
+NS_IMETHODIMP
+nsGenericElement::DoneCreatingElement()
+{
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 
 // Generic DOMNode implementations

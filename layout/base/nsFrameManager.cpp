@@ -71,6 +71,7 @@
 #include "nsIContentList.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsPrintfCString.h"
 
   #ifdef DEBUG
     #undef NOISY_DEBUG
@@ -366,7 +367,7 @@ public:
                                nsIStatefulFrame::SpecialStateID aID = nsIStatefulFrame::eNoID);
   NS_IMETHOD GenerateStateKey(nsIContent* aContent,
                               nsIStatefulFrame::SpecialStateID aID,
-                              nsCString& aString);
+                              nsACString& aString);
 
   // Gets and sets properties on a given frame
   NS_IMETHOD GetFrameProperty(nsIFrame* aFrame,
@@ -2048,14 +2049,14 @@ FrameManager::RestoreFrameState(nsIPresContext* aPresContext, nsIFrame* aFrame, 
 }
 
 
-static inline void KeyAppendSep(nsCString& aKey)
+static inline void KeyAppendSep(nsACString& aKey)
 {
   if (!aKey.IsEmpty()) {
-    aKey.Append(">");
+    aKey.Append('>');
   }
 }
 
-static inline void KeyAppendString(const nsAString& aString, nsCString& aKey)
+static inline void KeyAppendString(const nsAString& aString, nsACString& aKey)
 {
   KeyAppendSep(aKey);
 
@@ -2065,14 +2066,14 @@ static inline void KeyAppendString(const nsAString& aString, nsCString& aKey)
   aKey.Append(NS_ConvertUCS2toUTF8(aString));
 }
 
-static inline void KeyAppendInt(PRInt32 aInt, nsCString& aKey)
+static inline void KeyAppendInt(PRInt32 aInt, nsACString& aKey)
 {
   KeyAppendSep(aKey);
 
-  aKey.AppendInt(aInt);
+  aKey.Append(nsPrintfCString("%d", aInt));
 }
 
-static inline void KeyAppendAtom(nsIAtom* aAtom, nsCString& aKey)
+static inline void KeyAppendAtom(nsIAtom* aAtom, nsACString& aKey)
 {
   NS_PRECONDITION(aAtom, "KeyAppendAtom: aAtom can not be null!\n");
 
@@ -2093,7 +2094,7 @@ static inline PRBool IsAutocompleteOff(nsIDOMElement* aElement)
 NS_IMETHODIMP
 FrameManager::GenerateStateKey(nsIContent* aContent,
                                nsIStatefulFrame::SpecialStateID aID,
-                               nsCString& aKey)
+                               nsACString& aKey)
 {
   aKey.Truncate();
 
@@ -2163,11 +2164,6 @@ FrameManager::GenerateStateKey(nsIContent* aContent,
 
       nsCOMPtr<nsIContent> formContent(do_QueryInterface(formElement));
       mHTMLForms->IndexOf(formContent, index, PR_FALSE);
-      if (index <= -1) {
-        mHTMLForms->IndexOf(formContent, index, PR_TRUE);
-      }
-      NS_ASSERTION(index > -1,
-                   "nsFrameManager::GenerateStateKey didn't find form index!");
       if (index <= -1) {
         PRUint32 formsLength;
         // Assume the form index is going to be added to the form content next

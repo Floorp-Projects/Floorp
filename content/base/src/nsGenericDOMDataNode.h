@@ -210,6 +210,7 @@ public:
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
 
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
+  NS_IMETHOD DoneCreatingElement();
 
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;

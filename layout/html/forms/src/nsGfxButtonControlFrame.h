@@ -43,7 +43,6 @@
 #include "nsCOMPtr.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsITextContent.h"
-#include "nsIStatefulFrame.h"
 
 #ifdef ACCESSIBILITY
 class nsIAccessible;
@@ -57,8 +56,7 @@ class nsIAccessible;
 class nsIPresState;
 
 class nsGfxButtonControlFrame : public nsHTMLButtonControlFrame,
-                                public nsIAnonymousContentCreator,
-                                public nsIStatefulFrame
+                                public nsIAnonymousContentCreator
 {
 public:
   nsGfxButtonControlFrame();
@@ -116,10 +114,6 @@ protected:
   virtual PRBool IsReset(PRInt32 type);
   virtual PRBool IsSubmit(PRInt32 type);
   virtual PRBool IsBrowse(PRInt32 type); // Browse button of file input
-
-  //nsIStatefulFrame
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }

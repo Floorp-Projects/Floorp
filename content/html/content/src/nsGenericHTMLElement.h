@@ -53,7 +53,6 @@
 class nsIDOMAttr;
 class nsIDOMEventListener;
 class nsIDOMNodeList;
-class nsIEventListenerManager;
 class nsIFrame;
 class nsHTMLAttributes;
 class nsIHTMLMappedAttributes;
@@ -68,6 +67,7 @@ class nsIFormControlFrame;
 class nsIForm;
 class nsIPresState;
 class nsIScrollableView;
+class nsILayoutHistoryState;
 struct nsRect;
 
 
@@ -357,8 +357,38 @@ public:
   static nsIFormControlFrame* GetFormControlFrameFor(nsIContent* aContent,
                                                      nsIDocument* aDocument,
                                                      PRBool aFlushContent);
+  /**
+   * Get the presentation state for a piece of content, or create it if it does
+   * not exist.  Generally used by SaveState().
+   *
+   * @param aContent the content to get presentation state for.
+   * @param aPresState the presentation state (out param)
+   */
   static nsresult GetPrimaryPresState(nsIHTMLContent* aContent,
                                       nsIPresState** aPresState);
+  /**
+   * Get the layout history object *and* generate the key for a particular
+   * piece of content.
+   *
+   * @param aContent the content to generate the key for
+   * @param aState the history state object (out param)
+   * @param aKey the key (out param)
+   */
+  static nsresult GetLayoutHistoryAndKey(nsIHTMLContent* aContent,
+                                         nsILayoutHistoryState** aState,
+                                         nsACString& aKey);
+  /**
+   * Restore the state for a form control.  Ends up calling
+   * nsIFormControl::RestoreState().
+   *
+   * @param aContent an nsIHTMLContent* pointing to the form control
+   * @param aControl an nsIFormControl* pointing to the form control
+   * @return whether or not the RestoreState() was called and exited
+   *         successfully.
+   */
+  static PRBool RestoreFormControlState(nsIHTMLContent* aContent,
+                                        nsIFormControl* aControl);
+
   static nsresult GetPresContext(nsIHTMLContent* aContent,
                                  nsIPresContext** aPresContext);
 
@@ -589,14 +619,8 @@ public:
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
                      PRBool aRemoveFromForm = PR_TRUE);
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
-  {
-    return NS_OK;
-  }
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
-  {
-    return NS_OK;
-  }
+  NS_IMETHOD SaveState() { return NS_OK; }
+  NS_IMETHOD RestoreState(nsIPresState* aState) { return NS_OK; }
 
   // nsIContent
   NS_IMETHOD SetParent(nsIContent *aParent);
@@ -638,14 +662,8 @@ public:
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
                      PRBool aRemoveFromForm = PR_TRUE);
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
-  {
-    return NS_OK;
-  }
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
-  {
-    return NS_OK;
-  }
+  NS_IMETHOD SaveState() { return NS_OK; }
+  NS_IMETHOD RestoreState(nsIPresState* aState) { return NS_OK; }
 
   // nsIContent
   NS_IMETHOD SetParent(nsIContent *aParent);
@@ -658,7 +676,7 @@ public:
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
                      const nsAString& aValue,
                      PRBool aNotify);
-
+  NS_IMETHOD DoneCreatingElement();
 
   NS_METHOD SetAttribute(const nsAString& aName,
                          const nsAString& aValue)
@@ -949,7 +967,8 @@ nsresult
 NS_NewHTMLImageElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
-NS_NewHTMLInputElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+NS_NewHTMLInputElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
+                       PRBool aFromParser);
 
 nsresult
 NS_NewHTMLInsElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
@@ -1015,7 +1034,8 @@ nsresult
 NS_NewHTMLScriptElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
-NS_NewHTMLSelectElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+NS_NewHTMLSelectElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
+                        PRBool aFromParser);
 
 inline nsresult
 NS_NewHTMLSpacerElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)

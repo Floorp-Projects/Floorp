@@ -1880,6 +1880,11 @@ nsXULElement::HandleEvent(nsIDOMEvent *aEvent)
   return DispatchEvent(aEvent, &noDefault);
 }
 
+NS_IMETHODIMP
+nsXULElement::DoneCreatingElement()
+{
+  return NS_OK;
+}
 
 //----------------------------------------------------------------------
 // nsIScriptEventHandlerOwner interface

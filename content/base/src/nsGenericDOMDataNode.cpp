@@ -641,6 +641,11 @@ nsGenericDOMDataNode::GetListenerManager(nsIEventListenerManager** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGenericDOMDataNode::DoneCreatingElement()
+{
+  return NS_OK;
+}
 //----------------------------------------------------------------------
 
 // Implementation of nsIContent
