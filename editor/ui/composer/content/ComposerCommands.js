@@ -1886,7 +1886,7 @@ var nsPreviewCommand =
 
         while ( enumerator.hasMoreElements() )
         {
-          browser = windowManagerInterface.convertISupportsToDOMWindow( enumerator.getNext() );
+          browser = enumerator.getNext().QueryInterface(Components.interfaces.nsIDOMWindowInternal);
           if ( browser && (window._content.location.href == browser._content.location.href))
             break;
 

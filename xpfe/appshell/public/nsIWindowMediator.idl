@@ -92,9 +92,6 @@ interface nsIWindowMediator: nsISupports
 	*/
 	nsIDOMWindowInternal getWindowForResource( in wstring inResource );
 	
-	/* */
-	nsIDOMWindowInternal convertISupportsToDOMWindow( in nsISupports inWindow );
-	
 	/* Add the webshellwindow to the list */
 	[noscript] void registerWindow( in nsIXULWindow inWindow);
 	
@@ -161,7 +158,3 @@ interface nsIWindowMediator: nsISupports
                                  in unsigned long inPosition,
                                  in nsIXULWindow inBelow);
 };
-
-%{C++
-extern nsresult NS_NewWindowMediatorFactory(nsIFactory** aResult);
-%}

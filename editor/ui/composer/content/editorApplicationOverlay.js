@@ -127,7 +127,7 @@ function editPage(url, launchWindow, delay)
     var emptyWindow;
     while ( enumerator.hasMoreElements() )
     {
-      var win = windowManagerInterface.convertISupportsToDOMWindow( enumerator.getNext() );
+      var win = enumerator.getNext().QueryInterface(Components.interfaces.nsIDOMWindowInternal);
       if ( win && win.editorShell)
       {
         if (CheckOpenWindowForURIMatch(uri, win))
