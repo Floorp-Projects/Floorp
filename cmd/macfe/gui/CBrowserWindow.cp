@@ -231,6 +231,43 @@ void CBrowserWindow::FinishCreateSelf(void)
 	}
 }
 
+
+//
+// HookupContextToToolbars
+//
+// Handle connecting the current context to the various bits and pieces in the toolbars. This
+// routine may be called multiple times w/out problems because PP is smart enough not to
+// add listeners for things already registered.
+//
+void
+CBrowserWindow :: HookupContextToToolbars ( )
+{
+	if ( mContext ) {
+		// now hook up CProxyPane to listen to context
+		CProxyPane* browserPageProxy = dynamic_cast<CProxyPane*>(FindPaneByID(CProxyPane::class_ID));
+		if (browserPageProxy)
+			mContext->AddListener(browserPageProxy);
+		// now hook up CURLCaption to listen to context
+		CURLCaption* urlCaption = dynamic_cast<CURLCaption*>(FindPaneByID(CURLCaption::class_ID));
+		if (urlCaption)
+			mContext->AddListener(urlCaption);
+		// now hook up CURLEditField to listen to context
+		CURLEditField* urlField = dynamic_cast<CURLEditField*>(FindPaneByID(CURLEditField::class_ID));
+		if (urlField)
+			{
+			mContext->AddListener(urlField);
+			urlField->AddListener(this);
+			if (urlCaption)
+				urlField->AddListener(urlCaption);
+			}
+		CSpinningN* theN = dynamic_cast<CSpinningN*>(FindPaneByID(CSpinningN::class_ID));
+		if (theN)
+			mContext->AddListener(theN);
+	}
+	
+} // HookupContextToToolbars
+
+
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -259,27 +296,9 @@ void CBrowserWindow::SetWindowContext(CBrowserContext* inContext)
 			mProgressListener = NULL;
 		}
 		mContext->AddUser(this);
-		// now hook up CProxyPane to listen to context
-		CProxyPane* browserPageProxy = dynamic_cast<CProxyPane*>(FindPaneByID(CProxyPane::class_ID));
-		if (browserPageProxy)
-			mContext->AddListener(browserPageProxy);
-		// now hook up CURLCaption to listen to context
-		CURLCaption* urlCaption = dynamic_cast<CURLCaption*>(FindPaneByID(CURLCaption::class_ID));
-		if (urlCaption)
-			mContext->AddListener(urlCaption);
-		// now hook up CURLEditField to listen to context
-		CURLEditField* urlField = dynamic_cast<CURLEditField*>(FindPaneByID(CURLEditField::class_ID));
-		if (urlField)
-			{
-			mContext->AddListener(urlField);
-			urlField->AddListener(this);
-			if (urlCaption)
-				urlField->AddListener(urlCaption);
-			}
-		CSpinningN* theN = dynamic_cast<CSpinningN*>(FindPaneByID(CSpinningN::class_ID));
-		if (theN)
-			mContext->AddListener(theN);
 
+		HookupContextToToolbars();
+		
 		CBrowserSecurityButton* securityButton =
 			dynamic_cast<CBrowserSecurityButton*>(FindPaneByID(CBrowserSecurityButton::class_ID));
 		if (securityButton)

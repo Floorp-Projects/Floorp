@@ -68,8 +68,8 @@ class CBrowserWindow : public CNetscapeWindow, public CSaveWindowStatus, public 
 		
 		virtual	void			SetWindowContext(CBrowserContext* inContext);
 		virtual	CNSContext*		GetWindowContext() const;
-
-
+		virtual void			HookupContextToToolbars ( ) ;
+		
 		virtual void			FindCommandStatus(
 										CommandT			inCommand,
 										Boolean				&outEnabled,
