@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.279 $ ';
+$::UtilsVersion = '$Revision: 1.280 $ ';
 
 package TinderUtils;
 
@@ -864,6 +864,13 @@ sub BuildIt {
         print "Opening $logfile\n";
         open LOG, ">$logfile"
             or die "Cannot open logfile, $logfile: $?\n";
+
+        # Make the log file flush on every write.
+        my $oldfh = select(LOG);
+        $| = 1;
+        select($oldfh);
+
+        # Prepend basic information to the log file.
         print_log "current dir is -- " . ::hostname() . ":$build_dir\n";
         print_log "Build Administrator is $Settings::BuildAdministrator\n";
 
