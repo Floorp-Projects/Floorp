@@ -273,7 +273,7 @@ interface(TreeState *state)
           case IDLN_OP_DCL:
             write_indent(state->file);
             write_method_signature(data, state->file, FALSE);
-            fputs(" { return _to ", state->file);
+            fputs(" { return _to ## ", state->file);
             write_method_signature(data, state->file, TRUE);
             break;
 
@@ -281,7 +281,7 @@ interface(TreeState *state)
             write_indent(state->file);
             if (!write_attr_accessor(data, state->file, TRUE, FALSE))
                 return FALSE;
-            fputs(" { return _to ", state->file);
+            fputs(" { return _to ## ", state->file);
             if (!write_attr_accessor(data, state->file, TRUE, TRUE))
                 return FALSE;
             if (!IDL_ATTR_DCL(data).f_readonly) {
@@ -289,7 +289,7 @@ interface(TreeState *state)
                 write_indent(state->file);
                 if (!write_attr_accessor(data, state->file, TRUE, FALSE))
                     return FALSE;
-                fputs(" { return _to ", state->file);
+                fputs(" { return _to ## ", state->file);
                 if (!write_attr_accessor(data, state->file, FALSE, TRUE))
                     return FALSE;
                 /* '; } \n' at end will clean up. */
