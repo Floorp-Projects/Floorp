@@ -95,6 +95,8 @@ public:
   NS_IMETHOD PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldIndex, PRInt32 aNewIndex);
   NS_IMETHOD PagedUpDown();
 
+  void ScrollByLines(nsIPresContext& aPresContext, PRInt32 lines);
+
 protected:
   nsTreeRowGroupFrame();
   virtual ~nsTreeRowGroupFrame();
@@ -150,8 +152,6 @@ protected:
 
   void PostAppendRow(nsIFrame* aRowFrame, nsIPresContext& aPresContext);
 
-  void GetFirstRow(nsTableRowFrame **aRowFrame);
-
 public:
   // Helpers that allow access to info. The tree is the primary consumer of this
   // info.
@@ -164,6 +164,9 @@ public:
   // Tells you the row index of a row (given only the content node).
   // This method is expensive.
   void IndexOfRow(nsIPresContext& aPresContext, nsIContent* aRowContent, PRInt32& aRowIndex);
+
+  // get the first frame
+  void GetFirstRowFrame(nsTableRowFrame **aRowFrame);
 
   // Whether or not the row is valid. This is a cheap method, since the total row count
   // is cached.

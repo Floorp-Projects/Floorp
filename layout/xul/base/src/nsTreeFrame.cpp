@@ -72,6 +72,24 @@ nsTreeFrame::~nsTreeFrame()
 {
 }
 
+NS_IMPL_ADDREF_INHERITED(nsTreeFrame, nsTableFrame)
+NS_IMPL_RELEASE_INHERITED(nsTreeFrame, nsTableFrame)
+
+NS_IMETHODIMP nsTreeFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aInstancePtr = NULL;
+  if (aIID.Equals(NS_GET_IID(nsISelfScrollingFrame))) {
+    *aInstancePtr = (void*)(nsISelfScrollingFrame*) this;
+    return NS_OK;
+  }
+
+  return nsTableFrame::QueryInterface(aIID, aInstancePtr);
+}
+
 void nsTreeFrame::SetSelection(nsIPresContext& aPresContext, nsTreeCellFrame* aFrame)
 {
   nsCOMPtr<nsIContent> cellContent;
@@ -207,12 +225,19 @@ nsTreeFrame::HandleEvent(nsIPresContext& aPresContext,
         rowIndex++;
       else if (keyCode == NS_VK_UP)
         rowIndex--;
-      
-      if (!treeRowGroup->IsValidRow(rowIndex))
-        return NS_OK;
 
-      // Ensure that the required index is visible.
-      treeRowGroup->EnsureRowIsVisible(rowIndex);
+      // adjust for zero-based mRowCount
+      nsTableRowFrame* firstRow=nsnull;
+      treeRowGroup->GetFirstRowFrame(&firstRow);
+      if (firstRow) {
+        PRInt32 rowNumber = rowIndex - firstRow->GetRowIndex();
+
+        if (!treeRowGroup->IsValidRow(rowNumber))
+          return NS_OK;
+
+        // Ensure that the required index is visible.
+        treeRowGroup->EnsureRowIsVisible(rowNumber);
+      }
 
       // Now that the row is scrolled into view, we have a frame created. We can retrieve the cell.
       nsTreeCellFrame* cellFrame=nsnull;
@@ -454,3 +479,20 @@ nsTreeFrame::GetInsertionIndex(nsIFrame *aFrame)
   }
   return index;
 }
+
+
+NS_IMETHODIMP
+nsTreeFrame::ScrollByLines(nsIPresContext& aPresContext, PRInt32 lines)
+{
+  // Get our treechildren child frame.
+  nsTreeRowGroupFrame* treeRowGroup = nsnull;
+  GetTreeBody(&treeRowGroup);
+  
+  if (!treeRowGroup)
+    return NS_OK; // No tree body. Just bail.
+
+  treeRowGroup->ScrollByLines(aPresContext, lines);
+  return NS_OK;
+}
+
+
