@@ -41,10 +41,10 @@ nsCellMap::~nsCellMap()
 {
   if (nsnull!=mRows)
   {
-    for (int i=mTotalRowCount-1; 0<i; i--)
+    for (int i=mTotalRowCount-1; 0<=i; i--)
     {
       nsVoidArray *row = (nsVoidArray *)(mRows->ElementAt(i));
-      for (int j=mColCount; 0<j ;j--)
+      for (int j=mColCount-1; 0<=j ;j--)
       {
         CellData* data = (CellData *)(row->ElementAt(j));
         if (data != nsnull)
@@ -58,6 +58,7 @@ nsCellMap::~nsCellMap()
   }
   if (nsnull != mColFrames)
     delete mColFrames;
+  // mMinColSpans may be null, it is only set for tables that need it
   if (nsnull != mMinColSpans)
     delete [] mMinColSpans;
   mRows = nsnull;
@@ -75,7 +76,7 @@ void nsCellMap::Reset(int aRowCount, int aColCount)
     mColFrames = new nsVoidArray(); // don't give the array a count, because null col frames are illegal (unlike null cell entries in a row)
   }
 
-  if (nsnull==mRowCount)
+  if (nsnull==mRows)
   {
     mRows = new nsVoidArray();  // don't give the array a count, because null rows are illegal (unlike null cell entries in a row)
   }
