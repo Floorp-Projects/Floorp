@@ -95,10 +95,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStorageTransport)
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsHttpHandler.h"
-//NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpHandler, Init)
-
 #include "nsHttpBasicAuth.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpBasicAuth)
+
+///////////////////////////////////////////////////////////////////////////////
+
+#include "nsResProtocolHandler.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsResProtocolHandler, Init)
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -158,65 +161,12 @@ UnregisterBuiltInURLParsers(nsIComponentManager *aCompMgr,
     return NS_OK;
 }
 
-
-#if 0
-#include "nsIHTTPProtocolHandler.h"
-#include "nsHTTPHandler.h"
-#include "nsHTTPSHandler.h"
-#include "nsBasicAuth.h"
-
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPHandler, Init);
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPSHandler, Init);
-
-#define NS_HTTPS_HANDLER_FACTORY_CID { 0xd2771480, 0xcac4, 0x11d3, { 0x8c, 0xaf, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBasicAuth);
-#define NS_BASICAUTH_CID { 0xd5c9bc48, 0x1dd1, 0x11b2, { 0x9a, 0x0b, 0xf7, 0x3f, 0x59, 0x53, 0x19, 0xae } }
-#define NS_BASICAUTH_CONTRACTID "@mozilla.org/network/http-basic-auth;1"
-
-/* XXX this should all be data-driven, via NS_IMPL_GETMODULE_WITH_CATEGORIES */
-static NS_METHOD
-RegisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
-                  const char *registryLocation, const char *componentType,
-                  const nsModuleComponentInfo *info)
-{
-    nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    nsXPIDLCString previous;
-    return catman->AddCategoryEntry("http-auth", "basic", NS_BASICAUTH_CONTRACTID,
-                                    PR_TRUE, PR_TRUE, getter_Copies(previous));
-}
-
-static NS_METHOD
-UnregisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
-                    const char *registryLocation,
-                    const nsModuleComponentInfo *info)
-{
-    nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    nsXPIDLCString basicAuth;
-    rv = catman->GetCategoryEntry("http-auth", "basic",
-                                  getter_Copies(basicAuth));
-    if (NS_FAILED(rv)) return rv;
-    
-    // only unregister if we're the current Basic-auth handler
-    if (!strcmp(basicAuth, NS_BASICAUTH_CONTRACTID))
-        return catman->DeleteCategoryEntry("http-auth", "basic", PR_TRUE);
-    return NS_OK;
-}
-#endif
-
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsFileChannel.h"
 #include "nsFileProtocolHandler.h"
 #include "nsDataHandler.h"
 #include "nsJARProtocolHandler.h"
-#include "nsResProtocolHandler.h"
 
 #include "nsAboutProtocolHandler.h"
 #include "nsAboutBlank.h"
@@ -882,25 +832,6 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_LOCALFILECHANNEL_CONTRACTID, 
       nsFileChannel::Create
     },
-    
-#if 0
-    // from netwerk/protocol/http:
-    { "HTTP Handler",
-      NS_IHTTPHANDLER_CID,
-      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http",
-      nsHTTPHandlerConstructor },
-    { "HTTPS Handler",
-      NS_HTTPS_HANDLER_FACTORY_CID,
-      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "https",
-      nsHTTPSHandlerConstructor },
-    { "Basic Auth Encoder",
-      NS_BASICAUTH_CID,
-      NS_BASICAUTH_CONTRACTID,
-      nsBasicAuthConstructor,
-      RegisterBasicAuth,
-      UnregisterBasicAuth
-    },
-#endif
 
     { "HTTP Handler",
       NS_HTTPPROTOCOLHANDLER_CID,
@@ -931,10 +862,10 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
     },
 
     // from netwerk/protocol/res:
-    { "The Resource Protocol Handler", 
+    { "Resource Protocol Handler", 
       NS_RESPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "resource",
-      nsResProtocolHandler::Create
+      nsResProtocolHandlerConstructor
     },
 
     // from netwerk/protocol/about:

@@ -239,4 +239,17 @@
 }
 
 
+/******************************************************************************
+ * netwerk/protocol/res/ classes
+ */
+
+#define NS_RESPROTOCOLHANDLER_CID                    \
+{ /* e64f152a-9f07-11d3-8cda-0060b0fc14a3 */         \
+    0xe64f152a,                                      \
+    0x9f07,                                          \
+    0x11d3,                                          \
+    {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
+
+
 #endif // nsNetCID_h__

@@ -30,7 +30,6 @@ MODULE		= necko
 XPIDL_MODULE	= necko_res
 
 XPIDLSRCS	=			  \
-		nsIResChannel.idl         \
 		nsIResProtocolHandler.idl \
 		$(NULL)
 
