@@ -51,6 +51,10 @@ endif
 
 DIRS	+= libmocha libstyle
 
+ifdef DOM
+DIRS	+= libdom
+endif
+
 ifeq ($(OS_ARCH),OS2)
 DIRS	+= libcnv
 endif
