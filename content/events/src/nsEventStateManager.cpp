@@ -772,13 +772,23 @@ nsEventStateManager :: FireContextClick ( )
 
       nsCOMPtr<nsIAtom> tag;
       lastContent->GetTag ( *getter_AddRefs(tag) );
-      nsCOMPtr<nsIFormControl> formElm ( do_QueryInterface(lastContent) );
-      if ( formElm ) {
-        // of all form elements, onlyt <input> and <textarea> are allowed to have context menus
-        if ( tag != nsHTMLAtoms::input && tag != nsHTMLAtoms::textarea )
+      nsCOMPtr<nsIDOMHTMLInputElement> inputElm ( do_QueryInterface(lastContent) );
+      nsCOMPtr<nsIFormControl> formControl ( do_QueryInterface(lastContent) );
+      if ( inputElm ) {
+        // of all form elements, only <input type='text'> and <textarea> are allowed to have context menus
+        if ( tag == nsHTMLAtoms::textarea )
           allowedToDispatch = PR_FALSE;
+        else if ( tag == nsHTMLAtoms::input ) {
+          nsAutoString type;
+          lastContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, type);
+          if ( type != NS_LITERAL_STRING("") && type != NS_LITERAL_STRING("text") &&
+                type != NS_LITERAL_STRING("password") && type != NS_LITERAL_STRING("file") )
+            allowedToDispatch = PR_FALSE;
+        }
       }
-      if ( tag == nsXULAtoms::scrollbar || tag == nsXULAtoms::scrollbarbutton || tag == nsXULAtoms::button )
+      else if ( formControl )           // catches combo-boxes
+        allowedToDispatch = PR_FALSE;
+      else if ( tag == nsXULAtoms::scrollbar || tag == nsXULAtoms::scrollbarbutton || tag == nsXULAtoms::button )
         allowedToDispatch = PR_FALSE;
     
       if ( allowedToDispatch ) {
