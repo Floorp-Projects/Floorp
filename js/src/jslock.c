@@ -49,9 +49,11 @@
 #include "jspubtd.h"
 #include "jslock.h"
 
+#define ReadWord(W) (W)
+
 #ifndef NSPR_LOCK
+
 #include <memory.h>
-#endif
 
 static PRLock **global_locks;
 static uint32 global_lock_count = 1;
@@ -74,15 +76,11 @@ js_UnlockGlobal(void *id)
     PR_Unlock(global_locks[i]);
 }
 
-#define ReadWord(W) (W)
-
-#if !defined(NSPR_LOCK)
-
 /* Exclude Alpha NT. */
 #if defined(_WIN32) && defined(_M_IX86)
 #pragma warning( disable : 4035 )
 
-JS_INLINE int
+static JS_INLINE int
 js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
     __asm {
@@ -98,7 +96,7 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 #elif defined(__GNUC__) && defined(__i386__)
 
 /* Note: This fails on 386 cpus, cmpxchgl is a >= 486 instruction */
-JS_INLINE int
+static JS_INLINE int
 js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
     unsigned int res;
@@ -116,7 +114,7 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 
 #elif defined(SOLARIS) && defined(sparc) && defined(ULTRA_SPARC)
 
-JS_INLINE int
+static JS_INLINE int
 js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
 #if defined(__GNUC__)
@@ -144,7 +142,7 @@ mov 0,%0\n\
 
 #include <sys/atomic_op.h>
 
-JS_INLINE int
+static JS_INLINE int
 js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
     return !_check_lock((atomic_p)w, ov, nv);
@@ -156,7 +154,7 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 
 #endif /* arch-tests */
 
-#endif /* !defined(NSPR_LOCK) */
+#endif /* !NSPR_LOCK */
 
 jsword
 js_CurrentThreadId()
@@ -546,6 +544,8 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
         js_UnlockScope(cx, scope);
 }
 
+#ifndef NSPR_LOCK
+
 static JSFatLock *
 NewFatlock()
 {
@@ -637,9 +637,12 @@ PutFatlock(JSFatLock *m, void *id)
     fl_list_table[i].free = m;
 }
 
+#endif /* !NSPR_LOCK */
+
 JSBool
 js_SetupLocks(int l, int g)
 {
+#ifndef NSPR_LOCK
     uint32 i;
 
     if (global_locks)
@@ -681,6 +684,7 @@ js_SetupLocks(int l, int g)
         }
         fl_list_table[i].taken = NULL;
     }
+#endif /* !NSPR_LOCK */
     return JS_TRUE;
 }
 
@@ -690,6 +694,7 @@ extern void js_FinishDtoa(void);
 void
 js_CleanupLocks()
 {
+#ifndef NSPR_LOCK
     uint32 i;
 
     if (global_locks) {
@@ -712,6 +717,7 @@ js_CleanupLocks()
         fl_list_table = NULL;
         fl_list_table_len = 0;
     }
+#endif /* !NSPR_LOCK */
     js_FinishDtoa();
 }
 
@@ -721,6 +727,8 @@ js_InitContextForLocking(JSContext *cx)
     cx->thread = CurrentThreadId();
     JS_ASSERT(Thin_GetWait(cx->thread) == 0);
 }
+
+#ifndef NSPR_LOCK
 
 /*
  * Fast locking and unlocking is implemented by delaying the allocation of a
@@ -837,7 +845,7 @@ js_Dequeue(JSThinLock *tl)
     js_ResumeThread(tl);
 }
 
-JS_INLINE void
+static JS_INLINE void
 js_Lock(JSThinLock *tl, jsword me)
 {
     JS_ASSERT(me == CurrentThreadId());
@@ -851,7 +859,7 @@ js_Lock(JSThinLock *tl, jsword me)
 #endif
 }
 
-JS_INLINE void
+static JS_INLINE void
 js_Unlock(JSThinLock *tl, jsword me)
 {
     JS_ASSERT(me == CurrentThreadId());
@@ -864,6 +872,8 @@ js_Unlock(JSThinLock *tl, jsword me)
         JS_ASSERT(0);
 #endif
 }
+
+#endif /* !NSPR_LOCK */
 
 void
 js_LockRuntime(JSRuntime *rt)
