@@ -23,6 +23,9 @@
 
 package grendel;
 
+import javax.swing.LookAndFeel;
+import javax.swing.UIManager;
+
 import grendel.prefs.base.UIPrefs;
 
 import grendel.ui.MessageDisplayManager;
@@ -37,7 +40,24 @@ public class Main {
   static MessageDisplayManager fManager;
 
   public static void main(String argv[]) {
-    if (UIPrefs.GetMaster().getDisplayManager().equals("multi")) {
+
+    UIPrefs prefs = UIPrefs.GetMaster();
+
+    UIManager.LookAndFeelInfo[] info = UIManager.getInstalledLookAndFeels();
+    LookAndFeel laf;
+    for (int i = 0; i < info.length; i++) {
+      try {
+        String name = info[i].getClassName();
+        Class c = Class.forName(name);
+        laf = (LookAndFeel)c.newInstance();
+        if (laf.getDescription().equals(prefs.getLookAndFeel())) {
+          UIManager.setLookAndFeel(laf);
+        }
+      } catch (Exception e){
+      }
+    }
+
+    if (prefs.getDisplayManager().equals("multi")) {
       fManager = new MultiMessageDisplayManager();
     } else {
       fManager = new UnifiedMessageDisplayManager();
