@@ -1871,8 +1871,15 @@ nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsString &aFilename)
         }
     }
 
-    // Note: Filename could be empty at this point, but we'll deal with that
-    //       problem later.
+    // Empty filenames can confuse the local file object later 
+    // when it attempts to set the leaf name in CalculateUniqueFilename
+    // for duplicates and ends up replacing the parent dir. To avoid
+    // the problem, all filenames are made at least one character long.
+    if (fileName.IsEmpty())
+    {
+        fileName.Append(PRUnichar('a')); // 'a' is for arbitrary
+    }
+ 
 end:
     aFilename = fileName;
     return NS_OK;
