@@ -943,25 +943,26 @@ NS_IMETHODIMP nsMsgDBView::SetSelection(nsITreeSelection * aSelection)
 
 NS_IMETHODIMP nsMsgDBView::ReloadMessageWithAllParts()
 {
-  return ReloadMessageHelper(PR_TRUE);
+  if (m_currentlyDisplayedMsgUri.IsEmpty())
+    return NS_ERROR_FAILURE;
+
+  if (mSuppressMsgDisplay)
+    return NS_OK;
+
+  nsCAutoString forceAllParts(m_currentlyDisplayedMsgUri);
+  forceAllParts.AppendLiteral("?fetchCompleteMessage=true");
+  return mMessengerInstance->OpenURL(forceAllParts.get());
 }
 
 NS_IMETHODIMP nsMsgDBView::ReloadMessage()
 {
-  return ReloadMessageHelper(PR_FALSE);
-}
+  if (m_currentlyDisplayedMsgUri.IsEmpty())
+    return NS_ERROR_FAILURE;
 
-nsresult nsMsgDBView::ReloadMessageHelper(PRBool forceAllParts)
-{
-  if (!mSuppressMsgDisplay && m_currentlyDisplayedViewIndex != nsMsgViewIndex_None)
-  {
-    nsMsgViewIndex currentMsgToReload = m_currentlyDisplayedViewIndex;
-    m_currentlyDisplayedMsgKey = nsMsgKey_None;
-    m_currentlyDisplayedViewIndex = nsMsgViewIndex_None;
-    LoadMessageByViewIndexHelper(currentMsgToReload, forceAllParts);
-  }
+  if (mSuppressMsgDisplay)
+    return NS_OK;
 
-  return NS_OK;
+  return mMessengerInstance->OpenURL(m_currentlyDisplayedMsgUri.get());
 }
 
 nsresult nsMsgDBView::UpdateDisplayMessage(nsMsgViewIndex viewPosition)
@@ -1001,7 +1002,7 @@ nsresult nsMsgDBView::UpdateDisplayMessage(nsMsgViewIndex viewPosition)
 // given a msg key, we will load the message for it.
 NS_IMETHODIMP nsMsgDBView::LoadMessageByMsgKey(nsMsgKey aMsgKey)
 {
-  return LoadMessageByViewIndexHelper(FindViewIndex(aMsgKey), PR_FALSE);
+  return LoadMessageByViewIndex(FindViewIndex(aMsgKey));
 }
 
 NS_IMETHODIMP nsMsgDBView::LoadMessageByViewIndex(nsMsgViewIndex aViewIndex)
@@ -1021,28 +1022,6 @@ NS_IMETHODIMP nsMsgDBView::LoadMessageByViewIndex(nsMsgViewIndex aViewIndex)
     m_currentlyDisplayedViewIndex = aViewIndex;
     UpdateDisplayMessage(m_currentlyDisplayedViewIndex);
   }
-  return NS_OK;
-}
-
-nsresult nsMsgDBView::LoadMessageByViewIndexHelper(nsMsgViewIndex aViewIndex, PRBool forceAllParts)
-{
-  NS_ASSERTION(aViewIndex != nsMsgViewIndex_None,"trying to load nsMsgViewIndex_None");
-  if (aViewIndex == nsMsgViewIndex_None) return NS_ERROR_UNEXPECTED;
-
-  if (!mSuppressMsgDisplay && (m_currentlyDisplayedViewIndex != aViewIndex))
-  {
-    nsXPIDLCString uri;
-    nsresult rv = GetURIForViewIndex(aViewIndex, getter_Copies(uri));
-    NS_ENSURE_SUCCESS(rv,rv);
-    if (forceAllParts)
-      uri.Append("?fetchCompleteMessage=true");
-
-    mMessengerInstance->OpenURL(uri);
-    m_currentlyDisplayedMsgKey = m_keys[aViewIndex];
-    m_currentlyDisplayedViewIndex = aViewIndex;
-    UpdateDisplayMessage(aViewIndex);
-  }
-
   return NS_OK;
 }
 

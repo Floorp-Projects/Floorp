@@ -307,8 +307,6 @@ protected:
   PRInt32 FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThread, nsMsgViewIndex viewIndex);
   nsresult GetImapDeleteModel(nsIMsgFolder *folder);
   nsresult UpdateDisplayMessage(nsMsgViewIndex viewPosition);
-  nsresult LoadMessageByViewIndexHelper(nsMsgViewIndex aViewIndex, PRBool forceAllParts);
-  nsresult ReloadMessageHelper(PRBool forceAllParts);
 
   PRBool AdjustReadFlag(nsIMsgDBHdr *msgHdr, PRUint32 *msgFlags);
   void FreeAll(nsVoidArray *ptrs);
