@@ -107,6 +107,38 @@ var nsDragAndDrop = {
       var transArray = Components.classes["@mozilla.org/supports-array;1"]
                                  .createInstance(Components.interfaces.nsISupportsArray);
 
+      var region = null;
+      if (aEvent.target.localName == "outliner") {
+        // let's build the drag region
+        var outliner = aEvent.target;
+        try {
+          region = Components.classes["@mozilla.org/gfx/region;1"].createInstance(Components.interfaces.nsIScriptableRegion);
+          region.init();
+          var obo = outliner.outlinerBoxObject;
+          var bo = obo.outlinerBody.boxObject;
+          var obosel= obo.selection;
+
+          var rowX = bo.x;
+          var rowY = bo.y;
+          var rowHeight = obo.rowHeight;
+          var rowWidth = bo.width;
+
+          //add a rectangle for each visible selected row
+          for (var i = obo.getFirstVisibleRow(); i <= obo.getLastVisibleRow(); i ++)
+          {
+            if (obosel.isSelected(i))
+              region.unionRect(rowX, rowY, rowWidth, rowHeight);
+            rowY = rowY + rowHeight;
+          }
+      
+          //and finally, clip the result to be sure we don't spill over...
+          region.intersectRect(bo.x, bo.y, bo.width, bo.height);
+        } catch(ex) {
+          dump("Error while building selection region: " + ex + "\n");
+          region = null;
+        }
+      }
+
       var count = 0;
       do 
         {
@@ -118,7 +150,7 @@ var nsDragAndDrop = {
       while (transferData._XferID == "TransferDataSet" && 
              count < transferData.dataList.length);
       
-      this.mDragService.invokeDragSession(aEvent.target, transArray, null, dragAction.action);
+      this.mDragService.invokeDragSession(aEvent.target, transArray, region, dragAction.action);
       aEvent.preventBubble();
     },
 
