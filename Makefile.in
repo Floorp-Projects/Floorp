@@ -231,8 +231,11 @@ ifneq (,$(MOZ_L10N_LANG)$(MOZ_L10N_TOOLS))
 tier_9_dirs	+= l10n
 endif
 
-ifdef MOZ_PHOENIX
+ifdef MOZ_XUL_APP
 tier_9_dirs	+= toolkit
+endif
+
+ifdef MOZ_PHOENIX
 # remove this when bug 201821 is fixed
 tier_9_dirs	+= browser/components/bookmarks/public
 endif
@@ -270,7 +273,7 @@ tier_99_dirs	+= browser
 endif
 
 ifdef MOZ_THUNDERBIRD
-tier_99_dirs	+= toolkit/xre mail
+tier_99_dirs	+= mail
 endif
 
 ifdef MOZ_XUL_APP
