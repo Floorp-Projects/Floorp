@@ -2233,7 +2233,7 @@ nsresult PresShell::SetPrefLinkRules(void)
         if (NS_SUCCEEDED(result)) {
           // insert a rule to make links the preferred color
           PRUint32 index = 0;
-          nsAutoString strRule, strColor;
+          nsAutoString strColor;
           PRBool useDocColors = PR_TRUE;
 
           // see if we need to create the rules first
@@ -2242,27 +2242,24 @@ nsresult PresShell::SetPrefLinkRules(void)
           ///////////////////////////////////////////////////////////////
           // - links: '*:link, *:link:active {color: #RRGGBB [!important];}'
           ColorToString(linkColor,strColor);
-          strRule.Append(NS_LITERAL_STRING("*:link, *:link:active {color:"));
-          strRule.Append(strColor);
-          if (!useDocColors) {
-            strRule.Append(NS_LITERAL_STRING(" !important;} "));
-          } else {
-            strRule.Append(NS_LITERAL_STRING(";} "));
-          }
- 
+          result = sheet->InsertRule(NS_LITERAL_STRING("*:link, *:link:active {color:") +
+                                     strColor +
+                                     ( useDocColors ?
+                                       NS_LITERAL_STRING(";} ") :
+                                       NS_LITERAL_STRING(" !important;} ") ),
+                                     0,&index);
+          NS_ENSURE_SUCCESS(result, result);
+            
           ///////////////////////////////////////////////////////////////
           // - visited links '*:visited, *:visited:active {color: #RRGGBB [!important];}'
           ColorToString(visitedColor,strColor);
-          strRule.Append(NS_LITERAL_STRING("*:visited, *:visited:active {color:"));
-          strRule.Append(strColor);
-          if (!useDocColors) {
-            strRule.Append(NS_LITERAL_STRING(" !important;} "));
-          } else {
-            strRule.Append(NS_LITERAL_STRING(";} "));
-          }
-
-          // insert the rules
-          result = sheet->InsertRule(strRule,0,&index);
+          // insert the rule
+          result = sheet->InsertRule(NS_LITERAL_STRING("*:visited, *:visited:active {color:") +
+                                     strColor +
+                                     ( useDocColors ?
+                                       NS_LITERAL_STRING(";} ") :
+                                       NS_LITERAL_STRING(" !important;} ") ),
+                                     0,&index);
         }
 
         if (NS_SUCCEEDED(result)) {

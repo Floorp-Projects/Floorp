@@ -711,7 +711,7 @@ public:
   NS_IMETHOD  GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const;
   NS_IMETHOD  EnumerateRulesForwards(nsISupportsArrayEnumFunc aFunc, void * aData) const;
   NS_IMETHOD  DeleteStyleRuleAt(PRUint32 aIndex);
-  NS_IMETHOD  InsertStyleRuleAt(PRUint32 aIndex, nsICSSRule* aRule);
+  NS_IMETHOD  InsertStyleRulesAt(PRUint32 aIndex, nsISupportsArray* aRules);
   
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -836,8 +836,7 @@ CSSMediaRuleImpl::List(FILE* out, PRInt32 aIndent) const
     PRUint32 count;
     mMedia->Count(&count);
     while (index < count) {
-      nsCOMPtr<nsIAtom> medium;
-      mMedia->QueryElementAt(index++, NS_GET_IID(nsIAtom), getter_AddRefs(medium));
+      nsCOMPtr<nsIAtom> medium = dont_AddRef((nsIAtom*)mMedia->ElementAt(index++));
       medium->ToString(buffer);
       fputs(buffer, out);
       if (index < count) {
@@ -852,8 +851,7 @@ CSSMediaRuleImpl::List(FILE* out, PRInt32 aIndent) const
     PRUint32 count;
     mRules->Count(&count);
     while (index < count) {
-      nsCOMPtr<nsICSSRule> rule;
-      mRules->QueryElementAt(index++, NS_GET_IID(nsICSSRule), getter_AddRefs(rule));
+      nsCOMPtr<nsICSSRule> rule = dont_AddRef((nsICSSRule*)mRules->ElementAt(index++));
       rule->List(out, aIndent + 1);
     }
   }
@@ -898,8 +896,7 @@ void CSSMediaRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     PRUint32 count;
     mMedia->Count(&count);
     while (index < count) {
-      nsCOMPtr<nsIAtom> medium;
-      mMedia->QueryElementAt(index++, NS_GET_IID(nsIAtom), getter_AddRefs(medium));
+      nsCOMPtr<nsIAtom> medium = dont_AddRef((nsIAtom*)mMedia->ElementAt(index++));
       if(medium && uniqueItems->AddItem(medium)){
         medium->SizeOf(aSizeOfHandler, &localSize);
         aSize += localSize;
@@ -915,8 +912,7 @@ void CSSMediaRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     PRUint32 count;
     mRules->Count(&count);
     while (index < count) {
-      nsCOMPtr<nsICSSRule> rule;
-      mRules->QueryElementAt(index++, NS_GET_IID(nsICSSRule), getter_AddRefs(rule));
+      nsCOMPtr<nsICSSRule> rule = dont_AddRef((nsICSSRule*)mRules->ElementAt(index++));
       rule->SizeOf(aSizeOfHandler, localSize);
     }
   }
@@ -1016,7 +1012,7 @@ CSSMediaRuleImpl::EnumerateRulesForwards(nsISupportsArrayEnumFunc aFunc, void * 
 }
 
 /*
- * The next two methods (DeleteStyleRuleAt and InsertStyleRuleAt)
+ * The next two methods (DeleteStyleRuleAt and InsertStyleRulesAt)
  * should never be called unless you have first called WillDirty() on
  * the parents tylesheet.  After they are called, DidDirty() needs to
  * be called on the sheet
@@ -1026,23 +1022,23 @@ CSSMediaRuleImpl::DeleteStyleRuleAt(PRUint32 aIndex)
 {
   NS_ENSURE_TRUE(mRules, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsICSSRule> rule;
-  nsresult rv = mRules->QueryElementAt(aIndex, NS_GET_IID(nsICSSRule), getter_AddRefs(rule));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rule->SetStyleSheet(nsnull);
+  nsCOMPtr<nsICSSRule> rule = dont_AddRef((nsICSSRule*)mRules->ElementAt(aIndex));
+  if (rule) {
+    rule->SetStyleSheet(nsnull);
+  }
   return mRules->DeleteElementAt(aIndex);
 }
 
 NS_IMETHODIMP
-CSSMediaRuleImpl::InsertStyleRuleAt(PRUint32 aIndex, nsICSSRule* aRule)
+CSSMediaRuleImpl::InsertStyleRulesAt(PRUint32 aIndex, nsISupportsArray* aRules)
 {
   NS_ENSURE_TRUE(mRules, NS_ERROR_FAILURE);
 
-  // There is no xpcom-compatible version of InsertElementAt.... :(
-  if (! mRules->InsertElementAt(aRule, aIndex)) {
+  aRules->EnumerateForwards(SetStyleSheetReference, mSheet);
+  // There is no xpcom-compatible version of InsertElementsAt.... :(
+  if (! mRules->InsertElementsAt(aRules, aIndex)) {
     return NS_ERROR_FAILURE;
   }
-  aRule->SetStyleSheet(mSheet);
   return NS_OK;
 }
 
@@ -1081,8 +1077,7 @@ CSSMediaRuleImpl::GetCssText(nsAWritableString& aCssText)
   if (mMedia) {
     mMedia->Count(&count);
     for (index = 0; index < count; index++) {
-      nsCOMPtr<nsIAtom> medium;
-      mMedia->QueryElementAt(index, NS_GET_IID(nsIAtom), getter_AddRefs(medium));
+      nsCOMPtr<nsIAtom> medium = dont_AddRef((nsIAtom*)mMedia->ElementAt(index));
       if (medium) {
         nsAutoString tempString;
         if (index > 0)

@@ -1515,8 +1515,7 @@ CSSStyleSheetInner::RebuildNameSpaces(void)
       }
     }
     if (mOrderedRules) {
-      nsINameSpace* nameSpace = mNameSpace;
-      mOrderedRules->EnumerateForwards(CreateNameSpace, &nameSpace);
+      mOrderedRules->EnumerateForwards(CreateNameSpace, address_of(mNameSpace));
     }
   }
 }
@@ -2353,8 +2352,7 @@ ListRules(nsISupportsArray* aRules, FILE* aOut, PRInt32 aIndent)
   if (aRules) {
     aRules->Count(&count);
     for (index = 0; index < count; index++) {
-      nsCOMPtr<nsICSSRule> rule;
-      aRules->QueryElementAt(index, NS_GET_IID(nsICSSRule), getter_AddRefs(rule));
+      nsCOMPtr<nsICSSRule> rule = dont_AddRef((nsICSSRule*)aRules->ElementAt(index));
       rule->List(aOut, aIndent);
     }
   }
@@ -2417,8 +2415,7 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
     mMedia->Count(&count);
     nsAutoString  buffer;
     while (index < PRInt32(count)) {
-      nsCOMPtr<nsIAtom> medium;
-      mMedia->QueryElementAt(index++, NS_GET_IID(nsIAtom), getter_AddRefs(medium));
+      nsCOMPtr<nsIAtom> medium = dont_AddRef((nsIAtom*)mMedia->ElementAt(index++));
       medium->ToString(buffer);
       fputs(buffer, out);
       if (index < PRInt32(count)) {
@@ -2680,6 +2677,10 @@ CSSStyleSheetImpl::InsertRule(const nsAReadableString& aRule,
 {
   NS_ENSURE_TRUE(mInner, NS_ERROR_FAILURE);
   nsresult result;
+  result = WillDirty();
+  if (NS_FAILED(result))
+    return result;
+  
   if (! mInner->mOrderedRules) {
     result = NS_NewISupportsArray(&(mInner->mOrderedRules));
   }
@@ -2691,10 +2692,6 @@ CSSStyleSheetImpl::InsertRule(const nsAReadableString& aRule,
   if (aIndex > count)
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   
-  result = WillDirty();
-  if (NS_FAILED(result))
-    return result;
-
   nsCOMPtr<nsICSSLoader> loader;
   nsCOMPtr<nsICSSParser> css;
   nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(mDocument));
@@ -2717,95 +2714,126 @@ CSSStyleSheetImpl::InsertRule(const nsAReadableString& aRule,
       return result;
   }
 
-  nsCOMPtr<nsIStyleRule> rule;
-  result = css->ParseRule(aRule, mInner->mURL, getter_AddRefs(rule));
+  nsCOMPtr<nsISupportsArray> rules;
+  result = css->ParseRule(aRule, mInner->mURL, getter_AddRefs(rules));
   if (NS_FAILED(result))
     return result;
-  if (! rule) // parsed successfully, but no rule resulted
-    return NS_ERROR_DOM_SYNTAX_ERR;
   
-  nsCOMPtr<nsICSSRule> cssRule(do_QueryInterface(rule, &result));
-  NS_ENSURE_SUCCESS(result, result);
+  PRUint32 rulecount = 0;
+  rules->Count(&rulecount);  
+  if (rulecount == 0 && !aRule.IsEmpty()) {
+    return NS_ERROR_DOM_SYNTAX_ERR;
+  }
+  
+  // Hierarchy checking.  Just check the first and last rule in the list.
+  
+  // check that we're not inserting before a charset rule
+  nsCOMPtr<nsICSSRule> nextRule;
+  PRInt32 nextType = nsICSSRule::UNKNOWN_RULE;
+  nextRule = dont_AddRef((nsICSSRule*)mInner->mOrderedRules->ElementAt(aIndex));
+  if (nextRule) {
+    nextRule->GetType(nextType);
+    if (nextType == nsICSSRule::CHARSET_RULE) {
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
 
-  PRInt32 type = nsICSSRule::UNKNOWN_RULE;
-  cssRule->GetType(type);
+    // check last rule in list
+    nsCOMPtr<nsICSSRule> lastRule = dont_AddRef((nsICSSRule*)rules->ElementAt(rulecount-1));
+    PRInt32 lastType = nsICSSRule::UNKNOWN_RULE;
+    lastRule->GetType(lastType);
+    
+    if (nextType == nsICSSRule::IMPORT_RULE &&
+        lastType != nsICSSRule::CHARSET_RULE &&
+        lastType != nsICSSRule::IMPORT_RULE) {
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
+    
+    if (nextType == nsICSSRule::NAMESPACE_RULE &&
+        lastType != nsICSSRule::CHARSET_RULE &&
+        lastType != nsICSSRule::IMPORT_RULE &&
+        lastType != nsICSSRule::NAMESPACE_RULE) {
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    } 
+  }
+  
+  // check first rule in list
+  nsCOMPtr<nsICSSRule> firstRule = dont_AddRef((nsICSSRule*)rules->ElementAt(0));
+  PRInt32 firstType = nsICSSRule::UNKNOWN_RULE;
+  firstRule->GetType(firstType);
   if (aIndex != 0) {
-    if (type == nsICSSRule::CHARSET_RULE) { // no inserting charset at nonzero position
+    if (firstType == nsICSSRule::CHARSET_RULE) { // no inserting charset at nonzero position
       return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
     }
   
-    nsCOMPtr<nsICSSRule> prevRule;
-    result = mInner->mOrderedRules->QueryElementAt(aIndex-1, NS_GET_IID(nsICSSRule), getter_AddRefs(prevRule));
-    NS_ENSURE_SUCCESS(result, result);
+    nsCOMPtr<nsICSSRule> prevRule = dont_AddRef((nsICSSRule*)mInner->mOrderedRules->ElementAt(aIndex-1));
     PRInt32 prevType = nsICSSRule::UNKNOWN_RULE;
     prevRule->GetType(prevType);
 
-    if (type == nsICSSRule::IMPORT_RULE &&
+    if (firstType == nsICSSRule::IMPORT_RULE &&
         prevType != nsICSSRule::CHARSET_RULE &&
         prevType != nsICSSRule::IMPORT_RULE) {
       return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
     }
 
-    if (type == nsICSSRule::NAMESPACE_RULE &&
+    if (firstType == nsICSSRule::NAMESPACE_RULE &&
         prevType != nsICSSRule::CHARSET_RULE &&
         prevType != nsICSSRule::IMPORT_RULE &&
         prevType != nsICSSRule::NAMESPACE_RULE) {
       return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
     }
   }
-
-  if (type == nsICSSRule::CHARSET_RULE) {
-    // check that we're not inserting before another chatset rule
-    nsCOMPtr<nsICSSRule> nextRule;
-    mInner->mOrderedRules->QueryElementAt(aIndex, NS_GET_IID(nsICSSRule), getter_AddRefs(nextRule));
-    if (nextRule) {
-      PRInt32 nextType = nsICSSRule::UNKNOWN_RULE;
-      nextRule->GetType(nextType);
-      if (nextType == nsICSSRule::CHARSET_RULE) {
-        return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  
+  result = mInner->mOrderedRules->InsertElementsAt(rules, aIndex);
+  NS_ENSURE_SUCCESS(result, result);
+  nsCOMPtr<nsICSSRule> cssRule;
+  PRUint32 counter;
+  for (counter = 0; counter < rulecount; counter++) {
+    cssRule = dont_AddRef((nsICSSRule*)rules->ElementAt(counter));
+    cssRule->SetStyleSheet(this);
+    
+    PRInt32 type = nsICSSRule::UNKNOWN_RULE;
+    cssRule->GetType(type);
+    if (type == nsICSSRule::NAMESPACE_RULE) {
+      if (! mInner->mNameSpace) {
+        nsCOMPtr<nsINameSpaceManager>  nameSpaceMgr;
+        result = NS_NewNameSpaceManager(getter_AddRefs(nameSpaceMgr));
+        if (NS_FAILED(result))
+          return result;
+        nameSpaceMgr->CreateRootNameSpace(*getter_AddRefs(mInner->mNameSpace));
       }
+
+      NS_ENSURE_TRUE(mInner->mNameSpace, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsICSSNameSpaceRule> nameSpaceRule(do_QueryInterface(cssRule));
+      nsCOMPtr<nsINameSpace> newNameSpace;
+    
+      nsCOMPtr<nsIAtom> prefix;
+      nsAutoString urlSpec;
+      nameSpaceRule->GetPrefix(*getter_AddRefs(prefix));
+      nameSpaceRule->GetURLSpec(urlSpec);
+      mInner->mNameSpace->CreateChildNameSpace(prefix, urlSpec,
+                                               *getter_AddRefs(newNameSpace));
+      if (newNameSpace) {
+        mInner->mNameSpace = newNameSpace;
+      }
+    }
+    else {
+      CheckRuleForAttributes(cssRule);
+    }
+    
+    if (mDocument) {
+      result = mDocument->StyleRuleAdded(this, cssRule);
+      NS_ENSURE_SUCCESS(result, result);
     }
   }
   
-  result = mInner->mOrderedRules->InsertElementAt(cssRule, aIndex);
-  NS_ENSURE_SUCCESS(result, result);
-  cssRule->SetStyleSheet(this);
   DidDirty();
-  if (type == nsICSSRule::NAMESPACE_RULE) {
-    if (! mInner->mNameSpace) {
-      nsCOMPtr<nsINameSpaceManager>  nameSpaceMgr;
-      result = NS_NewNameSpaceManager(getter_AddRefs(nameSpaceMgr));
-      if (NS_FAILED(result))
-        return result;
-      nameSpaceMgr->CreateRootNameSpace(*getter_AddRefs(mInner->mNameSpace));
-    }
-
-    NS_ENSURE_TRUE(mInner->mNameSpace, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsICSSNameSpaceRule> nameSpaceRule(do_QueryInterface(cssRule));
-    nsCOMPtr<nsINameSpace> newNameSpace;
     
-    nsCOMPtr<nsIAtom> prefix;
-    nsAutoString urlSpec;
-    nameSpaceRule->GetPrefix(*getter_AddRefs(prefix));
-    nameSpaceRule->GetURLSpec(urlSpec);
-    mInner->mNameSpace->CreateChildNameSpace(prefix, urlSpec,
-                                             *getter_AddRefs(newNameSpace));
-    if (newNameSpace) {
-      mInner->mNameSpace = newNameSpace;
-    }
-  }
-  else {
-    CheckRuleForAttributes(cssRule);
-  }
   if (mDocument) {
-    result = mDocument->StyleRuleAdded(this, cssRule);
-    NS_ENSURE_SUCCESS(result, result);
-    
     result = mDocument->EndUpdate();
     NS_ENSURE_SUCCESS(result, result);
   }
-    
+  
   *aReturn = aIndex;
   return NS_OK;
 }
@@ -2830,9 +2858,8 @@ CSSStyleSheetImpl::DeleteRule(PRUint32 aIndex)
       if (aIndex >= count)
         return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
-      nsCOMPtr<nsICSSRule> rule;
-      mInner->mOrderedRules->QueryElementAt(aIndex, NS_GET_IID(nsICSSRule),
-                                            getter_AddRefs(rule));
+      nsCOMPtr<nsICSSRule> rule =
+        dont_AddRef((nsICSSRule*)mInner->mOrderedRules->ElementAt(aIndex));
       if (rule) {
         mInner->mOrderedRules->RemoveElementAt(aIndex);
         rule->SetStyleSheet(nsnull);
@@ -2935,31 +2962,38 @@ CSSStyleSheetImpl::InsertRuleIntoGroup(nsAReadableString & aRule, nsICSSGroupRul
   result = WillDirty();
   NS_ENSURE_SUCCESS(result, result);
 
-  nsCOMPtr<nsIStyleRule> rule;
-  result = css->ParseRule(aRule, mInner->mURL, getter_AddRefs(rule));
+  nsCOMPtr<nsISupportsArray> rules;
+  result = css->ParseRule(aRule, mInner->mURL, getter_AddRefs(rules));
   NS_ENSURE_SUCCESS(result, result);
 
-  if (! rule) {
+  PRUint32 rulecount = 0;
+  rules->Count(&rulecount);
+    if (rulecount == 0 && !aRule.IsEmpty()) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
-  nsCOMPtr<nsICSSRule> cssRule(do_QueryInterface(rule, &result));
-  NS_ENSURE_SUCCESS(result, result);
-             
-  // Only rulesets are allowed in a group as of CSS2
-  PRInt32 type = nsICSSRule::UNKNOWN_RULE;
-  cssRule->GetType(type);
-  if (type != nsICSSRule::STYLE_RULE) {
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  PRUint32 counter;
+  nsCOMPtr<nsICSSRule> rule;
+  for (counter = 0; counter < rulecount; counter++) {
+    // Only rulesets are allowed in a group as of CSS2
+    PRInt32 type = nsICSSRule::UNKNOWN_RULE;
+    rule = dont_AddRef((nsICSSRule*)rules->ElementAt(counter));
+    rule->GetType(type);
+    if (type != nsICSSRule::STYLE_RULE) {
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
   }
   
-  result = aGroup->InsertStyleRuleAt(aIndex, cssRule);
+  result = aGroup->InsertStyleRulesAt(aIndex, rules);
   NS_ENSURE_SUCCESS(result, result);
   DidDirty();
-  CheckRuleForAttributes(cssRule);
+  for (counter = 0; counter < rulecount; counter++) {
+    rule = dont_AddRef((nsICSSRule*)rules->ElementAt(counter));
+    CheckRuleForAttributes(rule);
   
-  result = mDocument->StyleRuleAdded(this, cssRule);
-  NS_ENSURE_SUCCESS(result, result);
+    result = mDocument->StyleRuleAdded(this, rule);
+    NS_ENSURE_SUCCESS(result, result);
+  }
 
   result = mDocument->EndUpdate();
   NS_ENSURE_SUCCESS(result, result);
@@ -4093,8 +4127,8 @@ void CSSRuleProcessor::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     PRUint32 sheetCount, curSheet, localSize2;
     mSheets->Count(&sheetCount);
     for(curSheet=0; curSheet < sheetCount; curSheet++){
-      nsCOMPtr<nsICSSStyleSheet> pSheet;
-      mSheets->QueryElementAt(curSheet, NS_GET_IID(nsICSSStyleSheet), getter_AddRefs(pSheet));
+      nsCOMPtr<nsICSSStyleSheet> pSheet =
+        dont_AddRef((nsICSSStyleSheet*)mSheets->ElementAt(curSheet));
       if(pSheet && uniqueItems->AddItem((void*)pSheet)){
         pSheet->SizeOf(aSizeOfHandler, localSize2);
         // XXX aSize += localSize2;
