@@ -60,6 +60,7 @@ for my $msg (sort { $a <=> $b } $folder->message_list) {
     my $submitter = $entity->get('From'); chomp($submitter);
     $submitter =~ s/</&lt;/g;
     $submitter =~ s/>/&gt;/g;
+    $submitter =~ s/'/&apos;/g;
     my $submitdate = $entity->get('Date'); chomp($submitdate);
 
     #
@@ -120,6 +121,7 @@ for my $msg (sort { $a <=> $b } $folder->message_list) {
     my $subject = $1;
     $subject =~ s/</&lt;/g;
     $subject =~ s/>/&gt;/g;
+    $subject =~ s/'/&apos;/g;
     $news  =~ /^Date: ([^\n]+)/m;
     my $date = $1;
 
