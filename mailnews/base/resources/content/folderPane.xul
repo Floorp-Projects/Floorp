@@ -53,9 +53,9 @@
 	</rule>
   </template>
 
-  <treecol style="width:60%" id="FolderColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol style="width:20%" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
-  <treecol style="width:20%" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
+  <treecol persist="width" width="3*" id="FolderColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol persist="width" width="1*" id="TotalUnreadCol" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
+  <treecol persist="width" width="1*" id="TotalMsgCol" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
   <treehead>
     <treerow>
       <treecell value="&nameColumn.label;"/>
