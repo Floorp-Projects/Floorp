@@ -76,15 +76,6 @@ my $cgi = Bugzilla->cgi;
 # Determine whether to use the action specified by the user or the default.
 my $action = $::FORM{'action'} || 'view';
 
-# Slight awkward extra checks for the case when we came here from the
-# attachment/choose.html.tmpl page
-if ($action eq 'View') {
-    $action = 'view';
-}
-elsif ($action eq 'Edit') {
-    $action = 'edit';
-}
-
 if ($action eq "view")  
 {
   validateID();
