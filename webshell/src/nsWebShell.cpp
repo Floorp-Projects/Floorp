@@ -96,6 +96,7 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("webshell");
 #define WEB_TRACE_CALLS        0x1
 #define WEB_TRACE_HISTORY      0x2
 
+
 #define WEB_LOG_TEST(_lm,_bit) (PRIntn((_lm)->level) & (_bit))
 
 #ifdef NS_DEBUG
@@ -128,6 +129,7 @@ static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 
+static nsAutoString LinkCommand("linkclick");
 //----------------------------------------------------------------------
 
 class nsWebShell : public nsIWebShell,
@@ -433,6 +435,8 @@ public:
   NS_IMETHOD GetIsInSHist(PRBool& aIsFrame);
   NS_IMETHOD GetURL(const PRUnichar** aURL);
   NS_IMETHOD SetURL(const PRUnichar* aURL);
+  NS_IMETHOD SetUrlDispatcher(nsIUrlDispatcher * anObserver);
+  NS_IMETHOD GetUrlDispatcher(nsIUrlDispatcher *& aResult);
 
 
 protected:
@@ -451,6 +455,7 @@ protected:
   nsIWidget* mWindow;
   nsIDocumentLoader* mDocLoader;
   nsIDocumentLoaderObserver* mDocLoaderObserver;
+  nsIUrlDispatcher *  mUrlDispatcher;
 #ifdef NECKO
   nsIPrompt* mPrompter;
 #else
@@ -1324,6 +1329,25 @@ nsWebShell::GetDocLoaderObserver(nsIDocumentLoaderObserver*& aResult)
 
 
 NS_IMETHODIMP
+nsWebShell::SetUrlDispatcher(nsIUrlDispatcher* aDispatcher)
+{
+  NS_IF_RELEASE(mUrlDispatcher);
+
+  mUrlDispatcher = aDispatcher;
+  NS_IF_ADDREF(mUrlDispatcher);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsWebShell::GetUrlDispatcher(nsIUrlDispatcher*& aResult)
+{
+  aResult = mUrlDispatcher;
+  NS_IF_ADDREF(mUrlDispatcher);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWebShell::SetPrefs(nsIPref* aPrefs)
 {
   NS_IF_RELEASE(mPrefs);
@@ -1953,6 +1977,48 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
       urlSpec.Insert(httpDef, 0, 7);
     }
   }
+
+
+  //Take care of mailto: url
+  nsIWebShell * root= nsnull;
+  PRInt32 index = urlSpec.Find("mailto:");
+  PRBool  isMail= PR_FALSE, isBrowser = PR_FALSE;
+  if (index == 0) {
+     isMail = PR_TRUE;
+  }
+
+  
+  nsresult res = GetRootWebShell(root);
+  if (NS_SUCCEEDED(res) && root) {
+     nsIDocumentLoaderObserver * dlObserver = nsnull;
+ 
+     res = root->GetDocLoaderObserver(dlObserver);
+     if (NS_SUCCEEDED(res) && dlObserver) {
+        isBrowser = PR_TRUE;
+     }
+     NS_IF_RELEASE(dlObserver); 
+  }
+
+  
+  /* Ask the URL dispatcher to take car of this URL only if it is a
+   * mailto: link clicked inside a browser or any link clicked
+   * inside a *non-browser* window. Note this mechanism s'd go away once 
+   * we have the protocol registry and window manager available
+   */
+  if (isMail || !isBrowser) {
+    //Ask the container to load the appropriate component for the URL.
+
+    if (root) {
+       nsCOMPtr<nsIUrlDispatcher>  urlDispatcher = nsnull;
+       res = GetUrlDispatcher(*getter_AddRefs(urlDispatcher));
+       if (NS_SUCCEEDED(res) && urlDispatcher) {
+		  printf("calling HandleUrl\n");
+          urlDispatcher->HandleUrl(LinkCommand.GetUnicode(), urlSpec.GetUnicode(), aPostData);
+          return NS_OK;          
+       }
+    }
+  }
+  NS_IF_RELEASE(root);  
 
 
    mURL = urlSpec.GetUnicode();
