@@ -30,7 +30,7 @@ sub getTime () {
     return &$timesub 
 	if $^O eq "MacOS"; # don't know a better way on Mac
 
-    if ($^O eq "MSWin32" || $^O eq "cygwin") { #XXX not tested on cygwin
+    if ($^O eq "MSWin32") {
 	eval "use Win32::API;";
 	$timesub = sub { 
 	    # pass pointer to struct, void return 
