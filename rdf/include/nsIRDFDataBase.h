@@ -19,16 +19,6 @@
 #ifndef nsIRDFDataBase_h__
 #define nsIRDFDataBase_h__
 
-/*
-
-  RDF databases aggregate RDF data sources (see nsIRDFDataSource.h)
-
-  XXX This needs to be thought about real hard. It seems really wrong
-  to me to have to hard code the data sources that a database knows
-  about.
-
-*/
-
 #include "nsISupports.h"
 #include "nsIRDFDataSource.h"
 
@@ -38,12 +28,21 @@ class nsIRDFDataSource;
 #define NS_IRDFDATABASE_IID \
 { 0x96343820, 0x307c, 0x11d2, { 0xb, 0x15, 0x00, 0x80, 0x5f, 0x91, 0x2f, 0xe7 } }
 
+/**
+ * An <tt>nsIRDFDataBase</tt> composes individual data sources, providing
+ * the illusion of a single, coherent RDF graph.
+ */
 class nsIRDFDataBase : public nsIRDFDataSource {
 public:
-    // XXX This is really a hack. I wish that the database was just a
-    // plain old data source that was smart import the data sources
-    // that it needed.
+    /**
+     * Add a datasource the the database.
+     */
     NS_IMETHOD AddDataSource(nsIRDFDataSource* source) = 0;
+
+    /**
+     * Remove a datasource from the database
+     */
+    NS_IMETHOD RemoveDataSource(nsIRDFDataSource* source) = 0;
 };
 
 

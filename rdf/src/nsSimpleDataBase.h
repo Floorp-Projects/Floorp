@@ -85,6 +85,7 @@ public:
 
     // nsIRDFDataBase interface
     NS_IMETHOD AddDataSource(nsIRDFDataSource* source);
+    NS_IMETHOD RemoveDataSource(nsIRDFDataSource* source);
 };
 
 
