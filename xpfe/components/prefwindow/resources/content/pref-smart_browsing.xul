@@ -54,7 +54,7 @@
 			<html:div>
 				<html:input name="related" type="radio" id="pref:0:int:browser.related.autoload" />
 				<html:label for="pref:0:int:browser.related.autoload" accesskey="n" tabindex="0">
-				&enableRelatedRadio.label;
+				&neverRadio;
 				</html:label>
 			</html:div>
 		    <html:div>
