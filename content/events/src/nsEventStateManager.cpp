@@ -1020,6 +1020,8 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
           event.internalAppFlags |=
             aEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED;
 
+          nsAutoPopupStatePusher popupStatePusher(aEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED ? openAllowed : openAbused);
+
           nsCOMPtr<nsIContent> oldTargetContent = mCurrentTargetContent;
           mCurrentTargetContent = content;
           content->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
