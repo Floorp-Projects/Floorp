@@ -4,37 +4,39 @@ $OLDFILE = $ARGV[0];
 $NEWFILE = $ARGV[1];
 
 sub processFile {
-    my ($FILENAME, $map, $prevMap) = @_;
-    open(FH, $FILENAME);
+    my ($filename, $map, $prevMap) = @_;
+    open(FH, $filename);
     while (<FH>) {
-        if (/^\s+(\d+) ([\w\:]+)\s+([\-\d]+)\s+([\-\d]+)\s+([\-\d]+)\s+([\-\d]+) \(\s+([\-\d\.]+) \+\/\-\s+([\w\.]+)\)\s+([\-\d]+)\s+([\-\d]+) \(\s+([\-\d\.]+) \+\/\-\s+([\w\.]+)\)/)
-        {
-            my $name = $2;
-            my $size = $3;
-            my $leaked = $4;
-            my $objTotal = $5;
-            my $objRem = $6;
-            my $objMean = $7;
-            my $objStdDev = $8;
-            my $refTotal = $9;
-            my $refRem = $10;
-            my $refMean = $11;
-            my $refStdDev = $12;
-            my $bloat = $objTotal * $size;   # heuristic measure of badness
-            $$map{$name} = { name => $name,
-                             size => $size,
-                             leaked => $leaked,
-                             objTotal => $objTotal,
-                             objRem => $objRem,
-                             objMean => $objMean,
-                             objStdDev => $objStdDev,
-                             refTotal => $refTotal,
-                             refRem => $refRem,
-                             refMean => $refMean,
-                             refStdDev => $refStdDev,
-                             bloat => $bloat };
-        }
-        else {
+        if (m{
+              ^\s*(\d+)\s          # Line number
+              ([\w:]+)\s+          # Name
+              (-?\d+)\s+           # Size
+              (-?\d+)\s+           # Leaked
+              (-?\d+)\s+           # Objects Total
+              (-?\d+)\s+           # Objects Rem
+              \(\s*(-?[\d.]+)\s+   # Objects Mean
+                 \+/-\s+
+              ([\w.]+)\)\s+        # Objects StdDev
+              (-?\d+)\s+           # Reference Total
+              (-?\d+)\s+           # Reference Rem
+              \(\s*(-?[\d.]+)\s+   # Reference Mean
+                 \+/-\s+
+              ([\w\.]+)\)          # Reference StdDev
+             }x) {
+          $$map{$2} = { name => $2,
+                        size => $3,
+                        leaked => $4,
+                        objTotal => $5,
+                        objRem => $6,
+                        objMean => $7,
+                        objStdDev => $8,
+                        refTotal => $9,
+                        refRem => $10,
+                        refMean => $11,
+                        refStdDev => $12,
+                        bloat => $3 * 5 # size * objTotal
+                      };
+        } else {
 #            print "failed to parse: $_\n";
         }
     }
