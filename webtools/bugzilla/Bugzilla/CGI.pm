@@ -122,9 +122,9 @@ sub multipart_init {
     $self->{'final_separator'} = "\r\n--$boundary--\r\n";
     my $type = SERVER_PUSH($boundary);
     return $self->header(
-	-nph => 0,
-	-type => $type,
-	(map { split "=", $_, 2 } @other),
+        -nph => 0,
+        -type => $type,
+        (map { split "=", $_, 2 } @other),
     ) . "WARNING: YOUR BROWSER DOESN'T SUPPORT THIS SERVER-PUSH TECHNOLOGY." . $self->multipart_end;
 }
 
