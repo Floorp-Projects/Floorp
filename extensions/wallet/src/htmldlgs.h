@@ -16,7 +16,7 @@
 
 #define PORT_Strlen(s) 	strlen(s)
 
-#define HTML_DLGS_URL "file:///y|/htmldlgs.html"
+#define HTML_DLGS_URL "file:///htmldlgs.html"
 #define XP_DIALOG_CANCEL_BUTTON (1<<0)
 #define XP_DIALOG_OK_BUTTON (1<<2)
 #define XP_STRINGS_CHUNKSIZE 512
