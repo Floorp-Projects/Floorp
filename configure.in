@@ -80,7 +80,7 @@ dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 GTK_VERSION=1.2.0
 LIBIDL_VERSION=0.6.3
-PERL_VERSION=5.005
+PERL_VERSION=5.000
 
 dnl Set various checks
 dnl ========================================================
@@ -294,14 +294,16 @@ AC_PATH_PROGS(PERL, perl5 perl )
 if test -z "$PERL"; then
     AC_MSG_ERROR([perl not found in \$PATH])
 fi
-AC_MSG_CHECKING([for required perl version])
-_perl_version=`$PERL -V:apiversion`
-if test `echo $_perl_version | grep -c $PERL_VERSION` = 0; then
-    AC_MSG_WARN([Perl 5.005 or higher is required. Disabling jar packaging])
-    MOZ_DISABLE_JAR_PACKAGING=1
-else
-    AC_MSG_RESULT([Found 5.005 api])
+
+AC_MSG_CHECKING([for minimum required perl version $PERL_VERSION])
+_perl_version=`$PERL -e 'use Config; print "$Config{version}"; if ($Config{version} >= $PERL_VERSION) { exit(0); } else { exit(1); }' 5>&1`
+_perl_res=$?
+AC_MSG_RESULT([$_perl_version])
+
+if test "$_perl_res" != 0; then
+    AC_MSG_ERROR([Perl $PERL_VERSION or higher is required.])
 fi
+
 AC_PATH_PROG(WHOAMI, whoami, :)
 AC_PATH_PROG(AUTOCONF, autoconf, :)
 AC_PATH_PROG(UNZIP, unzip, :)
