@@ -188,6 +188,7 @@ nsresult nsAbAddressCollecter::OpenHistoryAB(nsIAddrDatabase **aDatabase)
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_TRUE, aDatabase, PR_TRUE);
+		delete dbPath;
 	}
 	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
 	if (NS_FAILED(rv)) 

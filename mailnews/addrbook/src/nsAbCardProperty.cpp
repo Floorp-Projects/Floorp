@@ -649,6 +649,7 @@ nsresult nsAbCardProperty::GetCardDatabase(const char *uri)
 		}
 		else
 			rv = NS_ERROR_FAILURE;
+		delete dbPath;
 	}
 	return rv;
 }
