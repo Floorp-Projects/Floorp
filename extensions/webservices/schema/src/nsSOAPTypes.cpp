@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSchemaPrivate.h"
+#include "nsIWebServiceErrorHandler.h"
 
 nsSOAPArray::nsSOAPArray(nsISchemaType* aAnyType)
   : mAnyType(aAnyType)
@@ -60,9 +61,9 @@ nsSOAPArray::GetTargetNamespace(nsAString& aTargetNamespace)
   return NS_OK;
 }
 
-/* void resolve(); */
+/* void resolve(in nsIWebServiceErrorHandler); */
 NS_IMETHODIMP
-nsSOAPArray::Resolve() 
+nsSOAPArray::Resolve(nsIWebServiceErrorHandler* aErrorHandler) 
 {
   return NS_OK;
 }
@@ -224,9 +225,9 @@ nsSOAPArrayType::GetTargetNamespace(nsAString& aTargetNamespace)
   return NS_OK;
 }
 
-/* void resolve(); */
+/* void resolve(in nsIWebServiceErrorHandler); */
 NS_IMETHODIMP
-nsSOAPArrayType::Resolve() 
+nsSOAPArrayType::Resolve(nsIWebServiceErrorHandler* aErrorHandler) 
 {
   return NS_OK;
 }

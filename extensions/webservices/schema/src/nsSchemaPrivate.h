@@ -39,6 +39,7 @@
 #ifndef __nsSchemaPrivate_h__
 #define __nsSchemaPrivate_h__
 
+#include "nsIWebServiceErrorHandler.h"
 #include "nsISchema.h"
 
 // XPCOM Includes
@@ -56,6 +57,17 @@
    "http://schemas.xmlsoap.org/soap/encoding/"
 #define NS_SOAP_1_2_ENCODING_NAMESPACE \
    "http://www.w3.org/2001/09/soap-encoding"
+
+/**
+ * Fire error on error handler passed as argument, only to be used
+ * in ProcessXXX or Resolve methods.
+ */
+#define NS_SCHEMALOADER_FIRE_ERROR(status,statusMessage)   \
+  PR_BEGIN_MACRO                                           \
+  if (aErrorHandler) {                                     \
+    aErrorHandler->OnError(status, statusMessage);         \
+  }                                                        \
+  PR_END_MACRO
 
 class nsSchema : public nsISchema 
 {
@@ -75,7 +87,8 @@ public:
   NS_IMETHOD AddAttributeGroup(nsISchemaAttributeGroup* aAttributeGroup);
   NS_IMETHOD AddModelGroup(nsISchemaModelGroup* aModelGroup);
   void DropCollectionReference();
-  nsresult ResolveTypePlaceholder(nsISchemaType* aPlaceholder,
+  nsresult ResolveTypePlaceholder(nsIWebServiceErrorHandler* aErrorHandler,
+                                  nsISchemaType* aPlaceholder,
                                   nsISchemaType** aType);
   PRBool IsElementFormQualified() { return mElementFormQualified; }
 
@@ -114,7 +127,7 @@ protected:
   NS_IMETHOD GetTargetNamespace(nsAString& aTargetNamespace) {          \
     return nsSchemaComponentBase::GetTargetNamespace(aTargetNamespace); \
   }                                                                     \
-  NS_IMETHOD Resolve();                                                 \
+  NS_IMETHOD Resolve(nsIWebServiceErrorHandler* aErrorHandler);                                                 \
   NS_IMETHOD Clear();
 
 class nsSchemaBuiltinType : public nsISchemaBuiltinType
@@ -372,7 +385,7 @@ public:
   NS_DECL_NSISCHEMAELEMENT
 
   NS_IMETHOD GetTargetNamespace(nsAString& aTargetNamespace);
-  NS_IMETHOD Resolve();
+  NS_IMETHOD Resolve(nsIWebServiceErrorHandler* aErrorHandler);
   NS_IMETHOD Clear();
   NS_IMETHOD SetType(nsISchemaType* aType);
   NS_IMETHOD SetConstraints(const nsAString& aDefaultValue,

@@ -37,25 +37,25 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsIWebServiceErrorHandler.idl"
 
 interface nsISchema;
 interface nsISchemaType;
 interface nsIDOMElement;
 interface nsISchemaLoadListener;
 
-[scriptable, uuid(3c14a032-6f4e-11d5-9b46-000064657374)]
+[scriptable, uuid(77061d1d-e191-11d8-a3cc-000393b6661a)]
 interface nsISchemaLoader : nsISupports {
   nsISchema load(in AString schemaURI);
   void loadAsync(in AString schemaURI, 
                  in nsISchemaLoadListener listener);
-  nsISchema processSchemaElement(in nsIDOMElement element);
+  nsISchema processSchemaElement(in nsIWebServiceErrorHandler aErrorHandler, 
+                                 in nsIDOMElement element);
 };
 
-[scriptable, function, uuid(3c14a033-6f4e-11d5-9b46-000064657374)]
-interface nsISchemaLoadListener : nsISupports {
+[scriptable, function, uuid(8d9aa9ce-e191-11d8-9f31-000393b6661a)]
+interface nsISchemaLoadListener : nsIWebServiceErrorHandler {
   void onLoad(in nsISchema schema);
-  void onError(in PRInt32 status,
-               in AString statusMessage);
 };
 
 %{ C++

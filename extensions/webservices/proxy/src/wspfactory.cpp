@@ -41,6 +41,7 @@
 
 // NSPR includes
 #include "prprf.h"
+#include "nsIWebServiceErrorHandler.h"
 
 /***************************************************************************/
 class WSPAsyncProxyCreator : public nsIWSDLLoadListener
@@ -51,6 +52,7 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLLOADLISTENER
+  NS_DECL_NSIWEBSERVICEERRORHANDLER
 
   nsresult Run(const nsAString & wsdlURL, const nsAString & portname,
                const nsAString & qualifier, PRBool isAsync,
@@ -73,7 +75,9 @@ WSPAsyncProxyCreator::~WSPAsyncProxyCreator()
   // do nothing...
 }
 
-NS_IMPL_ISUPPORTS1(WSPAsyncProxyCreator, nsIWSDLLoadListener)
+NS_IMPL_ISUPPORTS2(WSPAsyncProxyCreator,
+                   nsIWSDLLoadListener,
+                   nsIWebServiceErrorHandler);
 
 nsresult
 WSPAsyncProxyCreator::Run(const nsAString& wsdlURL, const nsAString& portname,

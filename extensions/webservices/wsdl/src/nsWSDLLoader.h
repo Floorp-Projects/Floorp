@@ -39,6 +39,8 @@
 #ifndef __nsWSDLLoader_h__
 #define __nsWSDLLoader_h__
 
+#include "nsIWebServiceErrorHandler.h"
+
 #include "nsIWSDLLoader.h"
 #include "nsWSDLPrivate.h"
 
@@ -202,6 +204,7 @@ protected:
   nsCOMPtr<nsISchemaLoader> mSchemaLoader;
   nsCOMPtr<nsIWSDLPort> mPort;
   nsCOMArray<nsIURI> mImportList;
+  nsCOMPtr<nsIWebServiceErrorHandler> mErrorHandler;
   
   PRPackedBool mIsSync;
 

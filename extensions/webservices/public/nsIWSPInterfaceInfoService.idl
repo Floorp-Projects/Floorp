@@ -42,10 +42,6 @@
 #include "nsIInterfaceInfoManager.idl"
 #include "nsIWSDL.idl"
 
-%{ C++
-#include "nsAString.h"
-%} 
-
 [scriptable, uuid(8c7bf4bc-d3fe-4524-b213-ce578bfe936e)]
 interface nsIWSPInterfaceInfoService : nsISupports
 {

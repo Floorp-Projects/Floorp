@@ -46,6 +46,10 @@ MODULE    = websrvcs
 XPIDL_MODULE	= websrvcs
 
 XPIDLSRCS	= \
+	    nsIWebServiceErrorHandler.idl \
+	    $(NULL)
+
+XPIDLSRCS	+= \
 	    nsISOAPAttachments.idl \
 	    nsISOAPBlock.idl \
 	    nsISOAPBlock.idl \

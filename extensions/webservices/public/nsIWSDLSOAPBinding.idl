@@ -39,10 +39,6 @@
 #include "nsISupports.idl"
 #include "nsIWSDL.idl"
 
-%{ C++
-#include "nsAString.h"
-%}
-
 [scriptable, uuid(bb76b72e-d143-4738-804a-53b311466dd9)]
 interface nsIWSDLSOAPBinding : nsIWSDLBinding
 {

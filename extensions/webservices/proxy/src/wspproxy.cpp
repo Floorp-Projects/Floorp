@@ -102,7 +102,7 @@ WSPProxy::Init(nsIWSDLPort* aPort, nsIInterfaceInfo* aPrimaryInterface,
       return NS_ERROR_FAILURE;
     }
     rv = mPrimaryInterface->GetInfoForParam(3, &listenerParam,
-                                      getter_AddRefs(mListenerInterfaceInfo));
+                                            getter_AddRefs(mListenerInterfaceInfo));
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -158,6 +158,22 @@ WSPProxy::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 // Implementation of nsXPTCStubBase methods
 //
 ///////////////////////////////////////////////////
+
+/**
+ * Asynchronous processing :
+ * 1-> WSPProxy::CallMethod
+ * 2  -> WSPCallContext::CallAsync
+ * 3    -> nsSOAPCall::AsyncInvoke
+ * 4      -> nsXXXSOAPTransport::AsyncCall
+ * 5        -> nsIXMLHttpRequest::Send, nsXXXSOAPTransportCompletion::AddEventListener
+ * ---- asynchronous ----
+ * 6          -> nsXXXSOAPTransportCompletion::HandleEvent
+ * 7            -> WSPCallContext::HandleResponse, 
+ *                 WSPCallContext::CallCompletionListener
+ * 8              -> nsSOAPBlock::SetSchemaType, nsSOAPBlock::GetValue
+ * 9                -> nsSOAPEncoding::Decode, nsDefaultSOAPDecode::Decode
+ * 10                 -> WSPProxy::CallCompleted
+ */
 NS_IMETHODIMP
 WSPProxy::CallMethod(PRUint16 methodIndex,
                      const nsXPTMethodInfo* info,
@@ -385,8 +401,8 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
 
     nsCOMPtr<nsISchemaType> type;
     nsAutoString blockName, blockNamespace;
-
     nsCOMPtr<nsISchemaElement> element = do_QueryInterface(schemaComponent);
+
     if (element) {
       rv = element->GetType(getter_AddRefs(type));
       if (NS_FAILED(rv)) {

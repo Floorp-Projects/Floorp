@@ -59,9 +59,9 @@ NS_IMPL_ISUPPORTS3_CI(nsSchemaAttribute,
                       nsISchemaAttribute)
 
 
-/* void resolve (); */
+/* void resolve (in nsIWebServiceErrorHandler aErrorHandler); */
 NS_IMETHODIMP
-nsSchemaAttribute::Resolve()
+nsSchemaAttribute::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   if (mIsResolved) {
     return NS_OK;
@@ -71,7 +71,7 @@ nsSchemaAttribute::Resolve()
   nsresult rv = NS_OK;
   if (mType && mSchema) {
     nsCOMPtr<nsISchemaType> type;
-    rv = mSchema->ResolveTypePlaceholder(mType, getter_AddRefs(type));
+    rv = mSchema->ResolveTypePlaceholder(aErrorHandler, mType, getter_AddRefs(type));
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
@@ -79,7 +79,7 @@ nsSchemaAttribute::Resolve()
     if (!mType) {
       return NS_ERROR_FAILURE;
     }
-    rv = mType->Resolve();
+    rv = mType->Resolve(aErrorHandler);
   }
 
   return rv;
@@ -211,9 +211,9 @@ NS_IMPL_ISUPPORTS3_CI(nsSchemaAttributeRef,
                       nsISchemaAttribute)
 
 
-/* void resolve (); */
+/* void resolve (in nsIWebServiceErrorHandler aErrorHandler); */
 NS_IMETHODIMP
-nsSchemaAttributeRef::Resolve()
+nsSchemaAttributeRef::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   nsresult rv = NS_OK;
   if (mIsResolved) {
@@ -226,7 +226,7 @@ nsSchemaAttributeRef::Resolve()
   }
 
   if (mAttribute) {
-    rv = mAttribute->Resolve();
+    rv = mAttribute->Resolve(aErrorHandler);
   }
 
   return rv;
@@ -351,9 +351,9 @@ NS_IMPL_ISUPPORTS3_CI(nsSchemaAttributeGroup,
                       nsISchemaAttributeComponent,
                       nsISchemaAttributeGroup)
 
-/* void resolve (); */
+/* void resolve (in nsIWebServiceErrorHandler aErrorHandler); */
 NS_IMETHODIMP
-nsSchemaAttributeGroup::Resolve()
+nsSchemaAttributeGroup::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   if (mIsResolved) {
     return NS_OK;
@@ -365,7 +365,7 @@ nsSchemaAttributeGroup::Resolve()
 
   count = mAttributes.Count();
   for (i = 0; i < count; ++i) {
-    rv = mAttributes.ObjectAt(i)->Resolve();
+    rv = mAttributes.ObjectAt(i)->Resolve(aErrorHandler);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -488,9 +488,9 @@ NS_IMPL_ISUPPORTS3_CI(nsSchemaAttributeGroupRef,
                       nsISchemaAttributeComponent,
                       nsISchemaAttributeGroup)
 
-/* void resolve (); */
+/* void resolve (in nsIWebServiceErrorHandler aErrorHandler); */
 NS_IMETHODIMP
-nsSchemaAttributeGroupRef::Resolve()
+nsSchemaAttributeGroupRef::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   nsresult rv = NS_OK;
   if (mIsResolved) {
@@ -503,7 +503,7 @@ nsSchemaAttributeGroupRef::Resolve()
   }
 
   if (mAttributeGroup) {
-    rv = mAttributeGroup->Resolve();
+    rv = mAttributeGroup->Resolve(aErrorHandler);
   }
   
   return rv;
@@ -608,9 +608,9 @@ NS_IMPL_ISUPPORTS3_CI(nsSchemaAnyAttribute,
                       nsISchemaAttributeComponent,
                       nsISchemaAnyAttribute)
 
-/* void resolve (); */
+/* void resolve (in nsIWebServiceErrorHandler aErrorHandler); */
 NS_IMETHODIMP
-nsSchemaAnyAttribute::Resolve()
+nsSchemaAnyAttribute::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   return NS_OK;
 }

@@ -61,9 +61,9 @@ NS_IMPL_ISUPPORTS3_CI(nsSchemaComplexType,
                       nsISchemaType,
                       nsISchemaComplexType)
 
-/* void resolve (); */
+/* void resolve (in nsIWebServiceErrorHandler* aErrorHandler); */
 NS_IMETHODIMP
-nsSchemaComplexType::Resolve()
+nsSchemaComplexType::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   if (mIsResolved) {
     return NS_OK;
@@ -75,8 +75,20 @@ nsSchemaComplexType::Resolve()
 
   count = mAttributes.Count();
   for (i = 0; i < count; ++i) {
-    rv = mAttributes.ObjectAt(i)->Resolve();
+    rv = mAttributes.ObjectAt(i)->Resolve(aErrorHandler);
     if (NS_FAILED(rv)) {
+      nsAutoString attrName;
+      nsresult rv1 = mAttributes.ObjectAt(i)->GetName(attrName);
+      NS_ENSURE_SUCCESS(rv1, rv1);
+      
+      nsAutoString errorMsg;
+      errorMsg.AppendLiteral("Failure resolving schema complex type, ");
+      errorMsg.AppendLiteral("cannot resolve attribute \"");
+      errorMsg.Append(attrName);
+      errorMsg.AppendLiteral("\"");
+      
+      NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
+
       return rv;
     }
   }
@@ -87,19 +99,30 @@ nsSchemaComplexType::Resolve()
 
   nsCOMPtr<nsISchemaType> type;
   if (mBaseType) {
-    rv = mSchema->ResolveTypePlaceholder(mBaseType, getter_AddRefs(type));
+    rv = mSchema->ResolveTypePlaceholder(aErrorHandler, mBaseType, getter_AddRefs(type));
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
     mBaseType = type;
-    rv = mBaseType->Resolve();
+    rv = mBaseType->Resolve(aErrorHandler);
     if (NS_FAILED(rv)) {
+      nsAutoString baseStr;
+      nsresult rv1 = type->GetName(baseStr);
+      NS_ENSURE_SUCCESS(rv1, rv1);
+
+      nsAutoString errorMsg;
+      errorMsg.AppendLiteral("Failure resolving schema complex type, ");
+      errorMsg.AppendLiteral("cannot resolve base type \"");
+      errorMsg.Append(baseStr);
+      errorMsg.AppendLiteral("\"");
+
+      NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
       return NS_ERROR_FAILURE;
     }
   }
     
   if (mSimpleBaseType) {
-    rv = mSchema->ResolveTypePlaceholder(mSimpleBaseType, 
+    rv = mSchema->ResolveTypePlaceholder(aErrorHandler, mSimpleBaseType, 
                                          getter_AddRefs(type));
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
@@ -108,15 +131,27 @@ nsSchemaComplexType::Resolve()
     if (!mSimpleBaseType) {
       return NS_ERROR_FAILURE;
     }
-    rv = mSimpleBaseType->Resolve();
+    rv = mSimpleBaseType->Resolve(aErrorHandler);
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
   }
 
   if (mModelGroup) {
-    rv = mModelGroup->Resolve();
+    rv = mModelGroup->Resolve(aErrorHandler);
     if (NS_FAILED(rv)) {
+      nsAutoString modelName;
+      nsresult rv1 = type->GetName(modelName);
+      NS_ENSURE_SUCCESS(rv1, rv1);
+
+      nsAutoString errorMsg;
+      errorMsg.AppendLiteral("Failure resolving schema complex type, ");
+      errorMsg.AppendLiteral("cannot resolve model group \"");
+      errorMsg.Append(modelName);
+      errorMsg.AppendLiteral("\"");
+
+      NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
+
       return NS_ERROR_FAILURE;
     }
   }
@@ -128,18 +163,18 @@ nsSchemaComplexType::Resolve()
       PRUint16 schemaType;
       placeHolder->GetSchemaType(&schemaType);
       if (schemaType == nsISchemaType::SCHEMA_TYPE_PLACEHOLDER) {
-        rv = mSchema->ResolveTypePlaceholder(placeHolder, getter_AddRefs(type));
+        rv = mSchema->ResolveTypePlaceholder(aErrorHandler, placeHolder, getter_AddRefs(type));
         if (NS_FAILED(rv)) {
           return NS_ERROR_FAILURE;
         }
-        rv = type->Resolve();
+        rv = type->Resolve(aErrorHandler);
         if (NS_FAILED(rv)) {
           return NS_ERROR_FAILURE;
         }
         SetArrayInfo(type, mArrayInfo->GetDimension());
       }
       else {
-         rv = placeHolder->Resolve();
+         rv = placeHolder->Resolve(aErrorHandler);
         if (NS_FAILED(rv)) {
           return NS_ERROR_FAILURE;
         }

@@ -70,9 +70,10 @@ WSPProxyTest::~WSPProxyTest()
 {
 }
 
-NS_IMPL_ISUPPORTS3_CI(WSPProxyTest, 
+NS_IMPL_ISUPPORTS4_CI(WSPProxyTest,
                       nsIWSPProxyTest,
                       nsIWSDLLoadListener,
+                      nsIWebServiceErrorHandler,
                       SpheonJSAOPStatisticsPortTypeListener)
 
 nsresult

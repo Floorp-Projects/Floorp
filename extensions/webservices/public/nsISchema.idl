@@ -37,10 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-
-%{ C++
-#include "nsAString.h"
-%} 
+#include "nsIWebServiceErrorHandler.idl"
 
 interface nsISchema;
 interface nsISchemaType;
@@ -73,10 +70,10 @@ interface nsISchemaCollection : nsISupports {
   nsISchemaType getType(in AString name, in AString aNamespace);
 };
 
-[scriptable, uuid(3c14a020-6f4e-11d5-9b46-000064657374)]
+[scriptable, uuid(5caaa64e-e191-11d8-842a-000393b6661a)]
 interface nsISchemaComponent : nsISupports {
   readonly attribute AString targetNamespace;
-  void resolve();
+  void resolve(in nsIWebServiceErrorHandler aErrorHandler);
   void clear();
 };
 

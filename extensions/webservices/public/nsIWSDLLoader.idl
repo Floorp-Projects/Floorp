@@ -37,10 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-
-%{ C++
-#include "nsAString.h"
-%}
+#include "nsIWebServiceErrorHandler.idl"
 
 interface nsIWSDLPort;
 interface nsIWSDLLoadListener;
@@ -55,11 +52,10 @@ interface nsIWSDLLoader : nsISupports
                  in nsIWSDLLoadListener listener);
 };
 
-[scriptable, uuid(0458dac6-65de-11d5-9b42-00104bdf5339)]
-interface nsIWSDLLoadListener : nsISupports
+[scriptable, uuid(c3681210-e191-11d8-949e-000393b6661a)]
+interface nsIWSDLLoadListener : nsIWebServiceErrorHandler
 {
   void onLoad(in nsIWSDLPort port);
-  void onError(in nsresult status, in AString statusMessage);
 };
 
 %{ C++

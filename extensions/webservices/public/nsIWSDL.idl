@@ -39,10 +39,6 @@
 #include "nsISupports.idl"
 #include "nsISchema.idl"
 
-%{ C++
-#include "nsAString.h"
-%} 
-
 interface nsIWSDLBinding;
 interface nsIWSDLPort;
 interface nsIWSDLOperation;

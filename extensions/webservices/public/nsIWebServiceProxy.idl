@@ -45,10 +45,6 @@
 #include "nsISOAPBlock.idl"
 #include "nsIScriptableInterfaces.idl"
 
-%{ C++
-#include "nsAString.h"
-%} 
-
 interface nsIWebServiceProxy;
 interface nsIWebServiceProxyCreationListener;
 interface nsIInterfaceInfo;

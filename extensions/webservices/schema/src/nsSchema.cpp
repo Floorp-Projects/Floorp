@@ -109,39 +109,87 @@ nsSchema::GetSchemaNamespace(nsAString& aSchemaNamespace)
 }
 
 NS_IMETHODIMP
-nsSchema::Resolve()
+nsSchema::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   nsresult rv;
   PRUint32 i, count;
 
   count = mTypes.Count();
   for (i = 0; i < count; ++i) {
-    rv = mTypes.ObjectAt(i)->Resolve();
+    rv = mTypes.ObjectAt(i)->Resolve(aErrorHandler);
+    if (NS_FAILED(rv)) {
+      nsAutoString name;
+      nsresult rc = mTypes.ObjectAt(i)->GetName(name);
+      NS_ENSURE_SUCCESS(rc, rc);
+      
+      nsAutoString errorMsg;
+      errorMsg.AppendLiteral("Failure resolving schema, cannot resolve schema type \"");
+      errorMsg.Append(name);
+      errorMsg.AppendLiteral("\"");
+      
+      NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
+    }
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   count = mAttributes.Count();
   for (i = 0; i < count; ++i) {
-    rv = mAttributes.ObjectAt(i)->Resolve();
+    rv = mAttributes.ObjectAt(i)->Resolve(aErrorHandler);
+    if (NS_FAILED(rv)) {
+      nsAutoString name;
+      nsresult rc = mAttributes.ObjectAt(i)->GetName(name);
+      NS_ENSURE_SUCCESS(rc, rc);
+      
+      nsAutoString errorMsg;
+      errorMsg.AppendLiteral("Failure resolving schema, cannot resolve attribute \"");
+      errorMsg.Append(name);
+      errorMsg.AppendLiteral("\"");
+      
+      NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
+    }
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   count = mElements.Count();
   for (i = 0; i < count; ++i) {
-    rv = mElements.ObjectAt(i)->Resolve();
+    rv = mElements.ObjectAt(i)->Resolve(aErrorHandler);
+    if (NS_FAILED(rv)) {
+      nsAutoString name;
+      nsresult rc = mElements.ObjectAt(i)->GetName(name);
+      NS_ENSURE_SUCCESS(rc, rc);
+      
+      nsAutoString errorMsg;
+      errorMsg.AppendLiteral("Failure resolving schema, cannot resolve element \"");
+      errorMsg.Append(name);
+      errorMsg.AppendLiteral("\"");
+      
+      NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
+    }
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   count = mAttributeGroups.Count();
   for (i = 0; i < count; ++i) {
-    rv = mAttributeGroups.ObjectAt(i)->Resolve();
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mAttributeGroups.ObjectAt(i)->Resolve(aErrorHandler);
+    if (NS_FAILED(rv)) {
+      nsAutoString errorMsg(NS_LITERAL_STRING("Failure resolving schema, "));
+      errorMsg.AppendLiteral("cannot resolve attribute groups");
+      NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
+
+      return rv;
+    }
   }
 
   count = mModelGroups.Count();
   for (i = 0; i < count; ++i) {
-    rv = mModelGroups.ObjectAt(i)->Resolve();
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mModelGroups.ObjectAt(i)->Resolve(aErrorHandler);
+    if (NS_FAILED(rv)) {
+      nsAutoString errorMsg(NS_LITERAL_STRING("Failure resolving schema, "));
+      errorMsg.AppendLiteral("cannot resolve model group");
+      NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
+      
+      return rv;
+    }
   }
 
   return NS_OK;
@@ -451,7 +499,8 @@ nsSchema::DropCollectionReference()
 }
 
 nsresult
-nsSchema::ResolveTypePlaceholder(nsISchemaType* aPlaceholder,
+nsSchema::ResolveTypePlaceholder(nsIWebServiceErrorHandler* aErrorHandler, 
+                                 nsISchemaType* aPlaceholder,
                                  nsISchemaType** aType)
 {
   PRUint16 schemaType;
@@ -464,6 +513,13 @@ nsSchema::ResolveTypePlaceholder(nsISchemaType* aPlaceholder,
     nsresult rv = GetTypeByName(name, aType);
     if (NS_FAILED(rv) || !*aType) {
       *aType = nsnull;
+      nsAutoString errorMsg;
+      errorMsg.AppendLiteral("Failure resolving schema type, ");
+      errorMsg.AppendLiteral("cannot resolve schema type place holder for \"");
+      errorMsg.Append(name);
+      errorMsg.AppendLiteral("\"");
+
+      NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
 
       return NS_ERROR_FAILURE;
     }

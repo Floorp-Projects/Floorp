@@ -39,6 +39,7 @@
 #ifndef __nsSchemaLoader_h__
 #define __nsSchemaLoader_h__
 
+#include "nsIWebServiceErrorHandler.h"
 #include "nsISchemaLoader.h"
 #include "nsSchemaPrivate.h"
 #include "nsDOMUtils.h"
@@ -102,73 +103,90 @@ public:
   NS_DECL_NSISCHEMACOLLECTION
 
 protected:
-  nsresult ProcessElement(nsSchema* aSchema, 
+  nsresult ProcessElement(nsIWebServiceErrorHandler* aErrorHandler,
+                          nsSchema* aSchema, 
                           nsIDOMElement* aElement,
                           nsISchemaElement** aSchemaElement);
-  nsresult ProcessComplexType(nsSchema* aSchema, 
+  nsresult ProcessComplexType(nsIWebServiceErrorHandler* aErrorHandler,
+                              nsSchema* aSchema, 
                               nsIDOMElement* aElement,
                               nsISchemaComplexType** aComplexType);
-  nsresult ProcessComplexTypeBody(nsSchema* aSchema, 
+  nsresult ProcessComplexTypeBody(nsIWebServiceErrorHandler* aErrorHandler,
+                                  nsSchema* aSchema, 
                                   nsIDOMElement* aElement,
                                   nsSchemaComplexType* aComplexType,
                                   nsSchemaModelGroup* aSequence,
                                   PRUint16* aContentModel);
-  nsresult ProcessSimpleContent(nsSchema* aSchema, 
+  nsresult ProcessSimpleContent(nsIWebServiceErrorHandler* aErrorHandler,
+                                nsSchema* aSchema, 
                                 nsIDOMElement* aElement,
                                 nsSchemaComplexType* aComplexType,
                                 PRUint16* aDerivation,
                                 nsISchemaType** aBaseType);
-  nsresult ProcessSimpleContentRestriction(nsSchema* aSchema, 
+  nsresult ProcessSimpleContentRestriction(nsIWebServiceErrorHandler* aErrorHandler,
+                                           nsSchema* aSchema, 
                                            nsIDOMElement* aElement,
                                            nsSchemaComplexType* aComplexType, 
                                            nsISchemaType* aBaseType,
                                            nsISchemaSimpleType** aSimpleBaseType);
-  nsresult ProcessSimpleContentExtension(nsSchema* aSchema, 
+  nsresult ProcessSimpleContentExtension(nsIWebServiceErrorHandler* aErrorHandler,
+                                         nsSchema* aSchema, 
                                          nsIDOMElement* aElement,
                                          nsSchemaComplexType* aComplexType,
                                          nsISchemaType* aBaseType,
                                          nsISchemaSimpleType** aSimpleBaseType);
-  nsresult ProcessComplexContent(nsSchema* aSchema, 
+  nsresult ProcessComplexContent(nsIWebServiceErrorHandler* aErrorHandler,
+                                 nsSchema* aSchema, 
                                  nsIDOMElement* aElement,
                                  nsSchemaComplexType* aComplexType,
                                  PRUint16* aContentModel,
                                  PRUint16* aDerivation,
                                  nsISchemaType** aBaseType);
-  nsresult ProcessSimpleType(nsSchema* aSchema, 
+  nsresult ProcessSimpleType(nsIWebServiceErrorHandler* aErrorHandler,
+                             nsSchema* aSchema, 
                              nsIDOMElement* aElement,
                              nsISchemaSimpleType** aSimpleType);
-  nsresult ProcessSimpleTypeRestriction(nsSchema* aSchema, 
+  nsresult ProcessSimpleTypeRestriction(nsIWebServiceErrorHandler* aErrorHandler,
+                                        nsSchema* aSchema, 
                                         nsIDOMElement* aElement,
                                         const nsAString& aName,
                                         nsISchemaSimpleType** aSimpleType);
-  nsresult ProcessSimpleTypeList(nsSchema* aSchema, 
+  nsresult ProcessSimpleTypeList(nsIWebServiceErrorHandler* aErrorHandler,
+                                 nsSchema* aSchema, 
                                  nsIDOMElement* aElement,
                                  const nsAString& aName,
                                  nsISchemaSimpleType** aSimpleType);
-  nsresult ProcessSimpleTypeUnion(nsSchema* aSchema, 
+  nsresult ProcessSimpleTypeUnion(nsIWebServiceErrorHandler* aErrorHandler,
+                                  nsSchema* aSchema, 
                                   nsIDOMElement* aElement,
                                   const nsAString& aName,
                                   nsISchemaSimpleType** aSimpleType);
-  nsresult ProcessAttribute(nsSchema* aSchema, 
+  nsresult ProcessAttribute(nsIWebServiceErrorHandler* aErrorHandler,
+                            nsSchema* aSchema, 
                             nsIDOMElement* aElement,
                             nsISchemaAttribute** aAttribute);
-  nsresult ProcessAttributeGroup(nsSchema* aSchema, 
+  nsresult ProcessAttributeGroup(nsIWebServiceErrorHandler* aErrorHandler,
+                                 nsSchema* aSchema, 
                                  nsIDOMElement* aElement,
                                  nsISchemaAttributeGroup** aAttributeGroup);
-  nsresult ProcessAttributeComponent(nsSchema* aSchema, 
+  nsresult ProcessAttributeComponent(nsIWebServiceErrorHandler* aErrorHandler,
+                                     nsSchema* aSchema, 
                                      nsIDOMElement* aElement,
                                      nsIAtom* aTagName,
                                      nsISchemaAttributeComponent** aAttribute);
-  nsresult ProcessModelGroup(nsSchema* aSchema, 
+  nsresult ProcessModelGroup(nsIWebServiceErrorHandler* aErrorHandler,
+                             nsSchema* aSchema, 
                              nsIDOMElement* aElement,
                              nsIAtom* aTagName,
                              nsSchemaModelGroup* aParentSequence,
                              nsISchemaModelGroup** aModelGroup);
-  nsresult ProcessParticle(nsSchema* aSchema, 
+  nsresult ProcessParticle(nsIWebServiceErrorHandler* aErrorHandler,
+                           nsSchema* aSchema, 
                            nsIDOMElement* aElement,
                            nsIAtom* aTagName,
                            nsISchemaParticle** aModelGroup);
-  nsresult ProcessFacet(nsSchema* aSchema, 
+  nsresult ProcessFacet(nsIWebServiceErrorHandler* aErrorHandler,
+                        nsSchema* aSchema, 
                         nsIDOMElement* aElement,
                         nsIAtom* aTagName,
                         nsISchemaFacet** aFacet);

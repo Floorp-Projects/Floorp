@@ -117,9 +117,9 @@ NS_IMPL_ISUPPORTS3_CI(nsSchemaModelGroup,
                       nsISchemaModelGroup)
 
 
-/* void resolve (); */
+/* void resolve (in nsIWebServiceErrorHandler aErrorHandler); */
 NS_IMETHODIMP
-nsSchemaModelGroup::Resolve()
+nsSchemaModelGroup::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   if (mIsResolved) {
     return NS_OK;
@@ -131,8 +131,20 @@ nsSchemaModelGroup::Resolve()
 
   count = mParticles.Count();
   for (i = 0; i < count; ++i) {
-    rv = mParticles.ObjectAt(i)->Resolve();
+    rv = mParticles.ObjectAt(i)->Resolve(aErrorHandler);
     if (NS_FAILED(rv)) {
+      nsAutoString name;
+      nsresult rc = mParticles.ObjectAt(i)->GetName(name);
+      NS_ENSURE_SUCCESS(rc, rc);
+      
+      nsAutoString errorMsg;
+      errorMsg.AppendLiteral("Failure resolving schema particle, cannot ");
+      errorMsg.AppendLiteral("resolve particle \"");
+      errorMsg.Append(name);
+      errorMsg.AppendLiteral("\"");
+      
+      NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
+      
       return rv;
     }
   }
@@ -288,9 +300,9 @@ NS_IMPL_ISUPPORTS3_CI(nsSchemaModelGroupRef,
                       nsISchemaParticle,
                       nsISchemaModelGroup)
 
-/* void resolve (); */
+/* void resolve (in nsIWebServiceErrorHandler aErrorHandler); */
 NS_IMETHODIMP
-nsSchemaModelGroupRef::Resolve()
+nsSchemaModelGroupRef::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   nsresult rv = NS_OK;
 
@@ -304,7 +316,7 @@ nsSchemaModelGroupRef::Resolve()
   }
 
   if (mModelGroup) {
-    rv = mModelGroup->Resolve();
+    rv = mModelGroup->Resolve(aErrorHandler);
   }
 
   return rv;
@@ -420,9 +432,9 @@ NS_IMPL_ISUPPORTS3_CI(nsSchemaAnyParticle,
                       nsISchemaAnyParticle)
 
 
-/* void resolve (); */
+/* void resolve (in nsIWebServiceErrorHandler aErrorHandler); */
 NS_IMETHODIMP
-nsSchemaAnyParticle::Resolve()
+nsSchemaAnyParticle::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   return NS_OK;
 }
@@ -508,9 +520,9 @@ NS_IMPL_ISUPPORTS3_CI(nsSchemaElement,
                       nsISchemaParticle,
                       nsISchemaElement)
 
-/* void resolve (); */
+/* void resolve (in nsIWebServiceErrorHandler aErrorHandler); */
 NS_IMETHODIMP
-nsSchemaElement::Resolve()
+nsSchemaElement::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   if (mIsResolved) {
     return NS_OK;
@@ -520,13 +532,13 @@ nsSchemaElement::Resolve()
   nsresult rv = NS_OK;
   if (mType && mSchema) {
     nsCOMPtr<nsISchemaType> type;
-    rv = mSchema->ResolveTypePlaceholder(mType, getter_AddRefs(type));
+    rv = mSchema->ResolveTypePlaceholder(aErrorHandler, mType, getter_AddRefs(type));
     if (NS_FAILED(rv)) {
       return rv;
     }
     
     mType = type;
-    rv = mType->Resolve();
+    rv = mType->Resolve(aErrorHandler);
   }
 
   return rv;
@@ -675,9 +687,9 @@ NS_IMPL_ISUPPORTS3_CI(nsSchemaElementRef,
                       nsISchemaParticle,
                       nsISchemaElement)
 
-/* void resolve (); */
+/* void resolve (in nsIWebServiceErrorHandler aErrorHandler); */
 NS_IMETHODIMP
-nsSchemaElementRef::Resolve()
+nsSchemaElementRef::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   nsresult rv = NS_OK;
   if (mIsResolved) {
@@ -690,7 +702,7 @@ nsSchemaElementRef::Resolve()
   }
 
   if (mElement) {
-    rv = mElement->Resolve();
+    rv = mElement->Resolve(aErrorHandler);
   }
 
   return rv;

@@ -37,10 +37,6 @@
 
 #include "nsISupports.idl"
 
-%{ C++
-#include "nsAString.h"
-%} 
-
 interface nsIDOMElement;
 
 /**

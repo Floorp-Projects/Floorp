@@ -65,6 +65,17 @@
 #define NS_WSDL_NAMESPACE "http://schemas.xmlsoap.org/wsdl/"
 #define NS_WSDL_SOAP_NAMESPACE "http://schemas.xmlsoap.org/wsdl/soap/"
 
+/**
+ * Fire error on error handler passed as argument, only to be used
+ * in ProcessXXX or Resolve methods.
+ */
+#define NS_WSDLLOADER_FIRE_ERROR(status,statusMessage)     \
+  PR_BEGIN_MACRO                                           \
+  if (mErrorHandler) {                                     \
+    mErrorHandler->OnError(status, statusMessage);         \
+  }                                                        \
+  PR_END_MACRO
+
 class nsSOAPPortBinding : public nsISOAPPortBinding
 {
 public:

@@ -67,16 +67,15 @@ nsSchemaBuiltinType::GetTargetNamespace(nsAString& aTargetNamespace)
   return NS_OK;
 }
 
-/* void resolve (); */
+/* void resolve (in nsIWebServiceErrorHandler aErrorHandler); */
 NS_IMETHODIMP
-nsSchemaBuiltinType::Resolve()
+nsSchemaBuiltinType::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   return NS_OK;
 }
 
 /* void clear (); */
-NS_IMETHODIMP
-nsSchemaBuiltinType::Clear()
+NS_IMETHODIMP nsSchemaBuiltinType::Clear()
 {
   return NS_OK;
 }
@@ -283,9 +282,9 @@ NS_IMPL_ISUPPORTS4_CI(nsSchemaListType,
                       nsISchemaSimpleType,
                       nsISchemaListType)
 
-/* void resolve (); */
+/* void resolve (in nsIWebServiceErrorHandler aErrorHandler); */
 NS_IMETHODIMP
-nsSchemaListType::Resolve()
+nsSchemaListType::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   if (mIsResolved) {
     return NS_OK;
@@ -295,7 +294,7 @@ nsSchemaListType::Resolve()
   mIsResolved = PR_TRUE;
   if (mListType && mSchema) {
     nsCOMPtr<nsISchemaType> type;
-    rv = mSchema->ResolveTypePlaceholder(mListType, getter_AddRefs(type));
+    rv = mSchema->ResolveTypePlaceholder(aErrorHandler, mListType, getter_AddRefs(type));
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
@@ -304,7 +303,7 @@ nsSchemaListType::Resolve()
       return NS_ERROR_FAILURE;
     }
   }
-  rv = mListType->Resolve();
+  rv = mListType->Resolve(aErrorHandler);
 
   return rv;
 }
@@ -397,9 +396,9 @@ NS_IMPL_ISUPPORTS4_CI(nsSchemaUnionType,
                       nsISchemaSimpleType,
                       nsISchemaUnionType)
 
-/* void resolve (); */
+/* void resolve (in nsIWebServiceErrorHandler aErrorHandler); */
 NS_IMETHODIMP
-nsSchemaUnionType::Resolve()
+nsSchemaUnionType::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   if (mIsResolved) {
     return NS_OK;
@@ -411,14 +410,14 @@ nsSchemaUnionType::Resolve()
     count = mUnionTypes.Count();
     for (i = 0; i < count; ++i) {
       nsCOMPtr<nsISchemaType> type;
-      nsresult rv = mSchema->ResolveTypePlaceholder(mUnionTypes.ObjectAt(i),
+      nsresult rv = mSchema->ResolveTypePlaceholder(aErrorHandler, mUnionTypes.ObjectAt(i),
                                                     getter_AddRefs(type));
       if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
       }
       nsCOMPtr<nsISchemaSimpleType> simpleType = do_QueryInterface(type);
       mUnionTypes.ReplaceObjectAt(simpleType, i);
-      rv = type->Resolve();
+      rv = type->Resolve(aErrorHandler);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -533,9 +532,9 @@ NS_IMPL_ISUPPORTS4_CI(nsSchemaRestrictionType,
                       nsISchemaSimpleType,
                       nsISchemaRestrictionType)
 
-/* void resolve (); */
+/* void resolve (in nsIWebServiceErrorHandler aErrorHandler); */
 NS_IMETHODIMP
-nsSchemaRestrictionType::Resolve()
+nsSchemaRestrictionType::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   if (mIsResolved) {
     return NS_OK;
@@ -545,7 +544,7 @@ nsSchemaRestrictionType::Resolve()
   mIsResolved = PR_TRUE;
   if (mBaseType && mSchema) {
     nsCOMPtr<nsISchemaType> type;
-    rv = mSchema->ResolveTypePlaceholder(mBaseType, getter_AddRefs(type));
+    rv = mSchema->ResolveTypePlaceholder(aErrorHandler, mBaseType, getter_AddRefs(type));
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
@@ -553,7 +552,7 @@ nsSchemaRestrictionType::Resolve()
     if (!mBaseType) {
       return NS_ERROR_FAILURE;
     }
-    rv = mBaseType->Resolve();
+    rv = mBaseType->Resolve(aErrorHandler);
   }
 
   return rv;
@@ -690,9 +689,9 @@ NS_IMPL_ISUPPORTS3_CI(nsSchemaTypePlaceholder,
                       nsISchemaSimpleType)
 
 
-/* void resolve (); */
+/* void resolve (in nsIWebServiceErrorHandler aErrorHandler); */
 NS_IMETHODIMP
-nsSchemaTypePlaceholder::Resolve()
+nsSchemaTypePlaceholder::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   return NS_OK;
 }
@@ -750,9 +749,9 @@ NS_IMPL_ISUPPORTS2_CI(nsSchemaFacet,
                       nsISchemaComponent,
                       nsISchemaFacet)
 
-/* void resolve (); */
+/* void resolve (in nsIWebServiceErrorHandler aErrorHandler); */
 NS_IMETHODIMP
-nsSchemaFacet::Resolve()
+nsSchemaFacet::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 {
   return NS_OK;
 }
