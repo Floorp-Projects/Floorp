@@ -292,7 +292,6 @@ int nsMsgSendPart::PushBody(char* buffer, PRInt32 length)
   else 
   {
     // Merely translate all linebreaks to CRLF.
-    int status = 0;
     const char *in = encoded_data;
     const char *end = in + length;
     char *buffer, *out;
