@@ -105,6 +105,7 @@ protected:
     FILE*               mOut;
     friend class nsDNSRequest;
 #endif
+    char*               mMyIPAddress;
 };
 
 #endif /* nsDNSService_h__ */
