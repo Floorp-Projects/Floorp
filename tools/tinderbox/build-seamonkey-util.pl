@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.147 $ ';
+$::UtilsVersion = '$Revision: 1.148 $ ';
 
 package TinderUtils;
 
@@ -219,6 +219,9 @@ sub GetSystemInfo {
     if ($Settings::OS eq 'BSD_OS') {
         $Settings::BuildName = "$host BSD/OS $os_ver $build_type";
     }
+    if ($Settings::OS eq 'Darwin') {
+        $Settings::BuildName = "$host MacOSX/Darwin $os_ver $build_type";
+    }
     if ($Settings::OS eq 'FreeBSD') {
         $Settings::BuildName = "$host $Settings::OS/$Settings::CPU $os_ver $build_type";
     }
@@ -339,6 +342,12 @@ sub SetupPath {
         # Because ld dies if it encounters -include
         #$Settings::MakeOverrides ||= 'CPP_PROG_LINK=0 CCF=shlicc2';
         $Settings::NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE=';
+    }
+
+    if ($Settings::OS eq 'Darwin') {
+        $ENV{PATH} = "/bin:/usr/bin:$ENV{PATH}";
+        $Settings::ConfigureEnvArgs = 'CC=cc CXX=cpp';
+        $Settings::Compiler = 'cc';
     }
 
     if ($Settings::OS eq 'FreeBSD') {
