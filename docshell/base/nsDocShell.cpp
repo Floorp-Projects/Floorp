@@ -4460,7 +4460,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
                       NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(aEntry->GetPostData(getter_AddRefs(postData)),
                       NS_ERROR_FAILURE);
-#if 0
+
     /* If there is a valid postdata *and* the user pressed
      * shift-reload, take user's permission before we repost the 
      * data to the server.
@@ -4489,7 +4489,6 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
         }
       }
     }
-#endif /* 0 */
 
     NS_ENSURE_SUCCESS(InternalLoad
                       (uri, referrerURI, nsnull, PR_TRUE, PR_FALSE, nsnull,
