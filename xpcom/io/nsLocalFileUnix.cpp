@@ -379,11 +379,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
 
     int result;
     /* use creat(2) for NORMAL_FILE, mkdir(2) for DIRECTORY */
-#if defined(VMS)
-    int (*creationFunc)(const char *, mode_t, ...) =
-#else
     int (*creationFunc)(const char *, mode_t) =
-#endif
         type == NORMAL_FILE_TYPE ? exclusive_create : exclusive_mkdir;
 
     result = creationFunc((const char *)mPath, permissions);
