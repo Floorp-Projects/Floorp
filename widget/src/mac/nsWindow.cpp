@@ -730,7 +730,7 @@ NS_IMETHODIMP	nsWindow::Update(nsIRenderingContext* aRenderingContext)
 				do
 				{
           if (NS_SUCCEEDED(children->CurrentItem((nsISupports **)&child)))  {
-					  child->Update(renderingContext);
+					  child->Update(/*renderingContext*/);
           }
 				}
         while (NS_SUCCEEDED(children->Next()));			
