@@ -79,6 +79,9 @@ LCFLAGS = \
 LLIBS=                          \
  $(DIST)\lib\xpcom.lib          \
  $(DIST)\lib\raptorgfxwin.lib   \
+!ifdef DETECT_WEBSHELL_LEAKS
+ $(DIST)\lib\raptorweb.lib       \
+!endif
 !ifdef NECKO
  $(DIST)\lib\neckoutil_s.lib    \
 !else
