@@ -3517,7 +3517,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsIPresContext*          aPresConte
   // Initialize the frame and force it to have a view
 
     // the scrolled frame is anonymous and does not have a content node
-    scrolledFrame->Init(*aPresContext, nsnull, scrollFrame,
+    scrolledFrame->Init(*aPresContext, aContent, scrollFrame,
                         scrolledPseudoStyle, nsnull);
 
   nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, scrolledFrame,
