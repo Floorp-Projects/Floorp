@@ -82,7 +82,7 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
     from there since the parameters occupy the same stack space as the stack
     we're trying to populate.
 */
-    uint32 *l_d;
+    uint32 *l_d = d;
     nsXPCVariant *l_s = s;
     uint32 l_paramCount = paramCount;
 
