@@ -324,8 +324,7 @@ MsgAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 //
 // MsgAppCore class initialization
 //
-extern "C" NS_DOM nsresult
-NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype, JSObject * aParentProto)
+nsresult NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype, JSObject * aParentProto)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;
