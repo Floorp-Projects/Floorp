@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.3 2000/09/09 06:08:46 nelsonb%netscape.com Exp $
+ * $Id: sslsock.c,v 1.4 2000/09/11 22:37:12 nelsonb%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -1609,7 +1609,7 @@ ssl_SendTo(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
     return SECFailure;
 }
 
-static PRIOMethods ssl_methods = {
+static const PRIOMethods ssl_methods = {
     PR_DESC_LAYERED,
     ssl_Close,           	/* close        */
     ssl_Read,            	/* read         */
@@ -1648,23 +1648,59 @@ static PRIOMethods ssl_methods = {
     NULL                 	/* reserved for future use */
 };
 
+
+static PRIOMethods combined_methods;
+
 static void
-ssl_SetupIOMethods(PRIOMethods *ssl_methods)
+ssl_SetupIOMethods(void)
 {
-    const PRIOMethods *default_methods;
+          PRIOMethods *new_methods  = &combined_methods;
+    const PRIOMethods *nspr_methods = PR_GetDefaultIOMethods();
+    const PRIOMethods *my_methods   = &ssl_methods;
 
-    default_methods = PR_GetDefaultIOMethods();
+    *new_methods = *nspr_methods;
 
-    ssl_methods->reserved_fn_6   = default_methods->reserved_fn_6;
-    ssl_methods->reserved_fn_5   = default_methods->reserved_fn_5;
-    ssl_methods->getsocketoption = default_methods->getsocketoption;
-    ssl_methods->setsocketoption = default_methods->setsocketoption;
-    ssl_methods->reserved_fn_4   = default_methods->reserved_fn_4;
-    ssl_methods->reserved_fn_3   = default_methods->reserved_fn_3;
-    ssl_methods->reserved_fn_2   = default_methods->reserved_fn_2;
-    ssl_methods->reserved_fn_1   = default_methods->reserved_fn_1;
-    ssl_methods->reserved_fn_0   = default_methods->reserved_fn_0;
+    new_methods->file_type         = my_methods->file_type;
+    new_methods->close             = my_methods->close;
+    new_methods->read              = my_methods->read;
+    new_methods->write             = my_methods->write;
+    new_methods->available         = my_methods->available;
+    new_methods->available64       = my_methods->available64;
+    new_methods->fsync             = my_methods->fsync;
+    new_methods->seek              = my_methods->seek;
+    new_methods->seek64            = my_methods->seek64;
+    new_methods->fileInfo          = my_methods->fileInfo;
+    new_methods->fileInfo64        = my_methods->fileInfo64;
+    new_methods->writev            = my_methods->writev;
+    new_methods->connect           = my_methods->connect;
+    new_methods->accept            = my_methods->accept;
+    new_methods->bind              = my_methods->bind;
+    new_methods->listen            = my_methods->listen;
+    new_methods->shutdown          = my_methods->shutdown;
+    new_methods->recv              = my_methods->recv;
+    new_methods->send              = my_methods->send;
+    new_methods->recvfrom          = my_methods->recvfrom;
+    new_methods->sendto            = my_methods->sendto;
+    new_methods->poll              = my_methods->poll;
+    new_methods->acceptread        = my_methods->acceptread;
+    new_methods->transmitfile      = my_methods->transmitfile;
+    new_methods->getsockname       = my_methods->getsockname;
+    new_methods->getpeername       = my_methods->getpeername;
+/*  new_methods->getsocketoption   = my_methods->getsocketoption;	*/
+/*  new_methods->setsocketoption   = my_methods->setsocketoption;	*/
+    new_methods->sendfile          = my_methods->sendfile;
 
+}
+
+static PRCallOnceType initIoLayerOnce;
+
+static PRStatus  
+ssl_InitIOLayer(void)
+{
+    ssl_layer_id = PR_GetUniqueIdentity("SSL");
+    ssl_SetupIOMethods();
+    ssl_inited = PR_TRUE;
+    return PR_SUCCESS;
 }
 
 static PRStatus
@@ -1673,16 +1709,14 @@ ssl_PushIOLayer(sslSocket *ns, PRFileDesc *stack, PRDescIdentity id)
     PRFileDesc *layer	= NULL;
     PRStatus    status;
 
-    if (ssl_inited != PR_TRUE) {
-	ssl_layer_id = PR_GetUniqueIdentity("SSL");
-	ssl_SetupIOMethods(&ssl_methods);
-	ssl_inited = PR_TRUE;
+    if (!ssl_inited) {
+	PR_CallOnce(&initIoLayerOnce, &ssl_InitIOLayer);
     }
 
     if (ns == NULL)
 	goto loser;
 
-    layer = PR_CreateIOLayerStub(ssl_layer_id, &ssl_methods);
+    layer = PR_CreateIOLayerStub(ssl_layer_id, &combined_methods);
     if (layer == NULL)
 	goto loser;
     layer->secret = (PRFilePrivate *)ns;
