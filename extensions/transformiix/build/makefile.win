@@ -1,0 +1,67 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH=..\..\..\..
+include <$(DEPTH)/config/config.mak>
+
+DEFINES=-DMOZILLA
+
+MODULE=transformix
+REQUIRES=xpcom raptor
+IS_COMPONENT = 1
+
+CPPSRCS=						\
+	XSLProcessorFactory.cpp		\
+	$(NULL)
+
+CPP_OBJS=									\
+	.\$(OBJDIR)\XSLProcessorFactory.obj		\
+	$(NULL)
+
+MAKE_OBJ_TYPE = DLL
+DLLNAME = transformiix
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
+
+LINCS= -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
+      -I..\source\xml\dom \
+      -I..\source\xsl\expr -I..\source\xsl\util -I..\source\xml -I..\source\xsl \
+      -I..\source\base \
+      
+# These are the libraries we need to link with to create the dll
+LLIBS=												\
+ $(DIST)\lib\xpcom.lib                              \
+ $(DIST)\lib\transformix_base.lib					\
+ $(DIST)\lib\transformix_xml.lib					\
+ $(DIST)\lib\transformix_xml_dom_mozImpl.lib		\
+ $(DIST)\lib\transformix_xsl.lib					\
+ $(DIST)\lib\transformix_xsl_expr.lib				\
+ $(DIST)\lib\transformix_xsl_util.lib
+
+include <$(DEPTH)\config\rules.mak>
+
+install:: $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\bin\$(DLLNAME).dll
+	rm -f $(DIST)\lib\$(DLLNAME).lib

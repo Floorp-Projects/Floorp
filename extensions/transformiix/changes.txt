@@ -1,0 +1,56 @@
+TransforMiiX (TM) (C) Copyright The MITRE Corporation 1999  All rights reserved.
+
+
+Build 19990813
+-- added new example: indentity.xml/xsl which tests:
+   -- xsl:copy, node()
+-- added comment(), pi(), and node()
+   -- XMLParser still needs to handle reading in XML comments
+-- added xsl:copy
+-- added xsl:processing-instruction
+-- added xsl:comment
+
+Build 19990812
+-- Created base/Double.cpp  (primitives.h)
+   -- Based off some code submitted by Larry Fitzpatrick, changed Name from
+     FloatPort to Double, I wanted to add more Double related methods
+     -- changed the NaN() method to just a static double
+     -- All expr classes now use Double::isNaN() and Double::NaN
+     -- I added Double::isInfinite, Double::POSITIVE_INFINITY and 
+       Double::NEGATIVE_INFINITY
+-- Added base/Integer.cpp back into Makefile
+   -- added Integer::toString(int,String); 
+   -- changed implementation
+-- Moved code to convert from Strings to doubles and from doubles to Strings
+   into the Double class
+-- removed testdom.cpp from xml/dom 
+-- Added more changes from Larry Fitzpatrick and Michele Lee for
+   porting issues
+   -- added appropriate return values for:
+      -- xml/dom/Element.cpp
+      -- xml/dom/NodeDefinition.cpp
+      -- base/StringList.cpp
+      -- xsl/expr/PredicateList.cpp
+-- Added remaining String Function Calls
+   -- substring(), substring-after(), substring-before(), translate(), 
+      string-length()
+   
+
+Build 19990810
+-- Added most of the Whitespace handling
+-- Added ErrorObserver interface
+   -- ErrorObserver is now used throughout most of the code
+-- Added SimpleErrorObserver implementation of ErrorObserver
+-- Moved main() method from XSLProcessor.cpp to tranformiix.cpp
+-- Added the following XPath functions:
+   -- local-part(), name(), namespace()
+   -- see functions.xml/functions.xsl for available functions
+
+Build 19990806
+-- Incoporated Changes From Larry Fitzpatrick
+-- Added more XPath functions 
+   -- last(), count(), string(), contains(), starts-with(), concat()
+   -- see functions.xml/functions.xsl for available functions
+-- Added xsl:text support
+
+

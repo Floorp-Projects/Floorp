@@ -1,0 +1,486 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+    "http://www.w3.org/TR/REC-html40/loose.dtd">
+<?foo this is a test processing ? > instruction?>
+<!-- MITRE TransforMiiX Test cases, written by Keith Visco. -->
+<HTML>
+  <HEAD>
+    <TITLE>MII TransforMiiX Test Cases</TITLE>
+  </HEAD>
+  <BODY>
+    <CENTER>
+      <FONT COLOR="BLUE" FACE="Arial">
+        <B>MITRE</B>
+      </FONT>
+      <BR>
+      <B>MII Transfor<FONT COLOR="blue">Mii</FONT>X Test Cases</B>
+    </CENTER>
+    <P>This document serves to test basic XSL expressions.</P>
+    <P>
+      <B>Testing xsl:variable</B>
+      <BR>
+      <B>Test:</B>&lt;xsl:value-of select="$product-name"/&gt;<BR>
+      <B>Desired Result:</B>TransforMiiX<BR>
+      <B>Result:</B>TransforMiiX</P>
+    <P>
+      <B>Testing xsl:if</B>
+      <BR>
+      <B>Test:</B>&lt;xsl:if test="x | y | z"&gt;true&lt;/xsl:if&gt;<BR>
+      <B>Desired Result:</B>true<BR>
+      <B>Result:</B>true</P>
+    <P>
+      <B>Testing xsl:choose</B>
+      <BR>
+      <B>Test:</B>see source<BR>
+      <B>Desired Result:</B>true<BR>
+      <B>Result:</B>true</P>
+    <P>
+      <B>Testing parent and ancestor ops</B>
+      <BR>
+      <B>Test:</B>see source<BR>
+      <B>Desired Result:</B>true<BR>
+      <B>Result:</B>true<BR>
+    </P>
+    <P>
+      <B>Testing basic xsl:apply-templates</B>
+      <BR>
+      <B>Test:</B>&lt;xsl:apply-templates/&gt;<BR>
+      <B>Desired Result:</B>element x, element y, element z<BR>
+      <B>Result:</B>element<B> x</B>,element<B> y</B>,element<B> z</B>
+    </P>
+    <P>
+      <B>Testing basic xsl:apply-templates with mode</B>
+      <BR>
+      <B>Test:</B>&lt;xsl:apply-templates mode="mode-test"/&gt;<BR>
+      <B>Desired Result:</B>x, y, z<BR>
+      <B>Result:</B>x, y, z</P>
+    <P>
+      <B>Testing predicates</B>
+      <BR>
+      <B>Test:</B>see source<BR>
+      <B>Desired Result:</B>
+      <B>z</B>
+      <BR>
+      <B>Result:</B>
+      <B>z</B>
+    </P>
+    <P>
+      <B>Testing predicates</B>
+      <BR>
+      <B>Test:</B>see source<BR>
+      <B>Desired Result:</B>
+      <BR>
+      <B>Result:</B>
+    </P>
+    <P>
+      <B>Named Template/Call Template</B>
+      <BR>
+      <B>Test:</B>&lt;xsl:call-template name="named-template-test"/&gt;<BR>
+      <B>Desired Result:</B>named template processed!<BR>
+      <B>Result:</B>named template processed!</P>
+    <P>
+      <B>Attribute Value Templates and variables</B>
+      <BR>
+      <B>Test:</B>
+      <UL>&lt;xsl:variable name="color"&gt;red&lt;/xsl:variable&gt;<BR>&lt;FONT COLOR="{$color}"&gt;Red Text&lt;/FONT&gt;</UL>
+      <B>Desired Result:</B>
+      <FONT COLOR="red">Red Text</FONT>
+      <BR>
+      <B>Result:</B>
+      <FONT COLOR="red">Red Text</FONT>
+    </P>
+    <HR>
+    <TABLE>
+      <TR BGColor="#E0E0FF">
+        <TD Colspan="2" ALIGN="CENTER">
+          <B>Axis Identifiers (these should work, I need more test cases though)</B>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:if test="descendant::z"&gt;true&lt;/xsl:if&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">true</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">true</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:if test="not(descendant-or-self::no-element)"&gt;true&lt;/xsl:if&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">true</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">true</FONT>
+        </TD>
+      </TR>
+    </TABLE>
+    <HR>
+    <TABLE>
+      <TR BGColor="#E0E0FF">
+        <TD Colspan="2" ALIGN="CENTER">
+          <B>Creating Elements with xsl:element and xsl:attribute</B>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:element name="FONT"&gt;<BR>&lt;xsl:attribute name="COLOR"&gt;blue&lt;/xsl:attribute&gt;<BR>Passed<BR>&lt;/xsl:element&gt;</TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">Passed</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">Passed</FONT>
+        </TD>
+      </TR>
+      <TR BGCOLOR="#E0E0FF" ALIGN="CENTER">
+        <TD COLSPAN="2">
+          <B>Using Attribute Sets</B>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;FONT xsl:use-attribute-sets="style1"&gt;<BR>Passed<BR>&lt;/FONT&gt;</TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">Passed</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue" SIZE="+0">Passed</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:element name="FONT" use-attribute-sets="style1 style2"&gt;<BR>Passed<BR>&lt;/xsl:element&gt;</TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="red">Passed</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="red" SIZE="+0">Passed</FONT>
+        </TD>
+      </TR>
+    </TABLE>
+    <HR>
+    <TABLE>
+      <TR BGColor="#E0E0FF">
+        <TD Colspan="2" ALIGN="CENTER">
+          <B>Additive Expressions</B>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="70+4"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">74</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">74</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="-70+4"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">-66</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">-66</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="1900+70+8-4"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">1974</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">1974</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="(4+5)-(9+9)"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">-9</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">-9</FONT>
+        </TD>
+      </TR>
+    </TABLE>
+    <HR>
+    <TABLE>
+      <TR BGColor="#E0E0FF">
+        <TD Colspan="2" ALIGN="CENTER">
+          <B>Multiplicative Expressions</B>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="7*4"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">28</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">28</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="7mod4"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">3</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">3</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="7div4"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">1.75</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">1.75</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="7div0"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">Infinity</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">Infinity</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="0 div 0"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">NaN</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">NaN</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:variable name="x" expr="7*3"/&gt;<BR>&lt;xsl:variable name="y" expr="3"/&gt;<BR>&lt;xsl:value-of select="$x div $y"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">7</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">7</FONT>
+        </TD>
+      </TR>
+    </TABLE>
+  </BODY>
+</HTML>
