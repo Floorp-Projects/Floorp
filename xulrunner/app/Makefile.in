@@ -151,7 +151,6 @@ ifeq ($(OS_ARCH),OS2)
 RESFILE=splashos2.res
 RCFLAGS += -DMOZ_XULRUNNER
 ifdef BUILD_STATIC_LIBS
-OS_LIBS += -lpmwinx
 EXE_DEF_FILE = xulrunner.def
 RCFLAGS += -DMOZ_STATIC_BUILD -i $(DIST)/include/widget
 endif
