@@ -137,7 +137,7 @@ pull_and_build_all: pull_all depend build_all
 
 pull_clobber_and_build_all: pull_all clobber_all build_all
 
-pull_all: pull_nspr pull_psm pull_ldapcsdk pull_seamonkey
+pull_all: pull_nspr pull_psm pull_ldapcsdk pull_seamonkey pull_l10n
 
 pull_nspr: pull_clientmak
       cd $(MOZ_SRC)\.
@@ -159,6 +159,23 @@ pull_layout:
 pull_seamonkey: pull_clientmak
 	cd $(MOZ_SRC)\.
 	$(CVSCO) SeaMonkeyAll
+
+pull_l10n:
+	cd $(MOZ_SRC)\.
+!if defined(MOZ_LANGPACKS)
+	$(CVSCO) mozilla/l10n/langpacks
+!else
+	$(CVSCO) mozilla/l10n/makefile.win
+	$(CVSCO) mozilla/l10n/langpacks/makefile.win
+	$(CVSCO) mozilla/l10n/langpacks/en-GB/makefile.win
+	$(CVSCO) mozilla/l10n/langpacks/en-GB/theme.mk
+	$(CVSCO) mozilla/l10n/langpacks/en-GB/chrome/makefile.win
+	$(CVSCO) mozilla/l10n/langpacks/en-GB/chrome/en-GB/makefile.win
+	$(CVSCO) mozilla/l10n/langpacks/en-GB/chrome/en-GB/manifest.rdf
+	$(CVSCO) mozilla/l10n/langpacks/en-GB/defaults/makefile.win
+	$(CVSCO) mozilla/l10n/langpacks/en-GB/defaults/profile/makefile.win
+	$(CVSCO) mozilla/l10n/langpacks/en-GB/defaults/profile/en-GB
+!endif
 
 pull_clientmak:
     cd $(MOZ_SRC)\.
