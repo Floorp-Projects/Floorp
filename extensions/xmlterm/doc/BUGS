@@ -1,7 +1,7 @@
 Known bugs
 ----------
 
-25 Dec 1999
+11 Jan 2000
 
 
 1. Early use of "xls -i" does not scroll properly
@@ -11,3 +11,7 @@ Known bugs
 
 3. Typing text in text input element causes input to be duplicated
    in the command line
+
+4. Executing "emacs -nw" in the NCURSES version of LTERM results in
+   LTERM exiting abnormally when user exits emacs. An interrupt error
+   seems to occur while polling for output in ltermRead.

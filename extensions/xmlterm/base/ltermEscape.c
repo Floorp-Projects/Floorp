@@ -41,7 +41,9 @@
 
 
 static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
-                int count, const UNISTYLE *style, int *consumed, int *opcodes);
+                                   int count, const UNISTYLE *style,
+                                   int *consumed, int *opcodes,
+                                   int *opvals, int *oprow);
 static int ltermProcessDECPrivateMode(struct lterms *lts,
             const int *paramValues, int paramCount, UNICHAR uch, int *opcodes);
 static int ltermProcessXTERMSequence(struct lterms *lts, const UNICHAR *buf,
@@ -57,23 +59,28 @@ static int ltermProcessXMLTermSequence(struct lterms *lts, const UNICHAR *buf,
  * outputMode or terminating condition.
  * OPCODES ::= LINEDATA OUTPUT if a switch from LineMode to ScreenMode
  *                         or StreamMode was triggered by the ESCAPE sqeuence.
- * OPCODES ::= SCREENDATA OUTPUT if a switch from ScreenMode to StreamMode
- *                         was triggered by the ESCAPE sequence.
+ * OPCODES ::= SCREENDATA ( CLEAR | INSERT | DELETE | SCROLL )?
+ * for screenMode escape sequences or if a switch from ScreenMode to StreamMode
+ * was triggered by the ESCAPE sequence.
  * (A switch from ScreenMode to LineMode is not considered a terminating
  *  condition and occurs transparently.)
- * OPCODES ::= SCREENDATA (  CLEAR
- *                         | INSERT MOVEDOWN?
- *                         | DELETE MOVEDOWN? )
- * if the ESCAPE sequence corresponds to the ScreenMode terminal operation.
- * OPCODES ::= LINEDATA CLEAR
- * if the ESCAPE sequence corresponds to the LineMode terminal operation.
+ * OPVALS contains return value(s) for specific screen operations
+ *  such as INSERT, DELETE, and SCROLL.
+ * OPROW contains the row value for specific screen operations such as
+ *  INSERT, DELETE, and SCROLL (or -1, cursor row is to be used).
+ *
+ * OPVALS contains return value(s) for specific screen operations
+ *  such as INSERT and DELETE.
+ * OPROW contains the row value for specific screen operations such as
+ *  INSERT and DELETE (or -1, cursor row is to be used).
  *
  * @return 0 on successful processing of the ESCAPE sequence,
  *         1 if BUF contains an incomplete ESCAPE sequence,
  *        -1 if error an error occurred.
  */
 int ltermProcessEscape(struct lterms *lts, const UNICHAR *buf,
-                int count, const UNISTYLE *style, int *consumed, int *opcodes)
+                       int count, const UNISTYLE *style, int *consumed,
+                       int *opcodes, int *opvals, int *oprow)
 {
   struct LtermOutput *lto = &(lts->ltermOutput);
 
@@ -88,26 +95,27 @@ int ltermProcessEscape(struct lterms *lts, const UNICHAR *buf,
 
   if (buf[1] == U_LBRACKET) {
     /* ESC [ Process CSI sequence */
-    return ltermProcessCSISequence(lts, buf, count, style, consumed, opcodes);
+    return ltermProcessCSISequence(lts, buf, count, style, consumed,
+                                   opcodes, opvals, oprow);
   }
 
   if (buf[1] == U_RBRACKET) {
     /* ESC ] Process XTERM sequence */
-    return ltermProcessXTERMSequence(lts, buf, count, style, consumed,opcodes);
+    return ltermProcessXTERMSequence(lts, buf, count, style, consumed,
+                                     opcodes);
   }
 
   if (buf[1] == U_LCURLY) {
     /* ESC { Process XMLTerm sequence */
-    return ltermProcessXMLTermSequence(lts, buf, count, style, consumed,opcodes);
+    return ltermProcessXMLTermSequence(lts, buf, count, style, consumed,
+                                       opcodes);
   }
-
-  /* Set returned opcodes to zero */
-  *opcodes = 0;
 
   /* Assume two characters will be consumed at this point */
   *consumed = 2;
 
   switch (buf[1]) {
+
   /* Three character sequences */
   case U_NUMBER:            /* ESC # 8 DEC Screen Alignment Test */
   case U_LPAREN:            /* ESC ( C Designate G0 Character Set */
@@ -134,73 +142,86 @@ int ltermProcessEscape(struct lterms *lts, const UNICHAR *buf,
 
   /* Two character sequences */
   case U_SEVEN:             /* ESC 7 Save Cursor */
-    LTERM_WARNING("ltermProcessEscape: Warning - unimplemented %c\n",
-                  buf[1]);
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
     return 0;
 
   case U_EIGHT:             /* ESC 8 Restore Cursor */
-    LTERM_WARNING("ltermProcessEscape: Warning - unimplemented %c\n",
-                  buf[1]);
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
     return 0;
 
   case U_EQUALS:            /* ESC = Application Keypad */
-    LTERM_WARNING("ltermProcessEscape: Warning - unimplemented %c\n",
-                  buf[1]);
+    LTERM_LOG(ltermProcessEscape,52,("Application Keypad\n"));
+    if (lto->outputMode == LTERM2_LINE_MODE) {
+      ltermSwitchToScreenMode(lts);
+      *opcodes = LTERM_SCREENDATA_CODE | LTERM_CLEAR_CODE;
+    }
     return 0;
 
   case U_GREATERTHAN:       /* ESC > Normal Keypad */
-    LTERM_WARNING("ltermProcessEscape: Warning - unimplemented %c\n",
-                  buf[1]);
+    LTERM_LOG(ltermProcessEscape,52,("Normal Keypad\n"));
+    if (lto->outputMode == LTERM1_SCREEN_MODE) {
+      ltermSwitchToLineMode(lts);
+      *opcodes = LTERM_LINEDATA_CODE;
+    }
     return 0;
 
   case U_D_CHAR:            /* ESC D Index (IND) */
-    LTERM_WARNING("ltermProcessEscape: Warning - unimplemented %c\n",
-                  buf[1]);
+    LTERM_LOG(ltermProcessEscape,52,("Index\n"));
+    if (lto->outputMode == LTERM1_SCREEN_MODE) {
+      /* Scroll up */
+      if (ltermInsDelEraseLine(lts, 1, lto->topScrollRow, LTERM_DELETE_ACTION) != 0)
+        return -1;
+      *opcodes = LTERM_SCREENDATA_CODE | LTERM_DELETE_CODE;
+      *opvals = 1;
+      *oprow = lto->topScrollRow;
+    }
     return 0;
 
   case U_E_CHAR:            /* ESC E Next Line (NEL) */
-    LTERM_WARNING("ltermProcessEscape: Warning - unimplemented %c\n",
-                  buf[1]);
+    if (lto->outputMode == LTERM1_SCREEN_MODE) {
+      if (lto->cursorRow > 0)
+        lto->cursorRow--;
+    }
     return 0;
 
   case U_H_CHAR:            /* ESC H Tab Set (HTS) */
-    LTERM_WARNING("ltermProcessEscape: Warning - unimplemented %c\n",
-                  buf[1]);
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
     return 0;
 
   case U_M_CHAR:            /* ESC M Reverse Index (TI) */
-    LTERM_WARNING("ltermProcessEscape: Warning - unimplemented %c\n",
-                  buf[1]);
+    LTERM_LOG(ltermProcessEscape,52,("Reverse Index\n"));
+    if (lto->outputMode == LTERM1_SCREEN_MODE) {
+      /* Scroll down */
+      if (ltermInsDelEraseLine(lts, 1, lto->topScrollRow, LTERM_INSERT_ACTION) != 0)
+        return -1;
+      *opcodes = LTERM_SCREENDATA_CODE | LTERM_INSERT_CODE;
+      *opvals = 1;
+      *oprow = lto->topScrollRow;
+    }
     return 0;
 
   case U_N_CHAR:            /* ESC N Single Shift Select of G2 Character Set */
-    LTERM_WARNING("ltermProcessEscape: Warning - unimplemented %c\n",
-                  buf[1]);
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
     return 0;
 
   case U_O_CHAR:            /* ESC O Single Shift Select of G3 Character Set */
-    LTERM_WARNING("ltermProcessEscape: Warning - unimplemented %c\n",
-                  buf[1]);
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
     return 0;
 
   case U_Z_CHAR:            /* ESC Z Obsolete form of ESC[c */
-    LTERM_WARNING("ltermProcessEscape: Warning - unimplemented %c\n",
-                  buf[1]);
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
     return 0;
 
   case U_c_CHAR:            /* ESC c Full reset (RIS)  */
-    LTERM_WARNING("ltermProcessEscape: Warning - unimplemented %c\n",
-                  buf[1]);
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
     return 0;
 
   case U_n_CHAR:            /* ESC n Invoke the G2 Character Set  */
-    LTERM_WARNING("ltermProcessEscape: Warning - unimplemented %c\n",
-                  buf[1]);
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
     return 0;
 
   case U_o_CHAR:            /* ESC o Invoke the G3 Character Set */
-    LTERM_WARNING("ltermProcessEscape: Warning - unimplemented %c\n",
-                  buf[1]);
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
     return 0;
 
   default:
@@ -215,7 +236,9 @@ int ltermProcessEscape(struct lterms *lts, const UNICHAR *buf,
  * @return 0 on success and -1 on error.
  */
 static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
-                int count, const UNISTYLE *style, int *consumed, int *opcodes)
+                                   int count, const UNISTYLE *style,
+                                   int *consumed, int *opcodes,
+                                   int *opvals, int *oprow)
 {
   struct LtermOutput *lto = &(lts->ltermOutput);
   int offset, value, privateMode;
@@ -237,9 +260,6 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
     privateMode = 1;
     offset = 3;
   }
-
-  /* Set returned opcodes to zero */
-  *opcodes = 0;
 
   /* Process numerical parameters */
   paramCount = 0;
@@ -307,19 +327,29 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
   switch (buf[offset]) {
 
   case U_ATSIGN:    /* Insert Ps (Blank) Character(s) [default: 1] (ICH) */
-    if (ltermInsDelEraseChar(lts, param1, LTERM_INSERT_CHAR) != 0)
+    if (ltermInsDelEraseChar(lts, param1, LTERM_INSERT_ACTION) != 0)
       return -1;
     return 0;
 
   case U_e_CHAR:
   case U_A_CHAR:    /* Cursor Up Ps Times [default: 1] (CUU) */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,52,("Cursor Up Count = %d\n", param1));
+
+    if (lto->outputMode == LTERM1_SCREEN_MODE) {
+      lto->cursorRow += param1;
+      if (lto->cursorRow >= lts->nRows)
+        lto->cursorRow = lts->nRows - 1;
+    }
     return 0;
 
   case U_B_CHAR:    /* Cursor Down Ps Times [default: 1] (CUD) */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,52,("Cursor Down Count = %d\n", param1));
+
+    if (lto->outputMode == LTERM1_SCREEN_MODE) {
+      lto->cursorRow -= param1;
+      if (lto->cursorRow < 0)
+        lto->cursorRow = 0;
+    }
     return 0;
 
   case U_a_CHAR:
@@ -334,12 +364,16 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
       } else {
         lto->outputCursorChar = lto->outputChars;
       }
+
+    } else {
+      lto->cursorCol += param1;
+      if (lto->cursorCol >= lts->nCols)
+        lto->cursorCol = lts->nCols-1;
     }
     return 0;
 
   case U_D_CHAR:    /* Cursor Backward Ps Times [default: 1] (CUB) */
-    LTERM_LOG(ltermProcessCSISequence,52,("Cursor Back Count = %d\n",
-                   param1));
+    LTERM_LOG(ltermProcessCSISequence,52,("Cursor Back Count = %d\n", param1));
 
     if (lto->outputMode == LTERM2_LINE_MODE) {
 
@@ -348,23 +382,50 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
       } else {
         lto->outputCursorChar = 0;
       }
+
+    } else {
+      lto->cursorCol -= param1;
+      if (lto->cursorCol < 0)
+        lto->cursorCol = 0;
     }
     return 0;
 
   case U_E_CHAR:    /* Cursor Down Ps Times [default: 1] and to first column */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,52,("Cursor Down and First Count = %d\n",
+                   param1));
+
+    if (lto->outputMode == LTERM1_SCREEN_MODE) {
+      lto->cursorCol = 0;
+      lto->cursorRow -= param1;
+      if (lto->cursorRow < 0)
+        lto->cursorRow = 0;
+    }
     return 0;
 
   case U_F_CHAR:    /* Cursor Up Ps Times [default: 1] and to first column */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,52,("Cursor Up and First Count = %d\n",
+                   param1));
+
+    if (lto->outputMode == LTERM1_SCREEN_MODE) {
+      lto->cursorCol = 0;
+      lto->cursorRow += param1;
+      if (lto->cursorRow >= lts->nRows)
+        lto->cursorRow = lts->nRows - 1;
+    }
     return 0;
 
   case U_SNGLQUOTE:
   case U_G_CHAR:    /* Cursor to Column Ps (HPA) */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,52,("Cursor to Column = %d\n", param1));
+
+    if (lto->outputMode == LTERM1_SCREEN_MODE) {
+      lto->cursorCol = param1-1;
+      if (lto->cursorCol < 0) {
+        lto->cursorCol = 0;
+      } else if (lto->cursorCol >= lts->nCols) {
+        lto->cursorCol = lts->nCols - 1;
+      }
+    }
     return 0;
 
   case U_H_CHAR:    /* Cursor Position [row;column] [default: 1;1] (CUP) */
@@ -372,18 +433,33 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
                    param1, param2));
 
     if (lto->outputMode == LTERM2_LINE_MODE) {
-
+      /* Line mode */
       if ((param1 > 0) && ((param1-1) <= lto->outputChars)) {
         lto->outputCursorChar = param1-1;
       } else {
         lto->outputCursorChar = 0;
       }
+
+    } else {
+      /* Screen mode */
+      lto->cursorRow = lts->nRows - param1;
+      if (lto->cursorRow < 0) {
+        lto->cursorRow = 0;
+      } else if (lto->cursorRow >= lts->nRows) {
+        lto->cursorRow = lts->nRows - 1;
+      }
+
+      lto->cursorCol = param2 - 1;
+      if (lto->cursorCol < 0) {
+        lto->cursorCol = 0;
+      } else if (lto->cursorCol >= lts->nCols) {
+        lto->cursorCol = lts->nCols - 1;
+      }
     }
     return 0;
 
   case U_I_CHAR:    /* Move forward Ps tab stops [default: 1] */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented %c\n", buf[offset]));
     return 0;
 
   case U_J_CHAR:    /* Erase in Display (ED)
@@ -393,15 +469,57 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
                      */
     param1 = (paramCount > 0) ? paramValues[0] : 0;
 
-    LTERM_LOG(ltermProcessCSISequence,52,("Erase display code %d\n",
-                   param1));
+    LTERM_LOG(ltermProcessCSISequence,52,("Erase display code %d\n", param1));
 
     if (lto->outputMode == LTERM2_LINE_MODE) {
       /* Clear line */
       ltermClearOutputLine(lts);
 
       /* Set opcodes to return incomplete line */
-      *opcodes = LTERM_LINEDATA_CODE|LTERM_CLEAR_CODE;
+      *opcodes = LTERM_LINEDATA_CODE;
+
+    } else {
+      /* Screen mode */
+      int eraseLines, j;
+
+      if ((param1 == 0) && (lto->cursorRow == lts->nRows-1))
+        param1 = 2;
+
+      switch (param1) {
+      case 0:          /* Clear below */
+        eraseLines = lto->cursorRow + 1;
+        if (ltermInsDelEraseLine(lts, eraseLines, lto->cursorRow, LTERM_ERASE_ACTION) != 0)
+          return -1;
+
+        /* Set line modification flags */
+        for (j=0; j<=lto->cursorRow; j++) {
+          lto->modifiedCol[j] = lts->nCols-1;
+        }
+        break;
+
+      case 1:          /* Clear above */
+        eraseLines = lts->nRows - lto->cursorRow - 1;
+        if (ltermInsDelEraseLine(lts, eraseLines, lts->nRows-1, LTERM_ERASE_ACTION) != 0)
+          return -1;
+
+        /* Set line modification flags */
+        for (j=lto->cursorRow; j<lts->nRows; j++) {
+          lto->modifiedCol[j] = lts->nCols-1;
+        }
+        break;
+
+      case 2:          /* Clear all */
+        eraseLines = lts->nRows;
+        if (ltermInsDelEraseLine(lts, eraseLines, lts->nRows-1, LTERM_ERASE_ACTION) != 0)
+          return -1;
+
+        /* Clear screen */
+        *opcodes = LTERM_SCREENDATA_CODE|LTERM_CLEAR_CODE;
+        break;
+
+      default:         /* Invalid line erase code */
+        LTERM_WARNING("ltermProcessCSISequence: Warning - invalid line erase code %d\n", param1);
+      }
     }
     return 0;
 
@@ -412,11 +530,10 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
                      */
     param1 = (paramCount > 0) ? paramValues[0] : 0;
 
-    LTERM_LOG(ltermProcessCSISequence,52,("Line erase code %d\n",
-                   param1));
+    LTERM_LOG(ltermProcessCSISequence,52,("Line erase code %d\n", param1));
 
     if (lto->outputMode == LTERM2_LINE_MODE) {
-
+      /* Line mode */
       switch(param1) {
       case 0:        /* Clear to Right */
         lto->outputChars = lto->outputCursorChar;
@@ -432,6 +549,37 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
         lto->outputCursorChar = 0;
         lto->outputModifiedChar = 0;
         break;
+      default:       /* Invalid char erase code */
+        LTERM_WARNING("ltermProcessCSISequence: Warning - invalid char erase code %d\n", param1);
+      }
+
+    } else {
+      /* Screen mode */
+      int eraseCount = 0;
+
+      switch(param1) {
+      case 0:        /* Clear to Right */
+        eraseCount = lts->nCols - lto->cursorCol;
+        if (ltermInsDelEraseChar(lts, eraseCount, LTERM_ERASE_ACTION) != 0)
+          return -1;
+        break;
+
+      case 1:        /* Clear to Left */
+        eraseCount = lto->cursorCol;
+        lto->cursorCol = 0;
+        if (ltermInsDelEraseChar(lts, eraseCount, LTERM_ERASE_ACTION) != 0)
+          return -1;
+        lto->cursorCol = eraseCount;
+        break;
+
+      case 2:        /* Clear All */
+        eraseCount = lts->nCols;
+        lto->cursorCol = 0;
+        if (ltermInsDelEraseChar(lts, eraseCount, LTERM_ERASE_ACTION) != 0)
+          return -1;
+        lto->cursorCol = eraseCount;
+        break;
+
       default:       /* Invalid erase code */
         LTERM_WARNING("ltermProcessCSISequence: Warning - invalid erase code %d\n", param1);
       }
@@ -440,25 +588,38 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
     return 0;
 
   case U_L_CHAR:    /* Insert Ps Line(s) [default: 1] (IL) */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,52,("Insert Line Count = %d\n", param1));
+
+    if (lto->outputMode == LTERM1_SCREEN_MODE) {
+      if (ltermInsDelEraseLine(lts, param1, lto->cursorRow, LTERM_INSERT_ACTION) != 0)
+        return -1;
+      *opcodes = LTERM_SCREENDATA_CODE|LTERM_INSERT_CODE;
+      *opvals = param1;
+      *oprow = lto->cursorRow;
+    }
     return 0;
 
   case U_M_CHAR:    /* Delete Ps Line(s) [default: 1] (DL) */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,52,("Delete Line Count = %d\n", param1));
+
+    if (lto->outputMode == LTERM1_SCREEN_MODE) {
+      if (ltermInsDelEraseLine(lts, param1, lto->cursorRow, LTERM_DELETE_ACTION) != 0)
+        return -1;
+      *opcodes = LTERM_SCREENDATA_CODE|LTERM_DELETE_CODE;
+      *opvals = param1;
+      *oprow = lto->cursorRow;
+    }
     return 0;
 
   case U_P_CHAR:    /* Delete Ps Character(s) [default: 1] (DCH) */
-    if (ltermInsDelEraseChar(lts, param1, LTERM_DELETE_CHAR) != 0)
+    if (ltermInsDelEraseChar(lts, param1, LTERM_DELETE_ACTION) != 0)
       return -1;
     return 0;
 
   case U_T_CHAR:    /* Initiate hilite mouse tracking. Parameters
                      * [func;startx;starty;firstrow;lastrow]. 
                      */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented %c\n", buf[offset]));
     return 0;
 
   case U_W_CHAR:    /* Tabulator functions:
@@ -466,18 +627,16 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
                      *  Ps = 2  Tab Clear (TBC), Clear Current Column (default)
                      *  Ps = 5  Tab Clear (TBC), Clear All 
                      */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented %c\n", buf[offset]));
     return 0;
 
   case U_X_CHAR:    /* Erase Ps Character(s) [default: 1] (ECH) */
-    if (ltermInsDelEraseChar(lts, param1, LTERM_ERASE_CHAR) != 0)
+    if (ltermInsDelEraseChar(lts, param1, LTERM_ERASE_ACTION) != 0)
       return -1;
     return 0;
 
   case U_Z_CHAR:    /* Move backward Ps [default: 1] tab stops */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented %c\n", buf[offset]));
     return 0;
 
   case U_c_CHAR:    /* Send Device Attributes (DA)
@@ -485,49 +644,63 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
                      * returns: ESC[?1;2c
                      *          (``I am a VT100 with Advanced Video Option'') 
                      */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,52,("Device Attr %d\n", param1));
+    {
+      char deviceAttr[] = "\033[?1;2c";
+      if (ltermSendChar(lts, deviceAttr, strlen(deviceAttr)) != 0)
+        return -1;
+    }
+
     return 0;
 
   case U_d_CHAR:    /* Cursor to Line Ps (VPA) */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,52,("Cursor to Line = %d\n", param1));
+    if (lto->outputMode == LTERM1_SCREEN_MODE) {
+      lto->cursorRow = lts->nRows - param1;
+      if (lto->cursorRow < 0) {
+        lto->cursorRow = 0;
+      } else if (lto->cursorRow >= lts->nRows) {
+        lto->cursorRow = lts->nRows - 1;
+      }
+    }
     return 0;
 
   case U_f_CHAR:    /* Horizontal and Vertical Position [row;column] (HVP)
                      * [default: 1;1]
                      */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented %c\n", buf[offset]));
     return 0;
 
   case U_g_CHAR:    /* Tab Clear (TBC) 
                      * Ps = 0 Clear Current Column (default) 
                      * Ps = 3 Clear All (TBC)
                      */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented %c\n", buf[offset]));
     return 0;
 
   case U_i_CHAR:    /* Printing 
                      * Ps = 4 disable transparent print mode (MC4) 
                      * Ps = 5 enable transparent print mode (MC5)
                      */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented %c\n", buf[offset]));
     return 0;
 
   case U_h_CHAR:    /* Set Mode (SM)
                      * Ps =  4 Insert Mode (SMIR)
                      * Ps = 20 Automatic Newline (LNM)
                      */
-    LTERM_LOG(ltermProcessCSISequence,52,("Set Mode %d\n",
-                  param1));
+    LTERM_LOG(ltermProcessCSISequence,52,("Set Mode %d\n", param1));
 
     if (param1 == 4) {
       lto->insertMode = 1;
     } else if (param1 == 4) {
       lto->automaticNewline = 1;
+    } if ((param1 % 100) == 47) {
+      /* Switch to alternate buffer */
+      if (lto->outputMode == LTERM2_LINE_MODE) {
+        ltermSwitchToScreenMode(lts);
+        *opcodes = LTERM_SCREENDATA_CODE | LTERM_CLEAR_CODE;
+      }
     }
     return 0;
 
@@ -535,13 +708,18 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
                      * Ps =  4 Replace Mode (RMIR)
                      * Ps = 20 Normal Linefeed (LNM)
                      */
-    LTERM_LOG(ltermProcessCSISequence,52,("Reset Mode %d\n",
-                  param1));
+    LTERM_LOG(ltermProcessCSISequence,52,("Reset Mode %d\n", param1));
 
     if (param1 == 4) {
       lto->insertMode = 0;
     } else if (param1 == 4) {
       lto->automaticNewline = 0;
+    } if ((param1 % 100) == 47) {
+      /* Switch to regular buffer */
+      if (lto->outputMode == LTERM1_SCREEN_MODE) {
+        ltermSwitchToLineMode(lts);
+        *opcodes = LTERM_LINEDATA_CODE;
+      }
     }
     return 0;
 
@@ -561,8 +739,38 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
                      * Ps = 37 / 47 fg/bg White 
                      * Ps = 39 / 49 fg/bg Default
                      */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,52,("Character Attr %d\n", param1));
+    switch (param1) {
+    case 0:
+      lto->styleMask = 0;
+      break;
+    case 1:
+      lto->styleMask |= LTERM_BOLD_STYLE;
+      break;
+    case 22:
+      lto->styleMask &= ~LTERM_BOLD_STYLE;
+      break;
+    case 4:
+      lto->styleMask |= LTERM_ULINE_STYLE;
+      break;
+    case 24:
+      lto->styleMask &= ~LTERM_ULINE_STYLE;
+      break;
+    case 5:
+      lto->styleMask |= LTERM_BLINK_STYLE;
+      break;
+    case 25:
+      lto->styleMask &= ~LTERM_BLINK_STYLE;
+      break;
+    case 7:
+      lto->styleMask |= LTERM_INVERSE_STYLE;
+      break;
+    case 27:
+      lto->styleMask &= ~LTERM_INVERSE_STYLE;
+      break;
+    default:
+      break;
+    }
     return 0;
 
   case U_n_CHAR:    /* Device Status Report (DSR) 
@@ -572,20 +780,73 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
                      * Ps = 7 Request Display Name 
                      * Ps = 8 Request Version Number (place in window title)
                      */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,52,("Status Report %d\n", param1));
+    switch (param1) {
+    case 5:
+      {
+        char statusReport[] = "\033[01";
+        if (ltermSendChar(lts, statusReport, strlen(statusReport)) != 0)
+          return -1;
+      }
+      break;
+
+    case 6:
+      if (lto->outputMode == LTERM1_SCREEN_MODE) {
+        int iRow = lts->nRows-lto->cursorRow;
+        int iCol = lto->cursorCol+1;
+        char cursorPos[13];
+
+        if ((iRow > 0) && (iRow < 10000) && (iCol > 0) && (iCol < 10000)) {
+          if (sprintf(cursorPos, "\033[%d;%dR", iRow, iCol) > 12) {
+            LTERM_ERROR("ltermProcessCSISequence: Error - DSR buffer overflow\n");
+          }
+          if (ltermSendChar(lts, cursorPos, strlen(cursorPos)) != 0)
+            return -1;
+        }
+      }
+      break;
+    default:
+      break;
+    }
     return 0;
 
   case U_r_CHAR:    /* Set Scrolling Region [top;bottom] 
                      * [default: full size of window] (CSR) 
                      */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+
+    if (lto->outputMode == LTERM1_SCREEN_MODE) {
+
+      if (paramCount == 0) {
+        param1 = 1;
+        param2 = lts->nRows;
+      }
+
+      LTERM_LOG(ltermProcessCSISequence,52,("Scrolling Region (%d, %d)\n",
+                                            param1, param2));
+
+      lto->topScrollRow = (param1 > 0) ? lts->nRows - param1 : lts->nRows - 1;
+      if (lto->topScrollRow < 0)
+        lto->topScrollRow = 0;
+
+      lto->botScrollRow = (param2 > 0) ? lts->nRows - param2 : lts->nRows - 1;
+      if (lto->botScrollRow < 0)
+        lto->botScrollRow = 0;
+
+      if (lto->topScrollRow < lto->botScrollRow) {
+        int temRow = lto->topScrollRow;
+        lto->topScrollRow = lto->botScrollRow;
+        lto->botScrollRow = temRow;
+      }
+
+      *opcodes = LTERM_SCREENDATA_CODE|LTERM_SCROLL_CODE;
+      *opvals = lto->topScrollRow;
+      *oprow = lto->botScrollRow;
+    }
+
     return 0;
 
   case U_x_CHAR:    /* Request Terminal Parameters (DECREQTPARM) */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unimplemented %c\n",
-                  buf[offset]);
+    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented %c\n", buf[offset]));
     return 0;
 
   default:          /* Unknown Escape sequence */
@@ -614,28 +875,23 @@ static int ltermProcessDECPrivateMode(struct lterms *lts,
 
   switch (uch) {
   case U_h_CHAR:    /* DEC Private Mode Set (DECSET) */
-    LTERM_WARNING("ltermProcessDECPrivateMode: Warning - unimplemented %c\n",
-                  (char) uch);
+    LTERM_LOG(ltermProcessDECPrivateMode,2,("Unimplemented %c\n", (char) uch));
     return 0;
 
   case U_l_CHAR:    /* DEC Private Mode Reset (DECRST) */
-    LTERM_WARNING("ltermProcessDECPrivateMode: Warning - unimplemented %c\n",
-                  (char) uch);
+    LTERM_LOG(ltermProcessDECPrivateMode,2,("Unimplemented %c\n", (char) uch));
     return 0;
 
   case U_r_CHAR:    /* Restore previously saved DEC Private Mode Values */
-    LTERM_WARNING("ltermProcessDECPrivateMode: Warning - unimplemented %c\n",
-                  (char) uch);
+    LTERM_LOG(ltermProcessDECPrivateMode,2,("Unimplemented %c\n", (char) uch));
     return 0;
 
   case U_s_CHAR:    /* Save DEC Private Mode Values */
-    LTERM_WARNING("ltermProcessDECPrivateMode: Warning - unimplemented %c\n",
-                  (char) uch);
+    LTERM_LOG(ltermProcessDECPrivateMode,2,("Unimplemented %c\n", (char) uch));
     return 0;
 
   case U_t_CHAR:    /* Toggle DEC Private Mode Values */
-    LTERM_WARNING("ltermProcessDECPrivateMode: Warning - unimplemented %c\n",
-                  (char) uch);
+    LTERM_LOG(ltermProcessDECPrivateMode,2,("Unimplemented %c\n", (char) uch));
     return 0;
 
   default:          /* Unknown escape sequence */
@@ -730,6 +986,7 @@ static int ltermProcessXTERMSequence(struct lterms *lts, const UNICHAR *buf,
 
   return 0;
 }
+
 
 /** Processes XMLTerm sequence (a special case of Escape sequence processing)
  * XMLterm escape sequences are of the form
@@ -895,7 +1152,7 @@ static int ltermProcessXMLTermSequence(struct lterms *lts, const UNICHAR *buf,
   case U_S_CHAR:    /* Switch to null-terminated stream mode, with cookie */
 
     if (lto->outputMode == LTERM1_SCREEN_MODE) {
-      *opcodes = LTERM_SCREENDATA_CODE | LTERM_OUTPUT_CODE;
+      *opcodes = LTERM_SCREENDATA_CODE;
     } else if (lto->outputMode == LTERM2_LINE_MODE) {
       *opcodes = LTERM_LINEDATA_CODE | LTERM_OUTPUT_CODE;
     }
@@ -945,9 +1202,9 @@ static int ltermProcessXMLTermSequence(struct lterms *lts, const UNICHAR *buf,
 
 
 /** Insert/delete/erase COUNT characters at current output cursor position.
- * ACTION = LTERM_INSERT_CHAR (insert)
- *          LTERM_DELETE_CHAR (delete)
- *          LTERM_ERASE_CHAR  (erase)
+ * @param action = LTERM_INSERT_ACTION (insert)
+ *                 LTERM_DELETE_ACTION (delete)
+ *                 LTERM_ERASE_ACTION  (erase)
  * @return 0 on success and -1 on error.
  */
 int ltermInsDelEraseChar(struct lterms *lts, int count, int action)
@@ -965,7 +1222,7 @@ int ltermInsDelEraseChar(struct lterms *lts, int count, int action)
     /* Line mode */
     switch (action) {
 
-    case LTERM_INSERT_CHAR:
+    case LTERM_INSERT_ACTION:
 
       if (lto->outputChars + charCount > MAXCOLM1) {
         /* Output buffer overflow; ignore extra inserts */
@@ -992,11 +1249,11 @@ int ltermInsDelEraseChar(struct lterms *lts, int count, int action)
       lto->outputChars += charCount;
       break;
 
-    case LTERM_DELETE_CHAR:
+    case LTERM_DELETE_ACTION:
       if (lto->outputCursorChar+charCount > lto->outputChars)
         charCount = lto->outputChars - lto->outputCursorChar;
 
-      LTERM_LOG(ltermInsDelEraseChar,62,("Delete %d chars\n",
+      LTERM_LOG(ltermInsDelEraseChar,62,("Line delete %d chars\n",
                      charCount));
 
       /* Shift characters to the left */
@@ -1009,11 +1266,11 @@ int ltermInsDelEraseChar(struct lterms *lts, int count, int action)
       lto->outputChars -= charCount;
       break;
 
-    case LTERM_ERASE_CHAR:
+    case LTERM_ERASE_ACTION:
       if (lto->outputCursorChar+charCount > lto->outputChars)
         charCount = lto->outputChars - lto->outputCursorChar;
 
-      LTERM_LOG(ltermInsDelEraseChar,62,("Erase %d chars\n",
+      LTERM_LOG(ltermInsDelEraseChar,62,("Line erase %d chars\n",
                      charCount));
 
       /* Erase characters */
@@ -1031,6 +1288,190 @@ int ltermInsDelEraseChar(struct lterms *lts, int count, int action)
 
   } else if (lto->outputMode == LTERM1_SCREEN_MODE) {
     /* Screen mode */
+    int j0 = lto->cursorRow*lts->nCols;
+
+    switch (action) {
+
+    case LTERM_INSERT_ACTION:
+      if (lto->cursorCol+charCount > lts->nCols) {
+        /* Ignore inserts beyond screen width */
+        LTERM_WARNING("ltermInsDelEraseChar: Warning - screen insert overflow\n");
+        charCount = lts->nCols - lto->cursorCol;
+      }
+
+      LTERM_LOG(ltermInsDelEraseChar,62,
+                ("Screen insert %d blank chars at column %d\n",
+                 charCount, lto->cursorCol));
+
+      if (charCount > 0) {
+        /* Shift characters to the right to make room for insertion */
+        for (j=lts->nCols-1+j0; j>=lto->cursorCol+charCount+j0; j--) {
+          lto->screenChar[j] = lto->screenChar[j-charCount];
+          lto->screenStyle[j] = lto->screenStyle[j-charCount];
+        }
+
+        /* Insert blank characters */
+        for (j=lto->cursorCol+j0; j<lto->cursorCol+charCount+j0; j++) {
+          lto->screenChar[j] = U_SPACE;
+          lto->screenStyle[j] = LTERM_STDOUT_STYLE | lto->styleMask;
+        }
+
+        /* Note modified column */
+        lto->modifiedCol[lto->cursorRow] = lts->nCols-1;
+      }
+      break;
+
+    case LTERM_DELETE_ACTION:
+      if (lto->cursorCol+charCount > lts->nCols)
+        charCount = lts->nCols - lto->cursorCol;
+
+      LTERM_LOG(ltermInsDelEraseChar,62,
+                ("Screen delete %d chars at column %d\n",
+                 charCount, lto->cursorCol));
+
+      if (charCount > 0) {
+        /* Shift characters to the left */
+        for (j=lto->cursorCol+j0; j<lts->nCols-charCount+j0; j++) {
+          lto->screenChar[j] = lto->screenChar[j+charCount];
+          lto->screenStyle[j] = lto->screenStyle[j+charCount];
+        }
+
+        /* Note modified column */
+        lto->modifiedCol[lto->cursorRow] = lts->nCols-1;
+      }
+
+      break;
+
+    case LTERM_ERASE_ACTION:
+      if (lto->cursorCol+charCount > lts->nCols)
+        charCount = lts->nCols - lto->cursorCol;
+
+      LTERM_LOG(ltermInsDelEraseChar,62,
+                ("Screen erase %d chars at column %d\n",
+                 charCount, lto->cursorCol));
+
+      if (charCount > 0) {
+        /* Erase characters */
+        for (j=lto->cursorCol+j0; j<lto->cursorCol+charCount+j0; j++) {
+          lto->screenChar[j] = U_SPACE;
+          lto->screenStyle[j] = LTERM_STDOUT_STYLE | lto->styleMask;
+        }
+
+        /* Note modified column */
+        if (lto->modifiedCol[lto->cursorRow] < lto->cursorCol+charCount-1)
+          lto->modifiedCol[lto->cursorRow] = lto->cursorCol+charCount-1;
+      }
+
+      break;
+    }
+  }
+
+  return 0;
+}
+
+
+/** Insert COUNT blank lines about current current line, scrolling down, or
+ * delete COUNT lines at and below current line, scrolling up remaining lines,
+ * or erase COUNT lines at and below current line.
+ * Displayed lines above the current line are unaffected,
+ * cursor is not moved and no new modification flags are set.
+ * @param count no. of lines to be inserted/deleted/erased
+ * @param row row for insertion/deletion/erasure
+ * @param action = LTERM_INSERT_ACTION (insert)
+ *                 LTERM_DELETE_ACTION (delete)
+ *                 LTERM_ERASE_ACTION  (erase)
+ * @return 0 on success and -1 on error.
+ */
+int ltermInsDelEraseLine(struct lterms *lts, int count, int row, int action)
+{
+  struct LtermOutput *lto = &(lts->ltermOutput);
+  int lineCount, kblank1, kblank2;
+  int joffset, jscroll, j, k;
+
+  LTERM_LOG(ltermInsDelEraseLine,60, ("count=%d, row=%d, action=%d\n",
+                                      count, row, action));
+
+  lineCount = count;
+
+  switch (action) {
+
+  case LTERM_ERASE_ACTION:
+    /* Erase lines down; no scrolling */
+    if (lineCount > row + 1)
+      lineCount = row + 1;
+
+    kblank1 = row-lineCount+1;
+    kblank2 = row;
+    break;
+
+  case LTERM_INSERT_ACTION:
+    /* Scroll down for insertion */
+    if ( (row < lto->botScrollRow) ||
+         (row > lto->topScrollRow) ) {
+      /* Cursor located outside scrollable region */
+      return 0;
+    }
+
+    if (lineCount > row - lto->botScrollRow + 1)
+      lineCount = row - lto->botScrollRow + 1;
+
+    kblank1 = row-lineCount+1;
+    kblank2 = row;
+
+    for (k=lto->botScrollRow; k<=row-lineCount; k++) {
+      joffset = k*lts->nCols;
+      jscroll = lineCount*lts->nCols;
+
+      lto->modifiedCol[k] = lto->modifiedCol[k+lineCount];
+
+      for (j=0+joffset; j<=lts->nCols-1+joffset; j++) {
+        lto->screenChar[j] = lto->screenChar[j+jscroll];
+        lto->screenStyle[j] = lto->screenStyle[j+jscroll];
+      }
+    }
+
+    break;
+
+  case LTERM_DELETE_ACTION:
+    /* Scroll up for deletion */
+    if ( (row < lto->botScrollRow) ||
+         (row > lto->topScrollRow) ) {
+      /* Cursor located outside scrollable region */
+      return 0;
+    }
+
+    if (lineCount > row - lto->botScrollRow + 1)
+      lineCount = row - lto->botScrollRow + 1;
+
+    kblank1 = lto->botScrollRow;
+    kblank2 = lto->botScrollRow + lineCount-1;
+
+    /* Scroll up */
+    for (k=row; k>=lto->botScrollRow+lineCount; k--) {
+      joffset = k*lts->nCols;
+      jscroll = lineCount*lts->nCols;
+
+      lto->modifiedCol[k] = lto->modifiedCol[k-lineCount];
+
+      for (j=0+joffset; j<=lts->nCols-1+joffset; j++) {
+        lto->screenChar[j] = lto->screenChar[j-jscroll];
+        lto->screenStyle[j] = lto->screenStyle[j-jscroll];
+      }
+    }
+
+    break;
+  }
+
+  /* Blank out lines (assumed to be displayed already) */
+  for (k=kblank1; k<=kblank2; k++) {
+    joffset = k*lts->nCols;
+
+    lto->modifiedCol[k] = -1;
+
+    for (j=0+joffset; j<=lts->nCols-1+joffset; j++) {
+      lto->screenChar[j] = U_SPACE;
+      lto->screenStyle[j] = LTERM_STDOUT_STYLE;
+    }
   }
 
   return 0;

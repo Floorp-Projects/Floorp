@@ -270,10 +270,10 @@ typedef FILE FILESTREAM;
 #define LTERM1_SCREEN_MODE  1
 #define LTERM2_LINE_MODE    2
 
-/* character operation codes */
-#define LTERM_INSERT_CHAR 0
-#define LTERM_DELETE_CHAR 1
-#define LTERM_ERASE_CHAR  2
+/* character/line action codes */
+#define LTERM_INSERT_ACTION 0
+#define LTERM_DELETE_ACTION 1
+#define LTERM_ERASE_ACTION  2
 
 /* List of characters escaped in XML */
 #define LTERM_AMP_ESCAPE    0
@@ -298,11 +298,12 @@ struct LtermRead {
   UNISTYLE *style;  /* Pointer to character style buffer     (IN param) */
   int max_count;    /* max. number of characters in buffers  (IN param) */
   int read_count;   /* actual number of characters in buffers */
-  int opcodes;     /* Returned opcodes */
-  int buf_row;     /* row at which to display buffer data */
-  int buf_col;     /* starting column at which to display buffer data */
-  int cursor_row;  /* final cursor row position */
-  int cursor_col;  /* final cursor column position */
+  int opcodes;      /* Returned opcodes */
+  int opvals;       /* Returned opvalues */
+  int buf_row;      /* row at which to display buffer data */
+  int buf_col;      /* starting column at which to display buffer data */
+  int cursor_row;   /* final cursor row position */
+  int cursor_col;   /* final cursor column position */
 };
 
 /* LTERM input structure: managed by lterm_write */
@@ -428,8 +429,10 @@ struct LtermOutput {
   int outputModifiedChar;      /* leftmost modified character in output line */
 
   int cursorRow, cursorCol;    /* screen cursor row and column */
+  int returnedCursorRow, returnedCursorCol;
+                               /* returned screen cursor row and column */
 
-  int rowCols[MAXROW];         /* count of columns in each row (>=0) */
+  int topScrollRow, botScrollRow;    /* top and bottom scrolling rows */
 
   int modifiedCol[MAXROW];     /* first modified column in each row;
                                   -1 if no column has been modified */
@@ -547,9 +550,11 @@ void ltermSwitchToRawMode(struct lterms *lts);
 void ltermClearInputLine(struct lterms *lts);
 int ltermDeleteGlyphs(struct LtermInput *lti, int count);
 int ltermSendData(struct lterms *lts, const UNICHAR *buf, int count);
+int ltermSendChar(struct lterms *lts, const char *buf, int count);
 
 /* ltermOutput.c */
-int ltermProcessOutput(struct lterms *lts, int *opcodes);
+int ltermProcessOutput(struct lterms *lts, int *opcodes, int *opvals,
+                       int *oprow);
 int ltermReceiveData(struct lterms *lts, int readERR);
 void ltermClearOutputLine(struct lterms *lts);
 int ltermClearOutputScreen(struct lterms *lts);
@@ -560,7 +565,9 @@ int ltermSwitchToLineMode(struct lterms *lts);
 
 /* ltermEscape.c */
 int ltermProcessEscape(struct lterms *lts, const UNICHAR *buf,
-                int count, const UNISTYLE *style, int *consumed, int *opcodes);
+                       int count, const UNISTYLE *style, int *consumed,
+                       int *opcodes, int *opvals, int *oprow);
 int ltermInsDelEraseChar(struct lterms *lts, int count, int action);
+int ltermInsDelEraseLine(struct lterms *lts, int count, int row, int action);
 
 #endif  /* _LTERMPRIVATE_H */

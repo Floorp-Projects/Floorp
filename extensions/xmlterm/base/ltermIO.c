@@ -43,7 +43,8 @@
 static int ltermWrite(struct lterms *lts, int *opcodes);
 
 static int ltermReturnStreamData(struct lterms *lts, struct LtermRead *ltr);
-static int ltermReturnScreenData(struct lterms *lts, struct LtermRead *ltr);
+static int ltermReturnScreenData(struct lterms *lts, struct LtermRead *ltr,
+                                 int opcodes, int opvals, int oprow);
 static int ltermReturnInputLine(struct lterms *lts, struct LtermRead *ltr);
 static int ltermReturnOutputLine(struct lterms *lts, struct LtermRead *ltr);
 
@@ -440,10 +441,7 @@ int ltermWrite(struct lterms *lts, int *opcodes)
  * OPCODES ::= STREAMDATA NEWLINE? COOKIESTR? DOCSTREAM? XMLSTREAM? WINSTREAM?
  * if StreamMode data is being returned.
  *
- * OPCODES ::= SCREENDATA BELL? (  CLEAR
- *                               | INSERT MOVEDOWN?
- *                               | DELETE MOVEDOWN?
- *                               | OUTPUT )
+ * OPCODES ::= SCREENDATA BELL? ( OUTPUT | CLEAR | INSERT | DELETE | SCROLL )?
  * if ScreenMode data is being returned.
  *
  * OPCODES ::= LINEDATA BELL? (  CLEAR
@@ -464,7 +462,7 @@ int ltermRead(struct lterms *lts, struct LtermRead *ltr, int timeout)
   struct LtermOutput *lto = &(lts->ltermOutput);
   int waitTime, nfds_all, pollCode, rePoll;
   int inputAvailable, newOutputAvailable;
-  int outOpcodes, returnCode;
+  int outOpcodes, outOpvals, outOprow, returnCode;
   int j;
 
   LTERM_LOG(ltermRead,20,("start outputMode=%d\n", lto->outputMode));
@@ -506,7 +504,6 @@ int ltermRead(struct lterms *lts, struct LtermRead *ltr, int timeout)
   else
     nfds_all = lto->nfds;
 
-
   do {
     /* Do not re-poll unless something special occurs */
     rePoll = 0;
@@ -514,6 +511,7 @@ int ltermRead(struct lterms *lts, struct LtermRead *ltr, int timeout)
     /* Default return values in LtermRead structure */
     ltr->read_count = 0;
     ltr->opcodes = 0;
+    ltr->opvals = 0;
     ltr->buf_row = -1;
     ltr->buf_col = -1;
     ltr->cursor_row = -1;
@@ -526,7 +524,13 @@ int ltermRead(struct lterms *lts, struct LtermRead *ltr, int timeout)
     pollCode = POLL(lto->pollFD, (SIZE_T) lto->nfds, waitTime);
 
     if (pollCode == -1) {
-      LTERM_ERROR( "ltermRead: Error return from poll\n");
+#if defined(DEBUG) && !defined(USE_NSPR_IO)
+      int errcode = errno;
+      perror("ltermRead");
+#else
+      int errcode = 0;
+#endif
+      LTERM_ERROR( "ltermRead: Error return from poll, code=%d\n", errcode);
       return -1;
     }
 
@@ -611,14 +615,16 @@ int ltermRead(struct lterms *lts, struct LtermRead *ltr, int timeout)
 
     /* If there is some complete decoded output, process it */
     if ((lto->decodedChars > 0) && !lto->incompleteEscapeSequence) {
-      returnCode = ltermProcessOutput(lts, &outOpcodes);
+      returnCode = ltermProcessOutput(lts, &outOpcodes, &outOpvals, &outOprow);
       if (returnCode < 0)
         return -1;
 
     } else {
       /* No new output to process */
       if (lto->outputMode == LTERM1_SCREEN_MODE) {
-        outOpcodes = LTERM_SCREENDATA_CODE | LTERM_OUTPUT_CODE;
+        outOpcodes = LTERM_SCREENDATA_CODE;
+        outOpvals = 0;
+        outOprow = -1;
       } else {
         /* No new output in line mode; return nothing */
         return 0;
@@ -626,23 +632,8 @@ int ltermRead(struct lterms *lts, struct LtermRead *ltr, int timeout)
     }
 
     if (outOpcodes & LTERM_SCREENDATA_CODE) {
-
-      if (outOpcodes & LTERM_OUTPUT_CODE) {
-        /* Return screen mode output */
-        return ltermReturnScreenData(lts, ltr);
-
-      } else {
-        /* Screen mode data with modifier flags; return just cursor position */
-        ltr->opcodes = outOpcodes;
-
-        /* Copy full screen cursor position */
-        ltr->cursor_row = lto->cursorRow;
-        ltr->cursor_col = lto->cursorCol;
-
-        ltr->read_count = 0;
-
-        return 0;
-      }
+      /* Return screen mode output */
+      return ltermReturnScreenData(lts, ltr, outOpcodes, outOpvals, outOprow);
     }
 
     if (outOpcodes & LTERM_LINEDATA_CODE) {
@@ -769,6 +760,7 @@ int ltermRead(struct lterms *lts, struct LtermRead *ltr, int timeout)
       } else {
         /* Line mode data with modifier flags; return just cursor position */
         ltr->opcodes = outOpcodes;
+        ltr->opvals = 0;
 
         /* Copy full screen cursor position */
         ltr->cursor_row = -1;
@@ -911,17 +903,44 @@ static int ltermReturnStreamData(struct lterms *lts, struct LtermRead *ltr)
  *            (in this case the first COUNT characters are returned in BUF,
  *             and the rest are discarded).
  */
-static int ltermReturnScreenData(struct lterms *lts, struct LtermRead *ltr)
+static int ltermReturnScreenData(struct lterms *lts, struct LtermRead *ltr,
+                                 int opcodes, int opvals, int oprow)
 {
   struct LtermOutput *lto = &(lts->ltermOutput);
-  int returnRow, charCount, returnCode;
+  int cursorMoved, returnRow, charCount, returnCode;
   int jOffset, j;
 
-  LTERM_LOG(ltermReturnScreenData,30,("start\n"));
+  cursorMoved = (lto->returnedCursorRow != lto->cursorRow) ||
+                (lto->returnedCursorCol != lto->cursorCol);
+
+  lto->returnedCursorRow = lto->cursorRow;
+  lto->returnedCursorCol = lto->cursorCol;
+
+  LTERM_LOG(ltermReturnScreenData,30,("cursorMoved=%d\n", cursorMoved));
+
+  /* Screen mode data with possible modifier flags */
+  ltr->opcodes = opcodes;
+  ltr->opvals = opvals;
 
   /* Copy full screen cursor position */
-  ltr->cursor_row = lto->cursorRow;
-  ltr->cursor_col = lto->cursorCol;
+  ltr->cursor_row = lto->returnedCursorRow;
+  ltr->cursor_col = lto->returnedCursorCol;
+
+  if (opcodes &
+      (LTERM_CLEAR_CODE|LTERM_INSERT_CODE|LTERM_DELETE_CODE|LTERM_SCROLL_CODE)) {
+    /* Screen modifier flags; return no character data */
+    if (oprow >= 0) {
+      ltr->buf_row = oprow;
+    } else {
+      ltr->buf_row = lto->cursorRow;
+    }
+
+    ltr->buf_col = 0;
+
+    ltr->read_count = 0;
+
+    return 0;
+  }
 
   /* Check if any row has been modified */
   returnRow = -1;
@@ -933,15 +952,27 @@ static int ltermReturnScreenData(struct lterms *lts, struct LtermRead *ltr)
     }
 
   if (returnRow < 0) {
-    /* No modified rows; return no data */
-    ltr->opcodes = 0;
+    /* No modified rows */
+    ltr->read_count = 0;
+    ltr->buf_row = 0;
+    ltr->buf_col = 0;
+
+    if (!cursorMoved && (ltr->opcodes == LTERM_SCREENDATA_CODE)) {
+      /* Return no data (***IMPORTANT ACTION, TO PREVENT LOOPING***) */
+      ltr->opcodes = 0;
+    }
+
     return 0;
   }
 
-  /* Returning screen mode data without modifiers */
-  ltr->opcodes = LTERM_SCREENDATA_CODE;
+  /* Returning modified row */
+  ltr->opcodes |= LTERM_OUTPUT_CODE;
 
-  charCount = lts->nCols - lto->modifiedCol[returnRow];
+  /* Copy entire row */
+  ltr->buf_row = returnRow;
+  ltr->buf_col = 0;
+
+  charCount = lts->nCols;
 
   if (charCount <= ltr->max_count) {
     returnCode = 0;
@@ -950,10 +981,6 @@ static int ltermReturnScreenData(struct lterms *lts, struct LtermRead *ltr)
     charCount = ltr->max_count;
     returnCode = -3;
   }
-
-  /* Copy modified part of row and return */
-  ltr->buf_row = returnRow;
-  ltr->buf_col = lto->modifiedCol[returnRow];
 
   jOffset = ltr->buf_row * lts->nCols + ltr->buf_col;
   for (j=0; j<charCount; j++) {

@@ -443,8 +443,13 @@ NS_IMETHODIMP mozXMLTermStream::SizeToContentHeight(PRInt32 maxHeight)
   PRInt32 scrollBarHeight = PRInt32(sbHeight*pixelScale);
 
   // Determine webshell size in pixels
-  PRInt32 shellX, shellY, shellWidth, shellHeight;
-  result = webShell->GetBounds(shellX, shellY, shellWidth, shellHeight);
+  nsRect shellArea;
+  result = presContext->GetVisibleArea(shellArea);
+  if (NS_FAILED(result))
+    return result;
+
+  PRInt32 shellWidth = PRInt32((float)shellArea.width * pixelScale);
+  PRInt32 shellHeight = PRInt32((float)shellArea.height * pixelScale);
 
   // Determine page size in pixels
   nscoord contX, contY;
@@ -457,7 +462,7 @@ NS_IMETHODIMP mozXMLTermStream::SizeToContentHeight(PRInt32 maxHeight)
   printf("mozXMLTermStream::SizeToContentHeight: scrollbar %d, %d\n",
          scrollBarWidth, scrollBarHeight);
 
-  printf("mozXMLTermStream::SizeToContentHeight: shell %d, %d\n",
+  printf("mozXMLTermStream::SizeToContentHeight: presShell %d, %d\n",
          shellWidth, shellHeight);
 
   printf("mozXMLTermStream::SizeToContentHeight: page %d, %d, %e\n",

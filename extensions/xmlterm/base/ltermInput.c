@@ -63,7 +63,7 @@ int ltermPlainTextInput(struct lterms *lts,
   int returnCode;
 
   LTERM_LOG(ltermPlainTextInput,20,
-    ("start lti->inputMode=%d\n", lti->inputMode));
+    ("count=%d, lti->inputMode=%d\n", count, lti->inputMode));
 
   if (lti->inputMode == LTERM0_RAW_MODE) {
     /* Transmit characters immediately to child process; no buffering */
@@ -343,8 +343,8 @@ static int ltermLineInput(struct lterms *lts,
   charIndex = 0;
 
   LTERM_LOG(ltermLineInput,30,
-            ("lti->inputMode=%d, inputCursorGlyph=%d\n",
-             lti->inputMode, lti->inputCursorGlyph));
+            ("count=%d, lti->inputMode=%d, inputCursorGlyph=%d\n",
+             count, lti->inputMode, lti->inputCursorGlyph));
   LTERM_LOGUNICODE(ltermLineInput,31,(buf, count));
   LTERM_LOG(ltermLineInput,31,("Glyphs=%d,Cols=%d,Chars=%d\n",
                             lti->inputGlyphs, lti->inputCols, lti->inputChars));
@@ -801,28 +801,44 @@ int ltermSendData(struct lterms *lts, const UNICHAR *buf, int count)
                                  remainingChars, chunkSize));
 
     /* Send UTF8 to process */
-    if (lts->ptyMode)
-#ifndef USE_NSPR_IO
-      success = (write(lts->pty.ptyFD, &ptyBuf,
-                       (SIZE_T) chunkSize) == chunkSize);
-#else
-      assert(0);
-#endif
-    else
-      success = (WRITE(lts->ltermProcess.processIN, &ptyBuf,
-                       (SIZE_T) chunkSize) == chunkSize);
-
-    if (!success) {
-#if defined(DEBUG) && !defined(USE_NSPR_IO)
-      int errcode = errno;
-      perror("ltermSendData");
-#else
-      int errcode = 0;
-#endif
-      LTERM_ERROR("ltermSendData: Error %d in writing to child STDIN\n",
-                  errcode);
+    if (ltermSendChar(lts, ptyBuf, chunkSize) != 0)
       return -1;
-    }
+  }
+
+  return 0;
+}
+
+
+/** Transmits COUNT characters from BUF to child process.
+ * @return 0 on successful write, -1 on error.
+ */
+int ltermSendChar(struct lterms *lts, const char *buf, int count)
+{
+  int success;
+
+  LTERM_LOG(ltermSendChar,50,("count=%d\n", count));
+
+  if (lts->ptyMode)
+#ifndef USE_NSPR_IO
+    success = (write(lts->pty.ptyFD, buf,
+                     (SIZE_T) count) == count);
+#else
+  assert(0);
+#endif
+  else
+    success = (WRITE(lts->ltermProcess.processIN, buf,
+                     (SIZE_T) count) == count);
+
+  if (!success) {
+#if defined(DEBUG) && !defined(USE_NSPR_IO)
+    int errcode = errno;
+    perror("ltermSendChar");
+#else
+    int errcode = 0;
+#endif
+    LTERM_ERROR("ltermSendChar: Error %d in writing to child STDIN\n",
+                errcode);
+    return -1;
   }
 
   return 0;

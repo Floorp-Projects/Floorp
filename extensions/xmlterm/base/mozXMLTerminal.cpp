@@ -214,6 +214,12 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIWebShell* aWebShell,
 
   nsresult result = NS_OK;
 
+  printf("mozXMLTerminal::Init, check1\n");
+  nsCOMPtr<nsIContentViewer> contViewer;
+  result = mWebShell->GetContentViewer(getter_AddRefs(contViewer));
+  printf("mozXMLTerminal::Init, check2, result=%x, contViewer=%x\n",
+         result, contViewer.get());
+
   // NOTE: Need to parse args string!!!
   mCommand = "";
   mPromptExpr = "";
@@ -435,7 +441,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
 
   // Open LineTerm to execute command
   // Non-owning reference to this; delete LineTerm before deleting self
-  PRInt32 options = LTERM_NOSTDERR_FLAG;
+  PRInt32 options = 0;
 
   XMLT_LOG(mozXMLTerminal::Activate,22,("Opening LineTerm\n"));
   nsCOMPtr<nsIObserver> anObserver = this;

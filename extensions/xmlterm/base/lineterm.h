@@ -109,14 +109,18 @@ int lterm_new();
  * LTERM_NOEDIT_FLAG       disable input line editing
  * LTERM_NOCOMPLETION_FLAG disable command line completion
  * LTERM_NOMETA_FLAG       disable meta input
- * LTERM_NOPARTLINE_FLAG   disable returning of partial line output
  * LTERM_NOMARKUP_FLAG     disable HTML/XML element processing in command line
  * LTERM_NOECHO_FLAG       disable TTY echo
  * LTERM_NOPTY_FLAG        do not use pseudo-TTY
- * LTERM_NOSTDERR_FLAG     do not use separate STDERR
  * LTERM_NONUL_FLAG        do not process any NUL characters (discard them)
  * LTERM_NOLINEWRAP_FLAG   disable line wrapping
  * LTERM_NOEXPORT_FLAG     disable export of current environment to new process
+ * LTERM_STDERR_FLAG       enable use of separate STDERR
+ * LTERM_PARTLINE_FLAG     enable returning of partial line output
+ *
+ * Notes:
+ *  -LTERM_STDERR_FLAG, although implemented, does not work properly at all
+ *  -LTERM_PARTLINE_FLAG is not yet implemented
  *
  * PROCESS_TYPE specifies the subordinate process type, if set to one
  * of the following:
@@ -265,13 +269,10 @@ int lterm_metacomplete(int lterm, const UNICHAR *buf, int count);
  * Using Extended Backus-Naur Form notation:
  *
  * OPCODES ::= STREAMDATA NEWLINE?
-                 COOKIESTR? DOCSTREAM? XMLSTREAM? JSSTREAM? WINSTREAM?
+ *               COOKIESTR? DOCSTREAM? XMLSTREAM? JSSTREAM? WINSTREAM?
  * if StreamMode data is being returned.
  *
- * OPCODES ::= SCREENDATA BELL? (  CLEAR
- *                               | INSERT MOVEDOWN?
- *                               | DELETE MOVEDOWN?
- *                               | OUTPUT )
+ * OPCODES ::= SCREENDATA BELL? ( OUTPUT | CLEAR | INSERT | DELETE | SCROLL )?
  * if ScreenMode data is being returned.
  *
  * OPCODES ::= LINEDATA BELL? (  CLEAR
@@ -300,10 +301,16 @@ int lterm_metacomplete(int lterm, const UNICHAR *buf, int count);
  * BUF_ROW, CURSOR_ROW are always set to -1 when LTERM is in line mode,
  * BUF_ROW, CURSOR_ROW are always >=0 when LTERM is in screen mode,
  * with 0 denoting the bottom row.
+ *
+ * In ScreenMode:
+ *    - OUTPUT denotes that a modifed row of data is being returned.
+ *    - OPVALS contains the no. of lines to be inserted/deleted,
+ *      for INSERT/DELETE/SCROLL operations
+ *            
  */
 
 int lterm_read(int lterm, int timeout, UNICHAR *buf, int count,
-               UNISTYLE *style, int *opcodes,
+               UNISTYLE *style, int *opcodes, int *opvals,
                int *buf_row, int *buf_col, int *cursor_row, int *cursor_col);
 
 /* opcodes describing terminal operations:
@@ -313,9 +320,9 @@ int lterm_read(int lterm, int timeout, UNICHAR *buf, int count,
 #define LTERM_LINEDATA_CODE    0x0004U  /* Line mode */
 #define LTERM_BELL_CODE        0x0008U  /* Ring bell */
 #define LTERM_CLEAR_CODE       0x0010U  /* Clear screen */
-#define LTERM_INSERT_CODE      0x0020U  /* Insert row at cursor */
-#define LTERM_DELETE_CODE      0x0040U  /* Delete row at cursor */
-#define LTERM_MOVEDOWN_CODE    0x0080U  /* Move text down on insert/delete */
+#define LTERM_INSERT_CODE      0x0020U  /* Insert lines above current line */
+#define LTERM_DELETE_CODE      0x0040U  /* Delete lines below current line */
+#define LTERM_SCROLL_CODE      0x0080U  /* Define scrolling region */
 #define LTERM_INPUT_CODE       0x0100U  /* Contains STDIN at end of line */
 #define LTERM_PROMPT_CODE      0x0200U  /* Contains prompt at beginning */
 #define LTERM_OUTPUT_CODE      0x0400U  /* Contains STDOUT/STDERR/ALTOUT */
@@ -351,21 +358,21 @@ int lterm_read(int lterm, int timeout, UNICHAR *buf, int count,
 #define LTERM_BOLD_STYLE       0x0100UL /* boldface */
 #define LTERM_ULINE_STYLE      0x0200UL /* underline */
 #define LTERM_BLINK_STYLE      0x0400UL /* blink */
-#define LTERM_DIM_STYLE        0x0800UL /* inverse video */
+#define LTERM_INVERSE_STYLE    0x0800UL /* inverse video */
 
 /* LTERM option flags */
 #define LTERM_NOCANONICAL_FLAG   0x0001U
 #define LTERM_NOEDIT_FLAG        0x0002U
 #define LTERM_NOCOMPLETION_FLAG  0x0004U
 #define LTERM_NOMETA_FLAG        0x0008U
-#define LTERM_NOPARTLINE_FLAG    0x0010U
-#define LTERM_NOECHO_FLAG        0x0020U
-#define LTERM_NOMARKUP_FLAG      0x0040U
-#define LTERM_NOPTY_FLAG         0x0080U
-#define LTERM_NOSTDERR_FLAG      0x0100U
-#define LTERM_NONUL_FLAG         0x0200U
-#define LTERM_NOLINEWRAP_FLAG    0x0400U
-#define LTERM_NOEXPORT_FLAG      0x0800U
+#define LTERM_NOECHO_FLAG        0x0010U
+#define LTERM_NOMARKUP_FLAG      0x0020U
+#define LTERM_NOPTY_FLAG         0x0040U
+#define LTERM_NONUL_FLAG         0x0080U
+#define LTERM_NOLINEWRAP_FLAG    0x0100U
+#define LTERM_NOEXPORT_FLAG      0x0200U
+#define LTERM_STDERR_FLAG        0x0400U
+#define LTERM_PARTLINE_FLAG      0x0800U
 
 /* Process type codes */
 #define LTERM_DETERMINE_PROCESS -1       /* Determine process type from name */
