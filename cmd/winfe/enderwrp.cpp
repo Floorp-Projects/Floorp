@@ -63,9 +63,13 @@ void CEnderView::OnDraw(CDC *pDC)
     return;
 }
 
-
+#ifdef MOZ_ENDER_MIME
+BOOL 
+CEnderView::Create(CWnd *pParent, lo_FormElementHtmlareaData *pData, LO_TextAttr *pTextAttr)
+#else
 BOOL 
 CEnderView::Create(CWnd *pParent, lo_FormElementTextareaData *pData, LO_TextAttr *pTextAttr)
+#endif //MOZ_ENDER_MIME
 {
     if (!CView::Create(NULL, NULL, WS_CHILD | WS_BORDER | WS_TABSTOP,CRect(0,0,1,1),pParent,ID_ENDER+1,NULL))
         return FALSE;
@@ -74,6 +78,7 @@ CEnderView::Create(CWnd *pParent, lo_FormElementTextareaData *pData, LO_TextAttr
         assert(FALSE);
         return FALSE;
     }
+    lo_FormElementTextareaData *t_pData = (lo_FormElementTextareaData *)pData;
 	if(m_pCX)	
 	{
 		if(m_pCX->IsWindowContext() && VOID2CX(m_pCX, CPaneCX)->GetPane())	
@@ -132,15 +137,15 @@ CEnderView::Create(CWnd *pParent, lo_FormElementTextareaData *pData, LO_TextAttr
 
 					//	See if we can measure the default text, and/or
 					//		set up the size and size limits.
-					if(pData)	
+					if(t_pData)	
 					{
-						if(pData->cols > 0)	{
+						if(t_pData->cols > 0)	{
 							//	Use provided size.
-							lLength = pData->cols;
+							lLength = t_pData->cols;
 						}
-						if(pData->rows > 0)	{
+						if(t_pData->rows > 0)	{
 							//	Use provided size.
-							lLines = pData->rows;
+							lLines = t_pData->rows;
 						}
 					}
 
@@ -151,7 +156,7 @@ CEnderView::Create(CWnd *pParent, lo_FormElementTextareaData *pData, LO_TextAttr
 					int32 lWidgetHeight = (lLines + 1) * pMyFont->GetHeight();
 
 					//	If no word wrapping, account a horizontal scrollbar.
-					if(pData->auto_wrap == TEXTAREA_WRAP_OFF)	{
+					if(t_pData->auto_wrap == TEXTAREA_WRAP_OFF)	{
 						lWidgetHeight += sysInfo.m_iScrollHeight;
 					}
 

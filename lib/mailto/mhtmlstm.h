@@ -234,7 +234,8 @@ public:
 						 const char *body, uint32 body_length,
 						 MSG_AttachedFile *attachedFiles,
 						 DeliveryDoneCallback cb,
-						 char **ppOriginalRootURL);
+						 char **ppOriginalRootURL,
+                         char **ppStreamOut);
     virtual ~MSG_MimeRelatedStreamSaver();
 
     //
@@ -244,6 +245,7 @@ public:
     virtual void Complete( Bool bSuccess, EDT_ITapeFileSystemComplete *pfComplete, void *pArg );
 private:
   char *m_pFilename;
+  char **m_ppStreamOut;
 };
 #endif //MOZ_ENDER_MIME
 

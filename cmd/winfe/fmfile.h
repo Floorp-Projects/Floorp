@@ -74,7 +74,7 @@ protected:
 
 	//	Copy the current data out of the form element back into the
 	//		layout struct.
-	virtual void UpdateCurrentData();
+	virtual void UpdateCurrentData(BOOL bSubmit);
 
 public:
     virtual HWND GetRaw();

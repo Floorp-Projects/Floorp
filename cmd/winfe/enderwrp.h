@@ -11,7 +11,11 @@ public:
     CEnderView(CAbstractCX *p_pCx);
     CEnderView(){};
     ~CEnderView();
+#ifdef MOZ_ENDER_MIME
+    BOOL Create(CWnd *pParent, lo_FormElementHtmlareaData *pData, LO_TextAttr *pTextAttr);
+#else
     BOOL Create(CWnd *pParent, lo_FormElementTextareaData *pData, LO_TextAttr *pTextAttr);
+#endif
     virtual void OnDraw(CDC *pDC);
     CNetscapeEditView *GetEditView(){return m_pEditView;}
 protected:

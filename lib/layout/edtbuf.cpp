@@ -43,10 +43,10 @@ const int32 MAX_POSITIONAL_TEXT =0x7FFFFFF0;
 #include "prefapi.h"
 
 #if defined(ENDER) && defined(MOZ_ENDER_MIME)
-extern "C" {
-#include "edtlist.h"
-}
+
+#include "mprdecod.h"
 #endif /* ENDER && MOZ_ENDER_MIME */
+
 
 #define GET_COL TRUE
 #define GET_ROW FALSE
@@ -1537,10 +1537,9 @@ CEditBuffer::CEditBuffer(MWContext *pContext, XP_Bool bImportText):
         m_bBackgroundNoSave(FALSE),
         m_pBodyExtra(0),
 #ifdef ENDER
-		m_bEmbedded(FALSE),       //ENDER
-		m_pEmbeddedData(0),       //ENDER
-		m_pImportedStream(0),     //ENDER
-		m_pImportedHTMLStream(0), //ENDER
+		m_bEmbedded(FALSE),      
+		m_pEmbeddedData(0),      
+		m_pImportedHTMLStream(0),
 #endif //ENDER
         m_pLoadingImage(0),
         m_pSaveObject(0),
@@ -10188,6 +10187,74 @@ void CEditBuffer::ReadFromBuffer(XP_HUGE_CHAR_PTR pBuffer){
     NET_FreeURLStruct(url_s);
 }
 
+#ifdef MOZ_ENDER_MIME
+void CEditBuffer::ReadMimeFromBuffer(XP_HUGE_CHAR_PTR pBuffer){
+//we assume this is a mime multipart/related stream.
+    if (!pBuffer)
+    {
+        XP_ASSERT(FALSE);
+        return;
+    }
+    SimpleMultipartRelatedMimeDecoder t_decoder(pBuffer,XP_STRLEN(pBuffer));
+    t_decoder.setFilePrefix("nswebm");
+    if (!t_decoder.begin())
+    {
+        XP_ASSERT(FALSE); //debug only. did you get a bad message? or did the decoder screw up. let mjudge know!!!
+    }
+    if (t_decoder.getNumberOfParts() == 0)
+    {
+        pBuffer = ::ReadBufferFromFile(t_decoder.getHeaderFileName());
+        //destructor of decoder will destroy file
+    }
+    else if (t_decoder.getNumberOfParts() == 1) 
+    {
+        /*check to make sure it is text/html then use it to feed to read from buffer*/
+        SimpleMultiPart *t_part = t_decoder.getPart(0);
+        if (t_part)
+        {
+            if (t_part->getType() == SimpleMultiPart::TEXTHTML)
+                pBuffer = ::ReadBufferFromFile(t_part->getFileName());
+            else //error
+                return;
+            XP_FileRemove(t_part->getFileName(),xpFileToPost);
+        }
+    }
+    else
+    {
+        if (::DecodeSimpleMime(t_decoder,"nswebm")) //this just rewrote all those files as true binary files and renamed them
+        {
+            SimpleMultiPart *t_part = t_decoder.getPart(0);
+            if (t_part)
+            {
+                if (t_part->getType() == SimpleMultiPart::TEXTHTML)
+                    pBuffer = ::ReadBufferFromFile(t_part->getFileName()); //read from file, return char *
+                else //error
+                    return;
+                XP_FileRemove(t_part->getFileName(),xpFileToPost);
+                
+                //returns pointer to new buffer with parsed out <IMG SRC=cid...>
+                pBuffer = ::ParseBuffer(pBuffer,t_decoder); 
+                if (pBuffer)
+                {
+                    for (int i=1; i < t_decoder.getNumberOfParts(); i++)
+                    {
+                        t_part = t_decoder.getPart(i);
+                        if (t_part)
+                        {
+                            EDT_AddURLToSafeList(m_pEmbeddedData, 
+                                t_part->getUrlFileName());
+                        }
+                    }
+                }
+            }
+            
+        }
+    }
+    ReadFromBuffer(pBuffer);
+}
+#endif /*MOZ_ENDER_MIME*/
+
+
 void CEditBuffer::WriteToStream( IStreamOut *pOut ) {
     InitEscapes();
     CConvertCSIDStreamOut converter( GetRAMCharSetID(), GetDocCharSetID(), pOut);
@@ -10512,20 +10579,21 @@ void CEditBuffer::FinishedLoad2()
     m_pCreationCursor = NULL;
 
 #ifdef ENDER
+
     XP_Bool isEmbedded = FALSE;
-    if (m_pImportedHTMLStream && XP_STRLEN(m_pImportedHTMLStream))//ENDER
+    if (m_pImportedHTMLStream && XP_STRLEN(m_pImportedHTMLStream))
 	{
         char *t_ptr=m_pImportedHTMLStream;
         m_pImportedHTMLStream = NULL;
-        if (m_pImportedStream)
-        {
-	    	XP_FREE(m_pImportedStream);
-    		m_pImportedStream=NULL;
-        }
+#ifndef MOZ_ENDER_MIME
 		ReadFromBuffer(t_ptr);
+#else
+		ReadMimeFromBuffer(t_ptr);
+#endif //MOZ_ENDER_MIME
         return;
 	}
 #endif //ENDER
+
     // protect empty SOME empty lines! //i.e. list items with nothing in their containers
 	Protect( m_pRoot );
     // Get rid of empty items.
@@ -10585,15 +10653,6 @@ void CEditBuffer::FinishedLoad2()
     XP_Bool bIsNewDocument = EDT_IS_NEW_DOCUMENT(m_pContext)
                                     && !GetCommandLog()->InReload();
 
-#if ENDER
-	if (m_pImportedStream && (!m_pImportedHTMLStream || !XP_STRLEN(m_pImportedHTMLStream)) )//ENDER
-	{
-        isEmbedded = TRUE;
-		PasteText( m_pImportedStream, FALSE, FALSE, TRUE ,TRUE);
-		XP_FREE(m_pImportedStream);
-		m_pImportedStream=NULL;
-	}
-#endif //ENDER
     if( bIsNewDocument )
     {
         m_bDummyCharacterAddedDuringLoad = TRUE; /* Sometimes it's a no-break space. */
@@ -13837,14 +13896,8 @@ NORMAL_PASTE:
 
 #if defined(ENDER) && defined(MOZ_ENDER_MIME)
 
-            // Commented out because of possible security hole. We don't want
-            // to allow users to accidentally copy and paste something like
-            // this:
-            //
-            //    <IMG SRC="file:/etc/passwd">
-            //
-            // if( m_bEmbedded )
-            //     AddImagesToSafeList(pElement);
+            if( m_bEmbedded )
+                AddImagesToSafeList(pElement);
 
 #endif /* ENDER && MOZ_ENDER_MIME */
 

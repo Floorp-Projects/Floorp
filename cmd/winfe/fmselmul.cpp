@@ -680,7 +680,7 @@ void CFormSelectMult::FillSizeInfo()
 
 //	Copy the current data out of the form element back into the
 //		layout struct.
-void CFormSelectMult::UpdateCurrentData()
+void CFormSelectMult::UpdateCurrentData(BOOL bSubmit)
 {
 	//	Switch on context type for proper functionality.
 	if(GetContext())	{

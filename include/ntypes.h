@@ -101,6 +101,9 @@ typedef struct lo_FormElementOptionData_struct lo_FormElementOptionData;
 typedef struct lo_FormElementSelectData_struct lo_FormElementSelectData;
 typedef struct lo_FormElementTextData_struct lo_FormElementTextData;
 typedef struct lo_FormElementTextareaData_struct lo_FormElementTextareaData;
+#ifdef MOZ_ENDER_MIME
+typedef struct lo_FormElementHtmlareaData_struct lo_FormElementHtmlareaData;
+#endif /*MOZ_ENDER_MIME*/
 typedef struct lo_FormElementMinimalData_struct lo_FormElementMinimalData;
 typedef struct lo_FormElementToggleData_struct lo_FormElementToggleData;
 typedef struct lo_FormElementObjectData_struct lo_FormElementObjectData;

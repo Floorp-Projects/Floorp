@@ -555,7 +555,7 @@ void CFormSelectOne::FillSizeInfo()
 
 //	Copy the current data out of the form element back into the
 //		layout struct.
-void CFormSelectOne::UpdateCurrentData()
+void CFormSelectOne::UpdateCurrentData(BOOL bSubmit)
 {
 	//	Detect context type and copy appropriate data
 	//		according to representation.

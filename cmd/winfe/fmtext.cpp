@@ -483,7 +483,7 @@ void CFormText::FillSizeInfo()
 
 //	Copy the current data out of the form element back into the
 //		layout struct.
-void CFormText::UpdateCurrentData()
+void CFormText::UpdateCurrentData(BOOL bSubmit)
 {
 	if(GetContext())	{
 		if(GetContext()->IsWindowContext())	{

@@ -825,14 +825,14 @@ void CFE_GetFormElementInfo(MWContext *pContext, LO_FormElementStruct *pFormElem
     ABSTRACTCX(pContext)->GetFormElementInfo(pContext, pFormElement);
 }
 
-void CFE_GetFormElementValue(MWContext *pContext, LO_FormElementStruct *pFormElement, XP_Bool bHidden)	{
+void CFE_GetFormElementValue(MWContext *pContext, LO_FormElementStruct *pFormElement, XP_Bool bHidden, XP_Bool bSubmit)	{
 	if(ABSTRACTCX(pContext)->IsDestroyed())	{
 		//	Don't allow this to happen if the context has been destroyed...
 		TRACE("Context %p Destroyed :: GetFormElementValue Blocking\n", pContext);
 		return;
 	}
 
-    ABSTRACTCX(pContext)->GetFormElementValue(pContext, pFormElement, bHidden);
+    ABSTRACTCX(pContext)->GetFormElementValue(pContext, pFormElement, bHidden, bSubmit);
 }
 #endif
 

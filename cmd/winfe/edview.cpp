@@ -42,6 +42,8 @@
 #include "abdefn.h"
 #ifdef ENDER
 #include "editfloat.h"
+#include "libevent.h"
+
 #endif //ENDER
 
 // For XP Strings
@@ -498,6 +500,7 @@ CNetscapeEditView::CNetscapeEditView()
     m_imeoldcursorpos= (DWORD)-1;
 #endif
     m_pTempFilename = NULL;
+    m_pForm = NULL;
     SetEditChanged();
 }
 
@@ -918,43 +921,19 @@ void CNetscapeEditView::OnSetFocus(CWnd *pOldWin)
 
 void CNetscapeEditView::OnKillFocus(CWnd *pOldWin)  
 {
-    MWContext * pMWContext=NULL;
+    MWContext * pMWContext = GET_MWCONTEXT;
 
-#if 0
-    if (GetEmbedded())
+    if (GetEmbedded() && pMWContext && GetElement() && EDT_DirtyFlag(pMWContext))
     {
-        CMainFrame * pFrame = (CMainFrame*)GetParentFrame();
-        CComboToolBar *pController = pFrame->getComposeToolBar();
-        CWnd *pWnd=NULL;
-        CWnd *pCPparent=NULL;
-        BOOL keepToolbar=FALSE;
-
-        if (pOldWin)
-        {
-            pWnd = pOldWin->GetParent();
-            if (pOldWin->IsKindOf(RUNTIME_CLASS(CMiniDockFrameWnd))
-                ||pOldWin->IsKindOf(RUNTIME_CLASS(CDropdownToolbar)))
-                return;
-            if (pWnd && (pWnd->IsKindOf(RUNTIME_CLASS(CDropdownToolbar))
-                ||pWnd->IsKindOf(RUNTIME_CLASS(CMiniDockFrameWnd))
-                ||pWnd->IsKindOf(RUNTIME_CLASS(CComboToolBar)))) //thats the toolbar dont go anywhere!
-                return;
-            if (pOldWin->IsKindOf(RUNTIME_CLASS(CColorPicker)))
-            {
-                pCPparent = ((CColorPicker *)pOldWin)->getParent();
-                keepToolbar = (CGenericFrame *)::GetFrame(GET_MWCONTEXT) == (CGenericFrame *)pCPparent;
-            }
-        }
-
-        if (pController && !keepToolbar)
-        {
-            //remember where the controler was!
-            pFrame->ShowControlBar(pController,FALSE,FALSE);
-            pFrame->RecalcLayout();
-            UpdateWindow();
-        }
+        // send the event to libmocha --- do any further processing
+        //   in our closure routine
+	    JSEvent *event;
+	    event = XP_NEW_ZAP(JSEvent);
+	    event->type = EVENT_BLUR;
+	    event->layer_id = GetElement()->layer_id;
+        EDT_SetDirtyFlag(pMWContext, FALSE);
+	    ET_SendEvent(pMWContext, (LO_Element *)GetElement(), event, NULL, this);
     }
-#endif //ENDER
 
     //TRACE1("CNetscapeView::KillFocusEdit hOldWin=%X\n", (pOldWin ? pOldWin->GetSafeHwnd() : NULL));
     if (  m_caret.bEnabled &&
@@ -1008,11 +987,9 @@ void CNetscapeEditView::OnKillFocus(CWnd *pOldWin)
 
 BOOL CNetscapeEditView::ShouldParentHandle(UINT nID, int nCode)
 {
-    LPARAM t_param(0);
-    t_param = LOWORD(nID) + HIWORD(nCode);
     for (int i=0;i<NUM_MSG_NOT_ENDER;i++)
     {
-        if (t_param == MSG_NOT_ENDER[i])
+        if (nID == MSG_NOT_ENDER[i])
             return TRUE;
     }
     return FALSE;

@@ -88,7 +88,7 @@ typedef struct fe_functions {
 	void (*GetFormElementInfo)(void *fe_context,
 			LO_FormElementStruct *form_element);
 	void (*GetFormElementValue)(void *fe_context,
-			LO_FormElementStruct *form_element, XP_Bool hide);
+			LO_FormElementStruct *form_element, XP_Bool hide, XP_Bool submit);
 	void (*FormTextIsSubmit)(void *fe_context,
 			LO_FormElementStruct *single_text_ele);
 	void (*FreeFormElement)(void *fe_context,

@@ -384,7 +384,7 @@ void CFormRadio::FillSizeInfo()
 
 //	Copy the current data out of the form element back into the
 //		layout struct.
-void CFormRadio::UpdateCurrentData()
+void CFormRadio::UpdateCurrentData(BOOL bSubmit)
 {
 	//	Detect context type.
 	if(GetContext())	{

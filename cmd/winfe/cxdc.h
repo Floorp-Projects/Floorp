@@ -732,7 +732,7 @@ public:
 	virtual void DisplayFormElement(MWContext *pContext, int iLocation, LO_FormElementStruct *pFormElement);
 	virtual void FormTextIsSubmit(MWContext *pContext, LO_FormElementStruct *pFormElement);
 	virtual void GetFormElementInfo(MWContext *pContext, LO_FormElementStruct *pFormElement);
-	virtual void GetFormElementValue(MWContext *pContext, LO_FormElementStruct *pFormElement, XP_Bool bTurnOff);
+	virtual void GetFormElementValue(MWContext *pContext, LO_FormElementStruct *pFormElement, XP_Bool bTurnOff, XP_Bool bSubmit);
 	virtual void ResetFormElement(MWContext *pContext, LO_FormElementStruct *pFormElement);
 	virtual void SetFormElementToggle(MWContext *pContext, LO_FormElementStruct *pFormElement, XP_Bool iState);
 #endif

@@ -123,8 +123,10 @@ public:
     char   *m_pTempFilename;  
 
 #ifdef ENDER
-	void SetEmbedded(BOOL bEmbedded){m_bEmbedded=bEmbedded;} //mjudge for ENDER
-	BOOL GetEmbedded(){return m_bEmbedded;}                  //mjudge for ENDER
+	void SetEmbedded(BOOL bEmbedded){m_bEmbedded=bEmbedded;} 
+	BOOL GetEmbedded(){return m_bEmbedded;}                  
+    LO_FormElementStruct *GetElement(){return m_pForm;}
+    void SetElement(LO_FormElementStruct *p_pStruct){m_pForm = p_pStruct;}
 #else
 protected:
 #endif //ENDER
@@ -153,6 +155,8 @@ private:
     CEditorResourceDll m_resourcedll;
 #ifdef ENDER
     BOOL             m_bEmbedded;
+    LO_FormElementStruct *m_pForm;
+
     static CControlBarInfo    s_Info;
     BOOL             m_EnderBarRectInit;
     static BOOL      s_EnderBarRectInit;

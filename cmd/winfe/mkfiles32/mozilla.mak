@@ -294,8 +294,11 @@ CFLAGS_DEFAULT=\
     /I$(DEPTH)\dist\public\libfont \
     /I$(DEPTH)\dist\public\httpurl \
     /I$(DEPTH)\dist\public\netcache \
+!if defined(MOZ_ENDER_MIME)
+	/I$(DEPTH)\dist\public\mailto \
+!endif
     /I$(DEPTH)\dist\public\jsdebug \
-    /I$(DEPTH)\dist\public\winfont
+    /I$(DEPTH)\dist\public\winfont 
 !else
     $(CFLAGS_RELEASE) -DFORCE_PR_LOG
 !endif
@@ -313,6 +316,8 @@ CFLAGS_LIBDOM_C=	$(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/dom_priv.pch" /YX"dom_priv.h"
 !endif
 !ifdef SMART_MAIL
 CFLAGS_LIBMIME_C=       $(CFLAGS_DEFAULT) /DMOZILLA_30 /I$(DEPTH)\dist\public\mime /I$(DEPTH)\lib\xp
+!elseif defined(MOZ_ENDER_MIME)
+CFLAGS_LIBMIME_C=       $(CFLAGS_DEFAULT) /I$(DEPTH)\dist\public\mime /I$(DEPTH)\lib\xp
 !else
 CFLAGS_LIBMIME_C=       $(CFLAGS_DEFAULT) /I$(DEPTH)\dist\public\mime
 !endif
@@ -475,9 +480,11 @@ LINK_LIBS= \
     $(DIST)\lib\netutil.lib \
     $(DIST)\lib\network.lib \
     $(DIST)\lib\cnetinit.lib \
+!if defined(MOZ_MAIL_NEWS)
+    $(DIST)\lib\smtpurl.lib \
+!endif
 !ifdef MOZ_MAIL_NEWS
     $(DIST)\lib\nntpurl.lib \
-    $(DIST)\lib\smtpurl.lib \
     $(DIST)\lib\pop3url.lib \
     $(DIST)\lib\mailbxurl.lib \
     $(DIST)\lib\imap4url.lib \
@@ -509,6 +516,9 @@ LINK_LIBS= \
     $(DIST)\lib\msg.lib \
     $(DIST)\lib\addr.lib \
     $(DIST)\lib\neo.lib \
+!endif
+!ifdef MOZ_ENDER_MIME
+    $(DIST)\lib\mailto.lib \
 !endif
     $(DIST)\lib\prgrss32.lib \
     $(DIST)\lib\sched32.lib \
@@ -638,7 +648,9 @@ CINCLUDES= \
     /I$(DEPTH)\lib\layout \
     /I$(DEPTH)\lib\libstyle \
     /I$(DEPTH)\lib\liblayer\include \
-    /I$(DEPTH)\lib\libmsg \
+!ifdef MOZ_MAIL_NEWS
+	/I$(DEPTH)\lib\libmsg \
+!endif
     /I$(DEPTH)\lib\libcnv \
     /I$(DEPTH)\lib\libi18n \
     /I$(DEPTH)\lib\libparse \
@@ -681,6 +693,9 @@ CDISTINCLUDES1= \
 CDISTINCLUDES2= \
 !if "$(MOZ_BITS)" == "32"
     /I$(XPDIST)\public\libfont \
+!if defined(MOZ_ENDER_MIME)
+    /I$(XPDIST)\public\mailto \
+!endif
     /I$(XPDIST)\public\winfont \
     /I$(XPDIST)\public\js \
     /I$(XPDIST)\public\jsdebug \
@@ -692,7 +707,7 @@ CDISTINCLUDES2= \
     /I$(XPDIST)\public\netlib \
     /I$(XPDIST)\public\network \
     /I$(XPDIST)\public\netcnvts\
-    /I$(XPDIST)\public\util
+    /I$(XPDIST)\public\util 
 !endif
 
 CDISTINCLUDES3= \
@@ -767,6 +782,9 @@ CDEFINES=/DXP_PC /Dx386 /D_WINDOWS /D_X86_ \
 !endif
 !if defined(EDITOR)
 	/DENDER \
+!endif
+!if defined(MOZ_ENDER_MIME)
+	/DMOZ_ENDER_MIME \
 !endif
 !if defined(DOM)
 	/DDOM \
@@ -850,6 +868,9 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\layout\edtcmd.cpp
 	$(DEPTH)\lib\layout\edtele.cpp
 	$(DEPTH)\lib\layout\edtjava.cpp
+!if defined(MOZ_ENDER_MIME)
+	$(DEPTH)\lib\layout\edtlist.cpp
+!endif
 	$(DEPTH)\lib\layout\edtsave.cpp
 	$(DEPTH)\lib\layout\edtutil.cpp
 !endif
@@ -942,26 +963,26 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libcnv\readbmp.c
 	$(DEPTH)\lib\libcnv\libppm3.c
 
-!if defined( MOZ_MAIL_NEWS ) || defined( SMART_MAIL )
-	$(DEPTH)\lib\libmime\mimecont.c
-	$(DEPTH)\lib\libmime\mimeebod.c
+!if  defined(MOZ_ENDER_MIME)
 	$(DEPTH)\lib\libmime\mimeenc.c
-	$(DEPTH)\lib\libmime\mimeeobj.c
+!endif
+!if defined(MOZ_MAIL_NEWS) || defined(SMART_MAIL) 
 	$(DEPTH)\lib\libmime\mimehdrs.c
 	$(DEPTH)\lib\libmime\mimei.c
+	$(DEPTH)\lib\libmime\mimecont.c
+	$(DEPTH)\lib\libmime\mimeeobj.c
+	$(DEPTH)\lib\libmime\mimemrel.c
+	$(DEPTH)\lib\libmime\mimeobj.c
+	$(DEPTH)\lib\libmime\mimeebod.c
 	$(DEPTH)\lib\libmime\mimeiimg.c
 	$(DEPTH)\lib\libmime\mimeleaf.c
 	$(DEPTH)\lib\libmime\mimemalt.c
 	$(DEPTH)\lib\libmime\mimemapl.c
 	$(DEPTH)\lib\libmime\mimemdig.c
 	$(DEPTH)\lib\libmime\mimemmix.c
-	$(DEPTH)\lib\libmime\mimemoz.c
 	$(DEPTH)\lib\libmime\mimempar.c
-	$(DEPTH)\lib\libmime\mimemrel.c
-	$(DEPTH)\lib\libmime\mimemsg.c
 	$(DEPTH)\lib\libmime\mimemsig.c
 	$(DEPTH)\lib\libmime\mimemult.c
-	$(DEPTH)\lib\libmime\mimeobj.c
 	$(DEPTH)\lib\libmime\mimepbuf.c
 	$(DEPTH)\lib\libmime\mimesun.c
 	$(DEPTH)\lib\libmime\mimetenr.c
@@ -970,8 +991,10 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmime\mimetpla.c
 	$(DEPTH)\lib\libmime\mimetric.c
 	$(DEPTH)\lib\libmime\mimeunty.c
+	$(DEPTH)\lib\libmime\mimemoz.c
 	$(DEPTH)\lib\libmime\mimedrft.c
-!ifndef SMART_MAIL
+	$(DEPTH)\lib\libmime\mimemsg.c
+!if defined(SMART_MAIL) 
 	$(DEPTH)\lib\libmime\mimevcrd.c
 	$(DEPTH)\lib\libmisc\mime.c
 	$(DEPTH)\lib\libmisc\dirprefs.c
@@ -1174,7 +1197,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 !ifdef MOZ_MAIL_NEWS
 	$(DEPTH)\lib\xp\xp_md5.c
 !endif
-!ifdef SMART_MAIL
+!if defined(SMART_MAIL) || defined(MOZ_ENDER_MIME)
 	$(DEPTH)\lib\xp\xp_linebuf.c
 !endif
 	$(DEPTH)\lib\xp\xp_ncent.c
@@ -3000,6 +3023,10 @@ exports:
     -xcopy $(DEPTH)\dist\public\spellchk\*.h $(EXPORTINC) $(XCF)
     -xcopy $(DEPTH)\jpeg\*.h $(EXPORTINC) $(XCF)
     -xcopy $(DEPTH)\lib\libcnv\*.h $(EXPORTINC) $(XCF)
+!if defined (MOZ_ENDER_MIME)
+    -xcopy $(XPDIST)\public\mailto\*.h $(EXPORTINC) $(XCF)
+    -xcopy $(XPDIST)\public\libmime\*.h $(EXPORTINC) $(XCF)
+!endif
 !if defined(MOZ_CALENDAR)
     -xcopy $(DIST)\public\calendar\*.h $(EXPORTINC) $(XCF)
 !endif

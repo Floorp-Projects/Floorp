@@ -59,7 +59,7 @@
 #endif
 
 #if defined(ENDER) && defined(MOZ_ENDER_MIME)
-#include "edtlist.h"
+#include "edt.h"
 #endif /* ENDER && MOZ_ENDER_MIME */
 
 #ifndef XP_TRACE
@@ -2638,7 +2638,7 @@ lo_get_form_element_data(MWContext *context,
 	    (form_element->element_data->type != FORM_TYPE_BUTTON) &&
 	    (form_element->element_data->type != FORM_TYPE_OBJECT))
 	{
-		FE_GetFormElementValue(context, form_element, FALSE);
+		FE_GetFormElementValue(context, form_element,FALSE,TRUE);
 	}
 
 	switch (form_element->element_data->type)
@@ -2668,15 +2668,49 @@ lo_get_form_element_data(MWContext *context,
 			}
 		    }
 			break;
-		case FORM_TYPE_TEXTAREA:
 #ifdef ENDER
            case FORM_TYPE_HTMLAREA :
+#ifdef MOZ_ENDER_MIME
+		    {
+            lo_FormElementTextareaData *form_data;
+			lo_FormElementHtmlareaData *html_form_data;
+
+			form_data = (lo_FormElementTextareaData *)
+			    form_element->element_data;
+            html_form_data = (lo_FormElementHtmlareaData *)
+			    form_element->element_data;
+#if DISABLED_READONLY_SUPPORT
+			if (form_data->disabled == TRUE)
+			  /* if a form element is disabled, it's name/value pair isn't sent
+				 to the server. */
+			  break;
+#endif
+
+			if (form_data->name != NULL)
+			{
+				name = lo_dup_block(form_data->name);
+                if (html_form_data->mime_bits)
+                {
+				    value = lo_FEToNetLinebreaks(
+						    (PA_Block)html_form_data->mime_bits);/* change this to MIME*/
+                }
+                else
+                {
+				    value = lo_FEToNetLinebreaks(
+						form_data->current_text);/* change this to MIME*/
+                }
+				type = (uint8)form_data->type;
+			}
+		    }
+			break;
+#endif /*MOZ_ENDER_MIME*/
 #endif /*ENDER*/
+		case FORM_TYPE_TEXTAREA:
 		    {
 			lo_FormElementTextareaData *form_data;
 
 			form_data = (lo_FormElementTextareaData *)
-				form_element->element_data;
+			    form_element->element_data;
 
 #if DISABLED_READONLY_SUPPORT
 			if (form_data->disabled == TRUE)
@@ -3422,7 +3456,7 @@ lo_save_form_element_data(MWContext *context, LO_Element *element,
 	if ((form_element->element_data->type != FORM_TYPE_HIDDEN)&&
 	    (form_element->element_data->type != FORM_TYPE_KEYGEN))
 	{
-		FE_GetFormElementValue(context, form_element, discard_element);
+		FE_GetFormElementValue(context, form_element, discard_element, FALSE);
 	}
 }
 
@@ -3532,7 +3566,7 @@ lo_redo_form_elements_in_form_list(MWContext *context, lo_FormData *form_list)
 						form_ele->element_data);
 #else
 					FE_GetFormElementValue(context,
-						form_ele, TRUE);
+						form_ele, TRUE, FALSE);
 #endif
 				}
 				FE_GetFormElementInfo(context, form_ele);
@@ -4173,10 +4207,42 @@ lo_clone_form_element_data(LO_FormElementData *element_data)
 				}
 				break;
 
-			case FORM_TYPE_TEXTAREA:
 #ifdef ENDER
            case FORM_TYPE_HTMLAREA:
+#ifdef MOZ_ENDER_MIME
+               {
+					lo_FormElementTextareaData *form_data, *new_form_data;
+                    lo_FormElementHtmlareaData *html_form_data, *html_new_form_data;
+
+					form_data = (lo_FormElementTextareaData *)element_data;
+					new_form_data = (lo_FormElementTextareaData *)new_element_data;
+
+                    html_form_data = (lo_FormElementHtmlareaData *)element_data;
+					html_new_form_data = (lo_FormElementHtmlareaData *)new_element_data;
+
+					new_form_data->name = lo_dup_block(form_data->name);
+					new_form_data->default_text = lo_dup_block(form_data->default_text);
+					new_form_data->current_text = lo_dup_block(form_data->current_text);
+					html_new_form_data->mime_bits = (char *)lo_dup_block((PA_Block)html_form_data->mime_bits);
+
+					if ((PA_ALLOC_FAILED(new_form_data->name,
+							form_data->name))||
+						(PA_ALLOC_FAILED(new_form_data->default_text,
+							form_data->default_text))||
+						(PA_ALLOC_FAILED(new_form_data->current_text,
+							form_data->current_text))||
+						(PA_ALLOC_FAILED(html_new_form_data->mime_bits,
+							html_form_data->mime_bits)))
+					{
+						lo_FreeFormElementData(new_element_data);
+						XP_DELETE(new_element_data);
+						return(NULL);
+					}
+				}
+				break;
+#endif /*MOZ_ENDER_MIME*/
 #endif /*ENDER*/
+			case FORM_TYPE_TEXTAREA:
 				{
 					lo_FormElementTextareaData *form_data, *new_form_data;
 

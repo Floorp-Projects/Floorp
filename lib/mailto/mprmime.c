@@ -35,8 +35,6 @@
 #define CONTENT_DISPOSITION_MIMEREL     "Content-Disposition: inline;  filename="
 #define READ_BUFFER_LEN                 255
 
-
-
 /*
 prototypes
 */
@@ -50,16 +48,16 @@ AttachmentFields *
 AttachmentFields_Init(char *p_pFilename, char *p_pDispositionName, 
                       char *p_pContentType, char *p_pContentId)
 {
-  AttachmentFields *data = XP_NEW(AttachmentFields);
-  if (!data || !p_pFilename || !p_pContentType || !p_pContentId) return 0;
-  XP_MEMSET(data, 0, sizeof(*data));
-  data->m_pFilename = p_pFilename;
-  data->m_pDispositionName = p_pDispositionName;
-  data->m_pContentType = p_pContentType;
-  if (!data->m_pDispositionName)
-    data->m_pDispositionName = XP_STRDUP(p_pFilename);
-  data->m_pContentId = p_pContentId;
-  return data;
+    AttachmentFields *data = XP_NEW(AttachmentFields);
+    if (!data || !p_pFilename || !p_pContentType || !p_pContentId) return 0;
+    XP_MEMSET(data, 0, sizeof(*data));
+    data->m_pFilename = p_pFilename;
+    data->m_pDispositionName = p_pDispositionName;
+    data->m_pContentType = p_pContentType;
+    if (!data->m_pDispositionName)
+        data->m_pDispositionName = XP_STRDUP(p_pFilename);
+    data->m_pContentId = p_pContentId;
+    return data;
 }
 
 
@@ -102,15 +100,15 @@ p_pBoundarySpecifier will be deleted in Destroy method.
 */
 GenericMimeRelatedData *
 GenericMime_Init(char *p_pBoundarySpecifier, int (*output_fn) (const char *, int32, void *),
-					void *closure)
+                 void *closure)
 {
-  GenericMimeRelatedData *data = XP_NEW(GenericMimeRelatedData);
-  if (!data) return 0;
-  XP_MEMSET(data, 0, sizeof(*data));
-  data->m_pBoundarySpecifier = p_pBoundarySpecifier;
-  data->write_buffer = output_fn;
-  data->closure = closure;
-  return data;
+    GenericMimeRelatedData *data = XP_NEW(GenericMimeRelatedData);
+    if (!data) return 0;
+    XP_MEMSET(data, 0, sizeof(*data));
+    data->m_pBoundarySpecifier = p_pBoundarySpecifier;
+    data->write_buffer = output_fn;
+    data->closure = closure;
+    return data;
 }
 
 
@@ -175,7 +173,7 @@ output_text_body(GenericMimeRelatedData *p_genmime, int16 p_index)
         /* Attempt to read in READBUFLEN characters */
         while (!feof( t_inputfile ))
         {
-            numread = fread( readbuffer, sizeof( char ), READ_BUFFER_LEN, t_inputfile );
+            numread = XP_FileRead( readbuffer, READ_BUFFER_LEN, t_inputfile );
             if (ferror(t_inputfile))
             {
                 XP_ASSERT(FALSE);
@@ -183,7 +181,7 @@ output_text_body(GenericMimeRelatedData *p_genmime, int16 p_index)
             }
             (*p_genmime->write_buffer)(readbuffer,numread,p_genmime->closure);
         }
-        fclose( t_inputfile );
+        XP_FileClose( t_inputfile );
         (*p_genmime->write_buffer)("\n",1,p_genmime->closure);
         (*p_genmime->write_buffer)("\n",1,p_genmime->closure);
     }
@@ -269,7 +267,7 @@ output_base64_file(GenericMimeRelatedData *p_genmime, int16 p_index)
             return FALSE; /* bad?*/
         while (!feof( t_inputfile ))
         {
-            numread = fread( readbuffer, sizeof( char ), READ_BUFFER_LEN, t_inputfile );
+            numread = XP_FileRead( readbuffer, READ_BUFFER_LEN, t_inputfile );
             if (ferror(t_inputfile))
             {
                 XP_ASSERT(FALSE);
@@ -278,7 +276,7 @@ output_base64_file(GenericMimeRelatedData *p_genmime, int16 p_index)
             MimeEncoderWrite(t_base64data,readbuffer,numread);
         }
         MimeEncoderDestroy(t_base64data,FALSE);
-        fclose( t_inputfile );
+        XP_FileClose( t_inputfile );
         (*p_genmime->write_buffer)("\n",1,p_genmime->closure);
         (*p_genmime->write_buffer)("\n",1,p_genmime->closure);
     }
@@ -298,7 +296,7 @@ GenericMime_Begin(GenericMimeRelatedData *p_genmime)
     }
     if (p_genmime->m_iNumTextFiles == 1 && p_genmime->m_iNumBase64Files == 0)
     {
-      return output_text_body(p_genmime,0); /*output only the body part*/
+        return output_text_body(p_genmime,0); /*output only the body part*/
     }
     (*p_genmime->write_buffer)(CONTENT_TYPE_MPR_MIMEREL,strlen(CONTENT_TYPE_MPR_MIMEREL),p_genmime->closure);
     (*p_genmime->write_buffer)(BOUNDARYSTR_MIMEREL,strlen(BOUNDARYSTR_MIMEREL),p_genmime->closure);
@@ -326,7 +324,7 @@ GenericMime_Begin(GenericMimeRelatedData *p_genmime)
     if (p_genmime->m_pBoundarySpecifier)
     {
         (*p_genmime->write_buffer)(p_genmime->m_pBoundarySpecifier,strlen(p_genmime->m_pBoundarySpecifier),p_genmime->closure);
-      (*p_genmime->write_buffer)("--",2,p_genmime->closure);
+        (*p_genmime->write_buffer)("--",2,p_genmime->closure);
     }
     (*p_genmime->write_buffer)("\n",1,p_genmime->closure);
 

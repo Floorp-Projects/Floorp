@@ -236,19 +236,33 @@ lo_FormElementTextareaData *CFormElement::GetElementTextareaData() const
 #ifdef ENDER
 //	Careful when using, may return incorrect structure if not correct
 //		form type.
-lo_FormElementTextareaData *CFormElement::GetElementHtmlareaData() const
+#ifdef MOZ_ENDER_MIME
+lo_FormElementHtmlareaData *
+#else
+lo_FormElementTextareaData *
+#endif //MOZ_ENDER_MIME
+CFormElement::GetElementHtmlareaData() const
+
 {
+#ifdef MOZ_ENDER_MIME
+	lo_FormElementHtmlareaData *pRetval = NULL;
+#else
 	lo_FormElementTextareaData *pRetval = NULL;
+#endif
 	if(GetElementData())	{
 		ASSERT(
 			GetElementData()->type == FORM_TYPE_HTMLAREA
 			);
+#ifdef MOZ_ENDER_MIME
+		pRetval = &(GetElementData()->ele_mimearea);
+#else
 		pRetval = &(GetElementData()->ele_textarea);
+#endif //MOZ_ENDER_MIME
 	}
 
 	return(pRetval);
 }
-#endif
+#endif //ENDER
 
 //	Always safe to use.
 lo_FormElementMinimalData *CFormElement::GetElementMinimalData() const
@@ -408,7 +422,7 @@ void CFormElement::GetFormElementInfo()
 			//	First time creations should by default fill in the
 			//		current data with the default data, so that
 			//		MOCHA has some data to play with.
-			UpdateCurrentData();
+			UpdateCurrentData(FALSE);
 		}
 	}
 
@@ -422,10 +436,10 @@ void CFormElement::GetFormElementInfo()
 
 //	Retrieve the data from the form element, and possibly
 //		delete the form element widget.
-void CFormElement::GetFormElementValue(BOOL bTurnOff)
+void CFormElement::GetFormElementValue(BOOL bTurnOff, BOOL bSubmit)
 {
 	//	Collect data from the widgets.
-	UpdateCurrentData();
+	UpdateCurrentData(bSubmit);
 
 	if(bTurnOff)	{
 		//	If we have to turn off, then mark that we should use current data in the future
@@ -445,7 +459,7 @@ void CFormElement::ResetFormElement()
 	UseDefaultData();
 
 	//	Update (write over) any modified current (now old) data.
-	UpdateCurrentData();
+	UpdateCurrentData(FALSE);
 }
 
 //	Toggle the form element's state.
@@ -457,7 +471,7 @@ void CFormElement::SetFormElementToggle(BOOL bState)
         if(Button_GetCheck(hRaw) != bState) {
             Button_SetCheck(hRaw, bState);
         }
-        UpdateCurrentData();
+        UpdateCurrentData(FALSE);
     }
 }
 

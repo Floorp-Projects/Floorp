@@ -3076,12 +3076,13 @@ public:
     TXP_GrowableArray_XP_Bool m_FontDefNoSave;
     char *m_pBaseTarget;
     char *m_pBodyExtra;
+
 #ifdef ENDER
 	XP_Bool m_bEmbedded;
 	void *m_pEmbeddedData;
-	char *m_pImportedStream; //dont forget to XP_FREE this memory //ENDER
 	char *m_pImportedHTMLStream; //dont forget to XP_FREE this memory //ENDER
 #endif //ENDER
+
     CEditImageLoader *m_pLoadingImage;
     CFileSaveObject *m_pSaveObject;
     XP_Bool m_bMultiSpaceMode;
@@ -3725,6 +3726,10 @@ public:
 
     // Warning! This will delete the CEditBuffer.
     void ReadFromBuffer(XP_HUGE_CHAR_PTR pBuffer);
+
+#ifdef MOZ_ENDER_MIME
+    void ReadMimeFromBuffer(XP_HUGE_CHAR_PTR pBuffer);
+#endif //MOZ_ENDER_MIME
 
     void WriteToStream( IStreamOut *stream );
 

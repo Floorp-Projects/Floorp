@@ -159,6 +159,10 @@ void EDT_SaveToBuffer ( MWContext * pContext, XP_HUGE_CHAR_PTR* pBuffer );
 
 void EDT_ReadFromBuffer ( MWContext * pContext, XP_HUGE_CHAR_PTR pBuffer );
 
+#ifdef MOZ_ENDER_MIME
+void EDT_ReadMimeFromBuffer ( MWContext * pContext, XP_HUGE_CHAR_PTR pBuffer );
+#endif /*MOZ_ENDER_MIME*/
+
 /*
  * Returns ED_ERROR_NONE if files saved OK, else returns error code.
 */
@@ -644,6 +648,9 @@ EDT_ClipboardResult EDT_PasteText( MWContext *pContext, char *pText );
 #ifdef ENDER
 EDT_ClipboardResult EDT_SetDefaultText( MWContext *pContext, char *pText ); /* can done before finishedload can be called. */
 EDT_ClipboardResult EDT_SetDefaultHTML( MWContext *pContext, char *pText ); /* can done before finishedload can be called. */
+#ifdef MOZ_ENDER_MIME
+EDT_ClipboardResult EDT_SetDefaultMimeHTML( MWContext *pContext, char *pText ); /* can done before finishedload can be called. */
+#endif /*MOZ_ENDER_MIME*/
 #endif /*ENDER*/
 
 EDT_ClipboardResult EDT_PasteHTML( MWContext *pContext, char *pHtml, ED_PasteType iPasteType );
@@ -1464,6 +1471,16 @@ void EDT_SelectNextNonTextObject(MWContext *pContext);
 #ifdef ENDER
 /* Tell the backend that the editor is embedded in a page. */
 void EDT_SetEmbeddedEditorData(MWContext *pContext, void *pData);
+
+#ifdef MOZ_ENDER_MIME
+XP_Bool EDT_URLOnSafeList(void *id, const char *url_str);
+int32 EDT_AddURLToSafeList(void *id, const char *url_str);
+int32 EDT_RemoveURLFromSafeList(void *id, const char *url_str);
+int32 EDT_RemoveIDFromSafeList(void *id);
+int32 EDT_DestroySafeList();
+void * EDT_GetIdFromContext(MWContext *pContext);
+#endif /*MOZ_ENDER_MIME*/
+
 #endif /* ENDER */
 
 XP_END_PROTOS

@@ -378,7 +378,7 @@ void CFormButton::FillSizeInfo()
 
 //	Copy the current data out of the form element back into the
 //		layout struct.
-void CFormButton::UpdateCurrentData()
+void CFormButton::UpdateCurrentData(BOOL bSubmit)
 {
 	//	There is literally no data to update for this element type right now.
 	//	Perhaps one day....

@@ -40,11 +40,6 @@ extern "C" {
 #include "msgcom.h"
 #include "intl_csi.h"
 
-#if defined(ENDER) && defined(MOZ_ENDER_MIME)
-extern "C" {
-#include "edtlist.h"
-}
-#endif /* ENDER && MOZ_ENDER_MIME */
 
 //extern "C" int XP_EDT_HEAD_FAILED;
 
@@ -976,7 +971,13 @@ void EDT_ReadFromBuffer(MWContext* pContext, XP_HUGE_CHAR_PTR pBuffer )
     pEditBuffer->ReadFromBuffer(pBuffer);
 }
 
-
+#ifdef MOZ_ENDER_MIME
+void EDT_ReadMimeFromBuffer(MWContext* pContext, XP_HUGE_CHAR_PTR pBuffer )
+{
+    GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
+    pEditBuffer->ReadMimeFromBuffer(pBuffer);
+}
+#endif /*MOZ_ENDER_MIME*/
 
 void EDT_SaveCancel( MWContext *pContext ){
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
@@ -1895,8 +1896,7 @@ EDT_ClipboardResult EDT_PasteText( MWContext *pContext, char *pText ) {
     pEditBuffer->EndBatchChanges();
     return result;
 }
-
-#ifdef ENDER
+#if 0
 EDT_ClipboardResult EDT_SetDefaultText(  MWContext *pContext, char *pText ) {
 	CEditBuffer* pEditBuffer = LO_GetEDBuffer( pContext );
 	if (pEditBuffer && pText)
@@ -1911,8 +1911,12 @@ EDT_ClipboardResult EDT_SetDefaultText(  MWContext *pContext, char *pText ) {
 	}
 	return EDT_COP_DOCUMENT_BUSY;
 }
-
+#endif
+#ifdef ENDER
 EDT_ClipboardResult EDT_SetDefaultHTML(  MWContext *pContext, char *pHTML ) {
+#ifdef MOZ_ENDER_MIME
+    return EDT_SetDefaultMimeHTML(pContext, pHTML);
+#else
 	CEditBuffer* pEditBuffer = LO_GetEDBuffer( pContext );
 	if (pEditBuffer)
 	{
@@ -1929,7 +1933,29 @@ EDT_ClipboardResult EDT_SetDefaultHTML(  MWContext *pContext, char *pHTML ) {
 		}
 	}
 	return EDT_COP_DOCUMENT_BUSY;
+#endif
 }
+
+#ifdef MOZ_ENDER_MIME
+EDT_ClipboardResult EDT_SetDefaultMimeHTML(  MWContext *pContext, char *pHTML ) {
+	CEditBuffer* pEditBuffer = LO_GetEDBuffer( pContext );
+	if (pEditBuffer)
+	{
+		if (!CEditBuffer::IsAlive(pEditBuffer) || !pEditBuffer->IsReady() || !pEditBuffer->IsWritable() )
+		{ //set up the default data for finishedload2
+			if (pHTML)
+				pEditBuffer->m_pImportedHTMLStream=XP_STRDUP(pHTML);
+			return EDT_COP_OK;
+		}
+		else
+		{
+			pEditBuffer->ReadMimeFromBuffer(pHTML);
+			return EDT_COP_OK;
+		}
+	}
+	return EDT_COP_DOCUMENT_BUSY;
+}
+#endif /*MOZ_ENDER_MIME*/
 
 void EDT_SetEmbeddedEditorData(  MWContext *pContext, void *pData ) {
 	CEditBuffer* pEditBuffer = LO_GetEDBuffer( pContext );

@@ -407,7 +407,7 @@ void CStubsCX::GetEmbedSize(MWContext *pContext, LO_EmbedStruct *pEmbed, NET_Rel
 void CStubsCX::GetFormElementInfo(MWContext *pContext, LO_FormElementStruct *pFormElement)	{
 }
 
-void CStubsCX::GetFormElementValue(MWContext *pContext, LO_FormElementStruct *pFormElement, XP_Bool bHidden)	{
+void CStubsCX::GetFormElementValue(MWContext *pContext, LO_FormElementStruct *pFormElement, XP_Bool bHidden, XP_Bool bSubmit)	{
 }
 #endif
 

@@ -35,6 +35,8 @@ REQUIRES=security nspr htmldlgs img util layer pref security js java net progres
 
 OBJS	= \
 	.\$(OBJDIR)\mprmime.obj \
+	.\$(OBJDIR)\mprdecod.obj \
+	.\$(OBJDIR)\memstrem.obj \
 	.\$(OBJDIR)\mhtmlstm.obj \
 	.\$(OBJDIR)\msgsendp.obj \
 	$(NULL)
@@ -43,6 +45,7 @@ OBJS	= \
 
 EXPORTS = \
 	mhtmlstm.h \
+	mprdecod.h \
 	$(NULL)
 
 MODULE=mailto
@@ -57,7 +60,7 @@ LINCS=-I$(XPDIST)\public\security -I$(XPDIST)\public\nspr \
     -I$(XPDIST)\public\util -I$(XPDIST)\public\network 
 
 !ifdef MOZ_ENDER_MIME 
-LCFLAGS=$(LCFLAGS) -DMOZ_ENDER_MIME
+LCFLAGS=$(LCFLAGS) -DENDER -DMOZ_ENDER_MIME
 !endif
 
 include <$(DEPTH)\config\rules.mak>

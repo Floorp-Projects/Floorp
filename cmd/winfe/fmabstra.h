@@ -56,7 +56,11 @@ public:
 	lo_FormElementTextData *GetElementTextData() const;
 	lo_FormElementTextareaData *GetElementTextareaData() const;
 #ifdef ENDER
+#ifdef MOZ_ENDER_MIME
+    lo_FormElementHtmlareaData *GetElementHtmlareaData() const;
+#else
     lo_FormElementTextareaData *GetElementHtmlareaData() const;
+#endif /*MOZ_ENDER_MIME*/
 #endif /*ENDER*/
 	lo_FormElementMinimalData *GetElementMinimalData() const;
 	lo_FormElementToggleData *GetElementToggleData() const;
@@ -109,7 +113,7 @@ protected:
 public:
 	virtual void FreeFormElement(LO_FormElementData *pFormData);
 	virtual void GetFormElementInfo();
-	virtual void GetFormElementValue(BOOL bTurnOff);
+	virtual void GetFormElementValue(BOOL bTurnOff,BOOL bSubmit);
 	virtual void ResetFormElement();
 	virtual void FormTextIsSubmit();
 	virtual void SetFormElementToggle(BOOL bState);
@@ -157,8 +161,8 @@ protected:
 	virtual void FillSizeInfo() = 0;
 
 	//	Copy the current data out of the form element back into the
-	//		layout struct.
-	virtual void UpdateCurrentData() = 0;
+	//		layout struct. flag tells wether or not this is for submission
+	virtual void UpdateCurrentData(BOOL bSubmit) = 0;
 
 public:
     virtual HWND GetRaw() = 0;

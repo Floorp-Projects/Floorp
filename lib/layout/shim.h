@@ -79,7 +79,7 @@ extern void shim_FE_DisplayFormElement(DocumentContext context,
 extern void shim_FE_GetFormElementInfo(DocumentContext context,
 			LO_FormElementStruct *form_element);
 extern void shim_FE_GetFormElementValue(DocumentContext context,
-			LO_FormElementStruct *form_element, XP_Bool hide);
+			LO_FormElementStruct *form_element, XP_Bool hide, XP_Bool submit);
 extern void shim_FE_FormTextIsSubmit(DocumentContext context,
 			LO_FormElementStruct *single_text_ele);
 extern void shim_FE_FreeFormElement(DocumentContext context,

@@ -75,9 +75,8 @@ int GenericMime_AddBase64File(GenericMimeRelatedData *p_gendata, AttachmentField
 typedef
 */
 typedef  int (*MPR_MIME_OUTPUTFUNC) (const char *, int32, void *);
+
 XP_END_PROTOS
 
-#endif /* MOZ_ENDER_MIME */
-
-#endif //_MPRMIME_H
-
+#endif /*_MPRMIME_H*/
+#endif /*MOZ_ENDER_MIME*/

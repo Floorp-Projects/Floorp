@@ -338,7 +338,7 @@ void CFormReadOnly::FillSizeInfo()
 
 //	Copy the current data out of the form element back into the
 //		layout struct.
-void CFormReadOnly::UpdateCurrentData()
+void CFormReadOnly::UpdateCurrentData(BOOL bSubmit)
 {
 	//	There is literally no data to update for this element type right now.
 	//	Perhaps one day....

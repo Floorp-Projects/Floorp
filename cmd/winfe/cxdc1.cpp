@@ -1096,16 +1096,16 @@ void CDCCX::GetFormElementInfo(MWContext *pContext, LO_FormElementStruct *pFormE
 }
 
 
-void CDCCX::GetFormElementValue(MWContext *pContext, LO_FormElementStruct *pFormElement, XP_Bool bTurnOff)
+void CDCCX::GetFormElementValue(MWContext *pContext, LO_FormElementStruct *pFormElement, XP_Bool bTurnOff, XP_Bool bSubmit)
 {
 
     //  Call the base.
-    CStubsCX::GetFormElementValue(pContext, pFormElement, bTurnOff);
+    CStubsCX::GetFormElementValue(pContext, pFormElement, bTurnOff, bSubmit);
     
 	//	Get our front end form element, and have it do it's thang.
 	CFormElement *pFormClass = CFormElement::GetFormElement(ABSTRACTCX(GetContext()), pFormElement);
 	if(pFormClass != NULL)	{
-		pFormClass->GetFormElementValue(bTurnOff);
+		pFormClass->GetFormElementValue(bTurnOff,bSubmit);
 	}
 }
 

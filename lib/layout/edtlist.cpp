@@ -26,11 +26,8 @@
 #include <stdio.h>
 #endif /* DEBUG_SAFE_LIST */
 
-#include "xp.h"
 
-extern "C" {
-#include "edtlist.h"
-}
+#include "editor.h"
 
 class LListElement
 {
@@ -637,6 +634,13 @@ EDT_DestroySafeList()
   app_safe_list = 0;
 
   return 0;
+}
+
+extern "C" void *
+EDT_GetIdFromContext(MWContext *pContext)
+{
+  GET_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) 0;
+  return pEditBuffer->m_pEmbeddedData;
 }
 
 #endif /* ENDER && MOZ_ENDER_MIME */
