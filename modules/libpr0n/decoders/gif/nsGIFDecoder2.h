@@ -48,7 +48,7 @@ class nsGIFDecoder2 : public imgIDecoder
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIIMAGEDECODER
+  NS_DECL_IMGIDECODER
   NS_DECL_NSIOUTPUTSTREAM
 
   nsGIFDecoder2();

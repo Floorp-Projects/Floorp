@@ -45,7 +45,7 @@ class nsPPMDecoder : public imgIDecoder
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIIMAGEDECODER
+  NS_DECL_IMGIDECODER
   NS_DECL_NSIOUTPUTSTREAM
 
   nsPPMDecoder();
