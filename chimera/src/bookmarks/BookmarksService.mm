@@ -991,19 +991,29 @@ static void GetImportTitle(nsIDOMElement* aSrc, nsString& aTitle)
       charData->GetData(data);
       aTitle += data;
     }
+    else {
+      // Handle Omniweb's nesting of <a> inside <h3> for its folders.
+      nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(curr));
+      if (elt) {
+        nsAutoString localName;
+        elt->GetLocalName(localName);
+        ToLowerCase(localName);
+        if (localName.Equals(NS_LITERAL_STRING("a"))) {
+          aTitle = NS_LITERAL_STRING("");
+          return GetImportTitle(elt, aTitle);
+        }
+      }
+    }
+    
     nsCOMPtr<nsIDOMNode> temp = curr;
     temp->GetNextSibling(getter_AddRefs(curr));
   }
-
-  nsCAutoString ctitle; ctitle.AssignWithConversion(aTitle);
-  printf("The title is %s\n", ctitle.get());
 }
 
 static void CreateBookmark(nsIDOMElement* aSrc, nsIDOMElement* aDst,
                            nsIDOMDocument* aDstDoc, PRBool aIsFolder,
                            nsIDOMElement** aResult)
 {
-  nsCOMPtr<nsIDOMElement> childElt;
   nsAutoString tagName(NS_LITERAL_STRING("bookmark"));
   if (aIsFolder)
     tagName = NS_LITERAL_STRING("folder");
@@ -1023,31 +1033,19 @@ static void CreateBookmark(nsIDOMElement* aSrc, nsIDOMElement* aDst,
   }
 
   nsCOMPtr<nsIDOMNode> dummy;
-  aDst->AppendChild(childElt, getter_AddRefs(dummy));
+  aDst->AppendChild(*aResult, getter_AddRefs(dummy));
 }
 
 static void AddImportedBookmarks(nsIDOMElement* aSrc, nsIDOMElement* aDst, nsIDOMDocument* aDstDoc,
                                  PRInt32& aBookmarksType)
 {
-  if (!aSrc || !aDst) {
-    printf("uh-oh uh-oh. %x %x\n", aSrc, aDst);
-    return;
-  }
-  
   nsAutoString localName;
   aSrc->GetLocalName(localName);
   ToLowerCase(localName);
   nsCOMPtr<nsIDOMElement> newBookmark;
-  if (localName.Equals(NS_LITERAL_STRING("dt")) ||
-      localName.Equals(NS_LITERAL_STRING("li"))) {
-    if (aBookmarksType != 2) {
-      // If we ever decided that we were Mozilla, don't check again.
-      if (localName.Equals(NS_LITERAL_STRING("dt")))
-        aBookmarksType = 0; // IE.
-      else if (localName.Equals(NS_LITERAL_STRING("li")))
-        aBookmarksType = 1; // Omniweb.
-    }
-    
+  if (localName.Equals(NS_LITERAL_STRING("bookmarkinfo")))
+    aBookmarksType = 1; // Omniweb.
+  else if (localName.Equals(NS_LITERAL_STRING("dt"))) {
     // We have found either a folder or a leaf.
     nsCOMPtr<nsIDOMNode> curr;
     aSrc->GetFirstChild(getter_AddRefs(curr));
@@ -1056,34 +1054,51 @@ static void AddImportedBookmarks(nsIDOMElement* aSrc, nsIDOMElement* aDst, nsIDO
       if (childElt) {
         childElt->GetLocalName(localName);
         ToLowerCase(localName);
-        if (localName.Equals(NS_LITERAL_STRING("h3"))) {
-          // Folder in Mozilla and IE.  In Mozilla it will probably have an ID.
-          PRBool hasID;
-          childElt->HasAttribute(NS_LITERAL_STRING("ID"), &hasID);
-          if (hasID)
-            aBookmarksType = 2; // Mozilla
-          else
-            aBookmarksType = 0; // IE
-          CreateBookmark(childElt, aDst, aDstDoc, PR_TRUE, getter_AddRefs(newBookmark));
-        }
-        else if (localName.Equals(NS_LITERAL_STRING("a"))) {
+        if (localName.Equals(NS_LITERAL_STRING("a"))) {
           // Guaranteed to be a bookmark in IE.  Could be either in Omniweb.
-          // Assume that it's a folder if the href is missing.
-          PRBool hasAttr;
-          childElt->HasAttribute(NS_LITERAL_STRING("href"), &hasAttr);
-          CreateBookmark(childElt, aDst, aDstDoc, !hasAttr, getter_AddRefs(newBookmark));
+          nsCOMPtr<nsIDOMElement> dummy;
+          CreateBookmark(childElt, aDst, aDstDoc, PR_FALSE, getter_AddRefs(dummy));
         }
-        else if (localName.Equals(NS_LITERAL_STRING("dl")) ||
-                 localName.Equals(NS_LITERAL_STRING("ul"))) {
-          // The children of a folder.  Recur inside.
-          AddImportedBookmarks(aSrc, newBookmark, aDstDoc, aBookmarksType);
-        }
+        // Ignore the H3 we encounter.  This will be dealt with later.
       }
-      
       nsCOMPtr<nsIDOMNode> temp = curr;
       temp->GetNextSibling(getter_AddRefs(curr));
-    }      
-    return;
+    }
+  }
+  else if (localName.Equals(NS_LITERAL_STRING("dl"))) {
+    // The children of a folder.  Recur inside.
+    // Locate the parent to create the folder.
+    nsCOMPtr<nsIDOMNode> node;
+    aSrc->GetPreviousSibling(getter_AddRefs(node));
+    nsCOMPtr<nsIDOMElement> folderElt(do_QueryInterface(node));
+    if (folderElt) {
+      // Make sure it's an H3 folder in Mozilla and IE.  In Mozilla it will probably have an ID.
+      PRBool hasID;
+      folderElt->HasAttribute(NS_LITERAL_STRING("ID"), &hasID);
+      if (aBookmarksType != 1) {
+        if (hasID)
+          aBookmarksType = 2; // Mozilla
+        else
+          aBookmarksType = 0; // IE
+      }
+      nsAutoString localName;
+      folderElt->GetLocalName(localName);
+      ToLowerCase(localName);
+      if (localName.Equals(NS_LITERAL_STRING("h3")))
+        CreateBookmark(folderElt, aDst, aDstDoc, PR_TRUE, getter_AddRefs(newBookmark));
+    }
+    if (!newBookmark)
+      newBookmark = aDst;
+    // Recur over all our children.
+    nsCOMPtr<nsIDOMNode> curr;
+    aSrc->GetFirstChild(getter_AddRefs(curr));
+    while (curr) {
+      nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(curr));
+      if (elt)
+        AddImportedBookmarks(elt, newBookmark, aDstDoc, aBookmarksType);
+      nsCOMPtr<nsIDOMNode> temp = curr;
+      temp->GetNextSibling(getter_AddRefs(curr));
+    }
   }
   else {
     // Recur over all our children.
@@ -1116,10 +1131,10 @@ BookmarksService::ImportBookmarks(nsIDOMHTMLDocument* aHTMLDoc)
                           getter_AddRefs(childElt));
   nsCOMPtr<nsIDOMNode> dummy;
   elt->AppendChild(childElt, getter_AddRefs(dummy));
-
+  
   // Now crawl through the file and look for <DT> elements.  They signify folders
   // or leaves.
-  PRInt32 bookmarksType;
+  PRInt32 bookmarksType = 0; // Assume IE.
   AddImportedBookmarks(domElement, childElt, domDoc, bookmarksType);
 
   if (bookmarksType == 0)
