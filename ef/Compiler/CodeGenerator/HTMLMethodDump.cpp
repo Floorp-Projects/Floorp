@@ -397,7 +397,7 @@ openFile(const char* fileName)
 void MethodToHTML::
 closeFile()
 {
-//	assert(mFile);
+    mFile.flushLogFile();
 //	fclose(mFile);
 }
 
