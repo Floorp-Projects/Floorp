@@ -101,7 +101,10 @@ NS_NewFieldSetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aSt
   }
 
   // set the state flags (if any are provided)
-  it->SetFrameState( aStateFlags );
+  nsFrameState state;
+  it->GetFrameState( &state );
+  state |= aStateFlags;
+  it->SetFrameState( state );
   
   *aNewFrame = it;
   return NS_OK;
