@@ -213,7 +213,9 @@ nsXULPrototypeCache::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
   uri->GetSpec(getter_Copies(str));
   
   nsCStringKey key((const char*)str);
-  mXBLDocTable.Put(&key, aDocumentInfo);
+  nsCOMPtr<nsIXBLDocumentInfo> info = getter_AddRefs(NS_STATIC_CAST(nsIXBLDocumentInfo*, mXBLDocTable.Get(&key)));
+  if (!info)
+    mXBLDocTable.Put(&key, aDocumentInfo);
 
   return NS_OK;
 }
