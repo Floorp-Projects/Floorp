@@ -107,11 +107,6 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Forward);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, NewFolder);
 
 ////////////////////////////////////////////////////////////////////////
-// The cached service managers
-
-static nsIRDFService* gRDFService = nsnull;
-static nsIMsgHeaderParser *gHeaderParser = nsnull;
-////////////////////////////////////////////////////////////////////////
 // Utilities
 
 static PRBool
@@ -166,16 +161,16 @@ peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort)
 	}
 }
 
-static void createNode(nsString& str, nsIRDFNode **node)
+void nsMSGFolderDataSource::createNode(nsString& str, nsIRDFNode **node) const
 {
 	nsIRDFLiteral * value;
 	*node = nsnull;
-	if(NS_SUCCEEDED(gRDFService->GetLiteral((const PRUnichar*)str, &value))) {
+	if(NS_SUCCEEDED(mRDFService->GetLiteral((const PRUnichar*)str, &value))) {
 		*node = value;
 	}
 }
 
-static void createNode(PRUint32 value, nsIRDFNode **node)
+void nsMSGFolderDataSource::createNode(PRUint32 value, nsIRDFNode **node) const
 {
 	char *valueStr = PR_smprintf("%d", value);
 	nsString str(valueStr);
@@ -216,29 +211,30 @@ static PRBool ShouldIgnoreFile (const char *name)
   return PR_FALSE;
 }
 
-nsMSGFolderDataSource::nsMSGFolderDataSource()
+nsMSGFolderDataSource::nsMSGFolderDataSource():
+  mURI(nsnull),
+  mObservers(nsnull),
+  mInitialized(PR_FALSE),
+  mRDFService(nsnull),
+  mHeaderParser(nsnull)
 {
   NS_INIT_REFCNT();
 
-  mURI = nsnull;
-  mInitialized = PR_FALSE;  
-  mObservers = nsnull;
-
   nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
                                              nsIRDFService::GetIID(),
-                                             (nsISupports**) &gRDFService); // XXX probably need shutdown listener here
+                                             (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
 
 	rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
-													NULL, 
-													nsIMsgHeaderParser::GetIID(), 
-													(void **) &gHeaderParser);
+                                          NULL, 
+                                          nsIMsgHeaderParser::GetIID(), 
+                                          (void **) &mHeaderParser);
 
   PR_ASSERT(NS_SUCCEEDED(rv));
 }
 
 nsMSGFolderDataSource::~nsMSGFolderDataSource (void)
 {
-  gRDFService->UnregisterDataSource(this);
+  mRDFService->UnregisterDataSource(this);
 
   PL_strfree(mURI);
   if (mObservers) {
@@ -267,11 +263,9 @@ nsMSGFolderDataSource::~nsMSGFolderDataSource (void)
   NS_RELEASE2(kNC_Forward, refcnt);
   NS_RELEASE2(kNC_NewFolder, refcnt);
 
-  nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService); // XXX probably need shutdown listener here
-	if(gHeaderParser)		
-		NS_RELEASE(gHeaderParser);	
-  gHeaderParser =  nsnull;
-  gRDFService = nsnull;
+  nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); // XXX probably need shutdown listener here
+  NS_IF_RELEASE(mHeaderParser);
+  mRDFService = nsnull;
 }
 
 
@@ -311,26 +305,26 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
   if ((mURI = PL_strdup(uri)) == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
 
-  gRDFService->RegisterDataSource(this, PR_FALSE);
+  mRDFService->RegisterDataSource(this, PR_FALSE);
 
   if (! kNC_Child) {
-    gRDFService->GetResource(kURINC_child,   &kNC_Child);
-    gRDFService->GetResource(kURINC_MessageChild,   &kNC_MessageChild);
-    gRDFService->GetResource(kURINC_Folder,  &kNC_Folder);
-    gRDFService->GetResource(kURINC_Name,    &kNC_Name);
-    gRDFService->GetResource(kURINC_SpecialFolder, &kNC_SpecialFolder);
-    gRDFService->GetResource(kURINC_TotalMessages, &kNC_TotalMessages);
-    gRDFService->GetResource(kURINC_TotalUnreadMessages, &kNC_TotalUnreadMessages);
+    mRDFService->GetResource(kURINC_child,   &kNC_Child);
+    mRDFService->GetResource(kURINC_MessageChild,   &kNC_MessageChild);
+    mRDFService->GetResource(kURINC_Folder,  &kNC_Folder);
+    mRDFService->GetResource(kURINC_Name,    &kNC_Name);
+    mRDFService->GetResource(kURINC_SpecialFolder, &kNC_SpecialFolder);
+    mRDFService->GetResource(kURINC_TotalMessages, &kNC_TotalMessages);
+    mRDFService->GetResource(kURINC_TotalUnreadMessages, &kNC_TotalUnreadMessages);
     
-	gRDFService->GetResource(kURINC_Subject, &kNC_Subject);
-	gRDFService->GetResource(kURINC_Sender, &kNC_Sender);
-    gRDFService->GetResource(kURINC_Date, &kNC_Date);
-    gRDFService->GetResource(kURINC_Status, &kNC_Status);
+	mRDFService->GetResource(kURINC_Subject, &kNC_Subject);
+	mRDFService->GetResource(kURINC_Sender, &kNC_Sender);
+    mRDFService->GetResource(kURINC_Date, &kNC_Date);
+    mRDFService->GetResource(kURINC_Status, &kNC_Status);
     
-	gRDFService->GetResource(kURINC_Delete, &kNC_Delete);
-    gRDFService->GetResource(kURINC_Reply, &kNC_Reply);
-    gRDFService->GetResource(kURINC_Forward, &kNC_Forward);
-    gRDFService->GetResource(kURINC_NewFolder, &kNC_NewFolder);
+	mRDFService->GetResource(kURINC_Delete, &kNC_Delete);
+    mRDFService->GetResource(kURINC_Reply, &kNC_Reply);
+    mRDFService->GetResource(kURINC_Forward, &kNC_Forward);
+    mRDFService->GetResource(kURINC_NewFolder, &kNC_NewFolder);
   }
   mInitialized = PR_TRUE;
   return NS_OK;
@@ -388,11 +382,11 @@ nsresult nsMSGFolderDataSource::GetSenderName(nsAutoString& sender, nsAutoString
 {
 	//XXXOnce we get the csid, use Intl version
 	nsresult rv = NS_OK;
-	if(gHeaderParser)
+	if(mHeaderParser)
 	{
 		char *name;
 		char *senderStr = sender.ToNewCString();
-		if(NS_SUCCEEDED(rv = gHeaderParser->ExtractHeaderAddressName (nsnull, senderStr, &name)))
+		if(NS_SUCCEEDED(rv = mHeaderParser->ExtractHeaderAddressName (nsnull, senderStr, &name)))
 		{
 			*senderUserName = name;
 		}

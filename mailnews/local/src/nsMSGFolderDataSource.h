@@ -24,6 +24,8 @@
 #include "nsIRDFCursor.h"
 #include "nsFileSpec.h"
 #include "nsIFolderListener.h"
+#include "nsIMsgHeaderParser.h"
+#include "nsIRDFService.h"
 
 /**
  * The mail data source.
@@ -36,6 +38,11 @@ private:
   nsVoidArray*  mObservers;
 	PRBool				mInitialized;
 
+  // The cached service managers
+  
+  nsIRDFService* mRDFService;
+  nsIMsgHeaderParser *mHeaderParser;
+  
 public:
   
   NS_DECL_ISUPPORTS
@@ -127,6 +134,9 @@ protected:
 														nsIRDFNode *object, PRBool assert);
 	nsresult  GetSenderName(nsAutoString& sender, nsAutoString *senderUserName);
 
+  void createNode(nsString& str, nsIRDFNode **node) const;
+  void createNode(PRUint32 value, nsIRDFNode **node) const;
+  
   nsresult createFolderNode(nsIMsgFolder *folder, nsIRDFResource* property,
                             nsIRDFNode **target);
   nsresult createFolderNameNode(nsIMsgFolder *folder, nsIRDFNode **target);
