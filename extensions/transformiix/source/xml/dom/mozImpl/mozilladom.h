@@ -101,8 +101,8 @@ class MozillaObjectWrapper : public MITREObject
         MozillaObjectWrapper(nsISupports* aNsObject, Document* aaOwner);
         ~MozillaObjectWrapper();
 
-        virtual void setNSObj(nsISupports* aNsObject);
-        virtual void setNSObj(nsISupports* aNsObject, Document* aaOwner);
+        void setNSObj(nsISupports* aNsObject);
+        void setNSObj(nsISupports* aNsObject, Document* aaOwner);
 
         void* getKey() const;
    

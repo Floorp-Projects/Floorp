@@ -50,6 +50,7 @@ OBJS =../source/base/ArrayList.o \
   ../source/base/Tokenizer.o \
   ../source/base/MozillaString.o \
   ../source/net/URIUtils.o \
+  ../source/xml/dom/mozImpl/MozillaObjectWrapper.o \
   ../source/xml/dom/mozImpl/MozillaAttr.o \
   ../source/xml/dom/mozImpl/MozillaCDATASection.o \
   ../source/xml/dom/mozImpl/MozillaCharacterData.o \

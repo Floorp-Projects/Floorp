@@ -25,13 +25,13 @@
  *   -- added code in ::resolveFunctionCall to support the
  *      document() function.
  *
- * $Id: ProcessorState.cpp,v 1.6 2000/08/26 04:28:27 Peter.VanderBeken%pandora.be Exp $
+ * $Id: ProcessorState.cpp,v 1.7 2000/09/04 16:25:27 axel%pike.org Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.6 $ $Date: 2000/08/26 04:28:27 $
+ * @version $Revision: 1.7 $ $Date: 2000/09/04 16:25:27 $
 **/
 
 #include "ProcessorState.h"
@@ -180,7 +180,7 @@ MBool ProcessorState::addToResultTree(Node* node) {
             Attr* attr = (Attr*)node;
 #ifdef MOZ_XSL
             String nameSpaceURI;
-            getNameSpaceURI(attr->getName(), nameSpaceURI);
+	    getNameSpaceURI(attr->getName() , nameSpaceURI);
             element->setAttributeNS(nameSpaceURI, attr->getName(), attr->getValue());
 #else
             element->setAttribute(attr->getName(),attr->getValue());
@@ -405,7 +405,7 @@ Element* ProcessorState::getNamedTemplate(String& name) {
 /**
  * Returns the namespace URI for the given name
 **/
-void ProcessorState::getNameSpaceURI(String& name, String& nameSpaceURI) {
+void ProcessorState::getNameSpaceURI(const String& name, String& nameSpaceURI) {
     String prefix;
 
     XMLUtils::getNameSpace(name, prefix);
