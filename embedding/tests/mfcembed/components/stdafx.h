@@ -47,6 +47,19 @@
 
 #define VC_EXTRALEAN	// Exclude rarely-used stuff from Windows headers
 
+//
+// These headers are very evil, as they will define DEBUG if _DEBUG is
+//  defined, which is lame and not what we want for things like
+//  MOZ_TRACE_MALLOC and other tools.
+// If we do not detect this, various MOZ/NS debug symbols are undefined
+//  and we can not build.
+// /MDd defines _DEBUG automagically to have the right debug C LIB
+//  functions get called (so we can get symbols and hook into malloc).
+//
+#if !defined(DEBUG)
+#define THERECANBENODEBUG
+#endif
+
 #include <afxwin.h>         // MFC core and standard components
 #include <afxext.h>         // MFC extensions
 #include <afxdtctl.h>		// MFC support for Internet Explorer 4 Common Controls
@@ -57,5 +70,9 @@
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
+
+#if defined(THERECANBENODEBUG) && defined(DEBUG)
+#undef DEBUG
+#endif
 
 #endif //_STDAFX_H

@@ -90,6 +90,16 @@ OPTIMIZER=-Zi -O1 -UDEBUG -DNDEBUG
 !endif
 # MOZ_COVERAGE
 
+#
+# Handle trace-malloc in optimized builds.
+# No opt to give sane callstacks.
+#
+!if defined(MOZ_TRACE_MALLOC)
+OPTIMIZER=-Zi -Od -UDEBUG -DNDEBUG
+OS_LFLAGS=/DEBUG /DEBUGTYPE:CV /PDB:NONE /OPT:REF /OPT:nowin98
+!endif
+# MOZ_TRACE_MALLOC
+
 # if MOZ_DEBUG is not set and MOZ_MAPINFO
 !if defined (MOZ_MAPINFO)
 OS_LFLAGS=$(OS_LFLAGS) /MAP:$(MAPFILE) /MAPINFO:LINES
@@ -115,20 +125,20 @@ OS_LFLAGS= $(OS_LFLAGS) /COD:$(CODFILE)
 #//------------------------------------------------------------------------
 !ifdef USE_STATIC_LIBS
 RTL_FLAGS=-MT          # Statically linked multithreaded RTL
-!ifdef MOZ_DEBUG 
+!if defined(MOZ_DEBUG) || defined(MOZ_TRACE_MALLOC)
 RTL_FLAGS=-MTd         # Statically linked multithreaded MSVC4.0 debug RTL
 !endif
 
 !else ifdef USE_NON_MT_LIBS
 RTL_FLAGS=-ML          # Statically linked non-multithreaded LIBC RTL
-!ifdef MOZ_DEBUG
+!if defined(MOZ_DEBUG) || defined(MOZ_TRACE_MALLOC)
 RTL_FLAGS=-MLd         # Statically linked non-multithreaded LIBC debug RTL
 !endif
 
 !else
 RTL_FLAGS=-MD          # Dynamically linked, multithreaded RTL
 
-!ifdef MOZ_DEBUG 
+!if defined(MOZ_DEBUG) || defined(MOZ_TRACE_MALLOC)
 !ifndef MOZ_NO_DEBUG_RTL
 RTL_FLAGS=-MDd         # Dynamically linked, multithreaded MSVC4.0 debug RTL
 !endif

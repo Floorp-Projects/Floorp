@@ -94,7 +94,7 @@ WIN_LIBS =                             \
 !ifdef GC_LEAK_DETECTOR
 	$(DIST)\lib\boehm.lib  		\
 !endif
-!if defined(MOZ_DEBUG)
+!if defined(MOZ_DEBUG) || defined(MOZ_TRACE_MALLOC)
         imagehlp.lib                   \
 !endif
         $(NULL)
