@@ -333,7 +333,8 @@ static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 #define DOCUMENT_SCRIPTABLE_FLAGS                                             \
   (NODE_SCRIPTABLE_FLAGS |                                                    \
    nsIXPCScriptable::WANT_ADDPROPERTY |                                       \
-   nsIXPCScriptable::WANT_DELPROPERTY)
+   nsIXPCScriptable::WANT_DELPROPERTY |                                       \
+   nsIXPCScriptable::WANT_GETPROPERTY)
 
 #define ARRAY_SCRIPTABLE_FLAGS                                                \
   (DOM_DEFAULT_SCRIPTABLE_FLAGS |                                             \
@@ -465,7 +466,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   // Misc HTML classes
   NS_DEFINE_CLASSINFO_DATA(HTMLDocument, nsHTMLDocumentSH,
                            DOCUMENT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_GETPROPERTY |
                            nsIXPCScriptable::WANT_ENUMERATE)
   NS_DEFINE_CLASSINFO_DATA(HTMLCollection, nsHTMLCollectionSH,
                            ARRAY_SCRIPTABLE_FLAGS)
@@ -2807,9 +2807,9 @@ needsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
 // Window helper
 
 nsresult
-nsWindowSH::doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
-                                  nsIXPConnectWrappedNative *wrapper,
-                                  PRUint32 accessMode)
+nsDOMClassInfo::doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
+                                      nsIXPConnectWrappedNative *wrapper,
+                                      PRUint32 accessMode, PRBool isWindow)
 {
   if (!sSecMan) {
     return NS_OK;
@@ -2817,8 +2817,8 @@ nsWindowSH::doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
 
   // Don't check when getting the Components property, since we check
   // its properties anyway. This will help performance.
-  if (accessMode == nsIXPCSecurityManager::ACCESS_GET_PROPERTY &&
-      id == STRING_TO_JSVAL(sComponents_id)) {
+  if (id == STRING_TO_JSVAL(sComponents_id) &&
+      accessMode == nsIXPCSecurityManager::ACCESS_GET_PROPERTY && isWindow) {
     return NS_OK;
   }
 
@@ -2826,7 +2826,28 @@ nsWindowSH::doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
   wrapper->GetNative(getter_AddRefs(native));
 
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
-  NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
+
+  if (!sgo) {
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(native));
+    NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+
+    doc->GetScriptGlobalObject(getter_AddRefs(sgo));
+
+    if (!sgo) {
+      // There's no script global in the document. This means that
+      // this document is a result from using XMLHttpRequest or it's a
+      // document created through a DOMImplementation. In that case
+      // there's nothing we can do since the context on which the
+      // document was created is not accessable and we can't do a
+      // security check, but the document must remain
+      // scriptable. Documents loaded through these methods have
+      // already been vetted by the security manager before they were
+      // loaded, so allowing access here w/o doing a security check
+      // here is probably safe anyway.
+
+      return NS_OK;
+    }
+  }
 
   nsCOMPtr<nsIScriptContext> scx;
   sgo->GetContext(getter_AddRefs(scx));
@@ -2837,8 +2858,8 @@ nsWindowSH::doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
 
   JSObject *global = sgo->GetGlobalJSObject();
 
-  return sSecMan->CheckPropertyAccess(cx, global, mData->mName,
-                                      id, accessMode);
+  return sSecMan->CheckPropertyAccess(cx, global, mData->mName, id,
+                                      accessMode);
 }
 
 NS_IMETHODIMP
@@ -2947,7 +2968,8 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     nsresult rv =
       doCheckPropertyAccess(cx, obj, id, wrapper,
-                            nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
+                            nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
+                            PR_TRUE);
 
     if (NS_FAILED(rv)) {
       // Security check failed. The security manager set a JS
@@ -2969,7 +2991,8 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   if (needsSecurityCheck(cx, wrapper)) {
     nsresult rv =
       doCheckPropertyAccess(cx, obj, id, wrapper,
-                            nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+                            nsIXPCSecurityManager::ACCESS_SET_PROPERTY,
+                            PR_TRUE);
 
     if (NS_FAILED(rv)) {
       // Security check failed. The security manager set a JS
@@ -3032,7 +3055,8 @@ nsWindowSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   nsresult rv =
     doCheckPropertyAccess(cx, obj, id, wrapper,
-                          nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+                          nsIXPCSecurityManager::ACCESS_SET_PROPERTY,
+                          PR_TRUE);
 
   if (NS_FAILED(rv)) {
     // Security check failed. The security manager set a JS
@@ -3058,7 +3082,8 @@ nsWindowSH::DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   nsresult rv =
     doCheckPropertyAccess(cx, obj, id, wrapper,
-                          nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+                          nsIXPCSecurityManager::ACCESS_SET_PROPERTY,
+                          PR_TRUE);
 
   if (NS_FAILED(rv)) {
     // Security check failed. The security manager set a JS
@@ -4520,6 +4545,78 @@ nsFormControlListSH::GetNamedItem(nsISupports *aNative,
 
 // Document helper for document.location and document.on*
 
+static inline PRBool
+documentNeedsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
+{
+  // Get the JS object from the wrapper
+  JSObject *wrapper_obj = nsnull;
+  wrapper->GetJSObject(&wrapper_obj);
+
+  JSObject *wrapper_global = GetGlobalJSObject(cx, wrapper_obj);
+
+#ifdef DEBUG
+  {
+    JSClass *clazz = JS_GET_CLASS(cx, ::JS_GetGlobalObject(cx));
+
+    NS_ASSERTION(clazz && clazz->flags & JSCLASS_HAS_PRIVATE &&
+                 clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS,
+                 "Bad class for Document object!");
+  }
+#endif
+
+  if (wrapper_global != ::JS_GetGlobalObject(cx)) {
+    // cx is not the context in the global object in wrapper, force
+    // a security check.
+
+    return PR_TRUE;
+  }
+
+  // Check if the calling function comes from the same scope that the
+  // wrapper comes from. If that's the case, or if there's no JS
+  // running at the moment (i.e. someone is using the JS engine API
+  // directly to access a property on a JS object) there's no need to
+  // do a security check.
+
+  JSObject *function_obj = nsnull;
+  JSStackFrame *fp = nsnull;
+
+  do {
+    fp = ::JS_FrameIterator(cx, &fp);
+
+    if (!fp) {
+      if (!function_obj) {
+        // No JS is running (there's no frame on the JS stack with a
+        // function object), someone is just accessing properties on a
+        // JS object using the JS API, no need to do security checks
+        // then.
+
+        return PR_FALSE;
+      }
+
+      break;
+    }
+
+    function_obj = ::JS_GetFrameFunctionObject(cx, fp);
+  } while (!function_obj);
+
+  // Get the global object that the calling function comes from.
+  JSObject *function_global = GetGlobalJSObject(cx, function_obj);
+
+  if (function_global != wrapper_global) {
+    // The global object we're trying to access a property on is not
+    // from the scope that the calling function comes from. Do a
+    // security check.
+
+    return PR_TRUE;
+  }
+
+  // We're called from the same context as the context in the global
+  // object in the scope that wrapper came from, no need to do a
+  // security check now.
+
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsDocumentSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                           JSObject *obj, jsval id, jsval *vp,
@@ -4605,9 +4702,48 @@ nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 }
 
 NS_IMETHODIMP
+nsDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
+{
+  if (documentNeedsSecurityCheck(cx, wrapper)) {
+    nsresult rv =
+      doCheckPropertyAccess(cx, obj, id, wrapper,
+                            nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
+                            PR_FALSE);
+
+    if (NS_FAILED(rv)) {
+      // Security check failed. The security manager set a JS
+      // exception, we must make sure that exception is propagated.
+
+      *_retval = PR_FALSE;
+
+      *vp = JSVAL_NULL;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocumentSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                           JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
 {
+  if (documentNeedsSecurityCheck(cx, wrapper)) {
+    nsresult rv =
+      doCheckPropertyAccess(cx, obj, id, wrapper,
+                            nsIXPCSecurityManager::ACCESS_SET_PROPERTY,
+                            PR_FALSE);
+
+    if (NS_FAILED(rv)) {
+      // Security check failed. The security manager set a JS
+      // exception, we must make sure that exception is propagated.
+
+      *_retval = PR_FALSE;
+
+      return NS_OK;
+    }
+  }
+
   if (JSVAL_IS_STRING(id)) {
     JSString *str = JSVAL_TO_STRING(id);
 
@@ -4753,9 +4889,16 @@ nsHTMLDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
                               JSContext *cx, JSObject *obj, jsval id,
                               jsval *vp, PRBool *_retval)
 {
+  // nsDocumentSH::GetProperty() does a security check for us, call
+  // that first...
+  nsresult rv = nsDocumentSH::GetProperty(wrapper, cx, obj, id, vp, _retval);
+  if (!*_retval) {
+    return rv;
+  }
+
   nsCOMPtr<nsISupports> result;
 
-  nsresult rv = ResolveImpl(cx, wrapper, id, getter_AddRefs(result));
+  rv = ResolveImpl(cx, wrapper, id, getter_AddRefs(result));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (result) {
