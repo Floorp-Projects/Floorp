@@ -917,7 +917,8 @@ JSObjectOps JavaObject_ops = {
     NULL,                       /* setParent */
     NULL,                       /* mark */
     NULL,                       /* clear */
-    0,0                         /* spare */
+    NULL,                       /* getRequiredSlot */
+    NULL                        /* setRequiredSlot */
 };
 
 JS_STATIC_DLL_CALLBACK(JSObjectOps *)
@@ -959,8 +960,10 @@ jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
 JSBool
 jsj_init_JavaObject(JSContext *cx, JSObject *global_obj)
 {
-    JavaObject_ops.newObjectMap = jsj_wrapper_newObjectMap;
+    JavaObject_ops.newObjectMap = js_ObjectOps.newObjectMap;
     JavaObject_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
+    JavaObject_ops.getRequiredSlot = js_ObjectOps.getRequiredSlot;
+    JavaObject_ops.setRequiredSlot = js_ObjectOps.setRequiredSlot;
 
     if (!JS_InitClass(cx, global_obj, 
         0, &JavaObject_class, 0, 0,
