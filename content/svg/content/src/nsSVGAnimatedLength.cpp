@@ -40,6 +40,7 @@
 #include "nsWeakReference.h"
 #include "nsSVGAnimatedLength.h"
 #include "nsSVGLength.h"
+#include "nsContentUtils.h"
 
 
 ////////////////////////////////////////////////////////////////////////

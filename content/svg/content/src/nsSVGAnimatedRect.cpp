@@ -40,6 +40,7 @@
 #include "nsSVGRect.h"
 #include "nsSVGValue.h"
 #include "nsWeakReference.h"
+#include "nsContentUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGAnimatedRect

@@ -38,6 +38,7 @@
 #include "nsWeakReference.h"
 #include "nsSVGAnimatedAngle.h"
 #include "nsSVGLength.h"
+#include "nsContentUtils.h"
 
 
 ////////////////////////////////////////////////////////////////////////

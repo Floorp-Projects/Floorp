@@ -44,6 +44,7 @@
 #include "nsIWeakReference.h"
 #include "nsSVGMatrix.h"
 #include "nsTextFormatter.h"
+#include "nsContentUtils.h"
 
 
 ////////////////////////////////////////////////////////////////////////

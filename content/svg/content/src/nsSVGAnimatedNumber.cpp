@@ -42,6 +42,7 @@
 #include "nsSVGValue.h"
 #include "nsISVGValueUtils.h"
 #include "nsDOMError.h"
+#include "nsContentUtils.h"
 
 
 ////////////////////////////////////////////////////////////////////////

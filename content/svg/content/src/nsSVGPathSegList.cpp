@@ -44,6 +44,7 @@
 #include "nsDOMError.h"
 #include "nsSVGPathDataParser.h"
 #include "nsReadableUtils.h"
+#include "nsContentUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGPathSegList

@@ -44,6 +44,7 @@
 #include "nsCRT.h"
 #include "nsWeakReference.h"
 #include "nsIDOMSVGLength.h"
+#include "nsContentUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGRect class

@@ -40,6 +40,7 @@
 #include "nsSVGPreserveAspectRatio.h"
 #include "nsSVGValue.h"
 #include "nsWeakReference.h"
+#include "nsContentUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGAnimatedPreserveAspectRatio

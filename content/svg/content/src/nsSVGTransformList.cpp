@@ -46,6 +46,7 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsCOMArray.h"
+#include "nsContentUtils.h"
 
 nsresult
 nsSVGTransformList::Create(nsIDOMSVGTransformList** aResult)

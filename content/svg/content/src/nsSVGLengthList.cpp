@@ -46,6 +46,7 @@
 #include "nsSVGCoordCtx.h"
 #include "nsCRT.h"
 #include "nsISVGValueUtils.h"
+#include "nsContentUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGLengthList
