@@ -1,4 +1,4 @@
-snsAVLTree.h
+nsAVLTree.h
 nsCppSharedAllocator.h
 nsCRT.h
 nsDeque.h
