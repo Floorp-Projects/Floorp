@@ -28,7 +28,6 @@
 #include "nsBaseAppCore.h"
 #include "nsINetSupport.h"
 #include "nsIStreamObserver.h"
-#include "nsIURLListener.h"
 #include "nsIDocumentLoaderObserver.h"
 
 class nsIBrowserWindow;
@@ -87,14 +86,6 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    FindNext();
     NS_IMETHOD    SetDocumentCharset(const nsString& aCharset); 
     NS_IMETHOD    LoadInitialPage();
-
-#if 0
-    // nsIStreamObserver
-    NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-    NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-    NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-    NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
-#endif /* 0 */
 
     // nsIDocumentLoaderObserver
     NS_IMETHOD OnStartDocumentLoad(nsIURL* aURL, const char* aCommand);
