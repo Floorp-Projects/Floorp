@@ -24,6 +24,7 @@
 platform.mac = true;
 
 pref("browser.drag_out_of_frame_style", 1);
+pref("ui.key.saveLink.shift", false); // true = shift, false = meta
 
 pref("editor.use_html_editor",              false);
 pref("editor.use_image_editor",             false);

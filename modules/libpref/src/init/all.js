@@ -360,6 +360,7 @@ pref("security.xpconnect.plugin.unrestricted", true);
 pref("ui.key.accelKey", 17);
 pref("ui.key.menuAccessKey", 18);
 pref("ui.key.menuAccessKeyFocuses", false);
+pref("ui.key.saveLink.shift", true); // true = shift, false = meta
 
 // Middle-mouse handling
 pref("middlemouse.paste", false);

@@ -144,7 +144,17 @@
           event.preventBubble();
           return true;
         } 
-        if (event.shiftKey) {                                         // if shift is down
+        var saveModifier = true;
+        if (pref) {
+          try {
+            saveModifier = pref.GetBoolPref("ui.key.saveLink.shift");
+          }
+          catch {            
+          }
+        }
+        saveModifier = saveModifier ? event.shiftKey : event.metaKey;
+          
+        if (saveModifier) {                                           // if saveModifier is down
           savePage(href);                                             // save the link
           return true;
         }
