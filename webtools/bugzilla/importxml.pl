@@ -49,7 +49,7 @@ use strict;
 my $path = $0;
 $path =~ s#(.*)/[^/]+#$1#;
 chdir $path;
-use lib "$path";
+use lib ($path);
 
 use XML::Parser;
 use Data::Dumper;
