@@ -107,7 +107,7 @@ void nsInputFileFrame::MouseClicked(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsInputFileFrame::MoveTo(nscoord aX, nscoord aY)
 {
-//  if ((aX != mRect.x) || (aY != mRect.y)) {
+  if ((aX != mRect.x) || (aY != mRect.y)) {
     nsIFrame* childFrame = mFirstChild;
     nscoord x = aX;
     nscoord y = aY;
@@ -118,23 +118,23 @@ nsInputFileFrame::MoveTo(nscoord aX, nscoord aY)
       x = x + childSize.width + 100;
       childFrame->GetNextSibling(childFrame);
     }
-//  }
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsInputFileFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 {
- /* nsIFrame* childFrame = mFirstChild;
-  nscoord width = aWidth;
-  nscoord height = aHeight;
-  while (nsnull != childFrame) {
-    nsresult result = childFrame->SizeTo(width, height);
-    nsSize childSize;
-    ((nsInputFrame *)childFrame)->GetWidgetSize(childSize);
-    width = width - childSize.width - 100;
-    childFrame->GetNextSibling(childFrame);
-  }*/
+  mRect.width = aWidth;
+  mRect.height = aHeight;
+
+  // Let the view know the correct size
+  nsIView* view = nsnull;
+  GetView(view);
+  if (nsnull != view) {
+    view->SetDimensions(aWidth, aHeight);
+    NS_RELEASE(view);
+  }
   return NS_OK;
 }
 
