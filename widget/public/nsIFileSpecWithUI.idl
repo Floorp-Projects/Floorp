@@ -68,8 +68,8 @@ interface nsIFileSpecWithUI : nsIFileSpec
 	,	in string extraFilterTitle
 	,	in string extraFilter
 		);
-        string chooseFile(in string title);
-	void chooseDirectory(in string title);
+  string chooseFile(in string title);
+	string chooseDirectory(in string title);
 };
 	
 %{C++

@@ -165,7 +165,7 @@ Clean:
 } // nsFileSpecWithUIImpl::chooseInputFile
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecWithUIImpl::chooseDirectory(const char *title)
+NS_IMETHODIMP nsFileSpecWithUIImpl::chooseDirectory(const char *title, char **_retval)
 //----------------------------------------------------------------------------------------
 {
     if (!mBaseFileSpec)
@@ -181,6 +181,11 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::chooseDirectory(const char *title)
     nsFileSpec spec;
 	if (fileWidget->GetFolder(nsnull, title, spec) != nsFileDlgResults_OK)
 		rv = NS_FILE_FAILURE;
-    return mBaseFileSpec->setFromFileSpec(spec);
+
+  rv = mBaseFileSpec->setFromFileSpec(spec);
+	if (NS_FAILED(rv))
+		return rv;
+    
+  return GetURLString(_retval);
 } // nsFileSpecWithUIImpl::chooseDirectory
 
