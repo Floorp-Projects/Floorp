@@ -313,6 +313,7 @@ xpcom/tests/Makefile
 xpcom/tests/dynamic/Makefile
 xpcom/tools/Makefile
 xpcom/tools/xpidl/Makefile
+xpcom/tools/registry/Makefile
 xpcom/libxpt/Makefile
 xpcom/libxpt/public/Makefile
 xpcom/libxpt/src/Makefile
