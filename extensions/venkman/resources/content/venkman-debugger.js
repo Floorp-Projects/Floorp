@@ -73,6 +73,12 @@ console._executionHook = {
     }
 };
 
+console._errorHook = {
+    onExecute: function exehook (frame, type, rv) {
+        display ("error hook");
+    }
+};
+
 function initDebugger()
 {   
     console._continueCodeStack = new Array(); /* top of stack is the default */
@@ -88,15 +94,15 @@ function initDebugger()
     
     /* create the debugger instance */
     if (!Components.classes[JSD_CTRID])
-        throw BadMojo (ERR_NO_DEBUGGER);
+        throw new BadMojo (ERR_NO_DEBUGGER);
     
     console.jsds = Components.classes[JSD_CTRID].getService(jsdIDebuggerService);
     console.jsds.on();
     console.jsds.breakpointHook = console._executionHook;
     console.jsds.debuggerHook = console._executionHook;
+    //console.jsds.errorHook = console._errorHook;
     console.jsds.scriptHook = console._scriptHook;
     //dbg.interruptHook = interruptHooker;
-
     var enumer = new Object();
     enumer.enumerateScript = function (script)
     {
@@ -305,7 +311,7 @@ function getCurrentFrameIndex()
 function setCurrentFrameByIndex (index)
 {
     if (!console.frames)
-        throw BadMojo (ERR_NO_STACK);
+        throw new BadMojo (ERR_NO_STACK);
     
     ASSERT (index >= 0 && index < console.frames.length, "index out of range");
 
@@ -317,7 +323,7 @@ function setCurrentFrameByIndex (index)
 function clearCurrentFrame ()
 {
     if (!console.frames)
-        throw BadMojo (ERR_NO_STACK);
+        throw new BadMojo (ERR_NO_STACK);
 
     delete console._currentFrameIndex;
 }
@@ -348,7 +354,7 @@ function formatArguments (v)
 function formatProperty (p)
 {
     if (!p)
-        throw BadMojo (ERR_REQUIRED_PARAM, "p");
+        throw new BadMojo (ERR_REQUIRED_PARAM, "p");
 
     var flags = p.flags;
     var s = "";
@@ -374,7 +380,7 @@ function formatProperty (p)
 function formatScript (script)
 {
     if (!script)
-        throw BadMojo (ERR_REQUIRED_PARAM, "script");
+        throw new BadMojo (ERR_REQUIRED_PARAM, "script");
 
     return getMsg (MSN_FMT_SCRIPT, [script.functionName, script.fileName]);
 }
@@ -382,7 +388,7 @@ function formatScript (script)
 function formatFrame (f)
 {
     if (!f)
-        throw BadMojo (ERR_REQUIRED_PARAM, "f");
+        throw new BadMojo (ERR_REQUIRED_PARAM, "f");
  
     return getMsg (MSN_FMT_FRAME,
                    [f.script.functionName, formatArguments(f.scope),
@@ -394,7 +400,7 @@ function formatFrame (f)
 function formatValue (v, summary)
 {
     if (!v)
-        throw BadMojo (ERR_REQUIRED_PARAM, "v");
+        throw new BadMojo (ERR_REQUIRED_PARAM, "v");
     
     var type;
     var value;
@@ -461,10 +467,17 @@ function loadSource (url, cb)
 {
     var observer = {
         onComplete: function oncomplete (data, url, status) {
-            var ary = data.split("\n");
+            var ary = data.split(/$/m);
             for (var i = 0; i < ary.length; ++i)
-                /* need to use new String here so we can decorate it later */
-                ary[i] = new String(ary[i].replace(/\r$/, ""));
+            {
+                /* We use "new String" here so we can decorate the source line
+                 * with attributes used while displaying the source, like
+                 * "current line", and "breakpoint".
+                 * The replace() strips control characters, including whatever
+                 * line endings we just split() on.
+                 */
+                ary[i] = new String(ary[i].replace(/[\0-\31]/g, ""));
+            }
             console._sources[url] = ary;
             cb(data, url, status);
         }
@@ -485,10 +498,10 @@ function displayCallStack ()
 function displayProperties (v)
 {
     if (!v)
-        throw BadMojo (ERR_REQUIRED_PARAM, "v");
+        throw new BadMojo (ERR_REQUIRED_PARAM, "v");
 
     if (!(v instanceof jsdIValue))
-        throw BadMojo (ERR_INVALID_PARAM, "v", String(v));
+        throw new BadMojo (ERR_INVALID_PARAM, "v", String(v));
 
     var p = new Object();
     v.getProperties (p, {});
@@ -523,7 +536,7 @@ function displaySource (url, line, contextLines)
 function displayFrame (f, idx, showSource)
 {
     if (!f)
-        throw BadMojo (ERR_REQUIRED_PARAM, "f");
+        throw new BadMojo (ERR_REQUIRED_PARAM, "f");
 
     if (typeof idx == "undefined")
     {
