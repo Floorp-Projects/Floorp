@@ -5243,7 +5243,12 @@ EOF
 	        _PTHREAD_LDFLAGS="-lc_r"
 	    fi
 	    ;;
-    *-openbsd*|*-bsdi*|*-netbsd*)
+    *-netbsd*)
+	    if test "$ac_cv_have_dash_pthread" = "yes"; then
+	        _PTHREAD_LDFLAGS="-pthread"
+	    fi
+	    ;;
+    *-openbsd*|*-bsdi*)
 	    cat >> confdefs.h <<\EOF
 #define _THREAD_SAFE 1
 EOF
