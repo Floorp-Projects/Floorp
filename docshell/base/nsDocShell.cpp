@@ -2998,23 +2998,28 @@ nsDocShell::Create()
 
     // i don't want to read this pref in every time we load a url
     // so read it in once here and be done with it...
-    mPrefs->GetBoolPref("network.protocols.useSystemDefaults",
-                        &tmpbool);
-    mUseExternalProtocolHandler = tmpbool;
+    rv = mPrefs->GetBoolPref("network.protocols.useSystemDefaults",
+                             &tmpbool);
+    if (NS_SUCCEEDED(rv))
+      mUseExternalProtocolHandler = tmpbool;
 
-    mPrefs->GetBoolPref("browser.block.target_new_window", &tmpbool);
-    mDisallowPopupWindows = tmpbool;
+    rv = mPrefs->GetBoolPref("browser.block.target_new_window", &tmpbool);
+    if (NS_SUCCEEDED(rv))
+      mDisallowPopupWindows = tmpbool;
 
-    mPrefs->GetBoolPref("browser.frames.enabled", &tmpbool);
-    mAllowSubframes = tmpbool;
+    rv = mPrefs->GetBoolPref("browser.frames.enabled", &tmpbool);
+    if (NS_SUCCEEDED(rv))
+      mAllowSubframes = tmpbool;
 
     // Check pref to see if we should prevent frameset spoofing
-    mPrefs->GetBoolPref("browser.frame.validate_origin", &tmpbool);
-    mValidateOrigin = tmpbool;
+    rv = mPrefs->GetBoolPref("browser.frame.validate_origin", &tmpbool);
+    if (NS_SUCCEEDED(rv))
+      mValidateOrigin = tmpbool;
 
     // Should we use XUL error pages instead of alerts if possible?
-    mPrefs->GetBoolPref("browser.xul.error_pages.enabled", &tmpbool);
-    mUseErrorPages = tmpbool;
+    rv = mPrefs->GetBoolPref("browser.xul.error_pages.enabled", &tmpbool);
+    if (NS_SUCCEEDED(rv))
+      mUseErrorPages = tmpbool;
 
     return NS_OK;
 }
