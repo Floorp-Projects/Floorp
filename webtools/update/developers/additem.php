@@ -156,7 +156,14 @@ $sql = "SELECT ID, GUID from `main` WHERE `GUID` = '".escape_string($manifestdat
     $mode = "update";
     $row = mysql_fetch_array($sql_result);
     $item_id = $row["ID"];
-if ($_POST["legacy"]=="TRUE") {$item_id = escape_string($_POST["existingitems"]); }
+if ($_POST["legacy"]=="TRUE") {
+    if ($_POST["mode"]=="update") {
+        $item_id = escape_string($_POST["existingitems"]);
+    } else {
+        $item_id="";
+    }
+}
+
     $sql = "SELECT `UserID` from `authorxref` WHERE `ID`='$item_id' AND `UserID` = '$_SESSION[uid]' LIMIT 1";
       $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
       if (mysql_num_rows($sql_result)=="1" or ($_SESSION["level"]="admin" or $_SESSION["level"]="editor")) {
@@ -251,7 +258,6 @@ Your file: <?php echo"$filename"; ?> <INPUT name="filename" TYPE=HIDDEN VALUE="<
 <?php
 exit;
 }
-//exit;
 
 
 $typearray = array("E"=>"Extension","T"=>"Theme");
