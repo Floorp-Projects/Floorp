@@ -53,6 +53,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsINameSpace.h"
 #include "nsILookAndFeel.h"
+#include "xp_core.h"
 
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
@@ -2051,13 +2052,17 @@ MapDeclarationFontInto(nsICSSDeclaration* aDeclaration,
           }
           else if (NS_STYLE_FONT_SIZE_LARGER == value) {
             PRInt32 index = nsStyleUtil::FindNextLargerFontSize(parentFont->mFont.size, (PRInt32)defaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
-            font->mFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)defaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
-            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)defaultFixedFont.size, scaleFactor, aPresContext, eFontSize_CSS);
+            nscoord largerSize = nsStyleUtil::CalcFontPointSize(index, (PRInt32)defaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
+            nscoord largerFixedSize = nsStyleUtil::CalcFontPointSize(index, (PRInt32)defaultFixedFont.size, scaleFactor, aPresContext, eFontSize_CSS);
+            font->mFont.size = MAX(largerSize, parentFont->mFont.size);
+            font->mFixedFont.size = MAX(largerFixedSize, parentFont->mFixedFont.size);
           }
           else if (NS_STYLE_FONT_SIZE_SMALLER == value) {
             PRInt32 index = nsStyleUtil::FindNextSmallerFontSize(parentFont->mFont.size, (PRInt32)defaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
-            font->mFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)defaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
-            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)defaultFixedFont.size, scaleFactor, aPresContext, eFontSize_CSS);
+            nscoord smallerSize = nsStyleUtil::CalcFontPointSize(index, (PRInt32)defaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
+            nscoord smallerFixedSize = nsStyleUtil::CalcFontPointSize(index, (PRInt32)defaultFixedFont.size, scaleFactor, aPresContext, eFontSize_CSS);
+            font->mFont.size = MIN(smallerSize, parentFont->mFont.size);
+            font->mFixedFont.size = MIN(smallerFixedSize, parentFont->mFixedFont.size);
           }
           // this does NOT explicitly set font size
           font->mFlags &= ~NS_STYLE_FONT_SIZE_EXPLICIT;
