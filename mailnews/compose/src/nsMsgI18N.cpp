@@ -29,6 +29,7 @@
 #include "nsMsgI18N.h"
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
+#include "nsMsgMimeCID.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);

@@ -26,6 +26,7 @@
 #include "nsMsgI18N.h"
 #include "nsMsgCompUtils.h"
 #include "nsFileStream.h"
+#include "nsMsgMimeCID.h"
 
 #include "nsMsgTransition.h"
 

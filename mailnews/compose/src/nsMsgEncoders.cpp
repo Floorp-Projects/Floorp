@@ -21,6 +21,7 @@
 #include "nsIStringBundle.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsIServiceManager.h"
+#include "nsMsgMimeCID.h"
 #include "nsIMimeConverter.h"
 
 /* This is the next generation string retrieval call */

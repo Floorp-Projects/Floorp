@@ -23,7 +23,8 @@
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
-#include "nsIStreamConverter2.h"
+#include "nsIStreamConverter.h"
+#include "nsIChannel.h"
 #include "nsIMimeStreamConverter.h"
 #include "nsFileStream.h"
 #include "nsFileSpec.h"
@@ -45,11 +46,14 @@
 #include "nsMsgCopy.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
+#include "nsIIOService.h"
+#include "nsMsgMimeCID.h"
 
 // CID's needed
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kPrefCID,            NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID,      NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 //
 // Implementation...
@@ -99,7 +103,7 @@ NS_NewMsgDraft(const nsIID &aIID, void ** aInstancePtrResult)
 
 
 // stream converter
-static NS_DEFINE_CID(kStreamConverterCID,    NS_STREAM_CONVERTER_CID);
+static NS_DEFINE_CID(kStreamConverterCID,    NS_MAILNEWS_MIME_STREAM_CONVERTER_CID);
 
 ////////////////////////////////////////////////////////////////////////////////////
 // THIS IS A TEMPORARY CLASS THAT MAKES A DISK FILE LOOK LIKE A nsIInputStream 
@@ -215,9 +219,9 @@ SaveDraftMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData
   }
 
   // Create a mime parser (nsIStreamConverter)!
-  nsCOMPtr<nsIStreamConverter2> mimeParser;
+  nsCOMPtr<nsIStreamConverter> mimeParser;
   rv = nsComponentManager::CreateInstance(kStreamConverterCID, 
-                                          NULL, nsCOMTypeInfo<nsIStreamConverter2>::GetIID(), 
+                                          NULL, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), 
                                           (void **) getter_AddRefs(mimeParser)); 
   if (NS_FAILED(rv) || !mimeParser)
   {
@@ -254,7 +258,12 @@ SaveDraftMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData
   nsCOMPtr<nsIMimeStreamConverter> mimeConverter = do_QueryInterface(mimeParser);
   if (mimeConverter)
 	  mimeConverter->SetMimeOutputType(ptr->mOutType);  // Set the type of output for libmime
-  if (NS_FAILED(mimeParser->Init(aURL, nsnull /* no listener necessary */, nsnull /* the channel */)))
+
+  nsCOMPtr<nsIChannel> dummyChannel;
+  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
+  rv = netService->NewInputStreamChannel(aURL, nsnull, nsnull, getter_AddRefs(dummyChannel));
+
+  if (NS_FAILED(mimeParser->AsyncConvertData(nsnull, nsnull, nsnull, dummyChannel)))
   {
     NS_RELEASE(ptr);
     printf("Unable to set the output stream for the mime parser...\ncould be failure to create internal libmime data\n");
