@@ -46,6 +46,18 @@
 #include <imagehlp.h>
 
 #define F_DEMANGLE 1
+#define DEMANGLE_STATE_NORMAL 0
+#define DEMANGLE_STATE_QDECODE 1
+#define DEMANGLE_STATE_PROLOGUE_1 2
+#define DEMANGLE_STATE_HAVE_TYPE 3
+#define DEMANGLE_STATE_DEC_LENGTH 4
+#define DEMANGLE_STATE_HEX_LENGTH 5
+#define DEMANGLE_STATE_PROLOGUE_SECONDARY 6
+#define DEMANGLE_STATE_DOLLAR_1 7
+#define DEMANGLE_STATE_DOLLAR_2 8
+#define DEMANGLE_STATE_START 9
+#define DEMANGLE_STATE_STOP 10
+
 #else
 #define F_DEMANGLE 0
 #endif /* WIN32 */
@@ -227,7 +239,193 @@ char* symdup(const char* inSymbol)
             demangleRes = UnDecorateSymbolName(inSymbol, demangleBuf, sizeof(demangleBuf), UNDNAME_COMPLETE);
             if(0 != demangleRes)
             {
-                retval = strdup(demangleBuf);
+                if (strcmp(demangleBuf, "`string'") == 0)
+                {
+                    
+                    /* attempt manual demangling of string prefix.. */
+
+                    /* first make sure we have enough space for the
+                       updated string - the demangled string will
+                       always be shorter than strlen(inSymbol) and the
+                       prologue will always be longer than the
+                       "string: " that we tack on the front of the string
+                    */
+                    char *curresult = retval = malloc(strlen(inSymbol) + 11);
+                    const char *curchar = inSymbol;
+                    
+                    int state = DEMANGLE_STATE_START;
+
+                    /* the hex state is for stuff like ?$EA which
+                       really means hex value 0x40 */
+                    char hex_state = 0;
+                    char string_is_unicode = 0;
+
+                    /* sometimes we get a null-termination before the
+                       final @ sign - in that case, remember that
+                       we've seen the whole string */
+                    int have_null_char = 0;
+
+                    /* stick our user-readable prefix on */
+                    strcpy(curresult, "string: \"");
+                    curresult += 9;
+                    
+                    while (*curchar) {
+                        
+                        // process current state
+                        switch (state) {
+
+                            /* the Prologue states are divided up so
+                               that someday we can try to decode
+                               the random letters in between the '@'
+                               signs. Also, some strings only have 2
+                               prologue '@' signs, so we have to
+                               figure out how to distinguish between
+                               them at some point. */
+                        case DEMANGLE_STATE_START:
+                            if (*curchar == '@')
+                                state = DEMANGLE_STATE_PROLOGUE_1;
+                            /* ignore all other states */
+                            break;
+
+                        case DEMANGLE_STATE_PROLOGUE_1:
+                            switch (*curchar) {
+                            case '0':
+                                string_is_unicode=0;
+                                state = DEMANGLE_STATE_HAVE_TYPE;
+                                break;
+                            case '1':
+                                string_is_unicode=1;
+                                state = DEMANGLE_STATE_HAVE_TYPE;
+                                break;
+
+                                /* ignore all other characters */
+                            }
+                            break;
+
+                        case DEMANGLE_STATE_HAVE_TYPE:
+                            if (*curchar >= '0' && *curchar <= '9') {
+                                state = DEMANGLE_STATE_DEC_LENGTH;
+                            } else if (*curchar >= 'A' && *curchar <= 'Z') {
+                                state = DEMANGLE_STATE_HEX_LENGTH;
+                            }
+                        case DEMANGLE_STATE_DEC_LENGTH:
+                            /* decimal lengths don't have the 2nd
+                               field
+                            */
+                            if (*curchar == '@')
+                                state = DEMANGLE_STATE_NORMAL;
+                            break;
+                            
+                        case DEMANGLE_STATE_HEX_LENGTH:
+                            /* hex lengths have a 2nd field
+                               (though I have no idea what it is for)
+                            */
+                            if (*curchar == '@')
+                                state = DEMANGLE_STATE_PROLOGUE_SECONDARY;
+                            break;
+
+                        case DEMANGLE_STATE_PROLOGUE_SECONDARY:
+                            if (*curchar == '@')
+                                state = DEMANGLE_STATE_NORMAL;
+                            break;
+                        
+                        case DEMANGLE_STATE_NORMAL:
+                            switch (*curchar) {
+                            case '?':
+                                state = DEMANGLE_STATE_QDECODE;
+                                break;
+                            case '@':
+                                state = DEMANGLE_STATE_STOP;
+                                break;
+                            default:
+                                *curresult++ = *curchar;
+                                state = DEMANGLE_STATE_NORMAL;
+                                break;
+                            }
+                            break;
+
+                            /* found a '?' */
+                        case DEMANGLE_STATE_QDECODE:
+                            state = DEMANGLE_STATE_NORMAL;
+
+                            /* there are certain shortcuts, like
+                               "?3" means ":"
+                            */
+                            switch (*curchar) {
+                            case '1':
+                                *curresult++ = '/';
+                                break;
+                            case '2':
+                                *curresult++ = '\\';
+                                break;
+                            case '3':
+                                *curresult++ = ':';
+                                break;
+                            case '4':
+                                *curresult++ = '.';
+                                break;
+                            case '5':
+                                *curresult++ = ' ';
+                                break;
+                            case '6':
+                                *curresult++ = '\\';
+                                *curresult++ = 'n';
+                                break;
+                            case '8':
+                                *curresult++ = '\'';
+                                break;
+                            case '9':
+                                *curresult++ = '-';
+                                break;
+
+                                /* any other arbitrary ASCII value can
+                                   be stored by prefixing it with ?$
+                                */
+                            case '$':
+                                state = DEMANGLE_STATE_DOLLAR_1;
+                            }
+                            break;
+                            
+                        case DEMANGLE_STATE_DOLLAR_1:
+                            /* first digit of ?$ notation. All digits
+                               are hex, represented starting with the
+                               capital leter 'A' such that 'A' means 0x0,
+                               'B' means 0x1, 'K' means 0xA
+                            */
+                            hex_state = (*curchar - 'A') * 0x10;
+                            state = DEMANGLE_STATE_DOLLAR_2;
+                            break;
+
+                        case DEMANGLE_STATE_DOLLAR_2:
+                            /* same mechanism as above */
+                            hex_state += (*curchar - 'A');
+                            if (hex_state) {
+                                *curresult++ = hex_state;
+                                have_null_char = 0;
+                            }
+                            else {
+                                have_null_char = 1;
+                            }
+                            
+                            state = DEMANGLE_STATE_NORMAL;
+                            break;
+
+                        case DEMANGLE_STATE_STOP:
+                            break;
+                        }
+
+                        curchar++;
+                    }
+                    
+                    /* add the appropriate termination depending
+                       if we completed the string or not */
+                    if (!have_null_char)
+                        strcpy(curresult, "...\"");
+                    else
+                        strcpy(curresult, "\"");
+                } else {
+                    retval = strdup(demangleBuf);
+                }
             }
             else
             {
