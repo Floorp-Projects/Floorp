@@ -36,8 +36,17 @@ LOCAL_INCLUDES	= -I$(srcdir) -I$(OBJDIR)
 
 ICONS_GEN_HDR	= $(OBJDIR)/icon_extern.h
 ICONS_GEN_SRC	= $(OBJDIR)/icondata.c
+ICONLIST	= $(OBJDIR)/icon.list
+ICONANIMLIST	= $(OBJDIR)/iconanim.list
+MKICONS_EXE	= $(OBJDIR)/mkicons
 
-ANIM_PRIV = $(topsrcdir)/../ns_priv/xfe/icons/anim
+GARBAGE		+= $(MKICONS_EXE) \
+		  $(ICONS_GEN_HDR) \
+		  $(ICONS_GEN_HDR).tmp \
+		  $(ICONS_GEN_SRC) \
+		  $(ICONLIST) \
+		  $(ICONANIMLIST)
+
 
 include $(topsrcdir)/config/rules.mk
 
@@ -115,18 +124,11 @@ endif
 NICONS 	:= $(addprefix $(srcdir)/, $(NICONS))
 ICONS	+= $(NICONS)
 
-# Alphabetical order seems to matter here.
-ifdef NETSCAPE_PRIV
-ANIM		+= $(wildcard $(ANIM_PRIV)/main/*.gif \
-			$(ANIM_PRIV)/compass/*.gif \
-			$(ANIM_PRIV)/mozilla/*.gif)
+ifdef NETSCAPE_COMMERCIAL
+ANIM		= $(wildcard $(XFEPRIVDIR)/icons/anim/main/*.gif)
 else
 ANIM		= $(wildcard $(srcdir)/anim/main/*.gif)
 endif
-
-ICONLIST	 = $(OBJDIR)/icon.list
-ICONANIMLIST = $(OBJDIR)/iconanim.list
-MKICONS_EXE	 = $(OBJDIR)/mkicons
 
 ifdef JAVA_OR_NSJVM
 JAVA_JMC = $(DIST)/lib/libjmc.a			# XXX To be removed...	
@@ -169,13 +171,6 @@ MKICONS_LIB	+= -lz
 else
 MKICONS_LIB	+= $(DIST)/lib/libzlib.a
 endif
-
-GARBAGE		+= $(MKICONS_EXE) \
-		  $(ICONS_GEN_HDR) \
-		  $(ICONS_GEN_HDR).tmp \
-		  $(ICONS_GEN_SRC) \
-		  $(ICONLIST) \
-		  $(ICONANIMLIST)
 
 MKICONS_EXTRA	= $(OS_LIBS) -lm
 
