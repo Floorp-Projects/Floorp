@@ -47,6 +47,8 @@ static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFTreeBuilderCID,         NS_RDFTREEBUILDER_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,       NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFXULBuilderCID,          NS_RDFXULBUILDER_CID);
+static NS_DEFINE_CID(kXULDataSourceCID,			 NS_XULDATASOURCE_CID);
+static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
 
 class RDFFactoryImpl : public nsIFactory
 {
@@ -164,6 +166,14 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kRDFContentSinkCID)) {
         if (NS_FAILED(rv = NS_NewRDFContentSink((nsIRDFContentSink**) &inst)))
+            return rv;
+    }
+	else if (mClassID.Equals(kXULDataSourceCID)) {
+		if (NS_FAILED(rv = NS_NewXULDataSource((nsIRDFXMLDataSource**) &inst)))
+			return rv;
+	}
+	else if (mClassID.Equals(kXULContentSinkCID)) {
+        if (NS_FAILED(rv = NS_NewXULContentSink((nsIRDFContentSink**) &inst)))
             return rv;
     }
     else {

@@ -40,6 +40,7 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
 #include "nsIRDFDataSource.h"
+#include "nsIRDFXMLDataSource.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
@@ -74,6 +75,9 @@ static NS_DEFINE_CID(kRDFContentSinkCID,        NS_RDFCONTENTSINK_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
 
+static NS_DEFINE_IID(kIRDFXMLDataSourceIID,  NS_IRDFXMLDATASOURCE_IID);
+static NS_DEFINE_IID(kXULContentSinkCID,	 NS_XULCONTENTSINK_CID);
+
 ////////////////////////////////////////////////////////////////////////
 // Vocabulary stuff
 #include "rdf.h"
@@ -84,7 +88,7 @@ DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, nextVal);
 ////////////////////////////////////////////////////////////////////////
 // XULDataSourceImpl
 
-class XULDataSourceImpl : public nsIRDFDataSource
+class XULDataSourceImpl : public nsIRDFXMLDataSource
 {
 protected:
     struct NameSpaceMap {
@@ -207,13 +211,31 @@ public:
         return mInner->DoCommand(aCommand, aCommandTarget);
     }
 
+	// nsIRDFXMLDataSource interface
+    NS_IMETHOD SetSynchronous(PRBool aIsSynchronous);
+    NS_IMETHOD SetReadOnly(PRBool aIsReadOnly);
+    NS_IMETHOD BeginLoad(void);
+    NS_IMETHOD Interrupt(void);
+    NS_IMETHOD Resume(void);
+    NS_IMETHOD EndLoad(void);
+    NS_IMETHOD SetRootResource(nsIRDFResource* aResource);
+    NS_IMETHOD GetRootResource(nsIRDFResource** aResource);
+    NS_IMETHOD AddCSSStyleSheetURL(nsIURL* aStyleSheetURL);
+    NS_IMETHOD GetCSSStyleSheetURLs(nsIURL*** aStyleSheetURLs, PRInt32* aCount);
+    NS_IMETHOD AddNamedDataSourceURI(const char* aNamedDataSourceURI);
+    NS_IMETHOD GetNamedDataSourceURIs(const char* const** aNamedDataSourceURIs, PRInt32* aCount);
+    NS_IMETHOD AddNameSpace(nsIAtom* aPrefix, const nsString& aURI);
+    NS_IMETHOD SetContentModelBuilderCID(nsID* aCID);
+    NS_IMETHOD GetContentModelBuilderCID(nsID* aCID);
+    NS_IMETHOD AddXMLStreamObserver(nsIRDFXMLDataSourceObserver* aObserver);
+    NS_IMETHOD RemoveXMLStreamObserver(nsIRDFXMLDataSourceObserver* aObserver);
 };
 
 
 ////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXULDataSource(nsIRDFDataSource** result)
+NS_NewXULDataSource(nsIRDFXMLDataSource** result)
 {
     XULDataSourceImpl* ds = new XULDataSourceImpl();
     if (! ds)
@@ -291,7 +313,8 @@ XULDataSourceImpl::QueryInterface(REFNSIID iid, void** result)
         return NS_ERROR_NULL_POINTER;
 
     if (iid.Equals(kISupportsIID) ||
-        iid.Equals(kIRDFDataSourceIID)) {
+		iid.Equals(kIRDFDataSourceIID) ||
+		iid.Equals(kIRDFXMLDataSourceIID)) {
         *result = NS_STATIC_CAST(nsIRDFDataSource*, this);
         NS_ADDREF(this);
         return NS_OK;
@@ -348,10 +371,9 @@ static const char kResourceURIPrefix[] = "resource:";
                                                     (void**) &ns)))
         goto done;
 
-#if 0
     if (NS_FAILED(rv = nsRepository::CreateInstance(kXULContentSinkCID,
                                                     nsnull,
-                                                    kIXULContentSinkIID,
+                                                    kIRDFContentSinkIID,
                                                     (void**) &sink)))
         goto done;
 
@@ -362,7 +384,6 @@ static const char kResourceURIPrefix[] = "resource:";
     // store. This allows the initial content to be generated "directly".
     if (NS_FAILED(rv = sink->SetDataSource(this)))
         goto done;
-#endif
 
     if (NS_FAILED(rv = nsRepository::CreateInstance(kParserCID,
                                                     nsnull,
@@ -411,4 +432,231 @@ XULDataSourceImpl::Flush(void)
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+////////////////////////////////////////////////////////////////////////
+// nsIRDFXMLDataSource methods
+
+NS_IMETHODIMP
+XULDataSourceImpl::SetSynchronous(PRBool aIsSynchronous)
+{
+    mIsSynchronous = aIsSynchronous;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDataSourceImpl::SetReadOnly(PRBool aIsReadOnly)
+{
+    if (mIsWritable && aIsReadOnly)
+        mIsWritable = PR_FALSE;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDataSourceImpl::BeginLoad(void)
+{
+    mIsLoading = PR_TRUE;
+    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLDataSourceObserver* obs = (nsIRDFXMLDataSourceObserver*) mObservers[i];
+        obs->OnBeginLoad(this);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDataSourceImpl::Interrupt(void)
+{
+    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLDataSourceObserver* obs = (nsIRDFXMLDataSourceObserver*) mObservers[i];
+        obs->OnInterrupt(this);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDataSourceImpl::Resume(void)
+{
+    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLDataSourceObserver* obs = (nsIRDFXMLDataSourceObserver*) mObservers[i];
+        obs->OnResume(this);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDataSourceImpl::EndLoad(void)
+{
+    mIsLoading = PR_FALSE;
+    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLDataSourceObserver* obs = (nsIRDFXMLDataSourceObserver*) mObservers[i];
+        obs->OnEndLoad(this);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDataSourceImpl::SetRootResource(nsIRDFResource* aResource)
+{
+    NS_PRECONDITION(aResource != nsnull, "null ptr");
+    if (! aResource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_ADDREF(aResource);
+    mRootResource = aResource;
+
+    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLDataSourceObserver* obs = (nsIRDFXMLDataSourceObserver*) mObservers[i];
+        obs->OnRootResourceFound(this, mRootResource);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDataSourceImpl::GetRootResource(nsIRDFResource** aResource)
+{
+    NS_ADDREF(mRootResource);
+    *aResource = mRootResource;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDataSourceImpl::AddCSSStyleSheetURL(nsIURL* aCSSStyleSheetURL)
+{
+    NS_PRECONDITION(aCSSStyleSheetURL != nsnull, "null ptr");
+    if (! aCSSStyleSheetURL)
+        return NS_ERROR_NULL_POINTER;
+
+    nsIURL** p = new nsIURL*[mNumCSSStyleSheetURLs + 1];
+    if (! p)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PRInt32 i;
+    for (i = mNumCSSStyleSheetURLs - 1; i >= 0; --i)
+        p[i] = mCSSStyleSheetURLs[i];
+
+    NS_ADDREF(aCSSStyleSheetURL);
+    p[mNumCSSStyleSheetURLs] = aCSSStyleSheetURL;
+
+    ++mNumCSSStyleSheetURLs;
+    mCSSStyleSheetURLs = p;
+
+    for (i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLDataSourceObserver* obs = (nsIRDFXMLDataSourceObserver*) mObservers[i];
+        obs->OnCSSStyleSheetAdded(this, aCSSStyleSheetURL);
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDataSourceImpl::GetCSSStyleSheetURLs(nsIURL*** aCSSStyleSheetURLs, PRInt32* aCount)
+{
+    *aCSSStyleSheetURLs = mCSSStyleSheetURLs;
+    *aCount = mNumCSSStyleSheetURLs;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDataSourceImpl::AddNamedDataSourceURI(const char* aNamedDataSourceURI)
+{
+    NS_PRECONDITION(aNamedDataSourceURI != nsnull, "null ptr");
+    if (! aNamedDataSourceURI)
+        return NS_ERROR_NULL_POINTER;
+
+    char** p = new char*[mNumNamedDataSourceURIs + 1];
+    if (! p)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PRInt32 i;
+    for (i = mNumNamedDataSourceURIs - 1; i >= 0; --i)
+        p[i] = mNamedDataSourceURIs[i];
+
+    PRInt32 len = PL_strlen(aNamedDataSourceURI);
+    char* buf = new char[len + 1];
+    if (! buf) {
+        delete p;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    PL_strcpy(buf, aNamedDataSourceURI);
+    p[mNumNamedDataSourceURIs] = buf;
+
+    ++mNumNamedDataSourceURIs;
+    mNamedDataSourceURIs = p;
+
+    for (i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLDataSourceObserver* obs = (nsIRDFXMLDataSourceObserver*) mObservers[i];
+        obs->OnNamedDataSourceAdded(this, aNamedDataSourceURI);
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDataSourceImpl::GetNamedDataSourceURIs(const char* const** aNamedDataSourceURIs, PRInt32* aCount)
+{
+    *aNamedDataSourceURIs = mNamedDataSourceURIs;
+    *aCount = mNumNamedDataSourceURIs;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDataSourceImpl::AddNameSpace(nsIAtom* aPrefix, const nsString& aURI)
+{
+    NameSpaceMap* entry;
+
+    // ensure that URIs are unique
+    for (entry = mNameSpaces; entry != nsnull; entry = entry->Next) {
+        if (aURI.Equals(entry->URI))
+            return NS_OK;
+    }
+
+    // okay, it's a new one: let's add it.
+    entry = new NameSpaceMap;
+    if (! entry)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(aPrefix);
+    entry->Prefix = aPrefix;
+    entry->URI = aURI;
+    entry->Next = mNameSpaces;
+    mNameSpaces = entry;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+XULDataSourceImpl::SetContentModelBuilderCID(nsID* aCID)
+{
+    mContentModelBuilderCID = *aCID;
+
+    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIRDFXMLDataSourceObserver* obs = (nsIRDFXMLDataSourceObserver*) mObservers[i];
+        obs->OnContentModelBuilderSpecified(this, &mContentModelBuilderCID);
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDataSourceImpl::GetContentModelBuilderCID(nsID* aCID)
+{
+    *aCID = mContentModelBuilderCID;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDataSourceImpl::AddXMLStreamObserver(nsIRDFXMLDataSourceObserver* aObserver)
+{
+    mObservers.AppendElement(aObserver);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDataSourceImpl::RemoveXMLStreamObserver(nsIRDFXMLDataSourceObserver* aObserver)
+{
+    mObservers.RemoveElement(aObserver);
+    return NS_OK;
+}
+
 

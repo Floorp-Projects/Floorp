@@ -204,9 +204,13 @@ public:
     NS_IMETHOD RemoveXMLStreamObserver(nsIRDFXMLDataSourceObserver* aObserver) = 0;
 };
 
-
+// Two different kinds of XML data sources exist for RDF: serialized RDF and XUL.
+// These are the methods that make these data sources.
 extern nsresult
 NS_NewRDFXMLDataSource(nsIRDFXMLDataSource** result);
+
+extern nsresult
+NS_NewXULDataSource(nsIRDFXMLDataSource** result);
 
 #endif // nsIRDFXMLDataSource_h__
 
