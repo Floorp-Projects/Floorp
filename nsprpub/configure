@@ -4147,19 +4147,30 @@ EOF
 #define _REENTRANT 1
 EOF
 
-    ac_safe=`echo "machine/builtins.h" | sed 'y%./+-%__p_%'`
+
+    if echo "$OS_RELEASE" | egrep -c '(V2.0|V3.2)' 2>/dev/null ; then
+        USE_NSPR_THREADS=1
+    fi
+
+    if test -z "$GNU_CC"; then
+        CC="$CC -std1 -ieee_with_inexact"
+        if test "$OS_RELEASE" != "V2.0"; then
+            CC="$CC -readonly_strings"
+        fi
+        _OPTIMIZE_FLAGS="$_OPTIMIZE_FLAGS -Olimit 4000"
+        ac_safe=`echo "machine/builtins.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for machine/builtins.h""... $ac_c" 1>&6
-echo "configure:4153: checking for machine/builtins.h" >&5
+echo "configure:4164: checking for machine/builtins.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4158 "configure"
+#line 4169 "configure"
 #include "confdefs.h"
 #include <machine/builtins.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:4163: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:4174: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -4183,17 +4194,6 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
-
-    if echo "$OS_RELEASE" | egrep -c '(V2.0|V3.2)' 2>/dev/null ; then
-        USE_NSPR_THREADS=1
-    fi
-
-    if test -z "$GNU_CC"; then
-        CC="$CC -std1 -ieee_with_inexact"
-        if test "$OS_RELEASE" != "V2.0"; then
-            CC="$CC -readonly_strings"
-        fi
-        _OPTIMIZE_FLAGS="$_OPTIMIZE_FLAGS -Olimit 4000"
     fi
 
     if echo $OS_RELEASE | egrep -c '(V2.0|V3.2)' 2>/dev/null; then

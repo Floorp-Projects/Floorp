@@ -1454,7 +1454,6 @@ mips-sony-newsos*)
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(OSF1)
     AC_DEFINE(_REENTRANT)
-    AC_CHECK_HEADER(machine/builtins.h, AC_DEFINE(OSF1_HAVE_MACHINE_BUILTINS_H))
 
     if echo "$OS_RELEASE" | egrep -c '(V2.0|V3.2)' 2>/dev/null ; then
         USE_NSPR_THREADS=1
@@ -1466,6 +1465,7 @@ mips-sony-newsos*)
             CC="$CC -readonly_strings"
         fi
         _OPTIMIZE_FLAGS="$_OPTIMIZE_FLAGS -Olimit 4000"
+        AC_CHECK_HEADER(machine/builtins.h, AC_DEFINE(OSF1_HAVE_MACHINE_BUILTINS_H))
     fi
 
     if echo $OS_RELEASE | egrep -c '(V2.0|V3.2)' 2>/dev/null; then

@@ -101,7 +101,11 @@ GetHighResClock(void *buf, size_t maxbytes)
 {
     unsigned long t;
 
+#ifdef __GNUC__
+    __asm__("rpcc %0" : "=r" (t));
+#else
     t = asm("rpcc %v0");
+#endif
     return _pr_CopyLowBits(buf, maxbytes, &t, sizeof(t));
 }
 
