@@ -225,27 +225,6 @@ nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
 
     mRequestBuffer.Append(" HTTP/1.0"CRLF);
 
-/*    switch (mMethod)
-    {
-        case HM_GET:
-            PL_strncpy(lineBuffer, MethodToString(mMethod)
-            break;
-        case HM_DELETE:
-        case HM_HEAD:
-        case HM_INDEX:
-        case HM_LINK:
-        case HM_OPTIONS:
-        case HM_POST:
-        case HM_PUT:
-        case HM_PATCH:
-        case HM_TRACE:
-        case HM_UNLINK:
-            NS_ERROR_NOT_IMPLEMENTED;
-            break;
-        default: NS_ERROR("No method set on request!");
-            break;
-    }
-*/
     //
     // Write the request headers, if any...
     //

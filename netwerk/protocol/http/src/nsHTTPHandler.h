@@ -114,7 +114,7 @@ public:
     */
     NS_IMETHOD      FollowRedirects(PRBool bFollow=PR_TRUE);
 
-    // Singleton function
+    // Singleton function - note this AddRefs so when you are done... release it!
     static nsHTTPHandler* GetInstance(void);
 
     // Functions from nsIHTTPProtocolHandler
@@ -135,28 +135,34 @@ public:
     **/
 
     virtual nsresult CreateTransport(const char* host, PRInt32 port, 
-                                     nsIEventSinkGetter* i_ESG, nsIChannel** o_pTrans);
+                                     nsIEventSinkGetter* i_ESG, 
+                                     const char* aPrintHost,
+                                     nsIChannel** o_pTrans);
     
     /*
         Remove this transport from the list.
     */
     virtual nsresult ReleaseTransport(nsIChannel* i_pTrans);
 
-    nsresult CancelPendingChannel(nsHTTPChannel* aChannel);
+    virtual nsresult CancelPendingChannel(nsHTTPChannel* aChannel);
 
 protected:
     // None
     nsHTTPHandler(void);
     virtual ~nsHTTPHandler();
 
-    // This is the array of connections that the handler thread maintains to 
-    // verify unique requests. 
+    // This is the array of connections that the handler thread 
+    // maintains to verify unique requests. 
     nsCOMPtr<nsISupportsArray> mConnections;
     nsCOMPtr<nsISupportsArray> mPendingChannelList;
     nsCOMPtr<nsISupportsArray> mTransportList;
+    // Transports that are idle (ready to be used again)
+    nsCOMPtr<nsISupportsArray> mIdleTransports;
 
+    PRBool          mDoKeepAlive;
     char*           mProxy;
     PRInt32         mProxyPort;
+    PRBool          mUseProxy; 
 };
 
 #endif /* _nsHTTPHandler_h_ */
