@@ -41,6 +41,7 @@ EXPORTS		= \
 		nsPoint.h \
 		nsSize.h \
 		nsMargin.h \
+		nsNameValuePairDB.h \
 		nsTransform2D.h \
 		nsIRenderingContext.h \
 		nsRenderingContextImpl.h \
