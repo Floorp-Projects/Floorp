@@ -68,8 +68,8 @@ x = <alpha attr1="value1" attr2="value2">one<bravo attr3="value3" attr4="value4"
 y = <alpha attr2="value2" attr1="value1">one<bravo attr4="value4" attr3="value3">two</bravo></alpha>;
 TEST(8, true, (x == y) && (y == x));
 
-// Skips empty text nodes
-XML.ignoreWhitespace = false;
+// Skips empty text nodes if ignoring whitespace
+// XML.ignoreWhitespace = false;
 x = <alpha> <bravo>one</bravo> </alpha>;
 y = <alpha><bravo>one</bravo></alpha>;
 TEST(9, true, (x == y) && (y == x));

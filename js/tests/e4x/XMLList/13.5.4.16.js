@@ -40,7 +40,7 @@ START("13.5.4.16 - XMLList parent()");
 TEST(1, true, XMLList.prototype.hasOwnProperty("parent"));
     
 // Empty should return undefined
-x = new XML();
+x = new XMLList();
 TEST(2, undefined, x.parent());
 
 // If all XMLList items have same parent, then return that parent.

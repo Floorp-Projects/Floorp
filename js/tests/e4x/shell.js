@@ -167,6 +167,10 @@ function END()
 
 function NL() 
 {
-  return java.lang.System.getProperty("line.separator");
+  try {
+    return java.lang.System.getProperty("line.separator");
+  } catch (e) {
+    return "\n";
+  }
 }
 

@@ -50,7 +50,7 @@ x =
 </alpha>;
 
 TEST(2, "<bravo>one</bravo>", x.bravo.toXMLString());
-TEST(3, "<bravo>one</bravo>" + NL() + "<bravo>two</bravo>", x..bravo.toXMLString());
+TEST(3, "<bravo>one</bravo><bravo>two</bravo>", x..bravo.toXMLString());
 
 x = 
 <alpha>
@@ -87,7 +87,7 @@ x =
     <bravo/>
 </alpha>;
 
-TEST(7, "<bravo/>" + NL() + "<bravo/>", x.bravo.toXMLString());
+TEST(7, "<bravo/><bravo/>", x.bravo.toXMLString());
 
 x = 
 <alpha>
@@ -95,7 +95,7 @@ x =
     <bravo>two<charlie/></bravo>
 </alpha>;
 
-TEST(8, "<bravo>one<charlie/></bravo>" + NL() + "<bravo>two<charlie/></bravo>", x.bravo.toXMLString());
+TEST(8, "<bravo>one<charlie/></bravo><bravo>two<charlie/></bravo>", x.bravo.toXMLString());
    
 XML.prettyPrinting = true;
 

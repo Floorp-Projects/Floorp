@@ -65,7 +65,7 @@ TEST_XML(7, correct, x);
 
 
 // ignoreProcessingInstructions
-XML.defaultSettings();
+XML.setSettings();
 x = 
 <>
     <alpha>
@@ -100,7 +100,7 @@ correct =
 TEST_XML(9, correct, x);
 
 // ignoreWhitespace
-XML.defaultSettings();
+XML.setSettings();
 x = new XML("<alpha> \t\r\n\r\n<bravo> \t\r\n\r\none</bravo> \t\r\n\r\n</alpha>");
 
 correct = 
@@ -119,7 +119,7 @@ x = new XML(correct);
 TEST_XML(11, correct, x);
 
 // prettyPrinting
-XML.defaultSettings();
+XML.setSettings();
 
 x =
 <alpha>
@@ -184,7 +184,7 @@ TEST(18, correct, x.toString());
 TEST(19, correct, x.toXMLString());
 
 // settings()
-XML.defaultSettings();
+XML.setSettings();
 o = XML.settings();
 TEST(20, true, o.ignoreComments);
 TEST(21, true, o.ignoreProcessingInstructions);
@@ -208,8 +208,8 @@ TEST(27, false, o.ignoreWhitespace);
 TEST(28, false, o.prettyPrinting);
 TEST(29, 7, o.prettyIndent);
 
-// defaultSettings()
-XML.defaultSettings();
+// setSettings()
+XML.setSettings();
 o = XML.settings();
 TEST(30, true, o.ignoreComments);
 TEST(31, true, o.ignoreProcessingInstructions);

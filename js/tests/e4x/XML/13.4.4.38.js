@@ -50,7 +50,7 @@ x =
 </alpha>;
 
 TEST(2, "one", x.bravo.toString());
-TEST(3, "<bravo>one</bravo>" + NL() + "<bravo>two</bravo>", x..bravo.toString());
+TEST(3, "<bravo>one</bravo><bravo>two</bravo>", x..bravo.toString());
 
 x = 
 <alpha>
@@ -87,7 +87,7 @@ x =
     <bravo/>
 </alpha>;
 
-TEST(6, "<bravo/>" + NL() + "<bravo/>", x.bravo.toString());
+TEST(6, "<bravo/><bravo/>", x.bravo.toString());
 
 x = 
 <alpha>
@@ -95,6 +95,6 @@ x =
     <bravo>two<charlie/></bravo>
 </alpha>;
 
-TEST(7, "<bravo>one<charlie/></bravo>" + NL() + "<bravo>two<charlie/></bravo>", x.bravo.toString());
+TEST(7, "<bravo>one<charlie/></bravo><bravo>two<charlie/></bravo>", x.bravo.toString());
 
 END();
