@@ -105,6 +105,7 @@
 #include "nsITimerCallback.h"
 #include "nsDOMError.h"
 #include "nsIScrollable.h"
+#include "nsContentPolicyUtils.h"
 
 #ifdef ALLOW_ASYNCH_STYLE_SHEETS
 const PRBool kBlockByDefault=PR_FALSE;
@@ -4613,6 +4614,25 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       rv = securityManager->CheckLoadURI(mDocumentBaseURL, mScriptURI, PR_FALSE);
       if (NS_FAILED(rv)) 
           return rv;
+
+      // After the security manager, the content-policy stuff gets a veto
+      // For pinkerton: a symphony for string conversion, in 3 parts.
+      nsXPIDLCString urlCString;
+      mScriptURI->GetSpec(getter_Copies(urlCString));
+      nsAutoString url;
+      url.AssignWithConversion((const char *)urlCString);
+      nsCOMPtr<nsIDOMElement> DOMElement = do_QueryInterface(element, &rv);
+      
+      PRBool shouldLoad = PR_TRUE;
+      if (NS_SUCCEEDED(rv) &&
+          (rv = NS_CheckContentLoadPolicy(nsIContentPolicy::CONTENT_SCRIPT,
+                                          url, DOMElement, &shouldLoad),
+           NS_SUCCEEDED(rv)) &&
+          !shouldLoad) {
+
+        // content-policy veto causes silent failure
+        return NS_OK;
+      }
 
       nsCOMPtr<nsILoadGroup> loadGroup;
       nsIStreamLoader* loader;
