@@ -12,4 +12,6 @@
 <!ENTITY dialogPick.label "Open With...">
 <!ENTITY dialogSave.label "Save File...">
 <!ENTITY dialogCancel.label "Cancel">
+<!ENTITY dialogPause.label  "Pause">
+<!ENTITY dialogResume.label "Resume">
 

@@ -10,6 +10,9 @@
 <!ENTITY progress    "Progress:">
 
 <!ENTITY dialogCancel.label "Cancel"> 
+<!ENTITY pauseButtonText  "Pause">
+<!ENTITY resumeButtonText "Resume">
+
 
 <!ENTITY confirmCancel "Are you sure you want to cancel the saving of this file?">
 
@@ -66,6 +69,11 @@
 
     #1 will be replaced by the percentage of the file that has been saved -->
 <!ENTITY percentMsg "#1&#037;">
+
+<!-- LOCALIZATION NOTE (pausedMsg):
+    This string is used to indicate that the download is paused -->
+
+<!ENTITY pausedMsg "Download Paused">
 
 <!-- Error messages -->
 <!ENTITY diskFullMsg "There is not enough free space to store the file.  Free up space and try again, or choose a different target location.">

@@ -40,6 +40,7 @@ var interval = 500; // Update every 500 milliseconds.
 var lastUpdate = -interval; // Update initially.
 var keepProgressWindowUpBox;
 var targetFile;
+var gRestartChecked = false;
 
 // These are to throttle down the updating of the download rate figure.
 var priorRate = 0;
@@ -72,6 +73,26 @@ var progressListener = {
 
     onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
     {
+
+      if (!gRestartChecked) 
+      {
+        gRestartChecked = true;
+        // right now, all that supports restarting downloads is ftp (rfc959)    
+        ftpChannel = aRequest.QueryInterface(Components.interfaces.nsIFTPChannel);
+        if (ftpChannel) {
+            dialog.pause.setAttribute("hidden", false);
+            dialog.pause.setAttribute("label", getString("pause"));
+        }
+      }
+
+      // this is so that we don't clobber the status text if 
+      // a onProgressChange event happens after we press the pause btn.
+      if (dialog.downloadPaused) 
+      {
+        dialog.status.setAttribute("value", getString("pausedMsg"));
+      }
+
+      dialog.request = aRequest;  
 
       var overallProgress = aCurTotalProgress;
 
@@ -266,14 +287,12 @@ function loadDialog()
   dialog.timeElapsed.setAttribute("value", formatSeconds( elapsed / 1000 ));
   dialog.timeLeft.setAttribute("value", formatSeconds( 0 ));
 
-  dialog.location.setAttribute("value", sourceUrlValue.value.spec );
+  dialog.location.setAttribute("value", sourceUrl.spec );
   dialog.fileName.setAttribute( "value", targetFile.unicodePath );
 
   var prefs = Components.classes[prefContractID].getService(Components.interfaces.nsIPref);
   if (prefs)
     keepProgressWindowUpBox.checked = prefs.GetBoolPref("browser.download.progressDnldDialog.keepAlive");
-
-
 }
 
 function replaceInsert( text, index, value ) {
@@ -304,6 +323,9 @@ function onLoad() {
     dialog.timeLeft    = document.getElementById("dialog.timeLeft");
     dialog.timeElapsed = document.getElementById("dialog.timeElapsed");
     dialog.cancel      = document.getElementById("cancel");
+    dialog.pause       = document.getElementById("pause")
+    dialog.request     = 0;
+    dialog.downloadPaused = false;
     keepProgressWindowUpBox = document.getElementById('keepProgressDialogUp');
 
     // Set up dialog button callbacks.
@@ -388,6 +410,8 @@ function setupPostProgressUI()
 
   openFolderButton.removeAttribute("disabled");
   openButton.removeAttribute("disabled");
+
+  dialog.pause.setAttribute("disabled", true);
 }
 
 // when we receive a stop notification we are done reporting progress on the download
@@ -418,4 +442,21 @@ function doOpenFolder()
     if (localFile)
       localFile.reveal();
   } catch (ex) {}
+}
+
+function doPauseButton() {
+    if (dialog.downloadPaused)
+    {
+        // resume
+        dialog.downloadPaused = false;
+        dialog.pause.setAttribute("label", getString("pause"));
+        dialog.request.resume()
+    }
+    else
+    {
+        // suspend
+        dialog.downloadPaused = true;
+        dialog.pause.setAttribute("label", getString("resume"));
+        dialog.request.suspend()
+    }
 }
