@@ -33,7 +33,6 @@ imgContainer::imgContainer() :
   mSize(0,0),
   mFrame(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //******************************************************************************

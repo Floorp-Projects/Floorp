@@ -40,7 +40,6 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 nsIconDecoder::nsIconDecoder()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsIconDecoder::~nsIconDecoder()

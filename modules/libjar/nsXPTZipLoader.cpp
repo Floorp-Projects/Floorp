@@ -36,7 +36,6 @@ static const char gCacheContractID[] =
 static const PRUint32 gCacheSize = 1;
 
 nsXPTZipLoader::nsXPTZipLoader() {
-    NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsXPTZipLoader, nsIXPTLoader)

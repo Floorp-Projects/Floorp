@@ -74,8 +74,6 @@ typedef struct {
 
 nsJPEGDecoder::nsJPEGDecoder()
 {
-  NS_INIT_ISUPPORTS();
-
   mState = JPEG_HEADER;
   mFillState = READING_BACK;
 

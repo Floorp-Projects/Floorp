@@ -48,7 +48,6 @@
 // nsIconChannel methods
 nsIconChannel::nsIconChannel()
 {
-  NS_INIT_ISUPPORTS();
   mStatus = NS_OK;
 }
 

@@ -48,7 +48,6 @@ imgContainerGIF::imgContainerGIF() :
   mAnimationMode(kNormalAnimMode),
   mLoopCount(-1)
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 

@@ -89,7 +89,6 @@ NS_IMPL_ISUPPORTS1(imgLoader, imgILoader)
 
 imgLoader::imgLoader()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 #ifdef DEBUG_pavlov
   PrintImageDecoders();
@@ -803,7 +802,6 @@ NS_IMPL_ISUPPORTS2(ProxyListener, nsIStreamListener, nsIRequestObserver)
 ProxyListener::ProxyListener(nsIStreamListener *dest) :
   mDestListener(dest)
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 
@@ -886,7 +884,6 @@ NS_IMPL_ISUPPORTS2(imgCacheValidator, nsIStreamListener, nsIRequestObserver)
 imgCacheValidator::imgCacheValidator(imgRequest *request, void *aContext) :
   mContext(aContext)
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 
   mRequest = request;

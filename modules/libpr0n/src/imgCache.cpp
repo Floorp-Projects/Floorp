@@ -45,7 +45,6 @@ NS_IMPL_ISUPPORTS3(imgCache, imgICache, nsIObserver, nsISupportsWeakReference)
 
 imgCache::imgCache()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 

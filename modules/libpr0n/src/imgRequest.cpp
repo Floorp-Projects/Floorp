@@ -66,7 +66,6 @@ imgRequest::imgRequest() :
   mImageStatus(imgIRequest::STATUS_NONE), mState(0),
   mCacheId(0), mValidator(nsnull), mIsMultiPartChannel(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 

@@ -114,7 +114,6 @@ PRUint32 nsICODecoder::CalcAlphaRowSize()
 
 nsICODecoder::nsICODecoder()
 {
-  NS_INIT_ISUPPORTS();
   mPos = mNumColors = mRowBytes = mImageOffset = mCurrIcon = mNumIcons = 0;
   mCurLine = 1; // Otherwise decoder will never start
   mColors = nsnull;

@@ -71,7 +71,6 @@ nsIAtom*   nsMPFileLocProvider::sApp_MessengerFolderCache50;
 nsMPFileLocProvider::nsMPFileLocProvider() :
     mInitialized(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 

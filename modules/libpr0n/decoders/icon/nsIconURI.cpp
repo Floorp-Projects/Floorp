@@ -38,7 +38,6 @@ static void extractAttributeValue(const char * searchString, const char * attrib
  
 nsMozIconURI::nsMozIconURI()
 {
-  NS_INIT_ISUPPORTS();
   mSize = DEFAULT_IMAGE_SIZE;
 }
  

@@ -46,7 +46,6 @@ imgContainerMNG::imgContainerMNG() :
   mHandle(0),
   mFrozen(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //////////////////////////////////////////////////////////////////////////////

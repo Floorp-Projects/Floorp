@@ -97,7 +97,6 @@ nsPPMDecoder::nsPPMDecoder() :
   mType(0),
   mRowData(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsPPMDecoder::~nsPPMDecoder()
