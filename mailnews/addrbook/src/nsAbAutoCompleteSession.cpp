@@ -151,23 +151,30 @@ void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const P
     if (!fullAddrStr)
     {
       //oops, parser problem! I will try to do my best...
-      nsAutoString aStr(pDisplayNameStr);
-      aStr.AppendWithConversion(" <");
+      const PRUnichar * pStr = nsnull;
       if (bIsMailList)
       {
         if (pNotesStr && pNotesStr[0] != 0)
-          aStr += pNotesStr;
+          pStr = pNotesStr;
         else
-          aStr += pDisplayNameStr;
+          pStr = pDisplayNameStr;
       }
       else
-        aStr += pEmailStr;
-      aStr.AppendWithConversion(">");
-      fullAddrStr = aStr.ToNewUnicode();
+        pStr = pEmailStr;
+      // check this so we do not get a bogus entry "someName <>"
+      if (pStr && pStr[0] != 0) {
+        nsAutoString aStr(pDisplayNameStr);
+        aStr.AppendWithConversion(" <");
+        aStr += pStr;
+        aStr.AppendWithConversion(">");
+        fullAddrStr = aStr.ToNewUnicode();
+      }
+      else
+        fullAddrStr = nsnull;
     }
   }
     
-  if (! ItsADuplicate(fullAddrStr, results))
+  if (fullAddrStr && ! ItsADuplicate(fullAddrStr, results))
   {    
     nsCOMPtr<nsIAutoCompleteItem> newItem;
     rv = nsComponentManager::CreateInstance(kAutoCompleteItemCID, nsnull, NS_GET_IID(nsIAutoCompleteItem), getter_AddRefs(newItem));
