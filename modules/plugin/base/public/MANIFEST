@@ -50,3 +50,5 @@ nsIPluginStreamInfo.h
 nsIPluginInputStream.h
 nsIPluginInputStream2.h
 nsPIPluginHost.h
+nsPluginLogging.h
+
