@@ -91,10 +91,6 @@ public:
 
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
-  void Reset() {
-    mInitialized = PR_FALSE;
-  }
-
 protected:
   void Initialize(nsIPresContext* aPresContext);
 
@@ -139,9 +135,9 @@ HTMLColorRule::List(FILE* out, PRInt32 aIndent) const
 #endif
 
 HTMLDocumentColorRule::HTMLDocumentColorRule(nsIHTMLStyleSheet* aSheet) 
-  : HTMLColorRule(aSheet)
+  : HTMLColorRule(aSheet),
+    mInitialized(PR_FALSE)
 {
-  Reset();
 }
 
 HTMLDocumentColorRule::~HTMLDocumentColorRule()
@@ -202,10 +198,6 @@ public:
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
-  void Reset()
-  {
-  }
-
   nsIHTMLStyleSheet*  mSheet; // not ref-counted, cleared by content
 };
 
@@ -249,11 +241,6 @@ class TableTHRule: public GenericTableRule {
 public:
   TableTHRule(nsIHTMLStyleSheet* aSheet);
   virtual ~TableTHRule();
-
-  void Reset()
-  {
-    GenericTableRule::Reset();
-  }
 
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 };
@@ -385,11 +372,6 @@ public:
   TableTbodyRule(nsIHTMLStyleSheet* aSheet);
   virtual ~TableTbodyRule();
 
-  void Reset()
-  {
-    GenericTableRule::Reset();
-  }
-
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 };
 
@@ -429,11 +411,6 @@ public:
   TableRowRule(nsIHTMLStyleSheet* aSheet);
   virtual ~TableRowRule();
 
-  void Reset()
-  {
-    GenericTableRule::Reset();
-  }
-
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 };
 
@@ -472,11 +449,6 @@ public:
   TableColgroupRule(nsIHTMLStyleSheet* aSheet);
   virtual ~TableColgroupRule();
 
-  void Reset()
-  {
-    GenericTableRule::Reset();
-  }
-
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 };
 
@@ -514,11 +486,6 @@ class TableColRule: public GenericTableRule {
 public:
   TableColRule(nsIHTMLStyleSheet* aSheet);
   virtual ~TableColRule();
-
-  void Reset()
-  {
-    GenericTableRule::Reset();
-  }
 
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 };
@@ -1099,18 +1066,20 @@ HTMLStyleSheetImpl::Reset(nsIURI* aURL)
     mActiveRule->mSheet = nsnull;
     NS_RELEASE(mActiveRule);
   }
-  mDocumentColorRule->Reset();
-
-  mTableTbodyRule->Reset();
-  mTableRowRule->Reset();
-  mTableColgroupRule->Reset();
-  mTableColRule->Reset();
-  mTableTHRule->Reset();
+  if (mDocumentColorRule) {
+    mDocumentColorRule->mSheet = nsnull;
+    NS_RELEASE(mDocumentColorRule);
+  }
 
   if (mMappedAttrTable.ops) {
     PL_DHashTableFinish(&mMappedAttrTable);
     mMappedAttrTable.ops = nsnull;
   }
+
+  mDocumentColorRule = new HTMLDocumentColorRule(this);
+  if (!mDocumentColorRule)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(mDocumentColorRule);
 
   return NS_OK;
 }
