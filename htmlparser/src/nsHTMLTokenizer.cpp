@@ -28,7 +28,6 @@
  */
 
 #include "nsHTMLTokenizer.h"
-#include "nsParser.h"
 #include "nsScanner.h"
 #include "nsElementTable.h"
 #include "nsHTMLEntities.h"
@@ -85,12 +84,17 @@ nsresult nsHTMLTokenizer::QueryInterface(const nsIID& aIID, void** aInstancePtr)
  *  @return  NS_xxx error result
  */
 
-NS_HTMLPARS nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult,PRInt32 aMode,eParserDocType aDocType, eParserCommands aCommand) {
+NS_HTMLPARS 
+nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult,
+                                         PRInt32 aFlag,
+                                         eParserDocType aDocType, 
+                                         eParserCommands aCommand) 
+{
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsHTMLTokenizer* it = new nsHTMLTokenizer(aMode,aDocType,aCommand);
+  nsHTMLTokenizer* it = new nsHTMLTokenizer(aFlag,aDocType,aCommand);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -112,13 +116,45 @@ NS_IMPL_RELEASE(nsHTMLTokenizer)
  nsHTMLTokenizer::nsHTMLTokenizer(PRInt32 aParseMode,
                                   eParserDocType aDocType,
                                   eParserCommands aCommand) :
-  nsITokenizer(), mTokenDeque(0), mParseMode(aParseMode)
+  nsITokenizer(), mTokenDeque(0)
 {
   NS_INIT_REFCNT();
-  mDoXMLEmptyTags=((eDTDMode_strict==aParseMode) || (eDTDMode_transitional==aParseMode));
-  mDocType=aDocType;
+  
+  if (aParseMode==eDTDMode_strict) {
+    mFlags = NS_IPARSER_FLAG_STRICT_MODE;
+  }
+  else if (aParseMode==eDTDMode_transitional) {
+    mFlags = NS_IPARSER_FLAG_TRANSITIONAL_MODE;
+  }
+  else if (aParseMode==eDTDMode_quirks)  {
+    mFlags = NS_IPARSER_FLAG_QUIRKS_MODE;
+  }
+  else if (aParseMode==eDTDMode_autodetect) {
+    mFlags = NS_IPARSER_FLAG_AUTO_DETECT_MODE;
+  }
+  else {
+    mFlags = NS_IPARSER_FLAG_UNKNOWN_MODE;
+  }
+
+  if (aDocType==ePlainText) {
+    mFlags |= NS_IPARSER_FLAG_PLAIN_TEXT;
+  }
+  else if (aDocType==eXMLText) {
+    mFlags |= NS_IPARSER_FLAG_XML_TEXT;
+  }
+  else if (aDocType==eXHTMLText) {
+    mFlags |= NS_IPARSER_FLAG_XHTML_TEXT;
+  }
+  else if (aDocType==eHTML3Text) {
+    mFlags |= NS_IPARSER_FLAG_HTML3_TEXT;
+  }
+  else if (aDocType==eHTML4Text) {
+    mFlags |= NS_IPARSER_FLAG_HTML4_TEXT;
+  }
+  
+  mFlags |= (aCommand==eViewSource)? NS_IPARSER_FLAG_VIEW_SOURCE:NS_IPARSER_FLAG_VIEW_NORMAL;
+
   mRecordTrailingContent=PR_FALSE;
-  mParserCommand=aCommand;
   mTokenAllocator=nsnull;
   mTokenScanPos=0;
 }
@@ -448,7 +484,7 @@ nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)
     case NS_OK:
     default:
 
-      if(ePlainText!=mDocType) {
+      if(!(mFlags & NS_IPARSER_FLAG_PLAIN_TEXT)) {
         if(kLessThan==theChar) {
           return ConsumeTag(theChar,theToken,aScanner,aFlushTokens);
         }
@@ -505,7 +541,7 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
         result=aScanner.Peek(theNextChar, 1);
         if(NS_OK==result) {
           // xml allow non ASCII tag name, consume as end tag. need to make xml view source work
-          PRBool isXML=((eXMLText==mDocType) || (eXHTMLText==mDocType));
+          PRBool isXML=(mFlags & (NS_IPARSER_FLAG_XML_TEXT | NS_IPARSER_FLAG_XHTML_TEXT));
           if(nsCRT::IsAsciiAlpha(theNextChar)||(kGreaterThan==theNextChar)|| 
              (isXML && (! nsCRT::IsAscii(theNextChar)))) { 
             result=ConsumeEndTag(aChar,aToken,aScanner);
@@ -571,7 +607,7 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
   while((!done) && (result==NS_OK)) {
     CAttributeToken* theToken= NS_STATIC_CAST(CAttributeToken*, theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown));
     if(theToken){
-      result=theToken->Consume(aChar,aScanner,PRBool(eViewSource==mParserCommand));  //tell new token to finish consuming text...    
+      result=theToken->Consume(aChar,aScanner,mFlags);  //tell new token to finish consuming text...    
  
       //Much as I hate to do this, here's some special case code.
       //This handles the case of empty-tags in XML. Our last
@@ -585,7 +621,7 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
          // support XML like syntax to fix bugs like 44186
         if(!key.IsEmpty() && kForwardSlash==key.First() && text.IsEmpty()) {
           aToken->SetEmpty(PR_TRUE);
-          isUsableAttr=!mDoXMLEmptyTags; 
+          isUsableAttr = !(mFlags & (NS_IPARSER_FLAG_STRICT_MODE|NS_IPARSER_FLAG_TRANSITIONAL_MODE)); 
         }
         if(isUsableAttr) {
           theAttrCount++;
@@ -655,8 +691,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
     nsReadingIterator<PRUnichar> origin;
     aScanner.CurrentPosition(origin);
 
-    PRBool isHTML=((eHTML3Text==mDocType) || (eHTML4Text==mDocType));
-    result= aToken->Consume(aChar,aScanner,isHTML);     //tell new token to finish consuming text...    
+    result= aToken->Consume(aChar,aScanner,mFlags);     //tell new token to finish consuming text...    
 
     if(NS_SUCCEEDED(result)) {
      
@@ -668,7 +703,12 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
       PRBool theTagHasAttributes=PR_FALSE;
       nsReadingIterator<PRUnichar> start, end;
       if(NS_OK==result) { 
-        result=(eViewSource==mParserCommand) ? aScanner.ReadWhitespace(start, end) : aScanner.SkipWhitespace();
+        if (mFlags & NS_IPARSER_FLAG_VIEW_SOURCE) {
+          result = aScanner.ReadWhitespace(start, end);
+        }
+        else {
+          result = aScanner.SkipWhitespace();
+        }
         aToken->mNewlineCount += aScanner.GetNewlinesSkipped();
         if(NS_OK==result) {
           result=aScanner.Peek(aChar);
@@ -686,7 +726,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
       
       CStartToken* theStartToken=NS_STATIC_CAST(CStartToken*,aToken);
       if(theTagHasAttributes) {
-        if (eViewSource==mParserCommand) {
+        if (mFlags & NS_IPARSER_FLAG_VIEW_SOURCE) {
           // Since we conserve whitespace in view-source mode,
           // go back to the beginning of the whitespace section
           // and let the first attribute grab it.
@@ -719,7 +759,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
 
           CToken*     text=theAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text);
           CTextToken* textToken=NS_STATIC_CAST(CTextToken*,text);
-          result=textToken->ConsumeUntil(0,theTag!=eHTMLTag_script,aScanner,endText,mParseMode,aFlushTokens);  //tell new token to finish consuming text...    
+          result=textToken->ConsumeUntil(0,theTag!=eHTMLTag_script,aScanner,endText,mFlags,aFlushTokens);  //tell new token to finish consuming text...    
           
           // Fix bug 44186
           // Support XML like syntax, i.e., <script src="external.js"/> == <script src="external.js"></script>
@@ -770,8 +810,7 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
   nsresult result=NS_OK;
   
   if(aToken) {
-    PRBool isHTML=((eHTML3Text==mDocType) || (eHTML4Text==mDocType));
-    result= aToken->Consume(aChar,aScanner,isHTML);  //tell new token to finish consuming text...    
+    result= aToken->Consume(aChar,aScanner,mFlags);  //tell new token to finish consuming text...    
     AddToken(aToken,result,&mTokenDeque,theAllocator);
     
     if(NS_SUCCEEDED(result)) {
@@ -810,7 +849,7 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
 
        // Get the first entity character
        aScanner.GetChar(theChar);
-       result = aToken->Consume(theChar,aScanner,mParseMode);  //tell new token to finish consuming text...    
+       result = aToken->Consume(theChar,aScanner,mFlags);  //tell new token to finish consuming text...    
     }
     else if(kHashsign==theChar) {
        // Get the "&"
@@ -819,7 +858,7 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
 
        // Get the first numerical entity character
        aScanner.GetChar(theChar);
-       result=aToken->Consume(theChar,aScanner,mParseMode);
+       result=aToken->Consume(theChar,aScanner,mFlags);
     }
     else {
        //oops, we're actually looking at plain text...
@@ -854,7 +893,7 @@ nsresult nsHTMLTokenizer::ConsumeWhitespace(PRUnichar aChar,CToken*& aToken,nsSc
   aToken = theAllocator->CreateTokenOfType(eToken_whitespace,eHTMLTag_whitespace);
   nsresult result=NS_OK;
   if(aToken) {
-    result=aToken->Consume(aChar,aScanner,mParseMode);
+    result=aToken->Consume(aChar,aScanner,mFlags);
     AddToken(aToken,result,&mTokenDeque,theAllocator);
   }
   return result;
@@ -878,7 +917,7 @@ nsresult nsHTMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScann
   aToken = theAllocator->CreateTokenOfType(eToken_comment,eHTMLTag_comment);
   nsresult result=NS_OK;
   if(aToken) {
-    result=aToken->Consume(aChar,aScanner,mParseMode);
+    result=aToken->Consume(aChar,aScanner,mFlags);
     AddToken(aToken,result,&mTokenDeque,theAllocator);
   }
   return result;
@@ -900,7 +939,7 @@ nsresult nsHTMLTokenizer::ConsumeText(CToken*& aToken,nsScanner& aScanner){
   CTextToken* theToken = (CTextToken*)theAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text);
   if(theToken) {
     PRUnichar ch=0;
-    result=theToken->Consume(ch,aScanner,mParseMode);
+    result=theToken->Consume(ch,aScanner,mFlags);
     if(!NS_SUCCEEDED(result)) {
       if(0==theToken->GetTextLength()){
         IF_FREE(aToken, mTokenAllocator);
@@ -953,7 +992,7 @@ nsresult nsHTMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,n
     aToken = theAllocator->CreateTokenOfType(eToken_doctypeDecl,eHTMLTag_doctypeDecl);
   
   if(aToken) {
-    result=aToken->Consume(aChar,aScanner,mParseMode);
+    result=aToken->Consume(aChar,aScanner,mFlags);
     AddToken(aToken,result,&mTokenDeque,theAllocator);
   }
   return result;
@@ -976,7 +1015,7 @@ nsresult nsHTMLTokenizer::ConsumeNewline(PRUnichar aChar,CToken*& aToken,nsScann
   aToken=theAllocator->CreateTokenOfType(eToken_newline,eHTMLTag_newline);
   nsresult result=NS_OK;
   if(aToken) {
-    result=aToken->Consume(aChar,aScanner,mParseMode);
+    result=aToken->Consume(aChar,aScanner,mFlags);
     AddToken(aToken,result,&mTokenDeque,theAllocator);
   }
   return result;
@@ -1001,7 +1040,7 @@ nsresult nsHTMLTokenizer::ConsumeProcessingInstruction(PRUnichar aChar,CToken*& 
   aToken=theAllocator->CreateTokenOfType(eToken_instruction,eHTMLTag_unknown);
   nsresult result=NS_OK;
   if(aToken) {
-    result=aToken->Consume(aChar,aScanner,mParseMode);
+    result=aToken->Consume(aChar,aScanner,mFlags);
     AddToken(aToken,result,&mTokenDeque,theAllocator);
   }
   return result;

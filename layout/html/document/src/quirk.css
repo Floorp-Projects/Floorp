@@ -205,3 +205,13 @@ img[align=right] {
   margin-left: 3px;
 }
 
+/* Quirk: Make sure that the residual style tags' size info. 
+ * does not take precedence over heading tags' size. (b=77352)
+ * Note: This special attribute is set only for a residual 
+ * style tag within a heading tag.
+ */
+*[_moz-rs-heading] { 
+  font-size: inherit !important; 
+}
+
+

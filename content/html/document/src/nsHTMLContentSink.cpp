@@ -551,115 +551,6 @@ GetEntityTerminator(nsString& aSource,PRUnichar& aChar,PRInt32 aStartOffset=0) {
   return -1;
 }
 
-
-void HTMLContentSink::ReduceEntities(nsString& aString) {
-  if (mParser) {
-    nsCOMPtr<nsIDTD> dtd;
-
-    nsresult rv = mParser->GetDTD(getter_AddRefs(dtd));
-
-    if (NS_SUCCEEDED(rv)) {
-
-      // XXX Note: as coded today, this will only convert well formed
-      // entities.  This may not be compatible enough.
-      // XXX there is a table in navigator that translates some numeric entities
-      // should we be doing that? If so then it needs to live in two places (bad)
-      // so we should add a translate numeric entity method from the parser...
-
-      nsAutoString  theOutString;
-      nsAutoString  theNCRStr;
-
-      PRInt32 theLen=aString.Length();
-      PRInt32 theAmpPos = aString.FindChar('&');
-      PRInt32 theStartPos=0;
-      PRInt32 theTermPos=-1;
-      PRUnichar theTermChar='\0';
-      const PRUnichar *theBuf=aString.GetUnicode();
-  
-      nsDTDMode mode;
-      mHTMLDocument->GetDTDMode(mode);
-
-      while(-1!=theAmpPos) { 
-
-        if(theStartPos<theAmpPos) {
-          //we have real data to copy to output string before doing our first conversion          
-          theOutString.Append(&theBuf[theStartPos],theAmpPos-theStartPos);
-        }
-
-        theTermPos=GetEntityTerminator(aString,theTermChar,theAmpPos+1);
-        
-        if(-1!=theTermPos) {
-          //having found a semi, copy chars between amppos and semipos;
-          aString.Mid(theNCRStr,theAmpPos+1,theTermPos-theAmpPos-1);
-        }
-        else {
-          aString.Mid(theNCRStr,theAmpPos+1,theLen-theAmpPos-1);
-          PRInt32 theNewAmpPos=aString.FindChar('&',PR_FALSE,theAmpPos+1);
-          theTermPos=(-1==theNewAmpPos) ? theLen+1 : theNewAmpPos-1;
-        }
-
-        theStartPos=theTermPos+1;
-
-        PRUnichar theChar=(theLen>theAmpPos+1) ? aString.CharAt(theAmpPos+1) : '\0';
-        PRUnichar theEntity=0;
-        PRInt32   theErr=0;
-        PRInt32   theNCRValue=0;
-
-        switch(theChar) {
-          case '#':
-            theNCRValue=theNCRStr.ToInteger(&theErr,kAutoDetect);
-            theEntity=PRUnichar(theNCRValue);
-            break;
-          case '{':
-              //XXX Write ME!
-            break;
-          default:
-            if(nsCRT::IsAsciiAlpha(theChar)) {
-              dtd->ConvertEntityToUnicode(theNCRStr, &theNCRValue);
-              if (eDTDMode_strict!=mode) {
-                // XXX - Hack - Nav. does not support entity values > 255
-                // on the other hand IE supports entity values > 255 with a
-                // semicolon. I think it's reasonable to emulate IE than Nav.
-                if(theNCRValue>255 && theTermChar!=';') break;
-              }
-              if(-1!=theNCRValue) {
-                theEntity=PRUnichar(theNCRValue);
-              }
-            }
-            break;
-        } //switch
-        
-        if(theEntity) {
-          theOutString.Append(theEntity);
-          if(theTermChar!='\0' && theTermChar!='&' && theTermChar!=';') {
-            theOutString.Append(theTermChar);
-          }
-        }
-        else {
-          //what looked like an entity is not really one.
-          //so let's copy the ncrstring back to the output string
-          if(theTermChar!='&') { theTermPos++; }
-          aString.Mid(theNCRStr,theAmpPos,theTermPos-theAmpPos);
-          theOutString.Append(theNCRStr);
-        }
-        theAmpPos = aString.FindChar('&',PR_FALSE,theTermPos);
-      } //while
-
-      if(0<theOutString.Length()) {
-
-        if(theStartPos<theLen) {
-          aString.Mid(theNCRStr,theStartPos,theLen-theStartPos);
-          theOutString.Append(theNCRStr);
-        }
-
-        aString=theOutString;
-      } 
-
-    } //if
-  } //if
-}  
-
-
 // Temporary factory code to create content objects
 
 void
@@ -687,7 +578,6 @@ HTMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
         // Mismatched quotes - leave them in
       }
     }
-    ReduceEntities(aResult);
   }
 }
 
@@ -2782,7 +2672,7 @@ HTMLContentSink::SetTitle(const nsString& aValue)
     MOZ_TIMER_STOP(mWatch);
     return NS_OK;
   }
-  ReduceEntities(*mTitle);
+
   mTitle->CompressWhitespace(PR_TRUE, PR_TRUE);
 
   nsCOMPtr<nsIDOMHTMLDocument> domDoc(do_QueryInterface(mHTMLDocument));

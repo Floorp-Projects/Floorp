@@ -490,7 +490,6 @@ protected:
     nsresult        HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags aParent,nsIParserNode *aNode);
     nsresult        HandleSavedTokens(PRInt32 anIndex);
     nsresult        HandleKeyGen(nsIParserNode *aNode);
-    void            RecycleNodes(nsEntryStack *aNodeStack);
     
     nsDeque             mMisplacedContent;
     nsDeque             mSkippedContent;

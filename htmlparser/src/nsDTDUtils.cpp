@@ -84,6 +84,23 @@ nsEntryStack::~nsEntryStack() {
 }
 
 /**
+ * Release all objects in the entry stack
+ */
+void 
+nsEntryStack::ReleaseAll(nsNodeAllocator* aNodeAllocator)
+{
+  NS_WARN_IF_FALSE(aNodeAllocator,"no allocator? - potential leak!");
+
+  if(aNodeAllocator) {
+    NS_WARN_IF_FALSE(mCount >= 0,"count should not be negative");
+    while(mCount > 0) {
+      nsCParserNode* node=this->Pop();
+      IF_FREE(node,aNodeAllocator);
+    }
+  }
+}
+
+/**
  * Resets state of stack to be empty.
  * @update harishd 04/04/99
  */
@@ -1045,10 +1062,7 @@ void nsDTDContext::PushStyles(nsEntryStack *aStyles){
       // If you're here it means that we have hit the rock bottom
       // ,of the stack, and there's no need to handle anymore styles.
       // Fix for bug 29048
-      nsCParserNode* theNode=aStyles->Pop();
-      IF_HOLD(theNode);
-      delete aStyles;
-      aStyles=0;
+      IF_DELETE(aStyles,mNodeAllocator);
     }
   }//if(aStyles)
 }
