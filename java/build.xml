@@ -71,6 +71,9 @@
 
   <target name="dom">
 
+    <exec os="SunOS" dir="${basedir}/dom" executable="gmake" 
+                     failonerror="yes">
+    </exec>
     <exec os="Linux" dir="${basedir}/dom" executable="make" 
                      failonerror="yes">
     </exec>
@@ -93,6 +96,10 @@
 
     <ant dir="${basedir}/util" target="clean"/>
 
+    <exec os="SunOS" dir="${basedir}/dom" executable="make" 
+                     failonerror="yes">
+      <arg line="clean"/>
+    </exec>
     <exec os="Linux" dir="${basedir}/dom" executable="make" 
                      failonerror="yes">
       <arg line="clean"/>

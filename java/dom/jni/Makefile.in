@@ -93,7 +93,11 @@ JAVA_CLS= \
 	org.mozilla.dom.events.UIEventImpl \
  $(NULL)
 
+ifeq ($(OS_ARCH),Linux)
 INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/linux
+else
+INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/solaris
+endif
 
 JAVAH_PROG=$(JDKHOME)/bin/javah
 JAVAH_FLAGS=-jni -classpath $(CLASSPATH):$(JAVA_DESTPATH)

@@ -92,6 +92,8 @@
 
   <target name="compile.src_share" depends="compile.javah.headers">
 
+    <exec os="SunOS" dir="${basedir}/src_share" failonerror="yes" 
+                     executable="gmake"/>
     <exec os="Linux" dir="${basedir}/src_share" failonerror="yes" 
                      executable="make"/>
     <exec os="Windows 2000" dir="${basedir}/src_share" executable="nmake" 
@@ -174,6 +176,9 @@
 
   <target name="compile.src_moz" depends="compile.src_share">
 
+    <exec os="SunOS" dir="${basedir}/src_moz" executable="gmake" 
+                     failonerror="yes">
+    </exec>
     <exec os="Linux" dir="${basedir}/src_moz" executable="make" 
                      failonerror="yes">
     </exec>
@@ -182,6 +187,10 @@
       <arg line="-f makefile.win"/>
     </exec>
 
+    <exec os="SunOS" dir="${basedir}/src_moz" executable="gmake" 
+                     failonerror="yes">
+      <arg line="buildRunems"/>
+    </exec>
     <exec os="Linux" dir="${basedir}/src_moz" executable="make" 
                      failonerror="yes">
       <arg line="buildRunems"/>
@@ -198,6 +207,12 @@
 
     <ant antfile="build-tests.xml" target="clean"/>   
 
+    <exec os="SunOS" dir="${basedir}/src_moz" executable="gmake" 
+          failonerror="yes">
+
+      <arg line="clobber_all"/>
+
+    </exec>
     <exec os="Linux" dir="${basedir}/src_moz" executable="make" 
           failonerror="yes">
 
@@ -209,6 +224,12 @@
       <arg line="-f makefile.win clobber_all"/>
     </exec>
 
+    <exec os="SunOS" dir="${basedir}/src_share" executable="gmake"
+          failonerror="yes">
+
+      <arg line="clobber_all"/>
+
+    </exec>
     <exec os="Linux" dir="${basedir}/src_share" executable="make"
           failonerror="yes">
 
