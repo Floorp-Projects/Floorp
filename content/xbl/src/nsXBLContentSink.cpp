@@ -300,6 +300,12 @@ nsresult
 nsXBLContentSink::FlushText(PRBool aCreateTextNode,
                             PRBool* aDidFlush)
 {
+  if (mTextLength == 0) {
+    if (aDidFlush)
+      *aDidFlush = PR_FALSE;
+    return NS_OK;
+  }
+
   const nsASingleFragmentString& text = Substring(mText, mText+mTextLength);
   if (mState == eXBL_InHandlers) {
     // Get the text and add it to the event handler.
