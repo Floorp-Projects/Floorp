@@ -266,6 +266,7 @@ pref("mail.server.default.using_subscription", true);
 pref("mail.server.default.dual_use_folders", true);
 pref("mail.server.default.canDelete", false);
 pref("mail.server.default.login_at_startup", false);
+pref("mail.server.default.allows_specialfolders_usage", true);
 
 pref("mail.smtpserver.default.auth_method", 1); // auth any
 pref("mail.smtpserver.default.try_ssl", 0);
