@@ -92,9 +92,6 @@ nsRenderingContextUnix :: nsRenderingContextUnix()
 
 nsRenderingContextUnix :: ~nsRenderingContextUnix()
 {
-  NS_IF_RELEASE(mContext);
-  NS_IF_RELEASE(mFontCache);
-  NS_IF_RELEASE(mFontMetrics);
 
   if (mRegion) {
     ::XDestroyRegion(mRegion);
@@ -131,6 +128,11 @@ nsRenderingContextUnix :: ~nsRenderingContextUnix()
     }
     delete mFrontBuffer;
   }
+
+  NS_IF_RELEASE(mContext);
+  NS_IF_RELEASE(mFontCache);
+  NS_IF_RELEASE(mFontMetrics);
+
 }
 
 NS_IMPL_QUERY_INTERFACE(nsRenderingContextUnix, kRenderingContextIID)
