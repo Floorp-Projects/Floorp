@@ -240,7 +240,7 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
               *aToData = genericDataWrapper;
               NS_ADDREF(*aToData);
               *aDataToLen = outStr.Length();
-              delete [] holderBecauseNSStringIsLame;
+              nsCRT::free(holderBecauseNSStringIsLame);
             }
           }
         } // if plain text
