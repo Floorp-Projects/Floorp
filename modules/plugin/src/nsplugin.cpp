@@ -32,7 +32,6 @@
 #include "jvmmgr.h" 
 #include "nsILiveconnect.h"
 #endif
-#include "plstr.h" /* PL_strcasecmp */
 
 #include "xp_mem.h"
 #include "xpassert.h" 
@@ -66,10 +65,16 @@ static NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID);
 static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID); 
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID); 
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
+static NS_DEFINE_IID(kIFileUtilitiesIID, NS_IFILEUTILITIES_IID);
+#ifdef NEW_PLUGIN_STREAM_API
+static NS_DEFINE_IID(kIPluginInputStreamIID, NS_IPLUGININPUTSTREAM_IID);
+static NS_DEFINE_IID(kIPluginInputStream2IID, NS_IPLUGININPUTSTREAM2_IID);
+static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
+#else // !NEW_PLUGIN_STREAM_API
 static NS_DEFINE_IID(kISeekablePluginStreamPeerIID, NS_ISEEKABLEPLUGINSTREAMPEER_IID);
 static NS_DEFINE_IID(kIPluginStreamPeerIID, NS_IPLUGINSTREAMPEER_IID);
 static NS_DEFINE_IID(kIPluginStreamPeer2IID, NS_IPLUGINSTREAMPEER2_IID);
-static NS_DEFINE_IID(kIFileUtilitiesIID, NS_IFILEUTILITIES_IID);
+#endif // !NEW_PLUGIN_STREAM_API
 
 #include "prerror.h"
 
@@ -263,37 +268,37 @@ nsPluginManager::GetCapsManager(const nsIID& aIID)
     PRThread       *threadAttached = NULL;
 #ifdef OJI
     if (fCapsManager == NULL) {
-	      if ( PR_GetCurrentThread() == NULL )
-	      {
- 		       threadAttached = PR_AttachThread(PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL);
-	      }
+        if ( PR_GetCurrentThread() == NULL )
+        {
+            threadAttached = PR_AttachThread(PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL);
+        }
 
-       NS_DEFINE_CID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
-       nsresult err    = NS_OK;
-       err = nsRepository::CreateInstance(kCCapsManagerCID, 
-                                          (nsIPluginManager*)this,    /* outer */
-                                          kISupportsIID,
-                                          (void **)&fCapsManager);
-       NS_DEFINE_IID(kICapsManagerIID, NS_ICAPSMANAGER_IID);
-       if (   (err == NS_OK) 
-           && (fCapsManager != NULL) 
-           && (err = (fCapsManager->QueryInterface(kICapsManagerIID, (void**)&result)) == NS_OK)
-          )
-       {
-           ((nsCCapsManager*)result)->SetSystemPrivilegeManager();
-           result->Release();
-       }
-     }
-     if (  (err == NS_OK) 
-         &&(fCapsManager->QueryInterface(aIID, (void**)&result) != NS_OK)
+        NS_DEFINE_CID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
+        nsresult err    = NS_OK;
+        err = nsRepository::CreateInstance(kCCapsManagerCID, 
+                                           (nsIPluginManager*)this,    /* outer */
+                                           kISupportsIID,
+                                           (void **)&fCapsManager);
+        NS_DEFINE_IID(kICapsManagerIID, NS_ICAPSMANAGER_IID);
+        if (   (err == NS_OK) 
+               && (fCapsManager != NULL) 
+               && (err = (fCapsManager->QueryInterface(kICapsManagerIID, (void**)&result)) == NS_OK)
+            )
+        {
+            ((nsCCapsManager*)result)->SetSystemPrivilegeManager();
+            result->Release();
+        }
+    }
+    if (  (err == NS_OK) 
+          &&(fCapsManager->QueryInterface(aIID, (void**)&result) != NS_OK)
         )
-     {
-       result = NULL;
-     }
-	    if (threadAttached != NULL )
-     {
-       PR_DetachThread();
-     }
+    {
+        result = NULL;
+    }
+    if (threadAttached != NULL )
+    {
+        PR_DetachThread();
+    }
 #endif
     return result;
 }
@@ -527,6 +532,7 @@ nsPluginManager::HasAllocatedMenuID(nsIEventHandler* handler, PRInt16 menuID, PR
 #endif
 }
 
+#if 0 // problematic
 static NPL_ProcessNextEventProc npl_ProcessNextEventProc = NULL;
 static void* npl_ProcessNextEventData = NULL;
 
@@ -549,6 +555,7 @@ nsPluginManager::ProcessNextEvent(PRBool *bEventHandled)
     return NS_OK;
 #endif
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -558,6 +565,220 @@ extern "C" {
 extern PREventQueue* mozilla_event_queue;
 extern PRThread* mozilla_thread;
 };
+
+#ifdef NEW_PLUGIN_STREAM_API
+
+struct GetURLEvent {
+    PLEvent event;
+    nsPluginInstancePeer* peer;
+    const char* url;
+    const char* target;
+    void* notifyData;
+    const char* altHost;
+    const char* referrer;
+    PRBool forceJSEnabled;
+};
+
+static void*
+HandleGetURLEvent(PLEvent* event)
+{
+    PR_ASSERT(PR_CurrentThread() == mozilla_thread);
+    GetURLEvent* e = (GetURLEvent*)event;
+    NPP npp = e->peer->GetNPP();
+    NPError rslt = np_geturlinternal(npp,
+                                     e->url,
+                                     e->target,
+                                     e->altHost,
+                                     e->referrer,
+                                     e->forceJSEnabled,
+                                     e->notifyData != NULL,
+                                     e->notifyData);
+    return (void*)rslt;
+}
+
+static void
+DestroyGetURLEvent(PLEvent* event)
+{
+    GetURLEvent* e = (GetURLEvent*)event;
+    PR_Free(event);
+}
+
+NS_METHOD
+nsPluginManager::GetURL(nsISupports* pluginInst, 
+                        const char* url, 
+                        const char* target,
+                        nsIPluginStreamListener* listener,
+                        nsPluginStreamType streamType,
+                        const char* altHost,
+                        const char* referrer,
+                        PRBool forceJSEnabled)
+{
+    NPError rslt = NPERR_INVALID_PARAM;
+    nsIPluginInstance* inst = NULL;
+    if (pluginInst->QueryInterface(kIPluginInstanceIID, (void**)&inst) == NS_OK) {
+        // Warning: Casting to our implementation type of plugin instance peer here:
+        nsPluginInstancePeer* peer;
+        nsresult err = inst->GetPeer((nsIPluginInstancePeer**)&peer);
+        if (err == NS_OK) {
+            void* notifyData = NULL;
+            if (listener) {
+                nsPluginInputStream* inStr = new nsPluginInputStream(listener, streamType);
+                notifyData = inStr;
+            }
+
+            if (PR_CurrentThread() == mozilla_thread) {
+                NPP npp = peer->GetNPP();
+                rslt = np_geturlinternal(npp,
+                                         url,
+                                         target,
+                                         altHost,
+                                         referrer,
+                                         forceJSEnabled,
+                                         notifyData != NULL,
+                                         notifyData);
+            }
+            else {
+                GetURLEvent* e = PR_NEW(GetURLEvent);
+                if (e == NULL) {
+                    rslt = NPERR_OUT_OF_MEMORY_ERROR;
+                }
+                else {
+                    PL_InitEvent(&e->event, NULL, HandleGetURLEvent, DestroyGetURLEvent);
+                    e->peer = peer;
+                    e->url = url;
+                    e->target = target;
+                    e->notifyData = notifyData;
+                    e->altHost = altHost;
+                    e->referrer = referrer;
+                    e->forceJSEnabled = forceJSEnabled;
+                    /*rslt = (NPError)*/PL_PostSynchronousEvent(mozilla_event_queue, &e->event);
+                    rslt = NPERR_NO_ERROR;  /* XXX irix c++ compiler doesn't like the above cast */
+                }
+            }
+            peer->Release();
+        }
+        inst->Release();
+    }
+    return fromNPError[rslt];
+}
+
+struct PostURLEvent {
+    PLEvent event;
+    nsPluginInstancePeer* peer;
+    const char* url;
+    const char* target;
+    PRUint32 postDataLen;
+    const char* postData;
+    PRBool isFile;
+    void* notifyData;
+    const char* altHost;
+    const char* referrer;
+    PRBool forceJSEnabled;
+    PRUint32 postHeadersLen;
+    const char* postHeaders;
+};
+
+static void*
+HandlePostURLEvent(PLEvent* event)
+{
+    PR_ASSERT(PR_CurrentThread() == mozilla_thread);
+    PostURLEvent* e = (PostURLEvent*)event;
+    NPP npp = e->peer->GetNPP();
+    NPError rslt = np_posturlinternal(npp,
+                                      e->url, 
+                                      e->target,
+                                      e->altHost,
+                                      e->referrer,
+                                      e->forceJSEnabled,
+                                      e->postDataLen,
+                                      e->postData,
+                                      e->isFile,
+                                      e->notifyData != NULL,
+                                      e->notifyData);
+    return (void*)rslt;
+}
+
+static void
+DestroyPostURLEvent(PLEvent* event)
+{
+    PostURLEvent* e = (PostURLEvent*)event;
+    PR_Free(event);
+}
+
+NS_METHOD
+nsPluginManager::PostURL(nsISupports* pluginInst,
+                         const char* url,
+                         PRUint32 postDataLen, 
+                         const char* postData,
+                         PRBool isFile,
+                         const char* target,
+                         nsIPluginStreamListener* listener,
+                         nsPluginStreamType streamType,
+                         const char* altHost, 
+                         const char* referrer,
+                         PRBool forceJSEnabled,
+                         PRUint32 postHeadersLen, 
+                         const char* postHeaders)
+{
+    NPError rslt = NPERR_INVALID_PARAM;
+    nsIPluginInstance* inst = NULL;
+    if (pluginInst->QueryInterface(kIPluginInstanceIID, (void**)&inst) == NS_OK) {
+        // Warning: Casting to our implementation type of plugin instance peer here:
+        nsPluginInstancePeer* peer;
+        nsresult err = inst->GetPeer((nsIPluginInstancePeer**)&peer);
+        if (err == NS_OK) {
+            void* notifyData = NULL;
+            if (listener) {
+                nsPluginInputStream* inStr = new nsPluginInputStream(listener, streamType);
+                notifyData = inStr;
+            }
+
+            if (PR_CurrentThread() == mozilla_thread) {
+                NPP npp = peer->GetNPP();
+                PR_ASSERT(postHeaders == NULL); // XXX need to deal with postHeaders
+                rslt = np_posturlinternal(npp,
+                                          url, 
+                                          target,
+                                          altHost,
+                                          referrer,
+                                          forceJSEnabled,
+                                          postDataLen,
+                                          postData,
+                                          isFile,
+                                          notifyData != NULL,
+                                          notifyData);
+            }
+            else {
+                PostURLEvent* e = PR_NEW(PostURLEvent);
+                if (e == NULL) {
+                    rslt = NPERR_OUT_OF_MEMORY_ERROR;
+                }
+                else {
+                    PL_InitEvent(&e->event, NULL, HandlePostURLEvent, DestroyPostURLEvent);
+                    e->peer = peer;
+                    e->url = url;
+                    e->target = target;
+                    e->notifyData = notifyData;
+                    e->altHost = altHost;
+                    e->referrer = referrer;
+                    e->forceJSEnabled = forceJSEnabled;
+                    e->postDataLen = postDataLen;
+                    e->postData = postData;
+                    e->isFile = isFile;
+                    e->postHeadersLen = postHeadersLen;
+                    e->postHeaders = postHeaders;
+                    /*rslt = (NPError)*/PL_PostSynchronousEvent(mozilla_event_queue, &e->event);
+                    rslt = NPERR_NO_ERROR;  /* XXX irix c++ compiler doesn't like the above cast */
+                }
+            }
+            peer->Release();
+        }
+        inst->Release();
+    }
+    return fromNPError[rslt];
+}
+
+#else // !NEW_PLUGIN_STREAM_API
 
 struct GetURLEvent {
     PLEvent event;
@@ -744,6 +965,8 @@ nsPluginManager::PostURL(nsISupports* pinst, const char* url, const char* target
     }
     return fromNPError[rslt];
 }
+
+#endif // !NEW_PLUGIN_STREAM_API
 
 extern "C" char *pacf_find_proxies_for_url(MWContext *context, 
                                            URL_Struct *URL_s);
@@ -1003,13 +1226,20 @@ nsPluginInstancePeer::GetJavaPeer(jref *peer)
 
 void nsPluginInstancePeer::SetPluginInstance(nsIPluginInstance* inst)
 {
+    // We're now maintaining our reference to plugin instance in the
+    // npp->ndata->sdata (saved data) field, and we access the peer 
+    // from there. This method should be totally unnecessary.
+#if 0
     if (fPluginInst != NULL) {
         fPluginInst->Release();
     }
+#endif
     fPluginInst = inst;
+#if 0
     if (fPluginInst != NULL) {
 	    fPluginInst->AddRef();
-	 }
+    }
+#endif
 }
 
 nsIPluginInstance* nsPluginInstancePeer::GetPluginInstance()
@@ -1168,7 +1398,7 @@ nsPluginTagInfo::GetAttribute(const char* name, const char* *result)
         }
     }
 
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 }
 
 NS_METHOD
@@ -1257,7 +1487,7 @@ nsPluginTagInfo::GetParameter(const char* name, const char* *result)
         }
     }
 
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 }
 
 NS_METHOD
@@ -1390,6 +1620,123 @@ NS_IMPL_QUERY_INTERFACE(nsPluginManagerStream, kIOutputStreamIID);
 NS_IMPL_ADDREF(nsPluginManagerStream);
 NS_IMPL_RELEASE(nsPluginManagerStream);
 
+#ifdef NEW_PLUGIN_STREAM_API
+////////////////////////////////////////////////////////////////////////////////
+// Plugin Input Stream Interface
+
+nsPluginInputStream::nsPluginInputStream(nsIPluginStreamListener* listener,
+                                         nsPluginStreamType streamType)
+    : mListener(listener), mStreamType(streamType),
+      mUrls(NULL), mStream(NULL),
+      mBuffer(NULL), mBufferLength(0), mAmountRead(0)
+{
+    NS_INIT_REFCNT();
+    listener->AddRef();
+}
+
+nsPluginInputStream::~nsPluginInputStream(void)
+{
+    mListener->Release();
+    PL_strfree(mBuffer);
+}
+
+NS_IMPL_ADDREF(nsPluginInputStream);
+NS_IMPL_RELEASE(nsPluginInputStream);
+
+NS_METHOD
+nsPluginInputStream::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    if (NULL == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER; 
+    } 
+    if (aIID.Equals(kIPluginInputStream2IID) ||
+        aIID.Equals(kIPluginInputStreamIID) ||
+        aIID.Equals(kISupportsIID)) {
+        *aInstancePtr = (nsIPluginInputStream2*)this; 
+        AddRef();
+        return NS_OK; 
+    } 
+    return NS_NOINTERFACE; 
+}
+
+NS_METHOD
+nsPluginInputStream::Close(void)
+{
+    NPError err = npn_destroystream(mStream->instance->npp, mStream->pstream, 
+                                    nsPluginReason_UserBreak);
+    return fromNPError[err];
+}
+
+NS_METHOD
+nsPluginInputStream::GetLength(PRInt32 *aLength)
+{
+    *aLength = mStream->pstream->end;
+    return NS_OK;
+#if 0
+    *aLength = mBufferLength;
+    return NS_OK;
+#endif
+}
+
+NS_METHOD
+nsPluginInputStream::Read(char* aBuf, PRInt32 aOffset, PRInt32 aCount, 
+                          PRInt32 *aReadCount)
+{
+    if (aOffset > (PRInt32)mBufferLength)
+        return NS_ERROR_FAILURE;        // XXX right error?
+    PRUint32 cnt = PR_MIN(aCount, (PRInt32)mBufferLength - aOffset);
+    memcpy(aBuf, &mBuffer[aOffset], cnt);
+    *aReadCount = cnt;
+    mAmountRead -= cnt;
+    return NS_OK;
+}
+
+NS_METHOD
+nsPluginInputStream::GetLastModified(PRUint32 *result)
+{
+    *result = mStream->pstream->lastmodified;
+    return NS_OK;
+}
+
+NS_METHOD
+nsPluginInputStream::RequestRead(nsByteRange* rangeList)
+{
+    NPError err = npn_requestread(mStream->pstream,
+                                  (NPByteRange*)rangeList);
+    return fromNPError[err];
+}
+
+NS_METHOD
+nsPluginInputStream::GetContentLength(PRUint32 *result)
+{
+    *result = mUrls->content_length;
+    return NS_OK;
+}
+
+NS_METHOD
+nsPluginInputStream::GetHeaderFields(PRUint16& n, const char*const*& names,
+                                     const char*const*& values)
+{
+    n = (PRUint16)mUrls->all_headers.empty_index;
+    names = (const char*const*)mUrls->all_headers.key;
+    values = (const char*const*)mUrls->all_headers.value;
+    return NS_OK;
+}
+
+NS_METHOD
+nsPluginInputStream::GetHeaderField(const char* name, const char* *result)
+{
+    PRUint16 i;
+    for (i = 0; i < mUrls->all_headers.empty_index; i++) {
+        if (PL_strcmp(mUrls->all_headers.key[i], name) == 0) {
+            *result = mUrls->all_headers.value[i];
+            return NS_OK;
+        }
+    }
+    return NS_ERROR_FAILURE;
+}
+
+#else // !NEW_PLUGIN_STREAM_API
 ////////////////////////////////////////////////////////////////////////////////
 // Plugin Stream Peer Interface
 
@@ -1553,5 +1900,7 @@ nsPluginStreamPeer::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     } 
     return NS_NOINTERFACE; 
 } 
+
+#endif // !NEW_PLUGIN_STREAM_API
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -34,13 +34,15 @@
 #ifndef nsIPluginStream_h___
 #define nsIPluginStream_h___
 
+#ifndef NEW_PLUGIN_STREAM_API
+
 #include "nsplugindefs.h"
 #include "nsIOutputStream.h"
 
 /**
  * The nsIPluginStream interface specifies the minimal set of operations that
  * must be implemented by a plugin stream in order to receive data from the
- * browser. When a nsIPluginManager::FetchURL request is made, a subsequent
+ * browser. When a nsIPluginManager::GetURL request is made, a subsequent
  * nsIPluginInstance::NewStream request will be made to instruct the plugin
  * instance to construct a new stream to receive the data. 
  */
@@ -79,6 +81,8 @@ public:
     0x11d2,                                          \
     {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
 }
+
+#endif // !NEW_PLUGIN_STREAM_API
 
 ////////////////////////////////////////////////////////////////////////////////
 

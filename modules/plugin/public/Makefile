@@ -33,13 +33,20 @@ EXPORTS	=				\
 	nsIPluginManager.h		\
 	nsIPluginManager2.h		\
 	nsIPluginStream.h		\
-	nsIPluginStreamPeer.h		\
-	nsIPluginStreamPeer2.h		\
 	nsIPluginTagInfo.h		\
 	nsIPluginTagInfo2.h		\
-	nsISeekablePluginStreamPeer.h	\
 	nsIWindowlessPlugInstPeer.h	\
+        nsIPluginInputStream.h          \
+        nsIPluginInputStream2.h         \
+        nsIPluginStreamListener.h       \
 	nsplugin.h			\
 	nsplugindefs.h
+
+# DEPRECATED -- remove before we ship 5.0
+EXPORTS +=				\
+	nsIPluginStream.h		\
+	nsIPluginStreamPeer.h		\
+	nsIPluginStreamPeer2.h		\
+	nsISeekablePluginStreamPeer.h	\
 
 include $(DEPTH)/config/rules.mk

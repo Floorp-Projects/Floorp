@@ -64,6 +64,8 @@ struct nsIJVMManager;
 class nsHashtable;
 #endif /* OJI */
 
+#include "plstr.h"
+
 extern int XP_PLUGIN_LOADING_PLUGIN;
 extern int MK_BAD_CONNECT;
 extern int XP_PLUGIN_NOT_FOUND;
@@ -299,6 +301,34 @@ public:
     NS_IMETHOD
     UserAgent(const char* *result);
 
+#ifdef NEW_PLUGIN_STREAM_API
+
+    NS_IMETHOD
+    GetURL(nsISupports* pluginInst, 
+           const char* url, 
+           const char* target = NULL,
+           nsIPluginStreamListener* streamListener = NULL,
+           nsPluginStreamType streamType = nsPluginStreamType_Normal,
+           const char* altHost = NULL,
+           const char* referrer = NULL,
+           PRBool forceJSEnabled = PR_FALSE);
+
+    NS_IMETHOD
+    PostURL(nsISupports* pluginInst,
+            const char* url,
+            PRUint32 postDataLen, 
+            const char* postData,
+            PRBool isFile = PR_FALSE,
+            const char* target = NULL,
+            nsIPluginStreamListener* streamListener = NULL,
+            nsPluginStreamType streamType = nsPluginStreamType_Normal,
+            const char* altHost = NULL, 
+            const char* referrer = NULL,
+            PRBool forceJSEnabled = PR_FALSE,
+            PRUint32 postHeadersLength = 0, 
+            const char* postHeaders = NULL);
+
+#else // !NEW_PLUGIN_STREAM_API
     NS_IMETHOD
     GetURL(nsISupports* peer, const char* url, const char* target,
            void* notifyData = NULL, const char* altHost = NULL,
@@ -311,6 +341,7 @@ public:
             const char* altHost = NULL, const char* referrer = NULL,
             PRBool forceJSEnabled = PR_FALSE,
             PRUint32 postHeadersLength = 0, const char* postHeaders = NULL);
+#endif // !NEW_PLUGIN_STREAM_API
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsIPluginManager2:
@@ -355,6 +386,7 @@ public:
     NS_IMETHOD
     HasAllocatedMenuID(nsIEventHandler* handler, PRInt16 menuID, PRBool *result);
 
+#if 0
 	// On the mac (and most likely win16), network activity can
     // only occur on the main thread. Therefore, we provide a hook
     // here for the case that the main thread needs to tickle itself.
@@ -362,6 +394,7 @@ public:
     // the tickle code can notify it without freezing.
     NS_IMETHOD
     ProcessNextEvent(PRBool *bEventHandled);
+#endif
 
     ////////////////////////////////////////////////////////////////////////////
     // nsPluginManager specific methods:
@@ -660,6 +693,112 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef NEW_PLUGIN_STREAM_API
+
+#include "nsIPluginInputStream2.h"
+
+class nsPluginInputStream;
+
+// stored in the fe_data of the URL_Struct:
+struct nsPluginURLData {
+    NPEmbeddedApp* app;
+    nsIPluginStreamListener* listener;
+    nsPluginInputStream* inStr;
+};
+
+class nsPluginInputStream : public nsIPluginInputStream2 {
+public:
+
+    NS_DECL_ISUPPORTS
+
+    ////////////////////////////////////////////////////////////////////////////
+    // from nsIBaseStream:
+
+    /** Close the stream. */
+    NS_IMETHOD
+    Close(void);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // from nsIInputStream:
+
+    /** Return the number of bytes in the stream
+     *  @param aLength out parameter to hold the length
+     *         of the stream. if an error occurs, the length
+     *         will be undefined
+     *  @return error status
+     */
+    NS_IMETHOD
+    GetLength(PRInt32 *aLength);
+
+    /** Read data from the stream.
+     *  @param aErrorCode the error code if an error occurs
+     *  @param aBuf the buffer into which the data is read
+     *  @param aOffset the start offset of the data
+     *  @param aCount the maximum number of bytes to read
+     *  @param aReadCount out parameter to hold the number of
+     *         bytes read, eof if 0. if an error occurs, the
+     *         read count will be undefined
+     *  @return error status
+     */   
+    NS_IMETHOD
+    Read(char* aBuf, PRInt32 aOffset, PRInt32 aCount, PRInt32 *aReadCount); 
+
+    ////////////////////////////////////////////////////////////////////////////
+    // from nsIPluginInputStream:
+
+    // (Corresponds to NPStream's lastmodified field.)
+    NS_IMETHOD
+    GetLastModified(PRUint32 *result);
+
+    NS_IMETHOD
+    RequestRead(nsByteRange* rangeList);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // from nsIPluginInputStream2:
+
+    NS_IMETHOD
+    GetContentLength(PRUint32 *result);
+
+    NS_IMETHOD
+    GetHeaderFields(PRUint16& n, const char*const*& names, const char*const*& values);
+
+    NS_IMETHOD
+    GetHeaderField(const char* name, const char* *result);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // nsPluginInputStream specific methods:
+
+    nsPluginInputStream(nsIPluginStreamListener* listener,
+                        nsPluginStreamType streamType);
+    virtual ~nsPluginInputStream(void);
+
+    nsIPluginStreamListener* GetListener(void) { return mListener; }
+    nsPluginStreamType GetStreamType(void) { return mStreamType; }
+
+    void SetStreamInfo(URL_Struct* urls, np_stream* stream) {
+        mUrls = urls;
+        mStream = stream;
+    }
+
+    void SetReadBuffer(PRUint32 len, const char* buffer) {
+        mBuffer = PL_strdup(buffer);
+        mBufferLength = len;
+        mAmountRead = 0;
+    }
+
+protected:
+    nsIPluginStreamListener* mListener;
+    nsPluginStreamType mStreamType;
+    URL_Struct* mUrls;
+    np_stream* mStream;
+    char* mBuffer;
+    PRUint32 mBufferLength;
+    PRUint32 mAmountRead;
+
+};
+
+#else // !NEW_PLUGIN_STREAM_API
+
 class nsPluginStreamPeer : public nsIPluginStreamPeer2, 
                            public nsISeekablePluginStreamPeer
 {
@@ -741,6 +880,8 @@ protected:
     nsPluginReason reason;
 
 };
+
+#endif // !NEW_PLUGIN_STREAM_API
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -37,6 +37,8 @@
 #include "nsplugindefs.h"
 #include "nsISupports.h"
 
+class nsIPluginStreamListener;
+
 /**
  * The nsIPluginManager interface defines the minimum set of functionality that
  * the browser will support if it allows plugins. Plugins can call QueryInterface
@@ -82,11 +84,41 @@ public:
     NS_IMETHOD
     UserAgent(const char* *resultingAgentString) = 0;
 
+#ifdef NEW_PLUGIN_STREAM_API
+
+    NS_IMETHOD
+    GetURL(nsISupports* pluginInst, 
+           const char* url, 
+           const char* target = NULL,
+           nsIPluginStreamListener* streamListener = NULL,
+           nsPluginStreamType streamType = nsPluginStreamType_Normal,
+           const char* altHost = NULL,
+           const char* referrer = NULL,
+           PRBool forceJSEnabled = PR_FALSE) = 0;
+
+    NS_IMETHOD
+    PostURL(nsISupports* pluginInst,
+            const char* url,
+            PRUint32 postDataLen, 
+            const char* postData,
+            PRBool isFile = PR_FALSE,
+            const char* target = NULL,
+            nsIPluginStreamListener* streamListener = NULL,
+            nsPluginStreamType streamType = nsPluginStreamType_Normal,
+            const char* altHost = NULL, 
+            const char* referrer = NULL,
+            PRBool forceJSEnabled = PR_FALSE,
+            PRUint32 postHeadersLength = 0, 
+            const char* postHeaders = NULL) = 0;
+
+#else // !NEW_PLUGIN_STREAM_API
     /**
      * Fetches a URL.
      *
      * (Corresponds to NPN_GetURL and NPN_GetURLNotify.)
      *
+     * @param pluginInst - the plugin making the request. If NULL, the URL
+     *   is fetched in the background.
      * @param url - the URL to fetch
      * @param target - the target window into which to load the URL
      * @param notifyData - when present, URLNotify is called passing the
@@ -102,7 +134,7 @@ public:
      * @result - NS_OK if this operation was successful
      */
     NS_IMETHOD
-    GetURL(nsISupports* peer, const char* url, const char* target,
+    GetURL(nsISupports* pluginInst, const char* url, const char* target,
            void* notifyData = NULL, const char* altHost = NULL,
            const char* referrer = NULL, PRBool forceJSEnabled = PR_FALSE) = 0;
 
@@ -111,6 +143,8 @@ public:
      *
      * (Corresponds to NPN_PostURL and NPN_PostURLNotify.)
      *
+     * @param pluginInst - the plugin making the request. If NULL, the URL
+     *   is fetched in the background.
      * @param url - the URL to fetch
      * @param target - the target window into which to load the URL
      * @param postDataLength - the length of postData (if non-NULL)
@@ -134,12 +168,13 @@ public:
      * @result - NS_OK if this operation was successful
      */
     NS_IMETHOD
-    PostURL(nsISupports* peer, const char* url, const char* target,
+    PostURL(nsISupports* pluginInst, const char* url, const char* target,
             PRUint32 postDataLen, const char* postData,
             PRBool isFile = PR_FALSE, void* notifyData = NULL,
             const char* altHost = NULL, const char* referrer = NULL,
             PRBool forceJSEnabled = PR_FALSE,
             PRUint32 postHeadersLength = 0, const char* postHeaders = NULL) = 0;
+#endif // !NEW_PLUGIN_STREAM_API
 
 };
 

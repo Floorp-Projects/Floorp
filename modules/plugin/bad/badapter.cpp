@@ -68,9 +68,34 @@ public:
     NS_IMETHOD
     UserAgent(const char* *result);
 
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsINetworkManager:
+#ifdef NEW_PLUGIN_STREAM_API
 
+    NS_IMETHOD
+    GetURL(nsISupports* pluginInst, 
+           const char* url, 
+           const char* target = NULL,
+           nsIPluginStreamListener* streamListener = NULL,
+           nsPluginStreamType streamType = nsPluginStreamType_Normal,
+           const char* altHost = NULL,
+           const char* referrer = NULL,
+           PRBool forceJSEnabled = PR_FALSE);
+
+    NS_IMETHOD
+    PostURL(nsISupports* pluginInst,
+            const char* url,
+            PRUint32 postDataLen, 
+            const char* postData,
+            PRBool isFile = PR_FALSE,
+            const char* target = NULL,
+            nsIPluginStreamListener* streamListener = NULL,
+            nsPluginStreamType streamType = nsPluginStreamType_Normal,
+            const char* altHost = NULL, 
+            const char* referrer = NULL,
+            PRBool forceJSEnabled = PR_FALSE,
+            PRUint32 postHeadersLength = 0, 
+            const char* postHeaders = NULL);
+
+#else // !NEW_PLUGIN_STREAM_API
     NS_IMETHOD
     GetURL(nsISupports* peer, const char* url, const char* target,
            void* notifyData = NULL, const char* altHost = NULL,
@@ -84,8 +109,7 @@ public:
             PRBool forceJSEnabled = PR_FALSE,
             PRUint32 postHeadersLength = 0, const char* postHeaders = NULL);
 
-    NS_IMETHOD
-    FindProxyForURL(const char* url, char* *result);
+#endif // !NEW_PLUGIN_STREAM_API
 
 };
 
@@ -235,6 +259,92 @@ protected:
 	char** values_list;
 };
 
+#ifdef NEW_PLUGIN_STREAM_API
+
+class CPluginInputStream : public nsIPluginInputStream {
+public:
+
+    NS_DECL_ISUPPORTS
+
+    ////////////////////////////////////////////////////////////////////////////
+    // from nsIBaseStream:
+
+    /** Close the stream. */
+    NS_IMETHOD
+    Close(void);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // from nsIInputStream:
+
+    /** Return the number of bytes in the stream
+     *  @param aLength out parameter to hold the length
+     *         of the stream. if an error occurs, the length
+     *         will be undefined
+     *  @return error status
+     */
+    NS_IMETHOD
+    GetLength(PRInt32 *aLength);
+
+    /** Read data from the stream.
+     *  @param aErrorCode the error code if an error occurs
+     *  @param aBuf the buffer into which the data is read
+     *  @param aOffset the start offset of the data
+     *  @param aCount the maximum number of bytes to read
+     *  @param aReadCount out parameter to hold the number of
+     *         bytes read, eof if 0. if an error occurs, the
+     *         read count will be undefined
+     *  @return error status
+     */   
+    NS_IMETHOD
+    Read(char* aBuf, PRInt32 aOffset, PRInt32 aCount, PRInt32 *aReadCount); 
+
+    ////////////////////////////////////////////////////////////////////////////
+    // from nsIPluginInputStream:
+
+    // (Corresponds to NPStream's lastmodified field.)
+    NS_IMETHOD
+    GetLastModified(PRUint32 *result);
+
+    NS_IMETHOD
+    RequestRead(nsByteRange* rangeList);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // CPluginInputStream specific methods:
+
+    CPluginInputStream(nsIPluginStreamListener* listener,
+                       nsPluginStreamType streamType);
+    virtual ~CPluginInputStream(void);
+
+    void SetStreamInfo(NPP npp, NPStream* stream) {
+        mNPP = npp;
+        mStream = stream;
+    }
+
+    nsIPluginStreamListener* GetListener(void) { return mListener; }
+    nsPluginStreamType GetStreamType(void) { return mStreamType; }
+
+    nsresult SetReadBuffer(PRUint32 len, const char* buffer) {
+        // XXX this has to be way more sophisticated
+        mBuffer = strdup(buffer);
+        mBufferLength = len;
+        mAmountRead = 0;
+        return NS_OK;
+    }
+
+protected:
+    const char* mURL;
+    nsIPluginStreamListener* mListener;
+    nsPluginStreamType mStreamType;
+    NPP mNPP;
+    NPStream* mStream;
+    char* mBuffer;
+    PRUint32 mBufferLength;
+    PRUint32 mAmountRead;
+
+};
+
+#else // !NEW_PLUGIN_STREAM_API
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // CPluginStreamPeer
@@ -299,6 +409,8 @@ protected:
 
 };
 
+#endif // !NEW_PLUGIN_STREAM_API
+
 //////////////////////////////////////////////////////////////////////////////
 
 #ifdef XP_UNIX
@@ -350,8 +462,13 @@ NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
 NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID);
 NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID); 
+
+#ifdef NEW_PLUGIN_STREAM_API
+NS_DEFINE_IID(kIPluginInputStreamIID, NS_IPLUGININPUTSTREAM_IID);
+#else // !NEW_PLUGIN_STREAM_API
 NS_DEFINE_IID(kIPluginStreamPeerIID, NS_IPLUGINSTREAMPEER_IID);
 NS_DEFINE_IID(kISeekablePluginStreamPeerIID, NS_ISEEKABLEPLUGINSTREAMPEER_IID);
+#endif // !NEW_PLUGIN_STREAM_API
 
 // mapping from NPError to nsresult
 nsresult fromNPError[] = {
@@ -510,18 +627,19 @@ jref
 NPP_GetJavaClass(void)
 {
     // Only call initialize the plugin if it hasn't been `d.
-    /*  if (thePluginManager == NULL) {
+#if 0
+    if (thePluginManager == NULL) {
         // Create the plugin manager and plugin objects.
         NPError result = CPluginManager::Create();	
         if (result) return NULL;
-	    assert( thePluginManager != NULL );
+        assert( thePluginManager != NULL );
         thePluginManager->AddRef();
         NP_CreatePlugin(thePluginManager, (nsIPlugin** )(&thePlugin));
         assert( thePlugin != NULL );
-        }
-        */
-//	return thePlugin->GetJavaClass();
-	return NULL;
+    }
+    return thePlugin->GetJavaClass();
+#endif
+    return NULL;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -535,19 +653,19 @@ NPP_GetJavaClass(void)
 void
 NPP_Shutdown(void)
 {
-//	TRACE("NPP_Shutdown\n");
+//    TRACE("NPP_Shutdown\n");
 
-	if (thePlugin)
-	{
-		thePlugin->Shutdown();
-		thePlugin->Release();
-		thePlugin = NULL;
-	}
+    if (thePlugin)
+    {
+        thePlugin->Shutdown();
+        thePlugin->Release();
+        thePlugin = NULL;
+    }
 
-	if (thePluginManager)  {
-		thePluginManager->Release();
-		thePluginManager = NULL;
-	}
+    if (thePluginManager)  {
+        thePluginManager->Release();
+        thePluginManager = NULL;
+    }
     
     return;
 }
@@ -664,10 +782,10 @@ NPP_SetWindow(NPP instance, NPWindow* window)
 
 NPError 
 NPP_NewStream(NPP instance,
-	      NPMIMEType type,
-	      NPStream *stream, 
-	      NPBool seekable,
-	      PRUint16 *stype)
+              NPMIMEType type,
+              NPStream *stream, 
+              NPBool seekable,
+              PRUint16 *stype)
 {
     // XXX - How do you set the fields of the peer stream and stream?
     // XXX - Looks like these field will have to be created since
@@ -678,11 +796,29 @@ NPP_NewStream(NPP instance,
     if (instance == NULL)
         return NPERR_INVALID_INSTANCE_ERROR;
 				
+#ifdef NEW_PLUGIN_STREAM_API
+
+    CPluginInputStream* inStr = (CPluginInputStream*)stream->notifyData;
+    if (inStr == NULL)
+        return NPERR_GENERIC_ERROR;
+    nsPluginStreamInfo info;
+    info.contentType = type;
+    info.seekable = seekable;
+    nsresult err = inStr->GetListener()->OnStartBinding(stream->url, &info);
+    if (err) return err;
+
+    inStr->SetStreamInfo(instance, stream);
+    stream->pdata = inStr;
+    *stype = inStr->GetStreamType();
+
+#else // !NEW_PLUGIN_STREAM_API
+
     // Create a new plugin stream peer and plugin stream.
     CPluginStreamPeer* speer = new CPluginStreamPeer((nsMIMEType)type, stream,
                                                      (PRBool)seekable, stype); 
     if (speer == NULL) return NPERR_OUT_OF_MEMORY_ERROR;
     speer->AddRef();
+
     nsIPluginStream* pluginStream = NULL; 
     CPluginInstancePeer* peer = (CPluginInstancePeer*) instance->pdata;
     nsIPluginInstance* pluginInstance = peer->GetInstance();
@@ -697,6 +833,8 @@ NPP_NewStream(NPP instance,
     err = pluginStream->GetStreamType((nsPluginStreamType*)stype);
     assert(err == NS_OK);
 	
+#endif // !NEW_PLUGIN_STREAM_API
+
     return NPERR_NO_ERROR;
 }
 
@@ -714,11 +852,22 @@ NPP_WriteReady(NPP instance, NPStream *stream)
     if (instance == NULL)
         return -1;
 
+#ifdef NEW_PLUGIN_STREAM_API
+
+    CPluginInputStream* inStr = (CPluginInputStream*)stream->pdata;
+    if (inStr == NULL)
+        return -1;
+    return NP_MAXREADY;
+    
+#else // !NEW_PLUGIN_STREAM_API
+
     nsIPluginStream* theStream = (nsIPluginStream*) stream->pdata;	
     if( theStream == 0 )
         return -1;
 	
     return 8192;
+
+#endif // !NEW_PLUGIN_STREAM_API
 }
 
 
@@ -735,6 +884,19 @@ NPP_Write(NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
     if (instance == NULL)
         return -1;
 	
+#ifdef NEW_PLUGIN_STREAM_API
+
+    CPluginInputStream* inStr = (CPluginInputStream*)stream->pdata;
+    if (inStr == NULL)
+        return -1;
+    nsresult err = inStr->SetReadBuffer((PRUint32)len, (const char*)buffer);
+    if (err != NS_OK) return -1;
+    err = inStr->GetListener()->OnDataAvailable(stream->url, inStr, offset, len);
+    if (err != NS_OK) return -1;
+    return len;
+    
+#else // !NEW_PLUGIN_STREAM_API
+
     nsIPluginStream* theStream = (nsIPluginStream*) stream->pdata;
     if( theStream == 0 )
         return -1;
@@ -742,6 +904,8 @@ NPP_Write(NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
     PRInt32 count;
     nsresult err = theStream->Write((const char* )buffer, offset, len, &count);
     return (err == NS_OK) ? count : -1;
+
+#endif // !NEW_PLUGIN_STREAM_API
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -760,12 +924,25 @@ NPP_DestroyStream(NPP instance, NPStream *stream, NPReason reason)
     if (instance == NULL)
         return NPERR_INVALID_INSTANCE_ERROR;
 		
+#ifdef NEW_PLUGIN_STREAM_API
+
+    CPluginInputStream* inStr = (CPluginInputStream*)stream->pdata;
+    if (inStr == NULL)
+        return NPERR_GENERIC_ERROR;
+    inStr->GetListener()->OnStopBinding(stream->url, (nsPluginReason)reason);
+    inStr->Release();
+    stream->pdata = NULL;
+    
+#else // !NEW_PLUGIN_STREAM_API
+
     nsIPluginStream* theStream = (nsIPluginStream*) stream->pdata;
     if( theStream == 0 )
         return NPERR_GENERIC_ERROR;
 	
     theStream->Release();
     stream->pdata = NULL;
+
+#endif // !NEW_PLUGIN_STREAM_API
 	
     return NPERR_NO_ERROR;
 }
@@ -778,16 +955,27 @@ NPP_DestroyStream(NPP instance, NPStream *stream, NPReason reason)
 void 
 NPP_StreamAsFile(NPP instance, NPStream *stream, const char* fname)
 {
-//	TRACE("NPP_StreamAsFile\n");
+//    TRACE("NPP_StreamAsFile\n");
 
-	if (instance == NULL)
-		return;
+    if (instance == NULL)
+        return;
 		
-	nsIPluginStream* theStream = (nsIPluginStream*) stream->pdata;
-	if( theStream == 0 )
-		return;
+#ifdef NEW_PLUGIN_STREAM_API
 
-	theStream->AsFile( fname );
+    CPluginInputStream* inStr = (CPluginInputStream*)stream->pdata;
+    if (inStr == NULL)
+        return;
+    (void)inStr->GetListener()->OnFileAvailable(stream->url, fname);
+    
+#else // !NEW_PLUGIN_STREAM_API
+
+    nsIPluginStream* theStream = (nsIPluginStream*) stream->pdata;
+    if( theStream == 0 )
+        return;
+
+    theStream->AsFile( fname );
+
+#endif // !NEW_PLUGIN_STREAM_API
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -802,12 +990,12 @@ NPP_Print(NPP instance, NPPrint* printInfo)
     if(printInfo == NULL)   // trap invalid parm
         return;
 
-	if (instance != NULL)
-	{
-	    CPluginInstancePeer* peer = (CPluginInstancePeer*) instance->pdata;
-	    nsIPluginInstance* pluginInstance = peer->GetInstance();
-		pluginInstance->Print((nsPluginPrint* ) printInfo );
-	}
+    if (instance != NULL)
+    {
+        CPluginInstancePeer* peer = (CPluginInstancePeer*) instance->pdata;
+        nsIPluginInstance* pluginInstance = peer->GetInstance();
+        pluginInstance->Print((nsPluginPrint* ) printInfo );
+    }
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -818,14 +1006,22 @@ NPP_Print(NPP instance, NPPrint* printInfo)
 void
 NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
 {
-//   	TRACE("NPP_URLNotify\n");
+//    TRACE("NPP_URLNotify\n");
 
-	if( instance != NULL )
-	{
-	    CPluginInstancePeer* peer = (CPluginInstancePeer*) instance->pdata;
-	    nsIPluginInstance* pluginInstance = peer->GetInstance();
-		pluginInstance->URLNotify(url, NULL, (nsPluginReason)reason, notifyData);
-	}
+    if (instance != NULL) {
+#ifdef NEW_PLUGIN_STREAM_API
+
+        CPluginInputStream* inStr = (CPluginInputStream*)notifyData;
+        (void)inStr->GetListener()->OnStopBinding(url, (nsPluginReason)reason);
+    
+#else // !NEW_PLUGIN_STREAM_API
+
+        CPluginInstancePeer* peer = (CPluginInstancePeer*) instance->pdata;
+        nsIPluginInstance* pluginInstance = peer->GetInstance();
+        pluginInstance->URLNotify(url, NULL, (nsPluginReason)reason, notifyData);
+
+#endif // !NEW_PLUGIN_STREAM_API
+    }
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -839,29 +1035,29 @@ int16
 NPP_HandleEvent(NPP instance, void* event)
 {
 //    TRACE("NPP_HandleEvent\n");
-	int16 eventHandled = FALSE;
-	if (instance == NULL)
-		return eventHandled;
+    int16 eventHandled = FALSE;
+    if (instance == NULL)
+        return eventHandled;
 	
-	NPEvent* npEvent = (NPEvent*) event;
-	nsPluginEvent pluginEvent = {
+    NPEvent* npEvent = (NPEvent*) event;
+    nsPluginEvent pluginEvent = {
 #ifdef XP_MAC
-		npEvent, NULL
+        npEvent, NULL
 #else
-		npEvent->event, npEvent->wParam, npEvent->lParam
+        npEvent->event, npEvent->wParam, npEvent->lParam
 #endif
-	};
+    };
 	
     CPluginInstancePeer* peer = (CPluginInstancePeer*) instance->pdata;
     nsIPluginInstance* pluginInstance = peer->GetInstance();
-	if (pluginInstance) {
+    if (pluginInstance) {
         PRBool handled;
-		nsresult err = pluginInstance->HandleEvent(&pluginEvent, &handled);
+        nsresult err = pluginInstance->HandleEvent(&pluginEvent, &handled);
         if (err) return FALSE;
         eventHandled = (handled == PR_TRUE);
     }
 	
-	return eventHandled;
+    return eventHandled;
 }
 #endif // ndef XP_UNIX 
 
@@ -923,9 +1119,9 @@ NS_METHOD
 CPluginManager::MemFlush(PRUint32 size)
 {
 #ifdef XP_MAC
-	return NPN_MemFlush(size);	
+    return NPN_MemFlush(size);	
 #else
-	return 0;
+    return 0;
 #endif
 }
 #endif
@@ -937,10 +1133,109 @@ CPluginManager::MemFlush(PRUint32 size)
 NS_METHOD
 CPluginManager::ReloadPlugins(PRBool reloadPages)
 {
-	NPN_ReloadPlugins(reloadPages);
+    NPN_ReloadPlugins(reloadPages);
     return NS_OK;
 }
 
+#ifdef NEW_PLUGIN_STREAM_API
+
+NS_METHOD
+CPluginManager::GetURL(nsISupports* pluginInst, 
+                       const char* url, 
+                       const char* target,
+                       nsIPluginStreamListener* streamListener,
+                       nsPluginStreamType streamType,
+                       const char* altHost,
+                       const char* referrer,
+                       PRBool forceJSEnabled)
+{
+    if (altHost != NULL || referrer != NULL || forceJSEnabled != PR_FALSE) {
+        return NPERR_INVALID_PARAM;
+    }
+
+    nsIPluginInstance* inst = NULL;
+    nsresult rslt = pluginInst->QueryInterface(kIPluginInstanceIID, (void**)&inst);
+    if (rslt != NS_OK) return rslt;
+	CPluginInstancePeer* instancePeer = NULL;
+    rslt = inst->GetPeer((nsIPluginInstancePeer**)&instancePeer);
+    if (rslt != NS_OK) {
+        inst->Release();
+        return rslt;
+    }
+    NPP npp = instancePeer->GetNPPInstance();
+
+    NPError err;
+    if (streamListener) {
+        CPluginInputStream* inStr = new CPluginInputStream(streamListener, streamType);
+        if (inStr == NULL) {
+            instancePeer->Release();
+            inst->Release();
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        inStr->AddRef();
+    
+        err = NPN_GetURLNotify(npp, url, target, inStr);
+    }
+    else {
+        err = NPN_GetURL(npp, url, target);
+    }
+    instancePeer->Release();
+    inst->Release();
+    return fromNPError[err];
+}
+
+NS_METHOD
+CPluginManager::PostURL(nsISupports* pluginInst,
+                        const char* url,
+                        PRUint32 postDataLen, 
+                        const char* postData,
+                        PRBool isFile,
+                        const char* target,
+                        nsIPluginStreamListener* streamListener,
+                        nsPluginStreamType streamType,
+                        const char* altHost, 
+                        const char* referrer,
+                        PRBool forceJSEnabled,
+                        PRUint32 postHeadersLength, 
+                        const char* postHeaders)
+{
+    if (altHost != NULL || referrer != NULL || forceJSEnabled != PR_FALSE
+        || postHeadersLength != 0 || postHeaders != NULL) {
+        return NPERR_INVALID_PARAM;
+    }
+
+    nsIPluginInstance* inst = NULL;
+    nsresult rslt = pluginInst->QueryInterface(kIPluginInstanceIID, (void**)&inst);
+    if (rslt != NS_OK) return rslt;
+	CPluginInstancePeer* instancePeer = NULL;
+    rslt = inst->GetPeer((nsIPluginInstancePeer**)&instancePeer);
+    if (rslt != NS_OK) {
+        inst->Release();
+        return rslt;
+    }
+    NPP npp = instancePeer->GetNPPInstance();
+
+    NPError err;
+    if (streamListener) {
+        CPluginInputStream* inStr = new CPluginInputStream(streamListener, streamType);
+        if (inStr == NULL) {
+            instancePeer->Release();
+            inst->Release();
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        inStr->AddRef();
+    
+        err = NPN_PostURLNotify(npp, url, target, postDataLen, postData, isFile, inStr);
+    }
+    else {
+        err = NPN_PostURL(npp, url, target, postDataLen, postData, isFile);
+    }
+    instancePeer->Release();
+    inst->Release();
+    return fromNPError[err];
+}
+
+#else // !NEW_PLUGIN_STREAM_API
 
 // (Corresponds to NPN_GetURL and NPN_GetURLNotify.)
 //   notifyData: When present, URLNotify is called passing the notifyData back
@@ -968,7 +1263,7 @@ CPluginManager::GetURL(nsISupports* pinst, const char* url, const char* target,
         inst->Release();
         return rslt;
     }
-	NPP npp = instancePeer->GetNPPInstance();
+    NPP npp = instancePeer->GetNPPInstance();
 
     NPError err;
     // Call the correct GetURL* function.
@@ -1001,7 +1296,7 @@ CPluginManager::PostURL(nsISupports* pinst, const char* url, const char* target,
         inst->Release();
         return rslt;
     }
-	NPP npp = instancePeer->GetNPPInstance();
+    NPP npp = instancePeer->GetNPPInstance();
 
     NPError err;
     // Call the correct PostURL* function.
@@ -1016,11 +1311,7 @@ CPluginManager::PostURL(nsISupports* pinst, const char* url, const char* target,
     return fromNPError[err];
 }
 
-NS_METHOD
-CPluginManager::FindProxyForURL(const char* url, char* *result)
-{
-    return NS_ERROR_FAILURE;
-}
+#endif // !NEW_PLUGIN_STREAM_API
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
 // UserAgent:
@@ -1122,33 +1413,33 @@ CPluginInstancePeer::CPluginInstancePeer(nsIPluginInstance* pluginInstance,
     
     mInstance->AddRef();
 
-	attribute_list = (char**) NPN_MemAlloc(attr_cnt * sizeof(const char*));
-	values_list = (char**) NPN_MemAlloc(attr_cnt * sizeof(const char*));
+    attribute_list = (char**) NPN_MemAlloc(attr_cnt * sizeof(const char*));
+    values_list = (char**) NPN_MemAlloc(attr_cnt * sizeof(const char*));
 
-	if (attribute_list != NULL && values_list != NULL) {
-		for (int i = 0; i < attribute_cnt; i++)   {
-			attribute_list[i] = (char*) NPN_MemAlloc(strlen(attr_list[i]) + 1);
-			if (attribute_list[i] != NULL)
-				strcpy(attribute_list[i], attr_list[i]);
+    if (attribute_list != NULL && values_list != NULL) {
+        for (int i = 0; i < attribute_cnt; i++)   {
+            attribute_list[i] = (char*) NPN_MemAlloc(strlen(attr_list[i]) + 1);
+            if (attribute_list[i] != NULL)
+                strcpy(attribute_list[i], attr_list[i]);
 
-			values_list[i] = (char*) NPN_MemAlloc(strlen(val_list[i]) + 1);
-			if (values_list[i] != NULL)
-				strcpy(values_list[i], val_list[i]);
-		}
-	}
+            values_list[i] = (char*) NPN_MemAlloc(strlen(val_list[i]) + 1);
+            if (values_list[i] != NULL)
+                strcpy(values_list[i], val_list[i]);
+        }
+    }
 }
 
 CPluginInstancePeer::~CPluginInstancePeer(void) 
 {
-	if (attribute_list != NULL && values_list != NULL) {
-		for (int i = 0; i < attribute_cnt; i++)   {
-			NPN_MemFree(attribute_list[i]);
-			NPN_MemFree(values_list[i]);
-		}
+    if (attribute_list != NULL && values_list != NULL) {
+        for (int i = 0; i < attribute_cnt; i++)   {
+            NPN_MemFree(attribute_list[i]);
+            NPN_MemFree(values_list[i]);
+        }
 
-		NPN_MemFree(attribute_list);
-		NPN_MemFree(values_list);
-	}
+        NPN_MemFree(attribute_list);
+        NPN_MemFree(values_list);
+    }
 }   
 
 
@@ -1212,45 +1503,45 @@ CPluginInstancePeer::GetMode(nsPluginMode *result)
 NS_METHOD
 CPluginInstancePeer::GetAttributes(PRUint16& n, const char* const*& names, const char* const*& values)  
 {
-	n = attribute_cnt;
-	names = attribute_list;
-	values = values_list;
+    n = attribute_cnt;
+    names = attribute_list;
+    values = values_list;
 
-	return NS_OK;
+    return NS_OK;
 }
 
 #if defined(XP_MAC)
 
 inline unsigned char toupper(unsigned char c)
 {
-	return (c >= 'a' && c <= 'z') ? (c - ('a' - 'A')) : c;
+    return (c >= 'a' && c <= 'z') ? (c - ('a' - 'A')) : c;
 }
 
 static int strcasecmp(const char * str1, const char * str2)
 {
 #if __POWERPC__
 	
-	const	unsigned char * p1 = (unsigned char *) str1 - 1;
-	const	unsigned char * p2 = (unsigned char *) str2 - 1;
-				unsigned long		c1, c2;
+    const	unsigned char * p1 = (unsigned char *) str1 - 1;
+    const	unsigned char * p2 = (unsigned char *) str2 - 1;
+    unsigned long		c1, c2;
 		
-	while (toupper(c1 = *++p1) == toupper(c2 = *++p2))
-		if (!c1)
-			return(0);
+    while (toupper(c1 = *++p1) == toupper(c2 = *++p2))
+        if (!c1)
+            return(0);
 
 #else
 	
-	const	unsigned char * p1 = (unsigned char *) str1;
-	const	unsigned char * p2 = (unsigned char *) str2;
-				unsigned char		c1, c2;
+    const	unsigned char * p1 = (unsigned char *) str1;
+    const	unsigned char * p2 = (unsigned char *) str2;
+    unsigned char		c1, c2;
 	
-	while (toupper(c1 = *p1++) == toupper(c2 = *p2++))
-		if (!c1)
-			return(0);
+    while (toupper(c1 = *p1++) == toupper(c2 = *p2++))
+        if (!c1)
+            return(0);
 
 #endif
 	
-	return(toupper(c1) - toupper(c2));
+    return(toupper(c1) - toupper(c2));
 }
 
 #endif /* XP_MAC */
@@ -1260,19 +1551,19 @@ static int strcasecmp(const char * str1, const char * str2)
 NS_METHOD
 CPluginInstancePeer::GetAttribute(const char* name, const char* *result) 
 {
-	for (int i=0; i < attribute_cnt; i++)  {
+    for (int i=0; i < attribute_cnt; i++)  {
 #if defined(XP_UNIX) || defined(XP_MAC)
-		if (strcasecmp(name, attribute_list[i]) == 0)
+        if (strcasecmp(name, attribute_list[i]) == 0)
 #else
-        if (stricmp(name, attribute_list[i]) == 0) 
+            if (stricmp(name, attribute_list[i]) == 0) 
 #endif
-        {
-            *result = values_list[i];
-            return NS_OK;
-        }
-	}
+            {
+                *result = values_list[i];
+                return NS_OK;
+            }
+    }
 
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1280,7 +1571,7 @@ CPluginInstancePeer::GetAttribute(const char* name, const char* *result)
 //+++++++++++++++++++++++++++++++++++++++++++++++++
 NS_METHOD
 CPluginInstancePeer::NewStream(nsMIMEType type, const char* target, 
-                                     nsIOutputStream* *result)
+                               nsIOutputStream* *result)
 {
     assert( npp != NULL );
     
@@ -1464,13 +1755,77 @@ NS_IMPL_QUERY_INTERFACE(CPluginManagerStream, kIOutputStreamIID);
 
 //////////////////////////////////////////////////////////////////////////////
 
+#ifdef NEW_PLUGIN_STREAM_API
+
+CPluginInputStream::CPluginInputStream(nsIPluginStreamListener* listener,
+                                       nsPluginStreamType streamType)
+    : mListener(listener), mStreamType(streamType),
+      mNPP(NULL), mStream(NULL),
+      mBuffer(NULL), mBufferLength(0), mAmountRead(0)
+{
+    NS_INIT_REFCNT();
+    mListener->AddRef();
+}
+
+CPluginInputStream::~CPluginInputStream(void)
+{
+    mListener->Release();
+    free(mBuffer);
+}
+
+NS_IMPL_ISUPPORTS(CPluginInputStream, kIPluginInputStreamIID);
+
+NS_METHOD
+CPluginInputStream::Close(void)
+{
+    if (mNPP == NULL || mStream == NULL)
+        return NS_ERROR_FAILURE;
+    NPError err = NPN_DestroyStream(mNPP, mStream, NPRES_USER_BREAK);
+    return fromNPError[err];
+}
+
+NS_METHOD
+CPluginInputStream::GetLength(PRInt32 *aLength)
+{
+    *aLength = mStream->end;
+    return NS_OK;
+}
+
+NS_METHOD
+CPluginInputStream::Read(char* aBuf, PRInt32 aOffset, PRInt32 aCount, PRInt32 *aReadCount)
+{
+    if (aOffset > (PRInt32)mBufferLength)
+        return NS_ERROR_FAILURE;        // XXX right error?
+    PRUint32 cnt = PR_MIN(aCount, (PRInt32)mBufferLength - aOffset);
+    memcpy(aBuf, &mBuffer[aOffset], cnt);
+    *aReadCount = cnt;
+    mAmountRead -= cnt;
+    return NS_OK;
+}
+
+NS_METHOD
+CPluginInputStream::GetLastModified(PRUint32 *result)
+{
+    *result = mStream->lastmodified;
+    return NS_OK;
+}
+
+NS_METHOD
+CPluginInputStream::RequestRead(nsByteRange* rangeList)
+{
+    NPError err = NPN_RequestRead(mStream, (NPByteRange*)rangeList);
+    return fromNPError[err];
+}
+
+#else // !NEW_PLUGIN_STREAM_API
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // CPluginStreamPeer
 //
 
 CPluginStreamPeer::CPluginStreamPeer(nsMIMEType type, NPStream* npStream,
-											   PRBool seekable, PRUint16* stype)
+                                     PRBool seekable, PRUint16* stype)
 	: type(type), npStream(npStream), seekable(seekable),
 	  stype(stype), reason(nsPluginReason_NoReason)
 {
@@ -1582,6 +1937,8 @@ nsresult CPluginStreamPeer::QueryInterface(const nsIID& iid, void** ptr)
     } 
     return NS_NOINTERFACE; 
 } 
+
+#endif // !NEW_PLUGIN_STREAM_API
 
 //////////////////////////////////////////////////////////////////////////////
 

@@ -34,6 +34,8 @@
 #ifndef nsIPluginStreamPeer_h___
 #define nsIPluginStreamPeer_h___
 
+#ifndef NEW_PLUGIN_STREAM_API
+
 #include "nsplugindefs.h"
 #include "nsISupports.h"
 
@@ -79,6 +81,8 @@ public:
     0x11d2,                                          \
     {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
 }
+
+#endif // !NEW_PLUGIN_STREAM_API
 
 ////////////////////////////////////////////////////////////////////////////////
 
