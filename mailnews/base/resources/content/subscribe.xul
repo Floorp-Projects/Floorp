@@ -21,6 +21,7 @@ Rights Reserved.
 
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://messenger/skin/folderPane.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/subscribe.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
@@ -74,10 +75,10 @@ Rights Reserved.
 	<template>
 		<rule>
 			<treechildren>
-				<treeitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name">
+				<treeitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" Subscribed="rdf:http://home.netscape.com/NC-rdf#Subscribed">
 					<treerow>
 						<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-						<treecell value="rdf:http://home.netscape.com/NC-rdf#Subscribed"/>
+						<treecell class="subscribedcol image"/>
 						<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
 					</treerow>
 				</treeitem>

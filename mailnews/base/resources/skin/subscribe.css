@@ -18,51 +18,12 @@
  * Rights Reserved.
  */
 
-#subscribe-window {
- display: block;
- width: 100%;
- height: 100%;
-}
-
-tree { 
- background-color:white;
- border: none; 
- border-spacing: 0px; 
- //border-collapse: collapse; 
- width: 100%
-} 
-
-
-
-treecell { 
- color: black;
- font-family: Verdana;
- font-size: 10pt;
-} 
-
-treecell[selectedcell] { 
- background-color: #666699; 
- color: white;
-}
-
-treerow > treecell > titledbutton {
+treeitem[Subscribed="false"] > treerow > treecell.subscribedcol > .tree-button {
  list-style-image: url("chrome://messenger/skin/dot.gif");
- color: inherit;
- border: none;
- padding: 0px;
- margin: 0px;
- height: 16px;
- width: 16px;
+ min-height: 14px;
 }
 
-treeitem[subscribed="true"] > treerow > treecell > titledbutton {
+treeitem[Subscribed="true"] > treerow > treecell.subscribedcol > .tree-button {
  list-style-image: url("chrome://messenger/skin/check.gif");
+ min-height: 14px;
 }     
-
-treehead treerow treecell { 
- font-size: 9pt;
- background-color: #666699; 
- border: thin darkgray solid; 
- color: white;
-}
-
