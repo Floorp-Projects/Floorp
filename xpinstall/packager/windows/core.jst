@@ -67,6 +67,13 @@ szUninstall = fCommunicator + "\\Uninstall";
 fUninstall  = getFolder("file:///", szUninstall);
 File.dirCreate(fUninstall);
 
+// Log component.reg and xpcom.log files so it can be deleted by
+// the uninstaller.
+// These two files are created after installation is done, thus
+// are normally not logged for uninstall.
+logComment("[0/0] Installing: " + fCommunicator + "\\component.reg");
+logComment("[0/0] Installing: " + fCommunicator + "\\xpcom.log");
+
 if(verifyDiskSpace(fCommunicator, srDest) == true)
 {
   setPackageFolder(fCommunicator);
