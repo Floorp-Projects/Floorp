@@ -320,6 +320,9 @@ nsCString& CompressWhitespace( PRBool aEliminateLeading=PR_TRUE,PRBool aEliminat
   string conversion methods...
  *********************************************************************/
 
+    operator char*() {return mStr;}
+    operator const char*() const {return (const char*)mStr;}
+
 /**
  * This method constructs a new nsCString on the stack that is a copy
  * of this string.
@@ -763,9 +766,6 @@ public:
     nsCAutoString& operator=(char aChar) {nsCString::operator=(aChar); return *this;}
     nsCAutoString& operator=(const PRUnichar* aBuffer) {nsCString::operator=(aBuffer); return *this;}
     nsCAutoString& operator=(PRUnichar aChar) {nsCString::operator=(aChar); return *this;}
-
-    operator char*() {return mStr;}
-    operator const char*() {return (const char*)mStr;}
 
     /**
      * Retrieve the size of this string
