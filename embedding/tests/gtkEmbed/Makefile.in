@@ -36,21 +36,11 @@ LIBS= \
 		-lgtksuperwin \
                 $(NULL)
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
-EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS)
-else
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
-endif
+LIBS += $(TK_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS        += $(MOZ_GTK_CFLAGS)
-
-
-
-
-
-
 
 
 
