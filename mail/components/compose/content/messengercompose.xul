@@ -382,11 +382,11 @@
           </menu>
           <menu id="priorityMenu" label="&priorityMenu.label;" accesskey="&priorityMenu.accesskey;" onpopupshowing="updatePriorityMenu();" oncommand="PriorityMenuSelect(event.target);">
             <menupopup>
-              <menuitem type="radio" name="priority" label="&lowestPriorityCmd.label;" accesskey="&lowestPriorityCmd.accesskey;" value="lowest"  id="priority_lowest"/>
-              <menuitem type="radio" name="priority" label="&lowPriorityCmd.label;" accesskey="&lowPriorityCmd.accesskey;" value="low" id="priority_low"/>
-              <menuitem type="radio" name="priority" label="&normalPriorityCmd.label;" accesskey="&normalPriorityCmd.accesskey;" value="normal" id="priority_normal" checked="true"/>
-              <menuitem type="radio" name="priority" label="&highPriorityCmd.label;" accesskey="&highPriorityCmd.accesskey;" value="high" id="priority_high"/>
               <menuitem type="radio" name="priority" label="&highestPriorityCmd.label;" accesskey="&highestPriorityCmd.accesskey;" value="highest" id="priority_highest"/>
+              <menuitem type="radio" name="priority" label="&highPriorityCmd.label;" accesskey="&highPriorityCmd.accesskey;" value="high" id="priority_high"/>
+              <menuitem type="radio" name="priority" label="&normalPriorityCmd.label;" accesskey="&normalPriorityCmd.accesskey;" value="normal" id="priority_normal" checked="true"/>
+              <menuitem type="radio" name="priority" label="&lowPriorityCmd.label;" accesskey="&lowPriorityCmd.accesskey;" value="low" id="priority_low"/>
+              <menuitem type="radio" name="priority" label="&lowestPriorityCmd.label;" accesskey="&lowestPriorityCmd.accesskey;" value="lowest"  id="priority_lowest"/>              
             </menupopup>
           </menu>
           <menu id="fccMenu" label="&fileCarbonCopyCmd.label;" 
@@ -567,11 +567,11 @@
       <label value="&priorityButton.label;"/>
       <menulist id="priorityMenu-button" value="normal" oncommand="PriorityMenuSelect(event.target);">
         <menupopup>
-          <menuitem name="priority" label="&lowestPriorityCmd.label;"  value="lowest"   id="list_priority_lowest"/>
-          <menuitem name="priority" label="&lowPriorityCmd.label;"     value="low"      id="list_priority_low"/>
-          <menuitem name="priority" label="&normalPriorityCmd.label;"  value="normal"   id="list_priority_normal"/>
-          <menuitem name="priority" label="&highPriorityCmd.label;"    value="high"     id="list_priority_high"/>
           <menuitem name="priority" label="&highestPriorityCmd.label;" value="highest"  id="list_priotity_highest"/>
+          <menuitem name="priority" label="&highPriorityCmd.label;"    value="high"     id="list_priority_high"/>
+          <menuitem name="priority" label="&normalPriorityCmd.label;"  value="normal"   id="list_priority_normal"/>
+          <menuitem name="priority" label="&lowPriorityCmd.label;"     value="low"      id="list_priority_low"/>
+          <menuitem name="priority" label="&lowestPriorityCmd.label;"  value="lowest"   id="list_priority_lowest"/>
         </menupopup>
       </menulist>
     </toolbaritem>
