@@ -20,6 +20,10 @@
 #include <fstream.h>
 #include <ctype.h>
 
+#ifdef XP_MAC
+#pragma warn_possunwant 		off
+#endif
+
 IdlScanner::IdlScanner()
 {
   mFileName = (char*)0;
@@ -71,14 +75,22 @@ int IdlScanner::Open(char *aFileName)
 {
   mInputFile->close();
   mInputFile->clear();
+#ifdef XP_MAC
+  mInputFile->open(aFileName, ios::in);			// no 'nocreate' flag on Mac?
+#else
   mInputFile->open(aFileName, ios::in | ios::nocreate);
+#endif
   SetFileName(aFileName);
   return mInputFile->is_open();
 }
 
 int IdlScanner::CanReadMoreData()
 {
+#ifndef XP_MAC
   return !(mInputFile->eof());
+#else
+	return !(mInputFile->fail());			// not sure why EOF does not work
+#endif
 }
 
 //

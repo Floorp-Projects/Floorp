@@ -22,7 +22,12 @@
 #include <string.h>
 #include "plhash.h"
 
+#ifdef XP_MAC
+#include <fstream.h>			// required for namespace resolution
+#else
 class ofstream;
+#endif
+
 class IdlObject;
 class IdlSpecification;
 class IdlInterface;

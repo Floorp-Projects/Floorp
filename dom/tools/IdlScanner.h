@@ -21,11 +21,15 @@
 
 #include <string.h>
 
+#ifdef XP_MAC
+#include <fstream.h>			// required for namespace resolution
+#else
 class ifstream;
+#endif
 
 #define MAX_ID_LENGHT   256
 
-enum TokenType {
+enum EIDLTokenType {
   EOF_TOKEN = -1,
   ERROR_TOKEN = 0,
   COMMENT_TOKEN = 1,

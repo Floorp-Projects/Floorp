@@ -19,7 +19,7 @@
 #ifndef _IdlVariable_h__
 #define _IdlVariable_h__
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined (XP_MAC)
 #include <stddef.h>
 #endif
 

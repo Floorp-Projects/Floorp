@@ -37,7 +37,12 @@ public:
   IdlVariable*    GetEnumeratorAt(long aIndex);
 };
 
+
+#ifdef XP_MAC
+#include <ostream.h>			// required for namespace resolution
+#else
 class ostream;
+#endif
 ostream& operator<<(ostream &s, IdlEnum &aEnum);
 
 #endif

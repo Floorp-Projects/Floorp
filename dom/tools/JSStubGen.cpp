@@ -16,11 +16,18 @@
  * Reserved.
  */
 
+#ifndef XP_MAC
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifndef XP_UNIX
+#else
+#include <stat.h>
+#include <stddef.h>
+#endif
+
+#if !defined XP_UNIX && !defined XP_MAC
 #include <direct.h>
 #endif
+
 #include <fstream.h>
 #include <ctype.h>
 #include "nsIPtr.h"
