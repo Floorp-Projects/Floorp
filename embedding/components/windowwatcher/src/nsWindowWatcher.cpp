@@ -602,40 +602,33 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     }
   }
 
-  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  newDocShellItem->SetName(nameSpecified ? name.GetUnicode() : nsnull);
 
-  if (uriToLoad) {
-    /* Get security manager, check to see if URI is allowed.
-       Don't call CheckLoadURI for dialogs - see bug 56851
-       The security of this function depends on window.openDialog being 
-       inaccessible from web scripts */
-    JSContext                  *cx;
-    nsCOMPtr<nsIScriptContext>  scriptCX;
-    cx = GetExtantJSContext(aParent);
+  nsCOMPtr<nsIDocShell> newDocShell(do_QueryInterface(newDocShellItem));
+
+  if (uriToLoad) { // get the script principal and pass it to docshell
+
+    // get the security manager
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    JSContext                         *cx;
+    nsCOMPtr<nsIScriptContext>         scriptCX;
+
+    cx = GetJSContextFromCallStack();
+    if (!cx)
+      cx = GetJSContextFromWindow(aParent);
     if (!cx) {
       rv = contextGuard.Push();
       if (NS_FAILED(rv))
         return rv;
       cx = contextGuard.get();
     }
-#if 0
-    // better than trying so hard to find a script object? or just wrong?
-    nsJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(scriptCX));
-#else
     JSObject *scriptObject = GetWindowScriptObject(aParent ? aParent : *_retval);
     nsWWJSUtils::nsGetStaticScriptContext(cx, scriptObject,
                                           getter_AddRefs(scriptCX));
-#endif
     if (!scriptCX ||
-        NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))) ||
-        ((!aDialog && NS_FAILED(secMan->CheckLoadURIFromScript(cx, uriToLoad)))))
+        NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))))
       return NS_ERROR_FAILURE;
-  }
 
-  newDocShellItem->SetName(nameSpecified ? name.GetUnicode() : nsnull);
-
-  nsCOMPtr<nsIDocShell> newDocShell(do_QueryInterface(newDocShellItem));
-  if (uriToLoad) { // Get script principal and pass to docshell
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
     newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
     NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
@@ -967,11 +960,33 @@ nsWindowWatcher::URIfromURL(const char *aURL,
                             nsIDOMWindow *aParent,
                             nsIURI **aURI)
 {
-  // build the URI relative to the parent window, if possible
-  nsCOMPtr<nsIURI>      baseURI;
-  if (aParent) {
+  nsCOMPtr<nsIDOMWindow> baseWindow;
+
+  /* build the URI relative to the calling JS Context, if any.
+     (note this is the same context used to make the security check
+     in nsGlobalWindow.cpp.) */
+  JSContext *cx = GetJSContextFromCallStack();
+  if (cx) {
+    nsISupports *cxsup = (nsISupports *) JS_GetContextPrivate(cx);
+    nsCOMPtr<nsIScriptContext> scriptcx(do_QueryInterface(cxsup));
+    if (scriptcx) {
+      nsCOMPtr<nsIScriptGlobalObject> gobj(dont_AddRef(scriptcx->GetGlobalObject()));
+      baseWindow = do_QueryInterface(gobj);
+    }
+  }
+
+  // failing that, build it relative to the parent window, if possible
+  if (!baseWindow)
+    baseWindow = aParent;
+
+  // failing that, use the given URL unmodified. It had better not be relative.
+
+  nsCOMPtr<nsIURI> baseURI;
+
+  // get baseWindow's document URI
+  if (baseWindow) {
     nsCOMPtr<nsIDOMDocument> domDoc;
-    aParent->GetDocument(getter_AddRefs(domDoc));
+    baseWindow->GetDocument(getter_AddRefs(domDoc));
     if (domDoc) {
       nsCOMPtr<nsIDocument> doc;
       doc = do_QueryInterface(domDoc);
@@ -980,9 +995,7 @@ nsWindowWatcher::URIfromURL(const char *aURL,
     }
   }
 
-  /* make URI; if absoluteURL is relative (or otherwise bogus) this will
-      fail. (don't call this function with no context window and
-      a relative URL!) */
+  // build and return the absolute URI
   return NS_NewURI(aURI, aURL, baseURI);
 }
 
@@ -1521,9 +1534,12 @@ nsWindowWatcher::ConvertSupportsTojsvals(nsIDOMWindow *aWindow,
 
   AutoFree             argvGuard(argv);
 
-  JSContext           *cx = GetExtantJSContext(aWindow);
+  JSContext           *cx;
   JSContextAutoPopper  contextGuard;
 
+  cx = GetJSContextFromWindow(aWindow);
+  if (!cx)
+    cx = GetJSContextFromCallStack();
   if (!cx) {
     rv = contextGuard.Push();
     if (NS_FAILED(rv))
@@ -1811,12 +1827,22 @@ nsWindowWatcher::GetWindowTreeOwner(nsIDOMWindow *inWindow,
 }
 
 JSContext *
-nsWindowWatcher::GetExtantJSContext(nsIDOMWindow *aWindow)
+nsWindowWatcher::GetJSContextFromCallStack()
 {
-  JSContext *cx;
+  JSContext *cx = 0;
 
-  // given a window, we'll use its
-  cx = 0;
+  nsCOMPtr<nsIThreadJSContextStack> cxStack(do_GetService(sJSStackContractID));
+  if (cxStack)
+    cxStack->Peek(&cx);
+
+  return cx;
+}
+
+JSContext *
+nsWindowWatcher::GetJSContextFromWindow(nsIDOMWindow *aWindow)
+{
+  JSContext *cx = 0;
+
   if (aWindow) {
     nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aWindow));
     if (sgo) {
@@ -1828,17 +1854,6 @@ nsWindowWatcher::GetExtantJSContext(nsIDOMWindow *aWindow)
     /* (off-topic note:) the nsIScriptContext can be retrieved by
     nsCOMPtr<nsIScriptContext> scx;
     nsJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(scx));
-    */
-  }
-
-  // still no JSContext? try pulling one from the stack.
-  if (!cx) {
-    nsCOMPtr<nsIThreadJSContextStack> cxStack(do_GetService(sJSStackContractID));
-    if (cxStack)
-      cxStack->Peek(&cx);
-    /* We explicitly do not use GetSafeJSContext to force one if Peek
-       finds nothing. That's done, if necessary, by a helper class which
-       knows how to clean up after itself.
     */
   }
 
