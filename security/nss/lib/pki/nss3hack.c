@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: nss3hack.c,v $ $Revision: 1.2 $ $Date: 2001/10/17 14:40:20 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: nss3hack.c,v $ $Revision: 1.3 $ $Date: 2001/10/19 18:16:44 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -47,9 +47,13 @@ static const char CVS_ID[] = "@(#) $RCSfile: nss3hack.c,v $ $Revision: 1.2 $ $Da
 #include "pkim.h"
 #endif /* PKIM_H */
 
-#ifndef DEVT_H
-#include "devt.h"
-#endif /* DEVT_H */
+#ifndef DEV_H
+#include "dev.h"
+#endif /* DEV_H */
+
+#ifndef CKHELPER_H
+#include "ckhelper.h"
+#endif /* CKHELPER_H */
 
 #ifndef DEVNSS3HACK_H
 #include "devnss3hack.h"
@@ -64,14 +68,6 @@ static const char CVS_ID[] = "@(#) $RCSfile: nss3hack.c,v $ $Revision: 1.2 $ $Da
 #include "certt.h"
 #include "cert.h"
 #include "pk11func.h"
-
-#define NSSITEM_FROM_SECITEM(nssit, secit)  \
-    (nssit)->data = (void *)(secit)->data;  \
-    (nssit)->size = (secit)->len;
-
-#define SECITEM_FROM_NSSITEM(secit, nssit)          \
-    (secit)->data = (unsigned char *)(nssit)->data; \
-    (secit)->len  = (nssit)->size;
 
 NSSTrustDomain *g_default_trust_domain = NULL;
 
@@ -98,16 +94,16 @@ STAN_LoadDefaultNSS3TrustDomain
     }
     td->tokenList = nssList_Create(td->arena, PR_TRUE);
     list = PK11_GetAllTokens(CKM_INVALID_MECHANISM, PR_FALSE, PR_FALSE, NULL);
+#ifdef NSS_SOFTOKEN_MODULE
     if (list) {
-#ifndef NSS_SOFTOKEN_MODULE_FOO
 	/* XXX this doesn't work until softoken is a true PKCS#11 mod */
 	for (le = list->head; le; le = le->next) {
 	    token = nssToken_CreateFromPK11SlotInfo(td, le->slot);
 	    PK11Slot_SetNSSToken(le->slot, token);
 	    nssList_Add(td->tokenList, token);
 	}
-#endif
     }
+#endif
     td->tokens = nssList_CreateIterator(td->tokenList);
     g_default_trust_domain = td;
 }
@@ -186,7 +182,7 @@ nss3certificate_getIssuerIdentifier(nssDecodedCert *dc)
 }
 
 static PRBool
-nss3certificate_hasThisIdentifier(nssDecodedCert *dc, NSSItem *id)
+nss3certificate_matchIdentifier(nssDecodedCert *dc, NSSItem *id)
 {
     CERTCertificate *c = (CERTCertificate *)dc->data;
     SECItem *subjectKeyID, authKeyID;
@@ -229,6 +225,40 @@ nss3certificate_isNewerThan(nssDecodedCert *dc, nssDecodedCert *cmpdc)
     return PR_FALSE;
 }
 
+/* CERT_FilterCertListByUsage */
+static PRBool
+nss3certificate_matchUsage(nssDecodedCert *dc, NSSUsage *usage)
+{
+    SECStatus secrv;
+    unsigned int requiredKeyUsage;
+    unsigned int requiredCertType;
+    unsigned int certType;
+    PRBool bad;
+    CERTCertificate *cc = (CERTCertificate *)dc->data;
+    SECCertUsage secUsage = usage->nss3usage;
+    PRBool ca = usage->nss3lookingForCA;
+    secrv = CERT_KeyUsageAndTypeForCertUsage(secUsage, ca,
+                                             &requiredKeyUsage,
+                                             &requiredCertType);
+    if (secrv != SECSuccess) {
+	return PR_FALSE;
+    }
+    bad = PR_FALSE;
+    secrv = CERT_CheckKeyUsage(cc, requiredKeyUsage);
+    if (secrv != SECSuccess) {
+	bad = PR_TRUE;
+    }
+    if (ca) {
+	(void)CERT_IsCACert(cc, &certType);
+    } else {
+	certType = cc->nsCertType;
+    }
+    if (!(certType & requiredCertType)) {
+	bad = PR_TRUE;
+    }
+    return bad;
+}
+
 NSS_IMPLEMENT nssDecodedCert *
 nssDecodedPKIXCertificate_Create
 (
@@ -244,10 +274,11 @@ nssDecodedPKIXCertificate_Create
     rvDC->data = (void *)CERT_DecodeDERCertificate(&secDER, PR_TRUE, NULL);
     rvDC->getIdentifier = nss3certificate_getIdentifier;
     rvDC->getIssuerIdentifier = nss3certificate_getIssuerIdentifier;
-    rvDC->hasThisIdentifier = nss3certificate_hasThisIdentifier;
+    rvDC->matchIdentifier = nss3certificate_matchIdentifier;
     rvDC->getUsage = nss3certificate_getUsage;
     rvDC->isValidAtTime = nss3certificate_isValidAtTime;
     rvDC->isNewerThan = nss3certificate_isNewerThan;
+    rvDC->matchUsage = nss3certificate_matchUsage;
     return rvDC;
 }
 
@@ -261,6 +292,10 @@ nssDecodedPKIXCertificate_Destroy
     nss_ZFreeIf(dc);
     return PR_SUCCESS;
 }
+
+/* From pk11cert.c */
+extern PRBool
+PK11_IsUserCert(PK11SlotInfo *, CERTCertificate *, CK_OBJECT_HANDLE);
 
 /* see pk11cert.c:pk11_HandleTrustObject */
 static unsigned int
@@ -283,10 +318,6 @@ get_nss3trust_from_cktrust(CK_TRUST t)
     return rt;
 }
 
-/* From pk11cert.c */
-extern PRBool
-PK11_IsUserCert(PK11SlotInfo *, CERTCertificate *, CK_OBJECT_HANDLE);
-
 static CERTCertTrust * 
 nssTrust_GetCERTCertTrust(NSSTrust *t, CERTCertificate *cc)
 {
@@ -302,6 +333,26 @@ nssTrust_GetCERTCertTrust(NSSTrust *t, CERTCertificate *cc)
     return rvTrust;
 }
 
+static void
+fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc)
+{
+    /* fill other fields needed by NSS3 functions using CERTCertificate */
+    /* handle */
+    cc->pkcs11ID = c->handle;
+    /* nickname */
+    cc->nickname = PL_strdup(c->nickname);
+    /* slot (ownSlot ?) (addref ?) */
+    cc->slot = c->token->pk11slot;
+    /* trust */
+    cc->trust = nssTrust_GetCERTCertTrust(&c->trust, cc);
+    /* referenceCount  addref? */
+    /* subjectList ? */
+    /* pkcs11ID */
+    cc->pkcs11ID = c->handle;
+    /* pointer back */
+    cc->nssCertificate = c;
+}
+
 NSS_EXTERN CERTCertificate *
 STAN_GetCERTCertificate(NSSCertificate *c)
 {
@@ -309,27 +360,14 @@ STAN_GetCERTCertificate(NSSCertificate *c)
     CERTCertificate *cc;
     if (!c->decoding) {
 	dc = nssDecodedPKIXCertificate_Create(NULL, &c->encoding);
+	if (!dc) return NULL;
 	c->decoding = dc;
-	cc = (CERTCertificate *)dc->data;
-	/* fill other fields needed by NSS3 functions using CERTCertificate */
-	/* handle */
-	cc->pkcs11ID = c->handle;
-	/* nickname */
-	cc->nickname = PL_strdup(c->nickname);
-	/* emailAddr ??? */
-	/* slot (ownSlot ?) (addref ?) */
-	cc->slot = c->token->pk11slot;
-	/* trust */
-	cc->trust = nssTrust_GetCERTCertTrust(&c->trust, cc);
-	/* referenceCount  addref? */
-	/* subjectList ? */
-	/* pkcs11ID */
-	cc->pkcs11ID = c->handle;
-	/* pointer back */
-	cc->nssCertificate = c;
     } else {
 	dc = c->decoding;
-	cc = (CERTCertificate *)dc->data;
+    }
+    cc = (CERTCertificate *)dc->data;
+    if (!cc->nssCertificate) {
+	fill_CERTCertificateFields(c, cc);
     }
     return cc;
 }
@@ -348,3 +386,212 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
     return c;
 }
 
+static CK_TRUST
+get_stan_trust(unsigned int t) 
+{
+    if (t & CERTDB_TRUSTED_CA || t & CERTDB_NS_TRUSTED_CA) {
+	return CKT_NETSCAPE_TRUSTED_DELEGATOR;
+    }
+    if (t & CERTDB_TRUSTED) {
+	return CKT_NETSCAPE_TRUSTED;
+    }
+    if (t & CERTDB_VALID_CA) {
+	return CKT_NETSCAPE_VALID_DELEGATOR;
+    }
+    if (t & CERTDB_VALID_PEER) {
+	return CKT_NETSCAPE_VALID;
+    }
+    return CKT_NETSCAPE_UNTRUSTED;
+}
+
+NSS_EXTERN PRStatus
+STAN_ChangeCertTrust(NSSCertificate *c, CERTCertTrust *trust)
+{
+    CERTCertificate *cc = STAN_GetCERTCertificate(c);
+    NSSTrust nssTrust;
+    /* Set the CERTCertificate's trust */
+    cc->trust = trust;
+    /* Set the NSSCerticate's trust */
+    nssTrust.serverAuth = get_stan_trust(trust->sslFlags);
+    nssTrust.emailProtection = get_stan_trust(trust->emailFlags);
+    nssTrust.codeSigning= get_stan_trust(trust->objectSigningFlags);
+    return nssCertificate_SetCertTrust(c, &nssTrust);
+}
+
+/* This is here to replace CERT_Traverse calls */
+static PRStatus
+traverse_certificates_by_template
+(
+  NSSTrustDomain *td,
+  nssList *cachedList,
+  CK_ATTRIBUTE_PTR cktemplate,
+  CK_ULONG ctsize,
+  PRStatus (*callback)(NSSCertificate *c, void *arg),
+  void *arg
+)
+{
+    PRStatus nssrv;
+    NSSToken *tok;
+    for (tok  = (NSSToken *)nssListIterator_Start(td->tokens);
+         tok != (NSSToken *)NULL;
+         tok  = (NSSToken *)nssListIterator_Next(td->tokens))
+    {
+	nssrv = nssToken_TraverseCertificatesByTemplate(tok, NULL, cachedList,
+                                                        cktemplate, ctsize,
+	                                                callback, arg);
+	if (nssrv == PR_FAILURE) {
+	    return PR_FAILURE;
+	}
+    }
+    return PR_SUCCESS;
+}
+
+/* CERT_TraversePermCertsForSubject */
+NSS_IMPLEMENT PRStatus
+nssTrustDomain_TraverseCertificatesBySubject
+(
+  NSSTrustDomain *td,
+  NSSDER *subject,
+  PRStatus (*callback)(NSSCertificate *c, void *arg),
+  void *arg
+)
+{
+    PRStatus nssrv;
+    nssList *subjectList;
+    CK_ATTRIBUTE subj_template[] =
+    {
+	{ CKA_CLASS,   NULL, 0 },
+	{ CKA_SUBJECT, NULL, 0 }
+    };
+    CK_ULONG ctsize;
+    ctsize = (CK_ULONG)(sizeof(subj_template) / sizeof(subj_template[0]));
+    NSS_CK_SET_ATTRIBUTE_ITEM(subj_template, 0, &g_ck_class_cert);
+    NSS_CK_SET_ATTRIBUTE_ITEM(subj_template, 1, subject);
+    subjectList = nssList_Create(NULL, PR_FALSE);
+    (void)nssTrustDomain_GetCertsForSubjectFromCache(td, subject, subjectList);
+    nssrv = traverse_certificates_by_template(td, subjectList,
+                                              subj_template, ctsize,
+                                              callback, arg);
+    nssList_Destroy(subjectList);
+    return nssrv;
+}
+
+/* CERT_TraversePermCertsForNickname */
+NSS_IMPLEMENT PRStatus
+nssTrustDomain_TraverseCertificatesByNickname
+(
+  NSSTrustDomain *td,
+  NSSUTF8 *nickname,
+  PRStatus (*callback)(NSSCertificate *c, void *arg),
+  void *arg
+)
+{
+    PRStatus nssrv;
+    nssList *nickCerts;
+    CK_ATTRIBUTE nick_template[] =
+    {
+	{ CKA_CLASS, NULL, 0 },
+	{ CKA_LABEL, NULL, 0 }
+    };
+    CK_ULONG ctsize;
+    ctsize = (CK_ULONG)(sizeof(nick_template) / sizeof(nick_template[0]));
+    NSS_CK_SET_ATTRIBUTE_ITEM(nick_template, 0, &g_ck_class_cert);
+    nick_template[1].pValue = (CK_VOID_PTR)nickname;
+    nick_template[1].ulValueLen = (CK_ULONG)nssUTF8_Length(nickname, &nssrv);
+    nickCerts = nssList_Create(NULL, PR_FALSE);
+    (void)nssTrustDomain_GetCertsForNicknameFromCache(td, nickname, nickCerts);
+    nssrv = traverse_certificates_by_template(td, nickCerts,
+                                              nick_template, ctsize,
+                                              callback, arg);
+    nssList_Destroy(nickCerts);
+    return nssrv;
+}
+
+/* SEC_TraversePermCerts */
+NSS_IMPLEMENT PRStatus
+nssTrustDomain_TraverseCertificates
+(
+  NSSTrustDomain *td,
+  PRStatus (*callback)(NSSCertificate *c, void *arg),
+  void *arg
+)
+{
+    PRStatus nssrv;
+    nssList *certList;
+    CK_ATTRIBUTE cert_template[] =
+    {
+	{ CKA_CLASS, NULL, 0 },
+    };
+    CK_ULONG ctsize;
+    ctsize = (CK_ULONG)(sizeof(cert_template) / sizeof(cert_template[0]));
+    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 0, &g_ck_class_cert);
+    certList = nssList_Create(NULL, PR_FALSE);
+    (void)nssTrustDomain_GetCertsFromCache(td, certList);
+    nssrv = traverse_certificates_by_template(td, certList,
+                                              cert_template, ctsize,
+                                              callback, arg);
+    nssList_Destroy(certList);
+    return nssrv;
+}
+
+static CK_CERTIFICATE_TYPE
+get_cert_type(NSSCertificateType nssType)
+{
+    switch (nssType) {
+    case NSSCertificateType_PKIX:
+	return CKC_X_509;
+    default:
+	return CK_INVALID_KEY;
+    }
+}
+
+NSS_IMPLEMENT NSSToken *
+STAN_GetInternalToken(void)
+{
+    return NULL;
+}
+
+/* CERT_AddTempCertToPerm */
+NSS_EXTERN PRStatus
+nssTrustDomain_AddTempCertToPerm
+(
+  NSSCertificate *c
+)
+{
+    NSSToken *token;
+    CK_CERTIFICATE_TYPE cert_type;
+    CK_ATTRIBUTE cert_template[] =
+    {
+	{ CKA_CLASS,            NULL, 0 },
+	{ CKA_CERTIFICATE_TYPE, NULL, 0 },
+	{ CKA_ID,               NULL, 0 },
+	{ CKA_VALUE,            NULL, 0 },
+	{ CKA_LABEL,            NULL, 0 },
+	{ CKA_ISSUER,           NULL, 0 },
+	{ CKA_SUBJECT,          NULL, 0 },
+	{ CKA_SERIAL_NUMBER,    NULL, 0 }
+    };
+    CK_ULONG ctsize;
+    ctsize = (CK_ULONG)(sizeof(cert_template) / sizeof(cert_template[0]));
+    /* XXX sanity checking needed */
+    cert_type = get_cert_type(c->type);
+    /* Set up the certificate object */
+    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 0, &g_ck_class_cert);
+    NSS_CK_SET_ATTRIBUTE_VAR( cert_template, 1, cert_type);
+    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 2, &c->id);
+    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 3, &c->encoding);
+    NSS_CK_SET_ATTRIBUTE_UTF8(cert_template, 4,  c->nickname);
+    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 5, &c->issuer);
+    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 6, &c->subject);
+    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 7, &c->serial);
+    /* This is a hack, ignoring the 4.0 token ordering scheme */
+    token = STAN_GetInternalToken();
+    c->handle = nssToken_ImportObject(token, NULL, cert_template, ctsize);
+    if (c->handle == CK_INVALID_KEY) {
+	return PR_FAILURE;
+    }
+    c->token = token;
+    c->slot = token->slot;
+    /* Do the trust object */
+    return PR_SUCCESS;
+}
