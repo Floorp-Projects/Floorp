@@ -86,7 +86,7 @@ public:
 
   NS_IMETHOD  CharacterDataChanged(nsIPresContext* aPresContext,
                                    nsIContent*     aChild,
-                                   nsISupports*    aAppend);
+                                   PRBool          aAppend);
 
   NS_IMETHOD  SetSelected(nsIPresContext* aPresContext,
                           nsIDOMRange*    aRange,
