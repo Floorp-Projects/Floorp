@@ -26,7 +26,7 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kCTransactionManagerFactory, NS_TRANSACTION_MANAGER_FACTORY_CID);
+static NS_DEFINE_CID(kCTransactionManagerFactoryCID, NS_TRANSACTION_MANAGER_FACTORY_CID);
 
 class nsTransactionManagerFactory : public nsIFactory
 {
@@ -128,3 +128,15 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsISupports* ser
 
   return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
 }
+
+extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *path)
+{
+  return nsRepository::RegisterFactory(kCTransactionManagerFactoryCID, path, 
+                                       PR_TRUE, PR_TRUE);
+}
+
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char *path)
+{
+  return nsRepository::UnregisterFactory(kCTransactionManagerFactoryCID, path);
+}
+
