@@ -3243,6 +3243,17 @@ nsListControlFrame::GetIncrementalString()
   return incrementalString; 
 }
 
+void
+nsListControlFrame::DropDownToggleKey(nsIDOMEvent* aKeyEvent)
+{
+  if (IsInDropDownMode()) {
+    PRBool isDroppedDown;
+    mComboboxFrame->IsDroppedDown(&isDroppedDown);
+    mComboboxFrame->ShowDropDown(!isDroppedDown);
+    aKeyEvent->PreventDefault();
+  }
+}
+
 nsresult
 nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 {
@@ -3269,23 +3280,9 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 
   keyEvent->GetAltKey(&isAlt);
   if (isAlt) {
-#ifdef FIX_FOR_BUG_62425
-    if (code == nsIDOMKeyEvent::DOM_VK_UP || code == nsIDOMKeyEvent::DOM_VK_DOWN) {
-      if (IsInDropDownMode() == PR_TRUE) {
-        PRBool isDroppedDown;
-        mComboboxFrame->IsDroppedDown(&isDroppedDown);
-        mComboboxFrame->ShowDropDown(!isDroppedDown);
-        aKeyEvent->PreventDefault();
-
-        nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
-
-        if (nsevent) {
-          nsevent->PreventCapture();
-          nsevent->PreventBubble();
-        }
-      }
+    if (keycode == nsIDOMKeyEvent::DOM_VK_UP || keycode == nsIDOMKeyEvent::DOM_VK_DOWN) {
+      DropDownToggleKey(aKeyEvent);
     }
-#endif
     return NS_OK;
   }
 
@@ -3388,19 +3385,9 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 
 #if defined(XP_WIN) || defined(XP_OS2)
     case nsIDOMKeyEvent::DOM_VK_F4: {
-      if (IsInDropDownMode() == PR_TRUE) {
-        PRBool isDroppedDown;
-        mComboboxFrame->IsDroppedDown(&isDroppedDown);
-        mComboboxFrame->ShowDropDown(!isDroppedDown);
-
-        nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
-
-        if (nsevent) {
-          nsevent->PreventCapture();
-          nsevent->PreventBubble();
-        }
-      }
-      } break;
+      DropDownToggleKey(aKeyEvent);
+      return NS_OK;
+    } break;
 #endif
 
     case nsIDOMKeyEvent::DOM_VK_TAB: {
