@@ -96,12 +96,12 @@ class MimeExternalObjectOperator extends MimeLeafOperator {
       String cdi[] = headers.getHeader("Content-Disposition");
       String disp = (cdi == null || cdi.length == 0 ? null : cdi[0]);
 // ####
-      //      if (disp != null)
-      //        name = headers.getParameter(buf, "filename");
+      if (disp != null)
+         name = headers.getHeader("filename", "\n");
 
-      //      if (name == null)
-      //        if (headers.getHeaderValue("Content-Type", buf, false, false))
-          //          name = headers.getParameter(buf, "name");
+            if (name == null)
+              if ((type = headers.getHeader("Content-Type", "\n")) != null)
+                  name = headers.getHeader("name", "\n");
 
       if (name == null) {
         String n[] = headers.getHeader("Content-Name");
