@@ -277,7 +277,7 @@ _PR_MD_WAIT_CV(_MDCVar *cv, _MDLock *lock, PRIntervalTime timeout )
     rv = DosWaitEventSem(thred->md.blocked_sema.sem, msecs);
     DosResetEventSem(thred->md.blocked_sema.sem, &count);
 
-    _MD_LOCK(lock);
+    DosRequestMutexSem((lock->mutex), SEM_INDEFINITE_WAIT);
 
     PR_ASSERT(rv == NO_ERROR || rv == ERROR_TIMEOUT);
 
@@ -327,6 +327,33 @@ _PR_MD_NOTIFY_CV(_MDCVar *cv, _MDLock *lock)
 {
     md_PostNotifyToCvar(cv, lock, PR_FALSE);
     return;
+}
+
+PRStatus
+_PR_MD_NEW_LOCK(_MDLock *lock)
+{
+    DosCreateMutexSem(0, &(lock->mutex), 0, 0);
+    (lock)->notified.length=0;
+    (lock)->notified.link=NULL;
+    return PR_SUCCESS;
+}
+
+void
+_PR_MD_FREE_LOCK(_MDLock *lock)
+{
+    DosCloseMutexSem(lock->mutex);
+}
+
+void _PR_MD_LOCK(_MDLock *lock)
+{
+    DosRequestMutexSem(lock->mutex, SEM_INDEFINITE_WAIT);
+}
+
+PRBool
+_PR_MD_TEST_AND_LOCK(_MDLock *lock)
+{
+    DosRequestMutexSem(lock->mutex, SEM_INDEFINITE_WAIT);
+    return PR_SUCCESS;
 }
 
 void

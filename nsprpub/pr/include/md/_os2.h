@@ -350,10 +350,10 @@ extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 #define _PR_LOCK                      _MD_LOCK
 #define _PR_UNLOCK					  _MD_UNLOCK
 
-#define _MD_NEW_LOCK(lock)            (DosCreateMutexSem(0, &((lock)->mutex), 0, 0),(lock)->notified.length=0,(lock)->notified.link=NULL,PR_SUCCESS)
-#define _MD_FREE_LOCK(lock)           DosCloseMutexSem(((lock)->mutex))
-#define _MD_LOCK(lock)                DosRequestMutexSem(((lock)->mutex), SEM_INDEFINITE_WAIT)
-#define _MD_TEST_AND_LOCK(lock)       (DosRequestMutexSem(((lock)->mutex), SEM_INDEFINITE_WAIT),PR_SUCCESS)
+#define _MD_NEW_LOCK                  (_PR_MD_NEW_LOCK)
+#define _MD_FREE_LOCK                 (_PR_MD_FREE_LOCK)
+#define _MD_LOCK                      (_PR_MD_LOCK)
+#define _MD_TEST_AND_LOCK             (_PR_MD_TEST_AND_LOCK)
 #define _MD_UNLOCK                    (_PR_MD_UNLOCK)
 
 /* --- lock and cv waiting --- */
