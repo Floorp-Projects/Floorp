@@ -178,7 +178,7 @@ NS_IMETHODIMP nsMsgStatusFeedback::Observe( nsISupports *aSubject,
     nsCOMPtr<nsIWebShellWindow> window = do_QueryInterface(aSubject, &rv);
     if ( NS_SUCCEEDED(rv) && window && (window.get() == mWebShellWindow) ) 
     {
-      nsString topic1 = prefix;
+      nsAutoString topic1 = prefix;
       topic1 += ";status";
       if ( topic1 == aTopic ) 
         rv = ShowStatusString(someData);
@@ -216,7 +216,7 @@ NS_IMETHODIMP nsMsgStatusFeedback::HandleUnknownContentType(nsIDocumentLoader* l
 NS_IMETHODIMP
 nsMsgStatusFeedback::ShowStatusString(const PRUnichar *status)
 {
-	nsString statusMsg = status;
+	nsAutoString statusMsg = status;
 	setAttribute( mWebShell, "Messenger:Status", "value", statusMsg );
 	return NS_OK;
 }
@@ -224,7 +224,7 @@ nsMsgStatusFeedback::ShowStatusString(const PRUnichar *status)
 NS_IMETHODIMP
 nsMsgStatusFeedback::ShowProgress(PRInt32 percentage)
 {
-	nsString strPercentage;
+	nsAutoString strPercentage;
 
 	if (percentage == m_lastPercent)
 		return NS_OK;

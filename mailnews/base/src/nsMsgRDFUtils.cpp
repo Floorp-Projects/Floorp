@@ -31,7 +31,7 @@ static PRBool
 peqWithParameter(nsIRDFResource *r1, nsIRDFResource *r2, const char *parameter)
 {
 	char *r1Str, *r2Str;
-	nsString r1nsStr, r2nsStr;
+	nsAutoString r1nsStr, r2nsStr;
 
 	r1->GetValue(&r1Str);
 	r2->GetValue(&r2Str);
@@ -49,13 +49,13 @@ peqWithParameter(nsIRDFResource *r1, nsIRDFResource *r2, const char *parameter)
 		return PR_FALSE;
 	}
 
-	nsString r2propStr;
+	nsAutoString r2propStr;
 	//Get the string before the '?"
 	r2nsStr.Left(r2propStr, paramStart);
 	//If the two properties are equal, then search parameters.
 	if(r2propStr == r1nsStr)
 	{
-		nsString params;
+		nsAutoString params;
 		r2nsStr.Right(params, r2nsStr.Length() - 1 - paramStart);
 		PRInt32 parameterPos = params.Find(parameter);
 		return (parameterPos != -1);
@@ -97,9 +97,8 @@ nsresult createNode(nsString& str, nsIRDFNode **node, nsIRDFService *rdfService)
 nsresult createNode(PRUint32 value, nsIRDFNode **node, nsIRDFService *rdfService)
 {
 	nsresult rv;
-	char *valueStr = PR_smprintf("%d", value);
-	nsString str(valueStr);
-	PR_smprintf_free(valueStr);
+	nsAutoString str;
+  str.Append((PRInt32)value);
 	rv = createNode(str, node, rdfService);
 	return rv;
 }
@@ -110,7 +109,7 @@ nsresult createNode(const char* charstr, nsIRDFNode **node, nsIRDFService *rdfSe
   // use nsString to convert to unicode
 	if (!rdfService) return NS_ERROR_NULL_POINTER;  
 	nsCOMPtr<nsIRDFLiteral> value;
-  nsString str(charstr);
+  nsAutoString str(charstr);
   PRUnichar *ucharstr = str.ToNewUnicode();
   if (ucharstr)
   {
