@@ -13,13 +13,18 @@
             SUPERCLASS = NSObject; 
         }, 
         {
-            ACTIONS = {checkboxStartPageClicked = id; checkboxUseSystemHomePageClicked = id; }; 
+            ACTIONS = {
+                checkboxStartPageClicked = id; 
+                checkboxUseSystemHomePageClicked = id; 
+                defaultBrowserChange = id; 
+            }; 
             CLASS = OrgMozillaChimeraPreferenceNavigation; 
             LANGUAGE = ObjC; 
             OUTLETS = {
                 checkboxNewTabBlank = NSButton; 
                 checkboxNewWindowBlank = NSButton; 
                 checkboxUseSystemHomePage = NSButton; 
+                defaultBrowserPopUp = NSPopUpButton; 
                 textFieldHomePage = NSTextField; 
             }; 
             SUPERCLASS = PreferencePaneBase; 
