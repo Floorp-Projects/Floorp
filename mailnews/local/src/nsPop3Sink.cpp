@@ -47,7 +47,7 @@ NS_IMPL_ISUPPORTS(nsPop3Sink, nsIPop3Sink::GetIID());
 
 nsPop3Sink::nsPop3Sink()
 {
-	NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
     m_authed = PR_FALSE;
     m_accountUrl = nsnull;
     m_biffState = 0;
@@ -55,10 +55,12 @@ nsPop3Sink::nsPop3Sink()
     m_outputBuffer = nsnull;
     m_outputBufferSize = 0;
     m_mailDirectory = 0;
-	m_newMailParser = NULL;
+    m_newMailParser = NULL;
 #ifdef DEBUG
     m_fileCounter = 0;
 #endif
+    m_popServer = nsnull;
+    m_outFileStream = nsnull;
 }
 
 nsPop3Sink::~nsPop3Sink()
