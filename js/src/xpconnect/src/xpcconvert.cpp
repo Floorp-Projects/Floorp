@@ -399,8 +399,10 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
 
                     JSString* jsString = JS_NewUCString(cx, p, len);
 
-                    if(!jsString)
+                    if(!jsString) {
+                        nsMemory::Free(p); 
                         return JS_FALSE; 
+                    }
 
                     *d = STRING_TO_JSVAL(jsString);
                 }
@@ -1390,6 +1392,9 @@ XPCConvert::JSErrorToXPCException(XPCCallContext& ccx,
         }
 
         data = new nsScriptError();
+        if(!data)
+            return NS_ERROR_OUT_OF_MEMORY;
+
         NS_ADDREF(data);
         data->Init(bestMessage.get(),
                    NS_ConvertASCIItoUCS2(report->filename).get(),
