@@ -362,10 +362,11 @@ void nsView::SetPositionIgnoringChildWidgets(nscoord aX, nscoord aY)
 void nsView::ResetWidgetBounds(PRBool aRecurse, PRBool aMoveOnly,
                                PRBool aInvalidateChangedSize) {
   if (mWindow) {
-    // If our view manager has refresh disabled, then
-    // do nothing; the view manager will set our position when
-    // refresh is reenabled.
+    // If our view manager has refresh disabled, then do nothing; the view
+    // manager will set our position when refresh is reenabled.  Just let it
+    // know that it has pending updates.
     if (!mViewManager->IsRefreshEnabled()) {
+      mViewManager->PostPendingUpdate();
       return;
     }
 

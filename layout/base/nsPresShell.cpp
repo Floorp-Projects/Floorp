@@ -188,7 +188,6 @@
 
 // Content viewer interfaces
 #include "nsIContentViewer.h"
-#include "nsIDocumentViewer.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -1222,6 +1221,7 @@ public:
                             nsEventStatus* aStatus);
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD_(PRBool) IsVisible();
+  NS_IMETHOD_(void) WillPaint();
 
   // caret handling
   NS_IMETHOD GetCaret(nsICaret **aOutCaret);
@@ -1333,7 +1333,7 @@ protected:
   nsresult AddDummyLayoutRequest(void);
   nsresult RemoveDummyLayoutRequest(void);
 
-  void     WillCauseReflow() {}
+  void     WillCauseReflow() { ++mChangeNestCount; }
   nsresult DidCauseReflow();
   void     DidDoReflow();
   nsresult ProcessReflowCommands(PRBool aInterruptible);
@@ -1393,6 +1393,11 @@ protected:
   PRPackedBool mIgnoreFrameDestruction;
   PRPackedBool mHaveShutDown;
 
+  // This is used to protect ourselves from triggering reflow while in the
+  // middle of frame construction and the like... it really shouldn't be
+  // needed, one hopes, but it is for now.
+  PRUint32  mChangeNestCount;
+  
   nsIFrame*   mCurrentEventFrame;
   nsCOMPtr<nsIContent> mCurrentEventContent;
   nsVoidArray mCurrentEventFrameStack;
@@ -4640,38 +4645,11 @@ PresShell::IsPaintingSuppressed(PRBool* aResult)
 void
 PresShell::UnsuppressAndInvalidate()
 {
-  nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
-  nsIFocusController *focusController = nsnull;
-  if (ourWindow)
-    focusController = ourWindow->GetRootFocusController();
-  if (focusController)
-    // Suppress focus.  The act of tearing down the old content viewer
-    // causes us to blur incorrectly.
-    focusController->SetSuppressFocus(PR_TRUE, "PresShell suppression on Web page loads");
-
-  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
-  if (container) {
-    nsCOMPtr<nsIDocShell> cvc(do_QueryInterface(container));
-    if (cvc) {
-      nsCOMPtr<nsIContentViewer> cv;
-      cvc->GetContentViewer(getter_AddRefs(cv));
-      if (cv) {
-        nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
-        cv->Show();
-        // Calling |Show| may destroy us.  Not sure why yet, but it's
-        // a smoketest blocker.
-        if (mIsDestroying) {
-          if (focusController) {
-            // Unsuppress focus now that we're exiting this code,
-            // otherwise we're stuck in focus suppression, which hoses most of Mozilla
-            focusController->SetSuppressFocus(PR_FALSE, "PresShell suppression on Web page loads");
-          }
-          return;
-        }
-      }
-    }
+  if (!mPresContext->EnsureVisible(PR_FALSE)) {
+    // No point; we're about to be torn down anyway.
+    return;
   }
-
+  
   mPaintingSuppressed = PR_FALSE;
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
   if (rootFrame) {
@@ -4679,6 +4657,13 @@ PresShell::UnsuppressAndInvalidate()
     nsRect rect(nsPoint(0, 0), rootFrame->GetSize());
     rootFrame->Invalidate(rect, PR_FALSE);
   }
+
+  // This makes sure to get the same thing that nsPresContext::EnsureVisible()
+  // got.
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+  nsCOMPtr<nsPIDOMWindow> ourWindow = do_GetInterface(container);
+  nsIFocusController* focusController =
+    ourWindow ? ourWindow->GetRootFocusController() : nsnull;
 
   if (ourWindow)
     CheckForFocus(ourWindow, focusController, mDocument);
@@ -4928,8 +4913,8 @@ PresShell::IsSafeToFlush(PRBool& aIsSafeToFlush)
 {
   aIsSafeToFlush = PR_TRUE;
 
-  if (mIsReflowing) {
-    // Not safe if we are reflowing
+  if (mIsReflowing || mChangeNestCount) {
+    // Not safe if we are reflowing or in the middle of frame construction
     aIsSafeToFlush = PR_FALSE;
   } else {
     // Not safe if we are painting
@@ -5588,7 +5573,7 @@ PresShell::HandleEvent(nsIView         *aView,
   NS_ASSERTION(aView, "null view");
   aHandled = PR_TRUE;
 
-  if (mIsDestroying || mIsReflowing) {
+  if (mIsDestroying || mIsReflowing || mChangeNestCount) {
     return NS_OK;
   }
 
@@ -6018,6 +6003,26 @@ PresShell::IsVisible()
   return res;
 }
 
+NS_IMETHODIMP_(void)
+PresShell::WillPaint()
+{
+  // Don't reenter reflow and don't reflow during frame construction
+  if (mIsReflowing || mChangeNestCount) {
+    return;
+  }
+  
+  // Process reflows, if we have them, to reduce flicker due to invalidates and
+  // reflow being interspersed.  Note that we _do_ allow this to be
+  // interruptible; if we can't do all the reflows it's better to flicker a bit
+  // than to freeze up.
+  // XXXbz this update batch may not be strictly necessary, but it's good form.
+  // XXXbz should we be flushing out style changes here?  Probably not, I'd say.
+  NS_ASSERTION(mViewManager, "Something weird is going on");
+  mViewManager->BeginUpdateViewBatch();
+  ProcessReflowCommands(PR_TRUE);
+  mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+}
+
 nsresult
 PresShell::GetAgentStyleSheets(nsCOMArray<nsIStyleSheet>& aSheets)
 {
@@ -6150,12 +6155,15 @@ PresShell::PostReflowEvent()
 nsresult
 PresShell::DidCauseReflow()
 {
-  // We may have had more reflow commands appended to the queue during
-  // our reflow.  Make sure these get processed at some point.
-  if (!gAsyncReflowDuringDocLoad && mDocumentLoading) {
-    FlushPendingNotifications(Flush_Layout);
-  } else {
-    PostReflowEvent();
+  NS_ASSERTION(mChangeNestCount != 0, "Unexpected call to DidCauseReflow()");
+  if (--mChangeNestCount == 0) {
+    // We may have had more reflow commands appended to the queue during
+    // our reflow.  Make sure these get processed at some point.
+    if (!gAsyncReflowDuringDocLoad && mDocumentLoading) {
+      FlushPendingNotifications(Flush_Layout);
+    } else {
+      PostReflowEvent();
+    }
   }
 
   return NS_OK;

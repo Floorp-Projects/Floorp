@@ -104,15 +104,11 @@
 #include "nsIPluginWidget.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
-#include "nsIContentViewer.h"
-#include "nsIDocumentViewer.h"
-#include "nsIDocShell.h"
 #include "npapi.h"
 #include "nsGfxCIID.h"
 #include "nsUnicharUtils.h"
 #include "nsTransform2D.h"
 #include "nsIImageLoadingContent.h"
-#include "nsIFocusController.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentUtils.h"
 #include "nsIStringBundle.h"
@@ -4104,39 +4100,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsPresContext* aPresContext, nsObjectF
   // a page is reloaded. Shutdown happens usually when the last instance
   // is destroyed. Here we make sure the plugin instance in the old
   // document is destroyed before we try to create the new one.
-
-  nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
-  if (container) {
-    // We need to suppress the focus controller so that destroying the old
-    // content viewer doesn't transfer focus to the toplevel window.
-
-    nsCOMPtr<nsPIDOMWindow> privWindow = do_GetInterface(container);
-    nsIFocusController *fc = nsnull;
-    if (privWindow) {
-      fc = privWindow->GetRootFocusController();
-      if (fc)
-        fc->SetSuppressFocus(PR_TRUE, "PluginInstanceOwner::Init Suppression");
-    }
-
-    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-    if (docShell) {
-      nsCOMPtr<nsIContentViewer> cv;
-      docShell->GetContentViewer(getter_AddRefs(cv));
-      // Make sure that we're in the presentation that the current
-      // content viewer knows about
-      nsCOMPtr<nsIDocumentViewer> docV(do_QueryInterface(cv));
-      if (docV) {
-        nsCOMPtr<nsPresContext> currentPresContext;
-        docV->GetPresContext(getter_AddRefs(currentPresContext));
-        if (currentPresContext == aPresContext) {
-          cv->Show();
-        }
-      }
-    }
-
-    if (fc)
-      fc->SetSuppressFocus(PR_FALSE, "PluginInstanceOwner::Init Suppression");
-  }
+  aPresContext->EnsureVisible(PR_TRUE);
 
   // register context menu listener
   mCXMenuListener = new nsPluginDOMContextMenuListener();

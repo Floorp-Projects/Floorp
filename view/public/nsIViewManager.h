@@ -499,14 +499,6 @@ public:
    */
   NS_IMETHOD IsPainting(PRBool& aIsPainting)=0;
 
-
-  /**
-   * Flush pending invalidates which have been queued up
-   * between DisableRefresh and EnableRefresh calls. 
-   */
-  NS_IMETHOD FlushPendingInvalidates()=0;
-
-
   /**
    * Set the default background color that the view manager should use
    * to paint otherwise unowned areas. If the color isn't known, just set

@@ -91,6 +91,13 @@ public:
    * of having the view trees linked.
    */
   NS_IMETHOD_(PRBool) IsVisible() = 0;
+
+  /**
+   * Notify the observer that we're about to start painting.  This
+   * gives the observer a chance to make some last-minute invalidates
+   * and geometry changes if it wants to.
+   */
+  NS_IMETHOD_(void) WillPaint() = 0;
 };
 
 #endif

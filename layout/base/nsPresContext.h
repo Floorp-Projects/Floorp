@@ -587,6 +587,16 @@ public:
   /* Accessor for table of frame properties */
   nsPropertyTable* PropertyTable() { return &mPropertyTable; }
 
+  /* Helper function that ensures that this prescontext is shown in its
+     docshell if it's the most recent prescontext for the docshell.  Returns
+     whether the prescontext is now being shown.
+
+     @param aUnsuppressFocus If this is false, then focus will not be
+     unsuppressed when PR_TRUE is returned.  It's the caller's responsibility
+     to unsuppress focus in that case.
+  */
+  NS_HIDDEN_(PRBool) EnsureVisible(PRBool aUnsuppressFocus);
+  
 #ifdef MOZ_REFLOW_PERF
   NS_HIDDEN_(void) CountReflows(const char * aName,
                                 PRUint32 aType, nsIFrame * aFrame);
