@@ -72,6 +72,10 @@ public:
                                nsIDOMEvent** aDOMEvent, 
                                nsEventStatus& aEventStatus);
 
+  virtual nsresult CreateEvent(nsIPresContext& aPresContext, 
+                               nsEvent* aEvent, 
+                               nsIDOMEvent** aDOMEvent);
+
 protected:
   nsresult SetJSEventListener(nsIScriptContext *aContext, JSObject *aObject, REFNSIID aIID);
 
