@@ -20,133 +20,82 @@
 NECKO=1
 DEPTH=.
 
-# The following list of modules export headers, IDL files etc.
-
-EMBEDDING_EXPORTS = \
-	config \
-	nsprpub \
-!if defined (MOZ_STATIC_COMPONENTS)
-	modules\staticmod
-!endif
-	dbm \
-	modules\libreg \
-	xpcom \
-	js \
-	js\src\xpconnect \
-	js\src\liveconnect \
-	modules\zlib \
-	widget\timer \
-	include \
-	modules\libutil \
-	netwerk \
-!if defined(BUILD_PSM)
-	security \
-!endif
-	uriloader \
-	uriloader\exthandler \
-	intl \
-	modules\libpref \
-	jpeg \
-	modules\libimg \
-	gfx \
-	widget \
-	modules\oji \
-	modules\plugin \
-	modules\libjar \
-	modules\libimg\png \
-	caps \
-	expat \
-	htmlparser \
-	dom \
-	view \
-	content \
-	layout \
-	db \
-	rdf \
-	docshell \
-	webshell \
-	embedding \
-	editor \
-	sun-java \
-	profile \
-	xpfe \
-	extensions \
-!if defined(BUILD_PSM)
-	extensions\psm-glue \
-!endif
-	xpinstall \
-	profile \
-	$(NULL)
-
-
-# The following list of modules must be built
-
-EMBEDDING_INSTALLS = \
-	config \
-	nsprpub \
-!if defined (MOZ_STATIC_COMPONENTS)
-	modules\staticmod
-!endif		
-	dbm \
-	modules\libreg \
-	xpcom \
-	modules\libutil \
-	jpeg \
-	modules\libimg \
-	widget\timer \
-	gfx \
-	widget \
-	js \
-	js\src\xpconnect \
-	js\src\liveconnect \
-	modules\zlib \
-	modules\zlib\standalone \
-	netwerk \
-!if defined(BUILD_PSM)
-	security \
-!endif
-	uriloader \
-	intl \
-	modules\libpref \
-	modules\oji \
-	modules\libjar \
-	caps \
-	expat \
-	htmlparser \
-	dom \
-	view \
-	content \
-	layout \
-	rdf \
-	docshell \
-	webshell \
-	embedding \
-	editor \
-	xpfe\appshell \
-	xpfe\components\shistory \
-	extensions\cookie \
-!if defined(BUILD_PSM)
-	extensions\psm-glue \
-!endif
-	profile \
-	xpfe\global \
-	themes\classic \
-	embedding\config \
-	$(NULL)
-
+# The list of modules to be built.
+# The modules inside exporting sections export header files but do
+# not need to be built.
 
 DIRS = \
+  nsprpub \
+  config \
+  include                      \
+  jpeg \
 !if defined (exporting)
-	$(EMBEDDING_EXPORTS) \
-!else
-	$(EMBEDDING_INSTALLS) \
+  sun-java                     \
 !endif
-	$(NULL)
+  modules\libreg \
+  string \
+  xpcom \
+!if defined (MOZ_STATIC_COMPONENTS)
+  modules\staticmod
+!endif		
+  dbm \
+  modules\libutil \
+  modules\mpfilelocprovider    \
+  modules\zlib \
+  modules\zlib\standalone \
+  netwerk \
+!if defined(BUILD_PSM)
+  security \
+!endif
+  widget\timer \
+  js \
+  modules\libjar \
+  modules\libimg \
+  modules\libpref \
+  modules\oji \
+  caps \
+  intl \
+  rdf \
+  expat \
+  gfx \
+!if defined (exporting)
+  modules\plugin \
+!endif
+  uriloader \
+  htmlparser \
+  widget \
+  dom \
+  view \
+  content \
+  layout \
+  docshell \
+  webshell \
+  embedding \
+  profile \
+  editor \
+  extensions\cookie \
+!if defined (exporting)
+  extensions\wallet \
+!endif		
+!if defined(BUILD_PSM)
+  extensions\psm-glue \
+!endif
+!if defined (exporting)
+  xpfe \
+!else
+  xpfe\appshell \
+  xpfe\components\shistory \
+  xpfe\global \
+!endif
+  themes\classic \
+  embedding\config \
+  $(NULL)
+
 
 include <$(DEPTH)\config\rules.mak>
 
 all:: build_embed
 
 build_embed:
-	$(MAKE) -f embed.mak export exporting=1
-	$(MAKE) -f embed.mak install
+  $(MAKE) -f embed.mak export exporting=1
+  $(MAKE) -f embed.mak install
