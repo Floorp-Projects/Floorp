@@ -397,7 +397,8 @@ public:
   NS_IMETHOD    GetWidth(PRInt32* aWidth);
   NS_IMETHOD    GetHeight(PRInt32* aHeight);
   NS_IMETHOD    Load (const nsString& aUrl);
-                     
+  NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);
+ 
   // nsIDOMNode interface
   NS_DECL_IDOMNODE
 
@@ -465,6 +466,7 @@ public:
   virtual void      Finalize(JSContext *aContext, JSObject *aObj);
 
   virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
+  virtual nsresult SetDocumentURL(nsIURI* aURI);
 
 protected:
   nsIContent* FindContent(const nsIContent* aStartNode,

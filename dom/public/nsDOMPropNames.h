@@ -754,6 +754,7 @@
     "nsdocument.createrange", \
     "nsdocument.height", \
     "nsdocument.load", \
+    "nsdocument.plugins", \
     "nsdocument.width", \
     "nshtmlanchorelement.hash", \
     "nshtmlanchorelement.host", \

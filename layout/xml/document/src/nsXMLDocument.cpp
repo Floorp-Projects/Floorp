@@ -135,12 +135,19 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
 {
   nsresult rv;
 
-  nsXMLDocument* doc = new nsXMLDocument(aBaseURI);
+  *aInstancePtrResult = nsnull;
+
+  nsXMLDocument* doc = new nsXMLDocument();
   if (doc == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
   rv = doc->Reset(nsnull, nsnull);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) {
+    delete doc;
+    return rv;
+  }
+
+  doc->SetDocumentURL(aBaseURI);
 
   if (aDoctype) {
     nsCOMPtr<nsIDOMNode> tmpNode;
@@ -169,14 +176,12 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
   return doc->QueryInterface(kIDocumentIID, (void**) aInstancePtrResult);
 }
 
-nsXMLDocument::nsXMLDocument(nsIURI* aBaseURI)
+nsXMLDocument::nsXMLDocument()
 {
   mParser = nsnull;
   mAttrStyleSheet = nsnull;
   mInlineStyleSheet = nsnull;
   mCSSLoader = nsnull;
-  mDocumentURL = aBaseURI;
-  NS_IF_ADDREF(mDocumentURL);
 
 #ifdef MOZ_XSL
   mTransformMediator = nsnull;

@@ -40,7 +40,7 @@ class nsXMLDocument : public nsMarkupDocument,
                       public nsIHTMLContentContainer
 {
 public:
-  nsXMLDocument(nsIURI* aBaseURI = nsnull);
+  nsXMLDocument();
   virtual ~nsXMLDocument();
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);

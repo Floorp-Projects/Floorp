@@ -368,6 +368,7 @@ public:
     NS_IMETHOD    GetWidth(PRInt32* aWidth);
     NS_IMETHOD    GetHeight(PRInt32* aHeight);
     NS_IMETHOD    Load (const nsString& aUrl);
+    NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);
 
     // nsIDOMXULDocument interface
     NS_DECL_IDOMXULDOCUMENT
