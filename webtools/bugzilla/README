@@ -100,8 +100,10 @@ directories.
 
 3. Setting up database
 
-You should be run all six scripts named make*.sh.  This creates the
-databases and populates them a teeny bit.
+First, run mysql, and tell it "create database bugs;".
+
+Now, you should be run all six scripts named make*.sh.  This creates the
+database tables and populates them a teeny bit.
 
 
 4. Setting the parameters
