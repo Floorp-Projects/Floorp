@@ -156,6 +156,7 @@ PRBool
 nsHttpHeaderArray::CanAppendToHeader(nsHttpAtom header)
 {
     return header == nsHttp::Accept_Charset ||
+           header == nsHttp::Content_Type ||
            header == nsHttp::User_Agent ||
            header == nsHttp::Referer ||
            header == nsHttp::Host ||
