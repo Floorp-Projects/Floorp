@@ -290,6 +290,7 @@ sub can_see_bug {
     $sth->execute($bugid);
     my ($reporter, $owner, $qacontact, $reporter_access, $cclist_access,
         $isoncclist, $missinggroup) = $sth->fetchrow_array();
+    $sth->finish;
     $self->{sthCanSeeBug} = $sth;
     return ( (($reporter == $userid) && $reporter_access)
            || (Param('useqacontact') && ($qacontact == $userid) && $userid)
