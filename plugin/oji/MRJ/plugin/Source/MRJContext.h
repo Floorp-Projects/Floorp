@@ -82,6 +82,7 @@ public:
 	
 	void showFrames();
 	void hideFrames();
+	void releaseFrames();
 	
 	const char* getCodeBase();
 
@@ -108,6 +109,8 @@ private:
 	// Finds a suitable MRJPage object for this document URL, or creates one.
 	MRJPage* findPage(const MRJPageAttributes& attributes);
 
+	static CGrafPtr getEmptyPort();
+
 private:
 	MRJPluginInstance*		mPluginInstance;
 	MRJSession*				mSession;
@@ -121,6 +124,7 @@ private:
 	nsPluginWindow			mCache;
 	nsPluginWindow*			mPluginWindow;
 	RgnHandle				mPluginClipping;
+	CGrafPtr				mPluginPort;
 	char*					mCodeBase;
 	MRJPage*				mPage;
 };
