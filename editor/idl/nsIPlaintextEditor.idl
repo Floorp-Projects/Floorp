@@ -31,6 +31,32 @@
 [scriptable, uuid(b5f39ed4-1dd1-11b2-9d00-fd54d6f54962)]
 interface nsIPlaintextEditor : nsISupports
 {
+
+  /* the bits in an editor behavior mask. */
+  const short eEditorPlaintextBit = 0;                  /* only plain text entry is allowed via events */
+  const short eEditorSingleLineBit = 1;                 /* enter key and CR-LF handled specially */
+  const short eEditorPasswordBit = 2;                   /* text is not entered into content, only a representative character */
+  const short eEditorReadonlyBit = 3;                   /* editing events are disabled.  Editor may still accept focus. */
+  const short eEditorDisabledBit = 4;                   /* all events are disabled (like scrolling).  Editor will not accept focus. */
+  const short eEditorFilterInputBit = 5;                /* text input is limited to certain character types, use mFilter */
+  const short eEditorMailBit = 6;                       /* use mail-compose editting rules */
+  const short eEditorDisableForcedUpdatesBit = 7;       /* prevent immediate view refreshes */
+  const short eEditorDisableForcedReflowsBit = 8;       /* prevent immediate reflows */
+  const short eEditorEnableWrapHackBit = 9;             /* allow the editor to set font: monospace on the root node */
+  const short eEditorWidgetBit = 10;                    /* bit for widgets */
+
+  const long eEditorPlaintextMask            = 1;
+  const long eEditorSingleLineMask           = 2;
+  const long eEditorPasswordMask             = 4;
+  const long eEditorReadonlyMask             = 8;
+  const long eEditorDisabledMask             = 16;
+  const long eEditorFilterInputMask          = 32;
+  const long eEditorMailMask                 = 64;
+  const long eEditorDisableForcedUpdatesMask = 128;
+  const long eEditorDisableForcedReflowsMask = 256;
+  const long eEditorEnableWrapHackMask       = 512;
+  const long eEditorWidgetMask               = 1024;
+  
   /**
     * The length of the contents in characters.
     */

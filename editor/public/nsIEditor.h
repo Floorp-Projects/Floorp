@@ -140,6 +140,14 @@ public:
    */
   NS_IMETHOD DeleteSelection(EDirection aAction)=0;
 
+  /** 
+   * DeleteSelectionAndCreateNode combines DeleteSelection and CreateNode
+   * It deletes only if there is something selected (doesn't do DEL, BACKSPACE action)   
+   * @param aTag      The type of object to create
+   * @param aNewNode  [OUT] The node created.  Caller must release aNewNode.
+   */
+  NS_IMETHOD DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode)=0;
+
 
   /* ------------ Document info and file methods -------------- */
   

@@ -27,6 +27,7 @@
 #include "nsEditor.h"				// for gInstanceCount
 #include "nsEditorController.h" //CID
 #include "nsEditorService.h" 
+#include "nsPlaintextEditor.h"
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
@@ -38,6 +39,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorController)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsComposerController)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
 
 #ifdef ENABLE_EDITOR_API_LOG
 #include "nsHTMLEditorLog.h"
@@ -52,6 +54,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
 // class name.
 //
 static nsModuleComponentInfo components[] = {
+    { "Text Editor", NS_TEXTEDITOR_CID,
+      "@mozilla.org/editor/texteditor;1", nsPlaintextEditorConstructor, },
 #ifdef ENABLE_EDITOR_API_LOG
     { "HTML Editor", NS_HTMLEDITOR_CID,
       "@mozilla.org/editor/htmleditor;1", nsHTMLEditorLogConstructor, },

@@ -26,6 +26,7 @@
 #include "nsEditor.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMHTMLAnchorElement.h"
 
 /********************************************************
  *  helper methods from nsTextEditRules
@@ -483,6 +484,34 @@ nsHTMLEditUtils::IsImage(nsIDOMNode *node)
   if (tag.EqualsWithConversion("img"))
   {
     return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool 
+nsHTMLEditUtils::IsLink(nsIDOMNode *aNode)
+{
+  if (!aNode) return PR_FALSE;
+  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aNode);
+  if (anchor)
+  {
+    nsAutoString tmpText;
+    if (NS_SUCCEEDED(anchor->GetHref(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool 
+nsHTMLEditUtils::IsNamedAnchor(nsIDOMNode *aNode)
+{
+  if (!aNode) return PR_FALSE;
+  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aNode);
+  if (anchor)
+  {
+    nsAutoString tmpText;
+    if (NS_SUCCEEDED(anchor->GetName(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
+      return PR_TRUE;
   }
   return PR_FALSE;
 }

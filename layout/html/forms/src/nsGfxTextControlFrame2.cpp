@@ -31,7 +31,6 @@
 #include "nsIFormControl.h"
 #include "nsIServiceManager.h"
 #include "nsIFrameSelection.h"
-#include "nsIHTMLEditor.h"
 #include "nsIPlaintextEditor.h"
 #include "nsEditorCID.h"
 #include "nsLayoutCID.h"
@@ -101,7 +100,7 @@
 #define GUESS_INPUT_SIZE 150  // 10 pixels wide
 
 
-static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
+static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 
 
@@ -1612,8 +1611,8 @@ nsGfxTextControlFrame2::SetInitialValue()
     // immediate reflows during any editor calls.
 
     rv = mEditor->SetFlags(editorFlags |
-                           nsIHTMLEditor::eEditorDisableForcedUpdatesMask |
-                           nsIHTMLEditor::eEditorDisableForcedReflowsMask);
+                           nsIPlaintextEditor::eEditorDisableForcedUpdatesMask |
+                           nsIPlaintextEditor::eEditorDisableForcedReflowsMask);
 
     if (NS_FAILED(rv))
       return rv;
@@ -1751,9 +1750,10 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   // Create an editor
 
-  rv = nsComponentManager::CreateInstance(kHTMLEditorCID,
-                                              nsnull,
-                                              NS_GET_IID(nsIEditor), getter_AddRefs(mEditor));
+  rv = nsComponentManager::CreateInstance(kTextEditorCID,
+                                          nsnull,
+                                          NS_GET_IID(nsIEditor), 
+                                          getter_AddRefs(mEditor));
   if (NS_FAILED(rv))
     return rv;
   if (!mEditor) 
@@ -1784,14 +1784,14 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   PRUint32 editorFlags = 0;
   if (IsPlainTextControl())
-    editorFlags |= nsIHTMLEditor::eEditorPlaintextMask;
+    editorFlags |= nsIPlaintextEditor::eEditorPlaintextMask;
   if (IsSingleLineTextControl())
-    editorFlags |= nsIHTMLEditor::eEditorSingleLineMask;
+    editorFlags |= nsIPlaintextEditor::eEditorSingleLineMask;
   if (IsPasswordTextControl())
-    editorFlags |= nsIHTMLEditor::eEditorPasswordMask;
+    editorFlags |= nsIPlaintextEditor::eEditorPasswordMask;
 
   //all gfxtextcontrolframe2's are widgets
-  editorFlags |= nsIHTMLEditor::eEditorWidgetMask;
+  editorFlags |= nsIPlaintextEditor::eEditorWidgetMask;
 
   // Now initialize the editor.
   //
@@ -1949,7 +1949,7 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
       return rv;
 
     if (NS_CONTENT_ATTR_NOT_THERE != rv)
-      editorFlags |= nsIHTMLEditor::eEditorReadonlyMask;
+      editorFlags |= nsIPlaintextEditor::eEditorReadonlyMask;
 
     // Check if the disabled attribute is set.
 
@@ -1959,18 +1959,18 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
       return rv;
 
     if (NS_CONTENT_ATTR_NOT_THERE != rv) 
-      editorFlags |= nsIHTMLEditor::eEditorDisabledMask;
+      editorFlags |= nsIPlaintextEditor::eEditorDisabledMask;
 
     // Disable the caret and selection if neccessary.
 
-    if (editorFlags & nsIHTMLEditor::eEditorReadonlyMask ||
-        editorFlags & nsIHTMLEditor::eEditorDisabledMask)
+    if (editorFlags & nsIPlaintextEditor::eEditorReadonlyMask ||
+        editorFlags & nsIPlaintextEditor::eEditorDisabledMask)
     {
       if (mSelCon)
       {
         mSelCon->SetCaretEnabled(PR_FALSE);
 
-        if (editorFlags & nsIHTMLEditor::eEditorDisabledMask)
+        if (editorFlags & nsIPlaintextEditor::eEditorDisabledMask)
           mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
       }
 
@@ -2689,14 +2689,14 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
     mEditor->GetFlags(&flags);
     if (NS_CONTENT_ATTR_NOT_THERE != rv) 
     { // set readonly
-      flags |= nsIHTMLEditor::eEditorReadonlyMask;
+      flags |= nsIPlaintextEditor::eEditorReadonlyMask;
       if (mSelCon)
         mSelCon->SetCaretEnabled(PR_FALSE);
     }
     else 
     { // unset readonly
-      flags &= ~(nsIHTMLEditor::eEditorReadonlyMask);
-      if (mSelCon && !(flags & nsIHTMLEditor::eEditorDisabledMask))
+      flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
+      if (mSelCon && !(flags & nsIPlaintextEditor::eEditorDisabledMask))
         mSelCon->SetCaretEnabled(PR_TRUE);
     }    
     mEditor->SetFlags(flags);
@@ -2713,7 +2713,7 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
     mEditor->GetFlags(&flags);
     if (NS_CONTENT_ATTR_NOT_THERE != rv) 
     { // set disabled
-      flags |= nsIHTMLEditor::eEditorDisabledMask;
+      flags |= nsIPlaintextEditor::eEditorDisabledMask;
       if (mSelCon)
       {
         mSelCon->SetCaretEnabled(PR_FALSE);
@@ -2722,10 +2722,10 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
     }
     else 
     { // unset disabled
-      flags &= ~(nsIHTMLEditor::eEditorDisabledMask);
+      flags &= ~(nsIPlaintextEditor::eEditorDisabledMask);
       if (mSelCon)
       {
-        if (! (flags & nsIHTMLEditor::eEditorReadonlyMask))
+        if (! (flags & nsIPlaintextEditor::eEditorReadonlyMask))
           mSelCon->SetCaretEnabled(PR_TRUE);
         mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
       }
@@ -3019,15 +3019,15 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
 			if (NS_FAILED(rv)) return;
 			if (!domDoc) return;
       mSelCon->SelectAll();
-      nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+      nsCOMPtr<nsIPlaintextEditor> htmlEditor = do_QueryInterface(mEditor);
 			if (!htmlEditor) return;
 
 			// get the flags, remove readonly and disabled, set the value, restore flags
 			PRUint32 flags, savedFlags;
 			mEditor->GetFlags(&savedFlags);
 			flags = savedFlags;
-			flags &= ~(nsIHTMLEditor::eEditorDisabledMask);
-			flags &= ~(nsIHTMLEditor::eEditorReadonlyMask);
+			flags &= ~(nsIPlaintextEditor::eEditorDisabledMask);
+			flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
 			mEditor->SetFlags(flags);
       if (currentValue.Length() < 1)
         mEditor->DeleteSelection(nsIEditor::eNone);

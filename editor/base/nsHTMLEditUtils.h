@@ -58,6 +58,8 @@ public:
   static PRBool IsAddress(nsIDOMNode *aNode);
   static PRBool IsAnchor(nsIDOMNode *aNode);
   static PRBool IsImage(nsIDOMNode *aNode);
+  static PRBool IsLink(nsIDOMNode *aNode);
+  static PRBool IsNamedAnchor(nsIDOMNode *aNode);
   static PRBool IsDiv(nsIDOMNode *aNode);
   static PRBool IsNormalDiv(nsIDOMNode *aNode);
   static PRBool IsMozDiv(nsIDOMNode *aNode);

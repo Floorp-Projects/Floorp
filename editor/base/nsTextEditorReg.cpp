@@ -23,11 +23,10 @@
 #include "nsIGenericFactory.h"
 
 #include "nsEditorCID.h"
-#include "nsEditorShell.h"		// for the CID
-#include "nsEditor.h"				// for gInstanceCount
-#include "nsEditorController.h" //CID
-#include "nsEditorService.h" 
+#include "nsEditor.h"           // for gInstanceCount
 #include "nsPlaintextEditor.h"
+#include "nsEditorService.h" 
+#include "nsEditorController.h" //CID
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
@@ -35,18 +34,10 @@
 // NOTE: This creates an instance of objects by using the default constructor
 //
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorController)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsComposerController)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
 
-#ifdef ENABLE_EDITOR_API_LOG
-#include "nsHTMLEditorLog.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditorLog)
-#else
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
-#endif
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
@@ -56,31 +47,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
 static nsModuleComponentInfo components[] = {
     { "Text Editor", NS_TEXTEDITOR_CID,
       "@mozilla.org/editor/texteditor;1", nsPlaintextEditorConstructor, },
-#ifdef ENABLE_EDITOR_API_LOG
-    { "HTML Editor", NS_HTMLEDITOR_CID,
-      "@mozilla.org/editor/htmleditor;1", nsHTMLEditorLogConstructor, },
-#else
-    { "HTML Editor", NS_HTMLEDITOR_CID,
-      "@mozilla.org/editor/htmleditor;1", nsHTMLEditorConstructor, },
-#endif
     { "Editor Controller", NS_EDITORCONTROLLER_CID,
-      "@mozilla.org/editor/editorcontroller;1", nsEditorControllerConstructor, },
-    { "Composer Controller", NS_COMPOSERCONTROLLER_CID,
-      "@mozilla.org/editor/composercontroller;1", nsComposerControllerConstructor, },
-    { "Editor Shell Component", NS_EDITORSHELL_CID,
-      "@mozilla.org/editor/editorshell;1", nsEditorShellConstructor, },
-    { "Editor Shell Spell Checker", NS_EDITORSHELL_CID,
-      "@mozilla.org/editor/editorspellcheck;1", nsEditorShellConstructor, },
-    { "Editor Service", NS_EDITORSERVICE_CID,
-      "@mozilla.org/editor/editorservice;1", nsEditorServiceConstructor,},
-    { "Editor Startup Handler", NS_EDITORSERVICE_CID,
-      "@mozilla.org/commandlinehandler/general-startup;1?type=editor",
-      nsEditorServiceConstructor,
-      nsEditorService::RegisterProc,
-      nsEditorService::UnregisterProc, },
-    { "Edit Startup Handler", NS_EDITORSERVICE_CID,
-      "@mozilla.org/commandlinehandler/general-startup;1?type=edit",
-      nsEditorServiceConstructor, },
+      "@mozilla.org/editor/editorcontroller;1", nsEditorControllerConstructor, }
 };
 
 ////////////////////////////////////////////////////////////////////////

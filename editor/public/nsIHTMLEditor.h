@@ -45,45 +45,6 @@ class nsIHTMLEditor : public nsISupports
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IHTMLEDITOR_IID; return iid; }
 
-
-  // the bits in an editor behavior mask.
-  enum {
-    eEditorPlaintextBit       = 0,        // only plain text entry is allowed via events
-    eEditorSingleLineBit,                 // enter key and CR-LF handled specially
-    eEditorPasswordBit,                   // text is not entered into content, only a representative character
-    eEditorReadonlyBit,                   // editing events are disabled.  Editor may still accept focus.
-    eEditorDisabledBit,                   // all events are disabled (like scrolling).  Editor will not accept focus.
-    eEditorFilterInputBit,                // text input is limited to certain character types, use mFilter
-    eEditorMailBit,                       // use mail-compose editting rules
-    eEditorDisableForcedUpdatesBit,       // prevent immediate view refreshes
-    eEditorDisableForcedReflowsBit,       // prevent immediate reflows
-    eEditorEnableWrapHackBit,             // allow the editor to set font: monospace on the root node
-    eEditorWidgetBit                      // bit for widgets
-    
-    // max 32 bits
-  };
-  
-  enum {
-    eEditorPlaintextMask            = (1 << eEditorPlaintextBit),
-    eEditorSingleLineMask           = (1 << eEditorSingleLineBit),
-    eEditorPasswordMask             = (1 << eEditorPasswordBit),
-    eEditorReadonlyMask             = (1 << eEditorReadonlyBit),
-    eEditorDisabledMask             = (1 << eEditorDisabledBit),
-    eEditorFilterInputMask          = (1 << eEditorFilterInputBit),
-    eEditorMailMask                 = (1 << eEditorMailBit),
-    eEditorDisableForcedUpdatesMask = (1 << eEditorDisableForcedUpdatesBit),
-    eEditorDisableForcedReflowsMask = (1 << eEditorDisableForcedReflowsBit),
-    eEditorEnableWrapHackMask       = (1 << eEditorEnableWrapHackBit),
-    eEditorWidgetMask               = (1 << eEditorWidgetBit)
-  };
-  
-  // below used by TypedText()
-  enum {
-    eTypedText,  // user typed text
-    eTypedBR,    // user typed shift-enter to get a br
-    eTypedBreak  // user typed enter
-  };
-  
   // used by GetAlignment()
   typedef enum {
     eLeft,
@@ -231,14 +192,6 @@ public:
     *     Named Anchors, which insert before the selection
     */  
   NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection)=0;
-
-  /** 
-   * DeleteSelectionAndCreateNode combines DeleteSelection and CreateNode
-   * It deletes only if there is something selected (doesn't do DEL, BACKSPACE action)   
-   * @param aTag      The type of object to create
-   * @param aNewNode  [OUT] The node created.  Caller must release aNewNode.
-   */
-  NS_IMETHOD DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode)=0;
 
   /* ------------ Selection manipulation -------------- */
   /* Should these be moved to nsISelection? */

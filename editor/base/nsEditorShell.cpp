@@ -910,7 +910,7 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
   {
     if (mEditorTypeString.EqualsWithConversion("text"))
     {
-      err = editor->Init(aDoc, aPresShell, nsnull, selCon, nsIHTMLEditor::eEditorPlaintextMask | nsIHTMLEditor::eEditorEnableWrapHackMask);
+      err = editor->Init(aDoc, aPresShell, nsnull, selCon, nsIPlaintextEditor::eEditorPlaintextMask | nsIPlaintextEditor::eEditorEnableWrapHackMask);
       mEditorType = ePlainTextEditorType;
     }
     else if (mEditorTypeString.EqualsWithConversion("html") || mEditorTypeString.IsEmpty())  // empty string default to HTML editor
@@ -920,7 +920,7 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     }
     else if (mEditorTypeString.EqualsWithConversion("htmlmail"))  //  HTML editor with special mail rules
     {
-      err = editor->Init(aDoc, aPresShell, nsnull, selCon, nsIHTMLEditor::eEditorMailMask);
+      err = editor->Init(aDoc, aPresShell, nsnull, selCon, nsIPlaintextEditor::eEditorMailMask);
       mEditorType = eHTMLTextEditorType;
     }
     else
@@ -3423,7 +3423,7 @@ nsEditorShell::GetDocumentEditable(PRBool *aDocumentEditable)
   PRUint32  editorFlags;
   editor->GetFlags(&editorFlags);
   
-  if (editorFlags & nsIHTMLEditor::eEditorReadonlyMask)
+  if (editorFlags & nsIPlaintextEditor::eEditorReadonlyMask)
     return NS_OK;
   
   nsCOMPtr<nsIDOMDocument> doc;
