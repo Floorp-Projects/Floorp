@@ -869,7 +869,7 @@ $(CHROME_MISC:.\=CLOBBER\.\):
 
 !if "$(CHROME_TYPE)" != "$(NULL)"
 install::
-    -for %t in ($(CHROME_TYPE)) do echo %t,install,path,$(MAKEDIR)\$(DIST)\bin\chrome\$(CHROME_DIR) >>$(DIST)\bin\chrome\installed-chrome.txt
+    -for %t in ($(CHROME_TYPE)) do echo %t,install,url,resource:/chrome/$(CHROME_DIR:\=/)/ >>$(DIST)\bin\chrome\installed-chrome.txt
 !endif
 
 !endif # chrome

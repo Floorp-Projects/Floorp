@@ -1200,7 +1200,7 @@ ifneq ($(CHROME_TYPE),)
 install:: $(addprefix bogus/, $(CHROME_TYPE))
 
 $(addprefix bogus/, $(CHROME_TYPE)):
-	@echo $(patsubst bogus/%, %, $@),install,path,`pwd`/$(DEPTH)/dist/bin/chrome/$(CHROME_DIR) >>$(DEPTH)/dist/bin/chrome/installed-chrome.txt
+	@echo $(patsubst bogus/%, %, $@),install,url,resource:/chrome/$(CHROME_DIR)/ >>$(DEPTH)/dist/bin/chrome/installed-chrome.txt
 endif
 
 endif
