@@ -109,7 +109,7 @@ sub createArgument {
             } else {
                 # end of file -- give up with this argument and then switch to batch mode
                 $self->SUPER::createArgument(@_);
-                $self->setArgument($argument, 1);
+                $self->setArgument('batch', 1);
             }
         }
     }
