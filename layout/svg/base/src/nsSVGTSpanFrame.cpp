@@ -189,7 +189,7 @@ NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent,
 }
 
 nsSVGTSpanFrame::nsSVGTSpanFrame()
-    : mCharOffset(0), mFragmentTreeDirty(PR_FALSE)
+  : mCharOffset(0), mFragmentTreeDirty(PR_FALSE), mPropagateTransform(PR_TRUE)
 {
 }
 
