@@ -1742,7 +1742,7 @@ done:
 
     if (c->object.cryptoContext) {
 	/* Delete the temp instance */
-	nssCertificateStore_Remove(c->object.cryptoContext->certStore, c);
+	nssCertificateStore_Remove(c->object.cryptoContext->certStore, c, PR_TRUE);
 	c->object.cryptoContext = NULL;
 	cert->istemp = PR_FALSE;
 	cert->isperm = PR_TRUE;
