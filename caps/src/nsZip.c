@@ -53,11 +53,7 @@
 #include "xp.h"						/* for XP_STRDUP */
 #include "xp_qsort.h"
 #include "prmem.h"
-
-
-#ifdef NSPR20
 #include "prerror.h"
-#endif
 
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -228,7 +224,7 @@ static PRBool nsEnsureZip(ns_zip_t *zip)
 #endif
       fd = PR_Open(zip->fn, PR_RDONLY, 0);
       if (FD_IS_ERROR(fd)) {
-#if !defined(NSPR20) || !defined(XP_PC) || defined(_WIN32)
+#if !defined(XP_PC) || defined(_WIN32)
 	/*
 	 * perror is not defined for win16 dlls
 	 */
@@ -318,7 +314,7 @@ nsZipFindEnd(ns_zip_t *zip, char *endbuf)
 
     /* Need to search backwards from end of file */
     if ((len = PR_Seek(zip->fd, 0, SEEK_END)) == -1) {
-#if !defined(NSPR20) || !defined(XP_PC) || defined(_WIN32)
+#if !defined(XP_PC) || defined(_WIN32)
 	/*
 	 * perror is not defined for win16
 	 */
@@ -343,7 +339,7 @@ nsZipFindEnd(ns_zip_t *zip, char *endbuf)
 	long n = min(off - mark, INBUFSIZ);
 	memcpy(buf + n, buf, SIGSIZ);
 	if (PR_Seek(zip->fd, off -= n, SEEK_SET) == -1) {
-#if !defined(NSPR20) || !defined(XP_PC) || defined(_WIN32)
+#if !defined(XP_PC) || defined(_WIN32)
 	/*
 	 * perror is not defined for win16
 	 */
@@ -365,7 +361,7 @@ nsZipFindEnd(ns_zip_t *zip, char *endbuf)
 		    memcpy(endbuf, bp, ENDHDRSIZ);
 		} else {
 		    if (PR_Seek(zip->fd, endoff, SEEK_SET) == -1) {
-#if !defined(NSPR20) || !defined(XP_PC) || defined(_WIN32)
+#if !defined(XP_PC) || defined(_WIN32)
 	/*
 	 * perror is not defined for win16
 	 */
@@ -381,7 +377,7 @@ nsZipFindEnd(ns_zip_t *zip, char *endbuf)
 		    continue;
 		}
 		if (PR_Seek(zip->fd, endoff, SEEK_SET) == -1) {
-#if !defined(NSPR20) || !defined(XP_PC) || defined(_WIN32)
+#if !defined(XP_PC) || defined(_WIN32)
 	/*
 	 * perror is not defined for win16
 	 */
@@ -477,7 +473,7 @@ ns_zip_initReader(ns_zip_t *zip)
     }
     /* Seek to first CEN header */
     if (PR_Seek(zip->fd, zip->cenoff, SEEK_SET) == -1) {
-#if !defined(NSPR20) || !defined(XP_PC) || defined(_WIN32)
+#if !defined(XP_PC) || defined(_WIN32)
 	/*
 	 * perror is not defined for win16
 	 */
@@ -829,7 +825,7 @@ ns_zip_get(ns_zip_t *zip, const char *fn, void HUGEP *buf, PRInt32 len)
     }
     /* Seek to beginning of LOC header */
     if (PR_Seek(zip->fd, dp->off, SEEK_SET) == -1) {
-#if !defined(NSPR20) || !defined(XP_PC) || defined(_WIN32)
+#if !defined(XP_PC) || defined(_WIN32)
 	/*
 	 * perror is not defined for win16
 	 */
@@ -865,7 +861,7 @@ ns_zip_get(ns_zip_t *zip, const char *fn, void HUGEP *buf, PRInt32 len)
     }
     /* Seek to file data */
     if (PR_Seek(zip->fd, off, SEEK_SET) == -1) {
-#if !defined(NSPR20) || !defined(XP_PC) || defined(_WIN32)
+#if !defined(XP_PC) || defined(_WIN32)
 	/*
 	 * perror is not defined for win16
 	 */
