@@ -238,13 +238,16 @@ final class NativeString extends IdScriptable {
                          ScriptRuntime.toString(args, 0)));
 
                 case Id_match:
-                    return checkReProxy(cx).match(cx, scope, thisObj, args);
+                    return ScriptRuntime.checkRegExpProxy(cx).
+                        match(cx, scope, thisObj, args);
 
                 case Id_search:
-                    return checkReProxy(cx).search(cx, scope, thisObj, args);
+                    return ScriptRuntime.checkRegExpProxy(cx).
+                        search(cx, scope, thisObj, args);
 
                 case Id_replace:
-                    return checkReProxy(cx).replace(cx, scope, thisObj, args);
+                    return ScriptRuntime.checkRegExpProxy(cx).
+                        replace(cx, scope, thisObj, args);
             }
         }
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
@@ -255,15 +258,6 @@ final class NativeString extends IdScriptable {
           if (!(thisObj instanceof NativeString))
             throw incompatibleCallError(f);
         return (NativeString)thisObj;
-    }
-
-    private static RegExpProxy checkReProxy(Context cx)
-    {
-        RegExpProxy result = cx.getRegExpProxy();
-        if (result == null) {
-            throw cx.reportRuntimeError0("msg.no.regexp");
-        }
-        return result;
     }
 
     /*
@@ -416,15 +410,14 @@ final class NativeString extends IdScriptable {
      * separator occurrence if found, or the string length if no
      * separator is found.
      */
-    private static int find_split(Scriptable scope, String target,
-                                  String separator, Object re,
+    private static int find_split(Context cx, Scriptable scope, String target,
+                                  String separator, int version,
+                                  RegExpProxy reProxy, Object re,
                                   int[] ip, int[] matchlen, boolean[] matched,
                                   String[][] parensp)
     {
         int i = ip[0];
         int length = target.length();
-        Context cx = Context.getContext();
-        int version = cx.getLanguageVersion();
 
         /*
          * Perl4 special case for str.split(' '), only if the user has selected
@@ -479,10 +472,8 @@ final class NativeString extends IdScriptable {
          * trying for a match, so we don't get stuck in a loop.
          */
         if (re != null) {
-            return cx.getRegExpProxy().find_split(scope, target,
-                                                  separator, re,
-                                                  ip, matchlen, matched,
-                                                  parensp);
+            return reProxy.find_split(cx, scope, target, separator, re,
+                                      ip, matchlen, matched, parensp);
         }
 
         /*
@@ -559,7 +550,7 @@ final class NativeString extends IdScriptable {
         String separator = null;
         int[] matchlen = { 0 };
         Object re = null;
-        RegExpProxy reProxy = cx.getRegExpProxy();
+        RegExpProxy reProxy = ScriptRuntime.getRegExpProxy(cx);
         if (reProxy != null && reProxy.isRegExp(args[0])) {
             re = args[0];
         } else {
@@ -573,8 +564,10 @@ final class NativeString extends IdScriptable {
         int len = 0;
         boolean[] matched = { false };
         String[][] parens = { null };
-        while ((match = find_split(scope, target, separator, re, ip,
-                                   matchlen, matched, parens)) >= 0)
+        int version = cx.getLanguageVersion();
+        while ((match = find_split(cx, scope, target, separator, version,
+                                   reProxy, re, ip, matchlen, matched, parens))
+               >= 0)
         {
             if ((limited && len >= limit) || (match > target.length()))
                 break;
@@ -604,8 +597,8 @@ final class NativeString extends IdScriptable {
             }
             ip[0] = match + matchlen[0];
 
-            if (cx.getLanguageVersion() < Context.VERSION_1_3
-                && cx.getLanguageVersion() != Context.VERSION_DEFAULT)
+            if (version < Context.VERSION_1_3
+                && version != Context.VERSION_DEFAULT)
             {
         /*
          * Deviate from ECMA to imitate Perl, which omits a final

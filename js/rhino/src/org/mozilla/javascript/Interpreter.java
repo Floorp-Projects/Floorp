@@ -265,15 +265,12 @@ public class Interpreter
         int N = scriptOrFn.getRegexpCount();
         if (N == 0) return;
 
-        RegExpProxy rep = cx.getRegExpProxy();
-        if (rep == null) {
-            throw cx.reportRuntimeError0("msg.no.regexp");
-        }
+        RegExpProxy rep = ScriptRuntime.checkRegExpProxy(cx);
         Object[] array = new Object[N];
         for (int i = 0; i != N; i++) {
             String string = scriptOrFn.getRegexpString(i);
             String flags = scriptOrFn.getRegexpFlags(i);
-            array[i] = rep.newRegExp(cx, scope, string, flags, false);
+            array[i] = rep.newRegExp(cx, scope, string, flags);
         }
         itsData.itsRegExpLiterals = array;
     }

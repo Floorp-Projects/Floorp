@@ -43,12 +43,13 @@ package org.mozilla.javascript;
  *
  * @author Norris Boyd
  */
-public interface RegExpProxy {
+public interface RegExpProxy
+{
 
     public boolean isRegExp(Object obj);
 
-    public Object newRegExp(Context cx, Scriptable scope, String source,
-                            String global, boolean flat);
+    public Object newRegExp(Context cx, Scriptable scope,
+                            String source, String global);
 
     public Object match(Context cx, Scriptable scope,
                         Scriptable thisObj, Object[] args)
@@ -62,7 +63,8 @@ public interface RegExpProxy {
                           Scriptable thisObj, Object[] args)
         throws JavaScriptException;
 
-    public int find_split(Scriptable scope, String target, String separator,
-                          Object re, int[] ip, int[] matchlen,
+    public int find_split(Context cx, Scriptable scope, String target,
+                          String separator, Object re,
+                          int[] ip, int[] matchlen,
                           boolean[] matched, String[][] parensp);
 }

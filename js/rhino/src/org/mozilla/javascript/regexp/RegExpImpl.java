@@ -49,10 +49,10 @@ public class RegExpImpl implements RegExpProxy {
         return obj instanceof NativeRegExp;
     }
 
-    public Object newRegExp(Context cx, Scriptable scope, String source,
-                                                String global, boolean flat)
+    public Object newRegExp(Context cx, Scriptable scope,
+                            String source, String global)
     {
-        return new NativeRegExp(cx, scope, source, global, flat);
+        return new NativeRegExp(cx, scope, source, global, false);
     }
 
     public Object match(Context cx, Scriptable scope,
@@ -202,14 +202,14 @@ public class RegExpImpl implements RegExpProxy {
 
 
 
-    public int find_split(Scriptable scope, String target, String separator,
-                          Object reObj, int[] ip, int[] matchlen,
+    public int find_split(Context cx, Scriptable scope, String target,
+                          String separator, Object reObj,
+                          int[] ip, int[] matchlen,
                           boolean[] matched, String[][] parensp)
     {
         int i = ip[0];
         int length = target.length();
         int result;
-        Context cx = Context.getCurrentContext();
 
         int version = cx.getLanguageVersion();
         NativeRegExp re = (NativeRegExp) reObj;

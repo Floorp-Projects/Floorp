@@ -1959,8 +1959,18 @@ public class ScriptRuntime {
         return Context.getMessage(messageId, arguments);
     }
 
-    public static RegExpProxy getRegExpProxy(Context cx) {
+    public static RegExpProxy getRegExpProxy(Context cx)
+    {
         return cx.getRegExpProxy();
+    }
+
+    public static RegExpProxy checkRegExpProxy(Context cx)
+    {
+        RegExpProxy result = getRegExpProxy(cx);
+        if (result == null) {
+            throw cx.reportRuntimeError0("msg.no.regexp");
+        }
+        return result;
     }
 
     public static NativeCall getCurrentActivation(Context cx) {
