@@ -814,7 +814,7 @@ var gEditorOutputProgressListener =
    // cmanske to investigate these issues
 
    var saveCheck = {value:savePW};
-   return = promptServ.promptPassword(window, dlgTitle, text, pw, GetString("SavePassword"), saveCheck);
+   return promptServ.promptPassword(window, dlgTitle, text, pw, GetString("SavePassword"), saveCheck);
  }
 }
 
