@@ -99,7 +99,7 @@ class NS_COM nsQueryArrayElementAt : public nsCOMPtr_helper
           // nothing else to do here
         }
 
-      virtual nsresult operator()(const nsIID& aIID, void**) const;
+      virtual nsresult NS_FASTCALL operator()(const nsIID& aIID, void**) const;
 
     private:
       nsIArray*  mArray;

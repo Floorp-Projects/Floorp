@@ -184,7 +184,7 @@ struct nsCachedStyleData
     return 1 << aSID;
   };
 
-  NS_HIDDEN_(nsStyleStruct*) GetStyleData(const nsStyleStructID& aSID) {
+  NS_HIDDEN_(nsStyleStruct*) NS_FASTCALL GetStyleData(const nsStyleStructID& aSID) {
     // Each struct is stored at this.m##type##Data->m##name##Data where
     // |type| is either Inherit or Reset, and |name| is the name of the
     // style struct.  The |gInfo| stores the offset of the appropriate

@@ -331,7 +331,7 @@ class nsCOMPtr_helper
     */
   {
     public:
-      virtual nsresult operator()( const nsIID&, void** ) const = 0;
+      virtual nsresult NS_FASTCALL operator()( const nsIID&, void** ) const = 0;
   };
 
 /*
@@ -350,7 +350,7 @@ class NS_COM nsQueryInterface
           // nothing else to do here
         }
 
-      nsresult operator()( const nsIID& aIID, void** ) const;
+      nsresult NS_FASTCALL operator()( const nsIID& aIID, void** ) const;
 
     private:
       nsISupports*  mRawPtr;
@@ -366,7 +366,7 @@ class NS_COM nsQueryInterfaceWithError
           // nothing else to do here
         }
 
-      nsresult operator()( const nsIID& aIID, void** ) const;
+      nsresult NS_FASTCALL operator()( const nsIID& aIID, void** ) const;
 
     private:
       nsISupports*  mRawPtr;
@@ -431,13 +431,13 @@ class nsCOMPtr_base
           // nothing else to do here
         }
 
-      NS_COM ~nsCOMPtr_base();
+      NS_COM NS_FASTCALL ~nsCOMPtr_base();
 
-      NS_COM void    assign_with_AddRef( nsISupports* );
-      NS_COM void    assign_from_qi( const nsQueryInterface, const nsIID& );
-      NS_COM void    assign_from_qi_with_error( const nsQueryInterfaceWithError&, const nsIID& );
-      NS_COM void    assign_from_helper( const nsCOMPtr_helper&, const nsIID& );
-      NS_COM void**  begin_assignment();
+      NS_COM void NS_FASTCALL   assign_with_AddRef( nsISupports* );
+      NS_COM void NS_FASTCALL   assign_from_qi( const nsQueryInterface, const nsIID& );
+      NS_COM void NS_FASTCALL   assign_from_qi_with_error( const nsQueryInterfaceWithError&, const nsIID& );
+      NS_COM void NS_FASTCALL   assign_from_helper( const nsCOMPtr_helper&, const nsIID& );
+      NS_COM void** NS_FASTCALL begin_assignment();
 
     protected:
       NS_MAY_ALIAS_PTR(nsISupports) mRawPtr;

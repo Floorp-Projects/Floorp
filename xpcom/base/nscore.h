@@ -116,6 +116,42 @@
 #undef  IMETHOD_VISIBILITY
 #define IMETHOD_VISIBILITY  NS_VISIBILITY_HIDDEN
 
+/**
+ * Mark a function as using a potentially non-standard function calling
+ * convention.  This can be used on functions that are called very
+ * frequently, to reduce the overhead of the function call.  It is still worth
+ * using the macro for C++ functions which take no parameters since it allows
+ * passing |this| in a register.
+ *
+ *  - Do not use this on any scriptable interface method since xptcall won't be
+ *    aware of the different calling convention.
+ *  - This must appear on the declaration, not the definition.
+ *  - Adding this to a public function _will_ break binary compatibility.
+ *  - This may be used on virtual functions but you must ensure it is applied
+ *    to all implementations - the compiler will _not_ warn but it will crash.
+ *  - This has no effect for inline functions or functions which take a
+ *    variable number of arguments.
+ *
+ * Examples: int NS_FASTCALL func1(char *foo);
+ *           NS_HIDDEN_(int) NS_FASTCALL func2(char *foo);
+ */
+
+#if defined(__i386__) && defined(__GNUC__)
+#define NS_FASTCALL __attribute__ ((regparm (3), stdcall))
+#else
+#define NS_FASTCALL
+#endif
+
+/*
+ * NS_DEFCALL undoes the effect of a global regparm/stdcall setting
+ * so that xptcall works correctly.
+ */
+#if defined(__i386__) && defined(__GNUC__)
+#define NS_DEFCALL __attribute__ ((regparm (0), cdecl))
+#else
+#define NS_DEFCALL
+#endif
+
 #ifdef NS_WIN32
 
 #define NS_IMPORT __declspec(dllimport)
@@ -146,7 +182,7 @@
 #define NS_IMPORT_(type) type
 #define NS_EXPORT
 #define NS_EXPORT_(type) type
-#define NS_IMETHOD_(type) virtual IMETHOD_VISIBILITY type
+#define NS_IMETHOD_(type) virtual IMETHOD_VISIBILITY type NS_DEFCALL
 #define NS_IMETHODIMP_(type) type
 #define NS_METHOD_(type) type
 #define NS_CALLBACK_(_type, _name) _type (* _name)
@@ -201,6 +237,7 @@
 #else
 #define NS_COM NS_IMPORT
 #endif
+
 
 /**
  * NS_NO_VTABLE is emitted by xpidl in interface declarations whenever

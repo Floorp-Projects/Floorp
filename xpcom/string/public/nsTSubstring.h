@@ -198,35 +198,35 @@ class nsTSubstring_CharT : public nsTAString_CharT
           return mData[mLength - 1];
         }
 
-      NS_COM size_type CountChar( char_type ) const;
-      NS_COM PRInt32 FindChar( char_type, index_type offset = 0 ) const;
+      NS_COM size_type NS_FASTCALL CountChar( char_type ) const;
+      NS_COM PRInt32 NS_FASTCALL FindChar( char_type, index_type offset = 0 ) const;
 
 
         /**
          * equality
          */
 
-      NS_COM PRBool Equals( const self_type& ) const;
-      NS_COM PRBool Equals( const self_type&, const comparator_type& ) const;
+      NS_COM PRBool NS_FASTCALL Equals( const self_type& ) const;
+      NS_COM PRBool NS_FASTCALL Equals( const self_type&, const comparator_type& ) const;
 
-      NS_COM PRBool Equals( const abstract_string_type& readable ) const;
-      NS_COM PRBool Equals( const abstract_string_type& readable, const comparator_type& comp ) const;
+      NS_COM PRBool NS_FASTCALL Equals( const abstract_string_type& readable ) const;
+      NS_COM PRBool NS_FASTCALL Equals( const abstract_string_type& readable, const comparator_type& comp ) const;
 
-      NS_COM PRBool Equals( const char_type* data ) const;
-      NS_COM PRBool Equals( const char_type* data, const comparator_type& comp ) const;
+      NS_COM PRBool NS_FASTCALL Equals( const char_type* data ) const;
+      NS_COM PRBool NS_FASTCALL Equals( const char_type* data, const comparator_type& comp ) const;
 
         /**
          * An efficient comparison with ASCII that can be used even
          * for wide strings. Call this version when you know the
          * length of 'data'.
          */
-      NS_COM PRBool EqualsASCII( const char* data, size_type len ) const;
+      NS_COM PRBool NS_FASTCALL EqualsASCII( const char* data, size_type len ) const;
         /**
          * An efficient comparison with ASCII that can be used even
          * for wide strings. Call this version when 'data' is
          * null-terminated.
          */
-      NS_COM PRBool EqualsASCII( const char* data ) const;
+      NS_COM PRBool NS_FASTCALL EqualsASCII( const char* data ) const;
 
     // EqualsLiteral must ONLY be applied to an actual literal string.
     // Do not attempt to use it with a regular char* pointer, or with a char
@@ -257,8 +257,8 @@ class nsTSubstring_CharT : public nsTAString_CharT
     // *not* lowercased for you. If you compare to an ASCII or literal
     // string that contains an uppercase character, it is guaranteed to
     // return false. We will throw assertions too.
-      NS_COM PRBool LowerCaseEqualsASCII( const char* data, size_type len ) const;
-      NS_COM PRBool LowerCaseEqualsASCII( const char* data ) const;
+      NS_COM PRBool NS_FASTCALL LowerCaseEqualsASCII( const char* data, size_type len ) const;
+      NS_COM PRBool NS_FASTCALL LowerCaseEqualsASCII( const char* data ) const;
 
     // LowerCaseEqualsLiteral must ONLY be applied to an actual
     // literal string.  Do not attempt to use it with a regular char*
@@ -288,13 +288,13 @@ class nsTSubstring_CharT : public nsTAString_CharT
          */
 
       void Assign( char_type c )                                                                { Assign(&c, 1); }
-      NS_COM void Assign( const char_type* data, size_type length = size_type(-1) );
-      NS_COM void Assign( const self_type& );
-      NS_COM void Assign( const substring_tuple_type& );
-      NS_COM void Assign( const abstract_string_type& );
+      NS_COM void NS_FASTCALL Assign( const char_type* data, size_type length = size_type(-1) );
+      NS_COM void NS_FASTCALL Assign( const self_type& );
+      NS_COM void NS_FASTCALL Assign( const substring_tuple_type& );
+      NS_COM void NS_FASTCALL Assign( const abstract_string_type& );
 
-      NS_COM void AssignASCII( const char* data, size_type length );
-      NS_COM void AssignASCII( const char* data );
+      NS_COM void NS_FASTCALL AssignASCII( const char* data, size_type length );
+      NS_COM void NS_FASTCALL AssignASCII( const char* data );
 
     // AssignLiteral must ONLY be applied to an actual literal string.
     // Do not attempt to use it with a regular char* pointer, or with a char
@@ -317,7 +317,7 @@ class nsTSubstring_CharT : public nsTAString_CharT
       self_type& operator=( const substring_tuple_type& tuple )                                 { Assign(tuple);    return *this; }
       self_type& operator=( const abstract_string_type& readable )                              { Assign(readable); return *this; }
 
-      NS_COM void Adopt( char_type* data, size_type length = size_type(-1) );
+      NS_COM void NS_FASTCALL Adopt( char_type* data, size_type length = size_type(-1) );
 
 
         /**
@@ -325,12 +325,12 @@ class nsTSubstring_CharT : public nsTAString_CharT
          */
 
              void Replace( index_type cutStart, size_type cutLength, char_type c )               { Replace(cutStart, cutLength, &c, 1); }
-      NS_COM void Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length = size_type(-1) );
+      NS_COM void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length = size_type(-1) );
              void Replace( index_type cutStart, size_type cutLength, const self_type& str )      { Replace(cutStart, cutLength, str.Data(), str.Length()); }
-      NS_COM void Replace( index_type cutStart, size_type cutLength, const substring_tuple_type& tuple );
-      NS_COM void Replace( index_type cutStart, size_type cutLength, const abstract_string_type& readable );
+      NS_COM void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const substring_tuple_type& tuple );
+      NS_COM void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const abstract_string_type& readable );
 
-      NS_COM void ReplaceASCII( index_type cutStart, size_type cutLength, const char* data, size_type length = size_type(-1) );
+      NS_COM void NS_FASTCALL ReplaceASCII( index_type cutStart, size_type cutLength, const char* data, size_type length = size_type(-1) );
 
       void Append( char_type c )                                                                 { Replace(mLength, 0, c); }
       void Append( const char_type* data, size_type length = size_type(-1) )                     { Replace(mLength, 0, data, length); }
@@ -374,9 +374,9 @@ class nsTSubstring_CharT : public nsTAString_CharT
          * buffer sizing
          */
 
-      NS_COM void SetCapacity( size_type capacity );
+      NS_COM void NS_FASTCALL SetCapacity( size_type capacity );
 
-      NS_COM void SetLength( size_type );
+      NS_COM void NS_FASTCALL SetLength( size_type );
 
       void Truncate( size_type newLength = 0 )
         {
@@ -390,7 +390,7 @@ class nsTSubstring_CharT : public nsTAString_CharT
          * string will be truncated.  @see nsTSubstring::IsVoid
          */
 
-      NS_COM void SetIsVoid( PRBool );
+      NS_COM void NS_FASTCALL SetIsVoid( PRBool );
 
 
     public:
@@ -439,7 +439,7 @@ class nsTSubstring_CharT : public nsTAString_CharT
          * any of its member variables.  inotherwords, this function acts
          * like a destructor.
          */
-      void Finalize();
+      void NS_FASTCALL Finalize();
 
         /**
          * this function prepares mData to be mutated.
@@ -456,7 +456,7 @@ class nsTSubstring_CharT : public nsTAString_CharT
          *
          * XXX we should expose a way for subclasses to free old_data.
          */
-      PRBool MutatePrep( size_type capacity, char_type** old_data, PRUint32* old_flags );
+      PRBool NS_FASTCALL MutatePrep( size_type capacity, char_type** old_data, PRUint32* old_flags );
 
         /**
          * this function prepares a section of mData to be modified.  if
@@ -475,7 +475,7 @@ class nsTSubstring_CharT : public nsTAString_CharT
          * indicated by '_' have an unspecified value and can be freely
          * modified.  this function will null-terminate mData upon return.
          */
-      void ReplacePrep( index_type cutStart, size_type cutLength, size_type newLength );
+      void NS_FASTCALL ReplacePrep( index_type cutStart, size_type cutLength, size_type newLength );
 
         /**
          * returns the number of writable storage units starting at mData.
@@ -483,13 +483,13 @@ class nsTSubstring_CharT : public nsTAString_CharT
          *
          * NOTE: this function returns size_type(-1) if mData is immutable.
          */
-      size_type Capacity() const;
+      size_type NS_FASTCALL Capacity() const;
 
         /**
          * this helper function can be called prior to directly manipulating
          * the contents of mData.  see, for example, BeginWriting.
          */
-      NS_COM void EnsureMutable();
+      NS_COM void NS_FASTCALL EnsureMutable();
 
         /**
          * returns true if this string overlaps with the given string fragment.

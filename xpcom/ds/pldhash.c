@@ -349,7 +349,7 @@ PL_DHashTableFinish(PLDHashTable *table)
     table->ops->freeTable(table, table->entryStore);
 }
 
-static PLDHashEntryHdr *
+static PLDHashEntryHdr * PL_DHASH_FASTCALL
 SearchTable(PLDHashTable *table, const void *key, PLDHashNumber keyHash,
             PLDHashOperator op)
 {
@@ -479,7 +479,7 @@ ChangeTable(PLDHashTable *table, int deltaLog2)
     return PR_TRUE;
 }
 
-PR_IMPLEMENT(PLDHashEntryHdr *)
+PR_IMPLEMENT(PLDHashEntryHdr *) PL_DHASH_FASTCALL
 PL_DHashTableOperate(PLDHashTable *table, const void *key, PLDHashOperator op)
 {
     PLDHashNumber keyHash;

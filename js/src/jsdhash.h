@@ -45,6 +45,12 @@
 
 JS_BEGIN_EXTERN_C
 
+#if defined(__GNUC__) && defined(__i386__)
+#define JS_DHASH_FASTCALL __attribute__ ((regparm (3),stdcall))
+#else
+#define JS_DHASH_FASTCALL
+#endif
+
 #ifdef DEBUG_XXXbrendan
 #define JS_DHASHMETER 1
 #endif
@@ -500,7 +506,7 @@ typedef enum JSDHashOperator {
  * the entry is marked so that JS_DHASH_ENTRY_IS_FREE(entry).  This operation
  * returns null unconditionally; you should ignore its return value.
  */
-extern JS_PUBLIC_API(JSDHashEntryHdr *)
+extern JS_PUBLIC_API(JSDHashEntryHdr *) JS_DHASH_FASTCALL
 JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op);
 
 /*
