@@ -1787,97 +1787,9 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     WillReflowLine(aState, aLine);
 
     rv = ReflowBlockFrame(aState, aLine, aKeepReflowGoing);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
   }
   else {
-    // Setup initial coordinate system for reflowing the inline frames
-    // into.
-    aState.GetAvailableSpace();
-    const nsMargin& borderPadding = aState.BorderPadding();
-    nscoord x = aState.mAvailSpaceRect.x + borderPadding.left;
-    nscoord availWidth = aState.mAvailSpaceRect.width;
-    nscoord availHeight;
-    if (aState.mUnconstrainedHeight) {
-      availHeight = NS_UNCONSTRAINEDSIZE;
-    }
-    else {
-      /* XXX get the height right! */
-      availHeight = aState.mAvailSpaceRect.height;
-    }
-    nsLineLayout* lineLayout = aState.mLineLayout;
-    lineLayout->BeginLineReflow(x, aState.mY, availWidth, availHeight,
-                                PR_FALSE /*XXX isTopOfPage*/);
-
-    // Notify observers that we are about to reflow the line
-    WillReflowLine(aState, aLine);
-
-    // Reflow the frames that are already on the line first
-    PRBool keepLineGoing = PR_TRUE;
-    PRInt32 i;
-    nsIFrame* frame = aLine->mFirstChild;
-    for (i = 0; i < aLine->ChildCount(); i++) {
-      rv = ReflowInlineFrame(aState, aLine, frame, &keepLineGoing);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-      if (!keepLineGoing) {
-        // It is possible that one or more of next lines are empty
-        // (because of DeleteNextInFlowsFor). If so, delete them now
-        // in case we are finished.
-        nsLineBox* nextLine = aLine->mNext;
-        while ((nsnull != nextLine) && (0 == nextLine->ChildCount())) {
-          // Discard empty lines immediately. Empty lines can happen
-          // here because of DeleteNextInFlowsFor not being able to
-          // delete lines.
-          aLine->mNext = nextLine->mNext;
-          NS_ASSERTION(nsnull == nextLine->mFirstChild, "bad empty line");
-          delete nextLine;
-          nextLine = aLine->mNext;
-        }
-        break;
-      }
-      frame->GetNextSibling(&frame);
-    }
-
-    // Pull frames and reflow them until we can't
-    while (keepLineGoing) {
-      nsIFrame* frame;
-      rv = PullFrame(aState, aLine, frame);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-      if (nsnull == frame) {
-        break;
-      }
-      while (keepLineGoing) {
-        PRInt32 oldCount = aLine->ChildCount();
-        rv = ReflowInlineFrame(aState, aLine, frame, &keepLineGoing);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-        if (aLine->ChildCount() != oldCount) {
-          // We just created a continuation for aFrame AND its going
-          // to end up on this line (e.g. :first-letter
-          // situation). Therefore we have to loop here before trying
-          // to pull another frame.
-          frame->GetNextSibling(&frame);
-        }
-        else {
-          break;
-        }
-      }
-    }
-
-    // If we are propogating out a break-before status then there is
-    // no point in placing the line.
-    if (!NS_INLINE_IS_BREAK_BEFORE(aState.mReflowStatus)) {
-      rv = PlaceLine(aState, aLine, aKeepReflowGoing);
-    }
-    else {
-      lineLayout->EndLineReflow();
-    }
+    rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
   }
 
   return rv;
@@ -2572,6 +2484,130 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   return rv;
 }
 
+#define LINE_REFLOW_OK   0
+#define LINE_REFLOW_STOP 1
+#define LINE_REFLOW_REDO 2
+
+nsresult
+nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
+                                 nsLineBox* aLine,
+                                 PRBool* aKeepReflowGoing)
+{
+  nsresult rv = NS_OK;
+  *aKeepReflowGoing = PR_TRUE;
+
+  for (;;) {
+    // Setup initial coordinate system for reflowing the inline frames
+    // into.
+    aState.GetAvailableSpace();
+    const nsMargin& borderPadding = aState.BorderPadding();
+    nscoord x = aState.mAvailSpaceRect.x + borderPadding.left;
+    nscoord availWidth = aState.mAvailSpaceRect.width;
+    nscoord availHeight;
+    if (aState.mUnconstrainedHeight) {
+      availHeight = NS_UNCONSTRAINEDSIZE;
+    }
+    else {
+      /* XXX get the height right! */
+      availHeight = aState.mAvailSpaceRect.height;
+    }
+    nsLineLayout* lineLayout = aState.mLineLayout;
+    lineLayout->BeginLineReflow(x, aState.mY, availWidth, availHeight,
+                                x != borderPadding.left,
+                                PR_FALSE /*XXX isTopOfPage*/);
+
+    // Notify observers that we are about to reflow the line
+    WillReflowLine(aState, aLine);
+
+    // Reflow the frames that are already on the line first
+    PRUint8 lineReflowStatus = LINE_REFLOW_OK;
+    PRInt32 i;
+    nsIFrame* frame = aLine->mFirstChild;
+    for (i = 0; i < aLine->ChildCount(); i++) {
+      rv = ReflowInlineFrame(aState, aLine, frame, &lineReflowStatus);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      if (LINE_REFLOW_OK != lineReflowStatus) {
+        // It is possible that one or more of next lines are empty
+        // (because of DeleteChildsNextInFlow). If so, delete them now
+        // in case we are finished.
+        nsLineBox* nextLine = aLine->mNext;
+        while ((nsnull != nextLine) && (0 == nextLine->ChildCount())) {
+          // XXX Is this still necessary now that DeleteChildsNextInFlow
+          // uses DoRemoveFrame?
+          aLine->mNext = nextLine->mNext;
+          NS_ASSERTION(nsnull == nextLine->mFirstChild, "bad empty line");
+          delete nextLine;
+          nextLine = aLine->mNext;
+        }
+        break;
+      }
+      frame->GetNextSibling(&frame);
+    }
+
+    // Pull frames and reflow them until we can't
+    while (LINE_REFLOW_OK == lineReflowStatus) {
+      nsIFrame* frame;
+      rv = PullFrame(aState, aLine, frame);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      if (nsnull == frame) {
+        break;
+      }
+      while (LINE_REFLOW_OK == lineReflowStatus) {
+        PRInt32 oldCount = aLine->ChildCount();
+        rv = ReflowInlineFrame(aState, aLine, frame, &lineReflowStatus);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        if (aLine->ChildCount() != oldCount) {
+          // We just created a continuation for aFrame AND its going
+          // to end up on this line (e.g. :first-letter
+          // situation). Therefore we have to loop here before trying
+          // to pull another frame.
+          frame->GetNextSibling(&frame);
+        }
+        else {
+          break;
+        }
+      }
+    }
+    if (LINE_REFLOW_REDO == lineReflowStatus) {
+      // This happens only when we have a line that is impacted by
+      // floaters and the first element in the line doesn't fit with
+      // the floaters.
+      //
+      // What we do is to advance past the first floater we find and
+      // then reflow the line all over again.
+      NS_ASSERTION(aState.mAvailSpaceRect.width != aState.mContentArea.width,
+                   "redo line on totally empty line");
+      NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aState.mAvailSpaceRect.height,
+                   "unconstrained height on totally empty line");
+      aState.mY += aState.mAvailSpaceRect.height;
+      // XXX: a small optimization can be done here when paginating:
+      // if the new Y coordinate is past the end of the block then
+      // push the line and return now instead of later on after we are
+      // past the floater.
+      lineLayout->EndLineReflow();
+      continue;
+    }
+
+    // If we are propogating out a break-before status then there is
+    // no point in placing the line.
+    if (NS_INLINE_IS_BREAK_BEFORE(aState.mReflowStatus)) {
+      lineLayout->EndLineReflow();
+    }
+    else {
+      rv = PlaceLine(aState, aLine, aKeepReflowGoing);
+    }
+    break;
+  }
+
+  return rv;
+}
+
 /**
  * Reflow an inline frame. The reflow status is mapped from the frames
  * reflow status to the lines reflow status (not to our reflow status).
@@ -2584,9 +2620,9 @@ nsresult
 nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
                                 nsLineBox* aLine,
                                 nsIFrame* aFrame,
-                                PRBool* aKeepLineGoing)
+                                PRUint8* aLineReflowStatus)
 {
-  NS_PRECONDITION(*aKeepLineGoing, "bad caller");
+  *aLineReflowStatus = LINE_REFLOW_OK;
 
   // Send pre-reflow notification
   WillReflowFrame(aState, aLine, aFrame);
@@ -2624,7 +2660,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   if (NS_INLINE_IS_BREAK(frameReflowStatus)) {
     // Always abort the line reflow (because a line break is the
     // minimal amount of break we do).
-    *aKeepLineGoing = PR_FALSE;
+    *aLineReflowStatus = LINE_REFLOW_STOP;
 
     // XXX what should aLine->mBreakType be set to in all these cases?
     PRUint8 breakType = NS_INLINE_GET_BREAK_TYPE(frameReflowStatus);
@@ -2634,28 +2670,11 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     if (NS_INLINE_IS_BREAK_BEFORE(frameReflowStatus)) {
       // Break-before cases.
       if (aFrame == aLine->mFirstChild) {
-        NS_NOTREACHED("can't get here, can we?");
-#if 0
-        // All break-before's that occur at the first child on a
-        // line stop the overall reflow.
-        if (mLines == aLine) {
-          // If it's our first child on our first line then propogate
-          // outward the break-before reflow status unmodified.
-          aState.mReflowStatus = frameReflowStatus;
-        }
-        else {
-          // Its not our first line; push the remaining lines to a
-          // next-in-flow
-          PushLines(aState);
-
-          // Adjust the reflow status to indicate a
-          // break-after-not-complete; because we need to be continued
-          // and we need to force a line break (or something stronger)
-          // upstream.
-          aState.mReflowStatus = NS_FRAME_NOT_COMPLETE | NS_INLINE_BREAK |
-            NS_INLINE_BREAK_AFTER | NS_INLINE_MAKE_BREAK_TYPE(breakType);
-        }
-#endif
+        // If we break before the first frame on the line then we must
+        // be trying to place content where theres no room (e.g. on a
+        // line with wide floaters). Inform the caller to reflow the
+        // line after skipping past a floater.
+        *aLineReflowStatus = LINE_REFLOW_REDO;
       }
       else {
         // It's not the first child on this line so go ahead and split
@@ -2713,7 +2732,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
 
     if (needSplit) {
       // Split line after the current frame
-      *aKeepLineGoing = PR_FALSE;
+      *aLineReflowStatus = LINE_REFLOW_STOP;
       aFrame->GetNextSibling(&aFrame);
       rv = SplitLine(aState, aLine, aFrame);
       if (NS_FAILED(rv)) {
