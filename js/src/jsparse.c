@@ -237,14 +237,41 @@ NewBinary(JSContext *cx, JSTokenType tt,
             left->pn_arity = PN_LIST;
             PN_INIT_LIST_1(left, pn1);
             PN_APPEND(left, pn2);
-            left->pn_strcat = (tt == TOK_PLUS &&
-                               (pn1->pn_type == TOK_STRING ||
-                                pn2->pn_type == TOK_STRING));
+            left->pn_extra = 0;
+            if (tt == TOK_PLUS) {
+                if (pn1->pn_type == TOK_STRING)
+                    left->pn_extra |= PNX_STRCAT;
+                else if (pn1->pn_type != TOK_NUMBER)
+                    left->pn_extra |= PNX_CANTFOLD;
+                if (pn2->pn_type == TOK_STRING)
+                    left->pn_extra |= PNX_STRCAT;
+                else if (pn2->pn_type != TOK_NUMBER)
+                    left->pn_extra |= PNX_CANTFOLD;
+            }
         }
         PN_APPEND(left, right);
         left->pn_pos.end = right->pn_pos.end;
-        if (tt == TOK_PLUS && right->pn_type == TOK_STRING)
-            left->pn_strcat = JS_TRUE;
+        if (tt == TOK_PLUS) {
+            if (right->pn_type == TOK_STRING)
+                left->pn_extra |= PNX_STRCAT;
+            else if (right->pn_type != TOK_NUMBER)
+                left->pn_extra |= PNX_CANTFOLD;
+        }
+        return left;
+    }
+
+    /*
+     * Fold constant addition immediately, to conserve node space and, what's
+     * more, so js_FoldConstants never sees mixed addition and concatenation
+     * operations with more than one leading non-string operand in a PN_LIST
+     * generated for expressions such as 1 + 2 + "pt" (which should evaluate
+     * to "3pt", not "12pt").
+     */
+    if (tt == TOK_PLUS &&
+        left->pn_type == TOK_NUMBER &&
+        right->pn_type == TOK_NUMBER) {
+        left->pn_dval += right->pn_dval;
+        RecycleTree(right, tc);
         return left;
     }
 
@@ -3314,9 +3341,15 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             jschar *chars;
             JSString *str, *str2;
 
-            /* Any one string literal operand means this is a concatenation. */
+            /*
+             * Any string literal term with all others number or string means
+             * this is a concatenation.  If any term is not a string or number
+             * literal, we can't fold.
+             */
             JS_ASSERT(pn->pn_count > 2);
-            if (!pn->pn_strcat)
+            if (pn->pn_extra & PNX_CANTFOLD)
+                return JS_TRUE;
+            if (pn->pn_extra != PNX_STRCAT)
                 goto do_binary_op;
 
             /* Ok, we're concatenating: convert non-string constant operands. */
