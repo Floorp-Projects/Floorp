@@ -94,6 +94,17 @@
  {0x80, 0xa3, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e}}
 
 //
+// nsMailtoUrl
+//
+#define NS_MAILTOURL_PROGID \
+  "component://netscape/messengercompose/mailtourl"
+
+#define NS_MAILTOURL_CID                            \
+{ /* 05BAB5E7-9C7D-11d3-98A3-001083010E9B} */       \
+ 0x5bab5e7, 0x9c7d, 0x11d3,                         \
+ {0x98, 0xa3, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b}}
+
+//
 // nsSmtpServer
 //
 #define NS_SMTPSERVER_PROGID \
