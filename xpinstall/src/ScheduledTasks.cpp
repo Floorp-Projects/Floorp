@@ -39,7 +39,12 @@ GetPersistentStringFromSpec(const nsFileSpec& inSpec, char **string)
     if (!string) return NS_ERROR_NULL_POINTER;
 
     nsCOMPtr<nsIFileSpec> spec;
+#ifdef XP_MAC
+    nsFileSpec interim = inSpec.GetFSSpec(); /* XXX get rid of mError in nsFileSpec */
+    nsresult rv = NS_NewFileSpecWithSpec(interim, getter_AddRefs(spec));
+#else
     nsresult rv = NS_NewFileSpecWithSpec(inSpec, getter_AddRefs(spec));
+#endif
     if (NS_SUCCEEDED(rv)) {
         rv = spec->GetPersistentDescriptorString(string);
     } 
