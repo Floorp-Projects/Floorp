@@ -47,6 +47,23 @@
 #include "nsIMultiPartChannel.h"
 #include "nsCRT.h"
 
+//
+// Helper function for determining the length of data bytes up to
+// the next multipart token.  A token is usually preceded by a LF
+// or CRLF delimiter.
+// 
+static PRUint32
+LengthToToken(const char *cursor, const char *token)
+{
+    PRUint32 len = token - cursor;
+    // Trim off any LF or CRLF preceding the token
+    if (len && *(token-1) == '\n') {
+        --len;
+        if (len && *(token-2) == '\r')
+            --len;
+    }
+    return len;
+}
 
 //
 // nsPartChannel is a "dummy" channel which represents an individual part of
@@ -518,7 +535,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
 
         if (*(token+mTokenLen+1) == '-') {
 			// This was the last delimiter so we can stop processing
-            rv = SendData(cursor, token - cursor);
+            rv = SendData(cursor, LengthToToken(cursor, token));
             free(buffer);
             if (NS_FAILED(rv)) return rv;
             return SendStop(NS_OK);
@@ -527,7 +544,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
         if (!mNewPart && token > cursor) {
 			// headers are processed, we're pushing data now.
 			NS_ASSERTION(!mProcessingHeaders, "we should be pushing raw data");
-            rv = SendData(cursor, token - cursor);
+            rv = SendData(cursor, LengthToToken(cursor, token));
             bufLen -= token - cursor;
             if (NS_FAILED(rv)) ERR_OUT
         }
