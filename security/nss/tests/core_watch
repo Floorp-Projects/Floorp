@@ -9,11 +9,11 @@
 # to activate put the following into all.sh (after the HOSTDIR 
 # has been exported
 #############################################################
-# sh `dirname $0`/core_watch $HOSTDIR ${HOSTDIR} &	
+# sh `dirname $0`/core_watch $HOSTDIR ${HOSTDIR} &    
 # CORE_WATCH_PID=$!
 # if [ -n "${KILLPIDS}" ]
 # then
-#	 echo $CORE_WATCH_PID >>"${KILLPIDS}"			
+#     echo $CORE_WATCH_PID >>"${KILLPIDS}"            
 # fi
 #############################################################
 
@@ -35,11 +35,11 @@
 echo $$ >>"${KILLPIDS}"     #so Exit() can hopefully kill this shell
 while [ 1 ]
 do
-	for w in `find $1 -name "core" -print`
-	do
-		echo "Found core $w"
-		mv $w $w.`date +%H%M%S`
-	done
-	sleep 30
+    for w in `find $1 -name "core" -print`
+    do
+        echo "Found core $w"
+        mv $w $w.`date +%H%M%S`
+    done
+    sleep 30
 done
 
