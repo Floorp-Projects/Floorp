@@ -204,17 +204,6 @@ nsHTMLContainerFrame::ContentDeleted(nsIPresShell*   aShell,
   // Take the frame away; Note that we also have to take away any
   // continuations so we loop here until deadFrame is nsnull.
   while (nsnull != deadFrame) {
-    // If the last frame for the flow is the frame we are deleting
-    // then the flow will become complete.
-    if (!flow->mLastContentIsComplete) {
-      nsIFrame* firstChild;
-      flow->FirstChild(firstChild);
-      nsIFrame* lastFrame = LastFrame(firstChild);
-      if (lastFrame == deadFrame) {
-        flow->mLastContentIsComplete = PR_TRUE;
-      }
-    }
-
     // Remove frame from sibling list
     nsIFrame* nextSib;
     deadFrame->GetNextSibling(nextSib);
@@ -230,7 +219,6 @@ nsHTMLContainerFrame::ContentDeleted(nsIPresShell*   aShell,
     // removed from flow (because only the children that follow the
     // deletion need renumbering).
     flow->mChildCount--;
-    flow->mLastContentOffset--;
 
     // Break frame out of its flow and then destroy it
     nsIFrame* nextInFlow;
@@ -248,17 +236,6 @@ nsHTMLContainerFrame::ContentDeleted(nsIPresShell*   aShell,
       // prevSibling will be null.
       prevSibling = nsnull;
     }
-  }
-
-  // Repair any remaining next-in-flows content offsets; these are the
-  // next-in-flows the follow the last flow container that contained
-  // one of the deadFrame's. Therefore both content offsets need
-  // updating (because all the children are following the deletion).
-  flow = (nsHTMLContainerFrame*) flow->mNextInFlow;
-  while (nsnull != flow) {
-    flow->mFirstContentOffset--;
-    flow->mLastContentOffset--;
-    flow = (nsHTMLContainerFrame*) flow->mNextInFlow;
   }
 
   return rv;

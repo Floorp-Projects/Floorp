@@ -62,7 +62,6 @@ nsScrollBodyFrame::CreateFirstChild(nsIPresContext* aPresContext)
     // Yes. Create the first page frame
     mFirstChild = new nsPageFrame(mContent, this);/* XXX mContent won't work here */
     mChildCount = 1;
-    mLastContentOffset = mFirstContentOffset;
   } else {
     if (nsnull != mContent) {
 #if 0
@@ -83,7 +82,6 @@ nsScrollBodyFrame::CreateFirstChild(nsIPresContext* aPresContext)
 #else
       nsBodyFrame::NewFrame(&mFirstChild, mContent, this);
       mChildCount = 1;
-      mLastContentOffset = mFirstContentOffset;
 #endif
     }
   }

@@ -1778,12 +1778,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
     // Any space left?
     PRInt32 numKids;
     mContent->ChildCount(numKids);
-    if (state.availSize.height <= 0) {
-      // No space left. Don't try to pull-up children or reflow unmapped
-      if (NextChildOffset() < numKids) {
-        status = NS_FRAME_NOT_COMPLETE;
-      }
-    } else if (NextChildOffset() < numKids) {
+    if (state.availSize.height > 0) {
       // Try and pull-up some children from a next-in-flow
       if (!PullUpChildren(aPresContext, state, aDesiredSize.maxElementSize)) {
         // We were unable to pull-up all the existing frames from the

@@ -138,25 +138,6 @@ public:
   // IndexOf() returns -1 if the frame is not in the child list.
   NS_IMETHOD  FirstChild(nsIFrame*& aFirstChild) const;
 
-  // Access functions for starting and end content offsets. These reflect the
-  // range of content mapped by the frame.
-  //
-  // If the container is empty (has no children) the last content offset is
-  // undefined
-  PRInt32     GetFirstContentOffset() const {return mFirstContentOffset;}
-  void        SetFirstContentOffset(PRInt32 aOffset) {mFirstContentOffset = aOffset;}
-  PRInt32     GetLastContentOffset() const {return mLastContentOffset;}
-  void        SetLastContentOffset(PRInt32 aOffset) {mLastContentOffset = aOffset;}
-
-  /** return PR_TRUE if the last mapped child is complete */
-  PRBool      GetLastContentIsComplete() const {return mLastContentIsComplete;}
-  /** set the state indicating whether the last mapped child is complete */
-  void        SetLastContentIsComplete(PRBool aLIC) {mLastContentIsComplete = aLIC;}
-
-  // Get the offset for the next child content, i.e. the child after the
-  // last child that fit in us
-  PRInt32     NextChildOffset() const;
-
   // Returns true if this frame is being used a pseudo frame
   PRBool      IsPseudoFrame() const;
 
@@ -164,20 +145,6 @@ public:
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
   NS_IMETHOD  VerifyTree() const;
-
-  /**
-   * When aChild's content mapping offsets change and the child is a
-   * pseudo-frame (meaning that it is mapping content on the behalf of its
-   * geometric parent) then the geometric needs to have its content
-   * mapping offsets updated. This method is used to do just that. The
-   * object is responsible for updating its content mapping offsets and
-   * then if it is a pseudo-frame propogating the update upwards to its
-   * parent.
-   */
-  virtual void PropagateContentOffsets(nsIFrame* aChild,
-                                       PRInt32 aFirstContentOffset,
-                                       PRInt32 aLastContentOffset,
-                                       PRBool aLastContentIsComplete);
 
   /**
    * Return the number of children in the sibling list, starting at aChild.
@@ -276,15 +243,6 @@ protected:
                     PRBool aNextInFlowsLastChildIsComplete);
 
   /**
-   * Called after pulling-up children from the next-in-flow. Adjusts the first
-   * content offset of all the empty next-in-flows
-   *
-   * It's an error to call this function if all of the next-in-flow frames
-   * are empty.
-   */
-  void AdjustOffsetOfEmptyNextInFlows();
-
-  /**
    * Append child list starting at aChild to this frame's child list. Used for
    * processing of the overflow list.
    *
@@ -330,48 +288,12 @@ protected:
    */
   void PostReflowCheck(nsReflowStatus aStatus);
 
-  void CheckNextInFlowOffsets();
-
   PRBool IsEmpty();
-
-  PRBool SafeToCheckLastContentOffset(nsContainerFrame* nextInFlow);
-
-  /**
-   * Verify that our mLastContentIsComplete flag is set correctly.
-   */
-  void VerifyLastIsComplete() const;
 #endif
 
   nsIFrame*   mFirstChild;
   PRInt32     mChildCount;
-  PRInt32     mFirstContentOffset; // index of first child we map
-  PRInt32     mLastContentOffset;  // index of last child we map
-  PRBool      mLastContentIsComplete;
   nsIFrame*   mOverflowList;
-
-private:
-  /**
-   * Sets the first content offset based on the first child frame.
-   * @deprecated
-   */
-  void SetFirstContentOffset(const nsIFrame* aFirstChild);
-
-  /**
-   * Sets the last content offset based on the last child frame. If the last
-   * child is a pseudo frame then it sets mLastContentIsComplete to be the same
-   * as the last child's mLastContentIsComplete
-   * @deprecated
-   */
-  void SetLastContentOffset(const nsIFrame* aLastChild);
-
-#ifdef NS_DEBUG
-  /**
-   * Helper function to verify that the first/last content offsets
-   * are correct.  Note: this call will blow up if you have no
-   * children.
-   */
-  void CheckContentOffsets();
-#endif
 };
 
 #endif /* nsContainerFrame_h___ */

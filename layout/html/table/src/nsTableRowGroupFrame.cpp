@@ -528,28 +528,6 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
     NS_ASSERTION(IsLastChild(prevKidFrame), "bad last child");
   }
 
-  // We need to make sure the first content offset is correct for any empty
-  // next-in-flow frames (frames where we pulled up all the child frames)
-  nextInFlow = (nsTableRowGroupFrame*)mNextInFlow;
-  if ((nsnull != nextInFlow) && (nsnull == nextInFlow->mFirstChild)) {
-    // We have at least one empty frame. Did we succesfully pull up all the
-    // child frames?
-    if (PR_FALSE == result) {
-      // No, so we need to adjust the first content offset of all the empty
-      // frames
-      AdjustOffsetOfEmptyNextInFlows();
-#ifdef NS_DEBUG
-    } else {
-      // Yes, we successfully pulled up all the child frames which means all
-      // the next-in-flows must be empty. Do a sanity check
-      while (nsnull != nextInFlow) {
-        NS_ASSERTION(nsnull == nextInFlow->mFirstChild, "non-empty next-in-flow");
-        nextInFlow->GetNextInFlow((nsIFrame*&)nextInFlow);
-      }
-#endif
-    }
-  }
-
   return result;
 }
 
@@ -836,12 +814,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&      aPresContext,
       // Any space left?
       PRInt32 numKids;
       mContent->ChildCount(numKids);
-      if (state.availSize.height <= 0) {
-        // No space left. Don't try to pull-up children or reflow unmapped
-        if (NextChildOffset() < numKids) {
-          aStatus = NS_FRAME_NOT_COMPLETE;
-        }
-      } else if (NextChildOffset() < numKids) {
+      if (state.availSize.height > 0) {
         // Try and pull-up some children from a next-in-flow
         if (!PullUpChildren(&aPresContext, state, aDesiredSize.maxElementSize)) {
           // We were unable to pull-up all the existing frames from the
