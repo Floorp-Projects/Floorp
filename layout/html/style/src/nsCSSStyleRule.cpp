@@ -24,6 +24,7 @@
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsStyleConsts.h"
+#include "nsHTMLAtoms.h"
 #include "nsUnitConversion.h"
 
 //#define DEBUG_REFS
@@ -115,12 +116,14 @@ PRBool nsCSSSelector::Equals(const nsCSSSelector* aOther) const
 void nsCSSSelector::Set(const nsString& aTag, const nsString& aID, 
                         const nsString& aClass, const nsString& aPseudoClass)
 {
+  nsAutoString  buffer;
   NS_IF_RELEASE(mTag);
   NS_IF_RELEASE(mID);
   NS_IF_RELEASE(mClass);
   NS_IF_RELEASE(mPseudoClass);
   if (0 < aTag.Length()) {
-    mTag = NS_NewAtom(aTag);
+    aTag.ToUpperCase(buffer);    // XXX is this correct? what about class?
+    mTag = NS_NewAtom(buffer);
   }
   if (0 < aID.Length()) {
     mID = NS_NewAtom(aID);
@@ -129,7 +132,12 @@ void nsCSSSelector::Set(const nsString& aTag, const nsString& aID,
     mClass = NS_NewAtom(aClass);
   }
   if (0 < aPseudoClass.Length()) {
-    mPseudoClass = NS_NewAtom(aPseudoClass);
+    aPseudoClass.ToLowerCase(buffer);
+    mPseudoClass = NS_NewAtom(buffer);
+    if (nsnull == mTag) {
+      mTag = nsHTMLAtoms::a;
+      NS_ADDREF(mTag);
+    }
   }
 }
 
@@ -356,13 +364,16 @@ nsCSSSelector* CSSStyleRuleImpl::FirstSelector(void)
 
 void CSSStyleRuleImpl::AddSelector(const nsCSSSelector& aSelector)
 {
-  nsCSSSelector*  selector = new nsCSSSelector(aSelector);
-  nsCSSSelector*  last = &mSelector;
+  if ((nsnull != aSelector.mTag) || (nsnull != aSelector.mID) ||
+      (nsnull != aSelector.mClass) || (nsnull != aSelector.mPseudoClass)) { // skip empty selectors
+    nsCSSSelector*  selector = new nsCSSSelector(aSelector);
+    nsCSSSelector*  last = &mSelector;
 
-  while (nsnull != last->mNext) {
-    last = last->mNext;
+    while (nsnull != last->mNext) {
+      last = last->mNext;
+    }
+    last->mNext = selector;
   }
-  last->mNext = selector;
 }
 
 
