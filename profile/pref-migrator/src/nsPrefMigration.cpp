@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *	 Don Bragg <dbragg@netscape.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
@@ -76,6 +78,7 @@
 #define BOOKMARKS_FILE_NAME_IN_4x "bookmarks.html"
 #define HISTORY_FILE_NAME_IN_4x "history.dat"
 #define NEWSRC_PREFIX_IN_4x ".newsrc-"
+#define POPSTATE_FILE_IN_4x "popstate"
 #elif defined(XP_MAC)
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "<hostname> Rules"
 #define POP_MAIL_FILTER_FILE_NAME_IN_4x "Filter Rules"
@@ -83,6 +86,7 @@
 #define COOKIES_FILE_NAME_IN_4x "MagicCookie"
 #define BOOKMARKS_FILE_NAME_IN_4x "Bookmarks.html"
 #define HISTORY_FILE_NAME_IN_4x "Netscape History"
+#define POPSTATE_FILE_IN_4x "Pop State"
 #else /* XP_PC */
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "rules.dat"
 #define POP_MAIL_FILTER_FILE_NAME_IN_4x "rules.dat"
@@ -96,6 +100,7 @@
 #define COOKIES_FILE_NAME_IN_5x "cookies.txt"
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_5x "rules.dat"
 #define POP_MAIL_FILTER_FILE_NAME_IN_5x "rules.dat"
+#define POPSTATE_FILE_IN_5x	"popstate.dat"
 #define BOOKMARKS_FILE_NAME_IN_5x "bookmarks.html"
 #define HISTORY_FILE_NAME_IN_5x "history.dat"
 #define RENAMED_OLD_HISTORY_FILE_NAME "old "HISTORY_FILE_NAME_IN_4x
@@ -1616,6 +1621,9 @@ nsPrefMigration::DoSpecialUpdates(nsIFileSpec  * profilePath)
   if (serverType == POP_4X_MAIL_TYPE) {
 	rv = RenameAndMove4xPopFilterFile(profilePath);
   	if (NS_FAILED(rv)) return rv; 
+
+	rv = RenameAndMove4xPopStateFile(profilePath);
+  	if (NS_FAILED(rv)) return rv; 
   }
 #ifdef IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x 
   else if (serverType == IMAP_4X_MAIL_TYPE) {
@@ -1641,13 +1649,33 @@ nsPrefMigration::DoSpecialUpdates(nsIFileSpec  * profilePath)
 nsresult
 nsPrefMigration::RenameAndMove4xPopFilterFile(nsIFileSpec * profilePath)
 {
+	return RenameAndMove4xPopFile(profilePath, POP_MAIL_FILTER_FILE_NAME_IN_4x, POP_MAIL_FILTER_FILE_NAME_IN_5x);
+}
+
+nsresult
+nsPrefMigration::RenameAndMove4xPopStateFile(nsIFileSpec * profilePath)
+{
+#ifdef POPSTATE_FILE_IN_4x
+	return RenameAndMove4xPopFile(profilePath, POPSTATE_FILE_IN_4x, POPSTATE_FILE_IN_5x);
+#else 
+	// on windows, popstate.dat was in Users\<profile>\MAIL\popstate.dat
+	// which is the right place, unlike windows and mac.
+	// so, when we migrate Users\<profile>\Mail to Users50\<profile>\Mail\<hostname>
+	// it just works
+	return NS_OK;
+#endif /* POPSTATE_FILE_IN_4x */
+}
+
+nsresult
+nsPrefMigration::RenameAndMove4xPopFile(nsIFileSpec * profilePath, const char *fileNameIn4x, const char *fileNameIn5x)
+{
   nsresult rv = NS_OK;
   nsFileSpec file;
   rv = profilePath->GetFileSpec(&file);
   if (NS_FAILED(rv)) return rv;
   
-  // the 4.x pop filter file lives in <profile>/mailrule
-  file += POP_MAIL_FILTER_FILE_NAME_IN_4x;
+  // we assume the 4.x pop files live at <profile>/<fileNameIn4x>
+  file += fileNameIn4x;
 
   // figure out where the 4.x pop mail directory got copied to
   char *popServerName = nsnull;
@@ -1658,16 +1686,16 @@ nsPrefMigration::RenameAndMove4xPopFilterFile(nsIFileSpec * profilePath)
   migratedPopDirectory += popServerName;
   PR_FREEIF(popServerName);
 
-  // copy the 4.x file from <profile>/mailrule to the <profile>/Mail/<hostname>/mailrule
+  // copy the 4.x file from <profile>/<fileNameIn4x> to the <profile>/Mail/<hostname>/<fileNameIn4x>
   file.CopyToDir(migratedPopDirectory);
   
   // make migratedPopDirectory point the the copied filter file,
-  // <profile>/Mail/<hostname>/mailrule
-  migratedPopDirectory += POP_MAIL_FILTER_FILE_NAME_IN_4x;
+  // <profile>/Mail/<hostname>/<fileNameIn4x>
+  migratedPopDirectory += fileNameIn4x;
 
-  // rename <profile>/Mail/<hostname>/mailrule to <profile>/Mail/<hostname>/rules.dat, if necessary
-  if (PL_strcmp(POP_MAIL_FILTER_FILE_NAME_IN_4x,POP_MAIL_FILTER_FILE_NAME_IN_5x)) {
-	  migratedPopDirectory.Rename(POP_MAIL_FILTER_FILE_NAME_IN_5x);
+  // rename <profile>/Mail/<hostname>/<fileNameIn4x>to <profile>/Mail/<hostname>/<fileNameIn5x>, if necessary
+  if (PL_strcmp(fileNameIn4x,fileNameIn5x)) {
+	  migratedPopDirectory.Rename(fileNameIn5x);
   }
 
   return rv;
