@@ -48,7 +48,7 @@ NS_IMETHODIMP EditAggregateTxn::Do(void)
     PRInt32 i;
     PRUint32 count;
     mChildren->Count(&count);
-    for (i=0; i<count; i++)
+    for (i=0; i<((PRInt32)count); i++)
     {
       nsCOMPtr<nsISupports> isupports = (dont_AddRef)(mChildren->ElementAt(i));
       nsCOMPtr<nsITransaction> txn ( do_QueryInterface(isupports) );
@@ -91,7 +91,7 @@ NS_IMETHODIMP EditAggregateTxn::Redo(void)
     PRInt32 i;
     PRUint32 count;
     mChildren->Count(&count);
-    for (i=0; i<count; i++)
+    for (i=0; i<((PRInt32)count); i++)
     {
       nsCOMPtr<nsISupports> isupports = (dont_AddRef)(mChildren->ElementAt(i));
       nsCOMPtr<nsITransaction> txn ( do_QueryInterface(isupports) );
@@ -118,7 +118,7 @@ NS_IMETHODIMP EditAggregateTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransa
     *aDidMerge=PR_FALSE;
   if (mChildren)
   {
-    PRInt32 i;
+    PRInt32 i=0;
     PRUint32 count;
     mChildren->Count(&count);
     NS_ASSERTION(count>0, "bad count");
@@ -195,7 +195,7 @@ NS_IMETHODIMP EditAggregateTxn::GetTxnAt(PRInt32 aIndex, EditTxn **aTxn)
   // get the transaction at aIndex
   PRUint32 txnCount;
   mChildren->Count(&txnCount);
-  if (0>aIndex || txnCount<=aIndex) {
+  if (0>aIndex || ((PRInt32)txnCount)<=aIndex) {
     return NS_ERROR_UNEXPECTED;
   }
   nsCOMPtr<nsISupports> isupports = (dont_AddRef)(mChildren->ElementAt(aIndex));
