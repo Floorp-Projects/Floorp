@@ -942,6 +942,7 @@ function MailCheckBeforeOfflineChange()
 
 function MsgSettingsOffline()
 {
+    window.parent.MsgAccountManager();
 }
 
 function GetPrefsService()

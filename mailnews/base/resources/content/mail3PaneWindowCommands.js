@@ -390,17 +390,18 @@ var DefaultController =
       case "cmd_setFolderCharset":
         return IsFolderCharsetEnabled();
       case "cmd_close":
-                return true;
-            case "cmd_downloadFlagged":
-				return(MailAreaHasFocus() && IsFolderSelected() && CheckOnline());
-            case "cmd_downloadSelected":
-                return(MailAreaHasFocus() && IsFolderSelected() && CheckOnline());
-      case "cmd_synchronizeOffline":
-            case "cmd_settingsOffline":
         return true;
-            case "cmd_selectFlagged":
-                // disable select flagged until I finish the code in nsMsgDBView.cpp
-                return false;
+      case "cmd_downloadFlagged":
+        return(MailAreaHasFocus() && IsFolderSelected() && CheckOnline());
+      case "cmd_downloadSelected":
+        return(MailAreaHasFocus() && IsFolderSelected() && CheckOnline());
+      case "cmd_synchronizeOffline":
+        return true;
+      case "cmd_settingsOffline":
+        return (MailAreaHasFocus() && DoesAccountHaveOfflineFunc());
+      case "cmd_selectFlagged":
+        // disable select flagged until I finish the code in nsMsgDBView.cpp
+        return false;
       default:
         return false;
     }
@@ -557,7 +558,7 @@ var DefaultController =
 				MsgMarkThreadAsRead();
 				return;
 			case "cmd_markAllRead":
-        gDBView.doCommand(nsMsgViewCommandType.markAllRead);
+                gDBView.doCommand(nsMsgViewCommandType.markAllRead);
 				return;
 			case "cmd_markAsFlagged":
 				MsgMarkAsFlagged(null);
@@ -574,9 +575,9 @@ var DefaultController =
             case "cmd_downloadSelected":
                 MsgDownloadSelected();
                 break;
-      case "cmd_synchronizeOffline":
-        MsgSynchronizeOffline();
-        return;
+            case "cmd_synchronizeOffline":
+                MsgSynchronizeOffline();
+                break;
             case "cmd_settingsOffline":
                 MsgSettingsOffline();
                 break;

@@ -1109,3 +1109,20 @@ function SpaceHit()
     goDoCommand('cmd_nextUnreadMsg');
   }
 }
+
+
+function DoesAccountHaveOfflineSupport()
+{
+    var selectedFolders = GetSelectedMsgFolders();
+
+    if (selectedFolders && selectedFolders.length > 0)
+    {
+        var server = selectedFolders[0].server;
+        if(server && server.offlineSupportLevel > 0)
+            return true; 
+    } 
+       
+    return false;
+
+}
+
