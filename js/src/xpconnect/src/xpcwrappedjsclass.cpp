@@ -308,16 +308,14 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                                 const nsXPTMethodInfo* info,
                                 nsXPTCMiniVariant* params)
 {
-#define ARGS_BUFFER_COUNT     16
-
-    jsval argsBuffer[ARGS_BUFFER_COUNT];
-    jsval* argv = NULL;
+    jsval* stackbase;
+    jsval* sp = NULL;
     uint8 i;
     uint8 argc=0;
     jsval result;
     uint8 paramCount=0;
     nsresult retval = NS_ERROR_FAILURE;
-    JSErrorReporter older;
+    JSErrorReporter older = NULL;
     JSBool success;
     JSContext* cx = GetJSContext();
     JSBool InConversionsDone = JS_FALSE;
@@ -325,6 +323,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     JSBool iidIsOwned = JS_FALSE;
     JSObject* obj = wrapper->GetJSObject();
     const char* name = info->GetName();
+    void* mark;
 
     // XXX ASSUMES that retval is last arg.
     paramCount = info->GetParamCount();
@@ -334,17 +333,34 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     if(!cx || !IsReflectable(methodIndex))
         goto pre_call_clean_up;
 
-    // setup argv
-    if(argc > ARGS_BUFFER_COUNT)
+    older = JS_SetErrorReporter(cx, NULL);
+
+    // We use js_AllocStack, js_Invoke, and js_FreeStack so that the gcthings
+    // we use as args will be rooted by the engine as we do conversions and
+    // prepare to do the function call. This adds a fair amount of complexity,
+    // but is a good optimization compared to calling JS_AddRoot for each item.
+
+    // setup stack
+    if(NULL == (stackbase = sp = js_AllocStack(cx, argc + 2, &mark)))
     {
-        if(!(argv = new jsval[argc]))
-        {
-            retval = NS_ERROR_OUT_OF_MEMORY;
+        retval = NS_ERROR_OUT_OF_MEMORY;
+        goto pre_call_clean_up;
+    }
+
+    // if this is a function call, then push function and 'this'
+    if(!info->IsGetter() && !info->IsSetter())
+    {
+        jsval fval;
+
+        if(!JS_GetProperty(cx, obj, name, &fval))
             goto pre_call_clean_up;
-        }
+        *sp++ = fval;
+        *sp++ = OBJECT_TO_JSVAL(obj);
     }
     else
-        argv = argsBuffer;
+    {
+        sp += 2;    
+    }
 
     // build the args
     for(i = 0; i < argc; i++)
@@ -412,10 +428,10 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                 if(!JS_SetProperty(cx, obj, XPC_VAL_STR, &val))
                     goto pre_call_clean_up;
             }
-            argv[i] = OBJECT_TO_JSVAL(obj);
+            *sp++ = OBJECT_TO_JSVAL(obj);
         }
         else
-            argv[i] = val;
+            *sp++ = val;
     }
     InConversionsDone = JS_TRUE;
 
@@ -471,24 +487,41 @@ pre_call_clean_up:
     if(!InConversionsDone)
         goto done;
 
-    // do the function call - set the error reporter aside - note exceptions
+    // do the deed - note exceptions
 
-    older = JS_SetErrorReporter(cx, NULL);
     JS_ClearPendingException(cx);
 
     if(info->IsGetter())
         success = JS_GetProperty(cx, obj, name, &result);
     else if(info->IsSetter())
-        success = JS_SetProperty(cx, obj, name, argv);
+        success = JS_SetProperty(cx, obj, name, sp-1);
     else
-        success = JS_CallFunctionName(cx, obj,  name, argc, argv, &result);
+    {
+        // Lift current frame (or make new one) to include the args 
+        // and do the call.
+        JSStackFrame *fp, *oldfp, frame;
+        jsval *oldsp;
+
+        fp = oldfp = cx->fp;
+        if(!fp)
+        {
+            memset(&frame, 0, sizeof frame);
+            cx->fp = fp = &frame;
+        }
+        oldsp = fp->sp;
+        fp->sp = sp;
+        success = js_Invoke(cx, argc, JS_FALSE);
+        result = fp->sp[-1];
+        fp->sp = oldsp;
+        if(oldfp != fp)
+            cx->fp = oldfp;
+    }
 
     if(JS_IsExceptionPending(cx))
     {
         JS_ClearPendingException(cx);
         success = JS_FALSE;
     }
-    JS_SetErrorReporter(cx, older);
     if(!success)
         goto done;
 
@@ -509,7 +542,7 @@ pre_call_clean_up:
 
             if(param.IsRetval())
                 val = result;
-            else if(!JS_GetProperty(cx, JSVAL_TO_OBJECT(argv[i]), XPC_VAL_STR, &val))
+            else if(!JS_GetProperty(cx, JSVAL_TO_OBJECT(stackbase[i+2]), XPC_VAL_STR, &val))
                 break;
 
             // setup allocator and/or iid
@@ -563,11 +596,14 @@ pre_call_clean_up:
     retval = NS_OK;
 
 done:
-    if(argv && argv != argsBuffer)
-        delete [] argv;
+    if(sp)
+        js_FreeStack(cx, mark);
 
     if(conditional_iid && iidIsOwned)
         nsAllocator::Free((void*)conditional_iid);
+
+    if(older)
+        JS_SetErrorReporter(cx, older);
 
     return retval;
 }

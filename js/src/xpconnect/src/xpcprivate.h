@@ -36,6 +36,8 @@
 #include "jsapi.h"
 #include "jshash.h"
 #include "jsprf.h"
+#include "jsinterp.h"
+#include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "xptinfo.h"
 #include "xpcforwards.h"
