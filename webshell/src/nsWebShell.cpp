@@ -1696,26 +1696,27 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
 
   mProcessedEndDocumentLoad = PR_FALSE;
 
-#ifdef MOZ_PERF_METRICS
-  {
-     char* url;
-     nsresult rv = NS_OK;
-     rv = aUri->GetSpec(&url);
-     if (NS_SUCCEEDED(rv)) {
-       MOZ_TIMER_LOG(("*** Timing layout processes on url: '%s', webshell: %p\n", url, this));
-       delete [] url;
-     }
-  }
-  
-  MOZ_TIMER_DEBUGLOG(("Reset and start: nsWebShell::DoLoadURL(), this=%p\n", this));
-  MOZ_TIMER_RESET(mTotalTime);
-  MOZ_TIMER_START(mTotalTime);
-#endif
-
  /* WebShell was primarily passing the buck when it came to streamObserver.
   * So, pass on the observer which is already a streamObserver to DocLoder.
   */
-  if (aKickOffLoad)
+  if (aKickOffLoad) {
+
+#ifdef MOZ_PERF_METRICS
+    {
+       char* url;
+       nsresult rv = NS_OK;
+       rv = aUri->GetSpec(&url);
+       if (NS_SUCCEEDED(rv)) {
+         MOZ_TIMER_LOG(("*** Timing layout processes on url: '%s', webshell: %p\n", url, this));
+         delete [] url;
+       }
+    }
+  
+    MOZ_TIMER_DEBUGLOG(("Reset and start: nsWebShell::DoLoadURL(), this=%p\n", this));
+    MOZ_TIMER_RESET(mTotalTime);
+    MOZ_TIMER_START(mTotalTime);
+#endif
+        
     rv = mDocLoader->LoadDocument(aUri,        // URL string
                                   aCommand,        // Command
                                   NS_STATIC_CAST(nsIContentViewerContainer*, (nsIWebShell*)this),// Container
@@ -1725,7 +1726,9 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
                                   aLocalIP,        // load attributes.
                                   aReferrer);      // referrer
 
-    // Fix for bug 1646.  Change the notion of current url and referrer only after
+  }
+
+  // Fix for bug 1646.  Change the notion of current url and referrer only after
   // the document load succeeds.
   if (NS_SUCCEEDED(rv)) {
     mURL = urlSpec;
