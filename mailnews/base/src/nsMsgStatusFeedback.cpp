@@ -214,11 +214,6 @@ NS_IMETHODIMP nsMsgStatusFeedback::OnEndURLLoad(nsIDocumentLoader* loader, nsICh
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgStatusFeedback::HandleUnknownContentType(nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType,const char *aCommand )
-{
-	return NS_OK;
-}
-
 NS_IMETHODIMP
 nsMsgStatusFeedback::ShowStatusString(const PRUnichar *status)
 {
@@ -364,8 +359,10 @@ nsresult nsMsgStatusFeedback::setAttribute( nsIWebShell *shell,
 
     nsresult rv = NS_OK;
 
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(shell));
+
     nsCOMPtr<nsIContentViewer> cv;
-    rv = shell ? shell->GetContentViewer(getter_AddRefs(cv))
+    rv = docShell ? docShell->GetContentViewer(getter_AddRefs(cv))
                : NS_ERROR_NULL_POINTER;
     if ( cv ) {
         // Up-cast.
