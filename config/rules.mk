@@ -239,8 +239,8 @@ endif
 ifdef DIRS
 LOOP_OVER_DIRS		=					\
 	@for d in $(DIRS); do					\
-		$(UPDATE_TITLE);                    \
-		if test -d $$d; then				\
+		$(UPDATE_TITLE);				\
+		if test -f $$d/Makefile; then			\
 			set $(EXIT_ON_ERROR);			\
 			echo "cd $$d; $(MAKE) $@";		\
 			oldDir=`pwd`;				\
