@@ -104,6 +104,7 @@ LINCS=                       \
 		-I$(PUBLIC)\appcores	\
 		-I$(PUBLIC)\security	\
 		-I$(PUBLIC)\mime \
+        -I$(PUBLIC)\xpfe\components \
 		$(NULL)
 
 LCFLAGS = \
