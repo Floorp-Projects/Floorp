@@ -274,7 +274,7 @@ nsEditorShell::Init()
   return NS_OK;
 }
 
-NS_IMETHODIMP    
+nsresult    
 nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUrl)
 {
   if (!mContentAreaWebShell)
