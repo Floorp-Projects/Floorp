@@ -46,6 +46,8 @@ class nsBox : public nsIBox {
 
 public:
 
+  static void Shutdown();
+
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD GetChildBox(nsIBox** aBox);
@@ -154,7 +156,7 @@ protected:
   virtual void GetBoxName(nsAutoString& aName);
 #endif
 
-  static PRUint32 gRefCnt;
+  static PRBool gGotTheme;
   static nsITheme* gTheme;
 
   enum eMouseThrough {
