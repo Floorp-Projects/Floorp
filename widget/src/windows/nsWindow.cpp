@@ -1064,7 +1064,7 @@ nsWindow :: DealWithPopups ( UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESU
         // false allows the event to be dispatched
         //
         // So if we are NOT supposed to be consuming events, let it go through
-        if (gRollupConsumeRollupEvent) {
+        if (gRollupConsumeRollupEvent && inMsg != WM_RBUTTONDOWN) {
           *outResult = TRUE;
           return TRUE;
         } 
