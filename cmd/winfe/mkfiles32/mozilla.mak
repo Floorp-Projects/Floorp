@@ -294,7 +294,7 @@ CFLAGS_DEFAULT=\
     /I$(DEPTH)\dist\public\libfont \
     /I$(DEPTH)\dist\public\httpurl \
     /I$(DEPTH)\dist\public\netcache \
-!if defined(MOZ_ENDER_MIME)
+!if defined(EDITOR)
 	/I$(DEPTH)\dist\public\mailto \
 !endif
     /I$(DEPTH)\dist\public\jsdebug \
@@ -316,7 +316,7 @@ CFLAGS_LIBDOM_C=	$(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/dom_priv.pch" /YX"dom_priv.h"
 !endif
 !ifdef SMART_MAIL
 CFLAGS_LIBMIME_C=       $(CFLAGS_DEFAULT) /DMOZILLA_30 /I$(DEPTH)\dist\public\mime /I$(DEPTH)\lib\xp
-!elseif defined(MOZ_ENDER_MIME)
+!elseif defined(EDITOR)
 CFLAGS_LIBMIME_C=       $(CFLAGS_DEFAULT) /I$(DEPTH)\dist\public\mime /I$(DEPTH)\lib\xp
 !else
 CFLAGS_LIBMIME_C=       $(CFLAGS_DEFAULT) /I$(DEPTH)\dist\public\mime
@@ -517,7 +517,7 @@ LINK_LIBS= \
     $(DIST)\lib\addr.lib \
     $(DIST)\lib\neo.lib \
 !endif
-!ifdef MOZ_ENDER_MIME
+!ifdef EDITOR
     $(DIST)\lib\mailto.lib \
 !endif
     $(DIST)\lib\prgrss32.lib \
@@ -693,7 +693,7 @@ CDISTINCLUDES1= \
 CDISTINCLUDES2= \
 !if "$(MOZ_BITS)" == "32"
     /I$(XPDIST)\public\libfont \
-!if defined(MOZ_ENDER_MIME)
+!if defined(EDITOR)
     /I$(XPDIST)\public\mailto \
 !endif
     /I$(XPDIST)\public\winfont \
@@ -783,7 +783,7 @@ CDEFINES=/DXP_PC /Dx386 /D_WINDOWS /D_X86_ \
 !if defined(EDITOR)
 	/DENDER \
 !endif
-!if defined(MOZ_ENDER_MIME)
+!if defined(EDITOR)
 	/DMOZ_ENDER_MIME \
 !endif
 !if defined(DOM)
@@ -868,7 +868,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\layout\edtcmd.cpp
 	$(DEPTH)\lib\layout\edtele.cpp
 	$(DEPTH)\lib\layout\edtjava.cpp
-!if defined(MOZ_ENDER_MIME)
+!if defined(EDITOR)
 	$(DEPTH)\lib\layout\edtlist.cpp
 !endif
 	$(DEPTH)\lib\layout\edtsave.cpp
@@ -963,7 +963,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libcnv\readbmp.c
 	$(DEPTH)\lib\libcnv\libppm3.c
 
-!if  defined(MOZ_ENDER_MIME)
+!if  defined(EDITOR)
 	$(DEPTH)\lib\libmime\mimeenc.c
 !endif
 !if defined(MOZ_MAIL_NEWS) || defined(SMART_MAIL) 
@@ -1197,7 +1197,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 !ifdef MOZ_MAIL_NEWS
 	$(DEPTH)\lib\xp\xp_md5.c
 !endif
-!if defined(SMART_MAIL) || defined(MOZ_ENDER_MIME)
+!if defined(SMART_MAIL) || defined(EDITOR)
 	$(DEPTH)\lib\xp\xp_linebuf.c
 !endif
 	$(DEPTH)\lib\xp\xp_ncent.c
@@ -3023,7 +3023,7 @@ exports:
     -xcopy $(DEPTH)\dist\public\spellchk\*.h $(EXPORTINC) $(XCF)
     -xcopy $(DEPTH)\jpeg\*.h $(EXPORTINC) $(XCF)
     -xcopy $(DEPTH)\lib\libcnv\*.h $(EXPORTINC) $(XCF)
-!if defined (MOZ_ENDER_MIME)
+!if defined (EDITOR)
     -xcopy $(XPDIST)\public\mailto\*.h $(EXPORTINC) $(XCF)
     -xcopy $(XPDIST)\public\libmime\*.h $(EXPORTINC) $(XCF)
 !endif
