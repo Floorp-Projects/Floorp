@@ -52,7 +52,7 @@ CPPSRCS = \
 
 EXTRA_DSO_LDOPTS =	\
 	-L$(DIST)/bin	\
-	-ljs		\
+	-lmozjs		\
 	-lraptorbase	\
 	-ljsdom		\
 	-lxpcom		\
