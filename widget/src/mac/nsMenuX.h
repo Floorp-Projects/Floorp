@@ -115,6 +115,11 @@ protected:
     // fetch the content node associated with the menupopup item
     void GetMenuPopupContent ( nsIContent** aResult ) ;
 
+      // Insert a new item in this menu with index |inItemIndex| with the text |inItemLabel|,
+      // middle-truncated to a certain pixel width with an elipsis.
+    void InsertMenuItemWithTruncation ( nsAutoString & inItemLabel, 
+                                          PRUint32 inItemIndex ) ;
+    
     // fire handlers for oncreate/ondestroy
     PRBool OnDestroy() ;
     PRBool OnCreate() ;
