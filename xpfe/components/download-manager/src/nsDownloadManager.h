@@ -108,10 +108,11 @@ class nsDownload : public nsIDownload,
 {
 public:
   NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_NSITRANSFER
   NS_DECL_NSIDOWNLOAD
   NS_DECL_ISUPPORTS
 
-  nsDownload(nsDownloadManager* aManager, nsILocalFile* aTarget, nsIURI* aSource);
+  nsDownload(nsDownloadManager* aManager, nsIURI* aTarget, nsIURI* aSource);
   ~nsDownload();
 
   void SetDialogListener(nsIWebProgressListener* aInternalListener) {
@@ -156,7 +157,7 @@ private:
 
   nsString mDisplayName;
 
-  nsCOMPtr<nsILocalFile> mTarget;
+  nsCOMPtr<nsIURI> mTarget;
   nsCOMPtr<nsIURI> mSource;
   nsCOMPtr<nsIWebProgressListener> mListener;
   nsCOMPtr<nsIWebProgressListener> mDialogListener;

@@ -64,7 +64,8 @@
         class="dialog"
         title="&defaultTitle;"
         onload="notifyObserver('onload')"
-        onunload="notifyObserver('onunload')">
+        onunload="notifyObserver('onunload')"
+        style="width: 32em;">
 
     <!-- This is the only JS code in this file.  It simply routes the "command"
          to the dialog's observer (the implementation in nsProgressDialog.js).

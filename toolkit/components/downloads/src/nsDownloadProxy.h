@@ -44,6 +44,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIMIMEInfo.h"
+#include "nsIFileURL.h"
 
 #define PREF_BDM_SHOWWHENSTARTING "browser.download.manager.showWhenStarting"
 #define PREF_BDM_USEWINDOW "browser.download.manager.useWindow"
@@ -59,7 +60,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHODIMP Init(nsIURI* aSource,
-                     nsILocalFile* aTarget,
+                     nsIURI* aTarget,
                      const PRUnichar* aDisplayName,
                      nsIMIMEInfo *aMIMEInfo,
                      PRInt64 aStartTime,
@@ -84,8 +85,17 @@ public:
     branch->GetBoolPref(PREF_BDM_USEWINDOW, &useWindow);
     if (showDM && useWindow) {
       nsAutoString path;
-      rv = aTarget->GetPath(path);
+
+      nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aTarget, &rv);
       if (NS_FAILED(rv)) return rv;
+
+      nsCOMPtr<nsIFile> file;
+      rv = fileURL->GetFile(getter_AddRefs(file));
+      if (NS_FAILED(rv)) return rv;
+
+      rv = file->GetPath(path);
+      if (NS_FAILED(rv)) return rv;
+
       return dm->Open(nsnull, path.get());
     }
     return rv;
@@ -112,7 +122,7 @@ public:
     return mInner->GetSource(aSource);
   }
   
-  NS_IMETHODIMP GetTarget(nsILocalFile** aTarget)
+  NS_IMETHODIMP GetTarget(nsIURI** aTarget)
   {
     return mInner->GetTarget(aTarget);
   }
@@ -150,6 +160,11 @@ public:
   NS_IMETHODIMP GetPersist(nsIWebBrowserPersist** aPersist)
   {
     return mInner->GetPersist(aPersist);
+  }
+
+  NS_IMETHODIMP GetTargetFile(nsILocalFile** aTargetFile)
+  {
+    return mInner->GetTargetFile(aTargetFile);
   }
 
   NS_IMETHODIMP OnStateChange(nsIWebProgress* aWebProgress,
@@ -208,6 +223,6 @@ private:
   nsCOMPtr<nsIDownload> mInner;
 };
 
-NS_IMPL_ISUPPORTS2(nsDownloadProxy, nsIDownload, nsIWebProgressListener)  
+NS_IMPL_ISUPPORTS3(nsDownloadProxy, nsIDownload, nsITransfer, nsIWebProgressListener)  
 
 #endif

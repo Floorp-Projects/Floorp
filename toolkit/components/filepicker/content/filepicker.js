@@ -93,8 +93,6 @@ function filepickerLoad() {
       (filePickerMode == nsIFilePicker.modeOpenMultiple) ||
       (filePickerMode == nsIFilePicker.modeSave)) {
 
-    treeView.setFilter(filterTypes[0]);
-
     /* build filter popup */
     var filterPopup = document.createElement("menupopup");
 
@@ -116,6 +114,9 @@ function filepickerLoad() {
     filterBox.removeAttribute("hidden");
 
     filterMenuList.selectedIndex = o.filterIndex;
+
+    treeView.setFilter(filterTypes[o.filterIndex]);
+
   } else if (filePickerMode == nsIFilePicker.modeGetFolder) {
     treeView.showOnlyDirectories = true;
   }

@@ -122,6 +122,7 @@
     <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
     <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
     <command id="Browser:EditPage" oncommand="editPageOrFrame();" observes="isImage"/>
+    <command id="Browser:UploadFile" oncommand="BrowserUploadFile();"/>
     <command id="Browser:Open" oncommand="BrowserOpenWindow();"/>
     <command id="cmd_printSetup" oncommand="NSPrintSetup();"/>
     <command id="Browser:Print" oncommand="NSPrint();"/>
@@ -308,7 +309,7 @@
   <!-- Menu -->
   <menubar id="main-menubar" class="chromeclass-menubar">
     <menu id="menu_File">
-      <menupopup id="menu_FilePopup" onpopupshowing="updateCloseItems();getContentAreaFrameCount();">
+      <menupopup id="menu_FilePopup" onpopupshowing="updateCloseItems();getContentAreaFrameCount();updateFileUploadItem();">
         <menu id="menu_New">
           <menupopup id="menu_NewPopup">
             <!-- From utilityOverlay.xul -->
@@ -329,6 +330,8 @@
         <menuitem id="savepage" label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
         <menuseparator id="saveMenuBlockEnd"/>
         <menuitem label="&editPageCmd.label;" accesskey="&editPageCmd.accesskey;" key="key_editPage" command="Browser:EditPage" />
+        <menuseparator/>
+        <menuitem command="Browser:UploadFile" label="&uploadFile.label;"/>
         <menuseparator/>
         <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>
         <menuitem id="printPreviewMenuItem" label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" command="Browser:PrintPreview"/>

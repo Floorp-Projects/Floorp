@@ -63,6 +63,7 @@ function nsProgressDialog() {
     this.strings      = new Array;
     this.mSource      = null;
     this.mTarget      = null;
+    this.mTargetFile  = null;
     this.mMIMEInfo    = null;
     this.mDialog      = null;
     this.mDisplayName = null;
@@ -76,7 +77,13 @@ function nsProgressDialog() {
     this.mCancelDownloadOnClose = true;
 }
 
-const nsIProgressDialog = Components.interfaces.nsIProgressDialog;
+const nsIProgressDialog      = Components.interfaces.nsIProgressDialog;
+const nsIWindowWatcher       = Components.interfaces.nsIWindowWatcher;
+const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+const nsITextToSubURI        = Components.interfaces.nsITextToSubURI;
+const nsIChannel             = Components.interfaces.nsIChannel;
+const nsIFileURL             = Components.interfaces.nsIFileURL;
+const nsIURL                 = Components.interfaces.nsIURL;
 
 nsProgressDialog.prototype = {
     // Turn this on to get debugging messages.
@@ -108,7 +115,7 @@ nsProgressDialog.prototype = {
     get source()            { return this.mSource; },
     set source(newval)      { return this.mSource = newval; },
     get target()            { return this.mTarget; },
-    set target(newval)      { return this.mTarget = newval; },
+    get targetFile()        { return this.mTargetFile; },
     get MIMEInfo()          { return this.mMIMEInfo; },
     set MIMEInfo(newval)    { return this.mMIMEInfo = newval; },
     get dialog()            { return this.mDialog; },
@@ -126,6 +133,14 @@ nsProgressDialog.prototype = {
     get cancelDownloadOnClose() { return this.mCancelDownloadOnClose; },
     set cancelDownloadOnClose(newval) { return this.mCancelDownloadOnClose = newval; },
 
+    set target(newval) { 
+        // If newval references a file on the local filesystem, then grab a
+        // reference to its corresponding nsIFile.
+        this.mTargetFile = newval instanceof nsIFileURL ? newfile.file : null;
+
+        return this.mTarget = newval;
+    },
+
     // These setters use functions that update the dialog.
     set paused(newval)      { return this.setPaused(newval); },
     set completed(newval)   { return this.setCompleted(newval); },
@@ -142,7 +157,7 @@ nsProgressDialog.prototype = {
 
         // Open dialog using the WindowWatcher service.
         var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                   .getService( Components.interfaces.nsIWindowWatcher );
+                   .getService( nsIWindowWatcher );
         this.dialog = ww.openWindow( this.parent,
                                      this.dialogChrome,
                                      null,
@@ -165,9 +180,25 @@ nsProgressDialog.prototype = {
 
     // Look for STATE_STOP and update dialog to indicate completion when it happens.
     onStateChange: function( aWebProgress, aRequest, aStateFlags, aStatus ) {
-        if ( aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP ) {
-            // we are done downloading...
-            this.completed = true;
+        if ( aStateFlags & nsIWebProgressListener.STATE_STOP ) {
+            // if we are downloading, then just wait for the first STATE_STOP
+            if ( this.targetFile != null ) {
+                // we are done transfering...
+                this.completed = true;
+                return;
+            }
+
+            // otherwise, wait for STATE_STOP with aRequest corresponding to
+            // our target.  XXX redirects might screw up this logic.
+            try {
+                var chan = aRequest.QueryInterface(nsIChannel);
+                if (chan.URI.equals(this.target)) {
+                    // we are done transfering...
+                    this.completed = true;
+                }
+            }
+            catch (e) {
+            }
         }
     },
 
@@ -326,12 +357,33 @@ nsProgressDialog.prototype = {
     QueryInterface: function (iid) {
         if (!iid.equals(Components.interfaces.nsIProgressDialog) &&
             !iid.equals(Components.interfaces.nsIDownload) && 
+            !iid.equals(Components.interfaces.nsITransfer) && 
             !iid.equals(Components.interfaces.nsIWebProgressListener) &&
             !iid.equals(Components.interfaces.nsIObserver) &&
+            !iid.equals(Components.interfaces.nsIInterfaceRequestor) &&
             !iid.equals(Components.interfaces.nsISupports)) {
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
         return this;
+    },
+
+    // ---------- nsIInterfaceRequestor methods ----------
+
+    getInterface: function(iid) {
+        if (iid.equals(Components.interfaces.nsIPrompt) ||
+            iid.equals(Components.interfaces.nsIAuthPrompt)) {
+            // use the window watcher service to get a nsIPrompt/nsIAuthPrompt impl
+            var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                               .getService(Components.interfaces.nsIWindowWatcher);
+            var prompt;
+            if (iid.equals(Components.interfaces.nsIPrompt))
+                prompt = ww.getNewPrompter(this.parent);
+            else
+                prompt = ww.getNewAuthPrompter(this.parent);
+            return prompt;
+        }
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
     },
 
     // ---------- implementation methods ----------
@@ -384,8 +436,15 @@ nsProgressDialog.prototype = {
                this.hide( "targetRow" );
            }
         } else {
-            // Target is the destination file.
-            this.setValue( "target", this.target.path );
+            // If target is not a local file, then hide extra dialog controls.
+            if (this.targetFile != null) {
+                this.setValue( "target", this.targetFile.path );
+            } else {
+                this.setValue( "target", this.target.spec );
+                this.hide( "pauseResume" );
+                this.hide( "launch" );
+                this.hide( "reveal" );
+            }
         }
 
         // Set source field.
@@ -402,8 +461,9 @@ nsProgressDialog.prototype = {
         this.setValue( "timeElapsed", this.formatSeconds( this.elapsed / 1000 ) );
         this.setValue( "timeLeft", this.getString( "unknownTime" ) );
 
-        // Initialize the "keep open" box.  Hide this if we're opening a helper app.
-        if ( !this.saving ) {
+        // Initialize the "keep open" box.  Hide this if we're opening a helper app
+        // or if we are uploading.
+        if ( !this.saving || !this.targetFile ) {
             // Hide this in this case.
             this.hide( "keep" );
         } else {
@@ -422,17 +482,17 @@ nsProgressDialog.prototype = {
     // Cancel button stops the download (if not completed),
     // and closes the dialog.
     onCancel: function() {
-         // Cancel the download, if not completed.
-         if ( !this.completed ) {
-             if ( this.operation ) {
-                 this.operation.cancelSave();
-                 // XXX We're supposed to clean up files/directories.
-             }
-             if ( this.observer ) {
-                 this.observer.observe( this, "oncancel", "" );
-             }
-             this.paused = false;
-         }
+        // Cancel the download, if not completed.
+        if ( !this.completed ) {
+            if ( this.operation ) {
+                this.operation.cancelSave();
+                // XXX We're supposed to clean up files/directories.
+            }
+            if ( this.observer ) {
+                this.observer.observe( this, "oncancel", "" );
+            }
+            this.paused = false;
+        }
         // Test whether the dialog is already closed.
         // This will be the case if we've come through onUnload.
         if ( this.dialog ) {
@@ -477,7 +537,7 @@ nsProgressDialog.prototype = {
              // we need to ask if we're unsure
              dontAskAgain = false;
            }
-           if ( !dontAskAgain && this.target.isExecutable() ) {
+           if ( !dontAskAgain && this.targetFile.isExecutable() ) {
              try {
                var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                                .getService( Components.interfaces.nsIPromptService );
@@ -503,7 +563,7 @@ nsProgressDialog.prototype = {
              if ( !okToProceed )
                return;
            }
-           this.target.launch();
+           this.targetFile.launch();
            this.dialog.close();
          } catch ( exception ) {
              // XXX Need code here to tell user the launch failed!
@@ -515,15 +575,23 @@ nsProgressDialog.prototype = {
     // Invoke the reveal method of the target file.
     onReveal: function() {
          try {
-             this.target.reveal();
+             this.targetFile.reveal();
              this.dialog.close();
          } catch ( exception ) {
          }
     },
 
-    // Get filename from target file.
+    // Get filename from the target.
     fileName: function() {
-        return this.target ? this.target.leafName : "";
+        if ( this.targetFile != null )
+            return this.targetFile.leafName;
+        try {
+            var escapedFileName = this.target.QueryInterface(nsIURL).fileName; 
+            var textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
+                                         .getService(nsITextToSubURI);
+            return textToSubURI.unEscapeURIForUI(this.target.originCharset, escapedFileName);
+        } catch (e) {}
+        return "";
     },
 
     // Set the dialog title.
@@ -623,7 +691,7 @@ nsProgressDialog.prototype = {
                                              this.formatSeconds( this.elapsed/1000 ) );
                 string = this.replaceInsert( string,
                                              2,
-                                             this.target.fileSize >> 10 );
+                                             this.targetFile.fileSize >> 10 );
 
                 this.setValue( "status", string);
                 // Put progress meter at 100%.
@@ -649,7 +717,7 @@ nsProgressDialog.prototype = {
                 if ( enableButtons ) {
                     this.enable( "reveal" );
                     try {
-                        if ( this.target ) {
+                        if ( this.targetFile != null ) {
                             this.enable( "launch" );
                         }
                     } catch(e) {
@@ -795,15 +863,17 @@ nsProgressDialog.prototype = {
 
     // Hide a given dialog field.
     hide: function( field ) {
-        this.dialogElement( field ).setAttribute( "style", "display: none;" );
-        // Hide the associated separator, too.
-        this.dialogElement( field+"Separator" ).setAttribute( "style", "display: none;" );
+        this.dialogElement( field ).hidden = true;
+
+        // Also hide any related separator element...
+        var sep = this.dialogElement( field+"Separator" );
+        if (sep)
+            sep.hidden = true;
     },
 
     // Return input in hex, prepended with "0x" and leading zeros (to 8 digits).
     hex: function( x ) {
-         var hex = Number(x).toString(16);
-         return "0x" + ( "00000000" + hex ).substring( hex.length );
+        return "0x" + ("0000000" + Number(x).toString(16)).slice(-8);
     },
 
     // Dump text (if debug is on).
