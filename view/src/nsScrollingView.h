@@ -47,19 +47,21 @@ public:
 					nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
 
   //overrides
-  virtual void SetPosition(nscoord x, nscoord y);
   virtual void SetDimensions(nscoord width, nscoord height);
   virtual nsEventStatus HandleEvent(nsGUIEvent *aEvent, PRBool aCheckParent = PR_TRUE, PRBool aCheckChildren = PR_TRUE);
   virtual void AdjustChildWidgets(nscoord aDx, nscoord aDy);
 
   //nsIScrollableView interface
-  virtual void SetContainerSize(PRInt32 aSize);
+  virtual void ComputeContainerSize();
   virtual PRInt32 GetContainerSize();
 
   virtual void SetVisibleOffset(PRInt32 aOffset);
   virtual PRInt32 GetVisibleOffset();
 
   virtual nsIView * GetScrolledView(void);
+
+  //private
+  void ComputeScrollArea(nsIView *aView, nsRect &aRect, nscoord aOffX, nscoord aOffY);
 
 protected:
   PRInt32 mSize;

@@ -491,7 +491,7 @@ void nsView :: SetDimensions(nscoord width, nscoord height)
 
     if (NS_OK == mParent->QueryInterface(kscroller, (void **)&scroller))
     {
-      scroller->SetContainerSize(mBounds.height);
+      scroller->ComputeContainerSize();
       NS_RELEASE(scroller);
     }
   }
@@ -515,17 +515,12 @@ void nsView :: GetDimensions(nscoord *width, nscoord *height)
 
 void nsView :: SetBounds(const nsRect &aBounds)
 {
-  mBounds = aBounds;
-
   SetPosition(aBounds.x, aBounds.y);
   SetDimensions(aBounds.width, aBounds.height);
 }
 
 void nsView :: SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  mBounds.x = aX;
-  mBounds.y = aY;
-
   SetPosition(aX, aY);
   SetDimensions(aWidth, aHeight);
 }

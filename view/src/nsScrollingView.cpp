@@ -142,12 +142,6 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
   return rv;
 }
 
-
-void nsScrollingView :: SetPosition(nscoord x, nscoord y)
-{
-  nsView :: SetPosition(x, y);
-}
-
 void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
 {
   nsRect            trect;
@@ -173,7 +167,7 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
     //but unfortunately it will also cause scrollbar flashing. so long as
     //all resize operations happen through the viewmanager, this is not
     //an issue. we'll see. MMP
-//    SetContainerSize(mSize);
+//    ComputeContainerSize();
 
     NS_RELEASE(dx);
     NS_RELEASE(cx);
@@ -250,55 +244,64 @@ nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRBool aCheckPa
   return retval;
 }
 
-void nsScrollingView :: SetContainerSize(nscoord aSize)
+void nsScrollingView :: ComputeContainerSize()
 {
-  PRUint32 oldsize = aSize;
+  nsIView *scrollview = GetScrolledView();
 
-  mSize = aSize;
-
-  if (nsnull != mScrollBarView)
+  if (nsnull != scrollview)
   {
-    nscoord       width, height;
-    nsIScrollbar  *scroll;
-    nsIWidget     *win;
-
-    mScrollBarView->GetDimensions(&width, &height);
-
-    win = mScrollBarView->GetWidget();
-
-    static NS_DEFINE_IID(kscroller, NS_ISCROLLBAR_IID);
-
-    if (NS_OK == win->QueryInterface(kscroller, (void **)&scroll))
+    if (nsnull != mScrollBarView)
     {
-      if (mSize > height)
+      nscoord       width, height;
+      nsIScrollbar  *scroll;
+      nsIWidget     *win;
+      PRUint32      oldsize = mSize;
+      nsRect        area(0, 0, 0, 0);
+
+      ComputeScrollArea(scrollview, area, 0, 0);
+
+      mSize = area.YMost();
+
+      mScrollBarView->GetDimensions(&width, &height);
+
+      win = mScrollBarView->GetWidget();
+
+      static NS_DEFINE_IID(kscroller, NS_ISCROLLBAR_IID);
+
+      if (NS_OK == win->QueryInterface(kscroller, (void **)&scroll))
       {
-        nsIPresContext  *px = mViewManager->GetPresContext();
+        if (mSize > mBounds.height)
+        {
+          nsIPresContext  *px = mViewManager->GetPresContext();
 
-        //we need to be able to scroll
+          //we need to be able to scroll
 
-        mScrollBarView->SetVisibility(nsViewVisibility_kShow);
+          mScrollBarView->SetVisibility(nsViewVisibility_kShow);
 
-        //now update the scroller position for the new size
+          //now update the scroller position for the new size
 
-        PRUint32  newpos, oldpos = scroll->GetPosition();
-        PRInt32   offx, offy;
+          PRUint32  newpos, oldpos = scroll->GetPosition();
+          PRInt32   offx, offy;
 
-        newpos = NS_TO_INT_ROUND(NS_TO_INT_ROUND((((float)oldpos * mSize) / oldsize) * px->GetTwipsToPixels()) * px->GetPixelsToTwips());
+          newpos = NS_TO_INT_ROUND(NS_TO_INT_ROUND((((float)oldpos * mSize) / oldsize) * px->GetTwipsToPixels()) * px->GetPixelsToTwips());
 
-        mViewManager->GetWindowOffsets(&offx, &offy);
-        mViewManager->SetWindowOffsets(offx, newpos);
+          mViewManager->GetWindowOffsets(&offx, &offy);
+          mViewManager->SetWindowOffsets(offx, newpos);
 
-        scroll->SetParameters(mSize, mBounds.height, newpos, NS_POINTS_TO_TWIPS_INT(12));
+          scroll->SetParameters(mSize, mBounds.height, newpos, NS_POINTS_TO_TWIPS_INT(12));
 
-        NS_RELEASE(px);
+          NS_RELEASE(px);
+        }
+        else
+          mScrollBarView->SetVisibility(nsViewVisibility_kHide);
+
+        scroll->Release();
       }
-      else
-        mScrollBarView->SetVisibility(nsViewVisibility_kHide);
 
-      scroll->Release();
+      NS_RELEASE(win);
     }
 
-    NS_RELEASE(win);
+    NS_RELEASE(scrollview);
   }
 }
 
@@ -364,4 +367,33 @@ nsIView * nsScrollingView :: GetScrolledView(void)
   NS_IF_ADDREF(retview);
 
   return retview;
+}
+
+void nsScrollingView :: ComputeScrollArea(nsIView *aView, nsRect &aRect,
+                                          nscoord aOffX, nscoord aOffY)
+{
+  nsRect  trect, vrect;
+
+  aView->GetBounds(vrect);
+
+  aOffX += vrect.x;
+  aOffY += vrect.y;
+
+  trect.x = aOffX;
+  trect.y = aOffY;
+  trect.width = vrect.width;
+  trect.height = vrect.height;
+
+  if (aRect.IsEmpty() == PR_TRUE)
+    aRect = trect;
+  else
+    aRect.UnionRect(aRect, trect);
+
+  PRInt32 numkids = aView->GetChildCount();
+  
+  for (PRInt32 cnt = 0; cnt < numkids; cnt++)
+  {
+    nsIView *view = aView->GetChild(cnt);
+    ComputeScrollArea(view, aRect, aOffX, aOffY);
+  }
 }

@@ -30,10 +30,9 @@ class nsIScrollableView : public nsISupports
 {
 public:
   /**
-   * Set the height of the container in nscoords.
-   * @param aSize height of container in twips.
+   * Compute the size of the scrolled contanier.
    */
-  virtual void SetContainerSize(PRInt32 aSize) = 0;
+  virtual void ComputeContainerSize(void) = 0;
 
   /**
    * Get the height of the container
