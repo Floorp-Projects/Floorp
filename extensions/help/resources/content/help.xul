@@ -121,7 +121,7 @@
      <button id="help-search-btn" class="box-texttab texttab-sidebar"
              label="&searchtab.label;" oncommand="showPanel('help-search-panel')"/>
              <vbox id="help-search-panel" hidden="true" flex="1">
-                <hbox>
+                <hbox align="center">
                   <textbox id="findText" 
                      flex="1" 
                      onkeypress="if (event.keyCode == KeyEvent.DOM_VK_ENTER || event.keyCode == KeyEvent.DOM_VK_RETURN) doFind();"/>
