@@ -297,7 +297,7 @@ const int components_length = sizeof(components) / sizeof(components[0]);
 
 static const PRStaticLinkTable sGlueSymbols[] = {
     "NS_GetFrozenFunctions",
-    (void (*)())&NS_GetFrozenFunctions
+    (void (* PR_CALLBACK)())&NS_GetFrozenFunctions
 } ;
 
 // gMemory will be freed during shutdown.
