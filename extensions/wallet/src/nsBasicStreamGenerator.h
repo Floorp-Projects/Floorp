@@ -50,7 +50,8 @@ class nsBasicStreamGenerator : public nsIKeyedStreamGenerator
     static const char *mSignature;	// read only
     float mLevel;					// read only
     PRUint32 mSalt;					// not used for now
-    nsCString mPassword;
+    nsString mPassword;
     nsCOMPtr<nsIWeakReference> mWeakPasswordSink;	// nsIPasswordSink
+    PRInt32 mState;
 };
 

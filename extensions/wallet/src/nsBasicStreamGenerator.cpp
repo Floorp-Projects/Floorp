@@ -27,7 +27,7 @@ const char * nsBasicStreamGenerator::mSignature = "Basic Keyed Stream Generator"
 NS_IMPL_ISUPPORTS1(nsBasicStreamGenerator, nsIKeyedStreamGenerator)
 
 nsBasicStreamGenerator::nsBasicStreamGenerator()
-    : mLevel(NS_SECURITY_LEVEL), mSalt(0), mPassword()
+    : mLevel(NS_SECURITY_LEVEL), mSalt(0), mPassword(), mState(0)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -83,14 +83,19 @@ NS_IMETHODIMP nsBasicStreamGenerator::GetByte(PRUint32 offset, PRUint8 *retval)
         if (NS_FAILED(rv)) return rv;
         mPassword = aPassword;
         nsAllocator::Free(aPassword);
+        mState = 0;
     }
 
     // Get the offset byte from the stream. Our stream is just our password
     // repeating itself infinite times.
     //
-    // mPassword being a nsCString, returns a PRUnichar for operator [].
-    // Hence convert it to a const char * first before applying op [].
-    *retval = ((const char *)mPassword)[offset % mPassword.Length()];
-
+    // mPassword being a nsString, its elements are PRUnichars.
+    // We want to return either the high-order or low-order 8 bits of the PRUnichar
+    // depending on whether or not this routine was called an odd or an even number of times
+    PRUnichar ret16 = mPassword.CharAt((mState>>1) % mPassword.Length());
+    if ((mState++) & 1) {
+      ret16 = ret16>>8;
+    }
+    *retval = (PRUint8)(ret16 & 0xff);
     return rv;
 }
