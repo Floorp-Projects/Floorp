@@ -42,16 +42,6 @@
 #include "nsIProtocolConnection.h"
 #include "nsIUrl.h"
 
-#ifdef XP_PC
-#define NETLIB_DLL "netwerk.dll"
-#else
-#ifdef XP_MAC
-#include "nsMacRepository.h"
-#else
-#define NETLIB_DLL "libnetwerk.so"
-#endif
-#endif
-
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kNetServiceCID,             NS_NETSERVICE_CID);
 
@@ -152,8 +142,6 @@ main(int argc, char* argv[])
     rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
                                           "components");
     if (NS_FAILED(rv)) return rv;
-
-    nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
     // Create the Event Queue for this thread...
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);

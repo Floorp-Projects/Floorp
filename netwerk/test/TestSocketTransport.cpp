@@ -35,18 +35,6 @@
 
 #include "nsCRT.h"
 
-#ifdef XP_PC
-#define XPCOM_DLL  "xpcom32.dll"
-#define NETLIB_DLL  "netwerk.dll"
-#else
-#ifdef XP_MAC
-#include "nsMacRepository.h"
-#else
-#define XPCOM_DLL  "libxpcom.so"
-#define NETLIB_DLL  "libnetwerk.so"
-#endif
-#endif
-
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
@@ -429,10 +417,6 @@ main(int argc, char* argv[])
   //
   // -----
   // XXX why do I have to do this?!
-  nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kSocketTransportServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-
   rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
                                         "components");
   if (NS_FAILED(rv)) return rv;
