@@ -122,7 +122,6 @@ NS_CONFIG_MK	= 1
 # Provide the means to easily override our tool directory locations.
 #
 ifdef NETSCAPE_HIERARCHY
-NETSCAPE_BUILD = 1   # Defines XFEPRIVDIR, below.
 CONTRIB_BIN	:= /tools/contrib/bin/
 JAVA_BIN	:= /usr/local/java/bin/
 LOCAL_BIN	:= /usr/local/bin/
@@ -135,8 +134,8 @@ NS_LIB		:= .
 JAVA_LIB	:= .
 endif
 
-# Allow NETSCAPE_BUILD to include XFEPRIVDIR w/o NETSCAPE_HIERARCHY
-ifdef NETSCAPE_BUILD
+# Allow NETSCAPE_COMMERCIAL to include XFEPRIVDIR
+ifdef NETSCAPE_COMMERCIAL
 XFEPRIVDIR		:= $(DEPTH)/../ns/cmd/xfe/
 endif
 
