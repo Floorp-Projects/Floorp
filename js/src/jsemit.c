@@ -924,9 +924,14 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (!js_EmitFunctionBody(cx, &cg2, pn2, fun))
             return JS_FALSE;
 
-        /* We need an activation object if an inner peeks out. */
-        if (cg2.treeContext.flags & TCF_FUN_USES_NONLOCALS)
+        /*
+         * We need an activation object if an inner peeks out, or if such
+         * inner-peeking caused one of our inners to become heavyweight.
+         */
+        if (cg2.treeContext.flags & 
+            (TCF_FUN_USES_NONLOCALS | TCF_FUN_HEAVYWEIGHT)) {
             cg->treeContext.flags |= TCF_FUN_HEAVYWEIGHT;
+        }
         js_FinishCodeGenerator(cx, &cg2);
 
         /* Make the function object a literal in the outer script's pool. */
