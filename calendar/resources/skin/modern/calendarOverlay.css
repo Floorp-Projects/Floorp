@@ -43,3 +43,8 @@
 #mini-cal:hover:active {                                              
   list-style-image: url("chrome://calendar/skin/taskbar-cal-act.gif");
 }                                                                     
+
+.icon-calendar16 {
+  list-style-image: url("chrome://calendar/skin/taskbar-cal.gif");
+}
+
