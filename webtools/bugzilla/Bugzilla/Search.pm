@@ -98,20 +98,17 @@ sub init {
     &::GetVersionTable();
     
     # First, deal with all the old hard-coded non-chart-based poop.
-    if (lsearch($fieldsref, 'map_assigned_to.login_name') >= 0 || 
-        lsearch($fieldsref, 'map_assigned_to.realname') >= 0) {
+    if (grep(/map_assigned_to/, @$fieldsref)) {
         push @supptables, "profiles AS map_assigned_to";
         push @wherepart, "bugs.assigned_to = map_assigned_to.userid";
     }
 
-    if (lsearch($fieldsref, 'map_reporter.login_name') >= 0 || 
-        lsearch($fieldsref, 'map_reporter.realname') >= 0) {
+    if (grep(/map_reporter/, @$fieldsref)) {
         push @supptables, "profiles AS map_reporter";
         push @wherepart, "bugs.reporter = map_reporter.userid";
     }
 
-    if (lsearch($fieldsref, 'map_qa_contact.login_name') >= 0 || 
-        lsearch($fieldsref, 'map_qa_contact.realname') >= 0) {
+    if (grep(/map_qa_contact/, @$fieldsref)) {
         push @supptables, "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid";
     }
 

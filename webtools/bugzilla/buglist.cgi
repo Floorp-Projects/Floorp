@@ -475,11 +475,17 @@ DefineColumn("bug_severity"      , "bugs.bug_severity"          , "Severity"    
 DefineColumn("priority"          , "bugs.priority"              , "Priority"         );
 DefineColumn("rep_platform"      , "bugs.rep_platform"          , "Hardware"         );
 DefineColumn("assigned_to"       , "map_assigned_to.login_name" , "Assignee"         );
-DefineColumn("assigned_to_realname", "map_assigned_to.realname" , "Assignee"         );
 DefineColumn("reporter"          , "map_reporter.login_name"    , "Reporter"         );
-DefineColumn("reporter_realname" , "map_reporter.realname"      , "Reporter"         );
 DefineColumn("qa_contact"        , "map_qa_contact.login_name"  , "QA Contact"       );
-DefineColumn("qa_contact_realname", "map_qa_contact.realname"   , "QA Contact"       );
+if ($format->{'extension'} eq 'html') {
+    DefineColumn("assigned_to_realname", "CASE WHEN map_assigned_to.realname = '' THEN map_assigned_to.login_name ELSE map_assigned_to.realname END", "Assignee"  );
+    DefineColumn("reporter_realname"   , "CASE WHEN map_reporter.realname    = '' THEN map_reporter.login_name    ELSE map_reporter.realname    END", "Reporter"  );
+    DefineColumn("qa_contact_realname" , "CASE WHEN map_qa_contact.realname  = '' THEN map_qa_contact.login_name  ELSE map_qa_contact.realname  END", "QA Contact");
+} else {
+    DefineColumn("assigned_to_realname", "map_assigned_to.realname" , "Assignee"         );
+    DefineColumn("reporter_realname"   , "map_reporter.realname"    , "Reporter"         );
+    DefineColumn("qa_contact_realname" , "map_qa_contact.realname"  , "QA Contact"       );
+}
 DefineColumn("bug_status"        , "bugs.bug_status"            , "Status"           );
 DefineColumn("resolution"        , "bugs.resolution"            , "Result"           );
 DefineColumn("short_short_desc"  , "bugs.short_desc"            , "Summary"          );
