@@ -630,7 +630,7 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
     /* copy the module's common name */
     CHECK_SIZE( namesRunningOffset + 2);
     names = (unsigned char *)data->data;
-    len   = SECMOD_GETSHORT(names);
+    len   = SECMOD_GETSHORT(names+namesRunningOffset);
 
     CHECK_SIZE( namesRunningOffset + 2 + len);
     commonName = (char*)PORT_ArenaAlloc(arena,len+1);
@@ -656,7 +656,7 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
     /* copy the module's initialization string, if present. */
     if (!internal && extended) {
 	CHECK_SIZE( namesRunningOffset + 2);
-	len = SECMOD_GETSHORT(names);
+	len = SECMOD_GETSHORT(names+namesRunningOffset);
 	if (len) {
 	    CHECK_SIZE( namesRunningOffset + 2 + len );
 	    parameters = (char*)PORT_ArenaAlloc(arena,len + 1);
