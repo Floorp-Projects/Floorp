@@ -33,6 +33,7 @@ EXPORTS		= \
 		nsIForm.h \
 		nsILink.h \
 		nsISelectElement.h \
+		nsIScriptElement.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

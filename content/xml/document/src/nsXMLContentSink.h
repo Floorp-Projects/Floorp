@@ -37,6 +37,10 @@
 class nsICSSStyleSheet;
 #include "nsICSSLoaderObserver.h"
 #include "nsIHTMLContent.h"
+#include "nsIDOMHTMLScriptElement.h"
+#include "nsIScriptLoader.h"
+#include "nsIScriptLoaderObserver.h"
+#include "nsSupportsArray.h"
 
 class nsIDocument;
 class nsIScriptObjectOwner;
@@ -63,7 +67,7 @@ typedef enum {
 class nsXMLContentSink : public nsIXMLContentSink,
                          public nsIObserver,
                          public nsSupportsWeakReference,
-                         public nsIStreamLoaderObserver,
+                         public nsIScriptLoaderObserver,
                          public nsICSSLoaderObserver
 {
 public:
@@ -76,7 +80,7 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMLOADEROBSERVER
+  NS_DECL_NSISCRIPTLOADEROBSERVER
 
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void);
@@ -108,10 +112,6 @@ public:
   NS_IMETHOD Observe(nsISupports *aSubject, 
                      const PRUnichar *aTopic, 
                      const PRUnichar *someData);
-
-  NS_IMETHOD ResumeParsing();
-  NS_IMETHOD EvaluateScript(nsString& aScript, nsIURI *aScriptURI, PRUint32 aLineNo, const char* aVersion);
-  const char* mScriptLanguageVersion;
 
 protected:
   void StartLayout();
@@ -189,9 +189,12 @@ protected:
 
   PRPackedBool mInScript;
   PRPackedBool mInTitle;
-  nsString mScriptText;
   nsString mStyleText;
   PRUint32 mScriptLineNo;
+
+  PRBool mNeedToBlockParser;
+  PRBool mParserBlocked;
+  nsSupportsArray mScriptElements;
 
   nsString  mPreferredStyle;
   PRInt32 mStyleSheetCount;

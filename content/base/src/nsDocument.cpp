@@ -310,7 +310,6 @@ nsDOMImplementation::~nsDOMImplementation()
 {
 }
 
-
 // XPConnect interface list for nsDOMImplementation
 NS_CLASSINFO_MAP_BEGIN(DOMImplementation)
   NS_CLASSINFO_MAP_ENTRY(nsIDOMDOMImplementation)
@@ -518,6 +517,10 @@ nsDocument::~nsDocument()
   }
 
   NS_IF_RELEASE(mNameSpaceManager);
+
+  if (mScriptLoader) {
+    mScriptLoader->DropDocumentReference();
+  }
 
   mDOMStyleSheets = nsnull; // Release the stylesheets list.
 
@@ -1384,6 +1387,25 @@ nsDocument::GetNameSpaceManager(nsINameSpaceManager*& aManager)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocument::GetScriptLoader(nsIScriptLoader** aScriptLoader) 
+{
+  NS_ENSURE_ARG_POINTER(aScriptLoader);
+
+  if (!mScriptLoader) {
+    nsScriptLoader* loader = new nsScriptLoader();
+    if (!loader) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    mScriptLoader = loader;
+    mScriptLoader->Init(this);
+  }
+
+  *aScriptLoader = mScriptLoader;
+  NS_IF_ADDREF(*aScriptLoader);
+
+  return NS_OK;
+}
 
 // Note: We don't hold a reference to the document observer; we assume
 // that it has a live reference to the document.

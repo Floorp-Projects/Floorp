@@ -70,6 +70,7 @@
 #include "nsINodeInfo.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIFocusController.h"
+#include "nsScriptLoader.h"
 
 class nsIAtom;
 class nsIElementFactory;
@@ -229,6 +230,8 @@ public:
     NS_IMETHOD SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
 
     NS_IMETHOD GetNameSpaceManager(nsINameSpaceManager*& aManager);
+
+    NS_IMETHOD GetScriptLoader(nsIScriptLoader** aScriptLoader);
 
     virtual void AddObserver(nsIDocumentObserver* aObserver);
 
@@ -502,6 +505,7 @@ protected:
     nsCOMPtr<nsIHTMLStyleSheet>       mAttrStyleSheet;    // [OWNER]
     nsCOMPtr<nsIHTMLCSSStyleSheet>    mInlineStyleSheet;  // [OWNER]
     nsCOMPtr<nsICSSLoader>            mCSSLoader;         // [OWNER]
+    nsCOMPtr<nsIScriptLoader>         mScriptLoader;      // [OWNER]
     nsElementMap               mElementMap;
     nsCOMPtr<nsIRDFDataSource>          mLocalStore;
     nsCOMPtr<nsILineBreaker>            mLineBreaker;    // [OWNER] 

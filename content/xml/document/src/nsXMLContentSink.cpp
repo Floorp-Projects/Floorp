@@ -74,6 +74,7 @@
 #include "nsIDocumentViewer.h"
 #include "nsIScrollable.h"
 #include "nsIWebNavigation.h"
+#include "nsIScriptElement.h"
 
 // XXX misnamed header file, but oh well
 #include "nsHTMLTokens.h"
@@ -150,6 +151,8 @@ nsXMLContentSink::nsXMLContentSink()
   mStyleSheetCount = 0;
   mCSSLoader       = nsnull;
   mXSLTransformMediator = nsnull;
+  mNeedToBlockParser = PR_FALSE;
+  mParserBlocked = PR_FALSE;
 }
 
 nsXMLContentSink::~nsXMLContentSink()
@@ -201,6 +204,11 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
   mWebShell = aContainer;
   NS_IF_ADDREF(aContainer);
 
+  nsCOMPtr<nsIScriptLoader> loader;
+  nsresult rv = mDocument->GetScriptLoader(getter_AddRefs(loader));
+  NS_ENSURE_SUCCESS(rv, rv);
+  loader->AddObserver(this);
+
   mState = eXMLContentSinkState_InProlog;
   mDocElement = nsnull;
   mRootElement = nsnull;
@@ -226,7 +234,7 @@ NS_INTERFACE_MAP_BEGIN(nsXMLContentSink)
 	NS_INTERFACE_MAP_ENTRY(nsIContentSink)
 	NS_INTERFACE_MAP_ENTRY(nsIObserver)
 	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-	NS_INTERFACE_MAP_ENTRY(nsIStreamLoaderObserver)
+	NS_INTERFACE_MAP_ENTRY(nsIScriptLoaderObserver)
 	NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
 	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLContentSink)
 NS_INTERFACE_MAP_END
@@ -278,6 +286,12 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   nsresult rv = NS_OK;
   if (mXSLTransformMediator) {
     rv = SetupTransformMediator();
+  }
+
+  nsCOMPtr<nsIScriptLoader> loader;
+  mDocument->GetScriptLoader(getter_AddRefs(loader));
+  if (loader) {
+    loader->RemoveObserver(this);
   }
 
   if (!mXSLTransformMediator || NS_FAILED(rv)) {
@@ -566,6 +580,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   nsCOMPtr<nsIAtom> nameSpacePrefix;
   PRBool isHTML = PR_FALSE;
   PRBool pushContent = PR_TRUE;
+  PRBool appendContent = PR_TRUE;
   nsCOMPtr<nsIContent> content;
 
   // XXX Hopefully the parser will flag this before we get
@@ -599,6 +614,9 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   if (isHTML) {
     if (tagAtom.get() == nsHTMLAtoms::script) {
       result = ProcessStartSCRIPTTag(aNode);
+      // Don't append the content to the tree until we're all
+      // done collecting its contents
+      appendContent = PR_FALSE;
     } else if (tagAtom.get() == nsHTMLAtoms::title) {
       if (mTitleText.IsEmpty())
         mInTitle = PR_TRUE; // The first title wins
@@ -667,7 +685,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
         if (!mXSLTransformMediator)
             mDocument->SetRootContent(mDocElement);
       }
-      else {
+      else if (appendContent) {
         nsCOMPtr<nsIContent> parent = getter_AddRefs(GetCurrentContent());
 
         parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
@@ -695,6 +713,7 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
   nsCOMPtr<nsIAtom> nameSpacePrefix;
   PRBool isHTML = PR_FALSE;
   PRBool popContent = PR_TRUE;
+  PRBool appendContent = PR_FALSE;
 
   // XXX Hopefully the parser will flag this before we get
   // here. If we're in the prolog or epilog, there should be
@@ -714,6 +733,7 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
 
     if (tagAtom.get() == nsHTMLAtoms::script) {
       result = ProcessEndSCRIPTTag(aNode);
+      appendContent = PR_TRUE;
     } else if (tagAtom.get() == nsHTMLAtoms::title) {
       if (mInTitle) { // The first title wins
         nsCOMPtr<nsIXMLDocument> xmlDoc(do_QueryInterface(mDocument));
@@ -759,6 +779,11 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
       if (mDocElement == content.get()) {
         mState = eXMLContentSinkState_InEpilog;
       }
+      else if (appendContent) {
+        nsCOMPtr<nsIContent> parent = getter_AddRefs(GetCurrentContent());
+
+        parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
+      }
     }
     else {
       // XXX Again, the parser should catch unmatched tags and
@@ -775,7 +800,13 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
   }
   NS_IF_RELEASE(nameSpace);
 
-  return result;
+  if (mNeedToBlockParser) {
+    mParserBlocked = PR_TRUE;
+    return NS_ERROR_HTMLPARSER_BLOCK;
+  }
+  else {
+    return result;
+  }
 }
 
 NS_IMETHODIMP
@@ -881,9 +912,7 @@ nsXMLContentSink::AddCDATASection(const nsIParserNode& aNode)
   nsresult result = NS_OK;
 
   const nsAReadableString& text = aNode.GetText();
-  if (mInScript) {
-    mScriptText.Append(text);
-  } else if (mInTitle) {
+  if (mInTitle) {
     mTitleText.Append(text);
   } else if (mTextAreaElement) {
     mTextareaText.Append(text);
@@ -1515,9 +1544,7 @@ nsXMLContentSink::AddText(const nsAReadableString& aString)
     return NS_OK;
   }
 
-  if (mInScript) {
-    mScriptText.Append(aString);
-  } else if (mInTitle) {
+  if (mInTitle) {
     mTitleText.Append(aString);
   } else if (mTextAreaElement) {
     mTextareaText.Append(aString);
@@ -1750,203 +1777,102 @@ nsXMLContentSink::StartLayout()
   }
 }
 
-NS_IMETHODIMP
-nsXMLContentSink::ResumeParsing()
+nsresult
+nsXMLContentSink::ProcessEndSCRIPTTag(const nsIParserNode& aNode)
 {
-  if (mParser) {
+  nsresult result = NS_OK;
+
+  nsCOMPtr<nsIContent> element(dont_AddRef(GetCurrentContent()));
+  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(element));
+  NS_ASSERTION(scriptElement, "null script element in XML content sink");
+  mScriptElements.AppendElement(scriptElement);
+
+  nsCOMPtr<nsIScriptElement> sele(do_QueryInterface(element));
+  if (sele) {
+    sele->SetLineNumber(mScriptLineNo);
+  }
+
+  mInScript = PR_FALSE;
+  mConstrainSize = PR_TRUE; 
+  // Assume that we're going to block the parser with a script load.
+  // If it's an inline script, we'll be told otherwise in the call
+  // to our ScriptAvailable method.
+  mNeedToBlockParser = PR_TRUE;
+
+  return result;
+}
+
+NS_IMETHODIMP
+nsXMLContentSink::ScriptAvailable(nsresult aResult, 
+                                  nsIDOMHTMLScriptElement *aElement, 
+                                  PRBool aIsInline,
+                                  PRBool aWasPending,
+                                  nsIURI *aURI, 
+                                  PRInt32 aLineNo,
+                                  const nsAString& aScript)
+{
+  // Check if this is the element we were waiting for
+  PRUint32 count;
+  mScriptElements.Count(&count);
+  nsCOMPtr<nsISupports> sup(dont_AddRef(mScriptElements.ElementAt(count-1)));
+  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(sup));
+  if (aElement != scriptElement.get()) {
+    return NS_OK;
+  }
+
+  if (mParserBlocked) {
+    // make sure to unblock the parser before evaluating the script,
+    // we must unblock the parser even if loading the script failed or
+    // if the script was empty, if we don't, the parser will never be
+    // unblocked.
+    mParser->UnblockParser();
+    mParserBlocked = PR_FALSE;
+  }
+
+  // Mark the current script as loaded
+  mNeedToBlockParser = PR_FALSE;
+
+  if (NS_FAILED(aResult)) {
+    mScriptElements.RemoveElementAt(count-1);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsXMLContentSink::ScriptEvaluated(nsresult aResult, 
+                                  nsIDOMHTMLScriptElement *aElement,
+                                  PRBool aIsInline,
+                                  PRBool aWasPending)
+{
+  // Check if this is the element we were waiting for
+  PRUint32 count;
+  mScriptElements.Count(&count);
+  nsCOMPtr<nsISupports> sup(dont_AddRef(mScriptElements.ElementAt(count-1)));
+  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(sup));
+  if (aElement != scriptElement.get()) {
+    return NS_OK;
+  }
+
+  // Pop the script element stack
+  mScriptElements.RemoveElementAt(count-1); 
+
+  if(mParser && mParser->IsParserEnabled() && aWasPending){
     mParser->ContinueParsing();
   }
 
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXMLContentSink::EvaluateScript(nsString& aScript, nsIURI *aScriptURI, PRUint32 aLineNo, const char* aVersion)
-{
-  nsresult rv = NS_OK;
-
-  if (0 < aScript.Length()) {
-    nsCOMPtr<nsIScriptGlobalObject> scriptGlobal;
-    mDocument->GetScriptGlobalObject(getter_AddRefs(scriptGlobal));
-    if (scriptGlobal) {
-      nsCOMPtr<nsIScriptContext> context;
-      NS_ENSURE_SUCCESS(scriptGlobal->GetContext(getter_AddRefs(context)),
-         NS_ERROR_FAILURE);
-
-      char* url = nsnull;
-      if (aScriptURI) {
-        rv = aScriptURI->GetSpec(&url);
-      }
-
-      nsCOMPtr<nsIPrincipal> principal;
-      if (NS_SUCCEEDED(rv)) {
-        rv = mDocument->GetPrincipal(getter_AddRefs(principal));
-        NS_ASSERTION(principal, "principal required for document");
-      }
-
-      if (NS_SUCCEEDED(rv)) {
-        nsAutoString val;
-        PRBool isUndefined;
-
-        (void) context->EvaluateString(aScript, nsnull, principal, url, aLineNo, aVersion,
-                                       val, &isUndefined);
-      }
-      if (url) {
-        nsCRT::free(url);
-      }
-    }
-  }
-
-  return rv;
-}
-
-nsresult
-nsXMLContentSink::ProcessEndSCRIPTTag(const nsIParserNode& aNode)
-{
-  nsresult result = NS_OK;
-  if (mInScript) {
-    nsCOMPtr<nsIURI> docURI( dont_AddRef( mDocument->GetDocumentURL() ) );
-    result = EvaluateScript(mScriptText, docURI, mScriptLineNo, mScriptLanguageVersion);  
-    mScriptText.Truncate();
-    mInScript = PR_FALSE;
-  }
-
-  return result;
-}
-
-NS_IMETHODIMP
-nsXMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
-                                   nsISupports* context,
-                                   nsresult aStatus,
-                                   PRUint32 stringLen,
-                                   const char* string)
-{
-  nsresult rv = NS_OK;
-  nsString aData; aData.AssignWithConversion(string, stringLen);
-
-  if (NS_OK == aStatus) {
-    { // scope in block so nsCOMPtr released at one point
-      nsCOMPtr<nsIChannel> channel;
-      nsCOMPtr<nsIRequest> request;
-      aLoader->GetRequest(getter_AddRefs(request));
-      if (request)
-        channel = do_QueryInterface(request);
-
-      nsCOMPtr<nsIURI> url;
-      if (channel) {
-        channel->GetURI(getter_AddRefs(url));
-      }
-      
-      if(mParser) {
-        mParser->UnblockParser(); // make sure to unblock the parser before evaluating the script
-      }
-
-      rv = EvaluateScript(aData, url, 1, mScriptLanguageVersion);
-    }
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  if(mParser && mParser->IsParserEnabled()){
-    rv=mParser->ContinueParsing();
-  }
-
-  if (NS_FAILED(rv)) return rv;
-
-  return rv;
-}
-
 nsresult
 nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
 {
-  nsresult rv = NS_OK;
-  PRBool isJavaScript = PR_TRUE;
-  const char* jsVersionString = nsnull;
-  PRInt32 i, ac = aNode.GetAttributeCount();
+  // Wait until we get the script content
+  mInScript = PR_TRUE;
+  mConstrainSize = PR_FALSE;
+  mScriptLineNo = (PRUint32)aNode.GetSourceLineNumber();
 
-  // Look for SRC attribute and look for a LANGUAGE attribute
-  nsAutoString src;
-  for (i = 0; i < ac; i++) {
-    nsAutoString key(aNode.GetKeyAt(i));
-    if (key.EqualsIgnoreCase("src")) {
-      src = aNode.GetValueAt(i);
-    }
-    else if (key.EqualsIgnoreCase("type")) {
-      const nsString& type = aNode.GetValueAt(i);
-
-      nsAutoString  mimeType;
-      nsAutoString  params;
-      SplitMimeType(type, mimeType, params);
-
-      isJavaScript = mimeType.EqualsIgnoreCase("text/javascript");
-      if (isJavaScript) {
-        JSVersion jsVersion = JSVERSION_DEFAULT;
-        if (params.Find("version=", PR_TRUE) == 0) {
-          if (params.Length() != 11 || params[8] != '1' || params[9] != '.')
-            jsVersion = JSVERSION_UNKNOWN;
-          else switch (params[10]) {
-            case '0': jsVersion = JSVERSION_1_0; break;
-            case '1': jsVersion = JSVERSION_1_1; break;
-            case '2': jsVersion = JSVERSION_1_2; break;
-            case '3': jsVersion = JSVERSION_1_3; break;
-            case '4': jsVersion = JSVERSION_1_4; break;
-            case '5': jsVersion = JSVERSION_1_5; break;
-            default:  jsVersion = JSVERSION_UNKNOWN;
-          }
-        }
-        jsVersionString = JS_VersionToString(jsVersion);
-      }
-    }
-    else if (key.EqualsIgnoreCase("language")) {
-      const nsString& lang = aNode.GetValueAt(i);
-      isJavaScript = nsParserUtils::IsJavaScriptLanguage(lang, &jsVersionString);
-    }
-  }
-
-  // Don't process scripts that aren't JavaScript
-  if (isJavaScript) {
-    mScriptLanguageVersion = jsVersionString;
-
-    // If there is a SRC attribute...
-    if (src.Length() > 0) {
-      // Use the SRC attribute value to load the URL
-      nsIURI* url = nsnull;
-      nsAutoString absURL;
-    // XXX we need to get passed in the nsILoadGroup here!
-//      nsILoadGroup* group = mDocument->GetDocumentLoadGroup();
-      rv = NS_NewURI(&url, src, mDocumentBaseURL);
-      if (NS_OK != rv) {
-        return rv;
-      }
-
-      // Check that this page is allowed to load this URI.
-      NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                      NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-      if (NS_FAILED(rv)) 
-          return rv;
-      rv = securityManager->CheckLoadURI(mDocumentBaseURL, url, nsIScriptSecurityManager::ALLOW_CHROME);
-      if (NS_FAILED(rv)) 
-          return rv;
-
-      nsCOMPtr<nsIStreamLoader> loader;
-      nsCOMPtr<nsILoadGroup> loadGroup;
-
-      mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-      rv = NS_NewStreamLoader(getter_AddRefs(loader), url, this, nsnull,
-                              loadGroup);
-      NS_RELEASE(url);
-      if (NS_OK == rv) {
-        rv = NS_ERROR_HTMLPARSER_BLOCK;
-      }
-    }
-    else {
-      // Wait until we get the script content
-      mInScript = PR_TRUE;
-      mConstrainSize = PR_FALSE;
-      mScriptLineNo = (PRUint32)aNode.GetSourceLineNumber();
-    }
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 nsresult

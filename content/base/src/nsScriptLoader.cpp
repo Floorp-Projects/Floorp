@@ -57,7 +57,7 @@ public:
   nsScriptLoadRequest(nsIDOMHTMLScriptElement* aElement,
                       nsIScriptLoaderObserver* aObserver,
                       const char* aVersionString);
-  ~nsScriptLoadRequest();
+  virtual ~nsScriptLoadRequest();
 
   NS_DECL_ISUPPORTS
   
@@ -81,8 +81,8 @@ nsScriptLoadRequest::nsScriptLoadRequest(nsIDOMHTMLScriptElement* aElement,
                                          nsIScriptLoaderObserver* aObserver,
                                          const char* aVersionString) :
   mElement(aElement), mObserver(aObserver), 
-  mJSVersion(aVersionString), mLoading(PR_TRUE), mWasPending(PR_FALSE),
-  mIsInline(PR_TRUE), mLineNo(1)
+  mLoading(PR_TRUE), mWasPending(PR_FALSE),
+  mIsInline(PR_TRUE), mJSVersion(aVersionString), mLineNo(1)
 {
   NS_INIT_ISUPPORTS();
 }

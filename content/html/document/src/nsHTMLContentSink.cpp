@@ -30,11 +30,12 @@
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoader.h"
 #include "nsICSSLoaderObserver.h"
+#include "nsIScriptLoader.h"
+#include "nsIScriptLoaderObserver.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIURL.h"
-#include "nsIStreamLoader.h"
 #include "nsNetUtil.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
@@ -45,6 +46,7 @@
 #include "nsHTMLTokens.h"  
 #include "nsHTMLEntities.h" 
 #include "nsCRT.h"
+#include "nsSupportsArray.h"
 #include "jsapi.h" // for JSVERSION_* and JS_VersionToString
 #include "prtime.h"
 #include "prlog.h"
@@ -58,6 +60,8 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentType.h"
+#include "nsIDOMHTMLScriptElement.h"
+#include "nsIScriptElement.h"
 
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
@@ -169,7 +173,7 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 class SinkContext;
 
 class HTMLContentSink : public nsIHTMLContentSink,
-                        public nsIStreamLoaderObserver,
+                        public nsIScriptLoaderObserver,
                         public nsITimerCallback,
                         public nsICSSLoaderObserver,
                         public nsIDocumentObserver,
@@ -188,7 +192,7 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMLOADEROBSERVER
+  NS_DECL_NSISCRIPTLOADEROBSERVER
 
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void);
@@ -317,7 +321,6 @@ public:
   nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
   nsIURI* mDocumentURI;
   nsIURI* mDocumentBaseURL;
-  nsCOMPtr<nsIURI> mScriptURI;
   nsIWebShell* mWebShell;
   nsIParser* mParser;
 
@@ -335,7 +338,6 @@ public:
   nsIHTMLContent* mHead;
   nsString* mTitle;
   nsString  mUnicodeXferBuf;
-  nsString  mScriptCharset;
 
   PRBool mLayoutStarted;
   PRInt32 mInScript;
@@ -347,6 +349,9 @@ public:
   SinkContext* mCurrentContext;
   SinkContext* mHeadContext;
   PRInt32 mNumOpenIFRAMES;
+  nsSupportsArray mScriptElements;
+  PRBool mParserBlocked;
+  PRBool mNeedToBlockParser;
 
   nsCString           mRef;
 
@@ -393,13 +398,7 @@ public:
   // Script processing related routines
   nsresult ResumeParsing();
   PRBool   PreEvaluateScript();
-  void     PostEvaluateScript(PRBool aBodyPresent);
-  nsresult EvaluateScript(const nsAReadableString& aScript,
-                          nsIURI *aScriptURI,
-                          PRInt32 aLineNo,
-                          const char* aVersion,
-                          PRBool aInScriptTag);
-  const char* mScriptLanguageVersion;
+  void     PostEvaluateScript();
 
   void UpdateAllContexts();
   void NotifyAppend(nsIContent* aContent, 
@@ -2145,6 +2144,8 @@ HTMLContentSink::HTMLContentSink() {
   mInMonolithicContainer = 0;
   mInsideNoXXXTag  = 0;
   mFlags=0;
+  mNeedToBlockParser = PR_FALSE;
+  mParserBlocked = PR_FALSE;
 }
 
 HTMLContentSink::~HTMLContentSink()
@@ -2207,7 +2208,7 @@ HTMLContentSink::~HTMLContentSink()
 NS_IMPL_ISUPPORTS7(HTMLContentSink, 
                    nsIHTMLContentSink,
                    nsIContentSink,
-                   nsIStreamLoaderObserver,
+                   nsIScriptLoaderObserver,
                    nsITimerCallback,
                    nsICSSLoaderObserver,
                    nsIDocumentObserver,
@@ -2247,6 +2248,11 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mWebShell = aContainer;
   NS_ADDREF(aContainer);
 
+  nsCOMPtr<nsIScriptLoader> loader;
+  rv = mDocument->GetScriptLoader(getter_AddRefs(loader));
+  NS_ENSURE_SUCCESS(rv, rv);
+  loader->AddObserver(this);
+  
   PRBool enabled = PR_TRUE;
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   NS_ASSERTION(prefs, "oops no prefs!");
@@ -2431,6 +2437,12 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 
   ScrollToRef();
 
+  nsCOMPtr<nsIScriptLoader> loader;
+  mDocument->GetScriptLoader(getter_AddRefs(loader));
+  if (loader) {
+    loader->RemoveObserver(this);
+  }
+  
   mDocument->EndLoad();
 
   // Ref. Bug 49115
@@ -4477,7 +4489,7 @@ HTMLContentSink::PreEvaluateScript()
 }
 
 void
-HTMLContentSink::PostEvaluateScript(PRBool aBodyPresent)
+HTMLContentSink::PostEvaluateScript()
 {
   mInScript--;
   mCurrentContext->SetPreAppend(PR_FALSE);
@@ -4489,268 +4501,79 @@ HTMLContentSink::IsInScript()
   return (mInScript > 0);
 }
 
-nsresult
-HTMLContentSink::EvaluateScript(const nsAReadableString& aScript,
-                                nsIURI *aScriptURI,
-                                PRInt32 aLineNo,
-                                const char* aVersion,
-                                PRBool aInScriptTag)
-{
-  nsresult rv = NS_OK;
-
-  if (aScript.Length() > 0) {
-    nsCOMPtr<nsIScriptGlobalObject> globalObject;
-    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-    NS_ENSURE_TRUE(globalObject, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIScriptContext> context;
-    NS_ENSURE_SUCCESS(globalObject->GetContext(getter_AddRefs(context)),
-      NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIPrincipal> principal;
-    mDocument->GetPrincipal(getter_AddRefs(principal));
-    NS_ASSERTION(principal, "principal required for document");
-
-    nsAutoString ret;
-    char* url = nsnull;
-
-    if (aScriptURI) {
-      (void)aScriptURI->GetSpec(&url);
-    }
-    
-    // If we are currently processing a script tag, set 
-    // a flag in nsIScriptContext indicating for the same. 
-    if (aInScriptTag)
-      context->SetProcessingScriptTag(PR_TRUE);
-
-    PRBool isUndefined;
-    context->EvaluateString(aScript, nsnull, principal, url,
-                            aLineNo, aVersion, ret, &isUndefined);
-
-    // we are done processing the script. Unset the
-    // flag in nsIScriptContext
-    if (aInScriptTag)
-      context->SetProcessingScriptTag(PR_FALSE);
-    
-    if (url) {
-      nsCRT::free(url);
-    }
-  }
-  
-  return rv;
-}
-
 NS_IMETHODIMP
-HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
-                                  nsISupports* aContext,
-                                  nsresult aStatus,
-                                  PRUint32 stringLen,
-                                  const char* string)
+HTMLContentSink::ScriptAvailable(nsresult aResult, 
+                                 nsIDOMHTMLScriptElement *aElement, 
+                                 PRBool aIsInline,
+                                 PRBool aWasPending,
+                                 nsIURI *aURI, 
+                                 PRInt32 aLineNo, 
+                                 const nsAString& aScript)
 {
-  nsresult rv = NS_OK;
+  // Check if this is the element we were waiting for
+  PRUint32 count;
+  mScriptElements.Count(&count);
+  nsCOMPtr<nsISupports> sup(dont_AddRef(mScriptElements.ElementAt(count-1)));
+  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(sup));
+  if (aElement != scriptElement.get()) {
+    return NS_OK;
+  }
 
-  if(mParser) {
+  if (mParserBlocked) {
     // make sure to unblock the parser before evaluating the script,
     // we must unblock the parser even if loading the script failed or
     // if the script was empty, if we don't, the parser will never be
     // unblocked.
     mParser->UnblockParser();
+    mParserBlocked = PR_FALSE;
   }
 
-  if (stringLen) {
-    nsAutoString characterSet;
-    nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
-    nsXPIDLCString contenttypeheader;
-    nsCOMPtr<nsIHttpChannel> httpChannel;
+  // Mark the current script as loaded
+  mNeedToBlockParser = PR_FALSE;
 
-    nsCOMPtr<nsIChannel> channel;
-    nsCOMPtr<nsIRequest> request;
-    rv = aLoader->GetRequest(getter_AddRefs(request));    
-    NS_ASSERTION(request, "StreamLoader's request went away prematurely");
-    if (NS_FAILED(rv)) return rv;
-
-    channel = do_QueryInterface(request);
-
-    if (channel) {
-      httpChannel = do_QueryInterface(channel);
-      if (httpChannel) {
-        rv = httpChannel->GetResponseHeader("content-type",
-                                            getter_Copies(contenttypeheader));
-      }
-    }
-
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoString contentType;
-      contentType.AssignWithConversion(contenttypeheader.get());
-
-      PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
-
-      if(kNotFound != start) {
-        start += 8; // 8 = "charset=".length
-        PRInt32 end = contentType.FindCharInSet(";\n\r ", start  );
-        if(kNotFound == end ) end = contentType.Length();
-
-        contentType.Mid(characterSet, start, end - start);
-        NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &rv);
-
-        if(NS_SUCCEEDED(rv) && calias) {
-          nsAutoString preferred;
-          rv = calias->GetPreferred(characterSet, preferred);
-
-          if(NS_SUCCEEDED(rv)) {
-            characterSet = preferred;
-          }
-        }
-      }
-    }
-
-    if (NS_FAILED(rv) || characterSet.IsEmpty()) {
-      //charset from script charset tag
-      characterSet.Assign(mScriptCharset);
-    }
-
-    if (NS_FAILED(rv) || characterSet.IsEmpty()) {
-      // charset from document default
-      rv = mDocument->GetDocumentCharacterSet(characterSet);
-    }
-
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Could not get document charset!");
-
-    nsCOMPtr<nsICharsetConverterManager> charsetConv =
-      do_GetService(kCharsetConverterManagerCID, &rv);
-
-    if (NS_SUCCEEDED(rv) && charsetConv) {
-      rv = charsetConv->GetUnicodeDecoder(&characterSet,
-                                          getter_AddRefs(unicodeDecoder));
-    }
-
-    // converts from the charset to unicode
-    if (NS_SUCCEEDED(rv)) {
-      PRInt32 unicodeLength = 0;
-
-      rv = unicodeDecoder->GetMaxLength(string, stringLen, &unicodeLength);
-      if (NS_SUCCEEDED(rv)) {
-        mUnicodeXferBuf.SetCapacity(unicodeLength);
-
-        // XXX: Whaaaaa! const violation!!!
-        PRUnichar *ustr = (PRUnichar *) mUnicodeXferBuf.GetUnicode();
-
-        rv = unicodeDecoder->Convert(string, (PRInt32 *) &stringLen, ustr,
-                                     &unicodeLength);
-
-        if (NS_SUCCEEDED(rv)) {
-          mUnicodeXferBuf.SetLength(unicodeLength);
-        } else {
-          mUnicodeXferBuf.SetLength(0);
-        }
-      }
-    }
-
-    NS_ASSERTION(NS_SUCCEEDED(rv),
-                 "Could not convert external JavaScript to Unicode!");
-
-    if ((NS_OK == aStatus) && (NS_SUCCEEDED(rv))) {
-      PRBool bodyPresent = PreEvaluateScript();
-
-      //-- Merge the principal of the script file with that of the document
-      nsCOMPtr<nsISupports> owner;
-      channel->GetOwner(getter_AddRefs(owner));
-      nsCOMPtr<nsIPrincipal> prin;
-
-      if (owner) {
-        prin = do_QueryInterface(owner, &rv);
-        if (NS_FAILED(rv)) return rv;
-      }
-
-      rv = mDocument->AddPrincipal(prin);
-
-      if (NS_FAILED(rv))
-        return rv;
-
-      rv = EvaluateScript(mUnicodeXferBuf, mScriptURI, 1,
-                          mScriptLanguageVersion, PR_TRUE);
-      if (NS_FAILED(rv))
-        return rv;
-
-      PostEvaluateScript(bodyPresent);
-
-    }
+  if (NS_SUCCEEDED(aResult)) {
+    PreEvaluateScript();
+  }
+  else {
+    mScriptElements.RemoveElementAt(count-1);
   }
 
-  if(mParser && mParser->IsParserEnabled()){
-    rv = mParser->ContinueParsing();
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+HTMLContentSink::ScriptEvaluated(nsresult aResult, 
+                                 nsIDOMHTMLScriptElement *aElement,
+                                 PRBool aIsInline,
+                                 PRBool aWasPending)
+{
+  // Check if this is the element we were waiting for
+  PRUint32 count;
+  mScriptElements.Count(&count);
+  nsCOMPtr<nsISupports> sup(dont_AddRef(mScriptElements.ElementAt(count-1)));
+  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(sup));
+  if (aElement != scriptElement.get()) {
+    return NS_OK;
   }
 
-  //invalidate Xfer buffer content
-  mUnicodeXferBuf.SetLength(0); 
+  // Pop the script element stack
+  mScriptElements.RemoveElementAt(count-1); 
 
-  return rv;
+  if (NS_SUCCEEDED(aResult)) {
+    PostEvaluateScript();
+  }
+
+  if(mParser && mParser->IsParserEnabled() && aWasPending){
+    mParser->ContinueParsing();
+  }
+
+  return NS_OK;
 }
 
 nsresult
 HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
-  PRBool isJavaScript = PR_TRUE;
-  const char* jsVersionString = nsnull;
-  PRInt32 i, ac = aNode.GetAttributeCount();
-
-  // Look for SRC attribute and look for a LANGUAGE attribute
-  nsAutoString src;
-  for (i = 0; i < ac; i++) {
-    nsAutoString key(aNode.GetKeyAt(i));
-    if (key.EqualsIgnoreCase("src")) {
-      GetAttributeValueAt(aNode, i, src);
-    }
-    else if (key.EqualsIgnoreCase("type")) {
-      nsAutoString  type;
-
-      GetAttributeValueAt(aNode, i, type);
-
-      nsAutoString  mimeType;
-      nsAutoString  params;
-      SplitMimeType(type, mimeType, params);
-
-      isJavaScript = mimeType.EqualsIgnoreCase("application/x-javascript") || 
-                     mimeType.EqualsIgnoreCase("text/javascript");
-      if (isJavaScript) {
-        JSVersion jsVersion = JSVERSION_DEFAULT;
-        if (params.Find("version=", PR_TRUE) == 0) {
-          if (params.Length() != 11 || params[8] != '1' || params[9] != '.')
-            jsVersion = JSVERSION_UNKNOWN;
-          else switch (params[10]) {
-            case '0': jsVersion = JSVERSION_1_0; break;
-            case '1': jsVersion = JSVERSION_1_1; break;
-            case '2': jsVersion = JSVERSION_1_2; break;
-            case '3': jsVersion = JSVERSION_1_3; break;
-            case '4': jsVersion = JSVERSION_1_4; break;
-            case '5': jsVersion = JSVERSION_1_5; break;
-            default:  jsVersion = JSVERSION_UNKNOWN;
-          }
-        }
-        jsVersionString = JS_VersionToString(jsVersion);
-      }
-    }
-    else if (key.EqualsIgnoreCase("language")) {
-      nsAutoString  lang;
-       
-      GetAttributeValueAt(aNode, i, lang);
-      isJavaScript = nsParserUtils::IsJavaScriptLanguage(lang, &jsVersionString);
-    }
-    else if (key.EqualsIgnoreCase("charset")) {
-      //charset from script charset tag
-      nsAutoString  charset;
-
-      GetAttributeValueAt(aNode, i, charset);
-      NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &rv);
-      if(NS_SUCCEEDED(rv) && (nsnull != calias) )
-      {
-       rv = calias->GetPreferred(charset, mScriptCharset);
-      } else {
-       mScriptCharset = charset;
-      }
-    }
-  }
 
   // Create content object
   NS_ASSERTION(mCurrentContext->mStackPos > 0, "leaf w/o container");
@@ -4758,159 +4581,87 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     return NS_ERROR_FAILURE;
   }
   nsIHTMLContent* parent = mCurrentContext->mStack[mCurrentContext->mStackPos-1].mContent;
-  nsIHTMLContent* element = nsnull;
+  nsCOMPtr<nsIHTMLContent> element;
   nsCOMPtr<nsINodeInfo> nodeInfo;
   mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::script, nsnull, kNameSpaceID_None,
                                 *getter_AddRefs(nodeInfo));
 
-  rv = NS_CreateHTMLElement(&element, nodeInfo, PR_FALSE);
-  if (NS_SUCCEEDED(rv)) {
-    PRInt32 id;
-    mDocument->GetAndIncrementContentID(&id);    
-    element->SetContentID(id);
-
-    // Add in the attributes and add the style content object to the
-    // head container.
-    element->SetDocument(mDocument, PR_FALSE, PR_TRUE);
-    rv = AddAttributes(aNode, element);
-    if (NS_FAILED(rv)) {
-      NS_RELEASE(element);
-      return rv;
-    }
-    if (mCurrentContext->mStack[mCurrentContext->mStackPos-1].mInsertionPoint != -1) {
-      parent->InsertChildAt(element, 
-                            mCurrentContext->mStack[mCurrentContext->mStackPos-1].mInsertionPoint++, 
-                            PR_FALSE, PR_FALSE);
-    }
-    else {
-      parent->AppendChildTo(element, PR_FALSE, PR_FALSE);
-    }
-  }
-  else {
+  rv = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);
+  if (NS_FAILED(rv)) {
     return rv;
   }
-  
+
+  PRInt32 id;
+  mDocument->GetAndIncrementContentID(&id);    
+  element->SetContentID(id);
+
+  // Add in the attributes and add the style content object to the
+  // head container.
+  element->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+  rv = AddAttributes(aNode, element);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIScriptElement> sele(do_QueryInterface(element));
+  if (sele) {
+    sele->SetLineNumber((PRUint32)aNode.GetSourceLineNumber());
+  }
+
   // Create a text node holding the content
   // First, get the text content of the script tag
   nsAutoString script;
   script.Assign(aNode.GetSkippedContent());
 
   if (script.Length() > 0) {
-    nsIContent* text;
-    rv = NS_NewTextNode(&text);
+    nsCOMPtr<nsIContent> text;
+    rv = NS_NewTextNode(getter_AddRefs(text));
     if (NS_OK == rv) {
-      nsIDOMText* tc;
-      rv = text->QueryInterface(NS_GET_IID(nsIDOMText), (void**)&tc);
+      nsCOMPtr<nsIDOMText> tc;
+      rv = text->QueryInterface(NS_GET_IID(nsIDOMText), 
+                                (void**)getter_AddRefs(tc));
       if (NS_OK == rv) {
         tc->SetData(script);
-        NS_RELEASE(tc);
       }
       element->AppendChildTo(text, PR_FALSE, PR_FALSE);
       text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
-      NS_RELEASE(text);
     }
   }
-  NS_RELEASE(element);
 
   // Don't include script loading and evaluation in the stopwatch
   // that is measuring content creation time
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::ProcessSCRIPTTag()\n"));
   MOZ_TIMER_STOP(mWatch);
 
-  // Don't process scripts that aren't JavaScript and don't process
-  // scripts that are inside iframes, noframe, or noscript tags,
-  // or if the script context has script evaluation disabled:
-  PRBool scriptsEnabled = PR_TRUE;
-  nsCOMPtr<nsIScriptGlobalObject> globalObject;
-  mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-  if (globalObject)
-  {
-    nsCOMPtr<nsIScriptContext> context;
-    if (NS_SUCCEEDED(globalObject->GetContext(getter_AddRefs(context)))
-        && context)
-      context->GetScriptsEnabled(&scriptsEnabled);
+  // Assume that we're going to block the parser with a script load.
+  // If it's an inline script, we'll be told otherwise in the call
+  // to our ScriptAvailable method.
+  mNeedToBlockParser = PR_TRUE;
+
+  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(element));
+  mScriptElements.AppendElement(scriptElement);
+
+  // Insert the child into the content tree. This will evaluate the
+  // script as well.
+  if (mCurrentContext->mStack[mCurrentContext->mStackPos-1].mInsertionPoint != -1) {
+      parent->InsertChildAt(element, 
+                            mCurrentContext->mStack[mCurrentContext->mStackPos-1].mInsertionPoint++, 
+                            PR_FALSE, PR_FALSE);
+  }
+  else {
+    parent->AppendChildTo(element, PR_FALSE, PR_FALSE);
   }
 
-  if (scriptsEnabled && isJavaScript && !mNumOpenIFRAMES && !mInsideNoXXXTag) {
-    mScriptLanguageVersion = jsVersionString;
-
-    // If there is a SRC attribute...
-    if (src.Length() > 0) {
-      // Use the SRC attribute value to load the URL
-      {
-        rv = NS_NewURI(getter_AddRefs(mScriptURI), src, mDocumentBaseURL);
-      }
-      if (NS_OK != rv) {
-        return rv;
-      }
-
-      // Check that this page is allowed to load this URI.
-      NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                      NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-      if (NS_FAILED(rv)) 
-          return rv;
-      rv = securityManager->CheckLoadURI(mDocumentBaseURL, mScriptURI, nsIScriptSecurityManager::ALLOW_CHROME);
-      if (NS_FAILED(rv)) 
-          return rv;
-
-      // After the security manager, the content-policy stuff gets a veto
-      // For pinkerton: a symphony for string conversion, in 3 parts.
-      nsXPIDLCString urlCString;
-      mScriptURI->GetSpec(getter_Copies(urlCString));
-      nsAutoString url;
-      url.AssignWithConversion((const char *)urlCString);
-      nsCOMPtr<nsIDOMElement> DOMElement = do_QueryInterface(element, &rv);
-      
-      PRBool shouldLoad = PR_TRUE;
-      if (NS_SUCCEEDED(rv) &&
-          (rv = NS_CheckContentLoadPolicy(nsIContentPolicy::CONTENT_SCRIPT,
-                                          url, DOMElement, &shouldLoad),
-           NS_SUCCEEDED(rv)) &&
-          !shouldLoad) {
-
-        // content-policy veto causes silent failure
-        return NS_OK;
-      }
-
-      nsCOMPtr<nsILoadGroup> loadGroup;
-      nsCOMPtr<nsIStreamLoader> loader;
-
-      mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-
-      // supply a prompter if you have one. this allows modal dialogs put up
-      // from within this new stream loader to have proper parenting. but it's
-      // not fatal if there isn't a prompter.
-      nsCOMPtr<nsIInterfaceRequestor> promptcall(do_QueryInterface(mWebShell));
-      rv = NS_NewStreamLoader(getter_AddRefs(loader), mScriptURI, this,
-                              nsnull, loadGroup, promptcall,
-                              nsIChannel::LOAD_NORMAL);
-      if (NS_OK == rv) {
-        rv = NS_ERROR_HTMLPARSER_BLOCK;
-      }
-    }
-    else {
-      PRBool bodyPresent = PreEvaluateScript();
-
-      PRUint32 lineNo = (PRUint32)aNode.GetSourceLineNumber();
-      nsIURI *docURI = mDocument->GetDocumentURL();
-
-      EvaluateScript(script, docURI, lineNo, jsVersionString, PR_TRUE);
-      NS_IF_RELEASE(docURI);
-
-      PostEvaluateScript(bodyPresent);
-
-      // If the parse was disabled as a result of this evaluate script
-      // (for example, if the script document.wrote a SCRIPT SRC= tag,
-      // we remind the parser to block.
-      if ((nsnull != mParser) && (PR_FALSE == mParser->IsParserEnabled())) {
-        rv = NS_ERROR_HTMLPARSER_BLOCK;
-      }
-    }
+  // If the act of insertion evaluated the script, we're fine.
+  // Else, block the parser till the script has loaded.
+  if (mNeedToBlockParser) {
+    mParserBlocked = PR_TRUE;
+    return NS_ERROR_HTMLPARSER_BLOCK;
   }
-
-  return rv;
+  else {
+    return NS_OK;
+  }
 }
-
 
 // 3 ways to load a style sheet: inline, style src=, link tag
 // XXX What does nav do if we have SRC= and some style data inline?
