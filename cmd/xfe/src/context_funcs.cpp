@@ -672,6 +672,13 @@ XFE_AllConnectionsComplete(MWContext *context)
   else if((context->type != MWContextSearch) 
 	&& (context->type != MWContextSearchLdap) )
     {
+      /* At this point, we need to pay our dues if we've been lazy
+         about getting image sizes. If the context is marked for
+         reflow, then do it now... */
+      if (context->requires_reflow) {
+        LO_RelayoutFromElement(context, NULL);
+        context->requires_reflow = PR_FALSE;
+      }
       XFE_Progress (top, XP_GetString(XFE_DOCUMENT_DONE));
     }
   
