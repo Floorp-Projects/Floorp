@@ -1577,7 +1577,7 @@ nsBlockFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
     return NS_OK;
   }
   else if (aListName == gFloaterAtom) {
-    aFirstChild = nsnull;/* XXX temporary */
+    aFirstChild = mFloaters;
     return NS_OK;
   }
   else if (aListName == gBulletAtom) {
@@ -1801,6 +1801,11 @@ nsBlockFrame::BuildFloaterList()
       }
     }
     line = line->mNext;
+  }
+
+  // Terminate end of floater list just in case a floater was removed
+  if (nsnull != current) {
+    current->SetNextSibling(nsnull);
   }
   mFloaters = head;
 }
@@ -2530,6 +2535,7 @@ nsBlockFrame::FrameRemovedReflow(nsBlockReflowState& aState)
     linep = &line->mNext;
     line = line->mNext;
   }
+  NS_ASSERTION(nsnull != line, "can't find deleted frame in lines");
 
   // Remove frame and its continuations
   while (nsnull != deletedFrame) {
@@ -2541,6 +2547,29 @@ nsBlockFrame::FrameRemovedReflow(nsBlockReflowState& aState)
 #endif
       NS_FRAME_TRACE(NS_FRAME_TRACE_CHILD_REFLOW,
          ("nsBlockFrame::ContentDeleted: deadFrame=%p", deletedFrame));
+
+      // See if the frame is a floater (actually, the floaters
+      // placeholder). If it is, then destroy the floated frame too.
+      const nsStyleDisplay* display;
+      nsresult rv = deletedFrame->GetStyleData(eStyleStruct_Display,
+                                               (const nsStyleStruct*&)display);
+      if (NS_SUCCEEDED(rv) && (nsnull != display)) {
+        // XXX Sanitize "IsFloating" question *everywhere* (add a
+        // static method on nsFrame?)
+        if (NS_STYLE_FLOAT_NONE != display->mFloats) {
+          nsPlaceholderFrame* ph = (nsPlaceholderFrame*) deletedFrame;
+          nsIFrame* floater = ph->GetAnchoredItem();
+          if (nsnull != floater) {
+            floater->DeleteFrame(aState.mPresContext);
+            if (nsnull != line->mFloaters) {
+              // Wipe out the floater array for this line. It will get
+              // recomputed during reflow anyway.
+              delete line->mFloaters;
+              line->mFloaters = nsnull;
+            }
+          }
+        }
+      }
 
       // Remove deletedFrame from the line
       if (line->mFirstChild == deletedFrame) {
@@ -4493,19 +4522,14 @@ nsBlockFrame::RemoveChild(LineData* aLines, nsIFrame* aChild)
 void
 nsBlockFrame::ReflowFloater(nsIPresContext& aPresContext,
                             nsBlockReflowState& aState,
-                            nsIFrame* aFloaterFrame)
+                            nsIFrame* aFloaterFrame,
+                            nsHTMLReflowState& aFloaterReflowState)
 {
-  // Prepare the reflow state for the floater frame. Note that
-  // initially it's maxSize will be 0,0 until we compute it.
-  nsSize kidAvailSize(0, 0);
-  nsHTMLReflowState reflowState(aPresContext, aFloaterFrame, aState,
-                                kidAvailSize, eReflowReason_Initial);
-
   // If either dimension is constrained then get the border and
   // padding values in advance.
   nsMargin bp(0, 0, 0, 0);
-  if (reflowState.HaveFixedContentWidth() ||
-      reflowState.HaveFixedContentHeight()) {
+  if (aFloaterReflowState.HaveFixedContentWidth() ||
+      aFloaterReflowState.HaveFixedContentHeight()) {
     const nsStyleSpacing* spacing;
     if (NS_OK == aFloaterFrame->GetStyleData(eStyleStruct_Spacing,
                                              (const nsStyleStruct*&)spacing)) {
@@ -4514,10 +4538,11 @@ nsBlockFrame::ReflowFloater(nsIPresContext& aPresContext,
   }
 
   // Compute the available width for the floater
-  if (reflowState.HaveFixedContentWidth()) {
+  nsSize& kidAvailSize = aFloaterReflowState.maxSize;
+  if (aFloaterReflowState.HaveFixedContentWidth()) {
     // When the floater has a contrained width, give it just enough
     // space for its styled width plus its borders and paddings.
-    kidAvailSize.width = reflowState.minWidth + bp.left + bp.right;
+    kidAvailSize.width = aFloaterReflowState.minWidth + bp.left + bp.right;
   }
   else {
     // If we are floating something and we don't know the width then
@@ -4542,13 +4567,12 @@ nsBlockFrame::ReflowFloater(nsIPresContext& aPresContext,
   }
 
   // Compute the available height for the floater
-  if (reflowState.HaveFixedContentHeight()) {
-    kidAvailSize.height = reflowState.minHeight + bp.top + bp.bottom;
+  if (aFloaterReflowState.HaveFixedContentHeight()) {
+    kidAvailSize.height = aFloaterReflowState.minHeight + bp.top + bp.bottom;
   }
   else {
     kidAvailSize.height = NS_UNCONSTRAINEDSIZE;
   }
-  reflowState.maxSize = kidAvailSize;
 
   // Resize reflow the anchored item into the available space
   nsIHTMLReflow*  floaterReflow;
@@ -4557,7 +4581,8 @@ nsBlockFrame::ReflowFloater(nsIPresContext& aPresContext,
     nsHTMLReflowMetrics desiredSize(nsnull);
     nsReflowStatus  status;
     floaterReflow->WillReflow(aPresContext);
-    floaterReflow->Reflow(aPresContext, desiredSize, reflowState, status);
+    floaterReflow->Reflow(aPresContext, desiredSize, aFloaterReflowState,
+                          status);
     aFloaterFrame->SizeTo(desiredSize.width, desiredSize.height);
   }
 }
@@ -4568,7 +4593,12 @@ nsBlockReflowState::InitFloater(nsPlaceholderFrame* aPlaceholder)
   nsIFrame* floater = aPlaceholder->GetAnchoredItem();
 
   floater->SetGeometricParent(mBlock);
-  mBlock->ReflowFloater(mPresContext, *this, floater);
+
+  // XXX the choice of constructors is confusing and non-obvious
+  nsSize kidAvailSize(0, 0);
+  nsHTMLReflowState reflowState(mPresContext, floater, *this,
+                                kidAvailSize, eReflowReason_Initial);
+  mBlock->ReflowFloater(mPresContext, *this, floater, reflowState);
 
   AddFloater(aPlaceholder);
 }
@@ -4691,10 +4721,15 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
 
   // Reflow the floater if it's targetted for a reflow
   if (nsnull != reflowCommand) {
-    nsIFrame* target;
-    reflowCommand->GetTarget(target);
-    if (floater == target) {
-      mBlock->ReflowFloater(mPresContext, *this, floater);
+//XXX    nsIFrame* target;
+//XXX    reflowCommand->GetTarget(target);
+    if (floater == mNextRCFrame) {
+      nsSize kidAvailSize(0, 0);
+      // XXX the choice of constructors is confusing and non-obvious
+      nsHTMLReflowState reflowState(mPresContext, floater, *this,
+                                    kidAvailSize);
+      reflowState.lineLayout = nsnull;
+      mBlock->ReflowFloater(mPresContext, *this, floater, reflowState);
     }
   }
 
