@@ -39,7 +39,7 @@ FE_LoadPlugin(void *plugin,
 }
 
 void
-FE_UnloadPlugin(void *plugin)
+FE_UnloadPlugin(void *plugin, struct _np_handle* handle)
 {
 }
 
