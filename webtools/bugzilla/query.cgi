@@ -357,7 +357,7 @@ for (my $chart = 0; $::FORM{"field$chart-0-0"}; $chart++) {
         }
         push(@rows, \@cols);
     }
-    push(@charts, \@rows);
+    push(@charts, {'rows' => \@rows, 'negate' => $::FORM{"negate$chart"}});
 }
 
 $default{'charts'} = \@charts;

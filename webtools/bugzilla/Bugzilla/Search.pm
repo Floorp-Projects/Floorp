@@ -1049,6 +1049,7 @@ sub init {
          $chart < 0 || $params->param("field$chart-0-0") ;
          $chart++) {
         $chartid = $chart >= 0 ? $chart : "";
+        my @chartandlist = ();
         for ($row = 0 ;
              $params->param("field$chart-$row-0") ;
              $row++) {
@@ -1111,7 +1112,14 @@ sub init {
             }
             if (@orlist) {
                 @orlist = map("($_)", @orlist) if (scalar(@orlist) > 1);
-                push(@andlist, "(" . join(" OR ", @orlist) . ")");
+                push(@chartandlist, "(" . join(" OR ", @orlist) . ")");
+            }
+        }
+        if (@chartandlist) {
+            if ($params->param("negate$chart")) {
+                push(@andlist, "NOT(" . join(" AND ", @chartandlist) . ")");
+            } else {
+                push(@andlist, "(" . join(" AND ", @chartandlist) . ")");
             }
         }
     }

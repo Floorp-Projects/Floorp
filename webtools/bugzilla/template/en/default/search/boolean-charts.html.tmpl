@@ -57,7 +57,16 @@
 [% FOREACH chart = default.charts %]
   [% chartnum = loop.count - 1 %]
   <table>
-  [% FOREACH row = chart %]
+    <tr>
+      <input type="checkbox" id="negate[% chartnum FILTER html %]"
+             name="negate[% chartnum FILTER html %]" value="1"
+            [% "checked" IF chart.negate %]
+      >
+      <label for="negate[% chartnum FILTER html %]">
+        Not (negate this whole chart)
+      </label>
+    </tr>
+  [% FOREACH row = chart.rows %]
     [% rownum = loop.count - 1 %]
     <tr>
     [% FOREACH col = row %]
