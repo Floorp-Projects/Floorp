@@ -194,7 +194,7 @@ interface nsIX509CertDB : nsISupports {
    */
   void exportPKCS12File(in nsISupports aToken,
                         in nsILocalFile aFile,
-                        in PRUint32 count,
+                        in unsigned long count,
                         [array, size_is(count)] in nsIX509Cert aCerts);
                         //[array, size_is(count)] in wstring aCertNames);
   /*

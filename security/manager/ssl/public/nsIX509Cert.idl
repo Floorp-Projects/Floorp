@@ -96,11 +96,11 @@ interface nsIX509Cert : nsISupports {
    */
   nsISupportsArray getChain();
 
-  void getUsages(out PRUint32 verified,
-                 out PRUint32 count, 
+  void getUsages(out unsigned long verified,
+                 out unsigned long count, 
                  [array, size_is(count)] out wstring usages);
 
-  void getPurposes(out PRUint32 verified, out wstring purposes);
+  void getPurposes(out unsigned long verified, out wstring purposes);
 
 
   const unsigned long CERT_USAGE_SSLClient = 0;
@@ -119,7 +119,7 @@ interface nsIX509Cert : nsISupports {
   /*
    * output is verification result, bitmask?
   */
-  PRUint32 verifyForUsage(in PRUint32 usage);
+  unsigned long verifyForUsage(in unsigned long usage);
 
   /*
    * This is the attribute which describes the ASN1 layout

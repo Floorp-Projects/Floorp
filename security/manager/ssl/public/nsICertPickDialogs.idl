@@ -38,8 +38,8 @@ interface nsICertPickDialogs : nsISupports
   void PickCertificate(in nsIInterfaceRequestor ctx, 
                        [array, size_is(count)] in wstring certNickList,
                        [array, size_is(count)] in wstring certDetailsList,
-                       in PRUint32 count,
-                       inout PRInt32 selectedIndex,
+                       in unsigned long count,
+                       inout long selectedIndex,
                        out boolean canceled);
 };
 

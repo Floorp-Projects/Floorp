@@ -47,7 +47,7 @@ interface nsICertTree : nsITreeView {
 
   nsIX509Cert getCert(in unsigned long index);
   
-  void removeCert(in PRUint32 index);
+  void removeCert(in unsigned long index);
 };
 
 %{C++
