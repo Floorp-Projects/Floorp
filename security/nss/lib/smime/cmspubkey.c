@@ -34,7 +34,7 @@
 /*
  * CMS public key crypto
  *
- * $Id: cmspubkey.c,v 1.5 2002/12/17 01:39:46 wtc%netscape.com Exp $
+ * $Id: cmspubkey.c,v 1.6 2003/11/20 02:00:04 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -128,7 +128,14 @@ PK11SymKey *
 NSS_CMSUtil_DecryptSymKey_RSA(SECKEYPrivateKey *privkey, SECItem *encKey, SECOidTag bulkalgtag)
 {
     /* that's easy */
-    return PK11_PubUnwrapSymKey(privkey, encKey, PK11_AlgtagToMechanism(bulkalgtag), CKA_DECRYPT, 0);
+    CK_MECHANISM_TYPE target;
+    PORT_Assert(bulkalgtag != SEC_OID_UNKNOWN);
+    target = PK11_AlgtagToMechanism(bulkalgtag);
+    if (bulkalgtag == SEC_OID_UNKNOWN || target == CKM_INVALID_MECHANISM) {
+	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+	return NULL;
+    }
+    return PK11_PubUnwrapSymKey(privkey, encKey, target, CKA_DECRYPT, 0);
 }
 
 /* ====== MISSI (Fortezza) ========================================================== */
