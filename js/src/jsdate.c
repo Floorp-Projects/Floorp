@@ -541,10 +541,13 @@ date_UTC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSBool
-date_parseString(const jschar *s, jsdouble *result)
+date_parseString(JSString *str, jsdouble *result)
 {
     jsdouble msec;
 
+    const jschar *s = JSSTRING_CHARS(str);
+    size_t limit = JSSTRING_LENGTH(str);
+    size_t i = 0;
     int year = -1;
     int mon = -1;
     int mday = -1;
@@ -552,16 +555,13 @@ date_parseString(const jschar *s, jsdouble *result)
     int min = -1;
     int sec = -1;
     int c = -1;
-    int i = 0;
     int n = -1;
     jsdouble tzoffset = -1;  /* was an int, overflowed on win16!!! */
     int prevc = 0;
-    int limit = 0;
     JSBool seenplusminus = JS_FALSE;
 
-    if (s == 0)
+    if (limit == 0)
 	goto syntax;
-    limit = js_strlen(s);
     while (i < limit) {
 	c = s[i];
 	i++;
@@ -654,7 +654,7 @@ date_parseString(const jschar *s, jsdouble *result)
 	} else if (c == '/' || c == ':' || c == '+' || c == '-') {
 	    prevc = c;
 	} else {
-	    int st = i - 1;
+	    size_t st = i - 1;
 	    int k;
 	    while (i < limit) {
 		c = s[i];
@@ -736,7 +736,7 @@ date_parse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     str = js_ValueToString(cx, argv[0]);
     if (!str)
 	return JS_FALSE;
-    if (!date_parseString(str->chars, &result)) {
+    if (!date_parseString(str, &result)) {
 	*rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
 	return JS_TRUE;
     }
@@ -1899,7 +1899,7 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    if (!str)
 		return JS_FALSE;
 
-	    if (!date_parseString(str->chars, date))
+	    if (!date_parseString(str, date))
 		*date = *cx->runtime->jsNaN;
 	    *date = TIMECLIP(*date);
 	}

@@ -429,6 +429,10 @@ args_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
                                  : OBJECT_TO_JSVAL(fp->fun->object);
             } else {
                 atom = NULL;
+
+                /* Quell GCC overwarnings. */
+                tinyid = 0;
+                value = JSVAL_NULL;
             }
         }
 
@@ -1467,7 +1471,7 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsval fval, *sp, *oldsp;
     JSObject *aobj;
-    jsuint length = 0;
+    jsuint length;
     void *mark;
     uintN i;
     JSBool ok;
@@ -1489,6 +1493,10 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                              JS_GetStringBytes(JS_ValueToString(cx, fval)));
         return JS_FALSE;
     }
+
+    /* Quell GCC overwarnings. */
+    aobj = NULL;
+    length = 0;
 
     if (argc >= 2) {
         /* If the 2nd arg is null or void, call the function with 0 args. */
@@ -1565,8 +1573,8 @@ js_IsIdentifier(JSString *str)
     size_t n;
     jschar *s, c;
 
-    n = str->length;
-    s = str->chars;
+    n = JSSTRING_LENGTH(str);
+    s = JSSTRING_CHARS(str);
     c = *s;
     /*
      * We don't handle unicode escape sequences here
@@ -1599,7 +1607,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSTokenStream *ts;
     JSPrincipals *principals;
     jschar *collected_args, *cp;
-    size_t args_length;
+    size_t arg_length, args_length;
     JSTokenType tt;
     jsid oldArgId;
     JSBool ok;
@@ -1665,7 +1673,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         for (i = 0; i < n; i++) {
             /* Collect the lengths for all the function-argument arguments. */
             arg = JSVAL_TO_STRING(argv[i]);
-            args_length += arg->length;
+            args_length += JSSTRING_LENGTH(arg);
         }
         /* Add 1 for each joining comma. */
         args_length += n - 1;
@@ -1687,8 +1695,9 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          */
         for (i = 0; i < n; i++) {
             arg = JSVAL_TO_STRING(argv[i]);
-            (void) js_strncpy(cp, arg->chars, arg->length);
-            cp += arg->length;
+            arg_length = JSSTRING_LENGTH(arg);
+            (void) js_strncpy(cp, JSSTRING_CHARS(arg), arg_length);
+            cp += arg_length;
 
             /* Add separating comma or terminating 0. */
             *cp++ = (i + 1 < n) ? ',' : 0;
@@ -1811,8 +1820,8 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     mark = JS_ARENA_MARK(&cx->tempPool);
-    ts = js_NewTokenStream(cx, str->chars, str->length, filename, lineno,
-                           principals);
+    ts = js_NewTokenStream(cx, JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
+                           filename, lineno, principals);
     if (!ts) {
         ok = JS_FALSE;
     } else {

@@ -213,7 +213,7 @@ js_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
 	}
     } ELSE
     if (JSVAL_IS_STRING(v)) {
-	b = JSVAL_TO_STRING(v)->length ? JS_TRUE : JS_FALSE;
+	b = JSSTRING_LENGTH(JSVAL_TO_STRING(v)) ? JS_TRUE : JS_FALSE;
     } ELSE
     if (JSVAL_IS_INT(v)) {
 	b = JSVAL_TO_INT(v) ? JS_TRUE : JS_FALSE;

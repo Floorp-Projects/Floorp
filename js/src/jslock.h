@@ -163,6 +163,7 @@ js_GetSlotThreadSafe(JSContext *, JSObject *, uint32);
 extern void js_SetSlotThreadSafe(JSContext *, JSObject *, uint32, jsval);
 extern void js_InitLock(JSThinLock *);
 extern void js_FinishLock(JSThinLock *);
+extern void js_FinishSharingScope(JSRuntime *rt, JSScope *scope);
 
 #ifdef DEBUG
 

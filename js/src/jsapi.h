@@ -1359,6 +1359,61 @@ JS_GetStringLength(JSString *str);
 extern JS_PUBLIC_API(intN)
 JS_CompareStrings(JSString *str1, JSString *str2);
 
+/*
+ * Mutable string support.  A string's characters are never mutable in this JS
+ * implementation, but a growable string has a buffer that can be reallocated,
+ * and a dependent string is a substring of another (growable, dependent, or
+ * immutable) string.  The direct data members of the (opaque to API clients)
+ * JSString struct may be changed in a single-threaded way for growable and
+ * dependent strings.
+ *
+ * Therefore mutable strings cannot be used by more than one thread at a time.
+ * You may call JS_MakeStringImmutable to convert the string from a mutable
+ * (growable or dependent) string to an immutable (and therefore thread-safe)
+ * string.  The engine takes care of converting growable and dependent strings
+ * to immutable for you if you store strings in multi-threaded objects using
+ * JS_SetProperty or kindred API entry points.
+ *
+ * If you store a JSString pointer in a native data structure that is (safely)
+ * accessible to multiple threads, you must call JS_MakeStringImmutable before
+ * retiring the store.
+ */
+extern JS_PUBLIC_API(JSString *)
+JS_NewGrowableString(JSContext *cx, jschar *chars, size_t length);
+
+/*
+ * Create a dependent string, i.e., a string that owns no character storage,
+ * but that refers to a slice of another string's chars.  Dependent strings
+ * are mutable by definition, so the thread safety comments above apply.
+ */
+extern JS_PUBLIC_API(JSString *)
+JS_NewDependentString(JSContext *cx, JSString *str, size_t start,
+                      size_t length);
+
+/*
+ * Concatenate two strings, resulting in a new growable string.  If you create
+ * the left string and pass it to JS_ConcatStrings on a single thread, try to
+ * use JS_NewGrowableString to create the left string -- doing so helps Concat
+ * avoid allocating a new buffer for the result and copying left's chars into
+ * the new buffer.  See above for thread safety comments.
+ */
+extern JS_PUBLIC_API(JSString *)
+JS_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
+
+/*
+ * Convert a dependent string into an indepenent one.  This function does not
+ * change the string's mutability, so the thread safety comments above apply.
+ */
+extern JS_PUBLIC_API(const jschar *)
+JS_UndependString(JSContext *cx, JSString *str);
+
+/*
+ * Convert a mutable string (either growable or dependent) into an immutable,
+ * thread-safe one.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_MakeStringImmutable(JSContext *cx, JSString *str);
+
 /************************************************************************/
 
 /*

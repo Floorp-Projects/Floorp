@@ -136,7 +136,7 @@ struct JSObject {
 
 #ifdef DEBUG
 #define MAP_CHECK_SLOT(map,slot) \
-    JS_ASSERT((uint32)slot < JS_MAX((map)->nslots, (map)->freeslot))
+    JS_ASSERT((uint32)slot < JS_MIN((map)->freeslot, (map)->nslots))
 #define OBJ_CHECK_SLOT(obj,slot) \
     MAP_CHECK_SLOT((obj)->map, slot)
 #else

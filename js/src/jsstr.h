@@ -39,12 +39,13 @@
  *
  * A JS string is a counted array of unicode characters.  To support handoff
  * of API client memory, the chars are allocated separately from the length,
- * necessitating a pointer after the count, to form a string header.  String
- * headers are GC'ed while string bytes are allocated from the malloc heap.
+ * necessitating a pointer after the count, to form a separately allocated
+ * string descriptor.  String descriptors are GC'ed, while their chars are
+ * allocated from the malloc heap.
  *
  * When a string is treated as an object (by following it with . or []), the
  * runtime wraps it with a JSObject whose valueOf method returns the unwrapped
- * string header.
+ * string descriptor.
  */
 #include <ctype.h>
 #include "jspubtd.h"
@@ -53,10 +54,106 @@
 
 JS_BEGIN_EXTERN_C
 
+/*
+ * The original GC-thing "string" type, a flat character string owned by its
+ * GC-thing descriptor.  The chars member points to a vector having byte size
+ * (length + 1) * sizeof(jschar), terminated at index length by a zero jschar.
+ * The terminator is purely a backstop, in case the chars pointer flows out to
+ * native code that requires \u0000 termination.
+ *
+ * NB: Always use the JSSTRING_LENGTH and JSSTRING_CHARS accessor macros,
+ * unless you guard str->member uses with !JSSTRING_IS_DEPENDENT(str).
+ */
 struct JSString {
     size_t          length;
     jschar          *chars;
 };
+
+/*
+ * Overlay structure for a string that depends on another string's characters.
+ * Distinguished by the JSSTRFLAG_DEPENDENT bit being set in length.  The base
+ * member may point to another dependent string if JSSTRING_CHARS has not been
+ * called yet.  The length chars in a dependent string are stored starting at
+ * base->chars + start, and are not necessarily zero-terminated.  If start is
+ * 0, it is not stored, length is a full size_t (minus the JSSTRFLAG_* bits in
+ * the high two positions), and the JSSTRFLAG_PREFIX flag is set.
+ */
+struct JSDependentString {
+    size_t          length;
+    JSString        *base;
+};
+
+/* Definitions for flags stored in the high order bits of JSString.length. */
+#define JSSTRFLAG_BITS              2
+#define JSSTRFLAG_SHIFT(flg)        ((size_t)(flg) << JSSTRING_LENGTH_BITS)
+#define JSSTRFLAG_MASK              JSSTRFLAG_SHIFT(JS_BITMASK(JSSTRFLAG_BITS))
+#define JSSTRFLAG_DEPENDENT         JSSTRFLAG_SHIFT(1)
+#define JSSTRFLAG_PREFIX            JSSTRFLAG_SHIFT(2)
+
+/* Universal JSString type inquiry and accessor macros. */
+#define JSSTRING_BIT(n)             ((size_t)1 << (n))
+#define JSSTRING_BITMASK(n)         (JSSTRING_BIT(n) - 1)
+#define JSSTRING_HAS_FLAG(str,flg)  ((str)->length & (flg))
+#define JSSTRING_IS_DEPENDENT(str)  JSSTRING_HAS_FLAG(str, JSSTRFLAG_DEPENDENT)
+#define JSSTRING_IS_PREFIX(str)     JSSTRING_HAS_FLAG(str, JSSTRFLAG_PREFIX)
+#define JSSTRING_CHARS(str)         (JSSTRING_IS_DEPENDENT(str)               \
+                                     ? JSSTRDEP_CHARS(str)                    \
+                                     : (str)->chars)
+#define JSSTRING_LENGTH(str)        (JSSTRING_IS_DEPENDENT(str)               \
+                                     ? JSSTRDEP_LENGTH(str)                   \
+                                     : (str)->length)
+#define JSSTRING_LENGTH_BITS        (sizeof(size_t) * JS_BITS_PER_BYTE        \
+                                     - JSSTRFLAG_BITS)
+#define JSSTRING_LENGTH_MASK        JSSTRING_BITMASK(JSSTRING_LENGTH_BITS)
+
+/* Specific JSDependentString shift/mask accessor and mutator macros. */
+#define JSSTRDEP_START_BITS         (JSSTRING_LENGTH_BITS-JSSTRDEP_LENGTH_BITS)
+#define JSSTRDEP_START_SHIFT        JSSTRDEP_LENGTH_BITS
+#define JSSTRDEP_START_MASK         JSSTRING_BITMASK(JSSTRDEP_START_BITS)
+#define JSSTRDEP_LENGTH_BITS        (JSSTRING_LENGTH_BITS / 2)
+#define JSSTRDEP_LENGTH_MASK        JSSTRING_BITMASK(JSSTRDEP_LENGTH_BITS)
+
+#define JSSTRDEP(str)               ((JSDependentString *)(str))
+#define JSSTRDEP_START(str)         (JSSTRING_IS_PREFIX(str) ? 0              \
+                                     : ((JSSTRDEP(str)->length                \
+                                         >> JSSTRDEP_START_SHIFT)             \
+                                        & JSSTRDEP_START_MASK))
+#define JSSTRDEP_LENGTH(str)        (JSSTRDEP(str)->length                    \
+                                     & (JSSTRING_IS_PREFIX(str)               \
+                                        ? JSSTRING_LENGTH_MASK                \
+                                        : JSSTRDEP_LENGTH_MASK))
+
+#define JSSTRDEP_SET_START_AND_LENGTH(str,off,len)                            \
+    (JSSTRDEP(str)->length = JSSTRFLAG_DEPENDENT                              \
+                           | ((off) << JSSTRDEP_START_SHIFT)                  \
+                           | (len))
+#define JSPREFIX_SET_LENGTH(str,len)                                          \
+    (JSSTRDEP(str)->length = JSSTRFLAG_DEPENDENT | JSSTRFLAG_PREFIX | (len))
+
+#define JSSTRDEP_BASE(str)          (JSSTRDEP(str)->base)
+#define JSSTRDEP_SET_BASE(str,bstr) (JSSTRDEP(str)->base = (bstr))
+#define JSPREFIX_BASE(str)          JSSTRDEP_BASE(str)
+#define JSPREFIX_SET_BASE(str,bstr) JSSTRDEP_SET_BASE(str,bstr)
+
+#define JSSTRDEP_CHARS(str)                                                   \
+    (JSSTRING_IS_DEPENDENT(JSSTRDEP_BASE(str))                                \
+     ? js_GetDependentStringChars(str)                                        \
+     : JSSTRDEP_BASE(str)->chars + JSSTRDEP_START(str))
+
+extern size_t
+js_MinimizeDependentStrings(JSString *str, int level, JSString **basep);
+
+extern jschar *
+js_GetDependentStringChars(JSString *str);
+
+extern jschar *
+js_GetStringChars(JSString *str);
+
+extern JSString *
+js_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
+
+extern const jschar *
+js_UndependString(JSContext *cx, JSString *str);
 
 struct JSSubString {
     size_t          length;
@@ -207,6 +304,10 @@ extern const char js_encodeURIComponent_str[];
 extern JSString *
 js_NewString(JSContext *cx, jschar *chars, size_t length, uintN gcflag);
 
+extern JSString *
+js_NewDependentString(JSContext *cx, JSString *base, size_t start,
+                      size_t length, uintN gcflag);
+
 /* Copy a counted string and GC-allocate a descriptor for it. */
 extern JSString *
 js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n, uintN gcflag);
@@ -245,7 +346,7 @@ js_ValueToSource(JSContext *cx, jsval v);
  * Compute a hash function from str.
  */
 extern JSHashNumber
-js_HashString(const JSString *str);
+js_HashString(JSString *str);
 #endif
 
 /*
@@ -253,7 +354,7 @@ js_HashString(const JSString *str);
  * str1 is less than, equal to, or greater than str2.
  */
 extern intN
-js_CompareStrings(const JSString *str1, const JSString *str2);
+js_CompareStrings(JSString *str1, JSString *str2);
 
 /*
  * Boyer-Moore-Horspool superlinear search for pat:patlen in text:textlen.

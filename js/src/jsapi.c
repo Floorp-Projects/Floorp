@@ -218,7 +218,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
             if (c == 's')
                 *va_arg(ap, char **) = JS_GetStringBytes(str);
             else if (c == 'W')
-                *va_arg(ap, jschar **) = str->chars;
+                *va_arg(ap, jschar **) = JS_GetStringChars(str);
             else
                 *va_arg(ap, JSString **) = str;
             break;
@@ -794,10 +794,9 @@ JS_EndRequest(JSContext *cx)
              */
             if (js_DropObjectMap(cx, &scope->map, NULL)) {
                 js_InitLock(&scope->lock);
-                scope->u.count = 0;     /* don't assume NULL puns as 0 */
-                scope->ownercx = NULL;  /* NB: set last, after lock init */
+                scope->u.count = 0;                 /* NULL may not pun as 0 */
+                js_FinishSharingScope(rt, scope);   /* set ownercx = NULL */
                 nshares++;
-                JS_RUNTIME_METER(rt, sharedScopes);
             }
         }
         if (nshares)
@@ -1042,6 +1041,7 @@ InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
 
     /* Record Function and Object in cx->resolvingTable, if we are resolving. */
     resolving = (cx->resolving != 0);
+    table = NULL;       /* quell GCC overwarning */
     if (resolving) {
         table = cx->resolvingTable;
         rt = cx->runtime;
@@ -1701,10 +1701,10 @@ JS_GetExternalStringGCType(JSRuntime *rt, JSString *str)
 {
     uint8 type = (uint8) (*js_GetGCThingFlags(str) & GCF_TYPEMASK);
 
-    JS_ASSERT(type == GCX_STRING || type >= GCX_EXTERNAL_STRING);
-    if (type == GCX_STRING)
-        return -1;
-    return (intN)type;
+    if (type >= GCX_EXTERNAL_STRING)
+        return (intN)type;
+    JS_ASSERT(type == GCX_STRING || type == GCX_MUTABLE_STRING);
+    return -1;
 }
 
 /************************************************************************/
@@ -3580,26 +3580,87 @@ JS_InternUCString(JSContext *cx, const jschar *s)
 JS_PUBLIC_API(char *)
 JS_GetStringBytes(JSString *str)
 {
-    char *bytes = js_GetStringBytes(str);
+    char *bytes;
+
+    CHECK_REQUEST(cx);
+    bytes = js_GetStringBytes(str);
     return bytes ? bytes : "";
 }
 
 JS_PUBLIC_API(jschar *)
 JS_GetStringChars(JSString *str)
 {
-    return str->chars;
+    /*
+     * API botch (again, shades of JS_GetStringBytes): we have no cx to pass
+     * to js_UndependString (called by js_GetStringChars) for out-of-memory
+     * error reports, so js_UndependString passes NULL and suppresses errors.
+     * If it fails to convert a dependent string into an independent one, our
+     * caller will not be guaranteed a \u0000 terminator as a backstop.  This
+     * may break some clients who already misbehave on embedded NULs.
+     *
+     * The gain of dependent strings, which cure quadratic and cubic growth
+     * rate bugs in string concatenation, is worth this slight loss in API
+     * compatibility.
+     */
+    jschar *chars;
+
+    CHECK_REQUEST(cx);
+    chars = js_GetStringChars(str);
+    return chars ? chars : JSSTRING_CHARS(str);
 }
 
 JS_PUBLIC_API(size_t)
 JS_GetStringLength(JSString *str)
 {
-    return str->length;
+    CHECK_REQUEST(cx);
+    return JSSTRING_LENGTH(str);
 }
 
 JS_PUBLIC_API(intN)
 JS_CompareStrings(JSString *str1, JSString *str2)
 {
+    CHECK_REQUEST(cx);
     return js_CompareStrings(str1, str2);
+}
+
+JS_PUBLIC_API(JSString *)
+JS_NewGrowableString(JSContext *cx, jschar *chars, size_t length)
+{
+    CHECK_REQUEST(cx);
+    return js_NewString(cx, chars, length, GCF_MUTABLE);
+}
+
+JS_PUBLIC_API(JSString *)
+JS_NewDependentString(JSContext *cx, JSString *str, size_t start,
+                      size_t length)
+{
+    CHECK_REQUEST(cx);
+    return js_NewDependentString(cx, str, start, length, 0);
+}
+
+JS_PUBLIC_API(JSString *)
+JS_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
+{
+    CHECK_REQUEST(cx);
+    return js_ConcatStrings(cx, left, right);
+}
+
+JS_PUBLIC_API(const jschar *)
+JS_UndependString(JSContext *cx, JSString *str)
+{
+    CHECK_REQUEST(cx);
+    return js_UndependString(cx, str);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_MakeStringImmutable(JSContext *cx, JSString *str)
+{
+    CHECK_REQUEST(cx);
+    if (!js_UndependString(cx, str))
+        return JS_FALSE;
+
+    *js_GetGCThingFlags(str) &= ~GCF_MUTABLE;
+    return JS_TRUE;
 }
 
 /************************************************************************/
