@@ -60,33 +60,47 @@ typedef void    (*pfnXPIProgress)(const char* msg, PRInt32 val, PRInt32 max);
 typedef void     (*pfnXPIFinal)   (const char* URL, PRInt32 finalStatus);
 
 
+
 /** XPI_Init
  *
  *  call XPI_Init() to initialize XPCOM and the XPInstall
- *  engine, and to pass in your callback functions
+ *  engine, and to pass in your callback functions.
+ *
+ *  @param aDir     directory to use as "program" directory. If NULL default
+ *                  will be used -- the location of the calling executable.
+ *                  Must be native filename format.
+ *  @param startCB  Called when script started
+ *  @param progressCB Called for each installed file
+ *  @param finalCB  Called with status code at end
  *
  *  @returns    XPCOM status code indicating success or failure
  */
-PR_EXTERN(nsresult) XPI_Init(  pfnXPIStart    startCB, 
-                               pfnXPIProgress progressCB,
-                               pfnXPIFinal    finalCB     );
+PR_EXTERN(nsresult) XPI_Init( 
+#ifdef XP_MAC
+                              const FSSpec&     aDir,
+#else
+                              const char*       aDir,
+#endif
+                              pfnXPIStart       startCB, 
+                              pfnXPIProgress    progressCB,
+                              pfnXPIFinal       finalCB     );
 
 /** XPI_Install
  *
- *  Install a XPI package from a local file
+ *  Install an XPI package from a local file
  *
  *  @param file     Native filename of XPI archive
  *  @param args     Install.arguments, if any
  *  @param flags    the old SmartUpdate trigger flags. This may go away
  */
-PR_EXTERN(nsresult) XPI_Install(
-#ifndef XP_MAC
-                                const char* file, 
+PR_EXTERN(nsresult) XPI_Install( 
+#ifdef XP_MAC
+                                 const FSSpec& file,
 #else
-                                const FSSpec& file, 
+                                 const char*    file,
 #endif
-                                const char* args, 
-                                long flags         );
+                                 const char* args, 
+                                 long flags         );
 
 /** XPI_Exit
  * 

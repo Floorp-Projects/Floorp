@@ -84,6 +84,7 @@ static NS_DEFINE_IID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 
 
 nsSoftwareUpdate* nsSoftwareUpdate::mInstance = nsnull;
+nsIFileSpec*      nsSoftwareUpdate::mProgramDir = nsnull;
 
 
 nsSoftwareUpdate *
@@ -105,7 +106,8 @@ nsSoftwareUpdate::nsSoftwareUpdate()
 #endif
 
     NS_INIT_ISUPPORTS();
-    
+
+    mStubLockout = PR_FALSE;
      /***************************************/
     /* Create us a queue                   */
     /***************************************/
@@ -185,13 +187,21 @@ nsSoftwareUpdate::~nsSoftwareUpdate()
         mJarInstallQueue = nsnull;
     }
     PR_Unlock(mLock);
-
     PR_DestroyLock(mLock);
+
     NR_ShutdownRegistry();
+
+    if (mProgramDir)
+        mProgramDir->Release();
 }
 
+
+//------------------------------------------------------------------------
+//  nsISupports implementation
+//------------------------------------------------------------------------
 NS_IMPL_ADDREF( nsSoftwareUpdate );
 NS_IMPL_RELEASE( nsSoftwareUpdate );
+
 
 NS_IMETHODIMP
 nsSoftwareUpdate::QueryInterface( REFNSIID anIID, void **anInstancePtr )
@@ -210,6 +220,8 @@ nsSoftwareUpdate::QueryInterface( REFNSIID anIID, void **anInstancePtr )
             *anInstancePtr = (void*) ( (nsISoftwareUpdate*)this );
         else if ( anIID.Equals( nsIAppShellComponent::GetIID() ) ) 
             *anInstancePtr = (void*) ( (nsIAppShellComponent*)this );
+        else if (anIID.Equals( nsPvtIXPIStubHook::GetIID() ) )
+            *anInstancePtr = (void*) ( (nsPvtIXPIStubHook*)this );
         else if ( anIID.Equals( kISupportsIID ) )
             *anInstancePtr = (void*) ( (nsISupports*) (nsISoftwareUpdate*) this );
         else
@@ -231,6 +243,8 @@ NS_IMETHODIMP
 nsSoftwareUpdate::Initialize( nsIAppShellService *anAppShell, nsICmdLineService  *aCmdLineService ) 
 {
     nsresult rv;
+
+    mStubLockout = PR_TRUE;  // prevent use of nsPvtIXPIStubHook by browser
 
     rv = nsServiceManager::RegisterService( NS_IXPINSTALLCOMPONENT_PROGID, ( (nsISupports*) (nsISoftwareUpdate*) this ) );
 
@@ -337,15 +351,18 @@ nsSoftwareUpdate::RunNextInstall()
 
             if ( info )
                 mInstalling = PR_TRUE;
-            else
-                // XXX leaks any nsInstallInfos left in queue
+            else 
+            {
+                NS_ERROR("leaking all nsInstallInfos left in queue");
                 rv = NS_ERROR_NULL_POINTER;
+                VR_Close();
+            }
         }
-    }
-    else
-    {
-        // nothing more to do
-        VR_Close();
+        else
+        {
+            // nothing more to do
+            VR_Close();
+        }
     }
     PR_Unlock(mLock);
 
@@ -355,6 +372,31 @@ nsSoftwareUpdate::RunNextInstall()
 
     return rv;
 }
+
+
+NS_IMETHODIMP
+nsSoftwareUpdate::SetProgramDirectory(nsIFileSpec *aDir)
+{
+    if (mStubLockout)
+        return NS_ERROR_ABORT;
+    else if ( !aDir )
+        return NS_ERROR_NULL_POINTER;
+
+    // fix GetFolder return path
+    mProgramDir = aDir;
+    mProgramDir->AddRef();
+
+    // setup version registry path
+    char*    path;
+    nsresult rv = aDir->GetNativePath( &path );
+    if (NS_SUCCEEDED(rv))
+    {
+        VR_SetRegDirectory( path );
+    }
+
+    return rv;
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////
