@@ -47,6 +47,12 @@ typedef long long           PRInt64  ;
 typedef unsigned long       nsrefcnt ;
 typedef unsigned long       nsresult ;
 
+// XXX need this built into xpidl compiler so that it's really size_t or PRSize
+// and it's scriptable:
+typedef unsigned long       size_t;
+
+[ptr]         native voidPtr(void);
+[ptr]         native charPtr(char);
 [ptr]         native voidStar(void);
 [ptr]         native charStar(char);
 
