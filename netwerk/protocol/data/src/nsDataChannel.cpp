@@ -124,7 +124,7 @@ nsDataChannel::ParseData() {
     if (NS_FAILED(rv)) return rv;
 
     // move past "data:"
-    char *buffer = strstr(spec.get(), "data:");
+    const char *buffer = strstr(spec.get(), "data:");
     if (!buffer) {
         // malfored url
         return NS_ERROR_MALFORMED_URI;

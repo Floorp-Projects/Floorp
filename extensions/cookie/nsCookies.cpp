@@ -804,11 +804,11 @@ cookie_isForeign (char * curURL, char * firstURL, nsIIOService* ioService) {
   char * firstHostColon = 0;
 
   /* strip ports */
-  curHostColon = strchr(curHost.get(), ':');
+  curHostColon = (char *)strchr(curHost.get(), ':');
   if(curHostColon) {
     *curHostColon = '\0';
   }
-  firstHostColon = strchr(firstHost.get(), ':');
+  firstHostColon = (char *)strchr(firstHost.get(), ':');
   if(firstHostColon) {
     *firstHostColon = '\0';
   }
@@ -1128,7 +1128,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
       }
 
       /* strip port numbers from the current host for the domain test */
-      colon = strchr(cur_host.get(), ':');
+      colon = (char *)strchr(cur_host.get(), ':');
       if(colon) {
         *colon = '\0';
       }
@@ -1167,7 +1167,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
       }
       if ( pref_scd == PR_TRUE ) {
         cur_host.SetCharAt(cur_host_length-domain_length, '\0');
-        dot = strchr(cur_host.get(), '.');
+        dot = (char *)strchr(cur_host.get(), '.');
         cur_host.SetCharAt(cur_host_length-domain_length, '.');
         if (dot) {
         // TRACEMSG(("host minus domain failed no-dot test."
