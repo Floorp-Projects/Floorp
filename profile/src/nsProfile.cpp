@@ -58,6 +58,9 @@
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsICookieService.h"
+#include "nsIMsgAccountManager.h"
+#include "nsMsgBaseCID.h"
+#include "nsIMsgAccount.h"
 
 #if defined (XP_UNIX)
 #elif defined (XP_MAC)
@@ -68,10 +71,11 @@
 #define OLD_REGISTRY_FILE_NAME "nsreg.dat"
 #endif /* XP_UNIX */
 
-// PREG information
-#define PREG_COOKIE		"NS_REG2_PREG"
-#define PREG_USERNAME	"PREG_USER_NAME"
-#define PREG_DENIAL		"PREG_USER_DENIAL"
+// Activation cookie formats
+#define NS_ACTIVATION_COOOKIE		    "NS_C5A_REG"
+#define NS_ACTIVATION_USERNAME	        "NS_C5A_PN"
+#define NS_ACTIVATION_USEREMAIL	        "NS_C5A_E"
+#define NS_ACTIVATION_DENIAL		    "NS_C5A_DNY"
 
 // JavaScript and Cookies prefs in the all.js
 #define JAVASCRIPT_PREF	"javascript.enabled"
@@ -88,8 +92,12 @@
 #define REGISTRY_NO_STRING		"no"
 
 // Use PregUrlPref to extract the activation url
-#define PREG_URL_PREF "browser.registration.url"
-#define ACTIVATION_SERVER_URL "browser.registration.domain"
+#define PREG_URL_PREF                    "browser.registration.url"
+#define ACTIVATION_SERVER_URL            "browser.registration.domain"
+#define ACTIVATION_ACCEPT_DOMAIN         "browser.registration.acceptdomain"
+#define ACTIVATION_AIM_PREF              "aim.session.screenname"
+#define ACTIVATION_EMAIL_SERVER_NAME	 "browser.registration.mailservername"
+#define ACTIVATION_EMAIL_SERVER_TYPE	 "browser.registration.mailservertype"
 
 #define PROFILE_SELECTION_URL "chrome://profile/content/profileSelection.xul"
 #define PROFILE_SELECTION_CMD_LINE_ARG "-SelectProfile"
@@ -103,6 +111,12 @@
 #define PROFILE_CMD_LINE_ARG "-P"   
 
 #define PREF_CONFIRM_AUTOMIGRATION	"profile.confirm_automigration"
+
+#if defined (XP_MAC)
+#define CHROME_STYLE NS_CHROME_WINDOW_BORDERS_ON|NS_CHROME_WINDOW_CLOSE_ON
+#else /* the rest */
+#define CHROME_STYLE NS_CHROME_ALL_CHROME
+#endif 
 
 // we want everyone to have the debugging info to the console for now
 // to help track down profile manager problems
@@ -132,6 +146,7 @@ static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kPrefMigrationCID, NS_PREFMIGRATION_CID);
 static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
+
 
 static
 nsresult GetStringFromSpec(nsFileSpec inSpec, char **string)
@@ -300,7 +315,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
 
         nsCOMPtr<nsIWebShellWindow>  profWindow;
         rv = profAppShell->CreateTopLevelWindow(nsnull, profileURL,
-                                                PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
+                                                PR_TRUE, PR_TRUE, CHROME_STYLE,
                                                 nsnull, 
 						NS_SIZETOCONTENT,           // width 
 						NS_SIZETOCONTENT,           // height
@@ -1278,17 +1293,24 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 
 	char *pregCookie = nsnull;
 	char *profileName = nsnull;
+	char *userEmail = nsnull;
 	char *service_denial = nsnull;
 
 	if ( (aCookie.ToNewCString()) != nsnull )
 	{
-		pregCookie = PL_strstr(aCookie.ToNewCString(), PREG_COOKIE);
+		pregCookie = PL_strstr(aCookie.ToNewCString(), NS_ACTIVATION_COOOKIE);
 		//In the original scenario you must UnEscape the string
 		//PL_strstr(nsUnescape(uregCookie),PREG_USERNAME);
 		if (pregCookie)
 		{
-			profileName		= PL_strstr(pregCookie, PREG_USERNAME);
-			service_denial	= PL_strstr(pregCookie, PREG_DENIAL);
+			profileName		= PL_strstr(nsUnescape(pregCookie), NS_ACTIVATION_USERNAME);
+			userEmail		= PL_strstr(pregCookie, NS_ACTIVATION_USEREMAIL);
+			service_denial	= PL_strstr(pregCookie, NS_ACTIVATION_DENIAL);
+		}
+		else
+		{
+            // cookie information is not available
+            return NS_ERROR_FAILURE;
 		}
 	}
 	else
@@ -1298,17 +1320,20 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 	}
 
 	nsAutoString pName;
+	nsAutoString emailAddress;
 	nsAutoString serviceState;
 
 	if (profileName) 
 		pName.SetString(profileName);
+	if (userEmail) 
+		emailAddress.SetString(userEmail);
 	if (service_denial) 
 		serviceState.SetString(service_denial);
 
 	PRInt32 profileNameIndex, delimIndex;
 	PRInt32 serviceIndex;
 
-	nsString userProfileName, userServiceDenial;
+	nsString userProfileName, userServiceDenial, userEmailAddress;
 
 	if (pName.Length())
 	{
@@ -1318,6 +1343,18 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 		pName.Mid(userProfileName, profileNameIndex+1,delimIndex-(profileNameIndex+1));
 #if defined(DEBUG_profile)  
 		printf("\nProfiles : PREG Cookie user profile name = %s\n", userProfileName.ToNewCString());
+#endif
+	}
+
+	if (emailAddress.Length())
+	{
+		PRInt32 emailIndex;
+		emailIndex    = emailAddress.Find("=", 0);
+		delimIndex    = emailAddress.Find("[-]", emailIndex-1);
+    
+		emailAddress.Mid(userEmailAddress, emailIndex+1,delimIndex-(emailIndex+1));
+#if defined(DEBUG_profile)  
+		printf("\nProfiles : PREG Cookie user email = %s\n", userEmailAddress.ToNewCString());
 #endif
 	}
 
@@ -1372,6 +1409,89 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 		gProfileDataAccess->GetValue(userProfileName.ToNewCString(), &aProfile);
 
 		aProfile->NCProfileName = nsCRT::strdup(userProfileName.ToNewCString());
+
+        NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+		prefs->SetCharPref(ACTIVATION_AIM_PREF, aProfile->NCProfileName);
+		
+		if (userEmailAddress.mLength > 0)
+		{
+			aProfile->NCEmailAddress = nsCRT::strdup(userEmailAddress.ToNewCString());
+
+		        PRBool validDomain = PR_FALSE;
+			char *domain = nsnull;
+			domain = PL_strstr(userEmailAddress.ToNewCString(), "@");
+				
+			if (domain)
+			{
+				//strip @ symbol from domain string
+			    domain++;
+
+			    //Check if it is a valid domain
+			    CheckDomain(&validDomain, domain);
+			}
+
+			if (validDomain)
+			{
+				char* serverName = nsnull;
+				char* serverType = nsnull;
+
+				rv = prefs->CopyCharPref(ACTIVATION_EMAIL_SERVER_NAME, &serverName);
+				if (NS_FAILED(rv)) return rv;
+		        rv = prefs->CopyCharPref(ACTIVATION_EMAIL_SERVER_TYPE, &serverType);
+				if (NS_FAILED(rv)) return rv;
+
+				if (!serverName || !serverType)
+				    return NS_ERROR_FAILURE;
+				if ( (PL_strlen(serverName) == 0) || (PL_strlen(serverType) == 0) )
+					return NS_ERROR_FAILURE;
+
+				NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv);
+				NS_ENSURE_SUCCESS(rv, rv);
+
+				// create a fresh identity
+				nsCOMPtr<nsIMsgIdentity> identity;
+				rv = accountManager->CreateIdentity(getter_AddRefs(identity));
+				if (NS_FAILED(rv)) return rv;
+
+				// Set Email address to the new identity
+				rv = identity->SetEmail(aProfile->NCEmailAddress);
+				if (NS_FAILED(rv)) return rv;
+				
+				// Set the identity's valid attribute to FALSE, so that account 
+				// wizard picks up the imcomplete account
+				rv = identity->SetValid(PR_FALSE);
+				if (NS_FAILED(rv)) return rv;
+
+				// create the server
+				nsCOMPtr<nsIMsgIncomingServer> server;
+				rv = accountManager->CreateIncomingServer(aProfile->NCProfileName,
+														  serverName,
+														  serverType, 
+														  getter_AddRefs(server));
+				if (NS_FAILED(rv)) return rv;
+
+				// Set the IncomingServer's valid attribute to FALSE, so that account 
+				// wizard picks up the imcomplete account
+				rv = server->SetValid(PR_FALSE);
+				if (NS_FAILED(rv)) return rv;
+
+				// create the account
+				nsCOMPtr<nsIMsgAccount> account;
+				rv = accountManager->CreateAccount(getter_AddRefs(account));
+				if (NS_FAILED(rv)) return rv;
+
+				// Assign server and add newly created identity to the account
+				rv = account->SetIncomingServer(server);
+				if (NS_FAILED(rv)) return rv;
+				rv = account->AddIdentity(identity);
+				if (NS_FAILED(rv)) return rv;
+
+				CRTFREEIF(serverName);
+				CRTFREEIF(serverType);
+			}
+		}
         aProfile->NCHavePregInfo = nsCRT::strdup(REGISTRY_YES_STRING);
 
 		gProfileDataAccess->SetValue(aProfile);
@@ -1614,7 +1734,7 @@ nsProfile::TriggerActivation(char *profileName)
 		}
 
 		ProcessPRegCookie();
-		
+
 		CRTFREEIF(pregURL);      
 	}
 	CRTFREEIF(isPregInfoSet);    
@@ -1629,6 +1749,24 @@ nsProfile::CleanUp()
 
 	if (sHaveRedundantDirectory)
 		DeleteUserDirectories(sRedundantDirectory);
+
+	return rv;
+}
+
+nsresult
+nsProfile::CheckDomain(PRBool *valid, char* domain)
+{
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+	if (NS_FAILED(rv)) return rv;
+
+	char* domainPref;
+	rv = prefs->CopyCharPref(ACTIVATION_ACCEPT_DOMAIN, &domainPref);
+	
+	if (PL_strcasecmp(domainPref, domain) == 0)
+		*valid = PR_TRUE;
+
+	CRTFREEIF(domainPref);
 
 	return rv;
 }
@@ -1657,3 +1795,4 @@ nsProfile::CreateDefaultProfile(void)
 
 	return rv;
 }
+
