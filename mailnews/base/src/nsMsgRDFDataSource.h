@@ -56,6 +56,7 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
 	nsCOMPtr<nsIMessageView> mMessageView;
 
 	nsCOMPtr<nsISupportsArray> kEmptyArray;
+	PRBool m_shuttingDown;
 
  private:
   nsIRDFService *mRDFService;

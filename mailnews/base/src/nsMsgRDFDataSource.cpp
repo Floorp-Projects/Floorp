@@ -30,6 +30,7 @@ nsMsgRDFDataSource::nsMsgRDFDataSource():
     mRDFService(nsnull)
 {
     NS_INIT_REFCNT();
+	m_shuttingDown = PR_FALSE;
 }
 
 nsMsgRDFDataSource::~nsMsgRDFDataSource()
@@ -182,6 +183,8 @@ nsMsgRDFDataSource::AddObserver(nsIRDFObserver *aObserver)
     rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
     if (NS_FAILED(rv)) return rv;
   }
+  NS_ASSERTION(mObservers->IndexOf(aObserver) == -1, "better not already be observing this");
+
   mObservers->AppendElement(aObserver);
   return NS_OK;
 }
@@ -278,6 +281,7 @@ nsMsgRDFDataSource::OnShutdown(const nsCID& aClass, nsISupports* service)
     // at the very least we set our member variable to nsnull so
     // that getRDFService knows to re-get the service
     mRDFService=nsnull;
+	m_shuttingDown = PR_TRUE;
     return NS_OK;
 }
 

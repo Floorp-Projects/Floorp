@@ -81,10 +81,13 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 {
 	nsresult rv;
 
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	if (!m_shuttingDown)
+	{
+		NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
 
-	if(NS_SUCCEEDED(rv))
-		mailSession->RemoveFolderListener(this);
+		if(NS_SUCCEEDED(rv))
+			mailSession->RemoveFolderListener(this);
+	}
 	if (--gMessageResourceRefCnt == 0)
 	{
 		nsrefcnt refcnt;

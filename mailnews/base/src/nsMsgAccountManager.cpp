@@ -1127,12 +1127,12 @@ nsMsgAccountManager::createKeyedAccount(const char* key,
                                         nsIMsgAccount ** aAccount)
 {
     
-  nsIMsgAccount *account = nsnull;
+  nsCOMPtr<nsIMsgAccount> account;
   nsresult rv;
   rv = nsComponentManager::CreateInstance(kMsgAccountCID,
                                           nsnull,
                                           NS_GET_IID(nsIMsgAccount),
-                                          (void **)&account);
+                                          (void **)getter_AddRefs(account));
   
   if (NS_FAILED(rv)) return rv;
   account->SetKey(NS_CONST_CAST(char*,(const char*)key));
