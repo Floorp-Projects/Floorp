@@ -200,9 +200,9 @@ function SelectLatinModifier()
 function DisableLatinL(disable)
 {
   if (disable) {
-    LatinL_Label.setAttribute("disabled" "true");
+    LatinL_Label.setAttribute("disabled", "true");
     LatinL.setAttribute("disabled", "true");
-  else {
+  } else {
     LatinL_Label.removeAttribute("disabled");
     LatinL.removeAttribute("disabled");
   }
