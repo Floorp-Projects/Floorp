@@ -205,7 +205,8 @@ char *stub_Prompt(MWContext *context,
   return result;
 }
 
-#if 0
+// Choose between using the command line and the UI for getting the new password
+#if 1
 #include "nsIComponentManager.h" 
 #include "nsIBlockingNotification.h" 
 #include "nsAppShellCIDs.h" 
@@ -289,7 +290,7 @@ nsresult NS_NewDefaultNotificationFactory(nsIFactory** aResult)
 
 
 PRIVATE XP_Bool 
-stub_PromptUsernameAndPassword(MWContext *context, 
+_stub_PromptUsernameAndPassword(MWContext *context, 
                                const char *msg, 
                                char **username, 
                                char **password,
@@ -308,12 +309,17 @@ stub_PromptUsernameAndPassword(MWContext *context,
   if ((nsnull != URL_s) && (nsnull != URL_s->fe_data)) { 
     pConn = (nsConnectionInfo *)URL_s->fe_data; 
   } 
-
+#if 0
   // create an object that calls Resume() XXX
   rv = nsComponentManager::CreateInstance(kProtocolHelperCID, nsnull, kIBlockingNotificationIID, (void**)&caller); 
   if (NS_FAILED(rv)) {
     return FALSE;
   }
+#else
+	caller = new nsDefaultNotification;
+	if ( ! caller )
+		return false;
+#endif
   // build an nsIURL
   rv = NS_NewURL(&base, URL_s->address);
   if (NS_FAILED(rv)) {
@@ -336,7 +342,7 @@ stub_PromptUsernameAndPassword(MWContext *context,
 
   return FALSE;
 }
-#endif /* 0 */
+#else
 
 
 PRIVATE XP_Bool _stub_PromptUsernameAndPassword(MWContext *context,
@@ -399,7 +405,7 @@ PRIVATE XP_Bool _stub_PromptUsernameAndPassword(MWContext *context,
 
   return bResult;
 }
-
+#endif //0
 PRIVATE
 char *_stub_PromptPassword(MWContext *context,
                            char *msg,
