@@ -20,9 +20,9 @@
 #ifndef _NSREG_H_
 #define _NSREG_H_
 
-#ifndef STANDALONE_REGISTRY
 #include "xp_core.h"
-#endif
+
+typedef void (*nr_RegPackCallbackFunc) (void *userData, int32 bytes, int32 totalBytes);
 
 typedef int32   REGERR;
 typedef int32   RKEY;
@@ -55,6 +55,8 @@ typedef struct _reginfo
 #define REGERR_NOPATH       (16)
 #define REGERR_BADNAME      (17)
 #define REGERR_READONLY     (18)
+#define REGERR_BADUTF8      (19)
+
 
 /* Total path length */
 #define MAXREGPATHLEN   (2048)
@@ -85,7 +87,8 @@ typedef struct _reginfo
 #define REG_REPLACE_LIST_KEY "Netscape/Communicator/SoftwareUpdate/Replace List"
 #define REG_UNINSTALL_DIR    "Netscape/Communicator/SoftwareUpdate/Uninstall/"
 
-#define UNINSTALL_NAV_STR "."
+#define UNINSTALL_NAV_STR "_"
+
 
 #define UNIX_GLOBAL_FLAG     "MOZILLA_SHARED_REGISTRY"
 
@@ -104,7 +107,6 @@ typedef struct _reginfo
   #define VR_INTERFACE(type)     type
 #endif
 
-
 XP_BEGIN_PROTOS
 /* ---------------------------------------------------------------------
  * Registry API -- General
@@ -121,7 +123,9 @@ VR_INTERFACE(REGERR) NR_RegClose(
        );
 
 VR_INTERFACE(REGERR) NR_RegPack(
-         HREG hReg         /* handle of open registry to pack */
+         HREG hReg,         /* handle of open registry to pack */
+         void *userData,
+         nr_RegPackCallbackFunc fn
        );
 
 VR_INTERFACE(REGERR) NR_RegGetUsername(
