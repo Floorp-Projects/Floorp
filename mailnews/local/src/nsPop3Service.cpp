@@ -43,6 +43,71 @@ nsPop3Service::~nsPop3Service()
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsPop3Service, nsIPop3Service::GetIID());
 
+NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIUrlListener * aUrlListener, nsIURL ** aURL)
+{
+	NS_LOCK_INSTANCE();
+	nsresult rv = NS_OK;
+	const char * userName = nsnull;
+	const char * popPassword = nsnull;
+	const char * mailDirectory = nsnull;
+	const char * popServer = nsnull;
+
+	char * url = nsnull;
+	nsIMsgMailSession * mailSession = nsnull;
+	nsIMsgIdentity * identity = nsnull;
+	nsIPop3URL * pop3Url = nsnull;
+	nsPop3Protocol * protocol = nsnull; 
+
+	// get the current identity from the mail session....
+	rv = nsServiceManager::GetService(kCMsgMailSessionCID,
+	    							  nsIMsgMailSession::GetIID(),
+                                      (nsISupports **) &mailSession);
+	if (NS_SUCCEEDED(rv) && mailSession)
+	{
+		identity = nsnull;
+		rv = mailSession->GetCurrentIdentity(&identity);
+		// now release the mail service because we are done with it
+		nsServiceManager::ReleaseService(kCMsgMailSessionCID, mailSession);
+	}
+
+	if (NS_SUCCEEDED(rv) && identity)
+	{
+		// load up required identity information
+		identity->GetPopName(&userName);
+		identity->GetPopPassword(&popPassword);
+		identity->GetRootFolderPath(&mailDirectory);
+		identity->GetPopServer(&popServer);
+	}
+
+	// now construct a pop3 url...
+	char * urlSpec = PR_smprintf("pop3://%s?check", popServer);
+	rv = BuildPop3Url(urlSpec, mailDirectory, &pop3Url);
+	PR_FREEIF(urlSpec);
+
+	if (NS_SUCCEEDED(rv) && pop3Url) 
+	{
+		// does the caller want to listen to the url?
+		if (aUrlListener)
+			pop3Url->RegisterListener(aUrlListener);
+
+		nsPop3Protocol * protocol = new nsPop3Protocol(pop3Url);
+		if (protocol)
+		{
+			protocol->SetUsername(userName);
+			protocol->SetPassword(popPassword);
+			protocol->Load(pop3Url);
+		} // if pop server 
+	}
+
+	if (aURL && pop3Url) // we already have a ref count on pop3url...
+		*aURL = pop3Url; // transfer ref count to the caller...
+	else
+		NS_IF_RELEASE(pop3Url); // release our ref...
+	
+	NS_UNLOCK_INSTANCE();
+	return rv;
+}
+
 nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
 	NS_LOCK_INSTANCE();

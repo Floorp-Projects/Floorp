@@ -41,6 +41,8 @@ public:
 	// we suppport the nsIPop3Service Interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD GetNewMail(nsIUrlListener * aUrlListener, nsIURL ** aURL);
+
+	NS_IMETHOD CheckForNewMail(nsIUrlListener * aUrlListener, nsIURL ** aURL);
 	
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End suppport for the nsIPop3Service Interface
