@@ -28,6 +28,8 @@ NS_IMPL_ISUPPORTS(nsMsgIdentity, nsCOMTypeInfo<nsIMsgIdentity>::GetIID());
 
 
 nsMsgIdentity::nsMsgIdentity():
+  m_signature(0),
+  m_vCard(0),
   m_identityKey(0),
   m_prefs(0)
 {
