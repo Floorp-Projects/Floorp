@@ -74,6 +74,9 @@
 #include "nsBoxToBlockAdaptor.h"
 #include "nsIBoxLayout.h"
 #include "nsSprocketLayout.h"
+#include "nsIDocument.h"
+#include "nsIBindingManager.h"
+#include "nsIScrollableFrame.h"
 
 //define DEBUG_REDRAW
 
@@ -875,7 +878,7 @@ nsBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
                            nsIFrame* aOldFrame)
 {
   nsIFrame* insertionPoint = nsnull;
-  GetInsertionPoint(&insertionPoint);
+  GetInsertionPoint(&aPresShell, aOldFrame, &insertionPoint);
   if (insertionPoint)
     return insertionPoint->RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
 
@@ -904,7 +907,7 @@ nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
                             nsIFrame* aFrameList)
 {
    nsIFrame* insertionPoint = nsnull;
-   GetInsertionPoint(&insertionPoint);
+   GetInsertionPoint(&aPresShell, aFrameList, &insertionPoint);
    if (insertionPoint)
      return insertionPoint->InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
 
@@ -943,7 +946,7 @@ nsBoxFrame::AppendFrames(nsIPresContext* aPresContext,
                            nsIFrame*       aFrameList)
 {
    nsIFrame* insertionPoint = nsnull;
-   GetInsertionPoint(&insertionPoint);
+   GetInsertionPoint(&aPresShell, aFrameList, &insertionPoint);
    if (insertionPoint)
      return insertionPoint->AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
 
@@ -1576,6 +1579,49 @@ nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
     nsresult rv = nsHTMLContainerFrame::GetCursor(aPresContext, aPoint, aCursor);
 
     return rv;
+}
+
+void
+nsBoxFrame::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aChild, nsIFrame** aResult)
+{
+  *aResult = nsnull;
+  nsCOMPtr<nsIDocument> document;
+  mContent->GetDocument(*getter_AddRefs(document));
+  nsCOMPtr<nsIBindingManager> bindingManager;
+  document->GetBindingManager(getter_AddRefs(bindingManager));
+  if (!bindingManager)
+    return;
+  nsCOMPtr<nsIContent> insertionElement;
+  nsIFrame* frame = nsnull;
+  if (aChild) {
+    nsCOMPtr<nsIContent> currContent;
+    aChild->GetContent(getter_AddRefs(currContent));
+    bindingManager->GetInsertionPoint(mContent, currContent, getter_AddRefs(insertionElement));
+    if (insertionElement) {
+      aShell->GetPrimaryFrameFor(insertionElement, &frame);
+      if (frame) {
+        nsCOMPtr<nsIScrollableFrame> scroll(do_QueryInterface(frame));
+        if (scroll)
+          scroll->GetScrolledFrame(nsnull, frame);
+        *aResult = frame;
+      }
+      return;
+    }
+  }
+  else {
+    PRBool dummy;
+    bindingManager->GetSingleInsertionPoint(mContent, getter_AddRefs(insertionElement), &dummy);
+    if (insertionElement) {
+      aShell->GetPrimaryFrameFor(insertionElement, &frame);
+      if (frame) {
+        nsCOMPtr<nsIScrollableFrame> scroll(do_QueryInterface(frame));
+        if (scroll)
+          scroll->GetScrolledFrame(nsnull, frame);
+        *aResult = frame;
+      }
+      return;
+    }
+  }
 }
 
 //XXX the event come's in in view relative coords, but really should

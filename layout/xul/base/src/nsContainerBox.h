@@ -63,11 +63,6 @@ public:
   virtual void SanityCheck(nsFrameList& aFrameList);
   virtual void SetDebugOnChildList(nsBoxLayoutState& aState, nsIBox* aChild, PRBool aDebug);
 
-  // XXX Eventually these will move into nsIFrame.
-  // These methods are used for XBL <children>.
-  NS_IMETHOD GetInsertionPoint(nsIFrame** aFrame);
-  NS_IMETHOD SetInsertionPoint(nsIFrame* aFrame);
-
   virtual ~nsContainerBox() {}
   
   static nsresult LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect);
@@ -83,7 +78,6 @@ protected:
   nsIBox* mLastChild;
   PRInt32 mChildCount;
   nsCOMPtr<nsIBoxLayout> mLayoutManager;
-  nsIFrame* mInsertionPoint;
 };
 
 #endif

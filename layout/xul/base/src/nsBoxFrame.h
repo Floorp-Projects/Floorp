@@ -201,6 +201,8 @@ protected:
   
     NS_IMETHOD  Destroy(nsIPresContext* aPresContext);
 
+    virtual void GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aChild, nsIFrame** aResult);
+
 private: 
   
     friend class nsBoxFrameInner;

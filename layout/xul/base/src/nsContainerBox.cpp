@@ -72,7 +72,6 @@ nsContainerBox::nsContainerBox(nsIPresShell* aShell):nsBox(aShell)
   mFirstChild = nsnull;
   mLastChild = nsnull;
   mChildCount = 0;
-  mInsertionPoint = nsnull;
 }
 
 void
@@ -612,24 +611,4 @@ nsContainerBox::LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRe
 
   return NS_OK;
 }
-
-// XXX Eventually these will move into nsIFrame.
-// These methods are used for XBL <children>.
-NS_IMETHODIMP 
-nsContainerBox::GetInsertionPoint(nsIFrame** aFrame)
-{
-  *aFrame = mInsertionPoint;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContainerBox::SetInsertionPoint(nsIFrame* aFrame)
-{
-  mInsertionPoint = aFrame;
-  return NS_OK;
-}
-
-
-
-
 

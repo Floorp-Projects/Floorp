@@ -206,7 +206,9 @@ nsMenuBarFrame::FindMenuWithShortcut(PRUint32 aLetter)
 {
   // Enumerate over our list of frames.
   nsIFrame* immediateParent = nsnull;
-  GetInsertionPoint(&immediateParent);
+  nsCOMPtr<nsIPresShell> shell;
+  mPresContext->GetShell(getter_AddRefs(shell));
+  GetInsertionPoint(shell, nsnull, &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 
@@ -323,7 +325,9 @@ NS_IMETHODIMP
 nsMenuBarFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
 {
   nsIFrame* immediateParent = nsnull;
-  GetInsertionPoint(&immediateParent);
+  nsCOMPtr<nsIPresShell> shell;
+  mPresContext->GetShell(getter_AddRefs(shell));
+  GetInsertionPoint(shell, nsnull, &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 
@@ -384,7 +388,9 @@ NS_IMETHODIMP
 nsMenuBarFrame::GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
 {
   nsIFrame* immediateParent = nsnull;
-  GetInsertionPoint(&immediateParent);
+  nsCOMPtr<nsIPresShell> shell;
+  mPresContext->GetShell(getter_AddRefs(shell));
+  GetInsertionPoint(shell, nsnull, &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 

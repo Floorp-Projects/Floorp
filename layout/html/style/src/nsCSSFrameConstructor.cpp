@@ -5177,13 +5177,6 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
           frameManager->AppendFrames(aPresContext, *aPresShell, frame,
                                      nsnull, explicitItems.childList);
         }
-
-        if (frame) {
-          // XXX Eventually generalize to HTML as well. For now,
-          // leave this on nsIBox.
-          nsCOMPtr<nsIBox> box(do_QueryInterface(aNewFrame));
-          box->SetInsertionPoint(frame);
-        }
       }
       else if (multiple) {
         nsCOMPtr<nsIDocument> document;
