@@ -37,6 +37,9 @@ ostream& operator<<(ostream &s, IdlFunction &aFunction)
     }
     s << *(aFunction.GetParameterAt(count - 1));
   }
+  if (aFunction.GetHasEllipsis()) {
+    s << ",...";
+  }
   s << ")";
 
   count = aFunction.ExceptionCount();
@@ -56,6 +59,7 @@ IdlFunction::IdlFunction()
   mReturnValue = (IdlVariable*)0;
   mParameters = (nsVoidArray*)0;
   mExceptions = (nsVoidArray*)0;
+  mHasEllipsis = 0;
 }
 
 IdlFunction::~IdlFunction()
@@ -151,4 +155,15 @@ char* IdlFunction::GetExceptionAt(long aIndex)
   return excName;
 }
 
+int             
+IdlFunction::GetHasEllipsis()
+{
+  return mHasEllipsis;
+}
+
+void            
+IdlFunction::SetHasEllipsis(int aHasEllipsis)
+{
+  mHasEllipsis = aHasEllipsis;
+}
 

@@ -8,6 +8,7 @@ interface Test : Node {
  long    createChildren(in wstring ids, in boolean new);
  boolean isNew();
  wstring rename(in wstring newName);
+ wstring setTimeout(in wstring expr /* ... */);
 };
 
 interface Test2 {

@@ -201,6 +201,7 @@ ElementGetTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     *rval = STRING_TO_JSVAL(jsstring);
   }
   else {
+    JS_ReportError(cx, "Function getTagName requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -249,6 +250,7 @@ ElementGetAttributes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
     }
   }
   else {
+    JS_ReportError(cx, "Function getAttributes requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -293,6 +295,7 @@ ElementGetDOMAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     *rval = STRING_TO_JSVAL(jsstring);
   }
   else {
+    JS_ReportError(cx, "Function getDOMAttribute requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -343,6 +346,7 @@ ElementSetDOMAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     *rval = JSVAL_VOID;
   }
   else {
+    JS_ReportError(cx, "Function setDOMAttribute requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -384,6 +388,7 @@ ElementRemoveAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     *rval = JSVAL_VOID;
   }
   else {
+    JS_ReportError(cx, "Function removeAttribute requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -441,6 +446,7 @@ ElementGetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
   }
   else {
+    JS_ReportError(cx, "Function getAttributeNode requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -476,10 +482,12 @@ ElementSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
       if ((nsnull == supports0) ||
           (NS_OK != supports0->QueryInterface(kIAttributeIID, (void **)(b0.Query())))) {
+        JS_ReportError(cx, "Parameter must be of type Attribute");
         return JS_FALSE;
       }
     }
     else {
+      JS_ReportError(cx, "Parameter must be an object");
       return JS_FALSE;
     }
 
@@ -490,6 +498,7 @@ ElementSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     *rval = JSVAL_VOID;
   }
   else {
+    JS_ReportError(cx, "Function setAttributeNode requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -525,10 +534,12 @@ ElementRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
       if ((nsnull == supports0) ||
           (NS_OK != supports0->QueryInterface(kIAttributeIID, (void **)(b0.Query())))) {
+        JS_ReportError(cx, "Parameter must be of type Attribute");
         return JS_FALSE;
       }
     }
     else {
+      JS_ReportError(cx, "Parameter must be an object");
       return JS_FALSE;
     }
 
@@ -539,6 +550,7 @@ ElementRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     *rval = JSVAL_VOID;
   }
   else {
+    JS_ReportError(cx, "Function removeAttributeNode requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -596,6 +608,7 @@ ElementGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     }
   }
   else {
+    JS_ReportError(cx, "Function getElementsByTagName requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -628,6 +641,7 @@ ElementNormalize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     *rval = JSVAL_VOID;
   }
   else {
+    JS_ReportError(cx, "Function normalize requires 0 parameters");
     return JS_FALSE;
   }
 

@@ -138,6 +138,7 @@ SetAttributeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           prop = (PRBool)temp;
         }
         else {
+          JS_ReportError(cx, "Parameter must be a boolean");
           return JS_FALSE;
         }
       
@@ -251,6 +252,7 @@ AttributeGetName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     *rval = STRING_TO_JSVAL(jsstring);
   }
   else {
+    JS_ReportError(cx, "Function getName requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -286,6 +288,7 @@ AttributeToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     *rval = STRING_TO_JSVAL(jsstring);
   }
   else {
+    JS_ReportError(cx, "Function toString requires 0 parameters");
     return JS_FALSE;
   }
 

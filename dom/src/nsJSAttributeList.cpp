@@ -217,6 +217,7 @@ AttributeListGetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
   }
   else {
+    JS_ReportError(cx, "Function getAttribute requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -252,10 +253,12 @@ AttributeListSetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
       if ((nsnull == supports0) ||
           (NS_OK != supports0->QueryInterface(kIAttributeIID, (void **)(b0.Query())))) {
+        JS_ReportError(cx, "Parameter must be of type Attribute");
         return JS_FALSE;
       }
     }
     else {
+      JS_ReportError(cx, "Parameter must be an object");
       return JS_FALSE;
     }
 
@@ -266,6 +269,7 @@ AttributeListSetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     *rval = JSVAL_VOID;
   }
   else {
+    JS_ReportError(cx, "Function setAttribute requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -323,6 +327,7 @@ AttributeListRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     }
   }
   else {
+    JS_ReportError(cx, "Function remove requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -351,6 +356,7 @@ AttributeListItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   if (argc >= 1) {
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
     }
 
@@ -376,6 +382,7 @@ AttributeListItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     }
   }
   else {
+    JS_ReportError(cx, "Function item requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -409,6 +416,7 @@ AttributeListGetLength(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     *rval = INT_TO_JSVAL(nativeRet);
   }
   else {
+    JS_ReportError(cx, "Function getLength requires 0 parameters");
     return JS_FALSE;
   }
 

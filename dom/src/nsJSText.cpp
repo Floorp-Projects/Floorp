@@ -233,6 +233,7 @@ TextAppend(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     *rval = JSVAL_VOID;
   }
   else {
+    JS_ReportError(cx, "Function append requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -261,6 +262,7 @@ TextInsert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   if (argc >= 2) {
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
     }
 
@@ -279,6 +281,7 @@ TextInsert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     *rval = JSVAL_VOID;
   }
   else {
+    JS_ReportError(cx, "Function insert requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -307,10 +310,12 @@ TextDelete(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   if (argc >= 2) {
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
     }
 
     if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
     }
 
@@ -321,6 +326,7 @@ TextDelete(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     *rval = JSVAL_VOID;
   }
   else {
+    JS_ReportError(cx, "Function delete requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -350,10 +356,12 @@ TextReplace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   if (argc >= 3) {
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
     }
 
     if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
     }
 
@@ -372,6 +380,7 @@ TextReplace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     *rval = JSVAL_VOID;
   }
   else {
+    JS_ReportError(cx, "Function replace requires 3 parameters");
     return JS_FALSE;
   }
 
@@ -409,18 +418,22 @@ TextSplice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
       if ((nsnull == supports0) ||
           (NS_OK != supports0->QueryInterface(kIElementIID, (void **)(b0.Query())))) {
+        JS_ReportError(cx, "Parameter must be of type Element");
         return JS_FALSE;
       }
     }
     else {
+      JS_ReportError(cx, "Parameter must be an object");
       return JS_FALSE;
     }
 
     if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
     }
 
     if (!JS_ValueToInt32(cx, argv[2], (int32 *)&b2)) {
+      JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
     }
 
@@ -431,6 +444,7 @@ TextSplice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     *rval = JSVAL_VOID;
   }
   else {
+    JS_ReportError(cx, "Function splice requires 3 parameters");
     return JS_FALSE;
   }
 

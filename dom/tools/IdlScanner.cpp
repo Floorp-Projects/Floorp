@@ -1162,6 +1162,8 @@ void IdlScanner::Char(int aStartChar, Token *aToken)
 }
 
 #define DEFAULT_COMMENT_SIZE    512
+static char *kOptionalStr = "/* optional ";
+static char *kEllipsisStr = "/* ... ";
 
 void IdlScanner::Comment(char *aCurrentPos, Token *aToken)
 {
@@ -1220,7 +1222,15 @@ void IdlScanner::Comment(char *aCurrentPos, Token *aToken)
     // go back one and terminate the string
     *--pos = '\0';
 
-    aToken->SetToken(COMMENT_TOKEN, aCommentBuffer);
+    if (strcmp(aCommentBuffer, kOptionalStr) == 0) {
+      aToken->SetToken(OPTIONAL_TOKEN, aCommentBuffer);
+    }
+    else if (strcmp(aCommentBuffer, kEllipsisStr) == 0) {
+      aToken->SetToken(ELLIPSIS_TOKEN, aCommentBuffer);
+    }
+    else {
+      aToken->SetToken(COMMENT_TOKEN, aCommentBuffer);
+    }
   }
   else {
     // don't deal with it for now. It will report an error

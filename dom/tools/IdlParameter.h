@@ -32,6 +32,7 @@ public:
 
 private:
   int mAttribute;
+  int mIsOptional;
 
 public:
                   IdlParameter();
@@ -40,6 +41,8 @@ public:
   void            SetAttribute(CallAttribute aAttribute);
   int             GetAttribute();
 
+  void            SetIsOptional(int aIsOptional);
+  int             GetIsOptional();
 };
 
 class ostream;

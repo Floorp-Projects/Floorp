@@ -61,6 +61,7 @@ protected:
   IdlParameter*   ParseFunctionParameter(IdlSpecification &aSpecification);
 
   void            TrimComments();
+  int             TrimCommentsSpecial();
 
 };
 

@@ -217,6 +217,7 @@ DOMCreateDocument(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     }
   }
   else {
+    JS_ReportError(cx, "Function createDocument requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -259,6 +260,7 @@ DOMHasFeature(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
     *rval = BOOLEAN_TO_JSVAL(nativeRet);
   }
   else {
+    JS_ReportError(cx, "Function hasFeature requires 1 parameters");
     return JS_FALSE;
   }
 

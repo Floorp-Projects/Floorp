@@ -31,6 +31,7 @@ private:
   IdlVariable *mReturnValue;
   nsVoidArray *mParameters;
   nsVoidArray *mExceptions;
+  int         mHasEllipsis;
 
 public:
                   IdlFunction();
@@ -46,6 +47,9 @@ public:
   void            AddException(char *aException);
   long            ExceptionCount();
   char*           GetExceptionAt(long aIndex);
+
+  int             GetHasEllipsis();
+  void            SetHasEllipsis(int aHasEllipsis);
 };
 
 class ostream;

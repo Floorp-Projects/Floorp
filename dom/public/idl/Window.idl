@@ -1,7 +1,14 @@
       interface Window {
 	readonly attribute  Window window;
+        readonly attribute  Window self;
 	readonly attribute  Document document;
 	readonly attribute  Navigator navigator;
 	void  dump(in wstring str);
 	void  alert(in wstring str);
+ 
+        void clearTimeout(in long timerID);
+        void clearInterval(in long timerID);
+        long setTimeout(/* ... */);
+        long setInterval(/* ... */);
       };
+

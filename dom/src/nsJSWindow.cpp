@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+/* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
 #include "nscore.h"
@@ -45,8 +46,9 @@ NS_DEF_PTR(nsIDOMWindow);
 //
 enum Window_slots {
   WINDOW_WINDOW = -11,
-  WINDOW_DOCUMENT = -12,
-  WINDOW_NAVIGATOR = -13
+  WINDOW_SELF = -12,
+  WINDOW_DOCUMENT = -13,
+  WINDOW_NAVIGATOR = -14
 };
 
 /***********************************************************************/
@@ -69,6 +71,33 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsIDOMWindow* prop;
         if (NS_OK == a->GetWindow(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_SELF:
+      {
+        nsIDOMWindow* prop;
+        if (NS_OK == a->GetSelf(&prop)) {
           // get the js object
           if (prop != nsnull) {
             nsIScriptObjectOwner *owner = nsnull;
@@ -252,11 +281,16 @@ PR_STATIC_CALLBACK(JSBool)
 WindowDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != nativeThis, "null pointer");
   JSBool rBool = JS_FALSE;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
   if (argc >= 1) {
 
     JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
@@ -274,6 +308,7 @@ WindowDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     *rval = JSVAL_VOID;
   }
   else {
+    JS_ReportError(cx, "Function dump requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -315,11 +350,159 @@ WindowAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     *rval = JSVAL_VOID;
   }
   else {
+    JS_ReportError(cx, "Function alert requires 1 parameters");
     return JS_FALSE;
   }
 
   return JS_TRUE;
 }
+
+
+//
+// Native method ClearTimeout
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowClearTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->ClearTimeout(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function clearTimeout requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method ClearInterval
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowClearInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->ClearInterval(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function clearInterval requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method SetTimeout
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowSetTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->SetTimeout(cx, argv+0, argc-0, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    *rval = INT_TO_JSVAL(nativeRet);
+  }
+  else {
+    JS_ReportError(cx, "Function setTimeout requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method SetInterval
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowSetInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->SetInterval(cx, argv+0, argc-0, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    *rval = INT_TO_JSVAL(nativeRet);
+  }
+  else {
+    JS_ReportError(cx, "Function setInterval requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
 
 /***********************************************************************/
 //
@@ -345,6 +528,7 @@ JSClass WindowClass = {
 static JSPropertySpec WindowProperties[] =
 {
   {"window",    WINDOW_WINDOW,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"self",    WINDOW_SELF,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"document",    WINDOW_DOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"navigator",    WINDOW_NAVIGATOR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
@@ -358,6 +542,10 @@ static JSFunctionSpec WindowMethods[] =
 {
   {"dump",          WindowDump,     1},
   {"alert",          WindowAlert,     1},
+  {"clearTimeout",          WindowClearTimeout,     1},
+  {"clearInterval",          WindowClearInterval,     1},
+  {"setTimeout",          WindowSetTimeout,     0},
+  {"setInterval",          WindowSetInterval,     0},
   {0}
 };
 
@@ -376,7 +564,7 @@ Window(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 // Window class initialization
 //
 nsresult NS_InitWindowClass(nsIScriptContext *aContext, 
-                            nsIScriptGlobalObject *aGlobal)
+                        nsIScriptGlobalObject *aGlobal)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *global = JS_GetGlobalObject(jscontext);

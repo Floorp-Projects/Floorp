@@ -345,6 +345,7 @@ static const char *kGetCaseNonPrimaryStr =
 "          }\n"
 "        }\n"
 "        else {\n"
+"          JS_ReportError(cx, \"Object must be of type %s\");\n"
 "          return JS_FALSE;\n"
 "        }\n";
 
@@ -427,7 +428,7 @@ JSStubGen::GeneratePropGetter(ofstream *file,
             aInterface.GetName(), aInterface.GetName(),
             attr_name, 
             aAttribute.GetType() == TYPE_STRING ? "" : "&",
-            case_str);
+            case_str, aInterface.GetName());
   }
 
   *file << buf;
@@ -450,6 +451,7 @@ static const char *kSetCaseNonPrimaryStr =
 "        }\n"
 "        else {\n"
 "           %s\n"
+"           JS_ReportError(cx, \"Object must be of type %s\");\n"
 "           return JS_FALSE;\n"
 "        }\n"
 "        %s\n";
@@ -463,10 +465,12 @@ static const char *kObjectSetCaseStr =
 "          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); \n"
 "          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);\n"
 "          if (NS_OK != supports->QueryInterface(kI%sIID, (void **)&prop)) {\n"
+"            JS_ReportError(cx, \"Parameter must be of type %s\");\n"
 "            return JS_FALSE;\n"
 "          }\n"
 "        }\n"
 "        else {\n"
+"          JS_ReportError(cx, \"Parameter must be an object\");\n"
 "          return JS_FALSE;\n"
 "        }\n";
 
@@ -487,6 +491,7 @@ static const char *kIntSetCaseStr =
 "          prop = (%s)temp;\n"
 "        }\n"
 "        else {\n"
+"          JS_ReportError(cx, \"Parameter must be a number\");\n"
 "          return JS_FALSE;\n"
 "        }\n";
 
@@ -496,6 +501,7 @@ static const char *kBoolSetCaseStr =
 "          prop = (%s)temp;\n"
 "        }\n"
 "        else {\n"
+"          JS_ReportError(cx, \"Parameter must be a boolean\");\n"
 "          return JS_FALSE;\n"
 "        }\n";
 
@@ -532,7 +538,7 @@ JSStubGen::GeneratePropSetter(ofstream *file,
       strcpy(case_buf, kStringSetCaseStr);
       break;
     case TYPE_OBJECT:
-      sprintf(case_buf, kObjectSetCaseStr, aAttribute.GetTypeName());
+      sprintf(case_buf, kObjectSetCaseStr, aAttribute.GetTypeName(), aAttribute.GetTypeName());
       break;
     default:
       // XXX Fail for other cases
@@ -546,7 +552,7 @@ JSStubGen::GeneratePropSetter(ofstream *file,
   else {
     sprintf(buf, kSetCaseNonPrimaryStr, attr_type, case_buf,
             aInterface.GetName(), aInterface.GetName(), attr_name, 
-            end_str, end_str);
+            end_str, aInterface.GetName(), end_str);
   }
 
   *file << buf;
@@ -706,10 +712,12 @@ static const char *kMethodObjectParamStr = "\n"
 "\n"
 "      if ((nsnull == supports%d) ||\n"
 "          (NS_OK != supports%d->QueryInterface(kI%sIID, (void **)(b%d.Query())))) {\n"
+"        JS_ReportError(cx, \"Parameter must be of type %s\");\n"
 "        return JS_FALSE;\n"
 "      }\n"
 "    }\n"
 "    else {\n"
+"      JS_ReportError(cx, \"Parameter must be an object\");\n"
 "      return JS_FALSE;\n"
 "    }\n";
 
@@ -717,7 +725,7 @@ static const char *kMethodObjectParamStr = "\n"
     sprintf(buffer, kMethodObjectParamStr, paramNum, paramNum, \
             paramNum, paramNum,  \
             paramNum, paramNum, paramNum, paramNum, paramType,  \
-            paramNum)
+            paramNum, paramType)
 
 
 static const char *kMethodStringParamStr = "\n"
@@ -735,6 +743,7 @@ static const char *kMethodStringParamStr = "\n"
 
 static const char *kMethodBoolParamStr = "\n"
 "    if (!JS_ValueToBoolean(cx, argv[%d], &b%d)) {\n"
+"      JS_ReportError(cx, \"Parameter must be a boolean\");\n"
 "      return JS_FALSE;\n"
 "    }\n";
 
@@ -743,6 +752,7 @@ static const char *kMethodBoolParamStr = "\n"
 
 static const char *kMethodIntParamStr = "\n"
 "    if (!JS_ValueToInt32(cx, argv[%d], (int32 *)&b%d)) {\n"
+"      JS_ReportError(cx, \"Parameter must be a number\");\n"
 "      return JS_FALSE;\n"
 "    }\n";
 
@@ -751,6 +761,7 @@ static const char *kMethodIntParamStr = "\n"
 
 static const char *kMethodParamListStr = "b%d";
 static const char *kMethodParamListDelimiterStr = ", ";
+static const char *kMethodParamEllipsisStr = "cx, argv+%d, argc-%d";
 
 static const char *kMethodBodyMiddleStr =
 "\n"
@@ -801,6 +812,7 @@ static const char *kMethodVoidRetStr =
 static const char *kMethodEndStr =
 "  }\n"
 "  else {\n"
+"    JS_ReportError(cx, \"Function %s requires %d parameters\");\n"
 "    return JS_FALSE;\n"
 "  }\n"
 "\n"
@@ -888,8 +900,17 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
         param_ptr += strlen(param_ptr);
       }
 
-      if (rval->GetType() != TYPE_VOID) {
+      if (func->GetHasEllipsis()) {
         if (pcount > 0) {
+          strcpy(param_ptr, kMethodParamListDelimiterStr);
+          param_ptr += strlen(param_ptr);
+        }
+        sprintf(param_ptr, kMethodParamEllipsisStr, pcount, pcount);
+        param_ptr += strlen(param_ptr);
+      }
+
+      if (rval->GetType() != TYPE_VOID) {
+        if ((pcount > 0) || func->GetHasEllipsis()) {
           strcpy(param_ptr, kMethodParamListDelimiterStr);
         }
         sprintf(buf, kMethodBodyMiddleStr, method_name, param_buf,
@@ -927,7 +948,8 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
             break;
       }
 
-      *file << kMethodEndStr;
+      sprintf(buf, kMethodEndStr, func->GetName(), func->ParameterCount());
+      *file << buf;
     }
   }
 }
