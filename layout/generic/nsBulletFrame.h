@@ -54,11 +54,6 @@ public:
   virtual ~nsBulletFrame();
 
   // nsIFrame
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
-                  nsIFrame*        aPrevInFlow);
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
   NS_IMETHOD Paint(nsPresContext*      aCX,
                    nsIRenderingContext& aRenderingContext,
@@ -66,6 +61,7 @@ public:
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
   virtual nsIAtom* GetType() const;
+  NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
@@ -110,7 +106,6 @@ protected:
 
   nsSize mIntrinsicSize;
   nsSize mComputedSize;
-  nsPresContext* mPresContext; // weak ref
 };
 
 #endif /* nsBulletFrame_h___ */
