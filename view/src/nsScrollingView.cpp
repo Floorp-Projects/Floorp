@@ -1684,7 +1684,7 @@ PRBool nsScrollingView::CannotBitBlt(nsView* aScrolledView)
   return (mScrollProperties & NS_SCROLL_PROPERTY_NEVER_BLIT) ||
     (scrolledViewFlags & NS_VIEW_FLAG_DONT_BITBLT) ||
     (!(mScrollProperties & NS_SCROLL_PROPERTY_ALWAYS_BLIT)
-     && !mViewManager->CanScrollWithBitBlt(mClipView));
+     && !mViewManager->CanScrollWithBitBlt(aScrolledView));
 }
 
 void nsScrollingView::Scroll(nsView *aScrolledView, PRInt32 aDx, PRInt32 aDy,
