@@ -31,6 +31,7 @@ include $(topsrcdir)/config/rules.mk
 
 FILES := \
 	mimeTypes.rdf \
+    localstore.rdf \
 	$(NULL)
 
 libs:: $(FILES)
