@@ -619,6 +619,7 @@ SendSQL($query);
 my $bugowners = {};
 my $bugproducts = {};
 my $bugstatuses = {};
+my @bugidlist;
 
 my @bugs; # the list of records
 
@@ -628,7 +629,7 @@ while (my @row = FetchSQLData()) {
     # Slurp the row of data into the record.
     # The second from last column in the record is the number of groups
     # to which the bug is restricted.
-    foreach my $column (@selectcolumns, 'dummy', 'groupset', 'dummy' ) {
+    foreach my $column (@selectcolumns) {
         $bug->{$column} = shift @row;
     }
 
@@ -645,8 +646,13 @@ while (my @row = FetchSQLData()) {
     $bugproducts->{$bug->{'product'}} = 1 if $bug->{'product'};
     $bugstatuses->{$bug->{'status'}} = 1 if $bug->{'status'};
 
+    $bug->{isingroups} = 0;
+
     # Add the record to the list.
     push(@bugs, $bug);
+
+    # Add id to list for checking for bug privacy later
+    push(@bugidlist, $bug->{id});
 }
 
 # Switch back from the shadow database to the regular database so PutFooter()
@@ -654,6 +660,23 @@ while (my @row = FetchSQLData()) {
 # in the shadow database.
 SendSQL("USE $::db_name");
 
+# Check for bug privacy and set $bug->{isingroups} = 1 if private 
+# to 1 or more groups
+my %privatebugs;
+if (@bugidlist) {
+    SendSQL("SELECT DISTINCT bugs.bug_id FROM bugs, bug_group_map " .
+            "WHERE bugs.bug_id = bug_group_map.bug_id " .
+            "AND bugs.bug_id IN (" . join(',',@bugidlist) . ")");
+    while (MoreSQLData()) {
+        my ($id) = FetchSQLData();
+        $privatebugs{$id} = 1;
+    }
+    foreach my $bug (@bugs) {
+        if ($privatebugs{$bug->{id}}) {
+            $bug->{isingroups} = 1;
+        }
+    }
+}
 
 ################################################################################
 # Template Variable Definition
@@ -662,7 +685,7 @@ SendSQL("USE $::db_name");
 # Define the variables and functions that will be passed to the UI template.
 
 $vars->{'bugs'} = \@bugs;
-$vars->{'buglist'} = join(',', map($_->{id}, @bugs));
+$vars->{'buglist'} = join(',', @bugidlist);
 $vars->{'columns'} = $columns;
 $vars->{'displaycolumns'} = \@displaycolumns;
 
@@ -767,7 +790,7 @@ if ($format->{'extension'} eq "html") {
         my $qorder = url_quote($order);
         print "Set-Cookie: LASTORDER=$qorder ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     }
-    my $bugids = join(":", map( $_->{'id'}, @bugs));
+    my $bugids = join(":", @bugidlist);
     # See also Bug 111999
     if (length($bugids) < 4000) {
         print "Set-Cookie: BUGLIST=$bugids ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";

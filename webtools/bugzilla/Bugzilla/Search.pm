@@ -63,7 +63,7 @@ sub init {
     my @fields;
     my @supptables;
     my @wherepart;
-    my @having = ("(cntuseringroups = cntbugingroups OR canseeanyway)");
+    my @having;
     @fields = @$fieldsref if $fieldsref;
     my @specialchart;
     my @andlist;
@@ -910,26 +910,38 @@ sub init {
     
     # Make sure we create a legal SQL query.
     @andlist = ("1 = 1") if !@andlist;
-    
-    my $query =  ("SELECT " . join(', ', @fields) .
-                  ", COUNT(DISTINCT ugmap.group_id) AS cntuseringroups, " .
-                  " COUNT(DISTINCT bgmap.group_id) AS cntbugingroups, " .
-                  " ((COUNT(DISTINCT ccmap.who) AND cclist_accessible) " .
-                  "  OR ((bugs.reporter = $::userid) AND bugs.reporter_accessible) " .
-                  "  OR bugs.assigned_to = $::userid ) AS canseeanyway " .
-                  " FROM $suppstring" .
-                  " LEFT JOIN bug_group_map AS bgmap " .
-                  " ON bgmap.bug_id = bugs.bug_id " .
-                  " LEFT JOIN user_group_map AS ugmap " .
-                  " ON bgmap.group_id = ugmap.group_id " .
-                  " AND ugmap.user_id = $::userid " .
-                  " AND ugmap.isbless = 0" .
-                  " LEFT JOIN cc AS ccmap " .
-                  " ON ccmap.who = $::userid AND ccmap.bug_id = bugs.bug_id " .
-                  " WHERE " . join(' AND ', (@wherepart, @andlist)) .
-                  " GROUP BY bugs.bug_id" . 
-                  " HAVING " . join(" AND ", @having));
-    
+   
+    my $query = "SELECT " . join(', ', @fields) .
+                " FROM $suppstring" .
+                " LEFT JOIN bug_group_map " .
+                " ON bug_group_map.bug_id = bugs.bug_id ";
+
+    if (defined @{$::vars->{user}{groupids}} && @{$::vars->{user}{groupids}} > 0) {
+        $query .= " AND bug_group_map.group_id NOT IN (" . join(',', @{$::vars->{user}{groupids}}) . ") ";
+    }
+
+    if ($::vars->{user}{userid}) {
+        $query .= " LEFT JOIN cc ON cc.bug_id = bugs.bug_id AND cc.who = $::userid ";
+    }
+
+    $query .= " WHERE " . join(' AND ', (@wherepart, @andlist)) .
+              " AND ((bug_group_map.group_id IS NULL)";
+
+    if ($::vars->{user}{userid}) {
+        $query .= "    OR (bugs.reporter_accessible = 1 AND bugs.reporter = $::userid) " .
+              "    OR (bugs.cclist_accessible = 1 AND cc.who IS NOT NULL) " .
+              "    OR (bugs.assigned_to = $::userid) ";
+        if (Param('useqacontact')) {
+            $query .= "OR (bugs.qa_contact = $::userid) ";
+        }
+    }
+
+    $query .= ") GROUP BY bugs.bug_id";
+
+    if (@having) {
+        $query .= " HAVING " . join(" AND ", @having);
+    }
+
     if ($debug) {
         print "<p><code>" . value_quote($query) . "</code></p>\n";
         exit;

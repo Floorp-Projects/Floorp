@@ -128,7 +128,7 @@
     [% tableheader %]
   [% END %]
 
-  <tr class="bz_[% bug.severity %] bz_[% bug.priority %] [%+ "bz_secure" IF (bug.groupset && !usebuggroups) %]">
+  <tr class="bz_[% bug.severity %] bz_[% bug.priority %] [%+ "bz_secure" IF bug.isingroups %]">
 
     <td>
       [% IF dotweak %]<input type="checkbox" name="id_[% bug.id %]">[% END %]

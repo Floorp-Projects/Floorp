@@ -280,6 +280,7 @@ sub GetUserInfo {
     my %user;
     my @queries;
     my %groups;
+    my @groupids;
     
     # No info if not logged in
     return \%user if ($userid == 0);
@@ -304,16 +305,18 @@ sub GetUserInfo {
 
     $user{'canblessany'} = UserCanBlessAnything();
 
-    SendSQL("SELECT name FROM groups, user_group_map " .
+    SendSQL("SELECT DISTINCT id, name FROM groups, user_group_map " .
             "WHERE groups.id = user_group_map.group_id " .
             "AND user_id = $userid " .
             "AND NOT isbless");
     while (MoreSQLData()) {
-        my ($name) = FetchSQLData();    
+        my ($id, $name) = FetchSQLData();    
+        push(@groupids,$id);
         $groups{$name} = 1;
     }
 
     $user{'groups'} = \%groups;
+    $user{'groupids'} = \@groupids;
 
     return \%user;
 }
