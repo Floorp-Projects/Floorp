@@ -822,7 +822,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
       /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
+      /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlowEntity), kNone,	
       /*special props, prop-range*/       0, kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
