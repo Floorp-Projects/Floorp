@@ -19,7 +19,7 @@
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/ToolTip.h>											*/
-/* Description:	XfeToolTip - Tool tip and doc string support.			*/
+/* Description:	XfeToolTip - TipString / DocString support.				*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -44,6 +44,43 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeToolTipStringCallback												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+typedef void
+(*XfeToolTipStringObtainCallback)	(Widget				w,
+									 XtPointer			clientData1,
+									 XtPointer			clientData2,
+									 XmString *			string_return,
+									 Boolean *			need_to_free_string);
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Callback Reasons														*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+typedef enum _XfeDocStringReason
+{
+    XfeDOC_STRING_CLEAR,							/* Clear (leave)	*/
+	XfeDOC_STRING_SET								/* Set (enter)		*/
+} XfeDocStringReason;
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeToolTipStringCallback												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+typedef void
+(*XfeToolTipDocStringCallback)		(Widget					w,
+									 XtPointer				clientData1,
+									 XtPointer				clientData2,
+									 XfeDocStringReason		reason,
+									 XmString				string);
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* ToolTip label callback structure										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -57,55 +94,98 @@ typedef struct
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeToolTip public methods											*/
+/* TipString public methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern void
-XfeToolTipAdd					(Widget		w);
+XfeToolTipAddTipString				(Widget		w);
 /*----------------------------------------------------------------------*/
 extern void
-XfeToolTipRemove				(Widget		w);
+XfeToolTipRemoveTipString			(Widget		w);
 /*----------------------------------------------------------------------*/
 extern void
-XfeToolTipSetEnabledState		(Widget		w,
-								 Boolean	state);
+XfeToolTipSetTipStringEnabledState	(Widget		w,
+									 Boolean	state);
 /*----------------------------------------------------------------------*/
 extern Boolean
-XfeToolTipGetEnabledState		(Widget		w);
+XfeToolTipGetTipStringEnabledState	(Widget		w);
 /*----------------------------------------------------------------------*/
-
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Callback functions													*/
+/* TipString callback functions											*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern void
-XfeToolTipSetStringCallback		(Widget				w,
-								 XtCallbackProc		callback,
-								 XtPointer			client_data);
+XfeToolTipSetTipStringCallback		(Widget				w,
+									 XtCallbackProc		callback,
+									 XtPointer			client_data);
 /*----------------------------------------------------------------------*/
 extern void
-XfeToolTipClearStringCallback	(Widget						w);
-/*----------------------------------------------------------------------*/
+XfeToolTipClearTipStringCallback	(Widget				w);
+
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeToolTipIsShowing() - Check whether the global tooltip is showing	*/
+/* TipString global enabled / disable functions							*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern void			
+XfeToolTipGlobalSetTipStringEnabledState	(Boolean state);
+/*----------------------------------------------------------------------*/
+extern Boolean
+XfeToolTipGlobalGetTipStringEnabledState	(void);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Check whether the global tooltip is showing							*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern Boolean
-XfeToolTipIsShowing				(void);
+XfeToolTipIsTipStringShowing		(void);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* DocString public methods												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern void
+XfeToolTipAddDocString				(Widget		w);
+/*----------------------------------------------------------------------*/
+extern void
+XfeToolTipRemoveDocString			(Widget		w);
+/*----------------------------------------------------------------------*/
+extern void
+XfeToolTipSetDocStringEnabledState	(Widget		w,
+									 Boolean	state);
+/*----------------------------------------------------------------------*/
+extern Boolean
+XfeToolTipGetDocStringEnabledState	(Widget		w);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* DocString callback functions											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern void
+XfeToolTipSetDocStringCallback		(Widget				w,
+									 XtCallbackProc		callback,
+									 XtPointer			client_data);
+/*----------------------------------------------------------------------*/
+extern void
+XfeToolTipClearDocStringCallback	(Widget				w);
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Enable / Disable functions											*/
+/* DocString global enabled / disable functions							*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-extern void			XfeToolTipGlobalSetEnabledState		(Boolean state);
-extern Boolean		XfeToolTipGlobalGetEnabledState		(void);
+extern void			
+XfeToolTipGlobalSetDocStringEnabledState	(Boolean state);
 /*----------------------------------------------------------------------*/
+extern Boolean
+XfeToolTipGlobalGetDocStringEnabledState	(void);
 
 XFE_END_CPLUSPLUS_PROTECTION
 

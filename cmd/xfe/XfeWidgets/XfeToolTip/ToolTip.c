@@ -19,7 +19,7 @@
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/ToolTip.c>											*/
-/* Description:	XfeToolTip - Tool tip and doc string support.			*/
+/* Description:	XfeToolTip - TipString / DocString support.				*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -44,6 +44,10 @@
   KeyReleaseMask )
 
 
+#if 0
+#define DEBUG_TOOL_TIPS yes
+#endif
+
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* _XfeTipItemInfoRec													*/
@@ -51,10 +55,16 @@
 /*----------------------------------------------------------------------*/
 typedef struct
 {
-	Widget						widget;
-	Boolean						enabled;
-	XtCallbackRec				label_callback;
-/* 	XtPointer					label_client_data; */
+	Widget						item;
+
+	/* TipString */
+	Boolean						tip_string_enabled;
+	XtCallbackRec				tip_string_callback;
+
+	/* DocString */
+	Boolean						doc_string_enabled;
+	XtCallbackRec				doc_string_callback;
+
 } _XfeTipItemInfoRec,*_XfeTipItemInfo;
 /*----------------------------------------------------------------------*/
 
@@ -65,7 +75,7 @@ typedef struct
 /*----------------------------------------------------------------------*/
 typedef struct
 {
-	Widget		widget;
+	Widget		manager;
 	XfeLinked	children_list;
 } _XfeTipManagerInfoRec,*_XfeTipManagerInfo;
 /*----------------------------------------------------------------------*/
@@ -102,9 +112,6 @@ static void					WidgetRemove		(Widget);
 static _XfeTipItemInfo		WidgetGetInfo		(Widget);
 static _XfeTipItemInfo		WidgetAddInfo		(Widget);
 static void					WidgetRemoveInfo	(Widget,_XfeTipItemInfo);
-static _XfeTipItemInfo		WidgetAllocateInfo	(Widget,Boolean);
-static void					WidgetDestroyCB		(Widget,XtPointer,XtPointer);
-static void					WidgetFreeInfo		(_XfeTipItemInfo);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -113,28 +120,38 @@ static void					WidgetFreeInfo		(_XfeTipItemInfo);
 /*----------------------------------------------------------------------*/
 static void					GadgetAdd			(Widget);
 static void					GadgetRemove		(Widget);
-static _XfeTipItemInfo		GadgetAllocateInfo	(Widget,Boolean);
 static _XfeTipItemInfo		GadgetGetInfo		(Widget);
-static void					GadgetFreeInfo		(_XfeTipItemInfo);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* Item (Widget or Gadget)  functions									*/
 /*																		*/
 /*----------------------------------------------------------------------*/
+static void					ItemDestroyCB		(Widget,XtPointer,XtPointer);
+static void					ItemFreeInfo		(_XfeTipItemInfo);
+static _XfeTipItemInfo		ItemAllocateInfo	(Widget);
 static _XfeTipItemInfo		ItemGetInfo			(Widget);
-static void					ItemGetLabelString	(Widget,XmString *,Boolean *);
+static void					ItemGetTipString	(Widget,XmString *,Boolean *);
+static void					ItemGetDocString	(Widget,XmString *,Boolean *);
 static void					ItemPostToolTip		(Widget);
 static void					ItemUnPostToolTip	(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Item enter / leave / cancel functions								*/
+/* TipString enter / leave / cancel functions							*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void					ItemEnter				(Widget,_XfeTipItemInfo);
-static void					ItemLeave				(Widget,_XfeTipItemInfo);
-static void					ItemCancel				(Widget,_XfeTipItemInfo);
+static void		TipStringEnterItem			(Widget,_XfeTipItemInfo);
+static void		TipStringLeaveItem			(Widget,_XfeTipItemInfo);
+static void		TipStringCancelItem			(Widget,_XfeTipItemInfo);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* DocString enter / leave / cancel functions							*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void		DocStringEnterItem			(Widget,_XfeTipItemInfo);
+static void		DocStringLeaveItem			(Widget,_XfeTipItemInfo);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -179,8 +196,9 @@ GadgetPhonyInputDispatch(Widget		w,
 
 	assert( input_dispatch != NULL );
 
-	/* Do tool tip magic only if tool tips are enabled */
-	if (XfeToolTipGlobalGetEnabledState())
+	/* Do the tip magic only if tip or doc strings are globally enabled */
+	if (XfeToolTipGlobalGetTipStringEnabledState() ||
+		XfeToolTipGlobalGetDocStringEnabledState())
 	{
 		_XfeTipManagerInfo	manager_info = NULL;
 		Widget				pw = XtParent(w);
@@ -197,23 +215,46 @@ GadgetPhonyInputDispatch(Widget		w,
 			
 			if (node != NULL)
 			{
-				_XfeTipItemInfo	item_info = 
+				_XfeTipItemInfo		item_info = 
 					(_XfeTipItemInfo) XfeLinkNodeItem(node);
 
 				assert( item_info != NULL );
 
-				/* Make sure the item is enabled */
-				if (item_info->enabled)
+				if (item_info != NULL)
 				{
+					Boolean do_tip_string = 
+						XfeToolTipGlobalGetTipStringEnabledState() &&
+						item_info->tip_string_enabled;
+
+					Boolean do_doc_string = 
+						XfeToolTipGlobalGetDocStringEnabledState() &&
+						item_info->doc_string_enabled;
+
 					/* Enter */
 					if (event_mask & XmENTER_EVENT)
 					{
-						ItemEnter(w,item_info);
+						if (do_tip_string)
+						{
+							TipStringEnterItem(w,item_info);
+						}
+						
+						if (do_doc_string)
+						{
+							DocStringEnterItem(w,item_info);
+						}
 					}
 					/* Leave */
 					else if (event_mask & XmLEAVE_EVENT)
 					{
-						ItemLeave(w,item_info);
+						if (do_tip_string)
+						{
+							TipStringLeaveItem(w,item_info);
+						}
+						
+						if (do_doc_string)
+						{
+							DocStringLeaveItem(w,item_info);
+						}
 					}
 					/*
 					 * XmARM_EVENT
@@ -229,12 +270,15 @@ GadgetPhonyInputDispatch(Widget		w,
 					 */
 					else
 					{
-						ItemCancel(w,item_info);
+						if (do_tip_string)
+						{
+							TipStringCancelItem(w,item_info);
+						}
 					}
-				} /* item_info->enabled == True */
+				} /* item_info != NULL */
 			} /* node != NULL */
 		} /* manager_info != NULL */
-	} /* XfeToolTipGlobalGetEnabledState() == True */
+	} /* XfeToolTipGlobalGetTipStringEnabledState() == True */
 
 	/* Invoke the original InputDispatch() method */
 	(*input_dispatch)(w,event,event_mask);
@@ -369,7 +413,7 @@ ManagerAllocateInfo(Widget w)
 	manager_info = (_XfeTipManagerInfo) 
 		XtMalloc(sizeof(_XfeTipManagerInfoRec) * 1);
 	
-	manager_info->widget		= w;
+	manager_info->manager		= w;
 	manager_info->children_list	= XfeLinkedConstruct();
 	
 	XtAddCallback(w,
@@ -516,7 +560,7 @@ WidgetRemove(Widget w)
  	WidgetRemoveInfo(w,item_info);
 
 	/* Free the tool tip info */
-	WidgetFreeInfo(item_info);
+	ItemFreeInfo(item_info);
 
 	/* Remove the tool tip event handler */
     XtRemoveEventHandler(w,
@@ -553,38 +597,6 @@ WidgetGetInfo(Widget w)
 }
 /*----------------------------------------------------------------------*/
 static _XfeTipItemInfo
-WidgetAllocateInfo(Widget w,Boolean enabled)
-{
-	_XfeTipItemInfo	item_info = NULL;
-
-	assert( _XfeIsAlive(w) );
-	assert( _XfeIsRealized(w) );
-
-	item_info = (_XfeTipItemInfo) XtMalloc(sizeof(_XfeTipItemInfoRec) * 1);
-
-	/* Initialize the members */
-	item_info->widget					= w;
-	item_info->enabled					= enabled;
-	item_info->label_callback.callback	= NULL;
-	item_info->label_callback.closure	= NULL;
-
-	XtAddCallback(w,
-				  XmNdestroyCallback,
-				  WidgetDestroyCB,
-				  (XtPointer) item_info);
-	
-	return item_info;
-}
-/*----------------------------------------------------------------------*/
-static void
-WidgetFreeInfo(_XfeTipItemInfo item_info)
-{
-	assert( item_info != NULL );
-
-	XtFree((char *) item_info);
-}
-/*----------------------------------------------------------------------*/
-static _XfeTipItemInfo
 WidgetAddInfo(Widget w)
 {
 	_XfeTipItemInfo		item_info = NULL;
@@ -606,7 +618,14 @@ WidgetAddInfo(Widget w)
 						 (XPointer *) &item_info) != 0);
 
 	/* Allocate the item info */
-	item_info = WidgetAllocateInfo(w,True);
+	item_info = ItemAllocateInfo(w);
+
+	assert( item_info != NULL );
+
+#if 1 
+	item_info->tip_string_enabled = True;
+	item_info->doc_string_enabled = True;
+#endif
 
 	save_result = XSaveContext(XtDisplay(w),
 							   XtWindow(w),
@@ -633,18 +652,6 @@ WidgetRemoveInfo(Widget w,_XfeTipItemInfo item_info)
 								   _xfe_tt_item_context);
 
 	assert( delete_result == 0 );
-}
-/*----------------------------------------------------------------------*/
-static void
-WidgetDestroyCB(Widget w,XtPointer client_data,XtPointer call_data)
-{
-	_XfeTipItemInfo	item_info = (_XfeTipItemInfo) client_data;
-
-	assert( item_info != NULL );
-
-	WidgetRemoveInfo(w,item_info);
-
-	WidgetFreeInfo(item_info);
 }
 /*----------------------------------------------------------------------*/
 
@@ -678,7 +685,14 @@ GadgetAdd(Widget w)
 	assert( manager_info != NULL );
 
 	/* Allocate the item info */
-	item_info = GadgetAllocateInfo(w,True);
+	item_info = ItemAllocateInfo(w);
+
+	assert( item_info != NULL );
+
+#if 1 
+	item_info->tip_string_enabled = True;
+	item_info->doc_string_enabled = True;
+#endif
 
 	/* Make sure the item is not already on the list */
 	assert( XfeLinkedFind(manager_info->children_list,
@@ -723,7 +737,7 @@ GadgetRemove(Widget w)
 	assert( item_info != NULL );
 
 	/* Free the item info */
-	GadgetFreeInfo(item_info);
+	ItemFreeInfo(item_info);
 }
 /*----------------------------------------------------------------------*/
 static _XfeTipItemInfo
@@ -755,35 +769,62 @@ GadgetGetInfo(Widget w)
 	return item_info;
 }
 /*----------------------------------------------------------------------*/
-static _XfeTipItemInfo
-GadgetAllocateInfo(Widget w,Boolean enabled)
-{
-	_XfeTipItemInfo	item_info = NULL;
-
-	assert( _XfeIsAlive(w) );
-
-	item_info = (_XfeTipItemInfo) XtMalloc(sizeof(_XfeTipItemInfoRec) * 1);
-	
-	item_info->widget		= w;
-	item_info->enabled		= enabled;
-
-	return item_info;
-}
-/*----------------------------------------------------------------------*/
-static void
-GadgetFreeInfo(_XfeTipItemInfo item_info)
-{
-	assert( item_info != NULL );
-
-	XtFree((char *) item_info);
-}
-/*----------------------------------------------------------------------*/
-
 
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* Item (Widget or Gadget)  functions									*/
 /*																		*/
+/*----------------------------------------------------------------------*/
+static void
+ItemDestroyCB(Widget w,XtPointer client_data,XtPointer call_data)
+{
+	if (XmIsGadget(w))
+	{
+		GadgetRemove(w);
+	}
+	else
+	{
+		WidgetRemove(w);
+	}
+}
+/*----------------------------------------------------------------------*/
+static _XfeTipItemInfo
+ItemAllocateInfo(Widget w)
+{
+	_XfeTipItemInfo	item_info = NULL;
+
+	assert( _XfeIsAlive(w) );
+	assert( _XfeIsRealized(w) );
+
+	item_info = (_XfeTipItemInfo) XtMalloc(sizeof(_XfeTipItemInfoRec) * 1);
+
+	/* Initialize the members */
+	item_info->item							= w;
+
+	item_info->tip_string_enabled			= False;
+ 	item_info->doc_string_enabled			= False;
+
+	item_info->tip_string_callback.callback	= NULL;
+	item_info->tip_string_callback.closure	= NULL;
+
+	item_info->doc_string_callback.callback	= NULL;
+	item_info->doc_string_callback.closure	= NULL;
+
+	XtAddCallback(w,
+				  XmNdestroyCallback,
+				  ItemDestroyCB,
+				  (XtPointer) item_info);
+	
+	return item_info;
+}
+/*----------------------------------------------------------------------*/
+static void
+ItemFreeInfo(_XfeTipItemInfo item_info)
+{
+	assert( item_info != NULL );
+
+	XtFree((char *) item_info);
+}
 /*----------------------------------------------------------------------*/
 static _XfeTipItemInfo
 ItemGetInfo(Widget w)
@@ -805,7 +846,7 @@ ItemGetInfo(Widget w)
 }
 /*----------------------------------------------------------------------*/
 static void
-ItemGetLabelString(Widget w,XmString * xmstr_out,Boolean * need_to_free_out)
+ItemGetTipString(Widget w,XmString * xmstr_out,Boolean * need_to_free_out)
 {
 	_XfeTipItemInfo	item_info;
 
@@ -821,8 +862,8 @@ ItemGetLabelString(Widget w,XmString * xmstr_out,Boolean * need_to_free_out)
 	
 	assert( item_info != NULL );
 
-	/* Invoke the label callback if present */
-	if (item_info->label_callback.callback != NULL)
+	/* Invoke the tool tip callback if present */
+	if (item_info->tip_string_callback.callback != NULL)
 	{
 		XfeToolTipLabelCallbackStruct cbs;
 
@@ -831,10 +872,10 @@ ItemGetLabelString(Widget w,XmString * xmstr_out,Boolean * need_to_free_out)
 		cbs.label_return = NULL;
 		cbs.need_to_free_return = False;
 		
-		(*item_info->label_callback.callback)(w,
-											  item_info->label_callback.closure,
-											  &cbs);
-
+		(*item_info->tip_string_callback.callback)(w,
+												 item_info->tip_string_callback.closure,
+												 &cbs);
+		
 		*xmstr_out = cbs.label_return;
 		*need_to_free_out = cbs.need_to_free_return;
 	}
@@ -853,10 +894,59 @@ ItemGetLabelString(Widget w,XmString * xmstr_out,Boolean * need_to_free_out)
 	}
 }
 /*----------------------------------------------------------------------*/
+static void
+ItemGetDocString(Widget w,XmString * xmstr_out,Boolean * need_to_free_out)
+{
+	_XfeTipItemInfo	item_info;
+
+	assert( xmstr_out != NULL );
+	assert( need_to_free_out != NULL );
+
+	*xmstr_out = NULL;
+	*need_to_free_out = False;
+
+	assert( _XfeIsAlive(w) );
+	
+	item_info = ItemGetInfo(w);
+	
+	assert( item_info != NULL );
+
+	/* Invoke the doc string callback if present */
+	if (item_info->doc_string_callback.callback != NULL)
+	{
+		XfeToolTipLabelCallbackStruct cbs;
+		
+		cbs.reason = 0;
+		cbs.event = NULL;
+		cbs.label_return = NULL;
+		cbs.need_to_free_return = False;
+		
+		(*item_info->doc_string_callback.callback)(w,
+												   item_info->doc_string_callback.closure,
+												   &cbs);
+		
+		*xmstr_out = cbs.label_return;
+		*need_to_free_out = cbs.need_to_free_return;
+	}
+	/* Check resources directly */
+	else
+	{
+		*xmstr_out = XfeSubResourceGetWidgetXmStringValue(w, 
+														  XmNdocumentationString, 
+														  XmCDocumentationString);
+		
+		/*
+		 * No need to free this string.  The Xt resource destructor
+		 * should take care of freeing this memory.
+		 */
+		*need_to_free_out = False;
+	}
+}
+/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Enter / Leave / Cancel functions										*/
+/* TipString enter / leave / cancel functions							*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 static Widget		_xfe_tt_stage_one_target = NULL;
@@ -864,13 +954,16 @@ static Widget		_xfe_tt_stage_two_target = NULL;
 static XtIntervalId	_xfe_tt_timer_id = 0;
 
 static void
-ItemEnter(Widget w,_XfeTipItemInfo item_info)
+TipStringEnterItem(Widget w,_XfeTipItemInfo item_info)
 {
 	assert( _XfeIsAlive(w) );
 
 	if (_XfeToolTipIsLocked())
 	{
-		printf("Enter(%s): tool tips are locked.  aborting\n",XtName(w));
+#ifdef DEBUG_TOOL_TIPS
+		printf("TipStringEnterItem(%s): tool tips are locked - abort\n",
+			   XtName(w));
+#endif
 	}
 
 	_XfeToolTipLock();
@@ -879,11 +972,13 @@ ItemEnter(Widget w,_XfeTipItemInfo item_info)
 
 	StageTwoAddTimeout(w);
 
-	printf("Enter(%s)\n",XtName(w));
+#ifdef DEBUG_TOOL_TIPS
+	printf("TipStringEnterItem(%s)\n",XtName(w));
+#endif
 }
 /*----------------------------------------------------------------------*/
 static void
-ItemLeave(Widget w,_XfeTipItemInfo item_info)
+TipStringLeaveItem(Widget w,_XfeTipItemInfo item_info)
 {
 	assert( _XfeIsAlive(w) );
 	
@@ -908,18 +1003,56 @@ ItemLeave(Widget w,_XfeTipItemInfo item_info)
 	}
 
 	_XfeToolTipUnlock();
+
+#ifdef DEBUG_TOOL_TIPS
+	printf("TipStringLeaveItem(%s)\n",XtName(w));
+#endif
 }
 /*----------------------------------------------------------------------*/
 static void
-ItemCancel(Widget w,_XfeTipItemInfo item_info)
+TipStringCancelItem(Widget w,_XfeTipItemInfo item_info)
 {
-	ItemLeave(w,item_info);
+#ifdef DEBUG_TOOL_TIPS
+	printf("TipStringCancelItem(%s)\n",XtName(w));
+#endif
+
+	TipStringLeaveItem(w,item_info);
 }
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Itme Post / UnPost ToolTip functions									*/
+/* DocString enter / leave / cancel functions							*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* static Widget		_xfe_tt_stage_one_target = NULL; */
+/* static Widget		_xfe_tt_stage_two_target = NULL; */
+/* static XtIntervalId	_xfe_tt_timer_id = 0; */
+
+static void
+DocStringEnterItem(Widget w,_XfeTipItemInfo item_info)
+{
+	assert( _XfeIsAlive(w) );
+
+#ifdef DEBUG_TOOL_TIPS
+	printf("DocStringEnterItem(%s)\n",XtName(w));
+#endif
+}
+/*----------------------------------------------------------------------*/
+static void
+DocStringLeaveItem(Widget w,_XfeTipItemInfo item_info)
+{
+	assert( _XfeIsAlive(w) );
+	
+#ifdef DEBUG_TOOL_TIPS
+	printf("DocStringLeaveItem(%s)\n",XtName(w));
+#endif
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Item Post / UnPost ToolTip functions									*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 static Boolean		_xfe_tt_posted = False;
@@ -936,14 +1069,23 @@ ItemPostToolTip(Widget w)
 	assert( _XfeIsAlive(w) );
 
 	shell =_XfeToolTipGetShell(w);
-
+	
 	assert( _XfeIsAlive(shell) );
 
 	label = _XfeToolTipGetLabel(w);
 
 	assert( _XfeIsAlive(label) );
 
-	ItemGetLabelString(w,&xmstr,&need_to_free);
+	ItemGetTipString(w,&xmstr,&need_to_free);
+
+#if DEBUG
+	if (xmstr == NULL)
+	{
+		xmstr = XmStringCreateLocalized("YOU SUCK!");
+		
+		need_to_free = True;
+	}
+#endif
  
 	if (xmstr != NULL)
 	{
@@ -961,6 +1103,10 @@ ItemPostToolTip(Widget w)
 
 		XtPopup(shell,XtGrabNone);
 	}
+
+#ifdef DEBUG_TOOL_TIPS
+	printf("ItemPostToolTip(%s)\n",XtName(w));
+#endif
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -977,6 +1123,10 @@ ItemUnPostToolTip(Widget w)
 			XtPopdown(shell);
 		}
 	}
+
+#ifdef DEBUG_TOOL_TIPS
+	printf("ItemUnPostToolTip(%s)\n",XtName(w));
+#endif
 }
 /*----------------------------------------------------------------------*/
 
@@ -993,7 +1143,7 @@ ChildrenListDestroyProc(XtPointer item,XtPointer client_data)
 
 	assert( item_info != NULL );
 
-	GadgetFreeInfo(item_info);
+	ItemFreeInfo(item_info);
 }
 /*----------------------------------------------------------------------*/
 static Boolean
@@ -1004,7 +1154,7 @@ ChildrenListTestFunc(XtPointer item,XtPointer client_data)
 
 	assert( item_info != NULL );
 
-	return (item_info->widget == w);
+	return (item_info->item == w);
 }
 /*----------------------------------------------------------------------*/
 
@@ -1023,7 +1173,6 @@ StageTwoTimeout(XtPointer closure,XtIntervalId * id)
 	 * by accident later.
 	 */
 	_xfe_tt_timer_id = 0;
-
 
 	/*
 	 * Post the tooltip if a target is still alive.
@@ -1079,8 +1228,9 @@ WidgetStageOneEH(Widget		w,
 				 XEvent *	event,
 				 Boolean *	cont)
 {
-	/* Do tool tip magic only if tool tips are enabled */
-	if (event && XfeToolTipGlobalGetEnabledState())
+	/* Do the tip magic only if tip or doc strings are globally enabled */
+	if (XfeToolTipGlobalGetTipStringEnabledState() ||
+		XfeToolTipGlobalGetDocStringEnabledState())
 	{
 		_XfeTipItemInfo item_info = WidgetGetInfo(w);
 
@@ -1088,27 +1238,50 @@ WidgetStageOneEH(Widget		w,
 
 		if (item_info != NULL)
 		{
-			/* Make sure the item is enabled */
-			if (item_info->enabled)
+			Boolean do_tip_string = 
+				XfeToolTipGlobalGetTipStringEnabledState() &&
+				item_info->tip_string_enabled;
+			
+			Boolean do_doc_string = 
+				XfeToolTipGlobalGetDocStringEnabledState() &&
+				item_info->doc_string_enabled;
+
+			/* Enter */
+			if (event->type == EnterNotify)
 			{
-				/* Enter */
-				if (event->type == EnterNotify)
+				if (do_tip_string)
 				{
-					ItemEnter(w,item_info);
+					TipStringEnterItem(w,item_info);
 				}
-				/* Leave */
-				else if (event->type == LeaveNotify)
+				
+				if (do_doc_string)
 				{
-					ItemLeave(w,item_info);
+					DocStringEnterItem(w,item_info);
 				}
-				/* Cancel */
-				else
+			}
+			/* Leave */
+			else if (event->type == LeaveNotify)
+			{
+				if (do_tip_string)
 				{
-					ItemCancel(w,item_info);
+					TipStringLeaveItem(w,item_info);
 				}
-			} /* item_info->enabled == True */
+				
+				if (do_doc_string)
+				{
+					DocStringLeaveItem(w,item_info);
+				}
+			}
+			/* Cancel */
+			else
+			{
+				if (do_tip_string)
+				{
+					TipStringCancelItem(w,item_info);
+				}
+			}
 		} /* item_info != NULL */
-	} /* XfeToolTipGlobalGetEnabledState() == True */
+	}
 
 	*cont = True;
 }
@@ -1184,20 +1357,19 @@ _XfeToolTipIsLocked(void)
 }
 /*----------------------------------------------------------------------*/
 
-
-
-
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeToolTip Public Methods											*/
+/* TipString public methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 /* extern */ void
-XfeToolTipAdd(Widget w)
+XfeToolTipAddTipString(Widget w)
 {
 	assert( _XfeIsAlive(w) );
 
-	printf("XfeToolTipAdd(%s)\n",XtName(w));
+#ifdef DEBUG_TOOL_TIPS
+	printf("XfeToolTipAddTipString(%s)\n",XtName(w));
+#endif
 
 	if (XmIsGadget(w))
 	{
@@ -1210,11 +1382,13 @@ XfeToolTipAdd(Widget w)
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
-XfeToolTipRemove(Widget w)
+XfeToolTipRemoveTipString(Widget w)
 {
 	assert( _XfeIsAlive(w) );
 
-	printf("XfeToolTipRemove(%s)\n",XtName(w));
+#ifdef DEBUG_TOOL_TIPS
+	printf("XfeToolTipRemoveTipString(%s)\n",XtName(w));
+#endif
 
 	if (XmIsGadget(w))
 	{
@@ -1227,7 +1401,7 @@ XfeToolTipRemove(Widget w)
 }
 /*----------------------------------------------------------------------*/
 /* extern */ Boolean
-XfeToolTipGetEnabledState(Widget w)
+XfeToolTipGetTipStringEnabledState(Widget w)
 {
 	_XfeTipItemInfo item_info;
 	
@@ -1237,14 +1411,14 @@ XfeToolTipGetEnabledState(Widget w)
 
 	if (item_info != NULL)
 	{
-		return item_info->enabled;
+		return item_info->tip_string_enabled;
 	}
 
 	return False;
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
-XfeToolTipSetEnabledState(Widget w,Boolean state)
+XfeToolTipSetTipStringEnabledState(Widget w,Boolean state)
 {
 	_XfeTipItemInfo item_info;
 	
@@ -1256,20 +1430,20 @@ XfeToolTipSetEnabledState(Widget w,Boolean state)
 	
 	if (item_info != NULL)
 	{
-		item_info->enabled = state;
+		item_info->tip_string_enabled = state;
 	}
 }
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Callback functions													*/
+/* TipString callback functions											*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 /* extern */ void
-XfeToolTipSetStringCallback(Widget			w,
-							XtCallbackProc	callback,
-							XtPointer		client_data)
+XfeToolTipSetTipStringCallback(Widget			w,
+							   XtCallbackProc	callback,
+							   XtPointer		client_data)
 {
 	_XfeTipItemInfo item_info;
 	
@@ -1279,34 +1453,177 @@ XfeToolTipSetStringCallback(Widget			w,
 
 	if (item_info != NULL)
 	{
-		item_info->label_callback.callback = callback;
-		item_info->label_callback.closure = client_data;
+		item_info->tip_string_callback.callback = callback;
+		item_info->tip_string_callback.closure = client_data;
 	}
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
-XfeToolTipClearStringCallback(Widget w)
+XfeToolTipClearTipStringCallback(Widget w)
 {
-	XfeToolTipSetStringCallback(w,NULL,NULL);
+	XfeToolTipSetTipStringCallback(w,NULL,NULL);
 }
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Enable / Disable functions											*/
+/* TipString global enabled / disable functions							*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static Boolean _xfe_tt_global_enabled = False;
+static Boolean _xfe_tip_string_global_enabled = False;
 
 /* extern */ void
-XfeToolTipGlobalSetEnabledState(Boolean state)
+XfeToolTipGlobalSetTipStringEnabledState(Boolean state)
 {
-	_xfe_tt_global_enabled = state;
+	_xfe_tip_string_global_enabled = state;
 }
 /*----------------------------------------------------------------------*/
 /* extern */ Boolean
-XfeToolTipGlobalGetEnabledState(void)
+XfeToolTipGlobalGetTipStringEnabledState(void)
 {
-	return _xfe_tt_global_enabled;
+	return _xfe_tip_string_global_enabled;
 }
 /*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Check whether the global tooltip is showing							*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern Boolean
+XfeToolTipIsTipStringShowing(void)
+{
+	/* writeme */
+	assert( 0 );
+	return False;
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* DocString public methods												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeToolTipAddDocString(Widget w)
+{
+	assert( _XfeIsAlive(w) );
+
+#ifdef DEBUG_TOOL_TIPS
+	printf("XfeToolTipAddDocString(%s)\n",XtName(w));
+#endif
+
+	if (XmIsGadget(w))
+	{
+		GadgetAdd(w);
+	}
+	else
+	{
+		WidgetAdd(w);
+	}
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeToolTipRemoveDocString(Widget w)
+{
+	assert( _XfeIsAlive(w) );
+
+#ifdef DEBUG_TOOL_TIPS
+	printf("XfeToolTipRemoveDocString(%s)\n",XtName(w));
+#endif
+
+	if (XmIsGadget(w))
+	{
+		GadgetRemove(w);
+	}
+	else
+	{
+		WidgetRemove(w);
+	}
+}
+/*----------------------------------------------------------------------*/
+/* extern */ Boolean
+XfeToolTipGetDocStringEnabledState(Widget w)
+{
+	_XfeTipItemInfo item_info;
+	
+	assert( _XfeIsAlive(w) );
+
+	item_info = ItemGetInfo(w);
+
+	if (item_info != NULL)
+	{
+		return item_info->doc_string_enabled;
+	}
+
+	return False;
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeToolTipSetDocStringEnabledState(Widget w,Boolean state)
+{
+	_XfeTipItemInfo item_info;
+	
+	assert( _XfeIsAlive(w) );
+
+	item_info = ItemGetInfo(w);
+
+	assert( item_info != NULL );
+	
+	if (item_info != NULL)
+	{
+		item_info->doc_string_enabled = state;
+	}
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* DocString callback functions											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeToolTipSetDocStringCallback(Widget			w,
+							   XtCallbackProc	callback,
+							   XtPointer		client_data)
+{
+	_XfeTipItemInfo item_info;
+	
+	assert( _XfeIsAlive(w) );
+
+	item_info = ItemGetInfo(w);
+
+	if (item_info != NULL)
+	{
+		item_info->doc_string_callback.callback = callback;
+		item_info->doc_string_callback.closure = client_data;
+	}
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeToolTipClearDocStringCallback(Widget w)
+{
+	XfeToolTipSetDocStringCallback(w,NULL,NULL);
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* DocString global enabled / disable functions							*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static Boolean _xfe_doc_string_global_enabled = False;
+
+/* extern */ void
+XfeToolTipGlobalSetDocStringEnabledState(Boolean state)
+{
+	_xfe_doc_string_global_enabled = state;
+}
+/*----------------------------------------------------------------------*/
+/* extern */ Boolean
+XfeToolTipGlobalGetDocStringEnabledState(void)
+{
+	return _xfe_doc_string_global_enabled;
+}
+/*----------------------------------------------------------------------*/
+

@@ -88,28 +88,29 @@ main(int argc,char *argv[])
 
 	XtPopup(frame,XtGrabNone);
 
-	XfeToolTipAdd(_button_widgets[0]);
-	XfeToolTipAdd(_button_widgets[1]);
-/* 	XfeToolTipAdd(_button_widgets[2]); */
+	XfeToolTipAddTipString(_button_widgets[0]);
+	XfeToolTipAddTipString(_button_widgets[1]);
+/* 	XfeToolTipAddTipString(_button_widgets[2]); */
 
-	XfeToolTipAdd(_label_widgets[0]);
-	XfeToolTipAdd(_label_widgets[1]);
-/* 	XfeToolTipAdd(_label_widgets[2]); */
+	XfeToolTipAddTipString(_label_widgets[0]);
+	XfeToolTipAddTipString(_label_widgets[1]);
+/* 	XfeToolTipAddTipString(_label_widgets[2]); */
 
-	XfeToolTipAdd(_button_gadgets[0]);
-	XfeToolTipAdd(_button_gadgets[1]);
-/* 	XfeToolTipAdd(_button_gadgets[2]); */
+	XfeToolTipAddTipString(_button_gadgets[0]);
+	XfeToolTipAddTipString(_button_gadgets[1]);
+/* 	XfeToolTipAddTipString(_button_gadgets[2]); */
 
-	XfeToolTipAdd(_label_gadgets[0]);
-	XfeToolTipAdd(_label_gadgets[1]);
-/* 	XfeToolTipAdd(_label_gadgets[2]); */
+	XfeToolTipAddTipString(_label_gadgets[0]);
+	XfeToolTipAddTipString(_label_gadgets[1]);
+/* 	XfeToolTipAddTipString(_label_gadgets[2]); */
 
 
-	XfeToolTipSetStringCallback(_button_widgets[0],
-								tool_tip_cb,
-								NULL);
-
- 	XfeToolTipGlobalSetEnabledState(True);
+	XfeToolTipSetTipStringCallback(_button_widgets[0],
+								   tool_tip_cb,
+								   NULL);
+	
+ 	XfeToolTipGlobalSetTipStringEnabledState(True);
+ 	XfeToolTipGlobalSetDocStringEnabledState(True);
 
     XfeAppMainLoop();
 
