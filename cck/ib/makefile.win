@@ -86,6 +86,8 @@ install:: $(DLL)
 
 export::
 	$(MAKE_INSTALL) script.ib $(CCKDIST)\CCKTool
+	$(MAKE_INSTALL) help1.txt $(CCKDIST)\CCKTool
+	$(MAKE_INSTALL) help2.txt $(CCKDIST)\CCKTool
 
 #clobber::
 #	rm -f $(DIST)\bin\$(DLLNAME).dll
