@@ -128,7 +128,7 @@
 <!ENTITY formattingToolbarCmd.label "Format Toolbar">
 <!ENTITY formattingtb.accesskey "f">
 <!ENTITY editmodeToolbarCmd.label "Edit Mode Toolbar">
-<!ENTITY editmodetb.accesskey "e">
+<!ENTITY editmodetb.accesskey "E">
 <!ENTITY taskbarCmd.label "Status Bar">  
 <!ENTITY taskbarCmd.accesskey "S"> 
 <!ENTITY viewPageSource.label "Page Source">
@@ -256,7 +256,7 @@
 <!ENTITY insertlink.accesskey "l">
 <!ENTITY insertlink.keybinding "l">
 <!ENTITY insertAnchorCmd.label "Named Anchor...">
-<!ENTITY insertanchor.accesskey "a">
+<!ENTITY insertanchor.accesskey "A">
 <!ENTITY insertImageCmd.label "Image...">
 <!ENTITY insertimage.accesskey "i">
 <!ENTITY insertImageMapCmd.label "Image Map...">
@@ -267,7 +267,7 @@
 <!ENTITY insertHTMLCmd.label "HTML...">
 <!ENTITY insertHTMLCmd.accesskey "h">
 <!ENTITY insertCharsCmd.label "Characters and Symbols...">
-<!ENTITY insertchars.accesskey "c">
+<!ENTITY insertchars.accesskey "C">
 <!ENTITY insertBreakCmd.label "Line Break">
 <!ENTITY insertbreak.accesskey "b">
 <!ENTITY insertBreakAllCmd.label "Break Below Image(s)">
@@ -345,7 +345,7 @@
 <!ENTITY stylebold.accesskey "b">
 <!ENTITY stylebold.keybinding "b">
 <!ENTITY styleItalicCmd.label "Italic">
-<!ENTITY styleitalic.accesskey "i">
+<!ENTITY styleitalic.accesskey "I">
 <!ENTITY styleitalic.keybinding "i">
 <!ENTITY styleUnderlineCmd.label "Underline">
 <!ENTITY styleunderline.accesskey "u">
@@ -355,9 +355,9 @@
 <!ENTITY styleSuperscriptCmd.label "Superscript">
 <!ENTITY stylesuperscript.accesskey "p">
 <!ENTITY styleSubscriptCmd.label "Subscript">
-<!ENTITY stylesubscript.accesskey "s">
+<!ENTITY stylesubscript.accesskey "S">
 <!ENTITY styleNonbreakingCmd.label "Nonbreaking">
-<!ENTITY stylenonbreaking.accesskey "n">
+<!ENTITY stylenonbreaking.accesskey "N">
 <!ENTITY styleEm.label "Emphasis">
 <!ENTITY styleEm.accesskey "e">
 <!ENTITY styleStrong.label "Stronger Emphasis">
@@ -365,7 +365,7 @@
 <!ENTITY styleCite.label "Citation">
 <!ENTITY styleCite.accesskey "c">
 <!ENTITY styleAbbr.label "Abbreviation">
-<!ENTITY styleAbbr.accesskey "a">
+<!ENTITY styleAbbr.accesskey "A">
 <!ENTITY styleAcronym.label "Acronym">
 <!ENTITY styleAcronym.accesskey "r">
 <!ENTITY styleCode.label "Code">
@@ -378,7 +378,7 @@
 <!ENTITY formatFontColor.label "Text Color...">
 <!ENTITY formatfontcolor.accesskey "c">
 <!ENTITY tableOrCellColor.label "Table or Cell Background Color...">
-<!ENTITY tableOrCellColor.accesskey "b">
+<!ENTITY tableOrCellColor.accesskey "B">
 
 <!ENTITY formatremovestyles.keybinding "t">
 <!ENTITY formatremovelinks.keybinding "k">
@@ -386,9 +386,9 @@
 <!ENTITY formatindent.keybinding "]">
 <!ENTITY formatoutdent.keybinding "[">
 <!ENTITY paragraphMenu.label "Paragraph">
-<!ENTITY formatparagraphmenu.accesskey "p">
+<!ENTITY formatparagraphmenu.accesskey "P">
 <!ENTITY paragraphParagraphCmd.label "Paragraph">  
-<!ENTITY paragraphparagraph.accesskey "p">
+<!ENTITY paragraphparagraph.accesskey "P">
 <!ENTITY heading1Cmd.label "Heading 1">
 <!ENTITY heading1.accesskey "1">
 <!ENTITY heading2Cmd.label "Heading 2">
@@ -412,7 +412,7 @@
 <!ENTITY formatlistMenu.label "List">
 <!ENTITY formatlistmenu.accesskey "l">
 <!ENTITY noneCmd.label "None">
-<!ENTITY none.accesskey "n">
+<!ENTITY none.accesskey "N">
 <!ENTITY listBulletCmd.label "Bulleted">
 <!ENTITY listbullet.accesskey "b">
 <!ENTITY listNumberedCmd.label "Numbered">
@@ -427,7 +427,7 @@
 <!ENTITY ParagraphSelect.tooltip "Choose a paragraph format">
 <!-- Shared in Paragraph, and Toolbar menulist -->
 <!ENTITY bodyTextCmd.label "Body Text">
-<!ENTITY bodytext.accesskey "t">
+<!ENTITY bodytext.accesskey "T">
 <!-- isn't used in menu now, but may be added in future -->
 <!ENTITY advancedPropertiesCmd.label "Advanced Properties">
 <!ENTITY advancedproperties.accesskey "v">
@@ -468,7 +468,7 @@
 <!ENTITY increaseindent.accesskey "i">
 <!ENTITY increaseindentkb "=">
 <!ENTITY decreaseIndent.label "Decrease Indent">
-<!ENTITY decreaseindent.accesskey "d">
+<!ENTITY decreaseindent.accesskey "D">
 <!ENTITY decreaseindentkb "-">
 
 <!ENTITY pageProperties.label "Page Title and Properties...">
@@ -630,7 +630,7 @@
 <!ENTITY NormalMode.accesskey "n">
 <!ENTITY NormalMode.tooltip "Show table borders and named anchors">
 <!ENTITY AllTagsMode.label "Show All Tags">
-<!ENTITY AllTagsMode.accesskey "a">
+<!ENTITY AllTagsMode.accesskey "A">
 <!ENTITY AllTagsMode.tooltip "Display icons for all HTML tags">
 
 <!ENTITY HTMLSourceMode.label "HTML Source">
