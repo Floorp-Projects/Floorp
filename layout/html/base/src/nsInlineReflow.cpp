@@ -675,8 +675,8 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
   // height of the line box and then position each frame.
   nscoord minYTop = 0;
   nscoord maxYBottom = 0;
-  nscoord maxHeight = 0;
-  PRBool haveTBFrames = PR_FALSE;
+  nscoord maxTopHeight = 0;
+  nscoord maxBottomHeight = 0;
   PerFrameData* pfd;
   for (pfd = pfd0; pfd < end; pfd++) {
     PRUint8 verticalAlignEnum;
@@ -687,14 +687,8 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
     // yTop = Y coordinate for the top of frame box <B>relative</B> to
     // the baseline of the linebox which is assumed to be at Y=0
     nscoord yTop;
-
-    // Compute the effective height of the box applying the top and
-    // bottom margins
     nscoord height = pfd->mBounds.height + pfd->mMargin.top +
       pfd->mMargin.bottom;
-    if (height > maxHeight) {
-      maxHeight = pfd->mBounds.height;
-    }
     pfd->mAscent += pfd->mMargin.top;
 
     const nsStyleText* textStyle;
@@ -720,9 +714,14 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
         yTop = -fontParam - pfd->mAscent;
         break;
       case NS_STYLE_VERTICAL_ALIGN_TOP:
+        if (height > maxTopHeight) {
+          maxTopHeight = height;
+        }
+        continue;
       case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-        // THESE ARE DONE DURING PASS2
-        haveTBFrames = PR_TRUE;
+        if (height > maxBottomHeight) {
+          maxBottomHeight = height;
+        }
         continue;
       case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
         // Align the midpoint of the frame with 1/2 the parents x-height
@@ -773,17 +772,25 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
   }
 
   // Once we have finished the above abs(minYTop) represents the
-  // maximum ascent of the line box.
-
-  // CSS2 spec section 10.8: the line box height is the distance
-  // between the uppermost box top (minYTop) and the lowermost box
-  // bottom (maxYBottom).
+  // maximum ascent of the line box. "CSS2 spec section 10.8: the line
+  // box height is the distance between the uppermost box top
+  // (minYTop) and the lowermost box bottom (maxYBottom)."
   nscoord lineHeight = maxYBottom - minYTop;
-  if (lineHeight < maxHeight) {
-    // This ensures that any object aligned top/bottom will update the
-    // line height properly since they don't impact the minY or
-    // maxYBottom values computed above.
-    lineHeight = maxHeight;
+  nscoord maxAscent = -minYTop;
+  if (lineHeight < maxTopHeight) {
+    // If the line height ends up shorter than the tallest top aligned
+    // box then the line height must grow but the line's ascent need
+    // not be changed.
+    lineHeight = maxTopHeight;
+  }
+  if (lineHeight < maxBottomHeight) {
+    // If the line height ends up shorter than the tallest bottom
+    // aligned box then the line height must grow and the line's
+    // ascent needs to be adjusted (so that the baseline aligned
+    // objects move downward).
+    nscoord dy = maxBottomHeight - lineHeight;
+    lineHeight = maxBottomHeight;
+    maxAscent += dy;
   }
 
   nscoord topEdge = mTopEdge;
@@ -794,13 +801,14 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
     // outer frame is an inline frame then use it as well (line-height
     // on block frames specify the minimal height while on inline
     // frames it specifies the precise height).
+    if (mOuterIsBlock) {/* XXX temporary until line-height inheritance issue is resolved */
     if ((newLineHeight > lineHeight) || !mOuterIsBlock) {
       topEdge += (newLineHeight - lineHeight) / 2;
       lineHeight = newLineHeight;
     }
+    }
   }
   aLineBox.height = lineHeight;
-  nscoord maxAscent = -minYTop;
 
   // Pass2 - position each of the frames
   for (pfd = pfd0; pfd < end; pfd++) {
@@ -813,10 +821,10 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
       switch (verticalAlignEnum) {
       case NS_STYLE_VERTICAL_ALIGN_TOP:
         // XXX negative top margins on these will do weird things, maybe?
-        pfd->mBounds.y = topEdge + pfd->mMargin.top;
+        pfd->mBounds.y = mTopEdge + pfd->mMargin.top;
         break;
       case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-        pfd->mBounds.y = topEdge + lineHeight - pfd->mBounds.height;
+        pfd->mBounds.y = mTopEdge + lineHeight - pfd->mBounds.height;
         break;
       default:
         pfd->mBounds.y = topEdge + maxAscent + pfd->mBounds.y -
