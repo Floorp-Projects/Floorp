@@ -48,6 +48,7 @@
 #include "nsIScriptContextOwner.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
+#include "nsIContentViewer.h"
 #include "prtime.h"
 #include "prlog.h"
 #include "prmem.h"
@@ -1528,7 +1529,7 @@ nsXMLContentSink::StartLayout()
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));
       if (vm) {
-        vm->EnableRefresh();
+        RefreshIfEnabled(vm);
       }
 
       NS_RELEASE(shell);
@@ -1775,4 +1776,22 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
   }
 
   return rv;
+}
+
+nsresult
+nsXMLContentSink::RefreshIfEnabled(nsIViewManager* vm)
+{
+  if (vm) {
+    nsIContentViewer* contentViewer = nsnull;
+    nsresult rv = mWebShell->GetContentViewer(&contentViewer);
+    if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
+      PRBool enabled;
+      contentViewer->GetEnableRendering(&enabled);
+      if (enabled) {
+        vm->EnableRefresh();
+      }
+      NS_RELEASE(contentViewer); 
+    }
+  }
+  return NS_OK;
 }

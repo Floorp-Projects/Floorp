@@ -165,6 +165,8 @@ NS_NewDocumentViewer(nsIDocumentViewer** aResult)
 DocumentViewerImpl::DocumentViewerImpl()
 {
   NS_INIT_REFCNT();
+  mEnableRendering = PR_TRUE;
+
 }
 
 DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
@@ -590,6 +592,11 @@ DocumentViewerImpl::SetEnableRendering(PRBool aOn)
   if (mViewManager) {
     if (aOn) {
       mViewManager->EnableRefresh();
+      nsIView* view; 
+      mViewManager->GetRootView(view);   // views are not refCounted 
+      if (view) { 
+        mViewManager->UpdateView(view,nsnull,NS_VMREFRESH_IMMEDIATE); 
+      } 
     }
     else {
       mViewManager->DisableRefresh();
