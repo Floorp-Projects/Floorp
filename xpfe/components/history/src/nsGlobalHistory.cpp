@@ -929,8 +929,10 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       return CallQueryInterface(referrer, aTarget);
     }
     else if (aProperty == kNC_URL) {
-      // URL. This is just a self-referring arc.
-      return CallQueryInterface(aSource, aTarget);
+      nsCOMPtr<nsIRDFLiteral> uriLiteral;
+      rv = gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(uri), getter_AddRefs(uriLiteral));
+      if (NS_FAILED(rv))    return(rv);
+      return CallQueryInterface(uriLiteral, aTarget);
     }
     else {
       NS_NOTREACHED("huh, how'd I get here?");
