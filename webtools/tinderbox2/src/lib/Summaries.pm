@@ -8,8 +8,8 @@
 # The only external interface to this library is summary_pages() and
 # create_global_index() these functions are only called by tinder.cgi.
 
-# $Revision: 1.11 $ 
-# $Date: 2002/12/10 19:24:37 $ 
+# $Revision: 1.12 $ 
+# $Date: 2003/01/19 17:22:07 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Summaries.pm,v $ 
 # $Name:  $ 
@@ -126,9 +126,10 @@ sub summary_pages {
   my ($index_file) = FileStructure::get_filename($tree,'index');
 
   push @index_html, (
-                     "<html>\n\t<head><title>Tree: $tree</title></head>\n".
+                     "<HTML>\n\t<HEAD><TITLE>Tree: $tree</TITLE></HEAD>\n".
+                     "<BODY>\n".                     
                      "Select one of the following formats ".
-                     "for viewing tree: $tree <p>\n"
+                     "for viewing tree: $tree <P>\n"
                     );
 
   foreach $func (sort @SUMMARY_FUNCS) {
@@ -171,7 +172,8 @@ sub summary_pages {
                                      "linktxt"=>"status",
                                      "href"=>"status.html",
                                     ).
-                     "\n</UL></TD></TR></TABLE>\n",
+                     "\n</UL></TD></TR></TABLE>\n".
+                     "</BODY>\n",
                     );
 
   main::overwrite_file($index_file, @index_html);
@@ -195,7 +197,7 @@ sub treegroup_func_page    {
 
   foreach $tree (@tree_group) {
     $body .= ( $summary_ref->{$func}{'all_bodies'}{$tree} .
-               "\n<p>\n");
+               "\n<P>\n");
   }
 
   my ($header) = $summary_ref->{$func}{'header'};
@@ -275,7 +277,7 @@ sub create_global_index {
   foreach $groupname (sort keys %TreeData::VC_TREE_GROUPS) {
 
     push @func_summary_links, (
-                               "Summary Information for $groupname:<br>\n\n",
+                               "Summary Information for $groupname:<BR>\n\n",
                                (sort keys 
                                 %{ $TreeData::VC_TREE_GROUPS{$groupname} }),
                                "\t<UL>\n\n",
@@ -296,7 +298,12 @@ sub create_global_index {
   
   $out .= <<EOF;
 
-<h3>Tinderbox Pages sorted by Project</h3>
+<H3>Tinderbox Pages sorted by Project</H3>
+<HTML>
+<HEAD>
+	<TITLE>Tinderbox Main Page</TITLE>
+</HEAD>
+<BODY>
 Select one of the following trees:
 
 	<UL>
@@ -316,13 +323,18 @@ EOF
   if ( %{ $summary_ref } ) {
     $out .= <<EOF;
 
-<h3>Project Managements Summary Pages</h3>
+<H3>Project Managements Summary Pages</H3>
 
 @func_summary_links
 
 
 EOF
   }
+
+    $out .= <<EOF;
+</BODY>
+</HTML>
+EOF
 
   my $global_index_file = (
                            $FileStructure::TINDERBOX_HTML_DIR.
@@ -359,17 +371,17 @@ sub express {
   my ($colspan) = $#BUILD_NAMES + 1;
 
   $header = <<EOF;
-<html>
-<head>
+<HTML>
+<HEAD>
 	<META HTTP-EQUIV=\"Refresh: $REFRESH_TIME\" CONTENT=\"300\">
-	<title>Summary Express for Tree: $TREE</title>
-</head>
-<body>
+	<TITLE>Summary Express for Tree: $TREE</TITLE>
+</HEAD>
+<BODY>
 EOF
 
 
-  $body .= "\t<table border=1 cellpadding=1 cellspacing=1>\n";
-  $body .= "\t\t<tr><th align=left colspan=$colspan>";
+  $body .= "\t<TABLE BORDER=1 CELLPADDING=1 CELLSPACING=1>\n";
+  $body .= "\t\t<TR><TH ALIGH=LEFT COLSPAN=$colspan>";
   
   $body .= HTMLPopUp::Link(
                            "linktxt"=> ("$TREE is $TREE_STATE".
@@ -379,16 +391,16 @@ EOF
                                      "/$FileStructure::DEFAULT_HTML_PAGE"),
                           );
   
-  $body .= "\t\t</th></tr><tr>\n\n";
+  $body .= "\t\t</TH></TR><TR>\n\n";
   
   for ($i=0; $i <= $#BUILD_NAMES; $i++) {
     my ($buildname) = $BUILD_NAMES[$i];
     my ($color) = $HTML_COLORS[$i];
-    $body .= "\t\t<td bgcolor='$color'>$buildname</td>\n";
+    $body .= "\t\t<TD BGCOLOR='$color'>$buildname</TD>\n";
   }
-  $body .= "\t</tr></table>\n";
+  $body .= "\t</TR></TABLE>\n";
 
-  $footer = "</body>\n</html>\n";
+  $footer = "</BODY>\n</HTML>\n";
   $extension = 'html';
 
   return ($header, $body, $footer, $extension);
@@ -399,18 +411,18 @@ sub panel {
   my ($header, $body, $footer, $extension) = ();
 
   $header = qq{
-<html>
-<head>
+<HTML>
+<HEAD>
 	<META HTTP-EQUIV="Refresh: $REFRESH_TIME" CONTENT="300">
-	<style>
+	<STYLE>
 	body, td { 
 		font-family: Verdana, Sans-Serif;
 		font-size: 8pt;
 	}
-	</style>
-	<title>Summary Panel for Tree: $TREE</title>
-</head>
-<body BGCOLOR="white" TEXT="black" LINK="#0000EE" 
+	</STYLE>
+	<TITLE>Summary Panel for Tree: $TREE</TITLE>
+</HEAD>
+<BODY BGCOLOR="white" TEXT="black" LINK="#0000EE" 
       VLINK="#551A8B" ALINK="red">
   };
 
@@ -422,16 +434,16 @@ sub panel {
                                      "/$FileStructure::DEFAULT_HTML_PAGE"),
                      );
 
-  $body .= "\n\t<table border=0 cellpadding=1 cellspacing=1>\n";
+  $body .= "\n\t<TABLE BORDER=0 CELLPADDING=1 CELLSPACING=1>\n";
   for ($i=0; $i <= $#BUILD_NAMES; $i++) {
     my ($buildname) = $BUILD_NAMES[$i];
     my ($color) = $HTML_COLORS[$i];
-    $body .= "\t\t<tr><td bgcolor='$color'>$buildname</td></tr>\n";
+    $body .= "\t\t<TR><TD BGCOLOR='$color'>$buildname</TD></TR>\n";
   }
 
-  $body .= "\t</table>\n";
+  $body .= "\t</TABLE>\n";
 
-  $footer = "</body>\n</html>\n";
+  $footer = "</BODY>\n</HTML>\n";
   $extension = 'html';
 
   return ($header, $body, $footer, $extension);
@@ -454,14 +466,14 @@ sub jspanel {
   $temp =~ s/\"/\'/g;
   $body .= $temp;
 
-  $body .= "<table border=0 cellpadding=1 cellspacing=1>";
+  $body .= "<TABLE BPRDER=0 CELLPADDING=1 CELLSPACING=1>";
   for ($i=0; $i <= $#BUILD_NAMES; $i++) {
     my ($buildname) = $BUILD_NAMES[$i];
     my ($color) = $HTML_COLORS[$i];
-    $body .= "<tr><td class='tinderbuild' bgcolor='$color'>$buildname</td></tr>";
+    $body .= "\t\t<TR><TD CLASS='tinderbuild' BGCOLOR='$color'>$buildname</td></tr>\n";
   }
 
-  $body .= "</table>";
+  $body .= "</TABLE>";
 
   ## end the js
   $body .= '";';
@@ -476,7 +488,7 @@ sub jspanel {
 sub quickparse {
   my ($header, $body, $footer, $extension) = ();
 
-  $header = "<pre>\n";
+  $header = "<PRE>\n";
 
   $body .= "State|$TREE|$TREE|$TREE_STATE\n";
   
@@ -594,30 +606,30 @@ sub rdf {
     <rdf:RDF 
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://my.netscape.com/rdf/simple/0.9/">
-    <channel>
-      <title>Tinderbox - $tree</title>
-      <description>Build bustages for $tree</description>
-      <link>$mainurl</link>
-    </channel>
-    <image>
-      <title>$imagetitle</title>
-      <url>$dirurl/$image</url>
-      <link>$mainurl</link>
-    </image>
+    <CHANNEL>
+      <TITLE>Tinderbox - $tree</TITLE>
+      <DESCRIPTION>Build bustages for $tree</DESCRIPTION
+      <LINK>$mainurl</LINK>
+    </CHANNEL>
+    <IMAGE>
+      <TITLE>$imagetitle</TITLE>
+      <URL>$dirurl/$image</URL>
+      <LINK>$mainurl</LINK>
+    </IMAGE>
   };    
     
-  $body .= ("\t<item><title>The tree is currently $TREE_STATE</title>".
-            "<link>$mainurl</link></item>\n");
+  $body .= ("\t<ITEM><TITLE>The tree is currently $TREE_STATE</TITLE>".
+            "<LINK>$mainurl</LINK></ITEM>\n");
 
   for ($i=0; $i <= $#build_names; $i++) {
     my ($buildname) = $build_names[$i];
     my ($status) = $latest_status[$i];
     if ($status eq 'busted') {
       $body .= (
-                "\t<item>".
-                "<title>$buildname is in flames</title>".
-                "<link>$mainurl</link>".
-                "</item>\n"
+                "\t<ITEM>".
+                "<TITLE>$buildname is in flames</TITLE>".
+                "<LINK>$mainurl</LINK>".
+                "</ITEM>\n"
                );
     }
   }
@@ -634,12 +646,12 @@ sub rdf {
 sub hdml {
   my ($header, $body, $footer, $extension) = ();
 
-  $header = q{<hdml public=true version=2.0 ttl=0>
-<display title=Tinderbox>
-	<action type=help task=go dest=#help>
+  $header = q{<HDML PUBLIC=true VERSION=2.0 TTL=0>
+<DISPLAY TITLE=Tinderbox>
+	<ACTION TYPE=help TASK=go DEST=#help>
   };
 
-  $body .= "\t<LINE>$TREE is $TREE_STATE<br>\n";
+  $body .= "\t<LINE>$TREE is $TREE_STATE<BR>\n";
 
   for ($i=0; $i <= $#BUILD_NAMES; $i++) {
     my ($buildname) = $BUILD_NAMES[$i];
@@ -647,7 +659,7 @@ sub hdml {
     $body .= "\t<LINE>$hdml_char $buildname\n";
   }
 
-  $body .= "</display>\n";
+  $body .= "</DISPLAY>\n";
 
   $footer .= (
               "\n".
