@@ -1,0 +1,19 @@
+mozilla/tools/tinderbox
+===================
+
+This directory is for the scripts associated with the client-side of
+tinderbox (scripts to checkout, build, and report the status of the tree
+to a tinderbox server).
+
+
+Table of Contents
+=================
+
+* README 
+   This file.
+
+* build-moz-smoke.pl
+   A perl script to drive the client side of tinderbox (unix variants).
+   usage:
+      perl build-moz-smoke.pl [--clobber | --depend] -t TreeName
+		
