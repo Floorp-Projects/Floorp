@@ -2624,9 +2624,13 @@ txFnEndUnknownInstruction(txStylesheetCompilerState& aState)
  * Table Datas
  */
 
-txHandlerTableData gTxIgnoreTableData = {
-  // Handlers
-  { { 0, 0, 0, 0 } },
+struct txHandlerTableData {
+    txElementHandler mOtherHandler;
+    txElementHandler mLREHandler;
+    HandleTextFn mTextHandler;
+};
+
+const txHandlerTableData gTxIgnoreTableData = {
   // Other
   { 0, 0, txFnStartElementIgnore, txFnEndElementIgnore },
   // LRE
@@ -2635,11 +2639,12 @@ txHandlerTableData gTxIgnoreTableData = {
   txFnTextIgnore
 };
 
-txHandlerTableData gTxRootTableData = {
-  // Handlers
-  { { kNameSpaceID_XSLT, "stylesheet", txFnStartStylesheet, txFnEndStylesheet },
-    { kNameSpaceID_XSLT, "transform", txFnStartStylesheet, txFnEndStylesheet },
-    { 0, 0, 0, 0 } },
+const txElementHandler gTxRootElementHandlers[] = {
+  { kNameSpaceID_XSLT, "stylesheet", txFnStartStylesheet, txFnEndStylesheet },
+  { kNameSpaceID_XSLT, "transform", txFnStartStylesheet, txFnEndStylesheet }
+};
+
+const txHandlerTableData gTxRootTableData = {
   // Other
   { 0, 0, txFnStartElementError, txFnEndElementError },
   // LRE
@@ -2648,9 +2653,7 @@ txHandlerTableData gTxRootTableData = {
   txFnTextError
 };
 
-txHandlerTableData gTxEmbedTableData = {
-  // Handlers
-  { { 0, 0, 0, 0 } },
+const txHandlerTableData gTxEmbedTableData = {
   // Other
   { 0, 0, txFnStartEmbed, txFnEndEmbed },
   // LRE
@@ -2659,19 +2662,20 @@ txHandlerTableData gTxEmbedTableData = {
   txFnTextIgnore
 };
 
-txHandlerTableData gTxTopTableData = {
-  // Handlers
-  { { kNameSpaceID_XSLT, "attribute-set", txFnStartAttributeSet, txFnEndAttributeSet },
-    { kNameSpaceID_XSLT, "decimal-format", txFnStartDecimalFormat, txFnEndDecimalFormat },
-    { kNameSpaceID_XSLT, "include", txFnStartInclude, txFnEndInclude },
-    { kNameSpaceID_XSLT, "key", txFnStartKey, txFnEndKey },
-    { kNameSpaceID_XSLT, "output", txFnStartOutput, txFnEndOutput },
-    { kNameSpaceID_XSLT, "param", txFnStartTopVariable, txFnEndTopVariable },
-    { kNameSpaceID_XSLT, "preserve-space", txFnStartStripSpace, txFnEndStripSpace },
-    { kNameSpaceID_XSLT, "strip-space", txFnStartStripSpace, txFnEndStripSpace },
-    { kNameSpaceID_XSLT, "template", txFnStartTemplate, txFnEndTemplate },
-    { kNameSpaceID_XSLT, "variable", txFnStartTopVariable, txFnEndTopVariable },
-    { 0, 0, 0, 0 } },
+const txElementHandler gTxTopElementHandlers[] = {
+  { kNameSpaceID_XSLT, "attribute-set", txFnStartAttributeSet, txFnEndAttributeSet },
+  { kNameSpaceID_XSLT, "decimal-format", txFnStartDecimalFormat, txFnEndDecimalFormat },
+  { kNameSpaceID_XSLT, "include", txFnStartInclude, txFnEndInclude },
+  { kNameSpaceID_XSLT, "key", txFnStartKey, txFnEndKey },
+  { kNameSpaceID_XSLT, "output", txFnStartOutput, txFnEndOutput },
+  { kNameSpaceID_XSLT, "param", txFnStartTopVariable, txFnEndTopVariable },
+  { kNameSpaceID_XSLT, "preserve-space", txFnStartStripSpace, txFnEndStripSpace },
+  { kNameSpaceID_XSLT, "strip-space", txFnStartStripSpace, txFnEndStripSpace },
+  { kNameSpaceID_XSLT, "template", txFnStartTemplate, txFnEndTemplate },
+  { kNameSpaceID_XSLT, "variable", txFnStartTopVariable, txFnEndTopVariable }
+};
+
+const txHandlerTableData gTxTopTableData = {
   // Other
   { 0, 0, txFnStartOtherTop, txFnEndOtherTop },
   // LRE
@@ -2680,27 +2684,28 @@ txHandlerTableData gTxTopTableData = {
   txFnTextIgnore
 };
 
-txHandlerTableData gTxTemplateTableData = {
-  // Handlers
-  { { kNameSpaceID_XSLT, "apply-imports", txFnStartApplyImports, txFnEndApplyImports },
-    { kNameSpaceID_XSLT, "apply-templates", txFnStartApplyTemplates, txFnEndApplyTemplates },
-    { kNameSpaceID_XSLT, "attribute", txFnStartAttribute, txFnEndAttribute },
-    { kNameSpaceID_XSLT, "call-template", txFnStartCallTemplate, txFnEndCallTemplate },
-    { kNameSpaceID_XSLT, "choose", txFnStartChoose, txFnEndChoose },
-    { kNameSpaceID_XSLT, "comment", txFnStartComment, txFnEndComment },
-    { kNameSpaceID_XSLT, "copy", txFnStartCopy, txFnEndCopy },
-    { kNameSpaceID_XSLT, "copy-of", txFnStartCopyOf, txFnEndCopyOf },
-    { kNameSpaceID_XSLT, "element", txFnStartElement, txFnEndElement },
-    { kNameSpaceID_XSLT, "fallback", txFnStartElementSetIgnore, txFnEndElementSetIgnore },
-    { kNameSpaceID_XSLT, "for-each", txFnStartForEach, txFnEndForEach },
-    { kNameSpaceID_XSLT, "if", txFnStartIf, txFnEndIf },
-    { kNameSpaceID_XSLT, "message", txFnStartMessage, txFnEndMessage },
-    { kNameSpaceID_XSLT, "number", txFnStartNumber, txFnEndNumber },
-    { kNameSpaceID_XSLT, "processing-instruction", txFnStartPI, txFnEndPI },
-    { kNameSpaceID_XSLT, "text", txFnStartText, txFnEndText },
-    { kNameSpaceID_XSLT, "value-of", txFnStartValueOf, txFnEndValueOf },
-    { kNameSpaceID_XSLT, "variable", txFnStartVariable, txFnEndVariable },
-    { 0, 0, 0, 0 } },
+const txElementHandler gTxTemplateElementHandlers[] = {
+  { kNameSpaceID_XSLT, "apply-imports", txFnStartApplyImports, txFnEndApplyImports },
+  { kNameSpaceID_XSLT, "apply-templates", txFnStartApplyTemplates, txFnEndApplyTemplates },
+  { kNameSpaceID_XSLT, "attribute", txFnStartAttribute, txFnEndAttribute },
+  { kNameSpaceID_XSLT, "call-template", txFnStartCallTemplate, txFnEndCallTemplate },
+  { kNameSpaceID_XSLT, "choose", txFnStartChoose, txFnEndChoose },
+  { kNameSpaceID_XSLT, "comment", txFnStartComment, txFnEndComment },
+  { kNameSpaceID_XSLT, "copy", txFnStartCopy, txFnEndCopy },
+  { kNameSpaceID_XSLT, "copy-of", txFnStartCopyOf, txFnEndCopyOf },
+  { kNameSpaceID_XSLT, "element", txFnStartElement, txFnEndElement },
+  { kNameSpaceID_XSLT, "fallback", txFnStartElementSetIgnore, txFnEndElementSetIgnore },
+  { kNameSpaceID_XSLT, "for-each", txFnStartForEach, txFnEndForEach },
+  { kNameSpaceID_XSLT, "if", txFnStartIf, txFnEndIf },
+  { kNameSpaceID_XSLT, "message", txFnStartMessage, txFnEndMessage },
+  { kNameSpaceID_XSLT, "number", txFnStartNumber, txFnEndNumber },
+  { kNameSpaceID_XSLT, "processing-instruction", txFnStartPI, txFnEndPI },
+  { kNameSpaceID_XSLT, "text", txFnStartText, txFnEndText },
+  { kNameSpaceID_XSLT, "value-of", txFnStartValueOf, txFnEndValueOf },
+  { kNameSpaceID_XSLT, "variable", txFnStartVariable, txFnEndVariable }
+};
+
+const txHandlerTableData gTxTemplateTableData = {
   // Other
   { 0, 0, txFnStartUnknownInstruction, txFnEndUnknownInstruction },
   // LRE
@@ -2709,9 +2714,7 @@ txHandlerTableData gTxTemplateTableData = {
   txFnText
 };
 
-txHandlerTableData gTxTextTableData = {
-  // Handlers
-  { { 0, 0, 0, 0 } },
+const txHandlerTableData gTxTextTableData = {
   // Other
   { 0, 0, txFnStartElementError, txFnEndElementError },
   // LRE
@@ -2720,11 +2723,12 @@ txHandlerTableData gTxTextTableData = {
   txFnTextText
 };
 
-txHandlerTableData gTxApplyTemplatesTableData = {
-  // Handlers
-  { { kNameSpaceID_XSLT, "sort", txFnStartSort, txFnEndSort },
-    { kNameSpaceID_XSLT, "with-param", txFnStartWithParam, txFnEndWithParam },
-    { 0, 0, 0, 0 } },
+const txElementHandler gTxApplyTemplatesElementHandlers[] = {
+  { kNameSpaceID_XSLT, "sort", txFnStartSort, txFnEndSort },
+  { kNameSpaceID_XSLT, "with-param", txFnStartWithParam, txFnEndWithParam }
+};
+
+const txHandlerTableData gTxApplyTemplatesTableData = {
   // Other
   { 0, 0, txFnStartElementSetIgnore, txFnEndElementSetIgnore }, // should this be error?
   // LRE
@@ -2733,10 +2737,11 @@ txHandlerTableData gTxApplyTemplatesTableData = {
   txFnTextIgnore
 };
 
-txHandlerTableData gTxCallTemplateTableData = {
-  // Handlers
-  { { kNameSpaceID_XSLT, "with-param", txFnStartWithParam, txFnEndWithParam },
-    { 0, 0, 0, 0 } },
+const txElementHandler gTxCallTemplateElementHandlers[] = {
+  { kNameSpaceID_XSLT, "with-param", txFnStartWithParam, txFnEndWithParam }
+};
+
+const txHandlerTableData gTxCallTemplateTableData = {
   // Other
   { 0, 0, txFnStartElementSetIgnore, txFnEndElementSetIgnore }, // should this be error?
   // LRE
@@ -2745,9 +2750,7 @@ txHandlerTableData gTxCallTemplateTableData = {
   txFnTextIgnore
 };
 
-txHandlerTableData gTxVariableTableData = {
-  // Handlers
-  { { 0, 0, 0, 0 } },
+const txHandlerTableData gTxVariableTableData = {
   // Other
   { 0, 0, txFnStartElementStartRTF, 0 },
   // LRE
@@ -2756,10 +2759,11 @@ txHandlerTableData gTxVariableTableData = {
   txFnTextStartRTF
 };
 
-txHandlerTableData gTxForEachTableData = {
-  // Handlers
-  { { kNameSpaceID_XSLT, "sort", txFnStartSort, txFnEndSort },
-    { 0, 0, 0, 0 } },
+const txElementHandler gTxForEachElementHandlers[] = {
+  { kNameSpaceID_XSLT, "sort", txFnStartSort, txFnEndSort }
+};
+
+const txHandlerTableData gTxForEachTableData = {
   // Other
   { 0, 0, txFnStartElementContinueTemplate, 0 },
   // LRE
@@ -2768,9 +2772,7 @@ txHandlerTableData gTxForEachTableData = {
   txFnTextContinueTemplate
 };
 
-txHandlerTableData gTxTopVariableTableData = {
-  // Handlers
-  { { 0, 0, 0, 0 } },
+const txHandlerTableData gTxTopVariableTableData = {
   // Other
   { 0, 0, txFnStartElementStartTopVar, 0 },
   // LRE
@@ -2779,11 +2781,12 @@ txHandlerTableData gTxTopVariableTableData = {
   txFnTextStartTopVar
 };
 
-txHandlerTableData gTxChooseTableData = {
-  // Handlers
-  { { kNameSpaceID_XSLT, "otherwise", txFnStartOtherwise, txFnEndOtherwise },
-    { kNameSpaceID_XSLT, "when", txFnStartWhen, txFnEndWhen },
-    { 0, 0, 0, 0 } },
+const txElementHandler gTxChooseElementHandlers[] = {
+  { kNameSpaceID_XSLT, "otherwise", txFnStartOtherwise, txFnEndOtherwise },
+  { kNameSpaceID_XSLT, "when", txFnStartWhen, txFnEndWhen }
+};
+
+const txHandlerTableData gTxChooseTableData = {
   // Other
   { 0, 0, txFnStartElementError, 0 },
   // LRE
@@ -2792,10 +2795,11 @@ txHandlerTableData gTxChooseTableData = {
   txFnTextError
 };
 
-txHandlerTableData gTxParamTableData = {
-  // Handlers
-  { { kNameSpaceID_XSLT, "param", txFnStartParam, txFnEndParam },
-    { 0, 0, 0, 0 } },
+const txElementHandler gTxParamElementHandlers[] = {
+  { kNameSpaceID_XSLT, "param", txFnStartParam, txFnEndParam }
+};
+
+const txHandlerTableData gTxParamTableData = {
   // Other
   { 0, 0, txFnStartElementContinueTemplate, 0 },
   // LRE
@@ -2804,10 +2808,11 @@ txHandlerTableData gTxParamTableData = {
   txFnTextContinueTemplate
 };
 
-txHandlerTableData gTxImportTableData = {
-  // Handlers
-  { { kNameSpaceID_XSLT, "import", txFnStartImport, txFnEndImport },
-    { 0, 0, 0, 0 } },
+const txElementHandler gTxImportElementHandlers[] = {
+  { kNameSpaceID_XSLT, "import", txFnStartImport, txFnEndImport }
+};
+
+const txHandlerTableData gTxImportTableData = {
   // Other
   { 0, 0, txFnStartElementContinueTopLevel, 0 },
   // LRE
@@ -2816,10 +2821,11 @@ txHandlerTableData gTxImportTableData = {
   txFnTextIgnore  // XXX what should we do here?
 };
 
-txHandlerTableData gTxAttributeSetTableData = {
-  // Handlers
-  { { kNameSpaceID_XSLT, "attribute", txFnStartAttribute, txFnEndAttribute },
-    { 0, 0, 0, 0 } },
+const txElementHandler gTxAttributeSetElementHandlers[] = {
+  { kNameSpaceID_XSLT, "attribute", txFnStartAttribute, txFnEndAttribute }
+};
+
+const txHandlerTableData gTxAttributeSetTableData = {
   // Other
   { 0, 0, txFnStartElementError, 0 },
   // LRE
@@ -2828,10 +2834,11 @@ txHandlerTableData gTxAttributeSetTableData = {
   txFnTextError
 };
 
-txHandlerTableData gTxFallbackTableData = {
-  // Handlers
-  { { kNameSpaceID_XSLT, "fallback", txFnStartFallback, txFnEndFallback },
-    { 0, 0, 0, 0 } },
+const txElementHandler gTxFallbackElementHandlers[] = {
+  { kNameSpaceID_XSLT, "fallback", txFnStartFallback, txFnEndFallback }
+};
+
+const txHandlerTableData gTxFallbackTableData = {
   // Other
   { 0, 0, txFnStartElementSetIgnore, txFnEndElementSetIgnore },
   // LRE
@@ -2845,55 +2852,65 @@ txHandlerTableData gTxFallbackTableData = {
 /**
  * txHandlerTable
  */
-txHandlerTable::txHandlerTable() : mHandlers(MB_FALSE)
+txHandlerTable::txHandlerTable(const HandleTextFn aTextHandler,
+                               const txElementHandler* aLREHandler,
+                               const txElementHandler* aOtherHandler)
+  : mTextHandler(aTextHandler),
+    mLREHandler(aLREHandler),
+    mOtherHandler(aOtherHandler),
+    mHandlers(PR_FALSE)
 {
 }
 
 nsresult
-txHandlerTable::init(txHandlerTableData* aTableData)
+txHandlerTable::init(const txElementHandler* aHandlers, PRUint32 aCount)
 {
     nsresult rv = NS_OK;
 
-    mTextHandler = aTableData->mTextHandler;
-    mLREHandler = &aTableData->mLREHandler;
-    mOtherHandler = &aTableData->mOtherHandler;
-
-    txElementHandler* handler = aTableData->mHandlers;
-    while (handler->mLocalName) {
-        nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(handler->mLocalName);
-        txExpandedName name(handler->mNamespaceID, nameAtom);
+    PRUint32 i;
+    for (i = 0; i < aCount; ++i) {
+        nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aHandlers->mLocalName);
+        txExpandedName name(aHandlers->mNamespaceID, nameAtom);
         // XXX this cast is a reinterpret_cast, which is sad
-        rv = mHandlers.add(name, (TxObject*)handler);
+        rv = mHandlers.add(name, (TxObject*)aHandlers);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        handler++;
+        ++aHandlers;
     }
     return NS_OK;
 }
 
-txElementHandler*
+const txElementHandler*
 txHandlerTable::find(PRInt32 aNamespaceID, nsIAtom* aLocalName)
 {
     txExpandedName name(aNamespaceID, aLocalName);
     // XXX this cast is a reinterpret_cast, same sad story as in ::init
-    txElementHandler* handler = (txElementHandler*)mHandlers.get(name);
+    const txElementHandler* handler =
+        (const txElementHandler*)mHandlers.get(name);
     if (!handler) {
         handler = mOtherHandler;
     }
     return handler;
 }
 
-#define INIT_HANDLER(_name)                                 \
-    gTx##_name##Handler = new txHandlerTable();             \
-    if (!gTx##_name##Handler)                               \
-        return MB_FALSE;                                    \
-                                                            \
-    rv = gTx##_name##Handler->init(&gTx##_name##TableData); \
-    if (NS_FAILED(rv))                                      \
-        return MB_FALSE
+#define INIT_HANDLER(_name)                                          \
+    gTx##_name##Handler =                                            \
+        new txHandlerTable(gTx##_name##TableData.mTextHandler,       \
+                           &gTx##_name##TableData.mLREHandler,       \
+                           &gTx##_name##TableData.mOtherHandler);    \
+    if (!gTx##_name##Handler)                                        \
+        return PR_FALSE
 
-#define SHUTDOWN_HANDLER(_name)                             \
-    delete gTx##_name##Handler;                             \
+#define INIT_HANDLER_WITH_ELEMENT_HANDLERS(_name)                    \
+    INIT_HANDLER(_name);                                             \
+                                                                     \
+    rv = gTx##_name##Handler->init(gTx##_name##ElementHandlers,      \
+                                   NS_ARRAY_LENGTH(gTx##_name##ElementHandlers)); \
+    if (NS_FAILED(rv))                                               \
+        return PR_FALSE
+
+#define SHUTDOWN_HANDLER(_name)                                      \
+    delete gTx##_name##Handler;                                      \
     gTx##_name##Handler = nsnull
 
 // static
@@ -2902,22 +2919,22 @@ txHandlerTable::init()
 {
     nsresult rv = NS_OK;
 
-    INIT_HANDLER(Root);
+    INIT_HANDLER_WITH_ELEMENT_HANDLERS(Root);
     INIT_HANDLER(Embed);
-    INIT_HANDLER(Top);
+    INIT_HANDLER_WITH_ELEMENT_HANDLERS(Top);
     INIT_HANDLER(Ignore);
-    INIT_HANDLER(Template);
+    INIT_HANDLER_WITH_ELEMENT_HANDLERS(Template);
     INIT_HANDLER(Text);
-    INIT_HANDLER(ApplyTemplates);
-    INIT_HANDLER(CallTemplate);
+    INIT_HANDLER_WITH_ELEMENT_HANDLERS(ApplyTemplates);
+    INIT_HANDLER_WITH_ELEMENT_HANDLERS(CallTemplate);
     INIT_HANDLER(Variable);
-    INIT_HANDLER(ForEach);
+    INIT_HANDLER_WITH_ELEMENT_HANDLERS(ForEach);
     INIT_HANDLER(TopVariable);
-    INIT_HANDLER(Choose);
-    INIT_HANDLER(Param);
-    INIT_HANDLER(Import);
-    INIT_HANDLER(AttributeSet);
-    INIT_HANDLER(Fallback);
+    INIT_HANDLER_WITH_ELEMENT_HANDLERS(Choose);
+    INIT_HANDLER_WITH_ELEMENT_HANDLERS(Param);
+    INIT_HANDLER_WITH_ELEMENT_HANDLERS(Import);
+    INIT_HANDLER_WITH_ELEMENT_HANDLERS(AttributeSet);
+    INIT_HANDLER_WITH_ELEMENT_HANDLERS(Fallback);
 
     return MB_TRUE;
 }

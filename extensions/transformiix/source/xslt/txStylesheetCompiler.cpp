@@ -328,7 +328,7 @@ txStylesheetCompiler::startElementInternal(PRInt32 aNamespaceID,
             mEmbedStatus = eInEmbed;
         }
     }
-    txElementHandler* handler;
+    const txElementHandler* handler;
     do {
         handler = isInstruction ?
                   mHandlerTable->find(aNamespaceID, aLocalName) :
@@ -340,7 +340,7 @@ txStylesheetCompiler::startElementInternal(PRInt32 aNamespaceID,
 
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = pushPtr(handler);
+    rv = pushPtr(NS_CONST_CAST(txElementHandler*, handler));
     NS_ENSURE_SUCCESS(rv, rv);
 
     mElementContext->mDepth++;
@@ -374,7 +374,9 @@ txStylesheetCompiler::endElement()
         }
     }
 
-    txElementHandler* handler = NS_STATIC_CAST(txElementHandler*, popPtr());
+    const txElementHandler* handler =
+        NS_CONST_CAST(const txElementHandler*,
+                      NS_STATIC_CAST(txElementHandler*, popPtr()));
     rv = (handler->mEndFunction)(*this);
     NS_ENSURE_SUCCESS(rv, rv);
 
