@@ -53,6 +53,7 @@ FILES = \
 	folder-closed.gif		\
 	folder-open.gif			\
 	iefavorite.gif			\
+	ignore-test.xul			\
 	loading.gif			\
 	online.gif			\
 	personal-folder-closed.gif	\

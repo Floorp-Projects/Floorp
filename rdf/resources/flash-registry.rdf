@@ -1,11 +1,21 @@
+<!-- -*- Mode: SGML -*- -->
+
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:NC="http://home.netscape.com/NC-rdf#">
 
   <RDF:Bag ID="NC:FlashDataSources">
-    <!-- demo ware! -->
-    <RDF:li resource="resource:/res/rdf/remote-flash-1.rdf" />
-    <RDF:li resource="resource:/res/rdf/remote-flash-2.rdf" />
-    <RDF:li resource="resource:/res/rdf/remote-flash-3.rdf" />
+
+    <!-- The Tinderbox Flash -->
+    <RDF:li>
+      <RDF:Description about="http://zeeb/cgi-bin/tinder-flash.cgi?tree=SeaMonkey">
+        <NC:poll-interval>60</NC:poll-interval>
+      </RDF:Description>
+    </RDF:li>
+
+    <RDF:li>
+      <RDF:Description about="rdf:mailnews" />
+    </RDF:li>
+
   </RDF:Bag>
 
   <RDF:Bag ID="NC:FlashStyleSheets">
