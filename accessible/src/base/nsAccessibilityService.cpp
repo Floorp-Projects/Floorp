@@ -960,6 +960,7 @@ nsAccessibilityService::CreateXULTextAccessible(nsIDOMNode *aNode, nsIAccessible
 /** The single tab in a dialog or tabbrowser/editor interface */
 NS_IMETHODIMP nsAccessibilityService::CreateXULTabAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
 {
+#ifdef MOZ_XUL
   nsCOMPtr<nsIWeakReference> weakShell;
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
@@ -968,12 +969,16 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULTabAccessible(nsIDOMNode *aNode, 
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
   return NS_OK;
 }
 
 /** A combination of a tabs object and a tabpanels object */
 NS_IMETHODIMP nsAccessibilityService::CreateXULTabBoxAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
 {
+#ifdef MOZ_XUL
   nsCOMPtr<nsIWeakReference> weakShell;
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
@@ -982,12 +987,16 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULTabBoxAccessible(nsIDOMNode *aNod
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
   return NS_OK;
 }
 
 /** The display area for a dialog or tabbrowser interface */
 NS_IMETHODIMP nsAccessibilityService::CreateXULTabPanelsAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
 {
+#ifdef MOZ_XUL
   nsCOMPtr<nsIWeakReference> weakShell;
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
@@ -996,12 +1005,16 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULTabPanelsAccessible(nsIDOMNode *a
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
   return NS_OK;
 }
 
 /** The collection of tab objects, useable in the TabBox and independant of as well */
 NS_IMETHODIMP nsAccessibilityService::CreateXULTabsAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
 {
+#ifdef MOZ_XUL
   nsCOMPtr<nsIWeakReference> weakShell;
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
@@ -1010,6 +1023,9 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULTabsAccessible(nsIDOMNode *aNode,
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
   return NS_OK;
 }
 
