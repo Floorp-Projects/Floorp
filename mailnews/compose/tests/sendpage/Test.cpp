@@ -366,11 +366,11 @@ main(int argc, char *argv[])
       if (!email)
         email = "rhp@netscape.com";
 
-      pMsgCompFields->SetFrom(email, NULL);
-      pMsgCompFields->SetTo(argv[1], NULL);
+      pMsgCompFields->SetFrom(nsAutoString(email).GetUnicode());
+      pMsgCompFields->SetTo(nsAutoString(argv[1]).GetUnicode());
 
-      pMsgCompFields->SetSubject(argv[3], NULL);
-      pMsgCompFields->SetBody(argv[2], NULL);
+      pMsgCompFields->SetSubject(nsAutoString(argv[3]).GetUnicode());
+      pMsgCompFields->SetBody(nsAutoString(argv[2]).GetUnicode());
 
       nsIURI    *url;
       char      *ptr = argv[2];
