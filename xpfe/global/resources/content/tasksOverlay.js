@@ -240,7 +240,21 @@ function HideWallet() {
   element.setAttribute("disabled","true" );
 }
 
-function CheckForWallet()
+function HideImage() {
+  var element;
+  element = document.getElementById("image");
+  element.setAttribute("style","display: none;" );
+  element.setAttribute("disabled","true" );
+}
+
+function HideImage() {
+  var element;
+  element = document.getElementById("image");
+  element.setAttribute("style","display: none;" );
+  element.setAttribute("disabled","true" );
+}
+
+function CheckForWalletAndImage()
 {
   // remove wallet functions if not in browser
   try {
@@ -259,6 +273,16 @@ function CheckForWallet()
   } catch(e) {
     dump("wallet.enabled pref is missing from all.js\n");
   }
+
+  // remove image functions (unless overruled by the "imageblocker.enabled" pref)
+  try {
+    if (!this.pref.GetBoolPref("imageblocker.enabled")) {
+      HideImage();
+    }
+  } catch(e) {
+    dump("imageblocker.enabled pref is missing from all.js\n");
+  }
+
 }
 
 // perform a wallet action
