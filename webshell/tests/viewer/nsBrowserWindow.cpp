@@ -124,6 +124,13 @@ static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 #define THROBBING_N
 
+#define CLEANUP_WIDGET(_widget, _txt) \
+  DestroyWidget((_widget)); \
+  refCnt = (_widget)->Release(); \
+  (_widget) = nsnull; \
+  NS_ASSERTION(refCnt == 0, (_txt));
+
+
 // XXX greasy constants
 #ifdef THROBBING_N
 #define THROBBER_WIDTH 32
@@ -238,21 +245,18 @@ NS_IMETHODIMP nsBrowserWindow::Destroy()
     NS_RELEASE(mDocShell);
   }
 
-  DestroyWidget(mBack);
-  NS_ASSERTION(mBack->Release() == 0, "nsBrowserWindow::Destroy - mBack is being leaked.");
+  nsrefcnt refCnt;
 
-  DestroyWidget(mForward);   
-  NS_ASSERTION(mForward->Release() == 0, "nsBrowserWindow::Destroy - mForward is being leaked.");
-
-  DestroyWidget(mLocation);     
-  NS_ASSERTION(mLocation->Release() == 0, "nsBrowserWindow::Destroy - mLocation is being leaked.");
-
-  DestroyWidget(mStatus);       
-  NS_ASSERTION(mStatus->Release() == 0, "nsBrowserWindow::Destroy - mStatus is being leaked.");
+  CLEANUP_WIDGET(mBack,     "nsBrowserWindow::Destroy - mBack is being leaked.");
+  CLEANUP_WIDGET(mForward,  "nsBrowserWindow::Destroy - mForward is being leaked.");
+  CLEANUP_WIDGET(mLocation, "nsBrowserWindow::Destroy - mLocation is being leaked.");
+  CLEANUP_WIDGET(mStatus,   "nsBrowserWindow::Destroy - mStatus is being leaked.");
 
   if (mThrobber) {
     mThrobber->Destroy();
-    NS_ASSERTION(mThrobber->Release() == 0, "nsBrowserWindow::Destroy - mThrobber is being leaked.");
+    refCnt = mThrobber->Release();
+    mThrobber = nsnull;
+    NS_ASSERTION(refCnt == 0, "nsBrowserWindow::Destroy - mThrobber is being leaked.");
     mThrobber = nsnull;
   }
 
