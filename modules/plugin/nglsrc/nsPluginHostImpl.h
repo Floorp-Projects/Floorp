@@ -22,7 +22,6 @@
 #include "xp_core.h"
 #include "nsIPluginManager.h"
 #include "nsIPluginHost.h"
-#include "nsINetworkManager.h"
 #include "nsCRT.h"
 #include "prlink.h"
 #include "nsIMalloc.h"
@@ -53,8 +52,7 @@ public:
 #define NS_PLUGIN_FLAG_ENABLED    0x0001    //is this plugin enabled?
 #define NS_PLUGIN_FLAG_OLDSCHOOL  0x0002    //is this a pre-xpcom plugin?
 
-class nsPluginHostImpl : public nsIPluginManager, public nsIPluginHost,
-                         public nsINetworkManager
+class nsPluginHostImpl : public nsIPluginManager, public nsIPluginHost
 {
 public:
   nsPluginHostImpl();
@@ -78,8 +76,6 @@ public:
 
   NS_IMETHOD
   UserAgent(const char* *resultingAgentString);
-
-  //nsINetworkManager interface
 
   NS_IMETHOD
   GetURL(nsISupports* inst, const char* url, const char* target,
