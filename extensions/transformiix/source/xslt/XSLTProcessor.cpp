@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.24 2000/09/13 23:51:15 rayw%netscape.com Exp $
+ * $Id: XSLTProcessor.cpp,v 1.25 2000/09/26 07:38:51 kvisco%ziplink.net Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -53,7 +53,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.24 $ $Date: 2000/09/13 23:51:15 $
+ * @version $Revision: 1.25 $ $Date: 2000/09/26 07:38:51 $
 **/
 
 /**
@@ -422,6 +422,8 @@ void XSLTProcessor::processTopLevel
                     String thisDocBase = ps->getDocumentBase();
                     String errMsg;
                     XMLParser xmlParser;
+
+                    URIUtils::resolveHref(href, thisDocBase, realHref);
 
                     Document* xslDoc = xmlParser.getDocumentFromURI(realHref, thisDocBase, errMsg);
 
