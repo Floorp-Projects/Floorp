@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  * Norris Boyd
+ * Igor Bukanov
  * Roger Lawrence
  *
  * Alternatively, the contents of this file may be used under the
@@ -44,24 +45,74 @@ import java.util.Enumeration;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-public class Block {
+class Block
+{
 
-    public Block(int startNodeIndex, int endNodeIndex, Node[] statementNodes)
+    private static class FatBlock
+    {
+
+        FatBlock(int startNodeIndex, int endNodeIndex, Node[] statementNodes)
+        {
+            realBlock = new Block(startNodeIndex, endNodeIndex, statementNodes);
+        }
+
+        private static Block[] reduceToArray(ObjToIntMap map)
+        {
+            Block[] result = null;
+            if (!map.isEmpty()) {
+                result = new Block[map.size()];
+                int i = 0;
+                ObjToIntMap.Iterator iter = map.newIterator();
+                for (iter.start(); !iter.done(); iter.next()) {
+                    FatBlock fb = (FatBlock)(iter.getKey());
+                    result[i++] = fb.realBlock;
+                }
+            }
+            return result;
+        }
+
+        void addSuccessor(FatBlock b)  { successors.put(b, 0); }
+        void addPredecessor(FatBlock b)  { predecessors.put(b, 0); }
+
+        Block[] getSuccessors() { return reduceToArray(successors); }
+        Block[] getPredecessors() { return reduceToArray(predecessors); }
+
+            // all the Blocks that come immediately after this
+        private ObjToIntMap successors = new ObjToIntMap();
+            // all the Blocks that come immediately before this
+        private ObjToIntMap predecessors = new ObjToIntMap();
+
+        Block realBlock;
+    }
+
+    private static class CSEHolder
+    {
+       CSEHolder(Node parent, Node child)
+       {
+            getPropParent = parent;
+            getPropChild = child;
+       }
+
+       Node getPropParent;
+       Node getPropChild;
+    }
+
+    Block(int startNodeIndex, int endNodeIndex, Node[] statementNodes)
     {
         itsStartNodeIndex = startNodeIndex;
         itsEndNodeIndex = endNodeIndex;
         itsStatementNodes = statementNodes;
     }
 
-    public void setBlockID(int id)  { itsBlockID = id; }
-    public int getBlockID()         { return itsBlockID; }
-    public Node getStartNode()      { return itsStatementNodes[itsStartNodeIndex]; }
-    public Node getEndNode()        { return itsStatementNodes[itsEndNodeIndex]; }
+    void setBlockID(int id)  { itsBlockID = id; }
+    int getBlockID()         { return itsBlockID; }
+    Node getStartNode()      { return itsStatementNodes[itsStartNodeIndex]; }
+    Node getEndNode()        { return itsStatementNodes[itsEndNodeIndex]; }
 
-    public Block[] getPredecessorList() { return itsPredecessors; }
-    public Block[] getSuccessorList()   { return itsSuccessors; }
+    Block[] getPredecessorList() { return itsPredecessors; }
+    Block[] getSuccessorList()   { return itsSuccessors; }
 
-    public static Block[] buildBlocks(Node[] statementNodes)
+    static Block[] buildBlocks(Node[] statementNodes)
     {
             // a mapping from each target node to the block it begins
         Hashtable theTargetBlocks = new Hashtable();
@@ -117,7 +168,7 @@ public class Block {
         for (int i = 0; i < theBlocks.size(); i++) {
             FatBlock fb = (FatBlock)(theBlocks.get(i));
 
-            Node blockEndNode = fb.getEndNode();
+            Node blockEndNode = fb.realBlock.getEndNode();
             int blockEndNodeType = blockEndNode.getType();
 
             if ((blockEndNodeType != Token.GOTO)
@@ -135,7 +186,7 @@ public class Block {
                 FatBlock branchTargetBlock
                                     = (FatBlock)(theTargetBlocks.get(target));
                 target.putProp(Node.TARGETBLOCK_PROP,
-                                           branchTargetBlock.getSlimmerSelf());
+                                           branchTargetBlock.realBlock);
                 fb.addSuccessor(branchTargetBlock);
                 branchTargetBlock.addPredecessor(fb);
             }
@@ -145,15 +196,20 @@ public class Block {
 
         for (int i = 0; i < theBlocks.size(); i++) {
             FatBlock fb = (FatBlock)(theBlocks.get(i));
-            result[i] = fb.diet();
-            result[i].setBlockID(i);
+            Block b = fb.realBlock;
+            b.setSuccessorList(fb.getSuccessors());
+            b.setPredecessorList(fb.getPredecessors());
+            b.setBlockID(i);
+            result[i] = b;
         }
 
         return result;
     }
 
-    public static String toString(Block[] blockList, Node[] statementNodes)
+    static String toString(Block[] blockList, Node[] statementNodes)
     {
+        if (!Optimizer.DEBUG_OPTIMIZER) return null;
+
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
 
@@ -651,8 +707,8 @@ public class Block {
         }
     }
 
-    public void setSuccessorList(Block[] b)    { itsSuccessors = b; }
-    public void setPredecessorList(Block[] b)  { itsPredecessors = b; }
+    void setSuccessorList(Block[] b)    { itsSuccessors = b; }
+    void setPredecessorList(Block[] b)  { itsPredecessors = b; }
 
         // all the Blocks that come immediately after this
     private Block[] itsSuccessors;
@@ -673,15 +729,3 @@ public class Block {
 
 }
 
-class CSEHolder {
-
-   CSEHolder(Node parent, Node child)
-   {
-        getPropParent = parent;
-        getPropChild = child;
-   }
-
-   Node getPropParent;
-   Node getPropChild;
-
-}

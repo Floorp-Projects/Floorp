@@ -720,7 +720,7 @@ class Optimizer
     }
 
 
-    private static final boolean DEBUG_OPTIMIZER = false;
+    static final boolean DEBUG_OPTIMIZER = false;
     private static int debug_blockCount;
 
     private int itsOptLevel;
