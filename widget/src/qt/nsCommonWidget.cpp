@@ -261,8 +261,8 @@ nsCommonWidget::nsCommonWidget()
 NS_IMPL_ISUPPORTS_INHERITED0(nsCommonWidget,nsBaseWidget)
 nsCommonWidget::~nsCommonWidget()
 {
-    delete mDispatcher;
-    mDispatcher = 0;
+    mWidget->deleteLater();
+    mWidget = 0;
 }
 
 void
@@ -278,6 +278,7 @@ nsCommonWidget::Initialize(QWidget *widget)
 NS_IMETHODIMP
 nsCommonWidget::Show(PRBool aState)
 {
+    qDebug("MM Show");
     mIsShown = aState;
 
     // Ok, someone called show on a window that isn't sized to a sane
@@ -296,7 +297,9 @@ nsCommonWidget::Show(PRBool aState)
     // If someone is showing this window and it needs a resize then
     // resize the widget.
     if (aState && mNeedsResize) {
-        NativeResize(mBounds.width, mBounds.height,
+        qDebug("\tresizing [%d, %d, %d, %d]", mBounds.x, mBounds.y,
+               mBounds.width, mBounds.height);
+        NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height,
                      PR_FALSE);
     }
 
@@ -347,22 +350,37 @@ nsCommonWidget::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
 NS_IMETHODIMP
 nsCommonWidget::Move(PRInt32 x, PRInt32 y)
 {
-    if (x == mBounds.x && y == mBounds.y)
+    bool popup = mWidget ? mWidget->isPopup() : false;
+
+    if (!mWidget || (x == mBounds.x && y == mBounds.y &&
+                     !popup))
         return NS_OK;
 
-    mBounds.x = x;
-    mBounds.y = y;
+    qDebug("Move [%d,%d] (%s)", x, y, popup?"popup":"widget");
+
+    if (!mWidget)
+        return NS_OK;
 
     QPoint pos(x, y);
     if (mContainer) {
-        if (mContainer->isPopup() && mContainer->parentWidget()) {
-            pos = mContainer->parentWidget()->mapToGlobal(pos);
+        if (mParent && mWidget->isPopup()) {
+            nsRect oldrect, newrect;
+            oldrect.x = x;
+            oldrect.y = y;
+
+            mParent->WidgetToScreen(oldrect, newrect);
+
+            pos = QPoint(newrect.x, newrect.y);
+            qDebug("pos is [%d,%d]", pos.x(), pos.y());
+        } else {
+            qDebug("NO POSITION!!!!!!!!!!!!");
         }
-        qDebug("pos is [%d,%d]", pos.x(), pos.y());
-        mContainer->move(pos);
     }
-    else if (mWidget)
-        mWidget->move(pos);
+
+    mBounds.x = pos.x();
+    mBounds.y = pos.y();
+
+    mWidget->move(pos);
 
     return NS_OK;
 }
@@ -444,16 +462,17 @@ NS_IMETHODIMP
 nsCommonWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
                        PRBool aRepaint)
 {
-    mBounds.x = aX;
-    mBounds.y = aY;
-    mBounds.width = aWidth;
-    mBounds.height = aHeight;
-
+    qDebug("Resize : [%d,%d,%d,%d]", aX, aY, aWidth, aHeight);
     if (!mWidget || (mWidget->x() == aX &&
                      mWidget->y() == aY &&
                      mWidget->height() == aHeight &&
                      mWidget->width() == aWidth))
         return NS_OK;
+
+    mBounds.x = aX;
+    mBounds.y = aY;
+    mBounds.width = aWidth;
+    mBounds.height = aHeight;
 
     // There are several cases here that we need to handle, based on a
     // matrix of the visibility of the widget, the sanity of this resize
@@ -824,7 +843,7 @@ nsCommonWidget::DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus)
 bool
 nsCommonWidget::mousePressEvent(QMouseEvent *e)
 {
-    qDebug("mousePressEvent mWidget=%p", (void*)mWidget);
+    //qDebug("mousePressEvent mWidget=%p", (void*)mWidget);
 //     backTrace();
     PRUint32      eventType;
 
@@ -860,7 +879,7 @@ nsCommonWidget::mousePressEvent(QMouseEvent *e)
 bool
 nsCommonWidget::mouseReleaseEvent(QMouseEvent *e)
 {
-    qDebug("mouseReleaseEvent mWidget=%p", (void*)mWidget);
+    //qDebug("mouseReleaseEvent mWidget=%p", (void*)mWidget);
     PRUint32      eventType;
 
     switch (e->button()) {
@@ -937,7 +956,7 @@ nsCommonWidget::wheelEvent(QWheelEvent *e)
 bool
 nsCommonWidget::keyPressEvent(QKeyEvent *e)
 {
-    qDebug("keyPressEvent");
+    //qDebug("keyPressEvent");
 
     nsEventStatus status;
 
@@ -1004,7 +1023,7 @@ nsCommonWidget::focusInEvent(QFocusEvent *)
 bool
 nsCommonWidget::focusOutEvent(QFocusEvent *)
 {
-    qDebug("focusOutEvent mWidget=%p", (void*)mWidget);
+    //qDebug("focusOutEvent mWidget=%p", (void*)mWidget);
     DispatchLostFocusEvent();
     return FALSE;
 }
@@ -1042,8 +1061,8 @@ nsCommonWidget::leaveEvent(QEvent *aEvent)
 bool
 nsCommonWidget::paintEvent(QPaintEvent *e)
 {
-    qDebug("paintEvent: mWidget=%p x = %d, y = %d, width =  %d, height = %d", (void*)mWidget,
-           e->rect().x(), e->rect().y(), e->rect().width(), e->rect().height());
+    //qDebug("paintEvent: mWidget=%p x = %d, y = %d, width =  %d, height = %d", (void*)mWidget,
+    //e->rect().x(), e->rect().y(), e->rect().width(), e->rect().height());
 //     qDebug("paintEvent: Widgetrect %d %d %d %d", mWidget->x(), mWidget->y(),
 //            mWidget->width(), mWidget->height());
 
@@ -1072,27 +1091,28 @@ nsCommonWidget::paintEvent(QPaintEvent *e)
 bool
 nsCommonWidget::moveEvent(QMoveEvent *e)
 {
-    qDebug("moveEvent mWidget=%p %d %d", (void*)mWidget, e->pos().x(), e->pos().y());
+    bool shown = mWidget ? mWidget->isShown() : false;
+    bool popup = mWidget ? mWidget->isPopup() : false;
+    qDebug("moveEvent mWidget=%p %d %d (%s, %s)", (void*)mWidget, e->pos().x(), e->pos().y(),
+           shown? "shown": "hidden", popup ? "popup": "widget");
     // can we shortcut?
     if (!mWidget || (mBounds.x == e->pos().x() &&
                      mBounds.y == e->pos().y()))
         return FALSE;
-
+    qDebug("\tmoving");
     // Toplevel windows need to have their bounds set so that we can
     // keep track of our location.  It's not often that the x,y is set
     // by the layout engine.  Width and height are set elsewhere.
     QPoint pos = e->pos();
 
-    if (mWidget->isPopup()) {
-        pos = mWidget->parentWidget()->mapToGlobal(pos);
-        //     qDebug("global pos: %d/%d", pos.x(), pos.y());
-    }
     if (mContainer) {
         // Need to translate this into the right coordinates
         nsRect oldrect, newrect;
         WidgetToScreen(oldrect, newrect);
         mBounds.x = newrect.x;
         mBounds.y = newrect.y;
+
+        qDebug("BOUNDS are [%d, %d]", mBounds.x, mBounds.y);
     }
 
     nsGUIEvent event(NS_MOVE, this);
@@ -1115,6 +1135,9 @@ nsCommonWidget::resizeEvent(QResizeEvent *e)
     GetBounds(rect);
     rect.width = e->size().width();
     rect.height = e->size().height();
+
+    mBounds.width = rect.width;
+    mBounds.height = rect.height;
 
     qDebug("resizeEvent: mWidget=%p, aWidth=%d, aHeight=%d, aX = %d, aY = %d", (void*)mWidget,
            rect.width, rect.height, rect.x, rect.y);
@@ -1481,7 +1504,7 @@ nsCommonWidget::NativeShow(PRBool aState)
          qDebug("nsCommon::Show : widget empty");
          return;
     }
-
+    qDebug("Show (%p)  XXXXXXXXXXXXXXXXXX", (void*)mWidget);
     mWidget->setShown(aState);
 }
 
@@ -1504,7 +1527,24 @@ nsCommonWidget::NativeResize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHe
 {
     mNeedsResize = PR_FALSE;
 
-    mWidget->setGeometry( aX, aY, aWidth, aHeight);
+    QPoint pos(aX, aY);
+    if (mContainer)
+    {
+        if (mParent && mWidget->isPopup()) {
+            nsRect oldrect, newrect;
+            oldrect.x = aX;
+            oldrect.y = aY;
+
+            mParent->WidgetToScreen(oldrect, newrect);
+
+            pos = QPoint(newrect.x, newrect.y);
+            qDebug("pos is [%d,%d]", pos.x(), pos.y());
+        } else {
+            qDebug("NO POSITION!!!!!!!!!!!!");
+        }
+    }
+
+    mWidget->setGeometry(pos.x(), pos.y(), aWidth, aHeight);
 
     if (aRepaint) {
         if (mWidget->isVisible())
