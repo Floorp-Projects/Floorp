@@ -36,7 +36,8 @@
 
 @import url("resource:/res/forms.css");
 
-input {
+input,
+textarea {
   border-width: 2px;
   padding: 0 2px 0 1px;
   font-size: 11px;
