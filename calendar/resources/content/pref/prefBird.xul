@@ -104,7 +104,7 @@ var PrefDialogService =
 	get pref() 
 	{
 		if (!this._pref) {
-			this._pref = Components.classes['@mozilla.org/preferences;1'].getService(Components.interfaces.nsIPrefBranch);
+			this._pref = this.prefservice.getBranch(null);
 		}
 		return this._pref;
 	},
@@ -113,7 +113,7 @@ var PrefDialogService =
 	get defpref() 
 	{
 		if (!this._defpref) {
-			this._defpref = Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService).getDefaultBranch(null);
+			this._defpref = this.prefservice.getDefaultBranch(null);
 		}
 		return this._defpref;
 	},
@@ -122,7 +122,7 @@ var PrefDialogService =
 	get prefservice() 
 	{
 		if (!this._prefservice) {
-			this._prefservice = Components.classes['@mozilla.org/preferences;1'].getService(Components.interfaces.nsIPref);
+			this._prefservice = Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService);
 		}
 		return this._prefservice;
 	},
@@ -261,7 +261,7 @@ var PrefDialogService =
 		}
 
 		try {
-			this.pref.savePrefFile(null);
+			this.prefservice.savePrefFile(null);
 		}
 		catch(e) {
 		}
@@ -432,7 +432,7 @@ var PrefDialogService =
 				if (root[prefattribute] === null)
 					root[prefattribute] = prefElements[i].getAttribute('prefdefval');
 
-				if (this.prefservice.PrefIsLocked(root.prefstring))
+				if (this.pref.prefIsLocked(root.prefstring))
 					root.disabled = 'true';
 			}
 		}
