@@ -2512,7 +2512,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             mContext->GetPaletteInfo(palInfo);
             if (palInfo.isPaletteDevice && palInfo.palette) {
                 HDC hDC = ::GetDC(mWnd);
-                HPALETTE hOldPal = ::SelectPalette(hDC, (HPALETTE)palInfo.palette, TRUE);
+                HPALETTE hOldPal = ::SelectPalette(hDC, (HPALETTE)palInfo.palette, FALSE);
                 
                 // Realize the drawing palette
                 int i = ::RealizePalette(hDC);
