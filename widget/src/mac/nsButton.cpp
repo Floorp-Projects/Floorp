@@ -202,7 +202,7 @@ PRBool 	result;
 				result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_EXIT:
-			//if(mMouseDownInButton)
+			if(mMouseDownInButton)
 				{
 				DrawWidget(PR_FALSE);
 				mWidgetArmed = PR_FALSE;
@@ -210,7 +210,7 @@ PRBool 	result;
 			result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_ENTER:
-			//if(mMouseDownInButton)
+			if(mMouseDownInButton)
 				{
 				DrawWidget(PR_TRUE);
 				mWidgetArmed = PR_TRUE;
