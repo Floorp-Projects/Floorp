@@ -23,7 +23,6 @@
 extern const nsIID kBlockFrameCID;              // XXX temporary
 
 extern const nsIID kIAbsoluteItemsIID;
-extern const nsIID kIAnchoredItemsIID;
 extern const nsIID kIFloaterContainerIID;
 extern const nsIID kIHTMLContentIID;
 extern const nsIID kIRunaroundIID;

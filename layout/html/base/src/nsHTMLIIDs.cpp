@@ -23,7 +23,6 @@
 #include "nsIHTMLReflow.h"
 
 const nsIID kIAbsoluteItemsIID = NS_IABSOLUTE_ITEMS_IID;
-const nsIID kIAnchoredItemsIID = NS_IANCHORED_ITEMS_IID;
 const nsIID kIFloaterContainerIID = NS_IFLOATER_CONTAINER_IID;
 const nsIID kIHTMLContentIID = NS_IHTMLCONTENT_IID;
 const nsIID kIHTMLReflowIID = NS_IHTMLREFLOW_IID;
