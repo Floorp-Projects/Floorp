@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.4 2000/11/09 22:59:38 mcgreer%netscape.com Exp $
+ # $Id: nssinit.c,v 1.5 2001/01/04 08:21:15 nelsonb%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -47,6 +47,7 @@
 #include "nss.h"
 #include "secrng.h"
 #include "cdbhdl.h"	/* ??? */
+#include "pk11func.h"
 
 
 

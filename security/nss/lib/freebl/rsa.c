@@ -35,7 +35,7 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.20 2001/01/03 19:49:37 larryh%netscape.com Exp $
+ * $Id: rsa.c,v 1.21 2001/01/04 08:21:13 nelsonb%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -46,6 +46,7 @@
 #include "blapi.h"
 #include "mpi.h"
 #include "mpprime.h"
+#include "mplogic.h"
 #include "secmpi.h"
 #include "secitem.h"
 

@@ -44,6 +44,7 @@
 
 #include "secutil.h"
 #include "secpkcs7.h"
+#include "secrng.h"
 #include <sys/stat.h>
 #include <stdarg.h>
 

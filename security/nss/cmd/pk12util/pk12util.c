@@ -37,8 +37,8 @@
 #include "pk11func.h"
 #include "pkcs12.h"
 #include "p12plcy.h"
-
 #include "pk12util.h"
+#include "nss.h"
 
 #define PKCS12_IN_BUFFER_SIZE	200
 
