@@ -225,9 +225,9 @@ ShowLogo(Boolean bEraseRect)
 		/* draw Netscape logo */
 		if (logoPicH != nil)
 		{		
-			logoRectH = Get1Resource('RECT', rNSLogoBox);
+			logoRectH = GetResource('RECT', rNSLogoBox);
 			reserr = ResError();
-			if (reserr == noErr)
+			if (reserr == noErr && logoRectH)
 			{
 				HLock(logoRectH);
 				derefd = (Rect) **((Rect**)logoRectH);
@@ -244,6 +244,8 @@ ShowLogo(Boolean bEraseRect)
 					DrawPicture(logoPicH, &logoRect);
 					ReleaseResource((Handle)logoPicH);
 				}
+				
+				ReleaseResource((Handle)logoRectH);
 			}
 		}
 	}
@@ -460,6 +462,9 @@ ShowNavButtons(unsigned char* backTitle, unsigned char* nextTitle)
 	{
 		SetControlTitle( gControls->backB, backTitle); 
 		ShowControl( gControls->backB);
+		
+		if (gCurrWin==kWelcomeID)
+			HiliteControl(gControls->backB, kDisableControl);
 	}
 	
 	if ( gControls->nextB != NULL)

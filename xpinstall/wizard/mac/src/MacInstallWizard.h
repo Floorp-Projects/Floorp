@@ -53,6 +53,8 @@ typedef Boolean (*EventProc)(const EventRecord*);
 #define CFG_IS_REMOTE 		0	/* if on, download remote config.ini file */	
 #define SDINST_IS_DLL 		1	/* if on, load SDInstLib as code fragment */
 #define	MOZILLA				0	/* if on, draws the Mozilla logo, not NS */
+#define PRE_BETA_HACKERY	1	/* if on, extracts core to selected folder 
+										  instead of Temporary Items */
  
 /*-----------------------------------------------------------*
  *   defines 
@@ -191,8 +193,12 @@ if (err) 								\
 #define sFolderDlgMsg	18
 #define sDiskSpcAvail	19
 #define sDiskSpcNeeded	20		
-#define sKilobytes		21 		
+#define sKilobytes		21 	
+#if PRE_BETA_HACKERY == 1
+#define sExtracting 	27
+#else	
 #define sExtracting		23		
+#endif
 #define sInstalling		24
 #define	sFileSp			25
 #define sSpOfSp			26		/* end i18n strings */
@@ -535,6 +541,7 @@ Boolean		UnloadSDLib(CFragConnectionID *);
 OSErr		ExtractCoreFile(short, long);
 OSErr		AppleSingleDecode(FSSpecPtr, FSSpecPtr);
 void		ResolveDirs(char *, char*);
+OSErr		DirCreateRecursive(char *);
 OSErr		ForceMoveFile(short, long, ConstStr255Param, long);
 OSErr		CleanupExtractedFiles(short, long);
 

@@ -203,7 +203,7 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 	localPt = evt->where;
 	GlobalToLocal( &localPt);
 	
-	if (PtInRect( localPt, &gControls->cw->compListBox))
+	if ((evt->what == mouseUp) && (PtInRect( localPt, &gControls->cw->compListBox)))
 	{
 		LClick(localPt, evt->modifiers, gControls->cw->compList);
 		SetOptInfo();

@@ -39,13 +39,18 @@ pascal void* Install(void* unused)
 	THz				ourHZ;
 	Boolean 		isDir = false;
 	GrafPtr			oldPort;
-	
+
+#if PRE_BETA_HACKERY == 1	
+	/* download to user selected folder */
+	vRefNum = gControls->opt->vRefNum;
+	dirID = gControls->opt->dirID;
+#else /* PRE_BETA_HACKERY */
+
 #ifndef DEBUG
 	/* get "Temporary Items" folder path */
 	ERR_CHECK_RET(FindFolder(kOnSystemDisk, kTemporaryFolderType, kCreateFolder, &vRefNum, &dirID), (void*)0);
 #else
 	/* for DEBUG builds dump downloaded items in "<currProcessVolume>:Temp NSInstall:" */
-	
 	vRefNum = gControls->opt->vRefNum;
 	err = FSMakeFSSpec( vRefNum, 0, TEMP_DIR, &tmpSpec );
 	if (err != noErr)
@@ -65,9 +70,9 @@ pascal void* Install(void* unused)
 			ErrorHandler();
 			return (void*)0;
 		}
-	}
-		
-#endif /* CORRECT_DL_LOCATION == 1 */
+	}	
+#endif /* DEBUG */
+#endif /* PRE_BETA_HACKERY */
 	
 	GetIndString(pIDIfname, rStringList, sTempIDIName);
 	
@@ -95,13 +100,19 @@ pascal void* Install(void* unused)
 	SDI_NetInstall(&sdistruct);
 #endif
 	SetPort(oldPort);
+	
 	if (gWPtr)
 	{
+		GetPort(&oldPort);
+
+		SetPort(gWPtr);
 		BeginUpdate(gWPtr);
 		DrawControls(gWPtr);
 		ShowLogo(true);
 		UpdateTerminalWin();
 		EndUpdate(gWPtr);
+		
+		SetPort(oldPort);
 	}
 	SetZone(ourHZ);
 	gSDDlg = false;
@@ -132,13 +143,17 @@ pascal void* Install(void* unused)
 				ErrorHandler();
 				return (void*) nil;
 			}
-				
+			
+#if PRE_BETA_HACKERY == 0			
 			/* run all .xpi's through XPInstall */
 			err = RunAllXPIs(vRefNum, dirID);
 			if (err!=noErr)
 				ErrorHandler();
-
+				
 			CleanupExtractedFiles(vRefNum, dirID);
+#endif
+			err = FSpDelete(&coreFileSpec);
+			if (err!=noErr) SysBeep(10); // DEBUG
 		}
 	
 		if (coreFile)

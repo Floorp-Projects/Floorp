@@ -32,6 +32,18 @@
 static FSSpec 	coreFileList[kMaxCoreFiles];
 static short	currCoreFile = 0;
 
+#define SLASHES_2_COLONS(_path)										\
+do {																\
+	char	*delim;													\
+	long	count = 0, len = strlen(_path);							\
+																	\
+	while ( (count < len) && ((delim = strchr(_path, '/')) != 0) )	\
+	{																\
+		*delim = ':';												\
+		count++;													\
+	}																\
+} while(0)
+
 /*-----------------------------------------------------------*
  *   Deflation
  *-----------------------------------------------------------*/
@@ -104,7 +116,9 @@ ExtractCoreFile(short tgtVRefNum, long tgtDirID)
 	fullPathStr = NewPtrClear(fullPathLen+1);
 	strncat(fullPathStr, *fullPathH, fullPathLen);
 	*(fullPathStr+fullPathLen) = '\0';
+	
 	rv = ZIP_OpenArchive( fullPathStr, &hZip );
+	
 	HUnlock(fullPathH);
 	DisposeHandle(fullPathH);
 	DisposePtr(fullPathStr);
@@ -135,7 +149,13 @@ ExtractCoreFile(short tgtVRefNum, long tgtDirID)
 		strncat(fullPathStr, *fullPathH, fullPathLen);
 		strcat(fullPathStr, filename);	/* tack on filename to dirpath */
 		*(fullPathStr+fullPathLen+strlen(filename)) = '\0';
+		SLASHES_2_COLONS(fullPathStr);
+		err = DirCreateRecursive(fullPathStr);
+		if (err!=noErr)
+			continue;
+		
 		rv = ZIP_ExtractFile( hZip, filename, fullPathStr );
+		
 		HUnlock(fullPathH);
 		DisposeHandle(fullPathH);
 		DisposePtr(fullPathStr);
@@ -143,6 +163,7 @@ ExtractCoreFile(short tgtVRefNum, long tgtDirID)
 			return rv;
 		
 		// AppleSingle decode if need be
+		SLASHES_2_COLONS(filename);
 		extractedFile = CToPascal(filename); 
 		err = FSMakeFSSpec(tgtVRefNum, tgtDirID, extractedFile, &extractedFSp);
 		err = FSMakeFSSpec(tgtVRefNum, tgtDirID, extractedFile, &outFSp);
@@ -264,6 +285,51 @@ ResolveDirs(char *fname, char *dir)
 		strncpy(dir, fname, dirpath-fname);
 		*(dir + (dirpath-fname)+1) = 0; // NULL terminate
 	}
+}
+
+OSErr
+DirCreateRecursive(char* path)
+{
+	long 		count, len=strlen(path), dummyDirID;
+	char 		*delim = '\0', *pathpos = path, *currDir;
+	OSErr 		err = noErr;
+	StringPtr	pCurrDir;
+	FSSpec		currDirFSp;
+	
+	currDir = (char*) malloc(len+1);
+	
+	if ((delim=strchr(pathpos, ':'))!=0)		/* skip first since it's volName */
+	{
+		for (count=0; ((count<len)&&( (delim=strchr(pathpos, ':'))!=0) ); count++)
+		{
+			currDir[0] = '\0';
+			strncpy(currDir, path, delim-path+1);
+			currDir[delim-path+1] = '\0';
+		
+			pCurrDir = CToPascal(currDir);
+			if (pCurrDir && *pCurrDir > 0)
+			{
+				err = FSMakeFSSpec(0, 0, pCurrDir, &currDirFSp);
+				if (err == fnfErr)
+				{	
+					err = FSpDirCreate(&currDirFSp, smSystemScript, &dummyDirID);
+					if (err!=noErr) 
+					{
+						SysBeep(10);	// XXX remove...
+						return err;
+					}
+				}
+				
+				DisposePtr((Ptr)pCurrDir);
+				pathpos = delim+1;
+			}	
+		}
+	}
+	
+	if (currDir)
+		free(currDir);
+		
+	return err;
 }
 
 OSErr

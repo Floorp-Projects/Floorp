@@ -34,6 +34,11 @@ void HandleNextEvent(EventRecord* nextEvt)
 			HandleMouseDown(nextEvt);
 			break;
 			
+		case mouseUp:
+			if (gCurrWin == kComponentsID)
+				InComponentsContent(nextEvt, gWPtr);
+			break;
+
 		case keyDown:
 			HandleKeyDown(nextEvt);
 			break;
