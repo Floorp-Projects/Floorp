@@ -36,7 +36,7 @@ include $(DEPTH)/config/rules.mk
 
 #### NEXT FEW LINES ARE ONLY FOR TESTING -- full build!
 #MOZ_MAIL_NEWS	= 1
-#EDITOR		= 1
+#MOZ_EDITOR	= 1
 #MOZ_OFFLINE	= 1
 #MOZ_LOC_INDEP	= 1
 #MOZ_TASKBAR	= 1
@@ -111,7 +111,7 @@ ICONS += \
 	images/Desk_MsgCompose.gif
 endif
 
-ifdef EDITOR
+ifdef MOZ_EDITOR
 ICONS += $(wildcard images/e*.gif images/Desk_Composer.gif)
 endif
 

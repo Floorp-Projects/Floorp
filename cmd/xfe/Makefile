@@ -472,7 +472,7 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libjmd.a \
 		  $(NULL)
 
-ifdef EDITOR
+ifdef MOZ_EDITOR
 BASIC_LIBS	+= $(DIST)/lib/libedtplug.a
 endif
 
@@ -517,7 +517,7 @@ BASIC_LIBS      += $(DIST)/lib/liboji.a
 
 ifdef NSJVM
 
-ifdef EDITOR
+ifdef MOZ_EDITOR
 BASIC_LIBS	+= $(DIST)/lib/libedtplug.a
 endif
 else # !NSJVM
@@ -819,7 +819,7 @@ HPUX_RESOURCE_HACK	= -Wp,-H16384
 
 OTHER_LIBS	= $(HPUX_XLIBS) -lXm -L$(DIST)/lib -lXmu -lXt -lX11 -lXext $(OS_LIBS)
 
-ifndef NO_EDITOR
+ifdef MOZ_EDITOR
 
 ifdef NS_USE_GCC
 CCLD          = $(CCC)
@@ -1004,7 +1004,7 @@ ifndef NO_WEBFONTS
 EXTRA_REL_FILES += $(WEBFONT_DSO)
 endif
 
-ifndef NO_EDITOR
+ifdef MOZ_EDITOR
 OTHER_LIBS	+= -L$(NS_LIB)
 
 #
