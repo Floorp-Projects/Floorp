@@ -20,8 +20,42 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Document;
+import org.w3c.dom.DOMException;
+import org.w3c.dom.events.Event;
+import org.w3c.dom.events.EventTarget;
+import org.w3c.dom.events.EventListener;
+import java.util.Vector;
 
-public class NodeImpl implements Node {
+class NodeEventListener {
+	EventListener listener = null;
+	String type = null;
+	boolean useCapture = false;
+	long nativeListener = 0;
+
+	NodeEventListener(String aType, EventListener aListener, 
+                          boolean aUseCapture, long aNativeListener) {
+		type = aType;
+		listener = aListener;
+		useCapture = aUseCapture;
+		nativeListener = aNativeListener;
+	}
+
+	public boolean equals(Object o) {
+		if (!(o instanceof NodeEventListener))
+			return false;
+		else { 
+			NodeEventListener n = (NodeEventListener) o;
+			if ((useCapture != n.useCapture)  
+                            || (type == null) || !type.equals(n.type) 
+			    || (listener == null) || !listener.equals(n.listener)) 
+				return false;
+			else 
+				return true;
+		}
+	}
+}
+
+public class NodeImpl implements Node, EventTarget {
 
     /* The derived classes (Attr, CharacterData, DocumentFragment,
        Document, Element, EntityReference, NamedNodeMap,
@@ -29,6 +63,9 @@ public class NodeImpl implements Node {
        the nsIDOM coreDom classes follow the same hierarchy */
 
     private long p_nsIDOMNode = 0;
+
+    // associated DOMEventListeners
+    private Vector listeners = null;
 
     // instantiated from JNI only
     protected NodeImpl() {}
@@ -69,7 +106,7 @@ public class NodeImpl implements Node {
 	return "ERROR";
     }
 
-    public native Node appendChild(Node newChild);
+    public native Node appendChild(Node newChild) throws DOMException;
     public native Node cloneNode(boolean deep);
     public native NamedNodeMap getAttributes();
     public native NodeList getChildNodes();
@@ -83,13 +120,84 @@ public class NodeImpl implements Node {
     public native Node getParentNode();
     public native Node getPreviousSibling();
     public native boolean hasChildNodes();
-    public native Node insertBefore(Node newChild, Node refChild);
-    public native Node removeChild(Node oldChild);
-    public native Node replaceChild(Node newChild, Node oldChild);
+    public native Node insertBefore(Node newChild, Node refChild) throws DOMException;
+    public native Node removeChild(Node oldChild) throws DOMException;
+    public native Node replaceChild(Node newChild, Node oldChild) throws DOMException;
     public native void setNodeValue(String nodeValue);
 
     protected native void finalize();
 
     private native boolean XPCOM_equals(Object o);
     private native int XPCOM_hashCode();
+
+    //since DOM level 2
+    public boolean supports(String feature, String version) {
+        throw new UnsupportedOperationException();
+    }
+    
+    public String getNamespaceURI() {
+        throw new UnsupportedOperationException(); 
+    }
+    
+    public String getPrefix() {
+        throw new UnsupportedOperationException();
+    }
+
+    public void setPrefix(String prefix) throws DOMException {
+        throw new UnsupportedOperationException();
+    }
+
+    public String getLocalName() {
+        throw new UnsupportedOperationException();
+    }
+    
+    public void addEventListener(String type, 
+                                 EventListener listener, 
+                                 boolean useCapture) {
+
+        long nativeListener = addNativeEventListener(type, listener, useCapture);
+
+        if (nativeListener != 0) {
+	    if (listeners == null) 
+                listeners = new Vector();
+
+            NodeEventListener l = new NodeEventListener(type, 
+                                                        listener, 
+                                                        useCapture, 
+                                                        nativeListener);
+            listeners.add(l);
+	} 
+    }
+
+    public void removeEventListener(String type, 
+                                    EventListener listener, 
+                                    boolean useCapture) {
+        if (listeners == null) 
+            return;
+
+        NodeEventListener l = new NodeEventListener(type, 
+                                                    listener, useCapture, 0);
+
+        int idx = listeners.indexOf(l);
+
+	//if trying to remove non-existing listener then return 
+        if (idx == -1) 
+            return;
+
+    	l = (NodeEventListener) listeners.remove(idx);
+	
+	    removeNativeEventListener(type, l.nativeListener, useCapture);
+    }
+
+    public boolean dispatchEvent(Event evt) throws DOMException {
+        throw new UnsupportedOperationException();
+    }
+    
+    private native long  addNativeEventListener(String type,
+                                             EventListener listener,
+                                             boolean useCapture);
+
+    private native void  removeNativeEventListener(String type,
+                                                long nativeListener,
+                                                boolean useCapture);
 }

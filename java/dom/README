@@ -51,9 +51,35 @@ $MOZILLA_FIVE_HOME/classes *.java in the java/dom/jni directory. I
 chose to put my class files in $MOZILLA_FIVE_HOME/classes, you can put
 them elsewhere, just make sure it is in the CLASSPATH. 
 
-You will also need to get the w3c DOM interfaces from
-http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/java-binding.zip
+You will also need to get the w3c DOM level 2 interfaces from
+http://www.w3.org/TR/1999/WD-DOM-Level-2-19990923/java-binding.zip
 and put the class files in your CLASSPATH.
+
+
+DOM2 events
+------------
+
+At the moment all DOM2 event-related interfaces are present
+however they are not fully implemented yet
+because Mozilla's core DOM does not support DOM2 events fully. 
+Consequences:
+  - some methods throws OperationUnsupportedException()
+  - Some of key codes defined at DOM2 specs are never returned
+     (they are not supported by core DOM)
+
+The basic implementation architecture is following:
+   - NodeImpl is extended to support EventTarget interface
+   - for every addEventListener call special NativeDOMProxyListener object is 
+       created and is registered with Mozilla's DOM 
+     It's task is to propagate event notifications from Mozilla's DOM
+       to target Java EventListener
+   - In order to sucessfully unregister EventListeners we need to 
+       save association between java EventListener and corresponding 
+       NativeDOMProxyListener object. This is done by storing such
+       associations Vector at NodeImpl
+   - javaDOMEventsGlobals class is used much like javaDOMGlobals for caching
+     (this code may be moved to javaDOMGlobals) 
+     
 
 
 NSPR Logging

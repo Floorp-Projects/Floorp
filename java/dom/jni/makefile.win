@@ -22,6 +22,8 @@ MODULE=javadomjni
 
 CPPSRCS= \
 	javaDOMGlobals.cpp \
+	javaDOMEventsGlobals.cpp \
+	nativeDOMProxyListener.cpp \
 	org_mozilla_dom_DOMAccessorImpl.cpp \
 	org_mozilla_dom_DOMGarbageCollector.cpp \
 	org_mozilla_dom_AttrImpl.cpp \
@@ -37,10 +39,16 @@ CPPSRCS= \
 	org_mozilla_dom_NotationImpl.cpp \
 	org_mozilla_dom_ProcessingInstructionImpl.cpp \
 	org_mozilla_dom_TextImpl.cpp \
+	org_mozilla_dom_events_EventImpl.cpp \
+	org_mozilla_dom_events_MouseEventImpl.cpp \
+	org_mozilla_dom_events_KeyEventImpl.cpp \
+	org_mozilla_dom_events_UIEventImpl.cpp \
  $(NULL)
 
 CPP_OBJS= \
 	.\$(OBJDIR)\javaDOMGlobals.obj \
+	.\$(OBJDIR)\javaDOMEventsGlobals.obj \
+	.\$(OBJDIR)\nativeDOMProxyListener.obj \
 	.\$(OBJDIR)\org_mozilla_dom_DOMAccessorImpl.obj \
 	.\$(OBJDIR)\org_mozilla_dom_DOMGarbageCollector.obj \
 	.\$(OBJDIR)\org_mozilla_dom_AttrImpl.obj \
@@ -56,7 +64,11 @@ CPP_OBJS= \
 	.\$(OBJDIR)\org_mozilla_dom_NotationImpl.obj \
 	.\$(OBJDIR)\org_mozilla_dom_ProcessingInstructionImpl.obj \
 	.\$(OBJDIR)\org_mozilla_dom_TextImpl.obj \
- $(NULL)
+	.\$(OBJDIR)\org_mozilla_dom_events_EventImpl.obj \
+	.\$(OBJDIR)\org_mozilla_dom_events_UIEventImpl.obj \
+	.\$(OBJDIR)\org_mozilla_dom_events_MouseEventImpl.obj \
+	.\$(OBJDIR)\org_mozilla_dom_events_KeyEventImpl.obj \
+$(NULL)
 
 LINCS=
 

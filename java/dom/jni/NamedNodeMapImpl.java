@@ -18,6 +18,7 @@ package org.mozilla.dom;
 
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.DOMException;
 
 public class NamedNodeMapImpl extends NodeImpl implements NamedNodeMap {
 
@@ -29,4 +30,14 @@ public class NamedNodeMapImpl extends NodeImpl implements NamedNodeMap {
     public native Node item(int index);
     public native Node removeNamedItem(String name);
     public native Node setNamedItem(Node arg);
+
+    
+    public Node getNamedItemNS(String namespaceURI, String localName) {
+        throw new UnsupportedOperationException();
+    }
+
+    public Node removeNamedItemNS(String namespaceURI, String name)
+                                  throws DOMException {
+        throw new UnsupportedOperationException();
+    }    
 }

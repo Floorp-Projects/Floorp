@@ -15,8 +15,8 @@
 
 DEPTH		= ../../..
 topsrcdir	= $(DEPTH)
-srcdir		= .
-VPATH		= .
+srcdir		= $(topsrcdir)/java/dom/jni
+VPATH		= $(topsrcdir)/java/dom/jni
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -24,6 +24,8 @@ LIBRARY_NAME	= javadomjni
 
 CPPSRCS		= \
 	javaDOMGlobals.cpp \
+	javaDOMEventsGlobals.cpp \
+	nativeDOMProxyListener.cpp \
 	org_mozilla_dom_DOMGarbageCollector.cpp \
 	org_mozilla_dom_DOMAccessorImpl.cpp \
 	org_mozilla_dom_AttrImpl.cpp \
@@ -38,8 +40,15 @@ CPPSRCS		= \
 	org_mozilla_dom_NodeListImpl.cpp \
 	org_mozilla_dom_NotationImpl.cpp \
 	org_mozilla_dom_ProcessingInstructionImpl.cpp \
-	org_mozilla_dom_TextImpl.cpp 
+	org_mozilla_dom_TextImpl.cpp \
+	org_mozilla_dom_events_EventImpl.cpp \
+	org_mozilla_dom_events_UIEventImpl.cpp \
+	org_mozilla_dom_events_MouseEventImpl.cpp \
+	org_mozilla_dom_events_KeyEventImpl.cpp 
 
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
+
+classes:
+	javac -d $(topsrcdir)/dist/classes *.java

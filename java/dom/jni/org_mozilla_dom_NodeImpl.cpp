@@ -22,8 +22,12 @@ Inc. All Rights Reserved.
 #include "nsDOMError.h"
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_NodeImpl.h"
+#include "nativeDOMProxyListener.h"
+#include "nsIDOMEventTarget.h"  
+#include "javaDOMEventsGlobals.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIDOMEventTargetIID, NS_IDOMEVENTTARGET_IID);
 
 JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_1equals
   (JNIEnv *env, jobject jthis, jobject nodeArg)
@@ -825,3 +829,110 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setNodeValue
     return;
   }
 }
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    addNativeEventListener
+ * Signature: (Ljava/lang/String;Lorg/w3c/dom/events/EventListener;Z)J
+ */
+JNIEXPORT jlong JNICALL Java_org_mozilla_dom_NodeImpl_addNativeEventListener
+(JNIEnv *env, jobject jthis, jstring jtype, jobject jlistener, jboolean juseCapture)
+{
+    nsIDOMEventListener *listener = NULL;
+    PRBool useCapture;
+    nsISupports *isupports;
+    nsIDOMEventTarget* target;
+
+    isupports = (nsISupports *) env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+    if(!isupports) {
+        JavaDOMGlobals::ThrowException(env,
+            "EventTarget.addEventListener: NULL pointer");
+        return 0;
+    }
+
+    isupports->QueryInterface(kIDOMEventTargetIID, (void **) &target);
+    if(!target) {
+        JavaDOMGlobals::ThrowException(env,
+            "EventTarget.addEventListener: NULL DOMEventTarget pointer");
+        return 0;
+    }
+
+    jboolean iscopy = JNI_FALSE;
+
+    const char* type = env->GetStringUTFChars(jtype, &iscopy);
+    if (!type) {
+        JavaDOMGlobals::ThrowException(env,
+            "EventTarget.addEventListener: GetStringUTFChars failed\n");
+        return 0;
+    }
+
+    useCapture = juseCapture == JNI_TRUE ? PR_TRUE : PR_FALSE;
+
+    listener = new NativeDOMProxyListener(env, jlistener);
+    
+    nsresult rv = target->AddEventListener(type, listener, useCapture);
+
+    target->Release();
+
+    if (iscopy == JNI_TRUE)
+        env->ReleaseStringUTFChars(jtype, type);
+    if (NS_FAILED(rv)) {
+        JavaDOMGlobals::ThrowException(env,
+            "EventTarget.addEventListener: error");
+        return 0;
+    }
+
+    return (jlong) listener;
+}
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    removeNativeEventListener
+ * Signature: (Ljava/lang/String;JZ)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_removeNativeEventListener
+ (JNIEnv *env, jobject jthis, jstring jtype, jlong jlistener, jboolean juseCapture)
+{
+    PRBool useCapture;
+    nsISupports *isupports;
+    nsIDOMEventTarget* target;
+
+    isupports = (nsISupports *) env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+    if (!isupports) {
+        JavaDOMGlobals::ThrowException(env,        
+                "NodeImpl.removeEventListener: NULL pointer\n");
+        return;
+    }
+
+    isupports->QueryInterface(kIDOMEventTargetIID, (void **) &target);
+    if (!target) {
+        JavaDOMGlobals::ThrowException(env,
+                "NodeImpl.removeEventListener: NULL DOMEventTarget pointer\n");
+        return;
+    }
+
+    jboolean iscopy = JNI_FALSE;
+    const char* type = env->GetStringUTFChars(jtype, &iscopy);
+    if (!type) {
+        JavaDOMGlobals::ThrowException(env,
+                "NodeImpl.removeEventListener: GetStringUTFChars failed\n");
+        return;
+    }
+
+    useCapture = juseCapture == JNI_TRUE ? PR_TRUE : PR_FALSE;
+
+    nsresult rv = target->RemoveEventListener(type, 
+                              (nsIDOMEventListener*) jlistener, useCapture);
+
+    target->Release();
+
+    if (iscopy == JNI_TRUE)
+        env->ReleaseStringUTFChars(jtype, type);
+
+    if (NS_FAILED(rv)) {
+        JavaDOMGlobals::ThrowException(env,        
+               "EventTarget.addEventListener: error");
+        return;
+    }
+}
+

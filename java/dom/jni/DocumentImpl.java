@@ -26,10 +26,14 @@ import org.w3c.dom.EntityReference;
 import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.Text;
 import org.w3c.dom.DocumentType;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.events.DocumentEvent;
+import org.w3c.dom.events.Event;
+import org.w3c.dom.DOMException;
 
-public class DocumentImpl extends NodeImpl implements Document {
+public class DocumentImpl extends NodeImpl implements Document, DocumentEvent {
 
     // instantiated from JNI only
     private DocumentImpl() {}
@@ -52,8 +56,31 @@ public class DocumentImpl extends NodeImpl implements Document {
 
     private static native void initialize();
 
+
+    public Event createEvent(String type) throws DOMException {
+        throw new UnsupportedOperationException();
+    }
+
     static {
 	System.loadLibrary("javadomjni");
 	initialize();
     }
+
+    public Node importNode(Node importedNode, boolean deep) throws DOMException {
+        throw new UnsupportedOperationException();
+    }
+
+    public Element createElementNS(String namespaceURI, String qualifiedName)
+                                            throws DOMException {
+        throw new UnsupportedOperationException();
+    } 
+
+    public Attr createAttributeNS(String namespaceURI, String qualifiedName)
+                                              throws DOMException {
+        throw new UnsupportedOperationException();
+    } 
+
+    public NodeList getElementsByTagNameNS(String namespaceURI, String localName) {
+        throw new UnsupportedOperationException();
+    }  
 }

@@ -17,6 +17,9 @@ Inc. All Rights Reserved.
 package org.mozilla.dom;
 
 import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
+import org.w3c.dom.DocumentType;
+import org.w3c.dom.DOMException;
 
 public class DOMImplementationImpl implements DOMImplementation {
 
@@ -42,4 +45,17 @@ public class DOMImplementationImpl implements DOMImplementation {
 
     private native boolean XPCOM_equals(Object o);
     private native int XPCOM_hashCode();
+
+    //since DOM2
+    public DocumentType createDocumentType(String qualifiedName, String publicID, String systemID) {
+        throw new UnsupportedOperationException();
+    }
+
+    public Document  createDocument(String namespaceURI,
+                                    String qualifiedName,
+                                    DocumentType doctype) throws DOMException {
+        throw new UnsupportedOperationException();
+    }
+
+                                                                                                      
 }

@@ -14,26 +14,7 @@ Inc. Portions created by Sun are Copyright (C) 1999 Sun Microsystems,
 Inc. All Rights Reserved. 
 */
 
-package org.mozilla.dom;
+#include "prlog.h"
+#include "org_mozilla_dom_events_UIEventImpl.h"
 
-import org.w3c.dom.DocumentType;
-import org.w3c.dom.NamedNodeMap;
-
-public class DocumentTypeImpl  extends NodeImpl implements DocumentType {
-
-    // instantiated from JNI only
-    private DocumentTypeImpl() {}
-
-    public native String getName();
-    public native NamedNodeMap getEntities();
-    public native NamedNodeMap getNotations();
-    
-    //since DOM level 2
-    public String             getPublicID() {
-        throw new UnsupportedOperationException();
-    }
-    
-    public String             getSystemID() {
-        throw new UnsupportedOperationException();
-    }
-}
+/* Can't be implemented at the moment */

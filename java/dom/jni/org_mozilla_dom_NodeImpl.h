@@ -25,6 +25,14 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_1hashCode
 
 /*
  * Class:     org_mozilla_dom_NodeImpl
+ * Method:    addNativeEventListener
+ * Signature: (Ljava/lang/String;Lorg/w3c/dom/events/EventListener;Z)J
+ */
+JNIEXPORT jlong JNICALL Java_org_mozilla_dom_NodeImpl_addNativeEventListener
+  (JNIEnv *, jobject, jstring, jobject, jboolean);
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
  * Method:    appendChild
  * Signature: (Lorg/w3c/dom/Node;)Lorg/w3c/dom/Node;
  */
@@ -158,6 +166,14 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_insertBefore
  */
 JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_removeChild
   (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    removeNativeEventListener
+ * Signature: (Ljava/lang/String;JZ)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_removeNativeEventListener
+  (JNIEnv *, jobject, jstring, jlong, jboolean);
 
 /*
  * Class:     org_mozilla_dom_NodeImpl

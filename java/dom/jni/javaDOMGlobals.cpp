@@ -19,6 +19,7 @@ Inc. All Rights Reserved.
 #include "nsAutoLock.h"
 #include "nsIDOMNode.h"
 #include "javaDOMGlobals.h"
+#include "javaDOMEventsGlobals.h"
 
 jclass JavaDOMGlobals::attrClass = NULL;
 jclass JavaDOMGlobals::cDataSectionClass = NULL;
@@ -237,14 +238,21 @@ void JavaDOMGlobals::Initialize(JNIEnv *env)
     env->GetMethodID(runtimeExceptionClass, "<init>", "(Ljava/lang/String;)V");
   if (!runtimeExceptionInitMID) return;
 
+
   jclass integerClass = env->FindClass("java/lang/Integer");
   jfieldID javaMaxIntFID = 
     env->GetStaticFieldID(integerClass, "MAX_VALUE", "I");
   javaMaxInt = env->GetStaticIntField(integerClass, javaMaxIntFID);
+
+  //init events globals
+  JavaDOMEventsGlobals::Initialize(env);
 }
 
 void JavaDOMGlobals::Destroy(JNIEnv *env) 
 {
+  //destroy events stuff
+  JavaDOMEventsGlobals::Destroy(env);
+
   env->DeleteGlobalRef(attrClass);
   if (env->ExceptionOccurred()) {
     PR_LOG(log, PR_LOG_ERROR, 

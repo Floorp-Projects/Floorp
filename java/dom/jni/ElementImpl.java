@@ -19,6 +19,7 @@ package org.mozilla.dom;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.DOMException;
 
 public class ElementImpl extends NodeImpl implements Element {
 
@@ -34,4 +35,32 @@ public class ElementImpl extends NodeImpl implements Element {
     public native Attr removeAttributeNode(Attr oldAttr);
     public native void setAttribute(String name, String value);
     public native Attr setAttributeNode(Attr newAttr);
+
+    //since DOM2
+    public String getAttributeNS(String namespaceURI, String localName) {
+        throw new UnsupportedOperationException();
+    }
+
+    public void setAttributeNS(String namespaceURI, String localName,
+                               String value) throws DOMException {
+        throw new UnsupportedOperationException();
+    }
+
+    public void removeAttributeNS(String namespacURI, String localName)   
+                                              throws DOMException {
+        throw new UnsupportedOperationException();
+    }
+
+    public Attr getAttributeNodeNS(String namespaceURI, String localName) {
+        throw new UnsupportedOperationException();
+    }
+
+    public Attr setAttributeNodeNS(Attr newAttr) throws DOMException {
+        throw new UnsupportedOperationException();
+    }
+
+    public NodeList getElementsByTagNameNS(String namespaceURI, String localName) {
+        throw new UnsupportedOperationException();
+    }
+
 }

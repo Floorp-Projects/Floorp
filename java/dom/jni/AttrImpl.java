@@ -17,6 +17,7 @@ Inc. All Rights Reserved.
 package org.mozilla.dom;
 
 import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
 
 public class AttrImpl extends NodeImpl implements Attr {
 
@@ -27,4 +28,13 @@ public class AttrImpl extends NodeImpl implements Attr {
     public native boolean getSpecified();
     public native String getValue();
     public native void setValue(String value);
+
+    /**
+     * The <code>Element</code> node this attribute is attached to or
+     * <code>null</code> if this attribute is not in use.
+     * @since DOM Level 2
+     */
+    public Element            getOwnerElement() {
+        throw new UnsupportedOperationException();
+    }
 }
