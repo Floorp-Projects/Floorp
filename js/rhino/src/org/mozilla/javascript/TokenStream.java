@@ -255,8 +255,12 @@ public class TokenStream {
         SOURCEFILE  = 148,
         
         // For debugger
-        
-        BREAKPOINT  = 149;
+        BREAKPOINT  = 149,
+
+        // For Interpreter to store shorts and ints inline
+        SHORTNUMBER = 150,
+        INTNUMBER   = 151;
+
     // end enum
 
 
@@ -417,6 +421,9 @@ public class TokenStream {
                 "script",
                 "line",
                 "sourcefile",
+                "breakpoint",
+                "shortnumber",
+                "intnumber",
             };
             names = a;
         }

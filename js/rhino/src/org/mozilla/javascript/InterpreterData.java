@@ -45,7 +45,7 @@ class InterpreterData {
     static final int INITIAL_NUMBERTABLE_SIZE = 64;
     
     InterpreterData(int lastICodeTop, int lastStringTableIndex, 
-                    int lastNumberTableIndex, Object securityDomain,
+                    Object securityDomain,
                     boolean useDynamicScope, boolean checkThis)
     {
         itsICodeTop = lastICodeTop == 0 
@@ -57,10 +57,6 @@ class InterpreterData {
                                     ? INITIAL_STRINGTABLE_SIZE
                                     : lastStringTableIndex * 2];
 
-        itsNumberTable = new double[lastNumberTableIndex == 0
-                                    ? INITIAL_NUMBERTABLE_SIZE
-                                    : lastNumberTableIndex * 2];
-        
         itsUseDynamicScope = useDynamicScope;
         itsCheckThis = checkThis;
         if (securityDomain == null)
@@ -109,8 +105,8 @@ class InterpreterData {
     String[] itsStringTable;
     int itsStringTableIndex;
 
-    double[] itsNumberTable;
-    int itsNumberTableIndex;
+    double[] itsDoubleTable;
+    int itsDoubleTableIndex;
     
     InterpretedFunction[] itsNestedFunctions;
     
