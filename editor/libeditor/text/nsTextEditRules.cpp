@@ -39,6 +39,7 @@
 #include "nsIEditProperty.h"
 #include "nsEditorUtils.h"
 #include "EditTxn.h"
+#include "TypeInState.h"
 
 static NS_DEFINE_CID(kContentIteratorCID,   NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
@@ -227,7 +228,6 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
                             aHandled, 
                             info->inString,
                             info->outString,
-                            info->typeInState,
                             info->maxLength);
     case kDeleteSelection:
       return WillDeleteSelection(aSelection, info->collapsedAction, aCancel, aHandled);
@@ -340,7 +340,7 @@ nsTextEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
   res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
   if (NS_FAILED(res)) return res;
   // get prior node
-  res = GetPriorHTMLNode(selNode, selOffset, &priorNode);
+  res = mEditor->GetPriorHTMLNode(selNode, selOffset, &priorNode);
   if (NS_SUCCEEDED(res) && priorNode && nsHTMLEditUtils::IsMozBR(priorNode))
   {
     nsCOMPtr<nsIDOMNode> block1, block2;
@@ -487,12 +487,12 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
   nsresult res;
   res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
   if (NS_FAILED(res)) return res;
-  res = GetPriorHTMLNode(selNode, selOffset, &nearNode);
+  res = mEditor->GetPriorHTMLNode(selNode, selOffset, &nearNode);
   if (NS_FAILED(res)) return res;
   if (nearNode && nsHTMLEditUtils::IsBreak(nearNode) && !nsHTMLEditUtils::IsMozBR(nearNode))
   {
     PRBool bIsLast;
-    res = IsLastEditableChild(nearNode, &bIsLast);
+    res = mEditor->IsLastEditableChild(nearNode, &bIsLast);
     if (NS_FAILED(res)) return res;
     if (bIsLast)
     {
@@ -514,18 +514,15 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
 nsresult
 nsTextEditRules::WillInsertText(PRInt32          aAction,
                                 nsIDOMSelection *aSelection, 
-                                PRBool          *aCancel, 
+                                PRBool          *aCancel,
                                 PRBool          *aHandled,
-                                const nsString  *aInString,
-                                nsString        *aOutString,
-                                TypeInState      aTypeInState,
+                                const nsString  *inString,
+                                nsString        *outString,
                                 PRInt32          aMaxLength)
-{
-  if (!aSelection || !aCancel || !aHandled || !aInString || !aOutString) 
-    {return NS_ERROR_NULL_POINTER;}
-  CANCEL_OPERATION_IF_READONLY_OR_DISABLED
+{  
+  if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
 
-  if (aInString->IsEmpty() && (aAction != kInsertTextIME))
+  if (inString->IsEmpty() && (aAction != kInsertTextIME))
   {
     // HACK: this is a fix for bug 19395
     // I can't outlaw all empty insertions
@@ -536,28 +533,16 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     *aHandled = PR_FALSE;
     return NS_OK;
   }
-
-  nsresult res;
-
-  // initialize out params
+  
+  // initialize out param
   *aCancel = PR_FALSE;
   *aHandled = PR_TRUE;
-  *aOutString = *aInString;
-  PRInt32 start=0;  PRInt32 end=0;  
+  nsresult res;
+  nsCOMPtr<nsIDOMNode> selNode;
+  PRInt32 selOffset;
 
-  // handle docs with a max length
-  res = TruncateInsertionIfNeeded(aSelection, aInString, aOutString, aMaxLength);
-  if (NS_FAILED(res)) return res;
+  char specialChars[] = {'\t','\n',0};
   
-  // handle password field docs
-  if (mFlags & nsIHTMLEditor::eEditorPasswordMask)
-  {
-    res = mEditor->GetTextSelectionOffsets(aSelection, start, end);
-    NS_ASSERTION((NS_SUCCEEDED(res)), "getTextSelectionOffsets failed!");
-    if (NS_FAILED(res)) return res;
-  }
-
-
   // if the selection isn't collapsed, delete it.
   PRBool bCollapsed;
   res = aSelection->GetIsCollapsed(&bCollapsed);
@@ -573,69 +558,132 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = PR_FALSE;
+  
+  // get the (collapsed) selection location
+  res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
+  if (NS_FAILED(res)) return res;
 
-  // handle password field data
-  // this has the side effect of changing all the characters in aOutString
-  // to the replacement character
-  if (mFlags & nsIHTMLEditor::eEditorPasswordMask)
-  {
-    res = EchoInsertionToPWBuff(start, end, aOutString);
+  // dont put text in places that cant have it
+  nsAutoString textTag = "__moz_text";
+  if (!mEditor->IsTextNode(selNode) && !mEditor->CanContainTag(selNode, textTag))
+    return NS_ERROR_FAILURE;
+
+  // we need to get the doc
+  nsCOMPtr<nsIDOMDocument>doc;
+  res = mEditor->GetDocument(getter_AddRefs(doc));
+  if (NS_FAILED(res)) return res;
+  if (!doc) return NS_ERROR_NULL_POINTER;
+    
+  if (aAction == kInsertTextIME) 
+  { 
+    res = mEditor->JoeInsertTextImpl(*inString, &selNode, &selOffset, doc);
     if (NS_FAILED(res)) return res;
   }
-
-  // if we're a single line control, pretreat the input string to remove returns
-  // this is unnecessary if we use <BR>'s for breaks in "plain text", because
-  // InsertBreak() checks the string.  But we don't currently do that, so we need this
-  // fixes bug 21032 
-  // *** there's some debate about whether we should replace CRLF with spaces, or
-  //     truncate the string at the first CRLF.  Here, we replace with spaces.
-  // Hack: I stripped out this test for IME inserts - it screws up double byte chars
-  // that happen to end in the same values as CR or LF.  Bug 27699
-  if (aInString->IsEmpty() && (aAction != kInsertTextIME))
-  if ((nsIHTMLEditor::eEditorSingleLineMask & mFlags) && (aAction != kInsertTextIME))
+  else // aAction == kInsertText
   {
-    aOutString->ReplaceChar(CRLF, ' ');
-  }
-  
-  // time to do actual text insertion ------------------------------
-
-  PRBool bCancel;
-  char newlineChar[] = {'\n',0};
-  nsString theString(*aOutString);  // copy instring for now
-
-  // do the text insertion (IME case)
-  if(aAction == kInsertTextIME) 
-  { 
-     // special case for IME. We need this to 
-     // handle null strings, which are meaningful for IME
-     res = DoTextInsertion(aSelection, &bCancel, &theString, aTypeInState);
-     return res;
-  }
-
-  // do text insertion (non-IME case)
-  while (theString.Length())
-  {
-    nsString partialString;
-    PRInt32 pos = theString.FindCharInSet(newlineChar);
-    // if first char is special, then use just it
-    if (pos == 0) pos = 1;
-    if (pos == -1) pos = theString.Length();
-    theString.Left(partialString, pos);
-    theString.Cut(0, pos);
-
-    // is it a solo return?
-    if (partialString.Equals("\n"))
+    // find where we are
+    nsCOMPtr<nsIDOMNode> curNode = selNode;
+    PRInt32 curOffset = selOffset;
+    
+    // is our text going to be PREformatted?  
+    // We remember this so that we know how to handle tabs.
+    PRBool isPRE;
+    res = mEditor->IsPreformatted(selNode, &isPRE);
+    if (NS_FAILED(res)) return res;    
+    
+    // dont spaz my selection in subtransactions
+    nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
+    nsSubsumeStr subStr;
+    const PRUnichar *unicodeBuf = inString->GetUnicode();
+    nsCOMPtr<nsIDOMNode> unused;
+    PRInt32 pos = 0;
+        
+    // for efficiency, break out the pre case seperately.  This is because
+    // its a lot cheaper to search the input string for only newlines than
+    // it is to search for both tabs and newlines.
+    if (isPRE)
     {
-      res = mEditor->InsertBreak();
+      char newlineChar = '\n';
+      while (unicodeBuf && (pos != -1) && (pos < inString->Length()))
+      {
+        PRInt32 oldPos = pos;
+        PRInt32 subStrLen;
+        pos = inString->FindChar(newlineChar, PR_FALSE, oldPos);
+        
+        if (pos != -1) 
+        {
+          subStrLen = pos - oldPos;
+          // if first char is newline, then use just it
+          if (subStrLen == 0)
+            subStrLen = 1;
+        }
+        else
+        {
+          subStrLen = inString->Length() - oldPos;
+          pos = inString->Length();
+        }
+
+        subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
+        
+        // is it a return?
+        if (subStr.Equals("\n"))
+        {
+          res = mEditor->JoeCreateBR(&curNode, &curOffset, &unused, nsIEditor::eNone);
+          pos++;
+        }
+        else
+        {
+          res = mEditor->JoeInsertTextImpl(subStr, &curNode, &curOffset, doc);
+        }
+        if (NS_FAILED(res)) return res;
+      }
     }
     else
     {
-      res = DoTextInsertion(aSelection, &bCancel, &partialString, aTypeInState);
-    }
-    if (NS_FAILED(res)) return res;
-    pos = theString.FindCharInSet(newlineChar);
-  }
+      char specialChars[] = {'\t','\n',0};
+      nsAutoString tabString = "    ";
+      while (unicodeBuf && (pos != -1) && (pos < inString->Length()))
+      {
+        PRInt32 oldPos = pos;
+        PRInt32 subStrLen;
+        pos = inString->FindCharInSet(specialChars, oldPos);
+        
+        if (pos != -1) 
+        {
+          subStrLen = pos - oldPos;
+          // if first char is newline, then use just it
+          if (subStrLen == 0)
+            subStrLen = 1;
+        }
+        else
+        {
+          subStrLen = inString->Length() - oldPos;
+          pos = inString->Length();
+        }
 
+        subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
+        
+        // is it a tab?
+        if (subStr.Equals("\t"))
+        {
+          res = mEditor->JoeInsertTextImpl(tabString, &curNode, &curOffset, doc);
+          pos++;
+        }
+        // is it a return?
+        else if (subStr.Equals("\n"))
+        {
+          res = mEditor->JoeCreateBR(&curNode, &curOffset, &unused, nsIEditor::eNone);
+          pos++;
+        }
+        else
+        {
+          res = mEditor->JoeInsertTextImpl(subStr, &curNode, &curOffset, doc);
+        }
+        if (NS_FAILED(res)) return res;
+      }
+    }
+    if (curNode) aSelection->Collapse(curNode, curOffset);
+  }
   return res;
 }
 
@@ -646,375 +694,7 @@ nsTextEditRules::DidInsertText(nsIDOMSelection *aSelection,
   return DidInsert(aSelection, aResult);
 }
 
-nsresult
-nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInState &aTypeInState)
-{ 
-  // private method, we know aSelection is not null, and that it is collapsed
-  NS_ASSERTION(nsnull!=aSelection, "bad selection");
 
-  // We know at least one style is set and we're about to insert at least one character.
-  // If the selection is in a text node, split the node (even if we're at the beginning or end)
-  // then put the text node inside new inline style parents.
-  // Otherwise, create the text node and the new inline style parents.
-  nsCOMPtr<nsIDOMNode>anchor;
-  PRInt32 offset;
-  nsresult res = aSelection->GetAnchorNode( getter_AddRefs(anchor));
-  // createNewTextNode is a flag that tells us whether we need to create a new text node or not
-  PRBool createNewTextNode = PR_TRUE;
-  if (NS_SUCCEEDED(res) && NS_SUCCEEDED(aSelection->GetAnchorOffset(&offset)) && anchor)
-  {
-    nsCOMPtr<nsIDOMCharacterData>anchorAsText;
-    anchorAsText = do_QueryInterface(anchor);
-    if (anchorAsText)
-    {
-      createNewTextNode = PR_FALSE;   // we found a text node, we'll base our insertion on it
-      nsCOMPtr<nsIDOMNode>newTextNode;
-      // create an empty text node by splitting the selected text node according to offset
-      if (0==offset)
-      {
-        res = mEditor->SplitNode(anchorAsText, offset, getter_AddRefs(newTextNode));
-      }
-      else
-      {
-        PRUint32 length;
-        anchorAsText->GetLength(&length);
-        if (length==(PRUint32)offset)
-        {
-          // newTextNode will be the left node
-          res = mEditor->SplitNode(anchorAsText, offset, getter_AddRefs(newTextNode));
-          // but we want the right node in this case
-          newTextNode = do_QueryInterface(anchor);
-        }
-        else
-        {
-          // splitting anchor twice sets newTextNode as an empty text node between 
-          // two halves of the original text node
-          res = mEditor->SplitNode(anchorAsText, offset, getter_AddRefs(newTextNode));
-          if (NS_SUCCEEDED(res)) {
-            res = mEditor->SplitNode(anchorAsText, 0, getter_AddRefs(newTextNode));
-          }
-        }
-      }
-      // now we have the new text node we are going to insert into.  
-      // create style nodes or move it up the content hierarchy as needed.
-      if ((NS_SUCCEEDED(res)) && newTextNode)
-      {
-        nsCOMPtr<nsIDOMNode>newStyleNode;
-        if (aTypeInState.IsSet(NS_TYPEINSTATE_BOLD))
-        {
-          if (PR_TRUE==aTypeInState.GetBold()) {
-            res = InsertStyleNode(newTextNode, nsIEditProperty::b, aSelection, getter_AddRefs(newStyleNode));
-          }
-          else 
-          {
-            nsCOMPtr<nsIDOMNode>parent;
-            res = newTextNode->GetParentNode(getter_AddRefs(parent));
-            if (NS_FAILED(res)) return res;
-            if (!parent) return NS_ERROR_NULL_POINTER;
-            res = mEditor->RemoveTextPropertiesForNode (newTextNode, parent, 0, 0, nsIEditProperty::b, nsnull);
-          }
-        }
-        if (aTypeInState.IsSet(NS_TYPEINSTATE_ITALIC))
-        {
-          if (PR_TRUE==aTypeInState.GetItalic()) { 
-            res = InsertStyleNode(newTextNode, nsIEditProperty::i, aSelection, getter_AddRefs(newStyleNode));
-          }
-          else
-          {
-            nsCOMPtr<nsIDOMNode>parent;
-            res = newTextNode->GetParentNode(getter_AddRefs(parent));
-            if (NS_FAILED(res)) return res;
-            if (!parent) return NS_ERROR_NULL_POINTER;
-            res = mEditor->RemoveTextPropertiesForNode (newTextNode, parent, 0, 0, nsIEditProperty::i, nsnull);
-          }
-        }
-        if (aTypeInState.IsSet(NS_TYPEINSTATE_UNDERLINE))
-        {
-          if (PR_TRUE==aTypeInState.GetUnderline()) {
-            res = InsertStyleNode(newTextNode, nsIEditProperty::u, aSelection, getter_AddRefs(newStyleNode));
-          }
-          else 
-          {
-            nsCOMPtr<nsIDOMNode>parent;
-            res = newTextNode->GetParentNode(getter_AddRefs(parent));
-            if (NS_FAILED(res)) return res;
-            if (!parent) return NS_ERROR_NULL_POINTER;
-            res = mEditor->RemoveTextPropertiesForNode (newTextNode, parent, 0, 0, nsIEditProperty::u, nsnull);
-          }
-        }
-        if (aTypeInState.IsSet(NS_TYPEINSTATE_FONTCOLOR))
-        {
-          nsAutoString value;
-          aTypeInState.GetFontColor(value);
-          nsAutoString attr;
-          nsIEditProperty::color->ToString(attr);
-          res = CreateFontStyleForInsertText(newTextNode, attr, value, aSelection);
-        }
-        if (aTypeInState.IsSet(NS_TYPEINSTATE_FONTFACE))
-        {
-          nsAutoString value;
-          aTypeInState.GetFontFace(value);
-          nsAutoString attr;
-          nsIEditProperty::face->ToString(attr);
-          res = CreateFontStyleForInsertText(newTextNode, attr, value, aSelection); 
-        }
-        if (aTypeInState.IsSet(NS_TYPEINSTATE_FONTSIZE))
-        {
-          nsAutoString value;
-          aTypeInState.GetFontSize(value);
-          nsAutoString attr;
-          nsIEditProperty::size->ToString(attr);
-          res = CreateFontStyleForInsertText(newTextNode, attr, value, aSelection);
-        }
-      }
-    }
-  }
-
-  // we have no text node, so create a new style tag(s) with a newly created text node in it
-  // this is a separate case from the code above because that code needs to handle turning
-  // properties on and off, this code only turns them on
-  if (PR_TRUE==createNewTextNode)  
-  {
-    offset = 0;
-    nsCOMPtr<nsIDOMNode>parent = do_QueryInterface(anchor);
-    if (parent)
-    { // we have a selection, get the offset within the parent
-      res = aSelection->GetAnchorOffset(&offset);
-      if (NS_FAILED(res)) { return res; }
-    }
-    else
-    {
-      nsCOMPtr<nsIDOMElement> bodyElement;
-      res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));
-      if (NS_FAILED(res)) return res;
-      if (!bodyElement) return NS_ERROR_NULL_POINTER;
-      parent = do_QueryInterface(bodyElement);
-      // offset already set to 0
-    }    
-    if (!parent) { return NS_ERROR_NULL_POINTER; }
-
-    nsAutoString attr, value;
-
-    // now we've got the parent. insert the style tag(s)
-    if (aTypeInState.IsSet(NS_TYPEINSTATE_BOLD))
-    {
-      if (PR_TRUE==aTypeInState.GetBold()) { 
-        res = InsertStyleAndNewTextNode(parent, offset, 
-                                        nsIEditProperty::b, attr, value, 
-                                        aSelection);
-        if (NS_FAILED(res)) { return res; }
-      }
-    }
-    if (aTypeInState.IsSet(NS_TYPEINSTATE_ITALIC))
-    {
-      if (PR_TRUE==aTypeInState.GetItalic()) { 
-        res = InsertStyleAndNewTextNode(parent, offset, 
-                                        nsIEditProperty::i, attr, value, 
-                                        aSelection);
-        if (NS_FAILED(res)) { return res; }
-      }
-    }
-    if (aTypeInState.IsSet(NS_TYPEINSTATE_UNDERLINE))
-    {
-      if (PR_TRUE==aTypeInState.GetUnderline()) { 
-        res = InsertStyleAndNewTextNode(parent, offset, 
-                                        nsIEditProperty::u, attr, value, 
-                                        aSelection);
-        if (NS_FAILED(res)) { return res; }
-      }
-    }
-    if (aTypeInState.IsSet(NS_TYPEINSTATE_FONTCOLOR))
-    {
-      aTypeInState.GetFontColor(value);
-      nsIEditProperty::color->ToString(attr);
-      res = InsertStyleAndNewTextNode(parent, offset, 
-                                      nsIEditProperty::font, attr, value, 
-                                      aSelection);
-      if (NS_FAILED(res)) { return res; }
-    }
-    if (aTypeInState.IsSet(NS_TYPEINSTATE_FONTFACE))
-    {
-      aTypeInState.GetFontFace(value);
-      nsIEditProperty::face->ToString(attr);
-      res = InsertStyleAndNewTextNode(parent, offset, 
-                                      nsIEditProperty::font, attr, value, 
-                                      aSelection);
-      if (NS_FAILED(res)) { return res; }
-    }
-    if (aTypeInState.IsSet(NS_TYPEINSTATE_FONTSIZE))
-    {
-      aTypeInState.GetFontSize(value);
-      nsIEditProperty::size->ToString(attr);
-      res = InsertStyleAndNewTextNode(parent, offset, 
-                                      nsIEditProperty::font, attr, value, 
-                                      aSelection);
-      if (NS_FAILED(res)) { return res; }
-    }
-  }
-  return res;
-}
-
-nsresult
-nsTextEditRules::CreateFontStyleForInsertText(nsIDOMNode      *aNewTextNode,
-                                              const nsString  &aAttr, 
-                                              const nsString  &aValue,
-                                              nsIDOMSelection *aSelection)
-{
-  nsresult res = NS_OK;
-  nsCOMPtr<nsIDOMNode>newStyleNode;
-  if (0!=aValue.Length()) 
-  { 
-    res = InsertStyleNode(aNewTextNode, nsIEditProperty::font, aSelection, getter_AddRefs(newStyleNode));
-    if (NS_FAILED(res)) return res;
-    if (!newStyleNode) return NS_ERROR_NULL_POINTER;
-    nsCOMPtr<nsIDOMElement>element = do_QueryInterface(newStyleNode);
-    if (element) {
-      res = mEditor->SetAttribute(element, aAttr, aValue);
-    }
-  }
-  else
-  {
-    nsCOMPtr<nsIDOMNode>parent;
-    res = aNewTextNode->GetParentNode(getter_AddRefs(parent));
-    if (NS_FAILED(res)) return res;
-    if (!parent) return NS_ERROR_NULL_POINTER;
-    res = mEditor->RemoveTextPropertiesForNode (aNewTextNode, parent, 0, 0, nsIEditProperty::font, &aAttr);
-  }
-  return res;
-}
-
-nsresult
-nsTextEditRules::InsertStyleNode(nsIDOMNode      *aNode, 
-                                 nsIAtom         *aTag, 
-                                 nsIDOMSelection *aSelection,
-                                 nsIDOMNode     **aNewNode)
-{
-  NS_ASSERTION(aNode && aTag, "bad args");
-  if (!aNode || !aTag) { return NS_ERROR_NULL_POINTER; }
-
-  nsresult res;
-  nsCOMPtr<nsIDOMNode>parent;
-  res = aNode->GetParentNode(getter_AddRefs(parent));
-  if (NS_FAILED(res)) return res;
-  if (!parent) return NS_ERROR_NULL_POINTER;
-
-  nsAutoString tag;
-  aTag->ToString(tag);
-
-  if (PR_FALSE == mEditor->CanContainTag(parent, tag)) {
-    NS_ASSERTION(PR_FALSE, "bad use of InsertStyleNode");
-    return NS_ERROR_FAILURE;  // illegal place to insert the style tag
-  }
-
-  PRInt32 offsetInParent;
-  res = nsEditor::GetChildOffset(aNode, parent, offsetInParent);
-  if (NS_FAILED(res)) return res;
-
-  res = mEditor->CreateNode(tag, parent, offsetInParent, aNewNode);
-  if (NS_FAILED(res)) return res;
-  if (!aNewNode) return NS_ERROR_NULL_POINTER;
-
-  res = mEditor->DeleteNode(aNode);
-  if (NS_SUCCEEDED(res))
-  {
-    res = mEditor->InsertNode(aNode, *aNewNode, 0);
-    if (NS_SUCCEEDED(res)) {
-      if (aSelection) {
-        res = aSelection->Collapse(aNode, 0);
-      }
-    }
-  }
-  return res;
-}
-
-
-nsresult
-nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, 
-                                           PRInt32     aOffset, 
-                                           nsIAtom    *aTag, 
-                                           const nsString  &aAttr,
-                                           const nsString  &aValue,
-                                           nsIDOMSelection *aInOutSelection)
-{
-  NS_ASSERTION(aParentNode && aTag, "bad args");
-  if (!aParentNode || !aTag) { return NS_ERROR_NULL_POINTER; }
-
-  nsresult res;
-  // if the selection already points to a text node, just call InsertStyleNode()
-  if (aInOutSelection)
-  {
-    PRBool isCollapsed;
-    aInOutSelection->GetIsCollapsed(&isCollapsed);
-    if (PR_TRUE==isCollapsed)
-    {
-      nsCOMPtr<nsIDOMNode>anchor;
-      PRInt32 offset;
-      res = aInOutSelection->GetAnchorNode(getter_AddRefs(anchor));
-      if (NS_FAILED(res)) return res;
-      if (!anchor) return NS_ERROR_NULL_POINTER;
-      res = aInOutSelection->GetAnchorOffset(&offset);  // remember where we were
-      if (NS_FAILED(res)) return res;
-      // if we have a text node, just wrap it in a new style node
-      if (PR_TRUE==mEditor->IsTextNode(anchor))
-      {
-        nsCOMPtr<nsIDOMNode> newStyleNode;
-        res = InsertStyleNode(anchor, aTag, aInOutSelection, getter_AddRefs(newStyleNode));
-        if (NS_FAILED(res)) { return res; }
-        if (!newStyleNode) { return NS_ERROR_NULL_POINTER; }
-
-        // if we were given an attribute, set it on the new style node
-        PRInt32 attrLength = aAttr.Length();
-        if (0!=attrLength)
-        {
-          nsCOMPtr<nsIDOMElement>newStyleElement = do_QueryInterface(newStyleNode);
-          res = mEditor->SetAttribute(newStyleElement, aAttr, aValue);
-        }
-        if (NS_SUCCEEDED(res)) {
-          res = aInOutSelection->Collapse(anchor, offset);
-        }
-        return res;   // we return here because we used the text node passed into us via collapsed selection
-      }
-    }
-  }
-
-  // if we get here, there is no selected text node so we create one.
-  // first, create the style node
-  nsAutoString tag;
-  aTag->ToString(tag);
-  if (PR_FALSE == mEditor->CanContainTag(aParentNode, tag)) {
-    NS_ASSERTION(PR_FALSE, "bad use of InsertStyleAndNewTextNode");
-    return NS_ERROR_FAILURE;  // illegal place to insert the style tag
-  }
-  nsCOMPtr<nsIDOMNode>newStyleNode;
-  nsCOMPtr<nsIDOMNode>newTextNode;
-  res = mEditor->CreateNode(tag, aParentNode, aOffset, getter_AddRefs(newStyleNode));
-  if (NS_FAILED(res)) return res;
-  if (!newStyleNode) return NS_ERROR_NULL_POINTER;
-
-  // if we were given an attribute, set it on the new style node
-  PRInt32 attrLength = aAttr.Length();
-  if (0!=attrLength)
-  {
-    nsCOMPtr<nsIDOMElement>newStyleElement = do_QueryInterface(newStyleNode);
-    res = mEditor->SetAttribute(newStyleElement, aAttr, aValue);
-    if (NS_FAILED(res)) return res;
-  }
-
-  // then create the text node
-  nsAutoString textNodeTag;
-  res = nsEditor::GetTextNodeTag(textNodeTag);
-  if (NS_FAILED(res)) { return res; }
-
-  res = mEditor->CreateNode(textNodeTag, newStyleNode, 0, getter_AddRefs(newTextNode));
-  if (NS_FAILED(res)) return res;
-  if (!newTextNode) return NS_ERROR_NULL_POINTER;
-
-  // if we have a selection collapse the selection to the beginning of the new text node
-  if (aInOutSelection) {
-    res = aInOutSelection->Collapse(newTextNode, 0);
-  }
-  return res;
-}
 
 nsresult
 nsTextEditRules::WillSetTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled)
@@ -1553,12 +1233,6 @@ nsTextEditRules::EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsString *a
   // manage the password buffer
   mPasswordText.Insert(*aOutString, aStart);
 
-#ifdef DEBUG_jfrancis
-    char *password = mPasswordText.ToNewCString();
-    printf("mPasswordText is %s\n", password);
-    nsCRT::free(password);
-#endif
-
   // change the output to '*' only
   PRInt32 length = aOutString->Length();
   PRInt32 i;
@@ -1567,316 +1241,6 @@ nsTextEditRules::EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsString *a
     *aOutString += '*';
 
   return NS_OK;
-}
-
-
-nsresult
-nsTextEditRules::DoTextInsertion(nsIDOMSelection *aSelection, 
-                                 PRBool          *aCancel,
-                                 const nsString  *aInString,
-                                 TypeInState      aTypeInState)
-{
-  if (!aSelection || !aCancel || !aInString) {return NS_ERROR_NULL_POINTER;}
-  nsresult res = NS_OK;
-  
-  // for now, we always cancel editor handling of insert text.
-  // rules code always does the insertion
-  *aCancel = PR_TRUE;
-  
-  PRBool bCancel;
-  res = WillInsert(aSelection, &bCancel);
-  if (NS_SUCCEEDED(res) && (!bCancel))
-  {
-    if (PR_TRUE==aTypeInState.IsAnySet())
-    { // for every property that is set, insert a new inline style node
-      res = CreateStyleForInsertText(aSelection, aTypeInState);
-      if (NS_FAILED(res)) { return res; }
-    }
-    res = mEditor->InsertTextImpl(*aInString);
-  }
-  return res;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// GetPriorHTMLSibling: returns the previous editable sibling, if there is
-//                   one within the parent
-//                       
-nsresult
-nsTextEditRules::GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode)
-{
-  if (!outNode || !inNode) return NS_ERROR_NULL_POINTER;
-  nsresult res = NS_OK;
-  *outNode = nsnull;
-  nsCOMPtr<nsIDOMNode> temp, node = do_QueryInterface(inNode);
-  
-  while (1)
-  {
-    res = node->GetPreviousSibling(getter_AddRefs(temp));
-    if (NS_FAILED(res)) return res;
-    if (!temp) return NS_OK;  // return null sibling
-    // if it's editable, we're done
-    if (mEditor->IsEditable(temp)) break;
-    // otherwise try again
-    node = temp;
-  }
-  *outNode = temp;
-  return res;
-}
-
-
-
-///////////////////////////////////////////////////////////////////////////
-// GetPriorHTMLSibling: returns the previous editable sibling, if there is
-//                   one within the parent.  just like above routine but
-//                   takes a parent/offset instead of a node.
-//                       
-nsresult
-nsTextEditRules::GetPriorHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode)
-{
-  if (!outNode || !inParent) return NS_ERROR_NULL_POINTER;
-  nsresult res = NS_OK;
-  *outNode = nsnull;
-  if (!inOffset) return NS_OK;  // return null sibling if at offset zero
-  nsCOMPtr<nsIDOMNode> node = nsEditor::GetChildAt(inParent,inOffset-1);
-  if (mEditor->IsEditable(node)) 
-  {
-    *outNode = node;
-    return res;
-  }
-  // else
-  return GetPriorHTMLSibling(node, outNode);
-}
-
-
-
-///////////////////////////////////////////////////////////////////////////
-// GetNextHTMLSibling: returns the next editable sibling, if there is
-//                   one within the parent
-//                       
-nsresult
-nsTextEditRules::GetNextHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode)
-{
-  if (!outNode) return NS_ERROR_NULL_POINTER;
-  nsresult res = NS_OK;
-  *outNode = nsnull;
-  nsCOMPtr<nsIDOMNode> temp, node = do_QueryInterface(inNode);
-  
-  while (1)
-  {
-    res = node->GetNextSibling(getter_AddRefs(temp));
-    if (NS_FAILED(res)) return res;
-    if (!temp) return NS_ERROR_FAILURE;
-    // if it's editable, we're done
-    if (mEditor->IsEditable(temp)) break;
-    // otherwise try again
-    node = temp;
-  }
-  *outNode = temp;
-  return res;
-}
-
-
-
-///////////////////////////////////////////////////////////////////////////
-// GetNextHTMLSibling: returns the next editable sibling, if there is
-//                   one within the parent.  just like above routine but
-//                   takes a parent/offset instead of a node.
-//                       
-nsresult
-nsTextEditRules::GetNextHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode)
-{
-  if (!outNode || !inParent) return NS_ERROR_NULL_POINTER;
-  nsresult res = NS_OK;
-  *outNode = nsnull;
-  nsCOMPtr<nsIDOMNode> node = nsEditor::GetChildAt(inParent,inOffset);
-  if (!node) return NS_OK; // return null sibling if no sibling
-  if (mEditor->IsEditable(node)) 
-  {
-    *outNode = node;
-    return res;
-  }
-  // else
-  return GetPriorHTMLSibling(node, outNode);
-}
-
-
-
-///////////////////////////////////////////////////////////////////////////
-// GetPriorHTMLNode: returns the previous editable leaf node, if there is
-//                   one within the <body>
-//                       
-nsresult
-nsTextEditRules::GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode)
-{
-  if (!outNode) return NS_ERROR_NULL_POINTER;
-  nsresult res = mEditor->GetPriorNode(inNode, PR_TRUE, getter_AddRefs(*outNode));
-  if (NS_FAILED(res)) return res;
-  
-  // if it's not in the body, then zero it out
-  if (*outNode && !nsHTMLEditUtils::InBody(*outNode))
-  {
-    *outNode = nsnull;
-  }
-  return res;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// GetPriorHTMLNode: same as above but takes {parent,offset} instead of node
-//                       
-nsresult
-nsTextEditRules::GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode)
-{
-  if (!outNode) return NS_ERROR_NULL_POINTER;
-  nsresult res = mEditor->GetPriorNode(inParent, inOffset, PR_TRUE, getter_AddRefs(*outNode));
-  if (NS_FAILED(res)) return res;
-  
-  // if it's not in the body, then zero it out
-  if (*outNode && !nsHTMLEditUtils::InBody(*outNode))
-  {
-    *outNode = nsnull;
-  }
-  return res;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// GetNextHTMLNode: returns the previous editable leaf node, if there is
-//                   one within the <body>
-//                       
-nsresult
-nsTextEditRules::GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode)
-{
-  if (!outNode) return NS_ERROR_NULL_POINTER;
-  nsresult res = mEditor->GetNextNode(inNode, PR_TRUE, getter_AddRefs(*outNode));
-  if (NS_FAILED(res)) return res;
-  
-  // if it's not in the body, then zero it out
-  if (*outNode && !nsHTMLEditUtils::InBody(*outNode))
-  {
-    *outNode = nsnull;
-  }
-  return res;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// GetNHTMLextNode: same as above but takes {parent,offset} instead of node
-//                       
-nsresult
-nsTextEditRules::GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode)
-{
-  if (!outNode) return NS_ERROR_NULL_POINTER;
-  nsresult res = mEditor->GetNextNode(inParent, inOffset, PR_TRUE, getter_AddRefs(*outNode));
-  if (NS_FAILED(res)) return res;
-  
-  // if it's not in the body, then zero it out
-  if (*outNode && !nsHTMLEditUtils::InBody(*outNode))
-  {
-    *outNode = nsnull;
-  }
-  return res;
-}
-
-
-nsresult 
-nsTextEditRules::IsFirstEditableChild( nsIDOMNode *aNode, PRBool *aOutIsFirst)
-{
-  // check parms
-  if (!aOutIsFirst || !aNode) return NS_ERROR_NULL_POINTER;
-  
-  // init out parms
-  *aOutIsFirst = PR_FALSE;
-  
-  // find first editable child and compare it to aNode
-  nsCOMPtr<nsIDOMNode> parent, firstChild;
-  nsresult res = aNode->GetParentNode(getter_AddRefs(parent));
-  if (NS_FAILED(res)) return res;
-  if (!parent) return NS_ERROR_FAILURE;
-  res = GetFirstEditableChild(parent, &firstChild);
-  if (NS_FAILED(res)) return res;
-  
-  *aOutIsFirst = (firstChild.get() == aNode);
-  return res;
-}
-
-
-nsresult 
-nsTextEditRules::IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast)
-{
-  // check parms
-  if (!aOutIsLast || !aNode) return NS_ERROR_NULL_POINTER;
-  
-  // init out parms
-  *aOutIsLast = PR_FALSE;
-  
-  // find last editable child and compare it to aNode
-  nsCOMPtr<nsIDOMNode> parent, lastChild;
-  nsresult res = aNode->GetParentNode(getter_AddRefs(parent));
-  if (NS_FAILED(res)) return res;
-  if (!parent) return NS_ERROR_FAILURE;
-  res = GetLastEditableChild(parent, &lastChild);
-  if (NS_FAILED(res)) return res;
-  
-  *aOutIsLast = (lastChild.get() == aNode);
-  return res;
-}
-
-
-nsresult 
-nsTextEditRules::GetFirstEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstChild)
-{
-  // check parms
-  if (!aOutFirstChild || !aNode) return NS_ERROR_NULL_POINTER;
-  
-  // init out parms
-  *aOutFirstChild = nsnull;
-  
-  // find first editable child
-  nsCOMPtr<nsIDOMNode> child;
-  nsresult res = aNode->GetFirstChild(getter_AddRefs(child));
-  if (NS_FAILED(res)) return res;
-  
-  while (child && !mEditor->IsEditable(child))
-  {
-    nsCOMPtr<nsIDOMNode> tmp;
-    res = child->GetNextSibling(getter_AddRefs(tmp));
-    if (NS_FAILED(res)) return res;
-    if (!tmp) return NS_ERROR_FAILURE;
-    child = tmp;
-  }
-  
-  *aOutFirstChild = child;
-  return res;
-}
-
-
-nsresult 
-nsTextEditRules::GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastChild)
-{
-  // check parms
-  if (!aOutLastChild || !aNode) return NS_ERROR_NULL_POINTER;
-  
-  // init out parms
-  *aOutLastChild = nsnull;
-  
-  // find last editable child
-  nsCOMPtr<nsIDOMNode> child;
-  nsresult res = aNode->GetLastChild(getter_AddRefs(child));
-  if (NS_FAILED(res)) return res;
-  
-  while (child && !mEditor->IsEditable(child))
-  {
-    nsCOMPtr<nsIDOMNode> tmp;
-    res = child->GetPreviousSibling(getter_AddRefs(tmp));
-    if (NS_FAILED(res)) return res;
-    if (!tmp) return NS_ERROR_FAILURE;
-    child = tmp;
-  }
-  
-  *aOutLastChild = child;
-  return res;
 }
 
 

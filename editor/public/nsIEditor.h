@@ -385,14 +385,6 @@ public:
   NS_IMETHOD DeleteNode(nsIDOMNode * aChild)=0;
 
   /** 
-   * InsertNoneditableTextNode() inserts a noneditable text node, e.g. for formatting.
-   * @param aParent    The parent of the newly created node
-   * @param aOffset    The offset in the parent for the new node
-   * @param aStr       The string contents to be placed in the node
-   */
-  NS_IMETHOD InsertNoneditableTextNode(nsIDOMNode* aParent, PRInt32 aOffset,
-                                       nsString& aStr) = 0;
-  /** 
    * InsertFormattingForNode() sets a special dirty attribute on the node.
    * Usually this will be called immediately after creating a new node.
    * @param aNode      The node for which to insert formatting.

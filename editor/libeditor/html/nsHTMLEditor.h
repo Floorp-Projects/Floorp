@@ -281,11 +281,29 @@ public:
   /** make the given selection span the entire document */
   NS_IMETHOD SelectEntireDocument(nsIDOMSelection *aSelection);
 
+  /** join together any afjacent editable text nodes in the range */
+  NS_IMETHOD CollapseAdjacentTextNodes(nsIDOMRange *aInRange);
+
   /* ------------ nsICSSLoaderObserver -------------- */
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
 
   /* ------------ Utility Routines, not part of public API -------------- */
   NS_IMETHOD GetBodyStyleContext(nsIStyleContext** aStyleContext);
+
+  /** returns the absolute position of the end points of aSelection
+    * in the document as a text stream.
+    */
+  nsresult GetTextSelectionOffsets(nsIDOMSelection *aSelection,
+                                   PRInt32 &aStartOffset, 
+                                   PRInt32 &aEndOffset);
+
+  nsresult GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
+                                       PRInt32 aInStartOffset,
+                                       nsIDOMNode *aInEndNode,
+                                       PRInt32 aInEndOffset,
+                                       nsIDOMNode *aInCommonParentNode,
+                                       PRInt32 &aOutStartOffset, 
+                                       PRInt32 &aEndOffset);
 
 protected:
 
@@ -306,8 +324,6 @@ protected:
     */
   NS_IMETHOD GetLayoutObject(nsIDOMNode *aInNode, nsISupports **aOutLayoutObject);
 
-  NS_IMETHOD CollapseAdjacentTextNodes(nsIDOMSelection *aInSelection);
-
   NS_IMETHOD DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSelectedNode, PRInt32& offsetOfNewNode);
 
   /* StyleSheet load callback */
@@ -325,10 +341,6 @@ protected:
   void CacheInlineStyles(nsIDOMNode *aNode);
   void ClearInlineStylesCache();
   
-  // typing state getters
-  NS_IMETHOD GetTypingState(nsIAtom *aProperty, PRBool &aPropIsSet, PRBool &aSetting);
-  NS_IMETHOD GetTypingStateValue(nsIAtom *aProperty, PRBool &aPropIsSet, nsString &aValue);
-
   // key event helpers
   NS_IMETHOD TabInTable(PRBool inIsShift, PRBool *outHandled);
   NS_IMETHOD CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, 
@@ -371,36 +383,9 @@ protected:
   //  failed to set selection to some other content in the document
   NS_IMETHOD SetSelectionAtDocumentStart(nsIDOMSelection *aSelection);
 
-
 // End of Table Editing utilities
   
-
-  NS_IMETHOD ReParentContentOfNode(nsIDOMNode *aNode, 
-                                   nsString   &aParentTag,
-                                   BlockTransformationType aTranformation);
-
-  NS_IMETHOD ReParentBlockContent(nsIDOMNode  *aNode, 
-                                  nsString    &aParentTag,
-                                  nsIDOMNode  *aBlockParentNode,
-                                  nsString    &aBlockParentTag,
-                                  BlockTransformationType aTranformation,
-                                  nsIDOMNode **aNewParentNode);
-  
-/*  NS_IMETHOD ReParentContentOfRange(nsIDOMRange *aRange, 
-                                    nsString    &aParentTag,
-                                    BlockTransformationType aTranformation);
-*/
-  NS_IMETHOD RemoveParagraphStyleFromRange(nsIDOMRange *aRange);
-  
-  NS_IMETHOD RemoveParagraphStyleFromBlockContent(nsIDOMRange *aRange);
-
-  NS_IMETHOD RemoveParentFromRange(const nsString &aParentTag, nsIDOMRange *aRange);
-  
-  NS_IMETHOD RemoveParentFromBlockContent(const nsString &aParentTag, nsIDOMRange *aRange);
-
   NS_IMETHOD IsRootTag(nsString &aTag, PRBool &aIsTag);
-
-  NS_IMETHOD IsLeafThatTakesInlineStyle(const nsString *aTag, PRBool &aResult);
 
   NS_IMETHOD IsSubordinateBlock(nsString &aTag, PRBool &aIsTag);
 
@@ -439,132 +424,17 @@ protected:
                               const nsString  *aAttributes, 
                               PRBool          &aIsSet) const;
 
-  /** Moves the content between (aNode, aStartOffset) and (aNode, aEndOffset)
-    * into aNewParentNode, splitting aNode as necessary to maintain the relative
-    * position of all leaf content.
-    * @param aNode          The node whose content we're repositioning.
-    *                       aNode can be either a text node or a container node.
-    * @param aNewParentNode The node that will be the repositioned contents' parent.
-    *                       The caller is responsible for allocating aNewParentNode
-    * @param aStartOffset   The start offset of the content of aNode
-    * @param aEndOffset     The end offset of the content of aNode.
-    */
-  NS_IMETHOD MoveContentOfNodeIntoNewParent(nsIDOMNode  *aNode, 
-                                            nsIDOMNode  *aNewParentNode, 
-                                            PRInt32      aStartOffset, 
-                                            PRInt32      aEndOffset);
-
-  /** Moves the content between (aStartNode, aStartOffset) and (aEndNode, aEndOffset)
-    * into aNewParentNode, splitting aStartNode and aEndNode as necessary to maintain 
-    * the relative position of all leaf content.
-    * The content between the two endpoints MUST be "contiguous" in the sense that 
-    * it is all in the same block.  Another way of saying this is all content nodes
-    * between aStartNode and aEndNode must be inline. 
-    * @see IntermediateNodesAreInline
-    *
-    * @param aStartNode       The left node,  can be either a text node or a container node.
-    * @param aStartOffset     The start offset in the content of aStartNode
-    * @param aEndNode         The right node,  can be either a text node or a container node.
-    * @param aEndOffset       The end offset in the content of aEndNode.
-    * @param aGrandParentNode The common ancestor of aStartNode and aEndNode.
-    *                         aGrandParentNode will be the parent of aNewParentNode.
-    * @param aNewParentNode   The node that will be the repositioned contents' parent.
-    *                         The caller is responsible for allocating aNewParentNode
-    */
-  NS_IMETHOD MoveContiguousContentIntoNewParent(nsIDOMNode *aStartNode, 
-                                                PRInt32     aStartOffset, 
-                                                nsIDOMNode *aEndNode, 
-                                                PRInt32     aEndOffset, 
-                                                nsIDOMNode *aGrandParentNode,
-                                                nsIDOMNode *aNewParentNode);
-
-
-  NS_IMETHOD SetTextPropertiesForNode(nsIDOMNode  *aNode, 
-                                      nsIDOMNode  *aParent,
-                                      PRInt32      aStartOffset,
-                                      PRInt32      aEndOffset,
-                                      nsIAtom     *aPropName,
-                                      const nsString *aAttribute,
-                                      const nsString *aValue);
-
-  NS_IMETHOD SetTextPropertiesForNodesWithSameParent(nsIDOMNode  *aStartNode,
-                                                     PRInt32      aStartOffset,
-                                                     nsIDOMNode  *aEndNode,
-                                                     PRInt32      aEndOffset,
-                                                     nsIDOMNode  *aParent,
-                                                     nsIAtom     *aPropName,
-                                                     const nsString *aAttribute,
-                                                     const nsString *aValue);
-
-  NS_IMETHOD SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
-                                                          nsIDOMNode  *aStartNode,
-                                                          PRInt32      aStartOffset,
-                                                          nsIDOMNode  *aEndNode,
-                                                          PRInt32      aEndOffset,
-                                                          nsIDOMNode  *aParent,
-                                                          nsIAtom     *aPropName,
-                                                          const nsString *aAttribute,
-                                                          const nsString *aValue);
-
-  NS_IMETHOD RemoveTextPropertiesForNode(nsIDOMNode  *aNode, 
-                                         nsIDOMNode  *aParent,
-                                         PRInt32      aStartOffset,
-                                         PRInt32      aEndOffset,
-                                         nsIAtom     *aPropName,
-                                         const nsString *aAttribute);
-
-  NS_IMETHOD RemoveTextPropertiesForNodesWithSameParent(nsIDOMNode  *aStartNode,
-                                                        PRInt32      aStartOffset,
-                                                        nsIDOMNode  *aEndNode,
-                                                        PRInt32      aEndOffset,
-                                                        nsIDOMNode  *aParent,
-                                                        nsIAtom     *aPropName, 
-                                                        const nsString *aAttribute);
-
-  NS_IMETHOD RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStartNode,
-                                                             PRInt32      aStartOffset,
-                                                             nsIDOMNode  *aEndNode,
-                                                             PRInt32      aEndOffset,
-                                                             nsIDOMNode  *aParent,
-                                                             nsIAtom     *aPropName,
-                                                             const nsString *aAttribute);
-
-  NS_IMETHOD SetTypeInStateForProperty(TypeInState &aTypeInState, 
-                                       nsIAtom     *aPropName, 
-                                       const nsString *aAttribute,
-                                       const nsString *aValue);
-
-  NS_IMETHOD GetTextSelectionOffsetsForRange(nsIDOMSelection *aSelection, 
-                                             nsIDOMNode **aParent,
-                                             PRInt32     &aStartOffset, 
-                                             PRInt32     &aEndOffset);
 
   void ResetTextSelectionForRange(nsIDOMNode *aParent,
                                   PRInt32     aStartOffset,
                                   PRInt32     aEndOffset,
                                   nsIDOMSelection *aSelection);
 
-  /** returns the absolute position of the end points of aSelection
-    * in the document as a text stream.
-    */
-  nsresult GetTextSelectionOffsets(nsIDOMSelection *aSelection,
-                                   PRInt32 &aStartOffset, 
-                                   PRInt32 &aEndOffset);
-
-  nsresult GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
-                                       PRInt32 aInStartOffset,
-                                       nsIDOMNode *aInEndNode,
-                                       PRInt32 aInEndOffset,
-                                       nsIDOMNode *aInCommonParentNode,
-                                       PRInt32 &aOutStartOffset, 
-                                       PRInt32 &aEndOffset);
 
   // Methods for handling plaintext quotations
   NS_IMETHOD PasteAsPlaintextQuotation();
   NS_IMETHOD InsertAsPlaintextQuotation(const nsString& aQuotedText,
                                         nsIDOMNode **aNodeInserted);
-
-  TypeInState *GetTypeInState(); 
 
   /** simple utility to handle any error with event listener allocation or registration */
   void HandleEventListenerError();
