@@ -13,7 +13,7 @@
 ; for the specific language governing rights and limitations under the
 ; License.
 ;
-; The Original Code is the NetScape Portable Runtime (NSPR).
+; The Original Code is the Netscape Portable Runtime (NSPR).
 ;
 ; The Initial Developer of the Original Code is
 ; IBM Corporation.
@@ -36,15 +36,15 @@
 ;
 ; ***** END LICENSE BLOCK *****
 
-;        Windows uses inline assembly for their atomic functions, so we have
-;        created an assembly file for VACPP on OS/2.
+; Windows uses inline assembly for their atomic functions, so we have
+; created an assembly file for VACPP on OS/2.
 ;
-;        This assembly file also contains an implementation of RAM semaphores.
+; This assembly file also contains an implementation of RAM semaphores.
 ;
-;        Notes:
-;          The ulTIDPID element of the RAMSEM structure is overloaded in the 386
-;          implementation to hold the TID:PID in the lower 31 bits and the lock
-;          bit in the high bit
+; Notes:
+;   The ulTIDPID element of the RAMSEM structure is overloaded in the 386
+;   implementation to hold the TID:PID in the lower 31 bits and the lock
+;   bit in the high bit
 
         page ,132
 
