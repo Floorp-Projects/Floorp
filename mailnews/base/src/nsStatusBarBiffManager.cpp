@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -51,14 +52,10 @@
 #include "MailNewsTypes.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 #include "nsIFileChannel.h"
-#include "nsISound.h"
 #include "nsIPref.h"
 #include "nsXPIDLString.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
-
-static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
-static NS_DEFINE_CID(kMsgMailSessionCID,    NS_MSGMAILSESSION_CID);
 
 // QueryInterface, AddRef, and Release
 //
@@ -89,7 +86,7 @@ nsresult nsStatusBarBiffManager::Init()
   kBiffStateAtom = NS_NewAtom("BiffState");
 
   nsCOMPtr<nsIMsgMailSession> mailSession = 
-    do_GetService(kMsgMailSessionCID, &rv); 
+    do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
   if(NS_SUCCEEDED(rv))
     mailSession->AddFolderListener(this, nsIFolderListener::propertyFlagChanged);
 
@@ -105,68 +102,67 @@ nsresult nsStatusBarBiffManager::Shutdown()
 
 nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
 {
-    // See nsMsgStatusFeedback
-    nsresult rv;
-
-    // if we got new mail, attempt to play a sound.
-    // if we fail along the way, don't return.
-    // we still need to update the UI.    
-    if (newBiffFlag == nsIMsgFolder::nsMsgBiffState_NewMail) {
-      nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID);
-      if (pref) {
-        PRBool playSoundOnBiff = PR_FALSE;
-        rv = pref->GetBoolPref(PREF_PLAY_SOUND_ON_NEW_MAIL, &playSoundOnBiff);
-        if (NS_SUCCEEDED(rv) && playSoundOnBiff) {
-          nsCOMPtr<nsISound> sound = do_CreateInstance("@mozilla.org/sound;1");
-          if (sound) {
-            rv = sound->PlaySystemSound("_moz_mailbeep");
-          } 
+  // See nsMsgStatusFeedback
+  nsresult rv;
+  
+  // if we got new mail, attempt to play a sound.
+  // if we fail along the way, don't return.
+  // we still need to update the UI.    
+  if (newBiffFlag == nsIMsgFolder::nsMsgBiffState_NewMail) {
+    nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    PRBool playSoundOnBiff = PR_FALSE;
+    rv = pref->GetBoolPref(PREF_PLAY_SOUND_ON_NEW_MAIL, &playSoundOnBiff);
+    if (NS_SUCCEEDED(rv) && playSoundOnBiff) {
+      if (!mSound)
+        mSound = do_CreateInstance("@mozilla.org/sound;1");
+      
+      rv = mSound->PlaySystemSound("_moz_mailbeep");
+    }
+  }
+  
+  nsCOMPtr<nsIWindowMediator> windowMediator = 
+    do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+  
+  // why use DOM window enumerator instead of XUL window...????
+  if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator))))
+  { 
+    PRBool more;
+    
+    windowEnumerator->HasMoreElements(&more);
+    
+    while(more)
+    {
+      nsCOMPtr<nsISupports> nextWindow = nsnull;
+      windowEnumerator->GetNext(getter_AddRefs(nextWindow));
+      nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(nextWindow));
+      NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
+      
+      nsCOMPtr<nsIDOMDocument> domDocument;
+      domWindow->GetDocument(getter_AddRefs(domDocument));
+      
+      if(domDocument)
+      {
+        nsCOMPtr<nsIDOMElement> domElement;
+        domDocument->GetElementById(NS_LITERAL_STRING("mini-mail"), getter_AddRefs(domElement));
+        
+        if (domElement) {
+          if (newBiffFlag == nsIMsgFolder::nsMsgBiffState_NewMail) {
+            domElement->SetAttribute(NS_LITERAL_STRING("BiffState"), NS_LITERAL_STRING("NewMail"));
+          }
+          else if (newBiffFlag == nsIMsgFolder::nsMsgBiffState_NoMail){
+            domElement->RemoveAttribute(NS_LITERAL_STRING("BiffState"));
+          }
         }
       }
+      
+      windowEnumerator->HasMoreElements(&more);
     }
-    
-    nsCOMPtr<nsIWindowMediator> windowMediator = 
-      do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-
-	// why use DOM window enumerator instead of XUL window...????
-	if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator))))
-	{ 
-		PRBool more;
-	
-		windowEnumerator->HasMoreElements(&more);
-
-		while(more)
-		{
-			nsCOMPtr<nsISupports> nextWindow = nsnull;
-			windowEnumerator->GetNext(getter_AddRefs(nextWindow));
-			nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(nextWindow));
-			NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
-
-			nsCOMPtr<nsIDOMDocument> domDocument;
-			domWindow->GetDocument(getter_AddRefs(domDocument));
-
-			if(domDocument)
-			{
-				nsCOMPtr<nsIDOMElement> domElement;
-				domDocument->GetElementById(NS_LITERAL_STRING("mini-mail"), getter_AddRefs(domElement));
-
-				if (domElement) {
-					if (newBiffFlag == nsIMsgFolder::nsMsgBiffState_NewMail) {
-						domElement->SetAttribute(NS_LITERAL_STRING("BiffState"), NS_LITERAL_STRING("NewMail"));
-					}
-					else if (newBiffFlag == nsIMsgFolder::nsMsgBiffState_NoMail){
-						domElement->RemoveAttribute(NS_LITERAL_STRING("BiffState"));
-					}
-				}
-			}
-			
-			windowEnumerator->HasMoreElements(&more);
-		}
-
-	}
+  }
 
 	return NS_OK;
 }
