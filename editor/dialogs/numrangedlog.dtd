@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<!ENTITY StopIconLocation "image">
-<!ENTITY OutOfRangeSentence "The number you have entered is out of range.">
-<!ENTITY NumberRequestLabel "Please enter a number between:">
-<!ENTITY MinimumNumberLabel "Minimum Number:  %d">
-<!ENTITY MaxmumNumberLabel "Maximum Number:  %d">
-<!ENTITY OKButton "OK">

@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<!ENTITY FindLabelAndButton "Find">
-<!ENTITY ReplaceLabelAndButton "Replace">
-<!ENTITY ReplaceAndFindButton "Replace &amp; Find">
-<!ENTITY ReplaceAllButton "Replace All">
-<!ENTITY StopButton "Stop">
-<!ENTITY CaseSensitiveCheckboxLabel "Case Sensitive">
-<!ENTITY SearchBackwordsCheckboxLabel "Search Backwards">
-<!ENTITY WrapSearchCheckboxLabel "Wrap Search">
