@@ -63,7 +63,7 @@ pref("mail.threadpane.outliner_geometry", "");
 pref("mail.threadpane.messagepane_height", 400);
 
 // Customizable toolbar stuff
-pref("custtoolbar.personal_toolbar_folder", "Personal Toolbar Folder");
+pref("custtoolbar.personal_toolbar_folder", "");
 pref("custtoolbar.has_toolbar_folder", true);
 pref("custtoolbar.Browser.Navigation_Toolbar.position", 0);
 pref("custtoolbar.Browser.Navigation_Toolbar.showing", true);

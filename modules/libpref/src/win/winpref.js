@@ -34,7 +34,7 @@ pref("news.thread_columns_win",             "");
 pref("category.thread_columns_win",         "");
 pref("news.category_columns_win",           "");
 
-pref("custtoolbar.personal_toolbar_folder",                     "x234htz7");
+pref("custtoolbar.personal_toolbar_folder",                     "");
 pref("custtoolbar.has_toolbar_folder",                          true);
 pref("custtoolbar.personal_toolbar.Version",                    "");
 pref("custtoolbar.Browser.Navigation_Toolbar.position",         0);
