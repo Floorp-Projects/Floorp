@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.206 $ ';
+$::UtilsVersion = '$Revision: 1.207 $ ';
 
 package TinderUtils;
 
@@ -1970,7 +1970,15 @@ sub QATest {
 
 
     # Post-process log of test output.
+    open QATEST, "perl $build_dir/../qatest.pl $build_dir/QATest.log|"
+      or die "Unable to run qatest.pl";
+    while (<QATEST>) {
+      print_log $_;
+    }
+    close QATEST;
 
+    # Ok I have the data here, how do I show it?
+    print_log "TinderboxPrint: <a href=\"http://www.nytimes.com\")>A</A>\n";
 
     return $rv;  # Hard-coded for now.
 }
