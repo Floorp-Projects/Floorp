@@ -37,6 +37,8 @@
 #include "nsIFormManager.h"
 #include "nsIImageMap.h"
 
+#include "nsRepository.h"
+
 // XXX attribute values have entities in them - use the parsers expander!
 
 // XXX Go through a factory for this one
@@ -149,6 +151,8 @@ protected:
                          const nsIParserNode& aNode);
   nsresult ProcessSPACERTag(nsIHTMLContent** aInstancePtrResult,
                             const nsIParserNode& aNode);
+  nsresult ProcessTEXTAREATag(nsIHTMLContent** aInstancePtrResult,
+                              const nsIParserNode& aNode);
   nsresult ProcessWBRTag(nsIHTMLContent** aInstancePtrResult,
                          const nsIParserNode& aNode);
 
@@ -157,6 +161,10 @@ protected:
   void GetAttributeValueAt(const nsIParserNode& aNode,
                            PRInt32 aIndex,
                            nsString& aResult);
+
+  PRBool FindAttribute(const nsIParserNode& aNode,
+                       const nsString& aKeyName,
+                       nsString& aResult);
 
   nsresult AddAttributes(const nsIParserNode& aNode,
                          nsIHTMLContent* aInstancePtrResult);
@@ -345,6 +353,7 @@ PRBool HTMLContentSink::CloseBody(const nsIParserNode& aNode)
   return PR_TRUE;
 }
 
+static NS_DEFINE_IID(kIFormManagerIID, NS_IFORMMANAGER_IID);
 
 PRBool HTMLContentSink::OpenForm(const nsIParserNode& aNode)
 {
@@ -356,12 +365,48 @@ PRBool HTMLContentSink::OpenForm(const nsIParserNode& aNode)
     mCurrentForm = nsnull;
   }
 
-  // Create new form
-  nsAutoString tmp(aNode.GetText());
-  tmp.ToUpperCase();
-  nsIAtom* atom = NS_NewAtom(tmp);
-  nsresult rv = NS_NewHTMLForm(&mCurrentForm, atom);
-  NS_RELEASE(atom);
+  nsresult rv;
+  nsAutoString classID;
+  if (FindAttribute(aNode, "classid", classID)) {
+    // Translate classid string into an nsID
+    char cbuf[50];
+    classID.ToCString(cbuf, sizeof(cbuf));
+    nsID clid;
+    if (clid.Parse(cbuf)) {
+      // Create a form manager using the repository
+      nsIFactory* fac;
+      rv = NSRepository::FindFactory(clid, &fac);
+      if (NS_OK == rv) {
+        rv = fac->CreateInstance(nsnull, kIFormManagerIID,
+                                 (void**)&mCurrentForm);
+#ifdef NS_DEBUG
+        if (NS_OK != rv) {
+          printf("OpenForm: can't create form manager instance: %d\n", rv);
+        }
+#endif
+        NS_RELEASE(fac);
+      }
+      else {
+#ifdef NS_DEBUG
+        printf("OpenForm: can't find '%s' in the repository\n", cbuf);
+#endif
+      }
+    }
+    else {
+#ifdef NS_DEBUG
+      printf("OpenForm: classID is invalid: '%s'\n", cbuf);
+#endif
+    }
+  }
+
+  if (nsnull == mCurrentForm) {
+    // Create new form
+    nsAutoString tmp(aNode.GetText());
+    tmp.ToUpperCase();
+    nsIAtom* atom = NS_NewAtom(tmp);
+    rv = NS_NewHTMLForm(&mCurrentForm, atom);
+    NS_RELEASE(atom);
+  }
 
   if (NS_OK == rv) {
     // Add tag attributes to the form
@@ -427,15 +472,10 @@ PRBool HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
       rv = NS_NewImageMap(&mCurrentMap, atom);
       if (NS_OK == rv) {
         // Look for name attribute and set the map name
-        PRInt32 ac = aNode.GetAttributeCount();
-        for (PRInt32 i = 0; i < ac; i++) {
-          const nsString& key = aNode.GetKeyAt(i);
-          if (key.EqualsIgnoreCase("name")) {
-            nsAutoString name;
-            GetAttributeValueAt(aNode, i, name);
-            name.StripWhitespace();     // XXX leading, trailing, interior non=-space ws is removed
-            mCurrentMap->SetName(name);
-          }
+        nsAutoString name;
+        if (FindAttribute(aNode, "name", name)) {
+          name.StripWhitespace();     // XXX leading, trailing, interior non=-space ws is removed
+          mCurrentMap->SetName(name);
         }
         // Add the map to the document
         ((nsHTMLDocument*)mDocument)->AddImageMap(mCurrentMap);
@@ -645,6 +685,9 @@ PRBool HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
     case eHTMLTag_spacer:
       rv = ProcessSPACERTag(&leaf, aNode);
       break;
+    case eHTMLTag_textarea:
+      ProcessTEXTAREATag(&leaf, aNode);
+      break;
     }
     break;
 
@@ -721,6 +764,22 @@ void HTMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
       // Mismatched quotes - leave them in
     }
   }
+}
+
+PRBool HTMLContentSink::FindAttribute(const nsIParserNode& aNode,
+                                      const nsString& aKeyName,
+                                      nsString& aResult)
+{
+  PRInt32 ac = aNode.GetAttributeCount();
+  for (PRInt32 i = 0; i < ac; i++) {
+    const nsString& key = aNode.GetKeyAt(i);
+    if (key.EqualsIgnoreCase(aKeyName)) {
+      // Get value and remove mandatory quotes
+      GetAttributeValueAt(aNode, i, aResult);
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
 }
 
 nsresult HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
@@ -969,45 +1028,40 @@ nsresult HTMLContentSink::ProcessINPUTTag(nsIHTMLContent** aInstancePtrResult,
   nsresult rv = NS_ERROR_NOT_INITIALIZED;
 
   // Find type attribute and then create the appropriate form element
-  PRInt32 ac = aNode.GetAttributeCount();
-  for (PRInt32 i = 0; i < ac; i++) {
-    const nsString& key = aNode.GetKeyAt(i);
-    if (key.EqualsIgnoreCase("type")) {
-      const nsString& val= aNode.GetValueAt(i);
-      if (val.EqualsIgnoreCase("submit")) {
-        rv = NS_NewHTMLInputSubmit(aInstancePtrResult, atom, mCurrentForm);
-      }
-      else if (val.EqualsIgnoreCase("reset")) {
-        rv = NS_NewHTMLInputReset(aInstancePtrResult, atom, mCurrentForm);
-      }
-      else if (val.EqualsIgnoreCase("button")) {
-        rv = NS_NewHTMLInputButton(aInstancePtrResult, atom, mCurrentForm);
-      }
-      else if (val.EqualsIgnoreCase("checkbox")) {
-        rv = NS_NewHTMLInputCheckbox(aInstancePtrResult, atom, mCurrentForm);
-      }
-      else if (val.EqualsIgnoreCase("file")) {
-        rv = NS_NewHTMLInputFile(aInstancePtrResult, atom, mCurrentForm);
-      }
-      else if (val.EqualsIgnoreCase("hidden")) {
-        rv = NS_NewHTMLInputHidden(aInstancePtrResult, atom, mCurrentForm);
-      }
-      else if (val.EqualsIgnoreCase("image")) {
-        rv = NS_NewHTMLInputImage(aInstancePtrResult, atom, mCurrentForm);
-      }
-      else if (val.EqualsIgnoreCase("password")) {
-        rv = NS_NewHTMLInputPassword(aInstancePtrResult, atom, mCurrentForm);
-      }
-      else if (val.EqualsIgnoreCase("radio")) {
-        rv = NS_NewHTMLInputRadio(aInstancePtrResult, atom, mCurrentForm);
-      }
-      else if (val.EqualsIgnoreCase("text")) {
-        rv = NS_NewHTMLInputText(aInstancePtrResult, atom, mCurrentForm);
-      }
-      else {
-        rv = NS_NewHTMLInputSubmit(aInstancePtrResult, atom, mCurrentForm);
-      }
-      break;
+  nsAutoString val;
+  if (FindAttribute(aNode, "type", val)) {
+    if (val.EqualsIgnoreCase("submit")) {
+      rv = NS_NewHTMLInputSubmit(aInstancePtrResult, atom, mCurrentForm);
+    }
+    else if (val.EqualsIgnoreCase("reset")) {
+      rv = NS_NewHTMLInputReset(aInstancePtrResult, atom, mCurrentForm);
+    }
+    else if (val.EqualsIgnoreCase("button")) {
+      rv = NS_NewHTMLInputButton(aInstancePtrResult, atom, mCurrentForm);
+    }
+    else if (val.EqualsIgnoreCase("checkbox")) {
+      rv = NS_NewHTMLInputCheckbox(aInstancePtrResult, atom, mCurrentForm);
+    }
+    else if (val.EqualsIgnoreCase("file")) {
+      rv = NS_NewHTMLInputFile(aInstancePtrResult, atom, mCurrentForm);
+    }
+    else if (val.EqualsIgnoreCase("hidden")) {
+      rv = NS_NewHTMLInputHidden(aInstancePtrResult, atom, mCurrentForm);
+    }
+    else if (val.EqualsIgnoreCase("image")) {
+      rv = NS_NewHTMLInputImage(aInstancePtrResult, atom, mCurrentForm);
+    }
+    else if (val.EqualsIgnoreCase("password")) {
+      rv = NS_NewHTMLInputPassword(aInstancePtrResult, atom, mCurrentForm);
+    }
+    else if (val.EqualsIgnoreCase("radio")) {
+      rv = NS_NewHTMLInputRadio(aInstancePtrResult, atom, mCurrentForm);
+    }
+    else if (val.EqualsIgnoreCase("text")) {
+      rv = NS_NewHTMLInputText(aInstancePtrResult, atom, mCurrentForm);
+    }
+    else {
+      rv = NS_NewHTMLInputSubmit(aInstancePtrResult, atom, mCurrentForm);
     }
   }
 
@@ -1020,6 +1074,33 @@ nsresult HTMLContentSink::ProcessINPUTTag(nsIHTMLContent** aInstancePtrResult,
     // Add remaining attributes from the tag
     rv = AddAttributes(aNode, *aInstancePtrResult);
   }
+
+  NS_RELEASE(atom);
+  return rv;
+}
+
+nsresult
+HTMLContentSink::ProcessTEXTAREATag(nsIHTMLContent** aInstancePtrResult,
+                                    const nsIParserNode& aNode)
+{
+  nsAutoString tmp(aNode.GetText());
+  tmp.ToUpperCase();
+  nsIAtom* atom = NS_NewAtom(tmp);
+
+  const nsString& content = aNode.GetSkippedContent();
+
+#if XXX_chris_karnaze_writes_this_part
+  nsresult rv = NS_NewHTMLTextArea(aInstancePtrResult, atom, mCurrentForm);
+  if ((NS_OK == rv) && (nsnull != *aInstancePtrResult)) {
+    // Add remaining attributes from the tag
+    rv = AddAttributes(aNode, *aInstancePtrResult);
+    if (0 < content.Length()) {
+      ((nsHTMLTextArea*)*aInstancePtrResult)->SetContent(content);
+    }
+  }
+#else
+  nsresult rv = NS_NewHTMLText(aInstancePtrResult, content.GetUnicode(), content.Length());
+#endif
 
   NS_RELEASE(atom);
   return rv;
