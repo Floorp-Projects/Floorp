@@ -1753,15 +1753,10 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
               // mouse is over the border.
               if (p.x < 0) p.x = 0;
               if (p.y < 0) p.y = 0;
-              nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
-              if (url) {
-                url->SetQuery(nsPrintfCString("%d,%d", p.x, p.y));
-              } else {
-                nsCAutoString spec;
-                uri->GetSpec(spec);
-                spec += nsPrintfCString("?%d,%d", p.x, p.y);
-                uri->SetSpec(spec);                
-              }
+              nsCAutoString spec;
+              uri->GetSpec(spec);
+              spec += nsPrintfCString("?%d,%d", p.x, p.y);
+              uri->SetSpec(spec);                
               
               PRBool clicked = PR_FALSE;
               if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
