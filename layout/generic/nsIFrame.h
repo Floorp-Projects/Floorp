@@ -1359,6 +1359,9 @@ NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::embeddingLevel))
   NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough)=0;
   NS_IMETHOD MarkChildrenStyleChange()=0;
   NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState)=0;
+  NS_IMETHOD SetIncludeOverflow(PRBool aInclude) = 0;
+  NS_IMETHOD GetOverflow(nsSize& aOverflow) = 0;
+
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug)=0;
   NS_IMETHOD GetDebug(PRBool& aDebug)=0;
