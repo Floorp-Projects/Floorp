@@ -461,8 +461,7 @@ nsGnomeVFSInputStream::DoOpen()
 
   GnomeVFSFileInfo info = {0};
   rv = gnome_vfs_get_file_info(mSpec.get(), &info, GNOME_VFS_FILE_INFO_DEFAULT);
-  if (rv == GNOME_VFS_OK && info.mime_type &&
-        (strcmp(info.mime_type, "x-directory/normal") == 0))
+  if (rv == GNOME_VFS_OK && info.type == GNOME_VFS_FILE_TYPE_DIRECTORY)
   {
     rv = gnome_vfs_directory_list_load(&mDirList, mSpec.get(),
                                        GNOME_VFS_FILE_INFO_DEFAULT);
