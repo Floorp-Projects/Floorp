@@ -467,6 +467,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                               int attributes)
         throws PropertyException
     {
+        final int mask = READONLY | DONTENUM | PERMANENT;
+        attributes &= mask; // mask out unused bits
         Slot slot = getSlot(null, index, false);
         if (slot == null) {
             throw PropertyException.withMessage0("msg.prop.not.found");
