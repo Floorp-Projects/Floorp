@@ -150,8 +150,7 @@ function addToUrlbarHistory()
                      .getService(Components.interfaces.nsIIOService);
        
        try {
-         var unused = { };
-         var scheme = ioService.extractScheme(urlToAdd, unused, unused);
+         ioService.extractScheme(urlToAdd, {}, {});
        } catch(e) {
          urlToAdd = "http://" + urlToAdd;
        }
@@ -173,8 +172,7 @@ function addToUrlbarHistory()
           var rdfValue = entry.Value;
 
           try {
-            var unused = { };
-            var scheme = ioService.extractScheme(rdfValue, unused, unused);
+            ioService.extractScheme(rdfValue, {}, {});
           } catch(e) {
             rdfValue = "http://" + rdfValue;
           }
