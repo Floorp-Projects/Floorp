@@ -59,7 +59,7 @@ PL_strnlen(const char *str, PRUint32 max)
     register const char *s;
 
     if( (const char *)0 == str ) return 0;
-    for( s = str; *s && max; s++, max-- )
+    for( s = str; max && *s; s++, max-- )
         ;
 
     return (PRUint32)(s - str);

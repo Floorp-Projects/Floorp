@@ -86,7 +86,7 @@ PL_strnstr(const char *big, const char *little, PRUint32 max)
     max -= ll;
     max++;
 
-    for( ; *big && max; big++, max-- )
+    for( ; max && *big; big++, max-- )
         if( *little == *big )
             if( 0 == PL_strncmp(big, little, ll) )
                 return (char *)big;
@@ -105,7 +105,7 @@ PL_strnrstr(const char *big, const char *little, PRUint32 max)
 
     ll = PL_strlen(little);
 
-    for( p = big; *p && max; p++, max-- )
+    for( p = big; max && *p; p++, max-- )
         ;
 
     p -= ll;

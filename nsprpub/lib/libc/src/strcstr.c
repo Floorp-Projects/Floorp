@@ -86,7 +86,7 @@ PL_strncasestr(const char *big, const char *little, PRUint32 max)
     max -= ll;
     max++;
 
-    for( ; *big && max; big++, max-- )
+    for( ; max && *big; big++, max-- )
         /* obvious improvement available here */
             if( 0 == PL_strncasecmp(big, little, ll) )
                 return (char *)big;
@@ -105,7 +105,7 @@ PL_strncaserstr(const char *big, const char *little, PRUint32 max)
 
     ll = PL_strlen(little);
 
-    for( p = big; *p && max; p++, max-- )
+    for( p = big; max && *p; p++, max-- )
         ;
 
     p -= ll;
