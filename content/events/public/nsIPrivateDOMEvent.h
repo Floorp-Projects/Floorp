@@ -83,5 +83,7 @@ nsresult
 NS_NewDOMPopupBlockedEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, struct nsPopupBlockedEvent* aEvent);
 nsresult
 NS_NewDOMTextEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, struct nsTextEvent* aEvent);
+nsresult
+NS_NewDOMBeforeUnloadEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, struct nsBeforePageUnloadEvent* aEvent);
 
 #endif // nsIPrivateDOMEvent_h__

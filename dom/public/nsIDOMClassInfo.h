@@ -242,6 +242,8 @@ enum nsDOMClassInfoID {
 
   eDOMClassInfo_CSSMozDocumentRule_id,
 
+  eDOMClassInfo_BeforeUnloadEvent_id,
+
 #ifdef MOZ_SVG
   // The SVG document
   eDOMClassInfo_SVGDocument_id,
