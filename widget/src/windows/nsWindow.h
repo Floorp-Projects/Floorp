@@ -302,6 +302,13 @@ public:
     void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
 
 protected:
+    // special callback hook methods for pop ups
+    static LRESULT CALLBACK MozSpecialMsgFilter(int code, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK MozSpecialWndProc(int code, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK MozSpecialMouseProc(int code, WPARAM wParam, LPARAM lParam);
+
+    static void             RegisterSpecialDropdownHooks();
+    static void             UnregisterSpecialDropdownHooks();
 
     static  BOOL            DealWithPopups ( UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESULT* outResult ) ;
 
