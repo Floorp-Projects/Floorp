@@ -1960,7 +1960,7 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 
 	foreach $key (keys(%dupes))
 	{
-		$dupes{$key} =~ s/.*This bug has been marked as a duplicate of (\d{1,5}).*/$1/;
+		$dupes{$key} =~ s/.*This bug has been marked as a duplicate of (\d{1,5}).*/$1/sm;
 		$dbh->do("INSERT INTO duplicates VALUES('$dupes{$key}', '$key')");
 		#										 BugItsADupeOf   Dupe
 	}
