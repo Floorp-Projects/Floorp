@@ -85,6 +85,7 @@ nsMimeEmitter::StartHeader(PRBool rootMailHeader)
 {
   mDocHeader = rootMailHeader;
 
+  UtilityWrite("<img src=\"file://N:/MHTML/draft.eml?part=1.2\">");
   if (mDocHeader)
     UtilityWrite("<table BORDER=0 BGCOLOR=\"#99FF99\" >");
   else
@@ -128,6 +129,9 @@ nsMimeEmitter::EndHeader()
   return NS_OK;
 }
 
+// Note - these is setup only...you should not write
+// anything to the stream since these may be image data
+// output streams, etc...
 nsresult       
 nsMimeEmitter::Initialize(nsINetOStream *outStream)
 {
@@ -140,10 +144,12 @@ nsMimeEmitter::Initialize(nsINetOStream *outStream)
   mTotalWritten = 0;
   mTotalRead = 0;
 
-  UtilityWrite("<HTML>");
   return NS_OK;
 }
 
+// Note - this is teardown only...you should not write
+// anything to the stream since these may be image data
+// output streams, etc...
 nsresult
 nsMimeEmitter::Complete()
 {
@@ -156,8 +162,6 @@ nsMimeEmitter::Complete()
 
   printf("TOTAL WRITTEN = %d\n", mTotalWritten);
   printf("LEFTOVERS     = %d\n", mBufferMgr->GetSize());
-
-  UtilityWrite("</HTML>");
 
   return NS_OK;
 }
@@ -273,8 +277,8 @@ nsMimeEmitter::UtilityWrite(const char *buf)
 nsresult
 nsMimeEmitter::StartBody()
 {
+#ifdef rhp_DEBUG
   UtilityWrite("<BR>");
-#ifdef NS_DEBUG
   UtilityWrite("<B>============== STARTING BODY ==============</B>");
   UtilityWrite("<BR>");
 #endif
@@ -293,8 +297,8 @@ nsMimeEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten
 nsresult
 nsMimeEmitter::EndBody()
 {
+#ifdef rhp_DEBUG
   UtilityWrite("<BR>");
-#ifdef NS_DEBUG
   UtilityWrite("<B>============== ENDING BODY ==============</B>");
   UtilityWrite("<BR>");
 #endif
