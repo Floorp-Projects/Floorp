@@ -76,9 +76,17 @@ interface nsIXULWindow : nsISupports
 		out boolean persistCX, out boolean persistCY,
 		out boolean persistSizeMode);
 
-   /*
+	/*
 	Shows the window as a modal window
 	*/
 	void showModal();
+
+	const unsigned long lowestZ = 0;
+	const unsigned long loweredZ = 4;  /* "alwaysLowered" attribute */
+	const unsigned long normalZ = 5;
+	const unsigned long raisedZ = 6;   /* "alwaysRaised" attribute */
+	const unsigned long highestZ = 9;
+
+	readonly attribute unsigned long zlevel;
 };
 
