@@ -232,7 +232,6 @@ void nsRenderingContextMac::SelectDrawingSurface(nsDrawingSurfaceMac* aSurface, 
 	if (!mContext) return;
 	
 	// GS and context initializations
-	((nsDeviceContextMac *)mContext)->SetDrawingSurface(mPort);
 #if 0
 	((nsDeviceContextMac *)mContext)->InstallColormap();
 #endif

@@ -78,7 +78,6 @@ PRUint32 nsDeviceContextMac::sNumberOfScreens = 0;
  */
 nsDeviceContextMac :: nsDeviceContextMac()
   : DeviceContextImpl(),
-    mSurface(nsnull),
     mOldPort(nsnull)
 {
 }
@@ -696,7 +695,6 @@ GrafPtr	thePort;
  		::GetPort(&mOldPort);
  		thePort = (GrafPtr)::PrOpenDoc(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrtRec,nsnull,nsnull);
   	((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrinterPort = (TPrPort*)thePort;
-  	SetDrawingSurface(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrtRec);
   	SetPort(thePort);
   }
   return NS_OK;
