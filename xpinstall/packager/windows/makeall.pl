@@ -61,9 +61,11 @@ if(!(-e "$inDistPath"))
   system("mkdir $inDestPath");
 }
 
-MakeJsFile();
+# Make .js files
+MakeJsFile("core");
+MakeJsFile("mail");
 
-# Make all xpi files
+# Make .xpi files
 MakeXpiFile("core");
 MakeXpiFile("mail");
 
@@ -104,14 +106,12 @@ sub MakeConfigFile
 
 sub MakeJsFile
 {
-  # Make .js files
-  @jstFiles = <*.jst>;
-  foreach $jst (@jstFiles)
+  my($componentName) = @_;
+
+  # Make .js file
+  if(system("perl makejs.pl $componentName.jst $inDefaultVersion $inStagePath\\$componentName") != 0)
   {
-    if(system("perl makejs.pl $jst $inDefaultVersion") != 0)
-    {
-      exit(1);
-    }
+    exit(1);
   }
 }
 

@@ -269,11 +269,11 @@ Message=Preparing SmartUpdate, please wait...
 ;Destination=[SETUP PATH]\program
 
 ;Copy FileX sections
-;[Copy File0]
-;Timing=post launchapp
-;Source=[WINDISK]\Progra~1\JavaSoft\JRE\1.2.2\bin\npjava*.dll
-;Destination=[SETUP PATH]\components
-;Fail If Exists=FALSE
+[Copy File0]
+Timing=post launchapp
+Source=[JRE BIN PATH]\npjava*.dll
+Destination=[SETUP PATH]\Plugins
+Fail If Exists=FALSE
 
 ;[Copy File1]
 ;Timing=post launchapp
