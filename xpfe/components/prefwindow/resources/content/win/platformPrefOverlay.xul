@@ -30,9 +30,7 @@
 
   <script language="JavaScript">
   <![CDATA[
-    dump("*** in platformPrefOverlay for windows\n");
-    if (_elementIDs != undefined)
-      _elementIDs.push("browserUseWindowsColors");
+    _elementIDs.push("browserUseWindowsColors");
   ]]>
   </script>         
 

@@ -8,7 +8,6 @@ function newType()
   if (gNewTypeRV) {
     //gTree.builder.rebuild();
     gTree.setAttribute("ref", "urn:mimetypes");
-    selectApplication();
     gNewTypeRV = null;
   }
 }
@@ -34,7 +33,9 @@ function editType()
   if (gTree.selectedItems && gTree.selectedItems[0]) {
     var uri = gTree.selectedItems[0].id;
     var handlerOverride = new HandlerOverride(uri);
+    dump("*** foopy\n");
     window.openDialog("chrome://communicator/content/pref/pref-applications-edit.xul", "appEdit", "chrome,modal=yes,resizable=no", handlerOverride);
+    dump("*** foopy\n");
     selectApplication();
   }
 }
@@ -80,7 +81,7 @@ function Startup()
 
 function selectApplication()
 {
-  if (gTree.selectedItems && gTree.selectedItems[0]) {
+  if (gTree.selectedItems && gTree.selectedItems.length && gTree.selectedItems[0]) {
     var uri = gTree.selectedItems[0].id;
     var handlerOverride = new HandlerOverride(uri);
     gExtensionField.setAttribute("value", handlerOverride.extensions);
@@ -88,9 +89,9 @@ function selectApplication()
     
     // figure out how this type is handled
     if (handlerOverride.handleInternal == "true")
-      gHandlerField.setAttribute("value", "Handled Internally"); // gBundle.GetStringFromName("handleInternally"));
+      gHandlerField.setAttribute("value", gBundle.GetStringFromName("handleInternally"));
     else if (handlerOverride.saveToDisk == "true")
-      gHandlerField.setAttribute("value", "Save to Disk"); // gBundle.GetStringFromName("saveToDisk"));
+      gHandlerField.setAttribute("value", gBundle.GetStringFromName("saveToDisk"));
     else 
       gHandlerField.setAttribute("value", handlerOverride.appDisplayName);
 
