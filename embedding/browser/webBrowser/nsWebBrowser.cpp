@@ -64,7 +64,7 @@ static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
 //*****************************************************************************
 
 nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull), 
-   mContentListener(nsnull), mInitInfo(nsnull), mContentType(typeContentWrapper),
+   mInitInfo(nsnull), mContentType(typeContentWrapper),
    mParentNativeWindow(nsnull), mParentWidget(nsnull), mParent(nsnull),
    mProgressListener(nsnull), mListenerArray(nsnull), mFindImpl(nsnull)
 {
@@ -95,11 +95,6 @@ NS_IMETHODIMP nsWebBrowser::InternalDestroy()
       {
       mDocShellTreeOwner->WebBrowser(nsnull);
       NS_RELEASE(mDocShellTreeOwner);
-      }
-   if(mContentListener)
-      {
-      mContentListener->WebBrowser(nsnull);
-      NS_RELEASE(mContentListener);
       }
    if(mInitInfo)
       {
@@ -302,17 +297,20 @@ NS_IMETHODIMP nsWebBrowser::GetParentURIContentListener(nsIURIContentListener**
    aParentContentListener)
 {
    NS_ENSURE_ARG_POINTER(aParentContentListener);
-   NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
 
-   return mContentListener->GetParentContentListener(aParentContentListener);
+   nsCOMPtr<nsIURIContentListener> listener(do_QueryInterface(mDocShell));
+   NS_ASSERTION(listener, "docshell is no longer a content listner");
+
+   return listener->GetParentContentListener(aParentContentListener);
 }
 
 NS_IMETHODIMP nsWebBrowser::SetParentURIContentListener(nsIURIContentListener*
    aParentContentListener)
 {
-   NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
+   nsCOMPtr<nsIURIContentListener> listener(do_QueryInterface(mDocShell));
+   NS_ASSERTION(listener, "docshell is no longer a content listner");
 
-   return mContentListener->SetParentContentListener(aParentContentListener);
+   return listener->SetParentContentListener(aParentContentListener);
 }
 
 NS_IMETHODIMP nsWebBrowser::GetContentDOMWindow(nsIDOMWindow **_retval)
@@ -857,7 +855,6 @@ NS_IMETHODIMP nsWebBrowser::Create()
    NS_ENSURE_STATE(!mDocShell && (mParentNativeWindow || mParentWidget));
 
    NS_ENSURE_SUCCESS(EnsureDocShellTreeOwner(), NS_ERROR_FAILURE);
-   NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIWidget> docShellParentWidget(mParentWidget);
    if(!mParentWidget) // We need to create a widget
@@ -936,7 +933,6 @@ NS_IMETHODIMP nsWebBrowser::Create()
        mDocShellAsItem->SetItemType(nsIDocShellTreeItem::typeContent);
    }
    mDocShellAsItem->SetTreeOwner(mDocShellTreeOwner);
-   mDocShell->SetParentURIContentListener(mContentListener);
    
    // If the webbrowser is a content docshell item then we won't hear any
    // events from subframes. To solve that we install our own chrome event handler
@@ -1399,20 +1395,6 @@ NS_IMETHODIMP nsWebBrowser::EnsureDocShellTreeOwner()
 
    NS_ADDREF(mDocShellTreeOwner);
    mDocShellTreeOwner->WebBrowser(this);
-   
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsWebBrowser::EnsureContentListener()
-{
-   if(mContentListener)
-      return NS_OK;
-
-   mContentListener = new nsWBURIContentListener();
-   NS_ENSURE_TRUE(mContentListener, NS_ERROR_OUT_OF_MEMORY);
-
-   NS_ADDREF(mContentListener);
-   mContentListener->WebBrowser(this);
    
    return NS_OK;
 }
