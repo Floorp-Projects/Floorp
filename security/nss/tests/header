@@ -516,7 +516,7 @@ tbx_dirs()
 
 ################################### init_mcom ###########################
 # global shell function, sets domain specific variables for AOL's 
-# domains according to Bishakah's instructions
+# domains according to Bishakha's instructions
 ########################################################################
 init_mcom()
 {
@@ -526,15 +526,16 @@ init_mcom()
         UX_MASTERBUILD=spd04_Solaris8
     fi
     if [ "${NT_MB_WAS_SET}" = "FALSE" ] ; then 
-        UX_MASTERBUILD=spd06_NT4
+        NT_MASTERBUILD=spd06_NT4
     fi
+ 
     MASTERBUILD=$UX_MASTERBUILD
     if [ "${BC_MASTER_WAS_SET}" = "FALSE" ] ; then
-        BC_UX_MASTER=nss332/builds/20011213.1/spd04_Solaris8
-        BC_UX_MASTER=nss332/builds/20011213.1/spd06_NT4
+        BC_UX_MASTER=nss322/builds/20010820.1/y2sun2_Solaris8
+        BC_NT_MASTER=nss322/builds/20010820.1/blowfish_NT4.0_Win95
         BC_MASTER=$BC_UX_MASTER
     fi
-    UX_D0=/share/builds/components2/mccrel/nss
+    UX_D0=/share/builds/sbsrel2/nss
 }
 ################################### init_dirs ###########################
 # global shell function, sets the directories for standard QA
@@ -898,8 +899,8 @@ eval_opts()
           Debug "NSS Version: Parameters missing - defaulting to tip!"
       fi
   elif [ -z "$NSSVER" ] ; then
-      NSSVER="341"
-      Debug "NSS Version: Parameters missing - defaulting to 341!"
+      NSSVER="tip"
+      Debug "NSS Version: Parameters missing - defaulting to tip!"
   fi
   if [ -z "$BUILDDATE" ] ; then
       BUILDDATE=`date +%m%d`
