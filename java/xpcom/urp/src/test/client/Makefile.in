@@ -45,6 +45,7 @@ CPPSRCS  =   \
 LIBS            = -L./ -L$(DIST)/bin/components/ $(XPCOM_LIBS) $(NSPR_LIBS) $(EXTRA_DSO_LIBS) \
       ../../urpStub.o \
       ../../urpMarshalToolkit.o \
+      ../../urpLog.o \
       ../../urpManager.o \
       ../../transport/llTransport.o ../../transport/urpPacket.o \
       ../../transport/urpTransport.o \

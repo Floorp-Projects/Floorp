@@ -46,7 +46,7 @@ initImpl::initImpl() {
                                         (void**)&serverComponent);
   if (NS_FAILED(rv)) {
         printf("Create instance failed in initImpl!!!");
-	exit(-1);
+//	exit(-1);
   }
 /*
   rv = nsComponentManager::CreateInstance("urpTest",
@@ -55,7 +55,7 @@ initImpl::initImpl() {
                                         (void**)&anComp);
   if (NS_FAILED(rv)) {
         printf("Create instance failed in initImpl sec!!!");
-	exit(-1);
+//	exit(-1);
   }
 */
   int l = 2000;

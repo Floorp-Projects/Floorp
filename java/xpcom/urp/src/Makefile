@@ -41,6 +41,7 @@ CPPSRCS =  \
      urpMarshalToolkit.cpp \
      urpManager.cpp   \
      urpStub.cpp \
+     urpLog.cpp \
      $(NULL)
      
 EXPORTS = \

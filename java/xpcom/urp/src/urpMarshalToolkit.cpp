@@ -30,6 +30,7 @@
 #include "urpMarshalToolkit.h"
 #include <unistd.h>
 #include "urpStub.h"
+#include "urpLog.h"
 
 
 #include "nsIModule.h"
@@ -71,13 +72,14 @@ urpMarshalToolkit::WriteElement(bcIUnMarshaler *um, nsXPTParamInfo * param, uint
 	void* data = allocator->Alloc(sizeof(void*));
 	nsID *id;
 	char* help;
+	PRLogModuleInfo *log = urpLog::GetLog();
    	nsresult r = NS_OK;
 	switch(type) {
                 case nsXPTType::T_IID    :
 		  id = new nsID();
 		  um->ReadSimple(id,XPTType2bcXPType(type));
 		  help = ((nsID)(*id)).ToString();
-		  printf("nsIID %s\n", help);
+		  PR_LOG(log, PR_LOG_DEBUG, ("nsIID %s\n", help));
 		  message->WriteString(help, strlen(help));
 		  delete id;
 		  PR_Free(help);
@@ -542,9 +544,7 @@ urpMarshalToolkit::WriteType(bcIID iid, urpPacket* message) {
 	      cache_index = (short)0xffff;
 	   
 	   message->WriteByte((char)typeClass | (found ? 0x0 : 0x80));
-printf("write type is %x\n",(char)typeClass | (found ? 0x0 : 0x80));
 	   message->WriteShort(cache_index);
-printf("write type is %x\n",cache_index);
 
 	   if(!found) {
 		char* iidStr = iid.ToString();
@@ -574,9 +574,10 @@ void
 urpMarshalToolkit::WriteOid(bcOID oid, urpPacket* message) {
 	short cache_index;
 	int found = 0;
+	PRLogModuleInfo *log = urpLog::GetLog();
 
 	if(0) { // here should be checking on whether cache is used
-	   printf("cache is used\n");
+	   PR_LOG(log, PR_LOG_DEBUG, ("cache is used\n"));
 	   cache_index = 0x0;
 	}
 	else
@@ -613,8 +614,9 @@ urpMarshalToolkit::WriteThreadID(bcTID tid, urpPacket* message) {
 	realTID[2] = (tid>>8) & 0xff;
 	realTID[3] = tid & 0xff;
 
+	PRLogModuleInfo *log = urpLog::GetLog();
 	if(0) { // here should be checking on whether cache is used
-	   printf("cache is used\n");
+	   PR_LOG(log, PR_LOG_DEBUG, ("cache is used\n"));
 	   cache_index = 0x0;
 	}
 	else

@@ -43,6 +43,7 @@ EXTRA_DSO_LDOPTS += \
       ../transport/urpTransport.o \
       ../urpStub.o \
       ../urpMarshalToolkit.o \
+      ../urpLog.o \
       ../urpManager.o 
 
 CXXFLAGS        += -I../transport/ $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -D_REENTRANT -DOJI_DISABLE -I$(CONNECT_SRC)/public

@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include "urpStub.h"
 #include "urpMarshalToolkit.h"
+#include "urpLog.h"
 
 
 #include "nsIModule.h"
@@ -150,7 +151,7 @@ urpManager::urpManager(PRBool IsClient, bcIORB *orb, urpConnection* conn) {
                                                   0);
 	if(thr == nsnull) {
 	   printf("Error couldn't run listener\n");
-	   exit(-1);
+//	   exit(-1);
 	}
     } else
 	threadTable = new nsHashtable(20);
@@ -170,7 +171,8 @@ void urpManager::SendUrpRequest(bcOID oid, bcIID iid,
 			  bcICall *call,
 			  PRUint32 paramCount, const nsXPTMethodInfo* info,
 			  urpConnection* connection) {
-	printf("this is method sendUrpRequest and mid is %x\n",methodIndex);
+	PRLogModuleInfo *log = urpLog::GetLog();
+	PR_LOG(log, PR_LOG_DEBUG, ("this is method sendUrpRequest and mid is %x\n",methodIndex));
 	long size = 0;
 	long messagesCount = 0;
 	urpPacket* message = new urpPacket();
@@ -225,11 +227,11 @@ void urpManager::SendUrpRequest(bcOID oid, bcIID iid,
 		thrID = *(bcTID*)thr;
 	   else {
 		printf("Error with threads in SendUrpRequest\n");
-		exit(-1);
+//		exit(-1);
 	   }
 	} else
 	   thrID = (bcTID)PR_GetCurrentThread();
-printf("OID is written %ld %ld\n", oid, thrID);
+	PR_LOG(log, PR_LOG_DEBUG, ("OID is written %ld %ld\n", oid, thrID));
 	mt->WriteThreadID(thrID, message);
 	broker = call->GetORB();
 	mt->WriteParams(call, paramCount, info, interfaceInfo, message, methodIndex);
@@ -239,7 +241,8 @@ printf("OID is written %ld %ld\n", oid, thrID);
 }
 
 void urpManager::TransformMethodIDAndIID() {
-	printf("this is method transformMethodIDAndIID\n");
+	PRLogModuleInfo *log = urpLog::GetLog();
+	PR_LOG(log, PR_LOG_DEBUG, ("this is method transformMethodIDAndIID\n"));
 }
 
 nsresult
@@ -249,7 +252,8 @@ urpManager::ReadReply(urpPacket* message, char header,
 		    nsIInterfaceInfo *interfaceInfo, PRUint16 methodIndex,
 		    urpConnection* conn) {
 	nsresult rv = NS_OK;
-        printf("this is method readReply\n");
+	PRLogModuleInfo *log = urpLog::GetLog();
+        PR_LOG(log, PR_LOG_DEBUG, ("this is method readReply\n"));
 	if(methodIndex != 1 && methodIndex != 2) {
 	   urpMarshalToolkit* mt = new urpMarshalToolkit(PR_TRUE); 
 	   rv = mt->ReadParams(paramCount, info, message, interfaceInfo, methodIndex, call, broker, this, conn);
@@ -422,7 +426,7 @@ urpManager::ReadLongRequest(char header, urpPacket* message,
 	   if(clientTID) {
 	      if(thrID != tid) {
 		 printf("Error: threadIDs are not equal in ReadLongRequest\n");
-		 exit(-1);
+//		 exit(-1);
 	      }
 	   } else 
 	      threadTable->Put(&thrHK, &tid);
@@ -430,7 +434,8 @@ urpManager::ReadLongRequest(char header, urpPacket* message,
 
 	urpMarshalToolkit* mt = new urpMarshalToolkit(PR_FALSE);
 
-printf("method readLongRequest: tid %ld %ld\n",tid,oid);
+	PRLogModuleInfo *log = urpLog::GetLog();
+	PR_LOG(log, PR_LOG_DEBUG, ("method readLongRequest: tid %ld %ld\n",tid,oid));
 	char ignore_cache = ((header & IGNORECACHE) != 0); // do not use cache for this request?
 
         char mustReply;
@@ -456,9 +461,11 @@ printf("method readLongRequest: tid %ld %ld\n",tid,oid);
 	    delete mt;
             return NS_ERROR_FAILURE;
         }
+/*
 char* name;
   interfaceInfo->GetName(&name);
   printf("in handleRequest interface name is %s\n",name);
+*/
         nsXPTMethodInfo* info;
         interfaceInfo->GetMethodInfo(methodId,(const nsXPTMethodInfo **)&info);
 	PRUint32 paramCount = info->GetParamCount();
@@ -479,7 +486,8 @@ nsresult
 urpManager::SetCall(bcICall* call, PRMonitor *m, bcTID thrID) {
 	monitCall* mc;
 // = new monitCall(m, call, nsnull, 0);
-printf("method SetCall %p %p %p %ld\n",call, m, this, thrID);
+	PRLogModuleInfo *log = urpLog::GetLog();
+	PR_LOG(log, PR_LOG_DEBUG, ("method SetCall %p %p %p %ld\n",call, m, this, thrID));
         threadHashKey thrHK(thrID);
 	if(!(mc = (monitCall*)monitTable->Get(&thrHK))) {
 	   PR_INIT_CLIST((PRCList*)m);
@@ -493,7 +501,8 @@ printf("method SetCall %p %p %p %ld\n",call, m, this, thrID);
 
 nsresult
 urpManager::RemoveCall(forReply* fR, bcTID thrID) {
-printf("method RemoveCall\n");
+	PRLogModuleInfo *log = urpLog::GetLog();
+	PR_LOG(log, PR_LOG_DEBUG, ("method RemoveCall\n"));
         threadHashKey thrHK(thrID);
         monitCall* mc = (monitCall*)monitTable->Get(&thrHK);
 	fR->mess= mc->mess;
@@ -505,7 +514,7 @@ printf("method RemoveCall\n");
 	      mc = (monitCall*)monitTable->Remove(&thrHK);
 	      delete mc;
 	   } else {
-	      printf("It is not error\n");
+	      PR_LOG(log, PR_LOG_DEBUG, ("It is not error\n"));
 	   }
 	} else {
 	   fR->iid = mc->iid;
@@ -529,7 +538,7 @@ urpManager::GetThread() {
         thrID = *(bcTID*)thr;
      else {
         printf("Error with threads in SendUrpRequest\n");
-        exit(-1);
+//        exit(-1);
      }
   } else
      thrID = (bcTID)PR_GetCurrentThread();

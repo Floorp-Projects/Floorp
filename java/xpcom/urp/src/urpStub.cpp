@@ -28,6 +28,7 @@
 #include "urpStub.h"
 
 #include "urpManager.h"
+#include "urpLog.h"
 
 
 urpStub::urpStub(urpManager* man, urpConnection* conn) {
@@ -38,14 +39,16 @@ _mOwningThread = PR_CurrentThread();
 
 
 urpStub::~urpStub() {
-printf("destructor of urpStub\n");
+  PRLogModuleInfo *log = urpLog::GetLog();
+  PR_LOG(log, PR_LOG_DEBUG, ("destructor of urpStub\n"));
   if(manager) 
      delete manager;
 }
 
 void urpStub::Dispatch(bcICall *call) {
     
-  printf("this is method Dispatch of urpStub\n");
+  PRLogModuleInfo *log = urpLog::GetLog();
+  PR_LOG(log, PR_LOG_DEBUG, ("this is method Dispatch of urpStub\n"));
   bcIID iid; bcOID oid; bcMID mid;
   call->GetParams(&iid, &oid, &mid);
   nsIInterfaceInfo *interfaceInfo;
@@ -60,19 +63,18 @@ void urpStub::Dispatch(bcICall *call) {
   }
   char* name;
   interfaceInfo->GetName(&name);
-  printf("real interface name is %s\n",name);
+  PR_LOG(log, PR_LOG_DEBUG, ("real interface name is %s\n",name));
 
   nsXPTMethodInfo* info;
   interfaceInfo->GetMethodInfo(mid, (const nsXPTMethodInfo **)&info);
   PRUint32 paramCount = info->GetParamCount();
   PRMonitor* mon = PR_NewMonitor();
   PR_EnterMonitor(mon);
-printf("ThreadID is written %d %p %p %p %p\n",paramCount, call, mon, manager, this);
   bcTID tid = manager->GetThread();
   nsresult rv = manager->SetCall(call, mon, tid);
   if(NS_FAILED(rv)) {
      printf("Error of SetCall in method Dispatch\n");
-     exit(-1);
+//     exit(-1);
   }
   manager->SendUrpRequest(oid, iid, mid, interfaceInfo, call, paramCount,
 		 info, connection);
@@ -81,7 +83,7 @@ printf("ThreadID is written %d %p %p %p %p\n",paramCount, call, mon, manager, th
     fR->request = 0;
     if(NS_FAILED(PR_Wait(mon, PR_INTERVAL_NO_TIMEOUT))) {
 	printf("Can't wait on cond var\n");
-	exit(-1);
+//	exit(-1);
     }
     rv = manager->RemoveCall(fR, tid);
     if(fR->request) 

@@ -85,7 +85,7 @@ nsIInterfaceInfo *interfaceInfo;
     PRStatus status = transport->Open(connectString);
     if(status != PR_SUCCESS) {
         printf("Error during opening connection\n");
-        exit(-1);
+//        exit(-1);
     }
     urpConnection* conn = transport->GetConnection();
     urpManager* man = new urpManager(PR_TRUE, nsnull, conn);

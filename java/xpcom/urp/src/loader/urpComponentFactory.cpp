@@ -26,6 +26,8 @@
 #include "urpIConnectComponent.h"
 #include "urpConnectComponentCID.h"
 
+#include "../urpLog.h"
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(urpComponentFactory, nsIFactory)
 
 static NS_DEFINE_CID(kConnectComponent,URP_CONNECTCOMPONENT_CID);
@@ -38,27 +40,29 @@ urpComponentFactory::urpComponentFactory(const char *_location, const nsCID &aCI
 }
 
 urpComponentFactory::~urpComponentFactory() {
-    printf("destructor or urpComponentFactory\n");
+    PRLogModuleInfo *log = urpLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("destructor or urpComponentFactory\n"));
     nsCRT::free((char*)location);
 }
 
 /* void CreateInstance (in nsISupports aOuter, in nsIIDRef iid, [iid_is (iid), retval] out nsQIResult result); 
 */
 NS_IMETHODIMP urpComponentFactory::CreateInstance(nsISupports *aOuter, const nsIID & iid, void * *result) {
-    printf("--urpComponentFactory::CreateInstance\n");
+    PRLogModuleInfo *log = urpLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--urpComponentFactory::CreateInstance\n"));
     nsresult r;
     nsIFactory* factory;
     NS_WITH_SERVICE(urpIConnectComponent, conn, kConnectComponent, &r);
     if(NS_FAILED(r)) {
 	printf("Error in loading urpIConnectComponent\n");
-	exit(-1);
+//	exit(-1);
     }
     nsIComponentManager* compM;
     conn->GetCompMan("socket,host=indra,port=20009", (nsISupports**)&compM);
     compM->FindFactory(aClass, &factory);
     factory->CreateInstance(aOuter, iid, result);
     NS_RELEASE(factory);
-    printf("--urpComponentFactory::CreateInstance end\n");
+    PR_LOG(log, PR_LOG_DEBUG, ("--urpComponentFactory::CreateInstance end\n"));
     return NS_OK;
 }
 

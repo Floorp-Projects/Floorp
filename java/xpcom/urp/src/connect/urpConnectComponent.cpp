@@ -61,7 +61,7 @@ urpConnectComponent::~urpConnectComponent() {
 NS_IMETHODIMP urpConnectComponent::GetCompMan(char* cntStr,
 	nsISupports** cm) {
     if (!cm) {
-        printf("--urpConnectComponent::GetCompMan\n");
+        printf("--urpConnectComponent::GetCompMan NS_ERROR_NULL_POINTER\n");
         return NS_ERROR_NULL_POINTER;
     }
     if (!compM) {
@@ -92,7 +92,7 @@ NS_IMETHODIMP urpConnectComponent::GetCompMan(char* cntStr,
 
 NS_IMETHODIMP urpConnectComponent::GetTransport(char* cntStr, urpTransport** trans) {
     if(!trans) {
-	printf("--urpConnectComponent::GetTransport\n");
+	printf("--urpConnectComponent::GetTransport NS_ERROR_NULL_POINTER\n");
         return NS_ERROR_NULL_POINTER;
     }
     if(!transport) {

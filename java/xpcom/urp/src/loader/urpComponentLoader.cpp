@@ -33,6 +33,8 @@
 #include "nsXPIDLString.h"    
 #include "nsCRT.h"
 
+#include "../urpLog.h"
+
         
 const char urpComponentTypeName[] = URPCOMPONENTTYPENAME;
 
@@ -55,11 +57,13 @@ urpComponentLoader::urpComponentLoader()
       mXPCOMKey(0)
 {
     NS_INIT_REFCNT();
-    printf("--urpComponentLoader::urpComponentLoader \n");
+    PRLogModuleInfo *log = urpLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--urpComponentLoader::urpComponentLoader \n"));
 }
 
 urpComponentLoader::~urpComponentLoader() { //nb
-    printf("--urpComponentLoader::~urpComponentLoader \n");
+    PRLogModuleInfo *log = urpLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--urpComponentLoader::~urpComponentLoader \n"));
 }
 
 
@@ -68,7 +72,8 @@ urpComponentLoader::~urpComponentLoader() { //nb
  */
 /* nsIFactory getFactory (in nsIIDRef aCID, in string aLocation, in string aType); */
 NS_IMETHODIMP urpComponentLoader::GetFactory(const nsIID & aCID, const char *aLocation, const char *aType, nsIFactory **_retval) { 
-    printf("--urpComponentLoader::GetFactory \n");
+    PRLogModuleInfo *log = urpLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--urpComponentLoader::GetFactory \n"));
         if (!_retval)
         return NS_ERROR_NULL_POINTER;
 #ifdef DEBUG
@@ -90,7 +95,8 @@ NS_IMETHODIMP urpComponentLoader::GetFactory(const nsIID & aCID, const char *aLo
  */
 /* void init (in nsIComponentManager aCompMgr, in nsISupports aRegistry); */
 NS_IMETHODIMP urpComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg) {
-    printf("--urpComponentLoader::Init \n");
+    PRLogModuleInfo *log = urpLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--urpComponentLoader::Init \n"));
     nsresult rv;
     mCompMgr = aCompMgr;
      mRegistry = do_QueryInterface(aReg, &rv);
@@ -111,7 +117,8 @@ NS_IMETHODIMP urpComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupport
  */
 /* void onRegister (in nsIIDRef aCID, in string aType, in string aClassName, in string aContractID, in string aLocation, in boolean aReplace, in boolean aPersist); */
 NS_IMETHODIMP urpComponentLoader::OnRegister(const nsIID & aCID, const char *aType, const char *aClassName, const char *aContractID, const char *aLocation, PRBool aReplace, PRBool aPersist) { //nb
-    printf("--urpComponentLoader::OnRegister \n");
+    PRLogModuleInfo *log = urpLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--urpComponentLoader::OnRegister \n"));
     return NS_OK;
 }
 
@@ -119,7 +126,8 @@ NS_IMETHODIMP urpComponentLoader::OnRegister(const nsIID & aCID, const char *aTy
  * AutoRegister components in the given directory.
  */
 NS_IMETHODIMP urpComponentLoader::AutoRegisterComponents(PRInt32 aWhen, nsIFile *aDirectory) {
-    printf("--urpComponentLoader::AutoRegisterComponents \n");
+    PRLogModuleInfo *log = urpLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--urpComponentLoader::AutoRegisterComponents \n"));
     return RegisterComponentsInDir(aWhen,aDirectory);
 }
 
@@ -218,14 +226,15 @@ NS_IMETHODIMP urpComponentLoader::AutoRegisterComponent(PRInt32 when, nsIFile *c
         PL_strcasecmp(leafName + len - javaExtensionLen, javaExtension))
         return NS_OK;
 
-    printf("--urpComponentLoader: registering urpComponent component %s\n",(const char *)leafName);
+    PRLogModuleInfo *log = urpLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--urpComponentLoader: registering urpComponent component %s\n",(const char *)leafName));
     rv = AttemptRegistration(component, PR_FALSE);
     if (NS_SUCCEEDED(rv))
-        printf("registered module %s\n", (const char *)leafName);
+        PR_LOG(log, PR_LOG_DEBUG, ("registered module %s\n", (const char *)leafName));
     else if (rv == NS_ERROR_FACTORY_REGISTER_AGAIN) 
-        printf("deferred module %s\n", (const char *)leafName);
+        PR_LOG(log, PR_LOG_DEBUG, ("deferred module %s\n", (const char *)leafName));
     else
-        printf("failed to register %s\n", (const char *)leafName);
+        PR_LOG(log, PR_LOG_DEBUG, ("failed to register %s\n", (const char *)leafName));
     *registered = (PRBool) NS_SUCCEEDED(rv);
     return NS_OK;
 
@@ -248,7 +257,8 @@ nsresult urpComponentLoader::AttemptRegistration(nsIFile *component,
     in.getline(cidStr,1000);
     in.getline(contractid,1000);
     in.getline(desc,1000);
-    printf("%s %s %s", cidStr, contractid, desc);
+    PRLogModuleInfo *log = urpLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("%s %s %s", cidStr, contractid, desc));
     nsCID  cid;
     cid.Parse((const char *)cidStr);
     mCompMgr->RegisterComponentWithType(cid, desc, contractid, component, registryLocation, PR_TRUE, PR_TRUE, urpComponentTypeName);
@@ -283,8 +293,9 @@ nsresult urpComponentLoader::SetRegistryInfo(const char *registryLocation,
     if (NS_FAILED(rv = component->GetFileSize(&fileSize)) ||
         NS_FAILED(rv = mRegistry->SetLongLong(key, fileSizeValueName, &fileSize)))
         return rv;
-    printf("SetRegistryInfo(%s) => (%d,%d)\n", registryLocation,
-            (int)modDate, (int)fileSize);
+    PRLogModuleInfo *log = urpLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("SetRegistryInfo(%s) => (%d,%d)\n", registryLocation,
+            (int)modDate, (int)fileSize));
     return NS_OK;
 }
 
@@ -323,7 +334,8 @@ PRBool urpComponentLoader::HasChanged(const char *registryLocation, nsIFile *com
  */
 /* boolean registerDeferredComponents (in long aWhen); */
 NS_IMETHODIMP urpComponentLoader::RegisterDeferredComponents(PRInt32 aWhen, PRBool *aRegistered) {
-    printf("--urpComponentLoader::RegisterDeferredComponents \n");
+    PRLogModuleInfo *log = urpLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--urpComponentLoader::RegisterDeferredComponents \n"));
     nsresult rv;
     *aRegistered = PR_FALSE;
     PRUint32 count;
@@ -368,7 +380,8 @@ NS_IMETHODIMP urpComponentLoader::RegisterDeferredComponents(PRInt32 aWhen, PRBo
  */
 /* void unloadAll (in long aWhen); */
 NS_IMETHODIMP urpComponentLoader::UnloadAll(PRInt32 aWhen) { //nb
-    printf("--urpComponentLoader::UnloadAll \n");
+    PRLogModuleInfo *log = urpLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--urpComponentLoader::UnloadAll \n"));
     return NS_OK;
 }
 
@@ -381,26 +394,27 @@ static NS_METHOD
 RegisterRemoteLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
 		 const char *registryLocation, const char *componentType, const nsModuleComponentInfo *info)
 {
+    PRLogModuleInfo *log = urpLog::GetLog();
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman =
         do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    printf("--URPLoader got registered\n");
+    PR_LOG(log, PR_LOG_DEBUG, ("--URPLoader got registered\n"));
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString previous;
     rv = catman->AddCategoryEntry("component-loader", urpComponentTypeName,
                                     URP_COMPONENTLOADER_ContractID,
                                     PR_TRUE, PR_TRUE, getter_Copies(previous));
     if(NS_FAILED(rv))
-	printf("Adding of remote-comp-loader is failed\n");
+	PR_LOG(log, PR_LOG_DEBUG, ("Adding of remote-comp-loader is failed\n"));
     else
-	printf("Adding of remote-comp-loader is succeseded\n");
+	PR_LOG(log, PR_LOG_DEBUG, ("Adding of remote-comp-loader is succeseded\n"));
     nsXPIDLCString urpLoader;
     rv = catman->GetCategoryEntry("component-loader", urpComponentTypeName,
                                   getter_Copies(urpLoader));
     if (NS_FAILED(rv)) 
-	printf("didn't got category entry\n");
+	PR_LOG(log, PR_LOG_DEBUG, ("didn't got category entry\n"));
     else
-	printf("got category entry\n");
+	PR_LOG(log, PR_LOG_DEBUG, ("got category entry\n"));
 
     return rv;
 
@@ -415,7 +429,8 @@ UnregisterRemoteLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
         do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString urpLoader;
-    printf("URP component loader is being unregistered\n");
+    PRLogModuleInfo *log = urpLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("URP component loader is being unregistered\n"));
     rv = catman->GetCategoryEntry("component-loader", urpComponentTypeName,
                                   getter_Copies(urpLoader));
     if (NS_FAILED(rv)) return rv;
