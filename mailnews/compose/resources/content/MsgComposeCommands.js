@@ -1417,6 +1417,7 @@ function GenerateAttachmentsString()
 					text = cell.getAttribute("attachment");
 					if (text.length)
 					{
+            text = text.replace(/\,/g, "%2C");
 						if (attachments == "")
 							attachments = text;
 						else
