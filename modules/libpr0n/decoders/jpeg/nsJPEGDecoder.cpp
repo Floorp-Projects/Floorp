@@ -139,12 +139,13 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgIRequest *aRequest)
   
   decoder_source_mgr *src;
   if (mInfo.src == NULL) {
-    //mInfo.src = PR_NEWZAP(decoder_source_mgr);
     src = PR_NEWZAP(decoder_source_mgr);
     if (!src) {
-      return PR_FALSE;
+      mState = JPEG_ERROR;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
-    mInfo.src = (struct jpeg_source_mgr *) src;
+
+    mInfo.src = NS_REINTERPRET_CAST(struct jpeg_source_mgr *, src);
   }
 
   /* Step 2: specify data source (eg, a file) */
@@ -176,8 +177,10 @@ NS_IMETHODIMP nsJPEGDecoder::Close()
     NS_WARNING("Never finished decoding the JPEG.");
 
   /* Step 8: Release JPEG decompression object */
+  decoder_source_mgr *src = NS_REINTERPRET_CAST(decoder_source_mgr *, mInfo.src);
+  PR_FREEIF(src);
+  mInfo.src = nsnull;
 
-  /* This is an important step since it will release a good deal of memory. */
   jpeg_destroy_decompress(&mInfo);
 
   return NS_OK;
@@ -189,7 +192,7 @@ NS_IMETHODIMP nsJPEGDecoder::Flush()
   LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::Flush");
 
   PRUint32 ret;
-  if (mState != JPEG_DONE && mState != JPEG_SINK_NON_JPEG_TRAILER)
+  if (mState != JPEG_DONE && mState != JPEG_SINK_NON_JPEG_TRAILER && mState != JPEG_ERROR)
     return this->WriteFrom(nsnull, 0, &ret);
 
   return NS_OK;
@@ -231,11 +234,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     return error_code;
   }
 
-
   PR_LOG(gJPEGlog, PR_LOG_DEBUG,
          ("[this=%p] nsJPEGDecoder::WriteFrom -- processing JPEG data\n", this));
-
-  decoder_source_mgr *src = NS_REINTERPRET_CAST(decoder_source_mgr *, mInfo.src);
 
   switch (mState) {
   case JPEG_HEADER:
