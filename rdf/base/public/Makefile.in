@@ -31,7 +31,6 @@ MODULE		= rdf
 EXPORTS		= \
 		rdf.h \
 		nsIRDFContentSink.h \
-		nsRDFInterfaces.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
