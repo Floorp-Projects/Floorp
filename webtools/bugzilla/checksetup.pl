@@ -1485,7 +1485,7 @@ my @states = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "RESOLVED",
 CheckEnumField('bugs', 'bug_status', @states);
 if (!GetFieldDef('bugs', 'everconfirmed')) {
     AddField('bugs', 'everconfirmed',  'tinyint not null');
-    $dbh->do("UPDATE bugs SET everconfirmed = 1");
+    $dbh->do("UPDATE bugs SET everconfirmed = 1, delta_ts = delta_ts");
 }
 AddField('products', 'maxvotesperbug', 'smallint not null default 10000');
 AddField('products', 'votestoconfirm', 'smallint not null');
