@@ -43,6 +43,10 @@ public:
 
   NS_IMETHOD GetLocation(nsIDOMLocation** aLocation) = 0;
   NS_IMETHOD GetWebShell(nsIWebShell **aWebShell) =0;// XXX This may be temporary - rods
+  
+  // This is private because activate/deactivate events are not part of the DOM spec.
+  NS_IMETHOD Activate() = 0;
+  NS_IMETHOD Deactivate() = 0;
 };
 
 #endif // nsPIDOMWindow_h__

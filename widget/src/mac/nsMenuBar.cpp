@@ -145,22 +145,34 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
   // Dispatch event
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
-  //for (int i = mMenuVoidArray.Count(); i > 0; --i)
-  //{
-    nsIMenuListener * menuListener = nsnull;
-    //((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(kIMenuListenerIID, &menuListener);
-    //printf("gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
-    if(gPreviousMenuStack[gPreviousMenuStack.Count() - 1])
-      ((nsIMenu*)gPreviousMenuStack[gPreviousMenuStack.Count() - 1])->QueryInterface(kIMenuListenerIID, &menuListener);
-    if(menuListener){
-      //TODO: MenuSelected is the right thing to call...
-      //eventStatus = menuListener->MenuSelected(aMenuEvent);
-      eventStatus = menuListener->MenuItemSelected(aMenuEvent);
-      NS_RELEASE(menuListener);
-      if(nsEventStatus_eIgnore != eventStatus)
-        return eventStatus;
+  nsIMenuListener * menuListener = nsnull;
+  //((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(kIMenuListenerIID, &menuListener);
+  //printf("gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
+  if (gPreviousMenuStack[gPreviousMenuStack.Count() - 1])
+    ((nsIMenu*)gPreviousMenuStack[gPreviousMenuStack.Count() - 1])->QueryInterface(kIMenuListenerIID, &menuListener);
+    
+  if (menuListener) {
+    //TODO: MenuSelected is the right thing to call...
+    //eventStatus = menuListener->MenuSelected(aMenuEvent);
+    eventStatus = menuListener->MenuItemSelected(aMenuEvent);
+    NS_RELEASE(menuListener);
+    if (nsEventStatus_eIgnore != eventStatus)
+      return eventStatus;
+  } else {
+    // If it's the help menu, gPreviousMenuStack won't be accurate so we need to get the listener a different way 
+    // We'll do it the old fashioned way of looping through and finding it
+    for (int i = mMenuVoidArray.Count(); i > 0; --i) {
+      ((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(kIMenuListenerIID, &menuListener);
+	  if (menuListener) {
+        //TODO: MenuSelected is the right thing to call...
+	    //eventStatus = menuListener->MenuSelected(aMenuEvent);
+	    eventStatus = menuListener->MenuItemSelected(aMenuEvent);
+	    NS_RELEASE(menuListener);
+	    if(nsEventStatus_eIgnore != eventStatus)
+	      return eventStatus;
+      }
     }
-  //}
+  }
   return eventStatus;
 }
 
@@ -297,7 +309,9 @@ nsEventStatus nsMenuBar::MenuConstruct(
                   // Make nsMenu a child of nsMenuBar. nsMenuBar takes ownership
                   pnsMenuBar->AddMenu(pnsMenu); 
                   
-                  if(menuName == "Help") {
+                  nsString menuIDstring;
+                  menuElement->GetAttribute(nsAutoString("id"), menuIDstring);
+                  if(menuIDstring == "menu_Help") {
                     nsMenuEvent event;
                     MenuHandle handle;
                     ::HMGetHelpMenuHandle(&handle);
@@ -443,7 +457,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 
 		if (appleMenu)
 		{
-		  ::AppendMenu(appleMenu, "\pAbout ApprunnerÉ");
+		  ::AppendMenu(appleMenu, "\pAbout Apprunner…");
 		  ::AppendMenu(appleMenu, "\p-");
 		  ::AppendResMenu(appleMenu, 'DRVR');
       ::InsertMenu(appleMenu, 0);
@@ -523,14 +537,13 @@ NS_METHOD nsMenuBar::SetNativeData(void* aData)
 NS_METHOD nsMenuBar::Paint()
 {
   gMacMenubar = this;
+  PRBool isHelpMenu;
   
   ::SetMenuBar(mMacMBarHandle);
   // Now we have blown away the merged Help menu, so we have to rebuild it
   for(int i = mMenuVoidArray.Count()-1; i>=0; --i) {
-    nsString label;
-    ((nsIMenu*)mMenuVoidArray[i])->GetLabel(label);
-    // Look at the label and figure out if it is the "Help" menu
-    if(label == "Help"){
+    ((nsIMenu*)mMenuVoidArray[i])->IsHelpMenu(&isHelpMenu);
+    if(isHelpMenu){
       MenuHandle helpMenuHandle;
       ::HMGetHelpMenuHandle(&helpMenuHandle);
       ((nsIMenu*)mMenuVoidArray[i])->SetNativeData((void*)helpMenuHandle);
