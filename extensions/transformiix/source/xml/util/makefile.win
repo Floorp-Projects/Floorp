@@ -20,6 +20,9 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..\..
+MODULE=transformiix
+REQUIRES = xpcom string dom layout widget content
+
 include <$(DEPTH)/config/config.mak>
 
 !if defined(TX_EXE)

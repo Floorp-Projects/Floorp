@@ -63,7 +63,7 @@ OBJS=                                       \
 #//
 #//------------------------------------------------------------------------
 
-
+REQUIRES=mozreg
 LIBNAME=nsreg
 DLL=$(OBJDIR)\$(LIBNAME).dll
 LIBRARY=$(OBJDIR)\$(LIBNAME)_s.lib

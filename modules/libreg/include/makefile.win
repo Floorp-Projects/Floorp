@@ -30,7 +30,7 @@
 #//
 #//------------------------------------------------------------------------
 
-MODULE=libreg 
+MODULE = mozreg
 DEPTH=..\..\.. 
 EXPORTS=VerReg.h NSReg.h 
 

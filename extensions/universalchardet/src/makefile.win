@@ -23,9 +23,11 @@ DEPTH=..\..\..
 MOZ_DEPTH=$(DEPTH)\..\mozilla\intl\chardet\src
 
 LCFLAGS= $(LCFLAGS) -D__STDC__
+REQUIRES	= xpcom string uconv chardet
 
 DEFINES= -DWIN32_LEAN_AND_MEAN 
 LIBRARY_NAME= universalchardet
+MODULE=$(LIBRARY_NAME)
 
 OBJS= \
 	$(NULL)
@@ -57,9 +59,6 @@ CPP_OBJS= \
         .\$(OBJDIR)\LangHungarianModel.obj \
 	$(NULL)
 
-MODULE=$(LIBRARY_NAME)
-
-REQUIRES=xpcom
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\chardet  \
      -I$(DEPTH)\public 
@@ -72,7 +71,8 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LLIBS= \
 	$(DIST)\lib\xpcom.lib \
-  	$(LIBNSPR)	
+	$(LIBNSPR)
+
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)

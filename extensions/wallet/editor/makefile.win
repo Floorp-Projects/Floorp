@@ -21,6 +21,7 @@
 
 DEPTH=..\..\..
 MODULE=walleteditor
+REQUIRES	= xpcom string wallet dom docshell necko widget
 
 #MAKE_OBJ_TYPE=DLL
 #DLLNAME=$(MODULE)

@@ -20,9 +20,11 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
+MODULE=wallet
+REQUIRES	= xpcom string necko dom layout widget uriloader pref webshell docshell appshell intl windowwatcher gfx content raptor
+
 include <$(DEPTH)/config/config.mak>
 
-MODULE=wallet
 LIBRARY_NAME=wallet
 MODULE_NAME=nsWalletModule
 

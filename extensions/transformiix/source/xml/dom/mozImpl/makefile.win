@@ -20,6 +20,8 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..\..\..
+REQUIRES = string xpcom dom layout widget necko content
+
 include <$(DEPTH)/config/config.mak>
 
 CPPSRCS=				\
@@ -67,7 +69,7 @@ CPP_OBJS=					\
 EXPORTS = 					\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\..\..\base -I..\..\dom \
+LINCS= -I..\..\..\base -I..\..\dom \
 	-I..\.. -I..\..\..\net
 
 LCFLAGS = \
