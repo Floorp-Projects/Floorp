@@ -44,11 +44,11 @@
   <keyset id="keyset"/>
            
   <tabcontrol flex="1" orient="vertical">
-    <tabbox>
-      <tab id="signonTab" style="display:none" value="&tab.signonsstored.label;"/>
-      <tab id="signonSitesTab" style="display:none" value="&tab.signonsnotstored.label;"/>
-      <tab id="nopreview" style="display:none" value="&tab.nopreview.label;"/>
-      <tab id="nocapture" style="display:none" value="&tab.nocapture.label;"/>
+    <tabbox orient="horizontal">
+      <tab id="signonTab" value="&tab.signonsstored.label;"/>
+      <tab id="signonSitesTab" value="&tab.signonsnotstored.label;"/>
+      <tab id="nopreview" value="&tab.nopreview.label;"/>
+      <tab id="nocapture" value="&tab.nocapture.label;"/>
     </tabbox>
     <tabpanel id="panel">
       <!-- saved signons -->

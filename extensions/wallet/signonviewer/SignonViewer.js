@@ -73,21 +73,23 @@ function Startup()
   if (tab == "S") {
     element = document.getElementById("signonTab");
     element.setAttribute("selected","true" );
-    element = document.getElementById("signonTab");
-    element.setAttribute("style","display: inline;" );
-    element = document.getElementById("signonSitesTab");
-    element.setAttribute("style","display: inline;" );
     element = document.getElementById("panel");
     element.setAttribute("index","0" );
+
+    // hide non-used tabs
+    element = document.getElementById("nopreview");
+    element.setAttribute("style", "display: none");
+    element = document.getElementById("nocapture");
+    element.setAttribute("style", "display: none");
   } else if (tab == "W") {
     element = document.getElementById("signonviewer");
     element.setAttribute("title", element.getAttribute("alttitle"));
     element = document.getElementById("nopreview");
     element.setAttribute("selected","true" );
     element = document.getElementById("nopreview");
-    element.setAttribute("style","display: inline;" );
+    element.setAttribute("style","display: block;" );
     element = document.getElementById("nocapture");
-    element.setAttribute("style","display: inline;" );
+    element.setAttribute("style","display: block;" );
     element = document.getElementById("panel");
     element.setAttribute("index","2" );
   } else {
