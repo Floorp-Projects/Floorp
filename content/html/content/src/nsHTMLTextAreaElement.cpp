@@ -40,7 +40,6 @@
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsITextControlElement.h"
 #include "nsIControllers.h"
-#include "nsIEditorController.h"
 #include "nsContentCID.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
@@ -815,14 +814,6 @@ nsHTMLTextAreaElement::GetControllers(nsIControllers** aResult)
 
     nsresult rv;
     nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/editor/editorcontroller;1", &rv);
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsCOMPtr<nsIEditorController> editorController = do_QueryInterface(controller, &rv);
-    if (NS_FAILED(rv))
-      return rv;
-
-    rv = editorController->Init(nsnull);
     if (NS_FAILED(rv))
       return rv;
 

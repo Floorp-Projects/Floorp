@@ -20,8 +20,9 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ryan Cassin <rcassin@supernova.org>
- *   Daniel Glazman <glazman@netscape.com>
+ *   Ryan Cassin      <rcassin@supernova.org>
+ *   Daniel Glazman   <glazman@netscape.com>
+ *   Charles Manske   <cmanske@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -43,6 +44,8 @@
 
 #include "nsIControllerCommand.h"
 #include "nsString.h"
+
+class nsIEditor;
 
 // This is a virtual base class for commands registered with the composer controller.
 // Note that such commands are instantiated once per composer, so can store state.
@@ -68,7 +71,6 @@ public:
   NS_IMETHOD DoCommand(const char * aCommandName, nsISupports *aCommandRefCon) = 0;
 
 };
-
 
 
 #define NS_DECL_COMPOSER_COMMAND(_cmd)                  \
@@ -272,17 +274,16 @@ protected:
 // composer commands
 
 NS_DECL_COMPOSER_COMMAND(nsCloseCommand)
+NS_DECL_COMPOSER_COMMAND(nsDocumentStateCommand)
+NS_DECL_COMPOSER_COMMAND(nsSetDocumentStateCommand)
 //NS_DECL_COMPOSER_COMMAND(nsPrintingCommands)
 
 // Generic commands
 
-
 // File menu
 NS_DECL_COMPOSER_COMMAND(nsNewCommands)   // handles 'new' anything
 
-
 // Edit menu
-NS_DECL_COMPOSER_COMMAND(nsPasteQuotationCommand)
 NS_DECL_COMPOSER_COMMAND(nsPasteNoFormattingCommand)
 
 // Block transformations
@@ -294,5 +295,7 @@ NS_DECL_COMPOSER_COMMAND(nsRemoveStylesCommand)
 NS_DECL_COMPOSER_COMMAND(nsIncreaseFontSizeCommand)
 NS_DECL_COMPOSER_COMMAND(nsDecreaseFontSizeCommand)
 
+// Insert content commands
+NS_DECL_COMPOSER_COMMAND(nsInsertHTMLCommand)
 
 #endif // nsComposerCommands_h_

@@ -40,6 +40,7 @@ REQUIRES	= string \
 LIBRARY_NAME	= commandhandler_s
 
 CPPSRCS		= \
+      nsBaseCommandController.cpp \
       nsCommandGroup.cpp \
       nsCommandManager.cpp \
       nsCommandParams.cpp \

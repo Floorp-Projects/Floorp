@@ -62,8 +62,6 @@ public:
 protected:
 
   nsSupportsHashtable   mCommandsTable;   // hash table of nsIControllerCommands, keyed by command name
-
-
 };
 
 

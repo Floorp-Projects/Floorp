@@ -50,6 +50,7 @@ REQUIRES	= xpcom \
 		  accessibility \
 		  xpconnect \
 		  unicharutil \
+		  commandhandler \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -61,7 +61,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS  = \
-           nsEditorShell.cpp              \
            nsEditorParserObserver.cpp     \
            nsInterfaceState.cpp           \
            nsComposerController.cpp       \

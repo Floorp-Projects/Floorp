@@ -42,61 +42,9 @@
 #include "nsIComponentManager.h"
 #include "nsEditorController.h"
 #include "nsIEditor.h"
-
 #include "nsEditorCommands.h"
+#include "nsIControllerCommandManager.h"
 
-
-NS_IMPL_ADDREF(nsEditorController)
-NS_IMPL_RELEASE(nsEditorController)
-
-NS_INTERFACE_MAP_BEGIN(nsEditorController)
-	NS_INTERFACE_MAP_ENTRY(nsIController)
-	NS_INTERFACE_MAP_ENTRY(nsICommandController)
-	NS_INTERFACE_MAP_ENTRY(nsIEditorController)
-	NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEditorController)
-NS_INTERFACE_MAP_END
-
-nsEditorController::nsEditorController()
-: mCommandRefCon(nsnull)
-{
-  NS_INIT_ISUPPORTS();  
-}
-
-nsEditorController::~nsEditorController()
-{
-}
-
-NS_IMETHODIMP nsEditorController::Init(nsISupports *aCommandRefCon)
-{
-  nsresult  rv;
- 
-  // get our ref to the singleton command manager
-  rv = GetEditorCommandManager(getter_AddRefs(mCommandManager));  
-  if (NS_FAILED(rv)) return rv;  
-
-  mCommandRefCon = aCommandRefCon;     // no addref  
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsEditorController::SetCommandRefCon(nsISupports *aCommandRefCon)
-{
-  mCommandRefCon = aCommandRefCon;     // no addref  
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsEditorController::GetInterface(const nsIID & aIID, void * *result)
-{
-  NS_ENSURE_ARG_POINTER(result);
-
-  if (NS_SUCCEEDED(QueryInterface(aIID, result)))
-    return NS_OK;
-  
-  if (mCommandManager && aIID.Equals(NS_GET_IID(nsIControllerCommandManager)))
-    return mCommandManager->QueryInterface(aIID, result);
-    
-  return NS_NOINTERFACE;
-}
 
 
 #define NS_REGISTER_ONE_COMMAND(_cmdClass, _cmdName)                                      \
@@ -184,70 +132,12 @@ nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandManager 
   NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectPageUp");
   NS_REGISTER_LAST_COMMAND(nsSelectionMoveCommands, "cmd_selectPageDown");
     
+  // Insert content
+  NS_REGISTER_ONE_COMMAND(nsInsertPlaintextCommand, "cmd_insertText");
+  NS_REGISTER_ONE_COMMAND(nsPasteQuotationCommand,  "cmd_pasteQuote");
+
+
   return NS_OK;
 }
 
-/* =======================================================================
- * nsIController
- * ======================================================================= */
-
-NS_IMETHODIMP nsEditorController::IsCommandEnabled(const char *aCommand, PRBool *aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  return mCommandManager->IsCommandEnabled(aCommand, mCommandRefCon, aResult);
-}
-
-NS_IMETHODIMP nsEditorController::SupportsCommand(const char *aCommand, PRBool *aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  return mCommandManager->SupportsCommand(aCommand, mCommandRefCon, aResult);
-}
-
-NS_IMETHODIMP nsEditorController::DoCommand(const char *aCommand)
-{
-  return mCommandManager->DoCommand(aCommand, mCommandRefCon);
-}
-
-NS_IMETHODIMP nsEditorController::DoCommandWithParams(const char *aCommand, nsICommandParams *aParams)
-{
-  return mCommandManager->DoCommandParams(aCommand, aParams, mCommandRefCon);
-}
-
-NS_IMETHODIMP nsEditorController::GetCommandStateWithParams(const char *aCommand, nsICommandParams *aParams)
-{
-  return mCommandManager->GetCommandState(aCommand, aParams, mCommandRefCon);
-}
-
-NS_IMETHODIMP nsEditorController::OnEvent(const char * aEventName)
-{
-  return NS_OK;
-}
-
-
-nsWeakPtr nsEditorController::sEditorCommandManager = NULL;
-
-// static
-nsresult nsEditorController::GetEditorCommandManager(nsIControllerCommandManager* *outCommandManager)
-{
-  NS_ENSURE_ARG_POINTER(outCommandManager);
-
-  nsCOMPtr<nsIControllerCommandManager> cmdManager = do_QueryReferent(sEditorCommandManager);
-  if (!cmdManager)
-  {
-    nsresult rv;
-    cmdManager = do_CreateInstance(NS_CONTROLLERCOMMANDMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    // register the commands. This just happens once per instance
-    rv = nsEditorController::RegisterEditorCommands(cmdManager);
-    if (NS_FAILED(rv)) return rv;
-
-    // save the singleton in our static weak reference
-    sEditorCommandManager = getter_AddRefs(NS_GetWeakReference(cmdManager, &rv));
-    if (NS_FAILED(rv))  return rv;
-  }
-
-  NS_ADDREF(*outCommandManager = cmdManager);
-  return NS_OK;
-}
 

@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *    Michael Judge   <mjudge@netscape.com>
+ *    Charles Manske  <cmanske@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -47,6 +49,9 @@
 
 #include "nsTextServicesDocument.h"
 #include "nsTextServicesCID.h"
+#include "nsIControllerContext.h"
+
+#include "nsIServiceManager.h"
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
@@ -55,8 +60,41 @@
 //
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorController)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextServicesDocument)
+
+
+NS_IMETHODIMP nsEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                            void **aResult)
+{
+  static PRBool commandsRegistered = PR_FALSE;
+  nsresult rv;
+  nsCOMPtr<nsIControllerContext> context =
+      do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1",&rv);
+  if (NS_FAILED(rv))
+    return rv;
+  if (!context)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIControllerCommandManager> editorCommandManager(
+      do_GetService(NS_CONTROLLERCOMMANDMANAGER_CONTRACTID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+  if (!editorCommandManager)
+    return NS_ERROR_OUT_OF_MEMORY;
+  if (!commandsRegistered)
+  {
+    rv = nsEditorController::RegisterEditorCommands(editorCommandManager);
+    if (NS_FAILED(rv))
+    {
+      return rv;
+    }
+    commandsRegistered = PR_TRUE;
+  }
+
+  
+  context->SetControllerCommandManager(editorCommandManager);
+  return context->QueryInterface(aIID, aResult);
+}
 
 #ifdef ENABLE_EDITOR_API_LOG
 #include "nsHTMLEditorLog.h"

@@ -16,10 +16,11 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Michael Judge   <mjudge@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -36,30 +37,63 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsComposerController_h__
-#define nsComposerController_h__
+#ifndef nsBaseCommandController_h__
+#define nsBaseCommandController_h__
+
+#define NS_BASECOMMANDCONTROLLER_CID \
+{ 0xbf88b48c, 0xfd8e, 0x40b4, { 0xba, 0x36, 0xc7, 0xc3, 0xad, 0x6d, 0x8a, 0xc9 } }
+#define NS_BASECOMMANDCONTROLLER_CONTRACTID \
+ "@mozilla.org/embedcomp/base-command-controller;1"
 
 
-class nsIControllerCommandManager;
+#include "nsIController.h"
+#include "nsIControllerContext.h"
+#include "nsIControllerCommand.h"
+#include "nsIControllerCommandManager.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
+
+//#include "nsHashtable.h"
+//#include "nsString.h"
+//#include "nsWeakPtr.h"
 
 
-// The plaintext editor controller is used for basic text editing and html editing
-// commands in composer
-// The refCon that gets passed to its commands is initially nsIEditingSession, 
-//   and after successfule editor creation it is changed to nsIEditor.
-#define NS_EDITORDOCSTATECONTROLLER_CID \
- { 0x50e95301, 0x17a8, 0x11d4, { 0x9f, 0x7e, 0xdd, 0x53, 0x0d, 0x5f, 0x05, 0x7c } }
-
-// The HTMLEditor controller is used only for HTML editors and takes nsIEditor as refCon
-#define NS_HTMLEDITORCONTROLLER_CID \
- { 0x62db0002, 0xdbb6, 0x43f4, { 0x8f, 0xb7, 0x9d, 0x25, 0x38, 0xbc, 0x57, 0x47 } }
-
-
-class nsComposerController
+// The base editor controller is used for both text widgets, 
+//   and all other text and html editing
+class nsBaseCommandController :  public nsIController,
+                            public nsIControllerContext,
+                            public nsIInterfaceRequestor,
+                            public nsICommandController
 {
 public:
-  static nsresult RegisterEditorDocStateCommands(nsIControllerCommandManager* inCommandManager);
-  static nsresult RegisterHTMLEditorCommands(nsIControllerCommandManager* inCommandManager);
+
+          nsBaseCommandController();
+  virtual ~nsBaseCommandController();
+
+  // nsISupports
+  NS_DECL_ISUPPORTS
+    
+  // nsIController
+  NS_DECL_NSICONTROLLER
+
+  // nsICommandController
+  NS_DECL_NSICOMMANDCONTROLLER
+
+  //nsIControllerContext
+  NS_DECL_NSICONTROLLERCONTEXT
+
+  // nsIInterfaceRequestor
+  NS_DECL_NSIINTERFACEREQUESTOR
+  
+private:
+
+   nsISupports *mCommandRefCon;
+   
+   // Our reference to the command manager
+   nsCOMPtr<nsIControllerCommandManager> mCommandManager;     
+
+   PRBool mImmutableManager;
 };
 
-#endif /* nsComposerController_h__ */
+#endif /* nsBaseCommandController_h_ */
+

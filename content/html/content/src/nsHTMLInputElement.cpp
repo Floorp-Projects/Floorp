@@ -43,7 +43,6 @@
 #include "nsIRadioVisitor.h"
 
 #include "nsIControllers.h"
-#include "nsIEditorController.h"
 #include "nsIFocusController.h"
 #include "nsPIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
@@ -1990,17 +1989,6 @@ nsHTMLInputElement::GetControllers(nsIControllers** aResult)
         controller(do_CreateInstance("@mozilla.org/editor/editorcontroller;1",
                                      &rv));
       if (NS_FAILED(rv)) return rv;
-
-      nsCOMPtr<nsIEditorController>
-        editorController = do_QueryInterface(controller, &rv);
-
-      if (NS_FAILED(rv))
-        return rv;
-
-      rv = editorController->Init(nsnull);
-      if (NS_FAILED(rv))
-        return rv;
-
       mControllers->AppendController(controller);
     }
   }
