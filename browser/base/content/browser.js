@@ -3397,7 +3397,7 @@ nsContextMenu.prototype = {
       var uri = Components.classes["@mozilla.org/network/standard-url;1"]
                           .createInstance(Components.interfaces.nsIURI);
       uri.spec = this.imageURL;
-       return permissionmanager.testPermission(uri, "image");
+      return permissionmanager.testPermission(uri, "image") == nsIPermissionManager.DENY_ACTION;
     },
     // Generate email address and put it on clipboard.
     copyEmail : function () {
