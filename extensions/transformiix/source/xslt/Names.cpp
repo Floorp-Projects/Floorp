@@ -28,14 +28,14 @@
  *       W3C XPath 1.0 Recommendation
  *    -- Added lang attr declaration
  *
- * $Id: Names.cpp,v 1.5 2000/05/23 08:13:03 kvisco%ziplink.net Exp $
+ * $Id: Names.cpp,v 1.6 2000/05/24 03:45:40 kvisco%ziplink.net Exp $
  */
 
 /**
  * XSL names used throughout the XSLProcessor.
  * Probably should be wrapped in a Namespace
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2000/05/23 08:13:03 $
+ * @version $Revision: 1.6 $ $Date: 2000/05/24 03:45:40 $
 **/
 #include "Names.h"
 
@@ -149,11 +149,12 @@ const String NODE_FNAME              = "node";
 const String IDENTITY_OP             = ".";
 const String PARENT_OP               = "..";
 
-//-- XSLT extension functions
+//-- XSLT additional functions
 const String CURRENT_FN              = "current";
 const String FORMAT_NUMBER_FN        = "format-number";
 const String GENERATE_ID_FN          = "generate-id";
 const String SYSTEM_PROPERTY_FN      = "system-property";
+const String DOCUMENT_FN             = "document";
 
 //-- MISC
 const String WILD_CARD               = "*";
