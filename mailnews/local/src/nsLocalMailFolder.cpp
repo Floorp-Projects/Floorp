@@ -51,6 +51,17 @@ nsGetNameFromPath(const nsFileSpec* path)
 static const char kRootPrefix[] = "mailbox:/";
 static const char kMsgRootFolderPref[] = "mailnews.rootFolder";
 
+#define NS_IMPL_IDS
+extern "C" const nsID kIPrefIID = {0xa22ad7b0, 0xca86, 0x11d1, 0xa9, 0xa4, 0x0, 0x80, 0x5f, 0x8a, 0x7a, 0xc4};
+//NS_DECLARE_ID(kIPrefIID, 
+//  0xa22ad7b0, 0xca86, 0x11d1, 0xa9, 0xa4, 0x0, 0x80, 0x5f, 0x8a, 0x7a, 0xc4);
+
+// {DC26E0E0-CA94-11d1-A9A4-00805F8A7AC4}
+extern "C" const nsID kPrefCID = {0xdc26e0e0, 0xca94, 0x11d1, 0xa9, 0xa4, 0x0, 0x80, 0x5f, 0x8a, 0x7a, 0xc4};
+//NS_DECLARE_ID(kPrefCID, 
+//  0xdc26e0e0, 0xca94, 0x11d1, 0xa9, 0xa4, 0x0, 0x80, 0x5f, 0x8a, 0x7a, 0xc4);
+
+
 static nsresult
 nsURI2Path(char* uriStr, nsFileSpec& pathResult, PRBool asParentFolder)
 {
@@ -59,23 +70,35 @@ nsURI2Path(char* uriStr, nsFileSpec& pathResult, PRBool asParentFolder)
   if (uri.Find(kRootPrefix) != 0)     // if doesn't start with kRootPrefix
     return NS_ERROR_FAILURE;
 
-  // get mailbox root preference
-#if 0
-  nsIPref* prefs;
-  nsresult rv;
-  rv = nsServiceManager::GetService(kPrefCID, kIPrefIID,
-                                    (nsISupports**)&prefs);
-  if (NS_FAILED(rv)) return rv; 
-
+  // get mailbox root preference and cache it permanently - this
+  // is extremely temporary...I'm waiting for hubie to check in the 
+  // new preferences service stuff.
+#if 1
   #define ROOT_PATH_LENGTH 128 
-  char rootPath[ROOT_PATH_LENGTH];
+  static char rootPath[ROOT_PATH_LENGTH];
   int rootLen = ROOT_PATH_LENGTH;
-  rv = prefs->GetCharPref(kMsgRootFolderPref, rootPath, &rootLen);
-  nsServiceManager::ReleaseService(kPrefCID, prefs);
-  if (NS_FAILED(rv))
-    return rv; 
+  static PRBool gGotMailboxRoot = PR_FALSE;
+  if (!gGotMailboxRoot)
+  {
+	  nsIPref* prefs;
+	  nsresult rv;
+	  rv = nsServiceManager::GetService(kPrefCID, kIPrefIID,
+										(nsISupports**)&prefs);
+	  if (NS_FAILED(rv)) return rv; 
+
+	  if (prefs && NS_SUCCEEDED(rv))
+	  {
+		prefs->Startup("prefs.js");
+
+		rv = prefs->GetCharPref(kMsgRootFolderPref, rootPath, &rootLen);
+		nsServiceManager::ReleaseService(kPrefCID, prefs);
+		gGotMailboxRoot = PR_TRUE;
+	  }
+	  if (NS_FAILED(rv))
+		return rv; 
+  }
 #else
-  char rootPath[] = "c:\\program files\\netscape\\users\\mscott\\mail";
+  char rootPath[] = "c:\\program files\\netscape\\users\\bienvenu\\mail";
 #endif
   path.Append(rootPath);
   uri.Cut(0, nsCRT::strlen(kRootPrefix));
