@@ -36,9 +36,17 @@ public:
   NS_IMETHOD_(nsrefcnt) Release(void);          
 
   // Override some of the native widget methods for scrollbars
-  PRBool OnPaint(nsPaintEvent &event);
-  PRBool OnResize(nsSizeEvent &event);
-  PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
+  PRBool     OnResize           (nsSizeEvent &event);
+  PRBool     DispatchMouseEvent (nsMouseEvent &aEvent);
+  NS_IMETHOD Show               (PRBool bState);
+  NS_IMETHOD Resize             (PRUint32 aWidth,
+                                 PRUint32 aHeight,
+                                 PRBool   aRepaint);
+  NS_IMETHOD Resize             (PRUint32 aX,
+                                 PRUint32 aY,
+                                 PRUint32 aWidth,
+                                 PRUint32 aHeight,
+                                 PRBool   aRepaint);
   
   // nsIScrollBar implementation
   NS_IMETHOD SetMaxRange(PRUint32 aEndRange);
@@ -56,12 +64,16 @@ public:
   void CreateNative(Window aParent, nsRect aRect);
   
 private:
+  void                 CalcBarBounds(void);
+  void                 LayoutBar(void);
   PRUint32             mMaxRange;
   PRUint32             mPosition;
   PRUint32             mThumbSize;
   PRUint32             mLineIncrement;
   PRBool               mIsVertical;
   nsIRenderingContext *mRenderingContext;
+  Window               mBar;
+  nsRect               mBarBounds;
 };
 
 #endif // nsButton_h__
