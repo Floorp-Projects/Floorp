@@ -1106,11 +1106,15 @@ public class Interpreter
             iCodeTop = addShort(itsLineNumber, iCodeTop);
         } else {
             iCodeTop = addIndexOp(type, argCount, iCodeTop);
-            if (debugNameIndex < 0xFFFF) {
-                // Use only 2 bytes to store debug index
-                iCodeTop = addShort(debugNameIndex, iCodeTop);
-            } else {
-                iCodeTop = addShort(0xFFFF, iCodeTop);
+            if (type == Token.NEW) {
+                // Code for generateCallFunAndThis takes care about debugging
+                // for Token.CALL abd Token.REF_CALL;
+                if (debugNameIndex < 0xFFFF) {
+                    // Use only 2 bytes to store debug index
+                    iCodeTop = addShort(debugNameIndex, iCodeTop);
+                } else {
+                    iCodeTop = addShort(0xFFFF, iCodeTop);
+                }
             }
         }
         // adjust stack
@@ -1735,8 +1739,10 @@ public class Interpreter
                 out.println(tname+" "+idata.itsNestedFunctions[indexReg]);
                 break;
               case Token.CALL :
-              case Token.NEW :
               case Token.REF_CALL :
+                out.println(tname+' '+indexReg);
+                break;
+              case Token.NEW :
                 out.println(tname+' '+indexReg);
                 pc += 2;
                 break;
@@ -1862,9 +1868,7 @@ public class Interpreter
                 // line number
                 return 1 + 1 + 1 + 2;
 
-            case Token.CALL :
             case Token.NEW :
-            case Token.REF_CALL :
                 // index of potential function name for debugging
                 return 1 + 2;
 
@@ -2659,7 +2663,29 @@ switch (op) {
                                             indexReg);
             stack[stackTop] = fun.call(cx, funScope, funThisObj, outArgs);
         }
-        pc += 2;
+        continue Loop;
+    }
+    case Token.REF_CALL : {
+        if (instructionCounting) {
+            cx.instructionCount += INVOCATION_COST;
+        }
+        // indexReg: number of arguments
+        stackTop -= indexReg;
+        int calleeArgShft = stackTop + 1;
+
+        // REF_CALL generation ensures that funThisObj and fun
+        // are already Scriptable and Function objects respectively
+        Scriptable funThisObj = (Scriptable)stack[stackTop];
+        --stackTop;
+        Function fun = (Function)stack[stackTop];
+
+        Scriptable funScope = scope;
+        if (idata.itsNeedsActivation) {
+            funScope = ScriptableObject.getTopLevelScope(scope);
+        }
+        Object[] outArgs = getArgsArray(stack, sDbl, calleeArgShft, indexReg);
+        stack[stackTop] = ScriptRuntime.referenceCall(fun, funThisObj, outArgs,
+                                                      cx, funScope);
         continue Loop;
     }
     case Token.NEW : {
@@ -2693,31 +2719,7 @@ switch (op) {
             if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
             throw notAFunction(lhs, idata, pc);
         }
-        pc += 2;
-        continue Loop;
-    }
-    case Token.REF_CALL : {
-        if (instructionCounting) {
-            cx.instructionCount += INVOCATION_COST;
-        }
-        // indexReg: number of arguments
-        stackTop -= indexReg;
-        int calleeArgShft = stackTop + 1;
-
-        // REF_CALL generation ensures that funThisObj and fun
-        // are already Scriptable and Function objects respectively
-        Scriptable funThisObj = (Scriptable)stack[stackTop];
-        --stackTop;
-        Function fun = (Function)stack[stackTop];
-
-        Scriptable funScope = scope;
-        if (idata.itsNeedsActivation) {
-            funScope = ScriptableObject.getTopLevelScope(scope);
-        }
-        Object[] outArgs = getArgsArray(stack, sDbl, calleeArgShft, indexReg);
-        stack[stackTop] = ScriptRuntime.referenceCall(fun, funThisObj, outArgs,
-                                                      cx, funScope);
-        pc += 2;
+        pc += 2; // skip debug name index
         continue Loop;
     }
     case Token.TYPEOF : {
@@ -3467,7 +3469,7 @@ switch (op) {
         } else {
             debugName = ScriptRuntime.toString(notAFunction);
         }
-        throw ScriptRuntime.typeError1("msg.isnt.function", debugName);
+        throw ScriptRuntime.notFunctionError(notAFunction, debugName);
     }
 
     private static Object[] getArgsArray(Object[] stack, double[] sDbl,
