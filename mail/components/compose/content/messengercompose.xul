@@ -565,7 +565,7 @@
 
     <toolbaritem id="priority-button" align="center" pack="center">
       <label value="&priorityButton.label;"/>
-      <menulist id="priorityMenu-button" value="normal" oncommand="PriorityMenuSelect(event.target);">
+      <menulist id="priorityMenu-button" value="Normal" oncommand="PriorityMenuSelect(event.target);">
         <menupopup>
           <menuitem name="priority" label="&highestPriorityCmd.label;" value="Highest"  id="list_priotity_highest"/>
           <menuitem name="priority" label="&highPriorityCmd.label;"    value="High"     id="list_priority_high"/>
