@@ -37,7 +37,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.67 2004/05/05 01:15:39 jpierre%netscape.com Exp $
+ * $Id: certdb.c,v 1.68 2004/05/11 02:43:09 jpierre%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -991,6 +991,10 @@ CERT_CheckCertValidTimes(CERTCertificate *c, PRTime t, PRBool allowOverride)
     PRTime notBefore, notAfter, llPendingSlop, tmp1;
     SECStatus rv;
 
+    if (!c) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return(secCertTimeUndetermined);
+    }
     /* if cert is already marked OK, then don't bother to check */
     if ( allowOverride && c->timeOK ) {
 	return(secCertTimeValid);

@@ -36,7 +36,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.27 2004/04/25 15:03:03 gerv%gerv.net Exp $
+ * $Id: certt.h,v 1.28 2004/05/11 02:43:09 jpierre%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -517,7 +517,9 @@ typedef enum CERTCertOwnerEnum {
 typedef enum SECCertTimeValidityEnum {
     secCertTimeValid = 0,
     secCertTimeExpired = 1,
-    secCertTimeNotValidYet = 2
+    secCertTimeNotValidYet = 2,
+    secCertTimeUndetermined = 3 /* validity could not be decoded from the
+                                   cert, most likely because it was NULL */
 } SECCertTimeValidity;
 
 /*
