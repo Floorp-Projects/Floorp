@@ -39,13 +39,21 @@ extern _declspec (dllimport) WIDGET ptr_ga[1000];
 
 CInterpret::CInterpret()
 {
-	// Init linked list to avoid messing operations
+	// Init linked list to avoid messy operations on the linked list
 	m_DLLs.dllName = "";
 	m_DLLs.procName = "";
+	m_DLLs.next = NULL;
 }
 
 CInterpret::~CInterpret()
 {
+	DLLINFO *dllp = m_DLLs.next;
+
+	while (dllp)
+	{
+		FreeLibrary(dllp->hDLL);
+		dllp = dllp->next;
+	}
 }
 
 BOOL CInterpret::InitInstance()
