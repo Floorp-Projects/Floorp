@@ -284,7 +284,9 @@ protected:
   nsCOMPtr<nsIPresContext>  mContext; // ref counted
   nsCOMPtr<nsIContent>      mContent; // ref counted
   nsString                  mTextValue; // the value of the text field at focus
-
+  PRBool                    mSkipFocusDispatch; // On Mouse down we don't want to dispatch 
+                                                // any focus events (they get dispatched
+                                                // from the native widget
                             // note nsGfxTextControlFrame is held as a weak ptr
                             // because the frame can be deleted in the middle
                             // of event processing.  See the KeyUp handler
@@ -412,12 +414,14 @@ public:
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus,
-                              nsMargin&                aBorderPadding);
+                              nsMargin&                aBorder,
+                              nsMargin&                aPadding);
   NS_IMETHOD ReflowStandard(nsIPresContext&          aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
                             const nsHTMLReflowState& aReflowState,
                             nsReflowStatus&          aStatus,
-                            nsMargin&                aBorderPadding);
+                            nsMargin&                aBorder,
+                            nsMargin&                aPadding);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -443,10 +447,19 @@ public:
   nsCWeakReferent *WeakReferent()
     { return &mWeakReferent; }
 
+  // The nsEnderEventListener needs to know if the focus
+  // had been successfully set, if so then it won't reset it
+  // See: nsGfxTextControlFrame::SetFocus
+  //      nsEnderEventListener::Focus
+  PRBool DidSetFocus() { return mDidSetFocus; }
+
 protected:
 
   /** calculate the inner region of the text control (size - border and padding) in pixels */
-  virtual void CalcSizeOfSubDocInTwips(const nsMargin &aBorderPadding, const nsSize &aFrameSize, nsRect &aSubBounds);
+  virtual void CalcSizeOfSubDocInTwips(const nsMargin &aBorder, 
+                                       const nsMargin &aPadding,  
+                                       const nsSize &aFrameSize, 
+                                       nsRect &aSubBounds);
 
   PRInt32 CalculateSizeNavQuirks (nsIPresContext*       aPresContext, 
                                   nsIRenderingContext*  aRendContext,
@@ -458,7 +471,8 @@ protected:
                                   PRBool&               aWidthExplicit, 
                                   PRBool&               aHeightExplicit, 
                                   nscoord&              aRowHeight,
-                                  nsMargin&             aBorderPadding);
+                                  nsMargin&             aBorder,
+                                  nsMargin&             aPadding);
 
   PRInt32 CalculateSizeStandard (nsIPresContext*       aPresContext, 
                                   nsIRenderingContext*  aRendContext,
@@ -470,7 +484,8 @@ protected:
                                   PRBool&               aWidthExplicit, 
                                   PRBool&               aHeightExplicit, 
                                   nscoord&              aRowHeight,
-                                  nsMargin&             aBorderPadding);
+                                  nsMargin&             aBorder,
+                                  nsMargin&             aPadding);
 
   nsresult GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
                              nsIAtom *     aColSizeAttr,
@@ -523,7 +538,6 @@ protected:
                           nsIFrame*            aFrame,
                           nsFramePaintLayer    aWhichLayer);
 
-
 protected:
   nsIWebShell* mWebShell;
   PRBool mCreatingViewer;
@@ -548,6 +562,8 @@ protected:
   // editing state
   nsCOMPtr<nsIEditor>       mEditor;  // ref counted
   nsCOMPtr<nsIDOMDocument>  mDoc;     // ref counted
+
+  PRBool mDidSetFocus;  // init false, 
 
 };
 
