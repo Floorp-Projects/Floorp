@@ -1,11 +1,15 @@
 messenger.jar:
-+   content/messenger/messengercompose/addressingWidgetOverlay.js              (content/addressingWidgetOverlay.js)
-+   content/messenger/messengercompose/addressingWidgetOverlay.xul             (content/addressingWidgetOverlay.xul)
-+   content/messenger/messengercompose/MsgComposeCommands.js                   (content/MsgComposeCommands.js)
-+   content/messenger/messengercompose/messengercompose.xul                    (content/messengercompose.xul)
++ content/messenger/messengercompose/addressingWidgetOverlay.js              (content/addressingWidgetOverlay.js)
++ content/messenger/messengercompose/addressingWidgetOverlay.xul             (content/addressingWidgetOverlay.xul)
++ content/messenger/messengercompose/MsgComposeCommands.js                   (content/MsgComposeCommands.js)
++ content/messenger/messengercompose/messengercompose.xul                    (content/messengercompose.xul)
++ content/messenger/addressbook/abCommon.js                                  (content/abCommon.js)
+
+toolkit.jar:
+  content/global/autocomplete.xml                              (content/autocomplete.xml)
 
 en-US.jar:
-+   locale/en-US/messenger/messengercompose/messengercompose.dtd               (locale/messengercompose.dtd)
++ locale/en-US/messenger/messengercompose/messengercompose.dtd (locale/messengercompose.dtd)
 
 classic.jar:
   skin/classic/messenger/icons/more-disabled.gif               (skin/more-disabled.gif)
