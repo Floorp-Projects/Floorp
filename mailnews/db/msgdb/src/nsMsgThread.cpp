@@ -259,13 +259,17 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
 			topLevelHdr->GetDate(&topLevelHdrDate);
 			if (LL_CMP(newHdrDate, <, topLevelHdrDate))
 			{
-#ifdef MOVE_ROW_IMPL
 				mdb_pos outPos;
 				m_mdbTable->MoveRow(m_mdbDB->GetEnv(), hdrRow, -1, 0, &outPos);
-#endif // MOVE_ROW_IMPL
 				topLevelHdr->SetThreadParent(newHdrKey);
 				parentKeyNeedsSetting = PR_FALSE;
 				SetThreadRootKey(newHdrKey);
+				child->SetThreadParent(nsMsgKey_None);
+				// argh, here we'd need to adjust all the headers that listed 
+				// the demoted header as their thread parent, but only because
+				// of subject threading. Adjust them to point to the new parent,
+				// that is.
+				ReparentNonReferenceChildrenOf(topLevelHdr, newHdrKey, announcer);
 			}
 		}
 	}
@@ -277,6 +281,39 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
 	return ret;
 }
 
+nsresult	nsMsgThread::ReparentNonReferenceChildrenOf(nsIMsgDBHdr *topLevelHdr, nsMsgKey newParentKey,
+														nsIDBChangeAnnouncer *announcer)
+{
+	nsCOMPtr <nsIMsgDBHdr> curHdr;
+	PRUint32 numChildren;
+	PRUint32 childIndex = 0;
+
+	GetNumChildren(&numChildren);
+	for (childIndex = 0; childIndex < numChildren; childIndex++)
+	{
+		nsMsgKey msgKey;
+
+		topLevelHdr->GetMessageKey(&msgKey);
+		nsresult ret = GetChildHdrAt(childIndex, getter_AddRefs(curHdr));
+		if (NS_SUCCEEDED(ret) && curHdr)
+		{
+			nsMsgKey oldThreadParent;
+			nsIMsgDBHdr *curMsgHdr = curHdr;
+	        nsMsgHdr* topLevelMsgHdr = NS_STATIC_CAST(nsMsgHdr*, curMsgHdr);      // closed system, cast ok
+			curHdr->GetThreadParent(&oldThreadParent);
+			if (oldThreadParent == msgKey && !topLevelMsgHdr->IsParentOf(curHdr))
+			{
+				curHdr->GetThreadParent(&oldThreadParent);
+				curHdr->GetMessageKey(&msgKey);
+				curHdr->SetThreadParent(newParentKey);
+				// OK, this is a reparenting - need to send notification
+				if (announcer)
+					announcer->NotifyParentChangedAll(msgKey, oldThreadParent, newParentKey, nsnull);
+			}
+		}
+	}
+	return NS_OK;
+}
 
 NS_IMETHODIMP nsMsgThread::GetChildAt(PRInt32 aIndex, nsIMsgDBHdr **result)
 {

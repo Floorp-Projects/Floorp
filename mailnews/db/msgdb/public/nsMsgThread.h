@@ -61,6 +61,8 @@ protected:
 												nsIMsgDBHdr **result, PRInt32 *resultIndex); 
 	nsresult			ReparentChildrenOf(nsMsgKey oldParent, nsMsgKey newParent, nsIDBChangeAnnouncer *announcer);
 
+	nsresult			ReparentNonReferenceChildrenOf(nsIMsgDBHdr *topLevelHdr, nsMsgKey newParentKey,
+														nsIDBChangeAnnouncer *announcer);
 	nsMsgKey		m_threadKey; 
 	PRUint32		m_numChildren;		
 	PRUint32		m_numUnreadChildren;	
