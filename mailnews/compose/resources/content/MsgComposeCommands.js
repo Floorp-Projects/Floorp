@@ -25,6 +25,9 @@ var msgCompType = Components.interfaces.nsIMsgCompType;
 var accountManagerProgID   = "component://netscape/messenger/account-manager";
 var accountManager = Components.classes[accountManagerProgID].getService(Components.interfaces.nsIMsgAccountManager);
 
+//var mailSessionProgID   = "component://netscape/messenger/services/session";
+//var mailSession = Components.classes[mailSessionProgID].getService(Components.interfaces.nsIMsgMailSession);
+
 var messengerMigratorProgID   = "component://netscape/messenger/migrator";
 
 var msgComposeService = Components.classes["component://netscape/messengercompose"].getService();
@@ -175,6 +178,7 @@ var defaultController =
       case "cmd_selectAddress":
       case "cmd_spelling":
       case "cmd_outputFormat":
+//      case "cmd_quoteMessage":
 
         return true;
 
@@ -241,6 +245,8 @@ var defaultController =
         return !focusedElement;
       case "cmd_outputFormat":
         return msgCompose.composeHTML;
+//      case "cmd_quoteMessage":
+//        return mailSession && mailSession.topmostMsgWindow;
       
       //Format Menu
       case "cmd_format":
@@ -320,6 +326,7 @@ var defaultController =
 
       //Options Menu
       case "cmd_selectAddress"      : if (defaultController.isCommandEnabled(command)) SelectAddress();         break;
+//      case "cmd_quoteMessage"       : if (defaultController.isCommandEnabled(command)) QuoteSelectedMessage();  break;
 
       default: 
 //        dump("##MsgCompose: don't know what to do with command " + command + "!\n");
@@ -342,6 +349,8 @@ function SetupCommandUpdateHandlers()
 function CommandUpdate_MsgCompose()
 {
 //  dump("\nCommandUpdate_MsgCompose\n");
+  try {
+  
   //File Menu
   goUpdateCommand("cmd_attachFile");
   goUpdateCommand("cmd_attachPage");
@@ -365,69 +374,78 @@ function CommandUpdate_MsgCompose()
   goUpdateCommand("cmd_showFormatToolbar");
   
   //Insert Menu
-  goUpdateCommand("cmd_insert");
-  goUpdateCommand("cmd_link");
-  goUpdateCommand("cmd_anchor");
-  goUpdateCommand("cmd_image");
-  goUpdateCommand("cmd_hline");
-  goUpdateCommand("cmd_table");
-  goUpdateCommand("cmd_insertHTML");
-  goUpdateCommand("cmd_insertChars");
-  goUpdateCommand("cmd_insertBreak");
-  goUpdateCommand("cmd_insertBreakAll");
+  if (msgCompose.composeHTML)
+  {
+    goUpdateCommand("cmd_insert");
+    goUpdateCommand("cmd_link");
+    goUpdateCommand("cmd_anchor");
+    goUpdateCommand("cmd_image");
+    goUpdateCommand("cmd_hline");
+    goUpdateCommand("cmd_table");
+    goUpdateCommand("cmd_insertHTML");
+    goUpdateCommand("cmd_insertChars");
+    goUpdateCommand("cmd_insertBreak");
+    goUpdateCommand("cmd_insertBreakAll");
+  }
   
   //Format Menu
-  goUpdateCommand("cmd_format");
-  goUpdateCommand("cmd_decreaseFont");
-  goUpdateCommand("cmd_increaseFont");
-  goUpdateCommand("cmd_bold");
-  goUpdateCommand("cmd_italic");
-  goUpdateCommand("cmd_underline");
-  goUpdateCommand("cmd_strikethrough");
-  goUpdateCommand("cmd_superscript");
-  goUpdateCommand("cmd_subscript");
-  goUpdateCommand("cmd_nobreak");
-  goUpdateCommand("cmd_em");
-  goUpdateCommand("cmd_strong");
-  goUpdateCommand("cmd_cite");
-  goUpdateCommand("cmd_abbr");
-  goUpdateCommand("cmd_acronym");
-  goUpdateCommand("cmd_code");
-  goUpdateCommand("cmd_samp");
-  goUpdateCommand("cmd_var");
-  goUpdateCommand("cmd_removeList");
-  goUpdateCommand("cmd_ul");
-  goUpdateCommand("cmd_ol");
-  goUpdateCommand("cmd_dt");
-  goUpdateCommand("cmd_dd");
-  goUpdateCommand("cmd_listProperties");
-  goUpdateCommand("cmd_indent");
-  goUpdateCommand("cmd_outdent");
-  goUpdateCommand("cmd_objectProperties");
-  goUpdateCommand("cmd_InsertTable");
-  goUpdateCommand("cmd_InsertRowAbove");
-  goUpdateCommand("cmd_InsertRowBelow");
-  goUpdateCommand("cmd_InsertColumnBefore");
-  goUpdateCommand("cmd_InsertColumnAfter");
-  goUpdateCommand("cmd_SelectTable");
-  goUpdateCommand("cmd_SelectRow");
-  goUpdateCommand("cmd_SelectColumn");
-  goUpdateCommand("cmd_SelectCell");
-  goUpdateCommand("cmd_SelectAllCells");
-  goUpdateCommand("cmd_DeleteTable");
-  goUpdateCommand("cmd_DeleteRow");
-  goUpdateCommand("cmd_DeleteColumn");
-  goUpdateCommand("cmd_DeleteCell");
-  goUpdateCommand("cmd_DeleteCellContents");
-  goUpdateCommand("cmd_NormalizeTable");
-  goUpdateCommand("cmd_tableJoinCells");
-  goUpdateCommand("cmd_tableSplitCell");
-  goUpdateCommand("cmd_editTable");
+  if (msgCompose.composeHTML)
+  {
+    goUpdateCommand("cmd_format");
+    goUpdateCommand("cmd_decreaseFont");
+    goUpdateCommand("cmd_increaseFont");
+    goUpdateCommand("cmd_bold");
+    goUpdateCommand("cmd_italic");
+    goUpdateCommand("cmd_underline");
+    goUpdateCommand("cmd_strikethrough");
+    goUpdateCommand("cmd_superscript");
+    goUpdateCommand("cmd_subscript");
+    goUpdateCommand("cmd_nobreak");
+    goUpdateCommand("cmd_em");
+    goUpdateCommand("cmd_strong");
+    goUpdateCommand("cmd_cite");
+    goUpdateCommand("cmd_abbr");
+    goUpdateCommand("cmd_acronym");
+    goUpdateCommand("cmd_code");
+    goUpdateCommand("cmd_samp");
+    goUpdateCommand("cmd_var");
+    goUpdateCommand("cmd_removeList");
+    goUpdateCommand("cmd_ul");
+    goUpdateCommand("cmd_ol");
+    goUpdateCommand("cmd_dt");
+    goUpdateCommand("cmd_dd");
+    goUpdateCommand("cmd_listProperties");
+    goUpdateCommand("cmd_indent");
+    goUpdateCommand("cmd_outdent");
+    goUpdateCommand("cmd_objectProperties");
+    goUpdateCommand("cmd_InsertTable");
+    goUpdateCommand("cmd_InsertRowAbove");
+    goUpdateCommand("cmd_InsertRowBelow");
+    goUpdateCommand("cmd_InsertColumnBefore");
+    goUpdateCommand("cmd_InsertColumnAfter");
+    goUpdateCommand("cmd_SelectTable");
+    goUpdateCommand("cmd_SelectRow");
+    goUpdateCommand("cmd_SelectColumn");
+    goUpdateCommand("cmd_SelectCell");
+    goUpdateCommand("cmd_SelectAllCells");
+    goUpdateCommand("cmd_DeleteTable");
+    goUpdateCommand("cmd_DeleteRow");
+    goUpdateCommand("cmd_DeleteColumn");
+    goUpdateCommand("cmd_DeleteCell");
+    goUpdateCommand("cmd_DeleteCellContents");
+    goUpdateCommand("cmd_NormalizeTable");
+    goUpdateCommand("cmd_tableJoinCells");
+    goUpdateCommand("cmd_tableSplitCell");
+    goUpdateCommand("cmd_editTable");
+  }
 
   //Options Menu
   goUpdateCommand("cmd_selectAddress");
   goUpdateCommand("cmd_spelling");
   goUpdateCommand("cmd_outputFormat");
+//  goUpdateCommand("cmd_quoteMessage");
+  
+  } catch(e) {}
 }
 
 function DoCommandClose()
@@ -525,7 +543,9 @@ function WaitFinishLoadingDocument(msgType)
 		CompFields2Recipients(msgCompose.compFields, msgType);
 		SetComposeWindowTitle(13);
 		AdjustFocus();
+		try {
 		window.updateCommands("create");
+		} catch(e) {}
 	}
 	else
 		setTimeout("WaitFinishLoadingDocument(" + msgType + ");", 200);
@@ -670,7 +690,9 @@ function ComposeStartup()
 			msgCompose.RegisterStateListener(stateListener);
 
 			// call updateCommands to disable while we're loading the page
+		  try {
 			window.updateCommands("create");
+  		} catch(e) {}
 			
 //	    SetupCommandUpdateHandlers();
 			WaitFinishLoadingDocument(args.type);
@@ -1298,6 +1320,8 @@ function AddAttachment(attachment)
 			prettyName = msgCompose.AttachmentPrettyName(attachment);
 		cell.setAttribute("value", prettyName);				//use for display only
 		cell.setAttribute("attachment", attachment);		//full url stored here
+//		cell.setAttribute("tooltip", "aTooltip");
+//		cell.setAttribute("tooltiptext", unescape(attachment));
 		row.appendChild(cell);
 		item.appendChild(row);
 		bucketBody.appendChild(item);
