@@ -38,7 +38,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.58 2003/10/17 13:45:39 ian.mcgreer%sun.com Exp $
+ * $Id: ssl3con.c,v 1.59 2003/10/19 01:55:50 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -5038,7 +5038,6 @@ ssl3_HandleCertificateRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     ssl3State *          ssl3        = ss->ssl3;
     PRArenaPool *        arena       = NULL;
     dnameNode *          node;
-    unsigned char *      data;
     PRInt32              remaining;
     PRBool               isTLS       = PR_FALSE;
     int                  i;
@@ -5573,7 +5572,7 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	goto loser;		/* malformed */
     }
 
-    if (sidBytes.len > 0) {
+    if (sidBytes.len > 0 && !ss->noCache) {
 	SSL_TRC(7, ("%d: SSL3[%d]: server, lookup client session-id for 0x%08x%08x%08x%08x",
                     SSL_GETPID(), ss->fd, ss->sec.ci.peer.pr_s6_addr32[0],
 		    ss->sec.ci.peer.pr_s6_addr32[1], 
@@ -7734,7 +7733,7 @@ ssl3_HandleFinished(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
     PRBool            isServer     = ss->sec.isServer;
     PRBool            isTLS;
     PRBool            doStepUp;
-    CK_MECHANISM_TYPE mechanism;
+    CK_MECHANISM_TYPE mechanism    = CKM_INVALID_MECHANISM;
     SSL3KEAType       effectiveExchKeyType;
 
     PORT_Assert( ssl_HaveRecvBufLock(ss) );
@@ -7890,8 +7889,8 @@ xmit_loser:
 	    	PK11_SetWrapKey(symKeySlot, wrapKeyIndex, wrappingKey);
 	    }
 	}
-    } else {
-	/* server. */
+    } else if (!ss->noCache) {
+	/* server socket using session cache. */
 	mechanism = PK11_GetBestWrapMechanism(symKeySlot);
 	if (mechanism != CKM_INVALID_MECHANISM) {
 	    wrappingKey =
