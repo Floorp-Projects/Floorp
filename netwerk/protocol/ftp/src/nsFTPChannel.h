@@ -81,6 +81,9 @@ protected:
     nsCOMPtr<nsISupports>   mOwner;
     nsHashtable*            mConnectionList; // thread safe list of connections.
     nsIThread*              mConnectionThread; // the thread for this connection.
+
+    nsIEventQueue*          mConnectionEventQueue;
+    nsIRequest*             mThreadRequest; // the nsIRequest proxy object.
 };
 
 #define NS_FTP_SEGMENT_SIZE   (4*1024)

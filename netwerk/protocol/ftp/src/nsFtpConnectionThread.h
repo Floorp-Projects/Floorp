@@ -21,6 +21,7 @@
 
 #include "nsIThread.h"
 #include "nsIRunnable.h"
+#include "nsIRequest.h"
 #include "nsISocketTransportService.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
@@ -52,6 +53,8 @@ public:
         NS_ADDREF(mOutputStream);
 
         mServerType = 0;
+        mList = PR_FALSE;
+        mUseDefaultPath = PR_TRUE;
     };
     ~nsConnCacheObj()
     {
@@ -66,6 +69,7 @@ public:
     PRUint32         mServerType;           // what kind of server is it.
     nsCAutoString    mCwd;                  // what dir are we in
     PRBool           mList;                 // are we sending LIST or NLST
+    PRBool           mUseDefaultPath;       // do we need to use the default path.
 };
 
 // ftp server types
@@ -143,15 +147,18 @@ typedef enum _FTP_ACTION {
     DEL
 } FTP_ACTION;
 
-class nsFtpConnectionThread : public nsIRunnable {
+class nsFtpConnectionThread : public nsIRunnable,
+                              public nsIRequest {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIRUNNABLE
+    NS_DECL_NSIREQUEST
 
     nsFtpConnectionThread();
     virtual ~nsFtpConnectionThread();
 
-    nsresult Init(nsIURI* aUrl,
+    nsresult Init(nsIEventQueue* aFTPEventQ,
+                  nsIURI* aUrl,
                   nsIEventQueue* aEventQ,
                   nsIStreamListener *aListener,
                   nsIChannel* channel,
@@ -161,7 +168,6 @@ public:
 
     // user level setup
     nsresult SetAction(FTP_ACTION aAction);
-    nsresult SetUsePasv(PRBool aUsePasv);
 
 private:
 
@@ -215,6 +221,7 @@ private:
     // Private members
 
     nsIEventQueue*      mEventQueue;        // used to communicate outside this thread
+    nsIEventQueue*      mFTPEventQueue;     // the eventq for this thread.
     nsIURI*             mUrl;
 
     FTP_STATE           mState;             // the current state
@@ -278,10 +285,7 @@ private:
 
 };
 
-#define NS_FTP_THREAD_SEGMENT_SIZE      (4*1024)
-#define NS_FTP_THREAD_BUFFER_SIZE       (16*1024)
-
-#define NS_FTP_BUFFER_READ_SIZE             (4*1024)
-#define NS_FTP_BUFFER_WRITE_SIZE            (4*1024)
+#define NS_FTP_BUFFER_READ_SIZE             (8*1024)
+#define NS_FTP_BUFFER_WRITE_SIZE            (8*1024)
 
 #endif //__nsftpconnectionthread__h_
