@@ -48,7 +48,6 @@
 class nsIAtom;
 class nsIArena;
 class nsIContent;
-class nsIDocumentContainer;
 class nsIDocumentObserver;
 class nsIPresContext;
 class nsIPresShell;
