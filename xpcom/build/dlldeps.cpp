@@ -87,7 +87,6 @@
 #include "nsEscape.h"
 #include "nsStreamUtils.h"
 #include "nsNativeCharsetUtils.h"
-#include "nsComponentManagerObsolete.h"
 #include "nsInterfaceRequestorAgg.h"
 #include "nsHashPropertyBag.h"
 #include "nsStringAPI.h"
