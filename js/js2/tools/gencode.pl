@@ -127,6 +127,24 @@ $ops{"SET_PROP"} =
    rem    => "object, name, source",
    params => [ ("Register", "const StringAtom*", "Register") ]
   };
+$ops{"PROP_XCR"} =
+  {
+   super  => "Instruction_4",
+   rem    => "dest, source, name, value",
+   params => [ ("Register", "Register", "const StringAtom*", "double") ]
+  };
+$ops{"NAME_XCR"} =
+  {
+   super  => "Instruction_3",
+   rem    => "dest, name, value",
+   params => [ ("Register", "const StringAtom*", "double") ]
+  };
+$ops{"VAR_XCR"} =
+  {
+   super  => "Instruction_3",
+   rem    => "dest, source, value",
+   params => [ ("Register", "Register", "double") ]
+  };
 $ops{"GET_ELEMENT"} =
   {
    super  => "Instruction_3",
