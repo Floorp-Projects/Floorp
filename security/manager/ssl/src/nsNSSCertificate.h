@@ -53,6 +53,7 @@ public:
   nsNSSCertificate(CERTCertificate *cert);
   /* from a request? */
   virtual ~nsNSSCertificate();
+  CERTCertificate *GetCert();
 
 private:
   CERTCertificate *mCert;

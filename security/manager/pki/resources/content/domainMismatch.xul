@@ -18,11 +18,10 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://pippki/locale/newserver.dtd">
-
+<!DOCTYPE window SYSTEM "chrome://pippki/locale/pippki.dtd">
 
 <window
-  id="ssl_warning" title="&newserver.title;"
+  id="domainMismatch" title="&domainMismatch.title;"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   debug="false"
@@ -32,31 +31,13 @@
 >
 <script src="chrome://global/content/strres.js" />
 <script src="pippki.js" />
-<script src="newserver.js" />
+<script src="domainMismatch.js" />
 
 <box orient="vertical" style="margin: 5px;" flex="1">
 
   <html id="message1" />
   <separator/>
-  <html>&newserver.message2;</html>
-  <separator/>
-  <html>&newserver.message3;</html>
-  <separator/>
-  <html id="message4" />
-
-  <radiogroup id="trustSiteCert" pref="false" orient="vertical">
-    <radio group="trustSiteCert" 
-           value="&newserver.acceptperm;"
-           id="acceptRadio"
-            data="0"/>
-    <radio group="trustSiteCert" 
-           value="&newserver.accepttemp;"
-           id="tmpAcceptRadio"  
-           data="1" checked="true"/>
-    <radio group="trustSiteCert" 
-           id="rejectRadio"
-           value="&newserver.reject;" data="2"/>
-  </radiogroup>
+  <html id="message2" />
 
   <!--
   <box>
@@ -66,12 +47,12 @@
   <separator/>
   -->
   <box>
-  <button id="ok-button" class="dialog" value="&newserver.okButton.label;"
-     style="width: 10ex" onclick="doOK();" disabled="false"/> 
-  <button id="cancel-button" class="dialog" value="&newserver.cancelButton.label;"
-     style="width: 10ex" onclick="doCancel();" /> 
-  <button id="help-button" class="dialog" value="&newserver.helpButton.label;"
-    style="width: 10ex" onclick="alert('Will bring up help one day');" /> 
+  <button id="ok-button" class="dialog" value="&ok.label;"
+     style="width: 8ex" onclick="doOK();" disabled="false"/> 
+  <button id="cancel-button" class="dialog" value="&cancel.label;"
+     style="width: 8ex" onclick="doCancel();" /> 
+  <button id="help-button" class="dialog" value="&help.label;"
+    style="width: 8ex" onclick="alert('Will bring up help one day');" /> 
   </box>
 </box>
 </window>

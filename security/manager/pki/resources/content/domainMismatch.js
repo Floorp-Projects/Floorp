@@ -30,27 +30,24 @@ var params;
 function onLoad()
 {
   params = window.arguments[0].QueryInterface(nsIDialogParamBlock);  
-  serverName = params.GetString(1); 
+  var connectURL = params.GetString(1); 
+  var certURL    = params.GetString(2);
 
-  var bundle = srGetStrBundle("chrome://pippki/locale/newserver.properties");
-  var gBundleBrand = srGetStrBundle("chrome://global/locale/brand.properties");
+  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
 
-  var brandName = gBundleBrand.GetStringFromName("brandShortName");
-  var message1 = bundle.formatStringFromName("newServerMessage1", 
-                                             [ serverName, brandName ],
+  var message1 = bundle.formatStringFromName("mismatchDomainMsg1", 
+                                             [ connectURL, certURL ],
                                              2);
-  var message4 = bundle.formatStringFromName("newServerMessage4", 
-                                             [ serverName ],
+  var message2 = bundle.formatStringFromName("mismatchDomainMsg2", 
+                                             [ connectURL ],
                                               1);
   setText("message1", message1);
-  setText("message4", message4);
+  setText("message2", message2);
 }
 
 function doOK()
 {
   params.SetInt(1,1);
-  var radioGroup = document.getElementById("trustSiteCert");
-  params.SetInt(2,parseInt(radioGroup.selectedItem.data));
   window.close();
 }
 

@@ -30,15 +30,83 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.1 2001/02/16 22:17:44 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.2 2001/02/24 00:20:30 javi%netscape.com Exp $
  */
 
 #include "nsNSSCertificate.h"
 #include "nsString.h"
 
+/* Header file */
+class nsX509CertValidity : public nsIX509CertValidity
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIX509CERTVALIDITY
+
+  nsX509CertValidity();
+  nsX509CertValidity(CERTCertificate *cert);
+  virtual ~nsX509CertValidity();
+  /* additional members */
+
+private:
+  PRTime mNotBefore, mNotAfter;
+  PRBool mTimesInitialized;
+};
+
+/* Implementation file */
+NS_IMPL_ISUPPORTS1(nsX509CertValidity, nsIX509CertValidity)
+
+nsX509CertValidity::nsX509CertValidity() : mTimesInitialized(PR_FALSE)
+{
+  NS_INIT_ISUPPORTS();
+  /* member initializers and constructor code */
+}
+
+nsX509CertValidity::nsX509CertValidity(CERTCertificate *cert) : 
+                                           mTimesInitialized(PR_FALSE)
+{
+  NS_INIT_ISUPPORTS();
+  if (cert) {
+    SECStatus rv = CERT_GetCertTimes(cert, &mNotBefore, &mNotAfter);
+    if (rv == SECSuccess)
+      mTimesInitialized = PR_TRUE;
+  }
+}
+
+nsX509CertValidity::~nsX509CertValidity()
+{
+  /* destructor code */
+}
+
+/* readonly attribute PRTime notBefore; */
+NS_IMETHODIMP nsX509CertValidity::GetNotBefore(PRTime *aNotBefore)
+{
+  NS_ENSURE_ARG(aNotBefore);
+
+  nsresult rv = NS_ERROR_FAILURE;
+  if (mTimesInitialized) {
+    *aNotBefore = mNotBefore;
+    rv = NS_OK;
+  }
+  return rv;
+}
+
+/* readonly attribute PRTime notAfter; */
+NS_IMETHODIMP nsX509CertValidity::GetNotAfter(PRTime *aNotAfter)
+{
+  NS_ENSURE_ARG(aNotAfter);
+
+  nsresult rv = NS_ERROR_FAILURE;
+  if (mTimesInitialized) {
+    *aNotAfter = mNotAfter;
+    rv = NS_OK;
+  }
+  return rv;
+}
+
 /* nsNSSCertificate */
 
-NS_IMPL_ISUPPORTS1(nsNSSCertificate, nsIX509Cert)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsNSSCertificate, nsIX509Cert)
 
 nsNSSCertificate::nsNSSCertificate(const char *certDER, int derLen)
 {
@@ -73,6 +141,25 @@ nsNSSCertificate::GetCommonName(PRUnichar **aCommonName)
       *aCommonName = cn.ToNewUnicode();
     }
   }
+  return NS_OK;
+}
+
+CERTCertificate *
+nsNSSCertificate::GetCert()
+{
+  return (mCert) ? CERT_DupCertificate(mCert) : nsnull;
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::GetValidity(nsIX509CertValidity **aValidity)
+{
+  NS_ENSURE_ARG(aValidity);
+  nsX509CertValidity *validity = new nsX509CertValidity(mCert);
+  if (nsnull == validity)
+   return  NS_ERROR_OUT_OF_MEMORY; 
+
+  NS_ADDREF(validity);
+  *aValidity = NS_STATIC_CAST(nsIX509CertValidity*, validity);
   return NS_OK;
 }
 

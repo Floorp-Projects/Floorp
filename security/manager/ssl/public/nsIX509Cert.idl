@@ -35,12 +35,19 @@
 
 #include "nsISupports.idl"
 
+[scriptable, uuid(e701dfd8-1dd1-11b2-a172-ffa6cc6156ad)]
+interface nsIX509CertValidity : nsISupports {
+  readonly attribute PRTime notBefore;
+  readonly attribute PRTime notAfter;
+};
+
 [scriptable, uuid(f0980f60-ee3d-11d4-998b-00b0d02354a0)]
 interface nsIX509Cert : nsISupports {
   /*
    * attributes for certs
    */
   readonly attribute wstring commonName;
-  
+
+  readonly attribute nsIX509CertValidity validity;
 };
 

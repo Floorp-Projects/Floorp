@@ -29,28 +29,22 @@ var params;
 
 function onLoad()
 {
-  params = window.arguments[0].QueryInterface(nsIDialogParamBlock);  
-  serverName = params.GetString(1); 
+  params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
 
-  var bundle = srGetStrBundle("chrome://pippki/locale/newserver.properties");
-  var gBundleBrand = srGetStrBundle("chrome://global/locale/brand.properties");
-
-  var brandName = gBundleBrand.GetStringFromName("brandShortName");
-  var message1 = bundle.formatStringFromName("newServerMessage1", 
-                                             [ serverName, brandName ],
-                                             2);
-  var message4 = bundle.formatStringFromName("newServerMessage4", 
-                                             [ serverName ],
+  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+  var message1 = params.GetString(1);
+  
+  var currDate = new Date(); 
+  var message2 = bundle.formatStringFromName("serverCertExpiredMsg2", 
+                                             [ currDate.toLocaleString() ],
                                               1);
   setText("message1", message1);
-  setText("message4", message4);
+  setText("message2", message2);
 }
 
 function doOK()
 {
   params.SetInt(1,1);
-  var radioGroup = document.getElementById("trustSiteCert");
-  params.SetInt(2,parseInt(radioGroup.selectedItem.data));
   window.close();
 }
 
