@@ -60,8 +60,7 @@ static int sDOMStringFinalizerIndex = -1;
 static void JS_DLL_CALLBACK
 DOMStringFinalizer(JSContext *cx, JSString *str)
 {
-    PRUnichar *data = JS_GetStringChars(str);
-    nsStringBuffer::FromData(data)->Release();
+    nsStringBuffer::FromData(JS_GetStringChars(str))->Release();
 }
 
 void
@@ -97,9 +96,10 @@ XPCStringConvert::ReadableToJSString(JSContext *cx,
                 return NULL;
         }
 
-        PRUnichar *data = NS_REINTERPRET_CAST(PRUnichar *, buf->Data());
+        str = JS_NewExternalString(cx, 
+                                   NS_REINTERPRET_CAST(jschar *, buf->Data()),
+                                   length, sDOMStringFinalizerIndex);
 
-        str = JS_NewExternalString(cx, data, length, sDOMStringFinalizerIndex);
         if (str)
             buf->AddRef();
     }
