@@ -80,10 +80,10 @@ function LoadModules()
     } catch (e) { done = true; }
   }
   /* Set the text on the fips button */
-  SetFIPSButtonText();
+  SetFIPSButton();
 }
 
-function SetFIPSButtonText()
+function SetFIPSButton()
 {
   var fipsButton = document.getElementById("fipsbutton");
   var label;
@@ -93,6 +93,13 @@ function SetFIPSButtonText()
    label = bundle.GetStringFromName("enable_fips"); 
   }
   fipsButton.setAttribute("label", label);
+
+  var can_toggle = secmoddb.canToggleFIPS;
+  if (can_toggle) {
+    fipsButton.removeAttribute("disabled");
+  } else {
+    fipsButton.setAttribute("disabled", "true");
+  }
 }
 
 /* Add a module to the tree.  slots is the array of slots in the module,
