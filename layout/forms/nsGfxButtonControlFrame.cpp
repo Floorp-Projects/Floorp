@@ -612,6 +612,7 @@ nsGfxButtonControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 {
   mSuggestedWidth = aWidth;
   mSuggestedHeight = aHeight;
+  mState |= NS_FRAME_IS_DIRTY;
   return NS_OK;
 }
 
