@@ -27,7 +27,9 @@
 #ifndef nsZipArchive_h_
 #define nsZipArchive_h_
 
+#ifdef XP_UNIX
 #include "prio.h"  // for PRFileDesc.
+#endif
 
 #define ZIP_MAGIC     0x5A49505FL   /* "ZIP_" */
 #define ZIPFIND_MAGIC 0x5A495046L   /* "ZIPF" */
