@@ -727,9 +727,8 @@ tabcontrol {
 /********* XP Scrollbar *********/
 
 thumb {
-   display: block;
    background-color: rgb(206, 207, 206);
-   border: 2px outset rgb(156, 154, 156);
+   border: 1px outset white;
    list-style-image: url(chrome://global/skin/scroll-thumb-horiz.gif)
 }
 
@@ -773,14 +772,13 @@ slider {
    display: block;
    border: 1px solid black;
    background-color: rgb(240,240,240);
- //  background-image: url("resource:/res/samples/bg.jpg");
 }
 
 scrollbarbutton {
   vertical-align: bottom;
   cursor: default;
 
-  border: 1px outset black;
+  border: 1px outset white;
   background-color: rgb(206, 207, 206);
   color:black; 
 
