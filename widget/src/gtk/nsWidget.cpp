@@ -567,9 +567,6 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
     mUpdateArea.SetRect(0, 0, mBounds.width, mBounds.height);
   }
 
-#ifdef DEBUG_pavlov
-  g_print("nsWidget::Invalidate(this=%p, %i)\n", this, aIsSynchronous);
-#endif
   return NS_OK;
 }
 
@@ -599,11 +596,6 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
                                    aRect.width, aRect.height);
   }
 
-#ifdef DEBUG_pavlov
-  g_print("nsWidget::Invalidate(this=%p, {x=%i,y=%i,w=%i,h=%i}, %i)\n",
-          this, aRect.x, aRect.y, aRect.width, aRect.height, aIsSynchronous);
-#endif
-
   return NS_OK;
 }
 
@@ -624,9 +616,7 @@ NS_METHOD nsWidget::Update(void)
     }
   }
   else {
-#ifdef DEBUG_pavlov
-  g_print("nsWidget::Update(this=%p): avoided update of empty area\n", this);
-#endif
+    //  g_print("nsWidget::Update(this=%p): avoided update of empty area\n", this);
   }
   return NS_OK;
 }
@@ -806,9 +796,22 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   CreateNative (parentWidget);
 
   Resize(aRect.width, aRect.height, PR_FALSE);
-  /* place the widget in its parent */
-  if (parentWidget)
-    gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
+
+  /* place the widget in its parent if it isn't a toplevel window*/
+  if (mIsToplevel)
+  {
+    if (parentWidget)
+    {
+      // set transient properties
+    }
+  }
+  else
+  {
+    if (parentWidget)
+    {
+      gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
+    }
+  }
 
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();

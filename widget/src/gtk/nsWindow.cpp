@@ -239,23 +239,30 @@ gint handle_delete_event(GtkWidget *w, GdkEventAny *e, nsWindow *win)
   return TRUE;
 }
 
+
+
 NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
 {
   if (nsnull != aInitData) {
     switch(aInitData->mBorderStyle)
     {
       case eBorderStyle_none:
+        g_print("border style is:  eBorderStyle_none\n");
         break;
       case eBorderStyle_dialog:
+        g_print("border style is:  eBorderStyle_dialog\n");
         mBorderStyle = GTK_WINDOW_DIALOG;
         break;
       case eBorderStyle_window:
+        g_print("border style is:  eBorderStyle_window\n");
         mBorderStyle = GTK_WINDOW_TOPLEVEL;
         break;
       case eBorderStyle_BorderlessTopLevel:
+        g_print("border style is:  eBorderStyle_BorderlessTopLevel\n");
       	mBorderStyle = GTK_WINDOW_POPUP;
         break;
       case eBorderStyle_3DChildWindow:
+        g_print("border style is:  eBorderStyle_3dChildWindow\n");
         break;
     }
     return NS_OK;
@@ -305,14 +312,20 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   if (mBorderStyle == GTK_WINDOW_POPUP)
   {
     mShell = gtk_window_new(GTK_WINDOW_POPUP);
-    gtk_window_set_default_size(GTK_WINDOW(mShell), 
-                                mBounds.width,
-                                mBounds.height);
-
     gtk_container_add(GTK_CONTAINER(mShell), mWidget);
+
 
     // Distinguish top-level windows from child windows
     mIsToplevel = PR_TRUE;
+
+
+    // link the window to its parent if it has one
+    if (parentWidget)
+    {
+      GtkWidget *tlw = gtk_widget_get_toplevel(parentWidget);
+      if (GTK_IS_WINDOW(tlw))
+        gtk_window_set_transient_for(GTK_WINDOW(mShell), GTK_WINDOW(tlw));
+    }
 
 
     // is this needed?
@@ -716,8 +729,18 @@ NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
   // not implimented for toplevel windows
   if (mIsToplevel && mShell)
   {
-    gtk_widget_set_uposition(mShell, aX, aY);
-
+    // do it the way it should be done period.
+    if (!mParent)
+      gtk_widget_set_uposition(mShell, aX, aY);
+    else
+    {
+      // *VERY* stupid hack to make gfx combo boxes work
+      nsRect oldrect, newrect;
+      oldrect.x = aX;
+      oldrect.y = aY;
+      mParent->WidgetToScreen(oldrect, newrect);
+      gtk_widget_set_uposition(mShell, newrect.x, newrect.y);
+    }
   }
   else if (mWidget) {
     ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
@@ -804,9 +827,6 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
     mUpdateArea.SetRect(0, 0, mBounds.width, mBounds.height);
   }
 
-#ifdef DEBUG_pavlov
-  g_print("nsWindow::Invalidate(this=%p, %i)\n", this, aIsSynchronous);
-#endif
   return NS_OK;
 }
 
@@ -843,11 +863,6 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
                                  aRect.x, aRect.y,
                                  aRect.width, aRect.height);
   }
-
-#ifdef DEBUG_pavlov
-  g_print("nsWindow::Invalidate(this=%p, {x=%i,y=%i,w=%i,h=%i}, %i)\n",
-          this, aRect.x, aRect.y, aRect.width, aRect.height, aIsSynchronous);
-#endif
 
   return NS_OK;
 }
