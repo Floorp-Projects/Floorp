@@ -1368,6 +1368,8 @@ void nsGfxTextControlFrame::SetTextControlFrameState(const nsString& aValue)
 			flags &= ~(nsIHTMLEditor::eEditorDisabledMask);
 			flags &= ~(nsIHTMLEditor::eEditorReadonlyMask);
 			mEditor->SetFlags(flags);
+      mEditor->SelectAll();
+      mEditor->DeleteSelection(nsIEditor::eNone);
       htmlEditor->InsertText(aValue);
 			mEditor->SetFlags(savedFlags);
     }
