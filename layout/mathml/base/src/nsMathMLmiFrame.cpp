@@ -37,6 +37,8 @@
 #include "nsStyleUtil.h"
 
 #include "nsIDOMText.h"
+#include "nsIFrameManager.h"
+#include "nsStyleChangeList.h"
 
 #include "nsMathMLmiFrame.h"
 
@@ -77,11 +79,13 @@ IsStyleInvariant(PRUnichar aChar)
 void
 nsMathMLmiFrame::ProcessTextData(nsIPresContext* aPresContext)
 {
+  if (!mFrames.FirstChild())
+    return;
+
   // Get the text content that we enclose and its length
   // our content can include comment-nodes, attribute-nodes, text-nodes...
   // we use the DOM to make sure that we are only looking at text-nodes...
   nsAutoString data;
-  PRInt32 length = 0;
   PRInt32 numKids;
   mContent->ChildCount(numKids);
   for (PRInt32 kid = 0; kid < numKids; kid++) {
@@ -90,9 +94,6 @@ nsMathMLmiFrame::ProcessTextData(nsIPresContext* aPresContext)
     if (kidContent.get()) {      	
       nsCOMPtr<nsIDOMText> kidText(do_QueryInterface(kidContent));
       if (kidText.get()) {
-      	PRUint32 kidLength;
-        kidText->GetLength(&kidLength);
-        length += kidLength;        
       	nsAutoString kidData;
         kidText->GetData(kidData);
         data += kidData;
@@ -100,42 +101,39 @@ nsMathMLmiFrame::ProcessTextData(nsIPresContext* aPresContext)
     }
   }
 
-  PRBool isStyleInvariant = (1 == length) && IsStyleInvariant(data[0]);
-  nsIFrame* firstChild = mFrames.FirstChild();
-  if (firstChild && ((1 < length) || isStyleInvariant)) {
-    // we are going to switch the font to normal ...
-
-    // we always enforce the style to normal if this is a non-stylable char.
-    // for other chars, we don't disable the italic style if we are in the
-    // scope of a mstyle frame with an explicit fontstyle="italic" ...
-    // XXX Need to also disable any bold style for non-stylable char.
-    nsAutoString fontstyle;
-    if (!isStyleInvariant) {
-      if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                       nsMathMLAtoms::fontstyle_, fontstyle))
-      {
-        if (fontstyle.Equals(NS_LITERAL_STRING("italic")))
-          return;
-      }
+  PRInt32 length = data.Length();
+  nsAutoString fontstyle;
+  if (1 == length) {
+    // our text content consits of a single character
+    if (IsStyleInvariant(data[0])) {
+      // bug 65951 - we always enforce the style to normal for a non-stylable char
+      // XXX also disable bold type? (makes sense to let the set IR be bold, no?) 
+      fontstyle.Assign(NS_LITERAL_STRING("normal"));
     }
-
-    // set the -moz-math-font-style attribute without notifying that we want a reflow
+    else {
+      fontstyle.Assign(NS_LITERAL_STRING("italic"));
+    }
+  }
+  else {
+    // our text content consits of multiple characters
     fontstyle.Assign(NS_LITERAL_STRING("normal"));
-    mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::fontstyle,
-                      fontstyle, PR_FALSE);
-    // then, re-resolve the style contexts in our subtree
-    nsCOMPtr<nsIStyleContext> parentStyleContext;
-    parentStyleContext = getter_AddRefs(mStyleContext->GetParent());
-    nsCOMPtr<nsIStyleContext> newStyleContext;
-    aPresContext->ResolveStyleContextFor(mContent, parentStyleContext,
-                                         PR_FALSE, getter_AddRefs(newStyleContext));
-    if (newStyleContext && newStyleContext.get() != mStyleContext) {
-      SetStyleContext(aPresContext, newStyleContext);
-      nsIFrame* childFrame = mFrames.FirstChild();
-      while (childFrame) {
-        aPresContext->ReParentStyleContext(childFrame, newStyleContext);
-        childFrame->GetNextSibling(&childFrame);
-      }
+  }
+
+  // set the -moz-math-font-style attribute without notifying that we want a reflow
+  mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::fontstyle, fontstyle, PR_FALSE);
+
+  // then, re-resolve the style contexts in our subtree
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  if (presShell) {
+    nsCOMPtr<nsIFrameManager> fm;
+    presShell->GetFrameManager(getter_AddRefs(fm));
+    if (fm) {
+      PRInt32 maxChange, minChange = NS_STYLE_HINT_NONE;
+      nsStyleChangeList changeList;
+      fm->ComputeStyleChangeFor(aPresContext, this,
+                                kNameSpaceID_None, nsMathMLAtoms::fontstyle,
+                                changeList, minChange, maxChange);
     }
   }
 }
@@ -185,5 +183,6 @@ nsMathMLmiFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
   aPresShell->GetPresContext(getter_AddRefs(presContext));
   ProcessTextData(presContext);
 
+  mState |= NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN;
   return mParent->ReflowDirtyChild(aPresShell, this);
 }
