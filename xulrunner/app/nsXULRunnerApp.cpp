@@ -35,25 +35,65 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXULAppAPI.h"
+#include "plstr.h"
+#include <stdio.h>
+#include <stdlib.h>
 #ifdef XP_WIN
 #include <windows.h>
-#include <stdlib.h>
 #endif
 
-static const nsXREAppData kAppData = {
-  "Mozilla",
-  "XULRunner",
-  APP_VERSION,
-  BUILD_ID,
-  "Copyright (c) 2004 mozilla.org",
-  PR_FALSE,
-  PR_FALSE,
-  PR_FALSE
-};
+static PRBool IsArg(const char* arg, const char* s)
+{
+  if (*arg == '-')
+  {
+    if (*++arg == '-')
+      ++arg;
+    return !PL_strcasecmp(arg, s);
+  }
+
+#if defined(XP_WIN) || defined(XP_OS2)
+  if (*arg == '/')
+    return !PL_strcasecmp(++arg, s);
+#endif
+
+  return PR_FALSE;
+}
 
 int main(int argc, char* argv[])
 {
-  return xre_main(argc, argv, &kAppData);
+  if (argc == 1 || IsArg(argv[1], "h")
+                || IsArg(argv[1], "help")
+                || IsArg(argv[1], "?"))
+  {
+    fprintf(stderr, "Usage: %s [appfile] [options ...]\n", argv[0]);
+    return 0;
+  }
+
+  if (argc == 2 && (IsArg(argv[1], "v") || IsArg(argv[1], "version"))) {
+    fprintf(stderr, "Mozilla XULRunner %s (%s)\n", APP_VERSION, BUILD_ID);
+    return 0;
+  }
+
+  // fixup argv to start with -app.
+  char **argv2 = NULL;
+  if (argv[1][0] != '-')
+  {
+    argv2 = (char **) malloc(sizeof(char*) * (argc + 2));
+    argv2[0] = argv[0];
+    argv2[1] = "-app";
+    for (int i=1; i<argc; ++i)
+      argv2[i+1] = argv[i];
+    argv2[argc+1] = NULL;
+    argv = argv2;
+    argc++;
+  }
+
+  int rv = xre_main(argc, argv, NULL);
+
+  if (argv2)
+    free(argv2);
+
+  return rv;
 }
                                                                                                                                                 
 #if defined( XP_WIN ) && defined( WIN32 ) && !defined(__GNUC__)
@@ -61,7 +101,7 @@ int main(int argc, char* argv[])
 // unused if we are a console application.
 int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int )
 {
-    // Do the real work.
-    return main( __argc, __argv );
+  // Do the real work.
+  return main( __argc, __argv );
 }
 #endif
