@@ -142,16 +142,7 @@ nsControllerCommandManager::UpdateCommandState(const char * aCommandName, nsISup
     return NS_OK;    // we don't handle this command
   }
   
-  nsCOMPtr<nsIStateUpdatingControllerCommand> stateCommand = do_QueryInterface(commandHandler);
-  if (!stateCommand)
-  {
-#if DEBUG
-    NS_WARNING("Controller command manager asked to update the state of a command that doesn't do state updating -- ");
-#endif
-    return NS_ERROR_NO_INTERFACE;
-  }
-  
-  return stateCommand->UpdateCommandState(aCommandName, aCommandRefCon);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -221,7 +212,7 @@ nsControllerCommandManager::GetCommandState(const char *aCommandName, nsICommand
 #endif
     return NS_OK;    // we don't handle this command
   }
-  return commandHandler->GetCommandState(aCommandName, aParams, aCommandRefCon);
+  return commandHandler->GetCommandStateParams(aCommandName, aParams, aCommandRefCon);
 }
 
 

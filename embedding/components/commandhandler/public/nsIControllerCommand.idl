@@ -48,7 +48,7 @@ interface nsIControllerCommand : nsISupports
    */
   boolean isCommandEnabled(in string aCommandName, in nsISupports aCommandRefCon);
 
-  void getCommandState(in string aCommandName, in nsICommandParams aParams, in nsISupports aCommandRefCon);
+  void getCommandStateParams(in string aCommandName, in nsICommandParams aParams, in nsISupports aCommandRefCon);
   
   /**
    * Execute the name command.
@@ -64,40 +64,4 @@ interface nsIControllerCommand : nsISupports
   void    doCommandParams(in string aCommandName, in nsICommandParams aParams, in nsISupports aCommandRefCon);
   
 };
-
-
-/**
- * nsIStatefulControllerCommand
- *
- * An extension of the basic nsIControllerCommand interface, for commands
- * that have to update state (e.g. "bold" in an editor). Note that the 
- * implementation of the command *must* be stateless (since a given command
- * can be shared between clients of the controller command manager). State
- * must be stored/update via the refCon.
- */
-
-[scriptable, uuid(78ad2381-1ae6-11d4-9f7e-a6d3f6dffffc)]
-interface nsIStateUpdatingControllerCommand : nsISupports
-{
-
-  /**
-   * Update the state of the named command.
-   *
-   * @param aCommandName     the name of the command for which we want to update state.
-   * 
-   * @param aCommandRefCon    a cookie held by the nsIControllerCommandManager,
-   *                  allowing the command to get some context information.
-   *                  The contents of this cookie are implementation-defined.
-   */
-  void    updateCommandState(in string aCommandName, in nsISupports aCommandRefCon);
-
-  /**
-   * Gets the command states based on the input parameters
-   * @param aCommandParams   this will pass in the states that need to beupdated. the results will be
-   *                  placed in the value portion of the command Params
-   */
-  //void    getCommandState(in nsICommandParams aCommandParams, in nsISupports aCommandRefCon);
-};
-
-
 
