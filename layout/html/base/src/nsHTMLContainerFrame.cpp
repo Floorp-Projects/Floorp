@@ -259,12 +259,12 @@ nsHTMLContainerFrame::CreateFrameFor(nsIPresContext*  aPresContext,
   // See whether it wants any special handling
   nsresult rv;
   if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
-    rv = AbsoluteFrame::NewFrame(&frame, aContent, this);
+    rv = nsAbsoluteFrame::NewFrame(&frame, aContent, this);
     if (NS_OK == rv) {
       frame->SetStyleContext(aPresContext, aStyleContext);
     }
   } else if (display->mFloats != NS_STYLE_FLOAT_NONE) {
-    rv = PlaceholderFrame::NewFrame(&frame, aContent, this);
+    rv = nsPlaceholderFrame::NewFrame(&frame, aContent, this);
     if (NS_OK == rv) {
       frame->SetStyleContext(aPresContext, aStyleContext);
     }

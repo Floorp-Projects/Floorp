@@ -21,9 +21,9 @@
 #include "nsHTMLContainerFrame.h"
 
 // Pseudo frame created by the root content frame
-class PageFrame : public nsContainerFrame {
+class nsPageFrame : public nsContainerFrame {
 public:
-  PageFrame(nsIContent* aContent, nsIFrame* aParent);
+  nsPageFrame(nsIContent* aContent, nsIFrame* aParent);
 
   NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
                      nsReflowMetrics&     aDesiredSize,

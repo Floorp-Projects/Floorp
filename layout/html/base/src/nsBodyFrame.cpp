@@ -53,7 +53,7 @@ nsBodyFrame::nsBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsHTMLContainerFrame(aContent, aParentFrame)
 {
   mIsPseudoFrame = IsPseudoFrame();
-  mSpaceManager = new SpaceManager(this);
+  mSpaceManager = new nsSpaceManager(this);
   NS_ADDREF(mSpaceManager);
 }
 

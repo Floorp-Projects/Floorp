@@ -21,7 +21,7 @@
 #include "nsFrame.h"
 
 // Implementation of a frame that's used as a placeholder for an anchored item
-class PlaceholderFrame : public nsFrame
+class nsPlaceholderFrame : public nsFrame
 {
 public:
   /**
@@ -52,9 +52,9 @@ public:
 protected:
   // Constructor. Takes as arguments the content object, the index in parent,
   // and the Frame for the content parent
-  PlaceholderFrame(nsIContent* aContent, nsIFrame* aParent);
+  nsPlaceholderFrame(nsIContent* aContent, nsIFrame* aParent);
 
-  virtual ~PlaceholderFrame();
+  virtual ~nsPlaceholderFrame();
 
   nsIFrame*   mAnchoredItem;
 };

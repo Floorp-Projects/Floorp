@@ -23,15 +23,15 @@
 static NS_DEFINE_IID(kIFloaterContainerIID, NS_IFLOATERCONTAINER_IID);
 
 nsresult
-PlaceholderFrame::NewFrame(nsIFrame**  aInstancePtrResult,
-                           nsIContent* aContent,
-                           nsIFrame*   aParent)
+nsPlaceholderFrame::NewFrame(nsIFrame**  aInstancePtrResult,
+                             nsIContent* aContent,
+                             nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new PlaceholderFrame(aContent, aParent);
+  nsIFrame* it = new nsPlaceholderFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -39,20 +39,20 @@ PlaceholderFrame::NewFrame(nsIFrame**  aInstancePtrResult,
   return NS_OK;
 }
 
-PlaceholderFrame::PlaceholderFrame(nsIContent* aContent, nsIFrame* aParent)
+nsPlaceholderFrame::nsPlaceholderFrame(nsIContent* aContent, nsIFrame* aParent)
   : nsFrame(aContent, aParent)
 {
   mAnchoredItem = nsnull;
 }
 
-PlaceholderFrame::~PlaceholderFrame()
+nsPlaceholderFrame::~nsPlaceholderFrame()
 {
 }
 
-NS_METHOD PlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
-                                   nsReflowMetrics&     aDesiredSize,
-                                   const nsReflowState& aReflowState,
-                                   nsReflowStatus&      aStatus)
+NS_METHOD nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
+                                     nsReflowMetrics&     aDesiredSize,
+                                     const nsReflowState& aReflowState,
+                                     nsReflowStatus&      aStatus)
 {
   // Get the floater container in which we're inserted
   nsIFloaterContainer*  container = nsnull;
@@ -101,55 +101,55 @@ NS_METHOD PlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
 }
 
 NS_METHOD
-PlaceholderFrame::ChildCount(PRInt32& aChildCount) const
+nsPlaceholderFrame::ChildCount(PRInt32& aChildCount) const
 {
   aChildCount = 1;
   return NS_OK;
 }
 
 NS_METHOD
-PlaceholderFrame::ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const
+nsPlaceholderFrame::ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const
 {
   aFrame = (0 == aIndex) ? mAnchoredItem : nsnull;
   return NS_OK;
 }
 
 NS_METHOD
-PlaceholderFrame::IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const
+nsPlaceholderFrame::IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const
 {
   aIndex = (aChild == mAnchoredItem) ? 0 : -1;
   return NS_OK;
 }
 
 NS_METHOD
-PlaceholderFrame::FirstChild(nsIFrame*& aFirstChild) const
+nsPlaceholderFrame::FirstChild(nsIFrame*& aFirstChild) const
 {
   aFirstChild = mAnchoredItem;
   return NS_OK;
 }
 
 NS_METHOD
-PlaceholderFrame::NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const
+nsPlaceholderFrame::NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const
 {
   aNextChild = nsnull;
   return NS_OK;
 }
 
 NS_METHOD
-PlaceholderFrame::PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const
+nsPlaceholderFrame::PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const
 {
   aPrevChild = nsnull;
   return NS_OK;
 }
 
 NS_METHOD
-PlaceholderFrame::LastChild(nsIFrame*& aLastChild) const
+nsPlaceholderFrame::LastChild(nsIFrame*& aLastChild) const
 {
   aLastChild = mAnchoredItem;
   return NS_OK;
 }
 
-NS_METHOD PlaceholderFrame::ListTag(FILE* out) const
+NS_METHOD nsPlaceholderFrame::ListTag(FILE* out) const
 {
   fputs("*placeholder", out);
   PRInt32 contentIndex;
@@ -159,7 +159,7 @@ NS_METHOD PlaceholderFrame::ListTag(FILE* out) const
 }
 
 NS_METHOD
-PlaceholderFrame::List(FILE* out, PRInt32 aIndent) const
+nsPlaceholderFrame::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
 

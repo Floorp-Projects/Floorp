@@ -32,15 +32,15 @@ static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 NS_DEF_PTR(nsIStyleContext);
 
 nsresult
-AbsoluteFrame::NewFrame(nsIFrame**  aInstancePtrResult,
-                        nsIContent* aContent,
-                        nsIFrame*   aParent)
+nsAbsoluteFrame::NewFrame(nsIFrame**  aInstancePtrResult,
+                          nsIContent* aContent,
+                          nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new AbsoluteFrame(aContent, aParent);
+  nsIFrame* it = new nsAbsoluteFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -48,20 +48,20 @@ AbsoluteFrame::NewFrame(nsIFrame**  aInstancePtrResult,
   return NS_OK;
 }
 
-AbsoluteFrame::AbsoluteFrame(nsIContent* aContent, nsIFrame* aParent)
+nsAbsoluteFrame::nsAbsoluteFrame(nsIContent* aContent, nsIFrame* aParent)
   : nsFrame(aContent, aParent)
 {
   mFrame = nsnull;
 }
 
-AbsoluteFrame::~AbsoluteFrame()
+nsAbsoluteFrame::~nsAbsoluteFrame()
 {
 }
 
-nsIView* AbsoluteFrame::CreateView(nsIView*         aContainingView,
-                                   const nsRect&    aRect,
-                                   nsStylePosition* aPosition,
-                                   nsStyleDisplay*  aDisplay)
+nsIView* nsAbsoluteFrame::CreateView(nsIView*         aContainingView,
+                                     const nsRect&    aRect,
+                                     nsStylePosition* aPosition,
+                                     nsStyleDisplay*  aDisplay)
 {
   nsIView*  view;
 
@@ -137,9 +137,9 @@ nsIView* AbsoluteFrame::CreateView(nsIView*         aContainingView,
   return view;
 }
 
-void AbsoluteFrame::ComputeViewBounds(const nsRect&    aContainingInnerRect,
-                                      nsStylePosition* aPosition,
-                                      nsRect&          aRect)
+void nsAbsoluteFrame::ComputeViewBounds(const nsRect&    aContainingInnerRect,
+                                        nsStylePosition* aPosition,
+                                        nsRect&          aRect)
 {
   // Compute the offset and size of the view based on the position properties
   // and the inner rect of the containing block
@@ -206,7 +206,7 @@ void AbsoluteFrame::ComputeViewBounds(const nsRect&    aContainingInnerRect,
   }
 }
 
-nsIFrame* AbsoluteFrame::GetContainingBlock()
+nsIFrame* nsAbsoluteFrame::GetContainingBlock()
 {
   // Look for a containing frame that is absolutely positioned. If we don't
   // find one then use the initial containg block which is the root frame
@@ -236,10 +236,10 @@ nsIFrame* AbsoluteFrame::GetContainingBlock()
   return result;
 }
 
-NS_METHOD AbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
-                                nsReflowMetrics&     aDesiredSize,
-                                const nsReflowState& aReflowState,
-                                nsReflowStatus&      aStatus)
+NS_METHOD nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
+                                  nsReflowMetrics&     aDesiredSize,
+                                  const nsReflowState& aReflowState,
+                                  nsReflowStatus&      aStatus)
 {
   // Have we created the absolutely positioned item yet?
   if (nsnull == mFrame) {
@@ -325,55 +325,55 @@ NS_METHOD AbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
 }
 
 NS_METHOD
-AbsoluteFrame::ChildCount(PRInt32& aChildCount) const
+nsAbsoluteFrame::ChildCount(PRInt32& aChildCount) const
 {
   aChildCount = 1;
   return NS_OK;
 }
 
 NS_METHOD
-AbsoluteFrame::ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const
+nsAbsoluteFrame::ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const
 {
   aFrame = (0 == aIndex) ? mFrame : nsnull;
   return NS_OK;
 }
 
 NS_METHOD
-AbsoluteFrame::IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const
+nsAbsoluteFrame::IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const
 {
   aIndex = (aChild == mFrame) ? 0 : -1;
   return NS_OK;
 }
 
 NS_METHOD
-AbsoluteFrame::FirstChild(nsIFrame*& aFirstChild) const
+nsAbsoluteFrame::FirstChild(nsIFrame*& aFirstChild) const
 {
   aFirstChild = mFrame;
   return NS_OK;
 }
 
 NS_METHOD
-AbsoluteFrame::NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const
+nsAbsoluteFrame::NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const
 {
   aNextChild = nsnull;
   return NS_OK;
 }
 
 NS_METHOD
-AbsoluteFrame::PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const
+nsAbsoluteFrame::PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const
 {
   aPrevChild = nsnull;
   return NS_OK;
 }
 
 NS_METHOD
-AbsoluteFrame::LastChild(nsIFrame*& aLastChild) const
+nsAbsoluteFrame::LastChild(nsIFrame*& aLastChild) const
 {
   aLastChild = mFrame;
   return NS_OK;
 }
 
-NS_METHOD AbsoluteFrame::List(FILE* out, PRInt32 aIndent) const
+NS_METHOD nsAbsoluteFrame::List(FILE* out, PRInt32 aIndent) const
 {
   // Indent
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);

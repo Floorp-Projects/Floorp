@@ -22,7 +22,7 @@
 #include "nsIAnchoredItems.h"
 
 struct nsBodyReflowState;
-class SpaceManager;
+class nsSpaceManager;
 
 class nsBodyFrame : public nsHTMLContainerFrame, public nsIAnchoredItems {
 public:
@@ -76,7 +76,7 @@ protected:
   virtual PRIntn GetSkipSides() const;
 
 private:
-  SpaceManager* mSpaceManager;
+  nsSpaceManager* mSpaceManager;
 
   void CreateColumnFrame(nsIPresContext* aPresContext);
   nsSize GetColumnAvailSpace(nsIPresContext* aPresContext,

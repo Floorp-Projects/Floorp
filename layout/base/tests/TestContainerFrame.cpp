@@ -92,11 +92,6 @@ class SimpleContainer : public nsContainerFrame
 public:
   SimpleContainer(nsIContent* aContent);
 
-  nsReflowStatus IncrementalReflow(nsIPresContext*  aPresContext,
-                                   nsReflowMetrics& aDesiredSize,
-                                   const nsSize&    aMaxSize,
-                                   nsReflowCommand& aReflowCommand);
-
   void      SetFirstChild(nsIFrame* aChild, PRInt32 aChildCount);
   nsIFrame* GetOverflowList() {return mOverflowList;}
   void      SetOverflowList(nsIFrame* aChildList) {mOverflowList = aChildList;}
@@ -104,23 +99,11 @@ public:
   // Allow public access to protected member functions
   void PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling, PRBool aLastIsComplete);
   PRBool DeleteChildsNextInFlow(nsIFrame* aChild);
-
-  PRInt32 ChildCount() {return mChildCount;}
 };
 
 SimpleContainer::SimpleContainer(nsIContent* aContent)
   : nsContainerFrame(aContent, nsnull)
 {
-}
-
-nsReflowStatus
-SimpleContainer::IncrementalReflow(nsIPresContext*  aPresContext,
-                                   nsReflowMetrics& aDesiredSize,
-                                   const nsSize&    aMaxSize,
-                                   nsReflowCommand& aReflowCommand)
-{
-  NS_NOTYETIMPLEMENTED("incremental reflow");
-  return NS_FRAME_COMPLETE;
 }
 
 // Sets mFirstChild and mChildCount, but not mContentOffset, mContentLength,
@@ -164,7 +147,8 @@ static PRBool
 TestChildEnumeration()
 {
   // Create a simple test container
-  SimpleContainer* f = new SimpleContainer(new SimpleContent());
+  SimpleContent*   content = new SimpleContent;
+  SimpleContainer* f = new SimpleContainer(content);
 
   // Add three child frames
   SimpleContent* childContent = new SimpleContent();
@@ -182,8 +166,10 @@ TestChildEnumeration()
   f->SetLastContentOffset(2);
 
   // Make sure the child count is correct
-  if (f->ChildCount() != 3) {
-    printf("ChildEnumeration: wrong child count: %d\n", f->ChildCount());
+  PRInt32 childCount;
+  f->ChildCount(childCount);
+  if (childCount != 3) {
+    printf("ChildEnumeration: wrong child count: %d\n", childCount);
     return PR_FALSE;
   }
 
@@ -228,13 +214,23 @@ TestChildEnumeration()
     return PR_FALSE;
   }
 
-#if 0
   // Test IndexOf()
-  if ((f->IndexOf(c1) != 0) || (f->IndexOf(c2) != 1) || (f->IndexOf(c3) != 2)) {
-    printf("ChildEnumeration: index of failed\n");
+  PRInt32 index;
+  f->IndexOf(c1, index);
+  if (index != 0) {
+    printf("ChildEnumeration: index of c1 failed\n");
     return PR_FALSE;
   }
-#endif
+  f->IndexOf(c2, index);
+  if (index != 1) {
+    printf("ChildEnumeration: index of c2 failed\n");
+    return PR_FALSE;
+  }
+  f->IndexOf(c3, index);
+  if (index != 2) {
+    printf("ChildEnumeration: index of c3 failed\n");
+    return PR_FALSE;
+  }
 
   return PR_TRUE;
 }
@@ -242,7 +238,6 @@ TestChildEnumeration()
 ///////////////////////////////////////////////////////////////////////////////
 //
 
-#if 0
 // Test the push children method
 //
 // This tests the following:
@@ -253,21 +248,22 @@ static PRBool
 TestPushChildren()
 {
   // Create a simple test container
-  SimpleContainer* f = new SimpleContainer(new SimpleContent());
+  SimpleContent*   content = new SimpleContent;
+  SimpleContainer* f = new SimpleContainer(content);
 
   // Add five child frames
-  SimpleContent* childContent = new SimpleContent();
+  SimpleContent* childContent = new SimpleContent;
   nsFrame*       c1;
   nsFrame*       c2;
   nsFrame*       c3;
   nsFrame*       c4;
   nsFrame*       c5;
 
-  nsFrame::NewFrame((nsIFrame**)&c1, childContent, 0, f);
-  nsFrame::NewFrame((nsIFrame**)&c2, childContent, 1, f);
-  nsFrame::NewFrame((nsIFrame**)&c3, childContent, 2, f);
-  nsFrame::NewFrame((nsIFrame**)&c4, childContent, 3, f);
-  nsFrame::NewFrame((nsIFrame**)&c5, childContent, 4, f);
+  nsFrame::NewFrame((nsIFrame**)&c1, childContent, f);
+  nsFrame::NewFrame((nsIFrame**)&c2, childContent, f);
+  nsFrame::NewFrame((nsIFrame**)&c3, childContent, f);
+  nsFrame::NewFrame((nsIFrame**)&c4, childContent, f);
+  nsFrame::NewFrame((nsIFrame**)&c5, childContent, f);
 
   c1->SetNextSibling(c2);
   c2->SetNextSibling(c3);
@@ -284,7 +280,9 @@ TestPushChildren()
   f->PushChildren(c4, c3, PR_TRUE);
 
   // Verify that the next sibling pointer of c3 has been cleared
-  if (nsnull != c3->GetNextSibling()) {
+  nsIFrame* nextSibling;
+  c3->GetNextSibling(nextSibling);
+  if (nsnull != nextSibling) {
     printf("PushChildren: sibling pointer isn't null\n");
     return PR_FALSE;
   }
@@ -298,12 +296,15 @@ TestPushChildren()
 
   // and that the children on the overflow still have the same geometric parent
   while (nsnull != overflowList) {
-    if (f != overflowList->GetGeometricParent()) {
+    nsIFrame* parent;
+
+    overflowList->GetGeometricParent(parent);
+    if (f != parent) {
       printf("PushChildren: bad geometric parent\n");
       return PR_FALSE;
     }
 
-    overflowList = overflowList->GetNextSibling();
+    overflowList->GetNextSibling(overflowList);
   }
 
   ///////////////////////////////////////////////////////////////////////////
@@ -314,7 +315,7 @@ TestPushChildren()
   f->SetOverflowList(nsnull);
 
   // Create a continuing frame
-  SimpleContainer* f1 = new SimpleContainer(f->GetContent());
+  SimpleContainer* f1 = new SimpleContainer(content);
 
   // Link it into the flow
   f->SetNextInFlow(f1);
@@ -324,43 +325,55 @@ TestPushChildren()
   f->PushChildren(c4, c3, PR_TRUE);
 
   // Verify there are two children in f1
-  if (f1->ChildCount() != 2) {
-    printf("PushChildren: continuing frame bad child count: %d\n", f1->ChildCount());
+  PRInt32 childCount;
+  f1->ChildCount(childCount);
+  if (childCount != 2) {
+    printf("PushChildren: continuing frame bad child count: %d\n", childCount);
     return PR_FALSE;
   }
 
   // Verify the content offsets are correct
-  if ((f1->GetFirstContentOffset() != 3) || (f1->GetLastContentOffset() != 4)) {
-    printf("PushChildren: continuing frame bad mapping\n");
+  if (f1->GetFirstContentOffset() != 3) {
+    printf("PushChildren: continuing frame bad first content offset\n");
+    return PR_FALSE;
+  }
+  if (f1->GetLastContentOffset() != 4) {
+    printf("PushChildren: continuing frame bad last content offset\n");
     return PR_FALSE;
   }
 
   // Verify that the first child is correct
-  if (c4 != f1->FirstChild()) {
+  nsIFrame* firstChild;
+  f1->FirstChild(firstChild);
+  if (c4 != firstChild) {
     printf("PushChildren: continuing frame first child is wrong\n");
     return PR_FALSE;
   }
 
   // Verify that the next sibling pointer of c3 has been cleared
-  if (nsnull != c3->GetNextSibling()) {
+  c3->GetNextSibling(nextSibling);
+  if (nsnull != nextSibling) {
     printf("PushChildren: sibling pointer isn't null\n");
     return PR_FALSE;
   }
 
   // Verify that the geometric parent and content parent have been changed
-  nsIFrame* firstChild = f1->FirstChild();
+  f1->FirstChild(firstChild);
   while (nsnull != firstChild) {
-    if (f1 != firstChild->GetGeometricParent()) {
+    nsIFrame* parent;
+    firstChild->GetGeometricParent(parent);
+    if (f1 != parent) {
       printf("PushChildren: bad geometric parent\n");
       return PR_FALSE;
     }
 
-    if (f1 != firstChild->GetContentParent()) {
+    firstChild->GetContentParent(parent);
+    if (f1 != parent) {
       printf("PushChildren: bad content parent\n");
       return PR_FALSE;
     }
 
-    firstChild = firstChild->GetNextSibling();
+    firstChild->GetNextSibling(firstChild);
   }
 
   ///////////////////////////////////////////////////////////////////////////
@@ -370,25 +383,32 @@ TestPushChildren()
   f->PushChildren(c2, c1, PR_TRUE);
 
   // Verify there are four children in f1
-  if (f1->ChildCount() != 4) {
-    printf("PushChildren: continuing frame bad child count: %d\n", f1->ChildCount());
+  f1->ChildCount(childCount);
+  if (childCount != 4) {
+    printf("PushChildren: continuing frame bad child count: %d\n", childCount);
     return PR_FALSE;
   }
 
   // Verify the content offset/length are correct
-  if ((f1->GetFirstContentOffset() != 1) || (f1->GetLastContentOffset() != 4)) {
-    printf("PushChildren: continuing frame bad mapping\n");
+  if (f1->GetFirstContentOffset() != 1) {
+    printf("PushChildren: continuing frame bad first content offset\n");
+    return PR_FALSE;
+  }
+  if (f1->GetLastContentOffset() != 4) {
+    printf("PushChildren: continuing frame bad last content offset\n");
     return PR_FALSE;
   }
 
   // Verify that the first child is correct
-  if (c2 != f1->FirstChild()) {
+  f1->FirstChild(firstChild);
+  if (c2 != firstChild) {
     printf("PushChildren: continuing frame first child is wrong\n");
     return PR_FALSE;
   }
 
   // Verify that c3 points to c4
-  if (c4 != c3->GetNextSibling()) {
+  c3->GetNextSibling(nextSibling);
+  if (c4 != nextSibling) {
     printf("PushChildren: bad sibling pointers\n");
     return PR_FALSE;
   }
@@ -413,12 +433,13 @@ static PRBool
 TestDeleteChildsNext()
 {
   // Create two simple test containers
-  SimpleContainer* f = new SimpleContainer(new SimpleContent());
+  SimpleContent*   content = new SimpleContent;
+  SimpleContainer* f = new SimpleContainer(content);
 
   // Create two child frames
-  SimpleContent* childContent = new SimpleContent();
-  nsFrame*       c1 = new SimpleSplittableFrame(childContent, 0, f);
-  nsFrame*       c11 = new SimpleSplittableFrame(childContent, 0, f);
+  SimpleContent* childContent = new SimpleContent;
+  nsFrame*       c1 = new SimpleSplittableFrame(childContent, f);
+  nsFrame*       c11 = new SimpleSplittableFrame(childContent, f);
 
   ///////////////////////////////////////////////////////////////////////////
   // #1a
@@ -432,19 +453,25 @@ TestDeleteChildsNext()
   f->DeleteChildsNextInFlow(c1);
 
   // Verify the child count
-  if (f->ChildCount() != 1) {
-    printf("DeleteNextInFlow: bad child count (#1a): %d\n", f->ChildCount());
+  PRInt32 childCount;
+  f->ChildCount(childCount);
+  if (childCount != 1) {
+    printf("DeleteNextInFlow: bad child count (#1a): %d\n", childCount);
     return PR_FALSE;
   }
 
   // Verify the sibling pointer is null
-  if (nsnull != c1->GetNextSibling()) {
+  nsIFrame* nextSibling;
+  c1->GetNextSibling(nextSibling);
+  if (nsnull != nextSibling) {
     printf("DeleteNextInFlow: bad sibling pointer (#1a):\n");
     return PR_FALSE;
   }
 
   // Verify the next-in-flow pointer is null
-  if (nsnull != c1->GetNextInFlow()) {
+  nsIFrame* nextInFlow;
+  c1->GetNextInFlow(nextInFlow);
+  if (nsnull != nextInFlow) {
     printf("DeleteNextInFlow: bad next-in-flow (#1a)\n");
     return PR_FALSE;
   }
@@ -459,10 +486,10 @@ TestDeleteChildsNext()
   // #2a
 
   // Create a second container frame
-  SimpleContainer* f1 = new SimpleContainer(new SimpleContent());
+  SimpleContainer* f1 = new SimpleContainer(content);
 
   // Re-create the continuing child frame
-  c11 = new SimpleSplittableFrame(childContent, 0, f1);
+  c11 = new SimpleSplittableFrame(childContent, f1);
 
   // Put the first child in the first container and the continuing child frame in
   // the second container
@@ -478,13 +505,18 @@ TestDeleteChildsNext()
   f->DeleteChildsNextInFlow(c1);
 
   // Verify that the second container frame is empty
-  if ((f1->ChildCount() != 0) || (f1->FirstChild() != nsnull)) {
+  nsIFrame* firstChild;
+
+  f1->ChildCount(childCount);
+  f1->FirstChild(firstChild);
+  if ((childCount != 0) || (firstChild != nsnull)) {
     printf("DeleteNextInFlow: continuing frame not empty (#2a)\n");
     return PR_FALSE;
   }
 
   // Verify the next-in-flow pointer is null
-  if (nsnull != c1->GetNextInFlow()) {
+  c1->GetNextInFlow(nextInFlow);
+  if (nsnull != nextInFlow) {
     printf("DeleteNextInFlow: bad next-in-flow (#1b)\n");
     return PR_FALSE;
   }
@@ -493,10 +525,10 @@ TestDeleteChildsNext()
   // #1b
 
   // Re-create the continuing child frame
-  c11 = new SimpleSplittableFrame(childContent, 0, f);
+  c11 = new SimpleSplittableFrame(childContent, f);
 
   // Create a third child frame
-  nsFrame*  c2 = new SimpleSplittableFrame(childContent, 1, f);
+  nsFrame*  c2 = new SimpleSplittableFrame(childContent, f);
 
   c1->SetNextSibling(c11);
   c11->AppendToFlow(c1);
@@ -508,19 +540,22 @@ TestDeleteChildsNext()
   f->DeleteChildsNextInFlow(c1);
 
   // Verify the child count
-  if (f->ChildCount() != 2) {
-    printf("DeleteNextInFlow: bad child count (#1b): %d\n", f->ChildCount());
+  f->ChildCount(childCount);
+  if (childCount != 2) {
+    printf("DeleteNextInFlow: bad child count (#1b): %d\n", childCount);
     return PR_FALSE;
   }
 
   // Verify the sibling pointer is correct
-  if (c1->GetNextSibling() != c2) {
+  c1->GetNextSibling(nextSibling);
+  if (nextSibling != c2) {
     printf("DeleteNextInFlow: bad sibling pointer (#1b):\n");
     return PR_FALSE;
   }
 
   // Verify the next-in-flow pointer is correct
-  if (nsnull != c1->GetNextInFlow()) {
+  c1->GetNextInFlow(nextInFlow);
+  if (nsnull != nextInFlow) {
     printf("DeleteNextInFlow: bad next-in-flow (#1b)\n");
     return PR_FALSE;
   }
@@ -535,8 +570,8 @@ TestDeleteChildsNext()
   // #2b
 
   // Re-create the continuing frame and the third child frame
-  c11 = new SimpleSplittableFrame(childContent, 0, f1);
-  c2 = new SimpleSplittableFrame(childContent, 1, f1);
+  c11 = new SimpleSplittableFrame(childContent, f1);
+  c2 = new SimpleSplittableFrame(childContent, f1);
 
   // Put the first child in the first container, and the continuing child frame
   // and the third frame in the second container
@@ -557,19 +592,22 @@ TestDeleteChildsNext()
   f->DeleteChildsNextInFlow(c1);
 
   // Verify the next-in-flow pointer is null
-  if (nsnull != c1->GetNextInFlow()) {
+  c1->GetNextInFlow(nextInFlow);
+  if (nsnull != nextInFlow) {
     printf("DeleteNextInFlow: bad next-in-flow (#2b)\n");
     return PR_FALSE;
   }
 
   // Verify that the second container frame has one child
-  if (f1->ChildCount() != 1) {
-    printf("DeleteNextInFlow: continuing frame bad child count (#2b): %d\n", f1->ChildCount());
+  f1->ChildCount(childCount);
+  if (childCount != 1) {
+    printf("DeleteNextInFlow: continuing frame bad child count (#2b): %d\n", childCount);
     return PR_FALSE;
   }
 
   // Verify that the second container's first child is correct
-  if (f1->FirstChild() != c2) {
+  f1->FirstChild(firstChild);
+  if (firstChild != c2) {
     printf("DeleteNextInFlow: continuing frame bad first child (#2b)\n");
     return PR_FALSE;
   }
@@ -585,11 +623,11 @@ TestDeleteChildsNext()
   // #3
 
   // Re-create the continuing frame and the third child frame
-  c11 = new SimpleSplittableFrame(childContent, 0, f);
-  c2 = new SimpleSplittableFrame(childContent, 1, f);
+  c11 = new SimpleSplittableFrame(childContent, f);
+  c2 = new SimpleSplittableFrame(childContent, f);
 
   // Create a second continuing frame
-  SimpleSplittableFrame*  c12 = new SimpleSplittableFrame(childContent, 0, f);
+  SimpleSplittableFrame*  c12 = new SimpleSplittableFrame(childContent, f);
 
   // Put all the child frames in the first container
   c1->SetNextSibling(c11);
@@ -604,14 +642,16 @@ TestDeleteChildsNext()
   f->DeleteChildsNextInFlow(c1);
 
   // Verify the next-in-flow pointer is null
-  if (nsnull != c1->GetNextInFlow()) {
+  c1->GetNextInFlow(nextInFlow);
+  if (nsnull != nextInFlow) {
     printf("DeleteNextInFlow: bad next-in-flow (#3)\n");
     return PR_FALSE;
   }
 
   // Verify the child count is correct
-  if (f->ChildCount() != 2) {
-    printf("DeleteNextInFlow: bad child count (#3): %d\n", f->ChildCount());
+  f->ChildCount(childCount);
+  if (childCount != 2) {
+    printf("DeleteNextInFlow: bad child count (#3): %d\n", childCount);
     return PR_FALSE;
   }
 
@@ -622,20 +662,26 @@ TestDeleteChildsNext()
   }
 
   // Verify the sibling list is correct
-  if ((c1->GetNextSibling() != c2) || (c2->GetNextSibling()!= nsnull)) {
+  c1->GetNextSibling(nextSibling);
+  if (nextSibling != c2) {
+    printf("DeleteNextInFlow: bad sibling list (#3)\n");
+    return PR_FALSE;
+  }
+  c2->GetNextSibling(nextSibling);
+  if (nextSibling != nsnull) {
     printf("DeleteNextInFlow: bad sibling list (#3)\n");
     return PR_FALSE;
   }
 
   // Verify the next-in-flow pointer is null
-  if (nsnull != c1->GetNextInFlow()) {
+  c1->GetNextInFlow(nextInFlow);
+  if (nsnull != nextInFlow) {
     printf("DeleteNextInFlow: bad next-in-flow (#3)\n");
     return PR_FALSE;
   }
 
   return PR_TRUE;
 }
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 //

@@ -1414,9 +1414,9 @@ void nsBlockFrame::ComputeDesiredRect(nsBlockReflowState& aState,
 //----------------------------------------------------------------------
 
 PRBool
-nsBlockFrame::AddFloater(nsIPresContext*   aPresContext,
-                         nsIFrame*         aFloater,
-                         PlaceholderFrame* aPlaceholder)
+nsBlockFrame::AddFloater(nsIPresContext*     aPresContext,
+                         nsIFrame*           aFloater,
+                         nsPlaceholderFrame* aPlaceholder)
 {
   nsIPresShell* shell = aPresContext->GetShell();
   nsBlockReflowState* state = (nsBlockReflowState*) shell->GetCachedData(this);
@@ -1456,9 +1456,9 @@ nsBlockFrame::AddFloater(nsIPresContext*   aPresContext,
 
 // XXX Deprecated
 void
-nsBlockFrame::PlaceFloater(nsIPresContext*   aPresContext,
-                           nsIFrame*         aFloater,
-                           PlaceholderFrame* aPlaceholder)
+nsBlockFrame::PlaceFloater(nsIPresContext*     aPresContext,
+                           nsIFrame*           aFloater,
+                           nsPlaceholderFrame* aPlaceholder)
 {
 #if 0
   nsIPresShell* shell = aPresContext->GetShell();
@@ -1505,7 +1505,7 @@ nsBlockFrame::IsLeftMostChild(nsIFrame* aFrame)
 void
 nsBlockFrame::PlaceFloater(nsIPresContext*     aPresContext,
                            nsIFrame*           aFloater,
-                           PlaceholderFrame*   aPlaceholder,
+                           nsPlaceholderFrame* aPlaceholder,
                            nsBlockReflowState& aState)
 {
   nsISpaceManager* sm = aState.mSpaceManager;
@@ -1561,7 +1561,7 @@ nsBlockFrame::PlaceBelowCurrentLineFloaters(nsBlockReflowState& aState,
   // XXX Factor this code with PlaceFloater()...
   PRInt32 numFloaters = aFloaterList->Count();
   for (PRInt32 i = 0; i < numFloaters; i++) {
-    PlaceholderFrame* placeholderFrame = (PlaceholderFrame*)aFloaterList->ElementAt(i);
+    nsPlaceholderFrame* placeholderFrame = (nsPlaceholderFrame*)aFloaterList->ElementAt(i);
     nsIFrame* floater = placeholderFrame->GetAnchoredItem();
     nsRect region;
 

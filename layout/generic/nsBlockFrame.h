@@ -197,12 +197,12 @@ public:
                     nsReflowStatus&      aStatus);
 
   // nsIFloaterContainer
-  virtual PRBool AddFloater(nsIPresContext*   aPresContext,
-                            nsIFrame*         aFloater,
-                            PlaceholderFrame* aPlaceholder);
-  virtual void PlaceFloater(nsIPresContext*   aPresContext,
-                            nsIFrame*         aFloater,
-                            PlaceholderFrame* aPlaceholder);
+  virtual PRBool AddFloater(nsIPresContext*     aPresContext,
+                            nsIFrame*           aFloater,
+                            nsPlaceholderFrame* aPlaceholder);
+  virtual void PlaceFloater(nsIPresContext*     aPresContext,
+                            nsIFrame*           aFloater,
+                            nsPlaceholderFrame* aPlaceholder);
 
   // nsBlockFrame
   nsresult ReflowInlineChild(nsIFrame*            aKidFrame,
@@ -274,7 +274,7 @@ protected:
 
   void PlaceFloater(nsIPresContext*     aPresContext,
                     nsIFrame*           aFloater,
-                    PlaceholderFrame*   aPlaceholder,
+                    nsPlaceholderFrame* aPlaceholder,
                     nsBlockReflowState& aState);
   void PlaceBelowCurrentLineFloaters(nsBlockReflowState& aState,
                                      nsVoidArray*        aFloaterList,
