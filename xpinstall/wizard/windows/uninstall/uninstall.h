@@ -81,11 +81,14 @@ typedef int PRInt32;
 #define AUTO                            2
 
 /* OS: Operating System */
-#define OS_WIN95_DEBUTE                 1
-#define OS_WIN95                        2
-#define OS_WIN98                        4
-#define OS_NT3                          8
-#define OS_NT4                         16
+#define OS_WIN9x                        1
+#define OS_WIN95_DEBUTE                 2
+#define OS_WIN95                        4
+#define OS_WIN98                        8
+#define OS_NT                          16
+#define OS_NT3                         32
+#define OS_NT4                         64
+#define OS_NT5                        128
 
 typedef struct dlgUninstall
 {
@@ -102,6 +105,7 @@ typedef struct uninstallStruct
   LPSTR     szProductName;
   LPSTR     szDescription;
   LPSTR     szUninstallKeyDescription;
+  LPSTR     szUninstallFilename;
   HKEY      hWrMainRoot;
   LPSTR     szWrMainKey;
   HKEY      hWrRoot;

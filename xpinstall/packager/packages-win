@@ -2,13 +2,13 @@
 ;
 ; File format:
 ;
-; [] designates a toplevel component. Example: [core]
+; [] designates a toplevel component. Example: [xpcom]
 ; - in front of a file specifies it to be removed from the destination
 ; * wildcard support to recursively copy the entire directory
 ; ; file comment
 ;
 
-[core]
+[xpcom]
 ; files required to initialize xpinstall for Install Wizard
 bin\js3250.dll
 bin\mozreg.dll
@@ -22,7 +22,7 @@ bin\components\jar50.dll
 bin\components\xpinstal.dll
 
 [browser]
-; files listed in core (missing in this section) will be installed as part of the browser
+; files listed in xpcom (missing in this section) will be installed as part of the browser
 bin\gkgfxwin.dll
 bin\gkplugin.dll
 bin\gkweb.dll

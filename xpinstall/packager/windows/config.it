@@ -48,6 +48,8 @@ Path=[PROGRAMFILESDIR]\$CompanyName$\Seamonkey
 Program Folder Name=$ProductName$
 Program Folder Path=[COMMON_PROGRAMS]
 
+Uninstall Filename=$UninstallFile$
+
 ; Default Setup Type values:
 ;   Setup Type 0 - first radio button (default)
 ;   Setup Type 1 - second radio button
@@ -126,6 +128,7 @@ Description Long=Program will be installed with the minimal options.
 ; this Setup Type is selected.
 C0=Component0
 C1=Component1
+C2=Component3
 
 [Setup Type1]
 Description Short=C&omplete
@@ -137,6 +140,7 @@ Description Long=Program will be installed with the most common options.
 C0=Component0
 C1=Component1
 C2=Component2
+C3=Component3
 
 [Setup Type2]
 Description Short=C&ustom
@@ -150,6 +154,7 @@ Description Long=You may choose the options you want to install.  Recommended fo
 C0=Component0
 C1=Component1
 C2=Component2
+C3=Component3
 
 ;[Setup Type3]
 ;Description Short=C&ustom
@@ -249,10 +254,10 @@ Message=Setup has detected that an instance of Personal Security Manager is curr
 [Component0]
 Description Short=Mozilla Xpinstall Engine
 Description Long=Install Engine
-Archive=core.xpi
-$InstallSize$:core
+Archive=xpcom.xpi
+$InstallSize$:xpcom
 $InstallSizeSystem$
-$InstallSizeArchive$:core.xpi
+$InstallSizeArchive$:xpcom.xpi
 ;Dependency0=
 Dependee0=Mozilla Seamonkey
 ; Attributes can be the following values:
@@ -305,10 +310,29 @@ Parameter=
 Domain0=$Domain$
 Server Path0=$ServerPath$
 
+[Component3]
+Description Short=$CompanyName$ Uninstaller
+Description Long=Uninstaller for $ProductName$
+Archive=$UninstallFile$
+Install Size=0
+$InstallSizeArchive$:$UninstallFile$
+;Dependency0=
+; Attributes can be the following values:
+;   SELECTED  - the component is selected to be installed by default.
+;   INVISIBLE - the component is not shown in the Select Components dialog.
+Attributes=SELECTED|INVISIBLE|DOWNLOAD_ONLY
+Parameter=
+; url keys can be as many as needed.  url0 is attempted first.  if it fails,
+; the next url key is tried in sequential order.
+; The url should not contain the filename.  Setup will assemble the complete url
+; using the url keys and the Archive key.
+Domain0=$Domain$
+Server Path0=$ServerPath$
+
 [Core]
-Source=[XPI PATH]\core.xpi
-Destination=[WIZTEMP]\core.ns
-$InstallSize$:core
+Source=[XPI PATH]\xpcom.xpi
+Destination=[WIZTEMP]\xpcom.ns
+$InstallSize$:xpcom
 Cleanup=TRUE
 Message=Preparing Install, please wait...
 
@@ -321,8 +345,8 @@ Message=
 ; The Timing key needs to be one of the following values:
 ;   pre download     - process before any files have been downloaded.
 ;   post download    - process after all files have been downloaded.
-;   pre core         - process before the core file has been uncompressed.
-;   post core        - process after the core file has been uncompressed.
+;   pre xpcom        - process before the xpcom file has been uncompressed.
+;   post xpcom       - process after the xpcom file has been uncompressed.
 ;   pre smartupdate  - process before the smartupdate engine has been launched.
 ;   post smartupdate - process after the smartupdate engine has been launched.
 ;   pre launchapp    - process before the launching of executables.
@@ -334,7 +358,7 @@ Message=
 ;Uncompress FileX sections
 ;[Uncompress File0]
 ;Timing=post download
-;Source=[XPI PATH]\core.xpi
+;Source=[XPI PATH]\xpcom.xpi
 ;Destination=[SETUP PATH]
 ;Message=Configuring Seamonkey, please wait...
 

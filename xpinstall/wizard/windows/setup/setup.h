@@ -72,8 +72,8 @@ typedef int PRInt32;
 /* T: Timing */
 #define T_PRE_DOWNLOAD                  1
 #define T_POST_DOWNLOAD                 2
-#define T_PRE_CORE                      3
-#define T_POST_CORE                     4
+#define T_PRE_XPCOM                     3
+#define T_POST_XPCOM                    4
 #define T_PRE_SMARTUPDATE               5
 #define T_POST_SMARTUPDATE              6
 #define T_PRE_LAUNCHAPP                 7
@@ -129,11 +129,14 @@ typedef int PRInt32;
 #define AC_ALL                          3
 
 /* OS: Operating System */
-#define OS_WIN95_DEBUTE                 1
-#define OS_WIN95                        2
-#define OS_WIN98                        4
-#define OS_NT3                          8
-#define OS_NT4                         16
+#define OS_WIN9x                        1
+#define OS_WIN95_DEBUTE                 2
+#define OS_WIN95                        4
+#define OS_WIN98                        8
+#define OS_NT                          16
+#define OS_NT3                         32
+#define OS_NT4                         64
+#define OS_NT5                        128
 
 /* DSR: Disk Space Required */
 #define DSR_DESTINATION                 0
@@ -272,8 +275,8 @@ typedef struct setupStruct
 
 typedef struct sinfoSmartDownload
 {
-  LPSTR szCoreFile;
-  LPSTR szCoreDir;
+  LPSTR szXpcomFile;
+  LPSTR szXpcomDir;
   LPSTR szNoAds;
   LPSTR szSilent;
   LPSTR szExecution;
@@ -281,10 +284,10 @@ typedef struct sinfoSmartDownload
   LPSTR szExtractMsg;
   LPSTR szExe;
   LPSTR szExeParam;
-  LPSTR szCoreFilePath;
+  LPSTR szXpcomFilePath;
 } siSD;
 
-typedef struct sinfoCoreFile
+typedef struct sinfoXpcomFile
 {
   LPSTR       szSource;
   LPSTR       szDestination;

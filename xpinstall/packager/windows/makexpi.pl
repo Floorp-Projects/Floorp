@@ -33,7 +33,7 @@
 #             - path to where the .xpi files are are to be created at.
 #               ** MUST BE AN ABSOLUTE PATH, NOT A RELATIVE PATH **
 #
-#   ie: perl makexpi.pl core z:\exposed\windows\32bit\en\5.0 d:\build\mozilla\dist\win32_o.obj\install\working
+#   ie: perl makexpi.pl xpcom z:\exposed\windows\32bit\en\5.0 d:\build\mozilla\dist\win32_o.obj\install\working
 #
 
 use File::Copy;

@@ -415,7 +415,6 @@ UpdateProgressBar(unsigned value)
 
       // Only invalidate the part that needs updating
       GetClientRect(hWndGauge, &rect);
-      rect.left = BAR_MARGIN + (nBars - 1) * (BAR_WIDTH + BAR_SPACING);
       InvalidateRect(hWndGauge, &rect, FALSE);
     
       // Update the whole extracting dialog. We do this because we don't
@@ -739,7 +738,7 @@ RunInstaller()
   GetFullTempPathName("SETUP.EXE",     sizeof(szSetupFile),     szSetupFile);
   GetFullTempPathName("uninstall.exe", sizeof(szUninstallFile), szUninstallFile);
 
-  GetPrivateProfileString("Archives", "uninstall.exe", "", szBuf, (MAX_BUF * 2), szArcLstFile);
+  GetPrivateProfileString("Archives", "uninstall.exe", "", szBuf, sizeof(szBuf), szArcLstFile);
   if((FileExists(szUninstallFile) != FALSE) && (*szBuf != '\0'))
   {
     lstrcpy(szCmdLine, szUninstallFile);
@@ -802,7 +801,7 @@ RunInstaller()
   // delete archive.lst file in the temp directory
   GetFullTempPathName("Archive.lst", sizeof(szTmp), szTmp);
   DeleteFile(szTmp);
-  GetFullTempPathName("core.ns", sizeof(szTmp), szTmp);
+  GetFullTempPathName("xpcom.ns", sizeof(szTmp), szTmp);
   DirectoryRemove(szTmp, TRUE);
   DirectoryRemove(szTempPath, FALSE);
   return TRUE;

@@ -27,8 +27,8 @@
 
 HRESULT     TimingCheck(DWORD dwTiming, LPSTR szSection, LPSTR szFile);
 HRESULT     FileUncompress(LPSTR szFrom, LPSTR szTo);
-HRESULT     ProcessCoreFile(void);
-HRESULT     CleanupCoreFile(void);
+HRESULT     ProcessXpcomFile(void);
+HRESULT     CleanupXpcomFile(void);
 HRESULT     ProcessUncompressFile(DWORD dwTiming);
 HRESULT     FileMove(LPSTR szFrom, LPSTR szTo);
 HRESULT     ProcessMoveFile(DWORD dwTiming);

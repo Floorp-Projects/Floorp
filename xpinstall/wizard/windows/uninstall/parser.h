@@ -47,6 +47,7 @@ void        ParseForWinRegInfo(LPSTR szString, LPSTR szKeyStr, LPSTR szRootKey, 
 void        DeleteWinRegKey(HKEY hkRootKey, LPSTR szKey);
 void        DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName);
 DWORD       GetLogFile(LPSTR szTargetPath, LPSTR szInFilename, LPSTR szOutBuf, DWORD dwOutBufSize);
+void        RemoveUninstaller(LPSTR szUninstallFilename);
 
 #endif
 

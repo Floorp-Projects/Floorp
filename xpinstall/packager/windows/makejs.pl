@@ -33,7 +33,7 @@
 #                                 ie: 5.0.0.99256
 #        component staging path - path to where the components are staged at
 #
-#        ie: perl makejs.pl core.jst 5.0.0.99256
+#        ie: perl makejs.pl xpcom.jst 5.0.0.99256
 #
 
 # Make sure there are at least two arguments
@@ -46,7 +46,7 @@ if($#ARGV < 2)
                                 form of: major.minor.release.yydoy
                                 ie: 5.0.0.99256
        component staging path : path to where this component is staged at
-                                ie: z:\\stage\\windows\\32bit\\en\\5.0\\core
+                                ie: z:\\stage\\windows\\32bit\\en\\5.0\\xpcom
        \n";
 }
 

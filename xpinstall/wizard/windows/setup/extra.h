@@ -90,8 +90,8 @@ BOOL              ResolveComponentDependency(siCD *siCDInDependency);
 void              ResolveDependees(LPSTR szToggledDescriptionShort);
 BOOL              ResolveComponentDependee(siCD *siCDInDependee);
 void              STGetComponents(LPSTR szSection, st *stSetupType, LPSTR szFileIni);
-HRESULT           InitSCoreFile(void);
-void              DeInitSCoreFile(void);
+HRESULT           InitSXpcomFile(void);
+void              DeInitSXpcomFile(void);
 void              DeInitialize(void);
 void              DeInitDlgWelcome(diW *diDialog);
 void              DeInitDlgLicense(diL *diDialog);
@@ -172,6 +172,8 @@ LPSTR             GetArgV(LPSTR lpszCommandLine, int iIndex, LPSTR lpszDest, int
 void              ParseCommandLine(LPSTR lpszCmdLine);
 void              SetSetupRunMode(LPSTR szMode);
 void              Delay(DWORD dwSeconds);
+siCD              *InitWinInitNodes(char *szInFile);
+void              UpdateWininit(LPSTR szUninstallFilename);
 
 BOOL              bSDInit;
 

@@ -47,7 +47,7 @@ extern LPSTR            szTempDir;
 extern LPSTR            szOSTempDir;
 extern LPSTR            szFileIniUninstall;
 
-extern DWORD            dwOSType;
+extern ULONG            ulOSType;
 extern DWORD            dwScreenX;
 extern DWORD            dwScreenY;
 

@@ -24,13 +24,10 @@
 
 #include "extern.h"
 #include "extra.h"
+#include "parser.h"
 #include "dialogs.h"
 #include "ifuncns.h"
-//#include "time.h"
-//#include <winnls.h>
 #include <winver.h>
-//#include <tlhelp32.h>
-//#include <winperf.h>
 
 #define HIDWORD(l)   ((DWORD) (((ULONG) (l) >> 32) & 0xFFFF))
 #define LODWORD(l)   ((DWORD) (l))
@@ -158,7 +155,7 @@ HRESULT Initialize(HINSTANCE hInstance)
   char szBuf[MAX_BUF];
   HWND hwndFW;
 
-  hDlgMessage     = NULL;
+  hDlgMessage = NULL;
   DetermineOSVersion();
 
   /* load strings from setup.exe */
@@ -593,6 +590,7 @@ void DetermineOSVersion()
   BOOL          bIsWin95Debute;
   char          szESetupRequirement[MAX_BUF];
 
+  ulOSType        = 0;
   dwVersion       = GetVersion();
   bIsWin95Debute  = IsWin95Debute();
 
@@ -604,22 +602,26 @@ void DetermineOSVersion()
   // Get build numbers for Windows NT or Win95/Win98
   if(dwVersion < 0x80000000) // Windows NT
   {
+    ulOSType |= OS_NT;
     if(dwWindowsMajorVersion == 3)
-      dwOSType = OS_NT3;
+      ulOSType |= OS_NT3;
+    else if(dwWindowsMajorVersion == 4)
+      ulOSType |= OS_NT4;
     else
-      dwOSType = OS_NT4;
+      ulOSType |= OS_NT5;
   }
   else if(dwWindowsMajorVersion == 4)
   {
+    ulOSType |= OS_WIN9x;
     if(dwWindowsMinorVersion == 0)
     {
-      dwOSType |= OS_WIN95;
+      ulOSType |= OS_WIN95;
 
       if(bIsWin95Debute)
-        dwOSType |= OS_WIN95_DEBUTE;
+        ulOSType |= OS_WIN95_DEBUTE;
     }
     else
-      dwOSType = OS_WIN98;
+      ulOSType |= OS_WIN98;
   }
   else
   {
@@ -704,6 +706,8 @@ HRESULT InitUninstallGeneral()
     return(1);
   if((ugUninstall.szUninstallKeyDescription = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((ugUninstall.szUninstallFilename       = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
 
   return(0);
 }
@@ -714,6 +718,7 @@ void DeInitUninstallGeneral()
   FreeMemory(&(ugUninstall.szLogFilename));
   FreeMemory(&(ugUninstall.szDescription));
   FreeMemory(&(ugUninstall.szUninstallKeyDescription));
+  FreeMemory(&(ugUninstall.szUninstallFilename));
   FreeMemory(&(ugUninstall.szUserAgent));
   FreeMemory(&(ugUninstall.szWrKey));
   FreeMemory(&(ugUninstall.szProductName));
@@ -1059,7 +1064,6 @@ BOOL CheckLegacy(HWND hDlg)
 HRESULT GetUninstallLogPath()
 {
   char szBuf[MAX_BUF];
-  char szTempDescription[MAX_BUF];
   char szLogFolder[MAX_BUF];
   char szKey[MAX_BUF];
   char szWindowsUninstallKey[MAX_BUF];
@@ -1148,6 +1152,8 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
     DecryptString(ugUninstall.szWrMainKey, szKeyCrypted);
   }
   RemoveBackSlash(ugUninstall.szWrMainKey);
+
+  GetPrivateProfileString("General", "Uninstall Filename", "", ugUninstall.szUninstallFilename, MAX_BUF, szFileIniUninstall);
 
 
   /* Uninstall dialog */
@@ -1244,7 +1250,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "CONFIGPATH") == 0)
   {
     /* parse for the "c:\Windows\Config" directory */
-    if((dwOSType & OS_WIN95) || (dwOSType & OS_WIN98))
+    if(ulOSType & OS_WIN9x)
     {
       GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion", "ConfigPath", szVariable, dwVariableSize);
     }
@@ -1257,7 +1263,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "COMMON_STARTUP") == 0)
   {
     /* parse for the "C:\WINNT40\Profiles\All Users\Start Menu\\Programs\\Startup" directory */
-    if((dwOSType & OS_WIN95) || (dwOSType & OS_WIN98))
+    if(ulOSType & OS_WIN9x)
     {
       GetWinReg(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Startup", szVariable, dwVariableSize);
     }
@@ -1269,7 +1275,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "COMMON_PROGRAMS") == 0)
   {
     /* parse for the "C:\WINNT40\Profiles\All Users\Start Menu\\Programs" directory */
-    if((dwOSType & OS_WIN95) || (dwOSType & OS_WIN98))
+    if(ulOSType & OS_WIN9x)
     {
       GetWinReg(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Programs", szVariable, dwVariableSize);
     }
@@ -1281,7 +1287,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "COMMON_STARTMENU") == 0)
   {
     /* parse for the "C:\WINNT40\Profiles\All Users\Start Menu" directory */
-    if((dwOSType & OS_WIN95) || (dwOSType & OS_WIN98))
+    if(ulOSType & OS_WIN9x)
     {
       GetWinReg(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Start Menu", szVariable, dwVariableSize);
     }
@@ -1293,7 +1299,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "COMMON_DESKTOP") == 0)
   {
     /* parse for the "C:\WINNT40\Profiles\All Users\Desktop" directory */
-    if((dwOSType & OS_WIN95) || (dwOSType & OS_WIN98))
+    if(ulOSType & OS_WIN9x)
     {
       GetWinReg(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Desktop", szVariable, dwVariableSize);
     }
@@ -1365,7 +1371,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "PERSONAL_PRINTHOOD") == 0)
   {
     /* parse for the "C:\WINNT40\Profiles\%USERNAME%\PrintHood" directory */
-    if((dwOSType & OS_NT3) || (dwOSType & OS_NT4))
+    if(ulOSType & OS_NT)
     {
       GetWinReg(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "PrintHood", szVariable, dwVariableSize);
     }
