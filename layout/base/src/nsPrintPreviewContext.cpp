@@ -22,6 +22,7 @@
 #include "nsIWidget.h"
 #include "nsGfxCIID.h"
 #include "nsLayoutAtoms.h"
+#include "prlog.h"
 
 static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
 
@@ -34,7 +35,27 @@ public:
   virtual PRBool IsPaginated();
   virtual nscoord GetPageWidth();
   virtual nscoord GetPageHeight();
+
+#ifdef NS_DEBUG
+  static PRBool UseFakePageSize();
+#endif
 };
+
+#ifdef NS_DEBUG
+PRBool
+PrintPreviewContext::UseFakePageSize()
+{
+  static PRLogModuleInfo* pageSizeLM;
+  static PRBool useFakePageSize = PR_FALSE;
+  if (nsnull == pageSizeLM) {
+    pageSizeLM = PR_NewLogModule("pagesize");
+    if (nsnull != pageSizeLM) {
+      useFakePageSize = 0 != pageSizeLM->level;
+    }
+  }
+  return useFakePageSize;
+}
+#endif
 
 PrintPreviewContext::PrintPreviewContext()
 {
@@ -52,19 +73,40 @@ PrintPreviewContext::GetMedium(nsIAtom*& aMedium)
   return NS_OK;
 }
 
-PRBool PrintPreviewContext::IsPaginated()
+PRBool
+PrintPreviewContext::IsPaginated()
 {
   return PR_TRUE;
 }
 
-nscoord PrintPreviewContext::GetPageWidth()
+nscoord
+PrintPreviewContext::GetPageWidth()
 {
+#ifdef NS_DEBUG
+  if (UseFakePageSize()) {
+    // For testing purposes make the page width smaller than the visible
+    // area
+    float sbWidth, sbHeight;
+    mDeviceContext->GetScrollBarDimensions(sbWidth, sbHeight);
+    nscoord sbar = NSToCoordRound(sbWidth);
+    return mVisibleArea.width - sbar - 2*100;
+  }
+#endif
+
   // XXX assumes a 1/2 margin around all sides
   return (nscoord) NS_INCHES_TO_TWIPS(7.5);
 }
 
-nscoord PrintPreviewContext::GetPageHeight()
+nscoord
+PrintPreviewContext::GetPageHeight()
 {
+#ifdef NS_DEBUG
+  if (UseFakePageSize()) {
+    // For testing purposes make the page height 60% of the visible area
+    return mVisibleArea.height * 60 / 100;
+  }
+#endif
+
   // XXX assumes a 1/2 margin around all sides
   return (nscoord) NS_INCHES_TO_TWIPS(10);
 }
