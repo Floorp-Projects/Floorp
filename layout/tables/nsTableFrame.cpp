@@ -1248,8 +1248,7 @@ nsTableFrame::GetRowGroupFrame(nsIFrame* aFrame,
     nsIScrollableFrame* scrollable = nsnull;
     nsresult rv = CallQueryInterface(aFrame, &scrollable);
     if (NS_SUCCEEDED(rv) && (scrollable)) {
-      nsIFrame* scrolledFrame;
-      scrollable->GetScrolledFrame(nsnull, scrolledFrame);
+      nsIFrame* scrolledFrame = scrollable->GetScrolledFrame();
       if (scrolledFrame) {
         if (nsLayoutAtoms::tableRowGroupFrame == scrolledFrame->GetType()) {
           rgFrame = scrolledFrame;

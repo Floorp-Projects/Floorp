@@ -154,7 +154,7 @@ nsScrollbarFrame::AttributeChanged(nsPresContext* aPresContext,
   if (!scrollable)
     return rv;
 
-  scrollable->CurPosAttributeChanged(aPresContext, aChild, aModType);
+  scrollable->CurPosAttributeChanged(aChild, aModType);
   return rv;
 }
 

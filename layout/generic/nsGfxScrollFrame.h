@@ -76,9 +76,7 @@ public:
   NS_IMETHOD ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
 
   // This gets called when the 'curpos' attribute on one of the scrollbars changes
-  nsresult CurPosAttributeChanged(nsPresContext* aPresContext,
-                                  nsIContent* aChild,
-                                  PRInt32 aModType);
+  void CurPosAttributeChanged(nsIContent* aChild, PRInt32 aModType);
 
   PRBool SetAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize, PRBool aReflow=PR_TRUE);
   PRInt32 GetIntegerAttribute(nsIBox* aFrame, nsIAtom* atom, PRInt32 defaultValue);
@@ -238,21 +236,17 @@ public:
   NS_IMETHOD GetPadding(nsMargin& aPadding);
 
   // nsIScrollableFrame
-  NS_IMETHOD GetScrolledFrame(nsPresContext* aPresContext, nsIFrame *&aScrolledFrame) const;
-  NS_IMETHOD GetScrollableView(nsPresContext* aContext, nsIScrollableView** aResult);
+  virtual nsIFrame* GetScrolledFrame() const;
+  virtual nsIScrollableView* GetScrollableView();
 
-  NS_IMETHOD GetScrollPosition(nsPresContext* aContext, nscoord &aX, nscoord& aY) const;
-  NS_IMETHOD ScrollTo(nsPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags);
+  virtual nsPoint GetScrollPosition() const;
+  virtual void ScrollTo(nsPoint aScrollPosition, PRUint32 aFlags);
 
-  NS_IMETHOD SetScrollbarVisibility(nsPresContext* aPresContext,
-                                    PRBool aVerticalVisible,
-                                    PRBool aHorizontalVisible);
+  virtual void SetScrollbarVisibility(PRBool aVerticalVisible, PRBool aHorizontalVisible);
 
-  NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult);
+  virtual nsIBox* GetScrollbarBox(PRBool aVertical);
 
-  NS_IMETHOD CurPosAttributeChanged(nsPresContext* aPresContext,
-                                    nsIContent* aChild,
-                                    PRInt32 aModType);
+  virtual void CurPosAttributeChanged(nsIContent* aChild, PRInt32 aModType);
 
   virtual void ScrollToRestoredPosition() {
     mInner.ScrollToRestoredPosition();
@@ -371,21 +365,17 @@ public:
   NS_IMETHOD GetPadding(nsMargin& aPadding);
 
   // nsIScrollableFrame
-  NS_IMETHOD  GetScrolledFrame(nsPresContext* aPresContext, nsIFrame *&aScrolledFrame) const;
-  NS_IMETHOD GetScrollableView(nsPresContext* aContext, nsIScrollableView** aResult);
+  virtual nsIFrame* GetScrolledFrame() const;
+  virtual nsIScrollableView* GetScrollableView();
 
-  NS_IMETHOD GetScrollPosition(nsPresContext* aContext, nscoord &aX, nscoord& aY) const;
-  NS_IMETHOD ScrollTo(nsPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags);
+  virtual nsPoint GetScrollPosition() const;
+  virtual void ScrollTo(nsPoint aScrollPosition, PRUint32 aFlags);
 
-  NS_IMETHOD SetScrollbarVisibility(nsPresContext* aPresContext,
-                                    PRBool aVerticalVisible,
-                                    PRBool aHorizontalVisible);
+  virtual void SetScrollbarVisibility(PRBool aVerticalVisible, PRBool aHorizontalVisible);
 
-  NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult);
+  virtual nsIBox* GetScrollbarBox(PRBool aVertical);
 
-  NS_IMETHOD CurPosAttributeChanged(nsPresContext* aPresContext,
-                                    nsIContent* aChild,
-                                    PRInt32 aModType);
+  virtual void CurPosAttributeChanged(nsIContent* aChild, PRInt32 aModType);
 
   virtual void ScrollToRestoredPosition() {
     mInner.ScrollToRestoredPosition();

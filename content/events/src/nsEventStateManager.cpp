@@ -1695,7 +1695,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     scrollView = nsnull;
     nsCOMPtr<nsIScrollableViewProvider> svp = do_QueryInterface(scrollFrame);
     if (svp) {
-      svp->GetScrollableView(aPresContext, &scrollView);
+      scrollView = svp->GetScrollableView();
     }
     if (!scrollView) {
       scrollFrame = scrollFrame->GetParent();

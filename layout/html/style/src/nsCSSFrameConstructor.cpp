@@ -5056,8 +5056,8 @@ LocateAnonymousFrame(nsPresContext* aPresContext,
     // We must take into account if the parent is a scrollframe. If it is, we
     // need to bypass the scrolling mechanics and get at the true frame.
     nsCOMPtr<nsIScrollableFrame> scrollFrame ( do_QueryInterface(aParentFrame) );
-    if ( scrollFrame )
-      scrollFrame->GetScrolledFrame ( aPresContext, *aResult );
+    if (scrollFrame)
+      *aResult = scrollFrame->GetScrolledFrame();
     else
       *aResult = aParentFrame;
     return;
@@ -11291,7 +11291,7 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIPresShell* aPresShell,
       nsIScrollableFrame* scroll = nsnull;
       CallQueryInterface(insertionPoint, &scroll);
       if (scroll)
-        scroll->GetScrolledFrame(nsnull, insertionPoint);
+        insertionPoint = scroll->GetScrolledFrame();
 
       if (insertionPoint != aParentFrame) 
         GetInsertionPoint(aPresShell, insertionPoint, aChildContent, aInsertionPoint, aMultiple);

@@ -244,12 +244,10 @@ nsListBoxBodyFrame::Init(nsPresContext* aPresContext, nsIContent* aContent,
   if (!scrollFrame)
     return rv;
 
-  nsIScrollableView* scrollableView;
-  scrollFrame->GetScrollableView(aPresContext, &scrollableView);
+  nsIScrollableView* scrollableView = scrollFrame->GetScrollableView();
   scrollableView->SetScrollProperties(NS_SCROLL_PROPERTY_ALWAYS_BLIT);
 
-  nsIBox* verticalScrollbar;
-  scrollFrame->GetScrollbarBox(PR_TRUE, &verticalScrollbar);
+  nsIBox* verticalScrollbar = scrollFrame->GetScrollbarBox(PR_TRUE);
   if (!verticalScrollbar) {
     NS_ERROR("Unable to install the scrollbar mediator on the listbox widget. You must be using GFX scrollbars.");
     return NS_ERROR_FAILURE;
@@ -980,10 +978,9 @@ nsListBoxBodyFrame::VerticalScroll(PRInt32 aPosition)
   if (!scrollFrame)
     return;
 
-  nscoord x, y;
-  scrollFrame->GetScrollPosition(mPresContext, x, y);
+  nsPoint scrollPosition = scrollFrame->GetScrollPosition();
  
-  scrollFrame->ScrollTo(mPresContext, x, aPosition, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
+  scrollFrame->ScrollTo(nsPoint(scrollPosition.x, aPosition), NS_SCROLL_PROPERTY_ALWAYS_BLIT);
 
   mYPosition = aPosition;
 }

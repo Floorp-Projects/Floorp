@@ -41,11 +41,9 @@
 
 #include "nsISupports.h"
 
-#define NS_ISCROLLABLEVIEWPROVIDER_IID_STR "2b2e0d30-1dd2-11b2-9169-eb82b04f6775"
-
 #define NS_ISCROLLABLEVIEWPROVIDER_IID \
-{0x2b2e0d30, 0x1dd2, 0x11b2, \
-{0x91, 0x69, 0xeb, 0x82, 0xb0, 0x4f, 0x67, 0x75}}
+{0xdafcbf5f, 0x701f, 0x4697, \
+{0xa5, 0x13, 0x81, 0xd8, 0x0e, 0x01, 0x41, 0x2c}}
 
 class nsIScrollableView;
 
@@ -53,7 +51,7 @@ class nsIScrollableViewProvider : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLABLEVIEWPROVIDER_IID)
 
-  NS_IMETHOD GetScrollableView(nsPresContext* aContext, nsIScrollableView** aResult)=0;
+  virtual nsIScrollableView* GetScrollableView() = 0;
 };
 
 #endif /* _nsIScrollableViewProvider_h */

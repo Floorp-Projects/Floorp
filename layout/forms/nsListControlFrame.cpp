@@ -427,9 +427,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
   }
 
   nsPresContext* presContext = GetPresContext();
-  nsIScrollableView * scrollableView;
-  GetScrollableView(presContext, &scrollableView);
-  if (!scrollableView) return;
+  if (!GetScrollableView()) return;
 
   nsIPresShell *presShell = presContext->GetPresShell();
   if (!presShell) return;
@@ -582,8 +580,7 @@ nsListControlFrame::SaveState(nsPresContext* aPresContext,
   nsCOMPtr<nsIPresState> state;
   nsresult res = NS_OK;
 
-  nsIScrollableView* scrollingView;
-  GetScrollableView(aPresContext, &scrollingView);
+  nsIScrollableView* scrollingView = GetScrollableView();
 
   nscoord x = 0, y = 0;
   if (scrollingView) {
@@ -666,8 +663,7 @@ nsListControlFrame::RestoreState(nsPresContext* aPresContext,
       res = height->GetData(&h);
 
     if (NS_SUCCEEDED(res)) {
-      nsIScrollableView* scrollingView;
-      GetScrollableView(aPresContext, &scrollingView);
+      nsIScrollableView* scrollingView = GetScrollableView();
       if (scrollingView) {
         nsIView* child = nsnull;
         nsRect childRect(0,0,0,0);
@@ -1486,8 +1482,7 @@ nsListControlFrame::CaptureMouseEvents(nsPresContext* aPresContext, PRBool aGrab
   if (IsInDropDownMode()) {
     view = GetView();
   } else {
-    nsIFrame* scrolledFrame = nsnull;
-    GetScrolledFrame(aPresContext, scrolledFrame);
+    nsIFrame* scrolledFrame = GetScrolledFrame();
     NS_ASSERTION(scrolledFrame, "No scrolled frame found");
     NS_ENSURE_TRUE(scrolledFrame, NS_ERROR_FAILURE);
     
@@ -2253,7 +2248,8 @@ NS_IMETHODIMP
 nsListControlFrame::GetOptionsContainer(nsPresContext* aPresContext,
                                         nsIFrame** aFrame)
 {
-  return GetScrolledFrame(aPresContext, *aFrame);
+  *aFrame = GetScrolledFrame();
+  return NS_OK;
 }
 
 // Send out an onchange notification.
@@ -2860,9 +2856,8 @@ nsListControlFrame::ScrollToIndex(PRInt32 aIndex)
 nsresult
 nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
 {
-  nsIScrollableView * scrollableView;
-  nsPresContext* presContext = GetPresContext();
-  GetScrollableView(presContext, &scrollableView);
+  nsIScrollableView* scrollableView = GetScrollableView();
+  nsPresContext* presContext = GetPresContext();  
 
   if (scrollableView) {
     // if null is passed in we scroll to 0,0
