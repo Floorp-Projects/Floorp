@@ -4194,19 +4194,21 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
             if ((wordSelectEatSpaceAfter ? isWhitespace : !isWhitespace) || !aPos->mEatingWS) {
               aPos->mContentOffset = aPos->mStartOffset + contentLen;
               keepSearching = PR_TRUE;
-              aPos->mEatingWS = !wordSelectEatSpaceAfter;
+              if (wordSelectEatSpaceAfter ? isWhitespace : !isWhitespace)
+                aPos->mEatingWS = PR_TRUE;
 #ifdef IBMBIDI
               wordLen = (mState & NS_FRAME_IS_BIDI)
                       ? mContentOffset + mContentLength : -1;
 #endif // IBMBIDI
               while (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE, aPos->mIsKeyboardSelect))
               {
-                if (aPos->mStartOffset + contentLen > (mContentLength + mContentOffset))
+                if (wordSelectEatSpaceAfter ? !isWhitespace : aPos->mEatingWS)
+                  break;
+                if (aPos->mStartOffset + contentLen >= (mContentLength + mContentOffset))
                   goto TryNextFrame;
                 if (wordSelectEatSpaceAfter ? isWhitespace : !isWhitespace)
-                  aPos->mContentOffset += contentLen;
-                else
-                  break;
+                  aPos->mEatingWS = PR_TRUE;
+                aPos->mContentOffset += contentLen;
 #ifdef IBMBIDI
                 wordLen = (mState & NS_FRAME_IS_BIDI)
                         ? mContentOffset + mContentLength : -1;
@@ -4221,7 +4223,6 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
               aPos->mContentOffset = mContentOffset;
               found = PR_TRUE;
             }
-            aPos->mEatingWS = isWhitespace;
           } 
 
   TryNextFrame:        
@@ -4233,7 +4234,15 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       {
         aPos->mContentOffset = PR_MIN(aPos->mContentOffset, mContentOffset + mContentLength);
         aPos->mContentOffset = PR_MAX(aPos->mContentOffset, mContentOffset);
-        result = GetFrameFromDirection(aPresContext, aPos);
+        if (wordSelectEatSpaceAfter && aPos->mDirection == eDirNext && aPos->mEatingWS) {
+          //If we want to stop at beginning of the next word
+          //GetFrameFromDirction should not return NS_ERROR_FAILURE at end of line
+          aPos->mEatingWS = PR_FALSE;
+          result = GetFrameFromDirection(aPresContext, aPos);
+          aPos->mEatingWS = PR_TRUE;
+        }
+        else
+          result = GetFrameFromDirection(aPresContext, aPos);
         if (NS_SUCCEEDED(result) && aPos->mResultFrame && aPos->mResultFrame!= this)
         {
           if (NS_SUCCEEDED(result = aPos->mResultFrame->PeekOffset(aPresContext, aPos)))
