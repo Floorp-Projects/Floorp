@@ -104,20 +104,19 @@ DateFormater.prototype.getFormatedDate = function( date )
    // that displays the date uses this function we will be able to 
    // make a user settable date format and use it here.
 
-   if( this.CalendarWindow.calendarPreferences.getPref( "dateformat" ) == 0 )
-   {
-      var oneBasedMonthNum = date.getMonth() + 1;
-   
-      var monthString = this.dateStringBundle.GetStringFromName("month." + oneBasedMonthNum + ".Mmm" );
-      
-      var dateString =  monthString + " " + date.getDate()+", "+date.getFullYear();
-      
-      return dateString;
-   }
-   else
-   {
-      return( dateService.FormatDate( "", dateService.dateFormatShort, date.getFullYear(), date.getMonth()+1, date.getDate() ) );
-   }
+   try                                                                                                           if( this.CalendarWindow.calendarPreferences.getPref( "dateformat" ) == 0 )
+   {                                                                                                             {
+      if( this.CalendarWindow.calendarPreferences.getPref( "dateformat" ) == 0 )                                    var oneBasedMonthNum = date.getMonth() + 1;
+         var dateFormat = dateService.dateFormatLong                                                             
+      else                                                                                                          var monthString = this.dateStringBundle.GetStringFromName("month." + oneBasedMonthNum + ".Mmm" );
+         var dateFormat = dateService.dateFormatShort;                                                              
+                                                                                                                    var dateString =  monthString + " " + date.getDate()+", "+date.getFullYear();
+      return( dateService.FormatDate( "", dateFormat, date.getFullYear(), date.getMonth()+1, date.getDate() ) );    
+   }                                                                                                                return dateString;
+   catch(ex)                                                                                                     }
+   {                                                                                                             else
+      return "";                                                                                                 {  
+   }                                                                                                                try
 }
 
 
