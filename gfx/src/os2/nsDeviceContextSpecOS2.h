@@ -79,6 +79,7 @@ class PRINTDLG
 public:
    PRINTDLG ();
   ~PRINTDLG ();
+   RefreshPrintQueue();
    int GetNumPrinters ();
    int GetDefaultPrinter ();
    void GetPrinter (int numPrinter, char** printerName);
