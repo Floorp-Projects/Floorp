@@ -14,9 +14,11 @@ my $machine_id = $p->param('machine_id') || "";
 my $logfile = $p->param('logfile') || "";
 
 # Detaint machine id / logfile
-$machine_id =~ s/[^0-9]//g;
-$logfile =~ s/[^0-9A-Za-z\.]//g;
-$logfile =~ s/^\.+//g;
+$machine_id =~ /^(\d+)$/s;
+$machine_id = $1;
+$logfile =~ /^(\d+\.log)$/s;
+$logfile = $1;
+
 
 if (!$machine_id || !$logfile) {
   die "Must specify machine_id and logfile!";
