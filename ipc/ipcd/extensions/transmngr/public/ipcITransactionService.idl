@@ -1,0 +1,239 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Transaction Manager.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corp.
+ * Portions created by the Initial Developer are Copyright (C) 2003
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   John Gaunt <jgaunt@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+// from tmTransactionManager.h
+//
+// XXX documentation needs work
+//////////////////////////////////////////////////////////////////////////////
+//  Overview of TransactionManager IPC Module
+//
+// Classes:
+//    tmIPCModule - From the tmTransactionManager's point of view, this
+//        is a proxy for the IPC daemon itself. The reverse is true
+//        from the daemon's point of view. This is an interface for the
+//        Transaction system to work with the IPC daemon as its transport
+//        layer.
+//    tmTransactionManager (TM) - Manages the different queues. Maintains
+//        the queues neccessary for different clients. Receives messages
+//        from the tmIPCModule and passes message to the IPC daemon through
+//        the tmIPCModule.
+//    tmQueue - this class manages the transactions for the different areas
+//        of the profiles being shared. Broken down by functional area there
+//        will be  a queue for prefs, cookies etc, but not for profileA and 
+//        profileB, and not for pref_delete, pref_create, pref_change etc...
+//    tmTransaction - the actual transaction being shared with the different
+//        tmClients. It contains the type of transaction, which will equate with
+//        a type of queue in existance, the owner of the transaction (an IPC daemon ID)
+//        and the actual text message to be shared. 
+//
+//////////////////////////////////////////////////////////////////////////////
+
+/// XXX some docs that need to be put somewhere:
+//
+// from tmqueue.cpp
+// Docs - note that the status of the TM_ATTACH_REPLY is only for checking
+//            for TM_ERROR_FAILURE. Other numbers have no importance
+// success of the status means the NS_ERROR_GET_CODE(status) will 
+//     yield the index of the listener.
+//
+// move to documentation page - from tmqueue.h
+//
+// a queue is specific to profile
+//
+// UUID going out from the module is a handler in the client 
+//          (will go to the XPCOM service impling that UUID)
+//   -- does it make sense to have different UUIDs for cookies/prefs/etc
+//
+
+#include "nsISupports.idl"
+
+interface ipcITransactionObserver;
+
+[scriptable, uuid(15561efb-8c58-4a47-813a-fa91cf730895)]
+interface ipcITransactionService : nsISupports
+{
+  /** 
+    * Connects the application to the transaction manager, defines the
+    *   namespace and initializes internal storage
+    *
+    * @param aNamespace
+    *        A string defining the scope of the transaction domains. It is
+    *        used internally to seperate process listening to the same domain
+    *        (ie. preferences) but for two different namespaces (ie. profile1 vs
+    *        profile2).
+    *
+    * @returns NS_OK if all memory allocated properly and the IPC service was
+    *          reached and attached to successfully.
+    *
+    * @returns an NS_ERROR_<foo> code specific to the failure otherwise
+    */
+  void init(in ACString aNamespace);
+
+  /** 
+    * Links the observer passed in with the domain specified. This will allow
+    *   the observer to post transactions dealing with this domain as well as
+    *   receive transactions posted by other applications observing this
+    *   domain.
+    *
+    * Return codes for this method confer information about the success of
+    *   this call, not of the actual attaching of the observer to the domain.
+    *   (except the TM_ERROR code - which means the observer can not attach)
+    *   If the attach is successful the observer will have its OnAttachReply
+    *   method called before this method returns.
+    *
+    * Note: This call is synchronous and will not return until the call to
+    *       OnAttachReply is made.
+    * 
+    * @param aDomainName
+    *        the name of the domain, in the current namespace, to listen for
+    *        transactions from. i.e. cookies
+    *
+    * @param aObserver
+    *        this will be used to notify the application when transactions
+    *        and messages come in.
+    *
+    * @param aLockingCall
+    *        Have the Transaction Sevice acquire a lock based on the domain
+    *        before attaching. This should be used when persistant storage
+    *        is being used to prevent data corruption.
+    *
+    * @returns NS_OK if the attach message was sent to the Transaction Manager.
+    *
+    * @returns an NS_ERROR_<foo> code specific to the failure otherwise
+    *
+    * @returns TM_ERROR_QUEUE_EXISTS if the queue already exists which means
+    *          someone has already attached to it.
+    */
+  void attach(in ACString aDomainName, 
+              in ipcITransactionObserver aObserver, 
+              in PRBool aLockingCall);
+
+  /**
+    * Sends a detach message to the Transaction Manager to unlink the observer
+    *   associated with the domain passed in. 
+    *
+    * As in attach, return codes do not indicate success of detachment. The
+    *   observer will have it's OnDetach method called if it is successfully
+    *   detached.
+    *
+    * Note: This call is an asynchronous call.
+    *
+    * @param aDomainName
+    *        the domain, in the current namespace, from which the client
+    *        should be removed.
+    *
+    * @returns NS_OK if the detach message is sent to the Transaction Manager
+    *
+    * @returns NS_ERROR_FAILURE is something goes wrong
+    *
+    * @returns NS_ERRROR_UNEXPECTD if the domain does not have an observer 
+    *          attached
+    */
+  void detach(in ACString aDomainName);
+
+  /**
+    * Sends a flush message to the Transaction Manager to remove all
+    *   transactions for the domain. After this call there will be no
+    *   transactions in the Transaction Manager for the namespace/domain
+    *   pairing. It is up to the application to coordinate the flushing
+    *   of the Transaction Manager with the writing of data to files,
+    *   if needed.
+    *
+    * Note: This call is synchronous and will not return until the call to
+    *       OnFlushReply is made.
+    *
+    * @param aDomainName
+    *        The domain, in the current namespace, to flush.
+    *
+    * @param aLockingCall
+    *        Have the Transaction Sevice acquire a lock based on the domain
+    *        before flushing. This should be used when persistant storage
+    *        is being used to prevent data corruption.
+    *
+    * @returns NS_OK if the flush message is sent to the Transaction Manager
+    *
+    * @returns NS_ERROR_FAILURE is something goes wrong
+    *
+    * @returns NS_ERRROR_UNEXPECTD if the domain does not have an observer 
+    *          attached
+    */
+  void flush(in ACString aDomainName, in PRBool aLockingCall);
+
+  /**
+    * Send the data to the Transaction Manager to be broadcast to any
+    *   applications that have registered as observers of this particular
+    *   namespace/domain pairing.
+    *
+    * If this domain is not being observed (attach has not been called for
+    *   this domain) the message is queued until the attach is made and then
+    *   the message is sent to the Transaction Manager with the proper domain
+    *   information. 
+    *
+    *   XXXjg - this may not be neccessary with the synch attach call.
+    *
+    * Note: This call is an asynchronous call.
+    *
+    * @param aDomainName
+    *        the domain, in the current namespace, to which the data will be
+    *        sent.
+    *
+    * @param aData
+    *        The actual data to be sent.
+    *
+    * @param aDataLen
+    *        The length of the data argument
+    */
+  void postTransaction(in ACString aDomainName, 
+                       [array, const, size_is(aDataLen)]
+                       in octet aData,
+                       in unsigned long aDataLen);
+};
+
+%{C++
+// singleton implementing ipcITransactionService
+#define IPC_TRANSACTIONSERVICE_CLASSNAME \
+    "tmTransactionService"
+#define IPC_TRANSACTIONSERVICE_CONTRACTID \
+    "@mozilla.org/ipc/transaction-service;1"
+#define IPC_TRANSACTIONSERVICE_CID \
+{ /* 1403adf4-94d1-4c67-a8ae-d9f86972d378 */         \
+  0x1403adf4,                                        \
+  0x94d1,                                            \
+  0x4c67,                                            \
+  {0xa8, 0xae, 0xd9, 0xf8, 0x69, 0x72, 0xd3, 0x78}   \
+}
+%}
