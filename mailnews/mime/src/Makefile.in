@@ -97,7 +97,6 @@ EXPORTS		= \
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
-		-lmozjs \
 		-lxpcom \
 		$(NSPR_LIBS) \
 		$(NULL)
