@@ -1103,9 +1103,6 @@ NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* hand
 NS_IMETHODIMP ns4xPluginInstance :: GetValue(nsPluginInstanceVariable variable,
                                              void *value)
 {
-  if(!mStarted)
-    return NS_OK;
-
   nsresult  res = NS_OK;
 
   switch (variable) {
@@ -1126,7 +1123,7 @@ NS_IMETHODIMP ns4xPluginInstance :: GetValue(nsPluginInstanceVariable variable,
       break;
 
     default:
-      if(fCallbacks->getvalue) {
+      if(fCallbacks->getvalue && mStarted) {
         NS_TRY_SAFE_CALL_RETURN(res, 
                                 CallNPP_GetValueProc(fCallbacks->getvalue, 
                                                      &fNPP, 
