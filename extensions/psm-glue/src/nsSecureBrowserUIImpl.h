@@ -36,6 +36,9 @@
 #include "nsISecureBrowserUI.h"
 #include "nsIDocShell.h"
 #include "nsIPref.h"
+#include "nsIWebProgressListener.h"
+#include "nsIFormSubmitObserver.h"
+#include "nsIURI.h"
 
 #define NS_SECURE_BROWSER_DOCOBSERVER_CLASSNAME "Mozilla Secure Browser Doc Observer"
 
@@ -46,7 +49,10 @@
 #define NS_SECURE_BROWSER_DOCOBSERVER_PROGID "component://netscape/secure_browser_docobserver"
 
 
-class nsSecureBrowserUIImpl : public nsIDocumentLoaderObserver, public nsSecureBrowserUI
+class nsSecureBrowserUIImpl : public nsSecureBrowserUI, 
+                              public nsIWebProgressListener, 
+                              public nsIFormSubmitObserver,
+                              public nsIObserver
 {
 public:
 
@@ -56,11 +62,13 @@ public:
     static NS_METHOD Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 	NS_DECL_ISUPPORTS    
-    NS_DECL_NSIDOCUMENTLOADEROBSERVER
+    NS_DECL_NSIWEBPROGRESSLISTENER
     NS_DECL_NSSECUREBROWSERUI
 
-    static nsresult IsSecureUrl(PRBool fileSecure, nsIURI* aURL, PRBool *value);
-    static nsresult GetURIFromDocumentLoader(nsIDocumentLoader* aLoader, nsIURI** uri);
+
+    // nsIObserver
+    NS_DECL_NSIOBSERVER
+    NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindow* window, nsIURI *actionURL);
 
 protected:
 
@@ -69,16 +77,22 @@ protected:
 	nsCOMPtr<nsIDocumentLoaderObserver> mOldWebShellObserver;
     nsCOMPtr<nsIPref>                   mPref;
     nsCOMPtr<nsIStringBundle>           mStringBundle;
+    
+    nsCOMPtr<nsIURI>                    mCurrentURI;
 
 	PRBool					mIsSecureDocument;  // is https loaded
 	PRBool					mIsDocumentBroken;  // 
 	PRBool					mMixContentAlertShown;
     
     char*                   mLastPSMStatus;
-    char*                   mHost;
+    
 
     void GetBundleString(const nsString& name, nsString &outString);
-
+    
+    nsresult CheckProtocolContextSwitch( nsIURI* newURI, nsIURI* oldURI);
+    nsresult CheckMixedContext(nsIURI* nextURI);
+    nsresult CheckPost(nsIURI *actionURL, PRBool *okayToPost);
+    nsresult IsURLHTTPS(nsIURI* aURL, PRBool *value);
 };
 
 

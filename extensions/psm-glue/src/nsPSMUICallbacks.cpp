@@ -26,7 +26,7 @@
 #include "nsIEventQueueService.h"
 #include "nsPSMUICallbacks.h"
 #include "nsINetSupportDialogService.h"
-#include "nsIFileSpecWithUI.h"
+#include "nsIFilePicker.h"
 
 #include "nsAppShellCIDs.h"
 #include "prprf.h"
@@ -65,77 +65,65 @@ NS_METHOD
 nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, const char *urlStr)
 {
     nsresult rv;
-    
+    nsCOMPtr<nsIDOMWindow> hiddenWindow;
+    JSContext *jsContext;
+
     NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
 	if (NS_SUCCEEDED(rv))
 	{
-		// get a parent window for the new browser window
-		nsCOMPtr<nsIXULWindow>	parent;
-		appShell->GetHiddenWindow(getter_AddRefs(parent));
+		rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
+                                                    &jsContext );
 
-		// convert it to a DOMWindow
-		nsCOMPtr<nsIDocShell>	docShell;
-		if (parent)
-		{
-			parent->GetDocShell(getter_AddRefs(docShell));
-		}
-		nsCOMPtr<nsIDOMWindow>	domParent(do_GetInterface(docShell));
-		nsCOMPtr<nsIScriptGlobalObject>	sgo(do_QueryInterface(domParent));
+	     if ( NS_SUCCEEDED( rv ) ) 
+         {
+            // Set up arguments for "window.open"
+            void *stackPtr;
 
-		nsCOMPtr<nsIScriptContext>	context;
-		if (sgo)
-		{
-			sgo->GetContext(getter_AddRefs(context));
-		}
-		if (context)
-		{
-			JSContext *jsContext = (JSContext*)context->GetNativeContext();
-			if (jsContext)
-			{
-				void	*stackPtr;
+            char buffer[256];
+            PR_snprintf(buffer,
+                        sizeof(buffer),
+                        "menubar=no,height=%d,width=%d",
+                        height,
+                        width );
 
-                char buffer[256];
-                PR_snprintf(buffer,
-                            sizeof(buffer),
-                            "menubar=no,height=%d,width=%d",
-                            height,
-                            width );
-
-				jsval	*argv = JS_PushArguments(jsContext, &stackPtr, "sss", urlStr, "_blank", buffer);
-				if (argv)
-				{
-					// open the window
-					nsIDOMWindow	*newWindow;
-					domParent->Open(jsContext, argv, 3, &newWindow);
-                    newWindow->ResizeTo(width, height);
-					JS_PopArguments(jsContext, stackPtr);
-                }
-			}
-	    }
+            jsval	*argv = JS_PushArguments(jsContext, &stackPtr, "sss", urlStr, "_blank", buffer);
+            if (argv)
+            {
+	            // open the window
+	            nsIDOMWindow	*newWindow;
+	            hiddenWindow->Open(jsContext, argv, 3, &newWindow);
+                newWindow->ResizeTo(width, height);
+	            JS_PopArguments(jsContext, stackPtr);
+            }
+        }
     }
     return rv;
 }
 
 NS_IMETHODIMP
-nsPSMUIHandlerImpl::PromptForFile(const char *prompt, const char *fileRegEx, PRBool shouldFileExist, char **outFile)
+nsPSMUIHandlerImpl::PromptForFile(const PRUnichar *prompt, const char *fileRegEx, PRBool shouldFileExist, char **outFile)
 {
     NS_ENSURE_ARG_POINTER(outFile);
-    nsIFileSpecWithUI* file = NS_CreateFileSpecWithUI();
+    nsCOMPtr<nsIFilePicker> fp = do_CreateInstance("component://mozilla/filepicker");
     
-    if (file == nsnull)
+    if (!fp)
         return NS_ERROR_NULL_POINTER;
 
-    nsresult rv = file->ChooseInputFile(prompt, 
-                                        nsIFileSpecWithUI::eAllFiles | nsIFileSpecWithUI::eExtraFilter, 
-                                        fileRegEx,   // FIX name?
-                                        fileRegEx);
 
-    if (NS_FAILED(rv)) 
-        return rv;
+    fp->Init(nsnull, prompt, nsIFilePicker::modeOpen);
+    fp->SetFilters(nsIFilePicker::filterAll);
+    fp->AppendFilter(nsAutoString(fileRegEx).GetUnicode(), nsAutoString(fileRegEx).GetUnicode());  
+    PRInt16 mode;
+    nsresult rv = fp->Show(&mode);
 
-    rv = file->GetNativePath(outFile);
-    
-    NS_RELEASE(file);
+    if (NS_FAILED(rv) || (mode == nsIFilePicker::returnCancel))
+         return rv;
+
+    nsCOMPtr<nsILocalFile> file;
+    rv = fp->GetFile(getter_AddRefs(file));
+
+    if (file)
+      file->GetPath(outFile);
 
     return rv;
 }
@@ -338,7 +326,7 @@ char * FilePathPromptCallback(void *arg, char *prompt, char *fileRegEx, CMUint32
     NS_WITH_PROXIED_SERVICE(nsIPSMUIHandler, handler, nsPSMUIHandlerImpl::GetCID(), NS_UI_THREAD_EVENTQ, &rv);
     
     if(NS_SUCCEEDED(rv))
-	    handler->PromptForFile(prompt, fileRegEx, (PRBool)shouldFileExist, &filePath);
+	    handler->PromptForFile(nsAutoString(prompt).GetUnicode(), fileRegEx, (PRBool)shouldFileExist, &filePath);
 
     return filePath;
 }

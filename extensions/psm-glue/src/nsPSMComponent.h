@@ -24,6 +24,9 @@
 
 #include "nscore.h"
 #include "nsIPSMComponent.h"
+#include "nsIStringBundle.h"
+
+#define SECURITY_STRING_BUNDLE_URL "chrome://navigator/locale/security.properties"
 
 #define NS_PSMCOMPONENT_CID {0xddcae170, 0x5412, 0x11d3, {0xbb, 0xc8, 0x00, 0x00, 0x86, 0x1d, 0x12, 0x37}}
 
