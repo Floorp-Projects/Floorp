@@ -187,6 +187,25 @@ function onStart()
   ioService.offline = offlineState.checked;
 
   try {
+
+    var dirExists;
+
+    try {
+      var profileDir = profile.getProfileDir(profilename);
+      dirExists = profileDir.exists();
+    }
+    catch (e) {
+      dirExists = false;
+    }
+    
+	if (dirExists == false) {
+	  var brandName = gBrandBundle.getString("brandShortName");
+	  var alertString = gProfileManagerBundle.getFormattedString("profDirMissing", [brandName, profilename]);
+	  alertString = alertString.replace(/\s*<html:br\/>/g,"\n");	  
+      alert(alertString);
+      return;
+    }
+
     profile.startApprunner(profilename);
     ExitApp();
   }

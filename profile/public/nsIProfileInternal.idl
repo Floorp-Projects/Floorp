@@ -23,6 +23,7 @@
 #include "nsIProfile.idl"
 
 interface nsICmdLineService;
+interface nsIFile;
 
 [scriptable, uuid(2f977d42-5485-11d4-87e2-0010a4e75ef2)]
 interface nsIProfileInternal : nsIProfile {
@@ -53,16 +54,9 @@ interface nsIProfileInternal : nsIProfile {
     void migrateAllProfiles();
     void migrateProfile(in wstring profileName, in boolean showProgressAsModalWindow);
     void forgetCurrentProfile();
-    
-   /**
-    * The following 3 methods are deprecated. DO NOT USE THEM.
-    */
-    
-    boolean isCurrentProfileAvailable();
-    [noscript] void getProfileDir(in wstring profileName,
-                                  out nsIFile profileDir);
-    [noscript] void getCurrentProfileDir(out nsIFile profileDir);
 
+    nsIFile getProfileDir(in wstring profileName);
+    
     attribute boolean automigrate;
     readonly attribute nsIFile defaultProfileParentDir;
     readonly attribute wstring firstProfile;
@@ -73,8 +67,14 @@ interface nsIProfileInternal : nsIProfile {
                        in wstring regName,
                        in wstring regEmail,
                        in wstring regOption);
-    [noscript] string isRegStringSet(in wstring profileName); 
-
+    [noscript] string isRegStringSet(in wstring profileName);
+    
+   /**
+    * The remaining methods are deprecated. DO NOT USE THEM.
+    */
+    
+    boolean isCurrentProfileAvailable();
+    [noscript] void getCurrentProfileDir(out nsIFile profileDir);
 };
 
 #endif /* nsIProfileInternal_h__ */

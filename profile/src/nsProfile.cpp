@@ -452,7 +452,19 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
             if (NS_FAILED(rv)) return rv;
             // Will get set in call to SetCurrentProfile() below
         }
-        else if (numProfiles > 1)
+        else if (numProfiles == 1)
+        {
+            // Make sure the profile dir exists. If not, we need the UI
+            nsCOMPtr<nsIFile> curProfileDir;
+            PRBool exists;
+            
+            rv = GetCurrentProfileDir(getter_AddRefs(curProfileDir));
+            if (NS_SUCCEEDED(rv))
+                rv = curProfileDir->Exists(&exists);
+            if (NS_FAILED(rv) || !exists)
+                profileURLStr = PROFILE_MANAGER_URL; 
+        }
+        else
             profileURLStr = PROFILE_SELECTION_URL;
     }
 
@@ -823,8 +835,9 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 // Sets the given profile to be a current profile
 NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsIFile **profileDir)
 {
-    NS_ENSURE_ARG_POINTER(profileName);   
+    NS_ENSURE_ARG(profileName);   
     NS_ENSURE_ARG_POINTER(profileDir);
+    *profileDir = nsnull;
 
     nsresult rv = NS_OK;
 
@@ -841,94 +854,32 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsIFile **p
 		return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsILocalFile>aProfileDir;
-    (void)aProfile->GetResolvedProfileDir(getter_AddRefs(aProfileDir));
-                           
-    // Set this to be a current profile only if it is a 5.0 profile
-    if (aProfile->isMigrated)
+    rv = aProfile->GetResolvedProfileDir(getter_AddRefs(aProfileDir));
+    if (NS_SUCCEEDED(rv) && aProfileDir)
     {
-        gProfileDataAccess->SetCurrentProfile(profileName);                          
-        
-        PRBool exists = PR_FALSE;
-
-        if (aProfileDir)
-        {
-            rv = aProfileDir->Exists(&exists);
-            if (NS_FAILED(rv)) return rv;
-            
 #ifdef XP_MAC
-            if (exists)
-            {
-                PRBool inTrash;
-                nsCOMPtr<nsIFile> trashFolder;
+        PRBool exists;
+        rv = aProfileDir->Exists(&exists);
+        if (NS_FAILED(rv)) return rv;
+        if (exists) {
+            PRBool inTrash;
+            nsCOMPtr<nsIFile> trashFolder;
                             
-                rv = NS_GetSpecialDirectory(NS_MAC_TRASH_DIR, getter_AddRefs(trashFolder));
-                if (NS_FAILED(rv)) return rv;
-                rv = trashFolder->Contains(aProfileDir, PR_TRUE, &inTrash);
-                if (NS_FAILED(rv)) return rv;
-                if (inTrash)
-                    aProfileDir = nsnull;   // Reset it - we'll make a new one
-            }
-#endif  
+            rv = NS_GetSpecialDirectory(NS_MAC_TRASH_DIR, getter_AddRefs(trashFolder));
+            if (NS_FAILED(rv)) return rv;
+            rv = trashFolder->Contains(aProfileDir, PR_TRUE, &inTrash);
+            if (NS_FAILED(rv)) return rv;
+            if (inTrash) {
+                aProfileDir = nsnull;
+                rv = NS_ERROR_FILE_NOT_FOUND;
+            }  
         }
-                
-        if (!aProfileDir || !exists) 
-        {
-            // NEEDS IMPROVEMENT: Here we are creating a new profile dir for a missing one and
-            // we're not even telling the user about this!! What if they moved it, had it on a ZIP
-            // drive which is not mounted, etc. 4.x at least used to prompt the user to find it.
-                                                                  
-            if (!aProfileDir) {
-                // Create the directory in the default location
-                // Since we're copying to default location - make it unique
-                nsCOMPtr<nsIFile> tempFile;
-                rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(tempFile));
-                if (NS_FAILED(rv)) return rv;
-                aProfileDir = do_QueryInterface(tempFile, &rv);
-                if (NS_FAILED(rv)) return rv;
-                aProfileDir->AppendUnicode(profileName);
-                nsXPIDLCString suggestedName;
-                rv = aProfileDir->GetLeafName(getter_Copies(suggestedName));
-                if (NS_FAILED(rv)) return rv;
-                rv = aProfileDir->CreateUnique(suggestedName, nsIFile::DIRECTORY_TYPE, 0775);
-                if (NS_FAILED(rv)) return rv;
-            }
-            else if (!exists) {
-                // Simply create the directory where the file specifies
-                // We have a valid file spec in a given location - don't CreateUnique
-                rv = aProfileDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
-                if (NS_FAILED(rv)) return rv;
-            }
-
-	        // creating a new profile, add the indirection
-            rv = AddLevelOfIndirection(aProfileDir);
-            if (NS_FAILED(rv)) return rv;
-
-			// since we might be changing the location of
-			// profile dir, reset it in the registry.
-			// see bug #56002 for details
-			rv = SetProfileDir(profileName, aProfileDir);
-            if (NS_FAILED(rv)) return rv;
-
-            // update the registry
-            gProfileDataAccess->mProfileDataChanged = PR_TRUE;
-            gProfileDataAccess->UpdateRegistry(nsnull);
-
-            // Copy contents from defaults folder.
-            nsCOMPtr<nsIFile> profDefaultsDir;
-            rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR, getter_AddRefs(profDefaultsDir));
-            if (NS_FAILED(rv)) return rv;
-            rv = profDefaultsDir->Exists(&exists);
-            if (NS_SUCCEEDED(rv) && exists)
-                rv = RecursiveCopy(profDefaultsDir, aProfileDir);
-        }
-    }
-
-    *profileDir = aProfileDir;
-    NS_ADDREF(*profileDir);
-    
-	 delete aProfile;
+#endif
+        *profileDir = aProfileDir;
+        NS_IF_ADDREF(*profileDir);
+    }    
+	delete aProfile;
     return rv;
-
 }
 
 NS_IMETHODIMP nsProfile::GetDefaultProfileParentDir(nsIFile **aDefaultProfileParentDir)
@@ -992,10 +943,15 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     NS_ENSURE_ARG(aCurrentProfile);
     
     nsresult rv;
+    nsCOMPtr<nsIFile> profileDir;
     PRBool exists;
-    rv = ProfileExists(aCurrentProfile, &exists);
+
+    // Ensure that the profile exists and its directory too.
+    rv = GetProfileDir(aCurrentProfile, getter_AddRefs(profileDir));
     if (NS_FAILED(rv)) return rv;
-    if (!exists) return NS_ERROR_FAILURE;
+    rv = profileDir->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+    if (!exists) return NS_ERROR_FILE_NOT_FOUND;
 
     PRBool isSwitch;
 
