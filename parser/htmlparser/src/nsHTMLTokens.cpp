@@ -903,7 +903,11 @@ nsresult CTextToken::ConsumeParsedCharacterData(PRUnichar aChar,
 
         // CCommentToken expects us to be on the '-'
         aScanner.SetPosition(currPos.advance(2));
-        result = consumer.Consume(*currPos, aScanner, aFlag);
+
+        // In quirks mode we consume too many things as comments, so pretend
+        // that we're not by modifying aFlag.
+        result = consumer.Consume(*currPos, aScanner, 
+	  (aFlag & ~NS_IPARSER_FLAG_QUIRKS_MODE) | NS_IPARSER_FLAG_STRICT_MODE);
         if (kEOF == result) {
           return kEOF; // this can only happen if we're really out of space.
         }
