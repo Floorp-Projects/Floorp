@@ -22,32 +22,6 @@
 
 platform.beos = true;
 
-// The other platforms roll this all into "toolbar mode".
-pref("browser.chrome.toolbar_tips", true);
-pref("browser.chrome.show_menubar", true);
-
-// Instead of "delay_images"
-pref("browser.autoload_images", true);
-
-// Not sure what this one does...
-pref("browser.fancy_ftp", true);
-
-// Fortezza stuff
-pref("fortezza.toggle", 1);
-pref("fortezza.timeout", 30);
-
 pref("intl.font_charset", "");
 pref("intl.font_spec_list", "");
 pref("mail.signature_date", 0);
-
-// Outliner column defaults
-pref("mail.threadpane.messagepane_height", 400);
-
-pref("taskbar.x", -1);
-pref("taskbar.y", -1);
-pref("taskbar.floating", false);
-pref("taskbar.horizontal", false);
-pref("taskbar.ontop", false);
-pref("taskbar.button_style", -1);
-
-config("menu.help.item_1.url", "http://home.netscape.com/eng/mozilla/5.0/");

@@ -23,32 +23,14 @@
 // Mac specific preference defaults
 platform.mac = true;
 
-pref("browser.mac.show_tool_tips",              true);
-pref("browser.mac.use_internet_config",         false);
-pref("browser.mac.active_scrolling",            true);
-pref("browser.mac.use_utility_pattern",         false);
-pref("browser.mac.use_grayscale_form_controls", true);
-
 pref("browser.drag_out_of_frame_style", 1);
 
 pref("editor.use_html_editor",              false);
 pref("editor.use_image_editor",             false);
 
-//print header/footer
-pref("browser.mac.print_header_topleft",    3);
-pref("browser.mac.print_header_topmid",     5);
-pref("browser.mac.print_header_topright",   2);
-pref("browser.mac.print_header_botleft",    0);
-pref("browser.mac.print_header_botmid",     4);
-pref("browser.mac.print_header_botright",   0);
-pref("browser.mac.print_background",        false); // checkbox
-
 pref("mail.notification.sound",             "");
 pref("mail.close_message_window.on_delete", true);
 pref("mail.close_message_window.on_file", true);
-
-pref("taskbar.mac.is_open",                 true);
-pref("taskbar.mac.is_vertical",             true);
 
 pref("mail.server_type_on_restart",         -1);
 
@@ -141,10 +123,6 @@ pref("font.name.fantasy.zh-TW", "XXX.fantasy");
 // Override the Windows settings: no menu key, meta accelerator key.
 pref("ui.key.menuAccessKey", 0);
 pref("ui.key.accelKey", 224);
-
-// This overrides the setting in config.js (which points to the Windows page)
-config("menu.help.item_0.label","Help Contents");
-config("menu.help.item_1.url","http://home.netscape.com/eng/mozilla/4.0/relnotes/mac-4.02.html");
 
 mime_type("mime.image_gif", "image/gif", "gif", 2, "JPEGView", "JVWR", "GIFf");
 mime_type("mime.image_jpeg", "image/jpeg", "jpg,jpeg,jpe", 2, "JPEGView", "JVWR", "JPEG");
