@@ -43,7 +43,7 @@
 
 class nsBlockFrame;
 class nsBlockReflowState;
-class nsHTMLReflowState;
+struct nsHTMLReflowState;
 class nsLineBox;
 class nsIFrame;
 class nsPresContext;
