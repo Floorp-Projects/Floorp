@@ -81,7 +81,7 @@
 #include "nsNetUtil.h"
 #include "nsCRT.h"
 
-#define SECURITY_STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
+#define SECURITY_STRING_BUNDLE_URL "chrome://pipnss/locale/security.properties"
 
 #define IS_SECURE(state) ((state & 0xFFFF) == STATE_IS_SECURE)
 
