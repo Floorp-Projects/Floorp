@@ -112,9 +112,17 @@ public:
   virtual PRBool Equals(const nsHashKey* aKey) const
   {
     URLKey* key = (URLKey*)aKey;
+#if 0 // bug 47846
     PRBool equals = PR_FALSE;
     nsresult result = mURL->Equals(key->mURL, &equals);
     return (NS_SUCCEEDED(result) && equals);
+#else
+    nsXPIDLCString str1;
+    nsXPIDLCString str2;
+    mURL->GetSpec(getter_Copies(str1));
+    key->mURL->GetSpec(getter_Copies(str2));
+    return ((nsCRT::strcasecmp(str1, str2) == 0) ? PR_TRUE : PR_FALSE);
+#endif
   }
 
   virtual nsHashKey *Clone(void) const
