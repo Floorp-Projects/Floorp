@@ -1833,6 +1833,14 @@ XULDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
         }
     }
 
+    // allright, if we at least have a tag, then we can return the
+    // thing with kNameSpaceID_None for now.
+    if (tag.Length()) {
+        *aNameSpaceID = kNameSpaceID_None;
+        *aTag = NS_NewAtom(tag);
+        return NS_OK;
+    }
+
     // Okay, somebody make this code even more convoluted.
     NS_ERROR("unable to convert URI to namespace/tag pair");
     return NS_ERROR_FAILURE; // XXX?
