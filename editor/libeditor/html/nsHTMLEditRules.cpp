@@ -1,4 +1,4 @@
- /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -838,36 +838,39 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
 
   if (!blockParent) return NS_ERROR_FAILURE;
 
-  if (useCSS && mHTMLEditor->mHTMLCSSUtils->IsCSSEditableProperty(blockParent, dummyProperty, &typeAttrName))
+  if (useCSS)
   {
-    // we are in CSS mode and we know how to align this element with CSS
-    nsAutoString value;
-    // let's get the value(s) of text-align or margin-left/margin-right
-    mHTMLEditor->mHTMLCSSUtils->GetCSSEquivalentToHTMLInlineStyleSet(blockParent,
+    nsCOMPtr<nsIContent> blockParentContent = do_QueryInterface(blockParent);
+    if (blockParentContent && 
+        mHTMLEditor->mHTMLCSSUtils->IsCSSEditableProperty(blockParent, dummyProperty, &typeAttrName))
+    {
+      // we are in CSS mode and we know how to align this element with CSS
+      nsAutoString value;
+      // let's get the value(s) of text-align or margin-left/margin-right
+      mHTMLEditor->mHTMLCSSUtils->GetCSSEquivalentToHTMLInlineStyleSet(blockParent,
                                                      dummyProperty,
                                                      &typeAttrName,
                                                      value,
                                                      COMPUTED_STYLE_TYPE);
-    if (value.Equals(NS_LITERAL_STRING("center")) ||
-        value.Equals(NS_LITERAL_STRING("-moz-center")) ||
-        value.Equals(NS_LITERAL_STRING("auto auto")))
-    {
-      *aAlign = nsIHTMLEditor::eCenter;
-      return NS_OK;
-    }
-    else if (value.Equals(NS_LITERAL_STRING("right")) ||
-             value.Equals(NS_LITERAL_STRING("-moz-right")) ||
-             value.Equals(NS_LITERAL_STRING("auto 0px")))
-    {
-      *aAlign = nsIHTMLEditor::eRight;
-      return NS_OK;
-    }
-    else if (value.Equals(NS_LITERAL_STRING("justify")))
-    {
-      *aAlign = nsIHTMLEditor::eJustify;
-      return NS_OK;
-    }
-    else    {
+      if (value.Equals(NS_LITERAL_STRING("center")) ||
+          value.Equals(NS_LITERAL_STRING("-moz-center")) ||
+          value.Equals(NS_LITERAL_STRING("auto auto")))
+      {
+        *aAlign = nsIHTMLEditor::eCenter;
+        return NS_OK;
+      }
+      if (value.Equals(NS_LITERAL_STRING("right")) ||
+          value.Equals(NS_LITERAL_STRING("-moz-right")) ||
+          value.Equals(NS_LITERAL_STRING("auto 0px")))
+      {
+        *aAlign = nsIHTMLEditor::eRight;
+        return NS_OK;
+      }
+      if (value.Equals(NS_LITERAL_STRING("justify")))
+      {
+        *aAlign = nsIHTMLEditor::eJustify;
+        return NS_OK;
+      }
       *aAlign = nsIHTMLEditor::eLeft;
       return NS_OK;
     }

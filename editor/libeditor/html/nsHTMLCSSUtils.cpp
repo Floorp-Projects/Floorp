@@ -336,12 +336,16 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIDOMNode * aNode,
                                       nsIAtom * aProperty,
                                       const nsAString * aAttribute)
 {
+  NS_ASSERTION(aNode, "Shouldn't you pass aNode? - Bug 214025");
+
   nsCOMPtr<nsIDOMNode> node = aNode;
   // we need an element node here
   if (mHTMLEditor->IsTextNode(aNode)) {
     aNode->GetParentNode(getter_AddRefs(node));
   }
   nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+  if (!content) return PR_FALSE;
+
   nsCOMPtr<nsIAtom> tagName;
   content->GetTag(getter_AddRefs(tagName));
 
