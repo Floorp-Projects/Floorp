@@ -1187,9 +1187,9 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
   result = mContent->GetParent(*aNewContent);
   if (*aNewContent){
     result = (*aNewContent)->IndexOf(mContent, aContentOffset);
-    if (NS_FAILED(result)) 
+    if (NS_FAILED(result) || aContentOffset < 0) 
     {
-      return result;
+      return (result?result:NS_ERROR_FAILURE);
     }
     aBeginFrameContent = PR_TRUE;
     if (thisRect.Contains(aPoint))
