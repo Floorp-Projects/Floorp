@@ -127,7 +127,7 @@ NS_IMETHODIMP
 nsXMLNamedNodeMap::GetLength(PRUint32* aLength)
 {
   if (mArray)
-    *aLength = mArray->Count();
+    mArray->Count(aLength);
   else
     *aLength = 0;
 
@@ -145,7 +145,8 @@ nsXMLNamedNodeMap::GetNamedItem(const nsString& aName, nsIDOMNode** aReturn)
   if (!mArray)
     return NS_OK;
 
-  PRUint32 i, count = mArray->Count();
+  PRUint32 i, count;
+  mArray->Count(&count);
 
   for (i = 0; i < count; i++) {
     nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mArray->ElementAt(i)));
@@ -179,7 +180,8 @@ nsXMLNamedNodeMap::SetNamedItem(nsIDOMNode* aArg, nsIDOMNode** aReturn)
   aArg->GetNodeName(argName);
 
   if (mArray) {
-    PRUint32 i, count = mArray->Count();
+    PRUint32 i, count;
+    mArray->Count(&count);
 
     for (i = 0; i < count; i++) {
       nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mArray->ElementAt(i)));
@@ -223,7 +225,8 @@ nsXMLNamedNodeMap::RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)
   if (!mArray)
     return NS_OK;
 
-  PRUint32 i, count = mArray->Count();
+  PRUint32 i, count;
+  mArray->Count(&count);
 
   for (i = 0; i < count; i++) {
     nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mArray->ElementAt(i)));
@@ -250,10 +253,13 @@ nsXMLNamedNodeMap::RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)
 NS_IMETHODIMP    
 nsXMLNamedNodeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
+  PRUint32 count;
+
   if (!aReturn)
     return NS_ERROR_NULL_POINTER;
 
-  if (mArray && aIndex < mArray->Count()) {
+  mArray->Count(&count);
+  if (mArray && aIndex < count) {
     nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mArray->ElementAt(aIndex)));
 
     *aReturn = domNode;
