@@ -152,8 +152,7 @@ ImageConsumer::ImageConsumer(ilIURL *aURL, ImageNetContextImpl *aContext)
   mUserContext = nsnull;
 }
 
-NS_DEFINE_IID(kIStreamNotificationIID, NS_ISTREAMLISTENER_IID);
-NS_IMPL_ISUPPORTS(ImageConsumer,kIStreamNotificationIID);
+NS_IMPL_ISUPPORTS2(ImageConsumer, nsIStreamListener, nsIStreamObserver);
 
 NS_IMETHODIMP
 ImageConsumer::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
