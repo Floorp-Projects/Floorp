@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.37 $ $Date: 2003/12/18 18:23:17 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.38 $ $Date: 2003/12/19 22:33:12 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -793,6 +793,7 @@ add_cert_to_cache (
 	    nssCertificate_Destroy(rvCert);
 	    return NULL;
 	}
+	STAN_ForceCERTCertificateUpdate(rvCert);
 	nssCertificate_Destroy(cert);
 	return rvCert;
     }
