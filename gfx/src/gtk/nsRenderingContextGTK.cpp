@@ -816,20 +816,24 @@ NS_IMETHODIMP nsRenderingContextGTK::GetWidth(char aC, nscoord &aWidth)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::GetWidth(PRUnichar aC, nscoord &aWidth)
+NS_IMETHODIMP nsRenderingContextGTK::GetWidth(PRUnichar aC, nscoord &aWidth, PRInt32 *aFontID)
 {
   gint width;
   GdkFont *font = (GdkFont *)mCurrentFont;
   width = gdk_char_width_wc(font,(GdkWChar)aC); 
   aWidth = NSToCoordRound(width * mP2T);
+  if (nsnull != aFontID)
+    *aFontID = 0;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const nsString& aString, nscoord &aWidth)
+NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const nsString& aString, nscoord &aWidth, PRInt32 *aFontID)
 {
   char* cStr = aString.ToNewCString();
   NS_IMETHODIMP ret = GetWidth(cStr, aString.Length(), aWidth);
   delete[] cStr;
+  if (nsnull != aFontID)
+    *aFontID = 0;
   return ret;
 }
 
@@ -859,7 +863,8 @@ NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const char *aString,
 
 
 NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const PRUnichar *aString,
-                                              PRUint32 aLength, nscoord &aWidth)
+                                              PRUint32 aLength, nscoord &aWidth,
+                                              PRInt32 *aFontID)
 {
     g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
   /* this really shouldn't be 0, and this gets called quite a bit.  not sure
@@ -872,13 +877,16 @@ NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const PRUnichar *aString,
     char* cStr = nsStr.ToNewCString();
     NS_IMETHODIMP ret = GetWidth(cStr, aLength, aWidth);
     delete[] cStr;
+
+    if (nsnull != aFontID)
+      *aFontID = 0;
+
     return ret;
 }
 
 NS_IMETHODIMP
 nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
                                   nscoord aX, nscoord aY,
-                                  nscoord aWidth,
                                   const nscoord* aSpacing)
 {
   g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
@@ -906,6 +914,9 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
                    mRenderingSurface->gc,
                    x, y, aString, aLength);
 
+#if 0
+  //this is no longer to be done by this API, but another
+  //will take it's place that will need this code again. MMP
   if (mFontMetrics)
   {
     const nsFont *font;
@@ -935,29 +946,30 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
       DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
     }
   }
+#endif
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawString(const PRUnichar *aString, PRUint32 aLength,
                                                 nscoord aX, nscoord aY,
-                                                nscoord aWidth,
+                                                PRInt32 aFontID,
                                                 const nscoord* aSpacing)
 {
   nsString nsStr;
   nsStr.SetString(aString, aLength);
   char* cStr = nsStr.ToNewCString();
-  NS_IMETHODIMP ret = DrawString(cStr, aLength, aX, aY, aWidth, aSpacing);
+  NS_IMETHODIMP ret = DrawString(cStr, aLength, aX, aY, aFontID, aSpacing);
   delete[] cStr;
   return ret;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawString(const nsString& aString,
                                                 nscoord aX, nscoord aY,
-                                                nscoord aWidth,
+                                                PRInt32 aFontID,
                                                 const nscoord* aSpacing)
 {
-  return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aWidth, aSpacing);
+  return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)

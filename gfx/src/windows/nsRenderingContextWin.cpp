@@ -1512,11 +1512,11 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(char ch, nscoord& aWidth)
   return GetWidth(buf, 1, aWidth);
 }
 
-NS_IMETHODIMP nsRenderingContextWin :: GetWidth(PRUnichar ch, nscoord &aWidth)
+NS_IMETHODIMP nsRenderingContextWin :: GetWidth(PRUnichar ch, nscoord &aWidth, PRInt32 *aFontID)
 {
   PRUnichar buf[1];
   buf[0] = ch;
-  return GetWidth(buf, 1, aWidth);
+  return GetWidth(buf, 1, aWidth, aFontID);
 }
 
 NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const char* aString, nscoord& aWidth)
@@ -1525,8 +1525,8 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const char* aString, nscoord& aW
 }
 
 NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const char* aString,
-                                  PRUint32 aLength,
-                                  nscoord& aWidth)
+                                                PRUint32 aLength,
+                                                nscoord& aWidth)
 {
   if (nsnull != mFontMetrics)
   {
@@ -1542,14 +1542,15 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const char* aString,
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const nsString& aString, nscoord& aWidth)
+NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const nsString& aString, nscoord& aWidth, PRInt32 *aFontID)
 {
-  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
+  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
 }
 
 NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
-                                  PRUint32 aLength,
-                                  nscoord &aWidth)
+                                                PRUint32 aLength,
+                                                nscoord &aWidth,
+                                                PRInt32 *aFontID)
 {
   if (nsnull != mFontMetrics)
   {
@@ -1559,6 +1560,9 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
     ::GetTextExtentPoint32W(mDC, aString, aLength, &size);
     aWidth = NSToCoordRound(float(size.cx) * mP2T);
 
+    if (nsnull != aFontID)
+      *aFontID = 0;
+
     return NS_OK;
   }
   else
@@ -1566,9 +1570,8 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
 }
 
 NS_IMETHODIMP nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
-                                    nscoord aX, nscoord aY,
-                                    nscoord aWidth,
-                                    const nscoord* aSpacing)
+                                                  nscoord aX, nscoord aY,
+                                                  const nscoord* aSpacing)
 {
 	PRInt32	x = aX;
   PRInt32 y = aY;
@@ -1592,27 +1595,13 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const char *aString, PRUint32 
     delete [] dx0;
   }
 
-  if (nsnull != mFontMetrics)
-  {
-    nsFont *font;
-    mFontMetrics->GetFont(font);
-    PRUint8 decorations = font->decorations;
-
-    if (decorations & NS_FONT_DECORATION_OVERLINE)
-    {
-      nscoord offset;
-      nscoord size;
-      mFontMetrics->GetUnderline(offset, size);
-      FillRect(aX, aY, aWidth, size);
-    }
-  }
-
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                    nscoord aX, nscoord aY, nscoord aWidth,
-                                    const nscoord* aSpacing)
+                                                  nscoord aX, nscoord aY,
+                                                  PRInt32 aFontID,
+                                                  const nscoord* aSpacing)
 {
   PRInt32 x = aX;
   PRInt32 y = aY;
@@ -1645,6 +1634,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUi
     ::ExtTextOutW(mDC, x, y, 0, NULL, aString, aLength, NULL);
   }
 
+#if 0
   if (nsnull != mFontMetrics)
   {
     nsFont *font;
@@ -1659,15 +1649,17 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUi
       FillRect(aX, aY, aWidth, size);
     }
   }
+#endif
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextWin :: DrawString(const nsString& aString,
-                                    nscoord aX, nscoord aY, nscoord aWidth,
-                                    const nscoord* aSpacing)
+                                                  nscoord aX, nscoord aY,
+                                                  PRInt32 aFontID,
+                                                  const nscoord* aSpacing)
 {
-  return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aWidth, aSpacing);
+  return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
 
 NS_IMETHODIMP nsRenderingContextWin :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)

@@ -656,18 +656,18 @@ nscolor white,black;
   aSurface->DrawArc(20, 20,50,100,(float)0.0,(float)90.0);
   aSurface->FillArc(70, 20,50,100,(float)0.0,(float)90.0);
   aSurface->DrawArc(150, 20,50,100,(float)90.0,(float)0.0);
-  aSurface->DrawString("0 to 90\0",20,8,30);
-  aSurface->DrawString("Reverse (eg 90 to 0)\0",120,8,30);
+  aSurface->DrawString("0 to 90\0",20,8);
+  aSurface->DrawString("Reverse (eg 90 to 0)\0",120,8);
 
   aSurface->DrawArc(20, 140,100,50,(float)130.0,(float)180.0);
   aSurface->FillArc(70, 140,100,50,(float)130.0,(float)180.0);
   aSurface->DrawArc(150, 140,100,50,(float)180.0,(float)130.0);
-  aSurface->DrawString("130 to 180\0",20,130,30);
+  aSurface->DrawString("130 to 180\0",20,130);
 
   aSurface->DrawArc(20, 200,50,100,(float)170.0,(float)300.0);
   aSurface->FillArc(70, 200,50,100,(float)170.0,(float)300.0);
   aSurface->DrawArc(150, 200,50,100,(float)300.0,(float)170.0);
-  aSurface->DrawString("170 to 300\0",20,190,30);
+  aSurface->DrawString("170 to 300\0",20,190);
 
 
   return(30);
@@ -694,7 +694,7 @@ nscolor white,black;
   aSurface->SetColor(black);
 
   aSurface->DrawRect(20, 20, 100, 100);
-  aSurface->DrawString("This is a Rectangle\0",20,5,30);
+  aSurface->DrawString("This is a Rectangle\0",20,5);
 
   aSurface->DrawLine(0,0,300,400);
 
@@ -706,7 +706,7 @@ nscolor white,black;
   pointlist[4].x = 175;pointlist[4].y = 175;
   pointlist[5].x = 150;pointlist[5].y = 150;
   aSurface->DrawPolygon(pointlist,6);
-  aSurface->DrawString("This is a closed Polygon\0",210,150,30);
+  aSurface->DrawString("This is a closed Polygon\0",210,150);
   delete [] pointlist;
 
 #ifdef WINDOWSBROKEN
@@ -717,12 +717,12 @@ nscolor white,black;
   pointlist[3].x = 260;pointlist[3].y = 240;
   pointlist[4].x = 225;pointlist[4].y = 225;
   aSurface->DrawPolygon(pointlist,6);
-  aSurface->DrawString("This is an open Polygon\0",250,200,30);
+  aSurface->DrawString("This is an open Polygon\0",250,200);
   delete [] pointlist;
 #endif  
 
   aSurface->DrawEllipse(30, 150,50,100);
-  aSurface->DrawString("This is an Ellipse\0",30,140,30);
+  aSurface->DrawString("This is an Ellipse\0",30,140);
 
 
   return(30);
@@ -748,7 +748,7 @@ nscolor white,black;
   aSurface->SetColor(black);
 
   aSurface->FillRect(20, 20, 100, 100);
-  aSurface->DrawString("This is a Rectangle\0",20,5,30);
+  aSurface->DrawString("This is a Rectangle\0",20,5);
 
   pointlist = new nsPoint[6];
   pointlist[0].x = 150;pointlist[0].y = 150;
@@ -758,7 +758,7 @@ nscolor white,black;
   pointlist[4].x = 175;pointlist[4].y = 175;
   pointlist[5].x = 150;pointlist[5].y = 150;
   aSurface->FillPolygon(pointlist,6);
-  aSurface->DrawString("This is a closed Polygon\0",210,150,30);
+  aSurface->DrawString("This is a closed Polygon\0",210,150);
   delete [] pointlist;
 
 
@@ -770,12 +770,12 @@ nscolor white,black;
   pointlist[3].x = 260;pointlist[3].y = 240;
   pointlist[4].x = 225;pointlist[4].y = 225;
   aSurface->FillPolygon(pointlist,6);
-  aSurface->DrawString("This is an open Polygon\0",250,200,30);
+  aSurface->DrawString("This is an open Polygon\0",250,200);
   delete [] pointlist;
 #endif
 
   aSurface->FillEllipse(30, 150,50,100);
-  aSurface->DrawString("This is an Ellipse\0",30,140,30);
+  aSurface->DrawString("This is an Ellipse\0",30,140);
 
   return(30);
 }

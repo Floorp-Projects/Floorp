@@ -397,18 +397,26 @@ public:
    * If no font has been Set, the results are undefined.
    * @param aC character to measure
    * @param aWidth out parameter for width
+   * @param aFontID an optional out parameter used to store a
+   *        font identifier that can be passed into the DrawString()
+   *        methods to speed rendering
    * @return error status
    */
-  NS_IMETHOD GetWidth(PRUnichar aC, nscoord &aWidth) = 0;
+  NS_IMETHOD GetWidth(PRUnichar aC, nscoord &aWidth,
+                      PRInt32 *aFontID = nsnull) = 0;
 
   /**
    * Returns the width (in app units) of an nsString
    * If no font has been Set, the results are undefined.
    * @param aString string to measure
    * @param aWidth out parameter for width
+   * @param aFontID an optional out parameter used to store a
+   *        font identifier that can be passed into the DrawString()
+   *        methods to speed rendering
    * @return error status
    */
-  NS_IMETHOD GetWidth(const nsString& aString, nscoord &aWidth) = 0;
+  NS_IMETHOD GetWidth(const nsString& aString, nscoord &aWidth,
+                      PRInt32 *aFontID = nsnull) = 0;
 
   /**
    * Returns the width (in app units) of an 8-bit character string
@@ -436,10 +444,13 @@ public:
    * @param aString string to measure
    * @param aLength number of characters in string
    * @param aWidth out parameter for width
+   * @param aFontID an optional out parameter used to store a
+   *        font identifier that can be passed into the DrawString()
+   *        methods to speed rendering
    * @return error status
    */
   NS_IMETHOD GetWidth(const PRUnichar *aString, PRUint32 aLength,
-                      nscoord &aWidth) = 0;
+                      nscoord &aWidth, PRInt32 *aFontID = nsnull) = 0;
 
   /**
    * Draw a string in the RenderingContext
@@ -447,12 +458,10 @@ public:
    * @param aLength The length of the aString
    * @param aX Horizontal starting point of baseline
    * @param aY Vertical starting point of baseline.
-   * @param aWidth Width of the underline
    * @param aSpacing inter-character spacing to apply
    */
   NS_IMETHOD DrawString(const char *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
-                        nscoord aWidth,
                         const nscoord* aSpacing = nsnull) = 0;
 
   /**
@@ -461,12 +470,14 @@ public:
    * @param aLength The length of the aString
    * @param aX Horizontal starting point of baseline
    * @param aY Vertical starting point of baseline.
-   * @param aWidth length in twips of the underline
+   * @param aFontID an optional parameter used to speed font
+   *        selection for complex unicode strings. the value
+   *        passed is returned by the DrawString() methods.
    * @param aSpacing inter-character spacing to apply
    */
   NS_IMETHOD DrawString(const PRUnichar *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
-                        nscoord aWidth,
+                        PRInt32 aFontID = -1,
                         const nscoord* aSpacing = nsnull) = 0;
 
   /**
@@ -474,11 +485,13 @@ public:
    * @param aString A nsString of the string
    * @param aX Horizontal starting point of baseline
    * @param aY Vertical starting point of baseline.
-   * @param aWidth Width of the underline
+   * @param aFontID an optional parameter used to speed font
+   *        selection for complex unicode strings. the value
+   *        passed is returned by the DrawString() methods.
    * @param aSpacing inter-character spacing to apply
    */
   NS_IMETHOD DrawString(const nsString& aString, nscoord aX, nscoord aY,
-                        nscoord aWidth,
+                        PRInt32 aFontID = -1,
                         const nscoord* aSpacing = nsnull) = 0;
 
   /**
