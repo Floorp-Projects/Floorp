@@ -85,8 +85,8 @@ nsCacheMetaData::Create()
 }
 
 
-nsAReadableCString *
-nsCacheMetaData::GetElement(const nsAReadableCString * key)
+const nsACString *
+nsCacheMetaData::GetElement(const nsACString * key)
 {
     PLDHashEntryHdr * hashEntry;
     nsCString *       result = nsnull;
@@ -108,8 +108,8 @@ nsCacheMetaData::GetElement(const nsAReadableCString * key)
 
 
 nsresult
-nsCacheMetaData::SetElement(const nsAReadableCString& key,
-                            const nsAReadableCString& value)
+nsCacheMetaData::SetElement(const nsACString& key,
+                            const nsACString& value)
 {
     nsCacheMetaDataHashTableEntry * metaEntry;
     nsresult  rv = NS_ERROR_OUT_OF_MEMORY;  // presume the worst
@@ -236,7 +236,7 @@ nsCacheMetaData::MatchEntry(PLDHashTable *       /* table */,
     nsCString * entryKey = ((nsCacheMetaDataHashTableEntry *)hashEntry)->key;
     NS_ASSERTION(entryKey, "### hashEntry->key == nsnull");
 
-    return entryKey->Equals(*NS_STATIC_CAST(const nsAReadableCString*,key));
+    return entryKey->Equals(*NS_STATIC_CAST(const nsACString*,key));
 }
 
 

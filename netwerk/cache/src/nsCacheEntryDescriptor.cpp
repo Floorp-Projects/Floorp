@@ -355,7 +355,7 @@ nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char ** result)
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     if (!key | !result) return NS_ERROR_NULL_POINTER;
-    nsAReadableCString *value;
+    const nsACString *value;
     *result = nsnull;
 
     // XXX not thread safe    

@@ -382,7 +382,7 @@ nsFTPDirListingConv::Init() {
 }
 
 nsresult
-nsFTPDirListingConv::GetHeaders(nsAWritableCString& headers,
+nsFTPDirListingConv::GetHeaders(nsACString& headers,
                                 nsIURI* uri)
 {
     nsresult rv = NS_OK;

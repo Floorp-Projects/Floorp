@@ -29,7 +29,7 @@
 #include "nscore.h"
 // #include "nsCOMPtr.h"
 #include "nsString.h"
-// #include "nsAReadableString.h"
+// #include "nsAString.h"
 
 class nsICacheMetaDataVisitor;
 
@@ -56,10 +56,10 @@ public:
 
     nsresult              Init(void);
 
-    nsAReadableCString *  GetElement(const nsAReadableCString * key);
+    const nsACString *    GetElement(const nsACString * key);
 
-    nsresult              SetElement(const nsAReadableCString& key,
-                                     const nsAReadableCString& value);
+    nsresult              SetElement(const nsACString& key,
+                                     const nsACString& value);
 
     PRUint32              Size(void);
 

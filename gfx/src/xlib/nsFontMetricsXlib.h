@@ -399,7 +399,7 @@ public:
   nsFontXlib*  TryAliases(nsCString* aName, PRUnichar aChar);
   nsFontXlib*  TryFamily(nsCString* aName, PRUnichar aChar);
   nsFontXlib*  TryNode(nsCString* aName, PRUnichar aChar);
-  nsFontXlib*  TryNodes(nsAWritableCString &aFFREName, PRUnichar aChar);
+  nsFontXlib*  TryNodes(nsACString &aFFREName, PRUnichar aChar);
   nsFontXlib*  TryLangGroup(nsIAtom* aLangGroup, nsCString* aName, PRUnichar aChar);
 
   nsFontXlib*  AddToLoadedFontsList(nsFontXlib* aFont);

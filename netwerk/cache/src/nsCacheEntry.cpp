@@ -133,8 +133,8 @@ nsCacheEntry::TouchData()
 
 
 nsresult
-nsCacheEntry::GetMetaDataElement( const nsAReadableCString&  key,
-                                  nsAReadableCString **      value)
+nsCacheEntry::GetMetaDataElement( const nsACString&   key,
+                                  const nsACString ** value)
 {
     *value = mMetaData ? mMetaData->GetElement(&key) : nsnull;
     return NS_OK;
@@ -142,8 +142,8 @@ nsCacheEntry::GetMetaDataElement( const nsAReadableCString&  key,
 
 
 nsresult
-nsCacheEntry::SetMetaDataElement( const nsAReadableCString& key, 
-                                  const nsAReadableCString& value)
+nsCacheEntry::SetMetaDataElement( const nsACString& key, 
+                                  const nsACString& value)
 {
     if (!mMetaData) {
         mMetaData = nsCacheMetaData::Create();

@@ -25,6 +25,7 @@
 
 #include "nsCache.h"
 #include "nsReadableUtils.h"
+#include "nsDependentSubstring.h"
 
 
 /**
@@ -70,7 +71,7 @@ PRTimeFromSeconds(PRUint32 seconds)
 
 
 nsresult
-ClientIDFromCacheKey(const nsAReadableCString&  key, char ** result)
+ClientIDFromCacheKey(const nsACString&  key, char ** result)
 {
     nsresult  rv = NS_OK;
     *result = nsnull;
@@ -96,7 +97,7 @@ ClientIDFromCacheKey(const nsAReadableCString&  key, char ** result)
 
 
 nsresult
-ClientKeyFromCacheKey(const nsAReadableCString& key, char ** result)
+ClientKeyFromCacheKey(const nsACString& key, char ** result)
 {
     nsresult  rv = NS_OK;
     *result = nsnull;

@@ -586,7 +586,7 @@ nsFileInputStream::Read(char * buf, PRUint32 count, PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsFileInputStream::ReadLine(nsAWritableString & aLine, PRBool *_retval)
+nsFileInputStream::ReadLine(nsAString & aLine, PRBool *_retval)
 {
     if (!mLineBuffer) {
         nsresult rv = NS_InitLineBuffer(&mLineBuffer);

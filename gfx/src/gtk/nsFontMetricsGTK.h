@@ -313,7 +313,7 @@ public:
   nsFontGTK*  TryAliases(nsCString* aName, PRUnichar aChar);
   nsFontGTK*  TryFamily(nsCString* aName, PRUnichar aChar);
   nsFontGTK*  TryNode(nsCString* aName, PRUnichar aChar);
-  nsFontGTK*  TryNodes(nsAWritableCString &aFFREName, PRUnichar aChar);
+  nsFontGTK*  TryNodes(nsACString &aFFREName, PRUnichar aChar);
   nsFontGTK*  TryLangGroup(nsIAtom* aLangGroup, nsCString* aName, PRUnichar aChar);
 
   nsFontGTK*  AddToLoadedFontsList(nsFontGTK* aFont);

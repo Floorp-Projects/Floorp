@@ -186,13 +186,13 @@ protected:
   void   doGetDirsPrefEnumCallback(const char* aName, void* aClosure);
   int    GetFontCatalog(FT_LibraryRec_*, nsFontCatalog *, nsDirCatalog *);
   void   doGetFontNames(const char* aPattern, nsFontNodeArray* aNodes);
-  PRBool GetFontSummaryName(nsAReadableCString &, nsAReadableCString &,
-                                   nsAWritableCString &, nsAWritableCString &);
+  PRBool GetFontSummaryName(const nsACString &, const nsACString &,
+                                   nsACString &, nsACString &);
   const char* GetFoundry(nsFontCatalogEntry *aFce);
   const char* GetRange1CharSetName(unsigned long aBit);
   const char* GetRange2CharSetName(unsigned long aBit);
   PRBool HandleFontDir(FT_LibraryRec_ *, nsFontCatalog *,
-                       nsAReadableCString &, nsAReadableCString &);
+                       const nsACString &, const nsACString &);
   void   HandleFontFile(FT_LibraryRec_ *, nsFontCatalog *, const char*);
   PRBool doInitGlobals(FT_LibraryRec_ *);
   PRBool IsSpace(FT_Long);
@@ -202,7 +202,7 @@ protected:
   nsFontCatalogEntry* NewFceFromFontFile(FT_LibraryRec_*, const char*,int,int*);
   nsFontCatalogEntry* NewFceFromSummary(nsNameValuePairDB *aDB);
   nsFontCatalog *NewFontCatalog();
-  PRBool ReadFontDirSummary(nsAReadableCString&, nsHashtable*);
+  PRBool ReadFontDirSummary(const nsACString&, nsHashtable*);
   PRBool ParseCCMapLine(nsCompressedCharMap*,long,const char*);
   PRBool ParseXLFD(char *, char**, char**, char**, char**);
   void   PrintCCMap(nsNameValuePairDB *aDB, PRUint16 *aCCMap);

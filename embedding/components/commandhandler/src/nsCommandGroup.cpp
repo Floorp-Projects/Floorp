@@ -337,7 +337,7 @@ nsControllerCommandGroup::GetGroupsEnumerator(nsISimpleEnumerator **_retval)
 
 /* nsISimpleEnumerator getEnumeratorForGroup (in DOMString aGroup); */
 NS_IMETHODIMP
-nsControllerCommandGroup::GetEnumeratorForGroup(const nsAReadableString & aGroup, nsISimpleEnumerator **_retval)
+nsControllerCommandGroup::GetEnumeratorForGroup(const nsAString & aGroup, nsISimpleEnumerator **_retval)
 {
   nsStringKey   groupKey(aGroup);  
   nsVoidArray*  commandList = (nsVoidArray *)mGroupsHash.Get(&groupKey);		// may be null

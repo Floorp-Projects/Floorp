@@ -127,7 +127,7 @@ CPlatformUCSConversion::PrepareDecoder()
 
 
 NS_IMETHODIMP 
-CPlatformUCSConversion::UCSToPlatform(const nsAReadableString& aIn, nsAWritableCString& aOut)
+CPlatformUCSConversion::UCSToPlatform(const nsAString& aIn, nsACString& aOut)
 {
     nsresult res;
 
@@ -168,7 +168,7 @@ CPlatformUCSConversion::UCSToPlatform(const nsAReadableString& aIn, nsAWritableC
 
 
 NS_IMETHODIMP
-CPlatformUCSConversion::UCSToPlatform(const nsAReadableString& aIn, Str255& aOut)
+CPlatformUCSConversion::UCSToPlatform(const nsAString& aIn, Str255& aOut)
 {
     nsresult res;
     nsCAutoString cStr;
@@ -187,7 +187,7 @@ CPlatformUCSConversion::UCSToPlatform(const nsAReadableString& aIn, Str255& aOut
 
 
 NS_IMETHODIMP 
-CPlatformUCSConversion::PlatformToUCS(const nsAReadableCString& aIn, nsAWritableString& aOut)
+CPlatformUCSConversion::PlatformToUCS(const nsACString& aIn, nsAString& aOut)
 {
    nsresult res;
 
@@ -227,7 +227,7 @@ CPlatformUCSConversion::PlatformToUCS(const nsAReadableCString& aIn, nsAWritable
 }
 
 NS_IMETHODIMP 
-CPlatformUCSConversion::PlatformToUCS(const Str255& aIn, nsAWritableString& aOut)
+CPlatformUCSConversion::PlatformToUCS(const Str255& aIn, nsAString& aOut)
 {
     char charBuf[256];
     
