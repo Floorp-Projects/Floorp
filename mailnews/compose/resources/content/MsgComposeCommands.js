@@ -1619,8 +1619,9 @@ function DetermineHTMLAction(convertible)
     if (! msgCompose.composeHTML)
     {
         try {
-            msgCompose.CheckAndPopulateRecipients(true, false, null);
-        } catch(ex) {}
+            var obj = new Object;
+            msgCompose.CheckAndPopulateRecipients(true, false, obj);
+        } catch(ex) { dump("msgCompose.CheckAndPopulateRecipients failed: " + ex + "\n"); }
         return msgCompSendFormat.PlainText;
     }
 
@@ -1639,6 +1640,7 @@ function DetermineHTMLAction(convertible)
             noHtmlRecipients = obj.value;
         } catch(ex)
         {
+            dump("msgCompose.CheckAndPopulateRecipients failed: " + ex + "\n");
             var msgCompFields = msgCompose.compFields;
             noHtmlRecipients = msgCompFields.to + "," + msgCompFields.cc + "," + msgCompFields.bcc;
             preferFormat = abPreferMailFormat.unknown;
@@ -1686,8 +1688,9 @@ function DetermineHTMLAction(convertible)
 	  else
 	  {
 		  try {
-			  msgCompose.CheckAndPopulateRecipients(true, false, null);
-		  } catch(ex) {}
+        var obj = new Object;
+			  msgCompose.CheckAndPopulateRecipients(true, false, obj);
+		  } catch(ex) { dump("msgCompose.CheckAndPopulateRecipients failed: " + ex + "\n"); }
 	  }
 
     return sendFormat;
