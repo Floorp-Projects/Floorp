@@ -502,10 +502,12 @@ my $drh = DBI->install_driver($db_base)
 
 if ($db_check) {
     # Do we have the database itself?
-    my @databases = $drh->func($db_host, $db_port, '_ListDBs');
+    my $dsn = "DBI:$db_base:$db_name;$db_host;$db_port";
+    my $dbh = DBI->connect($dsn, $db_user, $db_pass);
+    my @databases = $dbh->func('_ListDBs');
     unless (grep /^$db_name$/, @databases) {
-    print "Creating database $db_name ...\n";
-    $drh->func('createdb', $db_name, 'admin')
+       print "Creating database $db_name ...\n";
+       $drh->func('createdb', $db_name, "$db_host:$db_port", $db_user, $db_pass, 'admin')
             or die <<"EOF"
 
 The '$db_name' database is not accessible. This might have several reasons:
@@ -518,6 +520,7 @@ The '$db_name' database is not accessible. This might have several reasons:
   '\$db_check' to zero.\n
 EOF
     }
+    $dbh->disconnect if $dbh;
 }
 
 # now get a handle to the database:
