@@ -43,7 +43,7 @@
 
   <keyset id="keyset"/>
            
-  <tabcontrol flex="1" orient="vertical">
+  <tabcontrol id="tabcontrol" flex="1" orient="vertical">
     <tabbox>
       <tab id="cookiesTab" value="&tab.cookiesonsystem.label;"/>
       <tab value="&tab.bannedservers.label;"/>

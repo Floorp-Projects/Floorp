@@ -87,16 +87,17 @@ function Startup()
     }
     try {
       var tab = window.arguments[0];
+      var element2 = document.getElementById("tabcontrol");
       if (tab == "0") {
         element = document.getElementById("cookiesTab");
-        element.setAttribute("selected","true" );
+        element2.selectedTab = element;
         element = document.getElementById("panel");
         element.setAttribute("index","0" );
       } else {
         element = document.getElementById("cookieviewer");
         element.setAttribute("title", bundle.GetStringFromName("imageTitle"));
         element = document.getElementById("imagesTab");
-        element.setAttribute("selected","true" );
+        element2.selectedTab = element;
         element = document.getElementById("panel");
         element.setAttribute("index","2" );
       }
