@@ -88,17 +88,9 @@
 
   <!-- Splitter on the right of sidebar -->
   <splitter id="sidebar-splitter" collapse="before" persist="state hidden"
-    class="chromeclass-extrachrome sidebar-splitter">
+    class="chromeclass-extrachrome sidebar-splitter"
     onmouseup="SidebarFinishDrag();">
-    <box id="sidebar-topright-cap" align="vertical">
-      <spring flex="100%"/>
-    </box>
-    <spring flex="100%"/>
-    <grippy onclick="SidebarExpandCollapse();"/>
-    <spring flex="100%"/>
-    <box id="sidebar-bottomright-cap" align="vertical">
-    <spring flex="100%"/>
-    </box>
+    <grippy class="sidebar-splitter-grippy" onclick="SidebarExpandCollapse();"/>
   </splitter>
 
   <!-- View->Sidebar toggle -->
@@ -114,7 +106,7 @@
   -->
 
   <!-- Scripts go last, because they peek at state to tweak menus -->
-  <html:script language="JavaScript"
+  <script language="JavaScript"
     src="chrome://communicator/content/sidebar/sidebarOverlay.js"/>
 
 </overlay>
