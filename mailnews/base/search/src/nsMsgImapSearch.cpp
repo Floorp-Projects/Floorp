@@ -132,7 +132,7 @@ nsresult nsMsgSearchOnlineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
           nsXPIDLString folderName;
             pValue->attribute = nsMsgSearchAttrib::Location;
             m_scope->m_folder->GetName(getter_Copies(folderName));
-            pValue->u.wString = nsCRT::strdup((const PRUnichar *) folderName);
+           // pValue->u.wString = nsCRT::strdup((const PRUnichar *) folderName);
             newResult->AddValue (pValue);
         }
         pValue = new nsMsgSearchValue;
