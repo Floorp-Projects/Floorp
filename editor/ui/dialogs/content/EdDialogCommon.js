@@ -1192,6 +1192,13 @@ function SetRelativeCheckbox()
   if (!checkbox)
     return;
 
+  // Mail never allows relative URLs, so hide the checkbox
+  if (editorShell.editorType == "htmlmail")
+  {
+    checkbox.setAttribute("collapsed", "true");
+    return;
+  }
+
   var input =  document.getElementById(checkbox.getAttribute("for"));
   if (!input)
     return;
