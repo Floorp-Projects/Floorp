@@ -483,13 +483,13 @@ pk11_FindRSAPublicKeyAttribute(NSSLOWKEYPublicKey *key, CK_ATTRIBUTE_TYPE type)
     case CKA_VERIFY_RECOVER:
     case CKA_WRAP:
 	return (PK11Attribute *) &pk11_StaticTrueAttr;
-    default:
     case CKA_MODULUS:
 	return pk11_NewTokenAttributeSigned(type,key->u.rsa.modulus.data,
 					key->u.rsa.modulus.len, PR_FALSE);
     case CKA_PUBLIC_EXPONENT:
 	return pk11_NewTokenAttributeSigned(type,key->u.rsa.publicExponent.data,
 				key->u.rsa.publicExponent.len, PR_FALSE);
+    default:
 	break;
     }
     return NULL;
@@ -1039,8 +1039,10 @@ pk11_FindTokenAttribute(PK11TokenObject *object,CK_ATTRIBUTE_TYPE type)
     case CKA_TOKEN:
 	return (PK11Attribute *) &pk11_StaticTrueAttr;
     case CKA_LABEL:
-	if ((object->obj.objclass == CKO_CERTIFICATE) 
-				|| (object->obj.objclass == CKO_PRIVATE_KEY)) {
+	if (  (object->obj.objclass == CKO_CERTIFICATE) 
+	   || (object->obj.objclass == CKO_PRIVATE_KEY)
+	   || (object->obj.objclass == CKO_PUBLIC_KEY)
+	   || (object->obj.objclass == CKO_SECRET_KEY)) {
 	    break;
 	}
 	return (PK11Attribute *) &pk11_StaticNullAttr;
