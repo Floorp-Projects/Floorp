@@ -17,6 +17,8 @@ packages/core.jar:
         navigator/content/NetSupportConfirmCheckYN.xul (resources/content/NetSupportConfirmCheckYN.xul)
         navigator/content/tooltip.js                   (resources/content/tooltip.js)
         navigator/content/nsContextMenu.js             (resources/content/nsContextMenu.js)
+        navigator/content/askViewZoom.xul              (resources/content/askViewZoom.xul)
+        navigator/content/askViewZoom.js               (resources/content/askViewZoom.js)
 
 locales/en-US.jar:
         navigator/locale/openLocation.dtd             (resources/locale/en-US/openLocation.dtd)
@@ -26,3 +28,4 @@ locales/en-US.jar:
         navigator/locale/navigator.dtd                (resources/locale/en-US/navigator.dtd)
         navigator/locale/NetSupportConfirmCheckYN.dtd (resources/locale/en-US/NetSupportConfirmCheckYN.dtd)
         navigator/locale/navigator.properties         (resources/locale/en-US/navigator.properties)
+        navigator/locale/askViewZoom.dtd              (resources/locale/en-US/askViewZoom.dtd)
