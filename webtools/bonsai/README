@@ -14,6 +14,11 @@ and so we decided to let people see it first.
 Don't believe for a minute that you can use this stuff without first
 understanding most of the code.
 
+Check out the INSTALL file for some guidance on getting started.
+Many, many thanks to Artem Belevich <abelevic@ctron.com> for
+trailblazing his way through this and writing down all the problems he
+had.
+
 
 	============================
 	Configuration files you need
