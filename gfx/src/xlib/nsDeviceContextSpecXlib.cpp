@@ -151,10 +151,6 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::QueryInterface(REFNSIID aIID, void **aIns
 NS_IMPL_ADDREF(nsDeviceContextSpecXlib)
 NS_IMPL_RELEASE(nsDeviceContextSpecXlib)
 
-int nsDeviceContextSpecXlib::InitializeGlobalPrinters ()
-{
-}
-
 /** -------------------------------------------------------
  */
 static nsresult DisplayXPDialog(nsIPrintSettings* aPS,
