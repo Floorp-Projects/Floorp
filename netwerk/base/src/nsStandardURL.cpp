@@ -1522,6 +1522,10 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
     const nsPromiseFlatCString &flat = PromiseFlatCString(in);
     const char *relpath = flat.get();
 
+    // filter out unexpected chars "\r\n\t" if necessary
+    nsCAutoString buf;
+    relpath = FilterString(relpath, buf);
+
     // XXX hack hack hack
     char *p = nsnull;
     char **result = &p;
