@@ -293,7 +293,5 @@ XFE_NavCenterView::selector_destroy_cb(Widget		w,
 {	
   SelectorCBStruct *cbdata = (SelectorCBStruct *)clientData;
 
-  printf("destroy selector cbdata\n");
-
   delete cbdata;
 }
