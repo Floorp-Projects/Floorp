@@ -24,6 +24,7 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
+class nsIDOMRenderingContext;
 
 #define NS_IDOMNSEVENT_IID \
 { 0x6f765332,  0xee43, 0x11d1, \
@@ -73,6 +74,8 @@ public:
 
   NS_IMETHOD    GetLayerY(PRInt32* aLayerY)=0;
   NS_IMETHOD    SetLayerY(PRInt32 aLayerY)=0;
+
+  NS_IMETHOD    GetRc(nsIDOMRenderingContext** aRc)=0;
 };
 
 
@@ -81,6 +84,7 @@ public:
   NS_IMETHOD    SetLayerX(PRInt32 aLayerX);  \
   NS_IMETHOD    GetLayerY(PRInt32* aLayerY);  \
   NS_IMETHOD    SetLayerY(PRInt32 aLayerY);  \
+  NS_IMETHOD    GetRc(nsIDOMRenderingContext** aRc);  \
 
 
 
@@ -89,6 +93,7 @@ public:
   NS_IMETHOD    SetLayerX(PRInt32 aLayerX) { return _to##SetLayerX(aLayerX); } \
   NS_IMETHOD    GetLayerY(PRInt32* aLayerY) { return _to##GetLayerY(aLayerY); } \
   NS_IMETHOD    SetLayerY(PRInt32 aLayerY) { return _to##SetLayerY(aLayerY); } \
+  NS_IMETHOD    GetRc(nsIDOMRenderingContext** aRc) { return _to##GetRc(aRc); } \
 
 
 #endif // nsIDOMNSEvent_h__
