@@ -768,7 +768,7 @@ case "$target" in
     PR_MD_ARCH_DIR=beos
     RESOLVE_LINK_SYMBOLS=1
     case "${target_cpu}" in
-    i?86)
+    i*86)
         _OPTIMIZE_FLAGS=-O2
         _DEBUG_FLAGS='-gdwarf-2 -O0'
         MKSHLIB='$(CCC) $(DSO_LDOPTS) -o $@'
@@ -1165,7 +1165,7 @@ case "$target" in
         CFLAGS="$CFLAGS -mieee"
         CXXFLAGS="$CXXFLAGS -mieee"
         ;;
-    i?86)
+    i*86)
         AC_DEFINE(i386)
         PR_MD_ASFILES=os_Linux_x86.s
         ;;
@@ -1301,7 +1301,7 @@ case "$target" in
     esac
 
     case "$target_cpu" in
-    i?86)
+    i*86)
 	    AC_DEFINE(_X86_)
         ;;
     alpha)

@@ -3082,7 +3082,7 @@ EOF
     PR_MD_ARCH_DIR=beos
     RESOLVE_LINK_SYMBOLS=1
     case "${target_cpu}" in
-    i?86)
+    i*86)
         _OPTIMIZE_FLAGS=-O2
         _DEBUG_FLAGS='-gdwarf-2 -O0'
         MKSHLIB='$(CCC) $(DSO_LDOPTS) -o $@'
@@ -3757,7 +3757,7 @@ EOF
         CFLAGS="$CFLAGS -mieee"
         CXXFLAGS="$CXXFLAGS -mieee"
         ;;
-    i?86)
+    i*86)
         cat >> confdefs.h <<\EOF
 #define i386 1
 EOF
@@ -3920,7 +3920,7 @@ EOF
     esac
 
     case "$target_cpu" in
-    i?86)
+    i*86)
 	    cat >> confdefs.h <<\EOF
 #define _X86_ 1
 EOF
@@ -4721,8 +4721,8 @@ EOF
         LD='-ilink'
         MKSHLIB='$(LD) $(DSO_LDOPTS)'
         IMPLIB='implib -nologo -noignorecase'
-        FILTER='cppfilt -q -B -P'
-        _OPTIMIZE_FLAGS='/O+ /Gl+ /Gx+ /qtune=pentium /qarch=pentium'
+        FILTER='cppfilt -q -B -P -o'
+        _OPTIMIZE_FLAGS='/O+ /Gl+ /G5 /qarch=pentium'
         _DEBUG_FLAGS='/Ti+ '
         LDFLAGS='/NOL /M /L'
         DLLFLAGS='/O:$@ /DLL /INC:_dllentry /MAP:$(@:.dll=.map) /L /NOL'
@@ -5457,14 +5457,6 @@ if test -n "$USE_64"; then
 fi
 
 RELEASE_OBJDIR_NAME="${OS_CONFIG}${CPU_ARCH_TAG}${COMPILER_TAG}${IMPL_STRATEGY}${OBJDIR_TAG}.${OBJDIR_SUFFIX}"
-
-case "$target_os" in
-mingw*|cygwin*|msvc*|mksnt*)
-    CC="\$(CYGWIN_WRAPPER) $CC"
-    CXX="\$(CYGWIN_WRAPPER) $CXX"
-    RC="\$(CYGWIN_WRAPPER) $RC"
-    ;;
-esac
 
 
 
