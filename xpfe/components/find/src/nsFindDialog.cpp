@@ -32,6 +32,7 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
+#include "nsISound.h"
 
 #include "nsFindComponent.h"
 #include "nsFindDialog.h"
@@ -79,7 +80,8 @@ nsFindDialog::nsFindDialog( nsIFindComponent         *aComponent,
         : mComponent( dont_QueryInterface(aComponent) ),
           mContext( aContext ),
           mDialogWebShell(),
-          mDialogWindow()
+          mDialogWindow(),
+          mBeepIfNoFind(PR_TRUE)
 {
     // Initialize ref count.
     NS_INIT_REFCNT();
@@ -254,6 +256,7 @@ nsFindDialog::OnFind( nsIContent *aContent )
 		  PRBool  foundMatch;
 			// Find next occurrence in this context.
 			mComponent->FindNext(mContext, &foundMatch);
+      IndicateSuccess(foundMatch);
 		}
 	}
 }
@@ -267,6 +270,7 @@ nsFindDialog::OnNext()
 	  PRBool  foundMatch;
       // Find next occurrence in this context.
     mComponent->FindNext(mContext, &foundMatch);
+    IndicateSuccess(foundMatch);
   }
 }
 
@@ -283,4 +287,17 @@ nsFindDialog::SetWindow( nsIWebShellWindow *aWindow )
 {
     mDialogWindow = nsDontQueryInterface<nsIWebShellWindow>(aWindow);
 }
+
+void
+nsFindDialog::IndicateSuccess(PRBool aMatchFound)
+{
+  if (mBeepIfNoFind && !aMatchFound)
+  {
+    nsCOMPtr<nsISound> soundThang;
+    nsComponentManager::CreateInstance("component://netscape/sound", nsnull, nsISound::GetIID(), getter_AddRefs(soundThang));
+    if (soundThang)
+      soundThang->Beep();
+  }
+}
+
 
