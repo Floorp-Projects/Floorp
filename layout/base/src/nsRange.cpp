@@ -82,38 +82,38 @@ PRBool IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange)
   // if (RANGE(start) < NODE(end))  and (RANGE(end) > NODE(start))
   // then the Node intersect the Range.
   
-  if (!aNode) return false;
+  if (!aNode) return PR_FALSE;
   nsCOMPtr<nsIDOMNode> parent, rangeStartParent, rangeEndParent;
   PRInt32 nodeStart, nodeEnd, rangeStartOffset, rangeEndOffset; 
   
   // gather up the dom point info
   if (!GetNodeBracketPoints(aNode, &parent, &nodeStart, &nodeEnd))
-    return false;
+    return PR_FALSE;
   
   if (!NS_SUCCEEDED(aRange->GetStartParent(getter_AddRefs(rangeStartParent))))
-    return false;
+    return PR_FALSE;
 
   if (!NS_SUCCEEDED(aRange->GetStartOffset(&rangeStartOffset)))
-    return false;
+    return PR_FALSE;
 
   if (!NS_SUCCEEDED(aRange->GetEndParent(getter_AddRefs(rangeEndParent))))
-    return false;
+    return PR_FALSE;
 
   if (!NS_SUCCEEDED(aRange->GetEndOffset(&rangeEndOffset)))
-    return false;
+    return PR_FALSE;
 
   // is RANGE(start) < NODE(end) ?
   PRInt32 comp = ComparePoints(rangeStartParent, rangeStartOffset, parent, nodeEnd);
   if (comp >= 0)
-    return false; // range start is after node end
+    return PR_FALSE; // range start is after node end
     
   // is RANGE(end) > NODE(start) ?
   comp = ComparePoints(rangeEndParent, rangeEndOffset, parent, nodeStart);
   if (comp <= 0)
-    return false; // range end is before node start
+    return PR_FALSE; // range end is before node start
     
   // if we got here then the node intersects the range
-  return true;
+  return PR_TRUE;
 }
 
 
@@ -160,32 +160,32 @@ nsresult CompareNodeToRange(nsIContent* aNode,
   
   // gather up the dom point info
   if (!GetNodeBracketPoints(aNode, &parent, &nodeStart, &nodeEnd))
-    return false;
+    return PR_FALSE;
   
   if (!NS_SUCCEEDED(aRange->GetStartParent(getter_AddRefs(rangeStartParent))))
-    return false;
+    return PR_FALSE;
 
   if (!NS_SUCCEEDED(aRange->GetStartOffset(&rangeStartOffset)))
-    return false;
+    return PR_FALSE;
 
   if (!NS_SUCCEEDED(aRange->GetEndParent(getter_AddRefs(rangeEndParent))))
-    return false;
+    return PR_FALSE;
 
   if (!NS_SUCCEEDED(aRange->GetEndOffset(&rangeEndOffset)))
-    return false;
+    return PR_FALSE;
 
-  *outNodeBefore = false;
-  *outNodeAfter = false;
+  *outNodeBefore = PR_FALSE;
+  *outNodeAfter = PR_FALSE;
   
   // is RANGE(start) <= NODE(start) ?
   PRInt32 comp = ComparePoints(rangeStartParent, rangeStartOffset, parent, nodeStart);
   if (comp > 0)
-    *outNodeBefore = true; // range start is after node start
+    *outNodeBefore = PR_TRUE; // range start is after node start
     
   // is RANGE(end) >= NODE(end) ?
   comp = ComparePoints(rangeEndParent, rangeEndOffset, parent, nodeEnd);
   if (comp < 0)
-    *outNodeAfter = true; // range end is before node end
+    *outNodeAfter = PR_TRUE; // range end is before node end
     
   return NS_OK;
 }
@@ -200,13 +200,13 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
                             PRInt32* outEndOffset)
 {
   if (!aNode) 
-    return false;
+    return PR_FALSE;
   if (!outParent) 
-    return false;
+    return PR_FALSE;
   if (!outStartOffset)
-    return false;
+    return PR_FALSE;
   if (!outEndOffset)
-    return false;
+    return PR_FALSE;
     
   nsCOMPtr<nsIDOMNode> theDOMNode( do_QueryInterface(aNode) );
   PRInt32 indx;
@@ -220,10 +220,10 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
     *outParent = do_QueryInterface(aNode);
     nsCOMPtr<nsIContent> cN(do_QueryInterface(*outParent));
     if (!cN)
-      return false;
+      return PR_FALSE;
     cN->ChildCount(indx);
     if (!indx) 
-      return false;
+      return PR_FALSE;
     *outStartOffset = 0;
     *outEndOffset = indx;
   }
@@ -231,11 +231,11 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
   {
     nsCOMPtr<nsIContent> cN(do_QueryInterface(*outParent));
     if (!NS_SUCCEEDED(cN->IndexOf(aNode, indx)))
-      return false;
+      return PR_FALSE;
     *outStartOffset = indx;
     *outEndOffset = indx+1;
   }
-  return true;
+  return PR_TRUE;
 }
 
 /******************************************************
@@ -1492,7 +1492,7 @@ nsresult nsRange::OwnerGone(nsIContent* aDyingNode)
   // nothing for now - should be impossible to getter here
   // No node should be deleted if it holds a range endpoint,
   // since the range endpoint addrefs the node.
-  NS_ASSERTION(false,"Deleted content holds a range endpoint");  
+  NS_ASSERTION(PR_FALSE,"Deleted content holds a range endpoint");  
   return NS_OK;
 }
   
@@ -1647,7 +1647,7 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
     NS_PRECONDITION(NS_SUCCEEDED(res), "range and content disagree over range ownership");
     if (NS_SUCCEEDED(res))
     { 
-      PRBool bStartPointInChangedText = false;
+      PRBool bStartPointInChangedText = PR_FALSE;
       
       if (theRange->mStartParent == domNode)
       {
@@ -1655,7 +1655,7 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
         if ((aStartChanged <= theRange->mStartOffset) && (aEndChanged >= theRange->mStartOffset))
         { 
           theRange->mStartOffset = aStartChanged+aReplaceLength;
-          bStartPointInChangedText = true;
+          bStartPointInChangedText = PR_TRUE;
         }
         // else if text changed before start, adjust start offset
         else if (aEndChanged <= theRange->mStartOffset) 
