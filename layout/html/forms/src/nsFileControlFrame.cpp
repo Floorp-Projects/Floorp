@@ -312,6 +312,8 @@ nsFileControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
 nsGfxTextControlFrame*
 nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* aStart)
 {
+  nsGfxTextControlFrame* result = nsnull;
+
   // find the text control frame.
   nsIFrame* childFrame = nsnull;
   aStart->FirstChild(aPresContext, nsnull, &childFrame);
@@ -319,16 +321,20 @@ nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* 
   while (childFrame) {
     // see if the child is a text control
     nsCOMPtr<nsIContent> content;
-    childFrame->GetContent(getter_AddRefs(content));
-    nsIAtom* atom;
-    if (content->GetTag(atom) == NS_OK && atom == nsHTMLAtoms::input) {
-      nsString value;
+    nsresult res = childFrame->GetContent(getter_AddRefs(content));
+    if (NS_SUCCEEDED(res) && content) {
+      nsCOMPtr<nsIAtom> atom;
+      res = content->GetTag(*getter_AddRefs(atom));
+      if (NS_SUCCEEDED(res) && atom) {
+        if (atom.get() == nsHTMLAtoms::input) {
 
-      if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value)) {
-        value.ToUpperCase();
-        nsString txt("TEXT");
-        if (value == txt) {
-           return (nsGfxTextControlFrame*)childFrame;      
+          // It's an input, is it a text input?
+          nsAutoString value;
+          if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value)) {
+            if (value.EqualsIgnoreCase("text")) {
+              result = (nsGfxTextControlFrame*)childFrame;      
+            }
+          }
         }
       }
     }
@@ -336,13 +342,13 @@ nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* 
     // if not continue looking
     nsGfxTextControlFrame* frame = GetTextControlFrame(aPresContext, childFrame);
     if (frame)
-       return frame;
+       result = frame;
      
-    nsresult rv = childFrame->GetNextSibling(&childFrame);
-    NS_ASSERTION(rv == NS_OK,"failed to get next child");
+    res = childFrame->GetNextSibling(&childFrame);
+    NS_ASSERTION(res == NS_OK,"failed to get next child");
   }
 
-  return nsnull;
+  return result;
 }
 
 PRIntn
