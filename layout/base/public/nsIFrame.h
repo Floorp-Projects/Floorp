@@ -339,7 +339,7 @@ public:
   /**
    * Child frames are linked together in a singly-linked
    */
-  NS_IMETHOD  GetNextSibling(nsIFrame*& aNextSibling) const = 0;
+  NS_IMETHOD  GetNextSibling(nsIFrame** aNextSibling) const = 0;
   NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling) = 0;
 
   /**

@@ -339,7 +339,7 @@ nsLabelFrame::FindFirstControl(nsIFrame* aParentFrame, nsIFormControlFrame*& aRe
     } else if (FindFirstControl(child, aResultFrame)) {
       return PR_TRUE;
     }
-    child->GetNextSibling(child);
+    child->GetNextSibling(&child);
   }
   return PR_FALSE;
 }
@@ -367,7 +367,7 @@ nsLabelFrame::SetInitialChildList(nsIPresContext& aPresContext,
   NS_RELEASE(styleContext);                                           
 
   // Set the geometric and content parent for each of the child frames
-  for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(frame)) {
+  for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(&frame)) {
     frame->SetParent(mFrames.FirstChild());
   }
 

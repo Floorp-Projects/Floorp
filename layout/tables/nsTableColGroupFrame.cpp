@@ -53,7 +53,7 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
   if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
   {
     // Process the newly added column frames
-    for (nsIFrame* kidFrame = aChildList; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
+    for (nsIFrame* kidFrame = aChildList; nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
       // Set the preliminary values for the column frame
       PRInt32 colIndex = mStartColIndex + mColCount;
       ((nsTableColFrame *)(kidFrame))->InitColFrame (colIndex);
@@ -173,7 +173,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   for (kidFrame = mFrames.FirstChild(); nsnull != kidFrame;
-       kidFrame->GetNextSibling(kidFrame)) {
+       kidFrame->GetNextSibling(&kidFrame)) {
     // Give the child frame a chance to reflow, even though we know it'll have 0 size
     nsHTMLReflowMetrics kidSize(nsnull);
     // XXX Use a valid reason...
@@ -328,7 +328,7 @@ NS_METHOD nsTableColGroupFrame::IR_ColInserted(nsIPresContext&          aPresCon
   startingColIndex += GetColumnCount(); // has the side effect of resetting all column indexes
 
   nsIFrame *childFrame=nsnull;
-  GetNextSibling(childFrame);
+  GetNextSibling(&childFrame);
   while ((NS_SUCCEEDED(rv)) && (nsnull!=childFrame))
   {
     const nsStyleDisplay *display;
@@ -337,7 +337,7 @@ NS_METHOD nsTableColGroupFrame::IR_ColInserted(nsIPresContext&          aPresCon
     {
       startingColIndex += ((nsTableColGroupFrame *)childFrame)->SetStartColumnIndex(startingColIndex);
     }
-    rv = childFrame->GetNextSibling(childFrame);
+    rv = childFrame->GetNextSibling(&childFrame);
   }
 
   nsTableFrame* tableFrame=nsnull;
@@ -365,7 +365,7 @@ NS_METHOD nsTableColGroupFrame::IR_ColAppended(nsIPresContext&          aPresCon
   startingColIndex += GetColumnCount(); // has the side effect of resetting all column indexes
 
   nsIFrame *childFrame=nsnull;
-  GetNextSibling(childFrame);
+  GetNextSibling(&childFrame);
   while ((NS_SUCCEEDED(rv)) && (nsnull!=childFrame))
   {
     const nsStyleDisplay *display;
@@ -374,7 +374,7 @@ NS_METHOD nsTableColGroupFrame::IR_ColAppended(nsIPresContext&          aPresCon
     {
       startingColIndex += ((nsTableColGroupFrame *)childFrame)->SetStartColumnIndex(startingColIndex);
     }
-    rv = childFrame->GetNextSibling(childFrame);
+    rv = childFrame->GetNextSibling(&childFrame);
   }
 
   // today we need to rebuild the whole column cache
@@ -405,7 +405,7 @@ NS_METHOD nsTableColGroupFrame::IR_ColRemoved(nsIPresContext&          aPresCont
     if (childFrame==aDeletedFrame)
     {
       nsIFrame *deleteFrameNextSib=nsnull;
-      aDeletedFrame->GetNextSibling(deleteFrameNextSib);
+      aDeletedFrame->GetNextSibling(&deleteFrameNextSib);
       if (nsnull!=prevSib)
         prevSib->SetNextSibling(deleteFrameNextSib);
       else
@@ -420,7 +420,7 @@ NS_METHOD nsTableColGroupFrame::IR_ColRemoved(nsIPresContext&          aPresCont
       startingColIndex += ((nsTableColGroupFrame *)childFrame)->SetStartColumnIndex(startingColIndex);
     }
     prevSib=childFrame;
-    rv = childFrame->GetNextSibling(childFrame);
+    rv = childFrame->GetNextSibling(&childFrame);
   }
 
   // today we need to rebuild the whole column cache
@@ -536,7 +536,7 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPre
           colStyleContext->RecalcAutomaticData(&aPresContext);
           colIndex++;
         }
-        colFrame->GetNextSibling(colFrame);
+        colFrame->GetNextSibling(&colFrame);
       }
     }
     else
@@ -566,7 +566,7 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPre
               colStyleContext->RecalcAutomaticData(&aPresContext);
             }
           }
-          colFrame->GetNextSibling(colFrame);
+          colFrame->GetNextSibling(&colFrame);
         }
       }
     }
@@ -594,7 +594,7 @@ int nsTableColGroupFrame::GetColumnCount ()
       col->SetColumnIndex (mStartColIndex + mColCount);
       mColCount += col->GetSpan();
     }
-    childFrame->GetNextSibling(childFrame);
+    childFrame->GetNextSibling(&childFrame);
   }
   if (0==mColCount)
   { // there were no children of this colgroup that were columns.  So use my span attribute
@@ -625,7 +625,7 @@ nsTableColFrame * nsTableColGroupFrame::GetNextColumn(nsIFrame *aChildFrame)
       result = (nsTableColFrame *)childFrame;
       break;
     }
-    childFrame->GetNextSibling(childFrame);
+    childFrame->GetNextSibling(&childFrame);
   }
   return result;
 }
@@ -647,7 +647,7 @@ nsTableColFrame * nsTableColGroupFrame::GetColumnAt (PRInt32 aColIndex)
       if (aColIndex<=count)
         result = col;
     }
-    childFrame->GetNextSibling(childFrame);
+    childFrame->GetNextSibling(&childFrame);
   }
   return result;
 }

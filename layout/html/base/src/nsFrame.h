@@ -194,7 +194,7 @@ public:
   NS_IMETHOD  GetFrameType(nsIAtom** aType) const;
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const;
   NS_IMETHOD  GetAutoMarginSize(PRUint8 aSide, nscoord& aSize) const;
-  NS_IMETHOD  GetNextSibling(nsIFrame*& aNextSibling) const;
+  NS_IMETHOD  GetNextSibling(nsIFrame** aNextSibling) const;
   NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling);
   NS_IMETHOD  IsTransparent(PRBool& aTransparent) const;
   NS_IMETHOD  Scrolled(nsIView *aView);

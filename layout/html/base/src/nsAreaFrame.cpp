@@ -267,7 +267,7 @@ NS_IMETHODIMP
 nsAreaFrame::GetPositionedInfo(nscoord& aXMost, nscoord& aYMost) const
 {
   aXMost = aYMost = 0;
-  for (nsIFrame* f = mAbsoluteFrames.FirstChild(); nsnull != f; f->GetNextSibling(f)) {
+  for (nsIFrame* f = mAbsoluteFrames.FirstChild(); nsnull != f; f->GetNextSibling(&f)) {
     // Get the frame's x-most and y-most. This is for its flowed content only
     nsRect  rect;
     f->GetRect(rect);
@@ -400,7 +400,7 @@ nsAreaFrame::IncrementalReflow(nsIPresContext&          aPresContext,
       nsReflowStatus  status;
 
       ReflowAbsoluteFrame(aPresContext, aReflowState, newFrames, PR_TRUE, status);
-      newFrames->GetNextSibling(newFrames);
+      newFrames->GetNextSibling(&newFrames);
     }
   }
 
@@ -671,7 +671,7 @@ nsAreaFrame::ReflowAbsoluteFrames(nsIPresContext&          aPresContext,
   }
 
   nsIFrame* kidFrame;
-  for (kidFrame = mAbsoluteFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
+  for (kidFrame = mAbsoluteFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
     // Reflow the frame
     nsReflowStatus  kidStatus;
     ReflowAbsoluteFrame(aPresContext, reflowState, kidFrame, PR_FALSE,

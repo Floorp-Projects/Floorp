@@ -596,7 +596,7 @@ getNextFrame(nsIFrame *aStart)
     return result;
   }
   while(parent){
-    if (NS_SUCCEEDED(parent->GetNextSibling(result)) && result){
+    if (NS_SUCCEEDED(parent->GetNextSibling(&result)) && result){
       parent = result;
       return result;
     }
@@ -867,7 +867,7 @@ findFrameFromContent(nsIFrame *aParent, nsIContent *aContent, PRBool aTurnOff)
     if (result)
       return result;
   }
-  while (child && NS_SUCCEEDED(child->GetNextSibling(child))); //this is ok. no addrefs or releases
+  while (child && NS_SUCCEEDED(child->GetNextSibling(&child))); //this is ok. no addrefs or releases
   return result;
 }
 

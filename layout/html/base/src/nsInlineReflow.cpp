@@ -961,7 +961,7 @@ nsInlineReflow::HorizontalAlignFrames(nsRect& aLineBox, PRBool aAllowJustify)
         nsIFrame* kid = pfd->mFrame;;
         kid->GetOrigin(origin);
         kid->MoveTo(origin.x + dx, origin.y);
-        kid->GetNextSibling(kid);
+        kid->GetNextSibling(&kid);
       }
     }
   }

@@ -123,7 +123,7 @@ VerifyLineLength(nsLineBox* aLine)
   nsIFrame* frame = aLine->mFirstChild;
   PRInt32 n = aLine->mChildCount;
   while (--n >= 0) {
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
 }
 #endif
@@ -461,7 +461,7 @@ ReResolveLineList(nsIPresContext* aPresContext,
     PRInt32 n = aLine->mChildCount;
     while ((--n >= 0) && NS_SUCCEEDED(rv)) {
       rv = child->ReResolveStyleContext(aPresContext, aStyleContext);
-      child->GetNextSibling(child);
+      child->GetNextSibling(&child);
     }
     aLine = aLine->mNext;
   }
@@ -527,7 +527,7 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
         else {
           rv = child->ReResolveStyleContext(aPresContext, mStyleContext);
         }
-        child->GetNextSibling(child);
+        child->GetNextSibling(&child);
       }
       line = line->mNext;
     }
@@ -631,7 +631,7 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
       fputs("<\n", out);
       while (nsnull != kid) {
         kid->List(out, aIndent + 1);
-        kid->GetNextSibling(kid);
+        kid->GetNextSibling(&kid);
       }
       IndentBy(out, aIndent);
       fputs(">\n", out);
@@ -1518,7 +1518,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     while (--n >= 0) {
       frame->SetParent(this);
       lastFrame = frame;
-      frame->GetNextSibling(frame);
+      frame->GetNextSibling(&frame);
     }
     lastFrame->SetNextSibling(nsnull);
 
@@ -1713,7 +1713,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
         }
         break;
       }
-      frame->GetNextSibling(frame);
+      frame->GetNextSibling(&frame);
     }
 
     // Pull frames and reflow them until we can't
@@ -1835,7 +1835,7 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
     if (0 != --fromLine->mChildCount) {
       // Mark line dirty now that we pulled a child
       fromLine->MarkDirty();
-      frame->GetNextSibling(fromLine->mFirstChild);
+      frame->GetNextSibling(&fromLine->mFirstChild);
     }
     else {
       // Free up the fromLine now that it's empty
@@ -1908,7 +1908,7 @@ ListTag(stdout); printf(": SlideFrames: line=%p dy=%d\n", aDY);
       ihr->MoveInSpaceManager(aPresContext, aSpaceManager, 0, aDY);
     }
 
-    kid->GetNextSibling(kid);
+    kid->GetNextSibling(&kid);
   }
 
   // Adjust line state
@@ -1973,7 +1973,7 @@ ListTag(stdout); printf(": MoveInSpaceManager: d=%d,%d\n", aDeltaX, aDeltaY);
       if (NS_OK == kid->QueryInterface(kIHTMLReflowIID, (void**)&ihr)) {
         ihr->MoveInSpaceManager(aPresContext, aSpaceManager, aDeltaX, aDeltaY);
       }
-      kid->GetNextSibling(kid);
+      kid->GetNextSibling(&kid);
     }
     
     line = line->mNext;
@@ -1989,7 +1989,7 @@ nsBlockFrame::FindFollowingBlockFrame(nsIFrame* aFrame)
   nsIFrame* frame = aFrame;
   for (;;) {
     nsIFrame* nextFrame;
-    frame->GetNextSibling(nextFrame);
+    frame->GetNextSibling(&nextFrame);
     if (nsnull != nextFrame) {
       const nsStyleDisplay* display;
       nextFrame->GetStyleData(eStyleStruct_Display,
@@ -2308,7 +2308,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         // Push continuation to a new line, but only if we actually
         // made one.
         if (madeContinuation) {
-          frame->GetNextSibling(frame);
+          frame->GetNextSibling(&frame);
           nsLineBox* line = new nsLineBox(frame, 1, LINE_IS_BLOCK);
           if (nsnull == line) {
             return NS_ERROR_OUT_OF_MEMORY;
@@ -2468,7 +2468,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       }
 
       // Split line, but after the frame just reflowed
-      aFrame->GetNextSibling(aFrame);
+      aFrame->GetNextSibling(&aFrame);
       rv = SplitLine(aState, aLine, aFrame);
       if (NS_FAILED(rv)) {
         return rv;
@@ -2501,7 +2501,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     if (needSplit) {
       // Split line after the current frame
       aKeepLineGoing = PR_FALSE;
-      aFrame->GetNextSibling(aFrame);
+      aFrame->GetNextSibling(&aFrame);
       rv = SplitLine(aState, aLine, aFrame);
       if (NS_FAILED(rv)) {
         return rv;
@@ -2892,7 +2892,7 @@ FindFloatersIn(nsIFrame* aFrame, nsVoidArray*& aArray)
       if (NS_OK != rv) {
         return rv;
       }
-      kid->GetNextSibling(kid);
+      kid->GetNextSibling(&kid);
     }
   }
   return NS_OK;
@@ -2911,7 +2911,7 @@ nsBlockFrame::FindFloaters(nsLineBox* aLine)
   PRInt32 n = aLine->ChildCount();
   while (--n >= 0) {
     FindFloatersIn(frame, floaters);
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
 
   aLine->mFloaters = floaters;
@@ -2980,7 +2980,7 @@ nsBlockFrame::DrainOverflowLines()
       while (nsnull != frame) {
         frame->SetParent(this);
         lastFrame = frame;
-        frame->GetNextSibling(frame);
+        frame->GetNextSibling(&frame);
       }
 
       // Join the line lists
@@ -3097,7 +3097,7 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
   // Now create some lines for the new frames
   nsIFrame* prevFrame = lastFrame;
   for (nsIFrame* frame = aNewFrame; nsnull != frame;
-       frame->GetNextSibling(frame)) {
+       frame->GetNextSibling(&frame)) {
     // See if the child is a block or non-block
     const nsStyleDisplay* kidDisplay;
     rv = frame->GetStyleData(eStyleStruct_Display,
@@ -3239,7 +3239,7 @@ nsBlockFrame::InsertNewFrames(nsIPresContext& aPresContext,
   nsIFrame* newFrame = aFrameList;
   while (nsnull != newFrame) {
     nsIFrame* next;
-    newFrame->GetNextSibling(next);
+    newFrame->GetNextSibling(&next);
     newFrame->SetNextSibling(nsnull);
 
     const nsStyleDisplay* display;
@@ -3332,7 +3332,7 @@ nsBlockFrame::InsertNewFrames(nsIPresContext& aPresContext,
             for (i = 0; i < n; i++) {
               if (frame == aPrevSibling) {
                 nsIFrame* nextSibling;
-                aPrevSibling->GetNextSibling(nextSibling);
+                aPrevSibling->GetNextSibling(&nextSibling);
 
                 // Create new line to hold the remaining frames
                 NS_ASSERTION(n - i - 1 > 0, "bad line count");
@@ -3346,7 +3346,7 @@ nsBlockFrame::InsertNewFrames(nsIPresContext& aPresContext,
                 line->mChildCount = i + 1;
                 break;
               }
-              frame->GetNextSibling(frame);
+              frame->GetNextSibling(&frame);
             }
 
             // Now create a new line to hold the block
@@ -3370,7 +3370,7 @@ nsBlockFrame::InsertNewFrames(nsIPresContext& aPresContext,
       // after the above logic because the above logic depends on the
       // sibling list being in the "before insertion" state.
       nsIFrame* nextSibling;
-      aPrevSibling->GetNextSibling(nextSibling);
+      aPrevSibling->GetNextSibling(&nextSibling);
       newFrame->SetNextSibling(nextSibling);
       aPrevSibling->SetNextSibling(newFrame);
     }
@@ -3431,7 +3431,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext& aPresContext,
         goto found_frame;
       }
       prevSibling = frame;
-      frame->GetNextSibling(frame);
+      frame->GetNextSibling(&frame);
     }
     linep = &line->mNext;
     prevLine = line;
@@ -3442,7 +3442,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext& aPresContext,
   NS_ASSERTION(nsnull != line, "can't find deleted frame in lines");
   if (nsnull != prevSibling) {
     nsIFrame* tmp;
-    prevSibling->GetNextSibling(tmp);
+    prevSibling->GetNextSibling(&tmp);
     NS_ASSERTION(tmp == aDeletedFrame, "bad prevSibling");
   }
 #endif
@@ -3483,7 +3483,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext& aPresContext,
 
       // Get the deleted frames next sibling
       nsIFrame* nextFrame;
-      aDeletedFrame->GetNextSibling(nextFrame);
+      aDeletedFrame->GetNextSibling(&nextFrame);
 
       // Remove aDeletedFrame from the line
       if (line->mFirstChild == aDeletedFrame) {
@@ -3619,7 +3619,7 @@ IsEmptyLine(nsIPresContext& aPresContext, nsLineBox* aLine)
 
     NS_RELEASE(tc);
     NS_RELEASE(content);
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
   return PR_TRUE;
 }
@@ -3726,7 +3726,7 @@ nsBlockFrame::RemoveChild(nsLineBox* aLines, nsIFrame* aChild)
     PRInt32 n = line->ChildCount();
     while (--n >= 0) {
       nsIFrame* nextChild;
-      child->GetNextSibling(nextChild);
+      child->GetNextSibling(&nextChild);
       if (child == aChild) {
         NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
            ("nsBlockFrame::RemoveChild: line=%p frame=%p",
@@ -3921,7 +3921,7 @@ nsBlockReflowState::IsLeftMostChild(nsIFrame* aFrame)
           // We found a non-zero sized child frame that precedes aFrame
           return PR_FALSE;
         }
-        child->GetNextSibling(child);
+        child->GetNextSibling(&child);
       }
       break;
     }
@@ -3939,7 +3939,7 @@ nsBlockReflowState::IsLeftMostChild(nsIFrame* aFrame)
           // We found a non-zero sized child frame that precedes aFrame
           return PR_FALSE;
         }
-        child->GetNextSibling(child);
+        child->GetNextSibling(&child);
       }
     }
   
@@ -4238,7 +4238,7 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
       while (--n >= 0) {
         PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid,
                    aWhichLayer);
-        kid->GetNextSibling(kid);
+        kid->GetNextSibling(&kid);
       }
     }
   }
@@ -4293,7 +4293,7 @@ InLineList(nsLineBox* aLines, nsIFrame* aFrame)
       if (frame == aFrame) {
         return PR_TRUE;
       }
-      frame->GetNextSibling(frame);
+      frame->GetNextSibling(&frame);
     }
     aLines = aLines->mNext;
   }
@@ -4309,7 +4309,7 @@ InSiblingList(nsLineBox* aLine, nsIFrame* aFrame)
       if (frame == aFrame) {
         return PR_TRUE;
       }
-      frame->GetNextSibling(frame);
+      frame->GetNextSibling(&frame);
     }
   }
   return PR_FALSE;
@@ -4472,7 +4472,7 @@ nsBlockFrame::RenumberLists(nsBlockReflowState& aState)
           }
         }
       }
-      frame->GetNextSibling(frame);
+      frame->GetNextSibling(&frame);
     }
     block = (nsBlockFrame*) block->mNextInFlow;
   }
@@ -4596,7 +4596,7 @@ nsBlockFrame::ComputeTextRuns(nsBlockReflowState& aState)
           // therefore it will end an open text run.
           ll.EndTextRun();
         }
-        frame->GetNextSibling(frame);
+        frame->GetNextSibling(&frame);
       }
     }
     else {
@@ -4626,7 +4626,7 @@ nsBlockFrame::TakeRunInFrames(nsBlockFrame* aRunInFrame)
   while (nsnull != frame) {
     frame->SetParent(this);
     lastFrame = frame;
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
 
   // Join the line lists
@@ -4771,7 +4771,7 @@ nsAnonymousBlockFrame::RemoveFirstFrame()
       // Remove frame from line and mark the line dirty
       --line->mChildCount;
       line->MarkDirty();
-      firstChild->GetNextSibling(line->mFirstChild);
+      firstChild->GetNextSibling(&line->mFirstChild);
     }
 
     // Break linkage to next child after stolen frame
@@ -4818,7 +4818,7 @@ nsAnonymousBlockFrame::RemoveFramesFrom(nsIFrame* aFrame)
             done = PR_TRUE;
             break;
           }
-          frame->GetNextSibling(frame);
+          frame->GetNextSibling(&frame);
         }
         if (done) {
           break;

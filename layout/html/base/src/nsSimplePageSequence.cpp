@@ -88,7 +88,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
 
     // Compute the y-offset of this page
     for (nsIFrame* f = mFrames.FirstChild(); f != nextFrame;
-         f->GetNextSibling(f)) {
+         f->GetNextSibling(&f)) {
       nsSize  size;
 
       f->GetSize(size);
@@ -111,13 +111,13 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
     // XXX Check if the page is complete...
 
     // Update the y-offset to reflect the remaining pages
-    nextFrame->GetNextSibling(nextFrame);
+    nextFrame->GetNextSibling(&nextFrame);
     while (nsnull != nextFrame) {
       nsSize  size;
 
       nextFrame->GetSize(size);
       y += size.height + PAGE_SPACING_TWIPS;
-      nextFrame->GetNextSibling(nextFrame);
+      nextFrame->GetNextSibling(&nextFrame);
     }
 
   } else {
@@ -163,14 +163,14 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
         // Add it to our child list
 #ifdef NS_DEBUG
         nsIFrame* kidNextSibling;
-        kidFrame->GetNextSibling(kidNextSibling);
+        kidFrame->GetNextSibling(&kidNextSibling);
         NS_ASSERTION(nsnull == kidNextSibling, "unexpected sibling");
 #endif
         kidFrame->SetNextSibling(continuingPage);
       }
 
       // Get the next page
-      kidFrame->GetNextSibling(kidFrame);
+      kidFrame->GetNextSibling(&kidFrame);
     }
   }
 
@@ -276,7 +276,7 @@ nsSimplePageSequenceFrame::Print(nsIPresContext&         aPresContext,
 
   // Print each specified page
   PRInt32 pageNum = 1;
-  for (nsIFrame* page = mFrames.FirstChild(); nsnull != page; page->GetNextSibling(page)) {
+  for (nsIFrame* page = mFrames.FirstChild(); nsnull != page; page->GetNextSibling(&page)) {
     // See whether we should print this page
     PRBool  printThisPage = PR_TRUE;
 

@@ -353,7 +353,7 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
     
     // advance to the next child frame, if appropriate, and advance child content
     if ( canAdvanceFrame )
-      childFrame->GetNextSibling(childFrame);
+      childFrame->GetNextSibling(&childFrame);
     ++contentCounter;
     toolboxContent->ChildAt(contentCounter, *getter_AddRefs(childContent));
     ++grippyIndex;

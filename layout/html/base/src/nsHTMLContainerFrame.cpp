@@ -123,7 +123,7 @@ nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
 
     // Set aFrame's next sibling to nsnull, and remember the current next
     // sibling pointer
-    aFrame->GetNextSibling(nextSibling);
+    aFrame->GetNextSibling(&nextSibling);
     aFrame->SetNextSibling(nsnull);
 
     // Create a placeholder frame that will serve as the anchor point.
@@ -157,7 +157,7 @@ nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext& aPresContext,
     // Create a continuation frame for the child frame and insert it
     // into our lines child list.
     nsIFrame* nextFrame;
-    aFrame->GetNextSibling(nextFrame);
+    aFrame->GetNextSibling(&nextFrame);
     nsIStyleContext* kidSC;
     aFrame->GetStyleContext(&kidSC);
     aFrame->CreateContinuingFrame(aPresContext, aOuterFrame,
