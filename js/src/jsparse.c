@@ -1392,8 +1392,10 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 return NULL;
             pn4->pn_type = TOK_LC;
             PN_INIT_LIST(pn4);
+            ts->flags |= TSF_OPERAND;
             while ((tt = js_PeekToken(cx, ts)) != TOK_RC &&
                    tt != TOK_CASE && tt != TOK_DEFAULT) {
+                ts->flags &= ~TSF_OPERAND;
                 if (tt == TOK_ERROR)
                     return NULL;
                 pn5 = Statement(cx, ts, tc);
@@ -1401,7 +1403,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     return NULL;
                 pn4->pn_pos.end = pn5->pn_pos.end;
                 PN_APPEND(pn4, pn5);
+                ts->flags |= TSF_OPERAND;
             }
+            ts->flags &= ~TSF_OPERAND;
 
             /* Fix the PN_LIST so it doesn't begin at the TOK_COLON. */
             if (pn4->pn_head)
