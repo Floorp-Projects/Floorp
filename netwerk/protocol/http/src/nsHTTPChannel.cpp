@@ -2033,6 +2033,12 @@ nsHTTPChannel::Connect()
 
 #ifdef MOZ_NEW_CACHE
     if (mState == HS_WAITING_FOR_CACHE_ENTRY) {
+        if (NS_FAILED(mStatus)) {
+            LOG(("canceled while waiting for a cache entry descriptor [this=%x status=%x]\n",
+                this, mStatus));
+            CacheAbort(mStatus); // make sure the cache entry is doomed!!
+            return NS_OK;
+        }
         // So, we "may" have a cache entry now...
         rv = CheckCache();
         if (NS_FAILED(rv))
