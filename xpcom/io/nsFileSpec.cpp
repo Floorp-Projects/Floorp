@@ -457,8 +457,12 @@ nsFileURL::nsFileURL(const char* inString, PRBool inCreateDirs)
     if (!inString)
         return;
     NS_ASSERTION(strstr(inString, kFileURLPrefix) == inString, "Not a URL!");
-    // Make canonical and absolute.
-    nsFilePath path(inString + kFileURLPrefixLength, inCreateDirs);
+    // Make canonical and absolute. Since it's a parameter to this constructor,
+    // inString is escaped. We want to make an nsFilePath, which requires
+    // an unescaped string.
+    nsSimpleCharString unescapedPath(inString + kFileURLPrefixLength);
+    unescapedPath.Unescape()
+    nsFilePath path(unescapedPath, inCreateDirs);
     *this = path;
 } // nsFileURL::nsFileURL
 #endif
@@ -473,8 +477,12 @@ nsFileURL::nsFileURL(const nsString& inString, PRBool inCreateDirs)
     if (!inString.Length())
         return;
     NS_ASSERTION(strstr(aCString, kFileURLPrefix) == aCString, "Not a URL!");
-    // Make canonical and absolute.
-    nsFilePath path(aCString + kFileURLPrefixLength, inCreateDirs);
+    // Make canonical and absolute. Since it's a parameter to this constructor,
+    // inString is escaped. We want to make an nsFilePath, which requires
+    // an unescaped string.
+    nsSimpleCharString unescapedPath(aCString + kFileURLPrefixLength);
+    unescapedPath.Unescape()
+    nsFilePath path(unescapedPath, inCreateDirs);
     *this = path;
 } // nsFileURL::nsFileURL
 #endif
