@@ -97,13 +97,11 @@
 
 #define CS_KOI8_R     (SINGLEBYTE         |  39) /*   39 */
 #define CS_MAC_CYRILLIC     (SINGLEBYTE   |  40) /*   40 */
-#define CS_CP_1251    (SINGLEBYTE         |  41) /*   41 CP1251 Windows Cyrillic */
+#define CS_CP_1251    (SINGLEBYTE         |  41) /*   41 */
 #define CS_MAC_GREEK  (SINGLEBYTE         |  42) /*   42 */
-/* CS_CP_1253 should be deleted, we should use CS_8859_7 instead */
-#define CS_CP_1253    (SINGLEBYTE         |  43) /*   43 CP1253 Windows Greek */
-#define CS_CP_1250    (SINGLEBYTE         |  44) /*   44 CP1250 Windows C. Europe */
-/* CS_CP_1254 should be deleted, we should use CS_8859_9 instead */
-#define CS_CP_1254    (SINGLEBYTE         |  45) /*   45 CP1254 Windows Turkish */
+#define CS_CP_1253    (SINGLEBYTE         |  43) /*   43 */
+#define CS_CP_1250    (SINGLEBYTE         |  44) /*   44 */
+#define CS_CP_1254    (SINGLEBYTE         |  45) /*   45 */
 #define CS_MAC_TURKISH (SINGLEBYTE        |  46) /*   46 */
 #define CS_GB2312_11  (MULTIBYTE          |  47) /*  303 */
 #define CS_JISX0208_11 (MULTIBYTE         |  48) /*  304 */
@@ -122,7 +120,37 @@
 #define CS_CP_1257    (SINGLEBYTE         |  61) /*   61  Windows Baltic */
 #define CS_CP_1258    (SINGLEBYTE         |  62) /*   62  Windows Vietnamese */
 #define CS_ARMSCII8   (SINGLEBYTE         |  63) /*   63  Armenian ArmSCII-8 */
-#define INTL_CHAR_SET_MAX                    64  /* must be highest + 1 */
+#define CS_HZ         (STATEFUL           |  64) /*   576 */
+#define CS_ISO_2022_CN (STATEFUL          |  65) /*   577 */
+#define CS_GB13000    (MULTIBYTE          |  66) /*   322 */
+#define CS_BIG5_PLUS  (MULTIBYTE          |  67) /*   323 */
+#define CS_UHC        (MULTIBYTE|CS_SPACE |  68) /*   1348 cp949 */
+#define CS_CNS11643_3 (MULTIBYTE          |  69) /*   325 */
+#define CS_CNS11643_4 (MULTIBYTE          |  70) /*   326 */
+#define CS_CNS11643_5 (MULTIBYTE          |  71) /*   327 */
+#define CS_CNS11643_6 (MULTIBYTE          |  72) /*   328 */
+#define CS_CNS11643_7 (MULTIBYTE          |  73) /*   329 */
+#define CS_CNS11643_8 (MULTIBYTE          |  74) /*   330 */
+#define CS_CNS11643_9 (MULTIBYTE          |  75) /*   331 */
+#define CS_CNS11643_10 (MULTIBYTE         |  76) /*   332 */
+#define CS_CNS11643_11 (MULTIBYTE         |  77) /*   333 */
+#define CS_CNS11643_12 (MULTIBYTE         |  78) /*   334 */
+#define CS_CNS11643_13 (MULTIBYTE         |  79) /*   335 */
+#define CS_CNS11643_14 (MULTIBYTE         |  80) /*   336 */
+#define CS_CNS11643_15 (MULTIBYTE         |  81) /*   337 */
+#define CS_CNS11643_16 (MULTIBYTE         |  82) /*   338 */
+#define CS_VISCII      (                     83) /*   83 */
+#define CS_VIQR        (                     84) /*   84 */
+#define CS_KOI8_U      (                     85) /*   85 */
+#define CS_ISO_IR_111  (                     86) /*   86 */
+#define CS_8859_6_I    (                     87) /*   87 */
+#define CS_8859_6_E    (                     88) /*   88 */
+#define CS_8859_8_I    (                     89) /*   89 */
+#define CS_8859_8_E    (                     90) /*   90 */
+#define CS_JOHAB       (MULTIBYTE        |   91) /*   91 cp1361 */
+#define CS_JOHABFONT   (MULTIBYTE        |   92) /*   92 hangterm font*/
+
+#define INTL_CHAR_SET_MAX                    93  /* must be highest + 1 */
 
 
 #define CS_USER_DEFINED_ENCODING (SINGLEBYTE | 254) /* 254 */
