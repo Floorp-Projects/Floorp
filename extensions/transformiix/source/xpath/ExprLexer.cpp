@@ -125,9 +125,6 @@ txExprLexer::parse(const nsASingleFragmentString& aPattern)
   iterator start, end;
   start = aPattern.BeginReading(mPosition);
   aPattern.EndReading(end);
-  if (start == end) {
-    return NS_OK;
-  }
 
   //-- initialize previous token, this will automatically get
   //-- deleted when it goes out of scope
