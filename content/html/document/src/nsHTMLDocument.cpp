@@ -2105,7 +2105,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
     nsCOMPtr<nsIDOMDocument> kungFuDeathGrip =
       do_QueryInterface((nsIHTMLDocument*)this);
 
-    result = mScriptGlobalObject->SetNewDocument(kungFuDeathGrip);
+    result = mScriptGlobalObject->SetNewDocument(kungFuDeathGrip, PR_FALSE);
 
     if (NS_FAILED(result))
       return result;

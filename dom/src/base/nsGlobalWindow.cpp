@@ -288,7 +288,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetContext(nsIScriptContext ** aContext)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
+NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
+                                               PRBool removeEventListeners)
 {
   if (!aDocument) {
     if (mDocument) {
@@ -376,7 +377,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
       doc = nsnull;             // Forces release now
     }
 
-    if (mListenerManager) {
+    if (removeEventListeners && mListenerManager) {
       mListenerManager->RemoveAllListeners(PR_FALSE);
       mListenerManager = nsnull;
     }

@@ -950,7 +950,7 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
         mDocument->SetScriptGlobalObject(global);
         nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mDocument));
         if (nsnull != domdoc) {
-          global->SetNewDocument(domdoc);
+          global->SetNewDocument(domdoc, PR_TRUE);
         }
       }
     }
@@ -1168,7 +1168,7 @@ DocumentViewerImpl::Close()
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
     mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
     if (globalObject) {
-      globalObject->SetNewDocument(nsnull);
+      globalObject->SetNewDocument(nsnull, PR_TRUE);
     }
     // out of band cleanup of webshell
     mDocument->SetScriptGlobalObject(nsnull);
@@ -1286,7 +1286,7 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
       rv = owner->GetScriptGlobalObject(getter_AddRefs(global));
       if (NS_SUCCEEDED(rv) && (nsnull != global)) {
         mDocument->SetScriptGlobalObject(global);
-        global->SetNewDocument(aDocument);
+        global->SetNewDocument(aDocument, PR_TRUE);
       }
     }
   }  
