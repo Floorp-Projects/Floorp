@@ -461,16 +461,18 @@ nsSmtpService::loadSmtpServers()
     
     nsXPIDLCString serverList;
     rv = prefs->CopyCharPref("mail.smtpservers", getter_Copies(serverList));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
 
-    char *newStr;
-    char *pref = nsCRT::strtok(NS_CONST_CAST(char*,(const char*)serverList),
-                               ", ", &newStr);
-    while (pref) {
+        char *newStr;
+        char *pref = nsCRT::strtok(NS_CONST_CAST(char*,(const char*)serverList),
+                                   ", ", &newStr);
+        while (pref) {
+            
+            rv = createKeyedServer(pref);
+            
+            pref = nsCRT::strtok(newStr, ", ", &newStr);
+        }
 
-        rv = createKeyedServer(pref);
-        
-        pref = nsCRT::strtok(newStr, ", ", &newStr);
     }
 
     saveKeyList();
