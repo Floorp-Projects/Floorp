@@ -308,12 +308,12 @@ public:
 
   /** 
    * JoinNodes() takes 2 nodes and merge their content|children.
-   * @param aNodeToKeep   The left node.  It will remain after the join.
-   * @param aNodeToJoin   The right node.
-   *                      There is no requirement that the two nodes be of the same type.
+   * @param aLeftNode     The left node.  It will be deleted.
+   * @param aRightNode    The right node. It will remain after the join.
    * @param aParent       The parent of aExistingRightNode
-   * @param aNodeToKeepIsFirst  if PR_TRUE, the contents|children of aNodeToKeep come before the
-   *                            contents|children of aNodeToJoin, otherwise their positions are switched.
+   *
+   *                      There is no requirement that the two nodes be of the same type.
+   *                      However, a text node can be merged only with another text node.
    */
   NS_IMETHOD JoinNodes(nsIDOMNode  *aLeftNode,
                        nsIDOMNode  *aRightNode,
