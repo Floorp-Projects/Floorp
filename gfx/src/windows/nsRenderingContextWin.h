@@ -111,6 +111,12 @@ public:
   NS_IMETHOD DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
   NS_IMETHOD FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
 
+  /** ---------------------------------------------------
+   *  See documentation in nsIRenderingContext.h
+   *	@update 05/01/00 dwc
+   */
+  NS_IMETHOD FillStdPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
+
   NS_IMETHOD DrawEllipse(const nsRect& aRect);
   NS_IMETHOD DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD FillEllipse(const nsRect& aRect);

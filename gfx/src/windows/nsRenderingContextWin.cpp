@@ -1301,6 +1301,45 @@ NS_IMETHODIMP nsRenderingContextWin :: FillPolygon(const nsPoint aPoints[], PRIn
   return NS_OK;
 }
 
+
+NS_IMETHODIMP nsRenderingContextWin :: FillStdPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
+{
+  // First transform nsPoint's into POINT's; perform coordinate space
+  // transformation at the same time
+
+  POINT pts[20];
+  POINT* pp0 = pts;
+
+  if (aNumPoints > 20)
+    pp0 = new POINT[aNumPoints];
+
+  POINT* pp = pp0;
+  const nsPoint* np = &aPoints[0];
+
+	for (PRInt32 i = 0; i < aNumPoints; i++, pp++, np++)
+	{
+		pp->x = np->x;
+		pp->y = np->y;
+		mTranMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
+	}
+
+  // Fill the polygon
+  SetupSolidBrush();
+
+  if (NULL == mNullPen)
+    mNullPen = ::CreatePen(PS_NULL, 0, 0);
+
+  HPEN oldPen = (HPEN)::SelectObject(mDC, mNullPen);
+  ::Polygon(mDC, pp0, int(aNumPoints));
+  ::SelectObject(mDC, oldPen);
+
+  // Release temporary storage if necessary
+  if (pp0 != pts)
+    delete pp0;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsRenderingContextWin :: DrawEllipse(const nsRect& aRect)
 {
   return DrawEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
