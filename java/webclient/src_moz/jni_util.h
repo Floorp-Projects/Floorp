@@ -111,8 +111,11 @@ enum {
 	kHistoryWebShellError,
 	kClipboardWebShellError,
 	kFindComponentError,
-	kSearchContextError
+	kSearchContextError,
+    kGetContentViewerError,
+    kGetDOMWindowError
 };
+
 
 extern JavaVM *gVm; // defined in jni_util.cpp
 

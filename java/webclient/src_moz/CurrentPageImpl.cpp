@@ -71,6 +71,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
     nsIContentViewer* contentViewer ;
     nsresult rv = nsnull;
     rv = initContext->docShell->GetContentViewer(&contentViewer);
+    if (NS_FAILED(rv))  {
+        initContext->initFailCode = kGetContentViewerError;
+        ::util_ThrowExceptionToJava(env, "Exception: cant get ContentViewer from DocShell");
+        return;
+    }
+    
     nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_QueryInterface(contentViewer));
     rv = contentViewerEdit->CopySelection();
  
@@ -101,7 +107,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
   nsCOMPtr<nsIInterfaceRequestor> interfaceRequestor(do_QueryInterface(initContext->docShell));
   nsCOMPtr<nsIDOMWindow> domWindow;
   rv = interfaceRequestor->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWindow));
- 
+  if (NS_FAILED(rv))  {
+      initContext->initFailCode = kGetDOMWindowError;
+      ::util_ThrowExceptionToJava(env, "Exception: cant get DOMWindow from DocShell");
+      return;
+  }
 
   nsCOMPtr<nsISupports> searchContext;
   rv = findComponent->CreateContext(domWindow, nsnull, getter_AddRefs(searchContext));
@@ -111,7 +121,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
         return;
   }
 
-    nsCOMPtr<nsISearchContext> srchcontext;
+  nsCOMPtr<nsISearchContext> srchcontext;
   rv = searchContext->QueryInterface(NS_GET_IID(nsISearchContext), getter_AddRefs(srchcontext));
   if (NS_FAILED(rv))  {
         initContext->initFailCode = kSearchContextError;
@@ -123,6 +133,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
   srchcontext->GetSearchString(& aString);
 
   PRUnichar * srchString = (PRUnichar *) ::util_GetStringChars(env, searchString);
+
+  // Check if String is NULL
+  if (nsnull == srchString) {
+      ::util_ThrowExceptionToJava(env, "Exception: NULL String passed to Find call");
+      return;
+  }
 
   srchcontext->SetSearchString(srchString);
   srchcontext->SetSearchBackwards(!forward);
@@ -320,6 +336,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
         nsIContentViewer* contentViewer ;
         nsresult rv = nsnull;
         rv = initContext->docShell->GetContentViewer(&contentViewer);
+        if (NS_FAILED(rv))  {
+            initContext->initFailCode = kGetContentViewerError;
+            ::util_ThrowExceptionToJava(env, "Exception: cant get ContentViewer from DocShell");
+            return;
+        }
+
         nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_QueryInterface(contentViewer));
         rv = contentViewerEdit->SelectAll();
         if (NS_FAILED(rv)) {
