@@ -329,9 +329,13 @@ function getFormElementValue(formElement) {
 
   else if (formElement.type == "text" &&
            formElement.getAttribute("datatype") == "nsIFileSpec") {
-    var filespec = Components.classes["component://netscape/filespec"].createInstance(Components.interfaces.nsIFileSpec);
-    filespec.nativePath = formElement.value;
-    return filespec;
+    if (formElement.value) {
+      var filespec = Components.classes["component://netscape/filespec"].createInstance(Components.interfaces.nsIFileSpec);
+      filespec.nativePath = formElement.value;
+      return filespec;
+    } else {
+      return null;
+    }
   }
 
 
@@ -365,7 +369,7 @@ function setFormElementValue(formElement, value) {
     if (value) {
       var filespec = value.QueryInterface(Components.interfaces.nsIFileSpec);
       try {
-      formElement.value = filespec.nativePath;
+        formElement.value = filespec.nativePath;
       } catch (ex) {
         dump("Still need to fix uninitialized filespec problem!\n");
       }
