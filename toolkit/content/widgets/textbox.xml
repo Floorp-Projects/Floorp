@@ -17,14 +17,22 @@
     </resources>
     
     <content>
-      <xul:hbox class="textbox-input-box" flex="1">
-        <children/>
+      <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context">
         <html:input class="textbox-input" flex="1" anonid="input"
                     xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex,accesskey"/>
       </xul:hbox>
     </content>
     
-    <implementation>
+    <implementation implements="nsIAccessibleProvider, nsIDOMXULTextboxElement">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULTextBoxAccessible(this);
+          ]]>
+        </getter>
+      </property>
+
       <field name="mInputField">null</field>
       
       <property name="inputField" readonly="true">
@@ -39,7 +47,7 @@
                                   onget="return this.inputField.value;"/>
       <property name="type"       onset="this.inputField.type = val; return val;"
                                   onget="return this.inputField.type;"/>
-      <property name="maxlength"  onset="this.inputField.maxlength = val; return val;"
+      <property name="maxLength"  onset="this.inputField.maxlength = val; return val;"
                                   onget="return this.inputField.maxlength;"/>
       <property name="disabled"   onset="this.inputField.disabled = val;
                                          if (val) this.setAttribute('disabled', 'true');
@@ -51,7 +59,7 @@
                                          if (val) this.setAttribute('readonly', 'true');
                                          else this.removeAttribute('readonly'); return val;"
                                   onget="return this.inputField.readonly;"/>
-      
+
       <method name="select">
         <body>
           this.inputField.select();
@@ -100,46 +108,58 @@
       </handler>
     </handlers>    
   </binding>
-  
-  <binding id="timed-textbox" extends="chrome://global/content/bindings/textbox.xml#textbox">
-    <content>
-      <xul:hbox class="textbox-input-box" flex="1">
-        <html:input class="textbox-input" flex="1" anonid="input"
-                    xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex"/>
-      </xul:hbox>
-    </content>
+
+  <binding id="timed-textbox" extends="chrome://global/content/widgets/textbox.xml#textbox">
     <implementation>
       <field name="_timer">null</field>
-      <property name="callback"
-                onset="this.setAttribute('callback', val); return val;"
-                onget="return this.getAttribute('callback');"/>
       <property name="timeout"
                 onset="this.setAttribute('timeout', val); return val;"
-                onget="var t = parseInt(this.getAttribute('timeout')); return t ? t : 0;"/>
+                onget="return parseInt(this.getAttribute('timeout')) || 0;"/>
+      <property name="value">
+        <getter>
+          return this.inputField.value;
+        </getter>
+        <setter>
+          <![CDATA[
+            this.inputField.value = val;
+            if (this._timer)
+              clearTimeout(this._timer);
+            this._fireCommand(this);
+            return val;
+          ]]>
+        </setter>
+      </property>
+      <method name="_fireCommand">
+        <parameter name="me"/>
+        <body>
+          <![CDATA[
+            me._timer = null;
+            me.doCommand();
+          ]]>
+        </body>
+      </method>
     </implementation>    
     <handlers>
       <handler event="input">
         <![CDATA[
           if (this._timer)
             clearTimeout(this._timer);
-          this._timer = setTimeout(this.callback, this.timeout);
+          this._timer = this.timeout && setTimeout(this._fireCommand, this.timeout, this);
         ]]>
       </handler>
-      <handler event="keypress">
+      <handler event="keypress" keycode="VK_RETURN">
         <![CDATA[
-          if (event.keyCode == 13) {
-            if (this._timer)
-              clearTimeout(this._timer);
-            eval(this.callback);
-          }
+          if (this._timer)
+            clearTimeout(this._timer);
+          this._fireCommand(this);
         ]]>
       </handler>
     </handlers>
   </binding>
 
-  <binding id="textarea" extends="chrome://global/content/bindings/textbox.xml#textbox">
+  <binding id="textarea" extends="chrome://global/content/widgets/textbox.xml#textbox">
     <content>
-      <xul:hbox class="textbox-input-box" flex="1">
+      <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context">
         <html:textarea class="textbox-textarea" flex="1" anonid="input"
                        xbl:inherits="onfocus,onblur,value,disabled,rows,cols,readonly,wrap"/>
       </xul:hbox>
@@ -152,8 +172,9 @@
       <xul:menupopup onpopupshowing="if (document.commandDispatcher.focusedElement != this.parentNode.firstChild) 
                                        this.parentNode.firstChild.focus();
                                      this.parentNode.doPopupItemEnabling(this);"
-                     oncommand="this.parentNode.doCommand(event.originalTarget.getAttribute('cmd'));">
+                     oncommand="this.parentNode.doCommand(event.originalTarget.getAttribute('cmd'));event.preventBubble();">
         <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"/>
+        <xul:menuitem label="&redoCmd.label;" accesskey="&redoCmd.accesskey;" cmd="cmd_redo"/>
         <xul:menuseparator/>
         <xul:menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" cmd="cmd_cut"/>
         <xul:menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" cmd="cmd_copy"/>
