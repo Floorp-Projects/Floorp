@@ -94,7 +94,8 @@ public:
     virtual nsresult
     AddWidgetItem(nsIContent* aWidgetElement,
                   nsIRDFResource* aProperty,
-                  nsIRDFResource* aValue) = 0;
+                  nsIRDFResource* aValue, 
+                  PRInt32 naturalOrderPos) = 0;
 
     virtual PRBool
     IsWidgetProperty(nsIContent* aElement, nsIRDFResource* aProperty);
@@ -108,6 +109,9 @@ public:
     PRBool
     IsWidgetItemElement(nsIContent* aElement);
  
+    PRBool
+    IsWidgetInsertionRootElement(nsIContent* aElement);
+
     nsresult
     GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aResource);
 
@@ -156,6 +160,7 @@ protected:
 
     static nsIAtom* kContainerAtom;
     static nsIAtom* kItemContentsGeneratedAtom;
+    static nsIAtom* kNaturalOrderPosAtom;
     static nsIAtom* kIdAtom;
     static nsIAtom* kOpenAtom;
     static nsIAtom* kResourceAtom;

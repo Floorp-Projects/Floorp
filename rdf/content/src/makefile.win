@@ -36,6 +36,8 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsRDFDOMNodeList.obj          \
         .\$(OBJDIR)\nsRDFHTMLBuilder.obj          \
         .\$(OBJDIR)\nsRDFElement.obj              \
+		.\$(OBJDIR)\nsRDFGenericBuilder.obj       \
+		.\$(OBJDIR)\nsRDFMenuBuilder.obj          \
         .\$(OBJDIR)\nsRDFTreeBuilder.obj          \
         .\$(OBJDIR)\nsRDFXULBuilder.obj           \
         .\$(OBJDIR)\nsXULDocument.obj             \
