@@ -189,7 +189,7 @@ void txXSLKey::indexTree(Node* aNode, NamedMap* aMap)
     // check if the nodes attributes matches
     NamedNodeMap* attrs = aNode->getAttributes();
     if (attrs) {
-        for (PRUint32 i=0; i<attrs->getLength(); i++) {
+        for (UInt32 i=0; i<attrs->getLength(); i++) {
             testNode(attrs->item(i), aMap);
         }
     }
