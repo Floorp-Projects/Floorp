@@ -44,7 +44,6 @@
   <groupbox>
     <caption label="&header2.label;"/>
     <vbox flex="1">
-      <description>&homePageIntro.label;</description>
       <hbox align="center">
         <label value="&location.label;" accesskey="&location.accesskey;" control="browserStartupHomepage"/>
         <textbox id="browserStartupHomepage" type="autocomplete" flex="1" 
