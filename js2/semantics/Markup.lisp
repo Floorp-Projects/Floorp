@@ -719,26 +719,29 @@
 
 ; Return string converted from dash-separated-uppercase-words to mixed case,
 ; with the first character capitalized if capitalize is true.
-; The string should contain only letters, dashes, and numbers.
+; The string should contain only letters, dashes, numbers, and $ or _.
+; Any # characters in the string are ignored.
 (defun string-to-mixed-case (string &optional capitalize)
   (let* ((length (length string))
          (dst-string (make-array length :element-type #-mcl 'character #+mcl 'base-character :fill-pointer 0)))
     (dotimes (i length)
       (let ((char (char string i)))
-        (if (eql char #\-)
+        (cond
+         ((eql char #\-)
           (if capitalize
             (error "Double capitalize")
-            (setq capitalize t))
-          (progn
-            (cond
-             ((upper-case-p char)
-              (if capitalize
-                (setq capitalize nil)
-                (setq char (char-downcase char))))
-             ((digit-char-p char))
-             ((member char '(#\$ #\_)))
-             (t (error "Bad string-to-mixed-case character ~A" char)))
-            (vector-push char dst-string)))))
+            (setq capitalize t)))
+         ((eql char #\#))
+         (t
+          (cond
+           ((upper-case-p char)
+            (if capitalize
+              (setq capitalize nil)
+              (setq char (char-downcase char))))
+           ((digit-char-p char))
+           ((member char '(#\$ #\_)))
+           (t (error "Bad string-to-mixed-case character ~A" char)))
+          (vector-push char dst-string)))))
     dst-string))
 
 
