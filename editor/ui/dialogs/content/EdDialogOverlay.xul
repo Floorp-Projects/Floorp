@@ -45,8 +45,7 @@
 <button
   id        = "AdvancedEditButton"
   class     = "dialog"
-  oncommand = "onAdvancedEdit()"
-  value     = "&AdvancedEditButton.label;"
+  label     = "&AdvancedEditButton.label;"
   tooltip   = "aTooltip" 
   tooltiptext="&AdvancedEditButton.tooltip;"/>
 
@@ -54,7 +53,7 @@
   id        = "AdvancedEditButton2" 
   class     = "dialog" 
   oncommand = "onAdvancedEdit()" 
-  value     = "&AdvancedEditButton.label;"
+  label     = "&AdvancedEditButton.label;"
   tooltip   = "aTooltip"
   tooltiptext="&AdvancedEditButton.tooltip;"/>
 
@@ -62,6 +61,6 @@
   id        = "ChooseFile" 
   class     = "dialog" 
   oncommand = "chooseFile()"
-  value     = "&chooseButton.label;"/>
+  label     = "&chooseButton.label;"/>
 
 </overlay>    
