@@ -770,11 +770,18 @@ morkWriter::DirtyAll(morkEnv* ev)
   return ev->Good();
 }
 
+
 mork_bool
 morkWriter::OnNothingDone(morkEnv* ev)
 {
   mWriter_Incremental = !mWriter_NeedDirtyAll; // opposites
   
+  if (!mWriter_Store->IsStoreDirty())
+  {
+    mWriter_Phase = morkWriter_kPhaseWritingDone;
+    return morkBool_kTrue;
+  }
+
   // morkStream* stream = mWriter_Stream;
   if ( mWriter_NeedDirtyAll )
     this->DirtyAll(ev);
