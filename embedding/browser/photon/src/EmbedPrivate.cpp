@@ -23,11 +23,11 @@
 #include <nsIDocShell.h>
 #include <nsIURI.h>
 #include <nsIWebProgress.h>
-#include <nsIURIFixup.h>
 #include <nsIDOMDocument.h>
 #include <nsIDOMNodeList.h>
 #include <nsISelection.h>
 #include "nsReadableUtils.h"
+#include "nsNetUtil.h"
 #include "nsIWidget.h"
 
 // for do_GetInterface
@@ -57,7 +57,6 @@
 #include <nsIWebBrowserSetup.h>
 #include "nsIWebBrowserPrint.h"
 #include "nsIClipboardCommands.h"
-#include "docshell/nsCDefaultURIFixup.h"
 
 // for the focus hacking we need to do
 #include <nsIFocusController.h>
@@ -216,8 +215,6 @@ EmbedPrivate::Setup()
 	// get a handle on the navigation object
 	mNavigation = do_QueryInterface(webBrowser);
 
-	mFixup = do_GetService(NS_URIFIXUP_CONTRACTID);
-
 	// Create our session history object and tell the navigation object
 	// to use it.  We need to do this before we create the web browser
 	// window.
@@ -324,7 +321,6 @@ EmbedPrivate::Destroy(void)
 
   // release navigation
   mNavigation = nsnull;
-  mFixup = nsnull;
 
   //m_PrintSettings = nsnull;
 
@@ -608,37 +604,6 @@ EmbedPrivate::SaveAs(char *fname, char *dirname)
 	if (mWindow)
 		return (mWindow->SaveAs(fname, dirname));
 	return (1);
-}
-
-int
-EmbedPrivate::SaveURI(char *aURI, char *fname)
-{
-/* ATENTIE it was */
-#if 0	
-	if (mWindow && mFixup)
-	{
-		nsIURI* uri;
-
-		mFixup->CreateFixupURI(nsDependentCString(aURI), 0, &(uri));
-		return (mWindow->SaveURI(uri, fname));
-	}
-#endif
-
-	if (mWindow && mFixup)
-	{
-		nsIURI* uri;
-		mFixup->CreateFixupURI( NS_LITERAL_CSTRING(aURI), 0, &(uri));
-		return (mWindow->SaveURI(uri, fname));
-	}
-
-	return (1);
-}
-
-void
-EmbedPrivate::CancelSaveURI()
-{	
-	if (mWindow)
-		mWindow->CancelSaveURI();
 }
 
 nsresult

@@ -81,8 +81,6 @@ class EmbedPrivate {
   void        SelectAll  (void);
   void        Clear  (void);
   int    	  SaveAs(char *fname,char *dirname);
-  int 		  SaveURI(char *uri, char *fname);
-  void 		  CancelSaveURI();
   void 		  Print(PpPrintContext_t *pc);
   PRBool 	  CanGoBack();
   PRBool 	  CanGoForward();
@@ -134,7 +132,6 @@ class EmbedPrivate {
   nsCOMPtr<nsISupports>          mPrintGuard;
 
   nsCOMPtr<nsIWebNavigation>     mNavigation;
-  nsCOMPtr<nsIURIFixup>     mFixup;
   nsCOMPtr<nsISHistory>          mSessionHistory;
 
   // our event receiver

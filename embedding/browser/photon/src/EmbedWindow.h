@@ -63,8 +63,6 @@ class EmbedWindow : public nsIWebBrowserChrome,
   nsresult CreateWindow    (void);
   void     ReleaseChildren (void);
   int 	   SaveAs(char *fname,char *dirname);
-  int 	   SaveURI(nsIURI *uri, char *fname);
-  void 	   CancelSaveURI();
 
   NS_DECL_ISUPPORTS
 

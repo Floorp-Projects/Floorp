@@ -206,31 +206,6 @@ EmbedWindow::SaveAs(char *fname, char *dirname)
   return 0;
 }
 
-int
-EmbedWindow::SaveURI(nsIURI *uri, char *fname)
-{
-  PtMozillaWidget_t *w = (PtMozillaWidget_t *)(mOwner->mOwningWidget);
-  nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(mWebBrowser));
-  if (persist)
-  {
-    nsCOMPtr<nsILocalFile> file;
-    NS_NewNativeLocalFile(nsDependentCString(fname), PR_TRUE, getter_AddRefs(file));
-    persist->SetProgressListener((nsIWebProgressListener*) w->EmbedRef->mProgress);
-    persist->SaveURI(uri, nsnull, nsnull, nsnull, nsnull, file);
-    return (0);
-  }
-  return 1;
-}
-
-void
-EmbedWindow::CancelSaveURI()
-{
-  nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(mWebBrowser));
-  persist->SetProgressListener(nsnull);
-  persist->CancelSave();
-}
-
-
 NS_IMETHODIMP
 EmbedWindow::GetWebBrowser(nsIWebBrowser **aWebBrowser)
 {
@@ -489,6 +464,7 @@ NS_IMETHODIMP
 EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
 			   const PRUnichar *aTipText)
 {
+#if 0
   nsAutoString tipText ( aTipText );
   const char* tipString = ToNewCString(tipText), *font = "TextFont08";
   PtArg_t args[10];
@@ -537,6 +513,7 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
 
   nsMemory::Free( (void*)tipString );
 
+#endif
   return NS_OK;
 }
 
@@ -640,47 +617,49 @@ NS_IMETHODIMP EmbedWindow::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent
 
     PtInvokeCallbackList(cb, (PtWidget_t *)moz, &cbinfo);
 
-    /* store the url we clicked on */
-    nsAutoString rightClickUrl;
-
-    if (aContextFlags & CONTEXT_IMAGE)
+    if( aContextFlags & CONTEXT_IMAGE )
     {
+    		/* store the url we clicked on */
+    		nsAutoString rightClickUrl;
+
         // Get the IMG SRC
         nsresult rv = NS_OK;
         nsCOMPtr<nsIDOMHTMLImageElement> imgElement(do_QueryInterface(aNode, &rv));
-        if (NS_FAILED(rv))
-            return NS_OK;
+        if(NS_FAILED(rv)) return NS_OK;
 
         rv = imgElement->GetSrc(rightClickUrl);
-        if(NS_FAILED(rv)) 
-        {
-            if( moz->rightClickUrl ) 
-                free( moz->rightClickUrl );
-            moz->rightClickUrl = NULL;
-            return NS_OK;
-        }
+
+    		if( moz->rightClickUrl_image ) free( moz->rightClickUrl_image );
+
+        if(NS_FAILED(rv))  moz->rightClickUrl_image = NULL;
+    		else moz->rightClickUrl_image = ToNewCString(rightClickUrl);
     }
-    else
+
+		if( aContextFlags & CONTEXT_LINK )
     {
+				/* CONTEXT_IMAGE|CONTEXT_LINK is set for an <IMG>  with an <A> as an ancestor */
+				if( aContextFlags & CONTEXT_IMAGE ) {
+					nsIDOMNode *parent;
+					aNode->GetParentNode( &parent );
+					if( parent ) aNode = parent;
+					}
+
+    		/* store the url we clicked on */
+    		nsAutoString rightClickUrl;
+
         nsresult rv = NS_OK;
         nsCOMPtr<nsIDOMHTMLAnchorElement> linkElement(do_QueryInterface(aNode, &rv));
-        if(NS_FAILED(rv)) 
-            return NS_OK;
+
+        if(NS_FAILED(rv)) return NS_OK;
 
         // Note that this string is in UCS2 format
         rv = linkElement->GetHref( rightClickUrl );
-        if(NS_FAILED(rv)) 
-        {
-            if( moz->rightClickUrl ) 
-                free( moz->rightClickUrl );
-            moz->rightClickUrl = NULL;
-            return NS_OK;
-        }
-    }
 
-    if( moz->rightClickUrl ) 
-        free( moz->rightClickUrl );
-    moz->rightClickUrl = ToNewCString(rightClickUrl);
+				if( moz->rightClickUrl_link ) free( moz->rightClickUrl_link );
+
+        if(NS_FAILED(rv)) moz->rightClickUrl_link = NULL;
+				else moz->rightClickUrl_link = ToNewCString(rightClickUrl);
+    }
 
     return NS_OK;
 }
