@@ -978,12 +978,7 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
     //we need to notify explicitly the flag change because it failed when we did AddSubfolder
     child->OnFlagChange(mFlags);
     child->SetPrettyName(folderNameStr.get());  //because empty trash will create a new trash folder
-    nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
-    nsCOMPtr<nsISupports> folderSupports(do_QueryInterface(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this), &rv));
-    if(childSupports && NS_SUCCEEDED(rv))
-    {
-      NotifyItemAdded(folderSupports, childSupports, "folderView");
-    }
+    NotifyItemAdded(child, "folderView");
   }
   return rv;
 }
@@ -1349,13 +1344,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
       {
         SetParent(nsnull);
         parentFolder->PropagateDelete(this, PR_FALSE, msgWindow);
-        
-        nsCOMPtr<nsISupports> newFolderSupports = do_QueryInterface(newFolder);
-        nsCOMPtr<nsISupports> parentSupports = do_QueryInterface(parentFolder);
-        if(newFolderSupports && parentSupports)
-        {
-          NotifyItemAdded(parentSupports, newFolderSupports, "folderView");
-        }
+        parentFolder->NotifyItemAdded(newFolder, "folderView");
       }
       folderRenameAtom = do_GetAtom("RenameCompleted");
       newFolder->NotifyFolderEvent(folderRenameAtom);
@@ -2119,11 +2108,7 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
   {
     //notifying the "folder" that was dragged and dropped has been created.
     //no need to do this for its subfolders - isMoveFolder will be true for "folder"
-    nsCOMPtr<nsISupports> supports = do_QueryInterface(newMsgFolder);
-    nsCOMPtr <nsISupports> parentSupports = do_QueryInterface((nsIMsgLocalMailFolder*)this);
-    
-    if (supports && parentSupports)
-      NotifyItemAdded(parentSupports, supports, "folderView");
+    NotifyItemAdded(newMsgFolder, "folderView");
     
     nsCOMPtr<nsIMsgFolder> msgParent;
     srcFolder->GetParentMsgFolder(getter_AddRefs(msgParent));

@@ -928,15 +928,9 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
     nsCOMPtr <nsIAtom> folderCreateAtom;
     if(NS_SUCCEEDED(rv) && child)
     {
-      nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
-      nsCOMPtr<nsISupports> folderSupports;
-      rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
-      if(childSupports && NS_SUCCEEDED(rv))
-      {
-        NotifyItemAdded(folderSupports, childSupports, "folderView");
-        folderCreateAtom = do_GetAtom("FolderCreateCompleted");
-        child->NotifyFolderEvent(folderCreateAtom);
-      }
+      NotifyItemAdded(child, "folderView");
+      folderCreateAtom = do_GetAtom("FolderCreateCompleted");
+      child->NotifyFolderEvent(folderCreateAtom);
     }
     else
     {
@@ -7268,16 +7262,9 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
         if (oldImapFolder)
           oldImapFolder->SetVerifiedAsOnlineFolder(PR_FALSE);
 
-        nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
-        nsCOMPtr<nsISupports> parentSupports;
-        rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(parentSupports));
-
-        if(childSupports && NS_SUCCEEDED(rv))
-        {
-          NotifyItemAdded(parentSupports, childSupports, "folderView");
-        }
-	  }
-	}     
+        NotifyItemAdded(child, "folderView");
+      }
+    }     
     return rv;
 }
 
