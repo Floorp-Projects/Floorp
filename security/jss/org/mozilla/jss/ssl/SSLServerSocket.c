@@ -44,6 +44,10 @@
 #include <pk11util.h>
 #include "jssl.h"
 
+#ifdef WINNT
+#include <private/pprio.h>
+#endif 
+
 JNIEXPORT void JNICALL
 Java_org_mozilla_jss_ssl_SSLServerSocket_socketListen
     (JNIEnv *env, jobject self, jint backlog)
@@ -100,6 +104,17 @@ Java_org_mozilla_jss_ssl_SSLServerSocket_socketAccept
               case PR_PENDING_INTERRUPT_ERROR:
               case PR_IO_PENDING_ERROR:
                 break; /* out of the switch and loop again */
+#ifdef WINNT
+              case PR_IO_TIMEOUT_ERROR:
+                    /*
+                     * if timeout was set, and the PR_Accept() timed out,
+                     * then cancel the I/O on the port, otherwise PR_Accept()
+                     * will always return PR_IO_PENDING_ERROR on subsequent
+                     * calls
+                     */
+                      PR_NT_CancelIo(sock->fd);
+                     /* don't break here, let it fall through */
+#endif 
               default:
                 JSSL_throwSSLSocketException(env,
                     "Failed to accept new connection");

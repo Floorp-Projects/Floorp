@@ -1,4 +1,4 @@
-/* 
+ /* 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -43,6 +43,11 @@
 #include <pk11util.h>
 #include "_jni/org_mozilla_jss_ssl_SSLSocket.h"
 #include "jssl.h"
+
+
+#ifdef WINNT
+#include <private/pprio.h>
+#endif 
 
 #ifdef WIN32
 #include <winsock.h>
@@ -704,14 +709,29 @@ Java_org_mozilla_jss_ssl_SSLSocket_socketRead(JNIEnv *env, jobject self,
         } else {
             /* some error, but is it recoverable? */
             PRErrorCode err = PR_GetError();
+
+
             if( err == PR_PENDING_INTERRUPT_ERROR ||
                 err == PR_IO_PENDING_ERROR )
             {
                 /* just try again */
             } else {
+#ifdef WINNT
+                if (err == PR_IO_TIMEOUT_ERROR ) {
+                /*
+                 * if timeout was set, and the PR_Accept() timed out,
+                 * then cancel the I/O on the port, otherwise PR_Accept()
+                 * will always return PR_IO_PENDING_ERROR on subsequent
+                 * calls
+                 */
+                    PR_NT_CancelIo(sock->fd);
+                    JSSL_throwSSLSocketException(env, "Operation timed out");
+                    goto finish;
+                }
+#endif 
                 /* unrecoverable error */
                 JSSL_throwSSLSocketException(env,
-                    "Error reading from socket");
+                   "Error reading from socket");
                 goto finish;
             }
         }
@@ -792,6 +812,15 @@ Java_org_mozilla_jss_ssl_SSLSocket_socketWrite(JNIEnv *env, jobject self,
             {
                 /* just try again */
             } else if( err == PR_IO_TIMEOUT_ERROR ) {
+#ifdef WINNT
+                /*
+                 * if timeout was set, and the PR_Accept() timed out,
+                 * then cancel the I/O on the port, otherwise PR_Accept()
+                 * will always return PR_IO_PENDING_ERROR on subsequent
+                 * calls
+                 */
+                PR_NT_CancelIo(sock->fd);
+#endif 
                 JSSL_throwSSLSocketException(env, "Operation timed out");
                 goto finish;
             } else {
