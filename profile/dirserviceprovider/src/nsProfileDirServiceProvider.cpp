@@ -155,6 +155,22 @@ nsProfileDirServiceProvider::Register()
   return directoryService->RegisterProvider(this);
 }
 
+nsresult
+nsProfileDirServiceProvider::Shutdown()
+{
+  if (!mNotifyObservers)
+    return NS_OK;
+    
+  nsCOMPtr<nsIObserverService> observerService = 
+           do_GetService("@mozilla.org/observer-service;1");
+  if (!observerService)
+    return NS_ERROR_FAILURE;
+    
+  NS_NAMED_LITERAL_STRING(context, "shutdown-persist");
+  observerService->NotifyObservers(nsnull, "profile-before-change", context.get());        
+  return NS_OK;
+}
+
 //*****************************************************************************
 // nsProfileDirServiceProvider::nsISupports
 //*****************************************************************************   
