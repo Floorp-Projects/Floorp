@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vi:tw=2:ts=2:et:sw=2:
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -798,7 +799,7 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
       rv = mPluginManager->QueryInterface(aIID, aInstancePtr); 
 
    if (!*aInstancePtr || NS_FAILED(rv))
-     return QueryInterface(aIID, aInstancePtr);
+     return nsDocShell::GetInterface(aIID,aInstancePtr);
    else
      return rv;
 }
@@ -3280,20 +3281,6 @@ nsWebShell::OnStatus(nsIChannel* channel, nsISupports* ctxt,
     if (nsnull != mDocLoaderObserver)
     {
         nsAutoString temp(aMsg);
-#ifdef DEBUG_gagan
-
-#ifdef XP_UNIX
-        printf("\033[33m"); // Start yellow
-#endif
-
-        char* tmp = temp.ToNewCString();
-        printf("%s\n",tmp);
-        CRTFREEIF(tmp);
-#ifdef XP_UNIX
-        printf("\033[0m"); // End colors
-#endif
-
-#endif // DEBUG_gagan
         nsresult rv =  mDocLoaderObserver->OnStatusURLLoad(
             mDocLoader,
             channel,
