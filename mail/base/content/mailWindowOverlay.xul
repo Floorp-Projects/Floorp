@@ -1697,12 +1697,12 @@
 
       <toolbaritem id="button-junk">       
         <deck id="junk-deck" observes="button_junk">
-          <toolbarbutton class="toolbarbutton-1"
+          <toolbarbutton class="toolbarbutton-1 junk-button"
                    label="&junkButton.label;"
                    tooltiptext="&junkButton.tooltip;" 
                    observes="button_junk"
                    oncommand="goDoCommand('button_junk')"/>
-          <toolbarbutton class="toolbarbutton-1"
+          <toolbarbutton class="toolbarbutton-1 junk-button" 
                    label="&notJunkButton.label;"
                    tooltiptext="&notJunkButton.tooltip;" 
                    observes="button_junk"

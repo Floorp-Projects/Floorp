@@ -142,15 +142,15 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(60px 210px 90px 180px) !important;
 } 
 
-#button-junk{
+.junk-button {
   -moz-image-region: rect(0px 240px 30px 210px);
 }
 
-#button-junk:hover {
+.junk-button:hover {
   -moz-image-region: rect(30px 240px 60px 210px);
 }
 
-#button-junk[disabled="true"] {
+.junk-button[disabled="true"] {
   -moz-image-region: rect(60px 240px 90px 210px) !important;
 }
 
