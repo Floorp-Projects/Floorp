@@ -1128,8 +1128,7 @@ PRBool nsNativeThemeWin::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* 
       }
      
       // Check whether background differs from default
-      const nsStyleBackground* ourBG;
-      ::GetStyleData(aFrame, &ourBG);
+      const nsStyleBackground* ourBG = aFrame->GetStyleBackground();
 
       if (ourBG->mBackgroundColor != defaultBGColor ||
           ourBG->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT ||
@@ -1137,8 +1136,7 @@ PRBool nsNativeThemeWin::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* 
         return PR_TRUE;
       
       // Check whether border style or color differs from default
-      const nsStyleBorder* ourBorder;
-      ::GetStyleData(aFrame, &ourBorder);
+      const nsStyleBorder* ourBorder = aFrame->GetStyleBorder();
 
       for (PRInt32 i = 0; i < 4; i++) {
         if (ourBorder->GetBorderStyle(i) != defaultBorderStyle)            
@@ -1259,9 +1257,8 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsIDeviceContext* aContext,
 {
   switch (aWidgetType) {
     case NS_THEME_BUTTON: {
-      const nsStyleUserInterface *uiData = nsnull;
-      ::GetStyleData(aFrame, &uiData);      
-      if (uiData && uiData->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE) {
+      const nsStyleUserInterface *uiData = aFrame->GetStyleUserInterface();
+      if (uiData->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE) {
         // use different padding for non-focusable buttons
         (*aResult).top = (*aResult).left = 1;
         (*aResult).bottom = (*aResult).right = 2;
@@ -1415,10 +1412,9 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       else {
         if (contentState & NS_EVENT_STATE_ACTIVE && contentState & NS_EVENT_STATE_HOVER) {
           aState |= DFCS_PUSHED;
-          const nsStyleUserInterface *uiData = nsnull;
-          ::GetStyleData(aFrame, &uiData);
+          const nsStyleUserInterface *uiData = aFrame->GetStyleUserInterface();
           // The down state is flat if the button is focusable
-          if (uiData && uiData->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL) {
+          if (uiData->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL) {
             nsCOMPtr<nsIContent> content;
             aFrame->GetContent(getter_AddRefs(content));
             if (!content->IsContentOfType(nsIContent::eHTML))
