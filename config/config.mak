@@ -201,6 +201,11 @@ CFLAGS = $(CFLAGS) -FR
 CFLAGS=$(CFLAGS) -DSTANDALONE_IMAGE_LIB
 !endif
 
+# Crash-reporting system.  http://www.fullcirclesoftware.com
+!ifdef MOZ_FULLCIRCLE
+CFLAGS=$(CFLAGS) -DMOZ_FULLCIRCLE
+!endif
+
 !ifdef MODULAR_NETLIB
 CFLAGS=$(CFLAGS) -DMODULAR_NETLIB -DNS_MT_SUPPORTED -DNETLIB_THREAD -DNS_NET_FILE -DCookieManagement -DSingleSignon
 !else
