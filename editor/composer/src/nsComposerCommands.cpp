@@ -43,11 +43,10 @@
 
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
-#include "nsIEditingSession.h"
-
 #include "nsIHTMLAbsPosEditor.h"
 
 #include "nsIDOMElement.h"
+#include "nsIAtom.h"
 
 #include "nsIClipboard.h"
 

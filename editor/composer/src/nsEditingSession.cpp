@@ -50,6 +50,7 @@
 #include "nsITransactionManager.h"
 
 #include "nsIEditorDocShell.h"
+#include "nsIDocShell.h"
 
 #include "nsIChannel.h"
 #include "nsIWebProgress.h"
@@ -67,13 +68,13 @@
 #include "nsComposerCommandsUpdater.h"
 #include "nsEditingSession.h"
 
-#include "nsIComponentManager.h"
-#include "nsIInterfaceRequestor.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
 
 #include "nsIContentViewer.h"
 #include "nsISelectionController.h"
 #include "nsIPlaintextEditor.h"
+#include "nsIEditor.h"
 
 #include "nsIDOMNSDocument.h"
 #include "nsIScriptContext.h"

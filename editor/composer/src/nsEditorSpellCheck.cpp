@@ -55,7 +55,7 @@
 #include "nsIChromeRegistry.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsComposeTxtSrvFilter.h"
+#include "nsITextServicesFilter.h"
 
 NS_IMPL_ISUPPORTS1(nsEditorSpellCheck, nsIEditorSpellCheck);
 

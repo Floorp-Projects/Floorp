@@ -25,17 +25,17 @@
 
 #include "nsIDOMWindow.h"
 #include "nsComposerCommandsUpdater.h"
-#include "nsIServiceManager.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIDOMDocument.h"
 #include "nsISelection.h"
 #include "nsIScriptGlobalObject.h"
 
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsLiteralString.h"
 
 #include "nsICommandManager.h"
 #include "nsPICommandUpdater.h"
 
-#include "nsIEditor.h"
 #include "nsIDocShell.h"
 #include "nsITransactionManager.h"
 

@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIServiceManager.h"
+#include "nsIServiceManagerUtils.h"
 #include "nsIParserService.h"
 #include "nsEditorParserObserver.h"
 

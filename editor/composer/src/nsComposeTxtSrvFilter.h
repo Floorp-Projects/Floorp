@@ -42,11 +42,9 @@
 #include "nsITextServicesFilter.h"
 #include "nsIAtom.h"
 
-class nsIContent;
-
 /**
  * This class implements a filter interface, that enables
- * those usnig it to ski;p over certain nodes when traversing content
+ * those using it to skip over certain nodes when traversing content
  *
  * This filter is used to skip over various form control nodes and
  * mail's cite nodes

@@ -45,6 +45,7 @@
 #include "nsEditorSpellCheck.h"     // for the CID
 #include "nsEditorService.h"
 #include "nsComposeTxtSrvFilter.h"
+#include "nsIController.h"
 #include "nsIControllerContext.h"
 #include "nsIControllerCommandTable.h"
 
