@@ -36,6 +36,7 @@
 #include "nsString.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMHTMLCollection.h"
@@ -47,6 +48,7 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
+static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kINSHTMLDocumentIID, NS_IDOMNSHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIEventIID, NS_IDOMEVENT_IID);
 static NS_DEFINE_IID(kIHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
@@ -858,6 +860,7 @@ NSHTMLDocumentOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
     return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
   }
 
+  nsIDOMDocument* nativeRet;
   // If there's no private data, this must be the prototype, so ignore
   if (!nativeThis) {
     return JS_TRUE;
@@ -873,12 +876,12 @@ NSHTMLDocumentOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
       return nsJSUtils::nsReportError(cx, obj, result);
     }
 
-    result = nativeThis->Open(cx, argv+0, argc-0);
+    result = nativeThis->Open(cx, argv+0, argc-0, &nativeRet);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
 
-    *rval = JSVAL_VOID;
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
   }
 
   return JS_TRUE;

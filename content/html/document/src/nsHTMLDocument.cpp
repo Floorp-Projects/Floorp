@@ -2157,7 +2157,8 @@ nsHTMLDocument::Open()
 }
 
 NS_IMETHODIMP    
-nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
+nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc,
+                     nsIDOMDocument** aReturn)
 {
   nsresult result = NS_OK;
   nsIURI* sourceURL;
@@ -2175,6 +2176,8 @@ nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
     NS_RELEASE(sourceURL);
   }
 
+  QueryInterface(NS_GET_IID(nsIDOMDocument), (void **)aReturn);
+
   return result;
 }
 
@@ -2183,7 +2186,9 @@ nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
 NS_IMETHODIMP    
 nsHTMLDocument::Clear(JSContext* cx, jsval* argv, PRUint32 argc)
 {
-  return Open(cx, argv, argc);
+  nsCOMPtr<nsIDOMDocument> doc;
+
+  return Open(cx, argv, argc, getter_AddRefs(doc));
 }
 
 NS_IMETHODIMP    
@@ -2294,22 +2299,26 @@ nsHTMLDocument::ScriptWriteCommon(JSContext *cx,
     }
   }
 
-  if (nsnull == mParser) {
-    result = Open(cx, argv, argc);
-    if (NS_OK != result) {
+  if (!mParser) {
+    nsCOMPtr<nsIDOMDocument> doc;
+
+    result = Open(cx, argv, argc, getter_AddRefs(doc));
+    if (NS_FAILED(result)) {
       return result;
     }
   }
-  
+
   if (argc > 0) {
     PRUint32 index;
     nsAutoString str;
-    str.Truncate();
+
     for (index = 0; index < argc; index++) {
       JSString *jsstring = JS_ValueToString(cx, argv[index]);
       
-      if (nsnull != jsstring) {
-        str.Append(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsstring)), JS_GetStringLength(jsstring));
+      if (jsstring) {
+        str.Append(NS_REINTERPRET_CAST(const PRUnichar*,
+                                       JS_GetStringChars(jsstring)),
+                   JS_GetStringLength(jsstring));
       }
     }
 

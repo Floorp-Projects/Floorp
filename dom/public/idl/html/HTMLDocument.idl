@@ -39,7 +39,7 @@
      wstring getSelection();
      jsval namedItem(/* ... */);
 
-     void                      open(/* ... */);
+     Document                  open(/* ... */);
      void                      write(/* ... */);
      void                      writeln(/* ... */);
      void                      clear(/* ... */);
