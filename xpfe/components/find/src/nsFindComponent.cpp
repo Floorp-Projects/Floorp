@@ -497,6 +497,7 @@ nsFindComponent::Context::DoFind(PRBool *aDidFind)
           {
               // Match found.  Select it, remember where it was, and quit.
               txtDoc->SetSelection(foundOffset, mSearchString.Length());
+              txtDoc->ScrollSelectionIntoView();
               done = PR_TRUE;
              	*aDidFind = PR_TRUE;
               break;
