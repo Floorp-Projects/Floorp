@@ -93,6 +93,7 @@ interface nsIMsgFilterList : nsISupports {
 
     void saveToFile(in nsIOFileStream stream);
 
+    void parseCondition(in nsIMsgFilter aFilter, in string condition);
     // this is temporary so that we can save the filterlist to disk
     // without knowing where the filters were read from intially
     // (such as the filter list dialog)

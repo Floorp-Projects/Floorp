@@ -261,109 +261,16 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(const nsAString &name,
                                                  nsIMsgFolder **child)
 {
-  NS_ENSURE_ARG_POINTER(child);
-  
-  PRInt32 flags = 0;
-  nsresult rv;
-  nsCOMPtr<nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  nsCAutoString uri(mURI);
-  uri.Append('/');
-  
-  // URI should use UTF-8
-  // (see RFC2396 Uniform Resource Identifiers (URI): Generic Syntax)
-  nsCAutoString escapedName;
-  rv = NS_MsgEscapeEncodeURLPath(name, escapedName);
+  nsresult rv = nsMsgDBFolder::AddSubfolder(name, child);
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  // fix for #192780
-  // if this is the root folder
-  // make sure the the special folders
-  // have the right uri.
-  // on disk, host\INBOX should be a folder with the uri mailbox://user@host/Inbox"
-  // as mailbox://user@host/Inbox != mailbox://user@host/INBOX
-  nsCOMPtr<nsIMsgFolder> rootFolder;
-  rv = GetRootFolder(getter_AddRefs(rootFolder));
-  if (NS_SUCCEEDED(rv) && rootFolder && (rootFolder.get() == (nsIMsgFolder *)this))
-  {
-    if (nsCRT::strcasecmp(escapedName.get(), "INBOX") == 0)
-      uri += "Inbox";
-    else if (nsCRT::strcasecmp(escapedName.get(), "UNSENT%20MESSAGES") == 0)
-      uri += "Unsent%20Messages";
-    else if (nsCRT::strcasecmp(escapedName.get(), "DRAFTS") == 0)
-      uri += "Drafts";
-    else if (nsCRT::strcasecmp(escapedName.get(), "TRASH") == 0)
-      uri += "Trash";
-    else if (nsCRT::strcasecmp(escapedName.get(), "SENT") == 0)
-      uri += "Sent";
-    else if (nsCRT::strcasecmp(escapedName.get(), "TEMPLATES") == 0)
-      uri +="Templates";
-    else
-      uri += escapedName.get();
-  }
-  else
-    uri += escapedName.get();
-  
-  nsCOMPtr <nsIMsgFolder> msgFolder;
-  rv = GetChildWithURI(uri.get(), PR_FALSE/*deep*/, PR_TRUE /*case Insensitive*/, getter_AddRefs(msgFolder));  
-  if (NS_SUCCEEDED(rv) && msgFolder)
-    return NS_MSG_FOLDER_EXISTS;
-  
-  nsCOMPtr<nsIRDFResource> res;
-  rv = rdf->GetResource(uri, getter_AddRefs(res));
-  if (NS_FAILED(rv))
-    return rv;
-  
-  nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-  
-  folder->GetFlags((PRUint32 *)&flags);
-  
-  flags |= MSG_FOLDER_FLAG_MAIL;
-  
-  folder->SetParent(this);
-  
-  PRBool isServer;
-  rv = GetIsServer(&isServer);
-  
-  //Only set these is these are top level children.
-  if(NS_SUCCEEDED(rv) && isServer)
-  {
-    if(name.LowerCaseEqualsLiteral("inbox"))
-    {
-      flags |= MSG_FOLDER_FLAG_INBOX;
-      SetBiffState(nsIMsgFolder::nsMsgBiffState_Unknown);
-    }
-    else if (name.LowerCaseEqualsLiteral("trash"))
-      flags |= MSG_FOLDER_FLAG_TRASH;
-    else if (name.LowerCaseEqualsLiteral("unsent messages") ||
-      name.LowerCaseEqualsLiteral("outbox"))
-      flags |= MSG_FOLDER_FLAG_QUEUE;
-#if 0
-    // the logic for this has been moved into 
-    // SetFlagsOnDefaultMailboxes()
-    else if(name.EqualsIgnoreCase(NS_LITERAL_STRING("Sent"), nsCaseInsensitiveStringComparator()))
-      folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-    else if(name.EqualsIgnoreCase(NS_LITERAL_STRING("Drafts"), nsCaseInsensitiveStringComparator()))
-      folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
-    else if(name.EqualsIgnoreCase(NS_LITERAL_STRING("Templates"), nsCaseInsensitiveStringComparator()))
-      folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
-#endif 
-  }
-  
-  folder->SetFlags(flags);
-  
-  //at this point we must be ok and we don't want to return failure in case GetIsServer failed.
-  rv = NS_OK;
-  
-  nsCOMPtr<nsISupports> supports = do_QueryInterface(folder);
-  if(folder)
-    mSubFolders->AppendElement(supports);
-  *child = folder;
-  NS_ADDREF(*child);
-  
+  nsCOMPtr <nsIFileSpec> path;
+  // need to make sure folder exists...
+  (*child)->GetPath(getter_AddRefs(path));
+  PRBool exists;
+  rv = path->Exists(&exists);
+  if (!exists) 
+      rv = path->Touch();
+
   return rv;
 }
 

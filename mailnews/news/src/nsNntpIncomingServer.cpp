@@ -60,6 +60,7 @@
 #include "nntpCore.h"
 #include "nsIWindowWatcher.h"
 #include "nsITreeColumns.h"
+#include "nsMsgFolderFlags.h"
 
 #define INVALID_VERSION         0
 #define VALID_VERSION           1
@@ -649,28 +650,40 @@ nsNntpIncomingServer::GetNumGroupsNeedingCounts(PRInt32 *aNumGroupsNeedingCounts
 NS_IMETHODIMP
 nsNntpIncomingServer::GetFirstGroupNeedingCounts(nsISupports **aFirstGroupNeedingCounts)
 {
-	nsresult rv;
-
-	if (!aFirstGroupNeedingCounts) return NS_ERROR_NULL_POINTER;
-
-    PRBool moreFolders;
-    if (!mGroupsEnumerator) return NS_ERROR_FAILURE;
-
-	rv = mGroupsEnumerator->HasMoreElements(&moreFolders);
-	if (NS_FAILED(rv)) return rv;
-
-	if (!moreFolders) {
-		*aFirstGroupNeedingCounts = nsnull;
-    	delete mGroupsEnumerator;
-		mGroupsEnumerator = nsnull;
-		return NS_OK; // this is not an error - it just means we reached the end of the groups.
-	}
-
+  nsresult rv;
+  
+  if (!aFirstGroupNeedingCounts) return NS_ERROR_NULL_POINTER;
+  
+  PRBool moreFolders;
+  if (!mGroupsEnumerator) return NS_ERROR_FAILURE;
+  
+  rv = mGroupsEnumerator->HasMoreElements(&moreFolders);
+  if (NS_FAILED(rv)) return rv;
+  
+  if (!moreFolders) 
+  {
+    *aFirstGroupNeedingCounts = nsnull;
+    delete mGroupsEnumerator;
+    mGroupsEnumerator = nsnull;
+    return NS_OK; // this is not an error - it just means we reached the end of the groups.
+  }
+  
+  do 
+  {
     rv = mGroupsEnumerator->GetNext(aFirstGroupNeedingCounts);
-	if (NS_FAILED(rv)) return rv;
-	if (!*aFirstGroupNeedingCounts) return NS_ERROR_FAILURE;
-
-	return NS_OK;
+    if (NS_FAILED(rv)) return rv;
+    if (!*aFirstGroupNeedingCounts) return NS_ERROR_FAILURE;
+    nsCOMPtr <nsIMsgFolder> folder;
+    (*aFirstGroupNeedingCounts)->QueryInterface(NS_GET_IID(nsIMsgFolder), getter_AddRefs(folder));
+    PRUint32 folderFlags;
+    folder->GetFlags(&folderFlags);
+    if (folderFlags & MSG_FOLDER_FLAG_VIRTUAL)
+      continue;
+    else
+      break;
+  }
+  while (PR_TRUE);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

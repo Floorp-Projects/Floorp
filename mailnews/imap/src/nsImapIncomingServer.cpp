@@ -1790,12 +1790,16 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
     {
       PRBool explicitlyVerify = PR_FALSE;
       PRBool hasSubFolders = PR_FALSE;
+      PRUint32 folderFlags;
       nsCOMPtr<nsISupports> element;
       unverifiedFolders->GetElementAt(k, getter_AddRefs(element));
       
       nsCOMPtr<nsIMsgImapMailFolder> currentImapFolder = do_QueryInterface(element, &rv);
       nsCOMPtr<nsIMsgFolder> currentFolder = do_QueryInterface(element, &rv);
       if (NS_FAILED(rv))
+        continue;
+      currentFolder->GetFlags(&folderFlags);
+      if (folderFlags & MSG_FOLDER_FLAG_VIRTUAL) // don't remove virtual folders
         continue;
       if ((!usingSubscription || (NS_SUCCEEDED(currentImapFolder->GetExplicitlyVerify(&explicitlyVerify)) && explicitlyVerify)) ||
         ((NS_SUCCEEDED(currentFolder->GetHasSubFolders(&hasSubFolders)) && hasSubFolders)
@@ -1884,120 +1888,18 @@ nsresult nsImapIncomingServer::DeleteNonVerifiedFolders(nsIMsgFolder *curFolder)
     delete simpleEnumerator;
   }
   
-#if 0
+    
+  nsCOMPtr<nsIMsgFolder> parent;
+  rv = curFolder->GetParent(getter_AddRefs(parent));
   
-  MSG_IMAPFolderInfoMail *parentImapFolder = (parentFolder->GetType() == FOLDER_IMAPMAIL) ? 
-    (MSG_IMAPFolderInfoMail *) parentFolder :
-  (MSG_IMAPFolderInfoMail *)NULL;
-  
-  // if the parent is the imap container or an imap folder whose children were listed, then this bool is true.
-  // We only delete .snm files whose parent's children were listed											
-  XP_Bool parentChildrenWereListed =	(parentImapFolder == NULL) || 
-    (LL_CMP(parentImapFolder->GetTimeStampOfLastList(), >= , IMAP_GetTimeStampOfNonPipelinedList()));
-  
-  MSG_IMAPHost *imapHost = currentImapFolder->GetIMAPHost();
-  PRBool usingSubscription = imapHost ? imapHost->GetIsHostUsingSubscription() : PR_TRUE;
-  PRBool folderIsNoSelectFolder = (currentImapFolder->GetFolderPrefFlags() & MSG_FOLDER_FLAG_IMAP_NOSELECT) != 0;
-  PRBool shouldDieBecauseNoSelect = usingSubscription ?
-    (folderIsNoSelectFolder ? ((NoDescendantsAreVerified(currentImapFolder) || AllDescendantsAreNoSelect(currentImapFolder)) && !currentImapFolder->GetFolderIsNamespace()): PR_FALSE)
-    : PR_FALSE;
-  PRBool offlineCreate = (currentImapFolder->GetFolderPrefFlags() & MSG_FOLDER_FLAG_CREATED_OFFLINE) != 0;
-  
-  if (!currentImapFolder->GetExplicitlyVerify() && !offlineCreate &&
-				((autoUnsubscribeFromNoSelectFolders && shouldDieBecauseNoSelect) ||
-                                ((usingSubscription ? PR_TRUE : parentChildrenWereListed) && !currentImapFolder->GetIsOnlineVerified() && NoDescendantsAreVerified(currentImapFolder))))
+  if (NS_SUCCEEDED(rv) && parent)
   {
-    // This folder is going away.
-				// Give notification so that folder menus can be rebuilt.
-				if (*url_pane)
-                                {
-                                  XPPtrArray referringPanes;
-                                  uint32 total;
-                                  
-                                  (*url_pane)->GetMaster()->FindPanesReferringToFolder(currentFolder,&referringPanes);
-                                  total = referringPanes.GetSize();
-                                  for (int i=0; i < total;i++)
-                                  {
-                                    MSG_Pane *currentPane = (MSG_Pane *) referringPanes.GetAt(i);
-                                    if (currentPane)
-                                    {
-                                      if (currentPane->GetFolder() == currentFolder)
-                                      {
-                                        currentPane->SetFolder(NULL);
-                                        FE_PaneChanged(currentPane, PR_TRUE, MSG_PaneNotifyFolderDeleted, (uint32)currentFolder);
-                                      }
-                                    }
-                                  }
-                                  
-                                  FE_PaneChanged(*url_pane, PR_TRUE, MSG_PaneNotifyFolderDeleted, (uint32)currentFolder);
-                                  
-                                  // If we are running the IMAP subscribe upgrade, and we are deleting the folder that we'd normally
-                                  // try to load after the process completes, then tell the pane not to load that folder.
-                                  if (((MSG_ThreadPane *)(*url_pane))->GetIMAPUpgradeFolder() == currentFolder)
-                                    ((MSG_ThreadPane *)(*url_pane))->SetIMAPUpgradeFolder(NULL);
-                                  
-                                  if ((*url_pane)->GetFolder() == currentFolder)
-                                    *url_pane = NULL;
-                                  
-                                  
-                                  if (shouldDieBecauseNoSelect && autoUnsubscribeFromNoSelectFolders && usingSubscription)
-                                  {
-                                    char *unsubscribeUrl = CreateIMAPUnsubscribeMailboxURL(imapHost->GetHostName(), currentImapFolder->GetOnlineName(), currentImapFolder->GetOnlineHierarchySeparator());
-                                    if (unsubscribeUrl)
-                                    {
-                                      if (url_pane)
-                                        MSG_UrlQueue::AddUrlToPane(unsubscribeUrl, NULL, *url_pane);
-                                      else if (folderPane)
-                                        MSG_UrlQueue::AddUrlToPane(unsubscribeUrl, NULL, folderPane);
-                                      XP_FREE(unsubscribeUrl);
-                                    }
-                                    
-                                    if (AllDescendantsAreNoSelect(currentImapFolder) && (currentImapFolder->GetNumSubFolders() > 0))
-                                    {
-                                      // This folder has descendants, all of which are also \NoSelect.
-                                      // We'd like to unsubscribe from all of these as well.
-                                      if (url_pane)
-                                        UnsubscribeFromAllDescendants(currentImapFolder, *url_pane);
-                                      else if (folderPane)
-                                        UnsubscribeFromAllDescendants(currentImapFolder, folderPane);
-                                    }
-                                    
-                                  }
-                                }
-                                else
-                                {
-#ifdef DEBUG_chrisf
-                                  PR_ASSERT(PR_FALSE);
-#endif
-                                }
-                                
-                                parentFolder->PropagateDelete(&currentFolder); // currentFolder is null on return
-                                numberOfSubFolders--;
-                                folderIndex--;
+    nsCOMPtr<nsIMsgImapMailFolder> imapParent = do_QueryInterface(parent);
+    if (imapParent)
+      imapParent->RemoveSubFolder(curFolder);
   }
-  else
-  {
-    if (currentFolder->HasSubFolders())
-      DeleteNonVerifiedImapFolders(currentFolder, folderPane, url_pane);
-  }
-        }
-        folderIndex++;  // not in for statement because we modify it
-    }
-    
-#endif // 0
-    
-    nsCOMPtr<nsIMsgFolder> parent;
-    rv = curFolder->GetParent(getter_AddRefs(parent));
-    
-    
-    if (NS_SUCCEEDED(rv) && parent)
-    {
-      nsCOMPtr<nsIMsgImapMailFolder> imapParent = do_QueryInterface(parent);
-      if (imapParent)
-        imapParent->RemoveSubFolder(curFolder);
-    }
-    
-    return rv;
+  
+  return rv;
 }
 
 

@@ -160,10 +160,11 @@ interface nsIMsgIncomingServer : nsISupports {
   /* the RDF URI for the root mail folder */
   readonly attribute string serverURI;
 
-  /* the root folder for this server */
+  /* the root folder for this server, even if server is deferred */
   attribute nsIMsgFolder rootFolder;
 
-  /* handy accessor when we want a msg folder */
+  /* root folder for this account 
+     - if account is deferred, root folder of deferred-to account */
   readonly attribute nsIMsgFolder rootMsgFolder;
 
   /* are we already getting new Messages on the current server..

@@ -282,6 +282,8 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
                                   in unsigned long resultsize,
                                   out unsigned long numFolders);
 
+  nsISupportsArray getAllFoldersWithFlag(in unsigned long aFlag);
+
   void getExpansionArray(in nsISupportsArray expansionArray);
 
   string getUriForMsg(in nsIMsgDBHdr msgHdr);

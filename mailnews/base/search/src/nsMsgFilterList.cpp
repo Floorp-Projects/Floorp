@@ -674,7 +674,7 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
                 value.Assign(utf8);
                 nsMemory::Free(utf8);
               }
-              err = ParseCondition(value);
+              err = ParseCondition(m_curFilter, value.get());
               if (err == NS_ERROR_INVALID_ARG)
                 err = m_curFilter->SetUnparseable(PR_TRUE);
               NS_ENSURE_SUCCESS(err, err);
@@ -702,76 +702,74 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
 // what about values with close parens and quotes? e.g., (body, isn't, "foo")")
 // I guess interior quotes will need to be escaped - ("foo\")")
 // which will get written out as (\"foo\\")\") and read in as ("foo\")"
-nsresult nsMsgFilterList::ParseCondition(nsCString &value)
+NS_IMETHODIMP nsMsgFilterList::ParseCondition(nsIMsgFilter *aFilter, const char *aCondition)
 {
-	PRBool	done = PR_FALSE;
-	nsresult	err = NS_OK;
-	const char *curPtr = value.get();
-	while (!done)
-	{
-		// insert code to save the boolean operator if there is one for this search term....
-		const char *openParen = PL_strchr(curPtr, '(');
-		const char *orTermPos = PL_strchr(curPtr, 'O');		// determine if an "OR" appears b4 the openParen...
-		PRBool ANDTerm = PR_TRUE;
-		if (orTermPos && orTermPos < openParen) // make sure OR term falls before the '('
-			ANDTerm = PR_FALSE;
+  PRBool	done = PR_FALSE;
+  nsresult	err = NS_OK;
+  const char *curPtr = aCondition;
+  while (!done)
+  {
+    // insert code to save the boolean operator if there is one for this search term....
+    const char *openParen = PL_strchr(curPtr, '(');
+    const char *orTermPos = PL_strchr(curPtr, 'O');		// determine if an "OR" appears b4 the openParen...
+    PRBool ANDTerm = PR_TRUE;
+    if (orTermPos && orTermPos < openParen) // make sure OR term falls before the '('
+      ANDTerm = PR_FALSE;
+    
+    char *termDup = nsnull;
+    if (openParen)
+    {
+      PRBool foundEndTerm = PR_FALSE;
+      PRBool inQuote = PR_FALSE;
+      for (curPtr = openParen +1; *curPtr; curPtr++)
+      {
+        if (*curPtr == '\\' && *(curPtr + 1) == '"')
+          curPtr++;
+        else if (*curPtr == ')' && !inQuote)
+        {
+          foundEndTerm = PR_TRUE;
+          break;
+        }
+        else if (*curPtr == '"')
+          inQuote = !inQuote;
+      }
+      if (foundEndTerm)
+      {
+        int termLen = curPtr - openParen - 1;
+        termDup = (char *) PR_Malloc(termLen + 1);
+        if (termDup)
+        {
+          PL_strncpy(termDup, openParen + 1, termLen + 1);
+          termDup[termLen] = '\0';
+        }
+        else
+        {
+          err = NS_ERROR_OUT_OF_MEMORY;
+          break;
+        }
+      }
+    }
+    else
+      break;
+    if (termDup)
+    {
+      nsMsgSearchTerm	*newTerm = new nsMsgSearchTerm;
+      
+      if (newTerm) 
+      {
+        newTerm->m_booleanOp = (ANDTerm) ? nsMsgSearchBooleanOp::BooleanAND
+                                         : nsMsgSearchBooleanOp::BooleanOR;
 
-		char *termDup = nsnull;
-		if (openParen)
-		{
-			PRBool foundEndTerm = PR_FALSE;
-			PRBool inQuote = PR_FALSE;
-			for (curPtr = openParen +1; *curPtr; curPtr++)
-			{
-				if (*curPtr == '\\' && *(curPtr + 1) == '"')
-					curPtr++;
-				else if (*curPtr == ')' && !inQuote)
-				{
-					foundEndTerm = PR_TRUE;
-					break;
-				}
-				else if (*curPtr == '"')
-					inQuote = !inQuote;
-			}
-			if (foundEndTerm)
-			{
-				int termLen = curPtr - openParen - 1;
-				termDup = (char *) PR_Malloc(termLen + 1);
-				if (termDup)
-				{
-					PL_strncpy(termDup, openParen + 1, termLen + 1);
-					termDup[termLen] = '\0';
-				}
-				else
-				{
-					err = NS_ERROR_OUT_OF_MEMORY;
-					break;
-				}
-			}
-		}
-		else
-			break;
-		if (termDup)
-		{
-			nsMsgSearchTerm	*newTerm = new nsMsgSearchTerm;
-            
-			if (newTerm) {
-                if (ANDTerm) {
-                    newTerm->m_booleanOp = nsMsgSearchBooleanOp::BooleanAND;
-                }
-                else {
-                    newTerm->m_booleanOp = nsMsgSearchBooleanOp::BooleanOR;
-                }
-                err = newTerm->DeStreamNew(termDup, PL_strlen(termDup));
-                NS_ENSURE_SUCCESS(err, err);
-                m_curFilter->AppendTerm(newTerm);
-            }
-			PR_FREEIF(termDup);
-		}
-		else
-			break;
-	}
-	return err;
+        err = newTerm->DeStreamNew(termDup, PL_strlen(termDup));
+        NS_ENSURE_SUCCESS(err, err);
+        aFilter->AppendTerm(newTerm);
+      }
+      PR_FREEIF(termDup);
+    }
+    else
+      break;
+  }
+  return err;
 }
 
 nsresult nsMsgFilterList::WriteIntAttr(nsMsgFilterFileAttribValue attrib, int value, nsIOFileStream *aStream)

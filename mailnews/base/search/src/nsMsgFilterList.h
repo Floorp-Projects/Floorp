@@ -90,7 +90,6 @@ protected:
   char LoadAttrib(nsMsgFilterFileAttribValue &attrib, nsIOFileStream *aStream);
   const char *GetStringForAttrib(nsMsgFilterFileAttribValue attrib);
   nsresult LoadValue(nsCString &value, nsIOFileStream *aStream);
-  nsresult ParseCondition(nsCString &value);
   PRInt16 m_fileVersion;
   PRPackedBool m_loggingEnabled;
   PRPackedBool m_startWritingToBuffer; //tells us when to start writing one whole filter to m_unparsedBuffer

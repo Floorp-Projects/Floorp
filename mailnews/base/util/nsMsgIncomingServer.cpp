@@ -135,6 +135,8 @@ nsMsgIncomingServer::SetRootFolder(nsIMsgFolder * aRootFolder)
   return NS_OK;
 }
 
+// this will return the root folder of this account,
+// even if this server is deferred.
 NS_IMETHODIMP
 nsMsgIncomingServer::GetRootFolder(nsIMsgFolder * *aRootFolder)
 {
@@ -153,6 +155,8 @@ nsMsgIncomingServer::GetRootFolder(nsIMsgFolder * *aRootFolder)
   return NS_OK;
 }
 
+// this will return the root folder of the deferred to account,
+// if this server is deferred.
 NS_IMETHODIMP
 nsMsgIncomingServer::GetRootMsgFolder(nsIMsgFolder **aRootMsgFolder)
 {

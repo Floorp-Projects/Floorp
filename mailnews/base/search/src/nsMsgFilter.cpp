@@ -711,7 +711,7 @@ nsresult nsMsgFilter::SaveRule(nsIOFileStream *aStream)
     else
       condition += "OR (";
     
-    nsresult searchError = term->EnStreamNew(stream);
+    nsresult searchError = term->GetTermAsString(stream);
     if (NS_FAILED(searchError))
     {
       err = searchError;

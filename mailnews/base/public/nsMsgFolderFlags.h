@@ -66,6 +66,7 @@
                                                the listing.  This will only
                                                be present if the DIRECTORY
                                                bit is on. */
+#define MSG_FOLDER_FLAG_VIRTUAL   0x0020    /* virtual search folder */
 
     /* These flags only occur in folders which have
        the MSG_FOLDER_FLAG_NEWSGROUP bit set, and do
@@ -73,7 +74,6 @@
        MSG_FOLDER_FLAG_ELIDED bits set.
      */
 
-#define MSG_FOLDER_FLAG_UNUSED1   0x0020  /* used to be for a moderated newsgroup. */
 #define MSG_FOLDER_FLAG_SUBSCRIBED  0x0040  /* Whether this folder represents
                                                a subscribed newsgroup. */
 #define MSG_FOLDER_FLAG_UNUSED2   0x0080  /* used to be for new newsgroups

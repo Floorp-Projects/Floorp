@@ -92,6 +92,6 @@ interface nsIMsgSearchTerm : nsISupports {
                       
     readonly attribute boolean matchAllBeforeDeciding;
 
-    [noscript] void EnStreamNew(in nsCStringRef stream);
+    readonly attribute ACString termAsString;
 };
 

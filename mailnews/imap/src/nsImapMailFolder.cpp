@@ -320,6 +320,17 @@ nsShouldIgnoreFile(nsString& name)
     return PR_TRUE;
 }
 
+NS_IMETHODIMP nsImapMailFolder::AddSubfolder(const nsAString& aName,
+                                   nsIMsgFolder** aChild)
+{
+  nsresult rv = nsMsgDBFolder::AddSubfolder(aName, aChild);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr <nsIMsgImapMailFolder> imapChild = do_QueryInterface(*aChild);
+  if (imapChild)
+    imapChild->SetHierarchyDelimiter(m_hierarchyDelimiter);
+  return rv;
+}
+
 NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAString& name, nsIFileSpec *dbPath, 
                                              nsIMsgFolder **child)
 {
@@ -1658,7 +1669,7 @@ NS_IMETHODIMP
 nsImapMailFolder::GetCanCreateSubfolders(PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = !(mFlags & MSG_FOLDER_FLAG_IMAP_NOINFERIORS);
+  *aResult = !(mFlags & (MSG_FOLDER_FLAG_IMAP_NOINFERIORS | MSG_FOLDER_FLAG_VIRTUAL));
 
   PRBool isServer = PR_FALSE;
   GetIsServer(&isServer);
@@ -2219,18 +2230,38 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
     nsCOMPtr<nsIMsgFolder> curFolder;
     nsCOMPtr<nsIUrlListener> urlListener;
     nsCOMPtr<nsIMsgFolder> trashFolder;
-    PRUint32 i, folderCount = 0;
+    PRInt32 i;
+    PRUint32 folderCount = 0;
     nsresult rv;
     // "this" is the folder we're deleting from
     PRBool deleteNoTrash = TrashOrDescendentOfTrash(this) || !DeleteIsMoveToTrash();
     PRBool confirmed = PR_FALSE;
     PRBool confirmDeletion = PR_TRUE;
 
+
+    (void) folders->Count(&folderCount);
+
+    for (i = folderCount - 1; i >= 0; i--)
+    {
+      curFolder = do_QueryElementAt(folders, i, &rv);
+      if (NS_SUCCEEDED(rv))
+      {
+        PRUint32 folderFlags;
+        curFolder->GetFlags(&folderFlags);
+        if (folderFlags & MSG_FOLDER_FLAG_VIRTUAL)
+        {
+          RemoveSubFolder(curFolder);
+          folders->RemoveElementAt(i);
+          // since the folder pane only allows single selection, we can do this
+          deleteNoTrash = confirmed = PR_TRUE;
+          confirmDeletion = PR_FALSE;
+        }
+      }
+    }
+
     nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
-      rv = folders->Count(&folderCount);
-      NS_ENSURE_SUCCESS(rv, rv);
       if (!deleteNoTrash)
       {
         rv = GetTrashFolder(getter_AddRefs(trashFolder));
@@ -2262,7 +2293,7 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
          if (NS_SUCCEEDED(rv))
            prefBranch->GetBoolPref("mailnews.confirm.moveFoldersToTrash", &confirmDeletion);
       }
-      if (confirmDeletion || deleteNoTrash) //let us alert the user if we are deleting folder immediately
+      if (!confirmed && (confirmDeletion || deleteNoTrash)) //let us alert the user if we are deleting folder immediately
       {
         nsXPIDLString confirmationStr;
         IMAPGetStringByID(((!deleteNoTrash) ? IMAP_MOVE_FOLDER_TO_TRASH : IMAP_DELETE_NO_TRASH),

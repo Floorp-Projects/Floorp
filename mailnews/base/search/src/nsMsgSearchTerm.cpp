@@ -469,7 +469,7 @@ nsresult nsMsgSearchTerm::OutputValue(nsCString &outputStr)
   return NS_OK;
 }
 
-nsresult nsMsgSearchTerm::EnStreamNew (nsCString &outStream)
+NS_IMETHODIMP nsMsgSearchTerm::GetTermAsString (nsACString &outStream)
 {
   const char	*attrib, *operatorStr;
   nsCAutoString	outputStr;
