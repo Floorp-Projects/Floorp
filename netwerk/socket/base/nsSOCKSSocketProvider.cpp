@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Justin Bradford <jab@atdot.org>
  *   Darin Fisher <darin@meer.net>
+ *   Malcolm Smith <malsmith@cs.rmit.edu.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -80,6 +81,7 @@ nsSOCKSSocketProvider::NewSocket(PRInt32 family,
                                  PRInt32 port,
                                  const char *proxyHost,
                                  PRInt32 proxyPort,
+                                 PRUint32 flags,
                                  PRFileDesc **result, 
                                  nsISupports **socksInfo)
 {
@@ -95,6 +97,7 @@ nsSOCKSSocketProvider::NewSocket(PRInt32 family,
                                             proxyHost,
                                             proxyPort,
                                             mVersion,
+                                            flags,
                                             sock, 
                                             socksInfo);
     if (NS_SUCCEEDED(rv)) {
@@ -111,6 +114,7 @@ nsSOCKSSocketProvider::AddToSocket(PRInt32 family,
                                    PRInt32 port,
                                    const char *proxyHost,
                                    PRInt32 proxyPort,
+                                   PRUint32 flags,
                                    PRFileDesc *sock, 
                                    nsISupports **socksInfo)
 {
@@ -120,6 +124,7 @@ nsSOCKSSocketProvider::AddToSocket(PRInt32 family,
                                             proxyHost,
                                             proxyPort,
                                             mVersion,
+                                            flags,
                                             sock, 
                                             socksInfo);
     

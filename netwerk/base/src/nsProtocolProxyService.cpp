@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Malcolm Smith <malsmith@cs.rmit.edu.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -131,6 +132,19 @@ proxy_GetIntPref(nsIPrefBranch *aPrefBranch,
         aResult = temp;
 }
 
+static void
+proxy_GetBoolPref(nsIPrefBranch *aPrefBranch,
+                 const char    *aPref,
+                 PRBool        &aResult)
+{
+    PRBool temp;
+    nsresult rv = aPrefBranch->GetBoolPref(aPref, &temp);
+    if (NS_FAILED(rv)) 
+        aResult = PR_FALSE;
+    else
+        aResult = temp;
+}
+
 //----------------------------------------------------------------------------
 
 class nsProxyInfo : public nsIProxyInfo
@@ -153,6 +167,10 @@ public:
         return mType;
     }
 
+    NS_IMETHOD_(PRUint32) Flags() {
+        return mFlags;
+    }
+
     ~nsProxyInfo()
     {
         NS_IF_RELEASE(mNext);
@@ -161,12 +179,14 @@ public:
     nsProxyInfo(const char *type = nsnull)
         : mType(type)
         , mPort(-1)
+        , mFlags(0)
         , mNext(nsnull)
     {}
 
     const char  *mType; // pointer to static kProxyType_XYZ value
     nsCString    mHost;
     PRInt32      mPort;
+    PRUint32     mFlags;
     nsProxyInfo *mNext;
 };
 
@@ -207,6 +227,7 @@ nsProtocolProxyService::nsProtocolProxyService()
     , mHTTPSProxyPort(-1)
     , mSOCKSProxyPort(-1)
     , mSOCKSProxyVersion(4)
+    , mSOCKSProxyRemoteDNS(PR_FALSE)
     , mSessionStart(PR_Now())
     , mFailedProxyTimeout(30 * 60) // 30 minute default
 {
@@ -319,6 +340,9 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
         else
             mSOCKSProxyVersion = 4;
     }
+
+    if (!pref || !strcmp(pref, "network.proxy.socks_remote_dns"))
+        proxy_GetBoolPref(prefBranch, "network.proxy.socks_remote_dns", mSOCKSProxyRemoteDNS);
 
     if (!pref || !strcmp(pref, "network.proxy.failover_timeout"))
         proxy_GetIntPref(prefBranch, "network.proxy.failover_timeout", mFailedProxyTimeout);
@@ -484,6 +508,7 @@ const char *
 nsProtocolProxyService::ExtractProxyInfo(const char *start, PRBool permitHttp, nsProxyInfo **result)
 {
     *result = nsnull;
+    PRUint32 flags = 0;
 
     // see BNF in nsIProxyAutoConfig.idl
 
@@ -518,6 +543,13 @@ nsProtocolProxyService::ExtractProxyInfo(const char *start, PRBool permitHttp, n
     if (type) {
         const char *host = nsnull, *hostEnd = nsnull;
         PRInt32 port = -1;
+
+        // If it's a SOCKS5 proxy, do name resolution on the server side.
+        // We could use this with SOCKS4a servers too, but they might not
+        // support it.
+        if (type == kProxyType_SOCKS)
+            flags |= nsIProxyInfo::TRANSPARENT_PROXY_RESOLVES_HOST;
+
         // extract host:port
         start = sp;
         while ((*start == ' ' || *start == '\t') && start < end)
@@ -539,6 +571,7 @@ nsProtocolProxyService::ExtractProxyInfo(const char *start, PRBool permitHttp, n
         nsProxyInfo *pi = new nsProxyInfo;
         if (pi) {
             pi->mType = type;
+            pi->mFlags = flags;
             // YES, it is ok to specify a null proxy host.
             if (host) {
                 pi->mHost.Assign(host, hostEnd - host);
@@ -762,6 +795,8 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo **aResult)
     const nsACString *host = nsnull;
     PRInt32 port = -1;
 
+    PRUint32 proxyFlags = 0;
+
     if (!mHTTPProxyHost.IsEmpty() && mHTTPProxyPort > 0 &&
         scheme.EqualsLiteral("http")) {
         host = &mHTTPProxyHost;
@@ -793,10 +828,12 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo **aResult)
         else
             type = kProxyType_SOCKS;
         port = mSOCKSProxyPort;
+        if (mSOCKSProxyRemoteDNS)
+            proxyFlags |= nsIProxyInfo::TRANSPARENT_PROXY_RESOLVES_HOST;
     }
 
     if (type)
-        return NewProxyInfo_Internal(type, *host, port, aResult);
+        return NewProxyInfo_Internal(type, *host, port, proxyFlags, aResult);
 
     return NS_OK;
 }
@@ -805,6 +842,7 @@ NS_IMETHODIMP
 nsProtocolProxyService::NewProxyInfo(const nsACString &aType,
                                      const nsACString &aHost,
                                      PRInt32 aPort,
+                                     PRUint32 aFlags,
                                      nsIProxyInfo **aResult)
 {
     static const char *types[] = {
@@ -827,7 +865,7 @@ nsProtocolProxyService::NewProxyInfo(const nsACString &aType,
     if (aPort <= 0)
         aPort = -1;
 
-    return NewProxyInfo_Internal(type, aHost, aPort, aResult);
+    return NewProxyInfo_Internal(type, aHost, aPort, aFlags, aResult);
 }
 
 NS_IMETHODIMP
@@ -1075,6 +1113,7 @@ nsresult
 nsProtocolProxyService::NewProxyInfo_Internal(const char *aType,
                                               const nsACString &aHost,
                                               PRInt32 aPort,
+                                              PRUint32 aFlags,
                                               nsIProxyInfo **aResult)
 {
     nsProxyInfo *proxyInfo = new nsProxyInfo();
@@ -1084,6 +1123,7 @@ nsProtocolProxyService::NewProxyInfo_Internal(const char *aType,
     proxyInfo->mType = aType;
     proxyInfo->mHost = aHost;
     proxyInfo->mPort = aPort;
+    proxyInfo->mFlags = aFlags;
 
     NS_ADDREF(*aResult = proxyInfo);
     return NS_OK;

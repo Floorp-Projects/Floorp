@@ -187,13 +187,14 @@ private:
     //-------------------------------------------------------------------------
 
     // socket type info:
-    char      **mTypes;
-    PRUint32    mTypeCount;
-    nsCString   mHost;
-    nsCString   mProxyHost;
-    PRUint16    mPort;
-    PRUint16    mProxyPort;
-    PRBool      mProxyTransparent;
+    char       **mTypes;
+    PRUint32     mTypeCount;
+    nsCString    mHost;
+    nsCString    mProxyHost;
+    PRUint16     mPort;
+    PRUint16     mProxyPort;
+    PRPackedBool mProxyTransparent;
+    PRPackedBool mProxyTransparentResolvesHost;
 
     PRUint16         SocketPort() { return (!mProxyHost.IsEmpty() && !mProxyTransparent) ? mProxyPort : mPort; }
     const nsCString &SocketHost() { return (!mProxyHost.IsEmpty() && !mProxyTransparent) ? mProxyHost : mHost; }

@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Bradley Baetz <bbaetz@student.usyd.edu.au>
+ *   Malcolm Smith <malsmith@cs.rmit.edu.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -588,13 +589,14 @@ inline nsresult
 NS_NewProxyInfo(const nsACString &type,
                 const nsACString &host,
                 PRInt32           port,
+                PRUint32          flags,
                 nsIProxyInfo    **result)
 {
     nsresult rv;
     static NS_DEFINE_CID(kPPSServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
     nsCOMPtr<nsIProtocolProxyService> pps = do_GetService(kPPSServiceCID, &rv);
     if (NS_SUCCEEDED(rv))
-        rv = pps->NewProxyInfo(type, host, port, result);
+        rv = pps->NewProxyInfo(type, host, port, flags, result);
     return rv; 
 }
 

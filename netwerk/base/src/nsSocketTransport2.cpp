@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Darin Fisher <darin@netscape.com>
+ *   Malcolm Smith <malsmith@cs.rmit.edu.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -677,6 +678,7 @@ nsSocketTransport::nsSocketTransport()
     , mPort(0)
     , mProxyPort(0)
     , mProxyTransparent(PR_FALSE)
+    , mProxyTransparentResolvesHost(PR_FALSE)
     , mState(STATE_CLOSED)
     , mAttached(PR_FALSE)
     , mInputClosed(PR_TRUE)
@@ -769,8 +771,15 @@ nsSocketTransport::Init(const char **types, PRUint32 typeCount,
 
             // note if socket type corresponds to a transparent proxy
             if ((strcmp(mTypes[i], "socks") == 0) ||
-                (strcmp(mTypes[i], "socks4") == 0))
+                (strcmp(mTypes[i], "socks4") == 0)) {
                 mProxyTransparent = PR_TRUE;
+
+                if (proxyInfo->Flags() & nsIProxyInfo::TRANSPARENT_PROXY_RESOLVES_HOST) {
+                    // we want the SOCKS layer to send the hostname
+                    // and port to the proxy and let it do the DNS.
+                    mProxyTransparentResolvesHost = PR_TRUE;
+                }
+            }
         }
     }
 
@@ -865,6 +874,20 @@ nsSocketTransport::ResolveHost()
 
     nsresult rv;
 
+    if (!mProxyHost.IsEmpty() && mProxyTransparentResolvesHost) {
+        // Name resolution is done on the server side.  Just pretend
+        // client resolution is complete, this will get picked up later.
+        // since we don't need to do DNS now, we bypass the resolving
+        // step by initializing mNetAddr to an empty address, but we
+        // must keep the port. The SOCKS IO layer will use the hostname
+        // we send it when it's created, rather than the empty address
+        // we send with the connect call.
+        mState = STATE_RESOLVING;
+        PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET, SocketPort(), &mNetAddr);
+        return PostEvent(MSG_DNS_LOOKUP_COMPLETE, NS_OK, nsnull);
+    }
+
+
     nsCOMPtr<nsIDNSService> dns = do_GetService(kDNSServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
@@ -903,11 +926,12 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, PRBool &proxyTransparent, PRBool
             do_GetService(kSocketProviderServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
-        const char *host      = mHost.get();
-        PRInt32     port      = (PRInt32) mPort;
-        const char *proxyHost = mProxyHost.IsEmpty() ? nsnull : mProxyHost.get();
-        PRInt32     proxyPort = (PRInt32) mProxyPort;
-        
+        const char *host       = mHost.get();
+        PRInt32     port       = (PRInt32) mPort;
+        const char *proxyHost  = mProxyHost.IsEmpty() ? nsnull : mProxyHost.get();
+        PRInt32     proxyPort  = (PRInt32) mProxyPort;
+        PRUint32    proxyFlags = 0;
+
         PRUint32 i;
         for (i=0; i<mTypeCount; ++i) {
             nsCOMPtr<nsISocketProvider> provider;
@@ -918,13 +942,17 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, PRBool &proxyTransparent, PRBool
             if (NS_FAILED(rv))
                 break;
 
+            if (mProxyTransparentResolvesHost)
+                proxyFlags |= nsISocketProvider::PROXY_RESOLVES_HOST;
+
             nsCOMPtr<nsISupports> secinfo;
             if (i == 0) {
                 // if this is the first type, we'll want the 
                 // service to allocate a new socket
                 rv = provider->NewSocket(mNetAddr.raw.family,
                                          host, port, proxyHost, proxyPort,
-                                         &fd, getter_AddRefs(secinfo));
+                                         proxyFlags, &fd,
+                                         getter_AddRefs(secinfo));
 
                 if (NS_SUCCEEDED(rv) && !fd) {
                     NS_NOTREACHED("NewSocket succeeded but failed to create a PRFileDesc");
@@ -937,8 +965,10 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, PRBool &proxyTransparent, PRBool
                 // to the stack (such as pushing an io layer)
                 rv = provider->AddToSocket(mNetAddr.raw.family,
                                            host, port, proxyHost, proxyPort,
-                                           fd, getter_AddRefs(secinfo));
+                                           proxyFlags, fd,
+                                           getter_AddRefs(secinfo));
             }
+            proxyFlags = 0;
             if (NS_FAILED(rv))
                 break;
 

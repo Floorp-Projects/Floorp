@@ -58,6 +58,7 @@ nsTLSSocketProvider::NewSocket(PRInt32 family,
                                PRInt32 port,
                                const char *proxyHost,
                                PRInt32 proxyPort,
+                               PRUint32 flags,
                                PRFileDesc **_result,
                                nsISupports **securityInfo)
 {
@@ -80,6 +81,7 @@ nsTLSSocketProvider::AddToSocket(PRInt32 family,
                                  PRInt32 port,
                                  const char *proxyHost,
                                  PRInt32 proxyPort,
+                                 PRUint32 flags,
                                  PRFileDesc *aSocket,
                                  nsISupports **securityInfo)
 {

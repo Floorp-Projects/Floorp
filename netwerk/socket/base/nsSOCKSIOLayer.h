@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Justin Bradford <jab@atdot.org>
+ *   Malcolm Smith <malsmith@cs.rmit.edu.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,13 +45,14 @@
 #include "prio.h"
 #include "nscore.h"
 
-nsresult nsSOCKSIOLayerAddToSocket(PRInt32 family,
-                                   const char *host, 
-                                   PRInt32 port,
-                                   const char *proxyHost,
-                                   PRInt32 proxyPort,
-                                   PRInt32 socksVersion,
-                                   PRFileDesc *fd, 
+nsresult nsSOCKSIOLayerAddToSocket(PRInt32       family,
+                                   const char   *host, 
+                                   PRInt32       port,
+                                   const char   *proxyHost,
+                                   PRInt32       proxyPort,
+                                   PRInt32       socksVersion,
+                                   PRUint32      flags,
+                                   PRFileDesc   *fd, 
                                    nsISupports **info);
 
 #endif /* nsSOCKSIOLayer_h__ */
