@@ -275,13 +275,13 @@ nsContentAttr nsInputText::GetAttribute(nsIAtom* aAttribute,
                                         nsHTMLValue& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::maxlength) {
-    return GetCacheAttribute(mMaxLength, aResult);
+    return GetCacheAttribute(mMaxLength, aResult, eHTMLUnit_Integer);
   } 
   else if ((aAttribute == nsHTMLAtoms::rows) && (kInputTextArea == mType)) {
-    return GetCacheAttribute(mNumRows, aResult);
+    return GetCacheAttribute(mNumRows, aResult, eHTMLUnit_Integer);
   }
   else if ((aAttribute == nsHTMLAtoms::cols) && (kInputTextArea == mType)) {
-    return GetCacheAttribute(mNumCols, aResult);
+    return GetCacheAttribute(mNumCols, aResult, eHTMLUnit_Integer);
   }
   else {
     return super::GetAttribute(aAttribute, aResult);

@@ -1006,7 +1006,7 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 
   if (aAttribute == nsHTMLAtoms::width) 
   {
-    ParseValueOrPercent(aValue, val);
+    ParseValueOrPercent(aValue, val, eHTMLUnit_Pixel);
     nsHTMLTagContent::SetAttribute(aAttribute, val);
   }
   else if ( aAttribute == nsHTMLAtoms::border)
@@ -1016,18 +1016,18 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     tmp.StripWhitespace();
     if (0 == tmp.Length()) {
       // Just enable the border; same as border=1
-      val.Set(1, eHTMLUnit_Absolute);/* XXX pixels? */
+      val.SetEmptyValue();/* XXX pixels? */
     }
     else 
     {
-      ParseValue(aValue, 1, val);
+      ParseValue(aValue, 1, val, eHTMLUnit_Pixel);
     }
     nsHTMLTagContent::SetAttribute(aAttribute, val);
   }
   else if (aAttribute == nsHTMLAtoms::cellspacing ||
            aAttribute == nsHTMLAtoms::cellpadding) 
   {
-    ParseValue(aValue, 0, val);
+    ParseValue(aValue, 0, val, eHTMLUnit_Pixel);
     nsHTMLTagContent::SetAttribute(aAttribute, val);
     return;
   }
@@ -1055,14 +1055,12 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
       aContext->GetData(kStylePositionSID);
     switch (value.GetUnit()) {
     case eHTMLUnit_Percent:
-      position->mWidthFlags = NS_STYLE_POSITION_VALUE_PERCENT;
-      position->mWidth = 0;/* XXX need a float to store into */
+      position->mWidth.SetPercentValue(value.GetPercentValue());
       break;
 
-    case eHTMLUnit_Absolute:
+    case eHTMLUnit_Pixel:
       p2t = aPresContext->GetPixelsToTwips();
-      position->mWidthFlags = NS_STYLE_POSITION_VALUE_LENGTH;
-      position->mWidth = nscoord(p2t * value.GetIntValue());
+      position->mWidth.SetCoordValue(nscoord(p2t * (float)value.GetPixelValue()));
       break;
     }
   }
@@ -1083,39 +1081,22 @@ void nsTablePart::GetTableBorder(nsIHTMLContent* aContent,
   nsHTMLValue value;
 
   aContent->GetAttribute(nsHTMLAtoms::border, value);
-  if (value.GetUnit() == eHTMLUnit_Absolute) {
+  if ((value.GetUnit() == eHTMLUnit_Pixel) || 
+      (value.GetUnit() == eHTMLUnit_Empty)) {
     nsStyleBorder* border = (nsStyleBorder*)
       aContext->GetData(kStyleBorderSID);
     nsStyleSpacing* spacing = (nsStyleSpacing*)
       aContext->GetData(kStyleSpacingSID);
     float p2t = aPresContext->GetPixelsToTwips();
-    nscoord twips = aForCell
+    nscoord twips = (aForCell || (value.GetUnit() == eHTMLUnit_Empty))
       ? nscoord(NS_INT_PIXELS_TO_TWIPS(1, p2t))
-      : nscoord(NS_INT_PIXELS_TO_TWIPS(value.GetIntValue(), p2t));
+      : nscoord(NS_INT_PIXELS_TO_TWIPS(value.GetPixelValue(), p2t));
     nscoord two = nscoord(NS_INT_PIXELS_TO_TWIPS(2,p2t));
-
-#if 0
-    // XXX do I need to do this or can I assert that it's zero?
-    spacing->mBorderPadding.top -= spacing->mBorder.top;
-    spacing->mBorderPadding.right -= spacing->mBorder.right;
-    spacing->mBorderPadding.bottom -= spacing->mBorder.bottom;
-    spacing->mBorderPadding.left -= spacing->mBorder.left;
-#endif
-
-    spacing->mBorder.top = twips;
-    spacing->mBorder.right = twips;
-    spacing->mBorder.bottom = twips;
-    spacing->mBorder.left = twips;
 
     spacing->mPadding.top = two;
     spacing->mPadding.right = two;
     spacing->mPadding.bottom = two;
     spacing->mPadding.left = two;
-
-    spacing->mBorderPadding.top += twips + two;
-    spacing->mBorderPadding.right += twips + two;
-    spacing->mBorderPadding.bottom += twips + two;
-    spacing->mBorderPadding.left += twips + two;
 
     border->mSize.top = twips;
     border->mSize.right = twips;

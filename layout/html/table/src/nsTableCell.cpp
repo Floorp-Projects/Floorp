@@ -176,12 +176,12 @@ void nsTableCell::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     return;
   }
   if (aAttribute == nsHTMLAtoms::rowspan) {
-    ParseValue(aValue, 1, 10000, val);
+    ParseValue(aValue, 1, 10000, val, eHTMLUnit_Integer);
     SetRowSpan(val.GetIntValue());
     return;
   }
   if (aAttribute == nsHTMLAtoms::colspan) {
-    ParseValue(aValue, 1, 1000, val);
+    ParseValue(aValue, 1, 1000, val, eHTMLUnit_Integer);
     SetColSpan(val.GetIntValue());
     return;
   }
@@ -251,10 +251,10 @@ void nsTableCell::MapBorderMarginPaddingInto(nsIStyleContext* aContext,
 
     float     p2t = aPresContext->GetPixelsToTwips();
     if (padding_result == eContentAttr_HasValue)
-      padding = p2t*(float)padding_value.GetIntValue(); 
+      padding = p2t*(float)padding_value.GetPixelValue(); 
     
     if (spacing_result == eContentAttr_HasValue)
-      spacing = p2t*(float)spacing_value.GetIntValue(); 
+      spacing = p2t*(float)spacing_value.GetPixelValue(); 
 
     nsStyleSpacing* spacingData = (nsStyleSpacing*)aContext->GetData(kStyleSpacingSID);
     spacingData->mMargin.SizeTo(spacing,spacing,spacing,spacing);
@@ -270,7 +270,7 @@ void nsTableCell::MapBorderMarginPaddingInto(nsIStyleContext* aContext,
       // zero, then the cell's border width is also zero, 
       // otherwise the cell's border width is one
  
-      PRInt32 intValue = border_value.GetIntValue();
+      PRInt32 intValue = border_value.GetPixelValue();
       if (intValue > 0)
         intValue = 1;
       border = p2t*(float)intValue; 

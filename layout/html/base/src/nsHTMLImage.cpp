@@ -24,7 +24,6 @@
 #include "nsHTMLIIDs.h"
 #include "nsIImage.h"
 #include "nsIWidget.h"
-#include "nsIImage.h"
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIDocument.h"
@@ -302,12 +301,12 @@ void ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
   ca = part->nsHTMLTagContent::GetAttribute(nsHTMLAtoms::width, value);
   if (eContentAttr_HasValue == ca) {
     // XXX Percents
-    width = value.GetIntValue();
+    width = value.GetPixelValue();
   }
   ca = part->nsHTMLTagContent::GetAttribute(nsHTMLAtoms::height, value);
   if (eContentAttr_HasValue == ca) {
     // XXX Percents
-    height = value.GetIntValue();
+    height = value.GetPixelValue();
   }
 
   float p2t = aPresContext->GetPixelsToTwips();
@@ -435,40 +434,40 @@ nsContentAttr ImagePart::GetAttribute(nsIAtom* aAttribute,
   }
   else if (aAttribute == nsHTMLAtoms::usemap) {
     if (nsnull != mUseMap) {
-      aResult.Set(*mUseMap);
+      aResult.SetStringValue(*mUseMap);
       ca = eContentAttr_HasValue;
     }
   }
   else if (aAttribute == nsHTMLAtoms::align) {
     if (ALIGN_UNSET != mAlign) {
-      aResult.Set(mAlign, eHTMLUnit_Enumerated);
+      aResult.SetIntValue(mAlign, eHTMLUnit_Enumerated);
       ca = eContentAttr_HasValue;
     }
   }
   else if (aAttribute == nsHTMLAtoms::src) {
     if (nsnull != mSrc) {
-      aResult.Set(*mSrc);
+      aResult.SetStringValue(*mSrc);
       ca = eContentAttr_HasValue;
     }
   }
   else if (aAttribute == nsHTMLAtoms::lowsrc) {
     if (nsnull != mLowSrc) {
-      aResult.Set(*mLowSrc);
+      aResult.SetStringValue(*mLowSrc);
       ca = eContentAttr_HasValue;
     }
   }
   else if (aAttribute == nsHTMLAtoms::alt) {
     if (nsnull != mAltText) {
-      aResult.Set(*mAltText);
+      aResult.SetStringValue(*mAltText);
       ca = eContentAttr_HasValue;
     }
   }
   else if (aAttribute == nsHTMLAtoms::suppress) {
     if (SUPPRESS_UNSET != mSuppress) {
       switch (mSuppress) {
-      case SUPPRESS:         aResult.Set(1, eHTMLUnit_Absolute); break;
-      case DONT_SUPPRESS:    aResult.Set(0, eHTMLUnit_Absolute); break;
-      case DEFAULT_SUPPRESS: aResult.Reset(); break;
+      case SUPPRESS:         aResult.SetIntValue(1, eHTMLUnit_Integer); break;
+      case DONT_SUPPRESS:    aResult.SetIntValue(0, eHTMLUnit_Integer); break;
+      case DEFAULT_SUPPRESS: aResult.SetEmptyValue(); break;
       }
       ca = eContentAttr_HasValue;
     }
@@ -534,7 +533,7 @@ nsContentAttr ImagePart::AttributeToString(nsIAtom* aAttribute,
   }
   else if (aAttribute == nsHTMLAtoms::suppress) {
     if (SUPPRESS_UNSET != mSuppress) {
-      aResult.SetLength(0);
+      aResult.Truncate();
       switch (mSuppress) {
       case SUPPRESS:         aResult.Append("true"); break;
       case DONT_SUPPRESS:    aResult.Append("false"); break;
@@ -565,7 +564,7 @@ void ImagePart::MapAttributesInto(nsIStyleContext* aContext,
       display->mFloats = NS_STYLE_FLOAT_RIGHT;
       break;
     default:
-      text->mVerticalAlign.Set(mAlign, eStyleUnit_Enumerated);
+      text->mVerticalAlign.SetIntValue(mAlign, eStyleUnit_Enumerated);
       break;
     }
   }

@@ -78,7 +78,7 @@ nsIAtom* nsHTMLTagContent::GetTag() const
 
 void nsHTMLTagContent::ToHTMLString(nsString& aBuf) const
 {
-  aBuf.SetLength(0);
+  aBuf.Truncate(0);
   aBuf.Append('<');
 
   nsIAtom* tag = GetTag();
@@ -127,22 +127,26 @@ nsContentAttr nsHTMLTagContent::GetAttribute(const nsString& aName,
       value.GetStringValue(aResult);
       break;
 
-    case eHTMLUnit_Absolute:
-    case eHTMLUnit_Pixel:
-      aResult.SetLength(0);
+    case eHTMLUnit_Integer:
+      aResult.Truncate();
       aResult.Append(value.GetIntValue(), 10);
       break;
 
+    case eHTMLUnit_Pixel:
+      aResult.Truncate();
+      aResult.Append(value.GetPixelValue(), 10);
+      break;
+
     case eHTMLUnit_Percent:
-      aResult.SetLength(0);
-      aResult.Append(PRInt32(value.GetFloatValue() * 100.0f), 10);
+      aResult.Truncate(0);
+      aResult.Append(PRInt32(value.GetPercentValue() * 100.0f), 10);
       break;
 
     case eHTMLUnit_Color:
       color = nscolor(value.GetColorValue());
       PR_snprintf(cbuf, sizeof(cbuf), "#%02x%02x%02x",
                   NS_GET_R(color), NS_GET_G(color), NS_GET_B(color));
-      aResult.SetLength(0);
+      aResult.Truncate(0);
       aResult.Append(cbuf);
       break;
 
@@ -470,7 +474,7 @@ PRBool nsHTMLTagContent::ParseEnumValue(const nsString& aValue,
 {
   while (nsnull != aTable->tag) {
     if (aValue.EqualsIgnoreCase(aTable->tag)) {
-      aResult.Set(aTable->value, eHTMLUnit_Enumerated);
+      aResult.SetIntValue(aTable->value, eHTMLUnit_Enumerated);
       return PR_TRUE;
     }
     aTable++;
@@ -482,7 +486,7 @@ PRBool nsHTMLTagContent::EnumValueToString(const nsHTMLValue& aValue,
                                            EnumTable* aTable,
                                            nsString& aResult)
 {
-  aResult.SetLength(0);
+  aResult.Truncate(0);
   if (aValue.GetUnit() == eHTMLUnit_Enumerated) {
     PRInt32 v = aValue.GetIntValue();
     while (nsnull != aTable->tag) {
@@ -545,30 +549,39 @@ PRBool nsHTMLTagContent::DivAlignParamToString(const nsHTMLValue& aValue,
 }
 
 void nsHTMLTagContent::ParseValueOrPercent(const nsString& aString,
-                                           nsHTMLValue& aResult)
-{
+                                           nsHTMLValue& aResult, 
+                                           nsHTMLUnit aValueUnit)
+{ // XXX should vave min/max values?
   nsAutoString tmp(aString);
   tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
   PRInt32 ec, val = tmp.ToInteger(&ec);
   if (tmp.Last() == '%') {/* XXX not 100% compatible with ebina's code */
     if (val < 0) val = 0;
     if (val > 100) val = 100;
-    aResult.Set(float(val)/100.0f, eHTMLUnit_Percent);
+    aResult.SetPercentValue(float(val)/100.0f);
   } else {
-    aResult.Set(val, eHTMLUnit_Absolute);
+    if (eHTMLUnit_Pixel == aValueUnit) {
+      aResult.SetPixelValue(val);
+    }
+    else {
+      aResult.SetIntValue(val, aValueUnit);
+    }
   }
 }
 
 PRBool nsHTMLTagContent::ValueOrPercentToString(const nsHTMLValue& aValue,
                                                 nsString& aResult)
 {
-  aResult.SetLength(0);
+  aResult.Truncate(0);
   switch (aValue.GetUnit()) {
-  case eHTMLUnit_Absolute:
+  case eHTMLUnit_Integer:
     aResult.Append(aValue.GetIntValue(), 10);
     return PR_TRUE;
+  case eHTMLUnit_Pixel:
+    aResult.Append(aValue.GetPixelValue(), 10);
+    return PR_TRUE;
   case eHTMLUnit_Percent:
-    aResult.Append(PRInt32(aValue.GetFloatValue() * 100.0f), 10);
+    aResult.Append(PRInt32(aValue.GetPercentValue() * 100.0f), 10);
     aResult.Append('%');
     return PR_TRUE;
   }
@@ -576,21 +589,31 @@ PRBool nsHTMLTagContent::ValueOrPercentToString(const nsHTMLValue& aValue,
 }
 
 void nsHTMLTagContent::ParseValue(const nsString& aString, PRInt32 aMin,
-                                  nsHTMLValue& aResult)
+                                  nsHTMLValue& aResult, nsHTMLUnit aValueUnit)
 {
   PRInt32 ec, val = aString.ToInteger(&ec);
   if (val < aMin) val = aMin;
-  aResult.Set(val, eHTMLUnit_Absolute);
+  if (eHTMLUnit_Pixel == aValueUnit) {
+    aResult.SetPixelValue(val);
+  }
+  else {
+    aResult.SetIntValue(val, aValueUnit);
+  }
 }
 
 void nsHTMLTagContent::ParseValue(const nsString& aString, PRInt32 aMin,
                                   PRInt32 aMax,
-                                  nsHTMLValue& aResult)
+                                  nsHTMLValue& aResult, nsHTMLUnit aValueUnit)
 {
   PRInt32 ec, val = aString.ToInteger(&ec);
   if (val < aMin) val = aMin;
   if (val > aMax) val = aMax;
-  aResult.Set(val, eHTMLUnit_Absolute);
+  if (eHTMLUnit_Pixel == aValueUnit) {
+    aResult.SetPixelValue(val);
+  }
+  else {
+    aResult.SetIntValue(val, aValueUnit);
+  }
 }
 
 PRBool nsHTMLTagContent::ParseImageProperty(nsIAtom* aAttribute,
@@ -598,13 +621,13 @@ PRBool nsHTMLTagContent::ParseImageProperty(nsIAtom* aAttribute,
                                             nsHTMLValue& aResult)
 {
   if ((aAttribute == nsHTMLAtoms::width) ||
-      (aAttribute == nsHTMLAtoms::height)) {
-    ParseValueOrPercent(aString, aResult);
+      (aAttribute == nsHTMLAtoms::height) ||
+      (aAttribute == nsHTMLAtoms::border)) {
+    ParseValueOrPercent(aString, aResult, eHTMLUnit_Pixel);
     return PR_TRUE;
-  } else if ((aAttribute == nsHTMLAtoms::border) ||
-             (aAttribute == nsHTMLAtoms::hspace) ||
+  } else if ((aAttribute == nsHTMLAtoms::hspace) ||
              (aAttribute == nsHTMLAtoms::vspace)) {
-    ParseValue(aString, 0, aResult);
+    ParseValue(aString, 0, aResult, eHTMLUnit_Pixel);
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -633,36 +656,40 @@ PRBool nsHTMLTagContent::ParseColor(const nsString& aString,
     nscolor color;
     if (cbuf[0] == '#') {
       if (NS_HexToRGB(cbuf, &color)) {
-        aResult.Set(color);
+        aResult.SetColorValue(color);
         return PR_TRUE;
       }
     } else {
       if (NS_ColorNameToRGB(cbuf, &color)) {
-        aResult.Set(aString);
+        aResult.SetStringValue(aString);
         return PR_TRUE;
       }
     }
   }
 
-  // Illegal values are mapped to 0
-  aResult.Set(0, eHTMLUnit_Absolute);
+  // Illegal values are mapped to empty
+  aResult.SetEmptyValue();
   return PR_FALSE;
 }
 
 PRBool nsHTMLTagContent::ColorToString(const nsHTMLValue& aValue,
                                        nsString& aResult)
 {
-  if (aValue.GetUnit() == eHTMLUnit_Absolute) {
-    nscolor v = (nscolor) aValue.GetIntValue();
+  if (aValue.GetUnit() == eHTMLUnit_Color) {
+    nscolor v = aValue.GetColorValue();
     char buf[10];
     PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
                 NS_GET_R(v), NS_GET_G(v), NS_GET_B(v));
-    aResult.SetLength(0);
+    aResult.Truncate(0);
     aResult.Append(buf);
     return PR_TRUE;
   }
   if (aValue.GetUnit() == eHTMLUnit_String) {
     aValue.GetStringValue(aResult);
+    return PR_TRUE;
+  }
+  if (aValue.GetUnit() == eHTMLUnit_Empty) {  // was illegal
+    aResult.Truncate();
     return PR_TRUE;
   }
   return PR_FALSE;

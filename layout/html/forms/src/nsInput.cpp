@@ -272,24 +272,38 @@ nsContentAttr nsInput::GetCacheAttribute(nsString* const& aLoc, nsHTMLValue& aVa
     return eContentAttr_NotThere;
   } 
   else {
-    aValue.Set(*aLoc);
+    aValue.SetStringValue(*aLoc);
     return eContentAttr_HasValue;
   }
 }
 
-nsContentAttr nsInput::GetCacheAttribute(PRInt32 aLoc, nsHTMLValue& aValue) const
+nsContentAttr nsInput::GetCacheAttribute(PRInt32 aLoc, nsHTMLValue& aValue, nsHTMLUnit aUnit) const
 {
   aValue.Reset();
   if (aLoc <= ATTR_NOTSET) {
     return eContentAttr_NotThere;
   } 
   else {
-    aValue.Set(aLoc);
+    if (eHTMLUnit_Pixel == aUnit) {
+      aValue.SetPixelValue(aLoc);
+    }
+    else if (eHTMLUnit_Empty == aUnit) {
+      if (PRBool(aLoc)) {
+        aValue.SetEmptyValue();
+      }
+      else {
+        return eContentAttr_NotThere;
+      }
+    }
+    else {
+      aValue.SetIntValue(aLoc, aUnit);
+    }
     return eContentAttr_HasValue;
   }
 }
 
 #if 0
+// Replaced by using eHTMLUnit_Empty in above method
 nsContentAttr nsInput::GetCacheAttribute(PRBool aLoc, nsHTMLValue& aValue) const
 {
   aValue.Reset();
@@ -322,11 +336,20 @@ nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute, PRInt32& aValue) const
   nsHTMLValue htmlValue;
   nsContentAttr result = GetAttribute(aAttribute, htmlValue);
   if (eContentAttr_HasValue == result) {
-    aValue = htmlValue.GetIntValue();
+    if (eHTMLUnit_Empty == htmlValue.GetUnit()) {
+      aValue = 1;
+    }
+    else if (eHTMLUnit_Pixel == htmlValue.GetUnit()) {
+      aValue = htmlValue.GetPixelValue();
+    }
+    else {
+      aValue = htmlValue.GetIntValue();
+    }
     return eContentAttr_HasValue;
   }
   else {
     aValue = ATTR_NOTSET;
+    // XXX for bool values, this should return 0
     return eContentAttr_NoValue;
   }
 }
@@ -357,7 +380,7 @@ nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute,
       return eContentAttr_NotThere;
     }
     else {
-      aValue.Set(tmp);
+      aValue.SetStringValue(tmp);
       return eContentAttr_HasValue;
     }
   } 
@@ -365,13 +388,13 @@ nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute,
     return GetCacheAttribute(mName, aValue);
   } 
   else if (aAttribute == nsHTMLAtoms::size) {
-    return GetCacheAttribute(mSize, aValue);
+    return GetCacheAttribute(mSize, aValue, eHTMLUnit_Pixel); // XXX pixel or percent??
   }
   else if (aAttribute == nsHTMLAtoms::value) {
     return GetCacheAttribute(mValue, aValue);
   }
   else if (aAttribute == nsHTMLAtoms::align) {
-    return GetCacheAttribute(mAlign, aValue);
+    return GetCacheAttribute(mAlign, aValue, eHTMLUnit_Enumerated);
   }
   else {
     return super::GetAttribute(aAttribute, aValue);
