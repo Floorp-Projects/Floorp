@@ -4958,6 +4958,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     UpdateCurrentGlobalHistory();
     PRBool updateHistory = PR_TRUE;
     PRBool equalUri = PR_FALSE;
+    PRBool shAvailable = PR_TRUE;
 
     // Get the post data from the channel
     nsCOMPtr<nsIInputStream> inputStream;
@@ -4968,6 +4969,26 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
             httpChannel->GetUploadStream(getter_AddRefs(inputStream));
         }
     }
+    /* Create SH Entry (mLSHE) only if there is a  SessionHistory object (mSessionHistory) in
+     * the current frame or in the root docshell
+     */
+
+    if (!mSessionHistory) {
+      nsCOMPtr<nsIDocShellTreeItem> root;
+      //Get the root docshell
+      GetSameTypeRootTreeItem(getter_AddRefs(root));
+      if (root) {
+        // QI root to nsIWebNavigation
+        nsCOMPtr<nsIWebNavigation> rootAsWebnav(do_QueryInterface(root));
+        if (rootAsWebnav) {
+          // Get the handle to SH from the root docshell
+          nsCOMPtr<nsISHistory> rootSH;
+          rootAsWebnav->GetSessionHistory(getter_AddRefs(rootSH));
+          if (!rootSH)
+            shAvailable = PR_FALSE;
+        }
+      }
+    }  // mSessionHistory
     // Determine if this type of load should update history
     if (aLoadType & LOAD_FLAGS_BYPASS_HISTORY ||
         aLoadType & LOAD_CMD_RELOAD || aLoadType & LOAD_CMD_HISTORY ||
@@ -4976,8 +4997,8 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
         updateHistory = PR_FALSE;
     }
 
-    if (updateHistory) {        // Page load not from SH
-        // Update session history if necessary...
+    if (updateHistory && shAvailable) { 
+      // Update session history if necessary...
         if (!mLSHE && (mItemType == typeContent) && mURIResultedInDocument) {
             /* This is  a fresh page getting loaded for the first time
              *.Create a Entry for it and add it to SH, if this is the
