@@ -205,6 +205,11 @@ function MsgSortByJunkStatus()
     MsgSortThreadPane(nsMsgViewSortType.byJunkStatus);
 }
 
+function MsgSortByAttachments()
+{
+    MsgSortThreadPane(nsMsgViewSortType.byAttachments);
+}
+
 function MsgSortBySubject()
 {
     MsgSortThreadPane(nsMsgViewSortType.bySubject);

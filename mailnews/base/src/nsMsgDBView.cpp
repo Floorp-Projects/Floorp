@@ -3125,6 +3125,7 @@ nsresult nsMsgDBView::GetFieldTypeAndLenForSort(nsMsgViewSortTypeValue sortType,
         case nsMsgViewSortType::byStatus:
         case nsMsgViewSortType::byLabel:
         case nsMsgViewSortType::byJunkStatus:
+        case nsMsgViewSortType::byAttachments:
             *pFieldType = kU32;
             *pMaxLen = sizeof(PRUint32);
             break;
@@ -3228,6 +3229,11 @@ nsresult nsMsgDBView::GetLongField(nsIMsgDBHdr *msgHdr, nsMsgViewSortTypeValue s
         *result = junkScoreStr.IsEmpty() ? (0) : atoi(junkScoreStr.get()) + 1;
       }
       break;
+	   case nsMsgViewSortType::byAttachments:
+        bits = 0;
+        rv = msgHdr->GetFlags(&bits);
+        *result = !(bits & MSG_FLAG_ATTACHMENT);
+		  break;
     case nsMsgViewSortType::byDate:
       // when sorting threads by date, we want the date of the newest msg
       // in the thread
