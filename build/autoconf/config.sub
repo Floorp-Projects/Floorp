@@ -147,6 +147,10 @@ case $os in
 		basic_machine=i386-pc
 		os=-qnx`uname -v | cut -c1-1`
 		;;
+	-nto*)
+		basic_machine=i386-pc
+		os=-nto
+		;;
 	-rhapsody*)
 		basic_machine=ppc-apple
 		os=-rhapsody`uname -r`
@@ -517,6 +521,10 @@ case $basic_machine in
 		basic_machine=i386-pc
 		os=-qnx`uname -v | cut -c1-1`
 		;;
+	*nto*)
+		basic_machine=i386-pc
+		os=-nto
+		;;
 	rm[46]00)
 		basic_machine=mips-siemens
 		;;
@@ -790,6 +798,8 @@ case $os in
 	-rhapsody*)
 		;;
 	-qnx*)
+		;;
+	-nto*)
 		;;
 	-none)
 		;;
