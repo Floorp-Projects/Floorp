@@ -264,8 +264,6 @@ public:
    */
   NS_IMETHOD  GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const = 0;
 
-  NS_IMETHOD GetLangGroup(const nsString& aCharSet, nsIAtom** aLangGroup) = 0;
-
   /**
    * Get the nsIFontMetrics that describe the properties of
    * an nsFont.

@@ -59,8 +59,6 @@ public:
 
   NS_IMETHOD  GetCanonicalPixelScale(float &aScale) const;
 
-  NS_IMETHOD  GetLangGroup(const nsString& aCharSet, nsIAtom** aLangGroup);
-
   NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
                             nsIFontMetrics*& aMetrics);
   NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics);
