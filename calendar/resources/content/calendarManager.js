@@ -39,6 +39,7 @@
 include('chrome://calendar/content/jslib/io/io.js');
 include('chrome://calendar/content/jslib/rdf/rdf.js');
 include('chrome://calendar/content/jslib/rdf/rdfFile.js');
+var gNextSubNodeToRefresh=0;
 
 function CalendarObject()
 {
@@ -557,21 +558,26 @@ calendarManager.prototype.retrieveAndSaveRemoteCalendar = function calMan_retrie
    var CalendarData = this.getRemoteCalendarText( Channel, onResponse, null );
 }
 
-
+//this function will do the refreshing in turn for all calendars
+//so once refreshing one is finished refreshing the other will be
+//invoked.
 calendarManager.prototype.refreshAllRemoteCalendars = function calMan_refreshAllRemoteCalendars()
 {
    //get all the calendars.
    //get all the other calendars
    var SubNodes = this.rootContainer.getSubNodes();
 
-   for( var i = 0; i < SubNodes.length; i++ )
+   for( var i = gNextSubNodeToRefresh; i < SubNodes.length; i++ )
    {
       //check their remote attribute, if its true, call retrieveAndSaveRemoteCalendar()
       if( SubNodes[i].getAttribute( "http://home.netscape.com/NC-rdf#remote" ) == "true" )
       {
          this.retrieveAndSaveRemoteCalendar( SubNodes[i] );
+         gNextSubNodeToRefresh = i+1;
+         return;
       }
    }
+   gNextSubNodeToRefresh = 0;
 }
 
 /*
@@ -696,27 +702,28 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
       onStreamComplete: function(loader, ctxt, status, resultLength, result)
       {
          window.setCursor( "default" );
-         
+         var retval = false;
+
          //check to make sure its actually a calendar file, if not return.
          if( result.indexOf( "BEGIN:VCALENDAR" ) == -1 )
          {
             alert( "This doesn't appear to be a valid file. Here's what I got back from\n"+Channel.URI.spec+":\nResult:"+result );
-            return false;
+         } else {
+             //if we have only one event, open the event dialog.
+             var firstMatchLocation = result.indexOf( "BEGIN:VEVENT" );
+             if( firstMatchLocation == -1 )
+             {
+                alert( "There are no events in this file. Here's what I got from\n"+Channel.URI.spec+"\nResult: "+result );
+             }
+             else
+             {
+                onResponse( result );
+                retval = true;
+             }
          }
-
-         //if we have only one event, open the event dialog.
-         var BeginEventText = "BEGIN:VEVENT";
-         var firstMatchLocation = result.indexOf( BeginEventText );
-         if( firstMatchLocation == -1 )
-         {
-            alert( "There are no events in this file. Here's what I got from\n"+Channel.URI.spec+"\nResult: "+result );
-            return false;
-         }
-         else
-         {
-            onResponse( result );
-         }
-         return true;
+         if( gNextSubNodeToRefresh )
+            gCalendarWindow.calendarManager.refreshAllRemoteCalendars();
+         return retval;
       }
    }
    
