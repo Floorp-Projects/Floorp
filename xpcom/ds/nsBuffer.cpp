@@ -496,6 +496,8 @@ NS_IMETHODIMP
 nsBuffer::GetWriteSegment(char* *resultSegment,
                           PRUint32 *resultSegmentLen)
 {
+    *resultSegmentLen = 0;
+    *resultSegment = nsnull;
     if (mEOF)
         return NS_BASE_STREAM_EOF;
 
