@@ -76,6 +76,7 @@ textarea {
   background-color: -moz-field;
   border: 2px inset ThreeDFace;
   color: WindowText;
+  cursor: text;
   font: field;
   margin: 1px 0 1px 0;
   text-align: start;
