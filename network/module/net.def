@@ -20,4 +20,3 @@ EXPORTS
         NET_ToggleTrace
         NET_PollSockets
         NS_NewRelatedLinks
-	kINetSupportIID
