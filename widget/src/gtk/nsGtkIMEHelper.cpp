@@ -626,6 +626,11 @@ nsIMEStatus::CreateNative() {
 
   XStoreName(display, mIMStatusWindow, "Mozilla IM Status");
 
+  XClassHint class_hint;
+  class_hint.res_name = "mozilla-im-status";
+  class_hint.res_class = "MozillaImStatus";
+  XSetClassHint(display, mIMStatusWindow, &class_hint);
+
   long mask = ExposureMask;
   XSelectInput(display, mIMStatusWindow, mask);
 }
