@@ -22,7 +22,7 @@
 #include "nsLayoutCID.h"
 #include "nsIDocument.h"
 #include "nsIHTMLContent.h"
-#include "nsIRangeList.h"
+#include "nsICollection.h"
 
 #include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
@@ -30,6 +30,7 @@
 #include "nsDOMCID.h"
 #include "nsIDOMNativeObjectRegistry.h"
 #include "nsIServiceManager.h"
+#include "nsICollection.h"
 
 static NS_DEFINE_IID(kCHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCXMLDocumentCID, NS_XMLDOCUMENT_CID);
@@ -37,10 +38,10 @@ static NS_DEFINE_IID(kCImageDocumentCID, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kCHTMLImageElementFactoryCID, NS_HTMLIMAGEELEMENTFACTORY_CID);
 static NS_DEFINE_IID(kIDOMHTMLImageElementFactoryIID, NS_IDOMHTMLIMAGEELEMENTFACTORY_IID);
 static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
-static NS_DEFINE_IID(kIRangeList, NS_IRANGELIST);
+static NS_DEFINE_IID(kICollectionIID, NS_ICOLLECTION_IID);
 
 
-nsresult NS_NewRangeList(nsIRangeList **);
+nsresult NS_NewRangeList(nsICollection **);
 
 
 
@@ -205,8 +206,8 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     inst = new HTMLImageElementFactory();
     refCounted = PR_FALSE;
   }
-  else if (mClassID.Equals(kIRangeList)) {
-    res = NS_NewRangeList((nsIRangeList **)&inst);
+  else if (mClassID.Equals(kICollectionIID)) {
+    res = NS_NewRangeList((nsICollection **)&inst);
     if (!NS_SUCCEEDED(res)) {
       return res;
     }
