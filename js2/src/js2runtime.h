@@ -808,7 +808,7 @@ XXX ...couldn't get this to work...
     class JSArrayType : public JSType {
     public:
         JSArrayType(Context *cx, JSType *elementType, const StringAtom *name, JSType *super) 
-            : mElementType(elementType), JSType(cx, name, super)
+            : JSType(cx, name, super), mElementType(elementType)
         {
         }
         virtual ~JSArrayType() { } // keeping gcc happy
