@@ -94,6 +94,9 @@
 #include "nsQuickSort.h"
 #ifdef MOZ_XUL
 #include "nsIXULContent.h"
+#include "nsIDOMXULPopupElement.h"
+#include "nsIDOMXULMenuBarElement.h"
+#include "nsXULAtoms.h"
 #endif
 
 #include "nsContentUtils.h"
@@ -3234,6 +3237,7 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
   mIsHTMLLink = PR_FALSE;
   mIsSimpleXLink = PR_FALSE;
   mIsChecked = PR_FALSE;
+  mIsMenuActive = PR_FALSE;
   mLinkState = eLinkState_Unknown;
   mEventState = NS_EVENT_STATE_UNSPECIFIED;
   mNameSpaceID = kNameSpaceID_Unknown;
@@ -3302,13 +3306,38 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
       mIsSimpleXLink = PR_TRUE;
     } 
 
+    // The :checked pseudoclass applies to input and option elements
     if (mIsHTMLContent) {
       PRBool isChecked = PR_FALSE;
       if (mContentTag == nsHTMLAtoms::option) {
         nsCOMPtr<nsIDOMHTMLOptionElement> optEl = do_QueryInterface(mContent);
         optEl->GetSelected(&isChecked);
       }
+
       mIsChecked = isChecked;
+    }
+
+    // The :-moz-menuactive pseudoclass applies to HTML option elements,
+    // XUL menuitem elements, and XUL menu elements.
+    if ((mIsHTMLContent && mContentTag == nsHTMLAtoms::option) ||
+        (mContent->IsContentOfType(nsIContent::eXUL) &&
+         (mContentTag == nsXULAtoms::menuitem || mContentTag == nsXULAtoms::menu))) {
+      
+      nsCOMPtr<nsIDOMElement> currentItem;
+      nsCOMPtr<nsIDOMXULPopupElement> popupEl = do_QueryInterface(mParentContent);
+      if (popupEl)
+        popupEl->GetActiveItem(getter_AddRefs(currentItem));
+      else {
+        nsCOMPtr<nsIDOMXULMenuBarElement> menubar = do_QueryInterface(mParentContent);
+        if (menubar)
+          menubar->GetActiveMenu(getter_AddRefs(currentItem));
+      }
+
+      if (currentItem) {
+        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mContent);
+        if (currentItem == element)
+          mIsMenuActive = PR_TRUE;
+      }
     }
   }
 }
@@ -3608,6 +3637,12 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         //  <input type=radio>
         if (aTestState)
           result = data.mIsChecked ? localTrue : localFalse;
+      }
+      else if (nsCSSAtoms::menuActivePseudo == pseudoClass->mAtom) {
+        // This pseudoclass will match on at most one child of
+        // a menupopup.
+        if (aTestState)
+          result = data.mIsMenuActive ? localTrue : localFalse;
       }
       else {
         result = localFalse;  // unknown pseudo class
@@ -4242,6 +4277,7 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
         (pseudoClass->mAtom == nsCSSAtoms::focusPseudo) || 
         (pseudoClass->mAtom == nsCSSAtoms::hoverPseudo) || 
         (pseudoClass->mAtom == nsCSSAtoms::linkPseudo) ||
+        (pseudoClass->mAtom == nsCSSAtoms::menuActivePseudo) ||
         (pseudoClass->mAtom == nsCSSAtoms::selectionPseudo) ||
         (pseudoClass->mAtom == nsCSSAtoms::visitedPseudo)) {
       return PR_TRUE;

@@ -29,7 +29,7 @@
     <content>
       <xul:label class="menu-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:label class="menu-accel" inherits="value=acceltext"/>
-      <xul:hbox align="center" class="menu-right" inherits="menuactive,disabled">
+      <xul:hbox align="center" class="menu-right" inherits="disabled">
         <xul:image/>
       </xul:hbox>
       <children includes="menupopup"/>
@@ -71,7 +71,7 @@
   <binding id="menuitem-iconic" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
       <xul:hbox class="menu-iconic-left" align="center" pack="center"
-               inherits="selected,menuactive,disabled,checked">
+               inherits="selected,disabled,checked">
         <xul:image class="menu-iconic-icon" inherits="validate,src"/>
       </xul:hbox>
       <xul:label class="menu-iconic-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
@@ -91,7 +91,7 @@
       </xul:hbox>
       <xul:label class="menu-iconic-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:label class="menu-iconic-accel" inherits="value=acceltext"/>
-      <xul:hbox class="menu-right" inherits="menuactive,disabled" align="center" pack="center">
+      <xul:hbox class="menu-right" inherits="disabled" align="center" pack="center">
         <xul:image/>
       </xul:hbox>
       <children includes="menupopup|template"/>

@@ -57,8 +57,8 @@ menuitem[default="true"] {
   
 menu[disabled="true"],
 menuitem[disabled="true"],
-menu[menuactive="true"][disabled="true"],
-menuitem[menuactive="true"][disabled="true"] {
+menu[disabled="true"]:-moz-menuactive,
+menuitem[disabled="true"]:-moz-menuactive {
   color: #838E9B;
 }
 
@@ -102,7 +102,7 @@ menuitem[menuactive="true"][disabled="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-arrow.gif");
 }
 
-.menu-right[menuactive="true"] {
+menu:-moz-menuactive > .menu-right {
   list-style-image: url("chrome://global/skin/menu/menu-arrow-hov.gif");
 }
 
@@ -118,11 +118,11 @@ menubar > menu {
   margin: 1px 0px 1px 0px;
 }
 
-menubar > menu[menuactive="true"] {
+menubar > menu:-moz-menuactive {
   border: 1px outset #DDE3EB;
 }
 
-menubar > menu[menuactive="true"][open="true"] {
+menubar > menu[open="true"]:-moz-menuactive {
   border-style: inset;
 }
 
@@ -148,10 +148,10 @@ popup > menuitem {
   max-width: 42em;
 }
 
-menupopup > menu[menuactive="true"],
-menupopup > menuitem[menuactive="true"],
-popup > menu[menuactive="true"],
-popup > menuitem[menuactive="true"] {
+menupopup > menu:-moz-menuactive,
+menupopup > menuitem:-moz-menuactive,
+popup > menu:-moz-menuactive,
+popup > menuitem:-moz-menuactive {
   background-color: #424F63;
   color: #FFFFFF;
 }
@@ -175,7 +175,7 @@ menulist > menupopup > menuitem[selected="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check.gif");
 }
   
-menulist > menupopup > menuitem[menuactive="true"][selected="true"] {
+menulist > menupopup > menuitem[selected="true"]:-moz-menuactive {
   list-style-image: url("chrome://global/skin/menu/menu-check-hov.gif");
 }
 
@@ -189,7 +189,7 @@ menuitem[checked="true"][disabled="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check-dis.gif");
 }
 
-menuitem[checked="true"][menuactive="true"] {
+menuitem[checked="true"]:-moz-menuactive {
   list-style-image: url("chrome://global/skin/menu/menu-check-hov.gif");
 }
 
@@ -203,7 +203,7 @@ menuitem[checked="true"][type="radio"][disabled="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-radio-dis.gif");
 }
 
-menuitem[checked="true"][type="radio"][menuactive="true"] {
+menuitem[checked="true"][type="radio"]:-moz-menuactive {
   list-style-image: url("chrome://global/skin/menu/menu-radio-hov.gif");
 }
 
