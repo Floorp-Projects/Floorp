@@ -100,8 +100,15 @@ ssmObscure_InitPrivate(SSMObscureObject * obj, SSMObscureBool IsServer)
     	return NULL;
 
     priv->obj        = obj;
+
+    obj->privData  = (void *)priv;
+    obj->destroy  = ssmObscure_Destroy;
+    obj->send     = ssmObscure_Send;
+    obj->recv     = ssmObscure_Recv;
+    obj->sendInit = ssmObscure_SendInit;
+    obj->recvInit = ssmObscure_RecvInit;
+    
     return priv;
 }
 
 obsInitFn SSMObscure_InitPrivate = ssmObscure_InitPrivate;
-
