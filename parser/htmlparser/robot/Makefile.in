@@ -32,7 +32,7 @@ SHORT_LIBNAME	= dbgrobot
 CPPSRCS		= nsDebugRobot.cpp nsRobotSink.cpp
 
 ifdef ENABLE_TESTS
-#DIRS		= test
+DIRS		= test
 endif
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
