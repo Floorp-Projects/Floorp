@@ -45,8 +45,6 @@ function OnLoadNewCard()
 {
   InitEditCard();
 
-  doSetOKCancel(NewCardOKButton, 0);
-
   var cardproperty = Components.classes["@mozilla.org/addressbook/cardproperty;1"].createInstance(Components.interfaces.nsIAbCard);
 
   editCard.card = cardproperty;
@@ -205,24 +203,9 @@ function EditCardOKButton()
   return true;  // close the window
 }
 
-
-function OnNewCardEnter()
-{
-  if (NewCardOKButton()) 
-    window.close();
-}
-
-function OnEditCardEnter()
-{
-  if (EditCardOKButton()) 
-    window.close();
-}
-
 function OnLoadEditCard()
 {
   InitEditCard();
-
-  doSetOKCancel(EditCardOKButton, 0);
 
   editCard.titleProperty = "editCardTitle";
 
@@ -501,16 +484,6 @@ function CleanUpWebPage(webPage)
     return(webPage);
 }
 
-
-function NewCardCancelButton()
-{
-  top.window.close();
-}
-
-function EditCardCancelButton()
-{
-  top.window.close();
-}
 
 function GenerateDisplayName()
 {

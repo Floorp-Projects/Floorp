@@ -19,25 +19,16 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/addressbook/abCardOverlay.xul"?>
 
-
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="abcardWindow"
         onload="OnLoadEditCard()"
-        class="dialog">
-
-  <keyset id="editCardDialogKeys">
-    <key keycode="VK_ENTER" oncommand="OnEditCardEnter();"/>
-    <key keycode="VK_RETURN" oncommand="OnEditCardEnter();"/>
-    <key keycode="VK_ESCAPE" oncommand="window.close();"/>
-  </keyset>
+        buttonpack="center"
+        ondialogaccept="return EditCardOKButton();">
 
   <stringbundleset id="stringbundleset"/>
   <vbox id="editcard"/>	
-  <hbox id="okCancelButtons"/>
-</window>
-
+</dialog>
