@@ -270,8 +270,14 @@ Contributor(s): ______________________________________. -->
 <!ENTITY  notifCom.label "[Notification Component]">
 <!ENTITY  statusText.label "Document: Done">
 <<<<<<< navigator.xul
+<<<<<<< navigator.xul
+<!ENTITY  buildId.label "Build ID: 1999070517">
+=======
+=======
+<<<<<<< navigator.xul
 <!ENTITY  buildId.label "Build ID: 1999062415">
 =======
+>>>>>>> 1.164
 <!ENTITY  buildId.label "Build ID: 1999070614">
 >>>>>>> 1.162
 <!ENTITY  security-button.label "Secure Conn">
@@ -657,6 +663,27 @@ Contributor(s): ______________________________________. -->
   </menubar>
   
    <toolbox>
+    <xpmenubar chromeclass="menubar">
+	  <xpmenu>
+	    <html:u>F</html:u>ile
+	  </xpmenu>
+	  <xpmenu>
+	    <html:u>E</html:u>dit
+	  </xpmenu>
+	  <xpmenu>
+	    <html:u>V</html:u>iew
+	  </xpmenu>
+	  <xpmenu>
+	    <html:u>I</html:u>nsert
+	  </xpmenu>
+	  <xpmenu>
+	    <html:u>P</html:u>roject
+	  </xpmenu>
+	  <xpmenu>
+	    <html:u>B</html:u>uild
+	  </xpmenu>
+    </xpmenubar>
+
     <toolbar class="main-bar" chromeclass="toolbar">
 		  <titledbutton id="back-button" align="bottom" value="&backButton.label;" onclick="BrowserBack()">	
 				  <observes element="canGoBack" attribute="disabled" onChange="BrowserSetBack()"/>			

@@ -1186,14 +1186,14 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   if ( !popupContent ) 
     return NS_OK; // It's ok. Really.
   
-  // Fire the CONSTRUCT DOM event to give JS/C++ a chance to build the popup
+  // Fire the create DOM event to give JS/C++ a chance to build the popup
   // dynamically. After we fire off the event, make sure we check the result
   // for |nsEventStatus_eConsumeNoDefault| which translates into an event
   // handler returning false. If that happens, abort creating the popup.
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
-  event.message = NS_POPUP_CONSTRUCT;
+  event.message = NS_MENU_CREATE;
   rv = popupContent->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
   if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
     return rv;
@@ -1218,11 +1218,11 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
     // XXX Need to distinguish between popup menus and context menus?
     DoContextMenu(nsnull, rootElement, mWindow, aXPos, aYPos, aPopupAlignment, anAnchorAlignment);
 
-    // Fire the DESTRUCT DOM event to give JS/C++ a chance to destroy the popup contents
+    // Fire the destroy DOM event to give JS/C++ a chance to destroy the popup contents
     nsEventStatus status = nsEventStatus_eIgnore;
     nsMouseEvent event;
     event.eventStructType = NS_EVENT;
-    event.message = NS_POPUP_DESTRUCT;
+    event.message = NS_MENU_DESTROY;
     rv = popupContent->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
     return rv;
   }
