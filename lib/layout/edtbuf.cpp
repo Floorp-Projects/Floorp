@@ -3458,7 +3458,8 @@ EDT_ClipboardResult CEditBuffer::InternalReturnKey(XP_Bool bUserTyped)
         // Check if we were originally at an empty text element
         //   with different formating than current element --
         //   it was deleted during ClearPhantomInsertPoint() in SplitAtContainer()
-        if( pEmptyFormatElement && m_pCurrent && m_pCurrent->IsText() &&
+        if( !m_bUseCurrentTextFormat && pEmptyFormatElement && 
+            m_pCurrent && m_pCurrent->IsText() &&
             !m_pCurrent->Text()->SameFormat(pEmptyFormatElement) )
 	    {
             if( m_pCurrent->GetLen() > 0 )
