@@ -30,7 +30,7 @@
         <rdf:li> <rdf:Description nc:name="Internet protocol address (IP address)" nc:link="glossary.xhtml#Internet_protocol_address"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Java" nc:link="glossary.xhtml#Java"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="JavaScript" nc:link="glossary.xhtml#JavaScript"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="live bookmark" nc:link="glossary.xhtml#live_bookmark"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Live Bookmark" nc:link="glossary.xhtml#live_bookmark"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Location Bar" nc:link="glossary.xhtml#location_bar"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="master password" nc:link="glossary.xhtml#master_password"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Navigation Toolbar" nc:link="glossary.xhtml#navigation_toolbar"/> </rdf:li>
