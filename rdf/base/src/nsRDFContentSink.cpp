@@ -553,6 +553,24 @@ RDFContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
         return NS_ERROR_UNEXPECTED; // XXX
     }
 
+    // If we've just popped a member or property element, _now_ is the
+    // time to add that element to the graph.
+    switch (mState) {
+    case eRDFContentSinkState_InMemberElement: {
+        nsCOMPtr<nsIRDFContainer> container;
+        NS_NewRDFContainer(getter_AddRefs(container));
+        container->Init(mDataSource, GetContextElement(1));
+        container->AppendElement(resource);
+    } break;
+
+    case eRDFContentSinkState_InPropertyElement: {
+        mDataSource->Assert(GetContextElement(1), GetContextElement(0), resource, PR_TRUE);
+    } break;
+
+    default:
+        break;
+    }
+    
     PRInt32 nestLevel = mContextStack->Count();
     if (nestLevel == 0)
         mState = eRDFContentSinkState_InEpilog;
@@ -1175,25 +1193,6 @@ RDFContentSinkImpl::OpenObject(const nsIParserNode& aNode)
     rv = GetIdAboutAttribute(aNode, &rdfResource);
     if (NS_FAILED(rv)) return rv;
 
-    // If we're in a member or property element, then this is the cue
-    // that we need to hook the object up into the graph via the
-    // member/property.
-    switch (mState) {
-    case eRDFContentSinkState_InMemberElement: {
-        nsCOMPtr<nsIRDFContainer> container;
-        NS_NewRDFContainer(getter_AddRefs(container));
-        container->Init(mDataSource, GetContextElement(1));
-        container->AppendElement(rdfResource);
-    } break;
-
-    case eRDFContentSinkState_InPropertyElement: {
-        mDataSource->Assert(GetContextElement(1), GetContextElement(0), rdfResource, PR_TRUE);
-    } break;
-
-    default:
-        break;
-    }
-    
     // Push the element onto the context stack
     PushContext(rdfResource, mState);
 
