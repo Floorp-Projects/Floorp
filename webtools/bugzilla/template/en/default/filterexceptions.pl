@@ -427,7 +427,8 @@
   'matches.0', 
   'tablecolour',
   'buildid',
-  'sel', 
+  'sel',
+  'productstring', 
 ],
 
 'bug/activity/show.html.tmpl' => [
