@@ -75,8 +75,8 @@
             observe : function(aObject) { this.console.appendItem(aObject); }
           };
           
-          this.mConsoleRowBox = this.getAnonElByAttr("role", "console-rows");
-          this.mStrBundle = this.getAnonElByAttr("role", "string-bundle");
+          this.mConsoleRowBox = document.getAnonymousElementByAttribute(this, "role", "console-rows");
+          this.mStrBundle = document.getAnonymousElementByAttribute(this, "role", "string-bundle");
           
           try {
             var isupports = Components.classes['@mozilla.org/consoleservice;1'].getService();
@@ -251,24 +251,6 @@
             
       <!-- UTILITY FUNCTIONS -->
       
-      <!-- We need this method only because document.getAnonymousElementByAttribute 
-          is crashing (as of 2/26/2001) -->
-      <method name="getAnonElByAttr">
-        <parameter name="aAttr"/>
-        <parameter name="aVal"/>
-        <body><![CDATA[
-          var kids = document.getAnonymousNodes(this);
-          for (var i = 0; i < kids.length; ++i) {
-            if (kids[i].getAttribute(aAttr) == aVal)
-              return kids[i];
-            var kids2 = kids[i].getElementsByAttribute(aAttr, aVal);
-            if (kids2.item(0))
-              return kids2[0];
-          }
-          return null;
-        ]]></body>
-      </method>
-
       <method name="repeatChar">
         <parameter name="aChar"/>
         <parameter name="aCol"/>
