@@ -8,7 +8,7 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  title="CreateProfile Wizard"> 
+  title="Profile Manager"> 
 
 
 <html:script>
@@ -17,12 +17,12 @@ var profileCore = XPAppCoresManager.Find("ProfileCore");
     	
 if (!profileCore)
 {
-    dump("!profileCore\n");
+    //dump("!profileCore\n");
 	profileCore = new ProfileCore();
-	dump("!profileCore\n");
+	//dump("!profileCore\n");
 
 	if (profileCore) {
-		dump("after ! yes profileCore in if loop\n");
+		//dump("after ! yes profileCore in if loop\n");
 		profileCore.Init("ProfileCore");
 	}
 	else {
@@ -32,7 +32,7 @@ if (!profileCore)
 
 function GetProfileCore()
 {
-	dump("****************In GetProfileCore\n");
+	//dump("****************In GetProfileCore\n");
 	return profileCore;
 }
 
@@ -41,15 +41,15 @@ function GetProfileCore()
 
 function SetProfileName(profName)
 {
-	dump("****************In SetProfileName\n");
-	dump("********************************ProfileName: "+profName+"\n");
+	//dump("****************In SetProfileName\n");
+	//dump("********************************ProfileName: "+profName+"\n");
 	curProfileName = profName;
 }
 
 function GetProfileName()
 {
-	dump("****************In GetProfileName\n");
-	dump("********************************ProfileName: "+curProfileName+"\n");
+	//dump("****************In GetProfileName\n");
+	//dump("********************************ProfileName: "+curProfileName+"\n");
 
 	return curProfileName;
 }
