@@ -85,7 +85,7 @@ private:
   
   char* LookupMimeMappingsForItem ( DragReference inDragRef, ItemReference itemRef ) ;
 
-  void RegisterDragItemsAndFlavors ( nsISupportsArray * inArray ) ;
+  void RegisterDragItemsAndFlavors ( nsISupportsArray * inArray, RgnHandle inDragRgn ) ;
   PRBool BuildDragRegion ( nsIScriptableRegion* inRegion, nsIDOMNode* inNode, RgnHandle ioDragRgn ) ;
   OSErr GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference inDragRef, unsigned int inItemIndex, 
                              FlavorType inFlavor, void** outData, unsigned int * outSize ) ;

@@ -40,6 +40,7 @@
 
 #include "nsChildView.h"
 #include "nsIScrollbar.h"
+#import "mozView.h"
 
 
 /**
@@ -88,6 +89,10 @@ public:
   NS_IMETHOD          SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                             PRUint32 aPosition, PRUint32 aLineIncrement);
 
+    // called from the ScrollbarView when someone hits a part
+    // of the scrollbar.
+  void DoScroll(NSScrollerPart inPart);
+
 protected:
   
   virtual PRBool    IsVertical ( ) const = 0;
@@ -97,19 +102,12 @@ protected:
   virtual NSView*   CreateCocoaView() ;
   virtual GrafPtr   GetQuickDrawPort() ;
 
-private:
-
-  static 
-  pascal void       ScrollActionProc(ControlHandle, ControlPartCode);
-  void              DoScrollAction(ControlPartCode);
-
 // DATA
 private:
   PRInt32           mValue;
   PRUint32          mMaxValue;
   PRUint32          mVisibleImageSize;
   PRUint32          mLineIncrement;
-  PRBool            mMouseDownInScroll;
   ControlPartCode       mClickedPartCode;
   static ControlActionUPP   sControlActionProc; // we only need one of these
 };
@@ -137,27 +135,23 @@ protected:
 
 
 
-@interface ScrollbarView : NSScroller
+@interface ScrollbarView : NSScroller<mozView>
 {
-  // Our window [WEAK]
+    // Our window [WEAK]
   NSWindow* mWindow;
   
-    // the nsChildView that created the view. It retains this NSView, so
-    // the link back to it must be weak.
-  nsChildView* mGeckoChild;
-  
-    // allows us to redispatch events back to a centralized location
-  //nsIEventSink* mEventSink;
-  
-    // tag for our mouse enter/exit tracking rect
-  NSTrackingRectTag mMouseEnterExitTag;
-
-  // used to avoid move re-entrancy
-  BOOL mInMove;
+    // the nsScrollbar that created this view. It retains this NSView, so
+    // the link back to it must be weak. [WEAK]
+  nsScrollbar* mGeckoChild;
 }
 
-- (NSWindow*) getNativeWindow;
-- (void) setNativeWindow: (NSWindow*)aWindow;
+  // default initializer
+- (id)initWithFrame:(NSRect)frameRect geckoChild:(nsScrollbar*)inChild;
+  // overridden parent class initializer
+- (id)initWithFrame:(NSRect)frameRect;
+
+- (IBAction)scroll:(NSScroller*)sender;
+
 @end
 
 #endif // nsScrollbar_

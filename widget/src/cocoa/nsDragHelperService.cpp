@@ -177,8 +177,6 @@ nsDragHelperService::Leave ( DragReference inDragRef, nsIEventSink *inSink )
   PRBool handled = PR_FALSE;
   inSink->DragEvent ( NS_DRAGDROP_EXIT, mouseLocGlobal.h, mouseLocGlobal.v, 0L, &handled );
   
-  ::HideDragHilite ( inDragRef );
-
   // we're _really_ done with it, so let go of the service.
   mDragService = nsnull;      
 

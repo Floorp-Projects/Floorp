@@ -41,6 +41,7 @@
 
 #include "nsISupports.h"
 #include "nsBaseWidget.h"
+#include "nsIPluginWidget.h"
 #include "nsDeleteObserver.h"
 #include "nsIEventSink.h"
 
@@ -62,12 +63,13 @@
 
 struct nsPluginPort;
 
+#undef DARWIN
 #import <Cocoa/Cocoa.h>
 
 class nsChildView;
 
 
-@interface ChildView : NSQuickDrawView<mozView>
+@interface ChildView : NSQuickDrawView<mozView, NSTextInput>
 {
   NSWindow*       mWindow;    // shortcut to the top window, [WEAK]
   
@@ -83,24 +85,15 @@ class nsChildView;
 
   // Whether we're a plugin view.
   BOOL mIsPluginView;
+  BOOL mLastKeyEventWasSentToCocoa;
+
+  NSEvent* mCurEvent;   // only valid during a keyDown
+  
+  // needed for NSTextInput implementation
+  NSRange mMarkedRange;
+  NSRange mSelectedRange;
+  BOOL mInComposition;
 }
-
-  // sets up our view, attaching it to its owning gecko view
-- (id) initWithGeckoChild:(nsChildView*)child eventSink:(nsIEventSink*)sink;
-
-  // convert from one event system to the other for event dispatching
-- (void) convert:(NSEvent*)inEvent message:(PRInt32)inMsg toGeckoEvent:(nsInputEvent*)outGeckoEvent;
-
-  // create a gecko key event out of a cocoa event
-- (void) convert:(NSEvent*)aKeyEvent message:(PRUint32)aMessage 
-           isChar:(PRBool*)outIsChar
-           toGeckoEvent:(nsKeyEvent*)outGeckoEvent;
-- (void) convert:(NSPoint)inPoint message:(PRInt32)inMsg 
-          modifiers:(unsigned int)inMods toGeckoEvent:(nsInputEvent*)outGeckoEvent;
-
--(NSMenu*)getContextMenu;
-
--(void)setIsPluginView:(BOOL)aIsPlugin;
 
 @end
 
@@ -112,7 +105,11 @@ class nsChildView;
 //
 //-------------------------------------------------------------------------
 
-class nsChildView : public nsBaseWidget, public nsDeleteObserved, public nsIKBStateControl, public nsIEventSink
+class nsChildView : public nsBaseWidget,
+                    public nsDeleteObserved,
+                    public nsIPluginWidget,
+                    public nsIKBStateControl,
+                    public nsIEventSink
 {
 private:
   typedef nsBaseWidget Inherited;
@@ -178,8 +175,9 @@ public:
   virtual nsIFontMetrics* GetFont(void);
   NS_IMETHOD              SetFont(const nsFont &aFont);
   NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
-  NS_IMETHOD        Invalidate(const nsRect &aRect,PRBool aIsSynchronous);
-  NS_IMETHOD        InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
+  NS_IMETHOD              Invalidate(const nsRect &aRect,PRBool aIsSynchronous);
+  NS_IMETHOD              InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
+  NS_IMETHOD              Validate();
 
   virtual void*           GetNativeData(PRUint32 aDataType);
   NS_IMETHOD              SetColorMap(nsColorMap *aColorMap);
@@ -190,7 +188,7 @@ public:
   NS_IMETHOD              EndResizingChildren(void);
 
   static  PRBool          ConvertStatus(nsEventStatus aStatus);
-  NS_IMETHOD            DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
+  NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
   virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
 
   virtual void          StartDraw(nsIRenderingContext* aRenderingContext = nsnull);
@@ -199,9 +197,9 @@ public:
   virtual void      UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext);
   
   virtual void      ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
-  void          LocalToWindowCoordinate(nsPoint& aPoint)            { ConvertToDeviceCoordinates(aPoint.x, aPoint.y); }
-  void          LocalToWindowCoordinate(nscoord& aX, nscoord& aY)       { ConvertToDeviceCoordinates(aX, aY); }
-  void          LocalToWindowCoordinate(nsRect& aRect)              { ConvertToDeviceCoordinates(aRect.x, aRect.y); }
+  void              LocalToWindowCoordinate(nsPoint& aPoint)            { ConvertToDeviceCoordinates(aPoint.x, aPoint.y); }
+  void              LocalToWindowCoordinate(nscoord& aX, nscoord& aY)   { ConvertToDeviceCoordinates(aX, aY); }
+  void              LocalToWindowCoordinate(nsRect& aRect)              { ConvertToDeviceCoordinates(aRect.x, aRect.y); }
 
   NS_IMETHOD        SetMenuBar(nsIMenuBar * aMenuBar);
   NS_IMETHOD        ShowMenuBar(PRBool aShow);
@@ -216,17 +214,28 @@ public:
 
   NS_IMETHOD        GetAttention();
 
+  // nsIPluginWidget
+  NS_IMETHOD        GetPluginClipRect(nsRect& outClipRect, nsPoint& outOrigin);
+  NS_IMETHOD        StartDrawPlugin();
+  NS_IMETHOD        EndDrawPlugin();
+  
   // Mac specific methods
   virtual void      CalcWindowRegions();
 
-  virtual PRBool      PointInWidget(Point aThePoint);
+  virtual PRBool    PointInWidget(Point aThePoint);
   
-  virtual PRBool      DispatchWindowEvent(nsGUIEvent& event);
-  virtual PRBool      DispatchWindowEvent(nsGUIEvent &event,nsEventStatus &aStatus);
+  virtual PRBool    DispatchWindowEvent(nsGUIEvent& event);
+  virtual PRBool    DispatchWindowEvent(nsGUIEvent &event,nsEventStatus &aStatus);
   virtual void      AcceptFocusOnClick(PRBool aBool) { mAcceptFocusOnClick = aBool;};
   PRBool            AcceptFocusOnClick() { return mAcceptFocusOnClick;};
   void              Flash(nsPaintEvent  &aEvent);
+  
+  void              RemovedFromWindow();
+  void              AddedToWindow();
 
+  void              LiveResizeStarted();
+  void              LiveResizeEnded();
+  
 public:
   // nsIKBStateControl interface
   NS_IMETHOD ResetInputState();
@@ -260,23 +269,28 @@ public:
   const char*       gInstanceClassName;
 #endif
 
-  id              mView;      // my parallel cocoa view, [STRONG]
+  id                    mView;      // my parallel cocoa view, [STRONG]
 
-  NSView*         mParentView;
+  NSView*               mParentView;
+  nsIWidget*            mParentWidget;
   
-  PRBool          mDestroyCalled;
-  PRBool          mDestructorCalled;
-  PRBool          mVisible;
+  nsIFontMetrics*       mFontMetrics;
+  nsIRenderingContext*  mTempRenderingContext;
 
-  nsIFontMetrics*     mFontMetrics;
-  
-  PRBool          mDrawing;
-  nsIRenderingContext*    mTempRenderingContext;
-  PRBool          mTempRenderingContextMadeHere;
+  PRPackedBool          mDestroyCalled;
+  PRPackedBool          mDestructorCalled;
+  PRPackedBool          mVisible;
+  PRPackedBool          mInWindow;    // true if the widget is in a visible tab
+
+  PRPackedBool          mDrawing;
+  PRPackedBool          mTempRenderingContextMadeHere;
     
-  nsPluginPort*     mPluginPort;
-
-  PRBool          mAcceptFocusOnClick;
+  PRPackedBool          mAcceptFocusOnClick;
+  PRPackedBool          mLiveResizeInProgress;
+  PRPackedBool          mPluginDrawing;
+  
+  nsPluginPort*         mPluginPort;
+  RgnHandle             mVisRgn;
     
 };
 

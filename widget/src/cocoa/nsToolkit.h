@@ -39,7 +39,6 @@
 #define TOOLKIT_H
 
 #include "nsIToolkit.h"
-#include "nsRepeater.h"
 
 #include "nsCOMPtr.h"
 #include "nsIEventQueueService.h"
@@ -80,20 +79,11 @@ public:
     
   NS_IMETHOD  	Init(PRThread *aThread);
   
-  // are there pending events on the toolkit's event queue?
-  PRBool        ToolkitBusy();
-  
-public:
-
-  // Appearance Mgr
-  static bool 	HasAppearanceManager();
-  
-  // helpers to determine if the app is in the fg or bg
-  static void AppInForeground ( ) ;
-  static void AppInBackground ( ) ;
-  static bool IsAppInForeground ( ) ;
-
 protected:
+
+  static int QuartzChangedCallback(const char* pref, void* data);
+  static void SetupQuartzRendering();
+
   bool          mInited;
   static bool   sInForeground;
 };

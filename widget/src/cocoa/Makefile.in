@@ -44,7 +44,7 @@ REQUIRES	= xpcom \
           nkcache \
 		  locale \
           pref \
-          appshell \
+          exthandler \
           intl \
           mimetype \
 		  unicharutil \
@@ -57,7 +57,6 @@ EXPORTS = \
 GFX_LCPPSRCS = \
 		nsRegionMac.cpp \
 		nsWatchTask.cpp \
-		nsRepeater.cpp \
 		$(NULL)
 
 
@@ -67,7 +66,6 @@ CPPSRCS         =  \
 		nsDeleteObserver.cpp \
 		nsDragService.cpp \
 		nsDragHelperService.cpp \
-		nsFilePicker.cpp \
 		nsLookAndFeel.cpp \
 		nsMacResources.cpp \
 		nsMenuX.cpp \
@@ -80,6 +78,7 @@ CPPSRCS         =  \
 		$(NULL)
 
 CMMSRCS = \
+    nsFilePicker.mm \
     nsScrollbar.mm \
     nsToolkit.mm \
     nsAppShellCocoa.mm \
