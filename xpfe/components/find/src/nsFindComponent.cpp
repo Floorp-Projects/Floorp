@@ -21,97 +21,44 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIAppShellService.h"
-#include "nsIXULWindowCallbacks.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
-#include "nsIDocumentObserver.h"
+#include "nsITextServicesDocument.h"
+#include "nsTextServicesCID.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
+#include "nsIPresShell.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
 #include "nsIContent.h"
-#include "nsINameSpaceManager.h"
 #include "nsIURL.h"
 #include "nsFileSpec.h"
 #include "nsIFactory.h"
 #include "pratom.h"
 #include "nsIServiceManager.h"
 
-static nsresult setAttribute( nsIWebShell *shell,
-                              const char *id,
-                              const char *name,
-                              const nsString &value );
+#include "nsFindComponent.h"
+#include "nsFindDialog.h"
 
-// {4AA267A0-F81D-11d2-8067-00600811A9C3}
-#define NS_FINDCOMPONENT_CID \
-    { 0x4aa267a0, 0xf81d, 0x11d2, { 0x80, 0x67, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3} }
-
-struct nsFindComponent : public nsIFindComponent {
-    NS_DEFINE_STATIC_CID_ACCESSOR( NS_FINDCOMPONENT_CID );
-
-    // ctor/dtor
-    nsFindComponent();
-    virtual ~nsFindComponent();
-
-    // This class implements the nsISupports interface functions.
-    NS_DECL_ISUPPORTS
-
-    // This class implements the nsIAppShellComponent interface functions.
-    NS_DECL_IAPPSHELLCOMPONENT
-
-    // This class implements the nsIFindComponent interface functions.
-    NS_DECL_IFINDCOMPONENT
-
-    // "Context" for this implementation.
-    struct Context : public nsISupports {
-        NS_DECL_ISUPPORTS
-        Context( nsIDocument *aDocument,
-                 const nsString &lastSearchString,
-                 const nsString &lastIgnoreCase,
-                 const nsString &lastSearchBackward )
-            : mDocument(),
-              mSearchString( lastSearchString ),
-              mIgnoreCase( lastIgnoreCase ),
-              mSearchBackward( lastSearchBackward ) {
-            // Construct nsITextServicesDocument...
-            mDocument = nsDontQueryInterface<nsIDocument>( aDocument );
-
-            NS_INIT_REFCNT();
-        }
-        virtual ~Context() {
-        }
-        void Reset( nsIDocument *aNewDocument ) {
-            // Reconstruct nsITextServicesDocument?...
-            mDocument = nsDontQueryInterface<nsIDocument>( aNewDocument );
-        }
-        // Maybe add Find/FindNext functions here?
-        nsCOMPtr<nsIDocument> mDocument;
-        nsString              mSearchString;
-        nsString              mIgnoreCase;
-        nsString              mSearchBackward;
-    }; // nsFindComponent::Context
-
-private:
-    nsCOMPtr<nsIAppShellService> mAppShell;
-    nsString                     mLastSearchString;
-    nsString                     mLastIgnoreCase;
-    nsString                     mLastSearchBackward;
-}; // nsFindComponent
+#define DEBUG_FIND
 
 // ctor
 nsFindComponent::nsFindComponent()
     : mAppShell(),
       mLastSearchString(),
       mLastIgnoreCase("false"),
-      mLastSearchBackward("false") {
+      mLastSearchBackwards("false"),
+      mLastWrapSearch("false")
+{
     NS_INIT_REFCNT();
 
     // Initialize "last" stuff from prefs, if we wanted to be really clever...
 }
 
 // dtor
-nsFindComponent::~nsFindComponent() {
+nsFindComponent::~nsFindComponent()
+{
 }
 
 // nsISupports Implementation
@@ -119,7 +66,8 @@ NS_IMPL_ADDREF( nsFindComponent );
 NS_IMPL_RELEASE( nsFindComponent );
 
 NS_IMETHODIMP
-nsFindComponent::QueryInterface( REFNSIID anIID, void **anInstancePtr ) {
+nsFindComponent::QueryInterface( REFNSIID anIID, void **anInstancePtr )
+{
     nsresult rv = NS_OK;
 
     // Check for place to return result.
@@ -150,7 +98,8 @@ nsFindComponent::QueryInterface( REFNSIID anIID, void **anInstancePtr ) {
 
 NS_IMETHODIMP
 nsFindComponent::Initialize( nsIAppShellService *appShell,
-                             nsICmdLineService *args ) {
+                             nsICmdLineService *args )
+{
     nsresult rv = NS_OK;
 
     // Remember the app shell service in case we need it.
@@ -161,280 +110,303 @@ nsFindComponent::Initialize( nsIAppShellService *appShell,
 
 NS_IMETHODIMP
 nsFindComponent::CreateContext( nsIDocument *aDocument,
-                                nsISupports **aResult ) {
-    nsresult rv = NS_OK;
+                                nsISupports **aResult )
+{
 
-    // Check for place to put result.
-    if ( !aResult ) {
-        rv = NS_ERROR_NULL_POINTER;
-    } else {
-        // Construct a new Context with this document.
-        *aResult = new Context( aDocument,
-                                mLastSearchString,
-                                mLastIgnoreCase,
-                                mLastSearchBackward );
-        if ( *aResult ) {
-            // Do the expected on behalf of caller.
-            (*aResult)->AddRef();
-        } else {
-            // Allocation failed.
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        }
-    }
+    if (!aResult)
+			return NS_ERROR_NULL_POINTER;
+      
+    // Construct a new Context with this document.
+    Context		*newContext = new Context();
+   	if (!newContext)
+   		return NS_ERROR_OUT_OF_MEMORY;
+   
+     // Do the expected AddRef on behalf of caller.
+    newContext->AddRef();
 
-    return rv;
+    nsresult	rv = newContext->Init( aDocument,
+                        mLastSearchString,
+                        mLastIgnoreCase,
+                        mLastSearchBackwards,
+                        mLastWrapSearch);
+ 		if (NS_FAILED(rv))
+ 		{
+ 			NS_RELEASE(newContext);
+ 			return rv;
+ 		}
+ 
+		*aResult = newContext;
+    return NS_OK;
 }
 
-// Cribbed from nsFileDownloadDialog in nsBrowsrAppCore.cpp.  I really must
-// figure out how to make this more reusable...
-struct nsFindDialog : public nsIXULWindowCallbacks,
-                             nsIDocumentObserver {
-    // Declare implementation of ISupports stuff.
-    NS_DECL_ISUPPORTS
+#ifdef XP_MAC
+#pragma mark -
+#endif
 
-    // Declare implementations of nsIXULWindowCallbacks interface functions.
-    NS_IMETHOD ConstructBeforeJavaScript(nsIWebShell *aWebShell);
-    NS_IMETHOD ConstructAfterJavaScript(nsIWebShell *aWebShell) { return NS_OK; }
 
-    // Declare implementations of nsIDocumentObserver functions.
-    NS_IMETHOD BeginUpdate(nsIDocument *aDocument) { return NS_OK; }
-    NS_IMETHOD EndUpdate(nsIDocument *aDocument) { return NS_OK; }
-    NS_IMETHOD BeginLoad(nsIDocument *aDocument) { return NS_OK; }
-    NS_IMETHOD EndLoad(nsIDocument *aDocument) { return NS_OK; }
-    NS_IMETHOD BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell) { return NS_OK; }
-    NS_IMETHOD EndReflow(nsIDocument *aDocument, nsIPresShell* aShell) { return NS_OK; }
-    NS_IMETHOD ContentChanged(nsIDocument *aDocument,
-                              nsIContent* aContent,
-                              nsISupports* aSubContent) { return NS_OK; }
-    NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,
-                                    nsIContent* aContent1,
-                                    nsIContent* aContent2) { return NS_OK; }
-    // This one we care about; see implementation below.
-    NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
-                                nsIContent*  aContent,
-                                nsIAtom*     aAttribute,
-                                PRInt32      aHint);
-    NS_IMETHOD ContentAppended(nsIDocument *aDocument,
-                               nsIContent* aContainer,
-                               PRInt32     aNewIndexInContainer) { return NS_OK; }
-    NS_IMETHOD ContentInserted(nsIDocument *aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer) { return NS_OK; }
-    NS_IMETHOD ContentReplaced(nsIDocument *aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aOldChild,
-                               nsIContent* aNewChild,
-                               PRInt32 aIndexInContainer) { return NS_OK; }
-    NS_IMETHOD ContentRemoved(nsIDocument *aDocument,
-                              nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndexInContainer) { return NS_OK; }
-    NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
-                               nsIStyleSheet* aStyleSheet) { return NS_OK; }
-    NS_IMETHOD StyleSheetRemoved(nsIDocument *aDocument,
-                                 nsIStyleSheet* aStyleSheet) { return NS_OK; }
-    NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
-                                              nsIStyleSheet* aStyleSheet,
-                                              PRBool aDisabled) { return NS_OK; }
-    NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
-                                nsIStyleSheet* aStyleSheet,
-                                nsIStyleRule* aStyleRule,
-                                PRInt32 aHint) { return NS_OK; }
-    NS_IMETHOD StyleRuleAdded(nsIDocument *aDocument,
-                              nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule) { return NS_OK; }
-    NS_IMETHOD StyleRuleRemoved(nsIDocument *aDocument,
-                                nsIStyleSheet* aStyleSheet,
-                                nsIStyleRule* aStyleRule) { return NS_OK; }
-    NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument) { return NS_OK; }
-
-    // nsFindDialog stuff
-    nsFindDialog( nsIFindComponent *aComponent,
-                  nsFindComponent::Context *aContext );
-    virtual ~nsFindDialog() { NS_IF_RELEASE(mContext); }
-    void OnFind( nsIContent *aContent );
-    void OnNext();
-    void OnCancel();
-    void SetWindow( nsIWebShellWindow *aWindow );
-
-private:
-    nsCOMPtr<nsIFindComponent>         mComponent;
-    nsFindComponent::Context          *mContext;
-    nsCOMPtr<nsIWebShell>              mWebShell;
-    nsCOMPtr<nsIWebShellWindow>        mWindow;
-}; // nsFindDialog
-
-// Standard implementations of addref/release.
-NS_IMPL_ADDREF( nsFindDialog );
-NS_IMPL_RELEASE( nsFindDialog );
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-NS_IMETHODIMP 
-nsFindDialog::QueryInterface( REFNSIID anIID, void **anInstancePtr) {
-    nsresult rv = NS_OK;
-
-    if ( anInstancePtr ) {
-        // Always NULL result, in case of failure
-        *anInstancePtr = 0;
-
-        // Check for interfaces we support and cast this appropriately.
-        if ( anIID.Equals( nsIXULWindowCallbacks::GetIID() ) ) {
-            *anInstancePtr = (void*) ((nsIXULWindowCallbacks*)this);
-            NS_ADDREF_THIS();
-        } else if ( anIID.Equals( nsIDocumentObserver::GetIID() ) ) {
-            *anInstancePtr = (void*) ((nsIDocumentObserver*)this);
-            NS_ADDREF_THIS();
-        } else if ( anIID.Equals( kISupportsIID ) ) {
-            *anInstancePtr = (void*) ((nsISupports*)(nsIDocumentObserver*)this);
-            NS_ADDREF_THIS();
-        } else {
-            // Not an interface we support.
-            rv = NS_ERROR_NO_INTERFACE;
-        }
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-
-  return rv;
+nsFindComponent::Context::Context()
+{
+  NS_INIT_REFCNT();
+	// all our other members are self-initiating
 }
 
-// ctor
-nsFindDialog::nsFindDialog( nsIFindComponent         *aComponent,
-                            nsFindComponent::Context *aContext )
-        : mComponent( nsDontQueryInterface<nsIFindComponent>( aComponent ) ),
-          mContext( aContext ),
-          mWebShell(),
-          mWindow() {
-    // Initialize ref count.
-    NS_INIT_REFCNT();
-    mContext->AddRef();
+
+nsFindComponent::Context::~Context()
+{
+	// the nsCOMPtr will do its thing to release the document
+
 }
 
-// Do startup stuff from C++ side.
-NS_IMETHODIMP
-nsFindDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell) {
-    nsresult rv = NS_OK;
-
-    // Save web shell pointer.
-    mWebShell = nsDontQueryInterface<nsIWebShell>( aWebShell );
-
-    // Store instance information into dialog's DOM.
-    if ( mContext ) {
-        setAttribute( mWebShell,
-                      "data.searchString",
-                      "value",
-                      mContext->mSearchString );
-        setAttribute( mWebShell,
-                      "data.ignoreCase",
-                      "value",
-                      mContext->mIgnoreCase.GetUnicode() ? "true" : "false" );
-        setAttribute( mWebShell,
-                      "data.searchBackward",
-                      "value",
-                      mContext->mSearchBackward.GetUnicode() ? "true" : "false" );
-    }
-
-    // Add as observer of the xul document.
-    nsCOMPtr<nsIContentViewer> cv;
-    rv = mWebShell->GetContentViewer(getter_AddRefs(cv));
-    if ( cv ) {
-        // Up-cast.
-        nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-        if ( docv ) {
-            // Get the document from the doc viewer.
-            nsCOMPtr<nsIDocument> doc;
-            rv = docv->GetDocument(*getter_AddRefs(doc));
-            if ( doc ) {
-                doc->AddObserver( this );
-            } else {
-            }
-        } else {
-        }
-    } else {
-    }
-
-    return rv;
-}
-
-// Utility function to close a window given a root nsIWebShell.
-static void closeWindow( nsIWebShellWindow *aWebShellWindow ) {
-    if ( aWebShellWindow ) {
-        // crashes!
-        aWebShellWindow->Close();
-    }
-}
-
-// Handle attribute changing; we only care about the element "data.execute"
-// which is used to signal command execution from the UI.
-NS_IMETHODIMP
-nsFindDialog::AttributeChanged( nsIDocument *aDocument,
-                                nsIContent*  aContent,
-                                nsIAtom*     aAttribute,
-                                PRInt32      aHint ) {
-    nsresult rv = NS_OK;
-    // Look for data.execute command changing.
-    nsString id;
-    nsCOMPtr<nsIAtom> atomId = nsDontQueryInterface<nsIAtom>( NS_NewAtom("id") );
-    aContent->GetAttribute( kNameSpaceID_None, atomId, id );
-    if ( id == "data.execute" ) {
-        nsString cmd;
-        nsCOMPtr<nsIAtom> atomCommand = nsDontQueryInterface<nsIAtom>( NS_NewAtom("command") );
-        aContent->GetAttribute( kNameSpaceID_None, atomCommand, cmd );
-        if ( cmd == "find" ) {
-            OnFind( aContent );
-        } else if ( cmd == "next" ) {
-            OnNext();
-        } else if ( cmd == "cancel" ) {
-            OnCancel();
-        } else {
-        }
-        // Reset command so we detect next request.
-        aContent->SetAttribute( kNameSpaceID_None, atomCommand, "", PR_FALSE );
-    }
-
-    return rv;
-}
-
-// OnOK
-void
-nsFindDialog::OnFind( nsIContent *aContent ) {
-    if ( mWebShell && mContext ) {
-        // Get arguments and store into the search context.
-        nsCOMPtr<nsIAtom> atomKey = nsDontQueryInterface<nsIAtom>( NS_NewAtom("key") );
-        aContent->GetAttribute( kNameSpaceID_None, atomKey, mContext->mSearchString );
-        nsCOMPtr<nsIAtom> atomIgnoreCase = nsDontQueryInterface<nsIAtom>( NS_NewAtom("ignoreCase") );
-        aContent->GetAttribute( kNameSpaceID_None, atomIgnoreCase, mContext->mIgnoreCase );
-        nsCOMPtr<nsIAtom> atomSearchBackward = nsDontQueryInterface<nsIAtom>( NS_NewAtom("searchBackward") );
-        aContent->GetAttribute( kNameSpaceID_None, atomSearchBackward, mContext->mSearchBackward );
-
-        // Search for next occurrence.
-        OnNext();
-    }
-}
-
-// OnOK
-void
-nsFindDialog::OnNext() {
-    if ( mContext && mComponent ) {
-        // Find next occurrence in this context.
-        mComponent->FindNext( mContext );
-    }
-}
-
-void
-nsFindDialog::OnCancel() {
-    // Close the window.
-    closeWindow( mWindow );
-}
-
-void
-nsFindDialog::SetWindow( nsIWebShellWindow *aWindow ) {
-    mWindow = nsDontQueryInterface<nsIWebShellWindow>(aWindow);
-}
 
 NS_IMETHODIMP
-nsFindComponent::Find( nsISupports *aContext ) {
+nsFindComponent::Context::Init( nsIDocument *aDocument,
+                 const nsString &lastSearchString,
+                 const nsString &lastIgnoreCase,
+                 const nsString &lastSearchBackward,
+                 const nsString &lastWrapSearch)
+{
+
+	if (!aDocument)
+		return NS_ERROR_INVALID_ARG;
+		
+	mSearchString = lastSearchString;
+	mIgnoreCase = (lastIgnoreCase == "true");
+	mSearchBackwards = (lastSearchBackward == "true");
+	mWrapSearch = PR_FALSE;	//(lastWrapSearch == "true");
+	
+  // Construct nsITextServicesDocument...
+	nsresult	rv = MakeTSDocument(aDocument);
+	
+	return rv;
+}
+
+
+static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
+static NS_DEFINE_IID(kITextServicesDocumentIID, NS_ITEXTSERVICESDOCUMENT_IID);
+
+
+NS_IMETHODIMP
+nsFindComponent::Context::MakeTSDocument(nsIDocument *aDocument)
+{
+	if (!aDocument)
+		return NS_ERROR_INVALID_ARG;
+
+	nsITextServicesDocument		*textSvcDoc;
+
+	nsresult	rv;
+	rv = nsComponentManager::CreateInstance(kCTextServicesDocumentCID,
+																					 nsnull,
+	                                         kITextServicesDocumentIID,
+	                                         (void **)&textSvcDoc);
+	if (NS_FAILED(rv))
+		return rv;
+	
+	nsIPresShell		*aPresShell = aDocument->GetShellAt(0);		// I have no idea if this is always valid
+	
+	nsCOMPtr<nsIDOMDocument>			domDoc = do_QueryInterface(aDocument);
+	rv = textSvcDoc->InitWithDocument(domDoc, aPresShell);
+	if (NS_FAILED(rv))
+		return rv;
+	
+	mTextServicesDocument = do_QueryInterface(textSvcDoc);
+	if (!mTextServicesDocument)
+		return NS_ERROR_NULL_POINTER;
+	
+	// init the TS doc to start from the beginning
+	rv = mTextServicesDocument->FirstBlock();
+	if (NS_FAILED(rv))
+		return rv;
+	
+	mLastBlockOffset = -1;
+	
+	return NS_OK;
+}
+
+
+
+// ----------------------------------------------------------------
+//	CharsMatch
+//
+//	Compare chars. Match if both are whitespace, or both are
+//	non whitespace and same char.
+// ----------------------------------------------------------------
+
+static PRBool CharsMatch(PRUnichar c1, PRUnichar c2)
+{
+	return (nsString::IsSpace(c1) && nsString::IsSpace(c2)) ||
+						(c1 == c2);
+	
+}
+
+
+// ----------------------------------------------------------------
+//	FindInString
+//
+//	Routine to search in an nsString which is smart about extra
+//  whitespace, can search backwards, and do case insensitive search.
+//
+//	This uses a brute-force algorithm, which should be sufficient
+//	for our purposes (text searching)
+// 
+//	searchStr contains the text from a content node, which can contain
+//	extra white space between words, which we have to deal with.
+//	The offsets passed in and back are offsets into searchStr,
+//	and thus include extra white space.
+//
+//	If we are ignoring case, the strings have already been lowercased
+// 	at this point.
+//
+//	Returns -1 if the string is not found, or if the pattern is an
+//	empty string, or if startOffset is off the end of the string.
+// ----------------------------------------------------------------
+
+static PRInt32 FindInString(const nsString &searchStr, const nsString &patternStr,
+						PRInt32 startOffset, PRBool searchBackwards)
+{
+	PRInt32		foundOffset = -1;
+	PRInt32		patternLen = patternStr.Length();
+	PRInt32		searchStrLen = searchStr.Length();
+		
+	// pattern is empty
+	if (patternLen == 0)
+		return -1;
+	
+	if (startOffset < 0)
+		startOffset = 0;
+	
+	if (startOffset >= searchStrLen)
+		return -1;
+	
+	const PRUnichar	*searchBuf = searchStr.GetUnicode();
+	const PRUnichar	*patternBuf = patternStr.GetUnicode();
+
+	const PRUnichar	*searchEnd = searchBuf + searchStrLen;
+	const PRUnichar	*patEnd = patternBuf + patternLen;
+	
+	if (searchBackwards)
+	{
+		// searching backwards
+	
+	
+	
+	
+	
+	
+	
+	}
+	else
+	{
+		// searching forwards
+		
+		const PRUnichar	*s = &searchBuf[startOffset];
+	
+		while (s < searchEnd)
+		{
+			if (CharsMatch(*patternBuf, *s))			// start potential match
+			{
+				const PRUnichar	*t = s;
+				const PRUnichar	*p = patternBuf;
+				PRInt32		curMatchOffset = t - searchBuf;
+				PRBool		inWhitespace = PR_FALSE;
+				
+				while (p < patEnd && CharsMatch(*p, *s))
+				{
+					if (inWhitespace && !nsString::IsSpace(*p))
+					{
+						// leaving p whitespace. Eat up addition whitespace in s
+						while (s < searchEnd - 1 && nsString::IsSpace(*(s + 1)))
+							s ++;
+							
+						inWhitespace = false;
+					}
+					else
+						inWhitespace = nsString::IsSpace(*p);
+
+					s ++;
+					p ++;
+				}
+				
+				if (p == patEnd)
+				{
+					foundOffset = curMatchOffset;
+					goto done;
+				}
+				
+				// could be smart about incrementing s here
+			}
+			
+			s ++;
+		}
+	
+	
+	}
+
+done:
+	return foundOffset;
+}
+
+
+
+
+NS_IMETHODIMP
+nsFindComponent::Context::DoFind()
+{
+	if (!mTextServicesDocument)
+		return NS_ERROR_NOT_INITIALIZED;
+
+	nsAutoString		matchString = mSearchString;
+	if (mIgnoreCase)
+		matchString.ToLowerCase();
+	
+	nsresult	rv = NS_OK;
+  nsString str;
+	PRBool		done;
+	
+	while (NS_SUCCEEDED(mTextServicesDocument->IsDone(&done)) && !done)
+	{
+		rv = mTextServicesDocument->GetCurrentTextBlock(&str);
+
+		if (NS_FAILED(rv))
+			return rv;
+
+		if (mIgnoreCase)
+			str.ToLowerCase();
+		
+		
+		PRInt32		foundOffset = FindInString(str, matchString, (mLastBlockOffset == -1) ? 0 : mLastBlockOffset + 1, mSearchBackwards);
+
+		mLastBlockOffset = -1;
+
+		if (foundOffset != -1)
+		{
+			mTextServicesDocument->SetSelection(foundOffset, mSearchString.Length());
+			mLastBlockOffset = foundOffset;
+			break;
+		}
+		
+		mTextServicesDocument->NextBlock();
+	}
+
+	return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsFindComponent::Context::Reset( nsIDocument *aNewDocument )
+{
+
+	if (!aNewDocument)
+		return NS_ERROR_INVALID_ARG;
+
+  // Reconstruct nsITextServicesDocument?...
+	return MakeTSDocument(aNewDocument);
+}
+
+
+NS_IMETHODIMP
+nsFindComponent::Find( nsISupports *aContext )
+{
     nsresult rv = NS_OK;
 
     if ( aContext && mAppShell ) {
@@ -446,6 +418,9 @@ nsFindComponent::Find( nsISupports *aContext ) {
 
         // Make url for dialog xul.
         nsIURL *url;
+        
+        // this should be a chrome URI
+        // chrome://navigator/dialogs/content/default/finddialog.xul or something.
         rv = NS_NewURL( &url, "resource:/res/samples/finddialog.xul" );
 
         // Create callbacks object for the find dialog.
@@ -475,24 +450,28 @@ nsFindComponent::Find( nsISupports *aContext ) {
 }
 
 NS_IMETHODIMP
-nsFindComponent::FindNext( nsISupports *aContext ) {
+nsFindComponent::FindNext(nsISupports *aContext)
+{
     nsresult rv = NS_OK;
 
-    if ( aContext ) {
-        // For now, just record request to console.
-        Context *context = (Context*)aContext;
-        printf( "nsFindComponent::FindNext\n\tkey=%s\n\tignoreCase=%s\tsearchBackward=%s\n",
-                (const char *)nsAutoCString( context->mSearchString ),
-                (const char *)nsAutoCString( context->mIgnoreCase ),
-                (const char *)nsAutoCString( context->mSearchBackward ) );
+		if (!aContext)
+			return NS_ERROR_NULL_POINTER;
+			
+		// For now, just record request to console.
+		Context *context = (Context*)aContext;
+#ifdef DEBUG_FIND
+		printf( "nsFindComponent::FindNext\n\tkey=%s\n\tignoreCase=%ld\tsearchBackward=%ld\n",
+			      (const char *)nsAutoCString( context->mSearchString ),
+			      context->mIgnoreCase, context->mSearchBackwards);
+#endif
+		context->DoFind();
 
-        // Record this for out-of-the-blue FindNext calls.
-        mLastSearchString   = context->mSearchString;
-        mLastIgnoreCase     = context->mIgnoreCase;
-        mLastSearchBackward = context->mSearchBackward;
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
+
+		// Record this for out-of-the-blue FindNext calls.
+		mLastSearchString  		= context->mSearchString;
+		mLastIgnoreCase    		= (context->mIgnoreCase) ? "true" : "false";
+		mLastSearchBackwards	= (context->mSearchBackwards) ? "true" : "false";
+		mLastWrapSearch				= (context->mWrapSearch) ? "true" : "false";
 
     return rv;
 }
@@ -511,58 +490,12 @@ nsFindComponent::ResetContext( nsISupports *aContext,
     return rv;
 }
 
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
 // nsFindComponent::Context implementation...
 NS_IMPL_ISUPPORTS( nsFindComponent::Context, nsISupports::GetIID() )
-
-// This is cribbed from nsBrowserAppCore.cpp also (and should be put somewhere once
-// and reused)...
-static int APP_DEBUG = 0;
-static nsresult setAttribute( nsIWebShell *shell,
-                              const char *id,
-                              const char *name,
-                              const nsString &value ) {
-    nsresult rv = NS_OK;
-
-    nsCOMPtr<nsIContentViewer> cv;
-    rv = shell ? shell->GetContentViewer(getter_AddRefs(cv))
-               : NS_ERROR_NULL_POINTER;
-    if ( cv ) {
-        // Up-cast.
-        nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-        if ( docv ) {
-            // Get the document from the doc viewer.
-            nsCOMPtr<nsIDocument> doc;
-            rv = docv->GetDocument(*getter_AddRefs(doc));
-            if ( doc ) {
-                // Up-cast.
-                nsCOMPtr<nsIDOMXULDocument> xulDoc( do_QueryInterface(doc) );
-                if ( xulDoc ) {
-                    // Find specified element.
-                    nsCOMPtr<nsIDOMElement> elem;
-                    rv = xulDoc->GetElementById( id, getter_AddRefs(elem) );
-                    if ( elem ) {
-                        // Set the text attribute.
-                        rv = elem->SetAttribute( name, value );
-                        if ( rv != NS_OK ) {
-                             if (APP_DEBUG) printf("SetAttribute failed, rv=0x%X\n",(int)rv);
-                        }
-                    } else {
-                        if (APP_DEBUG) printf("GetElementByID failed, rv=0x%X\n",(int)rv);
-                    }
-                } else {
-                  if (APP_DEBUG)   printf("Upcast to nsIDOMXULDocument failed\n");
-                }
-            } else {
-                if (APP_DEBUG) printf("GetDocument failed, rv=0x%X\n",(int)rv);
-            }
-        } else {
-             if (APP_DEBUG) printf("Upcast to nsIDocumentViewer failed\n");
-        }
-    } else {
-        if (APP_DEBUG) printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
-    }
-    return rv;
-}
 
 
 static PRInt32 g_InstanceCount = 0;
@@ -650,6 +583,10 @@ nsFindComponentFactory::LockFactory(PRBool aLock) {
 
 	return NS_OK;
 }
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
 
 extern "C" NS_EXPORT nsresult
 NSRegisterSelf( nsISupports* aServiceMgr, const char* path ) {
