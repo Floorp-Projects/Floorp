@@ -16,7 +16,8 @@
 # Copyright (C) 1998 Netscape Communications Corporation. All
 # Rights Reserved.
 #
-# Contributor(s): 
+# Contributor(s):
+#   Prabhat Hegde <prabhat.hegde@sun.com>
 #
 
 DEPTH		= ../../../..
@@ -58,6 +59,11 @@ REQUIRES	= xpcom \
 		  java \
 		  exthandler \
 		  $(NULL)
+
+# Sun's Complex Text Layout support
+ifdef SUNCTL
+REQUIRES	+= ctl
+endif
 
 CPPSRCS		= \
 		nsAbsoluteContainingBlock.cpp \

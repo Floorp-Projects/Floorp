@@ -333,8 +333,13 @@ static nsFontCharSetInfo KOI8R =
 static nsFontCharSetInfo KOI8U =
   { "KOI8-U", SingleByteConvert, 0 };
 static nsFontCharSetInfo TIS620 =
+/* Added to support thai context sensitive shaping if
+ * CTL extension is is in force */
+#ifdef SUNCTL
+  { "tis620-2", SingleByteConvert, 0 };
+#else
   { "TIS-620", SingleByteConvert, 0 };
-
+#endif /* SUNCTL */
 static nsFontCharSetInfo Big5 =
   { "x-x-big5", DoubleByteConvert, 1 };
 static nsFontCharSetInfo CNS116431 =
