@@ -34,6 +34,7 @@ CSRCS		=  \
 CPPSRCS		= \
                   nsCharsetConverterManager.cpp \
                   nsUnicodeDecodeUtil.cpp \
+                  nsUnicodeDecodeHelper.cpp \
                   nsUnicodeEncodeHelper.cpp \
                   nsUNIXCharset.cpp \
                   nsCharsetAliasImp.cpp \
