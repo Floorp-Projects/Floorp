@@ -231,14 +231,14 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
         rv = pc->GetCharset(kPlatformCharsetSel_FileName, tmp);
         if (NS_FAILED(rv)) return rv;
         mFSCharset.Adopt(ToNewCString(tmp));
-#else
-        mFSCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
 #endif   
     }
-        
-    mBuf.Append("301: ");
-    mBuf.Append(mFSCharset);
-    mBuf.Append('\n');
+    
+    if (!mFSCharset.IsEmpty()) {
+        mBuf.Append("301: ");
+        mBuf.Append(mFSCharset);
+        mBuf.Append('\n');
+    }
     
     return NS_OK;
 }

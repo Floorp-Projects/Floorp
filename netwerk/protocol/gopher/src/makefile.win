@@ -24,6 +24,7 @@ REQUIRES	= xpcom \
 		  string \
 		  mimetype \
 		  necko \
+		  pref \
 		  $(NULL)
 
 LIBRARY_NAME=nkgopher_s

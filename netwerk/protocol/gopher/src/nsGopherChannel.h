@@ -39,15 +39,18 @@
 #include "nsIStreamListener.h"
 #include "nsITransport.h"
 #include "nsIProxyInfo.h"
+#include "nsIDirectoryListing.h"
 
 class nsGopherChannel : public nsIChannel,
-                        public nsIStreamListener {
+                        public nsIStreamListener,
+                        public nsIDirectoryListing {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSIDIRECTORYLISTING
 
     // nsGopherChannel methods:
     nsGopherChannel();
@@ -73,6 +76,7 @@ protected:
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
     PRBool                              mActAsObserver;
+    PRUint32                            mListFormat;
 
     nsXPIDLCString                      mHost;
     PRInt32                             mPort;

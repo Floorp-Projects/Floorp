@@ -32,9 +32,10 @@ EXPORTS =                           \
 	$(NULL)
 
 XPIDLSRCS =                             \
-	.\nsIAuthenticator.idl          \
+        .\nsIAuthenticator.idl          \
 	    .\nsIAuthPrompt.idl             \
         .\nsIChannel.idl                \
+        .\nsIDirectoryListing.idl       \
         .\nsIFileChannel.idl	        \
         .\nsIFileStreams.idl            \
         .\nsIFileTransportService.idl   \

@@ -5,8 +5,9 @@
 nsIAuthenticator.idl
 nsIAuthPrompt.idl
 nsIChannel.idl
-nsIFileChannel.idl
+nsIDirectoryListing.idl
 nsIDownloader.idl
+nsIFileChannel.idl
 nsIFileTransportService.idl
 nsIMIMEInputStream.idl
 nsIPasswordManager.idl

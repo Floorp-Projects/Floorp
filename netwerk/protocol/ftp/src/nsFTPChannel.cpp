@@ -45,6 +45,7 @@
 #include "nsMimeTypes.h"
 #include "nsIProxyObjectManager.h"
 #include "nsReadableUtils.h"
+#include "nsIPref.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
@@ -77,6 +78,7 @@ PRTimeToSeconds(PRTime t_usec)
 nsFTPChannel::nsFTPChannel()
     : mIsPending(0),
       mLoadFlags(LOAD_NORMAL),
+      mListFormat(FORMAT_HTML),
       mSourceOffset(0),
       mAmount(0),
       mContentLength(-1),
@@ -113,6 +115,7 @@ NS_INTERFACE_MAP_BEGIN(nsFTPChannel)
     NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
     NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
     NS_INTERFACE_MAP_ENTRY(nsICacheListener)
+    NS_INTERFACE_MAP_ENTRY(nsIDirectoryListing)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChannel)
 NS_INTERFACE_MAP_END
 
@@ -735,4 +738,41 @@ nsFTPChannel::SetUploadFile(nsIFile *file, const char *contentType, PRInt32 cont
 
     // set the stream on ourselves
     return SetUploadStream(stream, nsnull, -1); 
+}
+
+NS_IMETHODIMP
+nsFTPChannel::SetListFormat(PRUint32 format) {
+    if (format != FORMAT_PREF &&
+        format != FORMAT_RAW &&
+        format != FORMAT_HTML &&
+        format != FORMAT_HTTP_INDEX) {
+        return NS_ERROR_FAILURE;
+    }
+
+    // Convert the pref value
+    if (format == FORMAT_PREF) {
+        nsresult rv;
+        nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        PRInt32 sFormat;
+        rv = prefs->GetIntPref("network.dir.format", &sFormat);
+        if (NS_FAILED(rv))
+            format = FORMAT_HTML; // default
+        else
+            format = sFormat;
+
+        if (format == FORMAT_PREF) {
+            NS_WARNING("Who set the directory format pref to 'read from prefs'??");
+            return NS_ERROR_FAILURE;
+        }
+    }
+
+    mListFormat = format;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetListFormat(PRUint32 *format) {
+    *format = mListFormat;
+    return NS_OK;
 }

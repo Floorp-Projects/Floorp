@@ -62,6 +62,7 @@
 #include "nsIProxyInfo.h"
 #include "nsIResumableChannel.h"
 #include "nsIResumableEntityID.h"
+#include "nsIDirectoryListing.h"
 
 #include "nsICacheService.h"
 #include "nsICacheEntryDescriptor.h"
@@ -82,7 +83,8 @@ class nsFTPChannel : public nsIFTPChannel,
                      public nsIProgressEventSink,
                      public nsIStreamListener, 
                      public nsICacheListener,
-                     public nsIResumableChannel
+                     public nsIResumableChannel,
+                     public nsIDirectoryListing
 {
 public:
     NS_DECL_ISUPPORTS
@@ -96,6 +98,7 @@ public:
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSICACHELISTENER
     NS_DECL_NSIRESUMABLECHANNEL
+    NS_DECL_NSIDIRECTORYLISTING
     
     // nsFTPChannel methods:
     nsFTPChannel();
@@ -129,6 +132,7 @@ protected:
 
     PRBool                          mIsPending;
     PRUint32                        mLoadFlags;
+    PRUint32                        mListFormat;
 
     PRUint32                        mSourceOffset;
     PRInt32                         mAmount;

@@ -89,6 +89,7 @@
 #include "nsIDOMText.h"
 #include "nsIPref.h"
 #include "nsIStreamConverterService.h"
+#include "nsIDirectoryListing.h"
 
 //----------------------------------------------------------------------
 //
@@ -1017,6 +1018,12 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
           }
           if (NS_SUCCEEDED(rv) && (channel)) {
             channel->SetNotificationCallbacks(httpIndex);
+            nsCOMPtr<nsIDirectoryListing> dirList = do_QueryInterface(channel);
+            NS_ASSERTION(dirList, "Directory listing doesn't impl nsIDirectoryListing");
+            if (dirList) {
+              rv = dirList->SetListFormat(nsIDirectoryListing::FORMAT_HTTP_INDEX);
+              NS_ASSERTION(NS_SUCCEEDED(rv), "Could not set directory list format");
+            }
             rv = channel->AsyncOpen(httpIndex, aSource);
           }
         }
@@ -1363,8 +1370,12 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   nsCOMPtr<nsIPref> prefSrv = do_GetService(NS_PREF_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  PRBool useHtml;
-  rv = prefSrv->GetBoolPref("network.dir.generate_html", &useHtml);
+  PRBool useXUL = PR_FALSE;
+  PRInt32 dirPref;
+  rv = prefSrv->GetIntPref("network.dir.format", &dirPref);
+  if (NS_SUCCEEDED(rv) && dirPref == nsIDirectoryListing::FORMAT_HTTP_INDEX) {
+    useXUL = PR_TRUE;
+  }
 
   // We need to disable html mode for file:///, at least for the moment
   // The charset coding isn't quite right for non ASCII systems
@@ -1374,12 +1385,12 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   if (NS_SUCCEEDED(rv)) {
     PRBool isFile;
     if (NS_SUCCEEDED(uri->SchemeIs("file", &isFile)) && isFile)
-      useHtml = PR_FALSE;
+      useXUL = PR_TRUE;
   }
 
   PRBool viewSource = (PL_strstr(aContentType,"view-source") != 0);
 
-  if ((NS_FAILED(rv) || !useHtml) && !viewSource) {
+  if ((NS_FAILED(rv) || useXUL) && !viewSource) {
     
     // This is where we shunt the HTTP/Index stream into our datasource,
     // and open the directory viewer XUL file as the content stream to
@@ -1407,7 +1418,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
                                  aContainer, aExtraInfo, getter_AddRefs(listener),
                                  aDocViewerResult);
     if (NS_FAILED(rv)) return rv;
-    
+
     rv = channel->AsyncOpen(listener, nsnull);
     if (NS_FAILED(rv)) return rv;
     
