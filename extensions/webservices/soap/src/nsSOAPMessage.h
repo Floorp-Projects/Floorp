@@ -26,15 +26,13 @@
 #include "nsString.h"
 #include "nsISOAPEncoding.h"
 #include "nsISOAPMessage.h"
-#include "nsISecurityCheckedComponent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsIVariant.h"
 
-class nsSOAPMessage : public nsISOAPMessage, 
-  public nsISecurityCheckedComponent
+class nsSOAPMessage : public nsISOAPMessage
 {
 public:
   nsSOAPMessage();
@@ -44,9 +42,6 @@ public:
 
   // nsISOAPMessage
   NS_DECL_NSISOAPMESSAGE
-
-  // nsISecurityCheckedComponent
-  NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
 protected:
 

@@ -26,7 +26,6 @@
 #include "nsString.h"
 #include "nsSOAPMessage.h"
 #include "nsISOAPCall.h"
-#include "nsISecurityCheckedComponent.h"
 #include "nsISOAPTransport.h"
 #include "nsISOAPResponseListener.h"
 #include "nsCOMPtr.h"
@@ -45,9 +44,6 @@ public:
 
   // nsISOAPCall
   NS_DECL_NSISOAPCALL
-
-  // nsISecurityCheckedComponent
-  NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
 protected:
 

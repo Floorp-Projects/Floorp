@@ -105,9 +105,8 @@ NS_IMETHODIMP nsSOAPCall::Invoke(nsISOAPResponse **_retval)
   rv = GetTransport(getter_AddRefs(transport));
   if (NS_FAILED(rv)) return rv;
   
-  nsCOMPtr<nsISOAPResponse> response;
-  response = new nsSOAPResponse();
-  if (!response) return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsISOAPResponse> response(do_CreateInstance(NS_SOAPRESPONSE_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) return rv;
   rv = response->SetEncoding(mEncoding);
   if (NS_FAILED(rv)) return rv;
 
@@ -138,58 +137,11 @@ NS_IMETHODIMP nsSOAPCall::AsyncInvoke(nsISOAPResponseListener *listener, nsISOAP
   rv = GetTransport(getter_AddRefs(transport));
   if (NS_FAILED(rv)) return rv;
   
-  nsCOMPtr<nsISOAPResponse> response;
-  response = new nsSOAPResponse();
-  if (!response) return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsISOAPResponse> response(do_CreateInstance(NS_SOAPRESPONSE_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) return rv;
   rv = response->SetEncoding(mEncoding);
   if (NS_FAILED(rv)) return rv;
 
   rv = transport->AsyncCall(this, listener, response, aCompletion);
   return rv;
-}
-
-static const char* kAllAccess = "AllAccess";
-
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP 
-nsSOAPCall::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPCall))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP 
-nsSOAPCall::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPCall))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsSOAPCall::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPCall))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsSOAPCall::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPCall))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
 }

@@ -26,6 +26,7 @@ interface nsIDOMElement;
 interface nsIVariant;
 interface nsISOAPEncoding;
 interface nsISchemaType;
+interface nsISOAPAttachments;
 
 /**
  * This interface encapsulates an arbitrary block to be used
@@ -49,6 +50,14 @@ interface nsISchemaType;
 
 [scriptable, uuid(843afaa8-1dd2-11b2-8b0d-9b5d16fe64ea)]
 interface nsISOAPBlock : nsISupports {
+  /**
+   *  Initialize the block for additional decoding information.
+   *
+   * @param aAttachments Attachments in case this refers to them.
+   *
+   * @param aVersion SOAP version for decoding special header attributes.
+   */
+  void init(in nsISOAPAttachments aAttachments, in unsigned short aVersion);
     
   /**
    *  The namespace URI of the block.  Ignored if name is null.

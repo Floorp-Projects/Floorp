@@ -49,9 +49,8 @@ nsSOAPMessage::~nsSOAPMessage()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsSOAPMessage, 
-                   nsISOAPMessage, 
-                   nsISecurityCheckedComponent)
+NS_IMPL_ISUPPORTS1(nsSOAPMessage, 
+                   nsISOAPMessage)
 
 /* attribute nsIDOMDocument message; */
 NS_IMETHODIMP nsSOAPMessage::GetMessage(nsIDOMDocument * *aMessage)
@@ -498,8 +497,9 @@ NS_IMETHODIMP nsSOAPMessage::GetHeaderBlocks(PRUint32 *aCount, nsISOAPHeaderBloc
       *aHeaderBlocks = (nsISOAPHeaderBlock* *)memory->Realloc(*aHeaderBlocks, length * sizeof(**aHeaderBlocks));
     }
     element = next;
-    header = new nsSOAPHeaderBlock(nsnull, version);// Header needs version to interpret actor, mustInclude
+    header = do_CreateInstance(NS_SOAPHEADERBLOCK_CONTRACTID);
     if (!header) return NS_ERROR_OUT_OF_MEMORY;
+    header->Init(nsnull, version);
 
     (*aHeaderBlocks)[(*aCount)] = header;
     NS_ADDREF((*aHeaderBlocks)[(*aCount)]);
@@ -546,7 +546,7 @@ NS_IMETHODIMP nsSOAPMessage::GetParameters(PRBool aDocumentStyle, PRUint32 *aCou
       *aParameters = (nsISOAPParameter* *)memory->Realloc(*aParameters, length * sizeof(**aParameters));
     }
     element = next;
-    param = new nsSOAPParameter();
+    param = do_CreateInstance(NS_SOAPPARAMETER_CONTRACTID);
     if (!param) return NS_ERROR_OUT_OF_MEMORY;
 
     (*aParameters)[(*aCount)] = param;
@@ -574,9 +574,11 @@ NS_IMETHODIMP nsSOAPMessage::GetEncoding(nsISOAPEncoding* * aEncoding)
     nsresult rc = GetVersion(&version);
     if (NS_FAILED(rc)) return rc;
     if (version != nsISOAPMessage::VERSION_UNKNOWN) {
-        mEncoding = new nsSOAPEncoding(version);
-      if (!mEncoding)
+      nsCOMPtr<nsISOAPEncoding> encoding = do_CreateInstance(NS_SOAPENCODING_CONTRACTID);
+      if (!encoding)
         return NS_ERROR_OUT_OF_MEMORY;
+      rc = encoding->GetAssociatedEncoding(*nsSOAPUtils::kSOAPEncURI[version], PR_FALSE, getter_AddRefs(mEncoding));
+      if (NS_FAILED(rc)) return rc;
     }
   }
   *aEncoding = mEncoding;
@@ -586,51 +588,5 @@ NS_IMETHODIMP nsSOAPMessage::GetEncoding(nsISOAPEncoding* * aEncoding)
 NS_IMETHODIMP nsSOAPMessage::SetEncoding(nsISOAPEncoding* aEncoding)
 {
   mEncoding = aEncoding;
-  return NS_OK;
-}
-
-static const char*kAllAccess = "AllAccess";
-
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP 
-nsSOAPMessage::CanCreateWrapper(const nsIID * iid, char**_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPMessage))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP 
-nsSOAPMessage::CanCallMethod(const nsIID * iid, const PRUnichar*methodName, char**_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPMessage))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsSOAPMessage::CanGetProperty(const nsIID * iid, const PRUnichar*propertyName, char**_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPMessage))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsSOAPMessage::CanSetProperty(const nsIID * iid, const PRUnichar*propertyName, char**_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPMessage))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
   return NS_OK;
 }

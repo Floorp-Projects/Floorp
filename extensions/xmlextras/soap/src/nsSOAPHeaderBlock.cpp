@@ -28,13 +28,9 @@
 #include "nsISOAPAttachments.h"
 #include "nsISOAPMessage.h"
 
-nsSOAPHeaderBlock::nsSOAPHeaderBlock():mVersion(nsISOAPMessage::VERSION_UNKNOWN)
+nsSOAPHeaderBlock::nsSOAPHeaderBlock()
 {
   NS_INIT_ISUPPORTS();
-}
-
-nsSOAPHeaderBlock::nsSOAPHeaderBlock(nsISOAPAttachments* aAttachments, PRUint16 aVersion): nsSOAPBlock(aAttachments), mVersion(aVersion)
-{
 }
 
 NS_IMPL_CI_INTERFACE_GETTER2(nsSOAPHeaderBlock, nsISOAPBlock, nsISOAPHeaderBlock)
@@ -96,51 +92,5 @@ NS_IMETHODIMP nsSOAPHeaderBlock::SetMustUnderstand(PRBool aMustUnderstand)
   nsresult rc = SetElement(nsnull);
   if (NS_FAILED(rc)) return rc;
   mMustUnderstand = aMustUnderstand;
-  return NS_OK;
-}
-
-static const char* kAllAccess = "AllAccess";
-
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP 
-nsSOAPHeaderBlock::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPHeaderBlock))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP 
-nsSOAPHeaderBlock::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPHeaderBlock))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsSOAPHeaderBlock::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPHeaderBlock))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsSOAPHeaderBlock::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPHeaderBlock))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
   return NS_OK;
 }

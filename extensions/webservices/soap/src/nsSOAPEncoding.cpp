@@ -69,8 +69,10 @@ nsresult nsSOAPEncodingRegistry::GetAssociatedEncoding(const nsAString& aStyleUR
     encodingContractid.Append(NS_ConvertUCS2toUTF8(aStyleURI));
     defaultEncoding = do_GetService(encodingContractid.get());
     if (defaultEncoding || aCreateIf) {
-      *aEncoding = new nsSOAPEncoding(aStyleURI, this, defaultEncoding);
-      mEncodings->Put(&styleKey, *aEncoding);
+      nsCOMPtr<nsISOAPEncoding> encoding = do_CreateInstance(NS_SOAPENCODING_CONTRACTID);
+      *aEncoding = encoding;
+      NS_IF_ADDREF(*aEncoding);
+      mEncodings->Put(&styleKey, encoding);
     }
   }
   return NS_OK;
@@ -160,7 +162,7 @@ NS_IMETHODIMP nsSOAPEncodingRegistry::Decode(nsIDOMElement *aSource, nsISchemaTy
 
 //  Second, we create the encodings themselves.
 
-NS_IMPL_ISUPPORTS2_CI(nsSOAPEncoding, nsISOAPEncoding, nsISecurityCheckedComponent)
+NS_IMPL_ISUPPORTS1_CI(nsSOAPEncoding, nsISOAPEncoding)
 
 nsSOAPEncoding::nsSOAPEncoding(): mEncoders(new nsSupportsHashtable),
   mDecoders(new nsSupportsHashtable)
@@ -352,51 +354,5 @@ NS_IMETHODIMP nsSOAPEncoding::GetDefaultDecoder(nsISOAPDecoder * *aDefaultDecode
 NS_IMETHODIMP nsSOAPEncoding::SetDefaultDecoder(nsISOAPDecoder * aDefaultDecoder)
 {
   mDefaultDecoder = aDefaultDecoder;
-  return NS_OK;
-}
-
-static const char* kAllAccess = "AllAccess";
-
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP 
-nsSOAPEncoding::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPEncoding))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP 
-nsSOAPEncoding::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPEncoding))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsSOAPEncoding::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPEncoding))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsSOAPEncoding::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPEncoding))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
   return NS_OK;
 }

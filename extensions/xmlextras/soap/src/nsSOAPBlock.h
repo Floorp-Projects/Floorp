@@ -26,7 +26,6 @@
 #include "nsString.h"
 #include "nsIVariant.h"
 #include "nsISOAPBlock.h"
-#include "nsISecurityCheckedComponent.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsISOAPEncoding.h"
 #include "nsISchema.h"
@@ -35,21 +34,16 @@
 #include "nsCOMPtr.h"
 
 class nsSOAPBlock : public nsISOAPBlock,
-                        public nsISecurityCheckedComponent,
                         public nsIJSNativeInitializer
 {
 public:
   nsSOAPBlock();
-  nsSOAPBlock(nsISOAPAttachments* aAttachments);
   virtual ~nsSOAPBlock();
 
   NS_DECL_ISUPPORTS
 
   // nsISOAPBlock
   NS_DECL_NSISOAPBLOCK
-
-  // nsISecurityCheckedComponent
-  NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(JSContext *cx, JSObject *obj, 
@@ -65,6 +59,7 @@ protected:
   nsCOMPtr<nsIVariant> mValue;
   nsresult mStatus;
   PRBool mComputeValue;
+  PRBool mVersion;
 };
 
 #endif

@@ -26,7 +26,6 @@
 #include "nsString.h"
 #include "nsIVariant.h"
 #include "nsISOAPParameter.h"
-#include "nsISecurityCheckedComponent.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsISOAPEncoding.h"
 #include "nsISchema.h"
@@ -40,7 +39,6 @@ class nsSOAPParameter : public nsSOAPBlock,
 {
 public:
   nsSOAPParameter();
-  nsSOAPParameter(nsISOAPAttachments* aAttachments);
   virtual ~nsSOAPParameter();
 
   NS_DECL_ISUPPORTS
@@ -49,9 +47,6 @@ public:
 
   // nsISOAPParameter
   NS_DECL_NSISOAPPARAMETER
-
-  // nsISecurityCheckedComponent
-  NS_DECL_NSISECURITYCHECKEDCOMPONENT
 };
 
 #endif

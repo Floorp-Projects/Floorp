@@ -26,7 +26,6 @@
 #include "nsString.h"
 #include "nsIVariant.h"
 #include "nsISOAPHeaderBlock.h"
-#include "nsISecurityCheckedComponent.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsISOAPEncoding.h"
 #include "nsISchema.h"
@@ -40,7 +39,6 @@ class nsSOAPHeaderBlock : public nsSOAPBlock,
 {
 public:
   nsSOAPHeaderBlock();
-  nsSOAPHeaderBlock(nsISOAPAttachments* aAttachments, PRUint16 aVersion);
   virtual ~nsSOAPHeaderBlock();
 
   NS_DECL_ISUPPORTS
@@ -50,13 +48,9 @@ public:
   // nsISOAPHeaderBlock
   NS_DECL_NSISOAPHEADERBLOCK
 
-  // nsISecurityCheckedComponent
-  NS_DECL_NSISECURITYCHECKEDCOMPONENT
-
 protected:
   nsString mActorURI;
   PRBool mMustUnderstand;
-  PRBool mVersion;
 };
 
 #endif

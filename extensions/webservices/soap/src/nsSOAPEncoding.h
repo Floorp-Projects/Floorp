@@ -24,7 +24,6 @@
 #define nsSOAPEncodingRegistry_h__
 
 #include "nsString.h"
-#include "nsISecurityCheckedComponent.h"
 #include "nsIDOMElement.h"
 #include "nsISOAPEncoding.h"
 #include "nsISOAPEncoder.h"
@@ -49,16 +48,12 @@ protected:
   nsCOMPtr<nsISchemaCollection> mSchemaCollection;
 };
 
-class nsSOAPEncoding : public nsISOAPEncoding,
-		    public nsISecurityCheckedComponent
+class nsSOAPEncoding : public nsISOAPEncoding
 {
 public:
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSISOAPENCODING
-
-  // nsISecurityCheckedComponent
-  NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
   nsSOAPEncoding();
   nsSOAPEncoding(PRUint16 aVersion);

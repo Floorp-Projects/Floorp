@@ -25,17 +25,16 @@
 #include "nsIDOMNodeList.h"
 #include "nsISOAPMessage.h"
 
-nsSOAPFault::nsSOAPFault(nsIDOMElement* aElement)
+nsSOAPFault::nsSOAPFault()
 {
   NS_INIT_ISUPPORTS();
-  mFaultElement = aElement;
 }
 
 nsSOAPFault::~nsSOAPFault()
 {
 }
 
-NS_IMPL_ISUPPORTS2_CI(nsSOAPFault, nsISOAPFault, nsISecurityCheckedComponent)
+NS_IMPL_ISUPPORTS1_CI(nsSOAPFault, nsISOAPFault)
 
 /* attribute nsIDOMElement element; */
 NS_IMETHODIMP nsSOAPFault::SetElement(nsIDOMElement *aElement)
@@ -131,51 +130,5 @@ NS_IMETHODIMP nsSOAPFault::GetDetail(nsIDOMElement * *aDetail)
   nsCOMPtr<nsIDOMElement> element;
   nsSOAPUtils::GetSpecificChildElement(mFaultElement, *nsSOAPUtils::kSOAPEnvURI[mVersion],
     nsSOAPUtils::kFaultDetailTagName, aDetail);
-  return NS_OK;
-}
-
-static const char* kAllAccess = "AllAccess";
-
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP 
-nsSOAPFault::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPFault))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP 
-nsSOAPFault::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPFault))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsSOAPFault::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPFault))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsSOAPFault::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPFault))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
   return NS_OK;
 }

@@ -32,10 +32,6 @@ nsSOAPParameter::nsSOAPParameter()
   NS_INIT_ISUPPORTS();
 }
 
-nsSOAPParameter::nsSOAPParameter(nsISOAPAttachments* aAttachments): nsSOAPBlock(aAttachments)
-{
-}
-
 NS_IMPL_CI_INTERFACE_GETTER2(nsSOAPParameter, nsISOAPBlock, nsISOAPParameter)
 NS_IMPL_ADDREF_INHERITED(nsSOAPParameter, nsSOAPBlock)
 NS_IMPL_RELEASE_INHERITED(nsSOAPParameter, nsSOAPBlock)
@@ -47,50 +43,4 @@ NS_INTERFACE_MAP_END_INHERITING(nsSOAPBlock)
 
 nsSOAPParameter::~nsSOAPParameter()
 {
-}
-
-static const char* kAllAccess = "AllAccess";
-
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP 
-nsSOAPParameter::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPParameter))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP 
-nsSOAPParameter::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPParameter))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsSOAPParameter::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPParameter))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsSOAPParameter::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPParameter))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
 }

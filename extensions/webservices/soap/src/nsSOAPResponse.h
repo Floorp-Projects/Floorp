@@ -26,7 +26,6 @@
 #include "nsString.h"
 #include "nsSOAPCall.h"
 #include "nsISOAPResponse.h"
-#include "nsISecurityCheckedComponent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsCOMPtr.h"
@@ -42,9 +41,6 @@ public:
 
   // nsISOAPResponse
   NS_DECL_NSISOAPRESPONSE
-
-  // nsISecurityCheckedComponent
-  NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
   nsSOAPResponse();
   virtual ~nsSOAPResponse();

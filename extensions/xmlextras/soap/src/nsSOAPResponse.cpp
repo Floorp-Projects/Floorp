@@ -23,7 +23,11 @@
 #include "nsSOAPResponse.h"
 #include "nsSOAPUtils.h"
 #include "nsSOAPFault.h"
+#include "nsISOAPFault.h"
+#include "nsCOMPtr.h"
 #include "nsISOAPParameter.h"
+#include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
 
 nsSOAPResponse::nsSOAPResponse()
 {
@@ -63,9 +67,12 @@ NS_IMETHODIMP nsSOAPResponse::GetFault(nsISOAPFault * *aFault)
         *nsSOAPUtils::kSOAPEnvURI[version], nsSOAPUtils::kFaultTagName, 
         getter_AddRefs(fault));
       if (fault) {
-        *aFault = new nsSOAPFault(fault);
-        if (!*aFault)
+	nsCOMPtr<nsISOAPFault> f = do_CreateInstance(NS_SOAPFAULT_CONTRACTID);
+        if (!f)
           return NS_ERROR_OUT_OF_MEMORY;
+	rc = f->SetElement(fault);
+        if (NS_FAILED(rc)) return rc;
+	*aFault = f;
         NS_ADDREF(*aFault);
       }
     }
@@ -73,51 +80,5 @@ NS_IMETHODIMP nsSOAPResponse::GetFault(nsISOAPFault * *aFault)
   else {
     *aFault = nsnull;
   }
-  return NS_OK;
-}
-
-static const char* kAllAccess = "AllAccess";
-
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP 
-nsSOAPResponse::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPResponse))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP 
-nsSOAPResponse::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPResponse))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsSOAPResponse::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPResponse))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsSOAPResponse::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPResponse))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
   return NS_OK;
 }

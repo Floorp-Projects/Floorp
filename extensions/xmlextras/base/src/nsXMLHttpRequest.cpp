@@ -199,6 +199,7 @@ nsXMLHttpRequest::AddEventListener(const nsAReadableString& type,
   else {
     return NS_ERROR_INVALID_ARG;
   }
+  GetCurrentContext(getter_AddRefs(mScriptContext));
 
   return NS_OK;
 }

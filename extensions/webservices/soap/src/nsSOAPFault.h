@@ -25,24 +25,19 @@
 
 #include "nsString.h"
 #include "nsISOAPFault.h"
-#include "nsISecurityCheckedComponent.h"
 #include "nsIDOMElement.h"
 #include "nsCOMPtr.h"
 
-class nsSOAPFault : public nsISOAPFault,
-		    public nsISecurityCheckedComponent
+class nsSOAPFault : public nsISOAPFault
 {
 public:
-  nsSOAPFault(nsIDOMElement* aElement);
+  nsSOAPFault();
   virtual ~nsSOAPFault();
 
   NS_DECL_ISUPPORTS
 
   // nsISOAPFault
   NS_DECL_NSISOAPFAULT
-
-  // nsISecurityCheckedComponent
-  NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
 protected:
   nsCOMPtr<nsIDOMElement> mFaultElement;

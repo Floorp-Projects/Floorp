@@ -26,26 +26,30 @@
 #include "nsSOAPUtils.h"
 #include "nsIServiceManager.h"
 #include "nsISOAPAttachments.h"
+#include "nsISOAPMessage.h"
 
 nsSOAPBlock::nsSOAPBlock()
 {
   NS_INIT_ISUPPORTS();
 }
 
-nsSOAPBlock::nsSOAPBlock(nsISOAPAttachments* aAttachments)
-{
-  NS_INIT_ISUPPORTS();
-  mAttachments = aAttachments;
-}
-
 nsSOAPBlock::~nsSOAPBlock()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsSOAPBlock, 
+NS_IMPL_ISUPPORTS2(nsSOAPBlock, 
                       nsISOAPBlock, 
-                      nsISecurityCheckedComponent,
                       nsIJSNativeInitializer)
+
+NS_IMETHODIMP nsSOAPBlock::Init(nsISOAPAttachments* aAttachments, PRUint16 aVersion) {
+  if (aVersion == nsISOAPMessage::VERSION_1_1
+    ||aVersion == nsISOAPMessage::VERSION_1_2) {
+    mAttachments = aAttachments;
+    mVersion = aVersion;
+    return NS_OK;
+  }
+  return NS_ERROR_ILLEGAL_VALUE;
+}
 
 /* attribute AString namespaceURI; */
 NS_IMETHODIMP nsSOAPBlock::GetNamespaceURI(nsAString & aNamespaceURI)
@@ -197,52 +201,6 @@ nsSOAPBlock::Initialize(JSContext *cx, JSObject *obj,
     if (NS_FAILED(rc)) return rc;
     rc = SetEncoding(v);
     if (NS_FAILED(rc)) return rc;
-  }
-
-  return NS_OK;
-}
-
-static const char* kAllAccess = "AllAccess";
-
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP 
-nsSOAPBlock::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPBlock))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP 
-nsSOAPBlock::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPBlock))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsSOAPBlock::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPBlock))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsSOAPBlock::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsISOAPBlock))) {
-    *_retval = nsCRT::strdup(kAllAccess);
   }
 
   return NS_OK;
