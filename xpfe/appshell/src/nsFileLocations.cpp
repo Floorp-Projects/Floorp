@@ -60,10 +60,89 @@ static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 
 // Global variable for gProfileDir
 static nsFileSpec* gProfileDir = nsnull;
-
+static PRInt32 gRegisteredWithDirService = PR_FALSE;
 #ifdef XP_MAC
 #pragma export on
 #endif
+
+
+struct DirectoryTable
+{
+    char *  directoryName;          /* The formal directory name */
+    PRInt32 folderEnum;             /* Directory ID */
+};
+
+struct DirectoryTable DirectoryTable[] = 
+{
+// Preferences:
+
+    {"app.prefs.directory.3",        nsSpecialFileSpec::App_PrefsDirectory30 },
+    {"app.prefs.directory.4",        nsSpecialFileSpec::App_PrefsDirectory40 },
+    {"app.prefs.directory.5",        nsSpecialFileSpec::App_PrefsDirectory50 },
+    {"app.pref.default.directory.5", nsSpecialFileSpec::App_PrefDefaultsFolder50 },
+    
+    {"app.prefs.file.3",        nsSpecialFileSpec::App_PreferencesFile30 },
+    {"app.prefs.file.4",        nsSpecialFileSpec::App_PreferencesFile40 },
+    {"app.prefs.file.5",        nsSpecialFileSpec::App_PreferencesFile50 },
+
+// Profile:
+
+    {"app.profile.user.directory.3",        nsSpecialFileSpec::App_UserProfileDirectory30 },
+    {"app.profile.user.directory.4",        nsSpecialFileSpec::App_UserProfileDirectory40 },
+    {"app.profile.user.directory.5",        nsSpecialFileSpec::App_UserProfileDirectory50 },
+    {"app.profile.default.user.directory.3",nsSpecialFileSpec::App_DefaultUserProfileRoot30 },
+    {"app.profile.default.user.directory.4",nsSpecialFileSpec::App_DefaultUserProfileRoot40 },
+    {"app.profile.default.user.directory.5",nsSpecialFileSpec::App_DefaultUserProfileRoot50 },
+    {"app.profile.defaults.directory.3",    nsSpecialFileSpec::App_ProfileDefaultsFolder30 },
+    {"app.profile.defaults.directory.4",    nsSpecialFileSpec::App_ProfileDefaultsFolder40 },
+    {"app.profile.defaults.directory.5",    nsSpecialFileSpec::App_ProfileDefaultsFolder50 },
+
+
+// Application Directories: 
+    {"app.res.directory",            nsSpecialFileSpec::App_ResDirectory },
+    {"app.defaults.directory",       nsSpecialFileSpec::App_DefaultsFolder50 },
+    {"app.chrome.directory",           nsSpecialFileSpec::App_ChromeDirectory },
+    {"app.chrome.user.directory",      nsSpecialFileSpec::App_UserChromeDirectory },
+    {"app.plugins.directory",         nsSpecialFileSpec::App_PluginsDirectory },
+
+// Bookmarks:
+
+    {"app.bookmark.file.3",     nsSpecialFileSpec::App_BookmarksFile30 },
+    {"app.bookmark.file.4",     nsSpecialFileSpec::App_BookmarksFile40 },
+    {"app.bookmark.file.5",     nsSpecialFileSpec::App_BookmarksFile50 },
+
+// Search
+    {"app.search.file.5",            nsSpecialFileSpec::App_SearchFile50 },
+    {"app.search.directory.5",       nsSpecialFileSpec::App_SearchDirectory50 },
+    
+// Application Files:
+
+    {"app.registry.file.4",          nsSpecialFileSpec::App_Registry40 },
+    {"app.registry.file.5",          nsSpecialFileSpec::App_Registry50 },
+    {"app.local.store.file.5",       nsSpecialFileSpec::App_LocalStore50 },
+    {"app.history.file.5",           nsSpecialFileSpec::App_History50 },
+    {"app.user.panels.5",            nsSpecialFileSpec::App_UsersPanels50 },
+
+// MailNews:
+
+    {"app.mail.directory.5",            nsSpecialFileSpec::App_MailDirectory50 },
+    {"app.mail.imap.directory.5",       nsSpecialFileSpec::App_ImapMailDirectory50 },
+    {"app.mail.news.directory.5",       nsSpecialFileSpec::App_NewsDirectory50 },
+    {"app.mail.messenger.cache.directory.5",     nsSpecialFileSpec::App_MessengerFolderCache50 },
+
+    {"",     0 },
+};
+
+
+
+
+
+
+
+
+
+
+
 //========================================================================================
 // Static functions that ain't nobody else's business.
 //========================================================================================
@@ -326,7 +405,7 @@ void nsSpecialFileSpec::operator = (Type aType)
 #endif
             }
             break;
-		case App_ChromeDirectory:
+        case App_ChromeDirectory:
             {
                 *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
 #ifdef XP_MAC
@@ -336,7 +415,7 @@ void nsSpecialFileSpec::operator = (Type aType)
 #endif
             }
             break;
-		case App_PluginsDirectory:
+        case App_PluginsDirectory:
             {
                 *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
 #ifdef XP_MAC
@@ -347,7 +426,7 @@ void nsSpecialFileSpec::operator = (Type aType)
             }
             break;
 
-	    case App_UserChromeDirectory:
+        case App_UserChromeDirectory:
             {
                 *this = nsSpecialFileSpec(App_UserProfileDirectory50);
                 *this += "Chrome";
@@ -465,20 +544,20 @@ void nsSpecialFileSpec::operator = (Type aType)
             NS_NOTYETIMPLEMENTED("Write me!");
             break;    
 
-	case App_LocalStore50:
+    case App_LocalStore50:
             {
                 *this = nsSpecialFileSpec(App_UserProfileDirectory50);
                 *this += "localstore.rdf";
                 break;
             }
             break;    
-	case App_History50:
-	    {
-		*this = nsSpecialFileSpec(App_UserProfileDirectory50);
+    case App_History50:
+        {
+        *this = nsSpecialFileSpec(App_UserProfileDirectory50);
                 *this += "history.dat";
                 break;
             }
-	    break;
+        break;
         case App_MailDirectory50:
             {
                 *this = nsSpecialFileSpec(App_UserProfileDirectory50);
@@ -500,74 +579,74 @@ void nsSpecialFileSpec::operator = (Type aType)
                 break;
             }
             break;
-	case App_MessengerFolderCache50:
+    case App_MessengerFolderCache50:
             {
                 *this = nsSpecialFileSpec(App_UserProfileDirectory50);
                 *this += "panacea.dat";
                 break;
             }
             break;
-	case App_UsersPanels50:
-	    {
-		*this = nsSpecialFileSpec(App_UserProfileDirectory50);
-		*this += "panels.rdf";
+    case App_UsersPanels50:
+        {
+        *this = nsSpecialFileSpec(App_UserProfileDirectory50);
+        *this += "panels.rdf";
 
-		if (!(this->Exists())) {
-			// find the default panels.rdf file
-			// something like bin/defaults/profile/panels.rdf
-			nsFileSpec defaultPanelsFile;
-			GetProfileDefaultsFolder(defaultPanelsFile);
-			defaultPanelsFile += "panels.rdf";
+        if (!(this->Exists())) {
+            // find the default panels.rdf file
+            // something like bin/defaults/profile/panels.rdf
+            nsFileSpec defaultPanelsFile;
+            GetProfileDefaultsFolder(defaultPanelsFile);
+            defaultPanelsFile += "panels.rdf";
 
-			// get the users profile directory
-			*this = nsSpecialFileSpec(App_UserProfileDirectory50);
-			
-			// copy the default panels.rdf to <profile>/panels.rdf
-			nsresult rv = defaultPanelsFile.CopyToDir(*this);
-			NS_ASSERTION(NS_SUCCEEDED(rv), "failed to copy panels.rdf");
-			if (NS_SUCCEEDED(rv)) {
-				// set this to <profile>/panels.rdf
-				*this += "panels.rdf";
-			}
-		}
-		break;
-	    }
+            // get the users profile directory
+            *this = nsSpecialFileSpec(App_UserProfileDirectory50);
+            
+            // copy the default panels.rdf to <profile>/panels.rdf
+            nsresult rv = defaultPanelsFile.CopyToDir(*this);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "failed to copy panels.rdf");
+            if (NS_SUCCEEDED(rv)) {
+                // set this to <profile>/panels.rdf
+                *this += "panels.rdf";
+            }
+        }
+        break;
+        }
             break;
-	case App_SearchFile50:
-	    {
-		*this = nsSpecialFileSpec(App_UserProfileDirectory50);
-		*this += "search.rdf";
+    case App_SearchFile50:
+        {
+        *this = nsSpecialFileSpec(App_UserProfileDirectory50);
+        *this += "search.rdf";
 
-		if (!(this->Exists())) {
-			// find the default search.rdf file
-			// something like bin/defaults/profile/search.rdf
-			nsFileSpec defaultPanelsFile;
-			GetProfileDefaultsFolder(defaultPanelsFile);
-			defaultPanelsFile += "search.rdf";
+        if (!(this->Exists())) {
+            // find the default search.rdf file
+            // something like bin/defaults/profile/search.rdf
+            nsFileSpec defaultPanelsFile;
+            GetProfileDefaultsFolder(defaultPanelsFile);
+            defaultPanelsFile += "search.rdf";
 
-			// get the users profile directory
-			*this = nsSpecialFileSpec(App_UserProfileDirectory50);
-			
-			// copy the default search.rdf to <profile>/search.rdf
-			nsresult rv = defaultPanelsFile.CopyToDir(*this);
-			NS_ASSERTION(NS_SUCCEEDED(rv), "failed to copy search.rdf");
-			if (NS_SUCCEEDED(rv)) {
-				// set this to <profile>/search.rdf
-				*this += "search.rdf";
-			}
-		}
-		break;
-	    }
+            // get the users profile directory
+            *this = nsSpecialFileSpec(App_UserProfileDirectory50);
+            
+            // copy the default search.rdf to <profile>/search.rdf
+            nsresult rv = defaultPanelsFile.CopyToDir(*this);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "failed to copy search.rdf");
+            if (NS_SUCCEEDED(rv)) {
+                // set this to <profile>/search.rdf
+                *this += "search.rdf";
+            }
+        }
+        break;
+        }
             break;
-	case App_SearchDirectory50:
-	    {
+    case App_SearchDirectory50:
+        {
                 *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
 #ifdef XP_MAC
                 *this += "Search Plugins";
 #else
                 *this += "searchplugins";
 #endif
-	    }
+        }
             break;
         case App_DirectoryBase:
         case App_FileBase:
@@ -591,8 +670,14 @@ nsFileLocator::nsFileLocator()
 //----------------------------------------------------------------------------------------
 {
   NS_INIT_REFCNT();
-}
+    
+  if (gRegisteredWithDirService == 0)
+  {
+      PR_AtomicIncrement(&gRegisteredWithDirService);
+      new nsFileLocationProvider();
+  }
 
+}
 //----------------------------------------------------------------------------------------
 nsFileLocator::~nsFileLocator()
 //----------------------------------------------------------------------------------------
@@ -625,10 +710,92 @@ NS_IMETHODIMP nsFileLocator::GetFileLocation(
 NS_IMETHODIMP nsFileLocator::ForgetProfileDir()
 //----------------------------------------------------------------------------------------
 {
-	if (gProfileDir) {
-		delete gProfileDir;
-		gProfileDir = nsnull;
-	}
+    if (gProfileDir) {
+        delete gProfileDir;
+        gProfileDir = nsnull;
+        
+        nsresult rv;
+        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+        if (NS_FAILED(rv)) return rv;
+    
+        directoryService->Undefine("app.profile.user.directory.5"); 
+        directoryService->Undefine("app.profile.default.user.directory.5"); 
+        directoryService->Undefine("app.profile.defaults.directory.5"); 
+    }
 
-	return NS_OK;
+    return NS_OK;
 }
+
+
+
+
+nsFileLocationProvider::nsFileLocationProvider()
+{
+  NS_INIT_REFCNT();
+
+  nsresult rv;
+  NS_WITH_SERVICE(nsIDirectoryService, dirService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+
+  if (dirService)
+      dirService->RegisterProvider( NS_STATIC_CAST(nsIDirectoryServiceProvider*, this) );
+}
+
+nsFileLocationProvider::~nsFileLocationProvider()
+{
+}
+
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsFileLocationProvider, nsIDirectoryServiceProvider);
+
+/* MapNameToEnum
+ * maps name from the directory table to its enum */
+PRInt32 
+static MapNameToEnum(const char* name)
+{
+    int i = 0;
+
+    if ( !name )
+        return -1;
+
+    while ( DirectoryTable[i].directoryName[0] != 0 )
+    {
+        if ( strcmp(DirectoryTable[i].directoryName, name) == 0 )
+            return DirectoryTable[i].folderEnum;
+        i++;
+    }
+    return -1;
+}
+NS_IMETHODIMP
+nsFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+
+    *persistant = PR_TRUE;
+    nsFileSpec spec;
+    PRInt32 value = MapNameToEnum(prop);
+    if (value == -1)
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsILocalFile> localFile;
+    nsresult res;
+
+    if (value < nsSpecialFileSpec::App_DirectoryBase)
+    {
+       nsSpecialSystemDirectory ssd = (nsSpecialSystemDirectory::SystemDirectories)value;
+       res = NS_FileSpecToIFile(&ssd, getter_AddRefs(localFile));
+    }
+    else
+    {
+        nsSpecialFileSpec sfs = (nsSpecialFileSpec::Type)value;
+        res = NS_FileSpecToIFile(&sfs, getter_AddRefs(localFile));
+    }
+     
+    if (localFile && NS_SUCCEEDED(res))
+        return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
+
+    return NS_ERROR_FAILURE;
+}
+
+
+
+
