@@ -132,7 +132,7 @@
                 <!-- Settings for "Target Settings" panel -->
                 <SETTING><NAME>Linker</NAME><VALUE>MacOS PPC Linker</VALUE></SETTING>
                 <SETTING><NAME>PreLinker</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>PostLinker</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>PostLinker</NAME><VALUE>Output Flags Post Linker</VALUE></SETTING>
                 <SETTING><NAME>Targetname</NAME><VALUE>apprunnerDebug</VALUE></SETTING>
                 <SETTING><NAME>OutputDirectory</NAME>
                     <SETTING><NAME>Path</NAME><VALUE>::::dist:viewer_debug:</VALUE></SETTING>
@@ -676,7 +676,7 @@
                 <SETTING><NAME>ResourcesMapIsReadOnly</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>PrinterDriverIsMultiFinderCompatible</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Invisible</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>HasBundle</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>HasBundle</NAME><VALUE>true</VALUE></SETTING>
                 <SETTING><NAME>NameLocked</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Stationery</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>HasCustomIcon</NAME><VALUE>false</VALUE></SETTING>
@@ -1479,7 +1479,7 @@
                 <!-- Settings for "Target Settings" panel -->
                 <SETTING><NAME>Linker</NAME><VALUE>MacOS PPC Linker</VALUE></SETTING>
                 <SETTING><NAME>PreLinker</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>PostLinker</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>PostLinker</NAME><VALUE>Output Flags Post Linker</VALUE></SETTING>
                 <SETTING><NAME>Targetname</NAME><VALUE>apprunner</VALUE></SETTING>
                 <SETTING><NAME>OutputDirectory</NAME>
                     <SETTING><NAME>Path</NAME><VALUE>::::dist:viewer:</VALUE></SETTING>
@@ -2023,7 +2023,7 @@
                 <SETTING><NAME>ResourcesMapIsReadOnly</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>PrinterDriverIsMultiFinderCompatible</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Invisible</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>HasBundle</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>HasBundle</NAME><VALUE>true</VALUE></SETTING>
                 <SETTING><NAME>NameLocked</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Stationery</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>HasCustomIcon</NAME><VALUE>false</VALUE></SETTING>
@@ -2826,7 +2826,7 @@
                 <!-- Settings for "Target Settings" panel -->
                 <SETTING><NAME>Linker</NAME><VALUE>MacOS PPC Linker</VALUE></SETTING>
                 <SETTING><NAME>PreLinker</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>PostLinker</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>PostLinker</NAME><VALUE>Output Flags Post Linker</VALUE></SETTING>
                 <SETTING><NAME>Targetname</NAME><VALUE>apprunnerCarbonDebug</VALUE></SETTING>
                 <SETTING><NAME>OutputDirectory</NAME>
                     <SETTING><NAME>Path</NAME><VALUE>::::dist:viewer_debug:</VALUE></SETTING>
@@ -3370,7 +3370,7 @@
                 <SETTING><NAME>ResourcesMapIsReadOnly</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>PrinterDriverIsMultiFinderCompatible</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Invisible</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>HasBundle</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>HasBundle</NAME><VALUE>true</VALUE></SETTING>
                 <SETTING><NAME>NameLocked</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Stationery</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>HasCustomIcon</NAME><VALUE>false</VALUE></SETTING>
@@ -4197,7 +4197,7 @@
                 <!-- Settings for "Target Settings" panel -->
                 <SETTING><NAME>Linker</NAME><VALUE>MacOS PPC Linker</VALUE></SETTING>
                 <SETTING><NAME>PreLinker</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>PostLinker</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>PostLinker</NAME><VALUE>Output Flags Post Linker</VALUE></SETTING>
                 <SETTING><NAME>Targetname</NAME><VALUE>apprunnerCarbon</VALUE></SETTING>
                 <SETTING><NAME>OutputDirectory</NAME>
                     <SETTING><NAME>Path</NAME><VALUE>::::dist:viewer:</VALUE></SETTING>
@@ -4741,7 +4741,7 @@
                 <SETTING><NAME>ResourcesMapIsReadOnly</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>PrinterDriverIsMultiFinderCompatible</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Invisible</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>HasBundle</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>HasBundle</NAME><VALUE>true</VALUE></SETTING>
                 <SETTING><NAME>NameLocked</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Stationery</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>HasCustomIcon</NAME><VALUE>false</VALUE></SETTING>
