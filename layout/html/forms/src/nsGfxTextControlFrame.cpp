@@ -867,7 +867,7 @@ void nsGfxTextControlFrame::GetTextControlFrameState(nsString& aValue)
     if (mCachedState) {
       aValue = *mCachedState;
     } else {
-      nsFormControlHelper::GetInputElementValue(mContent, &aValue, PR_TRUE);
+      GetText(&aValue, PR_TRUE);
     }
   }
 }     
