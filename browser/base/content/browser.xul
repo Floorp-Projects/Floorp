@@ -823,6 +823,17 @@ Contributor(s):
                        sidebarurl="chrome://browser/content/bookmarks/bookmarksPanel.xul"
                        oncommand="toggleSidebar(this);"
                        tooltiptext="&bookmarksButton.tooltip;"/>
+    
+        <toolbarbutton id="new-tab-button" class="toolbarbutton-1"
+                       label="&tabCmd.label;"
+                       command="cmd_newNavigatorTab"
+                       tooltiptext="&newTabButton.tooltip;"/>
+
+        <toolbarbutton id="new-window-button" class="toolbarbutton-1"
+                       label="&newNavigatorCmd.label;"
+                       command="key_newNavigator"
+                       tooltiptext="&newWindowButton.tooltip;"/>
+
     </toolbarpalette>
 
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"

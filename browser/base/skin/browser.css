@@ -373,6 +373,36 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(0px 131px 32px 99px) !important;
 }
 
+#new-tab-button {
+  list-style-image: url("chrome://browser/skin/large-base.png");
+  -moz-image-region: rect(0px 42px 42px 0px);
+}
+#new-tab-button:hover {
+  -moz-image-region: rect(0px 96px 42px 54px);
+}
+#new-tab-button[disabled="true"] {
+  -moz-image-region: rect(0px 150px 42px 108px);
+}
+#new-tab-button:hover:active,
+#new-tab-button[checked="true"] {
+  -moz-image-region: rect(0px 204px 42px 162px);
+}
+
+#new-window-button {
+  list-style-image: url("chrome://browser/skin/large-base.png");
+  -moz-image-region: rect(0px 42px 42px 0px);
+}
+#new-window-button:hover {
+  -moz-image-region: rect(0px 96px 42px 54px);
+}
+#new-window-button[disabled="true"] {
+  -moz-image-region: rect(0px 150px 42px 108px);
+}
+#new-window-button:hover:active,
+#new-window-button[checked="true"] {
+  -moz-image-region: rect(0px 204px 42px 162px);
+}
+
 #downloads-button {
   list-style-image: url("chrome://browser/skin/downloads-large.png");
   -moz-image-region: rect(0px 42px 42px 0px);
@@ -503,7 +533,7 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 }
 
 toolbar[iconsize="small"] #downloads-button {
-  list-style-image: url("chrome://browser/skin/downloads-small.png") !important;
+  list-style-image: url("chrome://browser/skin/small-base.png") !important;
   -moz-image-region: rect(0px 24px 25px 0px);
 }
 toolbar[iconsize="small"] #downloads-button:hover {
@@ -517,8 +547,38 @@ toolbar[iconsize="small"] #downloads-button[disabled="true"] {
   -moz-image-region: rect(0px 96px 25px 72px) !important;
 }
 
+toolbar[iconsize="small"] #new-tab-button {
+  list-style-image: url("chrome://browser/skin/small-base.png") !important;
+  -moz-image-region: rect(0px 24px 25px 0px);
+}
+toolbar[iconsize="small"] #new-tab-button:hover {
+  -moz-image-region: rect(0px 48px 25px 24px);
+}
+toolbar[iconsize="small"] #new-tab-button:hover:active,
+toolbar[iconsize="small"] #new-tab-button[checked="true"] {
+  -moz-image-region: rect(0px 72px 25px 48px);
+}
+toolbar[iconsize="small"] #new-tab-button[disabled="true"] {
+  -moz-image-region: rect(0px 96px 25px 72px) !important;
+}
+
+toolbar[iconsize="small"] #new-window-button {
+  list-style-image: url("chrome://browser/skin/small-base.png") !important;
+  -moz-image-region: rect(0px 24px 25px 0px);
+}
+toolbar[iconsize="small"] #new-window-button:hover {
+  -moz-image-region: rect(0px 48px 25px 24px);
+}
+toolbar[iconsize="small"] #new-window-button:hover:active,
+toolbar[iconsize="small"] #new-window-button[checked="true"] {
+  -moz-image-region: rect(0px 72px 25px 48px);
+}
+toolbar[iconsize="small"] #new-window-button[disabled="true"] {
+  -moz-image-region: rect(0px 96px 25px 72px) !important;
+}
+
 toolbar[iconsize="small"] #bookmarks-button {
-  list-style-image: url("chrome://browser/skin/bookmarks-small.png") !important;
+  list-style-image: url("chrome://browser/skin/small-base.png") !important;
   -moz-image-region: rect(0px 24px 25px 0px);
 }
 toolbar[iconsize="small"] #bookmarks-button:hover {
