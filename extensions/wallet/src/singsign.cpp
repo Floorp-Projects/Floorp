@@ -67,6 +67,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIObserverService.h"
+#include "nsIObserver.h"
 
 //#define SINGSIGN_LOGGING
 #ifdef SINGSIGN_LOGGING
@@ -1830,6 +1831,56 @@ si_PutData(const char *passwordRealm, nsVoidArray *signonData, PRBool save) {
 /*****************************
  * Managing the Signon Files *
  *****************************/
+ 
+////////////////////////////////////////////////////////////////////////////////
+// nsSingleSignOnProfileObserver
+// This observer is a global object and is registered the first time any consumer
+// touches signon profile data. That is, when SI_LoadSignonData() is called.
+
+class nsSingleSignOnProfileObserver : public nsIObserver
+{
+public:
+    nsSingleSignOnProfileObserver() { }
+    virtual ~nsSingleSignOnProfileObserver() {}
+    
+    NS_DECL_ISUPPORTS
+    
+    NS_IMETHODIMP Observe(nsISupports*, const char *aTopic, const PRUnichar *someData) 
+    {
+        if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
+            SI_ClearUserData();
+        if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
+            SI_DeletePersistentUserData();
+        }
+        return NS_OK;
+    }
+};
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsSingleSignOnProfileObserver, nsIObserver)
+
+static nsresult EnsureSingleSignOnProfileObserver()
+{
+  static nsSingleSignOnProfileObserver *gSignOnProfileObserver;
+  
+  if (!gSignOnProfileObserver) {      
+    nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1"));
+    if (!observerService)
+      return NS_ERROR_FAILURE;
+      
+    gSignOnProfileObserver = new nsSingleSignOnProfileObserver;
+    if (!gSignOnProfileObserver)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    // The observer service holds the only ref to the observer
+    // It thus has the lifespan of the observer service
+    nsresult rv = observerService->AddObserver(gSignOnProfileObserver, "profile-before-change", PR_FALSE);
+    if (NS_FAILED(rv)) {
+      delete gSignOnProfileObserver;
+      gSignOnProfileObserver = nsnull; 
+      return rv;
+    }
+  }
+  return NS_OK;
+}
 
 #define BUFFER_SIZE 4096
 
@@ -1896,13 +1947,16 @@ SI_LoadSignonData() {
     return si_LoadSignonDataFromKeychain();
   }
 #endif
-
+  
   /* open the signon file */
   nsFileSpec dirSpec;
   nsresult rv = Wallet_ProfileDirectory(dirSpec);
   if (NS_FAILED(rv)) {
     return -1;
   }
+
+  rv = EnsureSingleSignOnProfileObserver();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to register profile change observer");
 
   SI_InitSignonFileName();
   nsInputFileStream strm(dirSpec+signonFileName);

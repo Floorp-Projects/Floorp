@@ -75,56 +75,6 @@
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsSingleSignOnProfileObserver
-// Signon data is used by both nsSingleSignOnPrompt and the wallet service.
-// This observer is global and initialized by the first consumer of signon data.
-
-class nsSingleSignOnProfileObserver : public nsIObserver
-{
-public:
-    nsSingleSignOnProfileObserver() { }
-    virtual ~nsSingleSignOnProfileObserver() {}
-    
-    NS_DECL_ISUPPORTS
-    
-    NS_IMETHODIMP Observe(nsISupports*, const char *aTopic, const PRUnichar *someData) 
-    {
-        if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
-            SI_ClearUserData();
-        if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
-            SI_DeletePersistentUserData();
-        }
-        return NS_OK;
-    }
-};
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsSingleSignOnProfileObserver, nsIObserver)
-
-static nsresult EnsureSingleSignOnProfileObserver()
-{
-  static nsSingleSignOnProfileObserver *gSignOnProfileObserver;
-  
-  if (!gSignOnProfileObserver) {      
-    nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1"));
-    if (!observerService)
-      return NS_ERROR_FAILURE;
-      
-    gSignOnProfileObserver = new nsSingleSignOnProfileObserver;
-    if (!gSignOnProfileObserver)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    // The observer service holds the only ref to the observer
-    // It thus has the lifespan of the observer service
-    nsresult rv = observerService->AddObserver(gSignOnProfileObserver, "profile-before-change", PR_FALSE);
-    if (NS_FAILED(rv)) {
-      delete gSignOnProfileObserver;
-      gSignOnProfileObserver = nsnull; 
-      return rv;
-    }
-  }
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 nsWalletlibService::nsWalletlibService()
 {
@@ -266,6 +216,8 @@ NS_IMETHODIMP nsWalletlibService::SI_SignonViewerReturn(nsAutoString results){
 NS_IMETHODIMP nsWalletlibService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData) 
 {
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
+    PRBool status;
+    WLLT_ExpirePassword(&status);
     WLLT_ClearUserData();
     if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
       WLLT_DeletePersistentUserData();
@@ -380,9 +332,6 @@ nsresult nsWalletlibService::Init()
   else
     NS_ASSERTION(PR_FALSE, "Could not get nsIObserverService");
     
-  rv = EnsureSingleSignOnProfileObserver();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to register profile change observer");
-
   // Get the global document loader service...  
   nsCOMPtr<nsIDocumentLoader> docLoaderService = 
            do_GetService(kDocLoaderServiceCID, &rv);
@@ -637,8 +586,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsSingleSignOnPrompt,
 nsresult
 nsSingleSignOnPrompt::Init()
 {
-  nsresult rv = EnsureSingleSignOnProfileObserver();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to register profile change observer");
   return NS_OK;
 }
 
