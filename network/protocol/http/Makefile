@@ -22,6 +22,7 @@ LIBRARY_NAME	= httpurl
 
 CSRCS		= \
 	mkhttp.c	\
+	mkaccess.c	\
 	$(NULL)
 
 EXPORTS= httpurl.h httpauth.h cookies.h jscookie.h
