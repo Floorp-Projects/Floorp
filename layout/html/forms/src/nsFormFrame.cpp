@@ -1144,7 +1144,7 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
           if(nsnull == value)
             value = valueStr.ToNewCString();
 
-          if ((0 == names[valueX].Length()) || (0 == valueStr.Length())) {
+          if (0 == names[valueX].Length()) {
             continue;
           }
 
@@ -1264,18 +1264,17 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
             if(nsnull == value)
               value = values[valueX].ToNewCString();
 
-            if ((0 == names[valueX].Length()) || (0 == values[valueX].Length())) {
+            if (0 == names[valueX].Length()) {
               continue;
             }
 
             // convert value to CRLF line breaks
-          // convert value to CRLF line breaks
             char* newValue = nsLinebreakConverter::ConvertLineBreaks(value,
                              nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakNet);
             delete [] value;
             value = newValue;
 
-	    // Print boundary line
+       	    // Print boundary line
             sprintf(buffer, SEP "%s" CRLF, boundary);
             rv = postDataFile->Write(buffer, wantbytes = PL_strlen(buffer), &gotbytes);
             if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
