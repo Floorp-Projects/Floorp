@@ -1164,7 +1164,7 @@ mime_bridge_create_stream(MimePluginInstance  *newPluginObj,
 
   /* This pref is written down in with the
   opposite sense of what we like to use... */
-  MIME_WrapLongLines = PR_FALSE;
+  MIME_WrapLongLines = PR_TRUE;
   if (msd->prefs)
     msd->prefs->GetBoolPref("mail.wrap_long_lines", &MIME_WrapLongLines);
 
