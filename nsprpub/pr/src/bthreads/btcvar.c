@@ -88,34 +88,46 @@ PR_IMPLEMENT(PRStatus)
     PR_WaitCondVar (PRCondVar *cvar, PRIntervalTime timeout)
 {
     status_t result;
-
-    /*
-    ** This is an entirely stupid bug, but...  If you call
-    ** acquire_sem_etc with a timeout of exactly 1,000,000 microseconds
-    ** it returns immediately with B_NO_ERROR.  1,000,010 microseconds
-    ** returns as expected.  Running BeOS/Intel R3.1 at this time.
-    ** Forwarded to Be, Inc. for resolution, Bug ID 980624-225956
-    **
-    ** Update: Be couldn't reproduce it, but removing timeout++ still
-    **         exhibits the problem on BeOS/Intel R4 and BeOS/PPC R4.
-    */
-
-    timeout++;
+    bigtime_t interval;
 
     PR_Unlock( cvar->lock );
 
-    if( PR_INTERVAL_NO_WAIT != timeout )
-    {
-	if( PR_INTERVAL_NO_TIMEOUT == timeout )
-	{
-	    if( acquire_sem( cvar->isem ) != B_NO_ERROR ) return PR_FAILURE;
+    switch (timeout) {
+    case PR_INTERVAL_NO_WAIT:
+        /* nothing to do */
+        break;
 
-	} else
-	{
-	    result = acquire_sem_etc( cvar->isem, 1, B_TIMEOUT, PR_IntervalToMicroseconds( timeout ) );
-	    if( result != B_NO_ERROR && result != B_TIMED_OUT )
-		return PR_FAILURE;
-	}
+    case PR_INTERVAL_NO_TIMEOUT:
+        /* wait as long as necessary */
+        if( acquire_sem( cvar->isem ) != B_NO_ERROR ) return PR_FAILURE;
+        break;
+
+    default:
+        interval = (bigtime_t)PR_IntervalToMicroseconds(timeout);
+
+        /*
+        ** in R5, this problem seems to have been resolved, so we
+        ** won't bother with it
+        */
+#if !defined(B_BEOS_VERSION_5) || (B_BEOS_VERSION < B_BEOS_VERSION_5)
+        /*
+        ** This is an entirely stupid bug, but...  If you call
+        ** acquire_sem_etc with a timeout of exactly 1,000,000 microseconds
+        ** it returns immediately with B_NO_ERROR.  1,000,010 microseconds
+        ** returns as expected.  Running BeOS/Intel R3.1 at this time.
+        ** Forwarded to Be, Inc. for resolution, Bug ID 980624-225956
+        **
+        ** Update: Be couldn't reproduce it, but removing timeout++ still
+        **         exhibits the problem on BeOS/Intel R4 and BeOS/PPC R4.
+        */
+        if (interval == 1000000)
+            interval = 1000010;
+#endif	/* !defined(B_BEOS_VERSION_5) || (B_BEOS_VERSION < B_BEOS_VERSION_5) */
+
+        result = acquire_sem_etc( cvar->isem, 1, B_RELATIVE_TIMEOUT, interval);
+        if( result != B_NO_ERROR && result != B_TIMED_OUT )
+            return PR_FAILURE;
+        break;
     }
 
     PR_Lock( cvar->lock );
@@ -162,4 +174,6 @@ PR_IMPLEMENT(PRStatus)
 
     if( release_sem_etc( cvar->isem, semInfo.count, 0 ) != B_NO_ERROR )
 	return PR_FAILURE;
+
+    return PR_SUCCESS;
 }

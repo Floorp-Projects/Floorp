@@ -674,38 +674,34 @@ PR_IMPLEMENT(PRStatus)
     PRIntn rv;
 
     PR_ASSERT(thred != NULL);
-    rv = resume_thread( thred->md.tid );
 
-    if( rv == B_BAD_THREAD_STATE )
-    {
-	/*
-	** We have a thread that's not suspended, but is
-	** blocked.  Suspend it THEN resume it.  The
-	** function call that's hanging will return
-	** B_INTERRUPTED
-	*/
+    /*
+    ** there seems to be a bug in beos R5 in which calling
+    ** resume_thread() on a blocked thread returns B_OK instead
+    ** of B_BAD_THREAD_STATE (beos bug #20000422-19095).  as such,
+    ** to interrupt a thread, we will simply suspend then resume it
+    ** (no longer call resume_thread(), check for B_BAD_THREAD_STATE,
+    ** the suspend/resume to wake up a blocked thread).  this wakes
+    ** up blocked threads properly, and doesn't hurt unblocked threads
+    ** (they simply get stopped then re-started immediately)
+    */
 
-	rv = suspend_thread( thred->md.tid );
-	if( rv != B_NO_ERROR )
-	{
-	    PR_SetError( PR_UNKNOWN_ERROR, rv );
-	    return( PR_FAILURE );
-	}
-	rv = resume_thread( thred->md.tid );
-	if( rv != B_NO_ERROR )
-	{
-	    PR_SetError( PR_UNKNOWN_ERROR, rv );
-	    return( PR_FAILURE );
-	}
-    }
-
+    rv = suspend_thread( thred->md.tid );
     if( rv != B_NO_ERROR )
     {
-	PR_SetError( PR_UNKNOWN_ERROR, rv );
-	return( PR_FAILURE );
+        /* this doesn't appear to be a valid thread_id */
+        PR_SetError( PR_UNKNOWN_ERROR, rv );
+        return PR_FAILURE;
     }
 
-    return( PR_SUCCESS );
+    rv = resume_thread( thred->md.tid );
+    if( rv != B_NO_ERROR )
+    {
+        PR_SetError( PR_UNKNOWN_ERROR, rv );
+        return PR_FAILURE;
+    }
+
+    return PR_SUCCESS;
 }
 
 PR_IMPLEMENT(void)
