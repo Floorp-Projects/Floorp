@@ -33,6 +33,7 @@
 #include "nsIRDFObserver.h"
 #include "nsIServiceManager.h"
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
+//Guha --- could we ask them to move it out?
 #include "nsRDFCID.h"
 #include "rdfutil.h"
 #include "plhash.h"
@@ -48,17 +49,19 @@ static NS_DEFINE_IID(kIRDFNodeIID,             NS_IRDFNODE_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,         NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kISupportsIID,            NS_ISUPPORTS_IID);
 
-// XXX how about some more descriptive names for these slots?
-struct Assertion {
-    nsIRDFResource* u;
-    nsIRDFResource* s;
-    nsIRDFNode*     v;
-    PRBool          tv;
-    Assertion*      next;
-    Assertion*      invNext;
-};
 
 
+class Assertion 
+{
+public:
+    nsIRDFResource* mSource;
+    nsIRDFResource* mProperty;
+    nsIRDFNode*     mTarget;
+    PRBool          mTv;
+    Assertion*      mNext;
+    Assertion*      mInvNext;
+}
+    
 ////////////////////////////////////////////////////////////////////////
 
 static PLHashNumber
@@ -89,9 +92,9 @@ class InMemoryDataSource : public nsIRDFDataSource
 protected:
     char*        mURL;
 
-    // XXX how about better names for these tables?
-    PLHashTable* mArg1; // forward arcs
-    PLHashTable* mArg2; // backwards arcs
+
+    PLHashTable* mForwardArcs; 
+    PLHashTable* mReverseArcs; 
 
     nsVoidArray* mObservers;  
 
@@ -226,8 +229,11 @@ InMemoryAssertionCursor::InMemoryAssertionCursor (InMemoryDataSource* ds,
         mTarget = u;
         mNextAssertion = mDataSource->getArg2(u);
     } else {
-        if (NS_SUCCEEDED(u->QueryInterface(kIRDFResourceIID, (void**) &mSource)))
-            mNextAssertion = mDataSource->getArg1(mSource);
+        mSource = u;
+        mNextAssertion = mDataSource->getArg1(mSource);
+        // Dont need this ...
+        //        if (NS_SUCCEEDED(u->QueryInterface(kIRDFResourceIID, (void**) &mSource)))
+        //  mNextAssertion = mDataSource->getArg1(mSource);
     }
 }
 
@@ -244,26 +250,27 @@ InMemoryAssertionCursor::Advance(void)
     // XXX I don't think that the semantics of this are quite right:
     // specifically, I think that the initial Advance() will skip the
     // first element...
+    // Guha --- I am pretty sure it won't
     nsresult rv;
 
     NS_IF_RELEASE(mValue);
 
     while (mNextAssertion) {
         PRBool eq;
-        if (NS_FAILED(rv = mLabel->EqualsResource(mNextAssertion->s, &eq)))
+        if (NS_FAILED(rv = mLabel->EqualsResource(mNextAssertion->mProperty, &eq)))
             return rv;
 
-        if ((mTruthValue == mNextAssertion->tv) && eq) {
+        if ((mTruthValue == mNextAssertion->mTv) && eq) {
             if (mInversep) {
-                mValue = mNextAssertion->u;
+                mValue = mNextAssertion->mSource;
                 NS_ADDREF(mValue);
             } else {
-                mValue = mNextAssertion->v;
+                mValue = mNextAssertion->target;
                 NS_ADDREF(mValue);
             }
             return NS_OK;
         }
-        mNextAssertion = (mInversep ? mNextAssertion->invNext : mNextAssertion->next);
+        mNextAssertion = (mInversep ? mNextAssertion->mInvNext : mNextAssertion->mNext);
     }
 
     // If we get here, the cursor is empty.
@@ -359,18 +366,18 @@ NS_IMPL_ISUPPORTS(InMemoryDataSource, kIRDFDataSourceIID);
 
 InMemoryDataSource::InMemoryDataSource(void)
     : mURL(nsnull),
-      mArg1(nsnull),
-      mArg2(nsnull),
+      mForwardArcs(nsnull),
+      mReverseArcs(nsnull),
       mObservers(nsnull)
 {
-    mArg1 = PL_NewHashTable(kInitialTableSize,
+    mForwardArcs = PL_NewHashTable(kInitialTableSize,
                             rdf_HashPointer,
                             PL_CompareValues,
                             PL_CompareValues,
                             nsnull,
                             nsnull);
 
-    mArg2 = PL_NewHashTable(kInitialTableSize,
+    mReverseArcs = PL_NewHashTable(kInitialTableSize,
                             rdf_HashPointer,
                             rdf_CompareNodes,
                             PL_CompareValues,
@@ -380,13 +387,13 @@ InMemoryDataSource::InMemoryDataSource(void)
 
 InMemoryDataSource::~InMemoryDataSource(void)
 {
-    if (mArg1) {
-        PL_HashTableDestroy(mArg1);
-        mArg1 = nsnull;
+    if (mForwardArcs) {
+        PL_HashTableDestroy(mForwardArcs);
+        mForwardArcs = nsnull;
     }
-    if (mArg2) {
-        PL_HashTableDestroy(mArg2);
-        mArg2 = nsnull;
+    if (mReverseArcs) {
+        PL_HashTableDestroy(mReverseArcs);
+        mReverseArcs = nsnull;
     }
     if (mObservers) {
         for (PRInt32 i = mObservers->Count(); i >= 0; --i) {
@@ -401,26 +408,26 @@ Assertion*
 InMemoryDataSource::getArg1 (nsIRDFResource* u)
 {
     // Cast is okay, we're in a closed system
-    return (Assertion*) PL_HashTableLookup(mArg1, u);
+    return (Assertion*) PL_HashTableLookup(mForwardArcs, u);
 }
 
 Assertion*
 InMemoryDataSource::getArg2 (nsIRDFNode* v)
 {
     // Cast is okay, we're in a closed system
-    return (Assertion*) PL_HashTableLookup(mArg2, v);
+    return (Assertion*) PL_HashTableLookup(mReverseArcs, v);
 }   
 
 void
 InMemoryDataSource::setArg1 (nsIRDFResource* u, Assertion* as)
 {
-    PL_HashTableAdd(mArg1, u, as);
+    PL_HashTableAdd(mForwardArcs, u, as);
 }
 
 void
 InMemoryDataSource::setArg2 (nsIRDFNode* v, Assertion* as)
 {
-    PL_HashTableAdd(mArg2, v, as);
+    PL_HashTableAdd(mReverseArcs, v, as);
 }
 
 NS_IMETHODIMP
@@ -437,18 +444,18 @@ InMemoryDataSource::GetSource(nsIRDFResource* property, nsIRDFNode* target,
                               PRBool tv, nsIRDFResource** source)
 {
     nsresult rv;
-    for (Assertion* as = getArg2(target); as != nsnull; as = as->next) {
+    for (Assertion* as = getArg2(target); as != nsnull; as = as->mNext) {
         PRBool eq;
-        if (NS_FAILED(rv = property->EqualsResource(as->s, &eq)))
+        if (NS_FAILED(rv = property->EqualsResource(as->mProperty, &eq)))
             return rv;
 
         if (! eq)
             continue;
 
-        if (as->tv != tv)
+        if (as->mTv != tv)
             continue;
 
-        *source = as->u;
+        *source = as->mSource;
         return NS_OK;
     }
     *source = nsnull;
@@ -459,18 +466,18 @@ NS_IMETHODIMP
 InMemoryDataSource::GetTarget(nsIRDFResource* source,  nsIRDFResource* property,
                               PRBool tv, nsIRDFNode** target) {
     nsresult rv;
-    for (Assertion* as = getArg1(source); as != nsnull; as = as->next) {
+    for (Assertion* as = getArg1(source); as != nsnull; as = as->mNext) {
         PRBool eq;
-        if (NS_FAILED(rv = property->EqualsResource(as->s, &eq)))
+        if (NS_FAILED(rv = property->EqualsResource(as->mProperty, &eq)))
             return rv;
 
         if (! eq)
             continue;
 
-        if (as->tv != tv)
+        if (as->mTv != tv)
             continue;
 
-        *target = as->v;
+        *target = as->target;
         return NS_OK;
     }
 
@@ -485,21 +492,21 @@ InMemoryDataSource::HasAssertion(nsIRDFResource* source, nsIRDFResource* propert
                                  nsIRDFNode* target, PRBool tv,PRBool* hasAssertion)
 {
     nsresult rv;
-    for (Assertion* as = getArg1(source); as != nsnull; as = as->next) {
+    for (Assertion* as = getArg1(source); as != nsnull; as = as->mNext) {
         PRBool eq;
-        if (NS_FAILED(rv = property->EqualsResource(as->s, &eq)))
+        if (NS_FAILED(rv = property->EqualsResource(as->mProperty, &eq)))
             return rv;
 
         if (! eq)
             continue;
 
-        if (NS_FAILED(rv = target->EqualsNode(as->v, &eq)))
+        if (NS_FAILED(rv = target->EqualsNode(as->target, &eq)))
             return rv;
 
         if (! eq)
             continue;
 
-        if (as->tv != tv)
+        if (as->mTv != tv)
             continue;
 
         // found it!
@@ -544,23 +551,23 @@ InMemoryDataSource::Assert(nsIRDFResource* source, nsIRDFResource* property,
     while (next) {
         PRBool eq;
 
-        if (NS_FAILED(rv = property->EqualsResource(next->s, &eq)))
+        if (NS_FAILED(rv = property->EqualsResource(next->mProperty, &eq)))
             return rv;
 
         if (eq) {
-            if (NS_FAILED(rv = target->EqualsNode(next->v, &eq)))
+            if (NS_FAILED(rv = target->EqualsNode(next->target, &eq)))
                 return rv;
 
             if (eq) {
                 // Wow, we already had the assertion. Make sure that the
                 // truth values are correct and bail.
-                next->tv = tv;
+                next->mTv = tv;
                 return NS_OK;
             }
         }
 
         prev = next;
-        next = as->next;
+        next = as->mNext;
     }
 
     as = new Assertion;
@@ -568,21 +575,21 @@ InMemoryDataSource::Assert(nsIRDFResource* source, nsIRDFResource* property,
         return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(source);
-    as->u  = source;
+    as->mSource  = source;
 
     NS_ADDREF(property);
-    as->s  = property;
+    as->mProperty  = property;
 
     NS_ADDREF(target);
-    as->v  = target;
+    as->target  = target;
 
-    as->tv = tv;
+    as->mTv = tv;
 
     // Link it in to the "forward arcs" table
     if (!prev) {
         setArg1(source, as);
     } else {
-        prev->next = as;
+        prev->mNext = as;
     }
     
     // Link it in to the "reverse arcs" table
@@ -590,11 +597,11 @@ InMemoryDataSource::Assert(nsIRDFResource* source, nsIRDFResource* property,
 
     // XXX Shouldn't we keep a pointer to the end of the list to make
     // sure this is O(1)?
-    for (next = getArg2(target); next != nsnull; next = next->invNext) {prev = next;}
+    for (next = getArg2(target); next != nsnull; next = next->mInvNext) {prev = next;}
     if (!prev) {
         setArg2(target, as);
     } else {
-        prev->invNext = as;
+        prev->mInvNext = as;
     }
 
     // notify observers
@@ -621,18 +628,18 @@ InMemoryDataSource::Unassert(nsIRDFResource* source,
     while (next) {
         PRBool eq;
 
-        if (NS_FAILED(rv = property->EqualsResource(next->s, &eq)))
+        if (NS_FAILED(rv = property->EqualsResource(next->mProperty, &eq)))
             return rv;
 
         if (eq) {
-            if (NS_FAILED(rv = target->EqualsNode(next->v, &eq)))
+            if (NS_FAILED(rv = target->EqualsNode(next->target, &eq)))
                 return rv;
 
             if (eq) {
                 if (prev == next) {
-                    setArg1(source, next->next);
+                    setArg1(source, next->mNext);
                 } else {
-                    prev->next = next->next;
+                    prev->mNext = next->mNext;
                 }
                 as = next;
                 break;
@@ -640,7 +647,7 @@ InMemoryDataSource::Unassert(nsIRDFResource* source,
         }
 
         prev = next;
-        next = as->next;
+        next = as->mNext;
     }
 
     // We don't even have the assertion, so just bail.
@@ -651,14 +658,14 @@ InMemoryDataSource::Unassert(nsIRDFResource* source,
     while (next) {
         if (next == as) {
             if (prev == next) {
-                setArg2(target, next->invNext);
+                setArg2(target, next->mInvNext);
             } else {
-                prev->invNext = next->invNext;
+                prev->mInvNext = next->mInvNext;
             }
             break;
         }
         prev = next;
-        next = as->invNext;
+        next = as->mInvNext;
     }
 
     // XXX delete the assertion struct & release resources?
