@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.2 2000/09/28 21:36:11 thayes%netscape.com Exp $
+ * $Id: keydb.c,v 1.3 2000/10/01 17:13:34 wtc%netscape.com Exp $
  */
 
 #include "keylow.h"
@@ -684,6 +684,8 @@ newdb:
     }
 
     handle->global_salt = GetKeyDBGlobalSalt(handle);
+    if ( dbname )
+        PORT_Free( dbname );
     return handle;
 
 loser:
