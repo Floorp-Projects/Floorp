@@ -431,6 +431,11 @@ nsTreeFrame::Reflow(nsIPresContext*          aPresContext,
   
   if (mFixedRows != -1) {
     PRInt32 totalRows = mCellMap->GetRowCount();
+    // If no rows yet, they will be added dynamically,
+    //   so don't bother with reflow now
+    if (totalRows == 0)
+      return rv;
+
     if (totalRows < mFixedRows) {
       if (totalRows == 0) aDesiredSize.height = 0 +
           aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;;
