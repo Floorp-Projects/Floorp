@@ -85,7 +85,6 @@
 #include "nsHTMLTags.h"
 #include "nsDTDUtils.h"
 #include "nsTimer.h"
-#include "nsIProgressEventSink.h"
 #include "nsIEventQueue.h"
 
 class IContentSink;
@@ -280,8 +279,6 @@ class nsParser : public nsIParser,
       // These methods are callback methods used by
       // net lib to let us know about our inputstream.
       //*********************************************
-    NS_DECL_NSIPROGRESSEVENTSINK
-
     // nsIRequestObserver methods:
     NS_DECL_NSIREQUESTOBSERVER
 
@@ -460,7 +457,6 @@ protected:
     PRInt32             mMinorIteration;
 
     nsIRequestObserver*   mObserver;
-    nsIProgressEventSink* mProgressEventSink;
     nsIContentSink*     mSink;
    
     nsIParserFilter*    mParserFilter;

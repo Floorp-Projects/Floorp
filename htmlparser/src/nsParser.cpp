@@ -56,7 +56,6 @@
 #include "nsICachingChannel.h"
 #include "nsICacheEntryDescriptor.h"
 #include "nsICharsetAlias.h"
-#include "nsIProgressEventSink.h"
 #include "nsIInputStream.h"
 #include "CNavDTD.h"
 #include "COtherDTD.h"
@@ -71,7 +70,6 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID); 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
-static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
 static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
@@ -308,7 +306,6 @@ nsParser::nsParser(nsITokenObserver* anObserver) {
   mCharset.AssignWithConversion("ISO-8859-1");
   mParserFilter = 0;
   mObserver = 0;
-  mProgressEventSink = nsnull;
   mSink=0;
   mParserContext=0;
   mTokenObserver=anObserver;
@@ -364,7 +361,6 @@ nsParser::~nsParser() {
 #endif
 
   NS_IF_RELEASE(mObserver);
-  NS_IF_RELEASE(mProgressEventSink);
   NS_IF_RELEASE(mSink);
   NS_IF_RELEASE(mParserFilter);
 
@@ -404,9 +400,6 @@ nsresult nsParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   else if(aIID.Equals(kIParserIID)) {  //do IParser base class...
     *aInstancePtr = (nsIParser*)(this);                                        
-  }
-  else if(aIID.Equals(NS_GET_IID(nsIProgressEventSink))) {
-    *aInstancePtr = (nsIStreamListener*)(this);                                        
   }
   else if(aIID.Equals(NS_GET_IID(nsIRequestObserver))) {
     *aInstancePtr = (nsIRequestObserver*)(this);                                        
@@ -2010,42 +2003,6 @@ nsITokenizer* nsParser::GetTokenizer(void) {
 /*******************************************************************
   These methods are used to talk to the netlib system...
  *******************************************************************/
-
-/**
- *  
- *  
- *  @update  gess 5/12/98
- *  @param   
- *  @return  error code -- 0 if ok, non-zero if error.
- */
-nsresult
-nsParser::OnProgress(nsIRequest *request, nsISupports* aContext, PRUint32 aProgress, PRUint32 aProgressMax)
-{
-  nsresult result=0;
-  if (nsnull != mProgressEventSink) {
-    mProgressEventSink->OnProgress(request, aContext, aProgress, aProgressMax);
-  }
-  return result;
-}
-
-/**
- *  
- *  
- *  @update  gess 5/12/98
- *  @param   
- *  @return  error code -- 0 if ok, non-zero if error.
- */
-nsresult
-nsParser::OnStatus(nsIRequest *request, nsISupports* aContext,
-                   nsresult aStatus, const PRUnichar* aStatusArg)
-{
-  nsresult rv;
-  if (nsnull != mProgressEventSink) {
-    rv = mProgressEventSink->OnStatus(request, aContext, aStatus, aStatusArg);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "dropping error result");
-  }
-  return NS_OK;
-}
 
 #ifdef rickgdebug
 #include <fstream.h>
