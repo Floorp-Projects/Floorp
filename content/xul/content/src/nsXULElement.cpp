@@ -1857,6 +1857,8 @@ nsXULElement::AddScriptEventListener(nsIAtom* aName,
 
         rv = global->GetContext(getter_AddRefs(context));
         if (NS_FAILED(rv)) return rv;
+
+        if (!context) return NS_OK;
     }
 
     nsCOMPtr<nsIContent> root;
