@@ -148,11 +148,21 @@ inLayoutUtils::GetClientOrigin(nsIPresContext* aPresContext,
   nsPoint result(0,0);
   nsIView* view;
   aFrame->GetOffsetFromView(aPresContext, result, &view);
+  nsIView* rootView = nsnull;
+  if (view) {
+      nsCOMPtr<nsIViewManager> viewManager;
+      view->GetViewManager(*getter_AddRefs(viewManager));
+      NS_ASSERTION(viewManager, "View must have a viewmanager");
+      viewManager->GetRootView(rootView);
+  }
   while (view) {
     nscoord x, y;
     view->GetPosition(&x, &y);
     result.x += x;
     result.y += y;
+    if (view == rootView) {
+      break;
+    }
     view->GetParent(view);
   }
   return result;
