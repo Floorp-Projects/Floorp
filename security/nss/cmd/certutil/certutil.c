@@ -1119,7 +1119,7 @@ Usage(char *progName)
     FPS "\t%s -R -s subj -o cert-request-file [-d certdir] [-P dbprefix] [-p phone] [-a]\n"
 	"\t\t [-k key-type] [-h token-name] [-f pwfile] [-g key-size]\n",
 	progName);
-    FPS "\t%s -V -n cert-name -u usage [-b time] [-e] \n",
+    FPS "\t%s -V -n cert-name -u usage [-b time] [-e] \n"
 	"\t\t[-X] [-d certdir] [-P dbprefix]\n",
 	progName);
     FPS "\t%s -S -n cert-name -s subj [-c issuer-name | -x]  -t trustargs\n"
@@ -1301,7 +1301,7 @@ static void LongUsage(char *progName)
 	"   -d certdir");
     FPS "%-20s Cert & Key database prefix\n",
 	"   -P dbprefix");
-    FPS "%-20s Token to reset (default is internal)\n"
+    FPS "%-20s Token to reset (default is internal)\n",
 	"   -h token-name");
     FPS "\n");
 

@@ -60,7 +60,7 @@
 
 #include "plgetopt.h"
 
-#define VERSIONSTRING "$Revision: 1.1 $ ($Date: 2000/03/31 20:12:54 $) $Author: relyea%netscape.com $"
+#define VERSIONSTRING "$Revision: 1.2 $ ($Date: 2002/03/15 06:04:32 $) $Author: wtc%netscape.com $"
 
 
 struct _DataBufferList;
@@ -325,7 +325,8 @@ const char * V2CipherString(int cs_int) {
   case 0x00ffe1:    cs_str = "SSL3/RSA-FIPS/DES56-CBC/SHA";         break;
   case 0x00ffe0:    cs_str = "SSL3/RSA-FIPS/3DES192EDE-CBC/SHA";    break;
 
-  default:          cs_str = "????/????????/?????????/???";     break;
+  /* the string literal is broken up to avoid trigraphs */
+  default:          cs_str = "????" "/????????" "/?????????" "/???"; break;
   }
 
   return cs_str;

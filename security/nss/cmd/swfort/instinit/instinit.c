@@ -264,7 +264,7 @@ main(int argc, char ** argv)
 
     if (verbose) {
 	printf("Processing file %s ....\n",filename);
-	printf("  Version %d\n",DER_GetInteger(&swfile->file.version));
+	printf("  Version %ld\n",DER_GetInteger(&swfile->file.version));
 	printf("  Issuer: %s\n",issuer);
 	printf("  Serial Number: ");
 	for (i=0; i < (int)swfile->file.serialID.len; i++) {
@@ -318,8 +318,7 @@ main(int argc, char ** argv)
 	    }
 	    continue;
 	}
-	cert = (CERTCertificate *)
-		__CERT_NewTempCertificate(certhandle,derCert, NULL, 
+	cert = CERT_NewTempCertificate(certhandle, derCert, NULL,
 							PR_FALSE, PR_TRUE);
 	if (cert == NULL) {
 	    if (verbose) {

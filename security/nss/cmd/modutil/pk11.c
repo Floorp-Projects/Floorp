@@ -316,6 +316,7 @@ RawListModule(char *modulespec)
 	return SUCCESS;
 }
 
+Error
 RawAddModule(char *dbmodulespec, char *modulespec)
 {
     SECMODModule *module;

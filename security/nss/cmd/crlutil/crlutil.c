@@ -126,7 +126,7 @@ static void ListCRLNames (CERTCertDBHandle *certHandle, int crlType)
 	while (crlNode) {
 	   name = &crlNode->crl->crl.name;
 	   if (!name){
-		fprintf(stderr, "%s: fail to get the CRL issuer name\n", progName,
+		fprintf(stderr, "%s: fail to get the CRL issuer name (%s)\n", progName,
 		SECU_Strerror(PORT_GetError()));
 		break;
 	    }
