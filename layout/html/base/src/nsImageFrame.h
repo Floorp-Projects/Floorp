@@ -71,6 +71,10 @@ public:
                               PRInt32 aHint);
   NS_IMETHOD GetFrameType(nsIAtom** aResult) const;
   NS_IMETHOD GetIntrinsicImageSize(nsSize& aSize);
+
+  NS_IMETHOD GetNaturalImageSize(PRUint32* naturalWidth, 
+                                 PRUint32 *naturalHeight);
+
   NS_IMETHOD IsImageComplete(PRBool* aComplete);
 
 #ifdef DEBUG
@@ -134,6 +138,7 @@ protected:
   PRPackedBool        mInitialLoadCompleted;
   PRPackedBool        mCanSendLoadEvent;
   nsMargin            mBorderPadding;
+  PRUint32 mNaturalImageWidth, mNaturalImageHeight;
 };
 
 #endif /* nsImageFrame_h___ */

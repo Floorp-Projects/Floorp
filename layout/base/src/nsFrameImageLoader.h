@@ -92,6 +92,10 @@ public:
   
   NS_IMETHOD GetIntrinsicSize(nsSize& aResult);
 
+  NS_IMETHOD GetNaturalImageSize(PRUint32* naturalWidth, 
+                                 PRUint32 *naturalHeight);
+
+
 protected:
   nsFrameImageLoader();
   virtual ~nsFrameImageLoader();

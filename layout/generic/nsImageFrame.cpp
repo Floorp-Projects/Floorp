@@ -1086,6 +1086,14 @@ nsImageFrame::GetIntrinsicImageSize(nsSize& aSize)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsImageFrame::GetNaturalImageSize(PRUint32* naturalWidth, 
+                                  PRUint32 *naturalHeight)
+{ 
+  mImageLoader.GetNaturalImageSize(naturalWidth, naturalHeight);
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsImageFrame::IsImageComplete(PRBool* aComplete)
 {
