@@ -16,6 +16,9 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
+ * 
+ * Author:
+ *   Adam Lock <adamlock@netscape.com>
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
@@ -38,8 +41,10 @@
 #include "nsIContentViewerFile.h"
 #include "nsISelectionController.h"
 
-static NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
-static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+
+// Macros to return errors from bad calls to the automation
+// interfaces and sets a descriptive string on IErrorInfo so VB programmers
+// have a clue why the call failed.
 
 static const TCHAR *c_szInvalidArg = _T("Invalid parameter");
 static const TCHAR *c_szUninitialized = _T("Method called while control is uninitialized");
@@ -57,14 +62,16 @@ static const TCHAR *c_szUninitialized = _T("Method called while control is unini
 
 extern "C" void NS_SetupRegistry();
 
-static const std::string c_szPrefsHomePage = "browser.startup.homepage";
-static const std::string c_szDefaultPage   = "resource:/res/MozillaControl.html";
+// Prefs
 
-static const tstring c_szHelpKey = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Browser Helper Objects");
+static const char *c_szPrefsHomePage = "browser.startup.homepage";
+static const char *c_szDefaultPage   = "resource:/res/MozillaControl.html";
 
-#define MOZ_CONTROL_REG_KEY                  _T("Software\\Mozilla\\")
-#define MOZ_CONTROL_REG_VALUE_DIR            _T("Dir")
-#define MOZ_CONTROL_REG_VALUE_BIN_DIRECTORY_PATH _T("BinDirectoryPath")
+// Registry keys and values
+
+static const TCHAR *c_szIEHelperObjectKey = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Browser Helper Objects");
+static const TCHAR *c_szMozillaControlKey = _T("Software\\Mozilla\\");
+static const TCHAR *c_szMozillaBinDirPathValue = _T("BinDirectoryPath");
 
 // Some recent SDKs define these IOleCommandTarget groups, so they're
 // postfixed with _Moz to prevent linker errors.
@@ -96,18 +103,18 @@ CMozillaBrowser::CMozillaBrowser()
 	m_bWndLess = FALSE;
 
 	// Initialize layout interfaces
-	m_pIDocShell = nsnull;
-	m_pIWebShellWin = nsnull;
-	m_pIPref = nsnull;
-    m_pIServiceManager = nsnull;
+	mRootDocShell = nsnull;
+	mRootDocShellAsWin = nsnull;
+	mPrefs = nsnull;
+    mServiceManager = nsnull;
 	m_bValidBrowser = FALSE;
 
 	// Ready state of control
 	m_nBrowserReadyState = READYSTATE_UNINITIALIZED;
 	
 	// Create the container that handles some things for us
-	m_pWebShellContainer = NULL;
-	m_pEditor = NULL;
+	mWebBrowserContainer = NULL;
+	mEditor = NULL;
 
 	// Controls starts off unbusy
 	m_bBusy = FALSE;
@@ -119,11 +126,11 @@ CMozillaBrowser::CMozillaBrowser()
 	m_bDropTarget = FALSE;
 
  	// the IHTMLDocument, lazy allocation.
- 	m_pDocument = NULL;
+ 	mIERootDocument = NULL;
 
 	// Open registry keys
-	m_SystemKey.Create(HKEY_LOCAL_MACHINE, MOZ_CONTROL_REG_KEY);
-	m_UserKey.Create(HKEY_CURRENT_USER, MOZ_CONTROL_REG_KEY);
+	mSystemRegKey.Create(HKEY_LOCAL_MACHINE, c_szMozillaControlKey);
+	mUserRegKey.Create(HKEY_CURRENT_USER, c_szMozillaControlKey);
 
 	CheckBinDirPath();//szBinDirPath, dwBinDirPath);
 
@@ -143,8 +150,8 @@ CMozillaBrowser::~CMozillaBrowser()
 	Terminate();
 
 	// Close registry keys
-	m_SystemKey.Close();
-	m_UserKey.Close();
+	mSystemRegKey.Close();
+	mUserRegKey.Close();
 }
 
 
@@ -232,7 +239,7 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 		if (!bUserMode)
 		{
 			USES_CONVERSION;
-			Navigate(A2OLE(c_szDefaultPage.c_str()), NULL, NULL, NULL, NULL);
+			Navigate(A2OLE(c_szDefaultPage), NULL, NULL, NULL, NULL);
 		}
 	}
 
@@ -261,10 +268,10 @@ LRESULT CMozillaBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 	NG_TRACE_METHOD(CMozillaBrowser::OnSize);
 
     // Pass resize information down to the WebShell...
-    if (m_pIWebShellWin)
+    if (mRootDocShellAsWin)
 	{
-		m_pIWebShellWin->SetPosition(0, 0);
-		m_pIWebShellWin->SetSize(LOWORD(lParam), HIWORD(lParam), PR_TRUE);
+		mRootDocShellAsWin->SetPosition(0, 0);
+		mRootDocShellAsWin->SetSize(LOWORD(lParam), HIWORD(lParam), PR_TRUE);
 	}
 	return 0;
 }
@@ -307,7 +314,7 @@ LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 
 	// Print the contents
 	nsIContentViewer *pContentViewer = nsnull;
-	nsresult res = m_pIDocShell->GetContentViewer(&pContentViewer);
+	nsresult res = mRootDocShell->GetContentViewer(&pContentViewer);
 	if (NS_SUCCEEDED(res))
 	{
         nsCOMPtr<nsIContentViewerFile> spContentViewerFile = do_QueryInterface(pContentViewer);
@@ -355,73 +362,92 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 
 	//Get the title of the current web page to set as the default filename.
 	USES_CONVERSION;
-	char szTmp[256];
+	char szTmp[256]; // XXX hardcoded URLs array lengths are BAD
+	memset(szTmp, 0, sizeof(szTmp));
+
 	get_LocationName(&pageName);
 	strcpy(szTmp, OLE2A(pageName));
 	
-	int j = 0;									//The SaveAs dialog will fail if szFile contains any "bad" characters.
-	for (int i=0; szTmp[i]!='\0'; i++) {		//This hunk of code attempts to mimick the IE way of replacing "bad"
-		switch(szTmp[i]) {						//characters with "good" characters.
-			case '\\':
-			case '*':
-			case '|':
-			case ':':
-			case '"':
-			case '>':
-			case '<':
-			case '?':
-				break;
-			case '.':
-				if (szTmp[i+1] != '\0') {
-					szFile[j] = '_';
-					j++;
-				}
-				break;
-			case '/':
-				szFile[j] = '-';
+	//The SaveAs dialog will fail if szFile contains any "bad" characters.
+	//This hunk of code attempts to mimick the IE way of replacing "bad"
+	//characters with "good" characters.
+	int j = 0;
+	for (int i=0; szTmp[i]!='\0'; i++)
+	{		
+		switch(szTmp[i])
+		{
+		case '\\':
+		case '*':
+		case '|':
+		case ':':
+		case '"':
+		case '>':
+		case '<':
+		case '?':
+			break;
+		case '.':
+			if (szTmp[i+1] != '\0')
+			{
+				szFile[j] = '_';
 				j++;
-				break;
-			default:
-				szFile[j] = szTmp[i];
-				j++;
+			}
+			break;
+		case '/':
+			szFile[j] = '-';
+			j++;
+			break;
+		default:
+			szFile[j] = szTmp[i];
+			j++;
 		}
 	}
 	szFile[j] = '\0';
 
-	HRESULT res = S_OK;
-	if ( GetSaveFileName(&SaveFileName) ) {		
+	HRESULT hr = S_OK;
+	if ( GetSaveFileName(&SaveFileName) )
+	{
 		//Get the current DOM document
 		nsIDOMDocument* pDocument = nsnull;
-		res = GetDOMDocument(&pDocument);
-		if ( FAILED(res) )
-			return res;
+		hr = GetDOMDocument(&pDocument);
+		if ( FAILED(hr) )
+		{
+			return hr;
+		}
 		
 		//Get an nsIDiskDocument interface to the DOM document
 		nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(pDocument);
 		if (!diskDoc)
+		{
 			return E_NOINTERFACE;
-		
+		}
+
+/* XXX fix to use new mime-ified version of SaveFile on nsIDiskDocument
 		//Set the file type specified by the user
 		//Add the correct file extension if none is specified
 		nsIDiskDocument::ESaveFileType saveFileType;
 		if ( SaveFileName.nFilterIndex == 2 )		//SaveAs text file
+		{
 			saveFileType = nsIDiskDocument::eSaveFileText;
+		}
 		else										//SaveAs html file
+		{
 			saveFileType = nsIDiskDocument::eSaveFileHTML;
+		}
 
 		//Create an nsFilelSpec from the selected file path.
 		nsFileSpec fileSpec(szFile, PR_FALSE);
 		
 		//Save the file.
-		res = diskDoc->SaveFile(&fileSpec, PR_TRUE, PR_TRUE, saveFileType, "");
+		hr = diskDoc->SaveFile(&fileSpec, PR_TRUE, PR_TRUE, saveFileType, "");
+*/
 	}
-	return res;
+
+	return hr;
 }
 
 LRESULT CMozillaBrowser::OnProperties(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::OnProperties);
-
 	MessageBox(_T("No Properties Yet!"), _T("Control Message"), MB_OK);
 	// TODO show the properties dialog
 	return 0;
@@ -440,19 +466,26 @@ LRESULT CMozillaBrowser::OnCut(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 		return NS_ERROR_NOT_INITIALIZED;
 	}
 
-  nsCOMPtr<nsISelectionController> pISelectionController;
-  pISelectionController = do_QueryInterface(pIPresShell);
-	if ( NS_FAILED(res) || !pISelectionController) 
-    return res?res:NS_ERROR_FAILURE;
+	nsCOMPtr<nsISelectionController> pISelectionController;
+	pISelectionController = do_QueryInterface(pIPresShell);
+	if ( NS_FAILED(res) || !pISelectionController)
+	{
+		return res ? res : NS_ERROR_FAILURE;
+	}
 
-  nsCOMPtr<nsIDOMSelection> selection;						//Get a pointer to the DOM selection
-  res = pISelectionController->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-	if ( NS_FAILED(res) ) return res;
+	nsCOMPtr<nsIDOMSelection> selection;						//Get a pointer to the DOM selection
+	res = pISelectionController->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+	if ( NS_FAILED(res) )
+	{
+		return res;
+	}
 	
-	res = pIPresShell->DoCopy();									//Copy the selection to the clipboard
+	// Copy the selection to the clipboard
+	res = pIPresShell->DoCopy();
 	if ( NS_SUCCEEDED(res) )
 	{
-		res = selection->DeleteFromDocument();					//Delete the selection from the document
+		// Delete the selection from the document
+		res = selection->DeleteFromDocument();
 	}
 	NS_RELEASE(pIPresShell);
 
@@ -465,8 +498,9 @@ LRESULT CMozillaBrowser::OnCopy(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 
 	nsresult res;
 	
+	//Get the presentation shell for the document
 	nsIPresShell* pIPresShell = nsnull;
-	res = GetPresShell(&pIPresShell);		//Get the presentation shell for the document
+	res = GetPresShell(&pIPresShell);
 	if (NS_FAILED(res) || pIPresShell == nsnull)
 	{
 		return NS_ERROR_NOT_INITIALIZED;
@@ -501,7 +535,7 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 {
 	NG_TRACE_METHOD(CMozillaBrowser::OnViewSource);
 
-	if (m_pWebShellContainer->m_pCurrentURI)
+	if (mWebBrowserContainer->m_pCurrentURI)
 	{
 		// No URI to view!
 		NG_ASSERT(0);
@@ -510,7 +544,7 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 
 	// Get the current URI
 	nsXPIDLCString aURI;
-	m_pWebShellContainer->m_pCurrentURI->GetSpec(getter_Copies(aURI));
+	mWebBrowserContainer->m_pCurrentURI->GetSpec(getter_Copies(aURI));
 	
 	nsString strUrl = nsString("view-source:") + nsString(aURI);
 
@@ -573,7 +607,6 @@ BOOL CMozillaBrowser::IsValid()
 // Initialises the web shell engine
 HRESULT CMozillaBrowser::Initialize()
 {
-
 	// Initialise XPCOM
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
 	// Can't call NS_InitXPCom more than once or things go boom!
@@ -585,7 +618,7 @@ HRESULT CMozillaBrowser::Initialize()
 
 		// Get the bin directory path
 		memset(szBinDirPath, 0, sizeof(szBinDirPath));
-		m_SystemKey.QueryValue(szBinDirPath, MOZ_CONTROL_REG_VALUE_BIN_DIRECTORY_PATH, &dwBinDirPath);
+		mSystemRegKey.QueryValue(szBinDirPath, c_szMozillaBinDirPathValue, &dwBinDirPath);
 
 		// Create an object to represent the path
 		nsILocalFile *pBinDirPath = nsnull;
@@ -598,12 +631,12 @@ HRESULT CMozillaBrowser::Initialize()
 		// Initialise XPCOM
 		if (pBinDirPath)
 		{
-			NS_InitXPCOM(&m_pIServiceManager, pBinDirPath);
+			NS_InitXPCOM(&mServiceManager, pBinDirPath);
 			NS_RELEASE(pBinDirPath);
 		}
 		else
 		{
-			NS_InitXPCOM(&m_pIServiceManager, nsnull);
+			NS_InitXPCOM(&mServiceManager, nsnull);
 		}
 
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
@@ -652,9 +685,9 @@ HRESULT CMozillaBrowser::Terminate()
 
 	// Terminate XPCOM & cleanup
 #ifndef HACK_AROUND_NONREENTRANT_INITXPCOM
-	NS_ShutdownXPCOM(m_pIServiceManager);
+	NS_ShutdownXPCOM(mServiceManager);
 #endif
-	m_pIServiceManager = nsnull;
+	mServiceManager = nsnull;
 
 	return S_OK;
 }
@@ -668,13 +701,13 @@ HRESULT CMozillaBrowser::CheckBinDirPath()
 
 	// Get the bin directory path
 	memset(szBinDirPath, 0, sizeof(szBinDirPath));
-	if (m_SystemKey.QueryValue(szBinDirPath, MOZ_CONTROL_REG_VALUE_BIN_DIRECTORY_PATH, &dwBinDirPath) == ERROR_SUCCESS)
+	if (mSystemRegKey.QueryValue(szBinDirPath, c_szMozillaBinDirPathValue, &dwBinDirPath) == ERROR_SUCCESS)
 	{
 		return S_OK;
 	}
 
 	// TODO store string in resource
-	UINT nAnswer = ::MessageBox(NULL,
+	UINT nAnswer = MessageBox(
 		_T("The browser control does not know where the Mozilla is installed "
 		   "and may not function correctly.\n"
  		   "Do you want to locate Mozilla now?"),
@@ -732,7 +765,7 @@ HRESULT CMozillaBrowser::CheckBinDirPath()
 	// by looking for component.reg
 
 	// Set the value and copy it
-	m_SystemKey.SetValue(szNewBinDirPath, MOZ_CONTROL_REG_VALUE_BIN_DIRECTORY_PATH);
+	mSystemRegKey.SetValue(szNewBinDirPath, c_szMozillaBinDirPathValue);
 
 	return S_OK;
 }
@@ -743,7 +776,7 @@ HRESULT CMozillaBrowser::CreateBrowser()
 {	
 	NG_TRACE_METHOD(CMozillaBrowser::CreateBrowser);
 
-	if (m_pIDocShell != nsnull)
+	if (mRootDocShell != nsnull)
 	{
 		NG_ASSERT(0);
 		RETURN_E_UNEXPECTED();
@@ -757,18 +790,12 @@ HRESULT CMozillaBrowser::CreateBrowser()
 		rcLocation.top++;
 	}
 
-	nsRect r;
-	r.x = 0;
-	r.y = 0;
-	r.width  = rcLocation.right  - rcLocation.left;
-	r.height = rcLocation.bottom - rcLocation.top;
-
 	nsresult rv;
 
 	// Load preferences service
 	rv = nsServiceManager::GetService(kPrefCID, 
 									NS_GET_IID(nsIPref), 
-									(nsISupports **)&m_pIPref);
+									(nsISupports **)&mPrefs);
 	if (NS_FAILED(rv))
 	{
 		NG_ASSERT(0);
@@ -777,37 +804,39 @@ HRESULT CMozillaBrowser::CreateBrowser()
 		return E_FAIL;
 	}
 
-	rv = m_pIPref->StartUp();		//Initialize the preference service
-	rv = m_pIPref->ReadUserPrefs();	//Reads from default_prefs.js
+	rv = mPrefs->StartUp();		//Initialize the preference service
+	rv = mPrefs->ReadUserPrefs();	//Reads from default_prefs.js
 	
 	PRBool aAllowPlugins = PR_TRUE;
 
 	// Create web shell
-	m_pIWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID, &rv);
+	mWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID, &rv);
 	if (NS_FAILED(rv))
 	{
 		return rv;
 	}
 
-	m_pIWebBrowser->QueryInterface(NS_GET_IID(nsIBaseWindow), (void **) &m_pIWebShellWin);
-	rv = m_pIWebShellWin->InitWindow(nsNativeWidget(m_hWnd), nsnull, r.x, r.y, r.width, r.height);
-	m_pIWebShellWin->Create();
-	m_pIWebBrowser->GetDocShell(&m_pIDocShell);
-	m_pIDocShell->SetAllowPlugins(aAllowPlugins);
+	mWebBrowser->QueryInterface(NS_GET_IID(nsIBaseWindow), (void **) &mRootDocShellAsWin);
+	rv = mRootDocShellAsWin->InitWindow(nsNativeWidget(m_hWnd), nsnull,
+		0, 0,
+		rcLocation.right - rcLocation.left, rcLocation.bottom - rcLocation.top);
+	mRootDocShellAsWin->Create();
+	mWebBrowser->GetDocShell(&mRootDocShell);
+	mRootDocShell->SetAllowPlugins(aAllowPlugins);
 	nsCOMPtr<nsIDocumentLoader> docLoader;
 
 	// Create the container object
-	m_pWebShellContainer = new CWebShellContainer(this);
-	m_pWebShellContainer->AddRef();
+	mWebBrowserContainer = new CWebBrowserContainer(this);
+	mWebBrowserContainer->AddRef();
 
 	// Set up the web shell
-	m_pIWebBrowser->SetParentURIContentListener(m_pWebShellContainer);
+	mWebBrowser->SetParentURIContentListener(mWebBrowserContainer);
 
-	nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(m_pIDocShell));
-	docShellAsItem->SetTreeOwner(m_pWebShellContainer);
+	nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mRootDocShell));
+	docShellAsItem->SetTreeOwner(mWebBrowserContainer);
 
-	m_pIDocShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*) m_pWebShellContainer);
-	m_pIWebShellWin->SetVisibility(PR_TRUE);
+	mRootDocShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*) mWebBrowserContainer);
+	mRootDocShellAsWin->SetVisibility(PR_TRUE);
 
 	m_bValidBrowser = TRUE;
 
@@ -822,33 +851,33 @@ HRESULT CMozillaBrowser::DestroyBrowser()
 	m_bValidBrowser = FALSE;
 
  	// Destroy the htmldoc
- 	if (m_pDocument != NULL)
+ 	if (mIERootDocument != NULL)
  	{
- 		m_pDocument->Release();
- 		m_pDocument = NULL;
+ 		mIERootDocument->Release();
+ 		mIERootDocument = NULL;
  	}
 
     // Destroy layout...
-	if (m_pIWebShellWin != nsnull)
+	if (mRootDocShellAsWin != nsnull)
 	{
-		m_pIWebShellWin->Destroy();
-		NS_RELEASE(m_pIWebShellWin);
+		mRootDocShellAsWin->Destroy();
+		NS_RELEASE(mRootDocShellAsWin);
 	}
 
-	if (m_pIDocShell != nsnull)
+	if (mRootDocShell != nsnull)
 	{
-		NS_RELEASE(m_pIDocShell);
+		NS_RELEASE(mRootDocShell);
 	}
 
-	if (m_pWebShellContainer)
+	if (mWebBrowserContainer)
 	{
-		m_pWebShellContainer->Release();
-		m_pWebShellContainer = NULL;
+		mWebBrowserContainer->Release();
+		mWebBrowserContainer = NULL;
 	}
 
-	if (m_pIPref)
+	if (mPrefs)
 	{
-		NS_RELEASE(m_pIPref);
+		NS_RELEASE(mPrefs);
 	}
 	
 	return S_OK;
@@ -861,7 +890,7 @@ HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
 	NG_TRACE_METHOD(CMozillaBrowser::SetEditorMode);
 
 	m_bEditorMode = FALSE;
-	if (bEnabled && m_pEditor == nsnull)
+	if (bEnabled && mEditor == nsnull)
 	{
 		if (!IsValid())
 		{
@@ -871,12 +900,12 @@ HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
 		nsresult result = nsComponentManager::CreateInstance(kHTMLEditorCID,
 										nsnull,
 										NS_GET_IID(nsIEditor),
-										(void **) &m_pEditor);
+										(void **) &mEditor);
 		if (NS_FAILED(result))
 		{
 			return result;
 		}
-		if (!m_pEditor)
+		if (!mEditor)
 		{
 			return E_OUTOFMEMORY;
 		}
@@ -893,7 +922,7 @@ HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
 			return E_UNEXPECTED;
 		}
 
-		result = m_pEditor->Init(pIDOMDocument, pIPresShell, 0);
+		result = mEditor->Init(pIDOMDocument, pIPresShell, 0);
 		if (NS_SUCCEEDED(result))
 		{
 			m_bEditorMode = TRUE;
@@ -904,10 +933,10 @@ HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
 	}
 	else
 	{
-		if (m_pEditor)
+		if (mEditor)
 		{
-			m_pEditor->Release();
-			m_pEditor = nsnull;
+			mEditor->Release();
+			mEditor = nsnull;
 		}
 	}
 
@@ -927,13 +956,13 @@ HRESULT CMozillaBrowser::OnEditorCommand(DWORD nCmdID)
 	{
 		return E_UNEXPECTED;
 	}
-	if (!m_pEditor)
+	if (!mEditor)
 	{
 		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
 
-	nsCOMPtr<nsIHTMLEditor> pHtmlEditor = do_QueryInterface(m_pEditor);
+	nsCOMPtr<nsIHTMLEditor> pHtmlEditor = do_QueryInterface(mEditor);
 
 	bool bToggleInlineProperty = false;
 	nsIAtom *pInlineProperty = nsnull;
@@ -1006,7 +1035,7 @@ HRESULT CMozillaBrowser::GetPresShell(nsIPresShell **pPresShell)
 	}
 	
 	nsIContentViewer* pIContentViewer = nsnull;
-	res = m_pIDocShell->GetContentViewer(&pIContentViewer);
+	res = mRootDocShell->GetContentViewer(&pIContentViewer);
 	if (NS_SUCCEEDED(res) && pIContentViewer)
 	{
 		nsIDocumentViewer* pIDocViewer = nsnull;
@@ -1052,7 +1081,7 @@ HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 	}
 	
 	nsIContentViewer * pCViewer = nsnull;
-	res = m_pIDocShell->GetContentViewer(&pCViewer);
+	res = mRootDocShell->GetContentViewer(&pCViewer);
 	if (NS_SUCCEEDED(res) && pCViewer)
 	{
 		nsIDocumentViewer * pDViewer = nsnull;
@@ -1084,7 +1113,7 @@ HRESULT CMozillaBrowser::LoadBrowserHelpers()
 	// Search the branch looking for objects to load with the control.
 
 	CRegKey cKey;
-	if (cKey.Open(HKEY_LOCAL_MACHINE, c_szHelpKey.c_str(), KEY_ENUMERATE_SUB_KEYS) != ERROR_SUCCESS)
+	if (cKey.Open(HKEY_LOCAL_MACHINE, c_szIEHelperObjectKey, KEY_ENUMERATE_SUB_KEYS) != ERROR_SUCCESS)
 	{
 		NG_TRACE(_T("No browser helper key found\n"));
 		return S_FALSE;
@@ -1348,7 +1377,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoBack(void)
 		NG_ASSERT(0);
 		RETURN_E_UNEXPECTED();
 	}
-	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(m_pIWebBrowser));
+	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
 	PRBool aCanGoBack = PR_FALSE;
 	webNav->GetCanGoBack(&aCanGoBack);
 	if (aCanGoBack == PR_TRUE)
@@ -1370,7 +1399,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoForward(void)
 		RETURN_E_UNEXPECTED();
 	}
 
-	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(m_pIWebBrowser));
+	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
 	PRBool aCanGoForward = PR_FALSE;
 	webNav->GetCanGoForward(&aCanGoForward);
 	if (aCanGoForward == PR_TRUE)
@@ -1392,23 +1421,22 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoHome(void)
 		RETURN_E_UNEXPECTED();
 	}
 
-	USES_CONVERSION;
-
-	TCHAR * sUrl = _T("http://home.netscape.com");
+	OLECHAR * sUrl = L"http://home.netscape.com";
 
 	// Find the home page stored in prefs
-	if (m_pIPref)
+	if (mPrefs)
 	{
 		char *szBuffer;
 		nsresult rv;
-		rv = m_pIPref->CopyCharPref(c_szPrefsHomePage.c_str(), &szBuffer);
+		rv = mPrefs->CopyCharPref(c_szPrefsHomePage, &szBuffer);
 		if (rv == NS_OK)
 		{
-			sUrl = A2T(szBuffer);
+			USES_CONVERSION;
+			sUrl = A2OLE(szBuffer);
 		}
 	}
 	// Navigate to the home page
-	Navigate(T2OLE(sUrl), NULL, NULL, NULL, NULL);
+	Navigate(sUrl, NULL, NULL, NULL, NULL);
 	
 	return S_OK;
 }
@@ -1424,16 +1452,15 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoSearch(void)
 		RETURN_E_UNEXPECTED();
 	}
 
-	USES_CONVERSION;
+	OLECHAR * sUrl = L"http://search.netscape.com";
 
-	TCHAR * sUrl = _T("http://search.netscape.com");
 	// Find the home page stored in prefs
-	if (m_pIPref)
+	if (mPrefs)
 	{
 		// TODO find and navigate to the search page stored in prefs
 		//      and not this hard coded address
 	}
-	Navigate(T2OLE(sUrl), NULL, NULL, NULL, NULL);
+	Navigate(sUrl, NULL, NULL, NULL, NULL);
 	
 	return S_OK;
 }
@@ -1461,7 +1488,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	else
 	{
 		USES_CONVERSION;
-		sUrl = OLE2A(URL);
+		sUrl = URL;
 	}
 
 	// Check for a view-source op - this is a bit kludgy
@@ -1491,8 +1518,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 
 	// Extract the target frame parameter
 	nsString sTargetFrame;
-	if (TargetFrameName &&
-		TargetFrameName->vt == VT_BSTR)
+	if (TargetFrameName && TargetFrameName->vt == VT_BSTR)
 	{
 		USES_CONVERSION;
 		sTargetFrame = nsString(OLE2A(TargetFrameName->bstrVal));
@@ -1562,7 +1588,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	// Load the URL	
 	nsresult res = NS_ERROR_FAILURE;
 
-	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(m_pIDocShell);
+	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mRootDocShell);
 	if (spIWebNavigation)
 	{
 		res = spIWebNavigation->LoadURI(sUrl.GetUnicode());
@@ -1636,7 +1662,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 		RETURN_E_UNEXPECTED();
 	}
 
-	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(m_pIDocShell);
+	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mRootDocShell);
 	if (spIWebNavigation)
 	{
 		spIWebNavigation->Reload(type);
@@ -1656,7 +1682,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Stop()
 		RETURN_E_UNEXPECTED();
 	}
 
-	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(m_pIDocShell);
+	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mRootDocShell);
 	if (spIWebNavigation)
 	{
 		spIWebNavigation->Stop();
@@ -1763,24 +1789,24 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Document(IDispatch __RPC_FAR *__R
 		RETURN_E_UNEXPECTED();
 	}
 
-	if (m_pDocument == NULL)
+	if (mIERootDocument == NULL)
  	{	
- 		CIEHtmlDocumentInstance::CreateInstance(&m_pDocument);
-  		if (m_pDocument == NULL)
+ 		CIEHtmlDocumentInstance::CreateInstance(&mIERootDocument);
+  		if (mIERootDocument == NULL)
  		{
 			RETURN_ERROR(_T("Refresh2: called while browser is invalid"), E_OUTOFMEMORY);
  		}
  		
 		// addref it so it doesn't go away on us.
- 		m_pDocument->AddRef();
+ 		mIERootDocument->AddRef();
  
  		// give it a pointer to us.  note that we shouldn't be addref'd by this call, or it would be 
  		// a circular reference.
- 		m_pDocument->SetParent(this);
+ 		mIERootDocument->SetParent(this);
 	}
 
-	m_pDocument->QueryInterface(IID_IDispatch, (void **) ppDisp);
-	m_pDocument->SetDOMNode(pIDOMDocument);
+	mIERootDocument->QueryInterface(IID_IDispatch, (void **) ppDisp);
+	mIERootDocument->SetDOMNode(pIDOMDocument);
 	pIDOMDocument->Release();
 
 	return S_OK;
@@ -2003,7 +2029,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationName(BSTR __RPC_FAR *Loca
 
 	// Get the url from the web shell
 	nsXPIDLString szLocationName;
-	m_pIWebShellWin->GetTitle(getter_Copies(szLocationName));
+	mRootDocShellAsWin->GetTitle(getter_Copies(szLocationName));
 	if (nsnull == (const PRUnichar *) szLocationName)
 	{
 		RETURN_E_UNEXPECTED();
@@ -2035,11 +2061,11 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationURL(BSTR __RPC_FAR *Locat
 	}
 
 	// Get the url from the web shell
-	if (m_pWebShellContainer->m_pCurrentURI != nsnull)
+	if (mWebBrowserContainer->m_pCurrentURI != nsnull)
 	{
 		USES_CONVERSION;
 		nsXPIDLCString aURI;
-		m_pWebShellContainer->m_pCurrentURI->GetSpec(getter_Copies(aURI));
+		mWebBrowserContainer->m_pCurrentURI->GetSpec(getter_Copies(aURI));
 		*LocationURL = SysAllocString(A2OLE((const char *) aURI));
 	}
 	else

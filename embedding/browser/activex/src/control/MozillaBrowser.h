@@ -16,6 +16,9 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
+ * 
+ * Author:
+ *   Adam Lock <adamlock@netscape.com>
  *
  * Contributor(s): 
  */
@@ -55,7 +58,7 @@ extern GUID CGID_MSHTML_Moz;
 typedef CComPtr<IUnknown> CComUnkPtr;
 typedef std::vector<CComUnkPtr> ObjectList;
 
-class CWebShellContainer;
+class CWebBrowserContainer;
 
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
@@ -81,7 +84,7 @@ class ATL_NO_VTABLE CMozillaBrowser :
 	public IConnectionPointContainerImpl<CMozillaBrowser>,
 	public ISpecifyPropertyPagesImpl<CMozillaBrowser>
 {
-	friend CWebShellContainer;
+	friend CWebBrowserContainer;
 public:
 	CMozillaBrowser();
 	virtual ~CMozillaBrowser();
@@ -103,7 +106,7 @@ BEGIN_COM_MAP(CMozillaBrowser)
 	COM_INTERFACE_ENTRY_IMPL(IOleInPlaceActiveObject)
 	COM_INTERFACE_ENTRY_IMPL(IOleControl)
 	COM_INTERFACE_ENTRY_IMPL(IOleObject)
-//	COM_INTERFACE_ENTRY_IMPL(IQuickActivate) // This causes size assertion in ATL
+	COM_INTERFACE_ENTRY_IMPL(IQuickActivate) // This causes size assertion in ATL
 	COM_INTERFACE_ENTRY_IMPL(IPersistStorage)
 	COM_INTERFACE_ENTRY_IMPL(IPersistStreamInit)
 	COM_INTERFACE_ENTRY_IMPL(ISpecifyPropertyPages)
@@ -117,19 +120,26 @@ BEGIN_COM_MAP(CMozillaBrowser)
 	COM_INTERFACE_ENTRY_IID(DIID_DWebBrowserEvents2, CDWebBrowserEvents2)	//Requests to DWebBrowserEvents2 will get the vtable of CDWebBrowserEvents2
 END_COM_MAP()
 
+// Properties supported by the control that map onto property
+// pages that the user may be able to configure from tools like VB.
+
 BEGIN_PROPERTY_MAP(CMozillaBrowser)
 	// Example entries
 	// PROP_ENTRY("Property Description", dispid, clsid)
 	PROP_PAGE(CLSID_StockColorPage)
 END_PROPERTY_MAP()
 
+// Table of outgoing connection points. Anyone subscribing
+// to events from the control should do so through one of these
+// connect points.
 
 BEGIN_CONNECTION_POINT_MAP(CMozillaBrowser)
 	// Fires IE events
-	CONNECTION_POINT_ENTRY(DIID_DWebBrowserEvents2)	//Connection points for the client's event sinks
+	CONNECTION_POINT_ENTRY(DIID_DWebBrowserEvents2)
 	CONNECTION_POINT_ENTRY(DIID_DWebBrowserEvents)
 END_CONNECTION_POINT_MAP()
 
+// Table of window messages and their associate handlers
 
 BEGIN_MSG_MAP(CMozillaBrowser)
 	MESSAGE_HANDLER(WM_CREATE, OnCreate)
@@ -150,6 +160,9 @@ END_MSG_MAP()
 
 	static HRESULT _stdcall EditModeHandler(CMozillaBrowser *pThis, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
 	static HRESULT _stdcall EditCommandHandler(CMozillaBrowser *pThis, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+
+// Table of OLE commands (invoked through IOleCommandTarget and their
+// associated command groups and command handlers.
 
 BEGIN_OLECOMMAND_TABLE()
 	// Standard "common" commands
@@ -297,27 +310,27 @@ protected:
 	static BOOL m_bRegistryInitialized;
 
 	// Pointer to web shell manager
-	CWebShellContainer	*	m_pWebShellContainer;
+	CWebBrowserContainer	*	mWebBrowserContainer;
 	// CComObject to IHTMLDocument implementer
-	CIEHtmlDocumentInstance * m_pDocument;
+	CIEHtmlDocumentInstance * mIERootDocument;
 
 	// Mozilla interfaces
-	nsCOMPtr<nsIWebBrowser>	m_pIWebBrowser;
-	nsIDocShell			*	m_pIDocShell;
-	nsIBaseWindow		*	m_pIWebShellWin;
+	nsCOMPtr<nsIWebBrowser>	mWebBrowser;
+	nsIDocShell			*	mRootDocShell;
+	nsIBaseWindow		*	mRootDocShellAsWin;
     
-	nsIPref             *   m_pIPref;
-	nsIEditor			*	m_pEditor;
-    nsIServiceManager   *   m_pIServiceManager;
+	nsIPref             *   mPrefs;
+	nsIEditor			*	mEditor;
+    nsIServiceManager   *   mServiceManager;
 
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
 	// Flag that stops XPCOM from blowing up when called multiple times
 	static BOOL             m_bXPCOMInitialised;
 #endif
 	// System registry key for various control settings
-	CRegKey                 m_SystemKey;
+	CRegKey                 mSystemRegKey;
 	// User registry key for various control settings
-	CRegKey                 m_UserKey;
+	CRegKey                 mUserRegKey;
 	// Flag to indicate if browser is created or not
 	BOOL                    m_bValidBrowser;
 	// Indicates the browser is busy doing something
