@@ -63,6 +63,7 @@ class nsIHTMLStyleSheet;
 class nsIHTMLCSSStyleSheet;
 class nsIParser;
 class nsICSSLoader;
+class nsIURI;
 
 class nsHTMLDocument : public nsMarkupDocument,
                        public nsIHTMLDocument,
@@ -80,6 +81,7 @@ public:
   NS_IMETHOD_(nsrefcnt) Release(void);
 
   NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
+  NS_IMETHOD ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup);
 
   NS_IMETHOD CreateShell(nsIPresContext* aContext,
                          nsIViewManager* aViewManager,
@@ -214,6 +216,8 @@ protected:
 
   nsresult AddDocWriteDummyRequest(void);
   nsresult RemoveDocWriteDummyRequest(void);
+
+  nsresult BaseResetToURI(nsIURI* aURI);
 
   nsIHTMLStyleSheet*    mAttrStyleSheet;
   nsIHTMLCSSStyleSheet* mStyleAttrStyleSheet;

@@ -242,6 +242,7 @@ public:
   NS_IMETHOD GetArena(nsIArena** aArena);
 
   NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
+  NS_IMETHOD ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup);
 
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
                                nsIChannel* aChannel,

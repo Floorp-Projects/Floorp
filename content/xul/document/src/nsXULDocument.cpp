@@ -638,6 +638,13 @@ nsXULDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 }
 
 NS_IMETHODIMP
+nsXULDocument::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup)
+{
+    NS_NOTREACHED("ResetToURI");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsXULDocument::GetArena(nsIArena** aArena)
 {
     NS_IF_ADDREF(*aArena = mArena);

@@ -366,6 +366,7 @@ public:
   NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager) = 0;
 
   NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) = 0;
+  NS_IMETHOD ResetToURI(nsIURI *aURI, nsILoadGroup* aLoadGroup) = 0;
 
   NS_IMETHOD AddReference(void *aKey, nsISupports *aReference) = 0;
   NS_IMETHOD RemoveReference(void *aKey, nsISupports **aOldReference) = 0;
