@@ -53,6 +53,7 @@
 #include "nsIHTMLContent.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsFont.h"
@@ -106,6 +107,8 @@ public:
                                const nsPoint&    aPoint, 
                                nsFramePaintLayer aWhichLayer,
                                nsIFrame**        aFrame);
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+
 #ifdef ACCESSIBILITY  
   NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible);
 #endif
@@ -156,6 +159,15 @@ nsFieldSetFrame::nsFieldSetFrame()
   mLegendSpace   = 0;
 }
 
+
+NS_IMETHODIMP
+nsFieldSetFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::fieldSetFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsFieldSetFrame::SetInitialChildList(nsIPresContext* aPresContext,
