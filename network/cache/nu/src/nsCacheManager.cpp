@@ -168,10 +168,11 @@ nsCacheManager::Entries() const
     if (m_pFirstModule) 
     {
         PRInt16 count=1;
-        nsCacheModule* pModule = m_pFirstModule;
-        while (pModule = pModule->NextModule()) 
+        nsCacheModule* pModule = m_pFirstModule->NextModule();
+        while (pModule)
         {
             count++;
+			pModule = pModule->NextModule();
         }
         return count;
     }
