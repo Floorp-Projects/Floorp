@@ -24,6 +24,7 @@ MODULE= msgimap
 
 XPIDLSRCS =	\
       .\nsIImapUrl.idl            \
+      .\nsIImapService.idl        \
 			.\nsIImapServerSink.idl	    \
 			.\nsIImapMessageSink.idl    \
 			.\nsIImapIncomingServer.idl \
@@ -44,7 +45,6 @@ EXPORTS =								          \
 			nsIIMAPHostSessionList.h	  \
 			nsIImapExtensionSink.h		  \
 			nsIImapMiscellaneousSink.h	\
-			nsIImapService.h			      \
 			$(NULL)
 
 
