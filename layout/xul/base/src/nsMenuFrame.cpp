@@ -1398,3 +1398,4 @@ nsMenuFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& a
   }
   return rv;
 }
+

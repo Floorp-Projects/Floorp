@@ -180,3 +180,4 @@ nsXULRadioElement::SetDisabled(PRBool aDisabled)
 
   return NS_OK;
 }
+

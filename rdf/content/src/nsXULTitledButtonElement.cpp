@@ -155,3 +155,4 @@ nsXULTitledButtonElement::SetDisabled(PRBool aDisabled)
 
   return NS_OK;
 }
+
