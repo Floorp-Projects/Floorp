@@ -1,12 +1,14 @@
 #!#perl# --
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
 
 # generate random bug tickets for testing purposes.  This program will
 # generate several hours worth of 'random bugs' staring at the
 # current time.
 
 
-# $Revision: 1.9 $ 
-# $Date: 2002/05/10 21:16:53 $ 
+# $Revision: 1.10 $ 
+# $Date: 2003/02/11 00:27:47 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbugs.tst,v $ 
 # $Name:  $ 

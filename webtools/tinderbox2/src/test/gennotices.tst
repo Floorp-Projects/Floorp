@@ -1,12 +1,14 @@
 #!#perl# --
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
 
 # generate random notices for testing purposes.  This program will
 # generate several hours worth of 'random notes' staring at the
 # current time.
 
 
-# $Revision: 1.12 $ 
-# $Date: 2002/12/10 19:20:05 $ 
+# $Revision: 1.13 $ 
+# $Date: 2003/02/11 00:27:47 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/gennotices.tst,v $ 
 # $Name:  $ 
@@ -101,9 +103,9 @@ $TINDERBOX_DATA_DIR = ( $TinderConfig::TINDERBOX_DATA_DIR ||
 		      'Slippage',
 
 		      # build
-#		      'Build_Packages_(Solaris)', 'Build_Packages_(Linux)',
-#		      'Coverage_Tests', 'Performance_Tests', 'Failover_Tests', 
-#		      'Lint_Tests', 
+		      'Build_Packages_(Solaris)', 'Build_Packages_(Linux)',
+		      'Coverage_Tests', 'Performance_Tests', 'Failover_Tests', 
+		      'Lint_Tests', 
 		      'Next_Milestone',
 
 	       );

@@ -1,4 +1,6 @@
 #!#perl# --
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
 
 # generate random build data for testing purposes.  This program will
 # generate several hours worth of 'randomized builds' starting at the
@@ -6,8 +8,8 @@
 # URL.
 
 
-# $Revision: 1.14 $ 
-# $Date: 2002/05/01 01:46:23 $ 
+# $Revision: 1.15 $ 
+# $Date: 2003/02/11 00:27:47 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbuilds.tst,v $ 
 # $Name:  $ 
