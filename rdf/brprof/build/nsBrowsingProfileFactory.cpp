@@ -33,8 +33,12 @@ nsConstructBrowsingProfile(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     NS_ASSERTION(aOuter == nsnull, "no aggregation");
     nsIBrowsingProfile* brprof;
     rv = NS_NewBrowsingProfile(nsnull, &brprof);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        NS_ERROR("Unable to construct browsing profile");
+        return rv;
+    }
     rv = brprof->QueryInterface(aIID, aResult);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find correct interface");
     NS_RELEASE(brprof);
     return rv;
 }
