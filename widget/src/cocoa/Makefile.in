@@ -122,7 +122,7 @@ export:: $(GFX_CPPSRCS) $(MAC_CPP_CSRCS) $(srcdir)/../mac/$(RES_SRC)
 	$(INSTALL) $^ .
 
 $(RES_DEST): $(RES_SRC)
-	/Developer/Tools/Rez -useDF $(RES_SRC) -o $(RES_DEST)
+	/Developer/Tools/Rez -i /Developer/Headers/FlatCarbon -useDF $(RES_SRC) -o $(RES_DEST)
 
 libs:: $(RES_DEST)
 
