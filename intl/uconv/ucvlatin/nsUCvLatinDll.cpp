@@ -29,6 +29,7 @@
 #include "nsCP1253ToUnicode.h"
 #include "nsUnicodeToLatin1.h"
 #include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
