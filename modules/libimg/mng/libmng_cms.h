@@ -32,9 +32,6 @@
 #ifndef _libmng_cms_h_
 #define _libmng_cms_h_
 
-#include "libmng.h"
-#include "libmng_data.h"
-
 /* ************************************************************************** */
 
 #ifdef MNG_INCLUDE_LCMS

@@ -1,0 +1,33 @@
+libmng v0.9.3
+-------------
+
+This is the fourth beta-release!
+
+Quite a few changes, since there has been several changes in the MNG spec.
+Also fixes a number of problems that have surfaced during extensive tests.
+And a number of functions have been added to facilitate in integrating
+the library in a multitude of applications, as these were the result of
+requests from several implementors.
+
+This is another release candidate. If no significant problems are discovered,
+libmng 1.0.0 will be just around the corner!
+
+
+For more information please visit:
+
+The official libmng web-site
+
+  http://www.libmng.com
+
+Libmng's community on SourceForge
+
+  https://sourceforge.net/project/?group_id=5635
+
+The official MNG homepage
+
+  http://www.libpng.org/pub/mng
+
+The official PNG homepage
+
+  http://www.libpng.org/pub/png
+

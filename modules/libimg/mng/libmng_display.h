@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_display.h          copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.4                                                      * */
 /* *                                                                        * */
 /* * purpose   : Display management (definition)                            * */
 /* *                                                                        * */
@@ -31,6 +31,13 @@
 /* *             - changed file-prefixes                                    * */
 /* *             0.9.3 - 08/07/2000 - G.Juyn                                * */
 /* *             - B111300 - fixup for improved portability                 * */
+/* *             0.9.3 - 08/26/2000 - G.Juyn                                * */
+/* *             - added MAGN chunk                                         * */
+/* *             0.9.3 - 10/16/2000 - G.Juyn                                * */
+/* *             - added JDAA chunk                                         * */
+/* *                                                                        * */
+/* *             0.9.4 - 11/24/2000 - G.Juyn                                * */
+/* *             - moved restore of object 0 to libmng_display              * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -41,15 +48,14 @@
 #ifndef _libmng_display_h_
 #define _libmng_display_h_
 
-#include "libmng.h"
-#include "libmng_data.h"
-
 /* ************************************************************************** */
 
 mng_retcode display_progressive_refresh (mng_datap  pData,
                                          mng_uint32 iInterval);
 
 /* ************************************************************************** */
+
+mng_retcode mng_reset_objzero     (mng_datap      pData);
 
 mng_retcode display_image         (mng_datap      pData,
                                    mng_imagep     pImage,
@@ -135,6 +141,10 @@ mng_retcode process_display_save  (mng_datap      pData);
 mng_retcode process_display_seek  (mng_datap      pData);
 mng_retcode process_display_jhdr  (mng_datap      pData);
 
+mng_retcode process_display_jdaa  (mng_datap      pData,
+                                   mng_uint32     iRawlen,
+                                   mng_uint8p     pRawdata);
+
 mng_retcode process_display_jdat  (mng_datap      pData,
                                    mng_uint32     iRawlen,
                                    mng_uint8p     pRawdata);
@@ -162,6 +172,19 @@ mng_retcode process_display_pplt  (mng_datap      pData,
                                    mng_palette8ep paIndexentries,
                                    mng_uint8p     paAlphaentries,
                                    mng_uint8p     paUsedentries);
+
+mng_retcode process_display_magn  (mng_datap      pData,
+                                   mng_uint16     iFirstid,
+                                   mng_uint16     iLastid,
+                                   mng_uint16     iMethodX,
+                                   mng_uint16     iMX,
+                                   mng_uint16     iMY,
+                                   mng_uint16     iML,
+                                   mng_uint16     iMR,
+                                   mng_uint16     iMT,
+                                   mng_uint16     iMB,
+                                   mng_uint16     iMethodY);
+mng_retcode process_display_magn2 (mng_datap      pData);
 
 /* ************************************************************************** */
 

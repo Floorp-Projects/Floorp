@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_filter.c           copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Filtering routines (implementation)                        * */
 /* *                                                                        * */
@@ -22,6 +22,9 @@
 /* *                                                                        * */
 /* *             0.9.2 - 08/05/2000 - G.Juyn                                * */
 /* *             - changed file-prefixes                                    * */
+/* *                                                                        * */
+/* *             0.9.3 - 09/07/2000 - G.Juyn                                * */
+/* *             - added support for new filter_types                       * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -52,7 +55,7 @@ mng_retcode filter_a_row (mng_datap pData)
   MNG_TRACE (pData, MNG_FN_FILTER_A_ROW, MNG_LC_START)
 #endif
 
-  switch (pData->pWorkrow[0])
+  switch (*(pData->pWorkrow + pData->iFilterofs))
   {
     case 1  : {
                 iRetcode = filter_sub     (pData);
@@ -95,12 +98,12 @@ mng_retcode filter_sub (mng_datap pData)
 #endif
 
   iBpp       = pData->iFilterbpp;
-  pRawx      = pData->pWorkrow + 1 + iBpp;
-  pRawx_prev = pData->pWorkrow + 1;
+  pRawx      = pData->pWorkrow + pData->iPixelofs + iBpp;
+  pRawx_prev = pData->pWorkrow + pData->iPixelofs;
 
   for (iX = iBpp; iX < pData->iRowsize; iX++)
   {
-    pRawx [0] = (mng_uint8)(pRawx [0] + pRawx_prev [0]);
+    *pRawx = (mng_uint8)(*pRawx + *pRawx_prev);
     pRawx++;
     pRawx_prev++;
   }
@@ -124,12 +127,12 @@ mng_retcode filter_up (mng_datap pData)
   MNG_TRACE (pData, MNG_FN_FILTER_UP, MNG_LC_START)
 #endif
 
-  pRawx   = pData->pWorkrow + 1;
-  pPriorx = pData->pPrevrow + 1;
+  pRawx   = pData->pWorkrow + pData->iPixelofs;
+  pPriorx = pData->pPrevrow + pData->iPixelofs;
 
   for (iX = 0; iX < pData->iRowsize; iX++)
   {
-    pRawx [0] = (mng_uint8)(pRawx [0] + pPriorx [0]);
+    *pRawx = (mng_uint8)(*pRawx + *pPriorx);
     pRawx++;
     pPriorx++;
   }
@@ -156,20 +159,20 @@ mng_retcode filter_average (mng_datap pData)
 #endif
 
   iBpp       = pData->iFilterbpp;
-  pRawx      = pData->pWorkrow + 1;
-  pPriorx    = pData->pPrevrow + 1;
-  pRawx_prev = pData->pWorkrow + 1;
+  pRawx      = pData->pWorkrow + pData->iPixelofs;
+  pPriorx    = pData->pPrevrow + pData->iPixelofs;
+  pRawx_prev = pData->pWorkrow + pData->iPixelofs;
 
   for (iX = 0; iX < iBpp; iX++)
   {
-    pRawx [0] = (mng_uint8)(pRawx [0] + (pPriorx [0] >> 1));
+    *pRawx = (mng_uint8)(*pRawx + ((*pPriorx) >> 1));
     pRawx++;
     pPriorx++;
   }
 
   for (iX = iBpp; iX < pData->iRowsize; iX++)
   {
-    pRawx [0] = (mng_uint8)(pRawx [0] + ((pRawx_prev [0] + pPriorx [0]) >> 1));
+    *pRawx = (mng_uint8)(*pRawx + ((*pRawx_prev + *pPriorx) >> 1));
     pRawx++;
     pPriorx++;
     pRawx_prev++;
@@ -201,14 +204,14 @@ mng_retcode filter_paeth (mng_datap pData)
 #endif
 
   iBpp         = pData->iFilterbpp;
-  pRawx        = pData->pWorkrow + 1;
-  pPriorx      = pData->pPrevrow + 1;
-  pRawx_prev   = pData->pWorkrow + 1;
-  pPriorx_prev = pData->pPrevrow + 1;
+  pRawx        = pData->pWorkrow + pData->iPixelofs;
+  pPriorx      = pData->pPrevrow + pData->iPixelofs;
+  pRawx_prev   = pData->pWorkrow + pData->iPixelofs;
+  pPriorx_prev = pData->pPrevrow + pData->iPixelofs;
 
   for (iX = 0; iX < iBpp; iX++)
   {
-    pRawx [0] = (mng_uint8)(pRawx [0] + pPriorx [0]);
+    *pRawx = (mng_uint8)(*pRawx + *pPriorx);
 
     pRawx++;
     pPriorx++;
@@ -216,21 +219,21 @@ mng_retcode filter_paeth (mng_datap pData)
 
   for (iX = iBpp; iX < pData->iRowsize; iX++)
   {
-    iA  = (mng_uint32)pRawx_prev   [0];
-    iB  = (mng_uint32)pPriorx      [0];
-    iC  = (mng_uint32)pPriorx_prev [0];
+    iA  = (mng_uint32)*pRawx_prev;
+    iB  = (mng_uint32)*pPriorx;
+    iC  = (mng_uint32)*pPriorx_prev;
     iP  = iA + iB - iC;
     iPa = abs (iP - iA);
     iPb = abs (iP - iB);
     iPc = abs (iP - iC);
 
     if ((iPa <= iPb) && (iPa <= iPc))
-      pRawx [0] = (mng_uint8)(pRawx [0] + iA);
+      *pRawx = (mng_uint8)(*pRawx + iA);
     else
       if (iPb <= iPc)
-        pRawx [0] = (mng_uint8)(pRawx [0] + iB);
+        *pRawx = (mng_uint8)(*pRawx + iB);
       else
-        pRawx [0] = (mng_uint8)(pRawx [0] + iC);
+        *pRawx = (mng_uint8)(*pRawx + iC);
 
     pRawx++;
     pPriorx++;
@@ -242,7 +245,644 @@ mng_retcode filter_paeth (mng_datap pData)
   MNG_TRACE (pData, MNG_FN_FILTER_PAETH, MNG_LC_END)
 #endif
 
-  return MNG_NOERROR; 
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+/* ************************************************************************** */
+
+mng_retcode init_rowdiffering (mng_datap pData)
+{
+  mng_uint8p pRawi, pRawo;
+  mng_int32  iX;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_INIT_ROWDIFFERING, MNG_LC_START)
+#endif
+
+  pData->iLevel0 = 0;                  /* default levels */
+  pData->iLevel1 = 0;
+  pData->iLevel2 = 0;
+  pData->iLevel3 = 0;
+
+  if (pData->iFilter & 0x40)           /* has leveling parameters ? */
+  {
+    switch (pData->iColortype)         /* salvage leveling parameters */
+    {
+      case 0 : {                       /* gray */
+                 if (pData->iBitdepth <= 8)
+                   pData->iLevel0 = (mng_uint16)*pData->pWorkrow;
+                 else
+                   pData->iLevel0 = mng_get_uint16 (pData->pWorkrow);
+
+                 break;
+               }
+      case 2 : {                       /* rgb */
+                 if (pData->iBitdepth <= 8)
+                 {
+                   pData->iLevel0 = (mng_uint16)*pData->pWorkrow;
+                   pData->iLevel1 = (mng_uint16)*(pData->pWorkrow+1);
+                   pData->iLevel2 = (mng_uint16)*(pData->pWorkrow+2);
+                 }
+                 else
+                 {
+                   pData->iLevel0 = mng_get_uint16 (pData->pWorkrow);
+                   pData->iLevel1 = mng_get_uint16 (pData->pWorkrow+2);
+                   pData->iLevel2 = mng_get_uint16 (pData->pWorkrow+4);
+                 }
+
+                 break;
+               }
+      case 3 : {                       /* indexed */
+                 pData->iLevel0 = (mng_uint16)*pData->pWorkrow;
+                 break;
+               }
+      case 4 : {                       /* gray+alpha */
+                 if (pData->iBitdepth <= 8)
+                 {
+                   pData->iLevel0 = (mng_uint16)*pData->pWorkrow;
+                   pData->iLevel1 = (mng_uint16)*(pData->pWorkrow+1);
+                 }
+                 else
+                 {
+                   pData->iLevel0 = mng_get_uint16 (pData->pWorkrow);
+                   pData->iLevel1 = mng_get_uint16 (pData->pWorkrow+2);
+                 }
+
+                 break;
+               }
+      case 6 : {                       /* rgb+alpha */
+                 if (pData->iBitdepth <= 8)
+                 {
+                   pData->iLevel0 = (mng_uint16)*pData->pWorkrow;
+                   pData->iLevel1 = (mng_uint16)*(pData->pWorkrow+1);
+                   pData->iLevel2 = (mng_uint16)*(pData->pWorkrow+2);
+                   pData->iLevel3 = (mng_uint16)*(pData->pWorkrow+3);
+                 }
+                 else
+                 {
+                   pData->iLevel0 = mng_get_uint16 (pData->pWorkrow);
+                   pData->iLevel1 = mng_get_uint16 (pData->pWorkrow+2);
+                   pData->iLevel2 = mng_get_uint16 (pData->pWorkrow+4);
+                   pData->iLevel3 = mng_get_uint16 (pData->pWorkrow+6);
+                 }
+
+                 break;
+               }
+    }
+  }
+                                       /* shift the entire row back in place */
+  pRawi = pData->pWorkrow + pData->iFilterofs;
+  pRawo = pData->pWorkrow;
+
+  for (iX = 0; iX < pData->iRowsize + pData->iPixelofs - pData->iFilterofs; iX++)
+    *pRawo++ = *pRawi++;
+
+  pData->iFilterofs = 0;               /* indicate so ! */
+
+  if (pData->iFilter & 0x01)           /* no adaptive filtering ? */
+    pData->iPixelofs = pData->iFilterofs;
+  else
+    pData->iPixelofs = pData->iFilterofs + 1;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_INIT_ROWDIFFERING, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode differ_g1 (mng_datap pData)
+{
+  mng_uint8p pRawi, pRawo;
+  mng_int32  iX;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_G1, MNG_LC_START)
+#endif
+
+  if (pData->iLevel0 & 0x01)           /* is it uneven level ? */
+  {
+    pRawi = pData->pWorkrow + pData->iPixelofs;
+    pRawo = pData->pPrevrow + pData->iPixelofs;
+                                       /* just invert every bit */
+    for (iX = 0; iX < pData->iRowsize; iX++)
+      *pRawo++ = (mng_uint8)(~(*pRawi++));
+
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_G1, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode differ_g2 (mng_datap pData)
+{
+  mng_uint8p pRawi, pRawo;
+  mng_int32  iX;
+  mng_int32  iC, iS;
+  mng_uint8  iB, iN, iQ;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_G2, MNG_LC_START)
+#endif
+
+  pRawi = pData->pWorkrow + pData->iPixelofs;
+  pRawo = pData->pPrevrow + pData->iPixelofs;
+  iC    = 0;
+  iB    = 0;
+  iN    = 0;
+  iS    = 0;
+
+  for (iX = 0; iX < pData->iRowsamples; iX++)
+  {
+    if (!iC)
+    {
+      iC = 4;
+      iB = *pRawi++;
+      iN = 0;
+      iS = 8;
+    }
+
+    iS -= 2;
+    iQ = (mng_uint8)(((iB >> iS) + pData->iLevel0) & 0x03);
+    iN = (mng_uint8)((iN << 2) + iQ);
+    iC--;
+
+    if (!iC)
+      *pRawo++ = iN;
+
+  }
+
+  if (iC)
+    *pRawo = (mng_uint8)(iN << iS);
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_G2, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode differ_g4 (mng_datap pData)
+{
+  mng_uint8p pRawi, pRawo;
+  mng_int32  iX;
+  mng_int32  iC, iS;
+  mng_uint8  iB, iN, iQ;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_G4, MNG_LC_START)
+#endif
+
+  pRawi = pData->pWorkrow + pData->iPixelofs;
+  pRawo = pData->pPrevrow + pData->iPixelofs;
+  iC    = 0;
+  iB    = 0;
+  iN    = 0;
+  iS    = 0;
+
+  for (iX = 0; iX < pData->iRowsamples; iX++)
+  {
+    if (!iC)
+    {
+      iC = 2;
+      iB = *pRawi++;
+      iN = 0;
+      iS = 8;
+    }
+
+    iS -= 4;
+    iQ = (mng_uint8)(((iB >> iS) + pData->iLevel0) & 0x0F);
+    iN = (mng_uint8)((iN << 4) + iQ);
+    iC--;
+
+    if (!iC)
+      *pRawo++ = iN;
+
+  }
+
+  if (iC)
+    *pRawo = (mng_uint8)(iN << iS);
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_G4, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode differ_g8 (mng_datap pData)
+{
+  mng_uint8p pRawi, pRawo;
+  mng_int32  iX;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_G8, MNG_LC_START)
+#endif
+
+  pRawi = pData->pWorkrow + pData->iPixelofs;
+  pRawo = pData->pPrevrow + pData->iPixelofs;
+
+  for (iX = 0; iX < pData->iRowsamples; iX++)
+  {
+    *pRawo++ = (mng_uint8)(((mng_uint16)*pRawi + pData->iLevel0) & 0xFF);
+
+    pRawi++;
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_G8, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode differ_g16 (mng_datap pData)
+{
+  mng_uint16p pRawi, pRawo;
+  mng_int32   iX;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_G16, MNG_LC_START)
+#endif
+
+  pRawi = (mng_uint16p)(pData->pWorkrow + pData->iPixelofs);
+  pRawo = (mng_uint16p)(pData->pPrevrow + pData->iPixelofs);
+
+  for (iX = 0; iX < pData->iRowsamples; iX++)
+  {
+    *pRawo++ = (mng_uint16)(((mng_uint32)*pRawi + (mng_uint32)pData->iLevel0) & 0xFFFF);
+
+    pRawi++;
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_G16, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode differ_rgb8 (mng_datap pData)
+{
+  mng_uint8p pRawi, pRawo;
+  mng_int32  iX;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_RGB8, MNG_LC_START)
+#endif
+
+  pRawi = pData->pWorkrow + pData->iPixelofs;
+  pRawo = pData->pPrevrow + pData->iPixelofs;
+
+  for (iX = 0; iX < pData->iRowsamples; iX++)
+  {
+    *(pRawo+1) = (mng_uint8)(((mng_uint16)*(pRawi+1) + pData->iLevel1) & 0xFF);
+    *pRawo     = (mng_uint8)(((mng_uint16)*pRawi     + pData->iLevel0 +
+                              (mng_uint16)*(pRawo+1)) & 0xFF);
+    *(pRawo+2) = (mng_uint8)(((mng_uint16)*(pRawi+2) + pData->iLevel2 +
+                              (mng_uint16)*(pRawo+1)) & 0xFF);
+
+    pRawi += 3;
+    pRawo += 3;
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_RGB8, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode differ_rgb16 (mng_datap pData)
+{
+  mng_uint16p pRawi, pRawo;
+  mng_int32   iX;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_RGB16, MNG_LC_START)
+#endif
+
+  pRawi = (mng_uint16p)(pData->pWorkrow + pData->iPixelofs);
+  pRawo = (mng_uint16p)(pData->pPrevrow + pData->iPixelofs);
+
+  for (iX = 0; iX < pData->iRowsamples; iX++)
+  {
+    *(pRawo+1) = (mng_uint16)(((mng_uint32)*(pRawi+1) + (mng_uint32)pData->iLevel1) & 0xFFFF);
+    *pRawo     = (mng_uint16)(((mng_uint32)*pRawi     + (mng_uint32)pData->iLevel0 +
+                               (mng_uint32)*(pRawo+1)) & 0xFFFF);
+    *(pRawo+2) = (mng_uint16)(((mng_uint32)*(pRawi+2) + (mng_uint32)pData->iLevel2 +
+                               (mng_uint32)*(pRawo+1)) & 0xFFFF);
+
+    pRawi += 3;
+    pRawo += 3;
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_RGB16, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode differ_idx1 (mng_datap pData)
+{
+  mng_uint8p pRawi, pRawo;
+  mng_int32  iX;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_IDX1, MNG_LC_START)
+#endif
+
+  if (pData->iLevel0 & 0x01)           /* is it uneven level ? */
+  {
+    pRawi = pData->pWorkrow + pData->iPixelofs;
+    pRawo = pData->pPrevrow + pData->iPixelofs;
+                                       /* just invert every bit */
+    for (iX = 0; iX < pData->iRowsize; iX++)
+      *pRawo++ = (mng_uint8)(~(*pRawi++));
+
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_IDX1, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode differ_idx2 (mng_datap pData)
+{
+  mng_uint8p pRawi, pRawo;
+  mng_int32  iX;
+  mng_int32  iC, iS;
+  mng_uint8  iB, iN, iQ;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_IDX2, MNG_LC_START)
+#endif
+
+  pRawi = pData->pWorkrow + pData->iPixelofs;
+  pRawo = pData->pPrevrow + pData->iPixelofs;
+  iC    = 0;
+  iB    = 0;
+  iN    = 0;
+  iS    = 0;
+
+  for (iX = 0; iX < pData->iRowsamples; iX++)
+  {
+    if (!iC)
+    {
+      iC = 4;
+      iB = *pRawi++;
+      iN = 0;
+      iS = 8;
+    }
+
+    iS -= 2;
+    iQ = (mng_uint8)(((iB >> iS) + pData->iLevel0) & 0x03);
+    iN = (mng_uint8)((iN << 2) + iQ);
+    iC--;
+
+    if (!iC)
+      *pRawo++ = iN;
+
+  }
+
+  if (iC)
+    *pRawo = (mng_uint8)(iN << iS);
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_IDX2, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode differ_idx4 (mng_datap pData)
+{
+  mng_uint8p pRawi, pRawo;
+  mng_int32  iX;
+  mng_int32  iC, iS;
+  mng_uint8  iB, iN, iQ;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_IDX4, MNG_LC_START)
+#endif
+
+  pRawi = pData->pWorkrow + pData->iPixelofs;
+  pRawo = pData->pPrevrow + pData->iPixelofs;
+  iC    = 0;
+  iB    = 0;
+  iN    = 0;
+  iS    = 0;
+
+  for (iX = 0; iX < pData->iRowsamples; iX++)
+  {
+    if (!iC)
+    {
+      iC = 2;
+      iB = *pRawi++;
+      iN = 0;
+      iS = 8;
+    }
+
+    iS -= 4;
+    iQ = (mng_uint8)(((iB >> iS) + pData->iLevel0) & 0x0F);
+    iN = (mng_uint8)((iN << 4) + iQ);
+    iC--;
+
+    if (!iC)
+      *pRawo++ = iN;
+
+  }
+
+  if (iC)
+    *pRawo = (mng_uint8)(iN << iS);
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_IDX4, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode differ_idx8 (mng_datap pData)
+{
+  mng_uint8p pRawi, pRawo;
+  mng_int32  iX;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_IDX8, MNG_LC_START)
+#endif
+
+  pRawi = pData->pWorkrow + pData->iPixelofs;
+  pRawo = pData->pPrevrow + pData->iPixelofs;
+
+  for (iX = 0; iX < pData->iRowsamples; iX++)
+  {
+    *pRawo++ = (mng_uint8)(((mng_uint16)*pRawi + pData->iLevel0) & 0xFF);
+
+    pRawi++;
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_IDX8, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode differ_ga8 (mng_datap pData)
+{
+  mng_uint8p pRawi, pRawo;
+  mng_int32  iX;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_GA8, MNG_LC_START)
+#endif
+
+  pRawi = pData->pWorkrow + pData->iPixelofs;
+  pRawo = pData->pPrevrow + pData->iPixelofs;
+
+  for (iX = 0; iX < pData->iRowsamples; iX++)
+  {
+    *pRawo     = (mng_uint8)(((mng_uint16)*pRawi     + pData->iLevel0) & 0xFF);
+    *(pRawo+1) = (mng_uint8)(((mng_uint16)*(pRawi+1) + pData->iLevel1) & 0xFF);
+
+    pRawi += 2;
+    pRawo += 2;
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_GA8, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode differ_ga16 (mng_datap pData)
+{
+  mng_uint16p pRawi, pRawo;
+  mng_int32   iX;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_GA16, MNG_LC_START)
+#endif
+
+  pRawi = (mng_uint16p)(pData->pWorkrow + pData->iPixelofs);
+  pRawo = (mng_uint16p)(pData->pPrevrow + pData->iPixelofs);
+
+  for (iX = 0; iX < pData->iRowsamples; iX++)
+  {
+    *pRawo     = (mng_uint16)(((mng_uint32)*pRawi     + (mng_uint32)pData->iLevel0) & 0xFFFF);
+    *(pRawo+1) = (mng_uint16)(((mng_uint32)*(pRawi+1) + (mng_uint32)pData->iLevel1) & 0xFFFF);
+
+    pRawi += 2;
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_GA16, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode differ_rgba8 (mng_datap pData)
+{
+  mng_uint8p pRawi, pRawo;
+  mng_int32  iX;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_RGBA8, MNG_LC_START)
+#endif
+
+  pRawi = pData->pWorkrow + pData->iPixelofs;
+  pRawo = pData->pPrevrow + pData->iPixelofs;
+
+  for (iX = 0; iX < pData->iRowsamples; iX++)
+  {
+    *(pRawo+1) = (mng_uint8)(((mng_uint16)*(pRawi+1) + pData->iLevel1) & 0xFF);
+    *pRawo     = (mng_uint8)(((mng_uint16)*pRawi     + pData->iLevel0 +
+                              (mng_uint16)*(pRawo+1)) & 0xFF);
+    *(pRawo+2) = (mng_uint8)(((mng_uint16)*(pRawi+2) + pData->iLevel2 +
+                              (mng_uint16)*(pRawo+1)) & 0xFF);
+    *(pRawo+3) = (mng_uint8)(((mng_uint16)*(pRawi+3) + pData->iLevel3) & 0xFF);
+
+    pRawi += 4;
+    pRawo += 4;
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_RGBA8, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode differ_rgba16 (mng_datap pData)
+{
+  mng_uint16p pRawi, pRawo;
+  mng_int32   iX;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_RGBA16, MNG_LC_START)
+#endif
+
+  pRawi = (mng_uint16p)(pData->pWorkrow + pData->iPixelofs);
+  pRawo = (mng_uint16p)(pData->pPrevrow + pData->iPixelofs);
+
+  for (iX = 0; iX < pData->iRowsamples; iX++)
+  {
+    *(pRawo+1) = (mng_uint16)(((mng_uint32)*(pRawi+1) + (mng_uint32)pData->iLevel1) & 0xFFFF);
+    *pRawo     = (mng_uint16)(((mng_uint32)*pRawi     + (mng_uint32)pData->iLevel0 +
+                               (mng_uint32)*(pRawo+1)) & 0xFFFF);
+    *(pRawo+2) = (mng_uint16)(((mng_uint32)*(pRawi+2) + (mng_uint32)pData->iLevel2 +
+                               (mng_uint32)*(pRawo+1)) & 0xFFFF);
+    *(pRawo+3) = (mng_uint16)(((mng_uint32)*(pRawi+3) + (mng_uint32)pData->iLevel3) & 0xFFFF);
+
+    pRawi += 4;
+    pRawo += 4;
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DIFFER_RGBA16, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
 }
 
 /* ************************************************************************** */

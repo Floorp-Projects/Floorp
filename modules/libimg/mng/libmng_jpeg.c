@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_jpeg.c             copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : JPEG library interface (implementation)                    * */
 /* *                                                                        * */
@@ -31,6 +31,9 @@
 /* *             0.9.2 - 08/05/2000 - G.Juyn                                * */
 /* *             - changed file-prefixes                                    * */
 /* *                                                                        * */
+/* *             0.9.3 - 10/16/2000 - G.Juyn                                * */
+/* *             - added support for JDAA                                   * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #include "libmng.h"
@@ -54,7 +57,7 @@
 
 /* ************************************************************************** */
 /* *                                                                        * */
-/* * Local IJG callback routines (source-manager & error-manager)           * */
+/* * Local IJG callback routines (source-manager, error-manager and such)   * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -92,6 +95,35 @@ void mng_skip_input_data (j_decompress_ptr cinfo, long num_bytes)
     if (pSrc->bytes_in_buffer < (size_t)num_bytes)
     {                                  /* tell the boss we need to skip some data! */
       pData->iJPEGtoskip = (mng_uint32)((size_t)num_bytes - pSrc->bytes_in_buffer);
+
+      pSrc->bytes_in_buffer = 0;       /* let the JPEG lib suspend */
+      pSrc->next_input_byte = MNG_NULL;
+    }
+    else
+    {                                  /* simply advance in the buffer */
+      pSrc->bytes_in_buffer -= num_bytes;
+      pSrc->next_input_byte += num_bytes;
+    }
+  }
+
+  return;
+}
+#endif /* MNG_INCLUDE_JNG_READ */
+
+/* ************************************************************************** */
+
+#ifdef MNG_INCLUDE_JNG_READ
+void mng_skip_input_data2 (j_decompress_ptr cinfo, long num_bytes)
+{
+  if (num_bytes > 0)                   /* ignore fony calls */
+  {                                    /* address my generic structure */
+    mng_datap pData = (mng_datap)cinfo->client_data;
+                                       /* address source manager */
+    mngjpeg_sourcep pSrc = pData->pJPEGdinfo2->src;
+                                       /* problem scenario ? */
+    if (pSrc->bytes_in_buffer < (size_t)num_bytes)
+    {                                  /* tell the boss we need to skip some data! */
+      pData->iJPEGtoskip2 = (mng_uint32)((size_t)num_bytes - pSrc->bytes_in_buffer);
 
       pSrc->bytes_in_buffer = 0;       /* let the JPEG lib suspend */
       pSrc->next_input_byte = MNG_NULL;
@@ -157,14 +189,23 @@ mng_retcode mngjpeg_initialize (mng_datap pData)
 #endif
                                        /* allocate space for JPEG structures if necessary */
 #ifdef MNG_INCLUDE_JNG_READ
-  if (pData->pJPEGderr  == MNG_NULL)
-    MNG_ALLOC (pData, pData->pJPEGderr,  sizeof (mngjpeg_error ))
-  if (pData->pJPEGdsrc  == MNG_NULL)
-    MNG_ALLOC (pData, pData->pJPEGdsrc,  sizeof (mngjpeg_source))
-  if (pData->pJPEGdinfo == MNG_NULL)
-    MNG_ALLOC (pData, pData->pJPEGdinfo, sizeof (mngjpeg_decomp))
+  if (pData->pJPEGderr   == MNG_NULL)
+    MNG_ALLOC (pData, pData->pJPEGderr,   sizeof (mngjpeg_error ))
+  if (pData->pJPEGdsrc   == MNG_NULL)
+    MNG_ALLOC (pData, pData->pJPEGdsrc,   sizeof (mngjpeg_source))
+  if (pData->pJPEGdinfo  == MNG_NULL)
+    MNG_ALLOC (pData, pData->pJPEGdinfo,  sizeof (mngjpeg_decomp))
                                        /* enable reverse addressing */
-  pData->pJPEGdinfo->client_data = pData;
+  pData->pJPEGdinfo->client_data  = pData;
+
+  if (pData->pJPEGderr2  == MNG_NULL)
+    MNG_ALLOC (pData, pData->pJPEGderr2,  sizeof (mngjpeg_error ))
+  if (pData->pJPEGdsrc2  == MNG_NULL)
+    MNG_ALLOC (pData, pData->pJPEGdsrc2,  sizeof (mngjpeg_source))
+  if (pData->pJPEGdinfo2 == MNG_NULL)
+    MNG_ALLOC (pData, pData->pJPEGdinfo2, sizeof (mngjpeg_decomp))
+                                       /* enable reverse addressing */
+  pData->pJPEGdinfo2->client_data = pData;
 #endif
 
 #ifdef MNG_INCLUDE_JNG_WRITE
@@ -175,26 +216,41 @@ mng_retcode mngjpeg_initialize (mng_datap pData)
                                        /* enable reverse addressing */
   pData->pJPEGcinfo->client_data = pData;
 #endif
-                                       /* initialize temporary buffer parms */
-  pData->iJPEGbufmax      = MNG_JPEG_MAXBUF;
+                                       /* initialize temporary buffers */
+  pData->iJPEGbufmax       = MNG_JPEG_MAXBUF;
   MNG_ALLOC (pData, pData->pJPEGbuf, pData->iJPEGbufmax)
 
-  pData->pJPEGcurrent     = pData->pJPEGbuf;
-  pData->iJPEGbufremain   = 0;
-  pData->pJPEGrow         = MNG_NULL;
-  pData->iJPEGrowlen      = 0;
-  pData->iJPEGtoskip      = 0;
+  pData->iJPEGbufmax2      = MNG_JPEG_MAXBUF;
+  MNG_ALLOC (pData, pData->pJPEGbuf2, pData->iJPEGbufmax2)
 
-  pData->bJPEGcompress    = MNG_FALSE; /* not doing anything yet ! */
-  pData->bJPEGdecompress  = MNG_FALSE;
-  pData->bJPEGhasheader   = MNG_FALSE;
-  pData->bJPEGdecostarted = MNG_FALSE;
-  pData->bJPEGscanstarted = MNG_FALSE;
+  pData->pJPEGcurrent      = pData->pJPEGbuf;
+  pData->iJPEGbufremain    = 0;
+  pData->pJPEGrow          = MNG_NULL;
+  pData->iJPEGrowlen       = 0;
+  pData->iJPEGtoskip       = 0;
 
-  pData->iJPEGrow         = 0;         /* zero input/output lines */
-  pData->iJPEGalpharow    = 0;
-  pData->iJPEGrgbrow      = 0;
-  pData->iJPEGdisprow     = 0;
+  pData->pJPEGcurrent2     = pData->pJPEGbuf2;
+  pData->iJPEGbufremain2   = 0;
+  pData->pJPEGrow2         = MNG_NULL;
+  pData->iJPEGrowlen2      = 0;
+  pData->iJPEGtoskip2      = 0;
+                                      /* not doing anything yet ! */
+  pData->bJPEGcompress     = MNG_FALSE;
+  
+  pData->bJPEGdecompress   = MNG_FALSE;
+  pData->bJPEGhasheader    = MNG_FALSE;
+  pData->bJPEGdecostarted  = MNG_FALSE;
+  pData->bJPEGscanstarted  = MNG_FALSE;
+
+  pData->bJPEGdecompress2  = MNG_FALSE;
+  pData->bJPEGhasheader2   = MNG_FALSE;
+  pData->bJPEGdecostarted2 = MNG_FALSE;
+  pData->bJPEGscanstarted2 = MNG_FALSE;
+
+  pData->iJPEGrow          = 0;        /* zero input/output lines */
+  pData->iJPEGalpharow     = 0;
+  pData->iJPEGrgbrow       = 0;
+  pData->iJPEGdisprow      = 0;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_JPEG_INITIALIZE, MNG_LC_END)
@@ -220,11 +276,13 @@ mng_retcode mngjpeg_cleanup (mng_datap pData)
   iRetcode = setjmp (pData->sErrorbuf);/* setup local JPEG error-recovery */
   if (iRetcode != 0)                   /* got here from longjmp ? */
     MNG_ERRORJ (pData, iRetcode)       /* then IJG-lib issued an error */
-#endif    
+#endif
 
-#ifdef MNG_INCLUDE_JNG_READ
-  if (pData->bJPEGdecompress)          /* still decompressing something ? */
+#ifdef MNG_INCLUDE_JNG_READ            /* still decompressing something ? */
+  if (pData->bJPEGdecompress)
     jpeg_destroy_decompress (pData->pJPEGdinfo);
+  if (pData->bJPEGdecompress2)
+    jpeg_destroy_decompress (pData->pJPEGdinfo2);
 #endif
 
 #ifdef MNG_INCLUDE_JNG_WRITE
@@ -233,27 +291,39 @@ mng_retcode mngjpeg_cleanup (mng_datap pData)
 #endif
 
 #endif /* MNG_INCLUDE_IJG6B */
-                                       /* cleanup temporary buffer */
-  MNG_FREE (pData, pData->pJPEGbuf, pData->iJPEGbufmax)
+                                       /* cleanup temporary buffers */
+  MNG_FREE (pData, pData->pJPEGbuf,  pData->iJPEGbufmax)
+  MNG_FREE (pData, pData->pJPEGbuf2, pData->iJPEGbufmax2)
                                        /* cleanup space for JPEG structures */
 #ifdef MNG_INCLUDE_JNG_READ
-  MNG_FREE (pData, pData->pJPEGdinfo, sizeof (mngjpeg_decomp))
-  MNG_FREE (pData, pData->pJPEGdsrc,  sizeof (mngjpeg_source))
-  MNG_FREE (pData, pData->pJPEGderr,  sizeof (mngjpeg_error ))
+  MNG_FREE (pData, pData->pJPEGdinfo,  sizeof (mngjpeg_decomp))
+  MNG_FREE (pData, pData->pJPEGdsrc,   sizeof (mngjpeg_source))
+  MNG_FREE (pData, pData->pJPEGderr,   sizeof (mngjpeg_error ))
+  MNG_FREE (pData, pData->pJPEGdinfo2, sizeof (mngjpeg_decomp))
+  MNG_FREE (pData, pData->pJPEGdsrc2,  sizeof (mngjpeg_source))
+  MNG_FREE (pData, pData->pJPEGderr2,  sizeof (mngjpeg_error ))
 #endif
 
 #ifdef MNG_INCLUDE_JNG_WRITE
-  MNG_FREE (pData, pData->pJPEGcinfo, sizeof (mngjpeg_comp  ))
-  MNG_FREE (pData, pData->pJPEGcerr,  sizeof (mngjpeg_error ))
+  MNG_FREE (pData, pData->pJPEGcinfo,  sizeof (mngjpeg_comp  ))
+  MNG_FREE (pData, pData->pJPEGcerr,   sizeof (mngjpeg_error ))
 #endif
 
-  MNG_FREE (pData, pData->pJPEGrow, pData->iJPEGrowlen)
+  MNG_FREE (pData, pData->pJPEGrow,  pData->iJPEGrowlen)
+  MNG_FREE (pData, pData->pJPEGrow2, pData->iJPEGrowlen2)
+                                       /* whatever we were doing ... */
+                                       /* we don't anymore ... */
+  pData->bJPEGcompress     = MNG_FALSE;
 
-  pData->bJPEGcompress    = MNG_FALSE; /* whatever we were doing ... */
-  pData->bJPEGdecompress  = MNG_FALSE; /* we don't anymore ... */
-  pData->bJPEGhasheader   = MNG_FALSE;
-  pData->bJPEGdecostarted = MNG_FALSE;
-  pData->bJPEGscanstarted = MNG_FALSE;
+  pData->bJPEGdecompress   = MNG_FALSE;
+  pData->bJPEGhasheader    = MNG_FALSE;
+  pData->bJPEGdecostarted  = MNG_FALSE;
+  pData->bJPEGscanstarted  = MNG_FALSE;
+
+  pData->bJPEGdecompress2  = MNG_FALSE;
+  pData->bJPEGhasheader2   = MNG_FALSE;
+  pData->bJPEGdecostarted2 = MNG_FALSE;
+  pData->bJPEGscanstarted2 = MNG_FALSE;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_JPEG_CLEANUP, MNG_LC_END)
@@ -262,6 +332,10 @@ mng_retcode mngjpeg_cleanup (mng_datap pData)
   return MNG_NOERROR;
 }
 
+/* ************************************************************************** */
+/* *                                                                        * */
+/* * JPEG decompression routines (JDAT)                                     * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #ifdef MNG_INCLUDE_JNG_READ
@@ -406,7 +480,7 @@ mng_retcode mngjpeg_decompressdata (mng_datap  pData,
       if (jpeg_read_header (pData->pJPEGdinfo, TRUE) != JPEG_SUSPENDED)
       {                                /* indicate the header's oke */
         pData->bJPEGhasheader = MNG_TRUE;
-
+                                       /* let's do some sanity checks ! */
         if ((pData->pJPEGdinfo->image_width  != pData->iDatawidth ) ||
             (pData->pJPEGdinfo->image_height != pData->iDataheight)    )
           MNG_ERROR (pData, MNG_JPEGPARMSERR)
@@ -590,6 +664,340 @@ mng_retcode mngjpeg_decompressfree (mng_datap pData)
   jpeg_destroy_decompress (pData->pJPEGdinfo);
 
   pData->bJPEGdecompress = MNG_FALSE;  /* indicate it's done */
+
+#endif /* MNG_INCLUDE_IJG6B */
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_JPEG_DECOMPRESSFREE, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+#endif /* MNG_INCLUDE_JNG_READ */
+
+/* ************************************************************************** */
+/* *                                                                        * */
+/* * JPEG decompression routines (JDAA)                                     * */
+/* *                                                                        * */
+/* ************************************************************************** */
+
+#ifdef MNG_INCLUDE_JNG_READ
+mng_retcode mngjpeg_decompressinit2 (mng_datap pData)
+{
+#if defined(MNG_INCLUDE_IJG6B) && defined(MNG_USE_SETJMP)
+  mng_retcode iRetcode;
+#endif
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_JPEG_DECOMPRESSINIT, MNG_LC_START)
+#endif
+
+#ifdef MNG_INCLUDE_IJG6B
+  /* allocate and initialize a JPEG decompression object */
+  pData->pJPEGdinfo2->err = jpeg_std_error (pData->pJPEGderr2);
+
+#ifdef MNG_USE_SETJMP                  /* setup local JPEG error-routines */
+  pData->pJPEGderr2->error_exit     = mng_error_exit;
+  pData->pJPEGderr2->output_message = mng_output_message;
+
+  iRetcode = setjmp (pData->sErrorbuf);/* setup local JPEG error-recovery */
+  if (iRetcode != 0)                   /* got here from longjmp ? */
+    MNG_ERRORJ (pData, iRetcode)       /* then IJG-lib issued an error */
+#endif /* MNG_USE_SETJMP */
+
+  /* allocate and initialize a JPEG decompression object (continued) */
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_JPEG_DECOMPRESSINIT, MNG_LC_JPEG_CREATE_DECOMPRESS)
+#endif
+  jpeg_create_decompress (pData->pJPEGdinfo2);
+
+  pData->bJPEGdecompress2 = MNG_TRUE;  /* indicate it's initialized */
+
+  /* specify the source of the compressed data (eg, a file) */
+                                       /* no, not a file; we have buffered input */
+  pData->pJPEGdinfo2->src = pData->pJPEGdsrc2;
+                                       /* use the default handler */
+  pData->pJPEGdinfo2->src->resync_to_restart = jpeg_resync_to_restart;
+                                       /* setup local source routine & parms */
+  pData->pJPEGdinfo2->src->init_source       = mng_init_source;
+  pData->pJPEGdinfo2->src->fill_input_buffer = mng_fill_input_buffer;
+  pData->pJPEGdinfo2->src->skip_input_data   = mng_skip_input_data2;
+  pData->pJPEGdinfo2->src->term_source       = mng_term_source;
+  pData->pJPEGdinfo2->src->next_input_byte   = pData->pJPEGcurrent2;
+  pData->pJPEGdinfo2->src->bytes_in_buffer   = pData->iJPEGbufremain2;
+
+#endif /* MNG_INCLUDE_IJG6B */
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_JPEG_DECOMPRESSINIT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+#endif /* MNG_INCLUDE_JNG_READ */
+
+/* ************************************************************************** */
+
+#ifdef MNG_INCLUDE_JNG_READ
+mng_retcode mngjpeg_decompressdata2 (mng_datap  pData,
+                                     mng_uint32 iRawsize,
+                                     mng_uint8p pRawdata)
+{
+  mng_retcode iRetcode;
+  mng_uint32  iRemain;
+  mng_uint8p  pWork;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_JPEG_DECOMPRESSDATA, MNG_LC_START)
+#endif
+
+#if defined (MNG_INCLUDE_IJG6B) && defined(MNG_USE_SETJMP)
+  iRetcode = setjmp (pData->sErrorbuf);/* initialize local JPEG error-recovery */
+  if (iRetcode != 0)                   /* got here from longjmp ? */
+    MNG_ERRORJ (pData, iRetcode)       /* then IJG-lib issued an error */
+#endif
+
+  pWork   = pRawdata;
+  iRemain = iRawsize;
+
+  if (pData->iJPEGtoskip2)             /* JPEG-lib told us to skip some more data ? */
+  {
+    if (iRemain > pData->iJPEGtoskip2) /* enough data in this buffer ? */
+    {
+      iRemain -= pData->iJPEGtoskip2;  /* skip enough to access the next byte */
+      pWork   += pData->iJPEGtoskip2;
+
+      pData->iJPEGtoskip2 = 0;         /* no more to skip then */
+    }
+    else
+    {
+      pData->iJPEGtoskip2 -= iRemain;  /* skip all data in the buffer */
+      iRemain = 0;                     /* and indicate this accordingly */
+    }
+                                       /* the skip set current-pointer to NULL ! */
+    pData->pJPEGcurrent2 = pData->pJPEGbuf2;
+  }
+
+  while (iRemain)                      /* repeat until no more input-bytes */
+  {                                    /* need to shift anything ? */
+    if ((pData->pJPEGcurrent2 > pData->pJPEGbuf2) &&
+        (pData->pJPEGcurrent2 - pData->pJPEGbuf2 + pData->iJPEGbufremain2 + iRemain > pData->iJPEGbufmax2))
+    {
+      if (pData->iJPEGbufremain2 > 0)  /* then do so */
+        MNG_COPY (pData->pJPEGbuf2, pData->pJPEGcurrent2, pData->iJPEGbufremain2)
+
+      pData->pJPEGcurrent2 = pData->pJPEGbuf2;
+    }
+                                       /* does the remaining input fit into the buffer ? */
+    if (pData->iJPEGbufremain2 + iRemain <= pData->iJPEGbufmax2)
+    {                                  /* move the lot */
+      MNG_COPY ((pData->pJPEGcurrent2 + pData->iJPEGbufremain2), pWork, iRemain)
+                                       /* adjust remaining_bytes counter */
+      pData->iJPEGbufremain2 += iRemain;
+      iRemain = 0;                     /* and indicate there's no input left */
+    }
+    else
+    {                                  /* calculate what does fit */
+      mng_uint32 iFits = pData->iJPEGbufmax2 - pData->iJPEGbufremain2;
+
+      if (iFits <= 0)                  /* no space is just bugger 'm all */
+        MNG_ERROR (pData, MNG_JPEGBUFTOOSMALL)
+                                       /* move that */
+      MNG_COPY ((pData->pJPEGcurrent2 + pData->iJPEGbufremain2), pWork, iFits)
+
+      pData->iJPEGbufremain2 += iFits; /* adjust remain_bytes counter */
+      iRemain -= iFits;                /* and the input-parms */
+      pWork   += iFits;
+    }
+
+#ifdef MNG_INCLUDE_IJG6B
+    pData->pJPEGdinfo2->src->next_input_byte = pData->pJPEGcurrent2;
+    pData->pJPEGdinfo2->src->bytes_in_buffer = pData->iJPEGbufremain2;
+
+    if (!pData->bJPEGhasheader2)       /* haven't got the header yet ? */
+    {
+      /* call jpeg_read_header() to obtain image info */
+#ifdef MNG_SUPPORT_TRACE
+      MNG_TRACE (pData, MNG_FN_JPEG_DECOMPRESSDATA, MNG_LC_JPEG_READ_HEADER)
+#endif
+      if (jpeg_read_header (pData->pJPEGdinfo2, TRUE) != JPEG_SUSPENDED)
+      {                                /* indicate the header's oke */
+        pData->bJPEGhasheader2 = MNG_TRUE;
+                                       /* let's do some sanity checks ! */
+        if ((pData->pJPEGdinfo2->image_width  != pData->iDatawidth ) ||
+            (pData->pJPEGdinfo2->image_height != pData->iDataheight)    )
+          MNG_ERROR (pData, MNG_JPEGPARMSERR)
+
+        if (pData->pJPEGdinfo2->jpeg_color_space != JCS_GRAYSCALE)
+          MNG_ERROR (pData, MNG_JPEGPARMSERR)
+                                       /* indicate whether or not it's progressive */
+        pData->bJPEGprogressive2 = (mng_bool)jpeg_has_multiple_scans (pData->pJPEGdinfo2);
+
+        if (pData->bJPEGprogressive2)  /* progressive alphachannel not allowed !!! */
+          MNG_ERROR (pData, MNG_JPEGPARMSERR)
+                                       /* allocate a row of JPEG-samples */
+        if (pData->pJPEGdinfo2->jpeg_color_space == JCS_YCbCr)
+          pData->iJPEGrowlen2 = pData->pJPEGdinfo2->image_width * 3;
+        else
+          pData->iJPEGrowlen2 = pData->pJPEGdinfo2->image_width;
+
+        MNG_ALLOC (pData, pData->pJPEGrow2, pData->iJPEGrowlen2)
+
+        pData->iJPEGalpharow = 0;      /* quite empty up to now */
+      }
+
+      pData->pJPEGcurrent2   = (mng_uint8p)pData->pJPEGdinfo2->src->next_input_byte;
+      pData->iJPEGbufremain2 = (mng_uint32)pData->pJPEGdinfo2->src->bytes_in_buffer;
+    }
+                                       /* decompress not started ? */
+    if ((pData->bJPEGhasheader2) && (!pData->bJPEGdecostarted2))
+    {
+      /* set parameters for decompression */
+
+      if (pData->bJPEGprogressive2)    /* progressive display ? */
+        pData->pJPEGdinfo2->buffered_image = TRUE;
+
+      /* jpeg_start_decompress(...); */
+#ifdef MNG_SUPPORT_TRACE
+      MNG_TRACE (pData, MNG_FN_JPEG_DECOMPRESSDATA, MNG_LC_JPEG_START_DECOMPRESS)
+#endif
+      if (jpeg_start_decompress (pData->pJPEGdinfo2) == TRUE)
+                                       /* indicate it started */
+        pData->bJPEGdecostarted2 = MNG_TRUE;
+
+      pData->pJPEGcurrent2   = (mng_uint8p)pData->pJPEGdinfo2->src->next_input_byte;
+      pData->iJPEGbufremain2 = (mng_uint32)pData->pJPEGdinfo2->src->bytes_in_buffer;
+    }
+                                       /* process some scanlines ? */
+    if ((pData->bJPEGhasheader2) && (pData->bJPEGdecostarted2) &&
+	    ((!jpeg_input_complete (pData->pJPEGdinfo2)) ||
+         (pData->pJPEGdinfo2->output_scanline < pData->pJPEGdinfo2->output_height)))
+    {
+      mng_int32 iLines;
+
+      /* for (each output pass) */
+      do
+      {                                /* address the row output buffer */
+        JSAMPROW pRow = (JSAMPROW)pData->pJPEGrow2;
+
+                                       /* init new pass ? */
+        if ((pData->bJPEGprogressive2) &&
+            ((!pData->bJPEGscanstarted2) ||
+             (pData->pJPEGdinfo2->output_scanline >= pData->pJPEGdinfo2->output_height)))
+        {
+          pData->bJPEGscanstarted2 = MNG_TRUE;
+
+          /* adjust output decompression parameters if required */
+          /* nop */
+
+          /* start a new output pass */
+#ifdef MNG_SUPPORT_TRACE
+          MNG_TRACE (pData, MNG_FN_JPEG_DECOMPRESSDATA, MNG_LC_JPEG_START_OUTPUT)
+#endif
+          jpeg_start_output (pData->pJPEGdinfo2, pData->pJPEGdinfo2->input_scan_number);
+
+          pData->iJPEGrow = 0;         /* start at row 0 in the image again */
+        }
+
+        /* while (scan lines remain to be read) */
+        do
+        {
+          /*   jpeg_read_scanlines(...); */
+#ifdef MNG_SUPPORT_TRACE
+          MNG_TRACE (pData, MNG_FN_JPEG_DECOMPRESSDATA, MNG_LC_JPEG_READ_SCANLINES)
+#endif
+          iLines = jpeg_read_scanlines (pData->pJPEGdinfo2, (JSAMPARRAY)&pRow, 1);
+
+          pData->pJPEGcurrent2   = (mng_uint8p)pData->pJPEGdinfo2->src->next_input_byte;
+          pData->iJPEGbufremain2 = (mng_uint32)pData->pJPEGdinfo2->src->bytes_in_buffer;
+
+          if (iLines > 0)              /* got something ? */
+          {
+            if (pData->fStorerow3)     /* store in object ? */
+            {
+              iRetcode = ((mng_storerow)pData->fStorerow3) (pData);
+
+              if (iRetcode)            /* on error bail out */
+                return iRetcode;
+
+            }
+          }
+        }
+        while ((pData->pJPEGdinfo2->output_scanline < pData->pJPEGdinfo2->output_height) &&
+               (iLines > 0));          /* until end-of-image or not enough input-data */
+
+        /* terminate output pass */
+        if ((pData->bJPEGprogressive2) &&
+            (pData->pJPEGdinfo2->output_scanline >= pData->pJPEGdinfo2->output_height))
+        {
+#ifdef MNG_SUPPORT_TRACE
+          MNG_TRACE (pData, MNG_FN_JPEG_DECOMPRESSDATA, MNG_LC_JPEG_FINISH_OUTPUT)
+#endif
+          jpeg_finish_output (pData->pJPEGdinfo2);
+                                       /* this scan has ended */
+          pData->bJPEGscanstarted2 = MNG_FALSE;
+        }
+      }
+      while ((!jpeg_input_complete (pData->pJPEGdinfo2)) && (iLines > 0));
+    }
+                                       /* end of image ? */
+    if ((pData->bJPEGhasheader2) && (pData->bJPEGdecostarted2) &&
+        (jpeg_input_complete (pData->pJPEGdinfo2)) &&
+        (pData->pJPEGdinfo2->input_scan_number == pData->pJPEGdinfo2->output_scan_number))
+    {
+      /* jpeg_finish_decompress(...); */
+#ifdef MNG_SUPPORT_TRACE
+      MNG_TRACE (pData, MNG_FN_JPEG_DECOMPRESSDATA, MNG_LC_JPEG_FINISH_DECOMPRESS)
+#endif
+      if (jpeg_finish_decompress (pData->pJPEGdinfo2) == TRUE)
+      {                                /* indicate it's done */
+        pData->bJPEGhasheader2   = MNG_FALSE;
+        pData->bJPEGdecostarted2 = MNG_FALSE;
+        pData->pJPEGcurrent2     = (mng_uint8p)pData->pJPEGdinfo2->src->next_input_byte;
+        pData->iJPEGbufremain2   = (mng_uint32)pData->pJPEGdinfo2->src->bytes_in_buffer;
+                                       /* remaining fluff is an error ! */
+        if ((pData->iJPEGbufremain2 > 0) || (iRemain > 0))
+          MNG_ERROR (pData, MNG_TOOMUCHJDAT)
+      }
+    }
+#endif /* MNG_INCLUDE_IJG6B */
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_JPEG_DECOMPRESSDATA, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+#endif /* MNG_INCLUDE_JNG_READ */
+
+/* ************************************************************************** */
+
+#ifdef MNG_INCLUDE_JNG_READ
+mng_retcode mngjpeg_decompressfree2 (mng_datap pData)
+{
+#if defined(MNG_INCLUDE_IJG6B) && defined(MNG_USE_SETJMP)
+  mng_retcode iRetcode;
+#endif
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_JPEG_DECOMPRESSFREE, MNG_LC_START)
+#endif
+
+#ifdef MNG_INCLUDE_IJG6B
+#ifdef MNG_USE_SETJMP
+  iRetcode = setjmp (pData->sErrorbuf);/* setup local JPEG error-recovery */
+  if (iRetcode != 0)                   /* got here from longjmp ? */
+    MNG_ERRORJ (pData, iRetcode)       /* then IJG-lib issued an error */
+#endif
+
+  /* release the JPEG decompression object */
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_JPEG_DECOMPRESSFREE, MNG_LC_JPEG_DESTROY_DECOMPRESS)
+#endif
+  jpeg_destroy_decompress (pData->pJPEGdinfo2);
+
+  pData->bJPEGdecompress2 = MNG_FALSE; /* indicate it's done */
 
 #endif /* MNG_INCLUDE_IJG6B */
 

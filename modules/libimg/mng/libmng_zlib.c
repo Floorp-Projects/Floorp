@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_zlib.c             copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : ZLIB library interface (implementation)                    * */
 /* *                                                                        * */
@@ -33,6 +33,11 @@
 /* *                                                                        * */
 /* *             0.9.2 - 08/05/2000 - G.Juyn                                * */
 /* *             - changed file-prefixes                                    * */
+/* *                                                                        * */
+/* *             0.9.3 - 08/08/2000 - G.Juyn                                * */
+/* *             - fixed compiler-warnings from Mozilla                     * */
+/* *             0.9.3 - 09/07/2000 - G.Juyn                                * */
+/* *             - added support for new filter_types                       * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -141,7 +146,7 @@ mng_retcode mngzlib_cleanup (mng_datap pData)
 
 mng_retcode mngzlib_inflateinit (mng_datap pData)
 {
-  uInt iZrslt;
+  int iZrslt;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_ZLIB_INFLATEINIT, MNG_LC_START)
@@ -169,7 +174,7 @@ mng_retcode mngzlib_inflaterows (mng_datap  pData,
                                  mng_uint32 iInlen,
                                  mng_uint8p pIndata)
 {
-  uInt        iZrslt;
+  int         iZrslt;
   mng_retcode iRslt;
   mng_ptr     pSwap;
 
@@ -183,7 +188,7 @@ mng_retcode mngzlib_inflaterows (mng_datap  pData,
   if (pData->sZlib.next_out == 0)      /* initialize output variables ? */
   {                                    /* let zlib know where to store stuff */
     pData->sZlib.next_out  = pData->pWorkrow;
-    pData->sZlib.avail_out = (uInt)(pData->iRowsize + 1);
+    pData->sZlib.avail_out = (uInt)(pData->iRowsize + pData->iPixelofs);
   }
 
   do
@@ -192,15 +197,28 @@ mng_retcode mngzlib_inflaterows (mng_datap  pData,
                                        /* produced a full row ? */
     if (((iZrslt == Z_OK) || (iZrslt == Z_STREAM_END)) &&
         (pData->sZlib.avail_out == 0))
-    {                                   /* shouldn't we be at the end ? */
+    {                                  /* shouldn't we be at the end ? */
       if (pData->iRow >= (mng_int32)pData->iDataheight)
-/*        MNG_ERROR (pData, MNG_TOOMUCHIDAT) */ ;
+/*        MNG_ERROR (pData, MNG_TOOMUCHIDAT) */ ;  /* TODO: check this!!! */
       else
-      {                                 /* filter the row if necessary */
-        if (pData->pWorkrow[0])
-          iRslt = filter_a_row (pData);
+      {
+        if (pData->iFilterofs)         /* has leveling info ? */
+          iRslt = init_rowdiffering (pData);
         else
           iRslt = MNG_NOERROR;
+                                       /* filter the row if necessary */
+        if ((!iRslt) && (pData->iFilterofs < pData->iPixelofs  ) &&
+                        (*(pData->pWorkrow + pData->iFilterofs))    )
+          iRslt = filter_a_row (pData);
+                                       /* additonal leveling/differing ? */
+        if ((!iRslt) && (pData->fDifferrow))
+        {
+          iRslt = ((mng_differrow)pData->fDifferrow) (pData);
+
+          pSwap           = pData->pWorkrow;
+          pData->pWorkrow = pData->pPrevrow;
+          pData->pPrevrow = pSwap;     /* so prev points to the processed row! */
+        }
 
         if (!iRslt)
         {
@@ -235,10 +253,13 @@ mng_retcode mngzlib_inflaterows (mng_datap  pData,
 
         if (iRslt)                     /* on error bail out */
           MNG_ERROR (pData, iRslt);
-                                       /* swap row-pointers */
-        pSwap           = pData->pWorkrow;
-        pData->pWorkrow = pData->pPrevrow;
-        pData->pPrevrow = pSwap;       /* so prev points to the processed row! */
+
+        if (!pData->fDifferrow)        /* swap row-pointers */
+        {
+          pSwap           = pData->pWorkrow;
+          pData->pWorkrow = pData->pPrevrow;
+          pData->pPrevrow = pSwap;     /* so prev points to the processed row! */
+        }
 
         iRslt = next_row (pData);      /* adjust variables for next row */
 
@@ -247,7 +268,7 @@ mng_retcode mngzlib_inflaterows (mng_datap  pData,
       }
                                        /* let zlib know where to store next output */
       pData->sZlib.next_out  = pData->pWorkrow;
-      pData->sZlib.avail_out = (uInt)(pData->iRowsize + 1);
+      pData->sZlib.avail_out = (uInt)(pData->iRowsize + pData->iPixelofs);
     }
   }                                    /* until some error or EOI */
   while ((iZrslt == Z_OK) && (pData->sZlib.avail_in > 0));
@@ -269,7 +290,7 @@ mng_retcode mngzlib_inflatedata (mng_datap  pData,
                                  mng_uint32 iInlen,
                                  mng_uint8p pIndata)
 {
-  uInt iZrslt;
+  int iZrslt;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_ZLIB_INFLATEDATA, MNG_LC_START)
@@ -297,7 +318,7 @@ mng_retcode mngzlib_inflatedata (mng_datap  pData,
 
 mng_retcode mngzlib_inflatefree (mng_datap pData)
 {
-  uInt iZrslt;
+  int iZrslt;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_ZLIB_INFLATEFREE, MNG_LC_START)
@@ -321,7 +342,7 @@ mng_retcode mngzlib_inflatefree (mng_datap pData)
 
 mng_retcode mngzlib_deflateinit (mng_datap pData)
 {
-  uInt iZrslt;
+  int iZrslt;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_ZLIB_DEFLATEINIT, MNG_LC_START)
@@ -369,7 +390,7 @@ mng_retcode mngzlib_deflatedata (mng_datap  pData,
                                  mng_uint32 iInlen,
                                  mng_uint8p pIndata)
 {
-  uInt iZrslt;
+  int iZrslt;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_ZLIB_DEFLATEDATA, MNG_LC_START)
@@ -397,7 +418,7 @@ mng_retcode mngzlib_deflatedata (mng_datap  pData,
 
 mng_retcode mngzlib_deflatefree (mng_datap pData)
 {
-  uInt iZrslt;
+  int iZrslt;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_ZLIB_DEFLATEFREE, MNG_LC_START)

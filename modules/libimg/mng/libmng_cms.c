@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_cms.c              copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : color management routines (implementation)                 * */
 /* *                                                                        * */
@@ -38,6 +38,9 @@
 /* *                                                                        * */
 /* *             0.9.2 - 08/05/2000 - G.Juyn                                * */
 /* *             - changed file-prefixes                                    * */
+/* *                                                                        * */
+/* *             0.9.3 - 08/31/2000 - G.Juyn                                * */
+/* *             - fixed sRGB precedence for gamma_only corection           * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -488,8 +491,14 @@ mng_retcode init_gamma_only (mng_datap pData)
 
   pBuf = pImage->pImgbuf;              /* address the buffer */
 
-  if (pBuf->bHasGAMA)                  /* get the gamma value */
+  if (pBuf->bHasSRGB)                  /* get the gamma value */
+    dGamma = 0.45455;
+  else
+  if (pBuf->bHasGAMA)
     dGamma = (mng_float)pBuf->iGamma / 100000;
+  else
+  if (pData->bHasglobalSRGB)
+    dGamma = 0.45455;
   else
   if (pData->bHasglobalGAMA)
     dGamma = (mng_float)pData->iGlobalGamma / 100000;
@@ -535,7 +544,10 @@ mng_retcode init_gamma_only_object (mng_datap pData)
                                        /* address the object-buffer */
   pBuf = ((mng_imagep)pData->pRetrieveobj)->pImgbuf;
 
-  if (pBuf->bHasGAMA)                  /* get the gamma value */
+  if (pBuf->bHasSRGB)                  /* get the gamma value */
+    dGamma = 0.45455;
+  else
+  if (pBuf->bHasGAMA)
     dGamma = (mng_float)pBuf->iGamma / 100000;
   else
     dGamma = pData->dDfltimggamma;

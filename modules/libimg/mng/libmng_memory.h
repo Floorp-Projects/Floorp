@@ -35,10 +35,6 @@
 #ifndef _libmng_memory_h_
 #define _libmng_memory_h_
 
-#include "libmng.h"
-#include "libmng_data.h"
-#include "libmng_error.h"
-
 /* ************************************************************************** */
 /* *                                                                        * */
 /* * Generic memory manager macros                                          * */

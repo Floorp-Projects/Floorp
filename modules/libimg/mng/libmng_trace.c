@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_trace.c            copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Trace functions (implementation)                           * */
 /* *                                                                        * */
@@ -61,6 +61,28 @@
 /* *             0.9.2 - 08/05/2000 - G.Juyn                                * */
 /* *             - changed file-prefixes                                    * */
 /* *             - added tracestring for updatemngsimplicity                * */
+/* *                                                                        * */
+/* *             0.9.3 - 08/26/2000 - G.Juyn                                * */
+/* *             - added MAGN chunk                                         * */
+/* *             0.9.3 - 09/07/2000 - G.Juyn                                * */
+/* *             - added support for new filter_types                       * */
+/* *             0.9.3 - 10/10/2000 - G.Juyn                                * */
+/* *             - added support for alpha-depth prediction                 * */
+/* *             0.9.3 - 10/11/2000 - G.Juyn                                * */
+/* *             - added JDAA chunk                                         * */
+/* *             - added support for nEED                                   * */
+/* *             0.9.3 - 10/16/2000 - G.Juyn                                * */
+/* *             - added functions to retrieve PNG/JNG specific header-info * */
+/* *             - added optional support for bKGD for PNG images           * */
+/* *             0.9.3 - 10/17/2000 - G.Juyn                                * */
+/* *             - added callback to process non-critical unknown chunks    * */
+/* *             - added routine to discard "invalid" objects               * */
+/* *             0.9.3 - 10/19/2000 - G.Juyn                                * */
+/* *             - implemented delayed delta-processing                     * */
+/* *             0.9.3 - 10/20/2000 - G.Juyn                                * */
+/* *             - added get/set for bKGD preference setting                * */
+/* *             0.9.3 - 10/21/2000 - G.Juyn                                * */
+/* *             - added get function for interlace/progressive display     * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -125,6 +147,8 @@
     {MNG_FN_SETCB_GETALPHALINE,        "setcb_getalphaline"},
     {MNG_FN_SETCB_PROCESSSAVE,         "setcb_processsave"},
     {MNG_FN_SETCB_PROCESSSEEK,         "setcb_processseek"},
+    {MNG_FN_SETCB_PROCESSNEED,         "setcb_processneed"},
+    {MNG_FN_SETCB_PROCESSUNKNOWN,      "setcb_processunknown"},
 
     {MNG_FN_GETCB_MEMALLOC,            "getcb_memalloc"},
     {MNG_FN_GETCB_MEMFREE,             "getcb_memfree"},
@@ -149,6 +173,8 @@
     {MNG_FN_GETCB_GETALPHALINE,        "getcb_getalphaline"},
     {MNG_FN_GETCB_PROCESSSAVE,         "getcb_processsave"},
     {MNG_FN_GETCB_PROCESSSEEK,         "getcb_processseek"},
+    {MNG_FN_GETCB_PROCESSNEED,         "getcb_processneed"},
+    {MNG_FN_GETCB_PROCESSUNKNOWN,      "getcb_processunknown"},
 
     {MNG_FN_SET_USERDATA,              "set_userdata"},
     {MNG_FN_SET_CANVASSTYLE,           "set_canvasstyle"},
@@ -179,6 +205,7 @@
     {MNG_FN_SET_SPEED,                 "set_speed"},
     {MNG_FN_SET_SUSPENSIONMODE,        "set_suspensionmode"},
     {MNG_FN_SET_SECTIONBREAKS,         "set_sectionbreaks"},
+    {MNG_FN_SET_USEBKGD,               "set_usebkgd"},
 
     {MNG_FN_GET_USERDATA,              "get_userdata"},
     {MNG_FN_GET_SIGTYPE,               "get_sigtype"},
@@ -221,6 +248,18 @@
     {MNG_FN_GET_CURRENTLAYER,          "get_currentlayer"},
     {MNG_FN_GET_CURRENTPLAYTIME,       "get_currentplaytime"},
     {MNG_FN_GET_SECTIONBREAKS,         "get_sectionbreaks"},
+    {MNG_FN_GET_ALPHADEPTH,            "get_alphadepth"},
+    {MNG_FN_GET_BITDEPTH,              "get_bitdepth"},
+    {MNG_FN_GET_COLORTYPE,             "get_colortype"},
+    {MNG_FN_GET_COMPRESSION,           "get_compression"},
+    {MNG_FN_GET_FILTER,                "get_filter"},
+    {MNG_FN_GET_INTERLACE,             "get_interlace"},
+    {MNG_FN_GET_ALPHABITDEPTH,         "get_alphabitdepth"},
+    {MNG_FN_GET_ALPHACOMPRESSION,      "get_alphacompression"},
+    {MNG_FN_GET_ALPHAFILTER,           "get_alphafilter"},
+    {MNG_FN_GET_ALPHAINTERLACE,        "get_alphainterlace"},
+    {MNG_FN_GET_USEBKGD,               "get_usebkgd"},
+    {MNG_FN_GET_REFRESHPASS,           "get_refreshpass"},
 
     {MNG_FN_STATUS_ERROR,              "status_error"},
     {MNG_FN_STATUS_READING,            "status_reading"},
@@ -284,6 +323,8 @@
     {MNG_FN_GETCHUNK_DBYK,             "getchunk_dbyk"},
     {MNG_FN_GETCHUNK_ORDR,             "getchunk_ordr"},
     {MNG_FN_GETCHUNK_UNKNOWN,          "getchunk_unknown"},
+    {MNG_FN_GETCHUNK_MAGN,             "getchunk_magn"},
+    {MNG_FN_GETCHUNK_JDAA,             "getchunk_jdaa"},
 
     {MNG_FN_GETCHUNK_PAST_SRC,         "getchunk_past_src"},
     {MNG_FN_GETCHUNK_SAVE_ENTRY,       "getchunk_save_entry"},
@@ -341,6 +382,8 @@
     {MNG_FN_PUTCHUNK_DBYK,             "putchunk_dbyk"},
     {MNG_FN_PUTCHUNK_ORDR,             "putchunk_ordr"},
     {MNG_FN_PUTCHUNK_UNKNOWN,          "putchunk_unknown"},
+    {MNG_FN_PUTCHUNK_MAGN,             "putchunk_magn"},
+    {MNG_FN_PUTCHUNK_JDAA,             "putchunk_jdaa"},
 
     {MNG_FN_PUTCHUNK_PAST_SRC,         "putchunk_past_src"},
     {MNG_FN_PUTCHUNK_SAVE_ENTRY,       "putchunk_save_entry"},
@@ -385,6 +428,7 @@
     {MNG_FN_CLEAR_CANVAS,              "clear_canvas"},
     {MNG_FN_READ_DATABUFFER,           "read_databuffer"},
     {MNG_FN_STORE_ERROR,               "store_error"},
+    {MNG_FN_DROP_INVALID_OBJECTS,      "drop_invalid_objects"},
 
     {MNG_FN_DISPLAY_RGB8,              "display_rgb8"},
     {MNG_FN_DISPLAY_RGBA8,             "display_rgba8"},
@@ -478,6 +522,23 @@
     {MNG_FN_FILTER_AVERAGE,            "filter_average"},
     {MNG_FN_FILTER_PAETH,              "filter_paeth"},
 
+    {MNG_FN_INIT_ROWDIFFERING,         "init_rowdiffering"},
+    {MNG_FN_DIFFER_G1,                 "differ_g1"},
+    {MNG_FN_DIFFER_G2,                 "differ_g2"},
+    {MNG_FN_DIFFER_G4,                 "differ_g4"},
+    {MNG_FN_DIFFER_G8,                 "differ_g8"},
+    {MNG_FN_DIFFER_G16,                "differ_g16"},
+    {MNG_FN_DIFFER_RGB8,               "differ_rgb8"},
+    {MNG_FN_DIFFER_RGB16,              "differ_rgb16"},
+    {MNG_FN_DIFFER_IDX1,               "differ_idx1"},
+    {MNG_FN_DIFFER_IDX2,               "differ_idx2"},
+    {MNG_FN_DIFFER_IDX4,               "differ_idx4"},
+    {MNG_FN_DIFFER_IDX8,               "differ_idx8"},
+    {MNG_FN_DIFFER_GA8,                "differ_ga8"},
+    {MNG_FN_DIFFER_GA16,               "differ_ga16"},
+    {MNG_FN_DIFFER_RGBA8,              "differ_rgba8"},
+    {MNG_FN_DIFFER_RGBA16,             "differ_rgba16"},
+
     {MNG_FN_CREATE_IMGDATAOBJECT,      "create_imgdataobject"},
     {MNG_FN_FREE_IMGDATAOBJECT,        "free_imgdataobject"},
     {MNG_FN_CLONE_IMGDATAOBJECT,       "clone_imgdataobject"},
@@ -488,6 +549,7 @@
     {MNG_FN_RESET_OBJECTDETAILS,       "reset_objectdetails"},
     {MNG_FN_RENUM_IMGOBJECT,           "renum_imgobject"},
     {MNG_FN_PROMOTE_IMGOBJECT,         "promote_imgobject"},
+    {MNG_FN_MAGNIFY_IMGOBJECT,         "magnify_imgobject"},
 
     {MNG_FN_STORE_G1,                  "store_g1"},
     {MNG_FN_STORE_G2,                  "store_g2"},
@@ -558,6 +620,7 @@
     {MNG_FN_CREATE_ANI_IPNG,           "create_ani_ipng"},
     {MNG_FN_CREATE_ANI_IJNG,           "create_ani_ijng"},
     {MNG_FN_CREATE_ANI_PPLT,           "create_ani_pplt"},
+    {MNG_FN_CREATE_ANI_MAGN,           "create_ani_magn"},
 
     {MNG_FN_CREATE_ANI_IMAGE,          "create_ani_image"},
 
@@ -588,6 +651,7 @@
     {MNG_FN_FREE_ANI_IPNG,             "free_ani_ipng"},
     {MNG_FN_FREE_ANI_IJNG,             "free_ani_ijng"},
     {MNG_FN_FREE_ANI_PPLT,             "free_ani_pplt"},
+    {MNG_FN_FREE_ANI_MAGN,             "free_ani_magn"},
 
     {MNG_FN_FREE_ANI_IMAGE,            "free_ani_image"},
 
@@ -618,6 +682,7 @@
     {MNG_FN_PROCESS_ANI_IPNG,          "process_ani_ipng"},
     {MNG_FN_PROCESS_ANI_IJNG,          "process_ani_ijng"},
     {MNG_FN_PROCESS_ANI_PPLT,          "process_ani_pplt"},
+    {MNG_FN_PROCESS_ANI_MAGN,          "process_ani_magn"},
 
     {MNG_FN_PROCESS_ANI_IMAGE,         "process_ani_image"},
 
@@ -626,6 +691,7 @@
     {MNG_FN_RESTORE_BGCOLOR,           "restore_bgcolor"},
     {MNG_FN_RESTORE_RGB8,              "restore_rgb8"},
     {MNG_FN_RESTORE_BGR8,              "restore_bgr8"},
+    {MNG_FN_RESTORE_BKGD,              "restore_bkgd"},
 
     {MNG_FN_INIT_IHDR,                 "init_ihdr"},
     {MNG_FN_INIT_PLTE,                 "init_plte"},
@@ -678,6 +744,8 @@
     {MNG_FN_INIT_DBYK,                 "init_dbyk"},
     {MNG_FN_INIT_ORDR,                 "init_ordr"},
     {MNG_FN_INIT_UNKNOWN,              "init_unknown"},
+    {MNG_FN_INIT_MAGN,                 "init_magn"},
+    {MNG_FN_INIT_JDAA,                 "init_jdaa"},
 
     {MNG_FN_FREE_IHDR,                 "free_ihdr"},
     {MNG_FN_FREE_PLTE,                 "free_plte"},
@@ -730,6 +798,8 @@
     {MNG_FN_FREE_DBYK,                 "free_dbyk"},
     {MNG_FN_FREE_ORDR,                 "free_ordr"},
     {MNG_FN_FREE_UNKNOWN,              "free_unknown"},
+    {MNG_FN_FREE_MAGN,                 "free_magn"},
+    {MNG_FN_FREE_JDAA,                 "free_jdaa"},
 
     {MNG_FN_READ_IHDR,                 "read_ihdr"},
     {MNG_FN_READ_PLTE,                 "read_plte"},
@@ -782,6 +852,8 @@
     {MNG_FN_READ_DBYK,                 "read_dbyk"},
     {MNG_FN_READ_ORDR,                 "read_ordr"},
     {MNG_FN_READ_UNKNOWN,              "read_unknown"},
+    {MNG_FN_READ_MAGN,                 "read_magn"},
+    {MNG_FN_READ_JDAA,                 "read_jdaa"},
 
     {MNG_FN_WRITE_IHDR,                "write_ihdr"},
     {MNG_FN_WRITE_PLTE,                "write_plte"},
@@ -834,6 +906,8 @@
     {MNG_FN_WRITE_DBYK,                "write_dbyk"},
     {MNG_FN_WRITE_ORDR,                "write_ordr"},
     {MNG_FN_WRITE_UNKNOWN,             "write_unknown"},
+    {MNG_FN_WRITE_MAGN,                "write_magn"},
+    {MNG_FN_WRITE_JDAA,                "write_jdaa"},
 
     {MNG_FN_ZLIB_INITIALIZE,           "zlib_initialize"},
     {MNG_FN_ZLIB_CLEANUP,              "zlib_cleanup"},
@@ -892,6 +966,8 @@
     {MNG_FN_PROCESS_DISPLAY_DROP,      "process_display_drop"},
     {MNG_FN_PROCESS_DISPLAY_DBYK,      "process_display_dbyk"},
     {MNG_FN_PROCESS_DISPLAY_ORDR,      "process_display_ordr"},
+    {MNG_FN_PROCESS_DISPLAY_MAGN,      "process_display_magn"},
+    {MNG_FN_PROCESS_DISPLAY_JDAA,      "process_display_jdaa"},
 
     {MNG_FN_JPEG_INITIALIZE,           "jpeg_initialize"},
     {MNG_FN_JPEG_CLEANUP,              "jpeg_cleanup"},
@@ -941,6 +1017,52 @@
     {MNG_FN_NEXT_JPEG_ALPHAROW,        "next_jpeg_alpharow"},
     {MNG_FN_NEXT_JPEG_ROW,             "next_jpeg_row"},
     {MNG_FN_DISPLAY_JPEG_ROWS,         "display_jpeg_rows"},
+
+    {MNG_FN_MAGNIFY_G8_X1,             "magnify_g8_x1"},
+    {MNG_FN_MAGNIFY_G8_X2,             "magnify_g8_x2"},
+    {MNG_FN_MAGNIFY_RGB8_X1,           "magnify_rgb8_x1"},
+    {MNG_FN_MAGNIFY_RGB8_X2,           "magnify_rgb8_x2"},
+    {MNG_FN_MAGNIFY_GA8_X1,            "magnify_ga8_x1"},
+    {MNG_FN_MAGNIFY_GA8_X2,            "magnify_ga8_x2"},
+    {MNG_FN_MAGNIFY_GA8_X3,            "magnify_ga8_x3"},
+    {MNG_FN_MAGNIFY_GA8_X4,            "magnify_ga8_x4"},
+    {MNG_FN_MAGNIFY_RGBA8_X1,          "magnify_rgba8_x1"},
+    {MNG_FN_MAGNIFY_RGBA8_X2,          "magnify_rgba8_x2"},
+    {MNG_FN_MAGNIFY_RGBA8_X3,          "magnify_rgba8_x3"},
+    {MNG_FN_MAGNIFY_RGBA8_X4,          "magnify_rgba8_x4"},
+
+    {MNG_FN_MAGNIFY_G8_Y1,             "magnify_g8_y1"},
+    {MNG_FN_MAGNIFY_G8_Y2,             "magnify_g8_y2"},
+    {MNG_FN_MAGNIFY_RGB8_Y1,           "magnify_rgb8_y1"},
+    {MNG_FN_MAGNIFY_RGB8_Y2,           "magnify_rgb8_y2"},
+    {MNG_FN_MAGNIFY_GA8_Y1,            "magnify_ga8_y1"},
+    {MNG_FN_MAGNIFY_GA8_Y2,            "magnify_ga8_y2"},
+    {MNG_FN_MAGNIFY_GA8_Y3,            "magnify_ga8_y3"},
+    {MNG_FN_MAGNIFY_GA8_Y4,            "magnify_ga8_y4"},
+    {MNG_FN_MAGNIFY_RGBA8_Y1,          "magnify_rgba8_y1"},
+    {MNG_FN_MAGNIFY_RGBA8_Y2,          "magnify_rgba8_y2"},
+    {MNG_FN_MAGNIFY_RGBA8_Y3,          "magnify_rgba8_y3"},
+    {MNG_FN_MAGNIFY_RGBA8_Y4,          "magnify_rgba8_y4"},
+
+    {MNG_FN_DELTA_G1_G1,               "delta_g1_g1"},
+    {MNG_FN_DELTA_G2_G2,               "delta_g2_g2"},
+    {MNG_FN_DELTA_G4_G4,               "delta_g4_g4"},
+    {MNG_FN_DELTA_G8_G8,               "delta_g8_g8"},
+    {MNG_FN_DELTA_G16_G16,             "delta_g16_g16"},
+    {MNG_FN_DELTA_RGB8_RGB8,           "delta_rgb8_rgb8"},
+    {MNG_FN_DELTA_RGB16_RGB16,         "delta_rgb16_rgb16"},
+    {MNG_FN_DELTA_GA8_GA8,             "delta_ga8_ga8"},
+    {MNG_FN_DELTA_GA8_G8,              "delta_ga8_g8"},
+    {MNG_FN_DELTA_GA8_A8,              "delta_ga8_a8"},
+    {MNG_FN_DELTA_GA16_GA16,           "delta_ga16_ga16"},
+    {MNG_FN_DELTA_GA16_G16,            "delta_ga16_g16"},
+    {MNG_FN_DELTA_GA16_A16,            "delta_ga16_a16"},
+    {MNG_FN_DELTA_RGBA8_RGBA8,         "delta_rgba8_rgba8"},
+    {MNG_FN_DELTA_RGBA8_RGB8,          "delta_rgba8_rgb8"},
+    {MNG_FN_DELTA_RGBA8_A8,            "delta_rgba8_a8"},
+    {MNG_FN_DELTA_RGBA16_RGBA16,       "delta_rgba16_rgba16"},
+    {MNG_FN_DELTA_RGBA16_RGB16,        "delta_rgba16_rgb16"},
+    {MNG_FN_DELTA_RGBA16_A16,          "delta_rgba16_a16"},
   };
 #endif /* MNG_INCLUDE_TRACE_STINGS */
 

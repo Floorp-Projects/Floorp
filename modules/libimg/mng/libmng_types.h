@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_types.h            copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.4                                                      * */
 /* *                                                                        * */
 /* * purpose   : type specifications                                        * */
 /* *                                                                        * */
@@ -71,6 +71,21 @@
 /* *                                                                        * */
 /* *             0.9.3 - 08/07/2000 - G.Juyn                                * */
 /* *             - B111300 - fixup for improved portability                 * */
+/* *             0.9.3 - 08/12/2000 - G.Juyn                                * */
+/* *             - added workaround for faulty PhotoShop iCCP chunk         * */
+/* *             0.9.3 - 09/11/2000 - G.Juyn                                * */
+/* *             - added export of zlib functions from windows dll          * */
+/* *             - fixed inclusion parameters once again to make those      * */
+/* *               external libs work together                              * */
+/* *             - re-fixed fixed inclusion parameters                      * */
+/* *               (these freeking libraries make me mad)                   * */
+/* *             0.9.3 - 10/11/2000 - G.Juyn                                * */
+/* *             - added support for nEED                                   * */
+/* *             0.9.3 - 10/17/2000 - G.Juyn                                * */
+/* *             - added callback to process non-critical unknown chunks    * */
+/* *                                                                        * */
+/* *             0.9.4 - 11/20/2000 - R.Giles                               * */
+/* *             - fixed inclusion of lcms header for non-windows platforms * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -98,13 +113,34 @@
 /* *                                                                        * */
 /* ************************************************************************** */
 
+#ifdef WIN32                           /* only include needed stuff */
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifdef MNG_USE_DLL
+#ifdef MNG_SKIP_ZLIB
+#undef MNG_INCLUDE_ZLIB
+#endif
+#ifdef MNG_SKIP_LCMS
+#undef MNG_INCLUDE_LCMS
+#endif
+#ifdef MNG_SKIP_IJG6B
+#undef MNG_INCLUDE_IJG6B
+#endif
+#endif
+
 #ifdef MNG_INCLUDE_ZLIB                /* zlib by Mark Adler & Jean-loup Gailly */
 #include "zlib.h"
 #endif
 
-#ifdef MNG_INCLUDE_LCMS                /* little cms by Marti Maria */
-#undef FAR                             /* possibly defined by zlib */
+#ifdef MNG_INCLUDE_LCMS                /* little cms by Marti Maria Saguer */
+#ifndef ZLIB_DLL
+#undef FAR
+#endif
+#ifdef WIN32                           /* different header locations */
 #include "lcms.h"
+#else
+#include "lcms/lcms.h"
+#endif
 #endif /* MNG_INCLUDE_LCMS */
 
 #ifdef MNG_INCLUDE_IJG6B               /* IJG's jpgsrc6b */
@@ -116,7 +152,9 @@
 #define USE_WINDOWS_MESSAGEBOX         /* display a messagebox under Windoze */
 #endif
 #endif /* MNG_USE_SETJMP */
+#ifdef FAR
 #undef FAR                             /* possibly defined by zlib or lcms */
+#endif
 #include "jpeglib.h"                   /* all that for JPEG support  :-) */
 #endif /* MNG_INCLUDE_IJG6B */
 
@@ -134,8 +172,11 @@
 #include <memory.h>                    /* defines "memcpy" for other win32 platforms */
 #endif
 /* B003 */
+#ifdef MNG_CHECK_BAD_ICCP
+#include <string.h>                    /* strncmp() */
+#endif
 #else
-#if defined(BSD) && !defined(XP_OS2)
+#ifdef BSD
 #include <strings.h>                   /* defines "memcpy" for BSD (?) */
 #else
 #include <string.h>                    /* defines "memcpy" for all others (???) */
@@ -368,6 +409,12 @@ typedef mng_bool   MNG_DECL (*mng_processtext)   (mng_handle  hHandle,
 typedef mng_bool   MNG_DECL (*mng_processsave)   (mng_handle  hHandle);
 typedef mng_bool   MNG_DECL (*mng_processseek)   (mng_handle  hHandle,
                                                   mng_pchar   zName);
+typedef mng_bool   MNG_DECL (*mng_processneed)   (mng_handle  hHandle,
+                                                  mng_pchar   zKeyword);
+typedef mng_bool   MNG_DECL (*mng_processunknown) (mng_handle  hHandle,
+                                                   mng_chunkid iChunkid,
+                                                   mng_uint32  iRawlen,
+                                                   mng_ptr     pRawdata);
 
                                        /* display processing callbacks */
 typedef mng_ptr    MNG_DECL (*mng_getcanvasline) (mng_handle  hHandle,

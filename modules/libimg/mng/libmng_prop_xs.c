@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_prop_xs.c          copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : property get/set interface (implementation)                * */
 /* *                                                                        * */
@@ -50,6 +50,15 @@
 /* *             - added status_xxxx functions                              * */
 /* *             0.9.2 - 08/05/2000 - G.Juyn                                * */
 /* *             - changed file-prefixes                                    * */
+/* *                                                                        * */
+/* *             0.9.3 - 10/10/2000 - G.Juyn                                * */
+/* *             - added support for alpha-depth prediction                 * */
+/* *             0.9.3 - 10/16/2000 - G.Juyn                                * */
+/* *             - added functions to retrieve PNG/JNG specific header-info * */
+/* *             0.9.3 - 10/20/2000 - G.Juyn                                * */
+/* *             - added get/set for bKGD preference setting                * */
+/* *             0.9.3 - 10/21/2000 - G.Juyn                                * */
+/* *             - added get function for interlace/progressive display     * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -187,9 +196,29 @@ mng_retcode MNG_DECL mng_set_bgcolor (mng_handle hHandle,
   ((mng_datap)hHandle)->iBGred   = iRed;
   ((mng_datap)hHandle)->iBGgreen = iGreen;
   ((mng_datap)hHandle)->iBGblue  = iBlue;
+  ((mng_datap)hHandle)->bUseBKGD = MNG_FALSE;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_BGCOLOR, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode MNG_DECL mng_set_usebkgd (mng_handle hHandle,
+                                      mng_bool   bUseBKGD)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_USEBKGD, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLE (hHandle)
+  ((mng_datap)hHandle)->bUseBKGD = bUseBKGD;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_USEBKGD, MNG_LC_END)
 #endif
 
   return MNG_NOERROR;
@@ -1040,6 +1069,294 @@ mng_uint32 MNG_DECL mng_get_simplicity (mng_handle hHandle)
 
 /* ************************************************************************** */
 
+mng_uint8 MNG_DECL mng_get_bitdepth (mng_handle hHandle)
+{
+  mng_uint8 iRslt;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_BITDEPTH, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+  if (((mng_datap)hHandle)->eImagetype == mng_it_png)
+    iRslt = ((mng_datap)hHandle)->iBitdepth;
+  else
+  if (((mng_datap)hHandle)->eImagetype == mng_it_jng)
+    iRslt = ((mng_datap)hHandle)->iJHDRimgbitdepth;
+  else
+    iRslt = 0;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_BITDEPTH, MNG_LC_END)
+#endif
+
+  return iRslt;
+}
+
+/* ************************************************************************** */
+
+mng_uint8 MNG_DECL mng_get_colortype (mng_handle hHandle)
+{
+  mng_uint8 iRslt;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_COLORTYPE, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+  if (((mng_datap)hHandle)->eImagetype == mng_it_png)
+    iRslt = ((mng_datap)hHandle)->iColortype;
+  else
+  if (((mng_datap)hHandle)->eImagetype == mng_it_jng)
+    iRslt = ((mng_datap)hHandle)->iJHDRcolortype;
+  else
+    iRslt = 0;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_COLORTYPE, MNG_LC_END)
+#endif
+
+  return iRslt;
+}
+
+/* ************************************************************************** */
+
+mng_uint8 MNG_DECL mng_get_compression (mng_handle hHandle)
+{
+  mng_uint8 iRslt;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_COMPRESSION, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+  if (((mng_datap)hHandle)->eImagetype == mng_it_png)
+    iRslt = ((mng_datap)hHandle)->iCompression;
+  else
+  if (((mng_datap)hHandle)->eImagetype == mng_it_jng)
+    iRslt = ((mng_datap)hHandle)->iJHDRimgcompression;
+  else
+    iRslt = 0;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_COMPRESSION, MNG_LC_END)
+#endif
+
+  return iRslt;
+}
+
+/* ************************************************************************** */
+
+mng_uint8 MNG_DECL mng_get_filter (mng_handle hHandle)
+{
+  mng_uint8 iRslt;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_FILTER, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+  if (((mng_datap)hHandle)->eImagetype == mng_it_png)
+    iRslt = ((mng_datap)hHandle)->iFilter;
+  else
+    iRslt = 0;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_FILTER, MNG_LC_END)
+#endif
+
+  return iRslt;
+}
+
+/* ************************************************************************** */
+
+mng_uint8 MNG_DECL mng_get_interlace (mng_handle hHandle)
+{
+  mng_uint8 iRslt;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_INTERLACE, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+  if (((mng_datap)hHandle)->eImagetype == mng_it_png)
+    iRslt = ((mng_datap)hHandle)->iInterlace;
+  else
+  if (((mng_datap)hHandle)->eImagetype == mng_it_jng)
+    iRslt = ((mng_datap)hHandle)->iJHDRimginterlace;
+  else
+    iRslt = 0;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_INTERLACE, MNG_LC_END)
+#endif
+
+  return iRslt;
+}
+
+/* ************************************************************************** */
+
+mng_uint8 MNG_DECL mng_get_alphabitdepth (mng_handle hHandle)
+{
+  mng_uint8 iRslt;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_ALPHABITDEPTH, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+  if (((mng_datap)hHandle)->eImagetype == mng_it_jng)
+    iRslt = ((mng_datap)hHandle)->iJHDRalphabitdepth;
+  else
+    iRslt = 0;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_ALPHABITDEPTH, MNG_LC_END)
+#endif
+
+  return iRslt;
+}
+
+/* ************************************************************************** */
+
+mng_uint8 MNG_DECL mng_get_refreshpass (mng_handle hHandle)
+{
+  mng_uint8 iRslt;
+  mng_datap pData;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_REFRESHPASS, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+  pData = (mng_datap)hHandle;
+                                       /* for PNG we know the exact pass */
+  if ((pData->eImagetype == mng_it_png) && (pData->iPass >= 0))
+    iRslt = pData->iPass;
+#ifdef MNG_INCLUDE_JNG
+  else                                 /* for JNG we'll fake it... */
+  if ((pData->eImagetype == mng_it_jng) &&
+      (pData->bJPEGhasheader) && (pData->bJPEGdecostarted) &&
+      (pData->bJPEGprogressive))
+  {
+    if (pData->pJPEGdinfo->input_scan_number <= 1)
+      iRslt = 0;                       /* first pass (I think...) */
+    else
+    if (jpeg_input_complete (pData->pJPEGdinfo))
+      iRslt = 7;                       /* input complete; aka final pass */
+    else
+      iRslt = 3;                       /* anything between 0 and 7 will do */
+
+  }
+#endif  
+  else
+    iRslt = 0;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_REFRESHPASS, MNG_LC_END)
+#endif
+
+  return iRslt;
+}
+
+/* ************************************************************************** */
+
+mng_uint8 MNG_DECL mng_get_alphacompression (mng_handle hHandle)
+{
+  mng_uint8 iRslt;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_ALPHACOMPRESSION, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+  if (((mng_datap)hHandle)->eImagetype == mng_it_jng)
+    iRslt = ((mng_datap)hHandle)->iJHDRalphacompression;
+  else
+    iRslt = 0;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_ALPHACOMPRESSION, MNG_LC_END)
+#endif
+
+  return iRslt;
+}
+
+/* ************************************************************************** */
+
+mng_uint8 MNG_DECL mng_get_alphafilter (mng_handle hHandle)
+{
+  mng_uint8 iRslt;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_ALPHAFILTER, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+  if (((mng_datap)hHandle)->eImagetype == mng_it_jng)
+    iRslt = ((mng_datap)hHandle)->iJHDRalphafilter;
+  else
+    iRslt = 0;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_ALPHAFILTER, MNG_LC_END)
+#endif
+
+  return iRslt;
+}
+
+/* ************************************************************************** */
+
+mng_uint8 MNG_DECL mng_get_alphainterlace (mng_handle hHandle)
+{
+  mng_uint8 iRslt;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_ALPHAINTERLACE, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+  if (((mng_datap)hHandle)->eImagetype == mng_it_jng)
+    iRslt = ((mng_datap)hHandle)->iJHDRalphainterlace;
+  else
+    iRslt = 0;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_ALPHAINTERLACE, MNG_LC_END)
+#endif
+
+  return iRslt;
+}
+
+/* ************************************************************************** */
+
+mng_uint8 MNG_DECL mng_get_alphadepth (mng_handle hHandle)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_ALPHADEPTH, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_ALPHADEPTH, MNG_LC_END)
+#endif
+
+  return ((mng_datap)hHandle)->iAlphadepth;
+}
+
+/* ************************************************************************** */
+
 mng_uint32 MNG_DECL mng_get_canvasstyle (mng_handle hHandle)
 {
 #ifdef MNG_SUPPORT_TRACE
@@ -1093,6 +1410,23 @@ mng_retcode MNG_DECL mng_get_bgcolor (mng_handle  hHandle,
 #endif
 
   return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_bool MNG_DECL mng_get_usebkgd (mng_handle hHandle)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEB (((mng_datap)hHandle), MNG_FN_GET_USEBKGD, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEB (((mng_datap)hHandle), MNG_FN_GET_USEBKGD, MNG_LC_END)
+#endif
+
+  return ((mng_datap)hHandle)->bUseBKGD;
 }
 
 /* ************************************************************************** */

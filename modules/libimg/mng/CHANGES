@@ -1,28 +1,142 @@
 -----------------------------------------------------------
 
-0.9.3 (xxxxxx nth 2000)
------------------------
+0.9.4 (xxxx nnth 2000)
+----------------------
 
 in short:
 
-Intermediate for the moment.
+intermediate for now
 
-- fixed bug 111300
+-------------------
+
+bugfixes:
+
+core:
+- version numbers
+- fixed possible loop in display_resume() (Thanks Vova!)
+- fixed unwanted repetition in mng_readdisplay()
+- changed inclusion of the lcms header file for non-windows platforms
+- changed IHDR filter_method check for PNGs                
+- moved restore of object 0 to libmng_display              
+- added restore of object 0 to TERM processing !!!
+- fixed TERM delay processing                             
+- fixed TERM end processing (count = 0)                   
+
+samples:
+
+contrib:
+- added GTK mng-view example by Vova Babin
+- added MSVC MNGview sample by Nikolaus Brennig
+- updated Jason Summer's mngplg to version 0.9.2
+  (that's mngplg-0.9.2 based on libmng-0.9.3 !!!)
+- rearranged contrib directory slightly
+
+doc:
+- added README.dll
+- added README.config
+
+makefiles:
+- added a makefile for MS Visual C++ (Thanks to Atsushi Matsuda)
+
+autoconf:
+- fixed configure.in for lcms (FreeBSD port by Mikhail Teterin)
+- by default configure includes CMS support if lcms is present
+
+-----------------------------------------------------------
+
+0.9.3 (October 29th 2000)
+-------------------------
+
+in short:
+
+Another beta release. The number of changes in the MNG specification have
+resulted in a lot of new code and some changed code. At the same time I saw
+no need to withhold some new functionality as it was pretty clear there was
+going to be another beta-round. If things go well, I'm going to try to release
+libmng 1.0.0 very shortly after this one.
+
+Many thanks to a lot of people for helping out, sending contributions, making
+suggestions and testing this little baby. This would get nowhere without YOU!!!
+
+- fixed bug 111300/117103
+- added workaround for faulty PhotoShop iCCP chunk
+- added MAGN/JDAA chunks
+- added support for new filter_types
+- added PNG/MNG spec version indicators
+- added BCB mngview contribution by Andy Protano
+- added BCB mngdump; a GUI-based MNG dumping utility (Andy Protano)
+- implemented support for nEED "draft nn"
+- implemented app-defined support for bKGD for PNG images
+- removed trace-options from default SO/DLL builds (!!!)
+- raised initial maximum canvas size to 10000x10000 (!!!)
+  (an App that wants to protect from overly large images should call
+   mng_set_maxcanvassize() with appropriate values)
+- fixed other assorted stuff
 
 -------------------
 
 bugfixes:
 - B111300 - fixup for improved portability
+- B117103 - fixed compilation errors on *nix with lcms (thanks Ralph!)
 
 core:
+- fixed compiler-warnings from Mozilla
+- added check for simplicity-bits in MHDR
+- added workaround for faulty PhotoShop iCCP chunk
+- fixed app-supplied background restore
+- fixed TERM processing delay of 0 msecs
+- fixed write-code for zTXt & iTXt
+- fixed read-code for iTXt
+- added MAGN chunk
+- fixed sRGB precedence for gamma_only corection
+- added support for new filter_types
+- fixed problem with no refresh after TERM
+- fixed DEFI behavior
+- fixed inclusion parameters to make the external libs work together
+- added export of zlib functions from windows dll
+- fixed timing & refresh behavior for single PNG/JNG
+- removed trace-options from default SO/DLL builds (!!!)
+- fixed MAGN rounding errors (thanks Matthias!)
+- fixed small timing problem when FRAM delay = 0
+- fixed simplicity-check in compliance with draft 81/0.98a
+- fixed alpha-blending for all alpha-canvasstyles
+- added support for alpha-depth prediction
+- fixed processing of unknown critical chunks
+- removed test-MaGN
+- added PNG/MNG spec version indicators
+- implemented support for nEED
+- added support for JDAA
+- added functions to retrieve PNG/JNG specific header-info
+- added optional support for bKGD for PNG images
+- raised initial maximum canvas size to 10000x10000
+- added support for delta-JNG
+- added callback to process non-critical unknown chunks
+- fixed support for delta-images during read() / display()
+- added closestream() processing for mng_cleanup()
+- fixed delta-processing behavior
+- added storage for pixel-/alpha-sampledepth for delta's
+- implemented delayed delta-processing
+- fixed putchunk_plte() to set bEmpty parameter (thanks Ben!)
+- added errorcode for delayed delta-processing
+- added get/set for bKGD preference setting
+- added get function for interlace/progressive display
+- fixed bug in empty PLTE handling
+- fixed seperate read() & display() processing
+- fixed tRNS processing for gray-image < 8-bits
 
 samples:
+- added BCB mngview contribution by Andy Protano
 
 contrib:
+- added BCB mngdump; a GUI-based MNG dumping utility (Andy Protano)
 
 doc:
+- updated RPM spec-file by MATSUURA Takanori
+- updated README.contrib
 
 makefiles:
+- fixed some stuff in automake/autoconf/libtool
+- fixed auto* for bug B117103
 
 -----------------------------------------------------------
 

@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_objects.h          copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Internal object structures (definition)                    * */
 /* *                                                                        * */
@@ -38,6 +38,17 @@
 /* *                                                                        * */
 /* *             0.9.2 - 08/05/2000 - G.Juyn                                * */
 /* *             - changed file-prefixes                                    * */
+/* *                                                                        * */
+/* *             0.9.3 - 08/26/2000 - G.Juyn                                * */
+/* *             - added MAGN chunk                                         * */
+/* *             0.9.3 - 09/10/2000 - G.Juyn                                * */
+/* *             - fixed DEFI behavior                                      * */
+/* *             0.9.3 - 10/16/2000 - G.Juyn                                * */
+/* *             - added support for delta-JNG                              * */
+/* *             0.9.3 - 10/17/2000 - G.Juyn                                * */
+/* *             - added valid-flag to stored objects for read() / display()* */
+/* *             0.9.3 - 10/19/2000 - G.Juyn                                * */
+/* *             - added storage for pixel-/alpha-sampledepth for delta's   * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -88,7 +99,13 @@ typedef struct {                                 /* MNG specification "object-bu
            mng_uint8         iCompression;
            mng_uint8         iFilter;
            mng_uint8         iInterlace;
+           
            mng_uint8         iAlphabitdepth;     /* used only for JNG images */
+           mng_uint8         iJHDRcompression;
+           mng_uint8         iJHDRinterlace;
+
+           mng_uint8         iPixelsampledepth;  /* used with delta-images */
+           mng_uint8         iAlphasampledepth;
 
            mng_bool          bHasPLTE;           /* PLTE chunk present */
            mng_bool          bHasTRNS;           /* tRNS chunk present */
@@ -146,6 +163,7 @@ typedef struct {                                 /* MNG specification "object" *
            mng_bool          bFrozen;            /* frozen flag */
            mng_bool          bVisible;           /* potential visibility flag */
            mng_bool          bViewable;          /* viewable flag */
+           mng_bool          bValid;             /* marks invalid when only reading */
            mng_int32         iPosx;              /* location fields */
            mng_int32         iPosy;
            mng_bool          bClipped;           /* clipping fields */
@@ -153,6 +171,14 @@ typedef struct {                                 /* MNG specification "object" *
            mng_int32         iClipr;
            mng_int32         iClipt;
            mng_int32         iClipb;
+           mng_uint16        iMAGN_MethodX;      /* magnification (MAGN) */
+           mng_uint16        iMAGN_MethodY;
+           mng_uint16        iMAGN_MX;
+           mng_uint16        iMAGN_MY;
+           mng_uint16        iMAGN_ML;
+           mng_uint16        iMAGN_MR;
+           mng_uint16        iMAGN_MT;
+           mng_uint16        iMAGN_MB;
            mng_imagedatap    pImgbuf;            /* the image-data buffer */
         } mng_image;
 typedef mng_image * mng_imagep;
@@ -266,8 +292,10 @@ typedef mng_ani_endl * mng_ani_endlp;
 typedef struct {                                 /* DEFI object */
            mng_object_header sHeader;            /* default header (DO NOT REMOVE) */
            mng_uint16        iId;                
-           mng_uint8         iDonotshow;         
-           mng_uint8         iConcrete;          
+           mng_bool          bHasdonotshow;
+           mng_uint8         iDonotshow;
+           mng_bool          bHasconcrete;
+           mng_uint8         iConcrete;
            mng_bool          bHasloca;           
            mng_int32         iLocax;
            mng_int32         iLocay;
@@ -450,6 +478,23 @@ typedef struct {                                 /* PPLT object */
            mng_uint8arr      aUsedentries;
         } mng_ani_pplt;
 typedef mng_ani_pplt * mng_ani_ppltp;
+
+/* ************************************************************************** */
+
+typedef struct {                                 /* MAGN object */
+           mng_object_header sHeader;            /* default header (DO NOT REMOVE) */
+           mng_uint16        iFirstid;
+           mng_uint16        iLastid;
+           mng_uint16        iMethodX;
+           mng_uint16        iMX;
+           mng_uint16        iMY;
+           mng_uint16        iML;
+           mng_uint16        iMR;
+           mng_uint16        iMT;
+           mng_uint16        iMB;
+           mng_uint16        iMethodY;
+        } mng_ani_magn;
+typedef mng_ani_magn * mng_ani_magnp;
 
 /* ************************************************************************** */
 

@@ -30,9 +30,6 @@
 #ifndef _libmng_dither_h_
 #define _libmng_dither_h_
 
-#include "libmng.h"
-#include "libmng_data.h"
-
 /* ************************************************************************** */
 
 mng_retcode dither_a_row (mng_datap  pData,

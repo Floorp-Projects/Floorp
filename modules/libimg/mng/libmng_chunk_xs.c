@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_chunk_xs.c         copyright (c) 2000 G. Juyn       * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : chunk access functions (implementation)                    * */
 /* *                                                                        * */
@@ -41,8 +41,13 @@
 /* *             - changed file-prefixes                                    * */
 /* *             - added function to set simplicity field                   * */
 /* *             - fixed putchunk_unknown() function                        * */
+/* *                                                                        * */
 /* *             0.9.3 - 08/07/2000 - G.Juyn                                * */
 /* *             - B111300 - fixup for improved portability                 * */
+/* *             0.9.3 - 08/26/2000 - G.Juyn                                * */
+/* *             - added MAGN chunk                                         * */
+/* *             0.9.3 - 10/20/2000 - G.Juyn                                * */
+/* *             - fixed putchunk_plte() to set bEmpty parameter            * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -1989,6 +1994,53 @@ mng_retcode MNG_DECL mng_getchunk_ordr_entry (mng_handle  hHandle,
 
 /* ************************************************************************** */
 
+mng_retcode MNG_DECL mng_getchunk_magn (mng_handle hHandle,
+                                        mng_handle hChunk,
+                                        mng_uint16 *iFirstid,
+                                        mng_uint16 *iLastid,
+                                        mng_uint16 *iMethodX,
+                                        mng_uint16 *iMX,
+                                        mng_uint16 *iMY,
+                                        mng_uint16 *iML,
+                                        mng_uint16 *iMR,
+                                        mng_uint16 *iMT,
+                                        mng_uint16 *iMB,
+                                        mng_uint16 *iMethodY)
+{
+  mng_datap pData;
+  mng_magnp pChunk;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_GETCHUNK_MAGN, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLE (hHandle)            /* check validity handle */
+  pData  = (mng_datap)hHandle;         /* and make it addressable */
+  pChunk = (mng_magnp)hChunk;          /* address the chunk */
+
+  if (pChunk->sHeader.iChunkname != MNG_UINT_MAGN)
+    MNG_ERROR (pData, MNG_WRONGCHUNK)  /* ouch */
+
+  *iFirstid = pChunk->iFirstid;        /* fill the fields */
+  *iLastid  = pChunk->iLastid;
+  *iMethodX = pChunk->iMethodX;
+  *iMX      = pChunk->iMX;
+  *iMY      = pChunk->iMY;
+  *iML      = pChunk->iML;
+  *iMR      = pChunk->iMR;
+  *iMT      = pChunk->iMT;
+  *iMB      = pChunk->iMB;
+  *iMethodY = pChunk->iMethodY;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_GETCHUNK_MAGN, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
 mng_retcode MNG_DECL mng_getchunk_unknown (mng_handle  hHandle,
                                            mng_handle  hChunk,
                                            mng_chunkid *iChunkname,
@@ -2105,7 +2157,8 @@ mng_retcode MNG_DECL mng_putchunk_plte (mng_handle   hHandle,
     return iRetcode;
                                        /* fill the chunk */
   ((mng_pltep)pChunk)->iEntrycount = iCount;
-  
+  ((mng_pltep)pChunk)->bEmpty      = (mng_bool)(iCount == 0);
+
   MNG_COPY (((mng_pltep)pChunk)->aEntries, aPalette, sizeof (mng_palette8))
 
   add_chunk (pData, pChunk);           /* add it to the list */
@@ -4744,6 +4797,64 @@ mng_retcode MNG_DECL mng_putchunk_ordr_entry (mng_handle  hHandle,
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (((mng_datap)hHandle), MNG_FN_PUTCHUNK_ORDR_ENTRY, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode MNG_DECL mng_putchunk_magn (mng_handle hHandle,
+                                        mng_uint16 iFirstid,
+                                        mng_uint16 iLastid,
+                                        mng_uint16 iMethodX,
+                                        mng_uint16 iMX,
+                                        mng_uint16 iMY,
+                                        mng_uint16 iML,
+                                        mng_uint16 iMR,
+                                        mng_uint16 iMT,
+                                        mng_uint16 iMB,
+                                        mng_uint16 iMethodY)
+{
+  mng_datap        pData;
+  mng_chunkp       pChunk;
+  mng_retcode      iRetcode;
+  mng_chunk_header sChunkheader =
+          {MNG_UINT_MAGN, init_magn, free_magn, read_magn, write_magn, 0, 0};
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_PUTCHUNK_MAGN, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLE (hHandle)            /* check validity handle */
+  pData = (mng_datap)hHandle;          /* and make it addressable */
+
+  if (!pData->bCreating)               /* aren't we creating a new file ? */
+    MNG_ERROR (pData, MNG_FUNCTIONINVALID)
+                                       /* must have had a MHDR first! */
+  if (pData->iFirstchunkadded != MNG_UINT_MHDR)
+    MNG_ERROR (pData, MNG_NOHEADER)
+                                       /* create the chunk */
+  iRetcode = init_magn (pData, &sChunkheader, &pChunk);
+
+  if (iRetcode)                        /* on error bail out */
+    return iRetcode;
+                                       /* fill the chunk */
+  ((mng_magnp)pChunk)->iFirstid = iFirstid;
+  ((mng_magnp)pChunk)->iLastid  = iLastid;
+  ((mng_magnp)pChunk)->iMethodX = iMethodX;
+  ((mng_magnp)pChunk)->iMX      = iMX;
+  ((mng_magnp)pChunk)->iMY      = iMY;
+  ((mng_magnp)pChunk)->iML      = iML;
+  ((mng_magnp)pChunk)->iMR      = iMR;
+  ((mng_magnp)pChunk)->iMT      = iMT;
+  ((mng_magnp)pChunk)->iMB      = iMB;
+  ((mng_magnp)pChunk)->iMethodY = iMethodY;
+
+  add_chunk (pData, pChunk);           /* add it to the list */
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_PUTCHUNK_MAGN, MNG_LC_END)
 #endif
 
   return MNG_NOERROR;

@@ -100,7 +100,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng.h                  copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : main application interface                                 * */
 /* *                                                                        * */
@@ -179,6 +179,32 @@
 /* *             - changed file-prefixes                                    * */
 /* *             - added function to set simplicity field                   * */
 /* *                                                                        * */
+/* *             0.9.3 - 08/09/2000 - G.Juyn                                * */
+/* *             - added check for simplicity-bits in MHDR                  * */
+/* *             0.9.3 - 08/12/2000 - G.Juyn                                * */
+/* *             - added workaround for faulty PhotoShop iCCP chunk         * */
+/* *             0.9.3 - 08/26/2000 - G.Juyn                                * */
+/* *             - added MAGN chunk                                         * */
+/* *             0.9.3 - 09/07/2000 - G.Juyn                                * */
+/* *             - added support for new filter_types                       * */
+/* *             0.9.3 - 10/10/2000 - G.Juyn                                * */
+/* *             - added support for alpha-depth prediction                 * */
+/* *             0.9.3 - 10/11/2000 - G.Juyn                                * */
+/* *             - fixed processing of unknown critical chunks              * */
+/* *             - removed test-MaGN                                        * */
+/* *             - added PNG/MNG spec version indicators                    * */
+/* *             - added support for nEED                                   * */
+/* *             0.9.3 - 10/16/2000 - G.Juyn                                * */
+/* *             - added functions to retrieve PNG/JNG specific header-info * */
+/* *             - added JDAA chunk                                         * */
+/* *             0.9.3 - 10/17/2000 - G.Juyn                                * */
+/* *             - added callback to process non-critical unknown chunks    * */
+/* *             0.9.3 - 10/20/2000 - G.Juyn                                * */
+/* *             - added errocode for delayed delta-processing              * */
+/* *             - added get/set for bKGD preference setting                * */
+/* *             0.9.3 - 10/21/2000 - G.Juyn                                * */
+/* *             - added get function for interlace/progressive display     * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #if defined(__BORLANDC__) && defined(MNG_STRICT_ANSI)
@@ -193,6 +219,8 @@
 #include "libmng_conf.h"               /* user-specific configuration options */
 
 /* ************************************************************************** */
+
+#define MNG_CHECK_BAD_ICCP             /* let's catch that sucker !!! */
 
 #ifdef MNG_SUPPORT_READ                /* dependencies based on user-configuration */
 #define MNG_INCLUDE_READ_PROCS
@@ -315,12 +343,12 @@ extern "C" {
 /* *                                                                        * */
 /* ************************************************************************** */
 
-#define MNG_VERSION_TEXT    "0.9.2"
+#define MNG_VERSION_TEXT    "0.9.4"
 #define MNG_VERSION_SO      0          /* eg. libmng.so.0 (while in test/beta) */
 #define MNG_VERSION_DLL     0          /* eg. libmng.dll (nb. same for version 1) */
 #define MNG_VERSION_MAJOR   0
 #define MNG_VERSION_MINOR   9
-#define MNG_VERSION_RELEASE 2
+#define MNG_VERSION_RELEASE 4
 
 MNG_EXT mng_pchar MNG_DECL mng_version_text    (void);
 MNG_EXT mng_uint8 MNG_DECL mng_version_so      (void);
@@ -328,6 +356,21 @@ MNG_EXT mng_uint8 MNG_DECL mng_version_dll     (void);
 MNG_EXT mng_uint8 MNG_DECL mng_version_major   (void);
 MNG_EXT mng_uint8 MNG_DECL mng_version_minor   (void);
 MNG_EXT mng_uint8 MNG_DECL mng_version_release (void);
+
+/* ************************************************************************** */
+/* *                                                                        * */
+/* *  MNG/PNG specification level conformance                               * */
+/* *                                                                        * */
+/* ************************************************************************** */
+
+#define MNG_PNG_VERSION     "1.2"
+#define MNG_PNG_VERSION_MAJ 1
+#define MNG_PNG_VERSION_MIN 2
+
+#define MNG_MNG_VERSION     "0.98a"
+#define MNG_MNG_VERSION_MAJ 0
+#define MNG_MNG_VERSION_MIN 98
+#define MNG_MNG_DRAFT       81
 
 /* ************************************************************************** */
 /* *                                                                        * */
@@ -470,8 +513,14 @@ MNG_EXT mng_retcode MNG_DECL mng_setcb_traceproc     (mng_handle        hHandle,
 /* processheader is called when all header information has been gathered
    from the inputstream */
 /* processtext is called for every tEXt, zTXt and iTXt chunk in the
-   inputstream (iType=0 for tEXt, 1 for zTXt and 2 for iTXt) */
-/* processsave & processseek are called for a SAVE/SEEK chunks */
+   inputstream (iType=0 for tEXt, 1 for zTXt and 2 for iTXt);
+   you can call get_imagelevel to check at what nesting-level the chunk is
+   encountered (eg. tEXt inside an embedded image inside a MNG -> level == 2;
+                in most other case -> level == 1) */
+/* processsave & processseek are called for SAVE/SEEK chunks */
+/* processneed is called for the nEED chunk; you should specify a callback
+   for this as the default behavior will be to abort processing */
+/* processunknown is called after reading each non-critical unknown chunk */
 #ifdef MNG_SUPPORT_READ
 MNG_EXT mng_retcode MNG_DECL mng_setcb_processheader (mng_handle        hHandle,
                                                       mng_processheader fProc);
@@ -481,6 +530,10 @@ MNG_EXT mng_retcode MNG_DECL mng_setcb_processsave   (mng_handle        hHandle,
                                                       mng_processsave   fProc);
 MNG_EXT mng_retcode MNG_DECL mng_setcb_processseek   (mng_handle        hHandle,
                                                       mng_processseek   fProc);
+MNG_EXT mng_retcode MNG_DECL mng_setcb_processneed   (mng_handle        hHandle,
+                                                      mng_processneed   fProc);
+MNG_EXT mng_retcode MNG_DECL mng_setcb_processunknown(mng_handle        hHandle,
+                                                      mng_processunknown fProc);
 #endif
 
 /* callbacks for display processing */
@@ -581,6 +634,8 @@ MNG_EXT mng_processheader MNG_DECL mng_getcb_processheader (mng_handle hHandle);
 MNG_EXT mng_processtext   MNG_DECL mng_getcb_processtext   (mng_handle hHandle);
 MNG_EXT mng_processsave   MNG_DECL mng_getcb_processsave   (mng_handle hHandle);
 MNG_EXT mng_processseek   MNG_DECL mng_getcb_processseek   (mng_handle hHandle);
+MNG_EXT mng_processneed   MNG_DECL mng_getcb_processneed   (mng_handle hHandle);
+MNG_EXT mng_processunknown MNG_DECL mng_getcb_processunknown (mng_handle hHandle);
 #endif
 
 /* see _setcb_ */
@@ -630,6 +685,10 @@ MNG_EXT mng_retcode MNG_DECL mng_set_bgcolor         (mng_handle        hHandle,
                                                       mng_uint16        iRed,
                                                       mng_uint16        iGreen,
                                                       mng_uint16        iBlue);
+
+/* Indicates preferred use of the bKGD chunk for PNG images */
+MNG_EXT mng_retcode MNG_DECL mng_set_usebkgd         (mng_handle        hHandle,
+                                                      mng_bool          bUseBKGD);
 
 /* Indicates storage of read chunks */
 /* only useful if you #define mng_store_chunks */
@@ -728,8 +787,10 @@ MNG_EXT mng_retcode MNG_DECL mng_set_zlib_maxidat    (mng_handle        hHandle,
 /* set to your liking; usually the defaults will suffice though! */
 /* check the documentation for IJGSRC6B for details on these parameters */
 #ifdef MNG_INCLUDE_JNG
+#ifdef MNG_INCLUDE_IJG6B
 MNG_EXT mng_retcode MNG_DECL mng_set_jpeg_dctmethod  (mng_handle        hHandle,
                                                       mngjpeg_dctmethod eJPEGdctmethod);
+#endif
 MNG_EXT mng_retcode MNG_DECL mng_set_jpeg_quality    (mng_handle        hHandle,
                                                       mng_int32         iJPEGquality);
 MNG_EXT mng_retcode MNG_DECL mng_set_jpeg_smoothing  (mng_handle        hHandle,
@@ -773,16 +834,49 @@ MNG_EXT mng_ptr     MNG_DECL mng_get_userdata        (mng_handle        hHandle)
    so they are available in the processheader callback; before that
    they are zeroed out and imagetype is set to it_unknown */
 /* this might be a good point for the app to initialize the drawing-canvas! */
-/* note that PNG and JNG files will not set the ticks thru simplicity fields! */
+/* note that some fields are only set for the first(!) header-chunk:
+   MNG/MHDR (imagetype = mng_it_mng) - ticks thru simplicity
+   PNG/IHDR (imagetype = mng_it_png) - bitdepth thru interlace
+   JNG/JHDR (imagetype = mng_it_jng) - bitdepth thru compression &
+                                       interlace thru alphainterlace */
 MNG_EXT mng_imgtype MNG_DECL mng_get_sigtype         (mng_handle        hHandle);
 MNG_EXT mng_imgtype MNG_DECL mng_get_imagetype       (mng_handle        hHandle);
 MNG_EXT mng_uint32  MNG_DECL mng_get_imagewidth      (mng_handle        hHandle);
 MNG_EXT mng_uint32  MNG_DECL mng_get_imageheight     (mng_handle        hHandle);
+
 MNG_EXT mng_uint32  MNG_DECL mng_get_ticks           (mng_handle        hHandle);
 MNG_EXT mng_uint32  MNG_DECL mng_get_framecount      (mng_handle        hHandle);
 MNG_EXT mng_uint32  MNG_DECL mng_get_layercount      (mng_handle        hHandle);
 MNG_EXT mng_uint32  MNG_DECL mng_get_playtime        (mng_handle        hHandle);
 MNG_EXT mng_uint32  MNG_DECL mng_get_simplicity      (mng_handle        hHandle);
+
+MNG_EXT mng_uint8   MNG_DECL mng_get_bitdepth        (mng_handle        hHandle);
+MNG_EXT mng_uint8   MNG_DECL mng_get_colortype       (mng_handle        hHandle);
+MNG_EXT mng_uint8   MNG_DECL mng_get_compression     (mng_handle        hHandle);
+MNG_EXT mng_uint8   MNG_DECL mng_get_filter          (mng_handle        hHandle);
+MNG_EXT mng_uint8   MNG_DECL mng_get_interlace       (mng_handle        hHandle);
+MNG_EXT mng_uint8   MNG_DECL mng_get_alphabitdepth   (mng_handle        hHandle);
+MNG_EXT mng_uint8   MNG_DECL mng_get_alphacompression(mng_handle        hHandle);
+MNG_EXT mng_uint8   MNG_DECL mng_get_alphafilter     (mng_handle        hHandle);
+MNG_EXT mng_uint8   MNG_DECL mng_get_alphainterlace  (mng_handle        hHandle);
+
+/* indicates the predicted alpha-depth required to properly display the image */
+/* gets set once the graphics header is processed and is available in the
+   processheader callback for any type of input-image (PNG, JNG or MNG) */
+/* possible values are 0,1,2,4,8,16
+   0  = no transparency required
+   1  = on/off transparency required (alpha-values are 0 or 2^bit_depth-1)
+   2+ = semi-transparency required (values will be scaled to the bitdepth of the
+                                    canvasstyle supplied by the application) */
+MNG_EXT mng_uint8   MNG_DECL mng_get_alphadepth      (mng_handle        hHandle);
+
+/* defines whether a refresh() callback is called for an interlace pass (PNG)
+   or progressive scan (JNG) */
+/* returns the interlace pass number for PNG or a fabricated pass number for JNG;
+   returns 0 in all other cases */
+/* only useful if the image_type = mng_it_png or mng_it_jng and if the image
+   is actually interlaced (PNG) or progressive (JNG) */
+MNG_EXT mng_uint8   MNG_DECL mng_get_refreshpass     (mng_handle        hHandle);
 
 /* see _set_ */
 MNG_EXT mng_uint32  MNG_DECL mng_get_canvasstyle     (mng_handle        hHandle);
@@ -793,6 +887,9 @@ MNG_EXT mng_retcode MNG_DECL mng_get_bgcolor         (mng_handle        hHandle,
                                                       mng_uint16*       iRed,
                                                       mng_uint16*       iGreen,
                                                       mng_uint16*       iBlue);
+
+/* see _set_ */
+MNG_EXT mng_bool    MNG_DECL mng_get_usebkgd         (mng_handle        hHandle);
 
 /* see _set_ */
 MNG_EXT mng_bool    MNG_DECL mng_get_storechunks     (mng_handle        hHandle);
@@ -830,8 +927,10 @@ MNG_EXT mng_uint32  MNG_DECL mng_get_zlib_maxidat    (mng_handle        hHandle)
 
 /* see _set_ */
 #ifdef MNG_INCLUDE_JNG
+#ifdef MNG_INCLUDE_IJG6B
 MNG_EXT mngjpeg_dctmethod
                     MNG_DECL mng_get_jpeg_dctmethod  (mng_handle        hHandle);
+#endif
 MNG_EXT mng_int32   MNG_DECL mng_get_jpeg_quality    (mng_handle        hHandle);
 MNG_EXT mng_int32   MNG_DECL mng_get_jpeg_smoothing  (mng_handle        hHandle);
 MNG_EXT mng_bool    MNG_DECL mng_get_jpeg_progressive(mng_handle        hHandle);
@@ -1276,6 +1375,11 @@ MNG_EXT mng_retcode MNG_DECL mng_getchunk_jdat       (mng_handle       hHandle,
                                                       mng_uint32       *iRawlen,
                                                       mng_ptr          *pRawdata);
 
+MNG_EXT mng_retcode MNG_DECL mng_getchunk_jdaa       (mng_handle       hHandle,
+                                                      mng_handle       hChunk,
+                                                      mng_uint32       *iRawlen,
+                                                      mng_ptr          *pRawdata);
+
 MNG_EXT mng_retcode MNG_DECL mng_getchunk_dhdr       (mng_handle       hHandle,
                                                       mng_handle       hChunk,
                                                       mng_uint16       *iObjectid,
@@ -1326,6 +1430,19 @@ MNG_EXT mng_retcode MNG_DECL mng_getchunk_ordr_entry (mng_handle       hHandle,
                                                       mng_uint32       iEntry,
                                                       mng_chunkid      *iChunkname,
                                                       mng_uint8        *iOrdertype);
+
+MNG_EXT mng_retcode MNG_DECL mng_getchunk_magn       (mng_handle       hHandle,
+                                                      mng_handle       hChunk,
+                                                      mng_uint16       *iFirstid,
+                                                      mng_uint16       *iLastid,
+                                                      mng_uint16       *iMethodX,
+                                                      mng_uint16       *iMX,
+                                                      mng_uint16       *iMY,
+                                                      mng_uint16       *iML,
+                                                      mng_uint16       *iMR,
+                                                      mng_uint16       *iMT,
+                                                      mng_uint16       *iMB,
+                                                      mng_uint16       *iMethodY);
 
 MNG_EXT mng_retcode MNG_DECL mng_getchunk_unknown    (mng_handle       hHandle,
                                                       mng_handle       hChunk,
@@ -1658,6 +1775,10 @@ MNG_EXT mng_retcode MNG_DECL mng_putchunk_jdat       (mng_handle       hHandle,
                                                       mng_uint32       iRawlen,
                                                       mng_ptr          pRawdata);
 
+MNG_EXT mng_retcode MNG_DECL mng_putchunk_jdaa       (mng_handle       hHandle,
+                                                      mng_uint32       iRawlen,
+                                                      mng_ptr          pRawdata);
+
 MNG_EXT mng_retcode MNG_DECL mng_putchunk_jsep       (mng_handle       hHandle);
 
 MNG_EXT mng_retcode MNG_DECL mng_putchunk_dhdr       (mng_handle       hHandle,
@@ -1706,6 +1827,18 @@ MNG_EXT mng_retcode MNG_DECL mng_putchunk_ordr_entry (mng_handle       hHandle,
                                                       mng_uint32       iEntry,
                                                       mng_chunkid      iChunkname,
                                                       mng_uint8        iOrdertype);
+
+MNG_EXT mng_retcode MNG_DECL mng_putchunk_magn       (mng_handle       hHandle,
+                                                      mng_uint16       iFirstid,
+                                                      mng_uint16       iLastid,
+                                                      mng_uint16       iMethodX,
+                                                      mng_uint16       iMX,
+                                                      mng_uint16       iMY,
+                                                      mng_uint16       iML,
+                                                      mng_uint16       iMR,
+                                                      mng_uint16       iMT,
+                                                      mng_uint16       iMB,
+                                                      mng_uint16       iMethodY);
 
 MNG_EXT mng_retcode MNG_DECL mng_putchunk_unknown    (mng_handle       hHandle,
                                                       mng_chunkid      iChunkname,
@@ -1889,6 +2022,10 @@ MNG_EXT mng_retcode MNG_DECL mng_updatemngsimplicity (mng_handle        hHandle,
 #define MNG_INVFILLMETHOD    (mng_retcode)1057 /* invalid fill_method         */
 #define MNG_OBJNOTCONCRETE   (mng_retcode)1058 /* object must be concrete     */
 #define MNG_TARGETNOALPHA    (mng_retcode)1059 /* object has no alpha-channel */
+#define MNG_MNGTOOCOMPLEX    (mng_retcode)1060 /* can't handle complexity     */
+#define MNG_UNKNOWNCRITICAL  (mng_retcode)1061 /* unknown critical chunk found*/
+#define MNG_UNSUPPORTEDNEED  (mng_retcode)1062 /* nEED requirement unsupported*/
+#define MNG_INVALIDDELTA     (mng_retcode)1063 /* Delta operation illegal     */
 
 #define MNG_INVALIDCNVSTYLE  (mng_retcode)2049 /* can't make anything of this */
 #define MNG_WRONGCHUNK       (mng_retcode)2050 /* accessing the wrong chunk   */
@@ -1984,10 +2121,13 @@ MNG_EXT mng_retcode MNG_DECL mng_updatemngsimplicity (mng_handle        hHandle,
 #define MNG_UINT_IHDR 0x49484452L
 #define MNG_UINT_IJNG 0x494a4e47L
 #define MNG_UINT_IPNG 0x49504e47L
+#define MNG_UINT_JDAA 0x4a444141L
 #define MNG_UINT_JDAT 0x4a444154L
 #define MNG_UINT_JHDR 0x4a484452L
 #define MNG_UINT_JSEP 0x4a534550L
+#define MNG_UINT_JdAA 0x4a644141L
 #define MNG_UINT_LOOP 0x4c4f4f50L
+#define MNG_UINT_MAGN 0x4d41474eL
 #define MNG_UINT_MEND 0x4d454e44L
 #define MNG_UINT_MHDR 0x4d484452L
 #define MNG_UINT_MOVE 0x4d4f5645L
@@ -2044,6 +2184,10 @@ MNG_EXT mng_retcode MNG_DECL mng_updatemngsimplicity (mng_handle        hHandle,
                                                     BASI, JHDR */
 
 #define MNG_FILTER_ADAPTIVE              0       /* IHDR, BASI, JHDR */
+#define MNG_FILTER_NO_ADAPTIVE           1
+#define MNG_FILTER_NO_DIFFERING          0
+#define MNG_FILTER_DIFFERING             0x40
+#define MNG_FILTER_MASK                  (MNG_FILTER_NO_ADAPTIVE | MNG_FILTER_DIFFERING)
 
 #define MNG_INTERLACE_NONE               0       /* IHDR, BASI, JHDR */
 #define MNG_INTERLACE_ADAM7              1

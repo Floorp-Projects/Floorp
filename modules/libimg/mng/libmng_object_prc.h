@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_object_prc.h       copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Object processing routines (definition)                    * */
 /* *                                                                        * */
@@ -34,6 +34,11 @@
 /* *             0.9.2 - 08/05/2000 - G.Juyn                                * */
 /* *             - changed file-prefixes                                    * */
 /* *                                                                        * */
+/* *             0.9.3 - 08/26/2000 - G.Juyn                                * */
+/* *             - added MAGN chunk                                         * */
+/* *             0.9.3 - 10/17/2000 - G.Juyn                                * */
+/* *             - added routine to discard "invalid" objects               * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #if defined(__BORLANDC__) && defined(MNG_STRICT_ANSI)
@@ -43,8 +48,9 @@
 #ifndef _libmng_object_prc_h_
 #define _libmng_object_prc_h_
 
-#include "libmng.h"
-#include "libmng_data.h"
+/* ************************************************************************** */
+
+mng_retcode drop_invalid_objects   (mng_datap      pData);
 
 /* ************************************************************************** */
 
@@ -135,6 +141,9 @@ mng_retcode promote_imageobject  (mng_datap  pData,
                                   mng_uint8  iBitdepth,
                                   mng_uint8  iColortype,
                                   mng_uint8  iFilltype);
+
+mng_retcode magnify_imageobject  (mng_datap  pData,
+                                  mng_imagep pImage);
 
 /* ************************************************************************** */
 
@@ -286,6 +295,18 @@ mng_retcode create_ani_pplt   (mng_datap      pData,
                                mng_uint8p     paAlphaentries,
                                mng_uint8p     paUsedentries);
 
+mng_retcode create_ani_magn   (mng_datap      pData,
+                               mng_uint16     iFirstid,
+                               mng_uint16     iLastid,
+                               mng_uint16     iMethodX,
+                               mng_uint16     iMX,
+                               mng_uint16     iMY,
+                               mng_uint16     iML,
+                               mng_uint16     iMR,
+                               mng_uint16     iMT,
+                               mng_uint16     iMB,
+                               mng_uint16     iMethodY);
+                               
 /* ************************************************************************** */
 
 mng_retcode free_ani_image    (mng_datap    pData,
@@ -340,6 +361,8 @@ mng_retcode free_ani_ipng     (mng_datap    pData,
 mng_retcode free_ani_ijng     (mng_datap    pData,
                                mng_objectp  pObject);
 mng_retcode free_ani_pplt     (mng_datap    pData,
+                               mng_objectp  pObject);
+mng_retcode free_ani_magn     (mng_datap    pData,
                                mng_objectp  pObject);
 
 /* ************************************************************************** */
@@ -396,6 +419,8 @@ mng_retcode process_ani_ipng  (mng_datap    pData,
 mng_retcode process_ani_ijng  (mng_datap    pData,
                                mng_objectp  pObject);
 mng_retcode process_ani_pplt  (mng_datap    pData,
+                               mng_objectp  pObject);
+mng_retcode process_ani_magn  (mng_datap    pData,
                                mng_objectp  pObject);
 
 /* ************************************************************************** */

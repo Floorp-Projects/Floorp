@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_chunk_prc.c        copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Chunk initialization & cleanup (implementation)            * */
 /* *                                                                        * */
@@ -30,6 +30,11 @@
 /* *             - wrapper for add_chunk() changed                          * */
 /* *             0.9.2 - 08/05/2000 - G.Juyn                                * */
 /* *             - changed file-prefixes                                    * */
+/* *                                                                        * */
+/* *             0.9.3 - 08/26/2000 - G.Juyn                                * */
+/* *             - added MAGN chunk                                         * */
+/* *             0.9.3 - 10/16/2000 - G.Juyn                                * */
+/* *             - added support for JDAA                                   * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -817,6 +822,26 @@ INIT_CHUNK_HDR (init_jhdr)
 /* ************************************************************************** */
 
 #ifdef MNG_INCLUDE_JNG
+INIT_CHUNK_HDR (init_jdaa)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_INIT_JDAA, MNG_LC_START)
+#endif
+
+  MNG_ALLOC (pData, *ppChunk, sizeof (mng_jdaa))
+  ((mng_jdaap)*ppChunk)->sHeader = *((mng_chunk_headerp)pHeader);
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_INIT_JDAA, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+#endif /* MNG_INCLUDE_JNG */
+
+/* ************************************************************************** */
+
+#ifdef MNG_INCLUDE_JNG
 INIT_CHUNK_HDR (init_jdat)
 {
 #ifdef MNG_SUPPORT_TRACE
@@ -993,6 +1018,24 @@ INIT_CHUNK_HDR (init_ordr)
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_ORDR, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+INIT_CHUNK_HDR (init_magn)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_INIT_MAGN, MNG_LC_START)
+#endif
+
+  MNG_ALLOC (pData, *ppChunk, sizeof (mng_magn))
+  ((mng_magnp)*ppChunk)->sHeader = *((mng_chunk_headerp)pHeader);
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_INIT_MAGN, MNG_LC_END)
 #endif
 
   return MNG_NOERROR;
@@ -1805,6 +1848,29 @@ FREE_CHUNK_HDR (free_jhdr)
 /* ************************************************************************** */
 
 #ifdef MNG_INCLUDE_JNG
+FREE_CHUNK_HDR (free_jdaa)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FREE_JDAA, MNG_LC_START)
+#endif
+
+  if (((mng_jdaap)pHeader)->iDatasize)
+    MNG_FREEX (pData, ((mng_jdaap)pHeader)->pData,
+                      ((mng_jdaap)pHeader)->iDatasize)
+
+  MNG_FREEX (pData, pHeader, sizeof (mng_jdaa))
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FREE_JDAA, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+#endif /* MNG_INCLUDE_JNG */
+
+/* ************************************************************************** */
+
+#ifdef MNG_INCLUDE_JNG
 FREE_CHUNK_HDR (free_jdat)
 {
 #ifdef MNG_SUPPORT_TRACE
@@ -1987,6 +2053,23 @@ FREE_CHUNK_HDR (free_ordr)
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_FREE_ORDR, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+FREE_CHUNK_HDR (free_magn)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FREE_MAGN, MNG_LC_START)
+#endif
+
+  MNG_FREEX (pData, pHeader, sizeof (mng_magn))
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FREE_MAGN, MNG_LC_END)
 #endif
 
   return MNG_NOERROR;
