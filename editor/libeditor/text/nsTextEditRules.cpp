@@ -1099,7 +1099,7 @@ nsTextEditRules::WillOutputText(nsISelection *aSelection,
     }
     else if (mBogusNode)
     { // this means there's no content, so output null string
-      aOutString->SetLength(0);
+      aOutString->Truncate();
       *aHandled = PR_TRUE;
     }
   }
@@ -1324,7 +1324,7 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection,
     PRInt32 resultingDocLength = docLength - selectionLength - oldCompStrLength;
     if (resultingDocLength >= aMaxLength) 
     {
-      aOutString->SetLength(0);
+      aOutString->Truncate();
       return res;
     }
     else
@@ -1342,7 +1342,7 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection,
 nsresult
 nsTextEditRules::ResetIMETextPWBuf()
 {
-  mPasswordIMEText.SetLength(0);
+  mPasswordIMEText.Truncate();
   return NS_OK;
 }
 
@@ -1379,7 +1379,7 @@ nsTextEditRules::EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsAString *
   // change the output to '*' only
   PRInt32 length = aOutString->Length();
   PRInt32 i;
-  aOutString->SetLength(0);
+  aOutString->Truncate();
   for (i=0; i<length; i++)
   {
     aOutString->Append(PRUnichar('*'));
