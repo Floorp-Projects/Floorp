@@ -482,5 +482,6 @@ if [ "$NECKO" ]; then
   add_makefiles <<END_NECKO_MAKEFILES
   extensions/cookie/Makefile
   extensions/cookie/tests/Makefile
+  htmlparser/robot/test/Makefile
 END_NECKO_MAKEFILES
 fi
