@@ -42,6 +42,7 @@
 #include "nsIJSNativeInitializer.h"
 #include "nsISelectElement.h"
 #include "nsISelectControlFrame.h"
+#include "nsIComboboxControlFrame.h"
 
 // Notify/query select frame for selected state
 #include "nsIFormControlFrame.h"
@@ -248,7 +249,7 @@ nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
 }
 
 NS_IMETHODIMP 
-nsHTMLOptionElement::GetSelected(PRBool* aValue)
+nsHTMLOptionElement::GetSelected(PRBool* aValue) 
 {
   nsIFormControlFrame* formControlFrame = nsnull;
   nsresult rv = GetPrimaryFrame(formControlFrame);
@@ -289,8 +290,33 @@ nsHTMLOptionElement::SetSelected(PRBool aValue)
 //NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, DefaultSelected, defaultselected)
 //NS_IMPL_INT_ATTR(nsHTMLOptionElement, Index, index)
 NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, Disabled, disabled)
-NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Label, label)
+//NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Label, label)
 NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Value, value)
+
+NS_IMETHODIMP                                                      
+nsHTMLOptionElement::GetLabel(nsString& aValue)                             
+{                                                                  
+  mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::label, aValue); 
+  return NS_OK;                                                   
+}         
+                                                         
+NS_IMETHODIMP                                                      
+nsHTMLOptionElement::SetLabel(const nsString& aValue)                       
+{                                                                  
+  nsresult result = mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::label, aValue, PR_TRUE); 
+  if (NS_SUCCEEDED(result)) {
+    nsIFormControlFrame* fcFrame = nsnull;
+    nsresult result = GetPrimaryFrame(fcFrame);
+    if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
+      nsIComboboxControlFrame* selectFrame = nsnull;
+      result = fcFrame->QueryInterface(nsIComboboxControlFrame::GetIID(),(void **) &selectFrame);
+      if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
+        selectFrame->UpdateSelection(PR_FALSE, PR_TRUE, 0);
+      }
+    }
+  }
+  return result;
+}
 
 NS_IMETHODIMP 
 nsHTMLOptionElement::GetDefaultSelected(PRBool* aDefaultSelected)
@@ -402,9 +428,11 @@ NS_IMETHODIMP
 nsHTMLOptionElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                               PRInt32& aHint) const
 {
-  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+  if (aAttribute == nsHTMLAtoms::label) {
+    aHint = NS_STYLE_HINT_REFLOW; 
+  } else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     aHint = NS_STYLE_HINT_CONTENT;
-  }
+  }  
 
   return NS_OK;
 }
