@@ -174,12 +174,6 @@ public class ScriptOrFnNode extends Node {
         }
     }
 
-    public final int getLocalCount() { return localCount; }
-
-    public final void incrementLocalCount() {
-        ++localCount;
-    }
-
     protected void finishParsing(IRFactory irFactory) { }
 
     private int encodedSourceStart;
@@ -199,7 +193,4 @@ public class ScriptOrFnNode extends Node {
     private ObjToIntMap itsVariableNames = new ObjToIntMap(11);
 
     private int varStart;               // index in list of first variable
-
-    private int localCount;
-
 }

@@ -128,7 +128,7 @@ public class IRFactory {
                               int lineno)
     {
         if (catchCond == null) {
-            catchCond = new Node(Token.TRUE);
+            catchCond = new Node(Token.EMPTY);
         }
         return new Node(Token.CATCH, (Node)createName(varName),
                                (Node)catchCond, (Node)stmts, lineno);
@@ -194,7 +194,7 @@ public class IRFactory {
     }
 
     public FunctionNode createFunction(String name) {
-        return compiler.createFunctionNode(this, name);
+        return compiler.createFunctionNode(name);
     }
 
     public Object initFunction(FunctionNode fnNode, int functionIndex,
@@ -336,28 +336,27 @@ public class IRFactory {
             return objNode;
         }
 
-        Node init = new Node(Token.ENUMINIT, objNode);
-        Node next = new Node(Token.ENUMNEXT);
-        next.putProp(Node.ENUM_PROP, init);
-        Node temp = createNewTemp(next);
-        Node cond = new Node(Token.NE);
-        cond.addChildToBack(temp);
-        cond.addChildToBack(new Node(Token.NULL));
+        Node localBlock = new Node(Token.LOCAL_BLOCK);
+
+        Node init = new Node(Token.ENUM_INIT, objNode);
+        init.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
+        Node cond = new Node(Token.ENUM_NEXT);
+        cond.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
+        Node id = new Node(Token.ENUM_ID);
+        id.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
+
         Node newBody = new Node(Token.BLOCK);
-        Node assign = (Node) createAssignment(lvalue, createUseTemp(temp));
+        Node assign = (Node) createAssignment(lvalue, id);
         newBody.addChildToBack(new Node(Token.POP, assign));
         newBody.addChildToBack((Node) body);
-        Node result = (Node) createWhile(cond, newBody, lineno);
 
-        result.addChildToFront(init);
+        Node loop = (Node) createWhile(cond, newBody, lineno);
+        loop.addChildToFront(init);
         if (type == Token.VAR)
-            result.addChildToFront(lhsNode);
+            loop.addChildToFront(lhsNode);
+        localBlock.addChildToBack(loop);
 
-        Node done = new Node(Token.ENUMDONE);
-        done.putProp(Node.ENUM_PROP, init);
-        result.addChildToBack(done);
-
-        return result;
+        return localBlock;
     }
 
     /**
@@ -403,7 +402,10 @@ public class IRFactory {
             return trynode;
         }
 
+
+        Node localBlock  = new Node(Token.LOCAL_BLOCK);
         Node.Jump pn = new Node.Jump(Token.TRY, trynode, lineno);
+        pn.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
 
         Node.Target finallyTarget = null;
         if (hasFinally) {
@@ -429,7 +431,7 @@ public class IRFactory {
 
                 try {
                         throw 3;
-                } catch (e: e instanceof Object) {
+                } catch (e if e instanceof Object) {
                         print("object");
                 } catch (e2) {
                         print(e2);
@@ -440,16 +442,12 @@ public class IRFactory {
                 try {
                         throw 3;
                 } catch (x) {
-                        o = newScope();
-                        o.e = x;
-                        with (o) {
+                        with (newCatchScope(e, x)) {
                                 if (e instanceof Object) {
                                         print("object");
                                 }
                         }
-                        o2 = newScope();
-                        o2.e2 = x;
-                        with (o2) {
+                        with (newCatchScope(e2, x)) {
                                 if (true) {
                                         print(e2);
                                 }
@@ -462,17 +460,13 @@ public class IRFactory {
             // mark it
             pn.addChildToBack(catchTarget);
 
-            // get the exception object and store it in a temp
-            Node exn = createNewLocal(new Node(Token.EMPTY));
-            pn.addChildToBack(new Node(Token.POP, exn));
-
             Node.Target endCatch = new Node.Target();
 
             // add [jsr finally?] goto end to each catch block
             // expects catchNode children to be (cond block) pairs.
             Node cb = catchNodes.getFirstChild();
+            boolean hasDefault = false;
             while (cb != null) {
-                Node catchStmt = new Node(Token.BLOCK);
                 int catchLineNo = cb.getLineno();
 
                 Node name = cb.getFirstChild();
@@ -482,36 +476,39 @@ public class IRFactory {
                 cb.removeChild(cond);
                 cb.removeChild(catchBlock);
 
-                Node newScope = createNewLocal(new Node(Token.NEWSCOPE));
-                Node initScope = new Node(Token.SETPROP, newScope,
-                                          Node.newString(name.getString()),
-                                          createUseLocal(exn));
-                catchStmt.addChildToBack(new Node(Token.POP, initScope));
-
                 catchBlock.addChildToBack(new Node(Token.LEAVEWITH));
                 Node.Jump GOTOToEndCatch = new Node.Jump(Token.GOTO);
                 GOTOToEndCatch.target = endCatch;
                 catchBlock.addChildToBack(GOTOToEndCatch);
-
-                Node ifStmt = (Node) createIf(cond, catchBlock, null, catchLineNo);
+                Node condStmt;
+                if (cond.getType() == Token.EMPTY) {
+                    condStmt = catchBlock;
+                    hasDefault = true;
+                } else {
+                    condStmt = (Node) createIf(cond, catchBlock, null,
+                                               catchLineNo);
+                }
                 // Try..catch produces "with" code in order to limit
                 // the scope of the exception object.
                 // OPT: We should be able to figure out the correct
                 //      scoping at compile-time and avoid the
                 //      runtime overhead.
-                Node withStmt = (Node) createWith(createUseLocal(newScope),
-                                                  ifStmt, catchLineNo);
-                catchStmt.addChildToBack(withStmt);
-
-                pn.addChildToBack(catchStmt);
+                Node catchScope = Node.newString(Token.CATCH_SCOPE,
+                                                 name.getString());
+                catchScope.addChildToBack(createUseLocal(localBlock));
+                Node withStmt = (Node) createWith(catchScope, condStmt,
+                                                  catchLineNo);
+                pn.addChildToBack(withStmt);
 
                 // move to next cb
                 cb = cb.getNext();
             }
-
-            // Generate code to rethrow if no catch clause was executed
-            Node rethrow = new Node(Token.THROW, createUseLocal(exn));
-            pn.addChildToBack(rethrow);
+            if (!hasDefault) {
+                // Generate code to rethrow if no catch clause was executed
+                Node rethrow = new Node(Token.THROW,
+                                        createUseLocal(localBlock));
+                pn.addChildToBack(rethrow);
+            }
 
             pn.addChildToBack(endCatch);
             // add a JSR finally if needed
@@ -527,10 +524,13 @@ public class IRFactory {
 
         if (hasFinally) {
             pn.addChildToBack(finallyTarget);
-            pn.addChildToBack(new Node(Token.FINALLY, finallyNode));
+            Node fBlock = new Node(Token.FINALLY, finallyNode);
+            fBlock.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
+            pn.addChildToBack(fBlock);
         }
         pn.addChildToBack(endTarget);
-        return pn;
+        localBlock.addChildToBack(pn);
+        return localBlock;
     }
 
     /**
@@ -558,11 +558,10 @@ public class IRFactory {
     public Object createArrayLiteral(Object obj) {
         Node array;
         array = new Node(Token.NEW, Node.newString(Token.NAME, "Array"));
-        Node temp = createNewTemp(array);
+        Node list = new Node(Token.INIT_LIST, array);
 
         Node elem = null;
         int i = 0;
-        Node comma = new Node(Token.COMMA, temp);
         for (Node cursor = ((Node) obj).getFirstChild(); cursor != null;) {
             // Move cursor to cursor.next before elem.next can be
             // altered in new Node constructor
@@ -572,10 +571,10 @@ public class IRFactory {
                 i++;
                 continue;
             }
-            Node addelem = new Node(Token.SETELEM, createUseTemp(temp),
+            Node addelem = new Node(Token.SETELEM, new Node(Token.USE_STACK),
                                     Node.newNumber(i), elem);
             i++;
-            comma.addChildToBack(addelem);
+            list.addChildToBack(addelem);
         }
 
         /*
@@ -595,16 +594,15 @@ public class IRFactory {
              * never set anything at all. */
             if (elem != null && elem.getType() == Token.UNDEFINED) {
                 Node setlength = new Node(Token.SETPROP,
-                                          createUseTemp(temp),
+                                          new Node(Token.USE_STACK),
                                           Node.newString("length"),
                                           Node.newNumber(i));
-                comma.addChildToBack(setlength);
+                list.addChildToBack(setlength);
             }
         } else {
             array.addChildToBack(Node.newNumber(i));
         }
-        comma.addChildToBack(createUseTemp(temp));
-        return comma;
+        return list;
     }
 
     /**
@@ -614,11 +612,10 @@ public class IRFactory {
      * stages don't need to know about object literals.
      */
     public Object createObjectLiteral(Object obj) {
-        Node result = new Node(Token.NEW, Node.newString(Token.NAME,
-                                                         "Object"));
-        Node temp = createNewTemp(result);
+        Node result = new Node(Token.NEW,
+                               Node.newString(Token.NAME, "Object"));
+        Node list = new Node(Token.INIT_LIST, result);
 
-        Node comma = new Node(Token.COMMA, temp);
         for (Node cursor = ((Node) obj).getFirstChild(); cursor != null;) {
             Node n = cursor;
             cursor = cursor.getNext();
@@ -628,11 +625,10 @@ public class IRFactory {
             // Move cursor before next.next can be altered in new Node
             Node next = cursor;
             cursor = cursor.getNext();
-            Node addelem = new Node(op, createUseTemp(temp), n, next);
-            comma.addChildToBack(addelem);
+            Node addelem = new Node(op, new Node(Token.USE_STACK), n, next);
+            list.addChildToBack(addelem);
         }
-        comma.addChildToBack(createUseTemp(temp));
-        return comma;
+        return list;
     }
 
     /**
@@ -685,8 +681,16 @@ public class IRFactory {
         return result;
     }
 
-    public Object createTernary(Object cond, Object ifTrue, Object ifFalse) {
-        return createIf(cond, ifTrue, ifFalse, -1);
+    public Object createCondExpr(Object condObj, Object ifTrue, Object ifFalse)
+    {
+        Node cond = (Node)condObj;
+        int condStatus = isAlwaysDefinedBoolean(cond);
+        if (condStatus == ALWAYS_TRUE_BOOLEAN) {
+            return ifTrue;
+        } else if (condStatus == ALWAYS_FALSE_BOOLEAN) {
+            return ifFalse;
+        }
+        return new Node(Token.HOOK, cond, (Node)ifTrue, (Node)ifFalse);
     }
 
     /**
@@ -762,32 +766,48 @@ public class IRFactory {
         Node childNode = (Node)child;
         int childType = childNode.getType();
 
-        if (post && !hasSideEffects(childNode)
-            && (childType == Token.NAME
-                || childType == Token.GETPROP
-                || childType == Token.GETELEM))
-        {
-            // if it's not a LHS type, createAssignment (below) will throw
-            // an exception.
-            return new Node(nodeType, childNode);
+        if (childType == Token.NAME) {
+            if (post) {
+                return new Node(nodeType, childNode);
+            }
+
+            /*
+             * Transform INC/DEC ops to +=1, -=1,
+             * expecting later optimization of all +/-=1 cases to INC, DEC.
+             */
+            Node rhs = (Node) createNumber(1.0);
+
+            String s = childNode.getString();
+            Node opLeft = Node.newString(Token.NAME, s);
+            opLeft = new Node(Token.POS, opLeft);
+
+            int opType = (nodeType == Token.INC) ? Token.ADD : Token.SUB;
+            Node op = new Node(opType, opLeft, rhs);
+            Node lvalueLeft = Node.newString(Token.BINDNAME, s);
+            return new Node(Token.SETNAME, lvalueLeft, op);
+
+        } else if (childType == Token.GETPROP || childType == Token.GETELEM) {
+            if (post) {
+                return new Node(nodeType, childNode);
+            }
+
+            /*
+             * Transform INC/DEC ops to +=1, -=1,
+             * expecting later optimization of all +/-=1 cases to INC, DEC.
+             */
+            Node rhs = (Node) createNumber(1.0);
+
+            return createAssignmentOp(nodeType == Token.INC
+                                        ? Token.ADD
+                                        : Token.SUB,
+                                      childNode,
+                                      rhs,
+                                      true);
         }
-
-        /*
-         * Transform INC/DEC ops to +=1, -=1,
-         * expecting later optimization of all +/-=1 cases to INC, DEC.
-         */
-        // we have to use Double for now, because
-        // 0.0 and 1.0 are stored as dconst_[01],
-        // and using a Float creates a stack mismatch.
-        Node rhs = (Node) createNumber(1.0);
-
-        return createAssignmentOp(nodeType == Token.INC
-                                    ? Token.ADD
-                                    : Token.SUB,
-                                  childNode,
-                                  rhs,
-                                  true,
-                                  post);
+        // TODO: This should be a ReferenceError--but that's a runtime
+        //  exception. Should we compile an exception into the code?
+        ts.reportCurrentLineError("msg.bad.lhs.assign", null);
+        return child;
     }
 
     /**
@@ -1005,12 +1025,11 @@ public class IRFactory {
 
     public Object createAssignmentOp(int assignOp, Object left, Object right)
     {
-        return createAssignmentOp(assignOp, (Node) left, (Node) right,
-                                  false, false);
+        return createAssignmentOp(assignOp, (Node)left, (Node)right, false);
     }
 
     private Node createAssignmentOp(int assignOp, Node left, Node right,
-                                    boolean tonumber, boolean postfix)
+                                    boolean tonumber)
     {
         int nodeType = left.getType();
         switch (nodeType) {
@@ -1021,18 +1040,9 @@ public class IRFactory {
             if (tonumber)
                 opLeft = new Node(Token.POS, opLeft);
 
-            if (!postfix) {
-                Node op = new Node(assignOp, opLeft, right);
-                Node lvalueLeft = Node.newString(Token.BINDNAME, s);
-                return new Node(Token.SETNAME, lvalueLeft, op);
-            } else {
-                opLeft = createNewTemp(opLeft);
-                Node op = new Node(assignOp, opLeft, right);
-                Node lvalueLeft = Node.newString(Token.BINDNAME, s);
-                Node result = new Node(Token.SETNAME, lvalueLeft, op);
-                result = new Node(Token.COMMA, result, createUseTemp(opLeft));
-                return result;
-            }
+            Node op = new Node(assignOp, opLeft, right);
+            Node lvalueLeft = Node.newString(Token.BINDNAME, s);
+            return new Node(Token.SETNAME, lvalueLeft, op);
           }
 
           case Token.GETPROP:
@@ -1041,50 +1051,15 @@ public class IRFactory {
             Node id = left.getLastChild();
 
             int type = nodeType == Token.GETPROP
-                       ? Token.SETPROP
-                       : Token.SETELEM;
+                       ? Token.SETPROP_OP
+                       : Token.SETELEM_OP;
 
-/*
-*    If the RHS expression could modify the LHS we have
-*    to construct a temporary to hold the LHS context
-*    prior to running the expression. Ditto, if the id
-*    expression has side-effects.
-*
-*    XXX If the hasSideEffects tests take too long, we
-*       could make this an optimizer-only transform
-*       and always do the temp assignment otherwise.
-*
-*/
-            Node tmp1, tmp2, opLeft;
-            if (obj.getType() != Token.NAME || id.hasChildren() ||
-                hasSideEffects(right) || hasSideEffects(id))
-            {
-                tmp1 = createNewTemp(obj);
-                Node useTmp1 = createUseTemp(tmp1);
-
-                tmp2 = createNewTemp(id);
-                Node useTmp2 = createUseTemp(tmp2);
-
-                opLeft = new Node(nodeType, useTmp1, useTmp2);
-            } else {
-                tmp1 = Node.newString(Token.NAME, obj.getString());
-                tmp2 = id.cloneNode();
-                opLeft = new Node(nodeType, obj, id);
-            }
-
-            if (tonumber)
+            Node opLeft = new Node(Token.USE_STACK);
+            if (tonumber) {
                 opLeft = new Node(Token.POS, opLeft);
-
-            if (!postfix) {
-                Node op = new Node(assignOp, opLeft, right);
-                return new Node(type, tmp1, tmp2, op);
-            } else {
-                opLeft = createNewTemp(opLeft);
-                Node op = new Node(assignOp, opLeft, right);
-                Node result = new Node(type, tmp1, tmp2, op);
-                result = new Node(Token.COMMA, result, createUseTemp(opLeft));
-                return result;
             }
+            Node op = new Node(assignOp, opLeft, right);
+            return new Node(type, obj, id, op);
           }
 
           default:
@@ -1095,45 +1070,10 @@ public class IRFactory {
         }
     }
 
-    public Node createNewTemp(Node n) {
-        int type = n.getType();
-        if (type == Token.STRING || type == Token.NUMBER) {
-            // Optimization: clone these values rather than storing
-            // and loading from a temp
-            return n;
-        }
-        return new Node(Token.NEWTEMP, n);
-    }
-
-    public Node createUseTemp(Node newTemp)
-    {
-        switch (newTemp.getType()) {
-          case Token.NEWTEMP: {
-            Node result = new Node(Token.USETEMP);
-            result.putProp(Node.TEMP_PROP, newTemp);
-            int n = newTemp.getIntProp(Node.USES_PROP, 0);
-            if (n != Integer.MAX_VALUE) {
-                newTemp.putIntProp(Node.USES_PROP, n + 1);
-            }
-            return result;
-          }
-          case Token.STRING:
-            return Node.newString(newTemp.getString());
-          case Token.NUMBER:
-            return Node.newNumber(newTemp.getDouble());
-          default:
-            throw Kit.codeBug();
-        }
-    }
-
-    public Node createNewLocal(Node n) {
-        return new Node(Token.NEWLOCAL, n);
-    }
-
-    public Node createUseLocal(Node newLocal) {
-        if (Token.NEWLOCAL != newLocal.getType()) Kit.codeBug();
-        Node result = new Node(Token.USELOCAL);
-        result.putProp(Node.LOCAL_PROP, newLocal);
+    public Node createUseLocal(Node localBlock) {
+        if (Token.LOCAL_BLOCK != localBlock.getType()) Kit.codeBug();
+        Node result = new Node(Token.LOCAL_LOAD);
+        result.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
         return result;
     }
 

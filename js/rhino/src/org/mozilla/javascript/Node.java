@@ -44,8 +44,8 @@ package org.mozilla.javascript;
  * @author Mike McCabe
  */
 
-public class Node implements Cloneable {
-
+public class Node
+{
     private static class NumberNode extends Node
     {
         NumberNode(double number)
@@ -363,10 +363,10 @@ public class Node implements Cloneable {
     }
 
     public static final int
-        ENUM_PROP         =  1,
-        FUNCTION_PROP     =  2,
-        TEMP_PROP         =  3,
-        LOCAL_PROP        =  4,
+        FUNCTION_PROP     =  1,
+        TEMP_PROP         =  2,
+        LOCAL_PROP        =  3,
+        LOCAL_BLOCK_PROP  =  4,
         FIXUPS_PROP       =  5,
         USES_PROP         =  6,
         REGEXP_PROP       =  7,
@@ -393,7 +393,6 @@ public class Node implements Cloneable {
         LASTUSE_PROP      = 14,
         ISNUMBER_PROP     = 15,
         DIRECTCALL_PROP   = 16,
-
         SPECIALCALL_PROP  = 17;
 
     public static final int    // this value of the SPECIAL_PROP_PROP specifies
@@ -415,10 +414,10 @@ public class Node implements Cloneable {
             // If Context.printTrees is false, the compiler
             // can remove all these strings.
             switch (propType) {
-                case ENUM_PROP:          return "enum";
                 case FUNCTION_PROP:      return "function";
                 case TEMP_PROP:          return "temp";
                 case LOCAL_PROP:         return "local";
+                case LOCAL_BLOCK_PROP:   return "local_block";
                 case FIXUPS_PROP:        return "fixups";
                 case USES_PROP:          return "uses";
                 case REGEXP_PROP:        return "regexp";
@@ -541,20 +540,6 @@ public class Node implements Cloneable {
         ((StringNode)this).str = s;
     }
 
-    public Node cloneNode() {
-        Node result;
-        try {
-            result = (Node) super.clone();
-            result.next = null;
-            result.first = null;
-            result.last = null;
-        }
-        catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e.getMessage());
-        }
-        return result;
-    }
-
     public String toString() {
         if (Token.printTrees) {
             StringBuffer sb = new StringBuffer(Token.name(type));
@@ -647,6 +632,9 @@ public class Node implements Cloneable {
                     break;
                   case LASTUSE_PROP :     // can't add this as it is dull
                     value = "last use property";
+                    break;
+                  case LOCAL_BLOCK_PROP :     // can't add this as it is dull
+                    value = "last local block";
                     break;
                   case SPECIAL_PROP_PROP:
                     switch (x.intValue) {

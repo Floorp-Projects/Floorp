@@ -59,10 +59,6 @@ class Optimizer
 
     // It is assumed that (NumberType | AnyType) == AnyType
 
-    Optimizer(IRFactory irFactory) {
-        this.irFactory = irFactory;
-    }
-
     void optimize(ScriptOrFnNode scriptOrFn, int optLevel)
     {
         itsOptLevel = optLevel;
@@ -80,8 +76,12 @@ class Optimizer
 
         inDirectCallFunction = theFunction.isTargetOfDirectCall();
 
-        Node[] theStatementNodes = buildStatementList(theFunction);
-        Block[] theBlocks = Block.buildBlocks(irFactory, theStatementNodes);
+        ObjArray statementsArray = new ObjArray();
+        buildStatementList_r(theFunction, statementsArray);
+        Node[] theStatementNodes = new Node[statementsArray.size()];
+        statementsArray.toArray(theStatementNodes);
+
+        Block[] theBlocks = Block.buildBlocks(theStatementNodes);
         PrintWriter pw = null;
         try {
             if (DEBUG_OPTIMIZER) {
@@ -582,7 +582,8 @@ class Optimizer
                         }
                     }
                 }
-            case Token.SETELEM : {
+            case Token.SETELEM :
+            case Token.SETELEM_OP : {
                     Node arrayBase = n.getFirstChild();
                     Node arrayIndex = arrayBase.getNext();
                     Node rValue = arrayIndex.getNext();
@@ -700,35 +701,28 @@ class Optimizer
             }
         }
     }
-
-    private static Node[] buildStatementList(FunctionNode theFunction)
+    private static void buildStatementList_r(Node node, ObjArray statements)
     {
-        ObjArray statements = new ObjArray();
-
-        PreorderNodeIterator iter = new PreorderNodeIterator();
-        for (iter.start(theFunction); !iter.done(); ) {
-            Node node = iter.getCurrent();
-            int type = node.getType();
-            if (type == Token.BLOCK
-                || type == Token.LOOP
-                || type == Token.FUNCTION)
-            {
-                iter.next();
-            } else {
-                statements.add(node);
-                iter.nextSkipSubtree();
+        int type = node.getType();
+        if (type == Token.BLOCK
+            || type == Token.LOCAL_BLOCK
+            || type == Token.LOOP
+            || type == Token.FUNCTION)
+        {
+            Node child = node.getFirstChild();
+            while (child != null) {
+                buildStatementList_r(child, statements);
+                child = child.getNext();
             }
+        } else {
+            statements.add(node);
         }
-
-        Node[] result = new Node[statements.size()];
-        statements.toArray(result);
-        return result;
     }
+
 
     private static final boolean DEBUG_OPTIMIZER = false;
     private static int debug_blockCount;
 
-    private IRFactory irFactory;
     private int itsOptLevel;
     private boolean inDirectCallFunction;
     private boolean parameterUsedInNumberContext;

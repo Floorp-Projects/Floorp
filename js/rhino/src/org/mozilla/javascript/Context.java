@@ -2052,7 +2052,7 @@ public class Context
         }
         decompiler = null; // It helps GC
 
-        tree = compiler.transform(this, irf, tree);
+        tree = compiler.transform(this, ts, tree);
 
         if (Token.printTrees) { System.out.println(tree.toStringTree(tree)); }
 

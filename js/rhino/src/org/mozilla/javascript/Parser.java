@@ -944,7 +944,7 @@ class Parser {
             mustMatchToken(ts, Token.COLON, "msg.no.colon.cond");
             decompiler.addToken(Token.COLON);
             ifFalse = assignExpr(ts, inForInit);
-            return nf.createTernary(pn, ifTrue, ifFalse);
+            return nf.createCondExpr(pn, ifTrue, ifFalse);
         }
 
         return pn;

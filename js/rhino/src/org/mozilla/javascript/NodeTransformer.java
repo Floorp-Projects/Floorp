@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Norris Boyd
+ * Igor Bukanov
  * Roger Lawrence
  * Mike McCabe
  *
@@ -46,43 +47,50 @@ package org.mozilla.javascript;
 
 public class NodeTransformer {
 
-    public NodeTransformer(IRFactory irFactory) {
-        this.irFactory = irFactory;
+    public NodeTransformer(TokenStream ts) {
+        this.ts = ts;
     }
 
-    /**
-     * Return new instance of this class. So that derived classes
-     * can override methods of the transformer.
-     */
-    protected NodeTransformer newInstance() {
-        return new NodeTransformer(irFactory);
+    public final void transform(ScriptOrFnNode tree)
+    {
+        transformCompilationUnit(tree);
+        for (int i = 0; i != tree.getFunctionCount(); ++i) {
+            FunctionNode fn = tree.getFunctionNode(i);
+            transform(fn);
+        }
     }
 
-    public void transform(ScriptOrFnNode tree)
+    private void transformCompilationUnit(ScriptOrFnNode tree)
     {
         loops = new ObjArray();
         loopEnds = new ObjArray();
-        inFunction = tree.getType() == Token.FUNCTION;
-
+        inFunction = (tree.getType() == Token.FUNCTION);
         // to save against upchecks if no finally blocks are used.
-        boolean hasFinally = false;
+        hasFinally = false;
+        transformCompilationUnit_r(tree, tree);
+    }
 
-        PreorderNodeIterator iter = new PreorderNodeIterator();
-        for (iter.start(tree); !iter.done(); iter.next()) {
-            Node node = iter.getCurrent();
+    private void transformCompilationUnit_r(final ScriptOrFnNode tree,
+                                            final Node parent)
+    {
+        Node node = null;
+      siblingLoop:
+        for (;;) {
+            Node previous = null;
+            if (node == null) {
+                node = parent.getFirstChild();
+            } else {
+                previous = node;
+                node = node.getNext();
+            }
+            if (node == null) {
+                break;
+            }
+
             int type = node.getType();
 
           typeswitch:
             switch (type) {
-
-              case Token.FUNCTION:
-                if (node != tree) {
-                    int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
-                    FunctionNode fnNode = tree.getFunctionNode(fnIndex);
-                    NodeTransformer inner = newInstance();
-                    inner.transform(fnNode);
-                }
-                break;
 
               case Token.LABEL:
               {
@@ -108,7 +116,6 @@ public class NodeTransformer {
                  * right target.
                  */
                 Node.Target breakTarget = new Node.Target();
-                Node parent = iter.getCurrentParent();
                 Node next = node.getNext();
                 while (next != null &&
                        (next.getType() == Token.LABEL ||
@@ -120,6 +127,12 @@ public class NodeTransformer {
                 labelNode.target = breakTarget;
                 if (next.getType() == Token.LOOP) {
                     labelNode.setContinue(((Node.Jump)next).getContinue());
+                } else if (next.getType() == Token.LOCAL_BLOCK) {
+                    // check for "for (in)" loop that is wrapped in local_block
+                    Node child = next.getFirstChild();
+                    if (child != null && child.getType() == Token.LOOP) {
+                        labelNode.setContinue(((Node.Jump)child).getContinue());
+                    }
                 }
 
                 loops.push(node);
@@ -131,7 +144,6 @@ public class NodeTransformer {
               case Token.SWITCH:
               {
                 Node.Target breakTarget = new Node.Target();
-                Node parent = iter.getCurrentParent();
                 parent.addChildAfter(breakTarget, node);
 
                 // make all children siblings except for selector
@@ -165,10 +177,6 @@ public class NodeTransformer {
                 break;
               }
 
-              case Token.NEWLOCAL :
-                  tree.incrementLocalCount();
-                break;
-
               case Token.LOOP:
                 loops.push(node);
                 loopEnds.push(((Node.Jump)node).target);
@@ -183,7 +191,7 @@ public class NodeTransformer {
                 loops.push(node);
                 Node leave = node.getNext();
                 if (leave.getType() != Token.LEAVEWITH) {
-                    throw new RuntimeException("Unexpected tree");
+                    Kit.codeBug();
                 }
                 loopEnds.push(leave);
                 break;
@@ -198,7 +206,6 @@ public class NodeTransformer {
                     loops.push(node);
                     loopEnds.push(finallytarget);
                 }
-                tree.incrementLocalCount();
                 break;
               }
 
@@ -221,18 +228,36 @@ public class NodeTransformer {
                  */
                 if (!hasFinally)
                     break;     // skip the whole mess.
-
+                Node child = node.getFirstChild();
+                boolean inserted = false;
                 for (int i=loops.size()-1; i >= 0; i--) {
                     Node n = (Node) loops.get(i);
                     int elemtype = n.getType();
-                    if (elemtype == Token.TRY) {
-                        Node.Jump jsrnode = new Node.Jump(Token.JSR);
-                        Node.Target jsrtarget = ((Node.Jump)n).getFinally();
-                        jsrnode.target = jsrtarget;
-                        iter.addBeforeCurrent(jsrnode);
-                    } else if (elemtype == Token.WITH) {
-                        Node leave = new Node(Token.LEAVEWITH);
-                        iter.addBeforeCurrent(leave);
+                    if (elemtype == Token.TRY || elemtype == Token.WITH) {
+                        if (!inserted) {
+                            inserted = true;
+                            if (child != null) {
+                                node.setType(Token.POPV);
+                                // process children now as node will be
+                                // changed to point to inserted RETURN_POPV
+                                transformCompilationUnit_r(tree, node);
+                                Node retPopv = new Node(Token.RETURN_POPV);
+                                parent.addChildAfter(retPopv, node);
+                                previous = node;
+                                node = retPopv;
+                            }
+                        }
+                        Node unwind;
+                        if (elemtype == Token.TRY) {
+                            Node.Jump jsrnode = new Node.Jump(Token.JSR);
+                            Node.Target jsrtarget = ((Node.Jump)n).getFinally();
+                            jsrnode.target = jsrtarget;
+                            unwind = jsrnode;
+                        } else {
+                            unwind = new Node(Token.LEAVEWITH);
+                        }
+                        previous = addBeforeCurrent(parent, previous, node,
+                                                    unwind);
                     }
                 }
                 break;
@@ -251,12 +276,14 @@ public class NodeTransformer {
                     int elemtype = n.getType();
                     if (elemtype == Token.WITH) {
                         Node leave = new Node(Token.LEAVEWITH);
-                        iter.addBeforeCurrent(leave);
+                        previous = addBeforeCurrent(parent, previous, node,
+                                                    leave);
                     } else if (elemtype == Token.TRY) {
                         Node.Jump tryNode = (Node.Jump)n;
                         Node.Jump jsrFinally = new Node.Jump(Token.JSR);
                         jsrFinally.target = tryNode.getFinally();
-                        iter.addBeforeCurrent(jsrFinally);
+                        previous = addBeforeCurrent(parent, previous, node,
+                                                    jsrFinally);
                     } else if (elemtype == Token.LABEL) {
                         if (label != null) {
                             Node.Jump labelNode = (Node.Jump)n;
@@ -347,16 +374,18 @@ public class NodeTransformer {
                     // Move cursor to next before createAssignment get chance
                     // to change n.next
                     Node n = cursor;
+                    if (n.getType() != Token.NAME) Kit.codeBug();
                     cursor = cursor.getNext();
                     if (!n.hasChildren())
                         continue;
                     Node init = n.getFirstChild();
                     n.removeChild(init);
-                    Node asn = (Node)irFactory.createAssignment(n, init);
-                    Node pop = new Node(Token.POP, asn, node.getLineno());
+                    n.setType(Token.BINDNAME);
+                    n = new Node(Token.SETNAME, n, init);
+                    Node pop = new Node(Token.POP, n, node.getLineno());
                     result.addChildToBack(pop);
                 }
-                iter.replaceCurrent(result);
+                node = replaceCurrent(parent, previous, node, result);
                 break;
               }
 
@@ -381,7 +410,7 @@ public class NodeTransformer {
                     } else {
                         // Local variables are by definition permanent
                         Node n = new Node(Token.FALSE);
-                        iter.replaceCurrent(n);
+                        node = replaceCurrent(parent, previous, node, n);
                     }
                 }
                 break;
@@ -419,6 +448,8 @@ public class NodeTransformer {
                 break;
               }
             }
+
+            transformCompilationUnit_r(tree, node);
         }
     }
 
@@ -426,84 +457,6 @@ public class NodeTransformer {
     }
 
     protected void visitCall(Node node, ScriptOrFnNode tree) {
-        /*
-         * For
-         *      Call(GetProp(a, b), c, d)   // or GetElem...
-         * we wish to evaluate as
-         *      Call(GetProp(tmp=a, b), tmp, c, d)
-         *
-         * for
-         *      Call(Name("a"), b, c)
-         * we wish to evaluate as
-         *      Call(GetProp(tmp=GetBase("a"), "a"), tmp, b, c)
-         *
-         * and for
-         *      Call(a, b, c);
-         * we wish to evaluate as
-         *      Call(tmp=a, Parent(tmp), c, d)
-         */
-        Node left = node.getFirstChild();
-        // count the arguments
-        int argCount = 0;
-        Node arg = left.getNext();
-        while (arg != null) {
-            arg = arg.getNext();
-            argCount++;
-        }
-        boolean addGetThis = false;
-        if (left.getType() == Token.NAME) {
-            String name = left.getString();
-            if (inFunction && tree.hasParamOrVar(name)
-                && !inWithStatement())
-            {
-                // call to a var. Transform to Call(GetVar("a"), b, c)
-                left.setType(Token.GETVAR);
-                // fall through to code to add GetParent
-            } else {
-                // transform to Call(GetProp(GetBase("a"), "a"), b, c)
-
-                node.removeChild(left);
-                left.setType(Token.GETBASE);
-                Node str = left.cloneNode();
-                str.setType(Token.STRING);
-                Node getProp = new Node(Token.GETPROP, left, str);
-                node.addChildToFront(getProp);
-                left = getProp;
-
-                // Conditionally set a flag to add a GETTHIS node.
-                // The getThis entry in the runtime will take a
-                // Scriptable object intended to be used as a 'this'
-                // and make sure that it is neither a With object or
-                // an activation object.
-                // Executing getThis requires at least two instanceof
-                // tests, so we only include it if we are currently
-                // inside a 'with' statement, or if we are executing
-                // a script (to protect against an eval inside a with).
-                addGetThis = inWithStatement() || !inFunction;
-                // fall through to GETPROP code
-            }
-        }
-        if (left.getType() != Token.GETPROP &&
-            left.getType() != Token.GETELEM)
-        {
-            node.removeChild(left);
-            Node tmp = irFactory.createNewTemp(left);
-            Node use = irFactory.createUseTemp(tmp);
-            use.putProp(Node.TEMP_PROP, tmp);
-            Node parent = new Node(Token.PARENT, use);
-            node.addChildToFront(parent);
-            node.addChildToFront(tmp);
-            return;
-        }
-        Node leftLeft = left.getFirstChild();
-        left.removeChild(leftLeft);
-        Node tmp = irFactory.createNewTemp(leftLeft);
-        left.addChildToFront(tmp);
-        Node use = irFactory.createUseTemp(tmp);
-        use.putProp(Node.TEMP_PROP, tmp);
-        if (addGetThis)
-            use = new Node(Token.GETTHIS, use);
-        node.addChildAfter(use, left);
     }
 
     protected boolean inWithStatement() {
@@ -519,7 +472,8 @@ public class NodeTransformer {
      * Return true if the node is a call to a function that requires
      * access to the enclosing activation object.
      */
-    private int getSpecialCallType(Node tree, Node node) {
+    private static int getSpecialCallType(Node tree, Node node)
+    {
         Node left = node.getFirstChild();
         int type = Node.NON_SPECIALCALL;
         if (left.getType() == Token.NAME) {
@@ -539,10 +493,39 @@ public class NodeTransformer {
         }
         if (type != Node.NON_SPECIALCALL) {
             // Calls to these functions require activation objects.
-            if (inFunction)
+            if (tree.getType() == Token.FUNCTION)
                 ((FunctionNode) tree).setRequiresActivation(true);
         }
         return type;
+    }
+
+    private static Node addBeforeCurrent(Node parent, Node previous,
+                                         Node current, Node toAdd)
+    {
+        if (previous == null) {
+            if (!(current == parent.getFirstChild())) Kit.codeBug();
+            parent.addChildToFront(toAdd);
+        } else {
+            if (!(current == previous.getNext())) Kit.codeBug();
+            parent.addChildAfter(toAdd, previous);
+        }
+        return toAdd;
+    }
+
+    private static Node replaceCurrent(Node parent, Node previous,
+                                       Node current, Node replacement)
+    {
+        if (previous == null) {
+            if (!(current == parent.getFirstChild())) Kit.codeBug();
+            parent.replaceChild(current, replacement);
+        } else if (previous.next == current) {
+            // Check cachedPrev.next == current is necessary due to possible
+            // tree mutations
+            parent.replaceChildAfter(previous, replacement);
+        } else {
+            parent.replaceChild(current, replacement);
+        }
+        return replacement;
     }
 
     private void
@@ -551,13 +534,15 @@ public class NodeTransformer {
     {
         int lineno = stmt.getLineno();
         String sourceName = tree.getSourceName();
-        irFactory.ts.reportSyntaxError(true, messageId, messageArgs,
+        ts.reportSyntaxError(true, messageId, messageArgs,
                                        sourceName, lineno, null, 0);
     }
 
     private ObjArray loops;
     private ObjArray loopEnds;
     private boolean inFunction;
-    protected IRFactory irFactory;
+    private boolean hasFinally;
+
+    private TokenStream ts;
 }
 

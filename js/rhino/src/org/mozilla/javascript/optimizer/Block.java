@@ -46,10 +46,8 @@ import java.io.StringWriter;
 
 public class Block {
 
-    public Block(IRFactory irFactory, int startNodeIndex, int endNodeIndex,
-                 Node[] statementNodes)
+    public Block(int startNodeIndex, int endNodeIndex, Node[] statementNodes)
     {
-        itsIRFactory = irFactory;
         itsStartNodeIndex = startNodeIndex;
         itsEndNodeIndex = endNodeIndex;
         itsStatementNodes = statementNodes;
@@ -63,8 +61,7 @@ public class Block {
     public Block[] getPredecessorList() { return itsPredecessors; }
     public Block[] getSuccessorList()   { return itsSuccessors; }
 
-    public static Block[]
-    buildBlocks(IRFactory irFactory, Node[] statementNodes)
+    public static Block[] buildBlocks(Node[] statementNodes)
     {
             // a mapping from each target node to the block it begins
         Hashtable theTargetBlocks = new Hashtable();
@@ -78,8 +75,7 @@ public class Block {
                 case Token.TARGET :
                     {
                         if (i != beginNodeIndex) {
-                            FatBlock fb = new FatBlock(irFactory,
-                                                       beginNodeIndex, i - 1,
+                            FatBlock fb = new FatBlock(beginNodeIndex, i - 1,
                                                        statementNodes);
                             if (statementNodes[beginNodeIndex].getType()
                                                         == Token.TARGET)
@@ -94,8 +90,7 @@ public class Block {
                 case Token.IFEQ :
                 case Token.GOTO :
                     {
-                        FatBlock fb = new FatBlock(irFactory,
-                                                   beginNodeIndex, i,
+                        FatBlock fb = new FatBlock(beginNodeIndex, i,
                                                    statementNodes);
                         if (statementNodes[beginNodeIndex].getType()
                                                        == Token.TARGET)
@@ -109,8 +104,7 @@ public class Block {
         }
 
         if ((beginNodeIndex != statementNodes.length)) {
-            FatBlock fb = new FatBlock(irFactory,
-                                       beginNodeIndex,
+            FatBlock fb = new FatBlock(beginNodeIndex,
                                        statementNodes.length - 1,
                                        statementNodes);
             if (statementNodes[beginNodeIndex].getType() == Token.TARGET)
@@ -464,7 +458,8 @@ public class Block {
                 }
                 break;
 
-            case Token.SETPROP : {
+            case Token.SETPROP :
+            case Token.SETPROP_OP : {
                     Node baseChild = n.getFirstChild();
                     Node nameChild = baseChild.getNext();
                     Node rhs = nameChild.getNext();
@@ -525,7 +520,8 @@ public class Block {
                             theCSETable.clear();
                 }
                 break;
-            case Token.SETPROP : {
+            case Token.SETPROP :
+            case Token.SETPROP_OP : {
                     Node baseChild = n.getFirstChild();
                     Node nameChild = baseChild.getNext();
                     Node rhs = nameChild.getNext();
@@ -564,8 +560,7 @@ public class Block {
                                         CSEHolder cseHolder = (CSEHolder)cse;
                                         Node nextChild = cseHolder.getPropChild.getNext();
                                         cseHolder.getPropParent.removeChild(cseHolder.getPropChild);
-                                        theCSE = itsIRFactory.createNewLocal(cseHolder.getPropChild);
-                                        theFunction.incrementLocalCount();
+                                        theCSE = OptTransformer.createNewTemp(cseHolder.getPropChild);
                                         if (nextChild == null)
                                             cseHolder.getPropParent.addChildToBack(theCSE);
                                         else
@@ -576,7 +571,7 @@ public class Block {
                                         theCSE = (Node)cse;
                                     Node nextChild = n.getNext();
                                     parent.removeChild(n);
-                                    Node cseUse = itsIRFactory.createUseLocal(theCSE);
+                                    Node cseUse = OptTransformer.createUseTemp(theCSE);
                                     if (nextChild == null)
                                         parent.addChildToBack(cseUse);
                                     else
@@ -587,7 +582,8 @@ public class Block {
                     }
                 }
                 break;
-            case Token.SETELEM : {
+            case Token.SETELEM :
+            case Token.SETELEM_OP : {
                     Node lhsBase = n.getFirstChild();
                     Node lhsIndex = lhsBase.getNext();
                     Node rhs = lhsIndex.getNext();
@@ -666,8 +662,6 @@ public class Block {
 
     public void setSuccessorList(Block[] b)    { itsSuccessors = b; }
     public void setPredecessorList(Block[] b)  { itsPredecessors = b; }
-
-    private IRFactory itsIRFactory;
 
         // all the Blocks that come immediately after this
     private Block[] itsSuccessors;
