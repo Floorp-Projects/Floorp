@@ -155,7 +155,6 @@ static PRInt64 PR_CALLBACK FileAvailable64(PRFileDesc *fd)
     return result;
 }
 
-#ifndef WIN32
 static PRInt32 PR_CALLBACK PipeAvailable(PRFileDesc *fd)
 {
 	PRInt32 rv;
@@ -169,7 +168,15 @@ static PRInt64 PR_CALLBACK PipeAvailable64(PRFileDesc *fd)
     LL_I2L(rv, _PR_MD_PIPEAVAILABLE(fd));
 	return rv;		
 }
+
+static PRStatus PR_CALLBACK PipeSync(PRFileDesc *fd)
+{
+#if defined(XP_MAC)
+#pragma unused (fd)
 #endif
+
+	return PR_SUCCESS;
+}
 
 static PRStatus PR_CALLBACK FileInfo(PRFileDesc *fd, PRFileInfo *info)
 {
@@ -283,14 +290,9 @@ static PRIOMethods _pr_pipeMethods = {
     FileClose,
     FileRead,
     FileWrite,
-#ifdef WIN32
-    FileAvailable,
-    FileAvailable64,
-#else
     PipeAvailable,
     PipeAvailable64,
-#endif
-    FileSync,
+    PipeSync,
     (PRSeekFN)_PR_InvalidInt,
     (PRSeek64FN)_PR_InvalidInt64,
     (PRFileInfoFN)_PR_InvalidStatus,
@@ -321,6 +323,11 @@ static PRIOMethods _pr_pipeMethods = {
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt
 };
+
+PR_IMPLEMENT(const PRIOMethods*) PR_GetPipeMethods(void)
+{
+    return &_pr_pipeMethods;
+}
 
 PR_IMPLEMENT(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode)
 {

@@ -186,11 +186,6 @@ struct _PT_Notified
 typedef struct PTDebug
 {
     PRTime timeStarted;
-    PRUintn predictionsFoiled;
-    PRUintn pollingListMax;
-    PRUintn continuationsServed;
-    PRUintn recyclesNeeded;
-    PRUintn quiescentIO;
     PRUintn locks_created, locks_destroyed;
     PRUintn locks_acquired, locks_released;
     PRUintn cvars_created, cvars_destroyed;
@@ -1421,9 +1416,7 @@ struct PRThread {
 #if defined(_PR_PTHREADS)
     pthread_t id;                   /* pthread identifier for the thread */
     PRBool okToDelete;              /* ok to delete the PRThread struct? */
-    PRCondVar *io_cv;               /* a condition used to run i/o */
     PRCondVar *waiting;             /* where the thread is waiting | NULL */
-	PRIntn io_tq_index;             /* the io-queue index for this thread */
     void *sp;                       /* recorded sp for garbage collection */
     PRThread *next, *prev;          /* simple linked list of all threads */
     PRUint32 suspend;               /* used to store suspend and resume flags */
@@ -1549,35 +1542,7 @@ struct PRFilePrivate {
     PRFileDesc *next;
     PRIntn lockCount;
     _MDFileDesc md;
-#ifdef _PR_PTHREADS
-    PRIntn eventMask[1];   /* An array of _pt_tq_count bitmasks.
-                            * eventMask[i] is only accessed by
-                            * the i-th i/o continuation thread.
-                            * A 0 in a bitmask means the event
-                            * should be igored in the revents
-                            * bitmask returned by poll.
-                            *
-                            * poll's revents bitmask is a short,
-                            * but we need to declare eventMask
-                            * as an array of PRIntn's so that
-                            * each bitmask can be updated
-                            * individually without disturbing
-                            * adjacent memory.  Only the lower
-                            * 16 bits of each PRIntn are used. */
-#endif
-/* IMPORTANT: eventMask MUST BE THE LAST FIELD OF THIS STRUCTURE */
 };
-
-/*
- * The actual size of the PRFilePrivate structure,
- * including the eventMask array at the end
- */
-#ifdef _PR_PTHREADS
-extern PRIntn _pt_tq_count;
-#define PRFILEPRIVATE_SIZE (sizeof(PRFilePrivate) + (_pt_tq_count-1) * sizeof(PRIntn))
-#else
-#define PRFILEPRIVATE_SIZE sizeof(PRFilePrivate)
-#endif
 
 struct PRDir {
     PRDirEntry d;
