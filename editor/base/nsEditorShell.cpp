@@ -76,8 +76,7 @@
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 
-#include "nsIFileWidget.h"
-#include "nsFileSpec.h"
+#include "nsIFilePicker.h"
 #include "nsIFindComponent.h"
 #include "nsIPrompt.h"
 #include "nsICommonDialogs.h"
@@ -137,22 +136,19 @@
 #include "nsISupportsArray.h"
 
 /* Define Class IDs */
-static NS_DEFINE_IID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kHTMLEditorCID,            NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
-static NS_DEFINE_IID(kCFileWidgetCID,           NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCommonDialogsCID,         NS_CommonDialog_CID );
 static NS_DEFINE_CID(kDialogParamBlockCID,      NS_DialogParamBlock_CID);
 static NS_DEFINE_CID(kPrefServiceCID,           NS_PREF_CID);
 static NS_DEFINE_CID(kChromeRegistryCID,        NS_CHROMEREGISTRY_CID);
-
-/* Define Interface IDs */
-static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kStandardURLCID,           NS_STANDARDURL_CID);
 
 #define APP_DEBUG 0 
 
 #define EDITOR_BUNDLE_URL "chrome://editor/locale/editor.properties"
+#define EDITOR_DEFAULT_DIR_PREF "editor.default.dir"
 
 enum {
   eEditorController,
@@ -558,50 +554,31 @@ nsEditorShell::PrepareDocumentForEditing(nsIDOMWindow* aDOMWindow, nsIURI *aUrl)
   // get the URL of the page we are editing
   if (aUrl)
   {
-    char* pageURLString = nsnull;                                               
-    char* pageScheme = nsnull;                                                  
-    aUrl->GetScheme(&pageScheme);                                               
-    aUrl->GetSpec(&pageURLString);
+    nsXPIDLCString  pageScheme;                                               
+    aUrl->GetScheme(getter_Copies(pageScheme));
 
-    // Truncate the URL name at "#" named anchor and "?" query appendages
-    char* temp = pageURLString;
-    while (temp && *temp)
+    nsCAutoString   schemeStr(pageScheme);
+   
+    // if this is a file URL of a file that exists locally, we'll stash the nsIFile
+    // in the disk document, so that later saves save back to the same file.
+    nsCOMPtr<nsIFileURL> pageFileURL(do_QueryInterface(aUrl));
+    if (schemeStr.EqualsIgnoreCase("file") && pageFileURL)
     {
-      if ( *temp == '#' || *temp == '?')
-        *temp = '\0';
-      else
-        temp++;
-    }
-
-#if DEBUG
-    printf("PrepareDocumentForEditing: Editor is editing %s\n", pageURLString ? pageURLString : "");
-#endif
-
-     // only save the file spec if this is a local file, and is not              
-     // about:blank                                                              
-     if (nsCRT::strncmp(pageScheme, "file", 4) == 0 &&                           
-         nsCRT::strncmp(pageURLString,"about:blank", 11) != 0)                   
-    {
-      // Clutzy method of converting URL to local file format
-      // nsIFileSpec is going away --  WE NEED TO REWRITE nsIDiskDocument!
-      nsFileURL    pageURL(pageURLString);
-      nsFileSpec   pageSpec(pageURL);
-
-      nsCOMPtr<nsIDOMDocument>  domDoc;
-      editor->GetDocument(getter_AddRefs(domDoc));
+      nsCOMPtr<nsIFile> pageFile;
+      pageFileURL->GetFile(getter_AddRefs(pageFile));
     
-      if (domDoc)
+      PRBool  fileExists;
+      if (pageFile && NS_SUCCEEDED(pageFile->Exists(&fileExists)) && fileExists)
       {
-        nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(domDoc);
+        nsCOMPtr<nsIDOMDocument>  domDoc;
+        editor->GetDocument(getter_AddRefs(domDoc));
+        nsCOMPtr<nsIDiskDocument> diskDoc(do_QueryInterface(domDoc));
         if (diskDoc)
-          diskDoc->InitDiskDocument(&pageSpec);
+          diskDoc->InitDiskDocument(pageFile);
       }
     }
-    if (pageURLString)
-      nsCRT::free(pageURLString);
-    if (pageScheme)
-      nsCRT::free(pageScheme);
   }
+
   // Set the editor-specific Window caption
   UpdateWindowTitle();
 
@@ -1671,16 +1648,28 @@ nsEditorShell::TransferDocumentStateListeners()
 NS_IMETHODIMP
 nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWindowInternal* inCheckWindow, PRBool *aDidFind)
 {
-  if (!inCheckWindow) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER((inCheckWindow && aDidFind));
+  
   *aDidFind = PR_FALSE;
   
-
-  // get an nsFileSpec from the URL
-  // This assumes inFileURL is "file://" format
-  nsAutoString fileURLString(inFileURL);
-  nsFileURL    fileURL(fileURLString);
-  nsFileSpec   fileSpec(fileURL);
-
+  
+  // It's really hard to compare nsIFiles with file URLs; there seems to be
+  // a lot of work here.  Ideally, we should be able to use nsIFile::GetURL,
+  // but it is only implemented on Windows.
+  nsCAutoString  fileURL; fileURL.AssignWithConversion(inFileURL);
+  
+  // make a temp URL for testing against
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIFileURL> tempFileURL(do_CreateInstance(kStandardURLCID, &rv));
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = tempFileURL->SetSpec(fileURL.get());
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIFile> urlFile;
+  rv = tempFileURL->GetFile(getter_AddRefs(urlFile));
+  if (NS_FAILED(rv)) return rv;
+  
   nsCOMPtr<nsIDOMWindowInternal> contentWindow;
   inCheckWindow->Get_content(getter_AddRefs(contentWindow));
   if (contentWindow)
@@ -1688,19 +1677,16 @@ nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWind
     // get the content doc
     nsCOMPtr<nsIDOMDocument> contentDoc;          
     contentWindow->GetDocument(getter_AddRefs(contentDoc));
-    if (contentDoc)
+    nsCOMPtr<nsIDiskDocument> diskDoc(do_QueryInterface(contentDoc));   // safe with NULL contentDoc
+    if (diskDoc)
     {
-      nsCOMPtr<nsIDiskDocument> diskDoc(do_QueryInterface(contentDoc));
-      if (diskDoc)
+      nsCOMPtr<nsIFile> docFileSpec;
+      if (NS_SUCCEEDED(diskDoc->GetFileSpec(getter_AddRefs(docFileSpec))) && docFileSpec)
       {
-        nsFileSpec docFileSpec;
-        if (NS_SUCCEEDED(diskDoc->GetFileSpec(docFileSpec)))
+        PRBool    isSameFile;          
+        if (NS_SUCCEEDED(docFileSpec->Equals(urlFile, &isSameFile)) && isSameFile)
         {
-          // is this the filespec we are looking for?
-          if (docFileSpec == fileSpec)
-          {
-            *aDidFind = PR_TRUE;
-          }
+          *aDidFind = PR_TRUE;
         }
       }
     }
@@ -1734,11 +1720,10 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
           return NS_ERROR_NO_INTERFACE;
 
         // find out if the doc already has a fileSpec associated with it.
-        nsFileSpec    docFileSpec;
-        PRBool noFileSpec = (diskDoc->GetFileSpec(docFileSpec) == NS_ERROR_NOT_INITIALIZED);
+        nsCOMPtr<nsIFile>    docFile;
+        PRBool noFileSpec = (diskDoc->GetFileSpec(getter_AddRefs(docFile)) == NS_ERROR_NOT_INITIALIZED);
         PRBool mustShowFileDialog = saveAs || noFileSpec;
         PRBool replacing = !saveAs;
-
         
         // Get existing document title
         nsAutoString title;
@@ -1787,54 +1772,24 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             SetDocumentTitle(title.GetUnicode());
           }
 
-// #if 0 Replace this with nsIFilePicker code 
-
-          nsCOMPtr<nsIFileWidget>  fileWidget;
-          res = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, 
-                                                   NS_GET_IID(nsIFileWidget), 
-                                                   getter_AddRefs(fileWidget));
-          if (NS_SUCCEEDED(res) && fileWidget)
+          nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1", &res);
+          if (filePicker)
           {
+            nsAutoString fileName;
+
             nsAutoString  promptString;
             GetBundleString(NS_LITERAL_STRING("SaveDocumentAs"), promptString);
 
-            nsString* titles = nsnull;
-            nsString* filters = nsnull;
-            nsString* nextTitle;
-            nsString* nextFilter;
-            nsAutoString HTMLFiles;
-            nsAutoString TextFiles;
-            nsAutoString fileName;
-            nsFileSpec parentPath;
-
-            titles = new nsString[3];
-            if (!titles)
-              return NS_ERROR_OUT_OF_MEMORY;
-
-            filters = new nsString[3];
-            if (!filters)
-            {
-              delete [] titles;
-              return NS_ERROR_OUT_OF_MEMORY;
-            }
-            nextTitle = titles;
-            nextFilter = filters;
-            // The names of the file types are localizable
-            GetBundleString(NS_LITERAL_STRING("HTMLFiles"), HTMLFiles);
-            GetBundleString(NS_LITERAL_STRING("TextFiles"), TextFiles);
-            if (! (HTMLFiles.Length() == 0 || TextFiles.Length() == 0))
-            {
-              nsAutoString allFilesStr;
-              GetBundleString(NS_LITERAL_STRING("AllFiles"), allFilesStr);
-              
-            *nextTitle++ = HTMLFiles;
-            (*nextFilter++).AssignWithConversion("*.htm; *.html; *.shtml");
-            *nextTitle++ = TextFiles;
-            (*nextFilter++).AssignWithConversion("*.txt");
-            *nextTitle++ = allFilesStr;
-            (*nextFilter++).AssignWithConversion("*.*");
-            fileWidget->SetFilterList(3, titles, filters);
-            }
+            // Initialize nsIFilePicker
+            nsCOMPtr<nsIDOMWindowInternal> parentWindow(do_QueryReferent(mContentWindow));
+            res = filePicker->Init(parentWindow, promptString.GetUnicode(), nsIFilePicker::modeSave);
+            if (NS_FAILED(res))
+              return res;
+            
+            // append in order so that HTML comes first and is default. test me on windows
+            filePicker->AppendFilters(nsIFilePicker::filterHTML);
+            filePicker->AppendFilters(nsIFilePicker::filterText);
+            filePicker->AppendFilters(nsIFilePicker::filterAll);
             
             if (noFileSpec)
             {
@@ -1891,71 +1846,75 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
                 title.StripChar(quote);
 
                 //Replace "bad" filename characteres with "_"
-                PRUnichar space = (PRUnichar)' ';
-                PRUnichar dot = (PRUnichar)'.';
-                PRUnichar bslash = (PRUnichar)'\\';
-                PRUnichar fslash = (PRUnichar)'/';
-                PRUnichar at = (PRUnichar)'@';
-                PRUnichar colon = (PRUnichar)':';
-                PRUnichar underscore = (PRUnichar)'_';
-                title.ReplaceChar(space, underscore);
-                title.ReplaceChar(dot, underscore);
-                title.ReplaceChar(bslash, underscore);
-                title.ReplaceChar(fslash, underscore);
-                title.ReplaceChar(at, underscore);
-                title.ReplaceChar(colon, underscore);
+                title.ReplaceChar(" .\\/@:", (PRUnichar)'_');
                 fileName = title;
                 fileName.AppendWithConversion(".html");
               }
             } 
-            else
+            else  // have a file spec
             {
-              char *leafName = docFileSpec.GetLeafName();
-              if (leafName)
-              {
+              nsXPIDLCString  leafName;
+              docFile->GetLeafName(getter_Copies(leafName));
+              if (leafName.get() && *leafName)
                 fileName.AssignWithConversion(leafName);
-                nsCRT::free(leafName);
-              }
-              docFileSpec.GetParent(parentPath);
 
-              // TODO: CHANGE TO THE DIRECTORY OF THE PARENT PATH?
+              nsCOMPtr<nsIFile> parentPath;
+              if (NS_SUCCEEDED(docFile->GetParent(getter_AddRefs(parentPath))))
+              {
+                nsCOMPtr<nsILocalFile> localParentPath(do_QueryInterface(parentPath));
+                if (localParentPath)
+                  filePicker->SetDisplayDirectory(localParentPath);
+              }
             }
             
             if (fileName.Length() > 0)
-              fileWidget->SetDefaultString(fileName);
+              filePicker->SetDefaultString(fileName.GetUnicode());
 
-            nsFileDlgResults dialogResult;
-            // 1ST PARAM SHOULD BE nsIDOMWindowInternal*, not nsIWidget*
-            dialogResult = fileWidget->PutFile(nsnull, promptString, docFileSpec);
-            delete [] titles;
-            delete [] filters;
+            PRInt16 dialogResult;
+            // Finally show the dialog
+            res = filePicker->Show(&dialogResult);
+            if (NS_FAILED(res))
+              return res;
 
-            if (dialogResult == nsFileDlgResults_Cancel)
+            if (dialogResult == nsIFilePicker::returnCancel)
             {
               // Note that *_retval = PR_FALSE at this point
               return NS_OK;
             }
-            replacing = (dialogResult == nsFileDlgResults_Replace);
+            replacing = (dialogResult == nsIFilePicker::returnReplace);
+            
+            nsCOMPtr<nsILocalFile> localFile;
+            res = filePicker->GetFile(getter_AddRefs(localFile));
+            if (NS_FAILED(res)) return res;
+            
+            docFile = do_QueryInterface(localFile, &res);
+            if (NS_FAILED(res)) return res;
           }
           else
           {
-             NS_ASSERTION(0, "Failed to get file widget");
+            NS_ASSERTION(0, "Failed to get file widget");
             return res;
           }
-//#endif end replace with nsIFilePicker block
 
           // Set the new URL for the webshell
           nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mContentAreaDocShell));
           if (webShell)
           {
-            nsFileURL fileURL(docFileSpec);
-            nsAutoString fileURLString; fileURLString.AssignWithConversion(fileURL.GetURLString());
-            PRUnichar *fileURLUnicode = fileURLString.ToNewUnicode();
-            if (fileURLUnicode)
-            {
-              webShell->SetURL(fileURLUnicode);
-        			Recycle(fileURLUnicode);
-            }
+            // would like to use nsIFile::GetURL here, but it is not implemented
+            // on all platforms
+            nsCOMPtr<nsIFileURL> fileURL(do_CreateInstance(kStandardURLCID, &res));
+            if (NS_FAILED(res)) return res;
+            
+            res = fileURL->SetFile(docFile);
+            if (NS_FAILED(res)) return res;
+            
+            nsXPIDLCString docURLSpec;
+            res = fileURL->GetSpec(getter_Copies(docURLSpec));
+            if (NS_FAILED(res)) return res;
+            
+            nsAutoString  fileURLUnicode; fileURLUnicode.AssignWithConversion(docURLSpec);      
+            res = webShell->SetURL(fileURLUnicode.GetUnicode());
+            if (NS_FAILED(res)) return res;
           }
         } // mustShowFileDialog
 
@@ -1964,7 +1923,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
         // For now, just save as HTML type
         nsString format;
         format.AssignWithConversion("text/html");
-        res = editor->SaveFile(&docFileSpec, replacing, saveCopy, format);
+        res = editor->SaveFile(docFile, replacing, saveCopy, format);
         if (NS_FAILED(res))
         {
           nsAutoString saveDocStr, failedStr;
@@ -2037,81 +1996,93 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindowInternal *parent, const PRUnichar *fi
   if (htmlFilter)
   {
     title = HTMLTitle;
-  } else {
-    nsAutoString ImageTitle;
-    GetBundleString(NS_LITERAL_STRING("SelectImageFile"), ImageTitle);
+  } else
+  {
+    nsAutoString imageTitle;
+    GetBundleString(NS_LITERAL_STRING("SelectImageFile"), imageTitle);
 
-    if (ImageTitle.Length() > 0 && imgFilter)
-      title = ImageTitle;
+    if (imageTitle.Length() > 0 && imgFilter)
+      title = imageTitle;
   }
 
-  nsFileSpec fileSpec;
-  // TODO: GET THE DEFAULT DIRECTORY FOR DIFFERENT TYPES FROM PREFERENCES
-  nsFileSpec aDisplayDirectory;
-
   nsresult res;
-  nsCOMPtr<nsIFileWidget> fileWidget( do_CreateInstance(kCFileWidgetCID,&res) );
-  if (NS_SUCCEEDED(res))
+  nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1", &res);
+  if (filePicker)
   {
-    nsFileDlgResults dialogResult;
-    nsString* titles = nsnull;
-    nsString* filters = nsnull;
-    nsString* nextTitle;
-    nsString* nextFilter;
-
-    nsAutoString tempStr;
-
+    res = filePicker->Init(parent, title.GetUnicode(), nsIFilePicker::modeOpen);
+    if (NS_FAILED(res)) return res;
+    
     if (htmlFilter)
     {
-      titles = new nsString[3];
-      filters = new nsString[3];
-      if (!titles || ! filters)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-      nextTitle = titles;
-      nextFilter = filters;
-      GetBundleString(NS_LITERAL_STRING("HTMLFiles"), tempStr);
-      *nextTitle++ = tempStr;
-      GetBundleString(NS_LITERAL_STRING("TextFiles"), tempStr);
-      *nextTitle++ = tempStr;
-      (*nextFilter++).AssignWithConversion("*.htm; *.html; *.shtml");
-      (*nextFilter++).AssignWithConversion("*.txt");
-      fileWidget->SetFilterList(3, titles, filters);
-    } else {
-      titles = new nsString[2];
-      filters = new nsString[2];
-      if (!titles || ! filters)
-        return NS_ERROR_OUT_OF_MEMORY;
-      nextTitle = titles;
-      nextFilter = filters;
-      GetBundleString(NS_LITERAL_STRING("IMGFiles"), tempStr);
-      *nextTitle++ = tempStr;
-      (*nextFilter++).AssignWithConversion("*.gif; *.jpg; *.jpeg; *.png; *.*");
-      fileWidget->SetFilterList(2, titles, filters);
+      filePicker->AppendFilters(nsIFilePicker::filterHTML);
+      filePicker->AppendFilters(nsIFilePicker::filterText);
+      filePicker->AppendFilters(nsIFilePicker::filterAll);
     }
-    GetBundleString(NS_LITERAL_STRING("AllFiles"), tempStr);
-    *nextTitle++ = tempStr;
-    (*nextFilter++).AssignWithConversion("*.*");
-    // First param should be Parent window, but type is nsIWidget*
-    // Bug is filed to change this to a more suitable window type
-    dialogResult = fileWidget->GetFile(/*parent*/ nsnull, title, fileSpec);
-    delete [] titles;
-    delete [] filters;
-
-    // Do this after we get this from preferences
-    //fileWidget->SetDisplayDirectory(aDisplayDirectory);
+    else
+    {
+      filePicker->AppendFilters(nsIFilePicker::filterImages);
+      filePicker->AppendFilters(nsIFilePicker::filterAll);      
+    }
     
-    if (dialogResult != nsFileDlgResults_Cancel) 
+#if 0
+    // get default directory from preference
+    NS_WITH_SERVICE( nsIPref, prefs, NS_PREF_CONTRACTID, &res );
+    if (prefs)
+    {
+      nsCOMPtr<nsILocalFile> defaultDir;
+      prefs->GetFileXPref(EDITOR_DEFAULT_DIR_PREF, getter_AddRefs(defaultDir));
+      if (defaultDir)
+      {
+        PRBool isValid = PR_FALSE;
+        defaultDir->Exists(&isValid);
+        if (isValid)
+        {
+          // Set file picker so startDir is used.
+          filePicker->SetDisplayDirectory(defaultDir);
+        }
+      }
+    }
+#endif
+    
+    PRInt16 dialogResult;
+    res = filePicker->Show(&dialogResult);
+    if (NS_FAILED(res))
+      return res;
+
+    if (dialogResult != nsIFilePicker::returnCancel)
     {
       // Get the platform-specific format
       // Convert it to the string version of the URL format
-      // NOTE: THIS CRASHES IF fileSpec is empty
-      nsFileURL url(fileSpec);
-      nsAutoString  returnVal; returnVal.AssignWithConversion(url.GetURLString());
-      *_retval = returnVal.ToNewUnicode();
+      nsCOMPtr<nsIFileURL> fileURL;
+      res = filePicker->GetFileURL(getter_AddRefs(fileURL));
+      if (fileURL)
+      {
+        nsXPIDLCString url;
+        res = fileURL->GetSpec(getter_Copies(url));
+        if (NS_FAILED(res)) return res;
+        
+        nsAutoString returnVal;
+        returnVal.AssignWithConversion((const char*) url);
+        *_retval = returnVal.ToNewUnicode();
+
+        if (!*_retval)
+          res = NS_ERROR_OUT_OF_MEMORY;
+      }
+
     }
-    // TODO: SAVE THIS TO THE PREFS?
-    fileWidget->GetDisplayDirectory(aDisplayDirectory);
+
+#if 0
+    // save default directory to preference
+    if (NS_SUCCEEDED(res) && prefs)
+    {
+      nsCOMPtr<nsILocalFile> defaultDir;
+      filePicker->GetDisplayDirectory(getter_AddRefs(defaultDir));
+      if (defaultDir)
+      {
+        prefs->SetFileXPref(EDITOR_DEFAULT_DIR_PREF, defaultDir);
+      }
+    }
+#endif
   }
 
   return res;
@@ -2146,13 +2117,13 @@ nsEditorShell::UpdateWindowTitle()
       if (diskDoc)
       {
         // find out if the doc already has a fileSpec associated with it.
-        nsFileSpec docFileSpec;
-        if (NS_SUCCEEDED(diskDoc->GetFileSpec(docFileSpec)))
+        nsCOMPtr<nsIFile> docFileSpec;
+        if (NS_SUCCEEDED(diskDoc->GetFileSpec(getter_AddRefs(docFileSpec))))
         {
-          nsAutoString name;
-          docFileSpec.GetLeafName(name);
+          nsXPIDLCString fileName;
+          docFileSpec->GetLeafName(getter_Copies(fileName));
           windowCaption.AppendWithConversion(" [");
-          windowCaption += name;
+          windowCaption.AppendWithConversion(fileName);
           windowCaption.AppendWithConversion("]");
         }
       }
@@ -5023,7 +4994,7 @@ nsEditorShell::RunUnitTests()
 }
 
 NS_IMETHODIMP
-nsEditorShell::StartLogging(nsIFileSpec *logFile)
+nsEditorShell::StartLogging(nsIFile *logFile)
 {
   nsresult  err = NS_OK;
 
