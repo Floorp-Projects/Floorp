@@ -171,11 +171,15 @@ var MigrationWizard = {
   {
     var items = document.getElementById("dataSources");
     var checkboxes = items.getElementsByTagName("checkbox");
-    
+
     var oneChecked = false;
-    for (var i = 0; i < checkboxes.length; ++i)
-      oneChecked = checkboxes[i].checked;
-    
+    for (var i = 0; i < checkboxes.length; ++i) {
+      if (checkboxes[i].checked) {
+        oneChecked = true;
+        break;
+      }
+    }
+
     this._wiz.getButton("next").disabled = !oneChecked;
   },
   
