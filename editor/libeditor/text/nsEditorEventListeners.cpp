@@ -90,7 +90,7 @@ nsTextEditorKeyListener::ProcessEvent(nsIDOMEvent* aEvent)
 }
 
 
-//#define HAVE_EVENT_CHARCODE				// on when we have the charCode in the event
+#define HAVE_EVENT_CHARCODE				// on when we have the charCode in the event
 
 nsresult
 nsTextEditorKeyListener::GetCharFromKeyCode(PRUint32 aKeyCode, PRBool aIsShift, char *aChar)
@@ -163,7 +163,7 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
       case nsIDOMEvent::VK_PAGE_DOWN:
       	// who handles these?
 #if DEBUG
-		printf("Key not handled");
+		printf("Key not handled\n");
 #endif
       	break;
       	
