@@ -204,7 +204,7 @@ extern void SECU_PrintGeneralizedTime(FILE *out, SECItem *t, char *m,
 				      int level);
 
 /* callback for listing certs through pkcs11 */
-extern SECStatus SECU_PrintCertNickname(CERTCertificate *cert, void *data);
+extern SECStatus SECU_PrintCertNickname(CERTCertListNode* cert, void *data);
 
 /* Dump all certificate nicknames in a database */
 extern SECStatus

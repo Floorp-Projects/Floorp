@@ -657,7 +657,7 @@ listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 	if (certs) {
 	    for (node = CERT_LIST_HEAD(certs); !CERT_LIST_END(node,certs);
 						node = CERT_LIST_NEXT(node)) {
-		SECU_PrintCertNickname(node->cert,stdout);
+		SECU_PrintCertNickname(node,stdout);
 	    }
 	    rv = SECSuccess;
 	}
@@ -687,7 +687,7 @@ ListCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 	for (node = CERT_LIST_HEAD(list); !CERT_LIST_END(node, list);
 	     node = CERT_LIST_NEXT(node)) 
 	{
-	    SECU_PrintCertNickname(node->cert, stdout);
+	    SECU_PrintCertNickname(node, stdout);
 	}
 	CERT_DestroyCertList(list);
 	return SECSuccess;
