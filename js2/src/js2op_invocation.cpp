@@ -88,8 +88,10 @@
                         else {
                             pFrame = new ParameterFrame(fWrap->compileFrame);
                             pFrame->instantiate(meta->env);
-                            PrototypeInstance *pInst = new PrototypeInstance(meta, protoObj, meta->objectClass);
-                            baseVal = OBJECT_TO_JS2VAL(pInst);
+                            if (protoObj->kind == PrototypeInstanceKind)
+                                baseVal = OBJECT_TO_JS2VAL(new PrototypeInstance(meta, protoObj, (checked_cast<PrototypeInstance *>(protoObj))->type));
+                            else
+                                baseVal = OBJECT_TO_JS2VAL(new PrototypeInstance(meta, protoObj, meta->objectClass));
                             pFrame->thisObject = baseVal;
                             pFrame->assignArguments(meta, obj, base(argCount), argCount);
                             jsr(phase, fWrap->bCon, base(argCount + 1) - execStack, baseVal, fWrap->env);   // seems out of order, but we need to catch the current top frame 
@@ -130,9 +132,8 @@
             if (fWrap) {
                 if (fWrap->compileFrame->prototype) {
                     if (JS2VAL_IS_VOID(a) || JS2VAL_IS_NULL(a)) {
-                        Frame *g = meta->env->getPackageOrGlobalFrame();
-                        if (g->kind == GlobalObjectKind)
-                            a = OBJECT_TO_JS2VAL(g);
+                        Frame *g = meta->env->getPackageFrame();
+                        a = OBJECT_TO_JS2VAL(g);
                     }
                 }
                 if (fWrap->code) {  // native code

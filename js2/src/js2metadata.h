@@ -94,7 +94,7 @@ extern js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 length);
 
 // OBJECT is the semantic domain of all possible objects and is defined as:
 // OBJECT = UNDEFINED | NULL | BOOLEAN | FLOAT64 | LONG | ULONG | CHARACTER | STRING | NAMESPACE |
-// COMPOUNDATTRIBUTE | CLASS | METHODCLOSURE | PROTOTYPE | INSTANCE | PACKAGE | GLOBAL
+// COMPOUNDATTRIBUTE | CLASS | METHODCLOSURE | PROTOTYPE | INSTANCE | PACKAGE
 //
 //  In this implementation, the primitive types are distinguished by the tag value
 // of a JS2Value (see js2value.h). Non-primitive types are distinguished by calling
@@ -103,7 +103,6 @@ extern js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 length);
 enum ObjectKind { 
     AttributeObjectKind,
     SystemKind,                 
-    GlobalObjectKind, 
     PackageKind, 
     ParameterKind, 
     ClassKind, 
@@ -590,7 +589,7 @@ public:
     Frame *getTopFrame()                    { return frameList.front(); }
     FrameListIterator getBegin()            { return frameList.begin(); }
     FrameListIterator getEnd()              { return frameList.end(); }
-    Frame *getPackageOrGlobalFrame();
+    Frame *getPackageFrame();
     SystemFrame *getSystemFrame()           { return checked_cast<SystemFrame *>(frameList.back()); }
 
     void setTopFrame(Frame *f)              { while (frameList.front() != f) frameList.pop_front(); }
@@ -656,14 +655,14 @@ public:
 
 };
 
-class GlobalObject : public NonWithFrame {
+class Package : public NonWithFrame {
 public:
-    GlobalObject(World &world) : NonWithFrame(GlobalObjectKind), internalNamespace(new Namespace(&world.identifiers["internal"])) { }
+    Package(Namespace *internal) : NonWithFrame(PackageKind), internalNamespace(internal) { }
 
-    Namespace *internalNamespace;               // This global object's internal namespace
-    DynamicPropertyMap dynamicProperties;       // A set of this global object's dynamic properties
+    Namespace *internalNamespace;               // This Package's internal namespace
+    DynamicPropertyMap dynamicProperties;       // A set of this Package's dynamic properties
     virtual void markChildren();
-    virtual ~GlobalObject()            { }
+    virtual ~Package()            { }
 };
 
 
@@ -1280,7 +1279,7 @@ public:
     typedef std::vector<BytecodeContainer *>::iterator BConListIterator;
     BConList bConList;
 
-    GlobalObject *glob;
+    Package *glob;
     Environment *env;
     Context cxt;
 

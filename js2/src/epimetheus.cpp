@@ -319,8 +319,12 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                         if (pInst->type == meta->functionClass) {
                             FunctionWrapper *fWrap = (checked_cast<FunctionInstance *>(fObj))->fWrap;
                             stdOut << "Function:" << "\n";
-                            stdOut << "Environment depth " << fWrap->env->getSize() << "\n";
-                            dumpBytecode(fWrap->bCon);
+                            if (fWrap) {
+                                stdOut << "Environment depth " << fWrap->env->getSize() << "\n";
+                                dumpBytecode(fWrap->bCon);
+                            }
+                            else
+                                stdOut << "<<Empty Function>>\n";
                         }
                     }
                 }
@@ -349,7 +353,7 @@ js2val load(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
         RootKeeper rk(&curEnv);
         // Set the environment to global object and system frame so that the
         // load happens into the top frame.
-        meta->env = new Environment(curEnv->getSystemFrame(), curEnv->getPackageOrGlobalFrame());
+        meta->env = new Environment(curEnv->getSystemFrame(), curEnv->getPackageFrame());
         
         js2val result = JS2VAL_UNDEFINED;
         try {

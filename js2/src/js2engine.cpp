@@ -998,7 +998,6 @@ namespace MetaData {
                         a = STRING_TO_JS2VAL(object_StringAtom);
                     break;
                 case PackageKind:
-                case GlobalObjectKind:
                     a = STRING_TO_JS2VAL(object_StringAtom);
                     break;
                 case SimpleInstanceKind:
@@ -1045,8 +1044,8 @@ namespace MetaData {
             if (obj->kind == SimpleInstanceKind)
                 dMap = (checked_cast<SimpleInstance *>(obj))->dynamicProperties;
             else
-            if (obj->kind == GlobalObjectKind)
-                dMap = &(checked_cast<GlobalObject *>(obj))->dynamicProperties;
+            if (obj->kind == PackageKind)
+                dMap = &(checked_cast<Package *>(obj))->dynamicProperties;
             else
             if (obj->kind == PrototypeInstanceKind)
                 dMap = &(checked_cast<PrototypeInstance *>(obj))->dynamicProperties;

@@ -443,7 +443,7 @@ namespace MetaData {
                                 JS2Object *fObj = validateStaticFunction(&f->function, compileThis, prototype, unchecked, cxt, env);
                                 if (unchecked 
                                         && (f->attributes == NULL)
-                                        && ((topFrame->kind == GlobalObjectKind)
+                                        && ((topFrame->kind == PackageKind)
                                                         || (topFrame->kind == BlockKind)
                                                         || (topFrame->kind == ParameterKind)) ) {
                                     DynamicVariable *v = defineHoistedVar(env, f->function.name, p);
@@ -501,7 +501,7 @@ namespace MetaData {
                         if (vb->initializer)
                             ValidateExpression(cxt, env, vb->initializer);
 
-                        if (!cxt->strict && ((regionalFrame->kind == GlobalObjectKind)
+                        if (!cxt->strict && ((regionalFrame->kind == PackageKind)
                                             || (regionalFrame->kind == ParameterKind))
                                         && !immutable
                                         && (vs->attributes == NULL)
@@ -2075,7 +2075,7 @@ doUnary:
                             *exprType = checked_cast<Variable *>(m)->type;
                             break;
                         }
-                        if (pf->kind == GlobalObjectKind)
+                        if (pf->kind == PackageKind)
                             break;
                     }
                     else {
@@ -2379,10 +2379,12 @@ doUnary:
         return fi;
     }
 
-    // Returns the penultimate frame, either Package or Global
-    Frame *Environment::getPackageOrGlobalFrame()
+    // Returns the penultimate frame, always a Package
+    Frame *Environment::getPackageFrame()
     {
-        return *(getEnd() - 2);
+        Frame *result = *(getEnd() - 2);
+        ASSERT(result->kind == PackageKind);
+        return result;
     }
 
     // findThis returns the value of this. If allowPrototypeThis is true, allow this to be defined 
@@ -2397,7 +2399,8 @@ doUnary:
                     && !JS2VAL_IS_NULL(checked_cast<ParameterFrame *>(pf)->thisObject))
                 if (allowPrototypeThis || !checked_cast<ParameterFrame *>(pf)->prototype)
                     return checked_cast<ParameterFrame *>(pf)->thisObject;
-            if (pf->kind == GlobalObjectKind)
+            if (pf->kind == PackageKind)    // XXX for ECMA3, when we hit a package (read GlobalObject)
+                                            // return that as the 'this'
                 return OBJECT_TO_JS2VAL(pf);
             fi++;
         }
@@ -2435,11 +2438,9 @@ doUnary:
             fi++;
         }
         if (createIfMissing) {
-            Frame *pf = getPackageOrGlobalFrame();
-            if (pf->kind == GlobalObjectKind) {
-                if (meta->writeProperty(pf, multiname, &lookup, true, newValue, phase, false))
-                    return;
-            }
+            Frame *pf = getPackageFrame();
+            if (meta->writeProperty(pf, multiname, &lookup, true, newValue, phase, false))
+                return;
         }
         meta->reportError(Exception::referenceError, "{0} is undefined", meta->engine->errorPos(), multiname->name);
     }
@@ -2825,9 +2826,9 @@ doUnary:
         return new OverrideStatusPair(readStatus, writeStatus);;
     }
 
-    // Define a hoisted var in the current frame (either Global or a Function)
+    // Define a hoisted var in the current frame (either Package or a Function)
     // defineHoistedVar(env, id, initialValue) defines a hoisted variable with the name id in the environment env. 
-    // Hoisted variables are hoisted to the global or enclosing function scope. Multiple hoisted variables may be 
+    // Hoisted variables are hoisted to the package or enclosing function scope. Multiple hoisted variables may be 
     // defined in the same scope, but they may not coexist with non-hoisted variables with the same name. A hoisted 
     // variable can be defined using either a var or a function statement. If it is defined using var, then initialValue
     // is always undefined (if the var statement has an initialiser, then the variable's value will be written later 
@@ -2842,7 +2843,7 @@ doUnary:
         FrameListIterator regionalFrameMark = env->getRegionalFrame();
         // XXX can the regionalFrame be a WithFrame?
         NonWithFrame *regionalFrame = checked_cast<NonWithFrame *>(*regionalFrameMark);
-        ASSERT((regionalFrame->kind == GlobalObjectKind) || (regionalFrame->kind == ParameterKind));
+        ASSERT((regionalFrame->kind == PackageKind) || (regionalFrame->kind == ParameterKind));
           
         // run through all the existing bindings, to see if this variable already exists.
         LocalBindingEntry **lbeP = regionalFrame->localBindings[*id];
@@ -2863,8 +2864,8 @@ doUnary:
         }
         
         if (result == NULL) {
-            if (regionalFrame->kind == GlobalObjectKind) {
-                GlobalObject *gObj = checked_cast<GlobalObject *>(regionalFrame);
+            if (regionalFrame->kind == PackageKind) {
+                Package *gObj = checked_cast<Package *>(regionalFrame);
                 DynamicPropertyBinding **dpbP = gObj->dynamicProperties[*id];
                 if (dpbP)
                     reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
@@ -3098,7 +3099,7 @@ static const uint8 urlCharType[256] =
     {
         ASSERT(JS2VAL_IS_OBJECT(thisValue));
         JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
-        if (obj->kind == GlobalObjectKind) {
+        if (obj->kind == PackageKind) {
             // special case this for now, ECMA3 test sanity...
             return GlobalObject_toString(meta, thisValue, NULL, 0);
         }
@@ -3125,7 +3126,7 @@ static const uint8 urlCharType[256] =
         mn1(new Multiname(NULL, publicNamespace)),
         mn2(new Multiname(NULL, publicNamespace)),
         bCon(new BytecodeContainer()),
-        glob(new GlobalObject(world)),
+        glob(new Package(new Namespace(&world.identifiers["internal"]))),
         env(new Environment(new MetaData::SystemFrame(), glob)),
         flags(JS1),
         showTrees(false)
@@ -3315,7 +3316,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         case SimpleInstanceKind: 
             return checked_cast<SimpleInstance *>(obj)->type;
 
-        case GlobalObjectKind: 
         case PackageKind:
             return packageClass;
 
@@ -3358,8 +3358,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         if (obj->kind == SimpleInstanceKind)
             dMap = (checked_cast<SimpleInstance *>(obj))->dynamicProperties;
         else
-        if (obj->kind == GlobalObjectKind)
-            dMap = &(checked_cast<GlobalObject *>(obj))->dynamicProperties;
+        if (obj->kind == PackageKind)
+            dMap = &(checked_cast<Package *>(obj))->dynamicProperties;
         else {
             ASSERT(obj->kind == PrototypeInstanceKind);
             isPrototypeInstance = true;
@@ -3386,8 +3386,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         if (obj->kind == SimpleInstanceKind)
             dMap = (checked_cast<SimpleInstance *>(obj))->dynamicProperties;
         else
-        if (obj->kind == GlobalObjectKind)
-            dMap = &(checked_cast<GlobalObject *>(obj))->dynamicProperties;
+        if (obj->kind == PackageKind)
+            dMap = &(checked_cast<Package *>(obj))->dynamicProperties;
         else {
             ASSERT(obj->kind == PrototypeInstanceKind);
             isPrototypeInstance = true;
@@ -3404,7 +3404,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     bool JS2Metadata::readDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
     {
         ASSERT(container && ((container->kind == SimpleInstanceKind) 
-                                || (container->kind == GlobalObjectKind)
+                                || (container->kind == PackageKind)
                                 || (container->kind == PrototypeInstanceKind)));
         if (!multiname->listContains(publicNamespace))
             return false;
@@ -3416,8 +3416,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         if (container->kind == SimpleInstanceKind)
             dMap = (checked_cast<SimpleInstance *>(container))->dynamicProperties;
         else
-        if (container->kind == GlobalObjectKind)
-            dMap = &(checked_cast<GlobalObject *>(container))->dynamicProperties;
+        if (container->kind == PackageKind)
+            dMap = &(checked_cast<Package *>(container))->dynamicProperties;
         else {
             isPrototypeInstance = true;
             dMap = &(checked_cast<PrototypeInstance *>(container))->dynamicProperties;
@@ -3488,7 +3488,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     bool JS2Metadata::writeDynamicProperty(JS2Object *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase)
     {
         ASSERT(container && ((container->kind == SimpleInstanceKind) 
-                                || (container->kind == GlobalObjectKind)
+                                || (container->kind == PackageKind)
                                 || (container->kind == PrototypeInstanceKind)));
         if (!multiname->listContains(publicNamespace))
             return false;
@@ -3497,8 +3497,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         if (container->kind == SimpleInstanceKind)
             dMap = (checked_cast<SimpleInstance *>(container))->dynamicProperties;
         else
-        if (container->kind == GlobalObjectKind)
-            dMap = &(checked_cast<GlobalObject *>(container))->dynamicProperties;
+        if (container->kind == PackageKind)
+            dMap = &(checked_cast<Package *>(container))->dynamicProperties;
         else 
             dMap = &(checked_cast<PrototypeInstance *>(container))->dynamicProperties;
         if (dMap == NULL)
@@ -3535,8 +3535,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             }
         }
         else {
-            if (container->kind == GlobalObjectKind) {
-                GlobalObject *glob = checked_cast<GlobalObject *>(container);
+            if (container->kind == PackageKind) {
+                Package *glob = checked_cast<Package *>(container);
                 LocalMember *m = findFlatMember(glob, multiname, ReadAccess, phase);
                 if (m == NULL) {
                     DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*name, DynamicPropertyValue(newValue, DynamicPropertyValue::ENUMERATE));
@@ -3657,7 +3657,6 @@ readClassProperty:
             goto readClassProperty;
 
         case SystemKind:
-        case GlobalObjectKind: 
         case PackageKind:
         case ParameterKind: 
         case BlockKind: 
@@ -3729,7 +3728,7 @@ readClassProperty:
             else {
                 // Must be System, Global, Package, Parameter or Block
                 LocalMember *m = findFlatMember(checked_cast<NonWithFrame *>(container), multiname, ReadAccess, phase);
-                if (!m && (container->kind == GlobalObjectKind))
+                if (!m && (container->kind == PackageKind))
                     return readDynamicProperty(container, multiname, lookupKind, phase, rval);
                 else
                     return readLocalMember(m, phase, rval);
@@ -3786,7 +3785,6 @@ readClassProperty:
             }
 
         case SystemKind:
-        case GlobalObjectKind: 
         case PackageKind:
         case ParameterKind: 
         case BlockKind: 
@@ -3843,7 +3841,7 @@ readClassProperty:
             else {
                 // Must be System, Global, Package, Parameter or Block
                 LocalMember *m = findFlatMember(checked_cast<NonWithFrame *>(container), multiname, WriteAccess, phase);
-                if (!m && (container->kind == GlobalObjectKind))
+                if (!m && (container->kind == PackageKind))
                     return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
                 else
                     return writeLocalMember(m, newValue, phase, initFlag);
@@ -3900,7 +3898,6 @@ deleteClassProperty:
             goto deleteClassProperty;
 
         case SystemKind:
-        case GlobalObjectKind: 
         case PackageKind:
         case ParameterKind: 
         case BlockKind: 
@@ -3926,7 +3923,7 @@ deleteClassProperty:
             else {
                 // Must be System, Global, Package, Parameter or Block
                 LocalMember *m = findFlatMember(checked_cast<NonWithFrame *>(container), multiname, ReadAccess, phase);
-                if (!m && (container->kind == GlobalObjectKind))
+                if (!m && (container->kind == PackageKind))
                     return deleteDynamicProperty(container, multiname, lookupKind, result);
                 else
                     return deleteLocalMember(m, result);
@@ -3958,7 +3955,7 @@ deleteClassProperty:
     bool JS2Metadata::deleteDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind * /* lookupKind */, bool *result)
     {
         ASSERT(container && ((container->kind == SimpleInstanceKind) 
-                                || (container->kind == GlobalObjectKind)
+                                || (container->kind == PackageKind)
                                 || (container->kind == PrototypeInstanceKind)));
         if (!multiname->listContains(publicNamespace))
             return false;
@@ -3967,8 +3964,8 @@ deleteClassProperty:
         if (container->kind == SimpleInstanceKind)
             dMap = (checked_cast<SimpleInstance *>(container))->dynamicProperties;
         else
-        if (container->kind == GlobalObjectKind)
-            dMap = &(checked_cast<GlobalObject *>(container))->dynamicProperties;
+        if (container->kind == PackageKind)
+            dMap = &(checked_cast<Package *>(container))->dynamicProperties;
         else {
             dMap = &(checked_cast<PrototypeInstance *>(container))->dynamicProperties;
         }
@@ -4474,8 +4471,7 @@ deleteClassProperty:
     PrototypeInstance::PrototypeInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) 
         : JS2Object(PrototypeInstanceKind), parent(parent), type(type) 
     {
-        // Add prototype property
-        writeProperty(meta, meta->engine->prototype_StringAtom, OBJECT_TO_JS2VAL(parent), 0);
+        // XXX add '__proto__' property for Monkey compatibility
     }
 
 
@@ -4499,6 +4495,8 @@ deleteClassProperty:
     FunctionInstance::FunctionInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type)
      : PrototypeInstance(meta, parent, type), fWrap(NULL) 
     {
+        // Add prototype property
+        writeProperty(meta, meta->engine->prototype_StringAtom, OBJECT_TO_JS2VAL(parent), 0);
     }
 
 
@@ -4566,12 +4564,12 @@ deleteClassProperty:
 
  /************************************************************************************
  *
- *  GlobalObject
+ *  Package
  *
  ************************************************************************************/
 
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
-    void GlobalObject::markChildren()
+    void Package::markChildren()
     {
         NonWithFrame::markChildren();
         GCMARKOBJECT(internalNamespace)
