@@ -31,6 +31,6 @@ classic.jar:
   skin/classic/browser/bookmarks/folderarrow-hover.png      (bookmarks/folderarrow-hover.png)
   skin/classic/browser/bookmarks/folderarrow.png            (bookmarks/folderarrow.png)
   skin/classic/browser/downloads/downloadmanager.css        (downloads/downloadmanager.css)
-  skin/classic/browser/pref/Options.png                     (pref/Options.png)
-  skin/classic/browser/pref/pref.css                        (pref/pref.css)
++ skin/classic/browser/pref/Options.png                     (pref/Options.png)
++ skin/classic/browser/pref/pref.css                        (pref/pref.css)
   icon.png
