@@ -108,6 +108,7 @@ public:
 
   static PRUintn CalculateBlockMarginsFor(nsIPresContext& aPresContext,
                                           nsIFrame* aFrame,
+                                          const nsHTMLReflowState* aParentRS,
                                           const nsStyleSpacing* aSpacing,
                                           nsMargin& aMargin);
 
