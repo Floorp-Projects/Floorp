@@ -26,9 +26,10 @@
 
 var client = new Object();
 
-//client.IMAGEDIR = "chrome://chatzilla/skin/images/";
-client.IMAGEDIR = "resource:///chrome/chatzilla/skin/default/images/";
-client.CSSDIR = "resource:///chrome/chatzilla/skin/default/";
+client.IMAGEDIR = "chrome://chatzilla/skin/images/";
+client.CSSDIR = "chrome://chatzilla/skin/";
+//client.IMAGEDIR = "resource:///chrome/chatzilla/skin/default/images/";
+//client.CSSDIR = "resource:///chrome/chatzilla/skin/default/";
 
 client.COMMAND_CHAR = "/";
 client.STEP_TIMEOUT = 500;
@@ -219,7 +220,7 @@ function insertSmiley (emoticon, containerTag)
     if (src)
     {
         var img = document.createElement ("html:img");
-        img.setAttribute ("src", src);
+        img.setAttribute ("src", client.IMAGEDIR + src);
         containerTag.appendChild (img);
     }
     

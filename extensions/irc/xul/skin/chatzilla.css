@@ -152,10 +152,8 @@ toolbar {
 
 .quick-list {
 
-/*
-	border: thin silver inset;
+/*	border: thin silver inset;*/
 	background: #dddddd;
-*/
 	overflow: auto;
 
 
