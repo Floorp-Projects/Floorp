@@ -66,14 +66,8 @@ interface nsIDragDropHandler : nsISupports
    *                   the client must handle the drop itself, either
    *                   through the method provided via |overrideDrop| or
    *                   by letting the event bubble up through the DOM.
-   * @param overrideDrag callback to client to override portions of the
-   *                      drag start action. Can be NULL.
-   * @param overrideDrop callback to client to override portions of the
-   *                      drop action. Can be NULL.
    */
-  void hookupTo(in nsIDOMEventTarget attachPoint, in nsIWebNavigation navigator,
-                  in nsIOverrideDragSource overrideDrag,
-                  in nsIOverrideDropSite overrideDrop);
+  void hookupTo(in nsIDOMEventTarget attachPoint, in nsIWebNavigation navigator);
   
   /**
    * Unregister all handlers related to drag&drop
