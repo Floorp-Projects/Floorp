@@ -283,7 +283,6 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
         }
         LOCKED_OBJ_SET_SLOT(obj, JSSLOT_PROTO, OBJECT_TO_JSVAL(pobj));
         JS_UNLOCK_SCOPE(cx, scope);
-        js_FlushPropertyCacheNotFounds(cx);
     } else {
         OBJ_SET_SLOT(cx, obj, slot, OBJECT_TO_JSVAL(pobj));
     }
@@ -1933,7 +1932,7 @@ js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
 	/* Try the property cache and return immediately on cache hit. */
         JS_LOCK_OBJ(cx, obj);
 	PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);
-	if (PROP_FOUND(prop)) {
+	if (prop) {
 #ifdef JS_THREADSAFE
 	    JS_ASSERT(OBJ_IS_NATIVE(obj));
 	    JS_ATOMIC_ADDREF(&((JSScopeProperty *)prop)->nrefs, 1);
@@ -1945,22 +1944,16 @@ js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
 	}
         JS_UNLOCK_OBJ(cx, obj);
 
-	/* If cache miss (not cached-as-not-found), take the slow path. */
-	if (!prop) {
-	    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
-		return JS_FALSE;
-	    if (prop) {
-		PROPERTY_CACHE_FILL(cx, &rt->propertyCache, pobj, id, prop);
-		*objp = obj;
-		*pobjp = pobj;
-		*propp = prop;
-		return JS_TRUE;
-	    }
-
-	    /* No such property -- cache obj[id] as not-found. */
-	    PROPERTY_CACHE_FILL(cx, &rt->propertyCache, obj, id,
-				PROP_NOT_FOUND(obj, id));
-	}
+	/* If cache miss, take the slow path. */
+        if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
+            return JS_FALSE;
+        if (prop) {
+            PROPERTY_CACHE_FILL(cx, &rt->propertyCache, pobj, id, prop);
+            *objp = obj;
+            *pobjp = pobj;
+            *propp = prop;
+            return JS_TRUE;
+        }
 	lastobj = obj;
     } while ((obj = OBJ_GET_PARENT(cx, obj)) != NULL);
 
@@ -2490,8 +2483,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
      * js_DestroyScopeProperty purges for us).
      */
     if (sprop->nrefs != 1) {
-	PROPERTY_CACHE_FILL(cx, &rt->propertyCache, obj, id,
-			    PROP_NOT_FOUND(obj, id));
+	PROPERTY_CACHE_FILL(cx, &rt->propertyCache, obj, id, NULL);
     }
 
 #if JS_HAS_OBJ_WATCHPOINT
