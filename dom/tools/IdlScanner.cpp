@@ -1131,12 +1131,16 @@ void IdlScanner::Number(int aStartChar, Token *aToken)
       if (isdigit(aStartChar)) {
         digit = aStartChar - '0';
       }
-      else {
+      else if ((aStartChar >= 'a') && (aStartChar <= 'f')) {
         digit = 10 + (aStartChar - 'a');
       }
+      else if ((aStartChar >= 'A') && (aStartChar <= 'F')) {
+        digit = 10 + (aStartChar - 'A');
+      }
+
       value = value * base + digit;
       aStartChar = mInputFile->get();
-    } while ((' ' != aStartChar) && ('.' != aStartChar));
+    } while (isdigit(aStartChar) || ((aStartChar >= 'a') && (aStartChar <= 'f')) || ((aStartChar >= 'A') && (aStartChar <= 'F')));
 
     if (aStartChar == '.') {
       // double. Deal with it later
