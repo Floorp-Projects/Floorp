@@ -81,15 +81,17 @@ static void AsyncIOCompletion (ExtendedParamBlock *pbAsyncPtr)
     if (_PR_MD_GET_INTSOFF()) {
         thread->md.missedIONotify = PR_TRUE;
         cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
-        return;
+    }
+    else {
+        _PR_INTSOFF(is);
+
+        thread->md.osErrCode = noErr;
+        DoneWaitingOnThisThread(thread);
+
+        _PR_FAST_INTSON(is);
     }
 
-    _PR_INTSOFF(is);
-
-    thread->md.osErrCode = noErr;
-    DoneWaitingOnThisThread(thread);
-
-    _PR_FAST_INTSON(is);
+    SignalIdleSemaphore();
 }
 
 void  _MD_SetError(OSErr oserror)

@@ -681,6 +681,18 @@ extern void LeaveCritialRegion();
 #endif
 
 
+
+/*
+ * CPU Idle support
+ */
+
+extern void InitIdleSemaphore();
+extern void TermIdleSemaphore();
+
+extern void WaitOnIdleSemaphore();
+extern void SignalIdleSemaphore();
+
+
 /*
  * Atomic operations
  */
