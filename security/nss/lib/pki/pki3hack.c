@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.37 $ $Date: 2002/03/01 21:43:55 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.38 $ $Date: 2002/03/04 17:13:54 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -120,6 +120,17 @@ cache_token_cert(NSSCertificate *c, void *arg)
     nssTrustDomain_AddCertsToCache(td, &c, 1);
     if (cp == c) {
 	NSSCertificate_Destroy(cp);
+    } else {
+	/* The cert was already in the cache, from another token.  Add this
+	 * token's instance to the cert.
+	 */
+	nssCryptokiInstance *tokenInstance, *instance;
+	nssList_GetArray(cp->object.instanceList, (void **)&tokenInstance, 1);
+	instance = nssCryptokiInstance_Create(c->object.arena, token,
+	                                      tokenInstance->handle, PR_TRUE);
+	nssList_Add(c->object.instanceList, instance);
+	nssListIterator_Destroy(c->object.instances);
+	c->object.instances = nssList_CreateIterator(c->object.instanceList);
     }
     /* This list reference persists with the token */
     nssList_Add(token->certList, nssCertificate_AddRef(c));
