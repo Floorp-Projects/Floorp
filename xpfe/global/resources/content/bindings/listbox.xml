@@ -34,6 +34,8 @@
       <field name="_selectionStart">null</field>
       <field name="_currentItem">null</field>
       <field name="_selectTimeout">null</field>
+      <field name="_lastKeyTime">0</field>
+      <field name="_incrementalString">""</field>
 
       <constructor>
       <![CDATA[
@@ -60,6 +62,11 @@
       <property name="listBoxObject"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsIListBoxObject);"
                 readonly="true"/>
+
+      <property name="disableKeyNavigation"
+                onget="return this.hasAttribute('disableKeyNavigation');"
+                onset="if (val) this.setAttribute('disableKeyNavigation', 'true');
+                       else this.removeAttribute('disableKeyNavigation'); return val;"/>
 
       <method name="timedSelect">
         <parameter name="item"/>
@@ -635,6 +642,45 @@
           this.currentItem.checked = !this.currentItem.checked;
       ]]>
       </handler>
+      <handler event="keypress">
+      <![CDATA[
+         if (!this.disableKeyNavigation && event.charCode > 0) {
+           var key = String.fromCharCode(event.charCode);
+           key = key.toLowerCase();
+           if (event.timeStamp - this._lastKeyTime > 1000)
+             this._incrementalString = key;
+           else {
+             if (this._incrementalString.length != 1 || this._incrementalString.charAt(0) != key.charAt(0))
+               this._incrementalString += key;
+           }
+           this._lastKeyTime = event.timeStamp;
+           
+           var l = this.selectedItems.length;
+           var c = -1;
+           if (l > 0)
+             c = this.getIndexOfItem(this.selectedItems[l-1]);
+           var rowCount = this.getRowCount();
+           var start = 1;
+           
+           if (this._incrementalString.length > 1)
+             start = 0;
+
+           for (var i = 0; i < rowCount; i++) {
+             var k = (i + start + c) % rowCount;
+             var item = this.getItemAtIndex(k); //listitem
+             var cellText = item.getAttribute("label");
+             cellText = cellText.toLowerCase();
+             if (cellText.search(this._incrementalString) == 0) {
+               this._isUpSelection=0;
+               this._isDownSelection=0;
+               this.ensureIndexIsVisible(k);
+               this.timedSelect(item, 500);
+               break;
+             }
+           }
+         }
+       ]]>
+       </handler>
     </handlers>    
   </binding>
 
