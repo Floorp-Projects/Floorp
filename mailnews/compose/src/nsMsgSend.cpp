@@ -44,6 +44,7 @@
 #include "nsIMsgSendListener.h"
 #include "nsIMimeURLUtils.h"
 #include "nsIMsgCopyServiceListener.h"
+#include "nsIFileSpec.h"
 
 #include "nsMsgPrompts.h"
 
@@ -2236,6 +2237,34 @@ nsMsgComposeAndSend::SaveInSentFolder()
   return SendToMagicFolder(nsMsgDeliverNow);
 }
 
+char*
+nsMsgGetEnvelopeLine(void)
+{
+  static char       result[75] = "";
+	PRExplodedTime    now;
+  char              buffer[128] = "";
+
+  // Generate envelope line in format of:  From - Sat Apr 18 20:01:49 1998
+  //
+  // Use PR_FormatTimeUSEnglish() to format the date in US English format,
+	// then figure out what our local GMT offset is, and append it (since
+	// PR_FormatTimeUSEnglish() can't do that.) Generate four digit years as
+	// per RFC 1123 (superceding RFC 822.)
+  //
+  PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
+	PR_FormatTimeUSEnglish(buffer, sizeof(buffer),
+						   "%a %b %d %H:%M:%S %Y",
+						   &now);
+  
+  // This value must be in ctime() format, with English abbreviations.
+	// PL_strftime("... %c ...") is no good, because it is localized.
+  //
+  PL_strcpy(result, "From - ");
+  PL_strcpy(result + 7, buffer);
+  PL_strcpy(result + 7 + 24, MSG_LINEBREAK);
+  return result;
+}
+
 nsresult 
 nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file, 
 			                         nsMsgDeliverMode mode,
@@ -2249,6 +2278,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   char          *obuffer = 0;
   PRInt32       obuffer_size = 0, obuffer_fp = 0;
   PRInt32       n;
+  char          *envelopeLine = nsMsgGetEnvelopeLine();
 
   //
   // Create the file that will be used for the copy service!
@@ -2310,6 +2340,22 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 	  status = MK_OUT_OF_MEMORY;
 	  goto FAIL;
 	}
+
+  //
+  // First, we we need to put a Berkely "From - " delimiter at the head of 
+  // the file for parsing...
+  //
+  if (envelopeLine)
+  {
+    PRInt32   len = PL_strlen(envelopeLine);
+    
+    n = tempOutfile.write(envelopeLine, len);
+    if (n != len)
+    {
+      status = NS_ERROR_FAILURE;
+      goto FAIL;
+    }
+  }
 
   //
   // Write out an X-Mozilla-Status header.
@@ -2533,7 +2579,11 @@ FAIL:
 
 
   if (tempOutfile.is_open()) 
+  {
     tempOutfile.close();
+    if (mCopyFileSpec)
+      mCopyFileSpec->closeStream();
+  }
 
   if (inputFile.is_open()) 
     inputFile.close();
