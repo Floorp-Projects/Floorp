@@ -547,6 +547,7 @@ function OpenSearch(tabName, searchStr)
   
   function BrowserOpenWindow()
   {
+    //opens a window where users can select a web location to open
     core = XPAppCoresManager.Find("toolkitCore");
     if ( !core ) {
         core = new ToolkitCore();
@@ -564,6 +565,12 @@ function OpenSearch(tabName, searchStr)
     } else {
         dump("Error; can't create toolkitCore\n");
     }
+  }
+  
+  function BrowserOpenFileWindow()
+  {
+    //opens an OS based file selector window
+    appCore.openWindow();
   }
 
   function OpenFile(url) {

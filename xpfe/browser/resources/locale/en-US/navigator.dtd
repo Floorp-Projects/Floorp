@@ -11,7 +11,8 @@
 <!ENTITY newBlankPageCmd.label "Blank Window">
 <!ENTITY newPageFromTemplateCmd.label "Page Using Template">
 <!ENTITY newPageFromDraftCmd.label "Page using Draft">
-<!ENTITY openCmd.label "Open File or Location...">
+<!ENTITY openCmd.label "Open Web Location...">
+<!ENTITY openFileCmd.label "Open File...">
 <!ENTITY sendPageCmd.label "Send Page">
 <!ENTITY editPageCmd.label "Edit Page">
 <!ENTITY offlineMenu.label "Offline">
