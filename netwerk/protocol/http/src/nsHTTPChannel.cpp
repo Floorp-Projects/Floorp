@@ -263,8 +263,6 @@ nsHTTPChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
     return NS_OK;
 }
 
-#define DUMMY_TYPE "text/html"
-
 NS_IMETHODIMP
 nsHTTPChannel::GetContentType(char * *aContentType)
 {
@@ -295,9 +293,8 @@ nsHTTPChannel::GetContentType(char * *aContentType)
         // XXX we should probably set the content-type for this http response at this stage too.
     }
 
-    // if all else fails treat it as text/html?
     if (!*aContentType) 
-        *aContentType = nsCRT::strdup(DUMMY_TYPE);
+        *aContentType = nsCRT::strdup(UNKNOWN_MIME);
     if (!*aContentType) {
         rv = NS_ERROR_OUT_OF_MEMORY;
     } else {
