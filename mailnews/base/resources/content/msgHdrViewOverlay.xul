@@ -104,11 +104,6 @@ Rights Reserved.
 </grid>
 
 <hbox id="expandedHeaderView" class="header-part1" keywordrelated="true" originalclass="header-part1" flex="1" collapsed="true">
-  <vbox autostretch="never">
-    <spacer flex="1"/>
-    <image style="padding: 5px" id="fromBuddyIcon"/>
-    <spacer flex="1"/>
-  </vbox>
 
   <vbox id="expandedHeaders" flex="1">
     <mail-toggle-headerfield keywordrelated="true" id="expandedsubjectBox" class="subjectvalue" label="&subjectField.label;" ontwistyclick="ToggleHeaderView();" collapsed="true"/>
@@ -124,28 +119,32 @@ Rights Reserved.
 
     <mail-headerfield keywordrelated="true" id="expandednewsgroupsBox"  label="&newsgroupsField.label;" collapsed="true"/>
     <mail-headerfield keywordrelated="true" id="expandedfollowup-toBox" label="&followupToField.label;" collapsed="true"/>
-    <mail-headerfield keywordrelated="true" id="expandeduser-agentBox"  label="&userAgentField.label;"  collapsed="true"/>
-   
-   </vbox>
+    <mail-headerfield keywordrelated="true" id="expandeduser-agentBox"  label="&userAgentField.label;"  collapsed="true"/> 
+  </vbox>
 
-   <vbox id="expandedKeywordBox">
-     <spacer flex="1"/>
-     <image id="expandedKeywordImage" keywordrelated="true" originalclass="none" />
-     <spacer flex="1"/>  
-   </vbox>
+  <vbox id="expandedKeywordBox">
+    <spacer flex="1"/>
+    <image id="expandedKeywordImage" keywordrelated="true" originalclass="none" />
+    <spacer flex="1"/>  
+  </vbox>
    
-   <vbox id="editMessageBox" class="header-part1" keywordrelated="true" originalclass="header-part1" collapsed="true">
-     <spacer flex="1"/>
-     <button id="editMessageButton" label="&editMessage.label;" oncommand="MsgComposeDraftMessage()"/>
-     <spacer flex="1"/>
-   </vbox> 
+  <vbox id="editMessageBox" class="header-part1" keywordrelated="true" originalclass="header-part1" collapsed="true">
+    <spacer flex="1"/>
+    <button id="editMessageButton" label="&editMessage.label;" oncommand="MsgComposeDraftMessage()"/>
+    <spacer flex="1"/>
+  </vbox> 
 
-   <vbox id="expandedAttachmentBox" class="header-part1" keywordrelated="true" originalclass="header-part1" collapsed="true">
-     <label id="attachmentText" value="&attachmentsTree.label;" crop="right"/>
-     <listbox id="attachmentList" flex="2"
+  <vbox autostretch="never">
+    <spacer flex="1"/>
+    <image style="padding: 5px" id="fromBuddyIcon"/>
+    <spacer flex="1"/>
+  </vbox>
+
+  <vbox id="expandedAttachmentBox" class="header-part1" keywordrelated="true" originalclass="header-part1" collapsed="true">
+    <label id="attachmentText" value="&attachmentsTree.label;" crop="right"/>
+    <listbox id="attachmentList" flex="2"
               onclick="attachmentListClick(event);" ondraggesture="nsDragAndDrop.startDrag(event,attachmentAreaDNDObserver);" ondragover="nsDragAndDrop.dragOver(event, attachmentAreaDNDObserver);" context="attachmentListContext"/>
-   </vbox>
-
-  </hbox>
- </hbox>
+  </vbox>
+</hbox>
+</hbox>
 </overlay>
