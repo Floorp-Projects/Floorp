@@ -2889,7 +2889,7 @@ nsComputedDOMStyle::GetContainingBlock(nsIFrame *aFrame)
   nsIFrame* container = aFrame;
   do {
     container = container->GetParent();
-  } while (container && !container->IsContainingBlock())
+  } while (container && !container->IsContainingBlock());
 
   NS_POSTCONDITION(container, "Frame has no containing block");
   return container;
