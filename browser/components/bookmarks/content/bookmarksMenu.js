@@ -151,7 +151,7 @@ var BookmarksMenu = {
     var item;
     switch (aNode.id) {
     case "bookmarks-ptf":
-      item = BMSVC.getBookmarksToolbarFolder().Value;
+      item = "NC:PersonalToolbarFolder";
       break;
     case "bookmarks-menu":
       item = "NC:BookmarksRoot";
@@ -179,14 +179,14 @@ var BookmarksMenu = {
     var item, parent, index;
     switch (aNode.id) {
     case "bookmarks-ptf":
-      parent = BMSVC.getBookmarksToolbarFolder().Value;
+      parent = "NC:PersonalToolbarFolder";
       item = BookmarksToolbar.getLastVisibleBookmark();
       break;
     case "bookmarks-menu":
       parent = "NC:BookmarksRoot";
       break;
     case "bookmarks-chevron":
-      parent = BMSVC.getBookmarksToolbarFolder().Value;
+      parent = "NC:PersonalToolbarFolder";
       break;
     default:
       if (aOrientation == BookmarksUtils.DROP_ON)
@@ -226,7 +226,7 @@ var BookmarksMenu = {
     case "bookmarks-chevron":
     case "bookmarks-stack":
     case "bookmarks-toolbar":
-      return BMSVC.getBookmarksToolbarFolder().Value;
+      return "NC:PersonalToolbarFolder";
     case "bookmarks-menu":
       return "NC:BookmarksRoot";
     default:
@@ -880,13 +880,6 @@ var BookmarksToolbarRDFObserver =
 {
   onAssert: function (aDataSource, aSource, aProperty, aTarget)
   {
-    if (aProperty.Value == NC_NS+"BookmarksToolbarFolder") {
-      var bt = document.getElementById("bookmarks-ptf");
-      if (bt) {
-        bt.ref = aSource.Value;
-        document.getElementById("bookmarks-chevron").ref = aSource.Value;
-      }
-    }
     this.setOverflowTimeout(aSource, aProperty);
   },
   onUnassert: function (aDataSource, aSource, aProperty, aTarget)
@@ -903,8 +896,7 @@ var BookmarksToolbarRDFObserver =
   {
     if (this._overflowTimerInEffect)
       return;
-    if (aSource != BMSVC.getBookmarksToolbarFolder()
-        || aProperty.Value == NC_NS+"LastModifiedDate")
+    if (aSource.Value != "NC:PersonalToolbarFolder" || aProperty.Value == NC_NS+"LastModifiedDate")
       return;
     this._overflowTimerInEffect = true;
     setTimeout(BookmarksToolbar.resizeFunc, 0);

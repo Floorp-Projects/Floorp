@@ -38,6 +38,7 @@ REQUIRES	= xpcom \
 		  nkcache \
 		  uconv \
 		  pref \
+		  profile \
 		  dom \
 		  intl \
 		  webshell \

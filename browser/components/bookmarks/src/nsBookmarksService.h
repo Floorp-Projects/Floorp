@@ -88,6 +88,7 @@ protected:
     PRUint32      htmlSize;
     PRInt32       mUpdateBatchNest;
     nsXPIDLString mPersonalToolbarName;
+    nsXPIDLString mBookmarksRootName;
     PRBool        mBookmarksAvailable;
     PRBool        mDirty;
     PRBool        mBrowserIcons;
@@ -127,17 +128,6 @@ protected:
                                      PRInt32 level,
                                      nsCOMArray<nsIRDFResource>& parentArray);
 
-    nsresult WriteBookmarkIdAndName(nsIRDFDataSource *aDs,
-                                    nsIOutputStream* aStrm,
-                                    nsIRDFResource *aNode);
-
-    nsresult WriteBookmarkProperties(nsIRDFDataSource *aDs,
-                                     nsIOutputStream* aStrm,
-                                     nsIRDFResource *aNode,
-                                     nsIRDFResource *aProperty,
-                                     const char *aHtmlAttrib,
-                                     PRBool aIsFirst);
-
     nsresult SerializeBookmarks(nsIURI* aURI);
 
     nsresult GetTextForNode(nsIRDFNode* aNode, nsString& aResult);
@@ -146,11 +136,26 @@ protected:
 
     nsresult UpdateBookmarkLastModifiedDate(nsIRDFResource *aSource);
 
+    nsresult WriteBookmarkProperties(nsIRDFDataSource *ds,
+                                     nsIOutputStream* strm,
+                                     nsIRDFResource *node,
+                                     nsIRDFResource *property,
+                                     const char *htmlAttrib,
+                                     PRBool isFirst);
+
     PRBool   CanAccept(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aTarget);
 
     nsresult getArgumentN(nsISupportsArray *arguments, nsIRDFResource *res,
                           PRInt32 offset, nsIRDFNode **argValue);
 
+    nsresult insertBookmarkItem(nsIRDFResource *src,
+                                nsISupportsArray *aArguments,
+                                nsIRDFResource *objType);
+
+    nsresult deleteBookmarkItem(nsIRDFResource *src,
+                                nsISupportsArray *aArguments,
+                                PRInt32 parentArgIndex);
+    
     nsresult setFolderHint(nsIRDFResource *src, nsIRDFResource *objType);
 
     nsresult getFolderViaHint(nsIRDFResource *src, PRBool fallbackFlag,
