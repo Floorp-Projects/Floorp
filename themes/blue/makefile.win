@@ -32,6 +32,7 @@ CHROME_TYPE = skin
 
 CHROME_MISC = \
 	.\manifest.rdf \
+	.\preview.png \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

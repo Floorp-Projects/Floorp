@@ -1,5 +1,6 @@
 skins/modern.jar:
     manifest.rdf                                               
+    preview.png                                               
     communicator/skin/box.css                                  (communicator/box.css)
     communicator/skin/securityOverlay.css                      (communicator/securityOverlay.css)
     communicator/skin/menubuttonBindings.xml                   (communicator/menubuttonBindings.xml)
