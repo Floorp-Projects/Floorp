@@ -375,12 +375,23 @@ nsXIFConverter::AppendEntity(const PRUnichar aChar, nsAWritableString* aStr,
 
     // Can't call AddAttribute directly -- it does entityizing
     // and will call us back.  So just do what it does:
-    mBuffer->Append(mSpace + mValue + mEqual + mQuote + *str + mQuote);
+
+    // ugly workaround for older compilers not understanding operator+
+    nsAReadableString *space = &mSpace;
+    nsAReadableString *value = &mValue;
+    nsAReadableString *equal = &mEqual;
+    nsAReadableString *quote = &mQuote;
+    mBuffer->Append(*space + *value + *equal + *quote + *str + *quote);
     FinishStartTag(mEntity, PR_TRUE, PR_FALSE);
   }
   else if (aStr)
   {
-    aStr->Append(NS_LITERAL_STRING("&") + *str + NS_LITERAL_STRING(";"));
+    // ugly workaround for older compilers not understanding operator+
+    NS_NAMED_LITERAL_STRING(ampersand, "&");
+    NS_NAMED_LITERAL_STRING(semicolon, ";");
+    nsAReadableString *ptrAmp = &ampersand;
+    nsAReadableString *ptrSemi = &semicolon;
+    aStr->Append(*ptrAmp + *str + *ptrSemi);
   }
   return NS_OK;
 }
