@@ -22,7 +22,7 @@
 
 /*
  *    jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.cpp,v 1.15 2000/02/29 21:47:25 mkaply%us.ibm.com Exp $
+ *    $Id: jpeg.cpp,v 1.16 2000/03/27 22:08:15 pnunn%netscape.com Exp $
  */
 
 
@@ -997,7 +997,6 @@ il_jpeg_complete(il_container *ic)
 {
     il_jpeg_abort(ic);
     ic->imgdcb->ImgDCBHaveImageAll();
-    ic->imgdcb->ImgDCBHaveImageFrame();
 }
 
 #ifdef PROFILE
