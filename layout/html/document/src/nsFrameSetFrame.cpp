@@ -942,6 +942,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
         mContent->ChildAt(childX, childCon);
         nsIHTMLContent* child = nsnull;
         nsresult result = childCon->QueryInterface(kIHTMLContentIID, (void**)&child);
+        NS_RELEASE(childCon);
         if (nsnull == child) {
           continue;
         }
