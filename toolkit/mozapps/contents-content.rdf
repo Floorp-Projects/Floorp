@@ -12,6 +12,7 @@
         chrome:displayName="Mozilla Application Support"
         chrome:author="mozilla.org"
         chrome:name="mozapps"
+        chrome:skinVersion="1.5"
         chrome:localeVersion="1.5a">
   </RDF:Description>
 
