@@ -57,6 +57,9 @@
 #include "navfram.h"
 #include "secnav.h"
 
+#include "prefs.h"
+#include "nsIDefaultBrowser.h"
+
 #ifdef MOZ_OFFLINE
 #include "offlndlg.h"
 #endif /* MOZ_OFFLINE */
@@ -218,6 +221,9 @@ CNetscapeApp::CNetscapeApp()
     m_bInitMapi 	     = TRUE;
     m_bExitStatus 	     = FALSE;
     InitTime();
+
+    // Desktop integration preference stuff.
+    m_bShowPrefsOnStartup = FALSE;
 
 #ifdef MOZ_MAIL_NEWS
 	m_bCreateInboxMAPI = FALSE; // rhp - for MAPI
@@ -653,13 +659,18 @@ void CNetscapeApp::CheckDefaultBrowser()
 void CNetscapeApp::MakeDefaultBrowser()
 {
 #ifdef XP_WIN32
+    // Create IDefaultBrowser interface.
+    nsIDefaultBrowser *pDefaultBrowser = nsIDefaultBrowser::GetInterface();
 
-	// Pop up a list containing the lost file types.
-	CDefaultBrowserDlg dlg;
-	CPtrArray* lostList = m_OwnedAndLostList.GetLostList();
-	if (theApp.m_OwnedAndLostList.NonemptyLostIgnoredIntersection())
-		dlg.DoModal();
-
+    if ( pDefaultBrowser ) {
+        // Ask if "default browser" dialog is required and display it if so.
+        if ( !pDefaultBrowser->IsDefaultBrowser() ) {
+            if ( pDefaultBrowser->DisplayDialog() == IDC_SHOW_DESKTOP_PREFS ) {
+                wfe_DisplayPreferences(NULL);
+            }
+        }
+        pDefaultBrowser->Release();
+    }
 #endif // XP_WIN32
 }
 
