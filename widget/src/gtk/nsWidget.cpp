@@ -26,6 +26,8 @@
 nsWidget::nsWidget()
 {
     NS_INIT_REFCNT();
+    mWidget = nsnull;
+// we should probibly init more stuff to null
 }
 
 nsWidget::~nsWidget()
