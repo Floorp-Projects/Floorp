@@ -32,7 +32,7 @@
     appCore = XPAppCoresManager.Find(editorName);  
     if (appCore != null) {
 	  	dump("Applying Style\n");
-      appCore.setTextProperty(styleName);
+      appCore.setTextProperty(styleName, null, null);
     } else {
       dump("EditorAppCore has not been created!\n");
     }
@@ -43,7 +43,7 @@
     appCore = XPAppCoresManager.Find(editorName);  
     if (appCore != null) {
 	  	dump("Removing Style\n");
-      appCore.removeTextProperty(styleName);
+      appCore.removeTextProperty(styleName, null);
     } else {
       dump("EditorAppCore has not been created!\n");
     }
