@@ -10,7 +10,7 @@
 <!ENTITY  defaultSearchEngine.label       "Search using:">
 <!ENTITY  defaultSearchEngine.accesskey   "u">
 
-<!ENTITY  openSidebarSearchPanel.label    "Open the Internet Search My Sidebar tab when search results are available">
+<!ENTITY  openSidebarSearchPanel.label    "Open the Internet Search My Sidebar panel when search results are available">
 <!ENTITY  openSidebarSearchPanel.accesskey "o">
 
 <!-- LOCALIZATION NOTE (defaultengine.label): Keep parenthesis so it sorts to the first position in the list -->
