@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-# $Id: logs.cgi,v 1.5 1999/11/17 22:14:21 leaf%mozilla.org Exp $
 #
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -21,7 +20,7 @@
 # Contributor(s):
 # Chris Waterson <waterson@netscape.com>
 #
-# $Id: logs.cgi,v 1.5 1999/11/17 22:14:21 leaf%mozilla.org Exp $
+# $Id: logs.cgi,v 1.6 1999/11/17 22:19:07 leaf%mozilla.org Exp $
 #
 
 #
@@ -95,6 +94,6 @@ For more information on how to use the Leak-o-Matic, see the
 
 };
 
-print '<small>$Id: logs.cgi,v 1.5 1999/11/17 22:14:21 leaf%mozilla.org Exp $</small>';
+print '<small>$Id: logs.cgi,v 1.6 1999/11/17 22:19:07 leaf%mozilla.org Exp $</small>';
 print $::query->end_html;
 
