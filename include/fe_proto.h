@@ -731,7 +731,7 @@ extern int      FE_GetTextInfo(MWContext * context, LO_TextStruct *text, LO_Text
 #ifdef XP_OS2       /* performance   */
 extern int      FE_GetMaxWidth(MWContext *pContext, LO_TextStruct *pText); /* performance */
 #endif
-#ifdef LAYERS
+#if 0
 void		FE_GetTextFrame(MWContext * context, LO_TextStruct *text, int32 start, int32 end, XP_Rect *frame);
 #endif
 #ifndef MOZ_NGLAYOUT
@@ -784,7 +784,7 @@ void        FE_DisplayBullet(MWContext *context, int iLocation, LO_BullettStruct
 void        FE_DisplayFormElement(MWContext * context, int iLocation, LO_FormElementStruct * form_element);
 void        FE_DisplayBorder(MWContext *context, int iLocation, int x, int y, int width, int height, int bw, LO_Color *color, LO_LineStyle style);
 void        FE_DisplayFeedback(MWContext *context, int iLocation, LO_Element *element);
-#ifdef LAYERS
+#if 0
 void        FE_EraseBackground(MWContext * context, int iLocation, int32 x, int32 y, uint32 width, uint32 height, LO_Color *bg);
 void        FE_SetClipRegion(MWContext *context, int iLocation, FE_Region region);
 #endif
@@ -1196,7 +1196,7 @@ void FE_ClickInputElement(MWContext *window, LO_Element *element);
 
 char *FE_GetAcceptLanguage(void);
 
-#ifdef LAYERS
+#if 0
 PRBool FE_HandleLayerEvent(MWContext *context, CL_Layer *layer, 
                            CL_Event *event);
 PRBool FE_HandleEmbedEvent(MWContext *context, LO_EmbedStruct *embed,

@@ -30,6 +30,8 @@
 #ifndef _LayoutElements_
 #define _LayoutElements_
 
+#if 0
+
 
 #include "xp_core.h"
 #include "xp_mem.h"
@@ -1442,5 +1444,7 @@ typedef enum LO_LayerType_enum {
 #define LO_BUILTIN_LAYER_NAME "_BUILTIN"
 
 #define LO_DOCUMENT_LAYER_ID 0
+
+#endif
 
 #endif /* _LayoutElements_ */

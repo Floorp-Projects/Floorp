@@ -146,7 +146,7 @@ FE_DEFINE(AllConnectionsComplete,void,(MWContext * context))
 #ifdef XP_OS2       /* performance */
 FE_DEFINE(GetMaxWidth,int, (MWContext * context, LO_TextStruct *text))
 #endif
-#ifdef LAYERS
+#if 0
 FE_DEFINE(EraseBackground, void, (MWContext *, int, int32, int32, uint32, uint32, LO_Color *))
 FE_DEFINE(SetDrawable, void, (MWContext *, CL_Drawable *))
 FE_DEFINE(GetTextFrame, void, (MWContext *, LO_TextStruct *, int32, int32, XP_Rect *))
