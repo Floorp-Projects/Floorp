@@ -203,11 +203,8 @@ PRBool nsEUCSampler::Sample(const char* aIn, PRUint32 aLen)
 float nsEUCSampler::GetScore(const float* aFirstByteFreq, float aFirstByteWeight,
                      const float* aSecondByteFreq, float aSecondByteWeight)
 {
-   return GetScore(aFirstByteFreq, mFirstByteFreq) ;
-/*
    return aFirstByteWeight * GetScore(aFirstByteFreq, mFirstByteFreq) +
           aSecondByteWeight * GetScore(aSecondByteFreq, mSecondByteFreq);
-*/
 }
 
 float nsEUCSampler::GetScore(const float* array1, const float* array2)
