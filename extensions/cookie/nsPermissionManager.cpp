@@ -154,6 +154,7 @@ NS_IMETHODIMP nsPermissionManager::TestForBlocking
 
 NS_IMETHODIMP nsPermissionManager::RemoveAll(void) {
   ::PERMISSION_RemoveAll();
+  ::PERMISSION_DeletePersistentUserData();
   return NS_OK;
 }
 
