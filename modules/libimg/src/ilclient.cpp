@@ -59,7 +59,6 @@ struct il_cache_struct il_cache;
 /*-------------------------------*/
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-NS_DEFINE_IID(kIImgDCallbkIID, NS_IIMGDCALLBK_IID);
 
 ImgDCallbk::~ImgDCallbk()
 {
@@ -67,7 +66,7 @@ ImgDCallbk::~ImgDCallbk()
         il_delete_container(ilContainer);
 }
 
-NS_IMPL_ISUPPORTS(ImgDCallbk, kIImgDCallbkIID)
+NS_IMPL_ISUPPORTS1(ImgDCallbk, nsIImgDCallbk)
 
 NS_IMETHODIMP
 ImgDCallbk::CreateInstance(const nsCID &aClass,
@@ -576,7 +575,7 @@ il_get_container(IL_GroupContext *img_cx,
           PR_FREEIF(ic);
           return NULL;
         }
-        nsresult res = imgdcb->QueryInterface(kIImgDCallbkIID, (void**)&imgdcb);
+        nsresult res = imgdcb->QueryInterface(NS_GET_IID(nsIImgDCallbk), (void**)&imgdcb);
         if (NS_FAILED(res)) {
           delete imgdcb; 
         

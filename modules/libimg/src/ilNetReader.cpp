@@ -24,8 +24,6 @@
 #include "ilINetReader.h"
 #include "nsCRT.h"
 
-static NS_DEFINE_IID(kINetReaderIID, IL_INETREADER_IID);
-
 class NetReaderImpl : public ilINetReader {
 public:
 
@@ -70,7 +68,7 @@ NetReaderImpl::~NetReaderImpl()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(NetReaderImpl, kINetReaderIID)
+NS_IMPL_THREADSAFE_ISUPPORTS1(NetReaderImpl, ilINetReader)
 
 NS_IMETHODIMP
 NetReaderImpl::WriteReady(PRUint32* max_read)
