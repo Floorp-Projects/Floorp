@@ -287,8 +287,38 @@ sub addToJarFile($$$$$$$)
         
         my($dst) = $target_dir.$dir_name.":".$rel_path;
                 
-        # print "Aliassing $src\n to\n$dst\n";        
-        MakeAlias($src, $dst);      # don't check errors, otherwise we fail on replacement
+        # print "Aliassing $src\n to\n$dst\n";
+        if ($override)
+        {
+            unlink $dst;
+            MakeAlias($src, $dst);      # don't check errors, otherwise we fail on replacement
+        }
+        else
+        {
+            if (-e $dst)
+            {
+                #compare dates here
+                my($dst_moddate) = GetFileModDate($dst);
+                my($file_moddate) = GetFileModDate($src);
+            
+                if ($file_moddate > $dst_moddate)
+                {
+                    print "Updating older file $rel_path in $dir_name\n";
+                    unlink $dst;
+                    MakeAlias($src, $dst);
+                }
+                else
+                {
+                    print "File $file_jar_path in $jar_id is more recent. Not updating.\n";
+                }
+            
+            }
+            else
+            {
+                MakeAlias($src, $dst);
+            }
+        }
+        
     }
 }
 
