@@ -62,6 +62,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  uconv \
 		  windowwatcher \
+		  appcomps \
 		  $(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
