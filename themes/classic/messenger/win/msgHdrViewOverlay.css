@@ -35,6 +35,8 @@ mail-emailaddress {
 .buttonTopSpacer     { height: .3em; }
 .buttonSpacer        { width: .5em; }
 
+.headerValueBox { width: 7.4em; text-align: right;}
+
 .headerBox              
   { 
     overflow              : hidden; 
@@ -98,8 +100,8 @@ mail-emailaddress {
     display               : inline;
   }
 
-.headerValue   { white-space: normal; min-width: 50px; }
-.subjectvalue  { font-weight: bold; }
+html.headerValue   { white-space: normal; min-width: 50px; margin: 0px;}
+html.subjectvalue  { font-weight: bold; }
 
-.headerdisplayname { font-weight: bold; margin-right: .5em; margin-left: .5em; min-height: 18px }
-.headerValue { white-space: normal; min-width: 50px; }
+text.headerdisplayname { font-weight: bold; margin-right: .5em; margin-left: .5em; min-height: 18px }
+text.headerValue { white-space: normal; min-width: 50px; }
