@@ -76,7 +76,6 @@ LLIBS=				\
  $(DIST)\lib\img32$(VERSION_NUMBER).lib        \
  $(DIST)\lib\js32$(VERSION_NUMBER).lib        \
  $(DIST)\lib\util.lib           \
- $(DIST)\lib\neckoutil_s.lib       \
  $(DIST)\lib\raptorgfxwin_s.lib \
  $(DIST)\lib\timer_s.lib \
 !if defined(NGLAYOUT_DDRAW)
