@@ -157,6 +157,7 @@ nsBrowserAppCore::Init(const nsString& aId)
    
   nsBaseAppCore::Init(aId);
 
+  // XXX This is lame and needs to be changed
 	nsAppCoresManager* sdm = new nsAppCoresManager();
 	sdm->Add((nsIDOMBaseAppCore *)(nsBaseAppCore *)this);
 	delete sdm;
