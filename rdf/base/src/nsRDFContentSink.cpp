@@ -1038,7 +1038,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             // mean http://www.w3.org/TR/REC-xml#NT-Letter, which it
             // probably isn't.
             PRUnichar first = name.First();
-            if (! nsString::IsAlpha(first) &&
+            if (! nsCRT::IsAsciiAlpha(first) &&
                 first != PRUnichar(':') &&
                 first != PRUnichar('_')) {
                 PR_LOG(gLog, PR_LOG_ALWAYS,

@@ -167,7 +167,7 @@ nsProtocolProxyService::CanUseProxy(nsIURI* aURI)
         PRInt32 nport = 0; // no proxy port
         // find the end of this element. 
         while (*endproxy && (*endproxy != ',' && 
-                    !nsString::IsSpace(*endproxy)))
+          !nsCRT::IsAsciiSpace(*endproxy)))
         {
             if (*endproxy == ':')
                 portLocation=endproxy;
