@@ -132,6 +132,9 @@ interface nsIAppShellService : nsISupports
                             in PRUint32 aChromeMask,
                             in nsIXULWindowCallbacks aCallbacks,
                             in long aInitialWidth, in long aInitialHeight);
+                         
+  // Apply Initialize function  to each app shell component.
+  void EnumerateAndInitializeComponents();
 
   /**
    * Close a window.
