@@ -62,6 +62,9 @@ public:
   // Sets the aStr param to the name of the propertyID
   static PRBool GetColorName(PRInt32 aPropID, nsCString &aStr);
 
+  static PRInt32 SearchKeywordTableInt(PRInt32 aValue, const PRInt32 aTable[]);
+  static const nsCString& SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[]);
+
   static const PRInt32  kHintTable[];
 
   // Keyword/Enum value tables
