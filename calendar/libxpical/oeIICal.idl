@@ -229,6 +229,7 @@ interface oeIICalContainer : nsISupports
 	void addCalendar( in string server );
 	void removeCalendar( in string server );
     oeIICal getCalendar( in string server );
+	void addCalendars( in unsigned long serverCount, [array, size_is(serverCount)] in string servers );
     void addObserver( in oeIICalObserver observer );
     void removeObserver( in oeIICalObserver observer );
     void addTodoObserver( in oeIICalTodoObserver observer );

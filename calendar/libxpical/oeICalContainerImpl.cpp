@@ -207,11 +207,24 @@ oeICalContainerImpl::RemoveCalendar( const char *server ) {
     return NS_OK;
 }
 
+NS_IMETHODIMP
+oeICalContainerImpl::AddCalendars( PRUint32 serverCount, const char **servers ) {
+#ifdef ICAL_DEBUG
+    printf( "oeICalContainerImpl::AddCalendars( %d, [Array] )\n", serverCount );
+#endif
+    nsresult rv;
+    for( int i=0; i<serverCount; i++ ) {
+        rv = AddCalendar( servers[i] );
+        if( NS_FAILED( rv ) )
+            break;
+    }
+    return rv;
+}
+
 /* attribute boolean batchMode; */
 NS_IMETHODIMP oeICalContainerImpl::GetBatchMode(PRBool *aBatchMode)
 {
     *aBatchMode = m_batchMode;
-
     return NS_OK;
 }
 
