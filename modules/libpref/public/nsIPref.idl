@@ -211,7 +211,7 @@ interface nsIPref : nsISupports {
    * The observers have their |Observe| methods called with
    * ([the observer], "nsPref:changed", [pref name]).
    */
-  void addObserver(in string aDomain, in nsIObserver aObserver, in boolean aHoldWeak);
+  void addObserver(in string aDomain, in nsIObserver aObserver);
   void removeObserver(in string aDomain, in nsIObserver aObserver);
 
 

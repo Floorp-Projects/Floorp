@@ -47,7 +47,8 @@ var gNavigatorRegionBundle;
 var gBrandRegionBundle;
 var gLastValidURL = "";
 
-var pref = null;
+var pref = Components.classes["@mozilla.org/preferences;1"]
+                     .getService(Components.interfaces.nsIPref);
 
 var appCore = null;
 
@@ -131,7 +132,7 @@ function UpdateInternetSearchResults(event)
       var searchInProgressFlag = search.FindInternetSearchResults(url);
 
       if (searchInProgressFlag) {
-        var autoOpenSearchPanel = pref.getBoolPref("browser.search.opensidebarsearchpanel");
+        var autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
 
         if (autoOpenSearchPanel)
           RevealSearchPanel();
@@ -166,8 +167,7 @@ function getHomePage()
 {
   var url;
   try {
-    url = pref.getComplexValue("browser.startup.homepage",
-                               Components.interfaces.nsIPrefLocalizedString);
+    url = pref.getLocalizedUnicharPref("browser.startup.homepage");
   } catch (e) {
   }
 
@@ -203,9 +203,7 @@ function UpdateBackForwardButtons()
 function nsButtonPrefListener()
 {
   try {
-    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-    if (pbi)
-      pbi.addObserver(this.domain, this, false);
+    pref.addObserver(this.domain, this);
   } catch(ex) {
     dump("Failed to observe prefs: " + ex + "\n");
   }
@@ -225,7 +223,7 @@ nsButtonPrefListener.prototype =
     var buttonId = buttonName + "-button";
     var button = document.getElementById(buttonId);
 
-    var show = pref.getBoolPref(prefName);
+    var show = pref.GetBoolPref(prefName);
     if (show)
       button.setAttribute("hidden","false");
     else
@@ -253,13 +251,6 @@ function Startup()
                         .createInstance(Components.interfaces.nsIBrowserInstance);
     if (!appCore)
       throw Components.results.NS_ERROR_FAILURE;
-
-    // Get the preferences service
-    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                .getService(Components.interfaces.nsIPrefService);
-    if (!prefService)
-      throw Components.results.NS_ERROR_FAILURE;
-    pref = prefService.getBranch(null);
 
     webNavigation = getWebNavigation();
     if (!webNavigation)
@@ -402,10 +393,8 @@ function Shutdown()
   }
 
   // unregister us as a pref listener
-  var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-  if (pbi)
-    pbi.removeObserver(window.buttonPrefListener.domain,
-                       window.buttonPrefListener);
+  pref.removeObserver(window.buttonPrefListener.domain,
+                      window.buttonPrefListener);
 
   window.browserContentListener.close();
   // Close the app core.
@@ -624,9 +613,8 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
     var forceAsURL = urlmatch.test(searchStr);
 
   try {
-    autoOpenSearchPanel = pref.getBoolPref("browser.search.opensidebarsearchpanel");
-    defaultSearchURL = pref.getComplexValue("browser.search.defaulturl",
-                                            Components.interfaces.nsIPrefLocalizedString);
+    autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
+    defaultSearchURL = pref.getLocalizedUnicharPref("browser.search.defaulturl");
   } catch (ex) {
   }
 
@@ -650,7 +638,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
    } else {
     var searchMode = 0;
     try {
-      searchMode = pref.getIntPref("browser.search.powermode");
+      searchMode = pref.GetIntPref("browser.search.powermode");
     } catch(ex) {
     }
     if (forceDialogFlag || searchMode == 1) {
@@ -678,7 +666,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 
         searchDS.RememberLastSearchText(escapedSearchStr);
         try {
-          var searchEngineURI = pref.getCharPref("browser.search.defaultengine");
+          var searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
           if (searchEngineURI) {
             var searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
           if (searchURL)
@@ -1255,7 +1243,7 @@ function getNewThemes()
 
 function URLBarMouseupHandler(aEvent)
 {
-  if (aEvent.button == 0 && pref.getBoolPref("browser.urlbar.clickSelectsAll")) {
+  if (aEvent.button == 0 && pref.GetBoolPref("browser.urlbar.clickSelectsAll")) {
     var selectionLen = gURLBar.selectionEnd - gURLBar.selectionStart;
     if (selectionLen == 0)
       gURLBar.setSelectionRange(0, gURLBar.textLength);
@@ -1264,7 +1252,7 @@ function URLBarMouseupHandler(aEvent)
 
 function URLBarBlurHandler(aEvent)
 {
-  if (pref.getBoolPref("browser.urlbar.clickSelectsAll"))
+  if (pref.GetBoolPref("browser.urlbar.clickSelectsAll"))
     gURLBar.setSelectionRange(0, 0);
 }
 
