@@ -29,14 +29,8 @@ class nsCommonDialogs: public nsICommonDialogs
 public:
 			nsCommonDialogs();
   virtual	~nsCommonDialogs();
-  NS_IMETHOD Alert(nsIDOMWindow *inParent, const PRUnichar *inMsg);
-  NS_IMETHOD Confirm(nsIDOMWindow *inParent, const PRUnichar *inMsg, PRBool *_retval);
-  NS_IMETHOD ConfirmCheck(nsIDOMWindow *inParent, const PRUnichar *inMsg, const PRUnichar *inCheckMsg, PRBool *outCheckValue, PRBool *_retval);
-  NS_IMETHOD Prompt(nsIDOMWindow *inParent, const PRUnichar *inMsg, const PRUnichar *inDefaultText, PRUnichar **result, PRBool *_retval);
-  NS_IMETHOD PromptUsernameAndPassword(nsIDOMWindow *inParent, const PRUnichar *inMsg, PRUnichar **outUser, PRUnichar **outPassword, PRBool *_retval);
-  NS_IMETHOD PromptPassword(nsIDOMWindow *inParent, const PRUnichar *inMsg, PRUnichar **outPassword, PRBool *_retval);
 
-  NS_IMETHOD DoDialog(nsIDOMWindow* inParent, nsIDialogParamBlock *ioParamBlock, const char *inChromeURL);
+  NS_DECL_NSICOMMONDIALOGS
   NS_DECL_ISUPPORTS
 private:
 };

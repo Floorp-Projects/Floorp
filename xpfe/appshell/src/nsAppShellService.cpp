@@ -98,32 +98,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Initialize(nsICmdLineService*aCmdLineService);
-  NS_IMETHOD Run();
-  NS_IMETHOD Shutdown();
-  NS_IMETHOD PushThreadEventQueue();
-  NS_IMETHOD PopThreadEventQueue();
-
-  NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow *aParent,
-                                  nsIURI *aUrl, 
-                                  PRBool aShowWindow,
-                                  PRBool aLoadDefaultPage,
-                                  PRUint32 aChromeMask,
-                                  nsIXULWindowCallbacks *aCallbacks,
-                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight,
-                                  nsIWebShellWindow **aResult);
-
-  NS_IMETHOD RunModalDialog(      nsIWebShellWindow **aWindow,
-                                  nsIWebShellWindow *aParent,
-                                  nsIURI *aUrl, 
-                                  PRUint32 aChromeMask,
-                                  nsIXULWindowCallbacks *aCallbacks,
-                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight);
-  NS_IMETHOD CloseTopLevelWindow(nsIWebShellWindow* aWindow);
-  NS_IMETHOD GetHiddenWindow(nsIWebShellWindow **aWindow);
-  NS_IMETHOD RegisterTopLevelWindow(nsIWebShellWindow* aWindow);
-  NS_IMETHOD UnregisterTopLevelWindow(nsIWebShellWindow* aWindow);
-
+  NS_DECL_NSIAPPSHELLSERVICE
 
 protected:
   virtual ~nsAppShellService();

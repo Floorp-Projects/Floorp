@@ -27,13 +27,8 @@ public:
 		nsDialogParamBlock();
 	virtual ~nsDialogParamBlock();
 	 
-	NS_IMETHOD SetNumberStrings( PRInt32 inNumStrings ); 
- 	NS_IMETHOD GetInt(PRInt32 inIndex, PRInt32 *_retval);
-	NS_IMETHOD SetInt(PRInt32 inIndex, PRInt32 inInt);
+    NS_DECL_NSIDIALOGPARAMBLOCK
 
-  
-  	NS_IMETHOD GetString(PRInt32 inIndex, PRUnichar **_retval);
-  	NS_IMETHOD SetString(PRInt32 inIndex, const PRUnichar *inString);
   	// COM
 	NS_DECL_ISUPPORTS	
 private:
