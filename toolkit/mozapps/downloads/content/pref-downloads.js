@@ -299,7 +299,7 @@ function showFolder()
 function getSpecialFolderKey(aFolderType) 
 {
 #ifdef XP_WIN
-  return aFolderType == "Desktop" ? "DeskV" : "Pers";
+  return aFolderType == "Desktop" ? "DeskP" : "Pers";
 #endif
 #ifdef XP_MACOSX
   return aFolderType == "Desktop" ? "UsrDsk" : "UsrDocs";
