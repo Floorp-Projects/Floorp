@@ -50,7 +50,7 @@ class GIFDecoder : public nsIImgDecoder
 {
 public:
   GIFDecoder(il_container* aContainer);
-  ~GIFDecoder();
+  virtual ~GIFDecoder();
  
   NS_DECL_ISUPPORTS
 
@@ -110,7 +110,7 @@ public:
   NS_DECL_ISUPPORTS
 
   nsGIFDecFactory(const nsCID &aClass);
-  ~nsGIFDecFactory();
+  virtual ~nsGIFDecFactory();
 
   NS_IMETHOD CreateInstance(nsISupports *aOuter,
                             REFNSIID aIID,
