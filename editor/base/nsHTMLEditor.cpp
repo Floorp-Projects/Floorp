@@ -5157,7 +5157,9 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
                 wc = (PRUint32)wrapColumn;
             }
           }
+#ifdef DEBUG_mjudge
           printf("Editor: getting output with wrapcol = %d (GetBodyWrapWidth returned %d\n", wc, wrapColumn);
+#endif
           return selection->ToString(aFormatType, aFlags, wc, aOutputString);
         }
       }
