@@ -55,7 +55,7 @@ Attributes=SELECTED
 
 [Dialog Start Install]
 Message0=Click the Install button to download and install the selected components.  
-
+Message1=Save installer modules upon download
 
 [SmartDownload-Netscape Install]
 core_file=xpcom.xpi
