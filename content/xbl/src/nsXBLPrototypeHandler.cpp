@@ -189,6 +189,14 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
   if (!mHandlerElement)
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIDOMNSUIEvent> uievent = do_QueryInterface(aEvent);
+  if (uievent) {
+    PRBool preventDefault;
+    uievent->GetPreventDefault(&preventDefault);
+    if (preventDefault)
+      return NS_OK;
+  }
+
   // See if our event receiver is a content node (and not us).
   PRBool isReceiverCommandElement = PR_FALSE;
   nsCOMPtr<nsIContent> content(do_QueryInterface(aReceiver));
