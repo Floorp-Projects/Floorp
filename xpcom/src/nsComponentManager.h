@@ -23,6 +23,7 @@
 #include "NSReg.h"
 #include "nsHashtable.h"
 #include "prtime.h"
+#include "prmon.h"
 
 class nsFactoryEntry;
 class nsDllStore;
@@ -168,7 +169,7 @@ protected:
 protected:
   nsHashtable*  mFactories;
   nsHashtable*  mProgIDs;
-  PRMonitor*    mMonitor;
+  PRMonitor*    mMon;
   nsDllStore*   mDllStore;
 };
 
