@@ -89,7 +89,7 @@ Encrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
     rv = mPSM->GetControlConnection(&control);
     if (rv != NS_OK) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
    
-    status = CMT_SDREncrypt(control, (const unsigned char *)0, 0, 
+    status = CMT_SDREncrypt(control, (void *)0, (const unsigned char *)0, 0, 
                data, dataLen, result, &cLen);
     if (status != CMTSuccess) { rv = NS_ERROR_FAILURE; goto loser; } /* XXX */
 
@@ -123,7 +123,7 @@ Decrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
     if (rv != NS_OK) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
     
     /* Call PSM to decrypt the value */
-    status = CMT_SDRDecrypt(control, data, dataLen, result, &len);
+    status = CMT_SDRDecrypt(control, (void *)0, data, dataLen, result, &len);
     if (status != CMTSuccess) { rv = NS_ERROR_FAILURE; goto loser; } /* Promote? */
 
     /* Copy returned data to nsAllocator buffer ? */
@@ -201,7 +201,17 @@ loser:
 NS_IMETHODIMP nsSecretDecoderRing::
 ChangePassword()
 {
-  return NS_OK;
+  nsresult rv = NS_OK;
+  CMTStatus status;
+  CMT_CONTROL *control;
+
+  rv = mPSM->GetControlConnection(&control);
+  if (rv != NS_OK) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
+
+  status = CMT_SDRChangePassword(control, (void*)0);
+
+loser:
+  return rv;
 }
 
 /* void logout(); */
