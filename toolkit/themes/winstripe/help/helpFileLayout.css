@@ -113,8 +113,8 @@ li {
 
 .contentsBox {
 	margin-top: 12px;
-	background-color: #cccccc;
-	border: 1px solid black;
+	background-color: #eee;
+	border: 1px solid #ccc;
 	width: 300px;
 	padding: 1em;
 }
