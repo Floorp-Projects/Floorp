@@ -39,7 +39,7 @@ public class PlugletLoader {
     //  path to jar file. Name of main class sould to be in MANIFEST.
     public static PlugletFactory getPluglet(String path) {
 	try {
-	    org.mozilla.util.Debug.print("-- PlugletLoader.getPluglet("+path+")\n"); 
+	    org.mozilla.util.DebugPluglet.print("-- PlugletLoader.getPluglet("+path+")\n"); 
 	    URL url = new URL("file://"+path);
 	    URLClassLoader loader = URLClassLoader.newInstance(new URL[]{url});
 	    URL manifestURL = new URL("jar:file://"+path+"!/META-INF/MANIFEST.MF");
@@ -47,8 +47,8 @@ public class PlugletLoader {
 	    Manifest manifest = new Manifest(inputStream);
 	    Attributes attr = manifest.getMainAttributes();
 	    String plugletClassName = attr.getValue("Pluglet-Class");
-	    org.mozilla.util.Debug.print("-- PlugletLoader.getPluglet class name "+plugletClassName+"\n");
-            org.mozilla.util.Debug.print("-- PL url[0] "+loader.getURLs()[0]+"\n");
+	    org.mozilla.util.DebugPluglet.print("-- PlugletLoader.getPluglet class name "+plugletClassName+"\n");
+            org.mozilla.util.DebugPluglet.print("-- PL url[0] "+loader.getURLs()[0]+"\n");
 	    if (plugletClassName == null) {
 		//nb
 		return null;
@@ -66,14 +66,14 @@ public class PlugletLoader {
 	    policy.grantPermission(codesource,collection);
 	    Object pluglet = loader.loadClass(plugletClassName).newInstance();
 	    if (pluglet instanceof PlugletFactory) {
-                org.mozilla.util.Debug.print("-- ok we have a PlugletFactory"+"\n");
+                org.mozilla.util.DebugPluglet.print("-- ok we have a PlugletFactory"+"\n");
 		return (PlugletFactory) pluglet;
 	    } else {
-                org.mozilla.util.Debug.print("-- oups we do not have a PlugletFactory"+"\n");
+                org.mozilla.util.DebugPluglet.print("-- oups we do not have a PlugletFactory"+"\n");
 		return null;
 	    }
 	} catch (Exception e) {
-	    org.mozilla.util.Debug.print("-- PlugletLoader.getPluglet exc "+e); 
+	    org.mozilla.util.DebugPluglet.print("-- PlugletLoader.getPluglet exc "+e); 
             e.printStackTrace();
 	    return null;
 	}
@@ -81,16 +81,16 @@ public class PlugletLoader {
     
     public static String getMIMEDescription(String path) {
 	try {
-	    org.mozilla.util.Debug.print("-- PlugletLoader.getMIMEDescription("+path+")\n");
+	    org.mozilla.util.DebugPluglet.print("-- PlugletLoader.getMIMEDescription("+path+")\n");
 	    URL manifestURL = new URL("jar:file://"+path+"!/META-INF/MANIFEST.MF");
 	    InputStream inputStream = manifestURL.openStream();
 	    Manifest manifest = new Manifest(inputStream);
 	    Attributes attr = manifest.getMainAttributes();
 	    String mimeDescription = attr.getValue("MIMEDescription");
-            org.mozilla.util.Debug.print("-- PlugletLoader.getMIMEDescription desc "+mimeDescription+"\n"); 
+            org.mozilla.util.DebugPluglet.print("-- PlugletLoader.getMIMEDescription desc "+mimeDescription+"\n"); 
 	    return mimeDescription;
 	} catch (Exception e) {
-	    org.mozilla.util.Debug.print(e+"\n");
+	    org.mozilla.util.DebugPluglet.print(e+"\n");
 	    e.printStackTrace();
 	    return null;
 	}

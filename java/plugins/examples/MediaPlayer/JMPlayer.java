@@ -93,7 +93,6 @@ class Player implements Pluglet, ControllerListener {
     }
 
     public PlugletStreamListener newStream() {
-	org.mozilla.util.Debug.print("--TestInstance.newStream\n");
 	JMPlayerStreamListener listener = new JMPlayerStreamListener();
 	listener.setPlayer(this);
 	return listener;

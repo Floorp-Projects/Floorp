@@ -27,7 +27,7 @@ import java.io.*;
 
 public class test implements PlugletFactory {
     public test() {
-	org.mozilla.util.Debug.print("--test.test()\n");
+	org.mozilla.util.DebugPluglet.print("--test.test()\n");
     }
     /**
      * Creates a new pluglet instance, based on a MIME type. This
@@ -35,7 +35,7 @@ public class test implements PlugletFactory {
      * the specified MIME type.
      */
     public Pluglet createPluglet(String mimeType) {
-	org.mozilla.util.Debug.print("--test.createPlugletInstance\n");
+	org.mozilla.util.DebugPluglet.print("--test.createPlugletInstance\n");
  	return new TestInstance();
     }
     /**
@@ -43,14 +43,14 @@ public class test implements PlugletFactory {
      * created.
      */
     public void initialize(PlugletManager manager) {	
-	org.mozilla.util.Debug.print("--test.initialize\n");
+	org.mozilla.util.DebugPluglet.print("--test.initialize\n");
     }
     /**
      * Called when the browser is done with the pluglet factory, or when
      * the pluglet is disabled by the user.
      */
     public void shutdown() {
-	org.mozilla.util.Debug.print("--test.shutdown\n");
+	org.mozilla.util.DebugPluglet.print("--test.shutdown\n");
     }
 }
 
@@ -60,7 +60,7 @@ class TestInstance implements Pluglet {
     List list;
     PlugletPeer peer;
     public TestInstance() {
-	org.mozilla.util.Debug.print("--TestInstance.TestInstance() \n");
+	org.mozilla.util.DebugPluglet.print("--TestInstance.TestInstance() \n");
 	panel = new Panel();
 	button = new Button("Press me :)");
 	button.addActionListener(new ActionListener() {
@@ -91,9 +91,9 @@ class TestInstance implements Pluglet {
 
     public void initialize(PlugletPeer peer) {
 	this.peer = peer;
-	org.mozilla.util.Debug.print("--TestInstance.initialize\n");
+	org.mozilla.util.DebugPluglet.print("--TestInstance.initialize\n");
 	peer.showStatus("Hello world");
-	org.mozilla.util.Debug.print("--TestInstance.initialize  "+peer.getMIMEType());
+	org.mozilla.util.DebugPluglet.print("--TestInstance.initialize  "+peer.getMIMEType());
 	/*
 	try {
 	    OutputStreamWriter out = new OutputStreamWriter(peer.newStream("text/plain","_new"));
@@ -113,7 +113,7 @@ class TestInstance implements Pluglet {
      * to in the browser window's history.
      */
     public void start() {
-	org.mozilla.util.Debug.print("--TestInstance.start\n");
+	org.mozilla.util.DebugPluglet.print("--TestInstance.start\n");
     }
     /**
      * Called to instruct the pluglet instance to stop, thereby suspending its state.
@@ -122,7 +122,7 @@ class TestInstance implements Pluglet {
      * list.
      */
     public void stop() {
-       org.mozilla.util.Debug.print("--TestInstance.stop\n");
+       org.mozilla.util.DebugPluglet.print("--TestInstance.stop\n");
     }
     /**
      * Called to instruct the pluglet instance to destroy itself. This is called when
@@ -131,7 +131,7 @@ class TestInstance implements Pluglet {
      * window containing this page in the history is being closed.
      */
     public void destroy() {
-       org.mozilla.util.Debug.print("--TestInstance.destroy\n");
+       org.mozilla.util.DebugPluglet.print("--TestInstance.destroy\n");
     }
     /**
      * Called to tell the pluglet that the initial src/data stream is
@@ -140,7 +140,7 @@ class TestInstance implements Pluglet {
      * @result PlugletStreamListener
      */
     public PlugletStreamListener newStream() {
-	org.mozilla.util.Debug.print("--TestInstance.newStream\n");
+	org.mozilla.util.DebugPluglet.print("--TestInstance.newStream\n");
 	return new TestStreamListener();
     }
     /**
@@ -149,7 +149,7 @@ class TestInstance implements Pluglet {
      * @param frame the pluglet panel
      */
     public void setWindow(Frame frame) {
-	org.mozilla.util.Debug.print("--Test...SetWindow "+frame+"\n");
+	org.mozilla.util.DebugPluglet.print("--Test...SetWindow "+frame+"\n");
 	if(frame == null) {
 	    return;
         }
@@ -157,8 +157,8 @@ class TestInstance implements Pluglet {
 	if (info instanceof PlugletTagInfo2) {
 	    PlugletTagInfo2 info2 = (PlugletTagInfo2)info;
 	    frame.setSize(info2.getWidth(),info2.getHeight());
-	    org.mozilla.util.Debug.print("--TestInstance.SetWindow width "+info2.getWidth()+ " height "+info2.getHeight()+"\n");
-	    org.mozilla.util.Debug.print("--Test...SetWindow "+frame+"\n");
+	    org.mozilla.util.DebugPluglet.print("--TestInstance.SetWindow width "+info2.getWidth()+ " height "+info2.getHeight()+"\n");
+	    org.mozilla.util.DebugPluglet.print("--Test...SetWindow "+frame+"\n");
 	}
 	frame.add(panel);
 	frame.pack();
@@ -175,16 +175,16 @@ class TestInstance implements Pluglet {
 
 class TestStreamListener implements PlugletStreamListener {
     public TestStreamListener() {
-	org.mozilla.util.Debug.print("--TestStreamListener.TestStreamListener()\n");
+	org.mozilla.util.DebugPluglet.print("--TestStreamListener.TestStreamListener()\n");
     }
     /**
      * Notify the observer that the URL has started to load.  This method is
      * called only once, at the beginning of a URL load.<BR><BR>
      */
     public void onStartBinding(PlugletStreamInfo streamInfo) {
-	org.mozilla.util.Debug.print("--TestStreamListener.onStartBinding ");
-	org.mozilla.util.Debug.print("length "+streamInfo.getLength());
-	org.mozilla.util.Debug.print(" contenet type "+ streamInfo.getContentType());
+	org.mozilla.util.DebugPluglet.print("--TestStreamListener.onStartBinding ");
+	org.mozilla.util.DebugPluglet.print("length "+streamInfo.getLength());
+	org.mozilla.util.DebugPluglet.print(" contenet type "+ streamInfo.getContentType());
     }
     /**
      * Notify the client that data is available in the input stream.  This
@@ -197,23 +197,23 @@ class TestStreamListener implements PlugletStreamListener {
      */
     public void onDataAvailable(PlugletStreamInfo plugletInfo, InputStream input,int  length) {
 	try{
-	    org.mozilla.util.Debug.print("--TestStreamListener.onDataAvailable ");
-	    org.mozilla.util.Debug.print("--length "+input.available()+"\n");
+	    org.mozilla.util.DebugPluglet.print("--TestStreamListener.onDataAvailable ");
+	    org.mozilla.util.DebugPluglet.print("--length "+input.available()+"\n");
 	} catch(Exception e) {
 	    ;
 	}
     }
     public void onFileAvailable(PlugletStreamInfo plugletInfo, String fileName) {
-	org.mozilla.util.Debug.print("--TestStreamListener.onFileAvailable\n");
+	org.mozilla.util.DebugPluglet.print("--TestStreamListener.onFileAvailable\n");
     }
     /**
      * Notify the observer that the URL has finished loading. 
      */
     public void onStopBinding(PlugletStreamInfo plugletInfo,int status) {
-	org.mozilla.util.Debug.print("--TestStreamListener.onStopBinding\n");
+	org.mozilla.util.DebugPluglet.print("--TestStreamListener.onStopBinding\n");
     }
     public int  getStreamType() {
-	org.mozilla.util.Debug.print("--TestStreamListener.getStreamType\n");
+	org.mozilla.util.DebugPluglet.print("--TestStreamListener.getStreamType\n");
 	return 1; //:)
     }
 }

@@ -20,7 +20,7 @@
  */
 package org.mozilla.util;
 
-public class Debug {
+public class DebugPluglet {
     public static native void  print(String str);
 
 }

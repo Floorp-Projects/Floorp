@@ -42,7 +42,7 @@ CPPSRCS =  \
 	org_mozilla_pluglet_mozilla_PlugletPeerImpl.cpp \
 	org_mozilla_pluglet_mozilla_PlugletStreamInfoImpl.cpp \
 	org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl.cpp \
-	org_mozilla_util_Debug.cpp \
+	org_mozilla_util_DebugPluglet.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

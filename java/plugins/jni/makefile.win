@@ -31,7 +31,7 @@ LIBRARY_NAME = plugletjni
 DEPTH= ..\..\..
 
 OBJS =  \
-	.\$(OBJDIR)\org_mozilla_util_Debug.obj \
+	.\$(OBJDIR)\org_mozilla_util_DebugPluglet.obj \
 	.\$(OBJDIR)\org_mozilla_pluglet_mozilla_PlugletStreamInfoImpl.obj \
 	.\$(OBJDIR)\org_mozilla_pluglet_mozilla_PlugletInputStream.obj \
 	.\$(OBJDIR)\org_mozilla_pluglet_mozilla_PlugletOutputStream.obj \
