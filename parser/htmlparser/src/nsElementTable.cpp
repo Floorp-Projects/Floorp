@@ -113,7 +113,6 @@ DECL_TAG_LIST(gFormKids,{eHTMLTag_keygen})
 DECL_TAG_LIST(gFramesetKids,{eHTMLTag_frame COMMA eHTMLTag_frameset COMMA eHTMLTag_noframes})
 
 DECL_TAG_LIST(gHtmlKids,{eHTMLTag_body COMMA eHTMLTag_frameset COMMA eHTMLTag_head COMMA eHTMLTag_map COMMA eHTMLTag_noscript COMMA eHTMLTag_noframes COMMA eHTMLTag_script COMMA eHTMLTag_newline COMMA eHTMLTag_whitespace})
-DECL_TAG_LIST(gHeadKids,{eHTMLTag_base COMMA eHTMLTag_bgsound COMMA eHTMLTag_link COMMA eHTMLTag_meta COMMA eHTMLTag_script COMMA eHTMLTag_style COMMA eHTMLTag_title COMMA eHTMLTag_noembed})
 
 DECL_TAG_LIST(gLabelKids,{eHTMLTag_span})
 DECL_TAG_LIST(gLIKids,{eHTMLTag_ol COMMA eHTMLTag_ul})
@@ -316,7 +315,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gInHead,	&gRootTags,
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
+      /*parent,incl,exclgroups*/          kHeadContent, kNone, kNone,	
       /*special props, prop-range*/       kNonContainer, kNoPropRange,
       /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown);
 
@@ -652,7 +651,7 @@ void InitializeElementTable(void) {
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kHTMLContent, (kHeadContent|kHeadMisc), kNone,	
       /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
-      /*special parents,kids,skip*/       &gInHTML,&gHeadKids,eHTMLTag_unknown);
+      /*special parents,kids,skip*/       &gInHTML,0,eHTMLTag_unknown);
 
     Initialize( 
       /*tag*/                             eHTMLTag_hr,
@@ -731,7 +730,7 @@ void InitializeElementTable(void) {
       /*requiredAncestor*/                eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          (kBlock|kHeadContent), kFlowEntity, kNone,	
+      /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
       /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
       /*special parents,kids,skip*/       &gInBody,0,eHTMLTag_unknown);
 
@@ -787,7 +786,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gInHead,&gInHead,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kHeadMisc, kNone, kNone,	
+      /*parent,incl,exclgroups*/          kHeadContent, kNone, kNone,	
       /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
       /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown);
 
@@ -832,7 +831,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gInHead,	&gInHead,
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kHeadMisc, kNone, kNone,	
+      /*parent,incl,exclgroups*/          kHeadContent, kNone, kNone,	
       /*special props, prop-range*/       kNoStyleLeaksIn|kNonContainer, kDefaultPropRange,
       /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown);
 
@@ -976,7 +975,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          (kSpecial|kHeadMisc), kCDATA, kNone,	
+      /*parent,incl,exclgroups*/          (kSpecial|kHeadContent), kCDATA, kNone,	// note: this is kHeadContent since shipping this breaks things.
       /*special props, prop-range*/       kNoStyleLeaksIn|kLegalOpen, kNoPropRange,
       /*special parents,kids,skip*/       0,&gContainsText,eHTMLTag_script);
 
@@ -1013,7 +1012,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          (kFlowEntity|kHeadContent), kNone, kNone,	 // Added kFlowEntity|kHeadContent & kNonContainer in
+      /*parent,incl,exclgroups*/          (kFlowEntity|kHeadMisc), kNone, kNone,	 // Added kFlowEntity|kHeadMisc & kNonContainer in
       /*special props, prop-range*/       kNonContainer,kDefaultPropRange,           // Ref. to Bug 25749
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
@@ -1066,7 +1065,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gInHead,	&gInHead,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kHeadMisc, kCDATA, kNone,	
+      /*parent,incl,exclgroups*/          kHeadContent, kCDATA, kNone,	
       /*special props, prop-range*/       kNoStyleLeaksIn|kNonContainer, kNoPropRange,
       /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_style);
 
@@ -1157,7 +1156,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gInHead,&gInHead,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kHeadMisc,kPCDATA, kNone,	
+      /*parent,incl,exclgroups*/          kHeadContent,kPCDATA, kNone,	
       /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
       /*special parents,kids,skip*/       &gInHead,&gContainsText,eHTMLTag_title);
 
@@ -1234,6 +1233,10 @@ void InitializeElementTable(void) {
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
+          // Whitespace must have a parent model of kHeadMisc to ensure that we
+          // do the right thing for whitespace in the head section of a document.
+          // (i.e., it must be non-exclusively a child of the head).
+
       /*tag*/                             eHTMLTag_whitespace, 
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
@@ -1243,6 +1246,10 @@ void InitializeElementTable(void) {
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
+          // Newlines must have a parent model of kHeadMisc to ensure that we
+          // do the right thing for whitespace in the head section of a document.
+          // (i.e., it must be non-exclusively a child of the head).
+
       /*tag*/                             eHTMLTag_newline,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
@@ -1252,11 +1259,15 @@ void InitializeElementTable(void) {
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
+          // Comments must have a parent model of kHeadMisc to ensure that we
+          // do the right thing for whitespace in the head section of a document
+          // (i.e., it must be non-exclusively a child of the head).
+
       /*tag*/                             eHTMLTag_comment,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
+      /*parent,incl,exclgroups*/          kFlowEntity|kHeadMisc, kNone, kNone,	
       /*special props, prop-range*/       kOmitEndTag|kLegalOpen,kNoPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
@@ -1297,11 +1308,15 @@ void InitializeElementTable(void) {
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
+          // Userdefined tags must have a parent model of kHeadMisc to ensure that
+          // we do the right thing for whitespace in the head section of a document.
+          // (i.e., it must be non-exclusively a child of the head).
+
       /*tag*/                             eHTMLTag_userdefined,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_frameset,
-	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
       /*autoclose starttags and endtags*/ &gBodyAutoClose,0,0,0,
-      /*parent,incl,exclgroups*/          kFlowEntity, (kInlineEntity|kSelf), kNone,	// Treat userdefined as inline element - Ref bug 56245,66772
+      /*parent,incl,exclgroups*/          (kFlowEntity|kHeadMisc), (kInlineEntity|kSelf), kNone,	// Treat userdefined as inline element - Ref bug 56245,66772
       /*special props, prop-range*/       kNone, kBodyPropRange,                      
       /*special parents,kids,skip*/       &gInNoframes,&gBodyKids,eHTMLTag_unknown);
   }//if
@@ -1758,45 +1773,31 @@ PRBool nsHTMLElement::CanOmitStartTag(eHTMLTags aChild) const{
 }
 
 /**
- * 
- * @update	gess12/13/98
- * @param 
- * @return
+ * Returns whether a given tag can be a direct child of the <head> node of
+ * an HTML document.
+ *
+ * @param aChild The tag in question.
+ * @param aExclusively [out]Whether or not this tag can *only* appear in the
+ *                     head (as opposed to things like <object> which can be
+                       either in the body or the head).
+ * @return Whether this tag can appear in the head.
  */
 PRBool nsHTMLElement::IsChildOfHead(eHTMLTags aChild,PRBool& aExclusively) {
-#if 0
-  PRBool result=PR_FALSE;
+  aExclusively = PR_TRUE;
 
-  aExclusively=PR_FALSE;
-
-  switch(aChild) {
-
-    case eHTMLTag_base:
-    case eHTMLTag_link:
-    case eHTMLTag_meta:
-    case eHTMLTag_title:
-    case eHTMLTag_style:
-      aExclusively=result=PR_TRUE;
-      break;
-
-    case eHTMLTag_bgsound:
-    case eHTMLTag_script:
-    case eHTMLTag_noembed:
-    case eHTMLTag_noscript:
-    case eHTMLTag_whitespace:
-    case eHTMLTag_newline:
-    case eHTMLTag_comment:
-      result=PR_TRUE;
-      break;
-
-    default:
-      break;
+  // Is this a head-only tag?
+  if (gHTMLElements[aChild].mParentBits & kHeadContent) {
+    return PR_TRUE;
   }
-  return result;
-#else
-  aExclusively=PR_TRUE;
-  return FindTagInSet(aChild,gHeadKids.mTags,gHeadKids.mCount);
-#endif
+
+
+  // If not, check if it can appear in the head.
+  if (gHTMLElements[aChild].mParentBits & kHeadMisc) {
+    aExclusively = PR_FALSE;
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
 }
 
 
