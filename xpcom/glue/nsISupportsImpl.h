@@ -257,6 +257,11 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
     foundInterface = NS_STATIC_CAST(_interface*, this);                       \
   else
 
+#define NS_IMPL_QUERY_BODY_CONDITIONAL(_interface, condition)                 \
+  if ( (condition) && aIID.Equals(NS_GET_IID(_interface)))                    \
+    foundInterface = NS_STATIC_CAST(_interface*, this);                       \
+  else
+
 #define NS_IMPL_QUERY_BODY_AMBIGUOUS(_interface, _implClass)                  \
   if ( aIID.Equals(NS_GET_IID(_interface)) )                                  \
     foundInterface = NS_STATIC_CAST(_interface*,                              \
@@ -324,6 +329,8 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
   */
 #define NS_INTERFACE_MAP_BEGIN(_implClass)      NS_IMPL_QUERY_HEAD(_implClass)
 #define NS_INTERFACE_MAP_ENTRY(_interface)      NS_IMPL_QUERY_BODY(_interface)
+#define NS_INTERFACE_MAP_ENTRY_CONDITIONAL(_interface, condition)             \
+  NS_IMPL_QUERY_BODY_CONDITIONAL(_interface, condition)
 #define NS_INTERFACE_MAP_ENTRY_AGGREGATED(_interface,_aggregate)              \
   NS_IMPL_QUERY_BODY_AGGREGATED(_interface,_aggregate)
 

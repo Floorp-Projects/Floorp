@@ -54,15 +54,9 @@ NS_INTERFACE_MAP_BEGIN(nsViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY(nsIViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-  if ( mHttpChannel && aIID.Equals(NS_GET_IID(nsIHttpChannel)) )
-    foundInterface = NS_STATIC_CAST(nsIHttpChannel*, this);
-  else
-  if ( mCachingChannel && aIID.Equals(NS_GET_IID(nsICachingChannel)) )
-    foundInterface = NS_STATIC_CAST(nsICachingChannel*, this);
-  else
-  if ( mUploadChannel && aIID.Equals(NS_GET_IID(nsIUploadChannel)) )
-    foundInterface = NS_STATIC_CAST(nsIUploadChannel*, this);
-  else
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIHttpChannel, mHttpChannel)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICachingChannel, mCachingChannel)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIUploadChannel, mUploadChannel)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIRequest, nsIViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIChannel, nsIViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIViewSourceChannel)
