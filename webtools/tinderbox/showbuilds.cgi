@@ -571,8 +571,8 @@ function js_what_menu(d,noteid,logfile,errorparser,buildname,buildtime) {
 
 note = new Array();
 tree = new Array();
-name = new Array();
-err = new Array();
+build = new Array();
+error = new Array();
 
 </script>
 
@@ -586,8 +586,8 @@ err = new Array();
 function log_popup(e,buildindex,logfile,buildtime)
 {
     tree = tree[buildindex];
-    buildname = name[buildindex];
-    errorparser = err[buildindex];
+    buildname = build[buildindex];
+    errorparser = error[buildindex];
 
     urlparams = "tree=" + tree
            + "&errorparser=" + errorparser
@@ -671,9 +671,9 @@ while ($ii <= $name_count) {
   if (defined($br = $build_table->[1][$ii])) {
     if ($br != -1) {
       $bn = $build_name_names->[$ii];
-      $script_str .= "tree[$ii]='$br->{td}{name}';\n";
-      $script_str .= "name[$ii]='$bn';\n";
-      $script_str .= " err[$ii]='$br->{errorparser}';\n";
+      $script_str .= " tree[$ii]='$br->{td}{name}';\n";
+      $script_str .= "build[$ii]='$bn';\n";
+      $script_str .= "error[$ii]='$br->{errorparser}';\n";
     }
   }
   $ii++;
