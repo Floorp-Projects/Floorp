@@ -176,7 +176,7 @@ function MsgCompactFolder(isAll)
         var folderList = tree.selectedItems;
         if (folderList)
         {
-            var selctedFolderUri = "";
+            var selectedFolderUri = "";
             var isImap = false;
             if (folderList.length == 1)
             {
