@@ -1,1 +1,2 @@
 nsIDocumentCharsetInfo.idl
+nsIDocCharset.idl
