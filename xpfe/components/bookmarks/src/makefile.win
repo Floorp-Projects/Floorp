@@ -41,6 +41,7 @@ LLIBS=                          \
  $(LIBNSPR)                     \
  $(DIST)\lib\timer_s.lib	\
  $(DIST)\lib\neckoutil_s.lib    \
+ $(DIST)\lib\js3250.lib        \
  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
