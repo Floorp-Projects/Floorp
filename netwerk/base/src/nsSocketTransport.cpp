@@ -864,12 +864,14 @@ nsReadFromSocket(void* closure,
     else {
       PRErrorCode code = PR_GetError();
 
-      if (PR_WOULD_BLOCK_ERROR == code) {
+    if (PR_WOULD_BLOCK_ERROR == code) {
         rv = NS_BASE_STREAM_WOULD_BLOCK;
-      } 
-      else {
+    } 
+    else {
         PR_LOG(gSocketLog, PR_LOG_ERROR, 
                ("PR_Read() failed. PRErrorCode = %x\n", code));
+
+        info -> bEOF = PR_TRUE;
 
         // XXX: What should this error code be?
         rv = NS_ERROR_FAILURE;
