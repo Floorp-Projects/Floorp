@@ -41,7 +41,6 @@
 #include "nsFileSpec.h"
 #include "nsIPref.h"
 #include "nsIProtocolProxyService.h"
-#include "nsIStringBundle.h"
 
 #ifdef DEBUG_gagan
 #include "nsUnixColorPrintf.h"
@@ -86,7 +85,6 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID); // remove now TODO
 static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
 
 NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 NS_IMPL_ISUPPORTS2(nsHTTPHandler,
                    nsIHTTPProtocolHandler,
@@ -399,62 +397,92 @@ nsHTTPHandler::GetAppVersion(PRUnichar* *aAppVersion)
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetVendorName(PRUnichar* *aVendorName)
+nsHTTPHandler::GetVendor(PRUnichar* *aVendor)
 {
-    *aVendorName = mVendorName.ToNewUnicode();
-    if (!*aVendorName) return NS_ERROR_OUT_OF_MEMORY;
+    *aVendor = mVendor.ToNewUnicode();
+    if (!*aVendor) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetVendorName(const PRUnichar* aVendorName)
+nsHTTPHandler::SetVendor(const PRUnichar* aVendor)
 {
-    mVendorName = (const PRUnichar*)aVendorName;
+    mVendor = aVendor;
     return BuildUserAgent();
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetVendorVersion(PRUnichar* *aVendorVersion)
+nsHTTPHandler::GetVendorSub(PRUnichar* *aVendorSub)
 {
-    *aVendorVersion = mVendorVersion.ToNewUnicode();
-    if (!*aVendorVersion) return NS_ERROR_OUT_OF_MEMORY;
+    *aVendorSub = mVendorSub.ToNewUnicode();
+    if (!*aVendorSub) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetVendorVersion(const PRUnichar* aVendorVersion)
+nsHTTPHandler::SetVendorSub(const PRUnichar* aVendorSub)
 {
-    mVendorVersion = (const PRUnichar*)aVendorVersion;
+    mVendorSub = aVendorSub;
     return BuildUserAgent();
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetProductName(PRUnichar* *aProductName)
+nsHTTPHandler::GetVendorComment(PRUnichar* *aComment)
 {
-    *aProductName = mProductName.ToNewUnicode();
-    if (!*aProductName) return NS_ERROR_OUT_OF_MEMORY;
+    *aComment = mVendorComment.ToNewUnicode();
+    if (!*aComment) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetProductName(const PRUnichar* aProductName)
+nsHTTPHandler::SetVendorComment(const PRUnichar* aComment)
 {
-    mProductName = (const PRUnichar*)aProductName;
+    mVendorComment = aComment;
     return BuildUserAgent();
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetProductVersion(PRUnichar* *aProductVersion)
+nsHTTPHandler::GetProduct(PRUnichar* *aProduct)
 {
-    *aProductVersion = mProductVersion.ToNewUnicode();
-    if (!*aProductVersion) return NS_ERROR_OUT_OF_MEMORY;
+    *aProduct = mProduct.ToNewUnicode();
+    if (!*aProduct) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetProductVersion(const PRUnichar* aProductVersion)
+nsHTTPHandler::SetProduct(const PRUnichar* aProduct)
 {
-    mProductVersion = (const PRUnichar*)aProductVersion;
+    mProduct = aProduct;
+    return BuildUserAgent();
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetProductSub(PRUnichar* *aProductSub)
+{
+    *aProductSub = mProductSub.ToNewUnicode();
+    if (!*aProductSub) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::SetProductSub(const PRUnichar* aProductSub)
+{
+    mProductSub = aProductSub;
+    return BuildUserAgent();
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetProductComment(PRUnichar* *aComment)
+{
+    *aComment = mProductComment.ToNewUnicode();
+    if (!*aComment) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::SetProductComment(const PRUnichar* aComment)
+{
+    mProductComment = aComment;
     return BuildUserAgent();
 }
 
@@ -469,7 +497,7 @@ nsHTTPHandler::GetLanguage(PRUnichar* *aLanguage)
 NS_IMETHODIMP
 nsHTTPHandler::SetLanguage(const PRUnichar* aLanguage)
 {
-    mAppLanguage = (const PRUnichar*)aLanguage;
+    mAppLanguage = aLanguage;
     return BuildUserAgent();
 }
 
@@ -505,21 +533,6 @@ nsHTTPHandler::SetMisc(const PRUnichar* aMisc)
     return BuildUserAgent();
 }
 
-NS_IMETHODIMP
-nsHTTPHandler::GetVendorComment(PRUnichar* *aComment)
-{
-    *aComment = mVendorComment.ToNewUnicode();
-    if (!*aComment) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTTPHandler::SetVendorComment(const PRUnichar* aComment)
-{
-    mVendorComment = (const PRUnichar*)aComment;
-    return BuildUserAgent();
-}
-
 nsHTTPHandler::nsHTTPHandler():
     mAcceptLanguages(nsnull),
     mDoKeepAlive(PR_FALSE),
@@ -528,63 +541,64 @@ nsHTTPHandler::nsHTTPHandler():
     NS_INIT_REFCNT();
 }
 
+#define UA_PREF_PREFIX "general.useragent."
 nsresult
-nsHTTPHandler::Init()
+nsHTTPHandler::InitUserAgentComponents()
 {
     nsresult rv = NS_OK;
+    nsXPIDLCString UAPrefVal;
 
-    mProxySvc = do_GetService(kProtocolProxyServiceCID, &rv);
-    mPrefs = do_GetService(kPrefServiceCID, &rv);
-    if (!mPrefs)
-        return NS_ERROR_OUT_OF_MEMORY;
+    // Gather vendor values.
+    rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "vendor",
+        getter_Copies(UAPrefVal));
+    if (NS_SUCCEEDED(rv))
+        mVendor = UAPrefVal;
 
-    mPrefs->RegisterCallback(NETWORK_PREFS, 
-                HTTPPrefsCallback, (void*)this);
-    PrefsChanged();
+    rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "vendorSub",
+        getter_Copies(UAPrefVal));
+    if (NS_SUCCEEDED(rv))
+        mVendorSub = UAPrefVal;
 
-    NS_WITH_SERVICE(nsIStringBundleService, sBundleService, 
-                    kStringBundleServiceCID, &rv); 
-    if (NS_FAILED(rv)) return rv;
-    nsILocale   *strLocale = nsnull;
-    nsCOMPtr<nsIStringBundle> bundle;
-    rv = sBundleService->CreateBundle("chrome://global/locale/brand.properties", strLocale, getter_AddRefs(bundle));
-    if (NS_FAILED(rv)) return rv;
+    rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "vendorComment",
+        getter_Copies(UAPrefVal));
+    if (NS_SUCCEEDED(rv))
+        mVendorComment = UAPrefVal;
 
-    // Gather brand.properties values.
-    nsXPIDLString vendorName, vendorVersion;
-    nsAutoString hashName("vendorShortName");
-    rv = bundle->GetStringFromName(hashName.GetUnicode(), getter_Copies(vendorName));
-    if (NS_FAILED(rv)) return rv;
+    // Gather product values.
+    rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "product",
+        getter_Copies(UAPrefVal));
+    if (NS_SUCCEEDED(rv))
+        mProduct = UAPrefVal;
 
-    nsAutoString convString(vendorName);
-    char *lCStr = convString.ToNewCString();
-    if (!lCStr) return NS_ERROR_OUT_OF_MEMORY;
-    mVendorName = lCStr;
-    nsAllocator::Free(lCStr);
+    rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "productSub",
+        getter_Copies(UAPrefVal));
+    if (NS_SUCCEEDED(rv))
+        mProductSub = UAPrefVal;
 
-    hashName = "vendorVersion";
-    rv = bundle->GetStringFromName(hashName.GetUnicode(), getter_Copies(vendorVersion));
-    if (NS_FAILED(rv)) return rv;
+    rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "productComment",
+        getter_Copies(UAPrefVal));
+    if (NS_SUCCEEDED(rv))
+        mProductComment = UAPrefVal;
 
-    convString = vendorVersion;
-    lCStr = convString.ToNewCString();
-    if (!lCStr) return NS_ERROR_OUT_OF_MEMORY;
-    mVendorVersion = lCStr;
-    nsAllocator::Free(lCStr);
+    // Gather misc value.
+    rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "misc",
+        getter_Copies(UAPrefVal));
+    if (NS_SUCCEEDED(rv))
+        mAppMisc = UAPrefVal;
 
-    // initialize the version and app components
+    // Gather Application name and Version.
     mAppName = "Mozilla";
     mAppVersion = "5.0";
+
     mAppSecurity = "N"; // XXX needs to be set by HTTPS
 
-    nsXPIDLCString locale;
-    rv = mPrefs->CopyCharPref("general.useragent.locale", 
-        getter_Copies(locale));
-    if (NS_SUCCEEDED(rv)) {
-        mAppLanguage = locale;
-    }
+    // Gather locale.
+    rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "locale", 
+        getter_Copies(UAPrefVal));
+    if (NS_SUCCEEDED(rv))
+        mAppLanguage = (const char*)UAPrefVal;
 
-    // Platform
+    // Gather platform.
 #if defined(XP_PC)
     mAppPlatform = "Windows";
 #elif defined (XP_UNIX)
@@ -593,16 +607,21 @@ nsHTTPHandler::Init()
     mAppPlatform = "Macintosh";
 #endif
 
-    // OS/CPU
+    // Gather OS/CPU.
 #ifdef XP_PC
     OSVERSIONINFO info = { sizeof OSVERSIONINFO };
     if (GetVersionEx(&info)) {
         if ( info.dwPlatformId == VER_PLATFORM_WIN32_NT ) {
-            if (info.dwMajorVersion == 4)
-                mAppOSCPU = "NT4.0";
-            else if (info.dwMajorVersion == 3) {
+            if (info.dwMajorVersion      == 3) {
                 mAppOSCPU = "NT3.51";
-            } else {
+            }
+            else if (info.dwMajorVersion == 4) {
+                mAppOSCPU = "NT4.0";
+            }
+            else if (info.dwMajorVersion == 5) {
+                mAppOSCPU = "Windows NT 5.0";
+            }
+            else {
                 mAppOSCPU = "NT";
             }
         } else if (info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
@@ -610,9 +629,6 @@ nsHTTPHandler::Init()
                 mAppOSCPU = "Win98";
             else
                 mAppOSCPU = "Win95";
-        } else {
-            if (info.dwMajorVersion > 4)
-                mAppOSCPU = "Win2k";
         }
     }
 #elif defined (XP_UNIX)
@@ -632,7 +648,24 @@ nsHTTPHandler::Init()
     mAppOSCPU = "BeOS";
 #endif
 
-    rv = BuildUserAgent();
+    // Finally, build up the user agent string.
+    return BuildUserAgent();
+}
+nsresult
+nsHTTPHandler::Init()
+{
+    nsresult rv = NS_OK;
+
+    mProxySvc = do_GetService(kProtocolProxyServiceCID, &rv);
+    mPrefs = do_GetService(kPrefServiceCID, &rv);
+    if (!mPrefs)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    mPrefs->RegisterCallback(NETWORK_PREFS, 
+                HTTPPrefsCallback, (void*)this);
+    PrefsChanged();
+
+    rv = InitUserAgentComponents();
     if (NS_FAILED(rv)) return rv;
 
 #if defined (PR_LOGGING)
@@ -945,13 +978,20 @@ nsHTTPHandler::FollowRedirects(PRBool bFollow)
 // This guy needs to be called each time one of it's comprising pieces changes.
 nsresult
 nsHTTPHandler::BuildUserAgent() {
-    // Mozilla portion
+    NS_ASSERTION((!mAppName.IsEmpty()
+                  || !mAppVersion.IsEmpty()
+                  || !mAppPlatform.IsEmpty()
+                  || !mAppSecurity.IsEmpty()
+                  || !mAppOSCPU.IsEmpty()),
+                   "HTTP cannot send practical requests without this much");
+
+    // Application portion
     mAppUserAgent = mAppName;
     mAppUserAgent += '/';
     mAppUserAgent += mAppVersion;
     mAppUserAgent += ' ';
 
-    // Mozilla comment
+    // Application comment
     mAppUserAgent += '(';
     mAppUserAgent += mAppPlatform;
     mAppUserAgent += "; ";
@@ -968,33 +1008,35 @@ nsHTTPHandler::BuildUserAgent() {
     }
     mAppUserAgent += ')';
 
-    // Vendor portion
-    if (!mVendorName.IsEmpty()) {
-        mAppUserAgent += ' ';
-        mAppUserAgent += mVendorName;
-        if (!mVendorVersion.IsEmpty()) {
-            mAppUserAgent += '/';
-            mAppUserAgent += mVendorVersion;
-        }
-    }
-    
-    // Vendor comment
-    if (!mVendorComment.IsEmpty()) {
-        mAppUserAgent += " (";
-        mAppUserAgent += mVendorComment;
-        mAppUserAgent += ')';
-    }
-
     // Product portion
-    if (!mProductName.IsEmpty()) {
+    if (!mProduct.IsEmpty()) {
         mAppUserAgent += ' ';
-        mAppUserAgent += mProductName;
-        if (!mProductVersion.IsEmpty()) {
+        mAppUserAgent += mProduct;
+        if (!mProductSub.IsEmpty()) {
             mAppUserAgent += '/';
-            mAppUserAgent += mProductVersion;
+            mAppUserAgent += mProductSub;
+        }
+        if (!mProductComment.IsEmpty()) {
+            mAppUserAgent += " (";
+            mAppUserAgent += mProductComment;
+            mAppUserAgent += ')';
         }
     }
 
+    // Vendor portion
+    if (!mVendor.IsEmpty()) {
+        mAppUserAgent += ' ';
+        mAppUserAgent += mVendor;
+        if (!mVendorSub.IsEmpty()) {
+            mAppUserAgent += '/';
+            mAppUserAgent += mVendorSub;
+        }
+        if (!mVendorComment.IsEmpty()) {
+            mAppUserAgent += " (";
+            mAppUserAgent += mVendorComment;
+            mAppUserAgent += ')';
+        }
+    }
     return NS_OK;
 }
 

@@ -81,32 +81,34 @@ interface nsIHTTPProtocolHandler : nsIProtocolHandler
     readonly attribute wstring appVersion;
 
     /**
-     * The vendor name.
-     *
-     * @return The vendor name (if any).
+     * @return The vendor name.
      */
-    attribute wstring vendorName;
+    attribute wstring vendor;
 
     /**
-     * The vendor version string.
-     *
-     * @return The vendor version (major and minor) string (if any).
+     * @return The vendor sub string.
      */
-    attribute wstring vendorVersion;
+    attribute wstring vendorSub;
+    
+    /**
+     * @return The vendor comment.
+     */
+    attribute wstring vendorComment;
 
     /**
-     * A product name.
-     *
-     * @return The product name (if any).
+     * @return The product name.
      */
-    attribute wstring productName;
+    attribute wstring product;
 
     /**
-     * A product version string.
-     *
-     * @return A vendor version (major and minor) string (if any).
+     * @return A product sub string.
      */
-    attribute wstring productVersion;
+    attribute wstring productSub;
+
+    /**
+     * @return A product comment.
+     */
+    attribute wstring productComment;
 
     /**
      * Get the current platform.
@@ -132,11 +134,6 @@ interface nsIHTTPProtocolHandler : nsIProtocolHandler
      * Get/Set the application comment misc portion.
      */
     attribute wstring misc;
-
-    /**
-     * Get/Set the vendor comment. Note this is the entire comment contents.
-     */
-    attribute wstring vendorComment;
 };
 
 %{C++
