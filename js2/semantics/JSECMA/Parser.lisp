@@ -36,19 +36,19 @@
        (deftype value (oneof undefined-value
                              null-value
                              (boolean-value boolean)
-                             (double-value double)
+                             (number-value float64)
                              (string-value string)
                              (object-value object)))
        (deftype object-or-null (oneof null-object-or-null (object-object-or-null object)))
        (deftype object (tuple (properties (address (vector property)))
-                              (typeof-name string)
-                              (prototype object-or-null)
-                              (get (-> (prop-name) value-or-exception))
-                              (put (-> (prop-name value) void-or-exception))
-                              (delete (-> (prop-name) boolean-or-exception))
-                              (call (-> (object-or-null (vector value)) reference-or-exception))
-                              (construct (-> ((vector value)) object-or-exception))
-                              (default-value (-> (default-value-hint) value-or-exception))))
+                         (typeof-name string)
+                         (prototype object-or-null)
+                         (get (-> (prop-name) value-or-exception))
+                         (put (-> (prop-name value) void-or-exception))
+                         (delete (-> (prop-name) boolean-or-exception))
+                         (call (-> (object-or-null (vector value)) reference-or-exception))
+                         (construct (-> ((vector value)) object-or-exception))
+                         (default-value (-> (default-value-hint) value-or-exception))))
        (deftype default-value-hint (oneof no-hint number-hint string-hint))
        (deftype property (tuple (name string) (read-only boolean) (enumerable boolean) (permanent boolean) (value (address value))))
        
@@ -60,7 +60,7 @@
        (deftype integer-or-exception (oneof (normal integer) (abrupt exception)))
        (deftype void-or-exception (oneof normal (abrupt exception)))
        (deftype boolean-or-exception (oneof (normal boolean) (abrupt exception)))
-       (deftype double-or-exception (oneof (normal double) (abrupt exception)))
+       (deftype float64-or-exception (oneof (normal float64) (abrupt exception)))
        (deftype string-or-exception (oneof (normal string) (abrupt exception)))
        (deftype object-or-exception (oneof (normal object) (abrupt exception)))
        (deftype value-or-exception (oneof (normal value) (abrupt exception)))
@@ -80,10 +80,10 @@
          (oneof normal (oneof null-value)))
        (define (boolean-result (b boolean)) value-or-exception
          (oneof normal (oneof boolean-value b)))
-       (define (double-result (d double)) value-or-exception
-         (oneof normal (oneof double-value d)))
+       (define (float64-result (d float64)) value-or-exception
+         (oneof normal (oneof number-value d)))
        (define (integer-result (i integer)) value-or-exception
-         (double-result (rational-to-double i)))
+         (float64-result (rational-to-float64 i)))
        (define (string-result (s string)) value-or-exception
          (oneof normal (oneof string-value s)))
        (define (object-result (o object)) value-or-exception
@@ -124,29 +124,34 @@
          (case v
            (((undefined-value null-value)) false)
            ((boolean-value b boolean) b)
-           ((double-value d double) (not (or (double-is-zero d) (double-is-nan d))))
+           ((number-value d float64) (not (or (float64-is-zero d) (float64-is-na-n d))))
            ((string-value s string) (/= (length s) 0))
            (object-value true)))
        
-       (define (coerce-boolean-to-double (b boolean)) double
+       (define (coerce-boolean-to-float64 (b boolean)) float64
          (if b 1.0 0.0))
        
-       (define (coerce-to-double (v value)) double-or-exception
+       (define (coerce-to-float64 (v value)) float64-or-exception
          (case v
            (undefined-value (oneof normal nan))
            (null-value (oneof normal 0.0))
-           ((boolean-value b boolean) (oneof normal (coerce-boolean-to-double b)))
-           ((double-value d double) (oneof normal d))
+           ((boolean-value b boolean) (oneof normal (coerce-boolean-to-float64 b)))
+           ((number-value d float64) (oneof normal d))
            (string-value (bottom))
            (object-value (bottom))))
        
+       (define (float64-to-uint32 (x float64)) integer
+         (if (or (float64-is-na-n x) (float64-is-infinite x))
+           0
+           (mod (truncate-float64 x) #x100000000)))
+       
        (define (coerce-to-uint32 (v value)) integer-or-exception
-         (letexc (d double (coerce-to-double v))
-           (oneof normal (double-to-uint32 d))))
+         (letexc (d float64 (coerce-to-float64 v))
+           (oneof normal (float64-to-uint32 d))))
        
        (define (coerce-to-int32 (v value)) integer-or-exception
-         (letexc (d double (coerce-to-double v))
-           (oneof normal (uint32-to-int32 (double-to-uint32 d)))))
+         (letexc (d float64 (coerce-to-float64 v))
+           (oneof normal (uint32-to-int32 (float64-to-uint32 d)))))
        
        (define (uint32-to-int32 (ui integer)) integer
          (if (< ui #x80000000)
@@ -158,24 +163,24 @@
            (undefined-value (oneof normal "undefined"))
            (null-value (oneof normal "null"))
            ((boolean-value b boolean) (if b (oneof normal "true") (oneof normal "false")))
-           (double-value (bottom))
+           (number-value (bottom))
            ((string-value s string) (oneof normal s))
            (object-value (bottom))))
        
        (define (coerce-to-primitive (v value) (hint default-value-hint)) value-or-exception
          (case v
-           (((undefined-value null-value boolean-value double-value string-value)) (oneof normal v))
+           (((undefined-value null-value boolean-value number-value string-value)) (oneof normal v))
            ((object-value o object)
             (letexc (pv value ((& default-value o) hint))
               (case pv
-                (((undefined-value null-value boolean-value double-value string-value)) (oneof normal pv))
+                (((undefined-value null-value boolean-value number-value string-value)) (oneof normal pv))
                 (object-value (typed-oneof value-or-exception abrupt (make-error (oneof coerce-to-primitive-error)))))))))
        
        (define (coerce-to-object (v value)) object-or-exception
          (case v
            (((undefined-value null-value)) (typed-oneof object-or-exception abrupt (make-error (oneof coerce-to-object-error))))
            (boolean-value (bottom))
-           (double-value (bottom))
+           (number-value (bottom))
            (string-value (bottom))
            ((object-value o object) (oneof normal o))))
        
@@ -188,7 +193,7 @@
        (%section "Terminal Actions")
        
        (declare-action eval-identifier $identifier string)
-       (declare-action eval-number $number double)
+       (declare-action eval-number $number float64)
        (declare-action eval-string $string string)
        
        (terminal-action eval-identifier $identifier cdr)
@@ -213,7 +218,7 @@
           (boolean-result false)))
        (production :primary-rvalue ($number) primary-rvalue-number
          ((eval (e env :unused))
-          (double-result (eval-number $number))))
+          (float64-result (eval-number $number))))
        (production :primary-rvalue ($string) primary-rvalue-string
          ((eval (e env :unused))
           (string-result (eval-string $string))))
@@ -317,14 +322,14 @@
        
        (define (call-object (f value) (this object-or-null) (arguments (vector value))) reference-or-exception
          (case f
-           (((undefined-value null-value boolean-value double-value string-value))
+           (((undefined-value null-value boolean-value number-value string-value))
             (typed-oneof reference-or-exception abrupt (make-error (oneof coerce-to-object-error))))
            ((object-value o object)
             ((& call o) this arguments))))
        
        (define (construct-object (constructor value) (arguments (vector value))) value-or-exception
          (case constructor
-           (((undefined-value null-value boolean-value double-value string-value))
+           (((undefined-value null-value boolean-value number-value string-value))
             (typed-oneof value-or-exception abrupt (make-error (oneof coerce-to-object-error))))
            ((object-value o object)
             (letexc (res object ((& construct o) arguments))
@@ -341,18 +346,18 @@
          ((eval (e env))
           (letexc (operand-reference reference ((eval :lvalue) e))
             (letexc (operand-value value (reference-get-value operand-reference))
-              (letexc (operand double (coerce-to-double operand-value))
-                (letexc (u void (reference-put-value operand-reference (oneof double-value (double-add operand 1.0)))
+              (letexc (operand float64 (coerce-to-float64 operand-value))
+                (letexc (u void (reference-put-value operand-reference (oneof number-value (float64-add operand 1.0)))
                            :unused)
-                  (double-result operand)))))))
+                  (float64-result operand)))))))
        (production (:postfix-expression :expr-kind) (:lvalue --) postfix-expression-decrement
          ((eval (e env))
           (letexc (operand-reference reference ((eval :lvalue) e))
             (letexc (operand-value value (reference-get-value operand-reference))
-              (letexc (operand double (coerce-to-double operand-value))
-                (letexc (u void (reference-put-value operand-reference (oneof double-value (double-subtract operand 1.0)))
+              (letexc (operand float64 (coerce-to-float64 operand-value))
+                (letexc (u void (reference-put-value operand-reference (oneof number-value (float64-subtract operand 1.0)))
                            :unused)
-                  (double-result operand)))))))
+                  (float64-result operand)))))))
        (%print-actions)
        
        (%section "Unary Operators")
@@ -390,28 +395,28 @@
          ((eval (e env))
           (letexc (operand-reference reference ((eval :lvalue) e))
             (letexc (operand-value value (reference-get-value operand-reference))
-              (letexc (operand double (coerce-to-double operand-value))
-                (let ((res double (double-add operand 1.0)))
-                  (letexc (u void (reference-put-value operand-reference (oneof double-value res)) :unused)
-                    (double-result res))))))))
+              (letexc (operand float64 (coerce-to-float64 operand-value))
+                (let ((res float64 (float64-add operand 1.0)))
+                  (letexc (u void (reference-put-value operand-reference (oneof number-value res)) :unused)
+                    (float64-result res))))))))
        (production (:unary-expression :expr-kind) (-- :lvalue) unary-expression-decrement
          ((eval (e env))
           (letexc (operand-reference reference ((eval :lvalue) e))
             (letexc (operand-value value (reference-get-value operand-reference))
-              (letexc (operand double (coerce-to-double operand-value))
-                (let ((res double (double-subtract operand 1.0)))
-                  (letexc (u void (reference-put-value operand-reference (oneof double-value res)) :unused)
-                    (double-result res))))))))
+              (letexc (operand float64 (coerce-to-float64 operand-value))
+                (let ((res float64 (float64-subtract operand 1.0)))
+                  (letexc (u void (reference-put-value operand-reference (oneof number-value res)) :unused)
+                    (float64-result res))))))))
        (production (:unary-expression :expr-kind) (+ (:unary-expression any-value)) unary-expression-plus
          ((eval (e env))
           (letexc (operand-value value ((eval :unary-expression) e))
-            (letexc (operand double (coerce-to-double operand-value))
-              (double-result operand)))))
+            (letexc (operand float64 (coerce-to-float64 operand-value))
+              (float64-result operand)))))
        (production (:unary-expression :expr-kind) (- (:unary-expression any-value)) unary-expression-minus
          ((eval (e env))
           (letexc (operand-value value ((eval :unary-expression) e))
-            (letexc (operand double (coerce-to-double operand-value))
-              (double-result (double-negate operand))))))
+            (letexc (operand float64 (coerce-to-float64 operand-value))
+              (float64-result (float64-negate operand))))))
        (production (:unary-expression :expr-kind) (~ (:unary-expression any-value)) unary-expression-bitwise-not
          ((eval (e env))
           (letexc (operand-value value ((eval :unary-expression) e))
@@ -428,7 +433,7 @@
            (undefined-value "undefined")
            (null-value "object")
            (boolean-value "boolean")
-           (double-value "number")
+           (number-value "number")
            (string-value "string")
            ((object-value o object) (& typeof-name o))))
        
@@ -441,23 +446,23 @@
          ((eval (e env))
           (letexc (left-value value ((eval :multiplicative-expression) e))
             (letexc (right-value value ((eval :unary-expression) e))
-              (apply-binary-double-operator double-multiply left-value right-value)))))
+              (apply-binary-float64-operator float64-multiply left-value right-value)))))
        (production (:multiplicative-expression :expr-kind) ((:multiplicative-expression any-value) / (:unary-expression any-value)) multiplicative-expression-divide
          ((eval (e env))
           (letexc (left-value value ((eval :multiplicative-expression) e))
             (letexc (right-value value ((eval :unary-expression) e))
-              (apply-binary-double-operator double-divide left-value right-value)))))
+              (apply-binary-float64-operator float64-divide left-value right-value)))))
        (production (:multiplicative-expression :expr-kind) ((:multiplicative-expression any-value) % (:unary-expression any-value)) multiplicative-expression-remainder
          ((eval (e env))
           (letexc (left-value value ((eval :multiplicative-expression) e))
             (letexc (right-value value ((eval :unary-expression) e))
-              (apply-binary-double-operator double-remainder left-value right-value)))))
+              (apply-binary-float64-operator float64-remainder left-value right-value)))))
        (%print-actions)
        
-       (define (apply-binary-double-operator (operator (-> (double double) double)) (left-value value) (right-value value)) value-or-exception
-         (letexc (left-number double (coerce-to-double left-value))
-           (letexc (right-number double (coerce-to-double right-value))
-             (double-result (operator left-number right-number)))))
+       (define (apply-binary-float64-operator (operator (-> (float64 float64) float64)) (left-value value) (right-value value)) value-or-exception
+         (letexc (left-number float64 (coerce-to-float64 left-value))
+           (letexc (right-number float64 (coerce-to-float64 right-value))
+             (float64-result (operator left-number right-number)))))
        
        (%section "Additive Operators")
        
@@ -474,12 +479,12 @@
                     (letexc (left-string string (coerce-to-string left-primitive))
                       (letexc (right-string string (coerce-to-string right-primitive))
                         (string-result (append left-string right-string))))
-                    (apply-binary-double-operator double-add left-primitive right-primitive))))))))
+                    (apply-binary-float64-operator float64-add left-primitive right-primitive))))))))
        (production (:additive-expression :expr-kind) ((:additive-expression any-value) - (:multiplicative-expression any-value)) additive-expression-subtract
          ((eval (e env))
           (letexc (left-value value ((eval :additive-expression) e))
             (letexc (right-value value ((eval :multiplicative-expression) e))
-              (apply-binary-double-operator double-subtract left-value right-value)))))
+              (apply-binary-float64-operator float64-subtract left-value right-value)))))
        (%print-actions)
        
        (%section "Bitwise Shift Operators")
@@ -544,9 +549,9 @@
              (if (and (is string-value left-primitive) (is string-value right-primitive))
                (boolean-result
                 (compare-strings (select string-value left-primitive) (select string-value right-primitive) less greater-or-equal greater-or-equal))
-               (letexc (left-number double (coerce-to-double left-primitive))
-                 (letexc (right-number double (coerce-to-double right-primitive))
-                   (boolean-result (double-compare left-number right-number less greater-or-equal greater-or-equal false))))))))
+               (letexc (left-number float64 (coerce-to-float64 left-primitive))
+                 (letexc (right-number float64 (coerce-to-float64 right-primitive))
+                   (boolean-result (float64-compare left-number right-number less greater-or-equal greater-or-equal false))))))))
        
        (define (compare-strings (left string) (right string) (less boolean) (equal boolean) (greater boolean)) boolean
          (if (and (empty left) (empty right))
@@ -597,24 +602,24 @@
            (((undefined-value null-value))
             (case right-value
               (((undefined-value null-value)) (oneof normal true))
-              (((boolean-value double-value string-value object-value)) (oneof normal false))))
+              (((boolean-value number-value string-value object-value)) (oneof normal false))))
            ((boolean-value left-bool boolean)
             (case right-value
               (((undefined-value null-value)) (oneof normal false))
               ((boolean-value right-bool boolean) (oneof normal (not (xor left-bool right-bool))))
-              (((double-value string-value object-value))
-               (compare-double-to-value (coerce-boolean-to-double left-bool) right-value))))
-           ((double-value left-number double)
-            (compare-double-to-value left-number right-value))
+              (((number-value string-value object-value))
+               (compare-float64-to-value (coerce-boolean-to-float64 left-bool) right-value))))
+           ((number-value left-number float64)
+            (compare-float64-to-value left-number right-value))
            ((string-value left-str string)
             (case right-value
               (((undefined-value null-value)) (oneof normal false))
               ((boolean-value right-bool boolean)
-               (letexc (left-number double (coerce-to-double left-value))
-                 (oneof normal (double-equal left-number (coerce-boolean-to-double right-bool)))))
-              ((double-value right-number double)
-               (letexc (left-number double (coerce-to-double left-value))
-                 (oneof normal (double-equal left-number right-number))))
+               (letexc (left-number float64 (coerce-to-float64 left-value))
+                 (oneof normal (float64-equal left-number (coerce-boolean-to-float64 right-bool)))))
+              ((number-value right-number float64)
+               (letexc (left-number float64 (coerce-to-float64 left-value))
+                 (oneof normal (float64-equal left-number right-number))))
               ((string-value right-str string)
                (oneof normal (compare-strings left-str right-str false true false)))
               (object-value
@@ -625,25 +630,25 @@
               (((undefined-value null-value)) (oneof normal false))
               ((boolean-value right-bool boolean)
                (letexc (left-primitive value (coerce-to-primitive left-value (oneof no-hint)))
-                 (compare-values left-primitive (oneof double-value (coerce-boolean-to-double right-bool)))))
-              (((double-value string-value))
+                 (compare-values left-primitive (oneof number-value (coerce-boolean-to-float64 right-bool)))))
+              (((number-value string-value))
                (letexc (left-primitive value (coerce-to-primitive left-value (oneof no-hint)))
                  (compare-values left-primitive right-value)))
               ((object-value right-obj object)
                (oneof normal (address-equal (& properties left-obj) (& properties right-obj))))))))
        
-       (define (compare-double-to-value (left-number double) (right-value value)) boolean-or-exception
+       (define (compare-float64-to-value (left-number float64) (right-value value)) boolean-or-exception
          (case right-value
            (((undefined-value null-value)) (oneof normal false))
-           (((boolean-value double-value string-value))
-            (letexc (right-number double (coerce-to-double right-value))
-              (oneof normal (double-equal left-number right-number))))
+           (((boolean-value number-value string-value))
+            (letexc (right-number float64 (coerce-to-float64 right-value))
+              (oneof normal (float64-equal left-number right-number))))
            (object-value
             (letexc (right-primitive value (coerce-to-primitive right-value (oneof no-hint)))
-              (compare-double-to-value left-number right-primitive)))))
+              (compare-float64-to-value left-number right-primitive)))))
        
-       (define (double-equal (x double) (y double)) boolean
-         (double-compare x y false true false false))
+       (define (float64-equal (x float64) (y float64)) boolean
+         (float64-compare x y false true false false))
        
        (define (strict-compare-values (left-value value) (right-value value)) boolean
          (case left-value
@@ -654,21 +659,21 @@
            ((boolean-value left-bool boolean)
             (case right-value
               ((boolean-value right-bool boolean) (not (xor left-bool right-bool)))
-              (((undefined-value null-value double-value string-value object-value)) false)))
-           ((double-value left-number double)
+              (((undefined-value null-value number-value string-value object-value)) false)))
+           ((number-value left-number float64)
             (case right-value
-              ((double-value right-number double) (double-equal left-number right-number))
+              ((number-value right-number float64) (float64-equal left-number right-number))
               (((undefined-value null-value boolean-value string-value object-value)) false)))
            ((string-value left-str string)
             (case right-value
               ((string-value right-str string)
                (compare-strings left-str right-str false true false))
-              (((undefined-value null-value boolean-value double-value object-value)) false)))
+              (((undefined-value null-value boolean-value number-value object-value)) false)))
            ((object-value left-obj object)
             (case right-value
               ((object-value right-obj object)
                (address-equal (& properties left-obj) (& properties right-obj)))
-              (((undefined-value null-value boolean-value double-value string-value)) false)))))
+              (((undefined-value null-value boolean-value number-value string-value)) false)))))
        
        (%section "Binary Bitwise Operators")
        
@@ -764,22 +769,22 @@
        
        (declare-action compound-operator :compound-assignment (-> (value value) value-or-exception))
        (production :compound-assignment (*=) compound-assignment-multiply
-         (compound-operator (binary-double-compound-operator double-multiply)))
+         (compound-operator (binary-float64-compound-operator float64-multiply)))
        (production :compound-assignment (/=) compound-assignment-divide
-         (compound-operator (binary-double-compound-operator double-divide)))
+         (compound-operator (binary-float64-compound-operator float64-divide)))
        (production :compound-assignment (%=) compound-assignment-remainder
-         (compound-operator (binary-double-compound-operator double-remainder)))
+         (compound-operator (binary-float64-compound-operator float64-remainder)))
        (production :compound-assignment (+=) compound-assignment-add
-         (compound-operator (binary-double-compound-operator double-remainder)))
+         (compound-operator (binary-float64-compound-operator float64-remainder)))
        (production :compound-assignment (-=) compound-assignment-subtract
-         (compound-operator (binary-double-compound-operator double-subtract)))
+         (compound-operator (binary-float64-compound-operator float64-subtract)))
        (%print-actions)
        
-       (define (binary-double-compound-operator (operator (-> (double double) double))) (-> (value value) value-or-exception)
+       (define (binary-float64-compound-operator (operator (-> (float64 float64) float64))) (-> (value value) value-or-exception)
          (function ((left-value value) (right-value value))
-           (letexc (left-number double (coerce-to-double left-value))
-             (letexc (right-number double (coerce-to-double right-value))
-               (oneof normal (oneof double-value (operator left-number right-number)))))))
+           (letexc (left-number float64 (coerce-to-float64 left-value))
+             (letexc (right-number float64 (coerce-to-float64 right-value))
+               (oneof normal (oneof number-value (operator left-number right-number)))))))
        |#
        (%section "Expressions")
        

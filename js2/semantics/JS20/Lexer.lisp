@@ -129,10 +129,10 @@
        
        (%section "Tokens")
        
-       (grammar-argument :tau re div unit)
-       (grammar-argument :tau_2 re div)
+       (grammar-argument :nu re div unit)
+       (grammar-argument :nu_2 re div)
        
-       (rule (:next-token :tau)
+       (rule (:next-token :nu)
              ((token token))
          (production (:next-token re) (:white-space (:token re)) next-token-re
            (token (token :token)))
@@ -147,23 +147,23 @@
        
        (%print-actions)
        
-       (rule (:token :tau_2)
+       (rule (:token :nu_2)
              ((token token))
-         (production (:token :tau_2) (:line-breaks) token-line-breaks
+         (production (:token :nu_2) (:line-breaks) token-line-breaks
            (token (oneof line-break)))
-         (production (:token :tau_2) (:identifier-or-reserved-word) token-identifier-or-reserved-word
+         (production (:token :nu_2) (:identifier-or-reserved-word) token-identifier-or-reserved-word
            (token (token :identifier-or-reserved-word)))
-         (production (:token :tau_2) (:punctuator) token-punctuator
+         (production (:token :nu_2) (:punctuator) token-punctuator
            (token (oneof punctuator (punctuator :punctuator))))
          (production (:token div) (:division-punctuator) token-division-punctuator
            (token (oneof punctuator (punctuator :division-punctuator))))
-         (production (:token :tau_2) (:numeric-literal) token-numeric-literal
-           (token (oneof number (double-value :numeric-literal))))
-         (production (:token :tau_2) (:string-literal) token-string-literal
+         (production (:token :nu_2) (:numeric-literal) token-numeric-literal
+           (token (oneof number (float64-value :numeric-literal))))
+         (production (:token :nu_2) (:string-literal) token-string-literal
            (token (oneof string (string-value :string-literal))))
          (production (:token re) (:reg-exp-literal) token-reg-exp-literal
            (token (oneof regular-expression (r-e-value :reg-exp-literal))))
-         (production (:token :tau_2) (:end-of-input) token-end
+         (production (:token :nu_2) (:end-of-input) token-end
            (token (oneof end))))
        
        (production :end-of-input ($end) end-of-input-end)
@@ -172,14 +172,14 @@
        (deftype reg-exp (tuple (re-body string)
                           (re-flags string)))
        
-       (deftype quantity (tuple (amount double)
+       (deftype quantity (tuple (amount float64)
                            (unit string)))
        
        (deftype token (oneof line-break
                              (identifier string)
                              (keyword string)
                              (punctuator string)
-                             (number double)
+                             (number float64)
                              (string string)
                              (regular-expression reg-exp)
                              end))
@@ -328,11 +328,11 @@
        
        (%section "Numeric literals")
        
-       (rule :numeric-literal ((double-value double))
+       (rule :numeric-literal ((float64-value float64))
          (production :numeric-literal (:decimal-literal) numeric-literal-decimal
-           (double-value (rational-to-double (rational-value :decimal-literal))))
+           (float64-value (rational-to-float64 (rational-value :decimal-literal))))
          (production :numeric-literal (:hex-integer-literal (:- :hex-digit)) numeric-literal-hex
-           (double-value (rational-to-double (integer-value :hex-integer-literal)))))
+           (float64-value (rational-to-float64 (integer-value :hex-integer-literal)))))
        (%print-actions)
        
        (define (expt (base rational) (exponent integer)) rational

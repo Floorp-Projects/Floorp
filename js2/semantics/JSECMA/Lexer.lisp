@@ -121,7 +121,7 @@
        (production :token (:punctuator) token-punctuator
          (token (oneof punctuator (punctuator :punctuator))))
        (production :token (:numeric-literal) token-numeric-literal
-         (token (oneof number (double-value :numeric-literal))))
+         (token (oneof number (float64-value :numeric-literal))))
        (production :token (:string-literal) token-string-literal
          (token (oneof string (string-value :string-literal))))
        (production :token (:end-of-input) token-end
@@ -130,7 +130,7 @@
        (production :end-of-input ($end) end-of-input-end)
        (production :end-of-input (:line-comment $end) end-of-input-line-comment)
        
-       (deftype token (oneof (identifier string) (reserved-word string) (punctuator string) (number double) (string string) line-breaks end))
+       (deftype token (oneof (identifier string) (reserved-word string) (punctuator string) (number float64) (string string) line-breaks end))
        (%print-actions)
        
        (%section "Keywords")
@@ -227,13 +227,13 @@
        
        (%section "Numeric literals")
        
-       (declare-action double-value :numeric-literal double)
+       (declare-action float64-value :numeric-literal float64)
        (production :numeric-literal (:decimal-literal) numeric-literal-decimal
-         (double-value (rational-to-double (rational-value :decimal-literal))))
+         (float64-value (rational-to-float64 (rational-value :decimal-literal))))
        (production :numeric-literal (:hex-integer-literal) numeric-literal-hex
-         (double-value (rational-to-double (integer-value :hex-integer-literal))))
+         (float64-value (rational-to-float64 (integer-value :hex-integer-literal))))
        (production :numeric-literal (:octal-integer-literal) numeric-literal-octal
-         (double-value (rational-to-double (integer-value :octal-integer-literal))))
+         (float64-value (rational-to-float64 (integer-value :octal-integer-literal))))
        (%print-actions)
        
        (define (expt (base rational) (exponent integer)) rational
