@@ -23,7 +23,6 @@
 
 #include "nsPrefService.h"
 #include "jsapi.h"
-#include "nsIGenericFactory.h"
 #include "nsIObserverService.h"
 #include "nsIProfileChangeStatus.h"
 #include "nsISignatureVerifier.h"
@@ -65,9 +64,12 @@ static nsresult savePrefFile(nsIFile* aFile);
 
 
 
-NS_IMPL_ISUPPORTS3(nsPrefService, nsIPrefService, nsIObserver, nsIPrefBranch);
+/*
+ * Constructor/Destructor
+ */
 
 nsPrefService::nsPrefService()
+: mCurrentFile(nsnull)
 {
   nsPrefBranch *rootBranch;
 
@@ -93,11 +95,31 @@ nsPrefService::~nsPrefService()
   }
 }
 
+
+/*
+ * nsISupports Implementation
+ */
+
+NS_IMPL_THREADSAFE_ADDREF(nsPrefService)
+NS_IMPL_THREADSAFE_RELEASE(nsPrefService)
+
+NS_INTERFACE_MAP_BEGIN(nsPrefService)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrefService)
+    NS_INTERFACE_MAP_ENTRY(nsIPrefService)
+    NS_INTERFACE_MAP_ENTRY(nsIObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIPrefBranch)
+NS_INTERFACE_MAP_END
+
+
+/*
+ * nsIPrefService Implementation
+ */
+
 NS_IMETHODIMP nsPrefService::Init()
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
-  if (PREF_Init(nsnull) == NS_OK) {
+  if (PREF_Init(nsnull) == PR_TRUE) {
     NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (observerService) {
       // Our refcnt must be > 0 when we call this, or we'll get deleted!
@@ -134,7 +156,7 @@ NS_IMETHODIMP nsPrefService::Observe(nsISupports *aSubject, const PRUnichar *aTo
   return rv;
 }
 
-NS_IMETHODIMP nsPrefService::ReadCFGFile()
+NS_IMETHODIMP nsPrefService::ReadConfigFile()
 {
   nsresult rv = NS_OK;
   PRUint32 fileNameLen;
@@ -262,6 +284,51 @@ NS_IMETHODIMP nsPrefService::GetDefaultBranch(const char *aPrefRoot, nsIPrefBran
 
 
 #pragma mark -
+
+nsresult nsPrefService::useDefaultPrefFile()
+{
+  nsresult rv;
+  nsCOMPtr<nsIFile> aFile;
+
+  // Anything which calls NS_InitXPCOM will have this
+  rv = NS_GetSpecialDirectory(NS_APP_PREFS_50_FILE, getter_AddRefs(aFile));
+
+  if (!aFile) {
+    // We know we have XPCOM directory services, but we might not have a provider which
+    // knows about NS_APP_PREFS_50_FILE. Put the file in NS_XPCOM_CURRENT_PROCESS_DIR.
+    rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, getter_AddRefs(aFile));
+    if (NS_FAILED(rv)) return rv;
+    rv = aFile->Append("default_prefs.js");
+    if (NS_FAILED(rv)) return rv;
+  } 
+
+  rv = ReadUserPrefs(aFile);
+  if (NS_SUCCEEDED(rv)) {
+    return rv;
+  }
+
+  // need to save the prefs now
+  rv = SavePrefFile(aFile); 
+
+  return rv;
+}
+
+nsresult nsPrefService::useUserPrefFile()
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIFile> aFile;
+
+  static const char* userFiles[] = {"user.js"};
+
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(aFile));
+  if (NS_SUCCEEDED(rv) && aFile) {
+    rv = aFile->Append(userFiles[0]);
+    if (NS_SUCCEEDED(rv)) {
+      rv = openPrefFile(mCurrentFile, PR_FALSE, PR_FALSE, PR_FALSE, PR_TRUE);
+    }
+  }
+  return rv;
+}
 
 static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal, PRBool aVerifyHash,
                                      PRBool aIsGlobalContext, PRBool aSkipFirstLine)
@@ -689,4 +756,3 @@ extern "C" JSRuntime* PREF_GetJSRuntime()
   return nsnull;
 }
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefService, Init)

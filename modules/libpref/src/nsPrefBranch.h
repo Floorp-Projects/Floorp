@@ -24,16 +24,19 @@
 
 #include "nsCOMPtr.h"
 #include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 
-class nsPrefBranch : public nsIPrefBranch
+class nsPrefBranch : public nsIPrefBranchInternal
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPREFBRANCH
+  NS_DECL_NSIPREFBRANCHINTERNAL
 
   nsPrefBranch(const char *aPrefRoot, PRBool aDefaultBranch);
   virtual ~nsPrefBranch();
