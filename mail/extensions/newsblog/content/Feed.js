@@ -80,6 +80,11 @@ Feed.prototype.download = function(parseItems, aCallback) {
   if (!(uri.schemeIs("http") || uri.schemeIs("https")))
     return this.onParseError(this); // simulate an invalid feed error
 
+  // Before we try to download the feed, make sure we aren't already processing the feed
+  // by looking up the url in our feed cache
+  if (gFzFeedCache[this.url])
+    return; // don't do anything, the feed is already in use
+
   this.request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                  .createInstance(Components.interfaces.nsIXMLHttpRequest);
   this.request.onprogress = Feed.onProgress; // must be set before calling .open
@@ -120,11 +125,17 @@ Feed.onDownloadError = function(event) {
   var feed = gFzFeedCache[url];
   if (feed.downloadCallback)
     feed.downloadCallback.downloaded(feed, kNewsBlogRequestFailure);
+
+  gFzFeedCache[url] = "";
 }
 
 Feed.prototype.onParseError = function(feed) {
   if (feed && feed.downloadCallback)
-    feed.downloadCallback.downloaded(feed, kNewsBlogInvalidFeed);
+  {
+    if (feed.downloadCallback)
+      feed.downloadCallback.downloaded(feed, kNewsBlogInvalidFeed);
+    gFzFeedCache[feed.url] = "";
+  }
 }
 
 Feed.prototype.url getter = function() {
@@ -506,6 +517,9 @@ Feed.prototype.storeNextItem = function()
   }
   else
   {    
+    // now that we are done parsing the feed, remove the feed from our feed cache
+    gFzFeedCache[item.feed.url] = "";
+
     item.feed.removeInvalidItems();
 
     // let's be sure to flush any feed item changes back to disk
