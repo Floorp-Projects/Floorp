@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: /; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -2871,8 +2871,8 @@ InternetSearchDataSource::ClearResults(PRBool flushLastSearchRef)
 
 			PRBool hasInArcs = PR_FALSE;
 			nsCOMPtr<nsISimpleEnumerator>	inArcs;
-			if (NS_FAILED(mInner->ArcLabelsIn(child, getter_AddRefs(inArcs)) ||
-				(!inArcs)))
+			if (NS_FAILED(mInner->ArcLabelsIn(child, getter_AddRefs(inArcs))) ||
+				(!inArcs))
 				continue;
 			if (NS_FAILED(inArcs->HasMoreElements(&hasInArcs)) ||
 				(hasInArcs == PR_TRUE))
@@ -2881,8 +2881,8 @@ InternetSearchDataSource::ClearResults(PRBool flushLastSearchRef)
 			// no other references, so also unassert any outgoing arcs
 
 			nsCOMPtr<nsISimpleEnumerator>	outArcs;
-			if (NS_FAILED(mInner->ArcLabelsOut(child, getter_AddRefs(outArcs)) ||
-				(!outArcs)))
+			if (NS_FAILED(mInner->ArcLabelsOut(child, getter_AddRefs(outArcs))) ||
+				(!outArcs))
 				continue;
 			PRBool	hasMoreOutArcs = PR_TRUE;
 			while (hasMoreOutArcs == PR_TRUE)
