@@ -624,7 +624,7 @@ function ComposeStartup()
 			// setEditorType MUST be call before setContentWindow
 			if (msgCompose.composeHTML)
 			{
-				window.editorShell.SetEditorType("htmlmail");
+				window.editorShell.editorType = "htmlmail";
 				dump("editor initialized in HTML mode\n");
 			}
 			else
@@ -636,7 +636,7 @@ function ComposeStartup()
 			    document.getElementById("menu_showFormatToolbar").setAttribute("checked", false);
 
 
-				window.editorShell.SetEditorType("textmail");
+				window.editorShell.editorType = "textmail";
 				dump("editor initialized in PLAIN TEXT mode\n");
 			}
 			window.editorShell.webShellWindow = window;
