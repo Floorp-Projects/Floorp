@@ -48,6 +48,7 @@ a:link img, a:visited img, a:active, {
 }
 
 input, select, textarea {
+  user-select: _moz_all !important;
   user-select: all !important;
   user-input: none !important;
   user-focus: none !important;
