@@ -38,6 +38,13 @@ install::
 	$(MAKE_INSTALL) pref-receipts.html	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) custreceipt.html	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) pref-diskspace.html	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) AccountWizard.xul	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) AccountWizard.js	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) aw-intro.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) aw-identity.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) aw-server.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) aw-smtp.xul			$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) aw-done.xul			$(DIST)\bin\chrome\messenger\content\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\AccountManager.xul
