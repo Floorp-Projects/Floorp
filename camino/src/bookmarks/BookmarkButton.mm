@@ -162,12 +162,8 @@
   BookmarkItem *item = [self BookmarkItem];
   if ([item isKindOfClass:[Bookmark class]])
     [brController openNewWindowWithURL:[(Bookmark *)item url] referrer: nil loadInBackground: loadInBackground];
-  // if we get to this else, we better be a group.  check just in case i'm wrong.
-  else if ([item isKindOfClass:[BookmarkFolder class]]) {
-    if ([(BookmarkFolder *)item isGroup]) {
-      [brController openNewWindowWithGroupURLs:[(BookmarkFolder *)item childURLs] loadInBackground: loadInBackground];
-    }
-  }
+  else if ([item isKindOfClass:[BookmarkFolder class]])
+    [brController openNewWindowWithGroupURLs:[(BookmarkFolder *)item childURLs] loadInBackground: loadInBackground];
   return; 
 }
 
