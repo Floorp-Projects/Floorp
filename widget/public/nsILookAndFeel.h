@@ -119,6 +119,9 @@ public:
     eColor__moz_mac_menuselect,				//colour used when mouse is over a menu item
     eColor__moz_mac_menushadow,				//colour used to do shadows on menu items
     eColor__moz_mac_menutextselect,			//colour used to display text while mouse is over a menu item
+
+    //colour needed by GTK2 Classic skin
+    eColor__moz_gtk2_hovertext,
     
   	//all of the accent colours
   	eColor__moz_mac_accentlightesthighlight,

@@ -108,6 +108,12 @@ radio[disabled="true"] {
   list-style-image: none;
 }
 
+#ifdef MOZ_WIDGET_GTK2
+radio:hover {
+  color: -moz-gtk2-hovertext;
+}
+#endif
+
 radio:hover:active > .radio-check-box1 {
   background-color: -moz-Dialog;
 }

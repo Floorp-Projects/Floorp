@@ -96,7 +96,13 @@ checkbox[disabled="true"] {
   min-height: 13px;
   background: -moz-Field no-repeat 50% 50%;
 }
-  
+
+#ifdef MOZ_WIDGET_GTK2
+checkbox:hover {
+  color: -moz-gtk2-hovertext;
+}
+#endif
+
 checkbox:hover:active > .checkbox-check {
   background-color: -moz-Dialog;
 }

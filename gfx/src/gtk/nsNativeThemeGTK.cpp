@@ -249,6 +249,25 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       // for dropdown textfields, look at the parent frame (the textbox)
       if (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD)
         aFrame = aFrame->GetParent();
+      // For XUL checkboxes and radio buttons, the state of the parent
+      // determines our state.
+      if (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO) {
+        if (aWidgetFlags) {
+          nsIAtom* atom = nsnull;
+
+          if (aFrame) {
+            nsIContent* content = aFrame->GetContent();
+            if (content->IsContentOfType(nsIContent::eXUL))
+              aFrame = aFrame->GetParent();
+            else if (content->Tag() == mInputAtom)
+              atom = mInputCheckedAtom;
+          }
+
+          if (!atom)
+            atom = (aWidgetType == NS_THEME_CHECKBOX) ? mCheckedAtom : mSelectedAtom;
+          *aWidgetFlags = CheckBooleanAttr(aFrame, atom);
+        }
+      }
 
       PRInt32 eventState = GetContentState(aFrame);
 
@@ -314,24 +333,6 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     break;
   case NS_THEME_CHECKBOX:
   case NS_THEME_RADIO:
-    if (aWidgetFlags) {
-      nsIAtom* atom = nsnull;
-
-      if (aFrame) {
-        // For XUL checkboxes and radio buttons, the state of the parent
-        // determines our state.
-        nsIContent* content = aFrame->GetContent();
-        if (content->IsContentOfType(nsIContent::eXUL))
-          aFrame = aFrame->GetParent();
-        else if (content->Tag() == mInputAtom)
-          atom = mInputCheckedAtom;
-      }
-
-      if (!atom)
-        atom = (aWidgetType == NS_THEME_CHECKBOX) ? mCheckedAtom : mSelectedAtom;
-      *aWidgetFlags = CheckBooleanAttr(aFrame, atom);
-    }
-
     aGtkWidgetType = (aWidgetType == NS_THEME_RADIO) ? MOZ_GTK_RADIOBUTTON : MOZ_GTK_CHECKBUTTON;
     break;
   case NS_THEME_SCROLLBAR_BUTTON_UP:

@@ -85,6 +85,14 @@ button[default="true"] {
   -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight ThreeDLightShadow;
 }
 
+#ifdef MOZ_WIDGET_GTK2
+/* .......... hover state .......... */
+
+button:hover {
+  color: -moz-gtk2-hovertext;
+}
+#endif
+
 /* .......... active/open/checked state .......... */
 
 button:hover:active,
@@ -94,6 +102,9 @@ button[checked="true"] {
   -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow transparent;
   -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow transparent;
   -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow transparent;
+#ifdef MOZ_WIDGET_GTK2
+  color: ButtonText;
+#endif
 }
 
 button:hover:active > .button-box,
