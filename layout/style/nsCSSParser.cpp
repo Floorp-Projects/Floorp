@@ -1908,8 +1908,25 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
           return;
         }
         if (mToken.IsSymbol(']')) {
+          PRBool isCaseSensitive = mCaseSensitive;
+          if (nameSpaceID == kNameSpaceID_None || nameSpaceID == kNameSpaceID_HTML) {
+            static const char* caseSensitiveHTMLAttribute[] = {
+              // list based on http://www.w3.org/TR/REC-html40/index/attributes.html
+              "abbr",          "alt",        "label",
+              "prompt",        "standby",     "summary",
+              "title",         nsnull
+            };
+            short i = 0;
+            const char* htmlAttr;
+            while ((htmlAttr = caseSensitiveHTMLAttribute[i++])) {
+              if (attr.EqualsIgnoreCase(htmlAttr)) {
+                isCaseSensitive = PR_TRUE;
+                break;
+              }
+            }
+          }
           aDataMask |= SEL_MASK_ATTRIB;
-          aSelector.AddAttribute(nameSpaceID, attr, func, value, mCaseSensitive);
+          aSelector.AddAttribute(nameSpaceID, attr, func, value, isCaseSensitive);
         }
         else {
           REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected ']' to terminate attribute selector but found"));
