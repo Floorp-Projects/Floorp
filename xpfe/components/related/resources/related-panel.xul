@@ -82,12 +82,11 @@
         </treerow>
       </treeitem>
 
-      <treeitem id="NC:LastSearchRoot" ref="http://home.netscape.com/NC-rdf#ref" container="true" >
+      <treeitem id="NC:LastSearchRoot" container="true">
         <treerow>
           <treecell indent="true" value="&lastsearch.row.label;" />
         </treerow>
       </treeitem>
-
 
       <treeitem id="NC:SiteMapRoot" container="true">
         <treerow>
