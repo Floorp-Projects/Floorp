@@ -36,6 +36,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 
+// scriptable date formater, for pretty printing dates
+var nsIScriptableDateFormat = Components.interfaces.nsIScriptableDateFormat;
+
+var dateService = Components.classes["@mozilla.org/intl/scriptabledateformat;1"].getService(nsIScriptableDateFormat);
+
 var kDate_MillisecondsInSecond = 1000;
 var kDate_SecondsInMinute      = 60;
 var kDate_MinutesInHour        = 60;
@@ -88,54 +93,7 @@ function DateFormater()
 
 DateFormater.prototype.getFormatedTime = function( date )
 {
-   // Format the time using a hardcoded format for now, since everything
-   // that displays the time uses this function we will be able to 
-   // make a user settable time format and use it here.
-
-   var hour = date.getHours();
-   var min = date.getMinutes();
-   
-   // compute am and pm
-   var ampm = "";
-
-   if( hour < 12 )
-   {
-      ampm = this.dateStringBundle.GetStringFromName( "am-string" );
-   }
-   else
-   {
-      ampm = this.dateStringBundle.GetStringFromName( "pm-string" );
-   }
-   
-   // convert to 12 hour clock
-   
-   if( hour > 12 )
-   {
-      hour -= 12;
-   }
-
-   // make 0 be midnight
-   
-   if( hour == 0  )
-   {
-      hour = 12;
-   }
-   
-   // put two zeros in the minute
-   
-   var minString = min.toString();
-   
-   if( min < 10 )
-   {
-      minString = "0" + min;
-   }
-   
-   // Make the time to display
-   
-   var timeString = hour + ":" + minString + " " + ampm;
-   
-   return timeString;
-
+   return( dateService.FormatTime( "", dateService.timeFormatNoSeconds, date.getHours(), date.getMinutes(), 0 ) ); 
 }
 
 
@@ -145,11 +103,13 @@ DateFormater.prototype.getFormatedDate = function( date )
    // that displays the date uses this function we will be able to 
    // make a user settable date format and use it here.
 
+   //return( dateService.FormatDate( "", dateService.dateFormatLong, date.getFullYear(), date.getMonth()+1, date.getDate() ) );
+   
    var oneBasedMonthNum = date.getMonth() + 1;
    
    var monthString = this.dateStringBundle.GetStringFromName("month." + oneBasedMonthNum + ".Mmm" );
    
-   var dateString =  monthString + " " + date.getDate();
+   var dateString =  monthString + " " + date.getDate()+", "+date.getFullYear();
    
    return dateString;
 }
