@@ -60,6 +60,13 @@ IS_COMPONENT =  1
 endif
 endif
 
+# BeOS/Intel
+ifeq ($(OS_ARCH),BeOS)
+ifeq ($(OS_TEST),BePC)
+IS_COMPONENT =  1
+endif
+endif
+
 DEFINES	+= -DJSFILE -DJS_THREADSAFE
 
 CPPSRCS=		\
@@ -80,6 +87,8 @@ CPPSRCS=		\
 	xpcwrappednativejsops.cpp	\
 	$(NULL)
 
+# this is automatically discovered under BeOS
+ifneq ($(OS_ARCH),BeOS)
 
 EXTRA_DSO_LDOPTS = \
 	-L$(DIST)/bin \
@@ -88,6 +97,8 @@ EXTRA_DSO_LDOPTS = \
 	-lreg \
 	$(NSPR_LIBS) \
 	$(NULL)
+
+endif # BeOS
 
 include $(topsrcdir)/config/rules.mk
 
