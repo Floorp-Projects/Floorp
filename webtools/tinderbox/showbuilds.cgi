@@ -279,6 +279,7 @@ sub display_build_table_row {
     print "<td>";
     for $who (sort keys %{$who_list->[$t]} ){
         $qr = &who_menu( $td1, $build_time_times->[$t],$build_time_times->[$t-1],$who);
+	$who =~ s/%.*$//;
         print "  ${qr}$who</a>\n";
     }
     print "</td>";
