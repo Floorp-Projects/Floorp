@@ -18,9 +18,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.8 $
+ *  Version: $Revision: 1.9 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.8 2000/07/17 11:36:12 mj%digicool.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.9 2000/07/27 14:52:47 mj%digicool.com Exp $
  */
 
 /*
@@ -59,6 +59,14 @@ nsXmlRpcFault.prototype = {
     toString: function() {
         return '<XML-RPC Fault: (' + this.faultCode + ') ' +
             this.faultString + '>';
+    },
+
+    // nsISupports interface
+    QueryInterface: function(iid) {
+        if (!iid.equals(Components.interfaces.nsISupports) &&
+            !iid.equals(XMLRPCFAULT_IID))
+            throw Components.results.NS_ERROR_NO_INTERFACE;
+        return this;
     }
 };
 
