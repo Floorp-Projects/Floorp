@@ -39,7 +39,7 @@
 # ***** END LICENSE BLOCK ***** */
 
 # allow core dumps
-ulimit -c 999999
+ulimit -c 2> /dev/null
 
 dir=`dirname $0`
 bin="$dir/.."
