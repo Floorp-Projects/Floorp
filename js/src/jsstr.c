@@ -3888,7 +3888,7 @@ static JSBool decode(JSContext *cx, JSString *str, JSString *reservedSet, jsval 
     size_t start, k = 0;
     jschar C, H;
     uint32 V;
-    uint B;
+    jsuint B;
     unsigned char octets[6];
     JSString *R;
     int16 j, n;
