@@ -198,7 +198,7 @@ public:
 }; // class nsSplashScreenOS2
 
 MRESULT EXPENTRY DialogProc( HWND dlg, ULONG msg, MPARAM mp1, MPARAM mp2 );
-void _Optlink ThreadProc (void *splashScreen);
+void ThreadProc (void *splashScreen);
 
 // Simple Win32 mutex wrapper.
 struct Mutex {
@@ -628,7 +628,7 @@ nsSplashScreenOS2 *nsSplashScreenOS2::GetPointer( HWND dlg ) {
     return (nsSplashScreenOS2*)data;
 }
 
-void _Optlink ThreadProc(void *splashScreen) {
+void ThreadProc(void *splashScreen) {
     HAB hab = WinInitialize( 0 );
     HMQ hmq = WinCreateMsgQueue( hab, 0 );
     WinDlgBox( HWND_DESKTOP, HWND_DESKTOP, (PFNWP)DialogProc, NULLHANDLE, IDD_SPLASH, (MPARAM)splashScreen );
