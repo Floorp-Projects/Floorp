@@ -314,6 +314,9 @@ nsGfxScrollFrame::GetScrollbarSizes(nsIPresContext* aPresContext,
 {
   nsBoxLayoutState state(aPresContext);
 
+  *aVbarWidth = 0;
+  *aHbarHeight = 0;
+
   if (mInner->mHScrollbarBox) {
     nsSize hs;
     mInner->mHScrollbarBox->GetPrefSize(state, hs);
@@ -350,6 +353,24 @@ NS_IMETHODIMP
 nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
                                          nsISupportsArray& aAnonymousChildren)
 {
+  // Don't create scrollbars if we're printing/print previewing
+  // Get rid of this code when printing moves to its own presentation
+  PRBool isPaginated = PR_FALSE;
+  aPresContext->IsPaginated(&isPaginated);
+  if (isPaginated) {
+    // allow scrollbars if this is the child of the viewport, because
+    // we must be the scrollbars for the print preview window
+    nsIFrame* parent;
+    GetParent(&parent);
+    nsCOMPtr<nsIAtom> parentType;
+    if (parent)
+      parent->GetFrameType(getter_AddRefs(parentType));
+    if (parentType != nsLayoutAtoms::viewportFrame) {
+      SetScrollbarVisibility(aPresContext, PR_FALSE, PR_FALSE);
+      return NS_OK;
+    }
+  }
+
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
   nsCOMPtr<nsIDocument> document;
@@ -687,8 +708,9 @@ nsGfxScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
                       (const nsStyleStruct*&)styleDisplay);
 
   nsSize vSize(0,0);
-  if (styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL || 
-      styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL) {
+  if (mInner->mVScrollbarBox &&
+      (styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL || 
+       styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL)) {
      // make sure they are visible.
      mInner->SetScrollbarVisibility(mInner->mVScrollbarBox, PR_TRUE);
      mInner->mVScrollbarBox->GetPrefSize(aState, vSize);
@@ -696,8 +718,9 @@ nsGfxScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   }
    
   nsSize hSize(0,0);
-  if (styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL || 
-      styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL) {
+  if (mInner->mHScrollbarBox &&
+      (styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL || 
+       styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL)) {
      mInner->SetScrollbarVisibility(mInner->mHScrollbarBox, PR_TRUE);
      mInner->mHScrollbarBox->GetPrefSize(aState, hSize);
      nsBox::AddMargin(mInner->mHScrollbarBox, hSize);
@@ -735,7 +758,8 @@ nsGfxScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   if (styleDisplay->mOverflow == NS_STYLE_OVERFLOW_AUTO) {
     if (computedSize.height == NS_INTRINSICSIZE
         && computedSize.width != NS_INTRINSICSIZE
-        && aSize.width > computedSize.width) {
+        && aSize.width > computedSize.width
+        && mInner->mHScrollbarBox) {
       // Add height of horizontal scrollbar which will be needed
       mInner->SetScrollbarVisibility(mInner->mHScrollbarBox, PR_TRUE);
       mInner->mHScrollbarBox->GetPrefSize(aState, hSize);
@@ -743,7 +767,8 @@ nsGfxScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
     }
     if (computedSize.width == NS_INTRINSICSIZE
         && computedSize.height != NS_INTRINSICSIZE
-        && aSize.height > computedSize.height) {
+        && aSize.height > computedSize.height
+        && mInner->mVScrollbarBox) {
       // Add width of vertical scrollbar which will be needed
       mInner->SetScrollbarVisibility(mInner->mVScrollbarBox, PR_TRUE);
       mInner->mVScrollbarBox->GetPrefSize(aState, vSize);
@@ -778,8 +803,9 @@ nsGfxScrollFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 
   nsresult rv = mInner->mScrollAreaBox->GetMinSize(aState, aSize);
      
-  if (styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL || 
-      styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL) {
+  if (mInner->mVScrollbarBox &&
+      (styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL || 
+       styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL)) {
     nsSize vSize(0,0);
     mInner->mVScrollbarBox->GetMinSize(aState, vSize);
      AddMargin(mInner->mVScrollbarBox, vSize);
@@ -788,8 +814,9 @@ nsGfxScrollFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
         aSize.height = vSize.height;
   }
         
-  if (styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL || 
-      styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL) {
+  if (mInner->mHScrollbarBox &&
+      (styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL || 
+       styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL)) {
      nsSize hSize(0,0);
      mInner->mHScrollbarBox->GetMinSize(aState, hSize);
      AddMargin(mInner->mHScrollbarBox, hSize);
@@ -1705,6 +1732,10 @@ nsGfxScrollFrameInner::SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisibl
   if (!aVisible) {
      content->SetAttr(kNameSpaceID_None, nsXULAtoms::collapsed, NS_LITERAL_STRING("true"), PR_TRUE);
   } else {
+    // disable laziness; we never want to recreate these scrollbars again
+    // once we've created them
+    // disable laziness FIRST so only one recreation happens.
+     content->UnsetAttr(kNameSpaceID_None, nsXULAtoms::lazy, PR_TRUE);
      content->UnsetAttr(kNameSpaceID_None, nsXULAtoms::collapsed, PR_TRUE);
   }
 

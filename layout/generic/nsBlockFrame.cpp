@@ -634,6 +634,10 @@ nsBlockFrame::GetAdditionalChildListName(PRInt32   aIndex,
     *aListName = nsLayoutAtoms::bulletList;
     NS_ADDREF(*aListName);
     break;
+  case NS_BLOCK_FRAME_OVERFLOW_LIST_INDEX:
+    *aListName = nsLayoutAtoms::overflowList;
+    NS_ADDREF(*aListName);
+    break;
   case NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX:
     *aListName = mAbsoluteContainer.GetChildListName();
     NS_ADDREF(*aListName);
