@@ -2281,7 +2281,7 @@ CPluginInstancePeer::NewStream(nsMIMEType type, const char* target,
     // Create a new NPStream.
     NPStream* ptr = NULL;
     NPError error = NPN_NewStream(npp, (NPMIMEType)type, target, &ptr);
-    if (error) 
+  if (error != NPERR_NO_ERROR)
         return fromNPError[error];
     
     // Create a new Plugin Manager Stream.
