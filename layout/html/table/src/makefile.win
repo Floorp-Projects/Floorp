@@ -29,7 +29,8 @@ CPPSRCS=nsCellLayoutData.cpp nsCellMap.cpp nsColLayoutData.cpp \
     nsTableCellFrame.cpp nsTableCol.cpp nsTableColGroup.cpp \
     nsTableColGroupFrame.cpp nsTableContent.cpp nsTableFrame.cpp \
     nsTableOuterFrame.cpp nsTablePart.cpp nsTableRow.cpp \
-    nsTableRowFrame.cpp nsTableRowGroup.cpp nsTableRowGroupFrame.cpp 
+    nsTableRowFrame.cpp nsTableRowGroup.cpp nsTableRowGroupFrame.cpp \
+	BasicTableLayoutStrategy.cpp 
 
 CPP_OBJS=.\$(OBJDIR)\nsCellLayoutData.obj .\$(OBJDIR)\nsCellMap.obj \
     .\$(OBJDIR)\nsColLayoutData.obj .\$(OBJDIR)\nsTableCaption.obj \
@@ -39,7 +40,8 @@ CPP_OBJS=.\$(OBJDIR)\nsCellLayoutData.obj .\$(OBJDIR)\nsCellMap.obj \
     .\$(OBJDIR)\nsTableContent.obj .\$(OBJDIR)\nsTableFrame.obj \
     .\$(OBJDIR)\nsTableOuterFrame.obj .\$(OBJDIR)\nsTablePart.obj \
     .\$(OBJDIR)\nsTableRow.obj .\$(OBJDIR)\nsTableRowFrame.obj \
-    .\$(OBJDIR)\nsTableRowGroup.obj .\$(OBJDIR)\nsTableRowGroupFrame.obj 
+    .\$(OBJDIR)\nsTableRowGroup.obj .\$(OBJDIR)\nsTableRowGroupFrame.obj \
+	.\$(OBJDIR)\BasicTableLayoutStrategy.obj
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
   -I..\..\base\src -I..\..\style\src \
