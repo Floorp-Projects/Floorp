@@ -505,6 +505,14 @@ NS_IMETHODIMP nsDecoderSupport::Finish(PRUnichar * aDest, PRInt32 aDestOffset,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDecoderSupport::Length(const char * aSrc, PRInt32 aSrcOffset, 
+                                       PRInt32 aSrcLength, PRInt32 * aDestLength) 
+{
+  // XXX this will silently go away when interface will change and the right 
+  // method will be called because it's already there!!!
+  return GetMaxLength(aSrc + aSrcOffset, aSrcLength, aDestLength);
+}
+
 NS_IMETHODIMP nsDecoderSupport::Reset()
 {
   mBufferLength = 0;

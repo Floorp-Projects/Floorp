@@ -51,10 +51,9 @@ nsresult nsUTF8ToUnicode::CreateInstance(nsISupports ** aResult)
 //----------------------------------------------------------------------
 // Subclassing of nsTableDecoderSupport class [implementation]
 
-NS_IMETHODIMP nsUTF8ToUnicode::Length(const char * aSrc, 
-                                      PRInt32 aSrcOffset, 
-                                      PRInt32 aSrcLength, 
-                                      PRInt32 * aDestLength)
+NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc, 
+                                            PRInt32 aSrcLength, 
+                                            PRInt32 * aDestLength)
 {
   // we are a single byte to Unicode converter, so...
   *aDestLength = aSrcLength;
