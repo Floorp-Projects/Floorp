@@ -278,6 +278,14 @@ DataRequestForwarder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsre
 
     if (mRetrying)
         return NS_OK;
+
+    // If there were no calls to ODA, then the onstart won't have been
+    // fired - bug 122913
+    if (!mDelayedOnStartFired) { 
+        mDelayedOnStartFired = PR_TRUE;
+        nsresult rv = DelayedOnStartRequest(request, ctxt);
+        if (NS_FAILED(rv)) return rv;
+    }
     
     nsCOMPtr<nsITransportRequest> trequest(do_QueryInterface(request));
     if (trequest)
