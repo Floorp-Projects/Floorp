@@ -31,12 +31,12 @@
 #include "nsHashtable.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIFontCatalogService.h"
-#include "nsIFreeType2.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_CACHE_H
 #include FT_CACHE_IMAGE_H
 #include FT_TRUETYPE_TABLES_H
+#include "nsIFreeType2.h"
 
 typedef struct FT_FaceRec_*  FT_Face;
 
