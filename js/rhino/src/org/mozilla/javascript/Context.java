@@ -1840,7 +1840,9 @@ public class Context {
                 open = i;
             else if (c == ')')
                 close = i;
-            else if (c == '\n' && open != -1 && close != -1 && colon != -1) {
+            else if (c == '\n' && open != -1 && close != -1 && colon != -1 && 
+                     open < colon && colon < close) 
+            {
                 String fileStr = s.substring(open + 1, colon);
                 if (fileStr.endsWith(".js")) {
                     String lineStr = s.substring(colon + 1, close);
