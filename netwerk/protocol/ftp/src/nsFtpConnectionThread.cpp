@@ -571,11 +571,11 @@ nsFtpState::EstablishControlConnection()
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) trying cached control\n", this));
         
-    nsISupports* connection;
+    nsFtpControlConnection* connection;
     (void) nsFtpProtocolHandler::RemoveConnection(mURL, &connection);
     
     if (connection) {
-        mControlConnection = NS_STATIC_CAST(nsFtpControlConnection*, (nsIStreamListener*)connection);
+        mControlConnection = connection;
         if (mControlConnection->IsAlive())
         {
             // set stream listener of the control connection to be us.        
@@ -599,12 +599,11 @@ nsFtpState::EstablishControlConnection()
             if (NS_SUCCEEDED(rv))
                 return rv;
         }
-#if defined(PR_LOGGING)
         else 
         {
             PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) isAlive return false\n", this));
+            NS_RELEASE(mControlConnection);
         }
-#endif
     }
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) creating control\n", this));
@@ -2348,8 +2347,7 @@ nsFtpState::KillControlConnection() {
         mControlConnection->mServerType = mServerType;           
         mControlConnection->mPassword = mPassword;
         mControlConnection->mPwd = mPwd;
-        nsresult rv = nsFtpProtocolHandler::InsertConnection(mURL, 
-                                           NS_STATIC_CAST(nsISupports*, (nsIStreamListener*)mControlConnection));
+        nsresult rv = nsFtpProtocolHandler::InsertConnection(mURL, mControlConnection);
         // Can't cache it?  Kill it then.  
         mControlConnection->Disconnect(rv);
     } 

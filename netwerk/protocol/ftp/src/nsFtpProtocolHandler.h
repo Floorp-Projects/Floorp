@@ -38,6 +38,7 @@
 #ifndef nsFtpProtocolHandler_h___
 #define nsFtpProtocolHandler_h___
 
+#include "nsFtpControlConnection.h"
 #include "nsIServiceManager.h"
 #include "nsIProxiedProtocolHandler.h"
 #include "nsVoidArray.h"
@@ -72,23 +73,25 @@ public:
     nsresult Init();
 
     // FTP Connection list access
-    static nsresult InsertConnection(nsIURI *aKey, nsISupports *aConn);
-    static nsresult RemoveConnection(nsIURI *aKey, nsISupports **_retval);
+    static nsresult InsertConnection(nsIURI *aKey, nsFtpControlConnection *aConn);
+    static nsresult RemoveConnection(nsIURI *aKey, nsFtpControlConnection **aConn);
 
     static nsresult BuildStreamConverter(nsIStreamListener* in, nsIStreamListener** out);
 protected:
     // Stuff for the timer callback function
     struct timerStruct {
         nsCOMPtr<nsITimer> timer;
-        nsCOMPtr<nsISupports> conn;
+        nsCOMPtr<nsFtpControlConnection> conn;
         char* key;
         
-        timerStruct() : key(nsnull) {};
+        timerStruct() : key(nsnull) {}
         
         ~timerStruct() {
             if (timer)
                 timer->Cancel();
             CRTFREEIF(key);
+            if (conn)
+                conn->Disconnect(NS_ERROR_ABORT);
         }
     };
 
