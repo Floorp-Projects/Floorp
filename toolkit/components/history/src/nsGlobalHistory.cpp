@@ -1152,7 +1152,10 @@ nsGlobalHistory::RemovePagesFromHost(const char *aHost, PRBool aEntireDomain)
   hostInfo.entireDomain = aEntireDomain;
   hostInfo.host = aHost;
   
-  return RemoveMatchingRows(matchHostCallback, (void *)&hostInfo, PR_TRUE);
+  nsresult rv = RemoveMatchingRows(matchHostCallback, (void *)&hostInfo, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
+  return Commit(kCompressCommit);
 }
 
 PRBool

@@ -1103,7 +1103,7 @@ nsGlobalHistory::RemovePage(const char *aURL)
   err = row->CutAllColumns(mEnv);
   NS_ASSERTION(err == 0, "couldn't cut all columns");
 
-  return NS_OK;
+  return Commit(kCompressCommit);
 }
 
 NS_IMETHODIMP
@@ -1114,7 +1114,10 @@ nsGlobalHistory::RemovePagesFromHost(const char *aHost, PRBool aEntireDomain)
   hostInfo.entireDomain = aEntireDomain;
   hostInfo.host = aHost;
   
-  return RemoveMatchingRows(matchHostCallback, (void *)&hostInfo, PR_TRUE);
+  nsresult rv = RemoveMatchingRows(matchHostCallback, (void *)&hostInfo, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
+  return Commit(kCompressCommit)
 }
 
 PRBool
