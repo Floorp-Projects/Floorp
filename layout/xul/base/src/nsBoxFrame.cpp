@@ -101,12 +101,14 @@ public:
   nsBoxFrameInner(nsBoxFrame* aThis)
   {
     mOuter = aThis;
+    mDebugInner = nsnull;
   }
 
   ~nsBoxFrameInner()
   {
       if (mDebugInner) {
           mDebugInner->RemoveListener();
+          NS_RELEASE(mDebugInner);
           mDebugInner = nsnull;
       }
   }
@@ -121,7 +123,7 @@ public:
     nsCOMPtr<nsISpaceManager> mSpaceManager; // We own this [OWNER].
     PRUint32 mFlags;
     nsBoxFrame* mOuter;
-    nsCOMPtr<nsBoxDebugInner> mDebugInner;
+    nsBoxDebugInner* mDebugInner;
 
   //  PRBool mIsDebug;
 };
@@ -1794,6 +1796,7 @@ nsBoxFrameInner::UpdatePseudoElements(nsIPresContext& aPresContext)
     if (hs && vs) {
         if (!mDebugInner) {
             mDebugInner = new nsBoxDebugInner(mOuter);
+            NS_ADDREF(mDebugInner);
             mDebugInner->AddListener();
         }
         mDebugInner->mHorizontalDebugStyle = hs;
@@ -1803,6 +1806,7 @@ nsBoxFrameInner::UpdatePseudoElements(nsIPresContext& aPresContext)
         if (mDebugInner) 
         {
             mDebugInner->RemoveListener();
+            NS_RELEASE(mDebugInner);
             mDebugInner = nsnull;
         }
     }
