@@ -9,6 +9,8 @@ nsError.h
 nsHashtable.h
 nsID.h
 nsIFactory.h
+nsIPtr.h
 nsISupports.h
+nsISupportsArray.h
 nsRepository.h
 nsIEnumerator.h
