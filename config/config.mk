@@ -429,6 +429,8 @@ endif
 
 ifneq ($(JDKHOME),)
 JAVAH_PROG	= $(JDKHOME)/bin/javah
+JAVAC_PROG		= $(JDKHOME)/bin/javac $(JAVAC_FLAGS)
+JAVAC 			= $(JAVAC_PROG)
 endif
 
 ifeq ($(STAND_ALONE_JAVA),1)
