@@ -108,11 +108,11 @@ static void FixUpOutputString(char * aString)
 {
   // replace angle brackets with rect brackets
   char * p = aString;
-  while(p = strstr(p, "<"))
+  while((p = strstr(p, "<")))
     *p = '[';
 
   p = aString;
-  while(p = strstr(p, ">"))
+  while((p = strstr(p, ">")))
     *p = ']';
 }
 
@@ -191,7 +191,7 @@ BOOL CLogger::appendToLog(NPAPI_Action action, DWORD dwTickEnter, DWORD dwTickRe
       }
     }
 
-    int iLength = formatLogItem(plis, szOutput, m_szItemSeparator, TRUE);
+    formatLogItem(plis, szOutput, m_szItemSeparator, TRUE);
     m_pLogFile->write(szOutput);
     m_pLogFile->flush();
   }
@@ -288,7 +288,7 @@ void CLogger::clearTarget()
       NPN_DestroyStream(m_pPluginInstance, m_pStream, NPRES_DONE);
 
     NPN_NewStream(m_pPluginInstance, m_szStreamType, m_szTarget, &m_pStream);
-    NPN_Write(m_pPluginInstance, m_pStream, 1, "\n");
+    NPN_Write(m_pPluginInstance, m_pStream, 1, (void *)"\n");
 
     if(!m_bShowImmediately)
     {
@@ -314,7 +314,7 @@ void CLogger::dumpLogToTarget()
   {
     for(LogItemListElement * plile = m_pLog->m_pFirst; plile != NULL; plile = plile->pNext)
     {
-      int iLength = formatLogItem(plile->plis, szOutput, "", TRUE);
+      formatLogItem(plile->plis, szOutput, "", TRUE);
       m_pPlugin->outputToNativeWindow(szOutput);
     }
   }
