@@ -105,6 +105,7 @@ $versionLanguage               = "en";
 $ENV{WIZ_nameCompany}          = "mozilla.org";
 $ENV{WIZ_nameProduct}          = "Mozilla";
 $ENV{WIZ_nameProductNoVersion} = "Mozilla";
+$ENV{WIZ_nameProductInternal}  = $ENV{WIZ_nameProductNoVersion};
 $ENV{WIZ_fileMainExe}          = "Mozilla.exe";
 $ENV{WIZ_fileUninstall}        = $seuFileNameSpecific;
 $ENV{WIZ_fileUninstallZip}     = $seuzFileNameSpecific;
