@@ -31,13 +31,13 @@ DLLNAME = bcXPCOMWrappers
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 XPIDLSRCS = \
-	bcIXPCOMWrappers.idl \
-	nsIXPIDLServiceManagerpublic.idl \
+	.\bcIXPCOMWrappers.idl \
+	.\nsIXPIDLServiceManager.idl \
 	$(NULL)
 	
 EXPORTS = \
-	bcXPCOMWrappers.h \
-	bcXPCOMWrappersCID.h \
+	.\bcXPCOMWrappers.h \
+	.\bcXPCOMWrappersCID.h \
        $(NULL)
 
 OBJS= \

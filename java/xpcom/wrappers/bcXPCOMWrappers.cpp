@@ -42,7 +42,7 @@ bcXPCOMWrappers::GetWrapper(nsISupports *wrapped,const nsIID & wrappedIID, nsIID
     nsresult r = NS_OK;
     if (wrappedIID.Equals(NS_GET_IID(nsIServiceManager))) {
         *_retval = new nsXPIDLServiceManager();
-	*wrapperIID = & NS_GET_IID(nsIXPIDLServiceManager);
+	*wrapperIID = (nsIID*) & NS_GET_IID(nsIXPIDLServiceManager);
 	NS_ADDREF(*_retval);
     } else {
         r = NS_ERROR_FAILURE;

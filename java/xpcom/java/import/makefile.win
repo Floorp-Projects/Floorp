@@ -29,7 +29,7 @@ JAVAXPIDLSRCS = nsISupports.idl \
 	nsIComponentManager.idl \
 	nsIFactory.idl \
 	nsISupportsPrimitives.idl \
-	nsIXPIDLServiceManager \
+	nsIXPIDLServiceManager.idl \
 	$(NULL)
 		
 include <$(DEPTH)\config\rules.mak>
