@@ -122,7 +122,7 @@ class NS_COM nsHashtable {
 
   public:
     nsHashtable(PRUint32 aSize = 16, PRBool threadSafe = PR_FALSE);
-    ~nsHashtable();
+    virtual ~nsHashtable();
 
     PRInt32 Count(void) { return mHashtable.entryCount; }
     PRBool Exists(nsHashKey *aKey);
