@@ -242,10 +242,18 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
             *va_arg(ap, JSObject **) = obj;
             break;
           case 'f':
-            fun = js_ValueToFunction(cx, sp, 0);
-            if (!fun)
-                return JS_FALSE;
-            *sp = OBJECT_TO_JSVAL(fun->object);
+            /*
+             * Don't convert a cloned function object to its shared private
+             * data, then follow fun->object back to the clone-parent.
+             */
+            if (JSVAL_IS_FUNCTION(cx, *sp)) {
+                fun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(*sp));
+            } else {
+                fun = js_ValueToFunction(cx, sp, 0);
+                if (!fun)
+                    return JS_FALSE;
+                *sp = OBJECT_TO_JSVAL(fun->object);
+            }
             *va_arg(ap, JSFunction **) = fun;
             break;
           case 'v':
@@ -464,10 +472,19 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
             *vp = OBJECT_TO_JSVAL(obj);
         break;
       case JSTYPE_FUNCTION:
-        fun = js_ValueToFunction(cx, &v, JSV2F_SEARCH_STACK);
-        ok = (fun != NULL);
-        if (ok)
-            *vp = OBJECT_TO_JSVAL(fun->object);
+        /*
+         * Don't convert a cloned function object to its shared private data,
+         * then follow fun->object back to the clone-parent.
+         */
+        if (JSVAL_IS_FUNCTION(cx, v)) {
+            ok = JS_TRUE;
+            *vp = v;
+        } else {
+            fun = js_ValueToFunction(cx, &v, JSV2F_SEARCH_STACK);
+            ok = (fun != NULL);
+            if (ok)
+                *vp = OBJECT_TO_JSVAL(fun->object);
+        }
         break;
       case JSTYPE_STRING:
         str = js_ValueToString(cx, v);
