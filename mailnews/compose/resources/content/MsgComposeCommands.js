@@ -355,6 +355,7 @@ function SetDocumentCharacterSet(aCharset)
   if (msgCompose) {
     msgCompose.SetDocumentCharset(aCharset);
     currentMailSendCharset = aCharset;
+    SetComposeWindowTitle(13);
   }
   else
     dump("Compose has not been created!\n");
@@ -429,6 +430,48 @@ function InitCharsetMenuCheckMark()
 
   // Set a document charset to a default mail send charset.
   SetDocumentCharacterSet(send_default_charset);
+}
+
+function GetCharsetUIString()
+{
+  try {
+    prefs = Components.classes['component://netscape/preferences'];
+    prefs = prefs.getService();
+    prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+  }
+  catch (ex) {
+    dump("failed to get prefs service!\n");
+    prefs = null;
+  }
+
+  var send_default_charset = prefs.CopyCharPref("mailnews.send_default_charset");
+  var charset = msgCompose.compFields.GetCharacterSet();
+
+  charset = charset.toUpperCase();
+  if (charset == "US-ASCII")
+    charset = "ISO-8859-1";
+
+  if (charset != send_default_charset) {
+    var charsetTitle = "";
+    try {
+      var ccm = Components.classes['component://netscape/charset-converter-manager'];
+      ccm = ccm.getService();
+      ccm = ccm.QueryInterface(Components.interfaces.nsICharsetConverterManager2);
+    }
+    catch (ex) {
+      dump("failed to get charset-converter-manager service!\n");
+      ccm = null;
+    }
+
+    // get a localized string
+    var charsetAtom = ccm.GetCharsetAtom(charset);
+    charsetTitle = ccm.GetCharsetTitle(charsetAtom);
+    dump(charsetTitle);
+
+    return " - " + charsetTitle;
+  }
+
+  return "";
 }
 			
 function GenericSendMessage( msgType )
@@ -748,11 +791,12 @@ function SetComposeWindowTitle(event)
 	/* dump("newTitle = " + newTitle + "\n"); */
 
 	if (newTitle == "" ) {
-		/* i18N todo:  this should not be hard coded */
-		newTitle = '(no subject)';
+		newTitle = Bundle.GetStringFromName("defaultSubject");
 	}
-	/* i18N todo:  this should not be hard coded, either */
-	window.title = "Compose: "+ newTitle;
+
+	newTitle += GetCharsetUIString();
+
+	window.title = Bundle.GetStringFromName("windowTitlePrefix") + " " + newTitle;
 }
 
 // Check for changes to document and allow saving before closing
