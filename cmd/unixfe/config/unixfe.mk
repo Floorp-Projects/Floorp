@@ -44,15 +44,6 @@
 
 ##########################################################################
 #
-# XFE_MKICONS_BIN_LDPATH
-#
-# This needs to be set to -L$(DIST)/bin if at least one of jpeg, png or
-# zlib is not native and is shared.
-#
-##########################################################################
-
-##########################################################################
-#
 # MOZ_NATIVE_JPEG
 #
 # The default usage for libjpeg is that its built as part of Mozilla.
@@ -60,18 +51,36 @@
 # MOZ_NATIVE_JPEG can be set to make Mozilla build using a 'native' libjpeg
 # as found in platforms such as Linux and IRIX.
 #
+# Only one of the following gets set:
+#
+# XFE_JPEG_LIB
+# XFE_JPEG_DSO
+#
+# The following get set if required jpeg lib is not native, but its
+# dynamic:
+#
+# XFE_JPEG_REQUIRES
+# XFE_MKICONS_BIN_LDPATH
+#
 ##########################################################################
 ifdef MOZ_NATIVE_JPEG
 
-XFE_JPEG_LDFLAGS			= -ljpeg
+XFE_JPEG_LIB				=
+XFE_JPEG_DSO				= -ljpeg
+XFE_JPEG_REQUIRES			=
+XFE_MKICONS_BIN_LDPATH		=
 
 else
 
-XFE_JPEG_LDFLAGS			= $(DIST)/lib/libjpeg.a
+XFE_JPEG_LIB				= $(DIST)/lib/libjpeg.a
+XFE_JPEG_DSO				= 
 XFE_JPEG_REQUIRES			= jpeg
 XFE_MKICONS_BIN_LDPATH		= -L$(DIST)/bin
 
 endif
+##########################################################################
+
+
 
 ##########################################################################
 #
@@ -82,26 +91,44 @@ endif
 # MOZ_NATIVE_PNG can be set to make Mozilla build using a 'native' libpng
 # as found in platforms such as Linux and IRIX.
 #
+# Only one of the following gets set:
+#
+# XFE_PNG_LIB
+# XFE_PNG_DSO
+#
+# The following get set if required png lib is not native, but its
+# dynamic:
+#
+# XFE_PNG_REQUIRES
+# XFE_MKICONS_BIN_LDPATH
+#
 ##########################################################################
 ifdef MOZ_NATIVE_PNG
 
-XFE_PNG_LDFLAGS				= -lpng
+XFE_PNG_LIB					=
+XFE_PNG_DSO					= -lpng
+XFE_PNG_REQUIRES			=
+XFE_MKICONS_BIN_LDPATH		=
 
 else
 
-XFE_PNG_LDFLAGS				= $(DIST)/lib/libpng.a
+XFE_PNG_LIB					= $(DIST)/lib/libpng.a
+XFE_PNG_DSO					= 
 XFE_PNG_REQUIRES			= png
 XFE_MKICONS_BIN_LDPATH		= -L$(DIST)/bin
 
 endif
+##########################################################################
+
+
 
 ##########################################################################
 #
 # MOZ_NATIVE_ZLIB
 #
-# The default usage for zlib is that its built as part of Mozilla.
-# 
-# MOZ_NATIVE_JPEG can be set to make Mozilla build using a 'native' libpng
+# The default usage for libzlib is that its built as part of Mozilla.
+#
+# MOZ_NATIVE_ZLIB can be set to make Mozilla build using a 'native' libzlib
 # as found in platforms such as Linux and IRIX.
 #
 # When built as part of Mozilla, it takes the name 'libzlib'
@@ -111,30 +138,39 @@ endif
 # The FULL_STATIC_BUILD force the final Mozilla binary to be as fully
 # staitc as possible - which includes zlib.
 #
-# The cmd/xfe/icons/mkicons present a problem.  Its not important how this
-# utility is linked, because its not released.  In any case, im setting
-# XFE_ZLIB_MKICONS_LDFLAGS over here to avoid ifdef hackery in the mkicons
-# Makefile(s).
+# Only one of the following gets set:
+#
+# XFE_ZLIB_LIB
+# XFE_ZLIB_DSO
+#
+# The following get set if required zlib lib is not native, but its
+# dynamic:
+#
+# XFE_ZLIB_REQUIRES
+# XFE_MKICONS_BIN_LDPATH
 #
 ##########################################################################
 ifdef MOZ_NATIVE_ZLIB
 
-XFE_ZLIB_LDFLAGS			= -lz
-XFE_ZLIB_MKICONS_LDFLAGS	= -lz
+XFE_ZLIB_LIB				=
+XFE_ZLIB_DSO				= -lz
+XFE_ZLIB_REQUIRES			=
+XFE_MKICONS_BIN_LDPATH		=
 
 else
-
-XFE_ZLIB_REQUIRES			= zlib
 
 ifdef FULL_STATIC_BUILD
 
-XFE_ZLIB_LDFLAGS			= $(DIST)/lib/libzlib.a
-XFE_ZLIB_MKICONS_LDFLAGS	= $(DIST)/lib/libzlib.a
+XFE_ZLIB_LIB				= $(DIST)/lib/libzlib.a
+XFE_ZLIB_DSO				=
+XFE_ZLIB_REQUIRES			= zlib
+XFE_MKICONS_BIN_LDPATH		=
 
 else
 
-XFE_ZLIB_DSO_LDFLAGS		= -lzlib
-XFE_ZLIB_MKICONS_LDFLAGS	= -lzlib
+XFE_ZLIB_LIB				=
+XFE_ZLIB_DSO				= -lzlib
+XFE_ZLIB_REQUIRES			= zlib
 XFE_MKICONS_BIN_LDPATH		= -L$(DIST)/bin
 
 endif
