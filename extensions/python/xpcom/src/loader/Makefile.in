@@ -41,9 +41,6 @@ DEPTH=../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-PYTHON_INCLUDES = @MOZ_PYTHON_INCLUDES@
-PYTHON_LIBS = @MOZ_PYTHON_LIBS@
-PYTHON_VER_DOTTED = @MOZ_PYTHON_VER_DOTTED@
 
 include $(DEPTH)/config/autoconf.mk
 
