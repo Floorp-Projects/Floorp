@@ -121,7 +121,6 @@ pref("browser.search.defaulturl", "chrome://browser-region/locale/region.propert
 // (note: must be a string representation of a float or it'll default to 0.0)
 pref("browser.search.basic.min_ver", "0.0");
 pref("browser.urlbar.autocomplete.enabled", true);
-pref("browser.urlbar.clickSelectsAll", true);
 
 pref("browser.history.last_page_visited", "");
 pref("browser.history_expire_days", 9);
