@@ -241,7 +241,7 @@ function loadCalendarEventDialog()
    setFieldValue( "repeat-until-radio", ( (gEvent.recurForever == undefined || gEvent.recurForever == false ) && gEvent.recurCount == 0), "selected" );
 
    setFieldValue( "repeat-numberoftimes-radio", (gEvent.recurCount != 0), "selected" );
-   setFieldValue( "repeat-numberoftimes-textbox", gEvent.recurCount );
+   setFieldValue( "repeat-numberoftimes-textbox", Math.max(gEvent.recurCount, 1));
 
    /* Categories stuff */
    // Load categories
@@ -378,7 +378,9 @@ function onOKCommand()
    gEvent.recurUnits    = getFieldValue( "repeat-length-units", "value" );  
    gEvent.recurForever  = getFieldValue( "repeat-forever-radio", "selected" );
    gEvent.recurInterval = getFieldValue( "repeat-length-field" );
-   gEvent.recurCount    = getFieldValue( "repeat-numberoftimes-textbox" );
+   gEvent.recurCount    = (getFieldValue("repeat-numberoftimes-radio", "selected")
+                           ? Math.max(1, getFieldValue( "repeat-numberoftimes-textbox"))
+                           : 0); // 0 means not selected.
    
    if( gEvent.recurInterval == 0 )
       gEvent.recur = false;
@@ -424,6 +426,7 @@ function onOKCommand()
 
    var listbox = document.getElementById( "exception-dates-listbox" );
 
+   var i;
    for( i = 0; i < listbox.childNodes.length; i++ )
    {
       debug( "\n exception added for "+listbox.childNodes[i].value );
