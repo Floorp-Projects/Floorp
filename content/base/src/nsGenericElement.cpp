@@ -517,7 +517,7 @@ nsGenericElement::RemoveAttributeNode(nsIDOMAttr* aAttribute,
 
 nsresult
 nsGenericElement::GetElementsByTagName(const nsString& aTagname,
-                                           nsIDOMNodeList** aReturn)
+                                       nsIDOMNodeList** aReturn)
 {
   return NS_ERROR_NOT_IMPLEMENTED;/* XXX */
 }
