@@ -54,6 +54,7 @@ bin\components\appshell.xpt
 bin\components\autocomplete.xpt
 bin\components\bookmarks.xpt
 bin\components\directory.xpt
+bin\components\downloads.xpt
 bin\components\commandhandler.xpt
 bin\components\history.xpt
 bin\components\winhooks.xpt
