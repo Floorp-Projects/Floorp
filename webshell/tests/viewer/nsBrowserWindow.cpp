@@ -897,7 +897,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   case VIEWER_GOTO_TEST_URL1: 
   case VIEWER_GOTO_TEST_URL2: {
     nsAutoString urlStr;
-    char * pref = aID == VIEWER_GOTO_TEST_URL1?"nglayout.widget.testurl1":"nglayout.widget.testurl2";
+    const char * pref = (aID == VIEWER_GOTO_TEST_URL1) ? "nglayout.widget.testurl1" : "nglayout.widget.testurl2";
     GetStringPref(pref, urlStr);
     PRUint32 size;
     mLocation->SetText(urlStr, size);
@@ -911,7 +911,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     nsAutoString text;
     PRUint32 size;
     mLocation->GetText(text, 1000, size);
-    char * pref = aID == VIEWER_SAVE_TEST_URL1?"nglayout.widget.testurl1":"nglayout.widget.testurl2";
+    const char * pref = (aID == VIEWER_SAVE_TEST_URL1) ? "nglayout.widget.testurl1" : "nglayout.widget.testurl2";
     SetStringPref(pref, text);
     }
     break;
