@@ -688,8 +688,9 @@ class Parser {
             tt = ts.peekTokenSameLine();
             ts.flags &= ~ts.TSF_REGEXP;
 
-            if (tt != ts.EOF && tt != ts.EOL
-                && tt != ts.SEMI && tt != ts.RC) {
+            if (tt != ts.EOF && tt != ts.EOL && tt != ts.SEMI && 
+                tt != ts.RC && !(tt == ts.PRIMARY && ts.getOp() == ts.THIS))         
+            {
                 lineno = ts.getLineno();
                 retExpr = expr(ts, source, false);
                 if (ts.getLineno() == lineno)

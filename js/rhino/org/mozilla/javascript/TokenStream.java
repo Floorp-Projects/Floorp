@@ -195,7 +195,7 @@ public class TokenStream {
         INC         = 105, // increment/decrement (++ --)
         DEC         = 106,
         DOT         = 107, // member operator (.)
-        PRIMARY     = 108, // true, false, null, this, super
+        PRIMARY     = 108, // true, false, null, this
         FUNCTION    = 109, // function keyword
         EXPORT      = 110, // export keyword
         IMPORT      = 111, // import keyword
