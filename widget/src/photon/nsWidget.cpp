@@ -2144,7 +2144,7 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::HandleEvent entering this=<%p> mWidge
             /* I am not sure what rect and boundary should be but this works */
 			PhRect_t rect = {0,0,0,0};
 			PhRect_t boundary = {0,0,640,480};
-			err=PhInitDrag( PtWidgetRid(mWidget), ( Ph_DRAG_KEY_MOTION | Ph_DRAG_TRACK ),&rect, &boundary, aCbInfo->event->input_group , NULL, NULL, NULL);
+			err=PhInitDrag( PtWidgetRid(mWidget), ( Ph_DRAG_KEY_MOTION | Ph_DRAG_TRACK ),&rect, &boundary, aCbInfo->event->input_group , NULL, NULL, NULL, NULL, NULL);
             if (err==-1)
 			{
 			  NS_WARNING("nsWidget::HandleEvent PhInitDrag Failed!\n");
