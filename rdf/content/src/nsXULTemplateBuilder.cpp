@@ -193,11 +193,6 @@ RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
 
 RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
 {
-    NS_IF_RELEASE(mRoot);
-    if (mDB) {
-        mDB->RemoveObserver(this);
-        NS_RELEASE(mDB);
-    }
     // NS_IF_RELEASE(mDocument) not refcounted
 
     --gRefCnt;
@@ -419,33 +414,30 @@ RDFGenericBuilderImpl::SetDocument(nsIRDFDocument* aDocument)
 NS_IMETHODIMP
 RDFGenericBuilderImpl::SetDataBase(nsIRDFCompositeDataSource* aDataBase)
 {
-    NS_PRECONDITION(aDataBase != nsnull, "null ptr");
-    if (! aDataBase)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(mDB == nsnull, "already initialized");
-    if (mDB)
-        return NS_ERROR_ALREADY_INITIALIZED;
-
     NS_PRECONDITION(mRoot != nsnull, "not initialized");
     if (! mRoot)
         return NS_ERROR_NOT_INITIALIZED;
 
-    mDB = aDataBase;
-    NS_ADDREF(mDB);
+    
+    if (mDB)
+        mDB->RemoveObserver(this);
 
-    mDB->AddObserver(this);
+    mDB = dont_QueryInterface(aDataBase);
 
-    // Now set the database on the element, so that script writers can
-    // access it.
-    nsCOMPtr<nsIDOMXULElement> element( do_QueryInterface(mRoot) );
-    NS_ASSERTION(element != nsnull, "not a XULElement");
-    if (! element)
-        return NS_ERROR_UNEXPECTED;
+    if (mDB) {
+        mDB->AddObserver(this);
 
-    nsresult rv;
-    rv = element->SetDatabase(aDataBase);
-    if (NS_FAILED(rv)) return rv;
+        // Now set the database on the element, so that script writers can
+        // access it.
+        nsCOMPtr<nsIDOMXULElement> element( do_QueryInterface(mRoot) );
+        NS_ASSERTION(element != nsnull, "not a XULElement");
+        if (! element)
+            return NS_ERROR_UNEXPECTED;
+
+        nsresult rv;
+        rv = element->SetDatabase(aDataBase);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     return NS_OK;
 }
@@ -459,7 +451,7 @@ RDFGenericBuilderImpl::GetDataBase(nsIRDFCompositeDataSource** aDataBase)
         return NS_ERROR_NULL_POINTER;
 
     *aDataBase = mDB;
-    NS_ADDREF(mDB);
+    NS_ADDREF(*aDataBase);
     return NS_OK;
 }
 
@@ -475,9 +467,7 @@ RDFGenericBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
 NS_IMETHODIMP
 RDFGenericBuilderImpl::SetRootContent(nsIContent* aElement)
 {
-    NS_IF_RELEASE(mRoot);
-    mRoot = aElement;
-    NS_IF_ADDREF(mRoot);
+    mRoot = dont_QueryInterface(aElement);
     return NS_OK;
 }
 
