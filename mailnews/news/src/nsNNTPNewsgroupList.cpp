@@ -34,6 +34,8 @@ class NewsGroupDB;
 class MessageDBView;
 #endif
 
+// we have a HAVE_XPGETSTRING in this file which needs fixed once we have XP_GetString
+
 
 #include "nsNNTPNewsgroupList.h"
 #include "nsINNTPArticleList.h"
@@ -609,7 +611,11 @@ nsNNTPNewsgroupList::ProcessXOVER(char *line)
 		/* only update every 10 articles for speed */
 		if ( (totIndex <= NEWS_ART_DISPLAY_FREQ) || ((lastIndex % NEWS_ART_DISPLAY_FREQ) == 0) || (lastIndex == totIndex))
 		{
+#ifdef HAVE_XPGETSTRING
 			char *statusTemplate = XP_GetString (MK_HDR_DOWNLOAD_COUNT);
+#else
+			char *statusTemplate = "XP_GetString not implemented in nsNNTPNewsgroupList.";
+#endif
 			char *statusString = PR_smprintf (statusTemplate, numDownloaded, totToDownload);
 #ifdef HAVE_PANES
 			FE_Progress (m_pane->GetContext(), statusString);

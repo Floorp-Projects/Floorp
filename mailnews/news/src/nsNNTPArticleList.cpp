@@ -50,8 +50,8 @@ protected:
 	MSG_Pane				*m_pane;
 #endif
   /* formerly m_groupName */
-	nsINNTPNewsgroup		*m_newsgroup;
-	nsINNTPHost			*m_host;
+	const nsINNTPNewsgroup		*m_newsgroup;
+	const nsINNTPHost			*m_host;
 #ifdef HAVE_NEWSDB
 	NewsGroupDB				*m_newsDB;
 #endif

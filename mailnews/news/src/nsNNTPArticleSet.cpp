@@ -19,8 +19,8 @@
 #include "nsNNTPArticleSet.h"
 #include "nsINNTPHost.h"
 
-#include "mkutils.h"
-
+// #include "mkutils.h"
+#include <ctype.h>
 #include "prmem.h"
 #include "prlog.h"
 #include "prprf.h"
