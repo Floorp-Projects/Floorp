@@ -29,7 +29,8 @@ static NS_DEFINE_CID(kMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID);
 	 printf("We succesfully obtained a nsIMsgRFC822Parser interface....\n");
 	 char * names = NULL;
 	 char * addresses = NULL;
-	 sample->ParseRFC822Addresses("Scott MacGregor <mscott@netscape.com>", &names, &addresses);
+	 PRUint32 numAddresses = 0; 
+	 sample->ParseRFC822Addresses("Scott MacGregor <mscott@netscape.com>", &names, &addresses, numAddresses);
 	 if (names)
 	 {
 		 printf(names);
