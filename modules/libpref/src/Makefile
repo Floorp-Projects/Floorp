@@ -100,8 +100,6 @@ CONFIG_FILE_EXPORTS = $(addprefix $(HEADER_DEST_DIR)/pref_,$(CONFIG_FILE_HEADERS
 # export these new files so other modules can use them
 EXPORTS += $(CONFIG_FILE_EXPORTS)
 
-include $(DEPTH)/config/rules.mk
-
 # VPATH allows us to make sure the auto-generation rule works for
 # everything in VPATH (so init/all.js->pref_all.h etc)
 VPATH += init/ unix/
