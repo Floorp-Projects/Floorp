@@ -114,8 +114,10 @@ public:
 
   NS_IMETHODIMP CreateTreeWidgetContent(nsIPresContext* aPresContext,
                                         nsIFrame*       aParentFrame,
+                                        nsIFrame*       aPrevFrame,
                                         nsIContent*     aChild,
-                                        nsIFrame**      aResult);
+                                        nsIFrame**      aResult,
+                                        PRBool          aIsAppend);
 
 protected:
 
