@@ -106,7 +106,7 @@ struct RegistryEntry {
     PRBool     isAlreadySet() const;
     nsresult   set();
     nsresult   reset();
-    nsCString  currentSetting() const;
+    nsCString  currentSetting( PRBool *currentUndefined = 0 ) const;
 
     // Return value name in proper form for passing to ::Reg functions
     // (i.e., emptry string is converted to a NULL pointer).
@@ -175,28 +175,37 @@ struct ProtocolRegistryEntry : public SavedRegistryEntry {
 //
 // Like a protocol registry entry, but for the shell\open\ddeexec subkey.
 //
-// We no longer wire in DDE into the registry so we don't set the
-// application name or topic.  We do *reset* them (to clean up previous
-// installations).
+// We need to remove this subkey entirely to ensure we work properly with
+// various programs on various platforms (see Bugzilla bugs 59078, 58770, etc.).
 //
-// Reset handle setting/resetting various ddeexec sub-entries, also.
+// We don't try to save everything, though.  We do save the known useful info
+// under the ddeexec subkey:
+//     ddexec\@
+//     ddeexec\NoActivateHandler
+//     ddeexec\Application\@
+//     ddeexec\Topic\@
+//
+// set/reset save/restore these values and remove/restore the ddeexec subkey
 struct DDERegistryEntry : public SavedRegistryEntry {
     DDERegistryEntry( const char *protocol )
-        : SavedRegistryEntry( HKEY_LOCAL_MACHINE, "", "", "" ),
-          app( HKEY_LOCAL_MACHINE, "", "", "Mozilla" ),
-          topic( HKEY_LOCAL_MACHINE, "", "", "WWW_OpenURL" ) {
+        : SavedRegistryEntry( HKEY_LOCAL_MACHINE, "", "", 0 ),
+          activate( HKEY_LOCAL_MACHINE, "", "NoActivateHandler", 0 ),
+          app( HKEY_LOCAL_MACHINE, "", "", 0 ),
+          topic( HKEY_LOCAL_MACHINE, "", "", 0 ) {
         // Derive keyName from protocol.
         keyName = "Software\\Classes\\";
         keyName += protocol;
         keyName += "\\shell\\open\\ddeexec";
         // Set subkey names.
+        activate.keyName = keyName;
         app.keyName = keyName;
         app.keyName += "\\Application";
         topic.keyName = keyName;
         topic.keyName += "\\Topic";
     }
-    nsresult reset();                                     
-    SavedRegistryEntry app, topic;
+    nsresult set();
+    nsresult reset();
+    SavedRegistryEntry activate, app, topic;
 };
 
 // FileTypeRegistryEntry
@@ -288,10 +297,11 @@ else printf( "Setting %s=%s\n", fullName().get(), setting.get() );
                 result = NS_OK;
             }
         } else {
+            // Get current value to see if it is set properly already.
             char buffer[4096] = { 0 };
             DWORD len = sizeof buffer;
             rc = ::RegQueryValueEx( key, valueNameArg(), NULL, NULL, (LPBYTE)buffer, &len );
-            if ( strcmp( setting.get(), buffer ) != 0 ) {
+            if ( rc != ERROR_SUCCESS || strcmp( setting.get(), buffer ) != 0 ) {
                 rc = ::RegSetValueEx( key, valueNameArg(), NULL, REG_SZ, (LPBYTE)setting.get(), setting.Length() );
 #ifdef DEBUG_law
 NS_WARN_IF_FALSE( rc == ERROR_SUCCESS, fullName().get() );
@@ -316,9 +326,12 @@ NS_WARN_IF_FALSE( rc == ERROR_SUCCESS, fullName().get() );
 // Get current setting, set new one, then save the previous.
 nsresult SavedRegistryEntry::set() {
     nsresult rv = NS_OK;
-    nsCAutoString prev( currentSetting() );
+    PRBool   currentlyUndefined = PR_TRUE;
+    nsCAutoString prev( currentSetting( &currentlyUndefined ) );
     // See if value is changing.
-    if ( setting != prev ) {
+    // We need an extra check for the case where we have an empty entry
+    // and we need to remove it entirely.
+    if ( setting != prev || ( !currentlyUndefined && isNull ) ) {
         // Set new.
         rv = RegistryEntry::set();
         if ( NS_SUCCEEDED( rv ) ) {
@@ -457,16 +470,24 @@ nsresult SavedRegistryEntry::reset() {
     // Test if we "own" it.
     if ( current == setting ) {
         // Unset it, then.  First get saved value it had previously.
+        PRBool noSavedValue = PR_TRUE;
         RegistryEntry saved = RegistryEntry( HKEY_LOCAL_MACHINE, mozillaKeyName, fullName().get(), "" );
-        saved.setting = saved.currentSetting();
-        if ( !saved.setting.IsEmpty() ) {
+        // There are 3 cases:
+        //    - no saved entry
+        //    - empty saved entry
+        //    - a non-empty saved entry
+        // We delete the current entry in the first case, and restore
+        // the saved entry (empty or otherwise) in the other two.
+        setting = saved.currentSetting( &noSavedValue );
+        if ( !setting.IsEmpty() || !noSavedValue ) {
             // Set to previous value.
-            setting = saved.setting;
+            isNull = PR_FALSE; // Since we're resetting and the saved value may be empty, we
+                               // need to make sure set() doesn't mistakenly delete this entry.
             result = RegistryEntry::set();
             // Remove saved entry.
             saved.reset();
         } else {
-            // Just delete this key/value.
+            // No saved value, just delete this entry.
             result = RegistryEntry::reset();
         }
     }
@@ -515,20 +536,91 @@ nsresult ProtocolRegistryEntry::reset() {
     return rv;
 }
 
+static DWORD deleteKey( HKEY baseKey, const char *keyName ) {
+    // Make sure input subkey isn't null.
+    DWORD rc;
+    if ( keyName && ::strlen(keyName) ) {
+        // Open subkey.
+        HKEY key;
+        rc = ::RegOpenKeyEx( baseKey,
+                             keyName,
+                             0,
+                             KEY_ENUMERATE_SUB_KEYS | DELETE,
+                             &key );
+        // Continue till we get an error or are done.
+        while ( rc == ERROR_SUCCESS ) {
+            char subkeyName[_MAX_PATH];
+            DWORD len = sizeof subkeyName;
+            // Get first subkey name.  Note that we always get the
+            // first one, then delete it.  So we need to get
+            // the first one next time, also.
+            rc = ::RegEnumKeyEx( key,
+                                 0,
+                                 subkeyName,
+                                 &len,
+                                 0,
+                                 0,
+                                 0,
+                                 0 );
+            if ( rc == ERROR_NO_MORE_ITEMS ) {
+                // No more subkeys.  Delete the main one.
+                rc = ::RegDeleteKey( baseKey, keyName );
+                break;
+            } else if ( rc == ERROR_SUCCESS ) {
+                // Another subkey, delete it, recursively.
+                rc = deleteKey( key, subkeyName );
+            }
+        }
+        // Close the key we opened.
+        ::RegCloseKey( key );
+    } else {
+        rc = ERROR_BADKEY;
+    }
+    return rc;
+}
+
+// Set the "dde" entry by deleting the main ddexec subkey
+// under HKLM\Software\Classes\<protocol>\shell\open.
+// We "set" the various subkeys in order to preserve useful
+// information.
+nsresult DDERegistryEntry::set() {
+    nsresult rv = SavedRegistryEntry::set();
+    rv = activate.set();
+    rv = app.set();
+    rv = topic.set();
+    // We've saved what we can.  Now recurse through this key and
+    // subkeys.  This is necessary due to the fact that
+    // ::RegDeleteKey won't work on WinNT (and Win2k?) if there are
+    // subkeys.
+    if ( deleteKey( baseKey, keyName.get() ) != ERROR_SUCCESS ) {
+        rv = NS_ERROR_FAILURE;
+    }
+    return rv;
+}
+
 // Reset the main (ddeexec) value but also the Application and Topic.
 // We reset the app/topic even though we no longer set them.  This
 // handles cases where the user installed a prior version, and then
 // upgraded.
 nsresult DDERegistryEntry::reset() {
     nsresult rv = SavedRegistryEntry::reset();
+    rv = activate.reset();
     rv = app.reset();
     rv = topic.reset();
     return rv;
 }
 
 // Return current setting for this registry entry.
-nsCString RegistryEntry::currentSetting() const {
+// Optionally, the caller can ask that a boolean be set to indicate whether
+// the registry value is undefined.  This flag can be used to distinguish
+// between not defined at all versus simply empty (both of which return an
+// empty string).
+nsCString RegistryEntry::currentSetting( PRBool *currentlyUndefined ) const {
     nsCString result;
+
+    if ( currentlyUndefined ) {
+        *currentlyUndefined = PR_TRUE;
+    }
 
     HKEY   key;
     LONG   rc = ::RegOpenKey( baseKey, keyName.get(), &key );
@@ -538,6 +630,9 @@ nsCString RegistryEntry::currentSetting() const {
         rc = ::RegQueryValueEx( key, valueNameArg(), NULL, NULL, (LPBYTE)buffer, &len );
         if ( rc == ERROR_SUCCESS ) {
             result = buffer;
+            if ( currentlyUndefined ) {
+                *currentlyUndefined = PR_FALSE; // Indicate entry is present.
+            }
         }
         ::RegCloseKey( key );
     }
