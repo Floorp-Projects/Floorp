@@ -34,21 +34,17 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH           = ../..
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
+relativesrcdir  = mail/locales
 
 include $(DEPTH)/config/autoconf.mk
 
-# For the moment, just hardcode en-US... more automation coming later.
-
-# We need a way to make a localized build and a langpack-extension from the
-# same jar.mn
-
 APP_VERSION = $(shell cat $(srcdir)/../config/version.txt)
 
-DEFINES += -DAB_CD=en-US -DAPP_VERSION=$(APP_VERSION)
+DEFINES += -DAB_CD=$(AB_CD) -DAPP_VERSION=$(APP_VERSION)
 
 ifdef MOZ_USE_OFFICIAL_BRANDING
 DEFINES += -DMOZ_USE_OFFICIAL_BRANDING
