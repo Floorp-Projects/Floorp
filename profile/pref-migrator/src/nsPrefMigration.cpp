@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
@@ -37,6 +36,10 @@
 
 #include "nsPrefMigration.h"
 #include "nsPMProgressDlg.h"
+
+#define POP_4X_MAIL_TYPE 0
+#define IMAP_4X_MAIL_TYPE 1
+#define MOVEMAIL_4X_MAIL_TYPE 2  
 
 /* who's going to win the file name battle? */
 #if defined(XP_UNIX)
@@ -125,7 +128,7 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
   char *oldPOPMailPathStr, *oldIMAPMailPathStr, *oldIMAPLocalMailPathStr, *oldNewsPathStr;
   char *newPOPMailPathStr, *newIMAPMailPathStr, *newIMAPLocalMailPathStr, *newNewsPathStr;
   char *popServerName;
-
+  
   nsFileSpec oldPOPMailPath, oldIMAPMailPath, oldIMAPLocalMailPath, oldNewsPath;
   nsFileSpec newPOPMailPath, newIMAPMailPath, newIMAPLocalMailPath, newNewsPath;
 
@@ -217,75 +220,79 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
 
   /* Create the new mail directory from the setting in prefs.js or a default */
   PREF_GetIntPref("mail.server.type", &serverType);
-  if (serverType == 0) /* User had POP */
-  {
-    if(GetDirFromPref(newProfilePathStr, "mail.directory", newPOPMailPathStr, oldPOPMailPathStr) == NS_OK)
+  if (serverType == POP_4X_MAIL_TYPE) 
     {
-      /* convert back to nsFileSpec */
-      oldPOPMailPath = oldPOPMailPathStr;
-      newPOPMailPath = newPOPMailPathStr;
+      if(GetDirFromPref(newProfilePathStr, "mail.directory", newPOPMailPathStr, oldPOPMailPathStr) == NS_OK)
+        {
+          /* convert back to nsFileSpec */
+          oldPOPMailPath = oldPOPMailPathStr;
+          newPOPMailPath = newPOPMailPathStr;
+        }
+      else
+        {
+          /* use the default locations */
+          oldPOPMailPath = oldProfilePathStr;
+          oldPOPMailPath += "Mail";
+          newPOPMailPath = newProfilePathStr;
+          newPOPMailPath += "Mail";
+        }
+      PR_MkDir(nsNSPRPath(newPOPMailPath), PR_RDWR);
+      PREF_GetCharPref("network.hosts.pop_server", popServerName, &nameLength);
+      newPOPMailPath += popServerName;
+      PR_MkDir(nsNSPRPath(newPOPMailPath), PR_RDWR);
     }
-    else
+  else if (serverType == IMAP_4X_MAIL_TYPE)
     {
-      /* use the default locations */
-      oldPOPMailPath = oldProfilePathStr;
-      oldPOPMailPath += "Mail";
-      newPOPMailPath = newProfilePathStr;
-      newPOPMailPath += "Mail";
+      hasIMAP = PR_TRUE;
+      /* First get the actual local mail files location */
+      if(GetDirFromPref(newProfilePathStr, "mail.directory", newIMAPLocalMailPathStr, oldIMAPLocalMailPathStr) == NS_OK)
+        {
+          /* convert back to nsFileSpec */
+          oldIMAPLocalMailPath = oldIMAPLocalMailPathStr;
+          newIMAPLocalMailPath = newIMAPLocalMailPathStr;
+        }
+      else  /* default paths */
+        { 
+          oldIMAPLocalMailPath = oldProfilePathStr;
+          oldIMAPLocalMailPath += "Mail";
+          newIMAPLocalMailPath = newProfilePathStr;
+          newIMAPLocalMailPath += "Mail";
+        }
+      /* Now create the new directories */
+      PR_MkDir(nsNSPRPath(newIMAPLocalMailPath), PR_RDWR);
+      newIMAPLocalMailPath += "Local Mail";
+      PR_MkDir(nsNSPRPath(newIMAPLocalMailPath), PR_RDWR);
+      
+      /* Next get IMAP mail summary files location */
+      if(GetDirFromPref(newProfilePathStr, "mail.imap.root_dir", newIMAPMailPathStr, oldIMAPMailPathStr) == NS_OK)
+        {
+          /* convert back to nsFileSpec */
+          oldIMAPMailPath = oldIMAPMailPathStr;
+          newIMAPMailPath = newIMAPMailPathStr;
+        }
+      else  /* default paths */
+        { 
+          oldIMAPMailPath = oldProfilePathStr;
+          oldIMAPMailPath += "ImapMail";
+          newIMAPMailPath = newProfilePathStr;
+          newIMAPMailPath += "ImapMail";
+        }
+      PR_MkDir(nsNSPRPath(newIMAPMailPath), PR_RDWR);
     }
-    PR_MkDir(nsNSPRPath(newPOPMailPath), PR_RDWR);
-    PREF_GetCharPref("network.hosts.pop_server", popServerName, &nameLength);
-    newPOPMailPath += popServerName;
-    PR_MkDir(nsNSPRPath(newPOPMailPath), PR_RDWR);
-  }
-  else /* User had IMAP */
-  {
-    hasIMAP = PR_TRUE;
-	/* First get the actual local mail files location */
-    if(GetDirFromPref(newProfilePathStr, "mail.directory", newIMAPLocalMailPathStr, oldIMAPLocalMailPathStr) == NS_OK)
+  else
     {
-      /* convert back to nsFileSpec */
-      oldIMAPLocalMailPath = oldIMAPLocalMailPathStr;
-      newIMAPLocalMailPath = newIMAPLocalMailPathStr;
+      return NS_ERROR_UNEXPECTED;
     }
-	else  /* default paths */
-	{ 
-      oldIMAPLocalMailPath = oldProfilePathStr;
-      oldIMAPLocalMailPath += "Mail";
-      newIMAPLocalMailPath = newProfilePathStr;
-      newIMAPLocalMailPath += "Mail";
-	}
-    /* Now create the new directories */
-    PR_MkDir(nsNSPRPath(newIMAPLocalMailPath), PR_RDWR);
-    newIMAPLocalMailPath += "Local Mail";
-    PR_MkDir(nsNSPRPath(newIMAPLocalMailPath), PR_RDWR);
-
-	/* Next get IMAP mail summary files location */
-    if(GetDirFromPref(newProfilePathStr, "mail.imap.root_dir", newIMAPMailPathStr, oldIMAPMailPathStr) == NS_OK)
-    {
-      /* convert back to nsFileSpec */
-      oldIMAPMailPath = oldIMAPMailPathStr;
-      newIMAPMailPath = newIMAPMailPathStr;
-    }
-	else  /* default paths */
-	{ 
-      oldIMAPMailPath = oldProfilePathStr;
-      oldIMAPMailPath += "ImapMail";
-      newIMAPMailPath = newProfilePathStr;
-      newIMAPMailPath += "ImapMail";
-	}
-	PR_MkDir(nsNSPRPath(newIMAPMailPath), PR_RDWR);
-  }
-
-
+  
+  
   /* Create the new News directory from the setting in prefs.js or a default */
   if(GetDirFromPref(newProfilePathStr, "news.directory", newNewsPathStr, oldNewsPathStr) == NS_OK)
-  {
-    oldNewsPath = oldNewsPathStr;
-    newNewsPath = newNewsPathStr;
-  }
+    {
+      oldNewsPath = oldNewsPathStr;
+      newNewsPath = newNewsPathStr;
+    }
   else /* default paths */
-  {
+    {
     oldNewsPath = oldProfilePathStr;
     oldNewsPath += "News";
     newNewsPath = newProfilePathStr;
@@ -542,29 +549,35 @@ nsPrefMigration::ComputeMailPath(nsFileSpec oldPath, nsFileSpec *newPath)
   const char *mail = "Mail";
 
   int  nameLength = MAXPATHLEN;
-  char *serverType, *popServerName, *mailPath;
+  PRInt32 serverType;
+  char *popServerName = nsnull;
+  char *mailPath = nsnull;
 
-  PREF_GetCharPref("mail.server.type", serverType, &nameLength);
-  if(*serverType == 0) /* User had POP */
+  PREF_GetIntPref("mail.server_type", &serverType);
+  if(serverType == POP_4X_MAIL_TYPE) /* User had POP */
   {
     PREF_GetCharPref("network.hosts.pop_server", popServerName, &nameLength);
     PREF_GetCharPref("mail.directory", mailPath, &nameLength);
     if (mailPath != NULL)
-    {
-      (newPath += *mailPath) += *popServerName;
-    }
+      {
+        (newPath += *mailPath) += *popServerName;
+      }
     else
+      {
+        newPath += *mail;
+        newPath += *popServerName;
+      }
+    return NS_OK;
+  }
+  else if (serverType == IMAP_4X_MAIL_TYPE)
     {
-      newPath += *mail;
-      newPath += *popServerName;
+      newPath += *localMailString;
+      return NS_OK;
     }
-    return NS_OK;
-  }
-  else  /* User had IMAP */
-  {
-    newPath += *localMailString;
-    return NS_OK;
-  }
+  else
+    {
+      return NS_ERROR_UNEXPECTED;
+    }
 
 }
 
