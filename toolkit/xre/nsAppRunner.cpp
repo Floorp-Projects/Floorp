@@ -1757,7 +1757,7 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #if defined(MOZ_WIDGET_GTK)
   gtk_set_locale();
 #endif
-  gtk_init(&argc, &argv);
+  gtk_init(&gArgc, &gArgv);
 
   gtk_widget_set_default_visual(gdk_rgb_get_visual());
   gtk_widget_set_default_colormap(gdk_rgb_get_cmap());
