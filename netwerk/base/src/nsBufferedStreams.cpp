@@ -216,10 +216,10 @@ nsBufferedInputStream::Fill()
         // |<------------->|<--rem-->|<--->|
         // b               c         f     s
         nsCRT::memcpy(mBuffer, mBuffer + mCursor, rem);
-        mBufferStartOffset += mCursor;
-        mFillPoint = rem;
-        mCursor = 0;
     }
+    mBufferStartOffset += mCursor;
+    mFillPoint = rem;
+    mCursor = 0;
 
     PRUint32 amt;
     rv = Source()->Read(mBuffer + mFillPoint, mBufferSize - mFillPoint, &amt);
