@@ -44,7 +44,7 @@ use Moz::BuildCore;
 #-------------------------------------------------------------
 
 my($prefs_file_name) = "Mozilla debug build prefs";
-my($config_header_file_name) = ":mozilla:config:mac:MozillaDebugDefinesOptions.h";
+my($config_header_file_name) = ":mozilla:config:mac:DefinesOptionsDebug.h";
 
 #-------------------------------------------------------------
 # hashes to hold build options

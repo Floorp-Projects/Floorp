@@ -11,6 +11,7 @@ build_flags
 all             1
 pull            0
 dist            0
+config          0
 xpidl           0
 idl             0
 stubs           0

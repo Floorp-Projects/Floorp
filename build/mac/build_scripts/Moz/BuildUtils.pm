@@ -43,6 +43,7 @@ use vars qw(@ISA @EXPORT);
                 SetupBuildLog
                 SetBuildNumber
                 SetTimeBomb
+                UpdateConfigHeader
               );
 
 #//--------------------------------------------------------------------------------------------------
@@ -663,6 +664,80 @@ sub SetTimeBomb($$)
   my ($warn_days, $bomb_days) = @_;
   
   system("perl :mozilla:config:mac-set-timebomb.pl $warn_days $bomb_days");
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// Regenerate a configuration header file if necessary
+#//--------------------------------------------------------------------------------------------------
+sub UpdateConfigHeader($)
+{
+    my($config_path) = @_;
+    
+    my($config, $oldconfig) = ("", "");
+    my($define, $definevalue, $defines);
+    my($k, $l,);
+
+    foreach $k (keys(%main::options))
+    {
+        if ($main::options{$k})
+        {
+            foreach $l (keys(%{$main::optiondefines{$k}}))
+            {
+                $my::defines{$l} = $main::optiondefines{$k}{$l};
+                print "Setting up my::defines{$l}\n";
+            }
+        }
+    }
+
+    my $config_headerfile = current_directory().$config_path;
+    if (-e $config_headerfile)
+    {
+        open(CONFIG_HEADER, "< $config_headerfile") || die "$config_headerfile: $!\n";
+        my($line);
+        while ($line = <CONFIG_HEADER>)
+        {
+            if ($line =~ m/#define\s+([^\s]*)\s+([^\s]*)\s*\n/)
+            {
+                $define = $1;
+                $definevalue = $2;
+                
+                #canonicalize so that whitespace changes are not significant
+                my $canon_value = "#define " . $define . " " . $definevalue . "\n";
+                $oldconfig .= $canon_value;
+                
+                if (exists ($my::defines{$define}) and ($my::defines{$define} == $definevalue))
+                {
+                    delete $my::defines{$define};
+                    $config .= $canon_value;
+                }
+            }
+        }
+        close(CONFIG_HEADER);
+    }
+
+    if (%my::defines)
+    {
+        foreach $k (keys(%my::defines))
+        {
+            $config .= "#define " . $k . " " . $my::defines{$k} . "\n";
+        }
+    }
+
+    my $file_name = basename($config_headerfile);
+    if (($config ne $oldconfig) || (!-e $config_headerfile))
+    {
+        printf("Writing new configuration header $file_name\n");
+        open(CONFIG_HEADER, "> $config_headerfile") || die "$config_headerfile: $!\n";
+        print(CONFIG_HEADER "/* This file is auto-generated based on build options. Do not edit. */\n");
+        print CONFIG_HEADER ($config);
+        close(CONFIG_HEADER);
+
+        MacPerl::SetFileInfo("CWIE", "TEXT", $config_headerfile);
+    }
+    else
+    {
+        printf("Configuration header $file_name is up-to-date\n");
+    }
 }
 
 

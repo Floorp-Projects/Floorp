@@ -44,7 +44,7 @@ use Moz::BuildCore;
 #-------------------------------------------------------------
 
 my($prefs_file_name) = "Mozilla opt build prefs";
-my($config_header_file_name) = ":mozilla:config:mac:MozillaDefinesOptions.h";
+my($config_header_file_name) = ":mozilla:config:mac:DefinesOptions.h";
 
 #-------------------------------------------------------------
 # hashes to hold build options
