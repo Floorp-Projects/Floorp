@@ -552,10 +552,10 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 
 PRInt32 nsSmtpProtocol::LoginResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-  PRInt32 status = 0;
+	PRInt32 status = 0;
 	nsCAutoString buffer ("HELO ");
 
-  if(m_responseCode != 220)
+	if(m_responseCode != 220)
 	{
 		m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
 		return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
@@ -949,7 +949,7 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
 		  return (NS_ERROR_COMMUNICATIONS_ERROR);
 	
 	  nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-	  status = SendData(url, buffer);
+	  status = SendData(url, buffer, PR_TRUE);
 	  m_nextState = SMTP_RESPONSE;
 	  m_nextStateAfterResponse = SMTP_AUTH_LOGIN_RESPONSE;
 	  SetFlag(SMTP_PAUSE_FOR_READ);
@@ -992,7 +992,7 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
     PR_snprintf(buffer, sizeof(buffer), "%.256s" CRLF, base64Str);
     nsCRT::free(base64Str);
     nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-    status = SendData(url, buffer);
+    status = SendData(url, buffer, PR_TRUE);
     m_nextState = SMTP_RESPONSE;
     m_nextStateAfterResponse = SMTP_AUTH_LOGIN_RESPONSE;
     SetFlag(SMTP_PAUSE_FOR_READ);   
@@ -1115,10 +1115,15 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
 }
 
 
-PRInt32 nsSmtpProtocol::SendData(nsIURI *url, const char *dataBuffer)
+PRInt32 nsSmtpProtocol::SendData(nsIURI *url, const char *dataBuffer, PRBool aSupressLogging)
 {
     if (!url || !dataBuffer) return -1;
-    PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Send: %s", dataBuffer));
+
+    if (!aSupressLogging) {
+        PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Send: %s", dataBuffer));
+    } else {
+        PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("Logging suppressed for this command (it probably contained authentication information)"));
+    }
     return nsMsgProtocol::SendData(url, dataBuffer);
 }
 

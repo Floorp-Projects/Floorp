@@ -93,7 +93,8 @@ protected:
 	// It also informs the transport layer that this data is now available for transmission.
 	// Returns a positive number for success, 0 for failure (not all the bytes were written to the
 	// stream, etc). 
-	virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer);
+    // aSupressLogging is a hint that sensitive data is being sent and should not be logged
+	virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSupressLogging = PR_FALSE);
 
   virtual nsresult PostMessage(nsIURI* url, nsIFileSpec * fileSpec);
 

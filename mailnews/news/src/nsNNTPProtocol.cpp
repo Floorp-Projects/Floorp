@@ -858,7 +858,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 	   */
 	  m_currentGroup.Assign(group);
 
-	  if (PL_strchr ((const char *)m_currentGroup, '*')) {
+	  if (m_currentGroup.FindChar(PRUnichar('*')) != kNotFound) {
 		m_typeWanted = LIST_WANTED;
 	  }
 	  else {
@@ -878,11 +878,11 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 		PRBool containsGroup = PR_TRUE;
 		NS_ASSERTION(m_nntpServer,"no nntp server");
 		if (m_nntpServer) {
-			rv = m_nntpServer->ContainsNewsgroup((const char *)m_currentGroup,&containsGroup);
+			rv = m_nntpServer->ContainsNewsgroup(m_currentGroup,&containsGroup);
 			if (NS_FAILED(rv)) return rv;
 
 			if (!containsGroup) {
-				rv = m_nntpServer->SubscribeToNewsgroup((const char *)m_currentGroup);
+				rv = m_nntpServer->SubscribeToNewsgroup(m_currentGroup);
 				if (NS_FAILED(rv)) return rv;
 			}
 		}
@@ -1210,9 +1210,15 @@ nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, PRBool * bValP, char ** aGroup,
  * stream, etc). We need to make another pass through this file to install an error system (mscott)
  */
 
-PRInt32 nsNNTPProtocol::SendData(nsIURI * aURL, const char * dataBuffer)
+PRInt32 nsNNTPProtocol::SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSupressLogging)
 {
-	NNTP_LOG_WRITE(dataBuffer);
+    if (!aSupressLogging) {
+        NNTP_LOG_WRITE(dataBuffer);
+    }
+    else {
+        PR_LOG(NNTP, out, ("Logging suppressed for this command (it probably contained authentication information)"));
+    }
+
 #ifdef DEBUG_sspitzer
 	printf("SEND: %s\n",dataBuffer);
 #endif
@@ -2603,17 +2609,18 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 
 		NET_SACopy(&command, "AUTHINFO pass ");
 		if (cachedPassword) {
-			PR_LOG(NNTP,PR_LOG_ALWAYS,("use %s as the password",(const char *)cachedPassword));			NET_SACat(&command, (const char *)cachedPassword);
+			PR_LOG(NNTP,PR_LOG_ALWAYS,("use cached password"));
+			NET_SACat(&command, (const char *)cachedPassword);
 		}
 		else {
-			PR_LOG(NNTP,PR_LOG_ALWAYS,("use %s as the password",(const char *)password)); 
+			// *don't log the password!* PR_LOG(NNTP,PR_LOG_ALWAYS,("use %s as the password",(const char *)password)); 
 			NET_SACat(&command, (const char *)password);
 		}
 		NET_SACat(&command, CRLF);
 	
 		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 		if (mailnewsurl)
-			status = SendData(mailnewsurl, command);
+			status = SendData(mailnewsurl, command, PR_TRUE);
 
 		PR_FREEIF(command);
 
@@ -2937,9 +2944,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
                 nsAutoString bytesStr; bytesStr.AppendInt(mBytesReceived);
 		
                 const PRUnichar *formatStrings[] = { bytesStr.GetUnicode() };
-        NS_NAMED_LITERAL_STRING(literalPropertyTag, "bytesReceived");
-				const PRUnichar *propertyTag = literalPropertyTag.get();
-                rv = bundle->FormatStringFromName(propertyTag,
+                rv = bundle->FormatStringFromName(NS_LITERAL_STRING("bytesReceived"),
                                                   formatStrings, 1,
                                                   getter_Copies(statusString));
 
@@ -3390,7 +3395,7 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
 nsresult nsNNTPProtocol::GetNewsStringByID(PRInt32 stringID, PRUnichar **aString)
 {
 	nsresult res;
-	nsAutoString	resultString; resultString.AssignWithConversion("???");
+	nsAutoString resultString(NS_LITERAL_STRING("???"));
 	if (!m_stringBundle)
 	{
 		char*       propertyURL = NEWS_MSGS_URL;
@@ -3409,9 +3414,9 @@ nsresult nsNNTPProtocol::GetNewsStringByID(PRInt32 stringID, PRUnichar **aString
 
 		if (NS_FAILED(res)) 
 		{
-			resultString.AssignWithConversion("[StringID");
+			resultString.Assign(NS_LITERAL_STRING("[StringID"));
 			resultString.AppendInt(stringID, 10);
-			resultString.AppendWithConversion("?]");
+			resultString.Append(NS_LITERAL_STRING("?]"));
 			*aString = resultString.ToNewUnicode();
 		}
 		else
@@ -3430,7 +3435,7 @@ nsresult nsNNTPProtocol::GetNewsStringByID(PRInt32 stringID, PRUnichar **aString
 nsresult nsNNTPProtocol::GetNewsStringByName(const char *aName, PRUnichar **aString)
 {
 	nsresult res;
-	nsAutoString	resultString; resultString.AssignWithConversion("???");
+	nsAutoString resultString(NS_LITERAL_STRING("???"));
 	if (!m_stringBundle)
 	{
 		char*       propertyURL = NEWS_MSGS_URL;
@@ -3452,9 +3457,9 @@ nsresult nsNNTPProtocol::GetNewsStringByName(const char *aName, PRUnichar **aStr
 
 		if (NS_FAILED(res)) 
 		{
-			resultString.AssignWithConversion("[StringName");
+			resultString.Assign(NS_LITERAL_STRING("[StringName"));
 			resultString.AppendWithConversion(aName);
-			resultString.AppendWithConversion("?]");
+			resultString.Append(NS_LITERAL_STRING("?]"));
 			*aString = resultString.ToNewUnicode();
 		}
 		else
@@ -3668,22 +3673,16 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 
 	nsXPIDLString name;
 	rv = currFolder->GetName(getter_Copies(name));
-	if (NS_FAILED(rv)) 
-    return -1;
-	if (!name) 
-    return -1;
 
-	// do I need asciiName?
-	nsCAutoString asciiName; asciiName.AssignWithConversion(name);
-	m_currentGroup = (const char *)asciiName;
+	m_currentGroup.AssignWithConversion(name);
 
-	if(NS_SUCCEEDED(rv) && ((const char *)m_currentGroup))
-    {
+	if(NS_SUCCEEDED(rv) && (m_currentGroup))
+	{
 		/* send group command to server
 		 */
 		char outputBuffer[OUTPUT_BUFFER_SIZE];
 
-		PR_snprintf(outputBuffer, OUTPUT_BUFFER_SIZE, "GROUP %.512s" CRLF, (const char *)m_currentGroup);
+		PR_snprintf(outputBuffer, OUTPUT_BUFFER_SIZE, "GROUP %.512s" CRLF, m_currentGroup.GetBuffer());
 		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 		if (mailnewsurl)
 			status = SendData(mailnewsurl, outputBuffer);
@@ -3709,14 +3708,12 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 
                 const PRUnichar *formatStrings[] = { thisGroupStr.GetUnicode(),totalGroupStr.GetUnicode() };
 
-                NS_NAMED_LITERAL_STRING(literalPropertyTag, "checkingForNewNews");
-                const PRUnichar *propertyTag = literalPropertyTag.get();
-                rv = bundle->FormatStringFromName(propertyTag,
+                rv = bundle->FormatStringFromName(NS_LITERAL_STRING("checkingForNewNews"),
                                                   formatStrings, 2,
                                                   getter_Copies(statusString));
                 NS_ENSURE_SUCCESS(rv, rv);
 
-				rv = SetProgressStatus((const PRUnichar *)statusString);
+				rv = SetProgressStatus(statusString);
                 NS_ENSURE_SUCCESS(rv, rv);
 		}
 		
@@ -3725,7 +3722,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 		SetFlag(NNTP_PAUSE_FOR_READ);
 		m_nextState = NNTP_RESPONSE;
 		m_nextStateAfterResponse = NEWS_DISPLAY_NEWS_RC_RESPONSE;
-    }
+	}
 	else
 	{
 		if (m_newsRCListCount)
@@ -3806,7 +3803,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
 	  }
 	  else if (m_responseCode == MK_NNTP_RESPONSE_GROUP_NO_GROUP)
 	  {
-          m_newsHost->GroupNotFound((const char *)m_currentGroup, PR_FALSE);
+          m_newsHost->GroupNotFound(m_currentGroup, PR_FALSE);
 	  }
 	  /* it turns out subscribe ui depends on getting this displaysubscribedgroup call,
 	     even if there was an error.
@@ -4087,7 +4084,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
     if (status < 0) {
 		nsCAutoString errorText;
 		errorText.AppendInt(status);
-		AlertError(MK_TCP_WRITE_ERROR,(const char *)errorText);
+		AlertError(MK_TCP_WRITE_ERROR, errorText);
                 failure = PR_TRUE;
 		goto FAIL;
 	}
@@ -4258,7 +4255,7 @@ PRInt32 nsNNTPProtocol::ListPrettyNames()
 	PR_snprintf(outputBuffer, 
 			OUTPUT_BUFFER_SIZE, 
 			"LIST PRETTYNAMES %.512s" CRLF,
-            NS_SUCCEEDED(rv) ? (const char *) group_name : "");
+            NS_SUCCEEDED(rv) ? (const char*)group_name : "");
     
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 	if (mailnewsurl)
@@ -5193,15 +5190,10 @@ NS_IMETHODIMP nsNNTPProtocol::GetContentType(char * *aContentType)
 
   // otherwise do what we did before...
 
-	if ((const char *)m_currentGroup && nsCRT::strlen((const char *)m_currentGroup)) {
-		// if it is an article url, it has a @ or %40 in it.
-    if (PL_strchr((const char *)m_currentGroup,'@') || PL_strstr((const char *)m_currentGroup,"%40") 
-        || m_typeWanted == ARTICLE_WANTED) {
-			*aContentType = nsCRT::strdup("message/rfc822");
-		}
-		else {
-			*aContentType = nsCRT::strdup("x-application-newsgroup");
-		}
+	if (m_typeWanted != ARTICLE_WANTED && !m_currentGroup.IsEmpty() &&
+	    // if it is an article url, it has a @ or %40 in it.
+	    m_currentGroup.Find("@") == kNotFound && m_currentGroup.Find("%40") == kNotFound) {
+		*aContentType = nsCRT::strdup("x-application-newsgroup");
 	}
 	else {
 		*aContentType = nsCRT::strdup("message/rfc822");
@@ -5227,9 +5219,8 @@ nsNNTPProtocol::AlertError(PRInt32 errorCode, const char *text)
 	  rv = GetNewsStringByID(errorCode, getter_Copies(newsString));
 	  if (NS_FAILED(rv)) return rv;
 
-	  nsAutoString alertText;
-	  alertText.AssignWithConversion("NEWS ERROR:  ");
-	  alertText.Append((const PRUnichar *)newsString);
+	  nsAutoString alertText(NS_LITERAL_STRING("NEWS ERROR:  "));
+	  alertText.Append(newsString);
 
 	  if (text)
 		  alertText.AppendWithConversion(text);

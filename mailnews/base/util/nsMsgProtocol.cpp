@@ -167,9 +167,11 @@ nsresult nsMsgProtocol::CloseSocket()
  * the transport layer that this data is now available for transmission.
  * Returns a positive number for success, 0 for failure (not all the bytes were written to the
  * stream, etc). We need to make another pass through this file to install an error system (mscott)
+ *
+ * No logging is done in the base implementation, so aSupressLogging is ignored.
  */
 
-PRInt32 nsMsgProtocol::SendData(nsIURI * aURL, const char * dataBuffer)
+PRInt32 nsMsgProtocol::SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSupressLogging)
 {
 	PRUint32 writeCount = 0; 
 	PRInt32 status = 0; 

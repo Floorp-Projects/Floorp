@@ -848,11 +848,16 @@ nsPop3Protocol::Error(PRInt32 err_code)
 	return -1;
 }
 
-PRInt32 nsPop3Protocol::SendData(nsIURI * aURL, const char * dataBuffer)
+PRInt32 nsPop3Protocol::SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSupressLogging)
 {
   	PRInt32 result = nsMsgProtocol::SendData(aURL, dataBuffer);
 
-    PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS, ("SEND: %s", dataBuffer));
+    if (!aSupressLogging) {
+        PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS, ("SEND: %s", dataBuffer));        
+    }
+    else {
+        PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS, ("Logging suppressed for this command (it probably contained authentication information)"));
+    }
 
 	if (result >= 0) // yeah this sucks...i need an error code....
 	{
@@ -1043,7 +1048,7 @@ PRInt32 nsPop3Protocol::SendPassword()
     else
         m_pop3ConData->next_state_after_response = POP3_SEND_STAT;
 
-    return SendData(m_url, cmd);
+    return SendData(m_url, cmd, PR_TRUE);
 }
 
 PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
