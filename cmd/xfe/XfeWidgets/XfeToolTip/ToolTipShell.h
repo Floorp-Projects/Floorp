@@ -121,24 +121,9 @@ XfeCreateToolTipShell				(Widget		pw,
 extern Widget
 XfeToolTipShellGetLabel				(Widget		w);
 /*----------------------------------------------------------------------*/
-
 extern void
-XfeToolTipShellAdd					(Widget		w);
-/*----------------------------------------------------------------------*/
-extern void
-XfeToolTipShellRemove				(Widget		w);
-/*----------------------------------------------------------------------*/
-extern void
-XfeToolTipShellAddCallback			(Widget		w);
-/*----------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* XfeToolTipShellIsShowing() - Check whether the global tooltip is showing	*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-extern Boolean
-XfeToolTipShellIsShowing				(void);
+XfeToolTipShellSetString			(Widget		w,
+									 XmString	string);
 /*----------------------------------------------------------------------*/
 
 XFE_END_CPLUSPLUS_PROTECTION

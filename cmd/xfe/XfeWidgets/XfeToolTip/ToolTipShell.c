@@ -404,16 +404,19 @@ LabelCreate(Widget w)
 	Arg					av[20];
 	Cardinal			ac = 0;
 
-  	XtSetArg(av[ac],XmNbackground,			_XfeBackgroundPixel(w)); ac++;
+/*   	XtSetArg(av[ac],XmNbackground,			_XfeBackgroundPixel(w)); ac++; */
 /* 	XtSetArg(av[ac],XmNforeground,			tp->title_foreground); ac++; */
 /*    	XtSetArg(av[ac],XmNalignment,			tp->title_alignment); ac++; */
 
-	XtSetArg(av[ac],XmNshadowThickness,			0); ac++;
+/* 	XtSetArg(av[ac],XmNshadowThickness,			0); ac++; */
 /* 	XtSetArg(av[ac],XmNstringDirection,			tp->title_direction); ac++; */
 	XtSetArg(av[ac],XmNraiseBorderThickness,	0); ac++;
 	XtSetArg(av[ac],XmNraiseOnEnter,			False); ac++;
 	XtSetArg(av[ac],XmNfillOnArm,				False); ac++;
 	XtSetArg(av[ac],XmNarmOffset,				0); ac++;
+	XtSetArg(av[ac],XmNusePreferredWidth,		True); ac++;
+	XtSetArg(av[ac],XmNusePreferredHeight,		True); ac++;
+	XtSetArg(av[ac],XmNbuttonType,				XmBUTTON_NONE); ac++;
 
 	if (tp->font_list != NULL)
 	{
@@ -453,5 +456,28 @@ XfeToolTipShellGetLabel(Widget w)
 	assert( _XfeIsAlive(tp->tool_tip_label) );
 
 	return tp->tool_tip_label;
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeToolTipShellSetString(Widget w,XmString string)
+{
+    XfeToolTipShellPart *	tp = _XfeToolTipShellPart(w);
+    XfeBypassShellPart *	bp = _XfeBypassShellPart(w);
+	Dimension				extra_thickness;
+
+	assert( XfeIsToolTipShell(w) );
+	assert( _XfeIsAlive(w) );
+	assert( _XfeIsAlive(tp->tool_tip_label) );
+
+	XtVaSetValues(tp->tool_tip_label,XmNlabelString,string,NULL);
+
+	extra_thickness = 
+		_XfeBorderWidth(tp->tool_tip_label) +
+		2 * bp->shadow_thickness;
+
+	_XfeResizeWidget(w,
+					 _XfeWidth(tp->tool_tip_label) + extra_thickness,
+					 _XfeHeight(tp->tool_tip_label) + extra_thickness);
+
 }
 /*----------------------------------------------------------------------*/
