@@ -202,12 +202,9 @@ AtomTableClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
     if (atom->IsPermanent())
       delete atom;
   }
-#ifdef NS_DEBUG
-  // this is debug-only mostly for bloat logs
   else {
     he->GetStaticAtomWrapper()->~nsStaticAtomWrapper();
   }
-#endif
   
   he->ClearAtom();
 }
