@@ -57,9 +57,19 @@ public:
 
 
   // nsIMenuListener 
+  virtual nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
   virtual nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   virtual nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent) ;
-  virtual nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent);
+  virtual nsEventStatus MenuConstruct(
+
+    const nsMenuEvent & aMenuEvent,
+
+    nsIWidget         * aParentWindow, 
+
+    void              * menubarNode,
+
+	void              * aWebShell);
+
   virtual nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
   
 protected:

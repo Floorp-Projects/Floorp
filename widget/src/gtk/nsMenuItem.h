@@ -65,10 +65,21 @@ public:
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD IsSeparator(PRBool & aIsSep);
 
+  NS_IMETHOD SetCommand(const nsString & aStrCmd);
+  NS_IMETHOD DoCommand();
+  NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMElement);
+  NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement);
+  NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
+  
   // nsIMenuListener interface
+  nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
-  nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuConstruct(
+    const nsMenuEvent & aMenuEvent,
+    nsIWidget         * aParentWindow, 
+    void              * menuNode,
+	void              * aWebShell);
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
  
 protected:

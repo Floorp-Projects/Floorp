@@ -40,9 +40,14 @@ public:
   NS_DECL_ISUPPORTS
   
   // nsIMenuListener methods
+  nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent); 
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent); 
-  nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent); 
+  nsEventStatus MenuConstruct(
+    const nsMenuEvent & aMenuEvent,
+    nsIWidget         * aParentWindow, 
+    void              * menuNode,
+	void              * aWebShell);
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent); 
   
   NS_IMETHOD Create(nsISupports * aParent, const nsString &aLabel);
@@ -65,6 +70,10 @@ public:
   NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
 
+  NS_IMETHOD SetDOMNode(nsIDOMNode * aMenuNode);
+  NS_IMETHOD SetDOMElement(nsIDOMElement * aMenuElement);
+  NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
+  
 protected:
   void       Create(GtkWidget *aParent, const nsString &aLabel);
   GtkWidget  *GetNativeParent();

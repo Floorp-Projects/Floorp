@@ -21,6 +21,9 @@
 
 #include "nsISupports.h"
 #include "nsString.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMElement.h"
+#include "nsIWebShell.h"
 
 class nsIMenuBar;
 class nsIMenu;
@@ -125,6 +128,23 @@ class nsIMenu : public nsISupports {
     */
     NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener) = 0;
 
+   /**
+    * Set DOMNode
+    *
+    */
+    NS_IMETHOD SetDOMNode(nsIDOMNode * aMenuNode) = 0;
+
+	/**
+    * Set DOMElement
+    *
+    */
+    NS_IMETHOD SetDOMElement(nsIDOMElement * aMenuElement) = 0;
+
+	/**
+    * Set WebShell
+    *
+    */
+    NS_IMETHOD SetWebShell(nsIWebShell * aWebShell) = 0;
 };
 
 #endif

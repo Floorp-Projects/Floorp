@@ -197,6 +197,11 @@ NS_METHOD nsMenuBar::Paint()
 // nsMenuListener interface
 //
 //-------------------------------------------------------------------------
+nsEventStatus nsMenuBar::MenuItemSelected(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+
 nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
   return nsEventStatus_eIgnore;
@@ -207,7 +212,11 @@ nsEventStatus nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eIgnore;
 }
 
-nsEventStatus nsMenuBar::MenuConstruct(const nsMenuEvent & aMenuEvent)
+nsEventStatus nsMenuBar::MenuConstruct(
+    const nsMenuEvent & aMenuEvent,
+    nsIWidget         * aParentWindow, 
+    void              * menuNode,
+	void              * aWebShell)
 {
   return nsEventStatus_eIgnore;
 }
