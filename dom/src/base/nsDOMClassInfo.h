@@ -151,6 +151,7 @@ protected:
   static inline PRBool IsReadonlyReplaceable(jsval id)
   {
     return (id == sTop_id          ||
+            id == sParent_id       ||
             id == sScrollbars_id   ||
             id == sContent_id      ||
             id == sSidebar_id      ||
@@ -198,6 +199,7 @@ protected:
   static PRBool sIsInitialized;
 
   static jsval sTop_id;
+  static jsval sParent_id;
   static jsval sScrollbars_id;
   static jsval sLocation_id;
   static jsval sComponents_id;
