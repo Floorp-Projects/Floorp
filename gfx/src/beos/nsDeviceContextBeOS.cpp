@@ -275,6 +275,18 @@ NS_IMETHODIMP nsDeviceContextBeOS::GetDeviceContextFor(nsIDeviceContextSpec *aDe
   return rv;
 }
 
+NS_IMETHODIMP nsDeviceContextBeOS::GetRect(nsRect &aRect)
+{
+  PRInt32 width, height;
+  nsresult rv;
+  rv = GetDeviceSurfaceDimensions(width, height);
+  aRect.x = 0;
+  aRect.y = 0;
+  aRect.width = width;
+  aRect.height = height;
+  return rv;
+}
+
 NS_IMETHODIMP nsDeviceContextBeOS::BeginDocument(void)
 {
   return NS_OK;

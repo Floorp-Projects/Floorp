@@ -114,7 +114,7 @@ nsresult nsGfxFactoryBeOS::CreateInstance(nsISupports *aOuter,
     NS_NEWXPCOM(inst, nsDeviceContextBeOS);
   }
   else if (mClassID.Equals(kCRenderingContext)) {
-    NS_NEWXPCOM(inst, nsDeviceContextBeOS);
+    NS_NEWXPCOM(inst, nsRenderingContextBeOS);
   }
   else if (mClassID.Equals(kCImage)) {
     NS_NEWXPCOM(inst, nsImageBeOS);
