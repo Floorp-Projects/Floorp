@@ -96,16 +96,6 @@ protected:
   void ReflowAbsoluteItems(nsIPresContext& aPresContext,
                            const nsHTMLReflowState& aReflowState);
 
-  void TranslatePoint(nsIFrame* aFrameFrom, nsPoint& aPoint) const;
-
-  void ComputeAbsoluteFrameBounds(nsIPresContext&          aPresContext,
-                                  nsIFrame*                aFrame,
-                                  const nsHTMLReflowState& aState,
-                                  const nsStylePosition*   aPosition,
-                                  nsRect&                  aRect) const;
-
-  void AddAbsoluteFrame(nsIFrame* aFrame);
-
 private:
   nsSpaceManager* mSpaceManager;
   nsFrameList     mAbsoluteFrames;  // additional named child list

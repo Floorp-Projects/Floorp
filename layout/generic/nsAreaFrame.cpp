@@ -393,7 +393,7 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
           nsIFrame* childFrames;
           aReflowState.reflowCommand->GetChildFrame(childFrames);
           NS_ASSERTION(nsnull != childFrames, "null child list");
-          AddAbsoluteFrame(childFrames);
+          mAbsoluteFrames.AppendFrames(nsnull, childFrames);
 
           // Indicate we handled the reflow command
           wasHandled = PR_TRUE;      
@@ -536,18 +536,17 @@ nsAreaFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
 /////////////////////////////////////////////////////////////////////////////
 // Helper functions
 
-// Add the frame to the end of the child list
-void nsAreaFrame::AddAbsoluteFrame(nsIFrame* aFrame)
-{
-  mAbsoluteFrames.AppendFrames(nsnull, aFrame);
-}
-
 // Called at the end of the Reflow() member function so we can process
 // any abolutely positioned items that need to be reflowed
 void
 nsAreaFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
                                  const nsHTMLReflowState& aReflowState)
 {
+  nsMargin              border;
+  const nsStyleSpacing* spacing =
+    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  spacing->GetBorder(border);
+
   for (nsIFrame* absoluteFrame = mAbsoluteFrames.FirstChild();
        nsnull != absoluteFrame; absoluteFrame->GetNextSibling(absoluteFrame)) {
 
@@ -620,159 +619,13 @@ nsAreaFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
           kidReflowState.availableWidth = kidReflowState.computedWidth;
           htmlReflow->Reflow(aPresContext, kidDesiredSize, kidReflowState, status);
         
-#if 0
-          // Figure out what size to actually use. If we let the child choose its
-          // size, then use what the child requested. Otherwise, use the value
-          // specified in the style information
-          if ((eStyleUnit_Auto == position->mWidth.GetUnit()) ||
-              ((desiredSize.width > availSize.width) &&
-               (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow))) {
-            rect.width = desiredSize.width;
-          }
-          if ((eStyleUnit_Auto == position->mHeight.GetUnit()) ||
-              (NS_UNCONSTRAINEDSIZE == rect.height) ||
-              ((desiredSize.height > rect.height) &&
-               (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow))) {
-            rect.height = desiredSize.height;
-          }
-#else
-          nsRect  rect(kidReflowState.computedOffsets.left + kidReflowState.computedMargin.left,
-                       kidReflowState.computedOffsets.top + kidReflowState.computedMargin.top,
+          // Position the child relative to our padding edge
+          nsRect  rect(border.left + kidReflowState.computedOffsets.left + kidReflowState.computedMargin.left,
+                       border.top + kidReflowState.computedOffsets.top + kidReflowState.computedMargin.top,
                        kidDesiredSize.width, kidDesiredSize.height);
-#endif
           absoluteFrame->SetRect(rect);
         }
       }
-    }
-  }
-}
-
-// Translate aPoint from aFrameFrom's coordinate space to our coordinate space
-void nsAreaFrame::TranslatePoint(nsIFrame* aFrameFrom, nsPoint& aPoint) const
-{
-  nsIFrame* parent;
-
-  aFrameFrom->GetParent(parent);
-  while ((nsnull != parent) && (parent != (nsIFrame*)this)) {
-    nsPoint origin;
-
-    parent->GetOrigin(origin);
-    aPoint += origin;
-    parent->GetParent(parent);
-  }
-}
-
-void nsAreaFrame::ComputeAbsoluteFrameBounds(nsIPresContext&          aPresContext,
-                                             nsIFrame*                aFrame,
-                                             const nsHTMLReflowState& aReflowState,
-                                             const nsStylePosition*   aPosition,
-                                             nsRect&                  aRect) const
-{
-  // Compute the offset and size of the view based on the position properties,
-  // and the inner rect of the containing block (which we get from the reflow
-  // state)
-  //
-  // If either the left or top are 'auto' then get the offset of the anchor
-  // frame from this frame
-  nsPoint offset(0, 0);
-  if ((eStyleUnit_Auto == aPosition->mOffset.GetLeftUnit()) ||
-      (eStyleUnit_Auto == aPosition->mOffset.GetTopUnit())) {
-    // Get the placeholder frame
-    nsIFrame*     placeholderFrame;
-    nsIPresShell* presShell = aPresContext.GetShell();
-
-    presShell->GetPlaceholderFrameFor(aFrame, placeholderFrame);
-    NS_RELEASE(presShell);
-    NS_ASSERTION(nsnull != placeholderFrame, "no placeholder frame");
-    if (nsnull != placeholderFrame) {
-      placeholderFrame->GetOrigin(offset);
-      TranslatePoint(placeholderFrame, offset);
-    }
-  }
-
-  // left-offset
-  if (eStyleUnit_Auto == aPosition->mOffset.GetLeftUnit()) {
-    // Use the current x-offset of the anchor frame translated into our
-    // coordinate space
-    aRect.x = offset.x;
-  } else if (eStyleUnit_Coord == aPosition->mOffset.GetLeftUnit()) {
-    nsStyleCoord  coord;
-    aRect.x = aPosition->mOffset.GetLeft(coord).GetCoordValue();
-  } else {
-    NS_ASSERTION(eStyleUnit_Percent == aPosition->mOffset.GetLeftUnit(),
-                 "unexpected offset type");
-    // Percentage values refer to the width of the containing block. If the
-    // width is unconstrained then just use 0
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) {
-      aRect.x = 0;
-    } else {
-      nsStyleCoord  coord;
-      aRect.x = (nscoord)((float)aReflowState.availableWidth *
-                          aPosition->mOffset.GetLeft(coord).GetPercentValue());
-    }
-  }
-
-  // top-offset
-  if (eStyleUnit_Auto == aPosition->mOffset.GetTopUnit()) {
-    // Use the current y-offset of the anchor frame translated into our
-    // coordinate space
-    aRect.y = offset.y;
-  } else if (eStyleUnit_Coord == aPosition->mOffset.GetTopUnit()) {
-    nsStyleCoord  coord;
-    aRect.y = aPosition->mOffset.GetTop(coord).GetCoordValue();
-  } else {
-    NS_ASSERTION(eStyleUnit_Percent == aPosition->mOffset.GetTopUnit(),
-                 "unexpected offset type");
-    // Percentage values refer to the height of the containing block. If the
-    // height is unconstrained then interpret it like 'auto'
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
-      aRect.y = offset.y;
-    } else {
-      nsStyleCoord  coord;
-      aRect.y = (nscoord)((float)aReflowState.availableHeight *
-                          aPosition->mOffset.GetTop(coord).GetPercentValue());
-    }
-  }
-
-  // XXX We aren't properly handling 'auto' width and height
-  // XXX The width/height represent the size of the padding area only, and not
-  // the frame size...
-
-  // width
-  if (eStyleUnit_Auto == aPosition->mWidth.GetUnit()) {
-    // Use the right-edge of the containing block
-    aRect.width = aReflowState.availableWidth - aRect.x;
-  } else if (eStyleUnit_Coord == aPosition->mWidth.GetUnit()) {
-    aRect.width = aPosition->mWidth.GetCoordValue();
-  } else {
-    NS_ASSERTION(eStyleUnit_Percent == aPosition->mWidth.GetUnit(),
-                 "unexpected width type");
-    // Percentage values refer to the width of the containing block
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) {
-      aRect.width = NS_UNCONSTRAINEDSIZE;
-    } else {
-      aRect.width = (nscoord)((float)aReflowState.availableWidth *
-                              aPosition->mWidth.GetPercentValue());
-    }
-  }
-
-  // height
-  if (eStyleUnit_Auto == aPosition->mHeight.GetUnit()) {
-    // Allow it to be as high as it wants
-    aRect.height = NS_UNCONSTRAINEDSIZE;
-  } else if (eStyleUnit_Coord == aPosition->mHeight.GetUnit()) {
-    aRect.height = aPosition->mHeight.GetCoordValue();
-  } else {
-    NS_ASSERTION(eStyleUnit_Percent == aPosition->mHeight.GetUnit(),
-                 "unexpected height type");
-    // Percentage values refer to the height of the containing block. If the
-    // height is unconstrained, then interpret it like 'auto' and make the
-    // height unconstrained
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
-      aRect.height = NS_UNCONSTRAINEDSIZE;
-    } else {
-      aRect.height = (nscoord)((float)aReflowState.availableHeight * 
-                               aPosition->mHeight.GetPercentValue());
     }
   }
 }
