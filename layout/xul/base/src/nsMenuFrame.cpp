@@ -699,6 +699,8 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     if ( !mCreateHandlerSucceeded || !OnDestroy() )
       return;
 
+    mMenuOpen = PR_FALSE;
+
     // Set the focus back to our view's widget.
     if (nsMenuFrame::mDismissalListener) {
       nsMenuFrame::mDismissalListener->EnableListener(PR_FALSE);
