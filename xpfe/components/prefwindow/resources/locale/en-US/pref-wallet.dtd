@@ -21,3 +21,7 @@
 <!ENTITY  changePasswords.label       "Change Forms Manager Password...">
 <!ENTITY  changePasswords.accesskey   "c">
 
+<!ENTITY  encryptHeader.label          "Encrypting versus Obscurring">
+<!ENTITY  encryptDescription.label     "Sensitive data that is stored on your hard disk can be either encrypted or obscurred.  Encryption prevents the data from being read by an intruder but requires you to enter a password to access the data.">
+<!ENTITY  encryptEnabled.label         "Use encryption when storing sensitive data.">
+<!ENTITY  encryptEnabled.accesskey     "n">

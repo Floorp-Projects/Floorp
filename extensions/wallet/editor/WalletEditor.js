@@ -419,6 +419,9 @@ function ViewEntries()
     for (i=first; i<lastPlusOne; i++) {
       if (strings[entries[i]+1] != "") {
         var text = Decrypt(strings[entries[i]+1]);
+        if ((strings[entries[i]+1])[0] != '~') {
+          text += " (encrypted)";
+        }
         AddItem("entrieslist", [text], "tree_", i-first); 
       }
     }
@@ -440,6 +443,9 @@ function ViewSynonyms()
     var lastPlusOne = entries[schemas[FirstSelectedSchema()]+FirstSelectedEntry()+1]-1;
     for (i=first; i<lastPlusOne; i++) {
       var text = Decrypt(strings[i]);
+      if (strings[i][0] != '~') {
+        text += " (encrypted)";
+      }
       AddItem("synonymslist", [text], "tree_", i-first);
     }
     EntrySelected();
