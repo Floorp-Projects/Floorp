@@ -84,6 +84,8 @@ public:
 private:
     nsresult Connect(PRBool firstTime = PR_TRUE);
     nsresult AsyncAbort(nsresult status);
+    nsresult AsyncRedirect();
+    void     HandleAsyncRedirect();
     nsresult SetupTransaction();
     void     ApplyContentConversions();
     nsresult ProcessResponse();
@@ -112,6 +114,9 @@ private:
     nsresult PromptForUserPass(const char *host, PRInt32 port, PRBool proxyAuth, const char *realm, nsAString &user, nsAString &pass);
     nsresult AddAuthorizationHeaders();
     nsresult GetCurrentPath(char **);
+
+    static void *PR_CALLBACK AsyncRedirect_EventHandlerFunc(PLEvent *);
+    static void  PR_CALLBACK AsyncRedirect_EventCleanupFunc(PLEvent *);
 
 private:
     nsCOMPtr<nsIURI>                  mOriginalURI;

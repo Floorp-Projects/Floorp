@@ -268,6 +268,8 @@ nsHttpChannel::AsyncAbort(nsresult status)
             observer->OnStartRequest(this, mListenerContext);
             observer->OnStopRequest(this, mListenerContext, mStatus);
         }
+        mListener = 0;
+        mListenerContext = 0;
     }
     // XXX else, no proxy object manager... what do we do?
 
@@ -276,6 +278,83 @@ nsHttpChannel::AsyncAbort(nsresult status)
         mLoadGroup->RemoveRequest(this, nsnull, status);
 
     return NS_OK;
+}
+
+nsresult
+nsHttpChannel::AsyncRedirect()
+{
+    nsCOMPtr<nsIEventQueueService> eqs;
+    nsCOMPtr<nsIEventQueue> eventQ;
+
+    nsHttpHandler::get()->GetEventQueueService(getter_AddRefs(eqs));
+    if (eqs)
+        eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(eventQ));
+    if (!eventQ)
+        return NS_ERROR_FAILURE;
+
+    PLEvent *event = new PLEvent;
+    if (!event)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF_THIS();
+
+    PL_InitEvent(event, this,
+            nsHttpChannel::AsyncRedirect_EventHandlerFunc,
+            nsHttpChannel::AsyncRedirect_EventCleanupFunc);
+
+    PRStatus status = eventQ->PostEvent(event);
+    return status == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
+}
+
+void *PR_CALLBACK
+nsHttpChannel::AsyncRedirect_EventHandlerFunc(PLEvent *ev)
+{
+    nsHttpChannel *chan =
+        NS_STATIC_CAST(nsHttpChannel *, PL_GetEventOwner(ev));
+
+    if (chan) {
+        chan->HandleAsyncRedirect();
+        NS_RELEASE(chan);
+    }
+    return nsnull;
+}
+
+void PR_CALLBACK
+nsHttpChannel::AsyncRedirect_EventCleanupFunc(PLEvent *ev)
+{
+    delete ev;
+}
+
+void
+nsHttpChannel::HandleAsyncRedirect()
+{
+    nsresult rv;
+
+    LOG(("nsHttpChannel::HandleAsyncRedirect [this=%p]\n", this));
+
+    // since this event is handled asynchronously, it is possible that this
+    // channel could have been canceled, in which case there would be no point
+    // in processing the redirect.
+    if (NS_SUCCEEDED(mStatus)) {
+        rv = ProcessRedirection(mResponseHead->Status());
+        if (NS_SUCCEEDED(rv))
+            rv = NS_BINDING_REDIRECTED;
+        mStatus = rv;
+    }
+
+    mListener->OnStartRequest(this, mListenerContext);
+
+    // close the cache entry... no need to destroy it.
+    CloseCacheEntry(NS_OK);
+
+    mIsPending = PR_FALSE;
+    mListener->OnStopRequest(this, mListenerContext, mStatus);
+
+    if (mLoadGroup)
+        mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+
+    mListener = 0;
+    mListenerContext = 0;
 }
 
 nsresult
@@ -395,18 +474,31 @@ nsHttpChannel::ProcessResponse()
         break;
     case 300:
     case 301:
-        // XXX this is actually a cacheable response
-        CloseCacheEntry(NS_ERROR_ABORT);
+    case 302:
+    case 307:
+        // these redirects can be cached (don't store the response body)
+        if (mCacheEntry) {
+            rv = InitCacheEntry();
+            if (NS_SUCCEEDED(rv)) {
+                // XXX we must open an output stream to force the cache service to
+                // select a cache device for our entry -- bad cache service!!
+                rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport));
+                if (NS_SUCCEEDED(rv)) {
+                    nsCOMPtr<nsIOutputStream> out;
+                    rv = mCacheTransport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(out));
+                }
+            }
+            CloseCacheEntry(rv);
+        }
         rv = ProcessRedirection(httpStatus);
         if (NS_FAILED(rv)) {
             LOG(("ProcessRedirection failed [rv=%x]\n", rv));
             rv = ProcessNormal();
         }
         break;
-    case 302:
     case 303:
     case 305:
-    case 307:
+        // these redirects cannot be cached
         CloseCacheEntry(NS_ERROR_ABORT);
         rv = ProcessRedirection(httpStatus);
         if (NS_FAILED(rv)) {
@@ -827,6 +919,8 @@ end:
 nsresult
 nsHttpChannel::ReadFromCache()
 {
+    nsresult rv;
+
     NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(mCachedContentIsValid, NS_ERROR_FAILURE);
 
@@ -853,8 +947,13 @@ nsHttpChannel::ReadFromCache()
         mCacheEntry->MarkValid();
     }
 
+    // if this is a cached redirect, we must process the redirect asynchronously
+    // since AsyncOpen may not have returned yet.
+    if (mResponseHead && (mResponseHead->Status() / 100 == 3))
+        return AsyncRedirect();
+
     // Get a transport to the cached data...
-    nsresult rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport));
+    rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport));
     if (NS_FAILED(rv)) return rv;
 
     // Hookup the notification callbacks interface to the new transport...
@@ -1115,13 +1214,14 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     rv = newChannel->AsyncOpen(mListener, mListenerContext);
     if (NS_FAILED(rv)) return rv;
 
-    // close down this channel
-    mTransaction->Cancel(NS_BINDING_REDIRECTED);
+    // close down this transaction (null if processing a cached redirect)
+    if (mTransaction) {
+        mTransaction->Cancel(NS_BINDING_REDIRECTED);
 
-    // disconnect from our listener
-    mListener = 0;
-    mListenerContext = 0;
-
+        // disconnect from our listener
+        mListener = 0;
+        mListenerContext = 0;
+    }
     return NS_OK;
 }
 
@@ -1847,14 +1947,8 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     rv = Connect();
     if (NS_FAILED(rv)) {
         LOG(("Connect failed [rv=%x]\n", rv));
-
-        // make sure  cache entry
         CloseCacheEntry(rv);
-
         AsyncAbort(rv);
-
-        mListener = 0;
-        mListenerContext = 0;
     }
     return NS_OK;
 }
