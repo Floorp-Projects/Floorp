@@ -31,11 +31,13 @@ REQUIRES	= xpcom \
 		  dom \
 		  windowwatcher \
 		  widget \
+		  gfx \
 		  js \
 		  xpconnect \
 		  caps \
 		  content \
 		  necko \
+		  uriloader \
 		  docshell \
 		  webbrwsr \
 		  embed_base \
@@ -47,6 +49,7 @@ CPPSRCS		= nsDialogParamBlock.cpp \
                   nsPromptService.cpp \
                   nsWWJSUtils.cpp \
                   nsWindowWatcher.cpp  \
+                  nsPrintingPrompt.cpp \
                   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

@@ -72,7 +72,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: Init(void)
 NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: CreateDeviceContextSpec(nsIWidget *aWidget,
                                   nsIPrintSettings* aPrintSettings,
 																	nsIDeviceContextSpec *&aNewSpec,
-																	PRBool aQuiet)
+																	PRBool aIsPrintPreview)
 {
 	NS_ENSURE_ARG_POINTER(aWidget);
 	PpPrintContext_t *pc = NULL;
@@ -90,8 +90,6 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: CreateDeviceContextSpec(nsIWidget 
 		{
 			PRInt32	range = 0;
 
-			aQuiet = 1; /* for the embedding stuff, the PrintSelection dialog is displayed by the client */
-			/* check for the page range if we are called by an embedded app, the pc is there */
 			aPrintSettings->GetEndPageRange(&range);
 			if (range)
 				pc = (PpPrintContext_t *) range;
@@ -102,7 +100,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: CreateDeviceContextSpec(nsIWidget 
 		{
 			specPh->SetPrintContext(pc);
 		}
-		rv = specPh->Init(aWidget, aPrintSettings, aQuiet);
+		rv = specPh->Init(aWidget, aPrintSettings, PR_TRUE);
 		if (NS_SUCCEEDED(rv)) {
   			aNewSpec = devSpec;
   		} else {

@@ -65,6 +65,8 @@ XPIDLSRCS	= \
 		nsITooltipTextProvider.idl	\
 		nsIWebBrowserFocus.idl		\
 		nsIWebBrowserPrint.idl       \
+		nsIPrintingPrompt.idl       \
+		nsIPrintingPromptService.idl       \
 		$(NULL)
 
 CPPSRCS		= \

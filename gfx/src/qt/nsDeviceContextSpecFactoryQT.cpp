@@ -99,7 +99,7 @@ NS_IMETHODIMP
 nsDeviceContextSpecFactoryQT::CreateDeviceContextSpec(nsIWidget *aWidget,
                                                       nsIPrintSettings* aPrintSettings,
                                                       nsIDeviceContextSpec *&aNewSpec,
-                                                      PRBool aQuiet)
+                                                      PRBool aIsPrintPreview)
 {
     nsresult  rv = NS_ERROR_FAILURE;
     nsIDeviceContextSpec  *devSpec = nsnull;
@@ -109,7 +109,7 @@ nsDeviceContextSpecFactoryQT::CreateDeviceContextSpec(nsIWidget *aWidget,
                                        (void **)&devSpec);
 
     if (nsnull != devSpec) {
-        if (NS_OK == ((nsDeviceContextSpecQT*)devSpec)->Init(aPrintSettings, aQuiet)) {
+        if (NS_OK == ((nsDeviceContextSpecQT*)devSpec)->Init(aPrintSettings)) {
             aNewSpec = devSpec;
             rv = NS_OK;
         }

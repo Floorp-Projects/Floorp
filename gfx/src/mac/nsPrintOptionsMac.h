@@ -39,19 +39,13 @@ public:
   virtual     ~nsPrintOptionsMac();
 
   NS_IMETHOD  ShowPrintSetupDialog(nsIPrintSettings *aThePrintSettings);
+  
   NS_IMETHOD  GetNativeData(PRInt16 aDataType, void * *_retval);
 
+  NS_IMETHOD  CreatePrintSettings(nsIPrintSettings **_retval);
 protected:
-
-  nsresult    ReadPageSetupFromPrefs();
-  nsresult    WritePageSetupToPrefs();
-
-	THPrint     GetPrintRecord(void) { return mPrintRecord; }
-
-protected:
-
-	THPrint	    mPrintRecord;
-
+  nsresult    ReadPrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags);
+  nsresult    WritePrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags);
 };
 
 #endif /* TARGET_CARBON */

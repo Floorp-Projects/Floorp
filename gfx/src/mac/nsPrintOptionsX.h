@@ -39,10 +39,7 @@
 #ifndef nsPrintOptionsX_h__
 #define nsPrintOptionsX_h__
 
-#include <PMDefinitions.h>
-
-#include "nsPrintOptionsImpl.h"  
-
+#include "nsPrintOptionsImpl.h"
 
 
 //*****************************************************************************
@@ -59,15 +56,12 @@ public:
   
   NS_IMETHOD  GetNativeData(PRInt16 aDataType, void * *_retval);
 
+  NS_IMETHOD  CreatePrintSettings(nsIPrintSettings **_retval);
+
 protected:
 
-  nsresult    ReadPageSetupFromPrefs();
-  nsresult    WritePageSetupToPrefs();
-  
-protected:
-
-  PMPageFormat      mPageFormat;      // persist this between runs
-  
+  nsresult    ReadPrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags);
+  nsresult    WritePrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags);
 };
 
 

@@ -42,19 +42,6 @@
 #include "nsIPref.h" 
 #include "prenv.h" /* for PR_GetEnv */ 
 
-#include "nsIDOMWindow.h" 
-#include "nsIServiceManager.h" 
-#include "nsIDialogParamBlock.h" 
-#include "nsISupportsPrimitives.h"
-#include "nsIWindowWatcher.h"
-#include "nsIDOMWindowInternal.h"
-
-#include "nsReadableUtils.h"
-#include "nsISupportsArray.h"
-
-//#include "prmem.h"
-//#include "plstr.h"
-
 //----------------------------------------------------------------------------------
 // The printer data is shared between the PrinterEnumerator and the nsDeviceContextSpecG
 // The PrinterEnumerator creates the printer info
@@ -153,73 +140,12 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: QueryInterface(REFNSIID aIID, void** aI
 NS_IMPL_ADDREF(nsDeviceContextSpecBeOS)
 NS_IMPL_RELEASE(nsDeviceContextSpecBeOS)
 
-
-/** -------------------------------------------------------
- */
-static nsresult DisplayXPDialog(nsIPrintSettings* aPS,
-                                const char* aChromeURL, 
-                                PRBool& aClickedOK)
-{
-  NS_ASSERTION(aPS, "Must have a print settings!");
-
-  aClickedOK = PR_FALSE;
-  nsresult rv = NS_ERROR_FAILURE;
-
-  // create a nsISupportsArray of the parameters 
-  // being passed to the window
-  nsCOMPtr<nsISupportsArray> array;
-  NS_NewISupportsArray(getter_AddRefs(array));
-  if (!array) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIPrintSettings> ps = aPS;
-  nsCOMPtr<nsISupports> psSupports(do_QueryInterface(ps));
-  NS_ASSERTION(psSupports, "PrintSettings must be a supports");
-  array->AppendElement(psSupports);
-
-  nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
-  if (ioParamBlock) {
-    ioParamBlock->SetInt(0, 0);
-    nsCOMPtr<nsISupports> blkSupps(do_QueryInterface(ioParamBlock));
-    NS_ASSERTION(blkSupps, "IOBlk must be a supports");
-
-    array->AppendElement(blkSupps);
-    nsCOMPtr<nsISupports> arguments(do_QueryInterface(array));
-    NS_ASSERTION(array, "array must be a supports");
-
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-    if (wwatch) {
-      nsCOMPtr<nsIDOMWindow> active;
-      wwatch->GetActiveWindow(getter_AddRefs(active));    
-      nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
-
-      nsCOMPtr<nsIDOMWindow> newWindow;
-      rv = wwatch->OpenWindow(parent, aChromeURL,
-            "_blank", "chrome,modal,centerscreen", array,
-            getter_AddRefs(newWindow));
-    }
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    PRInt32 buttonPressed = 0;
-    ioParamBlock->GetInt(0, &buttonPressed);
-    if (buttonPressed == 1) {
-      aClickedOK = PR_TRUE;
-    } else {
-      rv = NS_ERROR_ABORT;
-    }
-  } else {
-    rv = NS_ERROR_ABORT;
-  }
-  return rv;
-}
-
-
 /** -------------------------------------------------------
  *  Initialize the nsDeviceContextSpecBeOS
  *  @update   dc 2/15/98
  *  @update   syd 3/2/99
  */
-NS_IMETHODIMP nsDeviceContextSpecBeOS::Init(nsIPrintSettings* aPS, PRBool aQuiet)
+NS_IMETHODIMP nsDeviceContextSpecBeOS::Init(nsIPrintSettings* aPS)
 {
   nsresult rv = NS_ERROR_FAILURE;
   NS_ASSERTION(nsnull != aPS, "No print settings.");
@@ -260,99 +186,88 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS::Init(nsIPrintSettings* aPS, PRBool aQuiet
     return rv;
   }
 
-  if (!aQuiet ) {
-    rv = DisplayXPDialog(aPS, 
-                         "chrome://global/content/printdialog.xul", canPrint);    
-  }
-  else {
-    canPrint = PR_TRUE;
-  }
   
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
-  if (canPrint) {
-    if (aPS != nsnull) {
-      aPS->GetPrinterName(&printer);
-      aPS->GetPrintReversed(&reversed);
-      aPS->GetPrintInColor(&color);
-      aPS->GetPaperSize(&paper_size);
-      aPS->GetOrientation(&orientation);
-      aPS->GetPrintCommand(&command);
-      aPS->GetPrintRange(&printRange);
-      aPS->GetToFileName(&printfile);
-      aPS->GetPrintToFile(&tofile);
-      aPS->GetStartPageRange(&fromPage);
-      aPS->GetEndPageRange(&toPage);
-      aPS->GetNumCopies(&copies);
-      aPS->GetMarginTop(&dtop);
-      aPS->GetMarginLeft(&dleft);
-      aPS->GetMarginBottom(&dbottom);
-      aPS->GetMarginRight(&dright);
+  if (aPS != nsnull) {
+    aPS->GetPrinterName(&printer);
+    aPS->GetPrintReversed(&reversed);
+    aPS->GetPrintInColor(&color);
+    aPS->GetPaperSize(&paper_size);
+    aPS->GetOrientation(&orientation);
+    aPS->GetPrintCommand(&command);
+    aPS->GetPrintRange(&printRange);
+    aPS->GetToFileName(&printfile);
+    aPS->GetPrintToFile(&tofile);
+    aPS->GetStartPageRange(&fromPage);
+    aPS->GetEndPageRange(&toPage);
+    aPS->GetNumCopies(&copies);
+    aPS->GetMarginTop(&dtop);
+    aPS->GetMarginLeft(&dleft);
+    aPS->GetMarginBottom(&dbottom);
+    aPS->GetMarginRight(&dright);
 
-      if (command != nsnull && printfile != nsnull) {
-        // ToDo: Use LocalEncoding instead of UTF-8 (see bug 73446)
-        strcpy(mPrData.command, NS_ConvertUCS2toUTF8(command).get());  
-        strcpy(mPrData.path,    NS_ConvertUCS2toUTF8(printfile).get());
-      }
-      if (printer != nsnull) 
-        strcpy(mPrData.printer, NS_ConvertUCS2toUTF8(printer).get());        
+    if (command != nsnull && printfile != nsnull) {
+      // ToDo: Use LocalEncoding instead of UTF-8 (see bug 73446)
+      strcpy(mPrData.command, NS_ConvertUCS2toUTF8(command).get());  
+      strcpy(mPrData.path,    NS_ConvertUCS2toUTF8(printfile).get());
+    }
+    if (printer != nsnull) 
+      strcpy(mPrData.printer, NS_ConvertUCS2toUTF8(printer).get());        
 #ifdef DEBUG_rods
-      printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright);
-      printf("printRange     %d\n", printRange);
-      printf("fromPage       %d\n", fromPage);
-      printf("toPage         %d\n", toPage);
+    printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright);
+    printf("printRange     %d\n", printRange);
+    printf("fromPage       %d\n", fromPage);
+    printf("toPage         %d\n", toPage);
 #endif /* DEBUG_rods */
-    } else {
+  } else {
 #ifdef VMS
-      // Note to whoever puts the "lpr" into the prefs file. Please contact me
-      // as I need to make the default be "print" instead of "lpr" for OpenVMS.
-      strcpy(mPrData.command, "print");
+    // Note to whoever puts the "lpr" into the prefs file. Please contact me
+    // as I need to make the default be "print" instead of "lpr" for OpenVMS.
+    strcpy(mPrData.command, "print");
 #else
-      strcpy(mPrData.command, "lpr ${MOZ_PRINTER_NAME:+'-P'}${MOZ_PRINTER_NAME}");
+    strcpy(mPrData.command, "lpr ${MOZ_PRINTER_NAME:+'-P'}${MOZ_PRINTER_NAME}");
 #endif /* VMS */
-    }
+  }
 
-    mPrData.top       = dtop;
-    mPrData.bottom    = dbottom;
-    mPrData.left      = dleft;
-    mPrData.right     = dright;
-    mPrData.fpf       = !reversed;
-    mPrData.grayscale = !color;
-    mPrData.size      = paper_size;
-    mPrData.orientation = orientation;
-    mPrData.toPrinter = !tofile;
-    mPrData.copies = copies;
+  mPrData.top       = dtop;
+  mPrData.bottom    = dbottom;
+  mPrData.left      = dleft;
+  mPrData.right     = dright;
+  mPrData.fpf       = !reversed;
+  mPrData.grayscale = !color;
+  mPrData.size      = paper_size;
+  mPrData.orientation = orientation;
+  mPrData.toPrinter = !tofile;
+  mPrData.copies = copies;
 
-    // PWD, HOME, or fail 
-    
-    if (!printfile) {
-      if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) nsnull ) 
-        if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) nsnull )
-          strcpy(mPrData.path, "mozilla.ps");
-          
-      if ( path != (char *) nsnull )
-        sprintf(mPrData.path, "%s/mozilla.ps", path);
-      else
-        return NS_ERROR_FAILURE;
-    }
-    
+  // PWD, HOME, or fail 
+  
+  if (!printfile) {
+    if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) nsnull ) 
+      if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) nsnull )
+        strcpy(mPrData.path, "mozilla.ps");
+        
+    if ( path != (char *) nsnull )
+      sprintf(mPrData.path, "%s/mozilla.ps", path);
+    else
+      return NS_ERROR_FAILURE;
+  }
+  
 #ifdef NOT_IMPLEMENTED_YET
-    if (mGlobalNumPrinters) {
-       for(int i = 0; (i < mGlobalNumPrinters) && !mQueue; i++) {
-          if (!(mGlobalPrinterList->StringAt(i)->CompareWithConversion(mPrData.printer, TRUE, -1)))
-             mQueue = PrnDlg.SetPrinterQueue(i);
-       }
-    }
+  if (mGlobalNumPrinters) {
+     for(int i = 0; (i < mGlobalNumPrinters) && !mQueue; i++) {
+        if (!(mGlobalPrinterList->StringAt(i)->CompareWithConversion(mPrData.printer, TRUE, -1)))
+           mQueue = PrnDlg.SetPrinterQueue(i);
+     }
+  }
 #endif /* NOT_IMPLEMENTED_YET */
-    
-    if (command != nsnull) {
-      nsMemory::Free(command);
-    }
-    if (printfile != nsnull) {
-      nsMemory::Free(printfile);
-    }
-
-    return NS_OK;
+  
+  if (command != nsnull) {
+    nsMemory::Free(command);
+  }
+  if (printfile != nsnull) {
+    nsMemory::Free(printfile);
   }
 
   return rv;
@@ -564,19 +479,7 @@ NS_IMETHODIMP nsPrinterEnumeratorBeOS::InitPrintSettingsFromPrinter(const PRUnic
 
 NS_IMETHODIMP nsPrinterEnumeratorBeOS::DisplayPropertiesDlg(const PRUnichar *aPrinter, nsIPrintSettings *aPrintSettings)
 {
-  /* fixme: We simply ignore the |aPrinter| argument here
-   * We should get the supported printer attributes from the printer and 
-   * populate the print job options dialog with these data instead of using 
-   * the "default set" here.
-   * However, this requires changes on all platforms and is another big chunk
-   * of patches ... ;-(
-   */
-
-  PRBool pressedOK;
-  return DisplayXPDialog(aPrintSettings,
-                         "chrome://global/content/printjoboptions.xul", 
-                         pressedOK);
-
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

@@ -87,6 +87,16 @@
                     </SETTING>
                     <SETTING>
                         <SETTING><NAME>SearchPath</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>:::printingui:src:mac:</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
+                        </SETTING>
+                        <SETTING><NAME>Recursive</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>SearchPath</NAME>
                             <SETTING><NAME>Path</NAME><VALUE>:::</VALUE></SETTING>
                             <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
                             <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
@@ -752,9 +762,9 @@
                 <SETTING><NAME>MWLinker_PPC_dontdeadstripinitcode</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWLinker_PPC_permitmultdefs</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWLinker_PPC_linkmode</NAME><VALUE>Fast</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_PPC_initname</NAME><VALUE>__NSInitialize</VALUE></SETTING>
+                <SETTING><NAME>MWLinker_PPC_initname</NAME><VALUE>__NSInitializeWithResources</VALUE></SETTING>
                 <SETTING><NAME>MWLinker_PPC_mainname</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWLinker_PPC_termname</NAME><VALUE>__NSTerminate</VALUE></SETTING>
+                <SETTING><NAME>MWLinker_PPC_termname</NAME><VALUE>__NSTerminateWithResources</VALUE></SETTING>
 
                 <!-- Settings for "PPC Mach-O Linker" panel -->
                 <SETTING><NAME>MWLinker_MachO_exports</NAME><VALUE>None</VALUE></SETTING>
@@ -1079,6 +1089,13 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
+                    <PATH>printingUIDebug.o</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Library</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>                
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsCommandGroup.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -1101,6 +1118,13 @@
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsControllerCommandManager.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsPrintDialogExtension.r</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
@@ -1209,6 +1233,11 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
+                    <PATH>printingUIDebug.o</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsCommandGroup.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
@@ -1225,6 +1254,11 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsControllerCommandManager.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsPrintDialogExtension.r</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -1258,6 +1292,16 @@
                             <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
                         </SETTING>
                         <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>SearchPath</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>:::printingui:src:mac:</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
+                        </SETTING>
+                        <SETTING><NAME>Recursive</NAME><VALUE>false</VALUE></SETTING>
                         <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
                         <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
                     </SETTING>
@@ -1928,9 +1972,9 @@
                 <SETTING><NAME>MWLinker_PPC_dontdeadstripinitcode</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWLinker_PPC_permitmultdefs</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWLinker_PPC_linkmode</NAME><VALUE>Fast</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_PPC_initname</NAME><VALUE>__NSInitialize</VALUE></SETTING>
+                <SETTING><NAME>MWLinker_PPC_initname</NAME><VALUE>__NSInitializeWithResources</VALUE></SETTING>
                 <SETTING><NAME>MWLinker_PPC_mainname</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWLinker_PPC_termname</NAME><VALUE>__NSTerminate</VALUE></SETTING>
+                <SETTING><NAME>MWLinker_PPC_termname</NAME><VALUE>__NSTerminateWithResources</VALUE></SETTING>
 
                 <!-- Settings for "PPC Mach-O Linker" panel -->
                 <SETTING><NAME>MWLinker_MachO_exports</NAME><VALUE>None</VALUE></SETTING>
@@ -2255,6 +2299,13 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
+                    <PATH>printingUI.o</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Unknown</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsCommandGroup.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -2277,6 +2328,13 @@
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsControllerCommandManager.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsPrintDialogExtension.r</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
@@ -2385,6 +2443,11 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
+                    <PATH>printingUI.o</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsCommandGroup.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
@@ -2401,6 +2464,11 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsControllerCommandManager.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsPrintDialogExtension.r</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -2513,6 +2581,14 @@
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
         </GROUP>
+        <GROUP><NAME>Resources</NAME>
+            <FILEREF>
+                <TARGETNAME>EmbedComponentsDebug.shlb</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>nsPrintDialogExtension.r</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+        </GROUP>
         <GROUP><NAME>Build</NAME>
             <FILEREF>
                 <TARGETNAME>EmbedComponentsDebug.shlb</TARGETNAME>
@@ -2522,18 +2598,34 @@
             </FILEREF>
         </GROUP>
         <GROUP><NAME>Static Libs</NAME>
-            <FILEREF>
-                <TARGETNAME>EmbedComponents.shlb</TARGETNAME>
-                <PATHTYPE>Name</PATHTYPE>
-                <PATH>UnicharUtilsStatic.o</PATH>
-                <PATHFORMAT>MacOS</PATHFORMAT>
-            </FILEREF>
-            <FILEREF>
-                <TARGETNAME>EmbedComponentsDebug.shlb</TARGETNAME>
-                <PATHTYPE>Name</PATHTYPE>
-                <PATH>UnicharUtilsStaticDebug.o</PATH>
-                <PATHFORMAT>MacOS</PATHFORMAT>
-            </FILEREF>
+            <GROUP><NAME>Debug</NAME>
+                <FILEREF>
+                    <TARGETNAME>EmbedComponentsDebug.shlb</TARGETNAME>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>UnicharUtilsStaticDebug.o</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <TARGETNAME>EmbedComponentsDebug.shlb</TARGETNAME>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>printingUIDebug.o</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+            </GROUP>
+            <GROUP><NAME>Optimized</NAME>
+                <FILEREF>
+                    <TARGETNAME>EmbedComponents.shlb</TARGETNAME>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>UnicharUtilsStatic.o</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <TARGETNAME>EmbedComponents.shlb</TARGETNAME>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>printingUI.o</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+            </GROUP>
         </GROUP>
         <GROUP><NAME>NS Libraries</NAME>
             <GROUP><NAME>Debug</NAME>

@@ -54,18 +54,12 @@ protected:
   nsresult ReadPrefDouble(nsIPref * aPref, const char * aPrefId, double& aVal);
   nsresult WritePrefDouble(nsIPref * aPref, const char * aPrefId, double aVal);
 
-  nsresult ReadPrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags);
-  nsresult WritePrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags);
+  virtual nsresult ReadPrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags);
+  virtual nsresult WritePrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags);
   const char* GetPrefName(const char *     aPrefName, 
                           const nsString&  aPrinterName);
 
   // Members 
-  PRBool        mIsCancelled;
-  nsString      mTitle;
-  nsString      mURL;
-  PRBool        mPrintToFile;
-  nsString      mToFileName;
-
   nsCOMPtr<nsIPrintSettings> mGlobalPrintSettings;
 
   nsCString mPrefName;

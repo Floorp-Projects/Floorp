@@ -112,9 +112,7 @@ nsFont* nsPrintOptions::sDefaultFont = nsnull;
  *  See documentation in nsPrintOptionsImpl.h
  *	@update 6/21/00 dwc
  */
-nsPrintOptions::nsPrintOptions() :
-  mIsCancelled(PR_FALSE),
-  mPrintToFile(PR_FALSE)
+nsPrintOptions::nsPrintOptions() 
 {
   NS_INIT_ISUPPORTS();
 
@@ -898,79 +896,6 @@ NS_IMETHODIMP nsPrintOptions::DisplayJobProperties( const PRUnichar *aPrinter, n
       
    return NS_OK;
 }   
-
-/* attribute long isCancelled; */
-NS_IMETHODIMP nsPrintOptions::GetIsCancelled(PRBool *aIsCancelled)
-{
-  NS_ENSURE_ARG_POINTER(aIsCancelled);
-  *aIsCancelled = mIsCancelled;
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintOptions::SetIsCancelled(PRBool aIsCancelled)
-{
-  mIsCancelled = aIsCancelled;
-  return NS_OK;
-}
-
-/* attribute boolean printToFile; */
-NS_IMETHODIMP nsPrintOptions::GetPrintToFile(PRBool *aPrintToFile)
-{
-  //NS_ENSURE_ARG_POINTER(aPrintToFile);
-  *aPrintToFile = mPrintToFile;
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintOptions::SetPrintToFile(PRBool aPrintToFile)
-{
-  mPrintToFile = aPrintToFile;
-  return NS_OK;
-}
-
-/* attribute wstring toFileName; */
-NS_IMETHODIMP nsPrintOptions::GetToFileName(PRUnichar * *aToFileName)
-{
-  //NS_ENSURE_ARG_POINTER(aToFileName);
-  *aToFileName = ToNewUnicode(mToFileName);
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintOptions::SetToFileName(const PRUnichar * aToFileName)
-{
-  mToFileName = aToFileName;
-  return NS_OK;
-}
-
-/* attribute wstring docTitle; */
-NS_IMETHODIMP nsPrintOptions::GetTitle(PRUnichar * *aTitle)
-{
-  NS_ENSURE_ARG_POINTER(aTitle);
-  *aTitle = ToNewUnicode(mTitle);
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintOptions::SetTitle(const PRUnichar * aTitle)
-{
-  if (aTitle) {
-    mTitle = aTitle;
-  } else {
-    mTitle.SetLength(0);
-  }
-  return NS_OK;
-}
-
-/* attribute wstring docURL; */
-NS_IMETHODIMP nsPrintOptions::GetDocURL(PRUnichar * *aDocURL)
-{
-  NS_ENSURE_ARG_POINTER(aDocURL);
-  *aDocURL = ToNewUnicode(mURL);
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintOptions::SetDocURL(const PRUnichar * aDocURL)
-{
-  if (aDocURL) {
-    mURL = aDocURL;
-  } else {
-    mURL.SetLength(0);
-  }
-  return NS_OK;
-}
 
 /* [noscript] voidPtr GetNativeData (in short aDataType); */
 NS_IMETHODIMP nsPrintOptions::GetNativeData(PRInt16 aDataType, void * *_retval)

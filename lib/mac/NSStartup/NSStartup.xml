@@ -1898,6 +1898,13 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsComponentResContext.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>MSL_DropInRuntime_PPC.Lib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
@@ -1913,6 +1920,11 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>NSStartup.c</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsComponentResContext.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -2830,6 +2842,13 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsComponentResContext.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>MSL_ShLibRuntime_PPC.Lib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
@@ -2845,6 +2864,11 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>NSStartup.c</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsComponentResContext.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -3504,6 +3528,12 @@
             <TARGETNAME>NSAppStartup.o</TARGETNAME>
             <PATHTYPE>Name</PATHTYPE>
             <PATH>NSStartup.c</PATH>
+            <PATHFORMAT>MacOS</PATHFORMAT>
+        </FILEREF>
+        <FILEREF>
+            <TARGETNAME>NSComponentStartup.o</TARGETNAME>
+            <PATHTYPE>Name</PATHTYPE>
+            <PATH>nsComponentResContext.cpp</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
     </GROUPLIST>

@@ -54,7 +54,7 @@ public:
   NS_IMETHOD CreateDeviceContextSpec(nsIWidget *aWidget,
                                      nsIPrintSettings* aPrintSettings,
                                      nsIDeviceContextSpec *&aNewSpec,
-                                     PRBool aQuiet);
+                                     PRBool aIsPrintPreview);
 
 protected:
   ~nsDeviceContextSpecFactoryOS2();

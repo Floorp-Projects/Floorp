@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *		John C. Griggs <johng@corel.com>
+ *    John C. Griggs <johng@corel.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -42,15 +42,6 @@
 
 #include "nsIPref.h"
 #include "prenv.h" /* for PR_GetEnv */
-
-#include "nsIDOMWindowInternal.h"
-#include "nsIServiceManager.h" 
-#include "nsIDialogParamBlock.h"
-#include "nsISupportsPrimitives.h"
-#include "nsIWindowWatcher.h"
-
-#include "nsReadableUtils.h"
-#include "nsISupportsArray.h"
 
 #include <qapplication.h>
 
@@ -130,7 +121,7 @@ NS_IMETHODIMP nsDeviceContextSpecQT::QueryInterface(REFNSIID aIID,
  *  @update   dc 2/15/98
  *  @update   syd 3/2/99
  */
-NS_IMETHODIMP nsDeviceContextSpecQT::Init(nsIPrintSettings* aPS, PRBool aQuiet)
+NS_IMETHODIMP nsDeviceContextSpecQT::Init(nsIPrintSettings* aPS)
 {
   nsresult  rv = NS_ERROR_FAILURE;
   NS_ASSERTION(aPS, "Must have a PrintSettings!");
@@ -161,115 +152,73 @@ NS_IMETHODIMP nsDeviceContextSpecQT::Init(nsIPrintSettings* aPS, PRBool aQuiet)
   double dtop = 0.5;
   double dbottom = 0.5;
 
-  rv = NS_ERROR_FAILURE;
-  // create a nsISupportsArray of the parameters 
-  // being passed to the window
-  nsCOMPtr<nsISupportsArray> array;
-  NS_NewISupportsArray(getter_AddRefs(array));
-  if (!array) return NS_ERROR_FAILURE;
+  if (aPS) {
+    aPS->GetPrintReversed(&reversed);
+    aPS->GetPrintInColor(&color);
+    aPS->GetPaperSize(&paper_size);
+    aPS->GetOrientation(&orientation);
+    aPS->GetPrintCommand(&command);
+    aPS->GetPrintRange(&printRange);
+    aPS->GetToFileName(&printfile);
+    aPS->GetPrintToFile(&tofile);
+    aPS->GetStartPageRange(&fromPage);
+    aPS->GetEndPageRange(&toPage);
+    aPS->GetMarginTop(&dtop);
+    aPS->GetMarginLeft(&dleft);
+    aPS->GetMarginBottom(&dbottom);
+    aPS->GetMarginRight(&dright);
 
-  nsCOMPtr<nsIPrintSettings> ps = aPS;
-  nsCOMPtr<nsISupports> psSupports(do_QueryInterface(ps));
-  NS_ASSERTION(psSupports, "PrintSettings must be a supports");
-  array->AppendElement(psSupports);
+    if (command != nsnull && printfile != nsnull) {
+      // convert Unicode strings to cstrings
+      nsAutoString cmdStr;
+      nsAutoString printFileStr;
 
-  nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
-  if (ioParamBlock) {
-    ioParamBlock->SetInt(0, 0);
-    nsCOMPtr<nsISupports> blkSupps(do_QueryInterface(ioParamBlock));
-    NS_ASSERTION(blkSupps, "IOBlk must be a supports");
-
-    array->AppendElement(blkSupps);
-    nsCOMPtr<nsISupports> arguments(do_QueryInterface(array));
-    NS_ASSERTION(array, "array must be a supports");
-
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-    if (wwatch) {
-      nsCOMPtr<nsIDOMWindow> active;
-      wwatch->GetActiveWindow(getter_AddRefs(active));    
-      nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
-
-      nsCOMPtr<nsIDOMWindow> newWindow;
-      rv = wwatch->OpenWindow(parent, "chrome://global/content/printdialog.xul",
-            "_blank", "chrome,modal,centerscreen", array,
-            getter_AddRefs(newWindow));
+      cmdStr = command;
+      printFileStr = printfile;
+      char *pCmdStr = ToNewCString(cmdStr);
+      char *pPrintFileStr = ToNewCString(printFileStr);
+      sprintf(mPrData.command,pCmdStr);
+      sprintf(mPrData.path,pPrintFileStr);
+      nsMemory::Free(pCmdStr);
+      nsMemory::Free(pPrintFileStr);
     }
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    PRInt32 buttonPressed = 0;
-    ioParamBlock->GetInt(0, &buttonPressed);
-    if (buttonPressed == 1) {
-      if (aPS) {
-	aPS->GetPrintReversed(&reversed);
-	aPS->GetPrintInColor(&color);
-	aPS->GetPaperSize(&paper_size);
-        aPS->GetOrientation(&orientation);
-	aPS->GetPrintCommand(&command);
-	aPS->GetPrintRange(&printRange);
-	aPS->GetToFileName(&printfile);
-	aPS->GetPrintToFile(&tofile);
-	aPS->GetStartPageRange(&fromPage);
-	aPS->GetEndPageRange(&toPage);
-	aPS->GetMarginTop(&dtop);
-	aPS->GetMarginLeft(&dleft);
-	aPS->GetMarginBottom(&dbottom);
-	aPS->GetMarginRight(&dright);
-
-	if (command != nsnull && printfile != nsnull) {
-	  // convert Unicode strings to cstrings
-	  nsAutoString cmdStr;
-	  nsAutoString printFileStr;
-
-	  cmdStr = command;
-	  printFileStr = printfile;
-	  char *pCmdStr = ToNewCString(cmdStr);
-	  char *pPrintFileStr = ToNewCString(printFileStr);
-	  sprintf(mPrData.command,pCmdStr);
-	  sprintf(mPrData.path,pPrintFileStr);
-	  nsMemory::Free(pCmdStr);
-	  nsMemory::Free(pPrintFileStr);
-	}
-      }
-      else {
+  } else {
 #ifndef VMS
-	sprintf( mPrData.command, "lpr" );
+    const char* kCommandStr = "lpr";
 #else
-	// Note to whoever puts the "lpr" into the prefs file. Please contact me
-	// as I need to make the default be "print" instead of "lpr" for OpenVMS.
-	sprintf( mPrData.command, "print" );
+    // Note to whoever puts the "lpr" into the prefs file. Please contact me
+    // as I need to make the default be "print" instead of "lpr" for OpenVMS.
+    const char* kCommandStr = "print";
 #endif
-      }
-      mPrData.top = dtop;
-      mPrData.bottom = dbottom;
-      mPrData.left = dleft;
-      mPrData.right = dright;
-      mPrData.fpf = !reversed;
-      mPrData.grayscale = !color;
-      mPrData.size = paper_size;
-      mPrData.orientation = orientation;
-      mPrData.toPrinter = !tofile;
-
-      // PWD, HOME, or fail
-      if (!printfile) {
-	if ((path = PR_GetEnv("PWD")) == (char*)NULL)
-	  if ((path = PR_GetEnv("HOME")) == (char*)NULL)
-	    strcpy(mPrData.path,"mozilla.ps");
-	if (path != (char*)NULL)
-	  sprintf(mPrData.path,"%s/mozilla.ps",path);
-	else
-	  return NS_ERROR_FAILURE;
-      }
-      if (command != nsnull) {
-	nsMemory::Free(command);
-      }
-      if (printfile != nsnull) {
-	nsMemory::Free(printfile);
-      }
-      return NS_OK;
-    }
   }
-  return NS_ERROR_FAILURE;
+  sprintf( mPrData.command, kCommandStr );
+  mPrData.top = dtop;
+  mPrData.bottom = dbottom;
+  mPrData.left = dleft;
+  mPrData.right = dright;
+  mPrData.fpf = !reversed;
+  mPrData.grayscale = !color;
+  mPrData.size = paper_size;
+  mPrData.orientation = orientation;
+  mPrData.toPrinter = !tofile;
+
+  // PWD, HOME, or fail
+  if (!printfile) {
+    if ((path = PR_GetEnv("PWD")) == (char*)NULL)
+      if ((path = PR_GetEnv("HOME")) == (char*)NULL)
+        strcpy(mPrData.path,"mozilla.ps");
+    if (path != (char*)NULL)
+      sprintf(mPrData.path,"%s/mozilla.ps",path);
+    else
+      return NS_ERROR_FAILURE;
+  }
+  if (command != nsnull) {
+    nsMemory::Free(command);
+  }
+  if (printfile != nsnull) {
+    nsMemory::Free(printfile);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecQT::GetToPrinter(PRBool &aToPrinter)

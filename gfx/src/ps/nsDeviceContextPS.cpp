@@ -340,7 +340,7 @@ NS_IMETHODIMP nsDeviceContextPS::GetDeviceContextFor(nsIDeviceContextSpec *aDevi
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextPS::BeginDocument(PRUnichar * aTitle)
+NS_IMETHODIMP nsDeviceContextPS::BeginDocument(PRUnichar * aTitle, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage)
 {
   PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::BeginDocument()\n"));
 

@@ -66,7 +66,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: Init(void)
 NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget *aWidget,
                                                                        nsIPrintSettings* aPrintSettings,
                                                                        nsIDeviceContextSpec *&aNewSpec,
-                                                                       PRBool aQuiet)
+                                                                       PRBool aIsPrintPreview)
 {
   NS_ENSURE_ARG_POINTER(aWidget);
 
@@ -77,7 +77,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
 
   if (nsnull != devspec){
     nsDeviceContextSpecWin* specWin = NS_STATIC_CAST(nsDeviceContextSpecWin*, devspec);
-    rv = specWin->Init(aWidget, aPrintSettings, aQuiet);
+    rv = specWin->Init(aWidget, aPrintSettings, aIsPrintPreview);
     if (NS_SUCCEEDED(rv)) {
       aNewSpec = devspec;
     } else {
