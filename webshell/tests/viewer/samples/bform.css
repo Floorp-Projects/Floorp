@@ -28,7 +28,7 @@ select {
   background-color:rgb(200, 200, 200);
 }
 
-:-moz-dropdown-list {
+::-moz-dropdown-list {
   border-color:black;
   background-color:rgb(200, 200, 200);
 }

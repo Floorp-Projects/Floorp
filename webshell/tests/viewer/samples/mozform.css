@@ -36,7 +36,7 @@ input[type=radio]:hover {
   border : 2px solid black;
 }
 
-:-moz-radio {
+::-moz-radio {
   background-color:black;
   width:6px;
   height:6px;
@@ -78,7 +78,7 @@ input[type="button"][disabled]:active {
   padding: 1px;
 }
 
-input[type="button"]:-moz-focus-inner {
+input[type="button"]::-moz-focus-inner {
    padding-left  : 2px;
    padding-right : 2px;
    padding-top   : 1px;
@@ -86,7 +86,7 @@ input[type="button"]:-moz-focus-inner {
    margin: 0px;
 }
 
-input[type="button"]:focus:-moz-focus-inner {
+input[type="button"]:focus::-moz-focus-inner {
    padding-left  : 1px;
    padding-right : 1px;
    padding-top   : 0px;
@@ -137,7 +137,7 @@ button[disabled]:active {
   padding: 1px;
 }
 
-button:-moz-focus-inner {
+button::-moz-focus-inner {
    padding-left  : 2px;
    padding-right : 2px;
    padding-top   : 1px;
@@ -145,7 +145,7 @@ button:-moz-focus-inner {
    margin: 0px;
 }
 
-button:focus:-moz-focus-inner {
+button:focus::-moz-focus-inner {
    padding-left  : 1px;
    padding-right : 1px;
    padding-top   : 0px;
@@ -155,7 +155,7 @@ button:focus:-moz-focus-inner {
    border : 1px dotted black;
 }
 
-:-moz-dropdown-list {
+::-moz-dropdown-list {
   border-color:black;
   -moz-border-radius:4px;
   background-color:rgb(200, 200, 200);

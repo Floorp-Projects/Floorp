@@ -159,8 +159,9 @@ input[type="file"] > input[type="button"] {
  * The following rules are copied from forms.css, for widgets that aren't yet
  * defined in XBL.
  */
-*|*:-moz-fieldset-content {
+*|*::-moz-fieldset-content {
   display: block;
+  height: inherit;   /* Need this so percentage heights of kids work right */
 }
 
 form {
@@ -224,7 +225,7 @@ textarea > scrollbar {
   cursor: default;
 }
 
-*|*:-moz-singleline-textcontrol-frame {
+*|*::-moz-singleline-textcontrol-frame {
   overflow: hidden;
   white-space: nowrap;
   background-color: inherit;
@@ -236,7 +237,7 @@ textarea[disabled],
 option[disabled],
 optgroup[disabled],
 select[disabled],
-select[disabled]:-moz-display-comboboxcontrol-frame {
+select[disabled]::-moz-display-comboboxcontrol-frame {
   color: GrayText;
   cursor: default;
 }
@@ -281,7 +282,7 @@ input[type="file"] > input[type="button"] {
   height: inherit;
 }
 
-input[type="file"] > input[type="button"]:-moz-focus-inner
+input[type="file"] > input[type="button"]::-moz-focus-inner
  {
   padding: 0px 2px 0px 2px;
   border: 1px dotted transparent;

@@ -16,7 +16,7 @@ input[type="radio"] {
  background-color:white;
 }
 
-:-moz-radio {
+::-moz-radio {
  -moz-border-radius:1px; 
  border: 2px solid black; 
 }
@@ -62,7 +62,7 @@ select[size="1"] option:checked {
   color: white;
 }
 
-:-moz-dropdown-list {
+::-moz-dropdown-list {
   border: 1px solid black;
   background-color:white;
 }

@@ -95,7 +95,7 @@ label {
     -moz-user-select: all !important;
 }
 
-:-moz-display-comboboxcontrol-frame {
+::-moz-display-comboboxcontrol-frame {
   -moz-user-select: text !important;
 }
 

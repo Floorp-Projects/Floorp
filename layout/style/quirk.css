@@ -89,7 +89,7 @@ li > ol:first-node {
 /* Quirk: prevent bullet from resizing with the list item
  *   see bug 97351
  */
-li:-moz-list-bullet {
+li::-moz-list-bullet {
   font-size: -moz-initial;
 }
 
