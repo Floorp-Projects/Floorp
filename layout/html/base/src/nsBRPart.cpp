@@ -131,8 +131,8 @@ BRFrame::InlineReflow(nsCSSLineLayout&      aLineLayout,
     breakType = NS_STYLE_CLEAR_LINE;
   }
 
-  return NS_INLINE_REFLOW_BREAK_AFTER |
-    NS_INLINE_REFLOW_MAKE_BREAK_TYPE(breakType);
+  return NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |
+    NS_INLINE_MAKE_BREAK_TYPE(breakType);
 }
 
 //----------------------------------------------------------------------

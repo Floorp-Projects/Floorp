@@ -101,7 +101,7 @@ SpacerFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
                           nsReflowMetrics&     aMetrics,
                           const nsReflowState& aReflowState)
 {
-  nsresult rv = NS_INLINE_REFLOW_COMPLETE;
+  nsresult rv = NS_FRAME_COMPLETE;
 
   // By default, we have no area
   aMetrics.width = 0;
@@ -146,7 +146,7 @@ SpacerFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
 
   case TYPE_LINE:
     if (0 != width) {
-      rv = NS_INLINE_REFLOW_LINE_BREAK_AFTER;
+      rv = NS_INLINE_LINE_BREAK_AFTER(0);
       aMetrics.height = nscoord(width * p2t);
       aMetrics.ascent = aMetrics.height;
     }
