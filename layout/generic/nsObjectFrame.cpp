@@ -605,7 +605,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 				// Just make the frigging widget.
 
 				float           t2p;
-        aPresContext.GetTwipsToPixels(&t2p);
+                aPresContext.GetTwipsToPixels(&t2p);
 
 				PRInt32 x = NSTwipsToIntPixels(origin.x, t2p);
 				PRInt32 y = NSTwipsToIntPixels(origin.y, t2p);
@@ -770,11 +770,11 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
               //stream in the object source if there is one...
 
               if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src) ||
-		  NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, src)) 
-	      {
+                  NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, src)) 
+              {
                 nsIURLGroup* group = nsnull;
                 if (nsnull != baseURL) 
-		    baseURL->GetURLGroup(&group);
+                  baseURL->GetURLGroup(&group);
 
                 // Create an absolute URL
                 rv = NS_NewURL(&fullURL, src, baseURL, nsnull, group);
@@ -782,17 +782,16 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
                 SetFullURL(fullURL);
 
                 NS_IF_RELEASE(group);
-	      }
-	    }
+             }
+           }
 
-			// if there's no fullURL at this point, we need to set one
-	    if(!fullURL && baseURL)
-	    {
-		SetFullURL(baseURL); 
-		fullURL = baseURL;
-	    }
-	    nsIView *parentWithView;
-            nsPoint origin;
+           // if there's no fullURL at this point, we need to set one
+           if(!fullURL && baseURL) {
+             SetFullURL(baseURL); 
+             fullURL = baseURL;
+	       }
+           nsIView *parentWithView;
+           nsPoint origin;
 
             // we need to recalculate this now that we have access to the nsPluginInstanceOwner
             // and its size info (as set in the tag)
@@ -809,14 +808,14 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
             window->y = NSTwipsToIntPixels(origin.y, t2p);
             window->width = NSTwipsToIntPixels(aMetrics.width, t2p);
             window->height = NSTwipsToIntPixels(aMetrics.height, t2p);
+            
+            // beard: this needs to be in port coordinates on Mac OS, but
+            // the port isn't known yet.
             window->clipRect.top = 0;
             window->clipRect.left = 0;
-
-//              window->clipRect.top = NSTwipsToIntPixels(origin.y, t2p);
-//              window->clipRect.left = NSTwipsToIntPixels(origin.x, t2p);
-
-            window->clipRect.bottom = NSTwipsToIntPixels(aMetrics.height, t2p);
-            window->clipRect.right = NSTwipsToIntPixels(aMetrics.width, t2p);
+            window->clipRect.bottom = window->height;
+            window->clipRect.right = window->width;
+            
 #ifdef XP_UNIX
             window->ws_info = nsnull;   //XXX need to figure out what this is. MMP
 #endif
@@ -1262,6 +1261,7 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext&          aPresContext,
   window->y = NSTwipsToIntPixels(origin.y, t2p);
   window->width = NSTwipsToIntPixels(aMetrics.width, t2p);
   window->height = NSTwipsToIntPixels(aMetrics.height, t2p);
+  
   window->clipRect.top = 0;
   window->clipRect.left = 0;
   window->clipRect.bottom = NSTwipsToIntPixels(aMetrics.height, t2p);
@@ -1419,25 +1419,36 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
         GetOffsetFromView(origin, &parentWithView);
 
 #if 0
+        // beard:  how do we get this?
         parentWithView->GetScrollOffset(&offx, &offy);
 #else
         offx = offy = 0;
 #endif
 
-        window->x = 0;
-        window->y = 0;
+        window->x = NSTwipsToIntPixels(origin.x, t2p);
+        window->y = NSTwipsToIntPixels(origin.y, t2p);
+        // window->width = NSTwipsToIntPixels(aMetrics.width, t2p);
+        // window->height = NSTwipsToIntPixels(aMetrics.height, t2p);
 
-        window->clipRect.top = 0;
-        window->clipRect.left = 0;
-//        window->clipRect.top = NSTwipsToIntPixels(origin.y, t2p);
-//        window->clipRect.left = NSTwipsToIntPixels(origin.x, t2p);
-//        window->clipRect.top = NSTwipsToIntPixels(origin.y + offy, t2p);
-//        window->clipRect.left = NSTwipsToIntPixels(origin.x + offx, t2p);
-        window->clipRect.bottom = window->clipRect.top + window->height;
-        window->clipRect.right = window->clipRect.left + window->width;
-        
         // refresh the plugin port as well
         window->window = mInstanceOwner->GetPluginPort();
+
+        // beard: to preserve backward compatibility with Communicator 4.X, the
+        // clipRect must be in port coordinates.
+#ifdef XP_MAC
+        nsPluginPort* port = window->window;
+        nsPluginRect& clipRect = window->clipRect;
+        clipRect.top = -port->porty;
+        clipRect.left = -port->portx;
+        clipRect.bottom = clipRect.top + window->height;
+        clipRect.right = clipRect.left + window->width;
+#else
+        // this is only well-defined on the Mac OS anyway, or perhaps for windowless plugins.
+        window->clipRect.top = 0;
+        window->clipRect.left = 0;
+        window->clipRect.bottom = window->clipRect.top + window->height;
+        window->clipRect.right = window->clipRect.left + window->width;
+#endif
 
         if (NS_OK == mInstanceOwner->GetInstance(inst)) {
           inst->SetWindow(window);
