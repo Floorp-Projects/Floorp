@@ -1195,12 +1195,10 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     return NPERR_NO_ERROR;
 
   case NPNVserviceManager: {
-    // GetGlobalServiceManager does not AddRef, so we do here.
-    nsIServiceManagerObsolete* serviceManager;
-    res = nsServiceManager::GetGlobalServiceManager((nsIServiceManager**)&serviceManager);
+    nsIServiceManager * sm;
+    res = NS_GetServiceManager(&sm);
     if (NS_SUCCEEDED(res)) {
-      *(nsIServiceManagerObsolete**)result = serviceManager;
-      NS_ADDREF(serviceManager);
+      *(nsIServiceManager**)result = sm;
       return NPERR_NO_ERROR;
     } else
       return NPERR_GENERIC_ERROR;
