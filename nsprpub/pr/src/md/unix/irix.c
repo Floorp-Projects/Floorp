@@ -1174,7 +1174,7 @@ _MD_SuspendThread(PRThread *thread)
     PRInt32 rv;
 
     PR_ASSERT((thread->flags & _PR_GLOBAL_SCOPE) &&
-        (thread->flags & _PR_GCABLE_THREAD));
+        _PR_IS_GCABLE_THREAD(thread));
 
 	thread->md.suspending_id = getpid();
 	rv = kill(thread->md.id, SIGUSR1);
@@ -1190,7 +1190,7 @@ void
 _MD_ResumeThread(PRThread *thread)
 {
     PR_ASSERT((thread->flags & _PR_GLOBAL_SCOPE) &&
-        (thread->flags & _PR_GCABLE_THREAD));
+        _PR_IS_GCABLE_THREAD(thread));
     (void)unblockproc(thread->md.id);
 }
 

@@ -619,6 +619,13 @@ PR_EXTERN(void) _PR_Notify(PRMonitor *mon, PRBool all, PRBool sticky);
 #define        _PR_ADJUST_STACKSIZE(stackSize)
 #endif
 
+#ifdef GC_LEAK_DETECTOR
+/* All threads are GCable. */
+#define _PR_IS_GCABLE_THREAD(thr) 1
+#else
+#define _PR_IS_GCABLE_THREAD(thr) ((thr)->flags & _PR_GCABLE_THREAD)
+#endif /* GC_LEAK_DETECTOR */
+
 #define _PR_PENDING_INTERRUPT(thr)					\
 		(!((thr)->flags & _PR_INTERRUPT_BLOCKED) && ((thr)->flags & _PR_INTERRUPT))
 #define _PR_THREAD_BLOCK_INTERRUPT(thr)			\

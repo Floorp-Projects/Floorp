@@ -167,7 +167,7 @@ PR_IMPLEMENT(void) _MD_SuspendThread(struct PRThread *thread)
     PRInt32 rv;
 
     PR_ASSERT((thread->flags & _PR_GLOBAL_SCOPE) &&
-        (thread->flags & _PR_GCABLE_THREAD));
+        _PR_IS_GCABLE_THREAD(thread));
 #if 0
 	thread->md.suspending_id = getpid();
 	rv = kill(thread->md.id, SIGUSR1);
@@ -185,7 +185,7 @@ PR_IMPLEMENT(void) _MD_ResumeThread(struct PRThread *thread)
     PRInt32 rv;
 
     PR_ASSERT((thread->flags & _PR_GLOBAL_SCOPE) &&
-        (thread->flags & _PR_GCABLE_THREAD));
+        _PR_IS_GCABLE_THREAD(thread));
 #if 0
     rv = unblockproc(thread->md.id);
 #endif

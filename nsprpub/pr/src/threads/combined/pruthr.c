@@ -1331,16 +1331,7 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
   
         /* Update thread type counter */
         PR_Lock(_pr_activeLock);
-        /*
-         * We should just or in 'flags'.  Until I verify
-         * that it works on all platforms, I'm going to
-         * ifdef it with XP_MAC.  -- wtc@netscape.com
-         */
-#ifdef XP_MAC
-        thread->flags |= flags;
-#else
         thread->flags = flags;
-#endif
         thread->id = ++_pr_utid;
         if (type == PR_SYSTEM_THREAD) {
             thread->flags |= _PR_SYSTEM;
@@ -1616,7 +1607,7 @@ PR_IMPLEMENT(void) PR_SuspendAll(void)
     for (qp = _PR_ACTIVE_LOCAL_THREADQ().next;
         qp != &_PR_ACTIVE_LOCAL_THREADQ(); qp = qp->next) {
         if ((me != _PR_ACTIVE_THREAD_PTR(qp)) && 
-            (_PR_ACTIVE_THREAD_PTR(qp)->flags & _PR_GCABLE_THREAD)) {
+            _PR_IS_GCABLE_THREAD(_PR_ACTIVE_THREAD_PTR(qp))) {
             _PR_Suspend(_PR_ACTIVE_THREAD_PTR(qp));
                 PR_ASSERT((_PR_ACTIVE_THREAD_PTR(qp))->state != _PR_RUNNING);
             }
@@ -1624,7 +1615,7 @@ PR_IMPLEMENT(void) PR_SuspendAll(void)
     for (qp = _PR_ACTIVE_GLOBAL_THREADQ().next;
         qp != &_PR_ACTIVE_GLOBAL_THREADQ(); qp = qp->next) {
         if ((me != _PR_ACTIVE_THREAD_PTR(qp)) &&
-            (_PR_ACTIVE_THREAD_PTR(qp)->flags & _PR_GCABLE_THREAD))
+            _PR_IS_GCABLE_THREAD(_PR_ACTIVE_THREAD_PTR(qp)))
             /* PR_Suspend(_PR_ACTIVE_THREAD_PTR(qp)); */
                 _PR_MD_SUSPEND_THREAD(_PR_ACTIVE_THREAD_PTR(qp)); 
     }
@@ -1647,13 +1638,13 @@ PR_IMPLEMENT(void) PR_ResumeAll(void)
     for (qp = _PR_ACTIVE_LOCAL_THREADQ().next;
         qp != &_PR_ACTIVE_LOCAL_THREADQ(); qp = qp->next) {
         if ((me != _PR_ACTIVE_THREAD_PTR(qp)) && 
-            (_PR_ACTIVE_THREAD_PTR(qp)->flags & _PR_GCABLE_THREAD))
+            _PR_IS_GCABLE_THREAD(_PR_ACTIVE_THREAD_PTR(qp)))
             _PR_Resume(_PR_ACTIVE_THREAD_PTR(qp));
     }
     for (qp = _PR_ACTIVE_GLOBAL_THREADQ().next;
         qp != &_PR_ACTIVE_GLOBAL_THREADQ(); qp = qp->next) {
         if ((me != _PR_ACTIVE_THREAD_PTR(qp)) &&
-            (_PR_ACTIVE_THREAD_PTR(qp)->flags & _PR_GCABLE_THREAD))
+            _PR_IS_GCABLE_THREAD(_PR_ACTIVE_THREAD_PTR(qp)))
                 _PR_MD_RESUME_THREAD(_PR_ACTIVE_THREAD_PTR(qp));
     }
     _PR_MD_END_RESUME_ALL();
@@ -1693,7 +1684,7 @@ PR_IMPLEMENT(PRStatus) PR_EnumerateThreads(PREnumerator func, void *arg)
     {
         qp_next = qp->next;
         t = _PR_ACTIVE_THREAD_PTR(qp);
-        if (t->flags & _PR_GCABLE_THREAD)
+        if (_PR_IS_GCABLE_THREAD(t))
         {
             rv = (*func)(t, i, arg);
             if (rv != PR_SUCCESS)
@@ -1706,7 +1697,7 @@ PR_IMPLEMENT(PRStatus) PR_EnumerateThreads(PREnumerator func, void *arg)
     {
         qp_next = qp->next;
         t = _PR_ACTIVE_THREAD_PTR(qp);
-        if (t->flags & _PR_GCABLE_THREAD)
+        if (_PR_IS_GCABLE_THREAD(t))
         {
             rv = (*func)(t, i, arg);
             if (rv != PR_SUCCESS)

@@ -256,7 +256,7 @@ PRStatus _MD_CREATE_THREAD(PRThread *thread,
 
     flags = (state == PR_JOINABLE_THREAD ? THR_SUSPENDED/*|THR_NEW_LWP*/ 
 			   : THR_SUSPENDED|THR_DETACHED/*|THR_NEW_LWP*/);
-	if ((thread->flags & _PR_GCABLE_THREAD) ||
+	if (_PR_IS_GCABLE_THREAD(thread) ||
 							(scope == PR_GLOBAL_BOUND_THREAD))
 		flags |= THR_BOUND;
 
@@ -500,7 +500,7 @@ void _MD_Suspend(PRThread *thr)
    int lwp_main_proc_fd = 0;
 
     thr_suspend(thr->md.handle);
-    if (!(thr->flags & _PR_GCABLE_THREAD))
+    if (!_PR_IS_GCABLE_THREAD(thr))
       return;
     /* XXX Primordial thread can't be bound to an lwp, hence there is no
      * way we can assume that we can get the lwp status for primordial
@@ -519,7 +519,7 @@ void _MD_Suspend(PRThread *thr)
 }
 void _MD_Resume(PRThread *thr)
 {
-   if (!(thr->flags & _PR_GCABLE_THREAD) || !suspendAllOn){
+   if (!_PR_IS_GCABLE_THREAD(thr) || !suspendAllOn){
      /*XXX When the suspendAllOn is set, we will be trying to do lwp_suspend
       * during that time we can't call any thread lib or libc calls. Hence
       * make sure that no resume is requested for Non gcable thread
