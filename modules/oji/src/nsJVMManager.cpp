@@ -47,6 +47,16 @@
 #include "nsIPref.h"
 #include "lcglue.h"
 
+#include "nspr.h"
+#include "plstr.h"
+#include "nsCOMPtr.h"
+#include "nsJSPrincipals.h"
+#include "nsSystemPrincipal.h"
+#include "nsCodebasePrincipal.h"
+#include "nsCertificatePrincipal.h"
+#include "nsIScriptSecurityManager.h"
+//#include "nsScriptSecurityManager.h"
+
 extern "C" int XP_PROGRESS_STARTING_JAVA;
 extern "C" int XP_PROGRESS_STARTING_JAVA_DONE;
 extern "C" int XP_JAVA_NO_CLASSES;
@@ -783,6 +793,72 @@ nsJVMManager::IsLiveConnectEnabled(void)
 	}
 #endif
 	return PR_TRUE;
+}
+
+/*
+ * Find out if a given signer has been granted all permissions. This
+ * is a precondition to loading a signed applet in trusted mode.
+ * The certificate from which the fingerprint and commonname have
+ * be derived, should have been verified before this method is 
+ * called.
+ */
+
+NS_METHOD
+nsJVMManager::IsAllPermissionGranted(
+    const char * lastFP,
+    const char * lastCN, 
+    const char * rootFP,
+    const char * rootCN, 
+    PRBool * isGranted)
+{
+    nsresult rv      = NS_OK;
+    PRBool   success = PR_FALSE;
+
+    nsIPrincipal* pIPrincipal = NULL;
+  
+    // Get the Script Security Manager.
+
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
+    if (NS_FAILED(rv) || !secMan) return FALSE;
+
+
+    /*
+     * WARNING: we need to add code here to check if the certificate is
+     * trust worthy. Without this, the user may be granting rights to a
+     * misrepresented signer.
+     */
+
+
+    /*
+     * END WARNING.
+     */
+
+    // Ask the Script Security Manager to make a Certificate Principal.
+    // The fingerprint is a one way hash of this certificate. It is used
+    // as the key to store the principal in the principal database.
+
+    rv = secMan->GetCertificatePrincipal(lastFP, &pIPrincipal);
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    // Get the nsICertificatePrincipal interface so that we can set the
+    // common name. The common name is a user meaningful string.
+    
+    nsCOMPtr<nsICertificatePrincipal> pICertificate = do_QueryInterface(pIPrincipal, &rv);
+    if (NS_FAILED(rv) || !pICertificate) return PR_FALSE;
+
+    // Set the common name.
+
+    rv = pICertificate->SetCommonName(lastCN);
+
+    PRInt16 ret;
+
+    secMan->RequestCapability(pIPrincipal,"AllPermission",&ret);
+
+    PR_ASSERT(isGranted);
+    *isGranted = (ret!=0);
+
+    return PR_TRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
