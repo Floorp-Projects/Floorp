@@ -34,6 +34,7 @@ CPPSRCS =				\
 	nsUnicodeToISO2022KR.cpp		\
 	nsCP949ToUnicode.cpp		\
 	nsUnicodeToCP949.cpp		\
+	nsUnicodeToX11Johab.cpp		\
 	nsUCvKOSupport.cpp		\
 	nsUCvKODll.cpp			\
 	$(NULL)
@@ -46,6 +47,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToISO2022KR.obj		\
 	.\$(OBJDIR)\nsCP949ToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToCP949.obj		\
+	.\$(OBJDIR)\nsUnicodeToX11Johab.obj		\
 	.\$(OBJDIR)\nsUCvKOSupport.obj			\
 	.\$(OBJDIR)\nsUCvKODll.obj 			\
 	$(NULL)
