@@ -1275,6 +1275,9 @@ NS_METHOD nsFrame::List(FILE* out, PRInt32 aIndent) const
   ListTag(out);
   fputs(" ", out);
   out << mRect;
+  if (0 != mState) {
+    fprintf(out, " [state=%08x]", mState);
+  }
   fputs("<>\n", out);
   return NS_OK;
 }
