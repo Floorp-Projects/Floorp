@@ -59,6 +59,7 @@ CPPSRCS =			\
 	nsServiceManager.cpp	\
 	nsSupportsArray.cpp	\
 	nsSupportsArrayEnumerator.cpp	\
+	nsConjoiningEnumerator.cpp	\
 	nsTraceRefcnt.cpp	\
         nsXPComFactory.cpp      \
         nsEventQueueService.cpp \
@@ -77,6 +78,7 @@ CPP_OBJS = \
 	.\$(OBJDIR)\nsServiceManager.obj	\
 	.\$(OBJDIR)\nsSupportsArray.obj		\
 	.\$(OBJDIR)\nsSupportsArrayEnumerator.obj		\
+	.\$(OBJDIR)\nsConjoiningEnumerator.obj		\
 	.\$(OBJDIR)\nsTraceRefcnt.obj		\
         .\$(OBJDIR)\nsXPComFactory.obj          \
         .\$(OBJDIR)\nsEventQueueService.obj     \
@@ -86,6 +88,9 @@ CPP_OBJS = \
 	$(NULL)
 
 MODULE = xpcom 
+
+# XXX temporary, until I fix the RDF cursor/enumerator conspiracy
+EXPORTS = nsSupportsArrayEnumerator.h
 
 include <$(DEPTH)\config\rules.mak>
 

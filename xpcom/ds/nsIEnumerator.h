@@ -76,5 +76,13 @@ public:
 
 };
 
+// Construct and return an implementation of a "conjoining enumerator." This
+// enumerator lets you string together two other enumerators into one sequence.
+// The result is an nsIBidirectionalEnumerator, but if either input is not
+// also bidirectional, the Last and Prev operations will fail.
+extern NS_COM nsresult
+NS_NewConjoiningEnumerator(nsIEnumerator* first, nsIEnumerator* second,
+                           nsIBidirectionalEnumerator* *aInstancePtrResult);
+
 #endif // __nsIEnumerator_h
 
