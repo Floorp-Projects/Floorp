@@ -362,6 +362,8 @@ static JSClass global_class = {
 static JSBool
 env_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
+/* XXX porting may be easy, but these don't seem to supply setenv by default */
+#if !defined XP_BEOS && !defined XP_OS2 && !defined SOLARIS
     JSString *idstr, *valstr;
     const char *name, *value;
     int rv;
@@ -393,6 +395,7 @@ env_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         return JS_FALSE;
     }
     *vp = STRING_TO_JSVAL(valstr);
+#endif /* !defined XP_BEOS && !defined XP_OS2 && !defined SOLARIS */
     return JS_TRUE;
 }
 
