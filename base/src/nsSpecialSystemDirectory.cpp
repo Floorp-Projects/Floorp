@@ -119,7 +119,7 @@ static void GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
     //	- if MOZILLA_FIVE_HOME is defined, that is it
     //	- else give the current directory
     char buf[MAXPATHLEN];
-    char *moz5 = getenv("MOZILLA_FIVE_HOME");
+    char *moz5 = PR_GetEnv("MOZILLA_FIVE_HOME");
     if (moz5)
     {
         aFileSpec = moz5;
@@ -127,6 +127,15 @@ static void GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
     }
     else
     {
+        static PRBool firstWarning = PR_TRUE;
+
+        if(firstWarning) {
+            // Warn that MOZILLA_FIVE_HOME not set, once.
+            printf("Warning: MOZILLA_FIVE_HOME not set.\n");
+            firstWarning = PR_FALSE;
+        }
+
+        // Fall back to current directory.
         if (getcwd(buf, sizeof(buf)))
         {
             aFileSpec = buf;
