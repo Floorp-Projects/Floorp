@@ -89,6 +89,7 @@ public:
                                  PRBool* aIsUndefined);
   virtual nsresult CompileEventHandler(void *aTarget,
                                        nsIAtom *aName,
+                                       const char *aEventName,
                                        const nsAString& aBody,
                                        const char *aURL,
                                        PRUint32 aLineNo,

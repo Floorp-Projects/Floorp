@@ -323,3 +323,11 @@ nsSVGGraphicElement::IsAttributeMapped(const nsIAtom* name) const
     nsSVGGraphicElementBase::IsAttributeMapped(name);
 }
 
+//----------------------------------------------------------------------
+// nsSVGElement overrides
+
+PRBool
+nsSVGGraphicElement::IsEventName(nsIAtom* aName)
+{
+  return IsGraphicElementEventName(aName);
+}

@@ -1184,7 +1184,6 @@ nsJSContext::ExecuteScript(void* aScriptObject,
   return rv;
 }
 
-const char *gEventArgv[] = {"event"};
 
 static inline const char *
 AtomToEventHandlerName(nsIAtom *aName)
@@ -1209,6 +1208,7 @@ AtomToEventHandlerName(nsIAtom *aName)
 
 nsresult
 nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName,
+                                 const char *aEventName,
                                  const nsAString& aBody,
                                  const char *aURL, PRUint32 aLineNo,
                                  PRBool aShared, void** aHandler)
@@ -1241,9 +1241,11 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName,
 
   const char *charName = AtomToEventHandlerName(aName);
 
+  const char *argList[] = { aEventName };
+
   JSFunction* fun =
       ::JS_CompileUCFunctionForPrincipals(mContext, target, jsprin,
-                                          charName, 1, gEventArgv,
+                                          charName, 1, argList,
                                           (jschar*)(const PRUnichar*)PromiseFlatString(aBody).get(),
                                           aBody.Length(),
                                           aURL, aLineNo);

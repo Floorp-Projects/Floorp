@@ -61,8 +61,10 @@ public:
 
   // nsIStyledContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  
+
 protected:
+  // nsSVGElement overrides
+  virtual PRBool IsEventName(nsIAtom* aName);
   
   nsCOMPtr<nsIDOMSVGAnimatedTransformList> mTransforms;
 };

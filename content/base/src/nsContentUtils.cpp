@@ -1800,6 +1800,19 @@ nsContentUtils::UnregisterPrefCallback(const char *aPref,
 }
 
 
+static const char gEventName[] = "event";
+static const char gSVGEventName[] = "evt";
+
+// static
+const char *
+nsContentUtils::GetEventArgName(PRInt32 aNameSpaceID)
+{
+  if (aNameSpaceID == kNameSpaceID_SVG)
+    return gSVGEventName;
+
+  return gEventName;
+}
+
 void
 nsCxPusher::Push(nsISupports *aCurrentTarget)
 {
