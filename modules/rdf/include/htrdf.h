@@ -73,6 +73,12 @@ typedef struct _HT_CursorStruct* HT_Cursor;
 
 typedef struct _HT_ResourceStruct* HT_Resource;
 
+/* for use with HT_GetTemplate */
+enum TemplateType {
+	ht_template_chrome,
+	ht_template_management,
+	ht_template_navigation
+};
 
 /*
  * This is the Notification structure that gets passed to the HT layer on
@@ -273,6 +279,11 @@ PR_PUBLIC_API(HT_Resource)  HT_GetParent (HT_Resource node);
  */
 PR_PUBLIC_API(HT_Error)     HT_NodeDisplayString (HT_Resource node, char *buffer, int bufferLen);	/* obsolete! */
 PR_PUBLIC_API(HT_Error)     HT_ViewDisplayString (HT_View view, char *buffer, int bufferLen);		/* obsolete! */
+
+/* an API for external access to the templates.  It takes a specifier
+   defined by enum TemplateType, in this file.  HT_GetTemplate() returns
+   the basic HT_Pane corresponding to the requested type. */
+PR_PUBLIC_API(HT_Pane)	HT_GetTemplate(int templateType);
 
 PR_PUBLIC_API(PRBool)	HT_GetTemplateData(HT_Resource node, void* token, uint32 tokenType, void **nodeData);
 PR_PUBLIC_API(PRBool)	HT_GetNodeData (HT_Resource node, void *token,

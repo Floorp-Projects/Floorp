@@ -363,6 +363,7 @@ newHTEntry (HT_View view, RDF_Resource node)
 		nr->view = view;
 		if (existing != NULL)
 		{
+			nr->nextItem = existing->nextItem;
 			existing->nextItem = nr;
 		}
 		else
@@ -628,8 +629,7 @@ bmkNotifFunc (RDF_Event ns, void* pdata)
 				htr = htr->nextItem;
 			}
 		}
-		else if ((aev->s == gCoreVocab->RDF_name) || (aev->s == gNavCenter->RDF_smallIcon) ||
-				 (aev->s == gNavCenter->RDF_largeIcon))
+		else
 		{
 			htr = PL_HashTableLookup(hash, aev->u);
 			while (htr != NULL)
@@ -5115,6 +5115,25 @@ ht_isURLReal(HT_Resource node)
 
 
 
+PR_PUBLIC_API(HT_Pane)
+HT_GetTemplate(int templateType)
+{
+	XP_ASSERT(templateType == ht_template_chrome ||
+		templateType == ht_template_management ||
+		templateType == ht_template_navigation);
+	switch(templateType) {
+		case ht_template_chrome :
+			return gChromeTemplate;
+		case ht_template_management :
+			return gManagementTemplate;
+		case ht_template_navigation :
+			return gNavigationTemplate;
+		default :
+			return 0;
+	}
+}
+
+
 PR_PUBLIC_API(PRBool)
 HT_GetTemplateData(HT_Resource node, void* token, uint32 tokenType, void **nodeData)
 {
@@ -5372,6 +5391,7 @@ HT_IsNodeDataEditable(HT_Resource node, void *token, uint32 tokenType)
 			(token == gNavCenter->viewRolloverColor) ||
 			(token == gNavCenter->viewPressedColor) || (token == gNavCenter->viewDisabledColor) ||
 			(token == gNavCenter->toolbarBitmapPosition) || (token == gNavCenter->toolbarButtonsFixedSize) ||
+			(token == gNavCenter->toolbarDisplayMode) ||
 			(token == gNavCenter->RDF_smallDisabledIcon) || (token == gNavCenter->RDF_largeDisabledIcon) ||
 			(token == gNavCenter->RDF_smallRolloverIcon) || (token == gNavCenter->RDF_largeRolloverIcon) ||
 			(token == gNavCenter->RDF_smallPressedIcon) || (token == gNavCenter->RDF_largePressedIcon) ||
@@ -5894,6 +5914,7 @@ htIsPropertyInMoreOptions(RDF_Resource r)
 	    (r == gNavCenter->triggerPlacement) || (r == gNavCenter->viewRolloverColor) ||
 	    (r == gNavCenter->viewPressedColor) || (r == gNavCenter->viewDisabledColor) ||
 	    (r == gNavCenter->toolbarBitmapPosition) || (r == gNavCenter->toolbarButtonsFixedSize) ||
+	    (r == gNavCenter->toolbarDisplayMode) ||
 	    (r == gNavCenter->RDF_smallDisabledIcon) || (r == gNavCenter->RDF_largeDisabledIcon) ||
 	    (r == gNavCenter->RDF_smallRolloverIcon) || (r == gNavCenter->RDF_largeRolloverIcon) ||
 	    (r == gNavCenter->RDF_smallPressedIcon) || (r == gNavCenter->RDF_largePressedIcon) ||
