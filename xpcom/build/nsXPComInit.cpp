@@ -302,7 +302,6 @@ static const nsModuleComponentInfo components[] = {
 #ifdef MOZ_TIMELINE
     COMPONENT(TIMELINESERVICE, nsTimelineServiceConstructor),
 #endif
-    COMPONENT(OBSERVER, nsObserver::Create),
     COMPONENT(OBSERVERSERVICE, nsObserverService::Create),
     COMPONENT(GENERICFACTORY, nsGenericFactory::Create),
     COMPONENT(EVENTQUEUESERVICE, nsEventQueueServiceImpl::Create),
