@@ -34,7 +34,9 @@ CPPSRCS =				\
 	nsProperties.cpp		\
 	nsRBTree.cpp			\
 	nsSizeOfHandler.cpp		\
+	nsStr.cpp			\
 	nsString.cpp			\
+	nsString2.cpp			\
 	nsUnicharBuffer.cpp		\
 	nsUnicharInputStream.cpp	\
 	nsVoidArray.cpp			\
@@ -57,7 +59,9 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsProperties.obj		\
 	.\$(OBJDIR)\nsRBTree.obj		\
 	.\$(OBJDIR)\nsSizeOfHandler.obj		\
+	.\$(OBJDIR)\nsStr.obj		\
 	.\$(OBJDIR)\nsString.obj		\
+	.\$(OBJDIR)\nsString2.obj		\
 	.\$(OBJDIR)\nsUnicharBuffer.obj		\
 	.\$(OBJDIR)\nsUnicharInputStream.obj	\
 	.\$(OBJDIR)\nsVoidArray.obj		\
@@ -73,7 +77,7 @@ EXPORTS=nscore.h nsIArena.h nsIAtom.h nsIByteBuffer.h \
     nsBTree.h nsCRT.h nsDeque.h nsITimer.h \
     nsITimerCallback.h nsIUnicharBuffer.h nsRBTree.h \
     nsIUnicharInputStream.h nsString.h nsVoidArray.h \
-    nsUnitConversion.h \
+    nsStr.h nsString2.h nsUnitConversion.h \
     nsIBaseStream.h nsIInputStream.h nsIOutputStream.h \
     nsInt64.h nsTime.h
 
