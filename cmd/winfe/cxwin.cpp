@@ -613,14 +613,18 @@ void CWinCX::DestroyContext()   {
 		//  Call the base.  This will delete the object !!
 		//  To make sure that m_pPal is not being selected to a dc
 		HDC hdc = GetContextDC();
-		::SelectPalette(hdc,  (HPALETTE)::GetStockObject(DEFAULT_PALETTE), FALSE);
-		//  Get rid of the home grown DC that we created.
-		if(GetPane() != NULL)	{
-		#ifdef DDRAW
-            ReleaseDrawSurface();
-		#endif
-            ReleaseContextDC(hdc);
+		if (hdc)
+		{
+			::SelectPalette(hdc,  (HPALETTE)::GetStockObject(DEFAULT_PALETTE), FALSE);
+			//  Get rid of the home grown DC that we created.
+			if(GetPane() != NULL)	{
+			#ifdef DDRAW
+				ReleaseDrawSurface();
+			#endif
+				ReleaseContextDC(hdc);
+			}
 		}
+
 #if defined(OJI)
                 // XXX help
 #elif defined(JAVA)

@@ -155,10 +155,10 @@ void CNSNavFrame::CreateNewNavCenter(CNSGenFrame* pParentFrame, BOOL useViewType
 // Determine the pixels we should consume if docked
 	int32 width;
 	PREF_GetIntPref(gPrefDockPercentage, &width);
-    if ((int)width > 400) width = 400;
-	m_DockSize = (int)width;
+    m_DockSize = (int)width;
 	
 // Read in our dockstyle
+	m_dwOverDockStyle = DOCKSTYLE_VERTLEFT;
 	PREF_GetIntPref(gPrefDockOrientation, &m_dwOverDockStyle);
 
 // Find out if a view should be displayed
@@ -984,8 +984,7 @@ void CNSNavFrame::OnPaint( )
 	HDC hdc = pDC->GetSafeHdc();
 	CRect rect1;
 	CRgn pRgn;
-	HBRUSH hBrush;
-
+	
 	HBRUSH hBr = ::CreateSolidBrush((COLORREF)GetSysColor(COLOR_3DSHADOW));
 	HPEN hPen = ::CreatePen(PS_SOLID, 1,(COLORREF)GetSysColor(COLOR_3DLIGHT)); 
 
@@ -1000,9 +999,9 @@ void CNSNavFrame::OnPaint( )
 		rect1.left = rect.left + MIN_CATEGORY_WIDTH;
 		rect1.right = rect1.left + 2;
 		::FillRect(hdc, &rect1, hBr);
-		::SelectObject(pDC->GetSafeHdc(), (HPEN)::GetStockObject(WHITE_PEN));
-		::MoveToEx(pDC->GetSafeHdc(), rect1.left+1, rect1.top, NULL);
-		::LineTo(pDC->GetSafeHdc(), rect1.left+1, rect1.bottom);
+		::SelectObject(hdc, (HPEN)::GetStockObject(WHITE_PEN));
+		::MoveToEx(hdc, rect1.left+1, rect1.top, NULL);
+		::LineTo(hdc, rect1.left+1, rect1.bottom);
 	}
 	else {
 
@@ -1011,14 +1010,13 @@ void CNSNavFrame::OnPaint( )
 		rect1.top = rect.top + MIN_CATEGORY_HEIGHT;
 		rect1.bottom = rect1.top + 2;
 		::FillRect(hdc, &rect1, hBr);
-		::SelectObject(pDC->GetSafeHdc(), (HPEN)::GetStockObject(WHITE_PEN));
-		::MoveToEx(pDC->GetSafeHdc(), rect1.left, rect1.top+1, NULL);
-		::LineTo(pDC->GetSafeHdc(), rect1.right, rect1.top+1);
+		::SelectObject(hdc, (HPEN)::GetStockObject(WHITE_PEN));
+		::MoveToEx(hdc, rect1.left, rect1.top+1, NULL);
+		::LineTo(hdc, rect1.right, rect1.top+1);
 	}
 	::SelectObject(hdc, hOldPen);
-	::DeleteObject(hPen);
-	::DeleteObject(hBr);
-	::DeleteObject(hBrush);
+	VERIFY(::DeleteObject(hPen));
+	VERIFY(::DeleteObject(hBr));
 	ReleaseDC(pDC);
 	CFrameWnd::OnPaint();
 }
