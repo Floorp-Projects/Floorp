@@ -79,7 +79,7 @@
 PRLogModuleInfo* nsComponentManagerLog = nsnull;
 
 #if defined(DEBUG)
-#define SHOW_DENIED_ON_SHUTDOWN
+// #define SHOW_DENIED_ON_SHUTDOWN
 #endif
 
 // Loader Types
@@ -1752,7 +1752,7 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
         nsXPIDLCString cid, iid;
         cid.Adopt(aClass.ToString());
         iid.Adopt(aIID.ToString());
-        printf("Creating new instance on shutdown. Denied.\n"
+        fprintf(stderr, "Creating new instance on shutdown. Denied.\n"
                "         CID: %s\n         IID: %s\n", cid.get(), iid.get());
 #endif /* SHOW_DENIED_ON_SHUTDOWN */
         return NS_ERROR_UNEXPECTED;
@@ -1812,7 +1812,7 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
 #ifdef SHOW_DENIED_ON_SHUTDOWN
         nsXPIDLCString iid;
         iid.Adopt(aIID.ToString());
-        printf("Creating new instance on shutdown. Denied.\n"
+        fprintf(stderr, "Creating new instance on shutdown. Denied.\n"
                "  ContractID: %s\n         IID: %s\n", aContractID, iid.get());
 #endif /* SHOW_DENIED_ON_SHUTDOWN */
         return NS_ERROR_UNEXPECTED;
@@ -1911,7 +1911,7 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
         nsXPIDLCString cid, iid;
         cid.Adopt(aClass.ToString());
         iid.Adopt(aIID.ToString());
-        printf("Getting service on shutdown. Denied.\n"
+        fprintf(stderr, "Getting service on shutdown. Denied.\n"
                "         CID: %s\n         IID: %s\n", cid.get(), iid.get());
 #endif /* SHOW_DENIED_ON_SHUTDOWN */
         return NS_ERROR_UNEXPECTED;
@@ -2088,7 +2088,7 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID & aClass,
         nsXPIDLCString cid, iid;
         cid.Adopt(aClass.ToString());
         iid.Adopt(aIID.ToString());
-        printf("Checking for service on shutdown. Denied.\n"
+        fprintf(stderr, "Checking for service on shutdown. Denied.\n"
                "         CID: %s\n         IID: %s\n", cid.get(), iid.get());
 #endif /* SHOW_DENIED_ON_SHUTDOWN */
         return NS_ERROR_UNEXPECTED;
@@ -2129,7 +2129,7 @@ NS_IMETHODIMP nsComponentManagerImpl::IsServiceInstantiatedByContractID(const ch
 #ifdef SHOW_DENIED_ON_SHUTDOWN
         nsXPIDLCString iid;
         iid.Adopt(aIID.ToString());
-        printf("Checking for service on shutdown. Denied.\n"
+        fprintf(stderr, "Checking for service on shutdown. Denied.\n"
                "  ContractID: %s\n         IID: %s\n", aContractID, iid.get());
 #endif /* SHOW_DENIED_ON_SHUTDOWN */
         return NS_ERROR_UNEXPECTED;
@@ -2196,7 +2196,7 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
 #ifdef SHOW_DENIED_ON_SHUTDOWN
         nsXPIDLCString iid;
         iid.Adopt(aIID.ToString());
-        printf("Getting service on shutdown. Denied.\n"
+        fprintf(stderr, "Getting service on shutdown. Denied.\n"
                "  ContractID: %s\n         IID: %s\n", aContractID, iid.get());
 #endif /* SHOW_DENIED_ON_SHUTDOWN */
         return NS_ERROR_UNEXPECTED;

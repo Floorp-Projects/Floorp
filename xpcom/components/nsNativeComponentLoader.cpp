@@ -252,13 +252,13 @@ nsNativeComponentLoader::AutoRegisterComponents(PRInt32 aWhen,
 {
 #ifdef DEBUG
     /* do we _really_ want to print this every time? */
-    printf("nsNativeComponentLoader: autoregistering begins.\n");
+    fprintf(stderr, "nsNativeComponentLoader: autoregistering begins.\n");
 #endif
 
     nsresult rv = RegisterComponentsInDir(aWhen, aDirectory);
 
 #ifdef DEBUG
-    printf("nsNativeComponentLoader: autoregistering %s\n",
+    fprintf(stderr, "nsNativeComponentLoader: autoregistering %s\n",
            NS_FAILED(rv) ? "FAILED" : "succeeded");
 #endif
 
@@ -602,7 +602,8 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
 
     // Dump to screen if needed
 #ifdef PRINT_CRITICAL_ERROR_TO_SCREEN
-    printf("**************************************************\n"
+    fprintf(stderr, 
+           "**************************************************\n"
            "nsNativeComponentLoader: %s(%s) Load FAILED with error: %s\n"
            "**************************************************\n",
            aCallerName,
