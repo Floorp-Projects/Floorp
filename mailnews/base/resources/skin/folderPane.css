@@ -35,6 +35,9 @@ tree {
 
 treeitem { 
  display: table-row; 
+ color: black;
+ font-family: Verdana;
+ font-size: 10pt;
 } 
 
 treehead { 
@@ -47,9 +50,6 @@ treebody {
 
 treecell { 
  display: table-cell; 
- color: black;
- font-family: Verdana;
- font-size: 10pt;
  white-space: nowrap;
 } 
 

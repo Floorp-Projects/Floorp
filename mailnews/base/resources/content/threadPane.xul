@@ -36,7 +36,7 @@ Rights Reserved.
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 
-<tree datasources="rdf:mailnewsfolders rdf:mailnewsmessages" id="threadTree" onclick="return parent.parent.LoadMessage(event.target.parentNode)" containment="http://home.netscape.com/NC-rdf#MessageChild">
+<tree datasources="rdf:mailnewsfolders rdf:mailnewsmessages" id="threadTree" onchange="return parent.parent.LoadMessage(event.target.parentNode)" containment="http://home.netscape.com/NC-rdf#MessageChild">
 
 
   <treecol style="width:47%" id="SubjectColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
