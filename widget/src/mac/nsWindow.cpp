@@ -75,7 +75,7 @@ nsWindow::~nsWindow()
 		::DisposeRgn(mWindowRegion);
 		mWindowRegion = nsnull;	
 	}
-	
+			
 	NS_IF_RELEASE(mTempRenderingContext);
 }
 
@@ -170,7 +170,13 @@ NS_IMETHODIMP nsWindow::Destroy()
 	if (mDestroyCalled)
 		return NS_OK;
 	mDestroyCalled = PR_TRUE;
-
+	
+	// if the window being destroyed has the focus, lose it so that there isn't a dangling reference
+	if (mToolkit && ((nsToolkit*)mToolkit)->GetFocus() == this )
+	{
+		((nsToolkit*)mToolkit)->SetFocus( nil );
+	}
+	
 	nsBaseWidget::OnDestroy();
 	nsBaseWidget::Destroy();
 

@@ -74,6 +74,7 @@ void nsToolkit::SetFocus(nsWindow *aFocusWidget)
 		guiEvent.message = NS_LOSTFOCUS;
 		guiEvent.widget = mFocusedWidget;
 		mFocusedWidget->DispatchWindowEvent(guiEvent);
+		mFocusedWidget = nil;
 	}
 	
 	// let the new one know
