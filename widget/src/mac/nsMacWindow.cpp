@@ -40,6 +40,12 @@
 
 #include <Quickdraw.h>
 
+#ifdef TARGET_CARBON
+enum {
+  kEventWindowConstrain = 83   // BAD!!! our CarbonEvents.h don't yet support this
+};
+#endif
+
 // Define Class IDs -- i hate having to do this
 static NS_DEFINE_CID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1";
@@ -451,14 +457,10 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 				hOffset = kWindowMarginWidth;
 				vOffset = kWindowTitleBarHeight;
 				break;
-        /*
-			case eBorderStyle_3DChildWindow:
-				wDefProcID = altDBoxProc;
-				goAwayFlag = false;
-				hOffset = 0;
-				vOffset = 0;
-				break;
-        */
+
+      case eWindowType_invisible:
+        // don't do anything
+        break;
 		}
 
 		// now turn off some default features if requested by aInitData
@@ -544,10 +546,12 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   // Setup the live window resizing
   if ( mWindowType == eWindowType_toplevel ) {
     const UInt32 kWindowLiveResizeAttribute = (1L << 28);     // BAD!!! our headers don't yet support this
+
     ::ChangeWindowAttributes ( mWindowPtr, kWindowLiveResizeAttribute, kWindowNoAttributes );
     
-    EventTypeSpec windEventList[] = { {kEventClassWindow, kEventWindowBoundsChanged} };
-    OSStatus err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(WindowEventHandler), 1, windEventList, this, NULL );
+    EventTypeSpec windEventList[] = { {kEventClassWindow, kEventWindowBoundsChanged},
+                                      {kEventClassWindow, kEventWindowConstrain} };
+    OSStatus err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(WindowEventHandler), 2, windEventList, this, NULL );
       // note, passing NULL as the final param to IWEH() causes the UPP to be disposed automatically
       // when the event target (the window) goes away. See CarbonEvents.h for info.
     NS_ASSERTION(err == noErr, "Couldn't install Carbon Event handler");
@@ -596,6 +600,8 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 pascal OSStatus
 nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
 {
+  OSStatus retVal = noErr;
+  
   WindowRef myWind = NULL;
   ::GetEventParameter ( inEvent, kEventParamDirectObject, typeWindowRef, NULL, sizeof(myWind), NULL, &myWind );
   if ( myWind ) {
@@ -603,6 +609,7 @@ nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
     switch ( what ) {
     
       case kEventWindowBoundsChanged:
+      {
         Rect bounds;
         ::InvalWindowRect(myWind, ::GetWindowPortBounds(myWind, &bounds));
 
@@ -613,7 +620,20 @@ nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
           self->mMacEventHandler->UpdateEvent();
         }
         break;
-        
+      }
+      
+      case kEventWindowConstrain:
+      {
+        // Ignore this event if we're an invisible window, otherwise pass along the
+        // chain to ensure it's onscreen.
+        nsMacWindow* self = NS_REINTERPRET_CAST(nsMacWindow*, userData);
+        if ( self ) {
+          if ( self->mWindowType != eWindowType_invisible )
+            retVal = ::CallNextEventHandler( inHandlerChain, inEvent );
+        }
+        break;
+      }
+      
       default:
         // do nothing...
         break;
@@ -621,7 +641,7 @@ nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
     } // case of which event?
   }
   
-  return noErr;
+  return retVal;
   
 } // WindowEventHandler
 

@@ -594,8 +594,13 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
   else {
     nsWidgetInitData widgetInitData;
 
-    widgetInitData.mWindowType = aChromeMask & nsIWebBrowserChrome::CHROME_OPENAS_DIALOG ?
-                                 eWindowType_dialog : eWindowType_toplevel;
+#if TARGET_CARBON
+    if (aIsHiddenWindow)
+      widgetInitData.mWindowType = eWindowType_invisible;
+    else
+#endif
+      widgetInitData.mWindowType = aChromeMask & nsIWebBrowserChrome::CHROME_OPENAS_DIALOG ?
+                                    eWindowType_dialog : eWindowType_toplevel;
 
     // note default chrome overrides other OS chrome settings, but
     // not internal chrome
