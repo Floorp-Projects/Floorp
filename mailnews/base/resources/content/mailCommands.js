@@ -507,7 +507,7 @@ function ViewPageSource(messages)
 		// Use a browser window to view source
 		window.openDialog( getBrowserURL(),
 						   "_blank",
-						   "chrome,dialog=no",
+						   "scrollbars,resizable,chrome,dialog=no",
 							url,
 							"view-source" );
 	}
