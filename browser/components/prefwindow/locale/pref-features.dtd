@@ -27,5 +27,5 @@
 <!ENTITY fontsInfo.caption                  "Fonts &amp; Colors Settings">
 <!ENTITY fontsInfo.label                    "Select default Fonts and Colors used when displaying pages.">
 
-<!ENTITY showFontsAndColors.label           "Fonts &amp; Colors">
+<!ENTITY showFontsAndColors.label           "Fonts &amp; Colors...">
 <!ENTITY showFontsAndColors.accesskey       "f">
