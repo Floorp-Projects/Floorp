@@ -632,7 +632,7 @@
     	<titledbutton id="home-button" align="right" value="Home" 
 			onclick="BrowserHome()"/>
 		<titledbutton id="netscape-button" align="right" value="Netscape" 
-			onclick="window.frames[0].frames[1].location.href='http://my.netscape.com'"/>
+			onclick="window.frames[0].frames[1].location.href='http://home.netscape.com'"/>
 		<spring flex="100%"/>
 	</toolbar>
   </toolbox>
