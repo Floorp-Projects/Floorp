@@ -28,10 +28,18 @@
 #include "nsIPref.h"
 #include "nsIURL.h"
 #include "nsIEventStateManager.h"
+#ifdef RAPTOR_PERF_METRICS
+#include "nsITimeRecorder.h"
 
+#define NS_TIMER_STYLE_RESOLUTION 1
+#endif
 
 // Base class for concrete presentation context classes
-class nsPresContext : public nsIPresContext {
+class nsPresContext : public nsIPresContext
+#ifdef RAPTOR_PERF_METRICS
+                    , public nsITimeRecorder
+#endif
+{
 public:
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -114,6 +122,10 @@ public:
   NS_IMETHOD GetScaledPixelsToTwips(float* aScale) const;
   NS_IMETHOD GetDeviceContext(nsIDeviceContext** aResult) const;
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager);
+
+#ifdef RAPTOR_PERF_METRICS
+  NS_DECL_NSITIMERECORDER
+#endif
 
 protected:
   nsPresContext();
