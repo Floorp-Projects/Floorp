@@ -99,6 +99,31 @@
       <xul:button class="slider-button"/>
     </content>
   </binding>
+
+    <binding id="splitter" extends="chrome://global/content/bindings/splitter.xml#splitter">
+    <content >
+      <xul:hbox class="splitter-box" flex="1" inherits="width" >
+        <xul:vbox class="splitter-left">
+          <xul:spacer class="splitter-left-top"/>
+          <xul:spacer class="splitter-left-mid" flex="1"/>
+          <xul:spacer class="splitter-left-btm"/>
+        </xul:vbox>
+        <xul:vbox class="splitter-middle" flex="1">
+          <xul:spacer class="splitter-middle-top"/>
+          <xul:box class="splitter-internal-box" flex="1"  align="center" pack="center">
+            <children/>
+          </xul:box>            
+          <xul:spring class="splitter-middle-btm"/>
+        </xul:vbox>
+        <xul:vbox class="splitter-right">
+          <xul:spacer class="splitter-right-top"/>
+          <xul:spacer class="splitter-right-mid" flex="1"/>
+          <xul:spacer class="splitter-right-btm"/>
+        </xul:vbox>   
+       </xul:hbox>
+    </content>
+  </binding>
+
   
   <binding id="grippy" extends="chrome://global/content/bindings/splitter.xml#grippy">
     <content>

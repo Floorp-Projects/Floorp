@@ -60,6 +60,13 @@ button.plain {
       -moz-binding          : url("chrome://global/skin/menulistBindings.xml#menulist-editable") !important;
     }
 
+
+  splitter
+   {
+      -moz-binding        : url("chrome://global/skin/classicBindings.xml#splitter");   
+   
+   }
+   
   grippy, grippy[collapse="before"]
     {
       -moz-binding          : url("chrome://global/skin/classicBindings.xml#grippy");
