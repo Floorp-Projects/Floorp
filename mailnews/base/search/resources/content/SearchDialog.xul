@@ -54,9 +54,7 @@ Rights Reserved.
       <menulist id="searchableFolders" flex="2"
                 oncommand="onChooseFolder(event)"/>
       <spring flex="1"/>
-      <!--
-        <checkbox value="&searchSubfolders.label;"/>
-      -->
+        <checkbox id="checkSearchSubFolders" value="&searchSubfolders.label;"/>
     </box>
     <separator/>
     <text class="label" value="&conditionDesc.label;"/>

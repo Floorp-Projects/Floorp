@@ -141,6 +141,30 @@ function onSearch(event)
     gSearchSession.addScopeTerm(GetScopeForFolder(gCurrentFolder),
                                 gCurrentFolder);
 
+    var searchSubfolders = document.getElementById("checkSearchSubFolders").checked;
+	if (searchSubfolders && gCurrentFolder && gCurrentFolder.hasSubFolders)
+	{
+		var subFolderEnumerator = gCurrentFolder.GetSubFolders();
+		var done = false;
+		while (!done)
+		{
+			var next = subFolderEnumerator.currentItem();
+			if (next)
+			{
+				var nextFolder = next.QueryInterface(Components.interfaces.nsIMsgFolder);
+				if (nextFolder)
+					gSearchSession.addScopeTerm(GetScopeForFolder(nextFolder), nextFolder);
+			}
+			try 
+			{
+				subFolderEnumerator.next();
+			 } 
+			 catch (ex) 
+			 {
+				  done = true;
+			 }
+		}
+	}
     // reflect the search widgets back into the search session
     saveSearchTerms(gSearchSession.searchTerms, gSearchSession);
 
