@@ -211,7 +211,7 @@ public:
 			if (url.Find("NC:") == 0)
 				return(NS_RDF_NO_VALUE);
 			nsIRDFLiteral	*literal;
-			if (NS_FAILED(rv = gRDFService->GetLiteral(url, &literal)))
+			if (NS_FAILED(rv = gRDFService->GetLiteral(url.GetUnicode(), &literal)))
 			{
 				NS_ERROR("unable to construct literal for URL");
 				return rv;
@@ -674,7 +674,7 @@ nsHistoryDataSource::ReadOneHistoryFile(nsInputFileStream& aStream, nsFileSpec f
 					}
 				}
 
-				AddPageToGraph(url, nsAutoString(title), referer,
+				AddPageToGraph(url, nsAutoString(title).GetUnicode(), referer,
 					(PRUint32) atol(visitcount), time);
 				delete [] aLine;
 			}
@@ -712,7 +712,7 @@ nsHistoryDataSource::getSiteOfURL(const char* url, nsIRDFResource** resource)
 	if (NS_OK != gRDFService->GetResource(buff, resource)) return NS_ERROR_FAILURE;
 	mInner->Assert(mResourceHistoryBySite,  mResourceChild, *resource, 1);
 	nsAutoString ptitle(buff + sizeof(kHistoryURLPrefix) - 1);	
-	gRDFService->GetLiteral(ptitle, &titleLiteral);
+	gRDFService->GetLiteral(ptitle.GetUnicode(), &titleLiteral);
 	mInner->Assert(*resource, mResourceTitle, titleLiteral, 1);
 	return NS_OK;
 }
@@ -743,7 +743,7 @@ nsHistoryDataSource::AddPageToGraph(const char* url, const PRUnichar* title,
 			gRDFService->GetDateLiteral(date, getter_AddRefs(dateLiteral));
 			gRDFService->GetIntLiteral(visitCount, getter_AddRefs(visitCountLiteral));
 			nsAutoString ptitle(title);
-			gRDFService->GetLiteral(ptitle, getter_AddRefs(titleLiteral));
+			gRDFService->GetLiteral(ptitle.GetUnicode(), getter_AddRefs(titleLiteral));
 			mInner->Assert(histResource,  mResourcePage, pageResource, 1);
 			mInner->Assert(histResource,  mResourceDate, dateLiteral, 1);
 			mInner->Assert(histResource,  mResourceVisitCount, visitCountLiteral, 1);
@@ -820,7 +820,7 @@ nsHistoryDataSource::AddToDateHierarchy (PRTime date, const char *url)
 		// set name of synthesized history container
 		nsAutoString	ptitle(timeNameBuffer);
 		nsIRDFLiteral	*titleLiteral;
-		gRDFService->GetLiteral(ptitle, &titleLiteral);
+		gRDFService->GetLiteral(ptitle.GetUnicode(), &titleLiteral);
 		mInner->Assert(timeResource, mResourceTitle, titleLiteral, 1);
 	}
 	mInner->Assert(parent, mResourceChild, timeResource, 1);
@@ -840,7 +840,7 @@ nsHistoryDataSource::AddToDateHierarchy (PRTime date, const char *url)
 			// set name of synthesized history container
 			nsAutoString	dayTitle(dayNameBuffer);
 			nsIRDFLiteral	*dayLiteral;
-			gRDFService->GetLiteral(dayTitle, &dayLiteral);
+			gRDFService->GetLiteral(dayTitle.GetUnicode(), &dayLiteral);
 			mInner->Assert(dayResource, mResourceTitle, dayLiteral, 1);
 		}
 		mInner->Assert(parent, mResourceChild, dayResource, 1);

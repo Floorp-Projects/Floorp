@@ -273,7 +273,7 @@ FTPDataSource::GetURL(nsIRDFResource *source, nsVoidArray **array)
 	nsAutoString	url(uri);
 
 	nsIRDFLiteral	*literal;
-	gRDFService->GetLiteral(url, &literal);
+	gRDFService->GetLiteral(url.GetUnicode(), &literal);
 	urlArray->AppendElement(literal);
 	return(NS_OK);
 }
@@ -313,7 +313,7 @@ FTPDataSource::GetName(nsIRDFResource *source, nsVoidArray **array)
 	// XXX To Do: unescape basename
 	
 	nsIRDFLiteral	*literal;
-	gRDFService->GetLiteral(url, &literal);
+	gRDFService->GetLiteral(url.GetUnicode(), &literal);
 	urlArray->AppendElement(literal);
 	return(NS_OK);
 }
@@ -352,7 +352,7 @@ FTPDataSource::GetTarget(nsIRDFResource *source,
 			{
 				nsAutoString	url(uri);
 				nsIRDFLiteral	*literal;
-				gRDFService->GetLiteral(url, &literal);
+				gRDFService->GetLiteral(url.GetUnicode(), &literal);
 				*target = literal;
 				rv = NS_OK;
 			}
@@ -647,7 +647,7 @@ FTPDataSource::GetTargets(nsIRDFResource *source,
 			{
 				nsAutoString	url(uri);
 				nsIRDFLiteral	*literal;
-				gRDFService->GetLiteral(url, &literal);
+				gRDFService->GetLiteral(url.GetUnicode(), &literal);
 				array = new nsVoidArray();
 				if (array)
 				{

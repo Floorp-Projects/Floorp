@@ -443,7 +443,7 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
 	if ((nsnull != optionalTitle) && (*optionalTitle != '\0'))
 	{
 		nsCOMPtr<nsIRDFLiteral> literal;
-		if (NS_FAILED(rv = gRDFService->GetLiteral(nsAutoString(optionalTitle), getter_AddRefs(literal))))
+		if (NS_FAILED(rv = gRDFService->GetLiteral(nsAutoString(optionalTitle).GetUnicode(), getter_AddRefs(literal))))
 		{
 			NS_ERROR("unable to create literal for bookmark name");
 			return rv;
@@ -464,7 +464,7 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
 	if ((nsnull != shortcutURL) && (*shortcutURL != '\0'))
 	{
 		nsCOMPtr<nsIRDFLiteral> shortcutLiteral;
-		if (NS_FAILED(rv = gRDFService->GetLiteral(nsAutoString(shortcutURL),
+		if (NS_FAILED(rv = gRDFService->GetLiteral(nsAutoString(shortcutURL).GetUnicode(),
 			getter_AddRefs(shortcutLiteral))))
 		{
 			NS_ERROR("unable to get literal for bookmark shortcut URL");
@@ -541,7 +541,7 @@ BookmarkParser::ParseBookmarkHeader(const nsString& aLine, nsIRDFResource* aCont
     }
 
     nsCOMPtr<nsIRDFLiteral> literal;
-    if (NS_FAILED(rv = gRDFService->GetLiteral(name, getter_AddRefs(literal)))) {
+    if (NS_FAILED(rv = gRDFService->GetLiteral(name.GetUnicode(), getter_AddRefs(literal)))) {
         NS_ERROR("unable to create literal for folder name");
         return rv;
     }
@@ -637,7 +637,7 @@ BookmarkParser::AssertTime(nsIRDFResource* aSource,
 
     nsresult rv;
     nsIRDFLiteral* literal;
-    if (NS_FAILED(rv = gRDFService->GetLiteral(time, &literal))) {
+    if (NS_FAILED(rv = gRDFService->GetLiteral(time.GetUnicode(), &literal))) {
         NS_ERROR("unable to get literal for time");
         return rv;
     }
@@ -692,7 +692,7 @@ public:
     	{
     		*shortcutURL = nsnull;
     		nsCOMPtr<nsIRDFLiteral> literalTarget;
-    		if (NS_FAILED(rv = gRDFService->GetLiteral(nsAutoString(userInput),
+    		if (NS_FAILED(rv = gRDFService->GetLiteral(nsAutoString(userInput).GetUnicode(),
     			getter_AddRefs(literalTarget))))
     		{
     		}
@@ -885,7 +885,7 @@ BookmarkDataSourceImpl::GetTarget(nsIRDFResource* aSource,
             }
 
             nsIRDFLiteral* literal;
-            if (NS_FAILED(rv = gRDFService->GetLiteral(nsAutoString(uri), &literal))) {
+            if (NS_FAILED(rv = gRDFService->GetLiteral(nsAutoString(uri).GetUnicode(), &literal))) {
                 NS_ERROR("unable to construct literal for URL");
                 return rv;
             }
@@ -1035,7 +1035,7 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 	if (NS_SUCCEEDED(rv = gRDFService->GetResource("file:///C|/WINDOWS/Favorites/", getter_AddRefs(ieFolder))))
 	{
 		nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
-		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(ieTitle, getter_AddRefs(ieTitleLiteral))))
+		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(ieTitle.GetUnicode(), getter_AddRefs(ieTitleLiteral))))
 		{
 			rv = mInner->Assert(ieFolder, kNC_Name, ieTitleLiteral, PR_TRUE);
 		}

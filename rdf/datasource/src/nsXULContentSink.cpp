@@ -461,7 +461,7 @@ XULContentSinkImpl::MakeResourceFromQualifiedTag(PRInt32 aNameSpaceID,
 
     uri.Append(aTag);
 
-    rv = gRDFService->GetUnicodeResource(uri, aResource);
+    rv = gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
     NS_VERIFY(NS_SUCCEEDED(rv), "unable to get resource");
 
     return rv;
@@ -856,8 +856,8 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
             if (! d)
                 return NS_ERROR_OUT_OF_MEMORY;
 
-            d->mTitle.SetString(title);
-            d->mMedia.SetString(media);
+            d->mTitle=title;
+            d->mMedia=media;
             d->mIsActive = PR_TRUE;
             d->mURL      = url;
             NS_ADDREF(d->mURL);
@@ -1109,7 +1109,7 @@ XULContentSinkImpl::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
 
           nsresult rv;
           nsCOMPtr<nsIRDFLiteral> literal;
-          if (NS_FAILED(rv = gRDFService->GetLiteral(value, getter_AddRefs(literal)))) {
+          if (NS_FAILED(rv = gRDFService->GetLiteral(value.GetUnicode(), getter_AddRefs(literal)))) {
               NS_ERROR("unable to create RDF literal");
               return rv;
           }
@@ -1187,7 +1187,7 @@ XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode,
             mDocumentURL->GetSpec(&documentURL);
             rdf_PossiblyMakeAbsolute(documentURL, uri);
 
-            return gRDFService->GetUnicodeResource(uri, aResource);
+            return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
         }
     }
 
@@ -1269,11 +1269,11 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode,
 
         // Add the attribute to RDF
         nsCOMPtr<nsIRDFResource> property;
-        rv = gRDFService->GetUnicodeResource(propertyStr, getter_AddRefs(property));
+        rv = gRDFService->GetUnicodeResource(propertyStr.GetUnicode(), getter_AddRefs(property));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIRDFLiteral> value;
-        rv = gRDFService->GetLiteral(valueStr, getter_AddRefs(value));
+        rv = gRDFService->GetLiteral(valueStr.GetUnicode(), getter_AddRefs(value));
         if (NS_FAILED(rv)) return rv;
 
         rv = mDataSource->Assert(aSubject, property, value, PR_TRUE);

@@ -277,7 +277,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 		{
 			nsAutoString	pulse("12");
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(pulse, &pulseLiteral);
+			gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
 			array = new nsVoidArray();
 			if (array)
 			{
@@ -304,7 +304,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 			{
 				nsAutoString	url(uri);
 				nsIRDFLiteral	*literal;
-				gRDFService->GetLiteral(url, &literal);
+				gRDFService->GetLiteral(url.GetUnicode(), &literal);
 				*target = literal;
 				rv = NS_OK;
 			}
@@ -314,7 +314,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 		{
 			nsAutoString	pulse("12");
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(pulse, &pulseLiteral);
+			gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
 			array = new nsVoidArray();
 			if (array)
 			{
@@ -362,7 +362,7 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 		{
 			nsAutoString	pulse("12");
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(pulse, &pulseLiteral);
+			gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
 			array = new nsVoidArray();
 			if (array)
 			{
@@ -393,7 +393,7 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 			{
 				nsAutoString	url(uri);
 				nsIRDFLiteral	*literal;
-				gRDFService->GetLiteral(url, &literal);
+				gRDFService->GetLiteral(url.GetUnicode(), &literal);
 				array = new nsVoidArray();
 				if (array)
 				{
@@ -406,7 +406,7 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 		{
 			nsAutoString	pulse("12");
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(pulse, &pulseLiteral);
+			gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
 			array = new nsVoidArray();
 			if (array)
 			{
@@ -947,7 +947,7 @@ GetName(nsIRDFResource *source, nsVoidArray **array)
 	{
 		nsAutoString	name(basename);
 		nsIRDFLiteral *literal;
-		gRDFService->GetLiteral(name, &literal);
+		gRDFService->GetLiteral(name.GetUnicode(), &literal);
 		nameArray->AppendElement(literal);
 		delete []basename;
 	}
@@ -971,7 +971,7 @@ GetURL(nsIRDFResource *source, nsVoidArray **array)
 	nsAutoString	url(uri);
 
 	nsIRDFLiteral	*literal;
-	gRDFService->GetLiteral(url, &literal);
+	gRDFService->GetLiteral(url.GetUnicode(), &literal);
 	urlArray->AppendElement(literal);
 	return(NS_OK);
 }
