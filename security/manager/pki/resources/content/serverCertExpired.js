@@ -64,7 +64,5 @@ function viewCert()
     var isupport = pkiParams.getISupportAtIndex(1);
     cert = isupport.QueryInterface(nsIX509Cert);
   }
-
-  window.openDialog('chrome://pippki/content/certViewer.xul', cert.dbKey,
-                    'chrome');
+  cert.view();
 }

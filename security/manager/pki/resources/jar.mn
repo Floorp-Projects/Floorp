@@ -29,6 +29,7 @@ pippki.jar:
     content/pippki/serverCertExpired.xul     (content/serverCertExpired.xul)
     content/pippki/serverCertExpired.js      (content/serverCertExpired.js)
     content/pippki/certViewer.xul            (content/certViewer.xul)
+    content/pippki/certDump.xul              (content/certDump.xul)
     locale/en-US/pippki/contents.rdf         (locale/en-US/contents.rdf)
     locale/en-US/pippki/pippki.dtd           (locale/en-US/pippki.dtd)
     locale/en-US/pippki/pref-ssl.dtd         (locale/en-US/pref-ssl.dtd)

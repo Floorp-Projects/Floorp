@@ -749,3 +749,22 @@ nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
   return rv;
 }
 
+/* void viewCert (in nsIX509Cert cert); */
+NS_IMETHODIMP 
+nsNSSDialogs::ViewCert(nsIX509Cert *cert)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kPKIParamBlockCID);
+  if (!block)
+    return NS_ERROR_FAILURE;
+
+  rv = block->SetISupportAtIndex(1, cert);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = nsNSSDialogHelper::openDialog(nsnull,
+                                     "chrome://pippki/content/certViewer.xul",
+                                     block);
+  return rv;
+}

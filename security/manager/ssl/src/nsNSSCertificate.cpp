@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.13 2001/03/22 16:48:18 mcgreer%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.14 2001/03/28 02:05:54 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -45,6 +45,7 @@
 #include "nsNSSCertificate.h"
 #include "nsPKCS12Blob.h"
 #include "nsIX509Cert.h"
+#include "nsINSSDialogs.h"
 #include "nsString.h"
 
 #include "pk11func.h"
@@ -937,6 +938,18 @@ verify_failed:
   *_usages = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *));
   *_count = 0;
   return NS_OK;
+}
+
+/* void view (); */
+NS_IMETHODIMP 
+nsNSSCertificate::View()
+{
+  nsresult rv;
+
+  nsCOMPtr<nsICertificateDialogs> certDialogs;
+  rv = ::getNSSDialogs(getter_AddRefs(certDialogs),
+                       NS_GET_IID(nsICertificateDialogs));
+  return certDialogs->ViewCert(this);
 }
 
 /* nsNSSCertificateDB */

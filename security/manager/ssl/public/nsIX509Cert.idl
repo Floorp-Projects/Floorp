@@ -92,6 +92,14 @@ interface nsIX509Cert : nsISupports {
                  out PRUint32 count, 
                  [array, size_is(count)] out wstring usages);
 
+  /*
+   * This method is here to make it easier to view a cert.
+   * It will get the implemention of the nsICertificateDialogs
+   * interface and call the viewCert method passing itself
+   * as a parameter.
+   */
+  void view();
+
   [noscript] unsigned long getRawDER(out charPtr result);
 
 };

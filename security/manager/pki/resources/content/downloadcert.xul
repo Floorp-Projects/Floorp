@@ -37,6 +37,7 @@
 
 <script src="chrome://global/content/strres.js" />
 <script src="downloadcert.js"/>
+<script src="pippki.js" />
 
 <box orient="vertical" style="margin: 5px;" flex="1">
 

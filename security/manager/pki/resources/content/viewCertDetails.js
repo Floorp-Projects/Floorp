@@ -26,10 +26,11 @@ const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
 const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
 const nsIPK11TokenDB = Components.interfaces.nsIPK11TokenDB;
+const nsIPKIParamBlock = Components.interfaces.nsIPKIParamBlock;
 
-function AddCertChain(node, chain)
+function AddCertChain(node, chain, idPrefix)
 {
-  var idfier = "chain_";
+  var idfier = idPrefix+"chain_";
   var child = [document.getElementById(node)];
   var item = document.createElement("treeitem");
   item.setAttribute("id", idfier + "0");
@@ -76,13 +77,11 @@ function setWindowName()
   //  Get the cert from the cert database
   var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
 
-  //  See if the caller tried to open this window with the 
-  //  cert's keyDB.
-  var cert = certdb.getCertByKeyDB(self.name);
   var windowReference=document.getElementById('certDetails');
+  myName = self.name;
+  var cert;
 
-  if (cert == null) {
-    myName = self.name;
+  if (myName != "_blank") {
     windowReference.setAttribute("title","Certificate Detail: \""+myName+"\"");
     //  Get the token
     //  XXX ignore this for now.  NSS will find the cert on a token
@@ -94,6 +93,9 @@ function setWindowName()
     //var cert = certdb.getCertByNickname(token, myName);
     cert = certdb.getCertByNickname(null, myName);
   } else {
+    var pkiParams = window.arguments[0].QueryInterface(nsIPKIParamBlock);
+    var isupport = pkiParams.getISupportAtIndex(1);
+    cert = isupport.QueryInterface(nsIX509Cert);
     windowReference.setAttribute("title", 
                                  "Certificate Detail: \""+cert.windowTitle+'"');
   }
@@ -115,8 +117,48 @@ function setWindowName()
     chainEnum.next();
   }
   } catch (e) {}
-  AddCertChain("chain", chain.reverse());
+  AddCertChain("chain", chain.reverse(),"");
+  AddCertChain("chainDump", chain,"dump_");
   DisplayGeneralDataFromCert(cert);
+  BuildPrettyPrint(cert);
+}
+
+function addTreeItemToTreeChild(treeChild, label)
+{
+  var treeElem1 = document.createElement("treeitem");
+  treeElem1.setAttribute("container","true");
+  treeElem1.setAttribute("open","true");
+  treeElem1.setAttribute("class","treecell-indent");
+  var treeRow = document.createElement("treerow");
+  var treeCell = document.createElement("treecell");
+  treeCell.setAttribute("class", "treecell-indent");
+  treeCell.setAttribute("label",label);
+  treeRow.appendChild(treeCell);
+  treeElem1.appendChild(treeRow);
+  treeChild.appendChild(treeElem1);
+  return treeElem1;
+}
+
+function addChildrenToTree(parentTree,label)
+{
+  var treeChild1 = document.createElement("treechildren");
+  var treeElement = addTreeItemToTreeChild(treeChild1, label);
+  parentTree.appendChild(treeChild1);
+  return treeElement;
+}
+
+function BuildPrettyPrint(cert)
+{
+  // For now, I'm just gonna build some dummy stuff
+  // just to get the helper functions I need up and
+  // running.
+  var prettyPrintBox = document.getElementById("prettyPrintTree");
+  var tree = document.createElement("tree");
+  prettyPrintBox.appendChild(tree);
+  var treeChildren = addChildrenToTree(tree,"Top Level"); 
+  var childOfFirstChild = addChildrenToTree(treeChildren, "Second Level:1");
+  var levelone2 = addChildrenToTree(treeChildren,"Second Level:2");
+  var levelthree1 = addChildrenToTree(childOfFirstChild,"Third Level:1");
 }
 
 function DisplayGeneralDataFromCert(cert)
