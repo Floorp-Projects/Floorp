@@ -461,6 +461,9 @@ if ($serverpush) {
     }
 }
 
+if (Param('expectbigqueries')) {
+    SendSQL("set option SQL_BIG_TABLES=1");
+}
 SendSQL($query);
 
 my $count = 0;
