@@ -45,7 +45,6 @@
 #include "nsIDownloadItem.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFRemoteDataSource.h"
-#include "nsIRDFContainer.h"
 #include "nsIRDFService.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventListener.h"
@@ -80,7 +79,7 @@ protected:
   nsresult GetProfileDownloadsFileURL(char** aDownloadsFileURL);
   nsresult GetInternalListener(nsIDownloadProgressListener** aInternalListener);
   nsresult AssertProgressInfo();
-  nsresult NotifyDownloadEnded(const char* aTargetPath);
+  nsresult DownloadFinished(const char* aTargetPath);
   PRBool MustUpdateUI() { if (mDocument) return PR_TRUE; return PR_FALSE; }
 
 private:
@@ -108,6 +107,7 @@ protected:
   nsresult SetDownloadManager(nsDownloadManager* aDownloadManager);
   nsresult SetDialogListener(nsIWebProgressListener* aInternalListener);
   nsresult GetDialogListener(nsIWebProgressListener** aInternalListener);
+
 private:
   nsIRDFResource* mDownloadItem;
   nsIRDFDataSource* mDataSource;
