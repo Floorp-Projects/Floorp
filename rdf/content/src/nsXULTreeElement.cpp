@@ -426,10 +426,14 @@ nsXULTreeElement::GetCurrentItem(nsIDOMXULElement** aResult)
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsXULTreeElement::SetCurrentItem(nsIDOMXULElement* aCurrentItem)
 {
+  NS_IF_RELEASE(mCurrentItem);
   mCurrentItem = aCurrentItem;
+  NS_IF_ADDREF(aCurrentItem);
   nsCOMPtr<nsIContent> current = do_QueryInterface(mCurrentItem);
-  current->SetAttribute(kNameSpaceID_None, kCurrentAtom, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
+  if (current) 
+    current->SetAttribute(kNameSpaceID_None, kCurrentAtom, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
+  return NS_OK;
 }

@@ -133,7 +133,23 @@ SetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!secMan)
         return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
-      case 0:
+      case XULTREEELEMENT_CURRENTITEM:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULTREEELEMENT_CURRENTITEM, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMXULElement* prop;
+          if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
+                                                  kIXULElementIID, NS_ConvertASCIItoUCS2("XULElement"),
+                                                  cx, *vp)) {
+            rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
+            break;
+          }
+      
+          rv = a->SetCurrentItem(prop);
+          NS_IF_RELEASE(prop);
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
@@ -552,7 +568,7 @@ JSClass XULTreeElementClass = {
 static JSPropertySpec XULTreeElementProperties[] =
 {
   {"selectedItems",    XULTREEELEMENT_SELECTEDITEMS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"currentItem",    XULTREEELEMENT_CURRENTITEM,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"currentItem",    XULTREEELEMENT_CURRENTITEM,    JSPROP_ENUMERATE},
   {0}
 };
 
