@@ -43,10 +43,9 @@ static NS_DEFINE_CID(kLDAPServiceCID, NS_LDAPSERVICE_CID);
 
 #ifdef DEBUG
 #include "nspr.h"
+#endif
 
 void lds(class nsLDAPChannel *chan, const char *);
-
-#endif
 
 NS_IMPL_ISUPPORTS2(nsLDAPChannel, nsIChannel, nsIRequest);
 
