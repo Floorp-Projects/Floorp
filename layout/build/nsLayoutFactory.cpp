@@ -22,6 +22,7 @@
 #include "nsLayoutCID.h"
 #include "nsIDocument.h"
 #include "nsIHTMLContent.h"
+#include "nsIRangeList.h"
 
 #include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
@@ -36,6 +37,12 @@ static NS_DEFINE_IID(kCImageDocumentCID, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kCHTMLImageElementFactoryCID, NS_HTMLIMAGEELEMENTFACTORY_CID);
 static NS_DEFINE_IID(kIDOMHTMLImageElementFactoryIID, NS_IDOMHTMLIMAGEELEMENTFACTORY_IID);
 static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
+static NS_DEFINE_IID(kIRangeList, NS_IRANGELIST);
+
+
+nsresult NS_NewRangeList(nsIRangeList **);
+
+
 
 class HTMLImageElementFactory : public nsIDOMHTMLImageElementFactory {
 public:
@@ -175,30 +182,40 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
   // XXX ClassID check happens here
   if (mClassID.Equals(kCHTMLDocumentCID)) {
     res = NS_NewHTMLDocument((nsIDocument **)&inst);
-    if (res != NS_OK) {
+    if (!NS_SUCCEEDED(res)) {
       return res;
     }
     refCounted = PR_TRUE;
   }
-  if (mClassID.Equals(kCXMLDocumentCID)) {
+  else if (mClassID.Equals(kCXMLDocumentCID)) {
     res = NS_NewXMLDocument((nsIDocument **)&inst);
-    if (res != NS_OK) {
+    if (!NS_SUCCEEDED(res)) {
       return res;
     }
     refCounted = PR_TRUE;
   }
-  if (mClassID.Equals(kCImageDocumentCID)) {
+  else if (mClassID.Equals(kCImageDocumentCID)) {
     res = NS_NewImageDocument((nsIDocument **)&inst);
-    if (res != NS_OK) {
+    if (!NS_SUCCEEDED(res)) {
       return res;
     }
     refCounted = PR_TRUE;
   }
-  if (mClassID.Equals(kCHTMLImageElementFactoryCID)) {
+  else if (mClassID.Equals(kCHTMLImageElementFactoryCID)) {
     inst = new HTMLImageElementFactory();
     refCounted = PR_FALSE;
   }
-
+  else if (mClassID.Equals(kIRangeList)) {
+    res = NS_NewRangeList((nsIRangeList **)&inst);
+    if (!NS_SUCCEEDED(res)) {
+      return res;
+    }
+    refCounted = PR_TRUE;
+  }
+  else 
+  {
+    return NS_NOINTERFACE;
+  }
   if (inst == NULL) {  
     return NS_ERROR_OUT_OF_MEMORY;  
   }  
