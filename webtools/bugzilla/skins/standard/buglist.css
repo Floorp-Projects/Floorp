@@ -30,7 +30,6 @@
 table#form tr th { text-align: right; }
 
 table.bz_buglist td, table.bz_buglist th { 
-    padding-left: 20px;
 }
 
 /* For styling rows; by default striped white and gray */
@@ -48,6 +47,10 @@ tr.bz_secure td.first-child {
   background-position: center left;
   background-repeat: no-repeat;
   background-color: inherit;
+}
+
+th.first-child, td.first-child {
+  padding-left: 20px;
 }
 
 tr.bz_secure_mode_implied td.first-child {
