@@ -564,11 +564,6 @@ extern PRUint32 _PR_CondVarToString(PRCondVar *cvar, char *buf, PRUint32 buflen)
 
 PR_EXTERN(void) _PR_Notify(PRMonitor *mon, PRBool all, PRBool sticky);
 
-typedef struct _PRPerThreadExit {
-    PRThreadExit func;
-    void *arg;
-} _PRPerThreadExit;
-
 /* PRThread.flags */
 #define _PR_SYSTEM          0x01
 #define _PR_INTERRUPT       0x02
@@ -1482,8 +1477,6 @@ struct PRThread {
                                      * the thread from being scheduled on a
                                      * different CPU.
                                      */
-    PRUint32 numExits;
-    _PRPerThreadExit *ptes;
 
     /* thread termination condition variable for join */
     PRCondVar *term;
