@@ -122,6 +122,34 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
    NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
 NS_INTERFACE_MAP_END
 
+///*****************************************************************************
+// nsDocShell::nsIInterfaceRequestor
+//*****************************************************************************   
+
+NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
+{
+   NS_ENSURE_ARG_POINTER(aSink);
+
+   if(aIID.Equals(NS_GET_IID(nsIURIContentListener)) &&
+      NS_SUCCEEDED(EnsureContentListener()))
+      *aSink = mContentListener;
+   else if(aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)) &&
+      NS_SUCCEEDED(EnsureScriptEnvironment()))
+      *aSink = mScriptGlobal;
+   else if(aIID.Equals(NS_GET_IID(nsIDOMWindow)) &&
+      NS_SUCCEEDED(EnsureScriptEnvironment()))
+      {
+      NS_ENSURE_SUCCESS(mScriptGlobal->QueryInterface(NS_GET_IID(nsIDOMWindow),
+         aSink), NS_ERROR_FAILURE);
+      return NS_OK;
+      }
+   else
+      return QueryInterface(aIID, aSink);
+
+   NS_IF_ADDREF(((nsISupports*)*aSink));
+   return NS_OK;   
+}
+
 //*****************************************************************************
 // nsDocShell::nsIDocShell
 //*****************************************************************************   
@@ -320,10 +348,13 @@ NS_IMETHODIMP nsDocShell::GetPresContext(nsIPresContext** aPresContext)
 NS_IMETHODIMP nsDocShell::GetPresShell(nsIPresShell** aPresShell)
 {
    NS_ENSURE_ARG_POINTER(aPresShell);
+   *aPresShell = nsnull;
    
    nsCOMPtr<nsIPresContext> presContext;
    NS_ENSURE_SUCCESS(GetPresContext(getter_AddRefs(presContext)), 
       NS_ERROR_FAILURE);
+   if(!presContext)
+      return NS_OK;    
 
    NS_ENSURE_SUCCESS(presContext->GetShell(aPresShell), NS_ERROR_FAILURE);
 
@@ -923,25 +954,31 @@ NS_IMETHODIMP nsDocShell::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
 NS_IMETHODIMP nsDocShell::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx,
    PRInt32* cy)
 {
-   NS_ENSURE_ARG_POINTER(x && y && cx && cy);
-
    if(mContentViewer)
       {
       nsRect bounds;
 
       NS_ENSURE_SUCCESS(mContentViewer->GetBounds(bounds), NS_ERROR_FAILURE);
 
-      *x = bounds.x;
-      *y = bounds.y;
-      *cx = bounds.width;
-      *cy = bounds.height;
+      if(x)
+         *x = bounds.x;
+      if(y)
+         *y = bounds.y;
+      if(cx)
+         *cx = bounds.width;
+      if(cy)
+         *cy = bounds.height;
       }
    else if(InitInfo())
       {
-      *x = mInitInfo->x;
-      *y = mInitInfo->y;
-      *cx = mInitInfo->cx;
-      *cy = mInitInfo->cy;
+      if(x)
+         *x = mInitInfo->x;
+      if(y)
+         *y = mInitInfo->y;
+      if(cx)
+         *cx = mInitInfo->cx;
+      if(cy)
+         *cy = mInitInfo->cy;
       }
    else
       NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_FAILURE);
@@ -1399,34 +1436,6 @@ NS_IMETHODIMP nsDocShell::ScrollByPages(PRInt32 numPages)
    return NS_OK;
 }
 
-///*****************************************************************************
-// nsDocShell::nsIInterfaceRequestor
-//*****************************************************************************   
-
-NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
-{
-   NS_ENSURE_ARG_POINTER(aSink);
-
-   if(aIID.Equals(NS_GET_IID(nsIURIContentListener)) &&
-      NS_SUCCEEDED(EnsureContentListener()))
-      *aSink = mContentListener;
-   else if(aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)) &&
-      NS_SUCCEEDED(EnsureScriptEnvironment()))
-      *aSink = mScriptGlobal;
-   else if(aIID.Equals(NS_GET_IID(nsIDOMWindow)) &&
-      NS_SUCCEEDED(EnsureScriptEnvironment()))
-      {
-      NS_ENSURE_SUCCESS(mScriptGlobal->QueryInterface(NS_GET_IID(nsIDOMWindow),
-         aSink), NS_ERROR_FAILURE);
-      return NS_OK;
-      }
-   else
-      return QueryInterface(aIID, aSink);
-
-   NS_IF_ADDREF(((nsISupports*)*aSink));
-   return NS_OK;   
-}
-
 //*****************************************************************************
 // nsDocShell::nsIScriptGlobalObjectOwner
 //*****************************************************************************   
@@ -1653,8 +1662,7 @@ NS_IMETHODIMP nsDocShell::EnsureScriptEnvironment()
    NS_ENSURE_SUCCESS(NS_NewScriptGlobalObject(getter_AddRefs(scriptGlobalObject)), 
       NS_ERROR_FAILURE);
 
-   //XXXWEBSHELL
-   //mScriptGlobal->SetDocShell(NS_STATIC_CAST(nsIDocShell*, this));
+   mScriptGlobal->SetDocShell(NS_STATIC_CAST(nsIDocShell*, this));
    mScriptGlobal->SetGlobalObjectOwner(
       NS_STATIC_CAST(nsIScriptGlobalObjectOwner*, this));
 

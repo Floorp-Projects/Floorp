@@ -217,7 +217,7 @@ public:
   NS_IMETHOD GetContentBounds(nsRect& aResult);
   NS_IMETHOD GetWindowBounds(nsRect& aResult);
   NS_IMETHOD IsIntrinsicallySized(PRBool& aResult);
-  NS_IMETHOD ShowAfterCreation() { mCreatedVisible = PR_TRUE; return NS_OK; }
+  NS_IMETHOD ShowAfterCreation() { mShowAfterLoad = PR_TRUE; return NS_OK; }
   NS_IMETHOD Show() { return Show(PR_TRUE); }
   NS_IMETHOD Hide() { return Show(PR_FALSE); }
   NS_IMETHOD SetChrome(PRUint32 aNewChromeMask);
@@ -246,10 +246,8 @@ protected:
 
   void LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
   void DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
-  nsCOMPtr<nsIDOMNode>     FindNamedParentFromDoc(nsIDOMDocument * aDomDoc, const nsString &aName);
   nsCOMPtr<nsIDOMNode>     FindNamedDOMNode(const nsString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount);
   nsCOMPtr<nsIDOMDocument> GetNamedDOMDoc(const nsString & aWebShellName);
-  nsCOMPtr<nsIDOMNode>     GetParentNodeFromDOMDoc(nsIDOMDocument * aDOMDoc);
   NS_IMETHOD               CreateMenu(nsIMenuBar * aMenuBar, nsIDOMNode * aMenuNode, nsString & aMenuName);
   void LoadSubMenu(nsIMenu * pParentMenu, nsIDOMElement * menuElement,nsIDOMNode * menuNode);
   NS_IMETHOD LoadMenuItem(nsIMenu * pParentMenu, nsIDOMElement * menuitemElement, nsIDOMNode * menuitemNode);
@@ -268,19 +266,14 @@ protected:
 
   static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
   NS_IMETHODIMP           ShowModalInternal();
-  void                    ExitModalLoop() { mContinueModalLoop = PR_FALSE; }
 
   nsresult                NotifyObservers( const nsString &aTopic, const nsString &someData );
 
   nsIWebShell*            mWebShell;
   nsCOMPtr<nsIWeakReference> mParentWindow;
   nsIXULWindowCallbacks*  mCallbacks;
-  PRBool                  mContinueModalLoop;
   PRBool                  mLockedUntilChromeLoad;
-  PRBool                  mChromeInitialized;
   PRUint32                mChromeMask;
-  PRBool                  mCreatedVisible; // requested visible at creation
-  PRBool                  mDebuting;       // being made visible right now
   PRBool                  mLoadDefaultPage;
 
   nsVoidArray mMenuDelegates;

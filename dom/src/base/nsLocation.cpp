@@ -17,18 +17,19 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Travis Bogard <travis@netscape.com> 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsGlobalWindow.h"
 #include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "plstr.h"
 #include "prmem.h"
 #include "nsCOMPtr.h"
@@ -44,12 +45,13 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDOMLocationIID, NS_IDOMLOCATION_IID);
 static NS_DEFINE_IID(kIDOMNSLocationIID, NS_IDOMNSLOCATION_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-LocationImpl::LocationImpl(nsIWebShell *aWebShell)
+LocationImpl::LocationImpl(nsIDocShell *aDocShell)
 {
   NS_INIT_REFCNT();
   mScriptObject = nsnull;
-  mWebShell = aWebShell;
+  mDocShell = aDocShell; // Weak Reference
 }
  
 LocationImpl::~LocationImpl()
@@ -59,41 +61,13 @@ LocationImpl::~LocationImpl()
 NS_IMPL_ADDREF(LocationImpl)
 NS_IMPL_RELEASE(LocationImpl)
 
-nsresult 
-LocationImpl::QueryInterface(const nsIID& aIID,
-                              void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    *aInstancePtrResult = (void*) ((nsIScriptObjectOwner*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDOMLocationIID)) {
-    *aInstancePtrResult = (void*) ((nsIDOMLocation*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDOMNSLocationIID)) {
-    *aInstancePtrResult = (void*) ((nsIDOMNSLocation*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIJSScriptObjectIID)) {
-    *aInstancePtrResult = (void*)(nsISupports*)(nsIJSScriptObject*)this;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*)(nsISupports*)(nsIScriptObjectOwner*)this;
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_INTERFACE_MAP_BEGIN(LocationImpl)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptObjectOwner)
+   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
+   NS_INTERFACE_MAP_ENTRY(nsIDOMLocation)
+   NS_INTERFACE_MAP_ENTRY(nsIDOMNSLocation)
+   NS_INTERFACE_MAP_ENTRY(nsIJSScriptObject)
+NS_INTERFACE_MAP_END
 
 nsresult 
 LocationImpl::SetScriptObject(void *aScriptObject)
@@ -108,7 +82,7 @@ LocationImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
   NS_ENSURE_ARG_POINTER(aScriptObject);
 
   if (!mScriptObject) {
-    nsCOMPtr<nsIScriptGlobalObject> global(do_GetInterface(mWebShell));
+    nsCOMPtr<nsIScriptGlobalObject> global(do_GetInterface(mDocShell));
     NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(NS_NewScriptLocation(aContext, 
       NS_STATIC_CAST(nsIDOMLocation*, this),global, &mScriptObject), 
@@ -118,12 +92,9 @@ LocationImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(void)       
-LocationImpl::SetWebShell(nsIWebShell *aWebShell)
+NS_IMETHODIMP_(void) LocationImpl::SetDocShell(nsIDocShell *aDocShell)
 {
-  //mWebShell isn't refcnt'd here.  GlobalWindow calls SetWebShell(nsnull) 
-  // when it's told that the WebShell is going to be deleted.
-  mWebShell = aWebShell;
+   mDocShell = aDocShell; // Weak Reference
 }
 
 nsresult 
@@ -156,7 +127,7 @@ LocationImpl::CheckURL(nsIURI* aURL)
 nsresult 
 LocationImpl::SetURL(nsIURI* aURL)
 {
-  if (nsnull != mWebShell) {
+  if (mDocShell) {
     char* spec;
     aURL->GetSpec(&spec);
     nsAutoString s = spec;
@@ -165,7 +136,8 @@ LocationImpl::SetURL(nsIURI* aURL)
     if (NS_FAILED(CheckURL(aURL)))
       return NS_ERROR_FAILURE;
 
-    return mWebShell->LoadURL(s.GetUnicode(), nsnull, PR_TRUE);
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+    return webShell->LoadURL(s.GetUnicode(), nsnull, PR_TRUE);
   }
   else {
     return NS_OK;
@@ -336,14 +308,10 @@ LocationImpl::GetHref(nsString& aHref)
 //  PRInt32 index;
   nsresult result = NS_OK;
 
-  if (nsnull != mWebShell) {
+  if (mDocShell) {
     const PRUnichar *href;
-    /* no need to use session history to get the url for the
-     * current document. Fix until webshell's generic session history
-     * is restored. S'd work even otherwise
-     */
-    //mWebShell->GetHistoryIndex(index);
-    result = mWebShell->GetURL (&href);
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+    result = webShell->GetURL (&href);
     aHref = href;
   }
 
@@ -388,13 +356,14 @@ LocationImpl::SetHrefWithBase(const nsString& aHref,
     }
   }
 
-  if ((NS_OK == result) && (nsnull != mWebShell)) {
+  if ((NS_OK == result) && (mDocShell)) {
 
     if (NS_FAILED(CheckURL(newUrl)))
       return NS_ERROR_FAILURE;
 
     // Load new URI.
-    result = mWebShell->LoadURL(newHref.GetUnicode(), nsnull, aReplace);
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+    result = webShell->LoadURL(newHref.GetUnicode(), nsnull, aReplace);
   }
   
   return result;
@@ -612,13 +581,15 @@ LocationImpl::SetSearch(const nsString& aSearch)
 NS_IMETHODIMP    
 LocationImpl::Reload(PRBool aForceget)
 {
-  nsresult result = NS_OK;
+   nsresult result = NS_OK;
 
-  if (nsnull != mWebShell) {
-    result = mWebShell->Reload(nsIChannel::LOAD_NORMAL);
-  }
+   if(mDocShell)
+      {
+      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+      result = webShell->Reload(nsIChannel::LOAD_NORMAL);
+      }
 
-  return result;
+   return result;
 }
 
 NS_IMETHODIMP    

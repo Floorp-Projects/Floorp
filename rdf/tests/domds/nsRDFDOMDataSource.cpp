@@ -53,6 +53,7 @@
 
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresContext.h"
@@ -1216,36 +1217,15 @@ nsRDFDOMDataSource::SetWindow(nsIDOMWindow *window) {
     return NS_OK;
   }
   
-  nsCOMPtr<nsIWebShell> webShell;
-  scriptGlobalObject->GetWebShell(getter_AddRefs(webShell));
-  if (!webShell) {
+  nsCOMPtr<nsIDocShell> docShell;
+  scriptGlobalObject->GetDocShell(getter_AddRefs(docShell));
+  if (!docShell) {
     printf("Couldn't get webshell\n");
-    return NS_OK;
-  }
-  
-  nsCOMPtr<nsIContentViewer> cv;
-  rv = webShell->GetContentViewer(getter_AddRefs(cv));
-  if (NS_FAILED(rv)) {
-    printf("Couldn't get content viewer\n");
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDocumentViewer> dv =
-    do_QueryInterface(cv, &rv);
-  if (NS_FAILED(rv)) {
-    printf("Couldn't get document viewer\n");
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIPresContext> pcx;
-  rv = dv->GetPresContext(*getter_AddRefs(pcx));
-  if (NS_FAILED(rv)) {
-    printf("Couldn't get pres context\n");
     return NS_OK;
   }
 
   nsCOMPtr<nsIPresShell> pshell;
-  pcx->GetShell(getter_AddRefs(pshell));
+  rv = docShell->GetPresShell(getter_AddRefs(pshell));
   if (NS_FAILED(rv)) {
     printf("Couldn't get presshell\n");
     return NS_OK;

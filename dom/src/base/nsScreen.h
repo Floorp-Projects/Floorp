@@ -27,14 +27,17 @@
 #include "nsISupports.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
-class nsIWebShell;
+
+class nsIDocShell;
 class nsIDeviceContext;
 
 // Script "screen" object
 class ScreenImpl : public nsIScriptObjectOwner, public nsIDOMScreen {
 public:
-  ScreenImpl( nsIWebShell* aWebShell );
+  ScreenImpl( nsIDocShell* aDocShell );
   virtual ~ScreenImpl();
+
+  NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
 
   NS_DECL_ISUPPORTS
 
@@ -50,11 +53,12 @@ public:
   NS_IMETHOD GetAvailLeft(PRInt32* aAvailLeft);
   NS_IMETHOD GetAvailTop(PRInt32* aAvailTop);
 
+
 protected:
 	nsIDeviceContext* GetDeviceContext();
 	
   void *mScriptObject;
-  nsIWebShell* mWebShell;
+  nsIDocShell* mDocShell; // Weak Reference
 };
 
 #endif /* nsScreen_h___ */

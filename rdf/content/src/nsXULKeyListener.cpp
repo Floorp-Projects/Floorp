@@ -57,6 +57,7 @@
 #include "nsNetUtil.h"
 #include "plstr.h"
 #include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresContext.h"
@@ -538,23 +539,12 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
       if (!handled) {
         // Give the DOM window's associated key binding doc a shot.
         // XXX Check to see if we're in edit mode (how??!)
-        nsCOMPtr<nsIWebShell> webShell;
-        nsCOMPtr<nsIPresShell> presShell;
-        result = piWindow->GetWebShell(getter_AddRefs(webShell));
+        nsCOMPtr<nsIDocShell> docShell;
+        result = piWindow->GetDocShell(getter_AddRefs(docShell));
 
-        nsCOMPtr<nsIContentViewer> cv;
-        webShell->GetContentViewer(getter_AddRefs(cv));
-        if (nsnull != cv) {
-          nsCOMPtr<nsIDocumentViewer> docv;
-          cv->QueryInterface(NS_GET_IID(nsIDocumentViewer), getter_AddRefs(docv));
-          if (nsnull != docv) {
-            nsCOMPtr<nsIPresContext> cx;
-            docv->GetPresContext(*getter_AddRefs(cx));
-            if (nsnull != cx) {
-              result = cx->GetShell(getter_AddRefs(presShell));
-            }
-          }
-        }
+        nsCOMPtr<nsIPresShell> presShell;
+        if(docShell)
+         docShell->GetPresShell(getter_AddRefs(presShell));
 
         PRBool editorHasBindings = PR_FALSE;
         nsCOMPtr<nsIDOMXULDocument> platformDoc;

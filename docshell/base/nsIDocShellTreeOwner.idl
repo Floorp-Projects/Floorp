@@ -72,14 +72,12 @@ interface nsIDocShellTreeOwner : nsISupports
 	void showModal();	
 
 	/*
-		Tells the implementer of this interface to create a new webBrowserChrome
-		object for it.  Typically this means the implemetor will create a new 
-		top level window that is represented by nsIWebBrowserChrome.  This
-		most often will be called when for instance there is a need for a new
-		JS window, etc.  Soon after this new object is returned, the webBrowser
-		attribute will checked, if one does not exist, one will be created and
-		setWebBrowser will be called with the new widget to instantiate in this 
-		new window.	
+		Tells the implementer of this interface to create a new window.  This is
+		a new logical window.  Meaning in some implementations the result may not
+		be an actual new window, but rather a new tab or view in an existing
+		window.  What is returned is the new DocShellTreeItem from which the
+		internals can operate on.  This most often will be called when there is
+		a need for a new JS window, etc.	
 	*/
-	void getNewBrowserChrome(in long aChromeFlags, out nsIWebBrowserChrome webBrowserChrome);
+	nsIDocShellTreeItem getNewWindow(in long aChromeFlags);
 };

@@ -28,12 +28,12 @@
 #include "nscore.h"
 #include "nsIScriptContext.h"
 
-class nsIWebShell;
+class nsIDocShell;
 
 // Script "History" object
 class HistoryImpl : public nsIScriptObjectOwner, public nsIDOMHistory {
 public:
-  HistoryImpl();
+  HistoryImpl(nsIDocShell* aDocShell);
   virtual ~HistoryImpl();
 
   NS_DECL_ISUPPORTS
@@ -41,7 +41,7 @@ public:
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD SetScriptObject(void *aScriptObject);
 
-  NS_IMETHOD_(void)       SetWebShell(nsIWebShell *aWebShell);
+  NS_IMETHOD_(void)       SetDocShell(nsIDocShell *aDocShell);
 
   NS_IMETHOD    GetLength(PRInt32* aLength);
   NS_IMETHOD    GetCurrent(nsString& aCurrent);
@@ -52,7 +52,7 @@ public:
   NS_IMETHOD    Go(JSContext* cx, jsval* argv, PRUint32 argc);
 
 protected:
-  nsIWebShell* mWebShell;
+  nsIDocShell* mDocShell;
   void *mScriptObject;
 };
 

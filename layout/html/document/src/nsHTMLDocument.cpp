@@ -777,9 +777,9 @@ NS_IMETHODIMP nsHTMLDocument::SetTitle(const nsString& aTitle)
     nsCOMPtr<nsISupports> container;
     if (NS_OK == cx->GetContainer(getter_AddRefs(container))) {
       if (container) {
-        nsCOMPtr<nsIBaseWindow> webShell(do_QueryInterface(container));
-        if(webShell) {
-          webShell->SetTitle(aTitle.GetUnicode());
+        nsCOMPtr<nsIBaseWindow> docShell(do_QueryInterface(container));
+        if(docShell) {
+          docShell->SetTitle(aTitle.GetUnicode());
         }
       }
     }

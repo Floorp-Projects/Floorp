@@ -60,7 +60,25 @@ NS_INTERFACE_MAP_BEGIN(nsChromeTreeOwner)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocShellTreeOwner)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 NS_INTERFACE_MAP_END
+
+//*****************************************************************************
+// nsChromeTreeOwner::nsIInterfaceRequestor
+//*****************************************************************************   
+
+NS_IMETHODIMP nsChromeTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
+{
+   NS_ENSURE_ARG_POINTER(aSink);
+
+//   if(aIID.Equals(NS_GET_IID(nsISomeInterface)))
+//      *aSink = NS_STATIC_CAST(nsISomeInterface*, this);
+//   else
+      return QueryInterface(aIID, aSink);
+
+   NS_IF_ADDREF(((nsISupports*)*aSink));
+   return NS_OK;   
+}
 
 //*****************************************************************************
 // nsChromeTreeOwner::nsIDocShellTreeOwner
@@ -143,10 +161,10 @@ NS_IMETHODIMP nsChromeTreeOwner::ShowModal()
    return mXULWindow->ShowModal();   
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::GetNewBrowserChrome(PRInt32 aChromeFlags,
-   nsIWebBrowserChrome** aWebBrowserChrome)
+NS_IMETHODIMP nsChromeTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
+   nsIDocShellTreeItem** aDocShellTreeItem)
 {
-   return mXULWindow->GetNewBrowserChrome(aChromeFlags, aWebBrowserChrome);
+   return mXULWindow->GetNewWindow(aChromeFlags, aDocShellTreeItem);
 }
 
 //*****************************************************************************
@@ -170,8 +188,7 @@ NS_IMETHODIMP nsChromeTreeOwner::Create()
 
 NS_IMETHODIMP nsChromeTreeOwner::Destroy()
 {
-   NS_ASSERTION(PR_FALSE, "You can't call this");
-   return NS_ERROR_UNEXPECTED;
+   return mXULWindow->Destroy();
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::SetPosition(PRInt32 x, PRInt32 y)
@@ -213,11 +230,7 @@ NS_IMETHODIMP nsChromeTreeOwner::Repaint(PRBool aForce)
 
 NS_IMETHODIMP nsChromeTreeOwner::GetParentWidget(nsIWidget** aParentWidget)
 {
-   NS_ENSURE_ARG_POINTER(aParentWidget);
-   NS_ENSURE_STATE(mXULWindow->mWindow);
-
-   *aParentWidget = mXULWindow->mWindow->GetParent();
-   return NS_OK;
+   return mXULWindow->GetParentWidget(aParentWidget);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::SetParentWidget(nsIWidget* aParentWidget)
@@ -228,14 +241,7 @@ NS_IMETHODIMP nsChromeTreeOwner::SetParentWidget(nsIWidget* aParentWidget)
 
 NS_IMETHODIMP nsChromeTreeOwner::GetParentNativeWindow(nativeWindow* aParentNativeWindow)
 {
-   NS_ENSURE_ARG_POINTER(aParentNativeWindow);
-
-   nsCOMPtr<nsIWidget> parentWidget;
-   NS_ENSURE_SUCCESS(GetParentWidget(getter_AddRefs(parentWidget)), NS_ERROR_FAILURE);
-
-   *aParentNativeWindow = parentWidget->GetNativeData(NS_NATIVE_WIDGET);
-   
-   return NS_OK;
+   return mXULWindow->GetParentNativeWindow(aParentNativeWindow);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::SetParentNativeWindow(nativeWindow aParentNativeWindow)

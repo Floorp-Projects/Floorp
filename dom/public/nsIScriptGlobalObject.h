@@ -31,7 +31,7 @@ class nsIScriptContext;
 class nsIDOMDocument;
 class nsIDOMEvent;
 class nsIPresContext;
-class nsIWebShell;
+class nsIDocShell;
 class nsIDOMWindow;
 class nsIScriptGlobalObjectOwner;
 
@@ -51,8 +51,8 @@ public:
   NS_IMETHOD       SetContext(nsIScriptContext *aContext)=0;
   NS_IMETHOD       GetContext(nsIScriptContext **aContext)=0;
   NS_IMETHOD       SetNewDocument(nsIDOMDocument *aDocument)=0;
-  NS_IMETHOD       SetWebShell(nsIWebShell *aWebShell)=0;
-  NS_IMETHOD       GetWebShell(nsIWebShell **aWebShell)=0;
+  NS_IMETHOD       SetDocShell(nsIDocShell *aDocShell)=0;
+  NS_IMETHOD       GetDocShell(nsIDocShell **aDocShell)=0;
   NS_IMETHOD       SetOpenerWindow(nsIDOMWindow *aOpener)=0;
 
     /**

@@ -188,33 +188,6 @@ NS_INTERFACE_MAP_BEGIN(nsBrowserInstance)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
 NS_INTERFACE_MAP_END
 
-
-static
-nsIPresShell*
-GetPresShellFor(nsIWebShell* aWebShell)
-{
-  nsIPresShell* shell = nsnull;
-  if (nsnull != aWebShell) {
-    nsIContentViewer* cv = nsnull;
-    aWebShell->GetContentViewer(&cv);
-    if (nsnull != cv) {
-      nsIDocumentViewer* docv = nsnull;
-      cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
-      if (nsnull != docv) {
-        nsIPresContext* cx;
-        docv->GetPresContext(cx);
-	      if (nsnull != cx) {
-	        cx->GetShell(&shell);
-	        NS_RELEASE(cx);
-	      }
-        NS_RELEASE(docv);
-      }
-      NS_RELEASE(cv);
-    }
-  }
-  return shell;
-}
-
 NS_IMETHODIMP    
 nsBrowserAppCore::Init()
 {
@@ -262,12 +235,12 @@ nsBrowserAppCore::SetDocumentCharset(const PRUnichar *aCharset)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIWebShell> webShell;
-  globalObj->GetWebShell(getter_AddRefs(webShell));
-  if (webShell) 
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+  if (docShell) 
   {
     nsCOMPtr<nsIContentViewer> childCV;
-    NS_ENSURE_SUCCESS(webShell->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(docShell->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
     if (childCV) 
     {
       nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
@@ -782,9 +755,10 @@ static void DOMWindowToWebShellWindow(
     return; // with webWindow unchanged -- its constructor gives it a null ptr
 
   nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(DOMWindow));
-  nsCOMPtr<nsIWebShell> webshell, rootWebshell;
+  nsCOMPtr<nsIDocShell> docShell;
   if (globalScript)
-    globalScript->GetWebShell(getter_AddRefs(webshell));
+    globalScript->GetDocShell(getter_AddRefs(docShell));
+  nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
   if(!webshell)
    return;
   nsCOMPtr<nsIWebShellContainer> topLevelWindow;
@@ -800,21 +774,20 @@ nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
   if (! aForm)
     return NS_ERROR_NULL_POINTER;
 
-  nsIPresShell* shell;
-  shell = nsnull;
-  nsCOMPtr<nsIWebShell> webcontent; 
-
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject; 
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
   scriptGlobalObject = do_QueryInterface(aForm); 
-  scriptGlobalObject->GetWebShell(getter_AddRefs(webcontent)); 
+  nsCOMPtr<nsIDocShell> docShell; 
+  scriptGlobalObject->GetDocShell(getter_AddRefs(docShell)); 
 
-  shell = GetPresShellFor(webcontent);
+  nsCOMPtr<nsIPresShell> presShell;
+  if(docShell)
+   docShell->GetPresShell(getter_AddRefs(presShell));
   nsIWalletService *walletservice;
   nsresult res = nsServiceManager::GetService(kWalletServiceCID,
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if (NS_SUCCEEDED(res) && (nsnull != walletservice)) {
-    res = walletservice->WALLET_Prefill(shell, PR_FALSE);
+    res = walletservice->WALLET_Prefill(presShell, PR_FALSE);
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
     if (NS_FAILED(res)) { /* this just means that there was nothing to prefill */
       return NS_OK;
@@ -894,22 +867,21 @@ nsBrowserAppCore::WalletQuickFillin(nsIDOMWindow* aWin)
   if (! aWin)
     return NS_ERROR_NULL_POINTER;
 
-  nsIPresShell* shell;
-  shell = nsnull;
-  nsCOMPtr<nsIWebShell> webcontent; 
-
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject; 
-  scriptGlobalObject = do_QueryInterface(aWin); 
-  scriptGlobalObject->GetWebShell(getter_AddRefs(webcontent)); 
+  scriptGlobalObject = do_QueryInterface(aWin);
+  nsCOMPtr<nsIDocShell> docShell; 
+  scriptGlobalObject->GetDocShell(getter_AddRefs(docShell)); 
 
-  shell = GetPresShellFor(webcontent);
+  nsCOMPtr<nsIPresShell> presShell;
+  if(docShell)
+   docShell->GetPresShell(getter_AddRefs(presShell));
   nsIWalletService *walletservice;
   nsresult res;
   res = nsServiceManager::GetService(kWalletServiceCID,
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
-    res = walletservice->WALLET_Prefill(shell, PR_TRUE);
+    res = walletservice->WALLET_Prefill(presShell, PR_TRUE);
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
     return NS_OK;
   } else {
@@ -924,22 +896,21 @@ nsBrowserAppCore::WalletRequestToCapture(nsIDOMWindow* aWin)
   if (! aWin)
     return NS_ERROR_NULL_POINTER;
 
-  nsIPresShell* shell;
-  shell = nsnull;
-  nsCOMPtr<nsIWebShell> webcontent; 
-
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject; 
-  scriptGlobalObject = do_QueryInterface(aWin); 
-  scriptGlobalObject->GetWebShell(getter_AddRefs(webcontent)); 
+  scriptGlobalObject = do_QueryInterface(aWin);
+  nsCOMPtr<nsIDocShell> docShell; 
+  scriptGlobalObject->GetDocShell(getter_AddRefs(docShell)); 
 
-  shell = GetPresShellFor(webcontent);
+  nsCOMPtr<nsIPresShell> presShell;
+  if(docShell) 
+   docShell->GetPresShell(getter_AddRefs(presShell));
   nsIWalletService *walletservice;
   nsresult res;
   res = nsServiceManager::GetService(kWalletServiceCID,
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
-    res = walletservice->WALLET_RequestToCapture(shell);
+    res = walletservice->WALLET_RequestToCapture(presShell);
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
     return NS_OK;
   } else {
@@ -1233,9 +1204,10 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
   if (!globalObj) {
     return NS_ERROR_FAILURE;
   }
-
-  nsCOMPtr<nsIWebShell> webShell;
-  globalObj->GetWebShell(getter_AddRefs(webShell));
+  
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
   if (webShell) {
     mContentAreaWebShell = webShell;
     // NS_ADDREF(mContentAreaWebShell); WE DO NOT OWN THIS
@@ -1277,15 +1249,14 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
     return NS_ERROR_FAILURE;
   }
 
-  nsIWebShell * webShell;
-  globalObj->GetWebShell(&webShell);
-  if (nsnull != webShell) {
-    mWebShell = webShell;
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+  if (docShell) {
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
+    mWebShell = webShell.get();
     //NS_ADDREF(mWebShell); WE DO NOT OWN THIS
     // inform our top level webshell that we are its parent URI content listener...
-    nsCOMPtr<nsIDocShell> docShell (do_QueryInterface(mWebShell));
-    if (docShell)
-      docShell->SetParentURIContentListener(this);
+    docShell->SetParentURIContentListener(this);
 
     const PRUnichar * name;
     webShell->GetName( &name);
@@ -1306,7 +1277,6 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
       }
       NS_RELEASE(webShellContainer);
     }
-    NS_RELEASE(webShell);
   }
   return NS_OK;
 }
@@ -1977,8 +1947,10 @@ nsBrowserAppCore::PrintPreview()
 NS_IMETHODIMP    
 nsBrowserAppCore::Copy()
 { 
-  nsIPresShell * presShell = GetPresShellFor(mContentAreaWebShell);
-  if (nsnull != presShell) {
+   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mContentAreaWebShell));
+   nsCOMPtr<nsIPresShell> presShell;
+   docShell->GetPresShell(getter_AddRefs(presShell));
+  if (presShell) {
     presShell->DoCopy();
   }
 

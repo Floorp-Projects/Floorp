@@ -23,20 +23,26 @@
 #ifndef nsChromeTreeOwner_h__
 #define nsChromeTreeOwner_h__
 
+// Helper Classes
 #include "nsCOMPtr.h"
-#include "nsIDocShellTreeOwner.h"
+
+// Interfaces Needed
 #include "nsIBaseWindow.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIInterfaceRequestor.h"
 
 class nsXULWindow;
 
 class nsChromeTreeOwner : public nsIDocShellTreeOwner,
-                                  public nsIBaseWindow
+                                  public nsIBaseWindow, 
+                                  public nsIInterfaceRequestor
 {
 friend class nsXULWindow;
 
 public:
    NS_DECL_ISUPPORTS
 
+   NS_DECL_NSIINTERFACEREQUESTOR
    NS_DECL_NSIBASEWINDOW
    NS_DECL_NSIDOCSHELLTREEOWNER
 
