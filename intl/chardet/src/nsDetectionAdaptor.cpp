@@ -61,7 +61,7 @@ NS_IMETHODIMP nsMyObserver::Notify(
         return NS_OK;
     }
      
-    if(!mCharset.EqualsWithConversion(aCharset)) {
+    if(!mCharset.Equals(aCharset)) {
       if(mNotifyByReload) {
         rv = mWebShellSvc->SetRendering( PR_FALSE);
         rv = mWebShellSvc->StopDocumentLoad();

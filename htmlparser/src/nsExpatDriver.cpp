@@ -975,14 +975,14 @@ nsExpatDriver::CanParse(CParserContext& aParserContext,
   eAutoDetectResult result = eUnknownDetect;
 
   if (eViewSource != aParserContext.mParserCommand) {
-    if (aParserContext.mMimeType.EqualsWithConversion(kXMLTextContentType)         ||
-        aParserContext.mMimeType.EqualsWithConversion(kXMLApplicationContentType)  ||
-        aParserContext.mMimeType.EqualsWithConversion(kXHTMLApplicationContentType)||
-        aParserContext.mMimeType.EqualsWithConversion(kRDFTextContentType)         ||
+    if (aParserContext.mMimeType.Equals(kXMLTextContentType)         ||
+        aParserContext.mMimeType.Equals(kXMLApplicationContentType)  ||
+        aParserContext.mMimeType.Equals(kXHTMLApplicationContentType)||
+        aParserContext.mMimeType.Equals(kRDFTextContentType)         ||
 #ifdef MOZ_SVG
-        aParserContext.mMimeType.EqualsWithConversion(kSVGTextContentType)         ||
+        aParserContext.mMimeType.Equals(kSVGTextContentType)         ||
 #endif
-        aParserContext.mMimeType.EqualsWithConversion(kXULTextContentType)) {
+        aParserContext.mMimeType.Equals(kXULTextContentType)) {
       result=ePrimaryDetect;
     }
     else {

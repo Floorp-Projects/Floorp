@@ -175,7 +175,7 @@ nsMIMEInfoBase::Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval)
     nsresult rv = aMIMEInfo->GetMIMEType(getter_Copies(type));
     if (NS_FAILED(rv)) return rv;
 
-    *_retval = mMIMEType.EqualsWithConversion(type);
+    *_retval = mMIMEType.Equals(type);
 
     return NS_OK;
 }

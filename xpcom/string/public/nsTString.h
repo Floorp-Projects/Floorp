@@ -246,6 +246,7 @@ class nsTString_CharT : public nsTSubstring_CharT
 #endif
 
 
+
         /**
          * Equality check between given string and this string.
          *
@@ -254,15 +255,17 @@ class nsTString_CharT : public nsTSubstring_CharT
          * @param   aCount tells us how many chars to compare
          * @return  boolean
          */
-
+#ifdef CharT_is_char
+      PRBool EqualsIgnoreCase( const char* aString, PRInt32 aCount=-1 ) const {
+        return Compare(aString, PR_TRUE, aCount) == 0;
+      }
+#else
       NS_COM PRBool EqualsWithConversion( const char* aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aCount=-1 ) const;
       PRBool EqualsIgnoreCase( const char* aString, PRInt32 aCount=-1 ) const
         {
           return EqualsWithConversion(aString, PR_TRUE, aCount);
         }
 
-
-#ifdef CharT_is_PRUnichar
 
         /**
          *  Determine if given buffer is plain ascii
