@@ -796,7 +796,7 @@ nsresult nsRange::PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* 
   nsVoidArray* theRangeList;
   
   iter->CurrentNode(getter_AddRefs(cN));
-  while (cN && (NS_ENUMERATOR_FALSE == iter->IsDone()))
+  while (cN && (NS_COMFALSE == iter->IsDone()))
   {
     cN->GetRangeList(theRangeList);
     if (theRangeList)
@@ -1173,7 +1173,7 @@ nsresult nsRange::DeleteContents()
   // close tag order, and mark for deletion any node that is not an ancestor
   // of the start node.
   iter->CurrentNode(getter_AddRefs(cN));
-  while (cN && (NS_ENUMERATOR_FALSE == iter->IsDone()))
+  while (cN && (NS_COMFALSE == iter->IsDone()))
   {
     // if node is not an ancestor of start node, delete it
     if (startAncestorList.IndexOf(NS_STATIC_CAST(void*,cN)) == -1)
@@ -1526,7 +1526,7 @@ nsresult nsRange::ToString(nsString& aReturn)
   // loop through the content iterator, which returns nodes in the range in 
   // close tag order, and grab the text from any text node
   iter->CurrentNode(getter_AddRefs(cN));
-  while (cN && (NS_ENUMERATOR_FALSE == iter->IsDone()))
+  while (cN && (NS_COMFALSE == iter->IsDone()))
   {
 #ifdef DEBUG_range
     // If debug, dump it:

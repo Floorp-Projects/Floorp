@@ -455,7 +455,7 @@ IsNodeInSelection(nsIDOMNode *aInNode, nsIDOMSelection *aInSelection, PRBool &aO
          iter->Init(range);
          nsCOMPtr<nsIContent> currentContent;
          iter->CurrentNode(getter_AddRefs(currentContent));
-         while (NS_ENUMERATOR_FALSE == iter->IsDone())
+         while (NS_COMFALSE == iter->IsDone())
          {
             nsCOMPtr<nsIDOMNode>currentNode = do_QueryInterface(currentContent);
             if (currentNode.get()==aInNode)

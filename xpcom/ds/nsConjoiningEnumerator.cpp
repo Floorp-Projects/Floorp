@@ -87,7 +87,7 @@ nsConjoiningEnumerator::IsDone(void)
 {
   return (mCurrent == mFirst && mCurrent->IsDone() == NS_OK)
       || (mCurrent == mSecond && mCurrent->IsDone() == NS_OK)
-    ? NS_OK : NS_ENUMERATOR_FALSE;
+    ? NS_OK : NS_COMFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,7 +156,7 @@ nsEnumeratorContains(nsIEnumerator* e, nsISupports* item)
     }
     NS_RELEASE(other);
   }
-  return NS_ENUMERATOR_FALSE;   // false -- doesn't exist
+  return NS_COMFALSE;   // false -- doesn't exist
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -343,7 +343,7 @@ NS_IMETHODIMP
 nsUnionEnumerator::IsDone(void)
 {
   return (mFirst->IsDone() == NS_OK && mSecond->IsDone() == NS_OK)
-    ? NS_OK : NS_ENUMERATOR_FALSE;
+    ? NS_OK : NS_COMFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

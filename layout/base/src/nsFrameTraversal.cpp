@@ -170,7 +170,7 @@ nsFrameIterator::CurrentItem(nsISupports **aItem)
     return NS_ERROR_NULL_POINTER;
   *aItem = mCurrent;
   if (mOffEdge)
-    return NS_ENUMERATOR_FALSE;
+    return NS_COMFALSE;
   return NS_OK;
 }
 
@@ -181,7 +181,7 @@ nsFrameIterator::IsDone()//what does this mean??off edge? yes
 {
   if (mOffEdge != 0)
     return NS_OK;
-  return NS_ENUMERATOR_FALSE;
+  return NS_COMFALSE;
 }
 
 
