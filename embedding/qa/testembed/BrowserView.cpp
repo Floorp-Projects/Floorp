@@ -76,7 +76,10 @@
 
 // Print Includes
 #include "PrintProgressDialog.h"
+//#include "PrintSetupDialog.h"
 
+// Mozilla Includes
+#include "nsIWidget.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -966,13 +969,23 @@ LRESULT CBrowserView::OnFindMsg(WPARAM wParam, LPARAM lParam)
 
 void CBrowserView::OnFilePrint()
 {
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(rv)) 
+  {
+    prefs->SetBoolPref("print.use_native_print_dialog", PR_TRUE);
+    prefs->SetBoolPref("print.show_print_progress", PR_FALSE);
+  }
+  else
+	NS_ASSERTION(PR_FALSE, "Could not get preferences service");
+
   nsCOMPtr<nsIDOMWindow> domWindow;
 	mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
   if(domWindow) {
 	  nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
 	  if(print)
 	  {
-      CPrintProgressDialog  dlg(mWebBrowser, domWindow);
+      CPrintProgressDialog  dlg(mWebBrowser, domWindow, m_PrintSettings);
 
 	    nsCOMPtr<nsIURI> currentURI;
 	    nsresult rv = mWebNav->GetCurrentURI(getter_AddRefs(currentURI));
