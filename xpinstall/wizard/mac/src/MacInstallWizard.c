@@ -44,8 +44,45 @@ CFragConnectionID	gConnID;
 
 void main(void)
 {	
+	OSErr err = noErr;
+	
 	Init();
-	MainEventLoop();
+	if (VerifyEnv())	
+	{
+		err = NavLoad();
+		if (err!=noErr)
+			SysBeep(10);	// XXX better error handling
+			
+		ShowWindow(gWPtr);
+		MainEventLoop();
+	}
+}
+
+Boolean
+VerifyEnv(void)
+{
+	long	response;
+	OSErr 	err = noErr;
+	Boolean bEnvOK = true;
+	
+	// gestalt to check we are running 8.5 or later
+	err = Gestalt('sysv', &response);
+	if (err != noErr)
+	{
+		// errors already!  we are bailing
+		ErrorHandler();
+		bEnvOK = false;
+	}
+	
+	if (response < 0x00000850)
+	{
+		// we are bailing
+		StopAlert(160, nil);
+		bEnvOK = false;
+	}
+	
+	// it's all good
+	return bEnvOK;
 }
 
 void Init(void)
@@ -60,9 +97,6 @@ void Init(void)
 	gDone = false;
 	InitManagers();
 	InitControlsObject();	
-	err = NavLoad();
-	if (err!=noErr)
-		SysBeep(10);	// XXX better error handling
 
 #if (SDINST_IS_DLL == 1) && (MOZILLA == 0)
 	if (!InitSDLib())
@@ -103,7 +137,6 @@ void Init(void)
 	InitOptObject();
 	
 	ShowLicenseWin();	
-	ShowWindow(gWPtr);
 }
 
 OSErr
@@ -154,6 +187,9 @@ InitOptObject(void)
 		ErrorHandler();
 		return;
 	}
+	
+	/* TerminalWIn options */
+	gControls->opt->siteChoice = 1;
 	
 	gControls->opt->vRefNum = -1;
 	err = FSMakeFSSpec(gControls->opt->vRefNum, 0, "\p", &tmp);

@@ -27,6 +27,8 @@
  *   Terminal Window
  *-----------------------------------------------------------*/
 
+static Boolean bDownloadedRedirect = false;
+
 void 
 ShowTerminalWin(void)
 {
@@ -34,6 +36,12 @@ ShowTerminalWin(void)
 	Handle		rectH;
 	Rect		viewRect;
 	short		reserr;
+#if MOZILLA == 0
+	MenuHandle 			popupMenu;
+	PopupPrivateData ** pvtDataHdl;
+	unsigned char *		currMenuItem;
+	short 				i;
+#endif /* MOZILLA == 0 */
 	GrafPtr		oldPort;
 	GetPort(&oldPort);
 
@@ -66,7 +74,38 @@ ShowTerminalWin(void)
 	    	ErrorHandler();
 	    	return;
 	    }
-	
+	    
+#if MOZILLA == 0	
+		if (gControls->cfg->numSites > 0)
+		{
+			gControls->tw->siteSelector = NULL;
+			gControls->tw->siteSelector = GetNewControl( rSiteSelector, gWPtr );
+			if (!gControls->tw->siteSelector)
+			{
+				ErrorHandler();
+				return;
+			}
+			
+			// populate popup button menus
+			HLock((Handle)gControls->tw->siteSelector);
+			pvtDataHdl = (PopupPrivateData **) (*(gControls->tw->siteSelector))->contrlData;
+			HLock((Handle)pvtDataHdl);
+			popupMenu = (MenuHandle) (**pvtDataHdl).mHandle;
+			for (i=0; i<gControls->cfg->numSites; i++)
+			{
+				HLock(gControls->cfg->site[i].desc);
+				currMenuItem = CToPascal(*gControls->cfg->site[i].desc);		
+				HUnlock(gControls->cfg->site[i].desc);
+				InsertMenuItem( popupMenu, currMenuItem, i );
+			}
+			HUnlock((Handle)pvtDataHdl);
+			HUnlock((Handle)gControls->tw->siteSelector);
+			SetControlMaximum(gControls->tw->siteSelector, gControls->cfg->numSites);
+			SetControlValue(gControls->tw->siteSelector, gControls->opt->siteChoice);
+			ShowControl(gControls->tw->siteSelector);
+		}
+#endif /* MOZILLA == 0 */
+		
 		// populate control
 		HLock(gControls->cfg->startMsg);
 		TESetText(*gControls->cfg->startMsg, strlen(*gControls->cfg->startMsg), 
@@ -111,6 +150,9 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 	Point 			localPt;
 	Rect			r;
 	ControlPartCode	part;
+#if MOZILLA == 0
+	ControlHandle	currCntl;
+#endif /* MOZILLA == 0 */
 	ThreadID 		tid;
 	GrafPtr			oldPort;
 	GetPort(&oldPort);
@@ -118,6 +160,19 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 	SetPort(wCurrPtr);
 	localPt = evt->where;
 	GlobalToLocal( &localPt);
+	
+#if MOZILLA == 0			
+	HLock((Handle)gControls->tw->siteSelector);
+	r = (**(gControls->tw->siteSelector)).contrlRect;
+	HUnlock((Handle)gControls->tw->siteSelector);
+	if (PtInRect(localPt, &r))
+	{
+		part = FindControl(localPt, gWPtr, &currCntl);
+		part = TrackControl(currCntl, localPt, (ControlActionUPP) -1);
+		gControls->opt->siteChoice = GetControlValue(currCntl);
+		return;
+	}		
+#endif /* MOZILLA == 0 */
 					
 	HLock((Handle)gControls->backB);
 	SetRect(&r, (**(gControls->backB)).contrlRect.left,
@@ -163,6 +218,7 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 		if (part)
 		{
 		    DisableNavButtons();
+		    ClearSiteSelector();
 			SpawnSDThread(Install, &tid);
 			return;
 		}
@@ -189,17 +245,35 @@ SpawnSDThread(ThreadEntryProcPtr threadProc, ThreadID *tid)
 }
 
 void
+ClearSiteSelector(void)
+{	
+#if MOZILLA == 0
+	if (gControls->tw->siteSelector)
+		HideControl(gControls->tw->siteSelector);
+#endif /* MOZILLA == 0*/
+			
+	// erase the rect contents to get rid of the message
+	EraseRect(&gControls->tw->startMsgBox);
+}
+
+void
 EnableTerminalWin(void)
 {
 	EnableNavButtons();
-
-	// TO DO
+	
+#if MOZILLA == 0
+	if (gControls->tw->siteSelector)
+		HiliteControl(gControls->tw->siteSelector, kEnableControl);
+#endif /* MOZILLA == 0 */
 }
 
 void
 DisableTerminalWin(void)
 {
 	DisableNavButtons();
-	
-	// TO DO
+
+#if MOZILLA == 0
+	if (gControls->tw->siteSelector)
+		HiliteControl(gControls->tw->siteSelector, kDisableControl);
+#endif /* MOZILLA == 0 */
 }

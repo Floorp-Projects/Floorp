@@ -389,6 +389,7 @@ DrawDiskNFolder(short vRefNum, unsigned char *folder)
 	IconRef			icon;
 	SInt16			label;
 	unsigned long   free, total;
+	
 	/* get vol and folder name */
 	if ((err = HGetVInfo(vRefNum, volName, &outVRefNum, &free, &total)) == noErr)
 	{				
@@ -634,6 +635,11 @@ ClearDiskSpaceMsgs(void)
 	Rect instDescBox, viewRect;
 	Handle instDescRectH;
 	OSErr	reserr;
+	GrafPtr	oldPort;
+	
+	GetPort(&oldPort);
+	if (gWPtr)
+		SetPort(gWPtr);
 	
 	instDescRectH = NULL;
 	instDescRectH = Get1Resource('RECT', rCompListBox);
@@ -643,10 +649,10 @@ ClearDiskSpaceMsgs(void)
 		ErrorHandler();
 		return;
 	}
-	
+
 	HLock(instDescRectH);
 	instDescBox = (Rect) **((Rect**)instDescRectH);
-	SetRect( &viewRect, instDescBox.left, instDescBox.bottom + 2, 
+	SetRect( &viewRect, instDescBox.left, instDescBox.top, 
 						instDescBox.right, instDescBox.bottom + 14 );
 	HUnlock(instDescRectH);	
 	DetachResource(instDescRectH);
@@ -654,6 +660,8 @@ ClearDiskSpaceMsgs(void)
 						
 	EraseRect( &viewRect );
 	InvalRect( &viewRect );
+	
+	SetPort(oldPort);
 }
 
 /*
