@@ -2202,7 +2202,8 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
   if (parentContext &&
       (aRuleDetail != eRuleFullReset ||
        (fontData.mSize.IsRelativeLengthUnit() &&
-        fontData.mSize.GetUnit() != eCSSUnit_Pixel)))
+        fontData.mSize.GetUnit() != eCSSUnit_Pixel) ||
+       fontData.mSize.GetUnit() == eCSSUnit_Percent))
     parentFont = NS_STATIC_CAST(const nsStyleFont*,
                                parentContext->GetStyleData(eStyleStruct_Font));
   if (aStartStruct)
