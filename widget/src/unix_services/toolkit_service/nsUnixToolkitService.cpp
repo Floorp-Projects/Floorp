@@ -173,8 +173,8 @@ nsUnixToolkitService::GetGfxDllName(nsString & aGfxDllNameOut)
       
       name += "_";
       
-//      name += toolkit;
-      name += "xlib";
+      name += toolkit;
+//       name += "xlib";
       
       name += ksDllSuffix;
 
