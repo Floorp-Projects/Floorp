@@ -48,7 +48,7 @@ import java.awt.*;
  * There is one instance of this class and all of the exposed methods
  * are static.
 
- * @version $Id: BrowserControlNativeShim.java,v 1.1 1999/12/23 04:09:29 edburns%acm.org Exp $
+ * @version $Id: BrowserControlNativeShim.java,v 1.2 2000/02/18 19:16:26 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlImpl
 
@@ -71,6 +71,8 @@ private static boolean          initialized = false;
 private static BrowserControlNativeShim	instance = null;
 
 private static Object         	lock = null;
+
+  //private static int              myGtkwinptr;
 
 
 //
@@ -127,14 +129,15 @@ public static void terminate () throws Exception
 //
 
 public static int webShellCreate (int windowPtr, 
-                                  Rectangle bounds) throws Exception 
+                                  Rectangle bounds, BrowserControlImpl abrowsercontrolimpl) throws Exception 
 {
 	synchronized(lock) {
 		if (initialized) {
-			return(instance.nativeWebShellCreate(windowPtr, 
+       			return(instance.nativeWebShellCreate(windowPtr, 
                                                  bounds.x, bounds.y, 
                                                  bounds.width + 1, 
-                                                 bounds.height + 1));
+                                                 bounds.height + 1,
+						 abrowsercontrolimpl));
 		}
 		else {
 			throw new Exception("Error: unable to create native nsIWebShell");
@@ -371,8 +374,10 @@ private native void nativeTerminate () throws Exception;
 // WebShell interface
 //
 
+private native void      nativeDummy (BrowserControlNativeShim testShim);
+
 private native int  	nativeWebShellCreate			(int windowPtr,
-														 int x, int y, int width, int height) throws Exception;
+														 int x, int y, int width, int height, BrowserControlImpl abrowsercontrolimpl) throws Exception;
 private native void		nativeWebShellDelete			(int webShellPtr) throws Exception;
 private native void		nativeWebShellLoadURL			(int webShellPtr, String urlString) throws Exception;
 private native void		nativeWebShellStop				(int webShellPtr) throws Exception;
@@ -416,7 +421,7 @@ public static void main(String [] args)
     BrowserControlNativeShim me = new BrowserControlNativeShim();
     Log.setApplicationName("BrowserControlNativeShim");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlNativeShim.java,v 1.1 1999/12/23 04:09:29 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlNativeShim.java,v 1.2 2000/02/18 19:16:26 edburns%acm.org Exp $");
     
 }
 

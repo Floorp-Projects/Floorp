@@ -35,13 +35,15 @@ import org.mozilla.util.ParameterCheck;
 import java.awt.Rectangle;
 import java.awt.Canvas;
 
+import org.mozilla.webclient.motif.*;
+
 /**
  *
  *  <B>BrowserControlImpl</B> provides the implementation for BrowserControl
  *
  * <B>Lifetime And Scope</B> <P>
  *
- * @version $Id: BrowserControlImpl.java,v 1.7 1999/12/23 04:09:27 edburns%acm.org Exp $
+ * @version $Id: BrowserControlImpl.java,v 1.8 2000/02/18 19:16:26 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControl
  *
@@ -98,7 +100,7 @@ protected BrowserControlImpl(Canvas yourCanvas)
 
 public void createWindow(int windowPtr, Rectangle bounds) throws Exception 
 {
-	nativeWebShell = BrowserControlNativeShim.webShellCreate(windowPtr, bounds);
+	nativeWebShell = BrowserControlNativeShim.webShellCreate(windowPtr, bounds, this);
 }
 
 public Canvas getCanvas()
@@ -281,7 +283,7 @@ public static void main(String [] args)
     //    BrowserControlImpl me = new BrowserControlImpl();
     Log.setApplicationName("BrowserControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.7 1999/12/23 04:09:27 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.8 2000/02/18 19:16:26 edburns%acm.org Exp $");
     
 }
 

@@ -82,6 +82,13 @@ nsMacMessageSink gMessageSink;
 #include "nsCOMPtr.h"
 #include "nsIBaseWindow.h"
 
+#include <unistd.h>
+
+#ifdef XP_UNIX
+#include "gdksuperwin.h"
+#include "gtkmozarea.h"
+#endif
+
 
 #ifdef XP_PC
 
@@ -145,6 +152,7 @@ struct WebShellInitContext {
 	int					y;
 	int					w;
 	int					h;
+        int                                 gtkPtr;
 };
 
 void    PostEvent (WebShellInitContext * initContext, PLEvent * event);
@@ -332,11 +340,20 @@ EmbeddedEventHandler (void * arg) {
     }
     
 #if DEBUG_RAPTOR_CANVAS
-	printf("EmbeddedEventHandler(%lx): Init the WebShell...\n", initContext);
+	printf("EmbeddedEventHandler(%lx): Init the WebShell...%p\n", initContext, initContext->env);
 #endif
-    
+
+#ifdef XP_UNIX
+    GdkSuperWin * superwin;
+    GtkMozArea * mozarea;
+    mozarea = (GtkMozArea *) initContext->gtkPtr;
+    superwin = mozarea->superwin;
+    rv = initContext->webShell->Init((nsNativeWidget *)superwin, initContext->x, initContext->y, initContext->w, initContext->h);
+#else
     rv = initContext->webShell->Init((nsNativeWidget *)initContext->parentHWnd,
                                      initContext->x, initContext->y, initContext->w, initContext->h);
+#endif
+
     if (NS_FAILED(rv)) {
         initContext->initFailCode = kInitWebShellError;
         return;
@@ -723,6 +740,22 @@ Java_org_mozilla_webclient_BrowserControlNativeShim_nativeTerminate (
 } // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeTerminate()
 
 
+JNIEXPORT void JNICALL
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeDummy (
+	JNIEnv		*	env,
+	jobject			obj,
+	jobject                 shimObj)
+{
+  printf("Inside C++ - before GetObjectClass call\n");
+  jclass cls = env->GetObjectClass(shimObj); 
+  jfieldID fid = env->GetFieldID(cls, "initialized", "Z");
+  jboolean ans = env->GetBooleanField(cls, fid);
+  printf("Inside C++ - value of Initialized is %b\n", ans);
+  return;
+}
+
+
+
 /*
  * Class:     BrowserControlNativeShim
  * Method:    raptorWebShellCreate
@@ -736,7 +769,8 @@ Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellCreate (
 	jint			x,
 	jint			y,
 	jint			width,
-	jint			height)
+	jint			height,
+	jobject                 implObj)
 {
 	jobject			jobj = obj;
 #ifdef XP_MAC
@@ -768,6 +802,32 @@ Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellCreate (
 	initContext->y = y;
 	initContext->w = width;
 	initContext->h = height;
+
+#ifdef XP_UNIX
+    jclass cls = env->GetObjectClass(implObj);  // Get Class for BrowserControlImpl object
+    // Get myCanvas IVar
+    jfieldID fid = env->GetFieldID(cls, "myCanvas", "Ljava/awt/Canvas;"); 
+    if (NULL == fid) {
+	  ::ThrowExceptionToJava(env, "Exception: field myCanvas not found in the jobject for BrowserControlImpl");
+	  return (jint) 0;
+    }
+    jobject canvasObj = env->GetObjectField(implObj, fid);
+    jclass canvasCls = env->GetObjectClass(canvasObj);
+    if (NULL == canvasCls) {
+           ::ThrowExceptionToJava(env, "Exception: ");
+	   return (jint) 0;
+    }
+    jfieldID gtkfid = env->GetFieldID(canvasCls, "gtkWinPtr", "I");
+    if (NULL == gtkfid) {
+	  ::ThrowExceptionToJava(env, "Exception: field gtkWinPtr not found in the jobject for BrowserControlCanvas");
+	  return (jint) 0;
+    }
+    jint mozPtr = env->GetIntField(canvasObj, gtkfid);
+    initContext->gtkPtr = (int) mozPtr;
+#else
+	initContext->gtkPtr = NULL;
+#endif
+
 
 #ifdef XP_UNIX
     // This probably needs some explaining...
@@ -1598,3 +1658,4 @@ PostSynchronousEvent (WebShellInitContext * initContext, PLEvent * event)
 
 
 // EOF
+

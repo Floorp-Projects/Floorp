@@ -44,9 +44,10 @@ void * webClientDll;
 
 extern void locateMotifBrowserControlStubFunctions(void *);
 
+void (* nativeDummy) (JNIEnv *, jobject, jobject);
 void (* nativeInitialize) (JNIEnv *, jobject, jstring);
 void (* nativeTerminate) (JNIEnv *, jobject);
-jint (* nativeWebShellCreate) (JNIEnv *, jobject, jint, jint, jint, jint, jint);
+jint (* nativeWebShellCreate) (JNIEnv *, jobject, jint, jint, jint, jint, jint, jobject);
 void (* nativeWebShellDelete) (JNIEnv *, jobject, jint);
 void (* nativeWebShellLoadURL) (JNIEnv *, jobject, jint, jstring);
 void (* nativeWebShellStop) (JNIEnv *, jobject, jint);
@@ -72,6 +73,10 @@ void (* processNativeEventQueue) (JNIEnv *, jobject, jint);
 
 
 void locateBrowserControlStubFunctions(void * dll) {
+  nativeDummy = (void (*) (JNIEnv *, jobject, jobject)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeDummy");
+  if (!nativeDummy) {
+    printf("got dlsym error %s\n", dlerror());
+  }
   nativeInitialize = (void (*) (JNIEnv *, jobject, jstring)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeInitialize");
   if (!nativeInitialize) {
     printf("got dlsym error %s\n", dlerror());
@@ -80,7 +85,7 @@ void locateBrowserControlStubFunctions(void * dll) {
   if (!nativeTerminate) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellCreate = (jint (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellCreate");
+  nativeWebShellCreate = (jint (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint, jobject)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellCreate");
   if (!nativeWebShellCreate) {
     printf("got dlsym error %s\n", dlerror());
   }
@@ -175,6 +180,18 @@ void locateBrowserControlStubFunctions(void * dll) {
   }
 }
 
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeDummy (
+	JNIEnv		*	env,
+	jobject			obj,
+	jobject                 shimObj)
+{
+  (* nativeDummy) (env, obj, shimObj);
+}
+
+
+
 /*
  * Class:     org_mozilla_webclient_motif_MotifNativeEventQueue
  * Method:    processNativeEventQueue
@@ -240,9 +257,10 @@ Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellCreate (
 	jint			x,
 	jint			y,
 	jint			width,
-	jint			height)
+	jint			height,
+	jobject                 abrowsercontrolimpl)
 {
-  return (* nativeWebShellCreate) (env, obj, windowPtr, x, y, width, height);
+  return (* nativeWebShellCreate) (env, obj, windowPtr, x, y, width, height, abrowsercontrolimpl);
 } // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellCreate()
 
 
