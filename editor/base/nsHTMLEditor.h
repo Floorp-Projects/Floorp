@@ -117,12 +117,15 @@ public:
   NS_IMETHOD GetParagraphFormat(nsString& aParagraphFormat);
   NS_IMETHOD SetParagraphFormat(const nsString& aParagraphFormat);
 
+  NS_IMETHOD Indent(nsString& aIndent);
+  NS_IMETHOD Align(nsString& aAlign);
   NS_IMETHOD InsertLink(nsString& aURL);
   NS_IMETHOD InsertImage(nsString& aURL,
                          nsString& aWidth, nsString& aHeight,
                          nsString& aHspace, nsString& aVspace,
                          nsString& aBorder,
                          nsString& aAlt, nsString& aAlignment);
+  NS_IMETHOD InsertList(nsString& aListType);
 
   // This should replace InsertLink and InsertImage once it is working
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn);
@@ -179,8 +182,7 @@ protected:
   
   NS_IMETHOD RemoveParentFromBlockContent(const nsString &aParentTag, nsIDOMRange *aRange);
 
-  NS_IMETHOD CanContainBlock(nsString &aBlockChild, nsString &aBlockParent, PRBool &aCanContain);
-
+  PRBool     CanContainTag(nsIDOMNode* aParent, nsString &aTag);
   
   NS_IMETHOD IsRootTag(nsString &aTag, PRBool &aIsTag);
 

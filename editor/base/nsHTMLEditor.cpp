@@ -400,7 +400,7 @@ NS_IMETHODIMP nsHTMLEditor::Insert(nsString& aInputString)
 
   nsEditor::EndTransaction();
 
-  if (!NS_SUCCEEDED(res))
+  if (NS_FAILED(res))
     printf("Couldn't insert html: error was %d\n", res);
 
   return res;
@@ -939,23 +939,6 @@ nsHTMLEditor::ReParentContentOfRange(nsIDOMRange *aRange,
   return result;
 }
 
-// this should probably get moved into rules?  is this an app-level choice, or 
-// a restriction of HTML itself?
-NS_IMETHODIMP 
-nsHTMLEditor::CanContainBlock(nsString &aBlockChild, nsString &aBlockParent, PRBool &aCanContain)
-{
-  if (aBlockParent.EqualsIgnoreCase("body") ||
-      aBlockParent.EqualsIgnoreCase("td")   ||
-      aBlockParent.EqualsIgnoreCase("th")   ||
-      aBlockParent.EqualsIgnoreCase("blockquote") )  
-  {
-    aCanContain = PR_TRUE;
-    return NS_OK;
-  }
-  aCanContain = PR_FALSE;
-  return NS_OK;
-}
-
 NS_IMETHODIMP 
 nsHTMLEditor::RemoveParagraphStyle()
 {
@@ -1187,6 +1170,294 @@ nsHTMLEditor::RemoveParentFromBlockContent(const nsString &aParentTag, nsIDOMRan
   return result;
 }
 
+
+NS_IMETHODIMP
+nsHTMLEditor::Indent(nsString& aIndent)
+{
+  nsresult res = nsEditor::BeginTransaction();
+  if (NS_FAILED(res)) return res;
+  
+  nsCOMPtr<nsIDOMNode> node;
+  PRInt32 offset;
+  
+  // Find out if the selection is collapsed:
+  nsCOMPtr<nsIDOMSelection> selection;
+  res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res) || !selection)
+  {
+    // my kingdom for exceptions
+    nsEditor::EndTransaction();
+    return res;
+  }
+
+  PRBool isCollapsed;
+  res = selection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(res))
+  {
+    nsEditor::EndTransaction();
+    return res;
+  }
+
+  res = GetStartNodeAndOffset(selection, &node, &offset);
+  if (!node) res = NS_ERROR_FAILURE;
+  if (NS_FAILED(res))
+  {
+    nsEditor::EndTransaction();
+    return res;
+  }
+  
+  nsAutoString inward("indent");
+  if (aIndent == inward)
+  {
+  
+    if (isCollapsed)
+    {
+      // have to find a place to put the blockquote
+      nsCOMPtr<nsIDOMNode> parent = node;
+      nsCOMPtr<nsIDOMNode> topChild = node;
+      nsCOMPtr<nsIDOMNode> tmp;
+      nsAutoString bq("blockquote");
+      while ( !CanContainTag(parent, bq))
+      {
+        parent->GetParentNode(getter_AddRefs(tmp));
+        if (!tmp)
+        {
+          nsEditor::EndTransaction();
+          return NS_ERROR_FAILURE;
+        }
+        topChild = parent;
+        parent = tmp;
+      }
+    
+      if (parent != node)
+      {
+        // we need to split up to the child of parent
+        res = SplitNodeDeep(topChild, node, offset);
+        if (NS_FAILED(res))
+        {
+          nsEditor::EndTransaction();
+          return res;
+        }
+        // topChild already went to the right on the split
+        // so we don't need to add one to offset when figuring
+        // out where to plop list
+        offset = GetIndexOf(parent,topChild);  
+      }
+
+      // make a blockquote
+      nsCOMPtr<nsIDOMNode> newBQ;
+      res = CreateNode(bq, parent, offset, getter_AddRefs(newBQ));
+      if (NS_FAILED(res))
+      {
+        nsEditor::EndTransaction();
+        return res;
+      }
+      // put a space in it so layout will draw the list item
+      res = selection->Collapse(newBQ,0);
+      if (NS_FAILED(res))
+      {
+        nsEditor::EndTransaction();
+        return res;
+      }
+      nsAutoString theText(" ");
+      res = InsertText(theText);
+      if (NS_FAILED(res))
+      {
+        nsEditor::EndTransaction();
+        return res;
+      }
+      // reposition selection to before the space character
+      res = GetStartNodeAndOffset(selection, &node, &offset);
+      if (NS_FAILED(res))
+      {
+        nsEditor::EndTransaction();
+        return res;
+      }
+      res = selection->Collapse(node,0);
+      if (NS_FAILED(res))
+      {
+        nsEditor::EndTransaction();
+        return res;
+      }
+    }
+  }
+  
+  nsEditor::EndTransaction();  // don't return this result!
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsHTMLEditor::Align(nsString& aAlignType)
+{
+  nsresult res = nsEditor::BeginTransaction();
+  if (NS_FAILED(res)) return res;
+  
+  nsCOMPtr<nsIDOMNode> node;
+  PRInt32 offset;
+  
+  // Find out if the selection is collapsed:
+  nsCOMPtr<nsIDOMSelection> selection;
+  res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res) || !selection)
+  {
+    // my kingdom for exceptions
+    nsEditor::EndTransaction();
+    return res;
+  }
+
+  PRBool isCollapsed;
+  res = selection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(res))
+  {
+    nsEditor::EndTransaction();
+    return res;
+  }
+
+  res = GetStartNodeAndOffset(selection, &node, &offset);
+  if (!node) res = NS_ERROR_FAILURE;
+  if (NS_FAILED(res))
+  {
+    nsEditor::EndTransaction();
+    return res;
+  }
+  
+  nsAutoString leftStr("left");
+  if (aAlignType == leftStr)
+  {
+  
+    if (isCollapsed)
+    {
+    
+    }
+  }
+  
+  nsEditor::EndTransaction();  // don't return this result!
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsHTMLEditor::InsertList(nsString& aListType)
+{
+  nsresult res = nsEditor::BeginTransaction();
+  if (NS_FAILED(res)) return res;
+
+  // Find out if the selection is collapsed:
+  nsCOMPtr<nsIDOMSelection> selection;
+  res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res) || !selection)
+  {
+    // my kingdom for exceptions
+    nsEditor::EndTransaction();
+    return res;
+  }
+
+  PRBool isCollapsed;
+  res = selection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(res))
+  {
+    nsEditor::EndTransaction();
+    return res;
+  }
+
+  nsCOMPtr<nsIDOMNode> node;
+  PRInt32 offset;
+  
+  res = GetStartNodeAndOffset(selection, &node, &offset);
+  if (!node) res = NS_ERROR_FAILURE;
+  if (NS_FAILED(res))
+  {
+    nsEditor::EndTransaction();
+    return res;
+  }
+  
+  if (isCollapsed)
+  {
+    // have to find a place to put the list
+    nsCOMPtr<nsIDOMNode> parent = node;
+    nsCOMPtr<nsIDOMNode> topChild = node;
+    nsCOMPtr<nsIDOMNode> tmp;
+    
+    while ( !CanContainTag(parent, aListType))
+    {
+      parent->GetParentNode(getter_AddRefs(tmp));
+      if (!tmp)
+      {
+        nsEditor::EndTransaction();
+        return NS_ERROR_FAILURE;
+      }
+      topChild = parent;
+      parent = tmp;
+    }
+    
+    if (parent != node)
+    {
+      // we need to split up to the child of parent
+      res = SplitNodeDeep(topChild, node, offset);
+      if (NS_FAILED(res))
+      {
+        nsEditor::EndTransaction();
+        return res;
+      }
+      // topChild already went to the right on the split
+      // so we don't need to add one to offset when figuring
+      // out where to plop list
+      offset = GetIndexOf(parent,topChild);  
+    }
+
+    // make a list
+    nsCOMPtr<nsIDOMNode> newList;
+    res = CreateNode(aListType, parent, offset, getter_AddRefs(newList));
+    if (NS_FAILED(res))
+    {
+      nsEditor::EndTransaction();
+      return res;
+    }
+    // make a list item
+    nsAutoString tag("li");
+    nsCOMPtr<nsIDOMNode> newItem;
+    res = CreateNode(tag, newList, 0, getter_AddRefs(newItem));
+    if (NS_FAILED(res))
+    {
+      nsEditor::EndTransaction();
+      return res;
+    }
+    // put a space in it so layout will draw the list item
+    res = selection->Collapse(newItem,0);
+    if (NS_FAILED(res))
+    {
+      nsEditor::EndTransaction();
+      return res;
+    }
+    nsAutoString theText(" ");
+    res = InsertText(theText);
+    if (NS_FAILED(res))
+    {
+      nsEditor::EndTransaction();
+      return res;
+    }
+    // reposition selection to before the space character
+    res = GetStartNodeAndOffset(selection, &node, &offset);
+    if (NS_FAILED(res))
+    {
+      nsEditor::EndTransaction();
+      return res;
+    }
+    res = selection->Collapse(node,0);
+    if (NS_FAILED(res))
+    {
+      nsEditor::EndTransaction();
+      return res;
+    }
+  }
+  nsEditor::EndTransaction();  // don't return this result!
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsHTMLEditor::InsertLink(nsString& aURL)
 {
@@ -1195,7 +1466,7 @@ nsHTMLEditor::InsertLink(nsString& aURL)
   // Find out if the selection is collapsed:
   nsCOMPtr<nsIDOMSelection> selection;
   res = GetSelection(getter_AddRefs(selection));
-  if (!NS_SUCCEEDED(res) || !selection)
+  if (NS_FAILED(res) || !selection)
   {
 #ifdef DEBUG_akkana
     printf("Can't get selection!");
@@ -1204,7 +1475,7 @@ nsHTMLEditor::InsertLink(nsString& aURL)
   }
   PRBool isCollapsed;
   res = selection->GetIsCollapsed(&isCollapsed);
-  if (!NS_SUCCEEDED(res))
+  if (NS_FAILED(res))
     isCollapsed = PR_TRUE;
 
   // Temporary: we need to save the contents of the selection,
@@ -1221,7 +1492,7 @@ nsHTMLEditor::InsertLink(nsString& aURL)
   nsCOMPtr<nsIDOMNode> newNode;
   nsAutoString tag("A");
   res = nsEditor::DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
-  if (!NS_SUCCEEDED(res) || !newNode)
+  if (NS_FAILED(res) || !newNode)
     return res;
 
   nsCOMPtr<nsIDOMHTMLAnchorElement> anchor (do_QueryInterface(newNode));
@@ -1234,7 +1505,7 @@ nsHTMLEditor::InsertLink(nsString& aURL)
   }
 
   res = anchor->SetHref(aURL);
-  if (!NS_SUCCEEDED(res))
+  if (NS_FAILED(res))
   {
 #ifdef DEBUG_akkana
     printf("SetHref failed");
@@ -1244,7 +1515,7 @@ nsHTMLEditor::InsertLink(nsString& aURL)
 
   // Set the selection to the node we just inserted:
   res = GetSelection(getter_AddRefs(selection));
-  if (!NS_SUCCEEDED(res) || !selection)
+  if (NS_FAILED(res) || !selection)
   {
 #ifdef DEBUG_akkana
     printf("Can't get selection!");
@@ -1252,7 +1523,7 @@ nsHTMLEditor::InsertLink(nsString& aURL)
     return res;
   }
   res = selection->Collapse(newNode, 0);
-  if (!NS_SUCCEEDED(res))
+  if (NS_FAILED(res))
   {
 #ifdef DEBUG_akkana
     printf("Couldn't collapse");
@@ -1315,7 +1586,7 @@ nsHTMLEditor::InsertImage(nsString& aURL,
   }
 
   // If any of these failed, then don't insert the new node into the tree
-  if (!NS_SUCCEEDED(res))
+  if (NS_FAILED(res))
   {
 #ifdef DEBUG_akkana
     printf("Some failure creating the new image node\n");
@@ -1362,7 +1633,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
   PRBool first=PR_TRUE;
   nsCOMPtr<nsIDOMSelection>selection;
   result = nsEditor::GetSelection(getter_AddRefs(selection));
-  if (!NS_SUCCEEDED(result) || !selection)
+  if (NS_FAILED(result) || !selection)
     return result;
 
   PRBool isCollapsed;
@@ -1495,7 +1766,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
 
   nsCOMPtr<nsIDOMElement>newElement;
   result = mDoc->CreateElement(realTagName, getter_AddRefs(newElement));
-  if (!NS_SUCCEEDED(result) || !newElement)
+  if (NS_FAILED(result) || !newElement)
     return NS_ERROR_FAILURE;
 
 
@@ -1592,12 +1863,12 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
   // We must have a real selection
   nsCOMPtr<nsIDOMSelection> selection;
   result = GetSelection(getter_AddRefs(selection));
-  if (!NS_SUCCEEDED(result) || !selection)
+  if (NS_FAILED(result) || !selection)
     return result;
 
   PRBool isCollapsed;
   result = selection->GetIsCollapsed(&isCollapsed);
-  if (!NS_SUCCEEDED(result))
+  if (NS_FAILED(result))
     isCollapsed = PR_TRUE;
   
   if (isCollapsed)
@@ -1627,6 +1898,56 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
   }
   return result;
 }
+
+
+PRBool 
+nsHTMLEditor::CanContainTag(nsIDOMNode* aParent, nsString &aTag)
+{
+  if (!aParent) return PR_FALSE;
+  
+  static nsAutoString ulTag = "ul";
+  static nsAutoString olTag = "ol";
+  static nsAutoString liTag = "li";
+  static nsAutoString bodyTag = "body";
+  static nsAutoString tdTag = "td";
+  static nsAutoString thTag = "th";
+  static nsAutoString bqTag = "blockquote";
+
+  nsCOMPtr<nsIAtom> pTagAtom = GetTag(aParent);
+  nsAutoString pTag;
+  pTagAtom->ToString(pTag);
+
+  // flesh this out...
+  // for now, only lists and blockquotes are using this funct
+  
+  if (aTag.EqualsIgnoreCase(ulTag) ||
+      aTag.EqualsIgnoreCase(olTag) )
+  {
+    if (pTag.EqualsIgnoreCase(bodyTag) ||
+        pTag.EqualsIgnoreCase(tdTag) ||
+        pTag.EqualsIgnoreCase(thTag) ||
+        pTag.EqualsIgnoreCase(ulTag) ||
+        pTag.EqualsIgnoreCase(olTag) ||
+        pTag.EqualsIgnoreCase(liTag) ||
+        pTag.EqualsIgnoreCase(bqTag) )
+    {
+      return PR_TRUE;
+    }
+  }
+  else if (aTag.EqualsIgnoreCase(bqTag) )
+  {
+    if (pTag.EqualsIgnoreCase(bodyTag) ||
+        pTag.EqualsIgnoreCase(tdTag) ||
+        pTag.EqualsIgnoreCase(thTag) ||
+        pTag.EqualsIgnoreCase(liTag) ||
+        pTag.EqualsIgnoreCase(bqTag) )
+    {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
 
 NS_IMETHODIMP
 nsHTMLEditor::IsRootTag(nsString &aTag, PRBool &aIsTag)
