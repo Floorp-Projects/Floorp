@@ -3826,13 +3826,10 @@ PRBool IsSimpleXlink(nsIContent *aContent, nsString &aHREF)
     // first see if we have an XML element
     nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(aContent));
     if (xml) {
-      nsAutoString strSimple;
-      strSimple.AssignWithConversion("simple");
-
       // see if it is type=simple (we don't deal with other types)
       nsAutoString val;
       aContent->GetAttribute(kNameSpaceID_XLink, nsHTMLAtoms::type, val);
-      if (val == strSimple) {
+      if (val == NS_LITERAL_STRING("simple")) {
         // see if there is an xlink namespace'd href attribute: 
         // - get it if there is, if not no big deal, it is not required for xlinks
         aContent->GetAttribute(kNameSpaceID_XLink, nsHTMLAtoms::href, aHREF);
