@@ -583,29 +583,32 @@ void nsGfxTextControlFrame::SetTextControlFrameState(const nsString& aValue)
     }
     if (PR_FALSE==currentValue.Equals(aValue))  // this is necessary to avoid infinite recursion
     {
-      nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
-      NS_ASSERTION(editor, "bad QI to nsIEditor from mEditor");
-      if (editor)
-      {
-        nsCOMPtr<nsIDOMSelection>selection;
-        result = editor->GetSelection(getter_AddRefs(selection));
-        if (NS_SUCCEEDED(result) && selection)
-        {
-          nsCOMPtr<nsIDOMDocument>domDoc;
-          editor->GetDocument(getter_AddRefs(domDoc));
-          if (domDoc)
-          {
-            nsCOMPtr<nsIDOMNode> bodyNode;
-            nsAutoString bodyTag = "body";
-            result = GetFirstNodeOfType(bodyTag, domDoc, getter_AddRefs(bodyNode));
-            SelectAllTextContent(bodyNode, selection);
-            
-            nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-            if (htmlEditor)
-              htmlEditor->InsertText(aValue);
-          }
-        }
-      }
+      nsCOMPtr<nsIDOMSelection>selection;
+      result = mEditor->GetSelection(getter_AddRefs(selection));
+			if (NS_FAILED(result)) return;
+			if (!selection) return;
+
+      nsCOMPtr<nsIDOMDocument>domDoc;
+      result = mEditor->GetDocument(getter_AddRefs(domDoc));
+			if (NS_FAILED(result)) return;
+			if (!domDoc) return;
+
+      nsCOMPtr<nsIDOMNode> bodyNode;
+      nsAutoString bodyTag = "body";
+      result = GetFirstNodeOfType(bodyTag, domDoc, getter_AddRefs(bodyNode));
+      SelectAllTextContent(bodyNode, selection);
+      nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+			if (!htmlEditor) return;
+
+			// get the flags, remove readonly and disabled, set the value, restore flags
+			PRUint32 flags, savedFlags;
+			mEditor->GetFlags(&savedFlags);
+			flags = savedFlags;
+			flags &= ~(nsIHTMLEditor::eEditorDisabledMask);
+			flags &= ~(nsIHTMLEditor::eEditorReadonlyMask);
+			mEditor->SetFlags(flags);
+      htmlEditor->InsertText(aValue);
+			mEditor->SetFlags(savedFlags);
     }
   }    
 }
@@ -1074,6 +1077,9 @@ nsGfxTextControlFrame::InstallEditor()
       editorFlags |= nsIHTMLEditor::eEditorPasswordMask;
       
     result = mEditor->Init(mDoc, presShell, editorFlags);
+		if (NS_SUCCEEDED(result)) {
+			mEditor->PostCreate();
+		}
     if (NS_SUCCEEDED(result)) {
       result = InitializeTextControl(presShell, mDoc);
     }
