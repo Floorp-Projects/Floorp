@@ -47,7 +47,7 @@
 
 		<html:div>
 			<html:input pref="true" preftype="int" prefstring="news.keep.method" prefindex="0" id="news.keep.method0" class="indent" name="keepmsg" type="radio"/>
-			<html:label for="pref:0:int:news.keep.method">&keepAllMsg.label;</html:label>
+			<html:label for="news.keep.method0">&keepAllMsg.label;</html:label>
 		</html:div>
 
 		<html:div>

@@ -38,7 +38,7 @@
 		</html:div>
 		
 		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="ldap_2.autoComplete.showDialogForMultipleMatches" prefindex="true" id="ldap_2.autoComplete.showDialogForMultipleMatches" name="multilist" type="radio"/>
+			<html:input pref="true" preftype="bool" prefstring="ldap_2.autoComplete.showDialogForMultipleMatches" prefindex="true" id="ldap_2.autoComplete.showDialogForMultipleMatches0" name="multilist" type="radio"/>
 			<html:label for="ldap_2.autoComplete.showDialogForMultipleMatches0">&showList.label;</html:label>
 		</html:div>
 		
