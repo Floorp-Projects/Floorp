@@ -446,6 +446,14 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, 
                                                 nsIURI *aURI)
 {
+    // Get a context if necessary
+    if (!cx)
+    {
+        cx = GetCurrentContextQuick();
+        if (!cx)
+            return NS_OK; // No JS context, so allow the load
+    }
+
     // Get principal of currently executing script.
     nsCOMPtr<nsIPrincipal> principal;
     if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
