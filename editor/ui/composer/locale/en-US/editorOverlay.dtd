@@ -109,8 +109,8 @@
 <!ENTITY formattingtb.accesskey "f">
 <!ENTITY editmodeToolbarCmd.label "Edit Mode Toolbar">
 <!ENTITY editmodetb.accesskey "e">
-<!ENTITY taskbarCmd.label "Taskbar">  
-<!ENTITY taskbarCmd.accesskey "t"> 
+<!ENTITY taskbarCmd.label "Statusbar">  
+<!ENTITY taskbarCmd.accesskey "s"> 
 <!ENTITY viewPageSource.label "Page Source">
 <!ENTITY viewpagesource.accesskey "s">
 <!ENTITY viewParagraphMarks.label "Paragraph Marks">
