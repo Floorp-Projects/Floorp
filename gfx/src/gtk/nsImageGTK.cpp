@@ -1867,6 +1867,9 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
   alphaStride = mAlphaRowBytes;
 
   PRInt32 y;
+  PRInt32 ValidWidth = ( aDWidth < ( dest->mWidth - aDX ) ) ? aDWidth : ( dest->mWidth - aDX ); 
+  PRInt32 ValidHeight = ( aDHeight < ( dest->mHeight - aDY ) ) ? aDHeight : ( dest->mHeight - aDY );
+
   // now composite the two images together
   switch (mAlphaDepth) {
   case 1:
@@ -1876,9 +1879,10 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
       PRUint8 *src = rgbPtr;
       PRUint8 *alpha = alphaPtr;
       PRUint8 offset = aDX & 0x7; // x starts at 0
-      int iterations = (aDWidth+7)/8; // round up
-      for (y=0; y<aDHeight; y++) {
-        for (int x=0; x<aDWidth; x += 8, dst += 3*8, src += 3*8) {
+      int iterations = (ValidWidth+7)/8; // round up
+
+      for (y=0; y<ValidHeight; y++) {
+        for (int x=0; x<ValidWidth; x += 8, dst += 3*8, src += 3*8) {
           PRUint8 alphaPixels = *alpha++;
           if (alphaPixels == 0) {
             // all 8 transparent; jump forward
@@ -1887,8 +1891,8 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
 
           // 1 or more bits are set, handle dstAlpha now - may not be aligned.
           // Are all 8 of these alpha pixels used?
-          if (x+7 >= aDWidth) {
-            alphaPixels &= 0xff << (8 - (aDWidth-x)); // no, mask off unused
+          if (x+7 >= ValidWidth) {
+            alphaPixels &= 0xff << (8 - (ValidWidth-x)); // no, mask off unused
             if (alphaPixels == 0)
               continue;  // no 1 alpha pixels left
           }
@@ -1913,7 +1917,7 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
             // else mix of 1's and 0's in alphaPixels, do 1 bit at a time
             // Don't go past end of line!
             PRUint8 *d = dst, *s = src;
-            for (PRUint8 aMask = 1<<7, j = 0; aMask && j < aDWidth-x; aMask >>= 1, j++) {
+            for (PRUint8 aMask = 1<<7, j = 0; aMask && j < ValidWidth-x; aMask >>= 1, j++) {
               // if this pixel is opaque then copy into the destination image
               if (alphaPixels & aMask) {
                 // might be faster with *d++ = *s++ 3 times?
@@ -1937,13 +1941,13 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
     break;
   case 0:
   default:
-    for (y=0; y<aDHeight; y++)
+    for (y=0; y<ValidHeight; y++)
       memcpy(dest->mImageBits + (y+aDY)*dest->mRowBytes + 3*aDX, 
              rgbPtr + y*rgbStride,
-             3*aDWidth);
+             3*ValidWidth);
   }
 
-  nsRect rect(aDX, aDY, aDWidth, aDHeight);
+  nsRect rect(aDX, aDY, ValidWidth, ValidHeight);
   dest->ImageUpdated(nsnull, 0, &rect);
 
   return NS_OK;
