@@ -59,6 +59,7 @@ Rights Reserved.
 				 valueFolder="&deleteFolderCmd.label;"
 				 valueMessage="&deleteMsgCmd.label;"
 				 valueMessages="&deleteMsgsCmd.label;"/>
+	<broadcaster id="button_delete"/>
 	<broadcaster id="cmd_selectAll"/>
 	<broadcaster id="cmd_preferences"/>
 	
@@ -724,15 +725,15 @@ Rights Reserved.
 <toolbox id="mailToolbarToolbox">
 	<toolbar class="toolbar-primary chromeclass-toolbar" id="msgToolbar" persist="collapsed">
 		<box id="toolbar_button_box">
-			<button class="button-toolbar-2 top" id="button_getmsg" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
-			<button class="button-toolbar-2 top" id="button_newmsg" value="&newMsgButton.label;" onclick="MsgNewMessage(event)"/>
+			<button class="button-toolbar-2 top" id="button-getmsg" value="&getMsgButton.label;" tooltip="aTooltip" tooltiptext="&getMsgButton.tooltip;" onclick="MsgGetMessage()"/>
+			<button class="button-toolbar-2 top" id="button-newmsg" value="&newMsgButton.label;" tooltip="aTooltip" tooltiptext="&newMsgButton.tooltip;" onclick="MsgNewMessage(event)"/>
 			<toolbarseparator/>
-			<button class="button-toolbar-2 top" id="button_reply" value="&replyButton.label;" onclick="MsgReplyMessage(event)"/>
-			<button class="button-toolbar-2 top" id="button_replyall" value="&replyAllButton.label;" onclick="MsgReplyToAllMessage(event)"/>
-			<button class="button-toolbar-2 top" id="button_forward" value="&forwardButton.label;" onclick="MsgForwardMessage(event)"/>
+			<button class="button-toolbar-2 top" id="button-reply" value="&replyButton.label;" tooltip="aTooltip" tooltiptext="&replyButton.tooltip;" onclick="MsgReplyMessage(event)"/>
+			<button class="button-toolbar-2 top" id="button-replyall" value="&replyAllButton.label;" tooltip="aTooltip" tooltiptext="&replyAllButton.tooltip;" onclick="MsgReplyToAllMessage(event)"/>
+			<button class="button-toolbar-2 top" id="button-forward" value="&forwardButton.label;" tooltip="aTooltip" tooltiptext="&forwardButton.tooltip;" onclick="MsgForwardMessage(event)"/>
 			<toolbarseparator/>
 			<menu id="FileButtonMenu" datasources="rdf:null" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
-				<button class="button-toolbar-2 top" id="button_file" value="&fileButton.label;"/>
+				<button class="button-toolbar-2 top" id="button-file" value="&fileButton.label;" tooltip="aTooltip" tooltiptext="&fileButton.tooltip;"/>
 				<template> 
 					<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
 						<menupopup>
@@ -780,10 +781,10 @@ Rights Reserved.
 				</template>
 				<menupopup/>
 			</menu>
-			<button class="button-toolbar-2 top" id="button_next" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
-			<button class="button-toolbar-2 top" id="button_delete" disabled="true" value="&deleteButton.label;" onclick="goDoCommand('button_delete')"/>
-			<button class="button-toolbar-2 top" id="button_print" value="&printButton.label;" onclick="PrintEnginePrint()"/>
-			<button class="button-toolbar-2 top" id="button_stop" value="&stopButton.label;" onclick="MsgStop();"/>
+			<button class="button-toolbar-2 top" id="button-next" value="&nextButton.label;" tooltip="aTooltip" tooltiptext="&nextButton.tooltip;" onclick="MsgNextUnreadMessage()"/>
+			<button class="button-toolbar-2 top" id="button-delete" value="&deleteButton.label;" tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" observes="button_delete" onclick="goDoCommand('button_delete')"/>
+			<button class="button-toolbar-2 top" id="button-print" value="&printButton.label;" tooltip="aTooltip" tooltiptext="&printButton.tooltip;" onclick="PrintEnginePrint()"/>
+			<button class="button-toolbar-2 top" id="button-stop" value="&stopButton.label;" tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" onclick="MsgStop();"/>
 			<spring flex="100%"/>
 		</box>
     <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("messenger.throbber.url")'/>

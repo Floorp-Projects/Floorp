@@ -269,6 +269,18 @@ Rights Reserved.
 <!ENTITY printButton.label "Print">  
 <!ENTITY stopButton.label "Stop">  
 
+<!--Tooltips-->
+<!ENTITY getMsgButton.tooltip "Get Msg">  
+<!ENTITY newMsgButton.tooltip "New Msg">  
+<!ENTITY replyButton.tooltip "Reply">  
+<!ENTITY replyAllButton.tooltip "Reply All">  
+<!ENTITY forwardButton.tooltip "Forward">  
+<!ENTITY fileButton.tooltip "File">  
+<!ENTITY nextButton.tooltip "Next">  
+<!ENTITY deleteButton.tooltip "Delete">  
+<!ENTITY printButton.tooltip "Print">  
+<!ENTITY stopButton.tooltip "Stop">  
+
 <!-- Statusbar -->
 <!ENTITY  statusText.label "Document: Done">
 <!ENTITY  unreadCountText.label "Unread: ">

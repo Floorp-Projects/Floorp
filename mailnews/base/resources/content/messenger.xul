@@ -294,7 +294,9 @@ Rights Reserved.
                 oncommand="SendMailToNode(document.popupNode)"/>
 	</popup>
 	<popup id="messagePaneContext"/>
+	<popup id="folderTooltip"/>
 </popupset>
+<popupset id="aTooltipSet"/>
 
 
 

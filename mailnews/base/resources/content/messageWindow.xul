@@ -66,6 +66,8 @@ Rights Reserved.
 		</popup>
 		<popup id="messagePaneContext"/>
 	</popupset>
+	<popupset id="aTooltipSet"/>
+
     <menubar id="mailMenubar"/>
 
 	<toolbox id="mailToolbarToolbox"/>	

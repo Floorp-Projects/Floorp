@@ -689,6 +689,43 @@ function MsgSortByThread()
 	ChangeThreadView()
 }
 
+function FillInFolderTooltip(cellNode)
+{
+	var folderNode = cellNode.parentNode.parentNode;
+	var uri = folderNode.getAttribute('id');
+	var folderResource = RDF.GetResource(uri);
+
+	var folderTree = GetFolderTree();
+	var db = folderTree.database;
+
+	var nameProperty = RDF.GetResource('http://home.netscape.com/NC-rdf#Name');
+	var unreadCountProperty = RDF.GetResource('http://home.netscape.com/NC-rdf#TotalUnreadMessages');
+	var totalCountProperty = RDF.GetResource('http://home.netscape.com/NC-rdf#TotalMessages');
+
+	var nameResult = db.GetTarget(folderResource, nameProperty , true);
+	nameResult = nameResult.QueryInterface(Components.interfaces.nsIRDFLiteral);
+	var name = nameResult.Value;
+
+	var unreadCountResult = db.GetTarget(folderResource, unreadCountProperty , true);
+	unreadCountResult = unreadCountResult.QueryInterface(Components.interfaces.nsIRDFLiteral);
+	var unreadCount = unreadCountResult.Value;
+	if(unreadCount == "")
+		unreadCount = "0";
+
+	var totalCountResult = db.GetTarget(folderResource, totalCountProperty , true);
+	totalCountResult = totalCountResult.QueryInterface(Components.interfaces.nsIRDFLiteral);
+	var totalCount = totalCountResult.Value;
+	if(totalCount == "")
+		totalCount = "0";
+
+	var textNode = document.getElementById("foldertooltipText");
+	var folderTooltip = name + " ("  + unreadCount + "/" + totalCount +")";
+	textNode.setAttribute('value', folderTooltip);
+	return true;
+	
+
+}
+
 
 
 

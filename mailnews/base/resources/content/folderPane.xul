@@ -28,6 +28,9 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+<popup id="folderTooltip" class="tooltip" oncreate="return FillInFolderTooltip(document.tooltipNode);" > 
+    <text id="foldertooltipText"/>
+</popup>
 
 	<tree datasources="rdf:null"
 	      id="folderTree" class="mail-folders"
@@ -60,7 +63,7 @@
                    IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
 			             HasUnreadMessages="rdf:http://home.netscape.com/NC-rdf#HasUnreadMessages"
 			             NoSelect="rdf:http://home.netscape.com/NC-rdf#NoSelect">
-					<treecell indent="true" class="treecell-indent tree-cell-folderpane-icon" 
+					<treecell tooltip="folderTooltip" indent="true" class="treecell-indent tree-cell-folderpane-icon" 
                     value="rdf:http://home.netscape.com/NC-rdf#FolderTreeName"
                     SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
 			              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"

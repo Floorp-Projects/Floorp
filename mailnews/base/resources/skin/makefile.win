@@ -46,7 +46,6 @@ CHROME_SKIN = \
 	.\reply.gif \
 	.\replyall.gif \
 	.\forward.gif \
-	.\trash.gif \
 	.\check.gif \
 	.\dot.gif \
 	.\subscribe.css \
