@@ -2092,7 +2092,10 @@ var personalToolbarDNDObserver = {
     // hide the 'open in tab' menuseparator because bookmarks
     // can be inserted after it if they are dropped after the last bookmark
     // a more comprehensive fix would be in the menupopup template builder
-    var menuTarget = target.parentNode;
+    var menuTarget = target.localName == "toolbarbutton" ||
+                     target.localName == "menu"          && 
+                     orientation == BookmarksUtils.DROP_ON?
+                     target.lastChild:target.parentNode;
     if (menuTarget.hasChildNodes() &&
         menuTarget.lastChild.id == "openintabs-menuitem") {
       menuTarget.removeChild(menuTarget.lastChild.previousSibling);
