@@ -59,11 +59,7 @@ OBJS=                                       \
 #//
 #//------------------------------------------------------------------------
 
-!ifndef "$(MOZ_STANDALONE_REGISTRY)"
 LIBNAME=libreg$(MOZ_BITS)
-!else
-LIBNAME=reglib$(MOZ_BITS)
-!endif
 
 DLL=$(OBJDIR)\$(LIBNAME).dll
 LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
@@ -76,19 +72,10 @@ LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
 #//------------------------------------------------------------------------
 
 LCFLAGS = $(LCFLAGS)
-
-!ifdef "$(MOZ_STANDALONE_REGISTRY)"
-LCFLAGS = -DSTANDALONE_REGISTRY
-!endif
-
-!ifndef "$(MOZ_STANDALONE_REGISTRY)"
-
 LLIBS = $(LLIBS) $(LIBNSPR)
 
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
-!endif
-
 !endif
 
 #//
