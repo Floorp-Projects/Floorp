@@ -49,8 +49,9 @@ static HINSTANCE g_hInst = NULL;
 ** Define TIMEBOMB_ON for beta builds.
 ** Undef TIMEBOMB_ON for release builds.
 */
-#define TIMEBOMB_ON
-/* #undef TIMEBOMB_ON */
+/*#define TIMEBOMB_ON*/
+#undef TIMEBOMB_ON
+
 /*
 ** After this date all hell breaks loose
 */
