@@ -147,6 +147,7 @@ nsresult nsXPFCDialog :: CollectDataInCanvas(nsIXPFCCanvas* host_canvas, nsVoidA
   }
 
   NS_RELEASE(iterator);
+  return NS_OK;
 }
 
 nsresult nsXPFCDialog :: CollectData()
