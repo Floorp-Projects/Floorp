@@ -57,14 +57,15 @@ public:
 // Internal member functions
 protected:
   void GetImmediateChild(nsIAtom* aTag, nsIContent** aResult);
-  void BuildExcludesList(nsISupportsArray** aResult);
-  PRBool IsInExcludesArray(nsIAtom* aTag);
+  PRBool IsInExcludesList(nsIAtom* aTag, const nsString& aList);
 
 // MEMBER VARIABLES
 protected:
   nsCOMPtr<nsIContent> mBinding; // Strong. As long as we're around, the binding can't go away.
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
   nsCOMPtr<nsIXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
+
+  nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
 };
 
 // Static initialization
@@ -135,7 +136,26 @@ nsXBLBinding::GetAnonymousContent(nsIContent** aResult)
 NS_IMETHODIMP
 nsXBLBinding::SetAnonymousContent(nsIContent* aParent)
 {
+  // First cache the element.
   mContent = aParent;
+
+  // Now we need to ensure two things.
+  // (1) The anonymous content should be fooled into thinking it's in the bound
+  // element's document.
+  nsCOMPtr<nsIDocument> doc;
+  mBoundElement->GetDocument(*getter_AddRefs(doc));
+  mContent->SetDocument(doc, PR_TRUE);
+
+  // (2) The children's parent back pointer should not be to this synthetic root
+  // but should instead point to the bound element.
+  PRInt32 childCount;
+  mContent->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> child;
+    mContent->ChildAt(i, *getter_AddRefs(child));
+    child->SetParent(mBoundElement);
+  }
+
   return NS_OK;
 }
 
@@ -157,6 +177,9 @@ nsXBLBinding::SetBindingElement(nsIContent* aElement)
 NS_IMETHODIMP
 nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
 {
+  // Set our bound element.
+  mBoundElement = aBoundElement;
+
   // Fetch the content element for this binding.
   nsCOMPtr<nsIContent> content;
   GetImmediateChild(kContentAtom, getter_AddRefs(content));
@@ -179,23 +202,16 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
     nsAutoString excludes;
     content->GetAttribute(kNameSpaceID_None, kExcludesAtom, excludes);
     if (excludes == "true") {
-      // Build the excludes list.
-      nsCOMPtr<nsISupportsArray> atoms;
-      BuildExcludesList(getter_AddRefs(atoms));
-      if (!atoms)
-        buildContent = PR_FALSE;
-      else {
-        // Walk the children and ensure that all of them
-        // are in the excludes array.
-        for (PRInt32 i = 0; i < childCount; i++) {
-          nsCOMPtr<nsIContent> child;
-          aBoundElement->ChildAt(i, *getter_AddRefs(child));
-          nsCOMPtr<nsIAtom> tag;
-          child->GetTag(*getter_AddRefs(tag));
-          if (!IsInExcludesArray(tag)) {
-            buildContent = PR_FALSE;
-            break;
-          }
+      // Walk the children and ensure that all of them
+      // are in the excludes array.
+      for (PRInt32 i = 0; i < childCount; i++) {
+        nsCOMPtr<nsIContent> child;
+        aBoundElement->ChildAt(i, *getter_AddRefs(child));
+        nsCOMPtr<nsIAtom> tag;
+        child->GetTag(*getter_AddRefs(tag));
+        if (!IsInExcludesList(tag, excludes)) {
+          buildContent = PR_FALSE;
+          break;
         }
       }
     }
@@ -231,20 +247,53 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
 void
 nsXBLBinding::GetImmediateChild(nsIAtom* aTag, nsIContent** aResult) 
 {
-  // XXX Implement me!
+  *aResult = nsnull;
+  PRInt32 childCount;
+  mBinding->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> child;
+    mBinding->ChildAt(i, *getter_AddRefs(child));
+    nsCOMPtr<nsIAtom> tag;
+    child->GetTag(*getter_AddRefs(tag));
+    if (aTag == tag.get()) {
+      *aResult = child;
+      NS_ADDREF(*aResult);
+      return;
+    }
+  }
+
+  return;
 }
 
-void 
-nsXBLBinding::BuildExcludesList(nsISupportsArray** aResult) 
-{
-  // XXX Implement me!
-}
-  
+
 PRBool
-nsXBLBinding::IsInExcludesArray(nsIAtom* aTag) 
+nsXBLBinding::IsInExcludesList(nsIAtom* aTag, const nsString& aList) 
 { 
-  // XXX Implement me!
-  return PR_FALSE; 
+  nsAutoString element;
+  aTag->ToString(element);
+
+  if (aList == "*")
+      return PR_TRUE; // match _everything_!
+
+  PRInt32 indx = aList.Find(element);
+  if (indx == -1)
+    return PR_FALSE; // not in the list at all
+
+  // okay, now make sure it's not a substring snafu; e.g., 'ur'
+  // found inside of 'blur'.
+  if (indx > 0) {
+    PRUnichar ch = aList[indx - 1];
+    if (! nsString::IsSpace(ch) && ch != PRUnichar(','))
+      return PR_FALSE;
+  }
+
+  if (indx + element.Length() < aList.Length()) {
+    PRUnichar ch = aList[indx + element.Length()];
+    if (! nsString::IsSpace(ch) && ch != PRUnichar(','))
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
