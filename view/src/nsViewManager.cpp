@@ -354,6 +354,7 @@ PRInt32 nsViewManager::mVMCount = 0;
 nsDrawingSurface nsViewManager::mDrawingSurface = nsnull;
 nsRect nsViewManager::mDSBounds = nsRect(0, 0, 0, 0);
 
+nsIRenderingContext* nsViewManager::gCleanupContext = nsnull;
 nsDrawingSurface nsViewManager::gOffScreen = nsnull;
 nsDrawingSurface nsViewManager::gBlack = nsnull;
 nsDrawingSurface nsViewManager::gWhite = nsnull;
@@ -370,10 +371,18 @@ nsViewManager::nsViewManager()
 {
 	NS_INIT_REFCNT();
 
-  if (mVMCount == 0) {
-    //Create a vector to hold each view manager
+  if (gViewManagers == nsnull) {
+    NS_ASSERTION(mVMCount == 0, "View Manager count is incorrect");
+    // Create an array to hold a list of view managers
     gViewManagers = new nsVoidArray;
   }
+ 
+  if (gCleanupContext == nsnull) {
+    nsComponentManager::CreateInstance(kRenderingContextCID, 
+    nsnull, NS_GET_IID(nsIRenderingContext), (void**)&gCleanupContext);
+    NS_ASSERTION(gCleanupContext != nsnull, "Wasn't able to create a graphics context for cleanup");
+  }
+
   gViewManagers->AppendElement(this);
 
 	mVMCount++;
@@ -403,40 +412,45 @@ nsViewManager::~nsViewManager()
   PRBool removed = gViewManagers->RemoveElement(this);
   NS_ASSERTION(removed, "Viewmanager instance not was not in the global list of viewmanagers");
 
-	if ((0 == mVMCount) &&
-		((nsnull != mDrawingSurface) || (nsnull != gOffScreen) ||
-		 (nsnull != gBlack) || (nsnull != gWhite)))
-		{
-      delete gViewManagers;
+  if (0 == mVMCount) {
+      // There aren't any more view managers so
+      // release the global array of view managers
+   
+      NS_ASSERTION(gViewManagers != nsnull, "About to delete null gViewManagers");
       gViewManagers = nsnull;
 
-			nsCOMPtr<nsIRenderingContext> rc;
-			nsresult rv = nsComponentManager::CreateInstance(kRenderingContextCID, 
-															 nsnull, 
-															 NS_GET_IID(nsIRenderingContext), 
-															 getter_AddRefs(rc));
+      // Cleanup all of the offscreen drawing surfaces if the last view manager
+      // has been destroyed and there is something to cleanup
 
-			if (NS_OK == rv)
-				{
-					if (nsnull != mDrawingSurface)
-						rc->DestroyDrawingSurface(mDrawingSurface);
+      // Note: A global rendering context is needed because it is not possible 
+      // to create a nsIRenderingContext during the shutdown of XPCOM. The last
+      // viewmanager is typically destroyed during XPCOM shutdown.
 
-					if (nsnull != gOffScreen)
-						rc->DestroyDrawingSurface(gOffScreen);
+      if (gCleanupContext) {
+        if (nsnull != mDrawingSurface)
+          gCleanupContext->DestroyDrawingSurface(mDrawingSurface);
 
-					if (nsnull != gBlack)
-						rc->DestroyDrawingSurface(gBlack);
+        if (nsnull != gOffScreen)
+          gCleanupContext->DestroyDrawingSurface(gOffScreen);
 
-					if (nsnull != gWhite)
-						rc->DestroyDrawingSurface(gWhite);
-				}
-    
-			mDrawingSurface = nsnull;
-			gOffScreen = nsnull;
-			gBlack = nsnull;
-			gWhite = nsnull;
-			gOffScreenSize.SizeTo(0, 0);
-		}
+        if (nsnull != gWhite)
+          gCleanupContext->DestroyDrawingSurface(gWhite);
+
+        if (nsnull != gBlack)
+          gCleanupContext->DestroyDrawingSurface(gBlack);
+
+      } else {
+        NS_ASSERTION(PR_FALSE, "Cleanup of drawing surfaces + offscreen buffer failed");
+      }
+
+      mDrawingSurface = nsnull;
+      gOffScreen = nsnull;
+      gWhite = nsnull;
+      gBlack = nsnull;
+      gOffScreenSize.SizeTo(0, 0);
+
+      NS_IF_RELEASE(gCleanupContext);
+  }
 
 	mObserver = nsnull;
 	mContext = nsnull;
@@ -734,7 +748,7 @@ void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIRe
 
 	localcx->SetClipRect(trect, nsClipCombine_kIntersect, result);
 
-	RenderViews(aView, *localcx, trect, result);
+    RenderViews(aView, *localcx, trect, result);
 
 	if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds)
 		localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
@@ -1146,9 +1160,20 @@ void nsViewManager::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, co
     nsRect fakeClipRect;
     PRInt32 index = 0;
     PRBool anyRendered;
+    nsRect finalTransparentRect;
+
     ReapplyClipInstructions(PR_FALSE, fakeClipRect, index);
     
-    OptimizeDisplayList(aRect);
+    OptimizeDisplayList(aRect, finalTransparentRect);
+
+    if (!finalTransparentRect.IsEmpty()) {
+      // There are some bits here that aren't going to be completely painted unless we do it now.
+      // XXX Which color should we use for these bits?
+      aRC.SetColor(NS_RGB(128, 128, 128));
+      aRC.FillRect(finalTransparentRect);
+      printf("XXX: Using final transparent rect, x=%d, y=%d, width=%d, height=%d\n",
+        finalTransparentRect.x, finalTransparentRect.y, finalTransparentRect.width, finalTransparentRect.height);
+    }
     
     // initialize various counters. These are updated in OptimizeDisplayListClipping.
     mTranslucentViewCount = 0;
@@ -1181,6 +1206,12 @@ void nsViewManager::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, co
         RCList[3] = mOffScreenCX;
       }
       
+      if (!finalTransparentRect.IsEmpty()) {
+        // There are some bits that aren't going to be completely painted, so
+        // make sure we don't leave garbage in the offscreen context 
+        mOffScreenCX->SetColor(NS_RGB(128, 128, 128));
+        mOffScreenCX->FillRect(nsRect(0, 0, gOffScreenSize.width, gOffScreenSize.height));
+      }
       // DEBUGGING:  fill in complete offscreen image in green, to see if we've got a blending bug.
       //mOffScreenCX->SetColor(NS_RGB(0, 255, 0));
       //mOffScreenCX->FillRect(nsRect(0, 0, gOffScreenSize.width, gOffScreenSize.height));
@@ -3197,11 +3228,23 @@ void nsViewManager::ReapplyClipInstructions(PRBool aHaveClip, nsRect& aClipRect,
   }
 }
 
-// walk the display list, looking for opaque views, and remove any views that are behind them and totally occluded.
-// We rely on a good region implementation. If nsIRegion doesn't cut it, we can disable this
-// optimization ... or better still, fix nsIRegion on that platform. It seems to be good on Windows.
-nsresult nsViewManager::OptimizeDisplayList(const nsRect& aDamageRect)
+/**
+   Walk the display list, looking for opaque views, and remove any views that are behind them
+   and totally occluded.
+   We rely on a good region implementation. If nsIRegion doesn't cut it, we can disable this
+   optimization ... or better still, fix nsIRegion on that platform.
+   It seems to be good on Windows.
+
+   @param aFinalTransparentRect
+       Receives a rectangle enclosing all pixels in the damage rectangle
+       which will not be opaquely painted over by the display list.
+       Usually this will be empty, but nothing really prevents someone
+       from creating a set of views that are (for example) all transparent.
+*/
+nsresult nsViewManager::OptimizeDisplayList(const nsRect& aDamageRect, nsRect& aFinalTransparentRect)
 {
+    aFinalTransparentRect = aDamageRect;
+
     if (nsnull == mOpaqueRgn || nsnull == mTmpRgn) {
         return NS_OK;
     }
@@ -3226,6 +3269,11 @@ nsresult nsViewManager::OptimizeDisplayList(const nsRect& aDamageRect)
             }
 		}
 	}
+
+    mTmpRgn->SetTo(aDamageRect.x, aDamageRect.y, aDamageRect.width, aDamageRect.height);
+    mTmpRgn->Subtract(*mOpaqueRgn);
+    mTmpRgn->GetBoundingBox(&aFinalTransparentRect.x, &aFinalTransparentRect.y,
+      &aFinalTransparentRect.width, &aFinalTransparentRect.height);
 	
 	return NS_OK;
 }
