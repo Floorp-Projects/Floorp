@@ -386,8 +386,10 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRect(nsRect &aRect, PRBool &aClipVal
 {
   PRInt32 x, y, w, h;
   
-  if (!mClipRegion || !mClipRegion->IsEmpty())
-  {
+  if (!mClipRegion)
+    return NS_ERROR_FAILURE;
+
+  if (!mClipRegion->IsEmpty()) {
     mClipRegion->GetBoundingBox(&x,&y,&w,&h);
     aRect.SetRect(x,y,w,h);
     aClipValid = PR_TRUE;
