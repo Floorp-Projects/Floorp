@@ -29,35 +29,8 @@ print "Content-type: text/html\n\n";
 PutHeader("Changes made to bug $::FORM{'id'}", "Activity log",
           "Bug $::FORM{'id'}");
 
-my $query = "
-        select bugs_activity.field, bugs_activity.when,
-                bugs_activity.oldvalue, bugs_activity.newvalue,
-                profiles.login_name
-        from bugs_activity,profiles
-        where bugs_activity.bug_id = $::FORM{'id'}
-        and profiles.userid = bugs_activity.who
-        order by bugs_activity.when";
-
 ConnectToDatabase();
-SendSQL($query);
 
-print "<table border cellpadding=4>\n";
-print "<tr>\n";
-print "    <th>Who</th><th>What</th><th>Old value</th><th>New value</th><th>When</th>\n";
-print "</tr>\n";
+DumpBugActivity($::FORM{'id'});
 
-my @row;
-while (@row = FetchSQLData()) {
-    my ($field,$when,$old,$new,$who) = (@row);
-    $old = value_quote($old);
-    $new = value_quote($new);
-    print "<tr>\n";
-    print "<td>$who</td>\n";
-    print "<td>$field</td>\n";
-    print "<td>$old</td>\n";
-    print "<td>$new</td>\n";
-    print "<td>$when</td>\n";
-    print "</tr>\n";
-}
-print "</table>\n";
 print "<hr><a href=show_bug.cgi?id=$::FORM{'id'}>Back to bug $::FORM{'id'}</a>\n";

@@ -260,18 +260,57 @@ if ($::comma eq "") {
 }
 
 my $basequery = $::query;
+my $delta_ts;
 
 sub SnapShotBug {
     my ($id) = (@_);
-    SendSQL("select " . join(',', @::log_columns) .
+    SendSQL("select delta_ts, " . join(',', @::log_columns) .
             " from bugs where bug_id = $id");
-    return FetchSQLData();
+    my @row = FetchSQLData();
+    $delta_ts = shift @row;
+    return @row;
 }
 
 
 foreach my $id (@idlist) {
     SendSQL("lock tables bugs write, bugs_activity write, cc write, profiles write");
     my @oldvalues = SnapShotBug($id);
+
+    if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {
+        print "
+<H1>Mid-air collision detected!</H1>
+Someone else has made changes to this bug at the same time you were trying to.
+The changes made were:
+<p>
+";
+        DumpBugActivity($id, $delta_ts);
+        my $longdesc = GetLongDescription($id);
+        my $longchanged = 0;
+        if (length($longdesc) > $::FORM{'longdesclength'}) {
+            $longchanged = 1;
+            print "<P>Added text to the long description:<blockquote><pre>";
+            print html_quote(substr($longdesc, $::FORM{'longdesclength'}));
+            print "</pre></blockquote>\n";
+        }
+        SendSQL("unlock tables");
+        print "You have the following choices: <ul>\n";
+        $::FORM{'delta_ts'} = $delta_ts;
+        print "<li><form method=post>";
+        foreach my $i (keys %::FORM) {
+            my $value = value_quote($::FORM{$i});
+            print qq{<input type=hidden name="$i" value="$value">\n};
+        }
+        print qq{<input type=submit value="Submit my changes anyway">\n};
+        print " (This will cause all of the above changes to be overwritten";
+        if ($longchanged) {
+            print ", except for the changes to the description";
+        }
+        print qq{.)</form>\n<li><a href="show_bug.cgi?id=$id">Throw away my changes, and go revisit bug $id</a></ul>\n};
+        navigation_header();
+        exit;
+    }
+        
+
 
     my $query = "$basequery\nwhere bug_id = $id";
     

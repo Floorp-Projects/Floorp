@@ -126,7 +126,8 @@ select
 	qa_contact,
 	status_whiteboard,
         date_format(creation_ts,'Y-m-d'),
-        groupset
+        groupset,
+	delta_ts
 from bugs
 where bug_id = $::FORM{'id'}
 and bugs.groupset & $::usergroupset = bugs.groupset";
@@ -141,7 +142,7 @@ if (@row = FetchSQLData()) {
 		       "bug_severity", "component", "assigned_to", "reporter",
 		       "bug_file_loc", "short_desc", "target_milestone",
                        "qa_contact", "status_whiteboard", "creation_ts",
-                       "groupset") {
+                       "groupset", "delta_ts") {
 	$bug{$field} = shift @row;
 	if (!defined $bug{$field}) {
 	    $bug{$field} = "";
@@ -172,6 +173,7 @@ if (@row = FetchSQLData()) {
 $bug{'assigned_to'} = DBID_to_name($bug{'assigned_to'});
 $bug{'reporter'} = DBID_to_name($bug{'reporter'});
 $bug{'long_desc'} = GetLongDescription($::FORM{'id'});
+my $longdesclength = length($bug{'long_desc'});
 
 
 GetVersionTable();
@@ -206,6 +208,8 @@ print "
 <HEAD><TITLE>Bug $::FORM{'id'} -- " . html_quote($bug{'short_desc'}) .
     "</TITLE></HEAD><BODY>
 <FORM NAME=changeform METHOD=POST ACTION=\"process_bug.cgi\">
+<INPUT TYPE=HIDDEN NAME=\"delta_ts\" VALUE=\"$bug{'delta_ts'}\">
+<INPUT TYPE=HIDDEN NAME=\"longdesclength\" VALUE=\"$longdesclength\">
 <INPUT TYPE=HIDDEN NAME=\"id\" VALUE=$::FORM{'id'}>
 <INPUT TYPE=HIDDEN NAME=\"was_assigned_to\" VALUE=\"$bug{'assigned_to'}\">
   <TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0><TR>
