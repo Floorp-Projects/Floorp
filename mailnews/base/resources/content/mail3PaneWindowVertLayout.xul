@@ -63,8 +63,7 @@
         titlemenuseparator="&titleSeparator.label;"
         onload="OnLoadMessenger()"
         onunload="OnUnloadMessenger()"
-        width="750"
-        height="500"
+        style="width: 60em; height: 40em;"
         screenX="10" screenY="10"
         persist="width height screenX screenY sizemode"
         windowtype="mail:3pane">
@@ -159,11 +158,12 @@
   </toolbox>
   <!-- The main mail three pane frame -->
 
-  <hbox style="height:100px" flex="1">
+  <hbox flex="1">
     <vbox flex="1">
       <hbox id="mail3PaneVertLayoutBox" persist="collapsed height" flex="1">
-        <vbox id="folderPaneBox" flex="1" autostretch="always" persist="width">
-          <tree id="folderTree" flex="1" style="min-width: 100px;" context="folderPaneContext" persist="collapsed width height"/>
+        <vbox id="folderPaneBox" persist="width">
+          <tree id="folderTree" style="width: 15em; min-width: 7em;"
+                context="folderPaneContext" persist="collapsed width height"/>
         </vbox>
 
         <splitter id="gray_vertical_splitter" collapse="before" persist="state">
