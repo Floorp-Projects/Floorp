@@ -174,7 +174,7 @@ nsWindowDataSource::OnWindowTitleChange(nsIXULWindow *window,
 {
     nsresult rv;
     
-    nsPRUint32Key key(NS_PTR_TO_INT32(window));
+    nsVoidKey key(window);
 
     nsCOMPtr<nsISupports> sup =
         dont_AddRef(mWindowResources.Get(&key));
@@ -225,7 +225,7 @@ nsWindowDataSource::OnOpenWindow(nsIXULWindow *window)
     nsCOMPtr<nsIRDFResource> windowResource;
     gRDFService->GetResource(windowId.get(), getter_AddRefs(windowResource));
 
-    nsPRUint32Key key(NS_PTR_TO_INT32(window));
+    nsVoidKey key(window);
     mWindowResources.Put(&key, windowResource);
 
     // assert the new window
@@ -239,7 +239,7 @@ nsWindowDataSource::OnOpenWindow(nsIXULWindow *window)
 NS_IMETHODIMP
 nsWindowDataSource::OnCloseWindow(nsIXULWindow *window)
 {
-    nsPRUint32Key key(NS_PTR_TO_INT32(window));
+    nsVoidKey key(window);
     nsCOMPtr<nsIRDFResource> resource;
 
     nsresult rv;
@@ -329,7 +329,7 @@ struct findWindowClosure {
 PR_STATIC_CALLBACK(PRBool)
 findWindow(nsHashKey* aKey, void *aData, void* aClosure)
 {
-    nsPRUint32Key *thisKey = NS_STATIC_CAST(nsPRUint32Key*, aKey);
+    nsVoidKey *thisKey = NS_STATIC_CAST(nsVoidKey*, aKey);
 
     nsIRDFResource *resource =
         NS_STATIC_CAST(nsIRDFResource*, aData);
@@ -340,7 +340,7 @@ findWindow(nsHashKey* aKey, void *aData, void* aClosure)
     if (resource == closure->targetResource) {
         closure->resultWindow =
             NS_STATIC_CAST(nsIXULWindow*,
-                           NS_INT32_TO_PTR(thisKey->GetValue()));
+                           thisKey->GetValue());
         return PR_FALSE;         // stop enumerating
     }
     return PR_TRUE;
