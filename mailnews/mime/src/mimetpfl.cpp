@@ -520,7 +520,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
         if ('<' == *templinep)
           intag = 1;
         if (!intag) {
-          if ((' ' == *templinep) && !exdata->inflow) {
+          if (' ' == *templinep) {
             if (nextSpaceIsNbsp)
             {
               *outlinep='&'; outlinep++;
@@ -536,7 +536,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
             }
             nextSpaceIsNbsp = PR_TRUE;
             templinep++;
-          } else if(('\t' == *templinep) && !exdata->inflow) {
+          } else if('\t' == *templinep) {
             // Output 4 "spaces"
             for(int spaces=0; spaces<4; spaces++) {
               if (nextSpaceIsNbsp)
@@ -595,7 +595,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     while(*templinep && (*templinep != '\r') && (*templinep != '\n')) {
       if('<' == *templinep) intag = 1;
       if(!intag) {
-        if((' ' == *templinep) && !exdata->inflow) {
+        if(' ' == *templinep) {
           if (nextSpaceIsNbsp)
           {
             *outlinep='&'; outlinep++;
@@ -611,7 +611,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
           }
           nextSpaceIsNbsp = PR_TRUE;
           templinep++;
-        } else if(('\t' == *templinep) && !exdata->inflow) {
+        } else if('\t' == *templinep) {
           // Output 4 "spaces"
           for(int spaces=0; spaces<4; spaces++) {
             if (nextSpaceIsNbsp)
