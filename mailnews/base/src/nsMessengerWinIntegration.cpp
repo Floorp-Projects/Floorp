@@ -55,12 +55,9 @@
 #include "nsIProfile.h"
 #include "nsIDirectoryService.h"
 
+#include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIDocShell.h"
-#include "nsIBaseWindow.h"
-#include "nsIWidget.h"
-#include "nsIAppShellService.h"
+#include "nsIMessengerWindowService.h"
 #include "prprf.h"
 #include "nsIWeakReference.h"
 #include "nsIStringBundle.h"
@@ -80,6 +77,108 @@
 #ifdef GetUserName
 #undef GetUserName
 #endif
+
+
+// Message window encapsulation.
+struct MessageWindow 
+{
+    // ctor/dtor are simplistic
+    MessageWindow() 
+    {
+      Create();
+    }
+
+    // Act like an HWND.
+    operator HWND() 
+    {
+        return mHandle;
+    }
+
+    // Class name: appName + "MessageWindow"
+    static const char *className() 
+    {
+      static char classNameBuffer[128];
+      static char *mClassName = 0;
+      if ( !mClassName ) 
+      {
+        ::_snprintf( classNameBuffer,
+                     sizeof classNameBuffer,
+                     "%s%s",
+                     "MailBiffNotification",
+                     "MessageWindow" );
+        mClassName = classNameBuffer;
+      }
+      return mClassName;
+    }
+
+    // Create: Register class and create window.
+    NS_IMETHOD Create() 
+    {
+      // Try to find window.
+      mHandle = ::FindWindow( className(), 0 );
+      if (mHandle) 
+        return NS_OK;
+
+      WNDCLASS classStruct = { 0,                          // style
+                               &MessageWindow::WindowProc, // lpfnWndProc
+                               0,                          // cbClsExtra
+                               0,                          // cbWndExtra
+                               0,                          // hInstance
+                               0,                          // hIcon
+                               0,                          // hCursor
+                               0,                          // hbrBackground
+                               0,                          // lpszMenuName
+                               className() };              // lpszClassName
+
+      // Register the window class.
+      NS_ENSURE_TRUE( ::RegisterClass( &classStruct ), NS_ERROR_FAILURE );
+      // Create the window.
+      NS_ENSURE_TRUE( ( mHandle = ::CreateWindow( className(),
+                                                  0,          // title
+                                                  WS_CAPTION, // style
+                                                  0,0,0,0,    // x, y, cx, cy
+                                                  0,          // parent
+                                                  0,          // menu
+                                                  0,          // instance
+                                                  0 ) ),      // create struct
+                        NS_ERROR_FAILURE );
+      return NS_OK;
+    }
+
+    // Window proc.
+    static long CALLBACK WindowProc( HWND msgWindow, UINT msg, WPARAM wp, LPARAM lp ) 
+    {
+      if ( msg == WM_USER ) 
+      {
+         if ( lp == WM_LBUTTONDBLCLK ) 
+         {
+           nsCOMPtr<nsIWindowMediator> mediator ( do_GetService(NS_WINDOWMEDIATOR_CONTRACTID) );
+           if (mediator)
+           {
+             nsCOMPtr<nsIDOMWindowInternal> domWindow;
+             mediator->GetMostRecentWindow( NS_LITERAL_STRING("mail:3pane").get(), getter_AddRefs(domWindow));
+             if (domWindow)
+               domWindow->Focus();
+             else
+             {
+               // the user doesn't have a mail window open already so open one for them...
+                nsCOMPtr <nsIMessengerWindowService> messengerWindowService = do_GetService(NS_MESSENGERWINDOWSERVICE_CONTRACTID);
+                // if we want to preselect the first account with new mail, here is where we would try to generate
+                // a uri to pass in (and add code to the messenger window service to make that work)
+                if (messengerWindowService) 
+                  messengerWindowService->OpenMessengerWindowWithUri(nsnull);
+             }
+           }
+         }
+      }
+     
+      return TRUE;
+    }
+
+private:
+    HWND mHandle;
+}; // struct MessageWindow
+
 
 nsMessengerWinIntegration::nsMessengerWinIntegration()
 {
@@ -142,29 +241,6 @@ nsMessengerWinIntegration::ResetCurrent()
   return NS_OK;
 }
 
-// shamelessly ripped directly from nsNativeAppSupportWin.cpp
-HWND hwndForDOMWindow( nsISupports *window ) 
-{
-  nsCOMPtr<nsIScriptGlobalObject> ppScriptGlobalObj( do_QueryInterface(window) );
-  if ( !ppScriptGlobalObj ) 
-    return 0;
-  
-  nsCOMPtr<nsIDocShell> ppDocShell;
-  ppScriptGlobalObj->GetDocShell( getter_AddRefs( ppDocShell ) );
-  if ( !ppDocShell )
-    return 0;
-
-  nsCOMPtr<nsIBaseWindow> ppBaseWindow( do_QueryInterface( ppDocShell ) );
-  if ( !ppBaseWindow ) 
-    return 0;
-  
-  nsCOMPtr<nsIWidget> ppWidget;
-  ppBaseWindow->GetMainWidget( getter_AddRefs( ppWidget ) );
-
-  return (HWND)( ppWidget->GetNativeData( NS_NATIVE_WIDGET ) );
-}
-// end shameless copying from nsNativeAppSupportWin.cpp
-
 NOTIFYICONDATA nsMessengerWinIntegration::mAsciiBiffIconData = { sizeof(NOTIFYICONDATA),
                                                     0,
                                                     2,
@@ -185,20 +261,17 @@ void nsMessengerWinIntegration::InitializeBiffStatusIcon()
 {
   // initialize our biff status bar icon 
   nsresult rv = NS_OK; 
-  nsCOMPtr<nsIAppShellService> appService = do_GetService( "@mozilla.org/appshell/appShellService;1", &rv);
-  if (NS_FAILED(rv)) return;
-  nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
-  rv = appService->GetHiddenDOMWindow(getter_AddRefs(hiddenWindow));
+  MessageWindow msgWindow;
  
   if (mUseWideCharBiffIcon)
   {
-    mWideBiffIconData.hWnd = hwndForDOMWindow( hiddenWindow );
+    mWideBiffIconData.hWnd = (HWND) msgWindow;
     mWideBiffIconData.hIcon =  ::LoadIcon( ::GetModuleHandle( "msgbase.dll" ), MAKEINTRESOURCE(IDI_MAILBIFF) );
     mWideBiffIconData.szTip[0] = 0;
   }
   else
   {
-    mAsciiBiffIconData.hWnd = hwndForDOMWindow( hiddenWindow );
+    mAsciiBiffIconData.hWnd = (HWND) msgWindow;
     mAsciiBiffIconData.hIcon =  ::LoadIcon( ::GetModuleHandle( "msgbase.dll" ), MAKEINTRESOURCE(IDI_MAILBIFF) );
     mAsciiBiffIconData.szTip[0] = 0;
   }
@@ -463,6 +536,18 @@ nsMessengerWinIntegration::OnItemPropertyFlagChanged(nsISupports *item, nsIAtom 
 
 		if (newFlag == nsIMsgFolder::nsMsgBiffState_NewMail) 
     {
+      // if the icon is not already visible, only show a system tray icon iff 
+      // we are performing biff (as opposed to the user getting new mail)
+      if (!mBiffIconVisible)
+      {
+        PRBool performingBiff = PR_FALSE;
+        nsCOMPtr<nsIMsgIncomingServer> server;
+        folder->GetServer(getter_AddRefs(server));
+        if (server)
+          server->GetPerformingBiff(&performingBiff);
+        if (!performingBiff) 
+          return NS_OK; // kick out right now...
+      }
       nsCOMPtr<nsIWeakReference> weakFolder = do_GetWeakReference(folder); 
 
       // remove the element if it is already in the array....
@@ -758,7 +843,6 @@ nsMessengerWinIntegration::SetupInbox()
         mEmailPrefix.Truncate(0);
     }
 
-
     // Get user's email address
     nsCOMPtr<nsIMsgIdentity> identity;
     rv = account->GetDefaultIdentity(getter_AddRefs(identity));
@@ -833,3 +917,4 @@ nsMessengerWinIntegration::SetupUnreadCountUpdateTimer()
 
   return NS_OK;
 }
+
