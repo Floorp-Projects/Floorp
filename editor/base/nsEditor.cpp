@@ -403,6 +403,8 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   	caret->SetCaretReadOnly(PR_FALSE);
   }
 
+	mPresShell->SetCaretEnabled(PR_TRUE);
+
   NS_POSTCONDITION(mDoc && mPresShell, "bad state");
 
   return NS_OK;
