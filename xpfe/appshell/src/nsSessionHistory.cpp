@@ -489,6 +489,9 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
    cur = this;
    prev = aPrevEntry;
 
+   if (!cur || !prev) {
+     return NS_ERROR_NULL_POINTER;
+   }
    if (prev) {
      prev->GetURL(&pURL);
      pSURL = pURL;
@@ -497,14 +500,10 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
    if (cur) {
      cur->GetURL(&cURL);
      cSURL = cURL;
-	 Recycle(cURL);
-
    }
      
 //   NS_ADDREF(aPrevEntry);
-   if (!cur || !prev) {
-     return NS_ERROR_NULL_POINTER;
-   }
+
 
    //Compare the URLs
    {
@@ -513,10 +512,6 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
      else
        urlChanged = PR_TRUE;
    }  // compareURLs
-
- 
-   /* The URL to be loaded in it */
-   cur->GetURL(&cURL);
 
    if (urlChanged || aIsReload) {
       if (prev) {
@@ -567,8 +562,6 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
        if (APP_DEBUG) printf("SessionHistory::Load URLs in webshells %x & %x match \n", (unsigned int) mWS, (unsigned int) prev);	   
    }
 
-//   if (pSURL) delete pSURL;
-//   if (cSURL) delete cSURL;
    /* Make sure the child windows are in par */
    PRInt32  cnt=0, ccnt=0, pcnt=0;
    ccnt = cur->GetChildCnt();
@@ -632,7 +625,6 @@ nsHistoryEntry::Compare(nsIWebShell * aPrevEntry, PRBool aIsReload) {
    if (cur) {
      cur->GetURL(&cURL);
      cSURL = (cURL);
-	 Recycle(cURL);
    }
    //Compare the URLs
    {
@@ -641,9 +633,6 @@ nsHistoryEntry::Compare(nsIWebShell * aPrevEntry, PRBool aIsReload) {
      else
        urlChanged = PR_TRUE;
    }  // compareURLs
-
-   /* The URL to be loaded in it */
-   cur->GetURL(&cURL);
 
    if (urlChanged /*|| aIsReload*/) {
 	   if (APP_DEBUG) 
@@ -656,8 +645,7 @@ nsHistoryEntry::Compare(nsIWebShell * aPrevEntry, PRBool aIsReload) {
        /* Mark the changed flag to false. This is used in the end to determine
         * whether we are done with the whole loading process for this history
         */
-       if (APP_DEBUG) printf("SessionHistory::Compare URLs in webshells %x & %x match \n", (unsigned int) mWS, (unsigned int) prev);
-	   
+       if (APP_DEBUG) printf("SessionHistory::Compare URLs in webshells %x & %x match \n", (unsigned int) mWS, (unsigned int) prev);	   
    }
 
    /* Make sure the child windows are in par */
