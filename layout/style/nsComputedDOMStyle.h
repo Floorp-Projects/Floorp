@@ -46,6 +46,7 @@
 #include "nsDOMCSSDeclaration.h"
 #include "nsDOMCSSRGBColor.h"
 #include "nsDOMCSSValueList.h"
+#include "nsCSSProps.h"
 
 #include "nsIPresShell.h"
 #include "nsIContent.h"
@@ -275,6 +276,17 @@ private:
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
   nsDOMCSSValueList* GetROCSSValueList(PRBool aCommaDelimited);
   nsDOMCSSRGBColor* GetDOMCSSRGBColor(nscolor aColor);
+
+  struct ComputedStyleMapEntry
+  {
+    // Create a pointer-to-member-function type.
+    typedef nsresult (nsComputedDOMStyle::*ComputeMethod)(nsIFrame*, nsIDOMCSSValue**);
+
+    const nsCSSProperty mProperty;
+    const ComputeMethod mGetter;
+  };
+
+  static const ComputedStyleMapEntry* GetQueryablePropertyMap(PRUint32* aLength);
 
   nsCOMPtr<nsISupports> mInner; // CSS2Properties
 

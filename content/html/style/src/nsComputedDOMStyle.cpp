@@ -65,206 +65,7 @@
 /*
  * This is the implementation of the readonly CSSStyleDeclaration that is
  * returned by the getComputedStyle() function.
- *
- * This file is very much a work in progress.  There's a lot of code in this
- * file that is #ifdef'd out placeholders.
  */
-
-static const nsCSSProperty queryableProperties[] = {
-  /* ******************************************************************* *\
-   * Properties below are listed in alphabetical order.                  *
-   * Please keep them that way.                                          *
-   *                                                                     *
-   * Properties commented out with // are not yet implemented            *
-   * Properties commented out with //// are shorthands and not queryable *
-  \* ******************************************************************* */
-
-  /* ****************************** *\
-   * Implementations of CSS2 styles *
-  \* ****************************** */
-
-  // eCSSProperty_azimuth,
-
-  //// eCSSProperty_background,
-  eCSSProperty_background_attachment,
-  eCSSProperty_background_color,
-  eCSSProperty_background_image,
-  //// eCSSProperty_background_position,
-  eCSSProperty_background_repeat,
-  //// eCSSProperty_border,
-  //// eCSSProperty_border_bottom,
-  eCSSProperty_border_bottom_color,
-  eCSSProperty_border_bottom_style,
-  eCSSProperty_border_bottom_width,
-  eCSSProperty_border_collapse,
-  //// eCSSProperty_border_color,
-  //// eCSSProperty_border_left,
-  eCSSProperty_border_left_color,
-  eCSSProperty_border_left_style,
-  eCSSProperty_border_left_width,
-  //// eCSSProperty_border_right,
-  eCSSProperty_border_right_color,
-  eCSSProperty_border_right_style,
-  eCSSProperty_border_right_width,
-  //// eCSSProperty_border_spacing,
-  //// eCSSProperty_border_style,
-  //// eCSSProperty_border_top,
-  eCSSProperty_border_top_color,
-  eCSSProperty_border_top_style,
-  eCSSProperty_border_top_width,
-  //// eCSSProperty_border_width,
-  eCSSProperty_bottom,
-
-  eCSSProperty_caption_side,
-  eCSSProperty_clear,
-  eCSSProperty_clip,
-  eCSSProperty_color,
-  // eCSSProperty_content,
-  // eCSSProperty_counter_increment,
-  // eCSSProperty_counter_reset,
-  //// eCSSProperty_cue,
-  // eCSSProperty_cue_after,
-  // eCSSProperty_cue_before,
-  eCSSProperty_cursor,
-
-  eCSSProperty_direction,
-  eCSSProperty_display,
-
-  // eCSSProperty_elevation,
-  eCSSProperty_empty_cells,
-
-  eCSSProperty_float,
-  //// eCSSProperty_font,
-  eCSSProperty_font_family,
-  eCSSProperty_font_size,
-  eCSSProperty_font_size_adjust,
-  // eCSSProperty_font_stretch,
-  eCSSProperty_font_style,
-  eCSSProperty_font_variant,
-  eCSSProperty_font_weight,
-
-  eCSSProperty_height,
-
-  eCSSProperty_left,
-  eCSSProperty_letter_spacing,
-  eCSSProperty_line_height,
-  //// eCSSProperty_list_style,
-  eCSSProperty_list_style_image,
-  eCSSProperty_list_style_position,
-  eCSSProperty_list_style_type,
-
-  //// eCSSProperty_margin,
-  eCSSProperty_margin_bottom,
-  eCSSProperty_margin_left,
-  eCSSProperty_margin_right,
-  eCSSProperty_margin_top,
-  eCSSProperty_marker_offset,
-  // eCSSProperty_marks,
-  eCSSProperty_max_height,
-  eCSSProperty_max_width,
-  eCSSProperty_min_height,
-  eCSSProperty_min_width,
-
-  // eCSSProperty_orphans,
-  //// eCSSProperty_outline,
-  // eCSSProperty_outline_color,
-  // eCSSProperty_outline_style,
-  // eCSSProperty_outline_width,
-  eCSSProperty_overflow,
-
-  //// eCSSProperty_padding,
-  eCSSProperty_padding_bottom,
-  eCSSProperty_padding_left,
-  eCSSProperty_padding_right,
-  eCSSProperty_padding_top,
-  // eCSSProperty_page,
-  // eCSSProperty_page_break_after,
-  // eCSSProperty_page_break_before,
-  // eCSSProperty_page_break_inside,
-  //// eCSSProperty_pause,
-  // eCSSProperty_pause_after,
-  // eCSSProperty_pause_before,
-  // eCSSProperty_pitch,
-  // eCSSProperty_pitch_range,
-  //// eCSSProperty_play_during,
-  eCSSProperty_position,
-
-  // eCSSProperty_quotes,
-
-  // eCSSProperty_richness,
-  eCSSProperty_right,
-
-  //// eCSSProperty_size,
-  // eCSSProperty_speak,
-  // eCSSProperty_speak_header,
-  // eCSSProperty_speak_numeral,
-  // eCSSProperty_speak_punctuation,
-  // eCSSProperty_speech_rate,
-  // eCSSProperty_stress,
-
-  eCSSProperty_table_layout,
-  eCSSProperty_text_align,
-  eCSSProperty_text_decoration,
-  eCSSProperty_text_indent,
-  // eCSSProperty_text_shadow,
-  eCSSProperty_text_transform,
-  eCSSProperty_top,
-
-  eCSSProperty_unicode_bidi,
-
-  eCSSProperty_vertical_align,
-  eCSSProperty_visibility,
-  // eCSSProperty_voice_family,
-  // eCSSProperty_volume,
-
-  eCSSProperty_white_space,
-  // eCSSProperty_widows,
-  eCSSProperty_width,
-  eCSSProperty_word_spacing,
-
-  eCSSProperty_z_index,
-
-  /* ******************************* *\
-   * Implementations of -moz- styles *
-  \* ******************************* */
-
-  eCSSProperty_appearance,
-  eCSSProperty_binding,
-
-  eCSSProperty_border_bottom_colors,
-  eCSSProperty_border_left_colors,
-  eCSSProperty_border_right_colors,
-  eCSSProperty_border_top_colors,
-
-  eCSSProperty__moz_border_radius_bottomLeft,
-  eCSSProperty__moz_border_radius_bottomRight,
-  eCSSProperty__moz_border_radius_topLeft,
-  eCSSProperty__moz_border_radius_topRight,
-
-#ifdef INCLUDE_XUL
-  eCSSProperty_box_align,
-  eCSSProperty_box_direction,
-  eCSSProperty_box_flex,
-  eCSSProperty_box_ordinal_group,
-  eCSSProperty_box_orient,
-  eCSSProperty_box_pack,
-#endif
-  eCSSProperty_box_sizing,
-
-  eCSSProperty_float_edge,
-
-  eCSSProperty_opacity,
-  //// eCSSProperty__moz_outline,
-  eCSSProperty__moz_outline_color,
-  eCSSProperty__moz_outline_style,
-  eCSSProperty__moz_outline_width,
-
-  eCSSProperty_user_focus,
-  eCSSProperty_user_input,
-  eCSSProperty_user_modify,
-  eCSSProperty_user_select
-
-};
 
 static nsComputedDOMStyle *sCachedComputedDOMStyle;
 
@@ -438,8 +239,9 @@ nsComputedDOMStyle::SetCssText(const nsAString& aCssText)
 NS_IMETHODIMP
 nsComputedDOMStyle::GetLength(PRUint32* aLength)
 {
-  NS_ENSURE_ARG_POINTER(aLength);
-  *aLength = sizeof(queryableProperties) / sizeof(nsCSSProperty);
+  NS_PRECONDITION(aLength, "Null aLength!  Prepare to die!");
+
+  (void)GetQueryablePropertyMap(aLength);
 
   return NS_OK;
 }
@@ -490,244 +292,25 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
 
   nsresult rv = NS_OK;
 
-  // XXX FIX THIS!!!
   nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
 
-  switch (prop) {
-    case eCSSProperty_appearance:
-      rv = GetAppearance(frame, aReturn); break;
-    case eCSSProperty_binding :
-      rv = GetBinding(frame, aReturn); break;
-
-#if INCLUDE_XUL
-    case eCSSProperty_box_align:
-      rv = GetBoxAlign(frame, aReturn); break;
-    case eCSSProperty_box_direction:
-      rv = GetBoxDirection(frame, aReturn); break;
-    case eCSSProperty_box_flex:
-      rv = GetBoxFlex(frame, aReturn); break;
-    case eCSSProperty_box_ordinal_group:
-      rv = GetBoxOrdinalGroup(frame, aReturn); break;
-    case eCSSProperty_box_orient:
-      rv = GetBoxOrient(frame, aReturn); break;
-    case eCSSProperty_box_pack:
-      rv = GetBoxPack(frame, aReturn); break;
-#endif // INCLUDE_XUL
-    case eCSSProperty_box_sizing:
-      rv = GetBoxSizing(frame, aReturn); break;
-
-    case eCSSProperty_display :
-      rv = GetDisplay(frame, aReturn); break;
-    case eCSSProperty_position :
-      rv = GetPosition(frame, aReturn); break;
-    case eCSSProperty_clear:
-      rv = GetClear(frame, aReturn); break;
-    case eCSSProperty_float :
-      rv = GetCssFloat(frame, aReturn); break;
-    case eCSSProperty_float_edge:
-      rv = GetFloatEdge(frame, aReturn); break;
-    case eCSSProperty_width :
-      rv = GetWidth(frame, aReturn); break;
-    case eCSSProperty_height :
-      rv = GetHeight(frame, aReturn); break;
-    case eCSSProperty_max_height :
-      rv = GetMaxHeight(frame, aReturn); break;
-    case eCSSProperty_max_width :
-      rv = GetMaxWidth(frame, aReturn); break;
-    case eCSSProperty_min_height :
-      rv = GetMinHeight(frame, aReturn); break;
-    case eCSSProperty_min_width :
-      rv = GetMinWidth(frame, aReturn); break;
-    case eCSSProperty_left :
-      rv = GetLeft(frame, aReturn); break;
-    case eCSSProperty_top :
-      rv = GetTop(frame, aReturn); break;
-    case eCSSProperty_right :
-      rv = GetRight(frame, aReturn); break;
-    case eCSSProperty_bottom :
-      rv = GetBottom(frame, aReturn); break;
-
-      // Font properties
-    case eCSSProperty_color :
-      rv = GetColor(frame, aReturn); break;
-    case eCSSProperty_font_family :
-      rv = GetFontFamily(frame, aReturn); break;
-    case eCSSProperty_font_size :
-      rv = GetFontSize(frame, aReturn); break;
-    case eCSSProperty_font_size_adjust:
-      rv = GetFontSizeAdjust(frame, aReturn); break;
-    case eCSSProperty_font_style :
-      rv = GetFontStyle(frame, aReturn); break;
-    case eCSSProperty_font_weight :
-      rv = GetFontWeight(frame, aReturn); break;
-    case eCSSProperty_font_variant :
-      rv = GetFontVariant(frame, aReturn); break;
-
-      // Background properties
-    case eCSSProperty_background_attachment:
-      rv = GetBackgroundAttachment(frame, aReturn); break;
-    case eCSSProperty_background_color :
-      rv = GetBackgroundColor(frame, aReturn); break;
-    case eCSSProperty_background_image :
-      rv = GetBackgroundImage(frame, aReturn); break;
-    case eCSSProperty_background_repeat:
-      rv = GetBackgroundRepeat(frame, aReturn); break;
-
-      // Padding properties
-    case eCSSProperty_padding :
-      rv = GetPadding(frame, aReturn); break;
-    case eCSSProperty_padding_top :
-      rv = GetPaddingTop(frame, aReturn); break;
-    case eCSSProperty_padding_bottom :
-      rv = GetPaddingBottom(frame, aReturn); break;
-    case eCSSProperty_padding_left :
-      rv = GetPaddingLeft(frame, aReturn); break;
-    case eCSSProperty_padding_right :
-      rv = GetPaddingRight(frame, aReturn); break;
-
-      // Table properties
-    case eCSSProperty_border_collapse:
-      rv = GetBorderCollapse(frame, aReturn); break;
-    case eCSSProperty_caption_side:
-      rv = GetCaptionSide(frame, aReturn); break;
-    case eCSSProperty_empty_cells:
-      rv = GetEmptyCells(frame, aReturn); break;
-    case eCSSProperty_table_layout:
-      rv = GetTableLayout(frame, aReturn); break;
-    case eCSSProperty_vertical_align:
-      rv = GetVerticalAlign(frame, aReturn); break;
-
-      // Border properties
-    case eCSSProperty_border_top_style :
-      rv = GetBorderTopStyle(frame, aReturn); break;
-    case eCSSProperty_border_bottom_style :
-      rv = GetBorderBottomStyle(frame, aReturn); break;
-    case eCSSProperty_border_left_style :
-      rv = GetBorderLeftStyle(frame, aReturn); break;
-    case eCSSProperty_border_right_style :
-      rv = GetBorderRightStyle(frame, aReturn); break;
-    case eCSSProperty_border_top_width :
-      rv = GetBorderTopWidth(frame, aReturn); break;
-    case eCSSProperty_border_bottom_width :
-      rv = GetBorderBottomWidth(frame, aReturn); break;
-    case eCSSProperty_border_left_width :
-      rv = GetBorderLeftWidth(frame, aReturn); break;
-    case eCSSProperty_border_right_width :
-      rv = GetBorderRightWidth(frame, aReturn); break;
-    case eCSSProperty_border_top_color :
-      rv = GetBorderTopColor(frame, aReturn); break;
-    case eCSSProperty_border_bottom_color :
-      rv = GetBorderBottomColor(frame, aReturn); break;
-    case eCSSProperty_border_left_color :
-      rv = GetBorderLeftColor(frame, aReturn); break;
-    case eCSSProperty_border_right_color :
-      rv = GetBorderRightColor(frame, aReturn); break;
-    case eCSSProperty_border_bottom_colors:
-      rv = GetBorderBottomColors(frame, aReturn); break;
-    case eCSSProperty_border_left_colors:
-      rv = GetBorderLeftColors(frame, aReturn); break;
-    case eCSSProperty_border_right_colors:
-      rv = GetBorderRightColors(frame, aReturn); break;
-    case eCSSProperty_border_top_colors:
-      rv = GetBorderTopColors(frame, aReturn); break;
-    case eCSSProperty__moz_border_radius_bottomLeft:
-      rv = GetBorderRadiusBottomLeft(frame, aReturn); break;
-    case eCSSProperty__moz_border_radius_bottomRight:
-      rv = GetBorderRadiusBottomRight(frame, aReturn); break;
-    case eCSSProperty__moz_border_radius_topLeft:
-      rv = GetBorderRadiusTopLeft(frame, aReturn); break;
-    case eCSSProperty__moz_border_radius_topRight:
-      rv = GetBorderRadiusTopRight(frame, aReturn); break;
-
-      // Margin properties
-    case eCSSProperty_margin_top :
-      rv = GetMarginTopWidth(frame, aReturn); break;
-    case eCSSProperty_margin_bottom :
-      rv = GetMarginBottomWidth(frame, aReturn); break;
-    case eCSSProperty_margin_left :
-      rv = GetMarginLeftWidth(frame, aReturn); break;
-    case eCSSProperty_margin_right :
-      rv = GetMarginRightWidth(frame, aReturn); break;
-
-      // Marker property
-    case eCSSProperty_marker_offset :
-      rv = GetMarkerOffset(frame, aReturn); break;
-
-      // Outline properties
-    case eCSSProperty__moz_outline_width :
-      rv = GetOutlineWidth(frame, aReturn); break;
-    case eCSSProperty__moz_outline_style :
-      rv = GetOutlineStyle(frame, aReturn); break;
-    case eCSSProperty__moz_outline_color:
-      rv = GetOutlineColor(frame, aReturn); break;
-
-      // Text properties
-    case eCSSProperty_line_height:
-      rv = GetLineHeight(frame, aReturn); break;
-    case eCSSProperty_text_align:
-      rv = GetTextAlign(frame, aReturn); break;
-    case eCSSProperty_text_decoration:
-      rv = GetTextDecoration(frame, aReturn); break;
-    case eCSSProperty_text_indent:
-      rv = GetTextIndent(frame, aReturn); break;
-    case eCSSProperty_text_transform:
-      rv = GetTextTransform(frame, aReturn); break;
-    case eCSSProperty_letter_spacing:
-      rv = GetLetterSpacing(frame, aReturn); break;
-    case eCSSProperty_word_spacing:
-      rv = GetWordSpacing(frame, aReturn); break;
-    case eCSSProperty_white_space:
-      rv = GetWhiteSpace(frame, aReturn); break;
-      
-      // List properties
-    case eCSSProperty_list_style_image:
-      rv = GetListStyleImage(frame, aReturn); break; 
-    case eCSSProperty_list_style_position:
-      rv = GetListStylePosition(frame, aReturn); break; 
-    case eCSSProperty_list_style_type:
-      rv = GetListStyleType(frame, aReturn); break; 
-
-      // Display properties
-    case eCSSProperty_visibility:
-      rv = GetVisibility(frame, aReturn); break;
-    case eCSSProperty_opacity:
-      rv = GetOpacity(frame, aReturn); break;
-
-      // Z-Index property
-    case eCSSProperty_z_index:
-      rv = GetZIndex(frame, aReturn); break;
-
-      // Clip
-    case eCSSProperty_clip:
-      rv = GetClip(frame, aReturn); break;
-    case eCSSProperty_overflow:
-      rv = GetOverflow(frame, aReturn); break;
-
-      // Direction
-    case eCSSProperty_direction:
-      rv = GetDirection(frame, aReturn); break;
-    case eCSSProperty_unicode_bidi:
-      rv = GetUnicodeBidi(frame, aReturn); break;
-
-      // User interface
-    case eCSSProperty_cursor:
-      rv = GetCursor(frame, aReturn); break;
-    case eCSSProperty_user_focus:
-      rv = GetUserFocus(frame, aReturn); break;
-    case eCSSProperty_user_input:
-      rv = GetUserInput(frame, aReturn); break;
-    case eCSSProperty_user_modify:
-      rv = GetUserModify(frame, aReturn); break;
-    case eCSSProperty_user_select:
-      rv = GetUserSelect(frame, aReturn); break;
-
-    default :
-#ifdef DEBUG_ComputedDOMStyle
-      NS_ERROR("Someone is trying to get computed style of a property we "
-               "don't handle!");
-#endif
+  PRUint32 i = 0;
+  PRUint32 length = 0;
+  const ComputedStyleMapEntry* propMap = GetQueryablePropertyMap(&length);
+  for (; i < length; ++i) {
+    if (prop == propMap[i].mProperty) {
+      // Call our pointer-to-member-function.
+      rv = (this->*(propMap[i].mGetter))(frame, aReturn);
       break;
+    }
   }
+
+#ifdef DEBUG_ComputedDOMStyle
+  if (i == length) {
+    NS_WARNING(PromiseFlatCString(aPropertyName + 
+                                  NS_LITERAL_CSTRING(" is not queryable!")).get());
+  }
+#endif
 
   if (NS_FAILED(rv)) {
     *aReturn = nsnull;
@@ -771,11 +354,12 @@ nsComputedDOMStyle::SetProperty(const nsAString& aPropertyName,
 NS_IMETHODIMP
 nsComputedDOMStyle::Item(PRUint32 aIndex, nsAString& aReturn)
 {
-  PRUint32 length;
-  GetLength(&length);
   aReturn.Truncate();
+
+  PRUint32 length = 0;
+  const ComputedStyleMapEntry* propMap = GetQueryablePropertyMap(&length);
   if (aIndex < length) {
-    CopyASCIItoUCS2(nsCSSProps::GetStringValue(queryableProperties[aIndex]),
+    CopyASCIItoUCS2(nsCSSProps::GetStringValue(propMap[aIndex].mProperty),
                     aReturn);
   }
 
@@ -3833,3 +3417,186 @@ nsComputedDOMStyle::GetBorderStyleFor(PRUint8 aSide, nsIFrame *aFrame,
 
   return CallQueryInterface(val, aValue);
 }
+
+
+#define COMPUTED_STYLE_MAP_ENTRY(_prop, _method)  \
+  { eCSSProperty_##_prop, &nsComputedDOMStyle::Get##_method }
+
+const nsComputedDOMStyle::ComputedStyleMapEntry*
+nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
+{
+  /* ******************************************************************* *\
+   * Properties below are listed in alphabetical order.                  *
+   * Please keep them that way.                                          *
+   *                                                                     *
+   * Properties commented out with // are not yet implemented            *
+   * Properties commented out with //// are shorthands and not queryable *
+  \* ******************************************************************* */
+  static const ComputedStyleMapEntry map[] = {
+    /* ****************************** *\
+     * Implementations of CSS2 styles *
+    \* ****************************** */
+
+    // COMPUTED_STYLE_MAP_ENTRY(azimuth,                    Azimuth),
+    //// COMPUTED_STYLE_MAP_ENTRY(background,               Background),
+    COMPUTED_STYLE_MAP_ENTRY(background_attachment,         BackgroundAttachment),
+    COMPUTED_STYLE_MAP_ENTRY(background_color,              BackgroundColor),
+    COMPUTED_STYLE_MAP_ENTRY(background_image,              BackgroundImage),
+    //// COMPUTED_STYLE_MAP_ENTRY(background_position,      BackgroundPosition),
+    COMPUTED_STYLE_MAP_ENTRY(background_repeat,             BackgroundRepeat),
+    //// COMPUTED_STYLE_MAP_ENTRY(border,                   Border),
+    //// COMPUTED_STYLE_MAP_ENTRY(border_bottom,            BorderBottom),
+    COMPUTED_STYLE_MAP_ENTRY(border_bottom_color,           BorderBottomColor),
+    COMPUTED_STYLE_MAP_ENTRY(border_bottom_style,           BorderBottomStyle),
+    COMPUTED_STYLE_MAP_ENTRY(border_bottom_width,           BorderBottomWidth),
+    COMPUTED_STYLE_MAP_ENTRY(border_collapse,               BorderCollapse),
+    //// COMPUTED_STYLE_MAP_ENTRY(border_color,             BorderColor),
+    //// COMPUTED_STYLE_MAP_ENTRY(border_left,              BorderLeft),
+    COMPUTED_STYLE_MAP_ENTRY(border_left_color,             BorderLeftColor),
+    COMPUTED_STYLE_MAP_ENTRY(border_left_style,             BorderLeftStyle),
+    COMPUTED_STYLE_MAP_ENTRY(border_left_width,             BorderLeftWidth),
+    //// COMPUTED_STYLE_MAP_ENTRY(border_right,             BorderRight),
+    COMPUTED_STYLE_MAP_ENTRY(border_right_color,            BorderRightColor),
+    COMPUTED_STYLE_MAP_ENTRY(border_right_style,            BorderRightStyle),
+    COMPUTED_STYLE_MAP_ENTRY(border_right_width,            BorderRightWidth),
+    //// COMPUTED_STYLE_MAP_ENTRY(border_spacing,           BorderSpacing),
+    //// COMPUTED_STYLE_MAP_ENTRY(border_style,             BorderStyle),
+    //// COMPUTED_STYLE_MAP_ENTRY(border_top,               BorderTop),
+    COMPUTED_STYLE_MAP_ENTRY(border_top_color,              BorderTopColor),
+    COMPUTED_STYLE_MAP_ENTRY(border_top_style,              BorderTopStyle),
+    COMPUTED_STYLE_MAP_ENTRY(border_top_width,              BorderTopWidth),
+    //// COMPUTED_STYLE_MAP_ENTRY(border_width,             BorderWidth),
+    COMPUTED_STYLE_MAP_ENTRY(bottom,                        Bottom),
+    COMPUTED_STYLE_MAP_ENTRY(caption_side,                  CaptionSide),
+    COMPUTED_STYLE_MAP_ENTRY(clear,                         Clear),
+    COMPUTED_STYLE_MAP_ENTRY(clip,                          Clip),
+    COMPUTED_STYLE_MAP_ENTRY(color,                         Color),
+    // COMPUTED_STYLE_MAP_ENTRY(content,                    Content),
+    // COMPUTED_STYLE_MAP_ENTRY(counter_increment,          CounterIncrement),
+    // COMPUTED_STYLE_MAP_ENTRY(counter_reset,              CounterReset),
+    //// COMPUTED_STYLE_MAP_ENTRY(cue,                      Cue),
+    // COMPUTED_STYLE_MAP_ENTRY(cue_after,                  CueAfter),
+    // COMPUTED_STYLE_MAP_ENTRY(cue_before,                 CueBefore),
+    COMPUTED_STYLE_MAP_ENTRY(cursor,                        Cursor),
+    COMPUTED_STYLE_MAP_ENTRY(direction,                     Direction),
+    COMPUTED_STYLE_MAP_ENTRY(display,                       Display),
+    // COMPUTED_STYLE_MAP_ENTRY(elevation,                  Elevation),
+    COMPUTED_STYLE_MAP_ENTRY(empty_cells,                   EmptyCells),
+    COMPUTED_STYLE_MAP_ENTRY(float,                         CssFloat),
+    //// COMPUTED_STYLE_MAP_ENTRY(font,                     Font),
+    COMPUTED_STYLE_MAP_ENTRY(font_family,                   FontFamily),
+    COMPUTED_STYLE_MAP_ENTRY(font_size,                     FontSize),
+    COMPUTED_STYLE_MAP_ENTRY(font_size_adjust,              FontSizeAdjust),
+    // COMPUTED_STYLE_MAP_ENTRY(font_stretch,               FontStretch),
+    COMPUTED_STYLE_MAP_ENTRY(font_style,                    FontStyle),
+    COMPUTED_STYLE_MAP_ENTRY(font_variant,                  FontVariant),
+    COMPUTED_STYLE_MAP_ENTRY(font_weight,                   FontWeight),
+    COMPUTED_STYLE_MAP_ENTRY(height,                        Height),
+    COMPUTED_STYLE_MAP_ENTRY(left,                          Left),
+    COMPUTED_STYLE_MAP_ENTRY(letter_spacing,                LetterSpacing),
+    COMPUTED_STYLE_MAP_ENTRY(line_height,                   LineHeight),
+    //// COMPUTED_STYLE_MAP_ENTRY(list_style,               ListStyle),
+    COMPUTED_STYLE_MAP_ENTRY(list_style_image,              ListStyleImage),
+    COMPUTED_STYLE_MAP_ENTRY(list_style_position,           ListStylePosition),
+    COMPUTED_STYLE_MAP_ENTRY(list_style_type,               ListStyleType),
+    //// COMPUTED_STYLE_MAP_ENTRY(margin,                   Margin),
+    COMPUTED_STYLE_MAP_ENTRY(margin_bottom,                 MarginBottomWidth),
+    COMPUTED_STYLE_MAP_ENTRY(margin_left,                   MarginLeftWidth),
+    COMPUTED_STYLE_MAP_ENTRY(margin_right,                  MarginRightWidth),
+    COMPUTED_STYLE_MAP_ENTRY(margin_top,                    MarginTopWidth),
+    COMPUTED_STYLE_MAP_ENTRY(marker_offset,                 MarkerOffset),
+    // COMPUTED_STYLE_MAP_ENTRY(marks,                      Marks),
+    COMPUTED_STYLE_MAP_ENTRY(max_height,                    MaxHeight),
+    COMPUTED_STYLE_MAP_ENTRY(max_width,                     MaxWidth),
+    COMPUTED_STYLE_MAP_ENTRY(min_height,                    MinHeight),
+    COMPUTED_STYLE_MAP_ENTRY(min_width,                     MinWidth),
+    // COMPUTED_STYLE_MAP_ENTRY(orphans,                    Orphans),
+    //// COMPUTED_STYLE_MAP_ENTRY(outline,                  Outline),
+    // COMPUTED_STYLE_MAP_ENTRY(outline_color,              OutlineColor),
+    // COMPUTED_STYLE_MAP_ENTRY(outline_style,              OutlineStyle),
+    // COMPUTED_STYLE_MAP_ENTRY(outline_width,              OutlineWidth),
+    COMPUTED_STYLE_MAP_ENTRY(overflow,                      Overflow),
+    //// COMPUTED_STYLE_MAP_ENTRY(padding,                  Padding),
+    COMPUTED_STYLE_MAP_ENTRY(padding_bottom,                PaddingBottom),
+    COMPUTED_STYLE_MAP_ENTRY(padding_left,                  PaddingLeft),
+    COMPUTED_STYLE_MAP_ENTRY(padding_right,                 PaddingRight),
+    COMPUTED_STYLE_MAP_ENTRY(padding_top,                   PaddingTop),
+    // COMPUTED_STYLE_MAP_ENTRY(page,                       Page),
+    // COMPUTED_STYLE_MAP_ENTRY(page_break_after,           PageBreakAfter),
+    // COMPUTED_STYLE_MAP_ENTRY(page_break_before,          PageBreakBefore),
+    // COMPUTED_STYLE_MAP_ENTRY(page_break_inside,          PageBreakInside),
+    //// COMPUTED_STYLE_MAP_ENTRY(pause,                    Pause),
+    // COMPUTED_STYLE_MAP_ENTRY(pause_after,                PauseAfter),
+    // COMPUTED_STYLE_MAP_ENTRY(pause_before,               PauseBefore),
+    // COMPUTED_STYLE_MAP_ENTRY(pitch,                      Pitch),
+    // COMPUTED_STYLE_MAP_ENTRY(pitch_range,                PitchRange),
+    //// COMPUTED_STYLE_MAP_ENTRY(play_during,              PlayDuring),
+    COMPUTED_STYLE_MAP_ENTRY(position,                      Position),
+    // COMPUTED_STYLE_MAP_ENTRY(quotes,                     Quotes),
+    // COMPUTED_STYLE_MAP_ENTRY(richness,                   Richness),
+    COMPUTED_STYLE_MAP_ENTRY(right,                         Right),
+    //// COMPUTED_STYLE_MAP_ENTRY(size,                     Size),
+    // COMPUTED_STYLE_MAP_ENTRY(speak,                      Speak),
+    // COMPUTED_STYLE_MAP_ENTRY(speak_header,               SpeakHeader),
+    // COMPUTED_STYLE_MAP_ENTRY(speak_numeral,              SpeakNumeral),
+    // COMPUTED_STYLE_MAP_ENTRY(speak_punctuation,          SpeakPunctuation),
+    // COMPUTED_STYLE_MAP_ENTRY(speech_rate,                SpeechRate),
+    // COMPUTED_STYLE_MAP_ENTRY(stress,                     Stress),
+    COMPUTED_STYLE_MAP_ENTRY(table_layout,                  TableLayout),
+    COMPUTED_STYLE_MAP_ENTRY(text_align,                    TextAlign),
+    COMPUTED_STYLE_MAP_ENTRY(text_decoration,               TextDecoration),
+    COMPUTED_STYLE_MAP_ENTRY(text_indent,                   TextIndent),
+    // COMPUTED_STYLE_MAP_ENTRY(text_shadow,                TextShadow),
+    COMPUTED_STYLE_MAP_ENTRY(text_transform,                TextTransform),
+    COMPUTED_STYLE_MAP_ENTRY(top,                           Top),
+    COMPUTED_STYLE_MAP_ENTRY(unicode_bidi,                  UnicodeBidi),
+    COMPUTED_STYLE_MAP_ENTRY(vertical_align,                VerticalAlign),
+    COMPUTED_STYLE_MAP_ENTRY(visibility,                    Visibility),
+    // COMPUTED_STYLE_MAP_ENTRY(voice_family,               VoiceFamily),
+    // COMPUTED_STYLE_MAP_ENTRY(volume,                     Volume),
+    COMPUTED_STYLE_MAP_ENTRY(white_space,                   WhiteSpace),
+    // COMPUTED_STYLE_MAP_ENTRY(widows,                     Widows),
+    COMPUTED_STYLE_MAP_ENTRY(width,                         Width),
+    COMPUTED_STYLE_MAP_ENTRY(word_spacing,                  WordSpacing),
+    COMPUTED_STYLE_MAP_ENTRY(z_index,                       ZIndex),
+
+    /* ******************************* *\
+     * Implementations of -moz- styles *
+    \* ******************************* */
+
+    COMPUTED_STYLE_MAP_ENTRY(appearance,                    Appearance),
+    COMPUTED_STYLE_MAP_ENTRY(binding,                       Binding),
+    COMPUTED_STYLE_MAP_ENTRY(border_bottom_colors,          BorderBottomColors),
+    COMPUTED_STYLE_MAP_ENTRY(border_left_colors,            BorderLeftColors),
+    COMPUTED_STYLE_MAP_ENTRY(border_right_colors,           BorderRightColors),
+    COMPUTED_STYLE_MAP_ENTRY(border_top_colors,             BorderTopColors),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_border_radius_bottomLeft, BorderRadiusBottomLeft),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_border_radius_bottomRight,BorderRadiusBottomRight),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_border_radius_topLeft,    BorderRadiusTopLeft),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_border_radius_topRight,   BorderRadiusTopRight),
+#ifdef INCLUDE_XUL
+    COMPUTED_STYLE_MAP_ENTRY(box_align,                     BoxAlign),
+    COMPUTED_STYLE_MAP_ENTRY(box_direction,                 BoxDirection),
+    COMPUTED_STYLE_MAP_ENTRY(box_flex,                      BoxFlex),
+    COMPUTED_STYLE_MAP_ENTRY(box_ordinal_group,             BoxOrdinalGroup),
+    COMPUTED_STYLE_MAP_ENTRY(box_orient,                    BoxOrient),
+    COMPUTED_STYLE_MAP_ENTRY(box_pack,                      BoxPack),
+#endif
+    COMPUTED_STYLE_MAP_ENTRY(box_sizing,                    BoxSizing),
+    COMPUTED_STYLE_MAP_ENTRY(float_edge,                    FloatEdge),
+    COMPUTED_STYLE_MAP_ENTRY(opacity,                       Opacity),
+    //// COMPUTED_STYLE_MAP_ENTRY(_moz_outline,             MozOutline),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_outline_color,            OutlineColor),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_outline_style,            OutlineStyle),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_outline_width,            OutlineWidth),
+    COMPUTED_STYLE_MAP_ENTRY(user_focus,                    UserFocus),
+    COMPUTED_STYLE_MAP_ENTRY(user_input,                    UserInput),
+    COMPUTED_STYLE_MAP_ENTRY(user_modify,                   UserModify),
+    COMPUTED_STYLE_MAP_ENTRY(user_select,                   UserSelect)
+  };
+
+  *aLength = sizeof(map) / sizeof(map[0]);
+
+  return map;
+}
+
