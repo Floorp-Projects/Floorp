@@ -226,6 +226,9 @@ struct nsHTMLReflowState {
   // set it. if false, the reflow sets alignCharOffset
   PRPackedBool     mUseAlignCharOffset;
 
+  // Keep track of text-decoration: blink
+  PRPackedBool     mBlinks;
+
   // Cached pointers to the various style structs used during intialization
   const nsStyleDisplay* mStyleDisplay;
   const nsStyleVisibility* mStyleVisibility;

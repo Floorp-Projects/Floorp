@@ -5011,7 +5011,7 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   // the TEXT_BLINK_ON bit).
   PRBool lastTimeWeSkippedLeadingWS = 0 != (mState & TEXT_SKIP_LEADING_WS);
   mState &= ~TEXT_REFLOW_FLAGS;
-  if (ts.mFont->mFont.decorations & NS_STYLE_TEXT_DECORATION_BLINK) {
+  if (aReflowState.mBlinks) {
     if (0 == (mState & TEXT_BLINK_ON)) {
       mState |= TEXT_BLINK_ON;
       nsBlinkTimer::AddBlinkFrame(aPresContext, this);
