@@ -1450,6 +1450,7 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::EDirection aAction)
 
   nsCOMPtr<nsIDOMSelection> selection;
   PRBool cancel, handled;
+  nsresult result;
 
   // If it's one of these modes,
   // we have to extend the selection first.
@@ -1464,7 +1465,6 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::EDirection aAction)
     if (!selCont)
       return NS_ERROR_NO_INTERFACE;
 
-    nsresult result;
     switch (aAction)
     {
         case eNextWord:
@@ -1478,12 +1478,13 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::EDirection aAction)
           aAction = eNone;
           break;
         case eToBeginningOfLine:
-          result = selCont->IntraLineMove(PR_FALSE, PR_TRUE);
+          selCont->IntraLineMove(PR_TRUE, PR_FALSE);          // try to move to end
+          result = selCont->IntraLineMove(PR_FALSE, PR_TRUE); // select to beginning
           aAction = eNone;
           break;
         case eToEndOfLine:
           result = selCont->IntraLineMove(PR_TRUE, PR_TRUE);
-          aAction = eNone;
+          aAction = eNext;
           break;
         default:       // avoid several compiler warnings
           result = NS_OK;
@@ -1503,7 +1504,7 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::EDirection aAction)
   nsAutoRules beginRulesSniffing(this, kOpDeleteSelection, aAction);
 
   // pre-process
-  nsresult result = GetSelection(getter_AddRefs(selection));
+  result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) return result;
   if (!selection) return NS_ERROR_NULL_POINTER;
 
@@ -3464,8 +3465,10 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
   }
 
   // Make sure we have fixed-width font.  This should be done for us,
-  // but it isn't, see bug 22502:, so we have to add "font: monospace;".
-  styleValue.Append("font-family: monospace; ");
+  // but it isn't, see bug 22502, so we have to add "font: monospace;".
+  // Only do this if we're wrapping.
+  if (aWrapColumn >= 0)
+    styleValue.Append("font-family: monospace; ");
 
   // and now we're ready to set the new whitespace/wrapping style.
   if (aWrapColumn > 0)        // Wrap to a fixed column
@@ -3778,8 +3781,6 @@ NS_IMETHODIMP nsHTMLEditor::CanCut(PRBool &aCanCut)
 
 NS_IMETHODIMP nsHTMLEditor::Copy()
 {
-  //printf("nsEditor::Copy\n");
-
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
@@ -4081,6 +4082,7 @@ NS_IMETHODIMP
 nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
                                          nsIDOMNode **aNodeInserted)
 {
+  printf("InsertAsPlaintextQuotation(%s)\n", aQuotedText.ToNewCString());
   // We have the text.  Cite it appropriately:
   nsCOMPtr<nsICiter> citer;
   nsresult rv;
