@@ -77,6 +77,7 @@ import java.applet.Applet;
 public final class JSObject {
     /* the internal object data */
     private int                               internal;
+    private long                              long_internal;
 
     /**
      * initialize
@@ -96,6 +97,10 @@ public final class JSObject {
      */
     private JSObject(int jsobj_addr) {
         internal = jsobj_addr;
+    }
+
+    private JSObject(long jsobj_addr) {
+        long_internal = jsobj_addr;
     }
 
     /**
