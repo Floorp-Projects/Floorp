@@ -167,3 +167,19 @@ menuitem[checked="true"][menuactive="true"]
   {
     list-style-image      : url("chrome://global/skin/menu-arrow-hover.gif");
   }
+
+/** Tooltips (tooltip <popup> element)
+ *  class="tooltip"
+ **/
+.tooltip
+  {
+    background-color      : #FFFFCC;
+    border                : 1px outset #FFFFCC;
+    color                 : #000000;
+    font                  : smaller;
+    padding               : 3px;
+  }
+  
+  
+  
+  

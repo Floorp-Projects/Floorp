@@ -80,7 +80,8 @@
   <binding id="menubutton-dual">
     <content excludes="template,observes,menupopup">
       <xul:box class="menubutton-internal-box">
-        <xul:button class="menubutton-dual-button" allowevents="true" inherits="buttonaction:oncommand,src,value,crop,accesskey"/>
+        <xul:button class="menubutton-dual-button" allowevents="true" 
+                    inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey"/>
         <xul:image class="menubutton-dropmarker"/>
       </xul:box>
     </content>
