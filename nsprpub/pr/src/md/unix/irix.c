@@ -1002,10 +1002,12 @@ void exit(int status)
 {
 PRThread *me, *thr;
 PRCList *qp;
+#if 0  /* wtc: comment out */
 void __exit(int status);
 
 	if (!_pr_initialized) 
 		__exit(status);
+#endif /* 0 */
 
 	me = _PR_MD_CURRENT_THREAD();
 
