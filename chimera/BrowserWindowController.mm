@@ -127,6 +127,8 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
         mContextMenuFlags = 0;
         mContextMenuEvent = nsnull;
         mContextMenuNode = nsnull;
+        mThrobberImages = nil;
+        mThrobberHandler = nil;
     }
     return self;
 }
@@ -165,11 +167,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 
   [mProgress release];
 
-  if (mThrobberTimer) {
-      [mThrobberTimer invalidate];
-      [mThrobberTimer release];
-  }
-  
+  [self stopThrobber];
   [mThrobberImages release];
   
   [super dealloc];
@@ -636,14 +634,20 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
   [[mBrowserView getBrowserView] loadURI:[NSURL URLWithString: @"http://dmoz.org/"] flags:NSLoadFlagsNone];
 }
 
-static Boolean movieControllerFilter(MovieController mc, short action, void *params, long refCon)
+
+- (NSToolbarItem*)throbberItem
 {
-    if (action == mcActionMovieClick || action == mcActionMouseDown) {
-        EventRecord* event = (EventRecord*) params;
-        event->what = nullEvent;
-        return true;
+    // find our throbber toolbar item.
+    NSToolbar* toolbar = [[self window] toolbar];
+    NSArray* items = [toolbar visibleItems];
+    unsigned count = [items count];
+    for (unsigned i = 0; i < count; ++i) {
+        NSToolbarItem* item = [items objectAtIndex: i];
+        if ([item tag] == 'Thrb') {
+            return item;
+        }
     }
-    return false;
+    return nil;
 }
 
 - (NSArray*)throbberImages
@@ -666,118 +670,36 @@ static Boolean movieControllerFilter(MovieController mc, short action, void *par
   return mThrobberImages;
 }
 
-- (NSToolbarItem*)throbberItem
-{
-    // find our throbber toolbar item.
-    NSToolbar* toolbar = [[self window] toolbar];
-    NSArray* items = [toolbar visibleItems];
-    unsigned count = [items count];
-    for (unsigned i = 0; i < count; ++i) {
-        NSToolbarItem* item = [items objectAtIndex: i];
-        if ([item tag] == 'Thrb') {
-            return item;
-        }
-    }
-    return nil;
-}
 
 // XXX this is just temporary for testing the throbber.
 
 - (void)testThrobber:(id)aSender
 {
-    if (mThrobberTimer == nil)
-        [self startThrobber];
-    else
-        [self stopThrobber];
+  if (!mThrobberHandler)
+    [self startThrobber];
+  else
+    [self stopThrobber];
 }
-
-// Called by an NSTimer.
-
-- (void)pulseThrobber:(id)aSender
-{
-    // advance to next frame.
-    NSArray* throbberImages = [self throbberImages];
-    if (++mThrobberFrame >= [throbberImages count])
-        mThrobberFrame = 0;
-    NSToolbarItem* toolbarItem = (NSToolbarItem*) [aSender userInfo];
-    [toolbarItem setImage: [throbberImages objectAtIndex: mThrobberFrame]];
-}
-
-#define QUICKTIME_THROBBER 0
 
 - (void)startThrobber
 {
-#if QUICKTIME_THROBBER
-    // Use Quicktime to draw the frames from a single Animated GIF. This works fine for the animation, but
-    // when the frames stop, the poster frame disappears.
-    NSToolbarItem* throbberItem = [self throbberItem];
-    if (throbberItem != nil && [throbberItem view] == nil) {
-        NSSize minSize = [throbberItem minSize];
-        NSLog(@"Origin minSize = %f X %f", minSize.width, minSize.height);
-        NSSize maxSize = [throbberItem maxSize];
-        NSLog(@"Origin maxSize = %f X %f", maxSize.width, maxSize.height);
-        
-        NSURL* throbberURL = [NSURL fileURLWithPath: [[NSBundle mainBundle] pathForResource:@"throbber" ofType:@"gif"]];
-        NSLog(@"throbberURL = %@", throbberURL);
-        NSMovie* throbberMovie = [[[NSMovie alloc] initWithURL: throbberURL byReference: YES] autorelease];
-        NSLog(@"throbberMovie = %@", throbberMovie);
-        
-        if ([throbberMovie QTMovie] != nil) {
-            NSMovieView* throbberView = [[[NSMovieView alloc] init] autorelease];
-            [throbberView setMovie: throbberMovie];
-            [throbberView showController: NO adjustingSize: NO];
-            [throbberView setLoopMode: NSQTMovieLoopingPlayback];
-            [throbberItem setView: throbberView];
-            NSSize size = NSMakeSize(32, 32);
-            [throbberItem setMinSize: size];
-            [throbberItem setMaxSize: size];
-            [throbberView gotoPosterFrame: self];
-            [throbberView start: self];
-    
-            // experiment, veto mouse clicks in the movie controller by using an action filter.
-            MCSetActionFilterWithRefCon((MovieController) [throbberView movieController],
-                                        NewMCActionFilterWithRefConUPP(movieControllerFilter),
-                                        0);
-        }
-    }
-#else
-    // optimization:  only throb if the throbber toolbar item is visible.
-    if (mThrobberTimer == nil) {
-        NSToolbarItem* throbberItem = [self throbberItem];
-        if (throbberItem != nil) {
-            mThrobberTimer = [[NSTimer scheduledTimerWithTimeInterval: 0.2
-                                       target: self selector: @selector(pulseThrobber:)
-                                       userInfo: throbberItem repeats: YES] retain];
-        }
-    }
-#endif
+  // optimization:  only throb if the throbber toolbar item is visible.
+  NSToolbarItem* throbberItem = [self throbberItem];
+  if (throbberItem) {
+    [self stopThrobber];
+    mThrobberHandler = [[ThrobberHandler alloc] initWithToolbarItem:throbberItem 
+                          images:[self throbberImages]];
+  }
 }
 
 - (void)stopThrobber
 {
-#if QUICKTIME_THROBBER
-    // Stop the quicktime animation.
-    NSToolbarItem* throbberItem = [self throbberItem];
-    if (throbberItem != nil) {
-        NSMovieView* throbberView = [throbberItem view];
-        if ([throbberView isPlaying]) {
-            [throbberView stop: self];
-            [throbberView gotoPosterFrame: self];
-        } else {
-            [throbberView start: self];
-        }
-    }
-#else
-    if (mThrobberTimer != nil) {
-        [mThrobberTimer invalidate];
-        [mThrobberTimer release];
-        mThrobberTimer = nil;
-
-        mThrobberFrame = 0;
-        [[self throbberItem] setImage: [[self throbberImages] objectAtIndex: 0]];
-    }
-#endif
+  [mThrobberHandler stopThrobber];
+  [mThrobberHandler release];
+  mThrobberHandler = nil;
+  [[self throbberItem] setImage: [[self throbberImages] objectAtIndex: 0]];
 }
+
 
 - (BOOL)findInPage:(NSString*)text
 {
@@ -1331,6 +1253,119 @@ static Boolean movieControllerFilter(MovieController mc, short action, void *par
   if ( !sBrokenIcon )
     sBrokenIcon = [[NSImage imageNamed:@"security_broken"] retain];
   return sBrokenIcon;
+}
+
+@end
+
+
+@implementation ThrobberHandler
+
+-(id)initWithToolbarItem:(NSToolbarItem*)inButton images:(NSArray*)inImages
+{
+  if ( (self = [super init]) ) {
+    mImages = [inImages retain];
+    mTimer = [[NSTimer scheduledTimerWithTimeInterval: 0.2
+                        target: self selector: @selector(pulseThrobber:)
+                        userInfo: inButton repeats: YES] retain];
+    mFrame = 0;
+    [self startThrobber];
+  }
+  return self;
+}
+
+-(void)dealloc
+{
+  [self stopThrobber];
+  [mImages release];
+}
+
+
+// Called by an NSTimer.
+
+- (void)pulseThrobber:(id)aSender
+{
+  // advance to next frame.
+  if (++mFrame >= [mImages count])
+      mFrame = 0;
+  NSToolbarItem* toolbarItem = (NSToolbarItem*) [aSender userInfo];
+  [toolbarItem setImage: [mImages objectAtIndex: mFrame]];
+}
+
+
+static Boolean movieControllerFilter(MovieController mc, short action, void *params, long refCon)
+{
+    if (action == mcActionMovieClick || action == mcActionMouseDown) {
+        EventRecord* event = (EventRecord*) params;
+        event->what = nullEvent;
+        return true;
+    }
+    return false;
+}
+
+#define QUICKTIME_THROBBER 0
+
+- (void)startThrobber
+{
+#if QUICKTIME_THROBBER
+    // Use Quicktime to draw the frames from a single Animated GIF. This works fine for the animation, but
+    // when the frames stop, the poster frame disappears.
+    NSToolbarItem* throbberItem = [self throbberItem];
+    if (throbberItem != nil && [throbberItem view] == nil) {
+        NSSize minSize = [throbberItem minSize];
+        NSLog(@"Origin minSize = %f X %f", minSize.width, minSize.height);
+        NSSize maxSize = [throbberItem maxSize];
+        NSLog(@"Origin maxSize = %f X %f", maxSize.width, maxSize.height);
+        
+        NSURL* throbberURL = [NSURL fileURLWithPath: [[NSBundle mainBundle] pathForResource:@"throbber" ofType:@"gif"]];
+        NSLog(@"throbberURL = %@", throbberURL);
+        NSMovie* throbberMovie = [[[NSMovie alloc] initWithURL: throbberURL byReference: YES] autorelease];
+        NSLog(@"throbberMovie = %@", throbberMovie);
+        
+        if ([throbberMovie QTMovie] != nil) {
+            NSMovieView* throbberView = [[[NSMovieView alloc] init] autorelease];
+            [throbberView setMovie: throbberMovie];
+            [throbberView showController: NO adjustingSize: NO];
+            [throbberView setLoopMode: NSQTMovieLoopingPlayback];
+            [throbberItem setView: throbberView];
+            NSSize size = NSMakeSize(32, 32);
+            [throbberItem setMinSize: size];
+            [throbberItem setMaxSize: size];
+            [throbberView gotoPosterFrame: self];
+            [throbberView start: self];
+    
+            // experiment, veto mouse clicks in the movie controller by using an action filter.
+            MCSetActionFilterWithRefCon((MovieController) [throbberView movieController],
+                                        NewMCActionFilterWithRefConUPP(movieControllerFilter),
+                                        0);
+        }
+    }
+#else
+#endif
+}
+
+- (void)stopThrobber
+{
+#if QUICKTIME_THROBBER
+    // Stop the quicktime animation.
+    NSToolbarItem* throbberItem = [self throbberItem];
+    if (throbberItem != nil) {
+        NSMovieView* throbberView = [throbberItem view];
+        if ([throbberView isPlaying]) {
+            [throbberView stop: self];
+            [throbberView gotoPosterFrame: self];
+        } else {
+            [throbberView start: self];
+        }
+    }
+#else
+  if (mTimer) {
+    [mTimer invalidate];
+    [mTimer release];
+    mTimer = nil;
+
+    mFrame = 0;
+  }
+#endif
 }
 
 @end
