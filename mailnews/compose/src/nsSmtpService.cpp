@@ -309,12 +309,12 @@ NS_IMETHODIMP nsSmtpService::NewURI(const nsACString &aSpec,
   // get a new smtp url 
 
   nsresult rv = NS_OK;
-	nsCOMPtr <nsIURI> mailtoUrl;
+  nsCOMPtr <nsIURI> mailtoUrl;
 
-	rv = nsComponentManager::CreateInstance(kCMailtoUrlCID, NULL, NS_GET_IID(nsIURI), getter_AddRefs(mailtoUrl));
+  rv = nsComponentManager::CreateInstance(kCMailtoUrlCID, NULL, NS_GET_IID(nsIURI), getter_AddRefs(mailtoUrl));
 
-	if (NS_SUCCEEDED(rv))
-	{
+  if (NS_SUCCEEDED(rv))
+  {
     nsCAutoString utf8Spec;
     if (aOriginCharset)
     {
@@ -324,12 +324,14 @@ NS_IMETHODIMP nsSmtpService::NewURI(const nsACString &aSpec,
           rv = utf8Converter->ConvertURISpecToUTF8(aSpec, aOriginCharset, utf8Spec);
     }
 
-    if (NS_SUCCEEDED(rv) && !utf8Spec.IsEmpty())
+    // utf8Spec is filled up only when aOriginCharset is specified and 
+    // the conversion is successful. Otherwise, fall back to aSpec.
+    if (aOriginCharset && NS_SUCCEEDED(rv))
       mailtoUrl->SetSpec(utf8Spec);
     else
       mailtoUrl->SetSpec(aSpec);
     rv = mailtoUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
-	}
+  }
   return rv;
 }
 
