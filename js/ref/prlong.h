@@ -28,16 +28,7 @@ PR_BEGIN_EXTERN_C
 
 #ifdef HAVE_LONG_LONG
 
-#ifndef _WIN32
-
-typedef long long int64;
-typedef unsigned long long uint64;
-
-#define LL_MAXINT		0x7fffffffffffffffLL
-#define LL_MININT		0x8000000000000000LL
-#define LL_ZERO			0x0LL
-
-#else  /* _WIN32 */
+#ifdef _WIN32
 
 typedef LONGLONG  int64;
 typedef DWORDLONG uint64;
@@ -45,6 +36,24 @@ typedef DWORDLONG uint64;
 #define LL_MAXINT		0x7fffffffffffffffi64
 #define LL_MININT		0x8000000000000000i64
 #define LL_ZERO			0x0i64
+
+#elif defined(__osf__)
+
+typedef long int64;
+typedef unsigned long uint64;
+
+#define LL_MAXINT		0x7fffffffffffffffL
+#define LL_MININT		0x8000000000000000L
+#define LL_ZERO			0x0L
+
+#else
+
+typedef long long int64;
+typedef unsigned long long uint64;
+
+#define LL_MAXINT		0x7fffffffffffffffLL
+#define LL_MININT		0x8000000000000000LL
+#define LL_ZERO			0x0LL
 
 #endif /* _WIN32 */
 
