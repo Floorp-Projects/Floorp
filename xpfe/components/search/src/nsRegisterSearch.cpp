@@ -187,7 +187,7 @@ struct Components {
 static Components gComponents[] = {
     { "LocalSearch", &kLocalSearchServiceCID, NS_LOCALSEARCH_SERVICE_PROGID },
     { "LocalSearch", &kLocalSearchServiceCID, NS_LOCALSEARCH_DATASOURCE_PROGID },
-    { "InternetSearch", &kInternetSearchServiceCID, NS_INTERNETSEARCH_DATASOURCE_PROGID },
+    { "InternetSearch", &kInternetSearchServiceCID, NS_INTERNETSEARCH_SERVICE_PROGID },
     { "InternetSearch", &kInternetSearchServiceCID, NS_INTERNETSEARCH_DATASOURCE_PROGID },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
