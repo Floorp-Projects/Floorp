@@ -469,12 +469,12 @@ NS_IMETHODIMP nsAbSync::OnStatus(PRInt32 aTransactionID, const PRUnichar *aMsg)
 /* void OnStopOperation (in PRInt32 aTransactionID, in nsresult aStatus, in wstring aMsg, out string aProtocolResponse); */
 NS_IMETHODIMP nsAbSync::OnStopOperation(PRInt32 aTransactionID, nsresult aStatus, const PRUnichar *aMsg, const char *aProtocolResponse)
 {
-  nsresult    rv;
+  nsresult    rv = aStatus;
 
   //
   // Now, figure out what the server told us to do with the sync operation.
   //
-  if (aProtocolResponse)
+  if ( (aProtocolResponse) && (NS_SUCCEEDED(aStatus)) )
     rv = ProcessServerResponse(aProtocolResponse);
 
   NotifyListenersOnStopSync(aTransactionID, rv, aMsg);
@@ -591,11 +591,11 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
 
   // Ok, add the header to this protocol string information...
   if (mPostString.IsEmpty())
-    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=%s&user=%s", 
-                            mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION, "RHPizzarro");
+    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=%s", 
+                            mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION);
   else
-    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=%s&user=%s&", 
-                            mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION, "RHPizzarro");
+    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=%s&", 
+                            mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION);
   if (!prefixStr)
   {
     rv = NS_ERROR_OUT_OF_MEMORY;

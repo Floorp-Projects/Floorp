@@ -101,6 +101,7 @@ nsAbSyncPostEngine::nsAbSyncPostEngine()
   mAuthenticationRunning = PR_TRUE;
   mCookie = nsnull;
   mSyncSpec = nsnull;
+  mSyncProtocolRequest = nsnull;
 }
 
 nsAbSyncPostEngine::~nsAbSyncPostEngine()

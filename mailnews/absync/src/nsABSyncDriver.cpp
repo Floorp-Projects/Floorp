@@ -59,7 +59,7 @@ nsAbSyncDriver::OnStartAuthOperation(void)
     PRUnichar   *outValue = nsnull;
 
     // Tweak the button...
-    mStatus->StopMeteors();
+    mStatus->StartMeteors();
 
     outValue = GetString(NS_ConvertASCIItoUCS2("syncStartingAuth").GetUnicode());
     
