@@ -81,6 +81,7 @@ EXTRA_DSO_LDOPTS = \
 		$(DIST)/lib/libimg_s.a \
 		$(DIST)/lib/libmozutil_s.a \
 		$(MOZ_COMPONENT_LIBS) \
+		$(DIST)/lib/libxpcomds_s.a \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
