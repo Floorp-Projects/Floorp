@@ -22,7 +22,6 @@ toolkit.jar:
         content/global/selectDialog.js              (resources/content/selectDialog.js) 
         content/global/selectDialog.xul             (resources/content/selectDialog.xul) 
         content/global/nsWidgetStateManager.js      (resources/content/nsWidgetStateManager.js) 
-        content/global/widgetStateManager.js        (resources/content/widgetStateManager.js) 
         content/global/nsTreeController.js          (resources/content/nsTreeController.js) 
         content/global/nsTreeSorting.js             (resources/content/nsTreeSorting.js) 
         content/global/nsClipboard.js               (resources/content/nsClipboard.js) 
