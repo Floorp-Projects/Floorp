@@ -39,13 +39,10 @@
 <?php
 require"../core/config.php";
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
-<html lang="EN" dir="ltr">
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-    <meta http-equiv="Content-Language" content="en">
-    <meta http-equiv="Content-Style-Type" content="text/css">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
 
+<head>
 <?php
 //Bookmarking-Friendly Page Title
 $sql = "SELECT  UserName FROM `t_userprofiles`  WHERE UserID = '$_GET[id]' LIMIT 1";
@@ -58,19 +55,21 @@ exit;
   $row = mysql_fetch_array($sql_result);
 ?>
 
-<TITLE>Mozilla Update :: Themes - Author Profile: <?php echo"$row[UserName]"; ?></TITLE>
+    <TITLE>Mozilla Update :: Themes - Author Profile: <?php echo"$row[UserName]"; ?></TITLE>
 
-<LINK REL="STYLESHEET" TYPE="text/css" HREF="/core/update.css">
-</HEAD>
-<BODY>
+
 <?php
 include"$page_header";
-
-$type = "T";
-$category = $_GET["category"];
-include"inc_sidebar.php";
 ?>
-<DIV id="content">
+
+<div id="mBody">
+    <?php
+    $index="yes";
+    include"inc_sidebar.php";
+    ?>
+
+	<div id="mainContent">
+
 <?php
 $userid = $_GET["id"];
  $sql = "SELECT * FROM `t_userprofiles` WHERE `UserID` = '$userid' LIMIT 1";
@@ -85,10 +84,10 @@ $userid = $_GET["id"];
     $useremailhide = $row["UserEmailHide"];
 ?>
 
-<h3>Author Profile &#187; <?php echo"$username"; ?></h3>
+<h2>Author Profile &#187; <?php echo"$username"; ?></h2>
 
 Homepage: <?php 
-if ($userwebsite) {echo"<A HREF=\"$userwebsite\" target=\"_blank\">$userwebsite</A>";
+if ($userwebsite) {echo"<A HREF=\"$userwebsite\">$userwebsite</A>";
  } else {
 echo"Not Available for this Author";
 }
@@ -96,12 +95,12 @@ echo"Not Available for this Author";
 E-Mail: <?php if ($useremailhide=="1") {
 echo"Not Disclosed by Author";
 } else {
-echo"Contact this Author via the <A HREF=\"#email\">E-Mail form</A> below";
+echo"<A HREF=\"mailto:$useremail\">$useremail</A>\n";
 } 
 ?>
 
 &nbsp;<BR>
-<h3>All Extensions and Themes by <?php echo"$username"; ?></h3>
+<h2>All Extensions and Themes by <?php echo"$username"; ?></h2>
 <?php
 $sql = "SELECT  TM.ID, TM.Type, TM.Name, TM.Description, TM.DateUpdated, TM.TotalDownloads, TU.UserEmail FROM  `t_main`  TM 
 LEFT JOIN t_authorxref TAX ON TM.ID = TAX.ID
@@ -112,7 +111,6 @@ ORDER  BY  `Type` , `Name` ";
   $numresults = mysql_num_rows($sql_result);
   while ($row = mysql_fetch_array($sql_result)) {
 
-   unset($downloadcount);
 
 $sql2 = "SELECT `vID`, `Version` FROM `t_version` WHERE `ID` = '$row[ID]' AND `approved` = 'YES' ORDER BY `Version` ASC LIMIT 1";
  $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -140,7 +138,13 @@ $v++;
     $timestamp = strtotime("$year-$month-$day $hour:$minute:$second");
     $dateupdated = gmdate("F d, Y g:i:sa", $timestamp); //gmdate("F d, Y", $dutimestamp);
 
-echo"<h3><A HREF=\"moreinfo.php?".uriparams()."&id=$id\">$name</A></h3>";
+                if ($type=="E") {
+                    $typename = "extensions";
+                } else if ($type=="T") {
+                    $typename = "themes";
+                }
+
+echo"<h3><A HREF=\"/$typename/moreinfo.php?".uriparams()."&amp;id=$id\">$name</A></h3>";
 echo"$description<br>\n";
 }
 }
@@ -150,37 +154,7 @@ echo"No Extensions or Themes in the Database for $username";
 ?>
 </DIV>
 &nbsp;<BR>
-<?php if ($useremailhide !=="1") { ?>
-<A NAME="email"></A>
 
-<h3>Send an E-Mail to <?php echo"$username"; ?></h3>
-
-<?php
-//SendMail Returned Message Section
-if ($_GET["mail"]) {
-$mail = $_GET["mail"];
-echo"<DIV class=\"mailresult\">";
-if ($mail=="successful") {
-echo"Your message has been sent successfully..."; 
-} else if ($mail=="unsuccessful") {
-echo"An error occured, your message was not sent... Please try again..."; 
-}
-echo"</DIV>\n";
-}
-?>
-<FORM NAME="sendmail" METHOD="POST" ACTION="sendmail.php">
-<INPUT NAME="senduserid" TYPE="HIDDEN" VALUE="<?php echo"$userid"; ?>">
-Your Name: <INPUT NAME="fromname" TYPE="TEXT" SIZE=40 MAXLENGTH=100><BR>
-Email: <INPUT NAME="fromemail" TYPE="TEXT" SIZE=40 MAXLENGTH=100><BR>
-Subject: <INPUT NAME="subject" TYPE="TEXT" SIZE=40 MAXLENGTH=100><BR>
-Message:<BR>
-<CENTER><TEXTAREA NAME="body" ROWS=20 COLS=65></TEXTAREA><BR>
-<INPUT NAME="submit" TYPE="SUBMIT" VALUE="Send Message">&nbsp;&nbsp;<INPUT NAME="reset" TYPE="RESET" VALUE="Reset Form"><BR>
-</CENTER>
-</FORM>
-</DIV>
-&nbsp;<BR>
-<?php } ?>
 </DIV>
 <?php
 include"$page_footer";

@@ -345,6 +345,7 @@ if ($usermode=="A") {$a="TRUE"; $e="TRUE";
     }
     echo"</TD></TR>\n";
 ?>
+<TR><TD COLSPAN="2"><strong>Warning:</strong> Setting E-Mail Public to Visible will show your e-mail address in plaintext on your profile. Do not enable this if you wish to keep your e-mail address hidden.</TD></TR>
 <TR><TD COLSPAN="2" ALIGN="CENTER"><INPUT NAME="submit" TYPE="SUBMIT" VALUE="Update">&nbsp;&nbsp;<INPUT NAME="reset" TYPE="RESET" VALUE="Reset Form">&nbsp;&nbsp;<INPUT NAME="submit" TYPE="SUBMIT" VALUE="Delete User" ONCLICK="return confirm('Are you sure you want to delete the profile for <?php echo"$username"; ?>?');"></TD></TR>
 </FORM>
 <?php if ($_SESSION["level"]=="user") {} else { ?>
@@ -506,6 +507,10 @@ if (!$userid) { $userid = $_POST["userid"]; }
 <?php
 } else {}
 ?>
+
+
+<!-- close #mBody-->
+</div>
 
 <?php
 include"$page_footer";
