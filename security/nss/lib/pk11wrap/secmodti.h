@@ -63,15 +63,6 @@ typedef struct pk11TraverseSlotStr {
 } pk11TraverseSlot;
 
 
-/* structure to allow us to implement the read/write locks for our
- * module lists  */
-struct SECMODListLockStr {
-    PZLock	*mutex;	    /*general mutex to protect this data structure*/
-    PZMonitor	*monitor;   /* monitor to allow us to signal */
-    int		state;	    /* read/write/waiting state */
-    int		count;	    /* how many waiters on this lock */
-};
-
 /* represent a pkcs#11 slot reference counted. */
 struct PK11SlotInfoStr {
     /* the PKCS11 function list for this slot */

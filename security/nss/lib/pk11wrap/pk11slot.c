@@ -133,15 +133,11 @@ PK11_NewSlotList(void)
     if (list == NULL) return NULL;
     list->head = NULL;
     list->tail = NULL;
-#ifdef PKCS11_USE_THREADS
     list->lock = PZ_NewLock(nssILockList);
     if (list->lock == NULL) {
 	PORT_Free(list);
 	return NULL;
     }
-#else
-    list->lock = NULL;
-#endif
 
     return list;
 }
@@ -154,11 +150,11 @@ pk11_FreeListElement(PK11SlotList *list, PK11SlotListElement *le)
 {
     PRBool freeit = PR_FALSE;
 
-    PK11_USE_THREADS(PZ_Lock((PZLock *)(list->lock));)
+    PZ_Lock(list->lock);
     if (le->refCount-- == 1) {
 	freeit = PR_TRUE;
     }
-    PK11_USE_THREADS(PZ_Unlock((PZLock *)(list->lock));)
+    PZ_Unlock(list->lock);
     if (freeit) {
     	PK11_FreeSlot(le->slot);
 	PORT_Free(le);
@@ -179,7 +175,7 @@ PK11_FreeSlotList(PK11SlotList *list)
 	next = le->next;
 	pk11_FreeListElement(list,le);
     }
-    PK11_USE_THREADS(PZ_DestroyLock((PZLock *)(list->lock));)
+    PZ_DestroyLock(list->lock);
     PORT_Free(list);
 }
 
@@ -197,11 +193,11 @@ PK11_AddSlotToList(PK11SlotList *list,PK11SlotInfo *slot)
     le->slot = PK11_ReferenceSlot(slot);
     le->prev = NULL;
     le->refCount = 1;
-    PK11_USE_THREADS(PZ_Lock((PZLock *)(list->lock));)
+    PZ_Lock(list->lock);
     if (list->head) list->head->prev = le; else list->tail = le;
     le->next = list->head;
     list->head = le;
-    PK11_USE_THREADS(PZ_Unlock((PZLock *)(list->lock));)
+    PZ_Unlock(list->lock);
 
     return SECSuccess;
 }
@@ -212,11 +208,11 @@ PK11_AddSlotToList(PK11SlotList *list,PK11SlotInfo *slot)
 SECStatus
 PK11_DeleteSlotFromList(PK11SlotList *list,PK11SlotListElement *le)
 {
-    PK11_USE_THREADS(PZ_Lock((PZLock *)(list->lock));)
+    PZ_Lock(list->lock);
     if (le->prev) le->prev->next = le->next; else list->head = le->next;
     if (le->next) le->next->prev = le->prev; else list->tail = le->prev;
     le->next = le->prev = NULL;
-    PK11_USE_THREADS(PZ_Unlock((PZLock *)(list->lock));)
+    PZ_Unlock(list->lock);
     pk11_FreeListElement(list,le);
     return SECSuccess;
 }
@@ -276,10 +272,10 @@ PK11_GetFirstSafe(PK11SlotList *list)
 {
     PK11SlotListElement *le;
 
-    PK11_USE_THREADS(PZ_Lock((PZLock *)(list->lock));)
+    PZ_Lock(list->lock);
     le = list->head;
     if (le != NULL) (le)->refCount++;
-    PK11_USE_THREADS(PZ_Unlock((PZLock *)(list->lock));)
+    PZ_Unlock(list->lock);
     return le;
 }
 
@@ -292,7 +288,7 @@ PK11SlotListElement *
 PK11_GetNextSafe(PK11SlotList *list, PK11SlotListElement *le, PRBool restart)
 {
     PK11SlotListElement *new_le;
-    PK11_USE_THREADS(PZ_Lock((PZLock *)(list->lock));)
+    PZ_Lock(list->lock);
     new_le = le->next;
     if (le->next == NULL) {
 	/* if the prev and next fields are NULL then either this element
@@ -303,7 +299,7 @@ PK11_GetNextSafe(PK11SlotList *list, PK11SlotListElement *le, PRBool restart)
 	}
     }
     if (new_le) new_le->refCount++;
-    PK11_USE_THREADS(PZ_Unlock((PZLock *)(list->lock));)
+    PZ_Unlock(list->lock);
     pk11_FreeListElement(list,le);
     return new_le;
 }
@@ -338,9 +334,8 @@ PK11_NewSlotInfo(SECMODModule *mod)
     slot = (PK11SlotInfo *)PORT_Alloc(sizeof(PK11SlotInfo));
     if (slot == NULL) return slot;
 
-#ifdef PKCS11_USE_THREADS
     slot->sessionLock = mod->isThreadSafe ?
-	PZ_NewLock(nssILockSession) : (PZLock *)mod->refLock;
+	PZ_NewLock(nssILockSession) : mod->refLock;
     if (slot->sessionLock == NULL) {
 	PORT_Free(slot);
 	return slot;
@@ -353,10 +348,6 @@ PK11_NewSlotInfo(SECMODModule *mod)
 	PORT_Free(slot);
 	return slot;
     }
-#else
-    slot->sessionLock = NULL;
-    slot->freeListLock = NULL;
-#endif
     slot->freeSymKeysHead = NULL;
     slot->keyCount = 0;
     slot->maxKeyCount = 0;
@@ -424,7 +415,6 @@ PK11_DestroySlot(PK11SlotInfo *slot)
    if (slot->mechanismList) {
 	PORT_Free(slot->mechanismList);
    }
-#ifdef PKCS11_USE_THREADS
    if (slot->isThreadSafe && slot->sessionLock) {
 	PZ_DestroyLock(slot->sessionLock);
    }
@@ -433,7 +423,6 @@ PK11_DestroySlot(PK11SlotInfo *slot)
 	PZ_DestroyLock(slot->freeListLock);
 	slot->freeListLock = NULL;
    }
-#endif
 
    /* finally Tell our parent module that we've gone away so it can unload */
    if (slot->module) {
@@ -722,11 +711,7 @@ PK11_RestoreROSession(PK11SlotInfo *slot,CK_SESSION_HANDLE rwsession)
 static void
 pk11_initSlotList(PK11SlotList *list)
 {
-#ifdef PKCS11_USE_THREADS
     list->lock = PZ_NewLock(nssILockList);
-#else
-    list->lock = NULL;
-#endif
     list->head = NULL;
 }
 
@@ -740,11 +725,9 @@ pk11_freeSlotList(PK11SlotList *list)
 	next = le->next;
 	pk11_FreeListElement(list,le);
     }
-#ifdef PK11_USE_THREADS
     if (list->lock) {
-    	PZ_DestroyLock((PZLock *)(list->lock));
+    	PZ_DestroyLock(list->lock);
     }
-#endif
     list->lock = NULL;
     list->head = NULL;
 }

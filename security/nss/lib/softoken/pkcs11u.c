@@ -74,9 +74,9 @@ pk11_NewAttribute(PK11Object *object,
      * is done for attributes by 'allocating' them from a pool already
      * allocated by the parent object.
      */
-    PK11_USE_THREADS(PZ_Lock(so->attributeLock);)
+    PZ_Lock(so->attributeLock);
     index = so->nextAttr++;
-    PK11_USE_THREADS(PZ_Unlock(so->attributeLock);)
+    PZ_Unlock(so->attributeLock);
     PORT_Assert(index < MAX_OBJS_ATTRS);
     if (index >= MAX_OBJS_ATTRS) return NULL;
 
@@ -1233,9 +1233,9 @@ pk11_FindAttribute(PK11Object *object,CK_ATTRIBUTE_TYPE type)
 	return pk11_FindTokenAttribute(pk11_narrowToTokenObject(object),type);
     }
 
-    PK11_USE_THREADS(PZ_Lock(sessObject->attributeLock);)
+    PZ_Lock(sessObject->attributeLock);
     pk11queue_find(attribute,type,sessObject->head, sessObject->hashSize);
-    PK11_USE_THREADS(PZ_Unlock(sessObject->attributeLock);)
+    PZ_Unlock(sessObject->attributeLock);
 
     return(attribute);
 }
@@ -1325,9 +1325,9 @@ pk11_hasAttribute(PK11Object *object,CK_ATTRIBUTE_TYPE type)
 	return pk11_hasAttributeToken(pk11_narrowToTokenObject(object));
     }
 
-    PK11_USE_THREADS(PZ_Lock(sessObject->attributeLock);)
+    PZ_Lock(sessObject->attributeLock);
     pk11queue_find(attribute,type,sessObject->head, sessObject->hashSize);
-    PK11_USE_THREADS(PZ_Unlock(sessObject->attributeLock);)
+    PZ_Unlock(sessObject->attributeLock);
 
     return (PRBool)(attribute != NULL);
 }
@@ -1341,10 +1341,10 @@ pk11_AddAttribute(PK11Object *object,PK11Attribute *attribute)
     PK11SessionObject *sessObject = pk11_narrowToSessionObject(object);
 
     if (sessObject == NULL) return;
-    PK11_USE_THREADS(PZ_Lock(sessObject->attributeLock);)
+    PZ_Lock(sessObject->attributeLock);
     pk11queue_add(attribute,attribute->handle,
 				sessObject->head, sessObject->hashSize);
-    PK11_USE_THREADS(PZ_Unlock(sessObject->attributeLock);)
+    PZ_Unlock(sessObject->attributeLock);
 }
 
 /* 
@@ -1384,13 +1384,13 @@ pk11_DeleteAttribute(PK11Object *object, PK11Attribute *attribute)
     if (sessObject == NULL) {
 	return ;
     }
-    PK11_USE_THREADS(PZ_Lock(sessObject->attributeLock);)
+    PZ_Lock(sessObject->attributeLock);
     if (pk11queue_is_queued(attribute,attribute->handle,
 				sessObject->head, sessObject->hashSize)) {
 	pk11queue_delete(attribute,attribute->handle,
 				sessObject->head, sessObject->hashSize);
     }
-    PK11_USE_THREADS(PZ_Unlock(sessObject->attributeLock);)
+    PZ_Unlock(sessObject->attributeLock);
     pk11_FreeAttribute(attribute);
 }
 
@@ -1967,12 +1967,12 @@ pk11_lookupTokenKeyByHandle(PK11Slot *slot, CK_OBJECT_HANDLE handle)
  */
 static void
 pk11_tokenKeyLock(PK11Slot *slot) {
-    PK11_USE_THREADS(PZ_Lock(slot->objectLock);)
+    PZ_Lock(slot->objectLock);
 }
 
 static void
 pk11_tokenKeyUnlock(PK11Slot *slot) {
-    PK11_USE_THREADS(PZ_Unlock(slot->objectLock);)
+    PZ_Unlock(slot->objectLock);
 }
 
 
@@ -1988,13 +1988,13 @@ pk11_GetObjectFromList(PRBool *hasLocks, PRBool optimizeSpace,
     int size = 0;
 
     if (!optimizeSpace) {
-	PK11_USE_THREADS(PZ_Lock(list->lock));
+	PZ_Lock(list->lock);
 	object = list->head;
 	if (object) {
 	    list->head = object->next;
 	    list->count--;
 	}    	
-	PK11_USE_THREADS(PZ_Unlock(list->lock));
+	PZ_Unlock(list->lock);
 	if (object) {
 	    object->next = object->prev = NULL;
             *hasLocks = PR_TRUE;
@@ -2023,19 +2023,19 @@ pk11_PutObjectToList(PK11Object *object, PK11ObjectFreeList *list,
     PRBool optimizeSpace = isSessionObject && 
 				((PK11SessionObject *)object)->optimizeSpace; 
     if (!optimizeSpace && (list->count < MAX_OBJECT_LIST_SIZE)) {
-	PK11_USE_THREADS(PZ_Lock(list->lock));
+	PZ_Lock(list->lock);
 	object->next = list->head;
 	list->head = object;
 	list->count++;
-	PK11_USE_THREADS(PZ_Unlock(list->lock));
+	PZ_Unlock(list->lock);
 	return;
     }
     if (isSessionObject) {
 	PK11SessionObject *so = (PK11SessionObject *)object;
-	PK11_USE_THREADS(PZ_DestroyLock(so->attributeLock);)
+	PZ_DestroyLock(so->attributeLock);
 	so->attributeLock = NULL;
     }
-    PK11_USE_THREADS(PZ_DestroyLock(object->refLock);)
+    PZ_DestroyLock(object->refLock);
     object->refLock = NULL;
     PORT_Free(object);
 }
@@ -2051,11 +2051,7 @@ pk11_freeObjectData(PK11Object *object) {
 static void
 pk11_InitFreeList(PK11ObjectFreeList *list)
 {
-#ifdef PKCS11_USE_THREADS
     list->lock = PZ_NewLock(nssILockObject);
-#else
-    list->lock = NULL;
-#endif
 }
 
 void pk11_InitFreeLists(void)
@@ -2069,25 +2065,21 @@ pk11_CleanupFreeList(PK11ObjectFreeList *list, PRBool isSessionList)
 {
     PK11Object *object;
 
-#ifdef PKCS11_USE_THREADS
     if (!list->lock) {
 	return;
     }
-#endif
-    PK11_USE_THREADS(PZ_Lock(list->lock));
+    PZ_Lock(list->lock);
     for (object= list->head; object != NULL; 
 					object = pk11_freeObjectData(object)) {
-#ifdef PKCS11_USE_THREADS
 	PZ_DestroyLock(object->refLock);
 	if (isSessionList) {
 	    PZ_DestroyLock(((PK11SessionObject *)object)->attributeLock);
 	}
-#endif
     }
     list->count = 0;
     list->head = NULL;
-    PK11_USE_THREADS(PZ_Unlock(list->lock));
-    PK11_USE_THREADS(PZ_DestroyLock(list->lock));
+    PZ_Unlock(list->lock);
+    PZ_DestroyLock(list->lock);
     list->lock = NULL;
 }
 
@@ -2138,7 +2130,6 @@ pk11_NewObject(PK11Slot *slot)
     sessObject->sessionList.parent = object;
     sessObject->session = NULL;
     sessObject->wasDerived = PR_FALSE;
-#ifdef PKCS11_USE_THREADS
     if (!hasLocks) object->refLock = PZ_NewLock(nssILockRefLock);
     if (object->refLock == NULL) {
 	PORT_Free(object);
@@ -2146,14 +2137,10 @@ pk11_NewObject(PK11Slot *slot)
     }
     if (!hasLocks) sessObject->attributeLock = PZ_NewLock(nssILockAttribute);
     if (sessObject->attributeLock == NULL) {
-	PK11_USE_THREADS(PZ_DestroyLock(object->refLock);)
+	PZ_DestroyLock(object->refLock);
 	PORT_Free(object);
 	return NULL;
     }
-#else
-    sessObject->attributeLock = NULL;
-    object->refLock = NULL;
-#endif
     for (i=0; i < sessObject->hashSize; i++) {
 	sessObject->head[i] = NULL;
     }
@@ -2178,7 +2165,7 @@ pk11_DestroySessionObjectData(PK11SessionObject *so)
 		so->attrList[i].freeData = PR_FALSE;
 	    }
 	}
-/*	PK11_USE_THREADS(PZ_DestroyLock(so->attributeLock));*/
+/*	PZ_DestroyLock(so->attributeLock);*/
 	return CKR_OK;
 }
 
@@ -2221,9 +2208,9 @@ pk11_DestroyObject(PK11Object *object)
 void
 pk11_ReferenceObject(PK11Object *object)
 {
-    PK11_USE_THREADS(PZ_Lock(object->refLock);)
+    PZ_Lock(object->refLock);
     object->refCount++;
-    PK11_USE_THREADS(PZ_Unlock(object->refLock);)
+    PZ_Unlock(object->refLock);
 }
 
 static PK11Object *
@@ -2236,12 +2223,12 @@ pk11_ObjectFromHandleOnSlot(CK_OBJECT_HANDLE handle, PK11Slot *slot)
 	return pk11_NewTokenObject(slot, NULL, handle);
     }
 
-    PK11_USE_THREADS(PZ_Lock(slot->objectLock);)
+    PZ_Lock(slot->objectLock);
     pk11queue_find2(object, handle, index, slot->tokObjects);
     if (object) {
 	pk11_ReferenceObject(object);
     }
-    PK11_USE_THREADS(PZ_Unlock(slot->objectLock);)
+    PZ_Unlock(slot->objectLock);
 
     return(object);
 }
@@ -2268,10 +2255,10 @@ pk11_FreeObject(PK11Object *object)
     PRBool destroy = PR_FALSE;
     CK_RV crv;
 
-    PK11_USE_THREADS(PZ_Lock(object->refLock);)
+    PZ_Lock(object->refLock);
     if (object->refCount == 1) destroy = PR_TRUE;
     object->refCount--;
-    PK11_USE_THREADS(PZ_Unlock(object->refLock);)
+    PZ_Unlock(object->refLock);
 
     if (destroy) {
 	crv = pk11_DestroyObject(object);
@@ -2292,9 +2279,9 @@ pk11_AddSlotObject(PK11Slot *slot, PK11Object *object)
 {
     PRUint32 index = pk11_hash(object->handle, slot->tokObjHashSize);
     pk11queue_init_element(object);
-    PK11_USE_THREADS(PZ_Lock(slot->objectLock);)
+    PZ_Lock(slot->objectLock);
     pk11queue_add2(object, object->handle, index, slot->tokObjects);
-    PK11_USE_THREADS(PZ_Unlock(slot->objectLock);)
+    PZ_Unlock(slot->objectLock);
 }
 
 void
@@ -2304,10 +2291,10 @@ pk11_AddObject(PK11Session *session, PK11Object *object)
     PK11SessionObject *so = pk11_narrowToSessionObject(object);
 
     if (so) {
-	PK11_USE_THREADS(PZ_Lock(session->objectLock);)
+	PZ_Lock(session->objectLock);
 	pk11queue_add(&so->sessionList,0,session->objects,0);
 	so->session = session;
-	PK11_USE_THREADS(PZ_Unlock(session->objectLock);)
+	PZ_Unlock(session->objectLock);
     }
     pk11_AddSlotObject(slot,object);
     pk11_ReferenceObject(object);
@@ -2332,12 +2319,12 @@ pk11_DeleteObject(PK11Session *session, PK11Object *object)
   /* Handle Token case */
     if (so && so->session) {
 	PK11Session *session = so->session;
-	PK11_USE_THREADS(PZ_Lock(session->objectLock);)
+	PZ_Lock(session->objectLock);
 	pk11queue_delete(&so->sessionList,0,session->objects,0);
-	PK11_USE_THREADS(PZ_Unlock(session->objectLock);)
-	PK11_USE_THREADS(PZ_Lock(slot->objectLock);)
+	PZ_Unlock(session->objectLock);
+	PZ_Lock(slot->objectLock);
 	pk11queue_delete2(object, object->handle, index, slot->tokObjects);
-	PK11_USE_THREADS(PZ_Unlock(slot->objectLock);)
+	PZ_Unlock(slot->objectLock);
 	pk11queue_clear_deleted_element(object);
 	pk11_FreeObject(object); /* reduce it's reference count */
     } else {
@@ -2412,7 +2399,7 @@ pk11_CopyObject(PK11Object *destObject,PK11Object *srcObject)
 	return CKR_DEVICE_ERROR; /* can't copy token objects yet */
     }
 
-    PK11_USE_THREADS(PZ_Lock(src_so->attributeLock);)
+    PZ_Lock(src_so->attributeLock);
     for(i=0; i < src_so->hashSize; i++) {
 	attribute = src_so->head[i];
 	do {
@@ -2423,7 +2410,7 @@ pk11_CopyObject(PK11Object *destObject,PK11Object *srcObject)
 		    PK11Attribute *newAttribute = pk11_NewAttribute(
 			  destObject,pk11_attr_expand(&attribute->attrib));
 		    if (newAttribute == NULL) {
-			PK11_USE_THREADS(PZ_Unlock(src_so->attributeLock);)
+			PZ_Unlock(src_so->attributeLock);
 			return CKR_HOST_MEMORY;
 		    }
 		    pk11_AddAttribute(destObject,newAttribute);
@@ -2432,7 +2419,7 @@ pk11_CopyObject(PK11Object *destObject,PK11Object *srcObject)
 	    }
 	} while (attribute != NULL);
     }
-    PK11_USE_THREADS(PZ_Unlock(src_so->attributeLock);)
+    PZ_Unlock(src_so->attributeLock);
     return CKR_OK;
 }
 
@@ -2497,7 +2484,7 @@ pk11_searchObjectList(PK11SearchResults *search,PK11Object **head,
     for(i=0; i < size; i++) {
         /* We need to hold the lock to copy a consistant version of
          * the linked list. */
-        PK11_USE_THREADS(PZ_Lock(lock);)
+        PZ_Lock(lock);
 	for (object = head[i]; object != NULL; object= object->next) {
 	    if (pk11_objectMatch(object,theTemplate,count)) {
 		/* don't return objects that aren't yet visible */
@@ -2505,7 +2492,7 @@ pk11_searchObjectList(PK11SearchResults *search,PK11Object **head,
 		pk11_addHandle(search,object->handle);
 	    }
 	}
-        PK11_USE_THREADS(PZ_Unlock(lock);)
+        PZ_Unlock(lock);
     }
     return crv;
 }
@@ -2578,12 +2565,12 @@ pk11_update_all_states(PK11Slot *slot)
     PK11Session *session;
 
     for (i=0; i < slot->sessHashSize; i++) {
-	PK11_USE_THREADS(PZLock *lock = PK11_SESSION_LOCK(slot,i);)
-	PK11_USE_THREADS(PZ_Lock(lock);)
+	PZLock *lock = PK11_SESSION_LOCK(slot,i);
+	PZ_Lock(lock);
 	for (session = slot->head[i]; session; session = session->next) {
 	    pk11_update_state(slot,session);
 	}
-	PK11_USE_THREADS(PZ_Unlock(lock);)
+	PZ_Unlock(lock);
     }
 }
 
@@ -2629,15 +2616,11 @@ pk11_NewSession(CK_SLOT_ID slotID, CK_NOTIFY notify, CK_VOID_PTR pApplication,
     session->sign_context = NULL;
     session->search = NULL;
     session->objectIDCount = 1;
-#ifdef PKCS11_USE_THREADS
     session->objectLock = PZ_NewLock(nssILockObject);
     if (session->objectLock == NULL) {
 	PORT_Free(session);
 	return NULL;
     }
-#else
-    session->objectLock = NULL;
-#endif
     session->objects[0] = NULL;
 
     session->slot = slot;
@@ -2667,7 +2650,7 @@ pk11_DestroySession(PK11Session *session)
 	op->next = op->prev = NULL;
 	pk11_DeleteObject(session,op->parent);
     }
-    PK11_USE_THREADS(PZ_DestroyLock(session->objectLock);)
+    PZ_DestroyLock(session->objectLock);
     if (session->enc_context) {
 	pk11_FreeContext(session->enc_context);
     }
@@ -2693,12 +2676,12 @@ pk11_SessionFromHandle(CK_SESSION_HANDLE handle)
 {
     PK11Slot	*slot = pk11_SlotFromSessionHandle(handle);
     PK11Session *session;
-    PK11_USE_THREADS(PZLock	*lock = PK11_SESSION_LOCK(slot,handle);)
+    PZLock	*lock = PK11_SESSION_LOCK(slot,handle);
 
-    PK11_USE_THREADS(PZ_Lock(lock);)
+    PZ_Lock(lock);
     pk11queue_find(session,handle,slot->head,slot->sessHashSize);
     if (session) session->refCount++;
-    PK11_USE_THREADS(PZ_Unlock(lock);)
+    PZ_Unlock(lock);
 
     return (session);
 }
@@ -2710,13 +2693,13 @@ void
 pk11_FreeSession(PK11Session *session)
 {
     PRBool destroy = PR_FALSE;
-    PK11_USE_THREADS(PK11Slot *slot = pk11_SlotFromSession(session);)
-    PK11_USE_THREADS(PZLock *lock = PK11_SESSION_LOCK(slot,session->handle);)
+    PK11Slot *slot = pk11_SlotFromSession(session);
+    PZLock *lock = PK11_SESSION_LOCK(slot,session->handle);
 
-    PK11_USE_THREADS(PZ_Lock(lock);)
+    PZ_Lock(lock);
     if (session->refCount == 1) destroy = PR_TRUE;
     session->refCount--;
-    PK11_USE_THREADS(PZ_Unlock(lock);)
+    PZ_Unlock(lock);
 
     if (destroy) pk11_DestroySession(session);
 }
@@ -2869,14 +2852,12 @@ pk11_NewTokenObject(PK11Slot *slot, SECItem *dbKey, CK_OBJECT_HANDLE handle)
     if (rv != SECSuccess) {
 	goto loser;
     }
-#ifdef PKCS11_USE_THREADS
     if (!hasLocks) {
 	object->refLock = PZ_NewLock(nssILockRefLock);
     }
     if (object->refLock == NULL) {
 	goto loser;
     }
-#endif
     object->refCount = 1;
 
     return object;
@@ -2914,7 +2895,7 @@ pk11_convertSessionToToken(PK11Object *obj)
     SECStatus rv;
 
     pk11_DestroySessionObjectData(so);
-    PK11_USE_THREADS(PZ_DestroyLock(so->attributeLock));
+    PZ_DestroyLock(so->attributeLock);
     if (to == NULL) {
 	return NULL;
     }

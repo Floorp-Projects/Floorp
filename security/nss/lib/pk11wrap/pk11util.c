@@ -726,11 +726,11 @@ SECMODModuleList *SECMOD_NewModuleListElement(void)
 SECMODModule *
 SECMOD_ReferenceModule(SECMODModule *module) 
 {
-    PK11_USE_THREADS(PZ_Lock((PZLock *)module->refLock);)
+    PZ_Lock(module->refLock);
     PORT_Assert(module->refCount > 0);
 
     module->refCount++;
-    PK11_USE_THREADS(PZ_Unlock((PZLock*)module->refLock);)
+    PZ_Unlock(module->refLock);
     return module;
 }
 
@@ -743,12 +743,12 @@ SECMOD_DestroyModule(SECMODModule *module)
     int slotCount;
     int i;
 
-    PK11_USE_THREADS(PZ_Lock((PZLock *)module->refLock);)
+    PZ_Lock(module->refLock);
     if (module->refCount-- == 1) {
 	willfree = PR_TRUE;
     }
     PORT_Assert(willfree || (module->refCount > 0));
-    PK11_USE_THREADS(PZ_Unlock((PZLock *)module->refLock);)
+    PZ_Unlock(module->refLock);
 
     if (!willfree) {
 	return;
@@ -790,12 +790,12 @@ SECMOD_SlotDestroyModule(SECMODModule *module, PRBool fromSlot)
     PRBool willfree = PR_FALSE;
     if (fromSlot) {
         PORT_Assert(module->refCount == 0);
-	PK11_USE_THREADS(PZ_Lock((PZLock *)module->refLock);)
+	PZ_Lock(module->refLock);
 	if (module->slotCount-- == 1) {
 	    willfree = PR_TRUE;
 	}
 	PORT_Assert(willfree || (module->slotCount > 0));
-	PK11_USE_THREADS(PZ_Unlock((PZLock *)module->refLock);)
+	PZ_Unlock(module->refLock);
         if (!willfree) return;
     }
 
@@ -806,7 +806,7 @@ SECMOD_SlotDestroyModule(SECMODModule *module, PRBool fromSlot)
     if (module->loaded) {
 	SECMOD_UnloadModule(module);
     }
-    PK11_USE_THREADS(PZ_DestroyLock((PZLock *)module->refLock);)
+    PZ_DestroyLock(module->refLock);
     PORT_FreeArena(module->arena,PR_FALSE);
     secmod_PrivateModuleCount--;
 }

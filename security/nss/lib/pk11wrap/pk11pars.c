@@ -98,15 +98,11 @@ secmod_NewModule(void)
     newMod->trustOrder = 0;
     newMod->cipherOrder = 0;
     newMod->evControlMask = 0;
-#ifdef PKCS11_USE_THREADS
-    newMod->refLock = (void *)PZ_NewLock(nssILockRefLock);
+    newMod->refLock = PZ_NewLock(nssILockRefLock);
     if (newMod->refLock == NULL) {
 	PORT_FreeArena(arena,PR_FALSE);
 	return NULL;
     }
-#else
-    newMod->refLock = NULL;
-#endif
     return newMod;
     
 }

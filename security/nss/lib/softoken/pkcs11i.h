@@ -56,7 +56,6 @@
  * the expense of space.
  */
 
-#define PKCS11_USE_THREADS	/* set to true of you are need threads */
 /* 
  * The attribute allocation strategy is static allocation:
  *   Attributes are pre-allocated as part of the session object and used from
@@ -120,12 +119,6 @@
 #define LOG2_BUCKETS_PER_SESSION_LOCK 1
 #define BUCKETS_PER_SESSION_LOCK (1 << (LOG2_BUCKETS_PER_SESSION_LOCK))
 /* NOSPREAD sessionID to hash table index macro has been slower. */
-
-#ifdef PKCS11_USE_THREADS
-#define PK11_USE_THREADS(x) x
-#else
-#define PK11_USE_THREADS(x) 
-#endif
 
 /* define typedefs, double as forward declarations as well */
 typedef struct PK11AttributeStr PK11Attribute;

@@ -39,8 +39,6 @@
 #include "secmodt.h"
 #include "prinrval.h"
 
-#define PKCS11_USE_THREADS
-
 /* These mechanisms flags are visible to all other libraries. */
 /* They must be converted to internal SECMOD_*_FLAG */
 /* if used inside the functions of the security library */

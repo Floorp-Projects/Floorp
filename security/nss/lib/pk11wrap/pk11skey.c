@@ -74,13 +74,13 @@ static PK11SymKey *
 pk11_getKeyFromList(PK11SlotInfo *slot) {
     PK11SymKey *symKey = NULL;
 
-    PK11_USE_THREADS(PZ_Lock(slot->freeListLock);)
+    PZ_Lock(slot->freeListLock);
     if (slot->freeSymKeysHead) {
     	symKey = slot->freeSymKeysHead;
 	slot->freeSymKeysHead = symKey->next;
 	slot->keyCount--;
     }
-    PK11_USE_THREADS(PZ_Unlock(slot->freeListLock);)
+    PZ_Unlock(slot->freeListLock);
     if (symKey) {
 	symKey->next = NULL;
 	if ((symKey->series != slot->series) || (!symKey->sessionOwner))
@@ -169,7 +169,7 @@ PK11_FreeSymKey(PK11SymKey *symKey)
 	    PORT_Free(symKey->data.data);
 	}
         slot = symKey->slot;
-        PK11_USE_THREADS(PZ_Lock(slot->freeListLock);)
+        PZ_Lock(slot->freeListLock);
 	if (slot->keyCount < slot->maxKeyCount) {
 	    symKey->next = slot->freeSymKeysHead;
 	    slot->freeSymKeysHead = symKey;
@@ -177,7 +177,7 @@ PK11_FreeSymKey(PK11SymKey *symKey)
 	    symKey->slot = NULL;
 	    freeit = PR_FALSE;
         }
-	PK11_USE_THREADS(PZ_Unlock(slot->freeListLock);)
+	PZ_Unlock(slot->freeListLock);
         if (freeit) {
 	    pk11_CloseSession(symKey->slot, symKey->session,
 							symKey->sessionOwner);
