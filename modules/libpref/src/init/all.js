@@ -216,10 +216,14 @@ pref("network.hosts.pop_server",            "mail");
 
 // ruslan:
 // pref("network.http.version", "1.1");
+// pref("network.http.version", "1.0");	// default
+// pref("network.http.version", "0.9"); // it'll work too if you're crazy
 // keep-alive option is effectively obsolete, as we want to use http/1.1 by
 // default eventually. Nevertheless it'll work with some older 1.0 servers
 // pref("network.http.keep-alive", true);
 // pref("network.http.keep-alive.timeout", 120);
+// Enable http compression:
+// pref("network.http.accept-encoding", "gzip,deflate,compress,identity");
 
 // sspitzer:  change this back to "news" when we get to beta.
 // for now, set this to news.mozilla.org because you can only
