@@ -144,3 +144,11 @@ box#sidebar-panels-bottom > box.texttab + box.texttab {
 box#title-box { 
   min-width: 10px;
 }
+
+*[hidden="true"] {
+  display: none;
+}
+
+*[collapsed="true"] {
+  visibility: collapsed;
+}
