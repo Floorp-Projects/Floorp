@@ -171,7 +171,7 @@ void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
       mBorderEdges = new nsBorderEdges;
       mBorderEdges->mOutsideEdge=PR_FALSE;
       
-      PRInt32 rowspan = GetRowSpan();
+      PRInt32 rowspan = tableFrame->GetRowSpan(*this);
       PRInt32 i;
       for (i=0; i<rowspan; i++) {
         nsBorderEdge *borderToAdd = new nsBorderEdge();
@@ -179,7 +179,7 @@ void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
         borderToAdd = new nsBorderEdge();
         mBorderEdges->mEdges[NS_SIDE_RIGHT].AppendElement(borderToAdd);
       }
-      PRInt32 colspan = GetColSpan();
+      PRInt32 colspan = tableFrame->GetColSpan(*this);
       for (i=0; i<colspan; i++) {
         nsBorderEdge *borderToAdd = new nsBorderEdge();
         mBorderEdges->mEdges[NS_SIDE_TOP].AppendElement(borderToAdd);
@@ -728,7 +728,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
       }
     }
   }
-  PRInt32 colspan = GetColSpan();
+  PRInt32 colspan = tableFrame->GetColSpan(*this);
   if (colspan > 1) {
     smallestMinWidth = PR_MAX(smallestMinWidth, colspan * onePixel);
     nscoord spacingX = tableFrame->GetCellSpacingX();

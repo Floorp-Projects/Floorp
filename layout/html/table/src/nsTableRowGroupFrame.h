@@ -171,9 +171,6 @@ public:
     */
   PRInt32 GetStartRowIndex();
 
-  /** get the maximum number of columns taken up by any row in this rowgroup */
-  NS_METHOD GetMaxColumns(PRInt32 &aMaxColumns);
-
   /**
    * Used for header and footer row group frames that are repeated when
    * splitting a table frame.

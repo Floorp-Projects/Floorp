@@ -349,15 +349,15 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
 
-  /* attributes that resolve to integers with a min of 1 */
   else if ((aAttribute == nsHTMLAtoms::colspan) ||
-      (aAttribute == nsHTMLAtoms::rowspan)) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Integer)) {
+           (aAttribute == nsHTMLAtoms::rowspan)) {
+    if (nsGenericHTMLElement::ParseValue(aValue, -1, MAX_COLSPAN, aResult, eHTMLUnit_Integer)) {
       PRInt32 val = aResult.GetIntValue();
-      if (val > MAX_COLSPAN) {
+      if (val < 0) {
         nsHTMLUnit unit = aResult.GetUnit();
-        aResult.SetIntValue(MAX_COLSPAN, unit);
+        aResult.SetIntValue(1, unit);
       }
+
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

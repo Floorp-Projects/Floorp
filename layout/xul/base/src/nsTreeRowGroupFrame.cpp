@@ -1773,11 +1773,11 @@ nsTreeRowGroupFrame::GetCellFrameAtIndex(PRInt32 aRowIndex, PRInt32 aColIndex,
   printf("(screen index (%d,%d))\n", screenIndex, aColIndex);
 #endif
   
-  nsCellMap * cellMap = tableFrame->GetCellMap();
+  nsTableCellMap * cellMap = tableFrame->GetCellMap();
   CellData* cellData = cellMap->GetCellAt(screenIndex, aColIndex);
-  if (cellData) {
-    cellFrame = cellData->mOrigCell;
-    if (cellFrame) { // the cell originates at (rowX, colX)
+  if (cellData->IsOrig()) { // the cell originates at (rowX, colX)
+    cellFrame = cellData->GetCellFrame();
+    if (cellFrame) { 
       *aResult = (nsTreeCellFrame*)cellFrame; // XXX I am evil.
     }
   }
@@ -1856,7 +1856,7 @@ nsTreeRowGroupFrame::AddRowToMap(nsTableFrame*   aTableFrame,
 
   PRInt32 numNewCols = 0;
   if (aCurrentFrame) {
-    numNewCols = aTableFrame->InsertRow(aPresContext, *aCurrentFrame, 
+    numNewCols = aTableFrame->InsertRow(aPresContext, *this, *aCurrentFrame, 
                                         insertionIndex, PR_FALSE);
   }
 

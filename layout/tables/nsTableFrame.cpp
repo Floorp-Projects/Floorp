@@ -168,7 +168,7 @@ nsTableFrame::nsTableFrame()
   mColumnWidths = new PRInt32[mColumnWidthsLength];
   nsCRT::memset (mColumnWidths, 0, mColumnWidthsLength*sizeof(PRInt32));
 #endif
-  mCellMap = new nsCellMap(0, 0);
+  mCellMap = new nsTableCellMap(*this);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsTableFrame, nsHTMLContainerFrame)
@@ -347,6 +347,43 @@ nsTableFrame::SetInitialChildList(nsIPresContext* aPresContext,
   return rv;
 }
 
+PRInt32 
+nsTableFrame::GetColSpan(nsTableCellFrame& aCellFrame) 
+{
+  PRInt32 colspan = aCellFrame.GetColSpan();
+  if (0 == colspan) {
+    nsTableCellMap* cellMap = GetCellMap();
+    if (cellMap) {
+      PRInt32 rowIndex, colIndex;
+      aCellFrame.GetRowIndex(rowIndex);
+      aCellFrame.GetColIndex(colIndex);
+      colspan = cellMap->GetColSpan(rowIndex, colIndex);
+    }
+    else {
+      colspan = 1;
+    }
+  }
+  return colspan;
+}
+
+PRInt32 
+nsTableFrame::GetRowSpan(nsTableCellFrame& aCellFrame) 
+{
+  PRInt32 rowspan = aCellFrame.GetRowSpan();
+  if (0 == rowspan) {
+    nsTableCellMap* cellMap = GetCellMap();
+    if (cellMap) {
+      PRInt32 rowIndex, colIndex;
+      aCellFrame.GetRowIndex(rowIndex);
+      aCellFrame.GetColIndex(colIndex);
+      rowspan = cellMap->GetRowSpan(rowIndex, colIndex);
+    }
+    else {
+      rowspan = 1;
+    }
+  }
+  return rowspan;
+}
 
 void nsTableFrame::AttributeChangedFor(nsIPresContext* aPresContext, 
                                        nsIFrame*       aFrame,
@@ -358,7 +395,7 @@ void nsTableFrame::AttributeChangedFor(nsIPresContext* aPresContext,
   if (nsLayoutAtoms::tableCellFrame == frameType) {
     if ((nsHTMLAtoms::rowspan == aAttribute) || 
         (nsHTMLAtoms::colspan == aAttribute)) {
-      nsCellMap* cellMap = GetCellMap();
+      nsTableCellMap* cellMap = GetCellMap();
       if (cellMap) {
         // for now just remove the cell from the map and reinsert it
         nsTableCellFrame* cellFrame = (nsTableCellFrame*)aFrame;
@@ -396,7 +433,7 @@ PRInt32 nsTableFrame::GetSpecifiedColumnCount ()
 PRInt32 nsTableFrame::GetRowCount () const
 {
   PRInt32 rowCount = 0;
-  nsCellMap *cellMap = GetCellMap();
+  nsTableCellMap *cellMap = GetCellMap();
   NS_ASSERTION(nsnull!=cellMap, "GetRowCount null cellmap");
   if (nsnull!=cellMap)
     rowCount = cellMap->GetRowCount();
@@ -407,7 +444,7 @@ PRInt32 nsTableFrame::GetRowCount () const
 PRInt32 nsTableFrame::GetColCount ()
 {
   PRInt32 colCount = 0;
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   NS_ASSERTION(nsnull != cellMap, "GetColCount null cellmap");
   if (nsnull != cellMap)
     colCount = cellMap->GetColCount();
@@ -423,7 +460,7 @@ nsTableColFrame* nsTableFrame::GetColFrame(PRInt32 aColIndex)
 // can return nsnull
 nsTableCellFrame* nsTableFrame::GetCellFrameAt(PRInt32 aRowIndex, PRInt32 aColIndex)
 {
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) 
     return cellMap->GetCellInfoAt(aRowIndex, aColIndex);
   return nsnull;
@@ -453,7 +490,7 @@ PRInt32 nsTableFrame::GetEffectiveRowSpan (PRInt32 aRowIndex, nsTableCellFrame *
     return (rowCount - aRowIndex);
   return rowSpan;
 #else
-  PRInt32 rowSpan = aCell->GetRowSpan();
+  PRInt32 rowSpan = GetRowSpan(*aCell);
   PRInt32 rowCount = GetRowCount();
   PRInt32 startRow;
   aCell->GetRowIndex(startRow);
@@ -490,7 +527,7 @@ PRInt32 nsTableFrame::GetEffectiveRowSpan(nsTableCellFrame *aCell)
 PRInt32 nsTableFrame::GetEffectiveColSpan(PRInt32 aColIndex, const nsTableCellFrame* aCell) const
 {
   NS_PRECONDITION (nsnull != aCell, "bad cell arg");
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   NS_PRECONDITION (nsnull != cellMap, "bad call, cellMap not yet allocated.");
 
   return cellMap->GetEffectiveColSpan(aColIndex, aCell);
@@ -499,7 +536,7 @@ PRInt32 nsTableFrame::GetEffectiveColSpan(PRInt32 aColIndex, const nsTableCellFr
 PRInt32 nsTableFrame::GetEffectiveColSpan(const nsTableCellFrame* aCell) const
 {
   NS_PRECONDITION (nsnull != aCell, "bad cell arg");
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   NS_PRECONDITION (nsnull != cellMap, "bad call, cellMap not yet allocated.");
 
   PRInt32 initialColIndex;
@@ -509,7 +546,7 @@ PRInt32 nsTableFrame::GetEffectiveColSpan(const nsTableCellFrame* aCell) const
 
 PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
 {
-  nsCellMap *cellMap = GetCellMap();
+  nsTableCellMap *cellMap = GetCellMap();
   NS_PRECONDITION (nsnull!=cellMap, "null cellMap.");
   PRInt32 result;
   const nsStyleTable *tableStyle=nsnull;
@@ -665,7 +702,7 @@ void nsTableFrame::InsertCol(nsIPresContext&  aPresContext,
   mColFrames.InsertElementAt(&aColFrame, aColIndex);
   nsTableColType insertedColType = aColFrame.GetType();
   PRInt32 numCacheCols = mColFrames.Count();
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
     PRInt32 numMapCols = cellMap->GetColCount();
     if (numCacheCols > numMapCols) {
@@ -691,7 +728,7 @@ void nsTableFrame::InsertCol(nsIPresContext&  aPresContext,
         }
       }
       if (!removedFromCache) {
-        cellMap->AppendCol();
+        cellMap->AddColsAtEnd(1);
       }
     }
   }
@@ -707,7 +744,7 @@ void nsTableFrame::RemoveCol(nsIPresContext&       aPresContext,
     mColFrames.RemoveElementAt(aColIndex);
   }
   if (aRemoveFromCellMap) {
-    nsCellMap* cellMap = GetCellMap();
+    nsTableCellMap* cellMap = GetCellMap();
     if (cellMap) {
       // check to see if the cell map can remove the col
       if (cellMap->RemoveUnusedCols(1) < 1) { 
@@ -718,22 +755,10 @@ void nsTableFrame::RemoveCol(nsIPresContext&       aPresContext,
   }
 }
 
-/** return the index of the next row that is not yet assigned */
-PRInt32 nsTableFrame::GetNextAvailRowIndex() const
-{
-  PRInt32 result=0;
-  nsCellMap *cellMap = GetCellMap();
-  NS_PRECONDITION (nsnull!=cellMap, "null cellMap.");
-  if (nsnull!=cellMap) {
-    result = cellMap->GetNextAvailRowIndex(); 
-  }
-  return result;
-}
-
 /** Get the cell map for this table frame.  It is not always mCellMap.
   * Only the firstInFlow has a legit cell map
   */
-nsCellMap * nsTableFrame::GetCellMap() const
+nsTableCellMap * nsTableFrame::GetCellMap() const
 {
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   if (this!=firstInFlow)
@@ -917,9 +942,9 @@ PRInt32 nsTableFrame::AppendCell(nsIPresContext&   aPresContext,
                                  PRInt32           aRowIndex)
 {
   PRInt32 colIndex = 0;
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
-    colIndex = cellMap->AppendCell(&aCellFrame, aRowIndex, PR_TRUE);
+    colIndex = cellMap->AppendCell(aCellFrame, aRowIndex, PR_TRUE);
     PRInt32 numColsInMap   = GetColCount();
     PRInt32 numColsInCache = mColFrames.Count();
     PRInt32 numColsToAdd = numColsInMap - numColsInCache;
@@ -936,7 +961,7 @@ void nsTableFrame::InsertCells(nsIPresContext& aPresContext,
                                PRInt32         aRowIndex, 
                                PRInt32         aColIndexBefore)
 {
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
     cellMap->InsertCells(aCellFrames, aRowIndex, aColIndexBefore);
     PRInt32 numColsInMap = GetColCount();
@@ -980,7 +1005,7 @@ void nsTableFrame::RemoveCell(nsIPresContext&   aPresContext,
                               nsTableCellFrame* aCellFrame,
                               PRInt32           aRowIndex)
 {
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
     cellMap->RemoveCell(aCellFrame, aRowIndex);
     PRInt32 numColsInMap = GetColCount(); // cell map's notion of num cols
@@ -994,43 +1019,46 @@ void nsTableFrame::RemoveCell(nsIPresContext&   aPresContext,
 }
 
 // this cannot extend beyond a single row group
-void nsTableFrame::AppendRows(nsIPresContext&  aPresContext,
-                              nsVoidArray&     aRowFrames)
+void nsTableFrame::AppendRows(nsIPresContext&       aPresContext,
+                              nsTableRowGroupFrame& aRowGroupFrame,
+                              nsVoidArray&          aRowFrames)
 {
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
     PRInt32 rowIndex = cellMap->GetRowCount();
-    InsertRows(aPresContext, aRowFrames, rowIndex, PR_TRUE);
+    InsertRows(aPresContext, aRowGroupFrame, aRowFrames, rowIndex, PR_TRUE);
   }
 }
 
 PRInt32
-nsTableFrame::InsertRow(nsIPresContext&  aPresContext,
-                        nsIFrame&        aRowFrame,
-                        PRInt32          aRowIndex,
-                        PRBool           aConsiderSpans)
+nsTableFrame::InsertRow(nsIPresContext&       aPresContext,
+                        nsTableRowGroupFrame& aRowGroupFrame,
+                        nsIFrame&             aRowFrame,
+                        PRInt32               aRowIndex,
+                        PRBool                aConsiderSpans)
 {
   nsVoidArray rows;
   rows.AppendElement(&aRowFrame);
-  return InsertRows(aPresContext, rows, aRowIndex, aConsiderSpans);
+  return InsertRows(aPresContext, aRowGroupFrame, rows, aRowIndex, aConsiderSpans);
 }
 
 // this cannot extend beyond a single row group
 PRInt32
-nsTableFrame::InsertRows(nsIPresContext&  aPresContext,
-                         nsVoidArray&     aRowFrames,
-                         PRInt32          aRowIndex,
-                         PRBool           aConsiderSpans)
+nsTableFrame::InsertRows(nsIPresContext&       aPresContext,
+                         nsTableRowGroupFrame& aRowGroupFrame,
+                         nsVoidArray&          aRowFrames,
+                         PRInt32               aRowIndex,
+                         PRBool                aConsiderSpans)
 {
   //printf("insertRowsBefore firstRow=%d \n", aRowIndex);
   //Dump(PR_TRUE, PR_FALSE, PR_TRUE);
 
   PRInt32 numColsToAdd = 0;
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
     PRInt32 origNumRows = cellMap->GetRowCount();
     PRInt32 numNewRows = aRowFrames.Count();
-    cellMap->InsertRows(aRowFrames, aRowIndex, aConsiderSpans);
+    cellMap->InsertRows(aRowGroupFrame, aRowFrames, aRowIndex, aConsiderSpans);
     PRInt32 numColsInMap = GetColCount(); // cell map's notion of num cols
     PRInt32 numColsInCache = mColFrames.Count();
     numColsToAdd = numColsInMap - numColsInCache;
@@ -1065,7 +1093,7 @@ void nsTableFrame::RemoveRows(nsIPresContext&  aPresContext,
   //printf("removeRowsBefore firstRow=%d numRows=%d\n", aFirstRowIndex, aNumRowsToRemove);
   //Dump(PR_TRUE, PR_FALSE, PR_TRUE);
 
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
     cellMap->RemoveRows(aFirstRowIndex, aNumRowsToRemove, aConsiderSpans);
     // only remove cols that are of type eTypeAnonymous cell (they are at the end)
@@ -1085,7 +1113,7 @@ void nsTableFrame::RemoveRows(nsIPresContext&  aPresContext,
 void nsTableFrame::AppendRowGroups(nsIPresContext& aPresContext,
                                    nsIFrame*       aFirstRowGroupFrame)
 {
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
     PRInt32 rowIndex = cellMap->GetRowCount();
     InsertRowGroups(aPresContext, aFirstRowGroupFrame, rowIndex);
@@ -1127,11 +1155,12 @@ nsTableFrame::GetRowGroupFrame(nsIFrame* aFrame,
 }
 
 // collect the rows ancestors of aFrame
-void 
+PRInt32
 nsTableFrame::CollectRows(nsIFrame*    aFrame,
                           nsVoidArray& aCollection)
 {
-  if (!aFrame) return;
+  if (!aFrame) return 0;
+  PRInt32 numRows = 0;
   nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(aFrame);
   if (rgFrame) {
     nsIFrame* childFrame = nsnull;
@@ -1141,14 +1170,16 @@ nsTableFrame::CollectRows(nsIFrame*    aFrame,
       childFrame->GetFrameType(&childType);
       if (nsLayoutAtoms::tableRowFrame == childType) {
         aCollection.AppendElement(childFrame);
+        numRows++;
       }
       else {
-        CollectRows(childFrame, aCollection);
+        numRows += CollectRows(childFrame, aCollection);
       }
       NS_IF_RELEASE(childType);
       childFrame->GetNextSibling(&childFrame);
     }
   }
+  return numRows;
 }
 
 void
@@ -1156,15 +1187,24 @@ nsTableFrame::InsertRowGroups(nsIPresContext&  aPresContext,
                               nsIFrame*        aFirstRowGroupFrame,
                               PRInt32          aRowIndex)
 {
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
-    // collect the new row frames in an array
+    PRInt32 rowIndex = aRowIndex;
     nsVoidArray rows;
     for (nsIFrame* kidFrame = aFirstRowGroupFrame; kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
-      CollectRows(kidFrame, rows);
+      nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(kidFrame);
+      if (rgFrame) {
+        // create and add the cell map for the row group
+        cellMap->InsertGroupCellMap(rowIndex, *rgFrame);
+        // collect the new row frames in an array and add them to the table
+        PRInt32 numRows = CollectRows(kidFrame, rows);
+        if (numRows > 0) {
+          InsertRows(aPresContext, *rgFrame, rows, rowIndex, PR_TRUE);
+          rowIndex += numRows;
+          rows.Clear();
+        }
+      }
     }
-
-    InsertRows(aPresContext, rows, aRowIndex, PR_TRUE);
   }
 }
 
@@ -1185,7 +1225,7 @@ void nsTableFrame::ListColumnLayoutData(FILE* out, PRInt32 aIndent)
     return;
   }
 
-  nsCellMap *cellMap = GetCellMap();
+  nsTableCellMap *cellMap = GetCellMap();
   if (nsnull!=cellMap)
   {
     fprintf(out,"Column Layout Data \n");
@@ -2040,11 +2080,11 @@ nsTableFrame::CollapseRowGroupIfNecessary(nsIPresContext* aPresContext,
           nsTableCellFrame* lastCell = nsnull;
           for (int colX = 0; colX < numCols; colX++) {
             CellData* cellData = mCellMap->GetCellAt(aRowX, colX);
-            if (cellData && !cellData->mOrigCell) { // a cell above is spanning into here
+            if (cellData && cellData->IsSpan()) { // a cell above is spanning into here
               // adjust the real cell's rect only once
               nsTableCellFrame* realCell = nsnull;
-              if (cellData->mRowSpanData)
-                realCell = cellData->mRowSpanData->mOrigCell;
+              if (cellData->IsRowSpan())
+                realCell = mCellMap->GetCellFrame(aRowX, colX, *cellData, PR_TRUE);
               if (realCell != lastCell) {
                 nsRect realRect;
                 realCell->GetRect(realRect);
@@ -2133,8 +2173,8 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext* aPresContext,
           CellData* cellData = mCellMap->GetCellAt(rowX, colX);
           nsRect cellRect;
           if (cellData) {
-            cellFrame = cellData->mOrigCell;
-            if (cellFrame) { // the cell originates at (rowX, colX)
+            if (cellData->IsOrig()) { // the cell originates at (rowX, colX)
+              cellFrame = cellData->GetCellFrame();
               // reset the collapse offsets since they may have been collapsed previously
               cellFrame->SetCollapseOffsetX(aPresContext, 0);
               cellFrame->SetCollapseOffsetY(aPresContext, 0);
@@ -2150,8 +2190,8 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext* aPresContext,
               cellFrame->SetRect(aPresContext, cellRect);
               // if the cell does not originate at (rowX, colX), adjust the real cells width
             } else if (collapseGroup || collapseCol) { 
-              if (cellData->mColSpanData) {
-                cellFrame = cellData->mColSpanData->mOrigCell;
+              if (cellData->IsColSpan()) {
+                cellFrame = mCellMap->GetCellFrame(rowX, colX, *cellData, PR_FALSE);
               }
               if ((cellFrame) && (lastCell != cellFrame)) {
                 cellFrame->GetRect(cellRect);
@@ -2408,42 +2448,39 @@ nsTableFrame::RemoveFrame(nsIPresContext* aPresContext,
     }
 
     InvalidateColumnWidths();
-  } else if (IsRowGroup(display->mDisplay)) {
-    // remove the rows from the table
-    nsTableRowGroupFrame* rgFrame = (nsTableRowGroupFrame *) aOldFrame;
-    PRInt32 firstRowIndex = rgFrame->GetStartRowIndex();
-    PRInt32 numRows;
-    rgFrame->GetRowCount(numRows);
-    RemoveRows(*aPresContext, firstRowIndex, numRows, PR_TRUE);
-
-    // remove the row group frame from the sibling chain
-    mFrames.DestroyFrame(aPresContext, aOldFrame);
-
-    InvalidateColumnWidths();
+    AddTableDirtyReflowCommand(aPresContext, this);
   } else {
-    // Just remove the frame
-    mFrames.DestroyFrame(aPresContext, aOldFrame);
-    return NS_OK;
-  }
-  // Because the number of columns may have changed invalidate the column
-  // cache. Note that this has the side effect of recomputing the column
-  // widths, so we don't need to call InvalidateColumnWidths()
-  InvalidateColumnWidths();  
-  
-  // Mark the table as dirty and generate a reflow command targeted at the
-  // outer table frame
-  nsIReflowCommand* reflowCmd;
-  nsresult          rv;
-  
-  mState |= NS_FRAME_IS_DIRTY;
-  rv = NS_NewHTMLReflowCommand(&reflowCmd, mParent, nsIReflowCommand::ReflowDirty);
-  if (NS_SUCCEEDED(rv)) {
-    // Add the reflow command
-    rv = aPresShell.AppendReflowCommand(reflowCmd);
-    NS_RELEASE(reflowCmd);
-  }
+    nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(aOldFrame);
+    if (rgFrame) {
+      PRInt32 startRowIndex = rgFrame->GetStartRowIndex();
+      PRInt32 numRows;
+      rgFrame->GetRowCount(numRows);
+      // remove the row group from the cell map
+      nsTableCellMap* cellMap = GetCellMap();
+      if (cellMap) {
+        cellMap->RemoveGroupCellMap(rgFrame);
+      }
+      // only remove cols that are of type eTypeAnonymous cell (they are at the end)
+      PRInt32 numColsInMap = GetColCount(); // cell map's notion of num cols
+      PRInt32 numColsInCache = mColFrames.Count();
+      PRInt32 numColsNotRemoved = DestroyAnonymousColFrames(*aPresContext, numColsInCache - numColsInMap);
+      // if the cell map has fewer cols than the cache, correct it
+      if (numColsNotRemoved > 0) {
+        cellMap->AddColsAtEnd(numColsNotRemoved);
+      }
+      AdjustRowIndices(startRowIndex, -numRows);
+      // remove the row group frame from the sibling chain
+      mFrames.DestroyFrame(aPresContext, aOldFrame);
 
-  return rv;
+      InvalidateColumnWidths();
+      AddTableDirtyReflowCommand(aPresContext, this);
+    } else {
+      // Just remove the frame
+      mFrames.DestroyFrame(aPresContext, aOldFrame);
+      return NS_OK;
+    }
+  }
+  return NS_OK;
 }
 
 NS_METHOD nsTableFrame::IncrementalReflow(nsIPresContext* aPresContext,
@@ -3522,7 +3559,7 @@ void nsTableFrame::AdjustColumnsForCOLSAttribute()
 {
 // XXX this is not right, 
 #if 0
-  nsCellMap *cellMap = GetCellMap();
+  nsTableCellMap *cellMap = GetCellMap();
   NS_ASSERTION(nsnull!=cellMap, "bad cell map");
   
   // any specified-width column turns off COLS attribute
@@ -3886,7 +3923,7 @@ void nsTableFrame::GetTableBorderForRowGroup(nsTableRowGroupFrame* aRowGroupFram
       if (mBorderCollapser) {
         PRInt32 rowCount;
         aRowGroupFrame->GetRowCount(rowCount);
-        nsCellMap* cellMap = GetCellMap();
+        nsTableCellMap* cellMap = GetCellMap();
         //PRInt32 colCount = cellMap->GetColCount();
         mBorderCollapser->GetMaxBorder(aRowGroupFrame->GetStartRowIndex(), rowCount - 1,
                                        0, cellMap->GetColCount() - 1, aBorder);
@@ -4293,7 +4330,7 @@ void nsTableFrame::Dump(PRBool aDumpRows,
     }
   }
   if (aDumpCellMap) {
-    nsCellMap* cellMap = GetCellMap();
+    nsTableCellMap* cellMap = GetCellMap();
 #ifdef NS_DEBUG
     cellMap->Dump();
 #endif
@@ -4405,20 +4442,23 @@ nsTableCellFrame* nsTableFrame::GetCellInfoAt(PRInt32            aRowX,
                                               PRBool*            aOriginates, 
                                               PRInt32*           aColSpan)
 {
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   return cellMap->GetCellInfoAt(aRowX, aColX, aOriginates, aColSpan);
 }
 
 /*------------------ nsITableLayout methods ------------------------------*/
 NS_IMETHODIMP 
-nsTableFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
+nsTableFrame::GetCellDataAt(PRInt32        aRowIndex, 
+                            PRInt32        aColIndex,
                             nsIDOMElement* &aCell,   //out params
-                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
-                            PRInt32& aRowSpan, PRInt32& aColSpan,
-                            PRBool& aIsSelected)
+                            PRInt32&       aStartRowIndex, 
+                            PRInt32&       aStartColIndex, 
+                            PRInt32&       aRowSpan, 
+                            PRInt32&       aColSpan,
+                            PRBool&        aIsSelected)
 {
   nsresult result;
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   // Initialize out params
   aCell = nsnull;
   aStartRowIndex = 0;
@@ -4455,8 +4495,8 @@ nsTableFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
     cellFrame = cellMap->GetCellFrameOriginatingAt(row, col);
     if (cellFrame)
     {
-      rowSpan = cellFrame->GetRowSpan();
-      colSpan = cellFrame->GetColSpan();
+      rowSpan = GetRowSpan(*cellFrame);
+      colSpan = GetColSpan(*cellFrame);
 
       // Check if this extends into the location we want
       if( aRowIndex >= row && aRowIndex < row+rowSpan && 
@@ -4479,8 +4519,8 @@ CELL_FOUND:
             cellFrame = cellMap->GetCellFrameOriginatingAt(row, col);
             if (cellFrame)
             {
-              rowSpan = cellFrame->GetRowSpan();
-              colSpan = cellFrame->GetColSpan();
+              rowSpan = GetRowSpan(*cellFrame);
+              colSpan = GetColSpan(*cellFrame);
               if( aRowIndex >= row && aRowIndex < row+rowSpan && 
                   aColIndex >= col && aColIndex < col+colSpan) 
               {
@@ -4499,8 +4539,8 @@ CELL_FOUND:
   if (NS_FAILED(result)) return result;
   result = cellFrame->GetColIndex(aStartColIndex);
   if (NS_FAILED(result)) return result;
-  aRowSpan = cellFrame->GetRowSpan();
-  aColSpan = cellFrame->GetColSpan();
+  aRowSpan = GetRowSpan(*cellFrame);
+  aColSpan = GetColSpan(*cellFrame);
   result = cellFrame->GetSelected(&aIsSelected);
   if (NS_FAILED(result)) return result;
 
@@ -4519,7 +4559,7 @@ TEST_IF_SELECTED:
 
 NS_IMETHODIMP nsTableFrame::GetTableSize(PRInt32& aRowCount, PRInt32& aColCount)
 {
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   // Initialize out params
   aRowCount = 0;
   aColCount = 0;
@@ -4534,7 +4574,7 @@ NS_IMETHODIMP nsTableFrame::GetTableSize(PRInt32& aRowCount, PRInt32& aColCount)
 
 PRInt32 nsTableFrame::GetNumCellsOriginatingInCol(PRInt32 aColIndex) const
 {
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   return cellMap->GetNumCellsOriginatingInCol(aColIndex);
 }
 
@@ -4617,7 +4657,7 @@ void nsTableFrame::DebugReflow(char*                      aMessage,
 PRBool nsTableFrame::RowHasSpanningCells(PRInt32 aRowIndex)
 {
   PRBool result = PR_FALSE;
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   NS_PRECONDITION (cellMap, "bad call, cellMap not yet allocated.");
   if (cellMap) {
 		result = cellMap->RowHasSpanningCells(aRowIndex);
@@ -4628,7 +4668,7 @@ PRBool nsTableFrame::RowHasSpanningCells(PRInt32 aRowIndex)
 PRBool nsTableFrame::RowIsSpannedInto(PRInt32 aRowIndex)
 {
   PRBool result = PR_FALSE;
-  nsCellMap* cellMap = GetCellMap();
+  nsTableCellMap* cellMap = GetCellMap();
   NS_PRECONDITION (cellMap, "bad call, cellMap not yet allocated.");
   if (cellMap) {
 		result = cellMap->RowIsSpannedInto(aRowIndex);
@@ -4639,7 +4679,7 @@ PRBool nsTableFrame::RowIsSpannedInto(PRInt32 aRowIndex)
 PRBool nsTableFrame::ColIsSpannedInto(PRInt32 aColIndex)
 {
   PRBool result = PR_FALSE;
-  nsCellMap * cellMap = GetCellMap();
+  nsTableCellMap * cellMap = GetCellMap();
   NS_PRECONDITION (cellMap, "bad call, cellMap not yet allocated.");
   if (cellMap) {
 		result = cellMap->ColIsSpannedInto(aColIndex);

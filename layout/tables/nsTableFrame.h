@@ -32,7 +32,7 @@
 #include "nsTableColFrame.h"
 #include "nsTableColGroupFrame.h"
 
-class nsCellMap;
+class nsTableCellMap;
 class nsTableCellFrame;
 class nsTableColFrame;
 class nsTableRowGroupFrame;
@@ -141,12 +141,12 @@ public:
 
   // calculate the width of aFrame including its border and padding given 
   // given its reflow state.
-  static nscoord CalcBorderBoxWidth(const nsHTMLReflowState& aReflowState);
+  nscoord CalcBorderBoxWidth(const nsHTMLReflowState& aReflowState);
 
   // calculate the height of aFrame including its border and padding given 
   // its reflow state.
-  static nscoord CalcBorderBoxHeight(const nsHTMLReflowState& aReflowState,
-                                     PRBool                   aDoNavHacks);
+  nscoord CalcBorderBoxHeight(const nsHTMLReflowState& aReflowState,
+                              PRBool                   aDoNavHacks);
 
   // Return the closest sibling of aPriorChildFrame (including aPriroChildFrame)
   // of type aChildType.
@@ -309,11 +309,6 @@ public:
     */
   PRInt32 GetEffectiveCOLSAttribute();
 
-  /** return the index of the next row that is not yet assigned.
-    * If no row is initialized, 0 is returned.
-    */
-  PRInt32 GetNextAvailRowIndex() const;
-
   /** return the column frame associated with aColIndex */
   nsTableColFrame* GetColFrame(PRInt32 aColIndex) const;
 
@@ -357,18 +352,21 @@ public:
                           nsTableCellFrame* aCellFrame,
                           PRInt32           aRowIndex);
 
-  void AppendRows(nsIPresContext& aPresContext,
-                  nsVoidArray&    aRowFrames);
+  void AppendRows(nsIPresContext&       aPresContext,
+                  nsTableRowGroupFrame& aRowGroupFrame,
+                  nsVoidArray&          aRowFrames);
 
-  PRInt32 InsertRow(nsIPresContext& aPresContext,
-                    nsIFrame&       aFrame,
-                    PRInt32         aRowIndex,
-                    PRBool          aConsiderSpans);
+  PRInt32 InsertRow(nsIPresContext&       aPresContext,
+                    nsTableRowGroupFrame& aRowGroupFrame,
+                    nsIFrame&             aFrame,
+                    PRInt32               aRowIndex,
+                    PRBool                aConsiderSpans);
 
-  PRInt32 InsertRows(nsIPresContext& aPresContext,
-                     nsVoidArray&    aFrames,
-                     PRInt32         aRowIndex,
-                     PRBool          aConsiderSpans);
+  PRInt32 InsertRows(nsIPresContext&       aPresContext,
+                     nsTableRowGroupFrame& aRowGroupFrame,
+                     nsVoidArray&          aFrames,
+                     PRInt32               aRowIndex,
+                     PRBool                aConsiderSpans);
 
   virtual void RemoveRows(nsIPresContext& aPresContext,
                           PRInt32         aFirstRowFrame,
@@ -700,7 +698,7 @@ public:
   /** Get the cell map for this table frame.  It is not always mCellMap.
     * Only the firstInFlow has a legit cell map
     */
-  virtual nsCellMap *GetCellMap() const;
+  virtual nsTableCellMap* GetCellMap() const;
     
   void AdjustRowIndices(PRInt32 aRowIndex,
                         PRInt32 aAdjustment);
@@ -716,6 +714,15 @@ public:
   void ProcessGroupRules(nsIPresContext* aPresContext);
 
   nsVoidArray& GetColCache();
+
+	/** 
+	  * Return aFrame's child if aFrame is an nsScrollFrame, otherwise return aFrame
+	  */
+  nsTableRowGroupFrame* GetRowGroupFrameFor(nsIFrame*             aFrame, 
+                                            const nsStyleDisplay* aDisplay);
+
+  nsTableRowGroupFrame* GetRowGroupFrame(nsIFrame* aFrame,
+                                         nsIAtom*  aFrameTypeIn = nsnull);
 
 protected:
 
@@ -735,17 +742,8 @@ protected:
     */
   virtual PRInt32 GetSpecifiedColumnCount ();
 
-	/** 
-	  * Return aFrame's child if aFrame is an nsScrollFrame, otherwise return aFrame
-	  */
-  nsTableRowGroupFrame* GetRowGroupFrameFor(nsIFrame*             aFrame, 
-                                            const nsStyleDisplay* aDisplay);
-
-  nsTableRowGroupFrame* GetRowGroupFrame(nsIFrame* aFrame,
-                                         nsIAtom*  aFrameTypeIn = nsnull);
-
-  void CollectRows(nsIFrame*    aFrame,
-                   nsVoidArray& aCollection);
+  PRInt32 CollectRows(nsIFrame*    aFrame,
+                      nsVoidArray& aCollection);
 
 public: /* ----- Cell Map public methods ----- */
 
@@ -758,6 +756,9 @@ public: /* ----- Cell Map public methods ----- */
   /** returns the number of columns in this table after redundant columns have been removed 
     */
   virtual PRInt32 GetColCount();
+
+  PRInt32 GetRowSpan(nsTableCellFrame& aCellFrame);
+  PRInt32 GetColSpan(nsTableCellFrame& aCellFrame);
 
   /** return the column frame at colIndex.
     * returns nsnull if the col frame has not yet been allocated, or if aColIndex is out of range
@@ -838,7 +839,7 @@ protected:
     int : 26;                          // unused
   } mBits;
 
-  nsCellMap*   mCellMap;            // maintains the relationships between rows, cols, and cells
+  nsTableCellMap*   mCellMap;            // maintains the relationships between rows, cols, and cells
   nsITableLayoutStrategy * mTableLayoutStrategy; // the layout strategy for this frame
   nsFrameList  mColGroups;          // the list of colgroup frames
 

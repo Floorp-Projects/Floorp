@@ -166,8 +166,6 @@ public:
   nscoord GetChildMaxTopMargin() const;
   nscoord GetChildMaxBottomMargin() const;
 
-  PRInt32 GetMaxColumns() const;
-
   /** returns the ordinal position of this row in its table */
   virtual PRInt32 GetRowIndex() const;
 
