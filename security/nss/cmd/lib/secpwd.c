@@ -49,7 +49,7 @@
 #include <conio.h>
 #include <io.h>
 #define QUIET_FGETS quiet_fgets
-static int quiet_fgets (char *buf, int length, FILE *input);
+static char * quiet_fgets (char *buf, int length, FILE *input);
 #else
 #define QUIET_FGETS fgets
 #endif
@@ -148,7 +148,7 @@ PRBool SEC_BlindCheckPassword(char *cp)
 /* Get a password from the input terminal, without echoing */
 
 #ifdef _WINDOWS
-static int quiet_fgets (char *buf, int length, FILE *input)
+static char * quiet_fgets (char *buf, int length, FILE *input)
   {
   int c;
   char *end = buf;
@@ -177,6 +177,6 @@ static int quiet_fgets (char *buf, int length, FILE *input)
       break;
     }
 
-  return 0;
+  return buf;
   }
 #endif

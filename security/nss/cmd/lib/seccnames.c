@@ -110,7 +110,7 @@ static int
 sec_combine_trust_flags(CERTCertTrust *trust)
 {
     if (trust == NULL)
-	return NULL;
+	return 0;
     return trust->sslFlags | trust->emailFlags | trust->objectSigningFlags;
 }
 
