@@ -505,6 +505,9 @@ void nsXIFConverter::WriteDebugFile() {
 
 #elif defined(XP_MAC)
   // XXX Someone please write some Mac debugging code here!
+  const char* filename="xif.xif";
+#else
+  const char* filename="xif.xif";
 
 #endif
 
