@@ -38,7 +38,7 @@
 #ifdef XP_PC
 #include <io.h>     /* for isatty() */
 #else
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #include <unistd.h>     /* for isatty() */
 #endif
 #endif
