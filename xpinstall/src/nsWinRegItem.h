@@ -39,14 +39,16 @@ public:
                PRInt32          action,
                const nsString&  sub,
                const nsString&  valname,
-               const nsString&  val);
+               const nsString&  val,
+               PRInt32*         aReturn);
   
   nsWinRegItem(nsWinReg*        regObj,
                PRInt32          root,
                PRInt32          action,
                const nsString&  sub,
                const nsString&  valname,
-               PRInt32          val);
+               PRInt32          val,
+               PRInt32*         aReturn);
   
   ~nsWinRegItem();
 

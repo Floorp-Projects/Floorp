@@ -26,12 +26,22 @@
 nsWinProfileItem::nsWinProfileItem(nsWinProfile* profileObj, 
                                    nsString sectionName,
                                    nsString keyName,
-                                   nsString val) : nsInstallObject(profileObj->InstallObject())
+                                   nsString val,
+                                   PRInt32 *aReturn) : nsInstallObject(profileObj->InstallObject())
 {
   mProfile = profileObj;
   mSection = new nsString(sectionName);
   mKey     = new nsString(keyName);
   mValue   = new nsString(val);
+
+  *aReturn = nsInstall::SUCCESS;
+
+  if((mSection == nsnull) ||
+     (mKey     == nsnull) ||
+     (mValue   == nsnull))
+  {
+    *aReturn = nsInstall::OUT_OF_MEMORY;
+  }
 }
 
 nsWinProfileItem::~nsWinProfileItem()
@@ -48,7 +58,7 @@ PRInt32 nsWinProfileItem::Complete()
 	
     return NS_OK;
 }
-
+  
 char* nsWinProfileItem::toString()
 {
   char*     resultCString;
@@ -69,8 +79,8 @@ char* nsWinProfileItem::toString()
 
   resultCString = result->ToNewCString();
   
-  delete result;
-  delete filename;
+  if (result)   delete result;
+  if (filename) delete filename;
 
   return resultCString;
 }

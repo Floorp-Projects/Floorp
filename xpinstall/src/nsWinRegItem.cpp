@@ -25,30 +25,48 @@
 
 /* Public Methods */
 
-nsWinRegItem::nsWinRegItem(nsWinReg* regObj, PRInt32 root, PRInt32 action, const nsString& sub, const nsString& valname, const nsString& val)
+nsWinRegItem::nsWinRegItem(nsWinReg* regObj, PRInt32 root, PRInt32 action, const nsString& sub, const nsString& valname, const nsString& val, PRInt32 *aReturn)
 : nsInstallObject(regObj->InstallObject())
 {
 	mReg     = regObj;
 	mCommand = action;
 	mRootkey = root;
 
-	/* I'm assuming we need to copy these */
+  *aReturn = nsInstall::SUCCESS;
+
+  /* I'm assuming we need to copy these */
 	mSubkey  = new nsString(sub);
 	mName    = new nsString(valname);
 	mValue   = new nsString(val);
+
+  if((mSubkey == nsnull) ||
+     (mName   == nsnull) ||
+     (mValue  == nsnull))
+  {
+    *aReturn = nsInstall::OUT_OF_MEMORY;
+  }
 }
 
-nsWinRegItem::nsWinRegItem(nsWinReg* regObj, PRInt32 root, PRInt32 action, const nsString& sub, const nsString& valname, PRInt32 val)
+nsWinRegItem::nsWinRegItem(nsWinReg* regObj, PRInt32 root, PRInt32 action, const nsString& sub, const nsString& valname, PRInt32 val, PRInt32 *aReturn)
 : nsInstallObject(regObj->InstallObject())
 {
 	mReg     = regObj;
 	mCommand = action;
 	mRootkey = root;
 
-	/* I'm assuming we need to copy these */
+  *aReturn = nsInstall::SUCCESS;
+
+  /* I'm assuming we need to copy these */
 	mSubkey  = new nsString(sub);
 	mName    = new nsString(valname);
 	mValue   = new PRInt32(val);
+
+  if((mSubkey == nsnull) ||
+     (mName   == nsnull) ||
+     (mValue  == nsnull))
+  {
+    *aReturn = nsInstall::OUT_OF_MEMORY;
+  }
 }
 
 nsWinRegItem::~nsWinRegItem()
@@ -94,55 +112,68 @@ PRInt32 nsWinRegItem::Complete()
 	return aReturn;
 }
   
-#define kCRK "Create Registry Key "
-#define kDRK "Delete Registry Key "
-#define kDRV "Delete Registry Value "
-#define kSRV "Store Registry Value "
-#define kUNK "Unknown "
+#define kCRK  "Create Registry Key "
+#define kDRK  "Delete Registry Key "
+#define kDRV  "Delete Registry Value "
+#define kSRVS "Store Registry Value String "
+#define kSRVN "Store Registry Value Number "
+#define kSRV  "Store Registry Value "
+#define kUNK  "Unknown "
 
 char* nsWinRegItem::toString()
 {
-	nsString* keyString = nsnull;
-	nsString* result    = nsnull;
-    char*     resultCString = nsnull;
+	nsString*  keyString     = nsnull;
+	nsString*  result        = nsnull;
+  char*      resultCString = nsnull;
 
 	switch(mCommand)
 	{
-	    case NS_WIN_REG_CREATE:
-		    keyString = keystr(mRootkey, mSubkey, nsnull);
-            result    = new nsString(kCRK);
+    case NS_WIN_REG_CREATE:
+      keyString = keystr(mRootkey, mSubkey, nsnull);
+      result    = new nsString(kCRK);
+      break;
 
-        case NS_WIN_REG_DELETE:
-		    keyString = keystr(mRootkey, mSubkey, nsnull);
-            result    = new nsString(kDRK);
-	
-        case NS_WIN_REG_DELETE_VAL:
-		    keyString = keystr(mRootkey, mSubkey, mName);
-            result    = new nsString(kDRV);
+    case NS_WIN_REG_DELETE:
+      keyString = keystr(mRootkey, mSubkey, nsnull);
+      result    = new nsString(kDRK);
+      break;
 
-        case NS_WIN_REG_SET_VAL_STRING:
-            keyString = keystr(mRootkey, mSubkey, mName);
-            result    = new nsString(kSRV);
+    case NS_WIN_REG_DELETE_VAL:
+      keyString = keystr(mRootkey, mSubkey, mName);
+      result    = new nsString(kDRV);
+      break;
 
-        case NS_WIN_REG_SET_VAL:
-            keyString = keystr(mRootkey, mSubkey, mName);
-            result    = new nsString(kSRV);
+    case NS_WIN_REG_SET_VAL_STRING:
+      keyString = keystr(mRootkey, mSubkey, mName);
+      result    = new nsString(kSRVS);
+      break;
 
-        default:
-            keyString = keystr(mRootkey, mSubkey, mName);
-            result    = new nsString(kUNK);
+    case NS_WIN_REG_SET_VAL_NUMBER:
+      keyString = keystr(mRootkey, mSubkey, mName);
+      result    = new nsString(kSRVN);
+      break;
+
+    case NS_WIN_REG_SET_VAL:
+      keyString = keystr(mRootkey, mSubkey, mName);
+      result    = new nsString(kSRV);
+      break;
+
+    default:
+      keyString = keystr(mRootkey, mSubkey, mName);
+      result    = new nsString(kUNK);
+      break;
 	}
     
-    if (result)
-    {
-        result->Append(*keyString);
-        resultCString = result->ToNewCString();
-    }
-    
-    if (keyString) delete keyString;
-    if (result)    delete result;
-    
-    return resultCString;
+  if (result)
+  {
+      result->Append(*keyString);
+      resultCString = result->ToNewCString();
+  }
+  
+  if (keyString) delete keyString;
+  if (result)    delete result;
+  
+  return resultCString;
 }
 
 PRInt32 nsWinRegItem::Prepare()
@@ -158,51 +189,54 @@ void nsWinRegItem::Abort()
 
 nsString* nsWinRegItem::keystr(PRInt32 root, nsString* mSubkey, nsString* mName)
 {
-	nsString rootstr;
+	nsString  rootstr;
 	nsString* finalstr = nsnull;
-    char*     istr     = nsnull;
+  char*     istr     = nsnull;
 
 	switch(root)
 	{
-	    case (int)(HKEY_CLASSES_ROOT) :
-		    rootstr = "\\HKEY_CLASSES_ROOT\\";
-		    break;
+	  case (int)(HKEY_CLASSES_ROOT) :
+		  rootstr = "HKEY_CLASSES_ROOT\\";
+		  break;
 
-	    case (int)(HKEY_CURRENT_USER) :
-		    rootstr = "\\HKEY_CURRENT_USER\\";
-		    break;
+	  case (int)(HKEY_CURRENT_USER) :
+		  rootstr = "HKEY_CURRENT_USER\\";
+		  break;
 
-	    case (int)(HKEY_LOCAL_MACHINE) :
-		    rootstr = "\\HKEY_LOCAL_MACHINE\\";
-		    break;
+	  case (int)(HKEY_LOCAL_MACHINE) :
+		  rootstr = "HKEY_LOCAL_MACHINE\\";
+		  break;
 
-	    case (int)(HKEY_USERS) :
-		    rootstr = "\\HKEY_USERS\\";
-		    break;
+	  case (int)(HKEY_USERS) :
+		  rootstr = "HKEY_USERS\\";
+		  break;
 
-    	default:
-            istr = itoa(root);
-            if (istr)
-            {
-                rootstr = "\\#";
-                rootstr.Append(istr);
-                rootstr.Append("\\");
-                
-                PR_DELETE(istr);
-            }
-            break;
+    default:
+      istr = itoa(root);
+      if (istr)
+      {
+        rootstr = "#";
+        rootstr.Append(istr);
+        rootstr.Append("\\");
+        
+        PR_DELETE(istr);
+      }
+      break;
 	}
 
-    finalstr = new nsString(rootstr);
-	if(mName != nsnull && finalstr != nsnull)
+  finalstr = new nsString(rootstr);
+	if(finalstr != nsnull)
 	{
-        finalstr->Append(*mSubkey);
-        finalstr->Append(" [");
-        finalstr->Append(*mName);
-        finalstr->Append("]");
+    finalstr->Append(*mSubkey);
+    finalstr->Append(" [");
+
+    if(mName != nsnull)
+      finalstr->Append(*mName);
+
+    finalstr->Append("]");
 	}
 
-    return finalstr;
+  return finalstr;
 }
 
 

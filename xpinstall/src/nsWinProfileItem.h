@@ -38,7 +38,8 @@ public:
   nsWinProfileItem(nsWinProfile* profileObj,
                    nsString sectionName,
                    nsString keyName,
-                   nsString val);
+                   nsString val,
+                   PRInt32 *aReturn);
 
   ~nsWinProfileItem();
 
