@@ -21,8 +21,6 @@
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 
-
-
 #ifndef NSCAP_NO_NEW_CASTS
   #define STATIC_CAST(T,x)  static_cast<T>(x)
   #define REINTERPRET_CAST(T,x) reinterpret_cast<T>(x)
@@ -290,7 +288,17 @@ AVoidPtrPtrContext( void** )
   }
 
 
+// Optimism
+#define TEST_EXCEPTIONS 1
 
+// HAVE_CPP_EXCEPTIONS is defined automagically on unix
+#if defined(XP_UNIX)
+#if !defined(HAVE_CPP_EXCEPTIONS)
+#undef TEST_EXCEPTIONS
+#endif
+#endif
+
+#ifdef TEST_EXCEPTIONS
 static
 nsresult
 TestBloat_Raw()
@@ -329,8 +337,7 @@ TestBloat_Raw()
 
 		return result;
 	}
-
-
+#endif // TEST_EXCEPTIONS
 
 static
 nsresult
@@ -382,7 +389,9 @@ main()
 
 		cout << "sizeof(nsCOMPtr<IFoo>) --> " << sizeof(nsCOMPtr<IFoo>) << endl;
 
+#ifdef TEST_EXCEPTIONS
 		TestBloat_Raw();
+#endif // TEST_EXCEPTIONS
 		TestBloat_Raw_Unsafe();
 		TestBloat_Smart();
 
