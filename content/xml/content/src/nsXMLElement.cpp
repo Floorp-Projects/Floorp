@@ -39,6 +39,7 @@
 #include "nsIDocShell.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIRefreshURI.h"
+#include "nsStyleConsts.h"
 
 
 nsresult
@@ -519,6 +520,7 @@ nsXMLElement::GetID(nsIAtom*& aResult) const
 NS_IMETHODIMP
 nsXMLElement::GetClasses(nsVoidArray& aArray) const
 {
+  aArray.Clear();
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -531,7 +533,7 @@ nsXMLElement::HasClass(nsIAtom* aClass) const
 NS_IMETHODIMP
 nsXMLElement::GetContentStyleRules(nsISupportsArray* aRules)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -544,5 +546,6 @@ NS_IMETHODIMP
 nsXMLElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                        PRInt32& aHint) const
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aHint = NS_STYLE_HINT_CONTENT;  // by default, never map attributes to style
+  return NS_OK;
 }
