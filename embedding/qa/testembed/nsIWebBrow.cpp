@@ -101,7 +101,8 @@ void CNsIWebBrowser::WBGetContainerWindow()
 		QAOutput("Didn't get web browser chrome object.", 2);
 	else {
 		rv = qaWebBrowserChrome->ShowAsModal();
-		RvTestResult(rv, "nsIWebBrowserChrome::ShowAsModal() test", 2);
+		RvTestResult(rv, "nsIWebBrowserChrome::ShowAsModal() test", 1);
+		RvTestResultDlg(rv, "nsIWebBrowserChrome::ShowAsModal() test");
 	}
 }
 
@@ -126,7 +127,8 @@ void CNsIWebBrowser::WBGetURIContentListener()
 	else {
 		nsCOMPtr<nsISupports> qaSupports;
 		rv = qaURIContentListener->GetLoadCookie(getter_AddRefs(qaSupports));
-		RvTestResult(rv, "nsIURIContentListener::GetLoadCookie() test", 2);
+		RvTestResult(rv, "nsIURIContentListener::GetLoadCookie() test", 1);
+		RvTestResultDlg(rv, "nsIURIContentListener::GetLoadCookie() test");
 	}
 }
 
@@ -152,7 +154,8 @@ void CNsIWebBrowser::WBGetDOMWindow()
 		QAOutput("Didn't get dom window object.", 2);
 	else {
 		rv = qaDOMWindow->ScrollTo(50,50);
-		RvTestResult(rv, "nsIDOMWindow::ScrollTo() test", 2);
+		RvTestResult(rv, "nsIDOMWindow::ScrollTo() test", 1);
+		RvTestResultDlg(rv, "nsIDOMWindow::ScrollTo() test");
 	}
 }
 
@@ -207,7 +210,7 @@ void CNsIWebBrowser::WBSSetupProperty()
 	// nsIWebBrowserSetup methods
 
 	nsCOMPtr <nsIWebBrowserSetup> qaWBSetup(do_QueryInterface(qaWebBrowser, &rv));
-	RvTestResult(rv, "nsIWebBrowserSetup object test", 2);
+	RvTestResult(rv, "nsIWebBrowserSetup object test", 1);
 	RvTestResultDlg(rv, "nsIWebBrowserSetup object test");
 
 	if (!qaWBSetup) {

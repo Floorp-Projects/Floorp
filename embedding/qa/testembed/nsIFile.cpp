@@ -79,36 +79,36 @@ void CNsIFile::OnStartTests(UINT nMenuID)
 		return;
 	}
 
-	QAOutput("Begin nsIFile tests.", 2);
-
 	switch(nMenuID)
 	{		
 		case ID_INTERFACES_NSIFILE_RUNALLTESTS	:
+			QAOutput("Begin nsIFile tests.", 2);
 			RunAllTests(theTestFile,theFileOpDir);
+			QAOutput("End nsIFile tests.", 2);
 			break ;
 
 		case ID_INTERFACES_NSIFILE_INITWITHPATH	:
-			InitWithPathTest(theTestFile);
+			InitWithPathTest(theTestFile, 2);
 			break ;
 
 		case ID_INTERFACES_NSIFILE_APPENDRELATICEPATH :
-			AppendRelativePathTest(theTestFile);
+			AppendRelativePathTest(theTestFile, 2);
 			break ;
 
 		case ID_INTERFACES_NSIFILE_EXISTS :
-			FileCreateTest(theTestFile);
+			FileCreateTest(theTestFile, 2);
 			break ;
 
 		case ID_INTERFACES_NSIFILE_CREATE :
-			FileExistsTest(theTestFile);
+			FileExistsTest(theTestFile, 2);
 			break ;
 
 		case ID_INTERFACES_NSIFILE_COPYTO :
-			FileCopyTest(theTestFile, theFileOpDir);	
+			FileCopyTest(theTestFile, theFileOpDir, 2);	
 			break ;
 
 		case ID_INTERFACES_NSIFILE_MOVETO :
-			FileMoveTest(theTestFile, theFileOpDir);	
+			FileMoveTest(theTestFile, theFileOpDir, 2);	
 			break ;
 	}
 }
@@ -122,17 +122,13 @@ void CNsIFile::OnStartTests(UINT nMenuID)
 
 void CNsIFile::RunAllTests(nsILocalFile *theTestFile, nsILocalFile *theFileOpDir)
 {
-	InitWithPathTest(theTestFile);
-	AppendRelativePathTest(theTestFile);
-	FileCreateTest(theTestFile);
-	FileExistsTest(theTestFile);
-	FileCopyTest(theTestFile, theFileOpDir);	
-	FileMoveTest(theTestFile, theFileOpDir);	
+	InitWithPathTest(theTestFile, 1);
+	AppendRelativePathTest(theTestFile, 1);
+	FileCreateTest(theTestFile, 1);
+	FileExistsTest(theTestFile, 1);
+	FileCopyTest(theTestFile, theFileOpDir, 1);	
+	FileMoveTest(theTestFile, theFileOpDir, 1);	
 }
-
-
-
-
 
 // ***********************************************************************
 
@@ -140,19 +136,21 @@ void CNsIFile::RunAllTests(nsILocalFile *theTestFile, nsILocalFile *theFileOpDir
 
 
 
-void CNsIFile::InitWithPathTest(nsILocalFile *theTestFile)
+void CNsIFile::InitWithPathTest(nsILocalFile *theTestFile, PRInt16 displayMode)
 {
 	rv = theTestFile->InitWithNativePath(NS_LITERAL_CSTRING("c:\\temp\\"));
-	RvTestResult(rv, "InitWithNativePath() test (initializing file path)", 2);
+	RvTestResult(rv, "InitWithNativePath() test (initializing file path)", displayMode);
+	RvTestResultDlg(rv, "InitWithNativePath() test (initializing file path)", true);
 }
 
-void CNsIFile::AppendRelativePathTest(nsILocalFile *theTestFile)
+void CNsIFile::AppendRelativePathTest(nsILocalFile *theTestFile, PRInt16 displayMode)
 {
 	rv = theTestFile->AppendRelativeNativePath(NS_LITERAL_CSTRING("myFile.txt"));
-	RvTestResult(rv, "AppendRelativeNativePath() test (append file to the path)", 2);
+	RvTestResult(rv, "AppendRelativeNativePath() test (append file to the path)", displayMode);
+	RvTestResultDlg(rv, "AppendRelativeNativePath() test (append file to the path)");
 }
 
-void CNsIFile::FileCreateTest(nsILocalFile *theTestFile)
+void CNsIFile::FileCreateTest(nsILocalFile *theTestFile, PRInt16 displayMode)
 {
 	PRBool exists =  PR_TRUE;
 
@@ -162,15 +160,16 @@ void CNsIFile::FileCreateTest(nsILocalFile *theTestFile)
 	rv = theTestFile->Exists(&exists);
 	if (!exists)
 	{
-		QAOutput("File doesn't exist. We'll try creating it.", 2);
+		QAOutput("File doesn't exist. We'll try creating it.", displayMode);
 		rv = theTestFile->Create(nsIFile::NORMAL_FILE_TYPE, 0777);
-		RvTestResult(rv, "File Create() test ('myFile.txt')", 2);
+		RvTestResult(rv, "File Create() test ('myFile.txt')", displayMode);
+		RvTestResultDlg(rv, "File Create() test ('myFile.txt')");
 	}
 	else
-		QAOutput("File already exists (myFile.txt). We won't create it.", 2);
+		QAOutput("File already exists (myFile.txt). We won't create it.", displayMode);
 }
 
-void CNsIFile::FileExistsTest(nsILocalFile *theTestFile)
+void CNsIFile::FileExistsTest(nsILocalFile *theTestFile, PRInt16 displayMode)
 {
 	PRBool exists =  PR_TRUE;
 
@@ -178,65 +177,71 @@ void CNsIFile::FileExistsTest(nsILocalFile *theTestFile)
 	rv = theTestFile->AppendRelativeNativePath(NS_LITERAL_CSTRING("myFile.txt"));
 
 	rv = theTestFile->Exists(&exists);
+	RvTestResult(rv, "File Exists() test ('myFile.txt')", displayMode);
+	RvTestResultDlg(rv, "File Exists() test ('myFile.txt')");
 	if (!exists)
-		QAOutput("Exists() test Failed. File (myFile.txt) doesn't exist.", 2);
+		QAOutput("Exists() test Failed. File (myFile.txt) doesn't exist.", displayMode);
 	else
-		QAOutput("Exists() test Passed. File (myFile.txt) exists.", 2);
+		QAOutput("Exists() test Passed. File (myFile.txt) exists.", displayMode);
 }
 
-void CNsIFile::FileCopyTest(nsILocalFile *theTestFile, nsILocalFile *theFileOpDir)
+void CNsIFile::FileCopyTest(nsILocalFile *theTestFile, nsILocalFile *theFileOpDir,
+							PRInt16 displayMode)
 {
 	PRBool exists =  PR_TRUE;
 
-	QAOutput("Start File Copy test.", 2);
+	QAOutput("Start File Copy test.", displayMode);
 	rv = theFileOpDir->InitWithNativePath(NS_LITERAL_CSTRING("c:\\temp\\"));
 
 	if (NS_FAILED(rv))
-		QAOutput("The target dir wasn't found.", 2);
+		QAOutput("The target dir wasn't found.", displayMode);
 	else
-		QAOutput("The target dir was found.", 2);
+		QAOutput("The target dir was found.", displayMode);
 
 	rv = theTestFile->InitWithNativePath(NS_LITERAL_CSTRING("c:\\temp\\myFile.txt"));
 	if (NS_FAILED(rv))
-		QAOutput("The path wasn't found.", 2);
+		QAOutput("The path wasn't found.", displayMode);
 	else
-		QAOutput("The path was found.", 2);
+		QAOutput("The path was found.", displayMode);
 
 	rv = theTestFile->CopyToNative(theFileOpDir, NS_LITERAL_CSTRING("myFile2.txt"));
-	RvTestResult(rv, "rv CopyToNative() test", 2);
+	RvTestResult(rv, "rv CopyToNative() test", displayMode);
+	RvTestResultDlg(rv, "File CopyToNative() test ('myFile.txt')");
 
 	rv = theTestFile->InitWithNativePath(NS_LITERAL_CSTRING("c:\\temp\\myFile2.txt"));
 
 	rv = theTestFile->Exists(&exists);
 	if (!exists)
-		QAOutput("File didn't copy. CopyToNative() test Failed.", 2);
+		QAOutput("File didn't copy. CopyToNative() test Failed.", displayMode);
 	else
-		QAOutput("File copied. CopyToNative() test Passed.", 2);
+		QAOutput("File copied. CopyToNative() test Passed.", displayMode);
 }
 
-void CNsIFile::FileMoveTest(nsILocalFile *theTestFile, nsILocalFile *theFileOpDir)
+void CNsIFile::FileMoveTest(nsILocalFile *theTestFile, nsILocalFile *theFileOpDir,
+							PRInt16 displayMode)
 {
 	PRBool exists =  PR_TRUE;
 
-	QAOutput("Start File Move test.", 2);
+	QAOutput("Start File Move test.", displayMode);
 
 	rv = theFileOpDir->InitWithNativePath(NS_LITERAL_CSTRING("c:\\Program Files\\"));
 	if (NS_FAILED(rv))
-		QAOutput("The target dir wasn't found.", 2);
+		QAOutput("The target dir wasn't found.", displayMode);
 
 	rv = theTestFile->InitWithNativePath(NS_LITERAL_CSTRING("c:\\temp\\myFile2.txt"));
 	if (NS_FAILED(rv))
-		QAOutput("The path wasn't found.", 2);
+		QAOutput("The path wasn't found.", displayMode);
 
 	rv = theTestFile->MoveToNative(theFileOpDir, NS_LITERAL_CSTRING("myFile2.txt"));
-	RvTestResult(rv, "MoveToNative() test", 2);
+	RvTestResult(rv, "MoveToNative() test", displayMode);
+	RvTestResultDlg(rv, "File MoveToNative() test ('myFile.txt')");
 
 	rv = theTestFile->InitWithNativePath(NS_LITERAL_CSTRING("c:\\Program Files\\myFile2.txt"));
 
 	rv = theTestFile->Exists(&exists);
 	if (!exists)
-		QAOutput("File wasn't moved. MoveToNative() test Failed.", 2);
+		QAOutput("File wasn't moved. MoveToNative() test Failed.", displayMode);
 	else
-		QAOutput("File was moved. MoveToNative() test Passed.", 2);
+		QAOutput("File was moved. MoveToNative() test Passed.", displayMode);
 }
 

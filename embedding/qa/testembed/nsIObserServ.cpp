@@ -95,17 +95,17 @@ void CnsIObserServ::OnStartTests(UINT nMenuID)
 	case ID_INTERFACES_NSIOBSERVERSERVICE_ENUMERATEOBSERVERS :
 		QAOutput("Adding observers first", 2);
 		AddObserversTest(1);		
-		EnumerateObserversTest();
+		EnumerateObserversTest(1);
 		break;
 
 	case ID_INTERFACES_NSIOBSERVERSERVICE_NOTIFYOBSERVERS :
-		NotifyObserversTest();
+		NotifyObserversTest(1);
 		break;
 
 	case ID_INTERFACES_NSIOBSERVERSERVICE_REMOVEOBSERVERS :
 		QAOutput("Adding observers first.", 2);
 		AddObserversTest(1);
-		RemoveObserversTest();
+		RemoveObserversTest(1);
 		break;
 
 	default :
@@ -116,10 +116,10 @@ void CnsIObserServ::OnStartTests(UINT nMenuID)
 
 void CnsIObserServ::RunAllTests()
 {
-	AddObserversTest(2);
-	EnumerateObserversTest();
-	NotifyObserversTest();
-	RemoveObserversTest();
+	AddObserversTest(1);
+	EnumerateObserversTest(1);
+	NotifyObserversTest(1);
+	RemoveObserversTest(1);
 }
 
 void CnsIObserServ::AddObserversTest(int displayType)
@@ -127,6 +127,8 @@ void CnsIObserServ::AddObserversTest(int displayType)
 	int i;
 
 	nsCOMPtr<nsIObserverService>observerService(do_GetService("@mozilla.org/observer-service;1",&rv));
+	RvTestResult(rv, "nsIObserverService object test", displayType);
+	RvTestResultDlg(rv, "nsIObserverService object test", true);
 
 	QAOutput("\n nsIObserverService::AddObserversTest().");
 	if (!observerService) 
@@ -141,10 +143,11 @@ void CnsIObserServ::AddObserversTest(int displayType)
 									      ObserverTable[i].theOwnsWeak);
 		FormatAndPrintOutput("The observer to be added = ", ObserverTable[i].theTopic, 1);	
 		RvTestResult(rv, "AddObservers() test", displayType);
+		RvTestResultDlg(rv, "AddObservers() test");
 	}
 }
 
-void CnsIObserServ::RemoveObserversTest()
+void CnsIObserServ::RemoveObserversTest(int displayType)
 {
 	int i;
 
@@ -161,12 +164,13 @@ void CnsIObserServ::RemoveObserversTest()
 	{
 		rv = observerService->RemoveObserver(this, ObserverTable[i].theTopic);
 		FormatAndPrintOutput("The observer to be removed = ", ObserverTable[i].theTopic, 1);	
-		RvTestResult(rv, "RemoveObservers() test", 2);
+		RvTestResult(rv, "RemoveObservers() test", displayType);
+		RvTestResultDlg(rv, "RemoveObservers() test");
 	}
 }
 
 
-void CnsIObserServ::NotifyObserversTest()
+void CnsIObserServ::NotifyObserversTest(int displayType)
 {
 	PRInt32 i;
 	nsCOMPtr<nsIObserverService>observerService(do_GetService("@mozilla.org/observer-service;1",&rv));
@@ -177,12 +181,13 @@ void CnsIObserServ::NotifyObserversTest()
 	{
 		FormatAndPrintOutput("The notified observer = ", ObserverTable[i].theTopic, 1);
 		rv = observerService->NotifyObservers(nsnull, ObserverTable[i].theTopic, 0);
-		RvTestResult(rv, "NotifyObservers() test", 2);
+		RvTestResult(rv, "NotifyObservers() test", displayType);
+		RvTestResultDlg(rv, "NotifyObservers() test");
 	}
 }
 
 
-void CnsIObserServ::EnumerateObserversTest()
+void CnsIObserServ::EnumerateObserversTest(int displayType)
 {
 	PRInt32 i=0;
 	nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1",&rv));
@@ -202,7 +207,8 @@ void CnsIObserServ::EnumerateObserversTest()
 		rv = observerService->EnumerateObservers(ObserverTable[i].theTopic, 
 												 getter_AddRefs(simpleEnum));
 
-		RvTestResult(rv, "EnumerateObserversTest() test", 2);
+		RvTestResult(rv, "EnumerateObserversTest() test", displayType);
+		RvTestResultDlg(rv, "EnumerateObserversTest() test");
 		if (!simpleEnum)
 		{
 			QAOutput("Didn't get SimpleEnumerator object. Tests fail.");
@@ -219,6 +225,7 @@ void CnsIObserServ::EnumerateObserversTest()
 
 			rv = observer->Observe(observer, ObserverTable[i].theTopic, 0);
 			RvTestResult(rv, "nsIObserver() test", 1);	
+			RvTestResultDlg(rv, "nsIObserver() test");
 			
 			// compare 'this' with observer object
 			if( this == NS_REINTERPRET_CAST(CnsIObserServ*,NS_REINTERPRET_CAST(void*, observer.get())))

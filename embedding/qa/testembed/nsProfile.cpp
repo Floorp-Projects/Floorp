@@ -293,9 +293,6 @@ void CProfile::RenameProfile()
 
 	rv = oNsProfile->RenameProfile(currProfileName, T2W("New default"));
     RvTestResultDlg(rv, "oNsProfile->RenameProfile");
-
- 
-
 }
 
 void CProfile::DeleteProfile()
@@ -317,8 +314,6 @@ void CProfile::DeleteProfile()
 
     rv = oNsProfile->DeleteProfile(currProfileName, PR_TRUE);
     RvTestResultDlg(rv, "oNsProfile->DeleteProfile");
-
-
 }
 
 void CProfile::CloneProfile()
@@ -352,7 +347,5 @@ void CProfile::ShutDownCurrentProfile()
 	    RvTestResultDlg(rv, "Cannot get the nsIprofile object");
 	    return ;
 	}
-
-
 }
 

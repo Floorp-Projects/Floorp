@@ -72,7 +72,7 @@ public:
 	void CanGoForwardTest();
 	void GoForwardTest();
 	void GoToIndexTest();
-	void LoadUriTest(char *, PRUint32);
+	void LoadUriTest(char *, PRUint32, PRInt16 displayMode=2);
 	void ReloadTest(PRUint32);
 	void StopUriTest(char *, PRUint32);
 	void GetDocumentTest(void);

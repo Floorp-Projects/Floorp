@@ -64,9 +64,9 @@ public:
 
 	void RunAllTests();
 	void AddObserversTest(int);
-	void RemoveObserversTest();
-	void NotifyObserversTest();
-	void EnumerateObserversTest();
+	void RemoveObserversTest(int);
+	void NotifyObserversTest(int);
+	void EnumerateObserversTest(int);
 	void OnStartTests(UINT nMenuID);
 };
 
