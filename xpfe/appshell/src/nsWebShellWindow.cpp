@@ -995,18 +995,16 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   nsCOMPtr<nsIBrowserWindow> browserWindow = do_QueryInterface(newWindow);
   browserWindow->MoveTo(aXPos, aYPos);
 
-  // Get the webshell
+  // (2) Get the webshell
   nsCOMPtr<nsIWebShell> newShell;
   newWindow->GetWebShell(*getter_AddRefs(newShell));
   
-  // (2) Set the opener property to link the popup to the parent.
   nsCOMPtr<nsIDOMWindow> domWindow;
   if (NS_FAILED(rv = ConvertWebShellToDOMWindow(newShell, getter_AddRefs(domWindow)))) {
     NS_ERROR("Unable to retrieve the DOM window from the new web shell.");
     return rv;
   }
-  domWindow->SetOpener(aWindow);
-
+  
   // (3) We need to create a new document that clones the original document's popup
   // content.  This new document must use the different root and a different global script 
   // context (window object) but everything else about it is the same (namespaces, URLs,
@@ -1076,12 +1074,15 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   nsCOMPtr<nsIDOMFocusListener> blurListener = do_QueryInterface(popupListener);
   nsCOMPtr<nsIDOMEventTarget> targetWindow = do_QueryInterface(domWindow);
   targetWindow->AddEventListener("blur", blurListener, PR_FALSE, PR_FALSE);  
-        
-  // (8) Show the window, and give the window the focus.
+       
+  // (8) Set up the opener property
+  domWindow->SetOpener(aWindow);
+
+  // (9) Show the window, and give the window the focus.
   newWindow->Show(PR_TRUE);
   domWindow->Focus();
 
-  // (9) Do some layout.
+  // (10) Do some layout.
   nsCOMPtr<nsIXULChildDocument> popupChild = do_QueryInterface(popupDocument);
   popupChild->LayoutPopupDocument();
 
