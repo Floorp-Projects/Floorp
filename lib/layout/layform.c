@@ -2300,6 +2300,7 @@ lo_BeginTextareaTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	LO_TextAttr tmp_attr;
 	LO_TextAttr *old_attr;
 	LO_TextAttr *attr;
+	int32 type;
 #ifdef ENDER
 	PA_Block type_block; 
 	char *type_str;
@@ -2312,24 +2313,18 @@ lo_BeginTextareaTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 
 	lo_PushFont(state, tag->type, attr);
 
+	type = FORM_TYPE_TEXTAREA;
 #ifdef ENDER
 	type_block = lo_FetchParamValue(context, tag, PARAM_TYPE);
 	if (type_block)
 	{
 		PA_LOCK(type_str, char *, type_block);
-		if (!XP_STRCASECMP(type_str,"HTMLAREA"))
-			form_element = lo_form_textarea(context, state, tag,
-				FORM_TYPE_HTMLAREA);
-		else
-			form_element = lo_form_textarea(context, state, tag,
-				FORM_TYPE_TEXTAREA);
-
+		if (!XP_STRCASECMP(type_str, TEXT_HTML))
+			type = FORM_TYPE_HTMLAREA;
 		PA_FREE(type_block);
 	}
-	else
 #endif /*ENDER*/
-	form_element = lo_form_textarea(context, state, tag,
-		FORM_TYPE_TEXTAREA);
+	form_element = lo_form_textarea(context, state, tag, type);
 
 	/*
 	 * Make a copy of the tag so that we can correctly reflect this
