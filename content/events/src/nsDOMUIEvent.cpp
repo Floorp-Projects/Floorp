@@ -421,9 +421,9 @@ nsDOMUIEvent::GetPreventDefault(PRBool* aReturn)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMUIEvent::GetScrollInfo(nsIScrollableView** aScrollableView,
-   float* aP2T, float* aT2P)
+                            float* aP2T, float* aT2P)
 {
   NS_ENSURE_ARG_POINTER(aScrollableView);
   NS_ENSURE_ARG_POINTER(aP2T);
