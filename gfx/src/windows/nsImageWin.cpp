@@ -517,7 +517,7 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                                             (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
              rop = SRCPAINT;
           }  
-		}
+        }
       }
 
       
@@ -603,6 +603,10 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
   return NS_OK;
 }
 
+/** ---------------------------------------------------
+ *  This is a helper routine to do the blending for the DrawComposited method
+ *  @update 1/04/02 dwc
+ */
 void nsImageWin::DrawComposited24(unsigned char *aBits, int aX, int aY, int aWidth, int aHeight)
 {
   PRInt32 targetRowBytes = ((aWidth * 3) + 3) & ~3;
@@ -622,7 +626,8 @@ void nsImageWin::DrawComposited24(unsigned char *aBits, int aX, int aY, int aWid
 }
 
 /** ---------------------------------------------------
- *  Do alpha blending by hand
+ *  Blend the image into a 24 bit buffer.. using an 8 bit alpha mask 
+ *  @update 1/04/02 dwc
  */
 void nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY, int aDWidth, int aDHeight,
                     int aSX, int aSY, int aSWidth, int aSHeight)
@@ -634,14 +639,14 @@ void nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY, int aDWidth, int a
                                          (LPVOID *)&screenBits, NULL, 0);
   HBITMAP oldBitmap = (HBITMAP)::SelectObject(memDC, tmpBitmap);
 
-  /* Copy from the screen */
+  /* Copy from the HDC */
   ::StretchBlt(memDC, 0, 0, aSWidth, aSHeight,
                TheHDC, aDX, aDY, aDWidth, aDHeight, SRCCOPY);
 
   /* Do composite */
   DrawComposited24(screenBits, aSX, aSY, aSWidth, aSHeight);
 
-  /* Copy back to the screen */
+  /* Copy back to the HDC */
   ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight,
                memDC, 0, 0, aSWidth, aSHeight, SRCCOPY);
 
@@ -679,10 +684,8 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   
 
   PRInt32
-    destinationX = 0,
-    destinationY = 0,
-    destinationWidth  = mBHead->biWidth*scale,
-    destinationHeight = mBHead->biHeight*scale;
+    destScaledWidth  = (int) (mBHead->biWidth*scale),
+    destScaledHeight = (int) (mBHead->biHeight*scale);
 
   PRInt32
     validX = 0,
@@ -695,22 +698,20 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   // has been validated.
   if (mDecodedY2 < mBHead->biHeight) {
     validHeight = mDecodedY2 - mDecodedY1;
-    destinationHeight = validHeight*scale;
+    destScaledHeight = (int)(validHeight*scale);
   }
   if (mDecodedX2 < mBHead->biWidth) {
     validWidth = mDecodedX2 - mDecodedX1;
-    destinationHeight = validWidth*scale;
+    destScaledHeight = (int)(validWidth*scale);
   }
   if (mDecodedY1 > 0) {   
     validHeight -= mDecodedY1;
-    destinationY -= mDecodedY1*scale;
-    destinationHeight = validHeight*scale;
+    destScaledHeight = (int)(validHeight*scale);
     validY = mDecodedY1;
   }
   if (mDecodedX1 > 0) {
     validWidth -= mDecodedX1;
-    destinationX -= mDecodedX1*scale;
-    destinationHeight = validWidth*scale;
+    destScaledHeight = (int)(validWidth*scale);
     validX = mDecodedX1; 
   }
 
@@ -723,12 +724,13 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
 
   // this is the width and height of the image in pixels
   // we need to map this to the pixel height of the device
-  nscoord aWidth = mBHead->biWidth*scale;
-  nscoord aHeight = mBHead->biHeight*scale;
+  nscoord imageScaledWidth = (int)(mBHead->biWidth*scale);
+  nscoord imageScaledHeight = (int)(mBHead->biHeight*scale);
 
   nscoord tileWidth = aTileRect.width;
   nscoord tileHeight = aTileRect.height;
 
+  PRBool              tryAgain = PR_FALSE;
   nsRect              destRect,srcRect,tvrect;
   HDC                 TheHDC,offDC,maskDC;
   PRInt32             x,y,width,height,canRaster,TileBufferWidth,TileBufferHeight;
@@ -740,17 +742,88 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   tvrect.SetRect(0,0,aX1-aX0,aY1-aY0);
   ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
 
+
+  if( mAlphaDepth == 8){
+    /** 
+     *  do alpha depth equal to 8 here.. this needs some special attention
+     *  draw the alpha and the bitmap to an offscreen buffer.. for the blend.. first 
+     */
+    // get the current HDC to draw to..
+    ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
+    if (NULL == TheHDC){
+      return (PR_FALSE);
+    } 
+    // create a buffer for the blend            
+    HDC memDC = CreateCompatibleDC(TheHDC);
+    unsigned char *screenBits;
+    width = aX1-aX0;
+    height = aY1-aY0;
+    ALPHA24BITMAPINFO bmi(width, height);
+    HBITMAP tmpBitmap = ::CreateDIBSection(memDC, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, (LPVOID *)&screenBits, NULL, 0);
+    HBITMAP oldBitmap = (HBITMAP)::SelectObject(memDC, tmpBitmap);
+    if(0 == tmpBitmap){
+      ::DeleteObject(memDC);
+      tryAgain = PR_TRUE;
+    } else {
+      // Copy from the HDC to the memory DC
+      ::StretchBlt(memDC, 0, 0, width, height,TheHDC, 0, 0, width, height, SRCCOPY);
+  
+      PRInt32 targetRowBytes = ((width * 3) + 3) & ~3;
+      unsigned char *targetRow,*imageRow,*alphaRow;
+      PRInt32 temp1,temp2,imageScaledHeightPlus,imageScaledWidthPlus;
+
+
+      imageScaledHeightPlus = imageScaledHeight + aSYOffset;
+      imageScaledWidthPlus = imageScaledWidth + aSXOffset;
+      temp1 = mRowBytes + 3 * aSXOffset;
+      temp2 = mARowBytes + aSXOffset;
+
+      for (int y = 0,byw=aSYOffset; y < height; y++,byw++) {
+        if(byw >= imageScaledHeightPlus){
+          byw = aSYOffset;
+        }
+        targetRow = screenBits + y * targetRowBytes;
+        imageRow = mImageBits + byw * temp1;
+        alphaRow = mAlphaBits + byw * temp2;
+
+        for (int x=0,bxw=aSXOffset;x<width;x++,targetRow+=3,imageRow+=3,bxw++, alphaRow++) {
+          if(bxw>=imageScaledWidthPlus){
+            bxw = aSXOffset;
+            imageRow = mImageBits + byw * mRowBytes + ((3*bxw)%mRowBytes);
+            alphaRow = mAlphaBits + byw * mARowBytes + (bxw%mRowBytes);
+          }
+          unsigned alpha = *alphaRow;
+
+          MOZ_BLEND(targetRow[0], targetRow[0], imageRow[0], alpha);
+          MOZ_BLEND(targetRow[1], targetRow[1], imageRow[1], alpha);
+          MOZ_BLEND(targetRow[2], targetRow[2], imageRow[2], alpha);
+        }
+      }
+
+      // Copy back to the HDC 
+      ::StretchBlt(TheHDC, 0, 0, width, height,memDC, 0, 0, width, height, SRCCOPY);
+
+      ::SelectObject(memDC, oldBitmap);
+      ::DeleteObject(tmpBitmap);
+      ::DeleteObject(memDC);
+  
+    return(PR_TRUE);
+    }
+  }
+
+
   // we have to use the old way.. for 256 color mode and printing.. slow, but will always work.
-  if ((mAlphaDepth>1) || (canRaster==DT_RASPRINTER) || (256==mNumPaletteColors)
-      || (aWidth>MAX_BUFFER_WIDTH) || (aHeight>MAX_BUFFER_HEIGHT)){
-    for(y=aY0;y<aY1;y+=aHeight){
-      for(x=aX0;x<aX1;x+=aWidth){
+  if ((mAlphaDepth>8) || ((mAlphaDepth==8)&&tryAgain) || (canRaster==DT_RASPRINTER) || (256==mNumPaletteColors)
+      || (imageScaledWidth>MAX_BUFFER_WIDTH) || (imageScaledHeight>MAX_BUFFER_HEIGHT)){
+    for(y=aY0;y<aY1;y+=imageScaledHeight){
+      for(x=aX0;x<aX1;x+=imageScaledWidth){
       Draw(aContext, aSurface,
            0, 0, PR_MIN(validWidth, aX1-x), PR_MIN(validHeight, aY1-y),
-           x, y, PR_MIN(destinationWidth, aX1-x), PR_MIN(destinationHeight, aY1-y));
+           x, y, PR_MIN(destScaledWidth, aX1-x), PR_MIN(destScaledHeight, aY1-y));
       }
     } 
     return(PR_TRUE);
+  } else if(mAlphaDepth == 8 ){
   }
   
   // create a larger tile from the smaller one
@@ -810,17 +883,17 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
 
     // get the mask into our new tiled mask
     MONOBITMAPINFO  bmi(mAlphaWidth,mAlphaHeight);
-    ::StretchDIBits(maskDC, 0, 0, aWidth, aHeight,0, 0, 
+    ::StretchDIBits(maskDC, 0, 0, imageScaledWidth, imageScaledHeight,0, 0, 
                     mAlphaWidth, mAlphaHeight, mAlphaBits,(LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCCOPY);
 
-    ::BitBlt(maskDC,0,0,aWidth,aHeight,maskDC,0,0,SRCCOPY);
-    srcRect.SetRect(0,0,aWidth,aHeight);
+    ::BitBlt(maskDC,0,0,imageScaledWidth,imageScaledHeight,maskDC,0,0,SRCCOPY);
+    srcRect.SetRect(0,0,imageScaledWidth,imageScaledHeight);
     BuildTile(maskDC,srcRect,TileBufferWidth/2,TileBufferHeight/2,SRCCOPY);
   }
 
   // put the initial tile of background image into the offscreen
   if (!IsOptimized() || nsnull==mHBitmap){
-    ::StretchDIBits(offDC, 0, 0, aWidth, aHeight,0, 0, aWidth, aHeight, mImageBits,
+    ::StretchDIBits(offDC, 0, 0, imageScaledWidth, imageScaledHeight,0, 0, imageScaledWidth, imageScaledHeight, mImageBits,
                     (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS:DIB_RGB_COLORS,
                     SRCCOPY);
   }else{
@@ -828,11 +901,11 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
     HBITMAP oldBits;
 
     oldBits = (HBITMAP)::SelectObject(TheHDC, mHBitmap);
-    ::BitBlt(offDC,0,0,aWidth,aHeight,TheHDC,0,0,SRCCOPY);
+    ::BitBlt(offDC,0,0,imageScaledWidth,imageScaledHeight,TheHDC,0,0,SRCCOPY);
     ::SelectObject(TheHDC, oldBits);
   }
 
-  srcRect.SetRect(0,0,aWidth,aHeight);
+  srcRect.SetRect(0,0,imageScaledWidth,imageScaledHeight);
   BuildTile(offDC,srcRect,TileBufferWidth/2,TileBufferHeight/2,SRCCOPY);
 
   // now duplicate our tile into the background
@@ -1304,8 +1377,8 @@ nsImageWin::GetBits()
 #ifdef USE_IMG2
 NS_IMETHODIMP nsImageWin::DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord aDY, nscoord aDWidth, nscoord aDHeight)
 {
-  PRInt32 canRaster,srcy;
-  HBITMAP oldSrcBits, oldDstBits;
+  PRInt32 srcy;
+  HBITMAP oldDstBits;
   DWORD   rop;
   PRInt32 origDHeight = aDHeight;
   PRInt32 origDWidth = aDWidth;
