@@ -1505,10 +1505,7 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
         rv = fn(aContext, (nsIDOMXULElement*) this, mDocument, (void**) &mScriptObject);
 
         // Ensure that a reference exists to this element
-        nsAutoString tag;
-        Tag()->ToString(tag);
-
-        aContext->AddNamedReference((void*) &mScriptObject, mScriptObject, nsCAutoString(tag));
+        aContext->AddNamedReference((void*) &mScriptObject, mScriptObject, "nsXULElement::mScriptObject");
     }
 
     *aScriptObject = mScriptObject;
@@ -1576,11 +1573,7 @@ nsXULElement::SetCompiledEventHandler(nsIAtom *aName, void* aHandler)
                 if (!cx)
                     return NS_ERROR_UNEXPECTED;
 
-                nsAutoString handlername;
-                rv = aName->ToString(handlername);
-                if (NS_FAILED(rv)) return rv;
-
-                rv = AddJSGCRoot(cx, &attr->mEventHandler, nsCAutoString(handlername));
+                rv = AddJSGCRoot(cx, &attr->mEventHandler, "nsXULPrototypeAttribute::mEventHandler");
                 if (NS_FAILED(rv)) return rv;
 
                 break;
@@ -1690,7 +1683,6 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
                 nsCOMPtr<nsIScriptContext> context;
                 if (NS_OK == global->GetContext(getter_AddRefs(context))) {
                     context->RemoveReference((void*) &mScriptObject, mScriptObject);
-
                 }
             }
         }
@@ -1706,9 +1698,7 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
             if (global) {
                 nsCOMPtr<nsIScriptContext> context;
                 if (NS_OK == global->GetContext(getter_AddRefs(context))) {
-                    nsAutoString tag;
-                    Tag()->ToString(tag);
-                    context->AddNamedReference((void*) &mScriptObject, mScriptObject, nsCAutoString(tag));
+                    context->AddNamedReference((void*) &mScriptObject, mScriptObject, "nsXULElement::mScriptObject");
                 }
             }
         }
@@ -3786,6 +3776,6 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText, PRInt32 aTextLength,
                                 (void**) &mScriptObject);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddJSGCRoot(cx, &mScriptObject, "mScriptObject");
+    rv = AddJSGCRoot(cx, &mScriptObject, "nsXULPrototypeScript::mScriptObject");
     return rv;
 }
