@@ -34,6 +34,14 @@
 #include "prlog.h"
 #endif
 
+
+#if STATS_MAC_MEMORY
+#include "prglobal.h"
+#include "prfile.h"
+
+#include <unistd.h>
+#include <string.h>
+#endif
 #if DEBUG_MAC_MEMORY
 #include "MemoryTracker.h"
 
@@ -75,12 +83,16 @@ void InitializeSubAllocators ( void );
 Boolean ReclaimMemory(size_t amountNeeded);
 long pascal MallocGrowZoneProc(Size cbNeeded);
 
-#define	kMinLargeBlockHeapSize			(65 * 1024)
-#define	kMaxLargeBlockHeapSize			(1024 * 1024)
-#define	kLargeBlockInitialPercentage	(50)
+#define	kMinLargeBlockHeapSize			(65 * 1024)		/* Min size of the heaps in temp mem try to allocate */
+#define	kMaxLargeBlockHeapSize			(1024 * 1024)	/* Max size of the heaps in temp mem try to allocate */
+#define	kLargeBlockInitialPercentage	(65)			/* This is the % of the free space in the heap used for the
+															large block allocation heap */
+															
+#define	kMallocLowTempMemoryBoundary	(256 * 1024)	/* This is a boundary point at which we assume we're
+															running low on temp memory */
 
-// this is a boundary point at which we assume we're running low on temp memory
-#define	kMallocLowTempMemoryBoundary	(256 * 1024)
+#define kHeapEmergencyReserve			(64 * 1024)		/* Keep 64k free in the app heap for emergencies */
+
 
 #if GENERATINGCFM
 RoutineDescriptor 	gMallocGrowZoneProcRD = BUILD_ROUTINE_DESCRIPTOR(uppGrowZoneProcInfo, &MallocGrowZoneProc);
@@ -92,11 +104,19 @@ RoutineDescriptor 	gMallocGrowZoneProcRD = BUILD_ROUTINE_DESCRIPTOR(uppGrowZoneP
 //##############################################################################
 #pragma mark FIXED-SIZE ALLOCATION DECLARATIONS
 
+/* The format here is:
+
+	DeclareFixedSizeAllocator(blockSize lower bound, # blocks in a heap chunk, # blocks in a tempmem chunk);
+
+	DeclareSmallHeapAllocator(first chunk heap size, temp mem chunk heap size );
+	
+*/
+
 // the real declarators
 DeclareFixedSizeAllocator(4, 2600, 1000);
 DeclareFixedSizeAllocator(8, 2000, 1000);
-DeclareFixedSizeAllocator(12, 3200, 1000);
-DeclareFixedSizeAllocator(16, 2000, 1000);
+DeclareFixedSizeAllocator(12, 5000, 1000);
+DeclareFixedSizeAllocator(16, 4000, 1000);
 DeclareFixedSizeAllocator(20, 7000, 3000);
 DeclareFixedSizeAllocator(24, 9500, 3000);
 DeclareFixedSizeAllocator(28, 3200, 1000);
@@ -107,77 +127,107 @@ DeclareSmallHeapAllocator(512 * 1024, 256 * 1024);
 DeclareLargeBlockAllocator(kLargeBlockInitialPercentage, kMaxLargeBlockHeapSize, kMinLargeBlockHeapSize);
 
 AllocMemoryBlockDescriptor gFastMemSmallSizeAllocators[] = {
-	DeclareLargeBlockHeapDescriptor(),
-	DeclareFixedBlockHeapDescriptor(4),
-	DeclareFixedBlockHeapDescriptor(8),
-	DeclareFixedBlockHeapDescriptor(12),
-	DeclareFixedBlockHeapDescriptor(16),
-	DeclareFixedBlockHeapDescriptor(20),
-	DeclareFixedBlockHeapDescriptor(24),
-	DeclareFixedBlockHeapDescriptor(28),
-	DeclareFixedBlockHeapDescriptor(32),
-	DeclareFixedBlockHeapDescriptor(36),
-	DeclareFixedBlockHeapDescriptor(40),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor(),
-	DeclareSmallSmallHeapDescriptor()
+	DeclareLargeBlockHeapDescriptor(),			//	0
+	DeclareFixedBlockHeapDescriptor(4),			//	4
+	DeclareFixedBlockHeapDescriptor(8),			//	8
+	DeclareFixedBlockHeapDescriptor(12),		//	12
+	DeclareFixedBlockHeapDescriptor(16),		//	16
+	DeclareFixedBlockHeapDescriptor(20),		//	20
+	DeclareFixedBlockHeapDescriptor(24),		//	24
+	DeclareFixedBlockHeapDescriptor(28),		//	28
+	DeclareFixedBlockHeapDescriptor(32),		//	32
+	DeclareFixedBlockHeapDescriptor(36),		//	36
+	DeclareFixedBlockHeapDescriptor(40),		//	40
+	DeclareSmallSmallHeapDescriptor(),			//	44
+	DeclareSmallSmallHeapDescriptor(),			//	48
+	DeclareSmallSmallHeapDescriptor(),			//	52
+	DeclareSmallSmallHeapDescriptor(),			//	56
+	DeclareSmallSmallHeapDescriptor(),			//	60
+	DeclareSmallSmallHeapDescriptor(),			//	64
+	DeclareSmallSmallHeapDescriptor(),			//	68
+	DeclareSmallSmallHeapDescriptor(),			//	72
+	DeclareSmallSmallHeapDescriptor(),			//	76
+	DeclareSmallSmallHeapDescriptor(),			//	80
+	DeclareSmallSmallHeapDescriptor(),			//	84
+	DeclareSmallSmallHeapDescriptor(),			//	88
+	DeclareSmallSmallHeapDescriptor(),			//	92
+	DeclareSmallSmallHeapDescriptor(),			//	96
+	DeclareSmallSmallHeapDescriptor(),			//	100
+	DeclareSmallSmallHeapDescriptor(),			//	104
+	DeclareSmallSmallHeapDescriptor(),			//	108
+	DeclareSmallSmallHeapDescriptor(),			//	112
+	DeclareSmallSmallHeapDescriptor(),			//	116
+	DeclareSmallSmallHeapDescriptor(),			//	120
+	DeclareSmallSmallHeapDescriptor(),			//	124
+	DeclareSmallSmallHeapDescriptor(),			//	128
+	DeclareSmallSmallHeapDescriptor(),			//	132
+	DeclareSmallSmallHeapDescriptor(),			//	136
+	DeclareSmallSmallHeapDescriptor(),			//	140
+	DeclareSmallSmallHeapDescriptor(),			//	144
+	DeclareSmallSmallHeapDescriptor(),			//	148
+	DeclareSmallSmallHeapDescriptor(),			//	152
+	DeclareSmallSmallHeapDescriptor(),			//	156
+	DeclareSmallSmallHeapDescriptor(),			//	160
+	DeclareSmallSmallHeapDescriptor(),			//	164
+	DeclareSmallSmallHeapDescriptor(),			//	168
+	DeclareSmallSmallHeapDescriptor(),			//	172
+	DeclareSmallSmallHeapDescriptor(),			//	176
+	DeclareSmallSmallHeapDescriptor(),			//	180
+	DeclareSmallSmallHeapDescriptor(),			//	184
+	DeclareSmallSmallHeapDescriptor(),			//	188
+	DeclareSmallSmallHeapDescriptor(),			//	192
+	DeclareSmallSmallHeapDescriptor(),			//	196
+	DeclareSmallSmallHeapDescriptor(),			//	200
+	DeclareSmallSmallHeapDescriptor(),			//	204
+	DeclareSmallSmallHeapDescriptor(),			//	208
+	DeclareSmallSmallHeapDescriptor(),			//	212
+	DeclareSmallSmallHeapDescriptor(),			//	216
+	DeclareSmallSmallHeapDescriptor(),			//	220
+	DeclareSmallSmallHeapDescriptor(),			//	224
+	DeclareSmallSmallHeapDescriptor(),			//	228
+	DeclareSmallSmallHeapDescriptor(),			//	232
+	DeclareSmallSmallHeapDescriptor(),			//	236
+	DeclareSmallSmallHeapDescriptor(),			//	240
+	DeclareSmallSmallHeapDescriptor(),			//	244
+	DeclareSmallSmallHeapDescriptor(),			//	248
+	DeclareSmallSmallHeapDescriptor(),			//	252
+	DeclareSmallSmallHeapDescriptor(),			//	256
 };
+
 
 //##############################################################################
 //##############################################################################
+#pragma mark-
+#pragma mark INSTRUMENTATION
+
+#if INSTRUMENT_MAC_MEMORY
+
+
+InstHistogramClassRef		gSmallHeapHistogram = 0;
+InstHistogramClassRef		gLargeHeapHistogram = 0;
+
+
+static OSErr CreateInstrumentationClasses()
+{
+	OSErr	err = noErr;
+
+	err = InstCreateHistogramClass(kInstRootClassRef, "MacMemAllocator:SmallHeap:Histogram",
+			 40, 256, 4, kInstEnableClassMask, &gSmallHeapHistogram);
+	if (err != noErr) return err;
+	
+	err = InstCreateHistogramClass(kInstRootClassRef, "MacMemAllocator:LargeHeap:Histogram",
+			 256, 10240, 64, kInstEnableClassMask, &gLargeHeapHistogram);
+	if (err != noErr) return err;
+	
+	return err;
+}
+
+
+#endif
+
+//##############################################################################
+//##############################################################################
+#pragma mark-
 #pragma mark INITIALIZATION
 
 void MacintoshInitializeMemory(void)
@@ -205,11 +255,19 @@ void MacintoshInitializeMemory(void)
 	GetProcessInformation(&thisProcess, &processInfo);
 	gOurApplicationHeapBase = processInfo.processLocation;
 	gOurApplicationHeapMax = (Ptr)gOurApplicationHeapBase + processInfo.processSize;
-	
-#if DEBUG_MAC_MEMORY
+
+#if INSTRUMENT_MAC_MEMORY
+	if (CreateInstrumentationClasses() != noErr)
+	{
+		DebugStr("\pFailed to initialize instrumentation classes");
+		ExitToShell();
+	}
+#endif
+
+#if DEBUG_MAC_MEMORY || STATS_MAC_MEMORY
 	InstallMemoryManagerPatches();
 
-#if 1
+#if DEBUG_MAC_MEMORY
 	// Create some allocation sets to track our allocators
 	gFixedSizeAllocatorSet = NewAllocationSet ( 0, "Fixed Size Compact Allocator" );
 	gSmallHeapAllocatorSet = NewAllocationSet ( 0, "Small Heap Allocator" );
@@ -232,7 +290,12 @@ void MacintoshInitializeMemory(void)
 void InitializeSubAllocators ( void )
 {
 	SubHeapAllocationChunk *	chunk;
-	
+
+#ifdef MALLOC_IS_NEWPTR
+	/* Don't allocate memory pools if just using NewPtr */
+	return;
+#endif
+
 	/* fixed size allocators */
 	chunk = FixedSizeAllocChunk ( 0, &gFixedSize4Root );
 	PR_ASSERT(chunk);
@@ -329,6 +392,90 @@ fail:
 	ExitToShell();
 }
 
+#if STATS_MAC_MEMORY
+
+/* I hate copy and paste */
+static void WriteString ( PRFileHandle file, const char * string )
+{
+	long	len;
+	long	bytesWritten;
+	
+	len = strlen( string );
+	if ( len >= 1024 ) Debugger();
+	bytesWritten = _OS_WRITE ( file, string, len );
+	PR_ASSERT(bytesWritten == len);
+}
+
+static void WriteFixedAllocatorStats(PRFileHandle outFile, const FixedSizeAllocationRoot *root)
+{
+	char		outString[ 1024 ];
+	
+	WriteString ( outFile, "--------------------------------------------------------------------------------\n" );
+	
+	sprintf(outString, "Stats for fixed size allocator for blocks of %d-%d bytes\n", root->blockSize - 3, root->blockSize);
+	WriteString ( outFile, outString );
+	
+	WriteString ( outFile, "--------------------------------------------------------------------------------\n" );
+	
+	WriteString ( outFile, "                     Current         Max\n" );
+	WriteString ( outFile, "                  ----------     -------\n" );
+	
+	sprintf( outString,    "Num chunks:       %10d  %10d\n", root->chunksAllocated, root->maxChunksAllocated );
+	WriteString ( outFile, outString );
+	
+	sprintf( outString,    "Chunk total:      %10d  %10d\n", root->totalChunkSize, root->maxTotalChunkSize );
+	WriteString ( outFile, outString );
+	
+	sprintf( outString,    "Num blocks:       %10d  %10d\n", root->blocksAllocated, root->maxBlocksAllocated );
+	WriteString ( outFile, outString );
+
+	sprintf( outString,    "Block space:      %10d  %10d\n", root->blockSpaceUsed, root->maxBlockSpaceUsed );
+	WriteString ( outFile, outString );
+	
+	sprintf( outString,    "Blocks used:      %10d  %10d\n", root->blocksUsed, root->maxBlocksUsed );
+	WriteString ( outFile, outString );
+		
+	WriteString ( outFile, "                                 -------\n" );
+	
+	sprintf( outString,    "%s of allocated blocks used:   %10.2f\n", "%", 100.0 * root->maxBlocksUsed / root->maxBlocksAllocated );
+	WriteString ( outFile, outString );
+
+	sprintf( outString,    "%s of chunk space used:        %10.2f\n", "%", 100.0 * root->maxBlockSpaceUsed / root->maxTotalChunkSize );
+	WriteString ( outFile, outString );
+	
+	WriteString ( outFile, "\n\n");
+}
+
+void DumpAllocatorMemoryStats(PRFileHandle outFile);
+
+void DumpAllocatorMemoryStats(PRFileHandle outFile)
+{
+	/* fixed size allocators */
+	WriteFixedAllocatorStats( outFile, &gFixedSize4Root );
+	WriteFixedAllocatorStats( outFile, &gFixedSize8Root );
+	WriteFixedAllocatorStats( outFile, &gFixedSize12Root );
+	WriteFixedAllocatorStats( outFile, &gFixedSize16Root );
+	WriteFixedAllocatorStats( outFile, &gFixedSize20Root );
+	WriteFixedAllocatorStats( outFile, &gFixedSize24Root );
+	WriteFixedAllocatorStats( outFile, &gFixedSize32Root );
+	WriteFixedAllocatorStats( outFile, &gFixedSize36Root );
+	WriteFixedAllocatorStats( outFile, &gFixedSize40Root );
+
+/*	
+	chunk = SmallHeapAllocChunk ( 0, &gSmallHeapRoot );
+	PR_ASSERT(chunk);
+	if ( chunk == NULL ) goto fail;
+	
+	chunk = LargeBlockAllocChunk ( 0, &gLargeBlockRoot );
+	PR_ASSERT(chunk);
+	if ( chunk == NULL ) goto fail;
+*/
+
+}
+
+#endif /* STATS_MAC_MEMORY */
+
+
 //##############################################################################
 //##############################################################################
 #pragma mark -
@@ -395,7 +542,12 @@ UInt8 CallCacheFlushers(size_t blockSize)
 	MemoryCacheFlusherProcRec		*currentCacheFlusher = gFirstFlusher;
 	UInt8							result = false;
 
-	while (currentCacheFlusher != NULL) {
+	// we might want to remember which flusher was called last and start
+	// at the one after, to avoid always flushing the first one (image cache)
+	// first.
+	
+	while (currentCacheFlusher != NULL)
+	{
 		result |= (*(currentCacheFlusher->flushProc))(blockSize);
 		currentCacheFlusher = currentCacheFlusher->next;
 	}
@@ -447,9 +599,24 @@ SubHeapAllocationChunk * AllocateSubHeap ( SubHeapAllocationRoot * root, Size he
 	if ( useTemp )
 		{
 		tempHandle = TempNewHandle ( heapSize, &err );
-		if ( tempHandle != NULL && err == noErr )
+		
+		if ( tempHandle == NULL ) 
+		{
+			// failed to make temp handle. Let's try a handle in our heap
+			tempHandle = NewHandle( heapSize );
+			
+			// ensure that enough free mem is available for emergencies
+			if ( tempHandle != NULL && MaxBlock() < kHeapEmergencyReserve)
 			{
-			HLock ( tempHandle );
+				// we need to keep some contiguous space free for emergencies. Give up.
+				DisposeHandle(tempHandle);
+				tempHandle = NULL;
+			}
+		}
+		
+		if ( tempHandle != NULL && err == noErr )
+		{
+			HLockHi ( tempHandle );				// lock the handle hi now to reduce system heap fragmentation
 			heapBlock = *(SubHeapAllocationChunk **) tempHandle;
 			}
 		}

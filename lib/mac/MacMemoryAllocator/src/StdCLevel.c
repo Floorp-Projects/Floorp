@@ -25,6 +25,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "prlog.h"
+
 #ifndef NSPR20
 #include "prmacos.h"
 #include "prthread.h"
@@ -32,6 +34,7 @@
 
 #include "TypesAndSwitches.h"
 #include "MacMemAllocator.h"
+
 
 #if STATS_MAC_MEMORY
 #ifdef XP_MAC
@@ -43,8 +46,9 @@
 #include "prglobal.h"
 #include "prfile.h"
 
-static void WriteString ( PRFileHandle file, char * string );
-#endif
+static void WriteString ( PRFileHandle file, const char * string );
+extern void DumpAllocatorMemoryStats(PRFileHandle outFile);		/* this is in LowLevel.c */
+#endif /* STATS_MAC_MEMORY */
 
 #include "MemoryTracker.h"
 
@@ -65,9 +69,12 @@ static Boolean	gInsideCacheFlush = false;
 #pragma mark malloc DEBUG DECLARATIONS
 
 #if STATS_MAC_MEMORY
-UInt32 gSmallAllocationTotalCountTable[1025];
-UInt32 gSmallAllocationActiveCountTable[1025];
-UInt32 gSmallAllocationMaxCountTable[1025];
+#define ALLOCATION_TABLE_SIZE		1024
+#define WRITE_TABLES_FLAT			false
+
+UInt32 gSmallAllocationTotalCountTable[ALLOCATION_TABLE_SIZE + 1];
+UInt32 gSmallAllocationActiveCountTable[ALLOCATION_TABLE_SIZE + 1];
+UInt32 gSmallAllocationMaxCountTable[ALLOCATION_TABLE_SIZE + 1];
 #endif
 
 #if DEBUG_HEAP_INTEGRITY
@@ -91,10 +98,12 @@ MemoryBlockHeader *	gLastAllocatedBlock = NULL;
 extern void	*		gOurApplicationHeapBase;
 extern void	*		gOurApplicationHeapMax;
 
-#if DEBUG_MAC_MEMORY || DEBUG_HEAP_INTEGRITY
+#if DEBUG_MAC_MEMORY || DEBUG_HEAP_INTEGRITY || STATS_MAC_MEMORY
 
 UInt32				gOutstandingPointers = 0;
 UInt32				gOutstandingHandles = 0;
+
+#if DEBUG_MAC_MEMORY || STATS_MAC_MEMORY
 
 #if DEBUG_MAC_MEMORY
 
@@ -109,6 +118,8 @@ void		*		gMemoryTop;
 static void PrintStackCrawl ( void ** stackCrawl, char * name );
 static void CatenateRoutineNameFromPC( char * string, void *currentPC );
 static void PrintHexNumber( char * string, UInt32 hexNumber );
+#endif /* DEBUG_MAC_MEMORY */
+
 pascal void TrackerExitToShellPatch(void);
 
 /* patch on exit to shell to always print out our log */
@@ -134,8 +145,10 @@ void PrintEfficiency(PRFileHandle file, UInt32 current, UInt32 total);
 
 #endif
 
+/*
 asm void AsmFree(void *);
 asm void *AsmMalloc(size_t);
+*/
 
 //##############################################################################
 //##############################################################################
@@ -167,13 +180,35 @@ UInt32						gNextBlockNum = 0;
 
 UInt32		gTotalFixedSizeBlocksAllocated = 0;
 UInt32		gTotalFixedSizeBlocksUsed = 0;
+UInt32		gTotalFixedSizeBlocksMaxUsed = 0;
 UInt32		gTotalFixedSizeAllocated = 0;
 UInt32		gTotalFixedSizeUsed = 0;
+UInt32		gTotalFixedSizeMaxUsed = 0;
 
-UInt32		gTotalSmallHeapBlocksAllocated = 0;
-UInt32		gTotalSmallHeapBlocksUsed = 0;
-UInt32		gTotalSmallHeapAllocated = 0;
-UInt32		gTotalSmallHeapUsed = 0;
+UInt32		gTotalSmallHeapChunksAllocated = 0;				// the number of chunks (sub-heaps)
+UInt32		gTotalSmallHeapChunksMaxAllocated = 0;			// max no. chunks
+
+UInt32		gTotalSmallHeapTotalChunkSize = 0;				// total space allocated in small heaps
+UInt32		gTotalSmallHeapMaxTotalChunkSize = 0;			// max space allocated
+
+UInt32		gTotalSmallHeapBlocksUsed = 0;					// the number of blocks used
+UInt32		gTotalSmallHeapBlocksMaxUsed = 0;				// max blocks used
+
+UInt32		gTotalSmallHeapUsed = 0;						// space used in small heaps
+UInt32		gTotalSmallHeapMaxUsed = 0;						// max space used
+
+
+UInt32		gTotalLargeHeapChunksAllocated = 0;				// the number of chunks (sub-heaps)
+UInt32		gTotalLargeHeapChunksMaxAllocated = 0;			// max no. chunks
+
+UInt32		gTotalLargeHeapTotalChunkSize = 0;				// total space allocated in small heaps
+UInt32		gTotalLargeHeapMaxTotalChunkSize = 0;			// max space allocated
+
+UInt32		gTotalLargeHeapBlocksUsed = 0;					// the number of blocks used
+UInt32		gTotalLargeHeapBlocksMaxUsed = 0;				// max blocks used
+
+UInt32		gTotalLargeHeapUsed = 0;						// space used in small heaps
+UInt32		gTotalLargeHeapMaxUsed = 0;						// max space used
 
 #endif
 
@@ -196,7 +231,7 @@ void *malloc(size_t blockSize)
 	MemoryBlockHeader *				newBlockHeader;
 	MemoryBlockTrailer *			newBlockTrailer;	
 #endif
-#if DEBUG_HEAP_INTEGRITY || DEBUG_MAC_MEMORY
+#if DEBUG_HEAP_INTEGRITY || DEBUG_MAC_MEMORY || STATS_MAC_MEMORY
 	size_t							newCompositeSize = blockSize + sizeof(MemoryBlockHeader) + MEMORY_BLOCK_TAILER_SIZE;
 	size_t							blockSizeCopy = blockSize;
 #endif
@@ -211,10 +246,16 @@ void *malloc(size_t blockSize)
 	 * the allocators and that seems rather bug-prone...
 	 */
 	if ( gMemoryInitialized == false )
-		{
+	{
 		MacintoshInitializeMemory();
-		}
+	}
+
+	PR_ASSERT((SInt32)blockSize >= 0);		// if the high bit is set, someone probably passed in a -ve blocksize
 	
+#ifdef MALLOC_IS_NEWPTR
+	return NewPtr(blockSize);
+#endif
+
 #if DEBUG_HEAP_INTEGRITY
 	if (gVerifyHeapOnEveryMalloc)
 		VerifyMallocHeapIntegrity();
@@ -227,8 +268,8 @@ void *malloc(size_t blockSize)
 
 #if STATS_MAC_MEMORY
 
-	if (blockSizeCopy >= 1024)
-		blockSizeCopy = 1024;
+	if (blockSizeCopy >= ALLOCATION_TABLE_SIZE)
+		blockSizeCopy = ALLOCATION_TABLE_SIZE;
 
 	gSmallAllocationTotalCountTable[blockSizeCopy]++;
 	gSmallAllocationActiveCountTable[blockSizeCopy]++;
@@ -384,7 +425,7 @@ void free(void *deadBlock)
 #if DEBUG_HEAP_INTEGRITY
 	MemoryBlockTrailer			*deadBlockTrailer;
 #endif
-#if DEBUG_HEAP_INTEGRITY || STATS_MAC_MEMORY
+#if DEBUG_HEAP_INTEGRITY 	//|| STATS_MAC_MEMORY
 	size_t						deadBlockSize;	
 #endif
 	char						*deadBlockBase;
@@ -397,12 +438,17 @@ void free(void *deadBlock)
 		
 	if (deadBlock == NULL)
 		return;
-	
+
+#ifdef MALLOC_IS_NEWPTR
+	DisposePtr(deadBlock);
+	return;
+#endif
+
 	deadBlockBase = ((char *)deadBlock - sizeof(MemoryBlockHeader));
 
 	deadBlockHeader = (MemoryBlockHeader *)deadBlockBase;
 
-#if DEBUG_HEAP_INTEGRITY || STATS_MAC_MEMORY
+#if DEBUG_HEAP_INTEGRITY		// || STATS_MAC_MEMORY
 	deadBlockSize = deadBlockHeader->blockSize;
 #endif
 #if DEBUG_HEAP_INTEGRITY
@@ -410,9 +456,13 @@ void free(void *deadBlock)
 #endif
 	
 #if STATS_MAC_MEMORY
-	if (deadBlockSize >= 1024)
-		deadBlockSize = 1024;
-	gSmallAllocationActiveCountTable[deadBlockSize]--;
+	{
+		UInt32		blockSize = memsize(deadBlock);			/*	This doesn't work, beacuse it always returns
+																the 4-byte rounded value */
+		if (blockSize >= ALLOCATION_TABLE_SIZE)
+			blockSize = ALLOCATION_TABLE_SIZE;
+		gSmallAllocationActiveCountTable[blockSize]--;
+	}
 #endif
 	
 #if DEBUG_HEAP_INTEGRITY
@@ -479,6 +529,10 @@ size_t memsize ( void * block )
 	if (block == NULL)
 		return 0;
 	
+#ifdef MALLOC_IS_NEWPTR
+	return GetPtrSize(block);
+#endif
+
 	blockBase = ((char *)block - sizeof(MemoryBlockHeader));
 	blockHeader = (MemoryBlockHeader *)blockBase;
 
@@ -507,16 +561,24 @@ void memtotal ( size_t blockSize, FreeMemoryStats * stats )
 {
 	AllocMemoryBlockDescriptor *	whichAllocator;
 
+#ifdef MALLOC_IS_NEWPTR
+	// make up some bogus stats
+	//stats->totalHeapSize = ApplLimit - ApplZone;
+	stats->totalFreeBytes = FreeMem();
+	stats->maxBlockSize = MaxBlock();		// this should be the largest block allocated
+	return;
+#endif
+
 	/* which allocator should we use? */
 	if (blockSize <= kMaxTableAllocatedBlockSize)
-		{
+	{
 		whichAllocator = gFastMemSmallSizeAllocators + ((blockSize + 3) >> 2);
-		}
+	}
 	else
-		{
+	{
 		/* large blocks come out of entry 0 */
 		whichAllocator = &gFastMemSmallSizeAllocators[ 0 ];
-		}
+	}
 	
 	whichAllocator->heapFreeSpaceRoutine ( blockSize, stats, whichAllocator->root );
 }
@@ -583,12 +645,12 @@ void DumpCurrentMemoryStatistics(char *operation)
 	fprintf(statsFile, "%s\n", operation);
 	fprintf(statsFile, "Total Allocations\n");
 
-	for (count = 0; count < 1025; count++)
+	for (count = 0; count < ALLOCATION_TABLE_SIZE + 1; count++)
 		fprintf(statsFile, "%ld\n", gSmallAllocationTotalCountTable[count]);
 
 	fprintf(statsFile, "Current Allocation Allocations\n");
 
-	for (count = 0; count < 1025; count++)
+	for (count = 0; count < ALLOCATION_TABLE_SIZE + 1; count++)
 		fprintf(statsFile, "%ld\n", gSmallAllocationActiveCountTable[count]);
 
 }
@@ -623,7 +685,9 @@ extern void VerifyMallocHeapIntegrity()
 
 #if STATS_MAC_MEMORY
 void PrintEfficiency(PRFileHandle file, UInt32 current, UInt32 total)
-{	
+{
+	char	string[ 256 ];
+/*
 	UInt32 	efficiency = current * 1000 / total;
 	UInt32	efficiencyLow = efficiency / 10;
 	char	string[ 256 ];
@@ -631,6 +695,12 @@ void PrintEfficiency(PRFileHandle file, UInt32 current, UInt32 total)
 	efficiency = efficiency/10;
 	
 	sprintf(string, "%ld.%ld", efficiency, efficiencyLow);
+*/
+	if (total > 0)
+		sprintf(string, "%10.4f", 100.0 * current / total);
+	else
+		sprintf(string, "n/a");
+		
 	WriteString ( file, string );
 }
 #endif
@@ -717,7 +787,7 @@ static void PrintHexNumber( char * string, UInt32 hexNumber )
 #endif
 
 #if STATS_MAC_MEMORY
-static void WriteString ( PRFileHandle file, char * string )
+static void WriteString ( PRFileHandle file, const char * string )
 {
 	long	len;
 	long	bytesWritten;
@@ -727,6 +797,145 @@ static void WriteString ( PRFileHandle file, char * string )
 	bytesWritten = _OS_WRITE ( file, string, len );
 	PR_ASSERT(bytesWritten == len);
 }
+
+
+static void WriteAllocatationTableHeader(PRFileHandle outFile, const char *titleString, Boolean writeFlat)
+{
+	
+	WriteString ( outFile, "********************************************************************************\n" );
+	WriteString ( outFile, "********************************************************************************\n" );
+	
+	WriteString ( outFile, titleString );
+	WriteString ( outFile, "\n" );
+	
+	WriteString ( outFile, "********************************************************************************\n" );
+	WriteString ( outFile, "********************************************************************************\n" );
+
+	if (writeFlat)
+	{
+		WriteString(outFile, "  Size         Number   \n");
+		WriteString(outFile, "------      ----------  \n");
+	}
+	else
+	{
+		WriteString(outFile, "  Size          +0         +1          +2          +3            TOTAL\n");
+		WriteString(outFile, "------      ----------  ----------  ----------  ----------  ----------\n");	
+	}
+}
+
+
+static void WriteAllocationTableData(PRFileHandle outFile, UInt32 allocationTable[1025], Boolean writeFlat)
+{
+	char		outString[ 1024 ];
+	UInt32		currentItem;
+
+	if (writeFlat)
+	{
+		for (currentItem = 0; currentItem < ALLOCATION_TABLE_SIZE + 1; currentItem++)
+		{
+			sprintf(outString, "%6d  %10d\n", currentItem, allocationTable[currentItem]);
+			WriteString ( outFile, outString );
+		}
+	
+	}
+	else
+	{
+		for (currentItem = 0; currentItem < 64; currentItem++)
+		{
+			sprintf(outString, "%6d  %10d  %10d  %10d  %10d  %10d\n",
+						currentItem * 4,
+						allocationTable[currentItem * 4],
+						allocationTable[currentItem * 4 + 1],
+						allocationTable[currentItem * 4 + 2],
+						allocationTable[currentItem * 4 + 3],
+						allocationTable[currentItem * 4] + 
+							allocationTable[currentItem * 4 + 1] +
+							allocationTable[currentItem * 4 + 2] +
+							allocationTable[currentItem * 4 + 3]
+					);
+			
+			WriteString ( outFile, outString );
+		}
+	}
+	
+	sprintf(outString, "Blocks Over 1K:%8d  \n\n\n",  allocationTable[ALLOCATION_TABLE_SIZE]);
+	WriteString ( outFile, outString );
+}
+
+static void WriteAllocatorStatsExplanations(PRFileHandle outFile)
+{
+	WriteString ( outFile, "--------------------------------------------------------------------------------\n" );
+	
+	WriteString ( outFile, "Description of statistics for the various allocators\n" );
+	
+	WriteString ( outFile, "--------------------------------------------------------------------------------\n" );
+	
+	WriteString ( outFile, "Current:                     Current usage at time of data dump\n" );
+	WriteString ( outFile, "Max:                         Max usage throughout session\n\n" );
+	
+	WriteString ( outFile, "Num chunks:                  Number of chunks (sub-heaps) allocated\n" );
+	WriteString ( outFile, "Chunk total:                 Total size of chunks allocated\n" );
+	WriteString ( outFile, "Num blocks:                  Number of blocks allocated in the allocated chunks\n" );
+	WriteString ( outFile, "Block space:                 Space taken up by used blocks. Does not include the block header,\n");
+	WriteString ( outFile,"                              but includes rounding up block sizes to 4 byte boundaries\n" );
+	WriteString ( outFile, "Blocks used:                 Number of blocks used\n" );
+	WriteString ( outFile, "\n" );
+	WriteString ( outFile, "%s of used blocks occupied:  Percentage of the blocks allocated which are in use\n" );
+	WriteString ( outFile, "%s of chunks occupied:       Percentage of the chunks used by client data (includes 4-byte block rounding)\n" );
+	WriteString ( outFile, "(Percentages are calculated from the max usage figures)\n" );
+	WriteString ( outFile, "\n\n");
+}
+
+
+static void WriteSmallHeapMemoryUsageData(PRFileHandle outFile)
+{
+	char			outString[ 1024 ];
+	
+	WriteString ( outFile, "\n\n--------------------------------------------------------------------------------\n" );
+	WriteString(outFile, "Stats for small heap allocator (blocks 44 - 256 bytes)\n");
+	WriteString ( outFile, "--------------------------------------------------------------------------------\n" );
+	WriteString ( outFile, "                     Current         Max\n" );
+	WriteString ( outFile, "                  ----------     -------\n" );
+	sprintf( outString,    "Num chunks:       %10d  %10d\n", gTotalSmallHeapChunksAllocated, gTotalSmallHeapChunksMaxAllocated );
+	WriteString ( outFile, outString );
+	sprintf( outString,    "Chunk total:      %10d  %10d\n", gTotalSmallHeapTotalChunkSize, gTotalSmallHeapMaxTotalChunkSize );
+	WriteString ( outFile, outString );
+	sprintf( outString,    "Block space:      %10d  %10d\n", gTotalSmallHeapUsed, gTotalSmallHeapMaxUsed );
+	WriteString ( outFile, outString );
+	sprintf( outString,    "Blocks used:      %10d  %10d\n", gTotalSmallHeapBlocksUsed, gTotalSmallHeapBlocksMaxUsed );
+	WriteString ( outFile, outString );
+	WriteString ( outFile, "                                 -------\n" );
+	sprintf( outString,    "%s of allocated space used:    %10.2f\n", "%", 100.0 * gTotalSmallHeapMaxUsed / gTotalSmallHeapMaxTotalChunkSize );
+	WriteString ( outFile, outString );
+
+	WriteString ( outFile, "\n\n");
+}
+
+static void WriteLargeHeapMemoryUsageData(PRFileHandle outFile)
+{
+	char			outString[ 1024 ];
+	
+	WriteString ( outFile, "\n\n--------------------------------------------------------------------------------\n" );
+	WriteString(outFile, "Stats for large heap allocator (blocks > 256 bytes)\n");
+	WriteString ( outFile, "--------------------------------------------------------------------------------\n" );
+	WriteString ( outFile, "                     Current         Max\n" );
+	WriteString ( outFile, "                  ----------     -------\n" );
+	sprintf( outString,    "Num chunks:       %10d  %10d\n", gTotalLargeHeapChunksAllocated, gTotalLargeHeapChunksMaxAllocated );
+	WriteString ( outFile, outString );
+	sprintf( outString,    "Chunk total:      %10d  %10d\n", gTotalLargeHeapTotalChunkSize, gTotalLargeHeapMaxTotalChunkSize );
+	WriteString ( outFile, outString );
+	sprintf( outString,    "Block space:      %10d  %10d\n", gTotalLargeHeapUsed, gTotalLargeHeapMaxUsed );
+	WriteString ( outFile, outString );
+	sprintf( outString,    "Blocks used:      %10d  %10d\n", gTotalLargeHeapBlocksUsed, gTotalLargeHeapBlocksMaxUsed );
+	WriteString ( outFile, outString );
+	WriteString ( outFile, "                                 -------\n" );
+	sprintf( outString,    "%s of allocated space used:    %10.2f\n", "%", 100.0 * gTotalLargeHeapMaxUsed / gTotalLargeHeapMaxTotalChunkSize );
+	WriteString ( outFile, outString );
+
+	WriteString ( outFile, "\n\n");
+
+}
+
 #endif
 
 void DumpMemoryStats(void)
@@ -741,133 +950,60 @@ void DumpMemoryStats(void)
 	
 	outFile = PR_OpenFile ( "MemoryStats.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644 );
 	if ( outFile == NULL )
-		{
+	{
 		return;
-		}
-
-	sprintf(outString, "********************************************************************************\n");	WriteString ( outFile, outString );
-	sprintf(outString, "********************************************************************************\n");	WriteString ( outFile, outString );
-	sprintf(outString, "USAGE REPORT (MALLOC HEAP)\n");															WriteString ( outFile, outString );
-	sprintf(outString, "********************************************************************************\n");	WriteString ( outFile, outString );
-	sprintf(outString, "********************************************************************************\n");	WriteString ( outFile, outString );
-	sprintf(outString, "TYPE      BLOCKS (A)  BLOCKS (U)  BLOCKS (F)  MEMORY (A)  MEMORY (U)  EFFICIENCY\n");	WriteString ( outFile, outString );
-	sprintf(outString, "----      ----------  ----------  ----------  ----------  ----------  ----------\n");	WriteString ( outFile, outString );
-	sprintf(outString, "FIXED   ");																			WriteString ( outFile, outString );
-	PrintHexNumber(hexString, gTotalFixedSizeBlocksAllocated);
-	sprintf(outString, "%s  ", hexString);																		WriteString ( outFile, outString );
-	PrintHexNumber(hexString, gTotalFixedSizeBlocksUsed);
-	sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-	PrintHexNumber(hexString, gTotalFixedSizeBlocksAllocated - gTotalFixedSizeBlocksUsed);
-	sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-	PrintHexNumber(hexString, gTotalFixedSizeAllocated);
-	sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-	PrintHexNumber(hexString, gTotalFixedSizeUsed);
-	sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
+	}
+	/* 
+		There is a problem with the fixed size block data collection. That is that
+		to collect these summary statistics, we have to put additional data (the block size)
+		in the header for each block, and this adds another 4 bytes to every block! This
+		messes up the data.
+		
+		Now, each fixed size allocator stores its performance data in the heap root global,
+		so we can collect memory stats without adding any extra data to allocated blocks.
+		But we still don't know how much of each block is used; we just know the blocksize,
+		which is the requested size rounded up to a 4-byte boundary. So we can't know about
+		wasted space within blocks.
+	*/
+	
+	/*
+	WriteString(outFile, "********************************************************************************\n");
+	WriteString(outFile, "********************************************************************************\n");
+	WriteString(outFile, "USAGE REPORT (MALLOC HEAP)\n");
+	WriteString(outFile, "********************************************************************************\n");
+	WriteString(outFile, "********************************************************************************\n");
+	WriteString(outFile, "TYPE      BLOCKS (A)  BLOCKS (U)  BLOCKS (F)  BLOCKS (Max) MEMORY (A)  MEMORY (U)  MEM (Max)    EFFICIENCY\n");
+	WriteString(outFile, "----      ----------  ----------  ----------  ------------ ----------  ----------  ----------   ----------\n");
+	sprintf(outString, "FIXED   ");																	WriteString ( outFile, outString );
+	sprintf(outString, "%10d  ", gTotalFixedSizeBlocksAllocated);									WriteString ( outFile, outString );
+	sprintf(outString, "%10d  ", gTotalFixedSizeBlocksUsed);										WriteString ( outFile, outString );
+	sprintf(outString, "%10d  ", gTotalFixedSizeBlocksAllocated - gTotalFixedSizeBlocksUsed);		WriteString ( outFile, outString );
+	sprintf(outString, "%10d  ", gTotalFixedSizeBlocksMaxUsed);	WriteString ( outFile, outString );
+	sprintf(outString, "%10d  ", gTotalFixedSizeAllocated);	 	WriteString ( outFile, outString );
+	sprintf(outString, "%10d  ", gTotalFixedSizeUsed);	 		WriteString ( outFile, outString );
+	sprintf(outString, "%10d  ", gTotalFixedSizeMaxUsed);	 	WriteString ( outFile, outString );
+	
 	PrintEfficiency(outFile, gTotalFixedSizeBlocksUsed, gTotalFixedSizeBlocksAllocated);
 	sprintf(outString, "/"); WriteString ( outFile, outString );
 	PrintEfficiency(outFile, gTotalFixedSizeUsed, gTotalFixedSizeAllocated);
 	sprintf(outString, "  \n");	 WriteString ( outFile, outString );
-	sprintf(outString, "HEAP      "); WriteString ( outFile, outString );
-	PrintHexNumber(hexString, 0); WriteString ( outFile, outString );
-	sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-	PrintHexNumber(hexString, gTotalSmallHeapBlocksUsed);
-	sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-	PrintHexNumber(hexString, 0);
-	sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-	PrintHexNumber(hexString, gTotalSmallHeapAllocated);
-	sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-	PrintHexNumber(hexString, gTotalSmallHeapUsed);
-	sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-	PrintEfficiency(outFile, gTotalSmallHeapUsed, gTotalSmallHeapAllocated);
-	sprintf(outString, "  \nTotal efficiency: "); WriteString ( outFile, outString );
-	PrintEfficiency(outFile, gTotalSmallHeapUsed + gTotalFixedSizeUsed, 
-		gTotalSmallHeapAllocated + gTotalFixedSizeAllocated);
-	sprintf(outString, "  \n");	 WriteString ( outFile, outString );
-	sprintf(outString, "********************************************************************************\n");	 WriteString ( outFile, outString );
-	sprintf(outString, "********************************************************************************\n");	 WriteString ( outFile, outString );
-	sprintf(outString, "BLOCK DISTRIBUTION (MALLOC HEAP: ACTIVE)\n"); WriteString ( outFile, outString );
-	sprintf(outString, "********************************************************************************\n");	 WriteString ( outFile, outString );
-	sprintf(outString, "********************************************************************************\n"); WriteString ( outFile, outString );
-	sprintf(outString, "SIZE      +0x00       +0x01       +0x02      +0x03        TOTAL\n"); WriteString ( outFile, outString );
-	sprintf(outString, "----      ----------  ----------  ----------  ----------  ----------\n"); WriteString ( outFile, outString );
-	
-	for (currentItem = 0; currentItem < 64; currentItem++) {
-		PrintHexNumber(hexString, currentItem * 4);
-		sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-		PrintHexNumber(hexString, gSmallAllocationActiveCountTable[currentItem * 4]);
-		sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-		PrintHexNumber(hexString, gSmallAllocationActiveCountTable[currentItem * 4 + 1]);
-		sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-		PrintHexNumber(hexString, gSmallAllocationActiveCountTable[currentItem * 4 + 2]);
-		sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-		PrintHexNumber(hexString, gSmallAllocationActiveCountTable[currentItem * 4 + 3]);
-		sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-		PrintHexNumber(hexString, gSmallAllocationActiveCountTable[currentItem * 4] + 
-			gSmallAllocationActiveCountTable[currentItem * 4 + 1] +
-			gSmallAllocationActiveCountTable[currentItem * 4 + 2] +
-			gSmallAllocationActiveCountTable[currentItem * 4 + 3]);
-		sprintf(outString, "\n");	 WriteString ( outFile, outString );
-	}
-	sprintf(outString, "Blocks Over 1K:"); WriteString ( outFile, outString );
-	PrintHexNumber(hexString, gSmallAllocationActiveCountTable[1024]);	 WriteString ( outFile, hexString );
-	sprintf(outString, "\n");	 WriteString ( outFile, outString );
-	sprintf(outString, "********************************************************************************\n");	 WriteString ( outFile, outString );
-	sprintf(outString, "********************************************************************************\n");	 WriteString ( outFile, outString );
-	sprintf(outString, "BLOCK DISTRIBUTION (MALLOC HEAP: MAX)\n"); WriteString ( outFile, outString );
-	sprintf(outString, "********************************************************************************\n");	 WriteString ( outFile, outString );
-	sprintf(outString, "********************************************************************************\n"); WriteString ( outFile, outString );
-	sprintf(outString, "SIZE      +0x00       +0x01       +0x02      +0x03        TOTAL\n"); WriteString ( outFile, outString );
-	sprintf(outString, "----      ----------  ----------  ----------  ----------  ----------\n"); WriteString ( outFile, outString );
-	
-	for (currentItem = 0; currentItem < 64; currentItem++) {
-		PrintHexNumber(hexString, currentItem * 4);
-		sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-		PrintHexNumber(hexString, gSmallAllocationMaxCountTable[currentItem * 4]);
-		sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-		PrintHexNumber(hexString, gSmallAllocationMaxCountTable[currentItem * 4 + 1]);
-		sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-		PrintHexNumber(hexString, gSmallAllocationMaxCountTable[currentItem * 4 + 2]);
-		sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-		PrintHexNumber(hexString, gSmallAllocationMaxCountTable[currentItem * 4 + 3]);
-		sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-		PrintHexNumber(hexString, gSmallAllocationMaxCountTable[currentItem * 4] + 
-			gSmallAllocationMaxCountTable[currentItem * 4 + 1] +
-			gSmallAllocationMaxCountTable[currentItem * 4 + 2] +
-			gSmallAllocationMaxCountTable[currentItem * 4 + 3]);
-		sprintf(outString, "\n");	 WriteString ( outFile, outString );
-	}
-	sprintf(outString, "Blocks Over 1K:"); WriteString ( outFile, outString );
-	PrintHexNumber(hexString, gSmallAllocationMaxCountTable[1024]);	 WriteString ( outFile, hexString );
-	sprintf(outString, "\n");	 WriteString ( outFile, outString );
-	sprintf(outString, "********************************************************************************\n");	 WriteString ( outFile, outString );
-	sprintf(outString, "********************************************************************************\n");	 WriteString ( outFile, outString );
-	sprintf(outString, "BLOCK DISTRIBUTION (MALLOC HEAP: TOTAL)\n"); WriteString ( outFile, outString );
-	sprintf(outString, "********************************************************************************\n");	 WriteString ( outFile, outString );
-	sprintf(outString, "********************************************************************************\n"); WriteString ( outFile, outString );
-	sprintf(outString, "SIZE        +0x00       +0x01       +0x02      +0x03        TOTAL\n"); WriteString ( outFile, outString );
-	sprintf(outString, "----        ----------  ----------  ----------  ----------  ----------\n"); WriteString ( outFile, outString );
-	
-	for (currentItem = 0; currentItem < 64; currentItem++) {
-		PrintHexNumber(hexString, currentItem * 4);
-		sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-		PrintHexNumber(hexString, gSmallAllocationTotalCountTable[currentItem * 4]);
-		sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-		PrintHexNumber(hexString, gSmallAllocationTotalCountTable[currentItem * 4 + 1]);
-		sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-		PrintHexNumber(hexString, gSmallAllocationTotalCountTable[currentItem * 4 + 2]);
-		sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-		PrintHexNumber(hexString, gSmallAllocationTotalCountTable[currentItem * 4 + 3]);
-		sprintf(outString, "%s  ", hexString);	 WriteString ( outFile, outString );
-		PrintHexNumber(hexString, gSmallAllocationTotalCountTable[currentItem * 4] + 
-			gSmallAllocationTotalCountTable[currentItem * 4 + 1] +
-			gSmallAllocationTotalCountTable[currentItem * 4 + 2] +
-			gSmallAllocationTotalCountTable[currentItem * 4 + 3]);
-		sprintf(outString, "\n");	 WriteString ( outFile, outString );
-	}
-	sprintf(outString, "Blocks Over 1K:"); WriteString ( outFile, outString );
-	PrintHexNumber(hexString, gSmallAllocationTotalCountTable[1024]);
-	sprintf(outString, "%s\n", hexString);	 WriteString ( outFile, outString );
 
+	WriteAllocatationTableHeader(outFile, "BLOCK DISTRIBUTION (MALLOC HEAP: ACTIVE)", WRITE_TABLES_FLAT);
+	WriteAllocationTableData(outFile, gSmallAllocationActiveCountTable, WRITE_TABLES_FLAT);
+	
+	WriteAllocatationTableHeader(outFile, "BLOCK DISTRIBUTION (MALLOC HEAP: MAX)", WRITE_TABLES_FLAT);
+	WriteAllocationTableData(outFile, gSmallAllocationMaxCountTable, WRITE_TABLES_FLAT);
+	
+	WriteAllocatationTableHeader(outFile, "BLOCK DISTRIBUTION (MALLOC HEAP: TOTAL)", WRITE_TABLES_FLAT);
+	WriteAllocationTableData(outFile, gSmallAllocationTotalCountTable, WRITE_TABLES_FLAT);
+	*/
+	
+	WriteAllocatorStatsExplanations(outFile);
+
+	WriteSmallHeapMemoryUsageData(outFile);
+	WriteLargeHeapMemoryUsageData(outFile);
+	DumpAllocatorMemoryStats(outFile);
+	
 #endif
 }
 
@@ -897,6 +1033,10 @@ void *LargeBlockAlloc(size_t blockSize, void *refcon)
 	void *						stackCrawl[ kStackDepth ];
 	
 	GetCurrentStackTrace(stackCrawl);
+#endif
+
+#if INSTRUMENT_MAC_MEMORY
+	InstUpdateHistogram(gLargeHeapHistogram, blockSize, 1);
 #endif
 
 	/* round the block size up to a multiple of four and add space for the header and trailer */
@@ -939,7 +1079,17 @@ void *LargeBlockAlloc(size_t blockSize, void *refcon)
 	if ( blockHeader != NULL )
 		{
 		chunk->header.usedBlocks++;
-	
+
+#if STATS_MAC_MEMORY
+		gTotalLargeHeapBlocksUsed ++;
+		if (gTotalLargeHeapBlocksUsed > gTotalLargeHeapBlocksMaxUsed)
+			gTotalLargeHeapBlocksMaxUsed = gTotalLargeHeapBlocksUsed;
+		
+		gTotalLargeHeapUsed += allocSize;
+		if (gTotalLargeHeapUsed > gTotalLargeHeapMaxUsed)
+			gTotalLargeHeapMaxUsed = gTotalLargeHeapUsed;
+#endif
+
 #if DEBUG_MAC_ALLOCATORS && DEBUG_MAC_MEMORY
 		EnableAllocationSet ( gLargeBlockAllocatorSet );
 		TrackItem ( blockHeader, allocSize, 0, kPointerBlock, stackCrawl );
@@ -981,6 +1131,11 @@ void LargeBlockFree(void *block, void *refcon)
 	LargeBlockHeader *			next;
 	
 	blockHeader = (LargeBlockHeader *) ((char *)block - sizeof(LargeBlockHeader));
+
+#if STATS_MAC_MEMORY
+	gTotalLargeHeapBlocksUsed --;
+	gTotalLargeHeapUsed -= LARGE_BLOCK_SIZE(blockHeader);
+#endif
 
 #if DEBUG_MAC_ALLOCATORS && DEBUG_MAC_MEMORY
 	EnableAllocationSet ( gLargeBlockAllocatorSet );
@@ -1025,9 +1180,13 @@ void LargeBlockFree(void *block, void *refcon)
 	
 	// if this chunk is completely empty and it's not the first chunk then free it
 	if ( chunk->header.usedBlocks == 0 && root->header.firstChunk != (SubHeapAllocationChunk *) chunk )
-		{
+	{
 		FreeSubHeap ( &root->header, &chunk->header );
-		}
+#if STATS_MAC_MEMORY
+		gTotalLargeHeapChunksAllocated --;
+		gTotalLargeHeapTotalChunkSize -= chunk->header.heapSize;
+#endif
+	}
 }
 
 
@@ -1089,15 +1248,28 @@ SubHeapAllocationChunk * LargeBlockAllocChunk ( size_t blockSize, void * refcon 
 	/* if that failed, then try allocating the smallest chunk out of the application heap */
 	/* call the fe low memory proc as well, cuz we're running out jim */
 	if ( ( chunk == NULL ) && useTemp )
-		{
-		chunk = (LargeBlockAllocationChunk *) AllocateSubHeap ( &root->header, smallestHeapSize + sizeof(LargeBlockAllocationChunk),
+	{
+		bestHeapSize = smallestHeapSize;
+		
+		chunk = (LargeBlockAllocationChunk *) AllocateSubHeap ( &root->header, bestHeapSize + sizeof(LargeBlockAllocationChunk),
 			false );
 		
 		CallFE_LowMemory();
-		}
+	}
 		
 	if ( chunk != NULL )
-		{
+	{
+
+#if STATS_MAC_MEMORY
+		gTotalLargeHeapChunksAllocated ++;
+		if (gTotalLargeHeapChunksAllocated > gTotalLargeHeapChunksMaxAllocated)
+			gTotalLargeHeapChunksMaxAllocated = gTotalLargeHeapChunksAllocated;
+			
+		gTotalLargeHeapTotalChunkSize += bestHeapSize;
+		if (gTotalLargeHeapTotalChunkSize > gTotalLargeHeapMaxTotalChunkSize)
+			gTotalLargeHeapMaxTotalChunkSize = gTotalLargeHeapTotalChunkSize;
+#endif
+
 #if DEBUG_ALLOCATION_CHUNKS && DEBUG_MAC_MEMORY
 		EnableAllocationSet ( gLargeBlockAllocatorSet );
 		TrackItem ( chunk, bestHeapSize + sizeof(LargeBlockAllocationChunk), 0, kPointerBlock, stackCrawl );
@@ -1191,7 +1363,9 @@ void LargeBlockHeapFree(size_t blockSize, FreeMemoryStats * stats, void * refcon
 
 void *FixedSizeAlloc(size_t blockSize, void *refcon)
 {
+#if !STATS_MAC_MEMORY
 #pragma unused (blockSize)
+#endif
 	FixedSizeAllocationRoot *	root = (FixedSizeAllocationRoot *)refcon;
 	FixedSizeAllocationChunk *	chunk = (FixedSizeAllocationChunk *) root->header.firstChunk;
 	MemoryBlockHeader *			blockHeader;
@@ -1226,15 +1400,34 @@ void *FixedSizeAlloc(size_t blockSize, void *refcon)
 		TrackItem ( blockHeader, blockSize, 0, kPointerBlock, stackCrawl );
 		DisableAllocationSet ( gFixedSizeAllocatorSet );
 #endif
+
 #if STATS_MAC_MEMORY
+		//blockHeader->blockSize = root->blockSize;
+		
+		root->blocksUsed ++;
+		if (root->blocksUsed > root->maxBlocksUsed)
+			root->maxBlocksUsed = root->blocksUsed;
+		
+		root->blockSpaceUsed += root->blockSize;
+		if (root->blockSpaceUsed > root->maxBlockSpaceUsed)
+			root->maxBlockSpaceUsed = root->blockSpaceUsed;
+
 		gTotalFixedSizeUsed += root->blockSize;
+		
+		if (gTotalFixedSizeUsed > gTotalFixedSizeMaxUsed)
+			gTotalFixedSizeMaxUsed = gTotalFixedSizeUsed;
+			
 		gTotalFixedSizeBlocksUsed++;
+		
+		if (gTotalFixedSizeBlocksUsed > gTotalFixedSizeBlocksMaxUsed)
+			gTotalFixedSizeBlocksMaxUsed = gTotalFixedSizeBlocksUsed;
+		
 #endif
-		}
+	}
 	else
-		{
+	{
 		return NULL;
-		}
+	}
 
 	return (void *)((char *)blockHeader + sizeof(MemoryBlockHeader));
 	
@@ -1265,12 +1458,19 @@ void FixedSizeFree(void *block, void *refcon)
 	
 	// if this chunk is completely empty and it's not the first chunk then free it
 	if ( chunk->header.usedBlocks == 0 && root->header.firstChunk != (SubHeapAllocationChunk *) chunk )
-		{
+	{
 		FreeSubHeap ( &root->header, &chunk->header );
-		}
-	
-
 #if STATS_MAC_MEMORY
+		root->chunksAllocated --;
+		root->totalChunkSize -= chunk->chunkSize;
+		root->blocksAllocated -= chunk->numBlocks;
+#endif
+	}
+	
+#if STATS_MAC_MEMORY
+	root->blocksUsed --;
+	root->blockSpaceUsed -= root->blockSize;
+	
 	gTotalFixedSizeUsed -= root->blockSize;
 	gTotalFixedSizeBlocksUsed--;
 #endif
@@ -1327,6 +1527,19 @@ SubHeapAllocationChunk * FixedSizeAllocChunk ( size_t blockSize, void * refcon )
 		chunk->chunkSize = chunkSize;
 		chunk->numBlocks = numBlocks;
 		
+		root->blocksAllocated += numBlocks;
+		if (root->blocksAllocated > root->maxBlocksAllocated )
+			root->maxBlocksAllocated = root->blocksAllocated;
+			 
+		root->chunksAllocated ++;
+		root->totalChunkSize += chunkSize;
+		
+		if (root->chunksAllocated > root->maxChunksAllocated)
+			root->maxChunksAllocated = root->chunksAllocated;
+		
+		if (root->totalChunkSize > root->maxTotalChunkSize)
+			root->maxTotalChunkSize = root->totalChunkSize;
+			
 		gTotalFixedSizeAllocated += chunkSize;
 		gTotalFixedSizeBlocksAllocated += numBlocks;
 #endif
@@ -1509,6 +1722,10 @@ void *SmallHeapAlloc(size_t blockSize, void *refcon)
 	GetCurrentStackTrace(stackCrawl);
 #endif
 
+#if INSTRUMENT_MAC_MEMORY
+	InstUpdateHistogram(gSmallHeapHistogram, blockSize, 1);
+#endif
+
 	//	Round up allocation to nearest 4 bytes.
 	
 	blockSize = (blockSize + 3) & 0xFFFFFFFC;
@@ -1536,14 +1753,22 @@ tryAlloc:
 
 	#if STATS_MAC_MEMORY
 			gTotalSmallHeapBlocksUsed++;
+			if (gTotalSmallHeapBlocksUsed > gTotalSmallHeapBlocksMaxUsed)
+				gTotalSmallHeapBlocksMaxUsed = gTotalSmallHeapBlocksUsed;
+				
 			gTotalSmallHeapUsed += TotalSmallHeapBlockUsage(currentBinValue);
-	#endif
+			
+			if (gTotalSmallHeapUsed > gTotalSmallHeapMaxUsed)
+				gTotalSmallHeapMaxUsed = gTotalSmallHeapUsed;
+#endif
 #if DEBUG_MAC_ALLOCATORS && DEBUG_MAC_MEMORY
 			EnableAllocationSet ( gSmallHeapAllocatorSet );
 			TrackItem ( currentBinValue, blockSize, 0, kPointerBlock, stackCrawl );
 			DisableAllocationSet ( gSmallHeapAllocatorSet );
 #endif
 
+			chunk->header.usedBlocks ++;
+			
 			return SmallHeapBlockToMemoryPtr(currentBinValue);
 
 		}
@@ -1627,15 +1852,23 @@ tryAlloc:
 			
 				blockToCarve->info.inUseInfo.freeProc.blockFreeRoutine = &chunk->header.freeDescriptor;
 
-	#if STATS_MAC_MEMORY
+#if STATS_MAC_MEMORY
 				gTotalSmallHeapBlocksUsed++;
+				if (gTotalSmallHeapBlocksUsed > gTotalSmallHeapBlocksMaxUsed)
+					gTotalSmallHeapBlocksMaxUsed = gTotalSmallHeapBlocksUsed;
+					
 				gTotalSmallHeapUsed += TotalSmallHeapBlockUsage(blockToCarve);
-	#endif
+				
+				if (gTotalSmallHeapUsed > gTotalSmallHeapMaxUsed)
+					gTotalSmallHeapMaxUsed = gTotalSmallHeapUsed;
+#endif
 #if DEBUG_MAC_ALLOCATORS && DEBUG_MAC_MEMORY
 				EnableAllocationSet ( gSmallHeapAllocatorSet );
 				TrackItem ( blockToCarve, blockSize, 0, kPointerBlock, stackCrawl );
 				DisableAllocationSet ( gSmallHeapAllocatorSet );
 #endif
+				chunk->header.usedBlocks ++;
+				
 				return SmallHeapBlockToMemoryPtr(blockToCarve);
 							
 			} 
@@ -1643,8 +1876,8 @@ tryAlloc:
 			blockToCarve = blockToCarve->info.freeInfo.nextFree;
 		}
 	
-	chunk = (SmallHeapChunk *) chunk->header.next;
-	}
+		chunk = (SmallHeapChunk *) chunk->header.next;
+	}	// while (chunk != NULL)
 		
 	return NULL;
 }
@@ -1652,6 +1885,7 @@ tryAlloc:
 void SmallHeapFree(void *address, void *refcon)
 {
 	SmallHeapChunk			*chunk = (SmallHeapChunk *)refcon;
+	SmallHeapRoot			*root = (SmallHeapRoot *)chunk->header.root;
 	SmallHeapBlock			*deadBlock,
 							*prevBlock,
 							*nextBlock;
@@ -1694,6 +1928,19 @@ void SmallHeapFree(void *address, void *refcon)
 	}
 	
 	nextBlock->prevBlock = deadBlock;
+
+	-- chunk->header.usedBlocks;
+	PR_ASSERT(chunk->header.usedBlocks >= 0);
+	
+	// if this chunk is completely empty and it's not the first chunk then free it
+	if ( chunk->header.usedBlocks == 0 && root->header.firstChunk != (SubHeapAllocationChunk *) chunk )
+	{
+		FreeSubHeap( &root->header, &chunk->header );
+#if STATS_MAC_MEMORY
+		gTotalSmallHeapChunksAllocated --;
+		gTotalSmallHeapTotalChunkSize -= chunk->header.heapSize;
+#endif
+	}
 
 }
 
@@ -1746,6 +1993,17 @@ SubHeapAllocationChunk * SmallHeapAllocChunk ( size_t blockSize, void * refcon )
 		chunk->header.freeDescriptor.freeRoutine = SmallHeapFree;
 		chunk->header.freeDescriptor.sizeRoutine = SmallBlockSize;
 		chunk->header.freeDescriptor.refcon = chunk;
+
+#if STATS_MAC_MEMORY
+		gTotalSmallHeapTotalChunkSize += heapSize;
+		
+		if (gTotalSmallHeapTotalChunkSize > gTotalSmallHeapMaxTotalChunkSize)
+			gTotalSmallHeapMaxTotalChunkSize = gTotalSmallHeapTotalChunkSize;
+			
+		gTotalSmallHeapChunksAllocated ++;
+		if (gTotalSmallHeapChunksAllocated > gTotalSmallHeapChunksMaxAllocated)
+			gTotalSmallHeapChunksMaxAllocated = gTotalSmallHeapChunksAllocated;
+#endif
 
 #if DEBUG_ALLOCATION_CHUNKS && DEBUG_MAC_MEMORY
 		EnableAllocationSet ( gSmallHeapAllocatorSet );
@@ -1843,9 +2101,10 @@ void SmallBlockHeapFree(size_t blockSize, FreeMemoryStats * stats, void * refcon
 #pragma mark -
 #pragma mark TRACKING MEMORY MANAGER MEMORY
 
-#if DEBUG_MAC_MEMORY
+#if DEBUG_MAC_MEMORY || STATS_MAC_MEMORY
 #if GENERATINGPOWERPC
 
+#if DEBUG_MAC_MEMORY
 enum {
 	uppNewHandleProcInfo = kRegisterBased
 		 | RESULT_SIZE(SIZE_CODE(sizeof(Handle)))
@@ -1938,12 +2197,12 @@ pascal void DisposePtrPatch(UInt16 trapWord, Ptr deadPtr)
 	CallOSTrapUniversalProc(gDisposePtrPatchCallThru, uppDisposePtrProcInfo, trapWord, deadPtr);
 }
 
+#endif /* DEBUG_MAC_MEMORY */
 
 void InstallMemoryManagerPatches(void)
 {
-	OSErr				err;
-	
-	err = Gestalt ( gestaltLogicalRAMSize, (long *) &gMemoryTop );
+#if DEBUG_MAC_MEMORY
+	OSErr err = Gestalt ( gestaltLogicalRAMSize, (long *) &gMemoryTop );
 	if ( err != noErr )
 		{
 		DebugStr ( "\pThis machine has no logical ram?" );
@@ -1967,7 +2226,9 @@ void InstallMemoryManagerPatches(void)
 	SetTrackerDataDecoder ( kMallocBlock, PrintStackCrawl );
 	SetTrackerDataDecoder ( kHandleBlock, PrintStackCrawl );
 	SetTrackerDataDecoder ( kPointerBlock, PrintStackCrawl );
-	
+
+#endif /* DEBUG_MAC_MEMORY */
+
 	gExitToShellPatchCallThru = GetToolboxTrapAddress(0x01F4);
 	SetToolboxTrapAddress((UniversalProcPtr)&gExitToShellPatchRD, 0x01F4);
 }
@@ -1983,7 +2244,10 @@ void InstallMemoryManagerPatches(void)
 #endif
 
 
-#if DEBUG_MAC_MEMORY && GENERATINGPOWERPC
+#if GENERATINGPOWERPC
+
+
+#if (DEBUG_MAC_MEMORY || STATS_MAC_MEMORY)
 
 /*
  * Stuff for tracking memory leaks
@@ -1997,14 +2261,19 @@ static Boolean gBeenHere = false;
 	if ( !gBeenHere )
 		{
 		gBeenHere = true;
-		DumpMemoryTrackerState();
 		
+#if DEBUG_MAC_MEMORY
+		DumpMemoryTrackerState();
+#endif
+
 #if STATS_MAC_MEMORY
 		DumpMemoryStats();
 #endif
-		}
+	}
 
+#if DEBUG_MAC_MEMORY
 	ExitMemoryTracker();
+#endif
 
 #if GENERATINGCFM
 	CallUniversalProc(gExitToShellPatchCallThru, uppExitToShellProcInfo);
@@ -2013,10 +2282,10 @@ static Boolean gBeenHere = false;
 		ExitToShellProc	*exitProc = (ExitToShellProc *)&gExitToShellPatchCallThru;
 		(*exitProc)();
 	}
-#endif
+#endif	/* GENERATINGCFM */
 }
 
-
+#if DEBUG_MAC_MEMORY
 static void PrintStackCrawl ( void ** stackCrawl, char * name )
 {
 	unsigned long		currentStackLevel;
@@ -2043,10 +2312,14 @@ static void CatenateRoutineNameFromPC( char * string, void *currentPC )
 	if (currentPC == NULL)
 		return;
 
-	/* make sure we're not out in the weeds */
+	/* make sure we're not out in the weeds 
 	if ( (unsigned long) currentPC > (unsigned long) gMemoryTop )
 		return;
-		
+	*/
+	
+	if (GetPageState(currentPC) != kPageInMemory)
+		return;
+	
 	if ( (unsigned long) currentPC & 0x3 )
 		return;
 	
@@ -2057,9 +2330,12 @@ static void CatenateRoutineNameFromPC( char * string, void *currentPC )
 	
 		if (*currentPCAsLong == 0x4E800020) {
 			char	stringLength = *((char *)currentPCAsLong + 21);
-			memset( labelString, 0, 512 );
-			BlockMoveData( ((char *)currentPCAsLong + 22), labelString, stringLength );
 			
+			if (stringLength > 0)
+			{
+				BlockMoveData( ((char *)currentPCAsLong + 22), labelString, stringLength );
+				labelString[stringLength] = '\0';
+			}
 			// if there was no routine name, then just put down the address.
 			if ( *labelString == 0 )
 				{
@@ -2098,10 +2374,10 @@ bail:
 	lameString[ kNameMaxLength ] = 0;
 	strcat ( string, lameString );
 }
+#endif	/* DEBUG_MAC_MEMORY */
 
-#endif
+#endif	/* (DEBUG_MAC_MEMORY || STATS_MAC_MEMORY) */
 
-#if GENERATINGPOWERPC
 
 asm void *GetCurrentStackPointer()
 {
@@ -2282,8 +2558,7 @@ void GetCurrentNativeStackTrace ( void ** stackCrawl )
 	}
 #else
 #pragma unused(stackCrawl)
-#endif
+#endif	/* DEBUG_MAC_MEMORY */
 }
 
-#endif
-
+#endif /* GENERATINGPOWERPC */

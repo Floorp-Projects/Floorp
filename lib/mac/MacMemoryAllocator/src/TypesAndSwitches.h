@@ -22,16 +22,45 @@
 
 #include "MacMemAllocator.h"
 
-/* turn this on to check for block overwrites, heap corruption, bad frees, etc */ 
+/*	You probably only want to use this for debugging. It's useful to see leaks
+	with ZoneRanger.
+*/
+ #define MALLOC_IS_NEWPTR		1	
+
+/*	Turn this on to check for block overwrites, heap corruption, bad frees, etc */ 
 #define	DEBUG_HEAP_INTEGRITY	DEBUG
 
-/* turn this on to track memory allocations */
+/*	Turn this on to track memory allocations. If you do this, you will have to
+	allocate a lot more memory to the app (symptoms of too little are bogus
+	shared library errors on startup)
+*/
 #define DEBUG_MAC_MEMORY		0
 
+/* This setting is really obsoleted by STATS_MAC_MEMORY, which gives better stats */ 
 #define	TRACK_EACH_ALLOCATOR	0
 
-/* turn this on to track amount of memory allocated and performance of the allocators */
+/*	Turn this on to track amount of memory allocated and performance of the allocators
+	If you turn this on, it's better to not define DEBUG_HEAP_INTEGRITY, because
+	that setting causes each allocation to be 8-12 bytes larger, which messes
+	up the stats. I've been careful with STATS_MAC_MEMORY to not have it affect
+	block size at all.
+	
+	STATS_MAC_MEMORY can be turned on independently of the other debugging settings.
+	It will cause the creation of a text file, "MemoryStats.txt", in the app
+	directory, on quit. Its overhead is very low.
+*/
 #define STATS_MAC_MEMORY		0
+
+/*	Turn this on to use Apple's Instrumentation Lib to instrument block allocations
+	Currently, it collects histogram data on the frequency of allocations of
+	different sizes for the small and large allocators.
+*/
+/* #define INSTRUMENT_MAC_MEMORY	1 */
+
+#if INSTRUMENT_MAC_MEMORY
+#include "Instrumentation.h"
+#include "InstrumentationMacros.h"
+#endif
 
 #if DEBUG_MAC_MEMORY
 #include "xp_tracker.h"
@@ -82,7 +111,7 @@ typedef struct MemoryBlockHeader MemoryBlockHeader;
 
 struct MemoryBlockHeader {
 	FreeMemoryBlockDescriptor		*blockFreeRoutine;
-#if DEBUG_HEAP_INTEGRITY || STATS_MAC_MEMORY
+#if DEBUG_HEAP_INTEGRITY	// || STATS_MAC_MEMORY -- see comment in DumpMemoryStats()
 	size_t							blockSize;
 #endif
 #if DEBUG_HEAP_INTEGRITY
@@ -120,7 +149,7 @@ struct SubHeapAllocationChunk {
 	SubHeapAllocationRoot *		root;
 	SubHeapAllocationChunk *	next;
 	void *						refCon;
-	UInt32						usedBlocks;
+	SInt32						usedBlocks;
 	UInt32						heapSize;
 	FreeMemoryBlockDescriptor	freeDescriptor;
 };
@@ -210,6 +239,22 @@ struct FixedSizeAllocationRoot {
 	UInt32					baseChunkBlockCount;
 	UInt32					tempChunkBlockCount;
 	UInt32					blockSize;
+#if STATS_MAC_MEMORY
+	UInt32					chunksAllocated;
+	UInt32					maxChunksAllocated;
+	
+	UInt32					totalChunkSize;
+	UInt32					maxTotalChunkSize;
+
+	UInt32					blocksAllocated;
+	UInt32					maxBlocksAllocated;
+	
+	UInt32					blocksUsed;
+	UInt32					maxBlocksUsed;
+	
+	UInt32					blockSpaceUsed;
+	UInt32					maxBlockSpaceUsed;
+#endif
 };
 
 void *FixedSizeAlloc(size_t blockSize, void *refcon);
@@ -218,9 +263,10 @@ SubHeapAllocationChunk * FixedSizeAllocChunk ( size_t blockSize, void *refcon );
 size_t FixedBlockSize (void *freeBlock, void *refcon);
 void FixedBlockHeapFree(size_t blockSize, FreeMemoryStats * stats, void * refcon);
 
+/* When STATS_MAC_MEMORY, the extra fields in the FixedSizeAllocationRoot will be zeroed on initialization */
 #define DeclareFixedSizeAllocator(blockSize,baseCount,tempCount) \
-extern FixedSizeAllocationRoot	gFixedSize##blockSize##Root; \
-FixedSizeAllocationRoot	gFixedSize##blockSize##Root = { DECLARE_SUBHEAP_ROOT(), baseCount, tempCount, blockSize }
+extern FixedSizeAllocationRoot	gFixedSize##blockSize##Root;	\
+FixedSizeAllocationRoot	gFixedSize##blockSize##Root = {	DECLARE_SUBHEAP_ROOT(), baseCount, tempCount, blockSize }
 
 #define	DeclareFixedBlockHeapDescriptor(blockSize)	\
 	{	&FixedSizeAlloc, &FixedSizeAllocChunk, &FixedBlockHeapFree, (void *)&gFixedSize##blockSize##Root }
@@ -311,5 +357,10 @@ extern UInt32						gDontActuallyFreeMemory;
 extern SInt32						gFailToAllocateAfterNMallocs;
 
 extern SInt32						gTagReferencedBlocks;
+#endif
+
+#if INSTRUMENT_MAC_MEMORY
+extern InstHistogramClassRef		gSmallHeapHistogram;
+extern InstHistogramClassRef		gLargeHeapHistogram;
 #endif
 
