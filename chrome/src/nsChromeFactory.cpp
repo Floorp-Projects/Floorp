@@ -27,7 +27,6 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIChromeRegistry.h"
-#include "nsIChromeEntry.h"
 #include "nscore.h"
 #include "rdf.h"
 #include "nsChromeProtocolHandler.h"
@@ -49,24 +48,6 @@ NS_ConstructChromeRegistry(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     return rv;
 }
 
-static NS_IMETHODIMP
-NS_ConstructChromeEntry(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    nsresult rv;
-    NS_ASSERTION(aOuter == nsnull, "no aggregation");
-    nsIChromeEntry* chromeEntry;
-    rv = NS_NewChromeEntry(&chromeEntry);
-    if (NS_FAILED(rv)) {
-        NS_ERROR("Unable to construct chrome entry");
-        return rv;
-    }
-    rv = chromeEntry->QueryInterface(aIID, aResult);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find correct interface");
-    NS_RELEASE(chromeEntry);
-    return rv;
-}
-
-
 // The list of components we register
 static nsModuleComponentInfo components[] = 
 {
@@ -76,12 +57,6 @@ static nsModuleComponentInfo components[] =
       NS_ConstructChromeRegistry
     },
 
-    { "Chrome Entry", 
-      NS_CHROMEENTRY_CID,
-      "component://netscape/chrome/chrome-entry", 
-      NS_ConstructChromeEntry
-    },
-    
     { "Chrome Protocol Handler", 
       NS_CHROMEPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_PROGID_PREFIX "chrome", 
