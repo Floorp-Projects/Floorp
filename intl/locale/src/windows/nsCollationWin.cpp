@@ -54,14 +54,10 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
 nsresult nsCollationWin::GetSortKeyLen(const nsCollationStrength strength, 
                            const nsString& stringIn, PRUint32* outLen)
 {
-  nsString stringNormalized(stringIn);
-  
-  if (mCollation != NULL && strength == kCollationCaseInSensitive) {
-    mCollation->NormalizeString(stringNormalized);
-  }
+  // Currently, no length change by the normalization.
   // API returns number of bytes when LCMAP_SORTKEY is specified 
 	*outLen = LCMapStringW(GetUserDefaultLCID(), LCMAP_SORTKEY, 
-                              (LPCWSTR) stringNormalized.GetUnicode(), (int) stringNormalized.Length(), NULL, 0);
+                              (LPCWSTR) stringIn.GetUnicode(), (int) stringIn.Length(), NULL, 0);
 
   return NS_OK;
 }
@@ -70,7 +66,7 @@ nsresult nsCollationWin::CreateSortKey(const nsCollationStrength strength,
                            const nsString& stringIn, PRUint8* key, PRUint32* outLen)
 {
   int byteLen;
-  nsString stringNormalized(stringIn);
+  nsAutoString stringNormalized(stringIn);
 
   if (mCollation != NULL && strength == kCollationCaseInSensitive) {
     mCollation->NormalizeString(stringNormalized);
