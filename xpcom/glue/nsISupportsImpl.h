@@ -1085,7 +1085,7 @@ NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *count, nsIID ***array)          \
 
 #define NS_IMPL_CI_INTERFACE_GETTER11(_class, _i1, _i2, _i3, _i4, _i5, _i6,   \
                                       _i7, _i8, _i9, _i10, _i11)              \
-   NS_CLASSINFO_HELPER_BEGIN(_class, 10)                                      \
+   NS_CLASSINFO_HELPER_BEGIN(_class, 11)                                      \
      NS_CLASSINFO_HELPER_ENTRY(0, _i1)                                        \
      NS_CLASSINFO_HELPER_ENTRY(1, _i2)                                        \
      NS_CLASSINFO_HELPER_ENTRY(2, _i3)                                        \
