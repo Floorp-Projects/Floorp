@@ -3398,8 +3398,8 @@ nsBookmarksService::GetAllCmds(nsIRDFResource* source,
 		getFolderViaHint(kNC_PersonalToolbarFolder, getter_AddRefs(personalToolbarFolder));
 
 		cmdArray->AppendElement(kNC_BookmarkSeparator);
-		if (source != newBookmarkFolder)	cmdArray->AppendElement(kNC_BookmarkCommand_SetNewBookmarkFolder);
-		if (source != personalToolbarFolder)	cmdArray->AppendElement(kNC_BookmarkCommand_SetPersonalToolbarFolder);
+		if (source != newBookmarkFolder.get())		cmdArray->AppendElement(kNC_BookmarkCommand_SetNewBookmarkFolder);
+		if (source != personalToolbarFolder.get())	cmdArray->AppendElement(kNC_BookmarkCommand_SetPersonalToolbarFolder);
 	}
 
 	// always append a separator last (due to aggregation of commands from multiple datasources)
