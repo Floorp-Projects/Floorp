@@ -26,6 +26,7 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 EXPORT_RESOURCE_SAMPLES = \
+        $(srcdir)/colorpicker.xul \
 	$(srcdir)/dexanimmaster.xul \
 	$(srcdir)/dexanimdialog.xul \
 	$(srcdir)/dexparammaster.xul \
