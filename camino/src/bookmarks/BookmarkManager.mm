@@ -460,7 +460,7 @@ static unsigned gFirstUserCollection = 0;
     menuTitle = NSLocalizedString(@"Open Tabs in New Window", @"");
   else
     menuTitle = NSLocalizedString(@"Open in New Window", @"");
-  NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewWindow:) keyEquivalent:@""];
+  NSMenuItem *menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewWindow:) keyEquivalent:@""] autorelease];
   [menuItem setTarget:target];
   [contextMenu addItem:menuItem];
   
@@ -469,21 +469,21 @@ static unsigned gFirstUserCollection = 0;
     menuTitle = NSLocalizedString(@"Open in New Tabs", @"");
   else
     menuTitle = NSLocalizedString(@"Open in New Tab", @"");
-  menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewTab:) keyEquivalent:@""];
+  menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewTab:) keyEquivalent:@""] autorelease];
   [menuItem setTarget:target];
   [contextMenu addItem:menuItem];
   
   if (!outlineView || ([outlineView numberOfSelectedRows] == 1)) {
     [contextMenu addItem:[NSMenuItem separatorItem]];
     menuTitle = NSLocalizedString(@"Get Info", @"");
-    menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(showBookmarkInfo:) keyEquivalent:@""];
+    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(showBookmarkInfo:) keyEquivalent:@""] autorelease];
     [menuItem setTarget:target];
     [contextMenu addItem:menuItem];
   }
   
   if ([item isKindOfClass:[BookmarkFolder class]]) {
     menuTitle = NSLocalizedString(@"Use as Dock Menu", @"");
-    menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(makeDockMenu:) keyEquivalent:@""];
+    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(makeDockMenu:) keyEquivalent:@""] autorelease];
     [menuItem setTarget:item];
     [contextMenu addItem:menuItem];
   }
@@ -494,12 +494,13 @@ static unsigned gFirstUserCollection = 0;
       allowNewFolder = YES;
   } else
     allowNewFolder = YES;
+
   if (allowNewFolder) {
     // space
     [contextMenu addItem:[NSMenuItem separatorItem]];
     // create new folder
     menuTitle = NSLocalizedString(@"Create New Folder...", @"");
-    menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(addFolder:) keyEquivalent:@""];
+    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(addFolder:) keyEquivalent:@""] autorelease];
     [menuItem setTarget:target];
     [contextMenu addItem:menuItem];
   }
@@ -513,7 +514,7 @@ static unsigned gFirstUserCollection = 0;
     [contextMenu addItem:[NSMenuItem separatorItem]];
     // delete
     menuTitle = NSLocalizedString(@"Delete", @"");
-    menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(deleteBookmarks:) keyEquivalent:@""];
+    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(deleteBookmarks:) keyEquivalent:@""] autorelease];
     [menuItem setTarget:target];
     [contextMenu addItem:menuItem];
   }
