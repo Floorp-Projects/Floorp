@@ -119,9 +119,9 @@ tmTransactionService::Init(const nsACString & aNamespace) {
     return rv;
 
   // get the lock service
-  lockService = do_GetService("@mozilla.org/ipc/lock-service;1");
-  if (!lockService)
-    return NS_ERROR_FAILURE;
+  lockService = do_GetService("@mozilla.org/ipc/lock-service;1", &rv);
+  if (NS_FAILED(rv))
+    return rv;
 
   // create some internal storage
   mObservers = PL_NewHashTable(20, 
@@ -129,7 +129,7 @@ tmTransactionService::Init(const nsACString & aNamespace) {
                                PL_CompareStrings, 
                                PL_CompareValues, 0, 0);
   if (!mObservers)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // init some internal storage
   mQueueMaps.Init();
@@ -149,6 +149,8 @@ tmTransactionService::Attach(const nsACString & aDomainName,
   //   return an error here. Only one module attached to a queue per app.
   if (GetQueueID(aDomainName) != TM_NO_ID)
     return TM_ERROR_QUEUE_EXISTS;
+  if (!mObservers)
+    return NS_ERROR_NOT_INITIALIZED;
 
   // create the full queue name: namespace + queue
   nsCString jQName;
