@@ -210,17 +210,17 @@
 
 		<treecolgroup id="theColumns">
 			<treecol id="NameColumn" persist="hidden width" width="2*" flex="2"
-				rdf:resource="http://home.netscape.com/NC-rdf#Name"
+				resource="http://home.netscape.com/NC-rdf#Name"
 				sortActive="true" sortDirection="ascending" />
 			<splitter class="tree-splitter"/>
 			<treecol id="URLColumn" persist="hidden width" width="2*" flex="2"
-				rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
+				resource="http://home.netscape.com/NC-rdf#URL"/>
 			<splitter class="tree-splitter"/>
 			<treecol id="ShortcutURLColumn" persist="hidden width" width="1*" flex="1"
-				rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
+				resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
 			<splitter class="tree-splitter"/>
 			<treecol id="DescriptionColumn" persist="hidden width" width="1*" flex="1"
-				rdf:resource="http://home.netscape.com/NC-rdf#Description"/>
+				resource="http://home.netscape.com/NC-rdf#Description"/>
 			<splitter class="tree-splitter"/>
 			<treecol id="PopupColumn" persist="width" fixed="true" width="14" />
 		</treecolgroup>

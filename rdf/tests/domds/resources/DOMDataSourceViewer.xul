@@ -45,8 +45,8 @@
   </treechildren>
   </template>
 
-  <treecol style="width: 50%" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol style="width: 50%" id="ValueColumn" rdf:resource="http://home.netscape.com/NC-rdf#Value"/>
+  <treecol style="width: 50%" id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol style="width: 50%" id="ValueColumn" resource="http://home.netscape.com/NC-rdf#Value"/>
   <treehead>
     <treerow>
       <treecell value="Name"/>

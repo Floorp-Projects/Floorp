@@ -29,8 +29,8 @@ function SetIgnore()
 </html:form>
 
 <tree id="tree" datasources="rdf:bookmarks" onclick="return OpenURL(event,event.target.parentNode);">
-  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
+  <treecol resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol resource="http://home.netscape.com/NC-rdf#URL"/>
 
   <treehead>
     <treeitem>

@@ -12,8 +12,8 @@
   id="dataSourceTree"
   containment="http://home.netscape.com/NC-rdf#child">
   <treecolgroup>
-    <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
-    <treecol id="ValueColumn" rdf:resource="http://home.netscape.com/NC-rdf#Value" flex="1"/>
+    <treecol id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+    <treecol id="ValueColumn" resource="http://home.netscape.com/NC-rdf#Value" flex="1"/>
   </treecolgroup>
   <treehead>
     <treeitem>

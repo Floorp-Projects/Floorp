@@ -94,8 +94,8 @@ function SetItemText()
 
 <tree id="tree" datasources="rdf:bookmarks" onclick="return OpenURL(event,event.target.parentNode);">
   <treecolgroup>
-    <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
-    <treecol rdf:resource="http://home.netscape.com/NC-rdf#URL" flex="1"/>
+    <treecol resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+    <treecol resource="http://home.netscape.com/NC-rdf#URL" flex="1"/>
   </treecolgroup>
   <treehead>
     <treeitem>
