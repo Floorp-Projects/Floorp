@@ -446,11 +446,11 @@ nsHTMLTags::LookupTag(const nsAString& aTagName)
   if (tag == eHTMLTag_unknown) {
     // "__moz_text"
     static const PRUnichar moz_text[] =
-      {'_', '_', 'm', 'o', 'z', '_', 't', 'e', 'x', 't'};
+      {'_', '_', 'm', 'o', 'z', '_', 't', 'e', 'x', 't', PRUnichar(0) };
 
     // "#text"
     static const PRUnichar text[] =
-      {'#', 't', 'e', 'x', 't'};
+      {'#', 't', 'e', 'x', 't', PRUnichar(0) };
 
     if (nsCRT::strcmp(buf, moz_text) == 0) {
       tag = eHTMLTag_text;
