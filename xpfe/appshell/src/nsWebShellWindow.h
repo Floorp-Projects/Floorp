@@ -129,7 +129,8 @@ public:
 	  nsIWidget   * aParentWindow,
 	  PRInt32       aX,
 	  PRInt32       aY,
-    const nsString& aPopupAlignment);
+    const nsString& aPopupAlignment,
+    const nsString& aAnchorAlignment);
   
   // nsIDocumentLoaderObserver
   NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, 
