@@ -44,14 +44,15 @@ EXTRA_DSO_LDOPTS = \
 		-lmozjs			\
 		-ljsdom			\
 		-lxp			\
-		-lraptorbase		\
+		-lraptorbase	\
 		-lrdfutil_s		\
+		-lmsgbaseutil	\
 		-lxpcom			\
 		-lreg			\
 		-lappcores		\
-		$(NSPR_LIBS)		\
-		-L$(DIST)/bin		\
-		-L$(DIST)/lib		\
+		$(NSPR_LIBS)	\
+		-L$(DIST)/bin	\
+		-L$(DIST)/lib	\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
