@@ -181,6 +181,30 @@ Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSBool
+Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+    if (!argc)
+        return JS_TRUE;
+    
+    str = JS_ValueToString(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
+
+    char *bytes = JS_GetStringBytes(str);
+    bytes = nsCRT::strdup(bytes);
+
+#ifdef XP_MAC
+    for (char *c = bytes; *c; c++)
+        if (*c == '\r')
+            *c = '\n';
+#endif
+    fputs(bytes, stderr);
+    nsAllocator::Free(bytes);
+    return JS_TRUE;
+}
+
+static JSBool
 Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     uintN i;
@@ -304,6 +328,7 @@ static JSFunctionSpec glob_functions[] = {
     {"version",         Version,        1},
     {"build",           BuildDate,      0},
     {"dumpXPC",         DumpXPC,        1},
+    {"dump",            Dump,           1},
     {"gc",              GC,             0},
     {0}
 };

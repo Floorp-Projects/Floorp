@@ -497,6 +497,13 @@ MyEcho::ThrowArg(void)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* void callReceiverSometimeLater (); */
+NS_IMETHODIMP
+MyEcho::CallReceiverSometimeLater(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /***************************************************************************/
 // security manager test class
 

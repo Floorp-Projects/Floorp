@@ -72,7 +72,8 @@ nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
         return clazz;
     }
 
-    nsCOMPtr<nsIInterfaceInfoManager> iimgr = dont_AddRef(nsXPConnect::GetInterfaceInfoManager());
+    nsCOMPtr<nsIInterfaceInfoManager> iimgr = 
+                dont_AddRef(nsXPConnect::GetInterfaceInfoManager());
     if(!iimgr)
     {
         SET_ERROR_CODE(NS_ERROR_FAILURE);
@@ -317,8 +318,9 @@ nsXPCWrappedNativeClass::HandlePossibleNameCaseError(jsid id)
             const char* badName = JS_GetStringBytes(oldJSStr);
             char* locationStr = nsnull;
 
-            nsCOMPtr<nsXPCException> e = 
-                nsXPCException::NewException("", NS_OK, nsnull, nsnull);
+            nsCOMPtr<nsXPCException> e =
+                dont_AddRef(nsXPCException::NewException("", NS_OK, 
+                                                         nsnull, nsnull));
 
             nsCOMPtr<nsIJSStackFrameLocation> loc = nsnull;
             if(e)

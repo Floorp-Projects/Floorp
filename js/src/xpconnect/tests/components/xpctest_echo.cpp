@@ -36,11 +36,14 @@
 
 #include "xpctest_private.h"
 
-class xpctestEcho : public nsIEcho
+class xpctestEcho : public nsIEcho, public nsITimerCallback
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIECHO
+
+    // not very xpcom compilant method from nsITimerCallback
+    virtual void Notify(nsITimer *timer);
 
     xpctestEcho();
     virtual ~xpctestEcho();
@@ -50,8 +53,7 @@ private:
 
 /***************************************************************************/
 
-static NS_DEFINE_IID(kxpctestEchoIID, NS_IECHO_IID);
-NS_IMPL_ISUPPORTS(xpctestEcho, kxpctestEchoIID);
+NS_IMPL_ISUPPORTS2(xpctestEcho, nsIEcho, nsITimerCallback);
 
 xpctestEcho::xpctestEcho()
     : mReceiver(NULL)
@@ -402,6 +404,25 @@ xpctestEcho::ThrowArg(void)
         
     return NS_OK;
 }
+
+/* void callReceiverSometimeLater (); */
+NS_IMETHODIMP
+xpctestEcho::CallReceiverSometimeLater(void)
+{
+    nsITimer *timer;
+    if(NS_FAILED(NS_NewTimer(&timer)))
+        return NS_ERROR_FAILURE;
+    timer->Init(NS_STATIC_CAST(nsITimerCallback*,this), 2000);
+    return NS_OK;
+}
+
+void 
+xpctestEcho::Notify(nsITimer *timer)
+{
+    if(mReceiver)
+        mReceiver->CallReceiverSometimeLater();
+    NS_RELEASE(timer);
+}        
 
 /***************************************************/
 

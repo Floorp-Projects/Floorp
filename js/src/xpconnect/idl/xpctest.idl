@@ -124,6 +124,8 @@ interface nsIEcho : nsISupports {
 
     void printArgTypes(/* optional params */);
     void throwArg(/* optional param */);
+
+    void callReceiverSometimeLater();
 };
 
 /***************************************************************************/
