@@ -21,6 +21,7 @@
 # Contributor(s): Holger Schurig <holgerschurig@nikocity.de>
 #                 Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
+#                 Dave Miller <dave@intrec.com>
 #
 #
 # Direct any questions on this source code to
@@ -78,6 +79,7 @@
 #     add more MySQL-related checks                    --MYSQL--
 #     change table definitions                         --TABLE--
 #     add more groups                                  --GROUPS--
+#     create initial administrator account            --ADMIN--
 #
 # Note: sometimes those special comments occur more then once. For
 # example, --LOCAL-- is at least 3 times in this code!  --TABLE--
@@ -1233,31 +1235,138 @@ CheckEnumField('bugs', 'op_sys',       @my_opsys);
 CheckEnumField('bugs', 'rep_platform', @my_platforms);
 
 
-
-
-
 ###########################################################################
-# Promote first user into every group
+# Create Administrator  --ADMIN--
 ###########################################################################
 
-#
-# Assume you just logged in. Now how can you administrate the system? Just
-# execute checksetup.pl again. If there is only 1 user in bugzilla, then
-# this user is promoted into every group.
-#
+#  Prompt the user for the email address and name of an administrator.  Create
+#  that login, if it doesn't exist already, and make it a member of all groups.
 
-$sth = $dbh->prepare("SELECT login_name FROM profiles");
-$sth->execute;
-# when we have exactly one user ...
-if ($sth->rows == 1) {
-    my @row = $sth->fetchrow_array;
-    print "Putting user $row[0] into every group ...\n";
-    # are this enought f's for now?  :-)
-    $dbh->do("update profiles set groupset=0xffffffffffff");
+sub bailout {   # this is just in case we get interrupted while getting passwd
+    system("stty echo"); # re-enable input echoing
+    exit 1;
 }
 
+$sth = $dbh->prepare(<<_End_Of_SQL_);
+  SELECT login_name
+  FROM profiles
+  WHERE groupset=9223372036854775807
+_End_Of_SQL_
+$sth->execute;
+# when we have no admin users, prompt for admin email address and password ...
+if ($sth->rows == 0) {
+  my $login = "";
+  my $realname = "";
+  my $pass1 = "";
+  my $pass2 = "*";
+  my $admin_ok = 0;
+  my $admin_create = 1;
 
+  print "\nLooks like we don't have an administrator set up yet.  Either this is your\n";
+  print "first time using Bugzilla, or your administrator's privs might have accidently\n";
+  print "gotten deleted at some point.\n";
+  while(! $admin_ok ) {
+    while( $login eq "" ) {
+      print "Enter the e-mail address of the administrator: ";
+      $login = <STDIN>;
+      chomp $login;
+      if(! $login ) {
+        print "\nYou DO want an administrator, don't you?\n";
+      }
+    }
+    $login = $dbh->quote($login);
+    $sth = $dbh->prepare(<<_End_Of_SQL_);
+      SELECT login_name
+      FROM profiles
+      WHERE login_name=$login
+_End_Of_SQL_
+    $sth->execute;
+    if ($sth->rows > 0) {
+      print "$login already has an account.\n";
+      print "Make this user the administrator? [Y/n] ";
+      my $ok = <STDIN>;
+      chomp $ok;
+      if ($ok !~ /^n/i) {
+        $admin_ok = 1;
+        $admin_create = 0;
+      } else {
+        print "OK, well, someone has to be the administrator.  Try someone else.\n";
+        $login = "";
+      }
+    } else {
+      print "You entered $login.  Is this correct? [Y/n] ";
+      my $ok = <STDIN>;
+      chomp $ok;
+      if ($ok !~ /^n/i) {
+        $admin_ok = 1;
+      } else {
+        print "That's okay, typos happen.  Give it another shot.\n";
+        $login = "";
+      }
+    }
+  }
 
+  if ($admin_create) {
+
+    while( $realname eq "" ) {
+      print "Enter the real name of the administrator: ";
+      $realname = <STDIN>;
+      chomp $realname;
+      if(! $realname ) {
+        print "\nReally.  We need a full name.\n";
+      }
+    }
+
+    # trap a few interrupts so we can fix the echo if we get aborted.
+    $SIG{HUP}  = \&bailout;
+    $SIG{INT}  = \&bailout;
+    $SIG{QUIT} = \&bailout;
+    $SIG{TERM} = \&bailout;
+
+    system("stty -echo");  # disable input echoing
+
+    while( $pass1 ne $pass2 ) {
+      while( $pass1 eq "" ) {
+        print "Enter a password for the administrator account: ";
+        $pass1 = <STDIN>;
+        chomp $pass1;
+        if(! $pass1 ) {
+          print "\n\nIt's just plain stupid to not have a password.  Try again!\n";
+        }
+      }
+      print "\nPlease retype the password to verify: ";
+      $pass2 = <STDIN>;
+      chomp $pass2;
+      if ($pass1 ne $pass2) {
+        print "\n\nPasswords don't match.  Try again!\n";
+        $pass1 = "";
+        $pass2 = "*";
+      }
+    }
+
+    system("stty echo"); # re-enable input echoing
+    $SIG{HUP}  = 'DEFAULT'; # and remove our interrupt hooks
+    $SIG{INT}  = 'DEFAULT';
+    $SIG{QUIT} = 'DEFAULT';
+    $SIG{TERM} = 'DEFAULT';
+
+    $realname = $dbh->quote($realname);
+    $pass1 = $dbh->quote($pass1);
+
+    $dbh->do(<<_End_Of_SQL_);
+      INSERT INTO profiles
+      (login_name, realname, password, cryptpassword, groupset, newemailtech)
+      VALUES ($login, $realname, $pass1, encrypt($pass1), 0x7fffffffffffffff, 1)
+_End_Of_SQL_
+  } else {
+    $dbh->do(<<_End_Of_SQL_);
+      UPDATE profiles
+      SET groupset=0x7fffffffffffffff
+      WHERE login_name=$login
+_End_Of_SQL_
+  }
+  print "\n$login is now set up as the administrator account.\n";
+}
 
 
 
