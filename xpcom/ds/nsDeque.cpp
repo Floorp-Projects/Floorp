@@ -160,8 +160,8 @@ void* nsDeque::PopBack(void) {
     int offset=mOrigin+mSize;
     if(offset>=mCapacity) 
       offset-=mCapacity;
-    result=mData[offset];
-    mData[offset]=0;
+    result=mData[offset-1];
+    mData[offset-1]=0;
     mSize--;
     if(0==mSize)
       mOrigin=0;
