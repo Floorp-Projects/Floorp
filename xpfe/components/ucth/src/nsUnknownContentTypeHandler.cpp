@@ -107,9 +107,9 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
                 void *stackPtr;
                 jsval *argv = JS_PushArguments( jsContext,
                                                 &stackPtr,
-                                                "svsss",
+                                                "sssss",
                                                 "chrome://global/content/unknownContent.xul",
-                                                JSVAL_NULL,
+                                                "_blank",
                                                 "chrome",
                                                 urlStr,
                                                 aContentType );
