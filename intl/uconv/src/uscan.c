@@ -20,6 +20,8 @@
  * Contributor(s): 
  */
 #include "unicpriv.h"
+#define CHK_GR94(b) ( (PRUint8) 0xa0 < (PRUint8) (b) && (PRUint8) (b) < (PRUint8) 0xff )
+#define CHK_GR94_2Byte(b1,b2) (CHK_GR94(b1) && CHK_GR94(b2))
 /*=================================================================================
 
 =================================================================================*/
@@ -393,7 +395,9 @@ PRIVATE PRBool uCheckAndScanAlways2ByteShiftGR(
 		PRUint32*				inscanlen
 )
 {
-	if(inbuflen < 2)
+  // Both bytes should be in the range of [0xa1,0xfe] for 94x94 character sets
+  // invoked on GR. No encoding implemented in Mozilla uses 96x96 char. sets.
+	if(inbuflen < 2 || ! CHK_GR94_2Byte(in[1],in[0]))
 		return PR_FALSE;
 	else
 	{
@@ -445,7 +449,7 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8F(
 		PRUint32*				inscanlen
 )
 {
-	if((inbuflen < 3) ||(in[0] != 0x8F))
+	if((inbuflen < 3) ||(in[0] != 0x8F) || ! CHK_GR94_2Byte(in[1],in[2]))
 		return PR_FALSE;
 	else
 	{
@@ -466,7 +470,7 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA2(
 		PRUint32*				inscanlen
 )
 {
-	if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA2))
+	if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA2) || ! CHK_GR94_2Byte(in[2],in[3]))
 		return PR_FALSE;
 	else
 	{
@@ -558,7 +562,7 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA3(
 		PRUint32*				inscanlen
 )
 {
-	if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA3))
+	if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA3) || ! CHK_GR94_2Byte(in[2],in[3]))
 		return PR_FALSE;
 	else
 	{
@@ -579,7 +583,7 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA4(
 		PRUint32*				inscanlen
 )
 {
-	if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA4))
+	if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA4) || ! CHK_GR94_2Byte(in[2],in[3]))
 		return PR_FALSE;
 	else
 	{
@@ -600,7 +604,7 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA5(
 		PRUint32*				inscanlen
 )
 {
-	if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA5))
+	if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA5) || ! CHK_GR94_2Byte(in[2],in[3]))
 		return PR_FALSE;
 	else
 	{
@@ -621,7 +625,7 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA6(
 		PRUint32*				inscanlen
 )
 {
-	if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA6))
+	if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA6) || ! CHK_GR94_2Byte(in[2],in[3]))
 		return PR_FALSE;
 	else
 	{
@@ -642,7 +646,7 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA7(
 		PRUint32*				inscanlen
 )
 {
-	if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA7))
+	if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA7) || ! CHK_GR94_2Byte(in[2],in[3]))
 		return PR_FALSE;
 	else
 	{
