@@ -18,10 +18,8 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
+#include "nsRDFBuiltInDataSources.h"
 #include "nsRDFResourceManager.h"
-#include "nsMemoryDataSource.h"
-#include "nsBookmarkDataSource.h"
-#include "nsSimpleDataBase.h"
 #include "nsRDFDocument.h"
 #include "nsRDFRegistryImpl.h"
 #include "nsRDFCID.h"
@@ -118,16 +116,25 @@ nsRDFFactory::CreateInstance(nsISupports *aOuter,
         inst = NS_STATIC_CAST(nsISupports*, new nsRDFResourceManager());
     }
     else if (mClassID.Equals(kRDFMemoryDataSourceCID)) {
-        inst = NS_STATIC_CAST(nsISupports*, new nsMemoryDataSource());
+        if (NS_FAILED(rv = NS_NewRDFMemoryDataSource((nsIRDFDataSource**) &inst)))
+            return rv;
+
+        wasRefCounted = PR_TRUE;
     }
     else if (mClassID.Equals(kRDFBookmarkDataSourceCID)) {
-        inst = NS_STATIC_CAST(nsISupports*, new nsBookmarkDataSource());
+        if (NS_FAILED(rv = NS_NewRDFBookmarkDataSource((nsIRDFDataSource**) &inst)))
+            return rv;
+
+        wasRefCounted = PR_TRUE;
     }
     else if (mClassID.Equals(kRDFRegistryCID)) {
         inst = NS_STATIC_CAST(nsISupports*, new nsRDFRegistryImpl());
     }
     else if (mClassID.Equals(kRDFSimpleDataBaseCID)) {
-        inst = NS_STATIC_CAST(nsISupports*, new nsSimpleDataBase());
+        if (NS_FAILED(rv = NS_NewRDFSimpleDataBase((nsIRDFDataBase**) &inst)))
+            return rv;
+
+        wasRefCounted = PR_TRUE;
     }
     else if (mClassID.Equals(kRDFHTMLDocumentCID)) {
         if (NS_FAILED(rv = NS_NewRDFHTMLDocument((nsIRDFDocument**) &inst)))

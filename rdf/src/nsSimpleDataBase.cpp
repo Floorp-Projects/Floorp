@@ -16,12 +16,13 @@
  * Reserved.
  */
 
-#include "nsSimpleDataBase.h"
 #include "nsIRDFCursor.h"
 #include "nsIRDFNode.h"
+#include "nsIRDFDataBase.h"
 #include "nsISupportsArray.h"
 #include "nsRDFCID.h"
 #include "nsRepository.h"
+#include "nsVoidArray.h"
 #include "prlog.h"
 
 /*
@@ -336,11 +337,80 @@ dbArcCursorImpl::HasNegation(nsIRDFDataSource* ds0,
 
 
 ////////////////////////////////////////////////////////////////////////
-// nsSimpleDataBase
+// SimpleDataBaseImpl
 // XXX rvg  --- shouldn't this take a char** argument indicating the data sources
 // we want to aggregate?
 
-nsSimpleDataBase::nsSimpleDataBase(void)
+class SimpleDataBaseImpl : public nsIRDFDataBase {
+protected:
+    nsVoidArray mDataSources;
+    virtual ~SimpleDataBaseImpl(void);
+
+public:
+    SimpleDataBaseImpl(void);
+
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // nsIRDFDataSource interface
+    NS_IMETHOD Init(const nsString& uri);
+
+    NS_IMETHOD GetSource(nsIRDFNode* property,
+                         nsIRDFNode* target,
+                         PRBool tv,
+                         nsIRDFNode*& source);
+
+    NS_IMETHOD GetSources(nsIRDFNode* property,
+                          nsIRDFNode* target,
+                          PRBool tv,
+                          nsIRDFCursor*& sources);
+
+    NS_IMETHOD GetTarget(nsIRDFNode* source,
+                         nsIRDFNode* property,
+                         PRBool tv,
+                         nsIRDFNode*& target);
+
+    NS_IMETHOD GetTargets(nsIRDFNode* source,
+                          nsIRDFNode* property,
+                          PRBool tv,
+                          nsIRDFCursor*& targets);
+
+    NS_IMETHOD Assert(nsIRDFNode* source, 
+                      nsIRDFNode* property, 
+                      nsIRDFNode* target,
+                      PRBool tv = PR_TRUE);
+
+    NS_IMETHOD Unassert(nsIRDFNode* source,
+                        nsIRDFNode* property,
+                        nsIRDFNode* target);
+
+    NS_IMETHOD HasAssertion(nsIRDFNode* source,
+                            nsIRDFNode* property,
+                            nsIRDFNode* target,
+                            PRBool tv,
+                            PRBool& hasAssertion);
+
+    NS_IMETHOD AddObserver(nsIRDFObserver* n);
+
+    NS_IMETHOD RemoveObserver(nsIRDFObserver* n);
+
+    NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
+                           nsIRDFCursor*& labels);
+
+    NS_IMETHOD ArcLabelsOut(nsIRDFNode* source,
+                            nsIRDFCursor*& labels);
+
+    NS_IMETHOD Flush();
+
+    // nsIRDFDataBase interface
+    NS_IMETHOD AddDataSource(nsIRDFDataSource* source);
+    NS_IMETHOD RemoveDataSource(nsIRDFDataSource* source);
+};
+
+////////////////////////////////////////////////////////////////////////
+
+
+SimpleDataBaseImpl::SimpleDataBaseImpl(void)
 {
     NS_INIT_REFCNT();
 
@@ -359,7 +429,7 @@ nsSimpleDataBase::nsSimpleDataBase(void)
 }
 
 
-nsSimpleDataBase::~nsSimpleDataBase(void)
+SimpleDataBaseImpl::~SimpleDataBaseImpl(void)
 {
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
         nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
@@ -370,11 +440,11 @@ nsSimpleDataBase::~nsSimpleDataBase(void)
 ////////////////////////////////////////////////////////////////////////
 // nsISupports interface
 
-NS_IMPL_ADDREF(nsSimpleDataBase);
-NS_IMPL_RELEASE(nsSimpleDataBase);
+NS_IMPL_ADDREF(SimpleDataBaseImpl);
+NS_IMPL_RELEASE(SimpleDataBaseImpl);
 
 NS_IMETHODIMP
-nsSimpleDataBase::QueryInterface(REFNSIID iid, void** result)
+SimpleDataBaseImpl::QueryInterface(REFNSIID iid, void** result)
 {
     if (! result)
         return NS_ERROR_NULL_POINTER;
@@ -396,14 +466,14 @@ nsSimpleDataBase::QueryInterface(REFNSIID iid, void** result)
 // nsIRDFDataSource interface
 
 NS_IMETHODIMP
-nsSimpleDataBase::Init(const nsString& uri)
+SimpleDataBaseImpl::Init(const nsString& uri)
 {
     PR_ASSERT(0);
     return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSimpleDataBase::GetSource(nsIRDFNode* property,
+SimpleDataBaseImpl::GetSource(nsIRDFNode* property,
                             nsIRDFNode* target,
                             PRBool tv,
                             nsIRDFNode*& source)
@@ -431,7 +501,7 @@ nsSimpleDataBase::GetSource(nsIRDFNode* property,
 }
 
 NS_IMETHODIMP
-nsSimpleDataBase::GetSources(nsIRDFNode* property,
+SimpleDataBaseImpl::GetSources(nsIRDFNode* property,
                              nsIRDFNode* target,
                              PRBool tv,
                              nsIRDFCursor*& sources)
@@ -441,7 +511,7 @@ nsSimpleDataBase::GetSources(nsIRDFNode* property,
 }
 
 NS_IMETHODIMP
-nsSimpleDataBase::GetTarget(nsIRDFNode* source,
+SimpleDataBaseImpl::GetTarget(nsIRDFNode* source,
                             nsIRDFNode* property,
                             PRBool tv,
                             nsIRDFNode*& target)
@@ -469,7 +539,7 @@ nsSimpleDataBase::GetTarget(nsIRDFNode* source,
 }
 
 NS_IMETHODIMP
-nsSimpleDataBase::GetTargets(nsIRDFNode* source,
+SimpleDataBaseImpl::GetTargets(nsIRDFNode* source,
                              nsIRDFNode* property,
                              PRBool tv,
                              nsIRDFCursor*& targets)
@@ -483,7 +553,7 @@ nsSimpleDataBase::GetTargets(nsIRDFNode* source,
 }
 
 NS_IMETHODIMP
-nsSimpleDataBase::Assert(nsIRDFNode* source, 
+SimpleDataBaseImpl::Assert(nsIRDFNode* source, 
                          nsIRDFNode* property, 
                          nsIRDFNode* target,
                          PRBool tv)
@@ -522,7 +592,7 @@ nsSimpleDataBase::Assert(nsIRDFNode* source,
 }
 
 NS_IMETHODIMP
-nsSimpleDataBase::Unassert(nsIRDFNode* source,
+SimpleDataBaseImpl::Unassert(nsIRDFNode* source,
                            nsIRDFNode* property,
                            nsIRDFNode* target)
 {
@@ -547,7 +617,7 @@ nsSimpleDataBase::Unassert(nsIRDFNode* source,
 }
 
 NS_IMETHODIMP
-nsSimpleDataBase::HasAssertion(nsIRDFNode* source,
+SimpleDataBaseImpl::HasAssertion(nsIRDFNode* source,
                                nsIRDFNode* property,
                                nsIRDFNode* target,
                                PRBool tv,
@@ -584,21 +654,21 @@ nsSimpleDataBase::HasAssertion(nsIRDFNode* source,
 }
 
 NS_IMETHODIMP
-nsSimpleDataBase::AddObserver(nsIRDFObserver* n)
+SimpleDataBaseImpl::AddObserver(nsIRDFObserver* n)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsSimpleDataBase::RemoveObserver(nsIRDFObserver* n)
+SimpleDataBaseImpl::RemoveObserver(nsIRDFObserver* n)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsSimpleDataBase::ArcLabelsIn(nsIRDFNode* node,
+SimpleDataBaseImpl::ArcLabelsIn(nsIRDFNode* node,
                               nsIRDFCursor*& labels)
 {
     PR_ASSERT(0);
@@ -606,7 +676,7 @@ nsSimpleDataBase::ArcLabelsIn(nsIRDFNode* node,
 }
 
 NS_IMETHODIMP
-nsSimpleDataBase::ArcLabelsOut(nsIRDFNode* source,
+SimpleDataBaseImpl::ArcLabelsOut(nsIRDFNode* source,
                                nsIRDFCursor*& labels)
 {
     labels = new dbArcCursorImpl(mDataSources, source);
@@ -618,7 +688,7 @@ nsSimpleDataBase::ArcLabelsOut(nsIRDFNode* source,
 }
 
 NS_IMETHODIMP
-nsSimpleDataBase::Flush()
+SimpleDataBaseImpl::Flush()
 {
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
         nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
@@ -634,7 +704,7 @@ nsSimpleDataBase::Flush()
 // fit in. Right now, the new datasource gets stuck at the end.
 
 NS_IMETHODIMP
-nsSimpleDataBase::AddDataSource(nsIRDFDataSource* source)
+SimpleDataBaseImpl::AddDataSource(nsIRDFDataSource* source)
 {
     if (! source)
         return NS_ERROR_NULL_POINTER;
@@ -647,7 +717,7 @@ nsSimpleDataBase::AddDataSource(nsIRDFDataSource* source)
 
 
 NS_IMETHODIMP
-nsSimpleDataBase::RemoveDataSource(nsIRDFDataSource* source)
+SimpleDataBaseImpl::RemoveDataSource(nsIRDFDataSource* source)
 {
     if (! source)
         return NS_ERROR_NULL_POINTER;
@@ -656,5 +726,19 @@ nsSimpleDataBase::RemoveDataSource(nsIRDFDataSource* source)
         mDataSources.RemoveElement(source);
         NS_RELEASE(source);
     }
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+nsresult
+NS_NewRDFSimpleDataBase(nsIRDFDataBase** result)
+{
+    SimpleDataBaseImpl* db = new SimpleDataBaseImpl();
+    if (! db)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    *result = db;
+    NS_ADDREF(*result);
     return NS_OK;
 }
