@@ -1371,6 +1371,7 @@ done:
 
   if (inputFileStream)
   {
+    inputFileStream->close();
     inputStream = null_nsCOMPtr();
     delete inputFileStream;
   }
