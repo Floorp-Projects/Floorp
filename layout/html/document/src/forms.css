@@ -86,7 +86,6 @@ input {
   text-align: start;
   text-transform: none;
   cursor: text;
-  -moz-box-sizing: border-box;
   -moz-user-focus: normal;
   -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#inputFields");
 }
@@ -102,7 +101,6 @@ textarea {
   text-transform: none;
   vertical-align: text-bottom;
   cursor: text;
-  -moz-box-sizing: border-box;
   -moz-user-focus: normal;
   -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#textAreas");
   -moz-appearance: textfield;
@@ -260,7 +258,6 @@ input[type="hidden"] {
   padding: 0;
   border: 0;
   cursor: auto;
-  -moz-box-sizing: content-box;
   -moz-user-focus: ignore;
   -moz-binding: none;
 }
@@ -341,6 +338,7 @@ input[type="checkbox"] {
 input[type="radio"],
 input[type="checkbox"] {
   /* same colors as |input| rule, but |!important| this time. */
+  -moz-box-sizing: border-box;
   background-color: -moz-Field ! important;
   color: -moz-FieldText ! important;
   border: 2px inset ThreeDFace ! important;
