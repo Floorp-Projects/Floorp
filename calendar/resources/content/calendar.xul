@@ -292,7 +292,7 @@
 		<toolbarseparator class="toolbarseparator-primary"/>
 		<toolbarbutton class="toolbarbutton-1" id="calendar-day-view-button"       label="&calendar.dayview.button.label;"         tooltiptext="&calendar.dayview.button.tooltip;"      observes="day_view_command"/>
 		<toolbarbutton class="toolbarbutton-1" id="calendar-week-view-button"      label="&calendar.weekview.button.label;"        tooltiptext="&calendar.weekview.button.tooltip;"     observes="week_view_command"/>
-		<toolbarbutton class="toolbarbutton-2" id="calendar-multiweek-view-button"     label="&calendar.multiweekview.button.label;"       tooltiptext="&calendar.multiweekview.button.tooltip;"    observes="multiweek_view_command"/>
+		<toolbarbutton class="toolbarbutton-1" id="calendar-multiweek-view-button"     label="&calendar.multiweekview.button.label;"       tooltiptext="&calendar.multiweekview.button.tooltip;"    observes="multiweek_view_command"/>
 		<toolbarbutton class="toolbarbutton-1" id="calendar-month-view-button"     label="&calendar.monthview.button.label;"       tooltiptext="&calendar.monthview.button.tooltip;"    observes="month_view_command"/>
 
 		<spacer flex="1"/>

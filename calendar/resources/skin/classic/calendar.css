@@ -197,19 +197,8 @@
 /*--------------------------------------------------------------------
  *   Change to multiweek view button
  *-------------------------------------------------------------------*/
-/* OLD
-    -moz-image-region: rect(42px 32px 63px 0px);
-    -moz-image-region: rect(42px 128px 63px 96px);
-    -moz-image-region: rect(42px 64px 63px 32px);
-*/
-.toolbarbutton-2 {
+.toolbarbutton-1#calendar-multiweek-view-button {
   list-style-image: url("chrome://calendar/skin/btnwm1.gif");
-  min-width       : 47px ;
-  -moz-box-orient : vertical ;
-  padding-top     : 2px ;
-  padding-right   : 7px ;
-  padding-bottom  : 2px ;
-  padding-left    : 6px ;
 }
 
 #calendar-multiweek-view-button 
