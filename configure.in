@@ -386,13 +386,6 @@ AC_ARG_ENABLE(dom,
 	    MOZ_DOM=1
 	fi] )
 
-AC_ARG_ENABLE(pthreads,
-[  --enable-pthreads       enable native pthreads support],
-        [if test "$enableval" = "yes"; then
-	    AC_CHECK_LIB(pthread, pthread_create, 
-		NSPR_LIBS="-lpthread $NSPR_LIBS" USE_PTHREADS=1)
-        fi] )
-
 AC_ARG_ENABLE(mail-compose,
 [  --enable-mail-compose   enable old Messenger mail composer ],
 	[if test "$enableval" = "yes"; then
@@ -669,6 +662,13 @@ dnl system NSPR support
 dnl we always use the system NSPR from now on...this option
 dnl tells where to find nspr rather than whether to use it
 dnl ========================================================
+AC_ARG_WITH(pthreads,
+[  --with-pthreads         use system pthread library ],
+        [if test "$withval" = "yes"; then
+	    AC_CHECK_LIB(pthread, pthread_create, 
+		NSPR_LIBS="-lpthread $NSPR_LIBS" USE_PTHREADS=1)
+        fi] )
+
 AC_ARG_WITH(nspr,
 [  --with-nspr=\$dir        location of nspr headers and libraries],
 	NSPR_DIR=$withval)
@@ -727,8 +727,8 @@ AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr21 with thread lib")
 	    exit(0);
 	}
 	, [NSPR_LIBS="-lnspr21 $NSPR_LIBS" result="yes"],
-	[_NSPR_NEEDS_THREAD_LIB=1 result="no"], 
-	[_NSPR_NEEDS_THREAD_LIB=1 result="no"] )
+	[MISSING_NSPR="$MISSING_NSPR -lnspr21" result="no"], 
+	[MISSING_NSPR="$MISSING_NSPR -lnspr21" result="no"] )
     rm -f core
 AC_MSG_RESULT("$result")
 fi
