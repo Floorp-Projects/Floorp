@@ -832,7 +832,7 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
   // if the child handled the event(Ignore) or it handled the event but still wants
   // default behavor(ConsumeDoDefault) and we are visible then pass the event down the view's
   // frame hierarchy. -EDV
-  if (!aHandled && mVis == nsViewVisibility_kShow && !(mVFlags & NS_VIEW_PUBLIC_FLAG_TRANSPARENT))
+  if (!aHandled && mVis == nsViewVisibility_kShow)
   {
     //if no child's bounds matched the event or we consumed but still want
     //default behavior check the view itself. -EDV
