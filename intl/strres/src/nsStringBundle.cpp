@@ -111,6 +111,8 @@ class nsStringBundleFactory : public nsIStringBundleFactory
 {
 public:
   NS_DECL_ISUPPORTS
+  
+  nsStringBundleFactory() { NS_INIT_ISUPPORTS(); }
 
   NS_IMETHOD CreateInstance(nsISupports* aOuter, REFNSIID aIID, void** aResult);
   NS_IMETHOD LockFactory(PRBool aLock);
