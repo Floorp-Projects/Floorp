@@ -1885,8 +1885,20 @@ nsPlaintextEditor::SetCompositionString(const nsAReadableString& aCompositionStr
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
   ps->GetCaret(getter_AddRefs(caretP));
   caretP->SetCaretDOMSelection(selection);
+
+// XXX: The following ifdef should really be pushed up into the
+//      IME front-end code, or down into the caret code. There was a
+//      suggestion that perhaps nsCaret::GetCaretCoordinates() should
+//      be modified so that we can pass in something like eIMECoordinates
+//      and let it decide what to return based on the platform we are
+//      running on.
+#ifdef XP_MAC
   caretP->GetCaretCoordinates(nsICaret::eTopLevelWindowCoordinates, selection,
             &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed));
+#else
+  caretP->GetCaretCoordinates(nsICaret::eRenderingViewCoordinates, selection,
+            &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed));
+#endif
 
   // second part of 23558 fix:
   if (aCompositionString.IsEmpty()) 
