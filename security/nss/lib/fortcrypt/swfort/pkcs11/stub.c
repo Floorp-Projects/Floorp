@@ -39,7 +39,7 @@
  * SW FORTEZZA to link with some low level security functions without dragging
  * in NSPR.
  *
- * $Id: stub.c,v 1.2 2001/01/03 19:49:18 larryh%netscape.com Exp $
+ * $Id: stub.c,v 1.3 2001/01/30 02:03:47 wtc%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -237,6 +237,12 @@ PR_Calloc(PRUint32 blocks, PRUint32 bytes) { return calloc(blocks,bytes); }
 
 PR_IMPLEMENT(void)
 PR_Free(void *ptr) { free(ptr); }
+
+PR_IMPLEMENT(void)
+PR_SetError(PRErrorCode errorCode, PRInt32 oserr) { return; }
+
+PR_IMPLEMENT(void)
+PR_SetErrorText(PRIntn textLength, const char *text) { return; }
 
 
 /* Old template; want to expunge it eventually. */
