@@ -274,7 +274,7 @@ nsWidget::OnDestroySignal(GtkWidget* aGtkWidget)
 
 nsIWidget* nsWidget::GetParent(void)
 {
-  if (nsnull != mParent) {
+  if (mParent) {
     NS_ADDREF(mParent);
   }
   return mParent;

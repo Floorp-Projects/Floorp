@@ -85,7 +85,7 @@ PRBool nsWindow::IsChild() const
   return PR_FALSE;
 }
 
-NS_METHOD nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
+NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
   gint x;
   gint y;
@@ -125,21 +125,7 @@ NS_METHOD nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
   return NS_OK;
 }
 
-NS_METHOD nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
-{
-  g_print("nsWidget::ScreenToWidget\n");
-  NS_NOTYETIMPLEMENTED("nsWidget::ScreenToWidget");
-  return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-void nsWindow::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
-{
-
-}
-
-NS_METHOD nsWindow::Destroy()
+NS_IMETHODIMP nsWindow::Destroy()
 {
 #ifdef NOISY_DESTROY
   IndentByDepth(stdout);
@@ -185,7 +171,7 @@ gint handle_delete_event(GtkWidget *w, GdkEventAny *e, nsWindow *win)
 
 
 
-NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
+NS_IMETHODIMP nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
 {
   if (nsnull != aInitData) {
     SetWindowType(aInitData->mWindowType);
@@ -364,20 +350,10 @@ void *nsWindow::GetNativeData(PRUint32 aDataType)
 
 //-------------------------------------------------------------------------
 //
-// Set the colormap of the window
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
-{
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
 // Scroll the bits of a window
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
+NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
   if (GTK_IS_LAYOUT(mWidget)) {
     GtkAdjustment* horiz = gtk_layout_get_hadjustment(GTK_LAYOUT(mWidget));
@@ -391,7 +367,7 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 }
 
 
-NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
+NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
 {
   if (!mShell)
     return NS_ERROR_FAILURE;
@@ -466,13 +442,13 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 }
 
 
-NS_METHOD nsWindow::BeginResizingChildren(void)
+NS_IMETHODIMP nsWindow::BeginResizingChildren(void)
 {
   //  gtk_layout_freeze(GTK_LAYOUT(mWidget));
   return NS_OK;
 }
 
-NS_METHOD nsWindow::EndResizingChildren(void)
+NS_IMETHODIMP nsWindow::EndResizingChildren(void)
 {
   //  gtk_layout_thaw(GTK_LAYOUT(mWidget));
   return NS_OK;
@@ -491,50 +467,13 @@ PRBool nsWindow::OnScroll(nsScrollbarEvent &aEvent, PRUint32 cPos)
   return PR_FALSE;
 }
 
-NS_METHOD nsWindow::SetMenuBar(nsIMenuBar* aMenuBar)
-{
-  // this is needed for viewer so we need to do something here
-  // like add it to a layout widget.. (i.e. mWidget)
-#if 0
-  if (mMenuBar == aMenuBar) {
-    // Ignore duplicate calls
-    return NS_OK;
-  }
-
-  if (mMenuBar) {
-    // Get rid of the old menubar
-    GtkWidget* oldMenuBar;
-    mMenuBar->GetNativeData((void*&) oldMenuBar);
-    if (oldMenuBar) {
-      gtk_container_remove(GTK_CONTAINER(mVBox), oldMenuBar);
-    }
-    NS_RELEASE(mMenuBar);
-  }
-
-  mMenuBar = aMenuBar;
-  if (aMenuBar) {
-    NS_ADDREF(mMenuBar);
-  
-    GtkWidget *menubar;
-    void *voidData;
-    aMenuBar->GetNativeData(voidData);
-    menubar = GTK_WIDGET(voidData);
-
-    gtk_menu_bar_set_shadow_type (GTK_MENU_BAR(menubar), GTK_SHADOW_NONE);
-    gtk_box_pack_start(GTK_BOX(mVBox), menubar, PR_FALSE, PR_FALSE, 0);
-    gtk_box_reorder_child(GTK_BOX(mVBox), menubar, 0);
-  }
-#endif
-  return NS_OK;
-}
-
 //-------------------------------------------------------------------------
 //
 // Hide or show this component
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsWindow::Show(PRBool bState)
+NS_IMETHODIMP nsWindow::Show(PRBool bState)
 {
   if (!mWidget)
     return NS_OK; // Will be null durring printing
@@ -583,31 +522,12 @@ NS_METHOD nsWindow::Show(PRBool bState)
   return NS_OK;
 }
 
-NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
-{
-  if (!mMenuBar)
-    //    return NS_ERROR_FAILURE;
-    return NS_OK;
-
-  GtkWidget *menubar;
-  void *voidData;
-  mMenuBar->GetNativeData(voidData);
-  menubar = GTK_WIDGET(voidData);
-  
-  if (aShow == PR_TRUE)
-    gtk_widget_show(menubar);
-  else
-    gtk_widget_hide(menubar);
-
-  return NS_OK;
-}
-
 //-------------------------------------------------------------------------
 //
 // grab mouse events for this widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
+NS_IMETHODIMP nsWindow::CaptureMouse(PRBool aCapture)
 {
   if (mIsToplevel && mShell)
   {
@@ -652,7 +572,7 @@ NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 }
 
 
-NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
+NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
 #if 0
   printf("nsWindow::Move %s (%p) to %d %d\n",
@@ -696,7 +616,7 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 }
 
 
-NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
+NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
 #if 0
   printf("nsWindow::Resize %s (%p) to %d %d\n",
@@ -750,8 +670,8 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 }
 
 
-NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
-                           PRInt32 aHeight, PRBool aRepaint)
+NS_IMETHODIMP nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
+                               PRInt32 aHeight, PRBool aRepaint)
 {
   Resize(aWidth,aHeight,aRepaint);
   Move(aX,aY);
