@@ -380,6 +380,13 @@ void cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max)
 
     dlgInfo.nFileBars = 0;
     
+    // XXXben this is a really nasty hack. We shouldn't be parsing the msg value
+    // to find out what sort of progress notification this is. Really, the installer
+    // listener system needs to be rearchitected to send out a message type (int) 
+    // and a message value, and the listeners can synthesize a display message if
+    // they want to. As it stands, the strings that are used here are NOT localizable
+    // (hard coded over in mozilla/xpinstall/src), which blows dead goats through
+    // straws. 
     if ((!strncmp(msg, "Installing: ", 12) ||
          !strncmp(msg, "Replacing: ", 11)) 
          && (max != 0 && val <= max)) {
