@@ -307,7 +307,7 @@ sub BuildStubs()
 	BuildProjectClean(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",	"Stubs");
 	BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              	"Stubs");
 	BuildProjectClean(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",				"Stubs");
-	BuildProjectClean(":mozilla:cmd:macfe:projects:client:Client.mcp",    		"Stubs");
+#	BuildProjectClean(":mozilla:cmd:macfe:projects:client:Client.mcp",    		"Stubs");
 }
 
 
