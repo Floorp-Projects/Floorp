@@ -572,6 +572,15 @@ nsHttpConnection::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     }
 
     if (mReadDone && mWriteDone) {
+
+        nsCOMPtr<nsISupports> info;
+        mSocketTransport->GetSecurityInfo(getter_AddRefs(info));
+        nsCOMPtr<nsISSLSocketControl> secCtrl(do_QueryInterface(info));
+
+        // break the cycle between the security info and this
+        if (secCtrl)
+          secCtrl->SetNotificationCallbacks(nsnull);
+
         // break the cycle between the socket transport and this
         mSocketTransport->SetNotificationCallbacks(nsnull, 0);
         
