@@ -65,13 +65,11 @@
 #include "nsIPresShell.h"
 #include "nsFileSpec.h"  // needed for nsAutoCString
 
-#if defined(ClientWallet) || defined(SingleSignon)
 #ifdef ClientWallet
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
-#endif
 #include "nsIWalletService.h"
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
@@ -150,7 +148,6 @@ nsBrowserAppCore::nsBrowserAppCore()
   mContentAreaWebShell  = nsnull;
   mGHistory             = nsnull;
   mSearchContext        = nsnull;
-
   IncInstanceCount();
   NS_INIT_REFCNT();
 
@@ -439,54 +436,6 @@ nsBrowserAppCore::WalletChangePassword()
   return NS_OK;
 }
 
-NS_IMETHODIMP    
-nsBrowserAppCore::WalletSafeFillin(nsIDOMWindow* aWin)
-{
-  NS_PRECONDITION(aWin != nsnull, "null ptr");
-  if (! aWin)
-    return NS_ERROR_NULL_POINTER;
-
-  nsIPresShell* shell;
-  shell = nsnull;
-  nsCOMPtr<nsIWebShell> webcontent; 
-
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject; 
-  scriptGlobalObject = do_QueryInterface(aWin); 
-  scriptGlobalObject->GetWebShell(getter_AddRefs(webcontent)); 
-
-  nsresult res;
-  nsString urlString = nsString("");
-  if ( mContentAreaWebShell ) {
-    const PRUnichar *url = 0;
-    PRInt32 history;
-    res = mContentAreaWebShell->GetHistoryIndex(history);
-    if (NS_SUCCEEDED(res)) {
-      res = mContentAreaWebShell->GetURL( history, &url );
-      if (NS_SUCCEEDED(res)) {
-        urlString = nsString(url);
-      }
-    }
-  }
-
-  shell = GetPresShellFor(webcontent);
-  nsIWalletService *walletservice;
-  res = nsServiceManager::GetService(kWalletServiceCID,
-                                     kIWalletServiceIID,
-                                     (nsISupports **)&walletservice);
-  if (NS_SUCCEEDED(res) && (nsnull != walletservice)) {
-    res = walletservice->WALLET_Prefill(shell, urlString, PR_FALSE);
-    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
-  }
-
-#ifndef HTMLDialogs 
-  if (NS_SUCCEEDED(res)) {
-    return newWind("file:///htmldlgs.htm");
-  }
-#endif
-
-  return NS_OK;
-}
-
 #include "nsIDOMHTMLDocument.h"
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 NS_IMETHODIMP    
@@ -514,10 +463,96 @@ nsBrowserAppCore::WalletQuickFillin(nsIDOMWindow* aWin)
     nsString urlString = nsString("");
     res = walletservice->WALLET_Prefill(shell, urlString, PR_TRUE);
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
+    return NS_OK;
+  } else {
+    return res;
+  }
+}
+
+#ifdef xxx
+NS_IMETHODIMP    
+nsBrowserAppCore::WalletSafeFillin(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
+{
+  NS_PRECONDITION(aForm != nsnull, "null ptr");
+  if (! aForm)
+    return NS_ERROR_NULL_POINTER;
+
+  nsIPresShell* shell;
+  shell = nsnull;
+  nsCOMPtr<nsIWebShell> webcontent; 
+
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject; 
+  scriptGlobalObject = do_QueryInterface(aForm); 
+  scriptGlobalObject->GetWebShell(getter_AddRefs(webcontent)); 
+
+  nsresult res;
+  nsString urlString = nsString("");
+  if ( mContentAreaWebShell ) {
+    const PRUnichar *url = 0;
+    PRInt32 history;
+    res = mContentAreaWebShell->GetHistoryIndex(history);
+    if (NS_SUCCEEDED(res)) {
+      res = mContentAreaWebShell->GetURL( history, &url );
+      if (NS_SUCCEEDED(res)) {
+        urlString = nsString(url);
+      }
+    }
   }
 
-  return NS_OK;
+  shell = GetPresShellFor(webcontent);
+  nsIWalletService *walletservice;
+  res = nsServiceManager::GetService(kWalletServiceCID,
+                                     kIWalletServiceIID,
+                                     (nsISupports **)&walletservice);
+  if (NS_SUCCEEDED(res) && (nsnull != walletservice)) {
+    res = walletservice->WALLET_Prefill(shell, urlString, PR_TRUE);
+    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
+  }
+
+    // (code adapted from nsToolkitCore::ShowModal. yeesh.)
+    nsresult           rv;
+    nsIAppShellService *appShell;
+    nsIWebShellWindow  *window;
+
+    window = nsnull;
+
+    nsCOMPtr<nsIURL> urlObj;
+    rv = NS_NewURL(getter_AddRefs(urlObj), "resource://res/samples/htmldlgs.htm");
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
+                                    (nsISupports**) &appShell);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // Create "save to disk" nsIXULCallbacks...
+    //nsIXULWindowCallbacks *cb = new nsFindDialogCallbacks( aURL, aContentType );
+    nsIXULWindowCallbacks *cb = nsnull;
+
+    nsCOMPtr<nsIWebShellWindow> parent;
+    DOMWindowToWebShellWindow(aCurrentFrontWin, &parent);
+    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, window,
+                                 nsnull, cb, 504, 436);
+    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+
+    if (window != nsnull) {
+        nsCOMPtr<nsIWidget> parentWindowWidgetThing;
+        nsresult gotParent;
+        gotParent = parent ? parent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
+                             NS_ERROR_FAILURE;
+        // Windows OS is the only one that needs the parent disabled, or cares
+        // arguably this should be done by the new window, within ShowModal...
+        if (NS_SUCCEEDED(gotParent))
+            parentWindowWidgetThing->Enable(PR_FALSE);
+        window->ShowModal();
+        if (NS_SUCCEEDED(gotParent))
+            parentWindowWidgetThing->Enable(PR_TRUE);
+    }
+
+    return rv;
 }
+#endif
 
 NS_IMETHODIMP    
 nsBrowserAppCore::WalletSamples()
@@ -545,34 +580,8 @@ nsBrowserAppCore::WalletQuickFillin(nsIDOMWindow*) {
   return NS_OK;
 }
 NS_IMETHODIMP
-nsBrowserAppCore::WalletSafeFillin(nsIDOMWindow*) {
+nsBrowserAppCore::WalletSafeFillin(nsIDOMWindow*, nsIDOMWindow*) {
   return NS_OK;
-}
-#endif
-
-#ifdef SingleSignon
-NS_IMETHODIMP    
-nsBrowserAppCore::SignonViewer()
-{
-  nsIWalletService *walletservice;
-  nsresult res;
-  res = nsServiceManager::GetService(kWalletServiceCID,
-                                     kIWalletServiceIID,
-                                     (nsISupports **)&walletservice);
-  if ((NS_OK == res) && (nsnull != walletservice)) {
-    res = walletservice->SI_DisplaySignonInfoAsHTML();
-    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
-  }
-#ifndef HTMLDialogs 
-  return newWind("file:///htmldlgs.htm");
-#endif
-  return NS_OK;
-}
-#else
-NS_IMETHODIMP    
-nsBrowserAppCore::SignonViewer()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 #endif
 
