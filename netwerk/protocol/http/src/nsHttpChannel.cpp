@@ -1956,7 +1956,12 @@ nsHttpChannel::SetResponseHeader(const char *header, const char *value)
     nsHttpAtom atom = nsHttp::ResolveAtom(header);
     if (!atom)
         return NS_ERROR_NOT_AVAILABLE;
-    return mResponseHead->SetHeader(atom, value);
+
+    nsresult rv = mResponseHead->SetHeader(atom, value);
+    if (NS_SUCCEEDED(rv)) {
+        rv = nsHttpHandler::get()->OnExamineResponse(this);
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
