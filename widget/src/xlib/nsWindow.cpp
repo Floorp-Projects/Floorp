@@ -605,26 +605,8 @@ NS_IMETHODIMP nsWindow::Update(void)
   // The view manager also expects us to force our
   // children to update too!
 
-  nsCOMPtr<nsIEnumerator> children;
-
-  children = dont_AddRef(GetChildren());
-
-  if (children) {
-    nsCOMPtr<nsISupports> isupp;
-
-    nsCOMPtr<nsIWidget> child;
-    while (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(isupp))) && isupp) {
-
-      child = do_QueryInterface(isupp);
-
-      if (child) {
-        child->Update();
-      }
-
-      if (NS_FAILED(children->Next())) {
-        break;
-      }
-    }
+  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
+    kid->Update();
   }
 
   // While I'd think you should NS_RELEASE(aPaintEvent.widget) here,
@@ -695,25 +677,13 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
   //--------
   // Scroll the children
-  nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
-  if (children)
-    {
-      children->First();
-      do
-        {
-          nsISupports* child;
-          if (NS_SUCCEEDED(children->CurrentItem(&child)))
-            {
-              nsWindow *childWindow = NS_STATIC_CAST(nsWindow*, NS_STATIC_CAST(nsIWidget*, child));
-              NS_RELEASE(child);
-
-              nsRect bounds;
-              childWindow->GetRequestedBounds(bounds);
-              childWindow->Move(bounds.x + aDx, bounds.y + aDy);
-              Invalidate(bounds, PR_TRUE);
-            }
-        } while (NS_SUCCEEDED(children->Next()));
-    }
+  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
+    childWindow = NS_STATIC_CAST(nsWindow*, kid);
+    nsRect bounds;
+    childWindow->GetRequestedBounds(bounds);
+    childWindow->Move(bounds.x + aDx, bounds.y + aDy);
+    Invalidate(bounds, PR_TRUE);
+  }
 
   // If we are obscurred by another window we have to update those areas
   // which were not copied with the XCopyArea function.
