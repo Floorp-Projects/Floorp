@@ -37,6 +37,12 @@
 #ifndef MOZZCONF_H
 #define MOZZCONF_H
 
+#ifdef XP_WIN
+#ifdef ZLIB_DLL
+#undef ZLIB_DLL
+#endif
+#endif
+
 /* Symbols from zlib.def */
 #define zlibVersion MOZ_Z_zlibVersion
 #define deflate MOZ_Z_deflate
