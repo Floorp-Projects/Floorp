@@ -24,7 +24,7 @@ MODULE=necko
 
 IS_COMPONENT=1
 MAKE_OBJ_TYPE=DLL
-DLLNAME=nkkeyword
+DLLNAME=nkkyword
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LLIBS= $(LLIBS)                 \
