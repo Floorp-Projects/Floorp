@@ -38,10 +38,55 @@
 #include "nsIURL.h"
 #include "nsCSSLayout.h"
 #include "nsHTMLFrame.h"
+#include "prprf.h"
 
 #define BROKEN_IMAGE_URL "resource:/res/html/broken-image.gif"
 
+// XXX image frame layout can be 100% decoupled from the content
+// object; all it needs are attributes to work properly
+
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
+
+class ImagePart : public nsHTMLTagContent {
+public:
+  ImagePart(nsIAtom* aTag);
+
+  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
+                               nsIFrame* aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*& aResult);
+
+  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
+                                     nsHTMLValue& aResult) const;
+  virtual void UnsetAttribute(nsIAtom* aAttribute);
+
+  virtual void MapAttributesInto(nsIStyleContext* aContext, 
+                                 nsIPresContext* aPresContext);
+
+  PRBool IsMap() {
+    return mIsMap;
+  }
+
+  PRBool GetSuppress() {
+    return mSuppress;
+  }
+
+  PRPackedBool mIsMap;
+  PRUint8 mSuppress;
+  PRUint8 mAlign;
+  nsString* mAltText;
+  nsString* mSrc;
+  nsString* mLowSrc;
+  nsString* mUseMap;
+
+protected:
+  virtual ~ImagePart();
+
+  virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
+                                          nsHTMLValue& aValue,
+                                          nsString& aResult) const;
+};
 
 class ImageFrame : public nsLeafFrame {
 public:
@@ -62,6 +107,10 @@ public:
                          nsIFrame** aFrame,
                          PRInt32& aCursor);
 
+  PRBool IsServerImageMap() {
+    return ((ImagePart*)mContent)->IsMap();
+  }
+
 protected:
   virtual ~ImageFrame();
 
@@ -78,39 +127,6 @@ protected:
                    const nsString& aURLSpec,
                    const nsString& aTargetSpec,
                    PRBool aClick);
-};
-
-class ImagePart : public nsHTMLTagContent {
-public:
-  ImagePart(nsIAtom* aTag);
-
-  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
-                               nsIFrame* aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*& aResult);
-
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aResult) const;
-  virtual void UnsetAttribute(nsIAtom* aAttribute);
-
-  virtual void MapAttributesInto(nsIStyleContext* aContext, 
-                                 nsIPresContext* aPresContext);
-
-  PRPackedBool mIsMap;
-  PRUint8 mSuppress;
-  PRUint8 mAlign;
-  nsString* mAltText;
-  nsString* mSrc;
-  nsString* mLowSrc;
-  nsString* mUseMap;
-
-protected:
-  virtual ~ImagePart();
-
-  virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
-                                          nsHTMLValue& aValue,
-                                          nsString& aResult) const;
 };
 
 // Value's for mSuppress
@@ -447,7 +463,7 @@ ImageFrame::HandleEvent(nsIPresContext& aPresContext,
   case NS_MOUSE_LEFT_BUTTON_UP:
   case NS_MOUSE_MOVE:
     map = GetImageMap();
-    if (nsnull != map) {
+    if ((nsnull != map) || IsServerImageMap()) {
       nsIURL* docURL = nsnull;
       nsIDocument* doc = nsnull;
       mContent->GetDocument(doc);
@@ -462,14 +478,32 @@ ImageFrame::HandleEvent(nsIPresContext& aPresContext,
       nscoord y = nscoord(t2p * aEvent->point.y);
 
       // Ask map if the x,y coordinates are in a clickable area
-      PRBool suppress;
       nsAutoString absURL, target, altText;
-      nsresult r = map->IsInside(x, y, docURL, absURL, target, altText,
-                                 &suppress);
-      NS_IF_RELEASE(docURL);
-      NS_RELEASE(map);
-      if (NS_OK == r) {
-        // We hit a clickable area. Time to go somewhere...
+      PRBool suppress;
+      if (nsnull != map) {
+        nsresult r = map->IsInside(x, y, docURL, absURL, target, altText,
+                                   &suppress);
+        NS_IF_RELEASE(docURL);
+        NS_RELEASE(map);
+        if (NS_OK == r) {
+          // We hit a clickable area. Time to go somewhere...
+          TriggerLink(aPresContext, absURL, target,
+                      aEvent->message == NS_MOUSE_LEFT_BUTTON_UP);
+          aEventStatus = nsEventStatus_eConsumeNoDefault; 
+        }
+      }
+      else {
+        suppress = ((ImagePart*)mContent)->GetSuppress();
+        nsAutoString baseURL;/* XXX */
+        nsAutoString src;
+        nsString* srcp = ((ImagePart*)mContent)->mSrc;
+        if (nsnull != srcp) {
+          src.Append(*srcp);
+        }
+        NS_MakeAbsoluteURL(docURL, baseURL, src, absURL);
+        char cbuf[50];
+        PR_snprintf(cbuf, sizeof(cbuf), "?%d,%d", x, y);
+        absURL.Append(cbuf);
         TriggerLink(aPresContext, absURL, target,
                     aEvent->message == NS_MOUSE_LEFT_BUTTON_UP);
         aEventStatus = nsEventStatus_eConsumeNoDefault; 
