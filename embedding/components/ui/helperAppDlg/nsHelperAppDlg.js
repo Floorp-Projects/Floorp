@@ -272,8 +272,8 @@ nsHelperAppDialog.prototype = {
          this.mTitle = this.replaceInsert( win.getAttribute( "title" ), 1, fname);
          win.setAttribute( "title", this.mTitle );
 
-         // Put content type and location into intro.
-         this.initIntro(url);
+         // Put content type, filename and location into intro.
+         this.initIntro(url, fname);
 
          var iconString = "moz-icon://" + fname + "?size=32&contentType=" + this.mLauncher.MIMEInfo.MIMEType;
 
@@ -305,7 +305,7 @@ nsHelperAppDialog.prototype = {
     },
 
     // initIntro:
-    initIntro: function(url) {
+    initIntro: function(url, filename) {
         var intro = this.dialogElement( "intro" );
         var desc = this.mLauncher.MIMEInfo.Description;
         var modified;
@@ -321,6 +321,8 @@ nsHelperAppDialog.prototype = {
         }
 
         modified = this.replaceInsert( modified, 2, this.mLauncher.MIMEInfo.MIMEType );
+        modified = this.replaceInsert( modified, 3, filename);
+        modified = this.replaceInsert( modified, 4, this.getString( "brandShortName" ));
 
         // if mSourcePath is a local file, then let's use the pretty path name instead of an ugly
         // url...
