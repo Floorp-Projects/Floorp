@@ -56,14 +56,14 @@
 #include "nsViewSourceHTML.h"
 #endif
 
-#ifdef NS_DEBUG
+#if defined(NS_DEBUG) || defined(MOZ_PERF_METRICS)
 #include "nsLoggingSink.h"
 #include "nsExpatDriver.h"
 #endif
 
 //----------------------------------------------------------------------
 
-#ifdef NS_DEBUG
+#if defined(NS_DEBUG) || defined(MOZ_PERF_METRICS)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLoggingSink)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsExpatDriver)
 #endif
@@ -79,7 +79,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(CViewSourceHTML)
 
 static const nsModuleComponentInfo gComponents[] = {
 
-#ifdef NS_DEBUG
+#if defined(NS_DEBUG) || defined(MOZ_PERF_METRICS)
   { "Logging sink", NS_LOGGING_SINK_CID, NULL, nsLoggingSinkConstructor },
   { "Expat Driver", NS_EXPAT_DRIVER_CID, NULL, nsExpatDriverConstructor },
 #endif
