@@ -13,7 +13,8 @@ if ($len < 2)  {
 $mday = 0 . $mday
 }
 
+$year = $year + 1900;
 
 $Blddate = $year . $mon . $mday . $hour;
-open (BDATE, ">c:\\CCKScripts\\bdate.bat") || die "cannot open c:\\scripts\\bdate.bat: $!";
+open (BDATE, ">c:\\CCKScripts\\bdate.bat") || die "cannot open c:\\CCKScripts\\bdate.bat: $!";
 print BDATE "set BuildID=$Blddate\n";

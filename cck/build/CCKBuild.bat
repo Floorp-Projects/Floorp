@@ -45,7 +45,7 @@ cd\builds\mozilla\cck\driver
 
 REM Send Pull completion notification
 echo.CCK source pull complete.  >> tempfile.txt
-REM blat tempfile.txt  -t page-petitta@netscape.com -s "CCK Pull Notification" -i Undertaker
+blat tempfile.txt  -t page-petitta@netscape.com -s "CCK Pull Notification" -i Undertaker
 if exist tempfile.txt del tempfile.txt
 
 REM build the damn thing, then send notification if the exe is there.
@@ -58,12 +58,12 @@ if "%MOZ_DEBUG%"=="0" if exist D:\builds\mozilla\cck\driver\release\wizardmachin
 
 REM If the target is there then do the right thing, Mail notification then upload it.
 echo.CCK build complete and verified.  >> tempfile.txt
-REM if "%BuildGood%"=="1" blat tempfile.txt -t page-petitta@netscape.com -s "CCK Build Notification" -i Undertaker
+if "%BuildGood%"=="1" blat tempfile.txt -t page-petitta@netscape.com -s "CCK Build Notification" -i Undertaker
 if exist tempfile.txt del tempfile.txt
 
 REM Houston we have a problem, abort, abort!!!!!
 if "%BuildGood%" =="0" echo.CCK build died, casualty assesment.  >> tempfile.txt
-REM if "%BuildGood%" =="0" blat tempfile.txt -t page-petitta@netscape.com -s "CCK Build Notification" -i Undertaker
+if "%BuildGood%" =="0" blat tempfile.txt -t page-petitta@netscape.com -s "CCK Build Notification" -i Undertaker
 if exist tempfile.txt del tempfile.txt
 if "%BuildGood%" =="0" set ErrorType=2
 if "%BuildGood%" =="0" goto Errors
