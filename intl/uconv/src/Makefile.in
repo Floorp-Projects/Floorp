@@ -54,6 +54,8 @@ CPPSRCS		= \
 EXPORT_RESOURCE	= \
 		$(srcdir)/unixcharset.properties \
 		$(srcdir)/charsetalias.properties \
+		$(srcdir)/charsetTitles.properties \
+		$(srcdir)/charsetData.properties \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = $(MOZ_NECKO_UTIL_LIBS) \
