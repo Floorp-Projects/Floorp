@@ -133,10 +133,10 @@ protected:
 };
 
 // Class IDs
-static NS_DEFINE_IID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
-static NS_DEFINE_IID(kScrollingViewCID,     NS_SCROLLING_VIEW_CID);
-static NS_DEFINE_IID(kWidgetCID,            NS_CHILD_CID);
-static NS_DEFINE_IID(kViewCID,              NS_VIEW_CID);
+static NS_DEFINE_CID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
+static NS_DEFINE_CID(kScrollingViewCID,     NS_SCROLLING_VIEW_CID);
+static NS_DEFINE_CID(kWidgetCID,            NS_CHILD_CID);
+static NS_DEFINE_CID(kViewCID,              NS_VIEW_CID);
 
 // Interface IDs
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
@@ -715,7 +715,6 @@ DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
                                           nsnull, 
                                           kIViewIID, 
                                           (void**)&mView);
-  static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
   if ((NS_OK != rv) || (NS_OK != mView->Init(mViewManager, 
                                              tbounds,
                                              nsnull))) {
