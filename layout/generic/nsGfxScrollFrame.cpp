@@ -235,6 +235,7 @@ public:
   PRBool mHasHorizontalScrollbar;
   PRBool mFirstPass;
   PRBool mIsRoot;
+  PRBool mNeverReflowed;
 };
 
 NS_IMPL_ISUPPORTS2(nsGfxScrollFrameInner, nsIDocumentObserver, nsIScrollPositionListener)
@@ -261,6 +262,7 @@ nsGfxScrollFrame::nsGfxScrollFrame(nsIDocument* aDocument)
     mInner->mDocument = aDocument;
     mPresContext = nsnull;
     mInner->mIsRoot = PR_FALSE;
+    mInner->mNeverReflowed = PR_TRUE;
 }
 
 nsGfxScrollFrame::~nsGfxScrollFrame()
@@ -491,10 +493,11 @@ nsGfxScrollFrame::Reflow(nsIPresContext*          aPresContext,
   // Handle Incremental Reflow
   nsIFrame* incrementalChild = nsnull;
 
-  if ( aReflowState.reason == eReflowReason_Initial) {
+  if (mInner->mNeverReflowed) {
        // on the initial reflow see if we are the root box.
        // the root box.
        mInner->mIsRoot = PR_TRUE;
+       mInner->mNeverReflowed = PR_FALSE;
 
        // see if we are the root box
        nsIFrame* parent = mParent;
@@ -507,7 +510,9 @@ nsGfxScrollFrame::Reflow(nsIPresContext*          aPresContext,
 
             parent->GetParent(&parent);
        }
-   } else if ( aReflowState.reason == eReflowReason_Incremental ) {
+   }
+  
+   if ( aReflowState.reason == eReflowReason_Incremental ) {
 
     nsIReflowCommand::ReflowType  reflowType;
     aReflowState.reflowCommand->GetType(reflowType);

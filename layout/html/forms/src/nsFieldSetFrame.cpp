@@ -336,7 +336,9 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
           legendReflowState.mComputedHeight = NS_INTRINSICSIZE;
           legendReflowState.reason = reason;
 
-          ReflowChild(mLegendFrame, aPresContext, aDesiredSize, legendReflowState,
+          nsHTMLReflowMetrics legendDesiredSize(0,0);
+
+          ReflowChild(mLegendFrame, aPresContext, legendDesiredSize, legendReflowState,
                       0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
 
           // get the legend's margin
@@ -347,8 +349,8 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
           legendSpacing->GetMargin(legendMargin);
 
           // figure out the legend's rectangle
-          mLegendRect.width  = aDesiredSize.width + legendMargin.left + legendMargin.right;
-          mLegendRect.height = aDesiredSize.height + legendMargin.top + legendMargin.bottom;
+          mLegendRect.width  = legendDesiredSize.width + legendMargin.left + legendMargin.right;
+          mLegendRect.height = legendDesiredSize.height + legendMargin.top + legendMargin.bottom;
           mLegendRect.x = borderPadding.left;
           mLegendRect.y = 0;
 
@@ -382,7 +384,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
                  availSize.width = mLegendRect.width;
           }
 
-          FinishReflowChild(mLegendFrame, aPresContext, aDesiredSize, 0, 0, NS_FRAME_NO_MOVE_FRAME);    
+          FinishReflowChild(mLegendFrame, aPresContext, legendDesiredSize, 0, 0, NS_FRAME_NO_MOVE_FRAME);    
         }
     }
 
@@ -405,11 +407,15 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
 
             kidReflowState.reason = reason;
 
+            nsHTMLReflowMetrics kidDesiredSize(0,0);
+
+
             // Reflow the frame
-            ReflowChild(mContentFrame, aPresContext, aDesiredSize, kidReflowState,
+            ReflowChild(mContentFrame, aPresContext, kidDesiredSize, kidReflowState,
                         kidReflowState.mComputedMargin.left, kidReflowState.mComputedMargin.top,
                         0, aStatus);
 
+            /*
             printf("*** %p computedHgt: %d ", this, aReflowState.mComputedHeight);
               printf("Reason: ");
               switch (aReflowState.reason) {
@@ -418,27 +424,30 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
                 case eReflowReason_Resize: printf("Resize");      break;
                 case eReflowReason_StyleChange:printf("eReflowReason_StyleChange");break;
               }
+              */
 
             // set the rect. make sure we add the margin back in.
-            contentRect.SetRect(borderPadding.left,borderPadding.top + mLegendSpace,aDesiredSize.width ,aDesiredSize.height);
+            contentRect.SetRect(borderPadding.left,borderPadding.top + mLegendSpace,kidDesiredSize.width ,kidDesiredSize.height);
             if (aReflowState.mComputedHeight != NS_INTRINSICSIZE &&
-                borderPadding.top + mLegendSpace+aDesiredSize.height > aReflowState.mComputedHeight) {
-              aDesiredSize.height = aReflowState.mComputedHeight-(borderPadding.top + mLegendSpace);
-        printf(" areaHgt: %d", aDesiredSize.height);
+                borderPadding.top + mLegendSpace+kidDesiredSize.height > aReflowState.mComputedHeight) {
+              kidDesiredSize.height = aReflowState.mComputedHeight-(borderPadding.top + mLegendSpace);
+        printf(" areaHgt: %d", kidDesiredSize.height);
             }
 
-            FinishReflowChild(mContentFrame, aPresContext, aDesiredSize, contentRect.x, contentRect.y, 0);
+            FinishReflowChild(mContentFrame, aPresContext, kidDesiredSize, contentRect.x, contentRect.y, 0);
 
             nsFrameState  kidState;
             mContentFrame->GetFrameState(&kidState);
 
            // printf("width: %d, height: %d\n", desiredSize.mCombinedArea.width, desiredSize.mCombinedArea.height);
 
+            /*
             if (kidState & NS_FRAME_OUTSIDE_CHILDREN) {
                  mState |= NS_FRAME_OUTSIDE_CHILDREN;
                  aDesiredSize.mOverflowArea.width += borderPadding.left + borderPadding.right;
                  aDesiredSize.mOverflowArea.height += borderPadding.top + borderPadding.bottom + mLegendSpace;
             }
+            */
 
             NS_FRAME_TRACE_REFLOW_OUT("FieldSet::Reflow", aStatus);
 
@@ -496,7 +505,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
     if (aReflowState.mComputedHeight == NS_INTRINSICSIZE) {
        aDesiredSize.height = mLegendSpace + 
                              borderPadding.top +
-                             aDesiredSize.height +
+                             contentRect.height +
                              borderPadding.bottom;
     } else {
        nscoord min = borderPadding.top + borderPadding.bottom + mLegendRect.height;
@@ -507,7 +516,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
 
     if (aReflowState.mComputedWidth == NS_INTRINSICSIZE) {
         aDesiredSize.width = borderPadding.left + 
-                             aDesiredSize.width +
+                             contentRect.width +
                              borderPadding.right;
     } else {
        nscoord min = borderPadding.left + borderPadding.right + mLegendRect.width;

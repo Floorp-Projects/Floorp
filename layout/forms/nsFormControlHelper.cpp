@@ -84,6 +84,7 @@ nsFormControlHelper::~nsFormControlHelper()
 
 void nsFormControlHelper::ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame * aFrame)
 {
+
   if (aFrame == nsnull) {
     return;
   }
@@ -98,10 +99,11 @@ void nsFormControlHelper::ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame 
     nsIViewManager * viewMgr;
     view->GetViewManager(viewMgr);
     if (viewMgr != nsnull) {
-      viewMgr->UpdateView(view, rect, 0);
+      viewMgr->UpdateView(view, rect, NS_VMREFRESH_NO_SYNC);
       NS_RELEASE(viewMgr);
     }
   }
+  
 }
 
 PRBool nsFormControlHelper::GetBool(const nsString& aValue)
