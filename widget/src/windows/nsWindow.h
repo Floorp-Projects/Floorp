@@ -84,6 +84,7 @@ class nsIMM
     typedef LONG (CALLBACK *NotifyIMEPtr)   (HIMC,DWORD,DWORD,DWORD);
     typedef LONG (CALLBACK *SetCandWindowPtr)  (HIMC,LPCANDIDATEFORM);
     typedef LONG (CALLBACK *GetCompWindowPtr)  (HIMC,LPCOMPOSITIONFORM);
+    typedef LONG (CALLBACK *GetPropertyPtr)  (HKL, DWORD);
 
 public:
 
@@ -122,6 +123,9 @@ public:
       
 	    mGetCompositionWindow=(mInstance) ? (GetCompWindowPtr)GetProcAddress(mInstance,"ImmGetCompositionWindow") : 0;
 	    NS_ASSERTION(mGetCompositionWindow!=NULL,"nsIMM.ImmGetCompositionWindow failed.");
+
+	    mGetProperty=(mInstance) ? (GetPropertyPtr)GetProcAddress(mInstance,"ImmGetProperty") : 0;
+	    NS_ASSERTION(mGetProperty!=NULL,"nsIMM.ImmGetProperty failed.");
     }
 
     ~nsIMM() {
@@ -137,6 +141,7 @@ public:
       mNotifyIME=0;
       mSetCandiateWindow=0;
       mGetCompositionWindow=0;
+      mGetProperty=0;
     }
 
     LONG GetCompositionStringA(HIMC h,DWORD d1,LPVOID v,DWORD d2) {
@@ -175,6 +180,10 @@ public:
       return (mGetCompositionWindow) ? mGetCompositionWindow(h,l) : 0L;
     }
 
+    LONG GetProperty(HKL hKL, DWORD dwIndex) {
+      return (mGetProperty) ? mGetProperty(hKL, dwIndex) : 0L;
+    }
+
 private:
 
     HINSTANCE mInstance;
@@ -187,6 +196,7 @@ private:
     NotifyIMEPtr   mNotifyIME;  
     SetCandWindowPtr  mSetCandiateWindow;   
     GetCompWindowPtr  mGetCompositionWindow;   
+    GetPropertyPtr  mGetProperty;
 };
 
 /**

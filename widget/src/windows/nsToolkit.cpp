@@ -55,6 +55,7 @@ static PRUintn gToolkitTLSIndex = 0;
 
 HINSTANCE nsToolkit::mDllInstance = 0;
 PRBool    nsToolkit::mUseImeApiW  = PR_FALSE;
+PRBool    nsToolkit::mW2KXP_CP936 = PR_FALSE;
 
 #ifdef MOZ_AIMM
 IActiveIMMApp* nsToolkit::gAIMMApp   = NULL;
@@ -248,8 +249,10 @@ nsToolkit::Startup(HMODULE hModule)
       // XXX Hack for stopping the crash (125573)
       if (osversion.dwMajorVersion == 5 && (osversion.dwMinorVersion == 0 || osversion.dwMinorVersion == 1))  { 
         // "Microsoft Windows 2000 " or "Microsoft Windows XP "
-        if (936 == ::GetACP())  // Chinese (PRC, Singapore)
+        if (936 == ::GetACP())  {  // Chinese (PRC, Singapore)
           nsToolkit::mUseImeApiW = PR_FALSE;
+          nsToolkit::mW2KXP_CP936 = PR_TRUE;
+        }
       }
     }
 
