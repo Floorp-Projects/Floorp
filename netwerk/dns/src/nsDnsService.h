@@ -25,6 +25,7 @@
 
 #include "nsIDNSService.h"
 #include "nsIRunnable.h"
+#include "nsIObserver.h"
 #include "nsIThread.h"
 #include "nsISupportsArray.h"
 #if defined(XP_MAC)
@@ -36,8 +37,9 @@
 #include <Winsock2.h>
 #endif
 #include "nsCOMPtr.h"
-#include "nsHashtable.h"
-#include "prmon.h"
+#include "prclist.h"
+#include "prcvar.h"
+#include "pldhash.h"
 
 #ifdef DEBUG
 #define DNS_TIMING 1
@@ -46,84 +48,106 @@
 class nsIDNSListener;
 class nsDNSLookup;
 
+/******************************************************************************
+ *  nsDNSService
+ *****************************************************************************/
 class nsDNSService : public nsIDNSService,
-                     public nsIRunnable
+                     public nsIRunnable,
+                     public nsIObserver
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIRUNNABLE
     NS_DECL_NSIDNSSERVICE
-
+    NS_DECL_NSIOBSERVER
+    
     // nsDNSService methods:
     nsDNSService();
     virtual ~nsDNSService();
  
     // Define a Create method to be used with a factory:
-    static NS_METHOD
-    Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
+    static NS_METHOD        Create( nsISupports * outer,
+                                    const nsIID & iid,
+                                    void **       result);
     
-    friend class nsDNSLookup;
-    
-protected:
-    nsresult LateInit();
-    nsresult InitDNSThread();
-    nsresult GetLookupEntry(const char* hostName, nsDNSLookup* *result);
+    static void             Lock();
+    static void             Unlock();
 
-    static nsDNSService * gService;
-    static PRBool         gNeedLateInitialization;
+    void                    EnqueuePendingQ(nsDNSLookup * lookup);
+    nsDNSLookup *           DequeuePendingQ();
     
-    nsCOMPtr<nsIThread>   mThread;
-    nsresult              mState;
-    PRMonitor*            mMonitor;
-    nsSupportsHashtable   mLookups; // of nsDNSLookups
+    static PRInt32          ExpirationInterval();
+
+    static nsDNSService *   gService;
+
+private:
+    nsresult                LateInit();
+    nsresult                InstallPrefObserver();
+    nsresult                RemovePrefObserver();
+    nsDNSLookup *           FindOrCreateLookup( const char *  hostName);
+    void                    EvictLookup( nsDNSLookup * lookup);
+    void                    AddToEvictionQ( nsDNSLookup *  lookup);
+    void                    AbortLookups();
+    
+        
+    static PRBool           gNeedLateInitialization;
+    static PLDHashTableOps  gHashTableOps;
+
+    PRLock *                mDNSServiceLock;
+    PRCondVar *             mDNSCondVar;
+    PLDHashTable            mHashTable;
+    PRCList                 mPendingQ;
+    PRCList                 mEvictionQ;
+    PRInt32                 mEvictionQCount;
+    PRInt32                 mMaxCachedLookups;
+    PRInt32                 mExpirationInterval;
+    
+    char *                  mMyIPAddress;
+    nsCOMPtr<nsIThread>     mThread;
+    PRUint32                mState;
+
+    enum {
+        DNS_NOT_INITIALIZED = 0,
+        DNS_RUNNING         = 1,
+        DNS_SHUTTING_DOWN   = 2,
+        DNS_SHUTDOWN        = 3
+    };
 
 #if defined(XP_MAC)
-    friend pascal void    nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
-    PRBool                mThreadRunning;
-    InetSvcRef            mServiceRef;
-    QHdr                  mCompletionQueue;
+    friend pascal void      nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
+public:
+    InetSvcRef              mServiceRef;
+    OTNotifyUPP             nsDnsServiceNotifierRoutineUPP;
 #if TARGET_CARBON
-    OTClientContextPtr    mClientContext;
+    OTClientContextPtr      mClientContext;
 #endif /* TARGET_CARBON */
-    OTNotifyUPP           nsDnsServiceNotifierRoutineUPP;
+private:
 #endif /* XP_MAC */
 
 #if defined(XP_WIN)
-    PRUint32   AllocMsgID(void);
-    void       FreeMsgID(PRUint32 msgID);
+    friend static
+    LRESULT CALLBACK        nsDNSEventProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+public:
 
-    friend static LRESULT CALLBACK nsDNSEventProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    LRESULT ProcessLookup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    HWND                mDNSWindow;
-    PRUint32            mMsgIDBitVector[4];
+    PRUint32                AllocMsgID( void);
+    HWND                    mDNSWindow;
+
+private:
+    void                    FreeMsgID( PRUint32 msgID);
+	LRESULT                 ProcessLookup( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+ 
+    PRUint32                mMsgIDBitVector[4];
 #endif /* XP_WIN */
 
-#if defined(XP_UNIX)
-    // The lookup queue: a linked list of lookups 
-    nsDNSLookup *mLookupQ;
-
-    // The DNS thread waits on this monitor for lookups to process.
-    PRMonitor *mLookupQMon;
-
-    // Puts a lookup on the queue and signals the DNS thread.
-    nsresult EnqueueLookup(nsDNSLookup *);
-
-    // Called by the DNS thread to get the next lookup to process.
-    // Blocks until a lookup is available.
-    nsresult DequeueLookup(nsDNSLookup **);
-
-    // Needed if the DNS thread is not already waiting on the lookup monitor.
-    PRBool mShutdownInProgress;
-#endif
 
 #ifdef DNS_TIMING
+    friend class nsDNSRequest;
+
     double              mCount;
     double              mTimes;
     double              mSquaredTimes;
-    FILE*               mOut;
-    friend class nsDNSRequest;
+    FILE *              mOut;
 #endif
-    char*               mMyIPAddress;
 };
 
 #endif /* nsDNSService_h__ */
