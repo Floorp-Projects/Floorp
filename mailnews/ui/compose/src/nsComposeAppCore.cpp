@@ -336,7 +336,7 @@ nsComposeAppCore::SendMessage(const nsString& aAddrFrom, const nsString& aSmtp, 
 
 	if (res == NS_OK && pMsgSend) { 
 		printf("We succesfully obtained a nsIMsgSend interface....\n");
-		pMsgSend->Test();
+/* 		pMsgSend->Test(); */
 
 		res = nsRepository::CreateInstance(kMsgCompFieldsCID, 
 													NULL, 
