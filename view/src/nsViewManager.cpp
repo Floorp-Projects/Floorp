@@ -1817,7 +1817,13 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
         break;
       }
 
+    case NS_CREATE:
     case NS_DESTROY:
+    case NS_SETZLEVEL:
+    case NS_MOVE:
+      /* Don't pass these events through. Passing them through
+         causes performance problems on pages with lots of views/frames 
+         @see bug 112861 */
       *aStatus = nsEventStatus_eConsumeNoDefault;
       break;
 
