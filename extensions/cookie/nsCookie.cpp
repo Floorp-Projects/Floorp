@@ -32,6 +32,7 @@
 #include "nsIServiceManager.h"
 #include "nsFileStream.h"
 #include "nsIFileLocator.h"
+#include "nsIFileSpec.h"
 #include "nsFileLocations.h"
 
 extern "C" {
@@ -198,20 +199,11 @@ cookie_Localize(char* genericString) {
 }
 
 PRIVATE nsresult cookie_ProfileDirectory(nsFileSpec& dirSpec) {
-  nsresult rv;
-  nsIFileLocator* locator = nsnull;
-  rv = nsServiceManager::GetService
-    (kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!locator) {
-    return NS_ERROR_FAILURE;
-  }
-  rv = locator->GetFileLocation
-     (nsSpecialFileSpec::App_UserProfileDirectory50, &dirSpec);
-  nsServiceManager::ReleaseService(kFileLocatorCID, locator);
-  return rv;
+  nsIFileSpec* spec = NS_LocateFileOrDirectory(
+  							nsSpecialFileSpec::App_UserProfileDirectory50);
+  if (!spec)
+  	return NS_ERROR_FAILURE;
+  return spec->GetFileSpec(&dirSpec);
 }
 
 #ifndef XP_MAC
