@@ -124,6 +124,15 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
                             GDK_WINDOW_XDISPLAY(drawable),
                             GDK_WINDOW_XWINDOW(drawable));
 
+  // clip to dirtyRect
+  cairo_new_path(mCR);
+  cairo_move_to(mCR, dirtyRect.x, dirtyRect.y);
+  cairo_line_to(mCR, dirtyRect.x + dirtyRect.width, dirtyRect.y);
+  cairo_line_to(mCR, dirtyRect.x + dirtyRect.width, dirtyRect.y + dirtyRect.height);
+  cairo_line_to(mCR, dirtyRect.x, dirtyRect.y + dirtyRect.height);
+  cairo_close_path(mCR);
+  cairo_clip(mCR);
+
   // get the translation set on the rendering context. It will be in
   // displayunits (i.e. pixels*scale), *not* pixels:
   nsTransform2D* xform;
