@@ -278,6 +278,7 @@ public:
   NS_IMETHOD GetType(nsString& aType) const;
   NS_IMETHOD GetMediumCount(PRInt32& aCount) const;
   NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const;
+  NS_IMETHOD UseForMedium(nsIAtom* aMedium) const;
 
   NS_IMETHOD GetEnabled(PRBool& aEnabled) const;
   NS_IMETHOD SetEnabled(PRBool aEnabled);
@@ -578,6 +579,12 @@ HTMLCSSStyleSheetImpl::GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const
 {
   aMedium = nsnull;
   return NS_ERROR_INVALID_ARG;
+}
+
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::UseForMedium(nsIAtom* aMedium) const
+{
+  return NS_OK; // works for all media
 }
 
 NS_IMETHODIMP
