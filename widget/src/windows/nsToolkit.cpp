@@ -40,6 +40,9 @@
 #include "prmon.h"
 #include "prtime.h"
 #include "nsGUIEvent.h"
+#include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
+#include "nsIEventQueue.h"
 #ifdef MOZ_AIMM
 #include <initguid.h>
 #include "aimm.h"
@@ -62,6 +65,11 @@ NS_CreateWindowEx   nsToolkit::mCreateWindowEx = &CreateWindowExW;
 NS_RegisterClass    nsToolkit::mRegisterClass = &RegisterClassW; 
 
 #endif
+
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+
+// Cached reference to event queue service
+static nsCOMPtr<nsIEventQueueService>  gEventQueueService;
 
 NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 
@@ -438,6 +446,9 @@ nsToolkit::~nsToolkit()
     // Remove the TLS reference to the toolkit...
     PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
 
+    // Remove reference to cached event queue
+    gEventQueueService = nsnull;
+
 #ifdef MOZ_STATIC_COMPONENT_LIBS
     nsToolkit::Shutdown();
 #endif
@@ -536,6 +547,23 @@ nsToolkit::Shutdown()
     ::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance);
 }
 
+nsIEventQueue* 
+nsToolkit::GetEventQueue()
+{
+  if (! gEventQueueService) {
+    gEventQueueService = do_GetService(kEventQueueServiceCID);
+  }
+
+  if (gEventQueueService) {
+    nsCOMPtr<nsIEventQueue> eventQueue;
+    gEventQueueService->GetSpecialEventQueue(
+      nsIEventQueueService::UI_THREAD_EVENT_QUEUE, 
+      getter_AddRefs(eventQueue));
+    return eventQueue;
+  }
+  
+  return nsnull;
+}
 
 //-------------------------------------------------------------------------
 //
