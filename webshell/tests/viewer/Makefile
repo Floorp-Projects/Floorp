@@ -162,7 +162,7 @@ ifeq ($(OS_ARCH),Linux)
 endif
 
 ifeq ($(OS_ARCH),IRIX)
-	TOOLKIT_LIB_PATH    = -L/usr/openwin/lib -L/usr/dt/lib
+	TOOLKIT_LIB_PATH    = 
 	TOOLKIT_LDFLAGS     = -lXm -lXt -lX11
 	EXTRA_PRE_LDFLAGS   = -woff 84,85
 	EXTRA_POST_LDFLAGS  =
