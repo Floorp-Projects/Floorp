@@ -132,7 +132,7 @@ function onSelect(aEvent) {
   
   var selectionCount = gDownloadView.treeBoxObject.selection.count;
   if (selectionCount == 1)
-    gStatusBar.label = getFileForItem(getSelectedItem()).path;
+    gStatusBar.label = createLocalFile(getSelectedItem().id).path;
   else
     gStatusBar.label = "";
 
@@ -177,7 +177,7 @@ var downloadViewController = {
       // we can't reveal until the download is complete, because we have not given
       // the file its final name until them.
       return selectionCount == 1 && !isDownloading && selectedItem &&
-             getFileForItem(selectedItem).exists();
+             createLocalFile(selectedItem.id).exists();
     case "cmd_properties":
       return selectionCount == 1 && isDownloading;
     case "cmd_pause":
@@ -211,7 +211,7 @@ var downloadViewController = {
     case "cmd_openfile":
       selectedItem = getSelectedItem();
       if (selectedItem) {
-        file = getFileForItem(selectedItem);
+        file = createLocalFile(selectedItem.id);
         const kDontAskAgainPref  = "browser.download.progressDnlgDialog.dontAskForLaunch";
         try {
           var pref = Components.classes["@mozilla.org/preferences-service;1"]
@@ -247,7 +247,7 @@ var downloadViewController = {
     case "cmd_showinshell":
       selectedItem = getSelectedItem();
       if (selectedItem) {
-        file = getFileForItem(selectedItem);
+        file = createLocalFile(selectedItem.id);
         
         // on unix, open a browser window rooted at the parent
         if ((navigator.platform.indexOf("Win") == -1) &&
@@ -297,7 +297,7 @@ var downloadViewController = {
           newSelectionPos = gDownloadView.treeBoxObject.view.rowCount - 1;
         gDownloadView.treeBoxObject.selection.select(newSelectionPos);
         gDownloadView.treeBoxObject.ensureRowIsVisible(newSelectionPos);
-        gStatusBar.label = getFileForItem(getSelectedItem()).path;
+        gStatusBar.label = createLocalFile(getSelectedItem().id).path;
       }
       else {
         // Nothing on the panel, so clear the Status Bar
@@ -354,30 +354,20 @@ function getSelectedItems()
   return items;
 }
 
-function getFileForItem(aElement)
-{
-  var itemResource = gRDFService.GetUnicodeResource(aElement.id);
-  var fileResource = gDownloadView.database.GetTarget(itemResource, gNC_File, true);
-  fileResource = fileResource.QueryInterface(Components.interfaces.nsIRDFResource);
-  return createLocalFile(fileResource.Value);
-}
-
 function createLocalFile(aFilePath) 
 {
   const lfIID = Components.interfaces.nsILocalFile;
-  var file;
-  try {
-    file = gFileHandler.getFileFromURLSpec(aFilePath)
-                       .QueryInterface(lfIID);
-  }
-  catch(ex) {
-  }
-
   // XXXvarga We should fix the download manager to be consistent, that is,
   // use urls instead of local paths when adding new items to the list.
   // Once it's fixed, the code below can be removed.
   // See bug 208113 for more details.
-  if (!file) {
+
+  var file;
+  if (aFilePath.substring(0,5) == 'file:') {
+    file = gFileHandler.getFileFromURLSpec(aFilePath)
+                       .QueryInterface(lfIID);
+  }
+  else {
     const lfContractID = "@mozilla.org/file/local;1";
     file = Components.classes[lfContractID].createInstance(lfIID);
     file.initWithPath(aFilePath);
