@@ -47,6 +47,7 @@ my %map = (
   'find',               'xpfe/components/find embedding/components/find',
   'gfx',                'gfx',
   'gfx2',               'gfx2',
+  'gtkembedmoz',        'embedding/browser/gtk/tests',
   'gtkxtbin',           'widget/src/gtkxtbin',
   'helperAppDlg',       'embedding/components/ui/helperAppDlg',
   'htmlparser',         'htmlparser',
