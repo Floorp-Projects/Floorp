@@ -274,7 +274,8 @@ nsTreeLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
   if (redrawStart > -1) {
     nsRect bounds;
     aBox->GetBounds(bounds);
-    aBox->Redraw(aState, &nsRect(0,redrawStart,bounds.width, bounds.height - redrawStart));
+    nsRect tempRect(0,redrawStart,bounds.width, bounds.height - redrawStart);
+    aBox->Redraw(aState, &tempRect);
   }
 
   return NS_OK;
