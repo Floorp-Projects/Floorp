@@ -15,17 +15,17 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-MODULE = netwerk
+MODULE = necko
 
 DEPTH = ..\..\..\..
 
 // temporary, until we land:
 !ifndef NECKO
 include <$(DEPTH)/config/config.mak>
-PUBLIC = $(DEPTH)\netwerk\dist\include
+PUBLIC = $(DEPTH)\necko\dist\include
 !endif
 
-XPIDL_MODULE = netwerk_ftp
+XPIDL_MODULE = necko_ftp
 
 XPIDLSRCS =                 \
         .\nsIFTPChannel.idl \

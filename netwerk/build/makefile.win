@@ -16,16 +16,16 @@
 # Reserved.
 
 DEPTH=..\..
-MODULE=netwerk
+MODULE=necko
 
 // temporary, until we land:
 !ifndef NECKO
 include <$(DEPTH)/config/config.mak>
-PUBLIC = $(DEPTH)\netwerk\dist\include
+PUBLIC = $(DEPTH)\necko\dist\include
 !endif
 
 MAKE_OBJ_TYPE=DLL
-DLLNAME=netwerk
+DLLNAME=necko
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 CPP_OBJS=                            \
@@ -33,8 +33,8 @@ CPP_OBJS=                            \
 	$(NULL)
 
 LLIBS=                                \
-        $(DIST)\lib\netwerkbase_s.lib \
-        $(DIST)\lib\netwerkdns_s.lib  \
+        $(DIST)\lib\neckobase_s.lib \
+        $(DIST)\lib\neckodns_s.lib  \
         $(DIST)\lib\xpcom.lib         \
         $(DIST)\lib\plc3.lib          \
         $(LIBNSPR)  
@@ -43,8 +43,8 @@ MISCDEP=$(LLIBS)
 
 INCS = $(INCS)                      \
         -I$(DEPTH)\dist\include     \
-        -I$(DEPTH)\netwerk\base\src \
-        -I$(DEPTH)\netwerk\dns\src  \
+        -I$(DEPTH)\necko\base\src \
+        -I$(DEPTH)\necko\dns\src  \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

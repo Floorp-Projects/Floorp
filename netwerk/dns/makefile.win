@@ -17,7 +17,7 @@
 
 DEPTH = ..\..
 
-MODULE = netwerk
+MODULE = necko
 
 DIRS=          \
 	public \
