@@ -102,10 +102,16 @@ DestroyJSSL_SocketData(JNIEnv *env, JSSL_SocketData *sd)
 }
 
 
+/*
+ * These must match up with the constants defined in SSLSocket.java.
+ */
 static PRInt32 enums[] = {
     SSL_ENABLE_SSL2,            /* 0 */
     SSL_ENABLE_SSL3,            /* 1 */
-    SO_LINGER,                  /* 2 */
+    PR_SockOpt_NoDelay,         /* 2 */
+    PR_SockOpt_Keepalive,       /* 3 */
+    PR_SHUTDOWN_RCV,            /* 4 */
+    PR_SHUTDOWN_SEND,           /* 5 */
 
     0
 };
@@ -157,40 +163,13 @@ Java_org_mozilla_jss_ssl_SSLSocket_forceHandshake(JNIEnv *env, jobject self)
     int rv;
 
     /* get my fd */
-    if( JSS_SSL_getSockData(env, self, &sock) != PR_SUCCESS ) {
-        goto finish;
-    }
+    if( JSS_SSL_getSockData(env, self, &sock) != PR_SUCCESS ) goto finish;
 
     /* do the work */
     rv = SSL_ForceHandshake(sock->fd);
     if( rv != SECSuccess ) {
         JSS_throwMsg(env, SOCKET_EXCEPTION,
             "SSL_ForceHandshake returned an error");
-        goto finish;
-    }
-
-finish:
-}
-
-JNIEXPORT void JNICALL
-Java_org_mozilla_jss_ssl_SSLSocket_setTcpNoDelay(JNIEnv *env, jobject self,
-    jboolean on)
-{
-    PRSocketOptionData sockOptions;
-    PRStatus status;
-    JSSL_SocketData *sock;
-
-    if( JSS_SSL_getSockData(env, self, &sock) != PR_SUCCESS ) {
-        goto finish;
-    }
-
-    sockOptions.option = PR_SockOpt_NoDelay;
-    sockOptions.value.no_delay = on;
-
-    status = PR_SetSocketOption(sock->fd, &sockOptions);
-
-    if( status != PR_SUCCESS ) {
-        JSS_throwMsg(env, SOCKET_EXCEPTION, "PR_SetSocketOption failed");
         goto finish;
     }
 
@@ -251,6 +230,176 @@ Java_org_mozilla_jss_ssl_SSLSocket_getTcpNoDelay(JNIEnv *env, jobject self)
 
 finish:
     return sockOptions.value.no_delay;
+}
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_setTcpNoDelay(JNIEnv *env, jobject self,
+    jboolean on)
+{
+    PRSocketOptionData sockOptions;
+    PRStatus status;
+    JSSL_SocketData *sock;
+
+    if( JSS_SSL_getSockData(env, self, &sock) != PR_SUCCESS ) {
+        goto finish;
+    }
+
+    sockOptions.option = PR_SockOpt_NoDelay;
+    sockOptions.value.no_delay = on;
+
+    status = PR_SetSocketOption(sock->fd, &sockOptions);
+
+    if( status != PR_SUCCESS ) {
+        JSS_throwMsg(env, SOCKET_EXCEPTION, "PR_SetSocketOption failed");
+        goto finish;
+    }
+
+finish:
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_getSendBufferSize(JNIEnv *env, jobject self)
+{
+    PRSocketOptionData sockOptions;
+    JSSL_SocketData *sock;
+    PRStatus status;
+
+    if( JSS_SSL_getSockData(env, self, &sock) != PR_SUCCESS ) {
+        goto finish;
+    }
+
+    sockOptions.option = PR_SockOpt_SendBufferSize;
+
+    status = PR_GetSocketOption(sock->fd, &sockOptions);
+    if( status != PR_SUCCESS ) {
+        JSS_throwMsg(env, SOCKET_EXCEPTION, "PR_GetSocketOption failed");
+        goto finish;
+    }
+
+finish:
+    return sockOptions.value.send_buffer_size;
+}
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_setSendBufferSize(JNIEnv *env, jobject self,
+    jint size)
+{
+    PRSocketOptionData sockOptions;
+    PRStatus status;
+    JSSL_SocketData *sock;
+
+    if( JSS_SSL_getSockData(env, self, &sock) != PR_SUCCESS ) {
+        goto finish;
+    }
+
+    sockOptions.option = PR_SockOpt_SendBufferSize;
+    sockOptions.value.send_buffer_size = size;
+
+    status = PR_SetSocketOption(sock->fd, &sockOptions);
+
+    if( status != PR_SUCCESS ) {
+        JSS_throwMsg(env, SOCKET_EXCEPTION, "PR_SetSocketOption failed");
+        goto finish;
+    }
+
+finish:
+}
+
+JNIEXPORT jboolean JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_getKeepAlive(JNIEnv *env, jobject self)
+{
+    PRSocketOptionData sockOptions;
+    JSSL_SocketData *sock;
+    PRStatus status;
+
+    if( JSS_SSL_getSockData(env, self, &sock) != PR_SUCCESS ) {
+        goto finish;
+    }
+
+    sockOptions.option = PR_SockOpt_Keepalive;
+
+    status = PR_GetSocketOption(sock->fd, &sockOptions);
+    if( status != PR_SUCCESS ) {
+        JSS_throwMsg(env, SOCKET_EXCEPTION, "PR_GetSocketOption failed");
+        goto finish;
+    }
+
+finish:
+    return sockOptions.value.keep_alive;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_getReceiveBufferSize(
+    JNIEnv *env, jobject self)
+{
+    PRSocketOptionData sockOptions;
+    JSSL_SocketData *sock;
+    PRStatus status;
+
+    if( JSS_SSL_getSockData(env, self, &sock) != PR_SUCCESS ) {
+        goto finish;
+    }
+
+    sockOptions.option = PR_SockOpt_RecvBufferSize;
+
+    status = PR_GetSocketOption(sock->fd, &sockOptions);
+    if( status != PR_SUCCESS ) {
+        JSS_throwMsg(env, SOCKET_EXCEPTION, "PR_GetSocketOption failed");
+        goto finish;
+    }
+
+finish:
+    return sockOptions.value.recv_buffer_size;
+}
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_setReceiveBufferSize(
+    JNIEnv *env, jobject self, jint size)
+{
+    PRSocketOptionData sockOptions;
+    PRStatus status;
+    JSSL_SocketData *sock;
+
+    if( JSS_SSL_getSockData(env, self, &sock) != PR_SUCCESS ) {
+        goto finish;
+    }
+
+    sockOptions.option = PR_SockOpt_RecvBufferSize;
+    sockOptions.value.recv_buffer_size = size;
+
+    status = PR_SetSocketOption(sock->fd, &sockOptions);
+
+    if( status != PR_SUCCESS ) {
+        JSS_throwMsg(env, SOCKET_EXCEPTION, "PR_SetSocketOption failed");
+        goto finish;
+    }
+
+finish:
+}
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_setKeepAlive(JNIEnv *env, jobject self,
+    jboolean on)
+{
+    PRSocketOptionData sockOptions;
+    PRStatus status;
+    JSSL_SocketData *sock;
+
+    if( JSS_SSL_getSockData(env, self, &sock) != PR_SUCCESS ) {
+        goto finish;
+    }
+
+    sockOptions.option = PR_SockOpt_Keepalive;
+    sockOptions.value.keep_alive = on;
+
+    status = PR_SetSocketOption(sock->fd, &sockOptions);
+
+    if( status != PR_SUCCESS ) {
+        JSS_throwMsg(env, SOCKET_EXCEPTION, "PR_SetSocketOption failed");
+        goto finish;
+    }
+
+finish:
 }
 
 JNIEXPORT jint JNICALL
@@ -319,7 +468,7 @@ Java_org_mozilla_jss_ssl_SSLSocket_getLocalAddressNative(JNIEnv *env,
 }
 
 JNIEXPORT jint JNICALL
-Java_org_mozilla_jss_ssl_SSLSocket_getLocalPort(JNIEnv *env,
+Java_org_mozilla_jss_ssl_SSLSocket_getLocalPortNative(JNIEnv *env,
     jobject self)
 {
     PRNetAddr addr;
@@ -906,4 +1055,57 @@ finish:
     if( buf != NULL ) {
         (*env)->ReleaseByteArrayElements(env, bufBA, buf, JNI_ABORT);
     }
+}
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_shutdownNative(
+    JNIEnv *env, jobject self, jint how)
+{
+    JSSL_SocketData *sock;
+    PRStatus status;
+
+    if( JSS_SSL_getSockData(env, self, &sock) != PR_SUCCESS) goto finish;
+
+    status = PR_Shutdown(sock->fd, enums[how]);
+    if( status != PR_SUCCESS) {
+        JSS_throwMsg(env, SOCKET_EXCEPTION, "Failed to shutdown socket");
+        goto finish;
+    }
+
+finish:
+}
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_invalidateSession(JNIEnv *env, jobject self)
+{
+    JSSL_SocketData *sock;
+    SECStatus status;
+
+    if( JSS_SSL_getSockData(env, self, &sock) != PR_SUCCESS) goto finish;
+
+    status = SSL_InvalidateSession(sock->fd);
+    if(status != SECSuccess) {
+        JSS_throwMsg(env, SOCKET_EXCEPTION, "Failed to invalidate session");
+        goto finish;
+    }
+
+finish:
+}
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_redoHandshake(
+    JNIEnv *env, jobject self, jboolean flushCache)
+{
+    JSSL_SocketData *sock;
+    SECStatus status;
+
+    if( JSS_SSL_getSockData(env, self, &sock) != PR_SUCCESS) goto finish;
+
+    status = SSL_ReHandshake(sock->fd, flushCache);
+    if(status != SECSuccess) {
+        JSS_throwMsg(env, SOCKET_EXCEPTION, "Failed to redo handshake");
+        goto finish;
+    }
+
+finish:
 }

@@ -38,7 +38,7 @@ import java.io.*;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
-public class SSLSocket {
+public class SSLSocket extends java.net.Socket {
 
     /**
      * For sockets that get created by accept().
@@ -127,44 +127,62 @@ public class SSLSocket {
     }
 
 
-    public InetAddress getInetAddress() throws SocketException {
-        int intAddr = getPeerAddressNative();
-        InetAddress in;
-        byte[] addr = new byte[4];
-        addr[0] = (byte)((intAddr >>> 24) & 0xff);
-        addr[1] = (byte)((intAddr >>> 16) & 0xff);
-        addr[2] = (byte)((intAddr >>>  8) & 0xff);
-        addr[3] = (byte)((intAddr       ) & 0xff);
+    public InetAddress getInetAddress() {
         try {
-          in = InetAddress.getByName(
-            addr[0] + "." + addr[1] + "." + addr[2] + "." + addr[3] );
-        } catch (java.net.UnknownHostException e) {
-            in = null;
+            int intAddr = getPeerAddressNative();
+            InetAddress in;
+            byte[] addr = new byte[4];
+            addr[0] = (byte)((intAddr >>> 24) & 0xff);
+            addr[1] = (byte)((intAddr >>> 16) & 0xff);
+            addr[2] = (byte)((intAddr >>>  8) & 0xff);
+            addr[3] = (byte)((intAddr       ) & 0xff);
+            try {
+            in = InetAddress.getByName(
+                addr[0] + "." + addr[1] + "." + addr[2] + "." + addr[3] );
+            } catch (java.net.UnknownHostException e) {
+                in = null;
+            }
+            return in;
+        } catch(SocketException e) {
+            e.printStackTrace();
+            return null;
         }
-        return in;
     }
 
     private native int getPeerAddressNative() throws SocketException;
 
-    public InetAddress getLocalAddress() throws SocketException {
-        int intAddr = getLocalAddressNative();
-        InetAddress in;
-        byte[] addr = new byte[4];
-        addr[0] = (byte)((intAddr >>> 24) & 0xff);
-        addr[1] = (byte)((intAddr >>> 16) & 0xff);
-        addr[2] = (byte)((intAddr >>>  8) & 0xff);
-        addr[3] = (byte)((intAddr       ) & 0xff);
+    public InetAddress getLocalAddress() {
         try {
-          in = InetAddress.getByName(
-            addr[0] + "." + addr[1] + "." + addr[2] + "." + addr[3] );
-        } catch (java.net.UnknownHostException e) {
-            in = null;
+            int intAddr = getLocalAddressNative();
+            InetAddress in;
+            byte[] addr = new byte[4];
+            addr[0] = (byte)((intAddr >>> 24) & 0xff);
+            addr[1] = (byte)((intAddr >>> 16) & 0xff);
+            addr[2] = (byte)((intAddr >>>  8) & 0xff);
+            addr[3] = (byte)((intAddr       ) & 0xff);
+            try {
+            in = InetAddress.getByName(
+                addr[0] + "." + addr[1] + "." + addr[2] + "." + addr[3] );
+            } catch (java.net.UnknownHostException e) {
+                in = null;
+            }
+            return in;
+        } catch(SocketException e) {
+            e.printStackTrace();
+            return null;
         }
-        return in;
     }
     private native int getLocalAddressNative() throws SocketException;
 
-    private native int getLocalPort() throws SocketException;
+    public int getLocalPort() {
+        try {
+            return getLocalPortNative();
+        } catch(SocketException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+    private native int getLocalPortNative() throws SocketException;
 
     public native int getPort();
 
@@ -180,6 +198,20 @@ public class SSLSocket {
     public native void setTcpNoDelay(boolean on) throws SocketException;
 
     public native boolean getTcpNoDelay() throws SocketException;
+
+    public native void setKeepAlive(boolean on) throws SocketException;
+
+    public native boolean getKeepAlive(boolean on) throws SocketException;
+
+    public void shutdownInput() throws IOException {
+        shutdownNative(PR_SHUTDOWN_RCV);
+    }
+
+    public void shutdownOutput() throws IOException {
+        shutdownNative(PR_SHUTDOWN_SEND);
+    }
+
+    private native void shutdownNative(int how) throws IOException;
 
     /**
      * param linger The time (in hundredths of a second) to linger for.
@@ -200,18 +232,10 @@ public class SSLSocket {
     //
     // XXX These aren't implemented by native code. Perhaps they could be.
     //
-    public void setSendBufferSize(int size) throws SocketException {
-        throw new SocketException("not implemented");
-    }
-    public int getSendBufferSize() throws SocketException {
-        throw new SocketException("not implemented");
-    }
-    public void setReceiveBufferSize(int size) throws SocketException {
-        throw new SocketException("not implemented");
-    }
-    public int getReceiveBufferSize(int size) throws SocketException {
-        throw new SocketException("not implemented");
-    }
+    public native void setSendBufferSize(int size) throws SocketException;
+    public native int getSendBufferSize() throws SocketException;
+    public native void setReceiveBufferSize(int size) throws SocketException;
+    public native int getReceiveBufferSize(int size) throws SocketException;
 
     public void close() throws IOException {
         if( sockProxy != null ) {
@@ -284,7 +308,10 @@ public class SSLSocket {
      */
     private static final int SSL_ENABLE_SSL2 = 0;
     private static final int SSL_ENABLE_SSL3 = 1;
-    private static final int SO_LINGER = 2;
+    private static final int TCP_NODELAY = 2;
+    private static final int SO_KEEPALIVE = 3;
+    private static final int PR_SHUTDOWN_RCV = 4;
+    private static final int PR_SHUTDOWN_SEND = 5;
 
     /**
      * SO_TIMEOUT timeout in millis. I don't know why we have to keep it here
@@ -329,32 +356,14 @@ public class SSLSocket {
 
     private native void socketWrite(byte[] b, int off, int len, int timeout)
         throws IOException;
-/*
-    protected static native void setPermittedByPolicy(int cipher,
-        int permitted);
-    public static native void configServerSessionIDCache(int maxSidEntries,
-    public static native void clearSessionCache();
-    protected native int invalidateSession();
-    native SSLSecurityStatus getStatus();        // throws ????
-    native void resetHandshake();                 // throws ????
-    native void forceHandshake();                 // throws ????
-    native void redoHandshake();                 // throws ????
-    private native void socketConnect(InetAddress address, int port)
-        throws IOException;
-    private native void socketBind(InetAddress address, int port)
-        throws IOException;
-    private native void socketListen(int count)
-        throws IOException;
-    private native void socketAccept(SocketImpl s)
-        throws IOException;
-    private native void socketSetNeedClientAuth(boolean b);
-    private native void socketSetNeedClientAuthNoExpiryCheck(boolean b);
-    private native void socketSetOptionIntVal(int cmd, boolean on, int value)
-        throws SocketException;
-    private native int socketGetOption(int opt) throws SocketException;
-    private native void setClientNickname(String nickname);
-    private native void setServerNickname(String nickname);
-*/
+
+    public native void invalidateSession() throws SocketException;
+
+    public void redoHandshake() throws SocketException {
+        redoHandshake(false);
+    }
+
+    public native void redoHandshake(boolean flushCache) throws SocketException;
 
     protected void finalize() throws Throwable {
         close();
