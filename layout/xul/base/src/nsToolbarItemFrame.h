@@ -16,14 +16,16 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+ 
 #ifndef nsToolbarItemFrame_h___
 #define nsToolbarItemFrame_h___
 
-#include "nsLeafFrame.h"
-#include "nsIBox.h"
-#include "nsIDOMEventListener.h"
-#include "nsIDocument.h"
+
 #include "nsBoxFrame.h"
+
+class nsIFrame;
+class nsIPresContext;
+class nsIStyleContext;
 
 
 class nsToolbarItemFrame : public nsBoxFrame
@@ -31,14 +33,12 @@ class nsToolbarItemFrame : public nsBoxFrame
 public:
 
   nsToolbarItemFrame();
-  //~nsToolbarItemFrame();
+  ~nsToolbarItemFrame();
 
   friend nsresult NS_NewToolbarItemFrame(nsIFrame** aNewFrame);
 
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
-
-
 
   NS_IMETHOD  Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
