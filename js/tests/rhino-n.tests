@@ -41,6 +41,9 @@ js1_4/Eval/eval-001.js
 js1_4/Eval/eval-002.js
 js1_4/Eval/eval-003.js
 js1_5/Regress/regress-68498-003.js
+#Rhino compiled mode is limited by Java classfile size limitations
+js1_5/Regress/regress-89443.js
+js1_5/Regress/regress-90445.js
 #Rhino doesn't implement the (non-ECMA) toSource() method
 js1_5/Regress/regress-44009.js
 #Skip this test until the corresponding bug is fixed
@@ -48,3 +51,5 @@ ecma_3/RegExp/regress-78156.js
 #Skip these two; see http://bugzilla.mozilla.org/show_bug.cgi?id=81086
 ecma_3/Statements/regress-74474-002.js
 ecma_3/Statements/regress-74474-003.js
+#RegExp bug currently in both SpiderMonkey and Rhino
+ecma_3/RegExp/regress-87231.js
