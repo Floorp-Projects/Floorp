@@ -1,0 +1,776 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsFormControlFrame.h"
+#include "nsHTMLParts.h"
+#include "nsHTMLContainer.h"
+#include "nsIRenderingContext.h"
+#include "nsIPresShell.h"
+#include "nsIPresContext.h"
+#include "nsIStyleContext.h"
+#include "nsLeafFrame.h"
+#include "nsCSSRendering.h"
+#include "nsHTMLIIDs.h"
+#include "nsIView.h"
+#include "nsIViewManager.h"
+#include "nsCoord.h"
+#include "nsWidgetsCID.h"
+#include "nsViewsCID.h"
+#include "nsRepository.h"
+#include "nsGUIEvent.h"
+#include "nsDOMEvent.h"
+#include "nsIFontCache.h"
+#include "nsIFontMetrics.h"
+#include "nsIFormControl.h"
+#include "nsIDeviceContext.h"
+#include "nsHTMLAtoms.h"
+#include "nsIButton.h"  // remove this when GetCID is pure virtual
+#include "nsICheckButton.h"  //remove this
+#include "nsITextWidget.h"  //remove this
+#include "nsISupports.h"
+#include "nsStyleConsts.h"
+#include "nsUnitConversion.h"
+#include "nsCSSLayout.h"
+#include "nsStyleUtil.h"
+#include "nsFormFrame.h"
+#include "nsIContent.h"
+
+static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
+static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+//static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
+
+nsFormControlFrame::nsFormControlFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+  : nsLeafFrame(aContent, aParentFrame)
+{
+  mLastMouseState = eMouseNone;
+  mDidInit        = PR_FALSE;
+  mWidget         = nsnull;
+}
+
+nsFormControlFrame::~nsFormControlFrame()
+{
+  //printf("nsFormControlFrame::~nsFormControlFrame \n");
+  mFormFrame = nsnull;
+  NS_IF_RELEASE(mWidget);
+}
+
+nsresult
+nsFormControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kIFormControlFrameIID)) {
+    *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
+    return NS_OK;
+  }
+  return nsLeafFrame::QueryInterface(aIID, aInstancePtr);
+}
+
+nscoord 
+nsFormControlFrame::GetScrollbarWidth(float aPixToTwip)
+{
+   return NSIntPixelsToTwips(19, aPixToTwip);  // XXX this is windows
+}
+
+nscoord 
+nsFormControlFrame::GetVerticalBorderWidth(float aPixToTwip) const
+{
+   return NSIntPixelsToTwips(3, aPixToTwip);
+}
+
+nscoord 
+nsFormControlFrame::GetHorizontalBorderWidth(float aPixToTwip) const
+{
+  return GetVerticalBorderWidth(aPixToTwip);
+}
+
+nscoord 
+nsFormControlFrame::GetVerticalInsidePadding(float aPixToTwip, 
+                                               nscoord aInnerHeight) const
+{
+   return NSIntPixelsToTwips(3, aPixToTwip);
+}
+
+nscoord 
+nsFormControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+                                               float aPixToTwip, 
+                                               nscoord aInnerWidth,
+                                               nscoord aCharWidth) const
+{
+  return GetVerticalInsidePadding(aPixToTwip, aInnerWidth);
+}
+
+PRInt32
+nsFormControlFrame::GetMaxNumValues()
+{
+  return 0;
+}
+
+PRBool
+nsFormControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues, 
+                                   nsString* aValues, nsString* aNames)
+{
+  aNumValues = 0;
+  return PR_FALSE;
+}
+
+void 
+nsFormControlFrame::SetClickPoint(nscoord aX, nscoord aY)
+{
+  mLastClickPoint.x = aX;
+  mLastClickPoint.y = aY;
+}
+
+// XXX it would be cool if form element used our rendering sw, then
+// they could be blended, and bordered, and so on...
+NS_METHOD
+nsFormControlFrame::Paint(nsIPresContext& aPresContext,
+                    nsIRenderingContext& aRenderingContext,
+                    const nsRect& aDirtyRect)
+{
+  const nsStyleDisplay* disp =
+    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+
+  if (disp->mVisible) {
+    // Make sure the widget is visible if it isn't currently visible
+//    if (PR_FALSE == mDidInit) {
+//      PostCreateWidget(&aPresContext);
+//      mDidInit = PR_TRUE;
+//    }
+    // Point borders/padding if any
+    return nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  }
+  return NS_OK;
+}
+
+void 
+nsFormControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                             const nsReflowState& aReflowState,
+                             nsReflowMetrics& aDesiredLayoutSize,
+                             nsSize& aDesiredWidgetSize)
+{
+  // get the css size and let the frame use or override it
+  nsSize styleSize;
+  GetStyleSize(*aPresContext, aReflowState, styleSize);
+
+  // subclasses should always override this method, but if not and no css, make it small
+  aDesiredLayoutSize.width  = (styleSize.width  > CSS_NOTSET) ? styleSize.width  : 144;
+  aDesiredLayoutSize.height = (styleSize.height > CSS_NOTSET) ? styleSize.height : 144;
+  aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
+  aDesiredLayoutSize.descent = 0;
+  aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
+  aDesiredWidgetSize.height = aDesiredLayoutSize.height;
+}
+
+void 
+nsFormControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                             const nsReflowState& aReflowState,
+                             nsReflowMetrics& aDesiredSize)
+{
+  nsSize ignore;
+  GetDesiredSize(aPresContext, aReflowState, aDesiredSize, ignore);
+}
+
+NS_IMETHODIMP
+nsFormControlFrame::DidReflow(nsIPresContext& aPresContext,
+                        nsDidReflowStatus aStatus)
+{
+  nsresult rv = nsLeafFrame::DidReflow(aPresContext, aStatus);
+
+  // The view is created hidden; once we have reflowed it and it has been
+  // positioned then we show it.
+  if (NS_FRAME_REFLOW_FINISHED == aStatus) {
+    nsIView* view = nsnull;
+    GetView(view);
+    if (nsnull != view) {
+      view->SetVisibility(nsViewVisibility_kShow);
+    }
+  }
+  return rv;
+}
+
+NS_METHOD
+nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
+                     nsReflowMetrics&     aDesiredSize,
+                     const nsReflowState& aReflowState,
+                     nsReflowStatus&      aStatus)
+{
+  nsIView* view = nsnull;
+  GetView(view);
+  if (nsnull == view) {
+    static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
+    static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
+
+    // make sure the style context is set
+    if (nsnull == mStyleContext) {
+      GetStyleContext(&aPresContext, mStyleContext);
+    }
+    nsresult result = 
+	    nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
+                                   (void **)&view);
+	  if (NS_OK != result) {
+	    NS_ASSERTION(0, "Could not create view for button"); 
+      aStatus = NS_FRAME_NOT_COMPLETE;
+      return result;
+	  }
+	  nsIPresShell   *presShell = aPresContext.GetShell();     // need to release
+	  nsIViewManager *viewMan   = presShell->GetViewManager();  // need to release
+	  NS_RELEASE(presShell); 
+
+    GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
+
+    //nsRect boundBox(0, 0, mWidgetSize.width, mWidgetSize.height); 
+    nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
+
+    nsIFrame* parWithView;
+	  nsIView *parView;
+
+    GetParentWithView(parWithView);
+	  parWithView->GetView(parView);
+
+	  const nsIID& id = GetCID();
+    nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
+	  // initialize the view as hidden since we don't know the (x,y) until Paint
+    result = view->Init(viewMan, boundBox, parView, &id, initData,
+                        nsnull, 0, nsnull,
+                        1.0f, nsViewVisibility_kHide);
+    if (nsnull != initData) {
+      delete(initData);
+    }
+    if (NS_OK != result) {
+	    NS_ASSERTION(0, "widget initialization failed"); 
+      aStatus = NS_FRAME_NOT_COMPLETE;
+      return NS_OK;
+	  }
+
+	  // set our widget
+	  result = GetWidget(view, &mWidget);
+	  if ((NS_OK == result) && mWidget) { // keep the ref on mWidget
+      nsIFormControl* formControl = nsnull;
+      result = mContent->QueryInterface(kIFormControlIID, (void**)&formControl);
+      if ((NS_OK == result) && formControl) {
+        // set the content's widget, so it can get content modified by the widget
+        formControl->SetWidget(mWidget);
+        NS_RELEASE(formControl);
+      }
+      PostCreateWidget(&aPresContext);
+      mDidInit = PR_TRUE;
+	  } else {
+	    NS_ASSERTION(0, "could not get widget");
+	  }
+
+    viewMan->InsertChild(parView, view, 0);
+
+    SetView(view);
+	  NS_IF_RELEASE(viewMan);  
+  }
+  else {
+    GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
+
+    // If we are being reflowed and have a view, hide the view until
+    // we are told to paint (which is when our location will have
+    // stabilized).
+  }
+
+  aDesiredSize.ascent = aDesiredSize.height;
+  aDesiredSize.descent = 0;
+
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = aDesiredSize.width;
+	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  }
+    
+  aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;
+}
+
+nsWidgetInitData* 
+nsFormControlFrame::GetWidgetInitData(nsIPresContext& aPresContext)
+{
+  return nsnull;
+}
+
+void 
+nsFormControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
+{
+}
+
+nsresult
+nsFormControlFrame::GetWidget(nsIWidget** aWidget)
+{
+  if (mWidget) {
+    NS_ADDREF(mWidget);
+    *aWidget = mWidget;
+    return NS_OK;
+  } else {
+    *aWidget = nsnull;
+    return NS_FORM_NOTOK;
+  }
+}
+
+nsresult
+nsFormControlFrame::GetWidget(nsIView* aView, nsIWidget** aWidget)
+{
+  nsIWidget*  widget;
+  aView->GetWidget(widget);
+  nsresult    result;
+
+  if (nsnull == widget) {
+    *aWidget = nsnull;
+    result = NS_ERROR_FAILURE;
+
+  } else {
+    const nsIID id = GetIID();
+
+    result =  widget->QueryInterface(kIWidgetIID, (void**)aWidget); // keep the ref
+    if (NS_FAILED(result)) {
+      NS_ASSERTION(0, "The widget interface is invalid");  // need to print out more details of the widget
+    }
+  }
+
+  return result;
+}
+
+const nsIID&
+nsFormControlFrame::GetIID()
+{
+  static NS_DEFINE_IID(kButtonIID, NS_IBUTTON_IID);
+  return kButtonIID;
+}
+  
+const nsIID&
+nsFormControlFrame::GetCID()
+{
+  static NS_DEFINE_IID(kButtonCID, NS_BUTTON_CID);
+  return kButtonCID;
+}
+
+NS_IMETHODIMP
+nsFormControlFrame::GetMaxLength(PRInt32* aSize)
+{
+  *aSize = -1;
+  nsresult result = NS_CONTENT_ATTR_NOT_THERE;
+  nsIHTMLContent* content = nsnull;
+  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
+  if (nsnull != content) {
+    nsHTMLValue value;
+    result = content->GetAttribute(nsHTMLAtoms::maxlength, value);
+    if (eHTMLUnit_Integer == value.GetUnit()) { 
+      *aSize = value.GetIntValue();
+    }
+    NS_RELEASE(content);
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsFormControlFrame::GetSize(PRInt32* aSize) const
+{
+  *aSize = -1;
+  nsresult result = NS_CONTENT_ATTR_NOT_THERE;
+  nsIHTMLContent* content = nsnull;
+  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
+  if (nsnull != content) {
+    nsHTMLValue value;
+    result = content->GetAttribute(nsHTMLAtoms::size, value);
+    if (eHTMLUnit_Integer == value.GetUnit()) { 
+      *aSize = value.GetIntValue();
+    }
+    NS_RELEASE(content);
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsFormControlFrame::GetType(PRInt32* aType) const
+{
+  nsresult result = NS_FORM_NOTOK;
+  if (mContent) {
+    nsIFormControl* formControl = nsnull;
+    result = mContent->QueryInterface(kIFormControlIID, (void**)&formControl);
+    if ((NS_OK == result) && formControl) {
+      result = formControl->GetType(aType);
+      NS_RELEASE(formControl);
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsFormControlFrame::GetName(nsString* aResult)
+{
+  nsresult result = NS_FORM_NOTOK;
+  if (mContent) {
+    nsIHTMLContent* formControl = nsnull;
+    result = mContent->QueryInterface(kIHTMLContentIID, (void**)&formControl);
+    if ((NS_OK == result) && formControl) {
+      nsHTMLValue value;
+      result = formControl->GetAttribute(nsHTMLAtoms::name, value);
+      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+        if (eHTMLUnit_String == value.GetUnit()) {
+          value.GetStringValue(*aResult);
+        }
+      }
+      NS_RELEASE(formControl);
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsFormControlFrame::GetValue(nsString* aResult)
+{
+  nsresult result = NS_FORM_NOTOK;
+  if (mContent) {
+    nsIHTMLContent* formControl = nsnull;
+    result = mContent->QueryInterface(kIHTMLContentIID, (void**)&formControl);
+    if ((NS_OK == result) && formControl) {
+      nsHTMLValue value;
+      result = formControl->GetAttribute(nsHTMLAtoms::value, value);
+      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+        if (eHTMLUnit_String == value.GetUnit()) {
+          value.GetStringValue(*aResult);
+        }
+      }
+      NS_RELEASE(formControl);
+    }
+  }
+  return result;
+}
+
+PRBool
+nsFormControlFrame::IsSuccessful()
+{
+  nsAutoString name;
+  return (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
+}
+
+NS_METHOD nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+                                          nsGUIEvent* aEvent,
+                                          nsEventStatus& aEventStatus)
+{
+  if (nsnull != mContent) {
+    mContent->HandleDOMEvent(aPresContext, (nsEvent*)aEvent, nsnull, DOM_EVENT_INIT, aEventStatus);
+  }
+
+  // make sure that the widget in the event is this input
+  // XXX if there is no view, it could be an image button. Unfortunately,
+  // every image button will get every event.
+  nsIView* view;
+  GetView(view);
+  if (view) {
+    if (mWidget != aEvent->widget) {
+      aEventStatus = nsEventStatus_eIgnore;
+      return NS_OK;
+    }
+  }
+
+  //printf(" %d %d %d %d (%d,%d) \n", this, aEvent->widget, aEvent->widgetSupports, 
+  //       aEvent->message, aEvent->point.x, aEvent->point.y);
+
+  PRInt32 type;
+  GetType(&type);
+  switch (aEvent->message) {
+    case NS_MOUSE_ENTER:
+	    mLastMouseState = eMouseEnter;
+	    break;
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
+      if (NS_FORM_INPUT_IMAGE == type) {
+	      mLastMouseState = eMouseDown;
+      } else {
+	      mLastMouseState = (eMouseEnter == mLastMouseState) ? eMouseDown : eMouseNone;
+      }
+	    break;
+    case NS_MOUSE_LEFT_BUTTON_UP:
+	    if (eMouseDown == mLastMouseState) {
+		    //widget->SetFocus();
+        float t2p = aPresContext.GetTwipsToPixels();
+        SetClickPoint(NSTwipsToIntPixels(aEvent->point.x, t2p),
+                      NSTwipsToIntPixels(aEvent->point.y, t2p));   
+
+        nsEventStatus mStatus = nsEventStatus_eIgnore;
+        nsMouseEvent mEvent;
+        mEvent.eventStructType = NS_MOUSE_EVENT;
+        mEvent.message = NS_MOUSE_LEFT_CLICK;
+        mContent->HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus);
+        
+        if (nsEventStatus_eConsumeNoDefault != mStatus) {
+          MouseClicked(&aPresContext);
+		      //return PR_FALSE;
+        }
+	    } 
+	    mLastMouseState = eMouseEnter;
+	    break;
+    case NS_MOUSE_EXIT:
+	    mLastMouseState = eMouseNone;
+	    break;
+    case NS_KEY_DOWN:
+      if (NS_KEY_EVENT == aEvent->eventStructType) {
+        nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+        if (NS_VK_RETURN == keyEvent->keyCode) {
+          EnterPressed(aPresContext);
+        }
+      }
+      break;
+  }
+  aEventStatus = nsEventStatus_eConsumeDoDefault;
+  return NS_OK;
+}
+
+void nsFormControlFrame::GetStyleSize(nsIPresContext& aPresContext,
+                                const nsReflowState& aReflowState,
+                                nsSize& aSize)
+{
+  PRIntn ss = nsCSSLayout::GetStyleSize(&aPresContext, aReflowState, aSize);
+  if (0 == (ss & NS_SIZE_HAS_WIDTH)) {
+    aSize.width = CSS_NOTSET;
+  }
+  if (0 == (ss & NS_SIZE_HAS_HEIGHT)) {
+    aSize.height = CSS_NOTSET;
+  }
+}
+
+nscoord 
+nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame* aFrame,
+                                const nsString& aString, nsSize& aSize)
+{
+  nsFont font = aPresContext.GetDefaultFixedFont();
+  aFrame->GetFont(&aPresContext, font);
+  //printf("\n GetTextSize %s", aString.ToNewCString());
+  nsIDeviceContext* deviceContext = aPresContext.GetDeviceContext();
+  nsIFontCache* fontCache;
+  deviceContext->GetFontCache(fontCache);
+
+  nsIFontMetrics* fontMet;
+  fontCache->GetMetricsFor(font, fontMet);
+  fontMet->GetWidth(aString, aSize.width);
+  fontMet->GetHeight(aSize.height);
+
+  nscoord charWidth;
+  fontMet->GetWidth("W", charWidth);
+
+  NS_RELEASE(fontMet);
+  NS_RELEASE(fontCache);
+  NS_RELEASE(deviceContext);
+
+  return charWidth;
+}
+  
+nscoord
+nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame* aFrame,
+                                PRInt32 aNumChars, nsSize& aSize)
+{
+  nsAutoString val;
+  //char repChar = (kBackwardMode == aFrame->GetMode()) ? '%' : 'e';
+  char repChar = '%';
+  for (int i = 0; i < aNumChars; i++) {
+    val += repChar;  
+  }
+  return GetTextSize(aPresContext, aFrame, val, aSize);
+}
+  
+PRInt32
+nsFormControlFrame::CalculateSize (nsIPresContext* aPresContext, nsFormControlFrame* aFrame,
+                             const nsSize& aCSSSize, nsInputDimensionSpec& aSpec, 
+                             nsSize& aBounds, PRBool& aWidthExplicit, 
+                             PRBool& aHeightExplicit, nscoord& aRowHeight) 
+{
+  nscoord charWidth   = 0;
+  PRInt32 numRows     = ATTR_NOTSET;
+  aWidthExplicit      = PR_FALSE;
+  aHeightExplicit     = PR_FALSE;
+
+  aBounds.width  = CSS_NOTSET;
+  aBounds.height = CSS_NOTSET;
+  nsSize textSize(0,0);
+
+  nsIContent* iContent = nsnull;
+  aFrame->GetContent((nsIContent*&) iContent);
+  if (!iContent) {
+    return 0;
+  }
+  nsIHTMLContent* hContent = nsnull;
+  nsresult result = iContent->QueryInterface(kIHTMLContentIID, (void**)&hContent);
+  if ((NS_OK != result) || !hContent) {
+    NS_RELEASE(iContent);
+    return 0;
+  }
+  nsAutoString valAttr;
+  nsresult valStatus = NS_CONTENT_ATTR_NOT_THERE;
+  if (nsnull != aSpec.mColValueAttr) {
+    valStatus = hContent->GetAttribute(aSpec.mColValueAttr, valAttr);
+  }
+  nsHTMLValue colAttr;
+  nsresult colStatus = NS_CONTENT_ATTR_NOT_THERE;
+  if (nsnull != aSpec.mColSizeAttr) {
+    colStatus = hContent->GetAttribute(aSpec.mColSizeAttr, colAttr);
+  }
+  float p2t = aPresContext->GetPixelsToTwips();
+
+  // determine the width
+  nscoord adjSize;
+  if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
+    if (aSpec.mColSizeAttrInPixels) {
+      adjSize = (colAttr.GetPixelValue() > 0) ? colAttr.GetPixelValue() : 15;
+      aBounds.width = NSIntPixelsToTwips(adjSize, p2t);
+    }
+    else {
+      PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
+      if (col <= 0) {
+        col = 1;
+      }
+      charWidth = GetTextSize(*aPresContext, aFrame, col, aBounds);
+      aRowHeight = aBounds.height;  // XXX aBounds.height has CSS_NOTSET
+    }
+	  if (aSpec.mColSizeAttrInPixels) {
+	    aWidthExplicit = PR_TRUE;
+	  }
+  }
+  else {
+    if (CSS_NOTSET != aCSSSize.width) {  // css provides width
+      aBounds.width = (aCSSSize.width > 0) ? aCSSSize.width : 1;
+	    aWidthExplicit = PR_TRUE;
+    } 
+    else {                       
+      if (NS_CONTENT_ATTR_HAS_VALUE == valStatus) { // use width of initial value 
+        charWidth = GetTextSize(*aPresContext, aFrame, valAttr, aBounds);
+      }
+      else if (aSpec.mColDefaultValue) { // use default value
+        charWidth = GetTextSize(*aPresContext, aFrame, *aSpec.mColDefaultValue, aBounds);
+      }
+      else if (aSpec.mColDefaultSizeInPixels) {    // use default width in pixels
+        charWidth = GetTextSize(*aPresContext, aFrame, 1, aBounds);
+        aBounds.width = aSpec.mColDefaultSize;
+      }
+      else  {                                    // use default width in num characters
+        charWidth = GetTextSize(*aPresContext, aFrame, aSpec.mColDefaultSize, aBounds); 
+      }
+      aRowHeight = aBounds.height; // XXX aBounds.height has CSS_NOTSET
+    }
+  }
+
+  // determine the height
+  nsHTMLValue rowAttr;
+  nsresult rowStatus = NS_CONTENT_ATTR_NOT_THERE;
+  if (nsnull != aSpec.mRowSizeAttr) {
+    rowStatus = hContent->GetAttribute(aSpec.mRowSizeAttr, rowAttr);
+  }
+  if (NS_CONTENT_ATTR_HAS_VALUE == rowStatus) { // row attr will provide height
+    PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
+    adjSize = (rowAttrInt > 0) ? rowAttrInt : 1;
+    if (0 == charWidth) {
+      charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize);
+      aBounds.height = textSize.height * adjSize;
+      aRowHeight = textSize.height;
+      numRows = adjSize;
+    }
+    else {
+      aBounds.height = aBounds.height * adjSize;
+    }
+  }
+  else if (CSS_NOTSET != aCSSSize.height) {  // css provides height
+    aBounds.height = (aCSSSize.height > 0) ? aCSSSize.height : 1;
+	  aHeightExplicit = PR_TRUE;
+  } 
+  else {         // use default height in num lines
+    if (0 == charWidth) {  
+      charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize);
+      aBounds.height = textSize.height * aSpec.mRowDefaultSize;
+      aRowHeight = textSize.height;
+    } 
+    else {
+      aBounds.height = aBounds.height * aSpec.mRowDefaultSize;
+    }
+  }
+
+  if ((0 == charWidth) || (0 == textSize.width)) {
+    charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize);
+    aRowHeight = textSize.height;
+  }
+
+  // add inside padding if necessary
+  if (!aWidthExplicit) {
+    aBounds.width += (2 * aFrame->GetHorizontalInsidePadding(*aPresContext, p2t, aBounds.width, charWidth));
+  }
+  if (!aHeightExplicit) {
+    aBounds.height += (2 * aFrame->GetVerticalInsidePadding(p2t, textSize.height)); 
+  }
+
+  NS_RELEASE(hContent);
+  if (ATTR_NOTSET == numRows) {
+    numRows = aBounds.height / aRowHeight;
+  }
+
+  NS_RELEASE(iContent);
+  return numRows;
+}
+
+
+// this handles all of the input types rather than having them do it.
+NS_IMETHODIMP 
+nsFormControlFrame::GetFont(nsIPresContext* aPresContext, nsFont& aFont)
+{
+  const nsStyleFont* styleFont = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+
+  PRInt32 type;
+  GetType(&type);
+  switch (type) {
+    case NS_FORM_INPUT_TEXT:
+    case NS_FORM_TEXTAREA:
+    case NS_FORM_INPUT_PASSWORD:
+      aFont = styleFont->mFixedFont;
+      break;
+    case NS_FORM_INPUT_BUTTON:
+    case NS_FORM_INPUT_SUBMIT:
+    case NS_FORM_INPUT_RESET:
+    case NS_FORM_SELECT:
+      if ((styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT) || 
+          (styleFont->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT)) {
+        aFont = styleFont->mFixedFont;
+        aFont.weight = NS_FONT_WEIGHT_NORMAL;  // always normal weight
+        aFont.size = styleFont->mFont.size;    // normal font size
+        if (0 == (styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT)) {
+          aFont.name = "Arial";  // XXX windows specific font
+        }
+      } else {
+        // use arial, scaled down one HTML size
+        // italics, decoration & variant(?) get used
+        aFont = styleFont->mFont;
+        aFont.name = "Arial";  // XXX windows specific font
+        aFont.weight = NS_FONT_WEIGHT_NORMAL; 
+        const nsFont& normal = aPresContext->GetDefaultFont();
+        PRInt32 scaler = aPresContext->GetFontScaler();
+        float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
+        PRInt32 fontIndex = nsStyleUtil::FindNextSmallerFontSize(aFont.size, (PRInt32)normal.size, scaleFactor);
+        aFont.size = nsStyleUtil::CalcFontPointSize(fontIndex, (PRInt32)normal.size, scaleFactor);
+      }
+      break;
+  }
+  return NS_OK;
+}
+
+void
+nsFormControlFrame::Reset()
+{
+}
+
+
