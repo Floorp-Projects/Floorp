@@ -2796,7 +2796,7 @@ function s2v_sourceclick (event)
         target = target.parentNode;
     }
     
-    if (target && target.localName == "margin")
+    if (target && target.localName == "margin" && event.button == 0)
     {
         var line = parseInt (target.nextSibling.firstChild.data);
         sourceText.onMarginClick (event, line);
