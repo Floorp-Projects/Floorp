@@ -22,6 +22,7 @@
 
 #include "nsIDOMRange.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMDocument.h"
 #include "nsIContent.h"
 #include "nsVoidArray.h"
 
@@ -202,7 +203,7 @@ PRBool nsRange::InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
   res = aNode2->GetOwnerDocument(&document2);
   if (!NS_SUCCEEDED(res))
   {
-    //NS_IF_RELEASE(document1);
+    NS_IF_RELEASE(document1);
     return PR_FALSE;
   }
 
@@ -212,13 +213,8 @@ PRBool nsRange::InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
   if (document1 == document2)
     retval = PR_TRUE;
 
-  // The releases are commented out for now, because they result
-  // in compile errors:
-  // "cannot lookup method in incomplete type `nsIDOMDocument'"
-  // But I think they're needed: 
-  // nsGenericDOMDataNode::GetOwnerDocument() does a QueryInterface().
-  //NS_IF_RELEASE(document1);
-  //NS_IF_RELEASE(document2);
+  NS_IF_RELEASE(document1);
+  NS_IF_RELEASE(document2);
 
   return retval;
 }
