@@ -27,7 +27,7 @@
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
 static PRBool
-peqWithParameter(nsIRDFResource *r1, nsIRDFResource *r2, PRBool *isParameter, const char *parameter)
+peqWithParameter(nsIRDFResource *r1, nsIRDFResource *r2, const char *parameter)
 {
 	char *r1Str, *r2Str;
 	nsString r1nsStr, r2nsStr;
@@ -42,11 +42,10 @@ peqWithParameter(nsIRDFResource *r1, nsIRDFResource *r2, PRBool *isParameter, co
 
 	//Look to see if there are any parameters
 	PRInt32 paramStart = r2nsStr.FindChar('?');
-	//If not, then just return whether or not the strings are equal.
+	//If not, then it's not this parameter.
 	if(paramStart == -1)
 	{
-		*isParameter = PR_FALSE;
-		return (r1nsStr == r2nsStr);
+		return PR_FALSE;
 	}
 
 	nsString r2propStr;
@@ -58,35 +57,26 @@ peqWithParameter(nsIRDFResource *r1, nsIRDFResource *r2, PRBool *isParameter, co
 		nsString params;
 		r2nsStr.Right(params, r2nsStr.Length() - 1 - paramStart);
 		PRInt32 parameterPos = params.Find(parameter);
-		*isParameter = (parameterPos != -1);
-		return PR_TRUE;
+		return (parameterPos != -1);
 	}
 	//Otherwise the properties aren't equal.
 	else
 	{
-		*isParameter = PR_FALSE;
 		return PR_FALSE;
 	}
 	return PR_FALSE;
 }
 
 PRBool
-peqCollationSort(nsIRDFResource *r1, nsIRDFResource *r2, PRBool *isCollationSort)
+peqCollationSort(nsIRDFResource *r1, nsIRDFResource *r2)
 {
-
-	if(!isCollationSort)
-		return PR_FALSE;
-
-	return peqWithParameter(r1, r2, isCollationSort, "collation=true");
+	return peqWithParameter(r1, r2, "collation=true");
 }
 
 PRBool
-peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort)
+peqSort(nsIRDFResource* r1, nsIRDFResource* r2)
 {
-	if(!isSort)
-		return PR_FALSE;
-
-	return peqWithParameter(r1, r2, isSort, "sort=true");
+	return peqWithParameter(r1, r2, "sort=true");
 }
 
 nsresult createNode(nsString& str, nsIRDFNode **node)

@@ -38,6 +38,8 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_DATE					NC_NAMESPACE_URI "Date"
 #define NC_RDF_STATUS				NC_NAMESPACE_URI "Status"
 #define NC_RDF_FLAGGED				NC_NAMESPACE_URI "Flagged"
+#define NC_RDF_PRIORITY			NC_NAMESPACE_URI "Priority"
+#define NC_RDF_SIZE					NC_NAMESPACE_URI "Size"
 
 #define NC_RDF_CHILD				NC_NAMESPACE_URI "child"
 #define NC_RDF_MESSAGECHILD			NC_NAMESPACE_URI "MessageChild"
@@ -71,11 +73,11 @@ typedef struct _nsMsgRDFNotification {
 
 //Returns PR_TRUE if r1 is equal to r2 and r2 is the sort property.
 PRBool
-peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort);
+peqSort(nsIRDFResource* r1, nsIRDFResource* r2);
 
 //Returns PR_TRUE if r1 is equal to r2 and r2 is the collation property.
 PRBool
-peqCollationSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isCollation);
+peqCollationSort(nsIRDFResource* r1, nsIRDFResource* r2);
 
 //Given an nsString, create an nsIRDFNode
 nsresult createNode(nsString& str, nsIRDFNode **node);
