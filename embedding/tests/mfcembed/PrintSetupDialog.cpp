@@ -183,7 +183,7 @@ int CPrintSetupDialog::GetPaperSizeIndexFromData(short aUnit, double aW, double 
 int CPrintSetupDialog::GetPaperSizeIndex(const CString& aStr) 
 {
   for (int i=0;i<gNumPaperSizes;i++) {
-    if (aStr.Equals(gPaperSize[i].mDesc)) {
+    if (!aStr.Compare(gPaperSize[i].mDesc)) {
       return i;
     }
   }
