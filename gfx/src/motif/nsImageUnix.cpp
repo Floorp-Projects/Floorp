@@ -29,7 +29,6 @@ static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
 nsImageUnix :: nsImageUnix()
 {
-  printf("[[[[[[[[[[[[[[[[[[[[ New Image Created ]]]]]]]]]]]]]]]]]]]]]]\n");
   NS_INIT_REFCNT();
   mImage = nsnull ;
   mImageBits = nsnull;

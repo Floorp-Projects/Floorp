@@ -1314,7 +1314,6 @@ PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
   }*/
 
   if (mEventCallback && !mIgnoreResize) {
-printf("IN ON Resize %d %d %d %d\n",size->x, size->y, size->width, size->height);
     return(DispatchEvent(&aEvent));
   }
   return FALSE;
