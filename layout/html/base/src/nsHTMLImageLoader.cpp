@@ -147,7 +147,10 @@ nsHTMLImageLoader::Update(nsIPresContext* aPresContext,
 
   // Pass on update to the user of this object if they want it
   if (mCallBack) {
-    if (!mFlags.mSquelchCallback) {
+    // We squelch the status size callback in the case where the client doesn't
+    // want the size returned. However, don't squelch a status that says the image
+    // failed to load
+    if ((NS_IMAGE_LOAD_STATUS_ERROR & aStatus) || !mFlags.mSquelchCallback) {
       (*mCallBack)(aPresContext, this, aFrame, mClosure, aStatus);
     }
   }
