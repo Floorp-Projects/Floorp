@@ -264,6 +264,16 @@ class CToken {
       mLineNumber = mLineNumber == 0 ? aLineNumber : mLineNumber;
     }
 
+    void SetInError(PRBool aInError)
+    {
+      mInError = aInError;
+    }
+
+    PRBool IsInError()
+    {
+      return mInError;
+    }
+
     void SetAttributeCount(PRInt16 aValue) {  mAttrCount = aValue; }
 
     /**
@@ -285,7 +295,8 @@ protected:
     PRInt32 mTypeID;
     PRInt32 mUseCount;
     PRInt32 mNewlineCount;
-    PRInt32 mLineNumber;
+    PRUint32 mLineNumber : 31;
+    PRUint32 mInError : 1;
     PRInt16 mAttrCount;
 };
 

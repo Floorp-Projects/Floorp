@@ -978,7 +978,7 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
  *  @param   
  *  @return  result status
  */
-nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAString & aText,PRInt32 attrCount,PRBool aNewlineRequired) {
+nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAString & aText,PRInt32 attrCount,PRBool aTagInError) {
   nsresult result=NS_OK;
 
   // adjust line number to what it will be after we finish writing this tag
@@ -997,9 +997,8 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAString & aText,PRIn
     return NS_ERROR_FAILURE;
 
   if (kBeforeText[aTagType][0] != 0) {
-    nsAutoString beforeText;
-    beforeText.AssignWithConversion(kBeforeText[aTagType]);
-    theContext.mITextToken.SetIndirectString(beforeText);
+    theContext.mITextToken.SetIndirectString(
+        NS_ConvertASCIItoUTF16(kBeforeText[aTagType]));
     nsCParserNode theNode(&theContext.mITextToken, 0/*stack token*/);
     mSink->AddLeaf(theNode);
   }
@@ -1052,15 +1051,16 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAString & aText,PRIn
     result=WriteAttributes(attrCount);
   }
 
-  if (kAfterText[aTagType][0] != 0) {
-    nsAutoString afterText;
-    afterText.AssignWithConversion(kAfterText[aTagType]);
-    theContext.mITextToken.SetIndirectString(afterText);
+  // Tokens are set in error if their ending > is not there, so don't output 
+  // the after-text
+  if (!aTagInError && kAfterText[aTagType][0] != 0) {
+    theContext.mITextToken.SetIndirectString(
+      NS_ConvertASCIItoUTF16(kAfterText[aTagType]));
     nsCParserNode theNode(&theContext.mITextToken, 0/*stack token*/);
     mSink->AddLeaf(theNode);
   }
 #ifdef DUMP_TO_FILE
-  if (gDumpFile && kDumpFileAfterText[aTagType][0])
+  if (!aTagInError && gDumpFile && kDumpFileAfterText[aTagType][0])
     fprintf(gDumpFile, kDumpFileAfterText[aTagType]);
 #endif // DUMP_TO_FILE
 
@@ -1097,7 +1097,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
         ++mTagCount;
 
         const nsAString& startValue = aToken->GetStringValue();
-        result=WriteTag(mStartTag,startValue,aToken->GetAttributeCount(),PR_TRUE);
+        result=WriteTag(mStartTag,startValue,aToken->GetAttributeCount(),aToken->IsInError());
 
         if((ePlainText!=mDocType) && mParser && (NS_OK==result)) {
           result = mSink->NotifyTagObservers(&theContext.mTokenNode);
@@ -1112,7 +1112,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
         }
 
         const nsAString& endValue = aToken->GetStringValue();
-        result=WriteTag(mEndTag,endValue,aToken->GetAttributeCount(),PR_TRUE);
+        result=WriteTag(mEndTag,endValue,aToken->GetAttributeCount(),aToken->IsInError());
       }
       break;
 
@@ -1121,10 +1121,10 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
         nsAutoString theStr;
         theStr.AssignLiteral("<!");
         theStr.Append(aToken->GetStringValue());
-        // Treat CDATA sections specially because they remember their last
-        // character and can come back malformed.
-//        theStr.AppendLiteral(">");
-        result=WriteTag(mCDATATag,theStr,0,PR_TRUE);
+        if (!aToken->IsInError()) {
+          theStr.AppendLiteral(">");
+        }
+        result=WriteTag(mCDATATag,theStr,0,aToken->IsInError());
       }
       break;
 
@@ -1133,8 +1133,10 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
         nsAutoString theStr;
         theStr.AssignLiteral("<!");
         theStr.Append(aToken->GetStringValue());
-        theStr.AppendLiteral(">");
-        result=WriteTag(mMarkupDeclaration,theStr,0,PR_TRUE);
+        if (!aToken->IsInError()) {
+          theStr.AppendLiteral(">");
+        }
+        result=WriteTag(mMarkupDeclaration,theStr,0,aToken->IsInError());
       }
       break;
 
@@ -1142,14 +1144,14 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       {
         nsAutoString theStr;
         aToken->AppendSourceTo(theStr);
-        result=WriteTag(mCommentTag,theStr,0,PR_TRUE);
+        result=WriteTag(mCommentTag,theStr,0,aToken->IsInError());
       }
       break;
 
     case eToken_doctypeDecl:
       {
         const nsAString& doctypeValue = aToken->GetStringValue();
-        result=WriteTag(mDocTypeTag,doctypeValue,0,PR_TRUE);
+        result=WriteTag(mDocTypeTag,doctypeValue,0,aToken->IsInError());
       }
       break;
 
@@ -1182,7 +1184,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
     case eToken_text:
       {
         const nsAString& str = aToken->GetStringValue();         
-        result=WriteTag(mText,str,aToken->GetAttributeCount(),PR_TRUE);
+        result=WriteTag(mText,str,aToken->GetAttributeCount(),aToken->IsInError());
         ++mTokenCount;
         if (NS_VIEWSOURCE_TOKENS_PER_BLOCK > 0 &&
             mTokenCount > NS_VIEWSOURCE_TOKENS_PER_BLOCK && !str.IsEmpty()) {
@@ -1204,12 +1206,12 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
             theStr.Assign(NS_LITERAL_STRING("#") + theStr);
           }
         }
-        result=WriteTag(mEntityTag,theStr,0,PR_FALSE);
+        result=WriteTag(mEntityTag,theStr,0,aToken->IsInError());
       }
       break;
 
     case eToken_instruction:
-      result=WriteTag(mPITag,aToken->GetStringValue(),0,PR_TRUE);
+      result=WriteTag(mPITag,aToken->GetStringValue(),0,aToken->IsInError());
 
     default:
       result=NS_OK;

@@ -69,6 +69,7 @@ CToken::CToken(PRInt32 aTag) {
   mAttrCount=0;
   mNewlineCount=0;
   mLineNumber = 0;
+  mInError = PR_FALSE;
   mTypeID=aTag;
   // Note that the use count starts with 1 instead of 0. This
   // is because of the assumption that any token created is in

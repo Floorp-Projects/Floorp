@@ -688,11 +688,16 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,
           done = PR_TRUE;
         }
         else if(aChar == kLessThan) {
+          aToken->SetInError(PR_TRUE);
           done = PR_TRUE;
         }
       }//if
     }//if
   }//while
+
+  if (NS_FAILED(result)) {
+    aToken->SetInError(PR_TRUE);
+  }
 
   aToken->SetAttributeCount(theAttrCount);
   return result;
@@ -728,6 +733,9 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
       //Good. Now, let's see if the next char is ">". 
       //If so, we have a complete tag, otherwise, we have attributes.
       result = aScanner.Peek(aChar);
+      if (NS_FAILED(result)) {
+        aToken->SetInError(PR_TRUE);
+      }
       NS_ENSURE_SUCCESS(result, result);
 
       if(kGreaterThan != aChar) { //look for '>' 
@@ -854,6 +862,9 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
     NS_ENSURE_SUCCESS(result, result);
       
     result = aScanner.Peek(aChar);
+    if (NS_FAILED(result)) {
+      aToken->SetInError(PR_TRUE);
+    }
     NS_ENSURE_SUCCESS(result, result);
 
     if(kGreaterThan != aChar) {
