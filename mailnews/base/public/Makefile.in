@@ -45,6 +45,7 @@ XPIDLSRCS =				  \
 		nsIUrlListener.idl	\
 		nsIMsgBiffManager.idl	\
 		nsIMsgCopyService.idl	\
+		nsIMsgCopyServiceListener.idl	\
 		$(NULL)
 
 EXPORTS =				\

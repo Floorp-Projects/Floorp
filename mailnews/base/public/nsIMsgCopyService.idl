@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -19,6 +19,7 @@
 #include "nsISupports.idl"
 #include "nsIMsgFolder.idl"
 #include "nsIFileSpec.idl"
+#include "nsIMsgCopyServiceListener.idl"
 
 %{C++
 #include "nsISupportsArray.h"
@@ -36,9 +37,20 @@ interface nsIMsgCopyService : nsISupports {
 					  in nsIMsgFolder dstFolder,	/* destination folder */
 					  in boolean isMove,		 	/* move messages */
 					  in nsITransactionManager txnMgr); /* undo manager */
+
 	void CopyMessage(in nsIFileSpec fileSpec,	/* canonical mime msg file */
 					 in nsIMsgFolder dstFolder, /* destination folder */
 					 in nsITransactionManager txnMgr); /* undo manager */
+
 	void NotifyCompletion(in nsIMsgFolder srcFolder, /* storage src folder */
 						  in nsIMsgFolder dstFolder); /* destination folder */
+
+    void RegisterListener(in nsIMsgCopyServiceListener listener,
+                          in nsISupports aSupport, // either an ui source
+                                                   // folder or a file spec
+                          in nsIMsgFolder dstFolder,
+                          in nsISupports listenerData);
+
+    void UnregisterListener(in nsIMsgCopyServiceListener listener);
+
 };
