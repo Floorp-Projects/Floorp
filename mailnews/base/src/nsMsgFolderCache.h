@@ -61,7 +61,6 @@ protected:
 	nsFileSpec		m_dbFileSpec;
 	nsISupportsArray	*m_cacheElements;
 
-	nsString2			m_dbName;
 	// mdb stuff
 	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.
 	nsIMdbStore	 	    *m_mdbStore;

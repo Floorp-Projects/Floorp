@@ -270,7 +270,7 @@ NS_IMETHODIMP nsNntpUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
 	nsXPIDLCString hostName;
 	GetHost(getter_Copies(hostName));
 
-    nsString2 newsgroupURI(kNewsMessageRootURI, eOneByte);
+    nsCString newsgroupURI(kNewsMessageRootURI);
     newsgroupURI.Append("/");
     newsgroupURI.Append(hostName);
     newsgroupURI.Append("/");

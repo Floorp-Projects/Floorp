@@ -18,7 +18,7 @@
 
 #include "msgCore.h"
 #include "nsAbAutoCompleteSession.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsRDFCID.h"
 #include "nsIRDFService.h"
@@ -160,7 +160,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(const PRUnichar *aDocId, con
 				if (parser)
 					parser->MakeFullAddress(nsnull, m_searchNameCompletionEntryTable[nIndex].userName, 
 											m_searchNameCompletionEntryTable[nIndex].emailAddress, &fullAddress);
-				nsString2 searchResult(fullAddress);
+				nsString searchResult(fullAddress);
 				// iterate over the table looking for a match
 				rv = aResultListener->OnAutoCompleteResult(aDocId, aSearchString, searchResult.GetUnicode());
 				break;

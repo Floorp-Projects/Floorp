@@ -1074,7 +1074,7 @@ NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages,
     if (NS_FAILED(rv)) return rv;
     PRUnichar *newsgroupname;
     rv = GetName(&newsgroupname);
-	nsString2 asciiName(newsgroupname, eOneByte);
+	nsCString asciiName(newsgroupname);
     if (NS_FAILED(rv)) {
       PR_FREEIF(hostname);
       return rv;
