@@ -328,6 +328,22 @@ function GetPrefs()
   return null;
 }
 
+function GetStringPref(name)
+{
+  try {
+    return GetPrefs().getComplexValue(name, Components.interfaces.nsISupportsString).data;
+  } catch (e) {}
+  return "";
+}
+
+function GetBoolPref(name)
+{
+  try {
+    return GetPrefs().getBoolPref(name);
+  } catch (e) {}
+  return false;
+}
+
 function SetUnicharPref(aPrefName, aPrefValue)
 {
   var prefs = GetPrefs();
