@@ -324,12 +324,8 @@ private:
   NS_IMETHOD GetLocalName(nsAString& aLocalName) {                          \
     return nsGenericDOMDataNode::GetLocalName(aLocalName);                  \
   }                                                                         \
-  NS_IMETHOD GetNodeValue(nsAString& aNodeValue) {                          \
-    return nsGenericDOMDataNode::GetNodeValue(aNodeValue);                  \
-  }                                                                         \
-  NS_IMETHOD SetNodeValue(const nsAString& aNodeValue) {                    \
-    return nsGenericDOMDataNode::SetNodeValue(aNodeValue);                  \
-  }                                                                         \
+  NS_IMETHOD GetNodeValue(nsAString& aNodeValue);                           \
+  NS_IMETHOD SetNodeValue(const nsAString& aNodeValue);                     \
   NS_IMETHOD GetNodeType(PRUint16* aNodeType);                              \
   NS_IMETHOD GetParentNode(nsIDOMNode** aParentNode) {                      \
     return nsGenericDOMDataNode::GetParentNode(aParentNode);                \

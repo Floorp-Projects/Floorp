@@ -128,6 +128,18 @@ nsCommentNode::GetNodeName(nsAString& aNodeName)
 }
 
 NS_IMETHODIMP
+nsCommentNode::GetNodeValue(nsAString& aNodeValue)
+{
+  return nsGenericDOMDataNode::GetNodeValue(aNodeValue);
+}
+
+NS_IMETHODIMP
+nsCommentNode::SetNodeValue(const nsAString& aNodeValue)
+{
+  return nsGenericDOMDataNode::SetNodeValue(aNodeValue);
+}
+
+NS_IMETHODIMP
 nsCommentNode::GetNodeType(PRUint16* aNodeType)
 {
   *aNodeType = (PRUint16)nsIDOMNode::COMMENT_NODE;
