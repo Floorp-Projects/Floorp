@@ -308,7 +308,7 @@ CreateCompositionFields(const char        *from,
   NS_ENSURE_TRUE(cFields, NS_ERROR_OUT_OF_MEMORY);
   
   // Now set all of the passed in stuff...
-  cFields->SetCharacterSet(charset);
+  cFields->SetCharacterSet(!nsCRT::strcasecmp("us-ascii", charset) ? "ISO-8859-1" : charset);
   
   char *val;
   
