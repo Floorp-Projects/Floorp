@@ -501,7 +501,6 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
 nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
     nsrefcnt cnt;
-    gShuttingDown = PR_TRUE;
 
     // Notify observers of xpcom shutting down
     nsresult rv = NS_OK;
@@ -520,6 +519,11 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
             }
         }
     }
+
+    // XPCOM is officially in shutdown mode NOW
+    // Set this only after the observers have been notified as this
+    // will cause servicemanager to become inaccessible.
+    gShuttingDown = PR_TRUE;
 
     // Release our own singletons...
     XPTI_FreeInterfaceInfoManager();
