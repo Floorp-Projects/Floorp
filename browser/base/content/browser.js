@@ -159,7 +159,7 @@ function getHomePage()
   }
 
   // use this if we can't find the pref
-  if (!url)
+  if (!url && gNavigatorRegionBundle)
     url = gNavigatorRegionBundle.getString("homePageDefault");
 
   return url;
