@@ -58,6 +58,7 @@ public:
   void AddAvoidDomain(const nsString& aDomain);
 
   void SetBrowserWindow(nsIBrowserWindow* aWindow);
+  void GetBrowserWindow(nsIBrowserWindow** aWindow);
 
   // Set the delay (by default, the timer is set to one second)
   void SetDelay(PRInt32 aSeconds) {

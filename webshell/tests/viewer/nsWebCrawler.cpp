@@ -662,6 +662,13 @@ nsWebCrawler::SetBrowserWindow(nsIBrowserWindow* aWindow)
   NS_IF_ADDREF(mBrowser);
 }
 
+void
+nsWebCrawler::GetBrowserWindow(nsIBrowserWindow** aWindow)
+{
+  NS_IF_ADDREF(mBrowser);
+  *aWindow = mBrowser;
+}
+
 static void
 TimerCallBack(nsITimer *aTimer, void *aClosure)
 {
