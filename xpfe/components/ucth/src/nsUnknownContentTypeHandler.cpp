@@ -24,7 +24,9 @@
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 
-#include "nsIWebShell.h"  // Not sure why we need this? --law & mcafee
+#ifdef NECKO
+#include "nsIChannel.h"
+#endif
 
 // {42770B50-03E9-11d3-8068-00600811A9C3}
 #define NS_UNKNOWNCONTENTTYPEHANDLER_CID \
