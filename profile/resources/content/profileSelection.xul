@@ -54,6 +54,7 @@
   
   <script type="application/x-javascript" src="chrome://communicator/content/profile/profileSelection.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/profile/profileManager.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/profile/createProfileWizard.js"/>
   
   <keyset id="dialogKeys"/>
 

@@ -1,43 +1,70 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/profile/profile.css" type="text/css"?>
-<?xul-overlay href="chrome://global/content/wizardOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window [
+<!DOCTYPE wizard [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
 %brandDTD;
 <!ENTITY % profileDTD SYSTEM "chrome://communicator/locale/profile/createProfileWizard.dtd">
 %profileDTD;
 ]>
 
-
-<window title="&newprofile.title;" orient="vertical"
-        class="color-dialog"
+<wizard id="createProfileWizard"
+        title="&newprofile.title;"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onclose="onCancel();"
-        onload="Startup('newProfile1_1','content');">
+        onwizardcancel="return onCancel();"
+        onwizardfinish="return onFinish();"
+        onload="initWizard();"
+        style="&window.size;">
   
-  <stringbundle id="bundle_createProfileWizard"
-                src="chrome://communicator/locale/profile/createProfileWizard.properties"/>
   <stringbundle id="bundle_profileManager"
                 src="chrome://communicator/locale/profile/profileManager.properties"/>
 
-  <!-- XXX: strres.js is needed so that wizardManager.js will work -->
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/profile/createProfileWizard.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/wizardOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/wizardHandlerSet.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/wizardManager.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/widgetStateManager.js"/>
 
-  <hbox class="box-header" id="header" title="&window.title.label;" description="&profileWizard.title;"/>
-  <hbox class="wizard-box" flex="1">
-    <html:iframe src="about:blank" style="width: 40em; height: 23em; overflow: auto;" name="content" id="content" flex="1"/>
-  </hbox>
-  <separator class="groove"/>
-  <hbox id="wizardButtons"/>
+  <wizardpage id="explanation" onpageshow="enableNextButton();">
+    <description>&profileCreationExplanation_1.text;</description>
+    <description>&profileCreationExplanation_2.text;</description>
+    <description>&profileCreationExplanation_3.text;</description>
+    <spacer flex="1"/>
+    <description>&profileCreationExplanation_4.text;</description>
+  </wizardpage>
 
-</window>
+  <wizardpage id="createProfile" onpageshow="initSecondWizardPage();">
+    <description>&profileCreationIntro.text;</description> 
+
+    <label accesskey="&profilePrompt.accesskey;" control="ProfileName">&profilePrompt.label;</label> 
+    <textbox id="profileName" value="&profileDefaultName;"
+             oninput="checkCurrentInput(this.value);"/>
+    
+    <separator/>
+
+    <description>&profileDirExplanation.text;</description>
+
+    <vbox class="indent" flex="1" style="overflow: auto;">
+      <description id="profileDisplay">*</description>
+    </vbox>
+
+    <hbox>
+      <button label="&button.choosefolder.label;" oncommand="chooseProfileFolder();" 
+              accesskey="&button.choosefolder.accesskey;"/>
+
+      <button id="useDefault" label="&button.usedefault.label;"
+              oncommand="setDisplayToDefaultFolder(); updateProfileDisplay();"
+              accesskey="&button.usedefault.accesskey;" disabled="true"/>
+
+      <button label="&button.langSelection.label;" oncommand="showLangDialog();"
+              accesskey="&button.langSelection.accesskey;"/>
+    </hbox>
+
+    <separator/>
+
+    <description id="finishText">*</description>
+
+    <data id="profileLanguage"/>
+    <data id="profileRegion"/>
+  </wizardpage>
+
+</wizard>

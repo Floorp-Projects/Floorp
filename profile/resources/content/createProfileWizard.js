@@ -20,159 +20,205 @@
  * Contributor(s):
  *   Ben Goodger (30/09/99)
  *   Brant Gurganus (23/03/03)
+ *   Stefan Borggraefe (17/10/03)
  */ 
 
-// The WIZARD of GORE
-
-var profile = Components.classes["@mozilla.org/profile/manager;1"].getService();
-profile = profile.QueryInterface(Components.interfaces.nsIProfileInternal); 
-var gCreateProfileWizardBundle;
+var gProfile = Components.classes["@mozilla.org/profile/manager;1"].getService(Components.interfaces.nsIProfileInternal);
 var gProfileManagerBundle;
 
-// Navigation Set for pages contained in wizard 
-var wizardMap = {
-  newProfile1_1: { previous: null,              next: "newProfile1_2",    finish: false },
-  newProfile1_2: { previous: "newProfile1_1",   next: null,               finish: true }
+// The directory where the profile will be created.
+var gProfileRoot;
+
+// Text node to display the location and name of the profile to create.
+var gProfileDisplay;
+
+// Called once when the wizard is opened.
+function initWizard()
+{ 
+  gProfileManagerBundle = document.getElementById("bundle_profileManager");
+    
+  // Initialize the profile location display.
+  gProfileDisplay = document.getElementById("profileDisplay").firstChild;
+  setDisplayToDefaultFolder();
 }
 
-// page specific variables
-var profName      = "";
-var profDir       = "";
-var wizardManager = null;
-
-// startup procedure
-function Startup( startPage, frame_id )
+// Called every time the second wizard page is displayed.
+function initSecondWizardPage() 
 {
-  if( frame_id == "" ) {
-    dump("Please supply a content_frame ID!");
+  var profileName = document.getElementById("profileName");
+  profileName.select();
+  profileName.focus();
+
+  // Initialize profile name validation.
+  checkCurrentInput(profileName.value);
+}
+
+function setDisplayToDefaultFolder()
+{
+  setDisplayToFolder(gProfile.defaultProfileParentDir);
+  document.getElementById("useDefault").disabled = true;
+}
+
+function setDisplayToFolder(profileRoot)
+{
+  var profileName = document.getElementById("profileName");
+  profileName.focus();
+  gProfileRoot = profileRoot;
+}
+
+function updateProfileDisplay()
+{
+  var currentProfileName = document.getElementById("profileName").value;
+  var profilePathAndName = gProfileRoot.clone();
+
+  profilePathAndName.append(currentProfileName);
+  gProfileDisplay.data = profilePathAndName.path;
+}
+
+// Shows the Language/Region Selection dialog and updates the data-Attributes to 
+// the selected values.
+function showLangDialog()
+{
+  var languageCode = document.getElementById("profileLanguage").getAttribute("data");
+  var regionCode = document.getElementById("profileRegion").getAttribute("data");
+  window.openDialog("chrome://communicator/content/profile/selectLang.xul",
+                    "", "centerscreen,modal,titlebar",
+                    languageCode, regionCode);
+}
+
+// Invoke a folder selection dialog for choosing the directory of profile storage.
+function chooseProfileFolder()
+{
+  var newProfileRoot;
+  
+  try {
+    var dirChooser = Components.classes["@mozilla.org/filepicker;1"].createInstance(Components.interfaces.nsIFilePicker);
+    dirChooser.init(window, gProfileManagerBundle.getString("chooseFolder"), Components.interfaces.nsIFilePicker.modeGetFolder);
+    dirChooser.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
+    dirChooser.show();
+    newProfileRoot = dirChooser.file;
+  }
+  catch(e) {
+    // If something fails, change nothing.
     return;
   }
-  gCreateProfileWizardBundle = document.getElementById("bundle_createProfileWizard");
-  gProfileManagerBundle = document.getElementById("bundle_profileManager");
-  
-  // instantiate the Wizard Manager
-  wizardManager                   = new WizardManager( frame_id, null, null, wizardMap );
-  wizardManager.URL_PagePrefix    = "chrome://communicator/content/profile/";
-  wizardManager.URL_PagePostfix   = ".xul";
 
-  // set the button handler functions
-  wizardManager.SetHandlers( null, null, onFinish, onCancel, null, null );
-  // load the start page
-  wizardManager.LoadPage (startPage, false);
-  // move to center of screen if no opener, otherwise, to center of opener
-  if( window.opener )
-    moveToAlertPosition();
-  else
-    centerWindowOnScreen();
+  // Disable the "Default Folder..." button when the default profile folder
+  // was selected manually in the File Picker.
+  // This is always false on Windows, until bug 221872 is fixed.
+  document.getElementById("useDefault").disabled = (newProfileRoot.equals(gProfile.defaultProfileParentDir));
+
+  setDisplayToFolder(newProfileRoot);
+  updateProfileDisplay();
+}
+
+// Checks the current user input for validity and triggers an error message accordingly.
+function checkCurrentInput(currentInput)
+{
+  var finishButton = document.documentElement.getButton("finish");
+  var finishText = document.getElementById("finishText");
+  var canAdvance;
+
+  var errorMessage = checkProfileName(currentInput);
+
+  if (!errorMessage) {
+    finishText.className = "";
+    finishText.firstChild.data = gProfileManagerBundle.getString("profileFinishText");
+    canAdvance = true;
+  }
+  else {
+    finishText.className = "error";
+    finishText.firstChild.data = errorMessage;
+    canAdvance = false;
+  }
+
+  document.documentElement.canAdvance = canAdvance;
+  finishButton.disabled = !canAdvance;
+
+  updateProfileDisplay();
+}
+
+// Checks whether the given string is a valid profile name.
+// Returns an error message describing the error in the name or "" when it's valid.
+function checkProfileName(profileNameToCheck)
+{
+  // Check for emtpy profile name.
+  if (!/\S/.test(profileNameToCheck))
+    return gProfileManagerBundle.getString("profileNameEmpty");
+
+  // Check whether all characters in the profile name are allowed.
+  if (/([\\*:?<>|\/\"])/.test(profileNameToCheck))
+    return gProfileManagerBundle.getFormattedString("invalidChar", [RegExp.$1]);
+
+  // Check whether a profile with the same name already exists.
+  if (gProfile.profileExists(profileNameToCheck))
+    return gProfileManagerBundle.getString("profileExists");
+
+  // profileNameToCheck is valid.
+  return "";
+}
+
+// Called when the first wizard page is shown.
+function enableNextButton()
+{
+  document.documentElement.canAdvance = true;
 }
 
 function onCancel()
 {
-  if( top.window.opener )
-    window.close();
-  else { 
-    try {
-      profile.forgetCurrentProfile();
-    }
-    catch (ex) {
-      dump("failed to forget current profile.\n");
-    }
-    window.close();
+  // window.opener is false if the Create Profile Wizard was opened from the command line.
+  if (!window.opener)
+    return true;
+
+  try {
+    gProfile.forgetCurrentProfile();
   }
+  catch (ex) {
+  }
+
+  return true;
 }
 
-function onFinish()
+function onFinish() 
 {
+  var profileName = document.getElementById("profileName").value;
+  var languageCode = document.getElementById("profileLanguage").getAttribute("data");
+  var regionCode = document.getElementById("profileRegion").getAttribute("data");
 
-  // check if we're at final stage 
-  if( !wizardManager.wizardMap[wizardManager.currentPageTag].finish )
-    return;
+  var proceed = processCreateProfileData(profileName, gProfileRoot, languageCode, regionCode);
 
-  var tag =  wizardManager.WSM.GetTagFromURL( wizardManager.content_frame.src, "/", ".xul" );
-  wizardManager.WSM.SavePageData( tag, null, null, null );
+  // Error on profile creation. Don't leave the wizard so the user can correct his input.
+  if (!proceed)
+    return false;
 
-  var profName = wizardManager.WSM.PageData["newProfile1_2"].ProfileName.value;
-  var profDir = wizardManager.WSM.PageData["newProfile1_2"].ProfileDir.value;
-  var profLang = wizardManager.WSM.PageData["newProfile1_2"].ProfileLanguage.value;
-  var profRegion = wizardManager.WSM.PageData["newProfile1_2"].ProfileRegion.value;
-
-  // Get & select langcode
-  var proceed = processCreateProfileData(profName, profDir, profLang, profRegion); 
-  
-  if( proceed ) {
-    if( window.opener ) {
-      window.opener.CreateProfile(profName, profDir);
-    }
-    else {
-      profile.currentProfile = profName;
-    }
-    window.close();
-  }
+  // window.opener is false if the Create Profile Wizard was opened from the command line.
+  if (window.opener)
+    // Add new profile to the list in the Profile Manager.
+    window.opener.CreateProfile(profileName, gProfileRoot);
   else
-    return;
+    // Use the newly created Profile.
+    gProfile.currentProfile = profileName;
+
+  // Exit the wizard.
+  return true;
 }
 
-/** void processCreateProfileData( void ) ;
- *  - purpose: 
- *  - in:  nothing
- *  - out: nothing
- **/               
-function processCreateProfileData( aProfName, aProfDir, langcode, regioncode)
+// Create profile named profileName in profileRoot.
+function processCreateProfileData(profileName, profileRoot, languageCode, regionCode)
 {
   try {
-    // note: deleted check for empty profName string here as this should be
-    //       done by panel. -bmg (31/10/99)
-    // todo: move this check into the panel itself, activated ontyping :P
-    //       this should definetly be moved to that page.. but how about providing
-    //       user with some feedback about what's wrong. .. TOOLTIP! o_O
-    //       or.. some sort of onblur notification. like a dialog then, or a 
-    //       dropout layery thing. yeah. something like that to tell them when 
-    //       it happens, not when the whole wizard is complete. blah. 
-    if (profile.profileExists(aProfName)) {
-      alert(gCreateProfileWizardBundle.getString("profileExists"));
-      // this is a bad but probably acceptable solution for now. 
-      // when we add more panels, we will want a better solution. 
-      window.frames["content"].document.getElementById("ProfileName").focus();
-      return false;
-    }
-    var invalidChars = ["/", "\\", "*", ":"];
-    for( var i = 0; i < invalidChars.length; i++ )
-    {
-      if( aProfName.indexOf( invalidChars[i] ) != -1 ) {
-        var aString = gProfileManagerBundle.getString("invalidCharA");
-        var bString = gProfileManagerBundle.getString("invalidCharB");
-        bString = bString.replace(/\s*<html:br\/>/g,"\n");
-        var lString = aString + invalidChars[i] + bString;
-        alert( lString );
-        window.frames["content"].document.getElementById("ProfileName").focus();
-        return false;
-      }
-    }
-
-    // Adding code to see if the profile directory already exists....
-    // XXXX - Further modifications like adding propmt dialog are required - XXXX
-    var useExistingDir = false;
-    var fileSpec = Components.classes["@mozilla.org/file/local;1"].createInstance();
-    if ( fileSpec )
-        fileSpec = fileSpec.QueryInterface( Components.interfaces.nsILocalFile );
-
-    if (aProfDir == null)
-        fileSpec.initWithPath(profile.defaultProfileParentDir.path);
-    else
-        fileSpec.initWithPath(aProfDir);
-
-    fileSpec.append(aProfName);
-
-    if (fileSpec != null && fileSpec.exists())
-      useExistingDir = true;
-
-    dump("*** going to create a new profile called " + aProfName + " in folder: " + aProfDir + "\n");
-    profile.createNewProfileWithLocales(aProfName, aProfDir, langcode, regioncode, useExistingDir);
+    var profileLocation = profileRoot.clone();
+    profileLocation.append(profileName);
+    gProfile.createNewProfileWithLocales(profileName, profileRoot.path, languageCode, regionCode, profileLocation.exists());
 
     return true;
   }
-  catch(e) {
-    dump("*** Failed to create a profile\n");
+  catch (e) {
+    var profileCreationFailed = gProfileManagerBundle.getString("profileCreationFailed");
+    var profileCreationFailedTitle = gProfileManagerBundle.getString("profileCreationFailedTitle");
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+    promptService.alert(window, profileCreationFailedTitle, profileCreationFailed);
+
     return false;
   }
 }
