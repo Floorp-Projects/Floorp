@@ -2119,6 +2119,11 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
   rv = mPStreamListener->OnStartBinding((nsIPluginStreamInfo*)mPluginStreamInfo);
 
   mStartBinding = PR_TRUE;
+
+  if (NS_SUCCEEDED(rv)) {
+    mPStreamListener->GetStreamType(&mStreamType);
+  }
+
   return rv;
 }
 
