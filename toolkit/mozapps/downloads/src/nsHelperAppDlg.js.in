@@ -557,7 +557,7 @@ nsUnknownContentTypeDialog.prototype = {
         this.dialogElement("open").disabled = true;
         var openHandler = this.dialogElement("openHandler");
         openHandler.disabled = true;
-        openHandler.label = "";
+        openHandler.selectedItem = null;
         modeGroup.selectedItem = this.dialogElement("save");
         return;
       }
