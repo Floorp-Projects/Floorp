@@ -40,6 +40,7 @@
 #include "nsIBox.h"
 #include "nsBoxLayoutState.h"
 #include "nsIBoxToBlockAdaptor.h"
+#include "nsIFormControlFrame.h"
 #include "nsIStatefulFrame.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIPresState.h"
@@ -63,6 +64,7 @@ static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
+static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 
 //----------------------------------------------------------------------
 
@@ -187,6 +189,26 @@ nsScrollPortFrame::GetScrollingParentView(nsIPresContext* aPresContext,
   return(rv);
 }
 
+PRBool
+nsScrollPortFrame::IsInsideFormControlFrame()
+{
+    // XXX: This code will go away when a general solution for creating
+    // widgets only when needed is implemented.
+  nsIFrame* parentFrame;
+  GetParent(&parentFrame);
+  nsIFormControlFrame* fcFrame;
+
+  while (parentFrame) {
+    if ((NS_SUCCEEDED(parentFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame)))) {
+      return(PR_TRUE);
+    }
+    parentFrame->GetParent(&parentFrame); 
+  }
+ 
+  return PR_FALSE;
+}
+
+
 nsresult
 nsScrollPortFrame::CreateScrollingView(nsIPresContext* aPresContext)
 {
@@ -258,7 +280,9 @@ nsScrollPortFrame::CreateScrollingView(nsIPresContext* aPresContext)
     scrollingView->SetScrollPreference(nsScrollPreference_kNeverScroll);
 
     // Have the scrolling view create its internal widgets
-    scrollingView->CreateScrollControls(); 
+     if (! IsInsideFormControlFrame()) {
+      scrollingView->CreateScrollControls(); 
+    } 
 
     // Set the scrolling view's insets to whatever our border is
     nsMargin border;

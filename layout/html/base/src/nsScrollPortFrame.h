@@ -122,6 +122,7 @@ protected:
 
 private:
   nsresult CreateScrollingView(nsIPresContext* aPresContext);
+  PRBool   IsInsideFormControlFrame();
 
 };
 
