@@ -63,6 +63,8 @@ PRIVATE XP_Bool FE_CheckConfirm (
 	MWContext *pContext,
 	char* pConfirmMessage,
 	char* pCheckMessage,
+	char* pOkMessage,
+	char* pCancelMsg,
 	XP_Bool* pChecked) {
 
     Bool userHasAccepted = FE_Confirm(pContext, pConfirmMessage);
