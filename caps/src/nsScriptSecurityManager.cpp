@@ -568,6 +568,9 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
                 // Deny access
                 return NS_ERROR_DOM_BAD_URI;
             case LocalProtocol:
+                // TEMPORARY: file:// can access chrome://. See bug 42076.
+                if (nsCRT::strcasecmp(fromScheme, "file") == 0)
+                    return NS_OK;
                 // Other local protocols can access these schemes
                 for (unsigned j=0; j < sizeof(protocolList)/sizeof(protocolList[0]); j++)
                     if (nsCRT::strcasecmp(fromScheme, protocolList[j].name) == 0)
