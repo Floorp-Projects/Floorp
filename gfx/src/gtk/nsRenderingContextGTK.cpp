@@ -775,10 +775,11 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
     aSurface = nsnull;
     return NS_ERROR_FAILURE;
   }
- 
+
   g_return_val_if_fail (aBounds != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail ((aBounds->width > 0) && (aBounds->height > 0), NS_ERROR_FAILURE);
  
+  nsresult rv = NS_OK;
   nsDrawingSurfaceGTK *surf = new nsDrawingSurfaceGTK();
 
   if (surf)
@@ -786,12 +787,14 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
     NS_ADDREF(surf);
     if (!mGC)
       UpdateGC();
-    surf->Init(mGC, aBounds->width, aBounds->height, aSurfFlags);
+      rv = surf->Init(mGC, aBounds->width, aBounds->height, aSurfFlags);    
+  } else {
+    rv = NS_ERROR_FAILURE;
   }
 
   aSurface = (nsDrawingSurface)surf;
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DestroyDrawingSurface(nsDrawingSurface aDS)
