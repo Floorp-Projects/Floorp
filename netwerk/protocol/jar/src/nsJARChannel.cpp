@@ -835,6 +835,9 @@ nsJARChannel::GetOwner(nsISupports* *aOwner)
     nsresult rv;
     if (mOwner == nsnull) {
         //-- Verify signature, if one is present, and set owner accordingly
+        rv = EnsureZipReader();
+        if (NS_FAILED(rv)) return rv;
+
         nsCOMPtr<nsIPrincipal> certificate;
         rv = mJAR->GetCertificatePrincipal(mJAREntry, 
                                            getter_AddRefs(certificate));
@@ -891,6 +894,7 @@ nsJARChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
     *aSecurityInfo = nsnull;
     return NS_OK;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIStreamObserver methods:
 
@@ -947,25 +951,39 @@ nsJARChannel::OnDataAvailable(nsIChannel* jarCacheTransport,
 ////////////////////////////////////////////////////////////////////////////////
 // nsIStreamIO methods:
 
+nsresult
+nsJARChannel::EnsureZipReader()
+{
+    if (mJAR == nsnull) {
+        nsresult rv;
+        if (mJARBaseFile == nsnull)
+            return NS_ERROR_FAILURE;
+
+//        NS_ASSERTION(mJARBaseFile, "mJARBaseFile is null");
+
+        nsCOMPtr<nsIFile> fs;
+        rv = mJARBaseFile->GetFile(getter_AddRefs(fs));
+        if (NS_FAILED(rv)) return rv; 
+
+        nsCOMPtr<nsIZipReaderCache> jarCache;
+        rv = mJARProtocolHandler->GetJARCache(getter_AddRefs(jarCache));
+        if (NS_FAILED(rv)) return rv; 
+
+        rv = jarCache->GetZip(fs, getter_AddRefs(mJAR));
+        if (NS_FAILED(rv)) return rv; 
+    }
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsJARChannel::Open(char* *contentType, PRInt32 *contentLength) 
 {
-	nsresult rv;
-    NS_ASSERTION(mJARBaseFile, "mJARBaseFile is null");
-
-    nsCOMPtr<nsIFile> fs;
-    rv = mJARBaseFile->GetFile(getter_AddRefs(fs));
-    if (NS_FAILED(rv)) return rv; 
-
-    nsCOMPtr<nsIZipReaderCache> jarCache;
-    rv = mJARProtocolHandler->GetJARCache(getter_AddRefs(jarCache));
-    if (NS_FAILED(rv)) return rv; 
-
-    rv = jarCache->GetZip(fs, getter_AddRefs(mJAR));
-    if (NS_FAILED(rv)) return rv; 
+    nsresult rv;
+    rv = EnsureZipReader();
+    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIZipEntry> entry;
-	rv = mJAR->GetEntry(mJAREntry, getter_AddRefs(entry));
+    rv = mJAR->GetEntry(mJAREntry, getter_AddRefs(entry));
     if (NS_FAILED(rv)) return rv;
 
     if (contentLength) {
@@ -979,7 +997,6 @@ nsJARChannel::Open(char* *contentType, PRInt32 *contentLength)
     }
     return rv;
 }
-
 
 NS_IMETHODIMP
 nsJARChannel::Close(nsresult status) 
