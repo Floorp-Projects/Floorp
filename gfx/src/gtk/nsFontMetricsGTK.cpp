@@ -350,6 +350,9 @@ static nsFontCharSetInfo ISO106461 =
 static nsFontCharSetInfo AdobeSymbol =
    { "Adobe-Symbol-Encoding", SingleByteConvert, 0,
     TT_OS2_CPR1_SYMBOL, 0 };
+static nsFontCharSetInfo AdobeEuro =
+  { "x-adobe-euro", SingleByteConvert, 0,
+    0, 0 };
 
 #ifdef MOZ_MATHML
 static nsFontCharSetInfo CMCMEX =
@@ -553,6 +556,9 @@ static nsFontCharSetMap gNoneCharSetMap[] = { { nsnull }, };
 static nsFontCharSetMap gSpecialCharSetMap[] =
 {
   { "symbol-adobe-fontspecific", &FLG_NONE, &AdobeSymbol  },
+  { "euromono-adobe-fontspecific",  &FLG_NONE, &AdobeEuro },
+  { "eurosans-adobe-fontspecific",  &FLG_NONE, &AdobeEuro },
+  { "euroserif-adobe-fontspecific", &FLG_NONE, &AdobeEuro },
 
 #ifdef MOZ_MATHML
   { "cmex10-adobe-fontspecific", &FLG_NONE, &CMCMEX  },
@@ -621,11 +627,34 @@ static PRUint16* gDoubleByteSpecialCharsCCMap = nsnull;
 // fonts are too large to use is western fonts.
 // Here we define those characters.
 //
-static PRUnichar gDoubleByteSpecialChars[] = {
-  0x0152, 0x0153, 0x0160, 0x0161, 0x0178, 0x017D, 0x017E, 0x0192,
-  0x02C6, 0x02DC, 0x2013, 0x2014, 0x2018, 0x2019, 0x201A, 0x201C,
-  0x201D, 0x201E, 0x2020, 0x2021, 0x2022, 0x2026, 0x2030, 0x2039,
-  0x203A, 0x20AC, 0x2122,
+static const PRUnichar gDoubleByteSpecialChars[] = {
+  0x0152, /* LATIN CAPITAL LIGATURE OE */
+  0x0153, /* LATIN SMALL LIGATURE OE */
+  0x0160, /* LATIN CAPITAL LETTER S WITH CARON */
+  0x0161, /* LATIN SMALL LETTER S WITH CARON */
+  0x0178, /* LATIN CAPITAL LETTER Y WITH DIAERESIS */
+  0x017D, /* LATIN CAPITAL LETTER Z WITH CARON */
+  0x017E, /* LATIN SMALL LETTER Z WITH CARON */
+  0x0192, /* LATIN SMALL LETTER F WITH HOOK */
+  0x02C6, /* MODIFIER LETTER CIRCUMFLEX ACCENT */
+  0x02DC, /* SMALL TILDE */
+  0x2013, /* EN DASH */
+  0x2014, /* EM DASH */
+  0x2018, /* LEFT SINGLE QUOTATION MARK */
+  0x2019, /* RIGHT SINGLE QUOTATION MARK */
+  0x201A, /* SINGLE LOW-9 QUOTATION MARK */
+  0x201C, /* LEFT DOUBLE QUOTATION MARK */
+  0x201D, /* RIGHT DOUBLE QUOTATION MARK */
+  0x201E, /* DOUBLE LOW-9 QUOTATION MARK */
+  0x2020, /* DAGGER */
+  0x2021, /* DOUBLE DAGGER */
+  0x2022, /* BULLET */
+  0x2026, /* HORIZONTAL ELLIPSIS */
+  0x2030, /* PER MILLE SIGN */
+  0x2039, /* SINGLE LEFT-POINTING ANGLE QUOTATION MARK */
+  0x203A, /* SINGLE RIGHT-POINTING ANGLE QUOTATION MARK */
+  0x20AC, /* EURO SIGN */
+  0x2122, /* TRADE MARK SIGN */
   0
 };
 
@@ -4612,8 +4641,12 @@ if (gAllowDoubleByteSpecialChars) {
 
       // add the symbol font before the early transliterator
       // to get the bullet (hack)
-      nsCAutoString ffre("*-symbol-adobe-fontspecific");
-      nsFontGTK* symbol_font = TryNodes(ffre, 0x0030);
+      nsCAutoString symbol_ffre("*-symbol-adobe-fontspecific");
+      nsFontGTK* symbol_font = TryNodes(symbol_ffre, 0x0030);
+
+      // Add the Adobe Euro fonts before the early transliterator
+      nsCAutoString euro_ffre("*-euro*-adobe-fontspecific");
+      nsFontGTK* euro_font = TryNodes(euro_ffre, 0x20AC);
 
       // add the early transliterator
       // to avoid getting Japanese "special chars" such as smart
@@ -4629,6 +4662,9 @@ if (gAllowDoubleByteSpecialChars) {
       }
       else if (symbol_font && CCMAP_HAS_CHAR(symbol_font->mCCMap, aChar)) {
         return symbol_font;
+      }
+      else if (euro_font && CCMAP_HAS_CHAR(euro_font->mCCMap, aChar)) {
+        return euro_font;
       }
       else if (sub_font && CCMAP_HAS_CHAR(sub_font->mCCMap, aChar)) {
         FIND_FONT_PRINTF(("      transliterate special chars for single byte docs"));
