@@ -1,10 +1,11 @@
 #!#perl# -w --
 
 # generate static html pages for use in testing the popup libraries.
+# Output is written to standard out to be examined by a programmer.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2002/12/10 19:21:12 $ 
+# $Revision: 1.2 $ 
+# $Date: 2003/01/19 17:18:56 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/vcdisplay.tst,v $ 
 # $Name:  $ 
@@ -78,11 +79,14 @@ sub print_url {
 
 sub print_tests {
 
+    # simulation of processmail_build call
+
     %args = (
 	     'tree' => 'Project_A',
 	     'file' => 'main.c',
 	     'line' => 325,
 	     'linktxt' =>  "Compiler error! Some error message here.", 
+	     'alt_linktxt' =>  "Compiler error! Some error message here.", 
 	     );
 
     $line = VCDisplay::guess(%args);
@@ -91,7 +95,7 @@ sub print_tests {
     print $line."\n\n";
     print "\n\n\n";
     
-    
+    # simulation of Build column call    
 
     %args = (
 	     'tree' => 'Project_A',
@@ -109,11 +113,27 @@ sub print_tests {
     print "\n\n\n";
     
 
+    # simulation of VC column call    
     
     %args = (
 	     'tree' => 'Project_A',
+	     'mindate' => 1039467540  - $main::SECONDS_PER_DAY,
+	     'maxdate' => 1039467540,
+	     'who' => 'fred',
+	     );
+    
+    $line = VCDisplay::query(%args);
+    print_hash(%args);
+    print_url($line);
+    print $line."\n\n";
+    print "\n\n\n";
+ 
+    # simulation of time column call
+
+    %args = (
+	     'tree' => 'Project_A',
+	     'mindate' => 1039467540,
 	     'linktxt' => '12/09&nbsp;15:59',
-	     'mindate' => '1039467540',
 	     );
     
     $line = VCDisplay::query(%args);
