@@ -192,12 +192,8 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
   if (mIsActive) {
     InstallKeyboardNavigator();
   }
-  else if (mKeyboardNavigator) {
-    mTarget->RemoveEventListener(NS_LITERAL_STRING("keypress"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
-    mTarget->RemoveEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
-    mTarget->RemoveEventListener(NS_LITERAL_STRING("keyup"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
-  
-    NS_IF_RELEASE(mKeyboardNavigator);
+  else {
+    RemoveKeyboardNavigator();
   }
   
   // We don't want the caret to blink while the menus are active
@@ -263,13 +259,12 @@ nsMenuBarFrame::ToggleMenuActiveState()
 {
   if (mIsActive) {
     // Deactivate the menu bar
-    mIsActive = PR_FALSE;
+    SetActive(PR_FALSE);
     if (mCurrentMenu) {
       // Deactivate the menu.
       mCurrentMenu->OpenMenu(PR_FALSE);
       mCurrentMenu->SelectMenu(PR_FALSE);
       mCurrentMenu = nsnull;
-      RemoveKeyboardNavigator();
     }
   }
   else {
@@ -280,10 +275,8 @@ nsMenuBarFrame::ToggleMenuActiveState()
     // Activate the menu bar
     SetActive(PR_TRUE);
 
-    InstallKeyboardNavigator();
-
     // Set the active menu to be the top left item (e.g., the File menu).
-    // We use an attribute called "_moz-menuactive" to track the current 
+    // We use an attribute called "menuactive" to track the current 
     // active menu.
     nsIMenuFrame* firstFrame;
     GetNextMenuItem(nsnull, &firstFrame);
