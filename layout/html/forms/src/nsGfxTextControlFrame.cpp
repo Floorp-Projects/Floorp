@@ -1748,7 +1748,14 @@ nsGfxTextControlFrame::ContentChanged(nsIPresContext* aPresContext,
     nsCOMPtr<nsIPresShell> shell;
     rv = aPresContext->GetShell(getter_AddRefs(shell));
     if (NS_SUCCEEDED(rv) && shell) {
-      shell->AppendReflowCommand(cmd);
+      rv = shell->AppendReflowCommand(cmd);
+      // we need this reflow to be synchronous because the text may have changed
+      // length.  That would make the content and frame data out of synch, and
+      // can lead to a crash if we're asked to paint the text before this reflow
+      // fires.  See bug 37264.
+      if (NS_SUCCEEDED(rv)) { 
+        rv = shell->FlushPendingNotifications();
+      }      
     }
     NS_RELEASE(cmd);
   }
