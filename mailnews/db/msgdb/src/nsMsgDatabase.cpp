@@ -499,16 +499,18 @@ nsMsgDatabase::GetDBCache()
 void
 nsMsgDatabase::CleanupCache()
 {
-	if (m_dbCache) // clean up memory leak
-	{
-		for (PRInt32 i = 0; i < GetDBCache()->Count(); i++)
-		{
-			nsMsgDatabase* pMessageDB = NS_STATIC_CAST(nsMsgDatabase*, GetDBCache()->ElementAt(i));
-			if (pMessageDB)
-			{
+  if (m_dbCache) // clean up memory leak
+  {
+    for (PRInt32 i = 0; i < GetDBCache()->Count(); i++)
+    {
+      nsMsgDatabase* pMessageDB = NS_STATIC_CAST(nsMsgDatabase*, GetDBCache()->ElementAt(i));
+      if (pMessageDB)
+      {
+        // break cycle with folder -> parse msg state -> db
+        pMessageDB->m_folder = nsnull;
         // hold onto the db until we're finished closing it.
         nsCOMPtr <nsIMsgDatabase> kungFuGrip = pMessageDB;
-				pMessageDB->ForceClosed();
+        pMessageDB->ForceClosed();
         kungFuGrip = nsnull;
         // look for db in cache before deleting, 
         // in case ForceClosed caused the db to go away
@@ -521,15 +523,15 @@ nsMsgDatabase::CleanupCache()
             NS_RELEASE(saveDB);
           }
         }
-				i--;	// back up array index, since closing removes db from cache.
-			}
-		}
-		NS_ASSERTION(GetNumInCache() == 0, "some msg dbs left open");	// better not be any open db's.
-		delete m_dbCache;
-	}
-	m_dbCache = nsnull; // Need to reset to NULL since it's a
-			  // static global ptr and maybe referenced 
-			  // again in other places.
+        i--;	// back up array index, since closing removes db from cache.
+      }
+    }
+    NS_ASSERTION(GetNumInCache() == 0, "some msg dbs left open");	// better not be any open db's.
+    delete m_dbCache;
+  }
+  m_dbCache = nsnull; // Need to reset to NULL since it's a
+  // static global ptr and maybe referenced 
+  // again in other places.
 }
 
 //----------------------------------------------------------------------
