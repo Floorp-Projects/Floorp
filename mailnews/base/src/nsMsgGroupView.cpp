@@ -161,16 +161,20 @@ nsHashKey *nsMsgGroupView::AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr)
       }
     case nsMsgViewSortType::byDate:
     {
-      PRUint32 ageBucket;
+      PRUint32 ageBucket = 1;
       PRTime dateOfMsg;
+      PRUint32 dateOfMsgInSeconds, currentTimeInSeconds;
 	    
       nsresult rv = msgHdr->GetDate(&dateOfMsg);
+      (void) msgHdr->GetDateInSeconds(&dateOfMsgInSeconds);
 
       PRTime currentTime = PR_Now();
       PRExplodedTime explodedCurrentTime;
       PR_ExplodeTime(currentTime, PR_LocalTimeParameters, &explodedCurrentTime);
       PRExplodedTime explodedMsgTime;
       PR_ExplodeTime(dateOfMsg, PR_LocalTimeParameters, &explodedMsgTime);
+
+      dateOfMsgInSeconds -= explodedMsgTime.tm_params.tp_gmt_offset;
 
       if (explodedCurrentTime.tm_year == explodedMsgTime.tm_year &&
           explodedCurrentTime.tm_month == explodedMsgTime.tm_month &&
@@ -184,50 +188,54 @@ nsHashKey *nsMsgGroupView::AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr)
       {
         // some constants for calculation
         static PRInt64 microSecondsPerSecond;
-        static PRInt64 secondsPerDay;
         static PRInt64 microSecondsPerDay;
-        static PRInt64 microSecondsPer6Days;
-        static PRInt64 microSecondsPer13Days;
 
         static PRBool bGotConstants = PR_FALSE;
         if ( !bGotConstants )
         {
           // seeds
+          PRInt64 secondsPerDay;
+
           LL_I2L  ( microSecondsPerSecond,  PR_USEC_PER_SEC );
           LL_UI2L ( secondsPerDay,          60 * 60 * 24 );
     
           // derivees
           LL_MUL( microSecondsPerDay,   secondsPerDay,      microSecondsPerSecond );
-          LL_MUL( microSecondsPer6Days, microSecondsPerDay, 6 );
-          LL_MUL( microSecondsPer13Days, microSecondsPerDay, 13 );
-
           bGotConstants = PR_TRUE;
         }
 
-        // the most recent midnight, counting from current time
-        PRInt64 todaysMicroSeconds, mostRecentMidnight;
-        LL_MOD( todaysMicroSeconds, currentTime, microSecondsPerDay );
-        LL_SUB( mostRecentMidnight, currentTime, todaysMicroSeconds );
-        PRInt64 yesterday;
-        LL_SUB( yesterday, mostRecentMidnight, microSecondsPerDay );
-        // most recent midnight minus 6 days
-        PRInt64 mostRecentWeek;
-        LL_SUB( mostRecentWeek, mostRecentMidnight, microSecondsPer6Days );
+        const PRUint32 secondsPerDay = 60 * 60 * 24;
+        const PRUint32 secondsPer6Days = 60 * 60 * 24 * 6;
+        const PRUint32 secondsPer13Days = 60 * 60 * 24 * 13;
+        PRInt64 temp;
+        PRUint32 mostRecentMidnightSeconds;
+
+        LL_DIV(temp, currentTime, microSecondsPerSecond);
+        LL_L2UI(currentTimeInSeconds, temp);
+
+        PRUint32 nowSeconds;
+        LL_L2UI(nowSeconds, temp);
+
+        nowSeconds -= explodedCurrentTime.tm_params.tp_gmt_offset;
+
+        PRUint32 todaysSeconds = (nowSeconds % (60 * 60 * 24));
+        mostRecentMidnightSeconds = currentTimeInSeconds - todaysSeconds;
+        PRUint32 mostRecentWeekSeconds = mostRecentMidnightSeconds - secondsPer6Days;
+        PRUint32 yesterdayInSeconds = mostRecentMidnightSeconds - secondsPerDay;
 
         // was the message sent yesterday?
-        if ( LL_CMP( dateOfMsg, >=, yesterday ) )
+        if (dateOfMsgInSeconds >= yesterdayInSeconds)
         { // yes ....
           ageBucket = 2;
         }
-        else if (LL_CMP(dateOfMsg, >=, mostRecentWeek))
+        else if (dateOfMsgInSeconds >= mostRecentWeekSeconds)
         {
           ageBucket = 3;
         }
         else
         {
-          PRInt64 lastTwoWeeks;
-          LL_SUB( lastTwoWeeks, mostRecentMidnight, microSecondsPer13Days);
-          ageBucket = LL_CMP(dateOfMsg, >=, lastTwoWeeks) ? 4 : 5;
+          PRUint32 lastTwoWeeks = mostRecentMidnightSeconds - secondsPer13Days;
+          ageBucket = (dateOfMsgInSeconds >= lastTwoWeeks) ? 4 : 5;
         }
       }
       return new nsPRUint32Key(ageBucket);
@@ -249,7 +257,7 @@ nsMsgGroupThread *nsMsgGroupView::AddHdrToThread(nsIMsgDBHdr *msgHdr)
 //    msgKey = ((nsPRUint32Key *) hashKey)->GetValue();
   nsMsgGroupThread *foundThread = nsnull;
   if (hashKey)
-  foundThread = (nsMsgGroupThread *) m_groupsTable.Get(hashKey);
+    foundThread = (nsMsgGroupThread *) m_groupsTable.Get(hashKey);
   PRBool newThread = !foundThread;
   nsMsgViewIndex viewIndexOfThread;
   if (!foundThread)
@@ -285,7 +293,11 @@ nsMsgGroupThread *nsMsgGroupView::AddHdrToThread(nsIMsgDBHdr *msgHdr)
     foundThread->AddChild(msgHdr, nsnull, PR_FALSE, nsnull /* announcer */);
   // check if new hdr became thread root
   if (!newThread && foundThread->m_keys[0] == msgKey)
+  {
     m_keys.SetAt(viewIndexOfThread, msgKey);
+    if (m_sortType == nsMsgViewSortType::byDate)
+      foundThread->m_keys.SetAt(1, msgKey); // replace the old duplicate dummy header.
+  }
 
   return foundThread;
 }
@@ -478,12 +490,9 @@ NS_IMETHODIMP nsMsgGroupView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsA
       formattedCountString.AppendInt(numChildren);
       aValue.Assign(formattedCountString);
     }
+    delete hashKey;
     return NS_OK;
   }
-  // XXX fix me by making Fetch* take an nsAString& parameter
-  nsXPIDLString valueText;
-  nsCOMPtr <nsIMsgThread> thread;
-
   return nsMsgDBView::GetCellText(aRow, aCol, aValue);
 }
 
