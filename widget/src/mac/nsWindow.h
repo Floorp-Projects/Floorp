@@ -145,7 +145,9 @@ public:
 
     char gInstanceClassName[256];
 
-  virtual PRBool DispatchWindowEvent(nsGUIEvent& event);
+  virtual PRBool		DispatchWindowEvent(nsGUIEvent& event);
+  virtual nsresult	HandleUpdateEvent();
+
 protected:
 
 	PRBool				ReportDestroyEvent();
