@@ -42,6 +42,7 @@
 #include "nsIDeviceContext.h"
 #include "nsXIFConverter.h"
 #include "nsHTMLAtoms.h"
+#include "nsITextContent.h"
 
 // Selection includes
 #include "nsISelection.h"
@@ -50,7 +51,7 @@
 #define CALC_DEBUG 0
 #define DO_SELECTION 0
 
-
+static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -89,9 +90,7 @@
 
 // XXX use a PreTextFrame for pre-formatted text?
 
-#if 0
-static NS_DEFINE_IID(kITextContentIID, NS_ITEXTCONTENT_IID);
-#endif
+static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
 class TextFrame;
 
@@ -234,6 +233,7 @@ public:
   ((nscoord) ((PRUint32(_wi) & WORD_WIDTH_MASK) >> WORD_WIDTH_SHIFT))
 #endif
 
+#if 0
 class Text : public nsHTMLContent, public nsIDOMText {
 public:
   Text(const PRUnichar* aText, PRInt32 aLength);
@@ -330,6 +330,7 @@ protected:
   Text();
   virtual ~Text();
 };
+#endif
 
 //----------------------------------------------------------------------
 
@@ -434,6 +435,18 @@ void TextTimer::Notify(nsITimer *timer)
 
 //----------------------------------------------------------------------
 
+nsresult
+NS_NewTextFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                nsIFrame*& aResult)
+{
+  nsIFrame* frame = new TextFrame(aContent, aParentFrame);
+  if (nsnull == frame) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  aResult = frame;
+  return NS_OK;
+}
+
 TextFrame::TextFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsSplittableFrame(aContent, aParentFrame)
 {
@@ -537,6 +550,22 @@ NS_METHOD TextFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+/**
+ * To keep things efficient we depend on text content implementing
+ * our nsITextContent API
+ */
+static const PRUnichar*
+GetText(nsIContent* aContent, PRInt32& aLengthResult)
+{
+  const PRUnichar* cp = nsnull;
+  nsITextContent* tc = nsnull;
+  aContent->QueryInterface(kITextContentIID, (void**) &tc);
+  if (nsnull != tc) {
+    tc->GetText(cp, aLengthResult);
+    NS_RELEASE(tc);
+  }
+  return cp;
+}
 
 //---------------------------------------------------------------------
 // Compresses the White Space and builds a mapping between
@@ -560,10 +589,18 @@ char * TextFrame::CompressWhiteSpace(char            * aBuffer,
 
   memset(aIndexes, 255, 256); //debug only
   
-  // Skip leading space if necessary
-  Text* txt = (Text*) mContent;
-  const PRUnichar* cp  = txt->mText + mContentOffset;
+  // XXX inefficient (especially for really large strings)
+  PRInt32 textLength;
+  const PRUnichar* cp = GetText(mContent, textLength);
+  if (0 == textLength) {
+    aStrLen = 0;
+    aShouldDeleteStr = PR_FALSE;
+    return aBuffer;
+  }
+  cp += mContentOffset;
   const PRUnichar* end = cp + mContentLength;
+
+  // Skip leading space if necessary
 
   strInx = mContentOffset;
 
@@ -689,9 +726,16 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
   if (doc->GetDisplaySelection() == PR_FALSE)
   {
     // Skip leading space if necessary
-    Text* txt = (Text*) mContent;
-    const PRUnichar* cp = txt->mText + mContentOffset;
+    PRInt32 textLength;
+    const PRUnichar* cp  = GetText(mContent, textLength);
+    if (0 == textLength) {
+      return;
+    }
+    cp += mContentOffset;
     const PRUnichar* end = cp + mContentLength;
+
+    // Skip leading space if necessary
+
     if ((mFlags & TEXT_SKIP_LEADING_WS) != 0) {
       while (cp < end) {
         PRUnichar ch = *cp++;
@@ -1297,9 +1341,10 @@ TextFrame::ReflowNormal(nsCSSLineLayout& aLineLayout,
                         const nsStyleText& aTextStyle,
                         PRInt32 aStartingOffset)
 {
-  Text* txt = (Text*) mContent;
-  const PRUnichar* cp = txt->mText + aStartingOffset;
-  const PRUnichar* end = cp + txt->mLength - aStartingOffset;
+  PRInt32 textLength;
+  const PRUnichar* cp = GetText(mContent, textLength);
+  cp += aStartingOffset;
+  const PRUnichar* end = cp + textLength - aStartingOffset;
   const PRUnichar* cpStart = cp;
   mContentOffset = aStartingOffset;
 
@@ -1471,10 +1516,11 @@ TextFrame::ReflowPre(nsCSSLineLayout& aLineLayout,
 {
   nsInlineReflowStatus rs = NS_FRAME_COMPLETE;
 
-  Text* txt = (Text*) mContent;
-  const PRUnichar* cp = txt->mText + aStartingOffset;
+  PRInt32 textLength;
+  const PRUnichar* cp = GetText(mContent, textLength);
+  cp += aStartingOffset;
   const PRUnichar* cpStart = cp;
-  const PRUnichar* end = cp + txt->mLength - aStartingOffset;
+  const PRUnichar* end = cp + textLength - aStartingOffset;
 
   mFlags |= TEXT_IS_PRE;
   nsIFontMetrics* fm = aLineLayout.mPresContext->GetMetricsFor(aFont.mFont);
@@ -1658,6 +1704,28 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
 
 }
 
+// XXX there is a copy of this in nsGenericDomDataNode.cpp
+static void
+ToCString(nsString& aBuf, const PRUnichar* cp, PRInt32 aLen)
+{
+  const PRUnichar* end = cp + aLen;
+  while (cp < end) {
+    PRUnichar ch = *cp++;
+    if (ch == '\r') {
+      aBuf.Append("\\r");
+    } else if (ch == '\n') {
+      aBuf.Append("\\n");
+    } else if (ch == '\t') {
+      aBuf.Append("\\t");
+    } else if ((ch < ' ') || (ch >= 127)) {
+      aBuf.Append("\\0");
+      aBuf.Append((PRInt32)ch, 8);
+    } else {
+      aBuf.Append(ch);
+    }
+  }
+}
+
 NS_IMETHODIMP
 TextFrame::ListTag(FILE* out) const
 {
@@ -1682,8 +1750,11 @@ TextFrame::List(FILE* out, PRInt32 aIndent) const
   }
 
   // Output the first/last content offset and prev/next in flow info
-  PRBool isComplete =
-    mContentOffset + mContentLength == ((Text*)mContent)->mLength;
+  // XXX inefficient (especially for really large strings)
+  PRInt32 textLength;
+  const PRUnichar* cp = GetText(mContent, textLength);
+
+  PRBool isComplete = (mContentOffset + mContentLength) == textLength;
   fprintf(out, "[%d,%d,%c] ", 
           mContentOffset, mContentOffset+mContentLength-1,
           isComplete ? 'T':'F');
@@ -1705,10 +1776,9 @@ TextFrame::List(FILE* out, PRInt32 aIndent) const
   aIndent++;
 
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
-  Text* txt = (Text*) mContent;
-  nsAutoString tmp;
-  txt->ToCString(tmp, mContentOffset, mContentLength);
   fputs("\"", out);
+  nsAutoString tmp;
+  ToCString(tmp, cp, mContentLength);
   fputs(tmp, out);
   fputs("\"\n", out);
 
@@ -1736,578 +1806,4 @@ TextFrame::List(FILE* out, PRInt32 aIndent) const
   }
 #endif
   return NS_OK;
-}
-
-//----------------------------------------------------------------------
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-
-Text::Text(const PRUnichar* aText, PRInt32 aLength)
-{
-  if (0 == aLength) {
-    aLength = nsCRT::strlen(aText);
-  }
-  mLength = aLength;
-  mText = new PRUnichar[aLength];
-  nsCRT::memcpy(mText, aText, aLength * sizeof(PRUnichar));
-}
-
-Text::Text()
-{
-  mText = nsnull;
-  mLength = 0;
-}
-
-Text::~Text()
-{
-  if (nsnull != mText) {
-    delete[] mText;
-    mText = nsnull;
-  }
-  mLength = 0;
-}
-
-nsresult Text::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(nsnull != aInstancePtr, "null pointer");
-  
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (aIID.Equals(kIDOMTextIID)) {
-    *aInstancePtr = (void*) ((nsIDOMText*)this);
-    nsHTMLContent::AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDOMNodeIID)) {
-    *aInstancePtr = (void*) ((nsIDOMNode*)(nsHTMLContent*)this);
-    nsHTMLContent::AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*) ((nsISupports*)
-                             ((nsIHTMLContent*)
-                              ((nsHTMLContent*)this)));
-    nsHTMLContent::AddRef();
-    return NS_OK;
-  }
-  
-  return nsHTMLContent::QueryInterface(aIID, aInstancePtr);
-}
-
-nsrefcnt Text::AddRef(void)
-{
-  /*nsAutoString tmp;
-  ToCString(tmp, 0, mLength);
-  char * str = tmp.ToNewCString();
-  if (strlen(str) > 10) {
-    str[10] = 0;
-  }
-  if (strstr(str, "Example")) {
-    int x = 0;
-  }
-  printf("%-8s AddRef  RefCnt=%d<\n", str, mRefCnt);*/
-  nsrefcnt count = nsHTMLContent::AddRef();
-  /*printf("%-8s Current RefCnt=%d<\n", str, mRefCnt);
-
-  if (str) {
-    delete str;
-  }*/
-  return count;
-}
-
-nsrefcnt Text::Release(void)
-{
-  nsrefcnt count = nsHTMLContent::Release();
-  return count;
-}
-
-NS_IMETHODIMP
-Text::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
-  fputs("Text", out);
-  ListAttributes(out);
-  fprintf(out, " RefCnt=%d<\"", mRefCnt);
-
-  nsAutoString tmp;
-  ToCString(tmp, 0, mLength);
-  fputs(tmp, out);
-
-  fputs("\">\n", out);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Text::ToHTMLString(nsString& aBuf) const
-{
-  aBuf.SetLength(0);
-  aBuf.Append(mText, mLength);
-  return NS_OK;
-}
-
-void Text::ToCString(nsString& aBuf, PRInt32 aOffset, PRInt32 aLen) const
-{
-  PRUnichar* cp = mText + aOffset;
-  PRUnichar* end = cp + aLen;
-  while (cp < end) {
-    PRUnichar ch = *cp++;
-    if (ch == '\r') {
-      aBuf.Append("\\r");
-    } else if (ch == '\n') {
-      aBuf.Append("\\n");
-    } else if (ch == '\t') {
-      aBuf.Append("\\t");
-    } else if ((ch < ' ') || (ch >= 127)) {
-      aBuf.Append("\\0");
-      aBuf.Append((PRInt32)ch, 8);
-    } else {
-      aBuf.Append(ch);
-    }
-  }
-}
-
-NS_IMETHODIMP
-Text::BeginConvertToXIF(nsXIFConverter& aConverter) const
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Text::FinishConvertToXIF(nsXIFConverter& aConverter) const
-{
-  return NS_OK;
-}
-
-/**
- * Translate the content object into the (XIF) XML Interchange Format
- * XIF is an intermediate form of the content model, the buffer
- * will then be parsed into any number of formats including HTML, TXT, etc.
- */
-NS_IMETHODIMP
-Text::ConvertContentToXIF(nsXIFConverter& aConverter) const
-{
-  const nsIContent* content = this;
-
-  if (aConverter.GetUseSelection() == PR_TRUE && mDocument->IsInSelection(content))
-  {
-    nsISelection* sel = mDocument->GetSelection();
-    if (sel != nsnull)
-    {
-      nsSelectionRange* range = sel->GetRange();
-      if (range != nsnull)
-      {
-        nsSelectionPoint* startPoint = range->GetStartPoint();
-        nsSelectionPoint* endPoint = range->GetEndPoint();
-
-        nsIContent* startContent = startPoint->GetContent();
-        nsIContent* endContent   = endPoint->GetContent();
-
-        PRInt32 startOffset = startPoint->GetOffset();
-        PRInt32 endOffset = endPoint->GetOffset();
-
-        nsString  buffer;
-        buffer.Append(mText, mLength);
-        if (startContent == content || endContent == content)
-        { 
-          // NOTE: ORDER MATTERS!
-          // This must go before the Cut
-          if (endContent == content)
-            buffer.Truncate(endOffset);            
-          
-          // This must go after the Trunctate
-          if (startContent == content)
-           buffer.Cut(0,startOffset); 
-        }
-        aConverter.AddContent(buffer);
-        NS_IF_RELEASE(startContent);
-        NS_IF_RELEASE(endContent);
-      }
-    }
-    NS_RELEASE(sel);
-  }
-  else  
-  {
-    nsString  buffer;
-    buffer.Append(mText, mLength);
-    aConverter.AddContent(buffer);
-  }
-  return NS_OK;
-}
-
-
-#if 0
-// From nsITextContent; might want this later
-PRInt32 Text::GetLength()
-{
-  return mLength;
-}
-
-void Text::GetText(nsString& aBuf, PRInt32 aOffset, PRInt32 aCount)
-{
-  aBuf.SetLength(0);
-  if ((PRUint32(aOffset) >= PRUint32(mLength)) ||
-      (aCount <= 0)) {
-    return;
-  }
-  if (aOffset + aCount > mLength) {
-    aCount = mLength - aOffset;
-  }
-  aBuf.Append(mText + aOffset, aCount);
-}
-#endif
-
-nsresult
-Text::CreateFrame(nsIPresContext*  aPresContext,
-                  nsIFrame*        aParentFrame,
-                  nsIStyleContext* aStyleContext,
-                  nsIFrame*&       aResult)
-{
-  nsIFrame* frame = new TextFrame(this, aParentFrame);
-  if (nsnull == frame) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  frame->SetStyleContext(aPresContext, aStyleContext);
-  aResult = frame;
-  return NS_OK;
-}
-
-nsresult Text::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    res = NS_NewScriptText(aContext, (nsISupports *)(nsIDOMText *)this, mParent, (void**)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-  return res;
-}
-
-//
-// nsIDOMText interface
-//
-NS_IMETHODIMP    
-Text::GetNodeName(nsString& aNodeName)
-{
-  aNodeName.SetString("#text");
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-Text::GetNodeValue(nsString& aNodeValue)
-{
-  return GetData(aNodeValue);
-}
-
-NS_IMETHODIMP    
-Text::SetNodeValue(const nsString& aNodeValue)
-{
-  return SetData(aNodeValue);
-}
-
-NS_IMETHODIMP    
-Text::GetNodeType(PRInt32* aNodeType)
-{
-  *aNodeType = nsHTMLContent::TEXT;
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-Text::CloneNode(nsIDOMNode** aReturn)
-{
-  Text *newText;
-  nsresult res;
-  
-  res = NS_NewHTMLText((nsIHTMLContent**)&newText, mText, mLength);
-  if (NS_OK != res) {
-    return res;
-  }
-  
-  res = newText->QueryInterface(kIDOMTextIID, (void **)aReturn);
-  NS_RELEASE(newText);
-  if (NS_OK != res) {
-    return res;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-Text::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
-{
-  // XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP    
-Text::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
-{
-  return nsHTMLContent::GetAttributes(aAttributes);
-}
-
-NS_IMETHODIMP    
-Text::GetParentNode(nsIDOMNode** aParentNode)
-{
-  return nsHTMLContent::GetParentNode(aParentNode);
-}
-
-NS_IMETHODIMP    
-Text::GetChildNodes(nsIDOMNodeList** aChildNodes)
-{
-  return nsHTMLContent::GetChildNodes(aChildNodes);
-}
-
-NS_IMETHODIMP    
-Text::GetHasChildNodes(PRBool* aHasChildNodes)
-{
-  return nsHTMLContent::GetHasChildNodes(aHasChildNodes);
-}
-
-NS_IMETHODIMP    
-Text::GetFirstChild(nsIDOMNode** aFirstChild)
-{
-  return nsHTMLContent::GetFirstChild(aFirstChild);
-}
-
-NS_IMETHODIMP    
-Text::GetLastChild(nsIDOMNode** aLastChild)
-{
-  return nsHTMLContent::GetLastChild(aLastChild);
-}
-
-NS_IMETHODIMP    
-Text::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
-{
-  return nsHTMLContent::GetPreviousSibling(aPreviousSibling);
-}
-
-NS_IMETHODIMP    
-Text::GetNextSibling(nsIDOMNode** aNextSibling)
-{
-  return nsHTMLContent::GetNextSibling(aNextSibling);
-}
-
-NS_IMETHODIMP    
-Text::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
-{
-  return nsHTMLContent::InsertBefore(aNewChild, aRefChild, aReturn);
-}
-
-NS_IMETHODIMP    
-Text::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-{
-  return nsHTMLContent::ReplaceChild(aNewChild, aOldChild, aReturn);
-}
-
-NS_IMETHODIMP    
-Text::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-{
-  return nsHTMLContent::RemoveChild(aOldChild, aReturn);
-}
-
-NS_IMETHODIMP    
-Text::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
-{
-  return nsHTMLContent::AppendChild(aNewChild, aReturn);
-}
-
-//
-// nsIDOMData interface
-//
-NS_IMETHODIMP    
-Text::GetData(nsString& aData)
-{
-  if (nsnull != mText) {
-    aData.SetString(mText, mLength);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-Text::SetData(const nsString& aData)
-{
-  if (mText) {
-    delete[] mText;
-    mText = nsnull;
-  }
-
-  mLength = aData.Length();
-  mText = aData.ToNewUnicode();
-
-  // Notify the document that the text changed
-  if (nsnull != mDocument) {
-    mDocument->ContentChanged(this, nsnull);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-Text::GetSize(PRUint32* aSize)
-{
-  *aSize = mLength;
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-Text::Substring(PRUint32 aStart, PRUint32 aEnd, nsString& aReturn)
-{
-  if (nsnull != mText) {
-    if ((aStart < (PRUint32)mLength) && (aEnd < (PRUint32)mLength)) {
-      aReturn.SetString(mText + aStart, (aEnd - aStart));
-    }
-  }
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-Text::Append(const nsString& aData)
-{
-  return Replace(mLength, 0, aData);
-}
-
-NS_IMETHODIMP    
-Text::Insert(PRUint32 aOffset, const nsString& aData)
-{
-  return Replace(aOffset, 0, aData);
-}
-
-NS_IMETHODIMP    
-Text::Remove(PRUint32 aOffset, PRUint32 aCount)
-{
-  nsAutoString empty;
-  return Replace(aOffset, aCount, empty);
-}
-
-NS_IMETHODIMP    
-Text::Replace(PRUint32 aOffset, PRUint32 aCount, const nsString& aData)
-{
-  // sanitize arguments
-  if (aOffset > (PRUint32)mLength) {
-    aOffset = mLength;
-  }
-
-  // Allocate new buffer
-  PRInt32 endOffset = aOffset + aCount;
-  if (endOffset > mLength) {
-    aCount = mLength - aOffset;
-    endOffset = mLength;
-  }
-  PRInt32 dataLength = aData.Length();
-  PRInt32 newLength = mLength - aCount + dataLength;
-  PRUnichar* to = new PRUnichar[newLength ? newLength : 1];
-  if (nsnull == to) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Copy over appropriate data
-  if (0 != aOffset) {
-    nsCRT::memcpy(to, mText, sizeof(PRUnichar) * aOffset);
-  }
-  if (0 != dataLength) {
-    nsCRT::memcpy(to + aOffset, aData.GetUnicode(),
-                  sizeof(PRUnichar) * dataLength);
-  }
-  if (endOffset != mLength) {
-    nsCRT::memcpy(to + aOffset + dataLength, mText + endOffset,
-                  sizeof(PRUnichar) * (mLength - endOffset));
-  }
-
-  // Switch to new buffer
-  if (nsnull != mText) {
-    delete [] mText;
-  }
-  mText = to;
-  mLength = newLength;
-
-  // Notify the document that the text changed
-  if (nsnull != mDocument) {
-    mDocument->ContentChanged(this, nsnull);
-  }
-
-  return NS_OK;
-}
-
-// nsIDOMText interface
-NS_IMETHODIMP    
-Text::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP    
-Text::JoinText(nsIDOMText* aNode1, nsIDOMText* aNode2, nsIDOMText** aReturn)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-NS_NewHTMLText(nsIHTMLContent** aInstancePtrResult,
-               const PRUnichar* us, PRInt32 uslen)
-{
-  nsIHTMLContent* it = new Text(us, uslen);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kIHTMLContentIID, (void **) aInstancePtrResult);
-}
-
-nsresult
-NS_NewHTMLText(nsIHTMLContent** aInstancePtrResult,
-               nsIArena* aArena, const PRUnichar* us, PRInt32 uslen)
-{
-  nsIHTMLContent* it = new(aArena) Text(us, uslen);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kIHTMLContentIID, (void **) aInstancePtrResult);
-}
-
-//----------------------------------------------------------------------
-
-class SharedText : public Text {
-public:
-  SharedText(PRUnichar* aText, PRInt32 aLength);
-
-protected:
-  virtual ~SharedText();
-};
-
-SharedText::SharedText(PRUnichar* aText, PRInt32 aLength)
-  : Text()
-{
-  if (0 == aLength) {
-    aLength = nsCRT::strlen(aText);
-  }
-  mText = aText;
-  mLength = aLength;
-}
-
-SharedText::~SharedText()
-{
-  mText = nsnull;
-}
-
-nsresult
-NS_NewSharedHTMLText(nsIHTMLContent** aInstancePtrResult,
-                     PRUnichar* us, PRInt32 uslen)
-{
-  nsIHTMLContent* it = new SharedText(us, uslen);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kIHTMLContentIID, (void **) aInstancePtrResult);
-}
-
-nsresult
-NS_NewSharedHTMLText(nsIHTMLContent** aInstancePtrResult,
-                     nsIArena* aArena, PRUnichar* us, PRInt32 uslen)
-{
-  nsIHTMLContent* it = new(aArena) SharedText(us, uslen);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kIHTMLContentIID, (void **) aInstancePtrResult);
 }
