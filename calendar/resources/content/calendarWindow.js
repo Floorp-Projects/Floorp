@@ -222,6 +222,8 @@ CalendarWindow.prototype.close = function( )
 
 CalendarWindow.prototype.switchToDayView = function( )
 {
+   document.getElementById( "day-tree-item-0" ).focus();
+   
    this.switchToView( this.dayView )
 }
 
@@ -233,6 +235,8 @@ CalendarWindow.prototype.switchToDayView = function( )
 
 CalendarWindow.prototype.switchToWeekView = function( )
 {
+   document.getElementById( "week-tree-hour-0" ).focus();
+
    this.switchToView( this.weekView )
 }
 
