@@ -28,6 +28,9 @@
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMXULCommandDispatcher.h"
+#include "nsIDOMXULDocument.h"
 #include "nsIRDFNode.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
@@ -90,6 +93,9 @@ protected:
     static nsINameSpaceManager* gNameSpaceManager;
     static nsIDateTimeFormat* gFormat;
 
+    static nsIAtom* kEventsAtom;
+    static nsIAtom* kTargetsAtom;
+
 public:
     // nsISupports methods
     NS_DECL_ISUPPORTS
@@ -142,12 +148,17 @@ public:
     NS_IMETHOD
     GetResource(PRInt32 aNameSpaceID, const nsString& aAttribute, nsIRDFResource** aResult);
 
+    NS_IMETHOD
+    SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElement);
 };
 
 nsrefcnt nsXULContentUtils::gRefCnt;
 nsIRDFService* nsXULContentUtils::gRDF;
 nsINameSpaceManager* nsXULContentUtils::gNameSpaceManager;
 nsIDateTimeFormat* nsXULContentUtils::gFormat;
+
+nsIAtom* nsXULContentUtils::kEventsAtom;
+nsIAtom* nsXULContentUtils::kTargetsAtom;
 
 //------------------------------------------------------------------------
 // Constructors n' stuff
@@ -183,6 +194,9 @@ nsXULContentUtils::Init()
                                                 (void**) &gFormat);
 
         if (NS_FAILED(rv)) return rv;
+
+        kEventsAtom  = NS_NewAtom("events");
+        kTargetsAtom = NS_NewAtom("targets");
     }
     return NS_OK;
 }
@@ -203,6 +217,9 @@ nsXULContentUtils::~nsXULContentUtils()
         }
 
         NS_IF_RELEASE(gNameSpaceManager);
+
+        NS_IF_RELEASE(kEventsAtom);
+        NS_IF_RELEASE(kTargetsAtom);
     }
 }
 
@@ -784,3 +801,58 @@ nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, const nsString& aAttribute,
 
     return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElement)
+{
+    // Deal with setting up a 'commandupdater'. Pulls the 'events' and
+    // 'targets' attributes off of aElement, and adds it to the
+    // document's command dispatcher.
+    NS_PRECONDITION(aDocument != nsnull, "null ptr");
+    if (! aDocument)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aElement != nsnull, "null ptr");
+    if (! aElement)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    nsCOMPtr<nsIDOMXULDocument> xuldoc = do_QueryInterface(aDocument);
+    NS_ASSERTION(xuldoc != nsnull, "not a xul document");
+    if (! xuldoc)
+        return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIDOMXULCommandDispatcher> dispatcher;
+    rv = xuldoc->GetCommandDispatcher(getter_AddRefs(dispatcher));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get dispatcher");
+    if (NS_FAILED(rv)) return rv;
+
+    NS_ASSERTION(dispatcher != nsnull, "no dispatcher");
+    if (! dispatcher)
+        return NS_ERROR_UNEXPECTED;
+
+    nsAutoString events;
+    rv = aElement->GetAttribute(kNameSpaceID_None, kEventsAtom, events);
+
+    if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+        events = "*";
+
+    nsAutoString targets;
+    rv = aElement->GetAttribute(kNameSpaceID_None, kTargetsAtom, targets);
+
+    if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+        targets = "*";
+
+    nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
+    NS_ASSERTION(domelement != nsnull, "not a DOM element");
+    if (! domelement)
+        return NS_ERROR_UNEXPECTED;
+
+    rv = dispatcher->AddCommandUpdater(domelement, events, targets);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+

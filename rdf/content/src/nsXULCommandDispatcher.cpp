@@ -45,6 +45,8 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 
+#include "prlog.h"
+
 ////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID,      NS_ISCRIPTOBJECTOWNER_IID);
@@ -54,6 +56,10 @@ static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDomNodeIID,            NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDomElementIID,         NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDomEventListenerIID,   NS_IDOMEVENTLISTENER_IID);
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gLog;
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // XULCommandDispatcherImpl
@@ -123,6 +129,11 @@ XULCommandDispatcherImpl::XULCommandDispatcherImpl(void)
     : mScriptObject(nsnull), mCurrentElement(nsnull), mUpdaters(nsnull)
 {
 	NS_INIT_REFCNT();
+
+#ifdef PR_LOGGING
+    if (! gLog)
+        gLog = PR_NewLogModule("nsXULCommandDispatcher");
+#endif
 }
 
 XULCommandDispatcherImpl::~XULCommandDispatcherImpl(void)
@@ -226,6 +237,14 @@ XULCommandDispatcherImpl::AddCommandUpdater(nsIDOMElement* aElement,
 
     while (updater) {
         if (updater->mElement == aElement) {
+            PR_LOG(gLog, PR_LOG_ALWAYS,
+                   ("xulcmd[%p] replace %p(events=%s targets=%s) with (events=%s targets=%s)",
+                    this, aElement,
+                    (const char*) nsCAutoString(updater->mEvents),
+                    (const char*) nsCAutoString(updater->mTargets),
+                    (const char*) nsCAutoString(aEvents),
+                    (const char*) nsCAutoString(aTargets)));
+
             // If the updater was already in the list, then replace
             // (?) the 'events' and 'targets' filters with the new
             // specification.
@@ -237,6 +256,12 @@ XULCommandDispatcherImpl::AddCommandUpdater(nsIDOMElement* aElement,
         link = &(updater->mNext);
         updater = updater->mNext;
     }
+
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("xulcmd[%p] add     %p(events=%s targets=%s)",
+            this, aElement,
+            (const char*) nsCAutoString(aEvents),
+            (const char*) nsCAutoString(aTargets)));
 
     // If we get here, this is a new updater. Append it to the list.
     updater = new Updater(aElement, aEvents, aTargets);
@@ -259,6 +284,12 @@ XULCommandDispatcherImpl::RemoveCommandUpdater(nsIDOMElement* aElement)
 
     while (updater) {
         if (updater->mElement == aElement) {
+            PR_LOG(gLog, PR_LOG_ALWAYS,
+                   ("xulcmd[%p] remove  %p(events=%s targets=%s)",
+                    this, aElement,
+                    (const char*) nsCAutoString(updater->mEvents),
+                    (const char*) nsCAutoString(updater->mTargets)));
+
             *link = updater->mNext;
             delete updater;
             return NS_OK;
@@ -306,6 +337,11 @@ XULCommandDispatcherImpl::UpdateCommands(const nsString& aEventName)
         NS_ASSERTION(document != nsnull, "element has no document");
         if (! document)
             continue;
+
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("xulcmd[%p] update %p event=%s",
+                this, updater->mElement,
+                (const char*) nsCAutoString(aEventName)));
 
         PRInt32 count = document->GetNumberOfShells();
         for (PRInt32 i = 0; i < count; i++) {

@@ -155,12 +155,14 @@ public:
 
 protected:
     // pseudo-constants
-    static nsrefcnt             gRefCnt;
-    static nsIRDFService*       gRDFService;
+    static nsrefcnt               gRefCnt;
+    static nsIRDFService*         gRDFService;
     static nsIHTMLElementFactory* gHTMLElementFactory;
     static nsIXMLElementFactory*  gXMLElementFactory;
     static nsINameSpaceManager*   gNameSpaceManager;
+    static nsIXULContentUtils*    gXULUtils;
 
+    static nsIAtom* kCommandUpdaterAtom;
     static nsIAtom* kDataSourcesAtom;
     static nsIAtom* kIdAtom;
     static nsIAtom* kKeysetAtom;
@@ -206,6 +208,13 @@ protected:
     static
     nsresult
     Merge(nsIContent* aOriginalNode, nsIContent* aOverlayNode);
+
+    static
+    nsresult
+    InsertElement(nsIContent* aParent, nsIContent* aChild);
+
+    nsresult
+    AddElementToMap(nsIContent* aElement);
 
     // Script tag handling
     nsresult OpenScript(const nsIParserNode& aNode);
@@ -306,7 +315,9 @@ nsIRDFService* XULContentSinkImpl::gRDFService;
 nsIHTMLElementFactory* XULContentSinkImpl::gHTMLElementFactory;
 nsIXMLElementFactory* XULContentSinkImpl::gXMLElementFactory;
 nsINameSpaceManager* XULContentSinkImpl::gNameSpaceManager;
+nsIXULContentUtils* XULContentSinkImpl::gXULUtils;
 
+nsIAtom* XULContentSinkImpl::kCommandUpdaterAtom;
 nsIAtom* XULContentSinkImpl::kDataSourcesAtom;
 nsIAtom* XULContentSinkImpl::kIdAtom;
 nsIAtom* XULContentSinkImpl::kKeysetAtom;
@@ -492,18 +503,25 @@ XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
 
         if (NS_FAILED(rv)) return;
 
+        rv = nsServiceManager::GetService(kXULContentUtilsCID,
+                                          NS_GET_IID(nsIXULContentUtils),
+                                          (nsISupports**) &gXULUtils);
+
+        if (NS_FAILED(rv)) return;
+
         rv = gNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
         if (NS_FAILED(rv)) return;
 
-        kDataSourcesAtom = NS_NewAtom("datasources");
-        kIdAtom          = NS_NewAtom("id");
-        kKeysetAtom      = NS_NewAtom("keyset");
-        kOverlayAtom     = NS_NewAtom("overlay");
-        kPositionAtom    = NS_NewAtom("position");
-        kRefAtom         = NS_NewAtom("ref");
-        kScriptAtom      = NS_NewAtom("script");
-        kTemplateAtom    = NS_NewAtom("template");
+        kCommandUpdaterAtom = NS_NewAtom("commandupdater");
+        kDataSourcesAtom    = NS_NewAtom("datasources");
+        kIdAtom             = NS_NewAtom("id");
+        kKeysetAtom         = NS_NewAtom("keyset");
+        kOverlayAtom        = NS_NewAtom("overlay");
+        kPositionAtom       = NS_NewAtom("position");
+        kRefAtom            = NS_NewAtom("ref");
+        kScriptAtom         = NS_NewAtom("script");
+        kTemplateAtom       = NS_NewAtom("template");
     }
 
 #ifdef PR_LOGGING
@@ -586,7 +604,14 @@ XULContentSinkImpl::~XULContentSinkImpl()
         }
 
         NS_IF_RELEASE(gHTMLElementFactory);
+        NS_IF_RELEASE(gNameSpaceManager);
 
+        if (gXULUtils) {
+            nsServiceManager::ReleaseService(kXULContentUtilsCID, gXULUtils);
+            gXULUtils = nsnull;
+        }
+
+        NS_IF_RELEASE(kCommandUpdaterAtom);
         NS_IF_RELEASE(kDataSourcesAtom);
         NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kKeysetAtom);
@@ -1794,24 +1819,9 @@ XULContentSinkImpl::OpenRoot(const nsIParserNode& aNode, PRInt32 aNameSpaceID, n
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add anonymous form element");
     if (NS_FAILED(rv)) return rv;
 
-
     // Add the element to the XUL document's ID-to-element map.
-    nsAutoString id;
-    rv = element->GetAttribute(kNameSpaceID_None, kIdAtom, id);
+    rv = AddElementToMap(element);
     if (NS_FAILED(rv)) return rv;
-
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        rv = xuldoc->AddElementForID(id, element);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    rv = element->GetAttribute(kNameSpaceID_None, kRefAtom, id);
-    if (NS_FAILED(rv)) return rv;
-
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        rv = xuldoc->AddElementForID(id, element);
-        if (NS_FAILED(rv)) return rv;
-    }
 
     // Push the element onto the context stack, so that child
     // containers will hook up to us as their parent.
@@ -1879,65 +1889,38 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode, PRInt32 aNameSpaceID, ns
     rv = AddAttributes(aNode, element);
     if (NS_FAILED(rv)) return rv;
 
-    // Deal with somebody telling us that it has a 'pos'
+    // Insert the element into the content model
     nsCOMPtr<nsIContent> parent;
     rv = mContextStack.GetTopElement(getter_AddRefs(parent));
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString posStr;
-    rv = element->GetAttribute(kNameSpaceID_None, kPositionAtom, posStr);
+    rv = InsertElement(parent, element);
     if (NS_FAILED(rv)) return rv;
 
-    PRBool wasInserted = PR_FALSE;
-
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        PRInt32 pos = posStr.ToInteger(NS_REINTERPRET_CAST(PRInt32*, &rv));
-        if (NS_SUCCEEDED(rv)) {
-            rv = parent->InsertChildAt(element, pos, PR_FALSE);
-            if (NS_FAILED(rv)) return rv;
-
-            wasInserted = PR_TRUE;
-        }
-    }
-
-    if (! wasInserted) {
-        rv = parent->AppendChildTo(element, PR_FALSE);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-
-    // Add the element to the XUL document's ID-to-element map.
-    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mDocument);
-    if (! xuldoc)
-        return NS_ERROR_UNEXPECTED;
-
-    // check for an 'id' attribute
+    // Check for an 'id' attribute.  If we're inside a XUL template,
+    // then _everything_ needs to have an ID for the 'template'
+    // attribute hookup.
     nsAutoString id;
     rv = element->GetAttribute(kNameSpaceID_None, kIdAtom, id);
     if (NS_FAILED(rv)) return rv;
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE && mContextStack.IsInsideXULTemplate()) {
-        // If we're inside a XUL template, then _everything_ needs to
-        // have an ID for the 'template' attribute hookup.
         id = "$";
         id.Append(PRInt32(element.get()), 16);
         rv = element->SetAttribute(kNameSpaceID_None, kIdAtom, id, PR_FALSE);
         if (NS_FAILED(rv)) return rv;
-
-        rv = NS_CONTENT_ATTR_HAS_VALUE;
     }
 
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        rv = xuldoc->AddElementForID(id, element);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    // ...and a 'ref' attribute
-    rv = element->GetAttribute(kNameSpaceID_None, kRefAtom, id);
+    // Add the element to the XUL document's ID-to-element map.
+    rv = AddElementToMap(element);
     if (NS_FAILED(rv)) return rv;
 
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        rv = xuldoc->AddElementForID(id, element);
+    // Check for a 'commandupdater' attribute, in which case we'll
+    // hook the node up as a command updater.
+    nsAutoString value;
+    rv = element->GetAttribute(kNameSpaceID_None, kCommandUpdaterAtom, value);
+    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value.Equals("true")) {
+        rv = gXULUtils->SetCommandUpdater(mDocument, element);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -2042,6 +2025,18 @@ XULContentSinkImpl::OpenOverlayTag(const nsIParserNode& aNode, PRInt32 aNameSpac
     rv = AddAttributes(aNode, element);
     if (NS_FAILED(rv)) return rv;
 
+    if (domparent) {
+        // Check for a 'commandupdater' attribute, in which case we'll
+        // hook the node up as a command updater. We only do this in
+        // the case that the element was already in the document.
+        nsAutoString value;
+        rv = element->GetAttribute(kNameSpaceID_None, kCommandUpdaterAtom, value);
+        if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value.Equals("true")) {
+            rv = gXULUtils->SetCommandUpdater(mDocument, element);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+
     // Push the element onto the context stack, so that child
     // containers will hook up to us as their parent.
     rv = mContextStack.Push(element, mState);
@@ -2082,6 +2077,22 @@ XULContentSinkImpl::Merge(nsIContent* aOriginalNode, nsIContent* aOverlayNode)
             rv = aOriginalNode->SetAttribute(nameSpaceID, tag, value, PR_FALSE);
             if (NS_FAILED(rv)) return rv;
         }
+
+        // Check for a 'commandupdater' attribute, in which case we'll
+        // hook the node up as a command updater. We need to do this
+        // _here_, because it's possible that an overlay has added the
+        // 'commandupdater' attribute, or even altered the 'targets'
+        // or 'events' attributes.
+        nsAutoString value;
+        rv = aOriginalNode->GetAttribute(kNameSpaceID_None, kCommandUpdaterAtom, value);
+        if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value.Equals("true")) {
+            nsCOMPtr<nsIDocument> doc;
+            rv = aOriginalNode->GetDocument(*getter_AddRefs(doc));
+            if (NS_FAILED(rv)) return rv;
+
+            rv = gXULUtils->SetCommandUpdater(doc, aOriginalNode);
+            if (NS_FAILED(rv)) return rv;
+        }
     }
 
     {
@@ -2095,31 +2106,76 @@ XULContentSinkImpl::Merge(nsIContent* aOriginalNode, nsIContent* aOverlayNode)
             rv = aOverlayNode->ChildAt(i, *getter_AddRefs(child));
             if (NS_FAILED(rv)) return rv;
 
-            nsAutoString posStr;
-            rv = child->GetAttribute(kNameSpaceID_None, kPositionAtom, posStr);
+            rv = InsertElement(aOriginalNode, child);
             if (NS_FAILED(rv)) return rv;
-
-            PRBool wasInserted = PR_FALSE;
-
-            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                PRInt32 pos = posStr.ToInteger(NS_REINTERPRET_CAST(PRInt32*, &rv));
-                if (NS_SUCCEEDED(rv)) {
-                    rv = aOriginalNode->InsertChildAt(child, pos, PR_FALSE);
-                    if (NS_FAILED(rv)) return rv;
-
-                    wasInserted = PR_TRUE;
-                }
-            }
-
-            if (! wasInserted) {
-                rv = aOriginalNode->AppendChildTo(child, PR_FALSE);
-                if (NS_FAILED(rv)) return rv;
-            }
         }
 
         // Ok, now we _don't_ need to add these to the
         // document-to-element map because normal construction of the
         // nodes in OpenTag() will have done this.
+    }
+
+    return NS_OK;
+}
+
+
+nsresult
+XULContentSinkImpl::InsertElement(nsIContent* aParent, nsIContent* aChild)
+{
+    // Insert aChild appropriately into aParent, accountinf for a
+    // 'pos' attribute set on aChild.
+    nsresult rv;
+
+    nsAutoString posStr;
+    rv = aChild->GetAttribute(kNameSpaceID_None, kPositionAtom, posStr);
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool wasInserted = PR_FALSE;
+
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+        PRInt32 pos = posStr.ToInteger(NS_REINTERPRET_CAST(PRInt32*, &rv));
+        if (NS_SUCCEEDED(rv)) {
+            rv = aParent->InsertChildAt(aChild, pos, PR_FALSE);
+            if (NS_FAILED(rv)) return rv;
+
+            wasInserted = PR_TRUE;
+        }
+    }
+
+    if (! wasInserted) {
+        rv = aParent->AppendChildTo(aChild, PR_FALSE);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return NS_OK;
+}
+
+
+nsresult
+XULContentSinkImpl::AddElementToMap(nsIContent* aElement)
+{
+    // Add the specified element to the document's ID-to-element map
+    nsresult rv;
+
+    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mDocument);
+    if (! xuldoc)
+        return NS_ERROR_UNEXPECTED;
+
+    nsAutoString id;
+    rv = aElement->GetAttribute(kNameSpaceID_None, kIdAtom, id);
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+        rv = xuldoc->AddElementForID(id, aElement);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    rv = aElement->GetAttribute(kNameSpaceID_None, kRefAtom, id);
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+        rv = xuldoc->AddElementForID(id, aElement);
+        if (NS_FAILED(rv)) return rv;
     }
 
     return NS_OK;
