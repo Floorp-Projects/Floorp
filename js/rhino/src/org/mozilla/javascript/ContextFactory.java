@@ -150,7 +150,10 @@ public class ContextFactory
     }
 
     /**
-     * Get default ContextFactory.
+     * Get global ContextFactory.
+     *
+     * @see #hasExplicitGlobal()
+     * @see #initGlobal(ContextFactory)
      */
     public static ContextFactory getGlobal()
     {
@@ -158,7 +161,25 @@ public class ContextFactory
     }
 
     /**
-     * Initialize default ContextFactory. The method can only be called once.
+     * Check if global factory was set.
+     * Return true to indicate that {@link #initGlobal(ContextFactory)} was
+     * already called and false to indicate that the global factory was not
+     * explicitly set.
+     *
+     * @see #getGlobal()
+     * @see #initGlobal(ContextFactory)
+     */
+    public static boolean hasExplicitGlobal()
+    {
+        return hasCustomGlobal;
+    }
+
+    /**
+     * Set global ContextFactory.
+     * The method can only be called once.
+     *
+     * @see #getGlobal()
+     * @see #hasExplicitGlobal()
      */
     public static void initGlobal(ContextFactory factory)
     {
