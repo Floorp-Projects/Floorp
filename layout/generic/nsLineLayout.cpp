@@ -906,19 +906,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       reason = eReflowReason_Dirty;
   }
 
-  // Unless we're doing an unconstrained reflow, compute the
-  // containing block's width.
-  nscoord containingBlockWidth =
-    (NS_UNCONSTRAINEDSIZE != psd->mRightEdge)
-      ? (psd->mRightEdge - psd->mLeftEdge)
-      : NS_UNCONSTRAINEDSIZE;
-
   // Setup reflow state for reflowing the frame
   nsHTMLReflowState reflowState(mPresContext, *psd->mReflowState,
-                                aFrame, availSize,
-                                containingBlockWidth,
-                                psd->mReflowState->availableHeight,
-                                reason);
+                                aFrame, availSize, reason);
   reflowState.mLineLayout = this;
   reflowState.mFlags.mIsTopOfPage = GetFlag(LL_ISTOPOFPAGE);
   SetFlag(LL_UNDERSTANDSNWHITESPACE, PR_FALSE);
