@@ -254,14 +254,6 @@ public:
   virtual nsIContent* GetRootContent();
   virtual void SetRootContent(nsIContent* aRoot);
 
-  /**
-   * Methods to append to the prolog and epilog of
-   * a document. The prolog is the content before the document
-   * element, the epilog after.
-   */
-  NS_IMETHOD AppendToProlog(nsIContent* aContent);
-  NS_IMETHOD AppendToEpilog(nsIContent* aContent);
-
   /** 
    * Get the direct children of the document - content in
    * the prolog, the root content and content in the epilog.
@@ -471,7 +463,9 @@ protected:
   nsIDocument* mParentDocument;
   nsVoidArray mSubDocuments;
   nsVoidArray mPresShells;
-  nsIContent* mRootContent;
+  nsCOMPtr<nsISupportsArray> mChildren; // contains owning references
+  nsIContent* mRootContent; // a weak reference to the only element in
+                            // mChildren, or null if no such element exists.
   nsVoidArray mStyleSheets;
   nsVoidArray mObservers;
   void* mScriptObject;
@@ -482,8 +476,6 @@ protected:
   nsINameSpaceManager* mNameSpaceManager;
   nsDocHeaderData* mHeaderData;
   nsILineBreaker* mLineBreaker;
-  nsVoidArray *mProlog;
-  nsVoidArray *mEpilog;
   nsDocumentChildNodes* mChildNodes;
   nsIWordBreaker* mWordBreaker;
   // A content ID counter used to give a monotonically increasing ID to the content
@@ -499,6 +491,11 @@ protected:
   nsCOMPtr<nsIBindingManager> mBindingManager;
   nsCOMPtr<nsINodeInfoManager> mNodeInfoManager; // OWNER
   nsSupportsHashtable* mBoxObjectTable;
+
+private:
+  // These are not implemented and not supported.
+  nsDocument(const nsDocument& aOther);
+  nsDocument& operator=(const nsDocument& aOther);
 };
 
 #endif /* nsDocument_h___ */

@@ -765,11 +765,13 @@ nsXMLContentSink::AddContentAsLeaf(nsIContent *aContent)
 {
   nsresult result = NS_OK;
 
-  if (eXMLContentSinkState_InProlog == mState) {
-    result = mDocument->AppendToProlog(aContent);
-  }
-  else if (eXMLContentSinkState_InEpilog == mState) {
-    result = mDocument->AppendToEpilog(aContent);
+  if ((eXMLContentSinkState_InProlog == mState) ||
+      (eXMLContentSinkState_InEpilog == mState)) {
+    nsCOMPtr<nsIDOMDocument> domDoc( do_QueryInterface(mDocument) );
+    nsCOMPtr<nsIDOMNode> trash;
+    nsCOMPtr<nsIDOMNode> child( do_QueryInterface(aContent) );
+    NS_ASSERTION(child, "not a dom node");
+    domDoc->AppendChild(child, getter_AddRefs(trash));
   }
   else {
     nsCOMPtr<nsIContent> parent = getter_AddRefs(GetCurrentContent());

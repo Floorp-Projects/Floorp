@@ -1080,20 +1080,6 @@ nsXULDocument::SetRootContent(nsIContent* aRoot)
 }
 
 NS_IMETHODIMP
-nsXULDocument::AppendToProlog(nsIContent* aContent)
-{
-    NS_NOTREACHED("nsXULDocument::AppendToProlog");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsXULDocument::AppendToEpilog(nsIContent* aContent)
-{
-    NS_NOTREACHED("nsXULDocument::AppendToEpilog");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsXULDocument::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 {
     NS_NOTREACHED("nsXULDocument::ChildAt");

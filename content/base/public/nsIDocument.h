@@ -192,14 +192,6 @@ public:
   virtual nsIContent* GetRootContent() = 0;
   virtual void SetRootContent(nsIContent* aRoot) = 0;
 
-  /**
-   * Methods to append to the prolog and epilog of
-   * a document. The prolog is the content before the document
-   * element, the epilog after.
-   */
-  NS_IMETHOD AppendToProlog(nsIContent* aContent) = 0;
-  NS_IMETHOD AppendToEpilog(nsIContent* aContent) = 0;
-
   /** 
    * Get the direct children of the document - content in
    * the prolog, the root content and content in the epilog.

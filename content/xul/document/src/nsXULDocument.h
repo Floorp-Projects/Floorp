@@ -181,8 +181,6 @@ public:
 
     virtual void SetRootContent(nsIContent* aRoot);
 
-    NS_IMETHOD AppendToProlog(nsIContent* aContent);
-    NS_IMETHOD AppendToEpilog(nsIContent* aContent);
     NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;
     NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const;
     NS_IMETHOD GetChildCount(PRInt32& aCount);
