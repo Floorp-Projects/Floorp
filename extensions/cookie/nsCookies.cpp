@@ -177,7 +177,10 @@ COOKIE_RemoveAll()
     cookie_changed = PR_TRUE;
     delete cookie_list;
     cookie_list = nsnull;
-    Recycle(cookie_P3P);
+    if (cookie_P3P) {
+      Recycle(cookie_P3P);
+      cookie_P3P = nsnull;
+    }
   }
 }
 
