@@ -63,6 +63,12 @@
 #include "nsContentList.h"
 #include "nsGUIEvent.h"
 
+// For notification of cancelling or failure of submission
+#include "nsIWebProgressListener.h"
+#include "nsIWebProgress.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsWeakReference.h"
+
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
 class nsFormControlList;
@@ -72,7 +78,10 @@ class nsFormControlList;
 class nsHTMLFormElement : public nsGenericHTMLContainerElement,
                           public nsIDOMHTMLFormElement,
                           public nsIDOMNSHTMLFormElement,
-                          public nsIForm
+                          public nsIForm,
+                          public nsSupportsWeakReference,
+                          public nsIWebProgressListener
+                          
 {
 public:
   nsHTMLFormElement();
@@ -120,15 +129,20 @@ public:
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
+  // nsIWebProgressListener
+  NS_DECL_NSIWEBPROGRESSLISTENER
 
 protected:
   nsresult DoSubmitOrReset(nsIPresContext* aPresContext,
                            nsEvent* aEvent,
                            PRInt32 aMessage);
+  nsresult RemoveSelfAsWebProgressListener();
 
   nsFormControlList*       mControls;
   PRPackedBool             mGeneratingSubmit;
   PRPackedBool             mGeneratingReset;
+
+  nsCOMPtr<nsIWebProgress> mWebProgress; // Indicates whether there is a current submit happening
 };
 
 // nsFormControlList
@@ -291,6 +305,8 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFormElement,
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIForm)
+  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -490,6 +506,25 @@ nsHTMLFormElement::DoSubmitOrReset(nsIPresContext* aPresContext,
                                    nsEvent* aEvent,
                                    PRInt32 aMessage) {
   NS_ENSURE_ARG_POINTER(aPresContext);
+
+  // If mWebProgress is not null then we are in the middle of a submit
+  // if it is null, then we need to add the form content as a listener
+  // to check for double submits (Bug 72906) or whether someone is doing a submit
+  // from the "onsubmit" handler (Bug 85286).
+  if (mWebProgress) {
+    return NS_OK;
+  } else {
+    // Get out container and add ourself as a listener for progress
+    nsCOMPtr<nsISupports> supps;
+    aPresContext->GetContainer(getter_AddRefs(supps));
+    if (supps) {
+      nsresult rv;
+      mWebProgress = do_GetInterface(supps, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        mWebProgress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener *, this));
+      }
+    }
+  }
 
   // Make sure the presentation is up-to-date
   nsCOMPtr<nsIDocument> doc;
@@ -992,5 +1027,63 @@ nsHTMLFormElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
   *aResult = sizeof(*this) + BaseSizeOf(aSizer);
 
+  return NS_OK;
+}
+
+//---------------------------------------------------------------------
+//-- nsIWebProgressListener
+//---------------------------------------------------------------------
+
+// Helper Function
+nsresult nsHTMLFormElement::RemoveSelfAsWebProgressListener()
+{
+  // Remove ourselves as a progress listener 
+  if (mWebProgress) {
+    mWebProgress->RemoveProgressListener(NS_STATIC_CAST(nsIWebProgressListener *, this));
+    mWebProgress = do_QueryInterface(nsnull);
+  }
+  return NS_OK;
+}
+
+//------------------------
+// Callbacks to interface
+
+/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in unsigned long aStatus); */
+NS_IMETHODIMP 
+nsHTMLFormElement::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
+{
+  // This will fire when a submit gets cancelled or times out
+  if ((aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) &&
+      (aStateFlags & nsIWebProgressListener::STATE_STOP)) {
+    return RemoveSelfAsWebProgressListener();
+  }
+  return NS_OK;
+}
+
+/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
+NS_IMETHODIMP 
+nsHTMLFormElement::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+{
+  return RemoveSelfAsWebProgressListener();
+}
+
+/* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
+NS_IMETHODIMP 
+nsHTMLFormElement::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsIURI *location)
+{
+  return NS_OK;
+}
+
+/* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
+NS_IMETHODIMP 
+nsHTMLFormElement::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
+{
+  return NS_OK;
+}
+
+/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long state); */
+NS_IMETHODIMP 
+nsHTMLFormElement::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state)
+{
   return NS_OK;
 }

@@ -28,6 +28,7 @@ REQUIRES	= xpcom \
 		  widget \
 		  dom \
 		  js \
+		  uriloader \
 		  locale \
 		  webshell \
 		  htmlparser \
