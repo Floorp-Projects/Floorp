@@ -1083,6 +1083,7 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
     nsIHTMLContent* parent = mStack[mStackPos-1].mContent;
     result = parent->AppendChildTo(content, PR_FALSE);
   }
+  NS_IF_RELEASE(content);
 
   // Special handling for certain tags
   switch (nodeType) {
@@ -1090,59 +1091,6 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
     mSink->mInMonolithicContainer--;
     break;
 
-  // XXX This is a temporary fix for option tags with null content
-  // i.e. <option></option>
-  // This makes sure that a text content node gets created if there
-  // wasn't one
-  case eHTMLTag_option:
-    {
-      PRInt32 numChildren;
-      content->ChildCount(numChildren);
-      if (0 == numChildren) {
-        nsIContent* textNodeContent;
-        nsresult rv = NS_NewTextNode(&textNodeContent);
-        if (NS_OK == rv) {
-          // Set the content's document
-          textNodeContent->SetDocument(mSink->mDocument, PR_FALSE);
-          
-          // Set the text in the text node
-          nsITextContent* text = nsnull;
-          textNodeContent->QueryInterface(kITextContentIID, (void**) &text);
-          nsAutoString str(" ");
-          text->SetText(str.GetUnicode(), 1, PR_FALSE);
-          nsCOMPtr<nsIContent> txtContent(do_QueryInterface(textNodeContent));
-          content->AppendChildTo(txtContent, PR_FALSE);
-          NS_RELEASE(text);
-        }
-      } else {
-        // This strips out all "\n" from the content text of a option element
-        // this is for content inside the <option> element that has a return in it
-        // I hate to have to check every option but I don't know how else to
-        // get this job done.
-        nsIContent * txtContent;
-        content->ChildAt(0, txtContent);
-        nsITextContent* text = nsnull;
-        if (NS_OK == txtContent->QueryInterface(kITextContentIID, (void**) &text)) {
-          const nsTextFragment * frag;
-          PRInt32 status;
-          text->GetText(frag, status);
-          nsAutoString str;
-          if (frag->Is2b()) {
-            str.SetString(frag->Get2b(), frag->GetLength());
-          } else {
-            str.SetString(frag->Get1b(), frag->GetLength());
-          }
-
-          PRUnichar retChar = '\n';
-          if (-1 != str.FindChar(retChar)) {
-            str.StripChar(retChar);
-            text->SetText((const PRUnichar*)str.GetUnicode(), (PRInt32)str.Length(), PR_FALSE);
-          }
-          NS_RELEASE(text);
-        }
-        NS_RELEASE(txtContent);
-      }
-    }
   case eHTMLTag_form:
     {
       nsHTMLTag parserNodeType = nsHTMLTag(aNode.GetNodeType());
@@ -1160,7 +1108,6 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
     break;
   }
 
-  NS_IF_RELEASE(content);
   // Mark sink dirty if it can safely reflow something
   MaybeMarkSinkDirty();
 
