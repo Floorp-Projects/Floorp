@@ -85,7 +85,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	inbox.gif \
 	less.gif \
 	local-mailhost.gif \
-	mailWidgets.xml \
 	mailfolder.gif \
 	mailheader.css \
 	message-mail-attach.gif \
