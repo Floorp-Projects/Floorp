@@ -44,7 +44,9 @@ all::
 
 MODULE=java 
 JMODS=netscape/javascript
+!ifdef MOZ_JAVA
 JDIRS=$(JMODS) 
+!endif
 JAR_JSJ=jsj10.jar 
 JAR_JSJ_CLASSES=$(JMODS) 
 JARS=$(JAR_JSJ) 
