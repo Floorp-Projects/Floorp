@@ -28,9 +28,9 @@
 #include "ifuncns.h"
 #include "xpistub.h"
 #include "xpi.h"
+#include <shlobj.h>
 
-static WNDPROC  OldListBoxWndProc;
-static int      iLBCheckboxRedraw = 0;
+static WNDPROC OldListBoxWndProc;
 
 void AskCancelDlg(HWND hDlg)
 {
@@ -48,15 +48,53 @@ void AskCancelDlg(HWND hDlg)
   }
 } 
 
+void PaintGradientShade(HWND hWnd, HDC hdc)
+{
+  RECT    rectClient;        // Rectangle for entire client area
+  RECT    rectFill;          // Rectangle for filling band
+  HBRUSH  brush;
+  float   fStep;            // How large is each band?
+  int     iOnBand;  // Loop index
+
+  GetClientRect(hWnd, &rectClient);
+
+  // Determine how large each band should be in order to cover the
+  // client with 256 bands (one for every color intensity level)
+  fStep = (float)rectClient.bottom / 256.0f;
+
+  // Start filling bands
+  for (iOnBand = 0; iOnBand < 256; iOnBand++)
+  {
+
+    // Set the location of the current band
+    SetRect(&rectFill,
+            0,                           // Upper left X
+            (int)(iOnBand * fStep),      // Upper left Y
+            rectClient.right+1,          // Lower right X
+            (int)((iOnBand+1) * fStep)); // Lower right Y
+
+    // Create a brush with the appropriate color for this band
+    brush = CreateSolidBrush(RGB(0, 0, (255 - iOnBand)));
+
+    // Fill the rectangle
+    FillRect(hdc, &rectFill, brush);
+
+    // Get rid of the brush we created
+    DeleteObject(brush);
+  };
+}
+
 LRESULT CALLBACK DlgProcMain(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   HDC           hdc;
   PAINTSTRUCT   ps;
+  BOOL          bReturn = FALSE;
 
   switch(msg)
   {
     case WM_CREATE:
       hWndMain = hWnd;
+      bReturn = FALSE;
       break;
 
     case WM_COMMAND:
@@ -64,13 +102,16 @@ LRESULT CALLBACK DlgProcMain(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       {
         case ID_WIZNEXT:
           DlgSequenceNext();
+          bReturn = FALSE;
           break;
 
         case ID_WIZBACK:
           DlgSequencePrev();
+          bReturn = FALSE;
           break;
 
         default:
+          bReturn = FALSE;
           break;
       }
       break;
@@ -79,19 +120,22 @@ LRESULT CALLBACK DlgProcMain(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       hdc = BeginPaint(hWnd, &ps);
       // Add any drawing code here...
 
+      PaintGradientShade(hWnd, hdc);
       OutputTitle(hdc, sgProduct.szProductName);
 
       EndPaint(hWnd, &ps);
+      bReturn = FALSE;
       break;
 
     case WM_CLOSE:
       AskCancelDlg(hWnd);
+      bReturn = FALSE;
       break;
 
     default:
       return(DefWindowProc(hWnd, msg, wParam, lParam));
   }
-  return(0);
+  return(bReturn);
 }
 
 LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
@@ -305,7 +349,7 @@ BOOL BrowseForDirectory(HWND hDlg, char *szCurrDir)
   of.lpstrTitle         = szDlgBrowseTitle;
   of.Flags              = OFN_NONETWORKBUTTON |
                           OFN_ENABLEHOOK      |
-                          OFN_NOCHANGEDIR     |
+                          OFN_NOCHANGEDIR  |
                           OFN_ENABLETEMPLATE;
   of.nFileOffset        = 0;
   of.nFileExtension     = 0;
@@ -314,7 +358,7 @@ BOOL BrowseForDirectory(HWND hDlg, char *szCurrDir)
   of.lpfnHook           = BrowseHookProc;
   of.lpTemplateName     = MAKEINTRESOURCE(DLG_BROWSE_DIR);
 
-  if(GetSaveFileName(&of))
+  if(GetOpenFileName(&of))
     bRet = TRUE;
   else
     bRet = FALSE;
@@ -442,6 +486,12 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
     case WM_COMMAND:
       switch(LOWORD(wParam))
       {
+/*
+        BROWSEINFO    biBrowseInfo;
+        LPITEMIDLIST  lppidlPath;
+        int           iImageId = 0;
+        char          szDisplayName[MAX_BUF];
+*/
         case IDC_BUTTON_BROWSE:
           if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST0)      == BST_CHECKED)
             dwTempSetupType = ST_RADIO0;
@@ -451,6 +501,21 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
             dwTempSetupType = ST_RADIO2;
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST3) == BST_CHECKED)
             dwTempSetupType = ST_RADIO3;
+
+/*
+          biBrowseInfo.hwndOwner        = hDlg;
+          biBrowseInfo.pidlRoot         = NULL;
+          biBrowseInfo.pszDisplayName   = szDisplayName;
+          biBrowseInfo.lpszTitle        = "Title of BrowseForFolder()";
+          biBrowseInfo.ulFlags          = BIF_EDITBOX |
+                                          BIF_STATUSTEXT |
+                                          BIF_DONTGOBELOWDOMAIN;
+          biBrowseInfo.lpfn             = NULL;
+          biBrowseInfo.lParam           = 0;
+          biBrowseInfo.iImage           = iImageId;
+
+          lppidlPath = SHBrowseForFolder(&biBrowseInfo);
+*/
 
           GetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szTempSetupPath, MAX_PATH);
           BrowseForDirectory(hDlg, szTempSetupPath);
@@ -548,32 +613,39 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
   return(0);
 }
 
-void DrawCheck(LPDRAWITEMSTRUCT lpdis, HDC hdcMem)
+void DrawCheck(LPDRAWITEMSTRUCT lpdis)
 {
   siC     *siCTemp  = NULL;
-  HBITMAP hbmpCheck;
+  HDC     hdcMem;
+  HBITMAP hbmpCheckBox;
 
   siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE);
   if(siCTemp != NULL)
   {
     if(siCTemp->dwAttributes & SIC_SELECTED)
-      hbmpCheck = LoadBitmap(hSetupRscInst, MAKEINTRESOURCE(IDB_BOX_CHECKED));
+      hbmpCheckBox = hbmpBoxChecked;
     else
-      hbmpCheck = LoadBitmap(hSetupRscInst, MAKEINTRESOURCE(IDB_BOX_UNCHECKED));
+      hbmpCheckBox = hbmpBoxUnChecked;
 
-    // BitBlt() is used to prepare the checkbox icon into the list box item's device context.
-    // The SendMessage() function using LB_SETITEMDATA performs the drawing.
-    BitBlt(lpdis->hDC,
-           lpdis->rcItem.left + 2,
-           lpdis->rcItem.top + 2,
-           lpdis->rcItem.right - lpdis->rcItem.left,
-           lpdis->rcItem.bottom - lpdis->rcItem.top,
-           hdcMem,
-           0,
-           0,
-           SRCCOPY);
+    SendMessage(lpdis->hwndItem, LB_SETITEMDATA, lpdis->itemID, (LPARAM)hbmpCheckBox);
+    if((hdcMem = CreateCompatibleDC(lpdis->hDC)) != NULL)
+    {
+      SelectObject(hdcMem, hbmpCheckBox);
 
-    SendMessage(lpdis->hwndItem, LB_SETITEMDATA, lpdis->itemID, (LPARAM)hbmpCheck);
+      // BitBlt() is used to prepare the checkbox icon into the list box item's device context.
+      // The SendMessage() function using LB_SETITEMDATA performs the drawing.
+      BitBlt(lpdis->hDC,
+             lpdis->rcItem.left + 2,
+             lpdis->rcItem.top + 2,
+             lpdis->rcItem.right - lpdis->rcItem.left,
+             lpdis->rcItem.bottom - lpdis->rcItem.top,
+             hdcMem,
+             0,
+             0,
+             SRCCOPY);
+
+      DeleteDC(hdcMem);
+    }
   }
 }
 
@@ -590,7 +662,6 @@ void lbAddItem(HWND hList, siC *siCComponent)
 
 void InvalidateLBCheckbox(HWND hwndListBox)
 {
-//  BOOL bReturn;
   RECT rcCheckArea;
 
   // retrieve the rectangle of all list items to update.
@@ -606,7 +677,6 @@ void InvalidateLBCheckbox(HWND hwndListBox)
   // node attirbute, in this case it is a bitmap of a
   // checked/unchecked checkbox.
   InvalidateRect(hwndListBox, &rcCheckArea, TRUE);
-//  bReturn = RedrawWindow(hwndListBox, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
 }
 
 void ToggleCheck(HWND hwndListBox, DWORD dwIndex)
@@ -627,7 +697,6 @@ void ToggleCheck(HWND hwndListBox, DWORD dwIndex)
     {
       bMoreToResolve = ResolveDependencies(-1);
     }
-    iLBCheckboxRedraw = 2;
   }
 
   InvalidateLBCheckbox(hwndListBox);
@@ -663,6 +732,7 @@ LRESULT CALLBACK NewListBoxWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
   switch(uMsg)
   {
     case WM_CHAR:
+      /* check for the space key */
       if((TCHAR)wParam == 32)
       {
         dwIndex = SendMessage(hWnd,
@@ -707,17 +777,12 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
   RECT                rDlg;
   RECT                rLBComponentSize;
   RECT                rListBox;
-  HBITMAP             hbmpOld;
-  HBITMAP             hbmpLast;
   TCHAR               tchBuffer[MAX_BUF];
   TEXTMETRIC          tm;
   DWORD               y;
-  HDC                 hdcMem;
   HDC                 hdcComponentSize;
   LPDRAWITEMSTRUCT    lpdis;
-//  PAINTSTRUCT         ps;
   RECT                rTemp;
-  BOOL                bR;
   ULONGLONG           ullDSBuf;
   char                szBuf[MAX_BUF];
 
@@ -766,38 +831,17 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
       OldListBoxWndProc = SubclassWindow(hwndLBComponents, (WNDPROC)NewListBoxWndProc);
       break;
 
-//    case WM_PAINT:
-//    hdc = BeginPaint(hDlg, &ps);
-//      // Add any drawing code here...
-//
-//      OutputTitle(hdc, sgProduct.szProductName);
-//
-//      EndPaint(hWnd, &ps);
-//      break;
-//
     case WM_DRAWITEM:
       lpdis = (LPDRAWITEMSTRUCT)lParam;
-      SendMessage(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM)tchBuffer);
-      hbmpLast = (HBITMAP)SendMessage(lpdis->hwndItem,
-                                       LB_GETITEMDATA,
-                                       lpdis->itemID,
-                                       (LPARAM)0);
-
-      bR = GetClientRect(lpdis->hwndItem, &rTemp);
-
-      hdcMem  = CreateCompatibleDC(lpdis->hDC);
-      hbmpOld = SelectObject(hdcMem, hbmpLast);
-      hdcComponentSize = GetDC(lpdis->hwndItem);
-      SelectObject(hdcComponentSize, GetCurrentObject(lpdis->hDC, OBJ_FONT));
 
       // If there are no list box items, skip this message.
       if(lpdis->itemID == -1)
         break;
 
-//      SetTextColor(lpdis->hDC,        GetSysColor(COLOR_WINDOWTEXT));
-//      SetBkColor(lpdis->hDC,          GetSysColor(COLOR_WINDOW));
-//      SetTextColor(hdcComponentSize,  GetSysColor(COLOR_WINDOWTEXT));
-//      SetBkColor(hdcComponentSize,    GetSysColor(COLOR_WINDOW));
+      SendMessage(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM)tchBuffer);
+      GetClientRect(lpdis->hwndItem, &rTemp);
+      hdcComponentSize = GetDC(lpdis->hwndItem);
+      SelectObject(hdcComponentSize, GetCurrentObject(lpdis->hDC, OBJ_FONT));
 
       if((lpdis->itemAction & ODA_FOCUS) && (lpdis->itemState & ODS_SELECTED))
       {
@@ -846,23 +890,17 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
         /* calculate clipping region.  The region being the entire listbox window */
         GetClientRect(hwndLBComponents, &rListBox);
         if(lpdis->rcItem.bottom > rListBox.bottom)
-        {
           rLBComponentSize.bottom = rListBox.bottom - 1;
-        }
         else
-        {
           rLBComponentSize.bottom = lpdis->rcItem.bottom - 1;
-        }
+
         rLBComponentSize.left  = lpdis->rcItem.right - 50;
         rLBComponentSize.right = lpdis->rcItem.right;
         if(lpdis->rcItem.top < rListBox.top)
-        {
           rLBComponentSize.top = rListBox.top + 1;
-        }
         else
-        {
           rLBComponentSize.top = lpdis->rcItem.top + 1;
-        }
+
         /* set text alignment */
         SetTextAlign(hdcComponentSize, TA_RIGHT);
         /* output string */
@@ -876,7 +914,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
                    NULL);
       }
       
-      DrawCheck(lpdis, hdcMem);
+      DrawCheck(lpdis);
 
       // draw the focus rect on the selected item
       if((lpdis->itemAction & ODA_FOCUS) &&
@@ -885,16 +923,8 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
         DrawFocusRect(lpdis->hDC, &(lpdis->rcItem));
       }
 
-      DeleteDC(hdcMem);
       ReleaseDC(lpdis->hwndItem, hdcComponentSize);
       bReturn = TRUE;
-
-      if(iLBCheckboxRedraw > 0)
-      {
-        --iLBCheckboxRedraw;
-        InvalidateLBCheckbox(hwndLBComponents);
-//        UpdateWindow(hwndLBComponents);
-      }
 
       /* update the disk space required info in the dialog.  It is already
          in Kilobytes (unlike what GetDiskSpaceAvailable() returns) */
