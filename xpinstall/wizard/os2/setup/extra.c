@@ -6777,6 +6777,7 @@ HWND FindWindow(PCSZ pszClassName, PCSZ pszWindowName)
 {
   HENUM henum;
   HWND hwndClient, hwnd = NULLHANDLE;
+#ifdef OLDCODE
   char pszT[256];
 
   henum = WinBeginEnumWindows(HWND_DESKTOP);
@@ -6804,5 +6805,6 @@ HWND FindWindow(PCSZ pszClassName, PCSZ pszWindowName)
     }
   }
   WinEndEnumWindows(henum);
+#endif
   return  hwnd;
 }

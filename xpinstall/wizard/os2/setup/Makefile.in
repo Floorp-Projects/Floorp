@@ -41,6 +41,7 @@ EXTRA_DSO_LIBS	= \
 		$(NULL)
 
 USE_NON_MT_LIBS = 1
+USE_STATIC_LIBS = 1
 
 CSRCS		= \
 		setup.c \
@@ -53,7 +54,7 @@ CSRCS		= \
 
 CPPSRCS		= \
 		nsEscape.cpp \
-		pplib.cpp \
+		nsINIParser.cpp \
 		xpnetHook.cpp \
 		$(NULL)
 

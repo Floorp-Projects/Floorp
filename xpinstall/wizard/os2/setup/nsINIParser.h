@@ -31,6 +31,8 @@
 #include <sys/stat.h>
 #include <locale.h>
 
+#ifdef __cplusplus
+
 class nsINIParser
 {
 public:
@@ -108,6 +110,23 @@ public:
      */
     static char     *ResolveName(char *aINIRoot);
 
+    /**
+     * WriteString
+     * 
+     * Gets the value of the specified key in the specified section
+     * of the INI file represented by this instance. The value is stored
+     * in the supplied buffer. The buffer size is provided as input and
+     * the actual bytes used by the value is set in the in/out size param.
+     *
+     * @param aSection      section name
+     * @param aKey          key name
+     * @param aValBuf       user supplied buffer
+     * @param aIOValBufSize buf size on input; actual buf used on output
+     *
+     * @return mError       operation success code
+     */
+    int WriteString(      char *aSection, char *aKey, char *aValBuf );
+
 /*--------------------------------------------------------------------*
  *   Errors
  *--------------------------------------------------------------------*/
@@ -125,14 +144,18 @@ public:
 
 private:
     int FindSection(char *aSection, char **aOutSecPtr);
-    int FindKey(char *aSecPtr, char *aKey, char *aVal, int *aIOValSize);
+    int FindKey(char *aSecPtr, char *aKey, char **aOutSecPtr);
+    int GetValue(char *aSecPtr, char *aKey, char *aVal, int *aIOValSize);
 
     char    *mFileBuf;
+    char    *mFilename;
     int     mFileBufSize;
     int     mError;
+    int     mfWrite;
 };
 
 #define NL '\n'
+#define NLSTRING "\n"
 #define MAX_VAL_SIZE 512
 
 #if defined(DUMP)
@@ -143,6 +166,24 @@ private:
 #else
 #define DUMP(_msg) 
 #endif
+#endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+unsigned long GetPrivateProfileString(const char* szAppName,
+                                      const char* szKeyName,
+                                      const char* szDefault,
+                                      char* szReturnedString,
+                                      int nSize,
+                                      const char* szFileName);
+
+unsigned long WritePrivateProfileString(const char* szAppName,
+                                        const char* szKeyName,
+                                        const char* szValue,
+                                        const char* szFileName);
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_NS_INIPARSER_H_ */
