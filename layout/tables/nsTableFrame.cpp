@@ -171,6 +171,7 @@ private:
 
 ColumnInfoCache::ColumnInfoCache(PRInt32 aNumColumns)
 {
+  if (PR_TRUE==gsDebug) printf("CIC constructor: aNumColumns %d\n", aNumColumns);
   mNumColumns = aNumColumns;
   for (PRInt32 i=0; i<NUM_COL_WIDTH_TYPES; i++)
   {
@@ -193,6 +194,7 @@ ColumnInfoCache::~ColumnInfoCache()
 void ColumnInfoCache::AddColumnInfo(const nsStyleUnit aType, 
                                     PRInt32 aColumnIndex)
 {
+  if (PR_TRUE==gsDebug) printf("CIC AddColumnInfo: adding col index %d of type %d\n", aColumnIndex, aType);
   // a table may have more COLs than actual columns, so we guard against that here
   if (aColumnIndex<mNumColumns)
   {
@@ -231,8 +233,8 @@ void ColumnInfoCache::AddColumnInfo(const nsStyleUnit aType,
 
 
 void ColumnInfoCache::GetColumnsByType(const nsStyleUnit aType, 
-                                        PRInt32& aOutNumColumns,
-                                        PRInt32 *& aOutColumnIndexes)
+                                       PRInt32& aOutNumColumns,
+                                       PRInt32 *& aOutColumnIndexes)
 {
   // initialize out-params
   aOutNumColumns=0;
@@ -382,6 +384,7 @@ PRInt32 nsTableFrame::GetSpecifiedColumnCount ()
     }
     childFrame->GetNextSibling(childFrame);
   }    
+  if (PR_TRUE==gsDebug) printf("TIF GetSpecifiedColumnCount: returning %d\n", mColCount);
   return mColCount;
 }
 
@@ -436,6 +439,7 @@ void nsTableFrame::SetEffectiveColCount()
         break;
     }
   }
+  if (PR_TRUE==gsDebug) printf("TIF SetEffectiveColumnCount: returning %d\n", mEffectiveColCount);
 }
 
 nsTableColFrame * nsTableFrame::GetColFrame(PRInt32 aColIndex)
@@ -507,8 +511,6 @@ PRBool nsTableFrame::RowHasSpanningCells(PRInt32 aRowIndex)
   */
 PRBool nsTableFrame::ColIsSpannedInto(PRInt32 aColIndex)
 {
-  PRInt32 colCount=GetColCount();
-  NS_PRECONDITION (0<=aColIndex && aColIndex<colCount, "bad col index arg");
   PRBool result = PR_FALSE;
   nsCellMap * cellMap = GetCellMap();
   NS_PRECONDITION (nsnull!=cellMap, "bad call, cellMap not yet allocated.");
@@ -524,8 +526,6 @@ PRBool nsTableFrame::ColIsSpannedInto(PRInt32 aColIndex)
   */
 PRBool nsTableFrame::ColHasSpanningCells(PRInt32 aColIndex)
 {
-  PRInt32 colCount=GetColCount();
-  NS_PRECONDITION (0<=aColIndex && aColIndex<colCount, "bad col index arg");
   PRBool result = PR_FALSE;
   nsCellMap * cellMap = GetCellMap();
   NS_PRECONDITION (nsnull!=cellMap, "bad call, cellMap not yet allocated.");
@@ -569,7 +569,7 @@ PRInt32 nsTableFrame::GetEffectiveColSpan (PRInt32 aColIndex, nsTableCellFrame *
   NS_PRECONDITION (nsnull!=aCell, "bad cell arg");
   nsCellMap *cellMap = GetCellMap();
   NS_PRECONDITION (nsnull!=cellMap, "bad call, cellMap not yet allocated.");
-  PRInt32 colCount = GetColCount();
+  PRInt32 colCount = mCellMap->GetColCount();
   NS_PRECONDITION (0<=aColIndex && aColIndex<colCount, "bad col index arg");
 
   PRInt32 result;
@@ -626,6 +626,7 @@ PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
 // XXX this and EnsureColumnsAt should be 1 method, with -1 for aColIndex meaning "do them all"
 void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
 {
+  if (PR_TRUE==gsDebug) printf("TIF EnsureColumns\n");
   nsresult rv;
   NS_PRECONDITION(nsnull!=mCellMap, "bad state:  null cellmap");
   // XXX sec should only be called on firstInFlow
@@ -664,14 +665,15 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
       prevSibFrame = childFrame;
     childFrame->GetNextSibling(childFrame);
   }
-  PRInt32 colCount = GetColCount();
+  PRInt32 colCount = mCellMap->GetColCount();
   if (PR_TRUE==gsDebug) printf("EC: actual = %d, colCount=%d\n", actualColumns, colCount);
   if (actualColumns < colCount)
   {
+    if (PR_TRUE==gsDebug) printf("TIF EnsureColumns: actual %d < colCount %d\n", actualColumns, colCount);
     nsIHTMLContent *lastColGroup=nsnull;
     if (nsnull==lastColGroupFrame)
     {
-      if (PR_TRUE==gsDebug) printf("EC:creating colgroup\n", actualColumns, colCount);
+      if (PR_TRUE==gsDebug) printf("EnsureColumns:creating colgroup\n", actualColumns, colCount);
       // create an implicit colgroup
       nsAutoString colGroupTag;
       nsHTMLAtoms::colgroup->ToString(colGroupTag);
@@ -717,7 +719,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
     // the table's frames
     nsAutoString colTag;
     nsHTMLAtoms::col->ToString(colTag);
-    PRInt32 excessColumns = GetColCount() - actualColumns;
+    PRInt32 excessColumns = colCount - actualColumns;
     nsIFrame* firstNewColFrame = nsnull;
     nsIFrame* lastNewColFrame = nsnull;
     for ( ; excessColumns > 0; excessColumns--)
@@ -880,6 +882,7 @@ void nsTableFrame::EnsureColumnFrameAt(PRInt32              aColIndex,
 
 void nsTableFrame::AddColumnFrame (nsTableColFrame *aColFrame)
 {
+  if (gsDebug==PR_TRUE) printf("TIF: AddColumnFrame %p\n", aColFrame);
   nsCellMap *cellMap = GetCellMap();
   NS_PRECONDITION (nsnull!=cellMap, "null cellMap.");
   if (nsnull!=cellMap)
@@ -908,6 +911,7 @@ PRInt32 nsTableFrame::GetNextAvailColIndex(PRInt32 aRowIndex, PRInt32 aColIndex)
   NS_PRECONDITION (nsnull!=cellMap, "null cellMap.");
   if (nsnull!=cellMap)
     result = cellMap->GetNextAvailColIndex(aRowIndex, aColIndex);
+  if (gsDebug==PR_TRUE) printf("TIF: GetNextAvailColIndex returning %d\n", result);
   return result;
 }
 
@@ -958,7 +962,7 @@ void nsTableFrame::AddCellToTable (nsTableRowFrame *aRowFrame,
   NS_PRECONDITION(nsnull!=mCellMap, "bad cellMap");
 
   // XXX: must be called only on first-in-flow!
-  if (gsDebug==PR_TRUE) printf("Build Cell Map...\n");
+  if (gsDebug==PR_TRUE) printf("TIF AddCellToTable: frame %p\n", aCellFrame);
 
   // Make an educated guess as to how many columns we have. It's
   // only a guess because we can't know exactly until we have
@@ -1197,7 +1201,7 @@ void nsTableFrame::ListColumnLayoutData(FILE* out, PRInt32 aIndent)
   {
     fprintf(out,"Column Layout Data \n");
     
-    PRInt32 numCols = GetColCount();
+    PRInt32 numCols = cellMap->GetColCount();
     PRInt32 numRows = cellMap->GetRowCount();
     for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
     {
@@ -1256,7 +1260,7 @@ void nsTableFrame::RecalcLayoutData()
   if (nsnull==cellMap)
     return; // no info yet, so nothing useful to do
 
-  PRInt32 colCount = GetColCount();
+  PRInt32 colCount = cellMap->GetColCount();
   PRInt32 rowCount = cellMap->GetRowCount();
   PRInt32 row = 0;
   PRInt32 col = 0;
@@ -2798,7 +2802,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext& aPresContext,
   NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
   NS_ASSERTION(nsnull!=mColumnWidths, "never ever call me until the col widths array is built!");
 
-  PRInt32 numCols = GetColCount();
+  PRInt32 numCols = mCellMap->GetColCount();
   if (numCols>mColumnWidthsLength)
   {
     PRInt32 priorColumnWidthsLength=mColumnWidthsLength;
@@ -2863,7 +2867,7 @@ void nsTableFrame::SetTableWidth(nsIPresContext& aPresContext)
     printf ("SetTableWidth with cellSpacing = %d ", cellSpacing);
   PRInt32 tableWidth = cellSpacing;
 
-  PRInt32 numCols = GetColCount();
+  PRInt32 numCols = mCellMap->GetColCount();
   for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
   {
     nscoord totalColWidth = mColumnWidths[colIndex];
@@ -2908,8 +2912,8 @@ void nsTableFrame::AdjustColumnsForCOLSAttribute()
   nsStyleTable* tableStyle = (nsStyleTable *)mStyleContext->GetMutableStyleData(eStyleStruct_Table);
   if (tableStyle->mCols != NS_STYLE_TABLE_COLS_NONE)
   {
-    PRInt32 numCols = GetColCount();
-    PRInt32 numRows = GetRowCount();
+    PRInt32 numCols = cellMap->GetColCount();
+    PRInt32 numRows = cellMap->GetRowCount();
     for (PRInt32 rowIndex=0; rowIndex<numRows; rowIndex++)
     {
       for (PRInt32 colIndex=0; colIndex<numCols; colIndex++)
@@ -3322,7 +3326,7 @@ PRInt32 nsTableFrame::GetColumnWidth(PRInt32 aColIndex)
     NS_ASSERTION(nsnull!=mColumnWidths, "illegal state");
 #ifdef NS_DEBUG
     NS_ASSERTION(nsnull!=mCellMap, "no cell map");
-    PRInt32 numCols = GetColCount();
+    PRInt32 numCols = mCellMap->GetColCount();
     NS_ASSERTION (numCols > aColIndex, "bad arg, col index out of bounds");
 #endif
     if (nsnull!=mColumnWidths)
