@@ -57,9 +57,10 @@ function srGetStrBundle(path)
 }
 
 
-function localeSwitching(baseDirectory, providerName)
+function localeSwitching(winType, baseDirectory, providerName)
 {
   dump("\n ** Enter localeSwitching() ** \n");
+  dump("\n ** winType=" +  winType + " ** \n");
   dump("\n ** baseDirectory=" +  baseDirectory + " ** \n");
   dump("\n ** providerName=" +  providerName + " ** \n");
 
@@ -83,8 +84,10 @@ function localeSwitching(baseDirectory, providerName)
 
   // For M4 builds, use this line instead.
   // var ds = rdf.GetDataSource("resource:/chrome/registry.rdf");
-
-  var sourceNode = rdf.GetResource("chrome://navigator/locale/");
+  var srcURL = "chrome://";
+  srcURL += winType + "/locale/";
+  dump("\n** srcURL=" + srcURL + " **\n");
+  var sourceNode = rdf.GetResource(srcURL);
   var baseArc = rdf.GetResource("http://chrome.mozilla.org/rdf#base");
   var nameArc = rdf.GetResource("http://chrome.mozilla.org/rdf#name");
                       
@@ -101,12 +104,17 @@ function localeSwitching(baseDirectory, providerName)
   var newNameTarget = rdf.GetLiteral(providerName);
   
   // Unassert the old relationships
-  //ds.Unassert(sourceNode, baseArc, oldBaseTarget);
+  if (baseDirectory != "") {
+  	ds.Unassert(sourceNode, baseArc, oldBaseTarget);
+  }
+
   ds.Unassert(sourceNode, nameArc, oldNameTarget);
   
   // Assert the new relationships (note that we want a reassert rather than
   // an unassert followed by an assert, once reassert is implemented)
-  //ds.Assert(sourceNode, baseArc, newBaseTarget, true);
+  if (baseDirectory != "") {
+  	ds.Assert(sourceNode, baseArc, newBaseTarget, true);
+  }
   ds.Assert(sourceNode, nameArc, newNameTarget, true);
   
   // Flush the modified data source to disk
@@ -116,14 +124,23 @@ function localeSwitching(baseDirectory, providerName)
   // Open up a new window to see your new chrome, since changes aren't yet dynamically
   // applied to the current window
 
-  BrowserOpenWindow('chrome://navigator/content');
+  // BrowserOpenWindow('chrome://addressbook/content');
   dump("\n ** Leave localeSwitching() ** \n");
 }
 
-function localeTo(localeName)
+function localeTo(baseDirectory, localeName)
 {
   dump("\n ** Enter localeTo() ** \n");
-  localeSwitching("",
-               	  localeName);
+  localeSwitching("global", baseDirectory, localeName);
+  localeSwitching("navigator", baseDirectory, localeName);
+  localeSwitching("sidebar", baseDirectory, localeName);
+  localeSwitching("messenger", baseDirectory, localeName);
+  localeSwitching("messengercompose", baseDirectory, localeName);
+  localeSwitching("editor", baseDirectory, localeName);
+  localeSwitching("addressbook", baseDirectory, localeName);
+  localeSwitching("pref", baseDirectory, localeName);
+  localeSwitching("bookmarks", baseDirectory, localeName);
+  localeSwitching("history", baseDirectory, localeName);
+  localeSwitching("related", baseDirectory, localeName);
   dump("\n ** Leave localeTo() ** \n");
 }
