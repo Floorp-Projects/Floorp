@@ -23,6 +23,7 @@
 
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
+#include "nsIClipboardCommands.h"
 #include "pratom.h"
 #include "prprf.h"
 #include "nsIComponentManager.h"
@@ -2446,6 +2447,18 @@ nsBrowserAppCore::Observe( nsISupports *aSubject,
     }
 
     return rv;
+}
+
+NS_IMETHODIMP
+nsBrowserAppCore::SelectAll()
+{
+  nsresult rv;
+  nsCOMPtr<nsIClipboardCommands> clip(do_QueryInterface(mContentAreaWebShell,&rv));
+  if ( NS_SUCCEEDED(rv) ) {
+      rv = clip->SelectAll();
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
