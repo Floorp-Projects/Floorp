@@ -30,7 +30,7 @@
 #include "nsIServiceManager.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include <windows.h>
 #include <ddeml.h>
 #include <stdlib.h>
@@ -1014,7 +1014,7 @@ nsNativeAppSupportWin::OpenWindow( const char*urlstr, const char *args ) {
     static NS_DEFINE_CID( kAppShellServiceCID,    NS_APPSHELL_SERVICE_CID );
     NS_WITH_SERVICE(nsIAppShellService, appShellService, kAppShellServiceCID, &rv)
     if ( NS_SUCCEEDED( rv ) ) {
-        nsCOMPtr<nsIDOMWindow> hiddenWindow;
+        nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
         JSContext *jsContext;
         rv = appShellService->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
                                                            &jsContext );
@@ -1028,7 +1028,7 @@ nsNativeAppSupportWin::OpenWindow( const char*urlstr, const char *args ) {
                                             "chrome,dialog=no,all",
                                             args );
             if( argv ) {
-                nsCOMPtr<nsIDOMWindow> newWindow;
+                nsCOMPtr<nsIDOMWindowInternal> newWindow;
                 rv = hiddenWindow->OpenDialog( jsContext,
                                                argv,
                                                4,

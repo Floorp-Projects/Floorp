@@ -51,7 +51,7 @@
 #include "nsIFileLocator.h"
 #include "nsIXBLService.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIDOMLocation.h"
 #include "nsIWindowMediator.h"
@@ -1069,7 +1069,7 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
         nsCOMPtr<nsISupports> protoWindow;
         rv = windowEnumerator->GetNext(getter_AddRefs(protoWindow));
         if (NS_SUCCEEDED(rv) && protoWindow) {
-          nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(protoWindow);
+          nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(protoWindow);
           if (domWindow) {
             rv = RefreshWindow(domWindow);
             if (NS_FAILED(rv)) return rv;
@@ -1103,7 +1103,7 @@ static PRBool IsChromeURI(nsIURI* aURI)
   return PR_FALSE;
 }
 
-NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
+NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
 {
   nsresult rv;
   // Get the DOM document.

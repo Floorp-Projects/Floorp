@@ -531,14 +531,14 @@ extern "C" NS_DOM nsresult NS_InitEventClass(nsIScriptContext *aContext, void **
     if ((PR_TRUE == JS_LookupProperty(jscontext, global, "Event", &vp)) &&
         JSVAL_IS_OBJECT(vp) &&
         ((constructor = JSVAL_TO_OBJECT(vp)) != nsnull)) {
-      vp = INT_TO_JSVAL(nsIDOMEvent::BUBBLING_PHASE);
-      JS_SetProperty(jscontext, constructor, "BUBBLING_PHASE", &vp);
-
       vp = INT_TO_JSVAL(nsIDOMEvent::CAPTURING_PHASE);
       JS_SetProperty(jscontext, constructor, "CAPTURING_PHASE", &vp);
 
       vp = INT_TO_JSVAL(nsIDOMEvent::AT_TARGET);
       JS_SetProperty(jscontext, constructor, "AT_TARGET", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::BUBBLING_PHASE);
+      JS_SetProperty(jscontext, constructor, "BUBBLING_PHASE", &vp);
 
       vp = INT_TO_JSVAL(nsIDOMEvent::MOUSEDOWN);
       JS_SetProperty(jscontext, constructor, "MOUSEDOWN", &vp);

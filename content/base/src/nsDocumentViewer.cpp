@@ -27,7 +27,7 @@
 #include "nsIContent.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIDocumentViewer.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 
 #include "nsIImageGroup.h"
 #include "nsIImageObserver.h"
@@ -1838,7 +1838,7 @@ NS_IMETHODIMP nsDocViwerSelectionListener::NotifySelectionChanged(nsIDOMDocument
     nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
     theDoc->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
 
-    nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(scriptGlobalObject);
+    nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(scriptGlobalObject);
     if (!domWindow) return NS_ERROR_FAILURE;
     
     domWindow->UpdateCommands(NS_ConvertToString("select"));

@@ -169,10 +169,11 @@ NS_IMPL_RELEASE(GlobalWindowImpl)
 
 NS_INTERFACE_MAP_BEGIN(GlobalWindowImpl)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObject)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMWindowInternal)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMWindow)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMWindow)
   NS_INTERFACE_MAP_ENTRY(nsIJSScriptObject)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
@@ -391,7 +392,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetDocShell(nsIDocShell ** aDocShell)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetOpenerWindow(nsIDOMWindow* aOpener)
+NS_IMETHODIMP GlobalWindowImpl::SetOpenerWindow(nsIDOMWindowInternal* aOpener)
 {
   mOpener = aOpener;
   return NS_OK;
@@ -512,24 +513,28 @@ NS_IMETHODIMP GlobalWindowImpl::GetPrincipal(nsIPrincipal** result)
 // GlobalWindowImpl::nsIDOMWindow
 //*****************************************************************************
 
-NS_IMETHODIMP GlobalWindowImpl::GetWindow(nsIDOMWindow** aWindow)
-{
-  *aWindow = NS_STATIC_CAST(nsIDOMWindow *, this);
-  NS_ADDREF(*aWindow);
-  return NS_OK;
-}
-
-NS_IMETHODIMP GlobalWindowImpl::GetSelf(nsIDOMWindow** aWindow)
-{
-  *aWindow = NS_STATIC_CAST(nsIDOMWindow *, this);
-  NS_ADDREF(*aWindow);
-  return NS_OK;
-}
-
 NS_IMETHODIMP GlobalWindowImpl::GetDocument(nsIDOMDocument** aDocument)
 {
   *aDocument = mDocument;
   NS_IF_ADDREF(*aDocument);
+  return NS_OK;
+}
+
+//*****************************************************************************
+// GlobalWindowImpl::nsIDOMWindowInternal
+//*****************************************************************************
+
+NS_IMETHODIMP GlobalWindowImpl::GetWindow(nsIDOMWindowInternal** aWindow)
+{
+  *aWindow = NS_STATIC_CAST(nsIDOMWindowInternal *, this);
+  NS_ADDREF(*aWindow);
+  return NS_OK;
+}
+
+NS_IMETHODIMP GlobalWindowImpl::GetSelf(nsIDOMWindowInternal** aWindow)
+{
+  *aWindow = NS_STATIC_CAST(nsIDOMWindowInternal *, this);
+  NS_ADDREF(*aWindow);
   return NS_OK;
 }
 
@@ -591,7 +596,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetParent(nsIDOMWindow** aParent)
                       NS_ERROR_FAILURE);
   }
   else {
-    *aParent = NS_STATIC_CAST(nsIDOMWindow *, this);
+    *aParent = NS_STATIC_CAST(nsIDOMWindowInternal *, this);
     NS_ADDREF(*aParent);
   }
   return NS_OK;
@@ -616,7 +621,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetTop(nsIDOMWindow** aTop)
   return ret;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::Get_content(nsIDOMWindow** aContent)
+NS_IMETHODIMP GlobalWindowImpl::Get_content(nsIDOMWindowInternal** aContent)
 {
   *aContent = nsnull;
 
@@ -627,7 +632,7 @@ NS_IMETHODIMP GlobalWindowImpl::Get_content(nsIDOMWindow** aContent)
   nsCOMPtr<nsIDocShellTreeItem> primaryContent;
   treeOwner->GetPrimaryContentShell(getter_AddRefs(primaryContent));
 
-  nsCOMPtr<nsIDOMWindow> domWindow(do_GetInterface(primaryContent));
+  nsCOMPtr<nsIDOMWindowInternal> domWindow(do_GetInterface(primaryContent));
   *aContent = domWindow;
   NS_IF_ADDREF(*aContent);
 
@@ -643,7 +648,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetSidebar(nsISidebar** aSidebar)
     mSidebar = do_CreateInstance(NS_SIDEBAR_PROGID, &rv);
 
     if (mSidebar) {
-      nsIDOMWindow *win = NS_STATIC_CAST(nsIDOMWindow *, this);
+      nsIDOMWindowInternal *win = NS_STATIC_CAST(nsIDOMWindowInternal *, this);
       /* no addref */
       mSidebar->SetWindow(win);
     }
@@ -850,14 +855,14 @@ NS_IMETHODIMP GlobalWindowImpl::GetControllers(nsIControllers** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetOpener(nsIDOMWindow** aOpener)
+NS_IMETHODIMP GlobalWindowImpl::GetOpener(nsIDOMWindowInternal** aOpener)
 {
   *aOpener = mOpener;
   NS_IF_ADDREF(*aOpener);
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetOpener(nsIDOMWindow* aOpener)
+NS_IMETHODIMP GlobalWindowImpl::SetOpener(nsIDOMWindowInternal* aOpener)
 {
   mOpener = aOpener;
   return NS_OK;
@@ -1013,7 +1018,7 @@ GlobalWindowImpl::SetTitle(const nsAReadableString& aTitle)
 
 NS_IMETHODIMP GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
 {
-  nsCOMPtr<nsIDOMWindow> parent;
+  nsCOMPtr<nsIDOMWindowInternal> parent;
 
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
   *aInnerWidth = 0;
@@ -1053,7 +1058,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
 
 NS_IMETHODIMP GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
 {
-  nsCOMPtr<nsIDOMWindow> parent;
+  nsCOMPtr<nsIDOMWindowInternal> parent;
 
   FlushPendingNotifications();
 
@@ -1899,7 +1904,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetCursor(const nsAReadableString& aCursor)
 }
 
 NS_IMETHODIMP GlobalWindowImpl::Open(JSContext* cx, jsval* argv, PRUint32 argc,
-                                     nsIDOMWindow** aReturn)
+                                     nsIDOMWindowInternal** aReturn)
 {
   return OpenInternal(cx, argv, argc, PR_FALSE, aReturn);
 }
@@ -1908,7 +1913,7 @@ NS_IMETHODIMP GlobalWindowImpl::Open(JSContext* cx, jsval* argv, PRUint32 argc,
 // [features] as a JS property named "arguments"
 NS_IMETHODIMP GlobalWindowImpl::OpenDialog(JSContext* cx,
                                            jsval* argv, PRUint32 argc,
-                                           nsIDOMWindow** aReturn)
+                                           nsIDOMWindowInternal** aReturn)
 {
   return OpenInternal(cx, argv, argc, PR_TRUE, aReturn);
 }
@@ -1969,7 +1974,7 @@ NS_IMETHODIMP GlobalWindowImpl::UpdateCommands(const nsAReadableString& anAction
       if (!doc)
         return NS_ERROR_NULL_POINTER;
       doc->GetScriptGlobalObject(getter_AddRefs(global));
-      nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(global);
+      nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(global);
       return domWindow->UpdateCommands(anAction);
     }
     else {
@@ -1997,7 +2002,8 @@ NS_IMETHODIMP GlobalWindowImpl::UpdateCommands(const nsAReadableString& anAction
     if (NS_STATIC_CAST(nsIDOMWindow *, this) == parent.get())
       return NS_OK;
 
-    return parent->UpdateCommands(anAction);
+    nsCOMPtr<nsIDOMWindowInternal> parentInternal = do_QueryInterface(parent);
+    return parentInternal->UpdateCommands(anAction);
   }
 
   return NS_OK;
@@ -2429,7 +2435,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow ** aParent)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetPrivateRoot(nsIDOMWindow ** aParent)
+NS_IMETHODIMP GlobalWindowImpl::GetPrivateRoot(nsIDOMWindowInternal ** aParent)
 {
   *aParent = nsnull;            // Set to null so we can bail out later
 
@@ -2451,14 +2457,15 @@ NS_IMETHODIMP GlobalWindowImpl::GetPrivateRoot(nsIDOMWindow ** aParent)
       doc->GetScriptGlobalObject(getter_AddRefs(globalObject));
 
       parent = do_QueryInterface(globalObject);
-      parent->GetTop(aParent);  // Addref done here.
+      nsCOMPtr<nsIDOMWindow> tempParent;
+      parent->GetTop(getter_AddRefs(tempParent));
+      CallQueryInterface(tempParent, aParent);
       return NS_OK;
     }
   }
 
   if (parent) {
-    *aParent = parent.get();
-    NS_ADDREF(*aParent);
+    CallQueryInterface(parent, aParent);
   }
 
   return NS_OK;
@@ -2662,7 +2669,7 @@ GlobalWindowImpl::GetRootCommandDispatcher(nsIDocument *aDoc,
   nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
   nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
   aDoc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-  nsCOMPtr<nsIDOMWindow> rootWindow;
+  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
   nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
   if (ourWindow) {
     ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
@@ -2764,7 +2771,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetDocument(nsIDOMDocumentView ** aDocumentView)
 NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext *cx,
                                              jsval *argv, PRUint32 argc,
                                              PRBool aDialog,
-                                             nsIDOMWindow ** aReturn)
+                                             nsIDOMWindowInternal ** aReturn)
 {
   PRUint32 chromeFlags;
   nsAutoString name;
@@ -2973,7 +2980,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext *cx,
 
 // attach the given array of JS values to the given window, as a property array
 // named "arguments"
-NS_IMETHODIMP GlobalWindowImpl::AttachArguments(nsIDOMWindow *aWindow,
+NS_IMETHODIMP GlobalWindowImpl::AttachArguments(nsIDOMWindowInternal *aWindow,
                                                 jsval *argv, PRUint32 argc)
 {
   if (argc == 0)
@@ -3315,13 +3322,13 @@ GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
   return NS_OK;
 }
 
-// Return the nsIDOMWindow corresponding to the given nsIWebShell.
+// Return the nsIDOMWindowInternal corresponding to the given nsIWebShell.
 // Note this forces the creation of a script context, if one has not already
 // been created.  Note it also sets the window's opener to this -- because
 // it's just convenient, that's all.
 NS_IMETHODIMP
 GlobalWindowImpl::ReadyOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
-                                          nsIDOMWindow **aDOMWindow)
+                                          nsIDOMWindowInternal **aDOMWindow)
 {
   nsresult res;
 
@@ -3401,7 +3408,7 @@ PRInt32 GlobalWindowImpl::WinHasOption(char *aOptions, const char *aName,
 
 void GlobalWindowImpl::CloseWindow(nsISupports *aWindow)
 {
-  nsCOMPtr<nsIDOMWindow> win(do_QueryInterface(aWindow));
+  nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(aWindow));
 
   win->Close();
 }
@@ -4756,7 +4763,7 @@ NS_INTERFACE_MAP_BEGIN(nsDOMWindowController)
 NS_INTERFACE_MAP_END
 //NS_IMPL_QUERY_INTERFACE1(nsDOMWindowController, nsIController)
 
-nsDOMWindowController::nsDOMWindowController(nsIDOMWindow *aWindow)
+nsDOMWindowController::nsDOMWindowController(nsIDOMWindowInternal *aWindow)
 {
   NS_INIT_REFCNT();
   mWindow = aWindow;

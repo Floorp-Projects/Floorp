@@ -377,7 +377,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
     return result;
   }
 
-  nsCOMPtr<nsIDOMWindow> outerDOMWindow;
+  nsCOMPtr<nsIDOMWindowInternal> outerDOMWindow;
   result = mozXMLTermUtils::ConvertDocShellToDOMWindow(mDocShell,
                                               getter_AddRefs(outerDOMWindow));
 

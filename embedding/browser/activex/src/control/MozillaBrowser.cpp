@@ -42,7 +42,7 @@
 #include "nsIContentViewerFile.h"
 #include "nsISelectionController.h"
 
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 
 #include "nsEmbedAPI.h"
 
@@ -1068,7 +1068,7 @@ HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 	}
 
     // Get the DOM window from the webbrowser
-    nsCOMPtr<nsIDOMWindow> window(do_GetInterface(mWebBrowser));
+    nsCOMPtr<nsIDOMWindowInternal> window(do_GetInterface(mWebBrowser));
     if (window)
     {
         if (NS_SUCCEEDED(window->GetDocument(pDocument)) && *pDocument)

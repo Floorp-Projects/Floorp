@@ -23,7 +23,7 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include "nsString.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 
 #ifndef __nsGtkMozRemoteHelper_h__
 #define __nsGtkMozRemoteHelper_h__
@@ -57,9 +57,9 @@ public:
   static NS_METHOD   AddBookmark     (const char *aURL, const char *aTitle);
 
   // utility functions for getting windows
-  static NS_METHOD   GetHiddenWindow      (nsIDOMWindow **_retval);
-  static NS_METHOD   GetLastBrowserWindow (nsIDOMWindow **_retval);
-  static NS_METHOD   OpenXULWindow        (const char *aChromeURL, nsIDOMWindow *aParent,
+  static NS_METHOD   GetHiddenWindow      (nsIDOMWindowInternal **_retval);
+  static NS_METHOD   GetLastBrowserWindow (nsIDOMWindowInternal **_retval);
+  static NS_METHOD   OpenXULWindow        (const char *aChromeURL, nsIDOMWindowInternal *aParent,
 					   const char *aWindowFeatures,
 					   const PRUnichar *aName, const PRUnichar *aURL);
  

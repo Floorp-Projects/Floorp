@@ -29,7 +29,7 @@
 #include "nsIGenericFactory.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIBaseWindow.h"
 #include "nsIWidget.h"
 #include "nsCOMPtr.h"
@@ -65,7 +65,7 @@ nsUrlWidget::Init()
 }
 
 NS_IMETHODIMP
-nsUrlWidget::SetURLToHiddenControl( char const *aURL, nsIDOMWindow *parent )
+nsUrlWidget::SetURLToHiddenControl( char const *aURL, nsIDOMWindowInternal *parent )
 {
 	nsresult rv = NS_OK;
 	HWND	hEdit=NULL; // Handle to the hidden editbox control.

@@ -55,7 +55,7 @@ class mozXMLTermShell : public mozIXMLTermShell
   NS_IMETHOD IgnoreKeyPress(PRBool aIgnore,
                             const PRUnichar* aCookie);
 
-  NS_IMETHOD Init(nsIDOMWindow* aContentWin,
+  NS_IMETHOD Init(nsIDOMWindowInternal* aContentWin,
                   const PRUnichar* URL,
                   const PRUnichar* args);
 
@@ -77,7 +77,7 @@ protected:
   PRBool mInitialized;
 
   /** non-owning reference to content window for XMLterm */		
-  nsIDOMWindow* mContentWindow;
+  nsIDOMWindowInternal* mContentWindow;
 
   /** non-owning reference (??) to doc shell for content window */
   nsIDocShell* mContentAreaDocShell;

@@ -50,7 +50,7 @@ class nsIContent;
 class nsIDocument;
 class nsIDOMCharacterData;
 class nsIDOMElement;
-class nsIDOMWindow;
+class nsIDOMWindowInternal;
 class nsIDOMHTMLImageElement;
 class nsIDOMHTMLInputElement;
 class nsIStreamObserver;
@@ -85,8 +85,8 @@ public:
   NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell);
   NS_IMETHOD GetContentWebShell(nsIWebShell **aResult);
   NS_IMETHOD GetWidget(nsIWidget *& aWidget);
-  NS_IMETHOD GetDOMWindow(nsIDOMWindow** aDOMWindow);
-  NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow);
+  NS_IMETHOD GetDOMWindow(nsIDOMWindowInternal** aDOMWindow);
+  NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindowInternal** aDOMWindow);
   NS_IMETHOD GetPrompter(nsIPrompt* *result);
   // nsWebShellWindow methods...
   nsresult Initialize(nsIXULWindow * aParent, nsIAppShell* aShell, nsIURI* aUrl,

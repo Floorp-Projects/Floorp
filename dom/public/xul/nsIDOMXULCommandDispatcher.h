@@ -30,7 +30,7 @@
 
 class nsIController;
 class nsIDOMElement;
-class nsIDOMWindow;
+class nsIDOMWindowInternal;
 class nsIControllers;
 
 #define NS_IDOMXULCOMMANDDISPATCHER_IID \
@@ -44,8 +44,8 @@ public:
   NS_IMETHOD    GetFocusedElement(nsIDOMElement** aFocusedElement)=0;
   NS_IMETHOD    SetFocusedElement(nsIDOMElement* aFocusedElement)=0;
 
-  NS_IMETHOD    GetFocusedWindow(nsIDOMWindow** aFocusedWindow)=0;
-  NS_IMETHOD    SetFocusedWindow(nsIDOMWindow* aFocusedWindow)=0;
+  NS_IMETHOD    GetFocusedWindow(nsIDOMWindowInternal** aFocusedWindow)=0;
+  NS_IMETHOD    SetFocusedWindow(nsIDOMWindowInternal* aFocusedWindow)=0;
 
   NS_IMETHOD    GetSuppressFocus(PRBool* aSuppressFocus)=0;
   NS_IMETHOD    SetSuppressFocus(PRBool aSuppressFocus)=0;
@@ -71,8 +71,8 @@ public:
 #define NS_DECL_IDOMXULCOMMANDDISPATCHER   \
   NS_IMETHOD    GetFocusedElement(nsIDOMElement** aFocusedElement);  \
   NS_IMETHOD    SetFocusedElement(nsIDOMElement* aFocusedElement);  \
-  NS_IMETHOD    GetFocusedWindow(nsIDOMWindow** aFocusedWindow);  \
-  NS_IMETHOD    SetFocusedWindow(nsIDOMWindow* aFocusedWindow);  \
+  NS_IMETHOD    GetFocusedWindow(nsIDOMWindowInternal** aFocusedWindow);  \
+  NS_IMETHOD    SetFocusedWindow(nsIDOMWindowInternal* aFocusedWindow);  \
   NS_IMETHOD    GetSuppressFocus(PRBool* aSuppressFocus);  \
   NS_IMETHOD    SetSuppressFocus(PRBool aSuppressFocus);  \
   NS_IMETHOD    GetSuppressFocusScroll(PRBool* aSuppressFocusScroll);  \
@@ -90,8 +90,8 @@ public:
 #define NS_FORWARD_IDOMXULCOMMANDDISPATCHER(_to)  \
   NS_IMETHOD    GetFocusedElement(nsIDOMElement** aFocusedElement) { return _to GetFocusedElement(aFocusedElement); } \
   NS_IMETHOD    SetFocusedElement(nsIDOMElement* aFocusedElement) { return _to SetFocusedElement(aFocusedElement); } \
-  NS_IMETHOD    GetFocusedWindow(nsIDOMWindow** aFocusedWindow) { return _to GetFocusedWindow(aFocusedWindow); } \
-  NS_IMETHOD    SetFocusedWindow(nsIDOMWindow* aFocusedWindow) { return _to SetFocusedWindow(aFocusedWindow); } \
+  NS_IMETHOD    GetFocusedWindow(nsIDOMWindowInternal** aFocusedWindow) { return _to GetFocusedWindow(aFocusedWindow); } \
+  NS_IMETHOD    SetFocusedWindow(nsIDOMWindowInternal* aFocusedWindow) { return _to SetFocusedWindow(aFocusedWindow); } \
   NS_IMETHOD    GetSuppressFocus(PRBool* aSuppressFocus) { return _to GetSuppressFocus(aSuppressFocus); } \
   NS_IMETHOD    SetSuppressFocus(PRBool aSuppressFocus) { return _to SetSuppressFocus(aSuppressFocus); } \
   NS_IMETHOD    GetSuppressFocusScroll(PRBool* aSuppressFocusScroll) { return _to GetSuppressFocusScroll(aSuppressFocusScroll); } \

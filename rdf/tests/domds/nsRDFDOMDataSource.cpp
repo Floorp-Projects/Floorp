@@ -1215,7 +1215,7 @@ nsRDFDOMDataSource::unassertEnumFunc(void *aElement, void *aData)
 
 // nsIDOMDataSource methods
 nsresult
-nsRDFDOMDataSource::SetWindow(nsIDOMWindow *window) {
+nsRDFDOMDataSource::SetWindow(nsIDOMWindowInternal *window) {
   nsresult rv;
 
   objectTable.Reset();

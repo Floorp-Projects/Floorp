@@ -40,7 +40,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMNSLocation.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMWindowEventOwner.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptGlobalObject.h"
@@ -77,7 +77,7 @@ class nsIDocShellLoadInfo;
 // GlobalWindowImpl: Global Object for Scripting
 //*****************************************************************************   
 class GlobalWindowImpl :   public nsIScriptGlobalObject,
-                           public nsIDOMWindow,
+                           public nsIDOMWindowInternal,
                            public nsIJSScriptObject,
                            public nsIScriptObjectPrincipal,
                            public nsIDOMEventReceiver,
@@ -100,7 +100,7 @@ public:
    NS_IMETHOD SetNewDocument(nsIDOMDocument *aDocument);
    NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
    NS_IMETHOD GetDocShell(nsIDocShell** aDocShell);
-   NS_IMETHOD SetOpenerWindow(nsIDOMWindow *aOpener);
+   NS_IMETHOD SetOpenerWindow(nsIDOMWindowInternal *aOpener);
    NS_IMETHOD SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
    NS_IMETHOD GetGlobalObjectOwner(nsIScriptGlobalObjectOwner** aOwner);
    NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, 
@@ -112,6 +112,9 @@ public:
 
    // nsIDOMWindow
    NS_DECL_IDOMWINDOW
+
+   // nsIDOMWindowInternal
+   NS_DECL_IDOMWINDOWINTERNAL
 
    // nsIJSScriptObject
    virtual PRBool AddProperty(JSContext *aContext, JSObject *aObj, 
@@ -145,7 +148,7 @@ public:
 
    // nsPIDOMWindow
    NS_IMETHOD GetPrivateParent(nsPIDOMWindow** aResult);
-   NS_IMETHOD GetPrivateRoot(nsIDOMWindow** aResult);
+   NS_IMETHOD GetPrivateRoot(nsIDOMWindowInternal** aResult);
 
    NS_IMETHOD GetLocation(nsIDOMLocation** aLocation);
    
@@ -184,13 +187,13 @@ protected:
    
    // Window Control Functions
    NS_IMETHOD OpenInternal(JSContext* cx, jsval* argv, PRUint32 argc, 
-      PRBool aDialog, nsIDOMWindow** aReturn);
-   NS_IMETHOD AttachArguments(nsIDOMWindow* aWindow, jsval* argv, PRUint32 argc);
+      PRBool aDialog, nsIDOMWindowInternal** aReturn);
+   NS_IMETHOD AttachArguments(nsIDOMWindowInternal* aWindow, jsval* argv, PRUint32 argc);
    PRUint32 CalculateChromeFlags(char* aFeatures, PRBool aDialog);
    NS_IMETHOD SizeOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
       char* aFeatures, PRUint32 aChromeFlags);
    NS_IMETHOD ReadyOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
-      nsIDOMWindow** aDOMWindow);
+      nsIDOMWindowInternal** aDOMWindow);
    NS_IMETHOD CheckWindowName(JSContext* cx, nsString& aName);
    PRInt32 WinHasOption(char* aOptions, const char* aName, PRInt32 aDefault, PRBool* aPresenceFlag);
    static void CloseWindow(nsISupports* aWindow);
@@ -222,7 +225,7 @@ protected:
 protected:
    nsCOMPtr<nsIScriptContext>    mContext;
    nsCOMPtr<nsIDOMDocument>      mDocument;
-   nsCOMPtr<nsIDOMWindow>        mOpener;
+   nsCOMPtr<nsIDOMWindowInternal> mOpener;
    nsCOMPtr<nsIControllers>      mControllers;
    nsCOMPtr<nsIEventListenerManager> mListenerManager;
    nsCOMPtr<nsISidebar>          mSidebar;
@@ -385,7 +388,7 @@ class nsISelectionController;
 class nsDOMWindowController : public nsIController
 {
 public:
-	nsDOMWindowController( nsIDOMWindow* aWindow );
+	nsDOMWindowController( nsIDOMWindowInternal* aWindow );
     NS_DECL_ISUPPORTS
   	NS_DECL_NSICONTROLLER
   	
@@ -394,7 +397,7 @@ private:
 	nsresult GetEditInterface( nsIContentViewerEdit** aEditInterface);	
   nsresult GetSelectionController(nsISelectionController ** aSelCon);
 
-	nsIDOMWindow *mWindow;
+	nsIDOMWindowInternal *mWindow;
 };
 #endif // DOM_CONTROLLER
 

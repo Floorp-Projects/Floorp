@@ -45,7 +45,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIContent.h"
 #include "nsIWebProgress.h"
 #include "nsIChannel.h"
@@ -153,7 +153,7 @@ NS_IMPL_ISUPPORTS4(nsSecureBrowserUIImpl,
 
 
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::Init(nsIDOMWindow *window, nsIDOMElement *button, nsIDOMElement *certauth)
+nsSecureBrowserUIImpl::Init(nsIDOMWindowInternal *window, nsIDOMElement *button, nsIDOMElement *certauth)
 {
     mSecurityButton = button;
     mCertificateAuthorityDisplay = certauth;
@@ -247,7 +247,7 @@ static nsresult IsChildOfDomWindow(nsIDOMWindow *parent, nsIDOMWindow *child, PR
 
 
 NS_IMETHODIMP 
-nsSecureBrowserUIImpl::Notify(nsIContent* formNode, nsIDOMWindow* window, nsIURI* actionURL)
+nsSecureBrowserUIImpl::Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL)
 {
     // Return NS_OK unless we want to prevent this form from submitting.
 
@@ -261,7 +261,7 @@ nsSecureBrowserUIImpl::Notify(nsIContent* formNode, nsIDOMWindow* window, nsIURI
 
     nsCOMPtr<nsIScriptGlobalObject> globalObject; 
     document->GetScriptGlobalObject(getter_AddRefs(globalObject)); 
-    nsCOMPtr<nsIDOMWindow> postingWindow = do_QueryInterface(globalObject); 
+    nsCOMPtr<nsIDOMWindowInternal> postingWindow = do_QueryInterface(globalObject); 
     
     PRBool isChild;
     IsChildOfDomWindow(mWindow, postingWindow, &isChild);

@@ -25,7 +25,7 @@
 
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
@@ -47,7 +47,7 @@ static NS_DEFINE_CID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 //
 // This was cribbed from nsBaseFilePicker.cpp.  I will
 // echo the comment that appears there: aaaarrrrrrgh!
-static nsIWidget *parentWidget( nsIDOMWindow *window ) {
+static nsIWidget *parentWidget( nsIDOMWindowInternal *window ) {
   nsIWidget *result = 0;
   if ( window ) {
     nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface( window );
@@ -291,7 +291,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseDirectory(const char *title, char **_r
 } // nsFileSpecWithUIImpl::chooseDirectory
 
 NS_IMETHODIMP
-nsFileSpecWithUIImpl::GetParentWindow( nsIDOMWindow **aResult ) {
+nsFileSpecWithUIImpl::GetParentWindow( nsIDOMWindowInternal **aResult ) {
     nsresult rv = NS_OK;
 
     if ( aResult ) {
@@ -305,7 +305,7 @@ nsFileSpecWithUIImpl::GetParentWindow( nsIDOMWindow **aResult ) {
 }
 
 NS_IMETHODIMP
-nsFileSpecWithUIImpl::SetParentWindow( nsIDOMWindow *aParentWindow ) {
+nsFileSpecWithUIImpl::SetParentWindow( nsIDOMWindowInternal *aParentWindow ) {
     nsresult rv = NS_OK;
 
     // Release current parent.

@@ -35,7 +35,7 @@
 #include "nsPIXPIManagerCallbacks.h"    
 
 #include "nsIDocument.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULDocument.h"
 
@@ -65,6 +65,6 @@ class nsInstallProgressDialog : public nsIXPIListener,
     private:
         nsPIXPIManagerCallbacks*       mManager;
         nsCOMPtr<nsIDOMXULDocument>    mDocument;   // Should this be a weak reference?
-        nsCOMPtr<nsIDOMWindow>         mWindow;     // Should this be a weak reference?
+        nsCOMPtr<nsIDOMWindowInternal>         mWindow;     // Should this be a weak reference?
 };
 #endif

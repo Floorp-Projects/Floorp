@@ -35,7 +35,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsSize.h"
 #include "nsIDocument.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"

@@ -35,7 +35,7 @@
 #include "nsIDOMSelection.h"
 #include "nsIDOMAttr.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsITimer.h"
 
 #include "nsIEditor.h"
@@ -308,7 +308,7 @@ nsresult nsInterfaceState::CallUpdateCommands(const nsString& aCommand)
     nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
     theDoc->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
 
-    nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(scriptGlobalObject);
+    nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(scriptGlobalObject);
     if (!domWindow) return NS_ERROR_FAILURE;
     mDOMWindow = domWindow;
   }

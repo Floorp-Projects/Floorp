@@ -115,7 +115,7 @@
 #include "nsRDFCID.h"
 #include "nsRDFDOMNodeList.h"
 #include "nsXPIDLString.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsXULCommandDispatcher.h"
 #include "nsXULDocument.h"
 #include "nsXULElement.h"
@@ -2798,8 +2798,8 @@ nsXULDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
   nsCOMPtr<nsIInterfaceRequestor> ifrq(do_QueryInterface(container));
   NS_ENSURE_TRUE(ifrq, NS_OK);
 
-  nsCOMPtr<nsIDOMWindow> window;
-  ifrq->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(window));
+  nsCOMPtr<nsIDOMWindowInternal> window;
+  ifrq->GetInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(window));
   NS_ENSURE_TRUE(window, NS_OK);
 
   window->QueryInterface(NS_GET_IID(nsIDOMAbstractView),
@@ -2999,7 +2999,7 @@ NS_IMETHODIMP
 nsXULDocument::GetLocation(jsval* aLocation)
 {
   if (mScriptGlobalObject) {
-    nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(mScriptGlobalObject));
+    nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(mScriptGlobalObject));
     if(window) {
       return window->GetLocation(aLocation);
     }
@@ -3011,7 +3011,7 @@ NS_IMETHODIMP
 nsXULDocument::SetLocation(jsval aLocation)
 {
   if (mScriptGlobalObject) {
-    nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(mScriptGlobalObject));
+    nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(mScriptGlobalObject));
     if(window) {
       return window->SetLocation(aLocation);
     }

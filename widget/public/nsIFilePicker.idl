@@ -25,7 +25,7 @@
 #include "nsIURL.idl"
 #include "nsILocalFile.idl"
 
-interface nsIDOMWindow;
+interface nsIDOMWindowInternal;
 
 [scriptable, uuid(c47de916-1dd1-11b2-8141-82507fa02b21)]
 interface nsIFilePicker : nsISupports
@@ -48,12 +48,12 @@ interface nsIFilePicker : nsISupports
  /**
   * Initialize the file widget.
   *
-  * @param      parent   nsIDOMWindow parent.  This dialog should be dependant on this parent.
+  * @param      parent   nsIDOMWindowInternal parent.  This dialog should be dependant on this parent.
   * @param      title    The title for the file widget
   * @param      mode     load, save, or get folder
   *
   */
-  void init(in nsIDOMWindow parent, in wstring title, in short mode);
+  void init(in nsIDOMWindowInternal parent, in wstring title, in short mode);
 
  /**
   * Append to the  filter list with things from the predefined list

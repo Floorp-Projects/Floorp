@@ -46,7 +46,7 @@
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
@@ -158,7 +158,7 @@ mozXMLTermStream::QueryInterface(REFNSIID aIID,void** aInstancePtr)
  * @param maxResizeHeight maximum resize height (0=> do not resize)
  * @return NS_OK on success
  */
-NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindow* aDOMWindow,
+NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindowInternal* aDOMWindow,
                                      const char* frameName,
                                      const char* contentURL,
                                      const char* contentType,
@@ -227,7 +227,7 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindow* aDOMWindow,
     }
 
     // Get inner DOM window by looking up the frames list
-    nsCOMPtr<nsIDOMWindow> innerDOMWindow;
+    nsCOMPtr<nsIDOMWindowInternal> innerDOMWindow;
     result = mozXMLTermUtils::GetInnerDOMWindow(aDOMWindow, innerFrameName,
                                 getter_AddRefs(innerDOMWindow));
     if (NS_FAILED(result) || !innerDOMWindow)

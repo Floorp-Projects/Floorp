@@ -46,7 +46,7 @@
 #include "nsIDOMComment.h" 
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentType.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
@@ -2007,7 +2007,7 @@ nsHTMLDocument::GetSourceDocumentURL(JSContext* cx,
   nsCOMPtr<nsIScriptGlobalObject> global;
   nsLayoutUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
   if (global) {
-    nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(global, &result));
+    nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(global, &result));
 
     if (window) {
       nsCOMPtr<nsIDOMDocument> document;

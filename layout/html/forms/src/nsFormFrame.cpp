@@ -110,7 +110,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 // Security
 #include "nsIScriptSecurityManager.h"
 
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
@@ -864,7 +864,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 
       nsCOMPtr<nsIScriptGlobalObject> globalObject;
       document->GetScriptGlobalObject(getter_AddRefs(globalObject));  
-      nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(globalObject);
+      nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(globalObject);
 
       for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
         result = theEnum->CurrentItem(getter_AddRefs(inst));

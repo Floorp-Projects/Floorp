@@ -27,7 +27,7 @@
 #include "nsIFileSpec.idl"
 #include "nsIComponentManager.idl"
 
-interface nsIDOMWindow;
+interface nsIDOMWindowInternal;
 
 [scriptable, uuid(8ddf7681-139a-11d3-915f-dc1f8c138b7c)]
 interface nsIFileSpecWithUI : nsIFileSpec
@@ -71,7 +71,7 @@ interface nsIFileSpecWithUI : nsIFileSpec
 
 	string chooseDirectory(in string title);
 
-    attribute nsIDOMWindow parentWindow;
+    attribute nsIDOMWindowInternal parentWindow;
 };
 	
 %{C++

@@ -29,7 +29,7 @@
 #include "nsString.h"
 
 #include "nsIDocShell.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
 
 class mozXMLTermUtils
@@ -43,7 +43,7 @@ class mozXMLTermUtils
    */
   static NS_EXPORT nsresult
     ConvertDocShellToDOMWindow(nsIDocShell* aDocShell,
-                               nsIDOMWindow** aDOMWindow);
+                               nsIDOMWindowInternal** aDOMWindow);
 
   /** Gets doc shell for DOM window
    * @param aDOMWindow DOM window (frame)
@@ -51,7 +51,7 @@ class mozXMLTermUtils
    * @return NS_OK on success
    */
   static NS_EXPORT nsresult
-    ConvertDOMWindowToDocShell(nsIDOMWindow* aDOMWindow,
+    ConvertDOMWindowToDocShell(nsIDOMWindowInternal* aDOMWindow,
                                nsIDocShell** aDocShell);
 
   /** Locates named inner DOM window (frame) inside outer DOM window
@@ -61,9 +61,9 @@ class mozXMLTermUtils
    * @return NS_OK on success
    */
   static NS_EXPORT nsresult
-    GetInnerDOMWindow(nsIDOMWindow* outerDOMWindow,
+    GetInnerDOMWindow(nsIDOMWindowInternal* outerDOMWindow,
                       const nsString& innerFrameName,
-                      nsIDOMWindow** innerDOMWindow);
+                      nsIDOMWindowInternal** innerDOMWindow);
 
   /** Gets the scrollable view for presentation context
    * @param aPresContext presentation context

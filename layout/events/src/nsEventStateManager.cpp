@@ -53,7 +53,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIGfxTextControlFrame.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIEnumerator.h"
 #include "nsFrameTraversal.h"
@@ -342,7 +342,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
             nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
             gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-            nsCOMPtr<nsIDOMWindow> rootWindow;
+            nsCOMPtr<nsIDOMWindowInternal> rootWindow;
             nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
             if(ourWindow) {
               ourWindow->GetRootCommandDispatcher(gLastFocusedDocument, getter_AddRefs(commandDispatcher));
@@ -406,7 +406,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
       nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
       nsCOMPtr<nsIDOMElement> focusedElement;
-      nsCOMPtr<nsIDOMWindow> focusedWindow;
+      nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
       nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(mDocument);
 
       if (xulDoc) {
@@ -432,7 +432,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 	    {
 		    nsCOMPtr<nsPIDOMWindow> privateWindow = do_QueryInterface(focusedWindow);
         if(privateWindow){
-		      nsCOMPtr<nsIDOMWindow> privateRootWindow;
+		      nsCOMPtr<nsIDOMWindowInternal> privateRootWindow;
 		      privateWindow->GetPrivateRoot(getter_AddRefs(privateRootWindow));
           if(privateRootWindow) {
 			      nsCOMPtr<nsIDOMDocument> privateParentDoc;
@@ -508,7 +508,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       // focused sub-window and sub-element for this top-level
       // window.
       nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
-      nsCOMPtr<nsIDOMWindow> rootWindow;
+      nsCOMPtr<nsIDOMWindowInternal> rootWindow;
       nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
       if(ourWindow) {
         ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
@@ -780,14 +780,14 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
 {
   nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
   gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-  nsCOMPtr<nsIDOMWindow> rootWindow;
+  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
   nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
   NS_ENSURE_TRUE(ourWindow, NS_ERROR_FAILURE);
 
   ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
   NS_ENSURE_TRUE(rootWindow, NS_ERROR_FAILURE);
   
-  nsCOMPtr<nsIDOMWindow> windowContent;
+  nsCOMPtr<nsIDOMWindowInternal> windowContent;
   rootWindow->Get_content(getter_AddRefs(windowContent));
   NS_ENSURE_TRUE(windowContent, NS_ERROR_FAILURE);
 

@@ -104,7 +104,7 @@
 #include "nsIPrivateDOMImplementation.h"
 
 #include "nsIInterfaceRequestor.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 
 #include "nsIDOMElement.h"
 #include "nsIAnonymousContentCreator.h"
@@ -2409,7 +2409,7 @@ NS_IMETHODIMP
 nsDocument::GetLocation(jsval* aLocation)
 {
   if (mScriptGlobalObject) {
-    nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(mScriptGlobalObject));
+    nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(mScriptGlobalObject));
     if(window) {
       return window->GetLocation(aLocation);
     }
@@ -2421,7 +2421,7 @@ NS_IMETHODIMP
 nsDocument::SetLocation(jsval aLocation)
 {
   if (mScriptGlobalObject) {
-    nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(mScriptGlobalObject));
+    nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(mScriptGlobalObject));
     if(window) {
       return window->SetLocation(aLocation);
     }
@@ -2457,8 +2457,8 @@ nsDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
   nsCOMPtr<nsIInterfaceRequestor> ifrq(do_QueryInterface(container));
   NS_ENSURE_TRUE(ifrq, NS_OK);
 
-  nsCOMPtr<nsIDOMWindow> window;
-  ifrq->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(window));
+  nsCOMPtr<nsIDOMWindowInternal> window;
+  ifrq->GetInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(window));
   NS_ENSURE_TRUE(window, NS_OK);
 
   window->QueryInterface(NS_GET_IID(nsIDOMAbstractView),
@@ -2497,8 +2497,8 @@ nsDocument::GetPlugins(nsIDOMPluginArray** aPlugins)
   nsCOMPtr<nsIInterfaceRequestor> ifrq(do_QueryInterface(container));
   NS_ENSURE_TRUE(ifrq, NS_OK);
 
-  nsCOMPtr<nsIDOMWindow> window;
-  ifrq->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(window));
+  nsCOMPtr<nsIDOMWindowInternal> window;
+  ifrq->GetInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(window));
   NS_ENSURE_TRUE(window, NS_OK);
 
   nsCOMPtr<nsIDOMNavigator> navigator;

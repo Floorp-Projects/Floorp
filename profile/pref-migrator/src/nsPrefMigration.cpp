@@ -455,8 +455,8 @@ nsPrefMigration::ShowSpaceDialog(PRInt32 *choice)
     nsresult rv = mPMProgressWindow->GetDocShell(getter_AddRefs(docShell));
     if (NS_FAILED(rv)) return rv;
 
-    // Now convert the DocShell to an nsIDOMWindow
-    nsCOMPtr<nsIDOMWindow> PMDOMWindow(do_GetInterface(docShell));
+    // Now convert the DocShell to an nsIDOMWindowInternal
+    nsCOMPtr<nsIDOMWindowInternal> PMDOMWindow(do_GetInterface(docShell));
     if (!PMDOMWindow) return NS_ERROR_FAILURE;
 
     // Get the script global object for the window
@@ -501,7 +501,7 @@ nsPrefMigration::ShowSpaceDialog(PRInt32 *choice)
 
         if (argv)
         {
-          nsCOMPtr<nsIDOMWindow> newWindow;
+          nsCOMPtr<nsIDOMWindowInternal> newWindow;
           rv = PMDOMWindow->OpenDialog(jsContext,
                                        argv,
                                        4,

@@ -45,7 +45,7 @@ interface nsIUnknownContentTypeHandler : nsIAppShellComponent {
 
     void HandleUnknownContentType( in nsIChannel aURL,
                                    in string aContentType, 
-                                   in nsIDOMWindow aWindow );
+                                   in nsIDOMWindowInternal aWindow );
 };
 
 

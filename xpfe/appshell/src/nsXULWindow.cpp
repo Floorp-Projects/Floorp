@@ -38,7 +38,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIIOService.h"
@@ -834,7 +834,7 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
    return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::GetWindowDOMWindow(nsIDOMWindow** aDOMWindow)
+NS_IMETHODIMP nsXULWindow::GetWindowDOMWindow(nsIDOMWindowInternal** aDOMWindow)
 {
    NS_ENSURE_STATE(mDocShell);
 
@@ -1182,9 +1182,9 @@ void nsXULWindow::ActivateParent() {
   if (!windowMediator)
     return;
 
-  nsCOMPtr<nsIDOMWindow> topDOMWindow;
+  nsCOMPtr<nsIDOMWindowInternal> topDOMWindow;
   windowMediator->GetMostRecentWindow(nsnull, getter_AddRefs(topDOMWindow));
-  nsCOMPtr<nsIDOMWindow> ourDOMWindow(do_GetInterface(mDocShell));
+  nsCOMPtr<nsIDOMWindowInternal> ourDOMWindow(do_GetInterface(mDocShell));
 
   if (ourDOMWindow != topDOMWindow)
     return;

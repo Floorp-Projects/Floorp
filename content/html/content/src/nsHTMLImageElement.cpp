@@ -37,7 +37,7 @@
 #include "nsIJSNativeInitializer.h"
 #include "nsSize.h"
 #include "nsIDocument.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -649,7 +649,7 @@ nsHTMLImageElement::GetCallerSourceURL(JSContext* cx,
   nsCOMPtr<nsIScriptGlobalObject> global;
   nsLayoutUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
   if (global) {
-    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(global);
+    nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(global);
 
     if (window) {
       nsCOMPtr<nsIDOMDocument> domDoc;
@@ -763,7 +763,7 @@ nsHTMLImageElement::Initialize(JSContext* aContext,
   nsLayoutUtils::GetStaticScriptGlobal(aContext, aObj,
                                        getter_AddRefs(globalObject));;
   if (globalObject) {
-    nsIDOMWindow* domWindow;
+    nsIDOMWindowInternal* domWindow;
     result = globalObject->QueryInterface(kIDOMWindowIID, (void**)&domWindow);
     if (NS_SUCCEEDED(result)) {
       nsIDOMDocument* domDocument;

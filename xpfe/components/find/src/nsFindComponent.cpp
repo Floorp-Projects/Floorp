@@ -39,7 +39,7 @@
 #include "nsIURL.h"
 #include "nsIFactory.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
 
 #include "nsISound.h"
@@ -73,7 +73,7 @@ nsFindComponent::Context::~Context()
 }
 
 NS_IMETHODIMP
-nsFindComponent::Context::Init( nsIDOMWindow *aWindow,
+nsFindComponent::Context::Init( nsIDOMWindowInternal *aWindow,
                  nsIEditorShell* aEditorShell,
                  const nsString& lastSearchString,
                  const nsString& lastReplaceString,
@@ -101,7 +101,7 @@ static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
 
 
 NS_IMETHODIMP
-nsFindComponent::Context::MakeTSDocument(nsIDOMWindow* aWindow, nsITextServicesDocument** aDoc)
+nsFindComponent::Context::MakeTSDocument(nsIDOMWindowInternal* aWindow, nsITextServicesDocument** aDoc)
 {
   if (!aWindow)
     return NS_ERROR_INVALID_ARG;
@@ -559,7 +559,7 @@ nsFindComponent::Context::DoReplace()
 }
 
 NS_IMETHODIMP
-nsFindComponent::Context::Reset( nsIDOMWindow *aNewWindow )
+nsFindComponent::Context::Reset( nsIDOMWindowInternal *aNewWindow )
 {
 	if (!aNewWindow)
 		return NS_ERROR_INVALID_ARG;
@@ -666,7 +666,7 @@ nsFindComponent::Context::SetWrapSearch(PRBool aBool)
 }
 
 NS_IMETHODIMP
-nsFindComponent::Context::GetTargetWindow( nsIDOMWindow * *aWindow)
+nsFindComponent::Context::GetTargetWindow( nsIDOMWindowInternal * *aWindow)
 {
   NS_ENSURE_ARG_POINTER(aWindow);
   NS_IF_ADDREF(*aWindow = mTargetWindow);
@@ -674,7 +674,7 @@ nsFindComponent::Context::GetTargetWindow( nsIDOMWindow * *aWindow)
 }
 
 NS_IMETHODIMP
-nsFindComponent::Context::GetFindDialog( nsIDOMWindow  * *aDialog)
+nsFindComponent::Context::GetFindDialog( nsIDOMWindowInternal  * *aDialog)
 {
   NS_ENSURE_ARG_POINTER(aDialog);
   NS_IF_ADDREF(*aDialog = mFindDialog);
@@ -682,7 +682,7 @@ nsFindComponent::Context::GetFindDialog( nsIDOMWindow  * *aDialog)
 }
 
 NS_IMETHODIMP
-nsFindComponent::Context::SetFindDialog( nsIDOMWindow *aDialog )
+nsFindComponent::Context::SetFindDialog( nsIDOMWindowInternal *aDialog )
 {
   mFindDialog = aDialog;
   return NS_OK;
@@ -710,7 +710,7 @@ nsFindComponent::~nsFindComponent()
 }
 
 NS_IMETHODIMP
-nsFindComponent::CreateContext( nsIDOMWindow *aWindow, nsIEditorShell* aEditorShell,
+nsFindComponent::CreateContext( nsIDOMWindowInternal *aWindow, nsIEditorShell* aEditorShell,
                                 nsISupports **aResult )
 {
 
@@ -742,7 +742,7 @@ nsFindComponent::CreateContext( nsIDOMWindow *aWindow, nsIEditorShell* aEditorSh
     return NS_OK;
 }
 
-static nsresult OpenDialogWithArg( nsIDOMWindow     *parent,
+static nsresult OpenDialogWithArg( nsIDOMWindowInternal     *parent,
                                    nsISearchContext *arg, 
                                    const char       *url ) {
     nsresult rv = NS_OK;
@@ -766,7 +766,7 @@ static nsresult OpenDialogWithArg( nsIDOMWindow     *parent,
                                                     (const nsIID*)(&NS_GET_IID(nsISearchContext)),
                                                     (nsISupports*)arg );
                     if ( argv ) {
-                        nsIDOMWindow *newWindow;
+                        nsIDOMWindowInternal *newWindow;
                         rv = parent->OpenDialog( jsContext, argv, 4, &newWindow );
                         if ( NS_SUCCEEDED( rv ) ) {
                             newWindow->Release();
@@ -809,7 +809,7 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
     if ( aContext ) {
         nsCOMPtr<nsISearchContext> context = do_QueryInterface( aContext, &rv );
         if ( NS_SUCCEEDED( rv ) && context ) {
-            nsCOMPtr<nsIDOMWindow> dialog;
+            nsCOMPtr<nsIDOMWindowInternal> dialog;
             rv = context->GetFindDialog( getter_AddRefs( dialog ) );
             if ( NS_SUCCEEDED( rv ) && dialog ) {
                 // Just give focus back to the dialog.
@@ -834,16 +834,18 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
         // Open Find dialog and prompt for search parameters.
         char * urlStr = "chrome://global/content/finddialog.xul";
 
-        // We need the parent's nsIDOMWindow...
+        // We need the parent's nsIDOMWindowInternal...
         // 1. Get topLevelWindow nsIWebShellContainer (chrome included).
-        nsCOMPtr<nsIDOMWindow> window;
+        nsCOMPtr<nsIDOMWindowInternal> window;
         rv = context->GetTargetWindow( getter_AddRefs( window ) );
         if ( NS_SUCCEEDED( rv ) && window )
         {
         	nsCOMPtr<nsIDOMWindow> topWindow;
         	window->GetTop(getter_AddRefs(topWindow));
-        	if (topWindow)
-						rv = OpenDialogWithArg(topWindow, context, urlStr );
+        	if (topWindow) {
+              nsCOMPtr<nsIDOMWindowInternal> topInternal = do_QueryInterface(topWindow);
+              rv = OpenDialogWithArg(topInternal, context, urlStr);
+            }
         }
      } else {
         rv = NS_ERROR_NULL_POINTER;
@@ -892,7 +894,7 @@ nsFindComponent::FindNext(nsISupports *aContext, PRBool *aDidFind)
 
 NS_IMETHODIMP
 nsFindComponent::ResetContext( nsISupports *aContext,
-                               nsIDOMWindow *aNewWindow,
+                               nsIDOMWindowInternal *aNewWindow,
                                nsIEditorShell* aEditorShell )
 {
 	NS_ENSURE_ARG(aContext);

@@ -40,7 +40,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsEscape.h"
 #include "nsVoidArray.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMFocusListener.h"
@@ -485,7 +485,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         if (!data)
           break;
           
-        nsCOMPtr<nsIDOMWindow> domWindow;
+        nsCOMPtr<nsIDOMWindowInternal> domWindow;
         nsCOMPtr<nsIWebShell> contentShell;
         ((nsWebShellWindow *)data)->GetContentWebShell(getter_AddRefs(contentShell));
         if (contentShell) {
@@ -518,7 +518,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
           break;
 
         nsCOMPtr<nsIDOMDocument> domDocument;
-        nsCOMPtr<nsIDOMWindow> domWindow;
+        nsCOMPtr<nsIDOMWindowInternal> domWindow;
         ((nsWebShellWindow *)data)->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
         domWindow->GetDocument(getter_AddRefs(domDocument));
         nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(domDocument);
@@ -526,7 +526,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
           nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
           xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
           if (commandDispatcher) {
-            nsCOMPtr<nsIDOMWindow> focusedWindow;
+            nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
             commandDispatcher->GetFocusedWindow(getter_AddRefs(focusedWindow));
             if (focusedWindow) {
               commandDispatcher->SetSuppressFocus(PR_TRUE);
@@ -1068,7 +1068,7 @@ nsWebShellWindow::GetContentShellById(const nsString& aID, nsIWebShell** aChildS
 
 //------------------------------------------------------------------------------
 NS_IMETHODIMP
-nsWebShellWindow::ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow)
+nsWebShellWindow::ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindowInternal** aDOMWindow)
 {
   nsCOMPtr<nsIScriptGlobalObjectOwner> globalObjectOwner(do_QueryInterface(aShell));
   NS_ENSURE_TRUE(globalObjectOwner, NS_ERROR_FAILURE);
@@ -1077,7 +1077,7 @@ nsWebShellWindow::ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow**
   globalObjectOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
   NS_ENSURE_TRUE(globalObject, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMWindow> newDOMWindow(do_QueryInterface(globalObject));
+  nsCOMPtr<nsIDOMWindowInternal> newDOMWindow(do_QueryInterface(globalObject));
   NS_ENSURE_TRUE(newDOMWindow, NS_ERROR_FAILURE);
 
   *aDOMWindow = newDOMWindow.get();
@@ -1153,7 +1153,7 @@ nsWebShellWindow::GetWidget(nsIWidget *& aWidget)
 }
 
 NS_IMETHODIMP
-nsWebShellWindow::GetDOMWindow(nsIDOMWindow** aDOMWindow)
+nsWebShellWindow::GetDOMWindow(nsIDOMWindowInternal** aDOMWindow)
 {
    return ConvertWebShellToDOMWindow(mWebShell, aDOMWindow);
 }
@@ -1748,7 +1748,7 @@ NS_IMETHODIMP nsWebShellWindow::Destroy()
 //      - somewhere along the way a real dialog comes up
 // 
 // This little transducer maps the nsIPrompt interface to the nsICommonDialogs
-// interface. Ideally, nsIPrompt would be implemented by nsIDOMWindow which 
+// interface. Ideally, nsIPrompt would be implemented by nsIDOMWindowInternal which 
 // would eliminate the need for this.
 
 class nsDOMWindowPrompter : public nsIPrompt
@@ -1757,18 +1757,18 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROMPT
 
-  nsDOMWindowPrompter(nsIDOMWindow* window);
+  nsDOMWindowPrompter(nsIDOMWindowInternal* window);
   virtual ~nsDOMWindowPrompter() {}
 
   nsresult Init();
 
 protected:
-  nsCOMPtr<nsIDOMWindow>        mDOMWindow;
+  nsCOMPtr<nsIDOMWindowInternal>        mDOMWindow;
   nsCOMPtr<nsICommonDialogs>    mCommonDialogs;
 };
 
 static nsresult
-NS_NewDOMWindowPrompter(nsIPrompt* *result, nsIDOMWindow* window)
+NS_NewDOMWindowPrompter(nsIPrompt* *result, nsIDOMWindowInternal* window)
 {
   nsresult rv;
   nsDOMWindowPrompter* prompter = new nsDOMWindowPrompter(window);
@@ -1786,7 +1786,7 @@ NS_NewDOMWindowPrompter(nsIPrompt* *result, nsIDOMWindow* window)
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDOMWindowPrompter, nsIPrompt)
 
-nsDOMWindowPrompter::nsDOMWindowPrompter(nsIDOMWindow* window)
+nsDOMWindowPrompter::nsDOMWindowPrompter(nsIDOMWindowInternal* window)
   : mDOMWindow(window)
 {
   NS_INIT_REFCNT();
@@ -1972,7 +1972,7 @@ nsWebShellWindow::GetPrompter(nsIPrompt* *result)
     nsIWebShell* tempWebShell;
     GetWebShell(tempWebShell);
     nsCOMPtr<nsIWebShell> webShell(dont_AddRef(tempWebShell));
-    nsCOMPtr<nsIDOMWindow> domWindow;
+    nsCOMPtr<nsIDOMWindowInternal> domWindow;
     rv = ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
     if (NS_FAILED(rv)) {
       NS_ERROR("Unable to retrieve the DOM window from the new web shell.");

@@ -37,7 +37,7 @@
 #include "nsIController.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULCommandDispatcher.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIControllers.h"
 
 
@@ -98,7 +98,7 @@ GetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_FOCUSEDWINDOW, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
-          nsIDOMWindow* prop;
+          nsIDOMWindowInternal* prop;
           rv = a->GetFocusedWindow(&prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object
@@ -197,7 +197,7 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_FOCUSEDWINDOW, PR_TRUE);
         if (NS_SUCCEEDED(rv)) {
-          nsIDOMWindow* prop;
+          nsIDOMWindowInternal* prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
                                                   kIWindowIID, NS_ConvertASCIItoUCS2("Window"),
                                                   cx, *vp)) {

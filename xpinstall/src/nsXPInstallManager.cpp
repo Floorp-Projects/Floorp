@@ -50,7 +50,7 @@
 #include "nsInstallResources.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIProxyObjectManager.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -260,7 +260,7 @@ PRBool nsXPInstallManager::ConfirmInstall(nsIDialogParamBlock* ioParamBlock)
     NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv );
     if ( NS_SUCCEEDED( rv ) ) 
     {
-      nsCOMPtr<nsIDOMWindow> hiddenWindow;
+      nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
       JSContext* jsContext;
       rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs(hiddenWindow), &jsContext);
       if (NS_SUCCEEDED(rv))
@@ -277,7 +277,7 @@ PRBool nsXPInstallManager::ConfirmInstall(nsIDialogParamBlock* ioParamBlock)
 
         if (argv)
         {
-          nsCOMPtr<nsIDOMWindow> newWindow;
+          nsCOMPtr<nsIDOMWindowInternal> newWindow;
           rv = hiddenWindow->OpenDialog( jsContext,
                                          argv,
                                          4,
@@ -364,7 +364,7 @@ PRBool nsXPInstallManager::ConfirmChromeInstall()
 NS_IMETHODIMP nsXPInstallManager::DialogOpened(nsISupports* aWindow)
 {
   nsresult rv;
-  nsCOMPtr<nsIDOMWindow> win = do_QueryInterface(aWindow, &rv);
+  nsCOMPtr<nsIDOMWindowInternal> win = do_QueryInterface(aWindow, &rv);
   DownloadNext();
   return rv;
 }

@@ -39,7 +39,7 @@
 // Interfaces Needed
 #include "nsIAppShellService.h"
 #include "nsIDocShell.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
 #include "nsIScriptGlobalObject.h"
@@ -68,7 +68,7 @@ NS_METHOD
 nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, PRBool modal, const char *urlStr, nsIDOMWindow * win)
 {
     nsresult rv;
-    nsCOMPtr<nsIDOMWindow> parentWindow;
+    nsCOMPtr<nsIDOMWindowInternal> parentWindow;
     JSContext *jsContext;
 	jsval	*argv = NULL;
 
@@ -87,7 +87,7 @@ nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, PRBool modal, cons
 		jsContext = (JSContext*)scriptContext->GetNativeContext();
 		if (!jsContext) { rv = NS_ERROR_FAILURE; goto loser; }
 
-		parentWindow = win;
+		parentWindow = do_QueryInterface(win);
 	} else {
 		NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
 		if (NS_FAILED(rv)) {
@@ -120,7 +120,7 @@ nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, PRBool modal, cons
 	argv = JS_PushArguments(jsContext, &stackPtr, "sss", urlStr, "_blank", buffer);
 	if (argv) {
 		// open the window
-		nsIDOMWindow	*newWindow;
+		nsIDOMWindowInternal	*newWindow;
 		parentWindow->Open(jsContext, argv, 3, &newWindow);
         newWindow->ResizeTo(width, height);
         JS_PopArguments(jsContext, stackPtr);

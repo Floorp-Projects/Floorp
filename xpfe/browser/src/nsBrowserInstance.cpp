@@ -52,7 +52,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 
 #include "nsIScriptGlobalObject.h"
 #include "nsIContentViewer.h"
@@ -421,7 +421,7 @@ nsBrowserInstance::~nsBrowserInstance()
 void
 nsBrowserInstance::ReinitializeContentVariables()
 {
-  nsCOMPtr<nsIDOMWindow> content;
+  nsCOMPtr<nsIDOMWindowInternal> content;
   mDOMWindow->Get_content(getter_AddRefs(content));
   SetContentWindow(content);
 }
@@ -447,10 +447,10 @@ nsBrowserInstance::GetContentAreaDocShell()
   return docShell.get();
 }
     
-nsIDOMWindow* 
+nsIDOMWindowInternal* 
 nsBrowserInstance::GetContentWindow()
 {
-  nsCOMPtr<nsIDOMWindow> domWindow(do_QueryReferent(mContentWindowWeak));
+  nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryReferent(mContentWindowWeak));
   if (!domWindow)
     ReinitializeContentVariables();
   domWindow = do_QueryReferent(mContentWindowWeak);
@@ -864,7 +864,7 @@ nsBrowserInstance::GotoHistoryIndex(PRInt32 aIndex)
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm, PRBool* status)
+nsBrowserInstance::WalletPreview(nsIDOMWindowInternal* aWin, nsIDOMWindowInternal* aForm, PRBool* status)
 {
   NS_PRECONDITION(aForm != nsnull, "null ptr");
   if (! aForm)
@@ -910,7 +910,7 @@ nsBrowserInstance::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm, PRBool
                   "chrome,modal=yes,dialog=yes,all,width=504,height=436");
    NS_ENSURE_TRUE(argv, NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsIDOMWindow> newWindow;
+   nsCOMPtr<nsIDOMWindowInternal> newWindow;
    aWin->OpenDialog(jsContext, argv, 3, getter_AddRefs(newWindow));
    JS_PopArguments(jsContext, mark);
 
@@ -935,7 +935,7 @@ nsBrowserInstance::WalletChangePassword(PRBool* status)
 #include "nsIDOMHTMLDocument.h"
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 NS_IMETHODIMP    
-nsBrowserInstance::WalletQuickFillin(nsIDOMWindow* aWin, PRBool* status)
+nsBrowserInstance::WalletQuickFillin(nsIDOMWindowInternal* aWin, PRBool* status)
 {
   NS_PRECONDITION(aWin != nsnull, "null ptr");
   if (! aWin)
@@ -964,7 +964,7 @@ nsBrowserInstance::WalletQuickFillin(nsIDOMWindow* aWin, PRBool* status)
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::WalletRequestToCapture(nsIDOMWindow* aWin, PRUint32* status)
+nsBrowserInstance::WalletRequestToCapture(nsIDOMWindowInternal* aWin, PRUint32* status)
 {
   NS_PRECONDITION(aWin != nsnull, "null ptr");
   if (! aWin)
@@ -1008,7 +1008,7 @@ nsBrowserInstance::Init()
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::SetContentWindow(nsIDOMWindow* aWin)
+nsBrowserInstance::SetContentWindow(nsIDOMWindowInternal* aWin)
 {
   NS_PRECONDITION(aWin != nsnull, "null ptr");
   if (! aWin)
@@ -1110,7 +1110,7 @@ nsBrowserInstance::GetUrlbarHistory(nsIUrlbarHistory** aUrlbarHistory)
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::SetWebShellWindow(nsIDOMWindow* aWin)
+nsBrowserInstance::SetWebShellWindow(nsIDOMWindowInternal* aWin)
 {
    NS_ENSURE_ARG(aWin);
    mDOMWindow = aWin;
@@ -2265,7 +2265,7 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
   // we need a dom window to create the new browser window...in order
   // to do this, we need to get the window mediator service and ask it for a dom window
   NS_ENSURE_ARG(aChannel);
-  nsCOMPtr<nsIDOMWindow> parentWindow;
+  nsCOMPtr<nsIDOMWindowInternal> parentWindow;
   JSContext* jsContext = nsnull;
 
   if (aWindowContext)
@@ -2319,7 +2319,7 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
   argv = JS_PushArguments(jsContext, &mark, "Ws", value.GetUnicode(), windowTarget);
   NS_ENSURE_TRUE(argv, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMWindow> newWindow;
+  nsCOMPtr<nsIDOMWindowInternal> newWindow;
   parentWindow->Open(jsContext, argv, 2, getter_AddRefs(newWindow));
   JS_PopArguments(jsContext, mark);
 
@@ -2461,7 +2461,7 @@ int PR_CALLBACK ButtonShowHideCallback(const char* aPref, void* aClosure)
         nsCOMPtr<nsISupports> protoWindow;
         windowEnumerator->GetNext(getter_AddRefs(protoWindow));
         if (protoWindow) {
-          nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(protoWindow);
+          nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(protoWindow);
           if (domWindow) {
             nsCOMPtr<nsIDOMDocument> doc;
             domWindow->GetDocument(getter_AddRefs(doc));

@@ -31,7 +31,7 @@
 //Interfaces Needed
 #include "nsIAppShellService.h"
 #include "nsICommonDialogs.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIServiceManager.h"
 #include "nsIXULWindow.h"
 #include "nsIInterfaceRequestor.h"

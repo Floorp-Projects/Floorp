@@ -30,6 +30,7 @@ MODULE		= dom
 
 EXPORTS		= \
 		nsIDOMWindow.h \
+		nsIDOMWindowInternal.h \
 		nsIDOMNavigator.h \
 		nsIDOMLocation.h \
 		nsIDOMNSLocation.h \

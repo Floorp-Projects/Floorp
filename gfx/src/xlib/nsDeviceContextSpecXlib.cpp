@@ -29,7 +29,7 @@
 #include "prenv.h" /* for PR_GetEnv */
 
 #include "nsIAppShellComponentImpl.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIServiceManager.h"
 #include "nsIDialogParamBlock.h"
 #include "nsINetSupportDialogService.h"
@@ -122,8 +122,8 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::Init(PRBool aQuiet)
   if (NS_SUCCEEDED(rv)) {
     NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
     if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIDOMWindow> hiddenWindow;
-      nsCOMPtr<nsIDOMWindow> mWindow;
+      nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
+      nsCOMPtr<nsIDOMWindowInternal> mWindow;
 
       JSContext *jsContext;
       rv = appShell->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow), &jsContext);
@@ -138,7 +138,7 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::Init(PRBool aQuiet)
                                        (const nsIID *) (&NS_GET_IID(nsIDialogParamBlock)),
                                        (nsISupports *) ioParamBlock);
         if (argv) {
-          nsCOMPtr<nsIDOMWindow> newWindow;
+          nsCOMPtr<nsIDOMWindowInternal> newWindow;
 
           rv = hiddenWindow->OpenDialog(jsContext,
                                         argv,

@@ -46,7 +46,7 @@
 #include "nsIFrameManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIScrollbar.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScriptGlobalObject.h"
@@ -3539,7 +3539,7 @@ nsresult nsGfxTextControlFrame::UpdateTextControlCommands(const nsString& aComma
   if (NS_FAILED(rv)) return rv;
   if (!scriptGlobalObject) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(scriptGlobalObject);
+  nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(scriptGlobalObject);
   if (!domWindow) return NS_ERROR_FAILURE;
 
   return domWindow->UpdateCommands(aCommand);

@@ -22,7 +22,7 @@
 #include "domstubs.idl"
 
 %{C++
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMNode.h"
 %}
 
@@ -31,7 +31,7 @@ interface nsIDOMDataSource : nsISupports {
     
     void setMode(in string mode, in boolean active);
     boolean getMode(in string mode);
-    void setWindow(in nsIDOMWindow window);
+    void setWindow(in nsIDOMWindowInternal window);
     
 };
 

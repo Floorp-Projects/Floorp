@@ -36,7 +36,7 @@
 #include "nsCRT.h"
 #include "nsFileStream.h"
 #include "nsIComponentManager.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIGenericFactory.h"
 #include "nsIProfile.h"
 #include "nsIRDFContainer.h"
@@ -2393,7 +2393,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 					{
 						parent->GetDocShell(getter_AddRefs(docShell));
 					}
-					nsCOMPtr<nsIDOMWindow>	domParent(do_GetInterface(docShell));
+					nsCOMPtr<nsIDOMWindowInternal>	domParent(do_GetInterface(docShell));
 					nsCOMPtr<nsIScriptGlobalObject>	sgo(do_QueryInterface(domParent));
 
 					nsCOMPtr<nsIScriptContext>	context;
@@ -2411,7 +2411,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 							if (argv)
 							{
 					                        // open the window
-					                        nsIDOMWindow	*newWindow;
+					                        nsIDOMWindowInternal	*newWindow;
 					                        domParent->Open(jsContext, argv, 1, &newWindow);
 					                        JS_PopArguments(jsContext, stackPtr);
 							}

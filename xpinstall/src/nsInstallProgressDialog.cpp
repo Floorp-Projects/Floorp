@@ -29,7 +29,7 @@
 #include "nsIAppShellComponentImpl.h"
 
 
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIServiceManager.h"
 #include "nsIDocumentViewer.h"
 #include "nsIContent.h"
@@ -148,7 +148,7 @@ nsInstallProgressDialog::Open(nsIDialogParamBlock* ioParamBlock)
     NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv );
     if ( NS_SUCCEEDED( rv ) ) 
     {
-        nsCOMPtr<nsIDOMWindow> hiddenWindow;
+        nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
         JSContext* jsContext;
         rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs(hiddenWindow), &jsContext);
         if (NS_SUCCEEDED(rv))

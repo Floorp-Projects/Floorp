@@ -115,7 +115,7 @@ protected:
   nsIHTMLEditor*      mEditor;		 // the HTML editor
   nsIDOMDocument*  mChromeDoc;  // XUL document for the chrome area
 
-  nsIDOMWindow*       mDOMWindow;   // nsIDOMWindow used for calling UpdateCommands
+  nsIDOMWindowInternal*       mDOMWindow;   // nsIDOMWindowInternal used for calling UpdateCommands
   
   nsCOMPtr<nsITimer>  mUpdateTimer;
   

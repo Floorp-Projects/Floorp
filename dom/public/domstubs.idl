@@ -66,6 +66,9 @@ interface nsIDOMWindowCollection : nsISupports {};
 [scriptable, uuid(a6cf906b-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMWindow : nsISupports {};
 
+[scriptable, uuid(9c911860-7dd9-11d4-9a83-000064657374)]
+interface nsIDOMWindowInternal : nsIDOMWindow {};
+
 [scriptable, uuid(a6cf9076-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMDocumentFragment : nsIDOMNode {};
 
@@ -97,6 +100,7 @@ interface nsIDOMSelectionListener : nsISupports {};
     class nsIDOMBarProp;
     class nsIDOMWindowCollection;
     class nsIDOMWindow;
+    class nsIDOMWindowInternal;
     class nsIDOMDocumentFragment;
     class nsIDOMRange;
     class nsIDOMSelection;

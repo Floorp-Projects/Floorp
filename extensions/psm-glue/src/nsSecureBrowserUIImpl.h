@@ -31,7 +31,7 @@
 #include "nsIObserver.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIStringBundle.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIDocShell.h"
@@ -68,11 +68,11 @@ public:
 
     // nsIObserver
     NS_DECL_NSIOBSERVER
-    NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindow* window, nsIURI *actionURL);
+    NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI *actionURL);
 
 protected:
 
-	nsCOMPtr<nsIDOMWindow>              mWindow;
+	nsCOMPtr<nsIDOMWindowInternal>              mWindow;
     nsCOMPtr<nsIDOMElement>             mSecurityButton;
     nsCOMPtr<nsIDOMElement>             mCertificateAuthorityDisplay;
 	nsCOMPtr<nsIDocumentLoaderObserver> mOldWebShellObserver;

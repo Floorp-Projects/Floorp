@@ -32,7 +32,7 @@
 #include "nsIServiceManager.h"
 #include "nsICommonDialogs.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIFileSpec.h"
 #include "nsPrefMigrationCIDs.h"
 #include "nsIPrefMigration.h"
@@ -151,7 +151,7 @@ class nsPrefMigration: public nsIPrefMigration
 
       nsCOMPtr<nsIPref>         m_prefs;
       nsCOMPtr<nsIFileSpec>     m_prefsFile; 
-      nsCOMPtr<nsIDOMWindow>    m_parentWindow;
+      nsCOMPtr<nsIDOMWindowInternal>    m_parentWindow;
       nsCOMPtr<nsIXULWindow>    mPMProgressWindow;
 };
 

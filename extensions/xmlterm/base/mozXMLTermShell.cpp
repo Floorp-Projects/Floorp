@@ -46,7 +46,7 @@
 
 #include "nsIDOMDocument.h"
 #include "nsIDOMSelection.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 
 #include "mozXMLT.h"
 #include "mozXMLTermUtils.h"
@@ -210,7 +210,7 @@ NS_IMETHODIMP mozXMLTermShell::IgnoreKeyPress(PRBool aIgnore,
 
 // Initialize XMLTermShell
 NS_IMETHODIMP    
-mozXMLTermShell::Init(nsIDOMWindow* aContentWin,
+mozXMLTermShell::Init(nsIDOMWindowInternal* aContentWin,
                       const PRUnichar* URL,
                       const PRUnichar* args)
 {

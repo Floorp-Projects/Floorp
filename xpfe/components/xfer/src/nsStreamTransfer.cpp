@@ -63,13 +63,13 @@ public:
 protected:
     // Common implementation that takes contentType and suggestedName.
     NS_IMETHOD SelectFileAndTransferLocation( nsIChannel *aChannel,
-                                              nsIDOMWindow *parent,
+                                              nsIDOMWindowInternal *parent,
                                               char const *contentType,
                                               char const *suggestedName );
 
 private:
     // Put up file picker dialog.
-    NS_IMETHOD SelectFile( nsIDOMWindow *parent, nsIFileSpec **result, const nsCString &suggested );
+    NS_IMETHOD SelectFile( nsIDOMWindowInternal *parent, nsIFileSpec **result, const nsCString &suggested );
     nsCString  SuggestNameFor( nsIChannel *aChannel, char const *suggestedName );
 
     // Objects of this class are counted to manage library unloading...
@@ -78,7 +78,7 @@ private:
 
 // Get content type and suggested name from input channel in this case.
 NS_IMETHODIMP
-nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel, nsIDOMWindow *parent ) {
+nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel, nsIDOMWindowInternal *parent ) {
     // Content type comes straight from channel.
     nsXPIDLCString contentType;
     aChannel->GetContentType( getter_Copies( contentType ) );
@@ -114,7 +114,7 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel, nsIDOMWin
 
 NS_IMETHODIMP
 nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel,
-                                                 nsIDOMWindow *parent,
+                                                 nsIDOMWindowInternal *parent,
                                                  char const *contentType,
                                                  char const *suggestedName ) {
     // Prompt the user for the destination file.
@@ -168,7 +168,7 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel,
 
 NS_IMETHODIMP
 nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
-                                                     nsIDOMWindow *parent,
+                                                     nsIDOMWindowInternal *parent,
                                                      char const *contentType,
                                                      char const *suggestedName ) {
     nsresult rv = NS_OK;
@@ -196,7 +196,7 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
 }
 
 NS_IMETHODIMP
-nsStreamTransfer::SelectFile( nsIDOMWindow *parent, nsIFileSpec **aResult, const nsCString &suggested ) {
+nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsIFileSpec **aResult, const nsCString &suggested ) {
     nsresult rv = NS_OK;
 
     if ( aResult ) {

@@ -67,7 +67,7 @@ public:
     NS_IMETHOD SetNewDocument(nsIDOMDocument *aDocument);
     NS_IMETHOD SetDocShell(nsIDocShell *aDocShell);
     NS_IMETHOD GetDocShell(nsIDocShell **aDocShell);
-    NS_IMETHOD SetOpenerWindow(nsIDOMWindow *aOpener);
+    NS_IMETHOD SetOpenerWindow(nsIDOMWindowInternal *aOpener);
     NS_IMETHOD SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
     NS_IMETHOD GetGlobalObjectOwner(nsIScriptGlobalObjectOwner** aOwner);
     NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, 
@@ -526,7 +526,7 @@ nsXULPDGlobalObject::GetDocShell(nsIDocShell **aDocShell)
 
 
 NS_IMETHODIMP
-nsXULPDGlobalObject::SetOpenerWindow(nsIDOMWindow *aOpener)
+nsXULPDGlobalObject::SetOpenerWindow(nsIDOMWindowInternal *aOpener)
 {
     NS_NOTREACHED("waaah!");
     return NS_ERROR_UNEXPECTED;

@@ -47,7 +47,7 @@
 #include "nsXPIDLString.h"
 #include "nsString.h"
 
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIUnkContentTypeHandler.h"
 #include "nsDOMError.h"
 
@@ -96,7 +96,7 @@ protected:
     // and it will return TRUE.
     PRBool ProcessCanceledCase(nsIChannel * aChannel);
 
-    nsresult InvokeUnknownContentHandler(nsIChannel * aChannel, const char * aContentType, nsIDOMWindow * aDomWindow);
+    nsresult InvokeUnknownContentHandler(nsIChannel * aChannel, const char * aContentType, nsIDOMWindowInternal * aDomWindow);
 
 protected:
     nsCOMPtr<nsIURIContentListener> m_contentListener;
@@ -381,7 +381,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
 
       if (NS_FAILED(rv))
       {
-        nsCOMPtr<nsIDOMWindow> domWindow (do_GetInterface(originalWindowContext));
+        nsCOMPtr<nsIDOMWindowInternal> domWindow (do_GetInterface(originalWindowContext));
         return InvokeUnknownContentHandler(aChannel, contentType, domWindow);
       }
 
@@ -395,7 +395,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
   return rv;
 }
 
-nsresult nsDocumentOpenInfo::InvokeUnknownContentHandler(nsIChannel * aChannel, const char * aContentType, nsIDOMWindow * aDomWindow)
+nsresult nsDocumentOpenInfo::InvokeUnknownContentHandler(nsIChannel * aChannel, const char * aContentType, nsIDOMWindowInternal * aDomWindow)
 {
   NS_ENSURE_ARG(aChannel);
   NS_ENSURE_ARG(aDomWindow);

@@ -107,7 +107,7 @@
 #include "nsIReflowCallback.h"
 
 #include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #ifdef INCLUDE_XUL
 #include "nsIDOMXULDocument.h"
@@ -1540,7 +1540,7 @@ static void CheckForFocus(nsIDocument* aDocument)
   // of the command dispatcher moves into the embedding layer.
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
   aDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));  
-  nsCOMPtr<nsIDOMWindow> rootWindow;
+  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
   nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(globalObject);
   ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
   nsCOMPtr<nsIDOMDocument> rootDocument;
@@ -1554,7 +1554,7 @@ static void CheckForFocus(nsIDocument* aDocument)
     if (commandDispatcher) {
       // Suppress the command dispatcher.
       commandDispatcher->SetSuppressFocus(PR_TRUE);
-      nsCOMPtr<nsIDOMWindow> focusedWindow;
+      nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
       commandDispatcher->GetFocusedWindow(getter_AddRefs(focusedWindow));
       
       // See if the command dispatcher is holding on to an orphan window.
@@ -1571,7 +1571,7 @@ static void CheckForFocus(nsIDocument* aDocument)
         }
       }
 
-      nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(ourWindow);
+      nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(ourWindow);
       if (domWindow == focusedWindow) {
         PRBool active;
         commandDispatcher->GetActive(&active);
@@ -1951,7 +1951,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame){
       nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
 	  nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
 	  document->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-      nsCOMPtr<nsIDOMWindow> rootWindow;
+      nsCOMPtr<nsIDOMWindowInternal> rootWindow;
       nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
       if(ourWindow) {
         ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
@@ -2721,7 +2721,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
       nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
 	  nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
 	  document->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-      nsCOMPtr<nsIDOMWindow> rootWindow;
+      nsCOMPtr<nsIDOMWindowInternal> rootWindow;
       nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
       if(ourWindow) {
         ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
@@ -2971,7 +2971,7 @@ PresShell::DoCopy()
   // Now that we have copied, update the Paste menu item
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
   doc->GetScriptGlobalObject(getter_AddRefs(globalObject));  
-  nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(globalObject);
+  nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(globalObject);
   if (domWindow)
   {
     domWindow->UpdateCommands(NS_ConvertASCIItoUCS2("clipboard"));

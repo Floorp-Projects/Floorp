@@ -50,7 +50,7 @@ interface nsIStreamTransfer : nsIAppShellComponent {
     | dialog.                                                                  |
     --------------------------------------------------------------------------*/
     [noscript] void SelectFileAndTransferLocation( in nsIChannel aChannel,
-	                                               in nsIDOMWindow parent );
+	                                               in nsIDOMWindowInternal parent );
 
     /*------------------ SelectFileAndTransferLocationSpec ---------------------
     | Prompt the user for a destination file and then transfer the data, using |
@@ -58,7 +58,7 @@ interface nsIStreamTransfer : nsIAppShellComponent {
     | dialog.  You can provide a content type and/or a suggested file name.    |
     --------------------------------------------------------------------------*/
     void SelectFileAndTransferLocationSpec( in string       aURL,
-                                            in nsIDOMWindow parent,
+                                            in nsIDOMWindowInternal parent,
                                             in string       contentType,
                                             in string       suggestedName );
 };

@@ -23,7 +23,8 @@ DEPTH=..\..\..
 
 
 DEFINES=-D_IMPL_NS_DOM 
-EXPORTS=nsIDOMWindow.h nsIDOMNavigator.h nsIDOMLocation.h nsIDOMNSLocation.h \
+EXPORTS=nsIDOMWindow.h nsIDOMWindowInternal.h nsIDOMNavigator.h \
+	nsIDOMLocation.h nsIDOMNSLocation.h \
 	nsIDOMWindowCollection.h nsIDOMScreen.h nsIDOMHistory.h \
 	nsIDOMMimeType.h nsIDOMMimeTypeArray.h \
 	nsIDOMPlugin.h nsIDOMPluginArray.h nsIDOMBarProp.h \

@@ -397,7 +397,7 @@ NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::Init(nsIDOMWindow *aParent,
+NS_IMETHODIMP nsFilePicker::Init(nsIDOMWindowInternal *aParent,
                                  const PRUnichar *aTitle,
                                  PRInt16 aMode)
 {

@@ -929,84 +929,18 @@
     "uievent.inituievent", \
     "uievent.view", \
     "viewcss.getcomputedstyle", \
-    "window._content", \
-    "window.alert", \
-    "window.back", \
-    "window.blur", \
-    "window.captureevents", \
-    "window.clearinterval", \
-    "window.cleartimeout", \
-    "window.close", \
-    "window.closed", \
-    "window.confirm", \
-    "window.controllers", \
-    "window.crypto", \
-    "window.defaultstatus", \
-    "window.directories", \
-    "window.disableexternalcapture", \
     "window.document", \
-    "window.dump", \
-    "window.enableexternalcapture", \
-    "window.escape", \
-    "window.focus", \
-    "window.forward", \
     "window.frames", \
-    "window.getattention", \
     "window.getselection", \
-    "window.history", \
-    "window.home", \
-    "window.innerheight", \
-    "window.innerwidth", \
-    "window.length", \
-    "window.location", \
-    "window.locationbar", \
-    "window.menubar", \
-    "window.moveby", \
-    "window.moveto", \
     "window.name", \
-    "window.navigator", \
-    "window.open", \
-    "window.opendialog", \
-    "window.opener", \
-    "window.outerheight", \
-    "window.outerwidth", \
-    "window.pagexoffset", \
-    "window.pageyoffset", \
     "window.parent", \
-    "window.personalbar", \
-    "window.pkcs11", \
-    "window.print", \
-    "window.prompt", \
-    "window.prompter", \
-    "window.releaseevents", \
-    "window.resizeby", \
-    "window.resizeto", \
-    "window.routeevent", \
-    "window.screen", \
-    "window.screenx", \
-    "window.screeny", \
     "window.scriptglobals", \
-    "window.scroll", \
     "window.scrollbars", \
     "window.scrollby", \
     "window.scrollto", \
     "window.scrollx", \
     "window.scrolly", \
-    "window.self", \
-    "window.setcursor", \
-    "window.setinterval", \
-    "window.settimeout", \
-    "window.sidebar", \
-    "window.sizetocontent", \
-    "window.status", \
-    "window.statusbar", \
-    "window.stop", \
-    "window.title", \
-    "window.toolbar", \
     "window.top", \
-    "window.unescape", \
-    "window.updatecommands", \
-    "window.window", \
     "windowcollection.item", \
     "windowcollection.length", \
     "windowcollection.nameditem", \
@@ -1034,6 +968,72 @@
     "windoweventowner.onselect", \
     "windoweventowner.onsubmit", \
     "windoweventowner.onunload", \
+    "windowinternal._content", \
+    "windowinternal.alert", \
+    "windowinternal.back", \
+    "windowinternal.blur", \
+    "windowinternal.captureevents", \
+    "windowinternal.clearinterval", \
+    "windowinternal.cleartimeout", \
+    "windowinternal.close", \
+    "windowinternal.closed", \
+    "windowinternal.confirm", \
+    "windowinternal.controllers", \
+    "windowinternal.crypto", \
+    "windowinternal.defaultstatus", \
+    "windowinternal.directories", \
+    "windowinternal.disableexternalcapture", \
+    "windowinternal.dump", \
+    "windowinternal.enableexternalcapture", \
+    "windowinternal.escape", \
+    "windowinternal.focus", \
+    "windowinternal.forward", \
+    "windowinternal.getattention", \
+    "windowinternal.history", \
+    "windowinternal.home", \
+    "windowinternal.innerheight", \
+    "windowinternal.innerwidth", \
+    "windowinternal.length", \
+    "windowinternal.location", \
+    "windowinternal.locationbar", \
+    "windowinternal.menubar", \
+    "windowinternal.moveby", \
+    "windowinternal.moveto", \
+    "windowinternal.navigator", \
+    "windowinternal.open", \
+    "windowinternal.opendialog", \
+    "windowinternal.opener", \
+    "windowinternal.outerheight", \
+    "windowinternal.outerwidth", \
+    "windowinternal.pagexoffset", \
+    "windowinternal.pageyoffset", \
+    "windowinternal.personalbar", \
+    "windowinternal.pkcs11", \
+    "windowinternal.print", \
+    "windowinternal.prompt", \
+    "windowinternal.prompter", \
+    "windowinternal.releaseevents", \
+    "windowinternal.resizeby", \
+    "windowinternal.resizeto", \
+    "windowinternal.routeevent", \
+    "windowinternal.screen", \
+    "windowinternal.screenx", \
+    "windowinternal.screeny", \
+    "windowinternal.scroll", \
+    "windowinternal.self", \
+    "windowinternal.setcursor", \
+    "windowinternal.setinterval", \
+    "windowinternal.settimeout", \
+    "windowinternal.sidebar", \
+    "windowinternal.sizetocontent", \
+    "windowinternal.status", \
+    "windowinternal.statusbar", \
+    "windowinternal.stop", \
+    "windowinternal.title", \
+    "windowinternal.toolbar", \
+    "windowinternal.unescape", \
+    "windowinternal.updatecommands", \
+    "windowinternal.window", \
     "xulbrowserelement.webbrowser", \
     "xulcommanddispatcher.active", \
     "xulcommanddispatcher.addcommandupdater", \
