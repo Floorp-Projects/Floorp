@@ -377,6 +377,16 @@ NS_IMETHODIMP nsNntpService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL
   // this is only called by view message source
   rv = ConstructNntpUrl(messageIdURL.get(), nsnull, aMsgWindow, aMessageURI, nsINntpUrl::ActionDisplayArticle, aURL);
   NS_ENSURE_SUCCESS(rv,rv);
+  if (folder && *aURL)
+  {
+    nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(*aURL);
+    if (mailnewsUrl)
+    {
+      PRBool useLocalCache = PR_FALSE;
+      folder->HasMsgOffline(key, &useLocalCache);  
+      mailnewsUrl->SetMsgIsInLocalCache(useLocalCache);
+    }
+  }
   return rv;
 
 }

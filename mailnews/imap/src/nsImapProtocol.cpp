@@ -611,10 +611,13 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         // Ensure that the socket can get the notification callbacks
         nsCOMPtr<nsIInterfaceRequestor> callbacks;
         m_mockChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
-        m_channel->SetNotificationCallbacks(callbacks, PR_FALSE);
+        if (m_channel)
+        {
+          m_channel->SetNotificationCallbacks(callbacks, PR_FALSE);
         
-        if (NS_SUCCEEDED(rv))
-          rv = m_channel->OpenOutputStream(0, -1, 0, getter_AddRefs(m_outputStream));
+          if (NS_SUCCEEDED(rv))
+            rv = m_channel->OpenOutputStream(0, -1, 0, getter_AddRefs(m_outputStream));
+        }
       }
     } // if m_runningUrl
 

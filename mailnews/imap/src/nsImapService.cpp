@@ -288,7 +288,18 @@ NS_IMETHODIMP nsImapService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL
       PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);;
       rv = CreateStartOfImapUrl(aMessageURI, getter_AddRefs(imapUrl), folder, nsnull, urlSpec, hierarchySeparator);
       if (NS_FAILED(rv)) return rv;
-    	  imapUrl->SetImapMessageSink(imapMessageSink);
+    	imapUrl->SetImapMessageSink(imapMessageSink);
+      imapUrl->SetImapFolder(folder);
+      if (folder)
+      {
+        nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(imapUrl);
+        if (mailnewsUrl)
+        {
+          PRBool useLocalCache = PR_FALSE;
+          folder->HasMsgOffline(atoi(msgKey), &useLocalCache);  
+          mailnewsUrl->SetMsgIsInLocalCache(useLocalCache);
+        }
+      }
 
       nsCOMPtr<nsIURI> url = do_QueryInterface(imapUrl);
       nsXPIDLCString currentSpec;
