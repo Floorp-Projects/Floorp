@@ -57,11 +57,11 @@ nsMalloc::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
     if (outer && !aIID.Equals(kISupportsIID))
         return NS_NOINTERFACE;   // XXX right error?
     nsMalloc* mm = new nsMalloc(outer);
-    nsresult result = mm->QueryInterface(aIID, aInstancePtr);
-    if (result != NS_OK) {
-        delete mm;
-    }
-    return result;
+    if (mm == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+    mm->AddRef();
+    *aInstancePtr = mm->GetInner();
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
