@@ -722,6 +722,7 @@ static unsigned gFirstUserCollection = 0;
   }
   // Set up to scan the bookmark file
   NSScanner *fileScanner = [[NSScanner alloc] initWithString:fileAsString];
+  [fileScanner setCharactersToBeSkipped:nil];
   BOOL isNetscape = YES;
   // See if it's a netscape/IE style bookmark file, or omniweb
   NSRange aRange = [fileAsString rangeOfString:@"<!DOCTYPE NETSCAPE-Bookmark-file-1>" options:NSCaseInsensitiveSearch];
@@ -831,6 +832,8 @@ static unsigned gFirstUserCollection = 0;
         [fileScanner setScanLocation:(scanIndex+1)];
       }
       else if (([tokenTag isEqualToString:@"</D"]) || ([tokenTag isEqualToString:@"</d"])) {
+        // note that we only scan for the first two characters of a tag
+        // that is why this tag is "</D" and not "</DL"
         currentArray = (BookmarkFolder *)[currentArray parent];
         [fileScanner setScanLocation:(scanIndex+1)];
       }
