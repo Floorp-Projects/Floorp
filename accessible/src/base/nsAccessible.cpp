@@ -1489,20 +1489,21 @@ NS_IMETHODIMP nsAccessible::GetXULAccName(nsAString& _retval)
       //
       //   This should keep search times down and still get the relevant
       //   labels.
+      nsAutoString controlID;
+      domElement->GetAttribute(NS_LITERAL_STRING("id"), controlID);
       nsCOMPtr<nsIDOMNode> parent;
-      if (NS_SUCCEEDED(rv = mDOMNode->GetParentNode(getter_AddRefs(parent)))) {
+      if (!controlID.IsEmpty() && NS_SUCCEEDED(rv = mDOMNode->GetParentNode(getter_AddRefs(parent)))) {
         nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(parent));
         NS_ASSERTION(xulElement, "No xulElement for parent DOM Node!");
         if (xulElement) {
-          nsAutoString controlID;
-          nsCOMPtr<nsIDOMNodeList>labelList;
+          nsCOMPtr<nsIDOMNodeList> labelList;
           if (NS_SUCCEEDED(rv = xulElement->GetElementsByAttribute(NS_LITERAL_STRING("control"), controlID, getter_AddRefs(labelList))))
           {
             PRUint32 length = 0;
             if (NS_SUCCEEDED(rv = labelList->GetLength(&length)) && length > 0) {
-              for (PRUint32 i = 0; i < length; ++i) {
+              for (PRUint32 index = 0; index < length; ++index) {
                 nsCOMPtr<nsIDOMNode> child;
-                if (NS_SUCCEEDED(rv = labelList->Item(i, getter_AddRefs(child) ))) {
+                if (NS_SUCCEEDED(rv = labelList->Item(index, getter_AddRefs(child) ))) {
                   rv = AppendLabelText(child, label);
                 }
               }

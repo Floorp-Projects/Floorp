@@ -95,7 +95,7 @@ public:
   NS_IMETHOD GetAccName(nsAString& _retval);
 };
 
-class nsXULProgressMeterAccessible : public nsAccessible
+class nsXULProgressMeterAccessible : public nsFormControlAccessible
 {
 public:
   nsXULProgressMeterAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
