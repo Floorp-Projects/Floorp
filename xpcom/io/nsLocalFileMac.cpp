@@ -898,13 +898,6 @@ nsLocalFile::InitWithPath(const char *filePath)
 	// about turniung it into an FSSpec until the Create() method is called
 	mWorkingPath.SetString(filePath);
 	
-	// See if the last character is a : and kill it if so as Append adds :s itself
-	PRInt32 offset = mWorkingPath.Length() - 1;
-	if (filePath[offset] == ':')
-	{
-		mWorkingPath.Truncate(offset);
-	}
-	
 	mInitType = eInitWithPath;
 	
 	return NS_OK;
