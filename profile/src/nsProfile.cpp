@@ -44,6 +44,7 @@
 
 #include "nsIIOService.h"
 #include "nsNetUtil.h"
+#include "nsPrefMigration.h"
 #include "nsIPrefMigration.h"
 #include "nsPrefMigrationCIDs.h"
 #include "nsFileStream.h"
@@ -65,6 +66,12 @@
 #include "nsIDocShell.h"
 #include "nsIWebShell.h"
 #include "nsIWebBrowserChrome.h"
+
+#include "nsIScriptGlobalObject.h"
+#include "nsIBaseWindow.h"
+#include "nsICommonDialogs.h"
+#include "nsIDOMWindow.h"
+#include "nsIWindowMediator.h"
 
 #if defined (XP_UNIX)
 #elif defined (XP_MAC)
@@ -130,6 +137,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kPrefMigrationCID, NS_PREFMIGRATION_CID);
 static NS_DEFINE_CID(kPrefConverterCID, NS_PREFCONVERTER_CID);
 static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
+static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
+static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 static NS_DEFINE_CID(kChromeRegistryCID,    NS_CHROMEREGISTRY_CID);
 
@@ -162,6 +171,8 @@ nsresult GetStringFromSpec(nsFileSpec inSpec, char **string)
 nsProfile::nsProfile()
 {
     mAutomigrate = PR_FALSE;
+    mOutofDiskSpace = PR_FALSE;
+    mDiskSpaceErrorQuitCalled = PR_FALSE;
 
     if(!gProfileDataAccess)
         gProfileDataAccess = new nsProfileAccess();
@@ -235,6 +246,11 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
 
     if (cmdLineArgs)
         rv = ProcessArgs(cmdLineArgs, &profileDirSet, profileURLStr);
+
+    // This boolean is set only when an automigrated user runs out of disk space
+    // and chooses to cancel further operations from the dialogs presented...
+    if (mDiskSpaceErrorQuitCalled)
+        return NS_ERROR_FAILURE;
 
     if (!profileDirSet) {
         rv = LoadDefaultProfileDir(profileURLStr);
@@ -400,7 +416,9 @@ nsProfile::AutoMigrate()
     // automatically migrate the one 4.x profile
     rv = MigrateAllProfiles();
 
-    if (NS_FAILED(rv)) 
+    // Create a default profile if automigration failed for reasons
+    // other than out of disk space case...
+    if (NS_FAILED(rv) && !mOutofDiskSpace) 
     {
 #ifdef DEBUG_profile
         printf("AutoMigration failed. Let's create a default 5.0 profile.\n");
@@ -408,7 +426,7 @@ nsProfile::AutoMigrate()
         
         rv = CreateDefaultProfile();
         if (NS_FAILED(rv)) return rv;
-    }
+    }   
 
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
     gProfileDataAccess->UpdateRegistry();
@@ -1374,12 +1392,12 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
 
     newSpec->GetFileSpec(&newProfDir);
     newProfDir += profileName;
-	newProfDir.MakeUnique();
+    newProfDir.MakeUnique();
     if (newProfDir.Exists()) {
 #ifdef DEBUG_profile
-    	printf("directory already exists\n");
+        printf("directory already exists\n");
 #endif
-    	return NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE;
     }
 
     // Call migration service to do the work.
@@ -1395,10 +1413,11 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
         
     nsXPIDLCString oldProfDirStr;
     nsXPIDLCString newProfDirStr;
-    
+
     if (!newProfDir.Exists()) {
         newProfDir.CreateDirectory();
-    }
+    }    
+
     rv = GetStringFromSpec(newProfDir, getter_Copies(newProfDirStr));
     if (NS_FAILED(rv)) return rv;
     
@@ -1413,6 +1432,58 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
 
     rv = pPrefMigrator->ProcessPrefs(showProgressAsModalWindow);
     if (NS_FAILED(rv)) return rv;
+
+    // check for diskspace errors  
+    nsresult errorCode;   
+    errorCode = pPrefMigrator->GetError();
+
+    // In either of the cases below we have to return error to make
+    // app understand that migration has failed.
+    if (errorCode == CREATE_NEW)
+    {
+        PRInt32 numProfiles = 0;
+        ShowProfileWizard();
+
+        // When the automigration process fails because of disk space error,
+        // we present user a create profile wizard if the user chooses to create a 
+        // a profile then. But then the user may click on cancel on that dialog...
+        // So, if the user clicks on cancel, the number of profiles should be 
+        // ZERO at the point for the user who failed to automigrate single 4x profile.
+        // On such condition, set mDiskSpaceErrorQuitCalled to allow user to quit the app.
+        // If the user is presented with profilemanager dialog with multiple 4x profiles
+        // to migrate, value of mDiskSpaceErrorQuitCalled does not matter as it gets ignored..
+        // If a single profile needs automigration and no confirmation 
+        // is needed for that operation mAutomigrate is set to false. 
+        if (!mAutomigrate)
+        {
+            GetProfileCount(&numProfiles);
+            if (numProfiles == 0)
+                mDiskSpaceErrorQuitCalled = PR_TRUE;
+        }
+        mOutofDiskSpace = PR_TRUE;
+        return NS_ERROR_FAILURE;
+    }
+    else if (errorCode == CANCEL) 
+    {
+        // When the automigration process fails because of disk space error,
+        // user may choose to simply quit the app from the dialog presented 
+        // by pref-migrator. So, set mDiskSpaceErrorQuitCalled to allow user 
+        // to quit the app in such a case.
+        // If the user is presented with profilemanager dialog with multiple 4x profiles
+        // to migrate, value of mDiskSpaceErrorQuitCalled does not matter as it gets ignored..
+        // If a single profile needs automigration and no confirmation 
+        // is needed for that operation mAutomigrate is set to false. 
+        if (!mAutomigrate)
+            mDiskSpaceErrorQuitCalled = PR_TRUE;
+
+        ForgetCurrentProfile();
+        mOutofDiskSpace = PR_TRUE;
+        return NS_ERROR_FAILURE;
+    }
+    else if (errorCode != SUCCESS) 
+    {
+        return NS_ERROR_FAILURE;
+    }
 
     // Copy the default 5.0 profile files into the migrated profile
     // Get profile defaults folder..
@@ -1443,6 +1514,133 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
     gProfileDataAccess->UpdateRegistry();
 
     return rv;
+}
+
+nsresult
+nsProfile::ShowProfileWizard(void)
+{
+    nsresult rv = NS_OK;
+    PRBool hasParentWindow = PR_FALSE;
+    nsCOMPtr<nsIDOMWindow> PMDOMWindow;
+
+    // Get the window mediator
+    NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+    if (NS_SUCCEEDED(rv)) 
+    {
+        nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+
+        if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator)))) 
+        {
+            // Get each dom window
+            PRBool more;
+            windowEnumerator->HasMoreElements(&more);
+            while (more) 
+            {
+                nsCOMPtr<nsISupports> protoWindow;
+                rv = windowEnumerator->GetNext(getter_AddRefs(protoWindow));
+                if (NS_SUCCEEDED(rv) && protoWindow) 
+                {
+                    PMDOMWindow = do_QueryInterface(protoWindow);
+                    if (PMDOMWindow) 
+                    {
+                        hasParentWindow = PR_TRUE;
+                        break;
+                    }
+                }
+                windowEnumerator->HasMoreElements(&more);
+            }
+        }
+    }
+
+    if (hasParentWindow)
+    {
+        // Get the script global object for the window
+        nsCOMPtr<nsIScriptGlobalObject> sgo;
+        sgo = do_QueryInterface(PMDOMWindow);
+        if (!sgo) return NS_ERROR_FAILURE;
+
+        // Get the script context from the global context
+        nsCOMPtr<nsIScriptContext> scriptContext;
+        sgo->GetContext( getter_AddRefs(scriptContext));
+        if (!scriptContext) return NS_ERROR_FAILURE;
+
+        // Get the JSContext from the script context
+        JSContext* jsContext = (JSContext*)scriptContext->GetNativeContext();
+        if (!jsContext) return NS_ERROR_FAILURE;
+
+    
+        //-----------------------------------------------------
+        // Create the nsIDialogParamBlock to pass the trigger
+        // list to the dialog
+        //-----------------------------------------------------
+        nsCOMPtr<nsIDialogParamBlock> ioParamBlock;
+        rv = nsComponentManager::CreateInstance(kDialogParamBlockCID,
+                                            nsnull,
+                                            NS_GET_IID(nsIDialogParamBlock),
+                                            getter_AddRefs(ioParamBlock));
+
+    
+        if ( NS_SUCCEEDED( rv ) ) 
+            ioParamBlock->SetInt(0,4); // standard wizard buttons
+
+ 
+        void* stackPtr;
+        jsval *argv = JS_PushArguments( jsContext,
+                                    &stackPtr,
+                                    "sss%ip",
+                                    PROFILE_WIZARD_URL,
+                                    "_blank",
+                                    "chrome,modal",
+                                    (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
+                                    (nsISupports*)ioParamBlock);
+
+        if (argv)
+        {
+            nsCOMPtr<nsIDOMWindow> newWindow;
+            rv = PMDOMWindow->OpenDialog(jsContext,
+                                         argv,
+                                         4,
+                                         getter_AddRefs(newWindow));
+            if (NS_SUCCEEDED(rv))
+            {
+                JS_PopArguments( jsContext, stackPtr);
+            }
+            else
+                return NS_ERROR_FAILURE;
+        }
+        else
+            return NS_ERROR_FAILURE;     
+
+    }
+    else
+    {
+        // No parent window is available.
+        // So, Create top level window with create profile wizard
+        NS_WITH_SERVICE(nsIAppShellService, wizAppShell,
+                          kAppShellServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        nsCString profURLStr = PROFILE_WIZARD_URL;
+        nsCOMPtr<nsIURI> profURI;
+        rv = NS_NewURI(getter_AddRefs(profURI), (const char *)profURLStr);
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIXULWindow> newWindow;
+        rv = wizAppShell->CreateTopLevelWindow(nsnull, profURI,
+                                                PR_TRUE, PR_TRUE, CHROME_STYLE,
+                                                NS_SIZETOCONTENT,           // width 
+                                                NS_SIZETOCONTENT,           // height
+                                                getter_AddRefs(newWindow));
+
+        if (NS_FAILED(rv)) return rv;
+
+        /*
+         * Bring up the wizard...
+         */    
+        rv = wizAppShell->Run();
+    }
+    return rv;
+
 }
 
 NS_IMETHODIMP nsProfile::ProfileExists(const PRUnichar *profileName, PRBool *exists)

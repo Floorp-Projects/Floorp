@@ -69,6 +69,8 @@ private:
 								nsFileSpec& newProfDir,
 								const char *fileName);
     PRBool mAutomigrate;
+    PRBool mOutofDiskSpace;
+    PRBool mDiskSpaceErrorQuitCalled;
 
 public:
     nsProfile();
@@ -88,5 +90,6 @@ public:
     nsresult AutoMigrate();
 
     nsresult CreateDefaultProfile(void);
+    nsresult ShowProfileWizard(void);
 };
 

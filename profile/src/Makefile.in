@@ -37,6 +37,7 @@ CPPSRCS		= 	nsProfile.cpp	\
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		$(XPCOM_LIBS) \
+		$(MOZ_JS_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
