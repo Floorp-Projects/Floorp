@@ -3402,6 +3402,8 @@ int WFE_DrawTextEx( int iCSID, HDC hdc, LPTSTR lpchText, int cchText, LPRECT lpr
 	if (cchText < 0)
 		cchText = _tcslen(lpchText);
 
+/*
+	DrawTextEx does not handle DT_END_ELLIPSIS so please do not use the follwoing code to do optomization.
 #ifdef XP_WIN32
 	if ((dwMoreFormat == WFE_DT_CROPRIGHT) && sysInfo.m_bWin4) {
 		dwDTFormat |= DT_END_ELLIPSIS;
@@ -3409,12 +3411,13 @@ int WFE_DrawTextEx( int iCSID, HDC hdc, LPTSTR lpchText, int cchText, LPRECT lpr
 									dwDTFormat, NULL);
 	}
 #endif
+*/
 
 	LPTSTR pString = NULL;
     CSize cs = CIntlWin::GetTextExtent( iCSID, hdc, lpchText, cchText);
 
     if (cs.cx > (lprc->right - lprc->left) ) {
-		int iNumToRemove = 0;
+
 	    int iEllipsesLength = _tcslen(STRING_ELLIPSES);
 
 		pString = new _TCHAR[cchText + iEllipsesLength + 2];
@@ -3423,31 +3426,58 @@ int WFE_DrawTextEx( int iCSID, HDC hdc, LPTSTR lpchText, int cchText, LPRECT lpr
 			return 0;
 		}
 		_tcscpy(pString,lpchText);
-		while ( cs.cx > (lprc->right - lprc->left) ) {
-			if (++iNumToRemove >= cchText) {
-				delete [] pString;
-				return cs.cy;
-			}
-			switch (dwMoreFormat) {
-				case WFE_DT_CROPRIGHT:
-					_tcscpy(&pString[cchText - iNumToRemove], STRING_ELLIPSES);
-					break;
-				case WFE_DT_CROPCENTER:
+
+		switch(dwMoreFormat) {
+			case WFE_DT_CROPRIGHT:
+				{
+					int iEnd = cchText;
+					while( cs.cx > (lprc->right - lprc->left) )
 					{
-						int iLeft = (cchText - iNumToRemove) / 2;
-						int iRight = iLeft + ((cchText - iNumToRemove)%2);
-						_tcscpy(&pString[iLeft], STRING_ELLIPSES);
-						_tcscpy(&pString[iLeft+iEllipsesLength],
-								&lpchText[cchText-iRight]);
+ 						int iNewEnd = INTL_PrevCharIdxInText(iCSID, (unsigned char*) lpchText,	iEnd);
+						if ((iNewEnd == 0) || (iNewEnd == iEnd)) {
+							delete [] pString;
+							return cs.cy;
+						}
+						iEnd = iNewEnd;
+						_tcscpy(&pString[iNewEnd], STRING_ELLIPSES);
+ 						cs = CIntlWin::GetTextExtent( iCSID, hdc, pString, strlen(pString));
 					}
-					break;
-				case WFE_DT_CROPLEFT:
+				}
+				break;
+			case WFE_DT_CROPCENTER:
+				{
+					int iRemove = 0;
+					while( cs.cx > (lprc->right - lprc->left) )
+					{
+						if (++iRemove >= cchText) {
+							delete [] pString;
+							return cs.cy;
+						}
+						INTL_MidTruncateString(iCSID, lpchText, pString, cchText-iRemove);
+  						cs = CIntlWin::GetTextExtent( iCSID, hdc, pString, strlen(pString));
+					}
+				}
+				break;
+			case WFE_DT_CROPLEFT:
+				{
+					int iBegin = 0;
+					while( cs.cx > (lprc->right - lprc->left) )
+					{
+ 						int iNewBegin = INTL_NextCharIdxInText(iCSID, (unsigned char*) lpchText,	iBegin);
+						if ((iNewBegin >= cchText) || (iNewBegin == iBegin)) {
+							delete [] pString;
+							return cs.cy;
+						}
+						iBegin = iNewBegin;
 						_tcscpy(pString, STRING_ELLIPSES);
 						_tcscpy(&pString[iEllipsesLength],
-								&lpchText[iNumToRemove]);
-					break;
-			}
-			cs = CIntlWin::GetTextExtent( iCSID, hdc, pString, strlen(pString));
+								&lpchText[iNewBegin]);
+ 						cs = CIntlWin::GetTextExtent( iCSID, hdc, pString, strlen(pString));
+					}
+				}
+				break;
+
+
 		}
 		lpchText = pString;
     }
