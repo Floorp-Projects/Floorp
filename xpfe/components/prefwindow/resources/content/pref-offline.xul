@@ -46,21 +46,16 @@
   function Startup()
   {
     var aCheckbox = document.getElementById("offlineCompactFolder");
-    var aField = document.getElementById("offlineCompactFolderMin");
-    if(aCheckbox.checked)
-        aField.setAttribute("disabled", "true");
-    else
-        aField.removeAttribute("disabled");
-    
+    enableField(aCheckbox, "offlineCompactFolderMin");
   }
 
   function enableField(aCheckbox, aNodeID) 
   { 
      var aField = document.getElementById(aNodeID); 
      if (aCheckbox.checked) 
-         aField.setAttribute("disabled", "true"); 
-     else 
          aField.removeAttribute("disabled"); 
+     else 
+         aField.setAttribute("disabled", "true"); 
   } 
 
   </script>
