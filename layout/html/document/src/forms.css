@@ -90,14 +90,6 @@ input {
   -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#inputFields");
 }
 
-:not(xul|textbox) > input:not([type]),
-:not(xul|textbox) > input[type="text"],
-:not(xul|textbox) > input[type="password"] {
-  border-width: 2px !important;
-  border-style: inset !important;
-  -moz-border-radius: 0 !important;
-}
-
 textarea {
   margin: 1px 0 1px 0;
   border: 2px inset ThreeDFace;
@@ -110,12 +102,6 @@ textarea {
   -moz-box-sizing: border-box;
   -moz-user-focus: normal;
   -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#textAreas");
-}
-
-:not(xul|textbox) > textarea {
-  border-width: 2px !important;
-  border-style: inset !important;
-  -moz-border-radius: 0 !important;
 }
 
 textarea > scrollbar {
