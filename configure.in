@@ -1360,6 +1360,23 @@ if test "$ac_cv_cpp_explicit" = yes ; then
    AC_DEFINE(HAVE_CPP_EXPLICIT)
 fi
 
+dnl Check for template specialization
+dnl Test code and requirement from scc@netscape.com.
+dnl Autoconf cut-and-paste job by shaver@mozilla.org.
+AC_CACHE_CHECK(for C++ template specialization support,
+               ac_cv_cpp_template_specialization,
+               [AC_TRY_COMPILE(template <class T> struct X { int a; };
+                               class Y {};
+                               template <> struct X<Y> { double a; };,
+                               X<int> int_x;
+                               X<Y> y_x;,
+                               ac_cv_cpp_template_specialization=yes,
+                               ac_cv_cpp_template_specialization=no)])
+if test "$ac_cv_cpp_template_specialization" = yes ; then
+  AC_DEFINE(HAVE_CPP_SPECIALIZATION)
+fi
+
+
 dnl
 dnl We dont do exceptions on unix.  The only reason this used to be here
 dnl is that mozilla/xpcom/tests/TestCOMPtr.cpp has a test which uses 
