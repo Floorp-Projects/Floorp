@@ -274,7 +274,7 @@ int readmap(Options* inOptions, MSMap_Module* inModule)
                                             memset(theSymbol, 0, sizeof(MSMap_Symbol));
                                             theSymbol->mScope = STATIC;
                                             
-                                            scanRes = sscanf(current, "%x:%x %s %x", &(theSymbol->mPrefix), &(theSymbol->mOffset), symbolBuf, &(theSymbol->mRVABase));
+                                            scanRes = sscanf(current, "%x:%x %s %x", (unsigned*)&(theSymbol->mPrefix), (unsigned*)&(theSymbol->mOffset), symbolBuf, (unsigned*)&(theSymbol->mRVABase));
                                             if(4 == scanRes)
                                             {
                                                 theSymbol->mSymbol = strdup(symbolBuf);
@@ -335,7 +335,7 @@ int readmap(Options* inOptions, MSMap_Module* inModule)
                             {
                                 int scanRes = 0;
                                 
-                                scanRes = sscanf(current, "entry point at %x:%x", &(inModule->mEntryPrefix), &(inModule->mEntryOffset));
+                                scanRes = sscanf(current, "entry point at %x:%x", (unsigned*)&(inModule->mEntryPrefix), (unsigned*)&(inModule->mEntryOffset));
                                 if(2 == scanRes)
                                 {
                                     fsm.mHasEntryPoint = __LINE__;
@@ -395,7 +395,7 @@ int readmap(Options* inOptions, MSMap_Module* inModule)
                                         memset(theSymbol, 0, sizeof(MSMap_Symbol));
                                         theSymbol->mScope = PUBLIC;
                                         
-                                        scanRes = sscanf(current, "%x:%x %s %x", &(theSymbol->mPrefix), &(theSymbol->mOffset), symbolBuf, &(theSymbol->mRVABase));
+                                        scanRes = sscanf(current, "%x:%x %s %x", (unsigned*)&(theSymbol->mPrefix), (unsigned*)&(theSymbol->mOffset), symbolBuf, (unsigned *)&(theSymbol->mRVABase));
                                         if(4 == scanRes)
                                         {
                                             theSymbol->mSymbol = strdup(symbolBuf);
@@ -482,7 +482,7 @@ int readmap(Options* inOptions, MSMap_Module* inModule)
                                     
                                     memset(theSegment, 0, sizeof(MSMap_Segment));
                                     
-                                    scanRes = sscanf(current, "%x:%x %xH %s %s", &(theSegment->mPrefix), &(theSegment->mOffset), &(theSegment->mLength), nameBuf, classBuf);
+                                    scanRes = sscanf(current, "%x:%x %xH %s %s", (unsigned*)&(theSegment->mPrefix), (unsigned*)&(theSegment->mOffset), (unsigned*)&(theSegment->mLength), nameBuf, classBuf);
                                     if(5 == scanRes)
                                     {
                                         if('.' == nameBuf[0])
@@ -541,7 +541,7 @@ int readmap(Options* inOptions, MSMap_Module* inModule)
                     /*
                     **  The PLA has a particular format.
                     */
-                    scanRes = sscanf(current, "Preferred load address is %x", &(inModule->mPreferredLoadAddress));
+                    scanRes = sscanf(current, "Preferred load address is %x", (unsigned*)&(inModule->mPreferredLoadAddress));
                     if(1 == scanRes)
                     {
                         fsm.mHasPreferredLoadAddress = __LINE__;
@@ -561,7 +561,7 @@ int readmap(Options* inOptions, MSMap_Module* inModule)
                 /*
                 **  The timestamp has a particular format.
                 */
-                scanRes = sscanf(current, "Timestamp is %x", &(inModule->mTimestamp));
+                scanRes = sscanf(current, "Timestamp is %x", (unsigned*)&(inModule->mTimestamp));
                 if(1 == scanRes)
                 {
                     fsm.mHasTimestamp = __LINE__;
@@ -711,8 +711,8 @@ static int tsvout(Options* inOptions, unsigned inSize, MSMap_SegmentClass inClas
             {
                 printRes = fprintf(inOptions->mOutput,
                     "\t%.4X:%.8X",
-                    inPrefix,
-                    inOffset
+                    (unsigned)inPrefix,
+                    (unsigned)inOffset
                     );
             }
 
