@@ -190,7 +190,9 @@ public:
   static nsIAtom* table;
   static nsIAtom* tabstop;
   static nsIAtom* target;
+  static nsIAtom* td;
   static nsIAtom* text;
+  static nsIAtom* th;
   static nsIAtom* title;
   static nsIAtom* top;
   static nsIAtom* toppadding;
