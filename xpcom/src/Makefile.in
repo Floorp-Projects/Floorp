@@ -44,7 +44,6 @@ CPPSRCS		= \
 	nsXPIDLString.cpp \
 	nsEventQueueService.cpp \
 	xcDll.cpp \
-	xcDllStore.cpp \
 	nsAllocator.cpp \
 	nsGenericFactory.cpp \
 	nsRegistry.cpp \
