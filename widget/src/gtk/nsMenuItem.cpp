@@ -138,7 +138,7 @@ GtkWidget *nsMenuItem::GetNativeParent()
 {
   void * voidData;
   if (nsnull != mMenuParent) {
-    mMenuParent->GetNativeData(voidData);
+    mMenuParent->GetNativeData(&voidData);
   } else if (nsnull != mPopUpParent) {
     mPopUpParent->GetNativeData(voidData);
   } else {

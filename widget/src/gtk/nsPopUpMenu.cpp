@@ -121,7 +121,7 @@ NS_METHOD nsPopUpMenu::AddMenu(nsIMenu * aMenu)
 
   voidData = NULL;
 
-  aMenu->GetNativeData(voidData);
+  aMenu->GetNativeData(&voidData);
   newmenu = GTK_WIDGET(voidData);
 
   gtk_menu_item_set_submenu (GTK_MENU_ITEM (item), newmenu);

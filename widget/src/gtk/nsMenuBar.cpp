@@ -133,7 +133,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 
   delete[] labelStr;
 
-  aMenu->GetNativeData(voidData);
+  aMenu->GetNativeData(&voidData);
   nmenu = GTK_WIDGET(voidData);
 
   gtk_menu_item_set_submenu (GTK_MENU_ITEM (widget), nmenu);
