@@ -96,6 +96,8 @@ public:
 
 	virtual BOOL UseLargeIcons() { return TRUE; }
 
+	virtual void DisplayAndTrackMenu(void);
+
 	virtual void OnAction(void);
 
 	int Create(CWnd *pParent, int nToolbarStyle, CSize noviceButtonSize, CSize advancedButtonSize,

@@ -3759,7 +3759,7 @@ extern "C" MWContext* FE_GetRDFContext(void)
 // The context's GetDialogOwner() function.
 CWnd* CRDFCX::GetDialogOwner() const
 {
-	if (m_pCurrentRDFWindow == NULL)
+	if (m_pCurrentRDFWindow == NULL || m_pCurrentRDFWindow->m_hWnd == NULL)
 		return CWnd::GetDesktopWindow();
 	return m_pCurrentRDFWindow->GetTopLevelFrame();
 }

@@ -341,6 +341,11 @@ BOOL CSelectorButton::CreateRightMouseMenu()
 	// Build the actual menu.
 	m_MenuCommandMap.Clear();
 	
+	// Set the selected view, but do a mask if we're closed so we don't end up opening the pane.
+	
+	HT_SetSelectedView(HT_GetPane(m_HTView), m_HTView);
+	HT_SetSelection(HT_TopNode(m_HTView));
+	
 	HT_Cursor theCursor = HT_NewContextualMenuCursor(m_HTView, PR_TRUE, PR_FALSE);
 	if (theCursor != NULL)
 	{
@@ -361,8 +366,15 @@ BOOL CSelectorButton::CreateRightMouseMenu()
 		}
 		HT_DeleteCursor(theCursor);
 	}
+	
 	return TRUE;
 }
+
+void CSelectorButton::DisplayAndTrackMenu()
+{
+	CRDFToolbarButton::DisplayAndTrackMenu();
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // CNavCenterFrame
 
