@@ -1921,7 +1921,6 @@ SinkContext::AddComment(const nsIParserNode& aNode)
                   "SinkContext::AddLeaf", 
                   nsHTMLTag(aNode.GetNodeType()), 
                   mStackPos, mSink);
-
   FlushTextAndRelease();
 
   if (!mSink) {
@@ -1938,6 +1937,11 @@ SinkContext::AddComment(const nsIParserNode& aNode)
   domComment->AppendData(aNode.GetText());
 
   comment->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
+
+  NS_ASSERTION(mStackPos > 0, "stack out of bounds");
+  if (mStackPos <= 0) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsIHTMLContent* parent;
   if (!mSink->mBody && !mSink->mFrameset && mSink->mHead) {
@@ -3495,8 +3499,6 @@ HTMLContentSink::CloseContainer(const eHTMLTags aTag)
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::CloseContainer()\n"));
   MOZ_TIMER_START(mWatch);
 
-  nsresult rv = NS_OK;
-
   // XXX work around parser bug
   if (eHTMLTag_frameset == aTag) {
     MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseContainer()\n"));
@@ -3504,7 +3506,7 @@ HTMLContentSink::CloseContainer(const eHTMLTags aTag)
     return CloseFrameset();
   }
 
-  rv = mCurrentContext->CloseContainer(aTag);
+  nsresult rv = mCurrentContext->CloseContainer(aTag);
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseContainer()\n"));
   MOZ_TIMER_STOP(mWatch);
@@ -4938,6 +4940,16 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
   if (mCurrentContext) {
     parent = mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
   }
+
+  // XXX - Hack to fix the crash reported in bug 197015; Once the real 
+  // problem, in CSSLoader, is fixed then this hack could be removed.
+  // Close the head context, that got opened up by the link tag, because
+  // our CSSLoader, on loading the linked style sheet, calls the parser's
+  // ContinueParsing() even if the parser is not  blocked and that causes 
+  // the sink, whose current context is head, to go haywire. 
+  // Note: CSS loading is initiated before unwinding off this stack and 
+  // therefore the sink never got the chance to close its head context.
+  CloseHeadContext();
 
   if (parent) {
     // Create content object
