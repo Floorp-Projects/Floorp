@@ -137,6 +137,48 @@
   <key id="key_mail"  key="&messengerCmd.commandkey;" oncommand="toMessengerWindow();" modifiers="accel"/>
 </keyset>
 
+<popup id="dirTreeContext">
+  <menuitem id="dirTreeContext-properties"
+            label="&editButton.label;"
+            accesskey="&editButton.accesskey;"
+            oncommand="goDoCommand('button_edit');"/>
+  <menuseparator/>
+  <menuitem id="dirTreeContext-newcard"
+            label="&newcardButton.label;"
+            accesskey="&newcardButton.accesskey;"
+            oncommand="AbNewCard('dirTree')"/>
+  <menuitem id="dirTreeContext-newlist"
+            label="&newlistButton.label;"
+            accesskey="&newlistButton.accesskey;"
+            oncommand="AbNewList('dirTree')"/>
+  <menuseparator/>
+  <menuitem id="dirTreeContext-delete"
+            label="&deleteButton.label;"
+            accesskey="&deleteButton.accesskey;"
+            oncommand="goDoCommand('button_delete');"/>
+</popup>
+
+<popup id="abResultsTreeContext">
+  <menuitem id="abResultsTreeContext-properties"
+            label="&editButton.label;"
+            accesskey="&editButton.accesskey;"
+            oncommand="goDoCommand('button_edit');"/>
+  <menuseparator/>
+  <menuitem id="abResultsTreeContext-newmessage"
+            label="&newmsgButton.label;"
+            accesskey="&newmsgButton.accesskey;"
+            oncommand="AbNewMessage()"/>
+  <menuitem id="abResultsTreeContext-newim"
+            label="&newIM.label;"
+            accesskey="&newIM.accesskey;"
+            oncommand="AbIMSelected()"/>
+  <menuseparator/>
+  <menuitem id="abResultsTreeContext-delete"
+            label="&deleteButton.label;"
+            accesskey="&deleteButton.accesskey;"
+            oncommand="goDoCommand('button_delete');"/>
+</popup>
+
 <popup id="aTooltip" class="tooltip" onpopupshowing="return FillInTooltip(document.tooltipNode);" > 
   <label id="TOOLTIP-tooltipText" class="tooltip-label" flex="1"/>
 </popup>
@@ -413,6 +455,7 @@
             datasources="rdf:addressdirectory" ref="moz-abdirectory://"
             flags="dont-build-content"
             hidecolumnpicker="true"
+            context="dirTreeContext"
             onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('addrbook-select');"
             ondblclick="DirPaneDoubleClick(event);"
             onblur="goOnEvent(this,'blur')">
@@ -486,6 +529,7 @@
 
       <!-- results pane -->
       <tree id="abResultsTree" flex="1" enableColumnDrag="true" class="plain"
+            context="abResultsTreeContext"
             onclick="AbResultsPaneOnClick(event);"
             onselect="this.view.selectionChanged();"
             sortCol="GeneratedName"

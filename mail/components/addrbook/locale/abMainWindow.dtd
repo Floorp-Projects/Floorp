@@ -127,13 +127,19 @@
 <!ENTITY aboutCmd.label                                 "About &brandShortName;">
 <!ENTITY aboutCmd.accesskey                             "A">
 
-<!-- Address Book Toolbar -->  
+<!-- Address Book Toolbar and Context Menus -->  
 <!ENTITY newcardButton.label                            "New Card">
+<!ENTITY newcardButton.accesskey                        "C">
 <!ENTITY newlistButton.label                            "New List">
+<!ENTITY newlistButton.accesskey                        "L">
 <!ENTITY editButton.label                               "Properties">
+<!ENTITY editButton.accesskey                           "P">
 <!ENTITY newmsgButton.label                             "Write">
-<!ENTITY newIM.label                                    "IM">
+<!ENTITY newmsgButton.accesskey                         "W">
+<!ENTITY newIM.label                                    "Instant Message">
+<!ENTITY newIM.accesskey                                "I">
 <!ENTITY deleteButton.label                             "Delete">
+<!ENTITY deleteButton.accesskey                         "D">
 
 <!-- Address Book Toolbar Tooltips -->
 <!ENTITY newcardButton.tooltip                          "Create a new address book card">
