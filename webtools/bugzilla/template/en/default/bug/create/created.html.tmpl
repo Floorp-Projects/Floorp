@@ -23,6 +23,8 @@
   title = "Bug $id Submitted"
 %]
 
+[% header_done = 1 %]
+
 [% FOREACH item = sentmail %]
   [% PROCESS bug/process/results.html.tmpl
      type = item.type
