@@ -94,11 +94,6 @@ nsBrowserContentListener.prototype =
         return false;
     },
 
-    getProtocolHandler: function(uri)
-    {
-        return null;
-    },
-
     doContent: function(contentType, command, request, contentHandler)
     {
         // forward the doContent to our content area webshell

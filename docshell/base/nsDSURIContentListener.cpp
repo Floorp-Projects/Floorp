@@ -74,21 +74,6 @@ nsDSURIContentListener::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDSURIContentListener::GetProtocolHandler(nsIURI* aURI,
-                                           nsIProtocolHandler** aProtocolHandler)
-{
-    NS_ENSURE_ARG_POINTER(aProtocolHandler);
-    NS_ENSURE_ARG(aURI);
-                        
-    if(mParentContentListener) 
-        return mParentContentListener->GetProtocolHandler(aURI, aProtocolHandler);
-    else
-        *aProtocolHandler = nsnull;
-
-    return NS_OK;
-}
-
 NS_IMETHODIMP 
 nsDSURIContentListener::DoContent(const char* aContentType, 
                                   nsURILoadCommand aCommand,

@@ -104,13 +104,6 @@ nsURLFetcher::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
 }
 
 NS_IMETHODIMP 
-nsURLFetcher::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
-{
-  *aProtocolHandler = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
 nsURLFetcher::IsPreferred(const char * aContentType,
                                 nsURILoadCommand aCommand,
                                 char ** aDesiredContentType,

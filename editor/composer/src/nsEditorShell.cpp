@@ -4723,14 +4723,6 @@ NS_IMETHODIMP nsEditorShell::OnStartURIOpen(nsIURI *aURI, PRBool *aAbortOpen)
   return NS_OK;
 }
 
-/* void getProtocolHandler (in nsIURI aURI, out nsIProtocolHandler aProtocolHandler); */
-NS_IMETHODIMP nsEditorShell::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
-{
-  NS_ENSURE_ARG_POINTER(aProtocolHandler);
-  *aProtocolHandler = nsnull;
-  return NS_OK;
-}
-
 /* void doContent (in string aContentType, in nsURILoadCommand aCommand, in nsIChannel aOpenedChannel, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
 NS_IMETHODIMP nsEditorShell::DoContent(const char *aContentType, nsURILoadCommand aCommand, nsIRequest* request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {

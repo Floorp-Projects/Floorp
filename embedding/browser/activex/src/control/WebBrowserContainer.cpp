@@ -371,13 +371,6 @@ NS_IMETHODIMP CWebBrowserContainer::OnStartURIOpen(nsIURI *pURI, PRBool *aAbortO
     return NS_OK;
 }
 
-/* void getProtocolHandler (in nsIURI aURI, out nsIProtocolHandler aProtocolHandler); */
-NS_IMETHODIMP CWebBrowserContainer::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
 /* void doContent (in string aContentType, in nsURILoadCommand aCommand, in nsIRequest request, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
 NS_IMETHODIMP CWebBrowserContainer::DoContent(const char *aContentType, nsURILoadCommand aCommand, nsIRequest *request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {

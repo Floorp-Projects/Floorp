@@ -304,13 +304,6 @@ nsAbSyncPostEngine::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
 }
 
 NS_IMETHODIMP 
-nsAbSyncPostEngine::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
-{
-  *aProtocolHandler = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
 nsAbSyncPostEngine::IsPreferred(const char * aContentType,
                                 nsURILoadCommand aCommand,
                                 char ** aDesiredContentType,

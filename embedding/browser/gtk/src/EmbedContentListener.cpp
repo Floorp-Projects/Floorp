@@ -68,13 +68,6 @@ EmbedContentListener::OnStartURIOpen(nsIURI     *aURI,
 }
 
 NS_IMETHODIMP
-EmbedContentListener::GetProtocolHandler(nsIURI              *aURI,
-					 nsIProtocolHandler **aHandler)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 EmbedContentListener::DoContent(const char         *aContentType,
 				nsURILoadCommand    aCommand,
 				nsIRequest         *aRequest,

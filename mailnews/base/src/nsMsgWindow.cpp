@@ -401,14 +401,6 @@ NS_IMETHODIMP nsMsgWindow::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgWindow::GetProtocolHandler(nsIURI * /* aURI */, nsIProtocolHandler **aProtocolHandler)
-{
-   // we don't have any app specific protocol handlers we want to use so 
-  // just use the system default by returning null.
-  *aProtocolHandler = nsnull;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, nsURILoadCommand aCommand, 
                                      nsIRequest *request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
