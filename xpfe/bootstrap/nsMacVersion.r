@@ -29,14 +29,14 @@
 #define     APPLICATION_LANGUAGE    "en"
 
 #define		VERSION_MAJOR_STR		"5.0"
-#define		VERSION_MINOR_STR		"m8 Gecko"
+#define		VERSION_MINOR_STR		"m11 Gecko"
 #define		VERSION_STRING			VERSION_MAJOR_STR VERSION_MINOR_STR
 #define 	VERSION_LANG			"en"	// e.g. en, ja, de, fr
 #define 	VERSION_COUNTRY			"_US"		// e.g.,  _JP, _DE, _FR, _US
 #define 	VERSION_LOCALE			VERSION_LANG VERSION_COUNTRY
 #define 	VERSION_MAJOR			5
 #define		VERSION_MINOR			00		// =[0x00] This is really revision & fix in BCD
-#define 	VERSION_MICRO			8		// This is really the internal stage
+#define 	VERSION_MICRO			11		// This is really the internal stage
 #define		VERSION_KIND			alpha
 #define		COPYRIGHT_STRING		", Mozilla Open Source"
 
