@@ -773,14 +773,14 @@ CHROME_MISC_DIR=.
 # Export misc files by copying to dist.
 chrome:: $(CHROME_MISC:.\=INSTALL\.\)
 
-# Pseudo-target specifying how to install content files.
+# Pseudo-target specifying how to install misc files.
 $(CHROME_MISC:.\=INSTALL\.\):
     $(MAKE_INSTALL) $(@:INSTALL\.=.) $(CHROME_DIST)\$(CHROME_MISC_DIR)
 
-# Clobber content files.
+# Clobber misc files.
 clobber_all:: $(CHROME_MISC:.\=CLOBBER\.\)
 
-# Pseudo-target specifying how to clobber content files.
+# Pseudo-target specifying how to clobber misc files.
 $(CHROME_MISC:.\=CLOBBER\.\):
     -@$(RM) $(CHROME_DIST)\$(CHROME_MISC_DIR)\$(@:CLOBBER\.=.)
 
