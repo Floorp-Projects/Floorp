@@ -316,6 +316,13 @@
         }
       ]]>
       </handler>
+      <!-- Ensure that our state gets saved/restored across skin switches. -->
+       <handler event="bindingattached" action="var str = this.boxObject.getProperty('value'); 
+                                                if (str) {
+                                                  this.inputField.value=str;
+                                                  this.boxObject.removeProperty('value');
+                                                }"/>
+       <handler event="bindingdetached" action="if (this.inputField.value) this.boxObject.setProperty('value', this.inputField.value);"/>
    </handlers>    
   </binding>
 

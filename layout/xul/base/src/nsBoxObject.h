@@ -24,6 +24,7 @@
 #include "nsCOMPtr.h"
 #include "nsIBoxObject.h"
 #include "nsPIBoxObject.h"
+#include "nsIPresState.h"
 
 class nsIBoxLayoutManager;
 class nsIBoxPaintManager;
@@ -51,6 +52,8 @@ public:
 protected: 
   nsCOMPtr<nsIBoxLayoutManager> mLayoutManager; // [OWNER]
   nsCOMPtr<nsIBoxPaintManager> mPaintManager; // [OWNER]
+  nsCOMPtr<nsIPresState> mPresState; // [OWNER]
+
   nsIContent* mContent; // [WEAK]
   nsIPresShell* mPresShell; // [WEAK]
 };

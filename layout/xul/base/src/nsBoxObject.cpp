@@ -32,6 +32,7 @@
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
 #include "nsIFrame.h"
+#include "nsXPIDLString.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 // None so far.
@@ -97,6 +98,7 @@ nsBoxObject::Init(nsIContent* aContent, nsIPresShell* aShell)
 NS_IMETHODIMP
 nsBoxObject::SetDocument(nsIDocument* aDocument)
 {
+  mPresState = nsnull;
   if (aDocument) {
     nsCOMPtr<nsIPresShell> shell = getter_AddRefs(aDocument->GetShellAt(0));
     mPresShell = shell;
@@ -261,6 +263,66 @@ nsBoxObject::GetHeight(PRInt32* aResult)
   GetOffsetRect(rect);
   *aResult = rect.height;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxObject::GetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports** aResult)
+{
+  if (!mPresState) {
+    *aResult = nsnull;
+    return NS_OK;
+  }
+
+  nsAutoString propertyName(aPropertyName);
+  return mPresState->GetStatePropertyAsSupports(propertyName, aResult); // Addref here.
+}
+
+NS_IMETHODIMP
+nsBoxObject::SetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports* aValue)
+{
+  if (!mPresState)
+    NS_NewPresState(getter_AddRefs(mPresState));
+
+  nsAutoString propertyName(aPropertyName);
+  return mPresState->SetStatePropertyAsSupports(propertyName, aValue);
+}
+
+NS_IMETHODIMP
+nsBoxObject::GetProperty(const PRUnichar* aPropertyName, PRUnichar** aResult)
+{
+  if (!mPresState) {
+    *aResult = nsnull;
+    return NS_OK;
+  }
+
+  nsAutoString propertyName(aPropertyName);
+  nsAutoString result;
+  nsresult rv = mPresState->GetStateProperty(propertyName, result);
+  if (NS_FAILED(rv))
+    return rv;
+  *aResult = nsXPIDLString::Copy(result.GetUnicode());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxObject::SetProperty(const PRUnichar* aPropertyName, const PRUnichar* aPropertyValue)
+{
+  if (!mPresState)
+    NS_NewPresState(getter_AddRefs(mPresState));
+
+  nsAutoString propertyName(aPropertyName);
+  nsAutoString propertyValue(aPropertyValue);
+  return mPresState->SetStateProperty(propertyName, propertyValue);
+}
+
+NS_IMETHODIMP
+nsBoxObject::RemoveProperty(const PRUnichar* aPropertyName)
+{
+  if (!mPresState)
+    return NS_OK;
+
+  nsAutoString propertyName(aPropertyName);
+  return mPresState->RemoveStateProperty(propertyName);
 }
 
 /* string canCreateWrapper (in nsIIDPtr iid); */

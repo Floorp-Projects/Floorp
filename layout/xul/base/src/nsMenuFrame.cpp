@@ -1469,7 +1469,10 @@ nsMenuFrame::Execute()
   // Get our own content node and hold on to it to keep it from going away.
   nsCOMPtr<nsIContent> content = dont_QueryInterface(mContent);
 
-  // First hide all of the open menus.
+  // Deselect ourselves.
+  SelectMenu(PR_FALSE);
+
+  // Now hide all of the open menus.
   if (mMenuParent)
     mMenuParent->HideChain();
 
