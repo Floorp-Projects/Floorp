@@ -677,6 +677,18 @@ NS_IMETHODIMP nsView :: SetVisibility(nsViewVisibility aVisibility)
 
   mVis = aVisibility;
 
+  if (aVisibility == nsViewVisibility_kHide)
+  {
+    nsIView* grabbingView; //check to see if we are grabbing events
+    mViewManager->GetMouseEventGrabber(grabbingView);
+    if (grabbingView == this)
+    {
+      //if yes then we must release them before we become hidden and can't get them
+      PRBool boolResult;//not used
+      mViewManager->GrabMouseEvents(nsnull,boolResult);
+    }
+  }
+
   if (nsnull != mWindow)
   {
 #ifndef HIDE_ALL_WIDGETS
