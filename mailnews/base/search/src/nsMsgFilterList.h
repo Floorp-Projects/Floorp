@@ -29,6 +29,11 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 
+const PRInt16 kFileVersion = 8;
+const PRInt16 k60Beta1Version = 7;
+const PRInt16 k45Version = 6;
+
+
 ////////////////////////////////////////////////////////////////////////////////////////
 // The Msg Filter List is an interface designed to make accessing filter lists
 // easier. Clients typically open a filter list and either enumerate the filters,

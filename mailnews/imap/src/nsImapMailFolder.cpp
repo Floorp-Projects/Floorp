@@ -1814,8 +1814,7 @@ NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
           rootDir->GetFileSpec(&filterFile);
           // need a file spec for filters...
           filterFile += "rules.dat";
-          nsresult res;
-                    res = filterService->OpenFilterList(&filterFile, getter_AddRefs(m_filterList));
+          nsresult res = filterService->OpenFilterList(&filterFile, rootFolder, getter_AddRefs(m_filterList));
         }
       }
     }
@@ -1906,7 +1905,7 @@ NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
       PRUint32 msgFlags;
 
       newMsgHdr->GetFlags(&msgFlags);
-      if (!(msgFlags & MSG_FLAG_READ)) // only fire on unread msgs
+      if (!(msgFlags & (MSG_FLAG_READ || MSG_FLAG_IMAP_DELETED))) // only fire on unread msgs that haven't been deleted
       {
         rv = m_msgParser->GetAllHeaders(&headers, &headersSize);
 
@@ -2196,10 +2195,10 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
       case nsMsgFilterAction::MoveToFolder:
       {
         // if moving to a different file, do it.
-        PRUnichar *folderName = nsnull;
-        rv = GetName(&folderName);
+        nsXPIDLCString uri;
+        rv = GetURI(getter_Copies(uri));
 
-        if (value && nsCRT::strcasecmp(folderName, (char *) value))
+        if (value && nsCRT::strcasecmp((const char *) uri, (const char *) value))
         {
           msgHdr->GetFlags(&msgFlags);
 
@@ -2250,7 +2249,6 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
           }
 
         }
-        nsAllocator::Free(folderName);
       }
         break;
       case nsMsgFilterAction::MarkRead:
@@ -2371,7 +2369,7 @@ nsresult nsImapMailFolder::StoreImapFlags(imapMessageFlagsType flags, PRBool add
 
 nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
                          nsIMsgDatabase *sourceDB, 
-                         char *destFolder,
+                         char *destFolderUri,
                          nsIMsgFilter *filter)
 {
   nsresult err = NS_OK;
@@ -2381,22 +2379,15 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
   if (m_moveCoalescer)
   {
 
-    // look for matching imap folders, then pop folders
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    nsresult rv = GetServer(getter_AddRefs(server));
- 
-    nsCOMPtr<nsIFolder> rootFolder;
-    if (NS_SUCCEEDED(rv)) 
-      rv = server->GetRootFolder(getter_AddRefs(rootFolder));
+    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &err); 
+    nsCOMPtr<nsIRDFResource> res;
+    err = rdf->GetResource(destFolderUri, getter_AddRefs(res));
+    if (NS_FAILED(err))
+      return err;
 
-    if (!NS_SUCCEEDED(rv))
-      return rv;
-
-    nsCOMPtr <nsIFolder> destIFolder;
-    rootFolder->FindSubFolder (destFolder, getter_AddRefs(destIFolder));
-
-    nsCOMPtr <nsIMsgFolder> msgFolder;
-    msgFolder = do_QueryInterface(destIFolder);
+    nsCOMPtr<nsIMsgFolder> destIFolder(do_QueryInterface(res, &err));
+    if (NS_FAILED(err))
+      return err;        
 
     if (destIFolder)
     {
@@ -2405,11 +2396,11 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
       nsMsgKey keyToFilter;
       mailHdr->GetMessageKey(&keyToFilter);
 
-      if (sourceDB && msgFolder)
+      if (sourceDB && destIFolder)
       {
         PRBool imapDeleteIsMoveToTrash = DeleteIsMoveToTrash();
 
-        m_moveCoalescer->AddMove (msgFolder, keyToFilter);
+        m_moveCoalescer->AddMove (destIFolder, keyToFilter);
         // For each folder, we need to keep track of the ids we want to move to that
         // folder - we used to store them in the MSG_FolderInfo and then when we'd finished
         // downloading headers, we'd iterate through all the folders looking for the ones
@@ -2426,7 +2417,7 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
         {
         }
         
-        msgFolder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
+        destIFolder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
         
         if (imapDeleteIsMoveToTrash)  
           err = 0;

@@ -27,6 +27,8 @@
 #include "nsMsgFilterService.h"
 #include "nsFileStream.h"
 #include "nsMsgFilterList.h"
+#include "nsFileLocations.h"
+#include "nsSpecialSystemDirectory.h"
 
 NS_IMPL_ADDREF(nsMsgFilterService)
 NS_IMPL_RELEASE(nsMsgFilterService)
@@ -58,7 +60,7 @@ NS_IMETHODIMP nsMsgFilterService::QueryInterface(REFNSIID aIID, void** aResult)
 }   
 
 
-NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsFileSpec *filterFile, nsIMsgFilterList **resultFilterList)
+NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsFileSpec *filterFile, nsIMsgFolder *rootFolder, nsIMsgFilterList **resultFilterList)
 {
 	nsresult ret = NS_OK;
 
@@ -70,10 +72,19 @@ NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsFileSpec *filterFile, nsIMsgF
 	if (!filterList)
 		return NS_ERROR_OUT_OF_MEMORY;
 	NS_ADDREF(filterList);
+  filterList->SetFolder(rootFolder);
 	if (filterFile->GetFileSize() > 0)
 		ret = filterList->LoadTextFilters();
+  fileStream->close();
 	if (NS_SUCCEEDED(ret))
+  {
 		*resultFilterList = filterList;
+    if (filterList->GetVersion() != kFileVersion)
+    {
+
+      SaveFilterList(filterList, filterFile);
+    }
+  }
 	else
 		NS_RELEASE(filterList);
 	return ret;
@@ -89,11 +100,46 @@ NS_IMETHODIMP nsMsgFilterService::CloseFilterList(nsIMsgFilterList *filterList)
 NS_IMETHODIMP	nsMsgFilterService::SaveFilterList(nsIMsgFilterList *filterList, nsFileSpec *filterFile)
 {
 	nsresult ret = NS_OK;
+  nsCOMPtr <nsIFileSpec> tmpFiltersFile;
+  nsCOMPtr <nsIFileSpec> realFiltersFile;
+  nsCOMPtr <nsIFileSpec> parentDir;
 
-	nsIOFileStream *fileStream = new nsIOFileStream(*filterFile);
-	if (!fileStream)
+  nsSpecialSystemDirectory tmpFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+  tmpFile += "tmprules.dat";
+
+  ret = NS_NewFileSpecWithSpec(tmpFile, getter_AddRefs(tmpFiltersFile));
+
+  NS_ASSERTION(NS_SUCCEEDED(ret),"writing filters file: failed to append filename");
+  if (NS_FAILED(ret)) 
+    return ret;
+  if (NS_SUCCEEDED(ret))
+    ret = NS_NewFileSpecWithSpec(*filterFile, getter_AddRefs(realFiltersFile));
+
+	nsIOFileStream *tmpFileStream = nsnull;
+  
+  if (NS_SUCCEEDED(ret))
+    ret = realFiltersFile->GetParent(getter_AddRefs(parentDir));
+
+  if (NS_SUCCEEDED(ret))
+    tmpFileStream = new nsIOFileStream(tmpFile);
+	if (!tmpFileStream)
 		return NS_ERROR_OUT_OF_MEMORY;
+  ret = filterList->SaveToFile(tmpFileStream);
+  tmpFileStream->close();
 
+  if (NS_SUCCEEDED(ret))
+  {
+    // can't move across drives
+    ret = tmpFiltersFile->CopyToDir(parentDir);
+    if (NS_SUCCEEDED(ret))
+    {
+      filterFile->Delete(PR_FALSE);
+      parentDir->AppendRelativeUnixPath("tmprules.dat");
+      parentDir->Rename("rules.dat");
+      tmpFiltersFile->Delete(PR_FALSE);
+    }
+  }
+  NS_ASSERTION(NS_SUCCEEDED(ret), "error opening/saving filter list");
 	return ret;
 }
 

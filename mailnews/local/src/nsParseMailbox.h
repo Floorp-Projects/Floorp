@@ -173,7 +173,7 @@ public:
 	virtual PRInt32 HandleLine(char *line, PRUint32 line_length);
 
 	void			UpdateDBFolderInfo();
-	void			UpdateDBFolderInfo(nsIMsgDatabase *mailDB, const char *mailboxName);
+	void			UpdateDBFolderInfo(nsIMsgDatabase *mailDB);
 	void			UpdateStatusText (PRUint32 stringID);
 
 	// Update the progress bar based on what we know.

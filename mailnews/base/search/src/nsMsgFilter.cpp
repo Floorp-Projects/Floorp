@@ -24,6 +24,7 @@
 // this file implements the nsMsgFilterList interface 
 
 #include "msgCore.h"
+#include "nsMsgBaseCID.h"
 #include "nsIMsgHdr.h"
 #include "nsMsgFilterList.h"
 #include "nsMsgFilter.h"
@@ -32,6 +33,7 @@
 #include "nsMsgLocalSearch.h"
 #include "nsMsgSearchTerm.h"
 #include "nsXPIDLString.h"
+#include "nsIMsgAccountManager.h"
 
 static const char *kImapPrefix = "//imap:";
 
@@ -184,7 +186,7 @@ NS_IMETHODIMP nsMsgFilter::SetAction(nsMsgRuleActionType type, void *value)
 	switch (type)
 	{
 	case nsMsgFilterAction::MoveToFolder:
-		m_action.m_folderName = (const char *) value;
+		m_action.m_folderUri = (const char *) value;
 		break;
 	case nsMsgFilterAction::ChangePriority:
 		m_action.m_priority = (nsMsgPriority) (PRInt32)  value;
@@ -201,7 +203,7 @@ NS_IMETHODIMP nsMsgFilter::GetAction(nsMsgRuleActionType *type, void **value)
 	switch (m_action.m_type)
 	{
 	case nsMsgFilterAction::MoveToFolder:
-		* (const char **) value = m_action.m_folderName.GetBuffer();
+		* (const char **) value = m_action.m_folderUri.GetBuffer();
 		break;
 	case nsMsgFilterAction::ChangePriority:
 		* (nsMsgPriority *) value = m_action.m_priority;
@@ -325,37 +327,86 @@ void nsMsgFilter::SetFilterScript(nsCString *fileName)
 	m_scriptFileName = *fileName;
 }
 
-nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &relativePath)
+nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
 {
 
-//	m_action.m_folderName = relativePath;
-	// if relative path starts with kImap, this is a move to folder on the same server
-	if (relativePath.Find(kImapPrefix) == 0)
-	{
-		PRInt32 prefixLen = PL_strlen(kImapPrefix);
-		relativePath.Mid(m_action.m_originalServerPath, prefixLen, relativePath.Length() - prefixLen);
-		m_action.m_folderName = m_action.m_originalServerPath;
-		// convert the server path to the local full path
-//		MSG_IMAPFolderInfoMail *imapMailFolder = (filterList->GetFolderInfo()) ? filterList->GetFolderInfo()->GetIMAPFolderInfoMail() : (MSG_IMAPFolderInfoMail *)NULL;
-//		MSG_IMAPFolderInfoContainer *imapContainer = (imapMailFolder) ? imapMailFolder->GetIMAPContainer() : GetFilter()->GetMaster()->GetImapMailFolderTree();
+  PRInt16 filterVersion = kFileVersion;
+  if (m_filterList)
+    filterVersion = m_filterList->GetVersion();
+  if (filterVersion <= k60Beta1Version)
+  {
+    nsCOMPtr <nsIMsgFolder> rootFolder;
+    nsXPIDLCString folderUri;
 
-//		MSG_IMAPFolderInfoMail *imapFolder = NULL;
-//		if (imapContainer)
-//			imapFolder = GetFilter()->GetMaster()->FindImapMailFolder(imapContainer->GetHostName(), relativePath + nsCRT::strlen(MSG_Rule::kImapPrefix), NULL, PR_FALSE);
-//		if (imapFolder)
-//			m_action.m_value.m_folderName = nsCRT::strdup(imapFolder->GetPathname());
-//		else
-//		{
-			// did the user switch servers??
-			// we'll still save this filter, the filter code in the mail parser will handle this case
-//			m_action.m_value.m_folderName = nsCRT::strdup("");
-//		}
-	}
-	else
-//		m_action.m_value.m_folderName = PR_smprintf("%s/%s", master->GetPrefs()->GetFolderDirectory(), relativePath);
-		m_action.m_folderName = relativePath;
+    m_filterList->GetFolder(getter_AddRefs(rootFolder));
+
+	  // if relative path starts with kImap, this is a move to folder on the same server
+	  if (moveValue.Find(kImapPrefix) == 0)
+	  {
+		  PRInt32 prefixLen = PL_strlen(kImapPrefix);
+		  moveValue.Mid(m_action.m_originalServerPath, prefixLen, moveValue.Length() - prefixLen);
+
+      nsCOMPtr <nsIFolder> destIFolder;
+      if (rootFolder)
+      {
+        rootFolder->FindSubFolder (m_action.m_originalServerPath, getter_AddRefs(destIFolder));
+
+        nsCOMPtr <nsIMsgFolder> msgFolder;
+        msgFolder = do_QueryInterface(destIFolder);	
+        destIFolder->GetURI(getter_Copies(folderUri));
+		    m_action.m_folderUri = folderUri;
+        moveValue = folderUri;
+      }
+    }
+	  else
+    {
+      // start off leaving the value the same.
+      m_action.m_folderUri = moveValue;
+      nsresult rv = NS_OK;
+
+      nsCOMPtr <nsIFolder> localMailRoot;
+      rootFolder->GetURI(getter_Copies(folderUri));
+      // if the root folder is not imap, than the local mail root is the server root.
+      // otherwise, it's the migrated local folders.
+      if (nsCRT::strncmp("imap:", folderUri, 5))
+      {
+        localMailRoot = rootFolder;
+      }
+      else
+      {
+        NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                        NS_MSGACCOUNTMANAGER_PROGID, &rv);
+        if (NS_SUCCEEDED(rv))
+        {
+          nsCOMPtr <nsIMsgIncomingServer> server; 
+          rv = accountManager->GetLocalFoldersServer(getter_AddRefs(server)); 
+          if (NS_SUCCEEDED(rv) && server)
+          {
+            rv = server->GetRootFolder(getter_AddRefs(localMailRoot));
+          }
+        }
+      }
+      if (NS_SUCCEEDED(rv) && localMailRoot)
+      {
+        nsCOMPtr <nsIFolder> destIFolder;
+        localMailRoot->FindSubFolder (moveValue, getter_AddRefs(destIFolder));
+
+        if (destIFolder)
+        {
+          nsCOMPtr <nsIMsgFolder> msgFolder;
+          msgFolder = do_QueryInterface(destIFolder);	
+          destIFolder->GetURI(getter_Copies(folderUri));
+		      m_action.m_folderUri = folderUri;
+          moveValue = folderUri;
+        }
+      }
+    }
+  }
+  else
+    m_action.m_folderUri = moveValue;
+
 	return NS_OK;
-	// set m_action.m_value.m_folderName
+	// set m_action.m_value.m_folderUri
 }
 
 nsresult nsMsgFilter::SaveToTextFile(nsIOFileStream *stream)
@@ -387,8 +438,7 @@ nsresult nsMsgFilter::SaveRule()
 	{
 	case nsMsgFilterAction::MoveToFolder:
 		{
-		nsCAutoString imapTargetString(kImapPrefix);
-		imapTargetString += m_action.m_folderName;
+		nsCAutoString imapTargetString(m_action.m_folderUri);
 		err = filterList->WriteStrAttr(nsMsgFilterAttribActionValue, imapTargetString);
 		}
 		break;

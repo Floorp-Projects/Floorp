@@ -240,7 +240,7 @@ nsresult nsFilterTestDriver::OnOpenFilterFile()
 
 	if (filterFile.Exists())
 	{
-		nsresult res = m_filterService->OpenFilterList(&filterFile, getter_AddRefs(filterList));
+		nsresult res = m_filterService->OpenFilterList(&filterFile, nsnull, getter_AddRefs(filterList));
 		if (NS_SUCCEEDED(res))
 		{
 		}
@@ -259,7 +259,7 @@ nsresult nsFilterTestDriver::OnWriteFilterList()
 
 	if (filterFile.Exists())
 	{
-		nsresult res = m_filterService->OpenFilterList(&filterFile, getter_AddRefs(filterList));
+		nsresult res = m_filterService->OpenFilterList(&filterFile, nsnull, getter_AddRefs(filterList));
 		if (NS_SUCCEEDED(res))
 		{
 			filterFile.MakeUnique();

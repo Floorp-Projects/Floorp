@@ -46,13 +46,16 @@
 #include "nsIMsgFilterList.h"
 #include "nsIMsgFilter.h"
 #include "nsIIOService.h"
+#include "nsRDFCID.h"
 #include "nsIPref.h"
+#include "nsIRDFService.h"
 
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS_INHERITED(nsMsgMailboxParser, nsParseMailMessageState, nsIStreamListener);
@@ -306,11 +309,11 @@ void nsMsgMailboxParser::FreeBuffers()
 
 void nsMsgMailboxParser::UpdateDBFolderInfo()
 {
-	UpdateDBFolderInfo(m_mailDB, m_mailboxName);
+	UpdateDBFolderInfo(m_mailDB);
 }
 
 // update folder info in db so we know not to reparse.
-void nsMsgMailboxParser::UpdateDBFolderInfo(nsIMsgDatabase *mailDB, const char *mailboxName)
+void nsMsgMailboxParser::UpdateDBFolderInfo(nsIMsgDatabase *mailDB)
 {
 	// ### wrong - use method on db.
 	mailDB->SetSummaryValid(PR_TRUE);
@@ -1450,7 +1453,7 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
 		// need a file spec for filters...
 		filterFile += "rules.dat";
 		nsresult res;
-        res = filterService->OpenFilterList(&filterFile, getter_AddRefs(m_filterList));
+        res = filterService->OpenFilterList(&filterFile, rootMsgFolder, getter_AddRefs(m_filterList));
 	}
 
 	m_logFile = nsnull;
@@ -1798,16 +1801,31 @@ int nsParseNewMailState::MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr)
 
 nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 											   nsIMsgDatabase *sourceDB, 
-											   char *destFolder,
+											   char *destFolderUri,
 											   nsIMsgFilter *filter)
 {
-	int err = 0;
+	nsresult err = 0;
 	nsIOFileStream *destFile;
 
-	nsCOMPtr <nsIFolder> destIFolder;
-	nsCOMPtr <nsIMsgFolder> lockedFolder;
-	m_rootFolder->FindSubFolder (destFolder, getter_AddRefs(destIFolder));
-	lockedFolder = do_QueryInterface(destIFolder);
+  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &err); 
+  nsCOMPtr<nsIRDFResource> res;
+  err = rdf->GetResource(destFolderUri, getter_AddRefs(res));
+  if (NS_FAILED(err))
+    return err;
+
+  nsCOMPtr<nsIMsgFolder> destIFolder(do_QueryInterface(res, &err));
+  if (NS_FAILED(err))
+    return err;        
+
+  nsCOMPtr <nsIFileSpec> destIFolderSpec;
+
+	nsFileSpec destFolderSpec;
+  destIFolder->GetPath(getter_AddRefs(destIFolderSpec));
+	err = destIFolderSpec->GetFileSpec(&destFolderSpec);
+
+  if (!NS_SUCCEEDED(err))
+    return err;
+
 	nsISupports *myThis;
 
 	QueryInterface(NS_GET_IID(nsISupports), (void **) &myThis);
@@ -1816,7 +1834,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 
 //	NS_RELEASE(myThis);
 	// Make sure no one else is writing into this folder
-	if (lockedFolder && (err = lockedFolder->AcquireSemaphore (myISupports)) != 0)
+	if (destIFolder && (err = destIFolder->AcquireSemaphore (myISupports)) != 0)
 		return err;
 
 	NS_ASSERTION(m_inboxFileStream != 0, "no input file stream");
@@ -1825,8 +1843,8 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 #ifdef DEBUG_bienvenu
 		NS_ASSERTION(PR_FALSE, "couldn't get source file in move filter");
 #endif
-		if (lockedFolder)
-			lockedFolder->ReleaseSemaphore (myISupports);
+		if (destIFolder)
+			destIFolder->ReleaseSemaphore (myISupports);
 
 		return NS_MSG_FOLDER_UNREADABLE;	// ### dmb
 	}
@@ -1837,12 +1855,6 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	m_inboxFileStream->seek(PR_SEEK_SET, messageOffset);
 	int newMsgPos;
 
-	nsFileSpec rootDirectory;
-	m_inboxFileSpec.GetParent(rootDirectory);
-	nsFileSpec destFolderSpec(rootDirectory);
-	// ### Not sure this will work if destFolder is a sub-folder
-//	destFolderSpec.SetLeafName(destFolder);
-	destFolderSpec += destFolder;
 	destFile = new nsIOFileStream(destFolderSpec, PR_WRONLY | PR_CREATE_FILE);
 
 	if (!destFile) 
@@ -1850,8 +1862,8 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 #ifdef DEBUG_bienvenu
 		NS_ASSERTION(PR_FALSE, "out of memory");
 #endif
-		if (lockedFolder)
-			lockedFolder->ReleaseSemaphore (myISupports);
+		if (destIFolder)
+			destIFolder->ReleaseSemaphore (myISupports);
 		return  NS_MSG_ERROR_WRITING_MAIL_FOLDER;
 	}
 
@@ -1898,8 +1910,8 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 			// ### how to do this with a stream?
 			destFolderSpec.Truncate(newMsgPos);
 
-			if (lockedFolder)
-				lockedFolder->ReleaseSemaphore(myISupports);
+			if (destIFolder)
+				destIFolder->ReleaseSemaphore(myISupports);
 
 			if (destMailDB)
 				destMailDB->Close(PR_TRUE);
@@ -1947,22 +1959,22 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	if (m_inboxFileStream)
 		m_inboxFileStream->seek(m_inboxFileSpec.GetFileSize());
 
-	if (lockedFolder)
-		lockedFolder->ReleaseSemaphore (myISupports);
+	if (destIFolder)
+		destIFolder->ReleaseSemaphore (myISupports);
 
 	// tell parser that we've truncated the Inbox
 	mailHdr->GetMessageOffset(&messageOffset);
 	nsParseMailMessageState::Init(messageOffset);
 
-	if (lockedFolder)
-		lockedFolder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
+	if (destIFolder)
+		destIFolder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
 
 	if (destMailDB != nsnull)
 	{
 		// update the folder size so we won't reparse.
-		UpdateDBFolderInfo(destMailDB, destFolder);
-		if (lockedFolder != nsnull)
-			lockedFolder->SummaryChanged();
+		UpdateDBFolderInfo(destMailDB);
+		if (destIFolder != nsnull)
+			destIFolder->SummaryChanged();
 
 		destMailDB->Close(PR_TRUE);
 	}

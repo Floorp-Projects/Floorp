@@ -36,7 +36,7 @@ public:
         nsMsgRuleActionType      m_type;
 		// this used to be a union - why bother?
         nsMsgPriority	m_priority;  /* priority to set rule to */
-        nsCString		m_folderName;    /* Or some folder identifier, if such a thing is invented */
+        nsCString		m_folderUri;    /* Or some folder identifier, if such a thing is invented */
         nsCString		m_originalServerPath;
 } ;
 

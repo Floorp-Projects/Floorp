@@ -2265,7 +2265,7 @@ nsresult nsMessengerMigrator::MigrateFilters(nsIMsgIncomingServer *aServer)
 		if (NS_FAILED(rv)) return rv;
 
 		// open will migrate the filters.
-		rv = filterService->OpenFilterList(&filterFileSpec, getter_AddRefs(filterList));
+		rv = filterService->OpenFilterList(&filterFileSpec, folder, getter_AddRefs(filterList));
 		if (NS_FAILED(rv)) return rv;
 		if (!filterList) return NS_ERROR_FAILURE;
 		

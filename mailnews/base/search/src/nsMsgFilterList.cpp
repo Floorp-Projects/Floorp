@@ -31,9 +31,6 @@
 #include "nsMsgUtils.h"
 #include "nsMsgSearchTerm.h"
 
-const PRInt16 kFileVersion = 7;
-const PRInt16 k45Version = 6;
-
 
 nsMsgFilterList::nsMsgFilterList(nsIOFileStream *fileStream)
 {
@@ -86,10 +83,20 @@ NS_IMETHODIMP nsMsgFilterList::SetLoggingEnabled(PRBool enable)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilterList::GetFolderForFilterList(class nsIMsgFolder **aFolder)
+NS_IMETHODIMP nsMsgFilterList::GetFolder(nsIMsgFolder **aFolder)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG(aFolder);
+	*aFolder = m_folder;
+  NS_IF_ADDREF(*aFolder);
+	return NS_OK;
 }
+
+NS_IMETHODIMP nsMsgFilterList::SetFolder(nsIMsgFolder *aFolder)
+{
+  m_folder = aFolder;
+	return NS_OK;
+}
+
 
 NS_IMETHODIMP nsMsgFilterList::GetLoggingEnabled(PRBool *aResult)
 {

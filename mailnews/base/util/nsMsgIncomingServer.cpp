@@ -903,7 +903,7 @@ nsMsgIncomingServer::GetFilterList(nsIMsgFilterList **aResult)
           do_GetService(kMsgFilterServiceCID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
       
-      rv = filterService->OpenFilterList(&filterFile, getter_AddRefs(mFilterList));
+      rv = filterService->OpenFilterList(&filterFile, msgFolder, getter_AddRefs(mFilterList));
       NS_ENSURE_SUCCESS(rv, rv);
   }
   

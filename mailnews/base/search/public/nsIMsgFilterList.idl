@@ -37,7 +37,7 @@ interface nsIOFileStream;
 [scriptable, uuid(08ecbcb4-0493-11d3-a50a-0060b0fc04b7)]
 interface nsIMsgFilterList : nsISupports {
 
-    readonly attribute nsIMsgFolder folderForFilterList;
+    attribute nsIMsgFolder folder;
     readonly attribute unsigned long filterCount;
     nsIMsgFilter GetFilterAt(in unsigned long filterIndex);
 	/* these methods don't delete filters - they just change the list.
