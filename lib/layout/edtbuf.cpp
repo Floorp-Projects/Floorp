@@ -2864,7 +2864,7 @@ EDT_ClipboardResult CEditBuffer::DeleteChar(XP_Bool bForward, XP_Bool bTyping)
             }
         }
         // After deleting at a boundary between elements, 
-        // caret is always at the end of the current element
+        // caret is always at the end of the current element to the left of caret.
         // Check for this and move to the beginning of next element 
         //   and set flag to use format of this element
         // Note that testing for bForward means Backspace key will

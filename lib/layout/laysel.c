@@ -1229,10 +1229,12 @@ lo_BumpPosition(MWContext *context, lo_DocState *state, LO_Position* position, B
 PRIVATE
 Bool lo_ValidEditableElement(MWContext *context, LO_Element* eptr)
 {
-    return lo_EditableElement(eptr->type) &&
-        ( (!EDT_IS_EDITOR(context) ) ||
-            (eptr->lo_any.edit_element != 0 &&
-             eptr->lo_any.edit_offset >= 0));
+    if( eptr )
+        return lo_EditableElement(eptr->type) &&
+            ( (!EDT_IS_EDITOR(context) ) ||
+                (eptr->lo_any.edit_element != 0 &&
+                 eptr->lo_any.edit_offset >= 0));
+    return FALSE;
 }
 
 PRIVATE
