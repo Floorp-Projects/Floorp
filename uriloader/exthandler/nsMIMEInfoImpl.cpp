@@ -32,21 +32,25 @@ nsMIMEInfoImpl::nsMIMEInfoImpl(const char *aMIMEType) {
     mMIMEType = getter_AddRefs(NS_NewAtom(aMIMEType));
 }
 
+PRUint32
+nsMIMEInfoImpl::GetExtCount() {
+    return mExtensions.Count();
+}
+
 NS_IMETHODIMP
 nsMIMEInfoImpl::GetFileExtensions(PRInt32 *elementCount, char ***extensions) {
-    PRUint32 extCount = mExtensions.Count();
-    if (extCount < 1) return NS_ERROR_NOT_INITIALIZED;
+    *elementCount = mExtensions.Count();
+    if (*elementCount < 1) return NS_OK;;
 
-    char **_retExts = (char**)nsAllocator::Alloc(extCount*2*sizeof(char*));
+    char **_retExts = (char**)nsAllocator::Alloc((*elementCount)*2*sizeof(char*));
     if (!_retExts) return NS_ERROR_OUT_OF_MEMORY;
 
-    for (PRUint8 i=0; i < extCount; i++) {
-        nsString* ext = (nsString*)mExtensions.StringAt(i);
+    for (PRUint8 i=0; i < *elementCount; i++) {
+        nsString* ext = (nsString*)mExtensions.CStringAt(i);
         _retExts[i] = ext->ToNewCString();
         if (!_retExts[i]) return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    *elementCount = extCount;
     *extensions   = _retExts;
 
     return NS_OK;
@@ -62,7 +66,7 @@ nsMIMEInfoImpl::ExtensionExists(const char *aExtension, PRBool *_retval) {
     if (!aExtension) return NS_ERROR_NULL_POINTER;
 
     for (PRUint8 i=0; i < extCount; i++) {
-        nsString* ext = (nsString*)mExtensions.StringAt(i);
+        nsString* ext = (nsString*)mExtensions.CStringAt(i);
         if (ext->Equals(aExtension)) {
             found = PR_TRUE;
             break;
@@ -78,7 +82,7 @@ nsMIMEInfoImpl::FirstExtension(char **_retval) {
     PRUint32 extCount = mExtensions.Count();
     if (extCount < 1) return NS_ERROR_NOT_INITIALIZED;
 
-    *_retval = (mExtensions.StringAt(0))->ToNewCString();
+    *_retval = (mExtensions.CStringAt(0))->ToNewCString();
     if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;    
 }

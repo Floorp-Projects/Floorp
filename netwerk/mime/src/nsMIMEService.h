@@ -29,8 +29,10 @@
 #define ___nsIMIMEService__h___
 
 #include "nsIMIMEService.h"
+#include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsHashtable.h"
+#include "nsISupportsArray.h"
 
 
 class nsMIMEService : public nsIMIMEService {
@@ -45,18 +47,15 @@ class nsMIMEService : public nsIMIMEService {
     static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
 
 private:
-    nsresult AddMapping(const char* mimeType, 
-                        const char* extension,
-                        const char* description,
-                        nsIURI* dataURI = nsnull);
-    nsresult AppendExtension(const char* mimeType, const char* extension);
-
     nsresult InitFromURI(nsIURI *aUri);
     nsresult InitFromFile(const char *aFileName);
     nsresult InitFromHack();
 
     
-    nsHashtable             *mInfoObjects;
+    nsHashtable                 *mInfoObjects; // used for fast access and
+                                               // multi index lookups
+
+    nsCOMPtr<nsISupportsArray>   mInfoArray;   // used for enumeration
 };
 
 #endif // ___nsIMIMEService__h___

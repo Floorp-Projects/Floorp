@@ -63,8 +63,12 @@ nsMIMEService::~nsMIMEService() {
 
 nsresult
 nsMIMEService::Init() {
+    nsresult rv = NS_OK;
     mInfoObjects = new nsHashtable();
     if (!mInfoObjects) return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = NS_NewISupportsArray(getter_AddRefs(mInfoArray));
+    if (NS_FAILED(rv)) return rv;
 
     return InitFromHack();
 }
@@ -96,110 +100,194 @@ nsMIMEService::InitFromFile(const char *aFileName) {
 
 }
 
-// Call this first (perhaps only once) to create the initial nsMIMEInfo object
-nsresult
+NS_IMETHODIMP
 nsMIMEService::AddMapping(const char* mimeType, 
                           const char* extension,
                           const char* description,
                           nsIURI* dataURI)
 {
+    nsresult rv = NS_OK;
     // setup the new MIMEInfo object.
     nsMIMEInfoImpl* anInfo = new nsMIMEInfoImpl(mimeType);
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
 
-    anInfo->mExtensions.AppendString(extension);
+    anInfo->mExtensions.AppendCString(extension);
     anInfo->mDescription = description;
     anInfo->mURI = dataURI;
 
-    // The entry is mapped many-to-one.
+    // The entry is mapped many-to-one and the MIME type is the root mapping.
+    
+    // First remove any existing mapping.
+    rv = RemoveMapping(mimeType);
+    if (NS_FAILED(rv)) return rv;
 
+    // Next add the new root MIME mapping.
     nsStringKey key(mimeType);
     nsMIMEInfoImpl* oldInfo = (nsMIMEInfoImpl*)mInfoObjects->Put(&key, anInfo);
-    NS_IF_RELEASE(oldInfo);
+    NS_ASSERTION(!oldInfo, "we just removed the entry, we shouldn't have one");
     NS_ADDREF(anInfo);
 
+    rv = mInfoArray->AppendElement(anInfo); // update the root array.
+    if (NS_FAILED(rv)) return rv;
+
+    // Finally add an extension mapping.
     key = extension;
     oldInfo = (nsMIMEInfoImpl*)mInfoObjects->Put(&key, anInfo);
-    NS_IF_RELEASE(oldInfo);
+    NS_ASSERTION(!oldInfo, "file extension mappings should have been cleaned up in the RemoveMapping call");
     NS_ADDREF(anInfo);
 
     return NS_OK;
 }
 
-// Call this for subsequent extensions to be mapped to the MIME type.
-// You must call AddMapping() for a given MIME type *before* calling this.
-nsresult
+// used to cleanup any file extension mappings when 
+// a root MIME entry is removed.
+PRBool removeExts(nsCString& aElement, void *aData) {
+    nsHashtable* infoObjects = (nsHashtable*)aData;
+    NS_ASSERTION(infoObjects, "hash table botched up");
+
+    nsStringKey key(aElement);
+    nsMIMEInfoImpl* info = (nsMIMEInfoImpl*)infoObjects->Remove(&key);
+    NS_RELEASE(info);
+    return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsMIMEService::RemoveMapping(const char* aMIMEType) {
+    nsresult rv = NS_OK;
+    nsStringKey key(aMIMEType);
+
+    // First remove the root MIME mapping.
+    nsMIMEInfoImpl* info = (nsMIMEInfoImpl*)mInfoObjects->Remove(&key);
+    if (!info) return NS_OK;
+
+    rv = mInfoArray->RemoveElement(info); // update the root array.
+    if (NS_FAILED(rv)) return rv;
+
+    // Next remove any file association mappings.
+    rv = info->mExtensions.EnumerateForwards(removeExts, mInfoObjects);
+    NS_RELEASE(info);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMIMEService::AppendExtension(const char* mimeType, const char* extension) {
     nsStringKey key(mimeType);
 
     nsMIMEInfoImpl* info = (nsMIMEInfoImpl*)mInfoObjects->Get(&key);
-    NS_ASSERTION(info, "only call AppendExtension *after* a call to AddMapping");
+    if (!info) return NS_ERROR_FAILURE;
 
-    info->mExtensions.AppendString(extension);
+    info->mExtensions.AppendCString(extension);
 
-    // Add another mapping.
+    // Add another file extension mapping.
     key = extension;
     nsMIMEInfoImpl* oldInfo = (nsMIMEInfoImpl*)mInfoObjects->Put(&key, info);
-    NS_IF_RELEASE(oldInfo);
+    NS_IF_RELEASE(oldInfo); // overwrite any existing mapping.
     NS_ADDREF(info);
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMIMEService::RemoveExtension(const char* aExtension) {
+    nsresult rv = NS_OK;
+    nsStringKey key(aExtension);
+
+    // First remove the extension mapping.
+    nsMIMEInfoImpl* info = (nsMIMEInfoImpl*)mInfoObjects->Remove(&key);
+    if (!info) return NS_ERROR_FAILURE;
+    
+    // Next remove the root MIME mapping from the array and hash
+    // IFF this was the only file extension mapping left.
+    PRBool removed = info->mExtensions.RemoveCString(key.GetString());
+    NS_ASSERTION(removed, "mapping problem");
+
+    if (info->GetExtCount() == 0) {
+        // it's empty, remove the root mapping from hash and array.
+        nsXPIDLCString mimeType;
+        rv = info->GetMIMEType(getter_Copies(mimeType));
+        if (NS_FAILED(rv)) return rv;
+
+        key = (const char*)mimeType;
+        nsMIMEInfoImpl* rootEntry = (nsMIMEInfoImpl*)mInfoObjects->Remove(&key);
+        NS_ASSERTION(rootEntry, "mapping miss-hap");
+
+        rv = mInfoArray->RemoveElement(rootEntry); // update the root array
+        if (NS_FAILED(rv)) return rv;
+
+        NS_RELEASE(rootEntry);
+    }
+    
+    NS_RELEASE(info);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMIMEService::EnumerateEntries(nsIBidirectionalEnumerator* *aEnumerator) {
+    return NS_NewISupportsArrayEnumerator(mInfoArray, aEnumerator);
+}
+
+NS_IMETHODIMP
+nsMIMEService::Serialize() {
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
 nsMIMEService::InitFromHack() {
     nsresult rv;
 
-    rv = AddMapping("text/plain", "txt", "Text File");
+    rv = AddMapping("text/plain", "txt", "Text File", nsnull);
     if (NS_FAILED(rv)) return rv;
     rv = AppendExtension("text/plain", "text");
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("application/octet-stream", "exe", "Binary Executable");
+    rv = AddMapping("application/octet-stream", "exe", "Binary Executable", nsnull);
     if (NS_FAILED(rv)) return rv;
     rv = AppendExtension("application/octet-stream", "bin");
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("text/html", "htm", "Hyper Text Markup Language");
+    rv = AddMapping("text/html", "htm", "Hyper Text Markup Language", nsnull);
     if (NS_FAILED(rv)) return rv;
     rv = AppendExtension("text/html", "html");
     if (NS_FAILED(rv)) return rv;
     rv = AppendExtension("text/html", "shtml");
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("text/rdf", "rdf", "Resource Description Framework");
+    rv = AddMapping("text/rdf", "rdf", "Resource Description Framework", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("text/xul", "xul", "XML-Based User Interface Language");
+    rv = AddMapping("text/xul", "xul", "XML-Based User Interface Language", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("text/xml", "xml", "Extensible Markup Language");
+    rv = AddMapping("text/xml", "xml", "Extensible Markup Language", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("text/css", "css", "Style Sheet");
+    rv = AddMapping("text/css", "css", "Style Sheet", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("application/x-javascript", "js", "Javascript Source File");
+    rv = AddMapping("application/x-javascript", "js", "Javascript Source File", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("message/rfc822", "eml", "RFC-822 data");
+    rv = AddMapping("message/rfc822", "eml", "RFC-822 data", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("image/gif", "gif", "GIF Image");
+    rv = AddMapping("image/gif", "gif", "GIF Image", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("image/jpeg", "jpeg", "JPEG Image");
+    rv = AddMapping("image/jpeg", "jpeg", "JPEG Image", nsnull);
     if (NS_FAILED(rv)) return rv;
     rv = AppendExtension("image/jpeg", "jpg");
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("image/png", "png", "PNG Image");
+    rv = AddMapping("image/png", "png", "PNG Image", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("image/x-jg", "art", "ART Image");
+    rv = AddMapping("image/x-jg", "art", "ART Image", nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping("image/tiff", "tiff", "TIFF Image");
+    rv = AddMapping("image/tiff", "tiff", "TIFF Image", nsnull);
     if (NS_FAILED(rv)) return rv;
     rv = AppendExtension("image/tiff", "tif");
     if (NS_FAILED(rv)) return rv;
