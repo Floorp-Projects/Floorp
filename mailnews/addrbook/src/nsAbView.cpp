@@ -625,6 +625,9 @@ NS_IMETHODIMP nsAbView::SortBy(const PRUnichar *colID, const PRUnichar *sortDir)
     sortColumn = colID;
 
   PRInt32 i;
+  // this function does not optimize for the case when sortColumn and sortDirection
+  // are identical since the last call, the caller is responsible optimizing
+  // for that case
 
   // if we are sorting by how we are already sorted, 
   // and just the sort direction changes, just reverse
@@ -632,7 +635,7 @@ NS_IMETHODIMP nsAbView::SortBy(const PRUnichar *colID, const PRUnichar *sortDir)
   // note, we'll call SortBy() with the existing sort column and the
   // existing sort direction, and that needs to do a complete resort.
   // for example, we do that when the PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST changes
-  if (!nsCRT::strcmp(mSortColumn.get(),sortColumn.get()) && !nsCRT::strcmp(mSortDirection.get(), sortDir)) {
+  if (!nsCRT::strcmp(mSortColumn.get(),sortColumn.get()) && nsCRT::strcmp(mSortDirection.get(), sortDir)) {
     PRInt32 halfPoint = count / 2;
     for (i=0; i < halfPoint; i++) {
       // swap the elements.

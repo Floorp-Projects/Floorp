@@ -60,6 +60,11 @@ interface nsIAbView : nsISupports
     wstring init(in string URI, in nsIAbViewListener abViewListener, in wstring sortColumn, in wstring sortDirection);
     void close();
 
+    /**
+     * sortBy does not optimize for the case when sortColumn and sortDirection
+     * is identical since the last call, the caller is responsible optimizing
+     * for that case
+     */
     void sortBy(in wstring sortColumn, in wstring sortDirection);
     readonly attribute string URI;
     readonly attribute AString sortColumn;
