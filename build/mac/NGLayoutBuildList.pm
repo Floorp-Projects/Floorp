@@ -288,6 +288,7 @@ sub BuildClientDist()
 	InstallFromManifest(":mozilla:xpcom:ds:MANIFEST_IDL",							"$distdirectory:idl:");
 
 	BuildOneProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp", 						"headers", "", 0, 0, 0);
+	BuildOneProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp",							"xpcom.xpt", "", 1, 0, 1);
 
 	InstallFromManifest(":mozilla:xpcom:base:MANIFEST",								"$distdirectory:xpcom:");
 	InstallFromManifest(":mozilla:xpcom:components:MANIFEST",						"$distdirectory:xpcom:");
@@ -327,6 +328,7 @@ sub BuildClientDist()
 	#XPCONNECT	
 	InstallFromManifest(":mozilla:js:src:xpconnect:idl:MANIFEST",					"$distdirectory:idl:");
 	BuildOneProject(":mozilla:js:macbuild:XPConnectIDL.mcp", 						"headers", "", 0, 0, 0);
+	BuildOneProject(":mozilla:js:macbuild:XPConnectIDL.mcp", 						"xpconnect.xpt", "", 1, 0, 1);
 	InstallFromManifest(":mozilla:js:src:xpconnect:public:MANIFEST",				"$distdirectory:xpconnect:");
 
 	#CAPS
@@ -437,7 +439,10 @@ sub BuildClientDist()
       
 	#WIDGET
     InstallFromManifest(":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:");
+    InstallFromManifest(":mozilla:widget:public:MANIFEST_IDL",						"$distdirectory:idl:");
     InstallFromManifest(":mozilla:widget:src:mac:MANIFEST",							"$distdirectory:widget:");
+	BuildOneProject(":mozilla:widget:macbuild:widgetIDL.mcp", 						"headers", "", 0, 0, 0);
+	BuildOneProject(":mozilla:widget:macbuild:widgetIDL.mcp", 						"widget.xpt", "", 1, 0, 1);
 
     #RDF
     InstallFromManifest(":mozilla:rdf:base:idl:MANIFEST",							"$distdirectory:idl:");
@@ -448,6 +453,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:rdf:datasource:public:MANIFEST",					"$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:build:MANIFEST",								"$distdirectory:rdf:");
 	BuildOneProject(":mozilla:rdf:macbuild:RDFIDL.mcp", 							"headers", "", 0, 0, 0);
+	BuildOneProject(":mozilla:rdf:macbuild:RDFIDL.mcp",								"rdf.xpt", "", 1, 0, 1);
     
     #BRPROF
     InstallFromManifest(":mozilla:rdf:brprof:public:MANIFEST",						"$distdirectory:brprof:");
@@ -731,15 +737,7 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:modules:libreg:macbuild:libreg.mcp",				"libreg$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
 
 	BuildOneProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",						"xpcom$D.shlb", "xpcom.toc", 1, $main::ALIAS_SYM_FILES, 0);
-	
-	# This next line builds the dummy base shlb. On 99/05/24 :mozilla:base: has gone away and its code
-	# is now included in the xpcom library. But many projects still link with base, and it is faster to
-	# make a dummy base library than to remove base from all the projects in the tree. Eventually, though,
-	# we want to do this.
-	BuildOneProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",						"base$D.shlb", "", 1, 0, 0);
-	
-	BuildOneProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp",						"xpcom.xpt", "", 1, 0, 1);
-
+		
 	BuildOneProject(":mozilla:js:macbuild:JavaScript.mcp",						"JavaScript$D.shlb", "JavaScript.toc", 1, $main::ALIAS_SYM_FILES, 0);
 	
 	BuildOneProject(":mozilla:js:macbuild:LiveConnect.mcp",						"LiveConnect$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
@@ -757,7 +755,6 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:profile:macbuild:profile.mcp",					"profile$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
 	BuildOneProject(":mozilla:js:macbuild:XPConnect.mcp",						"XPConnect$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:js:macbuild:XPConnectIDL.mcp", 					"xpconnect.xpt", "", 1, 0, 1);
 
 	BuildOneProject(":mozilla:modules:libutil:macbuild:libutil.mcp",			"libutil$D.shlb", "libutil.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
@@ -901,7 +898,6 @@ sub MakeResourceAliases()
 	my($rdf_dir) = "$resource_dir" . "rdf:";
 	BuildFolderResourceAliases(":mozilla:rdf:resources:",								"$rdf_dir");
 
-	BuildOneProject(":mozilla:rdf:macbuild:RDFIDL.mcp",									"rdf.xpt", "", 1, 0, 1);
 	
 	my($profile_dir) = "$resource_dir" . "profile:";
 	BuildFolderResourceAliases(":mozilla:profile:resources:",							"$profile_dir");
