@@ -415,7 +415,7 @@ depend::
 #// DEPEND
 #//------------------------------------------------------------------------
 
-MAKEDEP=$(MOZ_TOOLS)\makedep.exe
+MAKEDEP=$(MOZ_SRC)\mozilla\config\makedep.exe
 MAKEDEPFILE=.\$(OBJDIR:/=\)\make.dep
 
 MAKEDEPDETECT=$(OBJS)
@@ -436,8 +436,6 @@ $(OBJS)
 !IF EXIST($(MAKEDEPFILE)) 
 !INCLUDE <$(MAKEDEPFILE)>
 !ENDIF
-
-
 
 export:: $(DIRS)
 
