@@ -1696,6 +1696,7 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
 
   nsresult rv;
 
+#if 0 // Disabled to see if this is what cost us 2% perf
   PRUint32 appType = nsIDocShell::APP_TYPE_UNKNOWN;
 
   {
@@ -1724,6 +1725,7 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
       return PR_FALSE;
     }
   }
+#endif
 
   PRInt16 decision = nsIContentPolicy::ACCEPT;
 
