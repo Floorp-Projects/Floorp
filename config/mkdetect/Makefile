@@ -72,6 +72,7 @@ clean:
 	@$(DETECT_GLIBC) --cleanup
 
 clobber: clean
+realclean: clean
 
 # This is needed for DETECT_MOTIF to work
 X11_INCLUDE_FLAGS=$(shell $(DETECT_X11) -if)
