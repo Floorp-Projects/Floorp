@@ -63,6 +63,12 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
   font-weight: inherit;
 }
 
+.menu-description {
+  font-style: italic;
+  color: GrayText;
+  margin-left: 1ex !important;
+}
+
 .menu-accel,
 .menu-iconic-accel {
   margin: 0px 2px 0px 7px !important;

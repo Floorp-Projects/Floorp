@@ -275,6 +275,10 @@ menuitem.menuitem-iconic {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
 }
 
+menuitem[description] {
+  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic-desc-noaccel");
+}
+
 menuitem[type="checkbox"],
 menuitem[type="radio"] {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
@@ -768,6 +772,10 @@ colorpicker[type="button"] {
 
 menulist {
   -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist");
+}
+
+menulist[type="description"] {
+  -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-description");
 }
 
 menulist[editable] {

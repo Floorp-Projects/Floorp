@@ -56,6 +56,12 @@ menulist {
   margin: 0 2px 0 0 !important;
 }
 
+.menulist-description {
+  font-style: italic;
+  color: #5D616E;
+  margin-left: 1em !important;
+}
+
 .menulist-icon {
   padding-right: 2px;
 }

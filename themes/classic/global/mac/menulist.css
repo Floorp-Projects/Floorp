@@ -68,6 +68,12 @@ menulist {
   margin: 1px 3px !important;
 }
 
+.menulist-description {
+  font-style: italic;
+  color: GrayText;
+  margin-left: 1ex !important;
+}
+
 /* ..... disabled state ..... */
 
 menulist[disabled="true"] {
