@@ -44,6 +44,11 @@ var gOutputAbsoluteLinks = 128;
 var gOutputEncodeEntities = 256;
 var gStringBundle;
 var gValidationError = false;
+var gIOService;
+var gOS = "";
+const gWin = "Win";
+const gUNIX = "UNIX";
+const gMac = "Mac";
 
 // Use for 'defaultIndex' param in InitPixelOrPercentMenulist
 var gPixel = 0;
@@ -1171,4 +1176,366 @@ function TextIsURI(selectedText)
                       ^ldap:|^ldaps:|^gopher:|^finger:|^javascript:/);
   }
   return false;
+}
+
+function SetRelativeCheckbox()
+{
+  var checkbox = document.getElementById("MakeRelativeCheckbox");
+  if (!checkbox)
+    return;
+
+  var input =  document.getElementById(checkbox.getAttribute("for"));
+  if (!input)
+    return;
+
+  var url = TrimString(input.value);
+  var urlScheme = GetScheme(url);
+
+  // Check it if url is relative (no scheme).
+  checkbox.checked = url.length > 0 && !urlScheme;
+
+  // Now do checkbox enabling:
+  var enable = false;
+
+  var docUrl = GetDocumentBaseUrl();
+  var docScheme = GetScheme(docUrl);
+
+  if (url && docUrl && docScheme)
+  {
+    if (urlScheme)
+    {
+      // Url is absolute, scheme and host must be the same
+      if (urlScheme == docScheme)
+      {
+        var urlHost = GetHost(url);
+        var docHost = GetHost(docUrl);
+        enable = (urlHost == docHost);
+      }
+    }
+    else
+    {
+      // Url is relative
+      // Check if url is a named anchor
+      //  but document doesn't have a filename
+      // (it's probably "index.html" or "index.htm",
+      //  but we don't want to allow a malformed URL)
+      if (url[0] == "#")
+      {
+        var docFilename = GetFilename(docUrl);
+        enable = docFilename.length > 0;
+      }
+      else
+      {
+        // Any other url is assumed 
+        //  to be ok to try to make absolute
+        enable = true;
+      }
+    }
+  }
+
+  SetElementEnabledById("MakeRelativeCheckbox", enable);
+}
+
+// oncommand handler for the Relativize checkbox in EditorOverlay.xul
+function MakeInputValueRelativeOrAbsolute()
+{
+  var checkbox = document.getElementById("MakeRelativeCheckbox");
+  if (!checkbox)
+    return;
+
+  var input =  document.getElementById(checkbox.getAttribute("for"));
+  if (!input)
+    return;
+
+  var docUrl = GetDocumentBaseUrl();
+  if (!docUrl)
+  {
+    // Checkbox should be disabled if not saved,
+    //  but keep this error message in case we change that
+    AlertWithTitle("", GetString("SaveToUseRelativeUrl"));
+    window.focus();
+  }
+  else 
+  {
+    // Note that "checked" is opposite of its last state,
+    //  which determines what we want to do here
+    if (checkbox.checked)
+      input.value = MakeRelativeUrl(input.value);
+    else
+      input.value = MakeAbsoluteUrl(input.value);
+
+    // Reset checkbox to reflect url state
+    SetRelativeCheckbox(checkbox, input.value);
+  }
+}
+
+function MakeRelativeUrl(url)
+{
+  var inputUrl = TrimString(url);
+  if (!inputUrl)
+    return inputUrl;
+
+  // Get the filespec relative to current document's location
+  // NOTE: Can't do this if file isn't saved yet!
+  var docUrl = GetDocumentBaseUrl();
+  var docScheme = GetScheme(docUrl);
+
+  // Can't relativize if no doc scheme (page hasn't been saved)
+  if (!docScheme)
+    return inputUrl;
+
+  var urlScheme = GetScheme(inputUrl);
+
+  // Do nothing if not the same scheme or url is already relativized
+  if (docScheme != urlScheme)
+    return inputUrl;
+
+  var IOService = GetIOService();
+  if (!IOService)
+    return inputUrl;
+
+  // Host must be the same
+  var docHost = GetHost(docUrl);
+  var urlHost = GetHost(inputUrl);
+  if (docHost != urlHost)
+    return inputUrl;
+
+  // Get just the file path part of the urls
+  var docPath = IOService.extractUrlPart(docUrl, IOService.url_Directory, {start:0}, {end:0}); 
+  var urlPath = IOService.extractUrlPart(inputUrl, IOService.url_Directory, {start:0}, {end:0});
+
+  // We only return "urlPath", so we can convert
+  //  the entire docPath for case-insensitive comparisons
+  var os = GetOS();
+  var doCaseInsensitive = (docScheme.toLowerCase() == "file" && os == gWin);
+  if (doCaseInsensitive)
+    docPath = docPath.toLowerCase();
+
+  // Get document filename before we start chopping up the docPath
+  var docFilename = GetFilename(docPath);
+
+  // Both url and doc paths now begin with "/"
+  // Look for shared dirs starting after that
+  urlPath = urlPath.slice(1);
+  docPath = docPath.slice(1);
+
+  var firstDirTest = true;
+  var nextDocSlash = 0;
+  var done = false;
+
+  // Remove all matching subdirs common to both doc and input urls
+  do {
+    nextDocSlash = docPath.indexOf("\/");
+    var nextUrlSlash = urlPath.indexOf("\/");
+
+    if (nextUrlSlash == -1)
+    {
+      // We're done matching and all dirs in url
+      // what's left is the filename
+      done = true;
+
+      // Remove filename for named anchors in the same file
+      if (nextDocSlash == -1 && docFilename)
+      { 
+        var anchorIndex = urlPath.indexOf("#");
+        if (anchorIndex > 0)
+        {
+          var urlFilename = doCaseInsensitive ? urlPath.toLowerCase() : urlPath;
+        
+          if (urlFilename.indexOf(docFilename) == 0)
+            urlPath = urlPath.slice(anchorIndex);
+        }
+      }
+    }
+    else if (nextDocSlash >= 0)
+    {
+      // Test for matching subdir
+      var docDir = docPath.slice(0, nextDocSlash);
+      var urlDir = urlPath.slice(0, nextUrlSlash);
+      if (doCaseInsensitive)
+        urlDir = urlDir.toLowerCase();
+
+      if (urlDir == docDir)
+      {
+
+        // Remove matching dir+"/" from each path
+        //  and continue to next dir
+        docPath = docPath.slice(nextDocSlash+1);
+        urlPath = urlPath.slice(nextUrlSlash+1);
+      }
+      else
+      {
+        // No match, we're done
+        done = true;
+
+        // Be sure we are on the same local drive or volume 
+        //   (the first "dir" in the path) because we can't 
+        //   relativize to different drives/volumes.
+        // UNIX doesn't have volumes, so we must not do this else
+        //  the first directory will be misinterpreted as a volume name
+        if (firstDirTest && docScheme == "file" && os != gUNIX)
+          return inputUrl;
+      }
+    }
+    else  // No more doc dirs left, we're done
+      done = true;
+
+    firstDirTest = false;
+  }
+  while (!done);
+
+  // Add "../" for each dir left in docPath
+  while (nextDocSlash > 0)
+  {
+    urlPath = "../" + urlPath;
+    nextDocSlash = docPath.indexOf("\/", nextDocSlash+1);
+  }
+  return urlPath;
+}
+
+function MakeAbsoluteUrl(url)
+{
+  var resultUrl = TrimString(url);
+  if (!resultUrl)
+    return resultUrl;
+
+  // Check if URL is already absolute, i.e., it has a scheme
+  var urlScheme = GetScheme(resultUrl);
+
+  if (urlScheme)
+    return resultUrl;
+
+  var docUrl = GetDocumentBaseUrl();
+  var docScheme = GetScheme(docUrl);
+
+  // Can't relativize if no doc scheme (page hasn't been saved)
+  if (!docScheme)
+    return resultUrl;
+
+  var  IOService = GetIOService();
+  if (!IOService)
+    return resultUrl;
+  
+  // Make a URI object to use its "resolve" method
+  var absoluteUrl = resultUrl;
+  var docUri = IOService.newURI(docUrl, null);
+
+  try {
+    absoluteUrl = docUri.resolve(resultUrl);
+    // This is deprecated and buggy! 
+    // If used, we must make it a path for the parent directory (remove filename)
+    //absoluteUrl = IOService.resolveRelativePath(resultUrl, docUrl);
+  } catch (e) {}
+
+  return absoluteUrl;
+}
+
+// Get the HREF of the page's <base> tag or the document location
+// returns empty string if no base href and document hasn't been saved yet
+function GetDocumentBaseUrl()
+{
+  if (window.editorShell)
+  {
+    var docUrl;
+
+    // if document supplies a <base> tag, use that URL instead 
+    var baseList = editorShell.editorDocument.getElementsByTagName("base");
+    if (baseList)
+    {
+      var base = baseList.item(0);
+      if (base)
+        docUrl = base.getAttribute("href");
+    }
+    if (!docUrl)
+      docUrl = editorShell.editorDocument.location.href;
+
+    if (docUrl != "about:blank")
+      return docUrl;
+  }
+  return "";
+}
+
+function GetIOService()
+{
+  if (gIOService)
+    return gIOService;
+
+  var CID = Components.classes["@mozilla.org/network/io-service;1"];
+  gIOService = CID.getService(Components.interfaces.nsIIOService);
+  return gIOService;
+}
+
+// Extract the scheme (e.g., 'file', 'http') from a URL string
+function GetScheme(url)
+{
+  var resultUrl = TrimString(url);
+  // Unsaved document URL has no acceptable scheme yet
+  if (!resultUrl || resultUrl == "about:blank")
+    return "";
+
+  var IOService = GetIOService();
+  if (!IOService)
+    return "";
+
+  var scheme = "";
+  try {
+    // This fails if there's no scheme
+    scheme = IOService.extractScheme(resultUrl, {schemeStartPos:0}, {schemeEndPos:0});
+   } catch (e) {}
+
+  return scheme ? scheme : "";
+}
+
+function GetHost(url)
+{
+  var IOService = GetIOService();
+  if (!IOService)
+    return "";
+
+  var host = "";
+  if (url)
+  {
+    try {
+      host = IOService.extractUrlPart(url, IOService.url_Host, {start:0}, {end:0}); 
+     } catch (e) {}
+  }
+  return host;
+}
+
+function GetFilename(url)
+{
+  var IOService = GetIOService();
+  if (!IOService)
+    return "";
+
+  var filename;
+
+  if (url)
+  {
+    try {
+      filename = IOService.extractUrlPart(url, IOService.url_FileBaseName, {start:0}, {end:0});
+      if (filename)
+      {
+        var ext = IOService.extractUrlPart(url, IOService.url_FileExtension, {start:0}, {end:0});
+        if (ext)
+          filename += "."+ext;
+      }
+     } catch (e) {}
+  }
+  return filename ? filename : "";
+}
+
+function GetOS()
+{
+  if (gOS)
+    return gOS;
+
+  if (navigator.platform.toLowerCase().indexOf("win") >= 0)
+    gOS = gWin;
+  else if (navigator.platform.toLowerCase().indexOf("mac") >=0)
+    gOS = gMac;
+  else
+    gOS = gUNIX;
+
+  return gOS;
 }

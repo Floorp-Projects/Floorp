@@ -64,4 +64,12 @@
   oncommand = "chooseFile()"
   label     = "&chooseButton.label;"/>
 
+<checkbox
+  id        = "MakeRelativeCheckbox"
+  label     = "&makeUrlRelative.label;"
+  oncommand = "MakeInputValueRelativeOrAbsolute()"
+  tooltip   = "aTooltip"
+  tooltiptext = "&makeUrlRelative.tooltip;"
+  style     = "margin-top: 0px"/>
+
 </overlay>    

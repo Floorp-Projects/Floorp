@@ -42,6 +42,7 @@ var doAltTextError = false;
 var actualWidth = "";
 var gOriginalSrc = "";
 var actualHeight = "";
+var gHaveDocumentUrl = false;
 
 // These must correspond to values in EditorDialog.css for each theme
 // (unfortunately, setting "style" attribute here doesn't work!)
@@ -74,11 +75,9 @@ function Startup()
   dialog.srcInput          = document.getElementById( "srcInput" );
   dialog.altTextInput      = document.getElementById( "altTextInput" );
   dialog.MoreFewerButton   = document.getElementById( "MoreFewerButton" );
-  dialog.AdvancedEditButton = document.getElementById( "AdvancedEditButton" );
-  dialog.AdvancedEditButton2 = document.getElementById( "AdvancedEditButton2" );
   dialog.MoreSection       = document.getElementById( "MoreSection" );
   dialog.customSizeRadio   = document.getElementById( "customSizeRadio" );
-  dialog.actualSizeRadio = document.getElementById( "actualSizeRadio" );
+  dialog.actualSizeRadio   = document.getElementById( "actualSizeRadio" );
   dialog.constrainCheckbox = document.getElementById( "constrainCheckbox" );
   dialog.widthInput        = document.getElementById( "widthInput" );
   dialog.heightInput       = document.getElementById( "heightInput" );
@@ -124,6 +123,9 @@ function Startup()
   // Make a copy to use for AdvancedEdit
   globalElement = imageElement.cloneNode(false);
 
+  // We only need to test for this once per dialog load
+  gHaveDocumentUrl = GetDocumentBaseUrl();
+
   InitDialog();
 
   // Save initial source URL
@@ -155,8 +157,13 @@ function InitDialog()
 {
   // Set the controls to the image's attributes
 
-  dialog.srcInput.value= globalElement.getAttribute("src");
-  GetImageFromURL();
+  dialog.srcInput.value = globalElement.getAttribute("src");
+
+  // Set "Relativize" checkbox according to current URL state
+  SetRelativeCheckbox();
+
+  // Force loading of image from its source and show preview image
+  LoadPreviewImage();
 
   dialog.altTextInput.value = globalElement.getAttribute("alt");
 
@@ -244,10 +251,16 @@ function chooseFile()
   var fileName = GetLocalFileURL("img");
   if (fileName)
   {
+    // Always try to relativize local file URLs
+    if (gHaveDocumentUrl)
+      fileName = MakeRelativeUrl(fileName);
+
     dialog.srcInput.value = fileName;
+
+    SetRelativeCheckbox();
     doOverallEnabling();
   }
-  GetImageFromURL();
+  LoadPreviewImage();
 
   // Put focus into the input field
   SetTextboxFocus(dialog.srcInput);
@@ -293,13 +306,13 @@ function PreviewImageLoaded()
   }
 }
 
-function GetImageFromURL()
+function LoadPreviewImage()
 {
   dialog.PreviewSize.setAttribute("collapsed", "true");
 
-  var imageSrc = dialog.srcInput.value;
-  if (imageSrc) imageSrc = imageSrc.trimString();
-  if (!imageSrc) return;
+  var imageSrc = TrimString(dialog.srcInput.value);
+  if (!imageSrc)
+    return;
 
   if (IsValidImage(dialog.srcInput.value))
   {
@@ -307,17 +320,27 @@ function GetImageFromURL()
       // Remove the image URL from image cache so it loads fresh
       //  (if we don't do this, loads after the first will always use image cache
       //   and we won't see image edit changes or be able to get actual width and height)
+      
+      var IOService = GetIOService();
+      if (IOService)
+      {
+        // We must have an absolute URL to preview it or remove it from the cache
+        imageSrc = MakeAbsoluteUrl(imageSrc);
 
-      var uri = Components.classes["@mozilla.org/network/standard-url;1"]
-                    .createInstance(Components.interfaces.nsIURI);
-      uri.spec = imageSrc;
+        if (GetScheme(imageSrc))
+        {
+          var uri = IOService.newURI(imageSrc, null);
+          if (uri)
+          {
+            var imgCacheService = Components.classes["@mozilla.org/image/cache;1"].getService();
+            var imgCache = imgCacheService.QueryInterface(Components.interfaces.imgICache);
 
-      var imgCacheService = Components.classes["@mozilla.org/image/cache;1"].getService();
-      var imgCache = imgCacheService.QueryInterface(Components.interfaces.imgICache);
-    
-      // This returns error if image wasn't in the cache; ignore that
-      imgCache.removeEntry(uri);
-
+            // This returns error if image wasn't in the cache; ignore that
+            if (imgCache)
+              imgCache.removeEntry(uri);
+          }
+        }
+      }
     } catch(e) {}
 
     if(dialog.PreviewImage)
@@ -347,37 +370,9 @@ function SetActualSize()
 
 function ChangeImageSrc()
 {
-  GetImageFromURL();
+  SetRelativeCheckbox();
+  LoadPreviewImage();
   doOverallEnabling();
-}
-
-// This overrides the default onMoreFewer in EdDialogCommon.js
-function onMoreFewer()
-{
-  if (SeeMore)
-  {
-    dialog.MoreSection.setAttribute("collapsed","true");
-    dialog.MoreFewerButton.setAttribute("label", GetString("MoreProperties"));
-    dialog.MoreFewerButton.setAttribute("more","0");
-    SeeMore = false;
-    // Show the "Advanced Edit" button on same line as "More Properties"
-    dialog.AdvancedEditButton.setAttribute("collapsed","false");
-    dialog.AdvancedEditButton2.setAttribute("collapsed","true");
-    // Weird caret appearing when we collapse, so force focus to URL textbox
-    dialog.srcInput.focus();
-  }
-  else
-  {
-    dialog.MoreSection.setAttribute("collapsed","false");
-    dialog.MoreFewerButton.setAttribute("label", GetString("FewerProperties"));
-    dialog.MoreFewerButton.setAttribute("more","1");
-    SeeMore = true;
-
-    // Show the "Advanced Edit" button at bottom
-    dialog.AdvancedEditButton.setAttribute("collapsed","true");
-    dialog.AdvancedEditButton2.setAttribute("collapsed","false");
-  }
-  window.sizeToContent();
 }
 
 function doDimensionEnabling()
@@ -414,7 +409,6 @@ function doOverallEnabling()
   wasEnableAll = canEnableOk;
 
   SetElementEnabledById("ok", canEnableOk );
-
   SetElementEnabledById( "imagemapLabel",  canEnableOk );
   //TODO: Restore when Image Map editor is finished
   //SetElementEnabledById( "editImageMap",   canEnableOk );

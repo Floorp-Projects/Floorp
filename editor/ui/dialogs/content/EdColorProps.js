@@ -62,6 +62,7 @@ var backgroundStr =  "background";
 var colorStyle =     "color: ";
 var backColorStyle = "background-color: ";
 var backImageStyle = "; background-image: url(";
+var gHaveDocumentUrl = false;
 
 // dialog initialization code
 function Startup()
@@ -110,6 +111,9 @@ function Startup()
     defaultBackgroundColor=  browserColors.BackgroundColor;
   }
 
+  // We only need to test for this once per dialog load
+  gHaveDocumentUrl = GetDocumentBaseUrl();
+
   InitDialog();
 
   if (dialog.DefaultColorsRadio.checked)
@@ -124,11 +128,13 @@ function InitDialog()
 {
   // Get image from document
   backgroundImage = globalElement.getAttribute(backgroundStr);
-  if (backgroundImage.length > 0)
+  if (backgroundImage.length)
   {
     dialog.BackgroundImageInput.value = backgroundImage;
     dialog.ColorPreview.setAttribute(styleStr, backImageStyle+backgroundImage+");");
   }
+
+  SetRelativeCheckbox();
 
   customTextColor        = globalElement.getAttribute(textStr);
   customLinkColor        = globalElement.getAttribute(linkStr);
@@ -324,7 +330,14 @@ function chooseFile()
   var fileName = GetLocalFileURL("img");
   if (fileName)
   {
+    // Always try to relativize local file URLs
+    if (gHaveDocumentUrl)
+      fileName = MakeRelativeUrl(fileName);
+
     dialog.BackgroundImageInput.value = fileName;
+
+    SetRelativeCheckbox();
+
     ValidateAndPreviewImage(true);
   }
   SetTextboxFocus(dialog.BackgroundImageInput);
@@ -334,6 +347,7 @@ function ChangeBackgroundImage()
 {
   // Don't show error message for image while user is typing
   ValidateAndPreviewImage(false);
+  SetRelativeCheckbox();
 }
 
 function ValidateAndPreviewImage(ShowErrorMessage)
@@ -347,7 +361,8 @@ function ValidateAndPreviewImage(ShowErrorMessage)
   {
     if (IsValidImage(image))
     {
-      backgroundImage = image;
+      backgroundImage = gHaveDocumentUrl ? MakeAbsoluteUrl(image) : image;
+
       // Append image style
       styleValue += backImageStyle+backgroundImage+");";
     }
