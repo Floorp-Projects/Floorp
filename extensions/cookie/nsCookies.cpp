@@ -1548,7 +1548,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
     expires = cookie_ParseDate(date);
     *ptr=origLast;
   }
-  if (server_date) {
+  if (server_date && *server_date) {
     sDate = cookie_ParseDate(server_date);
   } else {
     sDate = get_current_time();
