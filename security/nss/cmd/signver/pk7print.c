@@ -440,6 +440,10 @@ sv_PrintExtensions(FILE *out, CERTCertExtension **extensions, char *msg)
     return 0;
 }
 
+/* callers of this function must make sure that the CERTSignedCrl
+   from which they are extracting the CERTCrl has been fully-decoded.
+   Otherwise it will not have the entries even though the CRL may have
+   some */
 void
 sv_PrintCRLInfo(FILE *out, CERTCrl *crl, char *m)
 {

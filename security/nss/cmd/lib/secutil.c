@@ -1886,6 +1886,11 @@ secu_PrintSignerInfo(FILE *out, SEC_PKCS7SignerInfo *info, char *m, int level)
     }
 }
 
+/* callers of this function must make sure that the CERTSignedCrl
+   from which they are extracting the CERTCrl has been fully-decoded.
+   Otherwise it will not have the entries even though the CRL may have
+   some */
+
 void
 SECU_PrintCRLInfo(FILE *out, CERTCrl *crl, char *m, int level)
 {
