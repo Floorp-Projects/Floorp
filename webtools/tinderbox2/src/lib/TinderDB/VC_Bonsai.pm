@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.58 $ 
-# $Date: 2002/05/08 17:43:02 $ 
+# $Revision: 1.59 $ 
+# $Date: 2002/05/09 03:08:38 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.58 $ )[1];
+$VERSION = ( qw $Revision: 1.59 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -111,8 +111,6 @@ $VC_NAME = $TinderConfig::VC_NAME || "CVS";
 # how we recoginise bug number in the checkin comments.
 $VC_BUGNUM_REGEXP = $TinderConfig::VC_BUGNUM_REGEXP ||
     '(\d\d\d+)';
-
-$EMPTY_TABLE_CELL = $HTMLPopUp::EMPTY_TABLE_CELL;
 
 
 # Print out the Database in a visually useful form so that I can
@@ -332,6 +330,13 @@ sub status_table_legend {
 
 
   return ($out);  
+}
+
+# where can people attach notices to?
+# Really this is the names the columns produced by this DB
+
+sub notice_association {
+    return "$VC_NAME";
 }
 
 
@@ -558,7 +563,18 @@ sub render_authors {
                               "").
                              "  -->\n".
                              "");
-            
+
+#            $links .= (
+#                       "\t\t\t". 
+#                       TinderDB::Notice::Notice_Link(
+#                                                     'tree' => $tree,
+#                                                     'associated' => $VC_NAME,
+#                                                     'mindate' => $mindate,
+#                                                     'maxdate' => $maxdate,
+#                                                     )
+#                       "\n"
+#                       );
+
             $query_links .= "\t\t".$query_link."\n";
             
         } # foreach %author
@@ -581,8 +597,9 @@ sub render_authors {
 # that no authors have checked in during this time.
 
 sub render_empty_cell {
-    my ($last_treestate, $rowspan) = @_;
+    my ($last_treestate, $till_time, $rowspan, $tree) = @_;
 
+    my $local_till_time = localtime($till_time);
     my ($cell_color) = TreeData::TreeState2color($last_treestate);
     my ($char) = TreeData::TreeState2char($last_treestate);
     
@@ -596,10 +613,12 @@ sub render_empty_cell {
           HTMLPopUp::text_browser_color_string($cell_color, $char) ;
     }
     
-    my $cell_contents =  $text_browser_color_string || $EMPTY_TABLE_CELL;
+    my $cell_contents =  $text_browser_color_string || 
+        $HTMLPopUp::EMPTY_TABLE_CELL;
 
     return ("\t<!-- VC_Bonsai: empty data. ".
             "tree: $tree, ".
+            "filling till: $local_till_time, ".
             "-->\n".
             
             "\t\t<td align=center rowspan=$rowspan $cell_options>".
@@ -676,7 +695,7 @@ sub status_table_row {
   $LAST_TREESTATE{$tree} = $last_treestate || $LAST_TREESTATE{$tree};
   $last_treestate = $LAST_TREESTATE{$tree};
   
-  if (%{$authors}) {
+  if (scalar(%{$authors})) {
 
       $NEXT_DB{$tree} = $db_index;
       $NEXT_ROW{$tree} = $row_index + 1;
@@ -708,7 +727,10 @@ sub status_table_row {
   $next_db_index = $db_index;
   
   while (
-         !(%{$next_authors}) &&
+         ($row_index+$rowspan <=  $#{ $row_times }) &&
+
+         (!(scalar(%{$next_authors}))) &&
+
          (
           !defined($next_treestate) ||
           ($last_treestate eq $next_treestate)
@@ -719,14 +741,17 @@ sub status_table_row {
       $rowspan++ ;
       
       ($next_db_index, $next_treestate, $next_authors) =
-          cell_data($tree, $db_index, $row_times->[$row_index+$rowspan]);
+          cell_data($tree, $db_index, 
+                    $row_times->[$row_index+$rowspan]);
       
   }
   
   $NEXT_ROW{$tree} = $row_index + $rowspan;
   $NEXT_DB{$tree} = $db_index;
   
-  my @html= render_empty_cell($LAST_TREESTATE{$tree}, $rowspan);
+  my @html= render_empty_cell($LAST_TREESTATE{$tree}, 
+                              $row_times->[$row_index+$rowspan], 
+                              $rowspan, $tree);
   return @html;
 }
 
