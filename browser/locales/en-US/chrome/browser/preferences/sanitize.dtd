@@ -1,6 +1,6 @@
 <!ENTITY sanitizeDialog.title         "Sanitize">
 
-<!ENTITY items.label                  "Santize Items">
+<!ENTITY items.label                  "Sanitize Items">
 <!ENTITY sanitizeItems.label          "Clear the following items when Sanitizing &brandShortName;:">
 <!ENTITY itemHistory.label            "Browsing History">
 <!ENTITY itemFormData.label           "Saved Form Information">
