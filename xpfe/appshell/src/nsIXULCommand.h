@@ -19,6 +19,7 @@
 #ifndef nsIXULCommand_h___
 #define nsIXULCommand_h___
 
+#include "nsIMenuListener.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
 #include "nsIWebShell.h"
