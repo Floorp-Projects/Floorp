@@ -23,19 +23,17 @@
 #include "nsIRadioButton.h"
 
 /**
- * Native Motif Radiobutton wrapper
+ * Native Macintosh button wrapper
  */
 
 class nsRadioButton : public nsWindow
-                      
 {
 
 public:
-
   nsRadioButton(nsISupports *aOuter);
-  virtual                 ~nsRadioButton();
+  virtual ~nsRadioButton();
 
-  NS_IMETHOD QueryObject(REFNSIID aIID, void** aInstancePtr);
+  NS_IMETHOD QueryObject(const nsIID& aIID, void** aInstancePtr);
 
   void Create(nsIWidget *aParent,
               const nsRect &aRect,
@@ -44,7 +42,6 @@ public:
               nsIAppShell *aAppShell = nsnull,
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
-
   void Create(nsNativeWidget aParent,
               const nsRect &aRect,
               EVENT_CALLBACK aHandleEventFunction,
@@ -53,33 +50,35 @@ public:
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
 
-  // nsIRadioButton part
-  virtual void            SetLabel(const nsString& aText);
-  virtual void            GetLabel(nsString& aBuffer);
 
-  virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
-  virtual PRBool          OnPaint(nsPaintEvent &aEvent);
-  virtual PRBool          OnResize(nsSizeEvent &aEvent);
+    // nsIButton part
+  virtual void   SetLabel(const nsString& aText);
+  virtual void   GetLabel(nsString& aBuffer);
+  virtual PRBool OnPaint(nsPaintEvent & aEvent);
+  virtual PRBool OnResize(nsSizeEvent &aEvent);
+  virtual PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
 
   virtual void            SetState(PRBool aState);
   virtual PRBool          GetState();
-
-  // These are needed to Override the auto check behavior
-  void Armed();
-  void DisArmed();
+  
+  // Mac specific methods
+  void LocalToWindowCoordinate(nsPoint& aPoint);
+  void LocalToWindowCoordinate(nsRect& aRect);	
+  
+  // Overriden from nsWindow
+  virtual PRBool PtInWindow(PRInt32 aX,PRInt32 aY);
+  
 
 private:
+
+	void StringToStr255(const nsString& aText, Str255& aStr255);
+	void DrawWidget(PRBool	aMouseInside);
 
   // this should not be public
   static PRInt32 GetOuterOffset() {
     return offsetof(nsRadioButton,mAggWidget);
   }
 
-  Widget  mRadioBtn;
-  Boolean mInitialState;
-  Boolean mNewValue;
-  Boolean mValueWasSet;
-  Boolean mIsArmed;
 
   // Aggregator class and instance variable used to aggregate in the
   // nsIButton interface to nsRadioButton w/o using multiple
@@ -98,9 +97,16 @@ private:
     virtual PRBool GetState();
 
   };
+
   AggRadioButton mAggWidget;
   friend class AggRadioButton;
+  
+  Str255				mLabel;
+  PRBool				mMouseDownInButton;
+  PRBool				mWidgetArmed;
+  PRBool				mButtonSet;
+
 
 };
 
-#endif // nsRadioButton_h__
+#endif // nsButton_h__
