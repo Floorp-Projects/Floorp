@@ -49,7 +49,9 @@
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsISidebar.h"
+#include "nsIDOMPkcs11.h"
 #include "nsIDOMViewCSS.h"
+#include "nsIDOMCrypto.h"
 #include "nsIDOMWindow.h"
 #include "nsIControllers.h"
 
@@ -72,7 +74,9 @@ static NS_DEFINE_IID(kIEventIID, NS_IDOMEVENT_IID);
 static NS_DEFINE_IID(kIEventListenerIID, NS_IDOMEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIEventTargetIID, NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_IID(kISidebarIID, NS_ISIDEBAR_IID);
+static NS_DEFINE_IID(kIPkcs11IID, NS_IDOMPKCS11_IID);
 static NS_DEFINE_IID(kIViewCSSIID, NS_IDOMVIEWCSS_IID);
+static NS_DEFINE_IID(kICryptoIID, NS_IDOMCRYPTO_IID);
 static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
 
@@ -99,22 +103,24 @@ enum Window_slots {
   WINDOW_DIRECTORIES = -17,
   WINDOW_CLOSED = -18,
   WINDOW_FRAMES = -19,
-  WINDOW_CONTROLLERS = -20,
-  WINDOW_OPENER = -21,
-  WINDOW_STATUS = -22,
-  WINDOW_DEFAULTSTATUS = -23,
-  WINDOW_NAME = -24,
-  WINDOW_INNERWIDTH = -25,
-  WINDOW_INNERHEIGHT = -26,
-  WINDOW_OUTERWIDTH = -27,
-  WINDOW_OUTERHEIGHT = -28,
-  WINDOW_SCREENX = -29,
-  WINDOW_SCREENY = -30,
-  WINDOW_PAGEXOFFSET = -31,
-  WINDOW_PAGEYOFFSET = -32,
-  WINDOW_SCROLLX = -33,
-  WINDOW_SCROLLY = -34,
-  ABSTRACTVIEW_DOCUMENT = -35
+  WINDOW_CRYPTO = -20,
+  WINDOW_PKCS11 = -21,
+  WINDOW_CONTROLLERS = -22,
+  WINDOW_OPENER = -23,
+  WINDOW_STATUS = -24,
+  WINDOW_DEFAULTSTATUS = -25,
+  WINDOW_NAME = -26,
+  WINDOW_INNERWIDTH = -27,
+  WINDOW_INNERHEIGHT = -28,
+  WINDOW_OUTERWIDTH = -29,
+  WINDOW_OUTERHEIGHT = -30,
+  WINDOW_SCREENX = -31,
+  WINDOW_SCREENY = -32,
+  WINDOW_PAGEXOFFSET = -33,
+  WINDOW_PAGEYOFFSET = -34,
+  WINDOW_SCROLLX = -35,
+  WINDOW_SCROLLY = -36,
+  ABSTRACTVIEW_DOCUMENT = -37
 };
 
 /***********************************************************************/
@@ -350,6 +356,32 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_SUCCEEDED(rv)) {
           nsIDOMWindowCollection* prop;
           rv = a->GetFrames(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
+        }
+        break;
+      }
+      case WINDOW_CRYPTO:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CRYPTO, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMCrypto* prop;
+          rv = a->GetCrypto(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
+        }
+        break;
+      }
+      case WINDOW_PKCS11:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PKCS11, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMPkcs11* prop;
+          rv = a->GetPkcs11(&prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
@@ -2677,6 +2709,8 @@ static JSPropertySpec WindowProperties[] =
   {"directories",    WINDOW_DIRECTORIES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"closed",    WINDOW_CLOSED,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"frames",    WINDOW_FRAMES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"crypto",    WINDOW_CRYPTO,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"pkcs11",    WINDOW_PKCS11,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"controllers",    WINDOW_CONTROLLERS,    JSPROP_ENUMERATE, WindowcontrollersGetter, WindowcontrollersSetter},
   {"opener",    WINDOW_OPENER,    JSPROP_ENUMERATE},
   {"status",    WINDOW_STATUS,    JSPROP_ENUMERATE},
