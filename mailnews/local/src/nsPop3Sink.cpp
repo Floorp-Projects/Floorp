@@ -265,6 +265,12 @@ nsPop3Sink::IncorporateWrite(void* closure,
     if(length > 1 && *block == '.' && 
        (*(block+1) == '\r' || *(block+1) == '\n')) return NS_OK;
 
+	PRInt32 blockOffset = 0;
+	if (!PL_strncmp(block, "From ", 5))
+	{
+		length++;
+		blockOffset = 1;
+	}
     if (!m_outputBuffer || length > m_outputBufferSize)
     {
         if (!m_outputBuffer)
@@ -276,7 +282,9 @@ nsPop3Sink::IncorporateWrite(void* closure,
     }
     if (m_outputBuffer)
     {
-        memcpy(m_outputBuffer, block, length);
+		if (blockOffset == 1)
+			*m_outputBuffer = '>';
+        memcpy(m_outputBuffer + blockOffset, block, length - blockOffset);
         *(m_outputBuffer + length) = 0;
 		WriteLineToMailbox (m_outputBuffer);
 		// Is this where we should hook up the new mail parser? Is this block a line, or a real block?
