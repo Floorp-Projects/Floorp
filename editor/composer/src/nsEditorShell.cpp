@@ -1272,7 +1272,7 @@ nsEditorShell::GetHTMLSourceMode(PRBool *_retval)
 }
 
 NS_IMETHODIMP 
-nsEditorShell::SetHTMLSourceMode(const PRBool aSourceMode)
+nsEditorShell::SetHTMLSourceMode(PRBool aSourceMode)
 {
   mHTMLSourceMode = aSourceMode;
 
