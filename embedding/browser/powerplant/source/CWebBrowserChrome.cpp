@@ -34,10 +34,12 @@
 #include "UMacUnicode.h"
 #include "ApplIDs.h"
 
-#include "LStaticText.h"
-#include "LIconControl.h"
-#include "LCheckBox.h"
-#include "LEditText.h"
+#include <LStaticText.h>
+#include <LIconControl.h>
+#include <LCheckBox.h>
+#include <LEditText.h>
+#include <URegistrar.h>
+#include <UModalDialogs.h>
 
 // Interfaces needed to be included
 
@@ -110,14 +112,17 @@ NS_IMETHODIMP CWebBrowserChrome::SetOverLink(const PRUnichar* aLink)
 
 NS_IMETHODIMP CWebBrowserChrome::GetWebBrowser(nsIWebBrowser** aWebBrowser)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_ARG_POINTER(aWebBrowser);
+
+   *aWebBrowser = mWebBrowser;
+   NS_IF_ADDREF(*aWebBrowser);
+   return NS_OK;
 }
 
 NS_IMETHODIMP CWebBrowserChrome::SetWebBrowser(nsIWebBrowser* aWebBrowser)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   mWebBrowser = aWebBrowser;
+   return NS_OK;
 }
 
 NS_IMETHODIMP CWebBrowserChrome::GetChromeMask(PRUint32* aChromeMask)
@@ -396,7 +401,7 @@ NS_IMETHODIMP CWebBrowserChrome::SetTitle(const PRUnichar* aTitle)
 // CWebBrowserChrome::nsIPrompt
 //*****************************************************************************   
 
-NS_IMETHODIMP CWebBrowserChrome::Alert(const PRUnichar *text)
+NS_IMETHODIMP CWebBrowserChrome::Alert(const PRUnichar *dialogTitle, const PRUnichar *text)
 {
     RegisterClass_(LIconControl);
     
@@ -422,7 +427,7 @@ NS_IMETHODIMP CWebBrowserChrome::Alert(const PRUnichar *text)
     return NS_OK;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::Confirm(const PRUnichar *text, PRBool *_retval)
+NS_IMETHODIMP CWebBrowserChrome::Confirm(const PRUnichar *dialogTitle, const PRUnichar *text, PRBool *_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
     
@@ -456,7 +461,7 @@ NS_IMETHODIMP CWebBrowserChrome::Confirm(const PRUnichar *text, PRBool *_retval)
     return NS_OK;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::ConfirmCheck(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
+NS_IMETHODIMP CWebBrowserChrome::ConfirmCheck(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
 {
     NS_ENSURE_ARG_POINTER(checkValue);
     NS_ENSURE_ARG_POINTER(_retval);
@@ -495,7 +500,7 @@ NS_IMETHODIMP CWebBrowserChrome::ConfirmCheck(const PRUnichar *text, const PRUni
     return NS_OK;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::Prompt(const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
+NS_IMETHODIMP CWebBrowserChrome::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
 {
     NS_ENSURE_ARG_POINTER(result);
     NS_ENSURE_ARG_POINTER(_retval);
@@ -540,7 +545,7 @@ NS_IMETHODIMP CWebBrowserChrome::Prompt(const PRUnichar *text, const PRUnichar *
     return resultErr;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::PromptUsernameAndPassword(const PRUnichar *text, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
+NS_IMETHODIMP CWebBrowserChrome::PromptUsernameAndPassword(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, PRBool persistPassword, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
 {
     NS_ENSURE_ARG_POINTER(user);
     NS_ENSURE_ARG_POINTER(pwd);
@@ -594,7 +599,7 @@ NS_IMETHODIMP CWebBrowserChrome::PromptUsernameAndPassword(const PRUnichar *text
     return resultErr;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::PromptPassword(const PRUnichar *text, const PRUnichar *title, PRUnichar **pwd, PRBool *_retval)
+NS_IMETHODIMP CWebBrowserChrome::PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, PRBool persistPassword, PRUnichar **pwd, PRBool *_retval)
 {
     NS_ENSURE_ARG_POINTER(pwd);
     NS_ENSURE_ARG_POINTER(_retval);
