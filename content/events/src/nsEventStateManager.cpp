@@ -795,7 +795,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       // focused sub-window and sub-element for this top-level
       // window.
 
-      nsCOMPtr<nsIFocusController> focusController = dont_AddRef(GetFocusControllerForDocument(mDocument));
+      nsCOMPtr<nsIFocusController> focusController = GetFocusControllerForDocument(mDocument);
       if (focusController)
         focusController->SetSuppressFocus(PR_TRUE, "Deactivate Suppression");
 
@@ -5482,7 +5482,7 @@ nsEventStateManager::ShiftFocusByDoc(PRBool aForward)
 }
 
 // Get the FocusController given an nsIDocument
-nsIFocusController*
+already_AddRefed<nsIFocusController>
 nsEventStateManager::GetFocusControllerForDocument(nsIDocument* aDocument)
 {
   nsCOMPtr<nsISupports> container;
