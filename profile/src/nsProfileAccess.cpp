@@ -1345,17 +1345,9 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
 
     if (NS_SUCCEEDED(rv) && tempLocal)
     {
-        // Ensure that the parent of this dir exists - will catch
-        // paths which point to unmounted drives, etc. Don't create
-        // The actual directory though.
-        PRBool leafCreated;
-        rv = EnsureDirPathExists(tempLocal, &leafCreated);
-        if (NS_SUCCEEDED(rv))
-        {
+        PRBool exists;
+        if (NS_SUCCEEDED(tempLocal->Exists(&exists)) && exists)
             SetResolvedProfileDir(tempLocal);
-            if (leafCreated)
-                tempLocal->Remove(PR_FALSE);
-        }
     }
     
     return NS_OK;
