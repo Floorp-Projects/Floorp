@@ -365,8 +365,8 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList,
             }
         }
     }
-
     gtk_selection_data_free(selection_data);
+    g_free(targets);
 
     return NS_OK;
 }
