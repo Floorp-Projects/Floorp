@@ -1485,6 +1485,15 @@ void oeICalContainerFilter::UpdateAllFilters( PRInt32 icaltype )
 NS_IMETHODIMP oeICalContainerFilter::ReportError( PRInt16 severity, PRUint32 errorid, const char *errorstring ) {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP oeICalContainerFilter::SetParameter( const char *name, const char *value ) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalContainerFilter::GetParameter( const char *name, char **value ) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 ///////////////////////////////////////////////////
 // FilterDateTime
 //////////////////////////////////////////////////

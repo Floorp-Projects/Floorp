@@ -84,6 +84,7 @@
 <!ENTITY newevent.invite.label       "Invite" >
 <!ENTITY newevent.email.label        "Email Alarm To" >
 <!ENTITY newevent.beforealarm.label  "before the event starts" >
+<!ENTITY newevent.beforealarmends.label  "before the event ends" >
 <!ENTITY newevent.repeat.label       "Repeat every" >
 <!ENTITY newevent.until.label        "Until" >
 <!ENTITY newevent.forever.label      "Forever" >
@@ -141,6 +142,7 @@
 <!ENTITY newtodo.cancelled.label "Cancelled">
 <!ENTITY newtodo.status.label "Status">
 <!ENTITY newtodo.beforealarm.label  "before the task starts" >
+<!ENTITY newtodo.beforealarmends.label  "before the task is due" >
 <!ENTITY newtodo.newtodo.tab.label "Task" >
 <!ENTITY newtodo.status.longlabel "Task Status">
 <!ENTITY newtodo.duetime.warning    "Your start time is after your due time.">

@@ -24,6 +24,7 @@
    -                 Colin Phillips <colinp@oeone.com> 
    -                 Chris Charabaruk <ccharabaruk@meldstar.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
+   -                 Mostafa Hosseini <mostafah@oeone.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -98,6 +99,7 @@
 <script type="application/x-javascript" src="chrome://calendar/content/eventDialog.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/selectAddressesDialog.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/attachFile.js"/>
+
 <!-- needed to get the default categories -->
 <script type="application/x-javascript" src="chrome://calendar/content/pref/rootCalendarPref.js"/>
 
@@ -236,7 +238,12 @@
                                     <menuitem label="&alarm.units.days;"    labelplural="&alarm.units.days;"      labelsingular="&alarm.units.days.singular;"     value="days"/>
                                  </menupopup>
                               </menulist>
-                              <label id="alarm-length-text" for="alarm-length-field" value="&newevent.beforealarm.label;"/>
+                              <menulist id="alarm-trigger-relation" crop="none">
+                                 <menupopup>
+                                    <menuitem label="&newevent.beforealarm.label;" value="ICAL_RELATED_START"/>
+                                    <menuitem label="&newevent.beforealarmends.label;" value="ICAL_RELATED_END"/>
+                                 </menupopup>
+                              </menulist>
                            </hbox>
                            
                            <hbox id="alarm-box-email" align="center">

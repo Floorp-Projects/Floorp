@@ -203,6 +203,7 @@ function loadCalendarEventDialog()
    setFieldValue( "alarm-checkbox", gEvent.alarm, "checked" );
    setFieldValue( "alarm-length-field", gEvent.alarmLength );
    setFieldValue( "alarm-length-units", gEvent.alarmUnits );
+   setFieldValue( "alarm-trigger-relation", gEvent.getParameter( "ICAL_RELATED_PARAMETER" ) );
 
    if( gEvent.alarmEmailAddress == "" && "new" == args.mode )
       gEvent.alarmEmailAddress = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "alarms.emailaddress", "" );
@@ -379,6 +380,7 @@ function onOKCommand()
    gEvent.alarm       = getFieldValue( "alarm-checkbox", "checked" );
    gEvent.alarmLength = getFieldValue( "alarm-length-field" );
    gEvent.alarmUnits  = getFieldValue( "alarm-length-units", "value" );  
+   gEvent.setParameter( "ICAL_RELATED_PARAMETER", getFieldValue( "alarm-trigger-relation", "value" ) );
 
    if ( getFieldValue( "alarm-email-checkbox", "checked" ) ) 
    {
@@ -824,7 +826,7 @@ function updateAlarmItemEnabled()
    
    var alarmField = "alarm-length-field";
    var alarmMenu = "alarm-length-units";
-   var alarmLabel = "alarm-length-text";
+   var alarmTrigger = "alarm-trigger-relation";
       
    var alarmEmailCheckbox = "alarm-email-checkbox";
    var alarmEmailField = "alarm-email-field";
@@ -836,14 +838,14 @@ function updateAlarmItemEnabled()
       setFieldValue( alarmCheckBox, true, "checked" );
       setFieldValue( alarmField, false, "disabled" );
       setFieldValue( alarmMenu, false, "disabled" );
-      setFieldValue( alarmLabel, false, "disabled" );
+      setFieldValue( alarmTrigger, false, "disabled" );
       setFieldValue( alarmEmailCheckbox, false, "disabled" );
    }
    else
    {
       setFieldValue( alarmField, true, "disabled" );
       setFieldValue( alarmMenu, true, "disabled" );
-      setFieldValue( alarmLabel, true, "disabled" );
+      setFieldValue( alarmTrigger, true, "disabled" );
       setFieldValue( alarmEmailField, true, "disabled" );
       setFieldValue( alarmEmailCheckbox, true, "disabled" );
       setFieldValue( alarmEmailCheckbox, false, "checked" );

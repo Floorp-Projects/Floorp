@@ -87,9 +87,6 @@ oeICalTodoImpl::oeICalTodoImpl()
 
     /* member initializers and constructor code */
     nsresult rv;
-	if( NS_FAILED( rv = NS_NewDateTime((oeIDateTime**) &m_due ))) {
-        m_due = nsnull;
-	}
 	if( NS_FAILED( rv = NS_NewDateTime((oeIDateTime**) &m_completed ))) {
         m_completed = nsnull;
 	}
@@ -102,8 +99,6 @@ oeICalTodoImpl::~oeICalTodoImpl()
     printf( "oeICalTodoImpl::~oeICalTodoImpl()\n");
 #endif
     /* destructor code */
-    if( m_due )
-        m_due->Release();
     if( m_completed )
         m_completed->Release();
     mEvent->Release();
@@ -121,9 +116,7 @@ bool oeICalTodoImpl::matchId( const char *id ) {
 /* readonly attribute oeIDateTime due; */
 NS_IMETHODIMP oeICalTodoImpl::GetDue(oeIDateTime * *due)
 {
-    *due = m_due;
-    NS_ADDREF(*due);
-    return NS_OK;
+    return mEvent->GetEnd( due );
 }
 
 /* areadonly attribute oeIDateTime completed; */
@@ -274,16 +267,6 @@ bool oeICalTodoImpl::ParseIcalComponent( icalcomponent *comp )
         m_completed->m_datetime = icaltime_null_time();
     }
 
-    //due
-    prop = icalcomponent_get_first_property( vtodo, ICAL_DUE_PROPERTY );
-    if (prop != 0) {
-        icaltimetype due;
-        due = icalproperty_get_due( prop );
-        m_due->m_datetime = due;
-    } else {
-        m_due->m_datetime = icaltime_null_time();
-    }
-
     return true;
 }
 
@@ -331,8 +314,13 @@ icalcomponent* oeICalTodoImpl::AsIcalComponent()
             icalparameter *newpar = icalparameter_new_member( icalparameter_get_member( oldpar ) );
             icalproperty_add_parameter( newprop, newpar );
         } else if( propkind == ICAL_DTEND_PROPERTY ) {
-            //do nothing
-            continue;
+            //Change DTEND to DUE
+            newprop = icalproperty_new_due( icalproperty_get_dtend( prop ) );
+            icalparameter *oldpar = icalproperty_get_first_parameter( prop, ICAL_TZID_PARAMETER );
+            if( oldpar ) {
+                icalparameter *newpar = icalparameter_new_tzid( icalparameter_get_tzid( oldpar ) );
+                icalproperty_add_parameter( newprop, newpar );
+            }
         } else {
             newprop = icalproperty_new_clone( prop );
         }
@@ -348,30 +336,6 @@ icalcomponent* oeICalTodoImpl::AsIcalComponent()
     //percent
     if( m_percent != 0) {
         prop = icalproperty_new_percentcomplete( m_percent );
-        icalcomponent_add_property( vtodo, prop );
-    }
-
-    /* This isn't really needed
-    //Create due if does not exist
-    if( icaltime_is_null_time( m_due->m_datetime ) ) {
-        prop = icalcomponent_get_first_property( vtodo, ICAL_DTSTART_PROPERTY );
-        if( prop ) {
-            m_due->m_datetime = icalproperty_get_dtstart( prop );
-            //Set to the same as start date 23:59
-            m_due->SetHour( 23 ); m_due->SetMinute( 59 );
-        }
-    }
-
-    PRBool m_allday;
-    GetAllDay ( &m_allday );
-    if( m_allday ) {
-        m_due->SetHour( 23 );
-        m_due->SetMinute( 59 );
-    }*/
-
-    //due
-    if( m_due && !icaltime_is_null_time( m_due->m_datetime ) ) {
-        prop = icalproperty_new_due( m_due->m_datetime );
         icalcomponent_add_property( vtodo, prop );
     }
 

@@ -136,6 +136,7 @@ private:
     bool m_allday;
     bool m_hasalarm;
     unsigned long m_alarmlength;
+    icalparameter_related m_alarmtriggerrelation;
     char *m_alarmunits;
     char *m_alarmemail;
     char *m_inviteemail;
@@ -157,6 +158,7 @@ private:
     nsVoidArray m_snoozetimes;
     icaltimetype CalculateAlarmTime( icaltimetype date );
     bool IsExcepted( PRTime date );
+    icaldurationtype GetLength();
     nsCOMPtr<nsISupportsArray> m_attachments;
     nsCOMPtr<nsISupportsArray> m_contacts;
     oeIICal *m_calendar;

@@ -247,7 +247,12 @@
                                     <menuitem label="&alarm.units.days;"    labelplural="&alarm.units.days;"      labelsingular="&alarm.units.days.singular;"     value="days"/>
                                  </menupopup>
                               </menulist>
-                              <label id="alarm-length-text" for="alarm-length-field" value="&newtodo.beforealarm.label;"/>
+                              <menulist id="alarm-trigger-relation" crop="none">
+                                 <menupopup>
+                                    <menuitem label="&newtodo.beforealarm.label;" value="ICAL_RELATED_START"/>
+                                    <menuitem label="&newtodo.beforealarmends.label;" value="ICAL_RELATED_END"/>
+                                 </menupopup>
+                              </menulist>
                            </hbox>
                            
                            <hbox id="alarm-box-email" align="center">

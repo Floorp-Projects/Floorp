@@ -71,7 +71,6 @@ public:
 private:
     int m_percent;
     oeDateTimeImpl *m_completed;
-    oeDateTimeImpl *m_due;
     oeICalEventImpl *mEvent;
 };
 

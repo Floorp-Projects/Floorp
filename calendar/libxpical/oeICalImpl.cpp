@@ -2744,3 +2744,11 @@ NS_IMETHODIMP oeICalFilter::ReportError( PRInt16 severity, PRUint32 errorid, con
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP oeICalFilter::SetParameter( const char *name, const char *value ) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetParameter( const char *name, char **value ) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+

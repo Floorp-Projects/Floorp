@@ -182,7 +182,7 @@ function loadCalendarEventDialog()
    setFieldValue( "description-field", gEvent.description );
    setFieldValue( "location-field", gEvent.location );
    setFieldValue( "uri-field", gEvent.url );
-   
+
    switch( gEvent.status )
    {
       case gEvent.ICAL_STATUS_TENTATIVE:
@@ -211,6 +211,7 @@ function loadCalendarEventDialog()
    setFieldValue( "alarm-checkbox", gEvent.alarm, "checked" );
    setFieldValue( "alarm-length-field", gEvent.alarmLength );
    setFieldValue( "alarm-length-units", gEvent.alarmUnits );
+   setFieldValue( "alarm-trigger-relation", gEvent.getParameter( "ICAL_RELATED_PARAMETER" ) );
 
    if( gEvent.alarmEmailAddress == "" && "new" == args.mode )
       gEvent.alarmEmailAddress = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "alarms.emailaddress", "" );
@@ -374,6 +375,7 @@ function onOKCommand()
    gEvent.alarm       = getFieldValue( "alarm-checkbox", "checked" );
    gEvent.alarmLength = getFieldValue( "alarm-length-field" );
    gEvent.alarmUnits  = getFieldValue( "alarm-length-units", "value" );  
+   gEvent.setParameter( "ICAL_RELATED_PARAMETER", getFieldValue( "alarm-trigger-relation", "value" ) );
 
    if ( getFieldValue( "alarm-email-checkbox", "checked" ) ) 
    {
@@ -678,7 +680,6 @@ function onDatePick( datepicker )
 function prepareTimePicker( timeFieldName )
 {
    // get the popup and the field we are editing
-   
    var timePickerPopup = document.getElementById( "oe-time-picker-popup" );
    var timeField = document.getElementById( timeFieldName );
    
@@ -810,7 +811,7 @@ function updateAlarmItemEnabled()
    
    var alarmField = "alarm-length-field";
    var alarmMenu = "alarm-length-units";
-   var alarmLabel = "alarm-length-text";
+   var alarmTrigger = "alarm-trigger-relation";
       
    var alarmEmailCheckbox = "alarm-email-checkbox";
    var alarmEmailField = "alarm-email-field";
@@ -822,14 +823,14 @@ function updateAlarmItemEnabled()
       setFieldValue( alarmCheckBox, true, "checked" );
       setFieldValue( alarmField, false, "disabled" );
       setFieldValue( alarmMenu, false, "disabled" );
-      setFieldValue( alarmLabel, false, "disabled" );
+      setFieldValue( alarmTrigger, false, "disabled" );
       setFieldValue( alarmEmailCheckbox, false, "disabled" );
    }
    else
    {
       setFieldValue( alarmField, true, "disabled" );
       setFieldValue( alarmMenu, true, "disabled" );
-      setFieldValue( alarmLabel, true, "disabled" );
+      setFieldValue( alarmTrigger, true, "disabled" );
       setFieldValue( alarmEmailField, true, "disabled" );
       setFieldValue( alarmEmailCheckbox, true, "disabled" );
       setFieldValue( alarmEmailCheckbox, false, "checked" );

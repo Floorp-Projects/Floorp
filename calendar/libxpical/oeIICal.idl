@@ -157,6 +157,8 @@ interface oeIICalEvent : nsISupports
     void removeContacts();
 
     void reportError( in short severity, in unsigned long errorid, in string errorstring );
+    void setParameter( in string name, in string value );
+    string getParameter( in string name );
 };
 
 [scriptable, uuid(f95df40e-0d5f-49ec-9ba8-4b88d3eb53e0)]
