@@ -139,8 +139,10 @@ sub setCommandArgument {
 
 sub createArgument {
     my $self = shift;
-    my($argument, @default) = @_;
-    $self->{"argument $argument"} = \@default;
+    my($argument) = @_;
+    # drop the default on the floor -- the default should only be used
+    # when explicitly requested (e.g. by the user in interactive mode).
+    $self->{"argument $argument"} = [];
 }
 
 sub propertyExists {
