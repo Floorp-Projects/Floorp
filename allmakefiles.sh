@@ -770,47 +770,6 @@ content/base/public/Makefile
 intl/locale/public/Makefile
 "
 
-MAKEFILES_security="
-security/Makefile
-security/psm/Makefile
-security/psm/lib/Makefile
-security/psm/lib/client/Makefile
-security/psm/lib/protocol/Makefile
-
-intl/strres/public/Makefile
-intl/locale/idl/Makefile
-intl/locale/public/Makefile
-"
-
-MAKEFILES_psm_glue="
-extensions/psm-glue/public/Makefile
-extensions/psm-glue/Makefile
-extensions/psm-glue/src/Makefile
-netwerk/base/public/Makefile
-netwerk/build/Makefile
-netwerk/socket/base/Makefile
-dom/public/Makefile
-uriloader/base/Makefile
-modules/libpref/public/Makefile
-profile/public/Makefile
-caps/idl/Makefile
-caps/include/Makefile
-netwerk/protocol/http/public/Makefile
-widget/public/Makefile
-rdf/base/idl/Makefile
-xpfe/appshell/public/Makefile
-gfx/idl/Makefile
-gfx/public/Makefile
-docshell/base/Makefile
-layout/html/forms/public/Makefile
-layout/base/public/Makefile
-content/base/public/Makefile
-dom/src/base/Makefile
-modules/oji/public/Makefile
-gfx2/public/Makefile
-embedding/components/windowwatcher/public/Makefile
-"
-
 MAKEFILES_inspector="
 extensions/inspector/Makefile
 extensions/inspector/base/Makefile
@@ -1141,8 +1100,6 @@ else
 		;;
 	    necko) add_makefiles "
                  $MAKEFILES_netwerk $MAKEFILES_dbm $MAKEFILES_xpcom"
-		;;
-	    psm) add_makefiles "$MAKEFILES_dbm $MAKEFILES_xpcom $MAKEFILES_security $MAKEFILES_js $MAKEFILES_psm_glue"
 		;;
 	    psm2) add_makefiles "$MAKEFILES_dbm $MAKEFILES_js $MAKEFILES_xpcom $MAKEFILES_psm2"
 		;;

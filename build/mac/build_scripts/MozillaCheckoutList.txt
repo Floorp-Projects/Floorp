@@ -9,7 +9,6 @@
 
 mozilla/nsprpub,        NSPRPUB_CLIENT_TAG
 mozilla/security/nss,   NSS_CLIENT_TAG
-mozilla/security/psm,   
 mozilla/security/manager,
 mozilla/accessible,
 DirectorySDKSourceC,    LDAPCSDK_40_BRANCH
