@@ -1747,7 +1747,7 @@ NS_IMETHODIMP GlobalWindowImpl::Focus()
 
   nsCOMPtr<nsIPresShell> presShell;
   if (mDocShell) {
-    mDocShell->GetPresShell(getter_AddRefs(presShell));
+    mDocShell->GetEldestPresShell(getter_AddRefs(presShell));
   }
 
   nsresult result = NS_OK;

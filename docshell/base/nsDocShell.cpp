@@ -962,6 +962,31 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
 }
 
 NS_IMETHODIMP
+nsDocShell::GetEldestPresContext(nsIPresContext** aPresContext)
+{
+    nsresult rv = NS_OK;
+
+    NS_ENSURE_ARG_POINTER(aPresContext);
+    *aPresContext = nsnull;
+
+    nsCOMPtr<nsIContentViewer> viewer = mContentViewer;
+    while (viewer) {
+        nsCOMPtr<nsIContentViewer> prevViewer;
+        viewer->GetPreviousViewer(getter_AddRefs(prevViewer));
+        if (prevViewer)
+            viewer = prevViewer;
+        else {
+            nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(viewer));
+            if (docv)
+                rv = docv->GetPresContext(*aPresContext);
+            break;
+        }
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetPresContext(nsIPresContext ** aPresContext)
 {
     nsresult rv = NS_OK;
@@ -991,6 +1016,24 @@ nsDocShell::GetPresShell(nsIPresShell ** aPresShell)
 
     nsCOMPtr<nsIPresContext> presContext;
     (void) GetPresContext(getter_AddRefs(presContext));
+
+    if (presContext) {
+        rv = presContext->GetShell(aPresShell);
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetEldestPresShell(nsIPresShell** aPresShell)
+{
+    nsresult rv = NS_OK;
+
+    NS_ENSURE_ARG_POINTER(aPresShell);
+    *aPresShell = nsnull;
+
+    nsCOMPtr<nsIPresContext> presContext;
+    (void) GetEldestPresContext(getter_AddRefs(presContext));
 
     if (presContext) {
         rv = presContext->GetShell(aPresShell);

@@ -144,9 +144,15 @@ interface nsIDocShell : nsISupports
   [noscript] readonly attribute nsIPresContext presContext;
 
   /**
-   * Presentation context for the currently loaded document.  This may be null.
+   * Presentation shell for the currently loaded document.  This may be null.
    */
   [noscript] readonly attribute nsIPresShell presShell;
+
+  /**
+   * Presentation shell for the oldest document, if this docshell is
+   * currently transitioning between documents.
+   */
+  [noscript] readonly attribute nsIPresShell eldestPresShell;
 
   /**
    * Content Viewer that is currently loaded for this DocShell.  This may
