@@ -1469,7 +1469,7 @@ void CMapiFolderList::EnsureUniqueName( CMapiFolder *pFolder)
 			pCurrent = (CMapiFolder *)GetAt( i);
 			if (pCurrent->GetDepth() == pFolder->GetDepth()) {
 				pCurrent->GetDisplayName( cName);
-				if (!cName.Compare( name, PR_TRUE)) {
+				if (!cName.CompareWithConversion( name, PR_TRUE)) {
 					ChangeName( name);
 					pFolder->SetDisplayName( name);
 					done = FALSE;
