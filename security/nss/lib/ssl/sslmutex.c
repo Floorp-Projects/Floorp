@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslmutex.c,v 1.16 2002/09/07 02:48:45 jpierre%netscape.com Exp $
+ * $Id: sslmutex.c,v 1.17 2003/08/28 22:23:59 wtc%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -199,10 +199,17 @@ sslMutex_Destroy(sslMutex *pMutex)
 #if defined(LINUX) && defined(i386)
 /* No memory barrier needed for this platform */
 
+/* nWaiters includes the holder of the lock (if any) and the number
+** threads waiting for it.  After incrementing nWaiters, if the count
+** is exactly 1, then you have the lock and may proceed.  If the 
+** count is greater than 1, then you must wait on the pipe.
+*/ 
+
+
 SECStatus 
 sslMutex_Unlock(sslMutex *pMutex)
 {
-    PRInt32 oldValue;
+    PRInt32 newValue;
     if (PR_FALSE == pMutex->isMultiProcess) {
         return single_process_sslMutex_Unlock(pMutex);
     }
@@ -212,8 +219,8 @@ sslMutex_Unlock(sslMutex *pMutex)
 	return SECFailure;
     }
     /* Do Memory Barrier here. */
-    oldValue = PR_AtomicDecrement(&pMutex->u.pipeStr.nWaiters);
-    if (oldValue > 1) {
+    newValue = PR_AtomicDecrement(&pMutex->u.pipeStr.nWaiters);
+    if (newValue > 0) {
 	int  cc;
 	char c  = 1;
 	do {
@@ -233,7 +240,7 @@ sslMutex_Unlock(sslMutex *pMutex)
 SECStatus 
 sslMutex_Lock(sslMutex *pMutex)
 {
-    PRInt32 oldValue;
+    PRInt32 newValue;
     if (PR_FALSE == pMutex->isMultiProcess) {
         return single_process_sslMutex_Lock(pMutex);
     }
@@ -242,9 +249,9 @@ sslMutex_Lock(sslMutex *pMutex)
 	PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
 	return SECFailure;
     }
-    oldValue = PR_AtomicDecrement(&pMutex->u.pipeStr.nWaiters);
+    newValue = PR_AtomicIncrement(&pMutex->u.pipeStr.nWaiters);
     /* Do Memory Barrier here. */
-    if (oldValue > 0) {
+    if (newValue > 1) {
 	int   cc;
 	char  c;
 	do {
