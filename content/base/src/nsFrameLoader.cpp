@@ -469,7 +469,8 @@ nsFrameLoader::EnsureDocShell()
       parentAsItem->GetTreeOwner(getter_AddRefs(parentTreeOwner));
 
       if(parentTreeOwner) {
-        PRBool is_primary = value.Equals(NS_LITERAL_STRING("content-primary"));
+        PRBool is_primary = parentType == nsIDocShellTreeItem::typeChrome &&
+                            value.Equals(NS_LITERAL_STRING("content-primary"));
 
         parentTreeOwner->ContentShellAdded(docShellAsItem, is_primary,
                                            value.get());
