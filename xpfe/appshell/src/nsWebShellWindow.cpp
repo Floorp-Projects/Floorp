@@ -734,6 +734,25 @@ NS_IMETHODIMP
 nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
                               nsIWebShell *&aNewWebShell)
 {
+	// Don't return a web shell, since the shell that will hold our content
+  // hasn't been instantiated yet.  We'll have to wait and set up the linkage
+  // at a later date.
+	aNewWebShell = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShellWindow::CanCreateNewWebShell(PRBool& aResult)
+{
+  aResult = PR_FALSE; 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShellWindow::SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
+                                     nsIWebShell* aOpenerShell, PRUint32 chrome,
+                                     nsIWebShell** aNewWebShellResult)
+{
   // Create a new browser window. That's what this method is here for.
 	nsresult           rv;
   nsString           controllerCID;
@@ -757,14 +776,10 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
                                  nsnull, nsnull, 615, 480);
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
-  if (aVisible)
-    newWindow->Show(PR_TRUE);
-
-	// XXX Return our outermost webshell. We know this is wrong, since it means new windows
-	// won't have chrome, but it's going to take a little while for me to figure this out.
-	NS_IF_ADDREF(mWebShell);
-	aNewWebShell = mWebShell;
-  return rv;
+  // Now return our web shell.
+  NS_IF_ADDREF(mWebShell);
+  *aNewWebShellResult = mWebShell;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsWebShellWindow::FindWebShellWithName(const PRUnichar* aName,
