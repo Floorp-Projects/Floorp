@@ -204,7 +204,8 @@ public:
                            PRBool& aIsSelected);
   NS_IMETHOD GetFirstRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow);
   NS_IMETHOD GetNextRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow);
-  NS_IMETHOD SetCaretAfterTableEdit(nsIDOMElement* aTable, PRInt32 aRow, PRInt32 aCol, PRInt32 aDirection);
+  NS_IMETHOD SetSelectionAfterTableEdit(nsIDOMElement* aTable, PRInt32 aRow, PRInt32 aCol, 
+                                        PRInt32 aDirection, PRBool aSelected);
   NS_IMETHOD GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsString& aTagName, PRInt32 &aSelectedCount);
   NS_IMETHOD GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 &aSelectionType);
   // Finds the first selected cell in first range of selection
@@ -217,20 +218,9 @@ public:
   // aRange is optional: returns the range around the cell
   NS_IMETHOD GetNextSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange);
 
+  // Upper-left-most selected cell in table
+  NS_IMETHOD GetFirstSelectedCellInTable(nsIDOMElement **aCell, PRInt32 *aRowIndex, PRInt32 *aColIndex);
     
-// Selection and navigation
-  /* obsolete
-  NS_IMETHOD MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection);
-  NS_IMETHOD MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection);
-  NS_IMETHOD MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection);
-  NS_IMETHOD MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection);
-  NS_IMETHOD SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection); 
-  NS_IMETHOD SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection);
-  NS_IMETHOD ScrollUp(nsIAtom *aIncrement);
-  NS_IMETHOD ScrollDown(nsIAtom *aIncrement);
-  NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin);
-  */
-
   /* miscellaneous */
   // This sets background on the appropriate container element (table, cell,)
   //   or calls into nsTextEditor to set the page background
@@ -404,6 +394,17 @@ protected:
                             nsIDOMElement   **aCell,
                             nsIDOMNode      **aCellParent, PRInt32 *aCellOffset,
                             PRInt32 *aRowIndex, PRInt32 *aColIndex);
+
+  NS_IMETHOD GetCellSpansAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, 
+                            PRInt32& aActualRowSpan, PRInt32& aActualColSpan);
+
+  NS_IMETHOD SplitCellIntoColumns(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32 aColIndex,
+                                  PRInt32 aColSpanLeft, PRInt32 aColSpanRight, nsIDOMElement **aNewCell);
+
+  NS_IMETHOD SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32 aColIndex,
+                               PRInt32 aRowSpanAbove, PRInt32 aRowSpanBelow, nsIDOMElement **aNewCell);
+
+  NS_IMETHOD FixBadRowSpan(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32& aNewRowCount);
 
   // Fallback method: Call this after using ClearSelection() and you
   //  failed to set selection to some other content in the document
