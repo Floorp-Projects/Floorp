@@ -2112,6 +2112,7 @@ PresShell::ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight)
 #include "nsIScrollableView.h"
 #include "nsIDeviceContext.h"
 #include "nsIURL.h"
+#include "nsILinkHandler.h"
 
 static NS_DEFINE_IID(kViewManagerCID, NS_VIEW_MANAGER_CID);
 static NS_DEFINE_IID(kIViewManagerIID, NS_IVIEWMANAGER_IID);
@@ -2119,6 +2120,7 @@ static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
+static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
 
 static void
 LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
@@ -2412,6 +2414,12 @@ PresShell::VerifyIncrementalReflow()
   if (NS_SUCCEEDED(mPresContext->GetContainer(&container)) &&
       (nsnull != container)) {
     cx->SetContainer(container);
+    nsILinkHandler* lh;
+    if (NS_SUCCEEDED(container->QueryInterface(kILinkHandlerIID,
+                                               (void**)&lh))) {
+      cx->SetLinkHandler(lh);
+      NS_RELEASE(lh);
+    }
     NS_RELEASE(container);
   }
 #endif
