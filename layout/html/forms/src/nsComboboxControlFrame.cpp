@@ -551,7 +551,7 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext& aPresContext,
 
   //if (currentRect != dropdownRect) {
     dropdownFrame->SetRect(dropdownRect);
-#ifdef DEBUG_rods
+#ifdef DEBUG_rodsXXX
     printf("%d Position Dropdown at: %d %d %d %d\n", counter++, dropdownRect.x, dropdownRect.y, dropdownRect.width, dropdownRect.height);
 #endif
   //}
@@ -645,7 +645,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
                                const nsHTMLReflowState& aReflowState, 
                                nsReflowStatus&          aStatus)
 {
-#ifdef DEBUG_rods
+#ifdef DEBUG_rodsXXX
   printf("nsComboboxControlFrame::Reflow %d   Reason: ", myCounter++);
   switch (aReflowState.reason) {
     case eReflowReason_Initial:printf("eReflowReason_Initial\n");break;
@@ -1079,9 +1079,11 @@ nsComboboxControlFrame::SelectionChanged(PRBool aDoDispatchEvent)
      // Now have the frame handle the event
     nsIFrame* frame = nsnull;
     nsIFrame* dropdownFrame = GetDropdownFrame();
-    nsresult result = dropdownFrame->QueryInterface(kIFrameIID, (void**)&frame);
-    if ((NS_SUCCEEDED(result)) && (nsnull != frame)) {
-      frame->HandleEvent(*mPresContext, &event, status);
+    if (nsnull != dropdownFrame) {
+      nsresult result = dropdownFrame->QueryInterface(kIFrameIID, (void**)&frame);
+      if ((NS_SUCCEEDED(result)) && (nsnull != frame)) {
+        frame->HandleEvent(*mPresContext, &event, status);
+      }
     }
   }
   return NS_OK;
@@ -1346,6 +1348,7 @@ NS_IMETHODIMP
 nsComboboxControlFrame::Rollup()
 {
   if (mDroppedDown) {
+    mListControlFrame->AboutToRollup();
     ShowDropDown(PR_FALSE);
     mListControlFrame->CaptureMouseEvents(PR_FALSE);
   }

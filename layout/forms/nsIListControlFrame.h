@@ -86,6 +86,11 @@ public:
    */
   NS_IMETHOD AboutToDropDown() = 0;
 
+  /**
+   * 
+   */
+  NS_IMETHOD AboutToRollup() = 0;
+
 };
 
 #endif
