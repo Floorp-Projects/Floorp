@@ -340,7 +340,7 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
 	  nsresult ret;
 
   nsIInputStream* in = nsnull;
-	nsString Trial = "resource:/res/acct/NCI_Dir/";
+	nsString Trial; Trial.AssignWithConversion("resource:/res/acct/NCI_Dir/");
 	Trial = Trial + MiddleValue;
 	printf("this is the trial value %s \n", Trial.ToNewCString());
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &ret);
@@ -387,9 +387,9 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
 //  while (1) {
     char name[256];
     name[0] = 0;
-    nsAutoString v("");
+    nsAutoString v;
     sprintf(name, "%s", "SiteName");
-    ret = props->GetStringProperty(name, v);
+    ret = props->GetStringProperty(NS_ConvertASCIItoUCS2(name), v);
 
     if (NS_FAILED(ret) || (!v.Length())) {
 
@@ -403,7 +403,7 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
 	LocCount++;
 
     sprintf(name, "%s", "Phone");
-    ret = props->GetStringProperty(name, v);
+    ret = props->GetStringProperty(NS_ConvertASCIItoUCS2(name), v);
 
     if (NS_FAILED(ret) || (!v.Length())) {
 
@@ -432,7 +432,7 @@ int nsAccount::GetConfigValues(nsString fileName)
 	  nsresult ret;
 
   nsIInputStream* in = nsnull;
-	nsString Trial = "resource:/res/acct/NCI_Dir/";
+	nsString Trial; Trial.AssignWithConversion("resource:/res/acct/NCI_Dir/");
 	Trial = Trial + fileName;
 	printf("this is the trial value %s \n", Trial.ToNewCString());
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &ret);
@@ -479,10 +479,10 @@ int nsAccount::GetConfigValues(nsString fileName)
 //  while (1) {
     char name[256];
     name[0] = 0;
-    nsAutoString v("");
+    nsAutoString v;
 
     sprintf(name, "%s", "DomainName");
-    ret = props->GetStringProperty(name, v);
+    ret = props->GetStringProperty(NS_ConvertASCIItoUCS2(name), v);
 
     if (NS_FAILED(ret) || (!v.Length())) {
 
@@ -492,7 +492,7 @@ int nsAccount::GetConfigValues(nsString fileName)
 	PL_strcpy(domainname, v.ToNewCString());
 
     sprintf(name, "%s", "DNSAddress");
-    ret = props->GetStringProperty(name, v);
+    ret = props->GetStringProperty(NS_ConvertASCIItoUCS2(name), v);
 
     if (NS_FAILED(ret) || (!v.Length())) {
 
@@ -501,7 +501,7 @@ int nsAccount::GetConfigValues(nsString fileName)
 	PL_strcpy(dnsp, v.ToNewCString());
 
     sprintf(name, "%s", "DNSAddress2");
-    ret = props->GetStringProperty(name, v);
+    ret = props->GetStringProperty(NS_ConvertASCIItoUCS2(name), v);
 
     if (NS_FAILED(ret) || (!v.Length())) {
 
@@ -535,9 +535,9 @@ NS_IMETHODIMP nsAccount::GetLocation(nsString& Locat)
 	{
 		if (i != 0)
 		{
-			Locat += ",";
+			Locat.AppendWithConversion(",");
 		}
-		Locat += gNCIInfo[i];
+		Locat.AppendWithConversion(gNCIInfo[i]);
 	}
 	return rv;
 
@@ -550,11 +550,11 @@ NS_IMETHODIMP nsAccount::GetSiteName(nsString& SiteList)
 	{
 		if (i != 0)
 		{
-			SiteList += ",";
+			SiteList.AppendWithConversion(",");
 		}
-		SiteList += IspLocation[i];
-		SiteList += "^";
-		SiteList += gNCIInfo[i];
+		SiteList.AppendWithConversion(IspLocation[i]);
+		SiteList.AppendWithConversion("^");
+		SiteList.AppendWithConversion(gNCIInfo[i]);
 
 	}
 	LocCount=0;
@@ -568,9 +568,9 @@ NS_IMETHODIMP nsAccount::GetPhone(nsString& PhoneList)
 	{
 		if (i != 0)
 		{
-			PhoneList += ",";
+			PhoneList.AppendWithConversion(",");
 		}
-		PhoneList += IspPhone[i];
+		PhoneList.AppendWithConversion(IspPhone[i]);
 	}
 		PhoneCount =0;
 	return rv;
@@ -588,7 +588,7 @@ NS_IMETHODIMP nsAccount::LoadValues(void)
 
 	for (int icount =0; icount < NCICount; icount++)
 	{
-		int rv3 = GetNCIValues(nsString(gNCIInfo[icount]));
+		int rv3 = GetNCIValues(NS_ConvertASCIItoUCS2(gNCIInfo[icount]));
 
 		mConsole << '\t' << "This is the count number "<< icount <<" :"<< nsEndl;
 
@@ -644,10 +644,10 @@ NS_IMETHODIMP nsAccount::GetModemConfig(nsString& ModemList)
 			{
 				if (i != 0)
 				{
-					ModemList += ",";
+					ModemList.AppendWithConversion(",");
 				}
-				ModemList += modemResults[i];
-			}
+				ModemList.AppendWithConversion(modemResults[i]);
+      }
 
 //	strcpy( returnData, (const char*)str ); 
 //	returnData = modemResults[0];
@@ -700,9 +700,9 @@ NS_IMETHODIMP nsAccount::GetAcctConfig(nsString& AccountList)
 			{
 				if (i != 0)
 				{
-					AccountList += ",";
+					AccountList.AppendWithConversion(",");
 				}
-				AccountList += gNCIInfo[i];
+				AccountList.AppendWithConversion(gNCIInfo[i]);
 			}
 
 //			printf("this is the acct strings %s\n",AccountList.ToNewCString());
@@ -745,7 +745,7 @@ NS_IMETHODIMP nsAccount::SetDialerConfig(char* returnData)
 		printf ("This is the return data %s \n", returnData);
 
 //		if (NCICount > 0)
-		    nsString data(returnData);
+		    nsString data; data.AssignWithConversion(returnData);
     
 			// Set the gathered info into an array
 			SetDataArray(data);
@@ -756,7 +756,7 @@ NS_IMETHODIMP nsAccount::SetDialerConfig(char* returnData)
 		{
 			char* filename = GetValue("filename");
 			printf (" This is the file name %s \n",filename);
-			GetConfigValues(nsString(filename));
+			GetConfigValues(NS_ConvertASCIItoUCS2(filename));
 			printf (" This is the dnsp name %s \n",dnsp);
 			printf (" This is the dnss name %s \n",dnss);
 			printf (" This is the domain name %s \n",domainname);
@@ -787,11 +787,11 @@ return rv;
 NS_IMETHODIMP nsAccount::CheckForDun(nsString& dun)
 {
 	nsresult rv=NS_OK;
-	dun += "0";
-	PRBool dunvalue = CheckEnvironment();
+	dun.AppendWithConversion("0");
+  PRBool dunvalue = CheckEnvironment();
 	if (dunvalue )
 	{
-		dun += "1";
+		dun.AppendWithConversion("1");
 	}
 	
 return rv;
