@@ -37,7 +37,7 @@
 # ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://browser/skin/aboutDialog.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://browser/content/aboutDialog.css" type="text/css"?> 
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
