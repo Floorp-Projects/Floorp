@@ -537,26 +537,19 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
   nsIMsgMessageService * messageService = nsnull;
   nsSaveMsgListener *aListener = nsnull;
   nsSaveAllAttachmentsState *saveState= (nsSaveAllAttachmentsState*) closure;
-  nsAutoString from, to;
   nsCOMPtr<nsISupports> channelSupport;
-  nsCOMPtr<nsIStreamListener> convertedListener;
   nsCOMPtr<nsIMsgMessageFetchPartService> fetchService;
   nsAutoString urlString;
   char *urlCString = nsnull;
   nsCOMPtr<nsIURI> aURL;
   nsCAutoString fullMessageUri(messageUri);
   nsresult rv = NS_OK;
-  
-  NS_WITH_SERVICE(nsIStreamConverterService,
-                  streamConverterService,  
-                  kIStreamConverterServiceCID, &rv);
-  if (NS_FAILED(rv)) goto done;
 
+  // XXX whacky ref counting here...what's the deal? when does aListener get released? it's not clear.
   aListener = new nsSaveMsgListener(fileSpec, this);
   if (!aListener)
   {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-      goto done;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
   NS_ADDREF(aListener);
 
@@ -571,60 +564,42 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
   rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
   nsCRT::free(urlCString);
 
-  if (NS_FAILED(rv)) goto done;
-
-  rv = GetMessageServiceFromURI(messageUri, &messageService);
-  if (NS_FAILED(rv)) goto done;
-
-  fetchService = do_QueryInterface(messageService);
-  // if the message service has a fetch part service then we know we can fetch mime parts...
-  if (fetchService)
+  if (NS_SUCCEEDED(rv))
   {
-    PRInt32 sectionPos = urlString.Find("?section");
-    nsString mimePart;
-
-    urlString.Right(mimePart, urlString.Length() - sectionPos);
-    fullMessageUri.AppendWithConversion(mimePart);
-   
-    messageUri = fullMessageUri.get();
-  }
-  {
-    aListener->m_channel = null_nsCOMPtr();
-    rv = NS_NewInputStreamChannel(getter_AddRefs(aListener->m_channel),
-                                  aURL,
-                                  nsnull,      // inputStream
-                                  nsnull,      // contentType
-                                  -1);
-    if (NS_FAILED(rv)) goto done;
-
-    from.AssignWithConversion(MESSAGE_RFC822);
-    to.AssignWithConversion("application/vnd.mozilla.xul+xml");
-  
-    channelSupport = do_QueryInterface(aListener->m_channel);
-
-    rv = streamConverterService->AsyncConvertData(
-        from.GetUnicode(), to.GetUnicode(), aListener,
-        channelSupport, getter_AddRefs(convertedListener));
-    if (NS_FAILED(rv)) goto done;
-
-    if (fetchService)
-      rv = fetchService->FetchMimePart(aURL, messageUri, convertedListener,
-                                          mMsgWindow, nsnull,nsnull);
-    else
-      rv = messageService->DisplayMessage(messageUri,
-                                        convertedListener,mMsgWindow,
-                                        nsnull, nsnull, nsnull); 
-  }
-
-done:
-    if (messageService)
-      ReleaseMessageServiceFromURI(unescapedUrl, messageService);
-
-    if (NS_FAILED(rv))
+    rv = GetMessageServiceFromURI(messageUri, &messageService);
+    if (NS_SUCCEEDED(rv))
     {
-        NS_IF_RELEASE(aListener);
-        Alert("saveAttachmentFailed");
-    }
+      fetchService = do_QueryInterface(messageService);
+      // if the message service has a fetch part service then we know we can fetch mime parts...
+      if (fetchService)
+      {
+        PRInt32 sectionPos = urlString.Find("?section");
+        nsString mimePart;
+
+        urlString.Right(mimePart, urlString.Length() - sectionPos);
+        fullMessageUri.AppendWithConversion(mimePart);
+   
+        messageUri = fullMessageUri.get();
+      }
+
+      nsCOMPtr<nsISupports> consumer;
+      aListener->QueryInterface(NS_GET_IID(nsISupports),
+                                 getter_AddRefs(consumer));
+      if (fetchService)
+        rv = fetchService->FetchMimePart(aURL, messageUri, consumer, mMsgWindow, nsnull,nsnull);
+      else
+        rv = messageService->DisplayMessage(messageUri, consumer, mMsgWindow,nsnull, nsnull, nsnull); 
+
+      if (messageService)
+       ReleaseMessageServiceFromURI(unescapedUrl, messageService);
+    } // if we got a message service
+  } // if we created a url
+
+  if (NS_FAILED(rv))
+  {
+      NS_IF_RELEASE(aListener);
+      Alert("saveAttachmentFailed");
+  }
 	return rv;
 }
 
