@@ -1377,6 +1377,9 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext*        aPresCon
     // Move the frames that follow aKidFrame by aDeltaY, and update the running
     // y-offset
     for (aKidFrame->GetNextSibling(&kidFrame); kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
+      nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(kidFrame);
+      if (!rgFrame) continue; // skip foreign frames
+
       // See if it's the footer we're moving
       if (kidFrame == aReflowState.footerFrame) {
         movedFooter = PR_TRUE;
@@ -1390,8 +1393,7 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext*        aPresCon
 
       // Update the max element size
       //XXX: this should call into layout strategy to get the width field
-      if (aMaxElementSize) 
-      {
+      if (aMaxElementSize) {
         const nsStyleSpacing* tableSpacing;
         GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)tableSpacing));
         nsMargin borderPadding;
@@ -1399,7 +1401,7 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext*        aPresCon
         borderPadding += aReflowState.reflowState.mComputedPadding;
         nscoord cellSpacing = GetCellSpacingX();
         nsSize  kidMaxElementSize;
-        ((nsTableRowGroupFrame*)kidFrame)->GetMaxElementSize(kidMaxElementSize);
+        rgFrame->GetMaxElementSize(kidMaxElementSize);
         nscoord kidWidth = kidMaxElementSize.width + borderPadding.left + borderPadding.right + cellSpacing*2;
         aMaxElementSize->width = PR_MAX(aMaxElementSize->width, kidWidth); 
         aMaxElementSize->height += kidMaxElementSize.height;
@@ -1926,7 +1928,6 @@ NS_METHOD nsTableFrame::ResizeReflowPass2(nsIPresContext*          aPresContext,
   borderPadding += aReflowState.mComputedPadding;
 
   InnerTableReflowState state(aPresContext, aReflowState, borderPadding);
-
   // now that we've computed the column  width information, reflow all children
 
 #ifdef NS_DEBUG
@@ -2596,34 +2597,37 @@ nsTableFrame::RecoverState(InnerTableReflowState& aReflowState,
                            nsSize*                aMaxElementSize)
 {
   // Walk the list of children looking for aKidFrame
-  for (nsIFrame* frame = mFrames.FirstChild(); frame; frame->GetNextSibling(&frame)) {
+  for (nsIFrame* childFrame = mFrames.FirstChild(); childFrame; childFrame->GetNextSibling(&childFrame)) {
+    nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(childFrame);
+    if (!rgFrame) continue; // skip foreign frame types
+   
     // If this is a footer row group, remember it
     const nsStyleDisplay *display;
-    frame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+    rgFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
 
     // We only allow a single footer frame, and the footer frame must occur before
     // any body section row groups
     if ((NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == display->mDisplay) &&
         !aReflowState.footerFrame && !aReflowState.firstBodySection) {
-      aReflowState.footerFrame = frame;
+      aReflowState.footerFrame = childFrame;
     
     } else if ((NS_STYLE_DISPLAY_TABLE_ROW_GROUP == display->mDisplay) &&
                !aReflowState.firstBodySection) {
-      aReflowState.firstBodySection = frame;
+      aReflowState.firstBodySection = childFrame;
     }
     
     // See if this is the frame we're looking for
-    if (frame == aKidFrame) {
+    if (childFrame == aKidFrame) {
       // If it's the footer, then keep going because the footer is at the
       // very bottom
-      if (frame != aReflowState.footerFrame) {
+      if (childFrame != aReflowState.footerFrame) {
         break;
       }
     }
 
     // Get the frame's height
     nsSize  kidSize;
-    frame->GetSize(kidSize);
+    childFrame->GetSize(kidSize);
     
     // If our height is constrained then update the available height. Do
     // this for all frames including the footer frame
@@ -2632,7 +2636,7 @@ nsTableFrame::RecoverState(InnerTableReflowState& aReflowState,
     }
 
     // Update the running y-offset. Don't do this for the footer frame
-    if (frame != aReflowState.footerFrame) {
+    if (childFrame != aReflowState.footerFrame) {
       aReflowState.y += kidSize.height;
     }
 
@@ -2647,7 +2651,7 @@ nsTableFrame::RecoverState(InnerTableReflowState& aReflowState,
       borderPadding += aReflowState.reflowState.mComputedPadding;
       nscoord cellSpacing = GetCellSpacingX();
       nsSize  kidMaxElementSize;
-      ((nsTableRowGroupFrame*)frame)->GetMaxElementSize(kidMaxElementSize);
+      rgFrame->GetMaxElementSize(kidMaxElementSize);
       nscoord kidWidth = kidMaxElementSize.width + borderPadding.left + borderPadding.right + cellSpacing*2;
       aMaxElementSize->width = PR_MAX(aMaxElementSize->width, kidWidth); 
       aMaxElementSize->height += kidMaxElementSize.height;
@@ -3264,7 +3268,6 @@ void nsTableFrame::SetTableWidth(nsIPresContext*          aPresContext,
   tableWidth += (leftInset + rightInset);
   nsRect tableSize = mRect;
   tableSize.width = tableWidth;
-    
   SetRect(aPresContext, tableSize);
 }
 
