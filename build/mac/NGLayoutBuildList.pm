@@ -393,7 +393,7 @@ sub ScanForManifestFiles($$$$)
 
 			$dest_line =~ s|^#!dest[\t ]+|| || die "No destination line found in $filepath\n";
 
-			my($dest_path) = $dist_dir."chrome:$theme_name:$dest_line";
+			my($dest_path) = $dist_dir."chrome:skins:$theme_name:$dest_line";
 			# print " Destination is $dest_path\n";
 
 			InstallResources($filepath, "$dest_path", 0);
