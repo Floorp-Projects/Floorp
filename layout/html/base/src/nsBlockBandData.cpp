@@ -285,21 +285,13 @@ nsBlockBandData::ClearFloaters(nscoord aY, PRUint8 aBreakType)
           for (fn = 0; fn < numFrames; fn++) {
             nsIFrame* frame = (nsIFrame*) trapezoid->frames->ElementAt(fn);
             if (ShouldClearFrame(frame, aBreakType)) {
-#if 0
-              nscoord ym = GetFrameYMost(frame);
-#else
-              nscoord ym = trapezoid->yBottom;
-#endif
+              nscoord ym = trapezoid->yBottom + mSpaceManagerY;
               if (ym > yMost) yMost = ym;
             }
           }
         }
         else if (ShouldClearFrame(trapezoid->frame, aBreakType)) {
-#if 0
-          nscoord ym = GetFrameYMost(trapezoid->frame);
-#else
-          nscoord ym = trapezoid->yBottom;
-#endif
+          nscoord ym = trapezoid->yBottom + mSpaceManagerY;
           if (ym > yMost) yMost = ym;
         }
       }
