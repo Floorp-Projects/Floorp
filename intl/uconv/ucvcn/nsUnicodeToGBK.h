@@ -32,7 +32,7 @@
 #define nsUnicodeToGBK_h___
 
 #include "nsUCvCnSupport.h"
-
+#include "gbku.h"
 //----------------------------------------------------------------------
 // Class nsUnicodeToGBK [declaration]
 
@@ -64,15 +64,6 @@ protected:
   };  // just make it not abstract;
 
   NS_IMETHOD FillInfo(PRUint32 *aInfo);
-
- private:
-
-  typedef struct
-  {
-    char leftbyte;
-    char rightbyte;
-
-  } DByte;
 
 };
 

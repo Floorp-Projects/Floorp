@@ -36,8 +36,6 @@
 
 #include "nsUnicodeToHZ.h"
 #include "nsUCvCnDll.h"
-
-#define _GBKU_TABLE_		// to use a shared GBKU table
 #include "gbku.h"
 
 //----------------------------------------------------------------------

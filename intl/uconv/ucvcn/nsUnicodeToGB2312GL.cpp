@@ -24,15 +24,10 @@
 #include "nsUnicodeToGB2312GL.h"
 #include "nsUCvCnDll.h"
 
-
-#define _GBKU_TABLE_		// use a shared table
 #include "gbku.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToGB2312GL [implementation]
-
-#define TRUE 1
-#define FALSE 0
 
 nsUnicodeToGB2312GL::nsUnicodeToGB2312GL()
 {
@@ -71,7 +66,6 @@ NS_IMETHODIMP nsUnicodeToGB2312GL::ConvertNoBuff(const PRUnichar * aSrc,
 	PRInt32 i=0;
 	PRInt32 iSrcLength = 0;
   DByte *pDestDBCode;
-  DByte *pSrcDBCode;
 	PRInt32 iDestLength = 0;
   PRUnichar unicode;
   PRUint8 left, right;

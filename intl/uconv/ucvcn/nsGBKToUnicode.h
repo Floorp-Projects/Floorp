@@ -56,15 +56,6 @@ protected:
       PRInt32 * aDestLength);
 
 
-private:
-
-  typedef struct
-  {
-    char leftbyte;
-    char rightbyte;
-
-  } DByte;
-
 };
 
 #endif /* nsGBK2312ToUnicode_h___ */

@@ -53,59 +53,20 @@
 // Others let converter to do search from table GBKToUnicode[]. If we want further
 // trade memory for performance, we can let more unicode to do table mapping to get
 // its GBK instead of searching table GBKToUnicode[]. 
-
-#ifdef _GBKU_TABLE_
+#ifndef _GBKU_H__
+#define _GBKU_H__
 
 #define GB_UNDEFINED 0xFFFF
 #define MAX_GBK_LENGTH	  24066   /* (0xfe-0x80)*(0xfe-0x3f) */
 
 typedef struct
 {
-
   PRUint8 leftbyte;
   PRUint8 rightbyte;
-
 } DByte;
+
 extern PRUnichar GBKToUnicodeTable[MAX_GBK_LENGTH];
+extern DByte UnicodeToGBKTable[0x5200]; // 0xA000 - 0x4E00 = 0x5200
+extern PRBool gUnicodeToGBKTableInitialized;
 
-#ifdef _UNICODE_TO_GBK_ENCODER_
- DByte UnicodeToGBKTable[0x5200];
- PRUint16 gUnicodeToGBKTableInitialized = PR_FALSE;  // default to not initialized yet
-#else
- extern DByte UnicodeToGBKTable[0x5200]; // 0xA000 - 0x4E00 = 0x5200
- extern PRUint16 gUnicodeToGBKTableInitialized;
-#endif
-
-#else
-
-#define _GBKU_TABLE_
-
-
-#define GB_UNDEFINED 0xFFFF
-#define MAX_GBK_LENGTH	  24066   /* (0xfe-0x80)*(0xfe-0x3f) */
-
-typedef struct 
-{ 
-  PRUint8 leftbyte;
-  PRUint8 rightbyte;
-
-} DByte;
-
-
-
-PRUnichar GBKToUnicodeTable[MAX_GBK_LENGTH] =
-{
-#include "cp936map.h"
-};
-
-
-#ifdef _UNICODE_TO_GBK_ENCODER_
- DByte UnicodeToGBKTable[0x5200];
- PRUint16 gUnicodeToGBKTableInitialized = PR_FALSE;  // default to not initialized yet
-#else
- extern DByte UnicodeToGBKTable[0x5200]; // 0xA000 - 0x4E00 = 0x5200
- extern PRUint16 gUnicodeToGBKTableInitialized;
-#endif
-
-#endif /* ifdef _GBKU_TABLE_ */
-
+#endif /* _GBKU_H__ */

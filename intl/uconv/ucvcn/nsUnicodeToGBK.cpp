@@ -32,16 +32,10 @@
 
 #include "nsUnicodeToGBK.h"
 #include "nsUCvCnDll.h"
-
-#define _UNICODE_TO_GBK_ENCODER_  // this is the place we allocate memory for UnicodeToGBKTable[0xFFFF]
-#define _GBKU_TABLE_		// to use a shared GBKU table
 #include "gbku.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToGBK [implementation]
-
-#define TRUE 1
-#define FALSE 0
 
 nsUnicodeToGBK::nsUnicodeToGBK()
   {
@@ -82,7 +76,6 @@ NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(const PRUnichar * aSrc,
 	PRInt32 i=0;
 	PRInt32 iSrcLength = 0;
     DByte *pDestDBCode;
-    DByte *pSrcDBCode; 
 	PRInt32 iDestLength = 0;
     PRUnichar unicode;
     PRUint8 left, right;

@@ -24,7 +24,7 @@
 #define nsGB2312ToUnicodeV2_h___
 
 #include "nsUCvCnSupport.h"
-
+#include "gbku.h"
 //----------------------------------------------------------------------
 // Class nsGB2312ToUnicodeV2 [declaration]
 
@@ -55,15 +55,6 @@ protected:
 
   NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
-
-private:
-
-  typedef struct
-  {
-    char leftbyte;
-    char rightbyte;
-
-  } DByte;
 
 };
   

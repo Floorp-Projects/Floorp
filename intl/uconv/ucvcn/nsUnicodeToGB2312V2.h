@@ -64,15 +64,6 @@ protected:
 
   NS_IMETHOD FillInfo(PRUint32 *aInfo);
 
- private:
-
-  typedef struct
-  {
-    char leftbyte;
-    char rightbyte;
-
-  } DByte;
-
 };
 
 #endif /* nsUnicodeToGB2312V2_h___ */

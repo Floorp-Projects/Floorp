@@ -48,8 +48,6 @@
 
 #include "nsUCvCnDll.h"
 #include "nsHZToUnicode.h"
-
-#define _GBKU_TABLE_		// to use a shared GBKU table
 #include "gbku.h"
 
 //----------------------------------------------------------------------
