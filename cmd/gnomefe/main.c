@@ -25,10 +25,12 @@
 #include "net.h"
 #include "plevent.h"
 #include "xp.h"
+#include "rdf.h"
 
 #include "g-browser-frame.h"
 
 extern char *fe_home_dir;
+extern char *fe_config_dir;
 
 gint gnomefe_depth;
 GdkVisual *gnomefe_visual;
@@ -135,6 +137,10 @@ main(int argc,
 	*slash = '\0';
     }
 
+  /* Hmm. XFE claims InitNetLib needs to happen before pref init */
+  /* The unit for tcp buffer size is changed from kbytes to bytes */
+  NET_InitNetLib (8192, 50);
+
   {
     char buf [1024];
     PR_snprintf (buf, sizeof (buf), "%s/%s", fe_home_dir,
@@ -164,17 +170,32 @@ main(int argc,
 
   GH_InitGlobalHistory();
 
-  /* The unit for tcp buffer size is changed from kbytes to bytes */
-  NET_InitNetLib (8192, 50);
-
   IL_Init();
   LM_InitMocha ();
-  NPL_Init();
 
   initial_frame = moz_browser_frame_create();
 
   moz_frame_show(MOZ_FRAME(initial_frame));
 
+  /* Initialize RDF */
+  {
+    RDF_InitParamsStruct rdf_params = {0, };
+    
+    rdf_params.profileURL = 
+      XP_PlatformFileToURL(fe_config_dir);
+    rdf_params.bookmarksURL =
+      XP_PlatformFileToURL(fe_GetConfigDirFilename("bookmarks.html"));
+    rdf_params.globalHistoryURL = 
+      XP_PlatformFileToURL(fe_GetConfigDirFilename("history.db"));
+    
+    RDF_Init(&rdf_params);
+    
+    XP_FREEIF(rdf_params.profileURL);
+    XP_FREEIF(rdf_params.bookmarksURL);
+    XP_FREEIF(rdf_params.globalHistoryURL);
+  }
+  NPL_Init();
+  
   if(argc > 1)
     url = NET_CreateURLStruct(argv[1], NET_NORMAL_RELOAD);
   else

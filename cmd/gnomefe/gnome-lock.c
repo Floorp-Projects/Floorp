@@ -2,6 +2,7 @@
 #include "xpgetstr.h"
 
 #include <signal.h>
+#include <pwd.h>
 
 #ifdef NSPR20
 #include "private/prpriv.h"	/* for PR_NewNamedMonitor */

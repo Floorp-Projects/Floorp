@@ -24,8 +24,16 @@
 #include "xp_core.h"
 #include "structs.h"
 #include "ntypes.h"
+#include "g-browser-frame.h"
 
 MWContext*
 FE_GetRDFContext()
 {
+  MozBrowserFrame * frame;
+  frame = moz_browser_frame_create();
+  
+  moz_frame_show(MOZ_FRAME(frame));
+  
+  printf("FE_GetRDFContext (done?)\n");
+  return moz_frame_get_context(MOZ_FRAME(frame));
 }
