@@ -113,6 +113,7 @@ protected:
                                      nsIInterfaceRequestor* callbacks);
 
   // open a connection with a specific host and port
+  // aHostName must be UTF-8 encoded.
   virtual nsresult OpenNetworkSocketWithInfo(const char * aHostName,
                                              PRInt32 aGetPort,
                                              const char *connectionType,

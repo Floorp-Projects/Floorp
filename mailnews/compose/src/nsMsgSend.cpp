@@ -1479,6 +1479,7 @@ nsMsgComposeAndSend::GetEmbeddedObjectInfo(nsIDOMNode *node, nsMsgAttachmentData
   // Now, we know the types of objects this node can be, so we will do
   // our query interface here and see what we come up with 
   nsCOMPtr<nsIDOMHTMLBodyElement>     body = (do_QueryInterface(node));
+  // XXX convert to use nsIImageLoadingContent?
   nsCOMPtr<nsIDOMHTMLImageElement>    image = (do_QueryInterface(node));
   nsCOMPtr<nsIDOMHTMLLinkElement>     link = (do_QueryInterface(node));
   nsCOMPtr<nsIDOMHTMLAnchorElement>   anchor = (do_QueryInterface(node));
@@ -1490,7 +1491,7 @@ nsMsgComposeAndSend::GetEmbeddedObjectInfo(nsIDOMNode *node, nsMsgAttachmentData
     if (NS_SUCCEEDED(body->GetBackground(tUrl)))
     {
       nsCAutoString turlC;
-      turlC.AssignWithConversion(tUrl);
+      CopyUTF16toUTF8(tUrl, turlC);
       if (NS_SUCCEEDED(nsMsgNewURL(&attachment->url, turlC.get())))      
         NS_IF_ADDREF(attachment->url);
       else
@@ -1507,7 +1508,7 @@ nsMsgComposeAndSend::GetEmbeddedObjectInfo(nsIDOMNode *node, nsMsgAttachmentData
     if (NS_FAILED(image->GetSrc(tUrl)))
       return NS_ERROR_FAILURE;
     nsCAutoString turlC;
-    turlC.AssignWithConversion(tUrl);
+    CopyUTF16toUTF8(tUrl, turlC);
     if (NS_FAILED(nsMsgNewURL(&attachment->url, turlC.get())))
     {
       // Well, the first time failed...which means we probably didn't get
@@ -1531,13 +1532,13 @@ nsMsgComposeAndSend::GetEmbeddedObjectInfo(nsIDOMNode *node, nsMsgAttachmentData
         
         // Ok, now get the path to the root doc and tack on the name we
         // got from the GetSrc() call....
-        NS_ConvertUTF8toUCS2 workURL(spec);
+        NS_ConvertUTF8toUTF16 workURL(spec);
         
         PRInt32 loc = workURL.RFind("/");
         if (loc >= 0)
           workURL.SetLength(loc+1);
         workURL.Append(tUrl);
-        NS_ConvertUCS2toUTF8 workurlC(workURL);
+        NS_ConvertUTF16toUTF8 workurlC(workURL);
         if (NS_FAILED(nsMsgNewURL(&attachment->url, workurlC.get())))
         {
           // rhp - just try to continue and send it without this image.
@@ -1550,11 +1551,11 @@ nsMsgComposeAndSend::GetEmbeddedObjectInfo(nsIDOMNode *node, nsMsgAttachmentData
     
     rv = image->GetName(tName);
     NS_ENSURE_SUCCESS(rv, rv);
-    attachment->real_name = ToNewCString(tName);
+    attachment->real_name = ToNewCString(tName); // XXX i18n
     
     image->GetLongDesc(tDesc);
     NS_ENSURE_SUCCESS(rv, rv);
-    attachment->description = ToNewCString(tDesc);
+    attachment->description = ToNewCString(tDesc); // XXX i18n
     
   }
   else if (link)        // Is this a link?
@@ -1565,7 +1566,7 @@ nsMsgComposeAndSend::GetEmbeddedObjectInfo(nsIDOMNode *node, nsMsgAttachmentData
     rv = link->GetHref(tUrl);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCAutoString turlC;
-    turlC.AssignWithConversion(tUrl);
+    CopyUTF16toUTF8(tUrl, turlC);
     rv = nsMsgNewURL(&attachment->url, turlC.get());
     NS_ENSURE_SUCCESS(rv, rv);
     
@@ -1580,7 +1581,7 @@ nsMsgComposeAndSend::GetEmbeddedObjectInfo(nsIDOMNode *node, nsMsgAttachmentData
     rv = anchor->GetHref(tUrl);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCAutoString turlC;
-    turlC.AssignWithConversion(tUrl);
+    CopyUTF16toUTF8(tUrl, turlC);
     rv = nsMsgNewURL(&attachment->url, turlC.get());
     NS_ENSURE_SUCCESS(rv, rv);
     
@@ -1701,7 +1702,8 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   // 
   // Query the editor, get the body of HTML!
   //
-  nsString  format; format.AssignWithConversion(TEXT_HTML);
+  nsString  format;
+  format.AssignLiteral(TEXT_HTML);
   PRUint32  flags = nsIDocumentEncoder::OutputFormatted  | nsIDocumentEncoder::OutputNoFormattingInPre;
   nsAutoString bodyStr;
   PRUnichar* bodyText = nsnull;

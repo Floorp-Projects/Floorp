@@ -1968,19 +1968,19 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionReply(const PRUnichar * aHost, u
 
   // now that we have a host and port to connect to, 
   // open up the channel...
-  nsCAutoString hostCStr; hostCStr.AssignWithConversion(aHost);
-  PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Connecting to: %s on port %d.", hostCStr.get(), aPort));
+  NS_ConvertUTF16toUTF8 hostUTF8(aHost);
+  PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Connecting to: %s on port %d.", hostUTF8.get(), aPort));
   nsCOMPtr<nsIInterfaceRequestor> callbacks;
   nsCOMPtr<nsISmtpUrl> smtpUrl(do_QueryInterface(m_runningURL));
   if (smtpUrl)
       smtpUrl->GetNotificationCallbacks(getter_AddRefs(callbacks));
 
   nsCOMPtr<nsIProxyInfo> proxyInfo;
-  rv = NS_ExamineForProxy("mailto", hostCStr.get(), aPort, getter_AddRefs(proxyInfo));
+  rv = NS_ExamineForProxy("mailto", hostUTF8.get(), aPort, getter_AddRefs(proxyInfo));
   if (NS_FAILED(rv)) proxyInfo = nsnull;
 
   // pass in "ssl" for connectionType if you want this to be over SSL
-  rv = OpenNetworkSocketWithInfo(hostCStr.get(), aPort, nsnull /* connectionType */, proxyInfo, callbacks);
+  rv = OpenNetworkSocketWithInfo(hostUTF8.get(), aPort, nsnull /* connectionType */, proxyInfo, callbacks);
 
   // we are no longer waiting for a logon redirection reply
   ClearFlag(SMTP_WAIT_FOR_REDIRECTION);

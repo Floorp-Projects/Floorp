@@ -3427,17 +3427,17 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsStrin
     // should put in the appropriate HTML for inclusion, otherwise, do nothing.
     if (m_composeHTML)
     {
-      sigOutput.AppendWithConversion(htmlBreak);
-      sigOutput.AppendWithConversion(htmlsigopen);
+      sigOutput.AppendLiteral(htmlBreak);
+      sigOutput.AppendLiteral(htmlsigopen);
       if (reply_on_top != 1 || sig_bottom || !aQuoted)
-        sigOutput.AppendWithConversion(dashes);
-      sigOutput.AppendWithConversion(htmlBreak);
+        sigOutput.AppendLiteral(dashes);
+      sigOutput.AppendLiteral(htmlBreak);
       sigOutput.AppendLiteral("<img src=\"file:///");
            /* XXX pp This gives me 4 slashes on Unix, that's at least one to
               much. Better construct the URL with some service. */
       sigOutput.AppendWithConversion(testSpec);
       sigOutput.AppendLiteral("\" border=0>");
-      sigOutput.AppendWithConversion(htmlsigclose);
+      sigOutput.AppendLiteral(htmlsigclose);
     }
   }
   else
@@ -3458,14 +3458,14 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsStrin
   {
     if (m_composeHTML)
     {
-      sigOutput.AppendWithConversion(htmlBreak);
+      sigOutput.AppendLiteral(htmlBreak);
       if (htmlSig)
-        sigOutput.AppendWithConversion(htmlsigopen);
+        sigOutput.AppendLiteral(htmlsigopen);
       else
-        sigOutput.AppendWithConversion(preopen);
+        sigOutput.AppendASCII(preopen);
     }
     else
-      sigOutput.AppendWithConversion(CRLF);
+      sigOutput.AppendLiteral(CRLF);
 
     if ((reply_on_top != 1 || sig_bottom || !aQuoted) &&
         sigData.Find("\r-- \r", PR_TRUE) < 0 &&
@@ -3477,12 +3477,12 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsStrin
       if (!(firstFourChars.EqualsLiteral("-- \n") ||
             firstFourChars.EqualsLiteral("-- \r")))
       {
-        sigOutput.AppendWithConversion(dashes);
+        sigOutput.AppendLiteral(dashes);
     
         if (!m_composeHTML || !htmlSig)
-          sigOutput.AppendWithConversion(CRLF);
+          sigOutput.AppendLiteral(CRLF);
         else if (m_composeHTML)
-          sigOutput.AppendWithConversion(htmlBreak);
+          sigOutput.AppendLiteral(htmlBreak);
       }
     }
 
@@ -3491,9 +3491,9 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsStrin
     if (m_composeHTML)
     {
       if (htmlSig)
-        sigOutput.AppendWithConversion(htmlsigclose);
+        sigOutput.AppendLiteral(htmlsigclose);
       else
-        sigOutput.AppendWithConversion(preclose);
+        sigOutput.AppendLiteral(preclose);
     }
   }
 
@@ -4215,11 +4215,10 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
 
     *_retval = nsIMsgCompConvertible::No;
 
-    nsAutoString elementStr;
-    rv = node->GetNodeName(elementStr);
+    nsAutoString element;
+    rv = node->GetNodeName(element);
     if (NS_FAILED(rv))
       return rv;
-    nsCAutoString element; element.AssignWithConversion(elementStr);
 
     nsCOMPtr<nsIDOMNode> pItem;
     if      (

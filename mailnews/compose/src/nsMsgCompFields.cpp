@@ -79,7 +79,7 @@ nsMsgCompFields::nsMsgCompFields()
     if (charset.IsEmpty())
       m_DefaultCharacterSet.Assign("ISO-8859-1");
     else
-      m_DefaultCharacterSet.AssignWithConversion(charset);
+      LossyCopyUTF16toASCII(charset, m_DefaultCharacterSet); // Charsets better be ASCII
     SetCharacterSet(m_DefaultCharacterSet.get());
   }
 }

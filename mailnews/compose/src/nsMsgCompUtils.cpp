@@ -499,7 +499,10 @@ RRT_HEADER:
 		nsCAutoString platform;
 		pHTTPHandler->GetPlatform(platform);
 
-		userAgentString.AssignWithConversion(brandName.get());
+    // XXX: This may leave characters with the 8th bit set in the string, which
+    // aren't allowed in header values. this should use some kind of encoding
+    // for them
+    LossyCopyUTF16toASCII(brandName, userAgentString);
 		userAgentString += ' ';
 		userAgentString += vendorSub;
 		userAgentString += " (";
