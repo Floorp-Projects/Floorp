@@ -87,7 +87,10 @@
 
   <h2>Getting the Source</h2>
 
-  <p>...</p>
+  <ol>
+   <li>Go to the root of your mozilla tree.</li>
+   <li><kbd>cvs up -Pd browser</kbd></li>
+  </ol>
 
   <h2>Building mozilla/browser </h2>
 
@@ -95,8 +98,6 @@
 
   <ol>
    <li>Get a bog standard Mozilla tree built.</li>
-   <li>Go to the root of your mozilla tree.</li>
-   <li><kbd>cvs up -Pd browser</kbd></li>
    <li>if you have MOZ_OBJDIR set in your mozconfig file, <kbd>cd</kbd>
    to that directory</li>
    <li><kbd>sh -c "CONFIG_FILES=browser/Makefile ./config.status"</kbd></li>
@@ -105,7 +106,7 @@
    <li>Run mozilla with arguments <kbd>-chrome chrome://browser/</kbd></li>
   </ol>
 
-  Note that steps 4 and 5 need only be run once.
+  Note that steps 2 and 3 need only be run once.
 
   <h2>Mac (CodeWarrior)</h2>
 
