@@ -932,8 +932,6 @@ static void mozilla_set_default_pref( nsIPref *pref )
 	nsIPref *pref = moz->EmbedRef->GetPrefs();
 */
 
-/* ATENTIE */ printf( "In mozilla_set_default_pref\n" );
-
 	/* translation set = Western European (ISO 8859-1) */
 	pref->SetUnicharPref( "intl.charset.default", NS_ConvertASCIItoUCS2("iso8859-1").get());
 
