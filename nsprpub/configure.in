@@ -218,6 +218,7 @@ DLL_SUFFIX=so
 MKSHLIB='$(CCC) -shared -o $@'
 PR_MD_ASFILES=
 PR_MD_CSRCS=
+AR_FLAGS='cr $@'
 
 dnl ========================================================
 dnl Override of system specific host options
@@ -234,6 +235,26 @@ dnl ========================================================
 dnl Override of system specific target options
 dnl ========================================================
 case "$target" in
+
+*-nto*)
+    AC_DEFINE(XP_UNIX)
+    MDCPUCFG_H=_nto.cfg
+    PR_MD_CSRCS=nto.c
+    PR_MD_ARCH_DIR=unix
+    MKSHLIB='qcc -Vgcc_ntox86 -shared -Wl,-h$(@:$(OBJDIR)/%.so=%.so) -o $(@:$(OBJDIR)/%.so=%.so)'
+    CFLAGS="$CFLAGS -Wc,-Wall -Wc,-Wno-parentheses -DNTO -D_QNX_SOURCE -DHAVE_POINTER_LOCALTIME_R -shared"
+    OS_LIBS="-lsocket"
+    _OPTIMIZE_FLAGS="-O2"
+    _DEBUG_FLAGS="-O2 -gdwarf-2"
+    COMPILER_TAG="_qcc"
+    CC="qcc -Vgcc_ntox86 -w"
+    CXX="QCC -Vgcc_ntox86 -w"
+    CPP="qcc -Vgcc_ntox86 -w"
+    LD="qcc -Vgcc_ntox86 -nostdlib"
+    AR="qcc -Vgcc_ntox86 -M -a "
+    AR_FLAGS="$@"
+	;;
+
 *-beos*)
     AC_DEFINE(XP_BEOS)
     AC_DEFINE(BeOS)
@@ -379,6 +400,7 @@ case "$target" in
 	;;
     esac
     ;;
+
 esac
 
 dnl Turn off shared libraries if asked to do so.
@@ -685,6 +707,7 @@ AC_SUBST(MKSHLIB)
 AC_SUBST(DEFINES)
 AC_SUBST(DEFS)
 AC_SUBST(AR)
+AC_SUBST(AR_FLAGS)
 AC_SUBST(DLLTOOL)
 AC_SUBST(WINDRES)
 AC_SUBST(RANLIB)
