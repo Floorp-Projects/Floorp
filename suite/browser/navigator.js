@@ -1337,3 +1337,23 @@ function dumpMemoryLeaks() {
 	if (leakDetector != null)
 		leakDetector.dumpLeaks();
 }
+
+function enableUriLoading() {
+	var pref = Components.classes['component://netscape/preferences'];
+     if (pref)
+     {
+     	pref = pref.getService();   	
+     	pref = pref.QueryInterface(Components.interfaces.nsIPref);
+		pref.SetDefaultBoolPref("browser.uriloader", true);
+	 }
+}
+
+function disableUriLoading() {
+	var pref = Components.classes['component://netscape/preferences'];
+     if (pref)
+     {
+     	pref = pref.getService();   	
+     	pref = pref.QueryInterface(Components.interfaces.nsIPref);
+		pref.SetDefaultBoolPref("browser.uriloader", false);
+	 }
+}
