@@ -306,15 +306,20 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
 
   flags |= MSG_FOLDER_FLAG_MAIL;
 
-  PRBool isServer;
-    rv = GetIsServer(&isServer);
+   PRBool isServer;
+   rv = GetIsServer(&isServer);
 
-  //Only set these is these are top level children.
-  if(NS_SUCCEEDED(rv) && isServer)
+   PRInt32 pFlags;
+   GetFlags ((PRUint32 *) &pFlags);
+   PRBool isParentInbox = pFlags & MSG_FOLDER_FLAG_INBOX;
+ 
+   //Only set these if these are top level children or parent is inbox
+
+  if(NS_SUCCEEDED(rv))
   {
-    if(name->EqualsIgnoreCase(NS_ConvertASCIItoUCS2("Inbox")))
+    if(isServer && name->EqualsIgnoreCase(NS_ConvertASCIItoUCS2("Inbox")))
       flags |= MSG_FOLDER_FLAG_INBOX;
-    else if(name->EqualsIgnoreCase(nsAutoString(kTrashName)))
+    else if((isServer || isParentInbox) && name->EqualsIgnoreCase(nsAutoString(kTrashName)))
       flags |= MSG_FOLDER_FLAG_TRASH;
 #if 0
     else if(name->EqualsIgnoreCase(kSentName))
@@ -1659,8 +1664,11 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
             if (NS_FAILED(rv)) return rv;
             nsXPIDLCString name;
             rv = nsImapURI2FullName(kImapRootURI, hostname, uri, getter_Copies(name));
-            m_onlineFolderName.Assign(name);
-            autoOnlineName.AssignWithConversion(name);
+            nsCAutoString onlineCName(name);
+            if (m_hierarchyDelimiter != '/')
+              onlineCName.ReplaceChar('/', m_hierarchyDelimiter);
+            m_onlineFolderName.Assign(onlineCName); 
+            autoOnlineName.AssignWithConversion(onlineCName);
           }
           rv = (*folderInfo)->SetProperty("onlineName", &autoOnlineName);
         }
