@@ -2574,7 +2574,7 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
         for (i = 0; i < count; i++) {
             nsXULAttribute* attr = (nsXULAttribute*)mAttributes->ElementAt(i);
             if ((attr->mNameSpaceID == aNameSpaceID) && (attr->mName == aName)) {
-                oldValue = attr->mValue.GetUnicode();
+                oldValue = attr->mValue;
                 mAttributes->RemoveElementAt(i);
                 NS_RELEASE(attr);
                 successful = PR_TRUE;
@@ -3054,7 +3054,7 @@ RDFElementImpl::GetIdResource(nsIRDFResource** aResource)
             const nsXULAttribute* attr = (const nsXULAttribute*) mAttributes->ElementAt(i);
             if ((attr->mNameSpaceID == kNameSpaceID_None) &&
                 (attr->mName == kIdAtom)) {
-                return nsRDFContentUtils::MakeElementResource(mDocument, attr->mValue.GetUnicode(), aResource);
+                return nsRDFContentUtils::MakeElementResource(mDocument, attr->mValue, aResource);
             }
         }
     }
@@ -3080,22 +3080,8 @@ RDFElementImpl::GetRefResource(nsIRDFResource** aResource)
 
             if (attr->mName != kRefAtom)
                 continue;
-#if 0
-            // Found it!
-            nsresult rv;
 
-            // ...now resolve it to an absolute URI.
-            nsCOMPtr<nsIURI> base = dont_AddRef(mDocument->GetDocumentURL());
-
-            nsAutoString uri(attr->mValue);
-            rv = rdf_MakeAbsoluteURI(base, uri);
-            if (NS_FAILED(rv)) return rv;
-
-            // ...then, setup the new mapping.
-            return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
-#else
-            return nsRDFContentUtils::MakeElementResource(mDocument, attr->mValue.GetUnicode(), aResource);
-#endif
+            return nsRDFContentUtils::MakeElementResource(mDocument, attr->mValue, aResource);
         }
     }
 
