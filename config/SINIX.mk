@@ -16,7 +16,7 @@
 #
 
 ######################################################################
-# Config stuff for SNI SINIX-N (aka ReliantUNIX)
+# Config stuff for SNI SINIX (aka ReliantUNIX)
 ######################################################################
 #
 ######################################################################
@@ -24,10 +24,14 @@
 ######################################################################
 
 ARCH			:= sinix
+ifeq (86,$(findstring 86,$(OS_TEST)))
+CPU_ARCH		:= x86
+else
 CPU_ARCH		:= mips
+endif
 GFX_ARCH		:= x
 
-OS_INCLUDES		= -I/usr/local/include
+OS_INCLUDES		=
 G++INCLUDES		=
 LOC_LIB_DIR		= /usr/lib/locale
 MOTIF			=
@@ -61,6 +65,10 @@ PT_LOCALE		= pt_PT.88591
 # Version-specific stuff
 ######################################################################
 
+ifeq ($(CPU_ARCH),x86)
+PLATFORM_FLAGS		+= -Di386
+endif
+
 ######################################################################
 # Overrides for defaults in config.mk (or wherever)
 ######################################################################
@@ -69,6 +77,7 @@ BSDECHO			= /usr/ucb/echo
 EMACS			= /bin/true
 WHOAMI			= /usr/ucb/whoami
 PERL			= $(LOCAL_BIN)perl
+PROCESSOR_ARCHITECTURE	= _$(CPU_ARCH)
 
 ######################################################################
 # Other
@@ -77,12 +86,17 @@ PERL			= $(LOCAL_BIN)perl
 ifdef NS_USE_NATIVE
 CC			= cc
 CCC			= CC
+ifneq ($(CPU_ARCH),x86)
 PLATFORM_FLAGS		+= -fullwarn -xansi
+endif
 ifdef BUILD_OPT
 OPTIMIZER		= -Olimit 4000
 endif
 else
-PLATFORM_FLAGS		+= -pipe -Wall -Wno-format
+PLATFORM_FLAGS		+= -Wall -Wno-format
+ifneq ($(CPU_ARCH),x86)
+PLATFORM_FLAGS		+= -pipe
+endif
 ASFLAGS			+= -x assembler-with-cpp
 ifdef BUILD_OPT
 OPTIMIZER		= -O
