@@ -75,6 +75,7 @@ public:
     PRUint32         mServerType;           // what kind of server is it.
     nsString         mPassword;
     PRInt32          mSuspendedWrite;
+    nsCString        mPwd;
 
 private:
 	PRLock* mLock;  // protects mListener.

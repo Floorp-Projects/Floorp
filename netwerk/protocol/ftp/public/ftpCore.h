@@ -52,6 +52,9 @@
 #define NS_ERROR_FTP_PASV \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 23)
 
+#define NS_ERROR_FTP_PWD \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 24)
+
 /**
  * Status nsresult codes: used with nsINotification objects 
  */

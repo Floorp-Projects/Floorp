@@ -569,7 +569,7 @@ nsFtpState::EstablishControlConnection()
             // read cached variables into us. 
             mServerType = mControlConnection->mServerType;           
             mPassword   = mControlConnection->mPassword;
-
+            mPwd        = mControlConnection->mPwd;
             mTryingCachedControl = PR_TRUE;
             
             // we're already connected to this server, skip login.
@@ -897,6 +897,24 @@ nsFtpState::Process()
 
             break;
             
+// PWD        
+          case FTP_S_PWD:
+            rv = S_pwd();
+
+            if (NS_FAILED(rv))
+                mInternalError = NS_ERROR_FTP_PWD;
+            
+            MoveToNextState(FTP_R_PWD);
+            break;
+            
+          case FTP_R_PWD:
+            mState = R_pwd();
+
+            if (FTP_ERROR == mState) 
+                mInternalError = NS_ERROR_FTP_PWD;
+
+            break;
+            
           default:
             ;
             
@@ -1098,6 +1116,31 @@ nsFtpState::R_pass() {
 }
 
 nsresult
+nsFtpState::S_pwd() {
+    nsCString pwdStr("PWD" CRLF);
+    return SendFTPCommand(pwdStr);
+}
+
+FTP_STATE
+nsFtpState::R_pwd() {
+    if (mResponseCode/100 != 2) 
+        return FTP_ERROR;
+    nsCAutoString respStr(mResponseMsg);
+    PRInt32 pos = respStr.FindChar('"');
+    if (pos > -1) {
+        respStr.Cut(0,pos+1);
+        pos = respStr.FindChar('"');
+        if (pos > -1) {
+            respStr.Truncate(pos);
+            if (respStr.Last() != '/')
+                respStr.Append("/");
+            mPwd = respStr;
+        }
+    }
+    return FTP_S_TYPE;
+}
+
+nsresult
 nsFtpState::S_syst() {
     nsCString systString("SYST" CRLF);
     return SendFTPCommand( systString );
@@ -1131,7 +1174,7 @@ nsFtpState::R_syst() {
             return FTP_ERROR;
         }
 
-        return FTP_S_TYPE;
+        return FTP_S_PWD;
     }
 
     if (mResponseCode/100 == 5) {   
@@ -1139,7 +1182,7 @@ nsFtpState::R_syst() {
         // No clue.  We will just hope it is UNIX type server.
         mServerType = FTP_UNIX_TYPE;
 
-        return FTP_S_TYPE;
+        return FTP_S_PWD;
     }
     return FTP_ERROR;
 }
@@ -1174,8 +1217,10 @@ nsFtpState::R_type() {
 
 nsresult
 nsFtpState::S_cwd() {
-    nsCAutoString cwdStr("CWD ");
-    cwdStr.Append(mPath);
+    nsCAutoString cwdStr(mPath);
+    if (cwdStr.First() != '/')
+        cwdStr.Insert(mPwd,0);
+    cwdStr.Insert("CWD ",0);
     cwdStr.Append(CRLF);
 
     return SendFTPCommand(cwdStr);
@@ -1195,8 +1240,10 @@ nsFtpState::R_cwd() {
 
 nsresult
 nsFtpState::S_size() {
-    nsCAutoString sizeBuf("SIZE ");
-    sizeBuf.Append(mPath);
+    nsCAutoString sizeBuf(mPath);
+    if (sizeBuf.First() != '/')
+        sizeBuf.Insert(mPwd,0);
+    sizeBuf.Insert("SIZE ",0);
     sizeBuf.Append(CRLF);
 
     return SendFTPCommand(sizeBuf);
@@ -1293,8 +1340,10 @@ nsFtpState::R_list() {
 nsresult
 nsFtpState::S_retr() {
     nsresult rv = NS_OK;
-    nsCAutoString retrStr("RETR ");
-    retrStr.Append(mPath);
+    nsCAutoString retrStr(mPath);
+    if (retrStr.First() != '/')
+        retrStr.Insert(mPwd,0);
+    retrStr.Insert("RETR ",0);
     retrStr.Append(CRLF);
     
     if (!mDRequestForwarder)
@@ -1360,8 +1409,10 @@ nsFtpState::R_rest() {
 nsresult
 nsFtpState::S_stor() {
     nsresult rv = NS_OK;
-    nsCAutoString storStr("STOR ");
-    storStr.Append(mPath.get());
+    nsCAutoString storStr(mPath.get());
+    if (storStr.First() != '/')
+        storStr.Insert(mPwd,0);
+    storStr.Insert("STOR ",0);
     storStr.Append(CRLF);
 
     rv = SendFTPCommand(storStr);
@@ -1800,7 +1851,20 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
         rv = mURL->GetPath(&path);
     
     if (NS_FAILED(rv)) return rv;
-    mPath.Adopt(nsUnescape(path));
+    // Skip leading slash
+    char* fwdPtr= NS_CONST_CAST(char*, path);
+    if (fwdPtr && (*fwdPtr == '/'))
+        fwdPtr++;
+    if (*fwdPtr == '\0') {
+        // make it at least a dot
+        mPath.Adopt(".");
+    } else {
+        // now unescape it
+        char *unescPath = nsnull;
+        nsStdUnescape(fwdPtr,&unescPath);
+        nsMemory::Free(path);
+        mPath.Adopt(unescPath);
+    }
 
     // pull any username and/or password out of the uri
     nsXPIDLCString uname;
@@ -1907,6 +1971,7 @@ nsFtpState::KillControlConnection() {
         // Store connection persistant data
         mControlConnection->mServerType = mServerType;           
         mControlConnection->mPassword = mPassword;
+        mControlConnection->mPwd = mPwd;
         nsresult rv = nsFtpProtocolHandler::InsertConnection(mURL, 
                                            NS_STATIC_CAST(nsISupports*, (nsIStreamListener*)mControlConnection));
         // Can't cache it?  Kill it then.  
