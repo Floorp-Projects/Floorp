@@ -268,11 +268,15 @@ class basic_nsAReadableString
 
 
       int  Compare( const basic_nsAReadableString<CharT>& rhs ) const;
-      // int  Compare( const basic_nsLiteralString<CharT>& rhs ) const;
+      int  Compare( const CharT* ) const;
+      int  Compare( const CharT*, PRUint32 ) const;
+//    int  Compare( CharT ) const;
 
         // |Equals()| is a synonym for |Compare()|
       PRBool  Equals( const basic_nsAReadableString<CharT>& rhs ) const;
-      // PRBool  Equals( const basic_nsLiteralString<CharT>& rhs ) const;
+      PRBool  Equals( const CharT* ) const;
+      PRBool  Equals( const CharT*, PRUint32 ) const;
+//    PRBool  Equals( CharT ) const;
 
         // Comparison operators are all synonyms for |Compare()|
       PRBool  operator!=( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)!=0; }
@@ -382,15 +386,21 @@ basic_nsAReadableString<CharT>::Equals( const basic_nsAReadableString<CharT>& rh
     return Compare(rhs) == 0;
   }
 
-#if 0
 template <class CharT>
 inline
 PRBool
-basic_nsAReadableString<CharT>::Equals( const basic_nsLiteralString<CharT>& rhs ) const
+basic_nsAReadableString<CharT>::Equals( const CharT* rhs ) const
   {
-    return Compare(rhs) == 0;
+    return Compare(basic_nsLiteralString<CharT>(rhs)) == 0;
   }
-#endif
+
+template <class CharT>
+inline
+PRBool
+basic_nsAReadableString<CharT>::Equals( const CharT* rhs, PRUint32 rhs_length ) const
+  {
+    return Compare(basic_nsLiteralString<CharT>(rhs, rhs_length)) == 0;
+  }
 
 template <class CharT>
 inline
@@ -563,15 +573,21 @@ basic_nsAReadableString<CharT>::Compare( const basic_nsAReadableString<CharT>& r
     return ::Compare(*this, rhs);
   }
 
-#if 0
 template <class CharT>
 inline
 int
-basic_nsAReadableString<CharT>::Compare( const basic_nsLiteralString<CharT>& rhs ) const
+basic_nsAReadableString<CharT>::Compare( const CharT* rhs ) const
   {
-    return ::Compare(*this, rhs);
+    return ::Compare(*this, basic_nsLiteralString<CharT>(rhs));
   }
-#endif
+
+template <class CharT>
+inline
+int
+basic_nsAReadableString<CharT>::Compare( const CharT* rhs, PRUint32 rhs_length ) const
+  {
+    return ::Compare(*this, basic_nsLiteralString<CharT>(rhs, rhs_length));
+  }
 
 
 
