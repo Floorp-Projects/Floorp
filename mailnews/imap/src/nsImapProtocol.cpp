@@ -250,8 +250,7 @@ PRBool nsMsgImapLineDownloadCache::CacheEmpty()
 
 NS_IMETHODIMP nsMsgImapLineDownloadCache::CacheLine(const char *line, PRUint32 uid)
 {
-    PRUint32 lineLength = PL_strlen(line);
-    NS_ASSERTION((lineLength + 1) <= SpaceAvailable(), 
+    NS_ASSERTION((PL_strlen(line) + 1) <= SpaceAvailable(), 
                  "Oops... line length greater than space available");
     
     fLineInfo->uidOfMessage = uid;
@@ -2425,8 +2424,6 @@ void nsImapProtocol::AutoSubscribeToMailboxIfNecessary(const char *mailboxName)
 #endif
 }
 
-static int gEventCount = 0;
-
 nsresult nsImapProtocol::BeginMessageDownLoad(
                                               PRUint32 total_message_size, // for user, headers and body
                                               const char *content_type)
@@ -4029,13 +4026,9 @@ char* nsImapProtocol::CreateNewLineFromSocket()
       // death signal may have been received which means we should still kick out of the loop.
       do
       {
-//		  printf("waiting for data\n");
-        // wait on the data available monitor!!
-//        PR_EnterMonitor(m_dataAvailableMonitor);
-        // wait for data arrival
-//        PR_Wait(m_dataAvailableMonitor, /* PR_INTERVAL_NO_TIMEOUT */ PR_MillisecondsToInterval(50));
-//        PR_ExitMonitor(m_dataAvailableMonitor);
-
+        // if we didn't get any data, wait for 50 milliseconds to avoid hogging cpu
+        if (!numBytesInLine)
+          PR_Sleep(PR_MillisecondsToInterval(50)); 
         // now that we are awake...process some events
         m_eventQueue->ProcessPendingEvents();
       } while (TestFlag(IMAP_WAITING_FOR_DATA) && !DeathSignalReceived());
@@ -5460,7 +5453,6 @@ void nsImapProtocol::XMailboxInfo(const char *mailboxName)
 void nsImapProtocol::Namespace()
 {
 
-    ProgressEventFunctionUsingId (IMAP_STATUS_GETTING_NAMESPACE);
     IncrementCommandTagNumber();
     
   nsCString command(GetServerCommandTag());
