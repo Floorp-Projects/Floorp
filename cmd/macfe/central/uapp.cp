@@ -1089,6 +1089,9 @@ CFrontApp::~CFrontApp()
 	ET_FinishMocha();
 
 	LJ_ShutdownJava();
+	
+	// shutdown plugins
+	NPL_Shutdown();
 
 	DisposeRgn(mMouseRgnH);
 
