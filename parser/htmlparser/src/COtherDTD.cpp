@@ -242,18 +242,19 @@ COtherDTD::CreateNewInstance(nsIDTD** aInstancePtrResult)
   return result;
 }
 
-/** 
+/**
  * This method is called to determine if the given DTD can parse
- * a document in a given source-type. 
+ * a document in a given source-type.
  * NOTE: Parsing always assumes that the end result will involve
  *       storing the result in the main content model.
- * @update  gess6/24/98
- * @param    
- * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
+ * @param aParserContext -- the context for this document (knows
+ *           the content type, document type, parser command, etc).
+ * @return eUnknownDetect if you don't know how to parse it,
+ *         eValidDetect if you do, but someone may have a better idea,
+ *         ePrimaryDetect if you think you know best
  */
 NS_IMETHODIMP_(eAutoDetectResult)
-COtherDTD::CanParse(CParserContext& aParserContext, const nsString& aBuffer,
-                    PRInt32 aVersion)
+COtherDTD::CanParse(CParserContext& aParserContext)
 {
   eAutoDetectResult result=eUnknownDetect;
 
@@ -273,29 +274,7 @@ COtherDTD::CanParse(CParserContext& aParserContext, const nsString& aBuffer,
             break;
         }
       }
-      else {
-        //otherwise, look into the buffer to see if you recognize anything...
-        PRBool theBufHasXML=PR_FALSE;
-        if(BufferContainsHTML(aBuffer,theBufHasXML)){
-          result = eValidDetect ;
-          if(0==aParserContext.mMimeType.Length()) {
-            aParserContext.SetMimeType(NS_LITERAL_CSTRING(kHTMLTextContentType));
-            if(!theBufHasXML) {
-              switch(aParserContext.mDTDMode) {
-                case eDTDMode_full_standards:
-                case eDTDMode_almost_standards:
-                  result=ePrimaryDetect;
-                  break;
-                default:
-                  result=eValidDetect;
-                  break;
-              }
-            }
-            else result=eValidDetect;
-          }
-        }
-      }
-    } 
+    }
   }
   return result; 
 }

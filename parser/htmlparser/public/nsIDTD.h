@@ -107,14 +107,13 @@ public:
      * a document in a given source-type.
      * NOTE: Parsing always assumes that the end result will involve
      *       storing the result in the main content model.
-     * @update  gess6/24/98
-     * @param aContentType -- string representing type of doc to be
-     * converted (ie text/html)
-     * @return TRUE if this DTD can satisfy the request; FALSE otherwise.
+     * @param aParserContext -- the context for this document (knows
+     *           the content type, document type, parser command, etc).
+     * @return eUnknownDetect if you don't know how to parse it,
+     *         eValidDetect if you do, but someone may have a better idea,
+     *         ePrimaryDetect if you think you know best
      */
-    NS_IMETHOD_(eAutoDetectResult) CanParse(CParserContext& aParserContext,
-                                            const nsString& aBuffer,
-                                            PRInt32 aVersion) = 0;
+    NS_IMETHOD_(eAutoDetectResult) CanParse(CParserContext& aParserContext) = 0;
 
     NS_IMETHOD WillBuildModel(const CParserContext& aParserContext,
                               nsITokenizer* aTokenizer,
@@ -232,7 +231,7 @@ public:
 #define NS_DECL_NSIDTD \
     NS_IMETHOD_(const nsIID&)  GetMostDerivedIID(void) const;\
     NS_IMETHOD CreateNewInstance(nsIDTD** aInstancePtrResult);\
-    NS_IMETHOD_(eAutoDetectResult) CanParse(CParserContext& aParserContext, const nsString& aBuffer, PRInt32 aVersion);\
+    NS_IMETHOD_(eAutoDetectResult) CanParse(CParserContext& aParserContext);\
     NS_IMETHOD WillBuildModel(  const CParserContext& aParserContext, nsITokenizer* aTokenizer, nsIContentSink* aSink);\
     NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink);\
     NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink);\
