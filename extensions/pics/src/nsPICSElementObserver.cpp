@@ -130,6 +130,21 @@ NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID, eHTMLTags aTag
                     PRUint32 numOfAttributes, const PRUnichar* nameArray[], 
                     const PRUnichar* valueArray[]) 
 {
+  if(aTag == eHTMLTag_meta) {
+      return Notify(aDocumentID, numOfAttributes, nameArray, valueArray);
+  }
+  return NS_OK;
+}
+NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID, const PRUnichar* aTag, 
+                    PRUint32 numOfAttributes, const PRUnichar* nameArray[], 
+                    const PRUnichar* valueArray[]) 
+{
+  return Notify(aDocumentID, numOfAttributes, nameArray, valueArray);
+}
+NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID,  
+                    PRUint32 numOfAttributes, const PRUnichar* nameArray[], 
+                    const PRUnichar* valueArray[]) 
+{
   nsresult rv;
   int status;
   nsIWebShellServices* ws;
@@ -138,7 +153,6 @@ NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID, eHTMLTags aTag
   nsIURL* uaURL = nsnull;
 //  rv = NS_NewURL(&uaURL, nsString(aSpec));
  
-  if(aTag == eHTMLTag_meta) {
     if(numOfAttributes >= 2) {
       const nsString& theValue1=valueArray[0];
       char *val1 = theValue1.ToNewCString();
@@ -191,7 +205,6 @@ NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID, eHTMLTags aTag
         } 
       }
     }
-  }
   return NS_OK;
     
 }

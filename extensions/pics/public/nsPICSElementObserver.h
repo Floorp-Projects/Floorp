@@ -53,6 +53,9 @@ public:
   NS_IMETHOD Notify(PRUint32 aDocumentID, eHTMLTags aTag, 
                     PRUint32 numOfAttributes, const PRUnichar* nameArray[], 
                     const PRUnichar* valueArray[]);
+  NS_IMETHOD Notify(PRUint32 aDocumentID, const PRUnichar *aTag, 
+                    PRUint32 numOfAttributes, const PRUnichar* nameArray[], 
+                    const PRUnichar* valueArray[]);
 
   NS_DECL_IOBSERVER
 
@@ -60,6 +63,9 @@ public:
 
    
 private:
+  NS_IMETHOD Notify(PRUint32 aDocumentID ,
+                    PRUint32 numOfAttributes, const PRUnichar* nameArray[], 
+                    const PRUnichar* valueArray[]);
 
 };
 
