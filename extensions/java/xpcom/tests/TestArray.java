@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 import org.mozilla.xpcom.*;
+import java.io.*;
 
 /**
  * Adapted from xpcom/tests/TestArray.cpp
@@ -70,10 +71,10 @@ public class TestArray {
       throw new RuntimeException("MOZILLA_FIVE_HOME system property not set.");
     }
 
-    nsILocalFile localFile = GeckoEmbed.newLocalFile(mozillaPath, true);
+    File localFile = new File(mozillaPath);
     GeckoEmbed.initEmbedding(localFile, null);
 
-    nsIComponentManager componentManager = GeckoEmbed.getComponentManager();
+    nsIComponentManager componentManager = XPCOM.getComponentManager();
     nsIMutableArray array = (nsIMutableArray) componentManager.createInstanceByContractID(NS_ARRAY_CID, null, nsIMutableArray.NS_IMUTABLEARRAY_IID);
     if (array == null) {
       throw new RuntimeException("Failed to create nsIMutableArray.");

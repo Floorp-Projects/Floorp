@@ -74,7 +74,8 @@ nsAppFileLocProviderProxy::GetFile(const char* aProp, PRBool* aIsPersistant,
   // Call Java function
   jobject javaFile = nsnull;
   if (mid) {
-    javaFile = mJavaEnv->CallObjectMethod(mJavaLocProvider, mid, prop, persistant);
+    javaFile = mJavaEnv->CallObjectMethod(mJavaLocProvider, mid, prop,
+                                          persistant);
   }
   if (javaFile == nsnull) {
     return NS_ERROR_FAILURE;
