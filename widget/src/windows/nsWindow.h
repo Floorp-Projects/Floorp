@@ -347,6 +347,7 @@ protected:
      // when the window is created or resized.
     virtual PRInt32         GetHeight(PRInt32 aProposedHeight);
     virtual LPCTSTR         WindowClass();
+    virtual LPCTSTR         WindowPopupClass();
     virtual DWORD           WindowStyle();
     virtual DWORD           WindowExStyle();
 
@@ -477,6 +478,7 @@ protected:
     };
 
     static BOOL sIsRegistered;
+    static BOOL sIsPopupClassRegistered;
 
     HDWP mDeferredPositioner;
     static UINT uMSH_MOUSEWHEEL;

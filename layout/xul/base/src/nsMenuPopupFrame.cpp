@@ -218,10 +218,19 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   widgetData.mBorderStyle = eBorderStyle_default;
   widgetData.clipSiblings = PR_TRUE;
 
+  nsCOMPtr<nsIContent> parentContent;
+  aContent->GetParent(*getter_AddRefs(parentContent));
+  nsCOMPtr<nsIAtom> tag;
+  if (parentContent)
+    parentContent->GetTag(*getter_AddRefs(tag));
+  widgetData.mDropShadow = !(tag && tag == nsXULAtoms::menulist);
+  
   // XXX make sure we are hidden (shouldn't this be done automatically?)
   viewManager->SetViewVisibility(ourView, nsViewVisibility_kHide);
 #if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef DEBUG
   printf("XP Popups: This is a nag to indicate that an inconsistent hack is being done on the Mac for popups.\n");
+#endif  
   static NS_DEFINE_IID(kCPopupCID,  NS_POPUP_CID);
   ourView->CreateWidget(kCPopupCID, &widgetData, nsnull);
 #else

@@ -166,6 +166,7 @@ OleRegisterMgr::~OleRegisterMgr()
 // nsWindow Class static variable defintions
 ////////////////////////////////////////////////////
 BOOL nsWindow::sIsRegistered       = FALSE;
+BOOL nsWindow::sIsPopupClassRegistered = FALSE;
 UINT nsWindow::uMSH_MOUSEWHEEL     = 0;
 UINT nsWindow::uWM_MSIME_RECONVERT = 0; // reconvert messge for MSIME
 UINT nsWindow::uWM_MSIME_MOUSE     = 0; // mouse messge for MSIME
@@ -1258,7 +1259,8 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
                                          NULL);
     } else {
       mWnd = ::CreateWindowEx(extendedStyle,
-                              WindowClass(),
+                              aInitData && aInitData->mDropShadow ? 
+                                WindowPopupClass() : WindowClass(),
                               "",
                               style,
                               aRect.x,
@@ -3937,10 +3939,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 // return the window class name and initialize the class if needed
 //
 //-------------------------------------------------------------------------
+
+#define CS_XP_DROPSHADOW       0x00020000
+
 LPCTSTR nsWindow::WindowClass()
 {
     const LPCTSTR className = "MozillaWindowClass";
-
+    
     if (!nsWindow::sIsRegistered) {
         WNDCLASS wc;
 
@@ -3967,10 +3972,42 @@ LPCTSTR nsWindow::WindowClass()
           nsToolkit::gAIMMApp->FilterClientWindows((ATOM*)&nsWindow::sIsRegistered,1);
 #endif // MOZ_AIMM
     }
-
+    
     return className;
 }
 
+LPCTSTR nsWindow::WindowPopupClass()
+{
+    const LPCTSTR className = "MozillaDropShadowWindowClass";
+
+    if (!nsWindow::sIsPopupClassRegistered) {
+        WNDCLASS wc;
+        wc.style            = CS_DBLCLKS | CS_XP_DROPSHADOW;
+#ifdef MOZ_AIMM
+        wc.lpfnWndProc      = nsWindow::DefaultWindowProc;
+#else
+        wc.lpfnWndProc      = ::DefWindowProc;
+#endif
+        wc.cbClsExtra       = 0;
+        wc.cbWndExtra       = 0;
+        wc.hInstance        = nsToolkit::mDllInstance;
+        wc.hIcon            = ::LoadIcon(::GetModuleHandle(NULL), IDI_APPLICATION);
+        wc.hCursor          = NULL;
+        wc.hbrBackground    = mBrush;
+        wc.lpszMenuName     = NULL;
+        wc.lpszClassName    = className;
+    
+        nsWindow::sIsPopupClassRegistered = ::RegisterClass(&wc);
+        if (!nsWindow::sIsPopupClassRegistered) {
+          // For older versions of Win32 (i.e., not XP), the registration will
+          // fail, so we have to re-register without the CS_XP_DROPSHADOW flag.
+          wc.style = CS_DBLCLKS;
+          nsWindow::sIsPopupClassRegistered = ::RegisterClass(&wc);
+        }
+    }
+
+    return className;
+}
 
 //-------------------------------------------------------------------------
 //
