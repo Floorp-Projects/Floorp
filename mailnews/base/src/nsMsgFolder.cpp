@@ -1340,7 +1340,7 @@ nsGetMailboxRoot(nsFileSpec &result)
     // get mailbox root preference and cache it permanently - this
     // is extremely temporary...I'm waiting for hubie to check in the 
     // new preferences service stuff.
-#if 0
+#if 1
     nsService<nsIPref> prefs(kPrefCID, &rv);
     if (NS_FAILED(rv)) return rv; 
 
