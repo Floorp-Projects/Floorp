@@ -472,6 +472,10 @@ nsSVGUseElement::CreateAnonymousContent(nsPresContext*    aPresContext,
       tag != nsSVGAtoms::use)
     return NS_ERROR_FAILURE;
 
+  // circular loop detection
+  if (nsContentUtils::ContentIsDescendantOf(this, targetContent))
+      return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIDOMNode> newchild;
   element->CloneNode(PR_TRUE, getter_AddRefs(newchild));
 
