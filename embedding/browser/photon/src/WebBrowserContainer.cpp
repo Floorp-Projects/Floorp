@@ -459,15 +459,15 @@ NS_IMETHODIMP CWebBrowserContainer::OnStartURIOpen(nsIURI *pURI, PRBool *aAbortO
 }
 
 
-/* void doContent (in string aContentType, in nsURILoadCommand aCommand, in nsIRequest aOpenedChannel, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
-NS_IMETHODIMP CWebBrowserContainer::DoContent(const char *aContentType, nsURILoadCommand aCommand, nsIRequest *aOpenedChannel, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
+/* void doContent (in string aContentType, in boolean aIsContentPreferred, in nsIRequest aOpenedChannel, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
+NS_IMETHODIMP CWebBrowserContainer::DoContent(const char *aContentType, PRBool aIsContentPreferred, nsIRequest *aOpenedChannel, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
-/* boolean isPreferred (in string aContentType, in nsURILoadCommand aCommand, out string aDesiredContentType); */
-NS_IMETHODIMP CWebBrowserContainer::IsPreferred(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *aCanHandleContent)
+/* boolean isPreferred (in string aContentType, out string aDesiredContentType); */
+NS_IMETHODIMP CWebBrowserContainer::IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *aCanHandleContent)
 {
 
   if (aContentType &&
@@ -492,8 +492,8 @@ NS_IMETHODIMP CWebBrowserContainer::IsPreferred(const char *aContentType, nsURIL
 }
 
 
-/* boolean canHandleContent (in string aContentType, in nsURILoadCommand aCommand, out string aDesiredContentType); */
-NS_IMETHODIMP CWebBrowserContainer::CanHandleContent(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *_retval)
+/* boolean canHandleContent (in string aContentType, in boolean aIsContentPreferred, out string aDesiredContentType); */
+NS_IMETHODIMP CWebBrowserContainer::CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

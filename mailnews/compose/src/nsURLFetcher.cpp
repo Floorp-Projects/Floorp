@@ -120,18 +120,17 @@ nsURLFetcher::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
 
 NS_IMETHODIMP 
 nsURLFetcher::IsPreferred(const char * aContentType,
-                                nsURILoadCommand aCommand,
                                 char ** aDesiredContentType,
                                 PRBool * aCanHandleContent)
 
 {
-  return CanHandleContent(aContentType, aCommand, aDesiredContentType,
+  return CanHandleContent(aContentType, PR_TRUE, aDesiredContentType,
                           aCanHandleContent);
 }
 
 NS_IMETHODIMP 
 nsURLFetcher::CanHandleContent(const char * aContentType,
-                                nsURILoadCommand aCommand,
+                                PRBool aIsContentPreferred,
                                 char ** aDesiredContentType,
                                 PRBool * aCanHandleContent)
 
@@ -146,7 +145,7 @@ nsURLFetcher::CanHandleContent(const char * aContentType,
 
 NS_IMETHODIMP 
 nsURLFetcher::DoContent(const char * aContentType,
-                      nsURILoadCommand aCommand,
+                      PRBool aIsContentPreferred,
                       nsIRequest *request,
                       nsIStreamListener ** aContentHandler,
                       PRBool * aAbortProcess)
@@ -367,7 +366,7 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsILocalFile *localFile, nsIFileOutpu
   pURILoader->GetLoadGroupForContext(cntListener, getter_AddRefs(loadGroup));
   NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aURL, nsnull, loadGroup, this), NS_ERROR_FAILURE);
  
-  rv = pURILoader->OpenURI(channel, nsIURILoader::viewNormal, cntListener);
+  rv = pURILoader->OpenURI(channel, PR_FALSE, cntListener);
 
   return NS_OK;
 }

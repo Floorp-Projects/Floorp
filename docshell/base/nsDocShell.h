@@ -40,6 +40,7 @@
 #include "nsIDeviceContext.h"
 
 #include "nsIDocumentLoader.h"
+#include "nsIURILoader.h"
 
 #include "nsWeakReference.h"
 
@@ -189,7 +190,6 @@ public:
 
     nsresult SetLoadCookie(nsISupports * aCookie);
     nsresult GetLoadCookie(nsISupports ** aResult);
-    nsDocShellInfoLoadType ConvertLoadTypeToDocShellLoadInfo(PRUint32 aLoadType);
     PRUint32 ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType);
 
 protected:
@@ -214,13 +214,11 @@ protected:
     virtual nsresult DoURILoad(nsIURI * aURI,
                                nsIURI * aReferrer,
                                nsISupports * aOwner,
-                               nsURILoadCommand aLoadCmd,
                                nsIInputStream * aPostData,
                                nsIInputStream * aHeadersData);
     NS_IMETHOD AddHeadersToChannel(nsIInputStream * aHeadersData, 
                                   nsIChannel * aChannel);
     virtual nsresult DoChannelLoad(nsIChannel * aChannel,
-                                   nsURILoadCommand aLoadCmd,
                                    nsIURILoader * aURILoader);
     NS_IMETHOD ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor);
     NS_IMETHOD OnLoadingSite(nsIChannel * aChannel);

@@ -415,7 +415,7 @@ NS_IMETHODIMP nsMsgWindow::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, nsURILoadCommand aCommand, 
+NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, PRBool aIsContentPreferred,
                                      nsIRequest *request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
   if (aContentType)
@@ -440,7 +440,7 @@ NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, nsURILoadCommand 
         if (mailnewsUrl)
           mailnewsUrl->SetMsgWindow(this);
       }
-      return ctnListener->DoContent(aContentType, aCommand, request, aContentHandler, aAbortProcess);
+      return ctnListener->DoContent(aContentType, aIsContentPreferred, request, aContentHandler, aAbortProcess);
     }
   }
   return NS_OK;
@@ -448,7 +448,6 @@ NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, nsURILoadCommand 
 
 NS_IMETHODIMP 
 nsMsgWindow::IsPreferred(const char * aContentType,
-                         nsURILoadCommand aCommand,
                          char ** aDesiredContentType,
                          PRBool * aCanHandleContent)
 {
@@ -457,7 +456,7 @@ nsMsgWindow::IsPreferred(const char * aContentType,
 }
 
 NS_IMETHODIMP nsMsgWindow::CanHandleContent(const char * aContentType,
-                                            nsURILoadCommand aCommand,
+                                            PRBool aIsContentPreferred,
                                             char ** aDesiredContentType,
                                             PRBool * aCanHandleContent)
 
@@ -470,7 +469,7 @@ NS_IMETHODIMP nsMsgWindow::CanHandleContent(const char * aContentType,
   GetMessageWindowDocShell(getter_AddRefs(messageWindowDocShell));
   nsCOMPtr<nsIURIContentListener> ctnListener (do_GetInterface(messageWindowDocShell));
   if (ctnListener)
-    return ctnListener->CanHandleContent(aContentType, aCommand,
+    return ctnListener->CanHandleContent(aContentType, aIsContentPreferred,
                                          aDesiredContentType, aCanHandleContent);
   else
     *aCanHandleContent = PR_FALSE;

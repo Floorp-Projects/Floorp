@@ -321,18 +321,17 @@ nsAbSyncPostEngine::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
 
 NS_IMETHODIMP 
 nsAbSyncPostEngine::IsPreferred(const char * aContentType,
-                                nsURILoadCommand aCommand,
                                 char ** aDesiredContentType,
                                 PRBool * aCanHandleContent)
 
 {
-  return CanHandleContent(aContentType, aCommand, aDesiredContentType,
+  return CanHandleContent(aContentType, PR_TRUE, aDesiredContentType,
                           aCanHandleContent);
 }
 
 NS_IMETHODIMP 
 nsAbSyncPostEngine::CanHandleContent(const char * aContentType,
-                                nsURILoadCommand aCommand,
+                                PRBool aIsContentPreferred,
                                 char ** aDesiredContentType,
                                 PRBool * aCanHandleContent)
 
@@ -347,7 +346,7 @@ nsAbSyncPostEngine::CanHandleContent(const char * aContentType,
 
 NS_IMETHODIMP 
 nsAbSyncPostEngine::DoContent(const char * aContentType,
-                      nsURILoadCommand aCommand,
+                      PRBool aIsContentPreferred,
                       nsIRequest *request,
                       nsIStreamListener ** aContentHandler,
                       PRBool * aAbortProcess)

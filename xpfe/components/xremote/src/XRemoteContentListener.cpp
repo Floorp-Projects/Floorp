@@ -43,7 +43,7 @@ XRemoteContentListener::OnStartURIOpen(nsIURI *aURI, PRBool *_retval)
 
 NS_IMETHODIMP
 XRemoteContentListener::DoContent(const char *aContentType,
-				  nsURILoadCommand aCommand,
+				  PRBool aIsContentPreferred,
 				  nsIRequest *request,
 				  nsIStreamListener **aContentHandler,
 				  PRBool *_retval)
@@ -54,7 +54,6 @@ XRemoteContentListener::DoContent(const char *aContentType,
 
 NS_IMETHODIMP
 XRemoteContentListener::IsPreferred(const char *aContentType,
-				    nsURILoadCommand aCommand,
 				    char **aDesiredContentType,
 				    PRBool *_retval)
 {
@@ -63,7 +62,7 @@ XRemoteContentListener::IsPreferred(const char *aContentType,
 
 NS_IMETHODIMP
 XRemoteContentListener::CanHandleContent(const char *aContentType,
-					 nsURILoadCommand aCommand,
+					 PRBool aIsContentPreferred,
 					 char **aDesiredContentType,
 					 PRBool *_retval)
 {

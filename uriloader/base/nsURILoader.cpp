@@ -84,7 +84,7 @@ public:
     NS_DECL_ISUPPORTS
 
     nsresult Open(nsIChannel* channel, 
-                  nsURILoadCommand aCommand,
+                  PRBool aIsContentPreferred,
                   nsISupports * aWindowContext);
 
     nsresult DispatchContent(nsIRequest *request, nsISupports * aCtxt);
@@ -109,7 +109,7 @@ protected:
     nsCOMPtr<nsIURIContentListener> m_contentListener;
     nsCOMPtr<nsIStreamListener> m_targetStreamListener;
     nsCOMPtr<nsISupports> m_originalContext;
-    nsURILoadCommand mCommand;
+    PRBool mIsContentPreferred;
 };
 
 NS_IMPL_THREADSAFE_ADDREF(nsDocumentOpenInfo);
@@ -136,9 +136,9 @@ nsDocumentOpenInfo* nsDocumentOpenInfo::Clone()
 
   newObject = new nsDocumentOpenInfo();
   if (newObject) {
-    newObject->m_contentListener = m_contentListener;
-    newObject->mCommand          = mCommand;
-    newObject->m_originalContext = m_originalContext;
+    newObject->m_contentListener   = m_contentListener;
+    newObject->mIsContentPreferred = mIsContentPreferred;
+    newObject->m_originalContext   = m_originalContext;
   }
 
   return newObject;
@@ -172,7 +172,7 @@ PRBool nsDocumentOpenInfo::ProcessCanceledCase(nsIRequest *request)
 }
 
 nsresult nsDocumentOpenInfo::Open(nsIChannel *aChannel,  
-                                  nsURILoadCommand aCommand,
+                                  PRBool aIsContentPreferred,
                                   nsISupports * aWindowContext)
 {
    // this method is not complete!!! Eventually, we should first go
@@ -182,10 +182,10 @@ nsresult nsDocumentOpenInfo::Open(nsIChannel *aChannel,
 
   // But for now, I'm going to let necko do the work for us....
 
-  nsresult rv = NS_OK;
+  nsresult rv;
 
   // store any local state
-  mCommand = aCommand;
+  mIsContentPreferred = aIsContentPreferred;
 
   m_originalContext = aWindowContext;
 
@@ -301,7 +301,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     //              content type.
     //
     PRBool abortDispatch = PR_FALSE;
-    rv = uriLoader->DispatchContent(contentType, mCommand, 
+    rv = uriLoader->DispatchContent(contentType, mIsContentPreferred, 
                                     request, aCtxt, 
                                     m_contentListener, 
                                     m_originalContext,
@@ -362,8 +362,10 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
         aChannel->SetLoadFlags(loadFlags);
       }
 
-      rv = contentListener->DoContent(contentTypeToUse.get(), mCommand, 
-                                      request, getter_AddRefs(contentStreamListener),
+      rv = contentListener->DoContent(contentTypeToUse.get(),
+                                      mIsContentPreferred,
+                                      request,
+                                      getter_AddRefs(contentStreamListener),
                                       &bAbortProcess);
 
       // Do not continue loading if nsIURIContentListener::DoContent(...)
@@ -376,7 +378,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
       }
 
       // try to detect if there is a helper application we an use...
-      if (/* mCommand == nsIURILoader::viewUserClick && */ !contentStreamListener)
+      if (!contentStreamListener)
       {
         nsCOMPtr<nsIURI> uri;
         PRBool abortProcess = PR_FALSE;
@@ -500,14 +502,15 @@ NS_IMETHODIMP nsURILoader::UnRegisterContentListener(nsIURIContentListener * aCo
 }
 
 NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel, 
-                                   nsURILoadCommand aCommand,
+                                   PRBool aIsContentPreferred,
                                    nsISupports * aWindowContext)
 {
-  return OpenURIVia(channel, aCommand, aWindowContext, 0 /* ip address */); 
+  return OpenURIVia(channel, aIsContentPreferred, aWindowContext,
+                    0 /* ip address */); 
 }
 
 NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel *channel, 
-                                      nsURILoadCommand aCommand,
+                                      PRBool aIsContentPreferred,
                                       nsISupports * aWindowContext,
                                       PRUint32 aLocalIP)
 {
@@ -542,7 +545,7 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel *channel,
   SetupLoadCookie(aWindowContext, getter_AddRefs(loadCookie));
 
   // now instruct the loader to go ahead and open the url
-  rv = loader->Open(channel, aCommand, aWindowContext);
+  rv = loader->Open(channel, aIsContentPreferred, aWindowContext);
   NS_RELEASE(loader);
 
   return rv;
@@ -673,23 +676,24 @@ nsresult nsURILoader::SetupLoadCookie(nsISupports * aWindowContext,
 
 PRBool nsURILoader::ShouldHandleContent(nsIURIContentListener * aCntListener, 
                                         const char * aContentType,
-                                        nsURILoadCommand aCommand,
+                                        PRBool aIsContentPreferred,
                                         char ** aContentTypeToUse)
 {
   PRBool foundContentHandler = PR_FALSE;
-  if (aCommand == nsIURILoader::viewUserClick)
-    aCntListener->IsPreferred(aContentType, aCommand,
-                                aContentTypeToUse, 
-                                &foundContentHandler);
-  else
-    aCntListener->CanHandleContent(aContentType, aCommand,
+  if (aIsContentPreferred) {
+    aCntListener->IsPreferred(aContentType,
+                              aContentTypeToUse, 
+                              &foundContentHandler);
+  } else {
+    aCntListener->CanHandleContent(aContentType, PR_FALSE,
                                    aContentTypeToUse, 
                                    &foundContentHandler);
+  }
   return foundContentHandler;
 } 
 
 NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
-                                           nsURILoadCommand aCommand,
+                                           PRBool aIsContentPreferred,
                                            nsIRequest *request, 
                                            nsISupports * aCtxt, 
                                            nsIURIContentListener * aContentListener,
@@ -722,7 +726,7 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
   if (listenerToUse)
     foundContentHandler = ShouldHandleContent(listenerToUse,
                                               aContentType, 
-                                              aCommand,
+                                              aIsContentPreferred,
                                               aContentTypeToUse);
                                             
 
@@ -749,7 +753,7 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
       {
         foundContentHandler = ShouldHandleContent(listener,
                                                   aContentType, 
-                                                  aCommand,
+                                                  aIsContentPreferred,
                                                   aContentTypeToUse);
         if (foundContentHandler) {
           listenerToUse = listener;

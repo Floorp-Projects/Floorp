@@ -408,48 +408,6 @@ ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType)
     return loadType;
 }
 
-nsDocShellInfoLoadType
-nsDocShell::ConvertLoadTypeToDocShellLoadInfo(PRUint32 aLoadType)
-{
-    nsDocShellInfoLoadType docShellLoadType = nsIDocShellLoadInfo::loadNormal;
-    switch (aLoadType) {
-    case LOAD_NORMAL:
-        docShellLoadType = nsIDocShellLoadInfo::loadNormal;
-        break;
-    case LOAD_NORMAL_REPLACE:
-        docShellLoadType = nsIDocShellLoadInfo::loadNormalReplace;
-        break;
-    case LOAD_HISTORY:
-        docShellLoadType = nsIDocShellLoadInfo::loadHistory;
-        break;
-    case LOAD_RELOAD_NORMAL:
-        docShellLoadType = nsIDocShellLoadInfo::loadReloadNormal;
-        break;
-    case LOAD_RELOAD_CHARSET_CHANGE:
-        docShellLoadType = nsIDocShellLoadInfo::loadReloadCharsetChange;
-        break;
-    case LOAD_RELOAD_BYPASS_CACHE:
-        docShellLoadType = nsIDocShellLoadInfo::loadReloadBypassCache;
-        break;
-    case LOAD_RELOAD_BYPASS_PROXY:
-        docShellLoadType = nsIDocShellLoadInfo::loadReloadBypassProxy;
-        break;
-    case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
-        docShellLoadType = nsIDocShellLoadInfo::loadReloadBypassProxyAndCache;
-        break;
-    case LOAD_LINK:
-        docShellLoadType = nsIDocShellLoadInfo::loadLink;
-        break;
-    case LOAD_REFRESH:
-        docShellLoadType = nsIDocShellLoadInfo::loadRefresh;
-        break;
-    case LOAD_BYPASS_HISTORY:
-        docShellLoadType = nsIDocShellLoadInfo::loadBypassHistory;
-        break;
-    }
-
-    return docShellLoadType;
-}
 
 //*****************************************************************************
 // nsDocShell::nsIDocShell
@@ -636,9 +594,7 @@ nsDocShell::LoadStream(nsIInputStream * aStream, nsIURI * aURI,
         uriLoader(do_GetService(NS_URI_LOADER_CONTRACTID));
     NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
 
-    NS_ENSURE_SUCCESS(DoChannelLoad
-                      (channel, nsIURILoader::viewNormal, uriLoader),
-                      NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(DoChannelLoad(channel, uriLoader), NS_ERROR_FAILURE);
     return NS_OK;
 }
 
@@ -4085,10 +4041,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // been called. 
     mLSHE = aSHEntry;
 
-    nsDocShellInfoLoadType loadCmd =
-        ConvertLoadTypeToDocShellLoadInfo(mLoadType);
-
-    rv = DoURILoad(aURI, aReferrer, owner, loadCmd, aPostData, aHeadersData);
+    rv = DoURILoad(aURI, aReferrer, owner, aPostData, aHeadersData);
 
     return rv;
 }
@@ -4159,7 +4112,6 @@ nsDocShell::GetCurrentDocumentOwner(nsISupports ** aOwner)
 nsresult nsDocShell::DoURILoad(nsIURI * aURI,
                                nsIURI * aReferrerURI,
                                nsISupports * aOwner,
-                               nsURILoadCommand aLoadCmd,
                                nsIInputStream * aPostData,
                                nsIInputStream * aHeadersData)
 {
@@ -4274,7 +4226,7 @@ nsresult nsDocShell::DoURILoad(nsIURI * aURI,
         channel->SetOwner(aOwner);
     }
 
-    rv = DoChannelLoad(channel, aLoadCmd, uriLoader);
+    rv = DoChannelLoad(channel, uriLoader);
 
     return rv;
 }
@@ -4433,7 +4385,6 @@ nsDocShell::AddHeadersToChannel(nsIInputStream * aHeadersData,
 }
 
 nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
-                                   nsURILoadCommand aLoadCmd,
                                    nsIURILoader * aURILoader)
 {
     nsresult rv;
@@ -4490,7 +4441,7 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
     (void) aChannel->SetLoadFlags(loadFlags);
 
     rv = aURILoader->OpenURI(aChannel,
-                             aLoadCmd,
+                             (mLoadType == LOAD_LINK),
                              NS_STATIC_CAST(nsIDocShell *, this));
     
     if (rv == NS_ERROR_PORT_ACCESS_NOT_ALLOWED) {
