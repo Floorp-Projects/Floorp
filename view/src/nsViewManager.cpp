@@ -468,8 +468,6 @@ nsViewManager::CreateRegion(nsIRegion* *result)
 // holds a reference to us.
 NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext)
 {
-  nsresult rv;
-
   NS_PRECONDITION(nsnull != aContext, "null ptr");
 
   if (nsnull == aContext) {
@@ -503,7 +501,7 @@ NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext)
     NS_ASSERTION(mEventQueueService, "couldn't get event queue service");
   }
   
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager::GetRootView(nsIView *&aView)
