@@ -56,7 +56,7 @@
   <description>&info2.label;</description>
   <separator/>
 
-  <checkbox id="level" oncommand="conditionallyEnableUI('label')" accesskey="&level.accesskey;" label="&level.label;"/>
+  <checkbox id="level" oncommand="conditionallyEnableUI('label');" accesskey="&level.accesskey;" label="&level.label;"/>
 
   <separator/>
 

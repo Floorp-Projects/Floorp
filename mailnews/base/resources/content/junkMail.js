@@ -128,7 +128,7 @@ function conditionallyEnableUI(id)
   var enabled;
 
   if (!id || id == "level") {
-    enabled = document.getElementById("label").checked;
+    enabled = document.getElementById("level").checked;
     dump("XXX enabled = " + enabled + "\n");
   }
 
