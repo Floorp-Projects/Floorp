@@ -756,7 +756,7 @@ NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty, const nsStrin
   return result;
 }
 
-NS_IMETHODIMP nsTextEditor::DeleteSelection(nsIEditor::Direction aDir)
+NS_IMETHODIMP nsTextEditor::DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -769,11 +769,11 @@ NS_IMETHODIMP nsTextEditor::DeleteSelection(nsIEditor::Direction aDir)
   // pre-process
   nsEditor::GetSelection(getter_AddRefs(selection));
   nsTextRulesInfo ruleInfo(nsTextEditRules::kDeleteSelection);
-  ruleInfo.dir = aDir;
+  ruleInfo.collapsedAction = aAction;
   result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
   if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
   {
-    result = nsEditor::DeleteSelection(aDir);
+    result = nsEditor::DeleteSelection(aAction);
     // post-process 
     result = mRules->DidDoAction(selection, &ruleInfo, result);
   }
@@ -1598,7 +1598,7 @@ NS_IMETHODIMP nsTextEditor::RemoveTextPropertiesForNode(nsIDOMNode *aNode,
       // then split the style node and promote the selected content to the style node's parent
       while (NS_SUCCEEDED(result) && parent)
       {
-        if (gNoisy) { printf("* looking at parent %p\n", parent);}
+        if (gNoisy) { printf("* looking at parent %p\n", parent.get());}
         // get the tag from parent and see if we're done
         nsCOMPtr<nsIDOMNode>temp;
         nsCOMPtr<nsIDOMElement>element;
@@ -1617,7 +1617,7 @@ NS_IMETHODIMP nsTextEditor::RemoveTextPropertiesForNode(nsIDOMNode *aNode,
               if (NS_SUCCEEDED(result))
               {
                 if (0!=offsetInParent) {
-                  if (gNoisy) { printf("* splitting parent %p at offset %d\n", parent, offsetInParent);}
+                  if (gNoisy) { printf("* splitting parent %p at offset %d\n", parent.get(), offsetInParent);}
                   result = nsEditor::SplitNode(parent, offsetInParent, getter_AddRefs(newLeftNode));
                   if (gNoisy) { printf("* split created left node %p sibling of parent\n", newLeftNode.get());}
                   if (gNoisy) {DebugDumpContent(); } // DEBUG
@@ -1632,7 +1632,7 @@ NS_IMETHODIMP nsTextEditor::RemoveTextPropertiesForNode(nsIDOMNode *aNode,
                     NS_ASSERTION(count>0, "bad child count in newly split node");
                     if ((PRInt32)count!=1) 
                     {
-                      if (gNoisy) { printf("* splitting parent %p at offset %d\n", parent, 1);}
+                      if (gNoisy) { printf("* splitting parent %p at offset %d\n", parent.get(), 1);}
                       result = nsEditor::SplitNode(parent, 1, getter_AddRefs(newMiddleNode));
                       if (gNoisy) { printf("* split created middle node %p sibling of parent\n", newMiddleNode.get());}
                       if (gNoisy) {DebugDumpContent(); } // DEBUG
@@ -1666,8 +1666,8 @@ NS_IMETHODIMP nsTextEditor::RemoveTextPropertiesForNode(nsIDOMNode *aNode,
                   if ((PRInt32)count!=offsetInParent+1)
                   {
                     nsCOMPtr<nsIDOMNode>newRightNode;
-                    nsCOMPtr<nsIDOMNode>temp;
-                    if (gNoisy) { printf("* splitting parent %p at offset %d for right side\n", parent, offsetInParent+1);}
+                    //nsCOMPtr<nsIDOMNode>temp;
+                    if (gNoisy) { printf("* splitting parent %p at offset %d for right side\n", parent.get(), offsetInParent+1);}
                     result = nsEditor::SplitNode(parent, offsetInParent+1, getter_AddRefs(temp));
                     if (NS_SUCCEEDED(result))
                     {
@@ -1678,7 +1678,7 @@ NS_IMETHODIMP nsTextEditor::RemoveTextPropertiesForNode(nsIDOMNode *aNode,
                     }
                   }
                   if (NS_SUCCEEDED(result) && 0!=offsetInParent) {
-                    if (gNoisy) { printf("* splitting parent %p at offset %d for left side\n", parent, offsetInParent);}
+                    if (gNoisy) { printf("* splitting parent %p at offset %d for left side\n", parent.get(), offsetInParent);}
                     result = nsEditor::SplitNode(parent, offsetInParent, getter_AddRefs(newLeftNode));
                     if (gNoisy) { printf("* split created left node %p sibling of parent %p\n", newLeftNode.get(), parent.get());}
                     if (gNoisy) {DebugDumpContent(); } // DEBUG
@@ -1689,8 +1689,8 @@ NS_IMETHODIMP nsTextEditor::RemoveTextPropertiesForNode(nsIDOMNode *aNode,
                     PRInt32 childPositionInParent;
                     GetChildOffset(newMiddleNode, parent, childPositionInParent);
                     // compare childPositionInParent to the number of children in parent
-                    PRUint32 count=0;
-                    nsCOMPtr<nsIDOMNodeList>childNodes;
+                    //PRUint32 count=0;
+                    //nsCOMPtr<nsIDOMNodeList>childNodes;
                     result = parent->GetChildNodes(getter_AddRefs(childNodes));
                     if (NS_SUCCEEDED(result) && childNodes) {
                       childNodes->GetLength(&count);
@@ -1808,7 +1808,7 @@ nsTextEditor::RemoveTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
   if (NS_SUCCEEDED(result))
   {
     // remove aPropName from aStartNode
-    nsCOMPtr<nsIDOMCharacterData>nodeAsChar;
+    //nsCOMPtr<nsIDOMCharacterData>nodeAsChar;
     nodeAsChar =  do_QueryInterface(aStartNode);
     if (nodeAsChar) {
       nodeAsChar->GetLength((PRUint32 *)&endOffset);

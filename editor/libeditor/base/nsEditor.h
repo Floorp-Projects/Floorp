@@ -76,8 +76,8 @@ protected:
 
 public:
 
-  const static char* kMOZEditorBogusNodeAttr;
-  const static char* kMOZEditorBogusNodeValue;
+  static const char* kMOZEditorBogusNodeAttr;
+  static const char* kMOZEditorBogusNodeValue;
 
   /** The default constructor. This should suffice. the setting of the interfaces is done
    *  after the construction of the editor class.
@@ -139,7 +139,7 @@ public:
   
   NS_IMETHOD DeleteNode(nsIDOMNode * aChild);
 
-  NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir);
+  NS_IMETHOD DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction);
 
   NS_IMETHOD DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode);
 
@@ -245,11 +245,11 @@ protected:
                                     PRUint32             aLength,
                                     DeleteTextTxn      **aTxn);
 
-  NS_IMETHOD CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
+  NS_IMETHOD CreateTxnForDeleteSelection(nsIEditor::ECollapsedSelectionAction aAction,
                                          EditAggregateTxn  ** aTxn);
 
   NS_IMETHOD CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange, 
-                                              nsIEditor::Direction aDir, 
+                                              nsIEditor::ECollapsedSelectionAction aAction, 
                                               EditAggregateTxn    *aTxn);
 
   NS_IMETHOD CreateTxnForSplitNode(nsIDOMNode *aNode,

@@ -190,8 +190,8 @@ we must be good providers of factories etc. this is where to put ALL editor expo
 //BEGIN EXPORTS
 extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports * aServMgr, 
                                            const nsCID & aClass, 
-                                           const char *aClassName,
-                                           const char *aProgID,
+                                           const char * aClassName,
+                                           const char * aProgID,
                                            nsIFactory ** aFactory)
 {
   if (nsnull == aFactory) {
@@ -487,7 +487,7 @@ NS_IMETHODIMP nsEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
 }
 
 NS_IMETHODIMP
-nsEditor::SetProperties(nsVoidArray *aPropList)
+nsEditor::SetProperties(nsVoidArray * aPropList)
 {
   return NS_OK;
 }
@@ -797,7 +797,7 @@ NS_IMETHODIMP nsEditor::SelectAll()
   {
     nsCOMPtr<nsIDOMNodeList>nodeList;
     nsAutoString bodyTag = "body";
-    nsresult result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+    result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
     if ((NS_SUCCEEDED(result)) && nodeList)
     {
       PRUint32 count;
@@ -827,7 +827,7 @@ NS_IMETHODIMP nsEditor::Cut()
   //printf("nsEditor::Cut\n");
   nsresult res = Copy();
   if (NS_SUCCEEDED(res))
-    res = DeleteSelection(eLTR);
+    res = DeleteSelection(eDoNothing);
   return res;
 }
 
@@ -1104,7 +1104,8 @@ NS_IMETHODIMP nsEditor::CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, 
       result = selection->GetIsCollapsed(&collapsed);
       if (NS_SUCCEEDED(result) && !collapsed) {
         EditAggregateTxn *delSelTxn;
-        result = CreateTxnForDeleteSelection(nsIEditor::eLTR, &delSelTxn);
+        result = CreateTxnForDeleteSelection(nsIEditor::eDoNothing,
+                                             &delSelTxn);
         if (NS_SUCCEEDED(result) && delSelTxn) {
           (*aAggTxn)->AppendChild(delSelTxn);
         }
@@ -1366,7 +1367,7 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
     result = selection->GetIsCollapsed(&collapsed);
     if (NS_SUCCEEDED(result) && !collapsed) 
     {
-      result = DeleteSelection(nsIEditor::eLTR);
+      result = DeleteSelection(nsIEditor::eDoNothing);
       if (NS_FAILED(result)) {
         return result;
       }
@@ -1483,31 +1484,20 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
   return result;
 }
 
-#define DELETE_SELECTION_DOESNT_GO_THROUGH_RANGE
-
 NS_IMETHODIMP 
-nsEditor::DeleteSelection(nsIEditor::Direction aDir)
+nsEditor::DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction)
 {
   nsresult result;
-#ifdef DELETE_SELECTION_DOESNT_GO_THROUGH_RANGE
   EditAggregateTxn *txn;
-  result = CreateTxnForDeleteSelection(aDir, &txn);
+  result = CreateTxnForDeleteSelection(aAction, &txn);
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
-#else
-  // XXX Warning, this should be moved to a transaction since
-  // calling it this way means undo won't work.
-  nsCOMPtr<nsIDOMSelection> selection;
-  result = mPresShell->GetSelection(getter_AddRefs(selection));
-  if (NS_SUCCEEDED(result) && selection)
-    result = selection->DeleteFromDocument();
-#endif
 
   return result;
 }
 
-NS_IMETHODIMP nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir, 
+NS_IMETHODIMP nsEditor::CreateTxnForDeleteSelection(nsIEditor::ECollapsedSelectionAction aAction,
                                                     EditAggregateTxn  ** aTxn)
 {
   if (!aTxn)
@@ -1550,8 +1540,8 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
               result = NS_ERROR_OUT_OF_MEMORY;
           }
           else
-          { // we have an insertion point.  delete the thing in front of it or behind it, depending on aDir
-            result = CreateTxnForDeleteInsertionPoint(range, aDir, *aTxn);
+          { // we have an insertion point.  delete the thing in front of it or behind it, depending on aAction
+            result = CreateTxnForDeleteInsertionPoint(range, aAction, *aTxn);
           }
         }
       }
@@ -1571,14 +1561,15 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
 //XXX: currently, this doesn't handle edge conditions because GetNext/GetPrior are not implemented
 NS_IMETHODIMP
 nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange, 
-                                           nsIEditor::Direction aDir, 
+                                           nsIEditor::ECollapsedSelectionAction
+                                             aAction,
                                            EditAggregateTxn    *aTxn)
 {
   nsCOMPtr<nsIDOMNode> node;
   PRBool isFirst;
   PRBool isLast;
   PRInt32 offset;
-  PRInt32 length=1;
+  //PRInt32 length=1;
 
   // get the node and offset of the insertion point
   nsresult result = aRange->GetStartParent(getter_AddRefs(node));
@@ -1619,7 +1610,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
 
   // build a transaction for deleting the appropriate data
   // XXX: this has to come from rule section
-  if ((nsIEditor::eRTL==aDir) && (PR_TRUE==isFirst))
+  if ((nsIEditor::eDeleteLeft==aAction) && (PR_TRUE==isFirst))
   { // we're backspacing from the beginning of the node.  Delete the first thing to our left
     nsCOMPtr<nsIDOMNode> priorNode;
     result = GetPriorNode(node, PR_TRUE, getter_AddRefs(priorNode));
@@ -1656,7 +1647,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
       }
     }
   }
-  else if ((nsIEditor::eLTR==aDir) && (PR_TRUE==isLast))
+  else if ((nsIEditor::eDeleteRight==aAction) && (PR_TRUE==isLast))
   { // we're deleting from the end of the node.  Delete the first thing to our right
     nsCOMPtr<nsIDOMNode> nextNode;
     result = GetNextNode(node, PR_TRUE, getter_AddRefs(nextNode));
@@ -1697,11 +1688,11 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
   {
     if (nodeAsText)
     { // we have text, so delete a char at the proper offset
-      if (nsIEditor::eRTL==aDir) {
+      if (nsIEditor::eDeleteLeft==aAction) {
         offset --;
       }
       DeleteTextTxn *txn;
-      result = CreateTxnForDeleteText(nodeAsText, offset, length, &txn);
+      result = CreateTxnForDeleteText(nodeAsText, offset, 1, &txn);
       if (NS_SUCCEEDED(result)) {
         aTxn->AppendChild(txn);
       }
@@ -2755,7 +2746,7 @@ nsEditor::GetFirstNodeOfType(nsIDOMNode     *aStartNode,
       }
       else
       {
-        nsresult result = GetFirstNodeOfType(childNode, aTag, aResult);
+        result = GetFirstNodeOfType(childNode, aTag, aResult);
         if (nsnull!=*aResult)
           return result;
       }
@@ -2874,7 +2865,7 @@ nsEditor::SetPreeditText(const nsString& aStringToInsert)
 {
   nsresult result;
 
-  EditAggregateTxn *aggTxn = nsnull;
+  //EditAggregateTxn *aggTxn = nsnull;
   // Create the "delete current selection" txn
   nsCOMPtr<nsIDOMSelection> selection;
 
@@ -2888,7 +2879,9 @@ nsEditor::SetPreeditText(const nsString& aStringToInsert)
     result = selection->GetIsCollapsed(&collapsed);
     if (NS_SUCCEEDED(result) && !collapsed) {
       EditAggregateTxn *delSelTxn;
-      result = CreateTxnForDeleteSelection(nsIEditor::eLTR, &delSelTxn);
+      // XXX should this be eDoNothing instead of eDeleteRight?
+      result = CreateTxnForDeleteSelection(nsIEditor::eDeleteRight,
+                                           &delSelTxn);
       if (NS_SUCCEEDED(result) && delSelTxn) {
         result = Do(delSelTxn);
 
@@ -2929,7 +2922,6 @@ nsEditor::SetPreeditText(const nsString& aStringToInsert)
   }
   else if (NS_ERROR_EDITOR_NO_TEXTNODE==result) 
   {
-    nsCOMPtr<nsIDOMSelection> selection;
     result = GetSelection(getter_AddRefs(selection));
     if ((NS_SUCCEEDED(result)) && selection)
     {

@@ -21,7 +21,7 @@
 #include "nsHTMLEditRules.h"
 #include "nsEditorEventListeners.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMRange.h"
+#include "nsIDOMNSRange.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventReceiver.h" 
 #include "nsIDOMKeyListener.h" 
@@ -143,9 +143,9 @@ NS_IMETHODIMP nsHTMLEditor::RemoveTextProperty(nsIAtom *aProperty, const nsStrin
   return nsTextEditor::RemoveTextProperty(aProperty, aAttribute);
 }
 
-NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::Direction aDir)
+NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction)
 {
-  return nsTextEditor::DeleteSelection(aDir);
+  return nsTextEditor::DeleteSelection(aAction);
 }
 
 NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
@@ -336,7 +336,38 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
 
 NS_IMETHODIMP nsHTMLEditor::Insert(nsString& aInputString)
 {
-  return nsTextEditor::Insert(aInputString);
+  nsEditor::BeginTransaction();
+
+  nsEditor::DeleteSelection(nsIEditor::eDoNothing);
+
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult res = nsEditor::GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(res) && selection)
+  {
+    // Get the first NSRange in the selection:
+    nsCOMPtr<nsIDOMRange> domrange;
+    res = selection->GetRangeAt(0, getter_AddRefs(domrange));
+    if (NS_SUCCEEDED(res))
+    {
+      nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(domrange));
+      if (nsrange)
+      {
+#ifdef DEBUG_akkana
+  char* str = aInputString.ToNewCString();
+  printf("Calling nsIDOMNSRange::InsertFragment(%s)\n", str);
+  delete[] str;
+#endif /* DEBUG_akkana */
+        res = nsrange->InsertFragment(aInputString);
+        // XXX NOTE: this part isn't going through the transaction manager!
+      }
+    }
+  }
+
+  nsEditor::EndTransaction();
+
+  if (!NS_SUCCEEDED(res))
+    printf("Couldn't insert html: error was %d\n", res);
+  return res;
 }
 
 NS_IMETHODIMP nsHTMLEditor::OutputText(nsString& aOutputString)

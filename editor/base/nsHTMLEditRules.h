@@ -55,7 +55,7 @@ protected:
                             nsString       *outString,
                             TypeInState    typeInState);
   nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel);
-  nsresult WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::Direction aDir, PRBool *aCancel);
+  nsresult WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ECollapsedSelectionAction aAction, PRBool *aCancel);
 
   nsresult InsertTab(nsIDOMSelection *aSelection, PRBool *aCancel, PlaceholderTxn **aTxn, nsString *outString);
   nsresult InsertSpace(nsIDOMSelection *aSelection, PRBool *aCancel, PlaceholderTxn **aTxn, nsString *outString);

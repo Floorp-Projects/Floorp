@@ -76,7 +76,7 @@ protected:
 
   NS_IMETHOD CreateTxnsToDeleteContent(nsIDOMNode *aParent, 
                                              PRUint32 aOffset, 
-                                             nsIEditor::Direction aDir);
+                                             nsIEditor::ECollapsedSelectionAction aAction);
   
 protected:
   
