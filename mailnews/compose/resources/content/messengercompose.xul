@@ -219,6 +219,39 @@ Rights Reserved.
 		</menu>
 	  </menupopup>
     </menu>
+    <menu value="&debugMenu.label;">
+      <menupopup>
+	  <menuitem value="&outputTextCmd.label;"
+				     oncommand="EditorGetText()"/>
+      <menuitem value="&outputHTMLCmd.label;"
+				     oncommand="EditorGetHTML()"/>
+      <menuitem value="&outputXIFCmd.label;"
+				     oncommand="EditorGetXIF()"/>
+      <menuseparator />
+      <menuitem value="&insertTextCmd.label;"
+				     oncommand="EditorInsertText('All good things come to those who wait. ')"/>
+      <menuseparator />
+      <menuitem value="&testSelectionCmd.label;"
+				     oncommand="EditorTestSelection()"/>
+      <menuitem value="&testTableLayoutCmd.label;"
+				     oncommand="EditorTestTableLayout()"/>
+      <menuitem value="&showEmbeddedCmd.label;"
+				     oncommand="EditorShowEmbeddedObjects()"/>
+      <menuitem value="&dumpContentCmd.label;"
+				     oncommand="EditorDumpContent()"/>
+      <menuitem value="&testDocumentCmd.label;"
+				     oncommand="EditorTestDocument()"/>
+      <menuitem value="&runUnitTestsCmd.label;"
+				     oncommand="EditorUnitTests()"/>
+      <menuseparator />
+      <menuitem value="&startLogCmd.label;"
+				     oncommand="EditorStartLog()"/>
+      <menuitem value="&stopLogCmd.label;"
+				     oncommand="EditorStopLog()"/>
+      <menuitem value="&runLogCmd.label;"
+				     oncommand="EditorRunLog()"/>
+	  </menupopup>
+    </menu>
 	<menu id="tasksMenu"/>
 	<menu id="helpMenu"/>
 	<spring flex="100%"/>

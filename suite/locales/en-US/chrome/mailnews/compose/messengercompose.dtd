@@ -95,6 +95,23 @@
 
 <!ENTITY fileCarbonCopyCmd.label "File Carbon Copy">
 
+<!-- Debug Menu, imported from editorAppShell.dtd -->
+<!ENTITY debugMenu.label "Debug">
+<!ENTITY outputTextCmd.label "Output Text">
+<!ENTITY outputHTMLCmd.label "Output HTML">
+<!ENTITY outputXIFCmd.label "Output XIF">
+<!ENTITY insertTextCmd.label "Insert Text">
+<!ENTITY testSelectionCmd.label "Test Selection">
+<!ENTITY testTableLayoutCmd.label "Test Table Layout">
+<!ENTITY testDocumentCmd.label "Test Document">
+<!ENTITY showEmbeddedCmd.label "Show Embedded Objects">
+<!ENTITY dumpContentCmd.label "Dump Content Tree">
+<!ENTITY testDocumentCmd.label "Test Document">
+<!ENTITY runUnitTestsCmd.label "Run Unit Tests">
+<!ENTITY startLogCmd.label "Start Log">
+<!ENTITY stopLogCmd.label "Stop Log">
+<!ENTITY runLogCmd.label "Run Log">
+
 <!-- Toolbar items -->
 <!ENTITY sendButton.img "chrome://messengercompose/skin/send.gif">
 <!ENTITY sendButton.label "Send">
