@@ -777,11 +777,11 @@ function ComposeStartup()
               cleanBody = unescape(body);
             } catch(e) { cleanBody = body;}
 
-            msgCompFields.SetBody("<BR><A HREF=\"" + body +
-                                  "\">" + cleanBody + "</A><BR>");
+            msgCompFields.SetBody('<a href="' + body +
+                                  '">' + cleanBody + '</a><br>');
           }
           else
-            msgCompFields.SetBody("\n<" + body + ">\n");
+            msgCompFields.SetBody('<' + body + '>\n');
         }
 
 				var subjectValue = msgCompFields.GetSubject();
