@@ -33,6 +33,7 @@ const size_t gStackSize = 8192;
 
 static NS_DEFINE_IID(kIScriptContextIID, NS_ISCRIPTCONTEXT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 
 nsJSContext::nsJSContext(JSRuntime *aRuntime)
 {
@@ -64,11 +65,13 @@ PRBool nsJSContext::EvaluateString(const char *aScript,
 nsIScriptGlobalObject* nsJSContext::GetGlobalObject()
 {
   JSObject *global = JS_GetGlobalObject(mContext);
-  nsIScriptGlobalObject *script_global;
+  nsIScriptGlobalObject *script_global = nsnull;
   
   if (nsnull != global) {
-    script_global = (nsIScriptGlobalObject *)JS_GetPrivate(mContext, global);
-    NS_ADDREF(script_global);
+    nsISupports* sup = (nsISupports *)JS_GetPrivate(mContext, global);
+    if (nsnull != sup) {
+      sup->QueryInterface(kIScriptGlobalObjectIID, (void**) &script_global);
+    }
     return script_global;
   }
   else {
