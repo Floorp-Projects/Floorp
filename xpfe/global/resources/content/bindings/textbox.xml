@@ -68,11 +68,15 @@
                                   onget="return this.inputField.type;"/>
       <property name="maxlength"  onset="this.inputField.maxlength = val; return val;"
                                   onget="return this.inputField.maxlength;"/>
-      <property name="disabled"   onset="this.inputField.disabled = val; return val;"
+      <property name="disabled"   onset="this.inputField.disabled = val;
+                                         if (val) this.setAttribute('disabled', 'true');
+                                         else this.removeAttribute('disabled'); return val;"
                                   onget="return this.inputField.disabled;"/>
       <property name="size"       onset="this.inputField.size = val; return val;"
                                   onget="return this.inputField.size;"/>
-      <property name="readonly"   onset="this.inputField.readonly = val; return val;"
+      <property name="readonly"   onset="this.inputField.readonly = val;
+                                         if (val) this.setAttribute('disabled', 'true');
+                                         else this.removeAttribute('disabled'); return val;"
                                   onget="return this.inputField.readonly;"/>
 
       <method name="select">
