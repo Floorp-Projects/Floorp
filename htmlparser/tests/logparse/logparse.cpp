@@ -85,7 +85,7 @@ nsresult GenerateBaselineFile(const char* aSourceFilename,const char* aBaselineF
 			parser->RegisterDTD(dtd);
 			parser->SetContentSink(sink);
 			result = parser->Parse(theInputStream);
-			NS_RELEASE(parser);
+			NS_RELEASE(parser); 
 			NS_RELEASE(sink);
 		}
 

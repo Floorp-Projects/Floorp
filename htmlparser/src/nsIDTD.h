@@ -44,6 +44,7 @@ class nsIURL;
 class nsString;
 class nsITagHandler;
 
+
 enum eAutoDetectResult {eUnknownDetect, eValidDetect, eInvalidDetect};
 
 
@@ -201,7 +202,6 @@ class nsIDTD : public nsISupports {
      * @return  ptr to recycler (or null)
      */
     virtual nsITokenRecycler* GetTokenRecycler(void)=0;
-
 
 };
 
