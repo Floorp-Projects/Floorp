@@ -965,10 +965,12 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
   childList = innerFrame;
 
   // Have the inner table frame use a pseudo style context based on the outer table frame's
+  /* XXX: comment this back in and use this as the inner table's p-style asap
   nsIStyleContext *innerTableStyleContext = 
     aPresContext->ResolvePseudoStyleContextFor (aContent, 
                                                 nsHTMLAtoms::tablePseudo,
                                                 aStyleContext);
+  */
   innerFrame->SetStyleContext(aPresContext, aStyleContext);
   // this should be "innerTableStyleContext" but I haven't tested that thoroughly yet
 
