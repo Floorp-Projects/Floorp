@@ -814,8 +814,7 @@ XFE_PrefsMServerIMAPTab::XFE_PrefsMServerIMAPTab(
 	: XFE_XmLTabView(top, view, XFE_IMAP_TAB),
       m_delete_trash_toggle(0),
       m_delete_mark_toggle(0),
-      m_delete_remove_toggle(0),
-      m_use_ssl(0)
+      m_delete_remove_toggle(0) HG62519
 {
 #if 0
     m_use_sub=0;
