@@ -1343,7 +1343,7 @@ nsListControlFrame::HandleEvent(nsIPresContext* aPresContext,
   // do we have style that affects how we are selected?
   // do we have user-input style?
   const nsStyleUserInterface* uiStyle;
-  GetStyleData(eStyleStruct_UserInterface,  (const nsStyleUserInterface *&)uiStyle);
+  GetStyleData(eStyleStruct_UserInterface,  (const nsStyleStruct *&)uiStyle);
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
