@@ -91,7 +91,7 @@ StringUnicharInputStream::Read(PRUnichar* aBuf,
 {
   if (mPos >= mLen) {
     *aReadCount = 0;
-    return (nsresult)-1;
+    return NS_OK;
   }
   const PRUnichar* us = mString->get();
   NS_ASSERTION(mLen >= mPos, "unsigned madness");
