@@ -966,7 +966,8 @@ nsXULDocument::RemoveBroadcastListenerFor(nsIDOMElement* aBroadcaster,
                 NS_STATIC_CAST(BroadcastListener*, entry->mListeners[i]);
 
             if ((bl->mListener == aListener) && (bl->mAttribute == attr)) {
-                entry->mListeners.RemoveElement(aListener);
+                entry->mListeners.RemoveElementAt(i);
+                delete bl;
 
                 if (entry->mListeners.Count() == 0)
                     PL_DHashTableOperate(mBroadcasterMap, aBroadcaster,
