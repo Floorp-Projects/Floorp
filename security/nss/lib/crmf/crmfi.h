@@ -45,6 +45,7 @@
  */
 #include "secasn1.h"
 #include "crmfit.h"
+#include "secerr.h"
 
 #define CRMF_DEFAULT_ARENA_SIZE   1024
 #define MAX_WRAPPED_KEY_LEN       2048

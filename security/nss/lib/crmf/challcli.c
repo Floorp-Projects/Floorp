@@ -130,6 +130,7 @@ CMMF_POPODecKeyChallContDecryptChallenge(CMMFPOPODecKeyChallContent *inChalCont,
     SECItem         hashItem;
     SECOidTag       tag;
     unsigned char   hash[HASH_LENGTH_MAX]; 
+    PRArenaPool    *poolp  = NULL;
 
     PORT_Assert(inChalCont != NULL && inPrivKey != NULL);
     if (inChalCont == NULL || inIndex <0 || inIndex > inChalCont->numChallenges
@@ -158,7 +159,12 @@ CMMF_POPODecKeyChallContDecryptChallenge(CMMFPOPODecKeyChallContent *inChalCont,
       goto loser;
     }
     decryptedRand = PK11_GetKeyData(symKey);
-    rv = SEC_ASN1DecodeItem(NULL, &randStr, CMMFRandTemplate,
+
+    poolp = PORT_NewArena(CRMF_DEFAULT_ARENA_SIZE);
+    if (poolp == NULL) {
+        goto loser;
+    }
+    rv = SEC_ASN1DecodeItem(poolp, &randStr, CMMFRandTemplate,
 			    decryptedRand); 
     /* The decryptedRand returned points to a member within the symKey 
      * structure, so we don't want to free it. Let the symKey destruction 
@@ -211,6 +217,9 @@ CMMF_POPODecKeyChallContDecryptChallenge(CMMFPOPODecKeyChallContent *inChalCont,
  loser:
     if (symKey != NULL) {
         PK11_FreeSymKey(symKey);
+    }
+    if (poolp) {
+    	PORT_FreeArena(poolp, PR_FALSE);
     }
     return rv;
 }

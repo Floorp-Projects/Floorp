@@ -81,6 +81,11 @@ crmf_decode_process_raverified(CRMFCertReqMsg *inCertReqMsg)
 static SECStatus
 crmf_decode_process_signature(CRMFCertReqMsg *inCertReqMsg)
 {
+    PORT_Assert(inCertReqMsg->poolp);
+    if (!inCertReqMsg->poolp) {
+    	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
     return SEC_ASN1Decode(inCertReqMsg->poolp,
 			  &inCertReqMsg->pop->popChoice.signature,
 			  CRMFPOPOSigningKeyTemplate, 
@@ -251,6 +256,11 @@ crmf_decode_process_single_control(PRArenaPool *poolp,
     asn1Template = crmf_get_pkiarchiveoptions_subtemplate(inControl);
 
     PORT_Assert (asn1Template != NULL);
+    PORT_Assert (poolp != NULL);
+    if (!asn1Template || !poolp) {
+    	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
     /* We've got a union, so passing a pointer to one element of the
      * union is the same as passing a pointer to any of the other
      * members of the union.
