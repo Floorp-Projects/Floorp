@@ -43,6 +43,8 @@ REQUIRES  = xpcom \
             appshell \
             dom \
             profile \
+            widget \
+            pref \
             $(NULL)
 CPPSRCS   = \
     nsDownloadManager.cpp \
