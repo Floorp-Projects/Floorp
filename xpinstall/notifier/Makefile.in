@@ -22,13 +22,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = xpiflash
-LIBRARY_NAME = xpiflash
-IS_COMPONENT = 1
+MODULE		= xpiflash
+LIBRARY_NAME	= xpiflash
+IS_COMPONENT	= 1
 
-CPPSRCS = \
-		nsXPIFlash.cpp \
-		$(NULL)
+CPPSRCS		= nsXPIFlash.cpp
 
 EXPORT_RESOURCE_NOTIFIER = \
 		$(srcdir)/SoftwareUpdates.rdf \
@@ -36,11 +34,10 @@ EXPORT_RESOURCE_NOTIFIER = \
 		$(srcdir)/notification.gif \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS =\
-		-L$(DIST)/lib \
-		-lmozreg_s
+EXTRA_DSO_LDOPTS = -L$(DIST)/lib -lmozreg_s
 
 include $(topsrcdir)/config/rules.mk
 
 install:: 
 	$(INSTALL) $(EXPORT_RESOURCE_NOTIFIER) $(DIST)/bin/res/xpinstall
+
