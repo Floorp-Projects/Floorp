@@ -619,11 +619,13 @@ sub find_languages {
 
   {
    name => 'sendmailnow',
-   desc => 'If this is on, Bugzilla will tell sendmail to send any e-mail ' .
-           'immediately. If you have a large number of users with a large ' .
-           'amount of e-mail traffic, enabling this option may dramatically ' .
-           'slow down Bugzilla. Best used for smaller installations of ' .
-           'Bugzilla.',
+   desc => 'Sites using anything older than version 8.12 of \'sendmail\' ' .
+           'can achieve a significant performance increase in the ' .
+           'UI -- at the cost of delaying the sending of mail -- by ' .
+           'disabling this parameter. Sites using \'sendmail\' 8.12 or ' .
+           'higher should leave this on, as they will see no benefit from ' .
+           'turning it off. Sites using an MTA other than \'sendmail\' ' .
+           '*must* leave it on, or no bug mail will be sent.',
    type => 'b',
    default => 1
   },
