@@ -1080,7 +1080,7 @@ AtalkNextValue (RDFT rdf, RDF_Cursor c)
 		{
 			passThru = PR_FALSE;
 
-			if ((de = PR_ReadDir((PRDir*)c->pdata, (PRDirFlags)(c->count++))) != NULL)
+			while ((de = PR_ReadDir((PRDir*)c->pdata, (PRDirFlags)(c->count++))) != NULL)
 			{
 				if ((base = NET_Escape(de->name, URL_XALPHAS)) != NULL)		/* URL_PATH */
 				{
@@ -1123,12 +1123,27 @@ AtalkNextValue (RDFT rdf, RDF_Cursor c)
 								}
 								freeMem(encoded);
 							}
+							if (isFileVisible(temp) == PR_FALSE)
+							{
+								XP_FREE(url);
+								url = NULL;
+							}
 							freeMem(temp);
-							retVal = (void *)CreateAFPFSUnit(url, isDirectoryFlag);
+							if (url != NULL)
+							{
+								retVal = (void *)CreateAFPFSUnit(url, isDirectoryFlag);
+								XP_FREE(url);
+								url = NULL;
+								break;
+							}
 						}
-						XP_FREE(url);
 					}
 				}
+			}
+			if (de == NULL)
+			{
+				PR_CloseDir((PRDir *)c->pdata);
+				c->pdata = NULL;
 			}
 		}
 	}
