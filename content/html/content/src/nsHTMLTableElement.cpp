@@ -258,6 +258,7 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
       {
         nsIContent *content=nsnull;
         node->QueryInterface(kIContentIID, (void **)&content);
+        NS_ADDREF(nsHTMLAtoms::tr);
         GenericElementCollection body(content, nsHTMLAtoms::tr);
         PRUint32 rows;
         body.GetLength(&rows);
@@ -677,15 +678,16 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
   */
   *aValue = nsnull;
   nsresult rv;
-  PRInt32 refIndex = aIndex-1;
+  PRInt32 refIndex = aIndex;
   if (0<=refIndex)
   {
     nsIDOMHTMLCollection *rows;
     GetRows(&rows);
     PRUint32 rowCount;
     rows->GetLength(&rowCount);
-    if (rowCount>PRUint32(refIndex))
-      refIndex=rowCount-1;  // index >= the total number of rows means to append the row
+    if (rowCount<=PRUint32(refIndex))
+      refIndex=rowCount-1;  // we set refIndex to the last row so we can get the last row's parent
+                            // we then do an AppendChild below if (rowCount<aIndex)
     nsIDOMNode *refRow;
     rows->Item(refIndex, &refRow);
     nsIDOMNode *parent;
@@ -697,7 +699,10 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     {
       nsIDOMNode *newRowNode=nsnull;
       newRow->QueryInterface(kIDOMNodeIID, (void **)&newRowNode); // caller's addref
-      rv = parent->InsertBefore(newRowNode, refRow, (nsIDOMNode **)aValue);
+      if (rowCount<=PRUint32(aIndex)) // the index is greater than the number of rows, so just append
+        rv = parent->AppendChild(newRowNode, (nsIDOMNode **)aValue);
+      else  // insert the new row before the reference row we found above
+        rv = parent->InsertBefore(newRowNode, refRow, (nsIDOMNode **)aValue);
       NS_RELEASE(newRow);
     }
     NS_RELEASE(parent);
@@ -706,7 +711,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
   }
   else
   {
-    // find the first row group and insert there
+    // find the first row group and insert there as first child
     nsIDOMNode *rowGroup=nsnull;
     GenericElementCollection head((nsIContent*)this, nsHTMLAtoms::thead);
     PRUint32 length=0;
