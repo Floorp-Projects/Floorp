@@ -20,32 +20,29 @@
  * Contributor(s): 
  */
 
-#ifndef nsCookieService_h__
-#define nsCookieService_h__
+#ifndef nsPermissionManager_h__
+#define nsPermissionManager_h__
 
-#include "nsICookieService.h"
+#include "nsIPermissionManager.h"
 #include "nsIObserver.h"
-#include "nsIDocumentLoaderObserver.h"
 #include "nsWeakReference.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsCookieService : public nsICookieService,
-                        public nsIObserver,
-                        public nsIDocumentLoaderObserver,
-                        public nsSupportsWeakReference {
+class nsPermissionManager : public nsIPermissionManager,
+                            public nsIObserver,
+                            public nsSupportsWeakReference {
 public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIPERMISSIONMANAGER
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSIDOCUMENTLOADEROBSERVER
-  NS_DECL_NSICOOKIESERVICE
 
-  nsCookieService();
-  virtual ~nsCookieService(void);
+  nsPermissionManager();
+  virtual ~nsPermissionManager(void);
   nsresult Init();
   
 };
 
-#endif /* nsCookieService_h__ */
+#endif /* nsPermissionManager_h__ */

@@ -1,0 +1,60 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ 
+ * The Original Code is mozilla.org code.
+ 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 2001, Mozilla.  All Rights Reserved.
+ 
+ * Contributor(s):
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(E9FCB9A4-D376-458f-B720-E65E7DF593BC)]
+
+/**
+  This interface represents a HTTP or Javascript "cookie" object.
+*/
+
+interface nsICookie : nsISupports {
+
+    /* the name of the cookie */
+    readonly attribute string name;
+
+    /* the cookie value */
+    readonly attribute string value;
+
+    /* true if the cookie is a domain cookie, false otherwise */
+    readonly attribute boolean isDomain;
+
+    /* the host (possibly fully qualified) of the cookie */
+    readonly attribute string host;
+
+    /* the path pertaining to the cookie */
+    readonly attribute string path;
+
+    /* true if the cookie was transmitted over ssl, false otherwise */
+    readonly attribute boolean isSecure;
+
+    /* expiration time (local timezone) expressed as number of seconds since Jan 1, 1970 */
+    readonly attribute PRUint64 expires;
+
+};
+
+%{ C++
+// {E9FCB9A4-D376-458f-B720-E65E7DF593BC}
+#define NS_COOKIE_CID \
+{ 0xe9fcb9a4, 0xd376, 0x458f, { 0xb7, 0x20, 0xe6, 0x5e, 0x7d, 0xf5, 0x93, 0xbc } }
+#define NS_COOKIE_CONTRACTID "@mozilla.org/cookie;1"
+%}

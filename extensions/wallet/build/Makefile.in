@@ -35,14 +35,12 @@ REQUIRES	= xpcom string dom js
 CPPSRCS		= nsWalletViewerFactory.cpp
 
 LOCAL_INCLUDES	= \
-		-I$(srcdir)/../cookieviewer \
 		-I$(srcdir)/../editor \
 		-I$(srcdir)/../signonviewer \
 		-I$(srcdir)/../walletpreview \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libcookieviewer_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libsignonviewer_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libwalletpreview_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libwalleteditor_s.$(LIB_SUFFIX) \

@@ -27,7 +27,7 @@ MODULE = walletviewers
 LIBNAME = .\$(OBJDIR)\wlltvwrs
 DLL = $(LIBNAME).dll
 
-LINCS = -I..\cookieviewer	\
+LINCS = \
         -I..\editor             \
         -I..\signonviewer       \
         -I..\walletpreview      \
@@ -38,7 +38,6 @@ CPP_OBJS =                             \
        $(NULL)
 
 LLIBS =                               \
-	$(DIST)\lib\cookieviewer_s.lib  \
         $(DIST)\lib\signonviewer_s.lib  \
         $(DIST)\lib\walletpreview_s.lib \
         $(DIST)\lib\walleteditor_s.lib  \

@@ -18,39 +18,27 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): 
  *   Ben Goodger
  */
 
-/*
- * The cookieList is a sequence of items separated by the BREAK character.  These
- * items are:
- *   empty
- *   number for first cookie
- *   name for first cookie
- *   value for first cookie
- *   domain indicator ("Domain" or "Host") for first cookie
- *   domain or host name for first cookie
- *   path for first cookie
- *   secure indicator ("Yes" or "No") for first cookie
- *   expiration for first cookie
- * with the eight items above repeated for each successive cookie
- */
-
 // global variables
-var cookieviewer          = null;          // cookieviewer interface
-var cookieList            = [];            // array of cookies (OLD STREAM)
-var cookies               = [];            // array of cookeis (NEW OBJECT)
-var permissionList        = [];            // array of permissions (OLD STREAM)
-var permissions           = [];            // array of permissions (NEW OBJECT)
-var imageList             = [];            // array of images (OLD STREAM)
+var cookiemanager         = null;          // cookiemanager interface
+var permissionmanager     = null;          // permissionmanager interface
+var cookies               = [];            // array of cookies
+var permissions           = [];            // array of permissions
 var images                = [];            // array of images (NEW OBJECT)
 var deleted_cookies       = [];
 var deleted_permissions   = [];
 var deleted_images        = [];
-var deleted_cookies_count = 0;
-var deleted_permissions_count = 0;
-var deleted_images_count = 0;
+var deleted_cookies_count            = 0;
+var deleted_cookie_permissions_count = 0;
+var deleted_image_permissions_count  = 0;
+var cookie_permissions_count         = 0;
+var image_permissions_count          = 0;
+var cookieType                       = 0;
+var imageType                        = 1;
+
 // for dealing with the interface:
 var gone_c                = "";
 var gone_p                = "";
@@ -58,16 +46,19 @@ var gone_i                = "";
 // string bundle
 var bundle                = null;
 // CHANGE THIS WHEN MOVING FILES - strings localization file!
-var JS_STRINGS_FILE       = "chrome://communicator/locale/wallet/CookieViewer.properties";
-
+var JS_STRINGS_FILE = "chrome://communicator/locale/wallet/CookieViewer.properties";
+    
 // function : <CookieViewer.js>::Startup();
 // purpose  : initialises the cookie viewer dialog
 function Startup()
 {
-  // xpconnect to cookieviewer interface
-  cookieviewer = Components.classes["@mozilla.org/cookieviewer/cookieviewer-world;1"].createInstance();
-  cookieviewer = cookieviewer.QueryInterface(Components.interfaces.nsICookieViewer);
-  // intialise string bundle for
+  // xpconnect to cookiemanager interface
+  cookiemanager = Components.classes["@mozilla.org/cookiemanager;1"].getService();
+  cookiemanager = cookiemanager.QueryInterface(Components.interfaces.nsICookieManager);
+  // xpconnect to permissionmanager interface
+  permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
+  permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
+  // intialise string bundle
   bundle = srGetStrBundle(JS_STRINGS_FILE);
 
   // install imageblocker tab if instructed to do so by the "imageblocker.enabled" pref
@@ -80,9 +71,9 @@ function Startup()
       if (pref.GetBoolPref("imageblocker.enabled")) {
         var element;
         element = document.getElementById("imagesTab");
-        element.setAttribute("style","display: inline;" );
+        element.setAttribute("hidden","false" );
         element = document.getElementById("images");
-        element.setAttribute("style","display: inline;" );
+        element.setAttribute("hidden","false" );
       }
     } catch(e) {
     }
@@ -94,6 +85,8 @@ function Startup()
         element2.selectedTab = element;
         element = document.getElementById("panel");
         element.setAttribute("index","0" );
+        element = document.getElementById("imagesTab");
+        element.setAttribute("hidden","true" );
       } else {
         element = document.getElementById("cookieviewer");
         element.setAttribute("title", bundle.GetStringFromName("imageTitle"));
@@ -101,6 +94,10 @@ function Startup()
         element2.selectedTab = element;
         element = document.getElementById("panel");
         element.setAttribute("index","2" );
+        element = document.getElementById("serversTab");
+        element.setAttribute("hidden","true" );
+        element = document.getElementById("cookiesTab");
+        element.setAttribute("hidden","true" );
       }
     } catch(e) {
     }
@@ -109,48 +106,41 @@ function Startup()
     pref = null;
   }
 
-
+ 
   loadCookies();
   loadPermissions();
-  loadImages();
   doSetOKCancel(onOK, null);
   window.sizeToContent();
 }
 
 /*** =================== COOKIES CODE =================== ***/
 
-// function : <CookieViewer.js>::CreateCookieList();
-// purpose  : creates an array of cookie objects from the cookie stream
-function CreateCookieList()
-{
-  var count = 0;
-  for(var i = 1; i < cookieList.length; i+=8)
-  {
-    cookies[count] = new Cookie();
-    cookies[count].number     = cookieList[i+0];
-    cookies[count].name       = cookieList[i+1];
-    cookies[count].value      = cookieList[i+2];
-    cookies[count].domaintype = cookieList[i+3];
-    cookies[count].domain     = cookieList[i+4];
-    cookies[count].path       = cookieList[i+5];
-    cookies[count].secure     = cookieList[i+6];
-    cookies[count].expire     = cookieList[i+7];
-    count++;
-  }
+// function : <CookieViewer.js>::AddCookieToList();
+// purpose  : creates an array of cookie objects
+function AddCookieToList(count, name, value, isDomain, host, path, isSecure, expires) {
+  cookies[count] = new Cookie();
+  cookies[count].number     = count;
+  cookies[count].name       = name;
+  cookies[count].value      = value;
+  cookies[count].isDomain   = isDomain;
+  cookies[count].host       = host;
+  cookies[count].path       = path;
+  cookies[count].isSecure   = isSecure;
+  cookies[count].expires    = expires;
 }
 
 // function : <CookieViewer.js>::Cookie();
 // purpose  : an home-brewed object that represents a individual cookie in the stream
-function Cookie(number,name,value,domaintype,domain,path,secure,expire)
+function Cookie(number,name,value,isDomain,host,path,isSecure,expires)
 {
   this.number       = ( number ) ? number : null;
   this.name         = ( name ) ? name : null;
   this.value        = ( value ) ? value : null;
-  this.domaintype   = ( domaintype ) ? domaintype : null;
-  this.domain       = ( domain ) ? domain : null;
+  this.isDomain     = ( isDomain ) ? isDomain : null;
+  this.host         = ( host ) ? host : null;
   this.path         = ( path ) ? path : null;
-  this.secure       = ( secure ) ? secure : null;
-  this.expire       = ( expire ) ? expire : null;
+  this.isSecure     = ( isSecure ) ? isSecure : null;
+  this.expires      = ( expires ) ? expires : null;
 }
 
 
@@ -158,26 +148,39 @@ function Cookie(number,name,value,domaintype,domain,path,secure,expire)
 // purpose  : loads the list of cookies into the cookie list treeview
 function loadCookies()
 {
-  //  get cookies into an array
-  var list        = cookieviewer.GetCookieValue();
-  var BREAK       = list.substring(0,1);
-  cookieList      = list.split(BREAK);
-  CreateCookieList();   // builds an object array from cookiestream
-  for(var i = 0; i < cookies.length; i++)
-  {
-    var domain = cookies[i].domain;
-    if(domain.charAt(0) == ".")   // get rid of the ugly dot on the start of some domains
-      domain = domain.substring(1,domain.length);
-    AddItem("cookielist", [domain,cookies[i].name], "tree_", cookies[i].number);
+  var cookieString;
+  var cookieArray  = [];
+
+  var enumerator = cookiemanager.enumerator;
+  var count = 0;
+  while (enumerator.hasMoreElements()) {
+    var nextCookie = enumerator.getNext();
+    nextCookie = nextCookie.QueryInterface(Components.interfaces.nsICookie);
+
+    var name = nextCookie.name;
+    var value = nextCookie.value;
+    var isDomain = nextCookie.isDomain;
+    var host = nextCookie.host;
+    var path = nextCookie.path;
+    var isSecure = nextCookie.isSecure;
+    var expires = nextCookie.expires;
+
+    AddCookieToList
+      (count, name, value, isDomain, host, path, isSecure, expires);
+    if(host.charAt(0) == ".") { // get rid of the ugly dot on the start of some domains
+      host = host.substring(1,host.length);
+    }
+    AddItem("cookieList", [host, name], "cookietree_", count++);
   }
-  if (cookies.length == 0) {
+  Wallet_ColumnSort('0', 'cookieList');
+  if (count == 0) {
     document.getElementById("removeAllCookies").setAttribute("disabled","true");
   }
 }
 
 // function : <CookieViewer.js>::ViewSelectedCookie();
 // purpose  : displays information about the selected cookie in the info fieldset
-function ViewCookieSelected( e )
+function ViewCookieSelected( e ) 
 {
   var cookie = null;
   var cookietree = document.getElementById("cookietree");
@@ -188,37 +191,50 @@ function ViewCookieSelected( e )
     selItemsMax = true;
   if( cookietree.selectedItems.length )
     document.getElementById("removeCookies").removeAttribute("disabled","true");
-
+    
   if( ( e.type == "keypress" || e.type == "select" ) && e.target.selectedItems.length )
     cookie = cookietree.selectedItems[0];
-  if( e.type == "click" )
+  if( e.type == "click" ) 
     cookie = e.target.parentNode.parentNode;
 
-  if( !cookie || cookie.getAttribute("id").indexOf("tree_") == -1)
+  if( !cookie || cookie.getAttribute("id").indexOf("cookietree_") == -1)
     return false;
-  var idx = parseInt(cookie.getAttribute("id").substring(5,cookie.getAttribute("id").length));
+  var idx = parseInt(cookie.getAttribute("id").substring("cookietree_".length,cookie.getAttribute("id").length));
   for (var x=0; x<cookies.length; x++) {
     if (cookies[x].number == idx) {
       idx = x;
       break;
     }
   }
-  var props = [cookies[idx].number, cookies[idx].name, cookies[idx].value,
-               cookies[idx].domaintype, cookies[idx].domain, cookies[idx].path,
-               cookies[idx].secure, cookies[idx].expire];
+  var props = [cookies[idx].number, cookies[idx].name, cookies[idx].value, 
+               cookies[idx].isDomain, cookies[idx].host, cookies[idx].path,
+               cookies[idx].isSecure, cookies[idx].expires];
 
   var rows =
-    [null,"ifl_name","ifl_value","ifl_domaintype","ifl_domain","ifl_path","ifl_secure","ifl_expires"];
+    [null,"ifl_name","ifl_value","ifl_isDomain","ifl_host","ifl_path","ifl_isSecure","ifl_expires"];
+  var value;
+  var field;
   for(var i = 1; i < props.length; i++)
   {
-    if(i == 3) {
-      var dtypecell = document.getElementById("ifl_domaintype");
-      dtypecell.setAttribute("label", cookies[idx].domaintype+":");
-      continue;
+    if(rows[i] == "ifl_isDomain") {
+      field = document.getElementById("ifl_isDomain");
+      value = cookies[idx].isDomain ?
+              bundle.GetStringFromName("domainColon") :
+              bundle.GetStringFromName("hostColon");
+    } else if (rows[i] == "ifl_isSecure") {
+      field = document.getElementById("ifl_isSecure");
+      value = cookies[idx].isSecure ?
+              bundle.GetStringFromName("yes") : bundle.GetStringFromName("no");
+    } else if (rows[i] == "ifl_expires") {
+      field = document.getElementById("ifl_expires");
+      var date = new Date(1000*cookies[idx].expires);
+      value = cookies[idx].expires
+              ? date.toLocaleString()
+              : bundle.GetStringFromName("AtEndOfSession");
+    } else {
+      field = document.getElementById(rows[i]);
+      value = ( !selItemsMax ) ? props[i] : "";  // multiple selections clear fields.
     }
-    var field = document.getElementById(rows[i]);
-    var content = props[i];
-    var value = ( !selItemsMax ) ? content : "";  // multiple selections clear fields.
     field.setAttribute("value", value);
     if(rows[i] == "ifl_expires") break;
   }
@@ -230,10 +246,10 @@ function ViewCookieSelected( e )
 function DeleteCookieSelected() {
   // delete selected item
   deleted_cookies_count += document.getElementById("cookietree").selectedItems.length;
-  gone_c += DeleteItemSelected("cookietree", "tree_", "cookielist");
+  gone_c += DeleteItemSelected("cookietree", "cookietree_", "cookieList");
   // set fields
-  rows = ["ifl_name","ifl_value","ifl_domain","ifl_path","ifl_secure","ifl_expires"];
-  for(k = 0; k < rows.length; k++)
+  var rows = ["ifl_name","ifl_value","ifl_host","ifl_path","ifl_isSecure","ifl_expires"];
+  for(var k = 0; k < rows.length; k++) 
   {
     var row = document.getElementById(rows[k]);
     row.setAttribute("label","");
@@ -252,10 +268,10 @@ function DeleteCookieSelected() {
 // purpose  : deletes all the cookies
 function DeleteAllCookies() {
   // delete selected item
-  gone_c += DeleteAllItems(cookies.length, "tree_", "cookielist");
+  gone_c += DeleteAllItems(cookies.length, "cookietree_", "cookieList");
   // set fields
-  var rows = ["ifl_name","ifl_value","ifl_domain","ifl_path","ifl_secure","ifl_expires"];
-  for(var k = 0; k < rows.length; k++)
+  var rows = ["ifl_name","ifl_value","ifl_host","ifl_path","ifl_isSecure","ifl_expires"];
+  for(var k = 0; k < rows.length; k++) 
   {
     var row = document.getElementById(rows[k]);
     row.setAttribute("label","");
@@ -286,86 +302,96 @@ function HandleKeyPress( e )
 // will restore deleted cookies when I get around to filling it in.
 function RestoreCookies()
 {
-  // todo
+  // todo  
 }
 
 /*** =================== PERMISSIONS CODE =================== ***/
 
-// function : <CookieViewer.js>::CreatePermissionList();
-// purpose  : creates an array of permission objects from the permission stream
-function CreatePermissionList()
-{
-  var count = 0;
-  for(var i = 1; i < permissionList.length; i+=2)
-  {
-    permissions[count] = new Permission();
-    permissions[count].number     = permissionList[i];
-    var permStr                   = permissionList[i+1];
-    permissions[count].type       = permStr.substring(0,1);
-    permissions[count].domain     = permStr.substring(1,permStr.length);
-    count++;
-  }
+// function : <CookieViewer.js>::AddPermissionToList();
+// purpose  : creates an array of permission objects
+function AddPermissionToList(count, host, type, capability) {
+  permissions[count] = new Permission();
+  permissions[count].number = count;
+  permissions[count].host = host;
+  permissions[count].type = type;
+  permissions[count].capability = capability;
 }
 
 // function : <CookieViewer.js>::Permission();
 // purpose  : an home-brewed object that represents a individual permission in the stream
-function Permission(number,type,domain)
+function Permission(number, host, type, capability)
 {
   this.number       = (number) ? number : null;
+  this.host         = (host) ? host : null;
   this.type         = (type) ? type : null;
-  this.domain       = (domain) ? domain : null;
+  this.capability   = (capability) ? capability : null;
 }
 
 // function : <CookieViewer.js>::loadPermissions();
 // purpose  : loads the list of permissions into the permission list treeview
 function loadPermissions()
 {
-  // get permissions into an array
-  var list            = cookieviewer.GetPermissionValue(0);
-  var BREAK           = list.substring(0,1);
-  permissionList  = list.split(BREAK);
-  CreatePermissionList();   // builds an object array from permissionstream
-  for(var i = 0; i < permissions.length; i++)
-  {
-    var contentStr;
-    var domain = permissions[i].domain;
-    if(domain.charAt(0) == ".")   // get rid of the ugly dot on the start of some domains
-      domain = domain.substring(1,domain.length);
-    if(permissions[i].type == "+")
+  var permissionString;
+  var permissionArray  = [];
+
+  var enumerator = permissionmanager.enumerator;
+  var contentStr;
+  while (enumerator.hasMoreElements()) {
+    var nextPermission = enumerator.getNext();
+    nextPermission = nextPermission.QueryInterface(Components.interfaces.nsIPermission);
+
+    var host = nextPermission.host;
+    var type = nextPermission.type;
+    var capability = nextPermission.capability;
+    if(host.charAt(0) == ".") {  // get rid of the ugly dot on the start of some domains
+      host = host.substring(1,host.length);
+    }
+    if(capability) {
       contentStr = bundle.GetStringFromName("can");
-    else if(permissions[i].type == "-")
-      contentStr = bundle.GetStringFromName("cannot");
-    AddItem("permissionslist",[domain,contentStr],"permtree_",permissions[i].number)
+    } else {
+      contentStr = bundle.GetStringFromName("cannot");    
+    }
+    if (type == cookieType) {
+      AddPermissionToList(cookie_permissions_count, host, type, capability);
+      AddItem("cookiePermList", [host, contentStr], "cookiepermtree_", cookie_permissions_count++);
+    } else if (type == imageType) {
+      AddPermissionToList(image_permissions_count, host, type, capability);
+      AddItem("imagePermList", [host, contentStr], "imagepermtree_", image_permissions_count++);
+    }
   }
-  if (permissions.length == 0) {
+  if (cookie_permissions_count == 0) {
     document.getElementById("removeAllPermissions").setAttribute("disabled","true");
+  }
+  if (image_permissions_count == 0) {
+    document.getElementById("removeAllImages").setAttribute("disabled","true");
   }
 }
 
-function ViewPermissionSelected()
+function ViewCookiePermissionSelected()
 {
-  var permissiontree = document.getElementById("permissionstree");
-  if( permissiontree.selectedItems.length )
+  var cookiepermtree = document.getElementById("cookiepermissionstree");
+  if( cookiepermtree.selectedItems.length )
     document.getElementById("removePermissions").removeAttribute("disabled","true");
 }
 
-function DeletePermissionSelected()
+function DeleteCookiePermissionSelected()
 {
-  deleted_permissions_count += document.getElementById("permissionstree").selectedItems.length;
-  gone_p += DeleteItemSelected('permissionstree', 'permtree_', 'permissionslist');
-  if( !document.getElementById("permissionstree").selectedItems.length ) {
+  deleted_cookie_permissions_count +=
+    document.getElementById("cookiepermissionstree").selectedItems.length;
+  gone_p += DeleteItemSelected('cookiepermissionstree', 'cookiepermtree_', 'cookiePermList');
+  if( !document.getElementById("cookiepermissionstree").selectedItems.length ) {
     if( !document.getElementById("removePermissions").disabled ) {
       document.getElementById("removePermissions").setAttribute("disabled", "true")
     }
   }
-  if (deleted_permissions_count >= permissions.length) {
+  if (deleted_cookie_permissions_count >= cookie_permissions_count) {
     document.getElementById("removeAllPermissions").setAttribute("disabled","true");
   }
 }
 
-function DeleteAllPermissions() {
+function DeleteAllCookiePermissions() {
   // delete selected item
-  gone_p += DeleteAllItems(permissions.length, "permtree_", "permissionslist");
+  gone_p += DeleteAllItems(cookie_permissions_count, "cookiepermtree_", "cookiePermList");
   if( !document.getElementById("removePermissions").disabled ) {
     document.getElementById("removePermissions").setAttribute("disabled", "true")
   }
@@ -374,79 +400,31 @@ function DeleteAllPermissions() {
 
 /*** =================== IMAGES CODE =================== ***/
 
-// function : <CookieViewer.js>::CreateImageList();
-// purpose  : creates an array of image objects from the image stream
-function CreateImageList()
+function ViewImagePermissionSelected()
 {
-  var count = 0;
-  for(var i = 1; i < imageList.length; i+=2)
-  {
-    images[count] = new Image();
-    images[count].number     = imageList[i];
-    var imgStr               = imageList[i+1];
-    images[count].type       = imgStr.substring(0,1);
-    images[count].domain     = imgStr.substring(1,imgStr.length);
-    count++;
-  }
-}
-
-// function : <CookieViewer.js>::Image();
-// purpose  : an home-brewed object that represents a individual image in the stream
-function Image(number,type,domain)
-{
-  this.number       = (number) ? number : null;
-  this.type         = (type) ? type : null;
-  this.domain       = (domain) ? domain : null;
-}
-
-// function : <CookieViewer.js>::loadImages();
-// purpose  : loads the list of images into the image list treeview
-function loadImages()
-{
-  // get images into an array
-  var list = cookieviewer.GetPermissionValue(1);
-  var BREAK = list.substring(0,1);
-  imageList = list.split(BREAK);
-  CreateImageList();   // builds an object array from imagestream
-  for(var i = 0; i < images.length; i++)
-  {
-   var contentStr;
-   var domain = images[i].domain;
-    if(images[i].type == "+")
-      contentStr = bundle.GetStringFromName("canImages");
-    else if(images[i].type == "-")
-      contentStr = bundle.GetStringFromName("cannotImages");
-    AddItem("imageslist",[domain,contentStr],"imgtree_",images[i].number)
-  }
-  if (images.length == 0) {
-    document.getElementById("removeAllImages").setAttribute("disabled","true");
-  }
-}
-
-function ViewImageSelected()
-{
-  var imagetree = document.getElementById("imagestree");
-  if( imagetree.selectedItems.length )
+  var imagepermtree = document.getElementById("imagepermissionstree");
+  if( imagepermtree.selectedItems.length )
     document.getElementById("removeImages").removeAttribute("disabled","true");
 }
 
-function DeleteImageSelected()
+function DeleteImagePermissionSelected()
 {
-  deleted_images_count += document.getElementById("imagestree").selectedItems.length;
-  gone_i += DeleteItemSelected('imagestree', 'imgtree_', 'imageslist');
-  if( !document.getElementById("imagestree").selectedItems.length ) {
+  deleted_image_permissions_count
+    += document.getElementById("imagepermissionstree").selectedItems.length;
+  gone_i += DeleteItemSelected('imagepermissionstree', 'imagepermtree_', 'imagePermList');
+  if( !document.getElementById("imagepermissionstree").selectedItems.length ) {
     if( !document.getElementById("removeImages").disabled ) {
       document.getElementById("removeImages").setAttribute("disabled", "true")
     }
   }
-  if (deleted_images_count >= images.length) {
+  if (deleted_image_permissions_count >= image_permissions_count) {
     document.getElementById("removeAllImages").setAttribute("disabled","true");
   }
 }
 
-function DeleteAllImages() {
+function DeleteAllImagePermissions() {
   // delete selected item
-  gone_i += DeleteAllItems(images.length, "imgtree_", "imageslist");
+  gone_i += DeleteAllItems(image_permissions_count, "imagepermtree_", "imagePermList");
   if( !document.getElementById("removeImages").disabled ) {
     document.getElementById("removeImages").setAttribute("disabled", "true")
   }
@@ -458,9 +436,36 @@ function DeleteAllImages() {
 // function : <CookieViewer.js>::doOKButton();
 // purpose  : saves the changed settings and closes the dialog.
 function onOK(){
-  var result = "|goneC|" + gone_c + "|goneP|" + gone_p  + "|goneI|" + gone_i +
-               "|block|" + document.getElementById("checkbox").checked +"|";
-  cookieviewer.SetValue(result, window);
+
+  var deletedCookies = [];
+  deletedCookies = gone_c.split(",");
+  var cookieCount;
+  for (cookieCount=0; cookieCount<deletedCookies.length-1; cookieCount++) {
+    cookiemanager.remove(cookies[deletedCookies[cookieCount]].host,
+                                cookies[deletedCookies[cookieCount]].name,
+                                cookies[deletedCookies[cookieCount]].path,
+                                document.getElementById("checkbox").checked);
+  }
+
+  var deletedCookiePermissions = [];
+  deletedCookiePermissions = gone_p.split(",");
+  var cperm_count;
+  for (cperm_count=0;
+       cperm_count<deletedCookiePermissions.length-1;
+       cperm_count++) {
+    permissionmanager.remove
+      (permissions[deletedCookiePermissions[cperm_count]].host, cookieType);
+  }
+
+  var deletedImagePermissions = [];
+  deletedImagePermissions = gone_i.split(",");
+  var iperm_count;
+  for (iperm_count=0;
+       iperm_count<deletedImagePermissions.length-1;
+       iperm_count++) {
+    permissionmanager.remove
+      (permissions[deletedImagePermissions[iperm_count]].host, imageType);
+  }
   return true;
 }
 
@@ -493,14 +498,14 @@ function DeleteItemSelected(tree, prefix, kids) {
   var rv = "";
   var cookietree = document.getElementById(tree);
   var selitems = cookietree.selectedItems;
-  for(i = 0; i < selitems.length; i++)
-  {
+  for(i = 0; i < selitems.length; i++) 
+  { 
     delnarray[i] = document.getElementById(selitems[i].getAttribute("id"));
     var itemid = parseInt(selitems[i].getAttribute("id").substring(prefix.length,selitems[i].getAttribute("id").length));
     rv += (itemid + ",");
   }
-  for(i = 0; i < delnarray.length; i++)
-  {
+  for(i = 0; i < delnarray.length; i++) 
+  { 
     document.getElementById(kids).removeChild(delnarray[i]);
   }
   return rv;
@@ -511,8 +516,8 @@ function DeleteItemSelected(tree, prefix, kids) {
 function DeleteAllItems(length, prefix, kids) {
   var delnarray = [];
   var rv = "";
-  for(var i = 0; i < length; i++)
-  {
+  for(var i = 0; i < length; i++) 
+  { 
     if (document.getElementById(prefix+i) != null) {
       document.getElementById(kids).removeChild(document.getElementById(prefix+i));
       rv += (i + ",");

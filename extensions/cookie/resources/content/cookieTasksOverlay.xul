@@ -40,16 +40,26 @@
       element.setAttribute("disabled","true" );
     }
 
+    // for some unexplainable reason, CheckForImage() keeps getting called repeatedly
+    // as we mouse over the task menu.  IMO, that shouldn't be happening.  To avoid
+    // taking a performance hit due to this, we will set the following flag to avoid
+    // reexecuting the routine
+    var alreadyCheckedForImage = false;
+
     // determine if we need to remove the image entries from the task menu
     function CheckForImage()
     {
+      if (alreadyCheckedForImage) {
+        return;
+      }
+      alreadyCheckedForImage = true;
       // remove image functions (unless overruled by the "imageblocker.enabled" pref)
       try {
         if (!this.pref.GetBoolPref("imageblocker.enabled")) {
           HideImage();
         }
       } catch(e) {
-  HideImage();
+        HideImage();
         dump("imageblocker.enabled pref is missing from all.js\n");
       }
     }
@@ -57,31 +67,33 @@
     // perform a Cookie or Image action
     function CookieImageAction(action) {
 
-      var cookieViewer =
-        Components.classes["@mozilla.org/cookieviewer/cookieviewer-world;1"]
-          .createInstance(Components.interfaces["nsICookieViewer"]);
-
+      var permissionmanager =
+        Components.classes["@mozilla.org/permissionmanager;1"]
+          .getService().QueryInterface(Components.interfaces.nsIPermissionManager);
+      if (!permissionmanager) {
+        return;
+      }
       var COOKIEPERMISSION = 0;
       var IMAGEPERMISSION = 1;
-
+      var element;
       switch (action) {
         case "cookieAllow":
-          cookieViewer.AddPermission(window._content, true, COOKIEPERMISSION);
+          permissionmanager.add(window._content.location, true, COOKIEPERMISSION);
           element = document.getElementById("AllowCookies");
           alert(element.getAttribute("msg"));
           break;
         case "cookieBlock":
-          cookieViewer.AddPermission(window._content, false, COOKIEPERMISSION);
+          permissionmanager.add(window._content.location, false, COOKIEPERMISSION);
           element = document.getElementById("BlockCookies");
           alert(element.getAttribute("msg"));
           break;
         case "imageAllow":
-          cookieViewer.AddPermission(window._content, true, IMAGEPERMISSION);
+          permissionmanager.add(window._content.location, true, IMAGEPERMISSION);
           element = document.getElementById("AllowImages");
           alert(element.getAttribute("msg"));
           break;
         case "imageBlock":
-          cookieViewer.AddPermission(window._content, false, IMAGEPERMISSION);
+          permissionmanager.add(window._content.location, false, IMAGEPERMISSION);
           element = document.getElementById("BlockImages");
           alert(element.getAttribute("msg"));
           break;
@@ -93,7 +105,9 @@
   </script>         
 
   <!-- tasksOverlay menu items -->
-  <menupopup  id="personalManagers"> 
+  <menupopup id="taskPopup" oncreate="CheckForImage()"/>
+
+  <menupopup  id="personalManagers">
     <menu label="&cookieCookieManager.label;"
                 accesskey="&cookieCookieManager.accesskey;"
                 position="1">
@@ -112,9 +126,10 @@
       </menupopup>
     </menu>
     <menu label="&cookieImageManager.label;"
-          accesskey="&cookieImageManager.accesskey;" id="image"
+          accesskey="&cookieImageManager.accesskey;"
+          id="image"
           position="2">
-      <menupopup oncreate="CheckForImage()">
+      <menupopup>
         <menuitem label="&cookieDisplayImagesCmd.label;"
                   accesskey="&cookieDisplayImagesCmd.accesskey;" 
                   oncommand="viewImages();"/> 

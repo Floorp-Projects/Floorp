@@ -25,24 +25,43 @@ include <$(DEPTH)/config/config.mak>
 DEFINES=-D_IMPL_NS_COOKIE -DWIN32_LEAN_AND_MEAN
 MODULE=cookie 
 
-EXPORTS = nsICookieService.h nsCookieHTTPNotify.h nsCookie.h
-
-CSRCS=				\
- $(NULL)
+EXPORTS = nsCookieHTTPNotify.h
 
 CPPSRCS=				\
- nsCookieService.cpp			\
+ nsModuleFactory.cpp		\
  nsCookie.cpp			\
+ nsPermission.cpp			\
+ nsCookieManager.cpp			\
+ nsCookieService.cpp			\
+ nsImgManager.cpp			\
+ nsPermissionManager.cpp			\
+ nsCookies.cpp			\
+ nsImages.cpp			\
+ nsPermissions.cpp			\
+ nsUtils.cpp			\
  nsCookieHTTPNotify.cpp			\
  $(NULL)
 
-C_OBJS=				\
- $(NULL)
-
+XPIDLSRCS=      .\nsICookieManager.idl           \
+                .\nsIImgManager.idl            \
+                .\nsIPermissionManager.idl       \
+                .\nsICookieService.idl           \
+                .\nsICookie.idl                  \
+                .\nsIPermission.idl              \
+                $(NULL)
 
 CPP_OBJS=				\
+ .\$(OBJDIR)\nsModuleFactory.obj	\
+ .\$(OBJDIR)\nsCookie.obj		\
+ .\$(OBJDIR)\nsPermission.obj		\
+ .\$(OBJDIR)\nsCookieManager.obj	\
  .\$(OBJDIR)\nsCookieService.obj	\
- .\$(OBJDIR)\nsCookie.obj	\
+ .\$(OBJDIR)\nsImgManager.obj	\
+ .\$(OBJDIR)\nsPermissionManager.obj	\
+ .\$(OBJDIR)\nsCookies.obj	\
+ .\$(OBJDIR)\nsImages.obj	\
+ .\$(OBJDIR)\nsPermissions.obj	\
+ .\$(OBJDIR)\nsUtils.obj	\
  .\$(OBJDIR)\nsCookieHTTPNotify.obj	\
  $(NULL)
 

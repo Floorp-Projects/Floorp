@@ -26,12 +26,10 @@
 
 #include "nsWalletPreview.h"
 #include "nsSignonViewer.h"
-#include "nsCookieViewer.h"
 #include "nsWalletEditor.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(WalletPreviewImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(SignonViewerImpl)
-NS_GENERIC_FACTORY_CONSTRUCTOR(CookieViewerImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(WalletEditorImpl)
 
 // The list of components we register
@@ -40,8 +38,6 @@ static nsModuleComponentInfo components[] = {
       "@mozilla.org/walletpreview/walletpreview-world;1", WalletPreviewImplConstructor },
     { "SignonViewer World Component", NS_SIGNONVIEWER_CID,
       "@mozilla.org/signonviewer/signonviewer-world;1", SignonViewerImplConstructor },
-    { "CookieViewer World Component", NS_COOKIEVIEWER_CID,
-      "@mozilla.org/cookieviewer/cookieviewer-world;1", CookieViewerImplConstructor },
     { "WalletEditor World Component", NS_WALLETEDITOR_CID,
       "@mozilla.org/walleteditor/walleteditor-world;1", WalletEditorImplConstructor },
 };

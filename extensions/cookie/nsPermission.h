@@ -20,32 +20,32 @@
  * Contributor(s): 
  */
 
-#ifndef nsCookieService_h__
-#define nsCookieService_h__
+#ifndef nsPermission_h__
+#define nsPermission_h__
 
-#include "nsICookieService.h"
-#include "nsIObserver.h"
-#include "nsIDocumentLoaderObserver.h"
+#include "nsIPermission.h"
 #include "nsWeakReference.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsCookieService : public nsICookieService,
-                        public nsIObserver,
-                        public nsIDocumentLoaderObserver,
+class nsPermission : public nsIPermission,
                         public nsSupportsWeakReference {
 public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-  NS_DECL_NSIDOCUMENTLOADEROBSERVER
-  NS_DECL_NSICOOKIESERVICE
+  NS_DECL_NSIPERMISSION
 
-  nsCookieService();
-  virtual ~nsCookieService(void);
-  nsresult Init();
+  // Note: following constructor takes ownership of the host string so the caller
+  // of the constructor must not free them
+  nsPermission(char * host, PRInt32 type, PRBool capability);
+  nsPermission();
+  virtual ~nsPermission(void);
   
+protected:
+  char * permissionHost;
+  PRInt32 permissionType;
+  PRBool permissionCapability;
 };
 
-#endif /* nsCookieService_h__ */
+#endif /* nsPermission_h__ */

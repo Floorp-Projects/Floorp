@@ -36,15 +36,31 @@ DIRS		= tests
 endif
 
 CPPSRCS		= \
-		nsCookieService.cpp \
+		nsModuleFactory.cpp \
 		nsCookie.cpp \
+		nsPermission.cpp \
+		nsCookieManager.cpp \
+		nsCookieService.cpp \
+		nsImgManager.cpp \
+		nsPermissionManager.cpp \
+		nsCookies.cpp \
+		nsImages.cpp \
+		nsPermissions.cpp \
+		nsUtils.cpp \
 		nsCookieHTTPNotify.cpp \
 		$(NULL)
 
+XPIDLSRCS	= \
+		nsICookieManager.idl \
+		nsIImgManager.idl \
+		nsIPermissionManager.idl \
+		nsICookieService.idl \
+		nsICookie.idl \
+		nsIPermission.idl \
+		$(NULL)
+
 EXPORTS		= \
-		nsICookieService.h \
 		nsCookieHTTPNotify.h \
-		nsCookie.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

@@ -55,7 +55,6 @@
 #include "nsIContent.h"
 #include "nsIContentViewerFile.h"
 #include "nsIContentViewerEdit.h"
-#include "nsICookieService.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
@@ -112,7 +111,6 @@ static PRInt32              gRefCnt           = 0;
 // CIDs
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
 static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID,
@@ -4239,13 +4237,20 @@ NS_IMETHODIMP NavigatorImpl::GetCookieEnabled(PRBool *aCookieEnabled)
   nsresult rv = NS_OK;
   *aCookieEnabled = PR_FALSE;
 
-  NS_WITH_SERVICE(nsICookieService, service, kCookieServiceCID, &rv);
-  if (NS_FAILED(rv) || service == nsnull)
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if (NS_FAILED(rv) || prefs == nsnull)
     return rv;
 
-  return service->CookieEnabled(aCookieEnabled);
-}
+  PRInt32 cookieBehaviorPref;
+  rv = prefs->GetIntPref("network.cookie.cookieBehavior", &cookieBehaviorPref);
 
+  if (NS_FAILED(rv))
+    return rv;
+
+  const PRInt32 DONT_USE = 2;
+  *aCookieEnabled = (cookieBehaviorPref != DONT_USE);
+  return rv;
+}
 
 NS_IMETHODIMP NavigatorImpl::JavaEnabled(PRBool *aReturn)
 {

@@ -20,32 +20,39 @@
  * Contributor(s): 
  */
 
-#ifndef nsCookieService_h__
-#define nsCookieService_h__
-
-#include "nsICookieService.h"
-#include "nsIObserver.h"
-#include "nsIDocumentLoaderObserver.h"
-#include "nsWeakReference.h"
+#include "nsImgManager.h"
+#include "nsImages.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsCookieService : public nsICookieService,
-                        public nsIObserver,
-                        public nsIDocumentLoaderObserver,
-                        public nsSupportsWeakReference {
-public:
 
-  // nsISupports
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-  NS_DECL_NSIDOCUMENTLOADEROBSERVER
-  NS_DECL_NSICOOKIESERVICE
+////////////////////////////////////////////////////////////////////////////////
+// nsImgManager Implementation
 
-  nsCookieService();
-  virtual ~nsCookieService(void);
-  nsresult Init();
-  
-};
+NS_IMPL_ISUPPORTS1(nsImgManager, nsIImgManager);
 
-#endif /* nsCookieService_h__ */
+nsImgManager::nsImgManager()
+{
+  NS_INIT_REFCNT();
+}
+
+nsImgManager::~nsImgManager(void)
+{
+}
+
+nsresult nsImgManager::Init()
+{
+  IMAGE_RegisterPrefCallbacks();
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsImgManager::Block(const char * imageURL) {
+  ::IMAGE_Block(imageURL);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImgManager::CheckForPermission
+    (const char * hostname, const char * firstHostname, PRBool *permission) {
+  return ::IMAGE_CheckForPermission(hostname, firstHostname, permission);
+}

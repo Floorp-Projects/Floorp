@@ -47,8 +47,8 @@
   <tabcontrol id="tabcontrol" flex="1" orient="vertical">
     <tabbox>
       <tab id="cookiesTab" label="&tab.cookiesonsystem.label;"/>
-      <tab label="&tab.bannedservers.label;"/>
-      <tab id="imagesTab" style="display:none" label="&tab.bannedimages.label;"/>
+      <tab id="serversTab" label="&tab.bannedservers.label;"/>
+      <tab id="imagesTab" hidden="true" label="&tab.bannedimages.label;"/>
     </tabbox>
     <tabpanel id="panel" flex="1">
       <box class="tabpanel" id="system" flex="1" orient="vertical">
@@ -67,14 +67,14 @@
               <treerow>
                 <treecell class="treecell-header sortDirectionIndicator"
                           label="&treehead.cookiedomain.label;"
-                          onclick="return Wallet_ColumnSort('0', 'cookielist');"/>
+                          onclick="return Wallet_ColumnSort('0', 'cookieList');"/>
                 <treecell class="treecell-header
                           sortDirectionIndicator"
                           label="&treehead.cookiename.label;"
-                          onclick="return Wallet_ColumnSort('1', 'cookielist');"/>
+                          onclick="return Wallet_ColumnSort('1', 'cookieList');"/>
               </treerow>          
             </treehead>
-            <treechildren id="cookielist" flex="1"/>
+            <treechildren id="cookieList" flex="1"/>
           </tree>
           <titledbox>
             <label value="&treehead.infoselected.label;"/>
@@ -94,8 +94,8 @@
                   <textbox id="ifl_value" readonly="true"/>
                 </row>
                 <row>
-                  <text id="ifl_domaintype" value="&props.domain.label;"/>
-                  <textbox id="ifl_domain" readonly="true"/>
+                  <text id="ifl_isDomain" value="&props.domain.label;"/>
+                  <textbox id="ifl_host" readonly="true"/>
                 </row>
                 <row>
                   <text value="&props.path.label;"/>
@@ -103,7 +103,7 @@
                 </row>
                 <row>
                   <text value="&props.secure.label;"/>
-                  <textbox id="ifl_secure" readonly="true"/>
+                  <textbox id="ifl_isSecure" readonly="true"/>
                 </row>
                 <row>
                   <text value="&props.expires.label;"/>
@@ -130,9 +130,9 @@
       <box class="tabpanel" id="servers" flex="1" orient="vertical">
           <text class="label" value="&div.bannedservers.label;"/>
           <separator class="thin"/>
-          <tree id="permissionstree" class="inset" flex="1"
-                onkeypress="if(event.which == 46) gone_p += DeleteItemSelected('permissionstree', 'permtree_', 'permissionslist');"
-                multiple="true" onclick="ViewPermissionSelected();">
+          <tree id="cookiepermissionstree" class="inset" flex="1"
+                onkeypress="if(event.which == 46) gone_p += DeleteItemSelected('cookiepermissionstree', 'permtree_', 'cookiePermList');"
+                multiple="true" onclick="ViewCookiePermissionSelected();">
             <treecolgroup>
               <treecol flex="5" width="0"/>
               <splitter class="tree-splitter"/>
@@ -142,30 +142,30 @@
               <treerow>
                 <treecell class="treecell-header sortDirectionIndicator"
                           label="&treehead.sitename.label;"
-                          onclick="return Wallet_ColumnSort('0', 'permissionslist');"/>
+                          onclick="return Wallet_ColumnSort('0', 'cookiePermList');"/>
                 <treecell class="treecell-header sortDirectionIndicator"
                           label="&treehead.status.label;"
-                          onclick="return Wallet_ColumnSort('1', 'permissionslist');"/>
+                          onclick="return Wallet_ColumnSort('1', 'cookiePermList');"/>
               </treerow>          
             </treehead>
-            <treechildren flex="1" id="permissionslist"/>
+            <treechildren flex="1" id="cookiePermList"/>
           </tree>
           <box>
             <button id="removePermissions" class="dialog push" disabled="true" 
                           label="&removepermission.label;" 
-                          oncommand="DeletePermissionSelected();"/>
+                          oncommand="DeleteCookiePermissionSelected();"/>
             <button id="removeAllPermissions" class="dialog push"
                           label="&removeallpermissions.label;" 
-                          oncommand="DeleteAllPermissions();"/>
+                          oncommand="DeleteAllCookiePermissions();"/>
           </box>
       </box>
 
-      <box class="tabpanel" id="images" style="display:none" flex="1" orient="vertical">
+      <box class="tabpanel" id="images" hidden="true" flex="1" orient="vertical">
           <text class="label" value="&div.bannedimages.label;"/>
           <separator class="thin"/>
-          <tree id="imagestree" class="inset" flex="1" style="height: 0px;"
-                onkeypress="if(event.which == 46) gone_i += DeleteItemSelected('imagestree', 'imgtree_', 'imageslist');"
-                multiple="true" onclick="ViewImageSelected();">
+          <tree id="imagepermissionstree" class="inset" flex="1" style="height: 0px;"
+                onkeypress="if(event.which == 46) gone_i += DeleteItemSelected('imagepermisionstree', 'imgtree_', 'imagePermList');"
+                multiple="true" onclick="ViewImagePermissionSelected();">
             <treecolgroup>
               <treecol flex="5" width="0"/>
               <splitter class="tree-splitter"/>
@@ -175,21 +175,21 @@
               <treerow>
                 <treecell class="treecell-header sortDirectionIndicator"
                           label="&treehead.sitename.label;"
-                          onclick="return Wallet_ColumnSort('0', 'imageslist');"/>
+                          onclick="return Wallet_ColumnSort('0', 'imagePermList');"/>
                 <treecell class="treecell-header sortDirectionIndicator"
                           label="&treehead.status.label;"
-                          onclick="return Wallet_ColumnSort('1', 'imageslist');"/>
+                          onclick="return Wallet_ColumnSort('1', 'imagePermList');"/>
               </treerow>          
             </treehead>
-            <treechildren flex="1" id="imageslist"/>
+            <treechildren flex="1" id="imagePermList"/>
           </tree>
           <box>
             <button id="removeImages" class="dialog push" disabled="true"
                           label="&removeimage.label;" 
-                          oncommand="DeleteImageSelected();"/>
+                          oncommand="DeleteImagePermissionSelected();"/>
             <button id="removeAllImages" class="dialog push"
                           label="&removeallimages.label;" 
-                          oncommand="DeleteAllImages();"/>
+                          oncommand="DeleteAllImagePermissions();"/>
           </box>
       </box>
 

@@ -24,13 +24,17 @@
 #include "nsCookieService.h"
 #include "nsCookieHTTPNotify.h"
 #include "nsCRT.h"
-#include "nsCookie.h"
+#include "nsCookies.h"
 #include "nsIGenericFactory.h"
 #include "nsXPIDLString.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
+#include "nsIDocumentLoader.h"
+#include "nsCURILoader.h"
+
+static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,101 +42,114 @@
 ////////////////////////////////////////////////////////////////////////////////
 // nsCookieService Implementation
 
-NS_IMPL_ISUPPORTS3(nsCookieService, nsICookieService, nsIObserver, nsISupportsWeakReference);
+NS_IMPL_ISUPPORTS4(nsCookieService, nsICookieService,
+                   nsIObserver, nsIDocumentLoaderObserver, nsISupportsWeakReference);
 
 nsCookieService::nsCookieService()
-: mInitted(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
 
 nsCookieService::~nsCookieService(void)
 {
-    COOKIE_RemoveAllCookies();
+  COOKIE_Write(); /* in case any deleted cookies didn't get removed from file yet */
+  COOKIE_RemoveAll();
 }
 
 nsresult nsCookieService::Init()
 {
-  // make sure we're not initted twice, because this has the serious
-  // consequence of reading the cookies file twice
-  if (mInitted)
-  {
-    NS_ASSERTION(0, "Baking the cookies twice. Doesn't that make them biscuits?");
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
-    
-  COOKIE_RegisterCookiePrefCallbacks();
-  COOKIE_ReadCookies();
-  
+  COOKIE_RegisterPrefCallbacks();
+  COOKIE_Read();
+
   nsresult rv;
   NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (observerService) {
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
   }
-  
-  mInitted = PR_TRUE;
+
+  // Register as an observer for the document loader  
+  NS_WITH_SERVICE(nsIDocumentLoader, docLoaderService, kDocLoaderServiceCID, &rv)
+  if (NS_SUCCEEDED(rv) && docLoaderService) {
+    docLoaderService->AddObserver((nsIDocumentLoaderObserver*)this);
+  } else {
+    NS_ASSERTION(PR_FALSE, "Could not get nsIDocumentLoader");
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieService::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, const char* aCommand)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIRequest *request, nsresult aStatus)
+{
+  COOKIE_Write();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieService::OnStartURLLoad
+  (nsIDocumentLoader* loader, nsIRequest *request)
+{
+ return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieService::OnProgressURLLoad
+  (nsIDocumentLoader* loader, nsIRequest *request, PRUint32 aProgress, PRUint32 aProgressMax)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieService::OnStatusURLLoad
+  (nsIDocumentLoader* loader, nsIRequest *request, nsString& aMsg)
+{
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsCookieService::GetCookieString(nsIURI *aURL, nsString& aCookie) {
+nsCookieService::OnEndURLLoad
+  (nsIDocumentLoader* loader, nsIRequest *request, nsresult aStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieService::GetCookieString(nsIURI *aURL, char ** aCookie) {
   nsXPIDLCString spec;
   nsresult rv = aURL->GetSpec(getter_Copies(spec));
   if (NS_FAILED(rv)) return rv;
-  char *cookie = COOKIE_GetCookie((char *)(const char *)spec);
-  if (nsnull != cookie) {
-    aCookie.AssignWithConversion(cookie);
-    nsCRT::free(cookie);
-  } else {
-    // No Cookie isn't an error condition.
-    aCookie.Truncate();
-  }
+  *aCookie = COOKIE_GetCookie((char *)(const char *)spec);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCookieService::GetCookieStringFromHTTP(nsIURI *aURL, nsIURI *aFirstURL, nsString& aCookie) {
+nsCookieService::GetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, char ** aCookie) {
   nsXPIDLCString spec;
   nsresult rv = aURL->GetSpec(getter_Copies(spec));
   if (NS_FAILED(rv)) return rv;
   nsXPIDLCString firstSpec;
   rv = aFirstURL->GetSpec(getter_Copies(firstSpec));
   if (NS_FAILED(rv)) return rv;
-  char *cookie = COOKIE_GetCookieFromHttp((char *)(const char *)spec, (char *)(const char *)firstSpec);
-  if (nsnull != cookie) {
-    aCookie.AssignWithConversion(cookie);
-    nsCRT::free(cookie);
-  } else {
-    // No Cookie isn't an error condition.
-    aCookie.Truncate();
-  }
+  *aCookie = COOKIE_GetCookieFromHttp((char *)(const char *)spec, (char *)(const char *)firstSpec);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCookieService::SetCookieString(nsIURI *aURL, nsIDocument* aDoc, const nsString& aCookie) {
+nsCookieService::SetCookieString(nsIURI *aURL, nsIPrompt* aPrompt, const char * aCookie) {
   char *spec = NULL;
   nsresult result = aURL->GetSpec(&spec);
   NS_ASSERTION(result == NS_OK, "deal with this");
-  char *cookie = aCookie.ToNewCString();
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObj;
-  nsCOMPtr<nsIPrompt> prompt;
-  if (aDoc) {
-    aDoc->GetScriptGlobalObject(getter_AddRefs(globalObj));
-    if (globalObj) {
-      nsCOMPtr<nsIDOMWindowInternal> window (do_QueryInterface(globalObj));
-      if (window) {
-        window->GetPrompter(getter_AddRefs(prompt));
-      }
-    }
-  }
-
-  COOKIE_SetCookieString((char *)spec, prompt, cookie);
+  COOKIE_SetCookieString(spec, aPrompt, aCookie);
   nsCRT::free(spec);
-  nsCRT::free(cookie);
   return NS_OK;
 }
 
@@ -142,114 +159,38 @@ nsCookieService::SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, nsIPro
   nsresult rv = aURL->GetSpec(&spec);
   if (NS_FAILED(rv)) return rv;
   char *firstSpec = NULL;
-  rv = aFirstURL->GetSpec(&firstSpec);  if (NS_FAILED(rv)) return rv;
+  rv = aFirstURL->GetSpec(&firstSpec);
+  if (NS_FAILED(rv)) return rv;
   COOKIE_SetCookieStringFromHttp(spec, firstSpec, aPrompter, (char *)aCookie, (char *)aExpires);
   nsCRT::free(spec);
   nsCRT::free(firstSpec);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCookieService::Cookie_RemoveAllCookies(void) {
-  ::COOKIE_RemoveAllCookies();
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCookieService::Cookie_CookieViewerReturn(nsAutoString results) {
-  ::COOKIE_CookieViewerReturn(results);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCookieService::Cookie_GetCookieListForViewer(nsString& aCookieList) {
-  ::COOKIE_GetCookieListForViewer(aCookieList);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCookieService::Cookie_GetPermissionListForViewer
-    (nsString& aPermissionList, PRInt32 type) {
-  ::COOKIE_GetPermissionListForViewer(aPermissionList, type);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCookieService::Image_Block(nsAutoString imageURL) {
-  ::Image_Block(imageURL);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCookieService::Permission_Add
-    (nsString imageURL, PRBool permission, PRInt32 type) {
-  ::Permission_Add(imageURL, permission, type);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCookieService::Image_CheckForPermission
-    (char * hostname, char * firstHostname, PRBool &permission) {
-  return ::Image_CheckForPermission(hostname, firstHostname, permission);
-}
-
-
-NS_IMETHODIMP nsCookieService::CookieEnabled(PRBool* aEnabled)
-{
-  *aEnabled = (COOKIE_GetBehaviorPref() != COOKIE_DontUse);
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP nsCookieService::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
 {
   nsresult rv = NS_OK;
-    
+
   if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get())) {
     // The profile is about to change.
     
     // Dump current cookies.  This will be done by calling 
-    // COOKIE_RemoveAllCookies which clears the memory-resident
+    // COOKIE_RemoveAll which clears the memory-resident
     // cookie table.  The reason the cookie file does not
     // need to be updated is because the file was updated every time
     // the memory-resident table changed (i.e., whenever a new cookie
     // was accepted).  If this condition ever changes, the cookie
     // file would need to be updated here.
 
-    COOKIE_RemoveAllCookies();
+    COOKIE_RemoveAll();
     if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
       COOKIE_DeletePersistentUserData();
   }  
   else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-do-change").get())) {
     // The profile has aleady changed.    
     // Now just read them from the new profile location.
-    COOKIE_ReadCookies();
+    COOKIE_Read();
   }
 
   return rv;
 }
-
-
-//----------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-// Define the contructor function for the objects
-
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCookieService, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCookieHTTPNotify, Init)
-
-////////////////////////////////////////////////////////////////////////
-// Define a table of CIDs implemented by this module along with other
-// information like the function to create an instance, contractid, and
-// class name.
-//
-static nsModuleComponentInfo components[] = {
-    { "CookieService", NS_COOKIESERVICE_CID,
-      NS_COOKIESERVICE_CONTRACTID, nsCookieServiceConstructor, },	// XXX Singleton
-    { NS_COOKIEHTTPNOTIFY_CLASSNAME,
-      NS_COOKIEHTTPNOTIFY_CID,
-      NS_COOKIEHTTPNOTIFY_CONTRACTID,
-      nsCookieHTTPNotifyConstructor,
-      nsCookieHTTPNotify::RegisterProc,
-      nsCookieHTTPNotify::UnregisterProc
-    },
-};
-
-////////////////////////////////////////////////////////////////////////
-// Implement the NSGetModule() exported function for your module
-// and the entire implementation of the module object.
-//
-NS_IMPL_NSGETMODULE("nsCookieModule", components)

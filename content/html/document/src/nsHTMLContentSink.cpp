@@ -115,6 +115,8 @@
 
 #include "nsReadableUtils.h"
 #include "nsWeakReference.h"//nshtmlelementfactory supports weak references
+#include "nsIPrompt.h"
+#include "nsIDOMWindowInternal.h"
 
 #ifdef ALLOW_ASYNCH_STYLE_SHEETS
 const PRBool kBlockByDefault=PR_FALSE;
@@ -4500,8 +4502,18 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,nsString& aValue,nsIHTMLCont
     nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(docShell);
     rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
     if (NS_FAILED(rv)) return rv;
-    
-    rv = cookieServ->SetCookieString(baseURI, mDocument, aValue);
+    char *cookie = aValue.ToNewCString();
+    nsCOMPtr<nsIScriptGlobalObject> globalObj;
+    nsCOMPtr<nsIPrompt> prompt;
+    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
+    if (globalObj) {
+      nsCOMPtr<nsIDOMWindowInternal> window (do_QueryInterface(globalObj));
+      if (window) {
+        window->GetPrompter(getter_AddRefs(prompt));
+      }
+    }
+    rv = cookieServ->SetCookieString(baseURI, prompt, cookie);
+    nsCRT::free(cookie);
     if (NS_FAILED(rv)) return rv;
   } // END set-cookie
   
