@@ -2227,7 +2227,8 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
         while (nsnull != ancestor) {
           ancestor->GetWidget(window); // addrefs
           if (nsnull != window) {
-            window->SetFocus();
+              window->SetFocus();
+              NS_RELEASE(window); // releases. Duh.
 	          break;
 	        }
 	        ancestor->GetParent(ancestor);
