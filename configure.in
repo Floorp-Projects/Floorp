@@ -587,6 +587,36 @@ case "$target" in
     esac
     ;;
 
+*-darwin*) 
+    AC_DEFINE(DARWIN)
+    AC_DEFINE(TARGET_CARBON)
+    AC_DEFINE(TARGET_API_MAC_CARBON)
+    _PEDANTIC=
+    CFLAGS="$CFLAGS -fpascal-strings -traditional-cpp -fno-common"
+    CXXFLAGS="$CXXFLAGS -fpascal-strings -traditional-cpp -fno-common"
+    DLL_SUFFIX=".dylib"
+    DSO_LDOPTS='-compatibility_version 1 -current_version 1'
+    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
+    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
+    case "${target_cpu}" in
+    powerpc*)
+        AC_DEFINE(NO_X11)
+        AC_DEFINE(XP_MACOSX)
+        AC_DEFINE(TARGET_CARBON)
+        AC_DEFINE(TARGET_API_MAC_CARBON)
+        no_x=yes
+        MACOSX=1
+        MOZ_WIDGET_TOOLKIT='mac'
+        LDFLAGS="$LDFLAGS -framework Carbon"
+        DSO_LDOPTS="$DSO_LDOPTS -arch ppc -install_name @executable_path/\$@"
+        TK_LIBS='/System/Library/Frameworks/Carbon.framework/Carbon'
+        TK_CFLAGS="-I/Developer/Headers/FlatCarbon -F/System/Library/Frameworks"
+        CFLAGS="$CFLAGS $TK_CFLAGS"
+        CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
+        ;;
+    esac
+    ;;
+
 *-freebsd*)
     if test `test -x /usr/bin/objformat && /usr/bin/objformat || echo aout` != "elf"; then
 	DLL_SUFFIX=".so.1.0"
@@ -919,37 +949,6 @@ alpha*-*-osf*)
 	    TK_LIBS='-lphoton -lphrender'
 	    AC_DEFINE(NO_X11)
     fi
-    ;;
-
-*-darwin*) 
-    AC_DEFINE(DARWIN)
-    AC_DEFINE(TARGET_CARBON)
-    AC_DEFINE(TARGET_API_MAC_CARBON)
-    ENABLE_TESTS=
-    _PEDANTIC=
-    CFLAGS="$CFLAGS -fpascal-strings -traditional-cpp -fno-common"
-    CXXFLAGS="$CXXFLAGS -fpascal-strings -traditional-cpp -fno-common"
-    DLL_SUFFIX=".dylib"
-    DSO_LDOPTS='-compatibility_version 1 -current_version 1'
-    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
-    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
-    case "${target_cpu}" in
-    powerpc*)
-        AC_DEFINE(NO_X11)
-        AC_DEFINE(XP_MACOSX)
-        AC_DEFINE(TARGET_CARBON)
-        AC_DEFINE(TARGET_API_MAC_CARBON)
-        no_x=yes
-        MACOSX=1
-        MOZ_WIDGET_TOOLKIT='mac'
-        LDFLAGS="$LDFLAGS -framework Carbon"
-	DSO_LDOPTS="$DSO_LDOPTS -arch ppc -install_name @executable_path/\$@"
-        TK_LIBS='/System/Library/Frameworks/Carbon.framework/Carbon'
-        TK_CFLAGS="-I/Developer/Headers/FlatCarbon -F/System/Library/Frameworks"
-	CFLAGS="$CFLAGS $TK_CFLAGS"
-	CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
-        ;;
-    esac
     ;;
 
 *-sco*) 
