@@ -20,6 +20,7 @@
    - Contributor(s):
    -   Blake Ross   <blakeross@telocity.com>
    -   Peter Annema <disttsc@bart.nl>
+   -   Jeremy M. Dolan <jmd@pobox.com>
    -->
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
@@ -242,7 +243,7 @@
         <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
         <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
         <menuseparator />
-        
+
         <menuitem accesskey="&translateMenu.accesskey;" label="&translateMenu.label;" oncommand="Translate();"/>
         <menu label="&webContentMenu.label;" accesskey="&webContentMenu.accesskey;">
           <menupopup datasources="rdf:chrome"  ref="urn:mozilla:locale:root" 
@@ -259,7 +260,7 @@
           </menupopup>
         </menu>
         <menu id="charsetMenu" />
-        
+
         <menuseparator/>
         <menu label="&applyTheme.label;" accesskey="&applyTheme.accesskey;">
           <menupopup datasources="rdf:chrome" ref="urn:mozilla:skin:root" oncommand="applyTheme(event.target)">
@@ -294,7 +295,7 @@
         <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>
         <menuseparator hidden="true"/>
       </menupopup>
-    </menu>         
+    </menu>
     
     <menu id="BookmarksMenu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;" 
           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
@@ -320,7 +321,7 @@
             <menu class="menu-iconic bookmark-item" uri="rdf:*"
                   image="rdf:http://home.netscape.com/NC-rdf#Icon"
                   validate="never"
-            	  label="rdf:http://home.netscape.com/NC-rdf#Name"
+                  label="rdf:http://home.netscape.com/NC-rdf#Name"
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
               <menupopup />
             </menu>
@@ -354,29 +355,13 @@
   <menu id="tasksMenu"/>
   
   <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
+
   <!-- Menu for testing. -->
   <menu id="debugMenu" accesskey="D" label="Debug">
     <menupopup>
       <menu label="Verification">
         <menupopup>
-          <menuitem label="Mozilla"  oncommand="window._content.location.href='http://www.mozilla.org'"/>
-          <menuitem label="Yahoo"  oncommand="window._content.location.href='http://www.yahoo.com'"/>
-          <menuitem label="Netscape"  oncommand="window._content.location.href='http://www.netscape.com'"/>
-          <menuitem label="Excite"  oncommand="window._content.location.href='http://www.excite.com'"/>
-          <menuitem label="Microsoft"  oncommand="window._content.location.href='http://www.microsoft.com'"/>
-          <menuitem label="city.net"  oncommand="window._content.location.href='http://www.city.net'"/>
-          <menuitem label="Mirabilis"  oncommand="window._content.location.href='http://www.mirabilis.com'"/>
-          <menuitem label="Time"  oncommand="window._content.location.href='http://www.time.com/time/index.html'"/>
-          <menuitem label="Warner Bros."  oncommand="window._content.location.href='http://www.warnerbros.com/home_moz3_day.html'"/>
-          <menuitem label="CNN" oncommand="window._content.location.href='http://www.cnn.com'"/>
-          <menuitem label="USA Today" oncommand="window._content.location.href='http://www.usatoday.com'"/>
-          <menuitem label="Disney" oncommand="window._content.location.href='http://www.disney.go.com'"/>
-          <menuitem label="Hotwired" oncommand="window._content.location.href='http://www.hotwired.com'"/>
-          <menuitem label="Hotbot" oncommand="window._content.location.href='http://www.hotbot.com'"/>
-          <menuseparator />
-          <menuitem label="Frames" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_frame_index.html'"/>
           <menuitem label="Tables" oncommand="window._content.location.href='resource:/res/samples/test6.html'"/>
-          <menuitem label="Applets" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_applet.html'"/>
           <menuitem label="JavaScript" oncommand="window._content.location.href='http://mozilla.org/quality/browser/standards/javascript/tcmatrix/index.html'"/>
           <menuitem label="GIF Images" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_imagemap.html'"/>
           <menuitem label="JPEG Images" oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
@@ -385,6 +370,21 @@
           <menuitem label="Animation" oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
           <menuitem label="Larger page" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_html_mix3.html'"/>
           <menuitem label="Smaller page" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_link.html'"/>
+          <menuseparator />
+          <menuitem label="Mozilla" oncommand="window._content.location.href='http://www.mozilla.org'"/>
+          <menuitem label="Yahoo" oncommand="window._content.location.href='http://www.yahoo.com'"/>
+          <menuitem label="Netscape" oncommand="window._content.location.href='http://www.netscape.com'"/>
+          <menuitem label="Excite" oncommand="window._content.location.href='http://www.excite.com'"/>
+          <menuitem label="Microsoft" oncommand="window._content.location.href='http://www.microsoft.com'"/>
+          <menuitem label="city.net" oncommand="window._content.location.href='http://www.city.net'"/>
+          <menuitem label="Mirabilis" oncommand="window._content.location.href='http://www.mirabilis.com'"/>
+          <menuitem label="Time" oncommand="window._content.location.href='http://www.time.com'"/>
+          <menuitem label="Warner Bros." oncommand="window._content.location.href='http://www.warnerbros.com'"/>
+          <menuitem label="CNN" oncommand="window._content.location.href='http://www.cnn.com'"/>
+          <menuitem label="USA Today" oncommand="window._content.location.href='http://www.usatoday.com'"/>
+          <menuitem label="Disney" oncommand="window._content.location.href='http://www.disney.go.com'"/>
+          <menuitem label="Hotwired" oncommand="window._content.location.href='http://www.hotwired.com'"/>
+          <menuitem label="Hotbot" oncommand="window._content.location.href='http://www.hotbot.com'"/>
         </menupopup>
       </menu>
 
@@ -431,30 +431,18 @@
         </menupopup>
       </menu>
 
-     <menuitem label="Form Manager Samples" oncommand="window._content.location.href='chrome://communicator/locale/wallet/index.html';"/>
+      <menuitem label="Form Manager Samples" oncommand="window._content.location.href='chrome://communicator/locale/wallet/index.html';"/>
 
-     <menuitem label="chofmann's browser buster" oncommand="window._content.location.href='http://komodo.mozilla.org/buster/'"/>
-     <menuitem label="Composer with test page" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
-     <menuitem label="Flush Memory" oncommand="Components.classes['@mozilla.org/xpcom/memory-service;1'].getService(Components.interfaces.nsIMemory).heapMinimize(true);" />
-
-    </menupopup>
-  </menu>
-
-  <menu id="qaMenu" accesskey="Q" label="QA">
-    <menupopup>
-      <menuitem label="Precheckin Tests"  oncommand="window._content.location.href='http://www.mozilla.org/quality/precheckin-tests.html'"/>
-      <menuseparator />
-      <menuitem label="Bug Writing Guidelines"        oncommand="window._content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
-      <menuitem label="Bug Template"       oncommand="window._content.location.href='http://www.mozilla.org/quality/help/bug-form.html'"/>
-      <menuitem label="Smoke Tests"      oncommand="window._content.location.href='http://www.mozilla.org/quality/smoketests/'"/>
-      <menuitem label="Known Bugs"   oncommand="window._content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
-      <menuseparator />
-      <menuitem label="StringBundle Test"       oncommand="window._content.location.href='resource:/res/strres-test.xul'"/>
+      <menuitem label="chofmann's Browser Buster" oncommand="window._content.location.href='http://komodo.mozilla.org/buster/'"/>
+      <menuitem label="Composer (with test page)" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
+      <menuitem label="Flush Memory" oncommand="Components.classes['@mozilla.org/xpcom/memory-service;1'].getService(Components.interfaces.nsIMemory).heapMinimize(true);" />
 
       <menuseparator />
+
+      <menuitem label="StringBundle Test" oncommand="window._content.location.href='resource:/res/strres-test.xul'"/>
       <menuitem label="Bloat: Dump New Stats" oncommand="window._content.location.href='about:bloat?new'"/>
       <menuitem label="Bloat: Dump All Stats" oncommand="window._content.location.href='about:bloat'"/>
-      <menuitem label="Bloat: Clear Stats"   oncommand="window._content.location.href='about:bloat?clear'"/>
+      <menuitem label="Bloat: Clear Stats" oncommand="window._content.location.href='about:bloat?clear'"/>
 
       <menuseparator />
 
@@ -466,6 +454,33 @@
         <menuitem label="Verbose" oncommand="traceVerbose(this.getAttribute('checked'))" type="checkbox" checked="false"/>
        </menupopup>
       </menu>
+    </menupopup>
+  </menu>
+
+  <menu id="qaMenu" accesskey="Q" label="QA">
+    <menupopup>
+      <menuitem label="Getting Involved" oncommand="window._content.location.href='http://www.mozilla.org/start/'"/>
+      <menuitem label="Mozilla QA Overview" oncommand="window._content.location.href='http://www.mozilla.org/quality/'"/>
+
+      <menuseparator />
+
+      <menuitem label="Frequently Reported Bugs" oncommand="window._content.location.href='http://bugzilla.mozilla.org/duplicates.cgi'"/>
+      <menuitem label="Bug Writing Guidelines" oncommand="window._content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
+      <menuitem label="File a Bug..." oncommand="window._content.location.href='http://www.mozilla.org/quality/bug-form.html'"/>
+
+      <menuseparator />
+
+      <menuitem label="Bugs Filed Today" oncommand="window._content.location.href='http://bugzilla.mozilla.org/buglist.cgi?changedin=1&amp;chfield=%5BBug+creation%5D&amp;amp;chfieldto=Now&amp;product=Browser&amp;product=MailNews'"/>
+      <menuitem label="CVS Checkins Today" oncommand="window._content.location.href='http://bonsai.mozilla.org/cvsquery.cgi?treeid=default&amp;module=SeaMonkeyAll&amp;branch=HEAD&amp;branchtype=match&amp;sortby=Date&amp;date=day&amp;cvsroot=%2Fcvsroot'"/>
+
+      <menuseparator />
+
+      <menuitem label="Smoke Tests" oncommand="window._content.location.href='http://www.mozilla.org/quality/smoketests/'"/>
+      <menuitem label="Pre-Checkin Tests" oncommand="window._content.location.href='http://www.mozilla.org/quality/precheckin-tests.html'"/>
+
+      <menuseparator />
+
+      <menuitem label="Latest Builds" oncommand="window._content.location.href='ftp://ftp.mozilla.org/pub/mozilla/nightly/latest/'"/>
     </menupopup>
   </menu>
 </menubar>
