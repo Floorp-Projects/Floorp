@@ -1561,6 +1561,27 @@ JS_ClearNewbornRoots(JSContext *cx)
     cx->lastAtom = NULL;
 }
 
+JS_PUBLIC_API(JSBool)
+JS_EnterLocalRootScope(JSContext *cx)
+{
+    CHECK_REQUEST(cx);
+    return js_EnterLocalRootScope(cx);
+}
+
+JS_PUBLIC_API(void)
+JS_LeaveLocalRootScope(JSContext *cx)
+{
+    CHECK_REQUEST(cx);
+    js_LeaveLocalRootScope(cx);
+}
+
+JS_PUBLIC_API(void)
+JS_ForgetLocalRoot(JSContext *cx, void *thing)
+{
+    CHECK_REQUEST(cx);
+    js_ForgetLocalRoot(cx, (jsval) thing);
+}
+
 #include "jshash.h" /* Added by JSIFY */
 
 #ifdef DEBUG
@@ -3288,26 +3309,7 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
 {
     JSObject *obj;
 
-    /*
-     * We use a dummy stack frame to protect the script from a GC caused
-     * by debugger-hook execution.
-     *
-     * XXX We really need a way to manage local roots and such more
-     * XXX automatically, at which point we can remove this one-off hack
-     * XXX and others within the engine.  See bug 40757 for discussion.
-     */
-    JSStackFrame dummy;
-
-    CHECK_REQUEST(cx);
-
-    memset(&dummy, 0, sizeof dummy);
-    dummy.down = cx->fp;
-    dummy.script = script;
-    cx->fp = &dummy;
-
     obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
-
-    cx->fp = dummy.down;
     if (!obj)
         return NULL;
 

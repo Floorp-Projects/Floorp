@@ -72,8 +72,6 @@ struct JSStackFrame {
     JSObject        *sharpArray;    /* scope for #n= initializer vars */
     uint32          flags;          /* frame flags -- see below */
     JSStackFrame    *dormantNext;   /* next dormant frame chain */
-    JSAtomMap       *objAtomMap;    /* object atom map, non-null only if we
-                                       hit a regexp object literal */
 };
 
 typedef struct JSInlineFrame {
