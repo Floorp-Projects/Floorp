@@ -1163,7 +1163,15 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
         goto out;
     }
 
+    // Quick hack to unbust XPCONNECT_STANDALONE.
+    // This leaves the jsdebugger with a non-URL pathname in the 
+    // XPCONNECT_STANDALONE case - but at least it builds and runs otherwise.
+    // See: http://bugzilla.mozilla.org/show_bug.cgi?id=121438 
+#ifdef XPCONNECT_STANDALONE
+    localFile->GetPath(getter_Copies(displayPath));
+#else
     NS_GetURLSpecFromFile(localFile, getter_Copies(displayPath));
+#endif
     rv = localFile->OpenANSIFileDesc("r", &fileHandle);
     if (NS_FAILED(rv)) {
         global = nsnull;
