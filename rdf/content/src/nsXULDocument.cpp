@@ -527,6 +527,12 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
 
 #if defined(DEBUG_waterson) || defined(DEBUG_hyatt)
     mLoadStart = PR_Now();
+
+    {
+        nsInt64 now(PR_Now());
+        now /= nsInt64(1000);
+        printf("##### XUL document created at %ld\n", PRInt32(now));
+    }
 #endif
 
     nsCOMPtr<nsIURI> url;
@@ -4522,6 +4528,12 @@ nsXULDocument::ResumeWalk()
         PRInt32 diff = PRInt32(diff64 / nsInt64(1000));
         printf("***** XUL document loaded in %dmsec\n", diff);
     }
+
+    {
+        nsInt64 now(PR_Now());
+        now /= nsInt64(1000);
+        printf("##### XUL document loaded at %d\n", PRInt32(now));
+    }
 #endif
 
     rv = ResolveForwardReferences();
@@ -4551,7 +4563,7 @@ nsXULDocument::ResumeWalk()
     {
         nsInt64 now(PR_Now());
         now /= nsInt64(1000);
-        printf("### ResumeWalk complete %d\n", PRInt32(now));
+        printf("##### XUL document flowed at %d\n", PRInt32(now));
     }
 #endif
 
