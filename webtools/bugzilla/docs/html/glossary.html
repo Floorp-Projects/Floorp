@@ -1,0 +1,420 @@
+<HTML
+><HEAD
+><TITLE
+>Glossary</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.61
+"><LINK
+REL="HOME"
+TITLE="The Bugzilla Guide"
+HREF="index.html"><LINK
+REL="PREVIOUS"
+TITLE="How to use this License for your documents"
+HREF="gfdl_howto.html"></HEAD
+><BODY
+CLASS="GLOSSARY"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>The Bugzilla Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="gfdl_howto.html"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+>&nbsp;</TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="GLOSSARY"
+><H1
+><A
+NAME="GLOSSARY"
+>Glossary</A
+></H1
+><DIV
+CLASS="GLOSSDIV"
+><H1
+CLASS="GLOSSDIV"
+><A
+NAME="AEN2344"
+>0-9, high ascii</A
+></H1
+><DL
+><DT
+><B
+>.htaccess</B
+></DT
+><DD
+><P
+>	    Apache web server, and other NCSA-compliant web servers,
+	    observe the convention of using files in directories
+	    called <TT
+CLASS="FILENAME"
+>.htaccess</TT
+> files.  These
+	    restrict parameters of the web server.  In Bugzilla, they
+	    are used to restrict access to certain files which would
+	    otherwise compromise your installation.  For instance, the
+	    <TT
+CLASS="FILENAME"
+>localconfig</TT
+> file contains the
+	    password to your database.  If this information were
+	    generally available, and remote access to your database
+	    turned on, you risk corruption of your database by
+	    computer criminals or the curious.
+	  </P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="GLOSSDIV"
+><H1
+CLASS="GLOSSDIV"
+><A
+NAME="GLOSS_A"
+>A</A
+></H1
+><DL
+><DT
+><B
+>There are no entries for A</B
+></DT
+><DD
+><P
+></P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="GLOSSDIV"
+><H1
+CLASS="GLOSSDIV"
+><A
+NAME="GLOSS_B"
+>B</A
+></H1
+><DL
+><DT
+><B
+>Bug</B
+></DT
+><DD
+><P
+>	    A <SPAN
+CLASS="QUOTE"
+>"Bug"</SPAN
+> in Bugzilla refers to an issue
+	    entered into the database which has an associated number,
+	    assignments, comments, etc. Some also refer to a
+	    <SPAN
+CLASS="QUOTE"
+>"tickets"</SPAN
+> or <SPAN
+CLASS="QUOTE"
+>"issues"</SPAN
+>; in the
+	    context of Bugzilla, they are synonymous.
+	  </P
+></DD
+><DT
+><B
+>Bug Number</B
+></DT
+><DD
+><P
+>	    Each Bugzilla Bug is assigned a number that uniquely
+	    identifies that Bug.  The Bug associated with a Bug Number
+	    can be pulled up via a query, or easily from the very
+	    front page by typing the number in the "Find" box.
+	  </P
+></DD
+><DT
+><B
+>Bug Life Cycle</B
+></DT
+><DD
+><P
+>A Bug has stages through which it must pass before
+	    becoming a <SPAN
+CLASS="QUOTE"
+>"closed bug"</SPAN
+>, including
+	    acceptance, resolution, and verification.  The <SPAN
+CLASS="QUOTE"
+>"Bug
+	      Life Cycle"</SPAN
+> is moderately flexible according to
+	    the needs of the organization using it, though.</P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="GLOSSDIV"
+><H1
+CLASS="GLOSSDIV"
+><A
+NAME="GLOSS_I"
+>I</A
+></H1
+><DL
+><DT
+><A
+NAME="GLOSS_INFINITELOOP"
+><B
+>Infinite Loop</B
+></A
+></DT
+><DD
+><P
+>A loop of information that never ends; see recursion.</P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="GLOSSDIV"
+><H1
+CLASS="GLOSSDIV"
+><A
+NAME="GLOSS_P"
+>P</A
+></H1
+><DL
+><DT
+><B
+>Product</B
+></DT
+><DD
+><P
+>A Product is a broad category of types of bugs.  In
+	    general, there are several Components to a Product.  A
+	    Product also defines a default Group (used for Bug
+	    Security) for all bugs entered into components beneath
+	    it.</P
+><DIV
+CLASS="EXAMPLE"
+><A
+NAME="AEN2389"
+></A
+><P
+><B
+>Example 1. A Sample Product</B
+></P
+><P
+>A company sells a software product called
+	      <SPAN
+CLASS="QUOTE"
+>"X"</SPAN
+>.  They also maintain some older
+	      software called <SPAN
+CLASS="QUOTE"
+>"Y"</SPAN
+>, and have a secret
+	      project <SPAN
+CLASS="QUOTE"
+>"Z"</SPAN
+>.  An effective use of Products
+	      might be to create Products <SPAN
+CLASS="QUOTE"
+>"X"</SPAN
+>,
+	      <SPAN
+CLASS="QUOTE"
+>"Y"</SPAN
+>, <SPAN
+CLASS="QUOTE"
+>"Z"</SPAN
+>, each with Components
+	      of User Interface, Database, and Business Logic.  They
+	      might also change group permissions so that only those
+	      people who are members of Group <SPAN
+CLASS="QUOTE"
+>"Z"</SPAN
+> can see
+	      components and bugs under Product
+	      <SPAN
+CLASS="QUOTE"
+>"Z"</SPAN
+>.</P
+></DIV
+></DD
+></DL
+></DIV
+><DIV
+CLASS="GLOSSDIV"
+><H1
+CLASS="GLOSSDIV"
+><A
+NAME="GLOSS_Q"
+>Q</A
+></H1
+><DL
+><DT
+><B
+>QA</B
+></DT
+><DD
+><P
+><SPAN
+CLASS="QUOTE"
+>"QA"</SPAN
+>, <SPAN
+CLASS="QUOTE"
+>"Q/A"</SPAN
+>, and
+	    <SPAN
+CLASS="QUOTE"
+>"Q.A."</SPAN
+> are short for <SPAN
+CLASS="QUOTE"
+>"Quality
+	      Assurance"</SPAN
+>.  In most large software development
+	    organizations, there is a team devoted to ensuring the
+	    product meets minimum standards before shipping.  This
+	    team will also generally want to track the progress of
+	    bugs over their life cycle, thus the need for the
+	    <SPAN
+CLASS="QUOTE"
+>"QA Contact"</SPAN
+> field in a Bug.</P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="GLOSSDIV"
+><H1
+CLASS="GLOSSDIV"
+><A
+NAME="GLOSS_R"
+>R</A
+></H1
+><DL
+><DT
+><B
+>Recursion</B
+></DT
+><DD
+><P
+>The property of a function looking back at itself for
+	    something.  <SPAN
+CLASS="QUOTE"
+>"GNU"</SPAN
+>, for instance, stands for
+	    <SPAN
+CLASS="QUOTE"
+>"GNU's Not UNIX"</SPAN
+>, thus recursing upon itself
+	    for definition.  For further clarity, see Infinite
+	    Loop.</P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="GLOSSDIV"
+><H1
+CLASS="GLOSSDIV"
+><A
+NAME="GLOSS_Z"
+>Z</A
+></H1
+><DL
+><DT
+><B
+>Zarro Boogs Found</B
+></DT
+><DD
+><P
+>This is the cryptic response sent by Bugzilla when a
+	    query returned no results.  It is just a goofy way of
+	    saying "Zero Bugs Found".</P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="gfdl_howto.html"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>&nbsp;</TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>How to use this License for your documents</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>&nbsp;</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,273 @@
+<HTML
+><HEAD
+><TITLE
+>ERRATA</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.61
+"><LINK
+REL="HOME"
+TITLE="The Bugzilla Guide"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Installation"
+HREF="installation.html"><LINK
+REL="PREVIOUS"
+TITLE="Installation"
+HREF="installation.html"><LINK
+REL="NEXT"
+TITLE="Step-by-step Install"
+HREF="stepbystep.html"></HEAD
+><BODY
+CLASS="SECTION"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>The Bugzilla Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="installation.html"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 3. Installation</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="stepbystep.html"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECTION"
+><H1
+CLASS="SECTION"
+><A
+NAME="ERRATA"
+>3.1. ERRATA</A
+></H1
+><P
+>Here are some miscellaneous notes about possible issues you
+      main run into when you begin your Bugzilla installation.
+      Reference platforms for Bugzilla installation are Redhat Linux
+      7.2, Linux-Mandrake 8.0, and Solaris 8.</P
+><P
+></P
+><TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+>	If you are installing Bugzilla on S.u.S.e. Linux, or some
+	other distributions with <SPAN
+CLASS="QUOTE"
+>"paranoid"</SPAN
+> security
+	options, it is possible that the checksetup.pl script may fail
+	with the error: <SPAN
+CLASS="ERRORNAME"
+>cannot chdir(/var/spool/mqueue):
+	  Permission denied</SPAN
+> This is because your
+	<TT
+CLASS="FILENAME"
+>/var/spool/mqueue</TT
+> directory has a mode of
+	<SPAN
+CLASS="QUOTE"
+>"drwx------"</SPAN
+>.  Type <B
+CLASS="COMMAND"
+>chmod 755
+	  <TT
+CLASS="FILENAME"
+>/var/spool/mqueue</TT
+></B
+> as root to
+	fix this problem.
+      </TD
+></TR
+><TR
+><TD
+>	Bugzilla may be installed on Macintosh OS X (10), which is a
+	unix-based (BSD)  operating system. Everything required for
+	Bugzilla on OS X will install cleanly, but the optional GD
+	perl module which is used for bug charting requires some
+	additional setup for installation. Please see the  Mac OS X
+	installation section below for details
+      </TD
+></TR
+><TR
+><TD
+>	Release Notes for Bugzilla 2.14 are available at
+	<TT
+CLASS="FILENAME"
+>docs/rel_notes.txt</TT
+> in your Bugzilla
+	source distribution.
+      </TD
+></TR
+><TR
+><TD
+>	  The preferred documentation for Bugzilla is available in
+	docs/, with a variety of document types available.  Please
+	refer to these documents when  installing, configuring, and
+	maintaining your Bugzilla installation.
+      </TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+><DIV
+CLASS="WARNING"
+><P
+></P
+><TABLE
+CLASS="WARNING"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>	Bugzilla is not a package where you can just plop it in a directory,
+	twiddle a few things, and you're off.  Installing Bugzilla assumes you
+	know your variant of UNIX or Microsoft Windows well, are familiar with the
+	command line, and are comfortable compiling and installing a plethora
+	of third-party utilities.  To install Bugzilla on Win32 requires
+	fair Perl proficiency, and if you use a webserver other than Apache you
+	should be intimately familiar with the security mechanisms and CGI
+	environment thereof.
+      </P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="WARNING"
+><P
+></P
+><TABLE
+CLASS="WARNING"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>	Bugzilla has not undergone a complete security review. Security holes
+	may exist in the code.  Great care should be taken both in the installation
+	and usage of this software.  Carefully consider the implications of
+	installing other network services with Bugzilla.
+      </P
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="installation.html"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="stepbystep.html"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Installation</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="installation.html"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Step-by-step Install</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,1515 @@
+<HTML
+><HEAD
+><TITLE
+>Win32 Installation Notes</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.61
+"><LINK
+REL="HOME"
+TITLE="The Bugzilla Guide"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Installation"
+HREF="installation.html"><LINK
+REL="PREVIOUS"
+TITLE="Installation General Notes"
+HREF="geninstall.html"><LINK
+REL="NEXT"
+TITLE="Administering Bugzilla"
+HREF="administration.html"></HEAD
+><BODY
+CLASS="SECTION"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>The Bugzilla Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="geninstall.html"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 3. Installation</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="administration.html"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECTION"
+><H1
+CLASS="SECTION"
+><A
+NAME="WIN32"
+>3.6. Win32 Installation Notes</A
+></H1
+><P
+>This section covers installation on Microsoft Windows 95,
+      98, ME, NT, and 2000.  Bugzilla works fine on Win32 platforms,
+      but please remember that the Bugzilla team and the author of the
+      Guide neither endorse nor support installation on Microsoft
+      Windows.  Bugzilla installs and runs <EM
+>best</EM
+>
+      and <EM
+>easiest</EM
+> on UNIX-like operating systems,
+      and that is the way it will stay for the foreseeable future. The
+      Bugzilla team is considering supporting Win32 for the 2.16
+      release and later.</P
+><P
+>The easiest way to install Bugzilla on Intel-archiecture
+      machines is to install some variant of GNU/Linux, then follow
+      the UNIX installation instructions in this Guide.  If you have
+      any influence in the platform choice for running this system,
+      please choose GNU/Linux instead of Microsoft Windows.</P
+><DIV
+CLASS="SECTION"
+><H2
+CLASS="SECTION"
+><A
+NAME="WININSTALL"
+>3.6.1. Win32 Installation: Step-by-step</A
+></H2
+><DIV
+CLASS="NOTE"
+><P
+></P
+><TABLE
+CLASS="NOTE"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>	  You should be familiar with, and cross-reference, the rest
+	  of the  
+	  <A
+HREF="installation.html"
+>Chapter 3</A
+> section while performing your
+	  Win32 installation.
+	</P
+><P
+>  Making Bugzilla work on Microsoft Windows is no
+	  picnic.  Support for Win32 has improved dramatically in the
+	  last few releases, but, if you choose to proceed, you should
+	  be a <EM
+>very</EM
+> skilled Windows Systems
+	  Administrator with both strong troubleshooting abilities and
+	  a high tolerance for pain. Bugzilla on NT requires hacking
+	  source code and implementing some advanced utilities.  What
+	  follows is the recommended installation procedure for Win32;
+	  additional suggestions are provided in <A
+HREF="faq.html"
+>The Bugzilla FAQ</A
+>.
+	</P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="PROCEDURE"
+><OL
+TYPE="1"
+><LI
+><P
+>	    Install <A
+HREF="http://www.apache.org/"
+TARGET="_top"
+>Apache Web Server</A
+>
+	    for Windows.
+	  </P
+><DIV
+CLASS="NOTE"
+><P
+></P
+><TABLE
+CLASS="NOTE"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>	      You may also use Internet Information Server or Personal Web
+	      Server for this purpose.  However, setup is slightly more
+	      difficult.  If ActivePerl doesn't seem to handle your file
+	      associations correctly (for .cgi and .pl files), please
+	      consult <A
+HREF="faq.html"
+>The Bugzilla FAQ</A
+>.
+	    </P
+><P
+>	      If you are going to use IIS, if on Windows NT you must
+	      be updated to at least Service Pack 4.  Windows 2000
+	      ships with a sufficient version of IIS.
+	    </P
+></TD
+></TR
+></TABLE
+></DIV
+></LI
+><LI
+><P
+>	    Install <A
+HREF="http://www.activestate.com/"
+TARGET="_top"
+>ActivePerl</A
+> for Windows.  Check <A
+HREF="http://aspn.activestate.com/ASPN/Downloads/ActivePerl/"
+TARGET="_top"
+>http://aspn.activestate.com/ASPN/Downloads/ActivePerl</A
+> for a current compiled binary.
+	  </P
+><P
+>	    Please also check the following links to fully understand the status
+	    of ActivePerl on Win32:
+	    <A
+HREF="http://language.perl.com/newdocs/pod/perlport.html"
+TARGET="_top"
+>	      Perl Porting</A
+>, and
+	    <A
+HREF="http://ftp.univie.ac.at/packages/perl/ports/nt/FAQ/perlwin32faq5.html"
+TARGET="_top"
+>	      Perl on Win32 FAQ</A
+>
+	  </P
+></LI
+><LI
+><P
+>	    Use ppm from your perl\bin directory to install the following packs: DBI,
+	    DBD-Mysql, TimeDate, Chart, Date-Calc, Date-Manip, and GD.  You may need
+	    to extract them from .zip format using Winzip or other unzip program first.
+	    These additional ppm modules can be downloaded from ActiveState.
+	  </P
+><DIV
+CLASS="NOTE"
+><P
+></P
+><TABLE
+CLASS="NOTE"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>	      You can find a list of modules at
+	      <A
+HREF="http://www.activestate.com/PPMPackages/zips/5xx-builds-only"
+TARGET="_top"
+>		http://www.activestate.com/PPMPackages/zips/5xx-builds-only/</A
+>
+	    </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>	    The syntax for ppm is:
+	    <TT
+CLASS="COMPUTEROUTPUT"
+>	      <TT
+CLASS="PROMPT"
+>C:&#62; </TT
+><B
+CLASS="COMMAND"
+>ppm &#60;modulename&#62;</B
+>
+	    </TT
+>
+	  </P
+><DIV
+CLASS="EXAMPLE"
+><A
+NAME="AEN910"
+></A
+><P
+><B
+>Example 3-3. Installing ActivePerl ppd Modules on Microsoft Windows</B
+></P
+><P
+><TT
+CLASS="PROMPT"
+>C:&#62;</TT
+><B
+CLASS="COMMAND"
+>ppm
+		<TT
+CLASS="OPTION"
+>DBD-Mysql</TT
+></B
+></P
+><P
+>Watch your capitalization!</P
+></DIV
+><P
+>	    You can find ActiveState ppm modules at
+	    <A
+HREF="http://www.activestate.com/PPMPackages/5.6plus/"
+TARGET="_top"
+>	      http://www.activestate.com/PPMPackages/5.6plus</A
+>
+	  </P
+></LI
+><LI
+><P
+>	    Install MySQL for NT.
+	    <DIV
+CLASS="NOTE"
+><P
+></P
+><TABLE
+CLASS="NOTE"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>		You can download MySQL for Windows NT from <A
+HREF="http://www.mysql.com/"
+TARGET="_top"
+>MySQL.com</A
+>.  Some find it helpful to use the WinMySqlAdmin utility, included with the download, to set up the database.
+	      </P
+></TD
+></TR
+></TABLE
+></DIV
+>
+	  </P
+></LI
+><LI
+><P
+>	    Setup MySQL
+	  </P
+><OL
+CLASS="SUBSTEPS"
+TYPE="a"
+><LI
+><P
+>		<TT
+CLASS="COMPUTEROUTPUT"
+>		  <TT
+CLASS="PROMPT"
+>C:&#62; </TT
+>
+		  <B
+CLASS="COMMAND"
+>C:\mysql\bin\mysql -u root mysql</B
+>
+		</TT
+>
+	      </P
+></LI
+><LI
+><P
+>		<TT
+CLASS="COMPUTEROUTPUT"
+>		  <TT
+CLASS="PROMPT"
+>mysql&#62;</TT
+>
+		  <B
+CLASS="COMMAND"
+>DELETE FROM user WHERE Host='localhost' AND User='';</B
+>
+		</TT
+>
+	      </P
+></LI
+><LI
+><P
+>		<TT
+CLASS="COMPUTEROUTPUT"
+>		  <TT
+CLASS="PROMPT"
+>mysql&#62;</TT
+>
+		  <B
+CLASS="COMMAND"
+>UPDATE user SET Password=PASSWORD ('new_password')
+		    WHERE user='root';</B
+>
+		</TT
+>
+	      </P
+><P
+><SPAN
+CLASS="QUOTE"
+>"new_password"</SPAN
+>, above, indicates
+		whatever password you wish to use for your
+		<SPAN
+CLASS="QUOTE"
+>"root"</SPAN
+> user.</P
+></LI
+><LI
+><A
+NAME="NTBUGS-PASSWORD"
+></A
+><P
+>		<TT
+CLASS="COMPUTEROUTPUT"
+>		  <TT
+CLASS="PROMPT"
+>mysql&#62;</TT
+>
+		  <B
+CLASS="COMMAND"
+>GRANT SELECT, INSERT, UPDATE, DELETE,
+		    INDEX, ALTER, CREATE, DROP, REFERENCES
+		    ON bugs.* to bugs@localhost
+		    IDENTIFIED BY 'bugs_password';</B
+>
+		</TT
+>
+	      </P
+><P
+><SPAN
+CLASS="QUOTE"
+>"bugs_password"</SPAN
+>, above, indicates
+		whatever password you wish to use for your
+		<SPAN
+CLASS="QUOTE"
+>"bugs"</SPAN
+> user.</P
+></LI
+><LI
+><P
+>		<TT
+CLASS="COMPUTEROUTPUT"
+>		  <TT
+CLASS="PROMPT"
+>mysql&#62;</TT
+>
+		  <B
+CLASS="COMMAND"
+>FLUSH PRIVILEGES;</B
+>
+		</TT
+>
+	      </P
+></LI
+><LI
+><P
+>		<TT
+CLASS="COMPUTEROUTPUT"
+>		  <TT
+CLASS="PROMPT"
+>mysql&#62;</TT
+>
+		  <B
+CLASS="COMMAND"
+>create database bugs;</B
+>
+		</TT
+>
+	      </P
+></LI
+><LI
+><P
+>		<TT
+CLASS="COMPUTEROUTPUT"
+>		  <TT
+CLASS="PROMPT"
+>mysql&#62;</TT
+>
+		  <B
+CLASS="COMMAND"
+>exit;</B
+>
+		</TT
+>
+	      </P
+></LI
+><LI
+><P
+>		<TT
+CLASS="COMPUTEROUTPUT"
+>		  <TT
+CLASS="PROMPT"
+>C:&#62;</TT
+>
+		  <B
+CLASS="COMMAND"
+>C:\mysql\bin\mysqladmin -u root -p reload</B
+>
+		</TT
+>
+	      </P
+></LI
+></OL
+></LI
+><LI
+><P
+>	    Edit <TT
+CLASS="FILENAME"
+>checksetup.pl</TT
+> in your Bugzilla directory.  Change
+	    this line:
+	  </P
+><P
+>	    "my $webservergid = getgrnam($my_webservergroup); "
+	  </P
+><P
+>	    to
+	  </P
+><P
+>	    "my $webservergid = $my_webservergroup; "
+	  </P
+></LI
+><LI
+><P
+>	    Run <TT
+CLASS="FILENAME"
+>checksetup.pl</TT
+> from the Bugzilla directory.
+	  </P
+></LI
+><LI
+><P
+>Edit <TT
+CLASS="FILENAME"
+>localconfig</TT
+> to suit your
+	    requirements.  Set <TT
+CLASS="VARNAME"
+>$db_pass</TT
+> to your
+	    <SPAN
+CLASS="QUOTE"
+>"bugs_password"</SPAN
+> from <A
+HREF="win32.html#NTBUGS-PASSWORD"
+>step 5.d</A
+>, and <TT
+CLASS="VARNAME"
+>$webservergroup</TT
+> to <SPAN
+CLASS="QUOTE"
+>"8"</SPAN
+>.</P
+><DIV
+CLASS="NOTE"
+><P
+></P
+><TABLE
+CLASS="NOTE"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Not sure on the <SPAN
+CLASS="QUOTE"
+>"8"</SPAN
+> for
+	      <TT
+CLASS="VARNAME"
+>$webservergroup</TT
+> above.  If it's
+	      wrong, please send corrections.</P
+></TD
+></TR
+></TABLE
+></DIV
+></LI
+><LI
+><P
+>	    Edit <TT
+CLASS="FILENAME"
+>defparams.pl</TT
+> to suit your
+	    requirements.  Particularly, set
+	    <TT
+CLASS="VARNAME"
+>DefParam("maintainer")</TT
+> and
+	    <TT
+CLASS="VARNAME"
+>DefParam("urlbase") to match your
+	      install.</TT
+>
+	  </P
+><DIV
+CLASS="NOTE"
+><P
+></P
+><TABLE
+CLASS="NOTE"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>This is yet another step I'm not sure of, since the
+	      maintainer of this documentation does not maintain
+	      Bugzilla on NT.  If you can confirm or deny that this
+	      step is required, please let me know.</P
+></TD
+></TR
+></TABLE
+></DIV
+></LI
+><LI
+><DIV
+CLASS="NOTE"
+><P
+></P
+><TABLE
+CLASS="NOTE"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>	      There are several alternatives to Sendmail that will work on Win32.
+	      The one mentioned here is a <EM
+>suggestion</EM
+>, not
+	      a requirement.  Some other mail packages that can work include
+	      <A
+HREF="http://www.blat.net/"
+TARGET="_top"
+>BLAT</A
+>,
+	      <A
+HREF="http://www.geocel.com/windmail/"
+TARGET="_top"
+>Windmail</A
+>,
+	      <A
+HREF="http://www.dynamicstate.com/"
+TARGET="_top"
+>Mercury Sendmail</A
+>,
+	      and the CPAN Net::SMTP Perl module (available in .ppm).
+	      Every option requires some hacking of the Perl scripts for Bugzilla
+	      to make it work.  The option here simply requires the least.
+	    </P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="PROCEDURE"
+><OL
+TYPE="1"
+><LI
+><P
+>		Download NTsendmail, available from<A
+HREF="http://www.ntsendmail.com/"
+TARGET="_top"
+> www.ntsendmail.com</A
+>. You must have a "real" mail server which allows you to relay off it in your $ENV{"NTsendmail"} (which you should probably place in globals.pl)
+	      </P
+></LI
+><LI
+><P
+>Put ntsendmail.pm into your .\perl\lib directory.</P
+></LI
+><LI
+><P
+>Add to globals.pl:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+># these settings configure the NTsendmail process
+use NTsendmail;
+$ENV{"NTsendmail"}="your.smtpserver.box";
+$ENV{"NTsendmail_debug"}=1;
+$ENV{"NTsendmail_max_tries"}=5;
+	      </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><DIV
+CLASS="NOTE"
+><P
+></P
+><TABLE
+CLASS="NOTE"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>		  Some mention to also edit
+		  <TT
+CLASS="VARNAME"
+>$db_pass</TT
+> in
+		  <TT
+CLASS="FILENAME"
+>globals.pl</TT
+> to be your
+		  <SPAN
+CLASS="QUOTE"
+>"bugs_password"</SPAN
+>.  Although this may get
+		  you around some problem authenticating to your
+		  database, since globals.pl is not normally
+		  restricted by <TT
+CLASS="FILENAME"
+>.htaccess</TT
+>, your
+		  database password is exposed to whoever uses your
+		  web server.
+		</P
+></TD
+></TR
+></TABLE
+></DIV
+></LI
+><LI
+><P
+>		Find and comment out all occurences of
+		<SPAN
+CLASS="QUOTE"
+>"<B
+CLASS="COMMAND"
+>open(SENDMAIL</B
+>"</SPAN
+> in
+		your Bugzilla directory.  Then replace them with:
+		<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+># new sendmail functionality
+my $mail=new NTsendmail;
+my $from="bugzilla\@your.machine.name.tld";
+my $to=$login;
+my $subject=$urlbase;
+$mail-&#62;send($from,$to,$subject,$msg);
+		</PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+	      </P
+><DIV
+CLASS="NOTE"
+><P
+></P
+><TABLE
+CLASS="NOTE"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>The code above needs testing as well to make sure it is correct.</P
+></TD
+></TR
+></TABLE
+></DIV
+></LI
+></OL
+></DIV
+></LI
+><LI
+><P
+>	    Change all references in all files from
+	    <TT
+CLASS="FILENAME"
+>processmail</TT
+> to
+	    <TT
+CLASS="FILENAME"
+>processmail.pl</TT
+>, and
+	    rename <TT
+CLASS="FILENAME"
+>processmail</TT
+> to
+	    <TT
+CLASS="FILENAME"
+>processmail.pl</TT
+>.
+	  </P
+><DIV
+CLASS="NOTE"
+><P
+></P
+><TABLE
+CLASS="NOTE"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>	      Many think this may be a change we want to make for
+	      main-tree Bugzilla.  It's painless for the UNIX folks,
+	      and will make the Win32 people happier.
+	    </P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="NOTE"
+><P
+></P
+><TABLE
+CLASS="NOTE"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>	      Some people have suggested using the Net::SMTP Perl module instead of NTsendmail or the other options listed here.  You can change processmail.pl to make this work.
+	    <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>&#13;my $smtp = Net::SMTP-&#62;new('&#60;Name of your SMTP server&#62;');   #connect to SMTP server
+$smtp-&#62;mail('&#60;your name&#62;@&#60;you smpt server&#62;');# use the sender's adress here
+$smtp-&#62;to($tolist); # recipient's address
+$smtp-&#62;data();  # Start the mail
+$smtp-&#62;datasend($msg);
+$smtp-&#62;dataend();   # Finish sending the mail
+$smtp-&#62;quit;    # Close the SMTP connection
+$logstr = "$logstr; mail sent to $tolist $cclist";
+}&#13;</PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+here is a test mail program for Net::SMTP:
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>&#13;use Net::SMTP;
+ my $smtp = Net::SMTP-&#62;new('&#60;Name of your SMTP server', Timeout =&#62; 30, Debug
+=&#62; 1, ); # connect to SMTP server
+                 $smtp-&#62;auth;
+                $smtp-&#62;mail('you@yourcompany.com');# use the sender's adress
+here
+                $smtp-&#62;to('someotherAddress@someotherdomain.com'); #
+recipient's address
+                $smtp-&#62;data();  # Start the mail
+                $smtp-&#62;datasend('test');
+                $smtp-&#62;dataend();   # Finish sending the mail
+                $smtp-&#62;quit;    # Close the SMTP connection
+exit;&#13;</PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+	    </P
+></TD
+></TR
+></TABLE
+></DIV
+></LI
+><LI
+><DIV
+CLASS="NOTE"
+><P
+></P
+><TABLE
+CLASS="NOTE"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>	      This step is completely optional if you are using IIS or
+	      another web server which only decides on an interpreter
+	      based upon the file extension (.pl), rather than the
+	      <SPAN
+CLASS="QUOTE"
+>"shebang"</SPAN
+> line (#/usr/bonsaitools/bin/perl)
+	    </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>	    Modify the path to perl on the first line (#!) of all
+	    files to point to your Perl installation, and add
+	    <SPAN
+CLASS="QUOTE"
+>"perl"</SPAN
+> to the beginning of all Perl system
+	    calls that use a perl script as an argument.  This may
+	    take you a while. There is a <SPAN
+CLASS="QUOTE"
+>"setperl.csh"</SPAN
+>
+	    utility to speed part of this procedure, available in the
+	    <A
+HREF="patches.html"
+>Useful Patches and Utilities for Bugzilla</A
+> section of The Bugzilla Guide.
+	    However, it requires the Cygwin GNU-compatible environment
+	    for Win32 be set up in order to work.  See <A
+HREF="http://www.cygwin.com/"
+TARGET="_top"
+>http://www.cygwin.com/</A
+> for details on obtaining Cygwin.
+	  </P
+></LI
+><LI
+><P
+>	    Modify the invocation of all system() calls in all perl scripts in your Bugzilla directory.  For instance, change this line in processmail:
+	    <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>system ("./processmail.pl",@ARGLIST);
+	    </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+to
+	    <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>system ("perl processmail.pl",@ARGLIST);
+	    </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+	  </P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="TIP"
+><P
+></P
+><TABLE
+CLASS="TIP"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/tip.gif"
+HSPACE="5"
+ALT="Tip"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>	  If you are using IIS 5.0 or higher, you must add cgi
+	  relationships to Properties -&#62; Home directory (tab) -&#62;
+	  Application Settings (section) -&#62; Configuration (button),
+	  such as: <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+> 
+.cgi to: &#60;perl install directory&#62;\perl.exe %s %s
+.pl to: &#60;perl install directory&#62;\perl.exe %s %s
+GET,HEAD,POST
+	  </PRE
+></FONT
+></TD
+></TR
+></TABLE
+> 
+	  Change the path to Perl to match your
+	  install, of course.
+	</P
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="SECTION"
+><H2
+CLASS="SECTION"
+><A
+NAME="ADDLWINTIPS"
+>3.6.2. Additional Windows Tips</A
+></H2
+><DIV
+CLASS="TIP"
+><P
+></P
+><TABLE
+CLASS="TIP"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/tip.gif"
+HSPACE="5"
+ALT="Tip"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>	  From Andrew Pearson:
+	  <A
+NAME="AEN1062"
+></A
+><BLOCKQUOTE
+CLASS="BLOCKQUOTE"
+><P
+>	      "You can make Bugzilla work with Personal Web Server for
+	      Windows 98 and higher, as well as for IIS 4.0.  Microsoft has
+	      information available at
+	      <A
+HREF=" http://support.microsoft.com/support/kb/articles/Q231/9/98.ASP"
+TARGET="_top"
+>		http://support.microsoft.com/support/kb/articles/Q231/9/98.ASP</A
+>
+	    </P
+><P
+>	      Basically you need to add two String Keys in the
+	      registry at the following location:
+	    </P
+><P
+>	      HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W3SVC\Parameters\ScriptMap
+	    </P
+><P
+>	      The keys should be called ".pl" and ".cgi", and both
+	      should have a value something like:
+	      <B
+CLASS="COMMAND"
+>c:/perl/bin/perl.exe "%s" "%s"</B
+>
+	    </P
+><P
+>	      The KB article only talks about .pl, but it goes into
+	      more detail and provides a perl test script.
+	    </P
+></BLOCKQUOTE
+>
+	</P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="TIP"
+><P
+></P
+><TABLE
+CLASS="TIP"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/tip.gif"
+HSPACE="5"
+ALT="Tip"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>"Brian" had this to add, about upgrading to Bugzilla 2.12 from previous versions:</P
+><A
+NAME="AEN1072"
+></A
+><BLOCKQUOTE
+CLASS="BLOCKQUOTE"
+><P
+>	    Hi - I am updating bugzilla to 2.12 so I can tell you what I did (after I
+	    deleted the current dir and copied the files in).
+	  </P
+><P
+>	    In checksetup.pl, I did the following...
+	  </P
+><DIV
+CLASS="PROCEDURE"
+><OL
+TYPE="1"
+><LI
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>my $webservergid = getgrnam($my_webservergroup);
+	      </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>to</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>my $webservergid = 'Administrators'		
+	      </PRE
+></FONT
+></TD
+></TR
+></TABLE
+></LI
+><LI
+><P
+>		I then ran checksetup.pl
+	      </P
+></LI
+><LI
+><P
+>		I removed all the encrypt()
+		<DIV
+CLASS="EXAMPLE"
+><A
+NAME="AEN1084"
+></A
+><P
+><B
+>Example 3-4. Removing encrypt() for Windows NT installations</B
+></P
+><P
+>		    Replace this:
+		    <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) . ", " .
+    SqlQuote(substr($realcryptpwd, 0, 2)) . ")");
+my $enteredcryptpwd = FetchOneColumn();
+		    </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+		    with this:
+		    <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>my $enteredcryptpwd = $enteredpwd
+		    </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+		    in cgi.pl.
+		  </P
+></DIV
+>
+	      </P
+></LI
+><LI
+><P
+>		I renamed processmail to processmail.pl
+	      </P
+></LI
+><LI
+><P
+>		I altered the sendmail statements to windmail:
+		<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>  
+open SENDMAIL, "|\"C:/General/Web/tools/Windmail 4.0 Beta/windmail\" -t &#62; mail.log";
+		</PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+	      </P
+><P
+>		The quotes around the dir is for the spaces. mail.log is for the output
+	      </P
+></LI
+></OL
+></DIV
+></BLOCKQUOTE
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="TIP"
+><P
+></P
+><TABLE
+CLASS="TIP"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/tip.gif"
+HSPACE="5"
+ALT="Tip"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>	  This was some late breaking information from Jan Evert.  Sorry for the lack of formatting.
+	</P
+><P
+CLASS="LITERALLAYOUT"
+>I'm&nbsp;busy&nbsp;installing&nbsp;bugzilla&nbsp;on&nbsp;a&nbsp;WinNT&nbsp;machine&nbsp;and&nbsp;I&nbsp;thought&nbsp;I'd&nbsp;notify&nbsp;you<br>
+at&nbsp;this&nbsp;moment&nbsp;of&nbsp;the&nbsp;commments&nbsp;I&nbsp;have&nbsp;to&nbsp;section&nbsp;2.2.1&nbsp;of&nbsp;the&nbsp;bugzilla<br>
+guide&nbsp;(at&nbsp;http://www.trilobyte.net/barnsons/html/).<br>
+<br>
+Step&nbsp;1:<br>
+I've&nbsp;used&nbsp;apache,&nbsp;installation&nbsp;is&nbsp;really&nbsp;straightforward.<br>
+After&nbsp;reading&nbsp;the&nbsp;Unix&nbsp;installation&nbsp;instructions,&nbsp;I&nbsp;found&nbsp;that&nbsp;it&nbsp;is<br>
+necessary&nbsp;to&nbsp;add&nbsp;the&nbsp;ExecCGI&nbsp;option&nbsp;to&nbsp;the&nbsp;bugzilla&nbsp;directory.&nbsp;Also&nbsp;the<br>
+'AddHandler'&nbsp;line&nbsp;for&nbsp;.cgi&nbsp;is&nbsp;by&nbsp;default&nbsp;commented&nbsp;out.<br>
+<br>
+Step&nbsp;3:&nbsp;although&nbsp;just&nbsp;a&nbsp;detail,&nbsp;'ppm&nbsp;install&nbsp;&#60;module%gt;'&nbsp;will&nbsp;also&nbsp;work<br>
+(without&nbsp;.ppd).&nbsp;And,&nbsp;it&nbsp;can&nbsp;also&nbsp;download&nbsp;these&nbsp;automatically&nbsp;from<br>
+ActiveState.<br>
+<br>
+Step&nbsp;4:&nbsp;although&nbsp;I&nbsp;have&nbsp;cygwin&nbsp;installed,&nbsp;it&nbsp;seems&nbsp;that&nbsp;it&nbsp;is&nbsp;not&nbsp;necessary.<br>
+On&nbsp;my&nbsp;machine&nbsp;cygwin&nbsp;is&nbsp;not&nbsp;in&nbsp;the&nbsp;PATH&nbsp;and&nbsp;everything&nbsp;seems&nbsp;to&nbsp;work&nbsp;as<br>
+expected.<br>
+However,&nbsp;I've&nbsp;not&nbsp;used&nbsp;everything&nbsp;yet.<br>
+<br>
+Step&nbsp;6:&nbsp;the&nbsp;'bugs_password'&nbsp;given&nbsp;in&nbsp;SQL&nbsp;command&nbsp;d&nbsp;needs&nbsp;to&nbsp;be&nbsp;edited&nbsp;into<br>
+localconfig&nbsp;later&nbsp;on&nbsp;(Step&nbsp;7)&nbsp;if&nbsp;the&nbsp;password&nbsp;is&nbsp;not&nbsp;empty.&nbsp;I've&nbsp;also&nbsp;edited<br>
+it&nbsp;into&nbsp;globals.pl,&nbsp;but&nbsp;I'm&nbsp;not&nbsp;sure&nbsp;that&nbsp;is&nbsp;needed.&nbsp;In&nbsp;both&nbsp;places,&nbsp;the<br>
+variable&nbsp;is&nbsp;named&nbsp;db_pass.<br>
+<br>
+Step&nbsp;8:&nbsp;all&nbsp;the&nbsp;sendmail&nbsp;replacements&nbsp;mentioned&nbsp;are&nbsp;not&nbsp;as&nbsp;simple&nbsp;as<br>
+described&nbsp;there.&nbsp;Since&nbsp;I&nbsp;am&nbsp;not&nbsp;familiar&nbsp;(yet)&nbsp;with&nbsp;perl,&nbsp;I&nbsp;don't&nbsp;have&nbsp;any<br>
+mail&nbsp;working&nbsp;yet.<br>
+<br>
+Step&nbsp;9:&nbsp;in&nbsp;globals.pl&nbsp;the&nbsp;encrypt()&nbsp;call&nbsp;can&nbsp;be&nbsp;replaced&nbsp;by&nbsp;just&nbsp;the<br>
+unencrypted&nbsp;password.&nbsp;In&nbsp;CGI.pl,&nbsp;the&nbsp;complete&nbsp;SQL&nbsp;command&nbsp;can&nbsp;be&nbsp;removed.<br>
+<br>
+Step&nbsp;11:&nbsp;I've&nbsp;only&nbsp;changed&nbsp;the&nbsp;#!&nbsp;lines&nbsp;in&nbsp;*.cgi.&nbsp;I&nbsp;haven't&nbsp;noticed&nbsp;problems<br>
+with&nbsp;the&nbsp;system()&nbsp;call&nbsp;yet.<br>
+There&nbsp;seem&nbsp;to&nbsp;be&nbsp;only&nbsp;four&nbsp;system()&nbsp;called&nbsp;programs:&nbsp;processmail.pl&nbsp;(handled<br>
+by&nbsp;step&nbsp;10),&nbsp;syncshadowdb&nbsp;(which&nbsp;should&nbsp;probably&nbsp;get&nbsp;the&nbsp;same&nbsp;treatment&nbsp;as<br>
+processmail.pl),&nbsp;diff&nbsp;and&nbsp;mysqldump.&nbsp;The&nbsp;last&nbsp;one&nbsp;is&nbsp;only&nbsp;needed&nbsp;with&nbsp;the<br>
+shadowdb&nbsp;feature&nbsp;(which&nbsp;I&nbsp;don't&nbsp;use).<br>
+<br>
+There&nbsp;seems&nbsp;to&nbsp;be&nbsp;one&nbsp;step&nbsp;missing:&nbsp;copying&nbsp;the&nbsp;bugzilla&nbsp;files&nbsp;somehwere<br>
+that&nbsp;apache&nbsp;can&nbsp;serve&nbsp;them.<br>
+<br>
+Just&nbsp;noticed&nbsp;the&nbsp;updated&nbsp;guide...&nbsp;Brian's&nbsp;comment&nbsp;is&nbsp;new.&nbsp;His&nbsp;first&nbsp;comment<br>
+will&nbsp;work,&nbsp;but&nbsp;opens&nbsp;up&nbsp;a&nbsp;huge&nbsp;security&nbsp;hole.<br>
+	</P
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="geninstall.html"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="administration.html"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Installation General Notes</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="installation.html"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Administering Bugzilla</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

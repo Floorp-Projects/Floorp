@@ -1,0 +1,315 @@
+<HTML
+><HEAD
+><TITLE
+>Installation</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.61
+"><LINK
+REL="HOME"
+TITLE="The Bugzilla Guide"
+HREF="index.html"><LINK
+REL="PREVIOUS"
+TITLE="Using Bugzilla-Conclusion"
+HREF="usingbz-conc.html"><LINK
+REL="NEXT"
+TITLE="ERRATA"
+HREF="errata.html"></HEAD
+><BODY
+CLASS="CHAPTER"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>The Bugzilla Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="usingbz-conc.html"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="errata.html"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="INSTALLATION"
+>Chapter 3. Installation</A
+></H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>3.1. <A
+HREF="errata.html"
+>ERRATA</A
+></DT
+><DT
+>3.2. <A
+HREF="stepbystep.html"
+>Step-by-step Install</A
+></DT
+><DD
+><DL
+><DT
+>3.2.1. <A
+HREF="stepbystep.html#AEN478"
+>Introduction</A
+></DT
+><DT
+>3.2.2. <A
+HREF="stepbystep.html#AEN484"
+>Installing the Prerequisites</A
+></DT
+><DT
+>3.2.3. <A
+HREF="stepbystep.html#INSTALL-MYSQL"
+>Installing MySQL Database</A
+></DT
+><DT
+>3.2.4. <A
+HREF="stepbystep.html#INSTALL-PERL"
+>Perl (5.004 or greater)</A
+></DT
+><DT
+>3.2.5. <A
+HREF="stepbystep.html#AEN537"
+>DBI Perl Module</A
+></DT
+><DT
+>3.2.6. <A
+HREF="stepbystep.html#AEN574"
+>Data::Dumper Perl Module</A
+></DT
+><DT
+>3.2.7. <A
+HREF="stepbystep.html#AEN578"
+>MySQL related Perl Module Collection</A
+></DT
+><DT
+>3.2.8. <A
+HREF="stepbystep.html#AEN587"
+>TimeDate Perl Module Collection</A
+></DT
+><DT
+>3.2.9. <A
+HREF="stepbystep.html#AEN590"
+>GD Perl Module (1.8.3)</A
+></DT
+><DT
+>3.2.10. <A
+HREF="stepbystep.html#AEN596"
+>Chart::Base Perl Module (0.99c)</A
+></DT
+><DT
+>3.2.11. <A
+HREF="stepbystep.html#AEN599"
+>DB_File Perl Module</A
+></DT
+><DT
+>3.2.12. <A
+HREF="stepbystep.html#AEN602"
+>HTTP Server</A
+></DT
+><DT
+>3.2.13. <A
+HREF="stepbystep.html#AEN616"
+>Installing the Bugzilla Files</A
+></DT
+><DT
+>3.2.14. <A
+HREF="stepbystep.html#AEN636"
+>Setting Up the MySQL Database</A
+></DT
+><DT
+>3.2.15. <A
+HREF="stepbystep.html#AEN675"
+>Tweaking "localconfig"</A
+></DT
+><DT
+>3.2.16. <A
+HREF="stepbystep.html#AEN704"
+>Setting Up Maintainers Manually (Optional)</A
+></DT
+><DT
+>3.2.17. <A
+HREF="stepbystep.html#AEN713"
+>The Whining Cron (Optional)</A
+></DT
+><DT
+>3.2.18. <A
+HREF="stepbystep.html#AEN723"
+>Bug Graphs (Optional)</A
+></DT
+><DT
+>3.2.19. <A
+HREF="stepbystep.html#AEN735"
+>Securing MySQL</A
+></DT
+></DL
+></DD
+><DT
+>3.3. <A
+HREF="osx.html"
+>Mac OS X Installation Notes</A
+></DT
+><DT
+>3.4. <A
+HREF="bsdinstall.html"
+>BSD Installation Notes</A
+></DT
+><DT
+>3.5. <A
+HREF="geninstall.html"
+>Installation General Notes</A
+></DT
+><DD
+><DL
+><DT
+>3.5.1. <A
+HREF="geninstall.html#AEN837"
+>Modifying Your Running System</A
+></DT
+><DT
+>3.5.2. <A
+HREF="geninstall.html#AEN844"
+>Upgrading From Previous Versions</A
+></DT
+><DT
+>3.5.3. <A
+HREF="geninstall.html#HTACCESS"
+><TT
+CLASS="FILENAME"
+>.htaccess</TT
+> files and security</A
+></DT
+><DT
+>3.5.4. <A
+HREF="geninstall.html#AEN865"
+>UNIX Installation Instructions History</A
+></DT
+></DL
+></DD
+><DT
+>3.6. <A
+HREF="win32.html"
+>Win32 Installation Notes</A
+></DT
+><DD
+><DL
+><DT
+>3.6.1. <A
+HREF="win32.html#WININSTALL"
+>Win32 Installation: Step-by-step</A
+></DT
+><DT
+>3.6.2. <A
+HREF="win32.html#ADDLWINTIPS"
+>Additional Windows Tips</A
+></DT
+></DL
+></DD
+></DL
+></DIV
+><P
+>      These installation instructions are presented assuming you are
+      installing on a UNIX or completely POSIX-compliant system.  If
+      you are installing on Microsoft Windows or another oddball
+      operating system, please consult the appropriate sections in
+      this installation guide for notes on how to be successful.
+    </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="usingbz-conc.html"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="errata.html"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Using Bugzilla-Conclusion</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>ERRATA</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>
