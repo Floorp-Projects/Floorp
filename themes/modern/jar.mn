@@ -236,6 +236,7 @@ modern.jar:
   skin/modern/editor/btn2/italic.gif                               (editor/btn2/italic.gif)
   skin/modern/editor/btn2/justify-act.gif                          (editor/btn2/justify-act.gif)
   skin/modern/editor/btn2/justify-dis.gif                          (editor/btn2/justify-dis.gif)
+  skin/modern/editor/btn2/justify-hov.gif                          (editor/btn2/justify-hov.gif)
   skin/modern/editor/btn2/justify-sel.gif                          (editor/btn2/justify-sel.gif)
   skin/modern/editor/btn2/justify.gif                              (editor/btn2/justify.gif)
   skin/modern/editor/btn2/left-act.gif                             (editor/btn2/left-act.gif)
