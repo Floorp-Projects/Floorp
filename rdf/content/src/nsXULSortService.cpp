@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Robert John Churchill <rjc@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
@@ -131,10 +132,12 @@ static const char kXULNameSpaceURI[]
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkSeparator);
 
-
 typedef	struct	_sortStruct	{
-	nsCOMPtr<nsIRDFResource>		sortProperty;
-	nsCOMPtr<nsIRDFResource>		sortProperty2;
+	PRBool					firstFlag;
+	nsCOMPtr<nsIRDFResource>		sortProperty, sortProperty2;
+	nsCOMPtr<nsIRDFResource>		sortPropertyColl, sortPropertyColl2;
+	nsCOMPtr<nsIRDFResource>		sortPropertySort, sortPropertySort2;
+
 	nsCOMPtr<nsIRDFCompositeDataSource>	db;
 	nsCOMPtr<nsIRDFService>			rdfService;
 	nsCOMPtr<nsIRDFDataSource>		mInner;
@@ -146,6 +149,7 @@ typedef	struct	_sortStruct	{
 	PRBool					descendingSort;
 	PRBool					naturalOrderSort;
 	PRBool					inbetweenSeparatorSort;
+
 } sortStruct, *sortPtr;
 
 
@@ -211,10 +215,9 @@ nsresult	GetTreeCell(nsIContent *node, PRInt32 colIndex, nsIContent **cell);
 nsresult	SortTreeChildren(nsIContent *container, sortPtr sortInfo);
 nsresult	DoSort(nsIDOMNode* node, const nsString& sortResource, const nsString& sortDirection);
 
-static nsresult	GetCachedTarget(sortPtr sortInfo, nsIRDFResource* aSource, nsIRDFResource *aProperty, PRBool aTruthValue, nsIRDFNode **aResult);
-static nsresult	GetCachedResource(sortPtr sortInfo, nsIRDFResource *sortProperty, const char *suffix, nsIRDFResource **res);
-static nsresult	GetResourceValue(nsIRDFResource *res1, nsIRDFResource *sortProperty, sortPtr sortInfo, nsIRDFNode **, PRBool &isCollationKey);
-static nsresult	GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, nsIRDFNode **, PRBool &isCollationKey);
+static nsresult	GetCachedTarget(sortPtr sortInfo, PRBool useCache, nsIRDFResource* aSource, nsIRDFResource *aProperty, PRBool aTruthValue, nsIRDFNode **aResult);
+static nsresult	GetResourceValue(nsIRDFResource *res1, sortPtr sortInfo, PRBool first, PRBool useCache, nsIRDFNode **, PRBool &isCollationKey);
+static nsresult	GetNodeValue(nsIContent *node1, sortPtr sortInfo, PRBool first, nsIRDFNode **, PRBool &isCollationKey);
 static nsresult	GetTreeCell(sortPtr sortInfo, nsIContent *node, PRInt32 cellIndex, nsIContent **cell);
 static nsresult	GetNodeTextValue(sortPtr sortInfo, nsIContent *node, nsString & val);
 
@@ -628,7 +631,7 @@ XULSortServiceImpl::SetSortHints(nsIContent *tree, const nsString &sortResource,
 		tree->SetAttribute(kNameSpaceID_RDF, kResourceAtom, sortResource, PR_FALSE);
 
 		if (sortResource2.Length() > 0)
-			tree->SetAttribute(kNameSpaceID_RDF, kResource2Atom, sortDirection, PR_FALSE);
+			tree->SetAttribute(kNameSpaceID_RDF, kResource2Atom, sortResource2, PR_FALSE);
 		else	tree->UnsetAttribute(kNameSpaceID_RDF, kResource2Atom, PR_FALSE);
 	}
 	else
@@ -911,103 +914,37 @@ XULSortServiceImpl::CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
 
 
 nsresult
-XULSortServiceImpl::GetCachedTarget(sortPtr sortInfo, nsIRDFResource* aSource,
+XULSortServiceImpl::GetCachedTarget(sortPtr sortInfo, PRBool useCache, nsIRDFResource* aSource,
 		nsIRDFResource *aProperty, PRBool aTruthValue, nsIRDFNode **aResult)
 {
-	nsresult	rv = NS_OK, rvTemp;
+	nsresult	rv;
+
+	*aResult = nsnull;
 
 	if (!(sortInfo->mInner))
 	{
 		// if we don't have a mInner, create one
-		rvTemp = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
+		rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
 			nsnull, NS_GET_IID(nsIRDFDataSource), (void **)&(sortInfo->mInner));
+		if (NS_FAILED(rv))	return(rv);
 	}
+
+	rv = NS_RDF_NO_VALUE;
 	if (sortInfo->mInner)
 	{
-		// else, if we do have a mInner, look for the resource in it
-		rv = sortInfo->mInner->GetTarget(aSource, aProperty, aTruthValue, aResult);
-	}
-	if (NS_SUCCEEDED(rv) && (rv == NS_RDF_NO_VALUE) && (sortInfo->db))
-	{
-		// if we don't have a cached value, look it up in the document's DB
-		if (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(aSource, aProperty,
-			aTruthValue, aResult)) && (rv != NS_RDF_NO_VALUE))
+		if (useCache == PR_TRUE)
 		{
-			// and if we have a value, cache it away in our mInner also
-			rvTemp = sortInfo->mInner->Assert(aSource, aProperty, *aResult, PR_TRUE);
+			// if we do have a mInner, look for the resource in it
+			rv = sortInfo->mInner->GetTarget(aSource, aProperty, aTruthValue, aResult);
 		}
-	}
-	return(rv);
-}
-
-
-
-nsresult
-XULSortServiceImpl::GetCachedResource(sortPtr sortInfo, nsIRDFResource *sortProperty, const char *suffix, nsIRDFResource **res)
-{
-	nsresult		rv;
-
-	*res = nsnull;
-
-	const char		*sortPropertyURI = nsnull;
-	rv = sortProperty->GetValueConst(&sortPropertyURI);
-	if (NS_SUCCEEDED(rv) && (sortPropertyURI))
-	{
-		nsAutoString		resName(sortPropertyURI);
-		if (suffix)		resName += suffix;
-
-		if (!(sortInfo->resCache))
+		else if (sortInfo->db)
 		{
-			// if we don't have a cache, create one
-			rv = NS_NewISupportsArray(getter_AddRefs(sortInfo->resCache));
-		}
-		else
-		{
-			// else, if we do have a cache, look for the resource in it
-			PRUint32		numRes;
-			if (NS_SUCCEEDED(rv = sortInfo->resCache->Count(&numRes)))
+			// if we don't have a cached value, look it up in the document's DB
+			if (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(aSource, aProperty,
+				aTruthValue, aResult)) && (rv != NS_RDF_NO_VALUE))
 			{
-				PRUint32	loop;
-				for (loop=0; loop<numRes; loop++)
-				{
-					nsCOMPtr<nsISupports>	iSupports;
-					if (NS_SUCCEEDED(rv = sortInfo->resCache->GetElementAt(loop,
-						getter_AddRefs(iSupports))))
-					{
-						nsCOMPtr<nsIRDFResource>	aRes = do_QueryInterface(iSupports);
-						if (aRes)
-						{
-							const char	*resURI = nsnull;
-							if (NS_SUCCEEDED(rv = aRes->GetValueConst(&resURI)) && (resURI))
-							{
-								if (resName.Equals(resURI))
-								{
-									// found res in cache, so just return it
-									*res = aRes;
-									NS_ADDREF(*res);
-									break;
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-
-		if (!(*res))
-		{
-			nsCOMPtr<nsIRDFResource>	sortRes;
-			if (NS_SUCCEEDED(rv = sortInfo->rdfService->GetUnicodeResource(resName.GetUnicode(),
-				getter_AddRefs(sortRes))) && (sortRes))
-			{
-				*res = sortRes;
-				NS_ADDREF(*res);
-				
-				// and add it into the cache array
-				if (sortInfo->resCache)
-				{
-					sortInfo->resCache->AppendElement(sortRes);
-				}
+				// and if we have a value, cache it away in our mInner also (ignore errors)
+				sortInfo->mInner->Assert(aSource, aProperty, *aResult, PR_TRUE);
 			}
 		}
 	}
@@ -1017,7 +954,7 @@ XULSortServiceImpl::GetCachedResource(sortPtr sortInfo, nsIRDFResource *sortProp
 
 
 nsresult
-XULSortServiceImpl::GetResourceValue(nsIRDFResource *res1, nsIRDFResource *sortProperty, sortPtr sortInfo,
+XULSortServiceImpl::GetResourceValue(nsIRDFResource *res1, sortPtr sortInfo, PRBool first, PRBool useCache,
 				nsIRDFNode **target, PRBool &isCollationKey)
 {
 	nsresult		rv = NS_OK;
@@ -1025,16 +962,17 @@ XULSortServiceImpl::GetResourceValue(nsIRDFResource *res1, nsIRDFResource *sortP
 	*target = nsnull;
 	isCollationKey = PR_FALSE;
 
-	if ((res1) && (sortInfo->naturalOrderSort == PR_FALSE) && (sortInfo->sortProperty))
+	if ((res1) && (sortInfo->naturalOrderSort == PR_FALSE))
 	{
 		nsCOMPtr<nsIRDFResource>	modSortRes;
 
 		// for any given property, first ask the graph for its value with "?collation=true" appended
 		// to indicate that if there is a collation key available for this value, we want it
-		if (NS_SUCCEEDED(rv = GetCachedResource(sortInfo, sortInfo->sortProperty, "?collation=true",
-			getter_AddRefs(modSortRes))) && (modSortRes))
+
+		modSortRes = (first) ? sortInfo->sortPropertyColl : sortInfo->sortPropertyColl2;
+		if (modSortRes)
 		{
-			if (NS_SUCCEEDED(rv = GetCachedTarget(sortInfo, res1, modSortRes,
+			if (NS_SUCCEEDED(rv = GetCachedTarget(sortInfo, useCache, res1, modSortRes,
 				PR_TRUE, target)) && (rv != NS_RDF_NO_VALUE))
 			{
 				isCollationKey = PR_TRUE;
@@ -1046,10 +984,10 @@ XULSortServiceImpl::GetResourceValue(nsIRDFResource *res1, nsIRDFResource *sortP
 			// to indicate that if there is any distinction between its display value and sorting
 			// value, we want the sorting value (so that, for example, a mail datasource could strip
 			// off a "Re:" on a mail message subject)
-			if (NS_SUCCEEDED(rv = GetCachedResource(sortInfo, sortInfo->sortProperty, "?sort=true",
-				getter_AddRefs(modSortRes))) && (modSortRes))
+			modSortRes = (first) ? sortInfo->sortPropertySort : sortInfo->sortPropertySort2;
+			if (modSortRes)
 			{
-				if (NS_SUCCEEDED(rv = GetCachedTarget(sortInfo, res1, modSortRes,
+				if (NS_SUCCEEDED(rv = GetCachedTarget(sortInfo, useCache, res1, modSortRes,
 					PR_TRUE, target)) && (rv != NS_RDF_NO_VALUE))
 				{
 				}
@@ -1058,9 +996,13 @@ XULSortServiceImpl::GetResourceValue(nsIRDFResource *res1, nsIRDFResource *sortP
 		if (!(*target))
 		{
 			// if no collation key and no special sorting value, just get the property value
-			if (NS_SUCCEEDED(rv = GetCachedTarget(sortInfo, res1, sortProperty,
-				PR_TRUE, target) && (rv != NS_RDF_NO_VALUE)))
+			modSortRes = (first) ? sortInfo->sortProperty : sortInfo->sortProperty2;
+			if (modSortRes)
 			{
+				if (NS_SUCCEEDED(rv = GetCachedTarget(sortInfo, useCache, res1, modSortRes,
+					PR_TRUE, target) && (rv != NS_RDF_NO_VALUE)))
+				{
+				}
 			}
 		}
 	}
@@ -1070,7 +1012,7 @@ XULSortServiceImpl::GetResourceValue(nsIRDFResource *res1, nsIRDFResource *sortP
 
 
 nsresult
-XULSortServiceImpl::GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo,
+XULSortServiceImpl::GetNodeValue(nsIContent *node1, sortPtr sortInfo, PRBool first,
 				nsIRDFNode **theNode, PRBool &isCollationKey)
 {
 	nsresult			rv;
@@ -1115,7 +1057,11 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty
 	{
 		if (res1)
 		{
-			rv = GetResourceValue(res1, sortProperty, sortInfo, theNode, isCollationKey);
+			rv = GetResourceValue(res1, sortInfo, first, PR_TRUE, theNode, isCollationKey);
+			if ((rv == NS_RDF_NO_VALUE) || (!*theNode))
+			{
+				rv = GetResourceValue(res1, sortInfo, first, PR_FALSE, theNode, isCollationKey);
+			}
 		}
 		else
 		{
@@ -1247,13 +1193,8 @@ XULSortServiceImpl::InplaceSort(nsIContent *node1, nsIContent *node2, sortPtr so
 	sortOrder = 0;
 
 	nsCOMPtr<nsIRDFNode>	cellNode1, cellNode2;
-	GetNodeValue(node1, sortInfo->sortProperty, sortInfo, getter_AddRefs(cellNode1), isCollationKey1);
-	GetNodeValue(node2, sortInfo->sortProperty, sortInfo, getter_AddRefs(cellNode2), isCollationKey2);
-	if ((!cellNode1) && (!cellNode2) && (sortInfo->sortProperty2 == nsnull))
-	{
-		rv = GetNodeValue(node1, kNC_Name, sortInfo, getter_AddRefs(cellNode1), isCollationKey1);
-		rv = GetNodeValue(node2, kNC_Name, sortInfo, getter_AddRefs(cellNode2), isCollationKey2);
-	}
+	GetNodeValue(node1, sortInfo, PR_TRUE, getter_AddRefs(cellNode1), isCollationKey1);
+	GetNodeValue(node2, sortInfo, PR_TRUE, getter_AddRefs(cellNode2), isCollationKey2);
 
 	PRBool	bothValid = PR_FALSE;
 	rv = CompareNodes(cellNode1, isCollationKey1, cellNode2, isCollationKey2, bothValid, sortOrder);
@@ -1263,14 +1204,16 @@ XULSortServiceImpl::InplaceSort(nsIContent *node1, nsIContent *node2, sortPtr so
 		// nodes appear to be equivalent, check for secondary sort criteria
 		if (sortInfo->sortProperty2 != nsnull)
 		{
-			nsCOMPtr<nsIRDFResource>	temp = sortInfo->sortProperty;
-			sortInfo->sortProperty = sortInfo->sortProperty2;
-			sortInfo->sortProperty2 = nsnull;
+			cellNode1 = nsnull;
+			cellNode2 = nsnull;
+			isCollationKey1 = PR_FALSE;
+			isCollationKey2 = PR_FALSE;
+			
+			GetNodeValue(node1, sortInfo, PR_FALSE, getter_AddRefs(cellNode1), isCollationKey1);
+			GetNodeValue(node2, sortInfo, PR_FALSE, getter_AddRefs(cellNode2), isCollationKey2);
 
-			rv = InplaceSort(node1, node2, sortInfo, sortOrder);
-
-			sortInfo->sortProperty2 = sortInfo->sortProperty;
-			sortInfo->sortProperty = temp;
+			bothValid = PR_FALSE;
+			rv = CompareNodes(cellNode1, isCollationKey1, cellNode2, isCollationKey2, bothValid, sortOrder);
 		}
 	}
 
@@ -1437,9 +1380,24 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 }
 
 
+// rjc: yes, I'm lame. For the moment, "class sortState" is defined both here and in
+// nsRDFGenericBuilder.cpp so any changes made here must also (exactly) be made there also.
+
+typedef	class	sortState
+{
+public:
+	nsAutoString				sortResource, sortResource2;
+
+	nsCOMPtr<nsIRDFDataSource>		mCache;
+	nsCOMPtr<nsIRDFResource>		sortProperty, sortProperty2;
+	nsCOMPtr<nsIRDFResource>		sortPropertyColl, sortPropertyColl2;
+	nsCOMPtr<nsIRDFResource>		sortPropertySort, sortPropertySort2;
+} sortStateClass;
+
+
 
 NS_IMETHODIMP
-XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIRDFDataSource **cacheHandle, nsIContent *root,
+XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, sortState *sortState, nsIContent *root,
 					nsIContent *trueParent, nsIContent *container, nsIContent *node, PRBool aNotify)
 {
 	nsresult	rv;
@@ -1457,9 +1415,9 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIRDFDat
 	sortInfo.sortProperty = nsnull;
 	sortInfo.sortProperty2 = nsnull;
 	sortInfo.inbetweenSeparatorSort = PR_FALSE;
-	if (cacheHandle != nsnull)
+	if (sortState->mCache)
 	{
-		sortInfo.mInner = *cacheHandle;		// Note: this can/might be null
+		sortInfo.mInner = sortState->mCache;		// Note: this can/might be null
 	}
 	else
 	{
@@ -1505,13 +1463,71 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIRDFDat
 
 	if (sortInfoAvailable)
 	{
-		rv = gRDFService->GetUnicodeResource(sortResource.GetUnicode(), getter_AddRefs(sortInfo.sortProperty));
-		if (NS_FAILED(rv))	return(rv);
-		if (sortResource2.Length() > 0)
+		if (sortState->sortResource.Equals(sortResource) && sortState->sortResource2.Equals(sortResource2))
 		{
-			rv = gRDFService->GetUnicodeResource(sortResource2.GetUnicode(), getter_AddRefs(sortInfo.sortProperty2));
-			if (NS_FAILED(rv))	return(rv);
+			sortInfo.sortProperty = sortState->sortProperty;
+			sortInfo.sortProperty2 = sortState->sortProperty2;
+			sortInfo.sortPropertyColl = sortState->sortPropertyColl;
+			sortInfo.sortPropertyColl2 = sortState->sortPropertyColl2;
+			sortInfo.sortPropertySort = sortState->sortPropertySort;
+			sortInfo.sortPropertySort2 = sortState->sortPropertySort2;
 		}
+		else
+		{
+			nsAutoString	temp;
+
+			// either first time, or must have changing sorting info, so flush state cache
+			sortState->sortProperty = nsnull;	sortState->sortProperty2 = nsnull;
+			sortState->sortPropertyColl = nsnull;	sortState->sortPropertyColl2 = nsnull;
+			sortState->sortPropertySort = nsnull;	sortState->sortPropertySort2 = nsnull;
+
+			rv = gRDFService->GetUnicodeResource(sortResource.GetUnicode(), getter_AddRefs(sortInfo.sortProperty));
+			if (NS_FAILED(rv))	return(rv);
+			sortState->sortResource = sortResource;
+			sortState->sortProperty = sortInfo.sortProperty;
+			
+			temp = sortResource;
+			temp += "?collation=true";
+			rv = gRDFService->GetUnicodeResource(temp.GetUnicode(), getter_AddRefs(sortInfo.sortPropertyColl));
+			if (NS_FAILED(rv))	return(rv);
+			sortState->sortPropertyColl = sortInfo.sortPropertyColl;
+
+			temp = sortResource;
+			temp += "?sort=true";
+			rv = gRDFService->GetUnicodeResource(temp.GetUnicode(), getter_AddRefs(sortInfo.sortPropertySort));
+			if (NS_FAILED(rv))	return(rv);
+			sortState->sortPropertySort = sortInfo.sortPropertySort;
+
+			if (sortResource2.Length() > 0)
+			{
+				rv = gRDFService->GetUnicodeResource(sortResource2.GetUnicode(), getter_AddRefs(sortInfo.sortProperty2));
+				if (NS_FAILED(rv))	return(rv);
+				sortState->sortResource2 = sortResource2;
+				sortState->sortProperty2 = sortInfo.sortProperty2;
+
+				temp = sortResource2;
+				temp += "?collation=true";
+				rv = gRDFService->GetUnicodeResource(temp.GetUnicode(), getter_AddRefs(sortInfo.sortPropertyColl2));
+				if (NS_FAILED(rv))	return(rv);
+				sortState->sortPropertyColl2 = sortInfo.sortPropertyColl2;
+
+				temp = sortResource2;
+				temp += "?sort=true";
+				rv = gRDFService->GetUnicodeResource(temp.GetUnicode(), getter_AddRefs(sortInfo.sortPropertySort2));
+				if (NS_FAILED(rv))	return(rv);
+				sortState->sortPropertySort2 = sortInfo.sortPropertySort2;
+			}
+		}
+	}
+	else
+	{
+		// either first time, or must have changing sorting info, so flush state cache
+		sortState->sortResource.Truncate();
+		sortState->sortResource2.Truncate();
+
+		sortState->sortProperty = nsnull;	sortState->sortProperty2 = nsnull;
+		sortState->sortPropertyColl = nsnull;	sortState->sortPropertyColl2 = nsnull;
+		sortState->sortPropertySort = nsnull;	sortState->sortPropertySort2 = nsnull;
 	}
 
 	// set up sort order info
@@ -1634,10 +1650,9 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIRDFDat
 		container->AppendChildTo(node, aNotify);
 	}
 
-	if ((cacheHandle) && (sortInfo.mInner) && ((*cacheHandle) != sortInfo.mInner.get()))
+	if ((!sortState->mCache) && (sortInfo.mInner))
 	{
-		*cacheHandle = sortInfo.mInner;
-		NS_ADDREF(*cacheHandle);
+		sortState->mCache = sortInfo.mInner;
 	}
 	return(NS_OK);
 }
@@ -1695,10 +1710,6 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	sortInfo.kTreeCellAtom = kTreeCellAtom;
 	sortInfo.kNameSpaceID_XUL = kNameSpaceID_XUL;
 
-	if (NS_FAILED(rv = gRDFService->GetUnicodeResource(sortResource.GetUnicode(),
-		getter_AddRefs(sortInfo.sortProperty))))
-		return(rv);
-
 	// determine new sort resource and direction to use
 	if (sortDirection.EqualsIgnoreCase("natural"))
 	{
@@ -1718,6 +1729,37 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	PRBool		found;
 	if (NS_FAILED(rv = GetSortColumnIndex(treeNode, sortResource, sortDirection, sortResource2,
 		sortInfo.inbetweenSeparatorSort, sortInfo.colIndex, found)))	return(rv);
+
+	rv = gRDFService->GetUnicodeResource(sortResource.GetUnicode(), getter_AddRefs(sortInfo.sortProperty));
+	if (NS_FAILED(rv))	return(rv);
+
+	nsAutoString	temp;
+	temp = sortResource;
+	temp += "?collation=true";
+	rv = gRDFService->GetUnicodeResource(temp.GetUnicode(), getter_AddRefs(sortInfo.sortPropertyColl));
+	if (NS_FAILED(rv))	return(rv);
+
+	temp = sortResource;
+	temp += "?sort=true";
+	rv = gRDFService->GetUnicodeResource(temp.GetUnicode(), getter_AddRefs(sortInfo.sortPropertySort));
+	if (NS_FAILED(rv))	return(rv);
+
+	if (sortResource2.Length() > 0)
+	{
+		rv = gRDFService->GetUnicodeResource(sortResource2.GetUnicode(), getter_AddRefs(sortInfo.sortProperty2));
+		if (NS_FAILED(rv))	return(rv);
+
+		temp = sortResource2;
+		temp += "?collation=true";
+		rv = gRDFService->GetUnicodeResource(temp.GetUnicode(), getter_AddRefs(sortInfo.sortPropertyColl2));
+		if (NS_FAILED(rv))	return(rv);
+
+		temp = sortResource2;
+		temp += "?sort=true";
+		rv = gRDFService->GetUnicodeResource(temp.GetUnicode(), getter_AddRefs(sortInfo.sortPropertySort2));
+		if (NS_FAILED(rv))	return(rv);
+	}
+
 	SetSortHints(treeNode, sortResource, sortDirection, sortResource2, sortInfo.inbetweenSeparatorSort, found);
 
 	nsCOMPtr<nsIContent>	treeBody;
@@ -1731,8 +1773,8 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	if (NS_FAILED(rv = treeBody->GetParent(*getter_AddRefs(treeParent))))	return(rv);
 	if (NS_FAILED(rv = treeParent->IndexOf(treeBody, treeBodyIndex)))	return(rv);
 	if (NS_FAILED(rv = treeParent->RemoveChildAt(treeBodyIndex, PR_TRUE)))	return(rv);
-
 	if (NS_FAILED(rv = treeParent->AppendChildTo(treeBody, PR_TRUE)))	return(rv);
+
 	return(NS_OK);
 }
 

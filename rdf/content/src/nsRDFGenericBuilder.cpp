@@ -118,6 +118,22 @@ static NS_DEFINE_CID(kIHTMLElementFactoryIID, NS_IHTML_ELEMENT_FACTORY_IID);
 
 ////////////////////////////////////////////////////////////////////////
 
+// rjc: yes, I'm lame. For the moment, "class sortState" is defined both here and in
+// nsXULSortService.cpp so any changes made here must also (exactly) be made there also.
+
+typedef	class	sortState
+{
+public:
+	// state match strings
+	nsAutoString				sortResource, sortResource2;
+
+	// state variables
+	nsCOMPtr<nsIRDFDataSource>		mCache;
+	nsCOMPtr<nsIRDFResource>		sortProperty, sortProperty2;
+	nsCOMPtr<nsIRDFResource>		sortPropertyColl, sortPropertyColl2;
+	nsCOMPtr<nsIRDFResource>		sortPropertySort, sortPropertySort2;
+} sortStateClass;
+
 class RDFGenericBuilderImpl : public nsIRDFContentModelBuilder,
                               public nsIRDFObserver
 {
@@ -309,7 +325,9 @@ protected:
     nsCOMPtr<nsIContent>                mRoot;
 
     nsCOMPtr<nsIRDFDataSource>		mCache;
-    nsCOMPtr<nsITimer> mTimer;
+    nsCOMPtr<nsITimer>			mTimer;
+
+	sortState			sortState;
 
     // pseudo-constants
     static nsrefcnt gRefCnt;
@@ -2068,18 +2086,8 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
                 if (gXULSortService && isResourceElement)
                 {
-                	if (mCache)
-			{
-				rv = gXULSortService->InsertContainerNode(mDB,
-					(nsIRDFDataSource **)&mCache,
-					mRoot, trueParent, aRealNode, realKid, aNotify);
-			}
-			else
-			{
-				rv = gXULSortService->InsertContainerNode(mDB,
-					getter_AddRefs(mCache),
-					mRoot, trueParent, aRealNode, realKid, aNotify);
-			}
+			rv = gXULSortService->InsertContainerNode(mDB, &sortState,
+				mRoot, trueParent, aRealNode, realKid, aNotify);
                 }
 
                 if (NS_FAILED(rv)) {
