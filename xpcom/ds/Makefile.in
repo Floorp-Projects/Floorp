@@ -120,7 +120,6 @@ XPIDLSRCS	= \
 		nsISerializable.idl \
 		nsISupportsArray.idl \
 		nsISupportsIterators.idl \
-		nsISupportsPrimitives.idl \
 		nsITimelineService.idl \
 		$(NULL)
 
@@ -129,6 +128,7 @@ SDK_XPIDLSRCS   = \
 		nsIObserver.idl		   \
 		nsIProperties.idl          \
 		nsISimpleEnumerator.idl	   \
+		nsISupportsPrimitives.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
