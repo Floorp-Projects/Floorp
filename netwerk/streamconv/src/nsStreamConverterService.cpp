@@ -485,8 +485,9 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
     if (NS_FAILED(rv)) return rv;
 
     nsISupports *converter = nsnull;
-    rv = comMgr->CreateInstance(cProgID, nsnull,
-                                NS_GET_IID(nsIStreamConverter), (void**)&converter);
+    rv = comMgr->CreateInstanceByProgID(cProgID, nsnull,
+                                        NS_GET_IID(nsIStreamConverter),
+                                        (void**)&converter);
     if (NS_FAILED(rv)) {
         // couldn't go direct, let's try walking the graph of converters.
         rv = BuildGraph();
@@ -515,8 +516,9 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
             nsCString *progIDStr = (nsCString*)converterChain->ElementAt(i);
             const char *lProgID = progIDStr->GetBuffer();
 
-            rv = comMgr->CreateInstance(lProgID, nsnull,
-                                        NS_GET_IID(nsIStreamConverter), (void**)&converter);
+            rv = comMgr->CreateInstanceByProgID(lProgID, nsnull,
+                                                NS_GET_IID(nsIStreamConverter),
+                                                (void**)&converter);
 
             if (NS_FAILED(rv)) {
                 // clean up the array.
@@ -596,8 +598,9 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
     if (NS_FAILED(rv)) return rv;
 
     nsISupports *converter = nsnull;
-    rv = comMgr->CreateInstance(cProgID, nsnull,
-                                NS_GET_IID(nsIStreamConverter), (void**)&converter);
+    rv = comMgr->CreateInstanceByProgID(cProgID, nsnull,
+                                        NS_GET_IID(nsIStreamConverter),
+                                        (void**)&converter);
     if (NS_FAILED(rv)) {
         // couldn't go direct, let's try walking the graph of converters.
         rv = BuildGraph();
@@ -626,8 +629,9 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
             nsCString *progIDStr = (nsCString*)converterChain->ElementAt(i);
             const char *lProgID = progIDStr->GetBuffer();
 
-            rv = comMgr->CreateInstance(lProgID, nsnull,
-                                        NS_GET_IID(nsIStreamConverter), (void**)&converter);
+            rv = comMgr->CreateInstanceByProgID(lProgID, nsnull,
+                                                NS_GET_IID(nsIStreamConverter),
+                                                (void**)&converter);
             NS_ASSERTION(NS_SUCCEEDED(rv), "graph construction problem, built a progid that wasn't registered");
 
             nsCString fromStr, toStr;
