@@ -111,7 +111,7 @@ public class NativeFunction extends BaseFunction
         NativeCall activation = ScriptRuntime.findFunctionActivation(cx, this);
         if (activation == null)
             return argCount;
-        return activation.getOriginalArguments().length;
+        return activation.originalArgs.length;
     }
 
     public int getArity()

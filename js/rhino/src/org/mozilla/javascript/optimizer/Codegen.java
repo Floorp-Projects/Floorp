@@ -1288,11 +1288,9 @@ class BodyCodegen
             debugVariableName = "activation";
             cfw.addALoad(funObjLocal);
             cfw.addALoad(variableObjectLocal);
-            cfw.addALoad(thisObjLocal);
             cfw.addALoad(argsLocal);
             addScriptRuntimeInvoke("createFunctionActivation",
                                    "(Lorg/mozilla/javascript/NativeFunction;"
-                                   +"Lorg/mozilla/javascript/Scriptable;"
                                    +"Lorg/mozilla/javascript/Scriptable;"
                                    +"[Ljava/lang/Object;"
                                    +")Lorg/mozilla/javascript/Scriptable;");

@@ -2871,10 +2871,9 @@ public class ScriptRuntime {
 
     public static Scriptable createFunctionActivation(NativeFunction funObj,
                                                       Scriptable scope,
-                                                      Scriptable thisObj,
                                                       Object[] args)
     {
-        return new NativeCall(scope, funObj, thisObj, args);
+        return new NativeCall(funObj, scope, args);
     }
 
 
@@ -2900,7 +2899,7 @@ public class ScriptRuntime {
     {
         NativeCall call = cx.currentActivationCall;
         while (call != null) {
-            if (call.getFunctionObject() == f)
+            if (call.function == f)
                 return call;
             call = call.parentActivationCall;
         }

@@ -3240,7 +3240,7 @@ switch (op) {
 
             if (useActivation) {
                 scope = ScriptRuntime.createFunctionActivation(
-                            fnOrScript, scope, thisObj, args);
+                            fnOrScript, scope, args);
             }
         } else {
             scope = callerScope;

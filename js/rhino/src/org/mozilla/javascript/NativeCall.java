@@ -55,11 +55,9 @@ public final class NativeCall extends IdScriptableObject
 
     NativeCall() { }
 
-    NativeCall(Scriptable scope, NativeFunction funObj,
-               Scriptable thisObj, Object[] args)
+    NativeCall(NativeFunction function, Scriptable scope, Object[] args)
     {
-        this.funObj = funObj;
-        this.thisObj = thisObj;
+        this.function = function;
 
         setParentScope(scope);
         // leave prototype null
@@ -67,9 +65,9 @@ public final class NativeCall extends IdScriptableObject
         this.originalArgs = (args == null) ? ScriptRuntime.emptyArgs : args;
 
         // initialize values of arguments
-        String[] argNames = funObj.argNames;
+        String[] argNames = function.argNames;
         if (argNames != null) {
-            for (int i=0; i < funObj.argCount; i++) {
+            for (int i=0; i < function.argCount; i++) {
                 Object val = i < args.length ? args[i]
                                              : Undefined.instance;
                 super.put(argNames[i], this, val);
@@ -83,7 +81,7 @@ public final class NativeCall extends IdScriptableObject
         }
 
         if (argNames != null) {
-            for (int i = funObj.argCount; i != argNames.length; i++) {
+            for (int i = function.argCount; i != argNames.length; i++) {
                 String name = argNames[i];
                 if (!super.has(name, this)) {
                     super.put(name, this, Undefined.instance);
@@ -95,16 +93,6 @@ public final class NativeCall extends IdScriptableObject
     public String getClassName()
     {
         return "Call";
-    }
-
-    NativeFunction getFunctionObject()
-    {
-        return funObj;
-    }
-
-    Object[] getOriginalArguments()
-    {
-        return originalArgs;
     }
 
     protected int findPrototypeId(String s)
@@ -147,10 +135,9 @@ public final class NativeCall extends IdScriptableObject
         Id_constructor   = 1,
         MAX_PROTOTYPE_ID = 1;
 
-    private NativeFunction funObj;
-    private Scriptable thisObj;
-    private Object[] originalArgs;
+    NativeFunction function;
+    Object[] originalArgs;
 
-    NativeCall parentActivationCall;
+    transient NativeCall parentActivationCall;
 }
 

@@ -55,10 +55,10 @@ final class Arguments extends IdScriptableObject
         setParentScope(parent);
         setPrototype(ScriptableObject.getObjectPrototype(parent));
 
-        args = activation.getOriginalArguments();
+        args = activation.originalArgs;
         lengthObj = new Integer(args.length);
 
-        NativeFunction f = activation.getFunctionObject();
+        NativeFunction f = activation.function;
         calleeObj = f;
 
         if (f.version <= Context.VERSION_1_3
@@ -91,7 +91,7 @@ final class Arguments extends IdScriptableObject
             Object value = args[index];
             if (value != NOT_FOUND) {
                 if (sharedWithActivation(index)) {
-                    NativeFunction f = activation.getFunctionObject();
+                    NativeFunction f = activation.function;
                     String argName = f.argNames[index];
                     value = activation.get(argName, activation);
                     if (value == NOT_FOUND) Kit.codeBug();
@@ -104,7 +104,7 @@ final class Arguments extends IdScriptableObject
 
     private boolean sharedWithActivation(int index)
     {
-        NativeFunction f = activation.getFunctionObject();
+        NativeFunction f = activation.function;
         int definedCount = f.argCount;
         if (index < definedCount) {
             // Check if argument is not hidden by later argument with the same
@@ -127,14 +127,13 @@ final class Arguments extends IdScriptableObject
         if (0 <= index && index < args.length) {
             if (args[index] != NOT_FOUND) {
                 if (sharedWithActivation(index)) {
-                    NativeFunction f = activation.getFunctionObject();
-                    String argName = f.argNames[index];
+                    String argName = activation.function.argNames[index];
                     activation.put(argName, activation, value);
                     return;
                 }
                 synchronized (this) {
                     if (args[index] != NOT_FOUND) {
-                        if (args == activation.getOriginalArguments()) {
+                        if (args == activation.originalArgs) {
                             args = (Object[])args.clone();
                         }
                         args[index] = value;
@@ -151,7 +150,7 @@ final class Arguments extends IdScriptableObject
         if (0 <= index && index < args.length) {
             synchronized (this) {
                 if (args[index] != NOT_FOUND) {
-                    if (args == activation.getOriginalArguments()) {
+                    if (args == activation.originalArgs) {
                         args = (Object[])args.clone();
                     }
                     args[index] = NOT_FOUND;
