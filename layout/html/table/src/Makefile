@@ -46,7 +46,7 @@ MODULE = raptor
 
 REQUIRES = xpcom raptor dom js netlib
 
-INCLUDES += -I../../base/src -I../../style/src -I../../../base/src
+INCLUDES += -I../../base/src -I../../style/src -I../../content/src -I../../../base/src
 
 DEFINES += -D_IMPL_NS_HTML
 
