@@ -244,6 +244,7 @@ class RoundedRect
 
 public:
   PRInt32 mRoundness;
+  PRBool  mDoRound;
 
   PRInt16 mOuterLeft;
   PRInt16 mOuterRight;
