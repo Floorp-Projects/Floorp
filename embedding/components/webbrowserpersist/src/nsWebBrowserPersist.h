@@ -106,6 +106,7 @@ private:
         const char *aContentType);
     nsresult CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChannel,
         nsIURI *aOriginalURIWithExtension);
+    nsresult CalculateUniqueFilename(nsIURI *aURI);
     nsresult MakeFilenameFromURI(
         nsIURI *aURI, nsString &aFilename);
     nsresult StoreURIAttribute(
@@ -153,8 +154,6 @@ private:
         nsHashKey *aKey, void *aData, void* closure);
     static PRBool PR_CALLBACK EnumCountURIsToPersist(
         nsHashKey *aKey, void *aData, void* closure);
-    static PRBool PR_CALLBACK EnumCheckForDuplicateFileNames(
-        nsHashKey *aKey, void *aData, void* closure);
 
     nsCOMPtr<nsIURI>          mCurrentDataPath;
     PRBool                    mCurrentDataPathIsRelative;
@@ -170,6 +169,7 @@ private:
     nsHashtable               mUploadList;
     nsHashtable               mURIMap;
     nsVoidArray               mDocList;
+    nsCStringArray            mFilenameList;
     PRPackedBool              mFirstAndOnlyUse;
     PRPackedBool              mCancel;
     PRPackedBool              mJustStartedLoading;

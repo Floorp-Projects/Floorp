@@ -96,19 +96,11 @@ struct URIData
     PRPackedBool mSaved;
     PRPackedBool mIsSubFrame;
     PRPackedBool mDataPathIsRelative;
-    nsString mFileName;
+    nsString mFilename;
     nsString mSubFrameExt;
     nsCOMPtr<nsIURI> mFile;
     nsCOMPtr<nsIURI> mDataPath;
     nsCString mRelativePathToData;
-};
-
-// Information passed to enumerator while checking for duplicate filenames
-struct DuplicateData
-{
-    nsString mSourceFileName;
-    nsCOMPtr<nsIURI> mSourceDataPath;
-    PRPackedBool mIsDuplicate;
 };
 
 // Information about the output stream
@@ -151,6 +143,17 @@ struct UploadData
     {
     }
 };
+
+// Maximum file length constant. The max file name length is
+// volume / server dependent but it is difficult to obtain
+// that information. Instead this constant is a reasonable value that
+// modern systems should able to cope with.
+
+#ifdef XP_MAC
+const PRInt32 kDefaultMaxFilenameLength = 31;
+#else
+const PRInt32 kDefaultMaxFilenameLength = 64;
+#endif
 
 // Default flags for persistence
 const PRUint32 kDefaultPersistFlags = 
@@ -578,6 +581,9 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(
         {
             // this is the first point at which the server can tell us the mimetype
             CalculateAndAppendFileExt(data->mFile, channel, data->mOriginalLocation);
+
+            // now make filename conformant and unique
+            CalculateUniqueFilename(data->mFile);
         }
 
         // compare uris and bail before we add to output map if they are equal
@@ -1518,6 +1524,219 @@ void nsWebBrowserPersist::CleanUp()
         delete docData;
     }
     mDocList.Clear();
+    mFilenameList.Clear();
+}
+
+nsresult
+nsWebBrowserPersist::CalculateUniqueFilename(nsIURI *aURI)
+{
+    nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
+    NS_ENSURE_TRUE(url, NS_ERROR_FAILURE);
+
+    PRBool nameHasChanged = PR_FALSE;
+    nsresult rv;
+
+    // Get the old filename
+    nsCAutoString filename;
+    rv = url->GetFileName(filename);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    nsCAutoString directory;
+    rv = url->GetDirectory(directory);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+    // Split the filename into a base and an extension.
+    // e.g. "foo.html" becomes "foo" & ".html"
+    //
+    // The nsIURL methods GetFileBaseName & GetFileExtension don't
+    // preserve the dot whereas this code does to save some effort
+    // later when everything is put back together.
+    PRInt32 lastDot = filename.RFind(".");
+    nsCAutoString base;
+    nsCAutoString ext;
+    if (lastDot >= 0)
+    {
+        filename.Mid(base, 0, lastDot);
+        filename.Mid(ext, lastDot, filename.Length() - lastDot); // includes dot
+    }
+    else
+    {
+        // filename contains no dot
+        base = filename;
+    }
+
+    // Test if the filename is longer than allowed by the OS
+    PRInt32 needToChop = filename.Length() - kDefaultMaxFilenameLength;
+    if (needToChop > 0)
+    {
+        // Truncate the base first and then the ext if necessary
+        if (base.Length() > (PRUint32) needToChop)
+        {
+            base.Truncate(base.Length() - needToChop);
+        }
+        else
+        {
+            needToChop -= base.Length() - 1;
+            base.Truncate(1);
+            if (ext.Length() > (PRUint32) needToChop)
+            {
+                ext.Truncate(ext.Length() - needToChop);
+            }
+            else
+            {
+                ext.Truncate(0);
+            }
+            // If kDefaultMaxFilenameLength were 1 we'd be in trouble here,
+            // but that won't happen because it will be set to a sensible
+            // value.
+        }
+
+        filename.Assign(base);
+        filename.Append(ext);
+        nameHasChanged = PR_TRUE;
+    }
+
+    // Ensure the filename is unique
+    // Create a filename if it's empty, or if the filename / datapath is
+    // already taken by another URI and create an alternate name.
+
+    if (base.IsEmpty() || mFilenameList.Count() > 0)
+    {
+        nsCAutoString tmpPath;
+        nsCAutoString tmpBase;
+        PRUint32 duplicateCounter = 1;
+        while (1)
+        {
+            // Make a file name,
+            // Foo become foo_001, foo_002, etc.
+            // Empty files become _001, _002 etc.
+
+            if (base.IsEmpty() || duplicateCounter > 1)
+            {
+                char * tmp = PR_smprintf("_%03d", duplicateCounter);
+                NS_ENSURE_TRUE(tmp, NS_ERROR_OUT_OF_MEMORY);
+                if (filename.Length() < kDefaultMaxFilenameLength - 4)
+                {
+                    tmpBase = base;
+                }
+                else
+                {
+                    base.Mid(tmpBase, 0, base.Length() - 4);
+                }
+                tmpBase.Append(tmp);
+                PR_smprintf_free(tmp);
+            }
+            else
+            {
+                tmpBase = base;
+            }
+        
+            tmpPath.Assign(directory);
+            tmpPath.Append(tmpBase);
+            tmpPath.Append(ext);
+
+            // Test if the name is a duplicate
+            if (mFilenameList.IndexOf(tmpPath) < 0)
+            {
+                if (!base.Equals(tmpBase))
+                {
+                    filename.Assign(tmpBase);
+                    filename.Append(ext);
+                    nameHasChanged = PR_TRUE;
+                }
+                break;
+            }
+            duplicateCounter++;
+        }
+    }
+
+    // Add name to list of those already used
+    nsCAutoString newFilepath(directory);
+    newFilepath.Append(filename);
+    mFilenameList.AppendCString(newFilepath);
+
+    // Update the uri accordingly if the filename actually changed
+    if (nameHasChanged)
+    {
+        // Final sanity test
+        if (filename.Length() > kDefaultMaxFilenameLength)
+        {
+            NS_WARNING("Filename wasn't truncated less than the max file length - how can that be?");
+            return NS_ERROR_FAILURE;
+        }
+
+        nsCOMPtr<nsILocalFile> localFile;
+        GetLocalFileFromURI(aURI, getter_AddRefs(localFile));
+
+        if (localFile)
+        {
+            nsAutoString filenameAsUnichar;
+            filenameAsUnichar.AssignWithConversion(filename.get());
+            localFile->SetLeafName(filenameAsUnichar);
+
+            // Resync the URI with the file after the extension has been appended
+            nsresult rv;
+            nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
+            NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+            fileURL->SetFile(localFile);  // this should recalculate uri
+        }
+        else
+        {
+            url->SetFileName(filename);
+        }
+    }
+
+    return NS_OK;
+}
+
+
+nsresult
+nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsString &aFilename)
+{
+    // Try to get filename from the URI.
+    nsAutoString fileName;
+
+    // Get a suggested file name from the URL but strip it of characters
+    // likely to cause the name to be illegal.
+
+    nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
+    if (url)
+    {
+        nsCAutoString nameFromURL;
+        url->GetFileName(nameFromURL);
+        if (!nameFromURL.IsEmpty())
+        {
+            // Unescape the file name (GetFileName escapes it)
+            NS_UnescapeURL(nameFromURL);
+            PRUint32 nameLength = 0;
+            const char *p = nameFromURL.get();
+            for (;*p && *p != ';' && *p != '?' && *p != '#' && *p != '.'
+                 ;p++)
+            {
+                if (nsCRT::IsAsciiAlpha(*p) || nsCRT::IsAsciiDigit(*p)
+                    || *p == '.' || *p == '-' ||  *p == '_' || (*p == ' '))
+                {
+                    fileName.Append(PRUnichar(*p));
+                    if (++nameLength == kDefaultMaxFilenameLength)
+                    {
+                        // Note:
+                        // There is no point going any further since it will be
+                        // truncated in CalculateUniqueFilename anyway.
+                        // More importantly, certain implementations of
+                        // nsILocalFile (e.g. the Mac impl) might truncate
+                        // names in undesirable ways, such as truncating from
+                        // the middle, inserting ellipsis and so on.
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // Note: Filename could be empty at this point, but we'll deal with that
+    //       problem later.
+
+    aFilename = fileName;
+    return NS_OK;
 }
 
 
@@ -1596,6 +1815,11 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
 
                 if (!fileExt.IsEmpty())
                 {
+                    PRInt32 newLength = newFileName.Length() + fileExt.Length() + 1;
+                    if (newLength > kDefaultMaxFilenameLength)
+                    {
+                        newFileName.Truncate(newFileName.Length() - (newLength - kDefaultMaxFilenameLength));
+                    }
                     newFileName.Append(".");
                     newFileName.Append(fileExt);
                 }
@@ -1862,7 +2086,7 @@ nsWebBrowserPersist::EnumPersistURIs(nsHashKey *aKey, void *aData, void* closure
     nsCOMPtr<nsIURI> fileAsURI;
     rv = data->mDataPath->Clone(getter_AddRefs(fileAsURI));
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
-    rv = pthis->AppendPathToURI(fileAsURI, data->mFileName);
+    rv = pthis->AppendPathToURI(fileAsURI, data->mFilename);
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
     rv = pthis->SaveURIInternal(uri, nsnull, fileAsURI, PR_TRUE);
@@ -2282,7 +2506,7 @@ nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode,
             {
                 rv = data->mDataPath->Clone(getter_AddRefs(fileAsURI));
                 NS_ENSURE_SUCCESS(rv, PR_FALSE);
-                rv = AppendPathToURI(fileAsURI, data->mFileName);
+                rv = AppendPathToURI(fileAsURI, data->mFilename);
                 NS_ENSURE_SUCCESS(rv, PR_FALSE);
             }
             nsAutoString newValue;
@@ -2394,7 +2618,7 @@ nsWebBrowserPersist::SaveSubframeContent(
     NS_ENSURE_ARG_POINTER(aData);
     nsresult rv;
 
-    nsString filenameWithExt = aData->mFileName;
+    nsString filenameWithExt = aData->mFilename;
     filenameWithExt.Append(aData->mSubFrameExt);
 
     // Work out the path for the subframe
@@ -2408,9 +2632,17 @@ nsWebBrowserPersist::SaveSubframeContent(
     nsCOMPtr<nsIURI> frameDataURI;
     rv = mCurrentDataPath->Clone(getter_AddRefs(frameDataURI));
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
-    nsAutoString newFrameDataPath(aData->mFileName);
+    nsAutoString newFrameDataPath(aData->mFilename);
+
+    // Append _data
     newFrameDataPath.Append(NS_LITERAL_STRING("_data"));
     rv = AppendPathToURI(frameDataURI, newFrameDataPath);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+    // Make frame document & data path conformant and unique
+    rv = CalculateUniqueFilename(frameURI);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    rv = CalculateUniqueFilename(frameDataURI);
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
     mCurrentThingsToPersist++;
@@ -2557,7 +2789,7 @@ nsWebBrowserPersist::MakeAndStoreLocalFilenameInURIMap(
     NS_ENSURE_TRUE(data, NS_ERROR_OUT_OF_MEMORY);
 
     data->mNeedsPersisting = aNeedsPersisting;
-    data->mFileName = filename;
+    data->mFilename = filename;
     data->mSaved = PR_FALSE;
     data->mIsSubFrame = PR_FALSE;
     data->mDataPath = mCurrentDataPath;
@@ -2576,104 +2808,6 @@ nsWebBrowserPersist::MakeAndStoreLocalFilenameInURIMap(
     return NS_OK;
 }
 
-nsresult
-nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsString &aFilename)
-{
-    // Try to get filename from the URI.
-    nsAutoString fileName;
-
-    // Get a suggested file name from the URL but strip it of characters
-    // likely to cause the name to be illegal.
-
-    nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
-    if (url)
-    {
-        nsCAutoString nameFromURL;
-        url->GetFileName(nameFromURL);
-        if (!nameFromURL.IsEmpty())
-        {
-            const PRInt32 kMaxFileNameLength = 20;
-            // Unescape the file name (GetFileName escapes it)
-            PRInt32 length = 0;
-            NS_UnescapeURL(nameFromURL);
-            const char *p = nameFromURL.get();
-            for (;*p && *p != ';' && *p != '?' && *p != '#' && *p != '.' &&
-                  length < kMaxFileNameLength
-                 ;p++, length++)
-            {
-                if (nsCRT::IsAsciiAlpha(*p) || nsCRT::IsAsciiDigit(*p)
-                    || *p == '.' || *p == '-' ||  *p == '_'
-#ifdef WIN32
-                    || (*p == ' ' && length != kMaxFileNameLength - 1)
-#endif
-                    )
-                {
-                    fileName.Append(PRUnichar(*p));
-                }
-            }
-        }
-    }
-
-    // Create a filename if it's empty, or if the filename / datapath is already taken by another URI
-    // and create an alternate name.
-    if (fileName.IsEmpty() || mURIMap.Count() > 0)
-    {
-        DuplicateData dupData;
-        dupData.mSourceDataPath = mCurrentDataPath;
-        PRInt32 duplicateCounter = 1;
-        do {
-            dupData.mIsDuplicate = PR_FALSE;
-            dupData.mSourceFileName = fileName;
-            
-            // Make a file name,
-            // Foo become foo_001, foo_002, etc.
-            // Empty files become _001, _002 etc.
-            if (fileName.IsEmpty() || duplicateCounter > 1)
-            {
-                char * tmp = PR_smprintf("_%03d", duplicateCounter);
-                NS_ENSURE_TRUE(tmp, NS_ERROR_OUT_OF_MEMORY);
-                dupData.mSourceFileName.AppendWithConversion(tmp);
-                PR_smprintf_free(tmp);
-            }
-            
-            // Check for duplicates
-            if (mURIMap.Count() > 0)
-                mURIMap.Enumerate(EnumCheckForDuplicateFileNames, &dupData);
-
-            duplicateCounter++;
-        } while (dupData.mIsDuplicate);
-        fileName = dupData.mSourceFileName;
-    }
-
-    aFilename = fileName;
-
-    return NS_OK;
-}
-
-PRBool PR_CALLBACK
-nsWebBrowserPersist::EnumCheckForDuplicateFileNames(nsHashKey *aKey, void *aData, void* closure)
-{
-    DuplicateData *dupData = (DuplicateData *) closure;
-    URIData *data = (URIData *) aData;
-
-    NS_ENSURE_TRUE(dupData, PR_TRUE);
-    NS_ENSURE_TRUE(data, PR_TRUE);
-
-    if (data->mNeedsPersisting || data->mIsSubFrame)
-    {
-        NS_ENSURE_TRUE(data->mDataPath, PR_TRUE);
-
-        PRBool isSamePath = PR_FALSE;
-        data->mDataPath->Equals(dupData->mSourceDataPath, &isSamePath);
-        if (isSamePath && data->mFileName.Equals(dupData->mSourceFileName))
-        {
-            dupData->mIsDuplicate = PR_TRUE;
-            return PR_FALSE; // Stop enumerating
-        }
-    }
-
-    return PR_TRUE; // Continue enumerating
-}
 
 nsresult
 nsWebBrowserPersist::SetDocumentBase(
