@@ -28,6 +28,7 @@
 #include "nsBaseAppCore.h"
 #include "nsINetSupport.h"
 #include "nsIStreamObserver.h"
+#include "nsIURLListener.h"
 
 class nsIBrowserWindow;
 class nsIWebShell;
@@ -36,6 +37,7 @@ class nsIDOMWindow;
 class nsIURL;
 class nsIWebShellWindow;
 
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsBrowserAppCore:
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,7 +45,8 @@ class nsIWebShellWindow;
 class nsBrowserAppCore : public nsBaseAppCore, 
                          public nsIDOMBrowserAppCore,
                          public nsINetSupport,
-                         public nsIStreamObserver
+                         public nsIStreamObserver,
+                         public nsIURLListener
 {
   public:
 
@@ -55,7 +58,6 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
     NS_IMETHOD    Init(const nsString& aId);
     NS_IMETHOD    GetId(nsString& aId) { return nsBaseAppCore::GetId(aId); } 
-    NS_IMETHOD    SetDocumentCharset(const nsString& aCharset); 
 
     NS_IMETHOD    Back();
     NS_IMETHOD    Forward();
@@ -69,13 +71,31 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    PrintPreview();
     NS_IMETHOD    Close();
     NS_IMETHOD    Exit();
-
+    NS_IMETHOD    SetDocumentCharset(const nsString& aCharset); 
 
     // nsIStreamObserver
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
     NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
     NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
     NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+
+
+    // nsIURlListener methods
+  NS_IMETHOD WillLoadURL(nsIWebShell* aShell,
+                         const PRUnichar* aURL,
+                         nsLoadType aReason);
+
+  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell,
+                          const PRUnichar* aURL);
+
+  NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell,
+                             const PRUnichar* aURL,
+                             PRInt32 aProgress,
+                             PRInt32 aProgressMax);
+
+  NS_IMETHOD EndLoadURL(nsIWebShell* aShell,
+                        const PRUnichar* aURL,
+                        PRInt32 aStatus);
 
     // nsINetSupport
     NS_IMETHOD_(void) Alert(const nsString &aText);
@@ -109,6 +129,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
     nsIWebShellWindow  *mWebShellWin;
     nsIWebShell *       mWebShell;
+    nsIWebShell *       mContentAreaWebShell;
 
 };
 
