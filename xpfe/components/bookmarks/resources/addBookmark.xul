@@ -40,7 +40,8 @@
 
 <window id="newBookmarkWindow" style="width: 36em;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&newBookmark.title;" orient="vertical" class="dialog"
+        title="&newBookmark.title;" title-selectFolder="&selectFolder.label;"
+        orient="vertical" class="dialog"
         onload="Startup();">
   
   <script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"></script>
@@ -67,19 +68,22 @@
       <row autostretch="never">
         <text class="label" value="&name.label;" accesskey="&name.accesskey;" for="name"/>
         <textfield id="name"/>
+        <spring/>
       </row>
       <row>
         <separator class="thin"/>
         <separator class="thin"/>
+        <spring/>
       </row>
       <row autostretch="never">
         <text class="label" value="&url.label;" accesskey="&url.accesskey;" for="url"/>
         <textfield id="url" oninput="onLocationInput();"/>
+        <spring/>
       </row>
     </rows>
   </grid>
 
-  <separator/>
+  <separator id="createinseparator"/>
 
   <box id="createinbuttonbox">
     <button id="createin" class="disclosure-triangle" value="&button.createin.label;" 
@@ -93,20 +97,21 @@
     </box>
   </box>
   
-  <box id="folderbox" orient="vertical" hidden="true">
+  <box id="folderbox" orient="vertical" hidden="true" flex="1">
     <separator/>
-    <grid>
+    <grid flex="1">
       <columns>
         <column/>
         <column flex="1"/>
       </columns>
       <rows>
         <row autostretch="never" valign="top">
-          <text class="label" value="&createin.label;"/>
-          <box autostretch="never" valign="top">
+          <text id="createinlabel" class="label" value="&createin.label;"/>
+          <box autostretch="never" valign="top" flex="1">
             <tree id="folders" flex="1" style="height: 12em; width: 0px"
                   class="inset" ref="NC:BookmarksRoot" datasources="rdf:bookmarks"
-                  template="file-bookmarks-template">
+                  template="file-bookmarks-template"
+                  onselect="onTreeSelect();">
               <treecols>
                 <treecol flex="1"/>
               </treecols>
@@ -129,8 +134,13 @@
               </template>
               <treechildren id="folderKids" flex="1"/>
             </tree>
-            <button value="&button.newfolder.label;" accesskey="&button.newfolder.accesskey;"
-                    oncommand="createNewFolder();"/>
+            <box orient="vertical">
+              <button value="&button.newfolder.label;" accesskey="&button.newfolder.accesskey;"
+                      oncommand="createNewFolder();"/>
+              <button value="&button.defaultfolder.label;" 
+                      accesskey="&button.defaultfolder.accesskey;"
+                      oncommand="useDefaultFolder();"/>
+            </box>
           </box>
         </row>
       </rows>

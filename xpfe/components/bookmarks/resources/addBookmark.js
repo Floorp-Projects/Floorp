@@ -25,6 +25,8 @@ var gFld_Name   = null;
 var gFld_URL    = null; 
 var gFolderTree = null;
 
+var gBookmarkCharset = null;
+
 const kRDFSContractID = "@mozilla.org/rdf/rdf-service;1";
 const kRDFSIID = Components.interfaces.nsIRDFService;
 const kRDF = Components.classes[kRDFSContractID].getService(kRDFSIID);
@@ -40,17 +42,35 @@ function Startup()
   gFld_URL = document.getElementById("url");
   gFolderTree = document.getElementById("folders");
   
+  var shouldSetOKButton = true;
   if ("arguments" in window) {
-    gFld_Name.value = window.arguments[0] || "";
-    gFld_URL.value = window.arguments[1] || "";
-    if (window.arguments[2]) {
-      gCreateInFolder = window.arguments[2];
-      //document.getElementById("createin").setAttribute("hidden", "true");
-      //document.getElementById("folderbox").setAttribute("hidden", "true");
+    // If we're being opened as a folder selection window
+    if (window.arguments[4] == "selectFolder") {
+      document.getElementById("bookmarknamegrid").setAttribute("hidden", "true");
+      toggleCreateIn();
+      document.getElementById("createinlabel").setAttribute("collapsed", "true");
+      document.getElementById("createinbuttonbox").setAttribute("hidden", "true");
+      document.getElementById("dontaskagain").setAttribute("hidden", "true");
+      document.getElementById("createinseparator").setAttribute("hidden", "true");
+      sizeToContent();
+      const kWindowNode = document.getElementById("newBookmarkWindow");
+      kWindowNode.setAttribute("title", kWindowNode.getAttribute("title-selectFolder"));
+      shouldSetOKButton = false;
+    }
+    else {
+      gFld_Name.value = window.arguments[0] || "";
+      gFld_URL.value = window.arguments[1] || "";
+      gBookmarkCharset = window.arguments [3] || null;
+      if (window.arguments[2]) {
+        gCreateInFolder = window.arguments[2];
+        document.getElementById("createin").setAttribute("hidden", "true");
+        document.getElementById("folderbox").setAttribute("hidden", "true");
+      }
     }
   }
   
-  onLocationInput();
+  if (shouldSetOKButton)
+    onLocationInput();
   gFld_Name.focus();
 } 
 
@@ -85,31 +105,57 @@ function toggleCreateIn()
 function onLocationInput ()
 {
   var ok = document.getElementById("ok");
-  if (!gFld_URL.value) 
-    ok.setAttribute("disabled", "true");
-  else
-    ok.removeAttribute("disabled");
+  ok.disabled = gFld_URL.value == "";
 }
 
 function onOK()
 {
-  const kBMDS = kRDF.GetDataSource("rdf:bookmarks");
-  const kBMSContractID = "@mozilla.org/browser/bookmarks-service;1";
-  const kBMSIID = Components.interfaces.nsIBookmarksService;
-  const kBMS = Components.classes[kBMSContractID].getService(kBMSIID);
-  var rFolder = kRDF.GetResource(gCreateInFolder, true);
-  const kRDFCContractID = "@mozilla.org/rdf/container;1";
-  const kRDFIID = Components.interfaces.nsIRDFContainer;
-  const kRDFC = Components.classes[kRDFCContractID].getService(kRDFIID);
-  try {
-    kRDFC.Init(kBMDS, rFolder);
+  if (window.arguments[4] == "selectFolder")
+    window.arguments[5].selectedFolder = gCreateInFolder;
+  else {
+    const kBMDS = kRDF.GetDataSource("rdf:bookmarks");
+    const kBMSContractID = "@mozilla.org/browser/bookmarks-service;1";
+    const kBMSIID = Components.interfaces.nsIBookmarksService;
+    const kBMS = Components.classes[kBMSContractID].getService(kBMSIID);
+    var rFolder = kRDF.GetResource(gCreateInFolder, true);
+    const kRDFCContractID = "@mozilla.org/rdf/container;1";
+    const kRDFIID = Components.interfaces.nsIRDFContainer;
+    const kRDFC = Components.classes[kRDFCContractID].getService(kRDFIID);
+    try {
+      kRDFC.Init(kBMDS, rFolder);
+    }
+    catch (e) {
+      // No "NC:NewBookmarkFolder" exists, just append to the root.
+      rFolder = kRDF.GetResource("NC:BookmarksRoot", true);
+    }
+    if (!gFld_URL.value) return;
+    
+    // Check to see if the item is a local directory path, and if so, convert
+    // to a file URL so that aggregation with rdf:files works
+    var url = gFld_URL.value;
+    try {
+      const kLFContractID = "@mozilla.org/file/local;1";
+      const kLFIID = Components.interfaces.nsILocalFile;
+      const kLF = Components.classes[kLFContractID].createInstance(kLFIID);
+      kLF.initWithUnicodePath(url);
+      url = kLF.URL;
+    }
+    catch (e) {
+    }
+    
+    kBMS.AddBookmarkToFolder(url, rFolder, gFld_Name.value, gBookmarkCharset);
+  
+    // Persist the 'show this dialog again' preference.   
+    var checkbox = document.getElementById("dontaskagain");
+    const kPrefContractID = "@mozilla.org/preferences;1";
+    const kPrefIID = Components.interfaces.nsIPref;
+    const kPrefSvc = Components.classes[kPrefContractID].getService(kPrefIID);
+    try {
+      kPrefSvc.SetBoolPref("browser.bookmarks.add_without_dialog", checkbox.checked);
+    }
+    catch (e) {
+    }
   }
-  catch (e) {
-    // No "NC:NewBookmarkFolder" exists, just append to the root.
-    rFolder = kRDF.GetResource("NC:BookmarksRoot", true);
-  }
-  if (!gFld_URL.value) return;
-  kBMS.AddBookmarkToFolder(gFld_URL.value, rFolder, gFld_Name.value, null);
   close();
 }
 
@@ -133,5 +179,21 @@ function createNewFolder ()
   item = gFolderTree.selectedItems.length < 1 ? folderKids.firstChild : gFolderTree.selectedItems[0];
   gBookmarksShell.commands.createBookmarkItem("folder", item);
 }
+
+function useDefaultFolder ()
+{
+  const kBMDS = kRDF.GetDataSource("rdf:bookmarks");
+  var newBookmarkFolder = document.getElementById("NC:NewBookmarkFolder");
+  if (newBookmarkFolder) {
+    gFolderTree.selectItem(newBookmarkFolder);
+    gCreateInFolder = "NC:NewBookmarkFolder";
+  }
+  else {
+    gFolderTree.clearItemSelection();
+    gCreateInFolder = "NC:BookmarksRoot";
+  }
+}
+
+
 
 
