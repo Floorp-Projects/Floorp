@@ -1244,7 +1244,7 @@ public class Context {
      */
     public void setGeneratingDebug(boolean generatingDebug) {
         generatingDebugChanged = true;
-        if (generatingDebug)
+        if (generatingDebug && getOptimizationLevel() > 0)
             setOptimizationLevel(0);
         this.generatingDebug = generatingDebug;
     }
@@ -1618,9 +1618,8 @@ public class Context {
         if (isCachingEnabled && !cachingEnabled) {
             // Caching is being turned off. Empty caches.
             JavaMembers.classTable = new Hashtable();
-            ClassNameHelper nameHelper = getNameHelper();
-            if (nameHelper != null)
-                nameHelper.reset();
+            if (savedNameHelper != null)
+                savedNameHelper.reset();
         }
         isCachingEnabled = cachingEnabled;
         FunctionObject.setCachingEnabled(cachingEnabled);
