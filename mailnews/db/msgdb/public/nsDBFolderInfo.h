@@ -48,14 +48,14 @@ public:
 	// create the appropriate table and row in a new db.
 	nsresult			AddToNewMDB();
 	// accessor methods.
-	void				SetHighWater(MessageKey highWater, PRBool force = FALSE) ;
-	MessageKey			GetHighWater() ;
-	void				SetExpiredMark(MessageKey expiredKey);
+	void				SetHighWater(nsMsgKey highWater, PRBool force = FALSE) ;
+	nsMsgKey			GetHighWater() ;
+	void				SetExpiredMark(nsMsgKey expiredKey);
 	int					GetDiskVersion();
 
-	PRBool				AddLaterKey(MessageKey key, time_t until);
+	PRBool				AddLaterKey(nsMsgKey key, time_t *until);
 	PRInt32				GetNumLatered();
-	MessageKey			GetLateredAt(PRInt32 laterIndex, time_t *pUntil);
+	nsMsgKey			GetLateredAt(PRInt32 laterIndex, time_t *pUntil);
 	void				RemoveLateredAt(PRInt32 laterIndex);
 
 	virtual void		SetMailboxName(const char *newBoxName);
@@ -91,8 +91,8 @@ public:
 
 	void				SetVersion(PRUint16 version) {m_version = version;}
 
-	MessageKey			GetLastMessageLoaded();
-	void				SetLastMessageLoaded(MessageKey lastLoaded);
+	nsMsgKey			GetLastMessageLoaded();
+	void				SetLastMessageLoaded(nsMsgKey lastLoaded);
 
 	void				SetFolderSize(PRUint32 size);
 	void				SetFolderDate(time_t date);
@@ -111,7 +111,7 @@ public:
 	PRInt32		m_folderSize;
 	PRInt32		m_expungedBytes;	// sum of size of deleted messages in folder
 	time_t		m_folderDate;
-	MessageKey  m_highWaterMessageKey;	// largest news article number or imap uid whose header we've seen
+	nsMsgKey  m_highWaterMessageKey;	// largest news article number or imap uid whose header we've seen
 	
 	// IMAP only
 	PRInt32		m_ImapUidValidity;
@@ -119,7 +119,7 @@ public:
 	PRInt32		m_UnreadPendingMessages;
 
 	// news only (for now)
-	MessageKey	m_expiredMark;		// Highest invalid article number in group - for expiring
+	nsMsgKey	m_expiredMark;		// Highest invalid article number in group - for expiring
 	PRInt32		m_viewType;			// for news, the last view type open on this db.	
 
 	nsMsgKeyArray m_lateredKeys;		// list of latered messages
@@ -137,7 +137,7 @@ protected:
 	PRInt32		m_numMessages;		// includes expunged and ignored messages
 	PRInt32		m_flags;			// folder specific flags. This holds things like re-use thread pane,
 									// configured for off-line use, use default retrieval, purge article/header options
-	MessageKey	m_lastMessageLoaded; // set by the FE's to remember the last loaded message
+	nsMsgKey	m_lastMessageLoaded; // set by the FE's to remember the last loaded message
 
 // the db folder info will have to know what db and row it belongs to, since it is really
 // just a wrapper around the singleton folder info row in the mdb. 

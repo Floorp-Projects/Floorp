@@ -33,11 +33,6 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 
-static NS_DEFINE_IID(kIMsgAppCoreIID, NS_IDOMMSGAPPCORE_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kIDOMBaseAppCoreIID, NS_IDOMBASEAPPCORE_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 class nsMsgAppCore : public nsIDOMMsgAppCore,
                      public nsIScriptObjectOwner
 {
@@ -99,22 +94,22 @@ nsMsgAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   // Always NULL result, in case of failure
   *aInstancePtr = NULL;
 
-  if ( aIID.Equals(kIScriptObjectOwnerIID)) {
+  if ( aIID.Equals(nsIScriptObjectOwner::IID())) {
       *aInstancePtr = (void*) ((nsIScriptObjectOwner*)this);
       AddRef();
       return NS_OK;
   }
-  if ( aIID.Equals(kIDOMBaseAppCoreIID)) {
+  if ( aIID.Equals(nsIDOMBaseAppCore::IID())) {
       *aInstancePtr = (void*) ((nsIDOMBaseAppCore*)this);
       AddRef();
       return NS_OK;
   }
-  else if ( aIID.Equals(kIMsgAppCoreIID) ) {
+  else if ( aIID.Equals(nsIMsgAppCore::IID()) ) {
       *aInstancePtr = (void*)(nsISupports*)(nsIScriptObjectOwner*)this;
       AddRef();
       return NS_OK;
   }
-  else if ( aIID.Equals(kISupportsIID) ) {
+  else if ( aIID.Equals(::nsISupports::IID()) ) {
       *aInstancePtr = (void*)(nsISupports*)(nsIScriptObjectOwner*)this;
       AddRef();
       return NS_OK;
@@ -174,8 +169,7 @@ nsMsgAppCore::GetId(nsString& aId)
 NS_IMETHODIMP    
 nsMsgAppCore::Open3PaneWindow()
 {
-	static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-	static NS_DEFINE_IID(kIAppShellServiceIID, NS_IAPPSHELL_SERVICE_IID);
+	static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 	nsIAppShellService* appShell;
 	char *  urlstr=nsnull;
@@ -184,7 +178,7 @@ nsMsgAppCore::Open3PaneWindow()
 
 	urlstr = "resource:/res/samples/messenger.html";
 	rv = nsServiceManager::GetService(kAppShellServiceCID,
-									  kIAppShellServiceIID,
+									  nsIAppShellService::IID(),
 									  (nsISupports**)&appShell);
 	nsIURL* url;
 	nsIWidget* newWindow;
@@ -219,7 +213,7 @@ NS_NewMsgAppCore(nsIDOMMsgAppCore **aResult)
 
   nsMsgAppCore *appcore = new nsMsgAppCore();
   if (appcore) {
-    return appcore->QueryInterface(kIMsgAppCoreIID,
+    return appcore->QueryInterface(nsIMsgAppCore::IID(),
                                    (void **)aResult);
 
   }

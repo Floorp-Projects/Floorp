@@ -22,90 +22,72 @@
 #include "msgCore.h"
 #include "prtypes.h"
 
-/* MessageKey is a unique ID for a particular message in a folder.  If you want
+/* nsMsgKey is a unique ID for a particular message in a folder.  If you want
    a handle to a message that will remain valid even after resorting the folder
    or otherwise changing their indices, you want one of these rather than a
-   MSG_ViewIndex. MessageKeys don't survive local mail folder compression, however.
+   nsMsgViewIndex. nsMsgKeys don't survive local mail folder compression, however.
  */
-typedef PRUint32 MessageKey;
-const MessageKey MSG_MESSAGEKEYNONE = 0xffffffff;
+typedef PRUint32 nsMsgKey;
+const nsMsgKey nsMsgKey_None = 0xffffffff;
 
-/* XP_Index
+/* nsMsgViewIndex
  *
- * A generic index type from which other index types are derived.  All XP_Index
+ * A generic index type from which other index types are derived.  All nsMsgViewIndex
  * derived types are zero based.
  *
  * The following index types are currently supported:
- *  - MSG_ViewIndex - an index into the list of messages or folders or groups,
+ *  - nsMsgViewIndex - an index into the list of messages or folders or groups,
  *    where zero is the first one to show, one is the second, etc...
  *  - AB_SelectionIndex
  *  - AB_NameCompletionIndex
  */
 
-/* I'm not sure it's correct to carry these over into Mozilla, but we can always take them out */
-typedef enum _XP_IndexType
-{
-	kViewIndex = 0,
-	kSelectionIndex,
-	kNameCompletionIndex
-} XP_IndexType;
+typedef PRUint32 nsMsgViewIndex;
 
-typedef uint32 XP_Index;
-typedef XP_Index MSG_ViewIndex;
-typedef MSG_ViewIndex MsgViewIndex; 
-
-/* XP_INDEXNONE and MSG_VIEWINDEXNONE are used to indicate an invalid or
- * non-existent index.
- */
-const XP_Index      XP_INDEXNONE      = 0xFFFFFFFF;
-const MSG_ViewIndex MSG_VIEWINDEXNONE = 0xFFFFFFFF;
+const nsMsgViewIndex nsMsgViewIndex_None = 0xFFFFFFFF;
 
 /* Message priorities as determined by X-Priority hdr, or Priority header? */
-typedef enum
-{
-  MSG_PriorityNotSet = 0,
-  MSG_NoPriority = 1,
-  MSG_LowestPriority,
-  MSG_LowPriority,
-  MSG_NormalPriority,
-  MSG_HighPriority,
-  MSG_HighestPriority
-} MSG_PRIORITY;
+enum nsMsgPriority {
+  nsMsgPriority_NotSet = 0,
+  nsMsgPriority_None = 1,
+  nsMsgPriority_Lowest,
+  nsMsgPriority_Low,
+  nsMsgPriority_Normal,
+  nsMsgPriority_High,
+  nsMsgPriority_Highest
+};
 
 // The following enums are all persistent in databases, so don't go changing the values!
-enum nsMsgSortOrder
-{
-	nsMSG_SortTypeNone = 0,
-	nsMSG_SortTypeAscending = 1,
-	nsMSG_SortTypeDescending = 2
+enum nsMsgSortOrder {
+  nsMsgSortOrder_None = 0,
+  nsMsgSortOrder_Ascending = 1,
+  nsMsgSortOrder_Descending = 2
 };
 
 // We should be using the property name we're sorting by instead of these types.
-enum nsMsgSortType
-{
-	nsMSG_SortByDate = 0x12,
-	nsMSG_SortBySubject = 0x13,
-	nsMSG_SortByAuthor = 0x14,
-	nsMSG_SortById = 0x15,
-	nsMSG_SortByThread = 0x16,
-	nsMSG_SortByPriority = 0x17,
-	nsMSG_SortByStatus = 0x18,
-	nsMSG_SortBySize = 0x19,
-	nsMSG_SortByFlagged = 0x1a,
-	nsMSG_SortByUnread = 0x1b,
-	nsMSG_SortByRecipient
+enum nsMsgSortType {
+  nsMsgSortType_Date = 0x12,
+  nsMsgSortType_Subject = 0x13,
+  nsMsgSortType_Author = 0x14,
+  nsMsgSortType_Id = 0x15,
+  nsMsgSortType_Thread = 0x16,
+  nsMsgSortType_Priority = 0x17,
+  nsMsgSortType_Status = 0x18,
+  nsMsgSortType_Size = 0x19,
+  nsMsgSortType_Flagged = 0x1a,
+  nsMsgSortType_Unread = 0x1b,
+  nsMsgSortType_Recipient
 };
 
-enum nsMsgViewType
-{
-	nsMSG_ViewAny = 0,		// this view type matches any other view type, 
-							// for the purpose of matching cached views.
-							// Else, it's equivalent to ViewAllThreads
-	nsMSG_ViewAllThreads = 1,		// default view, no killed threads
-	nsMSG_ViewOnlyThreadsWithNew = 2,
-	nsMSG_ViewOnlyNewHeaders = 4,		
-	nsMSG_ViewWatchedThreadsWithNew = 5,
-	nsMSG_ViewCacheless		// this would be for cacheless imap
+enum nsMsgViewType {
+  nsMsgViewType_Any = 0,		// this view type matches any other view type, 
+                                // for the purpose of matching cached views.
+                                // Else, it's equivalent to ViewAllThreads
+  nsMsgViewType_AllThreads = 1,		// default view, no killed threads
+  nsMsgViewType_OnlyThreadsWithNew = 2,
+  nsMsgViewType_OnlyNewHeaders = 4,		
+  nsMsgViewType_WatchedThreadsWithNew = 5,
+  nsMsgViewType_Cacheless		// this would be for cacheless imap
 };
 
 

@@ -39,6 +39,7 @@ static const char *	kUnreadPendingMessagesColumnName = "unreadPendingMsgs";
 static const char * kMailboxNameColumnName = "mailboxName";
 
 nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
+  : m_folderDate()      // now
 {
 	m_mdbTable = NULL;
 	m_mdbRow = NULL;
@@ -50,7 +51,6 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 	// mail only (for now)
 	m_folderSize = 0;
 	m_expungedBytes = 0;	// sum of size of deleted messages in folder
-	m_folderDate = 0;
 	m_highWaterMessageKey = 0;
 	
 	// IMAP only
@@ -182,7 +182,7 @@ nsresult nsDBFolderInfo::InitMDBInfo()
 	return ret;
 }
 
-void nsDBFolderInfo::SetHighWater(MessageKey highWater, PRBool force /* = FALSE */)
+void nsDBFolderInfo::SetHighWater(nsMsgKey highWater, PRBool force /* = FALSE */)
 {
 	if (force || m_highWaterMessageKey < highWater)
 	{
@@ -201,12 +201,12 @@ void	nsDBFolderInfo::SetFolderDate(time_t folderDate)
 }
 
 
-MessageKey	nsDBFolderInfo::GetHighWater() 
+nsMsgKey	nsDBFolderInfo::GetHighWater() 
 {
 	return m_highWaterMessageKey;
 }
 
-void nsDBFolderInfo::SetExpiredMark(MessageKey expiredKey)
+void nsDBFolderInfo::SetExpiredMark(nsMsgKey expiredKey)
 {
 }
 
@@ -215,7 +215,7 @@ int	nsDBFolderInfo::GetDiskVersion()
 	return m_version;
 }
 
-PRBool nsDBFolderInfo::AddLaterKey(MessageKey key, time_t until)
+PRBool nsDBFolderInfo::AddLaterKey(nsMsgKey key, time_t *until)
 {
 	return PR_FALSE;
 }
@@ -225,9 +225,9 @@ PRInt32	nsDBFolderInfo::GetNumLatered()
 	return 0;
 }
 
-MessageKey	nsDBFolderInfo::GetLateredAt(PRInt32 laterIndex, time_t *pUntil)
+nsMsgKey	nsDBFolderInfo::GetLateredAt(PRInt32 laterIndex, time_t *pUntil)
 {
-	return MSG_MESSAGEKEYNONE;
+	return nsMsgKey_None;
 }
 
 void nsDBFolderInfo::RemoveLateredAt(PRInt32 laterIndex)
@@ -394,12 +394,12 @@ void nsDBFolderInfo::SetImapUidValidity(PRInt32 uidValidity)
 	m_ImapUidValidity = uidValidity;
 }
 
-MessageKey nsDBFolderInfo::GetLastMessageLoaded() 
+nsMsgKey nsDBFolderInfo::GetLastMessageLoaded() 
 {
 	return m_lastMessageLoaded;
 }
 
-void nsDBFolderInfo::SetLastMessageLoaded(MessageKey lastLoaded) 
+void nsDBFolderInfo::SetLastMessageLoaded(nsMsgKey lastLoaded) 
 {
 	m_lastMessageLoaded = lastLoaded;
 }

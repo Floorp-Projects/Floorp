@@ -25,6 +25,7 @@
  */
 
 #include "msgCore.h"    // precompiled header...
+#include "MailNewsTypes.h"
 
 #ifdef HAVE_PANES
 class MSG_Master;
@@ -61,11 +62,6 @@ class MessageDBView;
 #ifdef HAVE_PANES
 #include "msgpane.h"
 #endif
-
-static NS_DEFINE_IID(kINNTPNewsgroupListIID, NS_INNTPNEWSGROUPLIST_IID);
-
-/* temporary hack until MessageKey is defined */
-typedef PRUint32 MessageKey;
 
 extern "C"
 {
@@ -160,9 +156,9 @@ protected:
   MSG_Master		*m_master;
 #endif
   
-  MessageKey		m_lastProcessedNumber;
-  MessageKey		m_firstMsgNumber;
-  MessageKey		m_lastMsgNumber;
+  nsMsgKey		m_lastProcessedNumber;
+  nsMsgKey		m_firstMsgNumber;
+  nsMsgKey		m_lastMsgNumber;
   PRInt32			m_firstMsgToDownload;
   PRInt32			m_lastMsgToDownload;
   
@@ -185,7 +181,7 @@ nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, kINNTPNewsgroupListIID);
+NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, nsINNTPNewsgroupList::IID());
 
 nsresult
 nsNNTPNewsgroupList::InitNewsgroupList(const char *url, const char *groupName)

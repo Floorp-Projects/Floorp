@@ -37,20 +37,8 @@
 #include "nsFileSpec.h"
 #include "nsMsgFolderFlags.h"
 
-static NS_DEFINE_IID(kIRDFMSGFolderDataSourceIID,	NS_IRDFMSGFOLDERDATASOURCE_IID);
-static NS_DEFINE_IID(kIRDFDataSourceIID,					NS_IRDFDATASOURCE_IID);
-static NS_DEFINE_IID(kIRDFServiceIID,							NS_IRDFSERVICE_IID);
-static NS_DEFINE_IID(kIRDFResourceFactoryIID,			NS_IRDFRESOURCEFACTORY_IID);
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,		NS_RDFINMEMORYDATASOURCE_CID);
-static NS_DEFINE_IID(kIMsgFolderIID,							NS_IMSGFOLDER_IID);
-static NS_DEFINE_IID(kIMsgLocalMailFolderIID,					NS_IMSGLOCALMAILFOLDER_IID);
-static NS_DEFINE_IID(kIRDFArcsOutCursorIID,				NS_IRDFARCSOUTCURSOR_IID);
-static NS_DEFINE_IID(kIRDFAssertionCursorIID,			NS_IRDFASSERTIONCURSOR_IID);
-static NS_DEFINE_IID(kIRDFCursorIID,							NS_IRDFCURSOR_IID);
-static NS_DEFINE_IID(kISupportsIID,								NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIRDFNodeIID,								NS_IRDFNODE_IID);
-
 
 nsIRDFResource* nsMSGFolderDataSource::kNC_Child;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Folder;
@@ -146,7 +134,7 @@ nsMSGFolderDataSource::nsMSGFolderDataSource()
 	mObservers = nsnull;
 
 	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                             kIRDFServiceIID,
+                                             nsIRDFService::IID(),
                                              (nsISupports**) &gRDFService);
 
 	PR_ASSERT(NS_SUCCEEDED(rv));
@@ -179,7 +167,7 @@ nsMSGFolderDataSource::~nsMSGFolderDataSource (void)
 }
 
 
-NS_IMPL_ISUPPORTS(nsMSGFolderDataSource, kIRDFMSGFolderDataSourceIID);
+NS_IMPL_ISUPPORTS(nsMSGFolderDataSource, nsIRDFMSGFolderDataSource::IID());
 
  // nsIRDFDataSource methods
 NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
@@ -192,8 +180,6 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
 
   nsresult rv;
 
-	nsIRDFResourceFactory *folderFactory;
-
   if (! kNC_Child) {
     gRDFService->GetResource(kURINC_child,   &kNC_Child);
     gRDFService->GetResource(kURINC_Folder,  &kNC_Folder);
@@ -203,7 +189,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
 
 	//create the folder for the root folder
 	nsIMsgFolder *rootFolder;
-	if(NS_SUCCEEDED(kNC_MSGFolderRoot->QueryInterface(kIMsgFolderIID, (void**)&rootFolder)))
+	if(NS_SUCCEEDED(kNC_MSGFolderRoot->QueryInterface(nsIMsgFolder::IID(), (void**)&rootFolder)))
 	{		
 		if(rootFolder)
 		{
@@ -246,7 +232,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
 		return NS_ERROR_RDF_NO_VALUE;
 
 	nsIMsgFolder* folder;
-	if (NS_SUCCEEDED(source->QueryInterface(kIMsgFolderIID, (void**) &folder)))
+	if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::IID(), (void**) &folder)))
 	{
 
     nsresult rv;
@@ -286,7 +272,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTargets(nsIRDFResource* source,
   nsresult rv = NS_ERROR_FAILURE;
 
 	nsIMsgFolder* folder;
-	if(NS_SUCCEEDED(source->QueryInterface(kIMsgFolderIID, (void**)&folder)))
+	if(NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::IID(), (void**)&folder)))
 	{
 
 		if (peq(kNC_Child, property))
@@ -456,7 +442,7 @@ nsMSGFolderDataSource::InitLocalFolders(nsIMsgFolder* aParentFolder, nsNativeFil
 
 			PR_Free(fileurl);
 
-			if(NS_SUCCEEDED(resource->QueryInterface(kIMsgFolderIID, (void**)&folder)))
+			if(NS_SUCCEEDED(resource->QueryInterface(nsIMsgFolder::IID(), (void**)&folder)))
 			{
 				char * folderName;
 
@@ -464,7 +450,7 @@ nsMSGFolderDataSource::InitLocalFolders(nsIMsgFolder* aParentFolder, nsNativeFil
 				folder->SetName(folderName);
 
 				nsIMsgLocalMailFolder *mailFolder;
-				if(NS_SUCCEEDED(folder->QueryInterface(kIMsgLocalMailFolderIID, (void**)&mailFolder)))
+				if(NS_SUCCEEDED(folder->QueryInterface(nsIMsgLocalMailFolder::IID(), (void**)&mailFolder)))
 				{
 					mailFolder->SetPathName(pathStr);
 					NS_IF_RELEASE(mailFolder);
@@ -495,14 +481,14 @@ nsMSGFolderDataSource::InitLocalFolders(nsIMsgFolder* aParentFolder, nsNativeFil
 
 		PR_Free(fileurl);
 
-		if(NS_SUCCEEDED(resource->QueryInterface(kIMsgFolderIID, (void**)&folder)))
+		if(NS_SUCCEEDED(resource->QueryInterface(nsIMsgFolder::IID(), (void**)&folder)))
 		{
 			char * folderName;
 			folder->GetNameFromPathName(pathStr, &folderName);
 			folder->SetName(folderName);
 
 			nsIMsgLocalMailFolder *mailFolder;
-			if(NS_SUCCEEDED(folder->QueryInterface(kIMsgLocalMailFolderIID, (void**)&mailFolder)))
+			if(NS_SUCCEEDED(folder->QueryInterface(nsIMsgLocalMailFolder::IID(), (void**)&mailFolder)))
 			{
 				mailFolder->SetPathName(pathStr);
 				NS_IF_RELEASE(mailFolder);
@@ -682,7 +668,7 @@ SingletonMsgFolderCursor::GetTruthValue(PRBool* aTruthValue)
 }
 
 
-NS_IMPL_ISUPPORTS(SingletonMsgFolderCursor, kIRDFAssertionCursorIID);
+NS_IMPL_ISUPPORTS(SingletonMsgFolderCursor, nsIRDFAssertionCursor::IID());
 
 ArrayMsgFolderCursor::ArrayMsgFolderCursor(nsIRDFResource* u,
 											   nsIRDFResource* s,
@@ -781,9 +767,9 @@ ArrayMsgFolderCursor::QueryInterface(REFNSIID iid, void** result)
     return NS_ERROR_NULL_POINTER;
 
   *result = nsnull;
-  if (iid.Equals(kIRDFAssertionCursorIID) ||
-      iid.Equals(kIRDFCursorIID) ||
-      iid.Equals(kISupportsIID)) {
+  if (iid.Equals(nsIRDFAssertionCursor::IID()) ||
+      iid.Equals(::nsIRDFCursor::IID()) ||
+      iid.Equals(::nsISupports::IID())) {
       *result = NS_STATIC_CAST(nsIRDFAssertionCursor*, this);
       AddRef();
       return NS_OK;
@@ -869,9 +855,9 @@ MsgFolderArcsOutCursor::QueryInterface(REFNSIID iid, void** result)
     return NS_ERROR_NULL_POINTER;
 
   *result = nsnull;
-  if (iid.Equals(kIRDFCursorIID) ||
-      iid.Equals(kIRDFArcsOutCursorIID) ||
-      iid.Equals(kISupportsIID)) {
+  if (iid.Equals(nsIRDFCursor::IID()) ||
+      iid.Equals(nsIRDFArcsOutCursor::IID()) ||
+      iid.Equals(::nsISupports::IID())) {
       *result = NS_STATIC_CAST(nsIRDFArcsOutCursor*, this);
       AddRef();
       return NS_OK;

@@ -3,7 +3,6 @@
 #include "nsMsgBaseCID.h"
 #include "nsIMsgRFC822Parser.h"
 
-static NS_DEFINE_IID(kIMsgRFC822ParserIID, NS_IMSGRFC822PARSER_IID); 
 static NS_DEFINE_CID(kMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID); 
 
 /* This is just a testing stub added by mscott. All I'm doing is loading a component,
@@ -22,7 +21,7 @@ static NS_DEFINE_CID(kMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID);
    
    nsresult res = nsRepository::CreateInstance(kMsgRFC822ParserCID, 
                                                NULL, 
-                                               kIMsgRFC822ParserIID, 
+                                               nsIMsgRFC822Parser::IID(), 
                                                (void **) &sample); 
 
    if (res == NS_OK && sample) { 

@@ -12,7 +12,7 @@ class nsDBChangeAnnouncer;
 class nsIDBChangeListener : public nsISupports
 {
 public:
-	NS_IMETHOD OnKeyChange(MessageKey aKeyChanged, int32 aFlags, 
+	NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, int32 aFlags, 
 		nsIDBChangeListener * aInstigator) = 0;
 	NS_IMETHOD OnAnnouncerGoingAway(nsDBChangeAnnouncer * instigator) ;
 };

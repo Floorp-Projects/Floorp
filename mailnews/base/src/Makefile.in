@@ -41,7 +41,6 @@ CPPSRCS = \
 	nsMsgLocalMailFolder.cpp \
 	nsMsgImapMailFolder.cpp \
 	nsNewsSet.cpp \
-	nsMsg.cpp \
 	nsLocalFolderSummarySpec.cpp	\
 	$(NULL)
 

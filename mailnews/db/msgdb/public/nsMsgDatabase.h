@@ -50,7 +50,7 @@ public:
 	virtual PRBool RemoveListener(nsIDBChangeListener *listener);
 
 	// convenience routines to notify all our ChangeListeners
-	void NotifyKeyChangeAll(MessageKey keyChanged, PRInt32 flags, 
+	void NotifyKeyChangeAll(nsMsgKey keyChanged, PRInt32 flags, 
 		nsIDBChangeListener *instigator);
 	void NotifyAnnouncerGoingAway(nsDBChangeAnnouncer *instigator);
 };
@@ -70,8 +70,8 @@ public:
 // This is to be used as an interchange object, to make creating nsMsgHeaders easier.
 typedef struct _MessageHdrStruct
 {
-	MessageKey   m_threadId; 
-	MessageKey	m_messageKey; 	
+	nsMsgKey   m_threadId; 
+	nsMsgKey	m_messageKey; 	
 	nsString	m_subject;		// should be nsCString when it's impl
 	nsString	m_author;		// should be nsCString when it's impl
 	nsString	m_messageId;	// should be nsCString when it's impl
@@ -82,7 +82,7 @@ typedef struct _MessageHdrStruct
 	PRUint32	m_flags;
 	PRInt16		m_numChildren;		// for top-level threads
 	PRInt16		m_numNewChildren;	// for top-level threads
-	MSG_PRIORITY m_priority;
+	nsMsgPriority m_priority;
 } MessageHdrStruct;
 
 // I don't think this is going to be an interface, actually, since it's just
@@ -106,11 +106,11 @@ public:
 	// In 4.x, it was mainly used to remove corrupted databases.
 	virtual nsresult	ForceClosed();
 	// get a message header for the given key. Caller must release()!
-	virtual nsresult	GetMsgHdrForKey(MessageKey messageKey, nsMsgHdr **msgHdr);
+	virtual nsresult	GetMsgHdrForKey(nsMsgKey key, nsMsgHdr **msgHdr);
 	// create a new message header from a hdrStruct. Caller must release resulting header,
 	// after adding any extra properties they want.
 	virtual nsresult	CreateNewHdr(PRBool *newThread, MessageHdrStruct *hdrStruct, nsMsgHdr **newHdr, PRBool notify = FALSE);
-	virtual nsresult	CreateNewHdr(MessageKey key, nsMsgHdr **newHdr);
+	virtual nsresult	CreateNewHdr(nsMsgKey key, nsMsgHdr **newHdr);
 	// extract info from an nsMsgHdr into a MessageHdrStruct
 	virtual nsresult	GetMsgHdrStructFromnsMsgHdr(nsMsgHdr *msgHdr, MessageHdrStruct &hdrStruct);
 
@@ -130,63 +130,63 @@ public:
 
 	virtual nsresult MarkHdrRead(nsMsgHdr *msgHdr, PRBool bRead, nsIDBChangeListener *instigator);
 	// MDN support
-	virtual nsresult		MarkMDNNeeded(MessageKey messageKey, PRBool bNeeded,
+	virtual nsresult		MarkMDNNeeded(nsMsgKey key, PRBool bNeeded,
 									  nsIDBChangeListener *instigator = NULL);
 						// MarkMDNneeded only used when mail server is a POP3 server
 						// or when the IMAP server does not support user defined
 						// PERMANENTFLAGS
-	virtual nsresult		IsMDNNeeded(MessageKey messageKey, PRBool *isNeeded);
+	virtual nsresult		IsMDNNeeded(nsMsgKey key, PRBool *isNeeded);
 
-	virtual nsresult		MarkMDNSent(MessageKey messageKey, PRBool bNeeded,
+	virtual nsresult		MarkMDNSent(nsMsgKey key, PRBool bNeeded,
 									nsIDBChangeListener *instigator = NULL);
-	virtual nsresult		IsMDNSent(MessageKey messageKey, PRBool *isSent);
+	virtual nsresult		IsMDNSent(nsMsgKey key, PRBool *isSent);
 
 // methods to get and set docsets for ids.
-	virtual nsresult		MarkRead(MessageKey messageKey, PRBool bRead, 
+	virtual nsresult		MarkRead(nsMsgKey key, PRBool bRead, 
 								nsIDBChangeListener *instigator = NULL);
 
-	virtual nsresult		MarkReplied(MessageKey messageKey, PRBool bReplied, 
+	virtual nsresult		MarkReplied(nsMsgKey key, PRBool bReplied, 
 								nsIDBChangeListener *instigator = NULL);
 
-	virtual nsresult		MarkForwarded(MessageKey messageKey, PRBool bForwarded, 
+	virtual nsresult		MarkForwarded(nsMsgKey key, PRBool bForwarded, 
 								nsIDBChangeListener *instigator = NULL);
 
-	virtual nsresult		MarkHasAttachments(MessageKey messageKey, PRBool bHasAttachments, 
+	virtual nsresult		MarkHasAttachments(nsMsgKey key, PRBool bHasAttachments, 
 								nsIDBChangeListener *instigator = NULL);
 
 #ifdef WE_DO_THREADING_YET
-	virtual nsresult		MarkThreadIgnored(nsThreadMessageHdr *thread, MessageKey threadKey, PRBool bIgnored,
+	virtual nsresult		MarkThreadIgnored(nsThreadMessageHdr *thread, nsMsgKey threadKey, PRBool bIgnored,
 									nsIDBChangeListener *instigator = NULL);
-	virtual nsresult		MarkThreadWatched(nsThreadMessageHdr *thread, MessageKey threadKey, PRBool bWatched,
+	virtual nsresult		MarkThreadWatched(nsThreadMessageHdr *thread, nsMsgKey threadKey, PRBool bWatched,
 									nsIDBChangeListener *instigator = NULL);
 #endif
-	virtual nsresult		IsRead(MessageKey messageKey, PRBool *pRead);
-	virtual nsresult		IsIgnored(MessageKey messageKey, PRBool *pIgnored);
-	virtual nsresult		IsMarked(MessageKey messageKey, PRBool *pMarked);
-	virtual nsresult		HasAttachments(MessageKey messageKey, PRBool *pHasThem);
+	virtual nsresult		IsRead(nsMsgKey key, PRBool *pRead);
+	virtual nsresult		IsIgnored(nsMsgKey key, PRBool *pIgnored);
+	virtual nsresult		IsMarked(nsMsgKey key, PRBool *pMarked);
+	virtual nsresult		HasAttachments(nsMsgKey key, PRBool *pHasThem);
 
 	virtual nsresult		MarkAllRead(nsMsgKeyArray *thoseMarked);
 	virtual nsresult		MarkReadByDate (time_t startDate, time_t endDate, nsMsgKeyArray *markedIds);
 
-	virtual nsresult		DeleteMessages(nsMsgKeyArray &messageKeys, nsIDBChangeListener *instigator);
-	virtual nsresult		DeleteMessage(MessageKey messageKey, 
+	virtual nsresult		DeleteMessages(nsMsgKeyArray &nsMsgKeys, nsIDBChangeListener *instigator);
+	virtual nsresult		DeleteMessage(nsMsgKey key, 
 										nsIDBChangeListener *instigator = NULL,
 										PRBool commit = PR_TRUE);
 	virtual nsresult		DeleteHeader(nsMsgHdr *msgHdr, nsIDBChangeListener *instigator, PRBool commit, PRBool notify = TRUE);
 #ifdef WE_DO_UNDO
 	virtual nsresult		UndoDelete(nsMsgHdr *msgHdr);
 #endif
-	virtual nsresult		MarkLater(MessageKey messageKey, time_t until);
-	virtual nsresult		MarkMarked(MessageKey messageKey, PRBool mark,
+	virtual nsresult		MarkLater(nsMsgKey key, time_t *until);
+	virtual nsresult		MarkMarked(nsMsgKey key, PRBool mark,
 										nsIDBChangeListener *instigator = NULL);
-	virtual nsresult		MarkOffline(MessageKey messageKey, PRBool offline,
+	virtual nsresult		MarkOffline(nsMsgKey key, PRBool offline,
 										nsIDBChangeListener *instigator);
 #ifdef WE_DO_IMAP
-	virtual PRBool			AllMessageKeysImapDeleted(const nsMsgKeyArray &keys);
+	virtual PRBool			AllnsMsgKeysImapDeleted(const nsMsgKeyArray &keys);
 #endif
-	virtual nsresult		MarkImapDeleted(MessageKey messageKey, PRBool deleted,
+	virtual nsresult		MarkImapDeleted(nsMsgKey key, PRBool deleted,
 										nsIDBChangeListener *instigator);
-	virtual MessageKey		GetFirstNew();
+	virtual nsMsgKey		GetFirstNew();
 	virtual PRBool			HasNew();
 	virtual void			ClearNewList(PRBool notify = FALSE);
 
@@ -235,7 +235,7 @@ protected:
 	static int		FindInCache(nsMsgDatabase* pMessageDB);
 			PRBool	MatchDbName(nsFilePath &dbName);	// returns TRUE if they match
 
-	virtual nsresult SetKeyFlag(MessageKey messageKey, PRBool set, PRInt32 flag,
+	virtual nsresult SetKeyFlag(nsMsgKey key, PRBool set, PRInt32 flag,
 							  nsIDBChangeListener *instigator = NULL);
 	virtual PRBool	SetHdrFlag(nsMsgHdr *, PRBool bSet, MsgFlags flag);
 	virtual			nsresult			IsHeaderRead(nsMsgHdr *hdr, PRBool *pRead);

@@ -23,11 +23,6 @@
 #include "nsMimeObjectClassAccess.h"
 
 /* 
- * These macros are used to define a class IID for our component. 
- */
-static NS_DEFINE_IID(kIMimeObjectClassAccess, NS_IMIME_OBJECT_CLASS_ACCESS_IID);
-
-/* 
  * This function will be used by the factory to generate an 
  * mime object class object....
  */
@@ -41,7 +36,7 @@ nsresult NS_NewMimeObjectClassAccess(nsIMimeObjectClassAccess ** aInstancePtrRes
 	{
 		nsMimeObjectClassAccess *obj = new nsMimeObjectClassAccess();
 		if (obj)
-			return obj->QueryInterface(kIMimeObjectClassAccess, (void**) aInstancePtrResult);
+			return obj->QueryInterface(nsIMimeObjectClassAccess::IID(), (void**) aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}
@@ -55,7 +50,7 @@ nsresult NS_NewMimeObjectClassAccess(nsIMimeObjectClassAccess ** aInstancePtrRes
  */
 NS_IMPL_ADDREF(nsMimeObjectClassAccess)
 NS_IMPL_RELEASE(nsMimeObjectClassAccess)
-NS_IMPL_QUERY_INTERFACE(nsMimeObjectClassAccess, kIMimeObjectClassAccess); /* we need to pass in the interface ID of this interface */
+NS_IMPL_QUERY_INTERFACE(nsMimeObjectClassAccess, nsIMimeObjectClassAccess::IID()); /* we need to pass in the interface ID of this interface */
 
 /*
  * nsMimeObjectClassAccess definitions....

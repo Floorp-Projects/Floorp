@@ -33,9 +33,6 @@
 #include "nsNNTPNewsgroupList.h"
 #include "nsNNTPNewsgroup.h"
 
-static NS_DEFINE_IID(kINNTPHostIID, NS_INNTPHOST_IID);
-static NS_DEFINE_IID(kINNTPNewsgroupIID, NS_INNTPNEWSGROUP_IID);
-
 class nsNNTPHostStub : public nsINNTPHost 
 {
 public:
@@ -246,7 +243,7 @@ protected:
 	
 };
 
-NS_IMPL_ISUPPORTS(nsNNTPHostStub, kINNTPHostIID);
+NS_IMPL_ISUPPORTS(nsNNTPHostStub, nsINNTPHost::IID());
 
 nsNNTPHostStub::nsNNTPHostStub(const char * name, PRInt32 port)
 {
@@ -479,7 +476,7 @@ nsresult nsNNTPHostStub::GetFirstGroupNeedingCounts(char ** aFirstGroup)
 	if (groupToBe)
 	{
 		nsINNTPNewsgroup * group = nsnull;
-		groupToBe->QueryInterface(kINNTPNewsgroupIID, (void **) &group);
+		groupToBe->QueryInterface(nsINNTPNewsgroup::IID(), (void **) &group);
 		if (group)
 		{
 			group->GetName(aFirstGroup);
@@ -617,7 +614,7 @@ nsresult nsNNTPHostStub::FindGroup(const char * name, nsINNTPNewsgroup ** retVal
 		if (elem)
 		{	
 			nsINNTPNewsgroup * group = nsnull;
-			elem->QueryInterface(kINNTPNewsgroupIID, (void **) &group);
+			elem->QueryInterface(nsINNTPNewsgroup::IID(), (void **) &group);
 			if (group)
 			{
 				char * groupName = nsnull;
@@ -708,7 +705,7 @@ nsresult NS_NewNNTPHost(nsINNTPHost ** aInstancePtr, const char * name, PRUint32
 	{
 		nsNNTPHostStub * host = new nsNNTPHostStub(name, port);
 		if (host)
-			rv =host->QueryInterface(kINNTPHostIID, (void **) aInstancePtr);		
+			rv =host->QueryInterface(nsINNTPHost::IID(), (void **) aInstancePtr);		
 	}
 
 	return rv;

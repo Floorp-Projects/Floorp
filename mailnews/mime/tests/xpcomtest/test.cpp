@@ -3,10 +3,7 @@
 #include "nsRFC822toHTMLStreamConverter.h"
 #include "nsMimeObjectClassAccess.h"
 
-static NS_DEFINE_IID(kIStreamConverterIID, NS_ISTREAM_CONVERTER_IID);
 static NS_DEFINE_CID(kRFC822toHTMLStreamConverterCID, NS_RFC822_HTML_STREAM_CONVERTER_CID); 
-
-static NS_DEFINE_IID(kIMimeObjectClassAccessIID, NS_IMIME_OBJECT_CLASS_ACCESS_IID);
 static NS_DEFINE_CID(kMimeObjectClassAccessCID, NS_MIME_OBJECT_CLASS_ACCESS_CID); 
 
 /* 
@@ -25,7 +22,7 @@ int main(int argc, char *argv[])
                                 "mime.dll", PR_FALSE, PR_FALSE);
   
   nsresult res = nsRepository::CreateInstance(kRFC822toHTMLStreamConverterCID, 
-                    NULL, kIStreamConverterIID, (void **) &sample); 
+                    NULL, nsIStreamConverter::IID(), (void **) &sample); 
   if (res == NS_OK && sample) 
   { 
     void *stream;
@@ -38,7 +35,7 @@ int main(int argc, char *argv[])
 
   printf("Time for try the nsMimeObjectClassAccess class...\n");
   res = nsRepository::CreateInstance(kMimeObjectClassAccessCID, 
-                    NULL, kIMimeObjectClassAccessIID, 
+                    NULL, nsIMimeObjectClassAccess::IID(), 
                     (void **) &objAccess); 
   if (res == NS_OK && objAccess) 
   { 

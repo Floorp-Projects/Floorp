@@ -47,7 +47,7 @@ public:
   // If the db is NULL, then returns a URL that represents the entire
   // folder as a whole.
 #ifdef HAVE_DB
-  NS_IMETHOD BuildUrl(nsMsgDatabase *db, MessageKey key, char ** url);
+  NS_IMETHOD BuildUrl(nsMsgDatabase *db, nsMsgKey key, char ** url);
 #endif
 
 #ifdef HAVE_MASTER
@@ -63,7 +63,7 @@ public:
                                          MWContext *currentContext,
                                          MSG_UrlQueue *urlQueue,
                                          PRBool deleteAfterCopy,
-                                         MessageKey nextKey = MSG_MESSAGEKEYNONE);
+                                         nsMsgKey nextKey = nsMsgKey_None);
 
     
   NS_IMETHOD BeginCopyingMessages(MSG_FolderInfo *dstFolder, 
@@ -117,10 +117,10 @@ public:
   NS_IMETHOD HasMessages(PRBool *_retval);
   NS_IMETHOD GetNumMessages(PRUint32 *_retval);
   NS_IMETHOD GetNumMessagesToDisplay(PRUint32 *_retval);
-  NS_IMETHOD GetMessage(PRUint32 which, nsIMsg **_retval);
+  NS_IMETHOD GetMessage(PRUint32 which, nsIMessage **_retval);
   NS_IMETHOD GetMessages(nsISupportsArray **_retval);
-  NS_IMETHOD AddMessage(const nsIMsg *msg);
-  NS_IMETHOD RemoveMessage(const nsIMsg *msg);
+  NS_IMETHOD AddMessage(const nsIMessage *msg);
+  NS_IMETHOD RemoveMessage(const nsIMessage *msg);
 
 #ifdef HAVE_ADMINURL
   NS_IMETHOD GetAdminUrl(MWContext *context, MSG_AdminURLType type);
@@ -186,7 +186,7 @@ public:
   NS_IMETHOD GetFolderCSID(PRInt16 *csid);
 
 
-  NS_IMETHOD	SetLastMessageLoaded(MessageKey lastMessageLoaded);
+  NS_IMETHOD	SetLastMessageLoaded(nsMsgKey lastMessageLoaded);
   NS_IMETHOD GetLastMessageLoaded();
 #endif
 
@@ -289,7 +289,7 @@ protected:
 #endif
 
 #ifdef HAVE_DB
-  MessageKey	m_lastMessageLoaded;
+  nsMsgKey	m_lastMessageLoaded;
   // These values are used for tricking the front end into thinking that we have more 
   // messages than are really in the DB.  This is usually after and IMAP message copy where
   // we don't want to do an expensive select until the user actually opens that folder

@@ -38,7 +38,6 @@ CPPSRCS=                         \
 	nsLocalFolderSummarySpec.cpp	\
 	nsMsgLineBuffer.cpp		 \
 	nsNewsSet.cpp            \
-	nsMsg.cpp                \
 	$(NULL)
 
 CPP_OBJS=                                    \
@@ -53,7 +52,6 @@ CPP_OBJS=                                    \
 	.\$(OBJDIR)\nsMsgRDFFolder.obj       \
 	.\$(OBJDIR)\nsNewsSet.obj            \
 	.\$(OBJDIR)\nsMsgLineBuffer.obj            \
-	.\$(OBJDIR)\nsMsg.obj                \
 	$(NULL)
 
 

@@ -39,19 +39,19 @@ public:
 // methods to get and set docsets for ids.
 	virtual nsresult		MarkHdrRead(nsMsgHdr *msgHdr, PRBool bRead,
 								ChangeListener *instigator = NULL);
-	virtual nsresult		IsRead(MessageKey messageKey, PRBool *pRead);
-	virtual PRBool		IsArticleOffline(MessageKey messageKey);
+	virtual nsresult		IsRead(nsMsgKey key, PRBool *pRead);
+	virtual PRBool		IsArticleOffline(nsMsgKey key);
 	virtual nsresult		MarkAllRead(MWContext *context, IDArray *thoseMarked = NULL);
-	virtual nsresult		AddHdrFromXOver(const char * line,  MessageKey *msgId);
+	virtual nsresult		AddHdrFromXOver(const char * line,  nsMsgKey *msgId);
 	virtual nsresult		AddHdrToDB(nsMsgHdr *newHdr, PRBool *newThread, PRBool notify = PR_FALSE);
 
 	virtual nsresult		ListNextUnread(ListContext **pContext, nsMsgHdr **pResult);
 	// return highest article number we've seen.
-	virtual MessageKey		GetHighwaterArticleNum(); 
-	virtual MessageKey		GetLowWaterArticleNum();
+	virtual nsMsgKey		GetHighwaterArticleNum(); 
+	virtual nsMsgKey		GetLowWaterArticleNum();
 
-	virtual nsresult		ExpireUpTo(MessageKey expireKey);
-	virtual nsresult		ExpireRange(MessageKey startRange, MessageKey endRange);
+	virtual nsresult		ExpireUpTo(nsMsgKey expireKey);
+	virtual nsresult		ExpireRange(nsMsgKey startRange, nsMsgKey endRange);
 
 	msg_NewsArtSet			*GetNewsArtSet() {return m_set;}
 	virtual nsNewsDatabase	*GetNewsDB() ;

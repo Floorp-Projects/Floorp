@@ -31,10 +31,6 @@
 #include "prerror.h"
 #include "prprf.h"
 
-static NS_DEFINE_IID(kIMailboxUrlIID, NS_IMAILBOXURL_IID);
-static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
-
 /* the output_buffer_size must be larger than the largest possible line
  * 2000 seems good for news
  *
@@ -57,7 +53,7 @@ static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ADDREF(nsMailboxProtocol)
 NS_IMPL_RELEASE(nsMailboxProtocol)
-NS_IMPL_QUERY_INTERFACE(nsMailboxProtocol, kIStreamListenerIID); /* we need to pass in the interface ID of this interface */
+NS_IMPL_QUERY_INTERFACE(nsMailboxProtocol, nsIStreamListener::IID()); /* we need to pass in the interface ID of this interface */
 
 nsMailboxProtocol::nsMailboxProtocol(nsIURL * aURL, nsITransport * transportLayer)
 {
@@ -97,7 +93,7 @@ void nsMailboxProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 
 	if (aURL)
 	{
-		nsresult rv = aURL->QueryInterface(kIMailboxUrlIID, (void **)&m_runningUrl);
+		nsresult rv = aURL->QueryInterface(nsIMailboxUrl::IID(), (void **)&m_runningUrl);
 		if (NS_SUCCEEDED(rv) && m_runningUrl)
 		{
 			// okay, now fill in our event sinks...Note that each getter ref counts before
@@ -251,7 +247,7 @@ PRInt32 nsMailboxProtocol::SendData(const char * dataBuffer)
 			// notify the consumer that data has arrived
 			// HACK ALERT: this should really be m_runningUrl once we have NNTP url support...
 			nsIInputStream *inputStream = NULL;
-			m_outputStream->QueryInterface(kIInputStreamIID , (void **) &inputStream);
+			m_outputStream->QueryInterface(nsIInputStream::IID() , (void **) &inputStream);
 			if (inputStream)
 			{
 				m_outputConsumer->OnDataAvailable(m_runningUrl, inputStream, writeCount);
@@ -283,7 +279,7 @@ PRInt32 nsMailboxProtocol::LoadURL(nsIURL * aURL)
 		rv = aURL->GetProtocol(&protocol);
 		NS_ASSERTION(protocol && PL_strcmp(protocol, "mailbox") == 0, "this is not a mailbox url!");
 
-		rv = aURL->QueryInterface(kIMailboxUrlIID, (void **) &mailboxUrl);
+		rv = aURL->QueryInterface(nsIMailboxUrl::IID(), (void **) &mailboxUrl);
 		if (NS_SUCCEEDED(rv) && mailboxUrl)
 		{
 			NS_IF_RELEASE(m_runningUrl);

@@ -20,7 +20,7 @@ public:
 class MSG_Master
 {
 public:
-    GetFolderTree(void) {return 0;}
+    PRInt32 GetFolderTree(void) {return 0;}
 	HJ97882
 //	msg_HostTable* GetHostTable() {return m_hosttable;}
 

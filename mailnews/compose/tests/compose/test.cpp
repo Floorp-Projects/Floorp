@@ -4,10 +4,7 @@
 #include "nsIMsgCompose.h"
 #include "nsIMsgCompFields.h"
 
-static NS_DEFINE_IID(kIMsgComposeIID, NS_IMSGCOMPOSE_IID); 
 static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID); 
-
-static NS_DEFINE_CID(kIMsgCompFieldsIID, NS_IMSGCOMPFIELDS_IID); 
 static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
 
 /* This is just a testing stub added by mscott. All I'm doing is loading a component,
@@ -28,9 +25,9 @@ static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 	nsRepository::RegisterFactory(kMsgCompFieldsCID, "msgcompose.dll", PR_FALSE, PR_FALSE);
    
 	res = nsRepository::CreateInstance(kMsgCompFieldsCID, 
-												NULL, 
-												kIMsgCompFieldsIID, 
-												(void **) &pMsgCompFields); 
+                                           NULL, 
+                                           nsIMsgCompFields::IID(), 
+                                           (void **) &pMsgCompFields); 
 
 	if (res == NS_OK && pMsgCompFields) { 
 		printf("We succesfully obtained a nsIMsgCompFields interface....\n");
@@ -66,7 +63,7 @@ static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 		nsIMsgCompFields * pCopyFields;
 		res = nsRepository::CreateInstance(kMsgCompFieldsCID, 
 												NULL, 
-												kIMsgCompFieldsIID, 
+												nsIMsgCompFields::IID(), 
 												(void **) &pCopyFields); 
 
 		if (res == NS_OK && pCopyFields) { 
@@ -116,7 +113,7 @@ static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 
     res = nsRepository::CreateInstance(kMsgComposeCID, 
                                                NULL, 
-                                               kIMsgComposeIID, 
+                                               nsIMsgCompose::IID(), 
                                                (void **) &pMsgCompose); 
 
    if (res == NS_OK && pMsgCompose) { 

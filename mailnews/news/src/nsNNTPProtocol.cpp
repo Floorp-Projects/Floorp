@@ -255,10 +255,6 @@ static char * last_username_hostname=0;
 
 /* end of globals I'd like to move somewhere else */
 
-static NS_DEFINE_IID(kINntpURLIID, NS_INNTPURL_IID);
-static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
-
 nsNNTPProtocol::nsNNTPProtocol(nsIURL * aURL, nsITransport * transportLayer)
 {
   /* the following macro is used to initialize the ref counting data */
@@ -312,7 +308,7 @@ void nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 
 	if (aURL)
 	{
-		nsresult rv = aURL->QueryInterface(kINntpURLIID, (void **)&m_runningURL);
+		nsresult rv = aURL->QueryInterface(nsINntpUrl::IID(), (void **)&m_runningURL);
 		if (NS_SUCCEEDED(rv) && m_runningURL)
 		{
 			// okay, now fill in our event sinks...Note that each getter ref counts before
@@ -395,7 +391,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
   nsINntpUrl * nntpUrl = NULL;
   if (aURL)
   {
-	  rv = aURL->QueryInterface(kINntpURLIID, (void **) &nntpUrl);
+	  rv = aURL->QueryInterface(nsINntpUrl::IID(), (void **) &nntpUrl);
 	  if (NS_SUCCEEDED(rv) && nntpUrl)
 	  {
 		  // replace our old url with the new one...
@@ -888,7 +884,7 @@ PRInt32 nsNNTPProtocol::ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * b
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ADDREF(nsNNTPProtocol)
 NS_IMPL_RELEASE(nsNNTPProtocol)
-NS_IMPL_QUERY_INTERFACE(nsNNTPProtocol, kIStreamListenerIID); /* we need to pass in the interface ID of this interface */
+NS_IMPL_QUERY_INTERFACE(nsNNTPProtocol, nsIStreamListener::IID()); /* we need to pass in the interface ID of this interface */
 
 // Whenever data arrives from the connection, core netlib notifices the protocol by calling
 // OnDataAvailable. We then read and process the incoming data from the input stream. 
@@ -937,8 +933,8 @@ char *XP_AppCodeName = "Mozilla";
 const char *XP_AppCodeName = "Mozilla";
 #endif
 #define NET_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
-typedef PRUint32 MessageKey;
-const MessageKey MSG_MESSAGEKEYNONE = 0xffffffff;
+typedef PRUint32 nsMsgKey;
+const nsMsgKey nsMsgKey_None = 0xffffffff;
 
 /*
  * This function takes an error code and associated error data
@@ -1112,7 +1108,7 @@ PRInt32 nsNNTPProtocol::SendData(const char * dataBuffer)
 			// notify the consumer that data has arrived
 			// HACK ALERT: this should really be m_runningURL once we have NNTP url support...
 			nsIInputStream *inputStream = NULL;
-			m_outputStream->QueryInterface(kIInputStreamIID , (void **) &inputStream);
+			m_outputStream->QueryInterface(nsIInputStream::IID() , (void **) &inputStream);
 			if (inputStream)
 			{
 				m_outputConsumer->OnDataAvailable(m_runningURL, inputStream, writeCount);
@@ -3935,7 +3931,7 @@ PRInt32 nsNNTPProtocol::ListGroupResponse(nsIInputStream * inputStream, PRUint32
 	{
 		if (line[0] != '.')
 		{
-			long found_id = MSG_MESSAGEKEYNONE;
+			long found_id = nsMsgKey_None;
             nsresult rv;
 			sscanf(line, "%ld", &found_id);
             

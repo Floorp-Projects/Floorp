@@ -23,11 +23,6 @@
 #include "nsMsgRFC822Parser.h"	 
 #include "libi18n.h"
 
-/* use these macros to define a class IID for our component. Our object currently supports two interfaces 
-   (nsISupports and nsIMsgRFC822Parser) so we want to define constants for these two interfaces */
-static NS_DEFINE_IID(kIMsgRFC822Parser, NS_IMSGRFC822PARSER_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 // the following three functions are only here for test purposes.....because I18N stuff is not getting built
 // yet!!!!
 
@@ -103,7 +98,7 @@ nsMsgRFC822Parser::~nsMsgRFC822Parser()
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ADDREF(nsMsgRFC822Parser)
 NS_IMPL_RELEASE(nsMsgRFC822Parser)
-NS_IMPL_QUERY_INTERFACE(nsMsgRFC822Parser, kIMsgRFC822Parser); /* we need to pass in the interface ID of this interface */
+NS_IMPL_QUERY_INTERFACE(nsMsgRFC822Parser, nsIMsgRFC822Parser::IID()); /* we need to pass in the interface ID of this interface */
 
 nsresult nsMsgRFC822Parser::ParseRFC822Addresses (const char *line, char **names, char **addresses, PRUint32& numAddresses)
 {
@@ -271,7 +266,7 @@ nsresult NS_NewRFC822Parser(nsIMsgRFC822Parser** aInstancePtrResult)
 	{
 		nsMsgRFC822Parser* parser = new nsMsgRFC822Parser();
 		if (parser)
-			return parser->QueryInterface(kIMsgRFC822Parser, (void**) aInstancePtrResult);
+			return parser->QueryInterface(nsIMsgRFC822Parser::IID(), (void**) aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}

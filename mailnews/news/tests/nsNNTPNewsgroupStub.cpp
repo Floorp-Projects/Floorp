@@ -29,8 +29,6 @@
 #include "nsINNTPNewsgroup.h"
 #include "nsNNTPArticleSet.h"
 
-static NS_DEFINE_IID(kINNTPNewsgroupIID, NS_INNTPNEWSGROUP_IID);
-
 class nsNNTPNewsgroupStub : public nsINNTPNewsgroup 
 {
 
@@ -107,7 +105,7 @@ nsNNTPNewsgroupStub::~nsNNTPNewsgroupStub()
 	PR_FREEIF(m_prettyName);
 }
 
-NS_IMPL_ISUPPORTS(nsNNTPNewsgroupStub, kINNTPNewsgroupIID);
+NS_IMPL_ISUPPORTS(nsNNTPNewsgroupStub, nsINNTPNewsgroup::IID());
 
 nsresult nsNNTPNewsgroupStub::GetName(char ** aName)
 {
@@ -328,7 +326,7 @@ nsresult NS_NewNewsgroup(nsINNTPNewsgroup **info,
 	if (group)
 	{
 		group->SetSubscribed(subscribed);
-		rv = group->QueryInterface(kINNTPNewsgroupIID, (void **) info);
+		rv = group->QueryInterface(nsINNTPNewsgroup::IID(), (void **) info);
 	}
 
 	return rv;

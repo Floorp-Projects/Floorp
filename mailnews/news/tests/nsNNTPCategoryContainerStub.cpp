@@ -28,9 +28,6 @@
 #include "prmem.h"
 #include <stdio.h>
 
-static NS_DEFINE_IID(kINNTPCategoryContainerIID, NS_INNTPCATEGORYCONTAINER_IID);
-
-
 class nsNNTPCategoryContainerStub : public nsISupports {
  public: 
 	nsNNTPCategoryContainerStub();
@@ -45,7 +42,7 @@ class nsNNTPCategoryContainerStub : public nsISupports {
 
 };
 
-NS_IMPL_ISUPPORTS(nsNNTPCategoryContainerStub, kINNTPCategoryContainerIID);
+NS_IMPL_ISUPPORTS(nsNNTPCategoryContainerStub, nsINNTPCategoryContainer::IID());
 
 nsNNTPCategoryContainerStub::nsNNTPCategoryContainerStub()
 {
@@ -95,7 +92,7 @@ nsresult NS_NewCategoryContainerFromNewsgroup(nsINNTPCategoryContainer ** aInsta
 	{
 		stub = new nsNNTPCategoryContainerStub();
 		stub->SetRootCategory(group);
-		rv = stub->QueryInterface(kINNTPCategoryContainerIID, (void **) aInstancePtr);
+		rv = stub->QueryInterface(nsINNTPCategoryContainer::IID(), (void **) aInstancePtr);
 	}
 
 	return rv;

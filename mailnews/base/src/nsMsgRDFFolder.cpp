@@ -23,13 +23,6 @@
 #include "prmem.h"
 #include "plstr.h"
 
-
-static NS_DEFINE_IID(kIRDFResourceIID,					NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kIRDFNodeIID,							NS_IRDFNODE_IID);
-static NS_DEFINE_IID(kIRDFResourceFactoryIID,		NS_IRDFRESOURCEFACTORY_IID);
-static NS_DEFINE_IID(kISupportsIID,							NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIMsgRDFFolderIID,					NS_IMSGRDFFOLDER_IID);
-
 nsMsgRDFFolder::nsMsgRDFFolder(const char* uri)
 {
 	NS_INIT_REFCNT();
@@ -57,10 +50,10 @@ nsMsgRDFFolder::QueryInterface(REFNSIID iid, void** result)
 		return NS_ERROR_NULL_POINTER;
 
 	*result = nsnull;
-	if(iid.Equals(kIRDFResourceIID) ||
-    iid.Equals(kIRDFNodeIID) ||
-		iid.Equals(kIMsgRDFFolderIID) ||
-		iid.Equals(kISupportsIID)) {
+	if(iid.Equals(nsIRDFResource::IID()) ||
+    iid.Equals(nsIRDFNode::IID()) ||
+		iid.Equals(nsIMsgRDFFolder::IID()) ||
+		iid.Equals(::nsISupports::IID())) {
     *result = NS_STATIC_CAST(nsIMsgRDFFolder*, this);
 	}
 
@@ -77,7 +70,7 @@ NS_IMETHODIMP nsMsgRDFFolder::EqualsNode(nsIRDFNode* node, PRBool* result) const
 {
 	nsresult rv;
 	nsIRDFResource* resource;
-  if (NS_SUCCEEDED(node->QueryInterface(kIRDFResourceIID, (void**) &resource)))
+  if (NS_SUCCEEDED(node->QueryInterface(nsIRDFResource::IID(), (void**) &resource)))
 	{
 		rv = EqualsResource(resource, result);
 		NS_RELEASE(resource);
@@ -164,7 +157,7 @@ nsMsgFolderResourceFactoryImpl::~nsMsgFolderResourceFactoryImpl(void)
 {
 }
 
-NS_IMPL_ISUPPORTS(nsMsgFolderResourceFactoryImpl, kIRDFResourceFactoryIID);
+NS_IMPL_ISUPPORTS(nsMsgFolderResourceFactoryImpl, nsIRDFResourceFactory::IID());
 
 NS_IMETHODIMP
 nsMsgFolderResourceFactoryImpl::CreateResource(const char* aURI, nsIRDFResource** aResult)
@@ -176,7 +169,7 @@ nsMsgFolderResourceFactoryImpl::CreateResource(const char* aURI, nsIRDFResource*
   if (! folder)
     return NS_ERROR_OUT_OF_MEMORY;
 
-	folder->QueryInterface(kIRDFResourceIID, (void**)aResult);
+	folder->QueryInterface(nsIRDFResource::IID(), (void**)aResult);
     return NS_OK;
 }
 

@@ -72,15 +72,9 @@
 /////////////////////////////////////////////////////////////////////////////////
 // Define keys for all of the interfaces we are going to require for this test
 /////////////////////////////////////////////////////////////////////////////////
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
-static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
-static NS_DEFINE_IID(kIPop3UrlIID, NS_IPOP3URL_IID);
-static NS_DEFINE_IID(kIPop3SinkIID, NS_IPOP3SINK_IID);
-
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test
@@ -404,7 +398,7 @@ nsresult NS_NewPop3URL(nsIPop3URL ** aResult, const nsString urlSpec)
 	 if (pop3URL)
 	 {
 		pop3URL->ParseURL(urlSpec);  // load the spec we were given...
-		rv = pop3URL->QueryInterface(kIPop3UrlIID, (void **) aResult);
+		rv = pop3URL->QueryInterface(nsIPop3URL::IID(), (void **) aResult);
 	 }
 
 	 return rv;
@@ -820,7 +814,7 @@ int main()
 	// Create the Event Queue for this thread...
     nsIEventQueueService *pEventQService = nsnull;
     result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          kIEventQueueServiceIID,
+                                          nsIEventQueueService::IID(),
                                           (nsISupports **)&pEventQService);
 	if (NS_SUCCEEDED(result)) {
       // XXX: What if this fails?

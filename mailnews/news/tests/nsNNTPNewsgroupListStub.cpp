@@ -33,10 +33,7 @@
 #include "nsNNTPArticleSet.h"
 #include "nsNNTPNewsgroupList.h"
 
-/* temporary hack until MessageKey is defined */
-typedef PRUint32 MessageKey;
-
-static NS_DEFINE_IID(kINNTPNewsgroupListIID, NS_INNTPNEWSGROUPLIST_IID);
+#include "MailNewsTypes.h"
 
 class nsNNTPNewsgroupListStub : public nsINNTPNewsgroupList {
 
@@ -76,9 +73,9 @@ class nsNNTPNewsgroupListStub : public nsINNTPNewsgroupList {
 	 nsINNTPHost	*m_host;
 	 nsINNTPNewsgroup * m_group;
   
-	MessageKey		m_lastProcessedNumber;
-	MessageKey		m_firstMsgNumber;
-	MessageKey		m_lastMsgNumber;
+	nsMsgKey		m_lastProcessedNumber;
+	nsMsgKey		m_firstMsgNumber;
+	nsMsgKey		m_lastMsgNumber;
 	PRInt32			m_firstMsgToDownload;
 	PRInt32			m_lastMsgToDownload;
 
@@ -87,7 +84,7 @@ class nsNNTPNewsgroupListStub : public nsINNTPNewsgroupList {
 };
 
 
-NS_IMPL_ISUPPORTS(nsNNTPNewsgroupListStub, kINNTPNewsgroupListIID);
+NS_IMPL_ISUPPORTS(nsNNTPNewsgroupListStub, nsINNTPNewsgroupList::IID());
 
 nsNNTPNewsgroupListStub::nsNNTPNewsgroupListStub(nsINNTPHost* host,
                                          nsINNTPNewsgroup *newsgroup)
@@ -361,6 +358,6 @@ extern "C" nsresult NS_NewNewsgroupList(nsINNTPNewsgroupList **aInstancePtrResul
 {
 	nsNNTPNewsgroupListStub * stub = nsnull;
 	stub = new nsNNTPNewsgroupListStub(newsHost, newsgroup);
-	nsresult rv = stub->QueryInterface(kINNTPNewsgroupListIID, (void **) aInstancePtrResult);
+	nsresult rv = stub->QueryInterface(nsINNTPNewsgroupList::IID(), (void **) aInstancePtrResult);
 	return rv;
 }

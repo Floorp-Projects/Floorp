@@ -90,14 +90,14 @@ public:
 	MSG_CommandType PreviousSaveCommand();
 
 	virtual MsgERR	GetCommandStatus(MSG_CommandType command,
-										 const MSG_ViewIndex* indices,
+										 const nsMsgViewIndex* indices,
 										 PRInt32 numindices,
 										 PRBool *selectable_p,
 										 MSG_COMMAND_CHECK_STATE *selected_p,
 										 const char **display_string,
 										 PRBool * plural_p);
 	virtual MsgERR DoCommand(MSG_CommandType command,
-							 MSG_ViewIndex* indices, PRInt32 numindices);
+							 nsMsgViewIndex* indices, PRInt32 numindices);
 
 	const char* GetDefaultURL();
 	virtual void SetDefaultURL(const char *defaultUrl = NULL, 
@@ -164,7 +164,7 @@ public:
 								  struct MSG_AttachedFile *attachments,
 								  int attachments_count );
 
-	virtual void SetIMAPMessageUID (MessageKey key);
+	virtual void SetIMAPMessageUID (nsMsgKey key);
 
     int RetrieveStandardHeaders(MSG_HeaderEntry ** return_list);
     int SetHeaderEntries(MSG_HeaderEntry * in_list,int count);

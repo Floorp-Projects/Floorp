@@ -33,11 +33,6 @@
 #include "prprf.h"
 #include "nsCRT.h"
 
-static NS_DEFINE_IID(kIOutputStreamIID,  NS_IOUTPUTSTREAM_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIPop3URLIID, NS_IPOP3URL_IID);
-static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
-
 nsPop3URL::nsPop3URL(nsISupports* aContainer, nsIURLGroup* aGroup)
 {
     NS_INIT_REFCNT();
@@ -91,18 +86,17 @@ nsresult nsPop3URL::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
  
-    static NS_DEFINE_IID(kINetlibURLIID, NS_INETLIBURL_IID);
-    if (aIID.Equals(kIPop3URLIID) || aIID.Equals(kISupportsIID)) {
+    if (aIID.Equals(nsIPop3URL::IID()) || aIID.Equals(::nsISupports::IID())) {
         *aInstancePtr = (void*) ((nsIPop3URL*)this);
         AddRef();
         return NS_OK;
     }
-    if (aIID.Equals(kIURLIID)) {
+    if (aIID.Equals(nsIURL::IID())) {
         *aInstancePtr = (void*) ((nsIURL*)this);
         AddRef();
         return NS_OK;
     }
-    if (aIID.Equals(kINetlibURLIID)) {
+    if (aIID.Equals(nsINetlibURL::IID())) {
         *aInstancePtr = (void*) ((nsINetlibURL*)this);
         AddRef();
         return NS_OK;
@@ -563,7 +557,7 @@ PRBool nsPop3URL::Equals(const nsIURL* aURL) const
     NS_LOCK_INSTANCE();
 	// are they both Pop3 urls?? if yes...for now just compare the pointers until 
 	// I figure out if we need to check any of the guts for equality....
-    if (((nsIURL*)aURL)->QueryInterface(kIPop3URLIID, (void**)&other) == NS_OK) {
+    if (((nsIURL*)aURL)->QueryInterface(nsIPop3URL::IID(), (void**)&other) == NS_OK) {
         bIsEqual = other == this; // compare the pointers...
     }
     else

@@ -20,12 +20,6 @@
 #include "nsMsgComposeFact.h"
 #include "nsMsgCompose.h"
 
-/* use these macros to define a class IID for our component. Our object currently supports two interfaces 
-   (nsISupports and nsIMsgCompose) so we want to define constants for these two interfaces */
-static NS_DEFINE_IID(kIMsgCompose, NS_IMSGCOMPOSE_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIMsgComposeIID, NS_IMSGCOMPOSE_IID);
-
 /*JFD
 #include "msg.h"
 #include "errcode.h"
@@ -139,7 +133,7 @@ nsresult NS_NewMsgCompose(nsIMsgCompose** aInstancePtrResult)
 	{
 		nsMsgCompose* pCompose = new nsMsgCompose();
 		if (pCompose)
-			return pCompose->QueryInterface(kIMsgCompose, (void**) aInstancePtrResult);
+			return pCompose->QueryInterface(nsIMsgCompose::IID(), (void**) aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}
@@ -401,7 +395,7 @@ nsMsgCompose::~nsMsgCompose()
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgCompose, kIMsgComposeIID);
+NS_IMPL_ISUPPORTS(nsMsgCompose, nsIMsgCompose::IID());
 
 #if 0 //JFD
 nsMsgCompose::MSG_CompositionPaneCreate(MWContext* context,
@@ -684,7 +678,7 @@ nsMsgCompose::CheckForLosingFcc(const char* fcc)
 
 MsgERR
 nsMsgCompose::GetCommandStatus(MSG_CommandType command,
-										 const MSG_ViewIndex* indices,
+										 const nsMsgViewIndex* indices,
 										 PRInt32 numindices,
 						   PRBool *selectable_pP,
 						   MSG_COMMAND_CHECK_STATE *selected_pP,
@@ -811,7 +805,7 @@ nsMsgCompose::GetCommandStatus(MSG_CommandType command,
 
 					 
 MsgERR
-nsMsgCompose::DoCommand(MSG_CommandType command, MSG_ViewIndex* indices,
+nsMsgCompose::DoCommand(MSG_CommandType command, nsMsgViewIndex* indices,
 							   PRInt32 numindices)
 {
 	MsgERR status = 0;
@@ -3402,14 +3396,14 @@ nsMsgCompose::SetPreloadedAttachments ( MWContext *context,
 }
 
 void 
-nsMsgCompose::SetIMAPMessageUID ( MessageKey key )
+nsMsgCompose::SetIMAPMessageUID ( nsMsgKey key )
 {
 	PR_ASSERT (m_deliver_mode == MSG_SaveAsDraft || 
 			   m_deliver_mode == MSG_SaveAs ||
 			   m_deliver_mode == MSG_SaveAsTemplate);
-	PR_ASSERT(key != MSG_MESSAGEKEYNONE);
+	PR_ASSERT(key != nsMsgKey_None);
 
-	if (key == MSG_MESSAGEKEYNONE)
+	if (key == nsMsgKey_None)
 		return;
 
 /*JFD

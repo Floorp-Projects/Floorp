@@ -74,8 +74,6 @@ extern int msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 						   void *closure);
 
 
-static NS_DEFINE_IID(kINNTPHostIID, NS_INNTPHOST_IID);
-
 class nsNNTPHost : public nsINNTPHost {
 public:
 #ifdef HAVE_MASTER
@@ -2964,7 +2962,7 @@ nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
 #ifdef HAVE_MASTER
 			m_master->BroadcastFolderDeleted (newsInfo);
 #else
-            ;
+        ;
 #endif
 
 		if (newsInfo)
@@ -3014,7 +3012,7 @@ int nsNNTPHost::ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *g
                     infoList->ElementAt(idxInHostInfo);
                 
 				nsIMsgFolder *groupInHostInfo=NULL;
-                rv = hostInfoSupports->QueryInterface(nsISupports::IID(),
+                rv = hostInfoSupports->QueryInterface(::nsISupports::IID(),
                                                       (void **)&groupInHostInfo);
 #ifdef HAVE_PANE
 				if (group->CanBeInFolderPane())
@@ -3036,7 +3034,7 @@ int nsNNTPHost::ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *g
 			{
 				m_groups->InsertElementAt(groupToMove, idxInData); // the index has to be the same, right?
                 nsISupports* groupSupports;
-                groupToMove->QueryInterface(nsISupports::IID(),
+                groupToMove->QueryInterface(::nsISupports::IID(),
                                             (void **)&groupSupports);
 				infoList->InsertElementAt (groupSupports, idxInHostInfo);
                 NS_RELEASE(groupSupports);
@@ -3089,8 +3087,8 @@ nsNNTPHost::GetNewsgroupAndNumberOfID(const char *message_id,
     MessageDBView *view = pane->GetMsgView();
     if (!view || !view->GetDB())
         return NS_ERROR_NOT_INITIALIZED;
-    messageKey = view->GetDB()->GetMessageKeyForID(message_id);
-    *messageNumber = (messageKey == MSG_MESSAGEKEYNONE) ? 0 : messageKey;
+    nsMsgKey = view->GetDB()->GetMessageKeyForID(message_id);
+    *messageNumber = (nsMsgKey == nsMsgKey_None) ? 0 : nsMsgKey;
 #endif
 
     /* Why are we always choosing the current pane's folder? */

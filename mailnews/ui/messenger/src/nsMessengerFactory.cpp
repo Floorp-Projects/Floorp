@@ -25,9 +25,7 @@
 
 #include "pratom.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kCMsgAppCoreCID, NS_MSGAPPCORE_CID);
+static NS_DEFINE_CID(kCMsgAppCoreCID, NS_MSGAPPCORE_CID);
 
 static PRInt32 g_InstanceCount = 0;
 static PRInt32 g_LockCount = 0;
@@ -75,9 +73,9 @@ nsMessengerFactory::QueryInterface(const nsIID &aIID, void **aResult)
   *aResult = NULL;   
 
   // we support two interfaces....nsISupports and nsFactory.....
-  if (aIID.Equals(kISupportsIID))    
+  if (aIID.Equals(::nsISupports::IID()))    
     *aResult = (void *)(nsISupports*)this;   
-  else if (aIID.Equals(kIFactoryIID))   
+  else if (aIID.Equals(nsIFactory::IID()))   
     *aResult = (void *)(nsIFactory*)this;   
 
   if (*aResult == NULL)
@@ -142,7 +140,7 @@ NSGetFactory(const nsCID &aClass,
     *aFactory = new nsMessengerFactory(aClass);
 
 	if (aFactory)
-		return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory); // they want a Factory Interface so give it to them
+		return (*aFactory)->QueryInterface(nsIFactory::IID(), (void**)aFactory); // they want a Factory Interface so give it to them
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
 }

@@ -39,9 +39,7 @@
 #  endif /* XP_WIN */
 #endif /* XP_MAC */
 
-static NS_DEFINE_IID(kIPop3SinkIID, NS_IPOP3SINK_IID);
-
-NS_IMPL_ISUPPORTS(nsPop3Sink, kIPop3SinkIID);
+NS_IMPL_ISUPPORTS(nsPop3Sink, nsIPop3Sink::IID());
 
 nsPop3Sink::nsPop3Sink()
 {

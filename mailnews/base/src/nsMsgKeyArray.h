@@ -22,7 +22,7 @@
 #define _nsMsgKeyArray_H_ 
 
 /////////////////////////////////////////////////////////////////////////////
-// nsMsgKeyArray - Growable Array of MessageKeys's - Can contain up to uint - 1 ids. 
+// nsMsgKeyArray - Growable Array of nsMsgKeys's - Can contain up to uint - 1 ids. 
 ///////////////////////////////////////////////////////////////////////////// 
 #include "nsUInt32Array.h"
 #include "MailNewsTypes.h"
@@ -33,48 +33,48 @@ class nsMsgKeyArray : public nsUInt32Array
 public:
 	nsMsgKeyArray() : nsUInt32Array() {}
 
-// Public Operations on the MessageKey array - typesafe overrides
+// Public Operations on the nsMsgKey array - typesafe overrides
 public:
-	MessageKey operator[](PRUint32 nIndex) const {
-	  return((MessageKey)nsUInt32Array::operator[](nIndex));
+	nsMsgKey operator[](PRUint32 nIndex) const {
+	  return((nsMsgKey)nsUInt32Array::operator[](nIndex));
 	}
-	MessageKey GetKeyFromIndex(PRUint32 nIndex) {
+	nsMsgKey GetKeyFromIndex(PRUint32 nIndex) {
 	  return(operator[](nIndex));
 	}
-	MessageKey GetAt(PRUint32 nIndex) const {
+	nsMsgKey GetAt(PRUint32 nIndex) const {
 	  return(operator[](nIndex));
 	}
-	void SetAt(PRUint32 nIndex, MessageKey key) {
+	void SetAt(PRUint32 nIndex, nsMsgKey key) {
 	  nsUInt32Array::SetAt(nIndex, (PRUint32)key);
 	}
-	void SetAtGrow(PRUint32 nIndex, MessageKey key) {
+	void SetAtGrow(PRUint32 nIndex, nsMsgKey key) {
 	  nsUInt32Array::SetAtGrow(nIndex, (uint32)key);
 	}
-	void InsertAt(PRUint32 nIndex, MessageKey key, int nCount = 1) {
+	void InsertAt(PRUint32 nIndex, nsMsgKey key, int nCount = 1) {
 	  nsUInt32Array::InsertAt(nIndex, (PRUint32)key, nCount);
 	}
 	void InsertAt(PRUint32 nIndex, const nsMsgKeyArray *idArray) {
 	  nsUInt32Array::InsertAt(nIndex, idArray);
 	}
-	PRUint32 Add(MessageKey id) {
+	PRUint32 Add(nsMsgKey id) {
 	  return(nsUInt32Array::Add((uint32)id));
 	}
-	PRUint32 Add(MessageKey *elementPtr, PRUint32 numElements) {
+	PRUint32 Add(nsMsgKey *elementPtr, PRUint32 numElements) {
 	  return nsUInt32Array::Add((PRUint32 *) elementPtr, numElements);
 	}
 	void CopyArray(nsMsgKeyArray *oldA) { nsUInt32Array::CopyArray((nsUInt32Array*) oldA); }
 	void CopyArray(nsMsgKeyArray &oldA) { nsUInt32Array::CopyArray(oldA); }
 // new operations
 public:
-	MSG_ViewIndex					FindIndex(MessageKey key); // returns -1 if not found
+	nsMsgViewIndex					FindIndex(nsMsgKey key); // returns -1 if not found
 	
 	// use these next two carefully
-	MessageKey*				GetArray(void) {
-	  return((MessageKey*)m_pData);		// only valid until another function
+	nsMsgKey*				GetArray(void) {
+	  return((nsMsgKey*)m_pData);		// only valid until another function
 										// called on the array (like
 										// GetBuffer() in CString)
 	}
-	void				SetArray(MessageKey* pData, int numElements,
+	void				SetArray(nsMsgKey* pData, int numElements,
 								 int numAllocated);
 };
 ///////////////////////////////////////////////////////

@@ -26,7 +26,6 @@ IDLSRCS =				  \
 		nsIMsgHost.idl		  \
 		nsIMsgGroupRecord.idl	  \
 		nsIMsgFolder.idl	  \
-		nsIMsg.idl		  \
 		$(NULL)
 
 EXPORTS =				\
@@ -40,7 +39,6 @@ EXPORTS =				\
 		nsIMsgGroupRecord.h	\
 		nsIMsgFolder.h		\
 		nsIMsgRDFFolder.h	\
-		nsIMsg.h		\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

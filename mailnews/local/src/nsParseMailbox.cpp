@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -27,14 +27,10 @@
 #include "libi18n.h"
 #include "nsIMailboxUrl.h"
 
-static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
-static NS_DEFINE_IID(kIMailboxURLIID, NS_IMAILBOXURL_IID);
-
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ADDREF(nsMsgMailboxParser)
 NS_IMPL_RELEASE(nsMsgMailboxParser)
-NS_IMPL_QUERY_INTERFACE(nsMsgMailboxParser, kIStreamListenerIID); /* we need to pass in the interface ID of this interface */
+NS_IMPL_QUERY_INTERFACE(nsMsgMailboxParser, nsIStreamListener::IID()); /* we need to pass in the interface ID of this interface */
 
 NS_BEGIN_EXTERN_C
 
@@ -45,7 +41,7 @@ nsresult NS_NewMsgParser(nsIStreamListener ** aInstancePtr)
 	{
 		nsMsgMailboxParser * parser = new nsMsgMailboxParser();
 		if (parser)
-			rv =parser->QueryInterface(kIStreamListenerIID, (void **) aInstancePtr);		
+			rv =parser->QueryInterface(nsIStreamListener::IID(), (void **) aInstancePtr);		
 	}
 
 	return rv;
@@ -71,7 +67,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURL* aURL, const char *aCont
 	nsIMailboxUrl *runningUrl;
 	printf("\n+++ nsMsgMailboxParserStub::OnStartBinding: URL: %p, Content type: %s\n", aURL, aContentType);
 
-	nsresult rv = aURL->QueryInterface(kIMailboxURLIID, (void **)&runningUrl);
+	nsresult rv = aURL->QueryInterface(nsIMailboxUrl::IID(), (void **)&runningUrl);
 	if (NS_SUCCEEDED(rv) && runningUrl)
 	{
 		// okay, now fill in our event sinks...Note that each getter ref counts before
@@ -238,11 +234,15 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader()
 	if (m_newMsgHdr)
 	{
 		FolderTypeSpecificTweakMsgHeader(m_newMsgHdr);
-		
-		if (m_newMsgHdr->GetFlags() & MSG_FLAG_EXPUNGED)
+
+		PRUint32 flags;
+        (void)m_newMsgHdr->GetFlags(&flags);
+		if (flags & MSG_FLAG_EXPUNGED)
 		{
 			nsDBFolderInfo *folderInfo = m_mailDB->GetDBFolderInfo();
-			folderInfo->m_expungedBytes += m_newMsgHdr->GetMessageSize();
+            PRUint32 size;
+            (void)m_newMsgHdr->GetMessageSize(&size);
+			folderInfo->m_expungedBytes += size;
 			if (m_newMsgHdr)
 			{
 				m_newMsgHdr->Release();;
@@ -557,7 +557,7 @@ void nsParseMailMessageState::GetAggregateHeader (nsVoidArray &list, struct mess
 	{
 		header = (struct message_header*) list.ElementAt(i);
 		length += (header->length + 1); //+ for ","
-		NS_ASSERTION(header->length == XP_STRLEN(header->value), "header corrupted");
+		NS_ASSERTION(header->length == (PRInt32)XP_STRLEN(header->value), "header corrupted");
 	}
 
 	if (length > 0)
@@ -865,7 +865,9 @@ int nsParseMailMessageState::InternSubject (struct message_header *header)
 	/* strip "Re: " */
 	if (msg_StripRE((const char **) &key, &L))
 	{
-		m_newMsgHdr->SetFlags(m_newMsgHdr->GetFlags() | MSG_FLAG_HAS_RE);
+        PRUint32 flags;
+        (void)m_newMsgHdr->GetFlags(&flags);
+		m_newMsgHdr->SetFlags(flags | MSG_FLAG_HAS_RE);
 	}
 
 //  if (!*key) return 0; /* To catch a subject of "Re:" */
@@ -932,7 +934,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 	const char *s;
 	PRUint32 flags = 0;
 	PRUint32 delta = 0;
-	MSG_PRIORITY priorityFlags = MSG_PriorityNotSet;
+	nsMsgPriority priorityFlags = nsMsgPriority_NotSet;
 
 	if (!m_mailDB)		// if we don't have a valid db, skip the header.
 		return 0;
@@ -974,7 +976,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 			}
 			// strip off and remember priority bits.
 			flags &= ~MSG_FLAG_RUNTIME_ONLY;
-			priorityFlags = (MSG_PRIORITY) ((flags & MSG_FLAG_PRIORITIES) >> 13);
+			priorityFlags = (nsMsgPriority) ((flags & MSG_FLAG_PRIORITIES) >> 13);
 			flags &= ~MSG_FLAG_PRIORITIES;
 		  /* We trust the X-Mozilla-Status line to be the smartest in almost
 			 all things.  One exception, however, is the HAS_RE flag.  Since
@@ -1004,24 +1006,29 @@ int nsParseMailMessageState::FinalizeHeaders()
 		nsresult ret = m_mailDB->CreateNewHdr(m_envelope_pos, &m_newMsgHdr);
 		if (ret == NS_OK && m_newMsgHdr)
 		{
-			if (m_newMsgHdr->GetFlags() & MSG_FLAG_HAS_RE)
+            PRUint32 origFlags;
+            (void)m_newMsgHdr->GetFlags(&origFlags);
+			if (origFlags & MSG_FLAG_HAS_RE)
 				flags |= MSG_FLAG_HAS_RE;
 			else
 				flags &= ~MSG_FLAG_HAS_RE;
 
-			if (mdn_dnt && !(m_newMsgHdr->GetFlags() & MSG_FLAG_READ) &&
-				!(m_newMsgHdr->GetFlags() & MSG_FLAG_MDN_REPORT_SENT))
+			if (mdn_dnt && !(origFlags & MSG_FLAG_READ) &&
+				!(origFlags & MSG_FLAG_MDN_REPORT_SENT))
 				flags |= MSG_FLAG_MDN_REPORT_NEEDED;
 
 			m_newMsgHdr->SetFlags(flags);
-			if (priorityFlags != MSG_PriorityNotSet)
+			if (priorityFlags != nsMsgPriority_NotSet)
 				m_newMsgHdr->SetPriority(priorityFlags);
 
 			if (delta < 0xffff) 
 			{		/* Only use if fits in 16 bits. */
 				m_newMsgHdr->SetStatusOffset((PRUint16) delta);
-				if (!m_IgnoreXMozillaStatus)	// imap doesn't care about X-MozillaStatus
-					NS_ASSERTION(m_newMsgHdr->GetStatusOffset() < 10000, "invalid status offset"); /* ### Debugging hack */
+				if (!m_IgnoreXMozillaStatus) {	// imap doesn't care about X-MozillaStatus
+                    PRUint32 offset;
+                    (void)m_newMsgHdr->GetStatusOffset(&offset);
+					NS_ASSERTION(offset < 10000, "invalid status offset"); /* ### Debugging hack */
+                }
 			}
 			m_newMsgHdr->SetAuthor(sender->value);
 			if (recipient == &m_newsgroups)
@@ -1089,26 +1096,28 @@ int nsParseMailMessageState::FinalizeHeaders()
 				if (!mozstatus && statush)
 				{
 				  /* Parse a little bit of the Berkeley Mail status header. */
-				  for (s = statush->value; *s; s++)
-					switch (*s)
-					  {
-					  case 'R': case 'r':
-						m_newMsgHdr->SetFlags(m_newMsgHdr->GetFlags() | MSG_FLAG_READ);
-						break;
-					  case 'D': case 'd':
-						/* msg->flags |= MSG_FLAG_EXPUNGED;  ### Is this reasonable? */
-						break;
-					  case 'N': case 'n':
-					  case 'U': case 'u':
-						m_newMsgHdr->SetFlags(m_newMsgHdr->GetFlags()  & ~MSG_FLAG_READ);
-						break;
-					  }
+                    for (s = statush->value; *s; s++) {
+                        PRUint32 flags;
+                        (void)m_newMsgHdr->GetFlags(&flags);
+                        switch (*s)
+                        {
+                          case 'R': case 'r':
+                            m_newMsgHdr->SetFlags(flags | MSG_FLAG_READ);
+                            break;
+                          case 'D': case 'd':
+                            /* msg->flags |= MSG_FLAG_EXPUNGED;  ### Is this reasonable? */
+                            break;
+                          case 'N': case 'n':
+                          case 'U': case 'u':
+                            m_newMsgHdr->SetFlags(flags & ~MSG_FLAG_READ);
+                            break;
+                        }
+                    }
 				}
 
 				if (references != NULL)
 					m_newMsgHdr->SetReferences(references->value);
-				if (date)
-				{
+				if (date) {
 					time_t	resDate = 0;
 					PRTime resultTime, intermediateResult, microSecondsPerSecond;
 					PRStatus status = PR_ParseTimeString (date->value, PR_FALSE, &resultTime);
@@ -1125,8 +1134,8 @@ int nsParseMailMessageState::FinalizeHeaders()
 				}
 				if (priority)
 					m_newMsgHdr->SetPriority(priority->value);
-				else if (priorityFlags == MSG_PriorityNotSet)
-					m_newMsgHdr->SetPriority(MSG_NoPriority);
+				else if (priorityFlags == nsMsgPriority_NotSet)
+					m_newMsgHdr->SetPriority(nsMsgPriority_None);
 			}
 		} 
 		else
@@ -1667,7 +1676,7 @@ void ParseNewMailState::ApplyFilters(PRBool *pMoved)
 								msgHdr->OrFlags(kWatched);
 								break;
 							case acChangePriority:
-								m_mailDB->SetPriority(msgHdr,  * ((MSG_PRIORITY *) &value));
+								m_mailDB->SetPriority(msgHdr,  * ((nsMsgPriority *) &value));
 								break;
 							default:
 								break;
@@ -1849,7 +1858,7 @@ int ParseIMAPMailboxState::MoveIncorporatedMessage(nsMsgHdr *mailHdr,
 				MSG_FolderInfoMail *destMailFolder = destinationFolder->GetMailFolderInfo();
 				// put the header into the source db, since it needs to be there when we copy it
 				// and we need a valid header to pass to StartAsyncCopyMessagesInto
-				MessageKey keyToFilter = mailHdr->GetMessageKey();
+				nsMsgKey keyToFilter = mailHdr->GetMessageKey();
 
 				if (sourceDB && destMailFolder)
 				{

@@ -32,14 +32,8 @@
 #include "msgpane.h"
 JFD*/
 
-/* use these macros to define a class IID for our component. Our object currently supports two interfaces 
-   (nsISupports and nsIMsgCompose) so we want to define constants for these two interfaces */
-static NS_DEFINE_IID(kIMsgCompFields, NS_IMSGCOMPFIELDS_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIMsgCompFieldsIID, NS_IMSGCOMPFIELDS_IID);
-
 extern "C" {
-    extern int MK_OUT_OF_MEMORY;
+  extern int MK_OUT_OF_MEMORY;
 	extern int MK_MSG_INVALID_NEWS_HEADER;
 	extern int MK_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS;
 }
@@ -54,7 +48,7 @@ nsresult NS_NewMsgCompFields(nsIMsgCompFields** aInstancePtrResult)
 	{
 		nsMsgCompFields* pCompFields = new nsMsgCompFields();
 		if (pCompFields)
-			return pCompFields->QueryInterface(kIMsgCompFields, (void**) aInstancePtrResult);
+			return pCompFields->QueryInterface(nsIMsgCompFields::IID(), (void**) aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}
@@ -64,7 +58,7 @@ nsresult NS_NewMsgCompFields(nsIMsgCompFields** aInstancePtrResult)
 
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgCompFields, kIMsgCompFieldsIID);
+NS_IMPL_ISUPPORTS(nsMsgCompFields, nsIMsgCompFields::IID());
 
 nsMsgCompFields::nsMsgCompFields()
 {
@@ -408,12 +402,12 @@ nsresult nsMsgCompFields::GetDefaultBody(char **_retval)
 
 nsresult nsMsgCompFields::SetPriority(const char *value, PRInt32 *_retval)
 {
-	return SetHeader(MSG_PRIORITY_HEADER_MASK, value, _retval);
+	return SetHeader(nsMsgPriority_HEADER_MASK, value, _retval);
 }
 
 nsresult nsMsgCompFields::GetPriority(char **_retval)
 {
-	return GetHeader(MSG_PRIORITY_HEADER_MASK, _retval);
+	return GetHeader(nsMsgPriority_HEADER_MASK, _retval);
 }
 
 nsresult nsMsgCompFields::SetMessageEncoding(const char *value, PRInt32 *_retval)
@@ -657,7 +651,7 @@ PRInt16 nsMsgCompFields::DecodeHeader(MSG_HEADER_SET header)
     case MSG_NEWSPOSTURL_HEADER_MASK:
 		result = 13;
 		break;
-    case MSG_PRIORITY_HEADER_MASK:
+    case nsMsgPriority_HEADER_MASK:
 		result = 14;
 		break;
 	case MSG_NEWS_FCC_HEADER_MASK:

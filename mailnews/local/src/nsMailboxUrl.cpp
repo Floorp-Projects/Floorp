@@ -34,11 +34,6 @@
 #include "prprf.h"
 #include "nsCRT.h"
 
-static NS_DEFINE_IID(kIOutputStreamIID,  NS_IOUTPUTSTREAM_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIMailboxURLIID, NS_IMAILBOXURL_IID);
-static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
-
 nsMailboxUrl::nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 {
     NS_INIT_REFCNT();
@@ -93,18 +88,17 @@ nsresult nsMailboxUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
  
-    static NS_DEFINE_IID(kINetlibURLIID, NS_INETLIBURL_IID);
-    if (aIID.Equals(kIMailboxURLIID) || aIID.Equals(kISupportsIID)) {
+    if (aIID.Equals(nsIMailboxUrl::IID()) || aIID.Equals(::nsISupports::IID())) {
         *aInstancePtr = (void*) ((nsIMailboxUrl*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(kIURLIID)) {
+    if (aIID.Equals(nsIURL::IID())) {
         *aInstancePtr = (void*) ((nsIURL*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(kINetlibURLIID)) {
+    if (aIID.Equals(nsINetlibURL::IID())) {
         *aInstancePtr = (void*) ((nsINetlibURL*)this);
         NS_ADDREF_THIS();
         return NS_OK;
@@ -489,7 +483,7 @@ PRBool nsMailboxUrl::Equals(const nsIURL* aURL) const
     NS_LOCK_INSTANCE();
 	// are they both mailbox urls?? if yes...for now just compare the pointers until 
 	// I figure out if we need to check any of the guts for equality....
-    if (((nsIURL*)aURL)->QueryInterface(kIMailboxURLIID, (void**)&other) == NS_OK) {
+    if (((nsIURL*)aURL)->QueryInterface(nsIMailboxUrl::IID(), (void**)&other) == NS_OK) {
         bIsEqual = other == this; // compare the pointers...
     }
     else

@@ -34,11 +34,6 @@
 #include "nsCRT.h"
 #include "nsEscape.h"
 
-static NS_DEFINE_IID(kIOutputStreamIID,  NS_IOUTPUTSTREAM_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kISmtpURLIID, NS_ISMTPURL_IID);
-static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
-
 nsSmtpUrl::nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 {
     NS_INIT_REFCNT();
@@ -110,18 +105,17 @@ nsresult nsSmtpUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
  
-    static NS_DEFINE_IID(kINetlibURLIID, NS_INETLIBURL_IID);
-    if (aIID.Equals(kISmtpURLIID) || aIID.Equals(kISupportsIID)) {
+    if (aIID.Equals(nsISmtpUrl::IID()) || aIID.Equals(::nsISupports::IID())) {
         *aInstancePtr = (void*) ((nsISmtpUrl*)this);
         AddRef();
         return NS_OK;
     }
-    if (aIID.Equals(kIURLIID)) {
+    if (aIID.Equals(nsIURL::IID())) {
         *aInstancePtr = (void*) ((nsIURL*)this);
         AddRef();
         return NS_OK;
     }
-    if (aIID.Equals(kINetlibURLIID)) {
+    if (aIID.Equals(nsINetlibURL::IID())) {
         *aInstancePtr = (void*) ((nsINetlibURL*)this);
         AddRef();
         return NS_OK;
@@ -759,7 +753,7 @@ PRBool nsSmtpUrl::Equals(const nsIURL* aURL) const
     NS_LOCK_INSTANCE();
 	// are they both Smtp urls?? if yes...for now just compare the pointers until 
 	// I figure out if we need to check any of the guts for equality....
-    if (((nsIURL*)aURL)->QueryInterface(kISmtpURLIID, (void**)&other) == NS_OK) {
+    if (((nsIURL*)aURL)->QueryInterface(nsISmtpUrl::IID(), (void**)&other) == NS_OK) {
         bIsEqual = other == this; // compare the pointers...
     }
     else

@@ -27,12 +27,8 @@
 #include "nsIMsgRFC822Parser.h"
 #include "nsMsgRFC822Parser.h"
 
-
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kCMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID);
-static NS_DEFINE_IID(kCMsgFolderEventCID, NS_MSGFOLDEREVENT_CID);
-
+static NS_DEFINE_CID(kCMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID);
+static NS_DEFINE_CID(kCMsgFolderEventCID, NS_MSGFOLDEREVENT_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -79,9 +75,9 @@ nsresult nsMsgFactory::QueryInterface(const nsIID &aIID, void **aResult)
   *aResult = NULL;   
 
   // we support two interfaces....nsISupports and nsFactory.....
-  if (aIID.Equals(kISupportsIID))    
+  if (aIID.Equals(::nsISupports::IID()))    
     *aResult = (void *)(nsISupports*)this;   
-  else if (aIID.Equals(kIFactoryIID))   
+  else if (aIID.Equals(nsIFactory::IID()))   
     *aResult = (void *)(nsIFactory*)this;   
 
   if (*aResult == NULL)
@@ -160,7 +156,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass,
 	*aFactory = new nsMsgFactory(aClass);
 
 	if (aFactory)
-		return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory); // they want a Factory Interface so give it to them
+		return (*aFactory)->QueryInterface(nsIFactory::IID(), (void**)aFactory); // they want a Factory Interface so give it to them
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
 }

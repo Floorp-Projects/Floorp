@@ -24,7 +24,7 @@
 
 /* XXX - temporary hack so this will compile */
 
-typedef PRUint32 MessageKey;
+typedef PRUint32 nsMsgKey;
 
 class nsNNTPArticleList : nsINNTPArticleList
 #ifdef HAVE_CHANGELISTENER
@@ -63,7 +63,7 @@ protected:
 #endif
 #endif
 	PRInt32					m_dbIndex;
-	MessageKey				m_highwater;
+	nsMsgKey				m_highwater;
 };
 
 NS_IMPL_ISUPPORTS(nsNNTPArticleList, IID())
@@ -92,7 +92,7 @@ nsNNTPArticleList::Init(nsINNTPHost * newsHost,
 	nsINNTPNewsgroup *newsFolder = m_pane->GetMaster()->FindNewsFolder(host, groupName, PR_FALSE);
 	if (newsFolder)
 	{
-		char *url = newsFolder->BuildUrl(NULL, MSG_MESSAGEKEYNONE);
+		char *url = newsFolder->BuildUrl(NULL, nsMsgKey_None);
 #ifdef HAVE_NEWSDB
 		if (url)
 			NewsGroupDB::Open(url, m_pane->GetMaster(), &m_newsDB);

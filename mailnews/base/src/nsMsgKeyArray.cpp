@@ -23,19 +23,19 @@
 #include "nsMsgKeyArray.h"
 
 
-MSG_ViewIndex nsMsgKeyArray::FindIndex(MessageKey key)
+nsMsgViewIndex nsMsgKeyArray::FindIndex(nsMsgKey key)
 {
-	for (int i = 0; i < GetSize(); i++)
+	for (PRUint32 i = 0; i < GetSize(); i++)
 	{
-		if ((MessageKey)(m_pData[i]) == key)
+		if ((nsMsgKey)(m_pData[i]) == key)
 		{
 			return i;
 		}
 	}
-	return MSG_VIEWINDEXNONE;
+	return nsMsgViewIndex_None;
 }
 
-void nsMsgKeyArray::SetArray(MessageKey* pData, int numElements, int numAllocated)
+void nsMsgKeyArray::SetArray(nsMsgKey* pData, int numElements, int numAllocated)
 {
 	NS_ASSERTION(pData != NULL, "storage is NULL");
 	NS_ASSERTION(numElements >= 0, "negative number of elements");

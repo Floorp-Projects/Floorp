@@ -60,14 +60,9 @@
 /////////////////////////////////////////////////////////////////////////////////
 // Define keys for all of the interfaces we are going to require for this test
 /////////////////////////////////////////////////////////////////////////////////
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
-static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
-static NS_DEFINE_IID(kISmtpUrlIID, NS_ISMTPURL_IID);
-
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test
@@ -106,7 +101,7 @@ nsresult NS_NewSmtpUrl(nsISmtpUrl ** aResult, const nsString urlSpec)
 	 if (smtpUrl)
 	 {
 		smtpUrl->ParseURL(urlSpec);  // load the spec we were given...
-		rv = smtpUrl->QueryInterface(kISmtpUrlIID, (void **) aResult);
+		rv = smtpUrl->QueryInterface(nsISmtpUrl::IID(), (void **) aResult);
 	 }
 
 	 return rv;
@@ -452,7 +447,7 @@ int main()
 	// Create the Event Queue for this thread...
     nsIEventQueueService *pEventQService = nsnull;
     result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          kIEventQueueServiceIID,
+                                          nsIEventQueueService::IID(),
                                           (nsISupports **)&pEventQService);
 	if (NS_SUCCEEDED(result)) {
       // XXX: What if this fails?

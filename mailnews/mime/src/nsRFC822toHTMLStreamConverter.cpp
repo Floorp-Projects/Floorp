@@ -21,13 +21,6 @@
 #include "nsRFC822toHTMLStreamConverter.h"
 
 /* 
- * These macros are used to define a class IID for our component. Our 
- * object currently supports the nsRFC822toHTMLStreamConverter so we want 
- * to define constants for these two interfaces 
- */
-static NS_DEFINE_IID(kIStreamConverter, NS_ISTREAM_CONVERTER_IID);
-
-/* 
  * This function will be used by the factory to generate an 
  * RFC822 Converter....
  */
@@ -40,7 +33,7 @@ nsresult NS_NewRFC822HTMLConverter(nsIStreamConverter** aInstancePtrResult)
 	{
 		nsRFC822toHTMLStreamConverter *converter = new nsRFC822toHTMLStreamConverter();
 		if (converter)
-			return converter->QueryInterface(kIStreamConverter, (void**) aInstancePtrResult);
+			return converter->QueryInterface(nsIStreamConverter::IID(), (void**) aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}
@@ -55,7 +48,7 @@ nsresult NS_NewRFC822HTMLConverter(nsIStreamConverter** aInstancePtrResult)
  */
 NS_IMPL_ADDREF(nsRFC822toHTMLStreamConverter)
 NS_IMPL_RELEASE(nsRFC822toHTMLStreamConverter)
-NS_IMPL_QUERY_INTERFACE(nsRFC822toHTMLStreamConverter, kIStreamConverter); /* we need to pass in the interface ID of this interface */
+NS_IMPL_QUERY_INTERFACE(nsRFC822toHTMLStreamConverter, nsIStreamConverter::IID()); /* we need to pass in the interface ID of this interface */
 
 /*
  * nsRFC822toHTMLStreamConverter definitions....

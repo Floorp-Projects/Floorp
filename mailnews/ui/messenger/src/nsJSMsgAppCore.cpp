@@ -38,12 +38,6 @@
 
 #include "nsJSMsgAppCore.h"
 
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
-static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIMsgAppCoreIID, NS_IDOMMSGAPPCORE_IID);
-static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
-
 NS_DEF_PTR(nsIDOMMsgAppCore);
 NS_DEF_PTR(nsIDOMWindow);
 
@@ -290,7 +284,7 @@ MsgAppCoreSetWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   if (argc >= 1) {
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
-                                           kIWindowIID,
+                                           nsIWindow::IID(),
                                            "Window",
                                            cx,
                                            argv[0])) {
@@ -369,8 +363,6 @@ MsgAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   nsIDOMMsgAppCore *nativeThis;
   nsIScriptObjectOwner *owner = nsnull;
 
-  static NS_DEFINE_IID(kIDOMMsgAppCoreIID, NS_IDOMMSGAPPCORE_IID);
-
   result = context->GetNameSpaceManager(&manager);
   if (NS_OK != result) {
     return JS_FALSE;
@@ -384,7 +376,7 @@ MsgAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   result = nsRepository::CreateInstance(classID,
                                         nsnull,
-                                        kIDOMMsgAppCoreIID,
+                                        nsIDOMMsgAppCore::IID(),
                                         (void **)&nativeThis);
   if (NS_OK != result) {
     return JS_FALSE;
@@ -392,7 +384,7 @@ MsgAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   // XXX We should be calling Init() on the instance
 
-  result = nativeThis->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);
+  result = nativeThis->QueryInterface(nsIScriptObjectOwner::IID(), (void **)&owner);
   if (NS_OK != result) {
     NS_RELEASE(nativeThis);
     return JS_FALSE;
@@ -471,7 +463,7 @@ extern "C" NS_DOM nsresult NS_NewScriptMsgAppCore(nsIScriptContext *aContext, ns
   if (nsnull == aParent) {
     parent = nsnull;
   }
-  else if (NS_OK == aParent->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+  else if (NS_OK == aParent->QueryInterface(nsIScriptObjectOwner::IID(), (void**)&owner)) {
     if (NS_OK != owner->GetScriptObject(aContext, (void **)&parent)) {
       NS_RELEASE(owner);
       return NS_ERROR_FAILURE;
@@ -486,7 +478,7 @@ extern "C" NS_DOM nsresult NS_NewScriptMsgAppCore(nsIScriptContext *aContext, ns
     return NS_ERROR_FAILURE;
   }
 
-  result = aSupports->QueryInterface(kIMsgAppCoreIID, (void **)&aMsgAppCore);
+  result = aSupports->QueryInterface(nsIMsgAppCore::IID(), (void **)&aMsgAppCore);
   if (NS_OK != result) {
     return result;
   }

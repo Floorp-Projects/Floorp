@@ -6,7 +6,8 @@
 #define __gen_nsIMsgFolder_h__
 
 #include "nsISupportsArray.h" /* interface nsISupportsArray */
-#include "nsIMsg.h"
+
+class nsIMessage;
 
 /* starting interface nsIMsgFolder */
 
@@ -72,16 +73,16 @@ class nsIMsgFolder : public nsISupports {
   NS_IMETHOD GetNumMessagesToDisplay(PRUint32 *_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetMessage(PRUint32 which, nsIMsg **_retval) = 0;
+  NS_IMETHOD GetMessage(PRUint32 which, nsIMessage **_retval) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD GetMessages(nsISupportsArray **_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD AddMessage(const nsIMsg *msg) = 0;
+  NS_IMETHOD AddMessage(const nsIMessage *msg) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD RemoveMessage(const nsIMsg *msg) = 0;
+  NS_IMETHOD RemoveMessage(const nsIMessage *msg) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD GetDeleteIsMoveToTrash(PRBool *aDeleteIsMoveToTrash) = 0;

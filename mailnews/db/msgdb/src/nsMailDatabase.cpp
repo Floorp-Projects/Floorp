@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -144,11 +144,11 @@ nsresult nsMailDatabase::OnNewPath (nsFilePath &newPath)
 	return ret;
 }
 
-nsresult nsMailDatabase::DeleteMessages(nsMsgKeyArray &messageKeys, nsIDBChangeListener *instigator)
+nsresult nsMailDatabase::DeleteMessages(nsMsgKeyArray &nsMsgKeys, nsIDBChangeListener *instigator)
 {
 	nsresult ret = NS_OK;
 	m_folderStream = new nsIOFileStream(m_dbName);
-	ret = nsMsgDatabase::DeleteMessages(messageKeys, instigator);
+	ret = nsMsgDatabase::DeleteMessages(nsMsgKeys, instigator);
 	if (m_folderStream)
 		delete m_folderStream;
 	m_folderStream = NULL;
@@ -212,7 +212,9 @@ void nsMailDatabase::UpdateFolderFlag(nsMsgHdr *mailHdr, PRBool bSet,
 		savedPosition = ftell(gIncorporateFID); // so we can restore it.
 	}
 #endif // XP_MAC
-	if (mailHdr->GetStatusOffset() > 0) 
+    PRUint32 offset;
+    (void)mailHdr->GetStatusOffset(&offset);
+	if (offset > 0) 
 	{
 		
 		if (fileStream == NULL) 
@@ -221,8 +223,10 @@ void nsMailDatabase::UpdateFolderFlag(nsMsgHdr *mailHdr, PRBool bSet,
 		}
 		if (fileStream) 
 		{
-			PRUint32 position = mailHdr->GetStatusOffset() + mailHdr->GetMessageOffset();
-			PR_ASSERT(mailHdr->GetStatusOffset() < 10000);
+            PRUint32 msgOffset;
+            (void)mailHdr->GetMessageOffset(&msgOffset);
+			PRUint32 position = offset + msgOffset;
+			PR_ASSERT(offset < 10000);
 			fileStream->seek(position);
 			buf[0] = '\0';
 			if (fileStream->readline(buf, sizeof(buf))) 
@@ -231,7 +235,8 @@ void nsMailDatabase::UpdateFolderFlag(nsMsgHdr *mailHdr, PRBool bSet,
 					strncmp(buf + X_MOZILLA_STATUS_LEN, ": ", 2) == 0 &&
 					strlen(buf) > X_MOZILLA_STATUS_LEN + 6) 
 				{
-		            uint16 flags = mailHdr->GetFlags();
+                    PRUint32 flags;
+                    (void)mailHdr->GetFlags(&flags);
 					if (!(flags & MSG_FLAG_EXPUNGED))
 					{
 						int i;
@@ -241,9 +246,11 @@ void nsMailDatabase::UpdateFolderFlag(nsMsgHdr *mailHdr, PRBool bSet,
 						{
 							flags = (flags << 4) | msg_UnHex(*p);
 						}
+                        
+                        PRUint32 curFlags;
+                        (void)mailHdr->GetFlags(&curFlags);
 						flags = (flags & MSG_FLAG_QUEUED) |
-							(mailHdr->GetFlags() & 
-							 ~MSG_FLAG_RUNTIME_ONLY);
+                          (curFlags & ~MSG_FLAG_RUNTIME_ONLY);
 					}
 					else
 					{
@@ -263,7 +270,8 @@ void nsMailDatabase::UpdateFolderFlag(nsMsgHdr *mailHdr, PRBool bSet,
 							strncmp(buf + X_MOZILLA_STATUS2_LEN, ": ", 2) == 0 &&
 							strlen(buf) > X_MOZILLA_STATUS2_LEN + 10) 
 						{
-							uint32 dbFlags = mailHdr->GetFlags();
+							PRUint32 dbFlags;
+                            (void)mailHdr->GetFlags(&dbFlags);
 							dbFlags &= (MSG_FLAG_MDN_REPORT_NEEDED | MSG_FLAG_MDN_REPORT_SENT | MSG_FLAG_TEMPLATE);
 							fileStream->seek(position + LINEBREAK_LEN);
 							PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS2_FORMAT, dbFlags);
@@ -359,7 +367,7 @@ int nsMailDatabase::ListAllOfflineDeletes(nsMsgKeyArray &outputIds)
 	nsresult ret = NS_OK;
 	return ret;
 }
-nsresult nsMailDatabase::GetOfflineOpForKey(MessageKey opKey, PRBool create, nsOfflineImapOperation **)
+nsresult nsMailDatabase::GetOfflineOpForKey(nsMsgKey opKey, PRBool create, nsOfflineImapOperation **)
 {
 	nsresult ret = NS_OK;
 	return ret;
@@ -371,13 +379,13 @@ nsresult nsMailDatabase::AddOfflineOp(nsOfflineImapOperation *op)
 	return ret;
 }
 
-nsresult DeleteOfflineOp(MessageKey opKey)
+nsresult DeleteOfflineOp(nsMsgKey opKey)
 {
 	nsresult ret = NS_OK;
 	return ret;
 }
 
-nsresult SetSourceMailbox(nsOfflineImapOperation *op, const char *mailbox, MessageKey key)
+nsresult SetSourceMailbox(nsOfflineImapOperation *op, const char *mailbox, nsMsgKey key)
 {
 	nsresult ret = NS_OK;
 	return ret;

@@ -22,9 +22,6 @@
 #include "nsMsgFolderFlags.h"
 #include "prprf.h"
 
-static NS_DEFINE_IID(kIMsgLocalMailFolderIID, NS_IMSGLOCALMAILFOLDER_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 nsMsgLocalMailFolder::nsMsgLocalMailFolder(const char* uri)
 :nsMsgFolder(uri)
 {
@@ -46,8 +43,8 @@ nsMsgLocalMailFolder::QueryInterface(REFNSIID iid, void** result)
 		return NS_ERROR_NULL_POINTER;
 
 	*result = nsnull;
-	if (iid.Equals(kIMsgLocalMailFolderIID) ||
-      iid.Equals(kISupportsIID))
+	if (iid.Equals(nsIMsgLocalMailFolder::IID()) ||
+      iid.Equals(::nsISupports::IID()))
 	{
 		*result = NS_STATIC_CAST(nsIMsgLocalMailFolder*, this);
 		AddRef();
@@ -365,7 +362,7 @@ nsMsgLocalMailFolder::FindChildNamed(const char *name, nsIMsgFolder ** aChild)
     supports = mSubFolders->ElementAt(i);
 		if(folder)
 			NS_RELEASE(folder);
-		if(NS_SUCCEEDED(supports->QueryInterface(kISupportsIID, (void**)&folder)))
+		if(NS_SUCCEEDED(supports->QueryInterface(::nsISupports::IID(), (void**)&folder)))
 		{
 			char *folderName;
 

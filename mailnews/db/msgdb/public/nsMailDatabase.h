@@ -45,7 +45,7 @@ public:
 
 	virtual nsresult		OnNewPath (nsFilePath &newPath);
 
-	virtual nsresult		DeleteMessages(nsMsgKeyArray &messageKeys, nsIDBChangeListener *instigator);
+	virtual nsresult		DeleteMessages(nsMsgKeyArray &nsMsgKeys, nsIDBChangeListener *instigator);
 
 //	virtual int				GetCurVersion() {return kMailDBVersion;}
 	static  nsresult		SetFolderInfoValid(nsFilePath &pathname, int num, int numunread);
@@ -62,10 +62,10 @@ public:
 	// folders can cause these operations to be stored in local mail folders.
 	nsresult				ListAllOfflineOpIds(nsMsgKeyArray &outputIds);
 	int						ListAllOfflineDeletes(nsMsgKeyArray &outputIds);
-	nsresult				GetOfflineOpForKey(MessageKey opKey, PRBool create, nsOfflineImapOperation **);
+	nsresult				GetOfflineOpForKey(nsMsgKey opKey, PRBool create, nsOfflineImapOperation **);
 	nsresult				AddOfflineOp(nsOfflineImapOperation *op);
-	nsresult				DeleteOfflineOp(MessageKey opKey);
-	nsresult				SetSourceMailbox(nsOfflineImapOperation *op, const char *mailbox, MessageKey key);
+	nsresult				DeleteOfflineOp(nsMsgKey opKey);
+	nsresult				SetSourceMailbox(nsOfflineImapOperation *op, const char *mailbox, nsMsgKey key);
 	
 	virtual nsresult		SetSummaryValid(PRBool valid = PR_TRUE);
 	
