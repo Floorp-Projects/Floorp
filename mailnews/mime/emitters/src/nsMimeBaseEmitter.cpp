@@ -539,7 +539,12 @@ nsMimeBaseEmitter::AddHeaderField(const char *field, const char *value)
   if ( (ptr) && tPtr)
   {
     ptr->name = nsCRT::strdup(field);
-    ptr->value = nsAutoString(value).ToNewUTF8String();
+
+    if (mDocHeader)
+      ptr->value = nsCRT::strdup(value);
+    else
+      ptr->value = nsAutoString(value).ToNewUTF8String();
+
     tPtr->AppendElement(ptr);
   }
 
@@ -570,7 +575,7 @@ nsMimeBaseEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
   mHTMLHeaders.Append("<TR>");
   mHTMLHeaders.Append("<TD>");
 
-  mHTMLHeaders.Append("<DIV CLASS=\"headerdisplayname\">");
+  mHTMLHeaders.Append("<DIV CLASS=\"headerdisplayname\" style=\"display:inline;\">");
 
   // Here is where we are going to try to L10N the tagName so we will always
   // get a field name next to an emitted header value. Note: Default will always
@@ -606,6 +611,7 @@ nsMimeBaseEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
 nsresult
 nsMimeBaseEmitter::WriteHeaderFieldHTMLPrefix()
 {
+  mHTMLHeaders.Append("<BR><HR WIDTH=\"90%\" SIZE=4><BR>");
   mHTMLHeaders.Append("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=\"100%\">"); 
   return NS_OK;
 }

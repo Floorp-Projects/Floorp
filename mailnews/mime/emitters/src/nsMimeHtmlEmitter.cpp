@@ -272,7 +272,7 @@ nsMimeHtmlDisplayEmitter::StartAttachmentInBody(const char *name, const char *co
   UtilityWrite("<TD>");
 
   UtilityWrite("<CENTER>");
-  UtilityWrite("<DIV align=right CLASS=\"headerdisplayname\">");
+  UtilityWrite("<DIV align=right CLASS=\"headerdisplayname\" style=\"display:inline;\">");
 
   UtilityWrite(name);
 
@@ -304,7 +304,7 @@ nsMimeHtmlDisplayEmitter::AddAttachmentField(const char *field, const char *valu
   UtilityWrite("<TR>");
 
   UtilityWrite("<TD>");
-  UtilityWrite("<DIV align=right CLASS=\"headerdisplayname\">");
+  UtilityWrite("<DIV align=right CLASS=\"headerdisplayname\" style=\"display:inline;\">");
 
   UtilityWrite(field);
   UtilityWrite(":");

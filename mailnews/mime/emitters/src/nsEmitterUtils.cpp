@@ -72,6 +72,8 @@ EmitThisHeaderForPrefSetting(PRInt32 dispType, const char *header)
         (!nsCRT::strcmp(header, HEADER_FROM)) ||
         (!nsCRT::strcmp(header, HEADER_FOLLOWUP_TO)) ||
         (!nsCRT::strcmp(header, HEADER_CC)) ||
+        (!nsCRT::strcmp(header, HEADER_ORGANIZATION)) ||
+        (!nsCRT::strcmp(header, HEADER_REPLY_TO)) ||
         (!nsCRT::strcmp(header, HEADER_BCC))
        )
        return PR_TRUE;
