@@ -8218,7 +8218,7 @@ echo "$ac_t""$ac_cv_cpp_template_specialization" 1>&6
 case "$target" in
   *-*-solaris*)
 	if test ! "$GNU_CC"; then
-	   if test ! -z "`${CC} -V 2>&1 | head -1 | grep '4.2'`"
+	   if test ! -z "`${CC} -V 2>&1 | head -1 | grep '4.2'`"; then
              ac_cv_cpp_template_specialization=no
 	   fi
 	fi
