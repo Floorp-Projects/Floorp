@@ -44,7 +44,6 @@
 #include <base64.h>
 #include <cert.h>
 #include <cryptohi.h>
-#include <pqgutil.h>
 
 #include <jssutil.h>
 #include <jss_exceptions.h>

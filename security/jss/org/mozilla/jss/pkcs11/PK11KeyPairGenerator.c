@@ -38,7 +38,6 @@
 #include <nspr.h>
 #include <key.h>
 #include <secitem.h>
-#include <pqgutil.h>
 
 #include <jssutil.h>
 #include <pk11util.h>
