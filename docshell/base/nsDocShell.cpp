@@ -1706,7 +1706,6 @@ NS_IMETHODIMP nsDocShell::Create()
    // so read it in once here and be done with it...
    mPrefs->GetBoolPref("network.protocols.useSystemDefaults", &mUseExternalProtocolHandler);
    mPrefs->GetBoolPref("browser.target_new_blocked", &mDisallowPopupWindows);
-   mPrefs->GetBoolPref("javascript.enabled", &mAllowJavascript);
    mPrefs->GetBoolPref("browser.frames.enabled", &mAllowSubframes);
 
    return NS_OK;
