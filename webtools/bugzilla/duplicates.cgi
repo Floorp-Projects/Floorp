@@ -115,45 +115,16 @@ if (<data/duplicates/dupes$before*>)
 
 print Param("mostfreqhtml");
 
-my $commabugs = join(",", keys(%count));
-
-print "
-<p>
-<a href=\"buglist.cgi?bug_id=$commabugs\">Give me this list as a Bugzilla bug list.</a>
-</p>
-
-<table BORDER>
-<tr BGCOLOR=\"#CCCCCC\">
-
-<td><center><b>
-<a href=\"duplicates.cgi?sortby=bug_no&maxrows=$maxrows&changedsince=$changedsince\">Bug #</a>
-</b></center></td>
-<td><center><b>
-<a href=\"duplicates.cgi?sortby=dup_count&maxrows=$maxrows&changedsince=$changedsince\">Dupe<br>Count</a>
-</b></center></td>\n";
-
 my %delta;
 
 if ($dobefore) 
 {
-  print "<td><center><b>
-  <a href=\"duplicates.cgi?sortby=delta&maxrows=$maxrows&changedsince=$changedsince\">Change in
-  last<br>$changedsince day(s)</a></b></center></td>";
-
   # Calculate the deltas if we are doing a "before"
   foreach (keys(%count))
   {
     $delta{$_} = $count{$_} - $before{$_};
   }
 }
-
-print "
-<td><center><b>Component</b></center></td>
-<td><center><b>Severity</b></center></td>
-<td><center><b>Op Sys</b></center></td>
-<td><center><b>Target<br>Milestone</b></center></td>
-<td><center><b>Summary</b></center></td>
-</tr>\n\n";
 
 # Sort, if required
 my @sortedcount;
@@ -172,6 +143,54 @@ elsif ($sortby eq "dup_count")
 }
 
 my $i = 0;
+
+# Produce a string of bug numbers for a Bugzilla buglist.
+my $commabugs = "";
+foreach (@sortedcount) 
+{
+  last if ($i == $maxrows);
+
+  $commabugs .= ($_ . ",");
+  $i++;  
+}
+
+# Avoid having a comma at the end - Bad Things happen.
+chop $commabugs; 
+
+print qq|
+
+<form method="POST" action="buglist.cgi">
+<input type="hidden" name="bug_id" value="$commabugs">
+<input type="hidden" name="order" value="Reuse same sort as last time">
+Give this to me as a <input type="submit" value="Bug List">. (Note: the order may not be the same.)
+</form>
+
+<table BORDER>
+<tr BGCOLOR="#CCCCCC">
+
+<td><center><b>
+<a href="duplicates.cgi?sortby=bug_no&maxrows=$maxrows&changedsince=$changedsince">Bug #</a>
+</b></center></td>
+<td><center><b>
+<a href="duplicates.cgi?sortby=dup_count&maxrows=$maxrows&changedsince=$changedsince">Dupe<br>Count</a>
+</b></center></td>\n|;
+
+if ($dobefore) 
+{
+  print "<td><center><b>
+  <a href=\"duplicates.cgi?sortby=delta&maxrows=$maxrows&changedsince=$changedsince\">Change in
+  last<br>$changedsince day(s)</a></b></center></td>";
+}
+
+print "
+<td><center><b>Component</b></center></td>
+<td><center><b>Severity</b></center></td>
+<td><center><b>Op Sys</b></center></td>
+<td><center><b>Target<br>Milestone</b></center></td>
+<td><center><b>Summary</b></center></td>
+</tr>\n\n";
+
+$i = 0;
 
 foreach (@sortedcount)
 {
