@@ -703,25 +703,20 @@ nsMenuBarFrame :: KillPendingTimers ( )
 NS_IMETHODIMP
 nsMenuBarFrame::GetWidget(nsIWidget **aWidget)
 {
-  // (pinkerton/hyatt)
-  // since the menubar is a menuparent but not a menuItem, the win32 rollup code
-  // would erroneously add the entire top-level window to the widget list built up for
-  // determining if a click is in a submenu's menu chain. To get around this, we just 
-  // don't let the menubar have a widget. Things seem to work because the dismissal
-  // listener is registered when a new menu is popped up, which is the only real reason
-  // why we need a widget at all.
-  *aWidget = nsnull;
-  return NS_OK;
+  // We need to add the menubar to the submenu widget chain now, 
+  // because we no longer consume clicks outside the menu.
+  // If we don't, we won't toggle close when the user clicks
+  // a menu item that's open in the menu bar.
+  // We'd already be rolled up, so it would toggle
+  // open instead of closed.
 
-#if DONT_WANT_TO_DO_THIS
-  // Get parent view
+  *aWidget = nsnull;
   nsIView * view = nsnull;
-  nsMenuPopupFrame::GetNearestEnclosingView(mPresContext, this, &view);
+  nsMenuPopupFrame::GetRootViewForPopup(mPresContext, this, &view);
   if (!view)
     return NS_OK;
 
-  view->GetWidget(*aWidget);
-#endif
+  return view->GetWidget(*aWidget);
 }
 
 NS_IMETHODIMP
