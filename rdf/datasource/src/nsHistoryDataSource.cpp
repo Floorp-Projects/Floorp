@@ -44,6 +44,7 @@
 #include "prio.h"
 #include "prtime.h"
 #include "prlog.h"
+#include "prlong.h"
 
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
@@ -695,14 +696,50 @@ nsHistoryDataSource::AddPageToGraph(const char* url, const PRUnichar* title,
 nsresult
 nsHistoryDataSource::AddToDateHierarchy (PRTime date, const char *url)
 {
-	char		timeBuffer[256];
-	PRExplodedTime	etime;
-	PR_ExplodeTime(date, PR_LocalTimeParameters, &etime);
-	PR_FormatTimeUSEnglish(timeBuffer, sizeof(timeBuffer), "NC:hst:date?%A - %B %d, %Y", &etime);
+	char			timeBuffer[128], timeNameBuffer[128], dayBuffer[128], dayNameBuffer[128];
+	PRExplodedTime		enow, etime;
 
-	nsIRDFResource		*timeResource, *resource;
+	timeBuffer[0] = timeNameBuffer[0] = dayBuffer[0] = dayNameBuffer[0] = '\0';
+
+	PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &enow);
+	PR_ExplodeTime(date, PR_LocalTimeParameters, &etime);
+	if ((enow.tm_year == etime.tm_year) && (enow.tm_yday == etime.tm_yday))
+	{
+		PR_snprintf(timeBuffer, sizeof(timeBuffer), "NC:hst:date?today");
+		PR_snprintf(timeNameBuffer, sizeof(timeNameBuffer), "Today");			// XXX localization
+	}
+	else if ((enow.tm_year == etime.tm_year) && ((enow.tm_yday - 1) == etime.tm_yday))
+	{
+		PR_snprintf(timeBuffer, sizeof(timeBuffer), "NC:hst:date?yesterday");
+		PR_snprintf(timeNameBuffer, sizeof(timeNameBuffer), "Yesterday");		// XXX localization
+	}
+	else if ((enow.tm_year == etime.tm_year) && ((enow.tm_yday - etime.tm_yday) < 7))	// XXX calculation is not quite right
+	{
+		PR_FormatTimeUSEnglish(timeBuffer, sizeof(timeBuffer), "NC:hst:date?%A, %B %d, %Y", &etime);
+		PR_FormatTimeUSEnglish(timeNameBuffer, sizeof(timeNameBuffer), "%A", &etime);
+	}
+	else
+	{
+		PR_FormatTimeUSEnglish(dayBuffer, sizeof(dayBuffer), "NC:hst:day?%A, %B %d, %Y", &etime);
+		PR_FormatTimeUSEnglish(dayNameBuffer, sizeof(dayNameBuffer), "%A, %B %d, %Y", &etime);
+		if (etime.tm_wday > 0)
+		{
+			PRUint64	microSecsInSec, secsInDay, temp;
+			LL_I2L(microSecsInSec, PR_USEC_PER_SEC);
+			LL_I2L(secsInDay, (60L*60L*24L*etime.tm_wday));
+			LL_MUL(temp, microSecsInSec, secsInDay);
+			LL_SUB(date, date, temp);
+			PR_ExplodeTime(date, PR_LocalTimeParameters, &etime);
+		}
+		PR_FormatTimeUSEnglish(timeBuffer, sizeof(timeBuffer), "NC:hst:weekof?%B %d, %Y", &etime);
+		PR_FormatTimeUSEnglish(timeNameBuffer, sizeof(timeNameBuffer), "Week of %B %d, %Y", &etime);	// XXX localization
+	}
+
+	nsIRDFResource		*timeResource, *dayResource, *resource, *parent;
+	parent = mResourceHistoryByDate;
 	if (NS_OK != gRDFService->GetResource(url, &resource))
 		return NS_ERROR_FAILURE;
+
 	PRBool			found;
 	if (NS_OK != gRDFService->FindResource(timeBuffer, &timeResource, &found))
 		return NS_ERROR_FAILURE;
@@ -712,14 +749,35 @@ nsHistoryDataSource::AddToDateHierarchy (PRTime date, const char *url)
 			return NS_ERROR_FAILURE;
 
 		// set name of synthesized history container
-		PR_FormatTimeUSEnglish(timeBuffer, sizeof(timeBuffer), "%A - %B %d, %Y", &etime);
-		nsAutoString	ptitle(timeBuffer);
+		nsAutoString	ptitle(timeNameBuffer);
 		nsIRDFLiteral	*titleLiteral;
 		gRDFService->GetLiteral(ptitle, &titleLiteral);
 		mInner->Assert(timeResource, mResourceTitle, titleLiteral, 1);
 	}
-	mInner->Assert(timeResource, mResourceChild, resource, 1);
-	mInner->Assert(mResourceHistoryByDate, mResourceChild, timeResource, 1);
+	mInner->Assert(parent, mResourceChild, timeResource, 1);
+	parent = timeResource;
+
+	if (dayBuffer[0])
+	{
+		PRBool			found;
+		if (NS_OK != gRDFService->FindResource(dayBuffer, &dayResource, &found))
+			return NS_ERROR_FAILURE;
+		if (found == PR_FALSE)
+		{
+			if (NS_OK != gRDFService->GetResource(dayBuffer, &dayResource))
+				return NS_ERROR_FAILURE;
+
+			// set name of synthesized history container
+			nsAutoString	dayTitle(dayNameBuffer);
+			nsIRDFLiteral	*dayLiteral;
+			gRDFService->GetLiteral(dayTitle, &dayLiteral);
+			mInner->Assert(dayResource, mResourceTitle, dayLiteral, 1);
+		}
+		mInner->Assert(parent, mResourceChild, dayResource, 1);
+		parent = dayResource;
+	}
+
+	mInner->Assert(parent, mResourceChild, resource, 1);
 	return(NS_OK);
 }
 
