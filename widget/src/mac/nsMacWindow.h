@@ -96,10 +96,14 @@ protected:
 												void *handlerRefCon, DragReference theDragRef) ;
 	static DragTrackingHandlerUPP sDragTrackingHandlerUPP;
 	static DragReceiveHandlerUPP sDragReceiveHandlerUPP;
+
+
 	
-	PRBool							mWindowMadeHere;	// true if we created the window
-	PRBool							mIsDialog;				// true if the window is a dialog
+	PRBool												mWindowMadeHere;	// true if we created the window
+	PRBool												mIsDialog;				// true if the window is a dialog
 	auto_ptr<nsMacEventHandler>		mMacEventHandler;
+	nsWindowType 									mWindowType;			// normal,pop up, dialog, etc
+	nsIWidget 										*mOffsetParent;
 };
 
 #endif // MacWindow_h__
