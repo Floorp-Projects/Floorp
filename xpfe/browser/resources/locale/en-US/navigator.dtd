@@ -124,7 +124,7 @@
 <!ENTITY dcharCp1255Cmd.label "Hebrew (Windows-1255)">
 <!ENTITY dcharCp1256Cmd.label "Arabic (Windows-1256)">
 <!ENTITY searchMenu.label "Search">
-<!ENTITY findOnCmd.label "Find on this Page...">
+<!ENTITY findOnCmd.label "Find in This Page...">
 <!ENTITY findOnCmd.accesskey "f">
 <!ENTITY findOnCmd.commandkey "f">
 <!ENTITY findAgainCmd.label "Find Again">
