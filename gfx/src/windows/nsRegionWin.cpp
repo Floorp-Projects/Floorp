@@ -171,7 +171,29 @@ PRBool nsRegionWin :: ForEachRect(nsRectInRegionFunc *func, void *closure)
   return PR_FALSE;
 }
 
-HRGN nsRegionWin :: GetHRGN(void)
+NS_IMETHODIMP nsRegionWin :: GetNativeRegion(void *&aRegion) const
 {
-  return mRegion;
+  aRegion = (void *)mRegion;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRegionWin :: GetRegionComplexity(nsRegionComplexity &aComplexity) const
+{
+  switch (mRegionType)
+  {
+    case NULLREGION:
+      aComplexity = eRegionComplexity_empty;
+      break;
+
+    case SIMPLEREGION:
+      aComplexity = eRegionComplexity_rect;
+      break;
+
+    default:
+    case COMPLEXREGION:
+      aComplexity = eRegionComplexity_complex;
+      break;
+  }
+
+  return NS_OK;
 }

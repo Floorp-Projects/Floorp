@@ -27,6 +27,13 @@
 // for each rectangle in a region
 typedef void (*nsRectInRegionFunc)(void *closure, nsRect& rect);
 
+enum nsRegionComplexity
+{
+  eRegionComplexity_empty = 0,
+  eRegionComplexity_rect = 1,
+  eRegionComplexity_complex = 2
+};
+
 // An implementation of a region primitive that can be used to
 // represent arbitrary pixel areas. Probably implemented on top
 // of the native region primitive. The assumption is that, at worst,
@@ -39,7 +46,7 @@ typedef void (*nsRectInRegionFunc)(void *closure, nsRect& rect);
 class nsIRegion : public nsISupports
 {
 public:
-  virtual nsresult Init() = 0;
+  virtual nsresult Init(void) = 0;
 
   /**
   * copy operator equivalent that takes another region
@@ -196,6 +203,21 @@ public:
   *
   **/
   virtual PRBool ForEachRect(nsRectInRegionFunc *func, void *closure) = 0;
+
+  /**
+   * Get the native region that this nsIRegion represents.
+   * @param aRegion out parameter for native region handle
+   * @return error status
+   **/
+  NS_IMETHOD GetNativeRegion(void *&aRegion) const = 0;
+
+  /**
+   * Get the complexity of the region as defined by the
+   * nsRegionComplexity enum.
+   * @param aComplexity out parameter for region complexity
+   * @return error status
+   **/
+  NS_IMETHOD GetRegionComplexity(nsRegionComplexity &aComplexity) const = 0;
 };
 
 #endif  // nsRIegion_h___ 

@@ -475,10 +475,8 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRegion(const nsIRegion& aRegion, n
   nsRect 			rect;
   Rect			 	mrect;
   RgnHandle		mregion;
-
-  nsRegionMac *pRegion = (nsRegionMac *)&aRegion;
   
-  mregion = pRegion->GetRegion();
+  aRegion.GetNativeRegion((void *&)mregion);
   mrect = (**mregion).rgnBBox;
   
   rect.x = mrect.left;

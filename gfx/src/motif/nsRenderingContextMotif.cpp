@@ -495,9 +495,9 @@ NS_IMETHODIMP nsRenderingContextMotif :: SetClipRegion(const nsIRegion& aRegion,
 {
   nsRect rect;
   XRectangle xrect;
+  Region xregion;
 
-  nsRegionMotif *pRegion = (nsRegionMotif *)&aRegion;
-  Region xregion = pRegion->GetXRegion();
+  aRegion.GetNativeRegion((void *&)xregion);
   
   ::XClipBox(xregion, &xrect);
 

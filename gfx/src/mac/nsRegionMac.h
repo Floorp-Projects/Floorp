@@ -22,13 +22,6 @@
 #include "nsIRegion.h"
 #include <quickdraw.h>
 
-enum nsRegionType {
-  eRegionType_empty,
-  eRegionType_rect,
-  eRegionType_poly,
-  eRegionType_complex
-};
-
 
 class nsRegionMac : public nsIRegion
 {
@@ -54,12 +47,12 @@ public:
   virtual void Offset(PRInt32 aXOffset, PRInt32 aYOffset);
   virtual PRBool ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   virtual PRBool ForEachRect(nsRectInRegionFunc *func, void *closure);
-
-  RgnHandle GetRegion(void);
+  NS_IMETHOD GetNativeRegion(void *&aRegion) const;
+  NS_IMETHOD GetRegionComplexity(nsRegionComplexity &aComplexity) const;
 
 private:
-	RgnHandle			mRegion;
-  nsRegionType  mRegionType;
+	RgnHandle			      mRegion;
+  nsRegionComplexity  mRegionType;
 
 private:
   virtual void SetRegionType();

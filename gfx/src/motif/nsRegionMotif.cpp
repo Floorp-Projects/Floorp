@@ -192,10 +192,16 @@ PRBool nsRegionMotif :: ForEachRect(nsRectInRegionFunc *func, void *closure)
   return PR_FALSE;
 }
 
-
-Region nsRegionMotif :: GetXRegion(void)
+NS_IMETHODIMP nsRegionMotif :: GetNativeRegion(void *&aRegion) const
 {
-  return (mRegion);
+  aRegion = (void *)mRegion;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRegionMotif :: GetRegionComplexity(nsRegionComplexity &aComplexity) const
+{
+  aComplexity = mRegionType;
+  return NS_OK;
 }
 
 void nsRegionMotif :: SetRegionType()

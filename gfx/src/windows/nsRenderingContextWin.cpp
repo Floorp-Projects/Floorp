@@ -928,9 +928,10 @@ NS_IMETHODIMP nsRenderingContextWin :: GetClipRect(nsRect &aRect, PRBool &aClipV
 
 NS_IMETHODIMP nsRenderingContextWin :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
-  nsRegionWin *pRegion = (nsRegionWin *)&aRegion;
-  HRGN        hrgn = pRegion->GetHRGN();
+  HRGN        hrgn;
   int         cmode, cliptype;
+
+  aRegion.GetNativeRegion((void *&)hrgn);
 
   switch (aCombine)
   {
