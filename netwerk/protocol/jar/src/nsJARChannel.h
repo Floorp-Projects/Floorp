@@ -106,7 +106,7 @@ protected:
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
 
-    PRLock*                             mLock;
+    PRMonitor*                          mMonitor;
     nsCOMPtr<nsIChannel>                mJarCacheTransport;
     nsCOMPtr<nsIChannel>                mJarExtractionTransport;
 
