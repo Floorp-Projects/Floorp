@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.30 $';
+$Version = '$Revision: 1.31 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -72,7 +72,7 @@ sub SetupEnv {
 
     if ( $OS eq 'AIX' ) {
 	$ENV{'PATH'} = '/builds/local/bin:' . $ENV{'PATH'} . ':/usr/lpp/xlC/bin';
-	$ConfigureArgs .= '--x-includes=/usr/include/X11 --x-libraries=/usr/lib';
+	$ConfigureArgs .= '--enable-static --x-includes=/usr/include/X11 --x-libraries=/usr/lib';
 	$ConfigureEnvArgs = 'CC=xlC_r CXX=xlC_r';
 	$Compiler = 'xlC_r';
 	$NSPRArgs .= 'NS_USE_NATIVE=1 USE_PTHREADS=1';
@@ -89,11 +89,13 @@ sub SetupEnv {
 
     if ( $OS eq 'BSD_OS' ) {
 	$ENV{'PATH'} = '/usr/contrib/bin:/bin:/usr/bin:' . $ENV{'PATH'};
-	$ConfigureArgs .= '--disable-shared --enable-static --disable-debug --enable-optimize';
-	$ConfigureEnvArgs = 'CC=shlicc2 CXX=shlicc2';
-	$Compiler = 'shlicc2';
+	if ( $OSVer ne '4.0' ) {
+	    $ConfigureArgs .= '--disable-shared --enable-static --disable-debug --enable-optimize';
+	    $ConfigureEnvArgs = 'CC=shlicc2 CXX=shlicc2';
+	    $Compiler = 'shlicc2';
+	    $MakeOverrides = 'CPP_PROG_LINK=0 CCF=shlicc2'; # because ld dies if it encounters -include
+	}
 	$mail = '/usr/ucb/mail';
-	$MakeOverrides = 'CPP_PROG_LINK=0 CCF=shlicc2'; # because ld dies if it encounters -include
 	$NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE=';
     }
 
@@ -130,6 +132,14 @@ sub SetupEnv {
 	}
     }
 
+    if ( $OS eq 'Linux' ) {
+	# This is utterly lame....
+	if ( $ENV{'HOST'} eq 'eyeball.mcom.com' ) {
+	    $NSPRArgs .= 'USE_PTHREADS=1';
+	}
+        print "NSPRArgs: $NSPRArgs\n";
+    }
+
     if ( $OS eq 'NetBSD' ) {
 	$ENV{'PATH'} = '/bin:/usr/bin:' . $ENV{'PATH'};
 	$ConfigureEnvArgs = 'CC=egcc CXX=eg++';
@@ -144,7 +154,8 @@ sub SetupEnv {
 
     if ( $OS eq 'OpenServer' ) {
 	$ENV{'PATH'} = $BaseDir . '/' . $DirName . '/mozilla/build:/usr/local/bin:' . $ENV{'PATH'};
-	$ConfigureEnvArgs = 'CC="gcc -belf" CXX="g++ -belf"';
+	$ConfigureArgs .= '--disable-shared --enable-static';
+	$ConfigureEnvArgs = 'CC="gcc -belf -static" CXX="g++ -belf -static"';
 	$NSPRArgs .= 'NS_USE_NATIVE=1';
     }
 
@@ -368,9 +379,10 @@ sub GetSystemInfo {
 }
 
 sub BuildIt {
-    my($fe, @felist, $ClobberTarget, $DependTarget, $EarlyExit, $LastTime, $SaveCVSCO, $StartTimeStr, $comptmp, $jflag);
+    my($fe, @felist, $ClobberTarget, $DependTarget, $EarlyExit, $LastTime, $SaveCVSCO, $StartTimeStr, $comptmp, $jflag, $onlyonce);
     $comptmp = '';
     $jflag = '';
+    $onlyonce = 0;
 
     mkdir("$DirName", 0777);
     chdir("$DirName") || die "Couldn't enter $DirName";
@@ -532,6 +544,10 @@ sub BuildIt {
 
 	    &FinalizeLDLibPath('ns');
 
+	    if ( ($BuildNSCommercial) && ($onlyonce == 0) ) {
+		$ConfigureArgs .= ' --with-moz-objs=' . $BaseDir . '/' . $DirName . '/mozilla/' . $BuildObjName;
+		$onlyonce = 1;
+	    }
 	    print LOG "$ConfigureEnvArgs ../configure $ConfigureArgs\n";
 	    open (CONFIGURE, "$ConfigureEnvArgs $ShellOverride ../configure $ConfigureArgs 2>&1 |") || die "../configure: $!\n";
 	    while (<CONFIGURE>) {
