@@ -86,7 +86,7 @@
   separator.groove,
   separator.groove[orient="horizontal"] 
     {
-      -moz-apperance: separator;
+      -moz-appearance: separator;
       border-top: 1px solid ThreeDShadow;
       border-bottom: 1px solid ThreeDHighlight;
       height: 0px;
@@ -96,7 +96,7 @@
   
   separator.groove[orient="vertical"] 
     {
-      -moz-apperance: separator;
+      -moz-appearance: separator;
       border-left: 1px solid ThreeDShadow;
       border-right: 1px solid ThreeDHighlight;
       margin-left: 0.4em;
@@ -106,7 +106,7 @@
 /* groove separators (0 padding, for dividing effects) */  
   separator.groove-thin 
     {
-      -moz-apperance: separator;
+      -moz-appearance: separator;
       border-top: 1px solid ThreeDShadow;
       border-bottom: 1px solid ThreeDHighlight;
       height: 0px;
@@ -114,7 +114,7 @@
   
   separator[orient="vertical"].groove-thin 
     {
-      -moz-apperance: separator;
+      -moz-appearance: separator;
       border-left: 1px solid ThreeDShadow;
       border-right: 1px solid ThreeDHighlight;
     }

@@ -202,7 +202,7 @@ menulist > menupopup > menuitem[_moz-menuactive="true"][selected="true"],
 /* ::::: menuseparator ::::: */
 
 menuseparator {
-  -moz-apperance: separator;
+  -moz-appearance: separator;
   margin: 2px 3px;
   border-top: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDHighlight;
