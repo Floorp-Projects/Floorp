@@ -34,6 +34,11 @@
 #ifdef XP_UNIX
 #ifdef USE_DLFCN
 #include <dlfcn.h>
+#ifdef LINUX
+#define  _PR_DLOPEN_FLAGS RTLD_NOW
+#else
+#define  _PR_DLOPEN_FLAGS RTLD_LAZY
+#endif /* LINUX */
 #elif defined(USE_HPSHL)
 #include <dl.h>
 #elif defined(USE_MACH_DYLD)
@@ -163,7 +168,7 @@ void _PR_InitLinker(void)
 #elif defined(XP_UNIX)
 #ifdef HAVE_DLL
 #ifdef USE_DLFCN
-    h = dlopen(0, RTLD_LAZY);
+    h = dlopen(0, _PR_DLOPEN_FLAGS );
     if (!h) {
         char *error;
         
@@ -684,7 +689,7 @@ PR_LoadLibrary(const char *name)
 #ifdef HAVE_DLL
     {
 #if defined(USE_DLFCN)
-    void *h = dlopen(name, RTLD_LAZY);
+    void *h = dlopen(name, _PR_DLOPEN_FLAGS );
 #elif defined(USE_HPSHL)
     shl_t h = shl_load(name, BIND_DEFERRED | DYNAMIC_PATH, 0L);
 #elif defined(USE_MACH_DYLD)
