@@ -202,8 +202,8 @@ public:
  */
 CViewSourceHTML::CViewSourceHTML() : nsIDTD(), mFilename(""), 
   mStartTag("start"), mEndTag("end"), mCommentTag("comment"), 
-  mPITag("pi"), mEntityTag("entity"), mText("txt"),
-  mKey("key"), mValue("val"), mDocTypeTag("doctype")
+  mDocTypeTag("doctype"), mPITag("pi"), mEntityTag("entity"), 
+  mText("txt"), mKey("key"), mValue("val") 
 {
   NS_INIT_REFCNT();
   mParser=0;
@@ -292,7 +292,7 @@ NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotify
 #ifdef RAPTOR_PERF_METRICS
   vsTimer.Reset();
   NS_START_STOPWATCH(vsTimer);
-#endif RAPTOR_PERF_METRICS
+#endif 
 
   STOP_TIMER();
   mSink=(nsIXMLContentSink*)aSink;
@@ -407,7 +407,7 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
   printf("viewsource timer: ");
   vsTimer.Print();
   printf("\n");
-#endif RAPTOR_PERF_METRICS
+#endif 
 
   return result;
 }
@@ -831,10 +831,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
   nsresult        result=NS_OK;
   CHTMLToken*     theToken= (CHTMLToken*)(aToken);
   eHTMLTokenTypes theType= (eHTMLTokenTypes)theToken->GetTokenType();
-  eHTMLTags       theTag = (eHTMLTags)aToken->GetTypeID();
-
-  PRBool          theEndTag=PR_TRUE;
-
+ 
   mParser=(nsParser*)aParser;
   mSink=(nsIXMLContentSink*)aParser->GetContentSink();
  
