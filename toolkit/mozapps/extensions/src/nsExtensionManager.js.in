@@ -784,6 +784,8 @@ nsThemeInstaller.prototype = {
 
   install: function (aJARFile, aIsProfile)
   {
+    dumpFile(aJARFile);
+    
     var extDirKey = getDirKey(aIsProfile);
 
     // Since we're installing a "new type" theme, we assume a file layout
@@ -802,6 +804,7 @@ nsThemeInstaller.prototype = {
     var themeManifest = getFile(extDirKey,
                                 [DIR_EXTENSIONS, DIR_TEMP, FILE_INSTALL_MANIFEST]);
     zipReader.extract(FILE_INSTALL_MANIFEST, themeManifest);
+    
     var chromeManifest = getFile(extDirKey,
                                  [DIR_EXTENSIONS, DIR_TEMP, FILE_CHROME_MANIFEST]);
     zipReader.extract(FILE_CHROME_MANIFEST, chromeManifest);
@@ -857,7 +860,6 @@ nsThemeInstaller.prototype = {
           this._writer.installSkin(name, aIsProfile);
         }
       }
-
       this._writer.close();
       
       this._extensionDS.doneInstallingTheme(this._themeID);
@@ -1590,7 +1592,6 @@ nsExtensionManager.prototype = {
     var isProfile = aFlags & nsIExtensionManager.FLAG_INSTALL_PROFILE;
     var installer = new nsThemeInstaller(this._ds, this);
     installer.install(aJARFile, isProfile);
-
     // XPInstall selects the theme, if necessary.
   },
   
@@ -2390,6 +2391,9 @@ nsExtensionsDataSource.prototype = {
     // extension's resource, otherwise we'll think it's a global extension.
     var isProfile = this.isProfileItem(aExtensionID);
     
+    this.setItemProperty(aExtensionID, this._emR("toBeInstalled"), 
+                         null, isProfile, 
+                         nsIUpdateItem.TYPE_EXTENSION);
     this.setItemProperty(aExtensionID, this._emR("toBeUninstalled"), 
                          this._emL("true"), isProfile, 
                          nsIUpdateItem.TYPE_EXTENSION);

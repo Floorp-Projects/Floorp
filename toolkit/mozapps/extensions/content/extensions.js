@@ -164,7 +164,7 @@ function Shutdown()
 
   var os = Components.classes["@mozilla.org/observer-service;1"]
                      .getService(Components.interfaces.nsIObserverService);
-  os.removeObserver(gObserver, "xpinstall-download-started");
+  os.removeObserver(gDownloadManager, "xpinstall-download-started");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
