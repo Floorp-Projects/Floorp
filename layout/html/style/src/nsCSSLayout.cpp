@@ -65,59 +65,75 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
     kid->GetStyleContext(aCX, kidSC.AssignRef());
     kid->GetContent(kidContent.AssignRef());
     nsStyleText* textStyle = (nsStyleText*)kidSC->GetData(kStyleTextSID);
-    PRUint8 verticalAlignFlags = textStyle->mVerticalAlignFlags;
+    nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
+    PRUint8 verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_BASELINE;
 
     kid->GetRect(kidRect);
 
     // Vertically align the child
     nscoord kidYTop = 0;
-    switch (verticalAlignFlags) {
-    default:
-    case NS_STYLE_VERTICAL_ALIGN_BASELINE:
-      // Align the kid's baseline at the max baseline
-      kidYTop = aMaxAscent - kidAscent;
-      break;
 
-    case NS_STYLE_VERTICAL_ALIGN_TOP:
-      // Align the top of the kid with the top of the line box
-      break;
+    switch (verticalAlignUnit) {
+      case eStyleUnit_Twips:
+        kidYTop = aMaxAscent + textStyle->mVerticalAlign.GetCoordValue();
+        break;
 
-    case NS_STYLE_VERTICAL_ALIGN_SUB:
-      // Move baseline by 1/2 the ascent of the child.
-      // NOTE: CSSx doesn't seem to specify what subscripting does
-      // so we are using ebina's logic
-      kidYTop = aMaxAscent + (kidAscent/2) - kidAscent;
-      break;
+      case eStyleUnit_Percent:
+        pass2Kids++;
+        break;
 
-    case NS_STYLE_VERTICAL_ALIGN_SUPER:
-      // Move baseline by 1/2 the ascent of the child
-      // NOTE: CSSx doesn't seem to specify what superscripting does
-      // so we are using ebina's logic
-      kidYTop = aMaxAscent - (kidAscent/2) - kidAscent;
-      break;
+      case eStyleUnit_Enumerated:
+        verticalAlignEnum = textStyle->mVerticalAlign.GetIntValue();
+        switch (verticalAlignEnum) {
+          default:
+          case NS_STYLE_VERTICAL_ALIGN_BASELINE:
+            // Align the kid's baseline at the max baseline
+            kidYTop = aMaxAscent - kidAscent;
+            break;
 
-    case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-    case NS_STYLE_VERTICAL_ALIGN_PERCENT:
-      pass2Kids++;
-      break;
+          case NS_STYLE_VERTICAL_ALIGN_TOP:
+            // Align the top of the kid with the top of the line box
+            break;
 
-    case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
-      // XXX spec says use the 'x' height but our font api doesn't give us
-      // that information.
-      kidYTop = aMaxAscent - (fm->GetHeight() / 2) - kidRect.height/2;
-      break;
+          case NS_STYLE_VERTICAL_ALIGN_SUB:
+            // Move baseline by 1/2 the ascent of the child.
+            // NOTE: CSSx doesn't seem to specify what subscripting does
+            // so we are using ebina's logic
+            kidYTop = aMaxAscent + (kidAscent/2) - kidAscent;
+            break;
 
-    case NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM:
-      kidYTop = aMaxAscent + fm->GetMaxDescent() - kidRect.height;
-      break;
+          case NS_STYLE_VERTICAL_ALIGN_SUPER:
+            // Move baseline by 1/2 the ascent of the child
+            // NOTE: CSSx doesn't seem to specify what superscripting does
+            // so we are using ebina's logic
+            kidYTop = aMaxAscent - (kidAscent/2) - kidAscent;
+            break;
 
-    case NS_STYLE_VERTICAL_ALIGN_TEXT_TOP:
-      kidYTop = aMaxAscent - fm->GetMaxAscent();
-      break;
+          case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
+            pass2Kids++;
+            break;
 
-    case NS_STYLE_VERTICAL_ALIGN_LENGTH:
-      kidYTop = aMaxAscent + textStyle->mVerticalAlign.coord;
-      break;
+          case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
+            // XXX spec says use the 'x' height but our font api doesn't give us
+            // that information.
+            kidYTop = aMaxAscent - (fm->GetHeight() / 2) - kidRect.height/2;
+            break;
+
+          case NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM:
+            kidYTop = aMaxAscent + fm->GetMaxDescent() - kidRect.height;
+            break;
+
+          case NS_STYLE_VERTICAL_ALIGN_TEXT_TOP:
+            kidYTop = aMaxAscent - fm->GetMaxAscent();
+            break;
+
+        }
+        break;
+      
+      default:
+        // Align the kid's baseline at the max baseline
+        kidYTop = aMaxAscent - kidAscent;
+        break;
     }
 
     // Place kid and update min and max Y values
@@ -144,26 +160,29 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
       kid->GetStyleContext(aCX, kidSC.AssignRef());
       kid->GetContent(kidContent.AssignRef());
       nsStyleText* textStyle = (nsStyleText*)kidSC->GetData(kStyleTextSID);
-      PRUint8 verticalAlignFlags = textStyle->mVerticalAlignFlags;
+      nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
 
-      // Vertically align the child
-      if (verticalAlignFlags == NS_STYLE_VERTICAL_ALIGN_BOTTOM) {
-        // Place kid along the bottom
-        kid->GetRect(kidRect);
-        kid->MoveTo(kidRect.x, aY0 + lineHeight - kidRect.height);
-        if (--pass2Kids == 0) {
-          // Stop on last pass2 kid
-          break;
-        }
-      }
-      else if (verticalAlignFlags == NS_STYLE_VERTICAL_ALIGN_PERCENT) {
+      if (eStyleUnit_Percent == verticalAlignUnit) {
         nscoord kidYTop = aMaxAscent +
-          nscoord(textStyle->mVerticalAlign.percent * lineHeight);
+          nscoord(textStyle->mVerticalAlign.GetFloatValue() * lineHeight);
         kid->GetRect(kidRect);
         kid->MoveTo(kidRect.x, aY0 + kidYTop);
         if (--pass2Kids == 0) {
           // Stop on last pass2 kid
           break;
+        }
+      }
+      else if (verticalAlignUnit == eStyleUnit_Enumerated) {
+        PRUint8 verticalAlignEnum = textStyle->mVerticalAlign.GetIntValue();
+        // Vertically align the child
+        if (NS_STYLE_VERTICAL_ALIGN_BOTTOM == verticalAlignEnum) {
+          // Place kid along the bottom
+          kid->GetRect(kidRect);
+          kid->MoveTo(kidRect.x, aY0 + lineHeight - kidRect.height);
+          if (--pass2Kids == 0) {
+            // Stop on last pass2 kid
+            break;
+          }
         }
       }
 
