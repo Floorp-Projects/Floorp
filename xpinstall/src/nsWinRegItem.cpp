@@ -106,11 +106,11 @@ float nsWinRegItem::GetInstallOrder()
 #define kSRV "Store Registry Value "
 #define kUNK "Unknown "
 
-char* nsWinRegItem::toString()
+PRUnichar* nsWinRegItem::toString()
 {
 	nsString* keyString = nsnull;
 	nsString* result    = nsnull;
-    char*     resultCString = nsnull;
+    PRUnichar*     resultCString = nsnull;
 
 	switch(mCommand)
 	{
@@ -142,7 +142,7 @@ char* nsWinRegItem::toString()
     if (result)
     {
         result->Append(*keyString);
-        resultCString = result->ToNewCString();
+        resultCString = (PRUnichar *)result->ToNewCString();
     }
     
     if (keyString) delete keyString;

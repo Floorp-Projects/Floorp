@@ -71,7 +71,7 @@ class nsInstallFileOpItem : public nsInstallObject
 
     PRInt32       Prepare(void);
     PRInt32       Complete();
-    char*         toString();
+    PRUnichar*         toString();
     void          Abort();
     float         GetInstallOrder();
     

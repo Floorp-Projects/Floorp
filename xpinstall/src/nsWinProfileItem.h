@@ -50,7 +50,7 @@ public:
   
   float GetInstallOrder();
   
-  char* toString();
+  PRUnichar* toString();
   
   // no need for special clean-up
   void Abort();

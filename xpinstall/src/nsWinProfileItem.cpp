@@ -55,9 +55,9 @@ float nsWinProfileItem::GetInstallOrder()
 	return 4;  // <--- what is this magic number??  FIX
 }
 
-char* nsWinProfileItem::toString()
+PRUnichar* nsWinProfileItem::toString()
 {
-  char*     resultCString;
+  PRUnichar*     resultCString;
   
   nsString* filename = new nsString(*mProfile->GetFilename());
   nsString* result = new nsString("Write ");
@@ -73,7 +73,7 @@ char* nsWinProfileItem::toString()
   result->Append("=");
   result->Append(*mValue);
 
-  resultCString = result->ToNewCString();
+  resultCString = (PRUnichar *)result->ToNewCString();
   
   delete result;
   delete filename;
