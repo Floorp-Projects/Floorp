@@ -75,7 +75,6 @@
         <body><![CDATA[
           BMSVC.ReadBookmarks();
           this.toolbar.builder.rebuild();       
-          this.removeAttribute("hidden");
         ]]></body>
       </method>
 
