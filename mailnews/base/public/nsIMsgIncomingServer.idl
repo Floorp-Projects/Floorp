@@ -31,28 +31,50 @@ interface nsIMsgFolderCache;
 [scriptable, uuid(60dcb100-e3f2-11d2-b7fc-00805f05ffa5)]
 interface nsIMsgIncomingServer : nsISupports {
 
-  /* internal pref key */
+  /**
+   * internal pref key - guaranteed to be unique across all servers
+   */
   attribute string key;
 
-  /* pretty name - should be "userid on hostname" if this pref is not set */
+  /**
+   * pretty name - should be "userid on hostname"
+   * if the pref is not set
+   */
   attribute wstring prettyName;
 
-  /* hostname of the server */
+  /**
+   * hostname of the server
+   */
   attribute string hostName;
   
   /* port of the server */
   attribute long port;
 
-  /* userid to log into the server */
+  /**
+   * userid to log into the server
+   */
   attribute string username;
 
-  /* server type, i.e. "pop3", "imap", "nntp", "none", etc */
+  /**
+   * protocol type, i.e. "pop3", "imap", "nntp", "none", etc
+   * used to construct URLs
+   */
   attribute string type;
 
+  /**
+   * the schema for the local mail store, such
+   * as "mailbox", "imap", or "news"
+   * used to construct URIs
+   */
+  readonly attribute string localStoreType;
+  
   /* should we remember the password? */
   attribute boolean rememberPassword;
 
+  /* cleartext version of the password */
   attribute string password;
+
+  /* prompt the user for a password */
   string getPasswordWithUI(in wstring aPromptString);
 
   /* should we download whole messages when biff goes off? */
@@ -66,7 +88,8 @@ interface nsIMsgIncomingServer : nsISupports {
 
   /* the on-disk path to message storage for this server */
   attribute nsIFileSpec localPath;
- 
+
+  
   /* the RDF URI for the root mail folder */
   readonly attribute string serverURI;
 
@@ -84,9 +107,10 @@ interface nsIMsgIncomingServer : nsISupports {
   /* do a biff */
   void PerformBiff();
 
+  /* Write out all known folder data to panacea.dat */
   void WriteToFolderCache(in nsIMsgFolderCache folderCache);
 
-  // either we're going offline, or shutting down.
+  /* close any server connections */
   void CloseCachedConnections();
 
   /* access to generic attributes */

@@ -70,7 +70,6 @@ NS_IMPL_ISUPPORTS1(nsMsgIncomingServer, nsIMsgIncomingServer)
 NS_IMPL_GETSET(nsMsgIncomingServer, ServerBusy, PRBool, m_serverBusy)
 NS_IMPL_GETTER_STR(nsMsgIncomingServer::GetKey, m_serverKey)
 
-
 NS_IMETHODIMP
 nsMsgIncomingServer::SetKey(const char * serverKey)
 {
@@ -139,10 +138,34 @@ nsMsgIncomingServer::CloseCachedConnections()
 }
 
 
+// construct <localStoreType>://[<username>@]<hostname
 NS_IMETHODIMP
 nsMsgIncomingServer::GetServerURI(char **)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    nsCAutoString uri;
+
+    nsXPIDLCString localStoreType;
+    rv = GetLocalStoreType(getter_Copies(localStoreType));
+    
+    uri += localStoreType;
+    uri += "://";
+
+    nsXPIDLCString username;
+    rv = GetUsername(getter_Copies(username));
+
+    nsXPIDLCString escapedUsername;
+    *getter_Copies(escapedUsername) = nsEscape(username, url_Path);
+    // not all servers have hostnames
+    if (NS_SUCCEEDED(rv) && ((const char*)username) && username[0])
+        uri += username;
+
+    nsXPIDLCString hostname;
+    rv = GetHostName(getter_Copies(hostname));
+
+    uri += hostname;
+    
+    return NS_OK;
 }
 
 nsresult
@@ -587,6 +610,13 @@ NS_IMETHODIMP
 nsMsgIncomingServer::GetRememberPassword(PRBool* value)
 {
     return GetBoolValue("remember_password", value);
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::GetLocalStoreType(char **aResult)
+{
+    NS_NOTYETIMPLEMENTED("nsMsgIncomingServer superclass not implementing GetLocalStoreType!");
+    return NS_ERROR_UNEXPECTED;
 }
 
 // use the convenience macros to implement the accessors
