@@ -30,6 +30,8 @@
 #include "nsIFrame.h"
 #include "nsILookAndFeel.h"
 #include "nsIClipView.h"
+#include "nsISupportsArray.h"
+#include "nsIScrollPositionListener.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -356,6 +358,7 @@ nsScrollingView::nsScrollingView()
   mScrollPref = nsScrollPreference_kAuto;
   mScrollingTimer = nsnull;
   mLineHeight = 240;
+  mListeners = nsnull;
 }
 
 nsScrollingView::~nsScrollingView()
@@ -379,6 +382,11 @@ nsScrollingView::~nsScrollingView()
   {
     mScrollingTimer->Cancel();
     NS_RELEASE(mScrollingTimer);
+  }
+  
+  if (nsnull != mListeners) {
+    mListeners->Clear();
+    NS_RELEASE(mListeners);
   }
 }
 
@@ -605,6 +613,24 @@ NS_IMETHODIMP nsScrollingView::GetClipView(const nsIView** aClipView) const
   NS_PRECONDITION(aClipView, "null pointer");
   *aClipView = mClipView;
   return NS_OK;
+}
+
+NS_IMETHODIMP nsScrollingView::AddScrollPositionListener(nsIScrollPositionListener* aListener)
+{
+	if (nsnull == mListeners) {
+		nsresult rv = NS_NewISupportsArray(&mListeners);
+		if (NS_FAILED(rv))
+			return rv;
+	}
+	return mListeners->AppendElement(aListener);
+}
+
+NS_IMETHODIMP nsScrollingView::RemoveScrollPositionListener(nsIScrollPositionListener* aListener)
+{
+	if (nsnull != mListeners) {
+		return mListeners->RemoveElement(aListener);
+	}
+	return NS_ERROR_FAILURE;
 }
 
 void nsScrollingView::HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags)
@@ -1182,110 +1208,108 @@ NS_IMETHODIMP nsScrollingView::GetScrollPreference(nsScrollPreference &aScrollPr
 
 NS_IMETHODIMP nsScrollingView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags)
 {
-  nsIDeviceContext  *dev;
-  float             t2p;
-  float             p2t;
-  nsSize            clipSize;
-  nsIWidget         *widget;
-  PRInt32           dx = 0, dy = 0;
-  nsIView           *scrolledView;
+	nsIDeviceContext  *dev;
+	float             t2p;
+	float             p2t;
+	nsSize            clipSize;
+	nsIWidget         *widget;
+	PRInt32           dx = 0, dy = 0;
+	nsIView           *scrolledView;
 
-  mViewManager->GetDeviceContext(dev);
-  dev->GetAppUnitsToDevUnits(t2p);
-  dev->GetDevUnitsToAppUnits(p2t);
+	mViewManager->GetDeviceContext(dev);
+	dev->GetAppUnitsToDevUnits(t2p);
+	dev->GetDevUnitsToAppUnits(p2t);
 
-  NS_RELEASE(dev);
+	NS_RELEASE(dev);
 
-  mClipView->GetDimensions(&clipSize.width, &clipSize.height);
+	mClipView->GetDimensions(&clipSize.width, &clipSize.height);
 
-  mVScrollBarView->GetWidget(widget);
+	mVScrollBarView->GetWidget(widget);
 
-  if (nsnull != widget) {
-    nsIScrollbar* scrollv = nsnull;
-    if (NS_OK == widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv)) {
-      // Clamp aY
+	if (nsnull != widget) {
+		nsIScrollbar* scrollv = nsnull;
+		if (NS_OK == widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv)) {
+			// Clamp aY
 
-      if ((aY + clipSize.height) > mSizeY)
-        aY = mSizeY - clipSize.height;
+			if ((aY + clipSize.height) > mSizeY)
+				aY = mSizeY - clipSize.height;
 
-      if (aY < 0)
-        aY = 0;
+			if (aY < 0)
+				aY = 0;
 
-      // Move the scrollbar's thumb
+			// Move the scrollbar's thumb
 
-      PRUint32  oldpos = mOffsetY;
-      PRUint32  newpos = NSIntPixelsToTwips(NSTwipsToIntPixels(aY, t2p), p2t);
+			PRUint32  oldpos = mOffsetY;
+			PRUint32  newpos = NSIntPixelsToTwips(NSTwipsToIntPixels(aY, t2p), p2t);
 
-      scrollv->SetPosition(newpos);
+			scrollv->SetPosition(newpos);
 
-      dy = NSTwipsToIntPixels((oldpos - newpos), t2p);
+			dy = NSTwipsToIntPixels((oldpos - newpos), t2p);
 
-      NS_RELEASE(scrollv);
-    }
+			NS_RELEASE(scrollv);
+		}
 
-    NS_RELEASE(widget);
-  }
+		NS_RELEASE(widget);
+	}
 
-  mHScrollBarView->GetWidget(widget);
+	mHScrollBarView->GetWidget(widget);
 
-  if (nsnull != widget) {
-    nsIScrollbar* scrollh = nsnull;
-    if (NS_OK == widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh)) {
-      // Clamp aX
+	if (nsnull != widget) {
+		nsIScrollbar* scrollh = nsnull;
+		if (NS_OK == widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh)) {
+			// Clamp aX
 
-      if ((aX + clipSize.width) > mSizeX)
-        aX = mSizeX - clipSize.width;
+			if ((aX + clipSize.width) > mSizeX)
+				aX = mSizeX - clipSize.width;
 
-      if (aX < 0)
-        aX = 0;
+			if (aX < 0)
+				aX = 0;
 
-      // Move the scrollbar's thumb
+			// Move the scrollbar's thumb
 
-      PRUint32  oldpos = mOffsetX;
-      PRUint32  newpos = NSIntPixelsToTwips(NSTwipsToIntPixels(aX, t2p), p2t);
+			PRUint32  oldpos = mOffsetX;
+			PRUint32  newpos = NSIntPixelsToTwips(NSTwipsToIntPixels(aX, t2p), p2t);
 
-      scrollh->SetPosition(newpos);
+			scrollh->SetPosition(newpos);
 
-      dx = NSTwipsToIntPixels((oldpos - newpos), t2p);
+			dx = NSTwipsToIntPixels((oldpos - newpos), t2p);
 
-      NS_RELEASE(scrollh);
-    }
+			NS_RELEASE(scrollh);
+		}
 
-    NS_RELEASE(widget);
-  }
+		NS_RELEASE(widget);
+	}
 
-  // Update the scrolled view's position
+	// Update the scrolled view's position
 
-  GetScrolledView(scrolledView);
+	GetScrolledView(scrolledView);
 
-  if (nsnull != scrolledView)
-  {
-    scrolledView->SetPosition(-aX, -aY);
+	if (nsnull != scrolledView)
+	{
+		scrolledView->SetPosition(-aX, -aY);
 
-    mOffsetX = aX;
-    mOffsetY = aY;
-  }
+		mOffsetX = aX;
+		mOffsetY = aY;
+	}
 
-  Scroll(scrolledView, dx, dy, t2p, 0);
+	Scroll(scrolledView, dx, dy, t2p, 0);
 
-#if 0
-  if (dx || dy)
-    AdjustChildWidgets(this, scrolledView, 0, 0, t2p);
+	// notify the listeners.
+	if (nsnull != mListeners) {
+		PRUint32 listenerCount;
+		if (NS_SUCCEEDED(mListeners->Count(&listenerCount))) {
+			const nsIID& kScrollPositionListenerIID = NS_GET_IID(nsIScrollPositionListener);
+			nsIScrollPositionListener* listener;
+			for (PRUint32 i = 0; i < listenerCount; i++) {
+				if (NS_SUCCEEDED(mListeners->QueryElementAt(i, kScrollPositionListenerIID, (void**)&listener))) {
+					listener->ScrollPositionChanged(this, aX, aY);
+					NS_RELEASE(listener);
+				}
+			}
+		}
+	}
 
-  // Damage the updated area
-  nsRect  r;
-
-  r.x = 0;
-  r.y = aY;
-
-  mClipView->GetDimensions(&r.width, &r.height);
-
-  if (nsnull != scrolledView)
-    mViewManager->UpdateView(scrolledView, r, aUpdateFlags);
-  }
-#endif
-
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsScrollingView::SetControlInsets(const nsMargin &aInsets)

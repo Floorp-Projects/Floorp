@@ -22,10 +22,11 @@
 #include "nsISupports.h"
 #include "nsCoord.h"
 #include "nsIViewManager.h"
-class nsIView;
 
-typedef enum
-{
+class nsIView;
+class nsIScrollPositionListener;
+
+typedef enum {
   nsScrollPreference_kAuto = 0,
   nsScrollPreference_kNeverScroll,
   nsScrollPreference_kAlwaysScroll
@@ -45,10 +46,8 @@ typedef enum
  * because the scrolled view is made a child of the clip view (an internal
  * child view created by the scrolling view).
  *
- * XXX Rename this class nsIScrollingView
  */
-class nsIScrollableView : public nsISupports
-{
+class nsIScrollableView : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLABLEVIEW_IID)
 
@@ -209,6 +208,16 @@ public:
    * Returns the clip view
    */
   NS_IMETHOD GetClipView(const nsIView** aClipView) const = 0;
+
+  /**
+   * Adds a scroll position listener.
+   */
+  NS_IMETHOD AddScrollPositionListener(nsIScrollPositionListener* aListener) = 0;
+  
+  /**
+   * Removes a scroll position listener.
+   */
+  NS_IMETHOD RemoveScrollPositionListener(nsIScrollPositionListener* aListener) = 0;
 };
 
 //regardless of the transparency or opacity settings
