@@ -405,10 +405,9 @@ nsHTMLFrameInnerFrame::nsHTMLFrameInnerFrame(nsIContent* aContent,
 
 nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
 {
-  printf("nsHTMLFrameInnerFrame destructor %X \n", this);
+  //printf("nsHTMLFrameInnerFrame destructor %X \n", this);
   if (nsnull != mWebShell) {
-    // XXX: Is the needed (or wanted?)
-    mWebShell->SetContainer(nsnull);
+    mWebShell->Destroy();
     NS_RELEASE(mWebShell);
   }
   NS_RELEASE(mTempObserver);
