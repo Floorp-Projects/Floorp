@@ -162,7 +162,7 @@ STDMETHODIMP Accessible::AccessibleObjectFromWindow(
     }
     
 
-    return S_FALSE;
+    return E_FAIL;
 }
 
 STDMETHODIMP Accessible::NotifyWinEvent(
@@ -184,7 +184,7 @@ STDMETHODIMP Accessible::NotifyWinEvent(
          return gmNotifyWinEvent(event, hwnd, idObjectType, idObject);
     }
     
-    return S_FALSE;
+    return E_FAIL;
 }
 
 
@@ -228,7 +228,8 @@ STDMETHODIMP Accessible::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispPa
   if (pWnd) {
     // get the accessible.
     void* ptr = nsnull;
-    if (AccessibleObjectFromWindow(pWnd, OBJID_WINDOW, IID_IAccessible, &ptr) != S_FALSE) {
+    HRESULT result = AccessibleObjectFromWindow(pWnd, OBJID_WINDOW, IID_IAccessible, &ptr);
+    if (SUCCEEDED(result)) {
       IAccessible* a = (IAccessible*)ptr;
       // got one? return it.
       if (a) {
@@ -239,7 +240,7 @@ STDMETHODIMP Accessible::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispPa
   }
 
   *ppdispParent = NULL;
-  return S_FALSE;  
+  return E_FAIL;  
 }
 
 STDMETHODIMP Accessible::get_accChildCount( long __RPC_FAR *pcountChildren)
@@ -274,7 +275,7 @@ STDMETHODIMP Accessible::get_accChild(
   }
 
   *ppdispChild = NULL;
-  return S_FALSE;
+  return E_FAIL;
 }
 
 STDMETHODIMP Accessible::get_accName( 
@@ -347,12 +348,12 @@ STDMETHODIMP Accessible::get_accRole(
    GetNSAccessibleFor(varChild,a);
 
    if (!a)
-     return S_FALSE;
+     return E_FAIL;
 
    PRUint32 role = 0;
    nsresult rv = a->GetAccRole(&role);
    if (NS_FAILED(rv))
-     return S_FALSE;
+     return E_FAIL;
 
    pvarRole->lVal = role;
    return S_OK;
@@ -369,12 +370,12 @@ STDMETHODIMP Accessible::get_accState(
    nsCOMPtr<nsIAccessible> a;
    GetNSAccessibleFor(varChild,a);
    if (!a)
-     return S_FALSE;
+     return E_FAIL;
 
    PRUint32 state;
    nsresult rv = a->GetAccState(&state);
    if (NS_FAILED(rv))
-     return S_FALSE;
+     return E_FAIL;
 
    pvarState->lVal = state;
 
@@ -423,7 +424,7 @@ STDMETHODIMP Accessible::get_accFocus(
   }
 
   pvarChild->vt = VT_EMPTY;
-  return S_FALSE;
+  return E_FAIL;
 }
 /**
   * This method is called when a client wants to know which children of a node
@@ -544,7 +545,7 @@ STDMETHODIMP Accessible::accSelect(
     return S_OK;
   }
 
-  return S_FALSE;
+  return E_FAIL;
 }
 
 STDMETHODIMP Accessible::accLocation( 
@@ -572,7 +573,7 @@ STDMETHODIMP Accessible::accLocation(
     return S_OK;
   }
 
-  return S_FALSE;  
+  return E_FAIL;  
 }
 
 STDMETHODIMP Accessible::accNavigate( 
@@ -619,7 +620,7 @@ STDMETHODIMP Accessible::accNavigate(
      return NS_OK;
   } else {
      pvarEndUpAt->vt = VT_EMPTY;
-     return S_FALSE;
+     return E_FAIL;
   }
 }
 
@@ -653,7 +654,7 @@ STDMETHODIMP Accessible::accHitTest(
   } else {
       // no child at that point
       pvarChild->vt = VT_EMPTY;
-      return S_FALSE;
+      return E_FAIL;
   }
 
   return S_OK;
@@ -669,14 +670,14 @@ STDMETHODIMP Accessible::put_accName(
       /* [optional][in] */ VARIANT varChild,
       /* [in] */ BSTR szName)
 {
-  return S_FALSE;
+  return E_NOTIMPL;
 }
 
 STDMETHODIMP Accessible::put_accValue( 
       /* [optional][in] */ VARIANT varChild,
       /* [in] */ BSTR szValue)
 {
-  return S_FALSE;
+  return E_NOTIMPL;
 }
 
 
@@ -825,7 +826,7 @@ STDMETHODIMP DocAccessible::get_URL(/* [out] */ BSTR __RPC_FAR *aURL)
       return S_OK;
     }
   }
-  return S_FALSE;
+  return E_FAIL;
 }
 
 STDMETHODIMP DocAccessible::get_title( /* [out] */ BSTR __RPC_FAR *aTitle)
@@ -838,7 +839,7 @@ STDMETHODIMP DocAccessible::get_title( /* [out] */ BSTR __RPC_FAR *aTitle)
       return S_OK;
     }
   }
-  return S_FALSE;
+  return E_FAIL;
 }
 
 STDMETHODIMP DocAccessible::get_mimeType(/* [out] */ BSTR __RPC_FAR *aMimeType)
@@ -851,7 +852,7 @@ STDMETHODIMP DocAccessible::get_mimeType(/* [out] */ BSTR __RPC_FAR *aMimeType)
       return S_OK;
     }
   }
-  return S_FALSE;
+  return E_FAIL;
 }
 
 STDMETHODIMP DocAccessible::get_docType(/* [out] */ BSTR __RPC_FAR *aDocType)
@@ -864,7 +865,7 @@ STDMETHODIMP DocAccessible::get_docType(/* [out] */ BSTR __RPC_FAR *aDocType)
       return S_OK;
     }
   }
-  return S_FALSE;
+  return E_FAIL;
 }
 
 STDMETHODIMP DocAccessible::get_nameSpaceURIForID(/* [in] */  short aNameSpaceID,
@@ -879,13 +880,13 @@ STDMETHODIMP DocAccessible::get_nameSpaceURIForID(/* [in] */  short aNameSpaceID
     return S_OK;
   }
 
-  return S_FALSE;
+  return E_FAIL;
 }
 
 
 STDMETHODIMP DocAccessible::put_alternateViewMediaTypes( /* [in] */ BSTR __RPC_FAR *commaSeparatedMediaTypes)
 {
-  return S_FALSE;
+  return E_NOTIMPL;
 }
 
 //----- Root Accessible -----
