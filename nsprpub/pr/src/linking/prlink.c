@@ -596,6 +596,8 @@ PR_LoadLibrary(const char *name)
         FSSpec fileSpec;
         PRUint32 index;
 
+		Boolean tempUnusedBool;	// rjc
+
         /* Copy the name: we'll change it */
         cMacPath = strdup(name);    
         if (cMacPath == NULL)
@@ -645,6 +647,11 @@ PR_LoadLibrary(const char *name)
         if (err != noErr)
             goto unlock;
         fileSpec.parID = pb.dirInfo.ioDrDirID;
+
+		// resolve an alias if this was one (rjc)
+		err = ResolveAliasFile(&fileSpec, true, &tempUnusedBool, &tempUnusedBool);
+		if (err != noErr)
+			goto unlock;
 
         /* Finally, try to load the library */
         err = GetDiskFragment(&fileSpec, 0, kCFragGoesToEOF, fileSpec.name, 
