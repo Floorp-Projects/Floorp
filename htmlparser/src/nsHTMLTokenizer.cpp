@@ -462,7 +462,12 @@ nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)
       }
       else {
         if(!nsCRT::IsAsciiSpace(theChar)) {
-          result=ConsumeText(theToken,aScanner);
+          if(theChar!=nsnull) { 
+            result=ConsumeText(theToken,aScanner); 
+          } 
+          else { 
+            aScanner.GetChar(theChar); // skip the embedded null char. Fix bug 64098. 
+          } 
           break;
         }
         result=ConsumeWhitespace(theChar,theToken,aScanner);
