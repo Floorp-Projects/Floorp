@@ -199,11 +199,16 @@ my $emailinput2 = GenerateEmailInput(2);
 my $jscript = << 'ENDSCRIPT';
 <script language="Javascript1.2" type="text/javascript">
 <!--
+function array_push(str)
+{
+   this[this.length] = str;
+   return this;
+}
+Array.prototype.push = array_push;
+
 var cpts = new Array();
 var vers = new Array();
-// Apparently, IE4 chokes on the below, so do nothing if running that.
 var agt=navigator.userAgent.toLowerCase();
-if ((agt.indexOf("msie") == -1)) {
 ENDSCRIPT
 
 
@@ -214,11 +219,11 @@ my $i = 0;
 my $j = 0;
 
 foreach $c (@::legal_components) {
-    $jscript .= "cpts['$c'] = [];\n";
+    $jscript .= "cpts['$c'] = new Array();\n";
 }
 
 foreach $v (@::legal_versions) {
-    $jscript .= "vers['$v'] = [];\n";
+    $jscript .= "vers['$v'] = new Array();\n";
 }
 
 
@@ -239,13 +244,10 @@ for $p (@::legal_product) {
 $i = 0;
 $jscript .= q{
 
-\} // end IE4 choke around
 // Only display versions/components valid for selected product(s)
 
 function selectProduct(f) {
-    // Apparently, IE4 chokes on the below, so do nothing if running that.
     var agt=navigator.userAgent.toLowerCase();
-    if ((agt.indexOf("msie") != -1)) return;
     // Netscape 4.04 and 4.05 also choke with an "undefined"
     // error.  if someone can figure out how to "define" the
     // whatever, we'll remove this hack.  in the mean time, we'll
@@ -290,7 +292,7 @@ function selectProduct(f) {
         if (doit) {
             var l = f.component.length;
             f.component[l] = new Option(c, c);
-            if (csel[c] != undefined) {
+            if (csel[c]) {
                 f.component[l].selected = true;
             }
         }
@@ -322,7 +324,7 @@ function selectProduct(f) {
         if (doit) {
             var l = f.version.length;
             f.version[l] = new Option(v, v);
-            if (vsel[v] != undefined) {
+            if (vsel[v]) {
                 f.version[l].selected = true;
             }
         }
