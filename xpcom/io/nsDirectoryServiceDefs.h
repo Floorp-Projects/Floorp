@@ -96,7 +96,7 @@
     #define NS_UNIX_LIB_DIR                     "LibD"
     #define NS_UNIX_HOME_DIR                    "Home" 
 #elif defined (XP_OS2)
-    #define NS_OS2_DIR                          "0S2Dir"
+    #define NS_OS2_DIR                          "OS2Dir"
     #define NS_OS2_HOME_DIR                     "Home"
     #define NS_OS2_DESKTOP_DIR                  "Desk"    
 #elif defined (XP_BEOS)
