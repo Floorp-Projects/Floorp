@@ -66,7 +66,7 @@ function markLinkVisited(href, linkNode)
   var globalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
                                 .getService(Components.interfaces.nsIGlobalHistory2);
 
-  var uri = makeURL(href);
+  var uri = makeURI(href);
   if (!globalHistory.isVisited(uri)) {
     globalHistory.addURI(uri, false, true, null);
     var oldHref = linkNode.getAttribute("href");
@@ -131,7 +131,7 @@ function getReferrer(doc)
 
   if (sourceURL) {
     try {
-      return makeURL(sourceURL);
+      return makeURI(sourceURL);
     }
     catch (e) { }
   }
@@ -451,7 +451,7 @@ function nsHeaderSniffer(aURL, aCallback, aData, aSkipPrompt)
   this.mData = aData;
   this.mSkipPrompt = aSkipPrompt;
   
-  this.uri = makeURL(aURL);
+  this.uri = makeURI(aURL);
   
   this.linkChecker = Components.classes["@mozilla.org/network/urichecker;1"]
     .createInstance(Components.interfaces.nsIURIChecker);
@@ -680,7 +680,7 @@ function makeWebBrowserPersist()
   return Components.classes[persistContractID].createInstance(persistIID);
 }
 
-function makeURL(aURL)
+function makeURI(aURL)
 {
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                             .getService(Components.interfaces.nsIIOService);
