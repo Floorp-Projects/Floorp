@@ -15253,6 +15253,14 @@ EOF
 . ${srcdir}/config/chrome-versions.sh
 
 
+cat >> confdefs.h <<EOF
+#define MOZILLA_LOCALE_VERSION "$MOZILLA_LOCALE_VERSION"
+EOF
+
+cat >> confdefs.h <<EOF
+#define MOZILLA_REGION_VERSION "$MOZILLA_REGION_VERSION"
+EOF
+
 
 
 
