@@ -20,7 +20,6 @@
 #include "editor.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 
 // note that aEditor is not refcounted
@@ -56,35 +55,7 @@ nsresult SplitElementTxn::Do(void)
     // insert the new node
     if ((NS_SUCCEEDED(result)) && (nsnull!=mParent))
     {
-      nsCOMPtr<nsIDOMNode> resultNode;
-      result = mParent->InsertBefore(mNewNode, mNode, getter_AddRefs(resultNode));
-      if (NS_SUCCEEDED(result))
-      {
-        // split the children between the 2 nodes
-        // at this point, nNode has all the children
-        if (0<=mOffset) // don't bother unless we're going to move at least one child
-        {
-          nsCOMPtr<nsIDOMNodeList> childNodes;
-          result = mParent->GetChildNodes(getter_AddRefs(childNodes));
-          if ((NS_SUCCEEDED(result)) && (childNodes))
-          {
-            PRUint32 i=0;
-            for ( ; ((NS_SUCCEEDED(result)) && (i<mOffset)); i++)
-            {
-              nsCOMPtr<nsIDOMNode> childNode;
-              result = childNodes->Item(i, getter_AddRefs(childNode));
-              if ((NS_SUCCEEDED(result)) && (childNode))
-              {
-                result = mNode->RemoveChild(childNode, getter_AddRefs(resultNode));
-                if (NS_SUCCEEDED(result))
-                {
-                  result = mNewNode->AppendChild(childNode, getter_AddRefs(resultNode));
-                }
-              }
-            }
-          }
-        }
-      }        
+      result = EditTxn::SplitNode(mNode, mOffset, mNewNode, mParent);
     }
   }
   return result;
@@ -92,12 +63,15 @@ nsresult SplitElementTxn::Do(void)
 
 nsresult SplitElementTxn::Undo(void)
 {
-  return NS_OK;
+  // this assumes Do inserted the new node in front of the prior existing node
+  nsresult result = EditTxn::JoinNodes(mNode, mNewNode, mParent, PR_FALSE);
+  return result;
 }
 
 nsresult SplitElementTxn::Redo(void)
 {
-  return NS_OK;
+  nsresult result = EditTxn::SplitNode(mNode, mOffset, mNewNode, mParent);
+  return result;
 }
 
 nsresult SplitElementTxn::GetIsTransient(PRBool *aIsTransient)

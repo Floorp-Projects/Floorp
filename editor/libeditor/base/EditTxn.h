@@ -22,6 +22,8 @@
 #include "nsITransaction.h"
 class nsEditor;
 
+class nsIDOMNode;
+
 /**
  * base class for all document editing transactions.
  * provides access to the nsEditor that created this transaction.
@@ -49,6 +51,19 @@ public:
   virtual nsresult GetUndoString(nsString **aString);
 
   virtual nsresult GetRedoString(nsString **aString);
+
+ // helper static methods.  maybe move these into editor class.
+
+  /** */
+  static  nsresult SplitNode(nsIDOMNode * aNode,
+                             PRInt32      aOffset,
+                             nsIDOMNode * aNewNode,
+                             nsIDOMNode * aParent);
+
+  static nsresult EditTxn::JoinNodes(nsIDOMNode * aNodeToKeep,
+                                     nsIDOMNode * aNodeToJoin,
+                                     nsIDOMNode * aParent,
+                                     PRBool       aNodeToKeepIsFirst);
 
 protected:
 

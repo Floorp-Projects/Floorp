@@ -17,6 +17,9 @@
  */
 
 #include "EditTxn.h"
+#include "nsCOMPtr.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMNodeList.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITransactionIID, NS_ITRANSACTION_IID);
@@ -95,4 +98,55 @@ EditTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   *aInstancePtr = 0;
   return NS_NOINTERFACE;
+}
+
+
+/* =============================== Static helper methods ================================== */
+
+nsresult 
+EditTxn::SplitNode(nsIDOMNode * aNode,
+                   PRInt32      aOffset,
+                   nsIDOMNode*  aNewNode,
+                   nsIDOMNode*  aParent)
+{
+  nsCOMPtr<nsIDOMNode> resultNode;
+  nsresult result = aParent->InsertBefore(aNewNode, aNode, getter_AddRefs(resultNode));
+  if (NS_SUCCEEDED(result))
+  {
+    // split the children between the 2 nodes
+    // at this point, nNode has all the children
+    if (0<=aOffset) // don't bother unless we're going to move at least one child
+    {
+      nsCOMPtr<nsIDOMNodeList> childNodes;
+      result = aParent->GetChildNodes(getter_AddRefs(childNodes));
+      if ((NS_SUCCEEDED(result)) && (childNodes))
+      {
+        PRInt32 i=0;
+        for ( ; ((NS_SUCCEEDED(result)) && (i<aOffset)); i++)
+        {
+          nsCOMPtr<nsIDOMNode> childNode;
+          result = childNodes->Item(i, getter_AddRefs(childNode));
+          if ((NS_SUCCEEDED(result)) && (childNode))
+          {
+            result = aNode->RemoveChild(childNode, getter_AddRefs(resultNode));
+            if (NS_SUCCEEDED(result))
+            {
+              result = aNewNode->AppendChild(childNode, getter_AddRefs(resultNode));
+            }
+          }
+        }
+      }        
+    }
+  }
+  return result;
+}
+
+nsresult
+EditTxn::JoinNodes(nsIDOMNode * aNodeToKeep,
+                   nsIDOMNode * aNodeToJoin,
+                   nsIDOMNode * aParent,
+                   PRBool       aNodeToKeepIsFirst)
+{
+  nsresult result;
+  return result;
 }
