@@ -30,7 +30,7 @@ CHROME_DIR = packages/core
 CHROME_CONTENT_DIR = communicator/content
 
 CHROME_CONTENT = \
-		platformGlobalOverlay.xul \
+		platformCommunicatorOverlay.xul \
 		platformBrowserBindings.xul \
 		platformEditorBindings.xul \
 		$(NULL)
