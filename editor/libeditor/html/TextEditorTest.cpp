@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 
 #include <stdio.h>
 
@@ -50,7 +50,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsEditProperty.h"
 #include "nsString.h"
-
+#include "nsReadableUtils.h"
 
 #define TEST_RESULT(r) { if (NS_FAILED(r)) {printf("FAILURE result=%X\n", r); return r; } }
 #define TEST_POINTER(p) { if (!p) {printf("FAILURE null pointer\n"); return NS_ERROR_NULL_POINTER; } }
