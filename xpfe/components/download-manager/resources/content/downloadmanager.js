@@ -87,9 +87,9 @@ function Test()
   var ds = dlmgr.QueryInterface(Components.interfaces.nsIRDFDataSource);
   gDownloadView.database.AddDataSource(ds);
   gDownloadView.builder.rebuild();
-  dlmgr.addItem("Some File", uri, lf, null, null);
-  gDownloadView.builder.rebuild();  
-  dump("*** goat\n");
+//  dlmgr.addItem("Some File", uri, lf, null, null);
+//  gDownloadView.builder.rebuild();  
+//  dump("*** goat\n");
 }
 
 function Shutdown()

@@ -53,12 +53,10 @@
 #include "nsILocalFile.h"
  
 class nsDownloadManager : public nsIDownloadManager,
-                          public nsIRDFDataSource,
-                          public nsIRDFRemoteDataSource
+                          public nsIRDFDataSource
 {
 public:
   NS_DECL_NSIRDFDATASOURCE
-  NS_DECL_NSIRDFREMOTEDATASOURCE
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOWNLOADMANAGER
 
@@ -69,11 +67,12 @@ public:
 
 protected:
   nsresult GetDownloadsContainer(nsIRDFContainer** aResult);
+  nsresult GetProfileDownloadsFileURL(char** aDownloadsFileURL);
+
 
 protected:
   nsCOMPtr<nsIRDFDataSource> mInner;
   nsCOMPtr<nsISupportsArray> mObservers;
-
   nsCOMPtr<nsIRDFService> mRDFService;
   nsCOMPtr<nsIRDFContainerUtils> mRDFContainerUtils;
 

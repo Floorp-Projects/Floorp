@@ -55,6 +55,7 @@
 #include "nsFileStream.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 
 #define PROFILE_DOWNLOAD_FILE "downloads.rdf"
 #define NSDOWNLOADMANAGER_PROPERTIES_URI "chrome://communicator/locale/downloadmanager/downloadmanager.properties"
@@ -67,7 +68,7 @@ nsIRDFResource* gNC_Progress;
 
 nsIRDFService* gRDFService;
 
-NS_IMPL_ISUPPORTS3(nsDownloadManager, nsIDownloadManager, nsIRDFDataSource, nsIRDFRemoteDataSource)
+NS_IMPL_ISUPPORTS2(nsDownloadManager, nsIDownloadManager, nsIRDFDataSource)
 
 nsDownloadManager::nsDownloadManager()
 {
@@ -105,8 +106,24 @@ nsDownloadManager::Init()
   gRDFService->GetResource(NC_NAMESPACE_URI "Name", &gNC_Name);
   gRDFService->GetResource(NC_NAMESPACE_URI "Progress", &gNC_Progress);
 
+#if 0
   mInner = do_GetService(NS_RDF_DATASOURCE_CONTRACTID_PREFIX "in-memory-datasource", &rv);
   if (NS_FAILED(rv)) return rv;
+#else
+  mInner = do_GetService(kRDFXMLDataSourceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // This should move elsewhere
+  nsXPIDLCString downloadsDB;
+  GetProfileDownloadsFileURL(getter_Copies(downloadsDB));
+
+  nsCOMPtr<nsIRDFRemoteDataSource> remote(do_QueryInterface(mInner));
+  rv = remote->Init(downloadsDB);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = remote->Refresh(PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+#endif
 
   return gRDFService->RegisterDataSource(this, PR_FALSE);  
 }                                                 
@@ -171,7 +188,8 @@ nsDownloadManager::AddItem(const PRUnichar* aDisplayName, nsIURI* aSourceURI,
   gRDFService->GetResource(filePath, getter_AddRefs(fileResource));
   Assert(downloadItem, gNC_File, fileResource, PR_TRUE);
 
-  return Flush();
+  nsCOMPtr<nsIRDFRemoteDataSource> remote(do_QueryInterface(mInner));
+  return remote->Flush();
 }
 
 nsresult
@@ -357,34 +375,11 @@ nsDownloadManager::DoCommand(nsISupportsArray* aSources,
   return mInner->DoCommand(aSources, aCommand, aArguments);
 }
 
-////////////////////////////////////////////////////////////////////////
-// nsIRDFRemoteDataSource
-
-NS_IMETHODIMP
-nsDownloadManager::GetLoaded(PRBool* aResult)
-{
-  *aResult = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownloadManager::Init(const char* aURI)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownloadManager::Refresh(PRBool aBlocking)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownloadManager::Flush()
+nsresult
+nsDownloadManager::GetProfileDownloadsFileURL(char** aDownloadsFileURL)
 {
   nsresult rv;
 
-  // Locate datasource file
   nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1"));
   nsCOMPtr<nsIFile> profileDir;
   rv = fileLocator->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile), getter_AddRefs(profileDir));
@@ -393,27 +388,7 @@ nsDownloadManager::Flush()
   rv = profileDir->Append(PROFILE_DOWNLOAD_FILE);
   if (NS_FAILED(rv)) return rv;
 
-  nsXPIDLCString fileURL;
-  profileDir->GetURL(getter_Copies(fileURL));
-  nsAutoString fileAS; fileAS.AssignWithConversion(fileURL);
-
-  nsFileURL url(fileURL, PR_TRUE);
-  nsFileSpec path(url);
-
-  nsOutputFileStream out(path);
-  if (!out.is_open())
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIRDFXMLSerializer> serializer(do_CreateInstance("@mozilla.org/rdf/xml-serializer;1", &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = serializer->Init(mInner);
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr<nsIRDFXMLSource> source(do_QueryInterface(serializer, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  return source->Serialize(out.GetIStream());
+  return profileDir->GetURL(aDownloadsFileURL);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
