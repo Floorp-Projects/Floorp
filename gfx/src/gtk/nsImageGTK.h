@@ -149,7 +149,6 @@ private:
                          const nsRect &destRect, const nsRect &clipRect, PRBool useClip);
   inline void CreateAlphaBitmap(PRInt32 aWidth, PRInt32 aHeight);
   inline void CreateOffscreenPixmap(PRInt32 aWidth, PRInt32 aHeight);
-  inline void DrawImageOffscreen(PRInt32 validX, PRInt32 validY, PRInt32 validWidth, PRInt32 validHeight);
   inline void SetupGCForAlpha(GdkGC *aGC, PRInt32 aX, PRInt32 aY);
 
   PRUint8      *mImageBits;

@@ -294,6 +294,46 @@ void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
          aFlags);
 #endif
 
+//  fprintf(stderr, "ImageUpdated %p x,y=(%d %d) width,height=(%d %d)\n",
+//          this, aUpdateRect->x, aUpdateRect->y, aUpdateRect->width,
+//          aUpdateRect->height);
+
+  // check if the image has an all-opaque 8-bit alpha mask
+  if ((mAlphaDepth==8) && !mAlphaValid) {
+    unsigned bottom, left, right;
+    bottom = aUpdateRect->y + aUpdateRect->height;
+    left   = aUpdateRect->x;
+    right  = left + aUpdateRect->width;
+    for (unsigned y=aUpdateRect->y; (y<bottom) && !mAlphaValid; y++) {
+      unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + left;
+      for (unsigned x=left; x<right; x++) {
+        if (*(alpha++)!=255) {
+          mAlphaValid=PR_TRUE;
+          break;
+        }
+      }
+    }
+  }
+
+  if (mAlphaValid && mImagePixmap) {
+    gdk_pixmap_unref(mImagePixmap);
+    mImagePixmap = 0;
+  }
+
+  if (!mAlphaValid) {
+    CreateOffscreenPixmap(mWidth, mHeight);
+    if (!sXbitGC)
+      sXbitGC = gdk_gc_new(mImagePixmap);
+
+    gdk_draw_rgb_image_dithalign(mImagePixmap, sXbitGC, 
+                 aUpdateRect->x, aUpdateRect->y,
+                 aUpdateRect->width, aUpdateRect->height,
+                 GDK_RGB_DITHER_MAX,
+                 mImageBits + mRowBytes*aUpdateRect->y + 3*aUpdateRect->x,
+                 mRowBytes,
+                 aUpdateRect->x, aUpdateRect->y);
+  }
+
   mFlags = aFlags; // this should be 0'd out by Draw()
 }
 
@@ -850,23 +890,6 @@ void nsImageGTK::CreateOffscreenPixmap(PRInt32 aWidth, PRInt32 aHeight)
 }
 
 
-void nsImageGTK::DrawImageOffscreen(PRInt32 validX, PRInt32 validY, PRInt32 validWidth, PRInt32 validHeight)
-{
-  if (IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags)) {
-    if (!sXbitGC) {
-      sXbitGC = gdk_gc_new(mImagePixmap);
-    }
-
-    // Render the image bits into an off screen pixmap
-    gdk_draw_rgb_image(mImagePixmap,
-                       sXbitGC,
-                       validX, validY, validWidth, validHeight,
-                       GDK_RGB_DITHER_MAX,
-                       mImageBits, mRowBytes);
-  }
-
-}
-
 void nsImageGTK::SetupGCForAlpha(GdkGC *aGC, PRInt32 aX, PRInt32 aY)
 {
   // XXX should use (different?) GC cache here
@@ -953,9 +976,6 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
     validWidth -= mDecodedX1;
     validX = mDecodedX1;
   }
-
-  CreateOffscreenPixmap(aWidth, aHeight);
-  DrawImageOffscreen(validX, validY, validWidth, validHeight);
 
 #ifdef CHEAP_PERFORMANCE_MEASURMENT
   gPixmapTime = PR_Now();
@@ -1136,10 +1156,6 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
     return NS_OK;
   }
 
-  // draw the tile offscreen
-  CreateOffscreenPixmap(mWidth, mHeight);
-  DrawImageOffscreen(0, 0, validWidth, validHeight);
-
   if (mAlphaDepth == 1) {
 
     GdkPixmap *tileImg;
@@ -1254,10 +1270,6 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
     return NS_OK;
   }
 
-  // draw the tile offscreen
-  CreateOffscreenPixmap(mWidth, mHeight);
-  DrawImageOffscreen(validX, validY, validWidth, validHeight);
-
   if (mAlphaDepth == 1) {
     GdkPixmap *tileImg;
     GdkPixmap *tileMask;
@@ -1343,17 +1355,6 @@ nsImageGTK::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
   mDecodedX2 = x2; 
   mDecodedY2 = y2; 
 
-  // check if the image has an all-opaque 8-bit alpha mask
-  if ((mAlphaDepth==8) && !mAlphaValid) {
-    for (int y=mDecodedY1; y<mDecodedY2; y++) {
-      unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + mDecodedX1;
-      for (int x=mDecodedX1; x<mDecodedX2; x++)
-        if (*(alpha++)!=255) {
-          mAlphaValid=PR_TRUE;
-          return NS_OK;
-        }
-    }
-  }
 
   return NS_OK;
 }
