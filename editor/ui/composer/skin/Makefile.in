@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_RESOURCE_SKIN = $(srcdir)/Editor.css
+EXPORT_RESOURCE_SKIN = $(srcdir)/editor.css
 
 EXPORT_RESOURCE_TOOLBAR = \
 		$(srcdir)/images/bold.gif \
