@@ -60,6 +60,20 @@ static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
 #define XML_PSEUDO_ELEMENT  0
 
+// XXX Open Issues:
+// 1) html:style - Should we allow inline style? If so, the content
+//    sink needs to process the tag and invoke the CSS parser.
+// 2) html:base - Should we allow a base tag? If so, the content
+//    sink needs to maintain the base when resolving URLs for
+//    loaded scripts and style sheets. Should it be allowed anywhere?
+// 3) what's not allowed - We need to figure out which HTML tags
+//    (prefixed with a HTML namespace qualifier) are explicitly not
+//    allowed (if any).
+// 4) factoring code with nsHTMLContentSink - There's some amount of
+//    common code between this and the HTML content sink. This will
+//    increase as we support more and more HTML elements. How can code
+//    from the code be factored?
+
 nsresult
 NS_NewXMLContentSink(nsIXMLContentSink** aResult,
                      nsIDocument* aDoc,

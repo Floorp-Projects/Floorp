@@ -56,7 +56,86 @@ public:
   NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
+  NS_IMETHOD GetDocument(nsIDocument*& aResult) const {
+    return mInner.GetDocument(aResult);
+  }
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep) {
+    return mInner.SetDocument(aDocument, aDeep);
+  }
+  NS_IMETHOD GetParent(nsIContent*& aResult) const {
+    return mInner.GetParent(aResult);
+  }
+  NS_IMETHOD SetParent(nsIContent* aParent) {
+    return mInner.SetParent(aParent);
+  }
+  NS_IMETHOD CanContainChildren(PRBool& aResult) const {
+    return mInner.CanContainChildren(aResult);
+  }
+  NS_IMETHOD ChildCount(PRInt32& aResult) const {
+    return mInner.ChildCount(aResult);
+  }
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const {
+    return mInner.ChildAt(aIndex, aResult);
+  }
+  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const {
+    return mInner.IndexOf(aPossibleChild, aResult);
+  }
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+                           PRBool aNotify) {
+    return mInner.InsertChildAt(aKid, aIndex, aNotify);
+  }
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
+                            PRBool aNotify) {
+    return mInner.ReplaceChildAt(aKid, aIndex, aNotify);
+  }
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify) {
+    return mInner.AppendChildTo(aKid, aNotify);
+  }
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {
+    return mInner.RemoveChildAt(aIndex, aNotify);
+  }
+  NS_IMETHOD IsSynthetic(PRBool& aResult) {
+    return mInner.IsSynthetic(aResult);
+  }
+  NS_IMETHOD GetTag(nsIAtom*& aResult) const {
+    return mInner.GetTag(aResult);
+  }
+  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue,
+                          PRBool aNotify);
+  NS_IMETHOD GetAttribute(const nsString& aName,
+                          nsString& aResult) const {
+    return mInner.GetAttribute(aName, aResult);
+  }
+  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify) {
+    return mInner.UnsetAttribute(aAttribute, aNotify);
+  }
+  NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray,
+                                  PRInt32& aResult) const {
+    return mInner.GetAllAttributeNames(aArray, aResult);
+  }
+  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {
+    return mInner.GetAttributeCount(aResult);
+  }
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {
+    return mInner.List(out, aIndent);
+  }
+  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {
+    return mInner.BeginConvertToXIF(aConverter);
+  }
+  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const {
+    return mInner.ConvertContentToXIF(aConverter);
+  }
+  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {
+    return mInner.FinishConvertToXIF(aConverter);
+  }
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const {
+    return mInner.SizeOf(aHandler);
+  }
+  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
+                            nsEvent* aEvent,
+                            nsIDOMEvent** aDOMEvent,
+                            PRUint32 aFlags,
+                            nsEventStatus& aEventStatus);
 
   // nsIXMLContent
   NS_IMETHOD SetNameSpace(nsIAtom* aNameSpace);
@@ -99,6 +178,7 @@ protected:
   nsIAtom* mNameSpace;
   PRInt32 mNameSpaceId;
   void *mScriptObject;
+  PRBool mIsLink;
 };
 
 #endif // nsXMLElement_h___

@@ -279,7 +279,7 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
             if (target.Length() == 0) {
               GetAttribute(nsString(NS_HTML_BASE_TARGET), target);
             }
-            mInner.TriggerLink(aPresContext, base, href, target, PR_TRUE);
+            mInner.TriggerLink(aPresContext, eLinkVerb_Replace, base, href, target, PR_TRUE);
             aEventStatus = nsEventStatus_eConsumeNoDefault; 
           }
         }
@@ -300,7 +300,7 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
         if (target.Length() == 0) {
           GetAttribute(nsString(NS_HTML_BASE_TARGET), target);
         }
-        mInner.TriggerLink(aPresContext, base, href, target, PR_FALSE);
+        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, base, href, target, PR_FALSE);
         aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;
@@ -309,7 +309,7 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
     case NS_MOUSE_EXIT:
       {
         nsAutoString empty;
-        mInner.TriggerLink(aPresContext, empty, empty, empty, PR_FALSE);
+        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, empty, empty, empty, PR_FALSE);
         aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;
