@@ -93,6 +93,7 @@ public:
 
 protected:
     virtual ~nsHTTPHandler();
+    nsresult InitUserAgentComponents();
 
     // This is the array of connections that the handler thread 
     // maintains to verify unique requests. 
@@ -111,19 +112,20 @@ protected:
     PRTime              mSessionStartTime;
 
     nsresult BuildUserAgent();
-    nsCAutoString mAppName;
-    nsCAutoString mAppVersion;
-    nsCAutoString mVendorName;
-    nsCAutoString mVendorVersion;
-    nsCAutoString mVendorComment;
-    nsCAutoString mAppPlatform;
-    nsCAutoString mAppOSCPU;
-    nsCAutoString mAppSecurity;
-    nsCAutoString mAppLanguage;
-    nsCAutoString mAppUserAgent;
-    nsCAutoString mAppMisc;
-    nsCAutoString mProductName;
-    nsCAutoString mProductVersion;
+    nsCString mAppName;
+    nsCString mAppVersion;
+    nsCString mAppPlatform;
+    nsCString mAppOSCPU;
+    nsCString mAppSecurity;
+    nsCString mAppLanguage;
+    nsCString mAppUserAgent;
+    nsCString mAppMisc;
+    nsCString mVendor;
+    nsCString mVendorSub;
+    nsCString mVendorComment;
+    nsCString mProduct;
+    nsCString mProductSub;
+    nsCString mProductComment;
 };
 
 #endif /* _nsHTTPHandler_h_ */
