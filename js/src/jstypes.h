@@ -72,6 +72,7 @@
 **
 ***********************************************************************/
 #ifdef WIN32
+/* These also work for __MWERKS__ */
 #define JS_EXTERN_API(__type) extern _declspec(dllexport) __type
 #define JS_EXPORT_API(__type) _declspec(dllexport) __type
 #define JS_EXTERN_DATA(__type) extern _declspec(dllexport) __type
@@ -131,12 +132,16 @@
 #endif
 
 #ifdef _WIN32
+#  ifdef __MWERKS__
+#    define JS_IMPORT_API(__x)      __x
+#  else
 #    define JS_IMPORT_API(__x)      _declspec(dllimport) __x
+#  endif
 #else
 #    define JS_IMPORT_API(__x)      JS_EXPORT_API (__x)
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__MWERKS__)
 #    define JS_IMPORT_DATA(__x)      _declspec(dllimport) __x
 #else
 #    define JS_IMPORT_DATA(__x)     __x

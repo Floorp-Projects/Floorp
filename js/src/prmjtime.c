@@ -51,7 +51,12 @@
 #define PRMJ_DO_MILLISECONDS 1
 
 #ifdef XP_PC
+#ifndef __MWERKS__
 #include <sys/timeb.h>
+#else
+#include <WINDEF.H>
+#include <WINBASE.H>
+#endif
 #endif
 
 #ifdef XP_MAC
@@ -267,7 +272,11 @@ PRMJ_Now(void)
 {
 #ifdef XP_PC
     JSInt64 s, us, ms2us, s2us;
+#ifndef __MWERKS__
     struct timeb b;
+#else
+    SYSTEMTIME time;
+#endif /* __MWERKS__ */
 #endif /* XP_PC */
 #if defined(XP_UNIX) || defined(XP_BEOS)
     struct timeval tv;
@@ -283,6 +292,7 @@ PRMJ_Now(void)
 #endif /* XP_MAC */
 
 #ifdef XP_PC
+#ifndef __MWERKS__
     ftime(&b);
     JSLL_UI2L(ms2us, PRMJ_USEC_PER_MSEC);
     JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
@@ -292,6 +302,17 @@ PRMJ_Now(void)
     JSLL_MUL(s, s, s2us);
     JSLL_ADD(s, s, us);
     return s;
+#else
+    GetLocalTime(&time);
+    JSLL_UI2L(ms2us, PRMJ_USEC_PER_MSEC);
+    JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
+    JSLL_UI2L(s, time.wSecond);
+    JSLL_UI2L(us, time.wMilliseconds);
+    JSLL_MUL(us, us, ms2us);
+    JSLL_MUL(s, s, s2us);
+    JSLL_ADD(s, s, us);
+    return s;
+#endif /* __MWERKS__ */
 #endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
