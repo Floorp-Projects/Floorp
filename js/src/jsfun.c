@@ -1278,50 +1278,7 @@ fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     }
 
     proto = JSVAL_TO_OBJECT(pval);
-    if (!js_IsDelegate(cx, proto, v, bp))
-        return JS_FALSE;
-
-    if (!*bp && !JSVAL_IS_PRIMITIVE(v) && v != pval) {
-        /*
-         * Extension for "brutal sharing" of standard class constructors: if
-         * a script is compiled using a single, shared set of constructors, in
-         * particular Function and RegExp, but executed many times using other
-         * sets of standard constructors, then (/re/ instanceof RegExp), e.g.,
-         * will be false.
-         *
-         * We extend instanceof in this case to look for a matching native or
-         * script underlying the function object found in the 'constructor'
-         * property of the object in question (which is JSVAL_TO_OBJECT(v)),
-         * or found in the 'constructor' property of one of its prototypes.
-         *
-         * See also jsexn.c, where the *Error constructors are defined, each
-         * with its own native function, to satisfy (e instanceof Error) even
-         * when exceptions cross standard-class sharing boundaries.  Note that
-         * Error.prototype may not lie on e's __proto__ chain in that case.
-         */
-        obj2 = JSVAL_TO_OBJECT(v);
-        do {
-            if (!OBJ_GET_PROPERTY(cx, obj2,
-                                  (jsid)cx->runtime->atomState.constructorAtom,
-                                  &cval)) {
-                return JS_FALSE;
-            }
-
-            if (JSVAL_IS_FUNCTION(cx, cval)) {
-                cfun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(cval));
-                ofun = (JSFunction *) JS_GetPrivate(cx, obj);
-                if (cfun->interpreted == ofun->interpreted &&
-                    (cfun->interpreted
-                     ? cfun->u.script == ofun->u.script
-                     : cfun->u.native == ofun->u.native)) {
-                    *bp = JS_TRUE;
-                    break;
-                }
-            }
-        } while ((obj2 = OBJ_GET_PROTO(cx, obj2)) != NULL);
-    }
-
-    return JS_TRUE;
+    return js_IsDelegate(cx, proto, v, bp);
 }
 
 #else  /* !JS_HAS_INSTANCEOF */
