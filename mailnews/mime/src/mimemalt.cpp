@@ -228,7 +228,7 @@ MimeMultipartAlternative_display_part_p(MimeObject *self,
    are themselves unknown.
    */
 
-  MimeObjectClass *clazz = mime_find_class (ct, sub_hdrs, self->options, PR_FALSE);
+  MimeObjectClass *clazz = mime_find_class (ct, sub_hdrs, self->options, PR_TRUE);
   PRBool result = (clazz
           ? clazz->displayable_inline_p(clazz, sub_hdrs)
           : PR_FALSE);
