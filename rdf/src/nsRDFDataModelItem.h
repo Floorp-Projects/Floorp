@@ -21,13 +21,30 @@
 
 #include "rdf.h"
 #include "nsIDMItem.h"
+#include "nsVector.h"
+
+class nsRDFDataModel;
 
 ////////////////////////////////////////////////////////////////////////
 
 class nsRDFDataModelItem : public nsIDMItem {
+private:
+    nsRDFDataModel&     mDataModel;
+    RDF_Resource        mResource;
+    PRBool              mOpen;
+    nsVector            mChildren;
+    nsRDFDataModelItem* mParent;
+    mutable PRUint32    mCachedSubtreeSize;
+
+    PRUint32 GetSubtreeSize(void) const;
+    void InvalidateCachedSubtreeSize(void);
+
 public:
-    nsRDFDataModelItem(RDF_Resource& resource);
+    nsRDFDataModelItem(nsRDFDataModel& model, RDF_Resource resource);
     virtual ~nsRDFDataModelItem(void);
+
+    ////////////////////////////////////////////////////////////////////////
+    // nsISupports interface
 
     NS_DECL_ISUPPORTS
 
@@ -51,10 +68,39 @@ public:
     NS_IMETHOD GetStringPropertyValue(nsString& value, const nsString& itemProperty) const;
     NS_IMETHOD GetIntPropertyValue(PRInt32& value, const nsString& itemProperty) const;
 
-private:
-    RDF_Resource&         mResource;
-    PRBool                mOpen;
-    PRBool                mEnabled;
+    ////////////////////////////////////////////////////////////////////////
+    
+    nsRDFDataModel& GetDataModel(void) const {
+        return mDataModel;
+    }
+
+    RDF_Resource GetResource(void) const {
+        return mResource;
+    }
+
+    PRBool IsOpen(void) const {
+        return mOpen;
+    }
+
+    void SetOpenState(PRBool open) {
+        mOpen = open;
+    }
+
+    nsRDFDataModelItem* ChildAt(PRUint32 index) const {
+        return static_cast<nsRDFDataModelItem*>(mChildren[index]);
+    }
+
+    void AddChild(nsRDFDataModelItem* child);
+
+    PRUint32 GetChildCount(void) const {
+        return mChildren.GetSize();
+    }
+
+    nsRDFDataModelItem* GetParent(void) const {
+        return mParent;
+    }
+
+    nsRDFDataModelItem* GetNth(PRUint32 n) const;
 };
 
 ////////////////////////////////////////////////////////////////////////

@@ -18,14 +18,16 @@
 
 #include "nsRDFToolbarDataModel.h"
 
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIDataModelIID, NS_IDATAMODEL_IID);
 static NS_DEFINE_IID(kIToolbarDataModelIID, NS_ITOOLBARDATAMODEL_IID);
 
 
 ////////////////////////////////////////////////////////////////////////
 
-nsRDFToolbarDataModel::nsRDFToolbarDataModel(nsIRDFDataBase& db, RDF_Resource& root)
-    : nsRDFDataModel(db), mRoot(root)
+nsRDFToolbarDataModel::nsRDFToolbarDataModel(void)
 {
+    NS_INIT_REFCNT();
 }
 
 
@@ -34,6 +36,17 @@ nsRDFToolbarDataModel::~nsRDFToolbarDataModel(void)
 {
 }
 
+NS_IMETHODIMP_(nsrefcnt)
+nsRDFToolbarDataModel::AddRef(void)
+{
+    return nsRDFDataModel::AddRef(); // delegate to the superclass
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsRDFToolbarDataModel::Release(void)
+{
+    return nsRDFDataModel::Release(); // delegate to the superclass
+}
 
 NS_IMETHODIMP
 nsRDFToolbarDataModel::QueryInterface(const nsIID& iid, void** result)
@@ -44,11 +57,57 @@ nsRDFToolbarDataModel::QueryInterface(const nsIID& iid, void** result)
     *result = NULL;
     if (iid.Equals(kIToolbarDataModelIID)) {
         *result = static_cast<nsIToolbarDataModel*>(this);
-        nsRDFDataModel::AddRef(); // delegate to the superclass
+        AddRef();
         return NS_OK;
     }
-
-    // delegate to the superclass.
+    // delegate to the superclass
     return nsRDFDataModel::QueryInterface(iid, result);
 }
 
+////////////////////////////////////////////////////////////////////////
+
+#if 0
+NS_IMETHODIMP
+nsRDFToolbarDataModel::InitFromURL(const nsString& url)
+{
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsRDFToolbarDataModel::InitFromResource(nsIDMItem* pResource)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsRDFToolbarDataModel::GetDMWidget(nsIDMWidget*& widget) const
+{
+    widget = mModel.GetWidget();
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsRDFToolbarDataModel::SetDMWidget(nsIDMWidget* widget)
+{
+    mModel.SetWidget(widget);
+    return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsRDFToolbarDataModel::GetStringPropertyValue(nsString& value, const nsString& property) const
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsRDFToolbarDataModel::GetIntPropertyValue(PRInt32& value, const nsString& property) const
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+#endif

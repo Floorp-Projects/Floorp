@@ -28,21 +28,40 @@
 /**
  * An implementation for the Toolbar widget model.
  */
-class nsRDFToolbarDataModel : public nsRDFDataModel, nsIToolbarDataModel {
+class nsRDFToolbarDataModel : public nsIToolbarDataModel, public nsRDFDataModel {
 public:
-    nsRDFToolbarDataModel(nsIRDFDataBase& db, RDF_Resource& root);
+    nsRDFToolbarDataModel(void);
     virtual ~nsRDFToolbarDataModel(void);
 
     ////////////////////////////////////////////////////////////////////////
     // nsISupports interface
 
-    // XXX Note that we'll just use the parent class's implementation
-    // of AddRef() and Release()
+#if 0
+    NS_DECL_ISUPPORTS
+#endif
 
-    // NS_IMETHOD_(nsrefcnt) AddRef(void);
-    // NS_IMETHOD_(nsrefcnt) Release(void);
+    NS_IMETHOD_(nsrefcnt) AddRef(void);
+    NS_IMETHOD_(nsrefcnt) Release(void);
     NS_IMETHOD QueryInterface(const nsIID& iid, void** result);
 
+#if 0
+    ////////////////////////////////////////////////////////////////////////
+    // nsIDataModel interface
+
+    // Initializers
+    NS_IMETHOD InitFromURL(const nsString& url);
+    NS_IMETHOD InitFromResource(nsIDMItem* pResource);
+
+    // Inspectors
+    NS_IMETHOD GetDMWidget(nsIDMWidget*& pWidget) const;
+	
+    // Setters
+    NS_IMETHOD SetDMWidget(nsIDMWidget* pWidget);
+
+    // Methods to query the data model for property values for an entire widget.
+    NS_IMETHOD GetStringPropertyValue(nsString& value, const nsString& property) const;
+    NS_IMETHOD GetIntPropertyValue(PRInt32& value, const nsString& property) const;
+#endif
 
     ////////////////////////////////////////////////////////////////////////
     // nsIToolbarDataModel interface
@@ -50,7 +69,6 @@ public:
 
 
 private:
-    RDF_Resource& mRoot;
 };
 
 

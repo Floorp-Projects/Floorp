@@ -20,21 +20,45 @@
 #define nsRDFDataModel_h__
 
 #include "nsIDataModel.h"
+#include "rdf.h" // XXX
 
-class nsIRDFDataBase;
+class nsString;
+class nsRDFDataModelItem;
+
+enum nsRDFArcType {
+    eRDFArcType_Outbound, // follow outbound arcs (e.g., children-of)
+    eRDFArcType_Inbound   // follow inbound arcs (e.g., parent-of)
+};
+
+////////////////////////////////////////////////////////////////////////
 
 class nsRDFDataModel : public nsIDataModel {
+private:
+    // XXX eventually, when we XPCOM the back-end
+    //nsIRDFDataBase& mDB;
+
+    RDF                 mDB;
+    nsRDFDataModelItem* mRoot;
+    nsIDMWidget*        mWidget;
+
+    RDF_Resource mArcProperty;
+    nsRDFArcType mArcType;
+
 public:
-    nsRDFDataModel(nsIRDFDataBase& db);
+    nsRDFDataModel(void);
     virtual ~nsRDFDataModel(void);
 
     ////////////////////////////////////////////////////////////////////////
-    // nsISupports interface
+    // nsISupports
 
     NS_DECL_ISUPPORTS
 
     ////////////////////////////////////////////////////////////////////////
     // nsIDataModel interface
+
+    // Initializers
+    NS_IMETHOD InitFromURL(const nsString& url);
+    NS_IMETHOD InitFromResource(nsIDMItem* pResource);
 
     // Inspectors
     NS_IMETHOD GetDMWidget(nsIDMWidget*& pWidget) const;
@@ -46,9 +70,33 @@ public:
     NS_IMETHOD GetStringPropertyValue(nsString& value, const nsString& property) const;
     NS_IMETHOD GetIntPropertyValue(PRInt32& value, const nsString& property) const;
 
-private:
-    nsIRDFDataBase& mDB;
-    nsIDMWidget* mWidget;
+    ////////////////////////////////////////////////////////////////////////
+
+    void Initialize(const nsString& url);
+
+    RDF GetDB(void) const {
+        return mDB;
+    }
+
+    nsRDFDataModelItem* GetRoot(void) const {
+        return mRoot;
+    }
+
+    nsIDMWidget* GetWidget(void) const {
+        return mWidget;
+    }
+
+    void SetWidget(nsIDMWidget* widget) {
+        mWidget = widget;
+    }
+
+    RDF_Resource GetArcProperty(void) const {
+        return mArcProperty;
+    }
+
+    nsRDFArcType GetArcType(void) const {
+        return mArcType;
+    }
 };
 
 #endif // nsRDFDataModel_h__

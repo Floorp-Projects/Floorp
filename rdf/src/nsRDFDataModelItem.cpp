@@ -18,11 +18,14 @@
 
 #include "nsRDFDataModelItem.h"
 
-static NS_DEFINE_IID(kIDMItemIID, NS_IDMITEM_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+////////////////////////////////////////////////////////////////////////
 
-nsRDFDataModelItem::nsRDFDataModelItem(RDF_Resource& resource)
-    : mResource(resource)
+nsRDFDataModelItem::nsRDFDataModelItem(nsRDFDataModel& model, RDF_Resource resource)
+    : mDataModel(model),
+      mResource(resource),
+      mOpen(PR_FALSE),
+      mParent(NULL),
+      mCachedSubtreeSize(1)
 {
     NS_INIT_REFCNT();
 }
@@ -32,30 +35,13 @@ nsRDFDataModelItem::~nsRDFDataModelItem(void)
 {
 }
 
-
 NS_IMPL_ADDREF(nsRDFDataModelItem);
 NS_IMPL_RELEASE(nsRDFDataModelItem);
 
-NS_IMETHODIMP
-nsRDFDataModelItem::QueryInterface(const nsIID& iid, void** result)
-{
-    if (NULL == result) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    *result = NULL;
-    if (iid.Equals(kIDMItemIID) ||
-        iid.Equals(kISupportsIID)) {
-        *result = static_cast<nsIDMItem*>(this);
-        AddRef();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
-
+static NS_DEFINE_IID(kIDMItemIID, NS_IDMITEM_IID);
+NS_IMPL_QUERY_INTERFACE(nsRDFDataModelItem, kIDMItemIID);
 
 ////////////////////////////////////////////////////////////////////////
-
 
 NS_IMETHODIMP
 nsRDFDataModelItem::GetIconImage(nsIImage*& image, nsIImageGroup* group) const
@@ -68,29 +54,35 @@ nsRDFDataModelItem::GetIconImage(nsIImage*& image, nsIImageGroup* group) const
 NS_IMETHODIMP
 nsRDFDataModelItem::GetOpenState(PRBool& result) const
 {
-    result = mOpen;
+    result = IsOpen();
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsRDFDataModelItem::GetChildCount(PRUint32& count) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    count = mChildren.GetSize();
+    return NS_OK;
 }
 
 
 
 NS_IMETHODIMP
-nsRDFDataModelItem::GetNthChild(nsIDMItem*& pItem, PRUint32 item) const
+nsRDFDataModelItem::GetNthChild(nsIDMItem*& pItem, PRUint32 n) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (n < 0 || n > mChildren.GetUpperBound())
+        return NS_ERROR_UNEXPECTED; // XXX
+
+    pItem = static_cast<nsIDMItem*>(mChildren[n]);
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsRDFDataModelItem::GetParent(nsIDMItem*& pItem) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    pItem = static_cast<nsIDMItem*>(mParent);
+    return NS_OK;
 }
 
 
@@ -107,4 +99,71 @@ NS_IMETHODIMP
 nsRDFDataModelItem::GetIntPropertyValue(PRInt32& value, const nsString& itemProperty) const
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+void
+nsRDFDataModelItem::InvalidateCachedSubtreeSize(void)
+{
+    if (mCachedSubtreeSize) {
+        mCachedSubtreeSize = 0;
+        if (mParent)
+            mParent->InvalidateCachedSubtreeSize();
+    }
+}
+
+
+
+void
+nsRDFDataModelItem::AddChild(nsRDFDataModelItem* child)
+{
+    mChildren.Add(child);
+    nsRDFDataModelItem* item = this;
+    while (item) {
+        item->mCachedSubtreeSize += child->GetSubtreeSize();
+        item = item->mParent;
+    }
+}
+
+
+PRUint32
+nsRDFDataModelItem::GetSubtreeSize(void) const
+{
+    if (! mCachedSubtreeSize) {
+        mCachedSubtreeSize = 1; // me
+
+        for (PRUint32 i = mChildren.GetUpperBound(); i >= 0; --i) {
+            nsRDFDataModelItem* child =
+                static_cast<nsRDFDataModelItem*>(mChildren[i]);
+
+            mCachedSubtreeSize += child->GetSubtreeSize();
+        }
+    }
+    return mCachedSubtreeSize;
+}
+
+
+nsRDFDataModelItem*
+nsRDFDataModelItem::GetNth(PRUint32 n) const
+{
+    if (n == 0)
+        return const_cast<nsRDFDataModelItem*>(this);
+
+    PRUint32 upperBound = mChildren.GetUpperBound();
+    PRUint32 firstIndexInSubtree = 1;
+    for (PRUint32 i = 0; i < upperBound; ++i) {
+        nsRDFDataModelItem* child =
+            static_cast<nsRDFDataModelItem*>(mChildren[i]);
+
+        PRUint32 subtreeSize = child->GetSubtreeSize();
+        PRUint32 lastIndexInSubtree = firstIndexInSubtree + subtreeSize;
+
+        if (n >= firstIndexInSubtree && n < lastIndexInSubtree)
+            return GetNth(n - firstIndexInSubtree);
+    }
+
+    // n was larger than the total number of elements in the tree!
+    PR_ASSERT(0);
+    return NULL;
 }
