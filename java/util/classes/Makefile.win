@@ -53,6 +53,7 @@ JDIRS = $(JAR_MJUTIL_CLASSES)
 MJUTIL_JAR_NAME=mjutil$(VERSION_NUMBER).jar
 
 JAVAC_PROG=$(JDKHOME)\bin\javac
+include <$(DEPTH)\config\javarules.mak>
 include <$(DEPTH)\config\rules.mak>
 
 

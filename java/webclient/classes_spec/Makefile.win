@@ -78,5 +78,6 @@ export::
 JAVAC_CLASSPATH=$(JAVAC_CLASSPATH);$(CLASSPATH)
 !endif
 
+include <$(DEPTH)\config\javarules.mak>
 include <$(DEPTH)\config\rules.mak>
 
