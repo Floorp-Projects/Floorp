@@ -44,7 +44,12 @@ DIRS = liveconnect
 !endif
 !endif
 
+# Because WIN95 doesn't support recursive make, still need fdlibm in DIRS
+!if "$(WINOS)" == "WIN95"
+DIRS = $(DIRS) fdlibm xpconnect
+!else
 DIRS = $(DIRS) xpconnect
+!endif
 
 #//------------------------------------------------------------------------
 #//
