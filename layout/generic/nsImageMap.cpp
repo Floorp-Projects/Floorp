@@ -1397,6 +1397,24 @@ nsImageMap::Invalidate(nsIPresContext* aPresContext, nsIFrame* aFrame, nsRect& a
 
 }
 
+void
+nsImageMap::Destroy(void)
+{
+  //Remove all our focus listeners
+  PRInt32 i, n = mAreas.Count();
+  for (i = 0; i < n; i++) {
+    Area* area = (Area*) mAreas.ElementAt(i);
+    nsCOMPtr<nsIContent> areaContent;
+    area->GetArea(getter_AddRefs(areaContent));
+    if (areaContent) {
+      nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(areaContent));
+      if (rec) {
+        rec->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMFocusListener));
+      }
+    }
+  }
+}
+
 #ifdef DEBUG
 void
 nsImageMap::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
