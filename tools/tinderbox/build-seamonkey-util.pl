@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.70 $ ';
+$::UtilsVersion = '$Revision: 1.71 $ ';
 
 package TinderUtils;
 
@@ -659,19 +659,19 @@ sub BuildIt {
               print_log "Error: binary not found: $binary_basename\n";
               $build_status = 'busted';
             } else {
-		$build_status = 'success';
-	    }
+              $build_status = 'success';
+            }
 
-	    # TestGtkEmbed is only built by default on certain platforms.
-	    if (($Settings::EmbedTest or $Settings::BuildEmbed)) {
-		if (not BinaryExists($full_embed_binary_name)) {
-		    print_log "Error: binary not found: $Settings::EmbedBinaryName\n";
-		    $build_status = 'busted';
-		} else {
-		    $build_status = 'success';
-		}
-	    }
-	}
+			# TestGtkEmbed is only built by default on certain platforms.
+			if ($build_status ne 'busted' and ($Settings::EmbedTest or $Settings::BuildEmbed)) {
+			  if (not BinaryExists($full_embed_binary_name)) {
+				print_log "Error: binary not found: $Settings::EmbedBinaryName\n";
+				$build_status = 'busted';
+			  } else {
+				$build_status = 'success';
+			  }
+			}
+        }
 
         if ($build_status ne 'busted' and BinaryExists($full_binary_name)) {
             print_log "$binary_basename binary exists, build successful.\n";
