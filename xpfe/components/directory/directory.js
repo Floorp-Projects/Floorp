@@ -63,9 +63,8 @@ function OnClick(event)
         // <treeitem>
         //   <treerow>
         //     <treecell>
-        //       <box> <!-- anonymous -->
-        //         <titledbutton class="twisty"> <!-- anonymous -->
-        var treeitem = event.target.parentNode.parentNode.parentNode.parentNode;
+        //       <titledbutton class="twisty"> <!-- anonymous -->
+        var treeitem = event.target.parentNode.parentNode.parentNode;
         ToggleOpenState(treeitem);
     }
     else {
