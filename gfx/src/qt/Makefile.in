@@ -30,7 +30,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= layout
 LIBRARY_NAME	= gfx_qt
 EXPORT_LIBRARY = 1
-REQUIRES	= xpcom string widget view gfx2 uconv pref dom util js appshell mozcomps windowwatcher unicharutil
+REQUIRES	= xpcom string widget view gfx2 uconv pref dom util js appshell mozcomps windowwatcher unicharutil intl locale
 IS_COMPONENT    = 1
 MODULE_NAME	= nsGfxQTModule
 
