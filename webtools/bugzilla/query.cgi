@@ -903,7 +903,7 @@ if ($userid) {
     print "<a href=relogin.cgi>Log in as someone besides <b>$::COOKIE{'Bugzilla_login'}</b></a><br>\n";
 }
 print "<a href=userprefs.cgi>Change your password or preferences.</a><br>\n";
-print "<a href=\"enter_bug.cgi\">Create a new bug.</a><br>\n";
+print "<a href=\"enter_bug.cgi\">Report a new bug.</a><br>\n";
 print "<a href=\"createaccount.cgi\">Open a new Bugzilla account</a><br>\n";
 print "<a href=\"reports.cgi\">Bug reports</a><br>\n";
 
