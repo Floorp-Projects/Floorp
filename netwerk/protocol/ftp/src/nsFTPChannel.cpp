@@ -27,7 +27,6 @@
 #include "prlog.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#include "nsIBufferInputStream.h"
 #include "nsFtpConnectionThread.h"
 #include "nsIEventQueueService.h"
 #include "nsIProgressEventSink.h"
