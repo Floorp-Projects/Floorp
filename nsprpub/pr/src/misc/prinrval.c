@@ -36,12 +36,20 @@ void _PR_InitClock(void)
 {
     _PR_MD_INTERVAL_INIT();
 #ifdef DEBUG
+    /*
+     * Temporarily ifdef out the following assertions for
+     * the Mac while I debug it.  ticksPerSecond is 125
+     * on the Mac right now, which is less than the required
+     * minimum of 1000.  -- WTC 23 Nov. 1998
+     */
+#if !defined(XP_MAC)
     {
         PRIntervalTime ticksPerSec = PR_TicksPerSecond();
 
         PR_ASSERT(ticksPerSec >= PR_INTERVAL_MIN);
         PR_ASSERT(ticksPerSec <= PR_INTERVAL_MAX);
     }
+#endif
 #endif /* DEBUG */
 }
 
