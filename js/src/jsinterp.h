@@ -105,24 +105,26 @@ typedef struct JSInlineFrame {
 
 #else  /* !HAVE_ATOMIC_DWORD_ACCESS */
 
+#define JS_PROPERTY_CACHE_METERING      1
+
 #define PCE_LOAD(cache, pce, entry)                                           \
     JS_BEGIN_MACRO                                                            \
-	uint32 _prefills;                                                     \
-	uint32 _fills = (cache)->fills;                                       \
-	do {                                                                  \
-	    /* Load until cache->fills is stable (see FILL macro below). */   \
-	    _prefills = _fills;                                               \
-	    (entry) = *(pce);                                                 \
-	} while ((_fills = (cache)->fills) != _prefills);                     \
+        uint32 prefills_;                                                     \
+        uint32 fills_ = (cache)->fills;                                       \
+        do {                                                                  \
+            /* Load until cache->fills is stable (see FILL macro below). */   \
+            prefills_ = fills_;                                               \
+            (entry) = *(pce);                                                 \
+        } while ((fills_ = (cache)->fills) != prefills_);                     \
     JS_END_MACRO
 
 #define PCE_STORE(cache, pce, entry)                                          \
     JS_BEGIN_MACRO                                                            \
-	do {                                                                  \
-	    /* Store until no racing collider stores half or all of pce. */   \
-	    *(pce) = (entry);                                                 \
-	} while (PCE_OBJECT(*pce) != PCE_OBJECT(entry) ||                     \
-		 PCE_PROPERTY(*pce) != PCE_PROPERTY(entry));                  \
+        do {                                                                  \
+            /* Store until no racing collider stores half or all of pce. */   \
+            *(pce) = (entry);                                                 \
+        } while (PCE_OBJECT(*pce) != PCE_OBJECT(entry) ||                     \
+                 PCE_PROPERTY(*pce) != PCE_PROPERTY(entry));                  \
     JS_END_MACRO
 
 #endif /* !HAVE_ATOMIC_DWORD_ACCESS */
@@ -136,8 +138,8 @@ typedef struct JSInlineFrame {
 
 typedef union JSPropertyCacheEntry {
     struct {
-	JSObject    *object;    /* weak link to object */
-	JSProperty  *property;  /* weak link to property, or not-found id */
+        JSObject        *object;        /* weak link to object */
+        JSScopeProperty *property;      /* weak link to property */
     } s;
 #ifdef HAVE_ATOMIC_DWORD_ACCESS
     prdword align;
@@ -152,61 +154,60 @@ typedef struct JSPropertyCache {
     JSPropertyCacheEntry table[PROPERTY_CACHE_SIZE];
     JSBool               empty;
     JSBool               disabled;
+#ifdef JS_PROPERTY_CACHE_METERING
     uint32               fills;
     uint32               recycles;
     uint32               tests;
     uint32               misses;
     uint32               flushes;
+# define PCMETER(x)      x
+#else
+# define PCMETER(x)      /* nothing */
+#endif
 } JSPropertyCache;
 
-#define PROPERTY_CACHE_FILL(cx, cache, obj, id, prop)                         \
+#define PROPERTY_CACHE_FILL(cache, obj, id, sprop)                            \
     JS_BEGIN_MACRO                                                            \
-        JSPropertyCache *_cache = (cache);                                    \
-        if (!_cache->disabled) {                                              \
-            uintN _hashIndex = (uintN)PROPERTY_CACHE_HASH(obj, id);           \
-            JSPropertyCacheEntry *_pce = &_cache->table[_hashIndex];          \
-            JSPropertyCacheEntry _entry;                                      \
-            JSProperty *_pce_prop;                                            \
-            PCE_LOAD(_cache, _pce, _entry);                                   \
-            _pce_prop = PCE_PROPERTY(_entry);                                 \
-            if (_pce_prop && _pce_prop != prop)                               \
-                _cache->recycles++;                                           \
-            PCE_OBJECT(_entry) = obj;                                         \
-            PCE_PROPERTY(_entry) = prop;                                      \
-            _cache->empty = JS_FALSE;                                         \
-            _cache->fills++;                                                  \
-            PCE_STORE(_cache, _pce, _entry);                                  \
+        JSPropertyCache *cache_ = (cache);                                    \
+        if (!cache_->disabled) {                                              \
+            uintN hashIndex_ = (uintN) PROPERTY_CACHE_HASH(obj, id);          \
+            JSPropertyCacheEntry *pce_ = &cache_->table[hashIndex_];          \
+            JSPropertyCacheEntry entry_;                                      \
+            JSScopeProperty *pce_sprop_;                                      \
+            PCE_LOAD(cache_, pce_, entry_);                                   \
+            pce_sprop_ = PCE_PROPERTY(entry_);                                \
+            PCMETER(if (pce_sprop_ && pce_sprop_ != sprop)                    \
+                        cache_->recycles++);                                  \
+            PCE_OBJECT(entry_) = obj;                                         \
+            PCE_PROPERTY(entry_) = sprop;                                     \
+            cache_->empty = JS_FALSE;                                         \
+            PCMETER(cache_->fills++);                                         \
+            PCE_STORE(cache_, pce_, entry_);                                  \
         }                                                                     \
     JS_END_MACRO
 
-#define PROPERTY_CACHE_TEST(cache, obj, id, prop)                             \
+#define PROPERTY_CACHE_TEST(cache, obj, id, sprop)                            \
     JS_BEGIN_MACRO                                                            \
-	uintN _hashIndex = (uintN)PROPERTY_CACHE_HASH(obj, id);               \
-	JSPropertyCache *_cache = (cache);                                    \
-	JSPropertyCacheEntry *_pce = &_cache->table[_hashIndex];              \
-	JSPropertyCacheEntry _entry;                                          \
-	JSProperty *_pce_prop;                                                \
-	PCE_LOAD(_cache, _pce, _entry);                                       \
-	_pce_prop = PCE_PROPERTY(_entry);                                     \
-	_cache->tests++;                                                      \
-	if (_pce_prop &&                                                      \
-	    sym_id(((JSScopeProperty *)_pce_prop)->symbols) == id &&          \
-	    PCE_OBJECT(_entry) == obj) {                                      \
-	    prop = _pce_prop;                                                 \
-	} else {                                                              \
-	    _cache->misses++;                                                 \
-	    prop = NULL;                                                      \
-	}                                                                     \
+        uintN hashIndex_ = (uintN) PROPERTY_CACHE_HASH(obj, id);              \
+        JSPropertyCache *cache_ = (cache);                                    \
+        JSPropertyCacheEntry *pce_ = &cache_->table[hashIndex_];              \
+        JSPropertyCacheEntry entry_;                                          \
+        JSScopeProperty *pce_sprop_;                                          \
+        PCE_LOAD(cache_, pce_, entry_);                                       \
+        pce_sprop_ = PCE_PROPERTY(entry_);                                    \
+        PCMETER(cache_->tests++);                                             \
+        if (pce_sprop_ &&                                                     \
+            PCE_OBJECT(entry_) == obj &&                                      \
+            pce_sprop_->id == id) {                                           \
+            sprop = pce_sprop_;                                               \
+        } else {                                                              \
+            PCMETER(cache_->misses++);                                        \
+            sprop = NULL;                                                     \
+        }                                                                     \
     JS_END_MACRO
 
 extern void
 js_FlushPropertyCache(JSContext *cx);
-
-extern void
-js_FlushPropertyCacheByObject(JSContext *cx, JSObject *obj);
-
-extern void
-js_FlushPropertyCacheByProp(JSContext *cx, JSProperty *prop);
 
 extern void
 js_DisablePropertyCache(JSContext *cx);

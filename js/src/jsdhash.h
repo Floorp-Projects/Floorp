@@ -234,7 +234,8 @@ typedef void
  * moved via moveEntry callbacks.
  */
 typedef const void *
-(* JS_DLL_CALLBACK JSDHashGetKey)    (JSDHashTable *table, JSDHashEntryHdr *entry);
+(* JS_DLL_CALLBACK JSDHashGetKey)    (JSDHashTable *table,
+                                      JSDHashEntryHdr *entry);
 
 /*
  * Compute the hash code for a given key to be looked up, added, or removed

@@ -99,53 +99,9 @@ js_FlushPropertyCache(JSContext *cx)
     }
     memset(cache->table, 0, sizeof cache->table);
     cache->empty = JS_TRUE;
+#ifdef JS_PROPERTY_CACHE_METERING
     cache->flushes++;
-}
-
-void
-js_FlushPropertyCacheByObject(JSContext *cx, JSObject *obj)
-{
-    JSPropertyCache *cache;
-    JSPropertyCacheEntry *end, *pce, entry;
-    JSObject *pce_obj;
-
-    cache = &cx->runtime->propertyCache;
-    if (cache->empty)
-        return;
-
-    end = &cache->table[PROPERTY_CACHE_SIZE];
-    for (pce = &cache->table[0]; pce < end; pce++) {
-        PCE_LOAD(cache, pce, entry);
-        pce_obj = PCE_OBJECT(entry);
-        if (pce_obj == obj) {
-            PCE_OBJECT(entry) = NULL;
-            PCE_PROPERTY(entry) = NULL;
-            PCE_STORE(cache, pce, entry);
-        }
-    }
-}
-
-void
-js_FlushPropertyCacheByProp(JSContext *cx, JSProperty *prop)
-{
-    JSPropertyCache *cache;
-    JSPropertyCacheEntry *end, *pce, entry;
-    JSProperty *pce_prop;
-
-    cache = &cx->runtime->propertyCache;
-    if (cache->empty)
-        return;
-
-    end = &cache->table[PROPERTY_CACHE_SIZE];
-    for (pce = &cache->table[0]; pce < end; pce++) {
-        PCE_LOAD(cache, pce, entry);
-        pce_prop = PCE_PROPERTY(entry);
-        if (pce_prop == prop) {
-            PCE_OBJECT(entry) = NULL;
-            PCE_PROPERTY(entry) = NULL;
-            PCE_STORE(cache, pce, entry);
-        }
-    }
+#endif
 }
 
 void
@@ -1056,7 +1012,7 @@ ImportProperty(JSContext *cx, JSObject *obj, jsid id)
             return JS_FALSE;
         if (!prop) {
             str = js_DecompileValueGenerator(cx, JSDVG_IGNORE_STACK,
-                                             js_IdToValue(id), NULL);
+                                             ID_TO_VALUE(id), NULL);
             if (str)
                 js_ReportIsNotDefined(cx, JS_GetStringBytes(str));
             return JS_FALSE;
@@ -1067,7 +1023,7 @@ ImportProperty(JSContext *cx, JSObject *obj, jsid id)
             return JS_FALSE;
         if (!(attrs & JSPROP_EXPORTED)) {
             str = js_DecompileValueGenerator(cx, JSDVG_IGNORE_STACK,
-                                             js_IdToValue(id), NULL);
+                                             ID_TO_VALUE(id), NULL);
             if (str) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_NOT_EXPORTED,
@@ -1901,11 +1857,9 @@ js_Interpret(JSContext *cx, jsval *result)
             ok = call;                                                        \
         } else {                                                              \
             JS_LOCK_OBJ(cx, obj);                                             \
-            PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);           \
-            if (prop) {                                                       \
+            PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, sprop);          \
+            if (sprop) {                                                      \
                 JSScope *scope_ = OBJ_SCOPE(obj);                             \
-                sprop = (JSScopeProperty *)prop;                              \
-                sprop->nrefs++;                                               \
                 slot = (uintN)sprop->slot;                                    \
                 rval = (slot != SPROP_INVALID_SLOT)                           \
                        ? LOCKED_OBJ_GET_SLOT(obj, slot)                       \
@@ -1913,8 +1867,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 JS_UNLOCK_SCOPE(cx, scope_);                                  \
                 ok = SPROP_GET(cx, sprop, obj, obj, &rval);                   \
                 JS_LOCK_SCOPE(cx, scope_);                                    \
-                sprop = js_DropScopeProperty(cx, scope_, sprop);              \
-                if (ok && sprop && SPROP_HAS_VALID_SLOT(sprop))               \
+                if (ok && SPROP_HAS_VALID_SLOT(sprop, scope_))                \
                     LOCKED_OBJ_SET_SLOT(obj, slot, rval);                     \
                 JS_UNLOCK_SCOPE(cx, scope_);                                  \
             } else {                                                          \
@@ -1925,30 +1878,20 @@ js_Interpret(JSContext *cx, jsval *result)
         }                                                                     \
     JS_END_MACRO
 
-#if JS_BUG_SET_ENUMERATE
-#define SET_ENUMERATE_ATTR(sprop) ((sprop)->attrs |= JSPROP_ENUMERATE)
-#else
-#define SET_ENUMERATE_ATTR(sprop) ((void)0)
-#endif
-
 #define CACHED_SET(call)                                                      \
     JS_BEGIN_MACRO                                                            \
         if (!OBJ_IS_NATIVE(obj)) {                                            \
             ok = call;                                                        \
         } else {                                                              \
             JS_LOCK_OBJ(cx, obj);                                             \
-            PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);           \
-            if ((sprop = (JSScopeProperty *)prop) &&                          \
-                !(sprop->attrs & JSPROP_READONLY)) {                          \
+            PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, sprop);          \
+            if (sprop && !(sprop->attrs & JSPROP_READONLY)) {                 \
                 JSScope *scope_ = OBJ_SCOPE(obj);                             \
-                sprop->nrefs++;                                               \
                 JS_UNLOCK_SCOPE(cx, scope_);                                  \
                 ok = SPROP_SET(cx, sprop, obj, obj, &rval);                   \
                 JS_LOCK_SCOPE(cx, scope_);                                    \
-                sprop = js_DropScopeProperty(cx, scope_, sprop);              \
-                if (ok && sprop && SPROP_HAS_VALID_SLOT(sprop)) {             \
+                if (ok && SPROP_HAS_VALID_SLOT(sprop, scope_)) {              \
                     LOCKED_OBJ_SET_SLOT(obj, sprop->slot, rval);              \
-                    SET_ENUMERATE_ATTR(sprop);                                \
                     GC_POKE(cx, JSVAL_NULL);  /* XXX second arg ignored */    \
                 }                                                             \
                 JS_UNLOCK_SCOPE(cx, scope_);                                  \
@@ -2898,7 +2841,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
                 goto out;
             }
-            if (SPROP_HAS_VALID_SLOT(sprop))
+            if (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2)))
                 LOCKED_OBJ_SET_SLOT(obj2, slot, rval);
             OBJ_DROP_PROPERTY(cx, obj2, prop);
             PUSH_OPND(rval);
@@ -3254,35 +3197,35 @@ js_Interpret(JSContext *cx, jsval *result)
             break;
 
           case JSOP_GETARG:
-            obj = NULL;
             slot = GET_ARGNO(pc);
             JS_ASSERT(slot < fp->fun->nargs);
             PUSH_OPND(fp->argv[slot]);
+            obj = NULL;
             break;
 
           case JSOP_SETARG:
-            obj = NULL;
             slot = GET_ARGNO(pc);
             JS_ASSERT(slot < fp->fun->nargs);
             vp = &fp->argv[slot];
             GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
+            obj = NULL;
             break;
 
           case JSOP_GETVAR:
-            obj = NULL;
             slot = GET_VARNO(pc);
             JS_ASSERT(slot < fp->fun->nvars);
             PUSH_OPND(fp->vars[slot]);
+            obj = NULL;
             break;
 
           case JSOP_SETVAR:
-            obj = NULL;
             slot = GET_VARNO(pc);
             JS_ASSERT(slot < fp->fun->nvars);
             vp = &fp->vars[slot];
             GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
+            obj = NULL;
             break;
 
           case JSOP_DEFCONST:

@@ -1035,12 +1035,18 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
     }
 
 #ifdef DEBUG_brendan
+  {
+    uintN bigspans = 0;
     top = -1;
     for (sd = sdbase; sd < sdlimit; sd++) {
         offset = sd->offset;
 
         /* NB: sd->top cursors into the original, unextended bytecode vector. */
         if (sd->top != top) {
+            JS_ASSERT(top == -1 ||
+                      !JOF_TYPE_IS_EXTENDED_JUMP(type) ||
+                      bigspans != 0);
+            bigspans = 0;
             top = sd->top;
             JS_ASSERT(top == sd->before);
             op = (JSOp) base[offset];
@@ -1057,12 +1063,19 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
         pc = base + offset;
         if (JOF_TYPE_IS_EXTENDED_JUMP(type)) {
             span = GET_JUMPX_OFFSET(pc);
-            JS_ASSERT(span < JUMP_OFFSET_MIN || JUMP_OFFSET_MAX < span);
+            if (span < JUMP_OFFSET_MIN || JUMP_OFFSET_MAX < span) {
+                bigspans++;
+            } else {
+                JS_ASSERT(type == JOF_TABLESWITCHX ||
+                          type == JOF_LOOKUPSWITCHX);
+            }
         } else {
             span = GET_JUMP_OFFSET(pc);
         }
         JS_ASSERT(SD_TARGET_OFFSET(sd) == pivot + span);
     }
+    JS_ASSERT(!JOF_TYPE_IS_EXTENDED_JUMP(type) || bigspans != 0);
+  }
 #endif
 
     /*
@@ -1447,7 +1460,7 @@ LookupArgOrVar(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
     op = pn->pn_op;
     if (sprop) {
         if (pobj == obj) {
-            JSPropertyOp getter = SPROP_GETTER(sprop, pobj);
+            JSPropertyOp getter = sprop->getter;
 
             if (getter == js_GetArgument) {
                 switch (op) {
@@ -1479,7 +1492,7 @@ LookupArgOrVar(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
             }
             if (op != pn->pn_op) {
                 pn->pn_op = op;
-                pn->pn_slot = JSVAL_TO_INT(sprop->id);
+                pn->pn_slot = sprop->shortid;
             }
             pn->pn_attrs = sprop->attrs;
         }
@@ -1896,7 +1909,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             }
             JS_ASSERT(sprop && pobj == obj);
-            slot = (uintN) JSVAL_TO_INT(sprop->id);
+            slot = sprop->shortid;
             OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
 
             /* Emit [JSOP_DEFLOCALFUN, local variable slot, atomIndex]. */

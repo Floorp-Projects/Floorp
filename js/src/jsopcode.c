@@ -771,11 +771,13 @@ GetSlotAtom(JSPrinter *jp, JSPropertyOp getter, uintN slot)
 
     scope = jp->scope;
     while (scope) {
-        for (sprop = scope->props; sprop; sprop = sprop->next) {
-            if (SPROP_GETTER_SCOPE(sprop, scope) != getter)
+        for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
+            if (sprop->getter != getter)
                 continue;
-            if ((uintN)JSVAL_TO_INT(sprop->id) == slot)
-                return sym_atom(sprop->symbols);
+            JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+            JS_ASSERT(!JSVAL_IS_INT(sprop->id));
+            if ((uintN) sprop->shortid == slot)
+                return (JSAtom *) sprop->id;
         }
         obj = scope->object;
         if (!obj)
@@ -2321,12 +2323,13 @@ js_DecompileFunctionBody(JSPrinter *jp, JSFunction *fun)
 JSBool
 js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
 {
+    JSContext *cx;
+    uintN i, nargs, indent;
+    void *mark;
+    JSAtom **params;
     JSScope *scope, *oldscope;
-    JSScopeProperty *sprop, *snext;
+    JSScopeProperty *sprop;
     JSBool ok;
-    JSAtom *atom;
-    uintN indent;
-    intN i;
 
     /*
      * If pretty, conform to ECMA-262 Edition 3, 15.3.4.2, by decompiling a
@@ -2347,40 +2350,43 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
     js_printf(jp, "%s %s(",
               js_function_str, fun->atom ? ATOM_BYTES(fun->atom) : "");
 
-    scope = NULL;
     if (fun->script && fun->object) {
-	/*
-	 * Print the parameters.
-	 *
-	 * This code is complicated by the need to handle duplicate parameter
-	 * names.  A duplicate parameter is stored as a property with id equal
-	 * to the parameter number, but will not be in order in the linked list
-	 * of symbols. So for each parameter we search the list of symbols for
-	 * the appropriately numbered parameter, which we can then print.
-	 */
-	for (i = 0; ; i++) {
-	    jsid id;
-	    atom = NULL;
-	    scope = OBJ_SCOPE(fun->object);
-	    for (sprop = scope->props; sprop; sprop = snext) {
-		snext = sprop->next;
-		if (SPROP_GETTER_SCOPE(sprop, scope) != js_GetArgument)
-		    continue;
-		if (JSVAL_IS_INT(sprop->id) && JSVAL_TO_INT(sprop->id) == i) {
-		    atom = sym_atom(sprop->symbols);
-		    break;
-		}
-		id = (jsid) sym_atom(sprop->symbols);
-		if (JSVAL_IS_INT(id) && JSVAL_TO_INT(id) == i) {
-		    atom = (JSAtom *) sprop->id;
-		    break;
-		}
-	    }
-	    if (atom == NULL)
-		break;
-	    js_printf(jp, (i > 0 ? ", %s" : "%s"), ATOM_BYTES(atom));
-	}
+        /*
+         * Print the parameters.
+         *
+         * This code is complicated by the need to handle duplicate parameter
+         * names, as required by ECMA (bah!).  A duplicate parameter is stored
+         * as a duplicate entry in the double hash table, which collides with
+         * the first parameter of the same name, and any other duplicates and
+         * differently-named colliding entries.
+         */
+        cx = jp->sprinter.context;
+        nargs = fun->nargs;
+        mark = JS_ARENA_MARK(&cx->tempPool);
+        JS_ARENA_ALLOCATE_CAST(params, JSAtom **, &cx->tempPool,
+                               nargs * sizeof(JSAtom *));
+        if (!params) {
+            JS_ReportOutOfMemory(cx);
+            return JS_FALSE;
+        }
+        scope = OBJ_SCOPE(fun->object);
+        for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
+            if (sprop->getter != js_GetArgument)
+                continue;
+            JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+            JS_ASSERT((uintN) sprop->shortid < nargs);
+            JS_ASSERT(!JSVAL_IS_INT(sprop->id));
+            params[(uintN) sprop->shortid] = (JSAtom *) sprop->id;
+        }
+        for (i = 0; i < nargs; i++)
+            js_printf(jp, (i > 0 ? ", %s" : "%s"), ATOM_BYTES(params[i]));
+        JS_ARENA_RELEASE(&cx->tempPool, mark);
+#ifdef __GNUC__
+    } else {
+        scope = NULL;
+#endif
     }
+
     js_printf(jp, ") {\n");
     indent = jp->indent;
     jp->indent += 4;
@@ -2398,6 +2404,7 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
     }
     jp->indent -= 4;
     js_printf(jp, "\t}");
+
     if (jp->pretty) {
         js_puts(jp, "\n");
     } else {

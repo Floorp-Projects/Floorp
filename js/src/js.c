@@ -1147,46 +1147,37 @@ DumpAtom(JSHashEntry *he, int i, void *arg)
     return HT_ENUMERATE_NEXT;
 }
 
-static int
-DumpSymbol(JSHashEntry *he, int i, void *arg)
-{
-    FILE *fp = (FILE *) arg;
-    JSSymbol *sym = (JSSymbol *)he;
-
-    fprintf(fp, "%3d %08x", i, (uintN)he->keyHash);
-    if (JSVAL_IS_INT(sym_id(sym)))
-        fprintf(fp, " [%ld]\n", (long)JSVAL_TO_INT(sym_id(sym)));
-    else
-        fprintf(fp, " \"%s\"\n", ATOM_BYTES(sym_atom(sym)));
-    return HT_ENUMERATE_NEXT;
-}
-
-extern JS_FRIEND_DATA(JSScopeOps) js_list_scope_ops;
-
 static void
-DumpScope(JSContext *cx, JSObject *obj, JSHashEnumerator dump, FILE *fp)
+DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
 {
+    uintN i;
     JSScope *scope;
-    JSSymbol *sym;
-    int i;
+    JSScopeProperty *sprop;
 
-    fprintf(fp, "\n%s scope contents:\n", JS_GET_CLASS(cx, obj)->name);
+    i = 0;
     scope = OBJ_SCOPE(obj);
-    if (!MAP_IS_NATIVE(&scope->map))
-        return;
-    if (scope->ops == &js_list_scope_ops) {
-        for (sym = (JSSymbol *)scope->data, i = 0; sym;
-             sym = (JSSymbol *)sym->entry.next, i++) {
-            DumpSymbol(&sym->entry, i, fp);
-        }
-    } else {
-        JS_HashTableDump((JSHashTable *) scope->data, dump, fp);
+    for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
+        if (SCOPE_HAD_MIDDLE_DELETE(scope) && !SCOPE_HAS_PROPERTY(scope, sprop))
+            continue;
+        fprintf(fp, "%3u %p", i, sprop);
+        if (sprop->id & JSVAL_INT)
+            fprintf(fp, " [%ld]", (long)JSVAL_TO_INT(sprop->id));
+        else
+            fprintf(fp, " \"%s\"", ATOM_BYTES((JSAtom *)sprop->id));
+
+#define DUMP_ATTR(name) if (sprop->attrs & JSPROP_##name) fputs(" " #name, fp)
+        DUMP_ATTR(ENUMERATE);
+        DUMP_ATTR(READONLY);
+        DUMP_ATTR(PERMANENT);
+        DUMP_ATTR(EXPORTED);
+        DUMP_ATTR(GETTER);
+        DUMP_ATTR(SETTER);
+#undef  DUMP_ATTR
+
+        fprintf(fp, " slot %lu flags %x shortid %d\n",
+                sprop->slot, sprop->flags, sprop->shortid);
     }
 }
-
-/* These are callable from gdb. */
-static void Dsym(JSSymbol *sym) { if (sym) DumpSymbol(&sym->entry, 0, gErrFile); }
-static void Datom(JSAtom *atom) { if (atom) DumpAtom(&atom->entry, 0, gErrFile); }
 
 static JSBool
 DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -1212,7 +1203,7 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             fprintf(gOutFile, "\natom table contents:\n");
             JS_HashTableDump(cx->runtime->atomState.table, DumpAtom, stdout);
         } else if (strcmp(bytes, "global") == 0) {
-            DumpScope(cx, cx->globalObject, DumpSymbol, stdout);
+            DumpScope(cx, cx->globalObject, stdout);
         } else {
             atom = js_Atomize(cx, bytes, JS_GetStringLength(str), 0);
             if (!atom)
@@ -1231,7 +1222,7 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             }
             obj = JSVAL_TO_OBJECT(value);
             if (obj)
-                DumpScope(cx, obj, DumpSymbol, stdout);
+                DumpScope(cx, obj, stdout);
         }
     }
     return JS_TRUE;

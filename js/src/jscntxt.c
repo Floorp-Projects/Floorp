@@ -495,7 +495,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                         goto error;
                     fmt = efs->format;
                     while (*fmt) {
-                        if (*fmt == '{') {      /* balance} */
+                        if (*fmt == '{') {
                             if (isdigit(fmt[1])) {
                                 int d = JS7_UNDEC(fmt[1]);
                                 JS_ASSERT(expandedArgs < argCount);

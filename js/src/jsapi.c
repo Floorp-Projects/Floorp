@@ -660,6 +660,8 @@ JS_NewRuntime(uint32 maxbytes)
     rt->scopeSharingTodo = NO_SCOPE_SHARING_TODO;
 #endif
     rt->propertyCache.empty = JS_TRUE;
+    if (!js_InitPropertyTree(rt))
+        goto bad;
     JS_INIT_CLIST(&rt->contextList);
     JS_INIT_CLIST(&rt->trapList);
     JS_INIT_CLIST(&rt->watchPointList);
@@ -706,6 +708,7 @@ JS_DestroyRuntime(JSRuntime *rt)
     if (rt->scopeSharingDone)
         JS_DESTROY_CONDVAR(rt->scopeSharingDone);
 #endif
+    js_FinishPropertyTree(rt);
     free(rt);
 }
 
@@ -1745,7 +1748,7 @@ JS_PUBLIC_API(JSBool)
 JS_IdToValue(JSContext *cx, jsid id, jsval *vp)
 {
     CHECK_REQUEST(cx);
-    *vp = js_IdToValue(id);
+    *vp = ID_TO_VALUE(id);
     return JS_TRUE;
 }
 
@@ -2016,7 +2019,7 @@ JS_ConstructObjectWithArguments(JSContext *cx, JSClass *clasp, JSObject *proto,
 static JSBool
 DefineProperty(JSContext *cx, JSObject *obj, const char *name, jsval value,
                JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
-               JSProperty **propp)
+               uintN flags, intN tinyid)
 {
     jsid id;
     JSAtom *atom;
@@ -2031,8 +2034,12 @@ DefineProperty(JSContext *cx, JSObject *obj, const char *name, jsval value,
             return JS_FALSE;
         id = (jsid)atom;
     }
+    if (flags != 0 && OBJ_IS_NATIVE(obj)) {
+        return js_DefineNativeProperty(cx, obj, id, value, getter, setter,
+                                       attrs, flags, tinyid, NULL);
+    }
     return OBJ_DEFINE_PROPERTY(cx, obj, id, value, getter, setter, attrs,
-                               propp);
+                               NULL);
 }
 
 #define AUTO_NAMELEN(s,n)   (((n) == (size_t)-1) ? js_strlen(s) : (n))
@@ -2041,15 +2048,20 @@ static JSBool
 DefineUCProperty(JSContext *cx, JSObject *obj,
                  const jschar *name, size_t namelen, jsval value,
                  JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
-                 JSProperty **propp)
+                 uintN flags, intN tinyid)
 {
     JSAtom *atom;
 
     atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name,namelen), 0);
     if (!atom)
         return JS_FALSE;
+    if (flags != 0 && OBJ_IS_NATIVE(obj)) {
+        return js_DefineNativeProperty(cx, obj, (jsid)atom, value,
+                                       getter, setter, attrs, flags, tinyid,
+                                       NULL);
+    }
     return OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, value, getter, setter,
-                               attrs, propp);
+                               attrs, NULL);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -2065,7 +2077,7 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *clasp,
     if (!nobj)
         return NULL;
     if (!DefineProperty(cx, obj, name, OBJECT_TO_JSVAL(nobj), NULL, NULL, attrs,
-                        NULL)) {
+                        0, 0)) {
         cx->newborn[GCX_OBJECT] = NULL;
         return NULL;
     }
@@ -2087,7 +2099,7 @@ JS_DefineConstDoubles(JSContext *cx, JSObject *obj, JSConstDoubleSpec *cds)
         flags = cds->flags;
         if (!flags)
             flags = JSPROP_READONLY | JSPROP_PERMANENT;
-        ok = DefineProperty(cx, obj, cds->name, value, NULL, NULL, flags, NULL);
+        ok = DefineProperty(cx, obj, cds->name, value, NULL, NULL, flags, 0, 0);
         if (!ok)
             break;
     }
@@ -2098,28 +2110,14 @@ JS_PUBLIC_API(JSBool)
 JS_DefineProperties(JSContext *cx, JSObject *obj, JSPropertySpec *ps)
 {
     JSBool ok;
-    JSProperty *prop;
-    JSScopeProperty *sprop;
 
     CHECK_REQUEST(cx);
     for (ok = JS_TRUE; ps->name; ps++) {
         ok = DefineProperty(cx, obj, ps->name, JSVAL_VOID,
                             ps->getter, ps->setter, ps->flags,
-                            &prop);
+                            SPROP_HAS_SHORTID, ps->tinyid);
         if (!ok)
             break;
-        if (prop) {
-            if (OBJ_IS_NATIVE(obj)) {
-                sprop = (JSScopeProperty *)prop;
-#ifdef JS_DOUBLE_HASHING
-                sprop->attrs |= JSPROP_INDEX;
-                sprop->tinyid = ps->tinyid;
-#else
-                sprop->id = INT_TO_JSVAL(ps->tinyid);
-#endif
-            }
-            OBJ_DROP_PROPERTY(cx, obj, prop);
-        }
     }
     return ok;
 }
@@ -2129,7 +2127,7 @@ JS_DefineProperty(JSContext *cx, JSObject *obj, const char *name, jsval value,
                   JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
 {
     CHECK_REQUEST(cx);
-    return DefineProperty(cx, obj, name, value, getter, setter, attrs, NULL);
+    return DefineProperty(cx, obj, name, value, getter, setter, attrs, 0, 0);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2138,25 +2136,9 @@ JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name,
                             JSPropertyOp getter, JSPropertyOp setter,
                             uintN attrs)
 {
-    JSBool ok;
-    JSProperty *prop;
-    JSScopeProperty *sprop;
-
     CHECK_REQUEST(cx);
-    ok = DefineProperty(cx, obj, name, value, getter, setter, attrs, &prop);
-    if (ok && prop) {
-        if (OBJ_IS_NATIVE(obj)) {
-            sprop = (JSScopeProperty *)prop;
-#ifdef JS_DOUBLE_HASHING
-            sprop->attrs |= JSPROP_INDEX;
-            sprop->tinyid = tinyid;
-#else
-            sprop->id = INT_TO_JSVAL(tinyid);
-#endif
-        }
-        OBJ_DROP_PROPERTY(cx, obj, prop);
-    }
-    return ok;
+    return DefineProperty(cx, obj, name, value, getter, setter, attrs,
+                          SPROP_HAS_SHORTID, tinyid);
 }
 
 static JSBool
@@ -2191,18 +2173,17 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
     JSObject *obj2;
     JSProperty *prop;
     JSAtom *atom;
-    JSScope *scope;
     JSBool ok;
+    JSScopeProperty *sprop;
 
     CHECK_REQUEST(cx);
-    /* XXXbe push this into jsobj.c or jsscope.c */
     if (!LookupProperty(cx, obj, name, &obj2, &prop))
         return JS_FALSE;
     if (!prop) {
         js_ReportIsNotDefined(cx, name);
         return JS_FALSE;
     }
-    if (obj2 != obj || !OBJ_IS_NATIVE(obj2)) {
+    if (obj2 != obj || !OBJ_IS_NATIVE(obj)) {
         OBJ_DROP_PROPERTY(cx, obj2, prop);
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_ALIAS,
                              alias, name, OBJ_GET_CLASS(cx, obj2)->name);
@@ -2212,8 +2193,11 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
     if (!atom) {
         ok = JS_FALSE;
     } else {
-        scope = OBJ_SCOPE(obj);
-        ok = (scope->ops->add(cx, scope, (jsid)atom, (JSScopeProperty *)prop)
+        sprop = (JSScopeProperty *)prop;
+        ok = (js_AddNativeProperty(cx, obj, (jsid)atom,
+                                   sprop->getter, sprop->setter, sprop->slot,
+                                   sprop->attrs, sprop->flags | SPROP_IS_ALIAS,
+                                   sprop->shortid)
               != NULL);
     }
     OBJ_DROP_PROPERTY(cx, obj, prop);
@@ -2233,7 +2217,7 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop)
     if (OBJ_IS_NATIVE(obj2)) {
         /* Peek at the native property's slot value, without doing a Get. */
         sprop = (JSScopeProperty *)prop;
-        rval = (SPROP_HAS_VALID_SLOT(sprop))
+        rval = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2))
                ? LOCKED_OBJ_GET_SLOT(obj2, sprop->slot)
                : JSVAL_TRUE;
     } else {
@@ -2383,7 +2367,7 @@ JS_DefineUCProperty(JSContext *cx, JSObject *obj,
 {
     CHECK_REQUEST(cx);
     return DefineUCProperty(cx, obj, name, namelen, value, getter, setter,
-                            attrs, NULL);
+                            attrs, 0, 0);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2415,26 +2399,9 @@ JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
                               JSPropertyOp getter, JSPropertyOp setter,
                               uintN attrs)
 {
-    JSBool ok;
-    JSProperty *prop;
-    JSScopeProperty *sprop;
-
     CHECK_REQUEST(cx);
-    ok = DefineUCProperty(cx, obj, name, namelen, value, getter, setter, attrs,
-                          &prop);
-    if (ok && prop) {
-        if (OBJ_IS_NATIVE(obj)) {
-            sprop = (JSScopeProperty *)prop;
-#ifdef JS_DOUBLE_HASHING
-            sprop->attrs |= JSPROP_INDEX;
-            sprop->tinyid = tinyid;
-#else
-            sprop->id = INT_TO_JSVAL(tinyid);
-#endif
-        }
-        OBJ_DROP_PROPERTY(cx, obj, prop);
-    }
-    return ok;
+    return DefineUCProperty(cx, obj, name, namelen, value, getter, setter,
+                            attrs, SPROP_HAS_SHORTID, tinyid);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2544,18 +2511,17 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
 {
     JSObject *obj2;
     JSProperty *prop;
-    JSScope *scope;
+    JSScopeProperty *sprop;
     JSBool ok;
 
     CHECK_REQUEST(cx);
-    /* XXXbe push this into jsobj.c or jsscope.c */
     if (!LookupProperty(cx, obj, name, &obj2, &prop))
         return JS_FALSE;
     if (!prop) {
         js_ReportIsNotDefined(cx, name);
         return JS_FALSE;
     }
-    if (obj2 != obj || !OBJ_IS_NATIVE(obj2)) {
+    if (obj2 != obj || !OBJ_IS_NATIVE(obj)) {
         char numBuf[12];
         OBJ_DROP_PROPERTY(cx, obj2, prop);
         JS_snprintf(numBuf, sizeof numBuf, "%ld", (long)alias);
@@ -2563,9 +2529,11 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
                              numBuf, name, OBJ_GET_CLASS(cx, obj2)->name);
         return JS_FALSE;
     }
-    scope = OBJ_SCOPE(obj);
-    ok = (scope->ops->add(cx, scope, INT_TO_JSVAL(alias),
-                          (JSScopeProperty *)prop)
+    sprop = (JSScopeProperty *)prop;
+    ok = (js_AddNativeProperty(cx, obj, INT_TO_JSVAL(alias),
+                               sprop->getter, sprop->setter, sprop->slot,
+                               sprop->attrs, sprop->flags | SPROP_IS_ALIAS,
+                               sprop->shortid)
           != NULL);
     OBJ_DROP_PROPERTY(cx, obj, prop);
     return ok;
@@ -3134,7 +3102,6 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
     JSFunction *fun;
     JSAtom *funAtom, *argAtom;
     uintN i;
-    JSScopeProperty *sprop;
 
     CHECK_REQUEST(cx);
     mark = JS_ARENA_MARK(&cx->tempPool);
@@ -3160,15 +3127,14 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
             argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]), 0);
             if (!argAtom)
                 break;
-            if (!js_DefineProperty(cx, fun->object, (jsid)argAtom,
-                                   JSVAL_VOID, js_GetArgument, js_SetArgument,
-                                   JSPROP_ENUMERATE|JSPROP_PERMANENT,
-                                   (JSProperty **)&sprop)) {
+            if (!js_AddNativeProperty(cx, fun->object, (jsid)argAtom,
+                                      js_GetArgument, js_SetArgument,
+                                      SPROP_INVALID_SLOT,
+                                      JSPROP_ENUMERATE | JSPROP_PERMANENT |
+                                      JSPROP_SHARED,
+                                      SPROP_HAS_SHORTID, i)) {
                 break;
             }
-            JS_ASSERT(sprop);
-            sprop->id = INT_TO_JSVAL(i);
-            OBJ_DROP_PROPERTY(cx, fun->object, (JSProperty *)sprop);
         }
         if (i < nargs) {
             fun = NULL;

@@ -99,7 +99,7 @@ JS_DHashMatchEntryStub(JSDHashTable *table,
                        const JSDHashEntryHdr *entry,
                        const void *key)
 {
-    JSDHashEntryStub *stub = (JSDHashEntryStub *)entry;
+    const JSDHashEntryStub *stub = (const JSDHashEntryStub *)entry;
 
     return stub->key == key;
 }
@@ -458,8 +458,7 @@ ChangeTable(JSDHashTable *table, int deltaLog2)
                                    oldEntry->keyHash, JS_DHASH_ADD);
             JS_ASSERT(JS_DHASH_ENTRY_IS_FREE(newEntry));
             moveEntry(table, oldEntry, newEntry);
-            newEntry->keyHash =
-                oldEntry->keyHash | (newEntry->keyHash & COLLISION_FLAG);
+            newEntry->keyHash = oldEntry->keyHash;
         }
         oldEntryAddr += entrySize;
     }

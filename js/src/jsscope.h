@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -47,31 +47,163 @@
 # include "jslock.h"
 #endif
 
-#ifndef JS_DOUBLE_HASHING
-struct JSScopeOps {
-    JSSymbol *      (*lookup)(JSContext *cx, JSScope *scope, jsid id,
-			      JSHashNumber hash);
-    JSSymbol *      (*add)(JSContext *cx, JSScope *scope, jsid id,
-			   JSScopeProperty *sprop);
-    JSBool          (*remove)(JSContext *cx, JSScope *scope, jsid id);
-    void            (*clear)(JSContext *cx, JSScope *scope);
-};
-#endif
+/*
+ * Given P independent, non-unique properties each of size S words mapped by
+ * all scopes in a runtime, construct a property tree of N nodes each of size
+ * S+L words (L for tree linkage).  A nominal L value is 2 for leftmost-child
+ * and right-sibling links.  We hope that the N < P by enough that the space
+ * overhead of L, and the overhead of scope entries pointing at property tree
+ * nodes, is worth it.
+ *
+ * The tree construction goes as follows.  If any empty scope in the runtime
+ * has a property X added to it, find or create a node under the tree root
+ * labeled X, and set scope->lastProp to point at that node.  If any non-empty
+ * scope whose most recently added property is labeled Y has another property
+ * labeled Z added, find or create a node for Z under the node that was added
+ * for Y, and set scope->lastProp to point at that node.
+ *
+ * A property is labeled by its members' values: id, getter, setter, slot,
+ * attributes, tiny or short id, and a field telling for..in order.  Note that
+ * labels are not unique in the tree, but they are unique among a node's kids
+ * (barring rare and benign multi-threaded race condition outcomes, see below)
+ * and along any ancestor line from the tree root to a given leaf node.
+ *
+ * Thus the root of the tree represents all empty scopes, and the first ply
+ * of the tree represents all scopes containing one property, etc.  Each node
+ * in the tree can stand for any number of scopes having the same ordered set
+ * of properties, where that node was the last added to the scope.  (We need
+ * not store the root of the tree as a node, and do not -- all we need are
+ * links to its kids.)
+ *
+ * Sidebar on for..in loop order: ECMA requires no particular order, but this
+ * implementation has promised and delivered property definition order, and
+ * compatibility is king.  We could use an order number per property, which
+ * would require a sort in js_Enumerate, and an entry order generation number
+ * per scope.  An order number beats a list, which should be doubly-linked for
+ * O(1) delete.  An even better scheme is to use a parent link in the property
+ * tree, so that the ancestor line can be iterated from scope->lastProp when
+ * filling in a JSIdArray from back to front.  This parent link also helps the
+ * GC to sweep properties iteratively.
+ *
+ * What if a property Y is deleted from a scope?  If Y is the last property in
+ * the scope, we simply adjust the scope's lastProp member after we remove the
+ * scope's hash-table entry pointing at that property node.  The parent link
+ * mentioned in the for..in sidebar above makes this adjustment O(1).  But if
+ * Y comes between X and Z in the scope, then we might have to "fork" the tree
+ * at X, leaving X->Y->Z in case other scopes have those properties added in
+ * that order; and to finish the fork, we'd add a node labeled Z with the path
+ * X->Z, if it doesn't exist.  This could lead to lots of extra nodes, and to
+ * O(n^2) growth when deleting lots of properties.
+ * 
+ * Rather, for O(1) growth all around, we should share the path X->Y->Z among
+ * scopes having those three properties added in that order, and among scopes
+ * having only X->Z where Y was deleted.  All such scopes have a lastProp that
+ * points to the Z child of Y.  But a scope in which Y was deleted does not
+ * have a table entry for Y, and when iterating that scope by traversing the
+ * ancestor line from Z, we will have to test for a scope entry for each node,
+ * skipping nodes that lack entries.
+ *
+ * What if we add Y again?  X->Y->Z->Y is wrong and we'll enumerate Y twice.
+ * Therefore we must fork in such a case, if not earlier.  Because delete is
+ * "bursty", we should not fork eagerly.  Delaying a fork till we are at risk
+ * of adding Y after it was deleted already requires a flag in the JSScope, at
+ * least.  So we tag the scope->lastProp pointer with SCOPE_MIDDLE_DELETE_TAG,
+ * to avoid expanding the size of JSScope, and to penalize only the code that
+ * already must care about forking (js_{Add,Remove}ScopeProperty).
+ *
+ * What about thread safety?  If the property tree operations done by requests
+ * are find-node and insert-node, then the only hazard is duplicate insertion.
+ * This is harmless except for minor bloat.  When all requests have ended or
+ * been suspended, the GC is free to sweep the tree after marking all nodes
+ * reachable from scopes, performing remove-node operations as needed.  Note
+ * also that the stable storage of the property nodes during active requests
+ * permits the property cache (see jsinterp.h) to dereference JSScopeProperty
+ * weak references safely.
+ *
+ * Is the property tree worth it compared to property storage in each table's
+ * entries?  To decide, we must find the relation <> between the words used
+ * with a property tree and the words required without a tree.
+ *
+ * Model all scopes as one super-scope of capacity T entries (T a power of 2).
+ * Let alpha be the load factor of this double hash-table.  With the property
+ * tree, each entry in the table is a word-sized pointer to a node that can be
+ * shared by many scopes.  But all such pointers are overhead compared to the
+ * situation without the property tree, where the table stores property nodes
+ * directly, as entries each of size S words.  With the property tree, we need
+ * L=2 extra words per node for siblings and kids pointers.  Without the tree,
+ * (1-alpha)*S*T words are wasted on free or removed sentinel-entries required
+ * by double hashing.
+ *
+ * Therefore,
+ *
+ *      (property tree)                 <> (no property tree)
+ *      N*(S+L) + T                     <> S*T
+ *      N*(S+L) + T                     <> P*S + (1-alpha)*S*T
+ *      N*(S+L) + alpha*T + (1-alpha)*T <> P*S + (1-alpha)*S*T
+ *
+ * Note that P is alpha*T by definition, so
+ *
+ *      N*(S+L) + P + (1-alpha)*T <> P*S + (1-alpha)*S*T
+ *      N*(S+L)                   <> P*S - P + (1-alpha)*S*T - (1-alpha)*T
+ *      N*(S+L)                   <> (P + (1-alpha)*T) * (S-1)
+ *      N*(S+L)                   <> (P + (1-alpha)*P/alpha) * (S-1)
+ *      N*(S+L)                   <> P * (1/alpha) * (S-1)
+ *
+ * Let N = P*beta for a compression ratio beta, beta <= 1:
+ *
+ *      P*beta*(S+L) <> P * (1/alpha) * (S-1)
+ *      beta*(S+L)   <> (S-1)/alpha
+ *      beta         <> (S-1)/((S+L)*alpha)
+ *
+ * For S = 6 (32-bit architectures) and L = 2, the property tree wins iff
+ *
+ *      beta < 5/(8*alpha)
+ *
+ * We ensure that alpha <= .75, so the property tree wins if beta < .83_.  An
+ * average beta from recent Mozilla browser startups was around .6.
+ *
+ * Can we reduce L?  Observe that the property tree degenerates into a list of
+ * lists if at most one property Y follows X in all scopes.  In or near such a
+ * case, we waste a word on the right-sibling link outside of the root ply of
+ * the tree.  Note also that the root ply tends to be large, so O(n^2) growth
+ * searching it is likely, indicating the need for hashing (but with increased
+ * thread safety costs).
+ *
+ * If only K out of N nodes in the property tree have more than one child, we
+ * could eliminate the sibling link and overlay a children list or hash-table
+ * pointer on the leftmost-child link (which would then be either null or an
+ * only-child link; the overlay could be tagged in the low bit of the pointer,
+ * or flagged elsewhere in the property tree node, although such a flag must
+ * not be considered when comparing node labels during tree search).
+ *
+ * For such a system, L = 1 + (K * averageChildrenTableSize) / N instead of 2.
+ * If K << N, L approaches 1 and the property tree wins if beta < .95.
+ *
+ * We observe that fan-out below the root ply of the property tree appears to
+ * have extremely low degree (see the MeterPropertyTree code that histograms
+ * child-counts in jsscope.c), so instead of a hash-table we use a linked list
+ * of child node pointer arrays ("kid chunks").  The details are isolated in
+ * jsscope.c; others must treat JSScopeProperty.kids as opaque.  We leave it
+ * strongly typed for debug-ability of the common (null or one-kid) cases.
+ *
+ * One final twist (can you stand it?): the mean number of entries per scope
+ * in Mozilla is < 5, with a large standard deviation (~8).  Instead of always
+ * allocating scope->table, we leave it null while initializing all the other
+ * scope members as if it were non-null and minimal-length.  Until a property
+ * is added that crosses the threshold of 6 or more entries for hashing, or
+ * until a delete occurs, we use scope->lastProp to search for a given id and
+ * save on the space overhead of a hash table.
+ */
 
 struct JSScope {
     JSObjectMap     map;                /* base class state */
     JSObject        *object;            /* object that owns this scope */
-    JSScopeProperty *props;             /* property list in definition order */
-    JSScopeProperty **proptail;         /* pointer to pointer to last prop */
-#ifdef JS_DOUBLE_HASHING
-    uint32          tableLength;
-    JSScopeProperty *table;
-    uint32          gsTableLength;      /* number of entries in gsTable */
-    JSPropertyOp    gsTable[1];         /* actually, gsTableLength ops */
-#else
-    JSScopeOps      *ops;               /* virtual operations */
-    void            *data;              /* private data specific to ops */
-#endif
+    int16           hashShift;          /* multiplicative hash shift */
+    int16           sizeLog2;           /* log2(table size) */
+    uint32          entryCount;         /* number of entries in table */
+    uint32          removedCount;       /* removed entry sentinels in table */
+    JSScopeProperty **table;            /* table of ptrs to shared tree nodes */
+    JSScopeProperty *lastProp;          /* tagged ptr to last property added */
 #ifdef JS_THREADSAFE
     JSContext       *ownercx;           /* creating context, NULL if shared */
     JSThinLock      lock;               /* binary semaphore protecting scope */
@@ -86,123 +218,152 @@ struct JSScope {
 #endif
 };
 
-#define OBJ_SCOPE(obj)              ((JSScope *)(obj)->map)
-#define SPROP_GETTER(sprop,obj)     SPROP_GETTER_SCOPE(sprop, OBJ_SCOPE(obj))
-#define SPROP_SETTER(sprop,obj)     SPROP_SETTER_SCOPE(sprop, OBJ_SCOPE(obj))
+#define OBJ_SCOPE(obj)                  ((JSScope *)(obj)->map)
 
-#define SPROP_INVALID_SLOT          0xffffffff
-#define SPROP_HAS_VALID_SLOT(sprop) ((sprop)->slot != SPROP_INVALID_SLOT)
+#define SCOPE_MIDDLE_DELETE_TAG         ((jsuword)1) 
+#define SCOPE_LAST_PROP_WORD(scope)     ((jsuword)(scope)->lastProp)
 
-#ifdef JS_DOUBLE_HASHING
+#define SCOPE_LAST_PROP(scope)                                                \
+    ((JSScopeProperty *) (SCOPE_LAST_PROP_WORD(scope) &                       \
+                          ~SCOPE_MIDDLE_DELETE_TAG))
 
-struct JSScopeProperty {
-    jsid            id;
-    uint32          slot;               /* index in obj->slots vector */
-    uint8           attrs;              /* attributes, see jsapi.h JSPROP_ */
-    uint8           getterIndex;        /* getter and setter method indexes */
-    uint8           setterIndex;        /* in JSScope.gsTable[] */
-    uint8           reserved;
-    JSScopeProperty *next;              /* singly-linked list linkage */
-};
+#define SCOPE_HAD_MIDDLE_DELETE(scope)                                        \
+    (SCOPE_LAST_PROP_WORD(scope) & SCOPE_MIDDLE_DELETE_TAG)
 
-#define SPROP_GETTER_SCOPE(sprop,scope) ((scope)->gsTable[(sprop)->getterIndex])
-#define SPROP_SETTER_SCOPE(sprop,scope) ((scope)->gsTable[(sprop)->setterIndex])
+#define SCOPE_SET_LAST_PROP(scope, sprop)                                     \
+    ((scope)->lastProp = (JSScopeProperty *)                                  \
+                         ((jsuword) (sprop) |                                 \
+                          SCOPE_HAD_MIDDLE_DELETE(scope)))
 
-#else  /* !JS_DOUBLE_HASHING */
+#define SCOPE_REMOVE_LAST_PROP(scope)                                         \
+    SCOPE_SET_LAST_PROP(scope, SCOPE_LAST_PROP(scope)->parent)
 
-struct JSSymbol {
-    JSHashEntry     entry;              /* base class state */
-    JSScope         *scope;             /* pointer to owning scope */
-    JSSymbol        *next;              /* next in type-specific list */
-};
-
-#define sym_id(sym)             ((jsid)(sym)->entry.key)
-#define sym_atom(sym)           ((JSAtom *)(sym)->entry.key)
-#define sym_property(sym)       ((JSScopeProperty *)(sym)->entry.value)
+#define SCOPE_SET_MIDDLE_DELETE(scope)                                        \
+    ((scope)->lastProp = (JSScopeProperty *)                                  \
+                         (SCOPE_LAST_PROP_WORD(scope) |                       \
+                          SCOPE_MIDDLE_DELETE_TAG))
 
 struct JSScopeProperty {
-    jsrefcount      nrefs;              /* number of referencing symbols */
-    jsval           id;                 /* id passed to getter and setter */
-    JSPropertyOp    getter;             /* getter and setter methods */
+    jsid            id;                 /* int-tagged jsval/untagged JSAtom* */
+    JSPropertyOp    getter;             /* getter and setter hooks or objects */
     JSPropertyOp    setter;
     uint32          slot;               /* index in obj->slots vector */
-    uint8           attrs;              /* attributes, see jsapi.h JSPROP_ */
-    uint8           spare;              /* reserved for future use */
-    JSSymbol        *symbols;           /* list of aliasing symbols */
-    JSScopeProperty *next;              /* doubly-linked list linkage */
-    JSScopeProperty **prevp;
+    uint8           attrs;              /* attributes, see jsapi.h JSPROP_* */
+    uint8           flags;              /* flags, see below for defines */
+    int16           shortid;            /* tinyid, or local arg/var index */
+    JSScopeProperty *parent;            /* parent node, reverse for..in order */
+    JSScopeProperty *kids;              /* null, single child, or a tagged ptr
+                                           to many-kids data structure */
 };
 
-#define SPROP_GETTER_SCOPE(sprop,scope) ((sprop)->getter)
-#define SPROP_SETTER_SCOPE(sprop,scope) ((sprop)->setter)
+/* JSScopeProperty pointer tag bit indicating a collision. */
+#define SPROP_COLLISION                 ((jsuword)1)
+#define SPROP_REMOVED                   ((JSScopeProperty *) SPROP_COLLISION)
 
-#endif /* !JS_DOUBLE_HASHING */
+/* Macros to get and set sprop pointer values and collision flags. */
+#define SPROP_IS_FREE(sprop)            ((sprop) == NULL)
+#define SPROP_IS_REMOVED(sprop)         ((sprop) == SPROP_REMOVED)
+#define SPROP_IS_LIVE(sprop)            ((sprop) > SPROP_REMOVED)
+#define SPROP_FLAG_COLLISION(spp,sprop) (*(spp) = (JSScopeProperty *)         \
+                                         ((jsuword)(sprop) | SPROP_COLLISION))
+#define SPROP_HAD_COLLISION(sprop)      ((jsuword)(sprop) & SPROP_COLLISION)
+#define SPROP_FETCH(spp)                SPROP_CLEAR_COLLISION(*(spp))
+
+#define SPROP_CLEAR_COLLISION(sprop)                                          \
+    ((JSScopeProperty *) ((jsuword)(sprop) & ~SPROP_COLLISION))
+
+#define SPROP_STORE_PRESERVING_COLLISION(spp, sprop)                          \
+    (*(spp) = (JSScopeProperty *) ((jsuword)(sprop)                           \
+                                   | SPROP_HAD_COLLISION(*(spp))))
+
+/* Bits stored in sprop->flags. */
+#define SPROP_MARK                      0x01
+#define SPROP_IS_DUPLICATE              0x02
+#define SPROP_IS_ALIAS                  0x04
+#define SPROP_HAS_SHORTID               0x08
 
 /*
- * These macros are designed to decouple getter and setter from sprop, by
- * passing obj2 (in whose scope sprop lives, and in whose scope getter and
- * setter might be stored apart from sprop -- say in scope->gsTable[i] for
- * a compressed getter or setter index i that is stored in sprop).
+ * If SPROP_HAS_SHORTID is set in sprop->flags, we use sprop->shortid rather
+ * than id when calling sprop's getter or setter.
  */
+#define SPROP_USERID(sprop)                                                   \
+    (((sprop)->flags & SPROP_HAS_SHORTID) ? INT_TO_JSVAL((sprop)->shortid)    \
+                                          : ID_TO_VALUE((sprop)->id))
+
+#define SPROP_INVALID_SLOT              0xffffffff
+
+#define SPROP_HAS_VALID_SLOT(sprop, scope)                                    \
+    ((sprop)->slot < (scope)->map.freeslot)
+
+#define SPROP_CALL_GETTER(cx,sprop,getter,obj,obj2,vp)                        \
+    (!(getter) ||                                                             \
+     (getter)(cx, OBJ_THIS_OBJECT(cx,obj), SPROP_USERID(sprop), vp))
+#define SPROP_CALL_SETTER(cx,sprop,setter,obj,obj2,vp)                        \
+    (!(setter) ||                                                             \
+     (setter)(cx, OBJ_THIS_OBJECT(cx,obj), SPROP_USERID(sprop), vp))
+
 #define SPROP_GET(cx,sprop,obj,obj2,vp)                                       \
     (((sprop)->attrs & JSPROP_GETTER)                                         \
-     ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL(SPROP_GETTER(sprop,obj2)),    \
-                       0, 0, vp)                                              \
-     : (SPROP_GETTER(sprop,obj2) != JS_PropertyStub)                          \
-     ? SPROP_GETTER(sprop,obj2)(cx, OBJ_THIS_OBJECT(cx,obj), sprop->id, vp)   \
-     : JS_TRUE)
+     ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL((sprop)->getter), 0, 0, vp)   \
+     : SPROP_CALL_GETTER(cx, sprop, (sprop)->getter, obj, obj2, vp))
 
 #define SPROP_SET(cx,sprop,obj,obj2,vp)                                       \
     (((sprop)->attrs & JSPROP_SETTER)                                         \
-     ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL(SPROP_SETTER(sprop,obj2)),    \
-                       1, vp, vp)                                             \
+     ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL((sprop)->setter), 1, vp, vp)  \
      : ((sprop)->attrs & JSPROP_GETTER)                                       \
      ? (JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,                    \
                              JSMSG_GETTER_ONLY, NULL), JS_FALSE)              \
-     : (SPROP_SETTER(sprop,obj2) != JS_PropertyStub)                          \
-     ? SPROP_SETTER(sprop,obj2)(cx, OBJ_THIS_OBJECT(cx,obj), sprop->id, vp)   \
-     : JS_TRUE)
+     : SPROP_CALL_SETTER(cx, sprop, (sprop)->setter, obj, obj2, vp))
 
 extern JSScope *
 js_GetMutableScope(JSContext *cx, JSObject *obj);
 
 extern JSScope *
-js_MutateScope(JSContext *cx, JSObject *obj, jsid id,
-	       JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
-	       JSScopeProperty **propp);
-
-extern JSScope *
 js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
-	    JSObject *obj);
+            JSObject *obj);
 
 extern void
 js_DestroyScope(JSContext *cx, JSScope *scope);
 
-extern JSHashNumber
-js_HashId(jsid id);
+#define ID_TO_VALUE(id) (((id) & JSVAL_INT) ? id : ATOM_KEY((JSAtom *)(id)))
+#define HASH_ID(id)     (((id) & JSVAL_INT)                                   \
+                         ? (jsatomid) JSVAL_TO_INT(id)                        \
+                         : ((JSAtom *)id)->number)
 
-extern jsval
-js_IdToValue(jsid id);
+extern JS_FRIEND_API(JSScopeProperty **)
+js_SearchScope(JSScope *scope, jsid id, JSBool adding);
+
+#define SCOPE_GET_PROPERTY(scope, id)                                         \
+    SPROP_FETCH(js_SearchScope(scope, id, JS_FALSE))
+
+#define SCOPE_HAS_PROPERTY(scope, sprop)                                      \
+    (SCOPE_GET_PROPERTY(scope, (sprop)->id) == (sprop))
 
 extern JSScopeProperty *
-js_NewScopeProperty(JSContext *cx, JSScope *scope, jsid id,
-		    JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
+js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
+                    JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
+                    uintN attrs, uintN flags, intN shortid);
+
+extern JSScopeProperty *
+js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
+                            JSScopeProperty *sprop, uintN attrs, uintN mask,
+                            JSPropertyOp getter, JSPropertyOp setter);
+
+extern JSBool
+js_RemoveScopeProperty(JSContext *cx, JSScope *scope, jsid id);
 
 extern void
-js_DestroyScopeProperty(JSContext *cx, JSScope *scope, JSScopeProperty *sprop);
+js_ClearScope(JSContext *cx, JSScope *scope);
 
-/*
- * For bogus historical reasons, these functions cope with null sprop params.
- * They hide details of reference or "short-term property hold" accounting, so
- * they're worth the space.  But do use HOLD_SCOPE_PROPERTY to keep a non-null
- * sprop in hand for a scope-locking critical section.
- */
-extern JSScopeProperty *
-js_HoldScopeProperty(JSContext *cx, JSScope *scope, JSScopeProperty *sprop);
+#define MARK_SCOPE_PROPERTY(sprop)      ((sprop)->flags |= SPROP_MARK)
 
-extern JSScopeProperty *
-js_DropScopeProperty(JSContext *cx, JSScope *scope, JSScopeProperty *sprop);
+extern void
+js_SweepScopeProperties(JSRuntime *rt);
 
-#define HOLD_SCOPE_PROPERTY(scope,sprop) ((sprop)->nrefs++)
+extern JSBool
+js_InitPropertyTree(JSRuntime *rt);
+
+extern void
+js_FinishPropertyTree(JSRuntime *rt);
 
 #endif /* jsscope_h___ */
