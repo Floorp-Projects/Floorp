@@ -120,6 +120,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif
 
 #include "nsIPopupSetFrame.h"
+#include "nsIWalletService.h"
 
 /* Define Class IDs */
 static NS_DEFINE_CID(kWindowCID,           NS_WINDOW_CID);
@@ -138,7 +139,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
 static NS_DEFINE_CID(kXULPopupListenerCID, NS_XULPOPUPLISTENER_CID);
-
+static NS_DEFINE_CID(kSingleSignOnPromptCID, NS_SINGLESIGNONPROMPT_CID);
 
 
 #ifdef DEBUG_rods
@@ -1977,8 +1978,17 @@ nsWebShellWindow::GetPrompter(nsIPrompt* *result)
     if (NS_FAILED(rv)) return rv;
 
     // wrap the nsDOMWindowPrompter in a nsISingleSignOnPrompt:
-    rv = NS_NewSingleSignOnPrompt(getter_AddRefs(mPrompter), prompt);
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsISingleSignOnPrompt> siPrompt = do_CreateInstance(kSingleSignOnPromptCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      // then single sign-on is installed
+      rv = siPrompt->Init(prompt);
+      if (NS_FAILED(rv)) return rv;
+      mPrompter = siPrompt;
+    }
+    else {
+      // if single sign-on isn't installed, just use the DOM window prompter directly
+      mPrompter = prompt;
+    }
   }
   *result = mPrompter; 
   NS_ADDREF(*result);

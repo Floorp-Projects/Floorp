@@ -92,25 +92,4 @@ interface nsISingleSignOnPrompt : nsIPrompt
 #define NS_SINGLESIGNONPROMPT_CLASSNAME "Single Sign-On Prompt"
 #define NS_SINGLESIGNONPROMPT_PROGID    "component://netscape/wallet/single-sign-on-prompt"
 
-#include "nsIComponentManager.h"
-#include "nsCOMPtr.h"
-
-inline nsresult
-NS_NewSingleSignOnPrompt(nsIPrompt* *result, nsIPrompt* dialogs)
-{
-  nsresult rv;
-  nsCOMPtr<nsISingleSignOnPrompt> prompt;
-  static NS_DEFINE_CID(kSingleSignOnPromptCID, NS_SINGLESIGNONPROMPT_CID);
-  rv = nsComponentManager::CreateInstance(kSingleSignOnPromptCID,
-                                          nsnull,
-                                          NS_GET_IID(nsISingleSignOnPrompt),
-                                          getter_AddRefs(prompt));
-  if (NS_FAILED(rv)) return rv;
-  rv = prompt->Init(dialogs);
-  if (NS_FAILED(rv)) return rv;
-  *result = prompt;
-  NS_ADDREF(*result);
-  return NS_OK;
-}
-
 %}
