@@ -186,7 +186,7 @@ protected:
   nsCOMArray<nsIDOMHTMLScriptElement> mScriptElements;
   XMLContentSinkState mState;
 
-  nsString mRef; // ScrollTo #ref
+  nsCString mRef; // ScrollTo #ref
   nsString mTitleText; 
   
   PRInt32 mTextLength;

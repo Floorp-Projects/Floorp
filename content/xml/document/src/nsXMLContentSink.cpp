@@ -1378,19 +1378,30 @@ nsXMLContentSink::StartLayout()
     }
   }
 
-  // If the document we are loading has a reference or it is a top level
-  // frameset document, disable the scroll bars on the views.
-  nsCAutoString ref;
-  nsresult rv;
-  nsCOMPtr<nsIURL> url = do_QueryInterface(mDocumentURL, &rv);
-  if (url) {
-    rv = url->GetRef(ref);
-  }
-  if (rv == NS_OK) {
-    NS_UnescapeURL(ref); // XXX this may result in random non-ASCII bytes!
-    mRef = NS_ConvertASCIItoUCS2(ref);
+  if (mDocumentURL) {
+    nsCAutoString ref;
+
+    // Since all URI's that pass through here aren't URL's we can't
+    // rely on the nsIURI implementation for providing a way for
+    // finding the 'ref' part of the URI, we'll haveto revert to
+    // string routines for finding the data past '#'
+
+    nsresult rv = mDocumentURL->GetSpec(ref);
+
+    nsReadingIterator<char> start, end;
+
+    ref.BeginReading(start);
+    ref.EndReading(end);
+
+    if (FindCharInReadable('#', start, end)) {
+      ++start; // Skip over the '#'
+
+      mRef = Substring(start, end);
+    }
   }
 
+  // If the document we are loading has a reference or it is a top level
+  // frameset document, disable the scroll bars on the views.
   PRBool topLevelFrameset = PR_FALSE;
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   if (docShellAsItem) {
@@ -1401,7 +1412,7 @@ nsXMLContentSink::StartLayout()
     }
   }
 
-  if (!ref.IsEmpty() || topLevelFrameset) {
+  if (!mRef.IsEmpty() || topLevelFrameset) {
     // XXX support more than one presentation-shell here
 
     // Get initial scroll preference and save it away; disable the
