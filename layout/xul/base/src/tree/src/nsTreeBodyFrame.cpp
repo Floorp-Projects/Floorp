@@ -533,6 +533,7 @@ nsTreeBodyFrame::Destroy(nsIPresContext* aPresContext)
   mColumns = nsnull;
   
   // Save off our info into the box object.
+  EnsureBoxObject();
   if (mTreeBoxObject) {
     nsCOMPtr<nsIBoxObject> box(do_QueryInterface(mTreeBoxObject));
     if (mTopRowIndex > 0) {
@@ -564,7 +565,8 @@ nsTreeBodyFrame::EnsureBoxObject()
     if (parent) {
       nsCOMPtr<nsIDocument> parentDoc;
       parent->GetDocument(*getter_AddRefs(parentDoc));
-      NS_ASSERTION(parentDoc, "element has no document!");
+      if (!parentDoc) // there may be no document, if we're called from Destroy()
+        return;
       
       nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(parentDoc);
       nsCOMPtr<nsIBoxObject> box;
