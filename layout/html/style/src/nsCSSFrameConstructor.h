@@ -52,7 +52,7 @@ public:
                                 nsIContent*     aDocElement,
                                 nsIFrame*&      aNewFrame);
 
-  NS_IMETHOD  ReconstructDocElementHierarchy(nsIPresContext* aPresContext);
+  NS_IMETHOD ReconstructDocElementHierarchy(nsIPresContext* aPresContext);
 
   NS_IMETHOD ContentAppended(nsIPresContext* aPresContext,
                              nsIContent*     aContainer,
@@ -124,7 +124,8 @@ protected:
                           nsAbsoluteItems& aAbsoluteItems,
                           nsFrameItems&    aFrameItems,
                           nsAbsoluteItems& aFixedItems,
-                          nsAbsoluteItems& aFloatingItems);
+                          nsAbsoluteItems& aFloatingItems,
+                          PRBool aHaveFirstLetterStyle);
 
   nsresult ConstructDocElementFrame(nsIPresContext*  aPresContext,
                                     nsIContent*      aDocElement,
@@ -361,7 +362,8 @@ protected:
                                        nsAbsoluteItems&      aAbsoluteItems,
                                        nsFrameItems&         aFrameItems,
                                        nsAbsoluteItems&      aFixedItems,
-                                       nsAbsoluteItems&      aFloatingItems);
+                                       nsAbsoluteItems&      aFloatingItems,
+                                       PRBool aHaveFirstLetterStyle);
 
   nsresult GetAdjustedParentFrame(nsIFrame*  aCurrentParentFrame, 
                                   PRUint8    aChildDisplayType,
@@ -431,6 +433,44 @@ protected:
                                       nsIContent*      aContent,
                                       nsIStyleContext* aStyleContext,
                                       nsIFrame**       aContinuingFrame);
+
+  //----------------------------------------
+
+  // Methods support creating block frames and their children
+
+  PRBool HaveFirstLetterStyle(nsIPresContext* aPresContext,
+                              nsIContent* aContent,
+                              nsIStyleContext* aStyleContext);
+
+  nsIStyleContext* GetFirstLetterStyle(nsIPresContext* aPresContext,
+                                       nsIContent* aContent,
+                                       nsIStyleContext* aStyleContext);
+
+  nsresult ProcessBlockChildren(nsIPresContext*  aPresContext,
+                                nsIContent*      aContent,
+                                nsIFrame*        aFrame,
+                                nsAbsoluteItems& aAbsoluteItems,
+                                nsFrameItems&    aFrameItems,
+                                nsAbsoluteItems& aFixedItems,
+                                nsAbsoluteItems& aFloatingItems,
+                                PRBool           aCanHaveGeneratedContent);
+
+  nsresult WrapTextFrame(nsIPresContext* aPresContext,
+                         nsIFrame* aTextFrame,
+                         nsIContent* aParentContent,
+                         nsIContent* aChildContent,
+                         nsIFrame* aParentFrame,
+                         nsFrameItems& aFrameItems,
+                         nsFrameItems& aFloatingItems);
+
+  void CreateFloatingFirstLetterFrame(nsIPresContext* aPresContext,
+                                      nsIFrame* aTextFrame,
+                                      nsIContent* aContent,
+                                      nsIContent* aChildContent,
+                                      nsIFrame* aParentFrame,
+                                      nsFrameItems& aFrameItems,
+                                      nsFrameItems& aFloatingItems,
+                                      nsIStyleContext* aStyleContext);
 
 protected:
   nsIDocument*        mDocument;
