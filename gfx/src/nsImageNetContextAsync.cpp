@@ -246,6 +246,7 @@ ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 
   PRUint32 max_read;
   PRUint32 bytes_read = 0, str_length;
   ilINetReader *reader = mURL->GetReader();
+  PRInt32 ilErr;
 
   if (mInterrupted || mStatus != 0) {
     mStatus = MK_INTERRUPTED;
@@ -297,8 +298,14 @@ ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 
         return NS_ERROR_ABORT;
       }
     }
-        
-    reader->Write((const unsigned char *)mBuffer, (int32)nb);
+
+    ilErr = reader->Write((const unsigned char *)mBuffer, (int32)nb);
+	if(ilErr <= 0){
+        mStatus = MK_IMAGE_LOSSAGE;
+        mInterrupted = PR_TRUE;
+	    NS_RELEASE(reader);
+		return NS_ERROR_ABORT;
+	}
   } while(nb != 0);
 
   if ((NS_OK != err) && (NS_BASE_STREAM_EOF != err)) {
@@ -575,10 +582,10 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
 
   if (aURL->QueryInterface(kIURLIID, (void **)&nsurl) == NS_OK) {
     aURL->SetReader(aReader);
-        
-    // Find previously created ImageConsumer if possible
-    SetReloadPolicy(aLoadMethod);
 
+  SetReloadPolicy(aLoadMethod);    
+  
+    // Find previously created ImageConsumer if possible
     ImageConsumer *ic = new ImageConsumer(aURL, this);
     NS_ADDREF(ic);
         
