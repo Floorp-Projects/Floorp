@@ -104,6 +104,8 @@ nsresult nsNetFactory::LockFactory(PRBool aLock)
 extern "C" PR_IMPLEMENT(nsresult)
 NSGetFactory(nsISupports* aServMgr,
              const nsCID &aClass,
+             const char *aClassName,
+             const char *aProgID,
              nsIFactory **aFactory)
 {
     if (aFactory == nsnull)
