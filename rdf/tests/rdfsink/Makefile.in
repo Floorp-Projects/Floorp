@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS		= rdfsink.cpp
 
-LOCAL_INCLUDES = -I/usr/include/sys
+LOCAL_INCLUDES  =
 
 REQUIRES	= 
 

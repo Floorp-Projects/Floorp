@@ -16,11 +16,6 @@
  * Reserved.
  */
 
-#ifndef XP_UNIX
-#include <io.h>
-#endif
-
-#include "nsIContent.h"
 #include "nsIEventQueueService.h"
 #include "nsIInputStream.h"
 #include "nsINetService.h"
@@ -117,14 +112,6 @@ SetupRegistry(void)
     // netlib
     nsRepository::RegisterFactory(kNetServiceCID,            NETLIB_DLL, PR_FALSE, PR_FALSE);
 
-    // rdf
-    nsRepository::RegisterFactory(kRDFBookMarkDataSourceCID, RDF_DLL,    PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kRDFInMemoryDataSourceCID, RDF_DLL,    PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kRDFServiceCID,            RDF_DLL,    PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kRDFContentSinkCID,        RDF_DLL,    PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kRDFCompositeDataSourceCID, RDF_DLL,    PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kRDFXMLDataSourceCID,      RDF_DLL,    PR_FALSE, PR_FALSE);
-
     // parser
     nsRepository::RegisterFactory(kParserCID,                PARSER_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kWellFormedDTDCID,         PARSER_DLL, PR_FALSE, PR_FALSE);
@@ -160,7 +147,7 @@ public:
 
     // nsIOutputStream interface
     NS_IMETHOD Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount) {
-        write(1, aBuf + aOffset, aCount);
+        PR_Write(PR_GetSpecialFD(PR_StandardOutput), aBuf + aOffset, aCount);
         *aWriteCount = aCount;
         return NS_OK;
     }
@@ -193,15 +180,21 @@ main(int argc, char** argv)
     // Get netlib off the floor...
     if (NS_FAILED(rv = nsServiceManager::GetService(kEventQueueServiceCID,
                                                     kIEventQueueServiceIID,
-                                                    (nsISupports**) &theEventQueueService)))
+                                                    (nsISupports**) &theEventQueueService))) {
+        NS_ERROR("unable to get event queue service");
         goto done;
+    }
 
-    if (NS_FAILED(rv = theEventQueueService->CreateThreadEventQueue()))
+    if (NS_FAILED(rv = theEventQueueService->CreateThreadEventQueue())) {
+        NS_ERROR("unable to create thread event queue");
         goto done;
+    }
 
     if (NS_FAILED(rv = theEventQueueService->GetThreadEventQueue(PR_GetCurrentThread(),
-                                                                 &mainQueue)))
+                                                                 &mainQueue))) {
+        NS_ERROR("unable to get event queue for current thread");
         goto done;
+    }
 
     // Create a stream data source and initialize it on argv[1], which
     // is hopefully a "file:" URL. (Actually, we can do _any_ kind of
@@ -209,29 +202,40 @@ main(int argc, char** argv)
     if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFXMLDataSourceCID,
                                                     nsnull,
                                                     kIRDFXMLDataSourceIID,
-                                                    (void**) &ds)))
+                                                    (void**) &ds))) {
+        NS_ERROR("unable to create RDF/XML data source");
         goto done;
+    }
 
-    if (NS_FAILED(rv = ds->SetSynchronous(PR_TRUE)))
+    if (NS_FAILED(rv = ds->SetSynchronous(PR_TRUE))) {
+        NS_ERROR("unable to mark data source as synchronous");
         goto done;
+    }
 
     // Okay, this should load the XML file...
-    if (NS_FAILED(rv = ds->Init(argv[1])))
+    if (NS_FAILED(rv = ds->Init(argv[1]))) {
+        NS_ERROR("unable to initialize data source");
         goto done;
+    }
 
     // And finally, write it back out.
     if ((out = new ConsoleOutputStreamImpl()) == nsnull) {
+        NS_ERROR("unable to create console output stream");
         rv = NS_ERROR_OUT_OF_MEMORY;
         goto done;
     }
 
     NS_ADDREF(out);
 
-    if (NS_FAILED(rv = ds->QueryInterface(kIRDFXMLSourceIID, (void**) &source)))
+    if (NS_FAILED(rv = ds->QueryInterface(kIRDFXMLSourceIID, (void**) &source))) {
+        NS_ERROR("unable to RDF/XML interface");
         goto done;
+    }
 
-    if (NS_FAILED(rv = source->Serialize(out)))
+    if (NS_FAILED(rv = source->Serialize(out))) {
+        NS_ERROR("error serializing");
         goto done;
+    }
 
 done:
     NS_IF_RELEASE(out);
