@@ -152,11 +152,12 @@ CIconCache :: RequestIcon ( const string & inURL, const LListener* inClient )
 		if ( !urlStruct )
 			throw bad_alloc();
 		
+		mCache[inURL] = data;
+
 		data->IconContext()->AddListener ( this );
 		data->AddListener ( const_cast<LListener*>(inClient) );
 		data->IconContext()->SwitchLoadURL ( urlStruct, FO_PRESENT );
 		
-		mCache[inURL] = data;
 		result = kPutOnWaitingList;
 	}
 	
