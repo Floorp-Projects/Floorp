@@ -170,27 +170,23 @@ nsCacheEntry::VisitMetaDataElements( nsICacheMetaDataVisitor * visitor)
 
 
 nsresult
-nsCacheEntry::FlattenMetaData(char ** data, PRUint32 * size)
+nsCacheEntry::FlattenMetaData(char * buffer, PRUint32 bufSize)
 {
-    NS_ENSURE_ARG_POINTER(size);
+    if (mMetaData)  return mMetaData->FlattenMetaData(buffer, bufSize);
 
-    if (mMetaData)
-        return mMetaData->FlattenMetaData(data, size);
-
-    if (data) *data = nsnull;
-    *size = 0;
-
+    if (bufSize > 0) *buffer = nsnull;
     return NS_OK;
 }
 
+
 nsresult
-nsCacheEntry::UnflattenMetaData(char * data, PRUint32 size)
+nsCacheEntry::UnflattenMetaData(char * buffer, PRUint32 bufSize)
 {
     delete mMetaData;
     mMetaData = nsCacheMetaData::Create();
     if (!mMetaData)
         return NS_ERROR_OUT_OF_MEMORY;
-    nsresult rv = mMetaData->UnflattenMetaData(data, size);
+    nsresult rv = mMetaData->UnflattenMetaData(buffer, bufSize);
     if (NS_SUCCEEDED(rv))
         mMetaSize = mMetaData->Size();
     return rv;
@@ -203,22 +199,6 @@ nsCacheEntry::TouchMetaData()
     mLastModified = SecondsFromPRTime(PR_Now());
     MarkMetaDataDirty();
 }
-
-#if 0
-nsresult
-nsCacheEntry::GetKeyValueArray(nsCacheMetaDataKeyValuePair ** array,
-                               PRUint32 *                     count)
-{
-    if (!array || !count)  return NS_ERROR_NULL_POINTER;
-
-    if (!mMetaData) {
-        *array = nsnull;
-        *count = 0;
-        return NS_OK;
-    }
-    return mMetaData->GetKeyValueArray(array, count);
-}
-#endif
 
 
 nsresult

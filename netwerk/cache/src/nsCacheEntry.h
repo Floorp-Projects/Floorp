@@ -103,8 +103,8 @@ public:
 
     nsresult VisitMetaDataElements( nsICacheMetaDataVisitor * visitor);
 
-    nsresult FlattenMetaData( char ** data,  PRUint32 * size);
-    nsresult UnflattenMetaData( char * data, PRUint32   size);
+    nsresult FlattenMetaData( char * buffer,  PRUint32  bufSize);
+    nsresult UnflattenMetaData( char * buffer, PRUint32   bufSize);
 
     PRUint32 MetaDataSize()                       { return mMetaSize;}
 

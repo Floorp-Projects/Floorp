@@ -571,7 +571,7 @@ nsDiskCacheMap::ReadDiskCacheEntry(nsDiskCacheRecord * record, nsDiskCacheEntry 
         if (NS_FAILED(rv))  return rv;
 
         PRFileDesc * fd = nsnull;
-        nsresult rv = file->OpenNSPRFileDesc(PR_RDONLY, 00666, &fd);
+        rv = file->OpenNSPRFileDesc(PR_RDONLY, 00666, &fd);
         if (NS_FAILED(rv))  return rv;
         
         PRInt32 fileSize = PR_Available(fd);
