@@ -222,12 +222,10 @@ function initCommands()
     client.commandManager.isCommandSatisfied = isCommandSatisfied;
     client.commandManager.defineCommands(cmdary);
 
-    client.commandManager.argTypes.__aliasTypes__(["reason", "action", "text",
-                                                   "message", "params", "font",
-                                                   "reason", "expression",
-                                                   "ircCommand", "prefValue",
-                                                   "newTopic", "commandList",
-                                                   "file"], "rest");
+    var restList = ["reason", "action", "text", "message", "params", "font", 
+                    "expression", "ircCommand", "prefValue", "newTopic", 
+                    "commandList", "file", "commands"];
+    client.commandManager.argTypes.__aliasTypes__(restList, "rest");
     client.commandManager.argTypes["plugin"] = parsePlugin;
 }
 
