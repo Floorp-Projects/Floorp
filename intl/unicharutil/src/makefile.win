@@ -39,6 +39,10 @@ CPPSRCS= \
 	nsHankakuToZenkaku.cpp	\
 	nsEntityConverter.cpp	\
 	nsSaveAsCharset.cpp	\
+!ifdef IBMBIDI
+	nsBidiUtilsImp.cpp \
+	nsBidiImp.cpp \
+!endif
 	$(NULL)
 
 CPP_OBJS= \
@@ -48,6 +52,10 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsHankakuToZenkaku.obj \
 	.\$(OBJDIR)\nsEntityConverter.obj \
 	.\$(OBJDIR)\nsSaveAsCharset.obj \
+!ifdef IBMBIDI
+	.\$(OBJDIR)\nsBidiUtilsImp.obj \
+	.\$(OBJDIR)\nsBidiImp.obj \
+!endif
 	$(NULL)
 
 MODULE=unicharutil
