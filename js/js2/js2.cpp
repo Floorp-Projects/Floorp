@@ -22,6 +22,8 @@
 // JS2 shell.
 //
 
+#include <assert.h>
+
 #include "world.h"
 #include "interpreter.h"
 
@@ -33,15 +35,17 @@ using namespace JavaScript;
 #include <SIOUX.h>
 #include <MacTypes.h>
 
-static char *mac_argv[] = {"js", 0};
+static char *mac_argv[] = {"js2", 0};
 
 static void initConsole(StringPtr consoleName, const char* startupMessage, int &argc, char **&argv)
 {
-    SIOUXSettings.autocloseonquit = true;
+    SIOUXSettings.autocloseonquit = false;
     SIOUXSettings.asktosaveonclose = false;
     SIOUXSetTitle(consoleName);
+    
     // Set up a buffer for stderr (otherwise it's a pig).
-    setvbuf(stderr, new char[BUFSIZ], _IOLBF, BUFSIZ);
+    static char buffer[BUFSIZ];
+    setvbuf(stderr, buffer, _IOLBF, BUFSIZ);
 
     stdOut << startupMessage;
 
@@ -259,6 +263,7 @@ ProcessArgs(char **argv, int argc)
 #endif
 
 #include "icodegenerator.h"
+
 static void testICG(World &world)
 {
     //
@@ -343,15 +348,12 @@ static void testICG(World &world)
     std::cout << icg;
 }
 
-static void testInterpreter(float64 n)
+static float64 testFactorial(float64 n)
 {
-    //
-    // testing ICG 
-    //
+	// generate code for factorial, and interpret it.
     uint32 position = 0;
     ICodeGenerator icg;
 
-	// generate code for factorial, and interpret it.
 	// fact(n) {
 	// n is bound to var #0.
 	// var result = 1;
@@ -391,6 +393,54 @@ static void testInterpreter(float64 n)
     args[0] = JSValue(n);
     JSValue result = interpret(*iCode, args);
     std::cout << "fact(" << n << ") = " << result.f64 << std::endl;
+    
+    return result.f64;
+}
+
+static float64 testObjects(World &world, int32 n)
+{
+    // create some objects, put some properties, and retrieve them.
+    uint32 position = 0;
+    ICodeGenerator initCG;
+    
+    // var global = new Object();
+    StringAtom& global = world.identifiers[L"global"];
+    initCG.beginStatement(position);
+    initCG.saveName(global, initCG.newObject());
+
+    // global.counter = 0;
+    StringAtom& counter = world.identifiers[L"counter"];
+    initCG.beginStatement(position);
+    initCG.setProperty(counter, initCG.loadName(global), initCG.loadImmediate(0.0));
+
+    InstructionStream* initCode = initCG.complete();
+
+    // function increment()
+    // {
+    //   return ++global.counter;
+    // }
+    ICodeGenerator incrCG;
+    
+    incrCG.beginStatement(position);
+    Register robject = incrCG.loadName(global);
+    Register rvalue = incrCG.op(ADD, incrCG.getProperty(counter, robject), incrCG.loadImmediate(1.0));
+    incrCG.setProperty(counter, robject, rvalue);
+    incrCG.returnStatement(rvalue);
+
+    InstructionStream* incrCode = incrCG.complete();
+
+    // run initialization code.
+    JSValues args(32);
+    interpret(*initCode, args);
+
+    // call the increment function some number of times.
+    JSValue result;
+    while (n-- > 0)
+        result = interpret(*incrCode, args);
+
+    std::cout << "result =" << result.f64 << std::endl;
+
+    return result.f64;
 }
 
 int main(int argc, char **argv)
@@ -400,11 +450,11 @@ int main(int argc, char **argv)
   #endif
 	World world;
   #if 0
-    testInterpreter(5);
+    assert(testFactorial(5) == 120);
+    assert(testObjects(world, 5) == 5);
     testICG(world);
   #endif
 	readEvalPrint(stdin, world);
     return 0;
-
-    //return ProcessArgs(argv + 1, argc - 1);
+    // return ProcessArgs(argv + 1, argc - 1);
 }
