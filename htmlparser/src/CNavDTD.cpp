@@ -843,7 +843,7 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
     case eHTMLTag_counter:
       {
         PRInt32   theCount=mBodyContext->GetCount();
-        eHTMLTags theGrandParentTag=mBodyContext->TagAt(theCount-2);
+        eHTMLTags theGrandParentTag=mBodyContext->TagAt(theCount-1);
         
         nsAutoString  theNumber;
         
@@ -980,23 +980,47 @@ PRBool CanBeContained(eHTMLTags aChildTag,nsDTDContext& aContext) {
   //Note: This method is going away. First we need to get the elementtable to do closures right, and
   //      therefore we must get residual style handling to work.
 
-  PRBool result=PR_TRUE;
-  if(aContext.GetCount()){
+  //the changes to this method were added to fix bug 54651...
+
+  PRBool  result=PR_TRUE;
+  PRInt32 theCount=aContext.GetCount();
+
+  if(0<theCount){
     TagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
     TagList* theSpecialParents=gHTMLElements[aChildTag].GetSpecialParents();
     if(theRootTags) {
       PRInt32 theRootIndex=LastOf(aContext,*theRootTags);
       PRInt32 theSPIndex=(theSpecialParents) ? LastOf(aContext,*theSpecialParents) : kNotFound;  
       PRInt32 theChildIndex=GetIndexOfChildOrSynonym(aContext,aChildTag);
-      PRInt32 theBaseIndex=(theRootIndex>theSPIndex) ? theRootIndex : theSPIndex;
+      PRInt32 theTargetIndex=(theRootIndex>theSPIndex) ? theRootIndex : theSPIndex;
 
-      if((theBaseIndex==theChildIndex) && (gHTMLElements[aChildTag].CanContainSelf()))
+      if((theTargetIndex==theCount-1) ||
+        ((theTargetIndex==theChildIndex) && gHTMLElements[aChildTag].CanContainSelf())) {
         result=PR_TRUE;
-      else result=PRBool(theBaseIndex>theChildIndex);
+      }
+      else {
+        
+        result=PR_FALSE;
+
+        PRInt32 theIndex=theCount-1;
+        while(theChildIndex<theIndex) {
+          eHTMLTags theParentTag=aContext.TagAt(theIndex--);
+          if (gHTMLElements[theParentTag].IsMemberOf(kBlockEntity)  || 
+              gHTMLElements[theParentTag].IsMemberOf(kHeading)      || 
+              gHTMLElements[theParentTag].IsMemberOf(kPreformatted) || 
+              gHTMLElements[theParentTag].IsMemberOf(kList)) {
+            if(!HasOptionalEndTag(theParentTag)) {
+              result=PR_TRUE;
+              break;
+            }
+          }
+        }
+      }
     }
   }
 
   return result;
+
 }
 
 enum eProcessRule {eNormalOp,eLetInlineContainBlock};
@@ -1041,7 +1065,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
        (nsHTMLElement::IsResidualStyleTag(theParentTag)) &&
        (IsBlockElement(aChildTag,theParentTag))) {
 
-      if(eHTMLTag_table!=aChildTag) {
+      if((eHTMLTag_table!=aChildTag) && (eHTMLTag_li!=aChildTag)) {
         nsCParserNode* theParentNode= NS_STATIC_CAST(nsCParserNode*, mBodyContext->PeekNode());
         if(theParentNode->mToken->IsWellFormed()) {
           theRule=eLetInlineContainBlock;
@@ -1189,15 +1213,12 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
     /**************************************************************************************
      *
      * Now a little code to deal with bug #49687 (crash when layout stack gets too deep)
+     * I've also opened this up to any container (not just inlines): re bug 55095
      *
      **************************************************************************************/
 
   if(MAX_REFLOW_DEPTH<mBodyContext->GetCount()) {
-    if(gHTMLElements[aTag].IsMemberOf(kInlineEntity)) {
-      if(!gHTMLElements[aTag].IsMemberOf(kFormControl)) {
-        return kHierarchyTooDeep;
-      }
-    }
+    return kHierarchyTooDeep;  
   }
 
   STOP_TIMER()
@@ -1640,7 +1661,8 @@ eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsDTDContext& aCont
     PRInt32 theChildIndex=GetIndexOfChildOrSynonym(aContext,aCurrentTag);
     
     if(kNotFound<theChildIndex) {
-      if(thePrevTag==aContext[theChildIndex]){
+      if((thePrevTag==aContext[theChildIndex]) || 
+         (eHTMLTag_noscript==aCurrentTag)){  //bug 54571
         return aContext[theChildIndex];
       } 
     
