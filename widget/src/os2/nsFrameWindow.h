@@ -70,6 +70,7 @@ class nsFrameWindow : public nsCanvas
    MRESULT FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2);
 
    NS_IMETHOD Show( PRBool bState);
+   void SetWindowListVisibility( PRBool bState);
 
    // We have client
    NS_IMETHOD GetBorderSize( PRInt32 &aWidth, PRInt32 &aHeight);

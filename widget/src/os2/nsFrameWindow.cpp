@@ -53,6 +53,21 @@ nsFrameWindow::~nsFrameWindow()
 {
 }
 
+void nsFrameWindow::SetWindowListVisibility( PRBool bState)
+{
+   HSWITCH hswitch;
+   SWCNTRL swctl;
+
+   hswitch = WinQuerySwitchHandle(hwndFrame, 0);
+   if( hswitch)
+   {
+      WinQuerySwitchEntry( hswitch, &swctl);
+      swctl.uchVisibility = bState ? SWL_VISIBLE : SWL_INVISIBLE;
+      swctl.fbJump        = bState ? SWL_JUMPABLE : SWL_NOTJUMPABLE;
+      WinChangeSwitchEntry( hswitch, &swctl);
+   }
+}
+
 // Called in the PM thread.
 void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
                                   const nsRect &aRect,
@@ -66,7 +81,7 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
 /*   NS_ASSERTION( hwndP == HWND_DESKTOP && aParent == nsnull,
                  "Attempt to create non-top-level frame");   */
 
-#if DEBUG
+#if DEBUG_sobotka
    printf("\nIn nsFrameWindow::RealDoCreate:\n");
    printf("   hwndP = %lu\n", hwndP);
    printf("   aParent = 0x%lx\n", &aParent);
@@ -97,6 +112,8 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
 
    if (hwndFrame && !haveHiddenWindow)
      haveHiddenWindow = PR_TRUE;
+
+   SetWindowListVisibility( PR_FALSE);  // Hide from Window List until shown
 
    // This is a bit weird; without an icon, we get WM_PAINT messages
    // when minimized.  They don't stop, giving maxed cpu.  Go figure.
@@ -195,6 +212,7 @@ nsresult nsFrameWindow::Show( PRBool bState)
    if( mWnd)
    {
       nsWindow::Show( bState);
+      SetWindowListVisibility( bState);
       if( bState)
          WinSetWindowPos( GetMainWindow(), 0, 0, 0, 0, 0, SWP_ACTIVATE);
    }
@@ -207,17 +225,17 @@ MRESULT EXPENTRY fnwpFrame( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
    // check to see if we have a rollup listener registered
    if (nsnull != gRollupListener && nsnull != gRollupWidget) {
-      if (msg == WM_ACTIVATE || msg == WM_BUTTON1DOWN || 
-          msg == WM_BUTTON2DOWN || msg == WM_BUTTON3DOWN) {
+      if (msg == WM_ACTIVATE || msg == WM_TRACKFRAME || msg == WM_MINMAXFRAME ||
+          msg == WM_BUTTON1DOWN || msg == WM_BUTTON2DOWN || msg == WM_BUTTON3DOWN) {
          // Rollup if the event is outside the popup
          if (PR_FALSE == nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget)) {
             gRollupListener->Rollup();
 
             // if we are supposed to be consuming events and it is
             // a Mouse Button down, let it go through
-            if (gRollupConsumeRollupEvent && msg != WM_BUTTON1DOWN) {
+//            if (gRollupConsumeRollupEvent && msg != WM_BUTTON1DOWN) {
 //               return FALSE;
-            }
+//            }
          } 
       }
    }
