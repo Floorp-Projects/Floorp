@@ -84,6 +84,14 @@ while($line = <fpInIt>)
       chop($componentName);
 
       $installSize      = OutputInstallSize("$inStagePath\\$componentName");
+
+      # special oji consideration here.  Since it's an installer that 
+      # seamonkey installer will be calling, the disk space allocation
+      # needs to be adjusted by an expansion factor of 3.62.
+      if($componentName =~ /oji/i)
+      {
+        $installSize = int($installSize * 3.62);
+      }
     }
 
     # Read the next line to calculate for the "Install Size System="
