@@ -295,6 +295,9 @@ namespace JSTypes {
         JSType* mType;
         JSString* mClass;       // this is the internal [[Class]] property
 
+
+		void *mPrivate;
+
         static JSObject *initJSObject();
         static JSString *ObjectString;
         static JSObject *ObjectPrototypeObject;
@@ -311,6 +314,9 @@ namespace JSTypes {
             if (mGetter) delete mGetter;
             if (mSetter) delete mSetter;
         }
+
+		void *getPrivate()					{ return mPrivate; }
+		void setPrivate(void *underwear)	{ mPrivate = underwear; }
     
         static void initObjectObject(JSScope *g);
 
@@ -540,10 +546,8 @@ namespace JSTypes {
         static JSString* FunctionString;
         static JSObject* FunctionPrototypeObject;
         ICodeModule* mICode;
-        
-   	    typedef JavaScript::gc_traits_finalizable<JSFunction> traits;
-	    typedef gc_allocator<JSFunction, traits> allocator;
-		
+        typedef JavaScript::gc_traits_finalizable<JSFunction> traits;
+        typedef gc_allocator<JSFunction, traits> allocator;
     public:
         static void initFunctionObject(JSScope *g);
 
@@ -561,14 +565,13 @@ namespace JSTypes {
         virtual JSFunction *getFunky()  { return this; }
     
         void* operator new(size_t) { return allocator::allocate(1); }
-
         ICodeModule* getICode()    { return mICode; }
         virtual bool isNative()    { return false; }
     };
 
     class JSBoundThis : public JSFunction {
-   	    typedef JavaScript::gc_traits_finalizable<JSBoundThis> traits;
-	    typedef gc_allocator<JSBoundThis, traits> allocator;
+        typedef JavaScript::gc_traits_finalizable<JSBoundThis> traits;
+        typedef gc_allocator<JSBoundThis, traits> allocator;
     public:
         JSBoundThis(JSValue aThis, JSFunction *aFunc) : mBoundThis(aThis), mFunction(aFunc) { }
         JSValue mBoundThis;
@@ -577,13 +580,12 @@ namespace JSTypes {
         virtual ~JSBoundThis()              { mICode = NULL; }
         virtual JSValue getThis()           { return mBoundThis; }
         virtual JSFunction *getFunky()      { return mFunction; }  
-
         void* operator new(size_t) { return allocator::allocate(1); }
     };
 
     class JSNativeFunction : public JSFunction {
-   	    typedef JavaScript::gc_traits_finalizable<JSNativeFunction> traits;
-	    typedef gc_allocator<JSNativeFunction, traits> allocator;
+        typedef JavaScript::gc_traits_finalizable<JSNativeFunction> traits;
+        typedef gc_allocator<JSNativeFunction, traits> allocator;
     public:
         typedef JSValue (*JSCode)(Context *cx, const JSValues& argv);
         JSCode mCode;
@@ -593,8 +595,8 @@ namespace JSTypes {
     };
         
     class JSUnaryOperator : public JSFunction {
-   	    typedef JavaScript::gc_traits_finalizable<JSUnaryOperator> traits;
-	    typedef gc_allocator<JSUnaryOperator, traits> allocator;
+        typedef JavaScript::gc_traits_finalizable<JSUnaryOperator> traits;
+        typedef gc_allocator<JSUnaryOperator, traits> allocator;
     public:
         typedef JSValue (*JSUnaryCode)(Context *cx, const JSValue& arg1);
         JSUnaryCode mCode;
@@ -604,8 +606,8 @@ namespace JSTypes {
     };
 
     class JSBinaryOperator : public JSFunction {
-   	    typedef JavaScript::gc_traits_finalizable<JSBinaryOperator> traits;
-	    typedef gc_allocator<JSBinaryOperator, traits> allocator;
+        typedef JavaScript::gc_traits_finalizable<JSBinaryOperator> traits;
+        typedef gc_allocator<JSBinaryOperator, traits> allocator;
     public:
         typedef JSValue (*JSBinaryCode)(Context *cx, const JSValue& arg1, const JSValue& arg2);
         JSBinaryCode mCode;
@@ -617,15 +619,14 @@ namespace JSTypes {
     class JSClosure : public JSFunction {
         Interpreter::Activation *mActivation;
         JSClosure *mPrevious;
-   	    typedef JavaScript::gc_traits_finalizable<JSClosure> traits;
-	    typedef gc_allocator<JSClosure, traits> allocator;
+        typedef JavaScript::gc_traits_finalizable<JSClosure> traits;
+        typedef gc_allocator<JSClosure, traits> allocator;
     public:
         JSClosure(ICodeModule* iCode, Interpreter::Activation *activation, JSClosure *previous) 
             : JSFunction(iCode), mActivation(activation), mPrevious(previous) {}
 
         JSClosure* getPrevious()         { return mPrevious; }
         Interpreter::Activation* getActivation()      { return mActivation; }
-
         void* operator new(size_t) { return allocator::allocate(1); }
     };
 
@@ -736,6 +737,7 @@ namespace JSTypes {
         // The invokor is an implementation of the [[Call]] mechanism
         JSFunction *mInvokor;
     public:
+        JSType() { }
         JSType(const String &name, JSType *baseType) : mName(name), mBaseType(baseType), mConstructor(NULL), mInvokor(NULL)
         {
             mType = &Type_Type;

@@ -622,7 +622,7 @@ GenericPreXcrement:
         op = Decrement;
         goto GenericPostXcrement;
     case ExprNode::postIncrement: 
-        op = Decrement;
+        op = Increment;
         goto GenericPostXcrement;
 GenericPostXcrement:
         {

@@ -968,14 +968,24 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     LoadName* ln = static_cast<LoadName*>(instruction);                    
                     JSFunction *getter = mGlobal->getter(*src1(ln));
                     if (getter) {
-                        ASSERT(!getter->isNative());
-                        mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, dst(ln), mICode, mCurrentClosure);
-                        mICode = getter->getICode();
-                        mActivation = new Activation(mICode->itsMaxRegister, kNullValue);
-                        registers = &mActivation->mRegisters;
-                        mPC = mICode->its_iCode->begin();
-                        endPC = mICode->its_iCode->end();
-                        continue;
+                        if (getter->isNative()) {
+                            JSValues argv(2);
+                            argv[0] = kNullValue;
+							argv[1] = getter;
+                            JSValue result = static_cast<JSNativeFunction*>(getter)->mCode(this, argv);
+                            if (dst(ln).first != NotARegister)
+                                (*registers)[dst(ln).first] = result;
+                            break;
+                        }
+                        else {
+                            mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, dst(ln), mICode, mCurrentClosure);
+                            mICode = getter->getICode();
+                            mActivation = new Activation(mICode->itsMaxRegister, kNullValue);
+                            registers = &mActivation->mRegisters;
+                            mPC = mICode->its_iCode->begin();
+                            endPC = mICode->its_iCode->end();
+                            continue;
+                        }
                     }
                     else
                         (*registers)[dst(ln).first] = mGlobal->getVariable(*src1(ln));
@@ -986,14 +996,23 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     SaveName* sn = static_cast<SaveName*>(instruction);
                     JSFunction *setter = mGlobal->setter(*dst(sn));
                     if (setter) {
-                        ASSERT(!setter->isNative());
-                        mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, TypedRegister(NotARegister, &Null_Type), mICode, mCurrentClosure);
-                        mICode = setter->getICode();
-                        mActivation = new Activation(mICode->itsMaxRegister, (*registers)[src1(sn).first], kNullValue);
-                        registers = &mActivation->mRegisters;
-                        mPC = mICode->its_iCode->begin();
-                        endPC = mICode->its_iCode->end();
-                        continue;
+                        if (setter->isNative()) {
+                            JSValues argv(3);
+                            argv[0] = kNullValue;
+                            argv[1] = (*registers)[src1(sn).first];
+                            argv[2] = setter;
+                            JSValue result = static_cast<JSNativeFunction*>(setter)->mCode(this, argv);
+                            break;
+                        }
+                        else {
+                            mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, TypedRegister(NotARegister, &Null_Type), mICode, mCurrentClosure);
+                            mICode = setter->getICode();
+                            mActivation = new Activation(mICode->itsMaxRegister, (*registers)[src1(sn).first], kNullValue);
+                            registers = &mActivation->mRegisters;
+                            mPC = mICode->its_iCode->begin();
+                            endPC = mICode->its_iCode->end();
+                            continue;
+                        }
                     }
                     else
                         mGlobal->setVariable(*dst(sn), (*registers)[src1(sn).first]);
@@ -1102,8 +1121,9 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                             JSFunction *getter = value.object->getter(*src2(gp));
                             if (getter) {
                                 if (getter->isNative()) {
-                                    JSValues argv(1);
+                                    JSValues argv(2);
                                     argv[0] = value;
+                                    argv[1] = getter;
                                     JSValue result = static_cast<JSNativeFunction*>(getter)->mCode(this, argv);
                                     if (dst(gp).first != NotARegister)
                                         (*registers)[dst(gp).first] = result;
@@ -1116,6 +1136,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                     registers = &mActivation->mRegisters;
                                     mPC = mICode->its_iCode->begin();
                                     endPC = mICode->its_iCode->end();
+                                    continue;
                                 }
                             }
                             else
