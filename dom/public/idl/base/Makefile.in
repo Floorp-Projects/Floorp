@@ -28,6 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= raptor
 
+GLOBALIDLSRCS	= \
+		Window.idl \
+		$(NULL)
+
 IDLSRCS		= \
 		Navigator.idl \
 		Location.idl \
@@ -52,8 +56,10 @@ genx genjs:
 export:: genx genjs $(IDLSRCS)
 	@echo +++ make: generating xpcom headers
 	$(DIST)/bin/idlc -d genx -x $(IDLSRCS)
+	$(DIST)/bin/idlc -g -d genx -x $(GLOBALIDLSRCS)
 	@echo +++ make: generating JavaScript stubs
 	$(DIST)/bin/idlc -d genjs -j $(IDLSRCS)
+	$(DIST)/bin/idlc -g -d genjs -j $(GLOBALIDLSRCS)
 
 install::
 	$(NSINSTALL) genx/nsIDOM*.h $(DEPTH)/dom/public/base
