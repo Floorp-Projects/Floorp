@@ -256,23 +256,33 @@ NS_IMETHODIMP
 calDateTime::GetInTimezone(const char *aTimezone, calIDateTime **aResult)
 {
     struct icaltimetype icalt;
-    icaltimezone *zone, *utc;
+    icaltimezone *destzone;
 
     ToIcalTime(&icalt);
 
-    utc = icaltimezone_get_utc_timezone();
-    zone = icaltimezone_get_builtin_timezone_from_tzid(aTimezone);
-    if (!zone)
-        return NS_ERROR_FAILURE;
+    if (!aTimezone) {
+        destzone = icaltimezone_get_utc_timezone();
+    } else {
+        nsCOMPtr<calIICSService> ics = do_GetService(kCalICSService);
+        nsCOMPtr<calIIcalComponent> tz;
 
-    icaltimezone_convert_time(&icalt, utc, zone);
+        ics->GetTimezone(nsDependentCString(aTimezone), getter_AddRefs(tz));
+        if (!tz)
+            return NS_ERROR_FAILURE;
+
+        icalcomponent *zonecomp = tz->GetIcalComponent();
+        destzone = icalcomponent_get_timezone(zonecomp, aTimezone);
+    }
+
+    /* If there's a zone, we need to convert; otherwise, we just
+     * assign, since this item is floating */
+    if (icalt.zone) {
+        icaltimezone_convert_time(&icalt, (icaltimezone*) icalt.zone, destzone);
+    } else {
+        icalt.zone = destzone;
+    }
 
     calDateTime *cdt = new calDateTime(&icalt);
-    if (zone != utc) {
-        int ignored;
-        cdt->mIsUtc = PR_FALSE;
-        cdt->mTimezoneOffset = icaltimezone_get_utc_offset (zone, &icalt, &ignored);
-    }
 
     NS_ADDREF (*aResult = cdt);
     return NS_OK;
