@@ -41,8 +41,8 @@
 #include "nsCRT.h"
 #include "nsFileSpec.h"
 #include "nsIFileSpec.h"
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h"
+#include "nsIDirectoryService.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIWalletService.h"
@@ -145,7 +145,6 @@ public:
 static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_CID(kPrefCID,              NS_PREF_CID);
-static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 
 #include "nsNativeAppSupport.h"
@@ -648,27 +647,31 @@ static void	InitCachePrefs()
 	if (NS_FAILED(rv)) return;
 		
 	// If the pref is already set don't do anything
-	nsCOMPtr<nsIFileSpec> cacheSubDir;
-	rv = prefs->GetFilePref(CACHE_DIR_PREF, getter_AddRefs(cacheSubDir));
-	if (NS_SUCCEEDED(rv) && cacheSubDir.get()){
-    rv = cacheSubDir->IsDirectory(&isDir);
+	nsCOMPtr<nsILocalFile> cacheDir;
+	rv = prefs->GetFileXPref(CACHE_DIR_PREF, getter_AddRefs(cacheDir));
+	if (NS_SUCCEEDED(rv) && cacheDir.get()) {
+    rv = cacheDir->IsDirectory(&isDir);
     if (NS_SUCCEEDED(rv) && isDir)
       return;
   }
-// Set up the new pref
-  if(!cacheSubDir.get()) {
-	  rv = NS_NewFileSpec(getter_AddRefs(cacheSubDir));
-	  if(NS_FAILED(rv)) return;
-  }
+  // Set up the new pref
 
-	nsCOMPtr<nsIFileSpec> spec(dont_AddRef(NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50)));	
-	rv = cacheSubDir->FromFileSpec(spec);
-	if(NS_FAILED(rv)) return;
-		
-	rv = cacheSubDir->AppendRelativeUnixPath("Cache") ;
-	if(NS_FAILED(rv))	return;
-	
-	prefs->SetFilePref(CACHE_DIR_PREF, cacheSubDir, PR_FALSE);
+  nsCOMPtr<nsIFile> profileDir;   
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
+  NS_ASSERTION(profileDir, "NS_APP_USER_PROFILE_50_DIR is not defined");
+  if (NS_FAILED(rv)) return;
+
+  cacheDir = do_QueryInterface(profileDir);
+  NS_ASSERTION(cacheDir, "Cannot get nsILocalFile from cache dir");
+    
+  PRBool exists;
+  cacheDir->Append("Cache");
+  rv = cacheDir->Exists(&exists);
+  if (NS_SUCCEEDED(rv) && !exists)
+    rv = cacheDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+  if (NS_FAILED(rv)) return;
+
+  prefs->SetFileXPref(CACHE_DIR_PREF, cacheDir);
 }
 
 
