@@ -1,0 +1,9 @@
+en-win.jar:
+	locale/en-US/global-platform/typeaheadfind.properties
+
+en-unix.jar:
+	locale/en-US/global-platform/typeaheadfind.properties
+
+en-mac.jar:
+	locale/en-US/global-platform/typeaheadfind.properties
+
