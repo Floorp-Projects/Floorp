@@ -281,7 +281,7 @@ sub mail_notification {
     select(S); $| = 1; select(STDOUT);
 
     get_response_code(220);
-    print S "EHLO $hostname\n";
+    print S "HELO $hostname\n";
     get_response_code(250);
     print S "MAIL FROM: bonsai-daemon\@$hostname\n";
     get_response_code(250);
