@@ -564,3 +564,4 @@ pref("sidebar.customize.all_panels.url", "http://sidebar-rdf.netscape.com/%LOCAL
 pref("prefs.converted-to-utf8",false);
 
 pref("browser.throbber.url","http://www.mozilla.org");
+pref("skins.enable.switching",false);
