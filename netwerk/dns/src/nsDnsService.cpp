@@ -73,6 +73,7 @@
 #ifdef DNS_TIMING
 #include "prinrval.h"
 #include "prtime.h"
+#include "nsTraceRefcntImpl.h" // for NS_MeanAndStdDev
 #endif
 #include "prsystem.h"
 #include "nsNetCID.h"
