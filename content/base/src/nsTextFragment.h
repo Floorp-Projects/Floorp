@@ -207,7 +207,10 @@ public:
   void AppendTo(nsString& aString) const;
 
   /**
-   * Append the contents of this string fragment to aCString
+   * Append the contents of this string fragment to aCString. This
+   * method takes an nsCString& since the implementation relies on
+   * being able to call AppendWithConversion() for performance
+   * reasons.
    */
   void AppendTo(nsCString& aCString) const;
 
