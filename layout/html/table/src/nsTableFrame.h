@@ -19,6 +19,7 @@
 #define nsTableFrame_h__
 
 #include "nscore.h"
+#include "nsVoidArray.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
@@ -26,7 +27,6 @@
 
 
 class nsCellMap;
-class nsVoidArray;
 class nsTableCellFrame;
 class nsTableColFrame;
 class nsTableRowGroupFrame;
@@ -210,6 +210,10 @@ public:
 
   /* compute all the collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
   void    ComputeCollapsingBorders(PRInt32 aStartRowIndex, PRInt32 aEndRowIndex);
+  void    ComputeLeftBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex);
+  void    ComputeRightBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex);
+  void    ComputeTopBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex);
+  void    ComputeBottomBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex);
 
   void    RecalcLayoutData();
 
@@ -640,6 +644,9 @@ private:
   nscoord      mDefaultCellSpacingX;// the default cell spacing X for this table
   nscoord      mDefaultCellSpacingY;// the default cell spacing X for this table
   nscoord      mDefaultCellPadding; // the default cell padding for this table
+
+  nsVoidArray  mBorderEdges[4];     // one list of border segments for each side of the table frame
+                                    // used only for the collapsing border model
 };
 
 
