@@ -633,11 +633,14 @@ PRInt16 nsMsgCompFields::DecodeHeader(MSG_HEADER_SET header)
 PRInt16 nsMsgCompFields::AddForwardURL(const char* url)
 {
 	NS_ASSERTION(url && *url, "empty url");
-	if (!url || !*url) return -1;
+	if (!url || !*url)
+		return -1;
+
 	if (m_numforward >= m_maxforward) {
 		m_maxforward += 10;
 		char** tmp = new char* [m_maxforward];
-		if (!tmp) return MK_OUT_OF_MEMORY;
+		if (!tmp)
+			return MK_OUT_OF_MEMORY;
 		for (PRInt32 i=0 ; i<m_numforward ; i++) {
 			tmp[i] = m_forwardurl[i];
 		}
@@ -645,7 +648,8 @@ PRInt16 nsMsgCompFields::AddForwardURL(const char* url)
 		m_forwardurl = tmp;
 	}
 	m_forwardurl[m_numforward] = new char[nsCRT::strlen(url) + 1];
-	if (!m_forwardurl[m_numforward]) return MK_OUT_OF_MEMORY;
+	if (!m_forwardurl[m_numforward])
+		return MK_OUT_OF_MEMORY;
 	m_forwardurl[m_numforward] = nsCRT::strdup(url);
 	m_numforward++;
 	return 0;
