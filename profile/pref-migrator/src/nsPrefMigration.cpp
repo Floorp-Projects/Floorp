@@ -646,8 +646,6 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 
   /* initialize prefs with the old prefs.js file (which is a copy of the 4.x preferences file) */
   nsCOMPtr<nsIFileSpec> PrefsFile4x;
-  nsCOMPtr<nsIFileSpec> systemTempDir;
-  nsCOMPtr<nsIFileSpec> systemTempFile;
 
   //Get the location of the 4.x prefs file
   rv = NS_NewFileSpec(getter_AddRefs(PrefsFile4x));
@@ -659,32 +657,42 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   rv = PrefsFile4x->AppendRelativeUnixPath(PREF_FILE_NAME_IN_4x);
   if (NS_FAILED(rv)) return rv;
 
-  //Get the system's temp directory
-  nsSpecialSystemDirectory tempDir(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+  //Need to convert PrefsFile4x to an IFile in order to copy it to a 
+  //unique name in the system temp directory.
+  nsFileSpec PrefsFile4xAsFileSpec;
+  rv = PrefsFile4x->GetFileSpec(&PrefsFile4xAsFileSpec);
   if (NS_FAILED(rv)) return rv;
- 
-  NS_NewFileSpecWithSpec(tempDir, getter_AddRefs(systemTempDir));
   
-  NS_NewFileSpec(getter_AddRefs(systemTempFile));
-  rv = systemTempFile->FromFileSpec(systemTempDir);
+  nsCOMPtr<nsILocalFile> PrefsFile4xAsIFile;
+  rv = NS_FileSpecToIFile(&PrefsFile4xAsFileSpec,
+                     getter_AddRefs(PrefsFile4xAsIFile));
   if (NS_FAILED(rv)) return rv;
 
-  rv = systemTempFile->AppendRelativeUnixPath(PREF_FILE_NAME_IN_4x);
-  if (NS_FAILED(rv)) return rv;
-
-  PRBool flagExists = PR_FALSE;
-  systemTempFile->Exists(&flagExists);
-  if (flagExists)
-    systemTempFile->Delete(PR_FALSE);
-
+  nsSpecialSystemDirectory systemTempDir(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+  nsFileSpec tempPrefsFile = systemTempDir;
   
-  //Copy the 4.x prefs file to the temp directory to proctect it
-  rv = PrefsFile4x->CopyToDir(systemTempDir);
+  systemTempDir += "migrate"; 
+  
+  //Convert the systemTempDir to an nsILocalFile
+  nsCOMPtr<nsILocalFile> systemTempIFileDir;
+  rv = NS_NewLocalFile(systemTempDir, PR_TRUE, getter_AddRefs(systemTempIFileDir));
   if (NS_FAILED(rv)) return rv;
 
-  NS_NewFileSpec(getter_AddRefs(m_prefsFile));
+  //Create a unique directory in the system temp dir based on the name of the 4.x prefs file
+  rv = systemTempIFileDir->CreateUnique(nsnull, nsIFile::DIRECTORY_TYPE, 0700); 
+  if (NS_FAILED(rv)) return rv;
 
-  rv = m_prefsFile->FromFileSpec(systemTempFile);
+  rv = PrefsFile4xAsIFile->CopyTo(systemTempIFileDir, PREF_FILE_NAME_IN_4x);
+  if (NS_FAILED(rv)) return rv;
+  
+  //Get the new unique directory name and append it to the system temp dir
+  nsXPIDLCString uniquePrefsDir;
+  systemTempIFileDir->GetLeafName(getter_Copies(uniquePrefsDir));
+  tempPrefsFile += uniquePrefsDir;
+  tempPrefsFile += PREF_FILE_NAME_IN_4x;
+
+  //Create the m_prefsFile fileSpec for use in ReadUserPrefsFrom
+  rv = NS_NewFileSpecWithSpec(tempPrefsFile, getter_AddRefs(m_prefsFile));
   if (NS_FAILED(rv)) return rv;
 
   //Clear the prefs in case a previous set was read in.
@@ -787,6 +795,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 
 #ifdef HAVE_MOVEMAIL
   else if (serverType == MOVEMAIL_4X_MAIL_TYPE) {
+    
     summaryMailDriveDefault = PR_TRUE;
     summaryMailDrive = profileDrive;
 
@@ -1019,6 +1028,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 
 #ifdef HAVE_MOVEMAIL
   else if (serverType == MOVEMAIL_4X_MAIL_TYPE) {
+
     rv = newMOVEMAILMailPath->Exists(&exists);
     if (NS_FAILED(rv)) return rv;
     if (!exists)  {
@@ -1170,9 +1180,14 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   rv=m_prefs->ResetPrefs();
   if (NS_FAILED(rv)) return rv;
 
-  systemTempFile->Exists(&flagExists); //Delete the prefs.js file in the temp directory.
+  PRBool flagExists = PR_FALSE;
+  m_prefsFile->Exists(&flagExists); //Delete the prefs.js file in the temp directory.
   if (flagExists)
-    systemTempFile->Delete(PR_FALSE);
+    m_prefsFile->Delete(PR_FALSE);
+  
+  systemTempIFileDir->Exists(&flagExists); //Delete the unique dir in the system temp dir.
+  if (flagExists)
+    systemTempIFileDir->Delete(PR_FALSE);
 
   return rv;
 }
