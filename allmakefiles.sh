@@ -95,7 +95,6 @@ dom/src/jsurl/Makefile
 
 MAKEFILES_editor="
 editor/Makefile
-editor/base/Makefile
 editor/public/Makefile
 editor/idl/Makefile
 editor/txmgr/Makefile
@@ -615,7 +614,6 @@ xpfe/browser/src/Makefile
 xpfe/browser/samples/Makefile
 xpfe/browser/samples/sampleimages/Makefile
 xpfe/components/Makefile
-xpfe/components/public/Makefile
 xpfe/components/shistory/Makefile
 xpfe/components/shistory/public/Makefile
 xpfe/components/shistory/src/Makefile
