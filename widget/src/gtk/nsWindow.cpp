@@ -1009,26 +1009,6 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
                        GTK_SIGNAL_FUNC(handle_toplevel_focus_out),
                        this);
 
-    InstallButtonPressSignal(mShell);
-    InstallButtonReleaseSignal(mShell);
-    
-    InstallMotionNotifySignal(mShell);
-    
-    InstallEnterNotifySignal(mShell);
-    InstallLeaveNotifySignal(mShell);
-    
-    // Initialize this window instance as a drag target.
-    //gtk_drag_dest_set (mWidget,
-    //GTK_DEST_DEFAULT_ALL,
-    //target_table, n_targets - 1, /* no rootwin */
-    //GdkDragAction(GDK_ACTION_COPY | GDK_ACTION_MOVE));
-    
-    // Drag & Drop events.
-    InstallDragBeginSignal(mShell);
-    InstallDragLeaveSignal(mShell);
-    InstallDragMotionSignal(mShell);
-    InstallDragDropSignal(mShell);
-
   }
 
   // XXX fix this later...
