@@ -85,7 +85,12 @@ public:
    
   NS_IMETHOD GetBorderPaddingFor(nsStyleBorderPadding& aBorderPadding)=0;
 
-  // compute the effective difference between two contexts
+  // This method computes the effective difference between two contexts that are both at the
+  // same position in the style context tree.  The |this| parameter must always
+  // be the old context.  This method will only peek at style data on the old
+  // context, and will not instantiate new data in order to compute a difference.
+  // That is why the old context must always be used (since the new context will
+  // have no data on it yet) for determining the actual difference.
   NS_IMETHOD CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint) = 0;
 
   NS_IMETHOD GetRuleNode(nsRuleNode** aResult)=0;
