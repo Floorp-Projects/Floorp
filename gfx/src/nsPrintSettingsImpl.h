@@ -123,6 +123,9 @@ protected:
   PRBool        mPrintInColor; // a false means grayscale
   PRInt32       mPaperSize;    // see page size consts
   PRInt32       mOrientation;  // see orientation consts
+  nsString      mColorspace;
+  nsString      mResolutionName;
+  PRBool        mDownloadFonts;
   nsString      mPrintCommand;
   PRInt32       mNumCopies;
   nsXPIDLString mPrinter;

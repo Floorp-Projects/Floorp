@@ -4698,10 +4698,12 @@ GetFontNames(nsFontMetricsXlibContext *aFmctx, const char* aPattern, PRBool aAny
 #ifdef USE_XPRINT
   if (aFmctx->mPrinterMode) {
     Bool success;
-    long dpi = 0;
-    success = XpuGetResolution(dpy, XpGetContext(dpy), &dpi);
-    NS_ASSERTION(success, "XpuGetResolution(dpy, XpGetContext(dpy), &dpi); failure!");
-    screen_xres = screen_yres = dpi;
+    long x_dpi = 0,
+         y_dpi = 0;
+    success = XpuGetResolution(dpy, XpGetContext(dpy), &x_dpi, &y_dpi);
+    NS_ASSERTION(success, "XpuGetResolution(dpy, XpGetContext(dpy), &x_dpi, &y_dpi)!");
+    screen_xres = x_dpi;
+    screen_yres = y_dpi;
   }
   else
 #endif /* USE_XPRINT */

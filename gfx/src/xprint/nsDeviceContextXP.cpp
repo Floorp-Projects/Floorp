@@ -123,11 +123,17 @@ nsDeviceContextXp::InitDeviceContextXP(nsIDeviceContext *aCreatingDeviceContext,
   // Initialization moved to SetSpec to be done after creating the Print Context
   float origscale, newscale;
   float t2d, a2d;
-  int   print_resolution;
+  int   print_x_resolution,
+        print_y_resolution;
 
-  mPrintContext->GetPrintResolution(print_resolution);
+  mPrintContext->GetPrintResolution(print_x_resolution, print_y_resolution);
+  
+  if (print_x_resolution != print_y_resolution) {
+    PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, ("print_x_resolution != print_y_resolution not yet supported by Mozilla's layout engine\n"));
+    return NS_ERROR_NOT_IMPLEMENTED; /* this error code should be more detailed */
+  }
 
-  mPixelsToTwips = (float)NSIntPointsToTwips(72) / (float)print_resolution;
+  mPixelsToTwips = (float)NSIntPointsToTwips(72) / (float)print_x_resolution;
   mTwipsToPixels = 1.0f / mPixelsToTwips;
 
   newscale = TwipsToDevUnits();

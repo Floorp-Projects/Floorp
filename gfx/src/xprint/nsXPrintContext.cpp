@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Roland Mainz <roland.mainz@nrubsig.org>
  *   Leon Sha <leon.sha@sun.com>
+ *   Julien Lafon <julien.lafon@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -60,7 +61,9 @@
 #include "prprf.h"
 #include "plstr.h"
 #include "nsPrintfCString.h"
-
+#include "nsIServiceManager.h" 
+#include "nsIEnvironment.h"
+ 
 /* NS_XPRINT_RGB_DITHER: Macro to check whether we should dither or not.
  * In theory we only have to look at the visual and depth ("TrueColor" with 
  * enougth bits for the colors or GrayScale/StaticGray with enougth bits for
@@ -112,7 +115,8 @@ nsXPrintContext::nsXPrintContext() :
   mIsAPrinter(PR_TRUE),   /* default destination is printer */
   mPrintFile(nsnull),
   mXpuPrintToFileHandle(nsnull),
-  mPrintResolution(0L),
+  mPrintXResolution(0L),
+  mPrintYResolution(0L),
   mContext(nsnull)
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::nsXPrintContext()\n"));
@@ -186,20 +190,16 @@ nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::Init()\n"));
   nsresult rv = NS_ERROR_FAILURE;
 
-  int   prefDepth = 24;  /* 24 or 8 for PS DDX, 24, 8, 1 for PCL DDX... 
-                          * I wish current Xprt would have a 1bit/8bit StaticGray 
-                          * visual for the PS DDX... ;-( 
-                          */
-  /* Safeguard for production use (see bug 80562),
-   * Make sure we can switch back to the
-   * extensively tested 8bit Pseudocolor visual on demand... */
-  if( PR_GetEnv("MOZILLA_XPRINT_EXPERIMENTAL_DISABLE_24BIT_VISUAL") != nsnull )
-  {
-    prefDepth = 8;
-  }
-  
-  unsigned short width, height;
-  XRectangle rect;
+ 
+  unsigned short      width,
+                      height;
+  XRectangle          rect;
+  const char         *colorspace; 
+  XpuColorspaceList   cslist;
+  int                 cscount;
+  XpuColorspaceRec   *cs;
+  VisualID            csvid;
+  int                 cs_class;
 
   if (NS_FAILED(XPU_TRACE(rv = SetupPrintContext(aSpec))))
     return rv;
@@ -207,70 +207,91 @@ nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
   mScreen = XpGetScreenOfContext(mPDisplay, mPContext);
   mScreenNumber = XScreenNumberOfScreen(mScreen);
 
+  /* Convert colorspace name into visualid */
+  aSpec->GetColorspace(&colorspace);
+  cslist = XpuGetColorspaceList(mPDisplay, mPContext, &cscount);
+  if (!cslist) {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuGetColorspaceList() failed.\n"));
+    return NS_ERROR_GFX_PRINTER_COLORSPACE_NOT_SUPPORTED;
+  }
+  cs = XpuFindColorspaceByName(cslist, cscount, colorspace);
+  if (!cs) {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuFindColorspaceByName() failed.\n"));
+    XpuFreeColorspaceList(cslist);
+    return NS_ERROR_GFX_PRINTER_COLORSPACE_NOT_SUPPORTED;
+  }
+  csvid    = cs->visualinfo.visualid;
+  cs_class = cs->visualinfo.c_class;
+  XpuFreeColorspaceList(cslist);
+
   XlibRgbArgs xargs;
   memset(&xargs, 0, sizeof(xargs));
   xargs.handle_name           = nsnull;
   xargs.disallow_image_tiling = True; /* XlibRGB's "Image tiling"-hack is 
                                        * incompatible to Xprint API */
   
-  /* What about B/W-only printers ?! */
   if (mIsGrayscale)
   {
     PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("printing grayscale\n"));
-    /* 1st attempt using StaticGray */
-    xargs.xtemplate.c_class = StaticGray;
-    xargs.xtemplate.depth   = 8;
-    xargs.xtemplate_mask    = VisualClassMask|VisualDepthMask;
-    mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
-    if (!mXlibRgbHandle)
+
+    /* This is compliciated: Older versions of Xprt do not always have 
+     * Grayscale/StaticGray visual for a chosen printer so we only use
+     * the selected visual when it really represents gray color values.
+     * If the selected visual does not match that requirement we jump
+     * into an "emulation" codepath which tries to find a visual which
+     * matches the requirement for grayscale or b/w output */
+    if ((cs_class | GrayScale) == GrayScale)
+    {
+      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("using selected gray visual\n"));
+      xargs.xtemplate_mask     = VisualIDMask;
+      xargs.xtemplate.visualid = csvid;
+      mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
+    }
+    else
     { 
-      /* 2nd attempt using GrayScale */
-      xargs.xtemplate.c_class = GrayScale;
+      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("using fallback codepath\n"));
+      /* 1st attempt using GrayScale */
+      xargs.xtemplate.c_class = StaticGray;
       xargs.xtemplate.depth   = 8;
       xargs.xtemplate_mask    = VisualClassMask|VisualDepthMask;
       mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);             
-      if (!mXlibRgbHandle)
-      {
-        /* Last attempt: Emulate StaticGray via Pseudocolor colormap */
-        xargs.xtemplate_mask  = 0L;
-        xargs.xtemplate.depth = 0;
-        xargs.pseudogray      = True;
-        mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
-      }
 
       if (!mXlibRgbHandle)
-      {
-        PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("trying black/white\n"));
-
-        /* Last attempt using StaticGray 1bit (b/w printer) */
-        xargs.xtemplate.c_class = StaticGray;
-        xargs.xtemplate.depth   = 1;
+      { 
+        /* 2nd attempt using GrayScale */
+        xargs.xtemplate.c_class = GrayScale;
+        xargs.xtemplate.depth   = 8;
         xargs.xtemplate_mask    = VisualClassMask|VisualDepthMask;
-        xargs.pseudogray        = False;
-        mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
+        mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);             
+        if (!mXlibRgbHandle)
+        {
+          /* Last attempt: Emulate StaticGray via Pseudocolor colormap */
+          xargs.xtemplate_mask  = 0L;
+          xargs.xtemplate.depth = 0;
+          xargs.pseudogray      = True;
+          mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
+        }
+
+        if (!mXlibRgbHandle)
+        {
+          PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("trying black/white\n"));
+
+          /* Last attempt using StaticGray 1bit (b/w printer) */
+          xargs.xtemplate.c_class = StaticGray;
+          xargs.xtemplate.depth   = 1;
+          xargs.xtemplate_mask    = VisualClassMask|VisualDepthMask;
+          xargs.pseudogray        = False;
+          mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
+        }
       }
-    }
+    }  
   }
   else
   {
     PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("printing color\n"));
-    if (prefDepth > 12)
-    {
-      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("trying TrueColor %d bit\n", prefDepth));
-      xargs.xtemplate.depth   = prefDepth;
-      xargs.xtemplate.c_class = TrueColor;
-      xargs.xtemplate_mask    = VisualDepthMask|VisualClassMask;
-      mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
-    }  
-
-    if (!mXlibRgbHandle)
-    {
-      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("trying PseudoColor 8 bit\n"));
-      xargs.xtemplate.depth   = 8;
-      xargs.xtemplate.c_class = PseudoColor;
-      xargs.xtemplate_mask    = VisualDepthMask|VisualClassMask;
-      mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
-    }  
+    xargs.xtemplate_mask     = VisualIDMask;
+    xargs.xtemplate.visualid = csvid;
+    mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
   }
   
   /* No XlibRgb handle ? Either we do not have a matching visual or no memory... */
@@ -301,6 +322,66 @@ nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPrintContext::GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight)
+{
+  *aWidth = mWidth;
+  *aHeight = mHeight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPrintContext::IsOffscreen(PRBool *aOffScreen)
+{
+  *aOffScreen = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPrintContext::IsPixelAddressable(PRBool *aAddressable)
+{
+  *aAddressable = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPrintContext::GetPixelFormat(nsPixelFormat *aFormat)
+{
+  *aFormat = mPixFormat;
+  return NS_OK;
+}
+
+PRUint8 
+nsXPrintContext::GetShiftForMask(unsigned long val)
+{
+  PRUint8 cur_bit = 0;
+  // walk through the number, looking for the first 1
+  while (cur_bit < (sizeof(unsigned long) * 8)) {
+    if ((val >> cur_bit) & 0x1) {
+      return cur_bit;
+    }
+    cur_bit++;
+  }
+  return cur_bit;
+}
+
+PRUint8 
+nsXPrintContext::ConvertMaskToCount(unsigned long val)
+{
+  PRUint8 retval = 0;
+  PRUint8 cur_bit = 0;
+  // walk through the number, incrementing the value if
+  // the bit in question is set.
+  while (cur_bit < (sizeof(unsigned long) * 8)) {
+    if ((val >> cur_bit) & 0x1) {
+      retval++;
+    }
+    cur_bit++;
+  }
+  return retval;
+}
+
+
 nsresult
 nsXPrintContext::SetupWindow(int x, int y, int width, int height)
 {
@@ -321,6 +402,19 @@ nsXPrintContext::SetupWindow(int x, int y, int width, int height)
   visual_info = xxlib_rgb_get_visual_info(mXlibRgbHandle);
   mVisual     = xxlib_rgb_get_visual(mXlibRgbHandle);
   mDepth      = xxlib_rgb_get_depth(mXlibRgbHandle);
+  
+  mPixFormat.mRedMask    = visual_info->red_mask;
+  mPixFormat.mGreenMask  = visual_info->green_mask;
+  mPixFormat.mBlueMask   = visual_info->blue_mask;
+  mPixFormat.mAlphaMask  = 0;
+  mPixFormat.mRedCount   = ConvertMaskToCount(visual_info->red_mask);
+  mPixFormat.mGreenCount = ConvertMaskToCount(visual_info->green_mask);
+  mPixFormat.mBlueCount  = ConvertMaskToCount(visual_info->blue_mask);
+  mPixFormat.mAlphaCount = 0;
+  mPixFormat.mRedShift   = GetShiftForMask(visual_info->red_mask);
+  mPixFormat.mGreenShift = GetShiftForMask(visual_info->green_mask);
+  mPixFormat.mBlueShift  = GetShiftForMask(visual_info->blue_mask);
+  mPixFormat.mAlphaShift = 0;
 
   background = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, NS_TO_XXLIB_RGB(NS_RGB(0xFF, 0xFF, 0xFF))); /* white */
   foreground = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, NS_TO_XXLIB_RGB(NS_RGB(0x00, 0x00, 0x00))); /* black */
@@ -349,8 +443,8 @@ nsXPrintContext::SetupWindow(int x, int y, int width, int height)
 
   /* %p would be better instead of %lx for pointers - but does PR_LOG() support that ? */
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG,
-         ("nsXPrintContext::SetupWindow: mDepth=%d, mScreenNumber=%d, colormap=%lx, mDrawable=%lx\n",
-         (int)mDepth, (int)mScreenNumber, (long)xattributes.colormap, (long)mDrawable));
+         ("nsXPrintContext::SetupWindow: mVisual->visualid=%x, mVisual->c_class=%x, mDepth=%d, mScreenNumber=%d, colormap=%lx, mDrawable=%lx\n",
+         (int)mVisual->visualid, (int)mVisual->c_class, (int)mDepth, (int)mScreenNumber, (long)xattributes.colormap, (long)mDrawable));
          
   return NS_OK;
 }
@@ -567,6 +661,10 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   const char  *printername;
   nsresult     rv;
 
+  nsCOMPtr<nsIEnvironment> uEnv = do_GetService("@mozilla.org/process/environment;1", &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
   // Get the Attributes
   aSpec->GetToPrinter(mIsAPrinter);
   aSpec->GetGrayscale(mIsGrayscale);
@@ -606,11 +704,15 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
    * shared memory transport is used XCloseDisplay() tries to free() the 
    * shared memory segment - causing heap corruption and/or SEGV.
    */
-  PR_SetEnv("XSUNTRANSPORT=xxx");
+  uEnv->Set(NS_LITERAL_STRING("XSUNTRANSPORT"), NS_LITERAL_STRING("xxx"));
      
   /* Get printer, either by "name" (foobar) or "name@display" (foobar@gaja:5) */
   if( XpuGetPrinter(printername, &mPDisplay, &mPContext) != 1 )
     return NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
+
+  /* Remember the last used printer as new "default" printer as long this
+   * Mozilla instance is running */
+  uEnv->Set(NS_LITERAL_STRING("XPRINTER"), NS_ConvertUTF8toUCS2(printername));
 
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
          ("nsXPrintContext::SetupPrintContext: name='%s', display='%s', vendor='%s', release=%ld\n",
@@ -629,10 +731,14 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   dumpXpAttributes(mPDisplay, mPContext);
 #endif /* XPRINT_DEBUG_SOMETIMES_USEFULL */
   
-  const char *paper_name = nsnull,
-             *plex_name  = nsnull;
+  const char *paper_name      = nsnull,
+             *plex_name       = nsnull,
+             *resolution_name = nsnull;
+  PRBool      downloadfonts   = PR_TRUE;
   aSpec->GetPaperName(&paper_name);
   aSpec->GetPlexName(&plex_name);
+  aSpec->GetResolutionName(&resolution_name);
+  aSpec->GetDownloadFonts(downloadfonts);
   
   if (NS_FAILED(XPU_TRACE(rv = SetMediumSize(paper_name))))
     return rv;
@@ -643,11 +749,14 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   if (NS_FAILED(XPU_TRACE(rv = SetPlexMode(plex_name))))
     return rv;
     
-  if (NS_FAILED(XPU_TRACE(rv = SetResolution())))
+  if (NS_FAILED(XPU_TRACE(rv = SetResolution(resolution_name))))
     return rv;
    
   if (XPU_TRACE(XpuSetDocumentCopies(mPDisplay, mPContext, num_copies)) != 1)
     return NS_ERROR_GFX_PRINTER_TOO_MANY_COPIES;
+
+  if (XPU_TRACE(XpuSetEnableFontDownload(mPDisplay, mPContext, downloadfonts)) != 1)
+    return NS_ERROR_GFX_PRINTER_DRIVER_CONFIGURATION_ERROR;
         
   /* set printer context
    * WARNING: after this point it is no longer allows to change job attributes
@@ -662,10 +771,11 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
 #endif /* XPRINT_DEBUG_SOMETIMES_USEFULL */
 
   /* Get default printer resolution. May fail if Xprt is misconfigured.*/
-  if( XpuGetResolution(mPDisplay, mPContext, &mPrintResolution) != 1 )
+  if( XpuGetResolution(mPDisplay, mPContext, &mPrintXResolution, &mPrintYResolution) != 1 )
     return NS_ERROR_GFX_PRINTER_DRIVER_CONFIGURATION_ERROR;
 
-  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("print resolution %ld\n", (long)mPrintResolution));
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG,
+         ("print resolution %ld%x%ld\n", mPrintXResolution, mPrintYResolution));
   
   /* We want to get events when Xp(Start|End)(Job|Page) requests are processed... */  
   XpSelectInput(mPDisplay, mPContext, XPPrintMask);  
@@ -674,14 +784,13 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
 }
 
 NS_IMETHODIMP
-nsXPrintContext::SetResolution( void )
+nsXPrintContext::SetResolution(const char *resolution_name)
 {
   XpuResolutionList list;
   int               list_count;
   XpuResolutionRec *match;
   int               i;
-  long              default_resolution;
-  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::SetResolution().\n"));  
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::SetResolution('resolution_name=%s').\n", resolution_name));  
 
   list = XpuGetResolutionList(mPDisplay, mPContext, &list_count);
   if( !list )
@@ -692,42 +801,22 @@ nsXPrintContext::SetResolution( void )
   for( i = 0 ; i < list_count ; i++ )
   {
     XpuResolutionRec *curr = &list[i];
-    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("got resolution=%ld\n", (long)curr->dpi));
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG,
+           ("got resolution='%s'/%ldx%ld\n", curr->name, curr->x_dpi, curr->y_dpi));
   }
 #endif /* PR_LOGGING */
 
-  /* We rely on printer default resolution if we have one... */
-  if( XpuGetResolution(mPDisplay, mPContext, &default_resolution) == 1 )
-  {
-    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("using printers default resolution=%ld.\n", default_resolution));  
-    XpuFreeResolutionList(list);
-    return NS_OK;
-  }
-
-  /* XXX: Hardcoded resolution values... */
-  match = XpuFindResolution(list, list_count, 300, 300); 
+  /* Find requested resolution mode */
+  match = XpuFindResolutionByName(list, list_count, resolution_name);
   if (!match)
   {
-    /* Find a match between 300-600, lower resolution is better */
-    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("searching between 300-600, lower resolution is better...\n"));
-    match = XpuFindResolution(list, list_count, 300, 600); 
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuFindResolutionByName() failure.\n"));  
+    XpuFreeResolutionList(list);
+    return NS_ERROR_GFX_PRINTER_RESOLUTION_NOT_SUPPORTED;
+  } 
 
-    if (!match)
-    {
-      /* Find a match between 150-300, higher resolution is better */
-      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("searching between 150-300, higher resolution is better...\n"));
-      match = XpuFindResolution(list, list_count, 300, 150); 
-
-      if (!match)
-      {
-        /* If there is still no match then use the first one from the matches we
-         * obtained...*/
-         match = &list[0];
-      }
-    }  
-  }
-
-  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("setting resolution to %ld DPI.\n", match->dpi));  
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("setting resolution to '%s'/%ldx%ld DPI.\n", 
+         match->name, match->x_dpi, match->y_dpi));  
     
   if (XpuSetDocResolution(mPDisplay, mPContext, match) != 1)
   {
@@ -762,11 +851,7 @@ nsXPrintContext::BeginDocument( PRUnichar * aTitle, PRUnichar* aPrintToFileName,
   {
     /* Note that this is _only_ a _hack_ until bug 73446 
      * ("RFE: Need NS_ConvertUCS2ToLocalEncoding() and 
-     * NS_ConvertLocalEncodingToUCS2()") is implemented...
-     * Below we need COMPOUNT_TEXT which usually is the same as the Xserver's 
-     * local encoding - this hack should at least work for C/POSIX 
-     * and *.UTF-8 locales...
-     */
+     * NS_ConvertLocalEncodingToUCS2()") is implemented...) */
     job_title.Assign(NS_ConvertUCS2toUTF8(aTitle));
   }
   else
@@ -847,6 +932,36 @@ nsXPrintContext::EndDocument()
     
     mXpuPrintToFileHandle = nsnull;
   }
+
+  /*
+   * end of spooled job - get spooler command results
+   */
+  const char *results,
+             *lresults;
+  results = XpGetOneAttribute(mPDisplay, mPContext, XPJobAttr,
+  			      "xp-spooler-command-results");
+
+  if( results &&
+      (strlen(results) != 0) )
+  {
+    lresults = XpuCompoundTextToXmb(mPDisplay, results);
+  }
+  else
+  {
+    lresults = NULL;
+  }
+  /* present spooler command results
+   * TODO: Open a dialog and present the message there.
+   */
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG,
+         ("Printing complete - spooler command result '%s'/'%s'\n",
+  	  results  ? results  : "<no message>",
+	  lresults ? lresults : ""));
+  if( lresults )
+    XpuFreeXmbString(lresults);
+
+  if( results )
+    XFree((void *)results);
 
   mJobStarted = PR_FALSE;
     
@@ -982,12 +1097,13 @@ PRUint8 *ComposeAlphaImage(
 
 
 NS_IMETHODIMP
-nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
+nsXPrintContext::DrawImage(Drawable aDrawable, xGC *xgc, nsIImage *aImage,
                  PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
-         ("nsXPrintContext::DrawImage(%d/%d/%d/%d - %d/%d/%d/%d)\n", 
+         ("nsXPrintContext::DrawImage(%lx, %d/%d/%d/%d - %d/%d/%d/%d)\n",
+          (long)aDrawable,
           (int)aSX, (int)aSY, (int)aSWidth, (int)aSHeight,
           (int)aDX, (int)aDY, (int)aDWidth, (int)aDHeight));
   
@@ -1030,9 +1146,9 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
   scalingFactor *= PR_MIN(scale_x, scale_y);
   
   /* Adjust destination size to the match the scaling factor */
-  imageResolution = long(   double(mPrintResolution) * scalingFactor);
-  aDWidth_scaled  = PRInt32(double(aDWidth)          * scalingFactor);
-  aDHeight_scaled = PRInt32(double(aDHeight)         * scalingFactor);
+  imageResolution = long(   double(mPrintXResolution) * scalingFactor);
+  aDWidth_scaled  = PRInt32(double(aDWidth)           * scalingFactor);
+  aDHeight_scaled = PRInt32(double(aDHeight)          * scalingFactor);
 
   /* Check if we scaled the image to zero width/height - if "yes" then use the
    * smaller scaling factor and try again ... */
@@ -1043,9 +1159,9 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
     scalingFactor *= PR_MAX(scale_x, scale_y);
 
     /* Adjust destination size to the match the (new) scaling factor */
-    imageResolution = long(   double(mPrintResolution) * scalingFactor);
-    aDWidth_scaled  = PRInt32(double(aDWidth)          * scalingFactor);
-    aDHeight_scaled = PRInt32(double(aDHeight)         * scalingFactor);
+    imageResolution = long(   double(mPrintXResolution) * scalingFactor);
+    aDWidth_scaled  = PRInt32(double(aDWidth)           * scalingFactor);
+    aDHeight_scaled = PRInt32(double(aDHeight)          * scalingFactor);
   }
 
   /* Image scaled to 0 width/height ? */
@@ -1071,12 +1187,12 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
     if( (aSX != 0) || (aSY != 0) || (aSWidth != aDWidth_scaled) || (aSHeight != aDHeight_scaled) )
     {
       PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("using DrawImageBitsScaled()\n"));
-      rv = DrawImageBitsScaled(xgc, aImage, aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth_scaled, aDHeight_scaled);
+      rv = DrawImageBitsScaled(aDrawable, xgc, aImage, aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth_scaled, aDHeight_scaled);
     }
     else
     {
       PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("using DrawImage() [shortcut]\n"));
-      rv = DrawImage(xgc, aImage, aDX, aDY, aDWidth_scaled, aDHeight_scaled);
+      rv = DrawImage(aDrawable, xgc, aImage, aDX, aDY, aDWidth_scaled, aDHeight_scaled);
     }
     
     /* reset image resolution to previous resolution */
@@ -1089,7 +1205,7 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
     (void)XpSetImageResolution(mPDisplay, mPContext, prev_res, &dummy);
     
     /* scale image on our side (bad) */
-    rv = DrawImageBitsScaled(xgc, aImage, aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth, aDHeight);
+    rv = DrawImageBitsScaled(aDrawable, xgc, aImage, aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth, aDHeight);
   }
   
   return rv;
@@ -1098,12 +1214,13 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
 // use DeviceContextImpl :: GetCanonicalPixelScale(float &aScale) 
 // to get the pixel scale of the device context
 nsresult
-nsXPrintContext::DrawImageBitsScaled(xGC *xgc, nsIImage *aImage,
+nsXPrintContext::DrawImageBitsScaled(Drawable aDrawable, xGC *xgc, nsIImage *aImage,
                  PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
-         ("nsXPrintContext::DrawImageBitsScaled(%d/%d/%d/%d - %d/%d/%d/%d)\n", 
+         ("nsXPrintContext::DrawImageBitsScaled(%lx, %d/%d/%d/%d - %d/%d/%d/%d)\n",
+          (long)aDrawable,
           (int)aSX, (int)aSY, (int)aSWidth, (int)aSHeight,
           (int)aDX, (int)aDY, (int)aDWidth, (int)aDHeight));
 
@@ -1180,7 +1297,7 @@ nsXPrintContext::DrawImageBitsScaled(xGC *xgc, nsIImage *aImage,
 /* ToDo: scale alpha image */
 #endif /* XPRINT_SERVER_SIDE_ALPHA_COMPOSING */
     
-  rv = DrawImageBits(xgc, alphaBits, alphaRowBytes, alphaDepth,
+  rv = DrawImageBits(aDrawable, xgc, alphaBits, alphaRowBytes, alphaDepth,
                      dstimg_data, dstimg_bytes_per_line, 
                      aDX, aDY, aDWidth, aDHeight);
 
@@ -1196,11 +1313,12 @@ nsXPrintContext::DrawImageBitsScaled(xGC *xgc, nsIImage *aImage,
 
 
 NS_IMETHODIMP
-nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
+nsXPrintContext::DrawImage(Drawable aDrawable, xGC *xgc, nsIImage *aImage,
                            PRInt32 aX, PRInt32 aY,
                            PRInt32 dummy1, PRInt32 dummy2)
 {
-  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::DrawImage(%d/%d/%d(=dummy)/%d(=dummy))\n",
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::DrawImage(%lx, %d/%d/%d(=dummy)/%d(=dummy))\n",
+         (long)aDrawable,
          (int)aX, (int)aY, (int)dummy1, (int)dummy2));
 
   aImage->LockImagePixels(PR_FALSE);
@@ -1239,7 +1357,7 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
     alphaBits = nsnull;
   }
                
-  rv = DrawImageBits(xgc, alphaBits, alphaRowBytes, alphaDepth,
+  rv = DrawImageBits(aDrawable, xgc, alphaBits, alphaRowBytes, alphaDepth,
                      image_bits, row_bytes,
                      aX, aY, width, height);
 
@@ -1254,14 +1372,14 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
                          
 // Draw the bitmap, this draw just has destination coordinates
 nsresult
-nsXPrintContext::DrawImageBits(xGC *xgc,
+nsXPrintContext::DrawImageBits(Drawable aDrawable, xGC *xgc,
                                PRUint8 *alphaBits, PRInt32  alphaRowBytes, PRUint8 alphaDepth,
                                PRUint8 *image_bits, PRInt32  row_bytes,
                                PRInt32 aX, PRInt32 aY,
                                PRInt32 aWidth, PRInt32 aHeight)
 { 
-  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::DrawImageBits(%d/%d/%d/%d)\n",
-         (int)aX, (int)aY, (int)aWidth, (int)aHeight));
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::DrawImageBits(%lx, %d/%d/%d/%d)\n",
+         (long)aDrawable, (int)aX, (int)aY, (int)aWidth, (int)aHeight));
 
   Pixmap alpha_pixmap  = None;
   GC     image_gc;
@@ -1282,7 +1400,7 @@ nsXPrintContext::DrawImageBits(xGC *xgc,
     XGCValues  gcv;
     
     alpha_pixmap = XCreatePixmap(mPDisplay, 
-                                 mDrawable,
+                                 aDrawable,
                                  aWidth, aHeight, 1); /* ToDo: Check for error */
   
     /* Make an image out of the alpha-bits created by the image library (ToDo: check for error) */
@@ -1335,7 +1453,7 @@ nsXPrintContext::DrawImageBits(xGC *xgc,
     gcv.clip_x_origin = aX;
     gcv.clip_y_origin = aY;
 
-    image_gc = XCreateGC(mPDisplay, mDrawable, 
+    image_gc = XCreateGC(mPDisplay, aDrawable, 
                          (GCForeground|GCBackground|GCFunction|
                           GCClipXOrigin|GCClipYOrigin|GCClipMask),
                          &gcv);
@@ -1349,8 +1467,8 @@ nsXPrintContext::DrawImageBits(xGC *xgc,
 
 
   xxlib_draw_xprint_scaled_rgb_image(mXlibRgbHandle,
-                                     mDrawable,
-                                     mPrintResolution, XpGetImageResolution(mPDisplay, mPContext),
+                                     aDrawable,
+                                     mPrintXResolution, XpGetImageResolution(mPDisplay, mPContext),
                                      image_gc,
                                      aX, aY, aWidth, aHeight,
                                      NS_XPRINT_RGB_DITHER,
@@ -1365,19 +1483,20 @@ nsXPrintContext::DrawImageBits(xGC *xgc,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXPrintContext::GetPrintResolution(int &aPrintResolution)
+NS_IMETHODIMP nsXPrintContext::GetPrintResolution(int &aXres, int &aYres)
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
-         ("nsXPrintContext::GetPrintResolution() res=%d, mPContext=%lx\n",
-          (int)mPrintResolution, (long)mPContext));
+         ("nsXPrintContext::GetPrintResolution() res=%ldx%ld, mPContext=%lx\n",
+          mPrintXResolution, mPrintYResolution,(long)mPContext));
   
   if(mPContext!=None)
   {
-    aPrintResolution = mPrintResolution;
+    aXres = mPrintXResolution;
+    aYres = mPrintYResolution;
     return NS_OK;
   }
   
-  aPrintResolution = 0;
+  aXres = aYres = 0;
   return NS_ERROR_FAILURE;    
 }
 
@@ -1534,7 +1653,9 @@ class nsEPSObjectXp {
       }
 };
 
-NS_IMETHODIMP nsXPrintContext::RenderEPS(const nsRect& aRect, const unsigned char *aData, unsigned long aDatalen)
+NS_IMETHODIMP nsXPrintContext::RenderEPS(Drawable aDrawable,
+                                         const nsRect& aRect,
+                                         const unsigned char *aData, unsigned long aDatalen)
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
          ("nsXPrintContext::EPS(aData, aDatalen=%d)\n", aDatalen));
@@ -1646,7 +1767,7 @@ NS_IMETHODIMP nsXPrintContext::RenderEPS(const nsRect& aRect, const unsigned cha
                                           * supported options/option values) */
 
   /* XpPutDocumentData() takes |const| input for all string arguments, only the X11 prototypes do not allow |const| yet */
-  XpPutDocumentData(mPDisplay, mDrawable, (unsigned char *)embedData, embedDataLength, (char *)type, (char *)option);
+  XpPutDocumentData(mPDisplay, aDrawable, (unsigned char *)embedData, embedDataLength, (char *)type, (char *)option);
 
   XFree((void *)embedded_formats_supported);
   

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Julien Lafon <julien.lafon@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -85,13 +86,8 @@ nsRenderingContextXp::Init(nsIDeviceContext* aContext)
 
   /* A printer usually does not support things like multiple drawing surfaces
    * (nor "offscreen" drawing surfaces... would be quite difficult to 
-   * implement (however - Xprint API supports offscreen surfaces but Mozilla
-   * does not make use of them, see bug 124761 ("RFE: Make use of "offpaper"
-   * drawing surfaces in some printing APIs")) =:-) ...
-   * We just feed the nsXPContext object here directly - this is the only
-   * "surface" the Mozilla printer API can "draw" on ...
-   * |mOffscreenSurface| is just set for bug 251136 ("nsRenderingContextGTK
-   * uses mSurface after it's been freed")
+   * implement) - however the Xprint API supports offscreen surfaces for
+   * all DDX implementations.
    */
   mOffscreenSurface = mSurface = mPrintContext; 
   UpdateGC(); /* Fill |mGC| */
@@ -133,29 +129,6 @@ nsRenderingContextXp::UnlockDrawingSurface(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsRenderingContextXp::SelectOffScreenDrawingSurface(nsIDrawingSurface* aSurface)
-{
-  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::SelectOffScreenDrawingSurface()\n"));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRenderingContextXp::GetDrawingSurface(nsIDrawingSurface* *aSurface)
-{
-  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::GetDrawingSurface()\n"));
-  *aSurface = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRenderingContextXp::CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsIDrawingSurface* &aSurface)
-{
-  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::CreateDrawingSurface()\n"));
-  aSurface = nsnull;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsRenderingContextXp::DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect)
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawImage()\n"));
@@ -182,21 +155,113 @@ NS_IMETHODIMP nsRenderingContextXp::DrawImage(imgIContainer *aImage, const nsRec
   mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
 
   UpdateGC();
-  return mPrintContext->DrawImage(mGC, img,
+  return mPrintContext->DrawImage(mSurface->GetDrawable(),
+                                  mGC, img,
                                   sr.x, sr.y,
                                   sr.width, sr.height,
                                   dr.x, dr.y,
                                   dr.width, dr.height);
 }
 
-NS_IMETHODIMP
-nsRenderingContextXp::CopyOffScreenBits(nsIDrawingSurface* aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
-                                        const nsRect &aDestBounds, PRUint32 aCopyFlags)
+#ifdef JULIEN_NOTNOW
+static
+void TilePixmap(Display *dpy, Pixmap src, Pixmap dest, PRInt32 aSXOffset,
+                PRInt32 aSYOffset, const nsRect &destRect,
+                const nsRect &clipRect, PRBool useClip)
 {
-  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::CopyOffScreenBits()\n"));
+  GC gc;
+  XGCValues values;
+  unsigned long valuesMask;
+  memset(&values, 0, sizeof(XGCValues));
+  values.fill_style = FillTiled;
+  values.tile = src;
+  values.ts_x_origin = destRect.x - aSXOffset;
+  values.ts_y_origin = destRect.y - aSYOffset;
+  valuesMask = GCTile | GCTileStipXOrigin | GCTileStipYOrigin | GCFillStyle;
+  gc = XCreateGC(dpy, src, valuesMask, &values);
 
-  NS_NOTREACHED("nsRenderingContextXp::CopyOffScreenBits() not implemented");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (useClip) {
+    XRectangle xrectangle;
+    xrectangle.x      = clipRect.x;
+    xrectangle.y      = clipRect.y;
+    xrectangle.width  = clipRect.width;
+    xrectangle.height = clipRect.height;
+    XSetClipRectangles(dpy, gc, 0, 0, &xrectangle, 1, Unsorted);
+  }
+
+  XFillRectangle(dpy, dest, gc, destRect.x, destRect.y,
+                 destRect.width, destRect.height);
+
+  XFreeGC(dpy, gc);
+}
+#endif /* JULIEN_NOTNOW */
+
+NS_IMETHODIMP
+nsRenderingContextXp::DrawTile(imgIContainer *aImage,
+                               nscoord aSXOffset,
+                               nscoord aSYOffset,
+                               const nsRect *aTileRect)
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG,
+         ("nsRenderingContextXp::DrawTile(imgIContainer *aImage, nscoord aXImageStart, nscoord aYImageStart, const nsRect *aTargetRect)\n"));
+
+/* xxx_julien: Either this code or the PDF DDX needs a fix */
+#ifdef JULIEN_NOTNOW    
+  nsCOMPtr<gfxIImageFrame> iframe;
+  aImage->GetCurrentFrame(getter_AddRefs(iframe));
+  if (!iframe) 
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
+  if (!img) 
+    return NS_ERROR_FAILURE;
+
+  PushState();
+
+  nscoord imgwidth, imgheight;
+  aImage->GetWidth(&imgwidth);
+  aImage->GetHeight(&imgheight);
+
+  imgwidth  = NSToCoordRound(imgwidth*mP2T);
+  imgheight = NSToCoordRound(imgheight*mP2T);
+  
+  Drawable srcdrawable;
+  Drawable destdrawable;
+  mSurface->GetDrawable(destdrawable);
+
+  UpdateGC(); 
+  srcdrawable = XCreatePixmap(mDisplay, destdrawable,
+                              imgwidth, imgheight,
+                              xxlib_rgb_get_depth(mXlibRgbHandle));
+
+  XGCValues     values;
+  unsigned long valuesMask = 0;
+  nsRenderingContextXlibContext *rcContext;
+  nsIDeviceContext *dc = mContext;
+  NS_STATIC_CAST(nsDeviceContextX *, dc)->GetRCContext(rcContext);
+  xGC *xgc = rcContext->mGcCache.GetGC(mDisplay, srcdrawable, valuesMask, &values, NULL);
+
+  mPrintContext->DrawImage(srcdrawable,
+                           xgc, img,
+                           0, 0,
+                           img->GetWidth(), img->GetHeight(),
+                           0, 0,
+                           imgwidth, imgheight);
+
+  /* Xlib API can tile for us */
+  nsRect clipRect;
+  PRBool isValid;
+
+  GetClipRect(clipRect, isValid);
+  TilePixmap(mDisplay, srcdrawable, destdrawable, aSXOffset, aSYOffset,
+             *aTileRect, clipRect, PR_FALSE);
+
+  xgc->Release();
+  XFreePixmap(mDisplay, srcdrawable);
+  
+  PopState();
+#endif /* JULIEN_NOTNOW */
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -238,7 +303,7 @@ nsRenderingContextXp::RenderEPS(const nsRect& aRect, FILE *aDataFile)
   nsRect trect = aRect;
   mTranMatrix->TransformCoord(&trect.x, &trect.y, &trect.width, &trect.height);
   UpdateGC();
-  rv = mPrintContext->RenderEPS(trect, data, datalen);
+  rv = mPrintContext->RenderEPS(mSurface->GetDrawable(), trect, data, datalen);
 
   PopState();
   

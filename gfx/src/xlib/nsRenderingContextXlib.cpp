@@ -73,12 +73,6 @@ static void Widen8To16AndDraw(Drawable    drawable,
                               int          text_length);
 
 
-class nsRenderingContextXlibContext
-{
-public:
-  nsGCCacheXlib mGcCache;
-};
-
 nsresult CreateRenderingContextXlibContext(nsIDeviceContext *aDevice, nsRenderingContextXlibContext **aContext)
 {
   nsRenderingContextXlibContext *rcctx;

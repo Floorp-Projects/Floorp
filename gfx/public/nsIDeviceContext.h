@@ -158,6 +158,9 @@ typedef void * nsNativeDeviceContext;
 /* Cannot load the matching print module */
 #define NS_ERROR_GFX_COULD_NOT_LOAD_PRINT_MODULE \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+34)   
+/* requested resolution/quality mode not supported by printer */
+#define NS_ERROR_GFX_PRINTER_RESOLUTION_NOT_SUPPORTED \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+35)
       
 /**
  * Conts need for Print Preview

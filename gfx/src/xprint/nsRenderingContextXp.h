@@ -62,16 +62,10 @@ class nsRenderingContextXp : public nsRenderingContextXlib
                                 void **aBits, PRInt32 *aStride, PRInt32 *aWidthBytes,
                                 PRUint32 aFlags);
   NS_IMETHOD UnlockDrawingSurface(void);
-
-  NS_IMETHOD SelectOffScreenDrawingSurface(nsIDrawingSurface* aSurface);
-  NS_IMETHOD GetDrawingSurface(nsIDrawingSurface* *aSurface);
-
-  NS_IMETHOD CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsIDrawingSurface* &aSurface);
-  
+ 
   NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect);
 
-  NS_IMETHOD CopyOffScreenBits(nsIDrawingSurface* aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
-                               const nsRect &aDestBounds, PRUint32 aCopyFlags);
+  NS_IMETHOD DrawTile(imgIContainer *aImage, nscoord aXImageStart, nscoord aYImageStart, const nsRect *aTargetRect);
 
   NS_IMETHOD RenderEPS(const nsRect& aRect, FILE *aDataFile);
                                

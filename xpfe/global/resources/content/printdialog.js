@@ -490,7 +490,10 @@ function onAccept()
                 gPrintSetInterface.kInitSavePaperWidth    | 
                 gPrintSetInterface.kInitSavePaperHeight   |
                 gPrintSetInterface.kInitSavePaperName     | 
+                gPrintSetInterface.kInitSaveColorSpace    |
                 gPrintSetInterface.kInitSaveInColor       |
+                gPrintSetInterface.kInitSaveResolutionName   |
+                gPrintSetInterface.kInitSaveDownloadFonts |
                 gPrintSetInterface.kInitSavePrintCommand  |
                 gPrintSetInterface.kInitSaveShrinkToFit   |
                 gPrintSetInterface.kInitSaveScaling;

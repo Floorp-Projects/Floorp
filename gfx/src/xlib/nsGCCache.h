@@ -45,14 +45,14 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-#include <string.h>
 #include "nscore.h"
 #include "nsDebug.h"
 #include "prclist.h"
 #include <stdlib.h>
+#include <string.h>
 
 #define countof(x) ((int)(sizeof(x) / sizeof (*x)))
-#define GC_CACHE_SIZE 32
+#define GC_CACHE_SIZE 64
 
 #ifdef DEBUG
 #define DEBUG_METER(x) x
