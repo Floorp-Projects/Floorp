@@ -18,37 +18,16 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
+DEFINES=-D_IMPL_NS_UI 
 MODULE=raptor 
+XPIDL_MODULE=gfx
 
-IDLSRCS =  \
-        RenderingContext.idl
+XPIDLSRCS =               \
+  .\nsIScriptableRegion.idl          \
+  $(NULL)
 
-XPCOM_DESTDIR=$(DEPTH)\gfx\public
-JSSTUB_DESTDIR=$(DEPTH)\gfx\src
-GENXDIR=genx
-GENJSDIR=genjs
+EXPORTS=                  \
+  $(NULL)
 
-IIDDIRS=$(GENXDIR)
+include <$(DEPTH)\config\rules.mak>
 
-!include <$(DEPTH)\config\rules.mak>
-
-$(GENXDIR):
-	-mkdir $(GENXDIR)
-
-$(GENJSDIR):
-	-mkdir $(GENJSDIR)
-
-IDLC=$(DIST)\bin\idlc.exe
-GENIID=geniid.pl
-
-export:: $(GENXDIR) $(GENJSDIR) $(IDLSRCS)
-	@echo +++ make: generating xpcom headers
-	$(IDLC) -d $(GENXDIR) -x $(IDLSRCS)
-	@echo +++ make: generating JavaScript stubs
-	$(IDLC) -d $(GENJSDIR) -j $(IDLSRCS)
-	@echo +++ make: generating interface ids
-  	$(PERL) $(GENIID) $(IIDDIRS) 
-
-install::
-	$(MAKE_INSTALL:/=\) $(GENXDIR)\*.h $(XPCOM_DESTDIR)
-	$(MAKE_INSTALL:/=\) $(GENJSDIR)\*.cpp $(JSSTUB_DESTDIR)
