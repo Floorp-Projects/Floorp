@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "stdafx.h"
 
+#include "nsXPCOMGlue.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 
@@ -150,6 +151,7 @@ xpconnect_getvalue(NPP instance, NPPVariable variable, void *value)
 }
 
 
+static PRUint32 gInstances = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsScriptablePeer
@@ -157,10 +159,15 @@ xpconnect_getvalue(NPP instance, NPPVariable variable, void *value)
 nsScriptablePeer::nsScriptablePeer()
 {
     mRef = 0;
+    if (gInstances == 0)
+      XPCOMGlueStartup(nsnull);
+    gInstances++;
 }
 
 nsScriptablePeer::~nsScriptablePeer()
 {
+    if (--gInstances == 0)
+      XPCOMGlueShutdown();
 }
 
 HRESULT
@@ -281,10 +288,61 @@ nsScriptablePeer::ConvertVariants(nsIVariant *aIn, VARIANT *aOut)
         VariantClear(aOut);
         break;
 
-    // TODO
-    case nsIDataType::VTYPE_CSTRING:
+    case nsIDataType::VTYPE_STRING_SIZE_IS:
+    case nsIDataType::VTYPE_CHAR_STR:
+        {
+            nsXPIDLCString value;
+            aIn->GetAsString(getter_Copies(value));
+            nsAutoString valueWide; valueWide.AssignWithConversion(value);
+            aOut->vt = VT_BSTR;
+            aOut->bstrVal = SysAllocString(valueWide.get());
+        }
+        break;
+    case nsIDataType::VTYPE_WSTRING_SIZE_IS:
+    case nsIDataType::VTYPE_WCHAR_STR:
+        {
+            nsXPIDLString value;
+            aIn->GetAsWString(getter_Copies(value));
+            aOut->vt = VT_BSTR;
+            aOut->bstrVal = SysAllocString(value.get());
+        }
+        break;
+
     case nsIDataType::VTYPE_ASTRING:
+        {
+            nsAutoString value;
+            aIn->GetAsAString(value);
+            aOut->vt = VT_BSTR;
+            aOut->bstrVal = SysAllocString(value.get());
+        }
+        break;
+
     case nsIDataType::VTYPE_DOMSTRING:
+        {
+            nsAutoString value;
+            aIn->GetAsAString(value);
+            aOut->vt = VT_BSTR;
+            aOut->bstrVal = SysAllocString(value.get());
+        }
+        break;
+
+    case nsIDataType::VTYPE_CSTRING:
+        {
+            nsCAutoString value;
+            aIn->GetAsACString(value);
+            nsAutoString valueWide; valueWide.AssignWithConversion(value.get());
+            aOut->vt = VT_BSTR;
+            aOut->bstrVal = SysAllocString(valueWide.get());
+        }
+        break;
+    case nsIDataType::VTYPE_UTF8STRING:
+        {
+            nsCAutoString value;
+            aIn->GetAsAUTF8String(value);
+            nsAutoString valueWide; valueWide.AssignWithConversion(value.get());
+            aOut->vt = VT_BSTR;
+            aOut->bstrVal = SysAllocString(valueWide.get());
+        }
 
     // Unsupported types
     default:
@@ -292,14 +350,9 @@ nsScriptablePeer::ConvertVariants(nsIVariant *aIn, VARIANT *aOut)
     case nsIDataType::VTYPE_UINT64:
     case nsIDataType::VTYPE_VOID:
     case nsIDataType::VTYPE_ID:
-    case nsIDataType::VTYPE_CHAR_STR:
-    case nsIDataType::VTYPE_WCHAR_STR:
     case nsIDataType::VTYPE_INTERFACE:
     case nsIDataType::VTYPE_INTERFACE_IS:
     case nsIDataType::VTYPE_ARRAY:
-    case nsIDataType::VTYPE_STRING_SIZE_IS:
-    case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-    case nsIDataType::VTYPE_UTF8STRING:
     case nsIDataType::VTYPE_EMPTY_ARRAY:
         return E_INVALIDARG;
     }
@@ -315,10 +368,53 @@ nsScriptablePeer::ConvertVariants(VARIANT *aIn, nsIVariant **aOut)
         return NS_ERROR_INVALID_ARG;
     }
 
-    nsresult rv;
-    nsCOMPtr<nsIWritableVariant> v = do_CreateInstance("@mozilla.org/variant;1", &rv); 
+    *aOut = nsnull;
 
-    return E_NOTIMPL;
+    nsresult rv;
+    nsCOMPtr<nsIWritableVariant> v = do_CreateInstance("@mozilla.org/variant;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    switch (aIn->vt)
+    {
+    case VT_EMPTY:
+        v->SetAsEmpty();
+        break;
+    case VT_BSTR:
+        v->SetAsWString(aIn->bstrVal);
+        break;
+    case VT_I1:
+        v->SetAsInt8(aIn->cVal);
+        break;
+    case VT_I2:
+        v->SetAsInt16(aIn->iVal);
+        break;
+    case VT_I4:
+        v->SetAsInt32(aIn->lVal);
+        break;
+    case VT_UI1:
+        v->SetAsUint8(aIn->bVal);
+        break;
+    case VT_UI2:
+        v->SetAsUint16(aIn->uiVal);
+        break;
+    case VT_UI4:
+        v->SetAsUint32(aIn->ulVal);
+        break;
+    case VT_BOOL:
+        v->SetAsBool(aIn->boolVal == VARIANT_TRUE ? PR_TRUE : PR_FALSE);
+        break;
+    case VT_R4:
+        v->SetAsFloat(aIn->fltVal);
+        break;
+    case VT_R8:
+        v->SetAsDouble(aIn->dblVal);
+        break;
+    }
+
+    *aOut = v;
+    NS_ADDREF(*aOut);
+
+    return NS_OK;
 } 
 
 NS_IMETHODIMP
@@ -489,75 +585,43 @@ nsScriptablePeer::Invoke4(const char *aMethod, nsIVariant *a, nsIVariant *b, nsI
 NS_IMETHODIMP 
 nsScriptablePeer::GetProperty(const char *propertyName, nsIVariant **_retval)
 {
-/*    HRESULT hr;
+    HRESULT hr;
     DISPID dispid;
-    //VARIANT VarResult;
-    _variant_t VarResult;
-    //char* propertyValue;
-    IDispatch FAR* pdisp = (IDispatch FAR*)NULL;
-    const char* property = propertyName;
-    PluginInstanceData *pData = mPlugin;
-    if (pData == NULL) { 
-        return NPERR_INVALID_INSTANCE_ERROR;
-    }
-    IUnknown FAR* punk;
-    hr = pData->pControlSite->GetControlUnknown(&punk);
-    if (FAILED(hr)) { return NULL; }
-    punk->AddRef();
-    hr = punk->QueryInterface(IID_IDispatch,(void FAR* FAR*)&pdisp);
-    if (FAILED(hr)) { 
-        punk->Release();
+    IDispatchPtr disp;
+    if (FAILED(GetIDispatch(&disp)))
+    {
         return NPERR_GENERIC_ERROR; 
     }
     USES_CONVERSION;
-    OLECHAR FAR* szMember = A2OLE(property);
-    hr = pdisp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
-    if (FAILED(hr)) { 
-        punk->Release();
+    OLECHAR FAR* szMember = A2OLE(propertyName);
+    hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
+    if (FAILED(hr))
+    { 
         return NPERR_GENERIC_ERROR;
     }
+
+    DISPID dispIdPut = DISPID_PROPERTYPUT;
+    _variant_t vResult;
+    
     DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
-    hr = pdisp->Invoke(
+    hr = disp->Invoke(
         dispid,
         IID_NULL,
         LOCALE_USER_DEFAULT,
         DISPATCH_PROPERTYGET,
-        &dispparamsNoArgs, &VarResult, NULL, NULL);
-    if (FAILED(hr)) { 
+        &dispparamsNoArgs, &vResult, NULL, NULL);
+    
+    if (FAILED(hr))
+    { 
         return NPERR_GENERIC_ERROR;
     }
-	punk->Release();
-    
-    char* tempStr;
-    switch(VarResult.vt & VT_TYPEMASK) {
-    case VT_BSTR:    
-        tempStr = OLE2A(VarResult.bstrVal);
-        if(!_retval) return NS_ERROR_NULL_POINTER;
-        *_retval = (char*) nsMemory::Alloc(strlen(tempStr) + 1);
-        if (! *_retval) return NS_ERROR_NULL_POINTER;
-        if (VarResult.bstrVal == NULL) {
-            *_retval = NULL;
-        } else {
-            strcpy(*_retval, tempStr);
-        }
-        break;
-//  case VT_I2:
-    default:
-        VarResult.ChangeType(VT_BSTR);
-        tempStr = OLE2A(VarResult.bstrVal);
-        if(!_retval) return NS_ERROR_NULL_POINTER;
-        *_retval = (char*) nsMemory::Alloc(strlen(tempStr) + 1);
-        if (! *_retval) return NS_ERROR_NULL_POINTER;
-        if (VarResult.bstrVal == NULL) {
-            *_retval = NULL;
-        } else {
-            strcpy(*_retval, tempStr);
-        }
-        break;
-    } */
 
-    // caller will be responsible for any memory allocated.
-	return NS_OK;
+    nsCOMPtr<nsIVariant> propertyValue;
+    ConvertVariants(&vResult, getter_AddRefs(propertyValue));
+    *_retval = propertyValue;
+    NS_IF_ADDREF(*_retval);
+
+    return NS_OK;
 }
 
 /* void setProperty (in string propertyName, in string propertyValue); */
