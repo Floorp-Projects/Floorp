@@ -316,6 +316,7 @@ extern nsresult NS_NewPositionedInlineFrame(nsIFrame** aNewFrame);
 extern nsresult NS_NewObjectFrame(nsIFrame** aFrameResult);
 extern nsresult NS_NewSpacerFrame(nsIFrame** aResult);
 extern nsresult NS_NewTextFrame(nsIFrame** aResult);
+extern nsresult NS_NewContinuingTextFrame(nsIFrame** aResult);
 extern nsresult NS_NewEmptyFrame(nsIFrame** aResult);
 inline nsresult NS_NewWBRFrame(nsIFrame** aResult) {
   return NS_NewEmptyFrame(aResult);

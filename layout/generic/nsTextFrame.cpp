@@ -258,7 +258,7 @@ void nsBlinkTimer::Notify(nsITimer *timer)
 
 //----------------------------------------------------------------------
 
-class nsTextFrame : public nsSplittableFrame {
+class nsTextFrame : public nsFrame {
 public:
   nsTextFrame();
 
@@ -275,6 +275,20 @@ public:
   NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
                             nsIContent*     aChild,
                             nsISupports*    aSubContent);
+
+  NS_IMETHOD GetNextInFlow(nsIFrame** aNextInFlow) const {
+    *aNextInFlow = mNextInFlow;
+    return NS_OK;
+  }
+  NS_IMETHOD SetNextInFlow(nsIFrame* aNextInFlow) {
+    mNextInFlow = aNextInFlow;
+    return NS_OK;
+  }
+  
+  NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const {
+    aIsSplittable = NS_FRAME_SPLITTABLE;
+    return NS_OK;
+  }
 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
@@ -505,10 +519,68 @@ public:
 protected:
   virtual ~nsTextFrame();
 
-  PRInt32 mContentOffset;
-  PRInt32 mContentLength;
-  PRInt32 mColumn;
+  nsIFrame* mNextInFlow;
+  PRInt32   mContentOffset;
+  PRInt32   mContentLength;
+  PRInt32   mColumn;
 };
+
+class nsContinuingTextFrame : public nsTextFrame {
+public:
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD GetPrevInFlow(nsIFrame** aPrevInFlow) const {
+    *aPrevInFlow = mPrevInFlow;
+    return NS_OK;
+  }
+  NS_IMETHOD SetPrevInFlow(nsIFrame* aPrevInFlow) {
+    mPrevInFlow = aPrevInFlow;
+    return NS_OK;
+  }
+
+#ifdef DEBUG
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
+
+protected:
+  nsIFrame* mPrevInFlow;
+};
+
+NS_IMETHODIMP
+nsContinuingTextFrame::Init(nsIPresContext&  aPresContext,
+                            nsIContent*      aContent,
+                            nsIFrame*        aParent,
+                            nsIStyleContext* aContext,
+                            nsIFrame*        aPrevInFlow)
+{
+  nsresult  rv;
+  
+  rv = nsTextFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+  if (aPrevInFlow) {
+    // Hook the frame into the flow
+    mPrevInFlow = aPrevInFlow;
+    aPrevInFlow->SetNextInFlow(this);
+  }
+
+  return rv;
+}
+
+#ifdef DEBUG
+NS_IMETHODIMP
+nsContinuingTextFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = sizeof(*this);
+  return NS_OK;
+}
+#endif
 
 // Flag information used by rendering code. This information is
 // computed by the ResizeReflow code. The flags are stored in the
@@ -551,8 +623,22 @@ NS_NewTextFrame(nsIFrame** aNewFrame)
   return NS_OK;
 }
 
+nsresult
+NS_NewContinuingTextFrame(nsIFrame** aNewFrame)
+{
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsContinuingTextFrame* it = new nsContinuingTextFrame;
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  *aNewFrame = it;
+  return NS_OK;
+}
+
 nsTextFrame::nsTextFrame()
-  : nsSplittableFrame()
 {
   if (nsnull == gTextBlinker) {
     // Create text timer the first time out
@@ -609,6 +695,19 @@ nsTextFrame::GetCursor(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+static nsIFrame*
+GetLastInFlow(nsIFrame* aFrame)
+{
+  nsIFrame* lastInFlow;
+  nsIFrame* nextInFlow = aFrame;
+  while (nsnull!=nextInFlow)  {
+    lastInFlow = nextInFlow;
+    lastInFlow->GetNextInFlow(&nextInFlow);
+  }
+  NS_POSTCONDITION(nsnull!=lastInFlow, "illegal state in flow chain.");
+  return lastInFlow;
+}
+
 NS_IMETHODIMP
 nsTextFrame::ContentChanged(nsIPresContext* aPresContext,
                             nsIContent*     aChild,
@@ -624,7 +723,7 @@ nsTextFrame::ContentChanged(nsIPresContext* aPresContext,
       tccd->GetChangeType(&type);
       if (nsITextContentChangeData::Append == type) {
         markAllDirty = PR_FALSE;
-        nsTextFrame* frame = (nsTextFrame*) GetLastInFlow();
+        nsTextFrame* frame = (nsTextFrame*)::GetLastInFlow(this);
         frame->mState |= NS_FRAME_IS_DIRTY;
         targetTextFrame = frame;
       }
@@ -1687,7 +1786,9 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsTextFrame::FindTextRuns(nsLineLayout& aLineLayout)
 {
-  if (nsnull == mPrevInFlow) {
+  nsIFrame* prevInFlow;
+  GetPrevInFlow(&prevInFlow);
+  if (nsnull == prevInFlow) {
     aLineLayout.AddText(this);
   }
   return NS_OK;
@@ -1950,14 +2051,15 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
   }
   if (aSpread == eSpreadDown)
   {
-    nsIFrame *frame = GetPrevInFlow();
+    nsIFrame *frame;
+    GetPrevInFlow(&frame);
     while(frame){
       frame->SetSelected(aRange,aSelected,eSpreadNone);
       result = frame->GetPrevInFlow(&frame);
       if (NS_FAILED(result))
         break;
     }
-    frame = GetNextInFlow();
+    GetNextInFlow(&frame);
     while (frame){
       frame->SetSelected(aRange,aSelected,eSpreadNone);
       result = frame->GetNextInFlow(&frame);
@@ -2053,7 +2155,7 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
   {
     //this is not the frame we are looking for.
     nsIFrame *nextInFlow;
-    nextInFlow = GetNextInFlow();
+    GetNextInFlow(&nextInFlow);
     if (nextInFlow)
     {
       return nextInFlow->GetChildFrameContainingOffset(inContentOffset, inHint, outFrameContentOffset, outChildFrame);
@@ -2091,7 +2193,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
   }
   if (aPos->mStartOffset > (mContentOffset + mContentLength)){
     nsIFrame *nextInFlow;
-    nextInFlow = GetNextInFlow();
+    GetNextInFlow(&nextInFlow);
     if (!nextInFlow){
       NS_ASSERTION(PR_FALSE,"nsTextFrame::PeekOffset no more flow \n");
       return NS_ERROR_INVALID_ARG;
@@ -2174,7 +2276,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
         }
         if (i <0){
           found = PR_FALSE;
-          frameUsed = GetPrevInFlow();
+          GetPrevInFlow(&frameUsed);
           start = mContentOffset;
           aPos->mContentOffset = start;//in case next call fails we stop at this offset
         }
@@ -2193,7 +2295,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
 */
         if (i > mContentLength){
           found = PR_FALSE;
-          frameUsed = GetNextInFlow();
+          GetNextInFlow(&frameUsed);
           start = mContentOffset + mContentLength;
           aPos->mContentOffset = start;//in case next call fails we stop at this offset
         }
@@ -2310,7 +2412,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
           else if (!keepSearching) //we have found the "whole" word so just looking for WS
             aPos->mEatingWS = PR_TRUE;
         } 
-        frameUsed = GetNextInFlow();
+        GetNextInFlow(&frameUsed);
         start = 0;
       }
 #ifdef DEBUGWORDJUMP
@@ -2382,22 +2484,24 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
     nsCOMPtr<nsIDOMNode> startNode;
     nsCOMPtr<nsIDOMNode> endNode;
 
-    nsTextFrame *currentFrame = this;
-    nsTextFrame *prevFrame = (nsTextFrame *)GetPrevInFlow();
-
+    nsIFrame *currentFrame = this;
+    nsIFrame *prevFrame;
+     
+    GetPrevInFlow(&prevFrame);
     while(prevFrame){
       currentFrame = prevFrame;
-      prevFrame = (nsTextFrame *)currentFrame->GetPrevInFlow();
+      currentFrame->GetPrevInFlow(&prevFrame);
       if (NS_FAILED(rv))
         break;
     }
     prevFrame = currentFrame;
     currentFrame = this;
-    nsTextFrame *nextFrame = (nsTextFrame *)GetNextInFlow();
+    nsIFrame *nextFrame;
+    GetNextInFlow(&nextFrame);
 
     while (nextFrame){
       currentFrame = nextFrame;
-      nextFrame = (nsTextFrame *)currentFrame->GetNextInFlow();
+      currentFrame->GetNextInFlow(&nextFrame);
       if (NS_FAILED(rv))
         break;
     }
@@ -2544,8 +2648,11 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
 
   // Get starting offset into the content
   PRInt32 startingOffset = 0;
-  if (nsnull != mPrevInFlow) {
-    nsTextFrame* prev = (nsTextFrame*) mPrevInFlow;
+  nsIFrame* prevInFlow;
+
+  GetPrevInFlow(&prevInFlow);
+  if (nsnull != prevInFlow) {
+    nsTextFrame* prev = (nsTextFrame*)prevInFlow;
     startingOffset = prev->mContentOffset + prev->mContentLength;
 
     // If our starting offset doesn't agree with mContentOffset, then our
@@ -2617,8 +2724,8 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   // to true if we are part of a previous piece of text's word. This
   // is only valid for one pass through the measuring loop.
   PRBool inWord = lineLayout.InWord() ||
-    ((nsnull != mPrevInFlow) &&
-     (((nsTextFrame*)mPrevInFlow)->mState & TEXT_FIRST_LETTER));
+    ((nsnull != prevInFlow) &&
+     (((nsTextFrame*)prevInFlow)->mState & TEXT_FIRST_LETTER));
   if (inWord) {
     mState |= TEXT_IN_WORD;
   }
@@ -3289,8 +3396,10 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
   if (nsnull != mNextSibling) {
     fprintf(out, " next=%p", mNextSibling);
   }
-  if (nsnull != mPrevInFlow) {
-    fprintf(out, " prev-in-flow=%p", mPrevInFlow);
+  nsIFrame* prevInFlow;
+  GetPrevInFlow(&prevInFlow);
+  if (nsnull != prevInFlow) {
+    fprintf(out, " prev-in-flow=%p", prevInFlow);
   }
   if (nsnull != mNextInFlow) {
     fprintf(out, " next-in-flow=%p", mNextInFlow);
