@@ -228,6 +228,7 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 		{CS_IMAP4_UTF7,		CS_UTF8,		0, (CCCFunc)mz_imap4utf72utf8,	0},
 
  		{CS_MAC_ROMAN,		CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_SINGLEBYTE},
+ 		{CS_LATIN1,			CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_SINGLEBYTE},
  		{CS_MAC_CE,			CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_SINGLEBYTE},
  		{CS_MAC_CYRILLIC,	CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_SINGLEBYTE},
   		{CS_KOI8_R,			CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_SINGLEBYTE},
@@ -239,6 +240,7 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
  		{CS_GB_8BIT,	CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_CGK},
  
   		{CS_UTF8,		CS_MAC_ROMAN,	0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
+  		{CS_UTF8,		CS_LATIN1,	0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
  		{CS_UTF8,		CS_MAC_CE,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
  		{CS_UTF8,		CS_MAC_CYRILLIC,0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
   		{CS_UTF8,		CS_KOI8_R,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},

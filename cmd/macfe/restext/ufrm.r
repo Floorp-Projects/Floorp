@@ -77,6 +77,9 @@ resource 'UFRM' ( CS_MAC_GREEK, "macgreek.uf- CS_MAC_GREEK", purgeable) {{
 resource 'UFRM' ( CS_MAC_TURKISH, "macturki.uf- CS_MAC_TURKISH", purgeable) {{ 
 #include "macturki.uf"
 }};
+resource 'UFRM' ( CS_LATIN1, "8859-1.uf- CS_LATIN1", purgeable) {{ 
+#include "8859-1.uf"
+}};
 
 
 resource 'UTO '  ( RES_CS_MAC_ICELANDIC, "macicela.ut- RES_CS_MAC_ICELANDIC", purgeable) {{ 
@@ -114,6 +117,9 @@ resource 'UTO ' ( CS_MAC_GREEK, "macgreek.ut- CS_MAC_GREEK", purgeable) {{
 }};
 resource 'UTO ' ( CS_MAC_TURKISH, "macturki.ut- CS_MAC_TURKISH", purgeable) {{ 
 #include "macturki.ut"
+}};
+resource 'UTO ' ( CS_LATIN1, "8859-1.ut- CS_LATIN1", purgeable) {{ 
+#include "8859-1.ut"
 }};
 
 resource CSIDLIST_RESTYPE (CSIDLIST_RESID, "Roman/CE/Cy/Gr/J/TC/SC/K/Symbol/Dingbats/Tr", purgeable) {{
