@@ -47,8 +47,17 @@ enum nsPluginTagType {
     nsPluginTagType_Applet
 };
 
+#define NS_IPLUGINTAGINFO2_IID                       \
+{ /* 6a49c9a0-019b-11d2-815b-006008119d7a */         \
+    0x6a49c9a0,                                      \
+    0x019b,                                          \
+    0x11d2,                                          \
+    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
 class nsIPluginTagInfo2 : public nsIPluginTagInfo {
 public:
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGINTAGINFO2_IID)
 
     // QueryInterface on nsIPluginInstancePeer to get this.
 
@@ -106,14 +115,6 @@ public:
     GetUniqueID(PRUint32 *result) = 0;
 
 };
-
-#define NS_IPLUGINTAGINFO2_IID                       \
-{ /* 6a49c9a0-019b-11d2-815b-006008119d7a */         \
-    0x6a49c9a0,                                      \
-    0x019b,                                          \
-    0x11d2,                                          \
-    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

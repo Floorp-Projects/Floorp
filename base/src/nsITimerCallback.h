@@ -35,7 +35,9 @@ class nsITimer;
  */
 class nsITimerCallback : public nsISupports {
 public:  
-  virtual void Notify(nsITimer *timer)=0;
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITIMERCALLBACK_IID)
+
+  virtual void Notify(nsITimer *timer) = 0;
 };
 
 #endif

@@ -29,6 +29,7 @@
 struct nsIPluginInstanceOwner : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGININSTANCEOWNER_IID)
 
   /**
    * Let the owner know that an instance has been created
