@@ -65,7 +65,7 @@ MIME_CalendarCreateContentTypeHandlerClass(const char *content_type,
     return NULL;
 
   clazz->superclass = (MimeObjectClass *)COM_GetmimeInlineTextClass();
-  initStruct->force_inline_display = PR_FALSE;
+  initStruct->force_inline_display = PR_TRUE;
   return clazz;
 }
 
