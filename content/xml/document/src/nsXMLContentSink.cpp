@@ -1177,9 +1177,9 @@ nsXMLContentSink::GetElementFactory(PRInt32 aNameSpaceID,
 NS_IMETHODIMP 
 nsXMLContentSink::HandleStartElement(const PRUnichar *aName, 
                                      const PRUnichar **aAtts, 
-                                     const PRUint32 aAttsCount, 
-                                     const PRUint32 aIndex, 
-                                     const PRUint32 aLineNumber)
+                                     PRUint32 aAttsCount, 
+                                     PRUint32 aIndex, 
+                                     PRUint32 aLineNumber)
 {
   nsresult result = NS_OK;
   PRBool isHTML = PR_FALSE;

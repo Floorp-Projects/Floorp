@@ -188,9 +188,9 @@ nsXBLContentSink::FlushText(PRBool aCreateTextNode,
 NS_IMETHODIMP 
 nsXBLContentSink::HandleStartElement(const PRUnichar *aName, 
                                      const PRUnichar **aAtts, 
-                                     const PRUint32 aAttsCount, 
-                                     const PRUint32 aIndex, 
-                                     const PRUint32 aLineNumber)
+                                     PRUint32 aAttsCount, 
+                                     PRUint32 aIndex, 
+                                     PRUint32 aLineNumber)
 {
   nsresult rv = nsXMLContentSink::HandleStartElement(aName,aAtts,aAttsCount,aIndex,aLineNumber);
   if (NS_FAILED(rv))
