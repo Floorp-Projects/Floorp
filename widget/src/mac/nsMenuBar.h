@@ -59,8 +59,8 @@ class nsIDocument;
 
 namespace MenuHelpers
 {
-    // utility routine for getting a PresContext out of a webShell
-  nsresult WebShellToPresContext ( nsIWebShell* inWebShell, nsPresContext** outContext ) ;
+    // utility routine for getting a PresContext out of a docShell
+  nsresult DocShellToPresContext ( nsIDocShell* inDocShell, nsPresContext** outContext ) ;
 
     // utility routine for handling unicode->OS text conversions for setting the item
     // text in a menu.
@@ -98,7 +98,7 @@ public:
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, 
-                                 void* aDOMNode, void * aWebShell);
+                                 void* aDOMNode, void * aDocShell);
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
   nsEventStatus CheckRebuild(PRBool & aMenuEvent);
   nsEventStatus SetRebuild(PRBool aMenuEvent);
@@ -123,8 +123,8 @@ public:
     
 protected:
 
-  void GetDocument ( nsIWebShell* inWebShell, nsIDocument** outDocument ) ;
-  void RegisterAsDocumentObserver ( nsIWebShell* inWebShell ) ;
+  void GetDocument ( nsIDocShell* inDocShell, nsIDocument** outDocument ) ;
+  void RegisterAsDocumentObserver ( nsIDocShell* inDocShell ) ;
 
   nsHashtable           mObserverTable;   // stores observers for content change notification
   
@@ -135,7 +135,7 @@ protected:
 
   PRBool       mIsMenuBarAdded;
   
-  nsWeakPtr   mWebShellWeakRef;    // weak ref to webshell
+  nsWeakPtr   mDocShellWeakRef;    // weak ref to docshell
   nsIDocument *         mDocument;          // pointer to doc
 
   // Mac Specific

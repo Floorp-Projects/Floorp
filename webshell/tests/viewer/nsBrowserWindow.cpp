@@ -75,6 +75,7 @@
 #include "nsIDocumentViewer.h"
 #include "nsIContentViewer.h"
 #include "nsIContentViewerFile.h"
+#include "nsIContentViewerContainer.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIDocument.h"
@@ -800,13 +801,6 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
   case VIEW_SOURCE:
     {
-//      PRInt32 theIndex;
-//      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-//      webShell->GetHistoryIndex(theIndex);
-//      nsXPIDLString theURL;
-//      webShell->GetURL(theIndex, getter_Copies(theURL));
-//      nsAutoString theString(theURL);
-//      mApp->ViewSource(theString);
       //XXX Find out how the string is allocated, and perhaps delete it...
     }
     break;
@@ -1278,7 +1272,7 @@ nsBrowserWindow::~nsBrowserWindow()
   }
 }
 
-NS_IMPL_ISUPPORTS4(nsBrowserWindow, nsIBaseWindow, nsIInterfaceRequestor, nsIProgressEventSink, nsIWebShellContainer)
+NS_IMPL_ISUPPORTS3(nsBrowserWindow, nsIBaseWindow, nsIInterfaceRequestor, nsIProgressEventSink)
 
 nsresult
 nsBrowserWindow::GetInterface(const nsIID& aIID,
@@ -1352,8 +1346,6 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 
   mDocShell = do_GetInterface(mWebBrowser);
   mDocShell->SetAllowPlugins(aAllowPlugins);
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  webShell->SetContainer((nsIWebShellContainer*) this);
   webBrowserWin->SetVisibility(PR_TRUE);
 
   if (nsIWebBrowserChrome::CHROME_MENUBAR & aChromeMask) {
@@ -1424,8 +1416,6 @@ nsnull, r.x, r.y, r.width, r.height);
   webBrowserWin->Create();
   mDocShell = do_GetInterface(mWebBrowser);
   mDocShell->SetAllowPlugins(aAllowPlugins);
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  webShell->SetContainer((nsIWebShellContainer*) this);
   webBrowserWin->SetVisibility(PR_TRUE);
   if (nsIWebBrowserChrome::CHROME_MENUBAR & aChromeMask) {
     rv = CreateMenuBar(r.width);
@@ -1837,20 +1827,16 @@ nsBrowserWindow::GetChrome(PRUint32& aChromeMaskResult)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::GetWebShell(nsIWebShell*& aResult)
+nsBrowserWindow::GetDocShell(nsIDocShell*& aResult)
 {
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  aResult = webShell;
-  NS_IF_ADDREF(aResult);
+  NS_IF_ADDREF(aResult = mDocShell);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::GetContentWebShell(nsIWebShell **aResult)
+nsBrowserWindow::GetContentDocShell(nsIDocShell **aResult)
 {
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  *aResult = webShell;
-  NS_IF_ADDREF(*aResult);
+  NS_IF_ADDREF(*aResult = mDocShell);
   return NS_OK;
 }
 
@@ -1866,133 +1852,6 @@ nsBrowserWindow::ShowMenuBar(PRBool aShow)
 {
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsBrowserWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
-                             nsLoadType aReason)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::ProgressLoadURL(nsIWebShell* aShell,
-                                 const PRUnichar* aURL,
-                                 PRInt32 aProgress,
-                                 PRInt32 aProgressMax)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::EndLoadURL(nsIWebShell* aShell,
-                            const PRUnichar* aURL,
-                            nsresult aStatus)
-{  
-   return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsBrowserWindow::NewWebShell(PRUint32 aChromeMask,
-                             PRBool aVisible,
-                             nsIWebShell*& aNewWebShell)
-{
-  nsresult rv = NS_OK;
-
-  if (mWebCrawler) {
-    if (mWebCrawler->Crawling() || mWebCrawler->LoadingURLList()) {
-      // Do not fly javascript popups when we are crawling
-      aNewWebShell = nsnull;
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
-  }
-
-  // Create new window. By default, the refcnt will be 1 because of
-  // the registration of the browser window in gBrowsers.
-  nsNativeBrowserWindow* browser;
-  NS_NEWXPCOM(browser, nsNativeBrowserWindow);
-
-  if (nsnull != browser)
-  {
-    nsRect  bounds;
-    GetContentBounds(bounds);
-
-    browser->SetApp(mApp);
-
-    // Assume no controls for now
-    rv = browser->Init(mAppShell, bounds, aChromeMask, mAllowPlugins);
-    if (NS_OK == rv)
-    {
-      // Default is to startup hidden
-      if (aVisible) {
-        browser->SetVisibility(PR_TRUE);
-      }
-      nsIWebShell *shell;
-      rv = browser->GetWebShell(shell);
-      aNewWebShell = shell;
-    }
-    else
-    {
-      browser->Destroy();
-    }
-  }
-  else
-    rv = NS_ERROR_OUT_OF_MEMORY;
-
-  return rv;
-}
-
-
-NS_IMETHODIMP
-nsBrowserWindow::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
-{
-  PRInt32 i, n = gBrowsers ? gBrowsers->Count() : 0;
-
-  aResult = nsnull;
-  nsString aNameStr(aName);
-
-  for (i = 0; i < n; i++) {
-    nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers->ElementAt(i);
-    nsCOMPtr<nsIWebShell> webShell;
-    
-    if (NS_OK == bw->GetWebShell(*getter_AddRefs(webShell))) {
-      nsXPIDLString name;
-      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
-      if (NS_OK == docShellAsItem->GetName(getter_Copies(name))) {
-        if (aNameStr.Equals(name)) {
-          aResult = webShell;
-          NS_ADDREF(aResult);
-          return NS_OK;
-        }
-      }      
-
-      nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(mDocShell));
-
-      nsCOMPtr<nsIDocShellTreeItem> result;
-      if (NS_OK == docShellAsNode->FindChildWithName(aName, PR_TRUE, PR_FALSE, nsnull,
-         getter_AddRefs(result))) {
-        if (result) {
-          CallQueryInterface(result, &aResult);
-          return NS_OK;
-        }
-      }
-    }
-  }
-  return NS_OK;
-}
-
 
 //----------------------------------------
 

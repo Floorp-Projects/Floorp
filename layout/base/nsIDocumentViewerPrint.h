@@ -47,7 +47,6 @@ class nsIPresShell;
 class nsIDocument;
 class nsStyleSet;
 class nsIContent;
-class nsIWebShell;
 
 // {D0B7F354-D575-43fd-903D-5AA35A193EDA}
 #define NS_IDOCUMENT_VIEWER_PRINT_IID \

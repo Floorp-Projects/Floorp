@@ -40,7 +40,6 @@
 #include "nsGlobalWindow.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptContext.h"
-#include "nsIWebShell.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIWebNavigation.h"

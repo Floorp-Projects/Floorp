@@ -202,14 +202,13 @@ nsMenuBarX::SetRebuild(PRBool aNeedsRebuild)
 }
 
 void
-nsMenuBarX :: GetDocument ( nsIWebShell* inWebShell, nsIDocument** outDocument )
+nsMenuBarX :: GetDocument ( nsIDocShell* inDocShell, nsIDocument** outDocument )
 {
   *outDocument = nsnull;
   
-  nsCOMPtr<nsIDocShell> docShell ( do_QueryInterface(inWebShell) );
-  nsCOMPtr<nsIContentViewer> cv;
-  if ( docShell ) {
-    docShell->GetContentViewer(getter_AddRefs(cv));
+  if ( inDocShell ) {
+    nsCOMPtr<nsIContentViewer> cv;
+    inDocShell->GetContentViewer(getter_AddRefs(cv));
     if (cv) {
       // get the document
       nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
@@ -227,17 +226,17 @@ nsMenuBarX :: GetDocument ( nsIWebShell* inWebShell, nsIDocument** outDocument )
 // Name says it all.
 //
 void
-nsMenuBarX :: RegisterAsDocumentObserver ( nsIWebShell* inWebShell )
+nsMenuBarX :: RegisterAsDocumentObserver ( nsIDocShell* inDocShell )
 {
   nsCOMPtr<nsIDocument> doc;
-  GetDocument(inWebShell, getter_AddRefs(doc));
+  GetDocument(inDocShell, getter_AddRefs(doc));
   if (!doc)
     return;
 
   // register ourselves
   nsCOMPtr<nsIDocumentObserver> observer ( do_QueryInterface(NS_STATIC_CAST(nsIMenuBar*,this)) );
   doc->AddObserver(observer);
-  // also get pointer to doc, just in case webshell goes away
+  // also get pointer to doc, just in case docshell goes away
   // we can still remove ourself as doc observer directly from doc
   mDocument = doc;
 } // RegisterAsDocumentObesrver
@@ -415,7 +414,7 @@ nsMenuBarX :: ExecuteCommand ( nsIContent* inDispatchTo )
   if (!inDispatchTo)
     return nsEventStatus_eIgnore;
 
-  return MenuHelpersX::DispatchCommandTo(mWebShellWeakRef, inDispatchTo);
+  return MenuHelpersX::DispatchCommandTo(mDocShellWeakRef, inDispatchTo);
 } // ExecuteCommand
 
 
@@ -445,9 +444,9 @@ nsMenuBarX :: HideItem ( nsIDOMDocument* inDoc, const nsAString & inID, nsIConte
 
 nsEventStatus
 nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
-                            void * menubarNode, void * aWebShell )
+                            void * menubarNode, void * aDocShell )
 {
-  mWebShellWeakRef = do_GetWeakReference(NS_STATIC_CAST(nsIWebShell*, aWebShell));
+  mDocShellWeakRef = do_GetWeakReference(NS_STATIC_CAST(nsIDocShell*, aDocShell));
   nsIDOMNode* aDOMNode  = NS_STATIC_CAST(nsIDOMNode*, menubarNode);
   mMenuBarContent = do_QueryInterface(aDOMNode);           // strong ref
   NS_ASSERTION ( mMenuBarContent, "No content specified for this menubar" );
@@ -466,8 +465,8 @@ nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWin
   if ( err )
     return nsEventStatus_eIgnore;
 
-  nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
-  if (webShell) RegisterAsDocumentObserver(webShell);
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
+  if (docShell) RegisterAsDocumentObserver(docShell);
 
   // set this as a nsMenuListener on aParentWindow
   aParentWindow->AddMenuListener((nsIMenuListener *)this);
@@ -490,7 +489,7 @@ nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWin
         if ( pnsMenu ) {
           pnsMenu->Create(NS_STATIC_CAST(nsIMenuBar*, this), menuName, menuAccessKey, 
                           NS_STATIC_CAST(nsIChangeManager *, this), 
-                          NS_REINTERPRET_CAST(nsIWebShell*, aWebShell), menu);
+                          NS_REINTERPRET_CAST(nsIDocShell*, aDocShell), menu);
 
           // Make nsMenu a child of nsMenuBar. nsMenuBar takes ownership
           AddMenu(pnsMenu); 
@@ -935,25 +934,23 @@ nsMenuBarX :: Unregister ( PRUint32 inCommandID )
 
 
 //
-// WebShellToPresContext
+// DocShellToPresContext
 //
-// Helper to dig out a pres context from a webshell. A common thing to do before
+// Helper to dig out a pres context from a docshell. A common thing to do before
 // sending an event into the dom.
 //
 nsresult
-MenuHelpersX::WebShellToPresContext (nsIWebShell* inWebShell, nsPresContext** outContext )
+MenuHelpersX::DocShellToPresContext (nsIDocShell* inDocShell, nsPresContext** outContext )
 {
   NS_ENSURE_ARG_POINTER(outContext);
   *outContext = nsnull;
-  if (!inWebShell)
+  if (!inDocShell)
     return NS_ERROR_INVALID_ARG;
   
   nsresult retval = NS_OK;
   
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(inWebShell));
-
   nsCOMPtr<nsIContentViewer> contentViewer;
-  docShell->GetContentViewer(getter_AddRefs(contentViewer));
+  inDocShell->GetContentViewer(getter_AddRefs(contentViewer));
   if ( contentViewer ) {
     nsCOMPtr<nsIDocumentViewer> docViewer ( do_QueryInterface(contentViewer) );
     if ( docViewer )
@@ -966,19 +963,19 @@ MenuHelpersX::WebShellToPresContext (nsIWebShell* inWebShell, nsPresContext** ou
   
   return retval;
   
-} // WebShellToPresContext
+} // DocShellToPresContext
 
 nsEventStatus
-MenuHelpersX::DispatchCommandTo(nsIWeakReference* aWebShellWeakRef,
+MenuHelpersX::DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
                                 nsIContent* aTargetContent)
 {
   NS_PRECONDITION(aTargetContent, "null ptr");
 
-  nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(aWebShellWeakRef);
-  if (!webShell)
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(aDocShellWeakRef);
+  if (!docShell)
     return nsEventStatus_eConsumeNoDefault;
   nsCOMPtr<nsPresContext> presContext;
-  MenuHelpersX::WebShellToPresContext(webShell, getter_AddRefs(presContext));
+  MenuHelpersX::DocShellToPresContext(docShell, getter_AddRefs(presContext));
 
   nsEventStatus status = nsEventStatus_eConsumeNoDefault;
   nsMouseEvent event(NS_XUL_COMMAND);

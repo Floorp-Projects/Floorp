@@ -60,7 +60,6 @@
 #include "nsNetUtil.h"
 #include "nsIIOService.h"
 
-#include "nsIWebShell.h"
 #include "nsIPresShell.h"
 #include "nsIScriptContext.h"
 

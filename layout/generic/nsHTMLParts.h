@@ -54,7 +54,6 @@ class nsPresContext;
 class nsITextContent;
 class nsIURI;
 class nsString;
-class nsIWebShell;
 class nsIPresShell;
 class nsIChannel;
 

@@ -41,7 +41,7 @@
 #include "nsISupports.h"
 
 /* Forward declarations.... */
-class nsIWebShell;
+class nsIDocShell;
 class nsIWidget;
 class nsString;
 class nsIDOMWindowInternal; 
@@ -55,15 +55,18 @@ class nsIWebShellWindow : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IWEBSHELL_WINDOW_IID)
 
+  // XXXbz why do we need Show()?  This should probably inherit from
+  // nsIBaseWindow in a reasonable way and use nsIBaseWindow::SetVisibility
+  // (that's what it ends up doing anyway.....)
   NS_IMETHOD Show(PRBool aShow) = 0;
   NS_IMETHOD ShowModal() = 0;
   NS_IMETHOD Toolbar() = 0;
   NS_IMETHOD Close() = 0;
-  NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell) = 0;
-  NS_IMETHOD GetContentWebShell(nsIWebShell **aResult) = 0;
+  NS_IMETHOD GetDocShell(nsIDocShell *& aDocShell) = 0;
+  NS_IMETHOD GetContentDocShell(nsIDocShell **aResult) = 0;
   NS_IMETHOD GetWidget(nsIWidget *& aWidget) = 0;
   NS_IMETHOD GetDOMWindow(nsIDOMWindowInternal** aDOMWindow) = 0;
-  NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindowInternal** aDOMWindow) = 0;
+  NS_IMETHOD ConvertDocShellToDOMWindow(nsIDocShell* aShell, nsIDOMWindowInternal** aDOMWindow) = 0;
   NS_IMETHOD LockUntilChromeLoad() = 0;
   NS_IMETHOD GetLockedState(PRBool& aResult) = 0;
 

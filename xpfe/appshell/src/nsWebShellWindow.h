@@ -41,7 +41,6 @@
 #include "nsISupports.h"
 #include "nsIWebShellWindow.h"
 #include "nsGUIEvent.h"
-#include "nsIWebShell.h"  
 #include "nsIWebProgressListener.h"
 #include "nsIDocumentObserver.h"
 #include "nsVoidArray.h"
@@ -74,7 +73,6 @@ class nsVoidArray;
 
 class nsWebShellWindow : public nsXULWindow,
                          public nsIWebShellWindow,
-                         public nsIWebShellContainer,
                          public nsIWebProgressListener,
                          public nsIDocumentObserver
 
@@ -83,7 +81,7 @@ public:
   nsWebShellWindow();
 
   // nsISupports interface...
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD LockUntilChromeLoad() { mLockedUntilChromeLoad = PR_TRUE; return NS_OK; }
   NS_IMETHOD GetLockedState(PRBool& aResult) { aResult = mLockedUntilChromeLoad; return NS_OK; }
@@ -96,11 +94,11 @@ public:
   NS_IMETHOD ShowModal();
   NS_IMETHOD Toolbar();
   NS_IMETHOD Close();
-  NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell);
-  NS_IMETHOD GetContentWebShell(nsIWebShell **aResult);
+  NS_IMETHOD GetDocShell(nsIDocShell *& aWebShell);
+  NS_IMETHOD GetContentDocShell(nsIDocShell **aResult);
   NS_IMETHOD GetWidget(nsIWidget *& aWidget);
   NS_IMETHOD GetDOMWindow(nsIDOMWindowInternal** aDOMWindow);
-  NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindowInternal** aDOMWindow);
+  NS_IMETHOD ConvertDocShellToDOMWindow(nsIDocShell* aShell, nsIDOMWindowInternal** aDOMWindow);
   // nsWebShellWindow methods...
   nsresult Initialize(nsIXULWindow * aParent, nsIAppShell* aShell, nsIURI* aUrl,
                       PRBool aCreatedVisible, PRBool aLoadDefaultPage,
@@ -130,7 +128,7 @@ protected:
   NS_IMETHOD LoadMenuItem(nsIMenu * pParentMenu, nsIDOMElement * menuitemElement, nsIDOMNode * menuitemNode);
 #endif
 
-  nsCOMPtr<nsIDOMNode>     GetDOMNodeFromWebShell(nsIWebShell *aShell);
+  nsCOMPtr<nsIDOMNode>     GetDOMNodeFromDocShell(nsIDocShell *aShell);
   void                     ExecuteStartupCode();
   void                     LoadContentAreas();
   PRBool                   ExecuteCloseHandler();
@@ -139,7 +137,6 @@ protected:
 
   static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
-  nsIWebShell*            mWebShell;
   PRBool                  mLockedUntilChromeLoad;
   PRBool                  mLoadDefaultPage;
 

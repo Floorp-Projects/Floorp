@@ -40,7 +40,6 @@
 
 #include "nsError.h"
 #include "nsIWebShellServices.h"
-#include "nsIWebShell.h"
 #include "nsILinkHandler.h"
 #include "nsIClipboardCommands.h"
 #include "nsDocShell.h"
@@ -62,9 +61,11 @@ typedef enum {
 
 #define NS_ERROR_WEBSHELL_REQUEST_REJECTED  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL,1001)
 
+// Class ID for webshell
+#define NS_WEB_SHELL_CID \
+ { 0xa6cf9059, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+
 class nsWebShell : public nsDocShell,
-                   public nsIWebShell,
-                   public nsIWebShellContainer,
                    public nsIWebShellServices,
                    public nsILinkHandler,
                    public nsIClipboardCommands
@@ -80,16 +81,6 @@ public:
     NS_DECL_NSICLIPBOARDCOMMANDS
     NS_DECL_NSIWEBSHELLSERVICES
 
-    // nsIWebShell
-    NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
-    NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
-
-    // nsIWebShellContainer::GetContainer overrides an
-    // nsIDocumentLoader method, so redeclare and forward
-    NS_IMETHOD GetContainer(nsISupports** aContainer) {
-        return nsDocLoader::GetContainer(aContainer);
-    }
-    
     // nsILinkHandler
     NS_IMETHOD OnLinkClick(nsIContent* aContent,
         nsLinkVerb aVerb,
@@ -112,7 +103,6 @@ public:
     NS_IMETHOD GetLinkState(nsIURI* aLinkURI, nsLinkState& aState);
 
     NS_IMETHOD Create();
-    NS_IMETHOD Destroy();
 
   // nsWebShell
     nsresult GetEventQueue(nsIEventQueue **aQueue);
@@ -124,7 +114,6 @@ public:
     friend struct OnLinkClickEvent;
 
 protected:
-    // void GetRootWebShellEvenIfChrome(nsIWebShell** aResult);
     void InitFrameData();
 
     // helpers for executing commands
@@ -142,8 +131,6 @@ protected:
         nsresult aStatus);
 
     PRThread *mThread;
-
-    nsIWebShellContainer* mContainer;
 
     eCharsetReloadState mCharsetReloadState;
 

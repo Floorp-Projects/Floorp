@@ -63,8 +63,8 @@ class nsIDOMNode;
 
 namespace MenuHelpersX
 {
-    // utility routine for getting a PresContext out of a webShell
-  nsresult WebShellToPresContext ( nsIWebShell* inWebShell, nsPresContext** outContext ) ;
+    // utility routine for getting a PresContext out of a docShell
+  nsresult DocShellToPresContext ( nsIDocShell* inDocShell, nsPresContext** outContext ) ;
 
 }
 
@@ -95,7 +95,7 @@ public:
     nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
     nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
     nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, 
-                                void * menuNode, void * aWebShell);
+                                void * menuNode, void * aDocShell);
     nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
     nsEventStatus CheckRebuild(PRBool & aMenuEvent);
     nsEventStatus SetRebuild(PRBool aMenuEvent);
@@ -120,8 +120,8 @@ public:
     
 protected:
 
-    void GetDocument ( nsIWebShell* inWebShell, nsIDocument** outDocument ) ;
-    void RegisterAsDocumentObserver ( nsIWebShell* inWebShell ) ;
+    void GetDocument ( nsIDocShell* inDocShell, nsIDocument** outDocument ) ;
+    void RegisterAsDocumentObserver ( nsIDocShell* inDocShell ) ;
     
       // Make our menubar conform to Aqua UI guidelines
     void AquifyMenuBar ( ) ;
@@ -150,7 +150,7 @@ protected:
 
     PRBool                  mIsMenuBarAdded;
 
-    nsWeakPtr               mWebShellWeakRef;   // weak ref to webshell
+    nsWeakPtr               mDocShellWeakRef;   // weak ref to docshell
     nsIDocument*            mDocument;          // pointer to document
 
     MenuRef                 mRootMenu;          // root menu, representing entire menu bar.

@@ -94,11 +94,11 @@ nsMenuItemX::~nsMenuItemX()
 
 NS_METHOD nsMenuItemX::Create ( nsIMenu* aParent, const nsString & aLabel, PRBool aIsSeparator,
                                 EMenuItemType aItemType, PRBool aEnabled, 
-                                nsIChangeManager* aManager, nsIWebShell* aShell, nsIContent* aNode )
+                                nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode )
 {
   mContent = aNode;         // addref
   mMenuParent = aParent;    // weak
-  mWebShellWeakRef = do_GetWeakReference(aShell);
+  mDocShellWeakRef = do_GetWeakReference(aShell);
   
   mEnabled = aEnabled;
   mMenuType = aItemType;
@@ -222,7 +222,7 @@ nsEventStatus nsMenuItemX::MenuConstruct(
     const nsMenuEvent & aMenuEvent,
     nsIWidget         * aParentWindow, 
     void              * menuNode,
-    void              * aWebShell)
+    void              * aDocShell)
 {
     return nsEventStatus_eIgnore;
 }
@@ -255,10 +255,10 @@ nsEventStatus nsMenuItemX::SetRebuild(PRBool aNeedsRebuild)
 NS_METHOD nsMenuItemX::DoCommand()
 {
   nsCOMPtr<nsPresContext> presContext;
-  nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
-  if (!webShell)
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
+  if (!docShell)
     return nsEventStatus_eConsumeNoDefault;
-  MenuHelpersX::WebShellToPresContext(webShell, getter_AddRefs(presContext));
+  MenuHelpersX::DocShellToPresContext(docShell, getter_AddRefs(presContext));
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event(NS_XUL_COMMAND);

@@ -141,7 +141,6 @@
 
 /* Define Class IDs */
 static NS_DEFINE_CID(kWindowCID,           NS_WINDOW_CID);
-static NS_DEFINE_CID(kWebShellCID,         NS_WEB_SHELL_CID);
 
 #include "nsWidgetsCID.h"
 static NS_DEFINE_CID(kMenuBarCID,          NS_MENUBAR_CID);
@@ -153,8 +152,6 @@ static NS_DEFINE_CID(kMenuItemCID,         NS_MENUITEM_CID);
 #define DEBUG_MENUSDEL 1
 #endif
 
-#include "nsIWebShell.h"
-
 #define SIZE_PERSISTENCE_TIMEOUT 500 // msec
 
 struct ThreadedWindowEvent {
@@ -162,30 +159,8 @@ struct ThreadedWindowEvent {
   nsWebShellWindow  *window;
 };
 
-// The web shell info object is used to hold information about content areas that will
-// subsequently be filled in when we receive a webshell added notification.
-struct nsWebShellInfo {
-  nsString id; // The identifier of the iframe or frame node in the XUL tree.
-  PRBool   primary;   // whether it's considered a/the primary content
-  nsIWebShell* child; // The child web shell that will end up being used for the content area.
-
-  nsWebShellInfo(const nsString& anID, PRBool aPrimary, nsIWebShell* aChildShell)
-  {
-    id = anID; 
-    primary = aPrimary;
-    child = aChildShell;
-    NS_IF_ADDREF(aChildShell);
-  }
-
-  ~nsWebShellInfo()
-  {
-    NS_IF_RELEASE(child);
-  }
-};
-
 nsWebShellWindow::nsWebShellWindow() : nsXULWindow()
 {
-  mWebShell = nsnull;
   mWindow   = nsnull;
   mLockedUntilChromeLoad = PR_FALSE;
   mIntrinsicallySized = PR_FALSE;
@@ -197,12 +172,6 @@ nsWebShellWindow::nsWebShellWindow() : nsXULWindow()
 
 nsWebShellWindow::~nsWebShellWindow()
 {
-  if (nsnull != mWebShell) {
-    nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(mWebShell));
-    shellAsWin->Destroy();
-    NS_RELEASE(mWebShell);
-  }
-
   if (mWindow)
     mWindow->SetClientData(0);
   mWindow = nsnull; // Force release here.
@@ -216,19 +185,14 @@ nsWebShellWindow::~nsWebShellWindow()
   }
 }
 
-NS_IMPL_THREADSAFE_ADDREF(nsWebShellWindow)
-NS_IMPL_THREADSAFE_RELEASE(nsWebShellWindow)
+NS_IMPL_ADDREF_INHERITED(nsWebShellWindow, nsXULWindow)
+NS_IMPL_RELEASE_INHERITED(nsWebShellWindow, nsXULWindow)
 
 NS_INTERFACE_MAP_BEGIN(nsWebShellWindow)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebShellContainer)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellWindow)
-   NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
-   NS_INTERFACE_MAP_ENTRY(nsIXULWindow)
-   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
-   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END
+   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
+NS_INTERFACE_MAP_END_INHERITING(nsXULWindow)
 
 nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
                                       nsIAppShell* aShell, nsIURI* aUrl, 
@@ -284,17 +248,14 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   mWindow->SetBackgroundColor(NS_RGB(192,192,192));
 
   // Create web shell
-  mDocShell = do_CreateInstance(kWebShellCID);
+  mDocShell = do_CreateInstance("@mozilla.org/webshell;1");
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
-  CallQueryInterface(mDocShell, &mWebShell);
-  NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
 
   r.x = r.y = 0;
   nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
   NS_ENSURE_SUCCESS(docShellAsWin->InitWindow(nsnull, mWindow, 
    r.x, r.y, r.width, r.height), NS_ERROR_FAILURE);
   NS_ENSURE_SUCCESS(docShellAsWin->Create(), NS_ERROR_FAILURE);
-  mWebShell->SetContainer(this);
 
   // Attach a WebProgress listener.during initialization...
   nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(mDocShell, &rv));
@@ -380,7 +341,7 @@ nsEventStatus PR_CALLBACK
 nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 {
   nsEventStatus result = nsEventStatus_eIgnore;
-  nsIWebShell* webShell = nsnull;
+  nsIDocShell* docShell = nsnull;
   nsWebShellWindow *eventWindow = nsnull;
 
   // Get the WebShell instance...
@@ -390,14 +351,14 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
     aEvent->widget->GetClientData(data);
     if (data != nsnull) {
       eventWindow = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
-      webShell = eventWindow->mWebShell;
+      docShell = eventWindow->mDocShell;
     }
   }
 
-  if (nsnull != webShell) {
+  if (docShell) {
     switch(aEvent->message) {
       /*
-       * For size events, the WebShell must be resized to fill the entire
+       * For size events, the DocShell must be resized to fill the entire
        * client area of the window...
        */
       case NS_MOVE: {
@@ -409,7 +370,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
       case NS_SIZE: {
         PRBool chromeLock = PR_FALSE;
         nsSizeEvent* sizeEvent = (nsSizeEvent*)aEvent;
-        nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(webShell));
+        nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(docShell));
         shellAsWin->SetPositionAndSize(0, 0, sizeEvent->windowSize->width, 
           sizeEvent->windowSize->height, PR_FALSE);  
         // persist size, but not immediately, in case this OS is firing
@@ -453,7 +414,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         // the deactivation. Bug #82534
         if(modeEvent->mSizeMode == nsSizeMode_Minimized) {
           nsCOMPtr<nsIDOMWindowInternal> domWindow;
-          eventWindow->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
+          eventWindow->ConvertDocShellToDOMWindow(docShell, getter_AddRefs(domWindow));
           if (domWindow) {
             nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
             if(privateDOMWindow) {
@@ -508,14 +469,14 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         printf("nsWebShellWindow::NS_ACTIVATE\n");
 #endif
         nsCOMPtr<nsIDOMWindowInternal> domWindow;
-        eventWindow->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
+        eventWindow->ConvertDocShellToDOMWindow(docShell, getter_AddRefs(domWindow));
         /*
-        nsCOMPtr<nsIWebShell> contentShell;
-        eventWindow->GetContentWebShell(getter_AddRefs(contentShell));
+        nsCOMPtr<nsIDocShell> contentShell;
+        eventWindow->GetContentDocShell(getter_AddRefs(contentShell));
         if (contentShell) {
           
           if (NS_SUCCEEDED(eventWindow->
-              ConvertWebShellToDOMWindow(contentShell, getter_AddRefs(domWindow)))) {
+              ConvertDocShellToDOMWindow(contentShell, getter_AddRefs(domWindow)))) {
             if(domWindow){
               nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
               if(privateDOMWindow)
@@ -539,14 +500,14 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 #endif
 
         nsCOMPtr<nsIDOMWindowInternal> domWindow;
-        eventWindow->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
+        eventWindow->ConvertDocShellToDOMWindow(docShell, getter_AddRefs(domWindow));
         /*
-        nsCOMPtr<nsIWebShell> contentShell;
-        eventWindow->GetContentWebShell(getter_AddRefs(contentShell));
+        nsCOMPtr<nsIDocShell> contentShell;
+        eventWindow->GetContentDocShell(getter_AddRefs(contentShell));
         if (contentShell) {
           
           if (NS_SUCCEEDED(eventWindow->
-              ConvertWebShellToDOMWindow(contentShell, getter_AddRefs(domWindow)))) {
+              ConvertDocShellToDOMWindow(contentShell, getter_AddRefs(domWindow)))) {
             if(domWindow){
               nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
               if(privateDOMWindow)
@@ -574,7 +535,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 #endif
         nsCOMPtr<nsIDOMDocument> domDocument;
         nsCOMPtr<nsIDOMWindowInternal> domWindow;
-        eventWindow->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
+        eventWindow->ConvertDocShellToDOMWindow(docShell, getter_AddRefs(domWindow));
         nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(domWindow));
         if (!domWindow) {
           break;
@@ -944,7 +905,7 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
 
         //fake event
         nsMenuEvent fake;
-        menuListener->MenuConstruct(fake, aParentWindow, menubarNode, mWebShell);
+        menuListener->MenuConstruct(fake, aParentWindow, menubarNode, mDocShell);
 
         // Parent should own menubar now
         NS_RELEASE(pnsMenuBar);
@@ -1069,7 +1030,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
 
 //------------------------------------------------------------------------------
 NS_IMETHODIMP
-nsWebShellWindow::ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindowInternal** aDOMWindow)
+nsWebShellWindow::ConvertDocShellToDOMWindow(nsIDocShell* aShell, nsIDOMWindowInternal** aDOMWindow)
 {
   nsCOMPtr<nsIScriptGlobalObjectOwner> globalObjectOwner(do_QueryInterface(aShell));
   NS_ENSURE_TRUE(globalObjectOwner, NS_ERROR_FAILURE);
@@ -1102,10 +1063,9 @@ nsWebShellWindow::ShowModal()
 
 /* return the main, outermost webshell in this window */
 NS_IMETHODIMP 
-nsWebShellWindow::GetWebShell(nsIWebShell *& aWebShell)
+nsWebShellWindow::GetDocShell(nsIDocShell *& aDocShell)
 {
-  aWebShell = mWebShell;
-  NS_ADDREF(mWebShell);
+  NS_ADDREF(aDocShell = mDocShell);
   return NS_OK;
 }
 
@@ -1120,7 +1080,7 @@ nsWebShellWindow::GetWebShell(nsIWebShell *& aWebShell)
    nondeterministic, and it seems dangerous to set a precedent like that.
 */
 NS_IMETHODIMP
-nsWebShellWindow::GetContentWebShell(nsIWebShell **aResult)
+nsWebShellWindow::GetContentDocShell(nsIDocShell **aResult)
 {
    *aResult = nsnull;
    nsCOMPtr<nsIDocShellTreeItem> content;
@@ -1144,7 +1104,7 @@ nsWebShellWindow::GetWidget(nsIWidget *& aWidget)
 NS_IMETHODIMP
 nsWebShellWindow::GetDOMWindow(nsIDOMWindowInternal** aDOMWindow)
 {
-   return ConvertWebShellToDOMWindow(mWebShell, aDOMWindow);
+   return ConvertDocShellToDOMWindow(mDocShell, aDOMWindow);
 }
 
 void *
@@ -1357,18 +1317,18 @@ nsCOMPtr<nsIDOMNode> nsWebShellWindow::FindNamedDOMNode(const nsAString &aName, 
 } // nsWebShellWindow::FindNamedDOMNode
 
 //----------------------------------------
-nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsAString & aWebShellName)
+nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsAString & aDocShellName)
 {
   nsCOMPtr<nsIDOMDocument> domDoc; // result == nsnull;
 
   // first get the toolbar child docShell
   nsCOMPtr<nsIDocShell> childDocShell;
-  if (aWebShellName.EqualsLiteral("this")) { // XXX small kludge for code reused
+  if (aDocShellName.EqualsLiteral("this")) { // XXX small kludge for code reused
     childDocShell = mDocShell;
   } else {
     nsCOMPtr<nsIDocShellTreeItem> docShellAsItem;
     nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(mDocShell));
-    docShellAsNode->FindChildWithName(PromiseFlatString(aWebShellName).get(), 
+    docShellAsNode->FindChildWithName(PromiseFlatString(aDocShellName).get(), 
       PR_TRUE, PR_FALSE, nsnull, getter_AddRefs(docShellAsItem));
     childDocShell = do_QueryInterface(docShellAsItem);
     if (!childDocShell)
@@ -1446,7 +1406,7 @@ void nsWebShellWindow::LoadContentAreas() {
       searchSpec.Mid(contentURL, eqPos+1, endPos-eqPos-1);
       endPos++;
 
-      // see if we have a webshell with a matching contentAreaID
+      // see if we have a docshell with a matching contentAreaID
       nsCOMPtr<nsIDocShellTreeItem> content;
       rv = GetContentShellById(contentAreaID.get(), getter_AddRefs(content));
       if (NS_SUCCEEDED(rv) && content) {
@@ -1482,7 +1442,7 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
      than it otherwise would.) */
   nsCOMPtr<nsIWebShellWindow> kungFuDeathGrip(this);
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(mWebShell));
+  nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(mDocShell));
 
   if (globalObject) {
     nsCOMPtr<nsIContentViewer> contentViewer;

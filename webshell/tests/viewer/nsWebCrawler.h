@@ -165,7 +165,7 @@ protected:
   /** generate an output name from a URL */
   FILE* GetOutputFile(nsIURI *aURL, nsString& aOutputName);
 
-  nsIPresShell* GetPresShell(nsIWebShell* aWebShell = nsnull);
+  already_AddRefed<nsIPresShell> GetPresShell(nsIDocShell* aDocShell = nsnull);
 
   void PerformRegressionTest(const nsString& aOutputName);
 

@@ -180,7 +180,6 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "nsINodeInfo.h"
 #include "nsIDocument.h"
 #include "nsHTMLAtoms.h"
-#include "nsIWebShell.h"
 
 //focus
 #include "nsIDOMEventReceiver.h"

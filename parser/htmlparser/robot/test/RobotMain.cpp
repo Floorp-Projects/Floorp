@@ -1,9 +1,12 @@
 #include "nsXPCOM.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
-class nsIWebShell;
+class nsIDocShell;
 
-extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList, nsIWebShell * ww);
+//XXXbz is this even used?  There is no DebugRobot() with this
+//signature in the tree!
+
+extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList, nsIDocShell * ww);
 
 int main(int argc, char **argv)
 {

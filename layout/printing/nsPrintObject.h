@@ -45,7 +45,6 @@
 #include "nsIPresShell.h"
 #include "nsStyleSet.h"
 #include "nsIViewManager.h"
-#include "nsIWebShell.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsIWidget.h"
@@ -67,13 +66,12 @@ public:
   ~nsPrintObject(); // non-virtual
 
   // Methods
-  nsresult Init(nsIWebShell* aWebShell);
+  nsresult Init(nsIDocShell* aDocShell);
 
   PRBool IsPrintable()  { return !mDontPrint; }
   void   DestroyPresentation();
 
   // Data Members
-  nsCOMPtr<nsIWebShell>    mWebShell;
   nsCOMPtr<nsIDocShell>    mDocShell;
   nsCOMPtr<nsIPresShell>   mDisplayPresShell;
   nsCOMPtr<nsPresContext> mDisplayPresContext;

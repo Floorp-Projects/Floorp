@@ -52,6 +52,7 @@
 #include "nsIDocumentViewer.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIContentViewerContainer.h"
 
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"

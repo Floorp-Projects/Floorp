@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDocShell.h"
-#include "nsIWebShell.h"
 #include "nsWebShell.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIInterfaceRequestor.h"
@@ -191,7 +190,6 @@ nsWebShell::~nsWebShell()
 
   mContentViewer=nsnull;
   mDeviceContext=nsnull;
-  NS_IF_RELEASE(mContainer);
 
   if (mScriptGlobal) {
     mScriptGlobal->SetDocShell(nsnull);
@@ -247,9 +245,7 @@ NS_IMPL_ADDREF_INHERITED(nsWebShell, nsDocShell)
 NS_IMPL_RELEASE_INHERITED(nsWebShell, nsDocShell)
 
 NS_INTERFACE_MAP_BEGIN(nsWebShell)
-   NS_INTERFACE_MAP_ENTRY(nsIWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellServices)
-   NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
    NS_INTERFACE_MAP_ENTRY(nsILinkHandler)
    NS_INTERFACE_MAP_ENTRY(nsIClipboardCommands)
 NS_INTERFACE_MAP_END_INHERITING(nsDocShell)
@@ -270,24 +266,6 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
       }
 
    return nsDocShell::GetInterface(aIID, aInstancePtr);
-}
-
-NS_IMETHODIMP
-nsWebShell::SetContainer(nsIWebShellContainer* aContainer)
-{
-  NS_IF_RELEASE(mContainer);
-  mContainer = aContainer;
-  NS_IF_ADDREF(mContainer);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::GetContainer(nsIWebShellContainer*& aResult)
-{
-  aResult = mContainer;
-  NS_IF_ADDREF(mContainer);
-  return NS_OK;
 }
 
 nsEventStatus PR_CALLBACK
@@ -687,7 +665,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
   // someone is so very very rude as to bring this window down
   // during this load handler.
   //
-  nsCOMPtr<nsIWebShell> kungFuDeathGrip(this);
+  nsCOMPtr<nsIDocShell> kungFuDeathGrip(this);
   nsDocShell::EndPageLoad(aProgress, channel, aStatus);
 
   // Test if this is the top frame or a subframe
@@ -1139,15 +1117,6 @@ NS_IMETHODIMP nsWebShell::Create()
             ("nsWebShell::Init: this=%p", this));
 
   return nsDocShell::Create();
-}
-
-NS_IMETHODIMP nsWebShell::Destroy()
-{
-  nsDocShell::Destroy();
-
-  NS_IF_RELEASE(mContainer);
-
-  return NS_OK;
 }
 
 #ifdef DEBUG

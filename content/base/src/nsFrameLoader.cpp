@@ -55,7 +55,6 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIBaseWindow.h"
-#include "nsIWebShell.h"
 #include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIScriptGlobalObject.h"
@@ -502,6 +501,8 @@ nsFrameLoader::EnsureDocShell()
     parentAsNode->AddChild(docShellAsItem);
 
     if (isContent) {
+      // XXXbz why is this in content code, exactly?  We should handle
+      // this some other way.....
       nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
       parentAsItem->GetTreeOwner(getter_AddRefs(parentTreeOwner));
 
@@ -512,15 +513,6 @@ nsFrameLoader::EnsureDocShell()
         parentTreeOwner->ContentShellAdded(docShellAsItem, is_primary,
                                            value.get());
       }
-    }
-
-    // connect the container...
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-    nsCOMPtr<nsIWebShellContainer> outerContainer =
-      do_QueryInterface(parentAsWebNav);
-
-    if (outerContainer) {
-      webShell->SetContainer(outerContainer);
     }
 
     // Make sure all shells have links back to the content element

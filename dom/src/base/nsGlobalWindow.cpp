@@ -117,7 +117,6 @@
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebBrowserFind.h"  // For window.find()
-#include "nsIWebShell.h"
 #include "nsIWindowMediator.h"  // For window.find()
 #include "nsIComputedDOMStyle.h"
 #include "nsIEntropyCollector.h"
