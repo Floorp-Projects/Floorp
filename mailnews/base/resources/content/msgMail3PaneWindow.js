@@ -286,6 +286,8 @@ function OnUnloadMessenger()
 			messenger.SetWindow(null, null);
 		}
 	}
+
+  msgWindow.closeWindow();
 }
 
 
