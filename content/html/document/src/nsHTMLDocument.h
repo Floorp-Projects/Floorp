@@ -113,8 +113,6 @@ public:
 
   virtual nsICSSLoader* GetCSSLoader();
 
-  NS_IMETHOD SetReferrer(const nsAString& aReferrer);
-
   NS_IMETHOD GetCompatibilityMode(nsCompatibility& aMode);
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
 
@@ -255,10 +253,6 @@ protected:
 
   nsresult CreateAndAddWyciwygChannel(void);
   nsresult RemoveWyciwygChannel(void);
-
-  virtual void RetrieveRelevantHeaders(nsIChannel *aChannel);
-
-  nsString mReferrer;
 
   nsCOMPtr<nsIChannel>     mChannel;
   nsCOMPtr<nsIHttpChannel> mHttpChannel;
