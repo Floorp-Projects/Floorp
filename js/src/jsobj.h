@@ -168,10 +168,30 @@ struct JSObject {
      ? (void) LOCKED_OBJ_SET_SLOT(obj, slot, value)                           \
      : js_SetSlotThreadSafe(cx, obj, slot, value))
 
+/*
+ * If thread-safe, define an OBJ_GET_SLOT wrapper that bypasses, for a native
+ * object, the lock-free "fast path" test of (OBJ_SCOPE(obj)->ownercx == cx),
+ * to avoid needlessly switching from lock-free to lock-full scope when doing
+ * GC on a different context from the last one to own the scope.  The caller
+ * in this case is probably a JSClass.mark function, e.g., fun_mark, or maybe
+ * a finalizer.
+ *
+ * The GC runs only when all threads except the one on which the GC is active
+ * are suspended at GC-safe points, so there is no hazard in directly accessing
+ * obj->slots[slot] from the GC's thread, once rt->gcRunning has been set.  See
+ * jsgc.c for details.
+ */
+#define GC_AWARE_GET_SLOT(cx, obj, slot)                                      \
+    (OBJ_IS_NATIVE(obj) &&                                                    \
+     ((cx)->runtime->gcRunning && (cx)->runtime->gcThread == (cx)->thread)    \
+     ? (obj)->slots[slot]                                                     \
+     : OBJ_GET_SLOT(cx, obj, slot))
+
 #else   /* !JS_THREADSAFE */
 
 #define OBJ_GET_SLOT(cx,obj,slot)       LOCKED_OBJ_GET_SLOT(obj,slot)
 #define OBJ_SET_SLOT(cx,obj,slot,value) LOCKED_OBJ_SET_SLOT(obj,slot,value)
+#define GC_AWARE_GET_SLOT(cx,obj,slot)  LOCKED_OBJ_GET_SLOT(obj,slot)
 
 #endif /* !JS_THREADSAFE */
 

@@ -1778,8 +1778,15 @@ js_FinalizeObject(JSContext *cx, JSObject *obj)
     JS_ClearWatchPointsForObject(cx, obj);
 #endif
 
-    /* Finalize obj first, in case it needs map and slots. */
-    OBJ_GET_CLASS(cx, obj)->finalize(cx, obj);
+    /*
+     * Finalize obj first, in case it needs map and slots.  Optimized to use
+     * LOCKED_OBJ_GET_CLASS instead of OBJ_GET_CLASS, so we avoid "promoting"
+     * obj's scope from lock-free to lock-full (see jslock.c:ClaimScope) when
+     * we're called from the GC.  Only the GC should call js_FinalizeObject,
+     * and no other threads run JS (and possibly racing to update obj->slots)
+     * while the GC is running.
+     */
+    LOCKED_OBJ_GET_CLASS(obj)->finalize(cx, obj);
 
     /* Drop map and free slots. */
     js_DropObjectMap(cx, map, obj);
