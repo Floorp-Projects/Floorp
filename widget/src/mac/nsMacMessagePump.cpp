@@ -748,7 +748,17 @@ void	nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
 	partCode = ::FindWindow(anEvent.where, &whichWindow);
 	if (whichWindow == nil)
 		whichWindow = ::FrontWindow();
-	DispatchOSEventToRaptor(anEvent, whichWindow);
+
+	/* Disable mouse moved events for windowshaded windows -- this prevents tooltips
+	   from popping up in empty space.
+	*/
+#if TARGET_CARBON
+	if (!::IsWindowCollapsed(whichWindow))
+		DispatchOSEventToRaptor(anEvent, whichWindow);
+#else
+	if (!::EmptyRgn(((WindowRecord *) whichWindow)->contRgn))
+		DispatchOSEventToRaptor(anEvent, whichWindow);
+#endif
 }
 
 
@@ -910,24 +920,9 @@ PRBool	nsMacMessagePump::DispatchOSEventToRaptor(
 													EventRecord		&anEvent,
 													WindowPtr			aWindow)
 {
-	PRBool		handled = PR_FALSE;
-
-	if (mMessageSink->IsRaptorWindow(aWindow)) {
-		/* Suppress dispatch of events to windowshaded windows. This prevents some typical
-		   Mac application behaviour (select something, like, a bunch of bookmarks, collapse
-		   the window and hit delete -- this prevents the bookmarks' being deleted) and also
-		   some surprising behaviour (tooltips are otherwise active in a collapsed window).
-		*/
-#if TARGET_CARBON
-		if (!::IsWindowCollapsed(aWindow))
-			handled = mMessageSink->DispatchOSEvent(anEvent, aWindow);
-#else
-		if (!::EmptyRgn(((WindowRecord *) aWindow)->contRgn))
-			handled = mMessageSink->DispatchOSEvent(anEvent, aWindow);
-#endif
-	}
-
-	return handled;
+	if (mMessageSink->IsRaptorWindow(aWindow))
+		return mMessageSink->DispatchOSEvent(anEvent, aWindow);
+	return PR_FALSE;
 }
 
 
