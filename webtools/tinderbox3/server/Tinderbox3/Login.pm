@@ -34,7 +34,7 @@ sub login {
 sub delete_session {
   my ($dbh, $session_id) = @_;
   $dbh->do("DELETE FROM tbox_session WHERE session_id = ?", undef, $session_id);
-  $dbh->commit();
+  Tinderbox3::DB::maybe_commit($dbh);
 }
 
 sub check_session {
@@ -51,8 +51,11 @@ sub check_session {
       }
       my $new_session_id = time . "-" . int(rand()*100000) . "-" . $login;
       $dbh->do("INSERT INTO tbox_session (login, session_id, activity_time) VALUES (?, ?, " . Tinderbox3::DB::sql_current_timestamp() . ")", undef, $login, $new_session_id);
-      $dbh->commit();
-      $cookie = $p->cookie(-name => 'tbox_session', -value => $new_session_id);
+      Tinderbox3::DB::maybe_commit($dbh);
+      # Determine the path for the cookie
+      my $path = $p->url(-absolute => 1);
+      $path =~ s/\/[^\/]*$/\//g;
+      $cookie = $p->cookie(-name => 'tbox_session', -value => $new_session_id, -path => $path);
       $login_return = $login;
     }
   } elsif ($p->param('-logout') && $session_id) {
@@ -64,7 +67,7 @@ sub check_session {
         delete_session($dbh, $session_id);
       } else {
         $dbh->do("UPDATE tbox_session SET activity_time = " . Tinderbox3::DB::sql_current_timestamp() . " WHERE session_id = ?", undef, $session_id);
-        $dbh->commit();
+        Tinderbox3::DB::maybe_commit($dbh);
         $login_return = $row->[0];
       }
     }
