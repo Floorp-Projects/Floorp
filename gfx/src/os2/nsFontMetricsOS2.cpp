@@ -1357,6 +1357,8 @@ nsFontMetricsOS2::RealizeFont()
 
   FONTMETRICS fm;
   GFX (::GpiQueryFontMetrics (ps, sizeof (fm), &fm), FALSE);
+  /* Due to a bug in OS/2 MINCHO, need to cast lInternalLeading */
+  fm.lInternalLeading = (signed short)fm.lInternalLeading;
 
   float dev2app;
   mDeviceContext->GetDevUnitsToAppUnits(dev2app);
