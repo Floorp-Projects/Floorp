@@ -2873,7 +2873,7 @@ PRInt32 canRaster;
     }
     else {
       // windows NT
-      return PR_TRUE;
+      return PR_FALSE;
     }
   } else {
     return PR_FALSE;
