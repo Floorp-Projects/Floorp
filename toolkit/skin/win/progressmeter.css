@@ -67,11 +67,6 @@ progressmeter[mode="undetermined"] {
   background-color: ThreeDShadow;
 }
 
-.progress-bar[mode="undetermined"],
-.progress-remainder[mode="undetermined"] {
-  visibility: collapsed;
-}
-
 /* ::::: statusbar progressmeter ::::: */
 
 .progressmeter-statusbar {
