@@ -100,9 +100,9 @@ public:
 
   void RemoveReparentedView() { mReparentedView = nsnull; }
   void SetReparentedView(nsView* aView) { mReparentedView = aView; }
-  nsView* GetReparentedView() { return mReparentedView; }
+  nsView* GetReparentedView() const { return mReparentedView; }
 
-  virtual PRBool IsZPlaceholderView() { return PR_TRUE; }
+  virtual PRBool IsZPlaceholderView() const { return PR_TRUE; }
 
 protected:
   virtual ~nsZPlaceholderView() {
@@ -273,7 +273,7 @@ private:
   PRBool CreateDisplayList(nsView *aView,
                            PRBool aReparentedViewsPresent, DisplayZTreeNode* &aResult,
                            nscoord aOriginX, nscoord aOriginY,
-                           PRBool aInsideRealView, nsView *aRealView, const nsRect *aDamageRect,
+                           nsView *aRealView, const nsRect *aDamageRect,
                            nsView *aTopView, nscoord aX, nscoord aY,
                            PRBool aPaintFloats, PRBool aEventProcessing);
   PRBool AddToDisplayList(nsView *aView,
