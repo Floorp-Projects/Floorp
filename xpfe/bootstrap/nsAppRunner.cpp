@@ -98,6 +98,10 @@
 #include "nsTraceMalloc.h"
 #endif
 
+#if defined(DEBUG) && defined(XP_WIN32)
+#include <malloc.h>
+#endif
+
 #include "nsITimelineService.h"
 
 #if defined(DEBUG_sspitzer) || defined(DEBUG_seth) || defined(DEBUG_pra)
@@ -1526,6 +1530,14 @@ static PRBool GetWantSplashScreen(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
   NS_TIMELINE_MARK("enter main");
+
+#if defined(DEBUG) && defined(XP_WIN32)
+  // Disable small heap allocator to get heapwalk() giving us
+  // accurate heap numbers. Win2k non-debug does not use small heap allocator.
+  // Win2k debug seems to be still using it.
+  // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vclib/html/_crt__set_sbh_threshold.asp
+  _set_sbh_threshold(0);
+#endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
   InstallUnixSignalHandlers(argv[0]);
