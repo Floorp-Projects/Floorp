@@ -16,6 +16,12 @@
  * Reserved.
  */
 
+/* TODO:
+ *
+ *  + Remove all XXX's.
+ *
+ */
+
 #include "nsPrincipal.h"
 #include "nsPrivilegeManager.h"
 
@@ -23,6 +29,12 @@
 #include "xp_mem.h"
 #include "prmem.h"
 #include "zig.h"
+#include "secnav.h"
+
+#ifndef NO_SECURITY
+#include "navhook.h"
+#include "jarutil.h"
+#endif /* NO_SECURITY */
 
 /* XXX: Hack to determine the system principal */
 
@@ -33,6 +45,11 @@ PR_BEGIN_EXTERN_C
 #include "nsZip.h"
 #include "fe_proto.h"
 #include "nsLoadZig.h"
+
+static void destroyCertificates(nsVector* certArray);
+static nsVector* getTempCertificates(const unsigned char **certChain, 
+                                     PRUint32 *certChainLengths, 
+                                     PRUint32 noOfCerts);
 
 /* XXX: Create an error object with all arguments except errorText, instead pass error enum,
    This will be a method on caps consumer interface. */
@@ -135,6 +152,70 @@ PR_END_EXTERN_C
 /* XXX: end of hack to determine the system principal */
 
 
+static void destroyCertificates(nsVector* certArray) 
+{
+  if (certArray == NULL)
+    return;
+
+  for (PRUint32 i = certArray->GetSize(); i-- > 0; ) {
+    CERTCertificate *cert = (CERTCertificate *)certArray->Get(i);
+    if (cert != NULL) {
+      CERT_DestroyCertificate(cert);
+      certArray->Set(i, NULL);
+    }
+  }
+  delete certArray;
+}
+
+
+static nsVector* getTempCertificates(const unsigned char **certChain, 
+                                     PRUint32 *certChainLengths, 
+                                     PRUint32 noOfCerts)
+{
+#ifdef NO_SECURITY
+  return NULL;
+#else
+  CERTCertificate *cert;
+  CERTCertDBHandle *handle = CERT_GetDefaultCertDB();
+  SECStatus rv;
+
+  nsVector* certArray = new nsVector();
+  certArray->SetSize(noOfCerts, 1);
+  if (certArray == NULL) {
+    return NULL;
+  }
+
+  for (PRUint32 i = noOfCerts; i-- > 0; ) {
+    SECItem derCert;
+
+    derCert.data = (unsigned char *)certChain[i];
+    derCert.len = certChainLengths[i];
+
+    cert = CERT_NewTempCertificate(handle, &derCert, NULL,
+                                   PR_FALSE, PR_TRUE);
+       
+    if (cert != NULL) {
+      certArray->Set(i, (void*)cert);
+    } else {
+      // unable to add cert to the temp database
+      certArray->Set(i, NULL);
+    }
+  }
+
+  cert = (CERTCertificate *)certArray->Get(0);
+  rv = CERT_VerifyCert(handle, cert, PR_TRUE, 
+                       certUsageObjectSigner,
+                       PR_FALSE, NULL, NULL);
+  if (rv != SECSuccess) {
+     // Free the certificates and mark this principal as not trusted.
+     destroyCertificates(certArray);
+     return NULL;
+  }
+  return certArray;
+#endif /* NO_SECURITY */
+}
+
+
 //
 // 			PUBLIC METHODS 
 //
@@ -163,15 +244,9 @@ nsPrincipal::nsPrincipal(nsPrincipalType type,
 {
   /* We will store the signers certificate as the key */
   init(type, (void*)certChain[0], certChainLengths[0]);
-  for (PRUint32 i = noOfCerts; i < noOfCerts; i--) {
-    void* cert = (void*)certChain[i];
-    PRUint32 cert_len = certChainLengths[i];
-    /* 
-       SOB_ImportCert(cert, cert_len);
-       SOB_ValidateCert(cert, cert_len);
-       SOB_GetCertAttributes(cert, cert_len);
-    */
-  }
+  itsCertArray = getTempCertificates(certChain, 
+                                     certChainLengths, 
+                                     noOfCerts);
 }
 
 nsPrincipal::~nsPrincipal(void)
@@ -200,12 +275,30 @@ nsPrincipal::~nsPrincipal(void)
   if (itsNickname) {
     delete []itsNickname;
   }
+  if (itsCertArray) {
+    destroyCertificates(itsCertArray);
+  }
 }
+
 
 PRBool nsPrincipal::equals(nsPrincipal *prin)
 {
   if (prin == this) 
     return PR_TRUE;
+
+  /* Deal with CertChain principal specially */
+  if ((itsType == nsPrincipalType_CertChain) ||
+      (prin->itsType == nsPrincipalType_CertChain)) {
+    /* Because we have full certificate for the CertChain
+     * we will compare different attributes of the principal 
+     * and if all the attributes match, then we return TRUE
+     */
+    if ((XP_STRCMP(getSerialNo(), prin->getSerialNo()) == 0) &&
+        (XP_STRCMP(getSecAuth(), prin->getSecAuth()) == 0) &&
+        (XP_STRCMP(getExpDate(), prin->getExpDate()) == 0) &&
+        (XP_STRCMP(getFingerPrint(), prin->getFingerPrint()) == 0))
+      return PR_TRUE;
+  }
 
   if ((itsType != prin->itsType) ||
       (itsKeyLen != prin->itsKeyLen))
@@ -235,6 +328,7 @@ char * nsPrincipal::getVendor(void)
 }
 
 // XXX copyied from ns/lib/libjar/zig.h
+// RAMAN: Why??
 #ifndef ZIG_C_COMPANY
 #define ZIG_C_COMPANY   1
 #endif
@@ -319,12 +413,8 @@ char * nsPrincipal::getNickname(void)
     return "Classes for whom we don't the principal";
   }
 
-  if (nsPrincipalType_CertChain == itsType) {
-    /* XXX: We should get the first certificate's nickname */
-    return "Javasoft's principal";
-  }
-
-  if (nsPrincipalType_CertKey != itsType)
+  if ((nsPrincipalType_CertKey != itsType) ||
+      (nsPrincipalType_CertChain != itsType))
     return itsKey;
 
   if (itsNickname == NULL)
@@ -398,6 +488,16 @@ PRBool nsPrincipal::isSecurePrincipal(void)
 
   return PR_FALSE;
 }
+
+PRBool nsPrincipal::isTrustedCertChainPrincipal(void)
+{
+  /* We destroy the cert array if cert chain didn't verify */
+  if ((itsType != nsPrincipalType_CertChain) ||
+      (itsCertArray == NULL))
+    return PR_FALSE;
+  return PR_TRUE;
+}
+
 
 /* 
  * This method is introduced to check the whether a given url base 
@@ -565,6 +665,7 @@ void nsPrincipal::init(nsPrincipalType type, void * key, PRUint32 key_len)
   itsKeyLen = key_len;
   itsHashCode = computeHashCode();
   itsZig = NULL;
+  itsCertArray = NULL;
   itsString = NULL;
   itsCompanyName = NULL;
   itsCertAuth = NULL;
@@ -606,7 +707,9 @@ PRInt32 nsPrincipal::computeHashCode(void)
 char * nsPrincipal::saveCert(void)
 {
   int result;
-  /* XXX: Implement CertChain principal */
+  if (itsType == nsPrincipalType_CertChain) {
+    return NULL;
+  }
   if ((!itsZig) || (!itsKey)) {
     return NULL;
   }
@@ -632,8 +735,36 @@ nsPrincipal::getCertAttribute(int attrib)
     }
 
     if (itsType == nsPrincipalType_CertChain) {
-      /* XXX: Implement CertChain Principal */
-      return "Javasoft's cert chain principal";
+      char *attributeStr;
+      CERTCertificate *cert = (CERTCertificate *)itsCertArray->Get(0);
+      switch (attrib) {
+#ifndef NO_SECURITY
+      case ZIG_C_COMPANY:
+        attributeStr = SECNAV_GetJarCertInfo(cert, snjSubjectName);
+        break;
+      case ZIG_C_CA:
+        attributeStr = SECNAV_GetJarCertInfo(cert, snjIssuerName);
+        break;
+      case ZIG_C_SERIAL:
+        attributeStr = SECNAV_GetJarCertInfo(cert, snjSerialNumber);
+        break;
+      case ZIG_C_EXPIRES:
+        attributeStr = SECNAV_GetJarCertInfo(cert, snjExpirationDate);
+        break;
+      case ZIG_C_NICKNAME:
+        attributeStr = SECNAV_GetJarCertInfo(cert, snjNickname);
+        break;
+      case ZIG_C_FP:
+        attributeStr = SECNAV_GetJarCertInfo(cert, snjFingerprint);
+        break;
+#endif /* NO_SECURITY */
+      default:
+        return NULL;
+      }
+      attrStr = new char[strlen(attributeStr)+1];
+      XP_STRCPY(attrStr, attributeStr);
+      PR_FREEIF(attributeStr);
+      return attrStr;
     }
     
     if (SOB_cert_attribute(attrib, zig, 

@@ -42,7 +42,7 @@ nsCCertPrincipal::IsTrusted(char* scope, PRBool *pbIsTrusted)
       *pbIsTrusted = PR_FALSE;
       return NS_ERROR_ILLEGAL_VALUE;
    }
-   *pbIsTrusted = m_pNSPrincipal->isSecurePrincipal();
+   *pbIsTrusted = m_pNSPrincipal->isTrustedCertChainPrincipal();
    return NS_OK;
 }
      
@@ -183,7 +183,7 @@ nsCCertPrincipal::nsCCertPrincipal(const unsigned char **certChain,
                                    PRUint32 noOfCerts, 
                                    nsresult *result)
 {
-   m_pNSPrincipal = new nsPrincipal(nsPrincipalType_Cert, certChain, 
+   m_pNSPrincipal = new nsPrincipal(nsPrincipalType_CertChain, certChain, 
                                     certChainLengths, noOfCerts);
    if(m_pNSPrincipal == NULL)
    {
