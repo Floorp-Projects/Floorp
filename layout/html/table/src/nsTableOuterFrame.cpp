@@ -1273,9 +1273,23 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
   // pass along the reflow command to the inner table, requesting the same info in our flags
   nsHTMLReflowMetrics innerMet(aOuterMet.maxElementSize, aOuterMet.mFlags);
 
+  // If the incremental reflow command is a StyleChanged reflow and
+  // it's target is the current frame, then make sure we send
+  // StyleChange reflow reasons down to the children so that they
+  // don't over-optimize their reflow.
+  nsReflowReason ReflowReason = eReflowReason_Incremental;
+  nsIFrame* target = nsnull;
+  aOuterRS.reflowCommand->GetTarget(target);
+  if (this == target) {
+    nsIReflowCommand::ReflowType type;
+    aOuterRS.reflowCommand->GetType(type);
+    if (nsIReflowCommand::StyleChanged == type) {
+      ReflowReason = eReflowReason_StyleChange;
+    }
+  }
   nsresult rv = OuterReflowChild(aPresContext, mInnerTableFrame, aOuterRS, innerMet,
                                  nsnull, innerSize, innerMargin, innerMarginNoAuto, innerPadding,  
-                                 eReflowReason_Incremental, aStatus);
+                                 ReflowReason, aStatus);
   if (NS_FAILED(rv)) return rv;
 
   nsPoint  innerOrigin(0,0);
@@ -1298,9 +1312,12 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
       nscoord availWidth = GetCaptionAvailWidth(aPresContext, mCaptionFrame, aOuterRS,
                                                 &innerSize.width, &innerMarginNoAuto);
       nsReflowStatus capStatus; // don't let the caption cause incomplete
+      if (ReflowReason == eReflowReason_Incremental) {
+         ReflowReason = eReflowReason_Resize;
+      }
       rv = OuterReflowChild(aPresContext, mCaptionFrame, aOuterRS, captionMet, &availWidth,
                             captionSize, captionMargin, captionMarginNoAuto, 
-                            ignorePadding, eReflowReason_Resize, capStatus);
+                            ignorePadding, ReflowReason, capStatus);
       if (NS_FAILED(rv)) return rv;
 
       GetCaptionOrigin(aPresContext, captionSide, containSize, innerSize, 

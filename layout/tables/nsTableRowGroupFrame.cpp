@@ -411,8 +411,25 @@ nsTableRowGroupFrame::ReflowChildren(nsIPresContext*        aPresContext,
       // it wants. We'll deal with splitting later after we've computed the row
       // heights, taking into account cells with row spans...
       kidAvailSize.height = NS_UNCONSTRAINEDSIZE;
-      nsReflowReason reason = (frameState & NS_FRAME_FIRST_REFLOW) 
-                              ? eReflowReason_Initial : aReflowState.reason;
+      // If the incremental reflow command is a StyleChanged reflow and
+      // it's target is the current frame, then make sure we send
+      // StyleChange reflow reasons down to the children so that they
+      // don't over-optimize their reflow.
+      nsIFrame* target = nsnull;
+      nsReflowReason reason = aReflowState.reason;
+      if (eReflowReason_Incremental == aReflowState.reason) {
+        aReflowState.reflowState.reflowCommand->GetTarget(target);
+        if (this == target) {
+          nsIReflowCommand::ReflowType type;
+          aReflowState.reflowState.reflowCommand->GetType(type);
+          if (nsIReflowCommand::StyleChanged == type) {
+            reason = eReflowReason_StyleChange;
+          }
+        }
+      }
+      if (frameState & NS_FRAME_FIRST_REFLOW) {
+        reason = eReflowReason_Initial;
+      }
       nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState, kidFrame,
                                        kidAvailSize, reason);
      
@@ -1590,6 +1607,12 @@ nsTableRowGroupFrame::IR_StyleChanged(nsIPresContext*        aPresContext,
   // we presume that all the easy optimizations were done in the nsHTMLStyleSheet before we were called here
   // XXX: we can optimize this when we know which style attribute changed
   aReflowState.tableFrame->SetNeedStrategyInit(PR_TRUE);
+  nsRowGroupReflowState state(aReflowState);
+  nsTableRowFrame* firstRowReflowed;
+  rv = ReflowChildren(aPresContext, aDesiredSize, state, aStatus,
+                          nsnull, PR_FALSE, &firstRowReflowed);
+  CalculateRowHeights(aPresContext, aDesiredSize, aReflowState.reflowState, firstRowReflowed);
+      
   return rv;
 }
 
