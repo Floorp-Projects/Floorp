@@ -9,7 +9,7 @@ Content-Type: text/html; charset=ISO-8859-1
 <html lang="en">
  <head>
   <title>[% app.name %][% IF title != app.name %]: [% title %][% END %]</title>
-  <link rel="stylesheet" href="style">
+  <link rel="stylesheet" href="?command=showTemplate&amp;string=style">
 [% IF session.fields.settings.stylesheet != '' -%]
   <link rel="stylesheet" href="[% session.fields.settings.stylesheet | uri | html %]">
 [% END -%]
