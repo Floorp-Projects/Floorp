@@ -85,7 +85,6 @@ OBJS =                                 \
 LLIBS=                          \
  $(DIST)\lib\xpcom.lib          \
  $(DIST)\lib\baseembed_s.lib    \
- $(DIST)\lib\appfilelocprovider_s.lib \
  $(LIBNSPR)                     \
  $(NULL)
 
