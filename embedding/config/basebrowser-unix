@@ -27,7 +27,6 @@ libmozjs.so
 ; NGLayout Web Widget Control:
 ; 
 
-libwebshell.so 
 libgkgfx.so 
 libgtksuperwin.so 
 libgtkembedmoz.so 
