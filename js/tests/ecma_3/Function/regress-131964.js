@@ -56,7 +56,7 @@ var expectedvalues = [];
 status = inSection(1);
 function f()
 {
-  return 'f';
+  return 'f lives!';
 }
 delete f;
 
@@ -66,10 +66,10 @@ try
 }
 catch(e)
 {
-  actual = wasDeleted('f', 'global scope');
+  actual = 'f was deleted';
 }
 
-expect = 'f';
+expect = 'f lives!';
 addThis();
 
 
@@ -82,7 +82,7 @@ function g()
 {
   function f()
   {
-    return 'f';
+    return 'f lives!';
   }
   delete f;
 
@@ -92,10 +92,10 @@ function g()
   }
   catch(e)
   {
-    actual = wasDeleted('f', 'function scope');
+    actual = 'f was deleted';
   }
 
-  expect = 'f';
+  expect = 'f lives!';
   addThis();
 }
 g();
@@ -103,13 +103,13 @@ g();
 
 
 /*
- * Try the same test in eval scope - here we EXPECT the function to be deleted
+ * Try the same test in eval scope - here we EXPECT the function to be deleted (?)
  */
 status = inSection(3);
 var s = '';
 s += 'function h()';
 s += '{ ';
-s += '  return "h";';
+s += '  return "h lives!";';
 s += '}';
 s += 'delete h;';
 
@@ -119,22 +119,22 @@ s += '  actual = h();';
 s += '}';
 s += 'catch(e)';
 s += '{';
-s += '  actual = wasDeleted("h", "eval scope");';
+s += '  actual = "h was deleted";';
 s += '}';
 
-s += 'expect = wasDeleted("h", "eval scope");';
+s += 'expect = "h was deleted";';
 s += 'addThis();';
 eval(s);
 
 
 /*
- * Define the function in eval scope, delete it in global scope -
+ * Define the function in eval scope, but delete it in global scope -
  */
 status = inSection(4);
-var s = '';
+s = '';
 s += 'function k()';
 s += '{ ';
-s += '  return "k";';
+s += '  return "k lives!";';
 s += '}';
 eval(s);
 
@@ -144,12 +144,11 @@ try
 }
 catch(e)
 {
-  actual = wasDeleted("k", "eval scope");
+  actual = 'k was deleted';
 }
 
-expect = wasDeleted("k", "eval scope");
+expect = 'k was deleted';
 addThis();
-eval(s);
 
 
 
@@ -160,13 +159,9 @@ test();
 
 
 
-function wasDeleted(functionName, scopeName)
+function wasDeleted(functionName)
 {
-  var ret = '';
-  ret += 'function ' + functionName + '(), ';
-  ret += 'defined in ' + scopeName + ', ';
-  ret += 'was deleted...';
-  return ret;
+  return functionName + ' was deleted...';
 }
 
 
