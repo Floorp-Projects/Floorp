@@ -1,4 +1,5 @@
 tasksOverlay.css
+globalBindings.xml
 global.css
 commonDialog.css
 lessCols.gif
@@ -88,5 +89,7 @@ animthrob.gif
 animthrob_single.gif
 progressmeter-busy.gif
 wizardOverlay.css
-
-
+seltab-leftedge.gif
+seltab-rightedge.gif
+tab-leftedge.gif
+tab-rightedge.gif
