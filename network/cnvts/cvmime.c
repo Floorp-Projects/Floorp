@@ -52,6 +52,7 @@
 #include "intl_csi.h"
 
 
+#include "autoupdt.h"	/* autoupdate converters */
 #ifdef MOZ_SMARTUPDATE
 #include "softupdt.h"	/* software update converters */
 NET_StreamClass * autoupdate_Converter(FO_Present_Types format_out, void *data_object, URL_Struct *URL_s, MWContext *window_id);
@@ -628,15 +629,15 @@ net_RegisterDefaultDecoders (void)
   NET_RegisterContentTypeConverter("*", FO_CACHE_AND_ROBOTS_TXT, 
 									NULL, NET_CacheConverter);
 #endif /* CRAWLER */
+
 #ifdef MOZ_SMARTUPDATE
   NET_RegisterContentTypeConverter("*", FO_SOFTWARE_UPDATE, NULL, SU_NewStream);
   NET_RegisterContentTypeConverter(APPLICATION_JAVAARCHIVE, FO_PRESENT, NULL, SU_NewStream);
   NET_cdataCommit(APPLICATION_JAVAARCHIVE, ".jar");
+#endif
 
   NET_RegisterContentTypeConverter( "*", FO_CACHE_AND_AUTOUPDATE, NULL, NET_CacheConverter);
   NET_RegisterContentTypeConverter( "*", FO_AUTOUPDATE, NULL, autoupdate_Converter);
-
-#endif
 
 #ifndef MCC_PROXY
   NET_RegisterContentTypeConverter(APPLICATION_NS_PROXY_AUTOCONFIG,
