@@ -5650,7 +5650,7 @@ NET_DisplayCookieInfoAsHTML(MWContext * context)
     net_DisplayCookieInfoAsHTML(context, NULL);
 }
 
-#if 0
+
 #ifdef XP_MAC
 /* pinkerton - reset optimization state (see above) */
 #pragma global_optimizer reset
@@ -5658,8 +5658,8 @@ NET_DisplayCookieInfoAsHTML(MWContext * context)
 
 #else
 PUBLIC void
-NET_DisplayCookieInfoAsHTML(ActiveEntry *cur_entry)
+NET_DisplayCookieInfoAsHTML(MWContext * context)
 {
 }
 #endif
-#endif /* 0 */
+
