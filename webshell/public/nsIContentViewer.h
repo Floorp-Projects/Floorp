@@ -59,15 +59,17 @@ public:
 
   NS_IMETHOD GetContainer(nsIContentViewerContainer*& aContainerResult) = 0;
 
-  virtual nsRect GetBounds() = 0;
+  NS_IMETHOD Stop(void) = 0;
 
-  virtual void SetBounds(const nsRect& aBounds) = 0;
+  NS_IMETHOD GetBounds(nsRect& aBounds) = 0;
 
-  virtual void Move(PRInt32 aX, PRInt32 aY) = 0;
+  NS_IMETHOD SetBounds(const nsRect& aBounds) = 0;
 
-  virtual void Show() = 0;
+  NS_IMETHOD Move(PRInt32 aX, PRInt32 aY) = 0;
 
-  virtual void Hide() = 0;
+  NS_IMETHOD Show(void) = 0;
+
+  NS_IMETHOD Hide(void) = 0;
 
   NS_IMETHOD Print(void) = 0;
 };
