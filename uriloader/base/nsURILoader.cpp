@@ -18,6 +18,7 @@
 
 #include "nsURILoader.h"
 #include "nsIURIContentListener.h"
+#include "nsIContentHandler.h"
 #include "nsILoadGroup.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
@@ -146,6 +147,10 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIChannel * aChannel, nsISuppor
   return NS_OK;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Implementation of nsURILoader
+///////////////////////////////////////////////////////////////////////////////////////////////
+
 nsURILoader::nsURILoader()
 {
   NS_INIT_ISUPPORTS();
@@ -188,6 +193,20 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIURI *aURI,
                                    nsIURIContentListener *aContentListener,
                                    nsIURI *aReferringURI)
 {
+  return OpenURIVia(aURI, aCommand, aWindowTarget, aEventSinkGetter,
+                 aLoadGroup, aContext, aContentListener, aReferringURI, 0 /* ip address */);
+}
+
+NS_IMETHODIMP nsURILoader::OpenURIVia(nsIURI *aURI, 
+                                   const char * aCommand, 
+                                   const char * aWindowTarget,
+                                   nsIEventSinkGetter *aEventSinkGetter, 
+                                   nsILoadGroup * aLoadGroup,
+                                   nsISupports *aContext,
+                                   nsIURIContentListener *aContentListener,
+                                   nsIURI *aReferringURI,
+                                   const PRUint32 aLocalIP)
+{
   // we need to create a DocumentOpenInfo object which will go ahead and open the url
   // and discover the content type....
 
@@ -220,47 +239,63 @@ nsresult nsURILoader::DispatchContent(const char * aContentType,
   // (1) Give our uri content listener first crack at handling this content type.  
   nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIStreamListener> aContentStreamListener;
-  PRBool aAbortProcess = PR_FALSE;
-  if (aContentListener)
-    rv = aContentListener->DoContent(aContentType, aCommand, aWindowTarget, 
-                                             aChannel, getter_AddRefs(aContentStreamListener),
-                                             &aAbortProcess);
-
-  // the listener is doing all the work from here...we are done!!!
-  if (aAbortProcess) return rv;
-
-  // if we didn't get a content stream listener back...then iterate over our registered
-  // stream listeners until we can find one..
-
-  if (!aContentStreamListener)
+  nsCOMPtr<nsIURIContentListener> listenerToUse = aContentListener;
+  // find a content handler that can and will handle the content
+  PRBool canHandleContent = PR_FALSE;
+  if (listenerToUse)
+    listenerToUse->CanHandleContent(aContentType, aCommand, aWindowTarget, &canHandleContent);
+  if (!canHandleContent) // if it can't handle the content, scan through the list of registered listeners
   {
-    PRInt32 i = 0;
-    // keep looping until we are told to abort or we get a content listener back
-		for(i = 0; i < m_listeners->Count() && !aAbortProcess && !aContentStreamListener; i++)
-		{
-      aAbortProcess = PR_FALSE;
-			//nsIURIContentListener's aren't refcounted.
-			nsIURIContentListener * listener =(nsIURIContentListener*)m_listeners->ElementAt(i);
-      if (listener)
-        rv = listener->DoContent(aContentType, aCommand, aWindowTarget, 
-                                 aChannel, getter_AddRefs(aContentStreamListener),
-                                 &aAbortProcess);
-		}
-  }
+     PRInt32 i = 0;
+     // keep looping until we are told to abort or we get a content listener back
+     for(i = 0; i < m_listeners->Count() && !canHandleContent; i++)
+	   {
+	      //nsIURIContentListener's aren't refcounted.
+		    nsIURIContentListener * listener =(nsIURIContentListener*)m_listeners->ElementAt(i);
+        if (listener)
+         {
+            rv = listener->CanHandleContent(aContentType, aCommand, aWindowTarget, &canHandleContent);
+            if (canHandleContent)
+              listenerToUse = listener;
+         }
+    } // for loop
+  } // if we can't handle the content
 
-  // okay, all registered listeners have had a chance to handle this content...
-  // did one of them give us a stream listener back? if so, let's start reading data
-  // into it...
-  if (aContentStreamListener)
+
+  if (canHandleContent && listenerToUse)
   {
-      return aChannel->AsyncRead(0, -1, aCtxt, aContentStreamListener);
+      nsCOMPtr<nsIStreamListener> aContentStreamListener;
+      PRBool aAbortProcess = PR_FALSE;
+      rv = listenerToUse->DoContent(aContentType, aCommand, aWindowTarget, 
+                                    aChannel, getter_AddRefs(aContentStreamListener),
+                                    &aAbortProcess);
+
+      // the listener is doing all the work from here...we are done!!!
+      if (aAbortProcess) return rv;
+
+
+      // okay, all registered listeners have had a chance to handle this content...
+      // did one of them give us a stream listener back? if so, let's start reading data
+      // into it...
+      if (aContentStreamListener)
+      {
+        return aChannel->AsyncRead(0, -1, aCtxt, aContentStreamListener);
+      }
   }
 
   // no registered content listeners to handle this type!!! so go to the register 
   // and get a registered nsIContentHandler for our content type. Hand it off 
   // to them...
+  // eventually we want to hit up the category manager so we can allow people to
+  // over ride the default content type handlers....for now...i'm skipping that part.
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCAutoString handlerProgID (NS_CONTENT_HANDLER_PROGID_PREFIX);
+  handlerProgID += aContentType;
+  
+  nsCOMPtr<nsIContentHandler> aContentHandler;
+  rv = nsComponentManager::CreateInstance(handlerProgID, nsnull, NS_GET_IID(nsIContentHandler), getter_AddRefs(aContentHandler));
+  if (NS_SUCCEEDED(rv)) // we did indeed have a content handler for this type!! yippee...
+    rv = aContentHandler->HandleContent(aContentType, aCommand, aWindowTarget, aChannel);
+  return rv;
 }
 
