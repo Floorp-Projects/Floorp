@@ -394,7 +394,7 @@ nsresult nsHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsString& 
     if (!domDoc) return rv;  // should never happen
     
     PRInt32 encodingFlags = 0;
-    nsCOMPtr<nsILocalFile> filesFolder;
+    nsCOMPtr<nsIFile> filesFolder;
     
     if (!mContentType.Equals("text/plain")) {
       // Create a local directory in the same dir as our file.  It
