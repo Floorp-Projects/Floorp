@@ -100,9 +100,9 @@ function setHomePageToCurrentPage(folderFieldId)
 
 function prefClearGlobalHistory()
 {
-  var globalHistory = nsJSComponentManager.getService("@mozilla.org/browser/global-history;1", "nsIGlobalHistory");
+  var globalHistory = nsJSComponentManager.getService("@mozilla.org/browser/global-history;1", "nsIBrowserHistory");
   if (globalHistory)
-    globalHistory.RemoveAllPages();
+    globalHistory.removeAllPages();
 }
 
 function prefClearUrlbarHistory()
