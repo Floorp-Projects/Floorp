@@ -1374,7 +1374,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, nsIRegion *aRegion, PRUi
 NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags)
 {
   NS_PRECONDITION(nsnull != aView, "null view");
-  if (!mRefreshEnabled && 0 == mUpdateBatchCnt) {
+  if (!mRefreshEnabled) {
     // accumulate this rectangle in the view's dirty region, so we can process it later.
     AddRectToDirtyRegion(aView, aRect);
     ++mUpdateCnt;
@@ -1424,7 +1424,7 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
 
   if (nsnull != widgetView)
   {
-    if (0 == mUpdateCnt && 0 == mUpdateBatchCnt)
+    if (0 == mUpdateCnt)
       RestartTimer();
 
     mUpdateCnt++;
@@ -1453,22 +1453,19 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
 
     // See if we should do an immediate refresh or wait
 
-    if (0 == mUpdateBatchCnt)
+    if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE)
     {
-      if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE)
-      {
+      Composite();
+    }
+    else if ((mTrueFrameRate > 0) && !(aUpdateFlags & NS_VMREFRESH_NO_SYNC))
+    {
+      // or if a sync paint is allowed and it's time for the compositor to
+      // do a refresh
+
+      PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
+
+      if (deltams > (1000 / (PRInt32)mTrueFrameRate))
         Composite();
-      }
-      else if ((mTrueFrameRate > 0) && !(aUpdateFlags & NS_VMREFRESH_NO_SYNC))
-      {
-        // or if a sync paint is allowed and it's time for the compositor to
-        // do a refresh
-
-        PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
-
-        if (deltams > (1000 / (PRInt32)mTrueFrameRate))
-          Composite();
-      }
     }
   }
 
@@ -2273,12 +2270,18 @@ void nsViewManager :: UpdateTransCnt(nsIView *oldview, nsIView *newview)
 
 NS_IMETHODIMP nsViewManager :: DisableRefresh(void)
 {
+  if (mUpdateBatchCnt > 0)
+    return NS_OK;
+
   mRefreshEnabled = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager :: EnableRefresh(void)
 {
+  if (mUpdateBatchCnt > 0)
+    return NS_OK;
+
   mRefreshEnabled = PR_TRUE;
 
   if (mUpdateCnt > 0)
