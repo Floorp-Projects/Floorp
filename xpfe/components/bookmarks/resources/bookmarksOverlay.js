@@ -829,16 +829,6 @@ var BookmarksUtils = {
       title = url;
     }
 
-    const kPrefContractID = "@mozilla.org/preferences;1";
-    const kPrefIID = Components.interfaces.nsIPref;
-    const kPrefSvc = Components.classes[kPrefContractID].getService(kPrefIID);
-    try {
-      var temp = kPrefSvc.GetBoolPref("browser.bookmarks.add_without_dialog");
-      aShowDialog = !temp;
-    }
-    catch (e) {
-    }
-
     this.addBookmark(url, title, docCharset, aShowDialog);
   },
   
