@@ -109,6 +109,7 @@ nsresult nsOSHelperAppService::FindOSMimeInfoForType(const char * aMimeContentTy
      if (err == ERROR_SUCCESS)
      {
         LPBYTE pBytes = GetValueBytes( hKey, "Content Type");
+        LPBYTE pFileDescription = GetValueBytes(hKey, "");
 
         // create a new mime info object and initialize it if we don't have one already...
         if (!mimeInfo)
@@ -125,11 +126,25 @@ nsresult nsOSHelperAppService::FindOSMimeInfoForType(const char * aMimeContentTy
             else
               mimeInfo->AppendExtension(fileExtension);
 
-            mimeInfo->SetPreferredAction(nsIMIMEInfo::useHelperApp);
+            mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
+
+            // the following is just a test for right now...I'll find something useful out of the registry
+            // or just stuff the file executable here...
+            nsAutoString description;
+            description.AssignWithConversion((char *) pFileDescription);
+
+            PRInt32 pos = description.FindChar('.', PR_TRUE);
+            if (pos > 0) 
+              description.Truncate(pos); 
+            // the format of the description usually looks like appname.version.something.
+            // for now, let's try to make it pretty and just show you the appname.
+
+            mimeInfo->SetApplicationDescription(description.GetUnicode());
           }
         }
 
         delete [] pBytes;
+        delete [] pFileDescription;
 
         // close the key
        ::RegCloseKey(hKey);
@@ -190,16 +205,19 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
     nsCOMPtr<nsIFile> application;
     nsXPIDLCString path;
     aTempFile->GetPath(getter_Copies(path));
+
+    nsMIMEInfoHandleAction action = nsIMIMEInfo::useSystemDefault;
+    aMIMEInfo->GetPreferredAction(&action);
     
     aMIMEInfo->GetPreferredApplicationHandler(getter_AddRefs(application));
-    if (application)
+    if (application && action == nsIMIMEInfo::useHelperApp)
     {
       // if we were given an application to use then use it....otherwise
       // make the registry call to launch the app
       const char * strPath = (const char *) path;
       application->Spawn(&strPath, 1);
     }    
-    else
+    else // use the system default
     {
       // use the app registry name to launch a shell execute....
       LONG r = (LONG) ::ShellExecute( NULL, "open", (const char *) path, NULL, NULL, SW_SHOWNORMAL);
@@ -244,7 +262,7 @@ nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsCString& aFile
       ::RegCloseKey(hKey);
    }
    else
-     rv = NS_ERROR_FAILURE; // not 4.x extension mapping found!
+     rv = NS_ERROR_FAILURE; // no 4.x extension mapping found!
 
    return rv;
 }
