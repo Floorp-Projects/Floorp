@@ -541,7 +541,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             if (mStatus == NS_ERROR_CONNECTION_REFUSED) {
                 LOG(("connection failed [this=%x error=%x]\n", this, mStatus));
 
-                // Try again? OnConnectionFailed() may exit and re-enter the monitor.
+                // Try again? 
                 if (OnConnectionFailed(PR_TRUE)) { 
                     done = PR_TRUE;
                     continue;
@@ -570,7 +570,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
                 if (!firedOnStart && mWriteRequest)
                     firedOnStart = mWriteRequest->IsInitialized();
 
-                // Try again? OnConnectionFailed() may exit and re-enter the monitor.
+                // Try again? 
                 if (!firedOnStart && OnConnectionFailed(PR_TRUE)) {
                     // a little bit of hackery here so we'll end up in the
                     // WaitConnect state...
@@ -629,6 +629,7 @@ nsSocketTransport::Cancel(nsresult status)
 
 // Try next address if param says to. Otherwise, try to use autodial. If a 
 // connection is made, we try the network again. Otherwise, we don't.
+// Blocks until connection is made or fails.
 // Returns true to cause connection failures to try again.
 //
 PRBool
@@ -655,16 +656,16 @@ nsSocketTransport::OnConnectionFailed(PRBool tryNextAddress)
         }
     }
 
+#if defined(XP_WIN)
+
     // If not trying next address, try to make a connection using dialup. 
     // Retry if that connection is made.
     if (!tryAgain && mService->mAutodialEnabled) {
 
-#if defined(XP_WIN)
-        PR_ExitMonitor(mMonitor);
         tryAgain = nsNativeConnectionHelper::OnConnectionFailed(GetSocketHost());
-        PR_EnterMonitor(mMonitor);
-#endif
     }
+
+#endif
 
     // Prepare to try again.
     if (tryAgain)
@@ -1673,7 +1674,7 @@ nsSocketTransport::OnStopLookup(nsISupports *aContext,
     // If the lookup failed...
     if (NS_FAILED(aStatus)) {
         
-        // Retry? OnConnectionFailed() may exit and re-enter the monitor.
+        // Retry? 
         // Don't want to set the tryNextAddress param because DNS lookup has
         // just failed so hostname has not been resolved yet.
         if (aStatus != NS_BASE_STREAM_WOULD_BLOCK && OnConnectionFailed(PR_FALSE))

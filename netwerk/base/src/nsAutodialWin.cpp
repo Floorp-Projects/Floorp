@@ -83,70 +83,12 @@ nsRASAutodial::nsRASAutodial()
     mOSVerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     GetVersionEx(&mOSVerInfo);
 
-#ifdef PR_LOGGING
-    if (!gLog)
-        gLog = PR_NewLogModule("Autodial");
-#endif
-
     // We only need to dial on nt based systems. For all other platforms, 
     // mAutodialBehavior will remain AUTODIAL_NEVER, and we can skip
     // these initializations.
     if ((mOSVerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) 
-     && (mOSVerInfo.dwMajorVersion >= 3))
+     && (mOSVerInfo.dwMajorVersion >= 4))
     {
-        if (!mhRASdlg)
-        {
-            mhRASdlg = ::LoadLibrary("rasdlg.dll");
-            if ((UINT)mhRASdlg > 32)
-            {
-                // RasPhonebookDlg
-                mpRasPhonebookDlg =
-                 (tRASPHONEBOOKDLG)::GetProcAddress(mhRASdlg, "RasPhonebookDlgA");
-
-                // RasDialDlg
-                mpRasDialDlg =
-                 (tRASDIALDLG)::GetProcAddress(mhRASdlg, "RasDialDlgA");
-  
-            }
-
-            if (!mhRASdlg || !mpRasPhonebookDlg || !mpRasDialDlg)
-            {
-                LOGE(("Autodial: Error loading RASDLG.DLL."));
-            }
-        }
-
-        if (!mhRASapi32)
-        {
-            mhRASapi32 = ::LoadLibrary("rasapi32.dll");
-            if ((UINT)mhRASapi32 > 32)
-            {
-                // RasEnumConnections
-                mpRasEnumConnections = (tRASENUMCONNECTIONS)
-                 ::GetProcAddress(mhRASapi32, "RasEnumConnectionsA");
-
-                // RasEnumEntries
-                mpRasEnumEntries = (tRASENUMENTRIES)
-                 ::GetProcAddress(mhRASapi32, "RasEnumEntriesA");
-
-                // RasSetAutodialAddress
-                mpRasSetAutodialAddress = (tRASSETAUTODIALADDRESS)
-                    ::GetProcAddress(mhRASapi32, "RasSetAutodialAddressA");
-
-                // RasSetAutodialAddress
-                mpRasGetAutodialAddress = (tRASGETAUTODIALADDRESS)
-                 ::GetProcAddress(mhRASapi32, "RasGetAutodialAddressA");
-            }
-
-            if (!mhRASapi32 
-                || !mpRasEnumConnections 
-                || !mpRasEnumEntries 
-                || !mpRasSetAutodialAddress
-                || !mpRasGetAutodialAddress)
-            {
-                LOGE(("Autodial: Error loading RASAPI32.DLL."));
-            }
-        }
-
         // Initializations that can be made again since RAS OS settings can 
         // change.
         Init();
@@ -164,6 +106,11 @@ nsRASAutodial::~nsRASAutodial()
 // Returns NS_ERROR_FAILURE if error or NS_OK if success.
 nsresult nsRASAutodial::Init()
 {
+#ifdef PR_LOGGING
+    if (!gLog)
+        gLog = PR_NewLogModule("Autodial");
+#endif
+
     mDefaultEntryName[0] = '\0';
     mNumRASConnectionEntries = 0;
     mAutodialBehavior = QueryAutodialBehavior();
@@ -172,6 +119,39 @@ nsresult nsRASAutodial::Init()
     if (mAutodialBehavior == AUTODIAL_NEVER)
     {
         return NS_OK;
+    }
+
+    // Don't need to load this DLL before now.
+    if (!mhRASapi32)
+    {
+        mhRASapi32 = ::LoadLibrary("rasapi32.dll");
+        if ((UINT)mhRASapi32 > 32)
+        {
+            // RasEnumConnections
+            mpRasEnumConnections = (tRASENUMCONNECTIONS)
+             ::GetProcAddress(mhRASapi32, "RasEnumConnectionsA");
+
+            // RasEnumEntries
+            mpRasEnumEntries = (tRASENUMENTRIES)
+             ::GetProcAddress(mhRASapi32, "RasEnumEntriesA");
+
+            // RasSetAutodialAddress
+            mpRasSetAutodialAddress = (tRASSETAUTODIALADDRESS)
+                ::GetProcAddress(mhRASapi32, "RasSetAutodialAddressA");
+
+            // RasGetAutodialAddress
+            mpRasGetAutodialAddress = (tRASGETAUTODIALADDRESS)
+             ::GetProcAddress(mhRASapi32, "RasGetAutodialAddressA");
+        }
+
+        if (!mhRASapi32 
+            || !mpRasEnumConnections 
+            || !mpRasEnumEntries 
+            || !mpRasSetAutodialAddress
+            || !mpRasGetAutodialAddress)
+        {
+            LOGE(("Autodial: Error loading RASAPI32.DLL."));
+        }
     }
 
     // Get the number of dialup entries in the phonebook.
@@ -227,6 +207,7 @@ int nsRASAutodial::QueryAutodialBehavior()
 
     if (result != ERROR_SUCCESS)
     {
+        LOGE(("Autodial: Error opening reg key Internet Settings"));
         return AUTODIAL_NEVER;
     }
 
@@ -239,6 +220,7 @@ int nsRASAutodial::QueryAutodialBehavior()
     if (result != ERROR_SUCCESS)
     {
         ::RegCloseKey(hKey);
+        LOGE(("Autodial: Error reading reg value EnableAutodial."));
         return AUTODIAL_NEVER;
     }
 
@@ -246,6 +228,7 @@ int nsRASAutodial::QueryAutodialBehavior()
     if (result != ERROR_SUCCESS)
     {
         ::RegCloseKey(hKey);
+        LOGE(("Autodial: Error reading reg value NoNetAutodial."));
         return AUTODIAL_NEVER;
     }
   
@@ -314,6 +297,29 @@ nsresult nsRASAutodial::DialDefault(const char* hostName)
     // Do the dialing ourselves.
     else
     {
+        // Don't need to load the dll before this.
+        if (!mhRASdlg)
+        {
+            mhRASdlg = ::LoadLibrary("rasdlg.dll");
+            if ((UINT)mhRASdlg > 32)
+            {
+                // RasPhonebookDlg
+                mpRasPhonebookDlg =
+                 (tRASPHONEBOOKDLG)::GetProcAddress(mhRASdlg, "RasPhonebookDlgA");
+
+                // RasDialDlg
+                mpRasDialDlg =
+                 (tRASDIALDLG)::GetProcAddress(mhRASdlg, "RasDialDlgA");
+
+            }
+
+            if (!mhRASdlg || !mpRasPhonebookDlg || !mpRasDialDlg)
+            {
+                LOGE(("Autodial: Error loading RASDLG.DLL."));
+            }
+        }
+
+
         // If a default dial entry is configured, use it.
         if (mDefaultEntryName[0] != '\0') 
         {
@@ -574,7 +580,7 @@ nsresult nsRASAutodial::GetDefaultEntryName(char* entryName, int bufferSize)
 
     if (result != ERROR_SUCCESS)
     {
-        // Use first entry if none configured as default.
+        // Results in a prompt for which to use at dial time.
         return NS_ERROR_FAILURE;
     }
 
@@ -671,4 +677,3 @@ PRBool nsRASAutodial::AddAddressToAutodialDirectory(const char* hostName)
 
     return PR_TRUE;
 }
-

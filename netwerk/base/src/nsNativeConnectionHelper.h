@@ -50,8 +50,7 @@ public:
      *
      * Return PR_TRUE if the connection should be re-attempted.
      */
-    static PRBool OnConnectionFailed(const char* strHostName);
+    static PRBool OnConnectionFailed(const char* hostName);
 };
 
 #endif // !nsNativeConnectionHelper_h__
-

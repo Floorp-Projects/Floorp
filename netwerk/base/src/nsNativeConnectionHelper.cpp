@@ -37,116 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsNativeConnectionHelper.h"
-#include "nsIEventQueueService.h"
-#include "nsIServiceManager.h"
-#include "nsCOMPtr.h"
 #include "nsAutodialWin.h"
-#include "nsIPref.h"
-
-static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
-
-//-----------------------------------------------------------------------------
-// nsSyncEvent - implements a synchronous event that runs on the main thread.
-//
-// XXX move this class into xpcom/proxy
-//-----------------------------------------------------------------------------
-
-class nsSyncEvent
-{
-public:
-    nsSyncEvent() {}
-    virtual ~nsSyncEvent() {}
-
-    nsresult Dispatch();
-
-    virtual void HandleEvent() = 0;
-
-private:
-    static void* PR_CALLBACK EventHandler    (PLEvent *self);
-    static void  PR_CALLBACK EventDestructor (PLEvent *self);
-
-};
-
-nsresult
-nsSyncEvent::Dispatch()
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIEventQueueService> eqs(
-            do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIEventQueue> eventQ;
-    rv = eqs->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                                   getter_AddRefs(eventQ));
-    if (NS_FAILED(rv)) return rv;
-
-    PRBool onCurrentThread = PR_FALSE;
-    eventQ->IsQueueOnCurrentThread(&onCurrentThread);
-    if (onCurrentThread) {
-        HandleEvent();
-        return NS_OK;
-    }
-
-    // Otherwise build up an event and post it to the main thread's event queue
-    // and block before returning.
-
-
-    PLEvent *ev = new PLEvent;
-    if (!ev)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    PL_InitEvent(ev, (void *) this, EventHandler, EventDestructor);
-
-    // block until the event is answered
-    eventQ->PostSynchronousEvent(ev, nsnull);
-
-    return NS_OK;
-}
-
-void* PR_CALLBACK
-nsSyncEvent::EventHandler(PLEvent *self)
-{
-    nsSyncEvent *ev = (nsSyncEvent *) PL_GetEventOwner(self);
-    if (ev)
-        ev->HandleEvent();
-    
-    return nsnull;
-}
-
-void PR_CALLBACK
-nsSyncEvent::EventDestructor(PLEvent *self)
-{
-    delete self;
-}
-
-
-//-----------------------------------------------------------------------------
-// nsOnConnectionFailedEvent
-//-----------------------------------------------------------------------------
-
-class nsOnConnectionFailedEvent : public nsSyncEvent
-{
-private:
-    nsRASAutodial mAutodial;
-    const char* mHostName;
-
-public:
-    nsOnConnectionFailedEvent(const char* hostname) : mRetry(PR_FALSE), mHostName(hostname) { }
-
-    void HandleEvent();
-
-    PRBool mRetry;
-};
-
-void nsOnConnectionFailedEvent::HandleEvent()
-{
-    mRetry = PR_FALSE;
-    if (mAutodial.ShouldDialOnNetworkError()) {
-        mRetry = NS_SUCCEEDED(mAutodial.DialDefault(mHostName));
-    }
-}
-
 
 //-----------------------------------------------------------------------------
 // API typically invoked on the socket transport thread
@@ -154,11 +45,12 @@ void nsOnConnectionFailedEvent::HandleEvent()
 
 
 PRBool
-nsNativeConnectionHelper::OnConnectionFailed(const char* strHostName)
+nsNativeConnectionHelper::OnConnectionFailed(const char* hostName)
 {
-    nsOnConnectionFailedEvent event(strHostName);
-    if (NS_SUCCEEDED(event.Dispatch()))
-        return event.mRetry;
+    nsRASAutodial autodial;
 
-    return PR_FALSE;
+    if (autodial.ShouldDialOnNetworkError()) 
+        return NS_SUCCEEDED(autodial.DialDefault(hostName));
+    else
+        return PR_FALSE;
 }
