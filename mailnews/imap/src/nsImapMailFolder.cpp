@@ -2432,39 +2432,51 @@ nsresult nsImapMailFolder::GetMessageHeader(nsMsgKey key, nsIMsgDBHdr ** aMsgHdr
 NS_IMETHODIMP 
 nsImapMailFolder::OnlineCopyCompleted(nsIImapProtocol *aProtocol, ImapOnlineCopyState aCopyState)
 {
-	if (aCopyState == ImapOnlineCopyStateType::kSuccessfulCopy && aProtocol)
+    NS_ENSURE_ARG_POINTER(aProtocol);
+
+    nsresult rv;
+	if (aCopyState == ImapOnlineCopyStateType::kSuccessfulCopy)
 	{
 		nsCOMPtr <nsIImapUrl> imapUrl;
-		aProtocol->GetRunningImapURL(getter_AddRefs(imapUrl));
-		if (imapUrl)
+		rv = aProtocol->GetRunningImapURL(getter_AddRefs(imapUrl));
+        if (NS_FAILED(rv) || !imapUrl) return NS_ERROR_FAILURE;
+        
+        nsIImapUrl::nsImapAction action;
+        rv = imapUrl->GetImapAction(&action);
+        if (NS_FAILED(rv)) return rv;
+        
+        if (action == nsIImapUrl::nsImapOnlineToOfflineMove)
 		{
-			nsIImapUrl::nsImapAction action;
-			imapUrl->GetImapAction(&action);
-			if (action == nsIImapUrl::nsImapOnlineToOfflineMove)
-			{
-				nsCString messageIds;
-				nsresult rv = imapUrl->CreateListOfMessageIdsString(&messageIds);
-				if (NS_SUCCEEDED(rv))
-				{
-				   nsCOMPtr<nsIEventQueue> queue;	
-				   // get the Event Queue for this thread...
-				   NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+            nsCString messageIds;
+            nsresult rv = imapUrl->CreateListOfMessageIdsString(&messageIds);
 
-				   if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsIEventQueue> queue;	
+            // get the Event Queue for this thread...
+            NS_WITH_SERVICE(nsIEventQueueService, pEventQService,
+                            kEventQueueServiceCID, &rv);
+            if (NS_FAILED(rv)) return rv;
 
-					NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
-				   if (NS_FAILED(rv)) return rv;
-				   rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-				   if (NS_FAILED(rv)) return rv;
+            rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
+                                                     getter_AddRefs(queue));
+            if (NS_FAILED(rv)) return rv;
+            
+            NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+            if (NS_FAILED(rv)) return rv;
        
-				   rv = imapService->AddMessageFlags(queue, this, nsnull, nsnull,
-										messageIds.GetBuffer(),
-										kImapMsgDeletedFlag,
-										PR_TRUE);
-				}
-			}
-		}
-	}
+            rv = imapService->AddMessageFlags(queue, this, nsnull, nsnull,
+                                              messageIds.GetBuffer(),
+                                              kImapMsgDeletedFlag,
+                                              PR_TRUE);
+        }
+        /* unhandled action */
+        else return NS_ERROR_FAILURE;
+    }
+
+    /* unhandled copystate */
+    else return NS_ERROR_FAILURE;
+
+    return rv;
 }
 
 NS_IMETHODIMP
