@@ -796,26 +796,28 @@ nsWindowWatcher::AddWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome *aChrome)
   if (!aWindow)
     return NS_ERROR_INVALID_ARG;
 
-  nsWatcherWindowEntry *info;
-  nsAutoLock lock(mListLock);
+  {
+    nsWatcherWindowEntry *info;
+    nsAutoLock lock(mListLock);
 
-  // if we already have an entry for this window, adjust
-  // its chrome mapping and return
-  info = FindWindowEntry(aWindow);
-  if (info) {
-    info->mChrome = aChrome;
-    return NS_OK;
-  }
+    // if we already have an entry for this window, adjust
+    // its chrome mapping and return
+    info = FindWindowEntry(aWindow);
+    if (info) {
+      info->mChrome = aChrome;
+      return NS_OK;
+    }
   
-  // create a window info struct and add it to the list of windows
-  info = new nsWatcherWindowEntry(aWindow, aChrome);
-  if (!info)
-    return NS_ERROR_OUT_OF_MEMORY;
+    // create a window info struct and add it to the list of windows
+    info = new nsWatcherWindowEntry(aWindow, aChrome);
+    if (!info)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-  if (mOldestWindow)
-    info->InsertAfter(mOldestWindow->mOlder);
-  else
-    mOldestWindow = info;
+    if (mOldestWindow)
+      info->InsertAfter(mOldestWindow->mOlder);
+    else
+      mOldestWindow = info;
+  } // leave the mListLock
 
   // a window being added to us signifies a newly opened window.
   // send notifications.
