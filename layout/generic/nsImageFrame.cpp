@@ -167,6 +167,9 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
   if (nsnull == mImageLoader) {
     // Start image loading. Note that we don't specify a background color
     // so transparent images are always rendered using a transparency mask
+printf("loading ");
+fputs(src, stdout);
+printf("\n");
     rv = aPresContext->StartLoadImage(src, nsnull, aForFrame, aCallBack,
                                       aNeedSizeUpdate, PR_TRUE, &mImageLoader);
     if ((NS_OK != rv) || (nsnull == mImageLoader)) {
@@ -369,7 +372,18 @@ static nsresult
 UpdateImageFrame(nsIPresContext& aPresContext, nsIFrame* aFrame,
                  PRIntn aStatus)
 {
-  if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
+  if (NS_IMAGE_LOAD_STATUS_ERROR & aStatus) {
+    // XXX Turned off for the time being until the frame construction code for
+    // images that can't be rendered handles floated and absolutely positioned
+    // images...
+#if 0
+    // We failed to load the image. Notify the pres shell
+    nsIPresShell* presShell = aPresContext.GetShell();
+    presShell->CantRenderReplacedElement(&aPresContext, aFrame);
+    NS_RELEASE(presShell);
+#endif
+  }
+  else if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
     // Now that the size is available, trigger a content-changed reflow
     nsIContent* content = nsnull;
     aFrame->GetContent(&content);
@@ -382,16 +396,6 @@ UpdateImageFrame(nsIPresContext& aPresContext, nsIFrame* aFrame,
       }
       NS_RELEASE(content);
     }
-  } else if (NS_IMAGE_LOAD_STATUS_ERROR & aStatus) {
-    // XXX Turned off for the time being until the frame construction code for
-    // images that can't be rendered handles floated and absolutely positioned
-    // images...
-#if 0
-    // We failed to load the image. Notify the pres shell
-    nsIPresShell* presShell = aPresContext.GetShell();
-    presShell->CantRenderReplacedElement(&aPresContext, aFrame);
-    NS_RELEASE(presShell);
-#endif
   }
   return NS_OK;
 }
