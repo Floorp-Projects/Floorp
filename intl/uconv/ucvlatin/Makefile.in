@@ -45,8 +45,11 @@ CPPSRCS		= \
                   nsCP1252ToUnicode.cpp \
                   nsCP1253ToUnicode.cpp \
                   nsCP1254ToUnicode.cpp \
+                  nsCP1255ToUnicode.cpp \
+                  nsCP1256ToUnicode.cpp \
                   nsCP1257ToUnicode.cpp \
                   nsCP1258ToUnicode.cpp \
+                  nsCP866ToUnicode.cpp \
                   nsCP874ToUnicode.cpp \
                   nsKOI8UToUnicode.cpp \
                   nsKOI8RToUnicode.cpp \
@@ -82,9 +85,12 @@ CPPSRCS		= \
                   nsUnicodeToCP1252.cpp \
                   nsUnicodeToCP1253.cpp \
                   nsUnicodeToCP1254.cpp \
+                  nsUnicodeToCP1255.cpp \
+                  nsUnicodeToCP1256.cpp \
                   nsUnicodeToCP1257.cpp \
                   nsUnicodeToCP1258.cpp           \
                   nsUnicodeToCP874.cpp            \
+                  nsUnicodeToCP866.cpp            \
                   nsUnicodeToKOI8R.cpp           \
                   nsUnicodeToKOI8U.cpp            \
                   nsUnicodeToMacRoman.cpp \
