@@ -34,7 +34,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.13 2002/09/20 04:41:45 jpierre%netscape.com Exp $
+ * $Id: cms.h,v 1.14 2002/10/30 01:31:01 wtc%netscape.com Exp $
  */
 
 #ifndef _CMS_H_
@@ -130,6 +130,12 @@ NSS_CMSEncoder_Start(NSSCMSMessage *cmsg,
  */
 extern SECStatus
 NSS_CMSEncoder_Update(NSSCMSEncoderContext *p7ecx, const char *data, unsigned long len);
+
+/*
+ * NSS_CMSEncoder_Cancel - stop all encoding
+ */
+extern SECStatus
+NSS_CMSEncoder_Cancel(NSSCMSEncoderContext *p7ecx);
 
 /*
  * NSS_CMSEncoder_Finish - signal the end of data
