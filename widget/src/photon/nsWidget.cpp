@@ -2079,7 +2079,13 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
           }
         }
 
-        if( ptrev )
+/* Photon 2 Bug when clicking on any page, two widgets get the event but */
+/* only one has the focus */
+#if defined(PHOTON2_ONLY)
+        if ( (ptrev) && (PtIsFocused(mWidget) != 2) )
+#else
+        if (ptrev)
+#endif
         {
           printf( "nsWidget::HandleEvent Ph_EV_BUT_PRES before translation: (%ld,%ld) mWidget=<%p> PtIsFocused(mWidget)=<%d> \n", ptrev->pos.x, ptrev->pos.y, mWidget, PtIsFocused(mWidget) );
           ScreenToWidget( ptrev->pos );
@@ -2464,7 +2470,10 @@ int nsWidget::WorkProc( void *data )
         PtWidgetArea( dqe->widget, &area ); // parent coords
 PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> area=<%d,%d,%d,%d>\n", dqe->widget, area.pos.x, area.pos.y, area.size.w, area.size.h));
 
-#if 1
+printf("nsWidget::WorkProc PtWindow origin at (%d,%d) IsEmpty=<%d>\n", area.pos.x, area.pos.y, dqe->inst->mUpdateArea->IsEmpty());
+
+// this was enabled... what was it doing?
+#if 0
         /* Is forcing the damage to 0,0 really a good idea here?? */
         if ((PtWidgetIsClass(dqe->widget, PtWindow)) || (PtWidgetIsClass(dqe->widget, PtRegion)))
 		{
@@ -2472,12 +2481,13 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> area=<%
 		  area.pos.x = area.pos.y = 0;
 		}
 #endif
+
 		if (dqe->inst->mUpdateArea->IsEmpty())
 		{
 PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> mUpdateArea empty\n"));
 
-          extent.ul.x = area.pos.x; // convert widget coords to parent
-          extent.ul.y = area.pos.y;
+          extent.ul.x = 0; //area.pos.x; // convert widget coords to parent
+          extent.ul.y = 0; //area.pos.y;
           extent.lr.x = extent.ul.x + area.size.w - 1;
           extent.lr.y = extent.ul.y + area.size.h - 1;
 
@@ -2498,8 +2508,8 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> mUpdate
 
             // convert widget coords to parent
             temp_rect.SetRect(r->x, r->y, r->width, r->height);
-            extent.ul.x = temp_rect.x + area.pos.x;
-            extent.ul.y = temp_rect.y + area.pos.y;
+            extent.ul.x = temp_rect.x; // + area.pos.x;
+            extent.ul.y = temp_rect.y; // + area.pos.y;
             extent.lr.x = extent.ul.x + temp_rect.width - 1;
             extent.lr.y = extent.ul.y + temp_rect.height - 1;
 		
