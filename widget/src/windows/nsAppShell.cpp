@@ -66,14 +66,29 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 NS_METHOD nsAppShell::Run(void)
 {
   NS_ADDREF_THIS();
-    // Process messages
-  MSG msg;
-  while (GetMessage(&msg, NULL, 0, 0)) {
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
-    if (mDispatchListener)
-      mDispatchListener->AfterDispatch();
-  }
+  MSG  msg;
+  int  keepGoing = 1;
+  
+  // Process messages
+  do {
+    // Give priority to system messages (in particular keyboard, mouse,
+    // timer, and paint messages).
+    // Note: on Win98 and NT 5.0 we can also use PM_QS_INPUT and PM_QS_PAINT flags.
+    if (::PeekMessage(&msg, NULL, 0, WM_USER-1, PM_REMOVE)) {
+      keepGoing = (msg.message != WM_QUIT);
+    
+    } else {
+      // Block and wait for any posted application message
+      keepGoing = ::GetMessage(&msg, NULL, 0, 0);
+    }
+
+    if (keepGoing != 0) {
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+      if (mDispatchListener)
+        mDispatchListener->AfterDispatch();
+    }
+  } while (keepGoing != 0);
   Release();
   return msg.wParam;
 }
