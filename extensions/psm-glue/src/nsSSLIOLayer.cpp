@@ -560,8 +560,8 @@ nsPSMSocketInfo::GetSecurityState(PRInt32 *aSecurityState)
     if (!mPickledStatus)
         SetPickledStatus();
 
-    *aSecurityState = mPickledStatus ? nsIWebProgressListener::STATE_IS_SECURE
-        : nsIWebProgressListener::STATE_IS_BROKEN;
+    *aSecurityState = mPickledStatus ? (PRInt32) nsIWebProgressListener::STATE_IS_SECURE
+        : (PRInt32) nsIWebProgressListener::STATE_IS_BROKEN;
 
     return NS_OK;
 }
