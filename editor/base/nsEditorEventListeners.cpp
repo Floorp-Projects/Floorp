@@ -210,8 +210,6 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       }   
       if (nsIDOMKeyEvent::DOM_VK_TAB==keyCode)
       {
-        PRUint32 flags=0;
-        mEditor->GetFlags(&flags);
         if ((flags & nsIHTMLEditor::eEditorSingleLineMask))
           return NS_OK; // let it be used for focus switching
 
@@ -223,8 +221,6 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       if (nsIDOMKeyEvent::DOM_VK_RETURN==keyCode
           || nsIDOMKeyEvent::DOM_VK_ENTER==keyCode)
       {
-        PRUint32 flags=0;
-        mEditor->GetFlags(&flags);
         if (!(flags & nsIHTMLEditor::eEditorSingleLineMask))
         {
           //htmlEditor->InsertBreak();
@@ -238,7 +234,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         }
       }
     }
-    
+
     if (NS_SUCCEEDED(htmlEditor->EditorKeyPress(keyEvent)))
       ScrollSelectionIntoView();
   }
@@ -814,7 +810,6 @@ nsTextEditorDragListener::DragExit(nsIDOMEvent* aDragEvent)
 nsresult
 nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 {
-  nsresult rv = NS_OK;
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
   if ( htmlEditor )
   {
