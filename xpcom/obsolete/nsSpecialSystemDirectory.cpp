@@ -140,41 +140,6 @@ typedef BOOL (WINAPI * GetSpecialPathProc) (HWND hwndOwner, LPSTR lpszPath, int 
 GetSpecialPathProc gGetSpecialPathProc = NULL;
 static HINSTANCE gShell32DLLInst = NULL;
 #endif
-NS_COM_OBSOLETE void StartupSpecialSystemDirectory()
-{
-#if defined (XP_WIN)
-    /* On windows, the old method to get file locations is incredibly slow.
-       As of this writing, 3 calls to GetWindowsFolder accounts for 3% of mozilla
-       startup. Replacing these older calls with a single call to SHGetSpecialFolderPath
-       effectively removes these calls from the performace radar.  We need to 
-       support the older way of file location lookup on systems that do not have
-       IE4. (Note: gets the ansi version: SHGetSpecialFolderPathA).
-    */ 
-    gShell32DLLInst = LoadLibrary("Shell32.dll");
-    if(gShell32DLLInst)
-    {
-        gGetSpecialPathProc  = (GetSpecialPathProc) GetProcAddress(gShell32DLLInst, 
-                                                                   "SHGetSpecialFolderPathA");
-    }
-#endif
-}
-
-NS_COM_OBSOLETE void ShutdownSpecialSystemDirectory()
-{
-    if (systemDirectoriesLocations)
-    {
-        systemDirectoriesLocations->Reset(DeleteSystemDirKeys);
-        delete systemDirectoriesLocations;
-    }
-#if defined (XP_WIN)
-   if (gShell32DLLInst)
-   {
-       FreeLibrary(gShell32DLLInst);
-       gShell32DLLInst = NULL;
-       gGetSpecialPathProc = NULL;
-   }
-#endif
-}
 
 #if defined (XP_WIN)
 
