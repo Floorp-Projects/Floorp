@@ -2314,8 +2314,9 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 {
   nsresult rv = NS_OK;
   NS_START_STOPWATCH(mWatch)
-  // Implementation of AddDocTypeDecl() should start here
-
+  
+  rv=mHTMLDocument->AddDocTypeDecl(aNode.GetText(),(nsDTDMode)aMode);
+  
   NS_STOP_STOPWATCH(mWatch)
   return rv;
 }
