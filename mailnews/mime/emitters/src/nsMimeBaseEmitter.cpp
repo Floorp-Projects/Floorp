@@ -259,7 +259,7 @@ nsMimeBaseEmitter::LocalizeHeaderName(const char *aHeaderName, const char *aDefa
 {
   char *retVal = MimeGetStringByName(aHeaderName);
 
-  if (!retVal)
+  if (retVal)
     return retVal;
   else
     return nsCRT::strdup(aDefaultName);
