@@ -286,11 +286,11 @@
 
 <!-- Font Size SubMenu -->
 <!ENTITY FontSizeSelect.tooltip "Choose a font size">
-<!ENTITY decreaseFontSize.label "Decrease">
-<!ENTITY decreasefontsize.accesskey "d">
+<!ENTITY decreaseFontSize.label "Smaller">
+<!ENTITY decreasefontsize.accesskey "r">
 <!ENTITY decreaseFontSize.keybinding "[">
-<!ENTITY increaseFontSize.label "Increase">
-<!ENTITY increasefontsize.accesskey "i">
+<!ENTITY increaseFontSize.label "Larger">
+<!ENTITY increasefontsize.accesskey "g">
 <!ENTITY increaseFontSize.keybinding "]">
 
 <!ENTITY fontsizeMenu.label "Size">
@@ -306,7 +306,7 @@
 <!ENTITY size-largeCmd.label "large">
 <!ENTITY size-large.accesskey "l">
 <!ENTITY size-x-largeCmd.label "x-large">
-<!ENTITY size-x-large.accesskey "r">
+<!ENTITY size-x-large.accesskey "x">
 <!ENTITY size-xx-largeCmd.label "xx-large">
 <!ENTITY size-xx-large.accesskey "e">
 
