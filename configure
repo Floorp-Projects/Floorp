@@ -2641,7 +2641,7 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
-for ac_prog in gawk mawk nawk awk
+for ac_prog in mawk gawk nawk awk
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -2762,7 +2762,7 @@ fi
 
 echo $ac_n "checking for minimum required perl version $PERL_VERSION""... $ac_c" 1>&6
 echo "configure:2765: checking for minimum required perl version $PERL_VERSION" >&5
-_perl_version=`$PERL -e 'use Config; print "$Config{version}"; if ($Config{version} >= $PERL_VERSION) { exit(0); } else { exit(1); }' 1>&5`
+_perl_version=`$PERL -e 'use Config; print "$Config{version}"; if ($Config{version} >= $PERL_VERSION) { exit(0); } else { exit(1); }' 2>&5`
 _perl_res=$?
 echo "$ac_t""$_perl_version" 1>&6
 
