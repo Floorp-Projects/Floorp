@@ -22,6 +22,7 @@
  *                 Mike Potter <mikep@oeone.com>
  *                 Karl Guertin <grayrest@grayrest.com> 
  *                 Colin Phillips <colinp@oeone.com> 
+ *                 ArentJan Banck <ajbanck@planet.nl>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,11 +64,19 @@
 
 #calendar-controls-box
 {
-   background-image        : url("chrome://calendar/skin/calendar_topbar.gif");
-   background-repeat       : no-repeat;
    min-height              : 33px;
    max-height              : 33px;
 }
+
+
+/*--------------------------------------------------------------------
+ *   Primary toolbar buttons
+ *-------------------------------------------------------------------*/
+
+.toolbarbutton-1 {
+  list-style-image: url("chrome://calendar/skin/btn1.png");
+}
+
 
 /*--------------------------------------------------------------------
  *   new event button
@@ -75,22 +84,21 @@
 
 #calendar-new-event-button 
   {
-    padding-top:	1px;
-    list-style-image        : url("chrome://calendar/skin/newitem_up.gif");
+    -moz-image-region: rect(105px 32px 126px 0px);
   }
 #calendar-new-event-button[disabled="true"],
 #calendar-new-event-button[disabled="true"]:hover,
 #calendar-new-event-button[disabled="true"]:hover:active
   {
-   list-style-image         : url("chrome://calendar/skin/newitem_disabled.gif");
+    -moz-image-region: rect(105px 128px 126px 96px);
   }
 #calendar-new-event-button:hover
   {
-    list-style-image        : url("chrome://calendar/skin/newitem_hover.gif");
+    -moz-image-region: rect(105px 64px 126px 32px);
   }
 #calendar-new-event-button:hover:active
   {
-    list-style-image        : url("chrome://calendar/skin/newitem_down.gif");
+    -moz-image-region: rect(105px 96px 126px 64px);
   }
 
 /*--------------------------------------------------------------------
@@ -99,24 +107,24 @@
 
 #calendar-edit-event-button
 {
-   list-style-image        : url("chrome://calendar/skin/modify_up.png");
+    -moz-image-region: rect(126px 32px 147px 0px);
 }
 
 #calendar-edit-event-button[disabled="true"],
 #calendar-edit-event-button[disabled="true"]:hover,
 #calendar-edit-event-button[disabled="true"]:hover:active
 {
-   list-style-image        : url("chrome://calendar/skin/modify_disabled.png");
+    -moz-image-region: rect(126px 128px 147px 96px);
 }
 
 #calendar-edit-event-button:hover
 {
-   list-style-image        : url("chrome://calendar/skin/modify_hover.png");
+    -moz-image-region: rect(126px 64px 147px 32px);
 }
 
 #calendar-edit-event-button:hover:active
 {
-   list-style-image        : url("chrome://calendar/skin/modify_down.png");
+    -moz-image-region: rect(126px 96px 147px 64px);
 }
 
 /*--------------------------------------------------------------------
@@ -125,24 +133,24 @@
 
 #calendar-delete-event-button
 {
-   list-style-image        : url("chrome://calendar/skin/remove_up.png");
+    -moz-image-region: rect(147px 32px 168px 0px);
 }
   
 #calendar-delete-event-button[disabled="true"],
 #calendar-delete-event-button[disabled="true"]:hover,
 #calendar-delete-event-button[disabled="true"]:hover:active
 {
-   list-style-image        : url("chrome://calendar/skin/remove_disabled.png");
+    -moz-image-region: rect(147px 128px 168px 96px);
 }
 
 #calendar-delete-event-button:hover
 {
-   list-style-image        : url("chrome://calendar/skin/remove_hover.png");
+    -moz-image-region: rect(147px 64px 168px 32px);
 }
 
 #calendar-delete-event-button:hover:active
 {
-   list-style-image        : url("chrome://calendar/skin/remove_down.png");
+    -moz-image-region: rect(147px 96px 168px 64px);
 }
 
 /*--------------------------------------------------------------------
@@ -151,22 +159,21 @@
 
 #calendar-go-to-today-button 
   {
-    padding-top:	1px;
-    list-style-image        : url("chrome://calendar/skin/today_up.gif");
+    -moz-image-region: rect(84px 32px 105px 0px);
   }
 #calendar-go-to-today-button[disabled="true"],
 #calendar-go-to-today-button[disabled="true"]:hover,
 #calendar-go-to-today-button[disabled="true"]:hover:active
   {
-   list-style-image         : url("chrome://calendar/skin/today_disabled.gif");
+    -moz-image-region: rect(84px 128px 105px 96px);
   }
 #calendar-go-to-today-button:hover
   {
-    list-style-image        : url("chrome://calendar/skin/today_hover.gif");
+    -moz-image-region: rect(84px 64px 105px 32px);
   }
 #calendar-go-to-today-button:hover:active
   {
-    list-style-image        : url("chrome://calendar/skin/today_down.gif");
+    -moz-image-region: rect(84px 96px 105px 64px);
   }
 
 
@@ -176,22 +183,21 @@
 
 #calendar-choose-date-button 
   {
-    padding-top:	1px;
-    list-style-image        : url("chrome://calendar/skin/goto_up.gif");
+    -moz-image-region: rect(63px 32px 84px 0px);
   }
 #calendar-choose-date-button[disabled="true"],
 #calendar-choose-date-button[disabled="true"]:hover,
 #calendar-choose-date-button[disabled="true"]:hover:active
   {
-   list-style-image         : url("chrome://calendar/skin/goto_disabled.gif");
+    -moz-image-region: rect(63px 128px 84px 96px);
   }
 #calendar-choose-date-button:hover
   {
-    list-style-image        : url("chrome://calendar/skin/goto_hover.gif");
+    -moz-image-region: rect(63px 64px 84px 32px);
   }
 #calendar-choose-date-button:hover:active
   {
-    list-style-image        : url("chrome://calendar/skin/goto_down.gif");
+    -moz-image-region: rect(63px 96px 84px 64px);
   }
 
 
@@ -201,23 +207,21 @@
 
 #calendar-month-view-button 
   {
-    padding-top:	1px;
-    list-style-image        : url("chrome://calendar/skin/month_up.gif");
+    -moz-image-region: rect(42px 32px 63px 0px);
   }
 #calendar-month-view-button[disabled="true"],
 #calendar-month-view-button[disabled="true"]:hover,
 #calendar-month-view-button[disabled="true"]:hover:active
   {
-   /*list-style-image         : url("chrome://calendar/skin/month_disabled.gif");*/
-	list-style-image         : url("chrome://calendar/skin/month_down.gif");
+    -moz-image-region: rect(42px 128px 63px 96px);
   }
 #calendar-month-view-button:hover
   {
-    list-style-image        : url("chrome://calendar/skin/month_hover.gif");
+    -moz-image-region: rect(42px 64px 63px 32px);
   }
 #calendar-month-view-button:hover:active
   {
-    list-style-image        : url("chrome://calendar/skin/month_down.gif");
+    -moz-image-region: rect(42px 96px 63px 64px);
   }
 
 /*--------------------------------------------------------------------
@@ -226,23 +230,21 @@
 
 #calendar-week-view-button 
   {
-    padding-top:	1px;
-    list-style-image        : url("chrome://calendar/skin/week_up.gif");
+    -moz-image-region: rect(21px 32px 42px 0px);
   }
 #calendar-week-view-button[disabled="true"],
 #calendar-week-view-button[disabled="true"]:hover,
 #calendar-week-view-button[disabled="true"]:hover:active
   {
-   /*list-style-image         : url("chrome://calendar/skin/week_disabled.gif");*/
-	list-style-image         : url("chrome://calendar/skin/week_down.gif");
+    -moz-image-region: rect(21px 128px 42px 96px);
   }
 #calendar-week-view-button:hover
   {
-    list-style-image        : url("chrome://calendar/skin/week_hover.gif");
+    -moz-image-region: rect(21px 64px 42px 32px);
   }
 #calendar-week-view-button:hover:active
   {
-    list-style-image        : url("chrome://calendar/skin/week_down.gif");
+    -moz-image-region: rect(21px 96px 42px 64px);
   }
 
 /*--------------------------------------------------------------------
@@ -251,23 +253,21 @@
 
 #calendar-day-view-button 
   {
-    padding-top:	1px;
-    list-style-image        : url("chrome://calendar/skin/day_up.gif");
+    -moz-image-region: rect(0px 32px 21px 0px);
   }
 #calendar-day-view-button[disabled="true"],
 #calendar-day-view-button[disabled="true"]:hover,
 #calendar-day-view-button[disabled="true"]:hover:active
   {
-   /*list-style-image         : url("chrome://calendar/skin/day_disabled.gif");*/
-	list-style-image         : url("chrome://calendar/skin/day_down.gif");
+    -moz-image-region: rect(0px 128px 21px 96px);
   }
 #calendar-day-view-button:hover
   {
-    list-style-image        : url("chrome://calendar/skin/day_hover.gif");
+    -moz-image-region: rect(0px 64px 21px 32px);
   }
 #calendar-day-view-button:hover:active
   {
-    list-style-image        : url("chrome://calendar/skin/day_down.gif");
+    -moz-image-region: rect(0px 96px 21px 64px);
   }
 
 
