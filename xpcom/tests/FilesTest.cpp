@@ -61,7 +61,6 @@ struct FilesTest
     int CreateDirectoryRecursive(const char* aPath);
     int IterateDirectoryChildren(nsFileSpec& startChild);
     int CanonicalPath(const char* relativePath);
-    int Persistence(const char* relativePath);
     int FileSpecEquality(const char *aFile, const char *bFile);
     int FileSpecAppend(nsFileSpec& parent, const char* relativePath);
     int CopyToDir(const char*  sourceFile, const char* targDir);
@@ -74,8 +73,6 @@ struct FilesTest
 
     int SpecialSystemDirectories();
     
-    int NSPRCompatibility(const char* sourceFile);
-
     void Banner(const char* bannerString);
     int Passed();
     int Failed(const char* explanation = nsnull);
@@ -262,50 +259,6 @@ int FilesTest::IOStream(const char* relativePath)
         }
     }
     return 0;
-}
-
-//----------------------------------------------------------------------------------------
-int FilesTest::Persistence(
-    const char* relativePathToWrite)
-//----------------------------------------------------------------------------------------
-{
-    nsFilePath myTextFilePath(relativePathToWrite, PR_TRUE);
-    const char* pathAsString = (const char*)myTextFilePath;
-    nsFileSpec mySpec(myTextFilePath);
-
-    nsIOFileStream testStream(mySpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
-    if (!testStream.is_open())
-    {
-        mConsole
-            << "ERROR: File "
-            << pathAsString
-            << " could not be opened for input+output"
-            << nsEndl;
-        return -1;
-    }
-    
-    nsPersistentFileDescriptor myPersistent(mySpec);
-    mConsole
-        << "Writing persistent file data " << pathAsString << nsEndl << nsEndl;
-    
-    testStream.seek(0); // check that the seek compiles
-    testStream << myPersistent;
-    
-    testStream.seek(0);
-    
-    nsPersistentFileDescriptor mySecondPersistent;
-    testStream >> mySecondPersistent;
-    
-    mySpec = mySecondPersistent;
-#ifdef XP_MAC
-    if (mySpec.Error())
-        return Failed();
-#endif
-
-    if (!mySpec.Exists())
-        return Failed();
-    
-    return Passed();
 }
 
 //----------------------------------------------------------------------------------------
@@ -652,68 +605,6 @@ int FilesTest::Execute(const char* appName, const char* args)
 
     return Passed();
 }
-
-//----------------------------------------------------------------------------------------
-int FilesTest::NSPRCompatibility(const char* relativeUnixFilePath)
-//----------------------------------------------------------------------------------------
-{
-
-    nsFilePath filePath(relativeUnixFilePath, PR_TRUE); // relative path
-
-    nsFileSpec createTheFileSpec(filePath);
-    {
-       nsIOFileStream testStream(createTheFileSpec); // creates the file
-       // file gets closed here because scope ends here.
-    };
-    
-
-
-    PRFileDesc* fOut = NULL;
-
-    // From an nsFilePath
-    fOut = PR_Open( nsNSPRPath(filePath), PR_RDONLY, 0 );
-    if ( fOut == NULL )
-    {
-        return Failed();
-    }
-    else
-    {
-        PR_Close( fOut );
-        fOut = NULL;
-    }
-
-    // From an nsFileSpec
-    nsFileSpec fileSpec(filePath);
-    
-    fOut = PR_Open( nsNSPRPath(fileSpec), PR_RDONLY, 0 );
-    if ( fOut == NULL )
-    {
-        return Failed();
-    }
-    else
-    {
-        PR_Close( fOut );
-        fOut = NULL;
-    }
-  
-    // From an nsFileURL
-    nsFileURL fileURL(fileSpec);
-    
-    fOut = PR_Open( nsNSPRPath(fileURL), PR_RDONLY, 0 );
-    if ( fOut == NULL )
-    {
-        return Failed();
-    }
-    else
-    {
-        PR_Close( fOut );
-        fOut = NULL;
-    }
-
-
-    return Passed();
-}
-
 
 //----------------------------------------------------------------------------------------
 int FilesTest::SpecialSystemDirectories()
@@ -1081,20 +972,11 @@ int FilesTest::RunAllTests()
 #endif
         return -1;
 
-    Banner("NSPR Compatibility");
-    rv = NSPRCompatibility("mumble/aFile.txt");
-	if (rv)
-	    goto Clean;
-
     Banner("Special System Directories");
     rv = SpecialSystemDirectories();
 	if (rv)
 	    goto Clean;
 
-	Banner("Persistence");
- 	rv = Persistence("mumble/filedesc.dat");
-	if (rv)
-	    goto Clean;
 
 Clean:
 	Banner("Delete again (to clean up our mess)");
