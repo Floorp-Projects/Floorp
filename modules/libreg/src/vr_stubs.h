@@ -41,6 +41,7 @@
 #else
 
 #include "prio.h"
+#include "prlog.h"
 #include "prmem.h"
 #include "plstr.h"
 

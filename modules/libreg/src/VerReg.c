@@ -67,15 +67,15 @@
 #define CHKSTR          "Check"
 #define PATHSTR         "Path"
 #define DIRSTR          "Directory"
-#define NAVHOME         "Navigator Home"
+#define NAVHOME         "InstallDir"
 #define REFCSTR         "RefCount"
 #define SHAREDSTR       "Shared"
 #define PACKAGENAMESTR  "PackageName"
 #define SHAREDFILESSTR  "/Shared Files"
 
-#define VERSION_NAME    "Communicator"
-#define NAVIGATOR_NODE  "/Netscape"
-#define CURRENT_VER     "Current Navigator"
+#define VERSION_NAME    "Mozilla"
+#define NAVIGATOR_NODE  "/mozilla.org"
+#define CURRENT_VER     "CurrentVersion"
 
 #define PATH_ROOT(p)   ( ((p) && *(p)==PATHDEL) ? ROOTKEY_VERSIONS : curver )
 #define UNIX_ROOT(p)   ( ((p) && *(p)==PATHDEL) ? ROOTKEY_VERSIONS : unixver )
@@ -283,6 +283,7 @@ static XP_Bool vr_CompareDirs( char *dir1, char *dir2 )
 {
     int len1,len2;
    
+    XP_ASSERT( dir1 && dir2 );
     if (!dir1 || !dir2) return FALSE;
 
     len1 = XP_STRLEN( dir1 );
@@ -503,6 +504,11 @@ static REGERR vr_SetCurrentNav( char *installation, char *programPath, char *ver
     int         nCopy;
     char        regname[MAXREGNAMELEN];
     char        dirbuf[MAXREGNAMELEN];
+
+    XP_ASSERT( installation ); // required
+    XP_ASSERT( programPath );  // required
+    if ( !installation || !programPath )
+        return REGERR_PARAM;
 
     err = NR_RegAddKey( vreg, ROOTKEY_VERSIONS, NAVIGATOR_NODE, &navKey );
     if (err != REGERR_OK)
