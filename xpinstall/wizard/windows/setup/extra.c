@@ -633,10 +633,12 @@ void ParsePath(LPSTR szInput, LPSTR szOutput, DWORD dwOutputSize, DWORD dwType)
   int   iCounter;
   DWORD dwCounter;
   DWORD dwInputLen;
+  BOOL  bFound;
 
   if((szInput != NULL) && (szOutput != NULL))
   {
-    dwInputLen = lstrlen(szInput);
+    bFound        = TRUE;
+    dwInputLen    = lstrlen(szInput);
     ZeroMemory(szOutput, dwOutputSize);
 
     if(dwInputLen < dwOutputSize)
@@ -649,10 +651,13 @@ void ParsePath(LPSTR szInput, LPSTR szOutput, DWORD dwOutputSize, DWORD dwType)
             if(szInput[iCounter] == '\\')
             {
               lstrcpy(szOutput, &szInput[iCounter + 1]);
+              bFound = TRUE;
               break;
             }
           }
-          lstrcpy(szOutput, szInput);
+          if(bFound == FALSE)
+            lstrcpy(szOutput, szInput);
+
           break;
 
         case PP_PATH_ONLY:
@@ -662,10 +667,13 @@ void ParsePath(LPSTR szInput, LPSTR szOutput, DWORD dwOutputSize, DWORD dwType)
             {
               lstrcpy(szOutput, szInput);
               szOutput[iCounter + 1] = '\0';
+              bFound = TRUE;
               break;
             }
           }
-          lstrcpy(szOutput, szInput);
+          if(bFound == FALSE)
+            lstrcpy(szOutput, szInput);
+
           break;
 
         case PP_ROOT_ONLY:
@@ -741,7 +749,7 @@ HRESULT LaunchApps()
 
       if(bArchiveFound)
       {
-        wsprintf(szBuf, szMsg, siCObject->szArchiveName);
+        wsprintf(szBuf, szMsg, siCObject->szDescriptionShort);
         ShowMessage(szBuf, TRUE);
         WinSpawn(szArchive, siCObject->szParameter, szTempDir, SW_SHOWNORMAL, TRUE);
         ShowMessage(szBuf, FALSE);
