@@ -69,6 +69,7 @@ EXPORTS		= \
 
 XPIDLSRCS	= \
 		nsIAppShell.idl \
+		nsIFilePicker.idl \
 		nsIFileSpecWithUI.idl \
 		nsIToolkit.idl \
 		nsISound.idl \

@@ -27,11 +27,11 @@
 interface nsIDOMWindow;
 
 [scriptable, uuid(c47de916-1dd1-11b2-8141-82507fa02b21)]
-interface nsIFileWidget : nsISupports
+interface nsIFilePicker : nsISupports
 {
-  const short LOAD            = 0;              // Load a file or directory
-  const short SAVE            = 1;              // Save a file or directory
-  const short GETFOLDER       = 2;              // Select a fodler/directory
+  const short modeLoad            = 0;          // Load a file or directory
+  const short modeSave            = 1;          // Save a file or directory
+  const short modeGetFolder       = 2;          // Select a fodler/directory
 
   const short returnOK        = 0;              // User hit cancel, ignore selection
   const short returnCancel    = 1;              // User hit Ok, process selection
