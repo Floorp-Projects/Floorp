@@ -27,7 +27,9 @@ date
 # then update the Mozilla sources
 cd $src_dir
 cd ..
-time cvs -Q -d $CVSROOT checkout MozillaSource
+
+# jwz: let's check out "mozilla" instead of merely "MozillaSource".
+time cvs -Q -d $CVSROOT checkout mozilla
 
 date
 
