@@ -457,10 +457,13 @@ nsFolderCompactState::ReleaseFolderLock()
 
 void nsFolderCompactState::ShowDoneStatus()
 {
-  nsXPIDLString statusString;
-  nsresult rv = m_folder->GetStringWithFolderNameFromBundle("compactingDone", getter_Copies(statusString));
-  if (statusString && NS_SUCCEEDED(rv))
-    ShowStatusMsg(statusString);
+  if (m_folder)
+  {
+    nsXPIDLString statusString;
+    nsresult rv = m_folder->GetStringWithFolderNameFromBundle("compactingDone", getter_Copies(statusString));
+    if (statusString && NS_SUCCEEDED(rv))
+      ShowStatusMsg(statusString);
+  }
 }
 
 nsresult
