@@ -798,12 +798,6 @@ nsLineLayout::CanPlaceFloatNow() const
 }
 
 PRBool
-nsLineLayout::LineIsEmpty() const
-{
-  return 0 == mTotalPlacedFrames;
-}
-
-PRBool
 nsLineLayout::LineIsBreakable() const
 {
   if ((0 != mTotalPlacedFrames) || GetFlag(LL_IMPACTEDBYFLOATS)) {
