@@ -3014,7 +3014,7 @@ PRBool
 nsPrintEngine::PrintDocContent(nsPrintObject* aPO, nsresult& aStatus)
 {
   NS_ASSERTION(aPO, "Pointer is null!");
-
+  aStatus = NS_OK;
 
   if (!aPO->mHasBeenPrinted && aPO->IsPrintable()) {
     PRBool donePrinting = PR_TRUE;
