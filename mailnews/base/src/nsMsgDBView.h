@@ -146,7 +146,7 @@ protected:
   PRPackedBool   mIsSearchView; // tells if the search view is loaded.
   PRPackedBool   mRemovingRow; // set when we're telling the outline a row is being removed. used to suppress msg loading.
                         // during delete/move operations.
-  PRPackedBool  mOfflineMsgSelected;
+  PRPackedBool  mCommandsNeedDisablingBecauseOffline;
   virtual const char * GetViewName(void) {return "MsgDBView"; }
   nsresult FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aAuthorString);
   nsresult FetchSubject(nsIMsgHdr * aMsgHdr, PRUint32 aFlags, PRUnichar ** aValue);

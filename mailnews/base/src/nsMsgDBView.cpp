@@ -126,11 +126,14 @@ nsMsgDBView::nsMsgDBView()
   mNumSelectedRows = 0;
   mSuppressMsgDisplay = PR_FALSE;
   mSuppressCommandUpdating = PR_FALSE;
-  mOfflineMsgSelected = PR_FALSE;
   mIsSpecialFolder = PR_FALSE;
   mIsNews = PR_FALSE;
   mDeleteModel = nsMsgImapDeleteModels::MoveToTrash;
   m_deletingRows = PR_FALSE;
+
+  /* mCommandsNeedDisablingBecauseOffline - A boolean that tell us if we needed to disable commands because we're offline w/o a downloaded msg select */
+  
+  mCommandsNeedDisablingBecauseOffline = PR_FALSE;  
   mRemovingRow = PR_FALSE;
   mIsSearchView = PR_FALSE;
   m_saveRestoreSelectionDepth = 0;
@@ -911,7 +914,10 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
   nsMsgViewIndex *indices = selection.GetData();
   NS_ASSERTION(numSelected == selection.GetSize(), "selected indices is not equal to num of msg selected!!!");
 
-  PRBool offlineMsgSelected = (indices) ? OfflineMsgSelected(indices, numSelected) : PR_FALSE;
+  PRBool commandsNeedDisablingBecauseOffline = PR_FALSE;
+
+  if(WeAreOffline() && indices)
+      commandsNeedDisablingBecauseOffline = !OfflineMsgSelected(indices, numSelected);
   // if only one item is selected then we want to display a message
   if (numSelected == 1)
   {
@@ -953,10 +959,10 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
   // (2) it went from 1 to 0
   // (3) it went from 1 to many
   // (4) it went from many to 1 or 0
-  // (5) a different msg was selected - perhaps it was offline or not...
+  // (5) a different msg was selected - perhaps it was offline or not...matters only when we are offline
 
   if ((numSelected == mNumSelectedRows || 
-      (numSelected > 1 && mNumSelectedRows > 1)) && mOfflineMsgSelected == offlineMsgSelected)
+      (numSelected > 1 && mNumSelectedRows > 1)) && (commandsNeedDisablingBecauseOffline == mCommandsNeedDisablingBecauseOffline))
   {
   } 
   // don't update commands if we're suppressing them, or if we're removing rows, unless it was the last row.
@@ -965,7 +971,7 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
     mCommandUpdater->UpdateCommandStatus();
   }
   
-  mOfflineMsgSelected = offlineMsgSelected;
+  mCommandsNeedDisablingBecauseOffline = commandsNeedDisablingBecauseOffline;
   mNumSelectedRows = numSelected;
   return NS_OK;
 }
