@@ -1562,7 +1562,10 @@ PK11_VerifySlotMechanisms(PK11SlotInfo *slot)
     	mechList = (CK_MECHANISM_TYPE *)
 			    PORT_Alloc(count *sizeof(CK_MECHANISM_TYPE));
 	alloced = PR_TRUE;
-	if (mechList == NULL) return PR_FALSE;
+	if (mechList == NULL) {
+	    PK11_FreeSlot(intern);
+	    return PR_FALSE;
+	}
     }
     /* get the list */
     if (!slot->isThreadSafe) PK11_EnterSlotMonitor(slot);
@@ -1822,6 +1825,7 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
 					random_bytes, sizeof(random_bytes));
 	        PK11_ExitSlotMonitor(slot);
 	    }
+	    PK11_FreeSlot(int_slot);
 	}
     }
 
