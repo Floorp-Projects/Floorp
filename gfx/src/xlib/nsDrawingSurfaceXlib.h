@@ -90,6 +90,12 @@ private:
   // are we offscreen
   PRBool         mIsOffscreen;
   PRBool         mDestroyDrawable;
+
+
+private:
+
+  static PRUint8 ConvertMaskToCount(unsigned long val);
+  static PRUint8 GetShiftForMask(unsigned long val);
 };
 
 #endif
