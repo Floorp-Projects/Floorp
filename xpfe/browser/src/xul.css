@@ -95,6 +95,10 @@ menuitem {
 	display: none;
 }
 
+popup {
+	display: none;
+}
+
 progressmeter {
         display:inline;
         border: 1px #666699;
