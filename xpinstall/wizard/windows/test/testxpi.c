@@ -26,6 +26,8 @@
 
 //#define SSU_DEBUG
 
+HANDLE hXPIStubInst;
+
 /* Function to show the usage for this application */
 void ShowUsage(char *name)
 {
@@ -54,6 +56,7 @@ void PrintError(LPSTR szMsg, DWORD dwErrorCodeSH, int iExitCode)
 
   printf("%s\n", szErrorString);
   printf("exit code: %d\n", iExitCode);
+  DeInitializeXPIStub();
   exit(iExitCode);
 }
 
@@ -357,7 +360,6 @@ LPSTR GetArgV(LPSTR lpszCommandLine, int iIndex, LPSTR lpszDest, int iDestSize)
   return(lpszDest);
 }
 
-//int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
 int main(void)
 {
   HRESULT           hrResult;
