@@ -197,7 +197,6 @@ nsWindow::nsWindow(nsISupports *aOuter):
   mDisplayed = PR_FALSE;
   mLowerLeft = PR_FALSE;
   mCursor = eCursor_standard;
-  mChildCount = 0;
 }
 
 
@@ -356,6 +355,7 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
 				    XmNheight, aRect.height,
 				    XmNmarginHeight, 0,
 				    XmNmarginWidth, 0,
+                                    XmNrecomputeSize, False,
 				    nsnull);
 
 
@@ -406,6 +406,7 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
 				    XmNheight, aRect.height,
 				    XmNmarginHeight, 0,
 				    XmNmarginWidth, 0,
+                                    XmNrecomputeSize, False,
 				    nsnull);
 
 
@@ -612,8 +613,6 @@ nsIEnumerator* nsWindow::GetChildren()
 //-------------------------------------------------------------------------
 void nsWindow::AddChild(nsIWidget* aChild)
 {
-  mChildArray[mChildCount] = aChild;
-  mChildCount++;
 }
 
 
@@ -885,6 +884,7 @@ void nsWindow::SetCursor(nsCursor aCursor)
    return;
   // Only change cursor if it's changing
   if (aCursor != mCursor) {
+printf("Changind CURSOR --------------------\n");
     Cursor newCursor = 0;
     Display *display = ::XtDisplay(mWidget);
     Window window = ::XtWindow(mWidget);
@@ -1063,24 +1063,25 @@ nsIAppShell* nsWindow::GetAppShell()
 //-------------------------------------------------------------------------
 void nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
-  int i;
-
-   // Scroll all of the form widgets
-  for (i = 0; i < mChildCount; i++) {
-    nsIWidget* widget = mChildArray[i];
-    nsRect rect;
-    widget->GetBounds(rect);
-    Widget w = widget->GetNativeData(NS_NATIVE_WIDGET);
-    rect.x = rect.x + aDx;
-    rect.y = rect.y + aDy;
-    widget->Move(rect.x, rect.y);
-  }
-
-
   if (mWidget == nsnull) {
     return;
   }
 
+   // Scroll all of the child widgets
+  Cardinal numChildren;
+  XtVaGetValues(mWidget, XtNnumChildren, &numChildren, nsnull);
+  if (numChildren > 0) {
+    WidgetList children;
+    XtVaGetValues(mWidget, XtNchildren, &children, nsnull);
+    int i ;
+    for(i = 0; i < numChildren; i++) {
+      Position x;
+      Position y;
+      XtVaGetValues(children[i], XtNx, &x, XtNy, &y, nsnull);
+      XtMoveWidget(children[i], x + aDx,  y + aDy);
+    } 
+  }
+  
   Window  win      = XtWindow(mWidget);
   Display *display = XtDisplay(mWidget);
   
