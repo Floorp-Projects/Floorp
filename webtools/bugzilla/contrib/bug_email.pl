@@ -37,7 +37,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.3 2000/02/13 14:39:47 seth%cs.brandeis.edu Exp $
+# $Id: bug_email.pl,v 1.4 2000/03/07 20:39:38 seth%cs.brandeis.edu Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -53,13 +53,18 @@
 #    to see that the one in the database is a subset of the one in the sender address
 #    this is probably prone to false positives and probably needs more work.
 
+# 03/07/2000 (SML)
+# - added in $DEFAULT_PRODUCT and $DEFAULT_COMPONENT.  i.e., if $DEFAULT_PRODUCT = "PENDING",
+#    any email submitted bug will be entered with a product of PENDING, if no other product is
+#    specified in the email.
+
 # Next round of revisions :
-# - default product and component (i.e., if you don't specify a product and component, it goes into a PENDING product)
 # - querying a bug over email
 # - appending a bug over email
 # - keywords over email
 # - use the globals.pl parameters functionality to edit and save this script's parameters
 # - integrate some setup in the checksetup.pl script
+# - gpg signatures for security
 
 use diagnostics;
 use strict;
@@ -89,7 +94,12 @@ my $EMAIL_TRANSFORM_NONE = "email_transform_none";
 my $EMAIL_TRANSFORM_BASE_DOMAIN = "email_transform_base_domain";
 my $EMAIL_TRANSFORM_NAME_ONLY = "email_transform_name_only";
 
+# change to do incoming email address fuzzy matching
 my $email_transform = $EMAIL_TRANSFORM_NONE;
+
+# change to use default product / component functionality
+my $DEFAULT_PRODUCT = "";
+my $DEFAULT_COMPONENT = "";
 
 ###############################################################
 # findUser
@@ -797,10 +807,12 @@ $SenderShort =~ s/^.*?([a-zA-Z0-9_.-]+?\@[a-zA-Z0-9_.-]+\.[a-zA-Z0-9_.-]+).*$/$1
 
 $SenderShort = findUser($SenderShort);
 
-if ($SenderShort == undef) {
+print "SenderShort is $SenderShort\n";
+if (!defined($SenderShort)) {
   $SenderShort = $Sender;
   $SenderShort =~ s/^.*?([a-zA-Z0-9_.-]+?\@[a-zA-Z0-9_.-]+\.[a-zA-Z0-9_.-]+).*$/$1/;
 }
+print "The sendershort is now $SenderShort\n";
 
 my $Subject = "";
 $Subject = $entity->get( 'Subject' );
@@ -891,7 +903,8 @@ if (defined $qacontact && $qacontact !~ /^\s*$/) {
 #                => first check product !
 # Product
 my @all_products = ();
-my $Product = "";
+# set to the default product.  If the default product is empty, this has no effect
+my $Product = $DEFAULT_PRODUCT;
 $Product = CheckProduct( $Control{'product'} ) if( defined( $Control{ 'product'} ));
 
 if ( $Product eq "" ) {
@@ -918,7 +931,9 @@ $Control{'product'} = $Product;
 #
 # Check the Component:
 #
-my $Component = "";
+
+# set to the default component.  If the default component is empty, this has no effect
+my $Component = $DEFAULT_COMPONENT;
 
 if( defined( $Control{'component' } )) {
     $Component = CheckComponent( $Control{'product'}, $Control{'component'} );
