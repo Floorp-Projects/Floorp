@@ -299,19 +299,19 @@ cert_smime_client()
   #
   echo "$SCRIPTNAME: Importing Certificates =============================="
   CU_ACTION="Import Alices's cert into Bob's db"
-  certu -E -t "u,u,u" -d ${R_BOBDIR} -f ${R_PWFILE} \
+  certu -E -t "p,p,p" -d ${R_BOBDIR} -f ${R_PWFILE} \
         -i ${R_ALICEDIR}/Alice.cert 2>&1
 
   CU_ACTION="Import Bob's cert into Alice's db"
-  certu -E -t "u,u,u" -d ${R_ALICEDIR} -f ${R_PWFILE} \
+  certu -E -t "p,p,p" -d ${R_ALICEDIR} -f ${R_PWFILE} \
         -i ${R_BOBDIR}/Bob.cert 2>&1
 
   CU_ACTION="Import Dave's cert into Alice's DB"
-  certu -E -t "u,u,u" -d ${R_ALICEDIR} -f ${R_PWFILE} \
+  certu -E -t "p,p,p" -d ${R_ALICEDIR} -f ${R_PWFILE} \
         -i ${R_DAVEDIR}/Dave.cert 2>&1
 
   CU_ACTION="Import Dave's cert into Bob's DB"
-  certu -E -t "u,u,u" -d ${R_BOBDIR} -f ${R_PWFILE} \
+  certu -E -t "p,p,p" -d ${R_BOBDIR} -f ${R_PWFILE} \
         -i ${R_DAVEDIR}/Dave.cert 2>&1
 
   if [ "$CERTFAILED" != 0 ] ; then
