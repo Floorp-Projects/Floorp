@@ -98,6 +98,8 @@ What kind of file is this?
     AppendComment($id, $::COOKIE{"Bugzilla_login"},
                   "Created an attachment (id=$attachid)\n$desc\n");
     print "Your attachment has been created.";
+    system("./processmail $id < /dev/null > /dev/null 2> /dev/null &");
+
 
 }
 
