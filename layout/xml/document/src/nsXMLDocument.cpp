@@ -46,6 +46,7 @@
 #include "nsIDOMComment.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
+
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMDocumentType.h"
@@ -69,6 +70,8 @@
 #include "nsIParserFilter.h"
 #include "nsNetUtil.h"
 #include "nsDOMError.h"
+#include "nsScriptSecurityManager.h"
+#include "nsIPrincipal.h"
 
 
 // XXX The XML world depends on the html atoms
@@ -255,11 +258,24 @@ nsXMLDocument::Load(const nsAReadableString& aUrl)
 {
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_OK;
+  nsresult rv;
   
-  // Create a new URI and channel
+  // Create a new URI
   rv = NS_NewURI(getter_AddRefs(uri), aUrl, mDocumentURL);
   if (NS_FAILED(rv)) return rv;
+
+  // Get security manager, check to see if we're allowed to load this URI
+  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(secMan->CheckLoadURIFromScript(nsnull, uri)))
+    return NS_ERROR_FAILURE;
+
+  // Set a principal for this document
+  rv = secMan->GetCodebasePrincipal(uri, &mPrincipal);
+  if (!mPrincipal) return rv;
+  NS_ADDREF(mPrincipal);
+
+  // Create a channel
   rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull);
   if (NS_FAILED(rv)) return rv;
 

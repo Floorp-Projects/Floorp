@@ -247,10 +247,17 @@ NS_IMETHODIMP GlobalWindowImpl::GetContext(nsIScriptContext ** aContext)
 
 NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
 {
-  if (aDocument) {
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
-    if (doc)
+  if (!aDocument) {
+    if (mDocument) {
+      // Cache the old principal now that the document is being removed.
+      nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
+      NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
       doc->GetPrincipal(getter_AddRefs(mDocumentPrincipal));
+    }
+  } else {
+    // let go of the old cached principal
+    mDocumentPrincipal = nsnull;
   }
 
   // Always clear watchpoints, to deal with two cases:
@@ -512,33 +519,41 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP GlobalWindowImpl::GetPrincipal(nsIPrincipal** result)
 {
-  if (!mDocumentPrincipal && !mDocument) {
-    // If we don't have a principal and we don't have a document we
-    // ask the parent window for the principal. This can happen when
-    // loading a frameset that has a <frame src="javascript:xxx">, in
-    // that case we use the global window is used in JS before we've
-    // loaded a document into the window.
-    nsCOMPtr<nsIDOMWindow> parent;
-
-    GetParent(getter_AddRefs(parent));
-
-    if (parent && (parent.get() != NS_STATIC_CAST(nsIDOMWindow *, this))) {
-      nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal(do_QueryInterface(parent));
-
-      if (objPrincipal) {
-        return objPrincipal->GetPrincipal(result);
-      }
-    }
-
-    return NS_ERROR_FAILURE;
-  }
-
   NS_ENSURE_ARG_POINTER(result);
 
-  *result = mDocumentPrincipal;
-  NS_ADDREF(*result);
+  if (mDocument) {
+    // If we have a document, get the principal from the document
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
+    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-  return NS_OK;
+    return doc->GetPrincipal(result);
+  }
+
+  if (mDocumentPrincipal) {
+    *result = mDocumentPrincipal;
+    NS_ADDREF(*result);
+
+    return NS_OK;
+  }
+
+  // If we don't have a principal and we don't have a document we
+  // ask the parent window for the principal. This can happen when
+  // loading a frameset that has a <frame src="javascript:xxx">, in
+  // that case the global window is used in JS before we've loaded
+  // a document into the window.
+  nsCOMPtr<nsIDOMWindow> parent;
+
+  GetParent(getter_AddRefs(parent));
+
+  if (parent && (parent.get() != NS_STATIC_CAST(nsIDOMWindow *, this))) {
+    nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal(do_QueryInterface(parent));
+
+    if (objPrincipal) {
+      return objPrincipal->GetPrincipal(result);
+    }
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 //*****************************************************************************
