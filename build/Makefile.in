@@ -27,7 +27,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
 DIRS		= unix
+endif
 
 include $(topsrcdir)/config/rules.mk
 
