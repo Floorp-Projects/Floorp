@@ -196,12 +196,13 @@ function initHost(obj)
          /((^|\s)[\<\>]?[\;\=\:\8]\~?[\-\^\v]?[\)\|\(pP\<\>oO0\[\]\/\\](\s|$))/,
          insertSmiley);
     obj.munger.addRule ("rheet", /(rhee+t\!*)/i, "rheet");
-    obj.munger.addRule ("bold", /(\*.*\*)/, "bold");
-    obj.munger.addRule ("italic", /[^sS](\/.*\/)/, "italic");
-    obj.munger.addRule ("teletype", /(\|.*\|)/, "teletype");
-    obj.munger.addRule ("underline", /(\_.*\_)/, "underline");
-    //obj.munger.addRule ("strikethrough", /(\-.*\-)/, "strikethrough");
-    obj.munger.addRule ("smallcap", /(\#.*\#)/, "smallcap");
+    obj.munger.addRule ("bold", /(\*[^\*]*\*)/, "bold");
+    obj.munger.addRule ("italic", /[^sS](\/[^\/]*\/)/, "italic");
+    obj.munger.addRule ("teletype", /(\|[^|]*\|)/, "teletype");
+    obj.munger.addRule ("underline1", /^(\_[^\_]*\_)/, "underline");
+    obj.munger.addRule ("underline2", /\W(\_[^\_]*\_)/, "underline");
+         //obj.munger.addRule ("strikethrough", /(\-.*\-)/, "strikethrough");
+    obj.munger.addRule ("smallcap", /(\#[^\#]*\#)/, "smallcap");
 
     obj.rdf = new RDFHelper();
     
