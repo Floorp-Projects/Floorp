@@ -44,6 +44,7 @@ CPPSRCS= \
   nsGfxButtonControlFrame.cpp \
   nsGfxCheckboxControlFrame.cpp \
   nsGfxRadioControlFrame.cpp \
+  nsIsIndexFrame.cpp \
   nsRadioControlGroup.cpp
 
 CPP_OBJS= \
@@ -64,6 +65,7 @@ CPP_OBJS= \
   .\$(OBJDIR)\nsGfxButtonControlFrame.obj \
   .\$(OBJDIR)\nsGfxCheckboxControlFrame.obj \
   .\$(OBJDIR)\nsGfxRadioControlFrame.obj \
+  .\$(OBJDIR)\nsIsIndexFrame.obj \
   .\$(OBJDIR)\nsRadioControlGroup.obj 
 
 
