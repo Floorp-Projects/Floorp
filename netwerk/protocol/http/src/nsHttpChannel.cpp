@@ -1563,10 +1563,20 @@ nsHttpChannel::PromptForUserPass(const char *host,
     LOG(("nsHttpChannel::PromptForUserPass [this=%x realm=%s]\n", this, realm));
 
     nsresult rv;
-    nsCOMPtr<nsIAuthPrompt> authPrompt = do_GetInterface(mCallbacks, &rv); 
+    nsCOMPtr<nsIAuthPrompt> authPrompt(do_GetInterface(mCallbacks, &rv)); 
     if (NS_FAILED(rv)) {
-        NS_WARNING("notification callbacks should provide nsIAuthPrompt");
-        return rv;
+        // Ok, perhaps the loadgroup's notification callbacks provide an auth prompt...
+        if (mLoadGroup) {
+            nsCOMPtr<nsIInterfaceRequestor> cbs;
+            rv = mLoadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
+            if (NS_SUCCEEDED(rv))
+                authPrompt = do_GetInterface(cbs, &rv);
+        }
+        if (NS_FAILED(rv)) {
+            // Unable to prompt -- return
+            NS_WARNING("notification callbacks should provide nsIAuthPrompt");
+            return rv;
+        }
     }
 
     // construct the domain string
