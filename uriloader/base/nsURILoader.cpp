@@ -523,7 +523,6 @@ nsresult nsDocumentOpenInfo::RetargetOutput(nsIRequest *request, const char * aS
 nsURILoader::nsURILoader()
 {
   NS_INIT_ISUPPORTS();
-  NS_NewISupportsArray(getter_AddRefs(m_listeners));
 }
 
 nsURILoader::~nsURILoader()
@@ -541,24 +540,21 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP nsURILoader::RegisterContentListener(nsIURIContentListener * aContentListener)
 {
   nsresult rv = NS_OK;
-  if (!m_listeners) return NS_ERROR_FAILURE;
 
   nsWeakPtr weakListener = do_GetWeakReference(aContentListener);
   NS_ASSERTION(weakListener, "your URIContentListener must support weak refs!\n");
   
   if (weakListener)
-    m_listeners->AppendElement(weakListener);
+    m_listeners.AppendObject(weakListener);
 
   return rv;
 } 
 
 NS_IMETHODIMP nsURILoader::UnRegisterContentListener(nsIURIContentListener * aContentListener)
 {
-  if (!m_listeners) return NS_OK;
-    
   nsWeakPtr weakListener = do_GetWeakReference(aContentListener);
   if (weakListener)
-    m_listeners->RemoveElement(weakListener);
+    m_listeners.RemoveObject(weakListener);
 
   return NS_OK;
   
@@ -797,21 +793,16 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
   // registered listeners
   if (!foundContentHandler)
   {
-    PRUint32 count = 0;
+    PRInt32 count = m_listeners.Count();
     PRInt32 i;
     
     // keep looping until we get a content listener back
-    m_listeners->Count(&count);
-    for(i = 0; i < (PRInt32)count && !foundContentHandler; i++)
+    for(i = 0; i < count && !foundContentHandler; i++)
     {
       //nsIURIContentListener's aren't refcounted.
-      nsWeakPtr weakListener;
-      nsCOMPtr<nsIURIContentListener> listener;
-
-      m_listeners->QueryElementAt(i, NS_GET_IID(nsIWeakReference),
-                                  getter_AddRefs(weakListener));
-         
-      listener = do_QueryReferent(weakListener);
+      nsWeakPtr weakListener = m_listeners[i];
+      nsCOMPtr<nsIURIContentListener> listener(do_QueryReferent(weakListener));
+      
       if (listener)
       {
         foundContentHandler = ShouldHandleContent(listener,
@@ -823,7 +814,7 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
         }
       } else {
         // remove from the listener list, reset i and update count
-        m_listeners->RemoveElementAt(i--);
+        m_listeners.RemoveObjectAt(i--);
         --count;
       }
     } // for loop
