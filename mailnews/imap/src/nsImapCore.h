@@ -105,35 +105,35 @@ typedef enum {
 
 // I think this should really go in an imap.h equivalent file
 typedef enum {
-	kPersonalNamespace = 0,
-	kOtherUsersNamespace,
-	kPublicNamespace,
-	kDefaultNamespace,
-	kUnknownNamespace
+    kPersonalNamespace = 0,
+    kOtherUsersNamespace,
+    kPublicNamespace,
+    kDefaultNamespace,
+    kUnknownNamespace
 } EIMAPNamespaceType;
 
 
 typedef enum {
-	kCapabilityUndefined = 0x00000000,
-	kCapabilityDefined = 0x00000001,
-	kHasAuthLoginCapability = 0x00000002,
-	kHasXNetscapeCapability = 0x00000004,
-	kHasXSenderCapability = 0x00000008,
-	kIMAP4Capability = 0x00000010,          /* RFC1734 */
-	kIMAP4rev1Capability = 0x00000020,      /* RFC2060 */
-	kIMAP4other = 0x00000040,                       /* future rev?? */
-	kNoHierarchyRename = 0x00000080,                        /* no hierarchy rename */
-	kACLCapability = 0x00000100,          /* ACL extension */
-	kNamespaceCapability = 0x00000200,    /* IMAP4 Namespace Extension */
-	kMailboxDataCapability = 0x00000400,  /* MAILBOXDATA SMTP posting extension */
-	kXServerInfoCapability = 0x00000800,  /* XSERVERINFO extension for admin urls */
-	kHasAuthPlainCapability = 0x00001000, /* new form of auth plain base64 login */
-	kUidplusCapability = 0x00002000,	   /* RFC 2359 UIDPLUS extension */
-	kLiteralPlusCapability = 0x00004000, /* RFC 2088 LITERAL+ extension */
-	kAOLImapCapability = 0x00008000,     /* aol imap extensions */
-  kHasLanguageCapability = 0x00010000, /* language extensions */
-  kHasCRAMCapability     = 0x00020000, /* CRAM auth extension */
-  kQuotaCapability       = 0x00040000  /* RFC 2087 quota extension */
+    kCapabilityUndefined = 0x00000000,
+    kCapabilityDefined = 0x00000001,
+    kHasAuthLoginCapability = 0x00000002,
+    kHasXNetscapeCapability = 0x00000004,
+    kHasXSenderCapability = 0x00000008,
+    kIMAP4Capability = 0x00000010,          /* RFC1734 */
+    kIMAP4rev1Capability = 0x00000020,      /* RFC2060 */
+    kIMAP4other = 0x00000040,                       /* future rev?? */
+    kNoHierarchyRename = 0x00000080,                        /* no hierarchy rename */
+    kACLCapability = 0x00000100,          /* ACL extension */
+    kNamespaceCapability = 0x00000200,    /* IMAP4 Namespace Extension */
+    kMailboxDataCapability = 0x00000400,  /* MAILBOXDATA SMTP posting extension */
+    kXServerInfoCapability = 0x00000800,  /* XSERVERINFO extension for admin urls */
+    kHasAuthPlainCapability = 0x00001000, /* new form of auth plain base64 login */
+    kUidplusCapability = 0x00002000,	   /* RFC 2359 UIDPLUS extension */
+    kLiteralPlusCapability = 0x00004000, /* RFC 2088 LITERAL+ extension */
+    kAOLImapCapability = 0x00008000,     /* aol imap extensions */
+    kHasLanguageCapability = 0x00010000, /* language extensions */
+    kHasCRAMCapability     = 0x00020000, /* CRAM auth extension */
+    kQuotaCapability       = 0x00040000  /* RFC 2087 quota extension */
 } eIMAPCapabilityFlag;
 
 // this used to be part of the connection object class - maybe we should move it into 
@@ -144,9 +144,9 @@ typedef enum {
     kHeadersRFC822andUid,
     kUid,
     kFlags,
-	  kRFC822Size,
-	  kRFC822HeadersOnly,
-	  kMIMEPart,
+    kRFC822Size,
+    kRFC822HeadersOnly,
+    kMIMEPart,
     kMIMEHeader
 } nsIMAPeFetchFields;
     
@@ -157,75 +157,52 @@ typedef enum {
 class nsIMAPMailboxInfo
 {
 public:
-	nsIMAPMailboxInfo(const char *name, char delimiter);
-	virtual ~nsIMAPMailboxInfo();
-	void SetChildrenListed(PRBool childrenListed) { m_childrenListed = childrenListed; }
-	PRBool GetChildrenListed() { return m_childrenListed; }
-	const char *GetMailboxName() { return m_mailboxName.get(); }
-	char	GetDelimiter() { return m_delimiter; }
-
+  nsIMAPMailboxInfo(const char *name, char delimiter);
+  virtual ~nsIMAPMailboxInfo();
+  void SetChildrenListed(PRBool childrenListed) { m_childrenListed = childrenListed; }
+  PRBool GetChildrenListed() { return m_childrenListed; }
+  const char *GetMailboxName() { return m_mailboxName.get(); }
+  char	GetDelimiter() { return m_delimiter; }
+  
 protected:
-	PRBool m_childrenListed;
-	nsCString m_mailboxName;
-	char m_delimiter;
+  PRBool m_childrenListed;
+  nsCString m_mailboxName;
+  char m_delimiter;
 };
 
 class nsImapMailboxSpec : public nsIMailboxSpec
 {
 public:
-	NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
+    
+  nsImapMailboxSpec();
+  virtual ~nsImapMailboxSpec();
 
-	nsImapMailboxSpec();
-	
-	virtual ~nsImapMailboxSpec();
-	NS_DECL_NSIMAILBOXSPEC
-
+  NS_DECL_NSIMAILBOXSPEC
+    
   nsImapMailboxSpec& operator=(const nsImapMailboxSpec& aCopy);
-	PRInt32 		  	folder_UIDVALIDITY;
-	PRInt32			number_of_messages;
-	PRInt32 		  	number_of_unseen_messages;
-	PRInt32			number_of_recent_messages;
-	
-	PRUint32			box_flags;
-	
-	char          *allocatedPathName;
-	PRUnichar		*unicharPathName;
-	char			hierarchySeparator;
-	char			*hostName;
-	
-	nsImapProtocol *connection;	// do we need this? It seems evil.
-	nsCOMPtr <nsIImapFlagAndUidState>     flagState;
-	
-	PRBool			folderSelected;
-	PRBool			discoveredFromLsub;
-
-	PRBool			onlineVerified;
-
-	nsIMAPNamespace *namespaceForFolder;
+  PRInt32 folder_UIDVALIDITY;
+  PRInt32 number_of_messages;
+  PRInt32 number_of_unseen_messages;
+  PRInt32 number_of_recent_messages;
+  
+  PRUint32  box_flags;
+  
+  char          *allocatedPathName;
+  PRUnichar *unicharPathName;
+  char      hierarchySeparator;
+  char     *hostName;
+  
+  nsImapProtocol *connection;	// do we need this? It seems evil.
+  nsCOMPtr <nsIImapFlagAndUidState>     flagState;
+  
+  PRBool    folderSelected;
+  PRBool    discoveredFromLsub;
+  
+  PRBool    onlineVerified;
+  
+  nsIMAPNamespace *namespaceForFolder;
 };
-
-
-typedef struct _GenericInfo {
-	char *c, *hostName;
-	PRBool rv;
-} GenericInfo;
-
-typedef struct _StreamInfo {
-	PRUint32	size;
-	char	*content_type;
-	nsImapMailboxSpec *boxSpec;
-} StreamInfo;
-
-typedef struct _ProgressInfo {
-	PRUnichar *message;
-  PRInt32 currentProgress;
-  PRInt32 maxProgress;
-} ProgressInfo;
-
-typedef struct _StatusMessageInfo {
-	PRUint32 msgID;
-	char * extraInfo;
-} StatusMessageInfo;
 
 typedef struct _utf_name_struct {
 	PRBool toUtf7Imap;
@@ -234,16 +211,13 @@ typedef struct _utf_name_struct {
 } utf_name_struct;
 
 
-typedef struct _delete_message_struct {
-	char *onlineFolderName;
-	PRBool		deleteAllMsgs;
-	char *msgIdString;
-} delete_message_struct;
+typedef struct _ProgressInfo {
+  PRUnichar *message;
+  PRInt32 currentProgress;
+  PRInt32 maxProgress;
+} ProgressInfo;
 
-typedef enum {
-	kEverythingDone,
-	kBringUpSubscribeUI
-} EIMAPSubscriptionUpgradeState;
+
 
 typedef enum 
 {
@@ -261,14 +235,8 @@ typedef enum
 class nsIMAPACLRightsInfo
 { 
 public:
-	char *hostName, *mailboxName, *userName, *rights;
+  char *hostName, *mailboxName, *userName, *rights;
 };
-
-typedef struct _uid_validity_info {
-	char *canonical_boxname;
-	const char *hostName;
-	int32 returnValidity;
-} uid_validity_info;
 
 
 #endif

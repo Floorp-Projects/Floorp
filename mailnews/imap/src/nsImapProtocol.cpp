@@ -5006,8 +5006,8 @@ void nsImapProtocol::OnLSubFolders()
 #ifdef UNREADY_CODE
     TimeStampListNow();
 #endif
-        if (NS_SUCCEEDED(rv))
-            ParseIMAPandCheckForNewMail();  
+    if (NS_SUCCEEDED(rv))
+      ParseIMAPandCheckForNewMail();  
     PR_Free(mailboxName);
   }
   else
@@ -5019,34 +5019,33 @@ void nsImapProtocol::OnLSubFolders()
 
 void nsImapProtocol::OnAppendMsgFromFile()
 {
-    nsCOMPtr<nsIFileSpec> fileSpec;
-    nsresult rv = NS_OK;
-    rv = m_runningUrl->GetMsgFileSpec(getter_AddRefs(fileSpec));
-    if (NS_SUCCEEDED(rv) && fileSpec)
+  nsCOMPtr<nsIFileSpec> fileSpec;
+  nsresult rv = NS_OK;
+  rv = m_runningUrl->GetMsgFileSpec(getter_AddRefs(fileSpec));
+  if (NS_SUCCEEDED(rv) && fileSpec)
+  {
+    char *mailboxName =  OnCreateServerSourceFolderPathString();
+    if (mailboxName)
     {
-        char *mailboxName =  
-            OnCreateServerSourceFolderPathString();
-        if (mailboxName)
-        {
-          imapMessageFlagsType flagsToSet = kImapMsgSeenFlag;
-          // we assume msg is read, for appending to sent/drafts folder, because
-          // in that case, we don't have a msg hdr (and we want the msg to be read)
-					PRUint32 msgFlags = MSG_FLAG_READ;
-          if (m_imapMessageSink)
-            m_imapMessageSink->GetCurMoveCopyMessageFlags(m_runningUrl, &msgFlags);
-
-          if (!(msgFlags & MSG_FLAG_READ))
-            flagsToSet &= ~kImapMsgSeenFlag;
-					if (msgFlags & MSG_FLAG_MDN_REPORT_SENT)
-						flagsToSet |= kImapMsgMDNSentFlag;
-          UploadMessageFromFile(fileSpec, mailboxName, flagsToSet);
-          PR_Free( mailboxName );
-        }
-        else
-        {
-            HandleMemoryFailure();
-        }
+      imapMessageFlagsType flagsToSet = kImapMsgSeenFlag;
+      // we assume msg is read, for appending to sent/drafts folder, because
+      // in that case, we don't have a msg hdr (and we want the msg to be read)
+      PRUint32 msgFlags = MSG_FLAG_READ;
+      if (m_imapMessageSink)
+        m_imapMessageSink->GetCurMoveCopyMessageFlags(m_runningUrl, &msgFlags);
+      
+      if (!(msgFlags & MSG_FLAG_READ))
+        flagsToSet &= ~kImapMsgSeenFlag;
+      if (msgFlags & MSG_FLAG_MDN_REPORT_SENT)
+        flagsToSet |= kImapMsgMDNSentFlag;
+      UploadMessageFromFile(fileSpec, mailboxName, flagsToSet);
+      PR_Free( mailboxName );
     }
+    else
+    {
+      HandleMemoryFailure();
+    }
+  }
 }
 
 void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
