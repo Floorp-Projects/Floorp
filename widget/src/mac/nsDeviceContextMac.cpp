@@ -120,4 +120,9 @@ NS_IMETHODIMP nsDeviceContextMac :: CheckFontExistence(const nsString& aFontName
 
 //------------------------------------------------------------------------
 
+NS_IMETHODIMP nsDeviceContextWin :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
+{
+  aPixel = aColor;
+  return NS_OK;
+}
 
