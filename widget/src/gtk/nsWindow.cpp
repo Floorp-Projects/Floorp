@@ -36,6 +36,10 @@
 #include "nsIAppShell.h"
 #include "nsClipboard.h"
 
+#include "nsGtkUtils.h" // for nsGtkUtils::gdk_window_flash()
+
+#include "nsIServiceManager.h"
+#include "nsIPref.h"
 
 #include "stdio.h"
 
@@ -407,13 +411,6 @@ nsresult nsWindow::SetIcon(GdkPixmap *pixmap,
 // Uncommenting this will cause OnPaint() to printf what it is doing
 #undef TRACE_PAINT
 
-// Uncommenting this will cause the OnPaint() area rect to flash
-#undef TRACE_PAINT_FLASH
-
-#ifdef TRACE_PAINT_FLASH
-#include "nsGtkUtils.h" // for nsGtkUtils::gdk_window_flash()
-#endif
-
 /**
  * Processes an Expose Event
  *
@@ -458,25 +455,59 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
     event.renderingContext = GetRenderingContext();
     result = DispatchWindowEvent(&event);
 
-#ifdef TRACE_PAINT_FLASH
-    GdkRectangle ar;
-    GdkRectangle * area = NULL;
-
-    if (event.rect)
+#ifdef NS_DEBUG
+    // The idea here is to create this widget debugging thing
+    // only once, otherwise we will slow down painting significantly.
+    //
+    // However, it will cause wd to leak.  It should probably be 
+    // cleaned up in the dll unloading magic
+    //
+    // But, its debug only code...
+    static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+    
+    static nsIPref * sPrefs = nsnull;
+    
+    PRBool flashing = PR_FALSE;
+    
+    if (!sPrefs)
     {
-      ar.x = event.rect->x;
-      ar.y = event.rect->y;
-
-      ar.width = event.rect->width;
-      ar.height = event.rect->height;
-
-      area = &ar;
+      nsresult rv = nsServiceManager::GetService(kPrefCID, 
+                                                 NS_GET_IID(nsIPref),
+                                                 (nsISupports**) &sPrefs);
+      
+      NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
     }
-
-    nsGtkUtils::gdk_window_flash(renderWindow,
-                                 1,
-                                 100000,
-                                 area);
+    
+    if (sPrefs)
+    {
+      sPrefs->GetBoolPref("nglayout.widget.flash_invalidate_areas",&flashing);
+    }
+    
+    //nsServiceManager::ReleaseService(kPrefCID, sPrefs);
+    
+    if (flashing)
+    {
+      GdkWindow *    gw = GetRenderWindow();
+      
+      if (gw)
+      {
+        GdkRectangle   ar;
+        GdkRectangle * area = NULL;
+        
+        if (event.rect)
+        {
+          ar.x = event.rect->x;
+          ar.y = event.rect->y;
+          
+          ar.width = event.rect->width;
+          ar.height = event.rect->height;
+          
+          area = &ar;
+        }
+        
+        nsGtkUtils::gdk_window_flash(gw,1,100000,area);
+      }
+    }
 #endif
   }
   return result;
