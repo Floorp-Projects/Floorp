@@ -6,20 +6,20 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = "1.080";
+$Version = '$Revision: 1.11 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
     $BuildAdministrator = "$ENV{'USER'}\@$ENV{'HOST'}";
 
-    #Default values of cmdline opts
+    # Default values of cmdline opts
     $BuildDepend = 1;	# Depend or Clobber
     $ReportStatus = 1;	# Send results to server or not
     $BuildOnce = 0;	# Build once, don't send results to server
     $BuildClassic = 0;	# Build classic source
     $RunTest = 1;	# Run the smoke test on successful build, or not
 
-    #relative path to binary
+    # Relative path to binary
     $BinaryName{'x'} = 'mozilla-export';
     $BinaryName{'qt'} = 'qtmozilla-export';
     $BinaryName{'gnome'} = 'gnuzilla-export';
@@ -27,7 +27,7 @@ sub InitVars {
 
     # Set these to what makes sense for your system
     $cpus = 1;
-    $Make = 'gmake'; # Must be gnu make
+    $Make = 'gmake'; # Must be GNU make
     $MakeOverrides = '';
     $mail = '/bin/mail';
     $CVS = 'cvs -z3';
@@ -64,13 +64,13 @@ sub ConditionalArgs {
 	$ConfigureArgs .= " --enable-fe=$FE";
 	$BuildModule = 'Raptor';
 	$BuildTag = ''
-	    if ($BuildTag eq '');
+	    if ( $BuildTag eq '' );
 	$TopLevel = "mozilla-classic";
     } else {
 	$FE = 'apprunner'; 
 	$BuildModule = 'SeaMonkeyAll';
     }
-    $CVSCO .= " -r $BuildTag" if ( $BuildTag ne '');
+    $CVSCO .= " -r $BuildTag" if ( $BuildTag ne '' );
 }
 
 sub SetupEnv {
@@ -320,7 +320,7 @@ sub GetSystemInfo {
 	$ObjDir =~ s/s5\./s2./o;
     }
 
-    if ($BuildClassic) {
+    if ( $BuildClassic ) {
         $logfile = "${DirName}-classic.log";
     } else {
 	$logfile = "${DirName}.log";
@@ -353,7 +353,7 @@ sub BuildIt {
 	$StartTime = time - 60 * 10;
 	$StartTimeStr = &CVSTime($StartTime);
 
-	&StartBuild if ($ReportStatus);
+	&StartBuild if ( $ReportStatus );
  	$CurrentDir = getcwd();
 	if ( $CurrentDir ne $StartDir ) {
 	    print "startdir: $StartDir, curdir $CurrentDir\n";
@@ -402,7 +402,7 @@ sub BuildIt {
 	close(PULL);
 
 	# Do a separate checkout with toplevel makefile
-	if ($BuildClassic == 0) {
+	if ( $BuildClassic == 0 ) {
 	    print LOG "$Make -f mozilla/client.mk checkout CVSCO='$CVS $CVSCO'|\n";
 	    open (PULLALL, "$Make -f mozilla/client.mk checkout CVSCO='$CVS $CVSCO' |\n");
 	    while (<PULLALL>) {
@@ -452,9 +452,8 @@ sub BuildIt {
 	print "--- config.cache.\n";
 	print LOG "--- config.cache.\n";
 
-	# if we are building depend, rebuild dependencies
-
-	if ($BuildDepend) {
+	# If we are building depend, rebuild dependencies
+	if ( $BuildDepend ) {
 	    print LOG "$Make MAKE='$Make -j $cpus' depend 2>&1 |\n";
 	    open ( MAKEDEPEND, "$Make MAKE='$Make -j $cpus' depend 2>&1 |\n");
 	    while ( <MAKEDEPEND> ) {
@@ -463,7 +462,6 @@ sub BuildIt {
 	    }
 	    close (MAKEDEPEND);
 	    system("rm -rf dist");
-
 	} else {
 	    # Building clobber
 	    print LOG "$Make MAKE='$Make -j $cpus' $ClobberStr 2>&1 |\n";
@@ -478,13 +476,13 @@ sub BuildIt {
 	@felist = split(/,/, $FE);
 
 	foreach $fe ( @felist ) {	    
-	    if (&BinaryExists($fe)) {
+	    if ( &BinaryExists($fe) ) {
 		print LOG "deleting existing binary\n";
 		&DeleteBinary($fe);
 	    }
 	}
 
-	if ($BuildClassic) {
+	if ( $BuildClassic ) {
 	    # Build the BE only	    
 	    print LOG "$Make MAKE='$Make -j $cpus' MOZ_FE= 2>&1 |\n";
 	    open( BEBUILD, "$Make MAKE='$Make -j $cpus' MOZ_FE= 2>&1 |");
@@ -516,7 +514,7 @@ sub BuildIt {
 	}
 
 	foreach $fe (@felist) {
-	    if (&BinaryExists($fe)) {
+	    if ( &BinaryExists($fe) ) {
 		if ( $RunTest ) {
 		    print LOG "export binary exists, build successful.  Testing...\n";
 		    $BuildStatus = &RunSmokeTest($fe);
@@ -570,7 +568,7 @@ sub BuildIt {
 		$val = $q * 1000;
 		$Output = substr($_, $val, 1000);
 
-		last if $Output eq undef;
+		last if ( $Output eq undef );
 
 		$Output =~ s/^\.$//g;
 		$Output =~ s/\n//g;
@@ -586,9 +584,9 @@ sub BuildIt {
 	system( "$mail $Tinderbox_server < ${logfile}.last" ) if ( $ReportStatus );
 	unlink("$logfile");
 
-	# if this is a test run, set early_exit to 0. 
-	#This mean one loop of execution
-	$EarlyExit++ if ($BuildOnce);
+	# If this is a test run, set early_exit to 0. 
+	# This mean one loop of execution
+	$EarlyExit++ if ( $BuildOnce );
     }
 }
 
@@ -626,15 +624,15 @@ sub StartBuild {
 sub BinaryExists {
     my($fe) = @_;
     my($Binname);
-    $fe = 'x' if (!defined($fe)); 
+    $fe = 'x' if ( !defined($fe) ); 
 
-    if ($BuildClassic) {
+    if ( $BuildClassic ) {
 	$BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/'. $BuildObjName . "/cmd/${fe}fe/" . $BinaryName{"$fe"};
     } else {
 	$BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName{"$fe"};
     }
     print LOG $BinName . "\n"; 
-    if ((-e $BinName) && (-x $BinName) && (-s $BinName)) {
+    if ( (-e $BinName) && (-x $BinName) && (-s $BinName) ) {
 	1;
     }
     else {
@@ -645,9 +643,9 @@ sub BinaryExists {
 sub DeleteBinary {
     my($fe) = @_;
     my($BinName);
-    $fe = 'x' if (!defined($fe)); 
+    $fe = 'x' if ( !defined($fe) ); 
 
-    if ($BuildClassic) {
+    if ( $BuildClassic ) {
 	$BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . "/cmd/${fe}fe/" . $BinaryName{"$fe"};
     } else {
 	$BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName{"$fe"};
@@ -665,21 +663,21 @@ sub ParseArgs {
     $i = 0;
     $manArg = 0;
     while( $i < @ARGV ) {
-	if ($ARGV[$i] eq '--classic') {
+	if ( $ARGV[$i] eq '--classic' ) {
 	    $BuildClassic = 1;
 	}
-	elsif ($ARGV[$i] eq '--clobber') {
+	elsif ( $ARGV[$i] eq '--clobber' ) {
 	    $BuildDepend = 0;
 	    $manArg++;
 	}
-	elsif ($ARGV[$i] eq '--depend') {
+	elsif ( $ARGV[$i] eq '--depend' ) {
 	    $BuildDepend = 1;
  	    $manArg++;
 	}
-	elsif ($ARGV[$i] eq '--noreport') {
+	elsif ( $ARGV[$i] eq '--noreport' ) {
 	    $ReportStatus = 0;
 	}
-	elsif ($ARGV[$i] eq '--notest') {
+	elsif ( $ARGV[$i] eq '--notest' ) {
 	    $RunTest = 0;
 	}
 	elsif ( $ARGV[$i] eq '--once' ) {
@@ -688,7 +686,7 @@ sub ParseArgs {
 	elsif ( $ARGV[$i] eq '-tag' ) {
 	    $i++;
 	    $BuildTag = $ARGV[$i];
-	    if ( $BuildTag eq '' || $BuildTag eq '-t') {
+	    if ( $BuildTag eq '' || $BuildTag eq '-t' ) {
 		&PrintUsage;
 	    }
 	}
@@ -699,24 +697,24 @@ sub ParseArgs {
 		&PrintUsage;
 	    }
 	}
-	elsif ($ARGV[$i] eq '--version' || $ARGV[$i] eq '-v') {
-	    die "$0: version $Version\n";
+	elsif ( $ARGV[$i] eq '--version' || $ARGV[$i] eq '-v' ) {
+	    die "$0: version" . substr($Version,9,6) . "\n";
 	} else {
 	    &PrintUsage;
 	}
 
 	$i++;
-    } #EndWhile
+    }
 
     if ( $BuildTree =~ /^\s+$/i ) {
 	&PrintUsage;
     }
 
-    if ($BuildDepend eq undef) {
+    if ( $BuildDepend eq undef ) {
 	&PrintUsage;
     }
 
-    &PrintUsage if (! $manArg );
+    &PrintUsage if ( $manArg == 0 );
 }
 
 sub PrintUsage {
@@ -737,17 +735,17 @@ sub RunSmokeTest {
     my($status) = 0;
     my($waittime) = 45;
     my($pid) = fork;
-    $fe = 'x' if (!defined($fe));
+    $fe = 'x' if ( !defined($fe) );
 
     $Binary = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName{"$fe"};
     print LOG $Binary . "\n";
 
-    exec $Binary if (!$pid);
+    exec $Binary if ( !$pid );
 
     # parent - wait $waittime seconds then check on child
     sleep $waittime;
     $status = waitpid($pid, WNOHANG());
-    if ($status != 0) {
+    if ( $status != 0 ) {
 	print LOG "$Binary has crashed or quit.  Turn the tree orange now.\n";
 	return 333;
     }
@@ -759,7 +757,7 @@ sub RunSmokeTest {
 	# give it 3 seconds to actually die
 	sleep 3;
 	$status = waitpid($pid, WNOHANG());
-	last if ($status != 0);
+	last if ( $status != 0 );
     }
     return 0;
 }
