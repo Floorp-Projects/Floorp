@@ -90,7 +90,7 @@ nsComposeTxtSrvFilterConstructorForComposer(nsISupports *aOuter,
                                             REFNSIID aIID,
                                             void **aResult)
 {
-    return nsComposeTxtSrvFilterConstructor(aOuter, aIID, aResult, PR_TRUE);
+    return nsComposeTxtSrvFilterConstructor(aOuter, aIID, aResult, PR_FALSE);
 }
 
 static NS_IMETHODIMP
@@ -98,7 +98,7 @@ nsComposeTxtSrvFilterConstructorForMail(nsISupports *aOuter,
                                         REFNSIID aIID,
                                         void **aResult)
 {
-    return nsComposeTxtSrvFilterConstructor(aOuter, aIID, aResult, PR_FALSE);
+    return nsComposeTxtSrvFilterConstructor(aOuter, aIID, aResult, PR_TRUE);
 }
 
 NS_IMETHODIMP nsEditorDocStateControllerConstructor(nsISupports *aOuter, REFNSIID aIID, 
