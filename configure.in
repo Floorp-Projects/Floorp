@@ -68,11 +68,15 @@ CFLAGS="$CFLAGS $X_CFLAGS"
 LDFLAGS="$LDFLAGS $X_LIBS"
 dnl LIBS="$X_PRE_LIBS $X_EXTRA_LIBS $LIBS"
 
-MOTIF_VERSION=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC -xif -I$x_includes`
-MOTIF_INCLUDES=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC -xif -I$x_includes -if`
-MOTIF_STATIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC -xif -I$x_includes -sf`
-MOTIF_DYNAMIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC -xif -I$x_includes -df`
-MOTIF_DYNAMIC_PATHS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC -xif -I$x_includes -dp`
+if [ test ! -z "$x_includes" ]; then
+    MOTIF_XINCS="-xif -I$x_includes"
+fi
+
+MOTIF_VERSION=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS`
+MOTIF_INCLUDES=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -if`
+MOTIF_STATIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -sf`
+MOTIF_DYNAMIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -df`
+MOTIF_DYNAMIC_PATHS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -dp`
 
 ${srcdir}/config/mkdetect/detect_motif.sh --cleanup
 
