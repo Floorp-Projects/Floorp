@@ -322,11 +322,13 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
     if (eHTMLFrameConstraint_Fixed == aReflowState.heightConstraint) {
       scrollAreaSize.height -= border.top + border.bottom;
 
+#if 0
       // If scrollbars are always visible then subtract for the
       // height of the horizontal scrollbar
       if (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow) {
         scrollAreaSize.height -= NSToCoordRound(sbHeight);
       }
+#endif
     }
   }
   else {
@@ -336,11 +338,13 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
       // The height is constrained so subtract for borders
       scrollAreaSize.height -= border.top + border.bottom;
 
+#if 0
       // If scrollbars are always visible then subtract for the
       // height of the horizontal scrollbar
       if (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow) {
         scrollAreaSize.height -= NSToCoordRound(sbHeight);
       }
+#endif
     }
   }
   //@ Make me a subroutine...
@@ -363,12 +367,16 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
     }
     
     if (kidDesiredSize.height <= scrollAreaSize.height) {
-      // If the scrollbars are auto and the scrolled frame is vully visible
+      // If the scrollbars are auto and the scrolled frame is fully visible
       // vertically then the vertical scrollbar will be hidden so increase the
-      // width of the scrhidden then increase the scrolled frame's width
+      // width of the scrolled frame
+#if 0
       if (NS_STYLE_OVERFLOW_AUTO == display->mOverflow) {
+#endif
         kidDesiredSize.width += NSToCoordRound(sbWidth);
+#if 0
       }
+#endif
     }
   }
   if ((eHTMLFrameConstraint_Fixed == aReflowState.widthConstraint) || aReflowState.HaveConstrainedWidth()) {
@@ -408,10 +416,12 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
     aDesiredSize.height = kidDesiredSize.height;
   }
   aDesiredSize.height += border.top + border.bottom;
+#if 0
   // XXX This should really be "if we have a visible horizontal scrollbar"...
   if (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow) {
     aDesiredSize.height += NSToCoordRound(sbHeight);
   }
+#endif
 
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
