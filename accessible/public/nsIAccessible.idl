@@ -374,7 +374,7 @@ interface nsIAccessible : nsISupports
   enum { ROLE_COLUMN = 66U };      // ATK_ROLE_UNKNOWN
   enum { ROLE_ROW = 66U };         // ATK_ROLE_UNKNOWN
   enum { ROLE_CELL = 55U };        // ATK_ROLE_TABLE_CELL
-  enum { ROLE_LINK = 66U };        // ATK_ROLE_UNKNOWN
+  enum { ROLE_LINK = 101U };        // ATK doesn't have such role now
   enum { ROLE_HELPBALLOON = 66U }; // ATK_ROLE_UNKNOWN
   // The object represents a cartoon-like graphic object
   enum { ROLE_CHARACTER = 26U };   // ATK_ROLE_IMAGE
