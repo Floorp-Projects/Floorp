@@ -128,6 +128,10 @@ ifeq ($(OS_ARCH),UnixWare)
 OS_ARCH		:= UNIXWARE
 OS_RELEASE	:= $(shell uname -v)
 endif
+ifeq ($(OS_ARCH),OS_2)
+OS_ARCH		:= OS2
+OS_RELEASE	:= $(shell uname -v)
+endif
 ifeq ($(OS_ARCH),Mac OS)
 ifeq ($(OS_RELEASE),10.0)
 OS_ARCH		:= Rhapsody
@@ -203,29 +207,14 @@ NFSPWD		= $(CONFIG_TOOLS)/nfspwd
 PURIFY		= purify $(PURIFYOPTIONS)
 QUANTIFY	= quantify $(QUANTIFYOPTIONS)
 MOC		= moc
-XPIDL_COMPILE 	= $(DIST)/bin/xpidl
-XPIDL_LINK	= $(DIST)/bin/xpt_link
+XPIDL_COMPILE 	= $(DIST)/bin/xpidl$(BIN_SUFFIX)
+XPIDL_LINK	= $(DIST)/bin/xpt_link$(BIN_SUFFIX)
 
 ifeq ($(OS_ARCH),OS2)
-EMPTY		:=
-SLASH		:= /$(EMPTY)
-BSLASH		:= \$(EMPTY)
-SEMICOLON	:= ;$(EMPTY)
-SPACE		:= $(EMPTY) $(EMPTY)
-PATH_SEPARATOR	:= \;
-RC		= flipper rc$(BIN_SUFFIX)
-LIB_SUFFIX	= lib
-DLL_SUFFIX	= dll
-MAP_SUFFIX	= map
-BIN_SUFFIX	= .exe
-AR		= flipper ILibo //noignorecase //nologo $@
-IMPLIB		= flipper ILibo //noignorecase //nologo $@
-DLLFLAGS	= -DLL -OUT:$@ $(XLFLAGS) -MAP:$(@:.dll=.map)
-LFLAGS		= $(OBJS) -OUT:$@ $(XLFLAGS) $(DEPLIBS) $(EXTRA_LIBS) -MAP:$(@:.dll=.map) $(DEF_FILE)
+SHELL		= gbash.exe
 NSINSTALL	= nsinstall
 INSTALL		= $(NSINSTALL)
-JAVA_PROG	= flipper java -norestart
-JAVAC_ZIP	= $(subst $(BSLASH),$(SLASH),$(JAVA_HOME))/lib/classes.zip
+PATH_SEPARATOR	:= \;
 else
 ifeq ($(OS_ARCH),WINNT)
 PATH_SEPARATOR	:= :
@@ -282,11 +271,13 @@ LIBNSPR		+= $(DIST)/lib/libdbmalloc.$(LIB_SUFFIX)
 endif
 
 ifeq ($(OS_ARCH),OS2)
+ifneq ($(MOZ_WIDGET_TOOLKIT), os2)
 LIBNSJAVA	= $(DIST)/lib/jrt$(MOZ_BITS)$(VERSION_NUMBER).$(LIB_SUFFIX)
 LIBMD		= $(DIST)/lib/libjmd.$(LIB_SUFFIX)
 LIBJAVA		= $(DIST)/lib/libjrt.$(LIB_SUFFIX)
 LIBNSPR		= $(DIST)/lib/pr$(MOZ_BITS)$(VERSION_NUMBER).$(LIB_SUFFIX)
 LIBXP		= $(DIST)/lib/libxp.$(LIB_SUFFIX)
+endif
 else
 ifeq ($(OS_ARCH),WINNT)
 LIBNSJAVA	= $(DIST)/lib/jrt3221.$(LIB_SUFFIX)
@@ -401,7 +392,7 @@ endif
 
 GARBAGE		+= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o) Templates.DB
 
-ifneq ($(OS_ARCH),WINNT)
+ifneq (,$(filter-out OS2 WINNT, $(OS_ARCH)))
 NSINSTALL	= $(CONFIG_TOOLS)/nsinstall
 
 ifeq ($(NSDISTMODE),copy)
@@ -432,7 +423,7 @@ JAVA_SOURCEPATH	= $(DEPTH)/sun-java/classsrc
 endif
 
 ifndef JAVAH_IN_JAVA
-ifeq ($(OS_ARCH),OS2)
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
 JAVAH_PROG	= flipper $(DIST)/bin/javah
 else
 JAVAH_PROG	= $(DIST)/bin/javah
@@ -451,7 +442,7 @@ ifeq ($(STAND_ALONE_JAVA),1)
 STAND_ALONE_JAVA_DLL_SUFFIX	= s
 endif
 
-ifeq ($(OS_ARCH),OS2)
+ifeq ($(MOZ_OS2_TOOLS),OLD_IBM_BUILD) # These DLL names are no longer valid for OS/2
 AWTDLL		= awt$(MOZ_BITS)$(VERSION_NUMBER).$(DLL_SUFFIX)
 AWTSDLL		= awt$(MOZ_BITS)$(VERSION_NUMBER)$(STAND_ALONE_JAVA_DLL_SUFFIX).$(DLL_SUFFIX)
 CONDLL		= con.$(MOZ_BITS)$(VERSION_NUMBER)(DLL_SUFFIX)
