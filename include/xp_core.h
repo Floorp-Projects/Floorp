@@ -174,6 +174,9 @@
      *  been #undef-ing Bool before including this file.
      *  Can we just #undef Bool here? <mailto:mcafee> (help from djw, converse)
      */
+#ifdef Bool
+#undef Bool
+#endif
     typedef char Bool;
     typedef char XP_Bool;
 #endif
