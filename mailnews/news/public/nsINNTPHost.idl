@@ -18,9 +18,6 @@
 
 #include "nsISupports.idl"
 
-#include "nsINNTPNewsgroup.idl"
-#include "nsINNTPNewsgroupList.idl"
-
 interface nsINNTPNewsgroup;
 interface nsINNTPNewsgroupList;
 
