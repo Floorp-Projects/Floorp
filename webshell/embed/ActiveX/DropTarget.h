@@ -18,6 +18,8 @@
 #ifndef DROPTARGET_H
 #define DROPTARGET_H
 
+// Simple drop target implementation
+
 class CDropTarget : public CComObjectRootEx<CComSingleThreadModel>,
                     public IDropTarget
 {
@@ -29,7 +31,7 @@ BEGIN_COM_MAP(CDropTarget)
 	COM_INTERFACE_ENTRY(IDropTarget)
 END_COM_MAP()
 
-	// IDropTarget
+// IDropTarget
 	virtual HRESULT STDMETHODCALLTYPE DragEnter(/* [unique][in] */ IDataObject __RPC_FAR *pDataObj, /* [in] */ DWORD grfKeyState, /* [in] */ POINTL pt, /* [out][in] */ DWORD __RPC_FAR *pdwEffect);
 	virtual HRESULT STDMETHODCALLTYPE DragOver(/* [in] */ DWORD grfKeyState, /* [in] */ POINTL pt, /* [out][in] */ DWORD __RPC_FAR *pdwEffect);
 	virtual HRESULT STDMETHODCALLTYPE DragLeave(void);

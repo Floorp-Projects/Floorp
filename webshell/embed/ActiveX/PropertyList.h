@@ -21,8 +21,8 @@
 
 // Property is a name,variant pair held by the browser. In IE, properties
 // offer a primitive way for DHTML elements to talk back and forth with
-// the host app. The Mozilla app currently just implements them for
-// compatibility reasons
+// the host app.
+
 struct Property
 {
   CComBSTR szName;

@@ -18,31 +18,51 @@
 #ifndef IOLECOMMANDIMPL_H
 #define IOLECOMMANDIMPL_H
 
-// Macros to be placed in any class derived from the IOleCommandTargetImpl
-// class. These define what commands are exposed from the object.
-
-#define BEGIN_OLECOMMAND_TABLE() \
-	OleCommandInfo *GetCommandTable() \
-	{ \
-		static OleCommandInfo s_aSupportedCommands[] = \
-		{
-
-#define OLECOMMAND_MESSAGE(id, group, cmd, verb, desc) \
-			{ id, group, cmd, NULL, verb, desc },
-
-#define OLECOMMAND_HANDLER(id, group, handler, verb, desc) \
-			{ id, group, 0, handler, verb, desc },
-
-#define END_OLECOMMAND_TABLE() \
-			{ 0, &GUID_NULL, 0, NULL, NULL, NULL } \
-		}; \
-		return s_aSupportedCommands; \
-	};
-
 // Implementation of the IOleCommandTarget interface. The template is
-// reasonably generic which is a good thing given how needlessly complicated
-// this interface is. Blame Microsoft not me.
-
+// reasonably generic and reusable which is a good thing given how needlessly
+// complicated this interface is. Blame Microsoft for that and not me.
+//
+// To use this class, derive your class from it like this:
+//
+// class CComMyClass : public IOleCommandTargetImpl<CComMyClass>
+// {
+//     ... Ensure IOleCommandTarget is listed in the interface map ...
+// BEGIN_COM_MAP(CComMyClass)
+//     COM_INTERFACE_ENTRY(IOleCommandTarget)
+//     // etc.
+// END_COM_MAP()
+//     ... And then later on define the command target table ...
+// BEGIN_OLECOMMAND_TABLE()
+//    OLECOMMAND_MESSAGE(OLECMDID_PRINT, NULL, ID_PRINT, L"Print", L"Print the page")
+//    OLECOMMAND_MESSAGE(OLECMDID_SAVEAS, NULL, 0, L"SaveAs", L"Save the page")
+//    OLECOMMAND_HANDLER(IDM_EDITMODE, &CGID_MSHTML, EditModeHandler, L"EditMode", L"Switch to edit mode")
+// END_OLECOMMAND_TABLE()
+//     ... Now the window that OLECOMMAND_MESSAGE sends WM_COMMANDs to ...
+//     HWND GetCommandTargetWindow() const
+//     {
+//         return m_hWnd;
+//     }
+//     ... Now procedures that OLECOMMAND_HANDLER calls ...
+//     static HRESULT _stdcall EditModeHandler(CMozillaBrowser *pThis, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+// }
+//
+// The command table defines which commands the object supports. Commands are
+// defined by a command id and a command group plus a WM_COMMAND id or procedure,
+// and a verb and short description.
+//
+// Notice that there are two macros for handling Ole Commands. The first,
+// OLECOMMAND_MESSAGE sends a WM_COMMAND message to the window returned from
+// GetCommandTargetWindow() (that the derived class must implement if it uses
+// this macro).
+//
+// The second, OLECOMMAND_HANDLER calls a static handler procedure that
+// conforms to the OleCommandProc typedef. The first parameter, pThis means
+// the static handler has access to the methods and variables in the class
+// instance.
+//
+// The OLECOMMAND_HANDLER macro is generally more useful when a command
+// takes parameters or needs to return a result to the caller. 
+//
 template< class T >
 class IOleCommandTargetImpl : public IOleCommandTarget
 {
@@ -224,5 +244,25 @@ public:
 	}
 };
 
+// Macros to be placed in any class derived from the IOleCommandTargetImpl
+// class. These define what commands are exposed from the object.
+
+#define BEGIN_OLECOMMAND_TABLE() \
+	OleCommandInfo *GetCommandTable() \
+	{ \
+		static OleCommandInfo s_aSupportedCommands[] = \
+		{
+
+#define OLECOMMAND_MESSAGE(id, group, cmd, verb, desc) \
+			{ id, group, cmd, NULL, verb, desc },
+
+#define OLECOMMAND_HANDLER(id, group, handler, verb, desc) \
+			{ id, group, 0, handler, verb, desc },
+
+#define END_OLECOMMAND_TABLE() \
+			{ 0, &GUID_NULL, 0, NULL, NULL, NULL } \
+		}; \
+		return s_aSupportedCommands; \
+	};
 
 #endif
