@@ -272,6 +272,22 @@ public:
                              nsID*   p14,
                              char*   p15,
                              uint16* p16);
+    NS_IMETHOD SendInOutManyTypes(int8*    p1,
+                                  int16*   p2,
+                                  int32*   p3,
+                                  int64*   p4,
+                                  uint8*   p5,
+                                  uint16*  p6,
+                                  uint32*  p7,
+                                  uint64*  p8,
+                                  float*   p9,
+                                  double*  p10,
+                                  PRBool*  p11,
+                                  char*    p12,
+                                  uint16*  p13,
+                                  nsID**   p14,
+                                  char**   p15,
+                                  uint16** p16);
     MyEcho();
 private: 
     nsIEcho* mReciever;
@@ -369,6 +385,30 @@ MyEcho::SendManyTypes(int8    p1,
                                         p10, p11, p12, p13, p14, p15, p16);
     return NS_OK;
 }    
+
+NS_IMETHODIMP 
+MyEcho::SendInOutManyTypes(int8*    p1,
+                           int16*   p2,
+                           int32*   p3,
+                           int64*   p4,
+                           uint8*   p5,
+                           uint16*  p6,
+                           uint32*  p7,
+                           uint64*  p8,
+                           float*   p9,
+                           double*  p10,
+                           PRBool*  p11,
+                           char*    p12,
+                           uint16*  p13,
+                           nsID**   p14,
+                           char**   p15,
+                           uint16** p16)
+{
+    if(mReciever)
+        return mReciever->SendInOutManyTypes(p1, p2, p3, p4, p5, p6, p7, p8, p9,
+                                             p10, p11, p12, p13, p14, p15, p16);
+    return NS_OK;
+}
 
 
 /***************************************************************************/

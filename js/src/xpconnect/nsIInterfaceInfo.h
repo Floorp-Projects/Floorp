@@ -122,6 +122,22 @@ public:
                              nsID*   p14,
                              char*   p15,
                              uint16* p16) = 0;
+    NS_IMETHOD SendInOutManyTypes(int8*    p1,
+                                  int16*   p2,
+                                  int32*   p3,
+                                  int64*   p4,
+                                  uint8*   p5,
+                                  uint16*  p6,
+                                  uint32*  p7,
+                                  uint64*  p8,
+                                  float*   p9,
+                                  double*  p10,
+                                  PRBool*  p11,
+                                  char*    p12,
+                                  uint16*  p13,
+                                  nsID**   p14,
+                                  char**   p15,
+                                  uint16** p16) = 0;
 };
 
 /***************************************************************************/

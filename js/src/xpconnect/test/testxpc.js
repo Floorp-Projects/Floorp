@@ -89,8 +89,8 @@ var in_out_results2 = new Object();
 var in_out_results = 
         echo.In2OutAddTwoInts(123, 55, in_out_results1, in_out_results2);
 print("In2OutAddTwoInts - "+(
-       in_out_results1.val == 123 &&
-       in_out_results2.val ==  55 &&
+       in_out_results1.value == 123 &&
+       in_out_results2.value ==  55 &&
        in_out_results      == 178 
        ? "passed" : "failed"));
 
@@ -121,9 +121,7 @@ echo.SendManyTypes(send_params[0],
                    send_params[12], 
                    send_params[13], 
                    send_params[14], 
-                   send_params[15], 
-                   send_params[16], 
-                   send_params[17]);
+                   send_params[15]);
 
 var all_ok = true;
 for(i = 0; i < 16; i++) {
@@ -136,6 +134,77 @@ for(i = 0; i < 16; i++) {
 }
 if(all_ok)
     print("SendManyTypes - passed");
+
+////////////////////
+// SendInOutManyTypes
+
+var reciever_results = new Object();
+var send_params   = [-1,-2,-3,-102020,2,4,6,1023,1.5,2.000008,true,'a','b',NS_ITESTXPC_FOO_IID,"a string","another string"];
+var resend_params = [-2,-3,-7,-10220,12,14,16,123,2.5,8.000008,false,'z','l',NS_ISUPPORTS_IID,"foo string","yet another string"];
+
+reciever.SendInOutManyTypes = function() 
+    {
+        for(var i = 0; i < arguments.length; i++) {
+            reciever_results[i] = arguments[i].value;
+            arguments[i].value = resend_params[i];
+        }
+    };
+
+var inout_params = [{value:send_params[0] },
+                    {value:send_params[1] },
+                    {value:send_params[2] },
+                    {value:send_params[3] },
+                    {value:send_params[4] },
+                    {value:send_params[5] },
+                    {value:send_params[6] },
+                    {value:send_params[7] },
+                    {value:send_params[8] },
+                    {value:send_params[9] },
+                    {value:send_params[10]},
+                    {value:send_params[11]},
+                    {value:send_params[12]},
+                    {value:send_params[13]},
+                    {value:send_params[14]},
+                    {value:send_params[15]}];
+
+echo.SendInOutManyTypes(inout_params[0] ,
+                        inout_params[1] , 
+                        inout_params[2] , 
+                        inout_params[3] , 
+                        inout_params[4] , 
+                        inout_params[5] , 
+                        inout_params[6] , 
+                        inout_params[7] , 
+                        inout_params[8] , 
+                        inout_params[9] , 
+                        inout_params[10], 
+                        inout_params[11], 
+                        inout_params[12], 
+                        inout_params[13], 
+                        inout_params[14], 
+                        inout_params[15]);
+
+var all_ok = true;
+for(i = 0; i < 16; i++) {
+    if((""+reciever_results[i]) != (""+send_params[i])) {
+        if(all_ok)
+            print("SendInOutManyTypes - failed...");
+        all_ok = false;
+        print("    sent param number "+i+" diff: "+send_params[i]+" -> "+reciever_results[i]);
+    }
+}
+
+for(i = 0; i < 16; i++) {
+    if((""+resend_params[i]) != (""+inout_params[i].value)) {
+        if(all_ok)
+            print("SendInOutManyTypes - failed...");
+        all_ok = false;
+        print("    resent param number "+i+" diff: "+resend_params[i]+" -> "+inout_params[i].value);
+    }
+}
+
+if(all_ok)
+    print("SendInOutManyTypes - passed");
 
 
 print(".......................................");

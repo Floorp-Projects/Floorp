@@ -187,18 +187,38 @@ XPTParamDescriptor nsIEcho_SendManyTypesParams[16] = {
     {XPT_PD_IN, {XPT_TDP_POINTER|TD_PWSTRING ,0}}
 };
 
-XPTMethodDescriptor nsIEchoMethods[7] = {
-    {0, "SetReciever",      1, nsIEcho_SetRecieverParams,       ResultParam},
-    {0, "SendOneString",    1, nsIEcho_SendOneStringParams,     ResultParam},
-    {0, "In2OutOneInt",     2, nsIEcho_In2OutOneIntParams,      ResultParam},
-    {0, "In2OutAddTwoInts", 5, nsIEcho_In2OutAddTwoIntsParams,  ResultParam},
-    {0, "In2OutOneString",  2, nsIEcho_In2OutOneStringParams,   ResultParam},
-    {0, "SimpleCallNoEcho", 0, NULL,                            ResultParam},
-    {0, "SendManyTypes",   16, nsIEcho_SendManyTypesParams,     ResultParam}
+XPTParamDescriptor nsIEcho_SendInOutManyTypesParams[16] = {
+    {XPT_PD_IN|XPT_PD_OUT, {TD_INT8     ,0}},
+    {XPT_PD_IN|XPT_PD_OUT, {TD_INT16    ,0}},
+    {XPT_PD_IN|XPT_PD_OUT, {TD_INT32    ,0}},
+    {XPT_PD_IN|XPT_PD_OUT, {TD_INT64    ,0}},
+    {XPT_PD_IN|XPT_PD_OUT, {TD_UINT8    ,0}},
+    {XPT_PD_IN|XPT_PD_OUT, {TD_UINT16   ,0}},
+    {XPT_PD_IN|XPT_PD_OUT, {TD_UINT32   ,0}},
+    {XPT_PD_IN|XPT_PD_OUT, {TD_UINT64   ,0}},
+    {XPT_PD_IN|XPT_PD_OUT, {TD_FLOAT    ,0}},
+    {XPT_PD_IN|XPT_PD_OUT, {TD_DOUBLE   ,0}},
+    {XPT_PD_IN|XPT_PD_OUT, {TD_BOOL     ,0}},
+    {XPT_PD_IN|XPT_PD_OUT, {TD_CHAR     ,0}},
+    {XPT_PD_IN|XPT_PD_OUT, {TD_WCHAR    ,0}},
+    {XPT_PD_IN|XPT_PD_OUT, {XPT_TDP_POINTER|TD_PNSIID   ,0}},
+    {XPT_PD_IN|XPT_PD_OUT, {XPT_TDP_POINTER|TD_PSTRING  ,0}},
+    {XPT_PD_IN|XPT_PD_OUT, {XPT_TDP_POINTER|TD_PWSTRING ,0}}
+};
+
+XPTMethodDescriptor nsIEchoMethods[8] = {
+ {0, "SetReciever",         1, nsIEcho_SetRecieverParams,        ResultParam},
+ {0, "SendOneString",       1, nsIEcho_SendOneStringParams,      ResultParam},
+ {0, "In2OutOneInt",        2, nsIEcho_In2OutOneIntParams,       ResultParam},
+ {0, "In2OutAddTwoInts",    5, nsIEcho_In2OutAddTwoIntsParams,   ResultParam},
+ {0, "In2OutOneString",     2, nsIEcho_In2OutOneStringParams,    ResultParam},
+ {0, "SimpleCallNoEcho",    0, NULL,                             ResultParam},
+ {0, "SendManyTypes",      16, nsIEcho_SendManyTypesParams,      ResultParam},
+ {0, "SendInOutManyTypes", 16, nsIEcho_SendInOutManyTypesParams, ResultParam}
 };
 
 XPTInterfaceDescriptor nsIEchoInterfaceDescriptor =
-    {NULL, 7, nsIEchoMethods, 0, NULL};
+    {NULL, 8, nsIEchoMethods, 0, NULL};
 
 /***************/
 
