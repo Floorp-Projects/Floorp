@@ -1105,8 +1105,32 @@ NS_IMETHODIMP
 nsRenderingContextBeOS::GetBoundingMetrics(const char*        aString,
                                          PRUint32           aLength,
                                          nsBoundingMetrics& aBoundingMetrics) {
-  // Fill me up 
-  return NS_ERROR_NOT_IMPLEMENTED;
+	aBoundingMetrics.Clear();
+	if (0 >= aLength || !aString || !mCurrentFont)
+		return NS_ERROR_FAILURE;
+
+	BRect rect;
+	escapement_delta delta;
+	delta.nonspace = 0;
+	delta.space = 0;
+	// Use the printing metric to get more detail
+	mCurrentFont->GetBoundingBoxesForStrings(&aString, 1, B_PRINTING_METRIC, &delta, &rect);
+
+
+	aBoundingMetrics.width = NSToCoordRound(mCurrentFont->StringWidth(aString) * mP2T);
+	
+	aBoundingMetrics.leftBearing = NSToCoordRound(rect.left * mP2T);
+	aBoundingMetrics.rightBearing = NSToCoordRound(rect.right * mP2T);
+
+	// The pen position for DrawString is at the baseline of the font for BeOS.  
+	// The orientation for drawing moves downward for vertical metrics.
+	// MathML expects what X Windows does: the orientation of the ascent moves upward from the baseline.
+	// So, we need to negate the top value returned by GetBoundingBoxesForStrings, to have that value
+	// move up in BeOS.
+	aBoundingMetrics.ascent = NSToCoordRound((-rect.top) * mP2T);
+	aBoundingMetrics.descent = NSToCoordRound(rect.bottom * mP2T);
+
+	return NS_OK;
 }
 
   /**
@@ -1117,7 +1141,33 @@ nsRenderingContextBeOS::GetBoundingMetrics(const PRUnichar*   aString,
                                          PRUint32           aLength,
                                          nsBoundingMetrics& aBoundingMetrics,
                                          PRInt32*           aFontID) {
-  // Fill me up 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aBoundingMetrics.Clear();
+  nsresult r = NS_OK;
+  if (0 < aLength) {
+  	if (aString == NULL)
+  		return NS_ERROR_FAILURE;
+
+		// Since more often than not, single char strings are passed to this function
+		// we will try keep this on the stack, instead of the heap
+		uint8 utf8buf[1024];
+		uint8* utf8str = (uint8*)&utf8buf;
+		if (aLength * 4 + 1 > 1024)
+			utf8str = new uint8[aLength * 4 + 1];
+		uint8 *utf8ptr = utf8str;
+		const PRUnichar *uniptr = aString;
+	
+		for (PRUint32 i = 0; i < aLength; i++) {
+			convert_to_utf8(utf8ptr, uniptr);
+		}
+	
+		*utf8ptr = '\0';
+		uint32 utf8str_len = strlen(utf8str);
+		r = GetBoundingMetrics((char *)utf8str, utf8str_len, aBoundingMetrics);
+		if (utf8str != utf8buf)
+			delete [] utf8str;
+		if (nsnull != aFontID)
+			*aFontID = 0;
+	}		
+	return r;
 }
 #endif /* MOZ_MATHML */
