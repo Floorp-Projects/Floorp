@@ -603,12 +603,6 @@ nsPlainTextSerializer::IsEnabled(PRInt32 aTag, PRBool* aReturn)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsPlainTextSerializer::DoFragment(PRBool aFlag)
-{
-  return NS_OK;
-}
-
 /**
  * aNode may be null when we're working with the DOM, but then mContent is
  * useable instead.

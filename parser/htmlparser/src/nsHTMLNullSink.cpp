@@ -97,7 +97,6 @@ public:
   NS_IMETHOD WillProcessAToken(void) { return NS_OK; }
   NS_IMETHOD DidProcessAToken(void) { return NS_OK; }
 
-  NS_IMETHOD DoFragment(PRBool aFlag);
   NS_IMETHOD BeginContext(PRInt32 aPosition);
   NS_IMETHOD EndContext(PRInt32 aPosition);
 
@@ -639,17 +638,6 @@ nsHTMLNullSink::WillResume(void) {
 
 NS_IMETHODIMP
 nsHTMLNullSink::SetParser(nsIParser* aParser) 
-{
-  return NS_OK;
-}
-
-/**
- * 
- * @update	gpk03/14/99
- * @param 
- * @return
- */
-nsresult nsHTMLNullSink::DoFragment(PRBool aFlag) 
 {
   return NS_OK;
 }

@@ -283,8 +283,6 @@ public:
   NS_IMETHOD IsEnabled(PRInt32 aTag, PRBool* aReturn);
   NS_IMETHOD_(PRBool) IsFormOnStack();
 
-  NS_IMETHOD DoFragment(PRBool aFlag);
-
   // nsITimerCallback
   NS_DECL_NSITIMERCALLBACK
   
@@ -5868,12 +5866,6 @@ HTMLContentSink::SetDocumentCharset(nsAString& aCharset)
     return mDocument->SetDocumentCharacterSet(aCharset);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::DoFragment(PRBool aFlag)
-{
   return NS_OK;
 }
 

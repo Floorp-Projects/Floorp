@@ -453,13 +453,6 @@ mozSanitizingHTMLSerializer::CloseFrameset()
   return CloseContainer(eHTMLTag_frameset);
 }
 
-NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::DoFragment(PRBool aFlag)
-{
-  return NS_OK;
-}
-
-
 
 // Here comes the actual code...
 

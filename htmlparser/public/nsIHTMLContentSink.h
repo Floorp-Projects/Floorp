@@ -195,17 +195,6 @@ public:
   NS_IMETHOD CloseFrameset() = 0;
 
   /**
-   * This method tells the sink whether or not it is 
-   * encoding an HTML fragment or the whole document.
-   * By default, the entire document is encoded.
-   *
-   * @update 03/14/99 gpk
-   * @param  aFlag set to true if only encoding a fragment
-   */     
-
-  NS_IMETHOD DoFragment(PRBool aFlag) = 0;
-
-  /**
    * This gets called when handling illegal contents, especially
    * in dealing with tables. This method creates a new context.
    * 
