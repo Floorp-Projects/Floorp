@@ -44,9 +44,7 @@ CPPSRCS		= \
 		nsLabel.cpp \
 		$(NULL)
 
-ifdef MOZ_UNICODE
 DEFINES += -DMOZ_UNICODE 
-endif
 
 LOCAL_INCLUDES	= \
 		-I$(topsrcdir)/widget/src/windows \
