@@ -141,15 +141,6 @@ static int     requestCert;
 static int	verbose;
 static SECItem	bigBuf;
 
-static const char *pidFile;
-/*
- * On Linux, the first thread we create writes its pid to a file.
- * (See bug 119340 for why we do this.)
- */
-#ifdef LINUX
-static PRInt32 threadIndex;
-#endif
-
 static PRThread * acceptorThread;
 
 static PRLogModuleInfo *lm;
@@ -428,27 +419,6 @@ void
 thread_wrapper(void * arg)
 {
     perThread * slot = (perThread *)arg;
-
-#ifdef LINUX  /* bug 119403 */
-    if (pidFile && PR_AtomicIncrement(&threadIndex) == 1) {
-        char *pidFile2;
-        FILE *tmpfile;
-
-        pidFile2 = PORT_Alloc(PORT_Strlen(pidFile) + 3);
-        if (pidFile2 == NULL) {
-            return;  /* failed */
-        }
-        strcpy(pidFile2, pidFile);
-        strcat(pidFile2, ".2");
-        tmpfile=fopen(pidFile2,"w+");
-
-        if (tmpfile) {
-            fprintf(tmpfile,"%d",getpid());
-            fclose(tmpfile);
-        }
-        PORT_Free(pidFile2);
-    }
-#endif /* LINUX */
 
     slot->rv = (* slot->startFunc)(slot->a, slot->b, slot->c);
 
@@ -1414,6 +1384,7 @@ main(int argc, char **argv)
     char *               cipherString= NULL;
     const char *         dir         = ".";
     char *               passwd      = NULL;
+    const char *         pidFile     = NULL;
     char *               tmp;
     char *               envString;
     PRFileDesc *         listen_sock;

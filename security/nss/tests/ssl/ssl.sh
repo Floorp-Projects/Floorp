@@ -141,29 +141,13 @@ wait_for_selfserv()
 ########################################################################
 kill_selfserv()
 {
-  # Bug 119340: This is an inelegant but more reliable way to ensure
-  # that a multithreaded process on Linux has been completely killed.
-  # Recall that each thread is a process on Linux.  Instead of killing
-  # the primary thread, we kill the first thread created by selfserv and
-  # let the thread manager take care of terminating the other threads in
-  # selfserv.  The assumption we rely on is that the primary thread is
-  # the last one to go because it's the parent of the thread manager.
-  #
-  # On Linux, the first thread created by selfserv writes its pid to the
-  # {SERVERPID}.2 file.
-  if  [ "${OS_ARCH}" = "Linux" ]; then
-      ${KILL} `cat ${SERVERPID}.2`
-  else
-      ${KILL} `cat ${SERVERPID}`
-  fi
+  ${KILL} `cat ${SERVERPID}`
   wait `cat ${SERVERPID}`
   if [ ${fileout} -eq 1 ]; then
       cat ${SERVEROUTFILE}
   fi
+  ${SLEEP}  #FIXME linux waits 30 seconds - find a shorter way (sockets free)
   rm ${SERVERPID}
-  if  [ "${OS_ARCH}" = "Linux" ]; then
-      rm ${SERVERPID}.2
-  fi
 }
 
 ########################### start_selfserv #############################
