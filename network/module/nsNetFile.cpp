@@ -181,11 +181,15 @@ nsresult nsNetFile::GetFilePath(const char *aName, char **aRes) {
         }
     }
 
-    faFile = (nsFileAssoc*)PL_HashTableLookup(mHTFiles, fileTok);
-    if (faFile)
-        fileName = faFile->name;
-    else
-        fileName = fileTok; // It wasn't a token after all;
+    if (fileTok) {
+	faFile = (nsFileAssoc*)PL_HashTableLookup(mHTFiles, fileTok);
+	if (faFile)
+	    fileName = faFile->name;
+	else
+	    fileName = fileTok; // It wasn't a token after all;
+    } else {
+        fileName = (char *)aName;
+    }
 
     newPath.Append(fileName);
     PR_Free(fileTok);
