@@ -3529,15 +3529,13 @@ get_gtk_cursor(nsCursor aCursor)
         break;
     default:
         NS_ASSERTION(aCursor, "Invalid cursor type");
+        gdkcursor = gdk_cursor_new(GDK_LEFT_PTR);
         break;
     }
 
     // if by now we dont have a xcursor, this means we have to make a
     // custom one
-    if (!gdkcursor) {
-        NS_ASSERTION(newType != 0xff,
-                     "Unknown cursor type and no standard cursor");
-
+    if (newType != 0xff) {
         gdk_color_parse("#000000", &fg);
         gdk_color_parse("#ffffff", &bg);
 
