@@ -81,7 +81,6 @@ enum Document_slots {
   NSDOCUMENT_HEIGHT = -5,
   NSDOCUMENT_STYLESHEETS = -6,
   NSDOCUMENT_CHARACTERSET = -7
-
 };
 
 /***********************************************************************/
@@ -937,7 +936,7 @@ static JSPropertySpec DocumentProperties[] =
   {"height",    NSDOCUMENT_HEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"styleSheets",    NSDOCUMENT_STYLESHEETS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"characterSet",    NSDOCUMENT_CHARACTERSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
- {0}
+  {0}
 };
 
 
