@@ -52,18 +52,6 @@
       </menupopup> 
     </menu> 
 
-    <menu value="Update Notifications" datasources="rdf:xpinstall-update-notifier" ref="NC:SoftwareNotificationRoot">
-      <template>
-        <rule>
-          <menupopup>
-            <menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#name"
-            oncommand="ShowUpdateFromResource( event.target )"/>
-          </menupopup>
-        </rule>
-      </template>
-      <menupopup/>
-     </menu>
-     
      <menuseparator/>
 		<menu value="&toolsMenu.label;">
 		  <menupopup id="toolsPopup">
