@@ -3670,7 +3670,6 @@ GlobalWindowImpl::FindInternal(const nsAString& aStr,
   nsresult rv = NS_OK;
   *aDidFind = PR_FALSE;
 
-  // GetInterface(NS_GET_IID(nsIWebBrowserFind))
   nsCOMPtr<nsIWebBrowserFind> finder(do_GetInterface(mDocShell));
 
   // Set the options of the search
@@ -3682,6 +3681,16 @@ GlobalWindowImpl::FindInternal(const nsAString& aStr,
   finder->SetEntireWord(wholeWord);
   finder->SetSearchFrames(searchInFrames);
 
+  // the nsIWebBrowserFind is initialized to use this window
+  // as the search root, but uses focus to set the current search
+  // frame. If we're being called from JS (as here), this window
+  // should be the current search frame.
+  nsCOMPtr<nsIWebBrowserFindInFrames> framesFinder(do_QueryInterface(finder));
+  if (framesFinder) {
+    framesFinder->SetRootSearchFrame(this);   // paranoia
+    framesFinder->SetCurrentSearchFrame(this);
+  }
+  
   // The Find API does not accept empty strings. Launch the Find Dialog.
   if (aStr.IsEmpty() || showDialog) {
     // See if the find dialog is already up using nsIWindowMediator
