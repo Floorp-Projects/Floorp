@@ -99,6 +99,9 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsLinebreakConverter.h"
 #include "nsIMIMEService.h"
 
+// Security
+#include "nsIScriptSecurityManager.h"
+
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 
@@ -606,6 +609,17 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
         nsCRT::free(relPath);
       } else {
         result = NS_ERROR_OUT_OF_MEMORY;
+      }
+    } else {
+      // Get security manager, check to see if access to action URI is allowed.
+      NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
+                      NS_SCRIPTSECURITYMANAGER_PROGID, &result);
+      nsCOMPtr<nsIURI> actionURL;
+      if (NS_FAILED(result) ||
+          NS_FAILED(result = NS_NewURI(getter_AddRefs(actionURL), href)) ||
+          NS_FAILED(result = securityManager->CheckLoadURI(docURL, actionURL))) 
+      {
+        return result;
       }
     }
 
