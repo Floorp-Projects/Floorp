@@ -59,13 +59,14 @@
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
 #include "nsIPresContext.h"
-
+#include "nsIPref.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIXBLService.h"
 #include "nsIXBLBinding.h"
 #include "nsIBindingManager.h"
 
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 nsresult
 NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
@@ -357,6 +358,21 @@ static inline nsresult SpecialAutoLoadReturn(nsresult aRv, nsLinkVerb aVerb)
   return aRv;
 }
 
+inline PRBool BlockNewWindow(nsIPref *aPref)
+{
+  PRBool blockNewWindow = PR_FALSE;
+  nsCOMPtr<nsIPref> prefs;
+  if (aPref) {
+    prefs = dont_QueryInterface(aPref);
+  } else {
+    prefs = do_GetService(kPrefServiceCID);
+  }
+  if (prefs) {
+    prefs->GetBoolPref("browser.block.target_new_window", &blockNewWindow);
+  }
+  return blockNewWindow;
+}
+
 NS_IMETHODIMP
 nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
 {
@@ -381,15 +397,22 @@ nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
           value.Equals(onloadString)) {
 
         // show= ?
-        nsLinkVerb verb = eLinkVerb_Undefined;
+        nsLinkVerb verb = eLinkVerb_Undefined; // basically means same as replace
         rv = nsGenericContainerElement::GetAttr(kNameSpaceID_XLink,
                                                 kShowAtom, value);
         if (NS_FAILED(rv))
           break;
 
+        nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+        PRBool disableNewDuringLoad = PR_FALSE;
+        if (prefs) {
+          prefs->GetBoolPref("dom.disable_open_during_load", &disableNewDuringLoad);
+        }
         // XXX Should probably do this using atoms 
-        if (value.Equals(NS_LITERAL_STRING("new"))) {
-          verb = eLinkVerb_New;
+        if (!disableNewDuringLoad && value.Equals(NS_LITERAL_STRING("new"))) {
+          if (!BlockNewWindow(prefs)) {
+            verb = eLinkVerb_New;
+          }
         } else if (value.Equals(NS_LITERAL_STRING("replace"))) {
           // We want to actually stop processing the current document now.
           // We do this by returning the correct value so that the one
@@ -469,7 +492,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
           }
           nsAutoString show, href, target;
           nsIURI* baseURL = nsnull;
-          nsLinkVerb verb = eLinkVerb_Undefined;
+          nsLinkVerb verb = eLinkVerb_Undefined; // basically means same as replace
           nsGenericContainerElement::GetAttr(kNameSpaceID_XLink,
                                              kHrefAtom,
                                              href);
@@ -484,7 +507,9 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
           // XXX Should probably do this using atoms 
           if (show.Equals(NS_LITERAL_STRING("new"))) {
-            verb = eLinkVerb_New;
+            if (!BlockNewWindow(nsnull)) {
+              verb = eLinkVerb_New;
+            }
           } else if (show.Equals(NS_LITERAL_STRING("replace"))) {
             verb = eLinkVerb_Replace;
           } else if (show.Equals(NS_LITERAL_STRING("embed"))) {

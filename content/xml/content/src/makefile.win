@@ -37,6 +37,7 @@ REQUIRES	= xpcom \
 		  layout \
 		  gfx \
 		  unicharutil \
+		  pref \
 		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
