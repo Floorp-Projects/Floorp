@@ -51,7 +51,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsCRT.h"
 #include "prprf.h"
 
-#ifdef XP_PC
+#ifdef XP_WIN
 #include <windows.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -252,7 +252,7 @@ PageGrabber::Grab(const nsAFlatCString& aURL)
     }
         
     // Enter the message pump to allow the URL load to proceed.
-  #ifdef XP_PC
+  #ifdef XP_WIN
     MSG msg;
     while ( !copier->IsDone() ) {
       if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
