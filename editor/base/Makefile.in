@@ -33,6 +33,7 @@ IS_COMPONENT	= 1
 REQUIRES	= xpcom string dom js locale layout uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome caps appcomps xuldoc gfx2 mozcomps windowwatcher
 
 CPPSRCS		=                           \
+		nsAOLCiter.cpp              \
 		ChangeAttributeTxn.cpp      \
 		CreateElementTxn.cpp        \
 		DeleteElementTxn.cpp        \
@@ -54,11 +55,13 @@ CPPSRCS		=                           \
 		nsEditProperty.cpp          \
 		nsTextEditUtils.cpp         \
 		nsHTMLEditUtils.cpp         \
+		nsInternetCiter.cpp         \
 		nsPlaintextDataTransfer.cpp \
 		nsPlaintextEditor.cpp       \
 		nsSelectionState.cpp        \
 		nsStyleSheetTxns.cpp        \
 		nsTextEditRules.cpp         \
+		nsWrapUtils.cpp             \
 		PlaceholderTxn.cpp          \
 		SplitElementTxn.cpp         \
 		TransactionFactory.cpp      \
@@ -73,12 +76,13 @@ ifdef MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY
 
 CPPSRCS += nsTextEditorReg.cpp
 
+DEFINES += -DMOZILLA_PLAINTEXT_EDITOR_ONLY
+
 else
 
 # Building the full blown HTML Editor  so add it's source files and objects:
 
-CPPSRCS += nsAOLCiter.cpp                 \
-           nsEditorParserObserver.cpp     \
+CPPSRCS += nsEditorParserObserver.cpp     \
            nsEditorRegistration.cpp       \
            nsEditorShell.cpp              \
            nsEditorShellMouseListener.cpp \
@@ -88,10 +92,8 @@ CPPSRCS += nsAOLCiter.cpp                 \
            nsHTMLEditorStyle.cpp          \
            nsHTMLEditRules.cpp            \
            nsInterfaceState.cpp           \
-           nsInternetCiter.cpp            \
            nsTableEditor.cpp              \
-           nsWrapUtils.cpp                \
-		   nsWSRunObject.cpp              \
+           nsWSRunObject.cpp              \
            TextEditorTest.cpp             \
            TypeInState.cpp                \
            SetDocTitleTxn.cpp             \
