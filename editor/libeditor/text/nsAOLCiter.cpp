@@ -66,13 +66,10 @@ nsAOLCiter::GetCiteString(const nsAString& aInString, nsAString& aOutString)
   PRUnichar newline ('\n');
   if (aOutString.Last() == newline)
   {
-    aOutString.Append(PRUnichar(' '));
-    aOutString.Append(NS_LITERAL_STRING("<<\n"));
+    aOutString.SetLength(aOutString.Length() - 1);
   }
-  else
-  {
-    aOutString.Append(NS_LITERAL_STRING(" <<\n"));
-  }
+
+  aOutString.Append(NS_LITERAL_STRING(" <<\n"));
 
   return NS_OK;
 }
@@ -82,7 +79,7 @@ nsAOLCiter::StripCites(const nsAString& aInString, nsAString& aOutString)
 {
   // Remove the beginning cites, if any:
   nsAutoString tOutputString;
-  nsReadingIterator <PRUnichar> iter,enditer;
+  nsReadingIterator <PRUnichar> iter, enditer;
   aInString.BeginReading(iter);
   aInString.EndReading(enditer);
   if (StringBeginsWith(aInString, NS_LITERAL_STRING(">>")))
@@ -90,10 +87,10 @@ nsAOLCiter::StripCites(const nsAString& aInString, nsAString& aOutString)
     iter.advance(2);
     while (nsCRT::IsAsciiSpace(*iter))
       ++iter;
-    AppendUnicodeTo(iter,enditer,tOutputString);
+    AppendUnicodeTo(iter, enditer, tOutputString);
   }
   else
-    CopyUnicodeTo(iter,enditer,tOutputString);
+    CopyUnicodeTo(iter, enditer, tOutputString);
 
   // Remove the end cites, if any:
   tOutputString.Trim("<", PR_FALSE, PR_TRUE, PR_FALSE);
