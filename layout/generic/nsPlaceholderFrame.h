@@ -53,7 +53,6 @@ protected:
   // Constructor. Takes as arguments the content object, the index in parent,
   // and the Frame for the content parent
   nsPlaceholderFrame(nsIContent* aContent, nsIFrame* aParent);
-
   virtual ~nsPlaceholderFrame();
 
   nsIFrame*   mAnchoredItem;
