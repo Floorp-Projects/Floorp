@@ -34,6 +34,7 @@
                 stop = id; 
                 toggleSidebar = id; 
                 viewOnlyThisImage = id; 
+                viewSource = id; 
             }; 
             CLASS = BrowserWindowController; 
             LANGUAGE = ObjC; 

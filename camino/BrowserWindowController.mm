@@ -492,19 +492,23 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
                                      url: aURL suggestedFilename: aFilename];
 }
 
+- (IBAction)viewSource:(id)aSender
+{
+}
+
 - (void)printDocument
 {
-    [[mBrowserView getBrowserView] printDocument];
+  [[mBrowserView getBrowserView] printDocument];
 }
 
 - (void)printPreview
 {
-    [[mBrowserView getBrowserView] printPreview];
+  [[mBrowserView getBrowserView] printPreview];
 }
 
 - (BOOL)findInPage:(NSString*)text
 {
-    return [[mBrowserView getBrowserView] findInPage:text];
+  return [[mBrowserView getBrowserView] findInPage:text];
 }
 
 - (void)addBookmarkExtended: (BOOL)aIsFromMenu isFolder:(BOOL)aIsFolder

@@ -38,6 +38,7 @@
                 toggleBookmarksToolbar = id; 
                 toggleOfflineMode = id; 
                 toggleSmoothText = id; 
+                viewSource = id; 
             }; 
             CLASS = MainController; 
             LANGUAGE = ObjC; 
