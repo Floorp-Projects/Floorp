@@ -51,6 +51,9 @@
 #include "nsIPref.h"
 #include "nsPluginLogging.h"
 
+#include "nsIPluginInstancePeer2.h"
+#include "nsIJSContextStack.h"
+
 #ifdef XP_MAC
 #include <Resources.h>
 #endif
@@ -1261,6 +1264,32 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
     case NPPVpluginTransparentBool: {
       NPBool bTransparent = (result != nsnull);
       return inst->SetTransparent(bTransparent);
+
+    case NPPVjavascriptPushCallerBool:
+      {
+        nsresult rv;
+        nsCOMPtr<nsIJSContextStack> contextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+        if (NS_SUCCEEDED(rv)) {
+          NPBool bPushCaller = (result != nsnull);
+          if (bPushCaller) {
+            nsCOMPtr<nsIPluginInstancePeer> peer;
+            rv = inst->GetPeer(getter_AddRefs(peer));
+            if (NS_SUCCEEDED(rv)) {
+              nsCOMPtr<nsIPluginInstancePeer2> peer2 = do_QueryInterface(peer, &rv);
+              if (NS_SUCCEEDED(rv) && peer2) {
+                JSContext *cx;
+                rv = peer2->GetJSContext(&cx);
+                if (NS_SUCCEEDED(rv))
+                  rv = contextStack->Push(cx);
+              }
+            }
+          } else {
+            rv = contextStack->Pop(nsnull);
+          }
+        }
+        return NS_SUCCEEDED(rv) ? NPERR_NO_ERROR : NPERR_GENERIC_ERROR;
+      }
+      break;
     }
 
     default:
