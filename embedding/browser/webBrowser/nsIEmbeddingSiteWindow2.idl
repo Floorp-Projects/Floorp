@@ -14,7 +14,7 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications, Inc.  Portions created by Netscape are
- * Copyright (C) 2001, Mozilla.  All Rights Reserved.
+ * Copyright (C) 2002, Mozilla.  All Rights Reserved.
  * 
  * Contributor(s):
  */
@@ -35,8 +35,7 @@
 interface nsIEmbeddingSiteWindow2 : nsIEmbeddingSiteWindow
 {
     /**
-     * Blur the window. Implementation details may be sketchy. This should
-     * at least unfocus the window and send a blur event.
+     * Blur the window. This should unfocus the window and send an onblur event.
      */
     void blur();
 };
