@@ -308,6 +308,7 @@ int main(int argc, char **argv)
 	    SECU_PrintPRandOSError(progName);
 	    return -1;
 	}
+	SECU_RegisterDynamicOids();
 
 	rv = SECU_ReadDERFromFile(&der, signFile, 
 	                          signver.options[opt_ASCII].activated);

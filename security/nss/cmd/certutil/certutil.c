@@ -2748,6 +2748,7 @@ secuCommandFlag certutil_options[] =
 	    rv = SECFailure;
 	    goto shutdown;
         }
+    	SECU_RegisterDynamicOids();
     }
     certHandle = CERT_GetDefaultCertDB();
 

@@ -35,7 +35,7 @@
  * Pretty-print some well-known BER or DER encoded data (e.g. certificates,
  * keys, pkcs7)
  *
- * $Id: pp.c,v 1.4 2003/11/04 01:51:54 nelsonb%netscape.com Exp $
+ * $Id: pp.c,v 1.5 2004/01/29 22:48:57 nelsonb%netscape.com Exp $
  */
 
 #include "secutil.h"
@@ -132,6 +132,7 @@ int main(int argc, char **argv)
 	fprintf(stderr, "%s: NSS_NoDB_Init failed\n", progName);
 	exit(1);
     }
+    SECU_RegisterDynamicOids();
 
     rv = SECU_ReadDERFromFile(&der, inFile, ascii);
     if (rv != SECSuccess) {

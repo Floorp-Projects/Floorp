@@ -434,6 +434,7 @@ int main(int argc, char **argv)
 	SECU_PrintPRandOSError(progName);
 	return -1;
     }
+    SECU_RegisterDynamicOids();
 
     certHandle = CERT_GetDefaultCertDB();
     if (certHandle == NULL) {
