@@ -401,15 +401,11 @@ fieldset {
 
 /* links */
 :link {
-  color: blue;
-  text-decoration: underline;
   cursor: pointer;
   -moz-user-focus: normal;
 }
 
 :visited {
-  color: purple;
-  text-decoration: underline;
   cursor: pointer;
   -moz-user-focus: normal;
 }

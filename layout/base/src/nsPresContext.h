@@ -97,6 +97,8 @@ public:
   NS_IMETHOD GetDefaultFixedFont(nsFont& aResult);
   NS_IMETHOD SetDefaultFixedFont(const nsFont& aFont);
   virtual const nsFont& GetDefaultFixedFontDeprecated();
+  NS_IMETHOD GetCachedBoolPref(PRUint32 prefType, PRBool &aValue);
+
   NS_IMETHOD GetFontScaler(PRInt32* aResult);
   NS_IMETHOD SetFontScaler(PRInt32 aScaler);
   NS_IMETHOD GetDefaultColor(nscolor* aColor);
@@ -105,6 +107,8 @@ public:
   NS_IMETHOD GetDefaultBackgroundImageRepeat(PRUint8* aRepeat);
   NS_IMETHOD GetDefaultBackgroundImageOffset(nscoord* aX, nscoord* aY);
   NS_IMETHOD GetDefaultBackgroundImageAttachment(PRUint8* aRepeat);
+  NS_IMETHOD GetDefaultLinkColor(nscolor* aColor);
+  NS_IMETHOD GetDefaultVisitedLinkColor(nscolor* aColor);
 
   NS_IMETHOD SetDefaultColor(nscolor aColor);
   NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor);
@@ -112,6 +116,8 @@ public:
   NS_IMETHOD SetDefaultBackgroundImageRepeat(PRUint8 aRepeat);
   NS_IMETHOD SetDefaultBackgroundImageOffset(nscoord aX, nscoord aY);
   NS_IMETHOD SetDefaultBackgroundImageAttachment(PRUint8 aRepeat);
+  NS_IMETHOD SetDefaultLinkColor(nscolor aColor);
+  NS_IMETHOD SetDefaultVisitedLinkColor(nscolor aColor);
 
   NS_IMETHOD GetImageGroup(nsIImageGroup** aGroupResult);
   NS_IMETHOD StartLoadImage(const nsString& aURL,
@@ -176,8 +182,13 @@ protected:
   nsFont                mDefaultFont;
   nsFont                mDefaultFixedFont;
   PRInt32               mFontScaler;
-  nscolor               mDefaultColor;
-  nscolor               mDefaultBackgroundColor;
+  PRPackedBool          mUseDocumentFonts;        // set in GetUserPrefs
+  nscolor               mDefaultColor;            // set in GetUserPrefs
+  nscolor               mDefaultBackgroundColor;  // set in GetUserPrefs
+  PRPackedBool          mUseDocumentColors;       // set in GetUserPrefs
+  nscolor               mLinkColor;               // set in GetUserPrefs
+  nscolor               mVisitedLinkColor;        // set in GetUserPrefs
+  PRPackedBool          mUnderlineLinks;          // set in GetUserPrefs
   nsString              mDefaultBackgroundImage;
   PRUint8               mDefaultBackgroundImageRepeat;
   nscoord               mDefaultBackgroundImageOffsetX;
@@ -194,7 +205,7 @@ protected:
   PRPackedBool          mStopped;                 // loading stopped
   PRPackedBool          mStopChrome;              // should we stop chrome?
   PRUint8               mDefaultDirection;
-
+  
 #ifdef DEBUG
   PRBool                mInitialized;
 #endif

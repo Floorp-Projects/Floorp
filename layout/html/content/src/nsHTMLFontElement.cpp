@@ -35,6 +35,10 @@
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
 
+// MJA: bug 31816
+#include "nsIPresShell.h"
+#include "nsIDocShellTreeItem.h"
+// - END MJA
 
 class nsHTMLFontElement : public nsIDOMHTMLFontElement,
                           public nsIJSScriptObject,
@@ -218,7 +222,48 @@ MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
           
         font->mFont.name = familyList;
         nsAutoString face;
-        if (NS_OK == dc->FirstExistingFont(font->mFont, face)) {
+
+        // MJA: bug 31816
+        // if we are not using document fonts, but this is a xul document,
+        // then we set the chromeOverride bit so we use the document fonts anyway
+        PRBool chromeOverride = PR_FALSE;
+        PRBool useDocumentFonts = PR_TRUE;
+        aPresContext->GetCachedBoolPref(kPresContext_UseDocumentFonts,useDocumentFonts);
+        if (!useDocumentFonts) {
+          // check if the prefs have been disabled for this shell
+          // - if prefs are disabled then we use the document fonts anyway (yet another override)
+          PRBool prefsEnabled = PR_TRUE;
+          nsCOMPtr<nsIPresShell> shell;
+          aPresContext->GetShell(getter_AddRefs(shell));
+          if (shell) {
+            shell->ArePrefStyleRulesEnabled(prefsEnabled);
+          }
+          if (!prefsEnabled) {
+            useDocumentFonts = PR_TRUE;
+          } else {
+            // see if we are in the chrome, if so, use the document fonts (override the useDocFonts setting)
+            nsresult result = NS_OK;
+            nsCOMPtr<nsISupports> container;
+            result = aPresContext->GetContainer(getter_AddRefs(container));
+            if (NS_SUCCEEDED(result) && container) {
+              nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(container, &result));
+              if (NS_SUCCEEDED(result) && docShell){
+                PRInt32 docShellType;
+                result = docShell->GetItemType(&docShellType);
+                if (NS_SUCCEEDED(result)){
+                  if (nsIDocShellTreeItem::typeChrome == docShellType){
+                    chromeOverride = PR_TRUE;
+                  }
+                }      
+              }
+            }
+          }
+        }
+
+        // find the correct font if we are usingDocumentFonts OR we are overriding for XUL
+        // MJA: bug 31816
+        if ((chromeOverride || useDocumentFonts)  && 
+            NS_OK == dc->FirstExistingFont(font->mFont, face)) {
           if (face.EqualsIgnoreCase("-moz-fixed")) {
             font->mFlags |= NS_STYLE_FONT_USE_FIXED;
           } else {
