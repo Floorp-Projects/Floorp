@@ -1935,7 +1935,30 @@ var nsFindNextCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.FindNext();
+    var prefs = GetPrefs();
+    var newfind;
+    if (prefs) {
+      try {
+        newfind = prefs.getBoolPref("editor.new_find");
+      }
+      catch (ex) {
+        newfind = false;
+      }
+    }
+    if (newfind)
+    {
+      try {
+        var editorXUL = document.getElementById("content-frame");
+        var findInst = editorXUL.webBrowserFind;
+        findInst.findNext();
+      }
+      catch (ex) {
+        nsFindCommand.doCommand();
+      }
+    }
+    else {
+      window.editorShell.FindNext();
+    }
   }
 };
 
