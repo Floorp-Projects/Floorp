@@ -43,6 +43,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 
 static void unhexcape(char* inPlace)
