@@ -103,6 +103,23 @@ static PRBool sReadyForGC = PR_FALSE;
 
 nsScriptNameSpaceManager *gNameSpaceManager;
 
+static nsIJSRuntimeService *sRuntimeService = nsnull;
+JSRuntime *nsJSEnvironment::sRuntime = nsnull;
+
+static const char kJSRuntimeServiceContractID[] =
+  "@mozilla.org/js/xpc/RuntimeService;1";
+static const char kScriptSecurityManagerContractID[] =
+  NS_SCRIPTSECURITYMANAGER_CONTRACTID;
+
+static PRThread *gDOMThread;
+
+static JSGCCallback gOldJSGCCallback;
+
+static PRBool sDidShutdown = PR_FALSE;
+
+static PRInt32 sContextCount = 0;
+
+
 void JS_DLL_CALLBACK
 NS_ScriptErrorReporter(JSContext *cx,
                        const char *message,
@@ -372,6 +389,8 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
 {
   NS_INIT_REFCNT();
 
+  ++sContextCount;
+
   mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS
 #ifdef DEBUG
     | JSOPTION_STRICT   // lint catching for development
@@ -415,8 +434,6 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
   InvalidateContextAndWrapperCache();
 }
 
-const char kScriptSecurityManagerContractID[] = NS_SCRIPTSECURITYMANAGER_CONTRACTID;
-
 nsJSContext::~nsJSContext()
 {
   mSecurityManager = nsnull; // Force release
@@ -446,6 +463,15 @@ nsJSContext::~nsJSContext()
     xpc->ReleaseJSContext(mContext, !do_gc);
   } else {
     ::JS_DestroyContext(mContext);
+  }
+
+  --sContextCount;
+
+  if (!sContextCount && sDidShutdown) {
+    // The last context is being deleted, and we're already in the
+    // process of shutting down, release the JS runtime service.
+
+    NS_IF_RELEASE(sRuntimeService);
   }
 }
 
@@ -1606,14 +1632,6 @@ nsJSContext::FireGCTimer()
   first = PR_FALSE;
 }
 
-nsIJSRuntimeService *nsJSEnvironment::sRuntimeService = nsnull;
-JSRuntime *nsJSEnvironment::sRuntime = nsnull;
-
-const char kJSRuntimeServiceContractID[] = "@mozilla.org/js/xpc/RuntimeService;1";
-static PRThread *gDOMThread;
-
-static JSGCCallback gOldJSGCCallback;
-
 static JSBool JS_DLL_CALLBACK
 DOMGCCallback(JSContext *cx, JSGCStatus status)
 {
@@ -1702,10 +1720,14 @@ void nsJSEnvironment::ShutDown()
   delete gNameSpaceManager;
   gNameSpaceManager = nsnull;
 
-  if (sRuntimeService) {
-    nsServiceManager::ReleaseService(kJSRuntimeServiceContractID,
-                                     sRuntimeService);
+  if (!sContextCount) {
+    // We're being shutdown, and there are no more contexts
+    // alive, release the JS runtime service.
+
+    NS_IF_RELEASE(sRuntimeService);
   }
+
+  sDidShutdown = PR_TRUE;
 }
 
 // static

@@ -177,7 +177,6 @@ class nsJSEnvironment
 {
 private:
   static JSRuntime *sRuntime;
-  static nsIJSRuntimeService *sRuntimeService;
 
 public:
   static nsresult Init();
