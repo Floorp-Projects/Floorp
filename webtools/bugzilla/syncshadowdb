@@ -72,9 +72,6 @@ sub Verbose ($) {
         }
     }
 }
-    
-my $db_name = "bugs";
-require "localconfig";
 
 if (!Param("shadowdb")) {
     Verbose("We don't have shadow databases turned on; no syncing performed.");
@@ -101,7 +98,7 @@ if (!FetchOneColumn()) {
     exit;
 }
 
-my $shadowtable = "$db_name.shadowlog";
+my $shadowtable = "$::db_name.shadowlog";
 
 if (!$syncall) {
     Verbose("Looking for requests to sync the whole database.");
@@ -147,7 +144,7 @@ if ($syncall) {
     # into the shadowdb database.  Then mark everything in the shadowlog
     # as reflected.  Only then unlock everything.  This sequence causes
     # us to be sure not to miss anything or get something twice.
-    SendSQL("USE $db_name");
+    SendSQL("USE $::db_name");
     SendSQL("SHOW TABLES");
     @tables = ();
     $query = "LOCK TABLES shadowlog WRITE";
@@ -162,15 +159,21 @@ if ($syncall) {
     SendSQL($query);
     my $tempfile = "data/tmpsyncshadow.$$";
     Verbose("Dumping database to a temp file ($tempfile).");
+    my @ARGS = ("-u", $::db_user);
+    if ($::db_pass) { push @ARGS, "-p$::db_pass" }
+    push @ARGS, "-l", "-e", $::db_name, @tables;
     open SAVEOUT, ">&STDOUT";     # stash the original output stream
     open STDOUT, ">$tempfile";    # redirect to file
     select STDOUT; $| = 1;        # disable buffering
-    system("mysqldump","-l","-e",$db_name,@tables);
+    system("mysqldump", @ARGS);
     open STDOUT, ">&SAVEOUT";     # redirect back to original stream
     Verbose("Restoring from tempfile into shadowdb");
-    my $extra = "";
+    my $extra = "-u $::db_user";
+    if ($::db_pass) {
+        $extra .= " -p$::db_pass";
+    }
     if ($verbose) {
-        $extra = "-v";
+        $extra .= " -v";
     }
     open(MYSQL, "cat $tempfile | mysql $extra " .
          Param("shadowdb") . "|") || die "Couldn't do db copy";
