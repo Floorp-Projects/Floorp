@@ -508,11 +508,6 @@ ifdef MOZ_EDITOR
 DEFINES		+= -DENDER
 endif
 
-ifdef MOZ_GOLD
-DEFINES		+= -DGOLD
-BUILD_GOLD	= 1
-endif
-
 ifdef NO_SECURITY
 DEFINES		+= -DNO_SECURITY
 endif
