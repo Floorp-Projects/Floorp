@@ -2141,11 +2141,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         pn2 = pn->pn_kid;
         if (pn2) {
             /*
-             * Top-level JS_Execute/EvaluateScript, debugger, and eval frames
-             * may need the last expression statement's value as the script's
-             * result, even though it appears useless otherwise.
+             * Top-level or called-from-a-native JS_Execute/EvaluateScript,
+             * debugger, and eval frames may need the value of the ultimate
+             * expression statement as the script's result, despite the fact
+             * that it appears useless to the compiler.
              */
-            useful = !cx->fp->fun || cx->fp->special;
+            useful = !cx->fp->fun || cx->fp->fun->native || cx->fp->special;
             if (!useful) {
                 if (!CheckSideEffects(cx, &cg->treeContext, pn2, &useful))
                     return JS_FALSE;
