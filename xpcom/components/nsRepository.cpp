@@ -18,6 +18,9 @@
 
 #include <stdlib.h>
 #include <iostream.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include "plstr.h"
 #include "prlink.h"
 #include "nsRepository.h"
@@ -153,7 +156,7 @@ static FactoryEntry *platformFind(const nsCID &aCID)
 
 #else // USE_NSREG
 
-#ifdef XP_PC
+#ifdef _WIN32
 #define USE_REGISTRY
 
 static nsresult platformRegister(const nsCID &aCID, const char *aLibrary)
@@ -205,7 +208,7 @@ static FactoryEntry *platformFind(const nsCID &aCID)
   return NULL;
 }
 
-#endif // XP_PC
+#endif // _WIN32
 
 #endif // USE_NSREG
 
