@@ -903,7 +903,7 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
 
   if (mFontMetrics)
   {
-    nsFont *font;
+    const nsFont *font;
     mFontMetrics->GetFont(font);
     PRUint8 deco = font->decorations;
 
