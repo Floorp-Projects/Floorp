@@ -44,7 +44,8 @@
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
-nsGenericFactory::nsGenericFactory(nsModuleComponentInfo *info)
+
+nsGenericFactory::nsGenericFactory(const nsModuleComponentInfo *info)
     : mInfo(info)
 {
     NS_INIT_ISUPPORTS();
@@ -159,7 +160,7 @@ NS_IMETHODIMP nsGenericFactory::GetFlags(PRUint32 *flagsp)
 }
 
 // nsIGenericFactory: component-info accessors
-NS_IMETHODIMP nsGenericFactory::SetComponentInfo(nsModuleComponentInfo *info)
+NS_IMETHODIMP nsGenericFactory::SetComponentInfo(const nsModuleComponentInfo *info)
 {
     if (mInfo && mInfo->mClassInfoGlobal)
         *mInfo->mClassInfoGlobal = 0;
@@ -169,7 +170,7 @@ NS_IMETHODIMP nsGenericFactory::SetComponentInfo(nsModuleComponentInfo *info)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsGenericFactory::GetComponentInfo(nsModuleComponentInfo **infop)
+NS_IMETHODIMP nsGenericFactory::GetComponentInfo(const nsModuleComponentInfo **infop)
 {
     *infop = mInfo;
     return NS_OK;
@@ -194,7 +195,7 @@ NS_METHOD nsGenericFactory::Create(nsISupports* outer, const nsIID& aIID, void* 
 
 NS_COM nsresult
 NS_NewGenericFactory(nsIGenericFactory* *result,
-                     nsModuleComponentInfo *info)
+                     const nsModuleComponentInfo *info)
 {
     nsresult rv;
     nsIGenericFactory* fact;
@@ -213,7 +214,7 @@ NS_NewGenericFactory(nsIGenericFactory* *result,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsGenericModule::nsGenericModule(const char* moduleName, PRUint32 componentCount,
-                                 nsModuleComponentInfo* components,
+                                 const nsModuleComponentInfo* components,
                                  nsModuleConstructorProc ctor,
                                  nsModuleDestructorProc dtor)
     : mInitialized(PR_FALSE), 
@@ -255,7 +256,7 @@ nsGenericModule::Initialize()
     // This allows objects to be created (within their modules)
     // via operator new rather than CreateInstance, yet still be
     // QI'able to nsIClassInfo.
-    nsModuleComponentInfo* desc = mComponents;
+    const nsModuleComponentInfo* desc = mComponents;
     for (PRUint32 i = 0; i < mComponentCount; i++) {
         if (!desc->mConstructor ||
             (desc->mFlags & nsIClassInfo::EAGER_CLASSINFO)) {
@@ -317,7 +318,7 @@ nsGenericModule::GetClassObject(nsIComponentManager *aCompMgr,
     nsIDKey key(aClass);
     nsCOMPtr<nsIGenericFactory> fact = getter_AddRefs(NS_REINTERPRET_CAST(nsIGenericFactory *, mFactories.Get(&key)));
     if (fact == nsnull) {
-        nsModuleComponentInfo* desc = mComponents;
+        const nsModuleComponentInfo* desc = mComponents;
         for (PRUint32 i = 0; i < mComponentCount; i++) {
             if (desc->mCID.Equals(aClass)) {
                 rv = NS_NewGenericFactory(getter_AddRefs(fact), desc);
@@ -354,7 +355,7 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
     printf("*** Registering %s components (all right -- a generic module!)\n", mModuleName);
 #endif
 
-    nsModuleComponentInfo* cp = mComponents;
+    const nsModuleComponentInfo* cp = mComponents;
     for (PRUint32 i = 0; i < mComponentCount; i++) {
         // Register the component only if it has a constructor
         if (cp->mConstructor) {
@@ -401,7 +402,7 @@ nsGenericModule::UnregisterSelf(nsIComponentManager* aCompMgr,
 #ifdef DEBUG
     printf("*** Unregistering %s components (all right -- a generic module!)\n", mModuleName);
 #endif
-    nsModuleComponentInfo* cp = mComponents;
+    const nsModuleComponentInfo* cp = mComponents;
     for (PRUint32 i = 0; i < mComponentCount; i++) {
         // Call the unregistration hook of the component, if any
         if (cp->mUnregisterSelfProc)

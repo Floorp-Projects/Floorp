@@ -49,15 +49,15 @@ class nsGenericFactory : public nsIGenericFactory, public nsIClassInfo {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_GENERICFACTORY_CID);
 
-    nsGenericFactory(nsModuleComponentInfo *info = NULL);
+    nsGenericFactory(const nsModuleComponentInfo *info = NULL);
     virtual ~nsGenericFactory();
     
     NS_DECL_ISUPPORTS
     NS_DECL_NSICLASSINFO
     
     /* nsIGenericFactory methods */
-    NS_IMETHOD SetComponentInfo(nsModuleComponentInfo *info);
-    NS_IMETHOD GetComponentInfo(nsModuleComponentInfo **infop);
+    NS_IMETHOD SetComponentInfo(const nsModuleComponentInfo *info);
+    NS_IMETHOD GetComponentInfo(const nsModuleComponentInfo **infop);
 
     NS_IMETHOD CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
@@ -65,7 +65,7 @@ public:
 
     static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 private:
-    nsModuleComponentInfo *mInfo;
+    const nsModuleComponentInfo *mInfo;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,7 +77,7 @@ class nsGenericModule : public nsIModule
 {
 public:
     nsGenericModule(const char* moduleName, PRUint32 componentCount,
-                    nsModuleComponentInfo* components,
+                    const nsModuleComponentInfo* components,
                     nsModuleConstructorProc ctor,
                     nsModuleDestructorProc dtor);
     virtual ~nsGenericModule();
@@ -94,7 +94,7 @@ protected:
     PRBool                      mInitialized;
     const char*                 mModuleName;
     PRUint32                    mComponentCount;
-    nsModuleComponentInfo*      mComponents;
+    const nsModuleComponentInfo*      mComponents;
     nsSupportsHashtable         mFactories;
     nsModuleConstructorProc     mCtor;
     nsModuleDestructorProc      mDtor;

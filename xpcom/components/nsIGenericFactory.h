@@ -63,13 +63,13 @@ class nsIGenericFactory : public nsIFactory {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IGENERICFACTORY_IID)
     
-    NS_IMETHOD SetComponentInfo(nsModuleComponentInfo *info) = 0;
-    NS_IMETHOD GetComponentInfo(nsModuleComponentInfo **infop) = 0;
+    NS_IMETHOD SetComponentInfo(const nsModuleComponentInfo *info) = 0;
+    NS_IMETHOD GetComponentInfo(const nsModuleComponentInfo **infop) = 0;
 };
 
 extern NS_COM nsresult
 NS_NewGenericFactory(nsIGenericFactory **result,
-                     nsModuleComponentInfo *info);
+                     const nsModuleComponentInfo *info);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -132,7 +132,7 @@ typedef void (PR_CALLBACK *nsModuleDestructorProc) (nsIModule *self);
 struct nsModuleInfo {
     PRUint32                mVersion;
     const char*             mModuleName;
-    nsModuleComponentInfo*  mComponents;
+    const nsModuleComponentInfo*  mComponents;
     PRUint32                mCount;
     nsModuleConstructorProc mCtor;
     nsModuleDestructorProc  mDtor;
