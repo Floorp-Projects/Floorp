@@ -56,6 +56,8 @@ public:
                                 nsString& aControllerIID,
                                 nsIWidget*& aResult, nsIStreamObserver* anObserver) = 0;
   NS_IMETHOD CloseTopLevelWindow(nsIWidget* aWindow) = 0;
+  NS_IMETHOD RegisterTopLevelWindow(nsIWidget* aWindow) = 0;
+  NS_IMETHOD UnregisterTopLevelWindow(nsIWidget* aWindow) = 0;
 };
 
 #endif /* nsIAppShellService_h__ */

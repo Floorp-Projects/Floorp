@@ -84,6 +84,7 @@ public:
 
 
   // nsIWebShellWindow methods...
+  NS_IMETHOD Show(PRBool aShow);
   NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell);
   NS_IMETHOD GetWidget(nsIWidget *& aWidget);
 
@@ -99,11 +100,7 @@ public:
 protected:
   PRInt32 GetDocHeight(nsIDocument * aDoc);
   void SetCommandEnabled(const nsString & aCmdName, PRBool aState);
-  void LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aDOMDoc);
-  void ConnectCommandToOneGUINode(
-          nsIDOMNode* aNode,
-          nsIDOMElement* theNodeAsElementElement,
-          const nsString& aGuiNodeType);
+  void ConnectCommandToOneGUINode(nsIDOMNode* aGUINode);
 
   void LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
   nsCOMPtr<nsIXULCommand>  FindCommandByName(const nsString & aCmdName);
@@ -112,11 +109,18 @@ protected:
   nsCOMPtr<nsIDOMDocument> GetNamedDOMDoc(const nsString & aWebShellName);
   nsCOMPtr<nsIDOMNode>     GetParentNodeFromDOMDoc(nsIDOMDocument * aDOMDoc);
 
+  nsCOMPtr<nsIDOMNode>     GetDOMNodeFromWebShell(nsIWebShell *aShell);
+  void                     LoadCommandsInWebShell(nsIWebShell *aShell);
+  void                     MakeOneCommand(nsIWebShell *aShell, nsCOMPtr<nsIDOMNode> aCommand);
+  void                     ConnectCommandsToWidgetsByType(nsIWebShell *aShell, nsString &aType);
+  void                     ConnectWidgetCommands(nsIDOMNodeList *aNodes);
+
+
   virtual ~nsWebShellWindow();
 
   static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
-  nsIWidget*               mWindow;
+  nsIWidget*              mWindow;
   nsIWebShell*            mWebShell;
   nsIWidgetController*    mController;
   nsIDOMCharacterData*    mStatusText;

@@ -31,6 +31,7 @@ class nsIWebShellWindow : public nsISupports
 {
 public:
 
+  NS_IMETHOD Show(PRBool aShow) = 0;
   NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell) = 0;
   NS_IMETHOD GetWidget(nsIWidget *& aWidget) = 0;
 

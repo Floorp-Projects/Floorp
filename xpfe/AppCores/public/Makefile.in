@@ -28,9 +28,10 @@ EXPORTS =                         \
 		nsIDOMBaseAppCore.h          \
 		nsIDOMMailCore.h      \
 		nsIDOMToolbarCore.h	  \
-        nsIDOMBrowserAppCore.h     \
-        nsAppCoresCIDs.h     \
-        $(NULL)
+		nsIDOMToolkitCore.h		\
+		nsIDOMBrowserAppCore.h     \
+		nsAppCoresCIDs.h     \
+		$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 

@@ -45,6 +45,17 @@
     {0x96, 0xc4, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56}  \
 }
 
+#define NS_TOOLKITCORE_CID                             \
+{ /* 1cab9340-c122-11d2-81b2-0060083a0bcf */          \
+    0x1cab9340, 0xc122, 0x11d2,                       \
+    {0x81, 0xb2, 0x00, 0x60, 0x08, 0x3a, 0x0b, 0xcf}  \
+}
+
+#define NS_TOOLKITCORE_FACTORY_CID                     \
+{ /* 1cab9341-c122-11d2-81b2-0060083a0bcf */          \
+    0x1cab9341, 0xc122, 0x11d2,                       \
+    {0x81, 0xb2, 0x00, 0x60, 0x08, 0x3a, 0x0b, 0xcf}  \
+}
 
 #define NS_THROBBERGLUE_FACTORY_CID \
 { /* 771C3121-BC44-11d2-8A3F-00805F8A6608 */       \
