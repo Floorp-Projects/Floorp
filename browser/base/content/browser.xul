@@ -999,7 +999,7 @@
                       oncommand="BrowserPrint();"
                       tooltiptext="&printButton.tooltip;"/>
 
-      <toolbaritem id="throbber-box" align="center" pack="center">
+      <toolbaritem id="throbber-box" title="&throbberItem.title;" align="center" pack="center">
         <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
                 tooltiptext="&throbber.tooltip;"/>
       </toolbaritem>
