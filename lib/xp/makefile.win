@@ -43,7 +43,6 @@ OBJS=                                   \
         .\$(OBJDIR)\xp_file.obj         \
 	.\$(OBJDIR)\xp_list.obj		\
         .\$(OBJDIR)\allxpstr.obj        \
-        .\$(OBJDIR)\xp_error.obj        \
         $(NULL)
 
 #//------------------------------------------------------------------------
