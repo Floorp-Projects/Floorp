@@ -60,10 +60,3 @@ include $(topsrcdir)/config/rules.mk
 # for some reason puma decided to create a directory viewSource.xul.out
 GARBAGE_DIRS	+= viewSource.xul.out
 
-# viewSource.xul.out: viewSource.xul $(DEPTH)/config/build_number
-# 	cp $(srcdir)/viewSource.xul $@
-# 	$(PERL) $(topsrcdir)/config/aboutime.pl $@ $(DEPTH)/config/build_number
-
-# install:: viewSource.xul.out
-# 	cp viewSource.xul.out $(CHROME_DIST)/$(CHROME_CONTENT_DIR)/viewSource.xul
-
