@@ -26,9 +26,12 @@
 #include "nsIMenuListener.h"
 
 #if defined(XP_MAC)
+#include <Appearance.h>
 #include <TextUtils.h>
 #include <ToolUtils.h>
 #include <Devices.h>
+#include <UnicodeConverter.h>
+#include <Fonts.h>
 #endif
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -89,6 +92,14 @@ nsMenu::nsMenu() : nsIMenu()
   mMacMenuID = 0;
   mMacMenuHandle = nsnull;
   mListener      = nsnull;
+  
+  //
+  // create a multi-destination Unicode converter which can handle all of the installed
+  //	script systems
+  //
+  OSErr err = ::CreateUnicodeToTextRunInfoByScriptCode(0,NULL,&mUnicodeTextRunConverter);
+  NS_ASSERTION(err==noErr,"nsMenu::nsMenu: CreateUnicodeToTextRunInfoByScriptCode failed.");	
+
 }
 
 //-------------------------------------------------------------------------
@@ -98,6 +109,7 @@ nsMenu::nsMenu() : nsIMenu()
 //-------------------------------------------------------------------------
 nsMenu::~nsMenu()
 {
+  OSErr		err;
   NS_IF_RELEASE(mListener);
 
   while(mNumMenuItems)
@@ -127,6 +139,9 @@ nsMenu::~nsMenu()
 	  }
 	}
   }
+  
+  err = ::DisposeUnicodeToTextRunInfo(&mUnicodeTextRunConverter);
+  NS_ASSERTION(err==noErr,"nsMenu::~nsMenu: DisposeUnicodeToTextRunInfo failed.");	  
 }
 
 //-------------------------------------------------------------------------
@@ -185,10 +200,7 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
 {
   mLabel = aText;
 
-  char* menuLabel = mLabel.ToNewCString();
-  mMacMenuHandle = ::NewMenu(mMacMenuIDCount, c2pstr(menuLabel));
-  delete[] menuLabel;
-
+  mMacMenuHandle = NSStringNewMenu(mMacMenuIDCount,mLabel);
   mMacMenuID = mMacMenuIDCount;
   mMacMenuIDCount++;
 
@@ -235,12 +247,10 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
       
 	  nsString label;
 	  aMenuItem->GetLabel(label);
-	  char* menuLabel = label.ToNewCString();
 	  mNumMenuItems++;
 	  Str255 tmp = "a";
 	  ::InsertMenuItem(mMacMenuHandle, tmp, mNumMenuItems);
-	  ::SetMenuItemText(mMacMenuHandle, mNumMenuItems, c2pstr(menuLabel));
-	  delete[] menuLabel;
+	  NSStringSetMenuItemText(mMacMenuHandle, mNumMenuItems,label);
 	}
   }
   return NS_OK;
@@ -259,12 +269,10 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
       // We have to add it as a menu item and then associate it with the item
       nsString label;
       aMenu->GetLabel(label);
-      char* menuLabel = label.ToNewCString();
       mNumMenuItems++;
 
       ::InsertMenuItem(mMacMenuHandle, "\p ", mNumMenuItems);
-      ::SetMenuItemText(mMacMenuHandle, mNumMenuItems, c2pstr(menuLabel));
-      delete[] menuLabel;
+      NSStringSetMenuItemText(mMacMenuHandle, mNumMenuItems, label);
   
       MenuHandle menuHandle;
       aMenu->GetNativeData((void**)&menuHandle);
@@ -504,3 +512,116 @@ NS_METHOD nsMenu::SetWebShell(nsIWebShell * aWebShell)
 {
 	return NS_OK;
 }
+//-------------------------------------------------------------------------
+/**
+* Set WebShell
+*
+*/
+void nsMenu::NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& menuString)
+{
+	OSErr					err;
+	const PRUnichar*		unicodeText;
+	char*					scriptRunText;
+	size_t					unicodeTextLengthInBytes, unicdeTextReadInBytes,
+							scriptRunTextSizeInBytes, scriptRunTextLengthInBytes,
+							scriptCodeRunListLength;
+	ScriptCodeRun			convertedTextScript;
+	short					themeFontID;
+	Str255					themeFontName;
+	SInt16					themeFontSize;
+	Style					themeFontStyle;
+	
+	//
+	// extract the Unicode text from the nsString and convert it into a single script run
+	//
+	unicodeText = menuString.GetUnicode();
+	unicodeTextLengthInBytes = menuString.Length() * sizeof(PRUnichar);
+	scriptRunTextSizeInBytes = unicodeTextLengthInBytes * 2;
+	scriptRunText = new char[scriptRunTextSizeInBytes];
+	
+	err = ::ConvertFromUnicodeToScriptCodeRun(mUnicodeTextRunConverter,
+				unicodeTextLengthInBytes,unicodeText,
+				0, /* no flags*/
+				0,NULL,NULL,NULL, /* no offset arrays */
+				scriptRunTextSizeInBytes,&unicdeTextReadInBytes,&scriptRunTextLengthInBytes,
+				scriptRunText,
+				1 /* count of script runs*/,&scriptCodeRunListLength,&convertedTextScript);
+	NS_ASSERTION(err==noErr,"nsMenu::NSStringSetMenuItemText: ConvertFromUnicodeToScriptCodeRun failed.");
+	if (err!=noErr) { delete [] scriptRunText; return; }
+	scriptRunText[scriptRunTextLengthInBytes] = 0;	// null terminate
+	
+	//
+	// get a font from the script code
+	//
+	err = ::GetThemeFont(kThemeSystemFont,convertedTextScript.script,themeFontName,&themeFontSize,&themeFontStyle);
+	NS_ASSERTION(err==noErr,"nsMenu::NSStringSetMenuItemText: GetThemeFont failed.");
+	if (err!=noErr) { delete [] scriptRunText; return; }
+	::GetFNum(themeFontName,&themeFontID);
+	err = ::SetMenuItemFontID(macMenuHandle,menuItem,themeFontID);
+	NS_ASSERTION(err==noErr,"nsMenu::NSStringSetMenuItemText: SetMenuItemFontID failed.");
+	::SetMenuItemText(macMenuHandle,menuItem,c2pstr(scriptRunText));
+	
+	
+	//
+	// clean up and exit
+	//
+	delete [] scriptRunText;
+			
+}
+
+MenuHandle nsMenu::NSStringNewMenu(short menuID, nsString& menuTitle)
+{
+	OSErr					err;
+	const PRUnichar*		unicodeText;
+	char*					scriptRunText;
+	size_t					unicodeTextLengthInBytes, unicdeTextReadInBytes,
+							scriptRunTextSizeInBytes, scriptRunTextLengthInBytes,
+							scriptCodeRunListLength;
+	ScriptCodeRun			convertedTextScript;
+	short					themeFontID;
+	Str255					themeFontName;
+	SInt16					themeFontSize;
+	Style					themeFontStyle;
+	MenuHandle				newMenuHandle;
+	
+	//
+	// extract the Unicode text from the nsString and convert it into a single script run
+	//
+	unicodeText = menuTitle.GetUnicode();
+	unicodeTextLengthInBytes = menuTitle.Length() * sizeof(PRUnichar);
+	scriptRunTextSizeInBytes = unicodeTextLengthInBytes * 2;
+	scriptRunText = new char[scriptRunTextSizeInBytes];
+	
+	err = ::ConvertFromUnicodeToScriptCodeRun(mUnicodeTextRunConverter,
+				unicodeTextLengthInBytes,unicodeText,
+				0, /* no flags*/
+				0,NULL,NULL,NULL, /* no offset arrays */
+				scriptRunTextSizeInBytes,&unicdeTextReadInBytes,&scriptRunTextLengthInBytes,
+				scriptRunText,
+				1 /* count of script runs*/,&scriptCodeRunListLength,&convertedTextScript);
+	NS_ASSERTION(err==noErr,"nsMenu::NSStringNewMenu: ConvertFromUnicodeToScriptCodeRun failed.");
+	if (err!=noErr) { delete [] scriptRunText; return NULL; }
+	scriptRunText[scriptRunTextLengthInBytes] = 0;	// null terminate
+	
+	//
+	// get a font from the script code
+	//
+	err = ::GetThemeFont(kThemeSystemFont,convertedTextScript.script,themeFontName,&themeFontSize,&themeFontStyle);
+	NS_ASSERTION(err==noErr,"nsMenu::NSStringNewMenu: GetThemeFont failed.");
+	if (err!=noErr) { delete [] scriptRunText; return NULL; }
+	::GetFNum(themeFontName,&themeFontID);
+	newMenuHandle = ::NewMenu(menuID,c2pstr(scriptRunText));
+	NS_ASSERTION(newMenuHandle!=NULL,"nsMenu::NSStringNewMenu: NewMenu failed.");
+	if (newMenuHandle==NULL) { delete [] scriptRunText; return NULL; }
+	err = SetMenuFont(newMenuHandle,themeFontID,themeFontSize);
+	NS_ASSERTION(err==noErr,"nsMenu::NSStringNewMenu: SetMenuFont failed.");
+	if (err!=noErr) { delete [] scriptRunText; return NULL; }
+
+	//
+	// clean up and exit
+	//
+	delete [] scriptRunText;
+	return newMenuHandle;
+			
+}
+			
