@@ -336,7 +336,7 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt, PtResourceRec_t const *
 					break;
 
 				case Pt_MOZ_COMMAND_FIND: {
-					PtWebCommand_t *wdata = ( PtWebCommand_t * ) argt->len;
+					PtWebClient2Command_t *wdata = ( PtWebClient2Command_t * ) argt->len;
 					nsCOMPtr<nsIWebBrowserFind> finder( do_GetInterface( moz->EmbedRef->mWindow->mWebBrowser ) );
 					finder->SetSearchString( NS_ConvertASCIItoUCS2(wdata->FindInfo.string).get() );
 					finder->SetMatchCase( wdata->FindInfo.flags & Pt_WEB_FIND_MATCH_CASE );
@@ -590,10 +590,8 @@ mozilla_set_pref( PtWidget_t *widget, char *option, char *value )
 		}
 
 /* SOCKS options */
-	else if( !strcmp( option, "socks_server" ) )
-		pref->SetCharPref( "network.hosts.socks_server", value );
-	else if( !strcmp( option, "socks_port" ) )
-		pref->SetCharPref( "network.hosts.socks_serverport", value );
+	else if( !strcmp( option, "socks_server" ) )	; /* not used */
+	else if( !strcmp( option, "socks_port" ) )		; /* not used */
 	else if( !strcmp( option, "socks_user" ) ) 		; /* not used */
 	else if( !strcmp( option, "socks_app" ) ) 		; /* not used */
 
@@ -792,18 +790,6 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 		char *font = NULL;
 		pref->CopyCharPref( "font.name.monospace.x-western", &font );
 		strcpy( value, font );
-		}
-
-/* SOCKS options */
-  else if( !strcmp( option, "socks_server" ) ) {
-		char *s = NULL;
-		pref->CopyCharPref( "network.hosts.socks_server", &s );
-		if( s ) strcpy( value, s );
-		}
-  else if( !strcmp( option, "socks_port" ) ) {
-		char *s = NULL;
-		pref->CopyCharPref( "network.hosts.socks_serverport", &s );
-		if( s ) strcpy( value, s );
 		}
 
 /* HTTP options */
