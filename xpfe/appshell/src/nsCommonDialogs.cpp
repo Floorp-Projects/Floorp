@@ -22,7 +22,7 @@
 #include "nsXPComFactory.h"
 #include "nsIComponentManager.h"
 
-static NS_DEFINE_CID( kDialogParamBlock,          NS_DialogParamBlock_CID);
+static NS_DEFINE_CID( kDialogParamBlockCID,          NS_DialogParamBlock_CID);
 
 class nsCommonDialogs: public nsICommonDialogs
 {
@@ -51,7 +51,7 @@ const char* kWarningIconURL ="chrome://global/skin/message-icon.gif";
 
 nsCommonDialogs::nsCommonDialogs()
 {
-
+	NS_INIT_REFCNT();
 }
 
 nsCommonDialogs::~nsCommonDialogs()
@@ -62,7 +62,7 @@ NS_IMETHODIMP nsCommonDialogs::Alert(nsIDOMWindow *inParent, const PRUnichar *in
 {
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
-	rv = nsComponentManager::CreateInstance( kDialogParamBlock,
+	rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
                                                       0,
                                                       nsIDialogParamBlock::GetIID(),
                                                       (void**)&block );
@@ -85,7 +85,7 @@ NS_IMETHODIMP nsCommonDialogs::Confirm(nsIDOMWindow *inParent, const PRUnichar *
 {
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
-	rv = nsComponentManager::CreateInstance( kDialogParamBlock,
+	rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
                                                       0,
                                                       nsIDialogParamBlock::GetIID(),
                                                       (void**)&block );
@@ -111,7 +111,7 @@ NS_IMETHODIMP nsCommonDialogs::ConfirmCheck(nsIDOMWindow *inParent, const PRUnic
 {
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
-	rv = nsComponentManager::CreateInstance( kDialogParamBlock,
+	rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
                                                       0,
                                                       nsIDialogParamBlock::GetIID(),
                                                       (void**)&block );
@@ -142,7 +142,7 @@ NS_IMETHODIMP nsCommonDialogs::Prompt(nsIDOMWindow *inParent, const PRUnichar *i
 {
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
-	rv = nsComponentManager::CreateInstance( kDialogParamBlock,
+	rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
                                                       0,
                                                       nsIDialogParamBlock::GetIID(),
                                                       (void**)&block );
@@ -159,8 +159,10 @@ NS_IMETHODIMP nsCommonDialogs::Prompt(nsIDOMWindow *inParent, const PRUnichar *i
 	
 	rv = DoDialog( inParent, block, kPromptURL );
 	
-	PRInt32 tempInt = 0;
+	
 	block->GetString( eEditfield1Value, result );
+	PRInt32 tempInt = 0;
+	block->GetInt( eButtonPressed, &tempInt );
 	*_retval = tempInt ? PR_FALSE : PR_TRUE;
 	
 	NS_IF_RELEASE( block );
@@ -171,7 +173,7 @@ NS_IMETHODIMP nsCommonDialogs::PromptUsernameAndPassword(nsIDOMWindow *inParent,
 {
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
-	rv = nsComponentManager::CreateInstance( kDialogParamBlock,
+	rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
                                                       0,
                                                       nsIDialogParamBlock::GetIID(),
                                                       (void**)&block );
@@ -179,10 +181,20 @@ NS_IMETHODIMP nsCommonDialogs::PromptUsernameAndPassword(nsIDOMWindow *inParent,
 	if ( NS_FAILED( rv ) )
 		return rv;
 	// Stuff in Parameters
+	block->SetInt( eNumberButtons,2 );
+	block->SetString( eMsg, inMsg );
+	nsString url( kQuestionIconURL );
+	block->SetString( eIconURL, url.GetUnicode());
+	block->SetInt( eNumberEditfields, 2 );
 	
 	
 	rv = DoDialog( inParent, block, kPromptURL );
 	
+	block->GetString( eEditfield1Value, outUser );
+	block->GetString( eEditfield2Value, outPassword );
+	PRInt32 tempInt = 0;
+	block->GetInt( eButtonPressed, &tempInt );
+	*_retval = tempInt ? PR_FALSE : PR_TRUE;
 	NS_IF_RELEASE( block );
 	return rv;
 }
@@ -191,7 +203,7 @@ NS_IMETHODIMP nsCommonDialogs::PromptPassword(nsIDOMWindow *inParent, const PRUn
 {	
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
-	rv = nsComponentManager::CreateInstance( kDialogParamBlock,
+	rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
                                                       0,
                                                       nsIDialogParamBlock::GetIID(),
                                                       (void**)&block );
@@ -199,9 +211,17 @@ NS_IMETHODIMP nsCommonDialogs::PromptPassword(nsIDOMWindow *inParent, const PRUn
 	if ( NS_FAILED( rv ) )
 		return rv;
 	// Stuff in Parameters
-	
+	block->SetInt( eNumberButtons,2 );
+	block->SetString( eMsg, inMsg );
+	nsString url( kQuestionIconURL );
+	block->SetString( eIconURL, url.GetUnicode());
+	block->SetInt( eNumberEditfields, 1 );
 	
 	rv = DoDialog( inParent, block, kPromptURL );
+	block->GetString( eEditfield1Value, outPassword );
+	PRInt32 tempInt = 0;
+	block->GetInt( eButtonPressed, &tempInt );
+	*_retval = tempInt ? PR_FALSE : PR_TRUE;
 	
 	NS_IF_RELEASE( block );
 	return rv;
