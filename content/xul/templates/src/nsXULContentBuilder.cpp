@@ -1593,7 +1593,7 @@ nsXULContentBuilder::CreateElement(PRInt32 aNameSpaceID,
         rv = nsXULElement::Create(nodeInfo, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
     }
-    else if (aNameSpaceID == kNameSpaceID_HTML) {
+    else if (aNameSpaceID == kNameSpaceID_XHTML) {
         rv = gHTMLElementFactory->CreateInstanceByTag(nodeInfo,
                                                       getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;

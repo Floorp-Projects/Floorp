@@ -53,8 +53,6 @@ extern nsresult NS_NewXMLElementFactory(nsIElementFactory** aResult);
 
 static const char kXMLNSNameSpaceURI[] = "http://www.w3.org/2000/xmlns/";
 static const char kXMLNameSpaceURI[] = "http://www.w3.org/XML/1998/namespace";
-static const char kHTMLNameSpaceURI[] = "http://www.w3.org/TR/REC-html40";  // XXX?? "urn:w3-org-ns:HTML"??
-// XXX To be removed: Bug 7834 ---
 static const char kXHTMLNameSpaceURI[] = "http://www.w3.org/1999/xhtml";
 static const char kXLinkNameSpaceURI[] = "http://www.w3.org/1999/xlink";
 static const char kXSLTNameSpaceURI[] = "http://www.w3.org/1999/XSL/Transform";
@@ -79,26 +77,24 @@ static void InitializeNameSpaceManager()
     return;
   }
 
-  NS_ASSERTION(nsnull == gURIToIDTable, "already have URI table");
-  NS_ASSERTION(nsnull == gURIArray, "already have URI array");
+  NS_ASSERTION(!gURIToIDTable, "already have URI table");
+  NS_ASSERTION(!gURIArray, "already have URI array");
 
   gURIToIDTable = new nsHashtable();
   gURIArray = new nsVoidArray();
 
-  nsString* xmlns = new nsString( NS_ConvertASCIItoUCS2(kXMLNSNameSpaceURI) );
-  nsString* xml = new nsString( NS_ConvertASCIItoUCS2(kXMLNameSpaceURI) );
-  nsString* xhtml = new nsString( NS_ConvertASCIItoUCS2(kXHTMLNameSpaceURI) );
-  nsString* xlink = new nsString( NS_ConvertASCIItoUCS2(kXLinkNameSpaceURI) );
-  nsString* html = new nsString( NS_ConvertASCIItoUCS2(kHTMLNameSpaceURI) );
-  nsString* xslt = new nsString( NS_ConvertASCIItoUCS2(kXSLTNameSpaceURI) );
-  nsString* xbl = new nsString(NS_ConvertASCIItoUCS2(kXBLNameSpaceURI));
+  nsString* xmlns  = new nsString(NS_ConvertASCIItoUCS2(kXMLNSNameSpaceURI));
+  nsString* xml    = new nsString(NS_ConvertASCIItoUCS2(kXMLNameSpaceURI));
+  nsString* xhtml  = new nsString(NS_ConvertASCIItoUCS2(kXHTMLNameSpaceURI));
+  nsString* xlink  = new nsString(NS_ConvertASCIItoUCS2(kXLinkNameSpaceURI));
+  nsString* xslt   = new nsString(NS_ConvertASCIItoUCS2(kXSLTNameSpaceURI));
+  nsString* xbl    = new nsString(NS_ConvertASCIItoUCS2(kXBLNameSpaceURI));
   nsString* mathml = new nsString(NS_ConvertASCIItoUCS2(kMathMLNameSpaceURI));
 
   gURIArray->AppendElement(xmlns);  // ordering here needs to match IDs
   gURIArray->AppendElement(xml);
   gURIArray->AppendElement(xhtml); 
   gURIArray->AppendElement(xlink);
-  gURIArray->AppendElement(html); 
   gURIArray->AppendElement(xslt);
   gURIArray->AppendElement(xbl);
   gURIArray->AppendElement(mathml);
@@ -107,25 +103,23 @@ static void InitializeNameSpaceManager()
   nsStringKey xmlKey(*xml);
   nsStringKey xhtmlKey(*xhtml);
   nsStringKey xlinkKey(*xlink);
-  nsStringKey htmlKey(*html);
   nsStringKey xsltKey(*xslt);
   nsStringKey xblKey(*xbl);
   nsStringKey mathmlKey(*mathml);
 
-  gURIToIDTable->Put(&xmlnsKey, (void*)kNameSpaceID_XMLNS);
-  gURIToIDTable->Put(&xmlKey, (void*)kNameSpaceID_XML);
-  gURIToIDTable->Put(&xhtmlKey, (void*)kNameSpaceID_HTML);
-  gURIToIDTable->Put(&xlinkKey, (void*)kNameSpaceID_XLink);
-  gURIToIDTable->Put(&htmlKey, (void*)kNameSpaceID_HTML);
-  gURIToIDTable->Put(&xsltKey, (void*)kNameSpaceID_XSLT);
-  gURIToIDTable->Put(&xblKey, (void*)kNameSpaceID_XBL);
-  gURIToIDTable->Put(&mathmlKey, (void*)kNameSpaceID_MathML);
+  gURIToIDTable->Put(&xmlnsKey,  NS_INT32_TO_PTR(kNameSpaceID_XMLNS));
+  gURIToIDTable->Put(&xmlKey,    NS_INT32_TO_PTR(kNameSpaceID_XML));
+  gURIToIDTable->Put(&xhtmlKey,  NS_INT32_TO_PTR(kNameSpaceID_XHTML));
+  gURIToIDTable->Put(&xlinkKey,  NS_INT32_TO_PTR(kNameSpaceID_XLink));
+  gURIToIDTable->Put(&xsltKey,   NS_INT32_TO_PTR(kNameSpaceID_XSLT));
+  gURIToIDTable->Put(&xblKey,    NS_INT32_TO_PTR(kNameSpaceID_XBL));
+  gURIToIDTable->Put(&mathmlKey, NS_INT32_TO_PTR(kNameSpaceID_MathML));
 
   NS_NewISupportsArray(&gElementFactoryArray);
 
-  NS_ASSERTION(nsnull != gURIToIDTable, "no URI table");
-  NS_ASSERTION(nsnull != gURIArray, "no URI array");
-  NS_ASSERTION(nsnull != gElementFactoryArray, "no element factory array");
+  NS_ASSERTION(gURIToIDTable, "no URI table");
+  NS_ASSERTION(gURIArray, "no URI array");
+  NS_ASSERTION(gElementFactoryArray, "no element factory array");
 
   gNameSpaceManagerIsInitialized = PR_TRUE;
 }
@@ -151,11 +145,11 @@ void NS_NameSpaceManagerShutdown()
 
 static PRInt32 FindNameSpaceID(const nsAString& aURI)
 {
-  NS_ASSERTION(nsnull != gURIToIDTable, "no URI table");
+  NS_ASSERTION(gURIToIDTable, "no URI table");
   const nsPromiseFlatString& flatString = PromiseFlatString(aURI); 
   nsStringKey key(flatString);
   void* value = gURIToIDTable->Get(&key);
-  if (nsnull != value) {
+  if (value) {
     return NS_PTR_TO_INT32(value);
   }
   return kNameSpaceID_Unknown;
@@ -163,7 +157,7 @@ static PRInt32 FindNameSpaceID(const nsAString& aURI)
 
 static const nsString* FindNameSpaceURI(PRInt32 aID)
 {
-  NS_ASSERTION(nsnull != gURIArray, "no URI array");
+  NS_ASSERTION(gURIArray, "no URI array");
   return (const nsString*)gURIArray->SafeElementAt(aID - 1);
 }
 
@@ -221,7 +215,7 @@ NameSpaceImpl::NameSpaceImpl(nsINameSpaceManager* aManager,
     mParent(aParent),
     mPrefix(aPrefix)
 {
-  NS_ASSERTION(nsnull != aManager, "null namespace manager");
+  NS_ASSERTION(aManager, "null namespace manager");
   NS_INIT_REFCNT();
   NS_ADDREF(mManager);
   NS_IF_ADDREF(mParent);
@@ -238,7 +232,7 @@ NameSpaceImpl::NameSpaceImpl(nsINameSpaceManager* aManager,
     mPrefix(aPrefix),
     mID(aNameSpaceID)
 {
-  NS_ASSERTION(nsnull != aManager, "null namespace manager");
+  NS_ASSERTION(aManager, "null namespace manager");
   NS_INIT_REFCNT();
   NS_ADDREF(mManager);
   NS_IF_ADDREF(mParent);
@@ -257,7 +251,7 @@ NS_IMPL_ISUPPORTS1(NameSpaceImpl, nsINameSpace)
 NS_IMETHODIMP
 NameSpaceImpl::GetNameSpaceManager(nsINameSpaceManager*& aManager) const
 {
-  NS_ASSERTION(nsnull != aManager, "null namespace manager");
+  NS_ASSERTION(aManager, "null namespace manager");
   aManager = mManager;
   NS_ADDREF(aManager);
   return NS_OK;
@@ -273,7 +267,7 @@ NameSpaceImpl::GetNameSpaceID(PRInt32& aID) const
 NS_IMETHODIMP
 NameSpaceImpl::GetNameSpaceURI(nsAString& aURI) const
 {
-  NS_ASSERTION(nsnull != mManager, "null namespace manager");
+  NS_ASSERTION(mManager, "null namespace manager");
   return mManager->GetNameSpaceURI(mID, aURI);
 }
 
@@ -297,6 +291,7 @@ NS_IMETHODIMP
 NameSpaceImpl::FindNameSpace(nsIAtom* aPrefix, nsINameSpace*& aNameSpace) const
 {
   const NameSpaceImpl*  nameSpace = this;
+
   do {
     if (aPrefix == nameSpace->mPrefix) {
       aNameSpace = (nsINameSpace*)nameSpace;
@@ -304,8 +299,8 @@ NameSpaceImpl::FindNameSpace(nsIAtom* aPrefix, nsINameSpace*& aNameSpace) const
       return NS_OK;
     }
     nameSpace = nameSpace->mParent;
-  }
-  while (nsnull != nameSpace);
+  } while (nameSpace);
+
   aNameSpace = nsnull;
   return NS_ERROR_ILLEGAL_VALUE;
 }
@@ -320,9 +315,9 @@ NameSpaceImpl::FindNameSpaceID(nsIAtom* aPrefix, PRInt32& aNameSpaceID) const
       return NS_OK;
     }
     nameSpace = nameSpace->mParent;
-  } while (nsnull != nameSpace);
+  } while (nameSpace);
 
-  if (nsnull == aPrefix) {
+  if (!aPrefix) {
     aNameSpaceID = kNameSpaceID_None;
   }
   else {
@@ -335,6 +330,7 @@ NS_IMETHODIMP
 NameSpaceImpl::FindNameSpacePrefix(PRInt32 aNameSpaceID, nsIAtom*& aPrefix) const 
 {
   const NameSpaceImpl*  nameSpace = this;
+
   do {
     if (aNameSpaceID == nameSpace->mID) {
       aPrefix = nameSpace->mPrefix;
@@ -342,8 +338,8 @@ NameSpaceImpl::FindNameSpacePrefix(PRInt32 aNameSpaceID, nsIAtom*& aPrefix) cons
       return NS_OK;
     }
     nameSpace = nameSpace->mParent;
-  }
-  while (nsnull != nameSpace);
+  } while (nameSpace);
+
   aPrefix = nsnull;
   return NS_ERROR_ILLEGAL_VALUE;
 }
@@ -432,11 +428,15 @@ NameSpaceManagerImpl::CreateRootNameSpace(nsINameSpace*& aRootNameSpace)
   nsresult  rv = NS_ERROR_OUT_OF_MEMORY;
   aRootNameSpace = nsnull;
 
-  NameSpaceImpl* xmlns = new NameSpaceImpl(this, nsnull, nsLayoutAtoms::xmlnsNameSpace, kNameSpaceID_XMLNS);
+  NameSpaceImpl* xmlns = new NameSpaceImpl(this, nsnull,
+                                           nsLayoutAtoms::xmlnsNameSpace,
+                                           kNameSpaceID_XMLNS);
   if (nsnull != xmlns) {
-    NameSpaceImpl* xml = new NameSpaceImpl(this, xmlns, nsLayoutAtoms::xmlNameSpace, kNameSpaceID_XML);
-    if (nsnull != xml) {
-      rv = xml->QueryInterface(NS_GET_IID(nsINameSpace), (void**)&aRootNameSpace);
+    NameSpaceImpl* xml = new NameSpaceImpl(this, xmlns,
+                                           nsLayoutAtoms::xmlNameSpace,
+                                           kNameSpaceID_XML);
+    if (xml) {
+      rv = CallQueryInterface(xml, &aRootNameSpace);
     }
     else {
       delete xmlns;
@@ -478,7 +478,7 @@ NameSpaceManagerImpl::GetNameSpaceURI(PRInt32 aNameSpaceID, nsAString& aURI)
                "Namespace manager used past content module shutdown!!!");
 
   const nsString* result = FindNameSpaceURI(aNameSpaceID);
-  if (nsnull != result) {
+  if (result) {
     aURI = *result;
     return NS_OK;
   }

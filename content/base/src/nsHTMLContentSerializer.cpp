@@ -508,7 +508,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   if (name.get() == nsHTMLAtoms::textarea)
   {
     nsAutoString valueStr;
-    content->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, valueStr);
+    content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, valueStr);
     AppendToString(valueStr, aStr);
   }
 

@@ -52,18 +52,11 @@ MOZ_DECL_CTOR_COUNTER(nsButtonFrameRenderer)
 nsButtonFrameRenderer::nsButtonFrameRenderer()
 {
   MOZ_COUNT_CTOR(nsButtonFrameRenderer);
-  mNameSpace = kNameSpaceID_HTML;
 }
 
 nsButtonFrameRenderer::~nsButtonFrameRenderer()
 {
   MOZ_COUNT_DTOR(nsButtonFrameRenderer);
-}
-
-void
-nsButtonFrameRenderer::SetNameSpace(PRInt32 aNameSpace)
-{
-  mNameSpace = aNameSpace;
 }
 
 void
@@ -79,12 +72,6 @@ nsButtonFrameRenderer::GetFrame()
   return mFrame;
 }
 
-PRInt32
-nsButtonFrameRenderer::GetNameSpace()
-{
-  return mNameSpace;
-}
-
 void
 nsButtonFrameRenderer::SetDisabled(PRBool aDisabled, PRBool notify)
 {
@@ -93,9 +80,10 @@ nsButtonFrameRenderer::SetDisabled(PRBool aDisabled, PRBool notify)
   mFrame->GetContent(getter_AddRefs(content));
 
   if (aDisabled)
-    content->SetAttr(mNameSpace, nsHTMLAtoms::disabled, nsAutoString(), notify);
+    content->SetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, nsString(),
+                     notify);
   else
-    content->UnsetAttr(mNameSpace, nsHTMLAtoms::disabled, notify);
+    content->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, notify);
 
 }
 
@@ -106,7 +94,7 @@ nsButtonFrameRenderer::isDisabled()
   nsCOMPtr<nsIContent> content;
   mFrame->GetContent(getter_AddRefs(content));
   nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(mNameSpace, nsHTMLAtoms::disabled, value))
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, value))
     return PR_TRUE;
 
   return PR_FALSE;

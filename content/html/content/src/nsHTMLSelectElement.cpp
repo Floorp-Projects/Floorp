@@ -1521,7 +1521,7 @@ nsHTMLSelectElement::SetFocus(nsIPresContext* aPresContext)
   nsAutoString disabled;
 
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_HTML,
+      nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_None,
                                                  nsHTMLAtoms::disabled,
                                                  disabled)) {
     return NS_OK;
@@ -2251,12 +2251,12 @@ nsHTMLOptionCollection::NamedItem(const nsAString& aName,
     if (content) {
       nsAutoString name;
 
-      if (((content->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::name,
+      if (((content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name,
                              name) == NS_CONTENT_ATTR_HAS_VALUE) &&
-           (aName.Equals(name))) ||
-          ((content->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::id,
+           aName.Equals(name)) ||
+          ((content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id,
                              name) == NS_CONTENT_ATTR_HAS_VALUE) &&
-           (aName.Equals(name)))) {
+           aName.Equals(name))) {
         rv = CallQueryInterface(content, aReturn);
       }
     }

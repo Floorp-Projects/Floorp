@@ -938,7 +938,7 @@ MatchId(nsIContent *aContent, const nsAString& aName)
   PRInt32 ns;
 
   aContent->GetNameSpaceID(ns);
-  if (kNameSpaceID_HTML == ns) {
+  if (kNameSpaceID_XHTML == ns) {
     if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, value)) &&
         aName.Equals(value)) {
       return aContent;
@@ -1067,7 +1067,6 @@ nsXMLDocument::CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult)
   aNodeInfo->GetNamespaceID(namespaceID);
 
   nsCOMPtr<nsIElementFactory> elementFactory;
-
   mNameSpaceManager->GetElementFactory(namespaceID,
                                        getter_AddRefs(elementFactory));
 

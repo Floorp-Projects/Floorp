@@ -344,9 +344,8 @@ nsHTMLLinkElement::SetHref(const nsAString& aValue)
   // somebody asks for it.
   mLinkState = eLinkState_Unknown;
 
-  nsresult rv = nsGenericHTMLLeafElement::SetAttr(kNameSpaceID_HTML,
-                                                  nsHTMLAtoms::href,
-                                                  aValue,
+  nsresult rv = nsGenericHTMLLeafElement::SetAttr(kNameSpaceID_None,
+                                                  nsHTMLAtoms::href, aValue,
                                                   PR_TRUE);
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet();

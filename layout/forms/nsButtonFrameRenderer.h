@@ -78,7 +78,6 @@ public:
 						  const nsRect& aDirtyRect,
 						  const nsRect& aRect);
 
-	virtual void SetNameSpace(PRInt32 aNameSpace);
 	virtual void SetFrame(nsFrame* aFrame, nsIPresContext* aPresContext);
  
 	virtual void SetDisabled(PRBool aDisabled, PRBool notify);
@@ -106,7 +105,6 @@ public:
   virtual void Redraw(nsIPresContext* aPresContext);
 
   virtual nsIFrame* GetFrame();
-  virtual PRInt32 GetNameSpace();
 
 protected:
 
@@ -117,7 +115,6 @@ private:
 	nsCOMPtr<nsIStyleContext> mInnerFocusStyle;
 	nsCOMPtr<nsIStyleContext> mOuterFocusStyle;
 
-	PRInt32 mNameSpace;
 	nsFrame* mFrame;
 
   nsRect mOutlineRect;

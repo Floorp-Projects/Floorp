@@ -2284,7 +2284,7 @@ nsresult PresShell::CreatePreferenceStyleSheet(void)
       NS_ASSERTION(uri, "null but no error");
       result = mPrefStyleSheet->Init(uri);
       if (NS_SUCCEEDED(result)) {
-        mPrefStyleSheet->SetDefaultNameSpaceID(kNameSpaceID_HTML);
+        mPrefStyleSheet->SetDefaultNameSpaceID(kNameSpaceID_XHTML);
         mStyleSet->InsertUserStyleSheetBefore(mPrefStyleSheet, nsnull);
       }
     }

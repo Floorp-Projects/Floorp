@@ -60,7 +60,7 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsImageMapUtils.h"
 #include "nsIHTMLDocument.h"
-#include "nsINameSpaceManager.h"  // for kNameSpaceID_HTML
+#include "nsINameSpaceManager.h"  // for kNameSpaceID_XHTML
 #include "nsIWebShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIScrollableView.h"
@@ -792,7 +792,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
           //Someone registered an accesskey.  Find and activate it.
           PRUnichar accKey = nsCRT::ToLower((char)keyEvent->charCode);
 
-          nsVoidKey key((void*)accKey);
+          nsVoidKey key(NS_INT32_TO_PTR(accKey));
           if (mAccessKeys->Exists(&key)) {
             nsCOMPtr<nsIContent> content = dont_AddRef(NS_STATIC_CAST(nsIContent*, mAccessKeys->Get(&key)));
 
@@ -1397,9 +1397,14 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
     nsCOMPtr<nsIDOMAbstractView> view;
     docView->GetDefaultView(getter_AddRefs(view));
     
-    if (scrollPage)
-      numLines = numLines > 0 ? nsIDOMNSUIEvent::SCROLL_PAGE_DOWN : nsIDOMNSUIEvent::SCROLL_PAGE_UP;
-      
+    if (scrollPage) {
+      if (numLines > 0) {
+        numLines = nsIDOMNSUIEvent::SCROLL_PAGE_DOWN;
+      } else {
+        numLines = nsIDOMNSUIEvent::SCROLL_PAGE_UP;
+      }
+    }
+
     mouseEvent->InitMouseEvent(NS_LITERAL_STRING("DOMMouseScroll"), PR_TRUE, PR_TRUE, 
                                view, numLines,
                                msEvent->refPoint.x, msEvent->refPoint.y,
@@ -2023,28 +2028,22 @@ nsEventStateManager::GetNearestScrollingView(nsIView* aView)
 PRBool
 nsEventStateManager::CheckDisabled(nsIContent* aContent)
 {
-  PRBool disabled = PR_FALSE;
-
   nsCOMPtr<nsIAtom> tag;
   aContent->GetTag(*getter_AddRefs(tag));
 
-  if (nsHTMLAtoms::input == tag.get() ||
-      nsHTMLAtoms::select == tag.get() ||
-      nsHTMLAtoms::textarea == tag.get() ||
-      nsHTMLAtoms::button == tag.get()) {
-    nsAutoString empty;
-    if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_HTML, 
-                                                       nsHTMLAtoms::disabled,
-                                                       empty)) {
-      disabled = PR_TRUE;
-    }
+  if (tag == nsHTMLAtoms::input    ||
+      tag == nsHTMLAtoms::select   ||
+      tag == nsHTMLAtoms::textarea ||
+      tag == nsHTMLAtoms::button) {
+    return aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled);
   }
   
-  return disabled;
+  return PR_FALSE;
 }
 
 void
-nsEventStateManager::UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, 
+nsEventStateManager::UpdateCursor(nsIPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIFrame* aTargetFrame, 
                                   nsEventStatus* aStatus)
 {
   PRInt32 cursor;
@@ -3969,7 +3968,7 @@ nsEventStateManager::RegisterAccessKey(nsIFrame * aFrame, nsIContent* aContent, 
   if (content) {
     PRUnichar accKey = nsCRT::ToLower((char)aKey);
 
-    nsVoidKey key((void*)accKey);
+    nsVoidKey key(NS_INT32_TO_PTR(accKey));
 
 #ifdef DEBUG_jag
     nsCOMPtr<nsIContent> oldContent = dont_AddRef(NS_STATIC_CAST(nsIContent*,  mAccessKeys->Get(&key)));
@@ -3998,7 +3997,7 @@ nsEventStateManager::UnregisterAccessKey(nsIFrame * aFrame, nsIContent* aContent
   if (content) {
     PRUnichar accKey = nsCRT::ToLower((char)aKey);
 
-    nsVoidKey key((void*)accKey);
+    nsVoidKey key(NS_INT32_TO_PTR(accKey));
 
     nsCOMPtr<nsIContent> oldContent = dont_AddRef(NS_STATIC_CAST(nsIContent*, mAccessKeys->Get(&key)));
 #ifdef DEBUG_jag
@@ -4471,8 +4470,9 @@ NS_IMETHODIMP nsEventStateManager::MoveCaretToFocus()
     nsCOMPtr<nsIContent> selectionContent, endSelectionContent;
     nsIFrame *selectionFrame;
     PRUint32 selectionOffset;
-    nsresult rv = GetDocSelectionLocation(getter_AddRefs(selectionContent), getter_AddRefs(endSelectionContent),
-      &selectionFrame, &selectionOffset);
+    GetDocSelectionLocation(getter_AddRefs(selectionContent),
+                            getter_AddRefs(endSelectionContent),
+                            &selectionFrame, &selectionOffset);
     while (selectionContent) {
       nsCOMPtr<nsIContent> parentContent;
       selectionContent->GetParent(*getter_AddRefs(parentContent));

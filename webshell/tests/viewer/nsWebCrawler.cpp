@@ -762,10 +762,10 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
     // Get absolute url that tag targets
     nsAutoString base, src, absURLSpec;
     if (atom == mLinkTag) {
-      aNode->GetAttr(kNameSpaceID_HTML, mHrefAttr, src);
+      aNode->GetAttr(kNameSpaceID_None, mHrefAttr, src);
     }
     else {
-      aNode->GetAttr(kNameSpaceID_HTML, mSrcAttr, src);
+      aNode->GetAttr(kNameSpaceID_None, mSrcAttr, src);
     }
     nsCOMPtr<nsIURI> docURL;
     aDocument->GetDocumentURL(getter_AddRefs(docURL));

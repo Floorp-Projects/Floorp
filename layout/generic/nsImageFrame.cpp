@@ -303,7 +303,7 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
   // See if we have a SRC attribute
   nsAutoString src;
   nsresult ca;
-  ca = mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src, src);
+  ca = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src);
   if ((NS_CONTENT_ATTR_HAS_VALUE != ca) || (src.Length() == 0))
   {
     // Let's see if this is an object tag and we have a DATA attribute
@@ -311,7 +311,7 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
     mContent->GetTag(tag);
 
     if(tag == nsHTMLAtoms::object)
-      mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::data, src);
+      mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, src);
   
     NS_IF_RELEASE(tag);
   }
@@ -656,7 +656,7 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
     if (mFailureReplace) {
       // first check for image map
       nsAutoString usemap;
-      mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);    
+      mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::usemap, usemap);    
       if (usemap.IsEmpty()) {
         // check if we want to honor the ALT text in the IMG frame, or let the preShell make it into inline text
         //  - if QuirksMode, and the IMG has a size, then render the ALT text in the IMG frame
@@ -1459,7 +1459,7 @@ nsImageFrame::GetImageMap(nsIPresContext* aPresContext)
     }
 
     nsAutoString usemap;
-    mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);
+    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::usemap, usemap);
 
     nsCOMPtr<nsIDOMHTMLMapElement> map;
     if (NS_SUCCEEDED(nsImageMapUtils::FindImageMap(doc,usemap,getter_AddRefs(map))) && map) {
@@ -1529,7 +1529,7 @@ nsImageFrame::IsServerImageMap()
 {
   nsAutoString ismap;
   return NS_CONTENT_ATTR_HAS_VALUE ==
-    mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::ismap, ismap);
+    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::ismap, ismap);
 }
 
 PRIntn
@@ -1537,7 +1537,7 @@ nsImageFrame::GetSuppress()
 {
   nsAutoString s;
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::suppress, s)) {
+      mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::suppress, s)) {
     if (s.EqualsIgnoreCase("true")) {
       return SUPPRESS;
     } else if (s.EqualsIgnoreCase("false")) {

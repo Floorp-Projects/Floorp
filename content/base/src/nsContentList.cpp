@@ -535,10 +535,12 @@ nsContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn, PRBool aD
       if (content) {
         nsAutoString name;
         // XXX Should it be an EqualsIgnoreCase?
-        if (((content->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::name, name) == NS_CONTENT_ATTR_HAS_VALUE) &&
-             (aName.Equals(name))) ||
-            ((content->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::id, name) == NS_CONTENT_ATTR_HAS_VALUE) &&
-             (aName.Equals(name)))) {
+        if (((content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name,
+                               name) == NS_CONTENT_ATTR_HAS_VALUE) &&
+             aName.Equals(name)) ||
+            ((content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id,
+                               name) == NS_CONTENT_ATTR_HAS_VALUE) &&
+             aName.Equals(name))) {
           return CallQueryInterface(content, aReturn);
         }
       }

@@ -161,7 +161,7 @@ NS_NewHTMLAnchorElement(nsIHTMLContent** aInstancePtrResult,
     return rv;
   }
 
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  *aInstancePtrResult = it;
   NS_ADDREF(*aInstancePtrResult);
 
   return NS_OK;
@@ -214,7 +214,7 @@ nsHTMLAnchorElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   CopyInnerTo(this, it, aDeep);
 
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+  *aReturn = it;
 
   NS_ADDREF(*aReturn);
 
@@ -236,9 +236,7 @@ NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Type, type)
 NS_IMETHODIMP
 nsHTMLAnchorElement::GetAccessKey(nsAString& aValue)
 {
-  NS_STATIC_CAST(nsIHTMLContent *, this)->GetAttr(kNameSpaceID_None,
-                                                  nsHTMLAtoms::accesskey,
-                                                  aValue);
+  GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, aValue);
   return NS_OK;
 }
 
@@ -247,11 +245,8 @@ nsHTMLAnchorElement::SetAccessKey(const nsAString& aValue)
 {
   RegUnRegAccessKey(PR_FALSE);
 
-  nsresult rv = NS_STATIC_CAST(nsIHTMLContent *,
-                               this)->SetAttr(kNameSpaceID_None,
-                                              nsHTMLAtoms::accesskey,
-                                              aValue,
-                                              PR_TRUE);
+  nsresult rv = SetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, aValue,
+                        PR_TRUE);
 
   if (!aValue.IsEmpty()) {
     RegUnRegAccessKey(PR_TRUE);
@@ -270,9 +265,7 @@ nsresult nsHTMLAnchorElement::RegUnRegAccessKey(PRBool aDoReg)
   nsAutoString accessKey;
   nsresult rv;
 
-  rv = NS_STATIC_CAST(nsIContent *, this)->GetAttr(kNameSpaceID_None,
-                                                   nsHTMLAtoms::accesskey,
-                                                   accessKey);
+  rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, accessKey);
 
   if (NS_CONTENT_ATTR_NOT_THERE != rv) {
     nsCOMPtr<nsIPresContext> presContext;
@@ -451,9 +444,7 @@ nsHTMLAnchorElement::SetHref(const nsAString& aValue)
   // somebody asks for it.
   mLinkState = eLinkState_Unknown;
 
-  return NS_STATIC_CAST(nsIContent *, this)->SetAttr(kNameSpaceID_HTML,
-                                                     nsHTMLAtoms::href,
-                                                     aValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::href, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -462,9 +453,7 @@ nsHTMLAnchorElement::GetTarget(nsAString& aValue)
   aValue.Truncate();
 
   nsresult rv;
-  rv = NS_STATIC_CAST(nsIContent *, this)->GetAttr(kNameSpaceID_HTML,
-                                                   nsHTMLAtoms::target,
-                                                   aValue);
+  rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue);
   if (rv == NS_CONTENT_ATTR_NOT_THERE && mDocument) {
     rv = mDocument->GetBaseTarget(aValue);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -475,9 +464,7 @@ nsHTMLAnchorElement::GetTarget(nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchorElement::SetTarget(const nsAString& aValue)
 {
-  return NS_STATIC_CAST(nsIContent *, this)->SetAttr(kNameSpaceID_HTML,
-                                                     nsHTMLAtoms::target,
-                                                     aValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue, PR_TRUE);
 }
 
 #ifdef DEBUG
@@ -764,9 +751,7 @@ nsHTMLAnchorElement::GetHrefCString(char* &aBuf)
   nsAutoString relURLSpec;
 
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      NS_STATIC_CAST(nsIContent *, this)->GetAttr(kNameSpaceID_HTML,
-                                                  nsHTMLAtoms::href,
-                                                  relURLSpec)) {
+      GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, relURLSpec)) {
     // Clean up any leading or trailing whitespace
     relURLSpec.Trim(" \t\n\r");
 

@@ -594,8 +594,7 @@
   
 
   
-  <html:iframe id="content-frame" html:name="content" html:src="BrowserInitPage.html" flex="100%" />
-
+  <html:iframe id="content-frame" name="content" src="BrowserInitPage.html" flex="100%" />
   </hbox>
  
   <script>

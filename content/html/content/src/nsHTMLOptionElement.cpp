@@ -361,7 +361,7 @@ nsHTMLOptionElement::SetDisabled(PRBool aDisabled)
   if (aDisabled) {
     rv = SetHTMLAttribute(nsHTMLAtoms::disabled, empty, PR_TRUE);
   } else {
-    rv = UnsetAttr(kNameSpaceID_HTML, nsHTMLAtoms::disabled, PR_TRUE);
+    rv = UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, PR_TRUE);
   }
 
   return NS_OK;
@@ -370,7 +370,7 @@ nsHTMLOptionElement::SetDisabled(PRBool aDisabled)
 NS_IMETHODIMP                                                      
 nsHTMLOptionElement::GetLabel(nsAString& aValue)
 {                                                                  
-  nsGenericHTMLContainerElement::GetAttr(kNameSpaceID_HTML,
+  nsGenericHTMLContainerElement::GetAttr(kNameSpaceID_None,
                                          nsHTMLAtoms::label, aValue);
   return NS_OK;
 }         
@@ -380,7 +380,7 @@ nsHTMLOptionElement::SetLabel(const nsAString& aValue)
 {                                                                  
   nsresult result;
 
-  result = nsGenericHTMLContainerElement::SetAttr(kNameSpaceID_HTML,
+  result = nsGenericHTMLContainerElement::SetAttr(kNameSpaceID_None,
                                                   nsHTMLAtoms::label,
                                                   aValue, PR_TRUE);
   // XXX Why does this only happen to the combobox?  and what about
@@ -412,7 +412,7 @@ nsHTMLOptionElement::SetDefaultSelected(PRBool aDefaultSelected)
   if (aDefaultSelected) {
     rv = SetHTMLAttribute(nsHTMLAtoms::selected, empty, PR_TRUE);
   } else {
-    rv = UnsetAttr(kNameSpaceID_HTML, nsHTMLAtoms::selected, PR_TRUE);
+    rv = UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::selected, PR_TRUE);
   }
 
   return rv;
@@ -764,7 +764,7 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
         nsAutoString value(NS_REINTERPRET_CAST(const PRUnichar*,
                                                JS_GetStringChars(jsstr)));
 
-        result = nsGenericHTMLContainerElement::SetAttr(kNameSpaceID_HTML,
+        result = nsGenericHTMLContainerElement::SetAttr(kNameSpaceID_None,
                                                         nsHTMLAtoms::value,
                                                         value, PR_FALSE);
         if (NS_FAILED(result)) {

@@ -257,7 +257,7 @@ protected:
   {
     nsAutoString tmp;
 
-    GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, tmp);
+    GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, tmp);
 
     return tmp.EqualsIgnoreCase("image");
   }
@@ -482,13 +482,13 @@ nsHTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetDefaultValue(nsAString& aDefaultValue)
 {
-  return GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue);
+  return GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aDefaultValue);
 }
 
 NS_IMETHODIMP 
 nsHTMLInputElement::SetDefaultValue(const nsAString& aDefaultValue)
 {
-  return SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue,
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aDefaultValue,
                  PR_TRUE); 
 }
 
@@ -510,10 +510,10 @@ nsHTMLInputElement::SetDefaultChecked(PRBool aDefaultChecked)
   nsresult rv;
 
   if (aDefaultChecked) {
-    rv = SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::checked,
+    rv = SetAttr(kNameSpaceID_None, nsHTMLAtoms::checked,
                  NS_LITERAL_STRING(""), PR_TRUE);
   } else {
-    rv = UnsetAttr(kNameSpaceID_HTML, nsHTMLAtoms::checked, PR_TRUE);
+    rv = UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, PR_TRUE);
   }
   
   return rv;
@@ -539,7 +539,7 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 NS_IMETHODIMP
 nsHTMLInputElement::GetType(nsAString& aValue)
 {
-  nsresult rv = GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, aValue);
+  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aValue);
 
   if (rv == NS_CONTENT_ATTR_NOT_THERE)
     aValue.Assign(NS_LITERAL_STRING("text"));
@@ -550,7 +550,7 @@ nsHTMLInputElement::GetType(nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLInputElement::SetType(const nsAString& aValue)
 {
-  return nsGenericHTMLLeafFormElement::SetAttr(kNameSpaceID_HTML,
+  return nsGenericHTMLLeafFormElement::SetAttr(kNameSpaceID_None,
                                                nsHTMLAtoms::type, aValue,
                                                PR_TRUE);
 }
@@ -595,7 +595,7 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
   }
 
   // Treat value == defaultValue for other input elements
-  nsresult rv = GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue);
+  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue);
 
   if (rv == NS_CONTENT_ATTR_NOT_THERE &&
       (type == NS_FORM_INPUT_RADIO || type == NS_FORM_INPUT_CHECKBOX)) {
@@ -693,7 +693,7 @@ nsHTMLInputElement::SetValueSecure(const nsAString& aValue,
   }
 
   // Treat value == defaultValue for other input elements.
-  return nsGenericHTMLLeafFormElement::SetAttr(kNameSpaceID_HTML,
+  return nsGenericHTMLLeafFormElement::SetAttr(kNameSpaceID_None,
                                                nsHTMLAtoms::value,
                                                aValue, PR_TRUE);
 }
@@ -936,7 +936,7 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
 
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttr(kNameSpaceID_HTML,
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttr(kNameSpaceID_None,
                                            nsHTMLAtoms::disabled, disabled)) {
     return NS_OK;
   }
@@ -1020,7 +1020,7 @@ nsHTMLInputElement::Select()
 
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttr(kNameSpaceID_HTML,
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttr(kNameSpaceID_None,
                                            nsHTMLAtoms::disabled, disabled)) {
     return rv;
   }
@@ -1118,7 +1118,7 @@ nsHTMLInputElement::Click()
 
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttr(kNameSpaceID_HTML,
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttr(kNameSpaceID_None,
                                            nsHTMLAtoms::disabled, disabled)) {
     return rv;
   }

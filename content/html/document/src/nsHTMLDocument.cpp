@@ -111,6 +111,7 @@
 #include "nsISelectElement.h"
 #include "nsIFrameSelection.h"
 #include "nsISelectionPrivate.h"//for toStringwithformat code
+#include "nsIElementFactory.h"
 
 #include "nsICharsetDetector.h"
 #include "nsICharsetDetectionAdaptor.h"
@@ -1562,14 +1563,16 @@ nsHTMLDocument::CreateElementNS(const nsAString& aNamespaceURI,
   PRInt32 namespaceID;
   nodeInfo->GetNamespaceID(namespaceID);
 
-  nsCOMPtr<nsIContent> content;
-  if (namespaceID == kNameSpaceID_HTML) {
-    nsCOMPtr<nsIHTMLContent> htmlContent;
+  nsCOMPtr<nsIElementFactory> elementFactory;
+  mNameSpaceManager->GetElementFactory(namespaceID,
+                                       getter_AddRefs(elementFactory));
 
-    rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo, PR_FALSE);
-    content = do_QueryInterface(htmlContent);
-  }
-  else {
+  nsCOMPtr<nsIContent> content;
+
+  if (elementFactory) {
+    rv = elementFactory->CreateInstanceByTag(nodeInfo,
+                                             getter_AddRefs(content));
+  } else {
     rv = NS_NewXMLElement(getter_AddRefs(content), nodeInfo);
   }
 
@@ -1577,7 +1580,7 @@ nsHTMLDocument::CreateElementNS(const nsAString& aNamespaceURI,
 
   content->SetContentID(mNextContentID++);
 
-  return content->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aReturn);
+  return CallQueryInterface(content, aReturn);
 }
 
 
@@ -2115,16 +2118,16 @@ nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
 NS_IMETHODIMP    
 nsHTMLDocument::GetImages(nsIDOMHTMLCollection** aImages)
 {
-  if (nsnull == mImages) {
+  if (!mImages) {
     mImages = new nsContentList(this, nsHTMLAtoms::img, kNameSpaceID_Unknown);
-    if (nsnull == mImages) {
+    if (!mImages) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     NS_ADDREF(mImages);
   }
 
   *aImages = (nsIDOMHTMLCollection *)mImages;
-  NS_ADDREF(mImages);
+  NS_ADDREF(*aImages);
 
   return NS_OK;
 }
@@ -2132,16 +2135,17 @@ nsHTMLDocument::GetImages(nsIDOMHTMLCollection** aImages)
 NS_IMETHODIMP    
 nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
 {
-  if (nsnull == mApplets) {
-    mApplets = new nsContentList(this, nsHTMLAtoms::applet, kNameSpaceID_Unknown);
-    if (nsnull == mApplets) {
+  if (!mApplets) {
+    mApplets = new nsContentList(this, nsHTMLAtoms::applet,
+                                 kNameSpaceID_None);
+    if (!mApplets) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     NS_ADDREF(mApplets);
   }
 
   *aApplets = (nsIDOMHTMLCollection *)mApplets;
-  NS_ADDREF(mApplets);
+  NS_ADDREF(*aApplets);
 
   return NS_OK;
 }
@@ -2149,19 +2153,14 @@ nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
 PRBool
 nsHTMLDocument::MatchLinks(nsIContent *aContent, nsString* aData)
 {
-  nsIAtom *name;
-  aContent->GetTag(name);
-  nsAutoString attr;
-  PRBool result = PR_FALSE;
-  
-  if ((nsnull != name) && 
-      ((nsHTMLAtoms::area == name) || (nsHTMLAtoms::a == name)) &&
-      (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::href, attr))) {
-      result = PR_TRUE;
+  nsCOMPtr<nsIAtom> name;
+  aContent->GetTag(*getter_AddRefs(name));
+
+  if (name == nsHTMLAtoms::area || name == nsHTMLAtoms::a) {
+    return aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::href);
   }
 
-  NS_IF_RELEASE(name);
-  return result;
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP    
@@ -2184,19 +2183,14 @@ nsHTMLDocument::GetLinks(nsIDOMHTMLCollection** aLinks)
 PRBool
 nsHTMLDocument::MatchAnchors(nsIContent *aContent, nsString* aData)
 {
-  nsIAtom *name;
-  aContent->GetTag(name);
-  nsAutoString attr;
-  PRBool result = PR_FALSE;
-  
-  if ((nsnull != name) && 
-      (nsHTMLAtoms::a == name) &&
-      (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::name, attr))) {
-      result = PR_TRUE;
+  nsCOMPtr<nsIAtom> name;
+  aContent->GetTag(*getter_AddRefs(name));
+
+  if (name == nsHTMLAtoms::a) {
+    return aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::name);
   }
 
-  NS_IF_RELEASE(name);
-  return result;
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP    
@@ -2751,20 +2745,24 @@ nsHTMLDocument::Writeln()
 nsIContent *
 nsHTMLDocument::MatchId(nsIContent *aContent, const nsAString& aId)
 {
-  nsAutoString value;
+  // Most elements don't have an id, so lets call the faster HasAttr()
+  // method before we create a string object and call GetAttr().
 
-  nsresult rv = aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::id,
-                                  value);
+  if (aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::id)) {
+    nsAutoString value;
 
-  if (rv == NS_CONTENT_ATTR_HAS_VALUE && aId.Equals(value)) {
-    return aContent;
+    nsresult rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, value);
+
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE && aId.Equals(value)) {
+      return aContent;
+    }
   }
-  
+
   nsIContent *result = nsnull;
   PRInt32 i, count;
 
   aContent->ChildCount(count);
-  for (i = 0; i < count && result == nsnull; i++) {
+  for (i = 0; i < count && !result; i++) {
     nsIContent *child;
     aContent->ChildAt(i, child);
     result = MatchId(child, aId);
@@ -2849,17 +2847,23 @@ nsHTMLDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 PRBool
 nsHTMLDocument::MatchNameAttribute(nsIContent* aContent, nsString* aData)
 {
-  nsAutoString name;
+  // Most elements don't have a name attribute, so lets call the
+  // faster HasAttr() method before we create a string object and call
+  // GetAttr().
 
-  nsresult rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name,
-                                  name);
-
-  if (NS_SUCCEEDED(rv) && aData && name.Equals(*aData)) {
-    return PR_TRUE;
-  }
-  else {
+  if (!aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::name) || !aData) {
     return PR_FALSE;
   }
+
+  nsAutoString name;
+
+  nsresult rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name);
+
+  if (NS_SUCCEEDED(rv) && name.Equals(*aData)) {
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP    
@@ -3862,15 +3866,15 @@ nsHTMLDocument::GetBodyContent()
     root->ChildAt(i, *getter_AddRefs(child));
     NS_ENSURE_TRUE(child, NS_ERROR_UNEXPECTED);
 
-    nsCOMPtr<nsINodeInfo> ni;
-    child->GetNodeInfo(*getter_AddRefs(ni));
+    if (child->IsContentOfType(nsIContent::eHTML)) {
+      nsCOMPtr<nsINodeInfo> ni;
+      child->GetNodeInfo(*getter_AddRefs(ni));
 
-    if (ni && ni->Equals(nsHTMLAtoms::body) &&
-        (ni->NamespaceEquals(kNameSpaceID_None) ||
-         ni->NamespaceEquals(kNameSpaceID_HTML))) {
-      mBodyContent = do_QueryInterface(child);
+      if (ni->Equals(nsHTMLAtoms::body)) {
+        mBodyContent = do_QueryInterface(child);
 
-      return PR_TRUE;
+        return PR_TRUE;
+      }
     }
   }
 
