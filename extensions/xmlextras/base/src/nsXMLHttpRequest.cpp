@@ -81,7 +81,6 @@
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
-#include "nsILoadGroup.h"
 #include "nsIVariant.h"
 #include "nsIParser.h"
 #include "nsLoadListenerProxy.h"
