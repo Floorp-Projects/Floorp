@@ -253,3 +253,4 @@
 <!ENTITY newWindowButton.tooltip        "Opens a new tab">
 
 <!ENTITY findOnSearchBarCmd.label       "Find in this Page">
+<!ENTITY currentDownloads.label          "Current Downloads">

@@ -16,6 +16,7 @@
 <!ENTITY divider.label                    "-">
 <!ENTITY show.label                       "Show">
 <!ENTITY failed.label                     "Failed">
+<!ENTITY finishedDownloads.label          "Finished Downloads">
 
 <!ENTITY downloadManager.title            "Download Manager">
 
@@ -24,12 +25,14 @@
 <!ENTITY cmd.properties.keybinding        "i">
 <!ENTITY cmd.pause.label                  "Pause">
 <!ENTITY cmd.pause.accesskey              "p">
-<!ENTITY cmd.remove.label                 "Remove from List">
+<!ENTITY cmd.remove.label                 "Remove">
 <!ENTITY cmd.remove.accesskey             "r">
 <!ENTITY cmd.cancel.label                 "Cancel">
 <!ENTITY cmd.cancel.accesskey             "c">
-<!ENTITY cmd.openfile.label               "Launch File">
+<!ENTITY cmd.openfile.label               "Launch">
 <!ENTITY cmd.openfile.accesskey           "L">
+<!ENTITY cmd.show.label                   "Show">
+<!ENTITY cmd.show.accesskey               "S">
 <!ENTITY confirmCancel "Are you sure you want to cancel the saving of this file?">
 <!ENTITY progressMsgNoRate "#1KB of #2KB">
 <!ENTITY rateMsg "#1KB/sec">

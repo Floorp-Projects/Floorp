@@ -2521,23 +2521,6 @@ function toNavigator()
     OpenBrowserWindow();
 }
 
-function toDownloadManager()
-{
-  var dlmgr = Components.classes['@mozilla.org/download-manager;1'].getService();
-  dlmgr = dlmgr.QueryInterface(Components.interfaces.nsIDownloadManager);
-
-  var windowMediator = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-  windowMediator = windowMediator.QueryInterface(nsIWindowMediator);
-
-  var dlmgrWindow = windowMediator.getMostRecentWindow("Download:Manager");
-  if (dlmgrWindow) {
-    dlmgrWindow.focus();
-  }
-  else {
-    window.openDialog("chrome://browser/content/downloads/downloadmanager.xul", "Downloads", "chrome,extrachrome,resizable,scrollbars,toolbar,dialog=no");
-  }
-}
-  
 function toJavaScriptConsole()
 {
     toOpenWindowByType("global:console", "chrome://browser/content/console/console.xul");
