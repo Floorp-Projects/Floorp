@@ -27,9 +27,6 @@ DIRS = wallet \
 	irc \
 	content-packs \
 	help \
-!if defined(BUILD_PSM)
-	psm-glue \
-!endif 
 !if !defined(DISABLE_XSLT)
 	transformiix \
 !endif 

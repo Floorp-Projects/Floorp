@@ -52,7 +52,6 @@ inspector       0
 mailextras      1
 xptlink         0
 psm             0
-psm2            0
 embedding_test  1
 carbon          0      TARGET_CARBON
 useimg2         1      USE_IMG2

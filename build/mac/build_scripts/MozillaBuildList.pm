@@ -385,7 +385,7 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:xpinstall:res:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:embedding:components:ui:jar.mn", $chrome_dir, \%jars);
 
-    if ($main::options{psm2}) {
+    if ($main::options{psm}) {
     	CreateJarFromManifest(":mozilla:security:manager:ssl:resources:jar.mn", $chrome_dir, \%jars);
     	CreateJarFromManifest(":mozilla:security:manager:pki:resources:jar.mn", $chrome_dir, \%jars);
     }
@@ -653,13 +653,6 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:netwerk:cache:public:MANIFEST",                  "$distdirectory:idl:");
     InstallFromManifest(":mozilla:netwerk:mime:public:MANIFEST",                   "$distdirectory:netwerk:");
 
-    #SECURITY
-    InstallFromManifest(":mozilla:extensions:psm-glue:public:MANIFEST",            "$distdirectory:idl:");
-    InstallFromManifest(":mozilla:extensions:psm-glue:src:MANIFEST",               "$distdirectory:include:");
-
-    InstallFromManifest(":mozilla:security:psm:lib:client:MANIFEST",               "$distdirectory:security:");
-    InstallFromManifest(":mozilla:security:psm:lib:protocol:MANIFEST",             "$distdirectory:security:");
-    
     #EXTENSIONS
     InstallFromManifest(":mozilla:extensions:cookie:MANIFEST_IDL",          			 "$distdirectory:idl:");
     InstallFromManifest(":mozilla:extensions:cookie:MANIFEST",                     "$distdirectory:cookie:");
@@ -1045,15 +1038,11 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:netwerk:macbuild:netwerkIDL.mcp","necko");
     BuildIDLProject(":mozilla:uriloader:macbuild:uriLoaderIDL.mcp",                 "uriLoader");
     BuildIDLProject(":mozilla:netwerk:macbuild:cacheIDL.mcp", "cache");
-    if ($main::options{psm}) {
-    	# psm glue
-    	BuildIDLProject(":mozilla:extensions:psm-glue:macbuild:psmglueIDL.mcp",         "psmglue");
-	} 
 	
-	if ($main::options{psm2}) {
+    if ($main::options{psm}) {
     	BuildIDLProject(":mozilla:security:manager:ssl:macbuild:pipnssIDL.mcp",         "pipnss");
     	BuildIDLProject(":mozilla:security:manager:pki:macbuild:pippkiIDL.mcp",         "pippki");    	
-	}
+    }
     
     BuildIDLProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",             "libpref");
     BuildIDLProject(":mozilla:modules:libutil:macbuild:libutilIDL.mcp",             "libutil");
@@ -1437,16 +1426,9 @@ sub BuildNeckoProjects()
 #// Build Security projects
 #//--------------------------------------------------------------------------------------------------
 
-sub makeprops
-{
-    @ARGV = @_;
-
-    do ":mozilla:security:psm:ui:makeprops.pl";
-}
-
 sub BuildSecurityProjects()
 {
-    unless( $main::build{security} && ($main::options{psm} || $main::options{psm2})) { return; }
+    unless( $main::build{security} && $main::options{psm}) { return; }
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
@@ -1455,49 +1437,16 @@ sub BuildSecurityProjects()
     StartBuildModule("security");
 
     BuildOneProject(":mozilla:security:nss:macbuild:NSS.mcp","NSS$D.o", 0, 0, 0);
-    if($main::options{psm2}) {
-    	BuildOneProject(":mozilla:security:manager:ssl:macbuild:PIPNSS.mcp", "PIPNSS$D.shlb",  1, $main::ALIAS_SYM_FILES, 1);
-    	BuildOneProject(":mozilla:security:manager:pki:macbuild:PIPPKI.mcp", "PIPPKI$D.shlb",  1, $main::ALIAS_SYM_FILES, 1); 
-    } else {
-    	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp","PSMClient$D.o", 0, 0, 0);
-    	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMProtocol.mcp","PSMProtocol$D.o", 0, 0, 0); 
-    	BuildOneProject(":mozilla:security:psm:macbuild:PersonalSecurityMgr.mcp","PSM$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
-    	BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp","PSMGlue$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:security:manager:ssl:macbuild:PIPNSS.mcp", "PIPNSS$D.shlb",  1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:security:manager:pki:macbuild:PIPPKI.mcp", "PIPPKI$D.shlb",  1, $main::ALIAS_SYM_FILES, 1); 
+    
+#Build the loadable module that contains the root certs.
 
-		# make properties files for PSM User Interface
-    	my($src_dir) = ":mozilla:security:psm:ui:";
-
-    	opendir(DIR,$src_dir) || die "can't open directory $src_dir\n";
-    	my(@prop_files) = grep { /\.properties.in$/ } readdir(DIR);
-    	closedir DIR;
-		my($psm_data_dir) = $dist_dir."psmdata:";
-    	mkdir($psm_data_dir, 0);
-    	my($dest_dir) = $psm_data_dir."UI:";
-    	mkdir($dest_dir, 0);
-		my($file);
-    	foreach $file (@prop_files) {
-    	    $file =~ /(.+\.properties)\.in$/;
-    	    &makeprops($src_dir.$file, $dest_dir.$1);
-    	}
-    	
-    	
-    	my($doc_dir) = $psm_data_dir."doc:";
-    	mkdir($doc_dir, 0);
-    	opendir(DOC_DIR,":mozilla:security:psm:doc") || die ("Unable to open PSM doc directory");
-    	my(@doc_files);
-    	@doc_files = readdir(DOC_DIR);
-    	closedir(DOC_DIR);
-    	foreach $file (@doc_files) {
-    		copy(":mozilla:security:psm:doc:".$file, $doc_dir.$file);
-    	}
-    } 
-    #Build the loadable module that contains the root certs.
-
-	BuildOneProject(":mozilla:security:nss:macbuild:NSSckfw.mcp", "NSSckfw$D.o", 0, 0, 0);
-	BuildOneProject(":mozilla:security:nss:macbuild:LoadableRoots.mcp", "NSSckbi$D.shlb", 0, $main::ALIAS_SYM_FILES, 0);
-	# NSS doesn't properly load the shared library created above if it's an alias, so we'll just copy it so that
-	# all builds will just work.  It's 140K optimized and 164K debug so it's not too much disk space.
-	copy(":mozilla:security:nss:macbuild:NSSckbi$D.shlb",$dist_dir."Essential Files:NSSckbi$D.shlb");
+    BuildOneProject(":mozilla:security:nss:macbuild:NSSckfw.mcp", "NSSckfw$D.o", 0, 0, 0);
+    BuildOneProject(":mozilla:security:nss:macbuild:LoadableRoots.mcp", "NSSckbi$D.shlb", 0, $main::ALIAS_SYM_FILES, 0);
+    # NSS doesn't properly load the shared library created above if it's an alias, so we'll just copy it so that
+    # all builds will just work.  It's 140K optimized and 164K debug so it's not too much disk space.
+    copy(":mozilla:security:nss:macbuild:NSSckbi$D.shlb",$dist_dir."Essential Files:NSSckbi$D.shlb");
 	
     EndBuildModule("security");
 } # Security
