@@ -201,8 +201,6 @@ protected:
                        PRBool* aDidFlush=nsnull);
     nsresult AddText(const PRUnichar* aText, PRInt32 aLength);
 
-    nsresult ParseTagString(const PRUnichar* aTagName, const char** aNameSpaceURI, nsIAtom** aTagAtom);
-    
     // RDF-specific parsing
     nsresult OpenRDF(const PRUnichar* aName);
     nsresult OpenObject(const PRUnichar* aName ,const PRUnichar** aAttributes);
@@ -247,13 +245,13 @@ protected:
     nsAutoVoidArray mNameSpaceScopes;
 
     nsIAtom*
-    CutNameSpacePrefix(nsString& aString);
+    CutNameSpacePrefix(const nsAString& aString, nsIAtom** aTagAtom);
 
     nsresult
     GetNameSpaceURI(nsIAtom* aPrefix, const char** aNameSpaceURI);
 
     nsresult
-    ParseTagString(const nsAString& aTagName,
+    ParseTagString(const PRUnichar* aTagName,
                    const char** aNameSpaceURI,
                    nsIAtom** aTag);
 
@@ -916,20 +914,6 @@ RDFContentSinkImpl::PushNameSpacesFrom(const PRUnichar** aAttributes)
 }
 
 nsresult
-RDFContentSinkImpl::ParseTagString(const PRUnichar* aTagName,
-                                   const char** aNameSpaceURI,
-                                   nsIAtom** aTag)
-{
-    // Split the fully-qualified name into a prefix and a tag part.
-    nsAutoString tag(aTagName);
-    nsCOMPtr<nsIAtom> prefix = getter_AddRefs(CutNameSpacePrefix(tag));
-
-    GetNameSpaceURI(prefix, aNameSpaceURI);
-    *aTag = NS_NewAtom(tag);
-    return NS_OK;
-}
-
-nsresult
 RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
                                         nsIRDFResource** aResource,
                                         PRBool* aIsAnonymous)
@@ -1412,19 +1396,25 @@ RDFContentSinkImpl::OpenValue(const PRUnichar* aName, const PRUnichar** aAttribu
 // Qualified name resolution
 
 nsIAtom*
-RDFContentSinkImpl::CutNameSpacePrefix(nsString& aString)
+RDFContentSinkImpl::CutNameSpacePrefix(const nsAString& aString,
+                                       nsIAtom** aTagAtom)
 {
-    PRInt32 nsoffset = aString.FindChar(kNameSpaceSeparator);
+    nsIAtom* prefixAtom = nsnull;
+    NS_PRECONDITION(aTagAtom != nsnull, "null ptr");
+    *aTagAtom = nsnull;
 
-    if (nsoffset >= 0) {
-        nsAutoString prefix;
-        aString.Left(prefix, nsoffset);
-        aString.Cut(0, nsoffset+1);
-        return NS_NewAtom(prefix);
+    nsAString::const_iterator start, end;
+    aString.BeginReading(start);
+    aString.EndReading(end);
+    nsAString::const_iterator colon(start);
+
+    if (FindCharInReadable(kNameSpaceSeparator, colon, end)) {
+        prefixAtom = NS_NewAtom(Substring(start, colon));
+        *aTagAtom = NS_NewAtom(Substring(++colon, end));
     }
-    else {
-        return nsnull;
-    }
+    else
+        *aTagAtom = NS_NewAtom(aString);
+    return prefixAtom;
 }
 
 
@@ -1466,16 +1456,15 @@ RDFContentSinkImpl::GetNameSpaceURI(nsIAtom* aPrefix, const char** aNameSpaceURI
 }
 
 nsresult
-RDFContentSinkImpl::ParseTagString(const nsAString& aTagName,
+RDFContentSinkImpl::ParseTagString(const PRUnichar* aTagName,
                                    const char** aNameSpaceURI,
                                    nsIAtom** aTag)
 {
     // Split the fully-qualified name into a prefix and a tag part.
-    nsAutoString tag(aTagName);
-    nsCOMPtr<nsIAtom> prefix = getter_AddRefs(CutNameSpacePrefix(tag));
+    nsDependentString tagStr(aTagName);
+    nsCOMPtr<nsIAtom> prefix = getter_AddRefs(CutNameSpacePrefix(tagStr, aTag));
 
     GetNameSpaceURI(prefix, aNameSpaceURI);
-    *aTag = NS_NewAtom(tag);
     return NS_OK;
 }
 
@@ -1486,9 +1475,8 @@ RDFContentSinkImpl::ParseAttributeString(const nsAString& aAttributeName,
                                          nsIAtom** aAttribute)
 {
     // Split the fully-qualified name into a prefix and a tag part.
-    nsAutoString attr(aAttributeName);
-    nsCOMPtr<nsIAtom> prefix = getter_AddRefs(CutNameSpacePrefix(attr));
-
+    nsCOMPtr<nsIAtom> prefix = getter_AddRefs(CutNameSpacePrefix(aAttributeName,
+                                                                 aAttribute));
     if (prefix) {
         GetNameSpaceURI(prefix, aNameSpaceURI);
     }
@@ -1496,7 +1484,6 @@ RDFContentSinkImpl::ParseAttributeString(const nsAString& aAttributeName,
         *aNameSpaceURI = nsnull;
     }
 
-    *aAttribute = NS_NewAtom(attr);
     return NS_OK;
 }
 
@@ -1667,30 +1654,26 @@ RDFContentSinkImpl::PopContext(nsIRDFResource         *&aResource,
 PRBool
 RDFContentSinkImpl::IsXMLNSDirective(const nsAString& aAttributeKey, nsIAtom** aPrefix)
 {
-    nsAutoString attr(aAttributeKey);
-
     // Look for `xmlns' at the start of the attribute name
-    PRInt32 offset = attr.Find(kNameSpaceDef);
-    if (offset != 0)
+    if (!Substring(aAttributeKey, 0, sizeof(kNameSpaceDef) - 1).Equals(NS_LITERAL_STRING(kNameSpaceDef)))
         return PR_FALSE;
 
-    PRInt32 prefixLen = attr.Length() - sizeof(kNameSpaceDef);
+    PRInt32 prefixLen = aAttributeKey.Length() - sizeof(kNameSpaceDef);
     if (prefixLen <= 0) {
         // they're setting the default namespace; leave `prefix'
         // as nsnull.
     }
     else {
         // make sure there's a `:' character
-        if (attr[sizeof(kNameSpaceDef) - 1] != kNameSpaceSeparator)
+        nsAString::const_iterator iter;
+        if (*aAttributeKey.BeginReading(iter).advance(sizeof(kNameSpaceDef) - 1)
+                != kNameSpaceSeparator)
             return PR_FALSE;
 
         // if the caller wants the prefix back, compute it for them.
-        if (aPrefix) {
-            nsAutoString prefixStr;
-            attr.Right(prefixStr, prefixLen);
-
-            *aPrefix = NS_NewAtom(prefixStr);
-        }
+        if (aPrefix)
+            *aPrefix = NS_NewAtom(Substring(aAttributeKey,
+                                            sizeof(kNameSpaceDef), prefixLen));
     }
 
     return PR_TRUE;
