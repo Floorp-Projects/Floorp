@@ -1,3 +1,15 @@
+Changes since 1.0:
+
+1. Fixed a crash caused by leaving pending Java exceptions in a JNIEnv, when loading
+LiveConnect classes that were incompatible with ours. Thanks Apple!
+
+2. Worked around a change to com.apple.mrj.JavaEmbedding.JE_AppletViewer in Jaguar's JVM
+that was no longer implementing the java.applet.AppletContext. Now reading the panel field,
+which is an instance of a sun.applet.AppletPanel, which has a getApplet() method.
+
+3. Worked around Apple's shipped netscape.* classes by prepending MRJPlugin.jar to the
+boot classpath, instead of adding it to the regular application class path.
+
 Changes since 1.0fc2:
 
 1. Return correct value when mouse clicks occur within the applet. The browser is still
