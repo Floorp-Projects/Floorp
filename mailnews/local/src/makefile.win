@@ -20,29 +20,42 @@ IGNORE_MANIFEST=1
 
 include <$(DEPTH)\config\config.mak>
 
-LIBRARY_NAME=msglocal_s
+LIBRARY_NAME=msglocal
 MODULE= mailnews
 REQUIRES=xpcom nspr rdf
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=    nsMSGFolderDataSource.cpp \
-			$(NULL)
+CPPSRCS= \
+	nsMSGFolderDataSource.cpp \
+	nsPop3Protocol.cpp \
+	nsPop3URL.cpp \
+	nsPop3Sink.cpp \
+	$(NULL)
 
-CPP_OBJS=   .\$(OBJDIR)\nsMSGFolderDataSource.obj \
-			$(NULL)
+CPP_OBJS=   \
+	.\$(OBJDIR)\nsMSGFolderDataSource.obj \
+	.\$(OBJDIR)\nsPop3Protocol.obj \
+	.\$(OBJDIR)\nsPop3URL.obj \
+	.\$(OBJDIR)\nsPop3Sink.obj \
+	$(NULL)
 
 
 EXPORTS= \
-            $(NULL)
+	nsPop3Protocol.h \
+	nsPop3URL.h \
+	nsPop3Sink.h \
+	$(NULL)
 
 LINCS=  -I$(PUBLIC)\xpcom \
 		-I$(PUBLIC)\mailnews \
 		-I$(PUBLIC)\raptor \
+		-I$(PUBLIC)\netlib \
+		-I$(PUBLIC)\security \
 		-I$(PUBLIC)\rdf \
 		$(NULL)
 
-MYLIBS = $(DIST)\lib\msgcore_s.lib
+MYLIBS = $(DIST)\lib\msgcore.lib
 
 LCFLAGS = \
         $(LCFLAGS) \

@@ -27,6 +27,9 @@ LIBRARY_NAME=localmail
 
 CPPSRCS = \
 	nsMSGFolderDataSource.cpp \
+	nsPop3Protocol.cpp \
+	nsPop3URL.cpp \
+	nsPop3Sink.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
