@@ -318,7 +318,7 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
       if(knsMenuItemControlModifier & modifiers)
         macModifiers |= kMenuControlModifier;
     
-      if((knsMenuItemCommandModifier & modifiers))
+      if(!(knsMenuItemCommandModifier & modifiers))
         macModifiers |= kMenuNoCommandModifier;
 	  
 	  ::SetMenuItemModifiers(mMacMenuHandle, mMenuItemVoidArray.Count(), macModifiers);
