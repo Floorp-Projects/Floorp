@@ -135,6 +135,11 @@ interface nsIRDFService : nsISupports {
     // new data source. If construction is successful, the data source will
     // be initialized via <tt>nsIRDFDataSource::Init()</tt>.
     nsIRDFDataSource GetDataSource(in string aURI);
+
+    // Same as GetDataSource, but if a remote/XML data source needs to be
+    // constructed, then this method will issue a <b>blocking</b> Refresh
+    // call on that data source.
+    nsIRDFDataSource GetDataSourceBlocking(in string aURI);
 };
 
 %{C++
