@@ -308,7 +308,14 @@ nsDocumentEncoder::SerializeNodeStart(nsIDOMNode* aNode, PRInt32 aStartOffset,
     case nsIDOMNode::ELEMENT_NODE:
     {
       nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
-      mSerializer->AppendElementStart(element, aStr);
+      // Because FixupNode() may have done a shallow copy of aNode
+      // we need to tell the serializer if the original had children.
+      // Some serializers (notably XML) need this information 
+      // in order to handle empty tags properly.
+      PRBool hasChildren;
+      mSerializer->AppendElementStart(element, 
+                                      NS_SUCCEEDED(aNode->HasChildNodes(&hasChildren)) && hasChildren,
+                                      aStr);
       break;
     }
     case nsIDOMNode::TEXT_NODE:

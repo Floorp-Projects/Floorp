@@ -411,6 +411,7 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
 
 NS_IMETHODIMP
 nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
+                                            PRBool aHasChildren,
                                             nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);

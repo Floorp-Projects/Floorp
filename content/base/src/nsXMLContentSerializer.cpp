@@ -406,6 +406,7 @@ nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
 
 NS_IMETHODIMP 
 nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
+                                           PRBool aHasChildren,
                                            nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
@@ -509,9 +510,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   }
 
   // We don't output a separate end tag for empty element
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aElement));
-  PRBool hasChildren;
-  if (NS_SUCCEEDED(node->HasChildNodes(&hasChildren)) && !hasChildren) {
+  if (!aHasChildren) {
     AppendToString(NS_LITERAL_STRING("/>"), aStr);    
   } else {
     AppendToString(NS_LITERAL_STRING(">"), aStr);    
