@@ -25,6 +25,8 @@
 #include "prmem.h"
 #include "nsString.h"
 #include "nsIFactory.h"
+#include "nsCRT.h"
+#include "nscore.h"
 
 // Interface ID for nsIHistoryEntry
 #define NS_IHISTORY_ENTRY_IID \
@@ -89,7 +91,7 @@ public:
   /**
    * Get the URL  of the page 
    */
-  nsresult GetURL(const  PRUnichar ** aURL);
+  nsresult GetURL(const PRUnichar ** aURL);
 
   /**
    * Set the URL  of the page 
@@ -163,9 +165,6 @@ CompareNames(nsHistoryEntry * prev, nsHistoryEntry * cur);
 PRBool
 CompareWebShells(nsHistoryEntry * prev, nsHistoryEntry * cur);
 
-protected:
-//   virtual ~nsHistoryEntry();
-
 private:
   
   nsIWebShell *       mWS;    //Webshell corresponding to this history entry
@@ -199,35 +198,35 @@ nsHistoryEntry::~nsHistoryEntry()
 //NS_IMPL_ADDREF(nsHistoryEntry)
 //NS_IMPL_RELEASE(nsHistoryEntry)
 
-NS_IMETHODIMP
+nsresult
 nsHistoryEntry::GetName(const PRUnichar** aName)
 {
   *aName = mName->GetUnicode();
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHistoryEntry::SetName(const PRUnichar* aName)
 {
   mName = new nsString(aName);
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHistoryEntry::GetURL(const PRUnichar** aURL)
 {
   *aURL = mURL->GetUnicode();
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHistoryEntry::SetURL(const PRUnichar* aURL)
 {
   mURL =  new nsString(aURL);
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHistoryEntry::GetWebShell(nsIWebShell *& aResult)
 {
   aResult = mWS;
@@ -235,7 +234,7 @@ nsHistoryEntry::GetWebShell(nsIWebShell *& aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHistoryEntry::SetWebShell(nsIWebShell * aWebShell)
 {
   mWS = aWebShell;
@@ -249,7 +248,7 @@ nsHistoryEntry::GetChildCnt()
   return mChildCount;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHistoryEntry::GetChildAt(PRInt32 aIndex, nsHistoryEntry *& aResult)
 {
   if (PRUint32(aIndex) >= PRUint32(mChildren.Count())) {
@@ -263,7 +262,7 @@ nsHistoryEntry::GetChildAt(PRInt32 aIndex, nsHistoryEntry *& aResult)
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsHistoryEntry::SetSessionHistoryID(nsISessionHistory * aHistoryListID)
 {
 //   NS_IF_RELEASE(mHistoryList);
@@ -273,7 +272,7 @@ nsHistoryEntry::SetSessionHistoryID(nsISessionHistory * aHistoryListID)
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsHistoryEntry::SetParent(nsHistoryEntry* aParent)
 {
 //  NS_IF_RELEASE(mParent);
@@ -284,7 +283,7 @@ nsHistoryEntry::SetParent(nsHistoryEntry* aParent)
 
 
 
-NS_IMETHODIMP
+nsresult
 nsHistoryEntry::GetParent(nsHistoryEntry *& aParent)
 {
 
@@ -293,7 +292,7 @@ nsHistoryEntry::GetParent(nsHistoryEntry *& aParent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHistoryEntry::AddChild(nsHistoryEntry* aChild)
 {
   NS_PRECONDITION(nsnull != aChild, "null ptr");
@@ -309,7 +308,7 @@ nsHistoryEntry::AddChild(nsHistoryEntry* aChild)
 }
 
   
-NS_IMETHODIMP
+nsresult
 nsHistoryEntry::DestroyChildren() {
    nsHistoryEntry * hEntry=nsnull;
    nsHistoryEntry * parent=nsnull;
@@ -363,6 +362,7 @@ nsHistoryEntry::Create(nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISes
    // Save the handle to the window's history list   
    SetSessionHistoryID(aSHist);
 
+   return NS_OK;
 }
 
 static nsHistoryEntry *  
@@ -553,7 +553,7 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry) {
     cnt = pcnt;
     
 
-   for (int i=0; i<cnt; i++){
+   for (i=0; i<cnt; i++){
       nsIWebShell * cws=nsnull, *pws=nsnull;
       nsHistoryEntry *cChild=nsnull;
       nsIWebShell *  pChild=nsnull;
@@ -882,9 +882,14 @@ nsSessionHistory::add(nsIWebShell * aWebShell)
           
           nsIWebShell * root=nsnull;
           aWebShell->GetRootWebShell(root);
-          if (!root) 
-            return;   
-          ret = mHistoryEntryInLoad->Load(root);
+          if (!root) {
+			  NS_ASSERTION(0,"fix me");
+#ifdef DEBUG
+			printf("fix me\n");
+#endif
+            return NS_OK;
+          }
+		  ret = mHistoryEntryInLoad->Load(root);
           if (!ret) {
             /* The interim page matches exactly with the one in history.
              * Clear all flags and return.
