@@ -1576,7 +1576,7 @@ principalsCanAccessTarget(JSContext *cx, JSTarget target)
    /* Now find permission for (annotation, target) pair. */
     privilege = netscape_security_PrivilegeTable_get_1(env,
                                      annotation,
-                                     javaTarget);
+                                     (struct java_lang_Object *)javaTarget);
     if (JRI_ExceptionOccurred(env)) {
         return JS_FALSE;
     }
