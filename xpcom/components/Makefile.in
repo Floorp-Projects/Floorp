@@ -53,7 +53,6 @@ REQUIRES	= string \
 CPPSRCS		= \
 		nsCategoryManager.cpp \
 		nsComponentManager.cpp \
-		nsComponentManagerObsolete.cpp \
 		nsNativeComponentLoader.cpp \
 		nsServiceManagerObsolete.cpp \
 		xcDll.cpp \
@@ -65,7 +64,6 @@ endif
 
 EXPORTS		= \
 		nsCategoryManagerUtils.h \
-		nsComponentManagerObsolete.h \
 		nsIServiceManagerObsolete.h \
 		nsModule.h \
 		nsNativeComponentLoader.h \
