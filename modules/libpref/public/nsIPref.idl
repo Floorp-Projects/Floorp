@@ -26,7 +26,7 @@
 #include "jsapi.h"
 
 
-typedef int (*PrefChangedFunc)(const char *, void *);
+typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
 typedef void (*PrefEnumerationFunc)(const char *, void *);
  
 #define NS_PREF_CID                                    \
