@@ -432,36 +432,6 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
       }
       break;
 
-    case NS_MOUSE_LEFT_BUTTON_UP:
-      {
-        nsIEventStateManager *stateManager;
-        nsIContent *activeLink = nsnull;
-        if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
-          //stateManager->GetActiveLink(&activeLink);
-          NS_RELEASE(stateManager);
-        }
-
-        if (activeLink == this) {
-          if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
-            nsAutoString href, target, disabled;
-            nsIURI* baseURL = nsnull;
-            GetBaseURL(baseURL);
-            GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
-            GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
-            GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, disabled); 
-            
-            if (target.Length() == 0) {
-              GetBaseTarget(target);
-            }
-            ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURL,
-                              href, target, PR_TRUE);
-            NS_IF_RELEASE(baseURL);
-            *aEventStatus = nsEventStatus_eConsumeNoDefault; 
-          }
-        }
-      }
-      break;
-
     // cancel all of these events for buttons
     case NS_MOUSE_MIDDLE_BUTTON_DOWN:
     case NS_MOUSE_MIDDLE_BUTTON_UP:
