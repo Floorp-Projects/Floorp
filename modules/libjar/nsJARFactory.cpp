@@ -31,7 +31,6 @@
 #include "plstr.h"
 #include "prlog.h"
 
-#include "xp_regexp.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
