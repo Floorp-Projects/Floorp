@@ -33,7 +33,7 @@ var set = null;
 function CreateProfileWizard()
 {
   // Need to call CreateNewProfile xuls
-  window.openDialog('chrome://communicator/content/profile/createProfileWizard.xul', 'CPW', 'chrome,modal=yes');
+  window.openDialog('chrome://communicator/content/profile/createProfileWizard.xul', 'CPW', 'chrome,modal=yes,titlebar=yes');
 }
 
 // update the display to show the additional profile
@@ -135,7 +135,7 @@ function ConfirmDelete()
     return;
   }
 
-  var win = window.openDialog('chrome://communicator/content/profile/deleteProfile.xul', 'Deleter', 'chrome,modal=yes');
+  var win = window.openDialog('chrome://communicator/content/profile/deleteProfile.xul', 'Deleter', 'chrome,modal=yes,titlebar=yes');
   return win;
 }
 

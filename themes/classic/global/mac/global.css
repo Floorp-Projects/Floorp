@@ -72,6 +72,19 @@
       border-bottom       : 1px solid #DDDDDD;
     }
 
+  window.non-resizable-dialog
+    {
+      border-left         : 1px solid #FFFFFF;
+      border-top          : 1px solid #FFFFFF;
+      border-right        : 1px solid #DDDDDD;
+      border-bottom       : 1px solid #DDDDDD;    
+    }
+
+  window.non-resizable-dialog.modal
+    {
+      border              : none;
+    }
+  
 /**
  * XUL <box> debugging
  **/

@@ -41,7 +41,7 @@
 <window
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-  class="color-dialog profile"
+  class="color-dialog non-resizable"
   title="&windowtitle.label;"
   orient="vertical"
   style="width: 42em;"
