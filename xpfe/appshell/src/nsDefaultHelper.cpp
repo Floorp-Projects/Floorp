@@ -19,7 +19,6 @@
 
 #include "nsIBlockingNotification.h"
 #include "nsIURL.h"
-#include "nsIWebShell.h"
 #include "nsNetSupportDialog.h"
 
 #include "nsIEventQueueService.h"

@@ -62,7 +62,6 @@
 #include "nsITimerCallback.h"
 
 #include "nsIBrowserWindow.h"
-#include "nsIWebShell.h"
 
 // Globals
 
