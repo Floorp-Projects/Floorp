@@ -33,7 +33,7 @@
 
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["nglayoutWidgetGFXScrollbars", "viewUseViewManager2", "nglayoutDebugWindow",
+    _elementIDs = ["viewUseViewManager2", "nglayoutDebugWindow",
                    "debugXULBoxes", "nglayoutDebugPaintFlashing", "nglayoutDebugPaintDumping",
                    "nglayoutDebugInvalidateDumping", "nglayoutDebugEventDumping", "nglayoutDebugMotionEventDumping",
                    "nglayoutDebugCrossingEventDumping", "nglayoutDebugDisableXULCache", "browserEnableCache",
