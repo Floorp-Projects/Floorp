@@ -5,6 +5,8 @@
 # Graph tree-open status, via tbox graph server.
 #
 
+# Send data to graph server via HTTP.
+require "reportdata.pl";
 
 use Sys::Hostname;  # for ::hostname()
 
@@ -13,43 +15,6 @@ use Sys::Hostname;  # for ::hostname()
 my $script_dir = "/builds/tinderbox/mozilla/tools/tinderbox";  
 
 my $sheriff_string;
-
-# Send data to graph server.
-sub send_results_to_server {
-    my ($value, $data, $testname, $tbox) = @_;
-
-    my $tmpurl = "http://tegu.mozilla.org/graph/collect.cgi";
-    $tmpurl .= "?value=$value&data=$data&testname=$testname&tbox=$tbox";
-
-    print "send_results_to_server(): \n";
-    print "tmpurl = $tmpurl\n";
-
-    # libwww-perl has process control problems on windows,
-    # spawn wget instead.
-    if ($Settings::OS =~ /^WIN/) {
-        system ("wget", "-o", "/dev/null", $tmpurl);
-        print "send_results_to_server() succeeded.\n";
-    } else {
-        my $res = eval q{
-            use LWP::UserAgent;
-            use HTTP::Request;
-            my $ua  = LWP::UserAgent->new;
-            $ua->timeout(10); # seconds
-            my $req = HTTP::Request->new(GET => $tmpurl);
-            my $res = $ua->request($req);
-            return $res;
-        };
-        if ($@) {
-            warn "Failed to submit startup results: $@";
-            print "send_results_to_server() failed.\n";
-        } else {
-            print "Results submitted to server: \n",
-            $res->status_line, "\n", $res->content, "\n";
-            print "send_results_to_server() succeeded.\n";
-        }
-    }
-}
-
 
 sub is_tree_open {
   my $tbox_url = "http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey";
@@ -139,23 +104,24 @@ sub is_tree_open {
 # main
 {
   my $time_since_open = 0;
+  my $timefile = "$script_dir/treeopen_timefile";
 
   # Get tree status.
   if(is_tree_open()) {
 
     # Record tree open time if not set.
-    if (not (-e "$script_dir/timefile")) {
-      open TIMEFILE, ">$script_dir/timefile";
+    if (not (-e "$timefile")) {
+      open TIMEFILE, ">$timefile";
       print TIMEFILE time();
       close TIMEFILE;
     } else {
       # Timefile found, compute difference and report that number.
-      print "found timefile!\n";     
+      print "found timefile: $timefile!\n";     
       
       my $time_tree_opened = 0;
       my $now = 0;
   
-      open TIMEFILE, "$script_dir/timefile";
+      open TIMEFILE, "$timefile";
       while (<TIMEFILE>) {
         chomp;
         $time_tree_opened = $_;
@@ -182,10 +148,13 @@ sub is_tree_open {
     # tree is closed, leave tree_open_time at zero.
 
     # Delete timefile if there is one.
-    if (-e "$script_dir/timefile") {
-      unlink("$script_dir/timefile");
+    if (-e "$timefile") {
+      unlink("$timefile");
     }
   }
 
-  send_results_to_server("$time_since_open", "$sheriff_string", "treeopen", ::hostname());
+  ReportData::send_results_to_server("tegu.mozilla.org", 
+                                     "$time_since_open",
+                                     "$sheriff_string",
+                                     "treeopen", ::hostname());
 }
