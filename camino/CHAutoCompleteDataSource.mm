@@ -33,7 +33,7 @@
 {
   if ((self = [super init])) {
     mResults = nil;
-    mIconImage = [[NSImage imageNamed:@"globe_ico"] autorelease]; 
+    mIconImage = [NSImage imageNamed:@"globe_ico"]; 
   }
   return self;
 }

@@ -96,7 +96,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [mTableView setAction:@selector(onRowClicked:)];
   
   // Create the icon column if we have a proxy icon
-  if (mProxyIcon != nil) {
+  if (mProxyIcon) {
     column = [[[NSTableColumn alloc] initWithIdentifier:@"icon"] autorelease];
     [column setWidth:[mProxyIcon frame].origin.x + [mProxyIcon frame].size.width];
     dataCell = [[[NSImageCell alloc] initImageCell:nil] autorelease];
@@ -121,7 +121,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [scrollView setDocumentView: mTableView];
 
   // construct the datasource
-  mDataSource = [[[CHAutoCompleteDataSource alloc] init] retain];
+  mDataSource = [[CHAutoCompleteDataSource alloc] init];
   [mTableView setDataSource: mDataSource];
 
   [mPopupWin setContentView:scrollView];
