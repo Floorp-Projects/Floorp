@@ -46,6 +46,7 @@ interface nsIURIContentListener;
 interface nsIURI;
 interface nsIProgressEventSink;
 interface nsIChannel;
+interface nsIStreamListener;
 
 [scriptable, uuid(40AECB53-8B65-11d3-989D-001083010E9B)]
 interface nsIURILoader : nsISupports
@@ -103,5 +104,6 @@ interface nsIURILoader : nsISupports
 					   in string aWindowTarget,
 					   in nsIChannel aChannel, 
 					   in nsISupports aCtxt,
-					   in nsIURIContentListener aContentListener);
+					   in nsIURIContentListener aContentListener,
+					   out nsIStreamListener aTargetListener);
 };

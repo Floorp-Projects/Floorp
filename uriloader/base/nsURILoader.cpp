@@ -71,7 +71,7 @@ NS_IMPL_ISUPPORTS1(nsUriLoaderEventSinkGetter, nsIEventSinkGetter);
  * been loaded (or aborted).
  *
  */
-class nsDocumentOpenInfo : public nsIStreamObserver
+class nsDocumentOpenInfo : public nsIStreamListener
 {
 public:
     nsDocumentOpenInfo();
@@ -90,8 +90,8 @@ public:
     // nsIStreamObserver methods:
     NS_DECL_NSISTREAMOBSERVER
 
-	// nsIStreamListener methods:
-  // NS_DECL_NSISTREAMLISTENER
+	  // nsIStreamListener methods:
+    NS_DECL_NSISTREAMLISTENER
 
 protected:
     virtual ~nsDocumentOpenInfo();
@@ -99,10 +99,11 @@ protected:
 protected:
     nsCOMPtr<nsIURIContentListener> m_contentListener;
     nsCOMPtr<nsIChannel> m_channel;
+    nsCOMPtr<nsIStreamListener> m_targetStreamListener;
     nsCString m_windowTarget;
 };
 
-NS_IMPL_ISUPPORTS1(nsDocumentOpenInfo, nsIStreamObserver);
+NS_IMPL_ISUPPORTS2(nsDocumentOpenInfo, nsIStreamObserver, nsIStreamListener);
 
 nsDocumentOpenInfo::nsDocumentOpenInfo()
 {
@@ -162,7 +163,7 @@ nsresult nsDocumentOpenInfo::Open(nsIURI *aURI,
     nsCOMPtr<nsIChannel> m_channel;
     rv = pNetService->NewChannelFromURI("", aURI, aLoadGroup, aEventSinkGetter, aReferringURI, getter_AddRefs(m_channel));
     if (NS_FAILED(rv)) return rv; // uhoh we were unable to get a channel to handle the url!!!
-    rv = m_channel->AsyncOpen(this, nsnull); 
+    rv =  m_channel->AsyncRead(0, -1, nsnull, this);
   }
 
   return rv;
@@ -179,18 +180,32 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIChannel * aChannel, nsISuppo
   // go to the uri dispatcher and give them our stuff...
   NS_WITH_SERVICE(nsIURILoader, pURILoader, kURILoaderCID, &rv);
   if (NS_SUCCEEDED(rv))
+  {
     rv = pURILoader->DispatchContent(aContentType, "view", m_windowTarget, 
-                                     aChannel, aCtxt, m_contentListener);
+                                     aChannel, aCtxt, m_contentListener, getter_AddRefs(m_targetStreamListener));
+    if (m_targetStreamListener)
+      m_targetStreamListener->OnStartRequest(aChannel, aCtxt);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsDocumentOpenInfo::OnDataAvailable(nsIChannel * aChannel, nsISupports * aCtxt,
+                                                  nsIInputStream * inStr, PRUint32 sourceOffset, PRUint32 count)
+{
+  // if we have retarged to the end stream listener, then forward the call....
+  // otherwise, don't do anything
+
+  nsresult rv = NS_OK;
+  if (m_targetStreamListener)
+    rv = m_targetStreamListener->OnDataAvailable(aChannel, aCtxt, inStr, sourceOffset, count);
   return rv;
 }
 
 NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIChannel * aChannel, nsISupports *aCtxt, 
                                                 nsresult aStatus, const PRUnichar * errorMsg)
 {
-  // what are we going to do if we get a failure code here...that means the open may have failed
-  // and we never discovered the content type....so the uri never really was run!!!! uhoh..
-
-  // this method is incomplete until I figure that stuff out.
+  if (m_targetStreamListener)
+    m_targetStreamListener->OnStopRequest(aChannel, aCtxt, aStatus, errorMsg);
 
   return NS_OK;
 }
@@ -281,7 +296,8 @@ nsresult nsURILoader::DispatchContent(const char * aContentType,
                                       const char * aWindowTarget,
                                       nsIChannel * aChannel, 
                                       nsISupports * aCtxt, 
-                                      nsIURIContentListener * aContentListener)
+                                      nsIURIContentListener * aContentListener,
+                                      nsIStreamListener ** aTargetListener)
 {
   // okay, now we've discovered the content type. We need to do the following:
   // (1) Give our uri content listener first crack at handling this content type.  
@@ -327,7 +343,9 @@ nsresult nsURILoader::DispatchContent(const char * aContentType,
       // into it...
       if (aContentStreamListener)
       {
-        return aChannel->AsyncRead(0, -1, aCtxt, aContentStreamListener);
+        *aTargetListener = aContentStreamListener;
+        NS_IF_ADDREF(*aTargetListener);
+        return rv;
       }
   }
 
