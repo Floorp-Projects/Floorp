@@ -352,6 +352,17 @@ Clear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+JS_STATIC_DLL_CALLBACK(JSBool)
+SetExitCode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+            jsval *rval)
+{
+    if (argc == 0) {
+        gExitCode = 0;
+        return PR_TRUE;
+    }
+    return JS_ValueToECMAInt32(cx, argv[0], &gExitCode);
+}
+
 static JSFunctionSpec glob_functions[] = {
     {"print",           Print,          0},
     {"load",            Load,           1},
@@ -362,6 +373,7 @@ static JSFunctionSpec glob_functions[] = {
     {"dump",            Dump,           1},
     {"gc",              GC,             0},
     {"clear",           Clear,          1},
+    {"setExitCode",     SetExitCode,    1},
     {0}
 };
 
