@@ -1363,6 +1363,48 @@ MOZ_ARG_ENABLE_BOOL(brprof,
 
 dnl ========================================================
 dnl =
+dnl = ClientWallet, CookieManagement, SingleSignon hacks
+dnl = 
+dnl = Dont ask why these variables are named this way.
+dnl = 
+dnl ========================================================
+ClientWallet=1
+CookieManagement=1
+SingleSignon=1
+
+MOZ_ARG_DISABLE_BOOL(client-wallet,
+[  --disable-client-wallet         Disable ClientWallet],
+  ClientWallet= )
+
+MOZ_ARG_DISABLE_BOOL(cookie-management,
+[  --disable-cookie-management         Disable CookieManagement],
+  CookieManagement= )
+
+MOZ_ARG_DISABLE_BOOL(single-signon,
+[  --disable-single-signon         Disable SingleSignon],
+  SingleSignon= )
+
+if test "$ClientWallet"
+then
+  AC_DEFINE(ClientWallet)
+  
+  # I guess one depends on the other
+  SingleSignon=1
+fi
+
+if test "$CookieManagement"
+then
+  AC_DEFINE(CookieManagement)
+fi
+
+if test "$SingleSignon"
+then
+  AC_DEFINE(SingleSignon)
+fi
+
+
+dnl ========================================================
+dnl =
 dnl = GtkMozilla support
 dnl = 
 dnl ========================================================
@@ -1672,6 +1714,10 @@ AC_SUBST(BUILD_XPIDL)
 AC_SUBST(BUILD_IDLC)
 AC_SUBST(MOZ_ENABLE_GTK_MOZILLA)
 AC_SUBST(MOZ_BUILD_ROOT)
+
+AC_SUBST(ClientWallet)
+AC_SUBST(CookieManagement)
+AC_SUBST(SingleSignon)
 
 dnl system JPEG support
 dnl ========================================================

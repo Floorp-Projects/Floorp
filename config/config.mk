@@ -472,12 +472,6 @@ MOZILLA_CLIENT	= 1
 MOZ_JSD		= 1
 endif
 
-MOZ_COOKIEMANAGEMENT    = 1
-ifdef MOZ_NO_WALLET_HACK
-MOZ_SINGLESIGNON        = 1
-MOZ_CLIENTWALLET        = 1
-endif
-
 ifndef USE_AUTOCONF
 ifdef MOZ_LITE
 NO_UNIX_LDAP	= 1
@@ -513,18 +507,6 @@ MOZ_MAIL_NEWS	= 1
 MOZ_NEO		= 1
 MOZ_OFFLINE	= 1
 MOZ_TASKBAR	= 1
-endif
-
-ifdef MOZ_SINGLESIGNON
-DEFINES         += -DSingleSignon
-endif
-
-ifdef MOZ_COOKIEMANAGEMENT
-DEFINES         += -DCookieManagement
-endif
-
-ifdef MOZ_CLIENTWALLET
-DEFINES         += -DClientWallet
 endif
 
 ifdef MOZ_SMOOTH_PROGRESS
