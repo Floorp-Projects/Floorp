@@ -783,6 +783,8 @@ nsPostScriptObj::colorimage(nsIImage *aImage,int aX,int aY, int aWidth,int aHeig
 PRInt32 rowData,bytes_Per_Pix,x,y;
 PRInt32 width,height,bytewidth,cbits,n;
 PRUint8 *theBits,*curline;
+  PRBool isTopToBottom;
+  PRInt32 sRow, eRow, rStep; 
 
   XL_SET_NUMERIC_LOCALE();
   bytes_Per_Pix = aImage->GetBytesPix();
@@ -807,10 +809,20 @@ PRUint8 *theBits,*curline;
   XP_FilePrintf(mPrintContext->prSetup->out, " { currentfile rowdata readhexstring pop }\n");
   XP_FilePrintf(mPrintContext->prSetup->out, " false 3 colorimage\n");
 
-
   theBits = aImage->GetBits();
   n = 0;
-  for(y=0;y<height;y++){
+  if ( ( isTopToBottom = aImage->GetIsRowOrderTopToBottom()) == PR_TRUE ) {
+	sRow = height - 1;
+        eRow = 0;
+        rStep = -1;
+  } else {
+	sRow = 0;
+        eRow = height;
+        rStep = 1;
+  }
+
+  y = sRow;
+  while ( 1 ) {
     curline = theBits + (y*rowData);
     for(x=0;x<bytewidth;x++){
       if (n > 71) {
@@ -820,8 +832,10 @@ PRUint8 *theBits,*curline;
       XP_FilePrintf(mPrintContext->prSetup->out, "%02x", (int) (0xff & *curline++));
       n += 2;
     }
+    y += rStep;
+    if ( isTopToBottom == PR_TRUE && y < eRow ) break;
+    if ( isTopToBottom == PR_FALSE && y >= eRow ) break;
   }
-
 
   XP_FilePrintf(mPrintContext->prSetup->out, "\ngrestore\n");
   XL_RESTORE_NUMERIC_LOCALE();
