@@ -18,7 +18,7 @@
 # Rights Reserved.
 #
 # Contributors(s):
-#   Jan Varga <varga@utcru.sk>
+#   Jan Varga <varga@nixcorp.com>
 #   Håkan Waara (hwaara@chello.se)
 
 var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
