@@ -161,6 +161,9 @@ nsMsgStatusFeedback::ShowProgress(PRInt32 percentage)
 {
 	nsString strPercentage;
 	
+	if (percentage >= 0)
+		setAttribute(mWebShell, "Messenger:LoadingProgress", "mode","normal");
+
 	strPercentage.Append(percentage, 10);
 	setAttribute( mWebShell, "Messenger:LoadingProgress", "value", strPercentage);
 	return NS_OK;
