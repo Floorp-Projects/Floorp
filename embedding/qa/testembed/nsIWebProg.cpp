@@ -48,6 +48,7 @@
 #include "BrowserImpl.h"
 #include "BrowserView.h"
 #include "domwindow.h"
+#include "WebProgDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -191,13 +192,18 @@ void CnsiWebProg::RetrieveWebProgFlag()
 }
 void CnsiWebProg::OnStartTests(UINT nMenuID)
 {
+	CWebProgDlg myDialog;
+
 	switch(nMenuID)
 	{
 		case ID_INTERFACES_NSIWEBPROGRESS_RUNALLTESTS :
 			RunAllTests();
 			break ;
 		case ID_INTERFACES_NSIWEBPROGRESS_ADDPROGRESSLISTENER :
-			AddWebProgLstnr(nsIWebProgress::NOTIFY_STATE_ALL);
+			if (myDialog.DoModal() == IDOK)
+			{
+				AddWebProgLstnr(myDialog.m_wpFlagValue);
+			}
 			break ;
 		case ID_INTERFACES_NSIWEBPROGRESS_REMOVEPROGRESSLISTENER :
 			RemoveWebProgLstnr();

@@ -93,6 +93,7 @@ OBJS =                           \
 	.\$(OBJDIR)\nsIWebProg.obj \
 	.\$(OBJDIR)\nsIWebBrowFind.obj \
 	.\$(OBJDIR)\QaFindDlg.obj \
+	.\$(OBJDIR)\WebProgDlg.obj \
     $(NULL)
 
 LLIBS=					\
