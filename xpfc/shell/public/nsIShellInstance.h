@@ -147,7 +147,7 @@ public:
    * Launch an application
    * @result nsresult NS_OK upon succcessful completion
    */  
-  NS_IMETHOD LaunchApplication(nsString& aApplication) = 0 ;
+  NS_IMETHOD LaunchApplication(nsString& aApplication, nsString& aArgument) = 0 ;
 
 };
 

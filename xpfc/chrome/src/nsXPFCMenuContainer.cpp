@@ -308,7 +308,7 @@ nsresult nsXPFCMenuContainer::ProcessActionCommand(nsString& aAction)
 
   } else if (aAction == "LaunchCommandClient") {
 
-    mShellInstance->LaunchApplication(nsString("zulutest"));
+    mShellInstance->LaunchApplication(nsString("zulutest"),nsString(""));
 
   } else if (aAction == "ComposeEvent") {
 

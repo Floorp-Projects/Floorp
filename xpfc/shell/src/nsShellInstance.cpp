@@ -440,19 +440,46 @@ EVENT_CALLBACK nsShellInstance::GetShellEventCallback()
   return ((EVENT_CALLBACK)HandleEventApplication);
 }
 
-nsresult nsShellInstance::LaunchApplication(nsString& aApplication)
+nsresult nsShellInstance::LaunchApplication(nsString& aApplication, nsString& aArgument)
 {
   char * app = aApplication.ToNewCString();
-  char *argv[2];
-
+  char * argument = nsnull;
+  char *argv[100];
   PRStatus status ;
-
   char path[1024];
+  nsString temp;
+
+  /*
+   * Build up app
+   */
+
   (void)getcwd(path, sizeof(path));
   (void)PL_strcat(path, "\\");
   (void)PL_strcat(path, app);
   argv[0] = path;
-  argv[1] = nsnull;
+
+  /*
+   * Build up argument list
+   */
+
+  PRUint32 index = 1;
+
+  aArgument.Trim(" \r\n\t");
+  PRInt32 offset = aArgument.Find(' ');
+
+  while(offset != -1)
+  {
+    aArgument.Left(temp,offset);
+    aArgument.Cut(0,offset);
+    aArgument.Trim(" \r\n\t",PR_TRUE,PR_FALSE);
+    
+    argv[index++] = temp.ToNewCString();
+
+    offset = aArgument.Find(' ');
+  }
+
+  argv[index++] = aArgument.ToNewCString();
+  argv[index] = nsnull;
 
   status = PR_CreateProcessDetached(argv[0], argv, nsnull, nsnull);
 
@@ -460,6 +487,10 @@ nsresult nsShellInstance::LaunchApplication(nsString& aApplication)
     return NS_OK;
 
   delete app;
+
+  index = 1;
+  while(argv[index] != nsnull)
+    delete argv[index++];
 
   return NS_OK;
 }

@@ -996,6 +996,21 @@ nsresult nsCalendarShell::ReceiveCommand(nsString& aCommand, nsString& aReply)
 
 nsresult nsCalendarShell::ExecuteCommandScript(nsString aScript)
 {
+  /*
+   * Make sure the CommandServer is running ...
+   */
+
+  StartCommandServer();
+
+  /*
+   * Now launch the app that can handle scripting interaction with zulu
+   */
+
+  nsString script = "-s ";
+  script += aScript;
+
+  mShellInstance->LaunchApplication(nsString("zulutest"),script);
+
   return NS_OK;
 }
 
