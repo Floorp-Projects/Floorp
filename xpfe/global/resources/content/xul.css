@@ -305,8 +305,12 @@ treeitem[container="true"] > treerow > .treecell-indent {
  -moz-binding: url("chrome://global/content/treeBindings.xml#treecell-image");
 }
 
-.treecell-header {
+.treecell-header, .treecell-inset-header {
   -moz-binding: url("chrome://global/content/treeBindings.xml#treecell-header");
+}
+
+.treecell-header-image {
+  -moz-binding: url("chrome://global/content/treeBindings.xml#treecell-header-image");
 }
 
 .treecell-align-right {
