@@ -707,7 +707,7 @@ out2:
      * source) call that has stack budget for the generating pc.
      */
     if (fp->script && !(flags & JSINVOKE_INTERNAL))
-        vp[-fp->script->depth] = (jsval)fp->pc;
+        vp[-(intN)fp->script->depth] = (jsval)fp->pc;
     return ok;
 
 bad:

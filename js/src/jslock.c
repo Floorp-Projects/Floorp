@@ -32,6 +32,10 @@
 #include "jspubtd.h"
 #include "jslock.h"
 
+#ifndef NSPR_LOCK
+#include <memory.h>
+#endif
+
 static PRLock **_global_locks;
 static int _nr_of_globals=1;
 
