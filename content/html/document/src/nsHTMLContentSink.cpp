@@ -4931,7 +4931,7 @@ HTMLContentSink::PreEvaluateScript()
   // to the body (so that they can be seen by scripts) and force reflow.
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::PreEvaluateScript: flushing tags before evaluating script"));
-  FlushPendingNotifications();
+  mCurrentContext->FlushTags(PR_FALSE);
   mCurrentContext->SetPreAppend(PR_TRUE);
 
   mInScript++;
@@ -4943,8 +4943,6 @@ HTMLContentSink::PostEvaluateScript()
 {
   mInScript--;
   mCurrentContext->SetPreAppend(PR_FALSE);
-  // Take into account the content that script evaluation might have added.
-  mCurrentContext->UpdateChildCounts();
 }
 
 PRBool
