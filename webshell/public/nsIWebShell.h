@@ -66,6 +66,8 @@ public:
 
   //instances
   NS_IMETHOD NewWebShell(nsIWebShell *&aNewWebShell) = 0;
+  NS_IMETHOD FindWebShellWithName(const PRUnichar* aName,
+                                  nsIWebShell*& aResult) = 0;
 
   // NS_IMETHOD SetHistoryIndex(PRInt32 aIndex, PRInt32 aMaxIndex) = 0;
 
