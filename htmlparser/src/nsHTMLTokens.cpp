@@ -747,7 +747,7 @@ PRInt32 CCDATASectionToken::GetTokenType(void) {
  */
 nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag) {
   static const PRUnichar theTerminalsChars[] = 
-  { PRUnichar('\r'), PRUnichar(']'), PRUnichar(0) };
+  { PRUnichar('\r'), PRUnichar('\n'), PRUnichar(']'), PRUnichar(0) };
   static const nsReadEndCondition theEndCondition(theTerminalsChars);
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
@@ -764,6 +764,7 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
             case kCR:
               result=aScanner.GetChar(aChar); //strip off the \r
               mTextValue.Append(NS_LITERAL_STRING("\n\n"));
+              mNewlineCount += 2;
               break;
             case kNewLine:
                //which means we saw \r\n, which becomes \n
@@ -771,9 +772,15 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
                   //now fall through on purpose...
             default:
               mTextValue.Append(NS_LITERAL_STRING("\n"));
+              mNewlineCount++;
               break;
           } //switch
         } //if
+      }
+      else if (kNewLine == aChar) {
+        result=aScanner.GetChar(aChar);
+        mTextValue.Append(aChar);
+        ++mNewlineCount;
       }
       else if (kRightSquareBracket == aChar) {        
         result=aScanner.GetChar(aChar); //strip off the ]
@@ -1595,6 +1602,7 @@ nsresult ConsumeAttributeEntity(nsString& aString,
  */
 static
 nsresult ConsumeAttributeValueText(nsString& aString,
+                                   PRInt32& aNewlineCount,
                                    nsScanner& aScanner,
                                    const nsReadEndCondition& aEndCondition,
                                    PRInt32 aFlag)
@@ -1609,6 +1617,25 @@ nsresult ConsumeAttributeValueText(nsString& aString,
       aScanner.Peek(ch);
       if(ch == kAmpersand) {
         result = ConsumeAttributeEntity(aString,aScanner,aFlag);
+      }
+      else if(ch == kCR) {
+        aScanner.GetChar(ch);
+        result = aScanner.Peek(ch);
+        if (NS_SUCCEEDED(result)) {
+          if(ch == kNewLine) {
+            aString.Append(NS_LITERAL_STRING("\r\n"));
+            aScanner.GetChar(ch);
+          }
+          else {
+            aString.Append(PRUnichar('\r'));
+          }
+          ++aNewlineCount;
+        }
+      }
+      else if(ch == kNewLine) {
+        aScanner.GetChar(ch);
+        aString.Append(PRUnichar('\n'));
+        ++aNewlineCount;
       }
       else {
         done = PR_TRUE;
@@ -1630,16 +1657,19 @@ nsresult ConsumeAttributeValueText(nsString& aString,
  */
 static
 nsresult ConsumeQuotedString(PRUnichar aChar,
-                              nsString& aString,
-                              nsScanner& aScanner,
-                              PRInt32 aFlag)
+                             nsString& aString,
+                             PRInt32& aNewlineCount,
+                             nsScanner& aScanner,
+                             PRInt32 aFlag)
 {
   NS_ASSERTION(aChar==kQuote || aChar==kApostrophe,"char is neither quote nor apostrophe");
 
   static const PRUnichar theTerminalCharsQuote[] = { 
-    PRUnichar(kQuote), PRUnichar('&'),  PRUnichar(0) };
+    PRUnichar(kQuote), PRUnichar('&'), PRUnichar(kCR),
+    PRUnichar(kNewLine), PRUnichar(0) };
   static const PRUnichar theTerminalCharsApostrophe[] = { 
-    PRUnichar(kApostrophe), PRUnichar('&'), PRUnichar(0) };
+    PRUnichar(kApostrophe), PRUnichar('&'), PRUnichar(kCR),
+    PRUnichar(kNewLine), PRUnichar(0) };
   static const nsReadEndCondition
     theTerminateConditionQuote(theTerminalCharsQuote);
   static const nsReadEndCondition
@@ -1654,7 +1684,8 @@ nsresult ConsumeQuotedString(PRUnichar aChar,
   nsScannerIterator theOffset;
   aScanner.CurrentPosition(theOffset);
 
-  result=ConsumeAttributeValueText(aString,aScanner,*terminateCondition,aFlag);
+  result=ConsumeAttributeValueText(aString,aNewlineCount,aScanner,
+                                   *terminateCondition,aFlag);
 
   if(NS_SUCCEEDED(result)) {
     result = aScanner.SkipOver(aChar); // aChar should be " or '
@@ -1669,7 +1700,8 @@ nsresult ConsumeQuotedString(PRUnichar aChar,
       theAttributeTerminator(kAttributeTerminalChars);
     aString.Truncate();
     aScanner.SetPosition(theOffset, PR_FALSE, PR_TRUE);
-    result=ConsumeAttributeValueText(aString,aScanner,theAttributeTerminator,aFlag);
+    result=ConsumeAttributeValueText(aString,aNewlineCount,aScanner,
+                                     theAttributeTerminator,aFlag);
   }
   return result;
 }
@@ -1743,7 +1775,8 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                 if (NS_OK==result) {
                   if ((kQuote==aChar) || (kApostrophe==aChar)) {
                     aScanner.GetChar(aChar);
-                    result=ConsumeQuotedString(aChar,mTextValue,aScanner,aFlag);
+                    result=ConsumeQuotedString(aChar,mTextValue,mNewlineCount,
+                                               aScanner,aFlag);
                     if (NS_SUCCEEDED(result) && (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
                       mTextValue.Insert(aChar,0);
                       mTextValue.Append(aChar);
@@ -1764,6 +1797,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                     static const nsReadEndCondition
                       theAttributeTerminator(kAttributeTerminalChars);
                     result=ConsumeAttributeValueText(mTextValue,
+                                                     mNewlineCount,
                                                      aScanner,
                                                      theAttributeTerminator,
                                                      aFlag);
