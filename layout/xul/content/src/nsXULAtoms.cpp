@@ -30,7 +30,7 @@ PRInt32  nsXULAtoms::nameSpaceID;
 #undef XUL_ATOM
 
 
-static nsrefcnt gRefCnt;
+static nsrefcnt gRefCnt = 0;
 static nsINameSpaceManager* gNameSpaceManager;
 
 void nsXULAtoms::AddRefAtoms() {
