@@ -34,7 +34,7 @@
 /*
  * Header for CMS types.
  *
- * $Id: cmst.h,v 1.6 2002/12/17 01:39:46 wtc%netscape.com Exp $
+ * $Id: cmst.h,v 1.7 2002/12/24 02:25:36 wtc%netscape.com Exp $
  */
 
 #ifndef _CMST_H_
@@ -309,7 +309,7 @@ typedef struct NSSCMSKeyTransRecipientInfoStr NSSCMSKeyTransRecipientInfo;
  */
 struct NSSCMSKeyTransRecipientInfoExStr {
     NSSCMSKeyTransRecipientInfo recipientInfo;
-    int version;
+    int version;  /* version of this structure (0) */
     SECKEYPublicKey *pubKey;
 };
 
