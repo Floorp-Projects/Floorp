@@ -253,7 +253,7 @@ nsresult nsMsgRFC822Parser::UnquotePhraseOrAddr_Intl (PRInt16 csid, const char *
 }
 
  /* this function will be used by the factory to generate an RFC-822 Parser....*/
-nsresult NS_NewRFC822Parser(nsIMsgRFC822Parser** aInstancePtrResult)
+nsresult NS_NewRFC822Parser(const nsIID &aIID, void ** aInstancePtrResult)
 {
 	/* note this new macro for assertions...they can take a string describing the assertion */
 	nsresult result = NS_OK;
@@ -262,7 +262,7 @@ nsresult NS_NewRFC822Parser(nsIMsgRFC822Parser** aInstancePtrResult)
 	{
 		nsMsgRFC822Parser* parser = new nsMsgRFC822Parser();
 		if (parser)
-			return parser->QueryInterface(nsIMsgRFC822Parser::GetIID(), (void**) aInstancePtrResult);
+			return parser->QueryInterface(aIID, aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}

@@ -129,6 +129,6 @@
  }; 
 
  /* this function will be used by the factory to generate an RFC-822 Parser....*/
- extern nsresult NS_NewRFC822Parser(nsIMsgRFC822Parser** aInstancePtrResult);
+ extern nsresult NS_NewRFC822Parser(const nsIID &aIID, void ** aInstancePtrResult);
 
 #endif /* nsMSGRFCPARSER_h__ */
