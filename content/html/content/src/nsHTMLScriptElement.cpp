@@ -436,7 +436,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLScriptElement,
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLScriptElement)
   NS_INTERFACE_MAP_ENTRY(nsIScriptLoaderObserver)
   NS_INTERFACE_MAP_ENTRY(nsIScriptElement)
-  if ( mScriptEventHandler && aIID.Equals(NS_GET_IID(nsIScriptEventHandler)) )
+  if (mScriptEventHandler && aIID.Equals(NS_GET_IID(nsIScriptEventHandler)))
     foundInterface = NS_STATIC_CAST(nsIScriptEventHandler*,
                                     mScriptEventHandler);
   else
@@ -452,34 +452,45 @@ nsHTMLScriptElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                                        aName,
                                                        aValue,
                                                        aNotify);
-  if (NS_SUCCEEDED(rv) && aNotify && aName == nsHTMLAtoms::src &&
-      aNameSpaceID == kNameSpaceID_None) {
-    MaybeProcessScript();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aNameSpaceID != kNameSpaceID_None) {
+    return rv;
   }
 
-  else if (NS_SUCCEEDED(rv) && 
-    (aName == nsHTMLAtoms::_for || aName == nsHTMLAtoms::_event) &&
-    (aNameSpaceID == kNameSpaceID_None)) {
-
-    // If the script has NOT been executed yet then create a script event
-    // handler if necessary...
+  if (aNotify && aName == nsHTMLAtoms::src) {
+    MaybeProcessScript();
+  } else if ((aName == nsHTMLAtoms::_for &&
+              HasAttr(kNameSpaceID_None, nsHTMLAtoms::_event)) ||
+             (aName == nsHTMLAtoms::_event &&
+              HasAttr(kNameSpaceID_None, nsHTMLAtoms::_for))) {
+    // If the script has NOT been executed yet then create a script
+    // event handler if necessary...
     if (!mIsEvaluated && !mScriptEventHandler) {
       mScriptEventHandler = new nsHTMLScriptEventHandler(this);
-      if (mScriptEventHandler) {
-        NS_ADDREF(mScriptEventHandler);
-
-        // Mark the script as having already been executed.
-        //
-        // Event handlers are only compiled and executed in response to an event
-        // firing...
-        mIsEvaluated = PR_TRUE;
-      } else {
-        rv = NS_ERROR_OUT_OF_MEMORY;
+      if (!mScriptEventHandler) {
+        return NS_ERROR_OUT_OF_MEMORY;
       }
+
+      NS_ADDREF(mScriptEventHandler);
+
+      // Mark the script as having already been executed.
+      //
+      // Event handlers are only compiled and executed in response to
+      // an event firing...
+      mIsEvaluated = PR_TRUE;
     }
 
-    if ((aName == nsHTMLAtoms::_event) && mScriptEventHandler) {
-      rv = mScriptEventHandler->ParseEventString(aValue);
+    if (mScriptEventHandler) {
+      if (aName == nsHTMLAtoms::_event) {
+        rv = mScriptEventHandler->ParseEventString(aValue);
+      } else {
+        nsAutoString event_val;
+        rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::_event, event_val);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = mScriptEventHandler->ParseEventString(event_val);
+      }
     }
   }
 
