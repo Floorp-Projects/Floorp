@@ -236,7 +236,6 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return JS_FALSE;
         argv[i] = STRING_TO_JSVAL(str);
         filename = JS_GetStringBytes(str);
-        DoBeginRequest(cx);
         script = JS_CompileFile(cx, obj, filename);
         if (!script)
             ok = JS_FALSE;
@@ -244,7 +243,6 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             ok = JS_ExecuteScript(cx, obj, script, &result);
             JS_DestroyScript(cx, script);
         }
-        DoEndRequest(cx);
         if (!ok)
             return JS_FALSE;
     }
