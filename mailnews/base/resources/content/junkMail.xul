@@ -37,6 +37,8 @@
 
   <hbox>
     <radiogroup flex="1" id="level" orient="horizontal">
+      <!-- using 0 - 100, in case we ever do a slider or add more levels.  
+           this way, the exist pref value will migrate nice. -->
       <radio flex="1" id="off" value="0" label="&off.label;"/>
       <radio flex="1" id="lowest" value="20" label="&lowest.label;"/>
       <radio flex="1" id="low" value="40" label="&low.label;"/>
