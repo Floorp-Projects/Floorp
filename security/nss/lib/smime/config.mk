@@ -107,7 +107,7 @@ endif
 ifeq ($(OS_ARCH),HP-UX)
 MAPFILE = $(OBJDIR)/nssmap.hp
 ALL_TRASH += $(MAPFILE)
-MKSHLIB += -e $(MAPFILE)
+MKSHLIB += -c $(MAPFILE)
 endif
 
 ifeq ($(OS_ARCH),Linux)
