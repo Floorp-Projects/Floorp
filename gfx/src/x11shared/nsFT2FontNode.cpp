@@ -44,7 +44,7 @@
 
 #if (!defined(MOZ_ENABLE_FREETYPE2))
 
-void nsFT2FontNode::FreeGlobals() {};
+void nsFT2FontNode::FreeGlobals() {}
 
 nsresult nsFT2FontNode::InitGlobals()
 {
@@ -54,7 +54,7 @@ nsresult nsFT2FontNode::InitGlobals()
 }
 
 void nsFT2FontNode::GetFontNames(const char* aPattern,
-                                 nsFontNodeArray* aNodes) {};
+                                 nsFontNodeArray* aNodes) {}
 
 #else
 
