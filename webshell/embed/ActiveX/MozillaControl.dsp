@@ -102,6 +102,10 @@ SOURCE=.\ControlSiteIPFrame.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\DropTarget.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\guids.cpp
 # End Source File
 # Begin Source File
@@ -206,6 +210,14 @@ SOURCE=.\CPMozillaControl.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\DHTMLCmdIds.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DropTarget.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\guids.h
 # End Source File
 # Begin Source File
@@ -223,6 +235,10 @@ SOURCE=.\IEHtmlElementCollection.h
 # Begin Source File
 
 SOURCE=.\IEHtmlNode.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\IOleCommandTargetImpl.h
 # End Source File
 # Begin Source File
 
@@ -4491,6 +4507,22 @@ SOURCE=..\..\..\dist\include\zipfile.h
 # Begin Source File
 
 SOURCE=..\..\..\dist\include\zlib.h
+# End Source File
+# End Group
+# Begin Group "Make Files"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\..\config\config.mak
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\config\config.mk
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\config\rules.mak
 # End Source File
 # End Group
 # Begin Source File
