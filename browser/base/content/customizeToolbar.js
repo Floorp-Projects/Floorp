@@ -81,18 +81,7 @@ function buildDialog()
   var node = toolbar.palette.firstChild;
   while (node) {
     var paletteItem = node.cloneNode(true);
-    paletteItem.removeAttribute("observes");
-    paletteItem.removeAttribute("disabled");
-    paletteItem.removeAttribute("type");
-
-    if (paletteItem.localName == "toolbaritem" && 
-        paletteItem.firstChild) {
-      paletteItem.firstChild.removeAttribute("observes");
-      if (paletteItem.firstChild.localName == "textbox")
-        paletteItem.firstChild.setAttribute("disabled", "true");
-      else
-        paletteItem.firstChild.removeAttribute("disabled");
-    }
+    cleanUpItemForAdding(paletteItem);
 
     if (rowSlot == rowMax) {
       // Append the old row.
@@ -196,6 +185,7 @@ var dropObserver = {
     var enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                              "toolbarpaletteitem");
     enclosure.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event, dragObserver)");
+    cleanUpItemForAdding(paletteItem);
     enclosure.appendChild(paletteItem);
 
     toolbar.insertBefore(enclosure, gCurrentDragOverItem);
@@ -213,3 +203,20 @@ var dropObserver = {
   }
 }
 
+// Make sure all buttons look enabled (and that textboxes are disabled).
+// Hey, you try to come up with a better name.
+function cleanUpItemForAdding(aPaletteItem)
+{
+  aPaletteItem.removeAttribute("observes");
+  aPaletteItem.removeAttribute("disabled");
+  aPaletteItem.removeAttribute("type");
+
+  if (aPaletteItem.localName == "toolbaritem" && 
+      aPaletteItem.firstChild) {
+    aPaletteItem.firstChild.removeAttribute("observes");
+    if (aPaletteItem.firstChild.localName == "textbox")
+      aPaletteItem.firstChild.setAttribute("disabled", "true");
+    else
+      aPaletteItem.firstChild.removeAttribute("disabled");
+  }
+}
