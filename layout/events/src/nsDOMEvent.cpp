@@ -331,11 +331,10 @@ NS_METHOD nsDOMEvent::GetWhich(PRUint32* aWhich)
   switch (mEvent->eventStructType) {
   case NS_KEY_EVENT:
     return GetKeyCode(aWhich);
-    break;
   case NS_MOUSE_EVENT:
     return GetButton(aWhich);
-    break;
   }
+  return NS_ERROR_FAILURE;
 }
 
 NS_METHOD nsDOMEvent::SetWhich(PRUint32 aWhich)
@@ -343,11 +342,10 @@ NS_METHOD nsDOMEvent::SetWhich(PRUint32 aWhich)
   switch (mEvent->eventStructType) {
   case NS_KEY_EVENT:
     return SetKeyCode(aWhich);
-    break;
   case NS_MOUSE_EVENT:
     return SetButton(aWhich);
-    break;
   }
+  return NS_ERROR_FAILURE;
 }
 
 NS_METHOD nsDOMEvent::DuplicatePrivateData()
