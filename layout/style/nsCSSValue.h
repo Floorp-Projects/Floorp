@@ -233,7 +233,7 @@ public:
   
   NS_HIDDEN_(nscoord)   GetLengthTwips() const;
 
-  void  Reset()  // sets to null
+  NS_HIDDEN_(void)  Reset()  // sets to null
   {
     if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Counters) &&
         (nsnull != mValue.mString)) {
