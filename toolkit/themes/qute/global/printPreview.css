@@ -31,8 +31,13 @@
 
 .toolbar-portrait-page {
   list-style-image: url("chrome://global/skin/Portrait-small.png");
+
 }
 
 .toolbar-landscape-page {
   list-style-image: url("chrome://global/skin/Landscape-small.png");
+}
+
+.toolbarbutton-text { 
+  margin-left: 4px !important;
 }
