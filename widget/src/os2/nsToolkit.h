@@ -42,6 +42,9 @@
 #include "nsdefs.h"
 #include "prmon.h"
 #include "nsIToolkit.h"
+#ifdef DEBUG
+#include <stdio.h>
+#endif
 
 struct MethodInfo;
 
@@ -83,24 +86,12 @@ protected:
     PRMonitor *mMonitor;
 };
 
-// Window procedure for the internal window
-static MRESULT EXPENTRY nsToolkitWindowProc(HWND, ULONG, MPARAM, MPARAM);
-
 #define WM_CALLMETHOD   (WM_USER+1)
-#define WM_SENDMSG      (WM_USER+2)
 
-struct SendMsgStruct
+inline void nsToolkit::CallMethod(MethodInfo *info)
 {
-   HWND    hwnd;
-   ULONG   msg;
-   MPARAM  mp1, mp2;
-   MRESULT rc;
-
-   PRMonitor *pMonitor;
-
-   SendMsgStruct( HWND h, ULONG m, MPARAM p1, MPARAM p2, PRMonitor *pMon)
-        : hwnd( h), msg( m), mp1( p1), mp2( p2), rc( 0), pMonitor( pMon)
-   {}
-};
+    NS_PRECONDITION(::WinIsWindow((HAB)0, mDispatchWnd), "Invalid window handle");
+    ::WinSendMsg(mDispatchWnd, WM_CALLMETHOD, (MPARAM)0, MPFROMP(info));
+}
 
 #endif  // TOOLKIT_H

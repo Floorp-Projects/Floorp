@@ -203,5 +203,6 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
     else 
       Beep();
   }
+  return NS_OK;
 }
 

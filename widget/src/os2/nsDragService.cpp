@@ -1625,8 +1625,8 @@ int CodepageToUnicode(const nsACString& aString, PRUnichar **aResult)
 {
   nsAutoChar16Buffer buffer;
   PRInt32 bufLength;
-  nsresult rv = MultiByteToWideChar(0, PromiseFlatCString(aString).get(),
-                                    aString.Length(), buffer, bufLength);
+  MultiByteToWideChar(0, PromiseFlatCString(aString).get(),
+                      aString.Length(), buffer, bufLength);
   *aResult = ToNewUnicode(nsDependentString(buffer.get()));
   return bufLength;
 }

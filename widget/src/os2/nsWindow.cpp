@@ -136,9 +136,6 @@ PRBool gJustGotDeactivate = PR_FALSE;
 // Mouse Clicks - static variable defintions 
 // for figuring out 1 - 3 Clicks
 ////////////////////////////////////////////////////
-static POINTL gLastMousePoint;
-static LONG   gLastMsgTime    = 0;
-static LONG   gLastClickCount = 0;
 static POINTS gLastButton1Down = {0,0};
 
 #define XFROMMP(m)    (SHORT(LOUSHORT(m)))
@@ -766,21 +763,21 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
     if (!wnd->mIsDestroying) // not if we're in the destructor!
       kungFuDeathGrip = do_QueryInterface((nsBaseWidget*)wnd);
 
-   MRESULT mRC = 0;
+   MRESULT mresult = 0;
 
-   if( wnd)
+   if (wnd)
    {
-      if( PR_FALSE == wnd->ProcessMessage( msg, mp1, mp2, mRC) &&
+      if( PR_FALSE == wnd->ProcessMessage( msg, mp1, mp2, mresult) &&
           WinIsWindow( (HAB)0, hwnd) && wnd->GetPrevWP())
       {
-         mRC = (wnd->GetPrevWP())( hwnd, msg, mp1, mp2);
+         mresult = (wnd->GetPrevWP())( hwnd, msg, mp1, mp2);
 
       }
    }
    else
-      /* erm */ mRC = WinDefWindowProc( hwnd, msg, mp1, mp2);
+      /* erm */ mresult = WinDefWindowProc( hwnd, msg, mp1, mp2);
 
-   return mRC;
+   return mresult;
 }
 
 //-------------------------------------------------------------------------
@@ -1637,8 +1634,8 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
       char *buffer = new char[fontnameLength + 6];
       if (buffer) {
         sprintf(buffer, "%d.%s", points, fontname.get());
-        BOOL rc = ::WinSetPresParam(mWnd, PP_FONTNAMESIZE,
-                                    strlen(buffer) + 1, buffer);
+        ::WinSetPresParam(mWnd, PP_FONTNAMESIZE,
+                          strlen(buffer) + 1, buffer);
         delete [] buffer;
       }
    }
@@ -2150,8 +2147,7 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    USHORT     fsFlags = SHORT1FROMMP(mp1);
    USHORT     usVKey = SHORT2FROMMP(mp2);
    USHORT     usChar = SHORT1FROMMP(mp2);
-   UCHAR      uchScan = CHAR4FROMMP(mp1);
-   int        unirc = ULS_SUCCESS;
+//   UCHAR      uchScan = CHAR4FROMMP(mp1);
 
    // It appears we're not supposed to transmit shift, control & alt events
    // to gecko.  Shrug.
@@ -3305,10 +3301,10 @@ NS_METHOD nsWindow::SetTitle(const nsAString& aTitle)
       MethodInfo info( this, nsWindow::SET_TITLE, 1, &ulong);
       mOS2Toolkit->CallMethod( &info);
    }
-   else if( mWnd)
+   else if (mWnd)
    {
       PRUnichar* uchtemp = ToNewUnicode(aTitle);
-      for (int i=0;i<aTitle.Length();i++) {
+      for (PRUint32 i=0;i<aTitle.Length();i++) {
        switch (uchtemp[i]) {
          case 0x2018:
          case 0x2019:
