@@ -27,6 +27,10 @@
 #include "nsIStreamListener.h"
 #include "nsFileStream.h"
 
+#include "nsIInterfaceRequestor.h"
+#include "nsCURILoader.h"
+#include "nsIURIContentListener.h"
+
 //
 // Callback declarations for URL completion
 //
@@ -36,7 +40,7 @@ typedef nsresult (*nsAttachSaveCompletionCallback) (nsIURI* aURL, nsresult aStat
                                                     PRInt32 totalSize, const PRUnichar* aMsg, 
                                                     void *tagData);
 
-class nsURLFetcher : public nsIStreamListener { 
+class nsURLFetcher : public nsIStreamListener, public nsIURIContentListener, public nsIInterfaceRequestor { 
 public: 
   nsURLFetcher();
   virtual ~nsURLFetcher();
@@ -59,9 +63,10 @@ public:
 
   // Methods for nsIStreamListener
   NS_DECL_NSISTREAMLISTENER
-
   // Methods for nsIStreamObserver
   NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSIURICONTENTLISTENER
+  NS_DECL_NSIINTERFACEREQUESTOR
 
 private:
   nsOutputFileStream              *mOutStream;    // the output file stream

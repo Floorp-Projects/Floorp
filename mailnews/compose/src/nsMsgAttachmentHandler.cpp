@@ -458,7 +458,11 @@ nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
     rv = mFetcher->Initialize(mOutFile, FetcherURLDoneCallback, this);
     rv = GetMessageServiceFromURI(m_uri, &messageService);
     if (NS_SUCCEEDED(rv) && messageService)
-      rv = messageService->DisplayMessage(m_uri, mFetcher, nsnull, nsnull, nsnull);
+    {
+      nsCOMPtr<nsIStreamListener> strListener;
+      mFetcher->QueryInterface(NS_GET_IID(nsIStreamListener), getter_AddRefs(strListener));
+      rv = messageService->DisplayMessage(m_uri, strListener, nsnull, nsnull, nsnull);
+    }
   }
 done:
   if (NS_FAILED(rv))

@@ -60,9 +60,16 @@ nsresult NS_NewURLFetcher(nsURLFetcher ** aInstancePtrResult)
 		return NS_ERROR_NULL_POINTER; // aInstancePtrResult was NULL....
 }
 
-// The following macros actually implement addref, release and 
-// query interface for our component. 
-NS_IMPL_ISUPPORTS2(nsURLFetcher, nsIStreamListener, nsIStreamObserver);
+NS_IMPL_ADDREF(nsURLFetcher)
+NS_IMPL_RELEASE(nsURLFetcher)
+
+NS_INTERFACE_MAP_BEGIN(nsURLFetcher)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+   NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
+NS_INTERFACE_MAP_END
 
 /* 
  * Inherited methods for nsMimeConverter
@@ -85,6 +92,52 @@ nsURLFetcher::~nsURLFetcher()
   mStillRunning = PR_FALSE;
   PR_FREEIF(mContentType);
 }
+
+NS_IMETHODIMP nsURLFetcher::GetInterface(const nsIID & aIID, void * *aInstancePtr)
+{
+   NS_ENSURE_ARG_POINTER(aInstancePtr);
+   return QueryInterface(aIID, aInstancePtr);
+}
+
+// nsIURIContentListener support
+NS_IMETHODIMP 
+nsURLFetcher::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
+{
+  *aProtocolHandler = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsURLFetcher::CanHandleContent(const char * aContentType,
+                                nsURILoadCommand aCommand,
+                                const char * aWindowTarget,
+                                char ** aDesiredContentType,
+                                PRBool * aCanHandleContent)
+
+{
+  if (nsCRT::strcasecmp(aContentType, "message/rfc822") == 0)
+    *aDesiredContentType = nsCRT::strdup("text/html");
+
+  // since we explicilty loaded the url, we always want to handle it!
+  *aCanHandleContent = PR_TRUE;
+  return NS_OK;
+} 
+
+NS_IMETHODIMP 
+nsURLFetcher::DoContent(const char * aContentType,
+                      nsURILoadCommand aCommand,
+                      const char * aWindowTarget,
+                      nsIChannel * aOpenedChannel,
+                      nsIStreamListener ** aContentHandler,
+                      PRBool * aAbortProcess)
+{
+  nsresult rv = NS_OK;
+  if (aAbortProcess)
+    *aAbortProcess = PR_FALSE;
+  QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aContentHandler);
+  return rv;
+}
+
 
 nsresult
 nsURLFetcher::StillRunning(PRBool *running)
@@ -207,21 +260,18 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut,
     return NS_ERROR_FAILURE;
   }
 
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIChannel> channel;
-  rv = service->NewChannelFromURI("load", aURL, 
-                                  nsnull, // loadGroup
-                                  nsnull, // notificationCallbacks
-                                  nsIChannel::LOAD_NORMAL,
-                                  nsnull, // originalURI
-                                  0, 0,
-                                  getter_AddRefs(channel));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = channel->AsyncRead(0, -1, nsnull, this);
-  if (NS_FAILED(rv)) return rv;
+  // let's try uri dispatching...
+  NS_WITH_SERVICE(nsIURILoader, pURILoader, NS_URI_LOADER_PROGID, &rv);
+  if (NS_SUCCEEDED(rv)) 
+  {
+    nsCOMPtr<nsISupports> openContext;
+    nsCOMPtr<nsISupports> cntListener (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, this)));
+    rv = pURILoader->OpenURI(aURL, nsIURILoader::viewNormal, nsnull /* window target */, 
+                             cntListener,
+                             nsnull /* refferring URI */, 
+                             /* group */ nsnull, 
+                             getter_AddRefs(openContext));
+   }
 
   mURL = dont_QueryInterface(aURL);
   mOutStream = fOut;
