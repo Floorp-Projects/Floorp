@@ -40,32 +40,24 @@
 
 #define MSGFEEDBACK_TIMER_INTERVAL 500
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
-nsrefcnt nsMsgStatusFeedback::gInstanceCount = 0;
-
 nsMsgStatusFeedback::nsMsgStatusFeedback() :
   m_lastPercent(0)
 {
 	NS_INIT_REFCNT();
 	LL_I2L(m_lastProgressTime, 0);
 
-    if (gInstanceCount++ == 0) {
-      nsresult rv;
-      nsCOMPtr<nsIStringBundleService> bundleService =
-        do_GetService(kStringBundleServiceCID, &rv);
+    nsresult rv;
+    nsCOMPtr<nsIStringBundleService> bundleService =
+        do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
 
-      if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv))
         bundleService->CreateBundle("chrome://messenger/locale/messenger.properties",
                                     getter_AddRefs(mBundle));
-    }
 }
 
 nsMsgStatusFeedback::~nsMsgStatusFeedback()
 {
-  if (gInstanceCount-- == 0) {
-    mBundle = nsnull;
-  }
+  mBundle = nsnull;
 }
 
 NS_IMPL_THREADSAFE_ADDREF(nsMsgStatusFeedback);
@@ -257,7 +249,7 @@ NS_IMETHODIMP nsMsgStatusFeedback::OnStatus(nsIRequest *request, nsISupports* ct
                                             nsresult aStatus, const PRUnichar* aStatusArg)
 {
   nsresult rv;
-  nsCOMPtr<nsIStringBundleService> sbs = do_GetService(kStringBundleServiceCID, &rv);
+  nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
   nsXPIDLString str;
   rv = sbs->FormatStatusMessage(aStatus, aStatusArg, getter_Copies(str));

@@ -61,7 +61,6 @@ protected:
   // will replace this very C++ class you are looking at.
   nsCOMPtr<nsIMsgStatusFeedback> mStatusFeedback;
 
-  static nsrefcnt gInstanceCount;
   nsCOMPtr<nsIStringBundle> mBundle;
 };
 
