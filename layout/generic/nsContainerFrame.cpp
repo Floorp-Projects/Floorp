@@ -1111,10 +1111,10 @@ nsContainerFrame::DeleteNextInFlowChild(nsIPresContext* aPresContext,
   }
 
 #ifdef IBMBIDI
-  nsIFrame* nextBidi;
-  prevInFlow->GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi,
-                              (void**) &nextBidi,sizeof(nextBidi));
-  if (nextBidi == aNextInFlow) {
+  if ((prevInFlow->GetStateBits() & NS_FRAME_IS_BIDI) &&
+      (NS_STATIC_CAST(nsIFrame*,
+                      prevInFlow->GetProperty(nsLayoutAtoms::nextBidi)) ==
+       aNextInFlow)) {
     return;
   }
 #endif // IBMBIDI

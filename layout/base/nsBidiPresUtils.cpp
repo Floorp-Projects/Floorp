@@ -37,8 +37,6 @@
 
 #ifdef IBMBIDI
 
-#define FIX_FOR_BUG_40882
-
 #include "nsBidiPresUtils.h"
 #include "nsITextContent.h"
 #include "nsTextFragment.h"
@@ -58,10 +56,7 @@ static const PRUnichar kRLE              = 0x202B;
 static const PRUnichar kLRO              = 0x202D;
 static const PRUnichar kRLO              = 0x202E;
 static const PRUnichar kPDF              = 0x202C;
-
-#ifdef FIX_FOR_BUG_40882
 static const PRUnichar ALEF              = 0x05D0;
-#endif
 
 #define CHAR_IS_HEBREW(c) ((0x0590 <= (c)) && ((c)<= 0x05FF))
 // Note: The above code are moved from gfx/src/windows/nsRenderingContextWin.cpp
@@ -313,17 +308,17 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
       ++lineOffset;
     }
     else {
-      frame->SetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
-                             NS_INT32_TO_PTR(embeddingLevel));
-      frame->SetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel,
-                             NS_INT32_TO_PTR(paraLevel));
+      frame->SetProperty(nsLayoutAtoms::embeddingLevel,
+                         NS_INT32_TO_PTR(embeddingLevel));
+      frame->SetProperty(nsLayoutAtoms::baseLevel,
+                         NS_INT32_TO_PTR(paraLevel));
       if (isTextFrame) {
         PRInt32 typeLimit = PR_MIN(logicalLimit, lineOffset + fragmentLength);
         CalculateCharType(lineOffset, typeLimit, logicalLimit, runLength,
                            runCount, charType, prevType);
         // IBMBIDI - Egypt - Start
-        frame->SetBidiProperty(aPresContext,nsLayoutAtoms::charType,
-                               NS_INT32_TO_PTR(charType));
+        frame->SetProperty(nsLayoutAtoms::charType,
+                           NS_INT32_TO_PTR(charType));
         // IBMBIDI - Egypt - End
 
         if ( (runLength > 0) && (runLength < fragmentLength) ) {
@@ -541,8 +536,7 @@ nsBidiPresUtils::Reorder(nsIPresContext* aPresContext,
 
   for (i = 0; i < count; i++) {
     frame = (nsIFrame*) (mLogicalFrames[i]);
-    frame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
-                           (void**)&mLevels[i], sizeof(mLevels[i]) );
+    mLevels[i] = NS_GET_EMBEDDING_LEVEL(frame);
   }
   if (!mIndexMap) {
     mIndexMap = new PRInt32[mArraySize];
@@ -586,7 +580,6 @@ nsBidiPresUtils::RepositionInlineFrames(nsIPresContext*      aPresContext,
   nsIFrame* frame = (nsIFrame*) (mVisualFrames[0]);
   PRInt32 i;
 
-#ifdef FIX_FOR_BUG_40882
   PRInt32 ch;
   PRInt32 charType;
   nscoord width, dWidth, alefWidth, dx;
@@ -598,7 +591,6 @@ nsBidiPresUtils::RepositionInlineFrames(nsIPresContext*      aPresContext,
   dWidth = alefWidth = dx = 0;
   aRendContext->GetHints(hints);
   isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
-#endif // bug
 
   nsRect rect = frame->GetRect();
 
@@ -609,13 +601,11 @@ nsBidiPresUtils::RepositionInlineFrames(nsIPresContext*      aPresContext,
 
   for (i = 1; i < count; i++) {
 
-#ifdef FIX_FOR_BUG_40882
     ch = 0;
-    ( (nsIFrame*)mVisualFrames[i])->GetBidiProperty(aPresContext,
-                             nsLayoutAtoms::charType, (void**)&charType,sizeof(charType));
+    charType = NS_PTR_TO_INT32(((nsIFrame*)mVisualFrames[i])->
+                               GetProperty(nsLayoutAtoms::charType));
     if (CHARTYPE_IS_RTL(charType) ) {
-      frame->GetBidiProperty(aPresContext,
-                             nsLayoutAtoms::endsInDiacritic, (void**)&ch,sizeof(ch));
+      ch = NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::endsInDiacritic));
       if (ch) {
         if (!alefWidth) {
           aRendContext->GetWidth(buf, 1, alefWidth, nsnull);
@@ -631,23 +621,17 @@ nsBidiPresUtils::RepositionInlineFrames(nsIPresContext*      aPresContext,
         }
       }
     }
-#endif // bug
     frame = (nsIFrame*) (mVisualFrames[i]);
-#ifdef FIX_FOR_BUG_40882
     if (ch) {
       dx += (rect.width - dWidth);
       frame->SetPosition(nsPoint(rect.x + dWidth, frame->GetPosition().y));
     } else
-#endif // bug 40882
       frame->SetPosition(nsPoint(rect.XMost(), frame->GetPosition().y));
     rect = frame->GetRect();
   } // for
 
-#ifdef FIX_FOR_BUG_40882
   if (dx > 0) {
-    PRInt32 alignRight;
-    frame->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel,
-                           (void**) &alignRight,sizeof(alignRight));
+    PRInt32 alignRight = NS_GET_BASE_LEVEL(frame);
     if (0 == (alignRight & 1) ) {
       const nsStyleText* styleText = frame->GetStyleText();
       
@@ -663,7 +647,6 @@ nsBidiPresUtils::RepositionInlineFrames(nsIPresContext*      aPresContext,
       }
     }
   }
-#endif // bug
   
   // Now adjust inline container frames.
   // Example: LTR paragraph 
@@ -763,8 +746,7 @@ nsBidiPresUtils::EnsureBidiContinuation(nsIPresContext* aPresContext,
       return PR_FALSE;
     }
   }
-  aFrame->SetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, 
-                          (void*) *aNewFrame);
+  aFrame->SetProperty(nsLayoutAtoms::nextBidi, (void*) *aNewFrame);
   return PR_TRUE;
 }
 

@@ -4164,10 +4164,8 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
   else
     aPos->mStartOffset = -1;
 #ifdef IBMBIDI
-  PRUint8 oldLevel, newLevel, baseLevel;
-  GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&oldLevel, sizeof(oldLevel));
-  newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&newLevel, sizeof(newLevel));
-  newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel, (void**)&baseLevel, sizeof(baseLevel));
+  PRUint8 oldLevel = NS_GET_EMBEDDING_LEVEL(this);
+  PRUint8 newLevel = NS_GET_EMBEDDING_LEVEL(newFrame);
   if (newLevel & 1) // The new frame is RTL, go to the other end
     aPos->mStartOffset = -1 - aPos->mStartOffset;
 
@@ -4533,31 +4531,33 @@ nsFrame::IsMouseCaptured(nsIPresContext* aPresContext)
   return PR_FALSE;
 }
 
-nsresult 
-nsFrame::SetProperty(nsIPresContext*         aPresContext,
-                     nsIAtom*                aPropName,
+nsresult
+nsIFrame::SetProperty(nsIAtom*                aPropName,
                      void*                   aPropValue,
                      NSFramePropertyDtorFunc aPropDtorFunc)
 {
-  return aPresContext->FrameManager()->SetFrameProperty(this, aPropName,
-                                                        aPropValue,
-                                                        aPropDtorFunc);
+  return GetPresContext()->FrameManager()->
+    SetFrameProperty(this, aPropName, aPropValue, aPropDtorFunc);
 }
 
 void* 
-nsFrame::GetProperty(nsIPresContext* aPresContext,
-                     nsIAtom*        aPropName,
-                     PRBool          aRemoveProp) const
+nsIFrame::GetProperty(nsIAtom* aPropName, nsresult* aStatus) const
 {
-  PRUint32 options = 0;
+  return GetPresContext()->FrameManager()->
+    GetFrameProperty(this, aPropName, 0, aStatus);
+}
 
-  if (aRemoveProp) {
-    options |= NS_IFRAME_MGR_REMOVE_PROP;
-  }
+/* virtual */ void* 
+nsIFrame::GetPropertyExternal(nsIAtom* aPropName, nsresult* aStatus) const
+{
+  return GetProperty(aPropName, aStatus);
+}
 
-  
-  return aPresContext->FrameManager()->GetFrameProperty(this, aPropName,
-                                                        options);
+void*
+nsIFrame::RemoveProperty(nsIAtom* aPropName, nsresult* aStatus) const
+{
+  return GetPresContext()->FrameManager()->
+    GetFrameProperty(this, aPropName, NS_IFRAME_MGR_REMOVE_PROP, aStatus);
 }
 
 /* virtual */ const nsStyleStruct*
@@ -4566,50 +4566,6 @@ nsFrame::GetStyleDataExternal(nsStyleStructID aSID) const
   NS_ASSERTION(mStyleContext, "unexpected null pointer");
   return mStyleContext->GetStyleData(aSID);
 }
-
-#ifdef IBMBIDI
-/**
- *  retrieve Bidi property of this frame
- *  @lina 5/1/2000
- */
-
-NS_IMETHODIMP nsFrame::GetBidiProperty(nsIPresContext* aPresContext,
-                                  nsIAtom*        aPropertyName,
-                                  void**          aPropertyValue,
-                                  size_t          aSize) const
-{
-  if (!aPropertyValue || !aPropertyName) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if ( (aSize < 1) || (aSize > sizeof(void*) ) ) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  memset(aPropertyValue, 0, aSize);
-  void* val = aPresContext->FrameManager()->GetFrameProperty(this,
-                                                             aPropertyName, 0);
-
-  if (val) {
-    // to fix bidi on big endian. We need to copy the right bytes from the void*, not the first aSize bytes.
-#if IS_BIG_ENDIAN
-    memcpy(aPropertyValue, ((char*)&val)+sizeof(void*) - aSize, aSize);
-#else
-    memcpy(aPropertyValue, &val, aSize);
-#endif
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFrame::SetBidiProperty(nsIPresContext* aPresContext,
-                                  nsIAtom*        aPropertyName,
-                                  void*           aPropertyValue) 
-{
-  return aPresContext->FrameManager()->SetFrameProperty(this, aPropertyName,
-                                                        aPropertyValue,
-                                                        nsnull);
-}
-#endif // IBMBIDI
 
 #ifdef NS_DEBUG
 static void

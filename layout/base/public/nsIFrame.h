@@ -1187,28 +1187,19 @@ public:
   }
 
 
-  
-  virtual void* GetProperty(nsIPresContext* aPresContext,
-                            nsIAtom*        aPropertyName,
-                            PRBool          aRemoveProperty) const = 0;
+  void* GetProperty(nsIAtom* aPropertyName, nsresult* aStatus = nsnull) const;
+  virtual void* GetPropertyExternal(nsIAtom*  aPropertyName,
+                                    nsresult* aStatus) const;
+  void* RemoveProperty(nsIAtom* aPropertyName, nsresult* aStatus = nsnull) const;
+  nsresult SetProperty(nsIAtom*                aPropertyName,
+                       void*                   aValue,
+                       NSFramePropertyDtorFunc aDestructor = nsnull);
 
-  virtual nsresult SetProperty(nsIPresContext*         aPresContext,
-                               nsIAtom*                aPropertyName,
-                               void*                   aPropertyValue,
-                               NSFramePropertyDtorFunc aPropDtorFunc) = 0;
-#ifdef IBMBIDI
-  /**
-   *  retrieve and set Bidi property of this frame
-   *  @lina 5/1/2000
-   */
-  NS_IMETHOD GetBidiProperty(nsIPresContext* aPresContext,
-                             nsIAtom*        aPropertyName,
-                             void**          aPropertyValue,
-                             size_t          aSize ) const = 0;
-  NS_IMETHOD SetBidiProperty(nsIPresContext* aPresContext,
-                             nsIAtom*        aPropertyName,
-                             void*           aPropertyValue) = 0;
-#endif // IBMBIDI
+#define NS_GET_BASE_LEVEL(frame) \
+NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::baseLevel))
+
+#define NS_GET_EMBEDDING_LEVEL(frame) \
+NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::embeddingLevel))
 
   /** Create or retrieve the previously stored overflow area, if the frame does 
     * not overflow and no creation is required return nsnull.

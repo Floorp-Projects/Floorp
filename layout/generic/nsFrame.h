@@ -387,26 +387,8 @@ public:
   NS_IMETHOD CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);
   PRBool   IsMouseCaptured(nsIPresContext* aPresContext);
 
-  virtual void* GetProperty(nsIPresContext* aPresContext,
-                            nsIAtom*        aPropertyName,
-                            PRBool          aRemoveProperty) const;
-
-  virtual nsresult SetProperty(nsIPresContext*         aPresContext,
-                               nsIAtom*                aPropertyName,
-                               void*                   aPropertyValue,
-                               NSFramePropertyDtorFunc aPropDtorFunc);
-
   virtual const nsStyleStruct* GetStyleDataExternal(nsStyleStructID aSID) const;
 
-#ifdef IBMBIDI
-  NS_IMETHOD GetBidiProperty(nsIPresContext* aPresContext,
-                             nsIAtom*        aPropertyName,
-                             void**          aPropertyValue,
-                             size_t          aSize ) const;
-  NS_IMETHOD SetBidiProperty(nsIPresContext* aPresContext,
-                             nsIAtom*        aPropertyName,
-                             void*           aPropertyValue) ;
-#endif // IBMBIDI
 
 #ifdef NS_DEBUG
   /**

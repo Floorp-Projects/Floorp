@@ -61,7 +61,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsTextFragment.h"
 #include "nsBidiUtils.h"
-#define FIX_FOR_BUG_40882
 
 #ifdef DEBUG
 #undef  NOISY_HORIZONTAL_ALIGN
@@ -1043,16 +1042,17 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                        !textContent->IsOnlyWhitespace());
 // fix for bug 40882
 #ifdef IBMBIDI
-          const nsTextFragment* frag = textContent->Text();
-          if (frag->Is2b()) {
-            //PRBool isVisual;
-            //mPresContext->IsVisualMode(isVisual);
-            PRUnichar ch = /*(isVisual) ?
-                            *(frag->Get2b() + frag->GetLength() - 1) :*/ *frag->Get2b();
-            if (IS_BIDI_DIACRITIC(ch)) {
-              aFrame->SetBidiProperty(mPresContext, 
-                                      nsLayoutAtoms::endsInDiacritic,
-                                      NS_INT32_TO_PTR(ch));
+          if (mPresContext->BidiEnabled()) {
+            const nsTextFragment* frag = textContent->Text();
+            if (frag->Is2b()) {
+              //PRBool isVisual;
+              //mPresContext->IsVisualMode(isVisual);
+              PRUnichar ch = /*(isVisual) ?
+                              *(frag->Get2b() + frag->GetLength() - 1) :*/ *frag->Get2b();
+              if (IS_BIDI_DIACRITIC(ch)) {
+                aFrame->SetProperty(nsLayoutAtoms::endsInDiacritic,
+                                    NS_INT32_TO_PTR(ch));
+              }
             }
           }
 #endif // IBMBIDI

@@ -227,8 +227,7 @@ nsTextTransformer::Init(nsIFrame* aFrame,
    *  We do numeric shaping in all Bidi documents.
    */
   if (mPresContext->BidiEnabled()) {
-    aFrame->GetBidiProperty(mPresContext, nsLayoutAtoms::charType,
-                            (void**)&mCharType, sizeof(mCharType));
+    mCharType = (nsCharType)NS_PTR_TO_INT32(aFrame->GetProperty(nsLayoutAtoms::charType));
     if (mCharType == eCharType_RightToLeftArabic) {
       if (aForceArabicShaping) {
         SetNeedsArabicShaping(PR_TRUE);
