@@ -142,9 +142,12 @@ void nsWidget::OnDestroy()
 //
 //-------------------------------------------------------------------------
 
-nsIWidget *nsWidget::GetParent(void)
+nsIWidget* nsWidget::GetParent(void)
 {
 //  NS_NOTYETIMPLEMENTED("nsWidget::GetParent");
+  if (nsnull != mParent) {
+    NS_ADDREF(mParent);
+  }
   return mParent;
 }
 
