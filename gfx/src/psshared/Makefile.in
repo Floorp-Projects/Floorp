@@ -51,6 +51,7 @@ REQUIRES	= pref \
 		  widget \
 		  xpcom \
 		  $(NULL)
+LIBXUL_LIBRARY = 1
 
 PACKAGE_FILE	= psshared.pkg
 
