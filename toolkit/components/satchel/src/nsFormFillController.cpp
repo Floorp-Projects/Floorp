@@ -148,14 +148,12 @@ GetScreenOrigin(nsIDOMElement* aElement)
             widget->WidgetToScreen(oldBox, *rect);
           }
           
-          nscoord viewX = 0, viewY = 0;
-          view->GetPosition(&viewX, &viewY);
-
-          rect->x += NSTwipsToIntPixels(offset.x+viewX, scale);
-          rect->y += NSTwipsToIntPixels(offset.y+viewY, scale);
+          nsPoint viewPos = view->GetPosition();
+          rect->x += NSTwipsToIntPixels(offset.x+viewPos.x, scale);
+          rect->y += NSTwipsToIntPixels(offset.y+viewPos.y, scale);
         }
         
-        frame->GetSize(size);
+        size = frame->GetSize();
         rect->width = NSTwipsToIntPixels(size.width, scale);
         rect->height = NSTwipsToIntPixels(size.height, scale);
       }
