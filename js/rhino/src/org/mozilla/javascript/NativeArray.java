@@ -861,7 +861,7 @@ public class NativeArray extends IdScriptableObject
         if (cx.getLanguageVersion() == Context.VERSION_1_2)
             // if JS1.2 && no arguments, return undefined.
             return args.length == 0
-                ? Context.getUndefinedValue()
+                ? Undefined.instance
                 : args[args.length - 1];
 
         else
@@ -882,7 +882,7 @@ public class NativeArray extends IdScriptableObject
             // We don't need to delete the last property, because
             // setLength does that for us.
         } else {
-            result = Context.getUndefinedValue();
+            result = Undefined.instance;
         }
         // necessary to match js even when length < 0; js pop will give a
         // length property to any target it is called on.
@@ -916,7 +916,7 @@ public class NativeArray extends IdScriptableObject
             // We don't need to delete the last property, because
             // setLength does that for us.
         } else {
-            result = Context.getUndefinedValue();
+            result = Undefined.instance;
         }
         setLengthProperty(cx, thisObj, length);
         return result;
@@ -1011,7 +1011,7 @@ public class NativeArray extends IdScriptableObject
                    && cx.getLanguageVersion() == Context.VERSION_1_2)
         {
             /* Emulate C JS1.2; if no elements are removed, return undefined. */
-            result = Context.getUndefinedValue();
+            result = Undefined.instance;
         }
 
         /* Find the direction (up or down) to copy and make way for argv. */
