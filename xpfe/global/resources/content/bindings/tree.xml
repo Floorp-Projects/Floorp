@@ -22,10 +22,6 @@
     </content>
     
     <implementation implements="nsIDOMXULTreeElement, nsIDOMXULMultiSelectControlElement, nsIAccessibleProvider">
-      <constructor>
-        if (navigator.platform.indexOf("Mac") != -1)
-          this.pageUpOrDownMovesSelection = false;
-      </constructor>
 
       <!-- ///////////////// nsIDOMXULTreeElement ///////////////// -->
 
@@ -84,7 +80,7 @@
                 onget="return this.treeBoxObject.view; /*.QueryInterface(Components.interfaces.nsIXULTreeBuilder)*/"
                 readonly="true"/>
       <field name="pageUpOrDownMovesSelection">
-        true
+        !/Mac/.test(navigator.platform)
       </field>
       <property name="enableColumnDrag"
                 onget="return this.hasAttribute('enableColumnDrag');"
@@ -272,26 +268,40 @@
          }
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_up">
+      <handler event="keypress" keycode="vk_up" modifiers="control any">
         <![CDATA[
+         if (event.ctrlKey && this.view.selection.single) {
+           this.treeBoxObject.scrollByLines(-1);
+           return;
+         }
          var c = this.currentIndex;
          if (c == -1 || c == 0)
            return;
-         this.view.selection.timedSelect(c-1, this._selectDelay);
+         if (!event.ctrlKey)
+           this.view.selection.timedSelect(c - 1, this._selectDelay);
+         else // Ctrl+Up moves the anchor without selecting
+           this.currentIndex = c - 1;
          this.treeBoxObject.ensureRowIsVisible(c-1);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_down">
+      <handler event="keypress" keycode="vk_down" modifiers="control any">
         <![CDATA[
+         if (event.ctrlKey && this.view.selection.single) {
+           this.treeBoxObject.scrollByLines(1);
+           return;
+         }
          var c = this.currentIndex;
          try { if (c+1 == this.treeBoxObject.view.rowCount)
            return;
          } catch (e) {}
-         this.view.selection.timedSelect(c+1, this._selectDelay);
+         if (!event.ctrlKey)
+           this.view.selection.timedSelect(c+1, this._selectDelay);
+         else // Ctrl+Down moves the anchor without selecting
+           this.currentIndex = c + 1;
          this.treeBoxObject.ensureRowIsVisible(c+1);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_up" modifiers="shift">
+      <handler event="keypress" keycode="vk_up" modifiers="control any, shift">
         <![CDATA[
          if (this.view.selection.single)
            return;
@@ -299,11 +309,11 @@
          if (c == -1 || c == 0)
            return;
          // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, c - 1, false);
+         this.view.selection.rangedSelect(-1, c - 1, event.ctrlKey);
          this.treeBoxObject.ensureRowIsVisible(c - 1);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_down" modifiers="shift">
+      <handler event="keypress" keycode="vk_down" modifiers="control any, shift">
         <![CDATA[
          if (this.view.selection.single)
            return;
@@ -312,32 +322,13 @@
            return;
          } catch (e) {}
          // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, c + 1, false);
+         this.view.selection.rangedSelect(-1, c + 1, event.ctrlKey);
          this.treeBoxObject.ensureRowIsVisible(c + 1);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_up" modifiers="control">
+      <handler event="keypress" keycode="vk_page_up" modifiers="control any">
         <![CDATA[
-         var c = this.currentIndex;
-         if (c == -1 || c == 0)
-           return;
-         this.currentIndex = c-1;
-         this.treeBoxObject.ensureRowIsVisible(c-1);
-        ]]>
-      </handler>
-      <handler event="keypress" keycode="vk_down" modifiers="control">
-        <![CDATA[
-         var c = this.currentIndex;
-         try { if (c+1 == this.treeBoxObject.view.rowCount)
-           return;
-         } catch (e) {}
-         this.currentIndex = c+1;
-         this.treeBoxObject.ensureRowIsVisible(c+1);
-        ]]>
-      </handler>
-      <handler event="keypress" keycode="vk_page_up">
-        <![CDATA[
-         if (! this.pageUpOrDownMovesSelection) {
+         if (this.pageUpOrDownMovesSelection == event.ctrlKey) {
            this.treeBoxObject.scrollByPages(-1);
            return;
          }
@@ -357,9 +348,9 @@
          this.view.selection.timedSelect(i, this._selectDelay);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_down">
+      <handler event="keypress" keycode="vk_page_down" modifiers="control any">
         <![CDATA[
-         if (! this.pageUpOrDownMovesSelection) {
+         if (this.pageUpOrDownMovesSelection == event.ctrlKey) {
            this.treeBoxObject.scrollByPages(1);
            return;
          }
@@ -381,7 +372,7 @@
          this.view.selection.timedSelect(i, this._selectDelay);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_up" modifiers="shift">
+      <handler event="keypress" keycode="vk_page_up" modifiers="control any, shift">
         <![CDATA[
          if (this.view.selection.single)
            return;
@@ -399,10 +390,10 @@
            this.treeBoxObject.scrollByPages(-1);
          }
          // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, i, false);
+         this.view.selection.rangedSelect(-1, i, event.ctrlKey);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_down" modifiers="shift">
+      <handler event="keypress" keycode="vk_page_down" modifiers="control any, shift">
         <![CDATA[
          if (this.view.selection.single)
            return;
@@ -422,89 +413,52 @@
            this.treeBoxObject.scrollByPages(1);
          }
          // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, i, false);
+         this.view.selection.rangedSelect(-1, i, event.ctrlKey);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_up" modifiers="control">
+      <handler event="keypress" keycode="vk_home" modifiers="control any">
         <![CDATA[
-         var c = this.currentIndex;
-         if (c == 0)
+         if (this.treeBoxObject.view.rowCount == 0)
            return;
-         var f = this.treeBoxObject.getFirstVisibleRow();
-         var i = 0;
-         if (f > 0) {
-           var p = this.treeBoxObject.getPageLength();
-           if (f - p >= 0)
-             i = c - p;
-           else
-             i = c - f;
-           this.treeBoxObject.scrollByPages(-1);
-         }
-         this.currentIndex = i;
-        ]]>
-      </handler>
-      <handler event="keypress" keycode="vk_page_down" modifiers="control">
-        <![CDATA[
-         var c = this.currentIndex;
-         var l = this.treeBoxObject.view.rowCount - 1;
-         if (c == l)
-           return;
-         var f = this.treeBoxObject.getFirstVisibleRow();
-         var p = this.treeBoxObject.getPageLength();
-         var i = l;
-         var lastTopRowIndex = l - p;
-         if (f <= lastTopRowIndex) {
-           if (f + p <= lastTopRowIndex)
-             i = c + p;
-           else
-             i = lastTopRowIndex + c - f + 1;
-           this.treeBoxObject.scrollByPages(1);
-         }
-         this.currentIndex = i;
-        ]]>
-      </handler>
-      <handler event="keypress" keycode="vk_home">
-        <![CDATA[
-         this.view.selection.timedSelect(0, this._selectDelay);
+         // Normal behaviour is to select the first row
+         if (!event.ctrlKey)
+           this.view.selection.timedSelect(0, this._selectDelay);
+         // In a multiselect tree Ctrl+Home moves the anchor
+         else if (!this.view.selection.single)
+           this.currentIndex = 0;
          this.treeBoxObject.ensureRowIsVisible(0);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_end">
+      <handler event="keypress" keycode="vk_end" modifiers="control any">
         <![CDATA[
          var l = this.treeBoxObject.view.rowCount - 1;
-         this.view.selection.timedSelect(l, this._selectDelay);
+         if (l < 0)
+           return;
+         // Normal behaviour is to select the last row
+         if (!event.ctrlKey)
+           this.view.selection.timedSelect(l, this._selectDelay);
+         // In a multiselect tree Ctrl+End moves the anchor
+         else if (!this.view.selection.single)
+           this.currentIndex = l;
          this.treeBoxObject.ensureRowIsVisible(l);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_home" modifiers="shift">
+      <handler event="keypress" keycode="vk_home" modifiers="control any, shift">
         <![CDATA[
          if (this.view.selection.single)
            return;
          // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, 0, false);
+         this.view.selection.rangedSelect(-1, 0, event.ctrlKey);
          this.treeBoxObject.ensureRowIsVisible(0);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_end" modifiers="shift">
+      <handler event="keypress" keycode="vk_end" modifiers="control any, shift">
         <![CDATA[
          if (this.view.selection.single)
            return;
          var l = this.treeBoxObject.view.rowCount - 1;
          // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, l, false);
-         this.treeBoxObject.ensureRowIsVisible(l);
-        ]]>
-      </handler>
-      <handler event="keypress" keycode="vk_home" modifiers="control">
-        <![CDATA[
-         this.currentIndex = 0;
-         this.treeBoxObject.ensureRowIsVisible(0);
-        ]]>
-      </handler>
-      <handler event="keypress" keycode="vk_end" modifiers="control">
-        <![CDATA[
-         var l = this.treeBoxObject.view.rowCount - 1;
-         this.currentIndex = l;
+         this.view.selection.rangedSelect(-1, l, event.ctrlKey);
          this.treeBoxObject.ensureRowIsVisible(l);
         ]]>
       </handler>
