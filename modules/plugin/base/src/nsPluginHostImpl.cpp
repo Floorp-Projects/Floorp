@@ -4380,8 +4380,10 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   if(mPluginsLoaded)
     return NS_OK;
 
+#ifdef CALL_SAFETY_ON
   // check preferences on whether or not we want to try safe calls to plugins
   NS_INIT_PLUGIN_SAFE_CALLS;
+#endif
 
   // retrieve a path for layout module. Needed for plugin mime types registration
   nsCOMPtr<nsIFile> path;
