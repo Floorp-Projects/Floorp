@@ -39,6 +39,20 @@ class nsIXPFCCommand;
 { 0x6bc9da40, 0xe9e7, 0x11d1,    \
 { 0x92, 0x44, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6 } }
 
+enum nsSplittableOrientation {  
+  nsSplittableOrientation_eastwest,            
+  nsSplittableOrientation_northsouth,
+  nsSplittableOrientation_northwest,
+  nsSplittableOrientation_northeast,
+  nsSplittableOrientation_southwest,
+  nsSplittableOrientation_southeast,
+  nsSplittableOrientation_north,
+  nsSplittableOrientation_south,
+  nsSplittableOrientation_east,
+  nsSplittableOrientation_west,
+  nsSplittableOrientation_none
+};
+
 /**
  * XPFC Canvas interface. This is the core interface to all 
  * renderable components in the XPFC world
@@ -617,6 +631,12 @@ public:
   NS_IMETHOD SetCommand(nsString& aCommand) = 0;
   NS_IMETHOD_(nsString&) GetCommand() = 0;
   NS_IMETHOD_(nsEventStatus) ProcessCommand(nsIXPFCCommand * aCommand) = 0;
+
+  NS_IMETHOD_(PRBool)   IsSplittable() = 0;
+  NS_IMETHOD_(PRBool)   IsOverSplittableRegion(nsPoint& aPoint) = 0;
+  NS_IMETHOD_(nsCursor) GetCursor(void) = 0;
+  NS_IMETHOD_(void)     SetCursor(nsCursor aCursor) = 0;
+  NS_IMETHOD_(nsSplittableOrientation)     GetSplittableOrientation(nsPoint& aPoint) = 0;
 
   /**
    * Dump the canvas hierarchy to a file

@@ -232,6 +232,11 @@ public:
 
   NS_IMETHOD FindLargestTabGroup(PRUint32& aTabGroup);
   NS_IMETHOD FindLargestTabID(PRUint32 aTabGroup, PRUint32& aTabID);
+  NS_IMETHOD_(PRBool)   IsSplittable() ;
+  NS_IMETHOD_(PRBool)   IsOverSplittableRegion(nsPoint& aPoint) ;
+  NS_IMETHOD_(nsCursor) GetCursor(void) ;
+  NS_IMETHOD_(void)     SetCursor(nsCursor aCursor) ;
+  NS_IMETHOD_(nsSplittableOrientation)     GetSplittableOrientation(nsPoint& aPoint) ;
 
   // nsIImageRequestObserver
   virtual void Notify(nsIImageRequest *aImageRequest,

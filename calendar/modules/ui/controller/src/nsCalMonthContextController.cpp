@@ -955,13 +955,13 @@ void nsCalMonthContextController::SetMousePickInfo(CMiniCalEvent *pe)
       GetValidPos(m_iPikMCRow, m_iPikMCCol, &iStartPos, &iStopPos);
       if ( m_iCellRow - 2 > iStopPos/7 )
       {
-        GetWidget()->SetCursor(eCursor_standard);
+        SetCursor(eCursor_standard);
       }
       else
       {
         pe->SetAction(CMiniCalEvent::MWEEK);
         pe->SetWeekOffset(m_iCellRow - 2);
-        GetWidget()->SetCursor(eCursor_hyperlink);
+        SetCursor(eCursor_hyperlink);
       }
       return;
     }
@@ -981,7 +981,7 @@ void nsCalMonthContextController::SetMousePickInfo(CMiniCalEvent *pe)
         {
             if (m_iCellCol == 0)
             {
-                GetWidget()->SetCursor(eCursor_hyperlink);
+                SetCursor(eCursor_hyperlink);
                 pe->SetAction(CMiniCalEvent::MLEFTARROW);
                 return;
             }
@@ -989,7 +989,7 @@ void nsCalMonthContextController::SetMousePickInfo(CMiniCalEvent *pe)
         if (nsCalMonthContextController::LEFT == m_eTitleAlign &&
             m_iCellCol == (5 + (GetWeeks() ? 1 : 0)) )
         {
-            GetWidget()->SetCursor(eCursor_hyperlink);
+            SetCursor(eCursor_hyperlink);
             pe->SetAction(CMiniCalEvent::MLEFTARROW);
             return;
         }
@@ -1000,14 +1000,14 @@ void nsCalMonthContextController::SetMousePickInfo(CMiniCalEvent *pe)
         {
             if (m_iCellCol == (6 + (GetWeeks() ? 1 : 0)) )
             {
-                GetWidget()->SetCursor(eCursor_hyperlink);
+                SetCursor(eCursor_hyperlink);
                 pe->SetAction(CMiniCalEvent::MRIGHTARROW);
                 return;
             }
         }
         if (nsCalMonthContextController::RIGHT == m_eTitleAlign && m_iCellCol == 1)
         {
-            GetWidget()->SetCursor(eCursor_hyperlink);
+            SetCursor(eCursor_hyperlink);
             pe->SetAction(CMiniCalEvent::MRIGHTARROW);
             return;
         }
@@ -1019,7 +1019,7 @@ void nsCalMonthContextController::SetMousePickInfo(CMiniCalEvent *pe)
     if (m_iCellRow == 1 && iCellCol >= 0 && iCellCol <= 6)
     {
       FindDOW(pe);
-      GetWidget()->SetCursor(eCursor_hyperlink);
+      SetCursor(eCursor_hyperlink);
       pe->SetAction(CMiniCalEvent::MDOW);
       return;
     }
@@ -1032,17 +1032,17 @@ void nsCalMonthContextController::SetMousePickInfo(CMiniCalEvent *pe)
       if (FindDate(pe))
       {
         FindDOW(pe);
-        GetWidget()->SetCursor(eCursor_hyperlink);
+        SetCursor(eCursor_hyperlink);
         pe->SetAction(CMiniCalEvent::MDATE);
       }
       else
       {
-        GetWidget()->SetCursor(eCursor_standard);
+        SetCursor(eCursor_standard);
       }
       return;
     }
 
-    GetWidget()->SetCursor(eCursor_standard);
+    SetCursor(eCursor_standard);
 }
 
 /**
