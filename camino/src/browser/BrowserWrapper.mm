@@ -527,11 +527,13 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)setTabTitle:(NSString*)tabTitle windowTitle:(NSString*)windowTitle
 {
+  const short kViewSourceLength = 12;         // strlen("view-source:")
+
   NSString* curURL = [self getCurrentURLSpec];
   [mTabTitle autorelease];
   if (tabTitle && [tabTitle length] > 0) {
     if ([curURL hasPrefix:@"view-source:"])
-      mTabTitle = [NSString stringWithFormat:NSLocalizedString(@"SourceOf", @""), tabTitle];
+      mTabTitle = [NSString stringWithFormat:NSLocalizedString(@"SourceOf", @""), [curURL substringFromIndex:kViewSourceLength]];
     else	
       mTabTitle = tabTitle;
   } 
@@ -542,7 +544,7 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   [mTitle autorelease];
   if (windowTitle && [windowTitle length] > 0) {
     if ([curURL hasPrefix:@"view-source:"])
-      mTitle = [NSString stringWithFormat:NSLocalizedString(@"SourceOf", @""), windowTitle];
+      mTitle = [NSString stringWithFormat:NSLocalizedString(@"SourceOf", @""), [curURL substringFromIndex:kViewSourceLength]];
     else
       mTitle = windowTitle;
   } 
