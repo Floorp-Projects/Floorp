@@ -145,13 +145,18 @@ plaintext, xmp, pre {
 
 /* tables */
 
-table, *|*:table {
+table {
   display: table;
   border-spacing: 2px; 
   border-collapse: separate;
   margin-top: 0;
   margin-bottom: 0;
   -moz-box-sizing: border-box;
+}
+
+*|*:table {
+  display: table;
+  -moz-box-sizing: border-box; /* XXX do we really want this? */
 }
 
 table[align="left"] {
