@@ -35,6 +35,9 @@ interface nsIHTMLDocShell : nsISupports
 	*/
 	void scrollToNode(in nsIDOMNode node);
 
+	/** if true, plugins are allowed within the doc shell.  default = true */
+	attribute boolean allowPlugins;
+
 	/*
 	XXX Comment here!
 	*/
