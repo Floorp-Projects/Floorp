@@ -3551,6 +3551,41 @@ nsGenericHTMLContainerFormElement::~nsGenericHTMLContainerFormElement()
 }
 
 nsresult
+nsGenericHTMLContainerFormElement::GetScriptObject(nsIScriptContext* aContext,
+                                                   void** aScriptObject)
+{
+  NS_ENSURE_ARG_POINTER(aScriptObject);
+
+  if (mDOMSlots && mDOMSlots->mScriptObject) {
+    *aScriptObject = mDOMSlots->mScriptObject;
+
+    return NS_OK;
+  }
+
+  nsresult rv = nsGenericElement::GetScriptObject(aContext, aScriptObject);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(*aScriptObject, NS_ERROR_FAILURE);
+
+  // If there's a form associated with this control we set the form as parent
+  // object for this controls script object.
+  nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(mForm));
+
+  if (owner) {
+    JSContext *ctx = (JSContext *)aContext->GetNativeContext();
+    JSObject *parent = nsnull;
+
+    rv = owner->GetScriptObject(aContext, (void **)&parent);
+
+    if (NS_SUCCEEDED(rv) && parent) {
+      ::JS_SetParent(ctx, (JSObject *)*aScriptObject, parent);
+    }
+  }
+  
+  return rv;
+}
+
+
+nsresult
 nsGenericHTMLContainerFormElement::SetForm(nsIForm* aForm)
 {
   mForm = aForm;
@@ -3600,6 +3635,42 @@ nsGenericHTMLLeafFormElement::~nsGenericHTMLLeafFormElement()
 {
   // Do nothing
 }
+
+
+nsresult
+nsGenericHTMLLeafFormElement::GetScriptObject(nsIScriptContext* aContext,
+                                              void** aScriptObject)
+{
+  NS_ENSURE_ARG_POINTER(aScriptObject);
+
+  if (mDOMSlots && mDOMSlots->mScriptObject) {
+    *aScriptObject = mDOMSlots->mScriptObject;
+
+    return NS_OK;
+  }
+
+  nsresult rv = nsGenericElement::GetScriptObject(aContext, aScriptObject);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(*aScriptObject, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(mForm));
+
+  // If there's a form associated with this control we set the form as parent
+  // object for this controls script object.
+  if (owner) {
+    JSContext *ctx = (JSContext *)aContext->GetNativeContext();
+    JSObject *parent = nsnull;
+
+    rv = owner->GetScriptObject(aContext, (void **)&parent);
+
+    if (NS_SUCCEEDED(rv) && parent) {
+      ::JS_SetParent(ctx, (JSObject *)*aScriptObject, parent);
+    }
+  }
+  
+  return rv;
+}
+
 
 nsresult
 nsGenericHTMLLeafFormElement::SetForm(nsIForm* aForm)
