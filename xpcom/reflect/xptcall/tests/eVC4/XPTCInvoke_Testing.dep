@@ -1,0 +1,250 @@
+# eMbedded Visual C++ Dependency File, included by XPTCInvoke_Testing.vcn
+
+!IF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE emulator) Release"
+
+.\StdAfx.cpp : \
+	".\StdAfx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE emulator) Debug"
+
+.\StdAfx.cpp : \
+	".\StdAfx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE ARMV4) Release"
+
+.\StdAfx.cpp : \
+	".\StdAfx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE ARMV4) Debug"
+
+.\StdAfx.cpp : \
+	".\StdAfx.h"\
+	
+
+!ENDIF 
+
+!IF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE emulator) Release"
+
+.\TestXPTCInvoke.cpp : \
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nscore.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsDebug.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsError.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIClassInfo.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsID.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIInterfaceInfo.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIMemory.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIProgrammingLanguage.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupports.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsBase.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsImpl.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsUtils.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsMemory.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsrootidl.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsTraceRefcnt.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsXPCOM.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsXPCOMCID.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpcom-config.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpt_arena.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpt_struct.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptcall.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptcstubsdecl.inc"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptinfo.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\obsolete\protypes.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\pratom.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prcpucfg.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prinrval.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prlock.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prlong.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prthread.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prtime.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE emulator) Debug"
+
+.\TestXPTCInvoke.cpp : \
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nscore.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsDebug.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsError.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIClassInfo.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsID.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIInterfaceInfo.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIMemory.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIProgrammingLanguage.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupports.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsBase.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsImpl.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsUtils.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsMemory.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsrootidl.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsTraceRefcnt.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsXPCOM.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsXPCOMCID.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpcom-config.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpt_arena.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpt_struct.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptcall.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptcstubsdecl.inc"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptinfo.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\obsolete\protypes.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\pratom.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prcpucfg.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prinrval.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prlock.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prlong.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prthread.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prtime.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prtypes.h"\
+	".\StdAfx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE ARMV4) Release"
+
+.\TestXPTCInvoke.cpp : \
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nscore.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsDebug.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsError.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIClassInfo.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsID.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIInterfaceInfo.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIMemory.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIProgrammingLanguage.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupports.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsBase.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsImpl.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsUtils.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsMemory.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsrootidl.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsTraceRefcnt.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsXPCOM.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsXPCOMCID.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpcom-config.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpt_arena.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpt_struct.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptcall.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptcstubsdecl.inc"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptinfo.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\obsolete\protypes.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\pratom.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prcpucfg.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prinrval.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prlock.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prlong.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prthread.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prtime.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prtypes.h"\
+	".\StdAfx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE ARMV4) Debug"
+
+.\TestXPTCInvoke.cpp : \
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nscore.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsDebug.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsError.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIClassInfo.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsID.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIInterfaceInfo.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIMemory.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIProgrammingLanguage.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupports.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsBase.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsImpl.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsUtils.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsMemory.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsrootidl.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsTraceRefcnt.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsXPCOM.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsXPCOMCID.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpcom-config.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpt_arena.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpt_struct.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptcall.h"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptcstubsdecl.inc"\
+	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptinfo.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\obsolete\protypes.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\pratom.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prcpucfg.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prinrval.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prlock.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prlong.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prthread.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prtime.h"\
+	"..\..\..\..\..\arm_ppc\dist\sdk\include\prtypes.h"\
+	".\StdAfx.h"\
+	
+
+!ENDIF 
+
+!IF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE emulator) Release"
+
+.\XPTCInvoke_Testing.cpp : \
+	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\aygshell.h"\
+	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\sipapi.h"\
+	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\winuserm.h"\
+	".\StdAfx.h"\
+	".\XPTCInvoke_Testing.h"\
+	
+
+!ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE emulator) Debug"
+
+.\XPTCInvoke_Testing.cpp : \
+	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\aygshell.h"\
+	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\sipapi.h"\
+	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\winuserm.h"\
+	".\StdAfx.h"\
+	".\XPTCInvoke_Testing.h"\
+	
+
+!ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE ARMV4) Release"
+
+.\XPTCInvoke_Testing.cpp : \
+	".\StdAfx.h"\
+	".\XPTCInvoke_Testing.h"\
+	
+
+!ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE ARMV4) Debug"
+
+.\XPTCInvoke_Testing.cpp : \
+	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4\aygshell.h"\
+	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4\sipapi.h"\
+	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4\winuserm.h"\
+	".\StdAfx.h"\
+	".\XPTCInvoke_Testing.h"\
+	
+
+!ENDIF 
+
+!IF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE emulator) Release"
+
+.\XPTCInvoke_Testing.rc : \
+	".\newres.h"\
+	".\XPTCInvoke_Testing.ico"\
+	
+
+!ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE emulator) Debug"
+
+.\XPTCInvoke_Testing.rc : \
+	".\newres.h"\
+	".\XPTCInvoke_Testing.ico"\
+	
+
+!ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE ARMV4) Release"
+
+.\XPTCInvoke_Testing.rc : \
+	".\newres.h"\
+	".\XPTCInvoke_Testing.ico"\
+	
+
+!ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE ARMV4) Debug"
+
+.\XPTCInvoke_Testing.rc : \
+	".\newres.h"\
+	".\XPTCInvoke_Testing.ico"\
+	
+
+!ENDIF 
+
