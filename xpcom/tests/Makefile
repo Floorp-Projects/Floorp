@@ -31,7 +31,7 @@ INCLUDES=-I../src -I$(DIST)/include
 DIRS = dynamic 
 
 EX_LIBS = \
-        $(DIST)/bin/libreg.$(DLL_SUFFIX)	\
+	$(DIST)/bin/libreg.$(DLL_SUFFIX)	\
 	$(DIST)/bin/libxpcom.$(DLL_SUFFIX)	\
 	$(DIST)/lib/libplc21.a	\
 	$(DIST)/lib/libplds21.a	\
@@ -48,8 +48,6 @@ include $(DEPTH)/config/rules.mk
 $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
 	@$(MAKE_OBJDIR)
 	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS)
-
-export::
 
 install:: $(PROGS)
 	$(INSTALL) $(PROGS) $(DIST)/bin
