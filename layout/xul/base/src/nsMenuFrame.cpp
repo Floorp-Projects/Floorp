@@ -458,7 +458,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
     mMenuParent->GetIsContextMenu(isContextMenu);
     if ( isContextMenu ) {
       *aEventStatus = nsEventStatus_eConsumeNoDefault;
-      Execute();
+      Execute(aEvent);
     }
   }
   else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && !IsMenu() && mMenuParent && !IsDisabled()) {
@@ -479,7 +479,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
     }
 
     // Execute the execute event handler.
-    Execute();
+    Execute(aEvent);
   }
   else if (aEvent->message == NS_MOUSE_EXIT_SYNTH) {
     // Kill our timer if one is active.
@@ -1281,7 +1281,7 @@ nsMenuFrame::Enter()
   if (!mMenuOpen) {
     // The enter key press applies to us.
     if (!IsMenu() && mMenuParent)
-      Execute();          // Execute our event handler
+      Execute(0);          // Execute our event handler
     else {
       OpenMenu(PR_TRUE);
       SelectFirstItem();
@@ -1625,7 +1625,7 @@ nsMenuFrame::BuildAcceleratorText()
 }
 
 void
-nsMenuFrame::Execute()
+nsMenuFrame::Execute(nsGUIEvent *aEvent)
 {
   // Temporarily disable rollup events on this menu.  This is
   // to suppress this menu getting removed in the case where
@@ -1648,10 +1648,20 @@ nsMenuFrame::Execute()
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
   event.message = NS_XUL_COMMAND;
-  event.isShift = PR_FALSE;
-  event.isControl = PR_FALSE;
-  event.isAlt = PR_FALSE;
-  event.isMeta = PR_FALSE;
+  if (aEvent && (aEvent->eventStructType == NS_MOUSE_EVENT ||
+                 aEvent->eventStructType == NS_KEY_EVENT ||
+                 aEvent->eventStructType == NS_ACCESSIBLE_EVENT)) {
+
+    event.isShift = NS_STATIC_CAST(nsInputEvent *, aEvent)->isShift;
+    event.isControl = NS_STATIC_CAST(nsInputEvent *, aEvent)->isControl;
+    event.isAlt = NS_STATIC_CAST(nsInputEvent *, aEvent)->isAlt;
+    event.isMeta = NS_STATIC_CAST(nsInputEvent *, aEvent)->isMeta;
+  } else {
+    event.isShift = PR_FALSE;
+    event.isControl = PR_FALSE;
+    event.isAlt = PR_FALSE;
+    event.isMeta = PR_FALSE;
+  }
   event.clickCount = 0;
   event.widget = nsnull;
   // The order of the nsIViewManager and nsIPresShell COM pointers is

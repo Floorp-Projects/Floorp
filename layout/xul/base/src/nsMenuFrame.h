@@ -210,7 +210,7 @@ protected:
   void BuildAcceleratorText();
 
   // Called to execute our command handler.
-  void Execute();
+  void Execute(nsGUIEvent *aEvent);
 
   // Called as a hook just before the menu gets opened.
   PRBool OnCreate();
