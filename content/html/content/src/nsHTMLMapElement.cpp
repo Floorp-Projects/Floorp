@@ -152,6 +152,9 @@ nsHTMLMapElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   rv = nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
                                                   aCompileEventHandlers);
 
+  // Since we changed the document, gotta re-QI
+  htmlDoc = do_QueryInterface(mDocument);
+
   if (NS_SUCCEEDED(rv) && htmlDoc) {
     htmlDoc->AddImageMap(this);
   }
