@@ -67,7 +67,7 @@
                    accesskey="&openUsing.accesskey;"/>
           </box>
                
-          <box class="indent">
+          <box class="indent" autostretch="never">
             <button id="chooseApp"
                     class="dialog"
                     label="&chooseApp.label;"
