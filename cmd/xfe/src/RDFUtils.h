@@ -70,6 +70,7 @@ public:
     static HT_Resource		ht_FindNextItem			(HT_Resource  item);
     static HT_Resource		ht_FindPreviousItem		(HT_Resource  item);
 
+    static XP_Bool			ht_FolderHasChildren		(HT_Resource  folder);
     static XP_Bool			ht_FolderHasFolderChildren	(HT_Resource  folder);
   
 	//////////////////////////////////////////////////////////////////////

@@ -196,6 +196,15 @@ XFE_RDFUtils::ht_FindPreviousItem(HT_Resource current)
 }
 //////////////////////////////////////////////////////////////////////////
 /* static */ XP_Bool
+XFE_RDFUtils::ht_FolderHasChildren(HT_Resource header)
+{
+    XP_ASSERT( header != NULL );
+    XP_ASSERT( HT_IsContainer(header) );
+
+    return (HT_GetCountDirectChildren(header) > 0);
+}
+//////////////////////////////////////////////////////////////////////////
+/* static */ XP_Bool
 XFE_RDFUtils::ht_FolderHasFolderChildren(HT_Resource header)
 {
     XP_ASSERT( header != NULL );
