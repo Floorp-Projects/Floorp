@@ -1405,6 +1405,108 @@ pk11_handleKeyObject(PK11Session *session, PK11Object *object)
     return CKR_ATTRIBUTE_VALUE_INVALID;
 }
 
+/*
+ * check the consistancy and Verify a DSA Parameter Object 
+ */
+static CK_RV
+pk11_handleDSAParameterObject(PK11Session *session, PK11Object *object)
+{
+    PK11Attribute *primeAttr = NULL;
+    PK11Attribute *subPrimeAttr = NULL;
+    PK11Attribute *baseAttr = NULL;
+    PK11Attribute *seedAttr = NULL;
+    PK11Attribute *hAttr = NULL;
+    PK11Attribute *attribute;
+    CK_RV crv = CKR_TEMPLATE_INCOMPLETE;
+    PQGParams params;
+    PQGVerify vfy, *verify = NULL;
+    SECStatus result,rv;
+
+    primeAttr = pk11_FindAttribute(object,CKA_PRIME);
+    if (primeAttr == NULL) goto loser;
+    params.prime.data = primeAttr->attrib.pValue;
+    params.prime.len = primeAttr->attrib.ulValueLen;
+
+    subPrimeAttr = pk11_FindAttribute(object,CKA_SUBPRIME);
+    if (subPrimeAttr == NULL) goto loser;
+    params.subPrime.data = subPrimeAttr->attrib.pValue;
+    params.subPrime.len = subPrimeAttr->attrib.ulValueLen;
+
+    baseAttr = pk11_FindAttribute(object,CKA_BASE);
+    if (baseAttr == NULL) goto loser;
+    params.base.data = baseAttr->attrib.pValue;
+    params.base.len = baseAttr->attrib.ulValueLen;
+
+    attribute = pk11_FindAttribute(object, CKA_NETSCAPE_PQG_COUNTER);
+    if (attribute != NULL) {
+	vfy.counter = *(CK_ULONG *) attribute->attrib.pValue;
+	pk11_FreeAttribute(attribute);
+
+	seedAttr = pk11_FindAttribute(object, CKA_NETSCAPE_PQG_SEED);
+	if (seedAttr == NULL) goto loser;
+	vfy.seed.data = seedAttr->attrib.pValue;
+	vfy.seed.len = seedAttr->attrib.ulValueLen;
+
+	hAttr = pk11_FindAttribute(object, CKA_NETSCAPE_PQG_H);
+	if (hAttr == NULL) goto loser;
+	vfy.h.data = hAttr->attrib.pValue;
+	vfy.h.len = hAttr->attrib.ulValueLen;
+
+	verify = &vfy;
+    }
+
+    crv = CKR_FUNCTION_FAILED;
+    rv = PQG_VerifyParams(&params,verify,&result);
+    if (rv == SECSuccess) {
+	crv = (result== SECSuccess) ? CKR_OK : CKR_ATTRIBUTE_VALUE_INVALID;
+    }
+
+loser:
+    if (hAttr) pk11_FreeAttribute(hAttr);
+    if (seedAttr) pk11_FreeAttribute(seedAttr);
+    if (baseAttr) pk11_FreeAttribute(baseAttr);
+    if (subPrimeAttr) pk11_FreeAttribute(subPrimeAttr);
+    if (primeAttr) pk11_FreeAttribute(primeAttr);
+
+    return crv;
+}
+
+/*
+ * check the consistancy and initialize a Key Parameter Object 
+ */
+static CK_RV
+pk11_handleKeyParameterObject(PK11Session *session, PK11Object *object)
+{
+    PK11Attribute *attribute;
+    CK_KEY_TYPE key_type;
+    CK_BBOOL cktrue = CK_TRUE;
+    CK_BBOOL ckfalse = CK_FALSE;
+    CK_RV crv;
+
+    /* verify the required fields */
+    if ( !pk11_hasAttribute(object,CKA_KEY_TYPE) ) {
+	return CKR_TEMPLATE_INCOMPLETE;
+    }
+
+    /* now verify the common fields */
+    crv = pk11_defaultAttribute(object,CKA_LOCAL,&ckfalse,sizeof(CK_BBOOL));
+    if (crv != CKR_OK)  return crv; 
+
+    /* get the key type */
+    attribute = pk11_FindAttribute(object,CKA_KEY_TYPE);
+    key_type = *(CK_KEY_TYPE *)attribute->attrib.pValue;
+    pk11_FreeAttribute(attribute);
+
+    switch (key_type) {
+    case CKK_DSA:
+	return pk11_handleDSAParameterObject(session,object);
+	
+    default:
+	break;
+    }
+    return CKR_KEY_TYPE_INCONSISTENT;
+}
+
 /* 
  * Handle Object does all the object consistancy checks, automatic attribute
  * generation, attribute defaulting, etc. If handleObject succeeds, the object
@@ -1479,6 +1581,9 @@ pk11_handleObject(PK11Object *object, PK11Session *session)
     case CKO_PUBLIC_KEY:
     case CKO_SECRET_KEY:
 	crv = pk11_handleKeyObject(session,object);
+	break;
+    case CKO_KG_PARAMETERS:
+	crv = pk11_handleKeyParameterObject(session,object);
 	break;
     default:
 	crv = CKR_ATTRIBUTE_VALUE_INVALID;
