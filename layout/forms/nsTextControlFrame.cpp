@@ -1730,6 +1730,15 @@ nsTextControlFrame::InitEditor()
       return rv;
   }
 
+  if (IsPasswordTextControl()) {
+    // Disable undo for password textfields.  Note that we want to do this at
+    // the very end of InitEditor, so the calls to EnableUndo when setting the
+    // default value don't screw us up.
+    // Since changing the control type does a reframe, we don't have to worry
+    // about dynamic type changes here.
+    mEditor->EnableUndo(PR_FALSE);
+  }
+
   return NS_OK;
 }
 
