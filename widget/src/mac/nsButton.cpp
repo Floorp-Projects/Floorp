@@ -31,49 +31,36 @@
 NS_IMPL_ADDREF(nsButton)
 NS_IMPL_RELEASE(nsButton)
 
-//-------------------------------------------------------------------------
-//
-// nsButton constructor
-//
-//-------------------------------------------------------------------------
+/**-------------------------------------------------------------------------------
+ * nsButton Constructor
+ *  @update  dc 08/31/98
+ */
 nsButton::nsButton()
 {
   strcpy(gInstanceClassName, "nsButton");
   mWidgetArmed = PR_FALSE;
 }
 
-/**
- * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
-*/ 
-nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    static NS_DEFINE_IID(kIButton, NS_IBUTTON_IID);
-    if (aIID.Equals(kIButton)) {
-        *aInstancePtr = (void*) ((nsIButton*)this);
-        AddRef();
-        return NS_OK;
-    }
-
-    return nsWindow::QueryInterface(aIID,aInstancePtr);
-}
-
-
+/**-------------------------------------------------------------------------------
+ * The create method for a button, using a nsIWidget as the parent
+ * @update  dc 08/31/98
+ * @param  aParent -- the widget which will be this widgets parent in the tree
+ * @param  aRect -- The bounds in parental coordinates of this widget
+ * @param  aHandleEventFunction -- Procedures to be executed for this widget
+ * @param  aContext -- device context to be used by this widget
+ * @param  aAppShell -- 
+ * @param  aToolkit -- toolkit to be used by this widget
+ * @param  aInitData -- Initialization data used by frames
+ * @return -- NS_OK if everything was created correctly
+ */ 
 NS_IMETHODIMP nsButton::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext */*aContext*/,
                       nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
-                      nsWidgetInitData */*aInitData*/) 
+                      nsWidgetInitData *aInitData) 
 {
-
   mParent = aParent;
   aParent->AddChild(this);
 	
@@ -91,8 +78,7 @@ NS_IMETHODIMP nsButton::Create(nsIWidget *aParent,
 	mWindowPtr = (WindowPtr)window;
   
   NS_ASSERTION(window!=nsnull,"The WindowPtr for the widget cannot be null")
-	if (window)
-	{
+	if (window){
 	  InitToolkit(aToolkit, aParent);
 	  // InitDeviceContext(aContext, parentWidget);
 		
@@ -118,6 +104,18 @@ NS_IMETHODIMP nsButton::Create(nsIWidget *aParent,
 	return NS_OK;
 }
 
+/**-------------------------------------------------------------------------------
+ * The create method for a button, using a nsNativeWidget as the parent
+ * @update  dc 08/31/98
+ * @param  aParent -- the widget which will be this widgets parent in the tree
+ * @param  aRect -- The bounds in parental coordinates of this widget
+ * @param  aHandleEventFunction -- Procedures to be executed for this widget
+ * @param  aContext -- device context to be used by this widget
+ * @param  aAppShell -- 
+ * @param  aToolkit -- toolkit to be used by this widget
+ * @param  aInitData -- Initialization data used by frames
+ * @return -- NS_OK if everything was created correctly
+ */ 
 NS_IMETHODIMP nsButton::Create(nsNativeWidget /*aParent*/,
                       const nsRect &/*aRect*/,
                       EVENT_CALLBACK /*aHandleEventFunction*/,
@@ -130,46 +128,73 @@ NS_IMETHODIMP nsButton::Create(nsNativeWidget /*aParent*/,
 	return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
-// nsButton destructor
-//
-//-------------------------------------------------------------------------
+/**-------------------------------------------------------------------------------
+ * Destuctor for the button
+ * @update  dc 08/31/98
+ */ 
 nsButton::~nsButton()
 {
 }
 
+/**-------------------------------------------------------------------------------
+ * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
+ * @update  dc 08/31/98
+ * @param aIID The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+ */ 
+nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+	if (NULL == aInstancePtr) {
+	    return NS_ERROR_NULL_POINTER;
+	}
 
+	static NS_DEFINE_IID(kIButton, NS_IBUTTON_IID);
+	if (aIID.Equals(kIButton)) {
+	    *aInstancePtr = (void*) ((nsIButton*)this);
+	    AddRef();
+	    return NS_OK;
+	}
 
-//-------------------------------------------------------------------------
-//
-// paint message. Don't send the paint out
-//
-//-------------------------------------------------------------------------
+	return nsWindow::QueryInterface(aIID,aInstancePtr);
+}
+
+/**-------------------------------------------------------------------------------
+ * The onPaint handleer for a button -- this may change, inherited from windows
+ * @param aEvent -- The paint event to respond to
+ * @return -- PR_TRUE if painted, false otherwise
+ */ 
 PRBool nsButton::OnPaint(nsPaintEvent &aEvent)
 {
-	
-	  
 	DrawWidget(FALSE,aEvent.renderingContext);	
   return PR_FALSE;
 }
 
+/**-------------------------------------------------------------------------------
+ * Resizes the button, currently handles by nsWindow
+ * @update  dc 08/31/98
+ * @Param aEvent -- The event for this resize
+ * @return -- True if the event was handled, PR_FALSE is always return for now
+ */ 
 PRBool nsButton::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
 }
 
-
-PRBool 
-nsButton::DispatchMouseEvent(nsMouseEvent &aEvent)
+/**-------------------------------------------------------------------------------
+ * DispatchMouseEvent handle an event for this button
+ * @update  dc 08/31/98
+ * @Param aEvent -- The mouse event to respond to for this button
+ * @return -- True if the event was handled, PR_FALSE if we did not handle it.
+ */ 
+PRBool nsButton::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
-PRBool 							result;
+PRBool 							result=PR_FALSE;
 nsIRenderingContext	*theRC;
 	
 	theRC = this->GetRenderingContext();
 	
-	switch (aEvent.message)
-		{
+	switch (aEvent.message){
 		case NS_MOUSE_LEFT_BUTTON_DOWN:
 			mMouseDownInButton = PR_TRUE;
 			DrawWidget(PR_TRUE,theRC);
@@ -183,19 +208,17 @@ nsIRenderingContext	*theRC;
 				result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_EXIT:
-			if(mMouseDownInButton)
-				{
+			if(mMouseDownInButton){
 				DrawWidget(PR_FALSE,theRC);
 				mWidgetArmed = PR_FALSE;
-				}
+			}
 			result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_ENTER:
-			if(mMouseDownInButton)
-				{
+			if(mMouseDownInButton){
 				DrawWidget(PR_TRUE,theRC);
 				mWidgetArmed = PR_TRUE;
-				}
+			}
 			result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		}
@@ -204,9 +227,9 @@ nsIRenderingContext	*theRC;
 }
 
 
-//-------------------------------------------------------------------------
-/*  Draw in the different modes depending on the state of the mouse and buttons
- *  @update  dc 08/31/98
+/**-------------------------------------------------------------------------------
+ *  Draw in the different modes depending on the state of the mouse and buttons
+ *  @update  dc 10/16/98
  *  @param   aMouseInside -- A boolean indicating if the mouse is inside the control
  *  @return  nothing is returned
  */
@@ -214,38 +237,37 @@ void
 nsButton::DrawWidget(PRBool	aMouseInside,nsIRenderingContext	*aTheContext)
 {
 PRInt16							width,x,y;
-PRInt32							offx,offy;
-nsRect							therect;
-Rect								macrect,crect;
-GrafPtr							theport;
-RGBColor						blackcolor = {0,0,0};
-RgnHandle						thergn;
+PRInt32							offX,offY;
+nsRect							theRect;
+Rect								macRect;
+GrafPtr							thePort;
+RGBColor						blackColor = {0,0,0};
+RgnHandle						theRgn;
 
 
-	CalcOffset(offx,offy);
-	GetPort(&theport);
+	CalcOffset(offX,offY);
+	GetPort(&thePort);
 	::SetPort(mWindowPtr);
-	::SetOrigin(-offx,-offy);
-	GetBounds(therect);
-	nsRectToMacRect(therect,macrect);
+	::SetOrigin(-offX,-offY);
+	GetBounds(theRect);
+	nsRectToMacRect(theRect,macRect);
 	
-	crect = macrect;
-	thergn = ::NewRgn();
-	::GetClip(thergn);
-	::ClipRect(&crect);
+	theRgn = ::NewRgn();
+	::GetClip(theRgn);
+	::ClipRect(&macRect);
 	::PenNormal();
-	::RGBForeColor(&blackcolor);
+	::RGBForeColor(&blackColor);
 	
-	::EraseRoundRect(&macrect,10,10);
+	::EraseRoundRect(&macRect,10,10);
 	::PenSize(1,1);
-	::FrameRoundRect(&macrect,10,10); 
+	::FrameRoundRect(&macRect,10,10); 
 
   Str255 label;	
 	StringToStr255(mLabel, label);
 	
 	
 	width = ::StringWidth(label);
-	x = (macrect.left+macrect.right)/2 - (width/2);
+	x = (macRect.left+macRect.right)/2 - (width/2);
 	
 	::TextFont(0);
 	::TextSize(12);
@@ -253,39 +275,39 @@ RgnHandle						thergn;
 	//::GetFontInfo(&fi);
 	//height = fi.ascent;
 	//height = 6;
-	y = (macrect.top+macrect.bottom)/2 + 6;
+	y = (macRect.top+macRect.bottom)/2 + 6;
 	::MoveTo(x,y);
 	::DrawString(label);
 		
-	if(mMouseDownInButton && aMouseInside)
-		 ::InvertRoundRect(&macrect,10,10);
+	if(mMouseDownInButton && aMouseInside){
+		 ::InvertRoundRect(&macRect,10,10);
+	}
 		
 	::PenSize(1,1);
-	::SetClip(thergn);
+	::SetClip(theRgn);
+	::DisposeRgn(theRgn);
 	::SetOrigin(0,0);
-	::SetPort(theport);
+	::SetPort(thePort);
 }
 
-/** nsIButton Implementation **/
-
-/**
-	* Set the label for this object to be equal to aText
-	*
-	* @param  Set the label to aText
-	* @result NS_Ok if no errors
-	*/
+/**-------------------------------------------------------------------------------
+ * Set the label for this object to be equal to aText
+ * @update  dc 08/31/98
+ * @param  Set the label to aText
+ * @result NS_Ok if no errors
+ */
 NS_METHOD nsButton::SetLabel(const nsString& aText)
 {
 	mLabel = aText;
 	return NS_OK;
 }
 
-/**
-	* Set a buffer to be equal to this objects label
-	*
-	* @param  Put the contents of the label into aBuffer
-	* @result NS_Ok if no errors
-	*/
+/**-------------------------------------------------------------------------------
+ * Set a buffer to be equal to this objects label
+ * @update  dc 08/31/98
+ * @param  Put the contents of the label into aBuffer
+ * @result NS_Ok if no errors
+ */
 NS_METHOD nsButton::GetLabel(nsString& aBuffer)
 {
 	aBuffer = mLabel;

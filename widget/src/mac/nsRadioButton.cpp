@@ -26,56 +26,27 @@ NS_IMPL_ADDREF(nsRadioButton)
 NS_IMPL_RELEASE(nsRadioButton)
 
 #define DBG 0
-//-------------------------------------------------------------------------
-//
-// nsRadioButton constructor
-//
-//-------------------------------------------------------------------------
+/**-------------------------------------------------------------------------------
+ * nsRadioButton Constructor
+ */
 nsRadioButton::nsRadioButton() : nsWindow(), nsIRadioButton() 
 {
   strcpy(gInstanceClassName, "nsRadioButton");
   mButtonSet = PR_FALSE;
 }
 
-
-/*
- * Convert an nsPoint into mac local coordinated.
- * The tree hierarchy is navigated upwards, changing
- * the x,y offset by the parent's coordinates
- *
- */
-void nsRadioButton::LocalToWindowCoordinate(nsPoint& aPoint)
-{
-	nsIWidget* 	parent = GetParent();
-  nsRect 			bounds;
-  
-	while (parent)
-	{
-		parent->GetBounds(bounds);
-		aPoint.x += bounds.x;
-		aPoint.y += bounds.y;	
-		parent = parent->GetParent();
-	}
-}
-
-/* 
- * Convert an nsRect's local coordinates to global coordinates
- */
-void nsRadioButton::LocalToWindowCoordinate(nsRect& aRect)
-{
-	nsIWidget* 	parent = GetParent();
-  nsRect 			bounds;
-  
-	while (parent)
-	{
-		parent->GetBounds(bounds);
-		aRect.x += bounds.x;
-		aRect.y += bounds.y;	
-		parent = parent->GetParent();
-	}
-}
-
-
+/**-------------------------------------------------------------------------------
+ * The create method for a nsRadioButton, using a nsIWidget as the parent
+ * @update  dc 08/31/98
+ * @param  aParent -- the widget which will be this widgets parent in the tree
+ * @param  aRect -- The bounds in parental coordinates of this widget
+ * @param  aHandleEventFunction -- Procedures to be executed for this widget
+ * @param  aContext -- device context to be used by this widget
+ * @param  aAppShell -- 
+ * @param  aToolkit -- toolkit to be used by this widget
+ * @param  aInitData -- Initialization data used by frames
+ * @return -- NS_OK if everything was created correctly
+ */ 
 NS_IMETHODIMP nsRadioButton::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
@@ -103,8 +74,7 @@ NS_IMETHODIMP nsRadioButton::Create(nsIWidget *aParent,
 	mWindowPtr = (WindowPtr)window;
   
   NS_ASSERTION(window!=nsnull,"The WindowPtr for the widget cannot be null")
-	if (window)
-	{
+	if (window){
 	  InitToolkit(aToolkit, aParent);
 	  // InitDeviceContext(aContext, parentWidget);
 
@@ -147,6 +117,18 @@ NS_IMETHODIMP nsRadioButton::Create(nsIWidget *aParent,
 	return NS_OK;
 }
 
+/**-------------------------------------------------------------------------------
+ * The create method for a Radiobutton, using a nsNativeWidget as the parent
+ * @update  dc 08/31/98
+ * @param  aParent -- the widget which will be this widgets parent in the tree
+ * @param  aRect -- The bounds in parental coordinates of this widget
+ * @param  aHandleEventFunction -- Procedures to be executed for this widget
+ * @param  aContext -- device context to be used by this widget
+ * @param  aAppShell -- 
+ * @param  aToolkit -- toolkit to be used by this widget
+ * @param  aInitData -- Initialization data used by frames
+ * @return -- NS_OK if everything was created correctly
+ */ 
 NS_IMETHODIMP nsRadioButton::Create(nsNativeWidget /*aParent*/,
                       const nsRect &/*aRect*/,
                       EVENT_CALLBACK /*aHandleEventFunction*/,
@@ -160,20 +142,20 @@ NS_IMETHODIMP nsRadioButton::Create(nsNativeWidget /*aParent*/,
 }
 
 //-------------------------------------------------------------------------
-//
-// nsRadioButton destructor
-//
-//-------------------------------------------------------------------------
+/**
+ * Destuctor for the nsCheckButton
+ */ 
 nsRadioButton::~nsRadioButton()
 {
 }
 
-/**
+/**-------------------------------------------------------------------------------
  * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
+ * @update  dc 08/31/98
  * @param aIID The name of the class implementing the method
  * @param _classiiddef The name of the #define symbol that defines the IID
  * for the class (e.g. NS_ISUPPORTS_IID)
-*/ 
+ */ 
 nsresult nsRadioButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     if (NULL == aInstancePtr) {
@@ -190,11 +172,12 @@ nsresult nsRadioButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return nsWindow::QueryInterface(aIID,aInstancePtr);
 }
 
-//-------------------------------------------------------------------------
-//
-// paint message. Don't send the paint out
-//
-//-------------------------------------------------------------------------
+/**-------------------------------------------------------------------------------
+ * The onPaint handleer for a nsRadioButton -- this may change, inherited from windows
+ * @update  dc 08/31/98
+ * @param aEvent -- The paint event to respond to
+ * @return -- PR_TRUE if painted, false otherwise
+ */ 
 PRBool nsRadioButton::OnPaint(nsPaintEvent &aEvent)
 {
 	  
@@ -202,40 +185,29 @@ PRBool nsRadioButton::OnPaint(nsPaintEvent &aEvent)
   return PR_FALSE;
 }
 
+/**-------------------------------------------------------------------------------
+ * Resizes the nsRadioButton, currently handles by nsWindow
+ * @Param aEvent -- The event for this resize
+ * @return -- True if the event was handled, PR_FALSE is always return for now
+ */ 
 PRBool nsRadioButton::OnResize(nsSizeEvent &aEvent)
 {
-    return PR_FALSE;
+	return PR_FALSE;
 }
 
 
-#ifdef NOTNOW
-/*
- *  @update  gpk 08/27/98
- *  @param   aX -- x offset in widget local coordinates
- *  @param   aY -- y offset in widget local coordinates
- *  @return  PR_TRUE if the pt is contained in the widget
- */
-PRBool
-nsRadioButton::PtInWindow(PRInt32 aX,PRInt32 aY)
-{
-	PRBool	result = PR_FALSE;
-	nsPoint	hitPt(aX,aY);
-	nsRect	bounds;
-	
-	GetBounds(bounds);
-	if(bounds.Contains(hitPt))
-		result = PR_TRUE;
-	return(result);
-}
-#endif
-
+/**-------------------------------------------------------------------------------
+ * DispatchMouseEvent handle an event for this button
+ * @update  dc 08/31/98
+ * @Param aEvent -- The mouse event to respond to for this button
+ * @return -- True if the event was handled, PR_FALSE if we did not handle it.
+ */ 
 PRBool 
 nsRadioButton::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
 PRBool 	result;
 	
-	switch (aEvent.message)
-		{
+	switch (aEvent.message){
 		case NS_MOUSE_LEFT_BUTTON_DOWN:
 			mMouseDownInButton = PR_TRUE;
 			DrawWidget(PR_TRUE);
@@ -244,10 +216,9 @@ PRBool 	result;
 			break;
 		case NS_MOUSE_LEFT_BUTTON_UP:
 			mMouseDownInButton = PR_FALSE;
-			if(mWidgetArmed==PR_TRUE)
-				{
+			if(mWidgetArmed==PR_TRUE){
 				result = nsWindow::DispatchMouseEvent(aEvent);
-				}
+			}
 			DrawWidget(PR_TRUE);
 			break;
 		case NS_MOUSE_EXIT:
@@ -260,17 +231,17 @@ PRBool 	result;
 			mWidgetArmed = PR_TRUE;
 			result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
-		}
+	}
 	
 	return result;
 }
 
 
-//-------------------------------------------------------------------------
-/*  Track this control and draw in the different modes depending on the state of the mouse and buttons
- *  @update  dc 08/31/98
- *  @param   aMouseInside -- A boolean indicating if the mouse is inside the control
- *  @return  nothing is returned
+/**-------------------------------------------------------------------------------
+ * Draw in the different modes depending on the state of the mouse and nsRadioButton state
+ * @update  dc 08/31/98
+ * @param   aMouseInside -- A boolean indicating if the mouse is inside the control
+ * @return  nothing is returned
  */
 void
 nsRadioButton::DrawWidget(PRBool	aMouseInside)
@@ -316,11 +287,10 @@ Str255		tempstring;
 		
 	if(  (mButtonSet && !mMouseDownInButton) ||  
 	     (mMouseDownInButton && aMouseInside && !mButtonSet) ||
-	      (mMouseDownInButton && !aMouseInside && mButtonSet) )
-		{
+	      (mMouseDownInButton && !aMouseInside && mButtonSet) ){
 		::InsetRect(&rb,2,2);
 		::PaintOval(&rb);
-		}
+	}
 		
 	::PenSize(1,1);
 	::SetClip(thergn);
@@ -328,23 +298,18 @@ Str255		tempstring;
 	::SetPort(theport);
 }
 
-
-
-/** nsIRadioButton Implementation **/
-
-/**
- * Set the check state.
- * @param aState PR_TRUE show as checked. PR_FALSE show unchecked.
- * @result set to NS_OK if method successful
+/**-------------------------------------------------------------------------------
+ * Set the state for this RadioButton
+ * @update  dc 08/31/98
+ * @param  aState -- boolean TRUE if hilited, FALSE otherwise
+ * @result NS_Ok 
  */
-
 NS_METHOD nsRadioButton::SetState(PRBool aState) 
 {
-  int state = aState;
+int state = aState;
   
   mButtonSet = aState;
   DrawWidget(PR_FALSE);
-  
   return NS_OK;
   
   //if (mIsArmed) {
@@ -353,8 +318,9 @@ NS_METHOD nsRadioButton::SetState(PRBool aState)
   //}
 }
 
-/**
- * Get the check state.
+/**-------------------------------------------------------------------------------
+ * Get the RadioButtons state.
+ * @update  dc 08/31/98
  * @param aState PR_TRUE if checked. PR_FALSE if unchecked.
  * @result set to NS_OK if method successful
  */
@@ -366,24 +332,24 @@ NS_METHOD nsRadioButton::GetState(PRBool& aState)
 
 
 
-/**
-	* Set the label for this object to be equal to aText
-	*
-	* @param  Set the label to aText
-	* @result NS_Ok if no errors
-	*/
+/**-------------------------------------------------------------------------------
+ * Set the label for this object to be equal to aText
+ * @update  dc 08/31/98
+ * @param  Set the label to aText
+ * @result NS_Ok if no errors
+ */
 NS_METHOD nsRadioButton::SetLabel(const nsString& aText)
 {
 	mLabel = aText;
 	return NS_OK;
 }
 
-/**
-	* Set a buffer to be equal to this objects label
-	*
-	* @param  Put the contents of the label into aBuffer
-	* @result NS_Ok if no errors
-	*/
+/**-------------------------------------------------------------------------------
+ * Set a buffer to be equal to this objects label
+ * @update  dc 08/31/98
+ * @param  Put the contents of the label into aBuffer
+ * @result NS_Ok if no errors
+ */
 NS_METHOD nsRadioButton::GetLabel(nsString& aBuffer)
 {
 	aBuffer = mLabel;

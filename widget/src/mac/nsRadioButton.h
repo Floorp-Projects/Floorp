@@ -22,10 +22,10 @@
 #include "nsWindow.h"
 #include "nsIRadioButton.h"
 
-/**
- * Native Macintosh button wrapper
+/**-------------------------------------------------------------------------------
+ * nsRadioButton Class definition
+ * @update dc 10/16/98 
  */
-
 class nsRadioButton :  public nsWindow, public nsIRadioButton
 {
 
@@ -60,14 +60,7 @@ public:
   virtual PRBool OnPaint(nsPaintEvent & aEvent);
   virtual PRBool OnResize(nsSizeEvent &aEvent);
   virtual PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
-  
-  // Mac specific methods
-  void LocalToWindowCoordinate(nsPoint& aPoint);
-  void LocalToWindowCoordinate(nsRect& aRect);	
-  
-  // Overriden from nsWindow
-  //virtual PRBool PtInWindow(PRInt32 aX,PRInt32 aY);
-  
+    
 
 private:
 	void DrawWidget(PRBool	aMouseInside);
@@ -77,8 +70,6 @@ private:
   PRBool				mMouseDownInButton;
   PRBool				mWidgetArmed;
   PRBool				mButtonSet;
-
-
 };
 
 #endif // nsRadioButton_h__
