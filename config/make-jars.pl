@@ -4,7 +4,14 @@
 
 my $cygwin_mountprefix = "";
 if ($^O eq "cygwin") {
-    $cygwin_mountprefix = `mount -p | awk '{ if (/^\\//) { print \$1; exit } }'`;
+    $cygwin_mountprefix = $ENV{CYGDRIVE_MOUNT};
+    if ($cygwin_mountprefix eq "") {
+      $cygwin_mountprefix = `mount -p | awk '{ if (/^\\//) { print \$1; exit } }'`;
+      if ($cygwin_mountprefix eq "") {
+        print "Cannot determine cygwin mount points. Exiting.\n";
+        exit(1);
+      }
+    }
     chomp($cygwin_mountprefix);
     # Remove extra ^M caused by using dos-mode line-endings
     chop $cygwin_mountprefix if (substr($cygwin_mountprefix, -1, 1) eq "\r");
