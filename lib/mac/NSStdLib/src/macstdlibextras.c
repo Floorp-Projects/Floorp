@@ -26,6 +26,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <Quickdraw.h>
+#include <TextServices.h>
 
 int strcmpcore(const char*, const char*, int, int);
 
@@ -151,6 +152,7 @@ void InitializeMacToolbox(void)
 		InitDialogs(0);
 		InitCursor();
 		InitContextualMenus();
+		InitTSMAwareApplication();
 #endif
 #if DEBUG
 		InitializeSIOUX(false);
