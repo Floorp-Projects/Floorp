@@ -921,7 +921,7 @@ nsXULTreeOuterGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
 void
 nsXULTreeOuterGroupFrame::ScrollToIndex(PRInt32 aRowIndex)
 {
-  if ( aRowIndex < 0 )
+  if (( aRowIndex < 0 ) || (mRowHeight == 0))
     return;
     
   PRInt32 newIndex = aRowIndex;
