@@ -26,8 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE           = neckoutil
-LIBRARY_NAME     = neckoutil
+MODULE           = necko
+LIBRARY_NAME     = neckoutil_s
 EXPORT_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 
