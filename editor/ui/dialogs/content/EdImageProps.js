@@ -23,8 +23,8 @@
  *   Ben Goodger
  */
 
-var insertNew     = true;
-var insertNewIMap = true;
+var gInsertNewImage = true;
+var gInsertNewIMap = true;
 var wasEnableAll  = false;
 var constrainOn = false;
 // Note used in current version, but these are set correctly
@@ -32,10 +32,10 @@ var constrainOn = false;
 var constrainWidth  = 0;
 var constrainHeight = 0;
 var imageElement;
-var imageMap = 0;
-var canRemoveImageMap = false;
-var imageMapDisabled = false;
-var globalMap;
+var gImageMap = 0;
+var gCanRemoveImageMap = false;
+var gRemoveImageMap = false;
+var gImageMapDisabled = false;
 var firstTimeOkUsed = true;
 var doAltTextError = false;
 var actualWidth = "";
@@ -96,13 +96,13 @@ function Startup()
   if (imageElement)
   {
     // We found an element and don't need to insert one
-    insertNew = false;
+    gInsertNewImage = false;
     actualWidth  = imageElement.naturalWidth;
     actualHeight = imageElement.naturalHeight;
   }
   else
   {
-    insertNew = true;
+    gInsertNewImage = true;
 
     // We don't have an element selected,
     //  so create one with default attributes
@@ -165,10 +165,10 @@ function InitDialog()
 
   // setup the height and width widgets
   var width = InitPixelOrPercentMenulist(globalElement,
-                    insertNew ? null : imageElement,
+                    gInsertNewImage ? null : imageElement,
                     "width", "widthUnitsMenulist", gPixel);
   var height = InitPixelOrPercentMenulist(globalElement,
-                    insertNew ? null : imageElement,
+                    gInsertNewImage ? null : imageElement,
                     "height", "heightUnitsMenulist", gPixel);
 
   // Set actual radio button if both set values are the same as actual
@@ -208,9 +208,7 @@ function InitDialog()
   }
 
   // Get image map for image
-  imageMap = GetImageMap();
-  //XXX: We should eliminate dual imageMap variables (bug 94749)
-  globalMap = imageMap;
+  gImageMap = GetImageMap();
 
   // we want to force an update so initialize "wasEnableAll" to be the opposite of what the actual state is
   wasEnableAll = !IsValidImage(gDialog.srcInput.value);
@@ -223,21 +221,21 @@ function GetImageMap()
   var usemap = globalElement.getAttribute("usemap");
   if (usemap)
   {
-    canRemoveImageMap = true;
+    gCanRemoveImageMap = true;
     var mapname = usemap.substring(1, usemap.length);
     var mapCollection = editorShell.editorDocument.getElementsByName(mapname);
     if (mapCollection[0] != null)
     {
-      insertNewIMap = false;
+      gInsertNewIMap = false;
       return mapCollection[0];
     }
   }
   else
   {
-    canRemoveImageMap = false;
+    gCanRemoveImageMap = false;
   }
 
-  insertNewIMap = true;
+  gInsertNewIMap = true;
   return null;
 }
 
@@ -408,7 +406,7 @@ function doOverallEnabling()
   SetElementEnabledById( "imagemapLabel",  canEnableOk );
   //TODO: Restore when Image Map editor is finished
   //SetElementEnabledById( "editImageMap",   canEnableOk );
-  SetElementEnabledById( "removeImageMap", canRemoveImageMap);
+  SetElementEnabledById( "removeImageMap", gCanRemoveImageMap);
 
 }
 
@@ -468,30 +466,19 @@ function constrainProportions( srcID, destID )
 
 function editImageMap()
 {
-  // Make a copy to use for image map editor
-  if (insertNewIMap)
-  {
-    imageMap = editorShell.CreateElementWithDefaults("map");
-    globalMap = imageMap.cloneNode(true);
-  }
-  else
-    globalMap = imageMap;
+  // Create an imagemap for image map editor
+  if (gInsertNewIMap)
+    gImageMap = editorShell.CreateElementWithDefaults("map");
 
-  window.openDialog("chrome://editor/content/EdImageMap.xul", "_blank", "chrome,close,titlebar,modal", globalElement, globalMap);
+  // Note: We no longer pass in a copy of the global ImageMap. ImageMap editor should create a copy and manage onOk and onCancel behavior
+  window.openDialog("chrome://editor/content/EdImageMap.xul", "_blank", "chrome,close,titlebar,modal", globalElement, gImageMap);
 }
 
 function removeImageMap()
 {
-  globalElement.removeAttribute("usemap");
-  if (imageMap)
-  {
-    editorShell.DeleteElement(imageMap);
-    insertNewIMap = true;
-    globalMap = null;
-    imageMap = null;
-  }
-  canRemoveImageMap = false;
-  SetElementEnabledById( "removeImageMap", false);
+  gRemoveImageMap = true;
+  gCanRemoveImageMap = false;
+  SetElementEnabledById("removeImageMap", false);
 }
 
 // Get data from widgets, validate, and set for the global element
@@ -610,13 +597,25 @@ function onOK()
   doAltTextError = firstTimeOkUsed;
   firstTimeOkUsed = false;
 
-  // handle insertion of new image
+
   if (ValidateData())
   {
-    // Assign to map if there is one
-    if ( globalMap )
+    editorShell.BeginBatchChanges();
+
+    if (gRemoveImageMap)
     {
-      var mapName = globalMap.getAttribute("name");
+      globalElement.removeAttribute("usemap");
+      if (gImageMap)
+      {
+        editorShell.DeleteElement(gImageMap);
+        gInsertNewIMap = true;
+        gImageMap = null;
+      }
+    }
+    else if (gImageMap)
+    {
+      // Assign to map if there is one
+      var mapName = gImageMap.getAttribute("name");
       if (mapName != "")
       {
         globalElement.setAttribute("usemap", ("#"+mapName));
@@ -624,14 +623,12 @@ function onOK()
           globalElement.setAttribute("border", 0);
       }
 
-      // Copy or insert image map
-      imageMap = globalMap.cloneNode(true);
-      if (insertNewIMap)
+      if (gInsertNewIMap)
       {
         try
         {
-          editorShell.editorDocument.body.appendChild(imageMap);
-        //editorShell.InsertElementAtSelection(imageMap, false);
+          editorShell.editorDocument.body.appendChild(gImageMap);
+        //editorShell.InsertElementAtSelection(gImageMap, false);
         }
         catch (e)
         {
@@ -643,7 +640,7 @@ function onOK()
     // All values are valid - copy to actual element in doc or
     //   element created to insert
     editorShell.CloneAttributes(imageElement, globalElement);
-    if (insertNew)
+    if (gInsertNewImage)
     {
       try {
         // 'true' means delete the selection before inserting
@@ -662,6 +659,8 @@ function onOK()
     testArea.setAttribute("href", "test");
     test.appendChild(testArea);
     editorShell.InsertElementAtSelection(test, false);*/
+
+    editorShell.EndBatchChanges();
 
     SaveWindowLocation();
     return true;
