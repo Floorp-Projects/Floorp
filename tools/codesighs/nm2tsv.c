@@ -208,8 +208,7 @@ int nm2tsv(Options* inOptions)
             switch(toupper(*type))
             {
                 case 'T': /* text (code) */
-                case 'V': /* weak object */
-                case 'W': /* weak symbol */
+                case 'W': /* weak symbol ??? */
                     fprintf(inOptions->mOutput, "CODE\t");
                     break;
                 default:
