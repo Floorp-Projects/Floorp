@@ -63,6 +63,10 @@ NS_METHOD nsTextWidget::CreateNative(GtkWidget *parentWindow)
   mWidget = gtk_entry_new();
   gtk_widget_set_name(mWidget, "nsTextWidget");
   gtk_editable_set_editable(GTK_EDITABLE(mWidget), mMakeReadOnly?PR_FALSE:PR_TRUE);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "key_release_event",
+                     GTK_SIGNAL_FUNC(nsGtkWidget_Text_Callback),
+                     this);
   gtk_widget_show(mWidget);
   return NS_OK;
 }
