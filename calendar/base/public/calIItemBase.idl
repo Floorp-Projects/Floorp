@@ -89,6 +89,12 @@ interface calIItemBase : nsISupports
   // last time any attribute was modified on this item, in UTC
   readonly attribute calIDateTime lastModifiedTime;
 
+  // last time a "significant change" was made to this item
+  readonly attribute calIDateTime stampTime;
+
+  // indicate such a "significant change"
+  void updateStampTime();
+
   // the calICalendar to which this event belongs
   attribute calICalendar parent;
 

@@ -138,4 +138,21 @@ testImmutability(a1);
 dump("* Testing cascaded immutability (event -> attendee).\n");
 e.makeImmutable();
 testImmutability(a2);
+
+dump("* Testing cloning\n");
+var ec = e.clone();
+var clonedatts = ec.getAttendees({});
+var atts = e.getAttendees({});
+if (atts.length != clonedatts.length) {
+    throw "FAILURE: cloned event has " + clonedatts.length +
+        "attendees, original had " + atts.length;
+}
+for (i = 0; i < clonedatts.length; i++) {
+    if (atts[i] == clonedatts[i])
+        throw "FAILURE: attendee " + atts[i].id + " shared with clone!";
+    if (atts[i].id != clonedatts[i].id) {
+        throw "FAILURE: id mismatch on index " + i + ": " +
+            atts[i].id + " != " + clonedatts[i].id;
+    }
+}
 dump("PASSED!\n");

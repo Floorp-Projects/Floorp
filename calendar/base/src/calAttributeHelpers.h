@@ -59,7 +59,7 @@ cname::Get##name (mtype &_retval) { \
 #define CAL_STRINGTYPE_ATTR_SETTER(cname,mtype,name) \
 NS_IMETHODIMP \
 cname::Set##name (const mtype &aValue) { \
-    if (mImmutable) return NS_ERROR_FAILURE; \
+    if (mImmutable) return NS_ERROR_CALENDAR_IMMUTABLE; \
     m##name.Assign(aValue); \
     UPDATE_LAST_MODIFIED; \
     return NS_OK; \
@@ -80,7 +80,7 @@ cname::Get##name (mtype *_retval) { \
 #define CAL_VALUETYPE_ATTR_SETTER(cname,mtype,name) \
 NS_IMETHODIMP \
 cname::Set##name (mtype aValue) { \
-    if (mImmutable) return NS_ERROR_FAILURE; \
+    if (mImmutable) return NS_ERROR_CALENDAR_IMMUTABLE; \
     if (m##name != aValue) { \
         m##name = aValue; \
         UPDATE_LAST_MODIFIED; \
@@ -103,7 +103,7 @@ cname::Get##name (mtype **_retval) { \
 #define CAL_ISUPPORTS_ATTR_SETTER(cname,mtype,name) \
 NS_IMETHODIMP \
 cname::Set##name (mtype *aValue) { \
-    if (mImmutable) return NS_ERROR_FAILURE; \
+    if (mImmutable) return NS_ERROR_CALENDAR_IMMUTABLE; \
     if (m##name != aValue) { \
         m##name = aValue; \
         UPDATE_LAST_MODIFIED; \

@@ -1,4 +1,46 @@
-/* GENERATED FILE; DO NOT EDIT. SOURCE IS calItemBase.js.pre */
+/* -*- Mode: javascript; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Oracle Corporation code.
+ *
+ * The Initial Developer of the Original Code is
+ *  Oracle Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Mike Shaver <shaver@off.net>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+//
+// calItemBase.js
+//
+
 const ICAL = Components.interfaces.calIIcalComponent;
 
 function calItemBase() { }
@@ -17,11 +59,16 @@ calItemBase.prototype = {
     mImmutable: false,
     get isMutable() { return !this.mImmutable; },
 
-    makeItemBaseImmutable: function() {
+    mDirty: false,
+    modify: function() {
         if (this.mImmutable)
+            // Components.results.NS_ERROR_CALENDAR_IMMUTABLE;
             throw Components.results.NS_ERROR_FAILURE;
+        this.mDirty = true;
+    },
 
-
+    makeItemBaseImmutable: function() {
+        // make all our components immutable
         this.mCreationDate.makeImmutable();
 
         if (this.mRecurrenceInfo)
@@ -34,15 +81,17 @@ calItemBase.prototype = {
         this.mImmutable = true;
     },
 
-
+    // initialize this class's members
     initItemBase: function () {
         this.mCreationDate = new CalDateTime();
         this.mAlarmTime = new CalDateTime();
         this.mLastModifiedTime = new CalDateTime();
+        this.mStampTime = new CalDateTime();
 
         this.mCreationDate.jsDate = new Date();
         this.mLastModifiedTime.jsDate = new Date();
-
+        this.mStampTime.jsDate = new Date();
+        
         this.mProperties = Components.classes["@mozilla.org/hash-property-bag;1"].
                            createInstance(Components.interfaces.nsIWritablePropertyBag);
 
@@ -53,8 +102,8 @@ calItemBase.prototype = {
         this.mAttachments = null;
     },
 
-
-
+    // for subclasses to use; copies the ItemBase's values
+    // into m
     cloneItemBaseInto: function (m) {
         m.mImmutable = false;
         m.mGeneration = this.mGeneration;
@@ -68,7 +117,7 @@ calItemBase.prototype = {
         m.mHasAlarm = this.mHasAlarm;
 
         m.mCreationDate = this.mCreationDate.clone();
-
+        m.mStampTime = this.mStampTime.clone();
         if (this.mRecurrenceInfo) {
             m.mRecurrenceInfo = this.mRecurrenceInfo.clone();
             dump ("old recurType: " + this.mRecurrenceInfo.recurType + " new type: " + m.mRecurrenceInfo.recurType + "\n");
@@ -80,7 +129,7 @@ calItemBase.prototype = {
         for (var i = 0; i < this.mAttendees.length; i++)
             m.mAttendees[i] = this.mAttendees[i].clone();
 
-
+        // these need fixing
         m.mAttachments = this.mAttachments;
 
         m.mProperties = Components.classes["@mozilla.org/hash-property-bag;1"].
@@ -95,27 +144,25 @@ calItemBase.prototype = {
         return m;
     },
 
+    get lastModifiedTime() {
+        if (this.mDirty) {
+            this.mLastModifiedTime.jsDate = new Date();
+            this.mDirty = false;
+        }
+        return this.mLastModifiedTime;
+    },
 
+    mStampTime: null,
+    get stampTime() {
+        if (this.mStampTime.valid)
+            return this.mStampTime;
+        return this.mLastModifiedTime;
+    },
 
-
-
-
-    mGeneration: 0, get generation() { return this.mGeneration; }, set generation(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mGeneration = v; dump("set " + "generation" + " to " + v + "\n");},
-    mCreationDate: null, get creationDate() { return this.mCreationDate; }, set creationDate(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mCreationDate = v; dump("set " + "creationDate" + " to " + v + "\n");},
-    mLastModifiedTime: null, get lastModifiedTime() { return this.mLastModifiedTime; }, set lastModifiedTime(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mLastModifiedTime = v; dump("set " + "lastModifiedTime" + " to " + v + "\n");},
-    mParent: null, get parent() { return this.mParent; }, set parent(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mParent = v; dump("set " + "parent" + " to " + v + "\n");},
-    mId: null, get id() { return this.mId; }, set id(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mId = v; dump("set " + "id" + " to " + v + "\n");},
-    mTitle: "", get title() { return this.mTitle; }, set title(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mTitle = v; dump("set " + "title" + " to " + v + "\n");},
-    mPriority: 0, get priority() { return this.mPriority; }, set priority(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mPriority = v; dump("set " + "priority" + " to " + v + "\n");},
-    mPrivacy: "PUBLIC", get privacy() { return this.mPrivacy; }, set privacy(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mPrivacy = v; dump("set " + "privacy" + " to " + v + "\n");},
-    mStatus: null, get status() { return this.mStatus; }, set status(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mStatus = v; dump("set " + "status" + " to " + v + "\n");},
-    mHasAlarm: false, get hasAlarm() { return this.mHasAlarm; }, set hasAlarm(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mHasAlarm = v; dump("set " + "hasAlarm" + " to " + v + "\n");},
-    mAlarmTime: null, get alarmTime() { return this.mAlarmTime; }, set alarmTime(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mAlarmTime = v; dump("set " + "alarmTime" + " to " + v + "\n");},
-    mRecurrenceInfo: null, get recurrenceInfo() { return this.mRecurrenceInfo; }, set recurrenceInfo(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mRecurrenceInfo = v; dump("set " + "recurrenceInfo" + " to " + v + "\n");},
-    mAttachments: null, get attachments() { return this.mAttachments; }, set attachments(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mAttachments = v; dump("set " + "attachments" + " to " + v + "\n");},
-    mProperties: null, get properties() { return this.mProperties; }, set properties(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mProperties = v; dump("set " + "properties" + " to " + v + "\n");},
-
-
+    updateStampTime: function() {
+        this.modify();
+        this.mStampTime.jsDate = new Date();
+    },
 
     get propertyEnumerator() { return this.mProperties.enumerator; },
 
@@ -128,14 +175,12 @@ calItemBase.prototype = {
     },
 
     setProperty: function (aName, aValue) {
-        if (this.mImmutable)
-            throw Components.results.NS_ERROR_FAILURE;
+        this.modify();
         this.mProperties.setProperty(aName, aValue);
     },
 
     deleteProperty: function (aName) {
-        if (this.mImmutable)
-            throw Components.results.NS_ERROR_FAILURE;
+        this.modify();
         try {
             this.mProperties.deleteProperty(aName);
         } catch (e) {
@@ -144,7 +189,7 @@ calItemBase.prototype = {
 
     getAttendees: function (countObj) {
         countObj.value = this.mAttendees.length;
-        return this.mAttendees.concat([]);
+        return this.mAttendees.concat([]); // clone
     },
 
     getAttendeeById: function (id) {
@@ -155,8 +200,7 @@ calItemBase.prototype = {
     },
 
     removeAttendee: function (attendee) {
-        if (this.mImmutable)
-            throw Components.results.NS_ERROR_FAILURE;
+        this.modify();
         var found = false, newAttendees = [];
         for (var i = 0; i < this.mAttendees.length; i++) {
             if (this.mAttendees[i] != attendee)
@@ -171,18 +215,16 @@ calItemBase.prototype = {
     },
 
     removeAllAttendees: function() {
-        if (this.mImmutable)
-            throw Components.results.NS_ERROR_FAILURE;
+        this.modify();
         this.mAttendees = [];
     },
 
     addAttendee: function (attendee) {
-        if (this.mImmutable)
-            throw Components.results.NS_ERROR_FAILURE;
+        this.modify();
         this.mAttendees.push(attendee);
     },
 
-
+    /* MEMBER_ATTR(mIcalString, "", icalString), */
     get icalString() {
         throw Components.results.NS_NOT_IMPLEMENTED;
     },
@@ -201,6 +243,7 @@ calItemBase.prototype = {
         "STATUS": true,
         "CLASS": true,
         "DTALARM": true,
+        "DTSTAMP": true,
         "X-MOZILLA-GENERATION": true,
     },
 
@@ -227,6 +270,7 @@ calItemBase.prototype = {
     icsBasePropMap: [
     { cal: "mCreationDate", ics: "createdTime" },
     { cal: "mLastModifiedTime", ics: "lastModified" },
+    { cal: "mStampTime", ics: "stampTime" },
     { cal: "mId", ics: "uid" },
     { cal: "mTitle", ics: "summary" },
     { cal: "mPriority", ics: "priority" },
@@ -234,20 +278,20 @@ calItemBase.prototype = {
     { cal: "mPrivacy", ics: "icalClass" }],
 
     setItemBaseFromICS: function (icalcomp) {
-        if (this.mImmutable)
-            throw Components.results.NS_ERROR_FAILURE;
+        this.modify();
+
         this.mapPropsFromICS(icalcomp, this.icsBasePropMap);
         this.mPrivacy = icalcomp.icalClass;
 
         for (var attprop = icalcomp.getFirstProperty("ATTENDEE");
              attprop;
              attprop = icalcomp.getNextProperty("ATTENDEE")) {
-
+            
             var att = new CalAttendee();
             att.icalProperty = attprop;
             this.addAttendee(att);
         }
-
+        
         var gen = icalcomp.getFirstProperty("X-MOZILLA-GENERATION");
         if (gen)
             this.mGeneration = parseInt(gen.stringValue);
@@ -258,7 +302,7 @@ calItemBase.prototype = {
              prop;
              prop = icalcomp.getNextProperty("ANY")) {
             if (!promoted[prop.propertyName]) {
-
+                // XXX keep parameters around, sigh
                 this.setProperty(prop.propertyName, prop.stringValue);
             }
         }
@@ -269,6 +313,9 @@ calItemBase.prototype = {
     },
 
     fillIcalComponentFromBase: function (icalcomp) {
+        // Make sure that the LMT and ST are updated
+        var suppressDCE = this.lastModifiedTime;
+        suppressDCE = this.stampTime;
         this.mapPropsToICS(icalcomp, this.icsBasePropMap);
         icalcomp.icalClass = this.mPrivacy;
         for (var i = 0; i < this.mAttendees.length; i++)
@@ -281,7 +328,7 @@ calItemBase.prototype = {
         if (this.mRecurrenceInfo)
             icalcomp.addProperty(this.mRecurrenceInfo.icalProperty);
     },
-
+    
 };
 
 function calItemOccurrence () {
@@ -327,9 +374,37 @@ calItemOccurrence.prototype = {
 
 };
 
+makeMemberAttr(calItemBase, "mGeneration", 0, "generation");
+makeMemberAttr(calItemBase, "mCreationDate", null, "creationDate");
+makeMemberAttr(calItemBase, "mParent", null, "parent");
+makeMemberAttr(calItemBase, "mId", null, "id");
+makeMemberAttr(calItemBase, "mTitle", null, "title");
+makeMemberAttr(calItemBase, "mPriority", 0, "priority");
+makeMemberAttr(calItemBase, "mPrivacy", "PUBLIC", "privacy");
+makeMemberAttr(calItemBase, "mStatus", null, "status");
+makeMemberAttr(calItemBase, "mHasAlarm", false, "hasAlarm");
+makeMemberAttr(calItemBase, "mAlarmTime", null, "alarmTime");
+makeMemberAttr(calItemBase, "mRecurrenceInfo", null, "recurrenceInfo");
+makeMemberAttr(calItemBase, "mAttachments", null, "attachments");
+makeMemberAttr(calItemBase, "mProperties", null, "properties");
 
+function makeMemberAttr(ctor, varname, dflt, attr)
+{
+    ctor.prototype[varname] = dflt;
+    var getter = function () {
+        return this[varname];
+    };
+    var setter = function (v) {
+        this.modify();
+        this[varname] = v;
+    };
+    ctor.prototype.__defineGetter__(attr, getter);
+    ctor.prototype.__defineSetter__(attr, setter);
+}
 
-
+//
+// helper functions
+//
 
 const CalDateTime =
     new Components.Constructor("@mozilla.org/calendar/datetime;1",

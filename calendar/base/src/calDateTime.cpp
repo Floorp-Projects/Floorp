@@ -40,9 +40,9 @@
 
 #include "calDateTime.h"
 #include "calAttributeHelpers.h"
+#include "calBaseCID.h"
 
 #include "jsdate.h"
-
 
 extern "C" {
     #include "ical.h"
@@ -87,7 +87,7 @@ NS_IMETHODIMP
 calDateTime::MakeImmutable()
 {
     if (mImmutable)
-        return NS_ERROR_FAILURE; // XXX another error code
+        return NS_ERROR_CALENDAR_IMMUTABLE;
 
     mImmutable = PR_TRUE;
     return NS_OK;

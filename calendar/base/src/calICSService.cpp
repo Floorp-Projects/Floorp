@@ -131,7 +131,7 @@ calIcalProperty::GetParameter(const nsACString &param, nsACString &value)
             icalstr = icalparameter_get_xvalue(icalparam);
     } else {
         icalstr = icalproperty_get_parameter_as_string(mProperty,
-                                                        PromiseFlatCString(param).get());
+                                                       PromiseFlatCString(param).get());
     }
 
     if (!icalstr) {
@@ -193,17 +193,22 @@ calIcalProperty::SetParameter(const nsACString &param, const nsACString &value)
 static nsresult
 FillParameterName(icalparameter *icalparam, nsACString &name)
 {
-    if (!icalparam) {
-        name.Truncate();
-        name.SetIsVoid(PR_TRUE);
-        return NS_OK;
+    const char *propname = nsnull;
+    if (icalparam) {
+        icalparameter_kind paramkind = icalparameter_isa(icalparam);
+        if (paramkind == ICAL_X_PARAMETER)
+            propname = icalparameter_get_xname(icalparam);
+        else if (paramkind != ICAL_NO_PARAMETER)
+            propname = icalparameter_kind_to_string(paramkind);
     }
 
-    icalparameter_kind paramkind = icalparameter_isa(icalparam);
-    if (paramkind == ICAL_X_PARAMETER)
-        name.Assign(icalparameter_get_xname(icalparam));
-    else
-        name.Assign(icalparameter_kind_to_string(paramkind));
+    if (propname) {
+        name.Assign(propname);
+    } else {
+        name.Truncate();
+        name.SetIsVoid(PR_TRUE);
+    }
+
     return NS_OK;
 }
 
@@ -285,9 +290,12 @@ protected:
 
     nsresult SetStringProperty(icalproperty_kind kind, const nsACString &str)
     {
-        icalvalue *val = icalvalue_new_string(PromiseFlatCString(str).get());
-        if (!val)
-            return NS_ERROR_OUT_OF_MEMORY;
+        icalvalue *val = nsnull;
+        if (!str.IsVoid()) {
+            val = icalvalue_new_string(PromiseFlatCString(str).get());
+            if (!val)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
         return SetPropertyValue(kind, val);
     }
 
@@ -320,11 +328,15 @@ nsresult
 calIcalComponent::SetPropertyValue(icalproperty_kind kind, icalvalue *val)
 {
     ClearAllProperties(kind);
+    if (!val)
+        return NS_OK;
+
     icalproperty *prop = icalproperty_new(kind);
     if (!prop) {
         icalvalue_free(val);
         return NS_ERROR_OUT_OF_MEMORY;
     }
+
     icalproperty_set_value(prop, val);
     icalcomponent_add_property(mComponent, prop);
     return NS_OK;
@@ -334,9 +346,8 @@ nsresult
 calIcalComponent::SetProperty(icalproperty_kind kind, icalproperty *prop)
 {
     ClearAllProperties(kind);
-    if (!prop) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
+    if (!prop)
+        return NS_OK;
     icalcomponent_add_property(mComponent, prop);
     return NS_OK;
 }
@@ -386,9 +397,14 @@ calIcalComponent::Get##Attrname(nsACString &str)                        \
 NS_IMETHODIMP                                                           \
 calIcalComponent::Set##Attrname(const nsACString &str)                  \
 {                                                                       \
-    icalproperty_##lcname val =                                         \
-        icalproperty_string_to_##lcname(PromiseFlatCString(str).get()); \
-    icalproperty *prop = icalproperty_new_##lcname(val);                \
+    icalproperty *prop = nsnull;                                        \
+    if (!str.IsVoid()) {                                                \
+        icalproperty_##lcname val =                                     \
+            icalproperty_string_to_##lcname(PromiseFlatCString(str).get()); \
+        prop = icalproperty_new_##lcname(val);                          \
+        if (!prop)                                                      \
+            return NS_ERROR_OUT_OF_MEMORY; /* XXX map errno */          \
+    }                                                                   \
     return SetProperty(ICAL_##ICALNAME##_PROPERTY, prop);               \
 }                                                                       \
 
@@ -470,14 +486,14 @@ calIcalComponent::Get##Attrname(calIDateTime **dtp)                     \
     icalproperty *prop =                                                \
         icalcomponent_get_first_property(mComponent,                    \
                                          ICAL_##ICALNAME##_PROPERTY);   \
+    calDateTime *dt;                                                    \
     if (!prop) {                                                        \
-        *dtp = nsnull;                                                  \
-        return NS_OK;                                                   \
+        dt = new calDateTime();  /* invalid date */                     \
+    } else {                                                            \
+        struct icaltimetype itt =                                       \
+            icalvalue_get_datetime(icalproperty_get_value(prop));       \
+        dt = new calDateTime(&itt);                                     \
     }                                                                   \
-                                                                        \
-    struct icaltimetype itt =                                           \
-        icalvalue_get_datetime(icalproperty_get_value(prop));           \
-    calDateTime *dt = new calDateTime(&itt);                            \
     if (!dt)                                                            \
         return NS_ERROR_OUT_OF_MEMORY;                                  \
     NS_ADDREF(*dtp = dt);                                               \
@@ -491,8 +507,11 @@ NS_IMETHODIMP                                                           \
 calIcalComponent::Set##Attrname(calIDateTime *dt)                       \
 {                                                                       \
     struct icaltimetype itt;                                            \
-    if (!dt)                                                            \
-        return NS_ERROR_INVALID_ARG;                                    \
+    PRBool isValid;                                                     \
+    if (!dt || NS_FAILED(dt->GetValid(&isValid)) || !isValid) {         \
+        ClearAllProperties(ICAL_##ICALNAME##_PROPERTY);                 \
+        return NS_OK;                                                   \
+    }                                                                   \
     dt->ToIcalTime(&itt);                                               \
     icalvalue *val = icalvalue_new_datetime(itt);                       \
     if (!val)                                                           \

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Mike Shaver <shaver@off.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,9 +64,8 @@ const componentData =
     {cid: Components.ID("{5c8dcaa3-170c-4a73-8142-d531156f664d}"),
      contractid: "@mozilla.org/calendar/attendee;1",
      script: "calAttendee.js",
-     constructor: "calAttendee"}
-    ];
-
+     constructor: "calAttendee"}];
+    
 var calItemModule = {
     mScriptsLoaded: false,
     loadScripts: function () {
@@ -106,6 +106,8 @@ var calItemModule = {
     registerSelf: function (compMgr, fileSpec, location, type) {
         compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
+        var catman = Components.classes["@mozilla.org/categorymanager;1"]
+            .getService(Components.interfaces.nsICategoryManager);
         for (var i = 0; i < componentData.length; i++) {
             var comp = componentData[i];
             if (!comp.cid)
@@ -117,6 +119,11 @@ var calItemModule = {
                                             fileSpec,
                                             location,
                                             type);
+
+            if (comp.category) {
+                catman.addCategoryEntry(comp.category, comp.categoryEntry,
+                                        comp.contractid, true, true);
+            }
         }
     },
 
