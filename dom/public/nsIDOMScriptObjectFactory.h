@@ -100,7 +100,16 @@ public:
                                                nsISupports *aPI, 
                                                nsISupports *aParent, 
                                                void** aReturn)=0;
-  
+
+  NS_IMETHOD    NewScriptEntity(nsIScriptContext *aContext, 
+                                nsISupports *aPI, 
+                                nsISupports *aParent, 
+                                void** aReturn)=0;
+
+  NS_IMETHOD    NewScriptNotation(nsIScriptContext *aContext, 
+                                  nsISupports *aPI, 
+                                  nsISupports *aParent, 
+                                  void** aReturn)=0;
 };
 
 #endif /* nsIDOMScriptObjectFactory_h__ */

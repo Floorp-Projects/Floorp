@@ -35,6 +35,7 @@ EXPORTS =               \
 	nsIDOMDocumentFragment.h \
 	nsIDOMElement.h \
 	nsIDOMEntity.h \
+	nsIDOMNotation.h \
 	nsIDOMEntityReference.h \
 	nsIDOMNode.h \
 	nsIDOMNamedNodeMap.h \
