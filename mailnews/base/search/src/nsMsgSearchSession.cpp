@@ -453,6 +453,7 @@ NS_IMETHODIMP nsMsgSearchSession::GetRunningAdapter (nsIMsgSearchAdapter **aSear
   {
 		*aSearchAdapter = scope->m_adapter;
     NS_ADDREF(*aSearchAdapter);
+    return NS_OK;
   }
 	*aSearchAdapter = nsnull;
   return NS_OK;
