@@ -66,7 +66,7 @@ nsFilePicker.prototype = {
   get file()  { debug("getter called " + this.mFile); return this.mFile; },
 
   /* attribute wstring defaultString; */
-  set defaultString(a) { throw "readonly property"; },
+  set defaultString(a) { this.mSelectedFilter = a; },
   get defaultString()  { return this.mSelectedFilter; },
 
   /* methods */
@@ -77,12 +77,6 @@ nsFilePicker.prototype = {
   },
 
   setFilters: function(filterMask) {
-    dump(filterMask + "\n");
-    if (filterMask & nsIFilePicker.filterAll) {
-      dump("filterAll\n");
-      this.mFilterTitles.push(bundle.GetStringFromName("allTitle"));
-      this.mFilters.push(bundle.GetStringFromName("allFilter"));
-    }
     if (filterMask & nsIFilePicker.filterHTML) {
       this.mFilterTitles.push(bundle.GetStringFromName("htmlTitle"));
       this.mFilters.push(bundle.GetStringFromName("htmlFilter"));
@@ -102,6 +96,10 @@ nsFilePicker.prototype = {
     if (filterMask & nsIFilePicker.filterXUL) {
       this.mFilterTitles.push(bundle.GetStringFromName("xulTitle"));
       this.mFilters.push(bundle.GetStringFromName("xulFilter"));
+    }
+    if (filterMask & nsIFilePicker.filterAll) {
+      this.mFilterTitles.push(bundle.GetStringFromName("allTitle"));
+      this.mFilters.push(bundle.GetStringFromName("allFilter"));
     }
   },
 
