@@ -93,7 +93,9 @@ public:
   virtual ~nsMsgAppCore();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_IDOMBASEAPPCORE
+  NS_IMETHOD    GetId(nsString& aId);
+  NS_IMETHOD    Init(const nsString& aId);
+  NS_IMETHOD    SetDocumentCharset(const nsString& aCharset);
 
   // nsIScriptObjectOwner
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
