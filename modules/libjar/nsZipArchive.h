@@ -118,6 +118,17 @@ public:
   PRInt32 OpenArchiveWithFileDesc(PRFileDesc* fd);
 
   /**
+   * Test the integrity of items in this archive by running
+   * a CRC check after extracting each item into a memory 
+   * buffer.  If an entry name is supplied only the 
+   * specified item is tested.  Else, if null is supplied
+   * then all the items in the archive are tested.
+   *
+   * @return  status code       
+   */
+  PRInt32 Test(const char *aEntryName);
+
+  /**
    * Closes an open archive.
    */
   PRInt32 CloseArchive();
@@ -222,6 +233,7 @@ private:
   PRInt32           InflateItem( const nsZipItem* aItem, 
                                  PRFileDesc* outFD,
                                  char* buf );
+  PRInt32           TestItem( const nsZipItem *aItem );
 };
 
 /** 

@@ -57,6 +57,12 @@ PR_EXTERN(PRInt32) ZIP_OpenArchive( const char * zipname, void** hZip );
 PR_EXTERN(PRInt32) ZIP_CloseArchive( void** hZip );
 
 
+/* Test the integrity of every item in this open archive
+ * by verifying each item's checksum against the stored
+ * CRC32 value.
+ */
+PR_EXTERN(PRInt32) ZIP_TestArchive( void* hZip );
+
 /* Extract the named file in the archive to disk. 
  * This function will happily overwrite an existing Outfile if it can.
  * It's up to the caller to detect or move it out of the way if it's important.

@@ -134,6 +134,30 @@ PR_PUBLIC_API(PRInt32) ZIP_OpenArchive( const char * zipname, void** hZip )
 
 
 /**
+ * ZIP_TestArchive
+ *
+ * Tests the integrity of this open zip archive by extracting each 
+ * item to memory and performing a CRC check.
+ *
+ * @param   hZip      handle obtained from ZIP_OpenArchive
+ * @return  status code (success indicated by ZIP_OK)
+ */
+PR_PUBLIC_API(PRInt32) ZIP_TestArchive( void *hZip )
+{
+  /*--- error check args ---*/
+  if ( hZip == 0 )
+    return ZIP_ERR_PARAM;
+   
+  nsZipArchive* zip = NS_STATIC_CAST(nsZipArchive*,hZip);
+  if ( zip->kMagic != ZIP_MAGIC )
+    return ZIP_ERR_PARAM;   /* whatever it is isn't one of ours! */
+
+  /*--- test the archive ---*/
+  return zip->Test(NULL);
+}
+
+
+/**
  * ZIP_CloseArchive
  *
  * closes zip archive and frees memory
@@ -321,6 +345,44 @@ PRInt32 nsZipArchive::OpenArchiveWithFileDesc(PRFileDesc* fd)
 }
 
 //---------------------------------------------
+//  nsZipArchive::Test
+//---------------------------------------------
+PRInt32 nsZipArchive::Test(const char *aEntryName)
+{
+  PRInt32 rv = ZIP_OK;
+  nsZipItem *currItem = 0;
+
+  if (aEntryName) // only test specified item
+  {
+    currItem = GetFileItem(aEntryName);
+    if(!currItem)
+      return ZIP_ERR_FNF;
+
+    rv = TestItem(currItem);
+  }
+  else // test all items in archive
+  {
+    nsZipFind *iterator = FindInit( NULL );
+    if (!iterator)
+      return ZIP_ERR_GENERAL;
+
+    // iterate over items in list
+    while (ZIP_OK == FindNext(iterator, &currItem)) 
+    {
+      rv = TestItem(currItem);
+
+      // check if crc check failed
+      if (rv != ZIP_OK)
+        break;
+    }
+  
+    FindFree(iterator);
+  }
+
+  return rv;
+}
+
+//---------------------------------------------
 //  nsZipArchive::CloseArchive
 //---------------------------------------------
 PRInt32 nsZipArchive::CloseArchive()
@@ -355,7 +417,6 @@ PRInt32 nsZipArchive::GetItem( const char * aFilename, nsZipItem **result)
 	if (aFilename == 0)
 		return ZIP_ERR_PARAM;
 
-	//PRInt32 result;
 	nsZipItem* item;
 
 	//-- find file information
@@ -365,8 +426,7 @@ PRInt32 nsZipArchive::GetItem( const char * aFilename, nsZipItem **result)
 		return ZIP_ERR_FNF;
 	}
 
-
-    *result = item; // Return a pointer to the struct
+  *result = item; // Return a pointer to the struct
 	return ZIP_OK;
 }
 
@@ -800,7 +860,8 @@ PRInt32 nsZipArchive::BuildFileList()
           //-- NOTE: extralen is different in central header and local header
           //--       for archives created using the Unix "zip" utility. To set 
           //--       the offset accurately we need the local extralen.
-          if ( PR_Read( mFd, (char*)&Local, sizeof(ZipLocal) ) != (READTYPE)sizeof(ZipLocal) )
+          if ( PR_Read( mFd, (char*)&Local, sizeof(ZipLocal) ) != 
+                          (READTYPE)sizeof(ZipLocal) )
           { 
               //-- expected a complete local header
               status = ZIP_ERR_CORRUPT;
@@ -1179,6 +1240,184 @@ cleanup:
 
   PR_FREEIF( inbuf );
   PR_FREEIF( outbuf );
+  return status;
+}
+
+//---------------------------------------------
+// nsZipArchive::TestItem
+//---------------------------------------------
+PRInt32 nsZipArchive::TestItem( const nsZipItem* aItem )
+{
+  Bytef *inbuf = NULL, *outbuf = NULL, *old_next_out;
+  PRUint32 size, chunk, inpos, crc;
+  PRInt32 status = ZIP_OK; 
+  int zerr = Z_OK;
+  z_stream zs;
+  PRBool bInflating = PR_FALSE;
+  PRBool bRead;
+  PRBool bWrote;
+
+  //-- param checks
+  if (!aItem)
+    return ZIP_ERR_PARAM;
+  if (aItem->compression != STORED && aItem->compression != DEFLATED)
+    return ZIP_ERR_UNSUPPORTED;
+
+  //-- allocate buffers
+  inbuf = (Bytef *) PR_Malloc(ZIP_BUFLEN);
+  if (aItem->compression == DEFLATED)
+    outbuf = (Bytef *) PR_Malloc(ZIP_BUFLEN);
+
+  if ( inbuf == 0 || (aItem->compression == DEFLATED && outbuf == 0) )
+  {
+    status = ZIP_ERR_MEMORY;
+    goto cleanup;
+  }
+
+  //-- seek to the item 
+#ifndef STANDALONE 
+  if ( PR_Seek( mFd, aItem->offset, PR_SEEK_SET ) != (PRInt32)aItem->offset )
+#else
+  if ( PR_Seek( mFd, aItem->offset, PR_SEEK_SET ) != 0)
+#endif
+  {
+    status = ZIP_ERR_CORRUPT;
+    goto cleanup;
+  }
+
+  //-- set up the inflate if DEFLATED
+  if (aItem->compression == DEFLATED)
+  {
+    memset( &zs, 0, sizeof(zs) );
+    zerr = inflateInit2( &zs, -MAX_WBITS );
+    if ( zerr != Z_OK )
+    {
+      status = ZIP_ERR_GENERAL;
+      goto cleanup;
+    }
+    else
+    {
+      zs.next_out = outbuf;
+      zs.avail_out = ZIP_BUFLEN;
+    }
+    bInflating = PR_TRUE;
+  }
+
+  //-- initialize crc checksum
+  crc = crc32(0L, Z_NULL, 0);
+
+  size = aItem->size;
+  inpos = 0;
+
+  //-- read in ZIP_BUFLEN-sized chunks of item
+  //-- inflating if item is DEFLATED
+  while ( zerr == Z_OK )
+  {
+    bRead = PR_FALSE;  // used to check if new data to inflate
+    bWrote = PR_FALSE; // used to reset zs.next_out to outbuf 
+                       //   when outbuf fills up
+
+    //-- read to inbuf
+    if (aItem->compression == DEFLATED)
+    {
+      if ( zs.avail_in == 0 && zs.total_in < size )
+      {
+        //-- no data to inflate yet still more in file:
+        //-- read another chunk of compressed data
+
+        inpos = zs.total_in;  // input position
+        chunk = ( inpos + ZIP_BUFLEN <= size ) ? ZIP_BUFLEN : size - inpos;
+
+        if ( PR_Read( mFd, inbuf, chunk ) != (READTYPE)chunk )
+        {
+          //-- unexpected end of data
+          status = ZIP_ERR_CORRUPT;
+          break;
+        }
+
+        zs.next_in  = inbuf;
+        zs.avail_in = chunk;
+        bRead = PR_TRUE;
+      }
+
+      if ( zs.avail_out == 0 )
+      {
+        //-- reuse output buffer
+        zs.next_out = outbuf;
+        zs.avail_out = ZIP_BUFLEN;
+        bWrote = PR_TRUE; // mimic writing to disk/memory
+      }
+    }
+    else
+    {
+      if (inpos < size)
+      {
+        //-- read a chunk in 
+        chunk = ( inpos + ZIP_BUFLEN <= size ) ? ZIP_BUFLEN : size - inpos;
+
+        if ( PR_Read( mFd, inbuf, chunk ) != (READTYPE)chunk )
+        {
+          //-- unexpected end of data
+          status = ZIP_ERR_CORRUPT;
+          break;
+        }
+
+        inpos += chunk;
+      }
+      else
+      {
+        //-- finished reading STORED item
+        break;
+      }
+    }
+
+    //-- inflate if item is DEFLATED
+    if (aItem->compression == DEFLATED)
+    {
+      if (bRead || bWrote)
+      {
+        old_next_out = zs.next_out;
+
+        zerr = inflate( &zs, Z_PARTIAL_FLUSH );
+
+        //-- incrementally update crc checksum
+        crc = crc32(crc, (const unsigned char*)old_next_out, zs.next_out - old_next_out); 
+      }
+      else
+        zerr = Z_STREAM_END;
+    }
+    //-- else just use input buffer containing data from STORED item
+    else
+    {
+      //-- incrementally update crc checksum
+      crc = crc32(crc, (const unsigned char*)inbuf, chunk); 
+    }
+  }
+
+  //-- convert zlib error to return value
+  if ( status == ZIP_OK && zerr != Z_OK && zerr != Z_STREAM_END )
+  {
+    status = (zerr == Z_MEM_ERROR) ? ZIP_ERR_MEMORY : ZIP_ERR_CORRUPT;
+    goto cleanup;
+  }
+
+  //-- verify computed crc checksum against header info crc 
+  if (status == ZIP_OK && crc != aItem->crc32)
+  {
+    status = ZIP_ERR_CORRUPT;
+  }
+
+cleanup:
+  if ( bInflating )
+  {
+    //-- free zlib internal state
+    inflateEnd( &zs );
+  }
+
+  PR_FREEIF(inbuf);
+  if (aItem->compression == DEFLATED)
+    PR_FREEIF(outbuf);
+           
   return status;
 }
 

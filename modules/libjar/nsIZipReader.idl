@@ -64,13 +64,21 @@ interface nsIZipReader : nsISupports
     /**
      * Opens a zip reader.
      */
-	void open();
+    void open();
 
     /**
      * Closes a zip reader. Subsequent attempts to extract files or read from
      * its input stream will result in an error.
      */
-	void close();
+    void close();
+
+    /**
+     * Tests the integrity of the archive by performing a CRC check 
+     * on each item expanded into memory.  If an entry is specified
+     * the integrity of only that item is tested.  If NULL is passed 
+     * in the inetgrity of all items in the archive are tested.  
+     */
+    void test(in string aEntryName);
 
     /**
      * Extracts a zip entry into a local file specified by outFile.
@@ -85,7 +93,7 @@ interface nsIZipReader : nsISupports
     /**
      * Returns a simple enumerator whose elements are of type nsIZipEntry.
      */
-	nsISimpleEnumerator/*<nsIZipEntry>*/ findEntries(in string aPattern);
+    nsISimpleEnumerator/*<nsIZipEntry>*/ findEntries(in string aPattern);
 
     /**
      * Returns an input stream containing the contents of the specified zip entry.
