@@ -122,7 +122,7 @@ class nsTString_CharT : public nsTSubstring_CharT
          *       the null terminator character.
          */
 
-      const char_type CharAt( index_type i ) const
+      char_type CharAt( index_type i ) const
         {
           NS_ASSERTION(i <= mLength, "index exceeds allowable range");
           return mData[i];
