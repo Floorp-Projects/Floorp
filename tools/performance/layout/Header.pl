@@ -36,7 +36,7 @@ sub debug_print {
 
 @ARGV;
 $buildRoot = $ARGV[0];
-$buildIDFile = '< '.$buildRoot.'\bin\chrome\navigator\locale\navigator.dtd';
+$buildIDFile = '< '.$buildRoot.'\bin\chrome\locales\en-US\navigator\locale\navigator.dtd';
 $pullDate = $ARGV[1];
 $useClockTime = $ARGV[2];
 
