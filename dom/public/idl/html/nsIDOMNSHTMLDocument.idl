@@ -57,9 +57,13 @@ interface nsIDOMNSHTMLDocument : nsISupports
 
   // This is the internal version of open(); note that the version
   // scriptable with JS is defined entirely in classinfo.
+  // If aContentType is not something supported by nsHTMLDocument and
+  // the HTML content sink, trying to write to the document will
+  // probably throw.
   // Pass aReplace = true to trigger a replacement of the previous
   // document in session history; pass false for normal history handling.
-  nsIDOMDocument            open(in boolean aReplace);
+  nsIDOMDocument            open(in ACString aContentType,
+                                 in boolean aReplace);
 
   // Scriptable versions of write(), writeln(), clear().
   void                      write();

@@ -247,7 +247,8 @@ protected:
   nsresult WriteCommon(const nsAString& aText,
                        PRBool aNewlineTerminate);
   nsresult ScriptWriteCommon(PRBool aNewlineTerminate);
-  nsresult OpenCommon(nsIURI* aUrl, PRBool aReplace);
+  nsresult OpenCommon(nsIURI* aUrl, const nsACString& aContentType,
+                      PRBool aReplace);
 
   nsresult CreateAndAddWyciwygChannel(void);
   nsresult RemoveWyciwygChannel(void);

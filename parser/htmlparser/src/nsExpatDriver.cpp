@@ -1099,8 +1099,9 @@ nsExpatDriver::GetMostDerivedIID(void) const
 NS_IMETHODIMP_(void)
 nsExpatDriver::Terminate()
 {
-  // XXX - not sure what happens to the unparsed data.
-  XML_BlockParser(mExpatParser);
+  if (mExpatParser) {
+    XML_BlockParser(mExpatParser); // XXX - not sure what happens to the unparsed data.
+  }
   mInternalState = NS_ERROR_HTMLPARSER_STOPPARSING;
 }
 

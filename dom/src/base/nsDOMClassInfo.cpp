@@ -5396,6 +5396,22 @@ nsHTMLDocumentSH::DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
   nsCOMPtr<nsIDOMNSHTMLDocument> doc(do_QueryInterface(native));
   NS_ENSURE_TRUE(doc, JS_FALSE);
 
+  nsCAutoString contentType;
+  if (argc > 0) {
+    JSString* jsstr = JS_ValueToString(cx, argv[0]);
+    if (!jsstr) {
+      nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_OUT_OF_MEMORY);
+      return JS_FALSE;
+    }
+    CopyUTF16toUTF8(NS_REINTERPRET_CAST(const PRUnichar*,
+                                        ::JS_GetStringChars(jsstr)),
+                    contentType);
+    ToLowerCase(contentType);
+  }
+  if (!contentType.EqualsLiteral("text/plain")){
+    contentType = "text/html";
+  }
+  
   PRBool replace = PR_FALSE;
   if (argc > 1) {
     JSString* jsstr = JS_ValueToString(cx, argv[1]);
@@ -5410,7 +5426,7 @@ nsHTMLDocumentSH::DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
   }
 
   nsCOMPtr<nsIDOMDocument> retval;
-  rv = doc->Open(replace, getter_AddRefs(retval));
+  rv = doc->Open(contentType, replace, getter_AddRefs(retval));
   if (NS_FAILED(rv)) {
     nsDOMClassInfo::ThrowJSException(cx, rv);
 
