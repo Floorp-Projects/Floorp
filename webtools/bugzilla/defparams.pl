@@ -539,9 +539,9 @@ DefParam("expectbigqueries",
          0);
 
 DefParam("emailregexp",
-         'This defines the regexp to use for legal email addresses.  The default tries to match fully qualified email addresses.  Another popular value to put here is <tt>^[^@]*$</tt>, which means "local usernames, no @ allowed.',
+         'This defines the regexp to use for legal email addresses.  The default tries to match fully qualified email addresses.  Another popular value to put here is <tt>^[^@]+$</tt>, which means "local usernames, no @ allowed."',
          "t",
-         q:^[^@]*@[^@]*\\.[^@]*$:);
+         q:^[^@]+@[^@]+\\.[^@]+$:);
 
 DefParam("emailregexpdesc",
          "This describes in english words what kinds of legal addresses are allowed by the <tt>emailregexp</tt> param.",
