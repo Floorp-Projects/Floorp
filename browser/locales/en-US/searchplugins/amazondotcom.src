@@ -1,0 +1,25 @@
+# Search Plug-in for Amazon.com (http://www.amazon.com)
+# by Paul Millar <dazzle@edazzle.net> created: 18 January 2003
+# updated by Rafael Ebron <rebron@meer.net>
+
+<SEARCH
+    version = "7.1" 
+   name="Amazon.com"
+   description="Amazon.com Search"
+   method="GET"
+   action="http://www.amazon.com/exec/obidos/external-search/" 
+>
+
+<input name="field-keywords" user>
+<input name="mode" value="blended">
+<input name="tag" value="mozilla-20">
+<input  name="sourceid" value="Mozilla-search">
+
+</search>
+
+<BROWSER
+        update="http://www.mozilla.org/products/firefox/plugins/amazondotcom.src"
+        updateIcon="http://www.mozilla.org/products/firefox/plugins/amazondotcom.png"
+        updateCheckDays="3"
+	>
+

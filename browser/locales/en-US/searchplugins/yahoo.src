@@ -1,0 +1,42 @@
+# Yahoo Search Plug-in for Mozilla
+#
+# Created by Robert Fernandes <robert@bovilexics.com>, Matthew A. McGuigan <webnugget.com>, Rafael Ebron <rebron@meer.net>
+# Last Edited May 31, 2002
+# Last updated August 11, 2004
+
+<SEARCH
+    version = "7.1" 
+   name="Yahoo"
+   description="Yahoo Search"
+   searchForm="http://www.yahoo.com/r/so"
+   method="GET"
+   action="http://search.yahoo.com/search" 
+>
+
+<input name="p" user>
+<input name="ei" value="UTF-8">
+
+<interpret 
+    browserResultType="category" 
+    resultListStart="<div class=padrc>" 
+    resultListEnd="SPONSOR RESULTS" 
+    resultItemStart="149" 
+#    resultItemEnd="</a>"
+>
+
+<interpret 
+    browserResultType="result" 
+    resultListStart="<div id=web>" 
+    resultListEnd="MORE SPONSOR RESULTS" 
+    resultItemStart="<li>" 
+#    resultItemEnd="</a>"
+>
+
+<browser
+    alsomatch="http://search.yahoo.com/bin/search"
+    update="http://www.mozilla.org/products/firefox/plugins/yahoo.src"
+    updateIcon="http://www.mozilla.org/products/firefox/plugins/yahoo.gif"
+    updateCheckDays="3"
+>
+
+</search>
