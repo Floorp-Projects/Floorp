@@ -300,7 +300,7 @@ PRBool SupportsArrayImpl::AppendElements(nsISupportsArray* aElements)
       }
     }
 
-    PRInt32 index;
+    PRInt32 index = 0;
     while (index < elements->mCount) {
       NS_ADDREF(elements->mArray[index]);
       mArray[mCount++] = elements->mArray[index++];
