@@ -40,12 +40,8 @@
 static nsAutoString
 Right(const nsAutoString& text, PRUint32 start)
 {
-  MOZ_TIMER_START(mRightTimer);
-
   nsAutoString result;
   text.Right(result, text.Length() - start);
-
-  MOZ_TIMER_STOP(mRightTimer);
   return result;
 }
 
