@@ -267,9 +267,6 @@ public:
                                  nsIURI* aURL, 
                                  const char* aCommand);
     void FireOnEndDocumentLoad(nsIDocumentLoader* aLoadInitiator,
-#ifdef NECKO
-                               nsIChannel* channel,
-#endif
                                PRInt32 aStatus);
 							   
 
@@ -315,7 +312,9 @@ public:
     nsresult LoadURLComplete(nsIURI* aURL, nsISupports* aLoader, PRInt32 aStatus);
 #endif
     void SetParent(nsDocLoaderImpl* aParent);
-#ifndef NECKO
+#ifdef NECKO
+    void SetDocumentChannel(nsIChannel* channel);
+#else
     void SetDocumentUrl(nsIURI* aUrl);
 #endif
 
@@ -345,9 +344,6 @@ protected:
 
     void ChildDocLoaderFiredEndDocumentLoad(nsDocLoaderImpl* aChild,
                                             nsIDocumentLoader* aLoadInitiator,
-#ifdef NECKO
-                                            nsIChannel* channel,
-#endif
                                             PRInt32 aStatus);
 
 #ifndef NECKO
@@ -365,7 +361,9 @@ protected:
     // (ie, non owning) references. If you add any members to this
     // class, please make the ownership explicit (pinkerton, scc).
   
-#ifndef NECKO
+#ifdef NECKO
+    nsIChannel*                mDocumentChannel;       // [OWNER] ???compare with document
+#else
     nsIURI*                    mDocumentUrl;       // [OWNER] ???compare with document
     nsVoidArray                mChildGroupList;
     nsCOMPtr<nsILoadAttribs>   m_LoadAttrib;
@@ -407,7 +405,9 @@ nsDocLoaderImpl::nsDocLoaderImpl()
     }
 #endif /* DEBUG || FORCE_PR_LOG */
 
-#ifndef NECKO
+#ifdef NECKO
+    mDocumentChannel = nsnull;
+#else
     mDocumentUrl    = nsnull;
     mForegroundURLs = 0;
     mTotalURLs      = 0;
@@ -436,6 +436,8 @@ nsDocLoaderImpl::Init()
 #ifdef NECKO
     rv = NS_NewLoadGroup(nsnull, this, nsnull, getter_AddRefs(mLoadGroup));
     if (NS_FAILED(rv)) return rv;
+    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+           ("DocLoader:%p: load group %x.\n", this, mLoadGroup));
 #else
     rv = NS_NewISupportsArray(getter_AddRefs(m_LoadingDocsList));
     if (NS_FAILED(rv)) return rv;
@@ -457,7 +459,9 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
         NS_RELEASE(mParent);
     }
 
-#ifndef NECKO
+#ifdef NECKO
+    NS_IF_RELEASE(mDocumentChannel);
+#else
     NS_IF_RELEASE(mDocumentUrl);
 #endif
 
@@ -1007,6 +1011,7 @@ nsDocLoaderImpl::SetDefaultLoadAttributes(nsILoadAttribs*  aLoadAttribs)
 NS_IMETHODIMP
 nsDocLoaderImpl::OnStartRequest(nsIChannel *channel, nsISupports *ctxt)
 {
+    // called when the group gets its first element
     nsresult rv;
     nsCOMPtr<nsIURI> uri;
     rv = channel->GetURI(getter_AddRefs(uri));
@@ -1019,7 +1024,8 @@ NS_IMETHODIMP
 nsDocLoaderImpl::OnStopRequest(nsIChannel *channel, nsISupports *ctxt, 
                                nsresult status, const PRUnichar *errorMsg)
 {
-    FireOnEndDocumentLoad(this, channel, status);
+    // called when the group becomes empty
+    FireOnEndDocumentLoad(this, status);
     return NS_OK;
 }
 #endif
@@ -1076,14 +1082,29 @@ void nsDocLoaderImpl::FireOnStartDocumentLoad(nsIDocumentLoader* aLoadInitiator,
 }
 
 void nsDocLoaderImpl::FireOnEndDocumentLoad(nsIDocumentLoader* aLoadInitiator,
-#ifdef NECKO
-                                            nsIChannel* channel,
-#endif
                                             PRInt32 aStatus)
 									
 {
     PRInt32 count = mDocObservers.Count();
     PRInt32 index;
+
+#if defined(DEBUG)
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_OK;
+    if (mDocumentChannel)
+        rv = mDocumentChannel->GetURI(getter_AddRefs(uri));
+    if (NS_SUCCEEDED(rv)) {
+        char* buffer = nsCRT::strdup("?");
+        if (uri)
+            rv = uri->GetSpec(&buffer);
+        if (NS_SUCCEEDED(rv)) {
+            PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+                   ("DocLoader:%p: Firing OnEndDocumentLoad(...) called for %s\n", 
+                    this, buffer));
+            nsCRT::free(buffer);
+        }
+    }
+#endif /* DEBUG */
 
     /*
      * First notify any observers that the document load has finished...
@@ -1093,7 +1114,7 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsIDocumentLoader* aLoadInitiator,
             mDocObservers.ElementAt(index);
         observer->OnEndDocumentLoad(aLoadInitiator, 
 #ifdef NECKO
-                                    channel,
+                                    mDocumentChannel,
 #else
                                     mDocumentUrl,
 #endif
@@ -1104,20 +1125,13 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsIDocumentLoader* aLoadInitiator,
      * Finally notify the parent...
      */
     if (nsnull != mParent) {
-        mParent->ChildDocLoaderFiredEndDocumentLoad(this, aLoadInitiator, 
-#ifdef NECKO
-                                                    channel,
-#endif
-                                                    aStatus);
+        mParent->ChildDocLoaderFiredEndDocumentLoad(this, aLoadInitiator, aStatus);
     }
 }
 
 void
 nsDocLoaderImpl::ChildDocLoaderFiredEndDocumentLoad(nsDocLoaderImpl* aChild,
                                                     nsIDocumentLoader* aLoadInitiator,
-#ifdef NECKO
-                                                    nsIChannel* channel,
-#endif
                                                     PRInt32 aStatus)
 {
     PRBool busy;
@@ -1126,11 +1140,7 @@ nsDocLoaderImpl::ChildDocLoaderFiredEndDocumentLoad(nsDocLoaderImpl* aChild,
         // If the parent is no longer busy because a child document
         // loader finished, then its time for the parent to fire its
         // on-end-document-load notification.
-        FireOnEndDocumentLoad(aLoadInitiator,
-#ifdef NECKO
-                              channel,
-#endif
-                              aStatus);
+        FireOnEndDocumentLoad(aLoadInitiator, aStatus);
     }
 }
 
@@ -1352,7 +1362,7 @@ nsresult nsDocLoaderImpl::LoadURLComplete(nsIURI* aURL, nsISupports* aBindInfo, 
 
 #ifdef NECKO
     return GetLoadGroup()->RemoveChannel(channel, ctxt, aStatus, aMsg);
-#else
+#else   // !NECKO
     /*
      * Fire the OnEndDocumentLoad notification to any observers...
      */
@@ -1369,14 +1379,10 @@ nsresult nsDocLoaderImpl::LoadURLComplete(nsIURI* aURL, nsISupports* aBindInfo, 
                 this, buffer));
 #endif /* DEBUG */
 
-        FireOnEndDocumentLoad((nsIDocumentLoader *) this, 
-#ifdef NECKO
-                              channel,
-#endif
-                              aStatus);
+        FireOnEndDocumentLoad((nsIDocumentLoader *) this, aStatus);
     }
     return NS_OK;
-#endif
+#endif // !NECKO
 }
 
 void nsDocLoaderImpl::SetParent(nsDocLoaderImpl* aParent)
@@ -1386,7 +1392,14 @@ void nsDocLoaderImpl::SetParent(nsDocLoaderImpl* aParent)
   NS_IF_ADDREF(mParent);
 }
 
-#ifndef NECKO
+#ifdef NECKO
+void nsDocLoaderImpl::SetDocumentChannel(nsIChannel* channel)
+{
+  NS_IF_RELEASE(mDocumentChannel);
+  mDocumentChannel = channel;
+  NS_IF_ADDREF(mDocumentChannel);
+}
+#else
 void nsDocLoaderImpl::SetDocumentUrl(nsIURI* aUrl)
 {
   NS_IF_RELEASE(mDocumentUrl);
@@ -1596,7 +1609,6 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
 #ifndef NECKO
     m_DocLoader->SetDocumentUrl(url);
 #endif
-
     /*
      * Fire the OnStarDocumentLoad interfaces 
      */
@@ -1664,6 +1676,8 @@ nsresult nsDocumentBindInfo::Bind(nsIURI* aURL, nsIStreamListener* aListener)
   nsCOMPtr<nsIChannel> channel;
   rv = NS_OpenURI(getter_AddRefs(channel), aURL);
   if (NS_FAILED(rv)) return rv;
+
+  m_DocLoader->SetDocumentChannel(channel);
 
   rv = loadGroup->AddChannel(channel, nsnull);
   if (NS_FAILED(rv)) return rv;
