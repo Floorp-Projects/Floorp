@@ -355,6 +355,7 @@ public:
 
   NS_IMETHOD FlushPendingNotifications();
 
+  NS_IMETHOD IsReflowLocked(PRBool* aIsLocked);  
 
   //nsIViewObserver interface
 
@@ -2415,6 +2416,15 @@ PresShell::FlushPendingNotifications()
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+PresShell::IsReflowLocked(PRBool* aIsReflowLocked) 
+{
+  *aIsReflowLocked = (mReflowLockCount > 0);
+  return NS_OK;
+}
+
+
 
 NS_IMETHODIMP 
 PresShell::BeginBatchingReflows()

@@ -3520,7 +3520,7 @@ nsXULDocument::StartLayout(void)
           PRBool enabled;
           contentViewer->GetEnableRendering(&enabled);
           if (enabled) {
-            vm->EnableRefresh();
+            vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
           }
         }
       }

@@ -1832,7 +1832,7 @@ NS_IMETHODIMP nsViewManager2::DisableRefresh(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager2::EnableRefresh(void)
+NS_IMETHODIMP nsViewManager2::EnableRefresh(PRUint32 aUpdateFlags)
 {
   if (mUpdateBatchCnt > 0)
     return NS_OK;
@@ -1842,13 +1842,17 @@ NS_IMETHODIMP nsViewManager2::EnableRefresh(void)
   if (mUpdateCnt > 0)
     ProcessPendingUpdates(mRootView);
 
-  if (mTrueFrameRate > 0)
-  {
-    PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
+  if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
+   
+    if (mTrueFrameRate > 0)
+    {
+      PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
 
-    if (deltams > (1000 / (PRInt32)mTrueFrameRate))
-      Composite();
+      if (deltams > (1000 / (PRInt32)mTrueFrameRate))
+        Composite();
+    }
   }
+
 
   return NS_OK;
 }
@@ -1866,7 +1870,7 @@ NS_IMETHODIMP nsViewManager2::BeginUpdateViewBatch(void)
   return result;
 }
 
-NS_IMETHODIMP nsViewManager2::EndUpdateViewBatch(void)
+NS_IMETHODIMP nsViewManager2::EndUpdateViewBatch(PRUint32 aUpdateFlags)
 {
   nsresult result = NS_OK;
 
@@ -1881,7 +1885,7 @@ NS_IMETHODIMP nsViewManager2::EndUpdateViewBatch(void)
   }
 
   if (mUpdateBatchCnt == 0)
-    result = EnableRefresh();
+    result = EnableRefresh(aUpdateFlags);
 
   return result;
 }

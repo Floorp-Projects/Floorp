@@ -384,6 +384,12 @@ public:
   NS_IMETHOD FlushPendingNotifications() = 0;  
 
   /**
+   * Determine if reflow is currently locked
+   * @param aIsReflowLocked returns PR_TRUE if reflow is locked, PR_FALSE otherwise
+   */
+  NS_IMETHOD IsReflowLocked(PRBool* aIsLocked) = 0;  
+
+  /**
    * See if reflow verification is enabled. To enable reflow verification add
    * "verifyreflow:1" to your NSPR_LOG_MODULES environment variable
    * (any non-zero debug level will work). Or, call SetVerifyReflowEnable

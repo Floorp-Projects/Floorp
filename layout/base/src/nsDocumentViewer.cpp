@@ -468,7 +468,7 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
 
         // Now trigger a refresh
         if (mEnableRendering) {
-          mViewManager->EnableRefresh();
+          mViewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
         }
       }
 
@@ -758,7 +758,7 @@ DocumentViewerImpl::SetEnableRendering(PRBool aOn)
   mEnableRendering = aOn;
   if (mViewManager) {
     if (aOn) {
-      mViewManager->EnableRefresh();
+      mViewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
       nsIView* view; 
       mViewManager->GetRootView(view);   // views are not refCounted 
       if (view) { 
