@@ -5066,6 +5066,14 @@ nsEditor::CreateHTMLContent(const nsAString& aTag, nsIContent** aContent)
   if (!doc)
     return NS_ERROR_FAILURE;
 
+  // XXX Wallpaper over editor bug (editor tries to create elements with an
+  //     empty nodename).
+  if (aTag.IsEmpty()) {
+    NS_ERROR("Don't pass an empty tag to nsEditor::CreateHTMLContent, "
+             "check caller.");
+    return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsIAtom> tag = do_GetAtom(aTag);
   if (!tag)
     return NS_ERROR_OUT_OF_MEMORY;
