@@ -105,6 +105,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloader)
 #include "nsSyncStreamListener.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSyncStreamListener, Init)
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafeFileOutputStream)
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsStreamConverterService.h"
@@ -687,6 +689,11 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_LOCALFILEOUTPUTSTREAM_CID,
       NS_LOCALFILEOUTPUTSTREAM_CONTRACTID,
       nsFileOutputStream::Create },
+    { NS_SAFELOCALFILEOUTPUTSTREAM_CLASSNAME,
+      NS_SAFELOCALFILEOUTPUTSTREAM_CID,
+      NS_SAFELOCALFILEOUTPUTSTREAM_CONTRACTID,
+      nsSafeFileOutputStreamConstructor
+    },
     
     { "URIChecker",
       NS_URICHECKER_CID,

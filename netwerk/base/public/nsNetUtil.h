@@ -730,6 +730,27 @@ NS_NewLocalFileOutputStream(nsIOutputStream **aResult,
     return rv;
 }
 
+// Returns a file output stream. The object can be QI-ed to
+// nsISafeFileOuputStream.
+inline nsresult
+NS_NewSafeLocalFileOutputStream(nsIOutputStream **aResult,
+                                nsIFile          *aFile,
+                                PRInt32           aIOFlags       = -1,
+                                PRInt32           aPerm          = -1,
+                                PRInt32           aBehaviorFlags = 0)
+{
+    nsresult rv;
+    static NS_DEFINE_CID(kSafeLocalFileOutputStreamCID, NS_SAFELOCALFILEOUTPUTSTREAM_CID);
+    nsCOMPtr<nsIFileOutputStream> out =
+        do_CreateInstance(kSafeLocalFileOutputStreamCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = out->Init(aFile, aIOFlags, aPerm, aBehaviorFlags);
+        if (NS_SUCCEEDED(rv))
+            NS_ADDREF(*aResult = out);
+    }
+    return rv;
+}
+
 // returns the input end of a pipe.  the output end of the pipe
 // is attached to the original stream.  data from the original
 // stream is read into the pipe on a background thread.

@@ -435,6 +435,18 @@
     {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
+// component implementing nsISafeFileOutputStream
+#define NS_SAFELOCALFILEOUTPUTSTREAM_CLASSNAME \
+    "nsSafeFileOutputStream"
+#define NS_SAFELOCALFILEOUTPUTSTREAM_CONTRACTID \
+    "@mozilla.org/network/safe-file-output-stream;1"
+#define NS_SAFELOCALFILEOUTPUTSTREAM_CID             \
+{ /* a181af0d-68b8-4308-94db-d4f859058215 */         \
+    0xa181af0d,                                      \
+    0x68b8,                                          \
+    0x4308,                                          \
+    {0x94, 0xdb, 0xd4, 0xf8, 0x59, 0x05, 0x82, 0x15} \
+}
 
 /******************************************************************************
  * netwerk/cache/ classes

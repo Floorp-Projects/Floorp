@@ -96,3 +96,36 @@ interface nsIFileOutputStream : nsIOutputStream
     void init(in nsIFile file, in long ioFlags, in long perm,
               in long behaviorFlags);
 };
+
+/**
+ * This interface provides a mechanism to control a file output stream
+ * that takes care not to overwrite an existing file until it is known
+ * that all writes to the file succeeded.
+ * 
+ * An object that supports this interface is intended to also support
+ * nsIFileOutputStream.
+ *
+ * A file output stream that supports this interface writes to a
+ * temporary file, and moves it over the original file when the stream
+ * is closed, and all writes succeeded.  If the stream is closed, and
+ * something went wrong during writing, it will delete the temporary
+ * file and not touch the original.
+ */
+
+[scriptable, uuid(5f914307-5c34-4e1f-8e32-ec749d25b27a)]
+interface nsISafeFileOutputStream : nsISupports
+{
+    /**
+     * Set this attribute to true to cause the original file to be
+     * overwritten. Note: if any call to |write| failed to write out
+     * all of the data given to it, then setting this attribute to
+     * true will be ignored. The file will only be saved if all calls
+     * to |write| succeeded and if this attribute is set to true.
+     * If this attribute isn't set before |close| is called,
+     * or the stream goes away, the original file will not be
+     * overwritten, and the temporary file will be deleted.
+     *
+     * The default value for this attribute is false.
+     */
+    attribute boolean writeSucceeded;
+};

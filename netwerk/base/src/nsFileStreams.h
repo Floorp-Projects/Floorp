@@ -153,4 +153,32 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class nsSafeFileOutputStream : public nsFileOutputStream,
+                               public nsISafeFileOutputStream
+{
+public:
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSISAFEFILEOUTPUTSTREAM
+
+    nsSafeFileOutputStream() :
+        mWriteSucceeded(PR_FALSE), 
+        mInternalWriteSucceeded(PR_TRUE) {}
+
+    virtual ~nsSafeFileOutputStream() { nsSafeFileOutputStream::Close(); }
+
+    NS_IMETHODIMP Close();
+    NS_IMETHODIMP Write(const char *buf, PRUint32 count, PRUint32 *result);
+    NS_IMETHODIMP Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags);
+
+protected:
+    nsCOMPtr<nsIFile>         mTargetFile;
+    nsCOMPtr<nsIFile>         mTempFile;
+
+    PRBool mTargetFileExists;
+    PRBool mWriteSucceeded;         // Consumer reported
+    PRBool mInternalWriteSucceeded; // Internally detected in Write()
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif // nsFileStreams_h__
