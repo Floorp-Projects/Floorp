@@ -383,7 +383,43 @@ function onComposerSendMessage()
   }
 }
 
+function onComposerFromChanged()
+{
+  if (!gSMFields)
+    return;
+
+  // In order to provide maximum protection to the user:
+  // - If encryption is already enabled, we will not turn it off automatically.
+  // - If encryption is not enabled, but the new account defaults to encryption, we will turn it on.
+  // - If signing is disabled, we will not turn it on automatically.
+  // - If signing is enabled, but the new account defaults to not sign, we will turn signing off.
+
+  if (!gSMFields.requireEncryptMessage)
+  {
+    var encryptionPolicy = gCurrentIdentity.getIntAttribute("encryptionpolicy");
+    // 0 == never, 1 == if possible, 2 == always Encrypt.
+
+    if (encryptionPolicy == 2)
+    {
+      gSMFields.requireEncryptMessage = true;
+      setEncryptionUI();
+    }
+  }
+
+  if (gSMFields.signMessage)
+  {
+    var signMessage = gCurrentIdentity.getBoolAttribute("sign_mail");
+    
+    if (!signMessage)
+    {
+      gSMFields.signMessage = false;
+      setNoSignatureUI();
+    }
+  }
+}
+
 top.controllers.appendController(SecurityController);
 addEventListener('compose-window-close', onComposerClose, true);
 addEventListener('compose-window-reopen', onComposerReOpen, true);
 addEventListener('compose-send-message', onComposerSendMessage, true);
+addEventListener('compose-from-changed', onComposerFromChanged, true);

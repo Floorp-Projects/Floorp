@@ -2543,6 +2543,10 @@ function LoadIdentity(startup)
           try {
             gMsgCompose.SetSignature(gCurrentIdentity);
           } catch (ex) { dump("### Cannot set the signature: " + ex + "\n");}
+
+          var event = document.createEvent('Events');
+          event.initEvent('compose-from-changed', false, true);
+          document.getElementById("msgcomposeWindow").dispatchEvent(event);
         }
 
       AddDirectoryServerObserver(false);
