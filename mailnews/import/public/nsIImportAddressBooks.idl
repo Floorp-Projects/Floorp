@@ -127,6 +127,7 @@ interface nsIImportAddressBooks : nsISupports
 	void 	ImportAddressBook( 	in nsIImportABDescriptor source, 
 						   		in nsIAddrDatabase destination,
 						   		in nsIImportFieldMap fieldMap,
+								in boolean isAddrLocHome,
 								out wstring errorLog,
 								out wstring successLog,
 						   		out boolean fatalError);

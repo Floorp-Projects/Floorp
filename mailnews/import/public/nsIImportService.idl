@@ -65,10 +65,11 @@ interface nsIImportService : nsISupports
 
 };
 
-
 %{ C++
 #define NS_IMPORTSERVICE_CID						  \
 { /* 5df96d60-1726-11d3-a206-00a0cc26da63 */      \
  	0x5df96d60, 0x1726, 0x11d3,                   \
  	{0xa2, 0x06, 0x0, 0xa0, 0xcc, 0x26, 0xda, 0x63}}
+
+#define NS_IMPORTSERVICE_CONTRACTID "@mozilla.org/import/import-service;1"
 %}

@@ -85,6 +85,20 @@ Rights Reserved.
         <html id="results" flex="1"/>
       </hbox>
     </vbox>
+    <vbox class="wizard-box">
+      <html>&FieldDiscInputText1.label;</html>
+      <html>&FieldDiscInputText2.label;</html>
+      <separator/>
+      <separator class="thin"/>
+      <radiogroup id="homeorwork" orient="vertical" class="indent" autostretch="never">
+        <radio group="homeorwork" value="Home" id="homeRadio" label="&importDialog.homeTitle;"/>
+        <radio group="homeorwork" value="Work" id="workRadio" label="&importDialog.workTitle;"/>
+      </radiogroup>
+         <separator/>
+         <separator/>
+         <html>&FieldDiscWarning.label;</html>
+         <text id="warning" flex="1"/>
+    </vbox>
   </deck>
 
   <separator/>

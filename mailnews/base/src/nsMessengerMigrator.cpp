@@ -1940,7 +1940,7 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to convert na2 to ldif");
   if (NS_FAILED(rv)) return;
   
-  rv = ab->ConvertLDIFtoMAB(tmpLDIFFileSpec, PR_TRUE /* migrating */);
+  rv = ab->ConvertLDIFtoMAB(tmpLDIFFileSpec, PR_TRUE /* migrating */, nsnull, PR_FALSE, PR_FALSE /* Importing Comm4x */);
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration filed:  failed to convert ldif to mab\n");
   if (NS_FAILED(rv)) return;
  

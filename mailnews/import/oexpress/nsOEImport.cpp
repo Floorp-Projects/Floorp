@@ -131,10 +131,11 @@ public:
 	NS_IMETHOD InitFieldMap(nsIFileSpec *location, nsIImportFieldMap *fieldMap)
 		{ return( NS_ERROR_FAILURE); }
 	
-	/* void ImportAddressBook (in nsIImportABDescriptor source, in nsISupports destination, in nsISupports fieldMap, out boolean fatalError); */
+	/* void ImportAddressBook (in nsIImportABDescriptor source, in nsIAddrDatabase destination, in nsIImportFieldMap fieldMap, in boolean isAddrLocHome, out wstring errorLog, out wstring successLog, out boolean fatalError); */
 	NS_IMETHOD ImportAddressBook(	nsIImportABDescriptor *source, 
 									nsIAddrDatabase *	destination, 
 									nsIImportFieldMap *	fieldMap, 
+									PRBool isAddrLocHome, 
 									PRUnichar **		errorLog,
 									PRUnichar **		successLog,
 									PRBool *			fatalError);
@@ -612,6 +613,7 @@ NS_IMETHODIMP ImportOEAddressImpl::FindAddressBooks(nsIFileSpec *location, nsISu
 NS_IMETHODIMP ImportOEAddressImpl::ImportAddressBook(	nsIImportABDescriptor *source, 
 													nsIAddrDatabase *	destination, 
 													nsIImportFieldMap *	fieldMap, 
+													PRBool isAddrLocHome, 
 													PRUnichar **		errorLog,
 													PRUnichar **		successLog,
 													PRBool *			fatalError)

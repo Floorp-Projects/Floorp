@@ -85,10 +85,11 @@ public:
 	/* nsISupports InitFieldMap(nsIFileSpec location, nsIImportFieldMap fieldMap); */
 	NS_IMETHOD InitFieldMap(nsIFileSpec *location, nsIImportFieldMap *fieldMap);
 	
-	/* void ImportAddressBook (in nsIImportABDescriptor source, in nsISupports destination, in nsISupports fieldMap, out boolean fatalError); */
+	/* void ImportAddressBook (in nsIImportABDescriptor source, in nsIAddrDatabase destination, in nsIImportFieldMap fieldMap, in boolean isAddrLocHome, out wstring errorLog, out wstring successLog, out boolean fatalError); */
 	NS_IMETHOD ImportAddressBook(	nsIImportABDescriptor *source, 
 									nsIAddrDatabase *	destination, 
 									nsIImportFieldMap *	fieldMap, 
+									PRBool isAddrLocHome, 
 									PRUnichar **		errorLog,
 									PRUnichar **		successLog,
 									PRBool *			fatalError);
@@ -439,6 +440,7 @@ void ImportAddressImpl::SetLogs( nsString& success, nsString& error, PRUnichar *
 NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSource, 
 													nsIAddrDatabase *	pDestination, 
 													nsIImportFieldMap *	fieldMap, 
+													PRBool isAddrLocHome, 
 													PRUnichar **		pErrorLog,
 													PRUnichar **		pSuccessLog,
 													PRBool *			fatalError)

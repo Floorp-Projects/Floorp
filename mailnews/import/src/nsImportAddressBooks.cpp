@@ -88,8 +88,8 @@ public:
 	/* boolean WantsProgress (); */
 	NS_IMETHOD WantsProgress(PRBool *_retval);
 
-	/* boolean BeginImport (in nsIOutputStream successLog, in nsIOutputStream errorLog); */
-	NS_IMETHOD BeginImport(nsISupportsWString *successLog, nsISupportsWString *errorLog, PRBool *_retval);
+        /* boolean BeginImport (in nsISupportsWString successLog, in nsISupportsWString errorLog, in boolean isAddrLocHome); */
+        NS_IMETHOD BeginImport(nsISupportsWString *successLog, nsISupportsWString *errorLog, PRBool isAddrLocHome, PRBool *_retval) ;
 
 	/* boolean ContinueImport (); */
 	NS_IMETHOD ContinueImport(PRBool *_retval);
@@ -141,6 +141,7 @@ public:
 	nsISupportsWString *		successLog;
 	nsISupportsWString *		errorLog;
 	char *						pDestinationUri;
+	PRBool                      bAddrLocInput ;
 
 	AddressThreadData();
 	~AddressThreadData();
@@ -555,7 +556,7 @@ void nsImportGenericAddressBooks::SetLogs( nsString& success, nsString& error, n
 	}	
 }
 
-NS_IMETHODIMP nsImportGenericAddressBooks::BeginImport(nsISupportsWString *successLog, nsISupportsWString *errorLog, PRBool *_retval)
+NS_IMETHODIMP nsImportGenericAddressBooks::BeginImport(nsISupportsWString *successLog, nsISupportsWString *errorLog, PRBool isAddrLocHome, PRBool *_retval)
 {
 	NS_PRECONDITION(_retval != nsnull, "null ptr");
     if (!_retval)
@@ -605,6 +606,7 @@ NS_IMETHODIMP nsImportGenericAddressBooks::BeginImport(nsISupportsWString *succe
 	NS_IF_ADDREF( m_pSuccessLog);
 	if (m_pDestinationUri)
 		m_pThreadData->pDestinationUri = nsCRT::strdup( m_pDestinationUri);
+	m_pThreadData->bAddrLocInput = isAddrLocHome ;
 				
 	PRThread *pThread = PR_CreateThread( PR_USER_THREAD, &ImportAddressThread, m_pThreadData, 
 									PR_PRIORITY_NORMAL, 
@@ -918,24 +920,10 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 						PRUnichar *pSuccess = nsnull;
 						PRUnichar *pError = nsnull;
 
-						/*
-						if (pData->fieldMap) {
-							PRInt32		sz = 0;
-							PRInt32		mapIndex;
-							PRBool		active;
-							pData->fieldMap->GetMapSize( &sz);
-							IMPORT_LOG1( "**** Field Map Size: %d\n", (int) sz);
-							for (PRInt32 i = 0; i < sz; i++) {
-								pData->fieldMap->GetFieldMap( i, &mapIndex);
-								pData->fieldMap->GetFieldActive( i, &active);
-								IMPORT_LOG3( "Field map #%d: index=%d, active=%d\n", (int) i, (int) mapIndex, (int) active);
-							}
-						}
-						*/
-
 						rv = pData->addressImport->ImportAddressBook(	book, 
 																	pDestDB, // destination
 																	pData->fieldMap, // fieldmap
+													pData->bAddrLocInput,
 																	&pError,
 																	&pSuccess,
 																	&fatalError);

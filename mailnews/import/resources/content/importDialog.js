@@ -25,9 +25,12 @@ var gImportMsgsBundle;
 var importService = 0;
 var successStr = null;
 var errorStr = null;
+var inputStr = null ;
 var progressInfo = null;
 var selectedModuleName = null;
 
+var selLocIsHome = false ;
+var addInterface = null ;
 
 function OnLoadImportDialog()
 {
@@ -197,6 +200,9 @@ function ImportDialogOKButton()
           top.errorStr = Components.classes["@mozilla.org/supports-wstring;1"].createInstance();
           if (top.errorStr)
             top.errorStr = top.errorStr.QueryInterface( Components.interfaces.nsISupportsWString);
+          top.inputStr = Components.classes["@mozilla.org/supports-wstring;1"].createInstance();
+          if (top.inputStr)
+            top.inputStr = top.inputStr.QueryInterface( Components.interfaces.nsISupportsWString);
 
           if (ImportAddress( module, top.successStr, top.errorStr) == true) {
             // We think it was a success, either, we need to
@@ -363,6 +369,43 @@ function ContinueImport( info) {
     info.importInterface = null;
   }
 }
+
+
+function ShowResults(doesWantProgress, result)
+{
+       if (result)
+       {
+               if (doesWantProgress)
+               {
+                       var deck = document.getElementById("stateDeck");
+                       var header = document.getElementById("header");
+                       var progressStatusEl = document.getElementById("progressStatus");
+                       var progressTitleEl = document.getElementById("progressTitle");
+
+                       var meterText = gImportMsgsBundle.getFormattedString('MailProgressMeterText',
+                                                                                                                  [ name ]);
+                       header.setAttribute("description", meterText);
+      
+                       progressStatusEl.setAttribute("label", "");
+                       progressTitleEl.setAttribute("label", meterText);
+
+                       deck.setAttribute("index", "2");
+                       progressInfo.progressWindow = top.window;
+                       progressInfo.intervalState = setInterval("ContinueImportCallback()", 100);
+               }
+               else
+               {
+                       ShowImportResults(true, 'Address');
+               }
+       }
+       else
+       {
+        ShowImportResults(false, 'Address');
+       }
+
+       return true ;
+}
+
 
 function ShowImportResults(good, module)
 {
@@ -610,7 +653,7 @@ function ImportMail( module, success, error) {
   }
 
   if (mailInterface.WantsProgress()) {
-    if (mailInterface.BeginImport( success, error)) {
+   if (mailInterface.BeginImport( success, error, false)) {	
       top.progressInfo.importInterface = mailInterface;
       // top.intervalState = setInterval( "ContinueImport()", 100);
       return true;
@@ -619,7 +662,7 @@ function ImportMail( module, success, error) {
       return false;
   }
   else
-    return mailInterface.BeginImport( success, error) ? true : false;
+    return mailInterface.BeginImport( success, error, false) ? true : false;
 }
 
 
@@ -633,7 +676,7 @@ function ImportAddress( module, success, error) {
 
   top.progressInfo.importSuccess = false;
 
-  var addInterface = module.GetImportInterface( "addressbook");
+  addInterface = module.GetImportInterface( "addressbook");
   if (addInterface != null)
     addInterface = addInterface.QueryInterface( Components.interfaces.nsIImportGeneric);
   if (addInterface == null) {
@@ -641,7 +684,7 @@ function ImportAddress( module, success, error) {
     return( false);
   }
 
-
+  var path ;
   var loc = addInterface.GetStatus( "autoFind");
   if (loc == false) {
     loc = addInterface.GetData( "addressLocation");
@@ -698,6 +741,8 @@ function ImportAddress( module, success, error) {
       // ask for file
       try {
         filePicker.init( top.window, gImportMsgsBundle.getString('ImportSelectAddrFile'), Components.interfaces.nsIFilePicker.modeOpen);
+	if (selectedModuleName == gImportMsgsBundle.getString('Comm4xImportName'))
+		filePicker.appendFilter(gImportMsgsBundle.getString('Comm4xFiles'),"*.na2");
         filePicker.appendFilters( Components.interfaces.nsIFilePicker.filterAll);
         filePicker.show();
         if (filePicker.file && (filePicker.file.path.length > 0))
@@ -709,6 +754,8 @@ function ImportAddress( module, success, error) {
       }
     }
 
+    path = filePicker.file.leafName;
+	
     if (file == null) {
       return( false);
     }
@@ -716,6 +763,21 @@ function ImportAddress( module, success, error) {
     file = CreateNewFileSpecFromPath( file);
 
     addInterface.SetData( "addressLocation", file);
+  }
+
+  // no need to use the fieldmap for 4.x import since we are using separate dialog
+  if (selectedModuleName == gImportMsgsBundle.getString('Comm4xImportName'))
+  {
+               var deck = document.getElementById("stateDeck");
+               deck.setAttribute("index", "4");
+               var isHomeRadioGroup = document.getElementById("homeorwork");
+               isHomeRadioGroup.selectedItem = document.getElementById("workRadio");
+               var forwardButton = document.getElementById("forward");
+               forwardButton.removeAttribute("disabled");
+               var warning = document.getElementById("warning");
+               var textStr = "   " + path ;
+               warning.setAttribute ('value', textStr) ;
+               return false;
   }
 
   var map = addInterface.GetData( "fieldMap");
@@ -737,7 +799,7 @@ function ImportAddress( module, success, error) {
   }
 
   if (addInterface.WantsProgress()) {
-    if (addInterface.BeginImport( success, error)) {
+    if (addInterface.BeginImport( success, error, selLocIsHome)) {   	
       top.progressInfo.importInterface = addInterface;
       // top.intervalState = setInterval( "ContinueImport()", 100);
       return( true);
@@ -747,7 +809,7 @@ function ImportAddress( module, success, error) {
     }
   }
   else {
-    if (addInterface.BeginImport( success, error)) {
+    if (addInterface.BeginImport( success, error, selLocIsHome)) {	
       return( true);
     }
     else {
@@ -786,7 +848,31 @@ function next()
   case "3":
     close();
     break;
+  case "4" :
+    var isHomeRadioGroup = document.getElementById("homeorwork");
+    if (isHomeRadioGroup.selectedItem.getAttribute("value") == "Home")
+               selLocIsHome = true ;
+       ExportComm4x() ;
+       break ;
   }
+}
+
+function ExportComm4x()
+{
+  var result ;
+  if (addInterface.WantsProgress())
+  {
+    result = addInterface.BeginImport( successStr, errorStr, selLocIsHome) ;
+       top.progressInfo.importInterface = addInterface;
+       ShowResults(true, result) ;
+  }
+  else
+  {
+    result = addInterface.BeginImport( successStr, errorStr, selLocIsHome) ;
+       ShowResults(false, result) ;
+  }
+
+  return true ;
 }
 
 function enableAdvance()

@@ -80,7 +80,7 @@ interface nsIImportGeneric : nsISupports
 			failure of the import.  Failure can be reported even if WantsProgress
 			returned TRUE. 
 		 */
-	boolean		BeginImport( in nsISupportsWString successLog, in nsISupportsWString errorLog);
+	boolean         BeginImport( in nsISupportsWString successLog, in nsISupportsWString errorLog, in boolean isAddrLocHome);	
 		/*
 			If WantsProgress returned TRUE then this will indicate if the import should
 			continue.  If this returns FALSE then no other methods should be called
