@@ -195,15 +195,12 @@ nsresult nsMsgMessageDataSource::GetSenderName(nsAutoString& sender, nsAutoStrin
 	if(mHeaderParser)
 	{
 		char *name;
-		char *senderStr = sender.ToNewCString();
-		if(NS_SUCCEEDED(rv = mHeaderParser->ExtractHeaderAddressName (nsnull, senderStr, &name)))
+		if(NS_SUCCEEDED(rv = mHeaderParser->ExtractHeaderAddressName (nsnull, nsAutoCString(sender), &name)))
 		{
 			*senderUserName = name;
 		}
 		if(name)
 			PL_strfree(name);
-		if(senderStr)
-			delete[] senderStr;
 	}
 	return rv;
 }
@@ -615,3 +612,5 @@ nsresult nsMsgMessageDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
 	NotifyObservers(resource, propertyResource, newValueNode, PR_TRUE);
 	return NS_OK;
 }
+
+
