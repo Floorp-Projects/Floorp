@@ -185,7 +185,7 @@ public:
   NS_IMETHOD ClearRegions() = 0;
 };
 
-void inline nsBandTrapezoid::GetRect(nsRect& aRect) const
+inline void nsBandTrapezoid::GetRect(nsRect& aRect) const
 {
   aRect.x = PR_MIN(xTopLeft, xBottomLeft);
   aRect.y = yTop;
@@ -193,7 +193,7 @@ void inline nsBandTrapezoid::GetRect(nsRect& aRect) const
   aRect.height = yBottom - yTop;
 }
 
-void inline nsBandTrapezoid::operator=(const nsRect& aRect)
+inline void nsBandTrapezoid::operator=(const nsRect& aRect)
 {
   xTopLeft = xBottomLeft = aRect.x;
   xTopRight = xBottomRight = aRect.XMost();
