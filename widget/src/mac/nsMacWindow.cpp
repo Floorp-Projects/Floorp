@@ -90,16 +90,14 @@ long CallSystemWDEF ( short inCode, WindowPtr inWindow, short inMessage, long in
 
 #define kWindowPositionSlop 20
 
-// еее TODO: these should come from the system, not be hard-coded. What if I'm running
-// an elaborate theme with wide window borders?
+// These are only initial guesses. Real values are filled in
+// after window creation.
 const short kWindowTitleBarHeight = 22;
 const short kWindowMarginWidth = 6;
 const short kDialogTitleBarHeight = 26;
 const short kDialogMarginWidth = 6;
 
-
 #pragma mark -
-
 
 pascal OSErr
 nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr theWindow, 
@@ -112,7 +110,6 @@ nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr t
   if ( !theWindow || !windowEventSink )
     return dragNotAcceptedErr;
     
-  nsresult rv = NS_OK;
   switch ( theMessage ) {
   
     case kDragTrackingEnterHandler:
@@ -188,15 +185,14 @@ NS_IMPL_ISUPPORTS_INHERITED4(nsMacWindow, Inherited, nsIEventSink, nsPIWidgetMac
 //-------------------------------------------------------------------------
 nsMacWindow::nsMacWindow() : Inherited()
   , mWindowMadeHere(PR_FALSE)
-  , mIsDialog(PR_FALSE)
   , mIsSheet(PR_FALSE)
   , mIgnoreDeactivate(PR_FALSE)
-  , mMacEventHandler(nsnull)
   , mAcceptsActivation(PR_TRUE)
   , mIsActive(PR_FALSE)
   , mZoomOnShow(PR_FALSE)
   , mZooming(PR_FALSE)
   , mResizeIsFromUs(PR_FALSE)
+  , mMacEventHandler(nsnull)
 #if !TARGET_CARBON
   , mPhantomScrollbar(nsnull)
   , mPhantomScrollbarData(nsnull)
@@ -208,6 +204,8 @@ nsMacWindow::nsMacWindow() : Inherited()
   // create handlers for drag&drop
   mDragTrackingHandlerUPP = NewDragTrackingHandlerUPP(DragTrackingHandler);
   mDragReceiveHandlerUPP = NewDragReceiveHandlerUPP(DragReceiveHandler);
+  mBoundsOffset.v = kWindowTitleBarHeight; // initial guesses
+  mBoundsOffset.h = kWindowMarginWidth;
 }
 
 
@@ -292,7 +290,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
         mWindowType = eWindowType_dialog;
     } 
     else
-      mWindowType = (mIsDialog ? eWindowType_dialog : eWindowType_toplevel);
+      mWindowType = eWindowType_toplevel;
 
     short     wDefProcID = kWindowDocumentProc;
     Boolean   goAwayFlag = false;
@@ -469,6 +467,12 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
     }
     mWindowPtr = ::NewCWindow(nil, &wRect, "\p", false, wDefProcID, (WindowRef)-1, goAwayFlag, (long)nsnull);
     mWindowMadeHere = PR_TRUE;
+
+    Rect content, structure;
+    ::GetWindowBounds(mWindowPtr, kWindowStructureRgn, &structure);
+    ::GetWindowBounds(mWindowPtr, kWindowContentRgn, &content);
+    mBoundsOffset.v = content.top - structure.top;
+    mBoundsOffset.h = content.left - structure.left;
   }
   else
   {
@@ -1107,7 +1111,6 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
   StPortSetter setOurPortForLocalToGlobal ( mWindowPtr );
   
   if (eWindowType_popup == mWindowType) {
-    PRInt32 xOffset=0,yOffset=0;
     nsRect  localRect,globalRect;
 
     // convert to screen coordinates
@@ -1150,13 +1153,8 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
     Rect portBounds;
     ::GetWindowPortBounds(mWindowPtr, &portBounds);
 
-    if (mIsDialog) {
-      aX += kDialogMarginWidth;
-      aY += kDialogTitleBarHeight;
-    } else {
-      aX += kWindowMarginWidth;
-      aY += kWindowTitleBarHeight;
-    }
+    aX += mBoundsOffset.h;
+    aY += mBoundsOffset.v;
 
     nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
     if (screenmgr) {
@@ -1299,6 +1297,9 @@ nsMacWindow::UserStateForResize()
 
   // finally, reset our internal state to match
   nsBaseWidget::SetSizeMode(nsSizeMode_Normal);
+  // Tell container window we've moved. We stopped reporting move events
+  // when we were in the StandardState.
+  ReportMoveEvent();
 }
 
 
@@ -1457,14 +1458,7 @@ void nsMacWindow::MoveToGlobalPoint(PRInt32 aX, PRInt32 aY)
     }
   }
 
-  if (mIsDialog) {
-    aX -= kDialogMarginWidth;
-    aY -= kDialogTitleBarHeight;
-  } else {
-    aX -= kWindowMarginWidth;
-    aY -= kWindowTitleBarHeight;
-  }
-  Move(aX, aY);
+  Move(aX-mBoundsOffset.h, aY-mBoundsOffset.v);
 }
 
 //-------------------------------------------------------------------------
@@ -1558,10 +1552,7 @@ NS_IMETHODIMP nsMacWindow::GetScreenBounds(nsRect &aRect) {
     }
   }
  
-  if (mIsDialog)
-    aRect.MoveBy(-kDialogMarginWidth, -kDialogTitleBarHeight-yAdjust);
-  else
-    aRect.MoveBy(-kWindowMarginWidth, -kWindowTitleBarHeight-yAdjust);
+  aRect.MoveBy(-mBoundsOffset.h, -mBoundsOffset.v-yAdjust);
 
   return NS_OK;
 }
