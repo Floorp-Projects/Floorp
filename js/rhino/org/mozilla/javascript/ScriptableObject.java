@@ -760,9 +760,9 @@ public abstract class ScriptableObject implements Scriptable {
         final String propertyPrefix = "jsProperty_";
         final String getterPrefix = "jsGet_";
         final String setterPrefix = "jsSet_";
+        final String ctorName = "jsConstructor";
 
-        Method[] ctorMeths = FunctionObject.findMethods(clazz, 
-                                                        "jsConstructor");
+        Method[] ctorMeths = FunctionObject.findMethods(clazz, ctorName);
         Member ctorMember = null;
         if (ctorMeths != null) {
             if (ctorMeths.length > 1) {
@@ -824,6 +824,10 @@ public abstract class ScriptableObject implements Scriptable {
         }
 
         FunctionObject ctor = new FunctionObject(className, ctorMember, scope);
+        if (ctor.isVarArgsMethod()) {
+            String message = Context.getMessage("msg.varargs.ctor", null);
+            throw Context.reportRuntimeError(message);
+        }
         ctor.addAsConstructor(scope, proto);
 
         if (!hasPrefix && exclusionList == null)
@@ -845,6 +849,8 @@ public abstract class ScriptableObject implements Scriptable {
                     continue;
                 }
             }
+            if (name.equals(ctorName))
+                continue;
             String prefix = null;
             if (hasPrefix) {
                 if (name.startsWith(genericPrefix)) {
@@ -944,6 +950,11 @@ public abstract class ScriptableObject implements Scriptable {
                 continue;
             }
             FunctionObject f = new FunctionObject(name, methods[i], proto);
+            if (f.isVarArgsConstructor()) {
+                String message = Context.getMessage("msg.varargs.fun", 
+                                                    null);
+                throw Context.reportRuntimeError(message);
+            }
             Scriptable dest = prefix == staticFunctionPrefix
                               ? ctor
                               : proto;

@@ -119,6 +119,7 @@ public class FunctionObject extends NativeFunction {
                                                         null);
                     throw Context.reportRuntimeError(message);
                 }
+                parmsLength = VARARGS_CTOR;
             } else {
                 if (!isStatic ||
                     types[0] != Context.class ||
@@ -130,9 +131,9 @@ public class FunctionObject extends NativeFunction {
                                                         null);
                     throw Context.reportRuntimeError(message);
                 }
+                parmsLength = VARARGS_METHOD;
             }
             // XXX check return type
-            parmsLength = types[1].isArray() ? VARARGS_CTOR : VARARGS_METHOD;
             length = 1;
         } else {
             parmsLength = (short) types.length;
@@ -486,6 +487,14 @@ public class FunctionObject extends NativeFunction {
         catch (InstantiationException e) {
             throw WrappedException.wrapException(e);
         }
+    }
+    
+    boolean isVarArgsMethod() { 
+        return parmsLength == VARARGS_METHOD;
+    }
+
+    boolean isVarArgsConstructor() { 
+        return parmsLength == VARARGS_CTOR;
     }
 
     private static final short VARARGS_METHOD = -1;
