@@ -321,6 +321,9 @@ nsRootBoxFrame::AddTooltipSupport(nsIContent* aNode)
   // it will add itself to, and destroyed when those targets
   // are destroyed
   nsXULTooltipListener* listener = new nsXULTooltipListener();
+  if (!listener)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   listener->Init(aNode, this);
   return NS_OK;
 }

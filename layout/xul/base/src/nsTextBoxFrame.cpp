@@ -157,8 +157,7 @@ nsTextBoxFrame::nsTextBoxFrame(nsIPresShell* aShell):nsLeafBoxFrame(aShell), mCr
 
 nsTextBoxFrame::~nsTextBoxFrame()
 {
-    if (mAccessKeyInfo)
-        delete mAccessKeyInfo;
+    delete mAccessKeyInfo;
 }
 
 
@@ -733,8 +732,11 @@ nsTextBoxFrame::UpdateAccessIndex()
                 mAccessKeyInfo = nsnull;
             }
         } else {
-            if (!mAccessKeyInfo)
+            if (!mAccessKeyInfo) {
                 mAccessKeyInfo = new nsAccessKeyInfo();
+                if (!mAccessKeyInfo)
+                    return;
+            }
 
             nsAString::const_iterator start, end;
                 
