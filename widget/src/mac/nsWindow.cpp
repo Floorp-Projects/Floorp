@@ -675,14 +675,23 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 //		The window visRgn is expected to be set to whatever needs to be drawn
 //		(ie. if we are not between BeginUpdate/EndUpdate, we redraw the whole widget)
 //-------------------------------------------------------------------------
-NS_IMETHODIMP	nsWindow::Update()
+NS_IMETHODIMP	nsWindow::Update(nsIRenderingContext* aRenderingContext)
 {
 	RgnHandle updateRgn = ::NewRgn();
 	//::SectRgn(mWindowPtr->visRgn, mWindowRegion, updateRgn);
 	::SectRgn(mWindowPtr->visRgn, mMacPortRelativeRegion, updateRgn);
 	if (!::EmptyRgn(updateRgn))
 	{
-		nsIRenderingContext* renderingContext = GetRenderingContext();	// this sets the origin
+		// make sure we have a rendering context
+		nsIRenderingContext* renderingContext;
+		if (aRenderingContext)
+		{
+			renderingContext = aRenderingContext;
+			NS_ADDREF(renderingContext);
+		}
+		else
+			renderingContext = GetRenderingContext();	// this sets the origin
+
 		if (renderingContext)
 		{
 			// initialize the paint event for that widget
@@ -721,7 +730,7 @@ NS_IMETHODIMP	nsWindow::Update()
 				do
 				{
           if (NS_SUCCEEDED(children->CurrentItem((nsISupports **)&child)))  {
-					  child->Update();
+					  child->Update(renderingContext);
           }
 				}
         while (NS_SUCCEEDED(children->Next()));			
