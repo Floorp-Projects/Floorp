@@ -606,8 +606,9 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 NS_IMETHODIMP
 nsHTMLInputElement::GetSize(PRUint32* aValue)
 {
+  *aValue = 0;
+
   nsHTMLValue value;
-  *aValue = -1;
   if (NS_CONTENT_ATTR_HAS_VALUE ==
       GetHTMLAttribute(nsHTMLAtoms::size, value)) {
     if (value.GetUnit() == eHTMLUnit_Integer) {
