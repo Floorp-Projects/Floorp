@@ -222,7 +222,7 @@ nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
       if( nsnull == info.fMimeDescriptionArray) break;
 
       info.fExtensionArray = MakeStringArray(variants, extensions);
-      if( nsnull == extensionArray) break;
+      if( nsnull == info.fExtensionArray) break;
 
       rc = NS_OK;
       break;
