@@ -27,7 +27,7 @@ CBrowseDlg::CBrowseDlg(CWnd* pParent /*=NULL*/)
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	
 	m_sURL = _T("http://www.mozilla.com");
-	m_pWndBrowser = NULL;
+	m_pControlSite = NULL;
 }
 
 void CBrowseDlg::DoDataExchange(CDataExchange* pDX)
@@ -63,10 +63,13 @@ BOOL CBrowseDlg::OnInitDialog()
 	GetDlgItem(IDC_BROWSER_MARKER)->GetWindowRect(&rcMarker);
 	ScreenToClient(rcMarker);
 
-	// Create the control
-	m_pWndBrowser = new CWnd;
-	m_pWndBrowser->CreateControl(clsidMozilla, _T("Blah"), WS_VISIBLE, rcMarker, this, 1000);
-	
+	CControlSiteInstance::CreateInstance(&m_pControlSite);
+
+	if (m_pControlSite)
+	{
+		m_pControlSite->Attach(clsidMozilla, GetSafeHwnd(), rcMarker, NULL);
+	}
+
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -112,9 +115,11 @@ void CBrowseDlg::OnGo()
 
 	// If there's a browser control, use it to navigate to the specified URL
 
-	if (m_pWndBrowser)
+	if (m_pControlSite)
 	{
-		IUnknown *pIUnkBrowser = m_pWndBrowser->GetControlUnknown();
+		IUnknown *pIUnkBrowser = NULL;
+		
+		m_pControlSite->GetControlUnknown(&pIUnkBrowser);
 		if (pIUnkBrowser)
 		{
 			IWebBrowser *pIWebBrowser = NULL;
@@ -126,6 +131,7 @@ void CBrowseDlg::OnGo()
 				::SysFreeString(bstrURL);
 				pIWebBrowser->Release();
 			}
+			pIUnkBrowser->Release();
 		}
 	}
 }

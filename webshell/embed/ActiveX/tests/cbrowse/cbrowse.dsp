@@ -94,10 +94,21 @@ SOURCE=.\cbrowse.cpp
 # Begin Source File
 
 SOURCE=.\cbrowse.rc
+
+!IF  "$(CFG)" == "cbrowse - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "cbrowse - Win32 Debug"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
 SOURCE=.\CBrowseDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\ControlSite.cpp
 # End Source File
 # Begin Source File
 
@@ -115,6 +126,10 @@ SOURCE=.\cbrowse.h
 # Begin Source File
 
 SOURCE=.\CBrowseDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\ControlSite.h
 # End Source File
 # Begin Source File
 

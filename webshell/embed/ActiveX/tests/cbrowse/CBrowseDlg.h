@@ -15,7 +15,8 @@ class CBrowseDlg : public CDialog
 {
 // Construction
 public:
-	CWnd *m_pWndBrowser;
+	CControlSiteInstance *m_pControlSite;
+
 	CBrowseDlg(CWnd* pParent = NULL);	// standard constructor
 
 // Dialog Data
