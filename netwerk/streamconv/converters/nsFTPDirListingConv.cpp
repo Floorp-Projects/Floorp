@@ -683,7 +683,10 @@ nsFTPDirListingConv::ParseLSLine(char *aLine, indexEntry *aEntry) {
             }
         escName = nsEscape(aLine, url_Path);
         aEntry->mName.Adopt(escName);
-    
+
+        // initialize the time struct to 0 to be safe
+        InitPRExplodedTime(aEntry->mMDTM);
+
         return NS_OK;
     }
 
