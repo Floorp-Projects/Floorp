@@ -1978,6 +1978,43 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    return rc;
 }
 
+void nsWindow::ConstrainZLevel(HWND *aAfter) {
+
+  nsZLevelEvent  event;
+  nsWindow      *aboveWindow = 0;
+
+  event.eventStructType = NS_ZLEVEL_EVENT;
+  InitEvent(event, NS_SETZLEVEL);
+
+  if (*aAfter == HWND_BOTTOM)
+    event.mPlacement = nsWindowZBottom;
+  else if (*aAfter == HWND_TOP)
+    event.mPlacement = nsWindowZTop;
+  else {
+    event.mPlacement = nsWindowZRelative;
+    aboveWindow = GetNSWindowPtr(*aAfter);
+  }
+  event.mReqBelow = aboveWindow;
+  event.mActualBelow = nsnull;
+
+  event.mImmediate = PR_FALSE;
+  event.mAdjusted = PR_FALSE;
+  DispatchWindowEvent(&event);
+
+  if (event.mAdjusted) {
+    if (event.mPlacement == nsWindowZBottom)
+      *aAfter = HWND_BOTTOM;
+    else if (event.mPlacement == nsWindowZTop)
+      *aAfter = HWND_TOP;
+    else {
+      *aAfter = (HWND)event.mActualBelow->GetNativeData(NS_NATIVE_WINDOW);
+    }
+  }
+  NS_IF_RELEASE(event.mActualBelow);
+  NS_RELEASE(event.widget);
+}
+
+
 // 'Window procedure'
 PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
 {

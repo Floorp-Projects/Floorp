@@ -280,6 +280,8 @@ protected:
    virtual PRBool DispatchResizeEvent( PRInt32 aClientX, PRInt32 aClientY);
    void    DeferPosition( HWND, HWND, long, long, long, long, ULONG);
 
+    void ConstrainZLevel(HWND *aAfter);
+
    // Enumeration of the methods which are accessable on the PM thread
    enum {
       CREATE,
