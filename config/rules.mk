@@ -375,15 +375,6 @@ CPP_PROG_LINK = 1
 endif
 
 #
-# Define LINK_LINE here, since it gets used in two places.
-#
-ifdef CPP_PROG_LINK
-	LINK_LINE = $(CCC) $(CFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
-else
-	LINK_LINE = $(CCF) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
-endif
-
-#
 # PROGRAM = Foo
 # creates OBJS, links with LIBS to create Foo
 #
