@@ -2323,6 +2323,7 @@ XFE_DisplayBuiltin (MWContext *context, int iLocation,
 	Display *dpy = XtDisplay (CONTEXT_WIDGET (context));
 	Widget w = XtWindowToWidget (dpy, drawable);
 	Widget view = NULL;
+	int xs, ys;
 
 #ifdef DEBUG_spence
     printf ("XFE_DisplayBuiltin\n");
@@ -2335,6 +2336,15 @@ XFE_DisplayBuiltin (MWContext *context, int iLocation,
 	view = fe_showRDFView (CONTEXT_DATA (context)->drawing_area,
 						   builtin_struct->width, builtin_struct->height);
     builtin_struct->FE_Data = (void *) view;
+
+	/* update the window's position */
+	xs = builtin_struct->x + builtin_struct->x_offset -
+		CONTEXT_DATA (context)->document_x;
+	ys = builtin_struct->y + builtin_struct->y_offset -
+		CONTEXT_DATA (context)->document_y;
+
+	XtVaSetValues (view, XmNx, (Position) xs,
+				   XmNy, (Position) ys, 0);
 }
 
 void
