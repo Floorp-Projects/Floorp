@@ -1988,7 +1988,11 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
   
   nsXPIDLString folderName;
   srcFolder->GetName(getter_Copies(folderName));
-  
+  nsCAutoString tempSafeFolderName;
+  tempSafeFolderName.AssignWithConversion(folderName.get());
+  NS_MsgHashIfNecessary(tempSafeFolderName);
+  nsAutoString safeFolderName;
+  safeFolderName.AssignWithConversion(tempSafeFolderName);  
   srcFolder->ForceDBClosed();   
   
   nsCOMPtr<nsIFileSpec> oldPathSpec;
@@ -2027,7 +2031,7 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
   rv = summarySpec.CopyToDir(newPath);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  rv = AddSubfolder(folderName, getter_AddRefs(newMsgFolder));  
+  rv = AddSubfolder(safeFolderName, getter_AddRefs(newMsgFolder));  
   NS_ENSURE_SUCCESS(rv, rv);
 
   newMsgFolder->SetPrettyName(folderName.get());
