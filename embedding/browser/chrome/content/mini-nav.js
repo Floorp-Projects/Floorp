@@ -21,20 +21,65 @@
  */
 
 var appCore = null;
+var locationFld = null;
+
+
+function nsXULBrowserWindow()
+{
+}
+
+nsXULBrowserWindow.prototype = 
+{
+	QueryInterface : function(iid)
+		{
+		if(iid.equals(Components.interfaces.nsIXULBrowserWindow))
+			return this;
+		throw Components.results.NS_NOINTERFACE;
+		},
+	setJSStatus : function(status)
+		{
+		},
+	setJSDefaultStatus : function(status)
+		{
+		},
+	setDefaultStatus : function(status)
+		{
+		},
+	setOverLink : function(link)
+		{
+		},
+  onProgress : function (channel, current, max)
+  {
+  },
+	onStatusChange : function(channel, status)
+	{
+	},
+	onLocationChange : function(location)
+  {
+		if(!locationFld)
+			locationFld = document.getElementById("urlbar");
+
+		// We should probably not do this if the value has changed since the user 
+		// searched
+		locationFld.setAttribute("value", location);
+  }
+}
+
 
 function Startup()
 {
+  window.XULBrowserWindow = new nsXULBrowserWindow();
+
   // Create the browser instance component.
   createBrowserInstance();
 
-	window._content.appCore= appCore;
+  window._content.appCore= appCore;
   if (appCore == null) {
     // Give up.
     window.close();
   }
   // Initialize browser instance..
   appCore.setWebShellWindow(window);
-
 
   gURLBar = document.getElementById("urlbar");
 }
@@ -55,6 +100,7 @@ function createBrowserInstance()
       alert( "Error creating browser instance\n" );
   }
 }
+
 
 
 function InitContextMenu(xulMenu)
