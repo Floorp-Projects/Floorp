@@ -142,12 +142,16 @@ nsHTMLFontElement::StringToAttribute(nsIAtom* aAttribute,
       (aAttribute == nsHTMLAtoms::pointSize) ||
       (aAttribute == nsHTMLAtoms::fontWeight)) {
     nsAutoString tmp(aValue);
+      //rickg: fixed flaw where ToInteger error code was not being checked.
+      //       This caused wrong default value for font size.
     PRInt32 ec, v = tmp.ToInteger(&ec);
-    tmp.CompressWhitespace(PR_TRUE, PR_FALSE);
-    PRUnichar ch = tmp.First();
-    aResult.SetIntValue(v, ((ch == '+') || (ch == '-')) ?
-                        eHTMLUnit_Integer : eHTMLUnit_Enumerated);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if(NS_SUCCEEDED(ec)){
+      tmp.CompressWhitespace(PR_TRUE, PR_FALSE);
+      PRUnichar ch = tmp.First();
+      aResult.SetIntValue(v, ((ch == '+') || (ch == '-')) ?
+                          eHTMLUnit_Integer : eHTMLUnit_Enumerated);
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   if (aAttribute == nsHTMLAtoms::color) {
     nsGenericHTMLElement::ParseColor(aValue, aResult);
@@ -170,7 +174,7 @@ nsHTMLFontElement::AttributeToString(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
     else if (aValue.GetUnit() == eHTMLUnit_Integer) {
-      PRInt32 value = aValue.GetIntValue();
+      PRInt32 value = aValue.GetIntValue(); 
       if (value >= 0) {
         aResult.Append('+');
       }
