@@ -47,17 +47,17 @@
 
 #include "nsISupports.h"
 #include "nsIFrame.h"
-#include "nsIFocusTracker.h"   
 #include "nsISelection.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 #include "nsISelectionController.h"
 
+class nsIPresShell;
 
 // IID for the nsIFrameSelection interface
 #define NS_IFRAMESELECTION_IID      \
-{ 0xf46e4171, 0xdeaa, 0x11d1, \
-  { 0x97, 0xfc, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x4e } }
+{ 0x18477ed4, 0x01ff, 0x4319, \
+  { 0x95, 0xc0, 0x63, 0x9e, 0xe4, 0x33, 0xbe, 0x92 } }
 
 
 //----------------------------------------------------------------------
@@ -73,7 +73,7 @@ struct SelectionDetails
 };
 
 /*PeekOffsetStruct
-   *  @param mTracker is used to get the PresContext usefull for measuring text ect.
+   *  @param mShell is used to get the PresContext usefull for measuring text ect.
    *  @param mDesiredX is the "desired" location of the new caret
    *  @param mAmount eWord, eCharacter, eLine
    *  @param mDirection enum defined in this file to be eForward or eBackward
@@ -88,7 +88,7 @@ struct SelectionDetails
 */
 struct nsPeekOffsetStruct
 {
-  void SetData(nsIFocusTracker *aTracker, 
+  void SetData(nsIPresShell *aShell,
                nscoord aDesiredX, 
                nsSelectionAmount aAmount,
                nsDirection aDirection,
@@ -99,7 +99,7 @@ struct nsPeekOffsetStruct
                PRBool aScrollViewStop,
                PRBool aIsKeyboardSelect)
       {
-       mTracker=aTracker;
+       mShell=aShell;
        mDesiredX=aDesiredX;
        mAmount=aAmount;
        mDirection=aDirection;
@@ -110,7 +110,7 @@ struct nsPeekOffsetStruct
        mScrollViewStop = aScrollViewStop;
        mIsKeyboardSelect = aIsKeyboardSelect;
       }
-  nsIFocusTracker *mTracker;
+  nsIPresShell *mShell;
   nscoord mDesiredX;
   nsSelectionAmount mAmount;
   nsDirection mDirection;
@@ -134,12 +134,12 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAMESELECTION_IID)
   enum HINT { HINTLEFT = 0, HINTRIGHT = 1};  //end of this line or beginning of next
 
-  /** Init will initialize the frame selector with the necessary focus tracker to 
+  /** Init will initialize the frame selector with the necessary pres shell to 
    *  be used by most of the methods
-   *  @param aTracker is the parameter to be used for most of the other calls for callbacks ect
+   *  @param aShell is the parameter to be used for most of the other calls for callbacks ect
    *  @param aLimiter limits the selection to nodes with aLimiter parents
    */
-  NS_IMETHOD Init(nsIFocusTracker *aTracker, nsIContent *aLimiter) = 0; //default since this isnt used for embedding
+  NS_IMETHOD Init(nsIPresShell *aShell, nsIContent *aLimiter) = 0; //default since this isnt used for embedding
 
   /* SetScrollableView sets the scroll view
    *  @param aScrollView is the scroll view for this selection.

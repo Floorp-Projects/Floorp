@@ -66,7 +66,6 @@
 #include "nsLayoutAtoms.h"
 #include "nsITextContent.h"
 #include "nsStyleChangeList.h"
-#include "nsIFocusTracker.h"
 #include "nsIFrameSelection.h"
 #include "nsSpaceManager.h"
 #include "nsIntervalSet.h"
@@ -5673,8 +5672,6 @@ nsBlockFrame::HandleEvent(nsPresContext* aPresContext,
     shell = aPresContext->GetPresShell();
     if (!shell)
       return NS_OK;
-    nsCOMPtr<nsIFocusTracker> tracker( do_QueryInterface(shell, &result) );
-
     nsCOMPtr<nsILineIterator> it( do_QueryInterface(mainframe, &result) );
     nsIView* parentWithView;
     nsPoint origin;
@@ -5694,7 +5691,7 @@ nsBlockFrame::HandleEvent(nsPresContext* aPresContext,
       
       //we will now ask where to go. if we cant find what we want"aka another block frame" 
       //we drill down again
-      pos.mTracker = tracker;
+      pos.mShell = shell;
       pos.mDirection = eDirNext;
       pos.mDesiredX = aEvent->point.x;
       pos.mScrollViewStop = PR_FALSE;

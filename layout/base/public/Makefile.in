@@ -57,7 +57,6 @@ nsHTMLReflowState.h \
 nsIAutoCopy.h \
 nsICanvasFrame.h \
 nsICaret.h \
-nsIFocusTracker.h \
 nsIFrame.h \
 nsIFrameDebug.h \
 nsIFrameSelection.h \
