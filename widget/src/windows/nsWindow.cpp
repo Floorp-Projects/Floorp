@@ -2448,6 +2448,9 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
 // Process all nsWindows messages
 //
 //-------------------------------------------------------------------------
+static PRBool gJustGotDeactivate = PR_FALSE;
+static PRBool gJustGotActivate = PR_FALSE;
+
 PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue)
 {
     static UINT vkKeyCached = 0;                // caches VK code fon WM_KEYDOWN
@@ -2770,12 +2773,48 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             result = PR_TRUE;
             break;
 
+		case WM_ACTIVATE:
+			if (mEventCallback) {
+			  PRInt32 fActive = LOWORD(wParam);
+			
+			  if(WA_INACTIVE == fActive) {
+                gJustGotDeactivate = PR_TRUE;
+				result = DispatchFocus(NS_DEACTIVATE);
+			  } else {
+				gJustGotActivate = PR_TRUE;
+			    nsMouseEvent event;
+			    event.eventStructType = NS_GUI_EVENT;
+			    InitEvent(event, NS_MOUSE_ACTIVATE);
+
+                event.acceptActivation = PR_TRUE;
+
+                PRBool result = DispatchWindowEvent(&event);
+                NS_RELEASE(event.widget);
+				
+				if(event.acceptActivation)
+					*aRetValue = MA_ACTIVATE;
+				else
+					*aRetValue = MA_NOACTIVATE; 
+			  }				
+			}
+			break;
+
         case WM_SETFOCUS:
+			if(gJustGotActivate) {
+              result = DispatchFocus(NS_ACTIVATE);
+              gJustGotActivate = PR_FALSE;
+			} else {
             result = DispatchFocus(NS_GOTFOCUS);
+			}
             break;
 
         case WM_KILLFOCUS:
+			if(gJustGotDeactivate) {
+			  result = DispatchFocus(NS_DEACTIVATE);
+			  gJustGotDeactivate = PR_FALSE;
+			} else {
             result = DispatchFocus(NS_LOSTFOCUS);
+            }
             break;
 
         case WM_WINDOWPOSCHANGED: 

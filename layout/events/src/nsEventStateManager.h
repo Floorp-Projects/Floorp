@@ -73,7 +73,7 @@ protected:
   NS_IMETHOD DispatchKeyPressEvent(nsIPresContext& aPresContext, nsKeyEvent *aEvent, nsEventStatus& aStatus);  
   NS_IMETHOD SetClickCount(nsIPresContext& aPresContext, nsMouseEvent *aEvent, nsEventStatus& aStatus);  
   NS_IMETHOD CheckForAndDispatchClick(nsIPresContext& aPresContext, nsMouseEvent *aEvent, nsEventStatus& aStatus);  
-  PRBool ChangeFocus(nsIContent* aFocus, PRBool aSetFocus);
+  PRBool ChangeFocus(nsIContent* aFocus, nsIFrame* aFocusFrame, PRBool aSetFocus);
   void ShiftFocus(PRBool foward);
   nsIContent* GetNextTabbableContent(nsIContent* aParent, nsIContent* aChild, nsIContent* aTop, PRBool foward);
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);

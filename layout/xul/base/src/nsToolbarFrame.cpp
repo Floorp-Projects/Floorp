@@ -335,6 +335,41 @@ nsToolbarFrame :: GetFrameForPoint ( nsIPresContext* aPresContext,
 } // GetFrameForPoint
 
 
+// 
+// HandleEvent 
+// 
+// Process events that come to this frame. If they end up here, they are
+// almost certainly drag and drop events.
+//
+NS_IMETHODIMP 
+nsToolbarFrame :: HandleEvent ( nsIPresContext& aPresContext, 
+                                   nsGUIEvent*     aEvent, 
+                                   nsEventStatus&  aEventStatus) 
+{ 
+  if ( !aEvent ) 
+    return nsEventStatus_eIgnore; 
+
+  switch (aEvent->message) { 
+
+    case NS_MOUSE_ACTIVATE: 
+      // Does the toolbar accept activation/focus? Check style
+      nsCOMPtr<nsIStyleContext> context;
+      GetStyleContext(getter_AddRefs(context));
+      
+      const nsStyleUserInterface* styleStruct = (const nsStyleUserInterface*)context->GetStyleData(eStyleStruct_UserInterface);
+      if (NS_STYLE_USER_FOCUS_IGNORE == styleStruct->mUserFocus) {
+        // we want to surpress the blur and the following focus
+        if(aEvent->eventStructType == NS_MOUSE_EVENT)
+          ((nsMouseEvent*)aEvent)->acceptActivation = PR_FALSE;
+      }
+      break; 
+  } 
+
+  //XXX this needs to change when I am really handling the D&D events 
+  return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus); 
+  
+} // HandleEvent
+
 
 #if NOT_YET_NEEDED
 /**

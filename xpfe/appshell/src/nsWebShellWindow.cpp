@@ -543,6 +543,8 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         break;
       }
 
+      case NS_MOUSE_ACTIVATE:
+      case NS_ACTIVATE:
       case NS_GOTFOCUS: {
         void* data;
         aEvent->widget->GetClientData(data);

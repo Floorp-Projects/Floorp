@@ -82,6 +82,10 @@ public:
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aHint) ;
+                               
+  NS_IMETHOD HandleEvent ( nsIPresContext& aPresContext, 
+                           nsGUIEvent*     aEvent, 
+                           nsEventStatus&  aEventStatus);
 
 #if WTF_IS_THIS
     //еее not sure at all where this comes from. I asked rods, no reply yet.
