@@ -1,5 +1,5 @@
 <!ENTITY window.title "Confirm Migration">
-<!ENTITY confirmMigrationPart1.label "You are about to create a 5.0 profile based on your 4.x Netscape profile.">
+<!ENTITY confirmMigrationPart1.label "You are about to create a Mozilla 5.0 profile based on your Netscape 4.x profile.">
 <!ENTITY confirmMigrationPart2.label "This will copy some of your Netscape 4.x files.">
 <!ENTITY confirmMigrationPart3.label "Click OK if you want to proceed with automigration."> 
 <!ENTITY confirmMigrationPart4.label "(If you click Cancel, you can always do it later.)">
