@@ -1145,7 +1145,7 @@ PRInt32 nsPop3Protocol::SendPassword()
       unsigned char digest[DIGEST_LENGTH];
 
       char *decodedChallenge = PL_Base64Decode(m_commandResponse.get(), 
-      m_commandResponse.Length() - 2 /* subtract CRLF */, nsnull);
+      m_commandResponse.Length(), nsnull);
 
       rv = MSGCramMD5(decodedChallenge, strlen(decodedChallenge), password.get(), password.Length(), digest);
 
