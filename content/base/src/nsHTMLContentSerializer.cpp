@@ -377,6 +377,16 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     }
   
     attrName->ToString(nameStr);
+    
+    /*If we already crossed the MaxColumn limit or 
+    * if this attr name-value pair(including a space,=,opening and closing quotes) is greater than MaxColumn limit
+    * then start the attribute from a new line.
+    */
+
+    if (mDoFormat && (mColPos >= mMaxColumn || ((mColPos + nameStr.Length() + valueStr.Length() + 4) > mMaxColumn))) {
+        aStr.Append(mLineBreak);
+        mColPos = 0;
+    }
 
     SerializeAttr(nsAutoString(), nameStr, valueStr, aStr, !isJS);
   }
