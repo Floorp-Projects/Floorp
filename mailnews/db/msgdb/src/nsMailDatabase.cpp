@@ -248,6 +248,7 @@ NS_IMETHODIMP nsMailDatabase::EndBatch()
     m_folderStream = nsnull;
     m_ownFolderStream = PR_FALSE;
   }
+  SetFolderInfoValid(m_folderSpec, 0, 0);
   return NS_OK;
 }
 
