@@ -91,27 +91,32 @@ void CPatternButton::DrawButtonContent(void)
 
 void CPatternButton::DrawButtonGraphic(void)
 {
-	ResIDT theSaveID = GetGraphicID();
-	ResIDT theNewID = theSaveID;
-
+	bool useMouseOverIcon = false;
+	mIconTransform = kTransformNone;
+	
 	if (IsEnabled() && IsActive())
-		{
+	{
 		if (!IsBehaviourButton() && (GetValue() == Button_On))
 		{
 			// do something different if IsTrackInside()
-			theNewID += 2;
+			//theNewID += 2;
 		}
 		else if (IsTrackInside())
-			theNewID += 3;
+			mIconTransform = kTransformSelected;
 		else if (IsMouseInFrame())
-			theNewID += 2;
-		}
+			useMouseOverIcon = true;
+	}
 	else
-		theNewID += 1;
+		mIconTransform = kTransformDisabled;
 
-	SetGraphicID(theNewID);	
+	ResIDT theIconID;
+	if ( useMouseOverIcon ) {
+		theIconID = GetGraphicID();
+		SetGraphicID(theIconID + 2);
+	}
 	CToolbarButton::DrawButtonGraphic();
-	SetGraphicID(theSaveID);
+	if ( useMouseOverIcon )
+		SetGraphicID(theIconID);
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ

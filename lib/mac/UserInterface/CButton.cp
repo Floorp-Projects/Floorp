@@ -84,6 +84,7 @@ CButton::CButton(LStream *inStream)
 {
 	mButtonMask = NULL;
 	mGraphicHandle = NULL;
+	mIconTransform = kTransformNone;
 	SetTrackInside(false);
 	
 	*inStream >> mTrackBehaviour;
@@ -342,7 +343,7 @@ void CButton::DrawButtonGraphic(void)
 	else if (mGraphicType == 'ICN#')
 		{
 		CIconFamily theFamily(GetGraphicID());
-		theFamily.Plot(mCachedGraphicFrame, mGraphicAlignment);
+		theFamily.Plot(mCachedGraphicFrame, mGraphicAlignment, mIconTransform);
 		}
 	else
 		{

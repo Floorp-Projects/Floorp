@@ -119,6 +119,7 @@ class CButton : public LControl, public MPaneEnablerPolicy
 		Int16				mGraphicPadPixels;
 		
 		CIconHandle			mGraphicHandle;
+		IconTransformType	mIconTransform;
 		
 private:
 		virtual void		HandleEnablingPolicy();		
