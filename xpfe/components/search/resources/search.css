@@ -128,3 +128,15 @@ tree[singleclick="true"] treeitem > treerow > treecell:active {
 tree[singleclick="true"] treeitem[selected="true"] > treerow { 
   background-color: transparent;
 }
+
+#sidebar-search-text {
+  border: 1px solid black;
+}
+
+#Tree, #searchengines {
+  border: 1px solid black;
+}
+
+titledbutton.push {
+  background-color: #CCCCCC;
+}
