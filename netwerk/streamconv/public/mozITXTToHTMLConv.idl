@@ -72,7 +72,7 @@ interface mozITXTToHTMLConv : nsIStreamConverter {
   @result      "<", ">" and "&" are escaped and HTML tags are inserted where
                appropriate.
  */
-  wstring   scanTXT([const] in wstring text, in unsigned long whattodo);
+  wstring   scanTXT(in wstring text, in unsigned long whattodo);
 
 /**
   Adds additional formatting to user edited text, that the user was too lazy
@@ -91,7 +91,7 @@ interface mozITXTToHTMLConv : nsIStreamConverter {
   @param whattodo: Bitfield describing the modes of operation
   @result      Additional HTML tags are inserted where appropriate.
  */
-  wstring   scanHTML([const] in wstring text, in unsigned long whattodo);
+  wstring   scanHTML(in wstring text, in unsigned long whattodo);
 
 /**
   @param line: line in original msg, possibly starting starting with
@@ -103,7 +103,7 @@ interface mozITXTToHTMLConv : nsIStreamConverter {
   @return      Cite Level, i.e. number of txt quote tags found, i.e. number of
                nested quotes.
  */
-  unsigned long   citeLevelTXT([const] in wstring line,
+  unsigned long   citeLevelTXT(in wstring line,
                                out unsigned long logLineStart);
 
 /** 
@@ -115,5 +115,5 @@ interface mozITXTToHTMLConv : nsIStreamConverter {
  aEndPos --> index of the last character in the url (-1 if no url found)
  */
 
-  void findURLInPlaintext([const] in wstring text, in long aLength, in long aPos, out long aStartPos, out long aEndPos);
+  void findURLInPlaintext(in wstring text, in long aLength, in long aPos, out long aStartPos, out long aEndPos);
 };
