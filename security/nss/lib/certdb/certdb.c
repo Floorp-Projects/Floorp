@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.13 2001/06/21 03:20:09 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.14 2001/08/22 22:40:42 wtc%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -1706,7 +1706,7 @@ CERT_IsCADERCert(SECItem *derCert, unsigned int *type) {
 
     cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), derCert, NULL,
 	                                   PR_FALSE, PR_TRUE);
-    if (cert == NULL) return NULL;
+    if (cert == NULL) return PR_FALSE;
 
     isCA = CERT_IsCACert(cert,type);
     CERT_DestroyCertificate (cert);
@@ -2082,7 +2082,7 @@ loser:
 SECStatus
 CERT_AddCertToListTail(CERTCertList *certs, CERTCertificate *cert)
 {
-    CERT_AddCertToListTailWithData(certs, cert, NULL);
+    return CERT_AddCertToListTailWithData(certs, cert, NULL);
 }
 
 SECStatus

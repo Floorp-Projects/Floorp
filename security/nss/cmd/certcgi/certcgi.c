@@ -2416,7 +2416,7 @@ main(int argc, char **argv)
     fclose(outfile);
 #endif
     fflush(stdout);
-    return;
+    return 0;
 }
 
 

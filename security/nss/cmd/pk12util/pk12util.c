@@ -146,7 +146,7 @@ p12u_CreateTemporaryDigestFile(void)
 {
     p12uContext *p12cxt;
 #if defined(_WIN32) || defined(_WINDOWS) || defined(XP_OS2)
-    char *tmpdir,*filename,*last;
+    char *tmpdir,*filename,last;
     int len;
 #endif
 
