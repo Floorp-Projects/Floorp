@@ -227,7 +227,7 @@ cert_create_cert()
     if [ "$RET" -ne 0 ]; then
         return $RET
     fi
-    cert_add_cert
+    cert_add_cert "$5"
     return $?
 }
 
@@ -243,14 +243,14 @@ cert_add_cert()
 
     CU_ACTION="Generate Cert Request for $CERTNAME"
     CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
-    certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req 2>&1
+    certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req  2>&1
     if [ "$RET" -ne 0 ]; then
         return $RET
     fi
 
     CU_ACTION="Sign ${CERTNAME}'s Request"
     certu -C -c "TestCA" -m "$CERTSERIAL" -v 60 -d "${P_R_CADIR}" \
-          -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" 2>&1
+          -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" "$1" 2>&1
     if [ "$RET" -ne 0 ]; then
         return $RET
     fi
@@ -381,6 +381,10 @@ cert_smime_client()
 
   echo "$SCRIPTNAME: Creating Dave's Certificate -------------------------"
   cert_create_cert "${DAVEDIR}" Dave 5 ${D_DAVE}
+
+  echo "$SCRIPTNAME: Creating multiEmail's Certificate --------------------"
+  cert_create_cert "${EVEDIR}" "Eve" 6 ${D_EVE} "-7 eve@bogus.net,eve@bogus.cc,beve@bogus.com"
+
   #echo "************* Copying CA files to ${SERVERDIR}"
   #cp ${CADIR}/*.db .
   #hw_acc
@@ -415,6 +419,14 @@ cert_smime_client()
   CU_ACTION="Import Dave's cert into Bob's DB"
   certu -E -t "p,p,p" -d ${P_R_BOBDIR} -f ${R_PWFILE} \
         -i ${R_DAVEDIR}/Dave.cert 2>&1
+
+  CU_ACTION="Import Eve's cert into Alice's DB"
+  certu -E -t "p,p,p" -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
+        -i ${R_EVEDIR}/Eve.cert 2>&1
+
+  CU_ACTION="Import Eve's cert into Bob's DB"
+  certu -E -t "p,p,p" -d ${P_R_BOBDIR} -f ${R_PWFILE} \
+        -i ${R_EVEDIR}/Eve.cert 2>&1
 
   if [ "$CERTFAILED" != 0 ] ; then
       cert_log "ERROR: SMIME failed $RET"
@@ -565,7 +577,8 @@ cert_stresscerts()
   while [ $CONTINUE -ge $GLOB_MIN_CERT ]
   do
       CERTNAME="TestUser$CONTINUE"
-      cert_add_cert ${CLIENTDIR} "TestUser$CONTINUE" $CERTSERIAL
+#      cert_add_cert ${CLIENTDIR} "TestUser$CONTINUE" $CERTSERIAL
+      cert_add_cert 
       CERTSERIAL=`expr $CERTSERIAL + 1 `
       CONTINUE=`expr $CONTINUE - 1 `
   done
