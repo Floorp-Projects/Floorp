@@ -1777,8 +1777,7 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
     
     // Is this the best place to put this temp file?
     nsCOMPtr<nsIFile> pluginTmp;
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, 
-                                getter_AddRefs(pluginTmp));
+    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(pluginTmp));
     if (NS_FAILED(rv)) return rv;
     
     rv = pluginTmp->Append(kPluginTmpDirName);
@@ -3115,8 +3114,7 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
 
   // Lets remove any of the temporary files that we created.
   nsCOMPtr<nsIFile> pluginTmp;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, 
-                                getter_AddRefs(pluginTmp));
+  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(pluginTmp));
   if (NS_FAILED(rv)) return rv;
     
   rv = pluginTmp->Append(kPluginTmpDirName);
