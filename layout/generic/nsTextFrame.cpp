@@ -4594,7 +4594,6 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
   nscoord prevMaxWordWidth = 0, prevAscent = 0, prevDescent = 0;
   PRInt32 lastWordLen = 0;
   PRUnichar* lastWordPtr = nsnull;
-  PRBool  textStartsWithNBSP = PR_FALSE;
   PRBool  endsInWhitespace = PR_FALSE;
   PRBool  endsInNewline = PR_FALSE;
   PRBool  justDidFirstLetter = PR_FALSE;
@@ -4813,12 +4812,6 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
       } //(aTextData.mMeasureText)
     }
     else {
-      // See if the first thing in the section of text is a
-      // non-breaking space (html nbsp entity). If it is then make
-      // note of that fact for the line layout logic.
-      if (aTextData.mWrapping && firstThing && (firstChar == ' ')) {
-        textStartsWithNBSP = PR_TRUE;
-      }
       aTextData.mSkipWhitespace = PR_FALSE;
 
       if (aTextData.mFirstLetterOK) {
@@ -5186,7 +5179,6 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
   // effect the current setting of the ends-in-whitespace flag.
   lineLayout.SetColumn(column);
   lineLayout.SetUnderstandsWhiteSpace(PR_TRUE);
-  lineLayout.SetTextStartsWithNBSP(textStartsWithNBSP);
   if (0 != aTextData.mX) {
     lineLayout.SetEndsInWhiteSpace(endsInWhitespace);
   }

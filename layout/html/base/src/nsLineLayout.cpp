@@ -262,7 +262,6 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   
   SetFlag(LL_ENDSINWHITESPACE, PR_TRUE);
   SetFlag(LL_UNDERSTANDSNWHITESPACE, PR_FALSE);
-  SetFlag(LL_TEXTSTARTSWITHNBSP, PR_FALSE);
   SetFlag(LL_FIRSTLETTERSTYLEOK, PR_FALSE);
   SetFlag(LL_ISTOPOFPAGE, aIsTopOfPage);
   SetFlag(LL_UPDATEDBAND, PR_FALSE);
@@ -932,7 +931,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   reflowState.mLineLayout = this;
   reflowState.mFlags.mIsTopOfPage = GetFlag(LL_ISTOPOFPAGE);
   SetFlag(LL_UNDERSTANDSNWHITESPACE, PR_FALSE);
-  SetFlag(LL_TEXTSTARTSWITHNBSP, PR_FALSE);
   mTextJustificationNumSpaces = 0;
   mTextJustificationNumLetters = 0;
 
@@ -1262,7 +1260,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   else {
     PushFrame(aFrame);
   }
-  SetFlag(LL_TEXTSTARTSWITHNBSP, PR_FALSE);           // reset for next time
 
 #ifdef REALLY_NOISY_REFLOW
   nsFrame::IndentBy(stdout, mSpanDepth);
@@ -1519,15 +1516,6 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
     // don't naturally fit.
     return PR_TRUE;
  }
-
-  // Yet another special check. If the text happens to have started
-  // with a non-breaking space, then we make it sticky on its left
-  // edge...Which means that whatever piece of text we just formatted
-  // will be the piece that fits (the text frame logic knows to stop
-  // when it runs out of room).
-  if (pfd->GetFlag(PFD_ISNONEMPTYTEXTFRAME) && GetFlag(LL_TEXTSTARTSWITHNBSP)) {
-    return PR_TRUE;
-  }
 
 #ifdef NOISY_CAN_PLACE_FRAME
   printf("   ==> didn't fit\n");
