@@ -1219,6 +1219,10 @@ nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
   NS_ENSURE_ARG_POINTER(aAttributes);
   nsDOMSlots *slots = GetDOMSlots();
 
+  if (!slots) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   if (!slots->mAttributeMap) {
     slots->mAttributeMap = new nsDOMAttributeMap(this);
     if (!slots->mAttributeMap) {
@@ -1235,6 +1239,10 @@ nsresult
 nsGenericElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
   nsDOMSlots *slots = GetDOMSlots();
+
+  if (!slots) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   if (!slots->mChildNodes) {
     slots->mChildNodes = new nsChildContentList(this);
