@@ -23,10 +23,10 @@
 #define _nsMemCacheRecord_h_
 
 #include "nsINetDataCacheRecord.h"
+#include "nsIStorageStream.h"
 #include "nsCOMPtr.h"
 
 class nsMemCache;
-class nsIStorageStream;
 
 class nsMemCacheRecord : public nsINetDataCacheRecord
 {
