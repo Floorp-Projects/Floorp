@@ -1271,8 +1271,10 @@ sub BugInGroup {
 sub GroupExists {
     my ($groupname) = (@_);
     ConnectToDatabase();
+    PushGlobalSQLState();
     SendSQL("select count(*) from groups where name=" . SqlQuote($groupname));
     my $count = FetchOneColumn();
+    PopGlobalSQLState();
     return $count;
 }
 
@@ -1296,8 +1298,10 @@ sub GroupIsActive {
     my ($groupbit) = (@_);
     $groupbit ||= 0;
     ConnectToDatabase();
+    PushGlobalSQLState();
     SendSQL("select isactive from groups where bit=$groupbit");
     my $isactive = FetchOneColumn();
+    PopGlobalSQLState();
     return $isactive;
 }
 
