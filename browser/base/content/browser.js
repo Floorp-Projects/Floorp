@@ -292,8 +292,6 @@ function Startup()
     }
   }
 
-  //initConsoleListener();
-
   // XXXjag work-around for bug 113076
   // there's another bug where we throw an exception when getting
   // sessionHistory if it is null, which I'm exploiting here to
@@ -960,68 +958,6 @@ function traceVerbose(verbose)
   leakDetector.verbose = (verbose == "true");
 }
 #endif
-
-var consoleListener = {
-  observe: function (aMsgObject)
-  {
-    const nsIScriptError = Components.interfaces.nsIScriptError;
-    var scriptError = aMsgObject.QueryInterface(nsIScriptError);
-    var isWarning = scriptError.flags & nsIScriptError.warningFlag != 0;
-    if (!isWarning) {
-      var statusbarDisplay = document.getElementById("statusbar-display");
-      statusbarDisplay.setAttribute("error", "true");
-      statusbarDisplay.addEventListener("click", loadErrorConsole, true);
-      statusbarDisplay.label = gNavigatorBundle.getString("jserror");
-      this.isShowingError = true;
-    }
-  },
-
-  // whether or not an error alert is being displayed
-  isShowingError: false
-};
-
-function initConsoleListener()
-{
-  /**
-   * XXX - console launch hookup requires some work that I'm not sure
-   * how to do.
-   *
-   *       1) ideally, the notification would disappear when the
-   *       document that had the error was flushed. how do I know when
-   *       this happens? All the nsIScriptError object I get tells me
-   *       is the URL. Where is it located in the content area?
-   *       2) the notification service should not display chrome
-   *       script errors.  web developers and users are not interested
-   *       in the failings of our shitty, exception unsafe js. One
-   *       could argue that this should also extend to the console by
-   *       default (although toggle-able via setting for chrome
-   *       authors) At any rate, no status indication should be given
-   *       for chrome script errors.
-   *
-   *       As a result I am commenting out this for the moment.
-   *
-
-  var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
-                                 .getService(Components.interfaces.nsIConsoleService);
-
-  if (consoleService)
-    consoleService.registerListener(consoleListener);
-  */
-}
-
-function loadErrorConsole(aEvent)
-{
-  if (aEvent.detail == 2)
-    toJavaScriptConsole();
-}
-
-function clearErrorNotification()
-{
-  var statusbarDisplay = document.getElementById("statusbar-display");
-  statusbarDisplay.removeAttribute("error");
-  statusbarDisplay.removeEventListener("click", loadErrorConsole, true);
-  consoleListener.isShowingError = false;
-}
 
 function checkForDirectoryListing()
 {
@@ -1774,19 +1710,18 @@ function FillInHTMLTooltip(tipElement)
 var proxyIconDNDObserver = {
   onDragStart: function (aEvent, aXferData, aDragAction)
     {
-      var urlBar = document.getElementById("urlbar");
-
+      var value = gURLBar.value;
       // XXX - do we want to allow the user to set a blank page to their homepage?
       //       if so then we want to modify this a little to set about:blank as
       //       the homepage in the event of an empty urlbar.
-      if (!urlBar.value) return;
+      if (!value) return;
 
-      var urlString = urlBar.value + "\n" + window._content.document.title;
-      var htmlString = "<a href=\"" + urlBar.value + "\">" + urlBar.value + "</a>";
+      var urlString = value + "\n" + window._content.document.title;
+      var htmlString = "<a href=\"" + value + "\">" + value + "</a>";
 
       aXferData.data = new TransferData();
       aXferData.data.addDataForFlavour("text/x-moz-url", urlString);
-      aXferData.data.addDataForFlavour("text/unicode", urlBar.value);
+      aXferData.data.addDataForFlavour("text/unicode", value);
       aXferData.data.addDataForFlavour("text/html", htmlString);
     }
 }
