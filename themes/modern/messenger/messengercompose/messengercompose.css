@@ -212,10 +212,6 @@
   border-bottom: 1px solid #C4CADC;
 }
 
-.aw-menulist {
-  -moz-user-focus: ignore;
-}
-
 .person-icon {
   -moz-user-focus: ignore;
   cursor: default !important;

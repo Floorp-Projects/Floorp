@@ -183,10 +183,6 @@
   border-bottom: 1px solid #CACAFF;
 }
 
-.aw-menulist {
-  -moz-user-focus: ignore;
-}
-
 .person-icon {
   list-style-image: url("chrome://messenger/skin/addressbook/icons/abcard.gif");
   margin: 0px 3px 0px 3px;

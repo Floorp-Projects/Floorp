@@ -76,6 +76,13 @@ var gSavedSendNowKey;
 var gSendFormat;
 var gLogComposePerformance;
 
+var gMsgIdentityElement;
+var gMsgAddressingWidgetTreeElement;
+var gMsgSubjectElement;
+var gMsgAttachmentElement;
+var gMsgBodyFrame;
+var gMsgHeadersToolbarElement;
+
 // i18n globals
 var gCurrentMailSendCharset;
 var gSendDefaultCharset;
@@ -2258,6 +2265,22 @@ function RemoveSelectedAttachment()
 
 }
 
+function FocusOnFirstAttachment()
+{
+  var bucketTree = document.getElementById("attachmentBucket");
+  var body       = document.getElementById("bucketBody");
+
+  if (bucketTree && body && body.hasChildNodes())
+    bucketTree.selectItem(body.firstChild);
+}
+
+function AttachmentElementHasItems()
+{
+  var element = document.getElementById("bucketBody");
+
+  return element ? element.childNodes.length : 0;
+}  
+
 function AttachVCard()
 {
   dump("AttachVCard()\n");
@@ -2598,3 +2621,186 @@ function DisplaySaveFolderDlg(folderURI)
   }//if
   return;
 }
+
+function SetMsgAddressingWidgetTreeElementFocus()
+{
+  SuppressComposeCommandUpdating(true);
+
+  var element = document.getElementById("msgRecipient#" + awGetNumberOfRecipients());
+  awSetFocus(awGetNumberOfRecipients(), element);
+  //awSetFocus() will call SuppressComposeCommandUpdating(false);
+}
+
+function SetMsgIdentityElementFocus()
+{
+  // We're only changing focus from element to element.
+  // There's no need to update the composer commands.
+  SuppressComposeCommandUpdating(true);
+  GetMsgIdentityElement().focus();
+  SuppressComposeCommandUpdating(false);
+}
+
+function SetMsgSubjectElementFocus()
+{
+  SuppressComposeCommandUpdating(true);
+  GetMsgSubjectElement().focus();
+  SuppressComposeCommandUpdating(false);
+}
+
+function SetMsgAttachmentElementFocus()
+{
+  SuppressComposeCommandUpdating(true);
+  GetMsgAttachmentElement().focus();
+  FocusOnFirstAttachment();
+  SuppressComposeCommandUpdating(false);
+}
+
+function SetMsgBodyFrameFocus()
+{
+  SuppressComposeCommandUpdating(true);
+  editorShell.contentWindow.focus();
+  SuppressComposeCommandUpdating(false);
+}
+
+function GetMsgAddressingWidgetTreeElement()
+{
+  if (!gMsgAddressingWidgetTreeElement)
+    gMsgAddressingWidgetTreeElement = document.getElementById("addressingWidgetTree");
+
+  return gMsgAddressingWidgetTreeElement;
+}
+
+function GetMsgIdentityElement()
+{
+  if (!gMsgIdentityElement)
+    gMsgIdentityElement = document.getElementById("msgIdentity");
+
+  return gMsgIdentityElement;
+}
+
+function GetMsgSubjectElement()
+{
+  if (!gMsgSubjectElement)
+    gMsgSubjectElement = document.getElementById("msgSubject");
+
+  return gMsgSubjectElement;
+}
+
+function GetMsgAttachmentElement()
+{
+  if (!gMsgAttachmentElement)
+    gMsgAttachmentElement = document.getElementById("attachmentBucket");
+
+  return gMsgAttachmentElement;
+}
+
+function GetMsgBodyFrame()
+{
+  if (!gMsgBodyFrame)
+    gMsgBodyFrame = top.frames['browser.message.body'];
+
+  return gMsgBodyFrame;
+}
+
+function GetMsgHeadersToolbarElement()
+{
+  if (!gMsgHeadersToolbarElement)
+    gMsgHeadersToolbarElement = document.getElementById("MsgHeadersToolbar");
+
+  return gMsgHeadersToolbarElement;
+}
+
+function IsMsgHeadersToolbarCollapsed()
+{
+  var element = GetMsgHeadersToolbarElement();
+  if(element)
+    return(element.getAttribute('moz-collapsed') == "true");
+
+  return(0);
+}
+
+function WhichElementHasFocus()
+{
+  var msgIdentityElement             = GetMsgIdentityElement();
+  var msgAddressingWidgetTreeElement = GetMsgAddressingWidgetTreeElement();
+  var msgSubjectElement              = GetMsgSubjectElement();
+  var msgAttachmentElement           = GetMsgAttachmentElement();
+  var msgBodyFrame                   = GetMsgBodyFrame();
+
+  if (top.document.commandDispatcher.focusedWindow == msgBodyFrame)
+    return msgBodyFrame;
+
+  var currentNode = top.document.commandDispatcher.focusedElement;
+  while (currentNode)
+  {
+    if (currentNode == msgIdentityElement ||
+        currentNode == msgAddressingWidgetTreeElement ||
+        currentNode == msgSubjectElement ||
+        currentNode == msgAttachmentElement)
+      return currentNode;
+
+    currentNode = currentNode.parentNode;
+  }
+
+  return null;
+}
+
+// Function that performs the logic of switching focus from 
+// one element to another in the mail compose window.
+// The default element to switch to when going in either
+// direction (shift or no shift key pressed), is the
+// AddressingWidgetTreeElement.
+//
+// The only exception is when the MsgHeadersToolbar is
+// collapsed, then the focus will always be on the body of
+// the message.
+function SwitchElementFocus(event)
+{
+  var focusedElement = WhichElementHasFocus();
+
+  if (event && event.shiftKey)
+  {
+    if (IsMsgHeadersToolbarCollapsed())
+      SetMsgBodyFrameFocus();
+    else if (focusedElement == gMsgAddressingWidgetTreeElement)
+      SetMsgIdentityElementFocus();
+    else if (focusedElement == gMsgIdentityElement)
+      SetMsgBodyFrameFocus();
+    else if (focusedElement == gMsgBodyFrame)
+    {
+      // only set focus to the attachment element if there
+      // are any attachments.
+      if (AttachmentElementHasItems())
+        SetMsgAttachmentElementFocus();
+      else
+        SetMsgSubjectElementFocus();
+    }
+    else if (focusedElement == gMsgAttachmentElement)
+      SetMsgSubjectElementFocus();
+    else
+      SetMsgAddressingWidgetTreeElementFocus();
+  }
+  else
+  {
+    if (IsMsgHeadersToolbarCollapsed())
+      SetMsgBodyFrameFocus();
+    else if (focusedElement == gMsgAddressingWidgetTreeElement)
+      SetMsgSubjectElementFocus();
+    else if (focusedElement == gMsgSubjectElement)
+    {
+      // only set focus to the attachment element if there
+      // are any attachments.
+      if (AttachmentElementHasItems())
+        SetMsgAttachmentElementFocus();
+      else
+        SetMsgBodyFrameFocus();
+    }
+    else if (focusedElement == gMsgAttachmentElement)
+      SetMsgBodyFrameFocus();
+    else if (focusedElement == gMsgBodyFrame)
+      SetMsgIdentityElementFocus();
+    else
+      SetMsgAddressingWidgetTreeElementFocus();
+  }
+}
+
