@@ -525,7 +525,7 @@ nsChromeProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_re
 }
 
 NS_IMETHODIMP
-nsChromeProtocolHandler::GetURIType(PRInt16 *result)
+nsChromeProtocolHandler::GetProtocolFlags(PRUint32 *result)
 {
     *result = URI_STD;
     return NS_OK;

@@ -1519,8 +1519,9 @@ nsHttpHandler::SetAcceptEncodings(const char *aAcceptEncodings)
 // nsHttpHandler::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsHttpHandler,
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsHttpHandler,
                               nsIHttpProtocolHandler,
+                              nsIProxiedProtocolHandler,
                               nsIProtocolHandler,
                               nsIObserver,
                               nsISupportsWeakReference)
@@ -1542,9 +1543,9 @@ nsHttpHandler::GetDefaultPort(PRInt32 *aDefaultPort)
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetURIType(PRInt16 *result)
+nsHttpHandler::GetProtocolFlags(PRUint32 *result)
 {
-    *result = URI_STD;
+    *result = URI_STD | ALLOWS_PROXY | ALLOWS_PROXY_HTTP;
     return NS_OK;
 }
 
@@ -1587,11 +1588,9 @@ nsHttpHandler::NewChannel(nsIURI *uri, nsIChannel **result)
         }
     }
     
-    rv = NewProxyChannel(uri,
-                         nsnull,
-                         -1,
-                         nsnull,
-                         result);
+    rv = NewProxiedChannel(uri,
+                           nsnull,
+                           result);
     return rv;
 }
 
@@ -1604,20 +1603,18 @@ nsHttpHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
 }
 
 //-----------------------------------------------------------------------------
-// nsHttpHandler::nsIHttpProtocolHandler
+// nsHttpHandler::nsIProxiedProtocolHandler
 //-----------------------------------------------------------------------------
- 
+
 NS_IMETHODIMP
-nsHttpHandler::NewProxyChannel(nsIURI *uri,
-                               const char *proxyHost,
-                               PRInt32 proxyPort,
-                               const char *proxyType,
-                               nsIChannel **result)
+nsHttpHandler::NewProxiedChannel(nsIURI *uri,
+                                 nsIProxyInfo* proxyInfo,
+                                 nsIChannel **result)
 {
     nsHttpChannel *httpChannel = nsnull;
 
-    LOG(("nsHttpHandler::NewProxyChannel [proxy=%s:%d type=%s]\n",
-        proxyHost, proxyPort, proxyType));
+    LOG(("nsHttpHandler::NewProxiedChannel [proxyInfo=%p]\n",
+        proxyInfo));
 
     NS_NEWXPCOM(httpChannel, nsHttpChannel);
     if (!httpChannel)
@@ -1626,9 +1623,7 @@ nsHttpHandler::NewProxyChannel(nsIURI *uri,
 
     nsresult rv = httpChannel->Init(uri,
                                     mCapabilities,
-                                    proxyHost,
-                                    proxyPort,
-                                    proxyType);
+                                    proxyInfo);
 
     if (NS_SUCCEEDED(rv))
         rv = httpChannel->
@@ -1637,6 +1632,10 @@ nsHttpHandler::NewProxyChannel(nsIURI *uri,
     NS_RELEASE(httpChannel);
     return rv;
 }
+
+//-----------------------------------------------------------------------------
+// nsHttpHandler::nsIHttpProtocolHandler
+//-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
 nsHttpHandler::GetUserAgent(char **aUserAgent)

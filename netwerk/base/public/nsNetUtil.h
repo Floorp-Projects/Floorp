@@ -51,6 +51,7 @@
 #include "nsILocalFile.h"
 #include "nsIFileStreams.h"
 #include "nsXPIDLString.h"
+#include "nsIProtocolProxyService.h"
 #include "prio.h"       // for read/write flags, permissions, etc.
 
 #include "nsNetCID.h"
@@ -673,6 +674,19 @@ NS_CheckPortSafety(PRInt32 port, const char* scheme, nsIIOService* ioService = n
         return NS_ERROR_PORT_ACCESS_NOT_ALLOWED;
 
     return NS_OK;
+}
+
+inline nsresult
+NS_NewProxyInfo(const char* type, const char* host, PRInt32 port, nsIProxyInfo* *result)
+{
+    nsresult rv;
+
+    static NS_DEFINE_CID(kPPSServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
+    nsCOMPtr<nsIProtocolProxyService> pps = do_GetService(kPPSServiceCID,&rv);
+
+    if (NS_FAILED(rv)) return rv;
+
+    return pps->NewProxyInfo(type, host, port, result);
 }
 
 #endif // nsNetUtil_h__

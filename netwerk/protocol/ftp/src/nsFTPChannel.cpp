@@ -97,12 +97,13 @@ NS_IMPL_THREADSAFE_ISUPPORTS9(nsFTPChannel,
                               nsICacheListener);
 
 nsresult
-nsFTPChannel::Init(nsIURI* uri, nsICacheSession* session)
+nsFTPChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo, nsICacheSession* session)
 {
     nsresult rv = NS_OK;
 
     // setup channel state
     mURL = uri;
+    mProxyInfo = proxyInfo;
 
     rv = mURL->GetHost(getter_Copies(mHost));
     if (NS_FAILED(rv)) return rv;
@@ -327,7 +328,8 @@ nsFTPChannel::SetupState()
                                   mPrompter, 
                                   mAuthPrompter, 
                                   mFTPEventSink, 
-                                  mCacheEntry);
+                                  mCacheEntry,
+                                  mProxyInfo);
     if (NS_FAILED(rv)) return rv;
 
     (void) mFTPState->SetWriteStream(mUploadStream);

@@ -40,6 +40,8 @@
 #include "nsICategoryManager.h"
 #include "nsIURLParser.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIProxiedProtocolHandler.h"
+#include "nsIProxyInfo.h"
 #include "nsITimelineService.h"
 #include "nsEscape.h"
 
@@ -636,14 +638,14 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
 }
 
 NS_IMETHODIMP 
-nsIOService::GetURIType(const char* scheme, PRInt16 *uritype)
+nsIOService::GetProtocolFlags(const char* scheme, PRUint32 *flags)
 {
     nsCOMPtr<nsIProtocolHandler> handler;
     nsresult rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
     if (NS_FAILED(rv)) {
         return rv;
     }
-    rv = handler->GetURIType(uritype);
+    rv = handler->GetProtocolFlags(flags);
     return rv;
 }
 
@@ -708,7 +710,6 @@ nsIOService::NewFileURI(nsIFile *aSpec, nsIURI **_retval)
     return NewURI(urlString, nsnull, _retval);
 }
 
-
 NS_IMETHODIMP
 nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
 {
@@ -720,36 +721,28 @@ nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
     rv = aURI->GetScheme(getter_Copies(scheme));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIProtocolHandler> handler;
-    rv = GetProtocolHandler((const char*)scheme, getter_AddRefs(handler));
+    nsCOMPtr<nsIProxyInfo> pi;
+    rv = mProxyService->ExamineForProxy(aURI, getter_AddRefs(pi));
     if (NS_FAILED(rv)) return rv;
 
-    PRBool useProxy = PR_FALSE;
-    if (mProxyService) {
-        mProxyService->GetProxyEnabled(&useProxy);
-        if (useProxy) {
-            nsXPIDLCString host, type;
-            PRInt32 port;
-            rv = mProxyService->ExamineForProxy(aURI, getter_Copies(host), &port, getter_Copies(type));
-            if (NS_SUCCEEDED(rv) && type.get())
-            {
-                // we are going to proxy this channel and the only protocol that can do proxying is http
-                rv = GetProtocolHandler("http", getter_AddRefs(handler));
-                if (NS_FAILED(rv)) return rv;
-                
-                nsCOMPtr<nsIHttpProtocolHandler> httpHandler = do_QueryInterface(handler, &rv);
-                if (NS_FAILED(rv)) 
-                    return rv;
+    nsCOMPtr<nsIProtocolHandler> handler;
 
-                if (!httpHandler)
-                    return NS_ERROR_NULL_POINTER;
-
-                return httpHandler->NewProxyChannel(aURI, host, port, type, result);
-            }
-        }
+    if (pi && !nsCRT::strcmp(pi->Type(),"http")) {
+        // we are going to proxy this channel using an http proxy
+        rv = GetProtocolHandler("http", getter_AddRefs(handler));
+        if (NS_FAILED(rv)) return rv;
+    } else {
+        rv = GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
+        if (NS_FAILED(rv)) return rv;
     }
 
-    rv = handler->NewChannel(aURI, result);
+    nsCOMPtr<nsIProxiedProtocolHandler> pph = do_QueryInterface(handler);
+
+    if (pph)
+        rv = pph->NewProxiedChannel(aURI, pi, result);
+    else
+        rv = handler->NewChannel(aURI, result);
+
     return rv;
 }
 

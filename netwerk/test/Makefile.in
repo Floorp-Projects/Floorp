@@ -32,7 +32,6 @@ REQUIRES	= xpcom string necko nkcache timer cookie dbm util
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX)
 
 CPPSRCS		= \
-		TestOverlappedIO.cpp \
 		TestSocketIO.cpp \
 		TestSocketInput.cpp \
 		TestSocketTransport.cpp \

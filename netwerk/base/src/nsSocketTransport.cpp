@@ -44,6 +44,7 @@
 #include "nsISSLSocketControl.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsMemory.h"
+#include "nsIProxyInfo.h"
 
 #if defined(PR_LOGGING)
 static PRLogModuleInfo *gSocketTransportLog = nsnull;
@@ -127,13 +128,12 @@ nsSocketTransport::nsSocketTransport():
     mSocketConnectTimeout(PR_MillisecondsToInterval(DEFAULT_SOCKET_CONNECT_TIMEOUT_IN_MS)),
     mCurrentState(eSocketState_Created),
     mHostName(nsnull),
-    mPort(0),
+    mPort(-1),
     mMonitor(nsnull),
     mOperation(eSocketOperation_None),
-    mProxyPort(0),
+    mProxyPort(-1),
     mProxyHost(nsnull),
     mProxyTransparent(PR_FALSE),
-    mSSLProxy(PR_FALSE),
     mClosePending(PR_FALSE),
     mWasConnected(PR_FALSE),
     mService(nsnull),
@@ -229,8 +229,7 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
                                  PRInt32 aPort,
                                  PRUint32 aSocketTypeCount,
                                  const char* *aSocketTypes,
-                                 const char* aProxyHost,
-                                 PRInt32 aProxyPort,
+                                 nsIProxyInfo* aProxyInfo,
                                  PRUint32 bufferSegmentSize,
                                  PRUint32 bufferMaxSize)
 {
@@ -245,7 +244,8 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
     NS_ADDREF(mService);
     
     mPort      = aPort;
-    mProxyPort = aProxyPort;
+    if (aProxyInfo)
+        mProxyPort = aProxyInfo->Port();
     
     if (aHost && *aHost) {
         mHostName = nsCRT::strdup(aHost);
@@ -255,13 +255,20 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
     else // hostname was nsnull or empty...
         rv = NS_ERROR_FAILURE;
     
-    if (aProxyHost && *aProxyHost) {
-        mProxyHost = nsCRT::strdup(aProxyHost);
+    if (aProxyInfo && aProxyInfo->Host()) {
+        mProxyHost = nsCRT::strdup(aProxyInfo->Host());
         if (!mProxyHost)
             rv = NS_ERROR_OUT_OF_MEMORY;
     }
     
-    if (NS_SUCCEEDED(rv) && aSocketTypeCount) {
+    if (NS_SUCCEEDED(rv) && (aSocketTypeCount || aProxyInfo)) {
+        const char* proxyType = nsnull;
+
+        if (aProxyInfo && nsCRT::strcmp(aProxyInfo->Type(), "http") != 0) {
+            proxyType = aProxyInfo->Type();
+            ++aSocketTypeCount;
+        }
+
         mSocketTypes = (char**) nsMemory::Alloc(aSocketTypeCount * sizeof(char*));
         if (!mSocketTypes)
             rv = NS_ERROR_OUT_OF_MEMORY;
@@ -272,8 +279,17 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
                 return rv;
             nsCOMPtr<nsISocketProvider> provider;
 
-            for (PRUint32 type = 0; type < aSocketTypeCount; type++) {
-                const char * socketType = aSocketTypes[type];
+            for (PRUint32 type = 0, pos = 0; pos < aSocketTypeCount; ++type, ++pos) {
+                
+                const char * socketType = nsnull;
+
+                // Push a transport layer proxy if we have one
+                if (proxyType) {
+                    socketType = proxyType;
+                } else {
+                    socketType = aSocketTypes[type];
+                }
+
                 if (socketType == nsnull)
                     continue;
 #ifdef DEBUG
@@ -304,8 +320,12 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
                     // the default proxy behavior
                     mProxyTransparent = PR_TRUE;
                 }
-                if (mProxyHost && (nsCRT::strcmp(socketType, "ssl") == 0))
-                    mSSLProxy = PR_TRUE;
+
+                // then go back to normal
+                if (proxyType) {
+                    --type;
+                    proxyType = nsnull;
+                }
             }
         }
     } 
@@ -858,7 +878,7 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
         "rv = %x.\n\n",
         mHostName, mPort, this, rv));
 
-    if (rv == NS_OK && mSecurityInfo && mProxyHost && mProxyHost && proxyTransparent) {
+    if (rv == NS_OK && mSecurityInfo && mProxyHost && proxyTransparent) {
         // if the connection phase is finished, and the ssl layer
         // has been pushed, and we were proxying (transparently; ie. nothing
         // has to happen in the protocol layer above us), it's time

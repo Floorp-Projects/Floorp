@@ -167,7 +167,7 @@ nsResProtocolHandler::GetDefaultPort(PRInt32 *result)
 }
 
 NS_IMETHODIMP
-nsResProtocolHandler::GetURIType(PRInt16 *result)
+nsResProtocolHandler::GetProtocolFlags(PRUint32 *result)
 {
     *result = URI_STD;
     return NS_OK;

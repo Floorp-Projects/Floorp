@@ -121,7 +121,7 @@ nsThemeHandler::GetDefaultPort(PRInt32 *result)
 }
 
 NS_IMETHODIMP
-nsThemeHandler::GetURIType(PRInt16 *result)
+nsThemeHandler::GetProtocolFlags(PRUint32 *result)
 {
     *result = URI_NORELATIVE | URI_NOAUTH;
     return NS_OK;

@@ -43,7 +43,9 @@ nsDateTimeHandler::nsDateTimeHandler() {
 nsDateTimeHandler::~nsDateTimeHandler() {
 }
 
-NS_IMPL_ISUPPORTS1(nsDateTimeHandler, nsIProtocolHandler)
+NS_IMPL_ISUPPORTS2(nsDateTimeHandler,
+                   nsIProtocolHandler,
+                   nsIProxiedProtocolHandler)
 
 NS_METHOD
 nsDateTimeHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) {
@@ -74,8 +76,8 @@ nsDateTimeHandler::GetDefaultPort(PRInt32 *result) {
 }
 
 NS_IMETHODIMP
-nsDateTimeHandler::GetURIType(PRInt16 *result) {
-    *result = URI_NORELATIVE | URI_NOAUTH;
+nsDateTimeHandler::GetProtocolFlags(PRUint32 *result) {
+    *result = URI_NORELATIVE | URI_NOAUTH | ALLOWS_PROXY;
     return NS_OK;
 }
 
@@ -105,13 +107,20 @@ nsDateTimeHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 NS_IMETHODIMP
 nsDateTimeHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 {
+    return NewProxiedChannel(url, nsnull, result);
+}
+
+NS_IMETHODIMP
+nsDateTimeHandler::NewProxiedChannel(nsIURI* url, nsIProxyInfo* proxyInfo,
+                                     nsIChannel* *result)
+{
     nsresult rv;
     
     nsDateTimeChannel* channel;
     rv = nsDateTimeChannel::Create(nsnull, NS_GET_IID(nsIChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->Init(url);
+    rv = channel->Init(url, proxyInfo);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

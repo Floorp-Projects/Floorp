@@ -46,9 +46,11 @@ XPIDLSRCS	= \
 		nsIPrompt.idl \
 		nsIProtocolHandler.idl \
 		nsIProtocolProxyService.idl \
+		nsIProxiedProtocolHandler.idl \
 		nsIProxy.idl \
 		nsIProxyAutoConfig.idl \
 		nsIProxyAutoConfigUtils.idl \
+		nsIProxyInfo.idl \
 		nsIRequest.idl \
 		nsITransport.idl \
 		nsISocketTransport.idl \

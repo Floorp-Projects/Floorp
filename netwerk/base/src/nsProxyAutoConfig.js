@@ -103,7 +103,6 @@ nsProxyAutoConfig.prototype = {
     },
 
     onStopRequest: function(request, ctxt, status, errorMsg) {
-        this.done = true;
         if(!ProxySandBox) {
            ProxySandBox = new Sandbox();
         }
@@ -120,6 +119,7 @@ nsProxyAutoConfig.prototype = {
         }
         ProxySandBox.dnsResolve = dnsResolve;
         LocalFindProxyForURL=ProxySandBox.FindProxyForURL;
+        this.done = true;
     },
 
     onDataAvailable: function(request, ctxt, inStream, sourceOffset, count) {

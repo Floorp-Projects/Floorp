@@ -31,6 +31,8 @@
 #include "nsXPIDLString.h"
 #include "nsIProtocolProxyService.h"
 #include "nsIProxyAutoConfig.h"
+#include "nsIProxyInfo.h"
+#include "prmem.h"
 
 class nsProtocolProxyService : public nsIProtocolProxyService {
 public:
@@ -46,6 +48,35 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     void PrefsChanged(const char* pref);
+
+    class nsProxyInfo : public nsIProxyInfo {
+        NS_DECL_ISUPPORTS
+
+        NS_IMETHOD_(const char*) Host() {
+            return mHost;
+        }
+
+        NS_IMETHOD_(PRInt32) Port() {
+            return mPort;
+        }
+
+        NS_IMETHOD_(const char*) Type() {
+            return mType;
+        }
+
+        virtual ~nsProxyInfo() {
+            PR_FREEIF(mHost);
+            PR_FREEIF(mType);
+        }
+
+        nsProxyInfo() : mType(nsnull), mHost(nsnull), mPort(-1) {
+            NS_INIT_REFCNT();
+        }
+
+        char* mType;
+        char* mHost;
+        PRInt32 mPort;
+    };
 
 protected:
 

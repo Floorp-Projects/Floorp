@@ -781,6 +781,8 @@ nsXPInstallManager::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     nsresult err;
     char buffer[8*1024];
     PRUint32 writeCount;
+
+    printf("nsXPInstallManager::OnDataAvailable\n");
     
     if (mCancelled)
     {

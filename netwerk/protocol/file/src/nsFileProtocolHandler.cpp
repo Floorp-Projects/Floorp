@@ -97,7 +97,7 @@ nsFileProtocolHandler::GetDefaultPort(PRInt32 *result)
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::GetURIType(PRInt16 *result)
+nsFileProtocolHandler::GetProtocolFlags(PRUint32 *result)
 {
     *result = URI_NOAUTH;
     return NS_OK;

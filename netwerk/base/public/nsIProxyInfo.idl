@@ -18,35 +18,25 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *                  Bradley Baetz <bbaetz@netscape.com> (Original Developer)
  */
 
-// The datetime protocol handler creates "datetime" URIs of the form
-// "datetime:RFC867Server".
+#include "nsISupports.idl"
 
-#ifndef nsDateTimeHandler_h___
-#define nsDateTimeHandler_h___
+/* This interface is PRIVATE.
+ * It is used as an opaque cookie, and this class may change at
+ * any time without notice.
+ *
+ * @see nsIProtocolProxyService::GetProxyInfo
+ */
 
-#include "nsIProxiedProtocolHandler.h"
+native constCharPtr(const char*);
 
-#define DATETIME_PORT 13
-
-// {AA27D2A0-B71B-11d3-A1A0-0050041CAF44}
-#define NS_DATETIMEHANDLER_CID \
-{ 0xaa27d2a0, 0xb71b, 0x11d3, { 0xa1, 0xa0, 0x0, 0x50, 0x4, 0x1c, 0xaf, 0x44 } }
-
-class nsDateTimeHandler : public nsIProxiedProtocolHandler
+[scriptable, uuid(b65d22b0-1dd1-11b2-8f95-920e5b7b56f0)]
+interface nsIProxyInfo : nsISupports
 {
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIPROTOCOLHANDLER
-    NS_DECL_NSIPROXIEDPROTOCOLHANDLER
-
-    // nsDateTimeHandler methods:
-    nsDateTimeHandler();
-    virtual ~nsDateTimeHandler();
-
-    // Define a Create method to be used with a factory:
-    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
+    [noscript, notxpcom] constCharPtr Host();
+    [noscript, notxpcom] PRInt32 Port();
+    [noscript, notxpcom] constCharPtr Type();
 };
 
-#endif /* nsDateTimeHandler_h___ */

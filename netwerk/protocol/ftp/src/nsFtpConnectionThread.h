@@ -43,6 +43,7 @@
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
 #include "nsITransport.h"
+#include "nsIProxyInfo.h"
 
 #include "nsFtpControlConnection.h"
 
@@ -98,7 +99,8 @@ public:
                   nsIPrompt *aPrompter, 
                   nsIAuthPrompt *aAuthPrompter, 
                   nsIFTPEventSink *sink, 
-                  nsICacheEntryDescriptor* cacheEntry);
+                  nsICacheEntryDescriptor* cacheEntry,
+                  nsIProxyInfo* proxyInfo);
 
     // use this to provide a stream to be written to the server.
     nsresult SetWriteStream(nsIInputStream* aInStream);
@@ -162,6 +164,7 @@ private:
 
         // ****** consumer vars
     nsCOMPtr<nsIFTPChannel>         mChannel;         // our owning FTP channel we pass through our events
+    nsCOMPtr<nsIProxyInfo>          mProxyInfo;
 
         // ****** connection cache vars
     PRInt32             mServerType;    // What kind of server are we talking to

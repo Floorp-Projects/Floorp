@@ -24,7 +24,7 @@
 #define nsFtpProtocolHandler_h___
 
 #include "nsIServiceManager.h"
-#include "nsIProtocolHandler.h"
+#include "nsIProxiedProtocolHandler.h"
 #include "nsHashtable.h"
 #include "nsIIOService.h"
 #include "nsIThreadPool.h"
@@ -36,10 +36,11 @@
 #define NS_FTPPROTOCOLHANDLER_CID \
     { 0x25029490, 0xf132, 0x11d2, { 0x95, 0x88, 0x0, 0x80, 0x5f, 0x36, 0x9f, 0x95 } }
 
-class nsFtpProtocolHandler : public nsIProtocolHandler{
+class nsFtpProtocolHandler : public nsIProxiedProtocolHandler {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
+    NS_DECL_NSIPROXIEDPROTOCOLHANDLER
     
     // nsFtpProtocolHandler methods:
     nsFtpProtocolHandler();

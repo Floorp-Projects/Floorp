@@ -126,7 +126,7 @@ nsFtpControlConnection::IsAlive()
     return isAlive;
 }
 nsresult 
-nsFtpControlConnection::Connect()
+nsFtpControlConnection::Connect(nsIProxyInfo* proxyInfo)
 {
     nsresult rv;
 
@@ -134,9 +134,10 @@ nsFtpControlConnection::Connect()
         nsCOMPtr<nsITransport> transport;
         // build our own
         nsCOMPtr<nsISocketTransportService> sts = do_GetService(kSocketTransportServiceCID, &rv);
+
         rv = sts->CreateTransport(mHost, 
                                   mPort,
-                                  nsnull, -1,
+                                  proxyInfo,
                                   FTP_COMMAND_CHANNEL_SEG_SIZE, 
                                   FTP_COMMAND_CHANNEL_MAX_SIZE, 
                                   getter_AddRefs(mCPipe)); // the command transport

@@ -124,7 +124,7 @@ class nsSocketOS;  // output stream
 class nsSocketRequest;
 class nsSocketReadRequest;
 class nsSocketWriteRequest;
-
+class nsIProxyInfo;
 
 class nsSocketTransport : public nsISocketTransport,
                           public nsIDNSListener
@@ -144,8 +144,7 @@ public:
                   PRInt32 aPort,
 	              PRUint32 aSocketTypeCount,
 	              const char* *aSocketTypes,
-                  const char* aProxyHost, 
-                  PRInt32 aProxyPort,
+                  nsIProxyInfo* aProxyInfo,
                   PRUint32 bufferSegmentSize,
                   PRUint32 bufferMaxSize);
     
@@ -239,7 +238,6 @@ protected:
     PRInt32                         mProxyPort;
     char*                           mProxyHost;
     PRPackedBool                    mProxyTransparent;
-    PRPackedBool                    mSSLProxy;
 
     /* put all the packed bools together so we save space */
     PRPackedBool                    mClosePending;

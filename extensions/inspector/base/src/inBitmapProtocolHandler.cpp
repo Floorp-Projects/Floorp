@@ -59,7 +59,7 @@ NS_IMETHODIMP inBitmapProtocolHandler::GetDefaultPort(PRInt32 *result)
   return NS_OK;
 }
 
-NS_IMETHODIMP inBitmapProtocolHandler::GetURIType(PRInt16 *result) 
+NS_IMETHODIMP inBitmapProtocolHandler::GetProtocolFlags(PRUint32 *result) 
 {
   *result = URI_NORELATIVE;
   return NS_OK;

@@ -302,7 +302,7 @@ PRBool nsExternalProtocolHandler::HaveProtocolHandler(nsIURI * aURI)
   return haveHandler;
 }
 
-NS_IMETHODIMP nsExternalProtocolHandler::GetURIType(PRInt16 *aUritype)
+NS_IMETHODIMP nsExternalProtocolHandler::GetProtocolFlags(PRUint32 *aUritype)
 {
     // Make it norelative since it is a simple uri
     *aUritype = URI_NORELATIVE;

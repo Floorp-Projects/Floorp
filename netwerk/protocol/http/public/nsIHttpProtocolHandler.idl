@@ -22,24 +22,11 @@
  *   Darin Fisher <darin@netscape.com>
  */
 
-#include "nsIProtocolHandler.idl"
+#include "nsIProxiedProtocolHandler.idl"
 
 [scriptable, uuid(122c91c0-2485-40ba-89c9-b895934921bc)]
-interface nsIHttpProtocolHandler : nsIProtocolHandler
+interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 {
-    /**
-     * Constructs a new http proxy channel.
-     *
-     * @param uri       - the desired request-URI (eg. ftp://ftp.mozilla.org/)
-     * @param proxyHost - the proxy hostname
-     * @param proxyPort - the proxy port
-     * @param proxyType - the proxy type (usually "http" or "socks")
-     */
-    nsIChannel newProxyChannel(in nsIURI uri, 
-                               in string proxyHost,
-                               in long proxyPort,
-                               in string proxyType);
-
     /**
      * Get the HTTP advertised user agent string.
      */

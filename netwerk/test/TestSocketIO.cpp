@@ -311,7 +311,7 @@ main(int argc, char* argv[])
 
     // Create the socket transport...
     nsCOMPtr<nsITransport> transport;
-    rv = sts->CreateTransport(hostName, port, nsnull, -1, 0, 0, getter_AddRefs(transport));
+    rv = sts->CreateTransport(hostName, port, nsnull, 0, 0, getter_AddRefs(transport));
     if (NS_FAILED(rv)) {
         NS_WARNING("failed to create: socket transport!");
         return rv;

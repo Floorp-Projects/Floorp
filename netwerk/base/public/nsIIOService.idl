@@ -40,12 +40,12 @@ interface nsIIOService : nsISupports
     nsIProtocolHandler getProtocolHandler(in string scheme);
 
     /**
-     * Returns a uritype for a given scheme.
+     * Returns the protocol flags for a given scheme.
      *
      * @param scheme	URI scheme 
-     * @return	returns short for uritype definition
+     * @return	returns unsigned long for protocol flags
      */
-    short getURIType(in string scheme);
+    unsigned long getProtocolFlags(in string scheme);
 
     /**
      * This method constructs a new URI by first determining the scheme

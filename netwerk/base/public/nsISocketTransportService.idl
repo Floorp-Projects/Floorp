@@ -25,30 +25,33 @@
 interface nsITransport;
 interface nsIEventSinkGetter;
 interface nsIChannel;
+interface nsIProxyInfo;
 
 [scriptable, uuid(05331390-6884-11d3-9382-00104ba0fd40)]
 interface nsISocketTransportService : nsISupports 
 {
     /**
-     * Creates a transport for a specified host and port. 
-     * The eventSinkGetter is used to get the appropriate callbacks
-     * for the socket activity from the application. These include
-     * the progress and the status messages like "Contacting host.."
-     * etc. The printHost contains the actual hostname (and not the 
-     * proxy) for displaying in status messages. 
+     * Creates a transport for a specified host and port.
+     *
+     * @param proxyInfo Information about any transport-layer proxying. Used
+     * for communicating information about proxies like socks.
+     * This can either be the proxyInfo attribute on an
+     * nsISupportsTransparentProxy (or from the protocolProxyService),
+     * or null for no proxying.
+     *
+     * @see nsISupportsTransparentProxy
+     * @see nsIProtocolProxyService::GetProxyInfo
      */
     nsITransport createTransport(in string host,
                                  in long port,
-                                 in string proxyHost,
-                                 in long proxyPort,
+                                 in nsIProxyInfo proxyInfo,
                                  in unsigned long bufferSegmentSize,
                                  in unsigned long bufferMaxSize);
     
     nsITransport createTransportOfType(in string socketType,
                                        in string host, 
                                        in long port,
-                                       in string proxyHost,
-                                       in long proxyPort,
+                                       in nsIProxyInfo proxyInfo,
                                        in unsigned long bufferSegmentSize,
                                        in unsigned long bufferMaxSize);
 
@@ -56,8 +59,7 @@ interface nsISocketTransportService : nsISupports
 				      [array, size_is(typeCount)] in string socketTypes,
                                         in string host, 
                                         in long port,
-                                        in string proxyHost,
-                                        in long proxyPort,
+                                        in nsIProxyInfo proxyInfo,
                                         in unsigned long bufferSegmentSize,
                                         in unsigned long bufferMaxSize);
 

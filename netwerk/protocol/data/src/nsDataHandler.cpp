@@ -75,7 +75,7 @@ nsDataHandler::GetDefaultPort(PRInt32 *result) {
 }
 
 NS_IMETHODIMP
-nsDataHandler::GetURIType(PRInt16 *result) {
+nsDataHandler::GetProtocolFlags(PRUint32 *result) {
     *result = URI_NORELATIVE | URI_NOAUTH;
     return NS_OK;
 }

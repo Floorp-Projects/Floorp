@@ -33,6 +33,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIEventQueue.h"
 #include "nsIInputStream.h"
+#include "nsIProxyInfo.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "plstr.h"
@@ -148,20 +149,17 @@ class nsHttpConnectionInfo : public nsISupports
 public:
     NS_DECL_ISUPPORTS
 
-    nsHttpConnectionInfo(const char *host, PRInt32 port=-1,
-                         const char *proxyHost=0, PRInt32 proxyPort=-1,
-                         const char *proxyType=0, PRBool usingSSL=0)
-        : mProxyPort(proxyPort)
-        , mUsingSSL(usingSSL)
+    nsHttpConnectionInfo(const char *host, PRInt32 port,
+                         nsIProxyInfo* proxyInfo,
+                         PRBool usingSSL=PR_FALSE)
+        : mProxyInfo(proxyInfo)
+        , mUsingSSL(usingSSL) 
     {
         LOG(("Creating nsHttpConnectionInfo @%x\n", this));
 
         NS_INIT_ISUPPORTS();
 
-        if (proxyHost)
-          mProxyHost.Adopt(nsCRT::strdup(proxyHost));
-        if (proxyType)
-          mProxyType.Adopt(nsCRT::strdup(proxyType));
+        mUsingHttpProxy = (proxyInfo && !nsCRT::strcmp(proxyInfo->Type(), "http"));
 
         SetOriginServer(host, port);
     }
@@ -170,7 +168,7 @@ public:
     {
         if (host)
             mHost.Adopt(nsCRT::strdup(host));
-        mPort = port == -1 ? DefaultPort(): port;
+        mPort = port == -1 ? DefaultPort() : port;
         
         return NS_OK;
     }
@@ -180,36 +178,40 @@ public:
         LOG(("Destroying nsHttpConnectionInfo @%x\n", this));
     }
 
+    const char *ProxyHost() const { return mProxyInfo ? mProxyInfo->Host() : nsnull; }
+    PRInt32     ProxyPort() const { return mProxyInfo ? mProxyInfo->Port() : -1; }
+    const char *ProxyType() const { return mProxyInfo ? mProxyInfo->Type() : nsnull; }
+
     // Compare this connection info to another...
     // Two connections are 'equal' if they end up talking the same
     // protocol to the same server. This is needed to properly manage
     // persistent connections to proxies
+    // Note that we don't care about transparent proxies - 
+    // it doesn't matter if we're talking via socks or not, since
+    // a request will end up at the same host.
     PRBool Equals(const nsHttpConnectionInfo *info)
     {
-        // if its a host independent proxy, then compare the proxy
-        // servers.
-        if ((info->mProxyHost.get() || mProxyHost.get()) &&
-            !mUsingSSL &&
-            PL_strcasecmp(mProxyType, "socks") != 0 &&
-            PL_strcasecmp(mProxyType, "socks4") != 0) {
-            return (!PL_strcasecmp(info->mProxyHost, mProxyHost) &&
-                    !PL_strcasecmp(info->mProxyType, mProxyType) &&
-                    info->mProxyPort == mProxyPort &&
-                    info->mUsingSSL == mUsingSSL);
-        }
+        // Strictly speaking, we could talk to a proxy on the same port
+        // and reuse the connection. Its not worth the extra strcmp.
+        if ((info->mUsingHttpProxy != mUsingHttpProxy) ||
+            (info->mUsingSSL != mUsingSSL))
+            return PR_FALSE;
+
+        // if its a proxy, then compare the proxy servers.
+        if (mUsingHttpProxy && !mUsingSSL)
+            return (!PL_strcasecmp(info->ProxyHost(), ProxyHost()) &&
+                    info->ProxyPort() == ProxyPort());
 
         // otherwise, just check the hosts
         return (!PL_strcasecmp(info->mHost, mHost) &&
-                info->mPort == mPort &&
-                info->mUsingSSL == mUsingSSL);
+                info->mPort == mPort);
 
     }
 
     const char *Host()      { return mHost; }
     PRInt32     Port()      { return mPort; }
-    const char *ProxyHost() { return mProxyHost; }
-    PRInt32     ProxyPort() { return mProxyPort; }
-    const char *ProxyType() { return mProxyType; }
+    nsIProxyInfo *ProxyInfo() { return mProxyInfo; }
+    PRBool      UsingHttpProxy() { return mUsingHttpProxy; }
     PRBool      UsingSSL()  { return mUsingSSL; }
 
     PRInt32     DefaultPort() { return mUsingSSL ? 443 : 80; }
@@ -217,9 +219,8 @@ public:
 private:
     nsXPIDLCString     mHost;
     PRInt32            mPort;
-    nsXPIDLCString     mProxyHost;
-    PRInt32            mProxyPort;
-    nsXPIDLCString     mProxyType;
+    nsCOMPtr<nsIProxyInfo> mProxyInfo;
+    PRPackedBool       mUsingHttpProxy;
     PRPackedBool       mUsingSSL;
 };
 
