@@ -1,4 +1,5 @@
-#include "nsIStreamConverter.idl"
+#include "nsIInputStream.idl"
+#include "nsIStreamListener.idl"
 
 // The nsIStreamConverterService acts as a higher level stream converter factory
 // responsible for locating and creating the appropriate stream converters in order
@@ -17,9 +18,18 @@
     {0xa1, 0x6c, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44} \
 }
 
+#define NS_ISTREAMCONVERTER_KEY         "Software/Netscape/streamconv/"
 %}
 
 [scriptable, uuid(00362090-3B97-11d3-A16C-0050041CAF44)]
-interface nsIStreamConverterService : nsIStreamConverter {
-    // no methods. only implements nsIStreamConverter
+interface nsIStreamConverterService : nsISupports {
+
+    nsIInputStream Convert(in nsIInputStream aFromStream,
+						   in wstring aFromType,
+						   in wstring aToType);
+
+    nsIStreamListener AsyncConvertData(in wstring aFromType, 
+                                       in wstring aToType, 
+                                       in nsIStreamListener aListener);
+
 };

@@ -19,7 +19,7 @@
 //    by calling its nsIStreamListener::OnDataAvailable() method.
 //
 // 3. ASYNCRONOUS. nsIStreamListener to nsIStreamListener
-//    You can supply data directly to the service by calling it's
+//    You can supply data directly to the converter by calling it's
 //    nsIStreamListener::OnDataAvailable() method. It will then
 //    convert that data from type X to your desired output type and
 //    return converted data to you via the nsIStreamListener you passed
@@ -60,16 +60,10 @@ interface nsIStreamConverter : nsIStreamListener {
 				 in wstring aToType,
 				 in nsIStreamListener aListener);
 
-	// Converts data arriving via the service's nsIStreamListener::OnDataAvailable() method
+	// Converts data arriving via the converter's nsIStreamListener::OnDataAvailable() method
 	// from type aFromType to aToType pushing the converted data out to the caller via
 	// aListener::OnDataAvailable().
 	void AsyncConvertData(in wstring aFromType,
 				 in wstring aToType,
 				 in nsIStreamListener aListener);
 };
-
-%{C++
-
-#define NS_ISTREAMCONVERTER_KEY         "Software/Netscape/streamconv/"
-
-%}
