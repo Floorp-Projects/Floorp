@@ -297,7 +297,7 @@ nsITokenRecycler* nsExpatDTD::GetTokenRecycler(void){
  * @param 
  * @return
  */
-nsresult  nsExpatDTD::Terminate(void)
+nsresult  nsExpatDTD::Terminate(nsIParser* aParser)
 {
   return NS_ERROR_HTMLPARSER_STOPPARSING;
 }

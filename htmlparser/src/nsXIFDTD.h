@@ -250,7 +250,7 @@ class nsXIFDTD : public nsIDTD {
      * It's recommended to use this method in accordance with
      * the parser's terminate() method.
      */
-    virtual nsresult  Terminate(void);
+    virtual nsresult  Terminate(nsIParser* aParser=nsnull);
 
     /**
      * Give rest of world access to our tag enums, so that CanContain(), etc,

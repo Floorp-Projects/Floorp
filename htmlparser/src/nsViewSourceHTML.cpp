@@ -471,7 +471,7 @@ nsITokenRecycler* CViewSourceHTML::GetTokenRecycler(void){
  * @param 
  * @return
  */
-nsresult  CViewSourceHTML::Terminate(void) {
+nsresult  CViewSourceHTML::Terminate(nsIParser* aParser) {
   return NS_ERROR_HTMLPARSER_STOPPARSING;
 }
 

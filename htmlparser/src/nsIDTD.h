@@ -201,7 +201,7 @@ class nsIDTD : public nsISupports {
      * @param 
      * @return
      */
-    virtual nsresult  Terminate(void) = 0;
+    virtual nsresult  Terminate(nsIParser* aParser=nsnull) = 0;
 
 /* XXX Temporary measure, pending further work by RickG  */
     

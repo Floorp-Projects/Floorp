@@ -239,8 +239,7 @@ nsParser::~nsParser() {
   NS_IF_RELEASE(mProgressEventSink);
   NS_IF_RELEASE(mSink);
 
-  if(mBundle) 
-    delete mBundle;
+  NS_IF_RELEASE(mBundle);
 
   //don't forget to add code here to delete 
   //what may be several contexts...
@@ -1050,13 +1049,18 @@ void nsParser::SetUnusedInput(nsString& aBuffer) {
 nsresult nsParser::Terminate(void){
   nsresult result=NS_OK;
   if(mParserContext && mParserContext->mDTD) {
-    result=mParserContext->mDTD->Terminate();
+    result=mParserContext->mDTD->Terminate(this);
     if(result==NS_ERROR_HTMLPARSER_STOPPARSING) {
+      // XXX - [ until we figure out a way to break parser-sink circularity ]
+      // Hack - Hold a reference until we are completely done...
+      nsIParser* me=(nsIParser*)this;
+      NS_ADDREF(me); 
       mInternalState=result;
       result=DidBuildModel(result);
+      NS_RELEASE(me);
     }
   }
-  return result;
+  return mInternalState;
 }
 
 /**
@@ -1263,6 +1267,7 @@ aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,nsDTDMode aMode){
       NS_IF_RELEASE(theDTD);
     } 
     else { 
+      mParserContext->mStreamListenerState = (aLastCall) ? eOnStop:eOnDataAvail; // Fix 36148
       mParserContext->mScanner->Append(aSourceBuffer); 
       if(!mParserContext->mPrevContext) {
         ResumeParse(PR_FALSE);
@@ -1462,8 +1467,11 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
         
         else if (NS_ERROR_HTMLPARSER_STOPPARSING==result) {
           mInternalState=result;
-          DidBuildModel(mStreamStatus);
-          return mInternalState;
+          // Note: Parser Terminate() calls DidBuildModel.
+          if(NS_ERROR_HTMLPARSER_STOPPARSING!=theTokenizerResult) {
+            DidBuildModel(mStreamStatus);
+          }
+          break;
         }
                   
         else if((NS_OK==result) && (theTokenizerResult==kEOF)){
@@ -1558,8 +1566,7 @@ nsresult nsParser::BuildModel() {
     nsIDTD* theRootDTD=theRootContext->mDTD;
     if(theRootDTD) {      
       MOZ_TIMER_START(mDTDTime);
-      nsresult rv=theRootDTD->BuildModel(this,theTokenizer,mTokenObserver,mSink);  
-      result=(mInternalState==NS_ERROR_HTMLPARSER_STOPPARSING)? mInternalState:rv; // Fix for 32527
+      result=theRootDTD->BuildModel(this,theTokenizer,mTokenObserver,mSink);  
       MOZ_TIMER_STOP(mDTDTime);
     }
   }
@@ -2005,8 +2012,10 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
         if(kEOF==result){
           break;
         }
-        else if(NS_ERROR_HTMLPARSER_STOPPARSING==result)
-          return Terminate();
+        else if(NS_ERROR_HTMLPARSER_STOPPARSING==result) {
+          result=Terminate();
+          break;
+        }
       }
       else if(flushTokens && mObserversEnabled) {
         // I added the extra test of mObserversEnabled to fix Bug# 23931.
@@ -2125,7 +2134,8 @@ nsParser::SetDataIntoBundle(const nsString& aKey,nsISupports* anObject) {
   nsresult result=NS_OK;
   if(!mBundle) {
     mBundle = new nsParserBundle();
-    if(mBundle==nsnull) result=NS_ERROR_OUT_OF_MEMORY;
+    if(mBundle==nsnull) return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(mBundle);
   }
   result=mBundle->SetDataIntoBundle(aKey,anObject);
   return result;
@@ -2168,6 +2178,7 @@ static PRBool PR_CALLBACK ReleaseData(nsHashKey* aKey, void* aData, void* aClosu
  * @update harishd 05/10/00
  */                  
 nsParserBundle::nsParserBundle (){
+  NS_INIT_REFCNT();
   mData=new nsHashtable(5);
 }
 

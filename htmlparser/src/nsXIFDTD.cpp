@@ -1138,7 +1138,7 @@ nsITokenRecycler* nsXIFDTD::GetTokenRecycler(void){
  * @param 
  * @return
  */
-nsresult  nsXIFDTD::Terminate(void)
+nsresult  nsXIFDTD::Terminate(nsIParser* aParser)
 {
   return NS_ERROR_HTMLPARSER_STOPPARSING;
 }
