@@ -104,6 +104,7 @@ LINCS=$(LINCS) -I,							\
 			   -I$(PUBLIC)\pref				\
 			   -I$(PUBLIC)\raptor			\
 			   -I$(PUBLIC)\rdf				\
+			   -I$(PUBLIC)\netlib			\
  			     $(NULL)
 
 #//------------------------------------------------------------------------
