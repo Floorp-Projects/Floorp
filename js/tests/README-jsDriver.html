@@ -44,18 +44,23 @@
       <dd>
         <b>jsDriver.pl</b> is normally used to run a series of tests against
         one of the JavaScript shells.  These tests are expected to be laid out
-        in a directory structure exactly two levels deep.  The first level
-        represents a &quot;Test Suite&quot; and generally marks a broad
-        category such as <i>ECMA Level 1</i> or <i>Live Connect 3</i>.  The next
-        level represents a &quot;Suite Category&quot; and divides tests
-        inside a suite into smaller categories, such as <i>Execution Contexts</i>
-        or <i>Lexical Rules</i>.  Testcases reside under the  &quot;Suite 
-        Categories&quot; as normal JavaScript (*.js) files.  If a file named
-        shell.js exists in either the suite path (the parent directory of the 
-        &quot;Test Suites&quot;) or the indiviual &quot;Suite Category&quot;
-        directory, it is loaded into the shell before the testcase.  You can
-        use this to declare functions and variables common to an entire suite
-        or category.
+        in a directory structure exactly three levels deep.  The first level
+        is considered the <b>root</b> of the tests, subdirectories under the
+        <b>root</b> represent <b>Test Suites</b> and generally mark broad
+        categories such as <i>ECMA Level 1</i> or <i>Live Connect 3</i>.  Under the
+        <b>Test Suites</b> are the <b>Test Categories</b>, which divide the 
+        <b>Test Suite</b> into smaller categories, such as <i>Execution Contexts</i>
+        or <i>Lexical Rules</i>.  Testcases are located under the
+        <B>Test Categories</b> as normal JavaScript (*.js) files.  
+        <p>
+          If a file named <b>shell.js</b> exists in either the
+          <b>Test Suite</b> or the <b>Test Category</b> directory, it is
+          loaded into the shell before the testcase.  If <b>shell.js</b>
+          exists in both directories, the version in the <b>Test Suite</b>
+          directory is loaded <i>first</i>, giving the version associated with
+          the <b>Test Category</b> the ability to override funtions previously
+          declared.  You can use this to
+          create functions and variables common to an entire suite or category.
         <p>
           Testcases can report failures back to <b>jsDriver.pl</b> in one of
           two ways.  The most common is to write a line of text containing
@@ -68,8 +73,8 @@
           can output a line containing <code>EXPECT EXIT <i>n</i></code> where
           <i>n</i> is the exit code the driver should expect to see.  Testcases
           can return a nonzero exit code by calling the shell function
-          <code>exit(<i>n</i>)</code> where <code><i>n</i></code> is the
-          code to exit with.  Also, the various JavaScript shells report
+          <code>quit(<i>n</i>)</code> where <code><i>n</i></code> is the
+          code to exit with.  The various JavaScript shells report
           non-zero exit codes under the following conditions:
 
           <center>
@@ -193,7 +198,7 @@
             Generate html output to the HTML file named by FILE.  By default,
             a filename will be generated using a combination of the engine type
             and a date/time stamp, in the format: 
-            results-&lt;engine-type&gt;-&lt;date-stamp&gt;.html
+            <code>results-<i>&lt;engine-type&gt;</i>-<i>&lt;date-stamp&gt;</i>.html</code>
             <br>
             <br>
           <dt><b>-h, --help</b></dt>
@@ -323,7 +328,7 @@
     <address><a href="mailto:rginda@netscape.com">Robert Ginda</a></address>
 <!-- Created: Thu Dec  2 19:08:05 PST 1999 -->
 <!-- hhmts start -->
-Last modified: Wed Dec 15 16:58:26 PST 1999
+Last modified: Fri Dec 17 16:53:03 PST 1999
 <!-- hhmts end -->
   </body>
 </html>
