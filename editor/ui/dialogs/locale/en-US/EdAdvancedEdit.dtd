@@ -22,7 +22,7 @@
   -->
 
 <!ENTITY WindowTitle.label              "Advanced Property Editor">
-<!ENTITY AttName.label                  "Name: ">
+<!ENTITY AttName.label                  "Attribute: ">
 <!ENTITY AttValue.label                 "Value: ">
 <!ENTITY currentattributesfor.label     "Current attributes for: ">
 <!ENTITY tree.attributeHeader.label     "Attribute">
@@ -31,13 +31,5 @@
 <!ENTITY tabCSS.label                   "Inline Style">
 <!ENTITY tabJSE.label                   "JavaScript Events">
 
-<!-- REMOVE THIS AFTER NEW ADVANCED EDIT DIALOG IS FINISHED -->
-<!ENTITY AddAttributeButton.label       "Add">
-
-<!ENTITY AddJSEAttributeLabel.label     "Edit or Add a JavaScript Event Handler">
-<!ENTITY AddHTMLAttributeLabel.label    "Edit or Add an HTML Attribute">
-<!ENTITY AddCSSAttributeLabel.label     "Edit or Add a Style Attribute">
-
-<!ENTITY editAttribute.label    "Click on an item to edit its value">
+<!ENTITY editAttribute.label    "Click on an item above to edit its value">
 <!ENTITY removeAttribute.label  "Remove Attribute">
-<!ENTITY newButton.label        "New">

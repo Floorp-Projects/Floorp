@@ -507,13 +507,14 @@ function AppendLabelAndValueToMenulist(menulist, labelStr, valueStr)
 
 function ClearMenulist(menulist)
 {
-  // There is usually not more than 1 menupopup under a menulist,
-  //  but look for > 1 children anyway.
-  // Note -- this doesn't remove menuitems from the menupopop -- SHOULD WE?
+  // Always use "AppendStringToMenulist" so we know there's 
+  //  just one <menupopup> as 1st child of <menulist>
   if (menulist) {
     menulist.selectedItem = null;
-    while (menulist.firstChild)
-      menulist.removeChild(menulist.firstChild);
+    var popup = menulist.firstChild;
+    if (popup)
+      while (popup.firstChild)
+        popup.removeChild(popup.firstChild);
   }
 }
 
@@ -686,10 +687,13 @@ function forceInteger(elementID)
   var stringIn = editField.value;
   if (stringIn && stringIn.length > 0)
   {
+    // Strip out all nonnumeric characters
     stringIn = stringIn.replace(/\D+/g,"");
     if (!stringIn) stringIn = "";
-    // Strip out all nonnumeric characters
-    editField.value = stringIn;
+
+    // Write back only if changed
+    if (stringIn != editField.value)
+      editField.value = stringIn;
   }
 }
 
