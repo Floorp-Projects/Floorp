@@ -151,10 +151,9 @@ function onOK()
         }
       }
     }
+    // Don't delete selected text when inserting
+    editorShell.InsertElement(tableElement, false);
+    return true;
   }
-
-  // Don't delete selected text when inserting
-  editorShell.InsertElement(tableElement, false);
-
-  return true;
+  return false;
 }
