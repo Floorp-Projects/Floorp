@@ -573,6 +573,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
                 script->trynotes = (JSTryNote *)
                                    ((jsword)(SCRIPT_NOTES(script) + nsrcnotes) &
                                     ~(jsword)JSTRYNOTE_ALIGNMASK);
+                memset(script->trynotes, 0, ntrynotes * sizeof(JSTryNote));
             }
         }
     }
@@ -1064,6 +1065,7 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes)
         script->trynotes = (JSTryNote *)
                            ((jsword)(SCRIPT_NOTES(script) + nsrcnotes) &
                             ~(jsword)JSTRYNOTE_ALIGNMASK);
+        memset(script->trynotes, 0, ntrynotes * sizeof(JSTryNote));
     }
     return script;
 }
