@@ -99,21 +99,13 @@ function ResultsPaneSelectionChange()
 function SortResultPane(column, sortKey)
 {
 	var node = document.getElementById(column);
-	if(!node)
-		return false;
+	if(!node)    return(false);
 
-	var rdfCore = XPAppCoresManager.Find("RDFCore");
-	if (!rdfCore)
-	{
-		rdfCore = new RDFCore();
-		if (!rdfCore)
-		{
-			return(false);
-		}
-
-		rdfCore.Init("RDFCore");
-
-	}
+	var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
+	if (!isupports)    return(false);
+	
+	var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
+	if (!xulSortService)    return(false);
 
 	// sort!!!
 	sortDirection = "ascending";
@@ -124,11 +116,7 @@ function SortResultPane(column, sortKey)
             sortDirection = "ascending";
     else    sortDirection = "ascending";
 
-    rdfCore.doSort(node, sortKey, sortDirection);
+	xulSortService.Sort(node, sortKey, sortDirection);
 
     return(true);
-
-
 }
-
-
