@@ -34,6 +34,8 @@ namespace JavaScript {
     enum ICodeOp {
                         //      Operand1                Operand2                Operand3
 
+        MOVE_TO,        // Source Register          Destination Register
+
         LOAD_VAR,       // index of frame slot      Destination Register
         SAVE_VAR,       // index of frame slot      Source Register
 
@@ -46,6 +48,7 @@ namespace JavaScript {
         SET_PROP,       // StringAtom &             Base Register               Source Register
 
         ADD,            // Source Register 1        Source Register 2           Destination Register
+        COMPARE,        // Source Register 1        Source Register 2           Destination Register
         NOT,            // Source Register          Destination Register
 
         BRANCH,         // Target label
@@ -104,44 +107,64 @@ namespace JavaScript {
     /****************************************************************/
     /****************************************************************/
 
-    enum StateKind { While_State, If_State };
+    class ICodeGenerator;   // forward declaration
 
-    class ICodeState { 
+    enum StateKind { While_state, If_state, Do_state, Switch_state, For_state };
+
+    class ICodeState {
     public :
-        ICodeState(StateKind kind) : stateKind(kind) { }
+        ICodeState(StateKind kind, ICodeGenerator *icg);        // inline below
         StateKind stateKind;
+        int32 breakLabel;
+        int32 continueLabel;
+        int32 registerBase;
     };
 
     // an ICodeState that handles switching to a new InstructionStream 
     // and then re-combining the streams later
     class MultiPathICodeState : public ICodeState {
     public:
-        MultiPathICodeState(StateKind kind,InstructionStream *iCode, int32 topLabel)
-                            : ICodeState(kind), its_iCode(iCode), itsTopLabel(topLabel) {}
+        MultiPathICodeState(StateKind kind, ICodeGenerator *icg);        // inline below
+        virtual ~MultiPathICodeState()  { delete its_iCode; }
 
         InstructionStream *swapStream(InstructionStream *iCode) { InstructionStream *t = its_iCode; its_iCode = iCode; return t; }
 
         InstructionStream *its_iCode;
-        int32 itsTopLabel;      // set to the highest label allocated when this stream
-                                // was created. If that value changes, this stream may
-                                // contain labels that will need to be adjusted when
-                                // the streams are merged.
+
         void mergeStream(InstructionStream *mainStream, LabelList &labels);
     };
 
     class WhileCodeState : public MultiPathICodeState {
     public:
-        WhileCodeState(InstructionStream *iCode, int32 topLabel, int32 a, int32 b) 
-                    : MultiPathICodeState(While_State, iCode, topLabel), whileConditionLabel(a), whileBodyLabel(b) { }
-        int32 whileConditionLabel;
-        int32 whileBodyLabel;
+        WhileCodeState(int32 conditionLabel, int32 bodyLabel, ICodeGenerator *icg) 
+                    : MultiPathICodeState(While_state, icg), whileCondition(conditionLabel), whileBody(bodyLabel) { }
+        int32 whileCondition;
+        int32 whileBody;
     };
 
     class IfCodeState : public ICodeState {
     public:
-        IfCodeState(int32 a, int32 b) : ICodeState(If_State), elseLabel(a), beyondElse(b) { }
+        IfCodeState(int32 a, int32 b, ICodeGenerator *icg) 
+                    : ICodeState(If_state, icg), elseLabel(a), beyondElse(b) { }
         int32 elseLabel;
         int32 beyondElse;
+    };
+
+    class DoCodeState : public ICodeState {
+    public:
+        DoCodeState(int32 bodyLabel, int32 conditionLabel, ICodeGenerator *icg) 
+                    : ICodeState(Do_state, icg), doBody(bodyLabel), doCondition(conditionLabel) { }
+        int32 doBody;
+        int32 doCondition;
+    };
+
+    class SwitchCodeState : public MultiPathICodeState {
+    public:
+        SwitchCodeState(Register control, ICodeGenerator *icg) 
+                    : MultiPathICodeState(Switch_state, icg), controlExpression(control), defaultLabel(-1) { }
+        
+        Register controlExpression;
+        int32 defaultLabel;
     };
 
     /****************************************************************/
@@ -157,20 +180,21 @@ namespace JavaScript {
         
         LabelList labels;
 
-        std::stack<ICodeState *> stitcher;
+        std::vector<ICodeState *> stitcher;
 
         Register topRegister;
         Register getRegister()      { return topRegister++; }
-        void resetTopRegister()     { topRegister = 0; }
+        void resetTopRegister()     { topRegister = stitcher.empty() ? 0 : stitcher.back()->registerBase; }
 
         int32 getLabel();
         void setLabel(int32 label);
+        void setLabel(InstructionStream *stream, int32 label);
 
         void branch(int32 label);
         void branchConditional(int32 label, Register condition);
     
     public:
-        ICodeGenerator() { iCode = new InstructionStream(); }
+        ICodeGenerator() : topRegister(0) { iCode = new InstructionStream(); }
 
         InstructionStream *complete();
 
@@ -187,8 +211,8 @@ namespace JavaScript {
         Register loadName(StringAtom &name);
         Register getProperty(StringAtom &name, Register base);
 
-
-        void beginStatement(const SourcePosition &pos)        { resetTopRegister(); }
+        Register getRegisterBase()                          { return topRegister; }
+        InstructionStream *get_iCode()                      { return iCode; }
 
 
     // Rather than have the ICG client maniplate labels and branches, it
@@ -197,13 +221,16 @@ namespace JavaScript {
     // in the order listed for each construct, (internal error otherwise).
     // The ICG will enforce correct nesting and closing.
 
+        // expression statements
+        void beginStatement(const SourcePosition &pos)      { resetTopRegister(); }
     
+        
         void beginWhileStatement(const SourcePosition &pos);
         void endWhileExpression(Register condition);
         void endWhileStatement();
 
     
-        void beginDoStatement();
+        void beginDoStatement(const SourcePosition &pos);
         void endDoStatement();
         void endDoExpression(Register condition);
 
@@ -220,23 +247,27 @@ namespace JavaScript {
         void endForStatement();
 
 
-        void beginSwitchStatement(Register expression);
+        void beginSwitchStatement(const SourcePosition &pos, Register expression);
 
-        // sequences of the next three follow for each case clause
-        void beginCaseStatement();
         void endCaseCondition(Register expression);
-        void endCaseStatement();             // corresponds to a break and may be omitted
     
+        void beginCaseStatement();
+        void endCaseStatement();
+        
         // optionally
         void beginDefaultStatement();
-        void endDefaultStatement();          // the break for the default clause, may be omitted
+        void endDefaultStatement();
 
         void endSwitchStatement();
 
 
-        void labelStatement(const StringAtom &label);         // adds to label set for next statement, 
-                                                         // removed when that statement is finished
+        void labelStatement(const StringAtom &label);           // adds to label set for next statement, 
+                                                                // removed when that statement is finished
+        void continueStatement();
+        void breakStatement();
+
         void continueStatement(const StringAtom &label);
+        void breakStatement(const StringAtom &label);
 
 
         void throwStatement(Register expression);
@@ -253,5 +284,11 @@ namespace JavaScript {
 
     ostream &operator<<(ostream &s, ICodeGenerator &i);
     ostream &operator<<(ostream &s, StringAtom &str);
+
+    inline ICodeState::ICodeState(StateKind kind, ICodeGenerator *icg) 
+                    : stateKind(kind), breakLabel(-1), continueLabel(-1), registerBase(icg->getRegisterBase()) { }
+
+    inline MultiPathICodeState::MultiPathICodeState(StateKind kind, ICodeGenerator *icg)
+                    : ICodeState(kind, icg), its_iCode(icg->get_iCode()) {}
 }
 #endif

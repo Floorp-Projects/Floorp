@@ -371,6 +371,37 @@ void testICG(World &world)
         icg.beginElseStatement(false);
         icg.endIfStatement();
 
+
+        // switch (i) { case 3: case 4: j = 4; break; case 5: j = 5; break; default : j = 6; }
+        r1 = icg.loadVariable(0);   
+        icg.beginSwitchStatement(pos, r1);
+            // case 3, note empty case statement (?necessary???)
+            icg.endCaseCondition(icg.loadImmediate(3));
+                icg.beginCaseStatement();
+                icg.endCaseStatement();
+            // case 4
+            icg.endCaseCondition(icg.loadImmediate(4));
+                icg.beginCaseStatement();
+                icg.beginStatement(pos);
+                icg.saveVariable(1, icg.loadImmediate(4));
+                icg.breakStatement();
+                icg.endCaseStatement();
+            // case 5
+            icg.endCaseCondition(icg.loadImmediate(5));
+                icg.beginCaseStatement();
+                icg.beginStatement(pos);
+                icg.saveVariable(1, icg.loadImmediate(5));
+                icg.breakStatement();
+                icg.endCaseStatement();
+            // default
+                icg.beginDefaultStatement();
+                icg.beginStatement(pos);
+                icg.saveVariable(1, icg.loadImmediate(6));
+                icg.endDefaultStatement();
+        icg.endSwitchStatement();
+
+        InstructionStream *iCode = icg.complete();
+
         std::cout << icg;
 }
 
@@ -380,7 +411,7 @@ int main(int argc, char **argv)
     initConsole("\pJavaScript Shell", "Welcome to the js2 shell.\n", argc, argv);
 #endif
 	World world;
-#if 0
+#if 1
         testICG(world);
 #else
 	readEvalPrint(std::cin, world);
