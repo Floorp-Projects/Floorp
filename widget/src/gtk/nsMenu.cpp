@@ -494,6 +494,11 @@ nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent,
     aWebShell = mWebShell;
   }
 
+  // First open the menu.
+  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
+  if (domElement)
+    domElement->SetAttribute("open", "true");
+
    // Begin menuitem inner loop
     nsCOMPtr<nsIDOMNode> menuitemNode;
     ((nsIDOMNode*)mDOMNode)->GetFirstChild(getter_AddRefs(menuitemNode));
@@ -532,6 +537,11 @@ nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent,
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
+  // Close the node.
+  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
+  if (domElement)
+    domElement->RemoveAttribute("open");
+
   //g_print("nsMenu::MenuDestruct called \n");
   mConstructCalled = PR_FALSE;
   RemoveAll();
