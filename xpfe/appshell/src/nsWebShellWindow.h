@@ -114,6 +114,8 @@ public:
   NS_IMETHOD ContentChanged(nsIDocument *aDocument,
                             nsIContent* aContent,
                             nsISupports* aSubContent);
+  NS_IMETHOD ContentStateChanged(nsIDocument *aDocument,
+                                 nsIContent* aContent);
   NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                               nsIContent*  aContent,
                               nsIAtom*     aAttribute,
