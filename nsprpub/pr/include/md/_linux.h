@@ -177,6 +177,16 @@ extern void _MD_CleanupBeforeExit(void);
 /* XXX not sure if this is correct, or maybe it should be 17? */
 #define PR_NUM_GCREGS 9
 
+#elif defined(__ia64__)
+
+#define _MD_GET_SP(_t)      ((long *)((_t)->md.context[0].__jmpbuf)[0])
+#define _MD_SET_FP(_t, val)
+#define _MD_GET_SP_PTR(_t)  &(_MD_GET_SP(_t))
+#define _MD_GET_FP_PTR(_t)  ((void *) 0)
+#define _MD_SP_TYPE         long int
+
+#define PR_NUM_GCREGS       _JBLEN
+
 #elif defined(__mc68000__)
 /* m68k based Linux */
 
