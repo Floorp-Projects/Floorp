@@ -31,7 +31,7 @@ class nsIFontSizeIterator : public nsISupports
 		//	|Get| and |Advance| are distinct to facility wrapping with C++ objects as standard iterators.
 	{
 		public:
-      static const nsIID& GetIID() { static nsIID iid = NS_IFONTSIZEITERATOR_IID; return iid; }
+      NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFONTSIZEITERATOR_IID)
 
 			NS_IMETHOD Reset() = 0;
 				// does not need to be called initially, returns iterator to initial state

@@ -30,7 +30,7 @@
 class nsIDragSessionMac : public nsISupports {
 
   public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IDRAGSESSIONMAC_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDRAGSESSIONMAC_IID)
 
   /**
     * Since the drag may originate in an external application, we need some way of

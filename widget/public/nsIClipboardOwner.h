@@ -30,6 +30,7 @@ class nsITransferable;
 class nsIClipboardOwner : public nsISupports {
 
   public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICLIPBOARDOWNER_IID)
 
    /**
     * Notifies the owner of the clipboard transferable that the

@@ -32,7 +32,7 @@ class nsIFormatConverter : public nsISupports {
 
   public:
 
-    static const nsIID& GetIID() { static nsIID iid = NS_IFORMATCONVERTER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORMATCONVERTER_IID)
 
   /**
     * Get the list of the "input" data flavors, in otherwords, the flavors  

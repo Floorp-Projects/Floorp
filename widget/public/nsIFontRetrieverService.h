@@ -33,7 +33,7 @@ class nsIFontRetrieverService : public nsISupports
 		// This (singleton) service exists soley as a factory to manufacture iterators
 {
 		public:
-      static const nsIID& GetIID() { static nsIID iid = NS_IFONTRETRIEVERSERVICE_IID; return iid; }
+      NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFONTRETRIEVERSERVICE_IID)
 
 			NS_IMETHOD CreateFontNameIterator( nsIFontNameIterator** aIterator ) = 0;
 
