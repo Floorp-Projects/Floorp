@@ -1,47 +1,65 @@
 <!-- extracted from content/navigator.xul -->
 
-<!-- LOCALIZATION NOTE  mainWindow.title: Do NOT localize "Mozilla" -->
+<!-- LOCALIZATION NOTE mainWindow.title : DONT_TRANSLATE --> 
 <!ENTITY mainWindow.title "Mozilla"> 
+<!-- LOCALIZATION NOTE mainWindow.titlemodifier : DONT_TRANSLATE --> 
 <!ENTITY mainWindow.titlemodifier "Mozilla"> 
+<!-- LOCALIZATION NOTE mainWindow.titlemodifiermenuseparator : DONT_TRANSLATE -->
 <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
 <!ENTITY viewsourcetitle.preface "Source for: ">
-<!-- LOCALIZATION NOTE  throbber.url: Do NOT localize all the URL -->
+<!-- LOCALIZATION NOTE throbber.url : DONT_TRANSLATE --> 
 <!ENTITY throbber.url "http://www.mozilla.org"> 
+<!-- LOCALIZATION NOTE myNetscape.url : DONT_TRANSLATE -->
 <!ENTITY myNetscape.url "http://my.netscape.com">
+<!-- LOCALIZATION NOTE defaultHomepage.url : DONT_TRANSLATE -->
 <!ENTITY defaultHomepage.url "www.mozilla.org" >
 
-<!-- LOCALIZATION NOTE  fileMenu.label: Localize all the menu labels with accesskeys but not commandkeys. e.g.  "File" -> "XXXX(F)" in Japanese -->
 <!ENTITY browserCmd.label					"New Navigator Window">
+<!-- LOCALIZATION NOTE browserCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY browserCmd.accesskey				"n">
 <!ENTITY openCmd.label "Open Web Location...">
+<!-- LOCALIZATION NOTE openCmd.accesskey : DONT_TRANSLATE -->
 <!ENTITY openCmd.accesskey "o">
+<!-- LOCALIZATION NOTE openCmd.commandkey : DONT_TRANSLATE -->
 <!ENTITY openCmd.commandkey "o">
 <!ENTITY openFileCmd.label "Open File...">
+<!-- LOCALIZATION NOTE openFileCmd.accesskey : DONT_TRANSLATE -->
 <!ENTITY openFileCmd.accesskey "l">
+<!-- LOCALIZATION NOTE openFileCmd.commandkey : DONT_TRANSLATE -->
 <!ENTITY openFileCmd.commandkey "l">
 <!ENTITY sendPageCmd.label "Send Page">
+<!-- LOCALIZATION NOTE sendPageCmd.accesskey : DONT_TRANSLATE -->
 <!ENTITY sendPageCmd.accesskey "s">
 <!ENTITY editPageCmd.label					"Edit Page">
+<!-- LOCALIZATION NOTE editPageCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY editPageCmd.accesskey				"d">
 <!ENTITY offlineMenu.label "Offline">
+<!-- LOCALIZATION NOTE offlineMenu.accesskey : DONT_TRANSLATE -->
 <!ENTITY offlineMenu.accesskey "f">
 <!ENTITY offlineGoOfflineCmd.label "Go Offline">
+<!-- LOCALIZATION NOTE offlineGoOfflineCmd.accesskey : DONT_TRANSLATE -->
 <!ENTITY offlineGoOfflineCmd.accesskey "g">
 <!ENTITY offlineSynchronizeCmd.label "Synchronize">
+<!-- LOCALIZATION NOTE offlineSynchronizeCmd.accesskey : DONT_TRANSLATE -->
 <!ENTITY offlineSynchronizeCmd.accesskey "s">
 <!ENTITY printSetupCmd.label "Print Setup...">
+<!-- LOCALIZATION NOTE printSetupCmd.accesskey : DONT_TRANSLATE -->
 <!ENTITY printSetupCmd.accesskey "r">
 <!ENTITY printPreviewCmd.label "Print Preview">
+<!-- LOCALIZATION NOTE printPreviewCmd.accesskey : DONT_TRANSLATE -->
 <!ENTITY printPreviewCmd.accesskey "v">
 <!ENTITY printCmd.label "Print...">
+<!-- LOCALIZATION NOTE printCmd.accesskey : DONT_TRANSLATE -->
 <!ENTITY printCmd.accesskey "p">
+<!-- LOCALIZATION NOTE printCmd.commandkey : DONT_TRANSLATE -->
 <!ENTITY printCmd.commandkey "p">
 
-<!-- LOCALIZATION NOTE   walletMenu.label: Do NOT localize below line -->
+<!-- LOCALIZATION NOTE walletMenu.label : DONT_TRANSLATE -->
 <!ENTITY walletMenu.label "Wallet">
 <!ENTITY walletSafeFillCmd.label "Safe Form Fill">
 <!ENTITY walletQuickFillCmd.label "Quick Form Fill">
 <!ENTITY walletRequestToCaptureCmd.label "Capture Form">
+<!-- LOCALIZATION NOTE   walletContentsCmd.labe: Do NOT translate "Wallet"-->
 <!ENTITY walletContentsCmd.label "Wallet Contents...">
 <!ENTITY walletDisplaySignonsCmd.label "Display Signons...">
 <!ENTITY walletDisplayCookiesCmd.label "Display Cookies...">
@@ -52,7 +70,7 @@
 <!ENTITY navbarCmd.label "Navigation ToolBar">
 <!ENTITY personalbarCmd.label "Personal Toolbar">
 <!ENTITY taskbarCmd.label "Taskbar">
-<!-- LOCALIZATION NOTE   sidebarCmd.label: Do NOT localize below line -->
+<!-- LOCALIZATION NOTE sidebarCmd.label : DONT_TRANSLATE -->
 <!ENTITY sidebarCmd.label "Sidebar">
 <!ENTITY enlargeTextSizeCmd.label "Enlarge Text Size">
 <!ENTITY reduceTextSizeCmd.label "Reduce Text Size">
@@ -150,25 +168,37 @@
 <!ENTITY searchAddressbookCmd.label "Search Addressbook">
 <!ENTITY searchComputerCmd.label "Search on this Computer...">
 <!ENTITY goMenu.label "Go">
+<!-- LOCALIZATION NOTE goMenu.accesskey : DONT_TRANSLATE -->
 <!ENTITY goMenu.accesskey "g">
 <!ENTITY goBackCmd.label "Back">
+<!-- LOCALIZATION NOTE goBackCmd.accesskey : DONT_TRANSLATE -->
 <!ENTITY goBackCmd.accesskey "b">
+<!-- LOCALIZATION NOTE goBackCmd.commandkey : DONT_TRANSLATE -->
 <!ENTITY goBackCmd.commandkey "[">
 <!ENTITY goForwardCmd.label "Forward">
+<!-- LOCALIZATION NOTE goForwardCmd.accesskey : DONT_TRANSLATE -->
 <!ENTITY goForwardCmd.accesskey "f">
+<!-- LOCALIZATION NOTE goForwardCmd.commandkey : DONT_TRANSLATE -->
 <!ENTITY goForwardCmd.commandkey "]">
 <!ENTITY goHomeCmd.label "Home">
+<!-- LOCALIZATION NOTE goHomeCmd.accesskey : DONT_TRANSLATE -->
 <!ENTITY goHomeCmd.accesskey "h">
+<!-- LOCALIZATION NOTE goHomeCmd.commandkey : DONT_TRANSLATE -->
 <!ENTITY goHomeCmd.commandkey "h">
 
 
 <!ENTITY bookmarksMenu.label "Bookmarks">
+<!-- LOCALIZATION NOTE bookmarksMenu.accesskey : DONT_TRANSLATE -->
 <!ENTITY bookmarksMenu.accesskey "b">
 <!ENTITY addCurPageCmd.label "Add Current Page">
+<!-- LOCALIZATION NOTE addCurPageCmd.accesskey : DONT_TRANSLATE -->
 <!ENTITY addCurPageCmd.accesskey "a">
+<!-- LOCALIZATION NOTE addCurPageCmd.commandkey : DONT_TRANSLATE -->
 <!ENTITY addCurPageCmd.commandkey "d">
 <!ENTITY manBookmarksCmd.label "Manage Bookmarks...">
+<!-- LOCALIZATION NOTE manBookmarksCmd.accesskey : DONT_TRANSLATE -->
 <!ENTITY manBookmarksCmd.accesskey "m">
+<!-- LOCALIZATION NOTE manBookmarksCmd.commandkey : DONT_TRANSLATE -->
 <!ENTITY manBookmarksCmd.commandkey "b">
 
 <!ENTITY helpMenuCmd.label "Help">
@@ -288,11 +318,11 @@
 <!-- Toolbar items --> 
 <!ENTITY  bookmarksButton.label "Bookmarks">
 <!ENTITY  homeButton.label "Home">
-<!-- LOCALIZATION NOTE  netscapeButton.label: Do NOT localize below line -->
+<!-- LOCALIZATION NOTE  netscapeButton.label : DONT_TRANSLATE -->
 <!ENTITY  netscapeButton.label "My Netscape">
-<!-- LOCALIZATION NOTE  bugzillaButton.label: Do NOT localize below line -->
+<!-- LOCALIZATION NOTE  bugzillaButton.label : DONT_TRANSLATE -->
 <!ENTITY  bugzillaButton.label "Bugzilla">
-<!-- LOCALIZATION NOTE  tinderboxButton.label: Do NOT localize below line -->
+<!-- LOCALIZATION NOTE  tinderboxButton.label : DONT_TRANSLATE -->
 <!ENTITY  tinderboxButton.label "Tinderbox">
 
 <!-- Statusbar -->
@@ -301,38 +331,56 @@
 
 <!-- Context Menu -->                 
 <!ENTITY openLinkCmd.label            "Open link in new window">
+<!-- LOCALIZATION NOTE openLinkCmd.accesskey : DONT_TRANSLATE -->
 <!ENTITY openLinkCmd.accesskey        "o">
 <!ENTITY editLinkCmd.label            "Edit link in composer">
+<!-- LOCALIZATION NOTE editLinkCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY editLinkCmd.accesskey        "e">
 <!ENTITY openFrameCmd.label           "Open frame in new window">
+<!-- LOCALIZATION NOTE openFrameCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY openFrameCmd.accesskey       "o">
 <!ENTITY viewPageSourceCmd.label      "View page source">
+<!-- LOCALIZATION NOTE viewPageSourceCmd.accesskey  : DONT_TRANSLATE -->
 <!ENTITY viewPageSourceCmd.accesskey  "v">
 <!ENTITY viewFrameSourceCmd.label     "View frame source">
+<!-- LOCALIZATION NOTE viewFrameSourceCmd.accesskey : DONT_TRANSLATE -->
 <!ENTITY viewFrameSourceCmd.accesskey "v">
 <!ENTITY viewPageInfoCmd.label        "View page info">
+<!-- LOCALIZATION NOTE viewPageInfoCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY viewPageInfoCmd.accesskey    "i">
 <!ENTITY viewFrameInfoCmd.label       "View frame info">
+<!-- LOCALIZATION NOTE viewFrameInfoCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY viewFrameInfoCmd.accesskey   "i">
 <!ENTITY viewImageCmd.label           "View image">
+<!-- LOCALIZATION NOTE viewImageCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY viewImageCmd.accesskey       "w">
 <!ENTITY bookmarkPageCmd.label        "Bookmark this page">
+<!-- LOCALIZATION NOTE bookmarkPageCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY bookmarkPageCmd.accesskey    "b">
 <!ENTITY savePageCmd.label            "Save page as...">
+<!-- LOCALIZATION NOTE savePageCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY savePageCmd.accesskey        "s">
 <!ENTITY saveFrameCmd.label           "Save frame as...">
+<!-- LOCALIZATION NOTE saveFrameCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY saveFrameCmd.accesskey       "s">
 <!ENTITY saveLinkCmd.label            "Save link as...">
+<!-- LOCALIZATION NOTE saveLinkCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY saveLinkCmd.accesskey        "s">
 <!ENTITY saveImageCmd.label           "Save image as...">
+<!-- LOCALIZATION NOTE saveImageCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY saveImageCmd.accesskey       "a">
 <!ENTITY saveBGImageCmd.label         "Save background image as...">
+<!-- LOCALIZATION NOTE saveBGImageCmd.accesskey     : DONT_TRANSLATE -->
 <!ENTITY saveBGImageCmd.accesskey     "a">
 <!ENTITY copyCmd.label                "Copy">
+<!-- LOCALIZATION NOTE copyCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY copyCmd.accesskey            "c">
 <!ENTITY selectAllCmd.label           "Select all">
+<!-- LOCALIZATION NOTE selectAllCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY selectAllCmd.accesskey       "l">
 <!ENTITY copyLinkCmd.label            "Copy link location">
+<!-- LOCALIZATION NOTE copyLinkCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY copyLinkCmd.accesskey        "l">
 <!ENTITY copyImageCmd.label           "Copy image location">
+<!-- LOCALIZATION NOTE copyImageCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY copyImageCmd.accesskey       "m">
