@@ -2016,6 +2016,18 @@ BOOL TranslateToAscii(BYTE *aKeyState,
 //
 //
 //-------------------------------------------------------------------------
+#ifdef tague_keyboard_patch
+BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
+{
+  WORD asciiKey;
+
+  asciiKey = 0;
+  DispatchKeyEvent(NS_KEY_DOWN, asciiKey, aVirtualKeyCode);
+
+  // always let the def proc process a WM_KEYDOWN
+  return FALSE;
+}
+#else
 BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
 {
   WORD asciiKey;
@@ -2048,7 +2060,7 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
   // always let the def proc process a WM_KEYDOWN
   return FALSE;
 }
-
+#endif
 
 //-------------------------------------------------------------------------
 //
