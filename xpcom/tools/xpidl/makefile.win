@@ -21,6 +21,9 @@ MAKE_OBJ_TYPE   = EXE
 PROGRAM = .\$(OBJDIR)\xpidl.exe
 #RESFILE = xpidl.res
 
+# glib and libIDL link against the non-debug msvcrt
+MOZ_NO_DEBUG_RTL=1
+
 OBJS =  \
 	.\$(OBJDIR)\xpidl.obj		\
 	.\$(OBJDIR)\xpidl_idl.obj	\
