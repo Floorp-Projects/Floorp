@@ -70,6 +70,7 @@ interface nsIMsgMailNewsUrl : nsIURL {
 	attribute boolean updatingFolder;
 	attribute boolean addToMemoryCache; 
   attribute boolean msgIsInLocalCache;
+  attribute boolean suppressErrorMsgs; // used to avoid displaying biff error messages
 
   readonly attribute nsICachedNetData memCacheEntry;
 

@@ -3977,14 +3977,23 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
 void
 nsImapProtocol::AlertUserEventUsingId(PRUint32 aMessageId)
 {
-    if (m_imapServerSink)
+  if (m_imapServerSink)
   {
-    PRUnichar *progressString = nsnull;
-    m_imapServerSink->GetImapStringByID(aMessageId, &progressString);
-    nsCOMPtr<nsIMsgWindow> msgWindow;
-    GetMsgWindow(getter_AddRefs(msgWindow));
-    m_imapServerSink->FEAlert(progressString, msgWindow);
-    PR_FREEIF(progressString);
+    PRBool suppressErrorMsg = PR_FALSE;
+
+    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningUrl);
+    if (mailnewsUrl)
+      mailnewsUrl->GetSuppressErrorMsgs(&suppressErrorMsg);
+
+    if (!suppressErrorMsg)
+    {
+      PRUnichar *progressString = nsnull;
+      m_imapServerSink->GetImapStringByID(aMessageId, &progressString);
+      nsCOMPtr<nsIMsgWindow> msgWindow;
+      GetMsgWindow(getter_AddRefs(msgWindow));
+      m_imapServerSink->FEAlert(progressString, msgWindow);
+      PR_FREEIF(progressString);
+    } 
   }
 }
 

@@ -209,6 +209,9 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
 		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectFolder);
 
 		nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(imapUrl);
+    // if no msg window, we won't put up error messages (this is almost certainly a biff-inspired get new msgs)
+    if (!aMsgWindow)
+      mailNewsUrl->SetSuppressErrorMsgs(PR_TRUE);
 		mailNewsUrl->SetMsgWindow(aMsgWindow);
 		mailNewsUrl->SetUpdatingFolder(PR_TRUE);
 		imapUrl->AddChannelToLoadGroup();

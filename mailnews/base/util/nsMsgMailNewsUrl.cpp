@@ -51,6 +51,7 @@ nsMsgMailNewsUrl::nsMsgMailNewsUrl()
 	m_updatingFolder = PR_FALSE;
   m_addContentToCache = PR_FALSE;
   m_msgIsInLocalCache = PR_FALSE;
+  m_suppressErrorMsgs = PR_FALSE;
 
 	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, NS_GET_IID(nsIUrlListenerManager), (void **) getter_AddRefs(m_urlListeners));
 	nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(m_baseURL));
@@ -331,6 +332,19 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetMsgIsInLocalCache(PRBool *aMsgIsInLocalCache)
 NS_IMETHODIMP nsMsgMailNewsUrl::SetMsgIsInLocalCache(PRBool aMsgIsInLocalCache)
 {
 	m_msgIsInLocalCache = aMsgIsInLocalCache;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::GetSuppressErrorMsgs(PRBool *aSuppressErrorMsgs)
+{
+  NS_ENSURE_ARG(aSuppressErrorMsgs); 
+	*aSuppressErrorMsgs = m_suppressErrorMsgs;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetSuppressErrorMsgs(PRBool aSuppressErrorMsgs)
+{
+	m_suppressErrorMsgs = aSuppressErrorMsgs;
 	return NS_OK;
 }
 
