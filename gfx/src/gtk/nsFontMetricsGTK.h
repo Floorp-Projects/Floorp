@@ -30,6 +30,39 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 
+#undef FONT_SWITCHING
+#ifdef FONT_SWITCHING
+
+#ifdef ADD_GLYPH
+#undef ADD_GLYPH
+#endif
+#define ADD_GLYPH(map, g) (map)[(g) >> 3] |= (1 << ((g) & 7))
+
+#ifdef FONT_HAS_GLYPH
+#undef FONT_HAS_GLYPH
+#endif
+#define FONT_HAS_GLYPH(map, g) (((map)[(g) >> 3] >> ((g) & 7)) & 1)
+
+typedef struct nsFontCharSetInfo nsFontCharSetInfo;
+
+typedef gint (*nsFontCharSetConverter)(nsFontCharSetInfo* aSelf,
+  const PRUnichar* aSrcBuf, PRUint32 aSrcLen, PRUint8* aDestBuf,
+  PRUint32 aDestLen);
+
+typedef struct nsFontGTK
+{
+  GdkFont*               mFont;
+  PRUint8*               mMap;
+  nsFontCharSetInfo*     mCharSetInfo;
+  char*                  mName;
+} nsFontGTK;
+
+struct nsFontCharSet;
+struct nsFontFamily;
+typedef struct nsFontSearch nsFontSearch;
+
+#endif /* FONT_SWITCHING */
+
 class nsFontMetricsGTK : public nsIFontMetrics
 {
 public:
@@ -57,6 +90,27 @@ public:
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
+#ifdef FONT_SWITCHING
+
+  nsFontGTK*  FindFont(PRUnichar aChar);
+  static gint GetWidth(GdkFont* aFont, nsFontCharSetInfo* aInfo,
+                       const PRUnichar* aString, PRUint32 aLength);
+  static void InitFonts(void);
+
+  friend void TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet);
+  friend void TryFamily(nsFontSearch* aSearch, nsFontFamily* aFamily);
+
+  nsFontGTK   *mLoadedFonts;
+  PRUint16    mLoadedFontsAlloc;
+  PRUint16    mLoadedFontsCount;
+
+  nsString    *mFonts;
+  PRUint16    mFontsAlloc;
+  PRUint16    mFontsCount;
+  PRUint16    mFontsIndex;
+
+#endif /* FONT_SWITCHING */
+
 protected:
   char *PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired);
   void RealizeFont();
@@ -79,6 +133,14 @@ protected:
   nscoord             mStrikeoutOffset;
   nscoord             mUnderlineSize;
   nscoord             mUnderlineOffset;
+
+#ifdef FONT_SWITCHING
+
+  PRUint16            mPixelSize;
+  PRUint8             mStretchIndex;
+  PRUint8             mStyleIndex;
+
+#endif /* FONT_SWITCHING */
 };
 
 #endif

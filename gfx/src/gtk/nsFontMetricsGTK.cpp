@@ -17,8 +17,12 @@
  */
 
 #include "xp_core.h"
+#include "xp_qsort.h"
 #include "nsFontMetricsGTK.h"
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
 #include "nspr.h"
+#include "plhash.h"
 
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -65,16 +69,88 @@ nsFontMetricsGTK::~nsFontMetricsGTK()
     mFont = nsnull;
   }
 
+#ifdef FONT_SWITCHING
+
+  if (mFonts) {
+    delete [] mFonts;
+    mFonts = nsnull;
+  }
+
+  if (mLoadedFonts) {
+    //PR_Free(mLoadedFonts);
+    mLoadedFonts = nsnull;
+  }
+
+  mFontHandle = nsnull;
+
+#else
+
   if (nsnull != mFontHandle) {
     ::gdk_font_unref (mFontHandle);
   }
+
+#endif
+
 }
 
 NS_IMPL_ISUPPORTS(nsFontMetricsGTK, kIFontMetricsIID)
 
+#ifdef FONT_SWITCHING
+
+static PRBool
+FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
+{
+  nsFontMetricsGTK* metrics = (nsFontMetricsGTK*) aData;
+  if (metrics->mFontsCount == metrics->mFontsAlloc) {
+    int newSize = 2 * (metrics->mFontsAlloc ? metrics->mFontsAlloc : 1);
+    nsString* newPointer = new nsString[newSize];
+    if (newPointer) {
+      for (int i = metrics->mFontsCount - 1; i >= 0; i--) {
+        newPointer[i].SetString(metrics->mFonts[i].GetUnicode());
+      }
+      delete [] metrics->mFonts;
+      metrics->mFonts = newPointer;
+      metrics->mFontsAlloc = newSize;
+    }
+    else {
+      return PR_FALSE;
+    }
+  }
+  metrics->mFonts[metrics->mFontsCount].SetString(aFamily.GetUnicode());
+  metrics->mFonts[metrics->mFontsCount++].ToLowerCase();
+
+  return PR_TRUE;
+}
+
+#endif /* FONT_SWITCHING */
+
 NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIDeviceContext* aContext)
 {
   NS_ASSERTION(!(nsnull == aContext), "attempt to init fontmetrics with null device context");
+
+#ifdef FONT_SWITCHING
+
+  mFont = new nsFont(aFont);
+
+  mDeviceContext = aContext;
+
+  float app2dev;
+  mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+  mPixelSize = NSToIntRound(app2dev * mFont->size);
+  mStretchIndex = 4; // normal
+  mStyleIndex = mFont->style;
+
+  mFont->EnumerateFamilies(FontEnumCallback, this);
+
+  nsFontGTK* f = FindFont('a');
+  if (!f) {
+    return NS_OK; // XXX
+  }
+  mFontHandle = f->mFont;
+
+  RealizeFont();
+
+#else /* FONT_SWITCHING */
 
   nsAutoString  firstFace;
   if (NS_OK != aContext->FirstExistingFont(aFont, firstFace)) {
@@ -246,6 +322,8 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIDeviceContext* aCon
   RealizeFont();
 
   PR_Free(wildstring);
+
+#endif /* FONT_SWITCHING */
 
   return NS_OK;
 }
@@ -480,3 +558,1396 @@ NS_IMETHODIMP  nsFontMetricsGTK::GetFontHandle(nsFontHandle &aHandle)
   return NS_OK;
 }
 
+// ===================== new code -- erik ====================
+
+#ifdef FONT_SWITCHING
+
+/*
+ * CSS2 "font properties":
+ *   font-family
+ *   font-style
+ *   font-variant
+ *   font-weight
+ *   font-stretch
+ *   font-size
+ *   font-size-adjust
+ *   font
+ */
+
+/*
+ * CSS2 "font descriptors":
+ *   font-family
+ *   font-style
+ *   font-variant
+ *   font-weight
+ *   font-stretch
+ *   font-size
+ *   unicode-range
+ *   units-per-em
+ *   src
+ *   panose-1
+ *   stemv
+ *   stemh
+ *   slope
+ *   cap-height
+ *   x-height
+ *   ascent
+ *   descent
+ *   widths
+ *   bbox
+ *   definition-src
+ *   baseline
+ *   centerline
+ *   mathline
+ *   topline
+ */
+
+/*
+ * XLFD 1.5 "FontName fields":
+ *   FOUNDRY
+ *   FAMILY_NAME
+ *   WEIGHT_NAME
+ *   SLANT
+ *   SETWIDTH_NAME
+ *   ADD_STYLE_NAME
+ *   PIXEL_SIZE
+ *   POINT_SIZE
+ *   RESOLUTION_X
+ *   RESOLUTION_Y
+ *   SPACING
+ *   AVERAGE_WIDTH
+ *   CHARSET_REGISTRY
+ *   CHARSET_ENCODING
+ * XLFD example:
+ *   -adobe-times-medium-r-normal--17-120-100-100-p-84-iso8859-1
+ */
+
+/*
+ * XLFD 1.5 "font properties":
+ *   FOUNDRY
+ *   FAMILY_NAME
+ *   WEIGHT_NAME
+ *   SLANT
+ *   SETWIDTH_NAME
+ *   ADD_STYLE_NAME
+ *   PIXEL_SIZE
+ *   POINT_SIZE
+ *   RESOLUTION_X
+ *   RESOLUTION_Y
+ *   SPACING
+ *   AVERAGE_WIDTH
+ *   CHARSET_REGISTRY
+ *   CHARSET_ENCODING
+ *   MIN_SPACE
+ *   NORM_SPACE
+ *   MAX_SPACE
+ *   END_SPACE
+ *   AVG_CAPITAL_WIDTH
+ *   AVG_LOWERCASE_WIDTH
+ *   QUAD_WIDTH
+ *   FIGURE_WIDTH
+ *   SUPERSCRIPT_X
+ *   SUPERSCRIPT_Y
+ *   SUBSCRIPT_X
+ *   SUBSCRIPT_Y
+ *   SUPERSCRIPT_SIZE
+ *   SUBSCRIPT_SIZE
+ *   SMALL_CAP_SIZE
+ *   UNDERLINE_POSITION
+ *   UNDERLINE_THICKNESS
+ *   STRIKEOUT_ASCENT
+ *   STRIKEOUT_DESCENT
+ *   ITALIC_ANGLE
+ *   CAP_HEIGHT
+ *   X_HEIGHT
+ *   RELATIVE_SETWIDTH
+ *   RELATIVE_WEIGHT
+ *   WEIGHT
+ *   RESOLUTION
+ *   FONT
+ *   FACE_NAME
+ *   FULL_NAME
+ *   COPYRIGHT
+ *   NOTICE
+ *   DESTINATION
+ *   FONT_TYPE
+ *   FONT_VERSION
+ *   RASTERIZER_NAME
+ *   RASTERIZER_VERSION
+ *   RAW_ASCENT
+ *   RAW_DESCENT
+ *   RAW_*
+ *   AXIS_NAMES
+ *   AXIS_LIMITS
+ *   AXIS_TYPES
+ */
+
+/*
+ * XLFD 1.5 BDF 2.1 properties:
+ *   FONT_ASCENT
+ *   FONT_DESCENT
+ *   DEFAULT_CHAR
+ */
+
+/*
+ * CSS2 algorithm, in the following order:
+ *   font-family:  FAMILY_NAME (and FOUNDRY? (XXX))
+ *   font-style:   SLANT (XXX: XLFD's RI and RO)
+ *   font-variant: implemented in mozilla/layout/html/base/src/nsTextFrame.cpp
+ *   font-weight:  RELATIVE_WEIGHT (XXX), WEIGHT (XXX), WEIGHT_NAME
+ *   font-size:    XFontStruct.max_bounds.ascent + descent
+ *
+ * The following property is not specified in the algorithm spec. It will be
+ * ignored for now:
+ *   font-stretch: RELATIVE_SETWIDTH, SETWIDTH_NAME (XXX)
+ */
+
+/*
+ * XXX: Things to investigate in the future:
+ *   ADD_STYLE_NAME font-family's serif and sans-serif
+ *   SPACING        font-family's monospace; however, there are very few
+ *                  proportional fonts in non-Latin-1 charsets, so beware in
+ *                  font prefs dialog
+ *   AVERAGE_WIDTH  none (see SETWIDTH_NAME)
+ */
+
+struct nsFontCharSetInfo
+{
+  nsFontCharSetConverter Convert;
+  void                   (*GenerateMap)(nsFontCharSetInfo* aSelf);
+  PRUint8*               mMap;
+  nsIUnicodeEncoder*     mEncoder;
+};
+
+struct nsFontSize
+{
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  void LoadFont(void);
+
+  char*      mName;
+  int        mSize;
+  GdkFont*   mFont;
+  int        mActualSize;
+};
+
+struct nsFontCharSet
+{
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  void SortSizes(void);
+
+  nsFontCharSetInfo* mInfo;
+  nsFontSize*        mSizes;
+  int                mSizesAlloc;
+  int                mSizesCount;
+};
+
+struct nsFontStretch
+{
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  PLHashTable* mCharSets;
+};
+
+struct nsFontWeight
+{
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  void FillStretchHoles(void);
+
+  nsFontStretch* mStretches[9];
+};
+
+struct nsFontStyle
+{
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  void FillWeightHoles(void);
+
+  nsFontWeight* mWeights[9];
+};
+
+struct nsFontFamily
+{
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  void FillStyleHoles(void);
+
+  int          mHolesFilled;
+  nsFontStyle* mStyles[3];
+};
+
+typedef struct nsFontFamilyName
+{
+  char* mName;
+  char* mXName;
+} nsFontFamilyName;
+
+typedef struct nsFontPropertyName
+{
+  char* mName;
+  int   mValue;
+} nsFontPropertyName;
+
+typedef struct nsFontCharSetMap
+{
+  char*              mName;
+  nsFontCharSetInfo* mInfo;
+} nsFontCharSetMap;
+
+static PLHashTable* gFamilies = nsnull;
+
+static PLHashTable* gFamilyNames = nsnull;
+
+static nsFontFamilyName gFamilyNameTable[] =
+{
+  { "arial",           "helvetica" },
+  { "courier new",     "courier" },
+  { "times new roman", "times" },
+
+  { "serif",           "times" },
+  { "sans-serif",      "helvetica" },
+  { "fantasy",         "courier" },
+  { "cursive",         "courier" },
+  { "monospace",       "courier" },
+
+  { nsnull, nsnull }
+};
+
+static PLHashTable* gWeights = nsnull;
+
+static nsFontPropertyName gWeightNames[] =
+{
+  { "bold",     700 },
+  { "book",     400 },
+  { "demi",     600 },
+  { "demibold", 600 },
+  { "light",    300 },
+  { "medium",   400 },
+  { "regular",  400 },
+  
+  { nsnull,     0 }
+};
+
+static PLHashTable* gStretches = nsnull;
+
+static nsFontPropertyName gStretchNames[] =
+{
+  { "block",         5 }, // XXX
+  { "bold",          7 }, // XXX
+  { "double wide",   9 },
+  { "medium",        5 },
+  { "narrow",        3 },
+  { "normal",        5 },
+  { "semicondensed", 4 },
+  { "wide",          7 },
+
+  { nsnull,          0 }
+};
+
+static PLHashTable* gCharSets = nsnull;
+
+static nsFontCharSetInfo Ignore = { nsnull };
+
+static nsICharsetConverterManager* gConverterManager = nsnull;
+
+static gint
+ISO88591Convert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
+  PRUint32 aSrcLen, PRUint8* aDestBuf, PRUint32 aDestLen)
+{
+  if (aSrcLen > aDestLen) {
+    aSrcLen = aDestLen;
+  }
+  gint ret = aSrcLen;
+  char* dest = (char*) aDestBuf;
+  while (aSrcLen--) {
+    *dest++ = (char) *aSrcBuf++;
+  }
+
+  return ret;
+}
+
+static void
+ISO88591GenerateMap(nsFontCharSetInfo* aSelf)
+{
+  PRUint8* map = aSelf->mMap;
+  PRUnichar c;
+  for (c = 0x20; c < 0x7f; c++) {
+    ADD_GLYPH(map, c);
+  }
+  for (c = 0xa0; c <= 0xff; c++) {
+    ADD_GLYPH(map, c);
+  }
+}
+
+static nsFontCharSetInfo ISO88591 =
+  { ISO88591Convert, ISO88591GenerateMap, nsnull };
+
+static gint
+JISX02081983Convert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
+  PRUint32 aSrcLen, PRUint8* aDestBuf, PRUint32 aDestLen)
+{
+  nsIUnicodeEncoder* encoder = aSelf->mEncoder;
+  encoder->Reset();
+  encoder->Convert(aSrcBuf, (PRInt32*) &aSrcLen, (char*) aDestBuf,
+    (PRInt32*) &aDestLen);
+  int mask = 0x7f; // XXX should be 0xff for high-bit fonts
+  for (PRUint32 i = 0; i < aDestLen; i++) {
+    aDestBuf[i] &= mask;
+  }
+
+  return aDestLen / 2;
+}
+
+static void
+JISX02081983GenerateMap(nsFontCharSetInfo* aSelf)
+{
+  nsresult res;
+
+  if (!gConverterManager) {
+    res = nsServiceManager::GetService(kCharsetConverterManagerCID,
+      kICharsetConverterManagerIID, (nsISupports**) &gConverterManager);
+    if (NS_FAILED(res)) {
+      printf("cannot get converter manager\n");
+      return;
+    }
+  }
+  nsIUnicodeEncoder* encoder = aSelf->mEncoder;
+  if (!encoder) {
+    nsAutoString name("euc-jp");
+    res = gConverterManager->GetUnicodeEncoder(&name, &encoder);
+    if (NS_FAILED(res)) {
+      printf("cannot get euc-jp encoder\n");
+      return;
+    }
+    aSelf->mEncoder = encoder;
+  }
+  encoder->SetOutputErrorBehavior(encoder->kOnError_Replace, nsnull, '?');
+  PRUint8* map = aSelf->mMap;
+  PRUnichar c;
+  for (PRUint16 row = 1 /* XXX 0 */; row < 256; row++) {
+    PRUnichar src[256];
+    for (PRUint16 cell = 0; cell < 256; cell++) {
+      src[cell] = ((row << 8) | cell);
+    }
+    PRInt32 srcLen = 256;
+    PRUint8 dest[256 * 3];
+    PRInt32 destLen = sizeof(dest);
+    encoder->Reset();
+    src[0] = 0x3042;
+    srcLen = 1;
+    res = encoder->Convert(src, &srcLen, (char*) dest, &destLen);
+    printf("0x3042 -> 0x%02x 0x%02x\n", dest[0], dest[1]);
+    return;
+    if (NS_FAILED(res)) {
+      printf("euc-jp Convert failed\n");
+      return;
+    }
+    if (srcLen != 256) {
+      printf("srcLen != 256\n");
+    }
+    PRUint8* d = (PRUint8*) dest;
+    c = (row << 8); /* XXX put outside main loop */
+    while (destLen-- > 0) {
+      PRUint8 b = *d++;
+      if (b < 0x80) {
+        // do nothing
+      }
+      else if (b == 0x8e) {
+        destLen--;
+	d++;
+      }
+      else if (b == 0x8f) {
+        destLen -= 2;
+	d += 2;
+      }
+      else {
+        destLen--;
+	d++;
+        ADD_GLYPH(map, c);
+      }
+      c++;
+    }
+  }
+  int count = 0;
+  for (c = 0; count < 500; c++) {
+    if (FONT_HAS_GLYPH(map, c)) {
+      printf("%x ", c);
+      count++;
+    }
+  }
+  printf("\n");
+}
+
+static nsFontCharSetInfo JISX02081983 =
+  { JISX02081983Convert, JISX02081983GenerateMap, nsnull };
+
+/*
+ * Normally, the charset of an X font can be determined simply by looking at
+ * the last 2 fields of the long XLFD font name (CHARSET_REGISTRY and
+ * CHARSET_ENCODING). However, there are a number of special cases:
+ *
+ * Sometimes, X server vendors use the same name to mean different things. For
+ * example, IRIX uses "cns11643-1" to mean the 2nd plane of CNS 11643, while
+ * Solaris uses that name for the 1st plane.
+ *
+ * Some X server vendors use certain names for something completely different.
+ * For example, some Solaris fonts say "gb2312.1980-0" but are actually ASCII
+ * fonts. These cases can be detected by looking at the POINT_SIZE and
+ * AVERAGE_WIDTH fields. If the average width is half the point size, this is
+ * an ASCII font, not GB 2312.
+ *
+ * Some fonts say "fontspecific" in the CHARSET_ENCODING field. Their charsets
+ * depend on the FAMILY_NAME. For example, the following is a "Symbol" font:
+ *
+ *   -adobe-symbol-medium-r-normal--17-120-100-100-p-95-adobe-fontspecific
+ *
+ * Some vendors use one name to mean 2 different things, depending on the font.
+ * For example, AIX has some "ksc5601.1987-0" fonts that require the 8th bit of
+ * both bytes to be zero, while other fonts require them to be set to one.
+ * These cases can be distinguished by looking at the FOUNDRY field, but a
+ * better way is to look at XFontStruct.min_byte1.
+ */
+static nsFontCharSetMap gCharSetMap[] =
+{
+  { "-ascii",             &Ignore        },
+  { "-ibm pc",            &Ignore        },
+  { "adobe-fontspecific", &Ignore        },
+  { "cns11643.1986-1",    &Ignore        },
+  { "cns11643.1986-2",    &Ignore        },
+  { "cns11643.1992-1",    &Ignore        },
+  { "cns11643.1992-12",   &Ignore        },
+  { "cns11643.1992-2",    &Ignore        },
+  { "cns11643.1992-3",    &Ignore        },
+  { "cns11643.1992-4",    &Ignore        },
+  { "dec-dectech",        &Ignore        },
+  { "dtsymbol-1",         &Ignore        },
+  { "gb2312.1980-0",      &Ignore        },
+  { "gb2312.1980-1",      &Ignore        },
+  { "hp-japanese15",      &Ignore        },
+  { "hp-japaneseeuc",     &Ignore        },
+  { "hp-roman8",          &Ignore        },
+  { "hp-schinese15",      &Ignore        },
+  { "hp-tchinese15",      &Ignore        },
+  { "hp-tchinesebig5",    &Ignore        },
+  { "hp-wa",              &Ignore        },
+  { "hpbig5-",            &Ignore        },
+  { "hproc16-",           &Ignore        },
+  { "ibm-1252",           &Ignore        },
+  { "ibm-850",            &Ignore        },
+  { "ibm-fontspecific",   &Ignore        },
+  { "ibm-sbdcn",          &Ignore        },
+  { "ibm-sbdtw",          &Ignore        },
+  { "ibm-special",        &Ignore        },
+  { "ibm-udccn",          &Ignore        },
+  { "ibm-udcjp",          &Ignore        },
+  { "ibm-udctw",          &Ignore        },
+  { "iso646.1991-irv",    &Ignore        },
+  { "iso8859-1",          &ISO88591      },
+  { "iso8859-15",         &Ignore        },
+  { "iso8859-1@cn",       &Ignore        },
+  { "iso8859-1@kr",       &Ignore        },
+  { "iso8859-1@tw",       &Ignore        },
+  { "iso8859-1@zh",       &Ignore        },
+  { "iso8859-2",          &Ignore        },
+  { "iso8859-3",          &Ignore        },
+  { "iso8859-4",          &Ignore        },
+  { "iso8859-5",          &Ignore        },
+  { "iso8859-6",          &Ignore        },
+  { "iso8859-7",          &Ignore        },
+  { "iso8859-8",          &Ignore        },
+  { "iso8859-9",          &Ignore        },
+  { "jisx0201.1976-0",    &Ignore        },
+  { "jisx0201.1976-1",    &Ignore        },
+  { "jisx0208.1983-0",    &JISX02081983  },
+  { "jisx0208.1990-0",    &Ignore        },
+  { "jisx0212.1990-0",    &Ignore        },
+  { "ksc5601.1987-0",     &Ignore        },
+  { "misc-fontspecific",  &Ignore        },
+  { "sgi-fontspecific",   &Ignore        },
+  { "sun-fontspecific",   &Ignore        },
+  { "sunolcursor-1",      &Ignore        },
+  { "sunolglyph-1",       &Ignore        },
+  { "ucs2.cjk-0",         &Ignore        },
+  { "ucs2.cjk_japan-0",   &Ignore        },
+  { "ucs2.cjk_taiwan-0",  &Ignore        },
+
+  { nsnull,               nsnull         }
+};
+
+#undef DEBUG_DUMP_TREE
+#ifdef DEBUG_DUMP_TREE
+
+static char* gDumpStyles[3] = { "normal", "italic", "oblique" };
+
+static PRIntn
+DumpCharSet(PLHashEntry* he, PRIntn i, void* arg)
+{
+  printf("        %s\n", (char*) he->key);
+  nsFontCharSet* charSet = (nsFontCharSet*) he->value;
+  for (int sizeIndex = 0; sizeIndex < charSet->mSizesCount; sizeIndex++) {
+    nsFontSize* size = &charSet->mSizes[sizeIndex];
+    printf("          %d %s\n", size->mSize, size->mName);
+  }
+  return HT_ENUMERATE_NEXT;
+}
+
+static void
+DumpFamily(nsFontFamily* aFamily)
+{
+  for (int styleIndex = 0; styleIndex < 3; styleIndex++) {
+    nsFontStyle* style = aFamily->mStyles[styleIndex];
+    if (style) {
+      printf("  style: %s\n", gDumpStyles[styleIndex]);
+      for (int weightIndex = 0; weightIndex < 8; weightIndex++) {
+	nsFontWeight* weight = style->mWeights[weightIndex];
+        if (weight) {
+	  printf("    weight: %d\n", (weightIndex + 1) * 100);
+	  for (int stretchIndex = 0; stretchIndex < 9; stretchIndex++) {
+	    nsFontStretch* stretch = weight->mStretches[stretchIndex];
+	    if (stretch) {
+	      printf("      stretch: %d\n", stretchIndex + 1);
+	      PL_HashTableEnumerateEntries(stretch->mCharSets, DumpCharSet,
+	        nsnull);
+	    }
+	  }
+	}
+      }
+    }
+  }
+}
+
+static PRIntn
+DumpFamilyEnum(PLHashEntry* he, PRIntn i, void* arg)
+{
+  char buf[256];
+  ((nsString*) he->key)->ToCString(buf, sizeof(buf));
+  printf("family: %s\n", buf);
+  nsFontFamily* family = (nsFontFamily*) he->value;
+  DumpFamily(family);
+
+  return HT_ENUMERATE_NEXT;
+}
+
+static void
+DumpTree(void)
+{
+  PL_HashTableEnumerateEntries(gFamilies, DumpFamilyEnum, nsnull);
+}
+
+#endif /* DEBUG_DUMP_TREE */
+
+static PLHashNumber
+HashKey(const nsString* aString)
+{
+  return (PLHashNumber) nsCRT::HashValue(aString->GetUnicode());
+}
+
+static PRIntn
+CompareKeys(const nsString* aStr1, const nsString* aStr2)
+{
+  return nsCRT::strcmp(aStr1->GetUnicode(), aStr2->GetUnicode()) == 0;
+}
+
+struct nsFontSearch
+{
+  nsFontMetricsGTK* mMetrics;
+  PRUnichar         mChar;
+  nsFontGTK*        mFont;
+};
+
+void
+nsFontSize::LoadFont(void)
+{
+  GdkFont* gdkFont = ::gdk_font_load(mName);
+  if (gdkFont) {
+    mFont = gdkFont;
+    XFontStruct* xFont = (XFontStruct*) GDK_FONT_XFONT(gdkFont);
+    mActualSize = xFont->max_bounds.ascent + xFont->max_bounds.descent;
+  }
+}
+
+void
+TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet)
+{
+  nsFontSize* s;
+  nsFontSize* begin = aCharSet->mSizes;
+  nsFontSize* end = &aCharSet->mSizes[aCharSet->mSizesCount];
+  nsFontMetricsGTK* m = aSearch->mMetrics;
+  int desiredSize = m->mPixelSize;
+
+  for (s = begin; s < end; s++) {
+    if (s->mSize >= desiredSize) {
+      break;
+    }
+  }
+  if (s == end) {
+    s--;
+  }
+  else if (s != begin) {
+    if ((s->mSize - desiredSize) > (desiredSize - (s - 1)->mSize)) {
+      s--;
+    }
+  }
+
+  if (!s->mFont) {
+    s->LoadFont();
+    if (!s->mFont) {
+      return;
+    }
+  }
+  if (s->mActualSize > desiredSize) {
+    for (; s >= begin; s--) {
+      if (!s->mFont) {
+        s->LoadFont();
+	if (!s->mFont) {
+	  return;
+	}
+      }
+      if (s->mActualSize <= desiredSize) {
+	if (((s + 1)->mActualSize - desiredSize) <=
+	    (desiredSize - s->mActualSize)) {
+	  s++;
+	}
+        break;
+      }
+    }
+    if (s < begin) {
+      s = begin;
+    }
+  }
+  else if (s->mActualSize < desiredSize) {
+    for (; s < end; s++) {
+      if (!s->mFont) {
+        s->LoadFont();
+	if (!s->mFont) {
+	  return;
+	}
+      }
+      if (s->mActualSize >= desiredSize) {
+        if ((s->mActualSize - desiredSize) >
+	    (desiredSize - (s - 1)->mActualSize)) {
+	  s--;
+	}
+        break;
+      }
+    }
+    if (s == end) {
+      s--;
+    }
+  }
+
+  if (m->mLoadedFontsCount == m->mLoadedFontsAlloc) {
+    int newSize = 2 * (m->mLoadedFontsAlloc ? m->mLoadedFontsAlloc : 4);
+    nsFontGTK* newPointer = (nsFontGTK*) PR_Realloc(m->mLoadedFonts,
+      newSize * sizeof(nsFontGTK));
+    if (newPointer) {
+      m->mLoadedFonts = newPointer;
+      m->mLoadedFontsAlloc = newSize;
+    }
+    else {
+      return;
+    }
+  }
+  nsFontGTK* f = &m->mLoadedFonts[m->mLoadedFontsCount++];
+  f->mFont = s->mFont;
+  f->mMap = aCharSet->mInfo->mMap;
+  f->mCharSetInfo = aCharSet->mInfo;
+  f->mName = s->mName;
+  aSearch->mFont = f;
+
+#if 0
+  nsFontSize* result = s;
+  for (s = begin; s < end; s++) {
+    printf("%d/%d ", s->mSize, s->mActualSize);
+  }
+  printf("desired %d chose %d\n", desiredSize, result->mActualSize);
+#endif /* 0 */
+}
+
+static PRIntn
+SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
+{
+  nsFontCharSet* charSet = (nsFontCharSet*) he->value;
+  nsFontCharSetInfo* charSetInfo = charSet->mInfo;
+  PRUint8* map = charSetInfo->mMap;
+  nsFontSearch* search = (nsFontSearch*) arg;
+  PRUnichar c = search->mChar;
+  if (!map) {
+    map = (PRUint8*) PR_Calloc(8192, 1);
+    if (!map) {
+      return HT_ENUMERATE_NEXT;
+    }
+    charSetInfo->mMap = map;
+    charSetInfo->GenerateMap(charSetInfo);
+  }
+  if (!FONT_HAS_GLYPH(map, c)) {
+    return HT_ENUMERATE_NEXT;
+  }
+
+  TryCharSet(search, charSet);
+  if (search->mFont) {
+    return HT_ENUMERATE_STOP;
+  }
+
+  return HT_ENUMERATE_NEXT;
+}
+
+static int
+CompareSizes(const void* aArg1, const void* aArg2)
+{
+  return ((nsFontSize*) aArg1)->mSize - ((nsFontSize*) aArg2)->mSize;
+}
+
+void
+nsFontCharSet::SortSizes(void)
+{
+  XP_QSORT(mSizes, mSizesCount, sizeof(*mSizes), CompareSizes);
+}
+
+static PRIntn
+SortCharSetSizes(PLHashEntry* he, PRIntn i, void* arg)
+{
+  nsFontCharSet* charSet = (nsFontCharSet*) he->value;
+  charSet->SortSizes();
+
+  return HT_ENUMERATE_NEXT;
+}
+
+void
+nsFontWeight::FillStretchHoles(void)
+{
+  int i, j;
+
+  for (i = 0; i < 9; i++) {
+    if (mStretches[i]) {
+      PL_HashTableEnumerateEntries(mStretches[i]->mCharSets, SortCharSetSizes,
+        nsnull);
+    }
+  }
+
+  if (!mStretches[4]) {
+    for (i = 5; i < 9; i++) {
+      if (mStretches[i]) {
+        mStretches[4] = mStretches[i];
+        break;
+      }
+    }
+    if (!mStretches[4]) {
+      for (i = 3; i >= 0; i--) {
+        if (mStretches[i]) {
+          mStretches[4] = mStretches[i];
+          break;
+        }
+      }
+    }
+  }
+
+  for (i = 5; i < 9; i++) {
+    if (!mStretches[i]) {
+      for (j = i + 1; j < 9; j++) {
+        if (mStretches[j]) {
+          mStretches[i] = mStretches[j];
+          break;
+        }
+      }
+      if (!mStretches[i]) {
+        for (j = i - 1; j >= 0; j--) {
+          if (mStretches[j]) {
+            mStretches[i] = mStretches[j];
+            break;
+          }
+        }
+      }
+    }
+  }
+  for (i = 3; i >= 0; i--) {
+    if (!mStretches[i]) {
+      for (j = i - 1; j >= 0; j--) {
+        if (mStretches[j]) {
+          mStretches[i] = mStretches[j];
+          break;
+        }
+      }
+      if (!mStretches[i]) {
+        for (j = i + 1; j < 9; j++) {
+          if (mStretches[j]) {
+            mStretches[i] = mStretches[j];
+            break;
+          }
+        }
+      }
+    }
+  }
+}
+
+void
+nsFontStyle::FillWeightHoles(void)
+{
+  int i, j;
+
+  for (i = 0; i < 9; i++) {
+    if (mWeights[i]) {
+      mWeights[i]->FillStretchHoles();
+    }
+  }
+
+  if (!mWeights[3]) {
+    for (i = 4; i < 9; i++) {
+      if (mWeights[i]) {
+        mWeights[3] = mWeights[i];
+        break;
+      }
+    }
+    if (!mWeights[3]) {
+      for (i = 2; i >= 0; i--) {
+        if (mWeights[i]) {
+          mWeights[3] = mWeights[i];
+          break;
+        }
+      }
+    }
+  }
+
+  // CSS2, section 15.5.1
+  if (!mWeights[4]) {
+    mWeights[4] = mWeights[3];
+  }
+  for (i = 5; i < 9; i++) {
+    if (!mWeights[i]) {
+      for (j = i + 1; j < 9; j++) {
+        if (mWeights[j]) {
+          mWeights[i] = mWeights[j];
+          break;
+        }
+      }
+      if (!mWeights[i]) {
+        for (j = i - 1; j >= 0; j--) {
+          if (mWeights[j]) {
+            mWeights[i] = mWeights[j];
+            break;
+          }
+        }
+      }
+    }
+  }
+  for (i = 2; i >= 0; i--) {
+    if (!mWeights[i]) {
+      for (j = i - 1; j >= 0; j--) {
+        if (mWeights[j]) {
+          mWeights[i] = mWeights[j];
+          break;
+        }
+      }
+      if (!mWeights[i]) {
+        for (j = i + 1; j < 9; j++) {
+          if (mWeights[j]) {
+            mWeights[i] = mWeights[j];
+            break;
+          }
+        }
+      }
+    }
+  }
+}
+
+void
+nsFontFamily::FillStyleHoles(void)
+{
+  if (mHolesFilled) {
+    return;
+  }
+  mHolesFilled = 1;
+
+#ifdef DEBUG_DUMP_TREE
+  DumpFamily(this);
+#endif
+
+  for (int i = 0; i < 3; i++) {
+    if (mStyles[i]) {
+      mStyles[i]->FillWeightHoles();
+    }
+  }
+
+  // XXX If both italic and oblique exist, there is probably something
+  // wrong. Try counting the fonts, and removing the one that has less.
+  if (!mStyles[NS_FONT_STYLE_NORMAL]) {
+    if (mStyles[NS_FONT_STYLE_ITALIC]) {
+      mStyles[NS_FONT_STYLE_NORMAL] = mStyles[NS_FONT_STYLE_ITALIC];
+    }
+    else {
+      mStyles[NS_FONT_STYLE_NORMAL] = mStyles[NS_FONT_STYLE_OBLIQUE];
+    }
+  }
+  if (!mStyles[NS_FONT_STYLE_ITALIC]) {
+    if (mStyles[NS_FONT_STYLE_OBLIQUE]) {
+      mStyles[NS_FONT_STYLE_ITALIC] = mStyles[NS_FONT_STYLE_OBLIQUE];
+    }
+    else {
+      mStyles[NS_FONT_STYLE_ITALIC] = mStyles[NS_FONT_STYLE_NORMAL];
+    }
+  }
+  if (!mStyles[NS_FONT_STYLE_OBLIQUE]) {
+    if (mStyles[NS_FONT_STYLE_ITALIC]) {
+      mStyles[NS_FONT_STYLE_OBLIQUE] = mStyles[NS_FONT_STYLE_ITALIC];
+    }
+    else {
+      mStyles[NS_FONT_STYLE_OBLIQUE] = mStyles[NS_FONT_STYLE_NORMAL];
+    }
+  }
+
+#ifdef DEBUG_DUMP_TREE
+  DumpFamily(this);
+#endif
+}
+
+#define WEIGHT_INDEX(weight) (((weight) / 100) - 1)
+
+#define GET_WEIGHT_INDEX(index, weight) \
+  do {                                  \
+    (index) = WEIGHT_INDEX(weight);     \
+    if ((index) < 0) {                  \
+      (index) = 0;                      \
+    }                                   \
+    else if ((index) > 8) {             \
+      (index) = 8;                      \
+    }                                   \
+  } while (0)
+
+void
+TryFamily(nsFontSearch* aSearch, nsFontFamily* aFamily)
+{
+  aFamily->FillStyleHoles();
+  nsFontMetricsGTK* f = aSearch->mMetrics;
+  nsFontStyle* style = aFamily->mStyles[f->mStyleIndex];
+  if (!style) {
+    return; // skip dummy entries
+  }
+
+  nsFontWeight** weights = style->mWeights;
+  int weight = f->mFont->weight;
+  int steps = (weight % 100);
+  int weightIndex;
+  if (steps) {
+    if (steps < 10) {
+      int base = (weight - (steps * 101));
+      GET_WEIGHT_INDEX(weightIndex, base);
+      while (steps--) {
+        nsFontWeight* prev = weights[weightIndex];
+        for (weightIndex++; weightIndex < 9; weightIndex++) {
+          if (weights[weightIndex] != prev) {
+	    break;
+	  }
+        }
+        if (weightIndex >= 9) {
+          weightIndex = 8;
+        }
+      }
+    }
+    else if (steps > 90) {
+      steps = (100 - steps);
+      int base = (weight + (steps * 101));
+      GET_WEIGHT_INDEX(weightIndex, base);
+      while (steps--) {
+        nsFontWeight* prev = weights[weightIndex];
+        for (weightIndex--; weightIndex >= 0; weightIndex--) {
+          if (weights[weightIndex] != prev) {
+	    break;
+	  }
+        }
+        if (weightIndex < 0) {
+          weightIndex = 0;
+        }
+      }
+    }
+    else {
+      GET_WEIGHT_INDEX(weightIndex, weight);
+    }
+  }
+  else {
+    GET_WEIGHT_INDEX(weightIndex, weight);
+  }
+
+  // XXX Should process charsets in reasonable order, instead of randomly
+  // enumerating the hash table.
+  PL_HashTableEnumerateEntries
+  (
+    weights[weightIndex]->mStretches[f->mStretchIndex]->mCharSets,
+    SearchCharSet,
+    aSearch
+  );
+}
+
+static PRIntn
+SearchFamily(PLHashEntry* he, PRIntn i, void* arg)
+{
+  nsFontFamily* family = (nsFontFamily*) he->value;
+  nsFontSearch* search = (nsFontSearch*) arg;
+  TryFamily(search, family);
+  if (search->mFont) {
+    return HT_ENUMERATE_STOP;
+  }
+
+  return HT_ENUMERATE_NEXT;
+}
+
+static nsFontFamily*
+GetFontNames(char* aPattern)
+{
+  nsFontFamily* family = nsnull;
+
+  int count;
+  //printf("XListFonts %s\n", aPattern);
+  char** list = ::XListFonts(GDK_DISPLAY(), aPattern, INT_MAX, &count);
+  if ((!list) || (count < 1)) {
+    return nsnull;
+  }
+  for (int i = 0; i < count; i++) {
+    char* name = list[i];
+    if ((!name) || (name[0] != '-')) {
+      continue;
+    }
+    char* p = name + 1;
+
+#ifdef FIND_FIELD
+#undef FIND_FIELD
+#endif
+#define FIND_FIELD(var)           \
+  char* var = p;                  \
+  while ((*p) && ((*p) != '-')) { \
+    p++;                          \
+  }                               \
+  if (*p) {                       \
+    *p++ = 0;                     \
+  }                               \
+  else {                          \
+    continue;                     \
+  }
+
+#ifdef SKIP_FIELD
+#undef SKIP_FIELD
+#endif
+#define SKIP_FIELD(var)           \
+  while ((*p) && ((*p) != '-')) { \
+    p++;                          \
+  }                               \
+  if (*p) {                       \
+    p++;                          \
+  }                               \
+  else {                          \
+    continue;                     \
+  }
+
+    SKIP_FIELD(foundry);
+    // XXX What to do about the many Applix fonts that start with "ax"?
+    FIND_FIELD(familyName);
+    FIND_FIELD(weightName);
+    FIND_FIELD(slant);
+    FIND_FIELD(setWidth);
+    SKIP_FIELD(addStyle);
+    FIND_FIELD(pixelSize);
+    // XXX Correct font scaling: Specify the point size you want, and the
+    // X and Y resolution from the X server. Then put '*' for the pixel size
+    // and average width.
+    if (pixelSize[0] == '0') {
+      continue; // skip scalable fonts for now
+    }
+    FIND_FIELD(pointSize);
+    if (pointSize[0] == '0') {
+      continue; // skip scalable fonts for now
+    }
+    FIND_FIELD(resolutionX);
+    if (resolutionX[0] == '0') {
+      continue; // skip scalable fonts for now
+    }
+    FIND_FIELD(resolutionY);
+    if (resolutionY[0] == '0') {
+      continue; // skip scalable fonts for now
+    }
+    SKIP_FIELD(spacing);
+    FIND_FIELD(averageWidth);
+    if (averageWidth[0] == '0') {
+      continue; // skip scalable fonts for now
+    }
+    char* charSetName = p; // CHARSET_REGISTRY & CHARSET_ENCODING
+    if (!*charSetName) {
+      continue;
+    }
+    nsFontCharSetInfo* charSetInfo =
+      (nsFontCharSetInfo*) PL_HashTableLookup(gCharSets, charSetName);
+    if (!charSetInfo) {
+#ifdef NOISY_FONTS
+      printf("cannot find charset %s\n", charSetName);
+#endif
+      continue;
+    }
+    if (charSetInfo == &Ignore) {
+      // XXX printf("ignoring %s\n", charSetName);
+      continue;
+    }
+
+    nsAutoString familyName2(familyName);
+    family =
+      (nsFontFamily*) PL_HashTableLookup(gFamilies, (nsString*) &familyName2);
+    if (!family) {
+      family = new nsFontFamily;
+      if (!family) {
+        continue;
+      }
+      nsString* copy = new nsString(familyName);
+      if (!copy) {
+	delete family;
+        continue;
+      }
+      PL_HashTableAdd(gFamilies, copy, family);
+    }
+
+    int styleIndex;
+    // XXX This does not cover the full XLFD spec for SLANT.
+    switch (slant[0]) {
+    case 'i':
+      styleIndex = NS_FONT_STYLE_ITALIC;
+      break;
+    case 'o':
+      styleIndex = NS_FONT_STYLE_OBLIQUE;
+      break;
+    case 'r':
+    default:
+      styleIndex = NS_FONT_STYLE_NORMAL;
+      break;
+    }
+    nsFontStyle* style = family->mStyles[styleIndex];
+    if (!style) {
+      style = new nsFontStyle;
+      if (!style) {
+        continue;
+      }
+      family->mStyles[styleIndex] = style;
+    }
+
+    int weightNumber = (int) PL_HashTableLookup(gWeights, weightName);
+    if (!weightNumber) {
+#ifdef NOISY_FONTS
+      printf("cannot find weight %s\n", weightName);
+#endif
+      weightNumber = NS_FONT_WEIGHT_NORMAL;
+    }
+    int weightIndex = WEIGHT_INDEX(weightNumber);
+    nsFontWeight* weight = style->mWeights[weightIndex];
+    if (!weight) {
+      weight = new nsFontWeight;
+      if (!weight) {
+        continue;
+      }
+      style->mWeights[weightIndex] = weight;
+    }
+  
+    int stretchIndex = (int) PL_HashTableLookup(gStretches, setWidth);
+    if (!stretchIndex) {
+#ifdef NOISY_FONTS
+      printf("cannot find stretch %s\n", setWidth);
+#endif
+      stretchIndex = 5;
+    }
+    stretchIndex--;
+    nsFontStretch* stretch = weight->mStretches[stretchIndex];
+    if (!stretch) {
+      stretch = new nsFontStretch;
+      if (!stretch) {
+        continue;
+      }
+      weight->mStretches[stretchIndex] = stretch;
+    }
+  
+    if (!stretch->mCharSets) {
+      stretch->mCharSets = PL_NewHashTable(0, PL_HashString, PL_CompareStrings,
+        NULL, NULL, NULL);
+      if (!stretch->mCharSets) {
+        continue;
+      }
+    }
+    nsFontCharSet* charSet =
+      (nsFontCharSet*) PL_HashTableLookup(stretch->mCharSets, charSetName);
+    if (!charSet) {
+      charSet = new nsFontCharSet;
+      if (!charSet) {
+        continue;
+      }
+      char* copy = strdup(charSetName);
+      if (!copy) {
+        delete charSet;
+        continue;
+      }
+      charSet->mInfo = charSetInfo;
+      PL_HashTableAdd(stretch->mCharSets, copy, charSet);
+    }
+  
+    int pixels = atoi(pixelSize);
+    if (charSet->mSizesCount) {
+      nsFontSize* end = &charSet->mSizes[charSet->mSizesCount];
+      nsFontSize* s;
+      for (s = charSet->mSizes; s < end; s++) {
+        if (s->mSize == pixels) {
+          break;
+        }
+      }
+      if (s != end) {
+        continue;
+      }
+    }
+    if (charSet->mSizesCount == charSet->mSizesAlloc) {
+      int newSize = 2 * (charSet->mSizesAlloc ? charSet->mSizesAlloc : 1);
+      nsFontSize* newPointer = new nsFontSize[newSize];
+      if (newPointer) {
+        for (int i = charSet->mSizesAlloc - 1; i >= 0; i--) {
+          newPointer[i] = charSet->mSizes[i];
+        }
+        charSet->mSizesAlloc = newSize;
+        delete [] charSet->mSizes;
+        charSet->mSizes = newPointer;
+      }
+      else {
+        continue;
+      }
+    }
+    nsFontSize* size = &charSet->mSizes[charSet->mSizesCount++];
+    p = name;
+    while (p < charSetName) {
+      if (!*p) {
+        *p = '-';
+      }
+      p++;
+    }
+    char* copy = strdup(name);
+    if (!copy) {
+      continue;
+    }
+    size->mName = copy;
+    size->mSize = pixels;
+  }
+
+#ifdef DEBUG_DUMP_TREE
+  //DumpTree();
+#endif
+
+  return family;
+}
+
+/*
+ * XListFonts(*) is expensive. Delay this till the last possible moment.
+ * XListFontsWithInfo is expensive. Use XLoadQueryFont instead.
+ */
+nsFontGTK*
+nsFontMetricsGTK::FindFont(PRUnichar aChar)
+{
+  static int gInitialized = 0;
+  if (!gInitialized) {
+    gInitialized = 1;
+    gFamilies = PL_NewHashTable(0, HashKey, CompareKeys, NULL, NULL, NULL);
+    gFamilyNames = PL_NewHashTable(0, HashKey, CompareKeys, NULL, NULL, NULL);
+    nsFontFamilyName* f = gFamilyNameTable;
+    while (f->mName) {
+      nsString* name = new nsString(f->mName);
+      nsString* xName = new nsString(f->mXName);
+      if (name && xName) {
+        PL_HashTableAdd(gFamilyNames, name, (void*) xName);
+      }
+      f++;
+    }
+    gWeights = PL_NewHashTable(0, PL_HashString, PL_CompareStrings, NULL, NULL,
+      NULL);
+    nsFontPropertyName* p = gWeightNames;
+    while (p->mName) {
+      PL_HashTableAdd(gWeights, p->mName, (void*) p->mValue);
+      p++;
+    }
+    gStretches = PL_NewHashTable(0, PL_HashString, PL_CompareStrings, NULL,
+      NULL, NULL);
+    p = gStretchNames;
+    while (p->mName) {
+      PL_HashTableAdd(gStretches, p->mName, (void*) p->mValue);
+      p++;
+    }
+    gCharSets = PL_NewHashTable(0, PL_HashString, PL_CompareStrings, NULL, NULL,
+      NULL);
+    nsFontCharSetMap* charSetMap = gCharSetMap;
+    while (charSetMap->mName) {
+      PL_HashTableAdd(gCharSets, charSetMap->mName, (void*) charSetMap->mInfo);
+      charSetMap++;
+    }
+  }
+
+  nsFontSearch search = { this, aChar, nsnull };
+
+  while (mFontsIndex < mFontsCount) {
+    nsString* familyName = &mFonts[mFontsIndex++];
+    nsString* xName = (nsString*) PL_HashTableLookup(gFamilyNames, familyName);
+    if (!xName) {
+      xName = familyName;
+    }
+    nsFontFamily* family =
+      (nsFontFamily*) PL_HashTableLookup(gFamilies, xName);
+    if (!family) {
+      char name[128];
+      xName->ToCString(name, sizeof(name));
+      char buf[256];
+      PR_snprintf(buf, sizeof(buf), "-*-%s-*-*-*-*-*-*-*-*-*-*-*-*", name);
+      family = GetFontNames(buf);
+      if (!family) {
+	family = new nsFontFamily; // dummy entry to avoid calling X again
+	if (family) {
+	  nsString* copy = new nsString(*xName);
+	  if (copy) {
+	    PL_HashTableAdd(gFamilies, copy, family);
+	  }
+	  else {
+	    delete family;
+	  }
+	}
+        continue;
+      }
+    }
+    TryFamily(&search, family);
+    if (search.mFont) {
+      return search.mFont;
+    }
+  }
+
+  // XXX If we get to this point, that means that we have exhausted all the
+  // families in the lists. Maybe we should try a list of fonts that are
+  // specific to the vendor of the X server here. Because XListFonts for the
+  // whole list is very expensive on some Unixes.
+
+  static int gGotAllFontNames = 0;
+  if (!gGotAllFontNames) {
+    gGotAllFontNames = 1;
+    GetFontNames("-*-*-*-*-*-*-*-*-*-*-*-*-*-*");
+  }
+
+  PL_HashTableEnumerateEntries(gFamilies, SearchFamily, &search);
+  if (search.mFont) {
+    // XXX We should probably write this family name out to disk, so that we
+    // can use it next time. I.e. prefs file or something.
+    return search.mFont;
+  }
+
+  // XXX Just use any font that contains 'a' for now.
+  // Need to draw boxes eventually. Or pop up dialog like plug-in dialog.
+  search.mChar = 'a';
+  PL_HashTableEnumerateEntries(gFamilies, SearchFamily, &search);
+
+  return search.mFont;
+}
+
+gint
+nsFontMetricsGTK::GetWidth(GdkFont* aFont, nsFontCharSetInfo* aInfo,
+  const PRUnichar* aString, PRUint32 aLength)
+{
+  XChar2b buf[512];
+  gint len = aInfo->Convert(aInfo, aString, aLength, (PRUint8*) buf,
+    sizeof(buf));
+  return gdk_text_width(aFont, (char*) buf, len);
+}
+
+#endif /* FONT_SWITCHING */
