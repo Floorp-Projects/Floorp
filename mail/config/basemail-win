@@ -249,6 +249,7 @@ components\necko_strconv.xpt
 components\necko_file.xpt
 components\necko_cache.xpt
 components\necko_cookie.xpt         
+components\nsProxyAutoConfig.js
             
 ; psm2
 ; Optional - only if you need HTTPS support
