@@ -56,7 +56,12 @@
 // globals for 68K (analagous to the function SetCurrentA5
 // defined by the toolbox).
 //
+#if TARGET_CPU_68K
 #include <A4Stuff.h>
+#else
+#define EnterCodeResource()
+#define ExitCodeResource()
+#endif
 
 #include "jri.h"
 #include "npapi.h"
