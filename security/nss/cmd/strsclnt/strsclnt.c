@@ -1279,7 +1279,7 @@ main(int argc, char **argv)
     }
 
     /* Call the libsec initialization routines */
-    rv = NSS_Init(dir);
+    rv = NSS_Initialize(dir, "", "", SECMOD_DB, NSS_INIT_READONLY);
     if (rv != SECSuccess) {
     	fputs("NSS_Init failed.\n", stderr);
 	exit(1);
