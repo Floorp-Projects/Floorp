@@ -1261,7 +1261,7 @@ case "$target" in
         AC_DEFINE(OS2EMX_PLAIN_CHAR)
         MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/lib $(NSPR_LIBS)'
         MOZ_COMPONENT_XPCOM_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcom.lib'
-        MOZ_XPCOM_OBSOLETE_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcom_compat.lib'
+        MOZ_XPCOM_OBSOLETE_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcomct.lib'
         XPCOM_LIBS='-L$(DIST)/lib -lxpcom'
         MOZ_JS_LIBS='$(DIST)/lib/libmozjs.lib'
         MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/libxpcom.lib'
@@ -1308,7 +1308,7 @@ case "$target" in
         MKCSHLIB='$(LD) $(DSO_LDOPTS)'
         MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
         MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
-        MOZ_XPCOM_OBSOLETE_LIBS='$(DIST)/lib/xpcom_compat.lib'
+        MOZ_XPCOM_OBSOLETE_LIBS='$(DIST)/lib/xpcomct.lib'
         XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
         MOZ_JPEG_LIBS='$(DIST)/lib/mozjpeg.$(LIB_SUFFIX)'
         MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.$(LIB_SUFFIX)'
@@ -4645,10 +4645,8 @@ dnl = Cleanup section for misc ordering snafus
 dnl =
 if test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC"; then
     XPCOM_GLUE_LIBS='$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX)'
-    MOZ_XPCOM_OBSOLETE_LIBS='$(DIST)/lib/$(LIB_PREFIX)xpcom_compat.$(LIB_SUFFIX)'
 else
     XPCOM_GLUE_LIBS='-L${DIST}/bin -L${DIST}/lib -lxpcomglue -lstring_s -lstring_obsolete_s'
-    MOZ_XPCOM_OBSOLETE_LIBS='-L${DIST}/bin -L${DIST}/lib -lxpcom_compat'
 fi
 
 dnl ========================================================
