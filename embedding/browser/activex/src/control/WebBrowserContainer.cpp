@@ -57,7 +57,7 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserContainer)
 	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
 	NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
 	NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
-	NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
 	NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
@@ -536,21 +536,7 @@ NS_IMETHODIMP CWebBrowserContainer::GetNewWindow(PRInt32 aChromeFlags,
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// nsIBaseWindow
-
-NS_IMETHODIMP 
-CWebBrowserContainer::InitWindow(nativeWindow parentNativeWindow, nsIWidget * parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP 
-CWebBrowserContainer::Create(void)
-{
-	return NS_ERROR_FAILURE;
-}
-
+// nsIWebBrowserSiteWindow
 
 NS_IMETHODIMP 
 CWebBrowserContainer::Destroy(void)
@@ -600,58 +586,8 @@ CWebBrowserContainer::GetPositionAndSize(PRInt32 *x, PRInt32 *y, PRInt32 *cx, PR
 	return NS_ERROR_FAILURE;
 }
 
-
 NS_IMETHODIMP 
-CWebBrowserContainer::Repaint(PRBool force)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP 
-CWebBrowserContainer::GetParentWidget(nsIWidget * *aParentWidget)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP 
-CWebBrowserContainer::SetParentWidget(nsIWidget * aParentWidget)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP 
-CWebBrowserContainer::GetParentNativeWindow(nativeWindow *aParentNativeWindow)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP 
-CWebBrowserContainer::SetParentNativeWindow(nativeWindow aParentNativeWindow)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP 
-CWebBrowserContainer::GetVisibility(PRBool *aVisibility)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP 
-CWebBrowserContainer::SetVisibility(PRBool aVisibility)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP 
-CWebBrowserContainer::GetMainWidget(nsIWidget * *aMainWidget)
+CWebBrowserContainer::GetSiteWindow(void **aParentNativeWindow)
 {
 	return NS_ERROR_FAILURE;
 }
@@ -659,13 +595,6 @@ CWebBrowserContainer::GetMainWidget(nsIWidget * *aMainWidget)
 
 NS_IMETHODIMP 
 CWebBrowserContainer::SetFocus(void)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP 
-CWebBrowserContainer::FocusAvailable(nsIBaseWindow *aCurrentFocus, PRBool *aTookFocus)
 {
 	return NS_ERROR_FAILURE;
 }

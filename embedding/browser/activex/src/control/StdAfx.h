@@ -62,6 +62,7 @@
 #include "nsIURL.h"
 #include "nsIBaseWindow.h"
 #include "nsIWebBrowser.h"
+#include "nsIWebBrowserSiteWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
