@@ -200,6 +200,7 @@ DASH_R		= -r
 
 ifeq ($(OS_ARCH), IRIX)
 LDFLAGS		+= -n32
+DASH_R		+= -n32
 endif
 ifeq ($(OS_ARCH), Linux)
 LDFLAGS		+= -ldl
