@@ -110,6 +110,7 @@
         <xul:menulist editable="true" sizetopopup="false" style="width:7em"
                       id="timepicker-text"
                       class="timepicker-text-class"
+                      onkeypress="if (event.keyCode == 13) this.kTimePicker.parseTextBoxTime(true);"
                       xbl:inherits="disabled">
           <xul:menupopup popupalign="topright" popupanchor="bottomright"
                          onpopupshowing="onPopup(this)">
