@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.48 $ 
-# $Date: 2003/08/04 17:15:07 $ 
+# $Revision: 1.49 $ 
+# $Date: 2003/08/16 18:37:44 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -201,6 +201,16 @@ $PopUpImpl = (
 
 @DBImpl = (
 	   'TinderDB::Time',
+
+           # If you development spans multiple time zones you may wish
+           # to display a time other then the time on the server. More
+           # then one time column can be included if you
+           # desire. Time_UTC displays the UTC time while Time_Local
+           # will use JavaScript to compute the correct time for each
+           # browser.
+
+	   # 'TinderDB::Time_Local',
+	   # 'TinderDB::Time_UTC',
 
            # The notice board is a special column, you may not wish to
            # include it. If you do not have a notice column you can
