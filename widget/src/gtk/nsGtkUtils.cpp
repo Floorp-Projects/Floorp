@@ -121,7 +121,7 @@ nsGtkUtils::gdk_window_flash(GdkWindow * window,
                              unsigned int  times,
                              unsigned long interval)
 {
-  Display *    display = NULL;
+        Display *    display = 0;
 	Window       root_window = 0;
 	Window       child_window = 0;
 	Window       xwindow = 0;
