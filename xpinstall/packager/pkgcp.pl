@@ -193,7 +193,7 @@ LINE: while (<MANIFEST>) {
 
 	# if we hit this, it's either a file in the package file that is
 	# not in the src directory, or it is not a valid entry.
-	warn "Warning: package error or possible missing file: $line ($package, $lineno).\n";
+  warn "Warning: package error or possible missing or unnecessary file: $line ($package, $lineno).\n";
 
 } # LINE
 
