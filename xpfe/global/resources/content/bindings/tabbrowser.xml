@@ -515,6 +515,8 @@
             document.getElementById("menu_closeWindow").hidden = false;
             document.getElementById("menu_closeSeparator").hidden = false;
             document.getElementById("menu_close").setAttribute("label", this.mStringBundle.getString("tabs.closeTab"));
+            if (!this.mTabbedMode)
+              this.enterTabbedMode();
           }
           else {
             // XXXdwh temporary unclean dependency on specific menu items in navigator.xul
@@ -532,41 +534,48 @@
         </body>
       </method>
 
+      <method name="enterTabbedMode">
+        <body>
+          <![CDATA[
+            this.mTabbedMode = true; // Welcome to multi-tabbed mode.
+
+            // Get the first tab all hooked up with a title listener.
+            this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
+
+            if (this.mCurrentBrowser.contentDocument.title != "")
+              this.mCurrentTab.label = this.mCurrentBrowser.contentDocument.title;
+
+            // Hook up our favicon.
+            var uri = this.mCurrentBrowser.currentURI;
+            if (this.shouldLoadFavIcon(uri))
+              this.loadFavIcon(uri, "image", this.mCurrentTab);
+
+            // Remove all our progress listeners from the active browser.
+            if (this.mProgressListeners) {
+              for (var i = 0; i < this.mProgressListeners.length; i++) {
+                var p = this.mProgressListeners[i];
+                if (p)
+                  this.mCurrentBrowser.webProgress.removeProgressListener(p);
+              }
+            }
+
+            // Wire up a progress listener to our tab.
+            var listener = (this.mTabProgressListener)(this, this.mCurrentTab, false);
+            this.webProgress.addProgressListener(listener);
+            this.mTabListeners[0] = listener;
+          ]]>
+        </body>
+      </method>
+
       <method name="addTab">
         <parameter name="aURI"/>
         <parameter name="aReferrerURI"/>
         <body>
           <![CDATA[
             var blank = (aURI == "about:blank");
-            
-            if (!this.mTabbedMode) {
-              this.mTabbedMode = true; // Welcome to multi-tabbed mode.
 
-              // Going from one tab to two for the first time.  Get the first tab all hooked up with a title listener.
-              this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
-              
-              if (this.mCurrentBrowser.contentDocument.title != "")
-                this.mCurrentTab.label = this.mCurrentBrowser.contentDocument.title;
-
-              // Hook up our favicon.
-              var uri = this.mCurrentBrowser.currentURI;
-              if (this.shouldLoadFavIcon(uri))
-                this.loadFavIcon(uri, "image", this.mCurrentTab);
-                
-              // Remove all our progress listeners from the active browser.
-              if (this.mProgressListeners) {
-                for (var i = 0; i < this.mProgressListeners.length; i++) {
-                  var p = this.mProgressListeners[i];
-                  if (p)
-                    this.mCurrentBrowser.webProgress.removeProgressListener(p);
-                }
-              }
-
-              // Wire up a progress listener to our tab.
-              var listener = (this.mTabProgressListener)(this, this.mCurrentTab, false);
-              this.webProgress.addProgressListener(listener);
-              this.mTabListeners[0] = listener;
-            }
+            if (!this.mTabbedMode)
+              this.enterTabbedMode();
 
             var b = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                              "browser"); 
