@@ -106,6 +106,10 @@ nsresult
 nsMIMEService::InitFromHack() {
     nsresult rv;
 
+    rv = AddMapping("text/plain", "txt", "Text File");
+    if (NS_FAILED(rv)) return rv;
+    rv = AddMapping("text/plain", "text", "Text File");
+    if (NS_FAILED(rv)) return rv;
     rv = AddMapping("application/octet-stream", "exe", "Binary Executable");
     if (NS_FAILED(rv)) return rv;
     rv = AddMapping("application/octet-stream", "bin", "Binary Executable");
