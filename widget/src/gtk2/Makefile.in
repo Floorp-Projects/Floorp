@@ -35,18 +35,28 @@ REQUIRES	= xpcom \
 		  gfx \
 		  dom
 
-CSRCS		=
+CSRCS		= \
+		mozcontainer.c \
+		mozdrawingarea.c \
+		$(NULL)
 
 CPPSRCS		= \
 		nsWindow.cpp \
 		nsScrollbar.cpp \
 		nsAppShell.cpp \
 		nsWidgetFactory.cpp \
+		nsToolkit.cpp \
+		nsBidiKeyboard.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
 EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS)
+
+EXPORTS		= \
+		mozdrawingarea.h \
+		mozcontainer.h \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
