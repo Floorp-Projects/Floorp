@@ -16,9 +16,6 @@
  * Reserved.
  */
 
-#include <PP_Types.h>
-#include <UException.h>
-
 #include <new>
 #include <stddef.h>
 #include <stdlib.h>
