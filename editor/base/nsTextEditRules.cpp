@@ -323,12 +323,15 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
   nsCOMPtr<nsIDOMNode>anchor;
   PRInt32 offset;
   nsresult res = aSelection->GetAnchorNode( getter_AddRefs(anchor));
+  // createNewTextNode is a flag that tells us whether we need to create a new text node or not
+  PRBool createNewTextNode = PR_TRUE;
   if (NS_SUCCEEDED(res) && NS_SUCCEEDED(aSelection->GetAnchorOffset(&offset)) && anchor)
   {
     nsCOMPtr<nsIDOMCharacterData>anchorAsText;
     anchorAsText = do_QueryInterface(anchor);
     if (anchorAsText)
     {
+      createNewTextNode = PR_FALSE;   // we found a text node, we'll base our insertion on it
       nsCOMPtr<nsIDOMNode>newTextNode;
       // create an empty text node by splitting the selected text node according to offset
       if (0==offset)
@@ -429,39 +432,87 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
         }
       }
     }
+  }
+
+  // we have no text node, so create a new style tag(s) with a newly created text node in it
+  // this is a separate case from the code above because that code needs to handle turning
+  // properties on and off, this code only turns them on
+  if (PR_TRUE==createNewTextNode)  
+  {
+    nsCOMPtr<nsIDOMNode>parent = do_QueryInterface(anchor);
+    PRInt32 offset=0;
+    if (parent)
+    { // we have a selection, get the offset within the parent
+      res = aSelection->GetAnchorOffset(&offset);
+      if (NS_FAILED(res)) { return res; }
+    }
     else
     {
-      printf("not yet implemented.  selection is not text.\n");
+      nsCOMPtr<nsIDOMElement> bodyElement;
+      res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));
+      if (NS_FAILED(res)) return res;
+      if (!bodyElement) return NS_ERROR_NULL_POINTER;
+      parent = do_QueryInterface(bodyElement);
+      // offset already set to 0
+    }		
+    if (!parent) { return NS_ERROR_NULL_POINTER; }
+
+    nsAutoString attr, value;
+
+    // now we've got the parent. insert the style tag(s)
+    if (aTypeInState.IsSet(NS_TYPEINSTATE_BOLD))
+    {
+      if (PR_TRUE==aTypeInState.GetBold()) { 
+        res = InsertStyleAndNewTextNode(parent, offset, 
+                                        nsIEditProperty::b, attr, value, 
+                                        aSelection);
+        if (NS_FAILED(res)) { return res; }
+      }
     }
-  }
-  else  // we have no selection, so insert a style tag in the body
-  {
-		nsCOMPtr<nsIDOMElement> bodyElement;
-		res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));
-		if (NS_FAILED(res)) return res;
-		if (!bodyElement) return NS_ERROR_NULL_POINTER;
-    
-		nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
-    if (bodyNode)
-    { // now we've got the body tag.  insert the style tag
-      if (aTypeInState.IsSet(NS_TYPEINSTATE_BOLD))
-      {
-        if (PR_TRUE==aTypeInState.GetBold()) { 
-          InsertStyleAndNewTextNode(bodyNode, nsIEditProperty::b, aSelection);
-        }
+    if (aTypeInState.IsSet(NS_TYPEINSTATE_ITALIC))
+    {
+      if (PR_TRUE==aTypeInState.GetItalic()) { 
+        res = InsertStyleAndNewTextNode(parent, offset, 
+                                        nsIEditProperty::i, attr, value, 
+                                        aSelection);
+        if (NS_FAILED(res)) { return res; }
       }
-      if (aTypeInState.IsSet(NS_TYPEINSTATE_ITALIC))
-      {
-        if (PR_TRUE==aTypeInState.GetItalic()) { 
-          InsertStyleAndNewTextNode(bodyNode, nsIEditProperty::i, aSelection);
-        }
+    }
+    if (aTypeInState.IsSet(NS_TYPEINSTATE_UNDERLINE))
+    {
+      if (PR_TRUE==aTypeInState.GetUnderline()) { 
+        res = InsertStyleAndNewTextNode(parent, offset, 
+                                        nsIEditProperty::u, attr, value, 
+                                        aSelection);
+        if (NS_FAILED(res)) { return res; }
       }
-      if (aTypeInState.IsSet(NS_TYPEINSTATE_UNDERLINE))
-      {
-        if (PR_TRUE==aTypeInState.GetUnderline()) { 
-          InsertStyleAndNewTextNode(bodyNode, nsIEditProperty::u, aSelection);
-        }
-      }
+    }
+    if (aTypeInState.IsSet(NS_TYPEINSTATE_FONTCOLOR))
+    {
+      aTypeInState.GetFontColor(value);
+      nsIEditProperty::color->ToString(attr);
+      res = InsertStyleAndNewTextNode(parent, offset, 
+                                      nsIEditProperty::font, attr, value, 
+                                      aSelection);
+      if (NS_FAILED(res)) { return res; }
+    }
+    if (aTypeInState.IsSet(NS_TYPEINSTATE_FONTFACE))
+    {
+      aTypeInState.GetFontFace(value);
+      nsIEditProperty::face->ToString(attr);
+      res = InsertStyleAndNewTextNode(parent, offset, 
+                                      nsIEditProperty::font, attr, value, 
+                                      aSelection);
+      if (NS_FAILED(res)) { return res; }
+    }
+    if (aTypeInState.IsSet(NS_TYPEINSTATE_FONTSIZE))
+    {
+      aTypeInState.GetFontSize(value);
+      nsIEditProperty::size->ToString(attr);
+      res = InsertStyleAndNewTextNode(parent, offset, 
+                                      nsIEditProperty::font, attr, value, 
+                                      aSelection);
+      if (NS_FAILED(res)) { return res; }
     }
   }
   return res;
@@ -511,12 +562,18 @@ nsTextEditRules::InsertStyleNode(nsIDOMNode      *aNode,
 	if (NS_FAILED(res)) return res;
 	if (!parent) return NS_ERROR_NULL_POINTER;
 
+  nsAutoString tag;
+  aTag->ToString(tag);
+
+  if (PR_FALSE == mEditor->CanContainTag(parent, tag)) {
+    NS_ASSERTION(PR_FALSE, "bad use of InsertStyleNode");
+    return NS_ERROR_FAILURE;  // illegal place to insert the style tag
+  }
+
   PRInt32 offsetInParent;
   res = nsEditor::GetChildOffset(aNode, parent, offsetInParent);
   if (NS_FAILED(res)) return res;
 
-  nsAutoString tag;
-  aTag->ToString(tag);
   res = mEditor->CreateNode(tag, parent, offsetInParent, aNewNode);
 	if (NS_FAILED(res)) return res;
 	if (!aNewNode) return NS_ERROR_NULL_POINTER;
@@ -536,40 +593,78 @@ nsTextEditRules::InsertStyleNode(nsIDOMNode      *aNode,
 
 
 nsresult
-nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, nsIAtom *aTag, nsIDOMSelection *aSelection)
+nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, 
+                                           PRInt32     aOffset, 
+                                           nsIAtom    *aTag, 
+                                           const nsString  &aAttr,
+                                           const nsString  &aValue,
+                                           nsIDOMSelection *aInOutSelection)
 {
   NS_ASSERTION(aParentNode && aTag, "bad args");
   if (!aParentNode || !aTag) { return NS_ERROR_NULL_POINTER; }
 
   nsresult res;
   // if the selection already points to a text node, just call InsertStyleNode()
-  if (aSelection)
+  if (aInOutSelection)
   {
-    nsCOMPtr<nsIDOMNode>anchor;
-    PRInt32 offset;
-    res = aSelection->GetAnchorNode(getter_AddRefs(anchor));
-    if (NS_FAILED(res)) return res;
-    if (!anchor) return NS_ERROR_NULL_POINTER;
-    res = aSelection->GetAnchorOffset(&offset);
-    if (NS_FAILED(res)) return res;
-    nsCOMPtr<nsIDOMCharacterData>anchorAsText;
-    anchorAsText = do_QueryInterface(anchor);
-    if (anchorAsText)
+    PRBool isCollapsed;
+    aInOutSelection->GetIsCollapsed(&isCollapsed);
+    if (PR_TRUE==isCollapsed)
     {
-      nsCOMPtr<nsIDOMNode> newStyleNode;
-      res = InsertStyleNode(anchor, aTag, aSelection, getter_AddRefs(newStyleNode));
-      return res;
+      nsCOMPtr<nsIDOMNode>anchor;
+      PRInt32 offset;
+      res = aInOutSelection->GetAnchorNode(getter_AddRefs(anchor));
+      if (NS_FAILED(res)) return res;
+      if (!anchor) return NS_ERROR_NULL_POINTER;
+      res = aInOutSelection->GetAnchorOffset(&offset);  // remember where we were
+      if (NS_FAILED(res)) return res;
+      // if we have a text node, just wrap it in a new style node
+      if (PR_TRUE==mEditor->IsTextNode(anchor))
+      {
+        nsCOMPtr<nsIDOMNode> newStyleNode;
+        res = InsertStyleNode(anchor, aTag, aInOutSelection, getter_AddRefs(newStyleNode));
+        if (NS_FAILED(res)) { return res; }
+        if (!newStyleNode) { return NS_ERROR_NULL_POINTER; }
+
+        // if we were given an attribute, set it on the new style node
+        PRInt32 attrLength = aAttr.Length();
+        if (0!=attrLength)
+        {
+          nsCOMPtr<nsIDOMElement>newStyleElement = do_QueryInterface(newStyleNode);
+          res = mEditor->SetAttribute(newStyleElement, aAttr, aValue);
+        }
+        if (NS_SUCCEEDED(res)) {
+          res = aInOutSelection->Collapse(anchor, offset);
+        }
+        return res;   // we return here because we used the text node passed into us via collapsed selection
+      }
     }
   }
+
   // if we get here, there is no selected text node so we create one.
+  // first, create the style node
   nsAutoString tag;
   aTag->ToString(tag);
+  if (PR_FALSE == mEditor->CanContainTag(aParentNode, tag)) {
+    NS_ASSERTION(PR_FALSE, "bad use of InsertStyleAndNewTextNode");
+    return NS_ERROR_FAILURE;  // illegal place to insert the style tag
+  }
   nsCOMPtr<nsIDOMNode>newStyleNode;
   nsCOMPtr<nsIDOMNode>newTextNode;
-  res = mEditor->CreateNode(tag, aParentNode, 0, getter_AddRefs(newStyleNode));
-	if (NS_FAILED(res)) return res;
-	if (!newStyleNode) return NS_ERROR_NULL_POINTER;
+  res = mEditor->CreateNode(tag, aParentNode, aOffset, getter_AddRefs(newStyleNode));
+  if (NS_FAILED(res)) return res;
+  if (!newStyleNode) return NS_ERROR_NULL_POINTER;
 
+  // if we were given an attribute, set it on the new style node
+  PRInt32 attrLength = aAttr.Length();
+  if (0!=attrLength)
+  {
+    nsCOMPtr<nsIDOMElement>newStyleElement = do_QueryInterface(newStyleNode);
+    res = mEditor->SetAttribute(newStyleElement, aAttr, aValue);
+    if (NS_FAILED(res)) return res;
+  }
+
+  // then create the text node
   nsAutoString textNodeTag;
   res = nsEditor::GetTextNodeTag(textNodeTag);
   if (NS_FAILED(res)) { return res; }
@@ -578,8 +673,9 @@ nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, nsIAtom *aTa
 	if (NS_FAILED(res)) return res;
 	if (!newTextNode) return NS_ERROR_NULL_POINTER;
 
-  if (aSelection) {
-    res = aSelection->Collapse(newTextNode, 0);
+  // if we have a selection collapse the selection to the beginning of the new text node
+  if (aInOutSelection) {
+    res = aInOutSelection->Collapse(newTextNode, 0);
   }
   return res;
 }

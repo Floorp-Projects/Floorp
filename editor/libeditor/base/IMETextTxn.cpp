@@ -36,6 +36,12 @@ nsresult IMETextTxn::ClassInit()
   return NS_OK;
 }
 
+nsresult IMETextTxn::ClassShutdown()
+{
+  NS_IF_RELEASE(gIMETextTxnName);
+  return NS_OK;
+}
+
 IMETextTxn::IMETextTxn()
   : EditTxn()
 {

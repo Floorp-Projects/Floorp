@@ -87,6 +87,9 @@ public:
   /** must be called before any InsertTextTxn is instantiated */
   static nsresult ClassInit();
 
+  /** must be called once we are guaranteed all InsertTextTxn have completed */
+  static nsresult ClassShutdown();
+
   enum { kTransactionID = 11120 };
 
 protected:

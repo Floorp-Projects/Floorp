@@ -40,6 +40,12 @@ nsresult InsertTextTxn::ClassInit()
   return NS_OK;
 }
 
+nsresult InsertTextTxn::ClassShutdown()
+{
+  NS_IF_RELEASE(gInsertTextTxnName);
+  return NS_OK;
+}
+
 InsertTextTxn::InsertTextTxn()
   : EditTxn()
 {

@@ -93,6 +93,9 @@ public:
   /** must be called before any IMETextTxn is instantiated */
   static nsresult ClassInit();
 
+  /** must be called once we are guaranteed all IMETextTxn have completed */
+  static nsresult ClassShutdown();
+
   enum { kTransactionID = 11220 };
 
 protected:

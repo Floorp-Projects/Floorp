@@ -55,6 +55,7 @@ NS_IMETHODIMP EditAggregateTxn::Do(void)
     for (i=0; i<count; i++)
     {
       EditTxn *txn = (EditTxn*)(mChildren->ElementAt(i));
+      if (!txn) { return NS_ERROR_NULL_POINTER; }
       result = txn->Do();
       if (NS_FAILED(result))
         break;

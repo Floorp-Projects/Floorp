@@ -872,7 +872,7 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
     
     mEditorType = eUninitializedEditorType;
     mEditor = 0;  // clear out the nsCOMPtr
-    
+
     // and tell them that they are doing bad things
     NS_WARNING("Multiple loads of the editor's document detected.");
     // Note that if you registered doc state listeners before the second

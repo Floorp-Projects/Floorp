@@ -212,12 +212,33 @@ nsHTMLEditor::nsHTMLEditor()
 // NS_INIT_REFCNT();
   if (!gTypingTxnName)
     gTypingTxnName = NS_NewAtom("Typing");
+  else
+    NS_ADDREF(gTypingTxnName);
   if (!gDeleteTxnName)
     gDeleteTxnName = NS_NewAtom("Deleting");
+  else
+    NS_ADDREF(gDeleteTxnName);
 } 
 
 nsHTMLEditor::~nsHTMLEditor()
 {
+  nsrefcnt refCount=0;
+  if (gTypingTxnName)  // we addref'd in the constructor
+  { // want to release it without nulling out the pointer.
+    refCount = gTypingTxnName->Release();
+    if (0==refCount) {
+      gTypingTxnName = nsnull;
+    }
+  }
+
+  if (gDeleteTxnName)  // we addref'd in the constructor
+  { // want to release it without nulling out the pointer.
+    refCount = gDeleteTxnName->Release();
+    if (0==refCount) {
+      gDeleteTxnName = nsnull;
+    }
+  }
+
   //the autopointers will clear themselves up. 
   //but we need to also remove the listeners or we have a leak
   nsCOMPtr<nsIDOMSelection>selection;
