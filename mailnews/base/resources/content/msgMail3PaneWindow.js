@@ -70,6 +70,7 @@ var folderListener = {
 
 	OnFolderLoaded: function (folder)
 	{
+		dump('In OnFolderLoader\n');
 		if(folder)
 		{
 			var resource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
@@ -81,8 +82,11 @@ var folderListener = {
 					gCurrentLoadingFolderURI="";
 					var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
 					if(msgFolder)
+					{
 						msgFolder.endFolderLoading();
-					RerootFolder(uri);
+						dump("before reroot in OnFolderLoaded\n");
+						RerootFolder(uri, msgFolder);
+					}
 				}
 			}
 		}
@@ -104,7 +108,7 @@ function OnLoadMessenger()
 
     loadStartFolder();
 
-    getFolderListener();
+    AddToSession();
     
     goSetDefaultController(DefaultController);
 }
@@ -117,7 +121,10 @@ function OnUnloadMessenger()
 	{
 		mailSession = mailSession.QueryInterface(Components.interfaces.nsIMsgMailSession);
 		if(mailSession)
+		{
 			mailSession.RemoveFolderListener(folderListener);
+			mailSession.RemoveMsgWindow(msgWindow);
+		}
 	}
 
     saveWindowPosition();
@@ -208,14 +215,15 @@ function loadStartFolder()
 
 }
 
-function getFolderListener()
+function AddToSession()
 {
     try {
         var mailSession = Components.classes[mailSessionProgID].getService(Components.interfaces.nsIMsgMailSession);
         
         mailSession.AddFolderListener(folderListener);
+        mailSession.AddMsgWindow(msgWindow);
 	} catch (ex) {
-        dump("Error adding folder listener\n");
+        dump("Error adding to session\n");
     }
 }
 
@@ -223,6 +231,7 @@ function InitMsgWindow()
 {
 	msgWindow.statusFeedback = statusFeedback;
 	msgWindow.messageView = messageView;
+
 }
 
 function AddDataSources()

@@ -19,6 +19,7 @@
 #include "nsISupports.idl"
 #include "nsIMsgStatusFeedback.idl"
 #include "nsIMessageView.idl"
+#include "nsIMsgFolder.idl"
 
 interface nsITransactionManager;
 
@@ -33,4 +34,5 @@ interface nsIMsgWindow : nsISupports {
 	attribute nsIMsgStatusFeedback statusFeedback;
     attribute nsITransactionManager transactionManager;
 	attribute nsIMessageView messageView;
+	attribute nsIMsgFolder openFolder;
 };

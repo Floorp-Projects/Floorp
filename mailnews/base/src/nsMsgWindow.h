@@ -23,6 +23,8 @@
 #include "nsIMsgStatusFeedback.h"
 #include "nsITransactionManager.h"
 #include "nsIMessageView.h"
+#include "nsIMsgFolder.h"
+
 #include "nsCOMPtr.h"
 
 class nsMsgWindow : public nsIMsgWindow {
@@ -40,7 +42,7 @@ protected:
 	nsCOMPtr<nsIMsgStatusFeedback> mStatusFeedback;
 	nsCOMPtr<nsITransactionManager> mTransactionManager;
 	nsCOMPtr<nsIMessageView> mMessageView;
-
+	nsCOMPtr<nsIMsgFolder> mOpenFolder;
 };
 
 

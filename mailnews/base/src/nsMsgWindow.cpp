@@ -85,3 +85,20 @@ NS_IMETHODIMP nsMsgWindow::SetMessageView(nsIMessageView * aMessageView)
 	mMessageView = aMessageView;
 	return NS_OK;
 }
+
+NS_IMETHODIMP nsMsgWindow::GetOpenFolder(nsIMsgFolder * *aOpenFolder)
+{
+	if(!aOpenFolder)
+		return NS_ERROR_NULL_POINTER;
+
+	*aOpenFolder = mOpenFolder;
+	NS_IF_ADDREF(*aOpenFolder);
+	return NS_OK;
+
+}
+
+NS_IMETHODIMP nsMsgWindow::SetOpenFolder(nsIMsgFolder * aOpenFolder)
+{
+	mOpenFolder = aOpenFolder;
+	return NS_OK;
+}

@@ -196,6 +196,7 @@ function ChangeFolderByDOMNode(folderNode)
 
 function ChangeFolderByURI(uri)
 {
+  dump('In ChangeFolderByURI\n');
   var resource = RDF.GetResource(uri);
   var msgfolder =
       resource.QueryInterface(Components.interfaces.nsIMsgFolder);
@@ -223,16 +224,21 @@ function ChangeFolderByURI(uri)
   {
 	gCurrentLoadingFolderURI = "";
 	msgfolder.updateFolder();
-	RerootFolder(uri);
+	RerootFolder(uri, msgfolder);
   }
 }
 
-function RerootFolder(uri)
+function RerootFolder(uri, newFolder)
 {
 	dump('In reroot folder\n');
   var folder = GetThreadTreeFolder();
   ClearThreadTreeSelection();
+
+  //Set the window's new open folder.
+  msgWindow.openFolder = newFolder;
+
   folder.setAttribute('ref', uri);
+  
   var afterFolderLoadTime = new Date();
   var timeToLoad = (afterFolderLoadTime.getTime() - gBeforeFolderLoadTime.getTime())/1000;
   if(showPerformance)

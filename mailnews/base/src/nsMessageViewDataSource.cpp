@@ -83,11 +83,6 @@ nsMessageViewDataSource::QueryInterface(REFNSIID iid, void** result)
 		*result = NS_STATIC_CAST(nsIMessageView*, this);
 		NS_ADDREF_THIS();
 	}
-	else if(iid.Equals(nsCOMTypeInfo<nsIMsgWindow>::GetIID()))
-	{
-		*result = NS_STATIC_CAST(nsIMsgWindow*, this);
-		NS_ADDREF_THIS();
-	}
 
 	if(*result)
 	{
@@ -557,49 +552,6 @@ NS_IMETHODIMP nsMessageViewDataSource::SetShowThreads(PRBool aShowThreads)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMessageViewDataSource::GetStatusFeedback(nsIMsgStatusFeedback * *aStatusFeedback)
-{
-	if(!aStatusFeedback)
-		return NS_ERROR_NULL_POINTER;
-
-	*aStatusFeedback = mStatusFeedback;
-	NS_IF_ADDREF(*aStatusFeedback);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMessageViewDataSource::SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedback)
-{
-	mStatusFeedback = aStatusFeedback;
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP nsMessageViewDataSource::GetTransactionManager(nsITransactionManager * *aTransactionManager)
-{
-	if(!aTransactionManager)
-		return NS_ERROR_NULL_POINTER;
-
-	*aTransactionManager = mTransactionManager;
-	NS_IF_ADDREF(*aTransactionManager);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMessageViewDataSource::SetTransactionManager(nsITransactionManager * aTransactionManager)
-{
-	mTransactionManager = aTransactionManager;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMessageViewDataSource::GetMessageView(nsIMessageView * *aMessageView)
-{
-	return NS_OK;
-
-}
-
-NS_IMETHODIMP nsMessageViewDataSource::SetMessageView(nsIMessageView * aMessageView)
-{
-	return NS_OK;
-}
 
 nsresult
 nsMessageViewDataSource::createMessageNode(nsIMessage *message,

@@ -32,6 +32,8 @@
 #include "nsIMsgIncomingServer.idl"
 #include "nsIMsgAccountManager.idl"
 #include "nsIFolderListener.idl"
+#include "nsIMsgWindow.idl"
+#include "nsISupportsArray.idl"
 
 interface nsIMsgFolderCache;
 interface nsIMsgStatusFeedback;
@@ -43,7 +45,7 @@ interface nsIMsgMailSession : nsISupports {
   readonly attribute nsIMsgIncomingServer currentServer;
   readonly attribute nsIMsgAccountManager accountManager;
   readonly attribute nsIMsgFolderCache folderCache;
-
+ 
   attribute nsIMsgStatusFeedback temporaryMsgStatusFeedback;
 
   void Shutdown();
@@ -61,5 +63,9 @@ interface nsIMsgMailSession : nsISupports {
   void NotifyFolderItemAdded(in nsIFolder folder, in nsISupports item);
   void NotifyFolderItemDeleted(in nsIFolder folder, in nsISupports item);
   void NotifyFolderLoaded(in nsIFolder folder);
+
+  void AddMsgWindow(in nsIMsgWindow msgWindow);
+  void RemoveMsgWindow(in nsIMsgWindow msgWindow);
+  readonly attribute nsISupportsArray msgWindowsArray;
 };
 

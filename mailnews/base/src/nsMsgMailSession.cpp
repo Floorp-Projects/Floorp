@@ -59,7 +59,10 @@ nsMsgMailSession::~nsMsgMailSession()
 nsresult nsMsgMailSession::Init()
 {
 	nsresult rv = NS_NewISupportsArray(getter_AddRefs(mListeners));
+	if(NS_FAILED(rv))
+		return rv;
 
+	rv = NS_NewISupportsArray(getter_AddRefs(mWindows));
 	return rv;
 
 }
@@ -295,4 +298,25 @@ NS_IMETHODIMP  nsMsgMailSession::NotifyFolderLoaded(nsIFolder *folder)
 }
 
 
+NS_IMETHODIMP nsMsgMailSession::AddMsgWindow(nsIMsgWindow *msgWindow)
+{
+	mWindows->AppendElement(msgWindow);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMailSession::RemoveMsgWindow(nsIMsgWindow *msgWindow)
+{
+	mWindows->RemoveElement(msgWindow);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMailSession::GetMsgWindowsArray(nsISupportsArray * *aWindowsArray)
+{
+	if(!aWindowsArray)
+		return NS_ERROR_NULL_POINTER;
+
+	*aWindowsArray = mWindows;
+	NS_IF_ADDREF(*aWindowsArray);
+	return NS_OK;
+}
 

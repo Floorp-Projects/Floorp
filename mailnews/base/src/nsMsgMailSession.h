@@ -52,6 +52,7 @@ protected:
   nsIMsgAccountManager *m_accountManager;
   nsIMsgFolderCache		*m_msgFolderCache;
 	nsCOMPtr<nsISupportsArray> mListeners; 
+	nsCOMPtr<nsISupportsArray> mWindows;
 	// stick this here temporarily
 	nsCOMPtr <nsIMsgStatusFeedback> m_temporaryMsgStatusFeedback;
 
