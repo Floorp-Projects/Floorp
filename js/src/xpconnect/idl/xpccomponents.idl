@@ -113,10 +113,11 @@ interface nsIXPCConstructor : nsISupports
 /**
 * interface of JavaScript's 'Components' object
 */
-[scriptable, uuid(42624f80-d26c-11d2-9842-006008962422)]
+[scriptable, uuid(a6035b0c-3e28-42ad-95b9-e60d33cb075d)]
 interface nsIXPCComponents : nsISupports
 {
     readonly attribute nsIScriptableInterfaces      interfaces;
+    readonly attribute nsIScriptableInterfacesByID  interfacesByID;
     readonly attribute nsIXPCComponents_Classes     classes;
     readonly attribute nsIXPCComponents_ClassesByID classesByID;
     readonly attribute nsIStackFrame                stack;

@@ -2858,13 +2858,14 @@ private:
     void ClearMembers();
 
 private:
-    nsXPCComponents_Interfaces*  mInterfaces;
-    nsXPCComponents_Classes*     mClasses;
-    nsXPCComponents_ClassesByID* mClassesByID;
-    nsXPCComponents_Results*     mResults;
-    nsXPCComponents_ID*          mID;
-    nsXPCComponents_Exception*   mException;
-    nsXPCComponents_Constructor* mConstructor;
+    nsXPCComponents_Interfaces*     mInterfaces;
+    nsXPCComponents_InterfacesByID* mInterfacesByID;
+    nsXPCComponents_Classes*        mClasses;
+    nsXPCComponents_ClassesByID*    mClassesByID;
+    nsXPCComponents_Results*        mResults;
+    nsXPCComponents_ID*             mID;
+    nsXPCComponents_Exception*      mException;
+    nsXPCComponents_Constructor*    mConstructor;
 };
 
 /***************************************************************************/
