@@ -47,7 +47,7 @@
 #include "nsIScreenManager.h"
 #include "nsGUIEvent.h"
 #include "nsCarbonHelpers.h"
-#include "nsGFXUtils.h"
+#include "nsGfxUtils.h"
 #include "DefProcFakery.h"
 #include "nsMacResources.h"
 #include "nsRegionMac.h"
@@ -237,8 +237,18 @@ nsMacWindow::~nsMacWindow()
       ::DisposeDragReceiveHandlerUPP ( mDragReceiveHandlerUPP );
     }
 
+    // ensure we leave the port in a happy state
+    CGrafPtr    curPort;
+    CGrafPtr    windowPort = ::GetWindowPort(mWindowPtr);
+    ::GetPort((GrafPtr*)&curPort);
+    PRBool      mustResetPort = (curPort == windowPort);
+    
+    
     ::DisposeWindow(mWindowPtr);
     mWindowPtr = nsnull;
+    
+    if (mustResetPort)
+      nsGraphicsUtils::SetPortToKnownGoodPort();
   }
   
 }
@@ -569,6 +579,8 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
       InstallBorderlessDefProc(mWindowPtr);
 
   } // if we created windowPtr
+  
+  nsGraphicsUtils::SafeSetPortWindowPort(mWindowPtr);
   
   return NS_OK;
 }

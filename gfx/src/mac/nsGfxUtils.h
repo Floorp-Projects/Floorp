@@ -63,37 +63,171 @@ inline PRBool CurrentPortIsWMPort()
 
 
 //------------------------------------------------------------------------
-// utility port setting class
+// ValidateDrawingState
+// 
+// Test that the current drawing environment is good, which means that
+// we have a valid port (as far as we can tell)
 //------------------------------------------------------------------------
+inline PRBool ValidateDrawingState()
+{
+  CGrafPtr    curPort;
+  GDHandle    curDevice;
+  
+  GetGWorld(&curPort, &curDevice);
+  
+  if (CurrentPortIsWMPort())
+    return false;
 
+#if TARGET_CARBON
+  if (! IsValidPort(curPort))
+    return false;
+#else
+  // all our ports should be onscreen or offscreen color graphics ports
+  // Onscreen ports have portVersion 0xC000, GWorlds have 0xC001.
+  if (((UInt16)curPort->portVersion & 0xC000) != 0xC000)
+    return false;
+#endif
+
+  // see if the device is in the device list. If not, it probably means that
+  // it's the device for an offscreen GWorld. In that case, the current port
+  // should be set to that GWorld too.
+  {
+    GDHandle    thisDevice = GetDeviceList();
+    while (thisDevice)
+    {
+      if (thisDevice == curDevice)
+         break;
+    
+      thisDevice = GetNextDevice(thisDevice);
+    }
+
+    if ((thisDevice == nil) && !IsPortOffscreen(curPort))    // nil device is OK only with GWorld
+      return false;
+  }
+
+  return true;
+}
+
+
+//------------------------------------------------------------------------
+// static graphics utility methods
+//------------------------------------------------------------------------
+class nsGraphicsUtils
+{
+public:
+
+  //------------------------------------------------------------------------
+  // SafeSetPort
+  //
+  // Set the port, being sure to set the GDevice to a valid device, since
+  // the current GDevice may belong to a GWorld.
+  //------------------------------------------------------------------------
+  static void SafeSetPort(CGrafPtr newPort)
+  {
+    ::SetGWorld(newPort, ::IsPortOffscreen(newPort) ? nsnull : ::GetMainDevice());
+  }
+  
+  //------------------------------------------------------------------------
+  // SafeSetPortWindowPort
+  //
+  // Set the port, being sure to set the GDevice to a valid device, since
+  // the current GDevice may belong to a GWorld.
+  //------------------------------------------------------------------------
+  static void SafeSetPortWindowPort(WindowPtr window)
+  {
+    SafeSetPort(::GetWindowPort(window));
+  }
+
+  //------------------------------------------------------------------------
+  // SetPortToKnownGoodPort
+  //
+  // Set the port to a known good port, if possible.
+  //------------------------------------------------------------------------
+  static void SetPortToKnownGoodPort()
+  {
+    WindowPtr firstWindow = GetTheWindowList();
+    if (firstWindow)
+      ::SetGWorld(::GetWindowPort(firstWindow), ::GetMainDevice());
+  }
+
+};
+
+
+//------------------------------------------------------------------------
+// utility port setting class
+//
+// This code has to deal with the situation where the current port
+// is a GWorld, and the current devices that GWorld's device. So
+// when setting the port to an onscreen part, we always reset the
+// current device to the main device.
+//------------------------------------------------------------------------
 class StPortSetter
 {
 public:
-	StPortSetter(GrafPtr newPort)
-		: mNewPort(newPort), mOldPort(::GetQDGlobalsThePort())
+	StPortSetter(CGrafPtr newPort)
 	{
-		if (mOldPort != newPort)
-			::SetPort(newPort);
+		InitSetter(newPort);
 	}
 
-#if TARGET_CARBON
-	StPortSetter(WindowPtr newWindow)
-		: mNewPort(GetWindowPort(newWindow)), mOldPort(::GetQDGlobalsThePort())
+	StPortSetter(WindowPtr window)
 	{
-		if (mOldPort != mNewPort)
-			::SetPort(mNewPort);
+		InitSetter(GetWindowPort(window));
 	}
-#endif    
 	
 	~StPortSetter()
 	{
-		if (mOldPort != mNewPort)
-			::SetPort(mOldPort);
+	  if (mPortChanged)
+  		::SetGWorld(mOldPort, mOldDevice);
+	  NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
 	}
 
 protected:
-	GrafPtr		mNewPort;
-	GrafPtr		mOldPort;
+  void InitSetter(CGrafPtr newPort)
+	{
+	  NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
+	  // we assume that if the port has been set, then the port/GDevice are
+	  // valid, and do nothing (for speed)
+	  mPortChanged = (newPort != CGrafPtr(GetQDGlobalsThePort));
+	  if (mPortChanged)
+	  {
+  		::GetGWorld(&mOldPort, &mOldDevice);
+  		::SetGWorld(newPort, ::IsPortOffscreen(newPort) ? nsnull : ::GetMainDevice());
+		}
+	}
+
+protected:
+  Boolean     mPortChanged;
+	CGrafPtr		mOldPort;
+	GDHandle    mOldDevice;
+};
+
+
+//------------------------------------------------------------------------
+// utility GWorld port setting class
+//
+// This should *only* be used to set the port temporarily to the
+// GWorld, and then restore it.
+//------------------------------------------------------------------------
+
+class StGWorldPortSetter
+{
+public:
+	StGWorldPortSetter(GWorldPtr destGWorld)
+	{
+	  NS_ASSERTION(::IsPortOffscreen(destGWorld), "StGWorldPortSetter should only be used for GWorlds");
+	  ::GetGWorld(&mOldPort, &mOldDevice);
+		::SetGWorld(destGWorld, nsnull);
+	}
+	
+	~StGWorldPortSetter()
+	{
+    ::SetGWorld(mOldPort, mOldDevice);
+	  NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
+	}
+
+protected:
+	GWorldPtr		mOldPort;
+  GDHandle    mOldDevice;
 };
 
 //------------------------------------------------------------------------
@@ -124,10 +258,10 @@ protected:
 
   void SetPortFontStyle(SInt16 fontID, SInt16 fontSize, SInt16 fontFace)
 	{
-	  GrafPtr curPort;
-	  ::GetPort(&curPort);
+	  CGrafPtr curPort;
+	  ::GetPort((GrafPtr*)&curPort);
 	  
-    NS_ASSERTION(!CurrentPortIsWMPort(), "Setting window manager port font");
+	  NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
 
     mFontID = ::GetPortTextFont(curPort);
     mFontSize = ::GetPortTextSize(curPort);
@@ -136,6 +270,7 @@ protected:
   	::TextFont(fontID);
   	::TextSize(fontSize);
   	::TextFace(fontFace);
+
 	}
 
 protected:

@@ -51,7 +51,7 @@ static NS_DEFINE_IID(kIDrawingSurfaceMacIID, NS_IDRAWING_SURFACE_MAC_IID);
  * @update 3/02/99 dwc
  * @return error status
  */
-nsDrawingSurfaceMac :: nsDrawingSurfaceMac()
+nsDrawingSurfaceMac::nsDrawingSurfaceMac()
 {
   NS_INIT_REFCNT();
 
@@ -70,20 +70,19 @@ nsDrawingSurfaceMac :: nsDrawingSurfaceMac()
  * @update 3/02/99 dwc
  * @return error status
  */
-nsDrawingSurfaceMac :: ~nsDrawingSurfaceMac()
+nsDrawingSurfaceMac::~nsDrawingSurfaceMac()
 {
-  GWorldPtr offscreenGWorld;
-
 	if(mIsOffscreen && mPort){
-  	offscreenGWorld = (GWorldPtr)mPort;
+  	GWorldPtr offscreenGWorld = (GWorldPtr)mPort;
 		::UnlockPixels(::GetGWorldPixMap(offscreenGWorld));
 		::DisposeGWorld(offscreenGWorld);
+		
+		nsGraphicsUtils::SetPortToKnownGoodPort();
 	}
 
 	if (mGS){
 		sGraphicStatePool.ReleaseGS(mGS); //delete mGS;
 	}
-		
 }
 
 /** --------------------------------------------------- 
@@ -91,7 +90,7 @@ nsDrawingSurfaceMac :: ~nsDrawingSurfaceMac()
  * @update 3/02/99 dwc
  * @return error status
  */
-NS_IMETHODIMP nsDrawingSurfaceMac :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
+NS_IMETHODIMP nsDrawingSurfaceMac::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr)
     return NS_ERROR_NULL_POINTER;
@@ -133,30 +132,33 @@ NS_IMPL_RELEASE(nsDrawingSurfaceMac);
  * @update 3/02/99 dwc
  * @return error status
  */
-NS_IMETHODIMP nsDrawingSurfaceMac :: Lock(PRInt32 aX, PRInt32 aY,
+NS_IMETHODIMP nsDrawingSurfaceMac::Lock(PRInt32 aX, PRInt32 aY,
                                           PRUint32 aWidth, PRUint32 aHeight,
                                           void **aBits, PRInt32 *aStride,
                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
-  char*					baseaddr;
-  PRInt32				cmpSize, rowBytes;
-  GWorldPtr 		offscreenGWorld;
-  PixMapHandle	thePixMap;
 
-
-  if ((mIsLocked == PR_FALSE) && mIsOffscreen && mPort) {
+  if (!mIsLocked && mIsOffscreen && mPort)
+  {
     // get the offscreen gworld for our use
-    offscreenGWorld = (GWorldPtr)mPort;
+    GWorldPtr     offscreenGWorld = (GWorldPtr)mPort;
 
     // calculate the pixel data size
-    thePixMap = ::GetGWorldPixMap(offscreenGWorld);
-    baseaddr = GetPixBaseAddr(thePixMap);
-    cmpSize = ((**thePixMap).pixelSize >> 3);
-    rowBytes = (**thePixMap).rowBytes & 0x3FFF;
+    PixMapHandle  thePixMap = ::GetGWorldPixMap(offscreenGWorld);
+    Ptr           baseaddr  = ::GetPixBaseAddr(thePixMap);
+    PRInt32       cmpSize   = ((**thePixMap).pixelSize >> 3);
+    PRInt32       rowBytes  = (**thePixMap).rowBytes & 0x3FFF;
+
     *aBits = baseaddr + (aX * cmpSize) + aY * rowBytes;
     *aStride = rowBytes;
     *aWidthBytes = aWidth * cmpSize;
+
     mIsLocked = PR_TRUE;
+  }
+  else
+  {
+    NS_ASSERTION(0, "nested lock attempt");
+    return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
@@ -167,7 +169,7 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Lock(PRInt32 aX, PRInt32 aY,
  * @update 3/02/99 dwc
  * @return error status
  */
-NS_IMETHODIMP nsDrawingSurfaceMac :: Unlock(void)
+NS_IMETHODIMP nsDrawingSurfaceMac::Unlock(void)
 {
 	mIsLocked = PR_FALSE;
   return NS_OK;
@@ -178,11 +180,10 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Unlock(void)
  * @update 3/02/99 dwc
  * @return error status
  */
-NS_IMETHODIMP nsDrawingSurfaceMac :: GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight)
+NS_IMETHODIMP nsDrawingSurfaceMac::GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight)
 {
   *aWidth = mWidth;
   *aHeight = mHeight;
-
   return NS_OK;
 }
 
@@ -191,9 +192,10 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: GetDimensions(PRUint32 *aWidth, PRUint32 *a
  * @update 3/02/99 dwc
  * @return error status
  */
-NS_IMETHODIMP nsDrawingSurfaceMac :: IsPixelAddressable(PRBool *aAddressable)
+NS_IMETHODIMP nsDrawingSurfaceMac::IsPixelAddressable(PRBool *aAddressable)
 {
-  return NS_OK;
+  NS_ASSERTION(0, "Not implemented!");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /** --------------------------------------------------- 
@@ -201,11 +203,11 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: IsPixelAddressable(PRBool *aAddressable)
  * @update 3/02/99 dwc
  * @return error status
  */
-NS_IMETHODIMP nsDrawingSurfaceMac :: GetPixelFormat(nsPixelFormat *aFormat)
+NS_IMETHODIMP nsDrawingSurfaceMac::GetPixelFormat(nsPixelFormat *aFormat)
 {
   //*aFormat = mPixFormat;
-
-  return NS_OK;
+  NS_ASSERTION(0, "Not implemented!");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 #pragma mark -
@@ -215,15 +217,11 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: GetPixelFormat(nsPixelFormat *aFormat)
  * @update 3/02/99 dwc
  * @return error status
  */
-NS_IMETHODIMP nsDrawingSurfaceMac :: Init(nsDrawingSurface	aDS)
+NS_IMETHODIMP nsDrawingSurfaceMac::Init(nsDrawingSurface	aDS)
 {
-GrafPtr	gport;
-
 	nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aDS);
-	surface->GetGrafPtr(&gport);
-	mPort = gport;
+	surface->GetGrafPtr(&mPort);
 	mGS->Init(surface);
-	
 	
   return NS_OK;
 }
@@ -233,9 +231,8 @@ GrafPtr	gport;
  * @update 3/02/99 dwc
  * @return error status
  */
-NS_IMETHODIMP nsDrawingSurfaceMac :: Init(GrafPtr aPort)
+NS_IMETHODIMP nsDrawingSurfaceMac::Init(CGrafPtr aPort)
 {
-
 	// set our grafPtr to the passed in port
   mPort = aPort;
 	mGS->Init(aPort);
@@ -247,10 +244,10 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Init(GrafPtr aPort)
  * @update 3/02/99 dwc
  * @return error status
  */
-NS_IMETHODIMP nsDrawingSurfaceMac :: Init(nsIWidget *aTheWidget)
+NS_IMETHODIMP nsDrawingSurfaceMac::Init(nsIWidget *aTheWidget)
 {
 	// get our native graphics port from the widget
- 	mPort = reinterpret_cast<GrafPtr>(aTheWidget->GetNativeData(NS_NATIVE_GRAPHIC));
+ 	mPort = reinterpret_cast<CGrafPtr>(aTheWidget->GetNativeData(NS_NATIVE_GRAPHIC));
 	mGS->Init(aTheWidget);
   return NS_OK;
 }
@@ -261,12 +258,11 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Init(nsIWidget *aTheWidget)
  * @return error status
  */
 
-NS_IMETHODIMP nsDrawingSurfaceMac :: Init(PRUint32 aDepth,PRUint32 aWidth,PRUint32 aHeight, PRUint32 aFlags)
+NS_IMETHODIMP nsDrawingSurfaceMac::Init(PRUint32 aDepth,PRUint32 aWidth,PRUint32 aHeight, PRUint32 aFlags)
 {
   PRUint32	depth;
   Rect			macRect;
   GWorldPtr offscreenGWorld = nsnull;
-  GrafPtr 	savePort;
   Boolean   tryTempMemFirst = ((aFlags & NS_CREATEDRAWINGSURFACE_SHORTLIVED) != 0);
   
   depth = aDepth;
@@ -324,12 +320,12 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Init(PRUint32 aDepth,PRUint32 aWidth,PRUint
   ::LockPixels(::GetGWorldPixMap(offscreenGWorld));
 
 	// erase the offscreen area
-	::GetPort(&savePort);
-	::SetPort((GrafPtr)offscreenGWorld);
+	{
+	  StGWorldPortSetter  setter(offscreenGWorld);
 	::EraseRect(&macRect);
-	::SetPort(savePort);
+  }
 
-	this->Init((GrafPtr)offscreenGWorld);
+	Init(offscreenGWorld);
 	mIsOffscreen = PR_TRUE;
   return NS_OK;
 }

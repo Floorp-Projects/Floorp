@@ -141,6 +141,7 @@ public:
 
     virtual nsIFontMetrics* GetFont(void);
     NS_IMETHOD            	SetFont(const nsFont &aFont);
+    NS_IMETHOD              Validate();
     NS_IMETHOD            	Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD				Invalidate(const nsRect &aRect,PRBool aIsSynchronous);
     NS_IMETHOD				InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
@@ -222,10 +223,10 @@ protected:
 #endif
 
 	nsIWidget*				mParent;
-	PRBool					mResizingChildren;
-	PRBool					mSaveVisible;
-	PRBool     	 			mVisible;
-	PRBool     	 			mEnabled;
+  PRPackedBool      mResizingChildren;
+  PRPackedBool      mSaveVisible;
+  PRPackedBool      mVisible;
+  PRPackedBool      mEnabled;
 	PRInt32					mPreferredWidth;
 	PRInt32					mPreferredHeight;
 	nsIFontMetrics*			mFontMetrics;
@@ -235,16 +236,18 @@ protected:
 	RgnHandle				mVisRegion;
 	WindowPtr				mWindowPtr;
 
-	PRBool					mDestroyCalled;
-	PRBool					mDestructorCalled;
+  PRPackedBool      mDestroyCalled;
+  PRPackedBool      mDestructorCalled;
 
-	PRBool					mDrawing;
+  PRPackedBool      mAcceptFocusOnClick;
+
+  PRPackedBool      mDrawing;
+  PRPackedBool      mTempRenderingContextMadeHere;
+
 	nsIRenderingContext*  	mTempRenderingContext;
-	PRBool					mTempRenderingContextMadeHere;
   	
 	nsPluginPort*			mPluginPort;
 
-	PRBool					mAcceptFocusOnClick;
 	
   // Routines for iterating over the rects of a region. Carbon and pre-Carbon
   // do this differently so provide a way to do both.

@@ -61,8 +61,8 @@ public:
 	virtual void				CalcWindowRegions();
 
 protected:
-	PRBool						mClipChildren;
-	PRBool						mClipSiblings;
+	PRPackedBool				mClipChildren;
+	PRPackedBool				mClipSiblings;
 };
 
 

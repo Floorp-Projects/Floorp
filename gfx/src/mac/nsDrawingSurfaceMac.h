@@ -42,6 +42,9 @@
 #include "nsIDrawingSurface.h"
 #include "nsIDrawingSurfaceMac.h"
 
+#include "nsGfxUtils.h"
+#include "nsCarbonHelpers.h"
+
 class nsGraphicState;
 
 class nsDrawingSurfaceMac : public nsIDrawingSurface,
@@ -59,22 +62,22 @@ public:
                   PRUint32 aFlags);
   NS_IMETHOD Unlock(void);
   NS_IMETHOD GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight);
-  NS_IMETHOD IsOffscreen(PRBool *aOffScreen) {return mIsOffscreen;}
+  NS_IMETHOD IsOffscreen(PRBool *aOffScreen) { *aOffScreen = mIsOffscreen; return NS_OK; }
   NS_IMETHOD IsPixelAddressable(PRBool *aAddressable);
   NS_IMETHOD GetPixelFormat(nsPixelFormat *aFormat);
 
   //nsIDrawingSurfaceMac interface
   NS_IMETHOD Init(nsDrawingSurface aDS);
-  NS_IMETHOD Init(GrafPtr aThePort);
+  NS_IMETHOD Init(CGrafPtr aThePort);
   NS_IMETHOD Init(nsIWidget *aTheWidget);
   NS_IMETHOD Init(PRUint32 aDepth,PRUint32 aWidth, PRUint32 aHeight,PRUint32 aFlags);
-	NS_IMETHOD GetGrafPtr(GrafPtr	*aTheGrafPtr)   	{*aTheGrafPtr = mPort;return NS_OK;}
+	NS_IMETHOD GetGrafPtr(CGrafPtr	*aTheGrafPtr) { *aTheGrafPtr = mPort; return NS_OK; }
 
   // locals
 	nsGraphicState*	GetGS(void) {return mGS;}
 
 private:
-	GrafPtr					mPort;						// the onscreen or offscreen GrafPtr;	
+	CGrafPtr				mPort;						// the onscreen or offscreen CGrafPtr;	
 	
   PRUint32      	mWidth;
   PRUint32      	mHeight;

@@ -47,10 +47,12 @@
 #include <TextServices.h>
 #include <UnicodeConverter.h>
 #include <Script.h>
+
 #include "nsCarbonHelpers.h"
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
 #include "nsTSMStrategy.h"
+#include "nsGfxUtils.h"
 
 #ifndef XP_MACOSX
 #include <locale>
@@ -617,7 +619,7 @@ PRBool nsMacEventHandler::DragEvent ( unsigned int aMessage, Point aMouseGlobal,
 	// stuff just in case it has been changed.
 	Point hitPointLocal = aMouseGlobal;
 	WindowRef wind = reinterpret_cast<WindowRef>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
-	::SetPortWindowPort(wind);
+	nsGraphicsUtils::SafeSetPortWindowPort(wind);
 	Rect savePortRect;
 	::GetWindowPortBounds(wind, &savePortRect);
 	::SetOrigin(0, 0);
@@ -1679,7 +1681,7 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
   mTopLevelWidget->GetWindowType(wtype);
 	PRBool topLevelIsAPopup = (wtype == eWindowType_popup);
 	WindowRef wind = reinterpret_cast<WindowRef>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
-	::SetPortWindowPort(wind);
+	nsGraphicsUtils::SafeSetPortWindowPort(wind);
 	Rect savePortRect;
 	::GetWindowPortBounds(wind, &savePortRect);
 	::SetOrigin(0, 0);
@@ -1778,7 +1780,7 @@ nsresult nsMacEventHandler::HandleOffsetToPosition(long offset,Point* thePoint)
 	thePoint->h = mIMEPos.x;
 	printf("local (x,y) = (%d, %d)\n", thePoint->h, thePoint->v);
 	WindowRef wind = reinterpret_cast<WindowRef>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
-	::SetPortWindowPort(wind);
+	nsGraphicsUtils::SafeSetPortWindowPort(wind);
 	Rect savePortRect;
 	::GetWindowPortBounds(wind, &savePortRect);
 	::LocalToGlobal(thePoint);
