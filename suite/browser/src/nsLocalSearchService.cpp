@@ -906,7 +906,7 @@ LocalSearchDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 
 
 
-nsresult
+NS_IMETHODIMP
 NS_NewLocalSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
 	NS_PRECONDITION(aResult != nsnull, "null ptr");
