@@ -1,0 +1,458 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+#define NS_IMPL_IDS 1
+
+#include <stdio.h>
+#include "nscore.h"
+
+#include "nspr.h"
+#include "net.h"
+#include "plstr.h"
+
+#include "nsISupports.h"
+#include "nsIShellInstance.h"
+#include "nsShellInstance.h"
+#include "nsITimer.h"
+
+#include "nsWidgetsCID.h"
+#include "nsGfxCIID.h"
+#include "nsxpfcCIID.h"
+#include "nsParserCIID.h"
+#include "nsIAppShell.h"
+#include "nsIWebViewerContainer.h"
+
+#include "nsIPref.h"
+#include "nsStreamManager.h"
+#include "nsToolbarManager.h"
+
+#include "nsIBrowserWindow.h"
+#include "nsIWebShell.h"
+#include "nsIDocumentLoader.h"
+#include "nsIThrobber.h"
+#include "nsViewsCID.h"
+#include "nsPluginsCID.h"
+#include "nsIDeviceContext.h"
+
+#ifdef NS_WIN32
+#include "direct.h"
+#include "windows.h"
+#elif NS_UNIX
+#include <Xm/Xm.h>
+#endif
+
+
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+static NS_DEFINE_IID(kCShellInstance, NS_XPFC_SHELL_INSTANCE_CID);
+static NS_DEFINE_IID(kCStreamManager, NS_STREAM_MANAGER_CID);
+static NS_DEFINE_IID(kIStreamManager, NS_ISTREAM_MANAGER_IID);
+static NS_DEFINE_IID(kCToolbarManager, NS_TOOLBAR_MANAGER_CID);
+static NS_DEFINE_IID(kIToolbarManager, NS_ITOOLBAR_MANAGER_IID);
+static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
+static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+
+nsEventStatus PR_CALLBACK HandleEventApplication(nsGUIEvent *aEvent);
+nsShellInstance * gShellInstance = nsnull;
+
+nsShellInstance::nsShellInstance()
+{
+  NS_INIT_REFCNT();
+  mApplicationWindow = nsnull;
+  mPref = nsnull;
+  gShellInstance = this;
+  mStreamManager = nsnull;
+  mToolbarManager = nsnull;
+  mDeviceContext = nsnull;
+}
+
+nsShellInstance::~nsShellInstance()
+{
+  NS_IF_RELEASE(mDeviceContext);
+  NS_IF_RELEASE(mApplicationWindow);
+
+  if (mPref != nsnull)
+    mPref->Shutdown();
+
+  NS_IF_RELEASE(mPref);
+  NS_IF_RELEASE(mStreamManager);
+  NS_IF_RELEASE(mToolbarManager);
+}
+
+NS_DEFINE_IID(kIShellInstanceIID, NS_IXPFC_SHELL_INSTANCE_IID);
+NS_IMPL_ISUPPORTS(nsShellInstance,kIShellInstanceIID);
+
+nsresult nsShellInstance::Init()
+{
+  nsresult res = NS_OK;
+
+  RegisterFactories() ;
+
+  // Load preferences
+  res = nsRepository::CreateInstance(kPrefCID, NULL, kIPrefIID,
+                                     (void **) &mPref);
+  if (NS_OK != res) {
+    return res;
+  }
+
+  mPref->Startup(nsnull);
+
+  // Create a Stream Manager
+  res = nsRepository::CreateInstance(kCStreamManager, 
+                                     NULL, 
+                                     kIStreamManager,
+                                     (void **) &mStreamManager);
+  if (NS_OK != res)
+    return res;
+
+  mStreamManager->Init();
+
+
+  // Create a Toolbar Manager
+  res = nsRepository::CreateInstance(kCToolbarManager, 
+                                     NULL, 
+                                     kIToolbarManager,
+                                     (void **) &mToolbarManager);
+  if (NS_OK != res)
+    return res;
+
+  mToolbarManager->Init();
+
+  return res;
+}
+
+static nsITimer* gNetTimer;
+
+static void
+PollNet(nsITimer *aTimer, void *aClosure)
+{
+  NET_PollSockets();
+  NS_IF_RELEASE(gNetTimer);
+  if (NS_OK == NS_NewTimer(&gNetTimer)) {
+    gNetTimer->Init(PollNet, nsnull, 1000 / 50);
+  }
+}
+
+nsresult nsShellInstance::Run()
+{
+
+#ifdef NS_WIN32
+  MSG msg;
+  PollNet(0, 0);
+  while (GetMessage(&msg, NULL, 0, 0)) {
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+      NET_PollSockets();
+  }
+  return ((nsresult)msg.wParam);
+#elif NS_UNIX
+#if 0
+  extern   XtAppContext app_context ;
+
+  XtAppMainLoop(app_context) ;
+#endif
+  extern   XtAppContext app_context ;
+  extern Widget topLevel;
+
+  XtRealizeWidget(topLevel);
+
+  XEvent event;
+  for (;;) {
+    XtAppNextEvent(app_context, &event);
+    XtDispatchEvent(&event);
+  } 
+
+  return NS_OK;
+#else
+  return NS_OK;
+#endif
+}
+
+void * nsShellInstance::GetNativeInstance()
+{
+  return mNativeInstance ;
+}
+
+nsIPref * nsShellInstance::GetPreferences()
+{
+  return (mPref) ;
+}
+
+nsIStreamManager * nsShellInstance::GetStreamManager()
+{
+  return (mStreamManager) ;
+}
+
+nsIToolbarManager * nsShellInstance::GetToolbarManager()
+{
+  return (mToolbarManager) ;
+}
+
+void nsShellInstance::SetNativeInstance(void * aNativeInstance)
+{
+  mNativeInstance = aNativeInstance;
+  return ;
+}
+
+nsIApplicationShell * nsShellInstance::GetApplicationShell()
+{
+  return mApplicationShell ;
+}
+
+void nsShellInstance::SetApplicationShell(nsIApplicationShell * aApplicationShell)
+{
+  mApplicationShell = aApplicationShell;
+  return ;
+}
+
+// XXX We really need a standard way to enumerate 
+//     a set of libraries and call their self
+//     registration routines... when that code is 
+//     XP of course.
+nsresult nsShellInstance::RegisterFactories()
+{
+  // hardcode names of dll's
+#ifdef NS_WIN32
+  #define GFXWIN_DLL "raptorgfxwin.dll"
+  #define WIDGET_DLL "raptorwidget.dll"
+  #define VIEW_DLL   "raptorview.dll"
+  #define PARSER_DLL "raptorhtmlpars.dll"
+  #define PREF_DLL   "xppref32.dll"
+  #define WEB_DLL    "raptorweb.dll"
+  #define PLUGIN_DLL "raptorplugin.dll"
+#else
+  #define GFXWIN_DLL "libgfxunix.so"
+  #define WIDGET_DLL "libwidgetunix.so"
+  #define VIEW_DLL   "libraptorview.so"
+  #define PARSER_DLL "libraptorhtmlpars.so"
+  #define PREF_DLL   "libpref.so"
+  #define WEB_DLL    "libraptorweb.so"
+  #define PLUGIN_DLL "raptorplugin.so"
+#endif
+
+
+  static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+  nsRepository::RegisterFactory(kIWidgetIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+
+  // register graphics classes
+  static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
+  static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
+  static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
+  static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
+  static NS_DEFINE_IID(kCRegionIID, NS_REGION_CID);
+
+  nsRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCRegionIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+
+  // register widget classes
+  static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
+  static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
+  static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
+  static NS_DEFINE_IID(kCButtonCID, NS_BUTTON_CID);
+  static NS_DEFINE_IID(kCCheckButtonCID, NS_CHECKBUTTON_CID);
+  static NS_DEFINE_IID(kCComboBoxCID, NS_COMBOBOX_CID);
+  static NS_DEFINE_IID(kCListBoxCID, NS_LISTBOX_CID);
+  static NS_DEFINE_IID(kCRadioButtonCID, NS_RADIOBUTTON_CID);
+  static NS_DEFINE_IID(kCRadioGroupCID, NS_RADIOGROUP_CID);
+  static NS_DEFINE_IID(kCHorzScrollbarCID, NS_HORZSCROLLBAR_CID);
+  static NS_DEFINE_IID(kCVertScrollbarCID, NS_VERTSCROLLBAR_CID);
+  static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
+  static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
+  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+  static NS_DEFINE_IID(kCParserNodeCID, NS_PARSER_NODE_IID);
+  static NS_DEFINE_IID(kCTabWidgetCID, NS_TABWIDGET_CID);
+  static NS_DEFINE_IID(kDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
+  static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
+  static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
+  static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
+  static NS_DEFINE_IID(kCViewManagerCID, NS_VIEW_MANAGER_CID);
+  static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
+  static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
+
+  nsRepository::RegisterFactory(kCWindowCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCChildCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCheckButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCComboBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCFileWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCListBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCRadioButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCRadioGroupCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCHorzScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCVertScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCTextAreaCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCTabWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCTextFieldCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCParserCID, PARSER_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCParserNodeCID, PARSER_DLL, PR_FALSE, PR_FALSE);
+
+  nsRepository::RegisterFactory(kPrefCID, PREF_DLL, PR_FALSE, PR_FALSE);
+
+  nsRepository::RegisterFactory(kDocumentLoaderCID, WEB_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kThrobberCID, WEB_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kWebShellCID, WEB_DLL, PR_FALSE, PR_FALSE);
+  
+  nsRepository::RegisterFactory(kCPluginHostCID, PLUGIN_DLL, PR_FALSE, PR_FALSE);
+
+  nsRepository::RegisterFactory(kCViewManagerCID, VIEW_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCScrollingViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
+
+  return NS_OK;
+}
+
+nsIWidget * nsShellInstance::CreateApplicationWindow(nsIAppShell * aAppShell,
+                                                     const nsRect &aRect)
+{
+
+  nsRect windowRect ;
+
+  if (aRect.IsEmpty()) {
+    windowRect.SetRect(100,100,320,480);
+  } else {
+    windowRect.SetRect(aRect.x, aRect.y, aRect.width, aRect.height);
+  }
+
+  static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+  static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
+
+  nsRepository::CreateInstance(kCWindowCID, 
+                               nsnull, 
+                               kIWidgetIID, 
+                               (void **)&(mApplicationWindow));
+
+  nsWidgetInitData initData ;
+
+  initData.clipChildren = PR_TRUE;
+
+  nsresult res = nsRepository::CreateInstance(kDeviceContextCID, 
+                                              nsnull, 
+                                              kDeviceContextIID, 
+                                              (void **)&mDeviceContext);
+
+  if (NS_OK == res)
+    mDeviceContext->Init(nsnull);
+
+  mApplicationWindow->Create((nsIWidget*)nsnull, 
+                             aRect, 
+                             HandleEventApplication, 
+                             mDeviceContext, 
+                             aAppShell, 
+                             nsnull, 
+                             &initData);
+
+  return (mApplicationWindow);
+}
+
+
+nsresult nsShellInstance::ShowApplicationWindow(PRBool show)
+{
+  mApplicationWindow->Show(show);
+
+#ifdef NS_UNIX
+  XtRealizeWidget((Widget)GetNativeInstance());
+#endif
+
+  return NS_OK;
+}
+
+nsresult nsShellInstance::ExitApplication()
+{
+
+#ifdef NS_WIN32
+  PostQuitMessage(0);
+#endif
+  return NS_OK;
+}
+
+void * nsShellInstance::GetApplicationWindowNativeInstance()
+{
+  return (mApplicationWindow->GetNativeData(NS_NATIVE_WINDOW));
+}
+
+nsIWidget * nsShellInstance::GetApplicationWidget()
+{
+  return (mApplicationWindow);
+}
+
+EVENT_CALLBACK nsShellInstance::GetShellEventCallback()
+{
+  return ((EVENT_CALLBACK)HandleEventApplication);
+}
+
+nsresult nsShellInstance::LaunchApplication(nsString& aApplication)
+{
+  char * app = aApplication.ToNewCString();
+  char *argv[2];
+
+  PRStatus status ;
+
+  char path[1024];
+  (void)getcwd(path, sizeof(path));
+  (void)PL_strcat(path, "\\");
+  (void)PL_strcat(path, app);
+  argv[0] = path;
+  argv[1] = nsnull;
+
+  status = PR_CreateProcessDetached(argv[0], argv, nsnull, nsnull);
+
+  if (status == PR_FAILURE)
+    return NS_OK;
+
+  delete app;
+
+  return NS_OK;
+}
+
+nsEventStatus PR_CALLBACK HandleEventApplication(nsGUIEvent *aEvent)
+{
+  /*
+   * If this is a menu selection, generate a command object and
+   * dispatch it to the target object
+   */
+
+  if (aEvent->message == NS_MENU_SELECTED)
+  {
+
+    nsIWebViewerContainer * viewer;
+
+    nsresult res = gShellInstance->GetApplicationShell()->GetWebViewerContainer(&viewer);
+
+    if (res == NS_OK)
+    {
+      nsMenuEvent * event = (nsMenuEvent *) aEvent;
+
+      nsIMenuManager * menumgr = viewer->GetMenuManager();
+
+      nsIMenuItem * item = menumgr->MenuItemFromID(event->menuItem);
+
+      item->SendCommand();
+
+      NS_RELEASE(viewer);
+
+      return nsEventStatus_eIgnore; 
+
+    }
+    
+  }
+
+  return (gShellInstance->GetApplicationShell()->HandleEvent(aEvent));
+}
+
