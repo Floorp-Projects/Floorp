@@ -54,31 +54,32 @@ function HistoryInit()
             var windowNode = document.getElementById("history-window");
             windowNode.setAttribute("windowtype", "history:searchresults");
         }
+        document.getElementById("groupingMenu").setAttribute("hidden", "true");
     }
-    
-    gPrefService = Components.classes["@mozilla.org/preferences;1"]
-                             .getService(Components.interfaces.nsIPref);
-    try {
-        var grouping = gPrefService.GetCharPref("browser.history.grouping");
-    }
-    catch(e) {
-        grouping = "";
-    }
-    GroupBy(grouping);
-    if (gHistoryStatus) {  // must be the window
-        switch(grouping) {
-        case "site":
-            document.getElementById("groupBySite").setAttribute("checked", "true");
-            break;
-        case "none":
-            document.getElementById("groupByNone").setAttribute("checked", "true");
-            break;
-        case "day":
-        default:
-            document.getElementById("groupByDay").setAttribute("checked", "true");
-        }        
-    }
-
+    else {
+        gPrefService = Components.classes["@mozilla.org/preferences;1"]
+                                 .getService(Components.interfaces.nsIPref);
+        try {
+            var grouping = gPrefService.GetCharPref("browser.history.grouping");
+        }
+        catch(e) {
+            grouping = "";
+        }
+        GroupBy(grouping);
+        if (gHistoryStatus) {  // must be the window
+            switch(grouping) {
+            case "site":
+                document.getElementById("groupBySite").setAttribute("checked", "true");
+                break;
+            case "none":
+                document.getElementById("groupByNone").setAttribute("checked", "true");
+                break;
+            case "day":
+            default:
+                document.getElementById("groupByDay").setAttribute("checked", "true");
+            }        
+        }
+    } 
     gHistoryOutliner.focus();
     gHistoryOutliner.outlinerBoxObject.view.selection.select(0);
 }
