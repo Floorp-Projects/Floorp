@@ -654,7 +654,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetSidebar(nsISidebar** aSidebar)
 
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetPrompt(nsIPrompt** aPrompt)
+NS_IMETHODIMP GlobalWindowImpl::GetPrompter(nsIPrompt** aPrompt)
 {
   if(!mDocShell)
     return NS_ERROR_FAILURE;

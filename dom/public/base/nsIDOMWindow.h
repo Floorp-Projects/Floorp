@@ -72,7 +72,7 @@ public:
 
   NS_IMETHOD    GetSidebar(nsISidebar** aSidebar)=0;
 
-  NS_IMETHOD    GetPrompt(nsIPrompt** aPrompt)=0;
+  NS_IMETHOD    GetPrompter(nsIPrompt** aPrompter)=0;
 
   NS_IMETHOD    GetMenubar(nsIDOMBarProp** aMenubar)=0;
 
@@ -229,7 +229,7 @@ public:
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop);  \
   NS_IMETHOD    Get_content(nsIDOMWindow** a_content);  \
   NS_IMETHOD    GetSidebar(nsISidebar** aSidebar);  \
-  NS_IMETHOD    GetPrompt(nsIPrompt** aPrompt);  \
+  NS_IMETHOD    GetPrompter(nsIPrompt** aPrompter);  \
   NS_IMETHOD    GetMenubar(nsIDOMBarProp** aMenubar);  \
   NS_IMETHOD    GetToolbar(nsIDOMBarProp** aToolbar);  \
   NS_IMETHOD    GetLocationbar(nsIDOMBarProp** aLocationbar);  \
@@ -321,7 +321,7 @@ public:
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop) { return _to GetTop(aTop); } \
   NS_IMETHOD    Get_content(nsIDOMWindow** a_content) { return _to Get_content(a_content); } \
   NS_IMETHOD    GetSidebar(nsISidebar** aSidebar) { return _to GetSidebar(aSidebar); } \
-  NS_IMETHOD    GetPrompt(nsIPrompt** aPrompt) { return _to GetPrompt(aPrompt); } \
+  NS_IMETHOD    GetPrompter(nsIPrompt** aPrompter) { return _to GetPrompter(aPrompter); } \
   NS_IMETHOD    GetMenubar(nsIDOMBarProp** aMenubar) { return _to GetMenubar(aMenubar); } \
   NS_IMETHOD    GetToolbar(nsIDOMBarProp** aToolbar) { return _to GetToolbar(aToolbar); } \
   NS_IMETHOD    GetLocationbar(nsIDOMBarProp** aLocationbar) { return _to GetLocationbar(aLocationbar); } \
