@@ -53,7 +53,7 @@ void PR_CALLBACK init_source (j_decompress_ptr jd);
 boolean PR_CALLBACK fill_input_buffer (j_decompress_ptr jd);
 void PR_CALLBACK skip_input_data (j_decompress_ptr jd, long num_bytes);
 void PR_CALLBACK term_source (j_decompress_ptr jd);
-void PR_CALLBACK il_error_exit (j_common_ptr cinfo);
+void PR_CALLBACK my_error_exit (j_common_ptr cinfo);
 
 /* Normal JFIF markers can't have more bytes than this. */
 #define MAX_JPEG_MARKER_LENGTH  (((PRUint32)1 << 16) - 1)
@@ -121,8 +121,19 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgIRequest *aRequest)
 
   aRequest->GetImage(getter_AddRefs(mImage));
 
-  /* Step 1: allocate and initialize JPEG decompression object */
+  /* We set up the normal JPEG error routines, then override error_exit. */
   mInfo.err = jpeg_std_error(&mErr.pub);
+  /*   mInfo.err = jpeg_std_error(&mErr.pub); */
+  mErr.pub.error_exit = my_error_exit;
+  /* Establish the setjmp return context for my_error_exit to use. */
+  if (setjmp(mErr.setjmp_buffer)) {
+    /* If we get here, the JPEG code has signaled an error.
+     * We need to clean up the JPEG object, close the input file, and return.
+     */
+    return NS_ERROR_FAILURE;
+  }
+
+  /* Step 1: allocate and initialize JPEG decompression object */
   jpeg_create_decompress(&mInfo);
   
   decoder_source_mgr *src;
@@ -136,7 +147,6 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgIRequest *aRequest)
   }
 
   /* Step 2: specify data source (eg, a file) */
-  mErr.pub.error_exit = il_error_exit; /* XXX should be before jpeg_std_error ? */
 
   /* Setup callback functions. */
   src->pub.init_source = init_source;
@@ -147,21 +157,6 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgIRequest *aRequest)
 
   src->decoder = this;
 
-#if 0
-  /* We set up the normal JPEG error routines, then override error_exit. */
-  mInfo.err = jpeg_std_error(&jerr.pub);
-  jerr.pub.error_exit = my_error_exit;
-  /* Establish the setjmp return context for my_error_exit to use. */
-  if (setjmp(jerr.setjmp_buffer)) {
-    /* If we get here, the JPEG code has signaled an error.
-     * We need to clean up the JPEG object, close the input file, and return.
-     */
-    jpeg_destroy_decompress(&cinfo);
-    fclose(infile);
-    return 0;
-  }
-
-#endif
 
 
   return NS_OK;
@@ -248,6 +243,13 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   // else no input stream.. Flush() ?
 
 
+  nsresult error_code = NS_ERROR_FAILURE;
+  /* Return here if there is a fatal error. */
+  if ((error_code = setjmp(mErr.setjmp_buffer)) != 0) {
+    return error_code;
+  }
+
+
   PR_LOG(gJPEGlog, PR_LOG_DEBUG,
          ("[this=%p] nsJPEGDecoder::WriteFrom -- processing JPEG data\n", this));
 
@@ -301,10 +303,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
                                            JPOOL_IMAGE,
                                            row_stride, 1);
                                          
-    mRGBPadRow = (PRUint8*) PR_MALLOC(row_stride);                                       
+    mRGBPadRow = (PRUint8*) PR_MALLOC(row_stride);                                  
     memset(mRGBPadRow, 0, row_stride);
-  
-  
 
     /* Allocate RGB buffer for conversion from greyscale. */
     if (mInfo.output_components != 3) {
@@ -470,12 +470,13 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
       } else {
         /* 24-bit color image */
 #ifdef XP_PC
-        JSAMPROW ptrOutputBuf = mRGBPadRow;
+        memset(mRGBPadRow, 0, mInfo.output_width * mInfo.output_components);
+        PRUint8 *ptrOutputBuf = mRGBPadRow;
 
         JSAMPLE *j1 = mSamples[0];
         const JSAMPLE *j1end = j1 + (mInfo.output_width * mInfo.output_components);
 
-        while(j1 < j1end) {
+        for (PRUint32 i=0;i<mInfo.output_width;++i) {
           ptrOutputBuf[2] = *j1++;
           ptrOutputBuf[1] = *j1++;
           ptrOutputBuf[0] = *j1++;
@@ -536,36 +537,35 @@ NS_IMETHODIMP nsJPEGDecoder::SetObserver(nsIOutputStreamObserver * aObserver)
 
 /* Override the standard error method in the IJG JPEG decoder code. */
 void PR_CALLBACK
-il_error_exit (j_common_ptr cinfo)
+my_error_exit (j_common_ptr cinfo)
 {
-#if 0
-    int error_code;
-    il_error_mgr *err = (il_error_mgr *) cinfo->err;
+  nsresult error_code = NS_ERROR_FAILURE;
+  decoder_error_mgr *err = (decoder_error_mgr *) cinfo->err;
 
+#if 0
 #ifdef DEBUG
-#if 0
-  /*ptn fix later */
-    if (il_debug >= 1) {
-        char buffer[JMSG_LENGTH_MAX];
+/*ptn fix later */
+  if (il_debug >= 1) {
+      char buffer[JMSG_LENGTH_MAX];
 
-        /* Create the message */
-        (*cinfo->err->format_message) (cinfo, buffer);
+      /* Create the message */
+      (*cinfo->err->format_message) (cinfo, buffer);
 
-        ILTRACE(1,("%s\n", buffer));
-    }
-#endif
+      ILTRACE(1,("%s\n", buffer));
+  }
 #endif
 
-    /* Convert error to a browser error code */
-    if (cinfo->err->msg_code == JERR_OUT_OF_MEMORY)
-        error_code = MK_OUT_OF_MEMORY;
-    else
-        error_code = MK_IMAGE_LOSSAGE;
-        
-    /* Return control to the setjmp point. */
-    longjmp(err->setjmp_buffer, error_code);
 
+  /* Convert error to a browser error code */
+  if (cinfo->err->msg_code == JERR_OUT_OF_MEMORY)
+      error_code = MK_OUT_OF_MEMORY;
+  else
+      error_code = MK_IMAGE_LOSSAGE;
 #endif
+
+  /* Return control to the setjmp point. */
+  longjmp(err->setjmp_buffer, error_code);
+
 }
 
 /******************************************************************************/
@@ -731,7 +731,7 @@ fill_input_buffer (j_decompress_ptr jd)
 #if 0
           j_common_ptr cinfo = (j_common_ptr)(&src->js->jd);
           cinfo->err->msg_code = JERR_OUT_OF_MEMORY;
-          il_error_exit(cinfo);
+          my_error_exit(cinfo);
 #endif
         }
           
@@ -739,7 +739,7 @@ fill_input_buffer (j_decompress_ptr jd)
 
         /* Check for malformed MARKER segment lengths. */
         if (new_backtrack_buflen > MAX_JPEG_MARKER_LENGTH) {
-          //  il_error_exit((j_common_ptr)(&src->js->jd));
+          my_error_exit((j_common_ptr)(&src->decoder->mInfo));
         }
       }
 
@@ -756,12 +756,8 @@ fill_input_buffer (j_decompress_ptr jd)
       src->decoder->mBackBufferLen = (size_t)new_backtrack_buflen;
     
       src->decoder->mFillState = READING_BACK;
-#if 0
-      if (src->pub.bytes_in_buffer != 0)
-        return PR_TRUE;
-      else
-#endif
-        return PR_FALSE;
+
+      return PR_FALSE;
     }
     break;
   }
