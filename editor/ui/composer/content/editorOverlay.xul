@@ -44,12 +44,12 @@
     <key id="key_newNavigator"/>
     <key id="key_newBlankPage"/>
 
-    <key id="openeditorkb"  xulkey="true" key="&fileopen.keybinding;"  observes="cmd_open" />
-    <key id="openremoteeditorkb" xulkey="true" key="&fileopenremote.keybinding;" observes="cmd_openRemote" />
-    <key id="savekb"        xulkey="true" key="&filesave.keybinding;"  observes="cmd_save"/>
-    <key id="closekb"       xulkey="true" key="&fileclose.keybinding;" observes="cmd_close" />
-    <key id="printkb"       xulkey="true" key="&fileprint.keybinding;" observes="cmd_print" />
-    <key id="exitkb"        xulkey="true" key="&fileexit.keybinding;"  observes="cmd_quit" />
+    <key id="openeditorkb"  xulkey="true" key="&fileopen.keybinding;"  shift="false" observes="cmd_open" />
+    <key id="openremoteeditorkb" xulkey="true" key="&fileopenremote.keybinding;" shift="false" observes="cmd_openRemote" />
+    <key id="savekb"        xulkey="true" key="&filesave.keybinding;"  shift="false" observes="cmd_save"/>
+    <key id="closekb"       xulkey="true" key="&fileclose.keybinding;" shift="false" observes="cmd_close" />
+    <key id="printkb"       xulkey="true" key="&fileprint.keybinding;" shift="false" observes="cmd_print" />
+    <key id="exitkb"        xulkey="true" key="&fileexit.keybinding;"  shift="false" observes="cmd_quit" />
 
     <key id="key_undo"/>
     <key id="key_redo"/>
@@ -59,14 +59,14 @@
     <key id="pastequotationkb" xulkey="true" shift="true" key="&editpaste.keybinding;" observes="cmd_pasteQuote" />
     <key id="key_delete"/>
     <key id="key_selectAll"/>
-    <key id="findkb"          xulkey="true" key="&editfind.keybinding;"          observes="cmd_find" />
-    <key id="findnextkb"      xulkey="true" key="&editfindnext.keybinding;"      observes="cmd_findNext" />
-    <key id="checkspellingkb" xulkey="true" key="&editcheckspelling.keybinding;" observes="cmd_spelling" />
+    <key id="findkb"          xulkey="true" key="&editfind.keybinding;"          shift="false" observes="cmd_find" />
+    <key id="findnextkb"      xulkey="true" key="&editfindnext.keybinding;"      shift="false" observes="cmd_findNext" />
+    <key id="checkspellingkb" xulkey="true" key="&editcheckspelling.keybinding;" shift="false" observes="cmd_spelling" />
     <key id="key_preferences"/>
 
-    <key id="boldkb"        xulkey="true" key="&stylebold.keybinding;"      observes="cmd_bold"/>
-    <key id="italickb"      xulkey="true" key="&styleitalic.keybinding;"    observes="cmd_italic"/>
-    <key id="underlinekb"   xulkey="true" key="&styleunderline.keybinding;" observes="cmd_underline"/>
+    <key id="boldkb"        xulkey="true" key="&stylebold.keybinding;"      shift="false" observes="cmd_bold"/>
+    <key id="italickb"      xulkey="true" key="&styleitalic.keybinding;"    shift="false" observes="cmd_italic"/>
+    <key id="underlinekb"   xulkey="true" key="&styleunderline.keybinding;" shift="false" observes="cmd_underline"/>
 
     <key id="increaseindentkb" xulkey="true" key="&formatindent.keybinding;"  observes="cmd_indent" />
     <key id="decreaseindentkb" xulkey="true" key="&formatoutdent.keybinding;" observes="cmd_outdent" />
