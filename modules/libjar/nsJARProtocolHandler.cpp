@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsAutoPtr.h"
 #include "nsJARProtocolHandler.h"
 #include "nsIIOService.h"
 #include "nsCRT.h"
@@ -153,35 +155,19 @@ nsJARProtocolHandler::NewURI(const nsACString &aSpec,
                              nsIURI **result)
 {
     nsresult rv = NS_OK;
-    nsIURI* url;
 
-    nsJARURI *jarURI = new nsJARURI();
+    nsRefPtr<nsJARURI> jarURI = new nsJARURI();
     if (!jarURI)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    NS_ADDREF(url = jarURI);
-
     rv = jarURI->Init(aCharset);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(url);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = jarURI->SetSpecWithBase(aSpec, aBaseURI);
+    if (NS_FAILED(rv))
         return rv;
-    }
 
-    if (aBaseURI) {
-        nsCAutoString aResolvedURI;
-        rv = aBaseURI->Resolve(aSpec, aResolvedURI);
-        if (NS_FAILED(rv)) return rv;
-        rv = url->SetSpec(aResolvedURI);
-    }
-    else
-        rv = url->SetSpec(aSpec);
-
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(url);
-        return rv;
-    }
-
-    *result = url;
+    NS_ADDREF(*result = jarURI);
     return rv;
 }
 
