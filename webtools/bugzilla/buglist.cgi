@@ -1494,7 +1494,7 @@ $vars->{'closedstates'} = ['CLOSED', 'VERIFIED', 'RESOLVED'];
 # then we remove all non-query fields from it, f.e. the sort order (order)
 # and command type (cmdtype) fields.
 $vars->{'urlquerypart'} = $::buffer;
-$vars->{'urlquerypart'} =~ s/[&?](order|cmdtype)=[^&]*//g;
+$vars->{'urlquerypart'} =~ s/(order|cmdtype)=[^&]*&?//g;
 $vars->{'order'} = $order;
 
 # The user's login account name (i.e. email address).
