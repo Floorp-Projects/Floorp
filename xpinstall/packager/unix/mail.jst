@@ -18,7 +18,7 @@ if (verifyDiskSpace(communicatorFolder, srDest))
     logComment("addDirectory() returned: " + err);
 
     registerChrome(CONTENT | DELAYED_CHROME,
-               getFolder("Chrome","packages/messenger.jar"));
+               getFolder("Chrome","packages/messenger"));
 
     if (err==SUCCESS)
     {
