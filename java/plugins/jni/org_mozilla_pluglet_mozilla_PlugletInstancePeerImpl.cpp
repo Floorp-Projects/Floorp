@@ -1,4 +1,4 @@
-/* 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- 
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -67,6 +67,10 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerIm
 JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl_newStream
     (JNIEnv *env, jobject jthis, jstring _type, jstring _target) {
     nsMIMEType mimeType = NULL;
+    if ( _type == NULL
+         || _target == NULL) {
+        return NULL; //nb should throw NullPointerException
+    }
     if(!(mimeType = (nsMIMEType)env->GetStringUTFChars(_type,NULL))) {
 	return NULL;
     }
