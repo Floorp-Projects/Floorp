@@ -1576,7 +1576,11 @@ class Parser {
      * between function header and function body that rhino
      * decompilation does not.
      *
-     * @param f function to decompile
+     * @param encodedSourcesTree See {@link NativeFunction#getSourcesTree()}
+     *        for definition
+     *
+     * @param fromFunctionConstructor true if encodedSourcesTree represents
+     *                                result of Function(...)
      *
      * @param version engine version used to compile the source
      *
@@ -1585,46 +1589,39 @@ class Parser {
      * @param justbody Whether the decompilation should omit the
      * function header and trailing brace.
      */
-    static String decompile(NativeFunction f, int version,
+    static String decompile(Object encodedSourcesTree,
+                            boolean fromFunctionConstructor, int version,
                             int indent, boolean justbody)
     {
         StringBuffer result = new StringBuffer();
         Object[] srcData = new Object[1];
-        int type = f.fromFunctionConstructor ? CONSTRUCTED_FUNCTION
-                                             : TOP_LEVEL_SCRIPT_OR_FUNCTION;
+        int type = fromFunctionConstructor ? CONSTRUCTED_FUNCTION
+                                           : TOP_LEVEL_SCRIPT_OR_FUNCTION;
 
-        // The following casts can be avoided via additional interface
-        // but it is not worth it to replace a simple if sequence by more
-        // spread code
-        Object fdata;
-        if (f instanceof InterpretedFunction) {
-            fdata = ((InterpretedFunction)f).itsData;
-        } else if (f instanceof InterpretedScript) {
-            fdata = ((InterpretedScript)f).itsData;
-        } else {
-            fdata = f;
-        }
-        decompile_r(fdata, version, indent, type, justbody, srcData, result);
+        decompile_r(encodedSourcesTree, version, indent, type, justbody,
+                    srcData, result);
         return result.toString();
     }
 
-    private static void decompile_r(Object fdata, int version, int indent,
-                                    int type, boolean justbody,
+    private static void decompile_r(Object encodedSourcesTree, int version,
+                                    int indent, int type, boolean justbody,
                                     Object[] srcData, StringBuffer result)
     {
         String source;
-        Object[] nestedFunctions;
-        if (fdata instanceof InterpreterData) {
-            InterpreterData idata = (InterpreterData)fdata;
-            source = idata.itsSource;
-            nestedFunctions = idata.itsNestedFunctions;
+        Object[] childNodes = null;
+        if (encodedSourcesTree == null) {
+            source = null;
+        } else if (encodedSourcesTree instanceof String) {
+            source = (String)encodedSourcesTree;
         } else {
-            NativeFunction f = (NativeFunction)fdata;
-            source = f.source;
-            nestedFunctions = f.nestedFunctions;
+            childNodes = (Object[])encodedSourcesTree;
+            source = (String)childNodes[0];
         }
 
+        if (source == null) { return; }
+
         int length = source.length();
+        if (length == 0) { return; }
 
         // Spew tokens in source, for debugging.
         // as TYPE number char
@@ -1649,65 +1646,63 @@ class Parser {
             System.err.println();
         }
 
+        if (type != NESTED_FUNCTION) {
+            // add an initial newline to exactly match js.
+            if (!justbody)
+                result.append('\n');
+            for (int j = 0; j < indent; j++)
+                result.append(' ');
+        }
+
         int i = 0;
 
-        if (length != 0) {
-            // If the first token is TokenStream.SCRIPT, then we're
-            // decompiling the toplevel script, otherwise it a function
-            // and should start with TokenStream.FUNCTION
+        // If the first token is TokenStream.SCRIPT, then we're
+        // decompiling the toplevel script, otherwise it a function
+        // and should start with TokenStream.FUNCTION
 
-            if (type != NESTED_FUNCTION) {
-                // add an initial newline to exactly match js.
-                if (!justbody)
-                    result.append('\n');
-                for (int j = 0; j < indent; j++)
-                    result.append(' ');
-            }
+        int token = source.charAt(i);
+        ++i;
+        if (token == TokenStream.FUNCTION) {
+            if (!justbody) {
+                result.append("function ");
 
-            int token = source.charAt(i);
-            ++i;
-            if (token == TokenStream.FUNCTION) {
-                if (!justbody) {
-                    result.append("function ");
-
-                    /* version != 1.2 Function constructor behavior -
-                     * print 'anonymous' as the function name if the
-                     * version (under which the function was compiled) is
-                     * less than 1.2... or if it's greater than 1.2, because
-                     * we need to be closer to ECMA.  (ToSource, please?)
-                     */
-                    if (source.charAt(i) == TokenStream.LP
-                        && version != Context.VERSION_1_2
-                        && type == CONSTRUCTED_FUNCTION)
-                    {
-                        result.append("anonymous");
-                    }
-                } else {
-                    // Skip past the entire function header pass the next EOL.
-                    skipLoop: for (;;) {
-                        token = source.charAt(i);
-                        ++i;
-                        switch (token) {
-                            case TokenStream.EOL:
-                                break skipLoop;
-                            case TokenStream.NAME:
-                                // Skip function or argument name
-                                i = Parser.getSourceString(source, i, null);
-                                break;
-                            case TokenStream.LP:
-                            case TokenStream.COMMA:
-                            case TokenStream.RP:
-                                break;
-                            default:
-                                // Bad function header
-                                throw new RuntimeException();
-                        }
+                /* version != 1.2 Function constructor behavior -
+                 * print 'anonymous' as the function name if the
+                 * version (under which the function was compiled) is
+                 * less than 1.2... or if it's greater than 1.2, because
+                 * we need to be closer to ECMA.  (ToSource, please?)
+                 */
+                if (source.charAt(i) == TokenStream.LP
+                    && version != Context.VERSION_1_2
+                    && type == CONSTRUCTED_FUNCTION)
+                {
+                    result.append("anonymous");
+                }
+            } else {
+                // Skip past the entire function header pass the next EOL.
+                skipLoop: for (;;) {
+                    token = source.charAt(i);
+                    ++i;
+                    switch (token) {
+                        case TokenStream.EOL:
+                            break skipLoop;
+                        case TokenStream.NAME:
+                            // Skip function or argument name
+                            i = Parser.getSourceString(source, i, null);
+                            break;
+                        case TokenStream.LP:
+                        case TokenStream.COMMA:
+                        case TokenStream.RP:
+                            break;
+                        default:
+                            // Bad function header
+                            throw new RuntimeException();
                     }
                 }
-            } else if (token != TokenStream.SCRIPT) {
-                // Bad source header
-                throw new RuntimeException();
             }
+        } else if (token != TokenStream.SCRIPT) {
+            // Bad source header
+            throw new RuntimeException();
         }
 
         while (i < length) {
@@ -1780,14 +1775,14 @@ class Parser {
 
                 ++i;
                 int functionNumber = source.charAt(i);
-                if (nestedFunctions == null
-                    || functionNumber > nestedFunctions.length)
+                if (childNodes == null
+                    || functionNumber + 1 > childNodes.length)
                 {
                     throw Context.reportRuntimeError(Context.getMessage1
                         ("msg.no.function.ref.found",
                          new Integer(functionNumber)));
                 }
-                decompile_r(nestedFunctions[functionNumber], version,
+                decompile_r(childNodes[functionNumber + 1], version,
                             indent, NESTED_FUNCTION, false, srcData, result);
                 break;
             }

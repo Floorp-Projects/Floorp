@@ -64,6 +64,10 @@ final class InterpretedScript extends NativeScript
                                      this, itsData);
     }
 
+    protected Object getSourcesTree() {
+        return Interpreter.getSourcesTree(itsData);
+    }
+
     InterpreterData itsData;
 }
 

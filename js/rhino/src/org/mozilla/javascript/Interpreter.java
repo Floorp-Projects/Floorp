@@ -1508,6 +1508,21 @@ public class Interpreter {
         return presentLines.getKeys();
     }
 
+    static Object getSourcesTree(InterpreterData idata) {
+        InterpreterData[] nested = idata.itsNestedFunctions;
+        if (nested == null || nested.length == 0) {
+            return idata.itsSource;
+        } else {
+            int N = nested.length;
+            Object[] result = new Object[N + 1];
+            result[0] = idata.itsSource;
+            for (int i = 0; i != N; ++i) {
+                result[1 + i] = getSourcesTree(nested[i]);
+            }
+            return result;
+        }
+    }
+
     private static InterpretedFunction createFunction(Context cx,
                                                       Scriptable scope,
                                                       InterpreterData idata,

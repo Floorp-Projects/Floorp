@@ -42,7 +42,6 @@ import org.mozilla.javascript.*;
 import org.mozilla.classfile.*;
 import java.util.*;
 import java.io.IOException;
-import java.lang.reflect.*;
 
 /**
  * This class generates code for a given IR tree.
@@ -1174,19 +1173,6 @@ public class Codegen extends Interpreter {
                     "version", "S");
         }
 
-        // add the String representing the source.
-        String source = (String) tree.getProp(Node.SOURCE_PROP);
-        if ((source != null)
-                    && cx.isGeneratingSource()
-                        && (source.length() < 65536)) {
-            setNonTrivialInit(methodName);
-            addByteCode(ByteCode.ALOAD_0);
-            push(source);
-            classFile.add(ByteCode.PUTFIELD,
-                    "org/mozilla/javascript/NativeFunction",
-                    "source", "Ljava/lang/String;");
-        }
-
         // precompile all regexp literals
         ObjArray regexps = (ObjArray) tree.getProp(Node.REGEXP_PROP);
         if (regexps != null) {
@@ -1197,7 +1183,13 @@ public class Codegen extends Interpreter {
         ObjArray fns = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
         if (fns != null) {
             setNonTrivialInit(methodName);
-            generateFunctionInits(fns);
+            for (int i = 0; i != fns.size(); ++i) {
+                OptFunctionNode fn = (OptFunctionNode) fns.get(i);
+                Codegen codegen = new Codegen();
+                codegen.generateCode(fn, namesVector, classFilesVector,
+                                     itsNameHelper);
+                generateCreateFunction(fn);
+            }
         }
 
         if (tree instanceof OptFunctionNode) {
@@ -1221,6 +1213,58 @@ public class Codegen extends Interpreter {
         if (!trivialInit) {
             addByteCode(ByteCode.RETURN);
             finishMethod(cx, null);
+        }
+
+        // Add static method to return encoded source tree for decompilation
+        // which will be called from OptFunction/OptScrript.getSourcesTree
+        // via reflection. See NativeFunction.getSourcesTree for documentation.
+        // Note that nested function decompilation currently depends on the
+        // elements of the fns array being defined in source order.
+        // (per function/script, starting from 0.)
+        // Change Parser if changing ordering.
+
+        if (cx.isGeneratingSource()) {
+            String source = (String) tree.getProp(Node.SOURCE_PROP);
+            if (source != null && source.length() < 65536) {
+                short flags = ClassFileWriter.ACC_PUBLIC
+                            | ClassFileWriter.ACC_STATIC;
+                String getSourceMethodStr = "getSourcesTreeImpl";
+                classFile.startMethod(getSourceMethodStr,
+                                      "()Ljava/lang/Object;",
+                                      (short)flags);
+                if (fns == null) {
+                    // generate return <source-literal-string>;
+                    push(source);
+                } else {
+                    // generate with N = fns.size():
+                    // Object[] result = new Object[1 + N];
+                    // result[0] = <source-literal-string>
+                    // result[1] = Class1.getSourcesTreeImpl();
+                    // ...
+                    // result[N] = ClassN.getSourcesTreeImpl();
+                    // return result;
+                    push(1 + fns.size());
+                    addByteCode(ByteCode.ANEWARRAY, "java/lang/Object");
+                       addByteCode(ByteCode.DUP); // dup array reference
+                    push(0);
+                    push(source);
+                    addByteCode(ByteCode.AASTORE);
+                    for (int i = 0; i != fns.size(); ++i) {
+                        addByteCode(ByteCode.DUP); // dup array reference
+                        push(1 + i);
+
+                        OptFunctionNode fn = (OptFunctionNode) fns.get(i);
+                        classFile.add(ByteCode.INVOKESTATIC,
+                                      fn.getClassName(),
+                                      getSourceMethodStr,
+                                      "()",
+                                      "Ljava/lang/Object;");
+                        addByteCode(ByteCode.AASTORE);
+                    }
+                }
+                addByteCode(ByteCode.ARETURN);
+                classFile.stopMethod((short)0, null);
+            }
         }
     }
 
@@ -1267,42 +1311,6 @@ public class Codegen extends Interpreter {
         }
     }
 
-    private void generateFunctionInits(ObjArray fns) {
-        // make an array to put them in, so they're available
-        // for decompilation.
-        push(fns.size());
-        addByteCode(ByteCode.ANEWARRAY, "org/mozilla/javascript/NativeFunction");
-
-        /* note that nested function decompilation currently
-         * depends on the elements of the nestedFunctions array
-         * being defined in source order.  (per function/script,
-         * starting from 0.)  Change Parser and NativeFunction if
-         * changing ordering.
-         */
-
-        for (short i = 0; i < fns.size(); i++) {
-            addByteCode(ByteCode.DUP); // make another reference to the array
-            push(i);            // to set up for aastore at end of loop
-
-            OptFunctionNode fn = (OptFunctionNode) fns.get(i);
-            Codegen codegen = new Codegen();
-            codegen.generateCode(fn, namesVector, classFilesVector,
-                                 itsNameHelper);
-            generateCreateFunction(fn);
-            addByteCode(ByteCode.AASTORE);    // store NativeFunction
-                                              // instance to array
-        }
-
-        // add the array as the nestedFunctions field; array should
-        // still be on the stack.
-
-        addByteCode(ByteCode.ALOAD_0);  // load 'this'
-        addByteCode(ByteCode.SWAP);     // swap with original array reference
-
-        classFile.add(ByteCode.PUTFIELD, "org/mozilla/javascript/NativeFunction",
-                "nestedFunctions", "[Lorg/mozilla/javascript/NativeFunction;");
-    }
-
     // On exit it leaves on stack new function
     private void generateCreateFunction(OptFunctionNode fn) {
         String fnClassName = fn.getClassName();
@@ -1346,7 +1354,6 @@ public class Codegen extends Interpreter {
                             +"Ljava/lang/String;"
                             +"Z)",
                             "V");
-
     }
 
 

@@ -38,6 +38,8 @@
 
 package org.mozilla.javascript;
 
+import java.lang.reflect.Method;
+
 /**
  * This class implements the Function native object.
  * See ECMA 15.3.
@@ -55,10 +57,12 @@ public class NativeFunction extends BaseFunction {
      */
 
     public String decompile(Context cx, int indent, boolean justbody) {
-        if (source == null) {
+        Object sourcesTree = getSourcesTree();
+        if (sourcesTree == null) {
             return super.decompile(cx, indent, justbody);
         } else {
-            return Parser.decompile(this, version, indent, justbody);
+            return Parser.decompile(sourcesTree, fromFunctionConstructor,
+                                    version, indent, justbody);
         }
     }
 
@@ -95,6 +99,29 @@ public class NativeFunction extends BaseFunction {
     }
 
     /**
+     * Get encoded source as tree where node data encodes source of single
+     * function as String. If node is String, it is leaf and its data is node
+     * itself. Otherwise node is Object[] array, where array[0] holds node data
+     * and array[1..array.length) holds child nodes.
+     */
+    protected Object getSourcesTree() {
+        // The following is used only by optimizer, but is here to avoid
+        // introduction of 2 additional classes there
+        Class cl = getClass();
+        try { 
+            Method m = cl.getDeclaredMethod("getSourcesTreeImpl", 
+                                            new Class[0]);
+            return m.invoke(null, ScriptRuntime.emptyArgs);
+        } catch (NoSuchMethodException ex) { 
+            // No source implementation
+            return null;
+        } catch (Exception ex) {
+            // Wrap the rest of exceptions including possible SecurityException
+            throw WrappedException.wrapException(ex);
+        }
+    }
+
+    /**
      * The "argsNames" array has the following information:
      * argNames[0] through argNames[argCount - 1]: the names of the parameters
      * argNames[argCount] through argNames[args.length-1]: the names of the
@@ -109,18 +136,5 @@ public class NativeFunction extends BaseFunction {
      * constructor
      */
     boolean fromFunctionConstructor;
-
-    /**
-     * An encoded representation of the function source, for
-     * decompiling.  Needs to be visible (only) to generated
-     * subclasses of NativeFunction.
-     */
-    protected String source;
-
-    /**
-     * An array of NativeFunction values for each nested function.
-     * Used only for decompiling of nested functions.
-     */
-    public NativeFunction[] nestedFunctions;
 }
 

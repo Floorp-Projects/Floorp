@@ -46,7 +46,6 @@ final class InterpretedFunction extends NativeFunction
     InterpretedFunction(Context cx, InterpreterData theData) {
         itsData = theData;
         functionName = itsData.itsName;
-        source = itsData.itsSource;
         version = (short)cx.getLanguageVersion();
         argNames = itsData.argNames;
         argCount = (short)itsData.argCount;
@@ -59,6 +58,10 @@ final class InterpretedFunction extends NativeFunction
         return Interpreter.interpret(cx, scope, thisObj,
                                      args, null, 0, args.length,
                                      this, itsData);
+    }
+
+    protected Object getSourcesTree() {
+        return Interpreter.getSourcesTree(itsData);
     }
 
     InterpreterData itsData;
