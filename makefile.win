@@ -34,6 +34,8 @@ NECKO=1
 
 DEPTH=.
 
+include <$(DEPTH)\config\config.mak>
+
 #//------------------------------------------------------------------------
 #//
 #// Specify any "command" targets. (ie. DIRS, INSTALL_FILES, ...)
