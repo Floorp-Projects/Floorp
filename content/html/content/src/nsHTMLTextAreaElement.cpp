@@ -25,7 +25,7 @@
 #include "nsEditorController.h"
 #include "nsRDFCID.h"
 #include "nsCOMPtr.h"
-#include "nsComponentManager.h"
+#include "nsIComponentManager.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
