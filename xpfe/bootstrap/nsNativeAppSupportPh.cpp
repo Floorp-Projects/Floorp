@@ -140,35 +140,34 @@ nsSplashScreenPh::Show()
 			sprintf( splash_path, "%s/splash.bmp", splash );
       if( ( img = PxLoadImage( splash_path, NULL ) ) != NULL )
       {
-        PtArg_t     arg[6];
-        PhPoint_t   pos;
+       PtArg_t     arg[10];
+       PhPoint_t   pos;
 
-          img->flags = img->flags | Ph_RELEASE_IMAGE_ALL;
+      img->flags = img->flags | Ph_RELEASE_IMAGE_ALL;
 
-          pos.x = (aWidth/2)  - (img->size.w/2);
-          pos.y = (aHeight/2) - (img->size.h/2);
+      pos.x = (aWidth/2)  - (img->size.w/2);
+      pos.y = (aHeight/2) - (img->size.h/2);
 
-          pos.x += console.ul.x;
-          pos.y += console.ul.y;
+      pos.x += console.ul.x;
+      pos.y += console.ul.y;
 
-          PtSetArg( &arg[n], Pt_ARG_DIM, &img->size, 0 );
-          PtSetArg( &arg[++n], Pt_ARG_POS, &pos, 0 );
-          PtSetArg( &arg[++n], Pt_ARG_WINDOW_RENDER_FLAGS, 0, 0xFFFFFFFF );
-          PtSetArg( &arg[++n], Pt_ARG_FILL_COLOR, Pg_BLACK, 0 );
-          PtSetArg( &arg[++n], Pt_ARG_WINDOW_MANAGED_FLAGS, Ph_WM_CLOSE | Ph_WM_TOFRONT | Ph_WM_TOBACK | Ph_WM_MOVE, ~0 );
-          PtSetArg( &arg[++n], Pt_ARG_WINDOW_MANAGED_FLAGS, Ph_WM_RESIZE, ~0 );
-          mDialog = PtCreateWidget( PtWindow, NULL, n, arg );
+      PtSetArg( &arg[n++], Pt_ARG_DIM, &img->size, 0 );
+      PtSetArg( &arg[n++], Pt_ARG_POS, &pos, 0 );
+      PtSetArg( &arg[n++], Pt_ARG_WINDOW_RENDER_FLAGS, 0, 0xFFFFFFFF );
+      PtSetArg( &arg[n++], Pt_ARG_FILL_COLOR, Pg_BLACK, 0 );
+      PtSetArg( &arg[n++], Pt_ARG_WINDOW_MANAGED_FLAGS, Ph_WM_CLOSE | Ph_WM_TOFRONT | Ph_WM_TOBACK | Ph_WM_MOVE | Ph_WM_RESIZE, ~0 );
+      mDialog = PtCreateWidget( PtWindow, NULL, n, arg );
 
-          n=0;	
-          PtSetArg( &arg[n], Pt_ARG_LABEL_TYPE, Pt_IMAGE, 0 );
-          PtSetArg( &arg[++n], Pt_ARG_LABEL_DATA, img, sizeof(PhImage_t) );
-          PtSetArg( &arg[++n], Pt_ARG_BASIC_FLAGS, 0, 0xFFFFFFFF );
-          PtSetArg( &arg[++n], Pt_ARG_FLAGS, 0, Pt_HIGHLIGHTED);
-          PtSetArg( &arg[++n], Pt_ARG_MARGIN_HEIGHT, 0, 0);
-          PtSetArg( &arg[++n], Pt_ARG_MARGIN_WIDTH, 0, 0);
-          PtCreateWidget( PtLabel, mDialog, n, arg );
-          PtRealizeWidget( mDialog );
-          PtFlush();
+      n=0;
+      pos.x = pos.y = 0;
+      PtSetArg( &arg[n++], Pt_ARG_POS, &pos, 0 );
+      PtSetArg( &arg[n++], Pt_ARG_LABEL_TYPE, Pt_IMAGE, 0 );
+      PtSetArg( &arg[n++], Pt_ARG_LABEL_DATA, img, sizeof(PhImage_t) );
+      PtSetArg( &arg[n++], Pt_ARG_MARGIN_HEIGHT, 0, 0);
+      PtSetArg( &arg[n++], Pt_ARG_MARGIN_WIDTH, 0, 0);
+      PtCreateWidget( PtLabel, mDialog, n, arg );
+      PtRealizeWidget( mDialog );
+      PtFlush();
       }
    }
    else
