@@ -230,6 +230,8 @@ private:
   PRInt8        mNumBytesPixel;
   PRUint8       mFlags;             // flags set by ImageUpdated
   PRInt8        mDepth;             // bits per pixel
+
+  PRPackedBool  mOptimized;
 };
 
 #endif

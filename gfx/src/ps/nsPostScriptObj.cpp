@@ -2491,6 +2491,7 @@ PRInt32 sRow, eRow, rStep;
   fprintf(mPrintContext->prSetup->out, " { currentfile rowdata readhexstring pop }\n");
   fprintf(mPrintContext->prSetup->out, " image\n");
 
+  aImage->LockImagePixels(PR_FALSE);
   theBits = aImage->GetBits();
   n = 0;
   if ( ( isTopToBottom = aImage->GetIsRowOrderTopToBottom()) == PR_TRUE ) {
@@ -2519,6 +2520,7 @@ PRInt32 sRow, eRow, rStep;
     if ( isTopToBottom == PR_TRUE && y < eRow ) break;
     if ( isTopToBottom == PR_FALSE && y >= eRow ) break;
   }
+  aImage->UnlockImagePixels(PR_FALSE);
 
   fprintf(mPrintContext->prSetup->out, "\ngrestore\n");
   XL_RESTORE_NUMERIC_LOCALE();
@@ -2568,6 +2570,7 @@ PRInt32 sRow, eRow, rStep;
   fprintf(mPrintContext->prSetup->out, " { currentfile rowdata readhexstring pop }\n");
   fprintf(mPrintContext->prSetup->out, " false 3 colorimage\n");
 
+  aImage->LockImagePixels(PR_FALSE);
   theBits = aImage->GetBits();
   n = 0;
   if ( ( isTopToBottom = aImage->GetIsRowOrderTopToBottom()) == PR_TRUE ) {
@@ -2595,6 +2598,7 @@ PRInt32 sRow, eRow, rStep;
     if ( isTopToBottom == PR_TRUE && y < eRow ) break;
     if ( isTopToBottom == PR_FALSE && y >= eRow ) break;
   }
+  aImage->UnlockImagePixels(PR_FALSE);
 
   fprintf(mPrintContext->prSetup->out, "\ngrestore\n");
   XL_RESTORE_NUMERIC_LOCALE();
