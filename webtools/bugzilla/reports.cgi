@@ -268,32 +268,21 @@ FIN
     my $query;
     $query = <<FIN;
 select 
-    bugs.bug_id, bugs.assigned_to, bugs.bug_severity,
-    bugs.bug_status, bugs.product, 
+    bugs.bug_id,
+    bugs.bug_status,
     assign.login_name,
-    report.login_name,
     unix_timestamp(date_format(bugs.creation_ts, '%Y-%m-%d %h:%m:%s'))
 
 from   bugs,
-       profiles assign,
-       profiles report,
-       versions projector
+       profiles assign
 where  bugs.assigned_to = assign.userid
-and    bugs.reporter = report.userid
 FIN
 
     if ($FORM{'product'} ne "-All-" ) {
         $query .= "and    bugs.product=".SqlQuote($FORM{'product'});
     }
 
-    $query .= <<FIN;
-and      
-    ( 
-    bugs.bug_status = 'NEW' or 
-    bugs.bug_status = 'ASSIGNED' or 
-    bugs.bug_status = 'REOPENED'
-    )
-FIN
+    $query .= "AND bugs.bug_status IN ('NEW', 'ASSIGNED', 'REOPENED')";
 # End build up $query string
 
     print "<font color=purple><tt>$query</tt></font><p>\n" 
@@ -318,7 +307,7 @@ FIN
     #############################
 
     my $week = 60 * 60 * 24 * 7;
-    while (my ($bid, $a, $sev, $st, $prod, $who, $rep, $ts) = FetchSQLData()) {
+    while (my ($bid, $st, $who, $ts) = FetchSQLData()) {
         next if (exists $bugs_lookup{$bid});
         
         $bugs_lookup{$bid} ++;
