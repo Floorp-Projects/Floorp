@@ -72,4 +72,17 @@ public:
   NS_IMETHOD GetAccState(PRUint32 *aState); 
 };
 
+class nsHTMLLabelAccessible : public nsTextAccessible 
+{
+
+public:
+  nsHTMLLabelAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccName(nsAString& _retval);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval); 
+  NS_IMETHOD GetAccFirstChild(nsIAccessible **aAccFirstChild);
+  NS_IMETHOD GetAccLastChild(nsIAccessible **aAccLastChild);
+  NS_IMETHOD GetAccChildCount(PRInt32 *aAccChildCount);
+};
+
 #endif  

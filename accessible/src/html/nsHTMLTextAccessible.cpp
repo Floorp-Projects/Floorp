@@ -97,3 +97,59 @@ NS_IMETHODIMP nsHTMLBlockAccessible::GetAccState(PRUint32 *aState)
   *aState &= ~STATE_FOCUSABLE;
   return NS_OK;
 }
+
+nsHTMLLabelAccessible::nsHTMLLabelAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
+nsTextAccessible(aDomNode, aShell)
+{ 
+}
+
+NS_IMETHODIMP nsHTMLLabelAccessible::GetAccName(nsAString& aReturn)
+{ 
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+
+  nsAutoString name;
+  if (content)
+    rv = AppendFlatStringFromSubtree(content, &name);
+
+  if (NS_SUCCEEDED(rv)) {
+    // Temp var needed until CompressWhitespace built for nsAString
+    name.CompressWhitespace();
+    aReturn = name;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsHTMLLabelAccessible::GetAccRole(PRUint32 *aRole)
+{
+  *aRole = ROLE_STATICTEXT;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLLabelAccessible::GetAccState(PRUint32 *aState)
+{
+  nsTextAccessible::GetAccState(aState);
+  *aState &= (STATE_LINKED|STATE_TRAVERSED);  // Only use link states
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLLabelAccessible::GetAccFirstChild(nsIAccessible **aAccFirstChild) 
+{  
+  // A <label> is not necessarily a leaf!
+  return nsAccessible::GetAccFirstChild(aAccFirstChild);
+}
+
+  /* readonly attribute nsIAccessible accFirstChild; */
+NS_IMETHODIMP nsHTMLLabelAccessible::GetAccLastChild(nsIAccessible **aAccLastChild)
+{  
+  // A <label> is not necessarily a leaf!
+  return nsAccessible::GetAccLastChild(aAccLastChild);
+}
+
+/* readonly attribute long accChildCount; */
+NS_IMETHODIMP nsHTMLLabelAccessible::GetAccChildCount(PRInt32 *aAccChildCount) 
+{
+  // A <label> is not necessarily a leaf!
+  return nsAccessible::GetAccChildCount(aAccChildCount);
+}
