@@ -30,7 +30,9 @@
 
 #include "PascalString.h"
 #include "CWindowMediator.h"
+#ifndef MOZ_NGLAYOUT
 #include "CSimpleTextView.h"
+#endif
 
 class LTextEngine;
 class LStdPopupMenu;
@@ -169,7 +171,9 @@ void SetEnable( LPane* button, Boolean enable );
 void CreateMenuString( CStr255& itemName );
 
 // ¥ converts TextEdit handle to text handle that has hard carriage returns. 
+#ifndef MOZ_NGLAYOUT
 Handle TextHandleToHardLineBreaks(CSimpleTextView &inTextView);
+#endif
 
 // ¥Êsets the number of entries in popup to be shouldBe
 void SetMenuSize( LStdPopupMenu* popup, short shouldBe );
