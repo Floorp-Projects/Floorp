@@ -550,18 +550,24 @@ calendarManager.prototype.refreshAllRemoteCalendars = function calMan_refreshAll
 ** Otherwise, returns false.
 */
 
-calendarManager.prototype.isURLAlreadySubscribed = function calMan_isCalendarSubscribed( CalendarURL )
+calendarManager.prototype.isURLAlreadySubscribed = function calMan_isCalendarSubscribed( CalendarURI )
 {
-   CalendarURL = CalendarURL.replace( "webcal:", "http:" );
+   CalendarURL = CalendarURI.spec.replace( "webcal:", "http:" );
 
-   this.rdf.getRootContainers().length == 0
-      
-   for( var i = 0; i < this.rootContainer.getSubNodes().length; i++ )
+   var subNodes = this.rootContainer.getSubNodes();
+   for( var i = 0; i < subNodes.length; i++ )
    {
-      if( this.rootContainer.getSubNodes()[i].getAttribute( "http://home.netscape.com/NC-rdf#remotePath" ) == CalendarURL )
+      if( subNodes[i].getAttribute( "http://home.netscape.com/NC-rdf#remotePath" ) == CalendarURL )
       {
-         return( this.rootContainer.getSubNodes()[i] );
+         return( subNodes[i] );
       }
+   }
+   if( CalendarURI.scheme == "file" ) {
+     for( i = 0; i < subNodes.length; i++ ) {
+       if( makeURLFromPath( subNodes[i].getAttribute( "http://home.netscape.com/NC-rdf#path" ) ).equals( CalendarURI ) ) {
+         return( subNodes[i] );
+       }
+     }
    }
    return( false );
 }
@@ -575,7 +581,7 @@ calendarManager.prototype.isURLAlreadySubscribed = function calMan_isCalendarSub
 
 calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( Channel )
 {
-   var calendarSubscribed = this.isURLAlreadySubscribed( Channel.URI.spec );
+   var calendarSubscribed = this.isURLAlreadySubscribed( Channel.URI );
    
    if( calendarSubscribed === false )
    {
@@ -641,13 +647,12 @@ calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( C
    else
    {
       //calendarSubscribed is the subscribed calendar object.
-      if( calendarSubscribed.active == false )
-      {
-         calendarSubscribed.active = true;
+      if( calendarSubscribed.getAttribute( "http://home.netscape.com/NC-rdf#active" ) == "false" ) {
+         calendarSubscribed.setAttribute( "http://home.netscape.com/NC-rdf#active", "true" );
 
          this.addCalendar( calendarSubscribed );
       
-         document.getElementById( "calendar-list-item-"+calendarSubscribed.serverNumber ).setAttribute( "checked", "true" );
+         //document.getElementById( "calendar-list-item-"+calendarSubscribed.serverNumber ).setAttribute( "checked", "true" );
 
          refreshEventTree( getAndSetEventTable() );
 
@@ -860,6 +865,15 @@ calendarManager.prototype.getAndConvertAllOldCalendars = function calMan_getAllC
       prefService.getBranch( "calendar." ).clearUserPref( "servers.count" );
    } catch( e ) {
    }
+}
+
+function makeURLFromPath( path ) {
+  var localFile = Components.classes["@mozilla.org/file/local;1"].createInstance().
+                                    QueryInterface(Components.interfaces.nsILocalFile);
+  localFile.initWithPath( path );
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                 .getService(Components.interfaces.nsIIOService);
+  return ioService.newFileURI(localFile); 
 }
 
 /*
