@@ -3374,6 +3374,7 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
 void 
 HTMLContentSink::ProcessBaseHref(const nsString& aBaseHref)
 {
+#if 0
   //-- Make sure this page is allowed to load this URL
   nsresult rv;
   NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
@@ -3384,6 +3385,7 @@ HTMLContentSink::ProcessBaseHref(const nsString& aBaseHref)
   if (NS_FAILED(rv)) return;
   rv = securityManager->CheckLoadURI(mDocumentBaseURL, baseHrefURI, PR_FALSE);
   if (NS_FAILED(rv)) return;
+#endif
 
   if (nsnull == mBody) {  // still in real HEAD
     mHTMLDocument->SetBaseURL(aBaseHref);
