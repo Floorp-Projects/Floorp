@@ -222,7 +222,7 @@ DocObserver::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
 {
   fputs("[progress ", stdout);
   fputs(mURL, stdout);
-  printf(" %d %d %s]\n", aProgressMax, aProgressMax,
+  printf(" %d %d %s]\n", aProgress, aProgressMax,
          aMsg ? aMsg : "");
   return NS_OK;
 }
