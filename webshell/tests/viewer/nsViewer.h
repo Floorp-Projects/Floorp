@@ -48,25 +48,29 @@ public:
 
   // nsIDocumentObserver
   NS_IMETHOD SetTitle(const nsString& aTitle);
-  virtual void BeginUpdate() { }
-  virtual void EndUpdate() { }
-  virtual void ContentChanged(nsIContent* aContent,
-                              nsISupports* aSubContent) {}
-  virtual void ContentAppended(nsIContent* aContainer) { }
-  virtual void ContentInserted(nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer) { }
-  virtual void ContentReplaced(nsIContent* aContainer,
-                               nsIContent* aOldChild,
-                               nsIContent* aNewChild,
-                               PRInt32 aIndexInContainer) { }
-  virtual void ContentWillBeRemoved(nsIContent* aContainer,
-                                    nsIContent* aChild,
-                                    PRInt32 aIndexInContainer) { }
-  virtual void ContentHasBeenRemoved(nsIContent* aContainer,
-                                     nsIContent* aChild,
-                                     PRInt32 aIndexInContainer) { }
-  virtual void StyleSheetAdded(nsIStyleSheet* aStyleSheet) { }
+  NS_IMETHOD BeginUpdate();
+  NS_IMETHOD EndUpdate();
+  NS_IMETHOD BeginLoad();
+  NS_IMETHOD EndLoad();
+  NS_IMETHOD BeginReflow(nsIPresShell* aShell);
+  NS_IMETHOD EndReflow(nsIPresShell* aShell);
+  NS_IMETHOD ContentChanged(nsIContent* aContent,
+                            nsISupports* aSubContent);
+  NS_IMETHOD ContentAppended(nsIContent* aContainer);
+  NS_IMETHOD ContentInserted(nsIContent* aContainer,
+                             nsIContent* aChild,
+                             PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentReplaced(nsIContent* aContainer,
+                             nsIContent* aOldChild,
+                             nsIContent* aNewChild,
+                             PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentWillBeRemoved(nsIContent* aContainer,
+                                  nsIContent* aChild,
+                                  PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentHasBeenRemoved(nsIContent* aContainer,
+                                   nsIContent* aChild,
+                                   PRInt32 aIndexInContainer);
+  NS_IMETHOD StyleSheetAdded(nsIStyleSheet* aStyleSheet);
 
   // nsIStreamListener
   NS_IMETHOD GetBindInfo(void);

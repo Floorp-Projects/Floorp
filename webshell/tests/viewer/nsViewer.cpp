@@ -164,7 +164,7 @@ void OnLinkClickEvent::HandleEvent()
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENTOBSERVER_IID);
+static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMNOTIFICATION_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -208,6 +208,94 @@ NS_IMETHODIMP DocObserver::SetTitle(const nsString& aTitle)
       wd->windowWidget->SetTitle(aTitle);
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::BeginUpdate()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::EndUpdate()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::BeginLoad()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::EndLoad()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::BeginReflow(nsIPresShell* aShell)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::EndReflow(nsIPresShell* aShell)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::ContentChanged(nsIContent* aContent,
+                            nsISupports* aSubContent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::ContentAppended(nsIContent* aContainer)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::ContentInserted(nsIContent* aContainer,
+                             nsIContent* aChild,
+                             PRInt32 aIndexInContainer)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::ContentReplaced(nsIContent* aContainer,
+                             nsIContent* aOldChild,
+                             nsIContent* aNewChild,
+                             PRInt32 aIndexInContainer)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::ContentWillBeRemoved(nsIContent* aContainer,
+                                  nsIContent* aChild,
+                                  PRInt32 aIndexInContainer)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::ContentHasBeenRemoved(nsIContent* aContainer,
+                                   nsIContent* aChild,
+                                   PRInt32 aIndexInContainer)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocObserver::StyleSheetAdded(nsIStyleSheet* aStyleSheet)
+{
   return NS_OK;
 }
 
