@@ -141,6 +141,11 @@ function getProfileDir(folder, showPopup)
       detect = true;
     }
   }
+
+  //resize the parent window, because the native file path
+  //may require a window resize.
+  //comment this out for now, see bug #15825
+  //parent.sizeToContent();
 }
 
 function UseDefaultFolder()
@@ -154,4 +159,9 @@ function UseDefaultFolder()
   var text = document.createTextNode(bundle.GetStringFromName("defaultString"));
   span.appendChild(text);
   detect = false;
+
+  //resize the parent window, because switching to use the default
+  //may require a window resize.
+  //comment this out for now, see bug #15825
+  //parent.sizeToContent(); 
 }
