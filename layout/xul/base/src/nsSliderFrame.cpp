@@ -48,7 +48,7 @@
 #include "nsDocument.h"
 #include "nsTitledButtonFrame.h"
 #include "nsScrollbarButtonFrame.h"
-
+#include "nsIScrollbarListener.h"
 
 nsresult
 NS_NewSliderFrame ( nsIFrame** aNewFrame )
@@ -68,6 +68,7 @@ NS_NewSliderFrame ( nsIFrame** aNewFrame )
 
 
 nsSliderFrame::nsSliderFrame()
+:mScrollbarListener(nsnull), mCurPos(0)
 {
 }
 
@@ -455,6 +456,10 @@ nsSliderFrame::PageUpDown(nsIPresContext& aPresContext, nsIFrame* aThumbFrame, n
   // asking it for the current position and the page increment. If we are not in a scrollbar we will
   // get the values from our own node.
   nsIContent* scrollbar = GetScrollBar();
+  
+  if (mScrollbarListener)
+    mScrollbarListener->PagedUpDown(); // Let the listener decide our increment.
+
   nscoord pageIncrement = GetPageIncrement(scrollbar);
   PRInt32 curpos = GetCurrentPosition(scrollbar);
   SetCurrentPosition(aPresContext, scrollbar, aThumbFrame, curpos + change*pageIncrement);
@@ -516,6 +521,12 @@ nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
 
     // redraw just the change
     Invalidate(changeRect, PR_TRUE);
+
+    if (mScrollbarListener)
+      mScrollbarListener->PositionChanged(mCurPos, curpos);
+    
+    mCurPos = curpos;
+
 }
 
 void
@@ -527,6 +538,7 @@ nsSliderFrame::SetCurrentPosition(nsIPresContext& aPresContext, nsIContent* scro
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
    // get our current position and max position from our content node
+  PRInt32 curpos = GetCurrentPosition(scrollbar);
   PRInt32 maxpos = GetMaxPosition(scrollbar);
 
   // get the new position and make sure it is in bounds
@@ -540,6 +552,8 @@ nsSliderFrame::SetCurrentPosition(nsIPresContext& aPresContext, nsIContent* scro
 
   // set the new position
   scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, nsString(ch), PR_TRUE);
+
+  CurrentPositionChanged(&aPresContext);
 
   printf("Current Pos=%d\n",newpos);
   
@@ -758,4 +772,11 @@ NS_IMETHODIMP_(nsrefcnt)
 nsSliderFrame::Release(void)
 {
     return NS_OK;
+}
+
+void 
+nsSliderFrame::SetScrollbarListener(nsIScrollbarListener* aListener)
+{
+  // Don't addref/release this, since it's actually a frame.
+  mScrollbarListener = aListener;
 }
