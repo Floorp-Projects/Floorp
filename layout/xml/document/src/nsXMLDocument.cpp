@@ -326,10 +326,18 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 	PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
 	if(kNotFound != start)
 	{
-		 start += 8; // 8 = "charset=".length
-		 PRInt32 end = contentType.FindCharInSet(";\n\r ", start  );
-		 if(kNotFound == end )
-			 end = contentType.Length();
+    start += 8; // 8 = "charset=".length
+    PRInt32 end = 0;
+    if(PRUnichar('"') == contentType.CharAt(start)) {
+    	start++;
+    	end = contentType.FindCharInSet("\"", start  );
+      if(kNotFound == end )
+        end = contentType.Length();
+    } else {
+    	end = contentType.FindCharInSet(";\n\r ", start  );
+      if(kNotFound == end )
+        end = contentType.Length();
+    }
 		 nsAutoString theCharset;
 		 contentType.Mid(theCharset, start, end - start);
 		 nsICharsetAlias* calias = nsnull;
