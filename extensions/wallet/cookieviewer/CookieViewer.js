@@ -233,7 +233,10 @@ function ViewCookieSelected( e )
               : bundle.GetStringFromName("AtEndOfSession");
     } else {
       field = document.getElementById(rows[i]);
-      value = ( !selItemsMax ) ? props[i] : "";  // multiple selections clear fields.
+      value = props[i];
+    }
+    if (selItemsMax && rows[i] != "ifl_isDomain") {
+      value = ""; // clear field if multiple selections
     }
     field.setAttribute("value", value);
     if(rows[i] == "ifl_expires") break;
