@@ -565,7 +565,9 @@ nsDocLoaderImpl::LoadDocument(nsIURI * aUri,
       || nsCRT::strcasecmp(aUrlScheme, "mailbox") == 0
       || nsCRT::strcasecmp(aUrlScheme, "mailboxMessage") ==0
       || nsCRT::strcasecmp(aUrlScheme, "mailto") == 0
-      || nsCRT::strcasecmp(aUrlScheme, "http") == 0)
+      || nsCRT::strcasecmp(aUrlScheme, "http") == 0
+      || nsCRT::strcasecmp(aUrlScheme, "chrome") == 0
+      || nsCRT::strcasecmp(aUrlScheme, "res") == 0)
     {
       nsCOMPtr<nsISupports> aOpenContext = do_QueryInterface(mLoadGroup);
 
