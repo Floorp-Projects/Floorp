@@ -183,7 +183,8 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
         aEditorShell->InsertText(aPrefix.GetUnicode());
     }
 
-    aEditorShell->InsertAsQuotation(aBuf.GetUnicode());
+    if (aBuf != "")
+      aEditorShell->InsertAsQuotation(aBuf.GetUnicode());
 
     if (aSignature != "")
     {
@@ -194,13 +195,15 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
   {
     if (aHTMLEditor)
     {
-      aEditorShell->InsertSource(aBuf.GetUnicode());
+      if (aBuf != "")
+        aEditorShell->InsertSource(aBuf.GetUnicode());
       if (aSignature != "")
         aEditorShell->InsertSource(aSignature.GetUnicode());
     }
     else
     {
-      aEditorShell->InsertText(aBuf.GetUnicode());
+      if (aBuf != "")
+        aEditorShell->InsertText(aBuf.GetUnicode());
       if (aSignature != "")
         aEditorShell->InsertText(aSignature.GetUnicode());
     }
