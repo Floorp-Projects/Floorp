@@ -30,6 +30,7 @@ $DEBUG = 1;
 $ALIAS_SYM_FILES = $DEBUG;
 $CLOBBER_LIBS = 1;			# turn on to clobber existing libs and .xSYM files before
 							# building each project
+$CARBON = 0;				# turn on to build with TARGET_CARBON
 							
 # The following two options will delete all files, but leave the directory structure intact.
 $CLOBBER_DIST_ALL = 0;      # turn on to clobber all aliases/files inside dist (headers/xsym/libs)
