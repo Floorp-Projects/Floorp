@@ -615,7 +615,7 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLUListElement(aResult, aAtom);
     break;
   case eHTMLTag_wbr:
-    rv = NS_NewHTMLWordBreak(aResult, aAtom);/* XXX old style */
+    rv = NS_NewHTMLWBRElement(aResult, aAtom);
     break;
   }
   return rv;
