@@ -11,7 +11,8 @@
 <!ENTITY replyTo.label "Reply-to Address:">
 <!ENTITY organization.label "Organization:">
 <!ENTITY signature.label "Attach this signature">
-<!ENTITY editSignature.label "Edit...">
+<!ENTITY edit.label "Edit...">
+<!ENTITY choose.label "Choose...">
 <!-- LOCALIZATION NOTE (editVCard.label) : do not translate "vCard" in below line -->
 <!ENTITY editVCard.label "Edit vCard...">
 <!ENTITY sampleSig1.label "Sample Signature 1">

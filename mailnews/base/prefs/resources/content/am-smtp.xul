@@ -4,8 +4,10 @@
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-advanced.dtd" >
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      align="vertical">
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	flex="100%"
+	class="dialog"
+	align="vertical">
 
 <html:div>&smtpServer.label;</html:div>
 <html:div>&smtpDesc.label;</html:div>
