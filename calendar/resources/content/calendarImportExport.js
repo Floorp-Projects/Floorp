@@ -433,7 +433,7 @@ function saveDataToFile(aFilePath, aDataStream)
    outputStream = Components.classes[FILEOUT_CTRID].createInstance(nsIFileOutputStream);
    try
    {
-      outputStream.init(LocalFileInstance, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0664);
+      outputStream.init(LocalFileInstance, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0664, 0);
       outputStream.write(aDataStream, aDataStream.length);
       // outputStream.flush();
       outputStream.close();
