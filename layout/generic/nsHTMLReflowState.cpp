@@ -931,7 +931,23 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
 
   // The current coordinate space is that of the nearest block to the placeholder.
   // Convert to the coordinate space of the absolute containing block
-  nsPoint cbOffset = aBlockFrame->GetOffsetTo(cbrs->frame);
+  // One weird thing here is that for fixed-positioned elements we want to do
+  // the conversion incorrectly; specifically we want to ignore any scrolling
+  // that may have happened;
+  nsPoint cbOffset;
+  if (mStyleDisplay->mPosition == NS_STYLE_POSITION_FIXED) {
+    // In this case, cbrs->frame will always be an ancestor of aBlockFrame, so
+    // can just walk our way up the frame tree.
+    cbOffset.MoveTo(0, 0);
+    do {
+      cbOffset += aBlockFrame->GetPosition();
+      aBlockFrame = aBlockFrame->GetParent();
+      NS_ASSERTION(aBlockFrame,
+                   "Should hit cbrs->frame before we run off the frame tree!");
+    } while (aBlockFrame != cbrs->frame);
+  } else {
+    cbOffset = aBlockFrame->GetOffsetTo(cbrs->frame);
+  }
   aHypotheticalBox.mLeft += cbOffset.x;
   aHypotheticalBox.mTop += cbOffset.y;
   aHypotheticalBox.mRight += cbOffset.x;
