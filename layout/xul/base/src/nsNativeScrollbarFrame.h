@@ -91,8 +91,6 @@ protected:
   nsresult FindScrollbar(nsIFrame* start, nsIFrame** outFrame, nsIContent** outContent);
   
   PRBool IsVertical() const { return mIsVertical; }
-  void ConvertToWidgetCoordinates(nsIPresContext* inPresContext, const nsRect & inRect, 
-                                    nsRect & outAdjustedRect);
                   
 private:
 

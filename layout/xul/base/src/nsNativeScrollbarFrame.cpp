@@ -47,6 +47,7 @@
 #include "nsINativeScrollbar.h"
 #include "nsIScrollbarFrame.h"
 #include "nsIScrollbarMediator.h"
+#include "nsWidgetsCID.h"
 
 
 //
@@ -97,8 +98,7 @@ nsNativeScrollbarFrame::~nsNativeScrollbarFrame ( )
 //
 // Init
 //
-// Pass along to our parent, but also create the native widget that
-// we wrap. 
+// Pass along to our parent, but also create the native widget that we wrap. 
 //
 NS_IMETHODIMP
 nsNativeScrollbarFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
@@ -106,24 +106,28 @@ nsNativeScrollbarFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
 {
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  // create the native widget that we're wrapping, initialize and show it.
-  // Don't worry about sizing it, we'll do that later when we're reflowed.
-  mScrollbar = do_CreateInstance("@mozilla.org/widget/nativescrollbar;1", &rv);
-  NS_ASSERTION(mScrollbar, "Couldn't create native scrollbar!");
-  if ( mScrollbar ) {
-    nsCOMPtr<nsIWidget> parentWidget;
-    GetWindow(aPresContext, getter_AddRefs(parentWidget));
-    
-    nsCOMPtr<nsIDeviceContext> devContext;
-    aPresContext->GetDeviceContext(getter_AddRefs(devContext));
-    nsRect bounds(0,0,0,0);
-    rv = mScrollbar->Create(NS_STATIC_CAST(nsIWidget*,parentWidget), bounds, nsnull, devContext);
-    mScrollbar->Show(PR_TRUE);
-    
-    // defer telling the scrollbar about the mediator and the content
-    // node until its first reflow since not everything has been set
-    // by this point.
-    mScrollbarNeedsContent = PR_TRUE;
+  // create a view for this frame and then associate the view with the native
+  // scrollbar widget. The net result of this is that the view will automatically
+  // be resized and moved for us when things reflow, and the widget will follow
+  // suit. We don't have to lift a finger!
+  static NS_DEFINE_IID(kScrollbarCID,  NS_NATIVESCROLLBAR_CID);
+  if ( NS_SUCCEEDED(CreateViewForFrame(aPresContext, this, aContext, PR_TRUE)) ) {
+    nsIView* myView = nsnull;
+    GetView(aPresContext, &myView);
+    if ( myView ) {
+      nsWidgetInitData widgetData;
+      if ( NS_SUCCEEDED(myView->CreateWidget(kScrollbarCID, &widgetData, nsnull)) ) {
+        myView->GetWidget(*getter_AddRefs(mScrollbar));
+        NS_ASSERTION(mScrollbar, "Couldn't create native scrollbar!");
+        mScrollbar->Show(PR_TRUE);
+        mScrollbar->Enable(PR_TRUE);
+
+        // defer telling the scrollbar about the mediator and the content
+        // node until its first reflow since not everything has been set
+        // by this point.
+        mScrollbarNeedsContent = PR_TRUE;
+      }
+    }
   }
   
   return rv;
@@ -219,6 +223,7 @@ nsNativeScrollbarFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   
   PRInt32 narrowDimension = 0;
   nsCOMPtr<nsINativeScrollbar> native ( do_QueryInterface(mScrollbar) );
+  if ( !native ) return NS_ERROR_FAILURE;  
   native->GetNarrowSize(&narrowDimension);
   
   if ( IsVertical() )
@@ -233,19 +238,13 @@ nsNativeScrollbarFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 //
 // EndLayout
 //
-// Called when the box system is done moving us around. Move our associated widget
-// to match the bounds of the frame and, if necessary, finish initializing the
+// Called when the box system is done moving us around. If necessary, finish initializing the
 // widget.
 //
 NS_IMETHODIMP
 nsNativeScrollbarFrame::EndLayout(nsBoxLayoutState& aState)
 {
   nsresult rv = nsBoxFrame::EndLayout(aState);
-
-  nsRect adjustedRect;
-  ConvertToWidgetCoordinates(aState.GetPresContext(), mRect, adjustedRect);       // also converts twips->pixels
-  mScrollbar->Resize(adjustedRect.x, adjustedRect.y, adjustedRect.width,
-                          adjustedRect.height, PR_TRUE);
 
   // By now, we have both the content node for the scrollbar and the associated
   // scrollbar mediator (for outliner, if applicable). Hook up the scrollbar to
@@ -268,53 +267,3 @@ nsNativeScrollbarFrame::EndLayout(nsBoxLayoutState& aState)
   
   return rv;
 }
-
-
-//
-// ConvertToWidgetCoordinates
-//
-// Given a rect in frame coordinates (also in twips), convert to a rect (in pixels) that
-// is relative to the widget containing this frame. We have to go from the frame to the
-// closest view, then from the view to the closest widget.
-//
-void
-nsNativeScrollbarFrame::ConvertToWidgetCoordinates(nsIPresContext* inPresContext, const nsRect & inRect, 
-                                                    nsRect & outAdjustedRect)
-{
-  // Find offset from our view
-	nsIView *containingView = nsnull;
-	nsPoint	viewOffset(0,0);
-	GetOffsetFromView(inPresContext, viewOffset, &containingView);
-  NS_ASSERTION(containingView, "No containing view!");
-  if ( !containingView )
-    return;
-
-  // get the widget associated with the containing view. The offsets we get back
-  // are in twips.
-  nsCOMPtr<nsIWidget>	aWidget;
-  nscoord widgetOffsetX = 0, widgetOffsetY = 0;
-  containingView->GetOffsetFromWidget ( &widgetOffsetX, &widgetOffsetY, *getter_AddRefs(aWidget) );
-  if (aWidget) {
-		float t2p = 1.0;
-		inPresContext->GetTwipsToPixels(&t2p);
-
-    // GetOffsetFromWidget() actually returns the _parent's_ offset from its widget, so we
-    // still have to add in the offset to |containingView|'s parent ourselves.
-    nscoord viewOffsetToParentX = 0, viewOffsetToParentY = 0;
-    containingView->GetPosition ( &viewOffsetToParentX, &viewOffsetToParentY );
-
-    // Shift our offset point by offset into our view, the view's offset to its parent,
-    // and the parent's offset to the closest widget. Recall that everything that came from
-    // the view system is in twips and must be converted.
-    nsPoint widgetOffset(0,0);                                
-    widgetOffset.MoveBy (NSTwipsToIntPixels(widgetOffsetX + viewOffsetToParentX + viewOffset.x, t2p),
-                            NSTwipsToIntPixels(widgetOffsetY + viewOffsetToParentY + viewOffset.y, t2p) );
-
-    outAdjustedRect.x = NSTwipsToIntPixels(inRect.x,t2p);
-    outAdjustedRect.y = NSTwipsToIntPixels(inRect.y,t2p);
-    outAdjustedRect.MoveBy(widgetOffset.x, widgetOffset.y);
-    outAdjustedRect.SizeTo(NSTwipsToIntPixels(inRect.width,t2p), NSTwipsToIntPixels(inRect.height,t2p));
-  }
-
-} // ConvertToWidgetCoordinates
-

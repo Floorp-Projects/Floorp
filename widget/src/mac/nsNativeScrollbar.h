@@ -55,10 +55,6 @@ class StControlProcSingleton5;
 // with a stub gecko frame to scroll in the GFXScrollFrame mechanism
 //
 
-// {c2281100-3b4b-11d6-a384-f705fd0766fc}
-#define NS_NATIVESCROLLBAR_CID \
-{ 0xc2281100, 0x3b4b, 0x11d6, { 0xa3, 0x84, 0xf7, 0x05, 0xfd, 0x07, 0x66, 0xfc } }
-
 
 class nsNativeScrollbar : public nsMacControl, public nsINativeScrollbar
 {

@@ -77,3 +77,5 @@ WIDGET_ATOM(curpos, "curpos")
 WIDGET_ATOM(maxpos, "maxpos")
 WIDGET_ATOM(increment, "increment")
 WIDGET_ATOM(pageincrement, "pageincrement")
+WIDGET_ATOM(orient, "orient")
+
