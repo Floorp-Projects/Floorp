@@ -93,6 +93,7 @@ public:
   NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD SetDOMNode(nsIDOMNode * aMenuNode);
+  NS_IMETHOD GetDOMNode(nsIDOMNode ** aMenuNode);
   NS_IMETHOD SetDOMElement(nsIDOMElement * aMenuElement);
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
   NS_IMETHOD SetEnabled(PRBool aIsEnabled);

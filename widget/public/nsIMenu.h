@@ -174,6 +174,12 @@ class nsIMenu : public nsISupports {
     */
     NS_IMETHOD SetDOMNode(nsIDOMNode * aMenuNode) = 0;
 
+   /**
+    * Get DOMNode
+    *
+    */
+    NS_IMETHOD GetDOMNode(nsIDOMNode ** aMenuNode) = 0;
+    
 	/**
     * Set DOMElement
     *
