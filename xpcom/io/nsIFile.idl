@@ -54,6 +54,7 @@ interface nsIFile : nsISupports
      *      nsIFile.  
      */
     void append([const] in string node);
+    void appendUnicode([const] in wstring node);
 
     /**
      * Normalize the pathName (e.g. removing .. and . components on Unix).
@@ -87,6 +88,7 @@ interface nsIFile : nsISupports
      *   Accessor to the leaf name of the file itself. 
      */
     attribute string leafName;
+    attribute wstring unicodeLeafName;
     
     /**
      *  copyTo
@@ -111,6 +113,7 @@ interface nsIFile : nsISupports
      *
      */
     void copyTo(in nsIFile newParentDir, [const] in string newName);
+    void copyToUnicode(in nsIFile newParentDir, [const] in wstring newName);
      
     /**
      *  copyToFollowingLinks
@@ -119,6 +122,7 @@ interface nsIFile : nsISupports
      *  the name implies, follows symbolic links.
      */
     void copyToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
+    void copyToFollowingLinksUnicode(in nsIFile newParentDir, [const] in wstring newName);
     
     /**
      *  moveTo
@@ -145,6 +149,7 @@ interface nsIFile : nsISupports
      *
      */
     void moveTo(in nsIFile newParentDir, [const] in string newName);
+    void moveToUnicode(in nsIFile newParentDir, [const] in wstring newName);
 
     /**
      *  This will try to execute this file.  It will not block for
@@ -202,7 +207,9 @@ interface nsIFile : nsISupports
      */
 
     readonly attribute string target;
+    readonly attribute wstring unicodeTarget;
     readonly attribute string path;
+    readonly attribute wstring unicodePath;
     
     boolean exists();
     boolean isWritable();
