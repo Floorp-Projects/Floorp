@@ -17,7 +17,7 @@ Communications Corporation. Portions created by Netscape are
 Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
 
-Contributor(s): ______________________________________. -->
+Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
@@ -108,7 +108,15 @@ Contributor(s): ______________________________________. -->
 	             oncommand="BrowserChangeTextZoom(1);"/>
 	<broadcaster id="Browser:ReduceTextSize"
 	             oncommand="BrowserChangeTextZoom(-1);"/>
-
+	<broadcaster id="largestTextSizeCmd" value="&largestTextSizeCmd.label;"
+                                  accesskey="&largestTextSizeCmd.accesskey;" oncommand="BrowserChangeTextSize(5);"/>
+	<broadcaster id="largerTextSizeCmd" value="&largerTextSizeCmd.label;"
+                                  accesskey="&largerTextSizeCmd.accesskey;" oncommand="BrowserChangeTextSize(4);"/>
+	<broadcaster id="mediumTextSizeCmd" value="&mediumTextSizeCmd.label;"
+                                  accesskey="&mediumTextSizeCmd.accesskey;" oncommand="BrowserChangeTextSize(3);"/>
+	<broadcaster id="smallerTextSizeCmd" value="&smallerTextSizeCmd.label;"
+                                  accesskey="&smallerTextSizeCmd.accesskey;" oncommand="BrowserChangeTextSize(2);"/>
+	<broadcaster id="smallestTextSizeCmd" value="&smallestTextSizeCmd.label;"                                   accesskey="&smallestTextSizeCmd.accesskey;" oncommand="BrowserChangeTextSize(1);"/>
 	<broadcaster id="cmd_viewnavbar" type="checkbox" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
 	<broadcaster id="cmd_viewpersonaltoolbar" type="checkbox" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
 	<broadcaster id="cmd_viewtaskbar" type="checkbox" oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
@@ -195,16 +203,18 @@ Contributor(s): ______________________________________. -->
 		  		<menuitem value="&personalbarCmd.label;" observes="cmd_viewpersonaltoolbar" />
 		  		<menuitem value="&taskbarCmd.label;" observes="cmd_viewtaskbar" />
 		  	</menupopup>
-		  </menu>
-   
+	</menu>   
       <menuseparator />
-      <menuitem value="&enlargeTextSizeCmd.label;"
-        observes="Browser:EnlargeTextSize"/>
-        <!-- key="key_enlargeTextSize" -->
-      <menuitem value="&reduceTextSizeCmd.label;"
-        observes="Browser:ReduceTextSize"/>
+	<menu id="menu_TextSize_Popup" value="&textSizeMenu.label;"                                                                                                     accesskey="&textSizeMenu.accesskey;" oldsize="3">
+		<menupopup>
+			<menuitem type="radio" observes="largestTextSizeCmd"/>
+			<menuitem type="radio" observes="largerTextSizeCmd"/>
+			<menuitem type="radio" observes="mediumTextSizeCmd" checked="true"/>
+			<menuitem type="radio" observes="smallerTextSizeCmd"/>
+			<menuitem type="radio" observes="smallestTextSizeCmd"/>
+		</menupopup>
+	</menu>
         <!-- key="key_reduceTextSize" -->
-      <menuseparator />
       <menu value="&useStyleSheetMenu.label;" disabled="true" oncommand="BrowserReload();">
         <menupopup>
           <menuitem type="radio" name="stylesheet_group"
@@ -223,10 +233,9 @@ Contributor(s): ______________________________________. -->
         </menupopup>
       </menu>
       <menuseparator />
-      <menuitem  id="menuitem-reload" value="&reloadCmd.label;" observes="canReload" />
+      <menuitem id="menuitem-reload" value="&reloadCmd.label;" observes="canReload" />
       <menuitem value="&showImagesCmd.label;" disabled="true" oncommand="BrowserReload();"/>
-      <menuitem value="&stopCmd.label;" id="menuitem-stop" 
-        oncommand="BrowserStop();"/>
+      <menuitem value="&stopCmd.label;" id="menuitem-stop" oncommand="BrowserStop();"/>
       <menuseparator />
       <menuitem value="&pageSourceCmd.label;" oncommand="BrowserViewSource();"/>
       <menuitem value="&pageInfoCmd.label;" oncommand="BrowserPageInfo();"/>
