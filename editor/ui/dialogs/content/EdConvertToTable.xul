@@ -49,16 +49,21 @@
   <popupset id="aTooltipSet"/>
   <html flex="1">&instructions.label;</html>
   <radiogroup id="SepRadioGroup" orient="vertical" persist="index character" index="0" character="">
-    <radio group="SepRadioGroup" id="comma"    label="&commaRadio.label;"    oncommand="SelectCharacter('0');"/>
-    <radio group="SepRadioGroup" id="space"    label="&spaceRadio.label;"    oncommand="SelectCharacter('1');"/>
+    <radio group="SepRadioGroup" id="comma"   label="&commaRadio.label;" oncommand="SelectCharacter('0');"/>
+    <vbox>
+      <radio group="SepRadioGroup" id="space" label="&spaceRadio.label;" oncommand="SelectCharacter('1');"/>
+      <checkbox id="CollapseSpaces" label="&collapseSpaces.label;"
+        style="margin-left:2em" checked="true" persist="checked"
+        tooltip="aTooltip" tooltiptext="&collapseSpaces.tooltip;"/>
+    </vbox>
     <hbox autostretch="never">
-      <radio group="SepRadioGroup" id="other"  label="&otherRadio.label;"    oncommand="SelectCharacter('2');"/>
+      <radio group="SepRadioGroup" id="other" label="&otherRadio.label;" oncommand="SelectCharacter('2');"/>
       <textbox class="narrow" id="SepCharacterInput" oninput="InputSepCharacter()"/>
     </hbox>
   </radiogroup> 
   <spring class="spacer"/>
-  <checkbox id="DeleteSepCharacter" label="&deleteCharCheck.label;" oncommand="SelectCharacter('1');"/>
+  <checkbox id="DeleteSepCharacter" label="&deleteCharCheck.label;" checked="true" persist="checked"/>
   <separator class="groove"/>
   <!-- from global dialogOverlay -->
-  <hbox id="okCancelButtons"/>
+  <hbox id="okCancelButtonsRight"/>
 </window>

@@ -39,12 +39,10 @@ function Startup()
   dialog.sepRadioGroup      = document.getElementById("SepRadioGroup");
   dialog.sepCharacterInput  = document.getElementById("SepCharacterInput");
   dialog.deleteSepCharacter = document.getElementById("DeleteSepCharacter");
-  
+  dialog.collapseSpaces     = document.getElementById("CollapseSpaces");
+
   // We persist the user's separator character
   dialog.sepCharacterInput.value = dialog.sepRadioGroup.getAttribute("character");
-
-  // Always default to deleting the separator character
-  dialog.deleteSepCharacter.checked = true;
 
   gIndex = dialog.sepRadioGroup.getAttribute("index");
 
@@ -62,7 +60,7 @@ function Startup()
       break;
   }
 
-  // Set initial enable state on character input
+  // Set initial enable state on character input and "collapse" checkbox
   SelectCharacter(gIndex);
 
   SetTextboxFocus(dialog.sepRadioGroup);
@@ -78,8 +76,8 @@ function InputSepCharacter()
   if (str.length > 1)
     str.slice(0,1);
 
-  // We can never allow tag delimeters for separator character
-  if (str == "<" || str == ">")
+  // We can never allow tag or entity delimeters for separator character
+  if (str == "<" || str == ">" || str == "&" || str == ";" || str == " ")
     str = "";
 
   dialog.sepCharacterInput.value = str;
@@ -89,6 +87,7 @@ function SelectCharacter(radioGroupIndex)
 {
   gIndex = radioGroupIndex;
   SetElementEnabledById("SepCharacterInput", gIndex == gOtherIndex);
+  SetElementEnabledById("CollapseSpaces", gIndex == gSpaceIndex);
 }
 
 function onOK()
@@ -129,7 +128,8 @@ function onOK()
   str = str.replace(/(<br>)+$/, "");
 
   // Reduce multiple internal <br> to just 1
-  str = str.replace(/(<br>)+/g, "<br>");
+  // TODO: Maybe add a checkbox to let user decide
+  //str = str.replace(/(<br>)+/g, "<br>");
 
   // Trim leading and trailing spaces
   str = str.replace(/^\s+|\s+$/, "");
@@ -209,9 +209,6 @@ function onOK()
   if (dialog.deleteSepCharacter.checked)
   {
     replaceString = "";
-    // Replace one or more adjacent spaces
-    if (sepCharacter == " ")
-      sepCharacter += "\+"; 
   }  
   else
   {
@@ -219,11 +216,26 @@ function onOK()
     //  so include it at start of string to replace
     replaceString = sepCharacter;
   }
+
   replaceString += "<td>"; 
 
   if (sepCharacter.length > 0)
   {
-    var pattern = new RegExp("\\" + sepCharacter, "g");
+    var tempStr = sepCharacter;
+    var regExpChars = ".!@#$%^&*-+[]{}\\\/";
+    if (regExpChars.indexOf(sepCharacter) >= 0)
+      tempStr = "\\" + sepCharacter;
+
+    if (gIndex == gSpaceIndex)
+    {
+      // If checkbox is checked, 
+      //   one or more adjacent spaces are one separator
+      if (dialog.collapseSpaces.checked)
+          tempStr = "\\s+"
+        else
+          tempStr = "\\s";
+    }
+    var pattern = new RegExp(tempStr, "g");
     str = str.replace(pattern, replaceString);
   }
 
@@ -310,7 +322,6 @@ function onOK()
         if (node2.nodeName.toLowerCase() == "td" ||
             node2.nodeName.toLowerCase() == "th")
         {
-          cellNode = node2;
           editorShell.editorSelection.collapse(node2, 0);
           break;
         }
