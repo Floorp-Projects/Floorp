@@ -43,13 +43,13 @@ WIDGET* SetGlobal(CString theName, CString theValue)
 	return w;
 }
 
-extern "C" __declspec(dllexport)
-char *GetGlobal(CString theName)
+__declspec(dllexport)
+CString GetGlobal(CString theName)
 {
 	WIDGET *w = findWidget(theName);
 
 	if (w)
-		return (char *) (LPCTSTR) w->value;
+		return (w->value);
 
 	return "";
 }
