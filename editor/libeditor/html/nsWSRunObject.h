@@ -81,7 +81,6 @@ class nsWSRunObject
     };
 
     // constructor / destructor -----------------------------------------------
-    nsWSRunObject(nsHTMLEditor *aEd);
     nsWSRunObject(nsHTMLEditor *aEd, nsIDOMNode *aNode, PRInt32 aOffset);
     ~nsWSRunObject();
     

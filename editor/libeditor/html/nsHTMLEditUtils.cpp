@@ -250,16 +250,6 @@ nsHTMLEditUtils::IsUnorderedList(nsIDOMNode *node)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// IsDefinitionList: true if node an html definition list
-//                  
-PRBool 
-nsHTMLEditUtils::IsDefinitionList(nsIDOMNode *node)
-{
-  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("dl"));
-}
-
-
-///////////////////////////////////////////////////////////////////////////
 // IsBlockquote: true if node an html blockquote node
 //                  
 PRBool 
@@ -286,16 +276,6 @@ PRBool
 nsHTMLEditUtils::IsAddress(nsIDOMNode *node)
 {
   return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("address"));
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// IsAnchor: true if node an html anchor node
-//                  
-PRBool 
-nsHTMLEditUtils::IsAnchor(nsIDOMNode *node)
-{
-  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("a"));
 }
 
 
@@ -348,17 +328,6 @@ nsHTMLEditUtils::IsDiv(nsIDOMNode *node)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// IsNormalDiv: true if node an html div node, without type = _moz
-//                  
-PRBool 
-nsHTMLEditUtils::IsNormalDiv(nsIDOMNode *node)
-{
-  if (IsDiv(node) && !nsTextEditUtils::HasMozAttr(node)) return PR_TRUE;
-  return PR_FALSE;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
 // IsMozDiv: true if node an html div node with type = _moz
 //                  
 PRBool 
@@ -402,26 +371,6 @@ nsHTMLEditUtils::IsMailCite(nsIDOMNode *node)
   }
 
   return PR_FALSE;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// IsTextarea: true if node is an html textarea node
-//                  
-PRBool 
-nsHTMLEditUtils::IsTextarea(nsIDOMNode *node)
-{
-  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("textarea"));
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// IsMap: true if node is an html map node
-//                  
-PRBool 
-nsHTMLEditUtils::IsMap(nsIDOMNode *node)
-{
-  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("map"));
 }
 
 
@@ -477,15 +426,6 @@ nsHTMLEditUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 
   return PR_FALSE;
 }
 
-
-PRBool 
-nsHTMLEditUtils::IsLeafNode(nsIDOMNode *aNode)
-{
-  if (!aNode) return PR_FALSE;
-  PRBool hasChildren = PR_FALSE;
-  aNode->HasChildNodes(&hasChildren);
-  return !hasChildren;
-}
 
 PRBool
 nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode * aNode)

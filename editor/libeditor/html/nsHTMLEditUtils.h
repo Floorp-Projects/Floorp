@@ -64,7 +64,6 @@ public:
   static PRBool IsList(nsIDOMNode *aNode);
   static PRBool IsOrderedList(nsIDOMNode *aNode);
   static PRBool IsUnorderedList(nsIDOMNode *aNode);
-  static PRBool IsDefinitionList(nsIDOMNode *aNode);
   static PRBool IsBlockquote(nsIDOMNode *aNode);
   static PRBool IsPre(nsIDOMNode *aNode);
   static PRBool IsAddress(nsIDOMNode *aNode);
@@ -73,15 +72,10 @@ public:
   static PRBool IsLink(nsIDOMNode *aNode);
   static PRBool IsNamedAnchor(nsIDOMNode *aNode);
   static PRBool IsDiv(nsIDOMNode *aNode);
-  static PRBool IsNormalDiv(nsIDOMNode *aNode);
   static PRBool IsMozDiv(nsIDOMNode *aNode);
   static PRBool IsMailCite(nsIDOMNode *aNode);
-  static PRBool IsTextarea(nsIDOMNode *aNode);
-  static PRBool IsMap(nsIDOMNode *aNode);
   static PRBool IsFormWidget(nsIDOMNode *aNode);
   static PRBool IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 *aOffset = 0);
-  
-  static PRBool IsLeafNode(nsIDOMNode *aNode);
   static PRBool SupportsAlignAttr(nsIDOMNode *aNode);
 
 };
