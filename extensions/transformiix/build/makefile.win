@@ -30,6 +30,9 @@ REQUIRES	= xpcom \
 		  content \
 		  xpconnect \
 		  js \
+		  htmlparser \
+		  webshell \
+		  docshell \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
