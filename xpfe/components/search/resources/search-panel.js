@@ -359,11 +359,13 @@ function doStop()
 		var priceProperty        = rdf.GetResource("http://home.netscape.com/NC-rdf#Price", true);
 		var availabilityProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#Availability", true);
 		var relevanceProperty    = rdf.GetResource("http://home.netscape.com/NC-rdf#Relevance", true);
+		var dateProperty         = rdf.GetResource("http://home.netscape.com/NC-rdf#Date", true);
 		var trueProperty         = rdf.GetLiteral("true");
 
 		var hasPriceFlag         = internetSearch.HasAssertion(searchResource, priceProperty, trueProperty, true);
 		var hasAvailabilityFlag  = internetSearch.HasAssertion(searchResource, availabilityProperty, trueProperty, true);
 		var hasRelevanceFlag     = internetSearch.HasAssertion(searchResource, relevanceProperty, trueProperty, true);
+		var hasDateFlag          = internetSearch.HasAssertion(searchResource, dateProperty, trueProperty, true);
 
 		if(hasPriceFlag == true)
 		{
@@ -381,6 +383,12 @@ function doStop()
 		if (hasAvailabilityFlag == true)
 		{
 			colNode = top.content.document.getElementById("AvailabilityColumn");
+			if (colNode)
+				colNode.removeAttribute("style", "width: 0; visibility: collapse;");
+		}
+		if (hasDateFlag == true)
+		{
+			colNode = top.content.document.getElementById("DateColumn");
 			if (colNode)
 				colNode.removeAttribute("style", "width: 0; visibility: collapse;");
 		}

@@ -278,6 +278,7 @@ static	PRBool				mEngineListBuilt;
 	static nsIRDFResource		*kNC_Banner;
 	static nsIRDFResource		*kNC_Site;
 	static nsIRDFResource		*kNC_Relevance;
+	static nsIRDFResource		*kNC_Date;
 	static nsIRDFResource		*kNC_RelevanceSort;
 	static nsIRDFResource		*kNC_PageRank;
 	static nsIRDFResource		*kNC_Engine;
@@ -385,6 +386,7 @@ nsIRDFResource			*InternetSearchDataSource::kNC_Banner;
 nsIRDFResource			*InternetSearchDataSource::kNC_Site;
 nsIRDFResource			*InternetSearchDataSource::kNC_Relevance;
 nsIRDFResource			*InternetSearchDataSource::kNC_RelevanceSort;
+nsIRDFResource			*InternetSearchDataSource::kNC_Date;
 nsIRDFResource			*InternetSearchDataSource::kNC_PageRank;
 nsIRDFResource			*InternetSearchDataSource::kNC_Engine;
 nsIRDFResource			*InternetSearchDataSource::kNC_Price;
@@ -440,6 +442,7 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI "Site",                &kNC_Site);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Relevance",           &kNC_Relevance);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Relevance?sort=true", &kNC_RelevanceSort);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Date",                &kNC_Date);
 		gRDFService->GetResource(NC_NAMESPACE_URI "PageRank",            &kNC_PageRank);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Engine",              &kNC_Engine);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Price",               &kNC_Price);
@@ -485,6 +488,7 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 		NS_IF_RELEASE(kNC_Site);
 		NS_IF_RELEASE(kNC_Relevance);
 		NS_IF_RELEASE(kNC_RelevanceSort);
+		NS_IF_RELEASE(kNC_Date);
 		NS_IF_RELEASE(kNC_PageRank);
 		NS_IF_RELEASE(kNC_Engine);
 		NS_IF_RELEASE(kNC_Price);
@@ -3398,6 +3402,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 	}
 
 	PRBool	hasPriceFlag = PR_FALSE, hasAvailabilityFlag = PR_FALSE, hasRelevanceFlag = PR_FALSE;
+	PRBool	hasDateFlag = PR_FALSE;
 	PRInt32	pageRank = 1;
 
 	// need to handle multiple <interpret> sections, per spec
@@ -3408,6 +3413,9 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		nsAutoString	relevanceStartStr, relevanceEndStr;
 		nsAutoString	bannerStartStr, bannerEndStr, skiplocalStr;
 		nsAutoString	priceStartStr, priceEndStr, availStartStr, availEndStr;
+		nsAutoString	dateStartStr, dateEndStr;
+		nsAutoString	nameStartStr, nameEndStr;
+		nsAutoString	emailStartStr, emailEndStr;
 		nsAutoString	browserResultTypeStr="result";		// default to "result"
 
 		// need an original copy of the HTML every time through the loop
@@ -3425,11 +3433,24 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			GetData(data, "interpret", interpretSectionNum, "bannerEnd", bannerEndStr);
 			GetData(data, "interpret", interpretSectionNum, "skiplocal", skiplocalStr);
 			skipLocalFlag = (skiplocalStr.EqualsIgnoreCase("true")) ? PR_TRUE : PR_FALSE;
+
+			// shopping channel support
 			GetData(data, "interpret", interpretSectionNum, "priceStart", priceStartStr);
 			GetData(data, "interpret", interpretSectionNum, "priceEnd", priceEndStr);
 			GetData(data, "interpret", interpretSectionNum, "availStart", availStartStr);
 			GetData(data, "interpret", interpretSectionNum, "availEnd", availEndStr);
 
+			// news channel support
+			GetData(data, "interpret", interpretSectionNum, "dateStart", dateStartStr);
+			GetData(data, "interpret", interpretSectionNum, "dateEnd", dateEndStr);
+
+			// people channel support
+			GetData(data, "interpret", interpretSectionNum, "nameStart", nameStartStr);
+			GetData(data, "interpret", interpretSectionNum, "nameEnd", nameEndStr);
+			GetData(data, "interpret", interpretSectionNum, "emailStart", emailStartStr);
+			GetData(data, "interpret", interpretSectionNum, "emailEnd", emailEndStr);
+
+			// special browser support
 			GetData(data, "interpret", interpretSectionNum, "browserResultType", browserResultTypeStr);
 			if (browserResultTypeStr.Length() < 1)
 			{
@@ -3493,7 +3514,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		if (resultItemEndStr.Length() < 1)
 		{
 			resultItemEndStr = resultItemStartStr;
-			trimItemEnd = PR_FALSE;
+			trimItemEnd = PR_TRUE;
 		}
 
 		while(PR_TRUE)
@@ -3518,19 +3539,17 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			{
 				resultItemEnd = htmlResults.Length()-1;
 			}
+			else if ((trimItemEnd == PR_FALSE) && (resultItemEnd >= 0))
+			{
+				resultItemEnd += resultItemEndStr.Length();
+			}
 
 			nsAutoString	resultItem;
 			htmlResults.Left(resultItem, resultItemEnd);
 
 			if (resultItem.Length() < 1)	break;
-			if (trimItemEnd == PR_TRUE)
-			{
-				htmlResults.Cut(0, resultItemEnd + resultItemEndStr.Length());
-			}
-			else
-			{
-				htmlResults.Cut(0, resultItemEnd);
-			}
+
+			htmlResults.Cut(0, resultItemEnd);
 
 #ifdef	DEBUG_SEARCH_OUTPUT
 			char	*results = resultItem.ToNewCString();
@@ -3754,77 +3773,123 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 				}
 			}
 
-			// look for price
-			nsAutoString	priceItem;
-			PRInt32		priceStart;
-			if ((priceStart = resultItem.Find(priceStartStr, PR_TRUE)) >= 0)
+			// look for date
+			if (dateStartStr.Length() > 0)
 			{
-				PRInt32	priceEnd = resultItem.Find(priceEndStr, PR_TRUE, priceStart + priceStartStr.Length());
-				if (priceEnd > priceStart)
+				nsAutoString	dateItem;
+				PRInt32		dateStart;
+				if ((dateStart = resultItem.Find(dateStartStr, PR_TRUE)) >= 0)
 				{
-					resultItem.Mid(priceItem, priceStart + priceStartStr.Length(),
-						priceEnd - priceStart - priceStartStr.Length());
-
-					ConvertEntities(priceItem);
-				}
-			}
-			if (priceItem.Length() > 0)
-			{
-				const PRUnichar		*priceUni = priceItem.GetUnicode();
-				nsCOMPtr<nsIRDFLiteral>	priceLiteral;
-				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(priceUni, getter_AddRefs(priceLiteral))))
-				{
-					if (priceLiteral)
+					dateStart += dateStartStr.Length();
+					PRInt32	dateEnd = resultItem.Find(dateEndStr, PR_TRUE, dateStart);
+					if (dateEnd > dateStart)
 					{
-						mInner->Assert(res, kNC_Price, priceLiteral, PR_TRUE);
-						hasPriceFlag = PR_TRUE;
-					}
-				}
-
-				PRInt32	priceCharStartOffset = priceItem.FindCharInSet("1234567890");
-				if (priceCharStartOffset >= 0)
-				{
-					priceItem.Cut(0, priceCharStartOffset);
-					PRInt32	priceErr;
-					float	val = priceItem.ToFloat(&priceErr);
-					if (priceItem.FindChar(PRUnichar('.')) >= 0)	val *= 100;
-
-					nsCOMPtr<nsIRDFInt>	priceSortLiteral;
-					if (NS_SUCCEEDED(rv = gRDFService->GetIntLiteral((PRInt32)val, getter_AddRefs(priceSortLiteral))))
-					{
-						if (priceSortLiteral)
-						{
-							mInner->Assert(res, kNC_PriceSort, priceSortLiteral, PR_TRUE);
-						}
+						resultItem.Mid(dateItem, dateStart, dateEnd - dateStart);
 					}
 				}
 				
+				// strip out any html tags
+				PRInt32		ltOffset, gtOffset;
+				while ((ltOffset = dateItem.FindChar(PRUnichar('<'))) >= 0)
+				{
+					if ((gtOffset = dateItem.FindChar(PRUnichar('>'), PR_FALSE, ltOffset)) <= ltOffset)
+						break;
+					dateItem.Cut(ltOffset, gtOffset - ltOffset + 1);
+				}
+
+				// strip out whitespace and any CR/LFs
+				dateItem = dateItem.Trim("\n\r\t ");
+
+				if (dateItem.Length() > 0)
+				{
+					const PRUnichar		*dateUni = dateItem.GetUnicode();
+					nsCOMPtr<nsIRDFLiteral>	dateLiteral;
+					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(dateUni, getter_AddRefs(dateLiteral))))
+					{
+						if (dateLiteral)
+						{
+							mInner->Assert(res, kNC_Date, dateLiteral, PR_TRUE);
+							hasDateFlag = PR_TRUE;
+						}
+					}
+				}
+			}
+
+			// look for price
+			if (priceStartStr.Length() > 0)
+			{
+				nsAutoString	priceItem;
+				PRInt32		priceStart;
+				if ((priceStart = resultItem.Find(priceStartStr, PR_TRUE)) >= 0)
+				{
+					priceStart += priceStartStr.Length();
+					PRInt32	priceEnd = resultItem.Find(priceEndStr, PR_TRUE, priceStart);
+					if (priceEnd > priceStart)
+					{
+						resultItem.Mid(priceItem, priceStart, priceEnd - priceStart);
+						ConvertEntities(priceItem);
+					}
+				}
+				if (priceItem.Length() > 0)
+				{
+					const PRUnichar		*priceUni = priceItem.GetUnicode();
+					nsCOMPtr<nsIRDFLiteral>	priceLiteral;
+					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(priceUni, getter_AddRefs(priceLiteral))))
+					{
+						if (priceLiteral)
+						{
+							mInner->Assert(res, kNC_Price, priceLiteral, PR_TRUE);
+							hasPriceFlag = PR_TRUE;
+						}
+					}
+
+					PRInt32	priceCharStartOffset = priceItem.FindCharInSet("1234567890");
+					if (priceCharStartOffset >= 0)
+					{
+						priceItem.Cut(0, priceCharStartOffset);
+						PRInt32	priceErr;
+						float	val = priceItem.ToFloat(&priceErr);
+						if (priceItem.FindChar(PRUnichar('.')) >= 0)	val *= 100;
+
+						nsCOMPtr<nsIRDFInt>	priceSortLiteral;
+						if (NS_SUCCEEDED(rv = gRDFService->GetIntLiteral((PRInt32)val, getter_AddRefs(priceSortLiteral))))
+						{
+							if (priceSortLiteral)
+							{
+								mInner->Assert(res, kNC_PriceSort, priceSortLiteral, PR_TRUE);
+							}
+						}
+					}
+					
+				}
 			}
 
 			// look for availability
-			nsAutoString	availItem;
-			PRInt32		availStart;
-			if ((availStart = resultItem.Find(availStartStr, PR_TRUE)) >= 0)
+			if (availStartStr.Length() > 0)
 			{
-				PRInt32	availEnd = resultItem.Find(availEndStr, PR_TRUE, availStart + availStartStr.Length());
-				if (availEnd > availStart)
+				nsAutoString	availItem;
+				PRInt32		availStart;
+				if ((availStart = resultItem.Find(availStartStr, PR_TRUE)) >= 0)
 				{
-					resultItem.Mid(availItem, availStart + availStartStr.Length(),
-						availEnd - availStart - availStartStr.Length());
-
-					ConvertEntities(availItem);
-				}
-			}
-			if (availItem.Length() > 0)
-			{
-				const PRUnichar		*availUni = availItem.GetUnicode();
-				nsCOMPtr<nsIRDFLiteral>	availLiteral;
-				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(availUni, getter_AddRefs(availLiteral))))
-				{
-					if (availLiteral)
+					availStart += availStartStr.Length();
+					PRInt32	availEnd = resultItem.Find(availEndStr, PR_TRUE, availStart);
+					if (availEnd > availStart)
 					{
-						mInner->Assert(res, kNC_Availability, availLiteral, PR_TRUE);
-						hasAvailabilityFlag = PR_TRUE;
+						resultItem.Mid(availItem, availStart, availEnd - availStart);
+						ConvertEntities(availItem);
+					}
+				}
+				if (availItem.Length() > 0)
+				{
+					const PRUnichar		*availUni = availItem.GetUnicode();
+					nsCOMPtr<nsIRDFLiteral>	availLiteral;
+					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(availUni, getter_AddRefs(availLiteral))))
+					{
+						if (availLiteral)
+						{
+							mInner->Assert(res, kNC_Availability, availLiteral, PR_TRUE);
+							hasAvailabilityFlag = PR_TRUE;
+						}
 					}
 				}
 			}
@@ -3834,11 +3899,11 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			PRInt32		relStart;
 			if ((relStart = resultItem.Find(relevanceStartStr, PR_TRUE)) >= 0)
 			{
+				relStart += relevanceStartStr.Length();
 				PRInt32	relEnd = resultItem.Find(relevanceEndStr, PR_TRUE);
 				if (relEnd > relStart)
 				{
-					resultItem.Mid(relItem, relStart + relevanceStartStr.Length(),
-						relEnd - relStart - relevanceStartStr.Length());
+					resultItem.Mid(relItem, relStart, relEnd - relStart);
 				}
 			}
 
@@ -4043,6 +4108,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		if (hasPriceFlag == PR_TRUE)		SetHint(mParent, kNC_Price);
 		if (hasAvailabilityFlag == PR_TRUE)	SetHint(mParent, kNC_Availability);
 		if (hasRelevanceFlag == PR_TRUE)	SetHint(mParent, kNC_Relevance);
+		if (hasDateFlag == PR_TRUE)		SetHint(mParent, kNC_Date);
 	}
 
 	return(NS_OK);
