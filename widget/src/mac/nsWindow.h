@@ -128,6 +128,8 @@ public:
     virtual nsIMenuBar* GetMenuBar();
     NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
     NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
+    
+    NS_IMETHOD       SetCursor(nsCursor aCursor);
   
     // Mac specific methods
     void nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const;
