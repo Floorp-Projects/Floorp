@@ -844,7 +844,7 @@ nsresult nsImapMailFolder::GetDBFolderInfoAndDB(
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::DeleteMessage(nsIMessage* message)
+NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages)
 {
     nsresult rv = NS_ERROR_FAILURE;
     return rv;

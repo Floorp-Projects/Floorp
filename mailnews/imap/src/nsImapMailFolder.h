@@ -96,7 +96,7 @@ public:
     
     virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo,
                                           nsIMsgDatabase **db);
- 	NS_IMETHOD DeleteMessage(nsIMessage *message);
+ 	NS_IMETHOD DeleteMessages(nsISupportsArray *messages);
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgHdr, nsIMessage
                                          **message);
     NS_IMETHOD GetNewMessages();
