@@ -93,6 +93,7 @@
 	#define HAVE_CPP_USING
 	#define HAVE_CPP_EXPLICIT
 	#define HAVE_CPP_NEW_CASTS
+	#define HAVE_CPP_BOOL
 #endif
 
 	// under VC++ (Windows), we don't have autoconf yet
@@ -113,6 +114,9 @@
 		// under VC++, we win by inlining StartAssignment
 #endif
 
+#define NSCAP_FEATURE_ALLOW_RAW_POINTERS
+#define NSCAP_FEATURE_ALLOW_COMPARISONS
+
 
 	/*
 		If the compiler doesn't support |explicit|, we'll just make it go away, trusting
@@ -122,9 +126,17 @@
   #define explicit
 #endif
 
+#ifndef HAVE_CPP_BOOL
+	typedef bool NSCAP_BOOL;
+#else
+	typedef PRBool NSCAP_BOOL;
+#endif
+
 #ifdef HAVE_CPP_NEW_CASTS
+	#define NSCAP_STATIC_CAST(T,x)	static_cast<T>(x)
 	#define NSCAP_REINTERPRET_CAST(T,x)	reinterpret_cast<T>(x)
 #else
+	#define NSCAP_STATIC_CAST(T,x) ((T)(x))
 	#define NSCAP_REINTERPRET_CAST(T,x) ((T)(x))
 #endif
 
@@ -383,6 +395,22 @@ class nsCOMPtr : private nsCOMPtr_base
             NSCAP_ADDREF(mRawPtr);
         }
 
+#ifdef NSCAP_FEATURE_ALLOW_RAW_POINTERS
+			nsCOMPtr( T* aRawPtr )
+					: nsCOMPtr_base(aRawPtr)
+				{
+					if ( mRawPtr )
+						NSCAP_ADDREF(mRawPtr);
+				}
+
+      nsCOMPtr<T>&
+      operator=( T* rhs )
+        {
+          assign_with_AddRef(rhs);
+          return *this;
+        }
+#endif
+
       nsCOMPtr<T>&
       operator=( const nsQueryInterface& rhs )
         {
@@ -528,6 +556,70 @@ getter_AddRefs( nsCOMPtr<T>& aSmartPtr )
   {
     return nsGetterAddRefs<T>(aSmartPtr);
   }
+
+
+#ifdef NSCAP_FEATURE_ALLOW_COMPARISONS
+
+	/*
+		Note: can't enable this till I find a suitable replacement for |bool|.
+	*/
+
+template <class T, class U>
+inline
+NSCAP_BOOL
+operator==( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
+	{
+		return NSCAP_STATIC_CAST(const void*, lhs.get()) == NSCAP_STATIC_CAST(const void*, rhs.get());
+	}
+
+template <class T, class U>
+inline
+NSCAP_BOOL
+operator==( const nsCOMPtr<T>& lhs, const U* rhs )
+	{
+		return NSCAP_STATIC_CAST(const void*, lhs.get()) == NSCAP_STATIC_CAST(const void*, rhs);
+	}
+
+template <class T, class U>
+inline
+NSCAP_BOOL
+operator==( const U* lhs, const nsCOMPtr<T>& rhs )
+	{
+		return NSCAP_STATIC_CAST(const void*, lhs) == NSCAP_STATIC_CAST(const void*, rhs.get());
+	}
+
+template <class T, class U>
+inline
+NSCAP_BOOL
+operator!=( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
+	{
+		return NSCAP_STATIC_CAST(const void*, lhs.get()) != NSCAP_STATIC_CAST(const void*, rhs.get());
+	}
+
+template <class T, class U>
+inline
+NSCAP_BOOL
+operator!=( const nsCOMPtr<T>& lhs, const U* rhs )
+	{
+		return NSCAP_STATIC_CAST(const void*, lhs.get()) != NSCAP_STATIC_CAST(const void*, rhs);
+	}
+
+template <class T, class U>
+inline
+NSCAP_BOOL
+operator!=( const U* lhs, const nsCOMPtr<T>& rhs )
+	{
+		return NSCAP_STATIC_CAST(const void*, lhs) != NSCAP_STATIC_CAST(const void*, rhs.get());
+	}
+
+inline
+NSCAP_BOOL
+SameCOMIdentity( nsISupports* lhs, nsISupports* rhs )
+	{
+		return nsCOMPtr<nsISupports>( do_QueryInterface(lhs) ) == nsCOMPtr<nsISupports>( do_QueryInterface(rhs) );
+	}
+
+#endif // defined(NSCAP_FEATURE_ALLOW_COMPARISONS)
 
 
 
