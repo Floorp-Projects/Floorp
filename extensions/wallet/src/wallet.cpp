@@ -223,7 +223,7 @@ NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
     rv = eventQService->CreateThreadEventQueue();
     if (NS_FAILED(rv)) return rv;
 
-    rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
+    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
     if (NS_FAILED(rv)) return rv;
 
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
