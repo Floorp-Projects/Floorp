@@ -40,6 +40,8 @@ static struct fe_icon_type* splash_screen = NULL;
  * Needed by PREF_Init.
  * Sets the default preferences.
  */
+extern char *fe_GetConfigDirFilename(char *filename);
+
 JSBool
 pref_InitInitialObjects(void)
 {
@@ -48,6 +50,18 @@ pref_InitInitialObjects(void)
     XP_ASSERT(pref_init_buffer);
 
     status = PREF_EvaluateJSBuffer(pref_init_buffer, strlen(pref_init_buffer));
+
+    /* these strings never get freed, but that's probably the way it should be */
+    PREF_SetDefaultCharPref("browser.cache.directory", 
+                            fe_GetConfigDirFilename("cache"));
+    PREF_SetDefaultCharPref("browser.sarcache.directory",
+                            fe_GetConfigDirFilename("sarcache"));
+    PREF_SetDefaultCharPref("browser.bookmark_file", 
+                            fe_GetConfigDirFilename("bookmarks.html"));
+    PREF_SetDefaultCharPref("browser.history_file", 
+                            fe_GetConfigDirFilename("history.db"));
+    PREF_SetDefaultCharPref("browser.user_history_file", 
+                            fe_GetConfigDirFilename("history.list"));
 
 #if defined(__sgi) || (defined(__sun) && defined(__svr4__))
     PREF_SetDefaultCharPref("print.print_command", "lp");
