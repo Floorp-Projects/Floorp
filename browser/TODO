@@ -12,6 +12,7 @@ Missing Features
  add dnd support to bookmarks menu (adapt bookmarks button dnd code)
  images and cookie pref panels
 
+
 Open Issues
 -----------
 
@@ -20,6 +21,7 @@ Open Issues
  need to readd platformNavigationOverlay.xul once proper makefiles are in win/unix directories (this is why View | Full Screen is missing and things like alt+<-/-> don't work)
  doesn't load homepage upon startup (does in subsequent windows)
  view source should always launch helper app (notepad, emacsclient, bbedit, whatever) -- strip internal view source stuff completely
+ JS debugger and DOM Inspector aren't available
 
 
 See Also
