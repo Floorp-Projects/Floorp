@@ -370,6 +370,8 @@ nsDiskCacheRecord::GenInfo()
   memcpy(cur_ptr, file_url, name_len) ;
   cur_ptr += name_len ;
 
+  nsAllocator::Free(file_url);
+
   PR_ASSERT(cur_ptr == NS_STATIC_CAST(char*, newInfo) + mInfoSize);
   mInfo = newInfo ;
 
@@ -476,6 +478,9 @@ nsDiskCacheRecord::RetrieveInfo(void* aInfo, PRUint32 aInfoLength)
   	if ( NS_SUCCEEDED( rv ) )
   		file->InitWithPath(file_url) ;
   }
+
+  nsAllocator::Free(file_url);
+
   return NS_OK ;
 }
 
