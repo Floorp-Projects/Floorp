@@ -640,7 +640,9 @@ nsHttpChannel::ProcessResponse()
         }
         break;
     case 303:
-    case 305:
+#if 0
+    case 305: // disabled as a security measure (see bug 187996).
+#endif
         // these redirects cannot be cached
         CloseCacheEntry(NS_ERROR_ABORT);
 
@@ -1481,92 +1483,68 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     nsCOMPtr<nsIChannel> newChannel;
     nsCOMPtr<nsIURI> newURI;
 
-    if (redirectType == 305) {
-        // we must repeat the request via the proxy specified by location
- 
-        PRInt32 proxyPort;
-        
-        // location is of the form "host:port"
-        char *p = (char *)strchr(location, ':');
-        if (p) {
-            *p = 0;
-            proxyPort = atoi(p+1);
-        }
-        else
-            proxyPort = 80;
+    // create a new URI using the location header and the current URL
+    // as a base...
+    nsCOMPtr<nsIIOService> ioService;
+    rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
 
-        nsCOMPtr<nsIProxyInfo> pi;
-        rv = NS_NewProxyInfo("http", location, proxyPort, getter_AddRefs(pi));
+    // the new uri should inherit the origin charset of the current uri
+    nsCAutoString originCharset;
+    rv = mURI->GetOriginCharset(originCharset);
+    if (NS_FAILED(rv))
+        originCharset.Truncate();
 
-        // talk to the http handler directly for this case
-        rv = gHttpHandler->
-                NewProxiedChannel(mURI, pi, getter_AddRefs(newChannel));
+    rv = ioService->NewURI(nsDependentCString(location), originCharset.get(), mURI,
+                           getter_AddRefs(newURI));
+    if (NS_FAILED(rv)) return rv;
+
+    // verify that this is a legal redirect
+    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+    if (securityManager) {
+        rv = securityManager->CheckLoadURI(mURI, newURI,
+                                           nsIScriptSecurityManager::DISALLOW_FROM_MAIL);
         if (NS_FAILED(rv)) return rv;
     }
-    else {
-        // create a new URI using the location header and the current URL
-        // as a base...
-        nsCOMPtr<nsIIOService> ioService;
-        rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
 
-        // the new uri should inherit the origin charset of the current uri
-        nsCAutoString originCharset;
-        rv = mURI->GetOriginCharset(originCharset);
-        if (NS_FAILED(rv))
-            originCharset.Truncate();
+    // Kill the current cache entry if we are redirecting
+    // back to ourself.
+    PRBool redirectingBackToSameURI = PR_FALSE;
+    if (mCacheEntry && (mCacheAccess & nsICache::ACCESS_WRITE) &&
+        NS_SUCCEEDED(mURI->Equals(newURI, &redirectingBackToSameURI)) &&
+        redirectingBackToSameURI)
+            mCacheEntry->Doom();
 
-        rv = ioService->NewURI(nsDependentCString(location), originCharset.get(), mURI,
-                               getter_AddRefs(newURI));
-        if (NS_FAILED(rv)) return rv;
-
-        // verify that this is a legal redirect
-        nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-                 do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-        if (securityManager) {
-            rv = securityManager->CheckLoadURI(mURI, newURI,
-                                               nsIScriptSecurityManager::DISALLOW_FROM_MAIL);
-            if (NS_FAILED(rv)) return rv;
-        }
-
-        // Kill the current cache entry if we are redirecting
-        // back to ourself.
-        PRBool redirectingBackToSameURI = PR_FALSE;
-        if (mCacheEntry && (mCacheAccess & nsICache::ACCESS_WRITE) &&
-            NS_SUCCEEDED(mURI->Equals(newURI, &redirectingBackToSameURI)) &&
-            redirectingBackToSameURI)
-                mCacheEntry->Doom();
-
-        // move the reference of the old location to the new one if the new
-        // one has none.
-        nsCOMPtr<nsIURL> newURL = do_QueryInterface(newURI, &rv);
-        if (NS_SUCCEEDED(rv)) {
-            nsCAutoString ref;
-            rv = newURL->GetRef(ref);
-            if (NS_SUCCEEDED(rv) && ref.IsEmpty()) {
-                nsCOMPtr<nsIURL> baseURL( do_QueryInterface(mURI, &rv) );
-                if (NS_SUCCEEDED(rv)) {
-                    baseURL->GetRef(ref);
-                    if (!ref.IsEmpty())
-                        newURL->SetRef(ref);
-                }
+    // move the reference of the old location to the new one if the new
+    // one has none.
+    nsCOMPtr<nsIURL> newURL = do_QueryInterface(newURI, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        nsCAutoString ref;
+        rv = newURL->GetRef(ref);
+        if (NS_SUCCEEDED(rv) && ref.IsEmpty()) {
+            nsCOMPtr<nsIURL> baseURL( do_QueryInterface(mURI, &rv) );
+            if (NS_SUCCEEDED(rv)) {
+                baseURL->GetRef(ref);
+                if (!ref.IsEmpty())
+                    newURL->SetRef(ref);
             }
         }
-
-        PRUint32 newLoadFlags = mLoadFlags | LOAD_REPLACE;
-        // if the original channel was using SSL and this channel is not using
-        // SSL, then no need to inhibit persistent caching.  however, if the
-        // original channel was not using SSL and has INHIBIT_PERSISTENT_CACHING
-        // set, then allow the flag to apply to the redirected channel as well.
-        // since we force set INHIBIT_PERSISTENT_CACHING on all HTTPS channels,
-        // we only need to check if the original channel was using SSL.
-        if (mConnectionInfo->UsingSSL())
-            newLoadFlags &= ~INHIBIT_PERSISTENT_CACHING;
-
-        // build the new channel
-        rv = NS_NewChannel(getter_AddRefs(newChannel), newURI, ioService, mLoadGroup,
-                           mCallbacks, newLoadFlags);
-        if (NS_FAILED(rv)) return rv;
     }
+
+    PRUint32 newLoadFlags = mLoadFlags | LOAD_REPLACE;
+    // if the original channel was using SSL and this channel is not using
+    // SSL, then no need to inhibit persistent caching.  however, if the
+    // original channel was not using SSL and has INHIBIT_PERSISTENT_CACHING
+    // set, then allow the flag to apply to the redirected channel as well.
+    // since we force set INHIBIT_PERSISTENT_CACHING on all HTTPS channels,
+    // we only need to check if the original channel was using SSL.
+    if (mConnectionInfo->UsingSSL())
+        newLoadFlags &= ~INHIBIT_PERSISTENT_CACHING;
+
+    // build the new channel
+    rv = NS_NewChannel(getter_AddRefs(newChannel), newURI, ioService, mLoadGroup,
+                       mCallbacks, newLoadFlags);
+    if (NS_FAILED(rv)) return rv;
 
     // convey the original uri
     rv = newChannel->SetOriginalURI(mOriginalURI);
