@@ -16,21 +16,22 @@
  * Reserved.
  */
 
+#include "nsCOMPtr.h"
 #include "nsClipboard.h"
 
 #include "nsISupportsArray.h"
 #include "nsIClipboardOwner.h"
 #include "nsIDataFlavor.h"
+#include "nsIFormatConverter.h"
 
-#include "nsIWidget.h"
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
 
+#include <Scrap.h>
+
+
 // interface definitions
 static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
-
-static NS_DEFINE_IID(kIWidgetIID,        NS_IWIDGET_IID);
-static NS_DEFINE_IID(kWindowCID,         NS_WINDOW_CID);
 
 NS_IMPL_ADDREF_INHERITED(nsClipboard, nsBaseClipboard)
 NS_IMPL_RELEASE_INHERITED(nsClipboard, nsBaseClipboard)
@@ -53,6 +54,8 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
 nsClipboard::~nsClipboard()
 {
 }
+
+
 
 /**
  * @param aIID The name of the class implementing the method
@@ -80,11 +83,56 @@ nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 
-/**
-  * 
-  *
+//
+// MapMimeTypeToMacOSType
+//
+// Given a mime type, map this into the appropriate MacOS clipboard type. For
+// types that we don't know about intrinsicly, use a hash to get a unique 4
+// character code.
+//
+ResType
+nsClipboard :: MapMimeTypeToMacOSType ( const nsString & aMimeStr )
+{
+  ResType format = 0;
+
+  if (aMimeStr.Equals(kTextMime) )
+    format = 'TEXT';
+  else if ( aMimeStr.Equals(kXIFMime) )
+    format = 'XIF ';
+  else if ( aMimeStr.Equals(kHTMLMime) )
+    format = 'HTML';
+  else
+    format = '????';   // XXX for now...
+    
+  /*
+   else if (aMimeStr.Equals(kUnicodeMime)) {
+    format = CF_UNICODETEXT;
+  } else if (aMimeStr.Equals(kJPEGImageMime)) {
+    format = CF_BITMAP;
+  } else {
+    char * str = aMimeStr.ToNewCString();
+    format = ::RegisterClipboardFormat(str);
+    delete[] str;
+  }
   */
-NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
+  
+  return format;
+  
+} // MapMimeTypeToMacOSType
+
+
+//
+// SetNativeClipboardData
+//
+// Take data off the transferrable and put it on the clipboard in as many formats
+// as are registered.
+//
+// NOTE: This code could all live in ForceDataToClipboard() and this could be a NOOP. 
+// If speed and large data sizes are an issue, we should move that code there and only
+// do it on an app switch.
+//
+NS_IMETHODIMP
+nsClipboard :: SetNativeClipboardData()
 {
   mIgnoreEmptyNotification = PR_TRUE;
 
@@ -92,18 +140,65 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
   if (nsnull == mTransferable) {
     return NS_ERROR_FAILURE;
   }
-
-  //XXX DO THE WORK
+ 
   
+  ::ZeroScrap();
+  
+  // Get the flavor list, and on to the end of it, append the list of flavors we
+  // can also get to through a converter. This is so that we can just walk the list
+  // in one go and add the flavors to the clipboard.
+  nsCOMPtr<nsISupportsArray> flavorList;
+  mTransferable->GetTransferDataFlavors(getter_AddRefs(flavorList));
+  nsCOMPtr<nsIFormatConverter> converter;
+  mTransferable->GetConverter(getter_AddRefs(converter));
+  if ( converter ) {
+    nsCOMPtr<nsISupportsArray> convertedList;
+    converter->GetOutputDataFlavors(getter_AddRefs(convertedList));
+    if ( convertedList ) {
+//      flavorList->AppendElements(convertedList);
+      for (int i=0;i<convertedList->Count();i++) {
+  	    nsCOMPtr<nsISupports> temp = getter_AddRefs(convertedList->ElementAt(i));
+        flavorList->AppendElement(temp);    // this addref's for us
+      }
+    
+    }
+
+  }
+
+  // For each flavor present in the transferable, put it on the clipboard. Luckily,
+  // GetTransferData() handles conversions for us, so we really don't need to know
+  // if the transferable relies on a converter to do the work or not.
+  for ( int i = 0; i < flavorList->Count(); ++i ) {
+  	nsCOMPtr<nsISupports> temp = getter_AddRefs(flavorList->ElementAt(i));
+    nsCOMPtr<nsIDataFlavor> currentFlavor ( do_QueryInterface(temp) );
+    if ( currentFlavor ) {
+      // find MacOS flavor
+      nsString mimeType;
+      currentFlavor->GetMimeType(mimeType);
+      ResType macOSFlavor = MapMimeTypeToMacOSType(mimeType);
+    
+      // get data. This takes converters into account. We don't own the data
+      // so make sure not to delete it.
+      void* data = nsnull;
+      PRUint32 dataSize = 0;
+      mTransferable->GetTransferData ( currentFlavor, &data, &dataSize );
+      
+      // stash on clipboard
+      ::PutScrap ( dataSize, macOSFlavor, data );
+    }
+  } // foreach flavor in transferable
+
   return NS_OK;
-}
+  
+} // SetNativeClipboardData
 
 
 /**
   * 
   *
   */
-NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
+NS_IMETHODIMP
+nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
 {
   // make sure we have a good transferable
   if (nsnull == aTransferable) {

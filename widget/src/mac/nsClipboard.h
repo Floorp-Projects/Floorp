@@ -45,8 +45,12 @@ public:
   //NS_IMETHOD ForceDataToClipboard();
 
 protected:
+
+  // impelement the native clipboard behavior
   NS_IMETHOD SetNativeClipboardData();
   NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable);
+
+  static ResType MapMimeTypeToMacOSType ( const nsString & aMimeStr ) ;
 
 }; // nsClipboard
 
