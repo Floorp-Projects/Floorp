@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS =  content
+DIRS =  content locale
 
 include $(topsrcdir)/config/config.mk
 
