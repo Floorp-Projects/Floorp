@@ -5137,47 +5137,6 @@ CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
   return nsCRT::strcmp(str1, str2);
 }
 
-NS_IMETHODIMP
-nsFontEnumeratorWin::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aCount);
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  *aCount = 0;
-  *aResult = nsnull;
-
-  if (!gInitializedFontEnumerator) {
-    if (!InitializeFontEnumerator()) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  int count = nsFontMetricsWin::gGlobalFonts->Count();
-  PRUnichar** array = (PRUnichar**)nsMemory::Alloc(count * sizeof(PRUnichar*));
-  if (!array) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  for (int i = 0; i < count; ++i) {
-    nsGlobalFont* font = (nsGlobalFont*)nsFontMetricsWin::gGlobalFonts->ElementAt(i);
-    PRUnichar* str = ToNewUnicode(font->name);
-    if (!str) {
-      for (i = i - 1; i >= 0; --i) {
-        nsMemory::Free(array[i]);
-      }
-      nsMemory::Free(array);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    array[i] = str;
-  }
-
-  NS_QuickSort(array, count, sizeof(PRUnichar*), CompareFontNames, nsnull);
-
-  *aCount = count;
-  *aResult = array;
-
-  return NS_OK;
-}
-
 static int
 SignatureMatchesLangGroup(FONTSIGNATURE* aSignature,
   const char* aLangGroup)
@@ -5201,17 +5160,8 @@ SignatureMatchesLangGroup(FONTSIGNATURE* aSignature,
 }
 
 static int
-FontMatchesGenericType(nsGlobalFont* aFont, const char* aGeneric,
-  const char* aLangGroup)
+FontMatchesGenericType(nsGlobalFont* aFont, const char* aGeneric)
 {
-  if (!strcmp(aLangGroup, "ja"))    return 1;
-  if (!strcmp(aLangGroup, "zh-TW")) return 1;
-  if (!strcmp(aLangGroup, "zh-CN")) return 1;
-  if (!strcmp(aLangGroup, "ko"))    return 1;
-  if (!strcmp(aLangGroup, "th"))    return 1;
-  if (!strcmp(aLangGroup, "he"))    return 1;
-  if (!strcmp(aLangGroup, "ar"))    return 1;
-
   switch (aFont->logFont.lfPitchAndFamily & 0xF0) {
     case FF_DONTCARE:   return 0;
     case FF_ROMAN:      return !strcmp(aGeneric, "serif");
@@ -5224,21 +5174,23 @@ FontMatchesGenericType(nsGlobalFont* aFont, const char* aGeneric,
   return 0;
 }
 
-NS_IMETHODIMP
-nsFontEnumeratorWin::EnumerateFonts(const char* aLangGroup,
+static nsresult
+EnumerateMatchingFonts(const char* aLangGroup,
   const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult)
 {
-  NS_ENSURE_ARG_POINTER(aLangGroup);
-  NS_ENSURE_ARG_POINTER(aGeneric);
+  // aLangGroup=null or ""  means any (i.e., don't care)
+  // aGeneric=null or ""  means any (i.e, don't care)
+
   NS_ENSURE_ARG_POINTER(aCount);
   NS_ENSURE_ARG_POINTER(aResult);
 
   *aCount = 0;
   *aResult = nsnull;
 
-  if ((!strcmp(aLangGroup, "x-unicode")) ||
-      (!strcmp(aLangGroup, "x-user-def"))) {
-    return EnumerateAllFonts(aCount, aResult);
+  if (aLangGroup && *aLangGroup && 
+     (!strcmp(aLangGroup, "x-unicode") ||
+      !strcmp(aLangGroup, "x-user-def"))) {
+    return EnumerateMatchingFonts(nsnull, nsnull, aCount, aResult);
   }
 
   if (!gInitializedFontEnumerator) {
@@ -5255,8 +5207,14 @@ nsFontEnumeratorWin::EnumerateFonts(const char* aLangGroup,
   int j = 0;
   for (int i = 0; i < count; ++i) {
     nsGlobalFont* font = (nsGlobalFont*)nsFontMetricsWin::gGlobalFonts->ElementAt(i);
-    if (SignatureMatchesLangGroup(&font->signature, aLangGroup) &&
-        FontMatchesGenericType(font, aGeneric, aLangGroup)) {
+    PRBool accept = PR_TRUE;
+    if (aLangGroup && *aLangGroup) {
+      accept = SignatureMatchesLangGroup(&font->signature, aLangGroup);
+    }
+    if (accept && aGeneric && *aGeneric) {
+      accept = FontMatchesGenericType(font, aGeneric);
+    }
+    if (accept) {
       PRUnichar* str = ToNewUnicode(font->name);
       if (!str) {
         for (j = j - 1; j >= 0; --j) {
@@ -5276,6 +5234,19 @@ nsFontEnumeratorWin::EnumerateFonts(const char* aLangGroup,
   *aResult = array;
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorWin::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
+{
+  return EnumerateMatchingFonts(nsnull, nsnull, aCount, aResult);
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorWin::EnumerateFonts(const char* aLangGroup,
+  const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult)
+{
+  return EnumerateMatchingFonts(aLangGroup, aGeneric, aCount, aResult);
 }
 
 NS_IMETHODIMP
