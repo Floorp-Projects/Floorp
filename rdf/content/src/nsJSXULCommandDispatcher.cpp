@@ -55,7 +55,8 @@ static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
 //
 enum XULCommandDispatcher_slots {
   XULCOMMANDDISPATCHER_FOCUSEDELEMENT = -1,
-  XULCOMMANDDISPATCHER_FOCUSEDWINDOW = -2
+  XULCOMMANDDISPATCHER_FOCUSEDWINDOW = -2,
+  XULCOMMANDDISPATCHER_SUPPRESSFOCUS = -3
 };
 
 /***********************************************************************/
@@ -110,6 +111,23 @@ GetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
         if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, result);
+        }
+        break;
+      }
+      case XULCOMMANDDISPATCHER_SUPPRESSFOCUS:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_SUPPRESSFOCUS, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
+        }
+        PRBool prop;
+        nsresult result = NS_OK;
+        result = a->GetSuppressFocus(&prop);
+        if (NS_SUCCEEDED(result)) {
+          *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
           return nsJSUtils::nsReportError(cx, obj, result);
@@ -181,6 +199,21 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       
         a->SetFocusedWindow(prop);
         NS_IF_RELEASE(prop);
+        break;
+      }
+      case XULCOMMANDDISPATCHER_SUPPRESSFOCUS:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_SUPPRESSFOCUS, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
+        }
+        PRBool prop;
+        if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
+          return nsJSUtils::nsReportError(cx, obj,  NS_ERROR_DOM_NOT_BOOLEAN_ERR);
+        }
+      
+        a->SetSuppressFocus(prop);
+        
         break;
       }
       default:
@@ -506,6 +539,7 @@ static JSPropertySpec XULCommandDispatcherProperties[] =
 {
   {"focusedElement",    XULCOMMANDDISPATCHER_FOCUSEDELEMENT,    JSPROP_ENUMERATE},
   {"focusedWindow",    XULCOMMANDDISPATCHER_FOCUSEDWINDOW,    JSPROP_ENUMERATE},
+  {"suppressFocus",    XULCOMMANDDISPATCHER_SUPPRESSFOCUS,    JSPROP_ENUMERATE},
   {0}
 };
 

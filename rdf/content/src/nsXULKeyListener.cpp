@@ -1330,12 +1330,15 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
         if(code.IsEmpty()) {
           keyElement->GetAttribute(nsAutoString("keycode"), code);
           if(code.IsEmpty()) {
-            // HACK for temporary compatibility
-            if(aEventType == eKeyPress)
+            // XXX HACK for temporary compatibility
+            if(aEventType == eKeyPress) {
+              //gotCharCode = PR_TRUE;
               aKeyEvent->GetCharCode(&theChar);
-            else
+            }
+            else {
+              //gotKeyCode = PR_TRUE;
               aKeyEvent->GetKeyCode(&theChar);
-
+            }
           } else {
             // We want a keycode
             aKeyEvent->GetKeyCode(&theChar);

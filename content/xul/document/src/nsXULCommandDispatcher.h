@@ -85,6 +85,8 @@ protected:
     nsCOMPtr<nsIDOMElement> mCurrentElement; // [OWNER]
     nsCOMPtr<nsIDOMWindow> mCurrentWindow; // [OWNER]
 
+    PRBool mSuppressFocus;
+
     class Updater {
     public:
         Updater(nsIDOMElement* aElement,
