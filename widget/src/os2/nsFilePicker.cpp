@@ -131,7 +131,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   if(initialDir.IsEmpty())
     initialDir = mLastUsedDirectory;
 
-  mFile.SetLength(0);
+  mFile.Truncate();
 
   FILEDLG filedlg;
   memset(&filedlg, 0, sizeof(FILEDLG));
@@ -152,7 +152,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     if (filedlg.lReturn == DID_OK) {
       result = PR_TRUE;
       mDisplayDirectory->InitWithNativePath(nsDependentCString(filedlg.szFullFile));
-      mFile.Append(filedlg.szFullFile);
+      mFile.Assign(filedlg.szFullFile);
     }
   }
   else {
@@ -302,7 +302,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
           NS_ENSURE_SUCCESS(rv,rv);
         }
       } else {
-        mFile.Append(filedlg.szFullFile);
+        mFile.Assign(filedlg.szFullFile);
       }
       mSelectedType = (PRInt16)pmydata->ulCurExt;
     }
@@ -522,8 +522,7 @@ NS_IMETHODIMP nsFilePicker::InitNative(nsIWidget *aParent,
                                        PRInt16 aMode)
 {
   mWnd = (HWND) ((aParent) ? aParent->GetNativeData(NS_NATIVE_WINDOW) : 0); 
-  mTitle.SetLength(0);
-  mTitle.Append(aTitle);
+  mTitle.Assign(aTitle);
   mMode = aMode;
   return NS_OK;
 }
