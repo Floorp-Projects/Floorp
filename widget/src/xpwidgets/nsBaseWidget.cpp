@@ -593,6 +593,16 @@ NS_METHOD nsBaseWidget::AddEventListener(nsIEventListener * aListener)
   return NS_OK;
 }
 
+/**
+* Processes a menu event
+*
+**/
+NS_METHOD nsBaseWidget::AddMenuListener(nsIMenuListener * aListener)
+{
+  NS_PRECONDITION(mMenuListener == nsnull, "Null menu listener");
+  mMenuListener = aListener;
+  return NS_OK;
+}
 
 /**
 * If the implementation of nsWindow supports borders this method MUST be overridden

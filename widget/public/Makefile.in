@@ -56,6 +56,7 @@ EXPORTS =               \
         nsIRadioGroup.h \
         nsIMouseListener.h \
         nsIEventListener.h \
+        nsIMenuListener.h \
         nsIToolkit.h \
         nsWidgetsCID.h \
 	nsITooltipWidget.h \
