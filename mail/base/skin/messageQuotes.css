@@ -1,0 +1,60 @@
+/* ===== messageQuotes.css =================================================
+  == Shared styles such as block quote colors and signature style
+  == between the message body during
+  == message display and the mail editor instance for mail compose.
+  ======================================================================= */
+
+/* ::::: signature ::::: */
+
+.moz-txt-sig,
+.moz-signature {
+  color: gray;
+}
+
+.moz-txt-sig > a,
+.moz-signature > a {
+  color: #7777FF; /* light blue */
+}
+
+/* ::::: colorize block quote borders. We only go 7 levels deep ::::: */
+
+blockquote[type=cite] {
+  padding: 0em .5em .5em 1em !important;
+  border-right: medium double #0000ff !important;
+  border-left: medium double #0000ff !important;
+}
+
+blockquote[type=cite] blockquote {
+  border-right: medium double teal !important;
+  border-left: medium double teal !important;
+}
+
+blockquote[type=cite] blockquote blockquote {
+  border-right: medium double maroon !important;
+  border-left: medium double maroon !important;
+}
+
+blockquote[type=cite] blockquote blockquote blockquote {
+  border-right: medium double purple !important;
+  border-left: medium double purple !important;
+}
+
+blockquote[type=cite] blockquote blockquote blockquote blockquote {
+  border-right: medium double #00CC00 !important;
+  border-left: medium double #00CC00 !important;
+}
+
+blockquote[type=cite] blockquote blockquote blockquote blockquote blockquote {
+  border-right: medium double #ee00bb !important;
+  border-left: medium double #ee00bb !important;
+}
+
+blockquote[type=cite] blockquote blockquote blockquote blockquote blockquote blockquote {
+  border-right: medium double navy !important;
+  border-left: medium double navy !important;
+}
+
+blockquote[type=cite] blockquote blockquote blockquote blockquote blockquote blockquote blockquote 
+  border-right: medium double #00eecc !important;
+  border-left: medium double #00eecc !important;
+} 

@@ -40,6 +40,7 @@
   ======================================================================= */
 
 @import url(chrome://communicator/skin/smileys.css);
+@import url(chrome://messenger/skin/messageQuotes.css);
 
 /* XXX Breaks the HTML rules below (.moz-class stuff), at least on Linux.
    "html|.class" doesn't work.
@@ -136,19 +137,6 @@ span.moz-txt-formfeed {
   height: 100%;
 }
 
-
-/* ::::: signature ::::: */
-
-.moz-txt-sig,
-.moz-signature {
-  color: gray;
-}
-
-.moz-txt-sig > a,
-.moz-signature > a {
-  color: #7777FF; /* light blue */
-}
-
 /* ::::: vcard ::::: */
 
 .moz-vcard-table {
@@ -181,3 +169,4 @@ span.moz-txt-formfeed {
 .moz-vcard-badge:focus {
   -moz-outline: none;
 }
+
