@@ -71,6 +71,7 @@ static int gLogFD = -1;
 static pthread_t main_thread;
 
 static void startSignalCounter(unsigned long milisec);
+static int enableRTCSignals(bool enable);
 
 
 //----------------------------------------------------------------------
@@ -115,11 +116,21 @@ static void CrawlStack(malloc_log_entry* me, jmp_buf jb, char* first)
 
 //----------------------------------------------------------------------
 
+static int rtcHz;
+static int rtcFD = -1;
+
 #if defined(linux) || defined(NTO)
 static void DumpAddressMap()
 {
   // Turn off the timer so we dont get interrupts during shutdown
-  startSignalCounter(0);
+#if defined(linux)
+  if (rtcHz) {
+    enableRTCSignals(false);
+  } else
+#endif
+  {
+    startSignalCounter(0);
+  }
 
   int mfd = open(M_MAPFILE, O_CREAT|O_WRONLY|O_TRUNC, 0666);
   if (mfd >= 0) {
@@ -171,8 +182,6 @@ Log(u_long aTime, char *first)
 }
 
 static int realTime;
-static int rtcHz;
-static int rtcFD = -1;
 
 /* Lets interrupt at 10 Hz.  This is so my log files don't get too large.
  * This can be changed to a faster value latter.  This timer is not
@@ -234,7 +243,7 @@ static int setupRTCSignals(int hz, struct sigaction *sap)
     return 1;
 }
 
-int enableRTCSignals()
+static int enableRTCSignals(bool enable)
 {
     int flags = fcntl(rtcFD, F_GETFL);
     if (flags < 0) {
@@ -242,8 +251,18 @@ int enableRTCSignals()
         return 0;
     }
 
-    if (fcntl(rtcFD, F_SETFL, flags | FASYNC) == -1) {
-        perror("JPROF_RTC setup: fcntl(/dev/rtc, F_SETFL, flags | FASYNC)");
+    if (enable) {
+        flags |= FASYNC;
+    } else {
+        flags &= ~FASYNC;
+    }
+
+    if (fcntl(rtcFD, F_SETFL, flags) == -1) {
+        if (enable) {
+            perror("JPROF_RTC setup: fcntl(/dev/rtc, F_SETFL, flags | FASYNC)");
+        } else {
+            perror("JPROF_RTC setup: fcntl(/dev/rtc, F_SETFL, flags & ~FASYNC)");
+        }            
         return 0;
     }
 
@@ -271,7 +290,7 @@ void *mystry)
         puts("Jprof: received first signal");
 #if defined(linux)
         if (rtcHz) {
-            enableRTCSignals();
+            enableRTCSignals(true);
         } else
 #endif
         {
@@ -427,7 +446,7 @@ void setupProfilingStuff(void)
 #if defined(linux)
                         if (rtcHz) {
                             puts("Jprof: enabled RTC signals");
-                            enableRTCSignals();
+                            enableRTCSignals(true);
                         } else
 #endif
                         {
