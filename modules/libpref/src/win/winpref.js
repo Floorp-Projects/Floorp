@@ -78,6 +78,20 @@ pref("custtoolbar.Composer.Formatting_Toolbar.showing",         true);
 pref("custtoolbar.Composer.Formatting_Toolbar.open",            true);
 
 
+pref("font.name.serif.x-western", "Times New Roman");
+pref("font.size.serif.x-western", 12);
+pref("font.name.sans-serif.x-western", "Arial");
+pref("font.size.sans-serif.x-western", 12);
+pref("font.name.monospace.x-western", "Courier New");
+pref("font.size.monospace.x-western", 10);
+
+pref("font.name.serif.x-unicode", "Times New Roman");
+pref("font.size.serif.x-unicode", 12);
+pref("font.name.sans-serif.x-unicode", "Arial");
+pref("font.size.sans-serif.x-unicode", 12);
+pref("font.name.monospace.x-unicode", "Courier New");
+pref("font.size.monospace.x-unicode", 10);
+
 pref("intl.font2.win.mimecharset",  "iso-8859-1");
 pref("intl.font2.win.prop_font",    "Times New Roman");
 pref("intl.font2.win.prop_size",    12);
