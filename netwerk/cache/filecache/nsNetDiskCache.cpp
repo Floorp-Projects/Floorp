@@ -72,6 +72,51 @@ static const char * const DISK_CACHE_SIZE_PREF  = "browser.cache.disk_cache_size
 static const char * const CACHE_DIR_PREF   = "browser.cache.directory";
 static const char * const CACHE_ENABLE_PREF   = "browser.cache.disk.enable";
 
+
+static int folderChanged(const char *pref, void *closure)
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	if ( NS_FAILED (rv ) )
+		return rv;
+		
+	nsCOMPtr<nsIFileSpec> folder;
+	rv = prefs->GetFilePref(CACHE_DIR_PREF, getter_AddRefs( folder )  );
+	
+	if ( NS_FAILED( rv ) )
+		return rv;
+	
+	// This is really wrong and should be fixed when the pref code is update
+	// If someone has a system where path names are not unique they are going to
+	// be in a world of hurt.
+	
+	nsCOMPtr<nsILocalFile> cacheFolder;
+	char* path = NULL;
+	rv = folder->GetNativePath(& path );
+	if ( NS_FAILED ( rv ) )
+		return rv;
+		
+	rv = NS_NewLocalFile( path, getter_AddRefs(cacheFolder));
+	nsAllocator::Free( path );
+	
+	return ( (nsNetDiskCache*)closure )->SetDiskCacheFolder( cacheFolder );	
+}
+
+static int enableChanged(const char *pref, void *closure)
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	if ( NS_FAILED (rv ) )
+		return rv;
+		
+	PRBool enabled;
+	rv = prefs->GetBoolPref(CACHE_ENABLE_PREF, &enabled   );
+	if ( NS_FAILED( rv ) )
+		return rv;
+		
+	return ( (nsNetDiskCache*)closure )->SetEnabled( enabled );	
+}
+
 class nsDiskCacheRecord ;
 
 nsNetDiskCache::nsNetDiskCache() :
@@ -96,7 +141,13 @@ nsNetDiskCache::~nsNetDiskCache()
 
   NS_IF_RELEASE(mDB) ;
   
-
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	if ( NS_SUCCEEDED (rv ) )
+	{
+		 prefs->UnregisterCallback( CACHE_DIR_PREF, folderChanged, this ); 
+		 prefs->UnregisterCallback( CACHE_ENABLE_PREF, enableChanged, this ); 
+	}
   // FUR
   // I think that, eventually, we also want a distinguished key in the DB which
   // means "clean cache shutdown".  You clear this flag when the db is first
@@ -140,47 +191,6 @@ nsNetDiskCache::~nsNetDiskCache()
   }
 }
 
-
-static int folderChanged(const char *pref, void *closure)
-{
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
-	if ( NS_FAILED (rv ) )
-		return rv;
-		
-	nsCOMPtr<nsIFileSpec> folder;
-	rv = prefs->GetFilePref(CACHE_DIR_PREF, getter_AddRefs( folder )  );
-	
-	if ( NS_FAILED( rv ) )
-		return rv;
-	
-	// This is really wrong and should be fixed when the pref code is update
-	// If someone has a system where path names are not unique they are going to
-	// be in a world of hurt.
-	
-	nsCOMPtr<nsILocalFile> cacheFolder;
-	char* path;
-	folder->GetNativePath(& path );
-	rv = NS_NewLocalFile( path, getter_AddRefs(cacheFolder));
-	nsAllocator::Free( path );
-	
-	return ( (nsNetDiskCache*)closure )->SetDiskCacheFolder( cacheFolder );	
-}
-
-static int enableChanged(const char *pref, void *closure)
-{
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
-	if ( NS_FAILED (rv ) )
-		return rv;
-		
-	PRBool enabled;
-	rv = prefs->GetBoolPref(CACHE_ENABLE_PREF, &enabled   );
-	if ( NS_FAILED( rv ) )
-		return rv;
-		
-	return ( (nsNetDiskCache*)closure )->SetEnabled( enabled );	
-}
 
 nsresult nsNetDiskCache::InitPrefs()
 {
@@ -245,17 +255,10 @@ NS_IMETHODIMP nsNetDiskCache::InitCacheFolder()
 NS_IMETHODIMP
 nsNetDiskCache::Init(void) 
 {
-  
-
-	
-// Couldn't find a meaningful pref value for the cache location so create one in the users profile
-	 InitPrefs();
-	 
+	nsresult rv =InitPrefs();
+/// Couldn't find a meaningful pref value for the cache location so create one in the users profile	 
 	 if (!mDiskCacheFolder.get() )
-	 {	
-
-		nsresult rv ;
-  		
+	 {
 		nsCOMPtr<nsIFileSpec> cacheSubDir;
 		rv = NS_NewFileSpec(getter_AddRefs(cacheSubDir));
 		if(NS_FAILED(rv))
@@ -279,12 +282,19 @@ nsNetDiskCache::Init(void)
 		cacheSubDir->GetNativePath(& path );
 		rv = NS_NewLocalFile( path, getter_AddRefs(cacheFolder));
 		nsAllocator::Free( path );
-	
+		
+		PRBool exists;
+		if ( NS_SUCCEEDED( cacheFolder->Exists(&exists ) ) && !exists)
+		{
+				rv = cacheFolder->Create( nsIFile::DIRECTORY_TYPE, 0 );
+				if ( NS_FAILED( rv ) ) 
+					return rv;
+		}
+		
 		mDiskCacheFolder = cacheFolder;
-
+		rv =InitCacheFolder();
 	}
-
-  	return InitCacheFolder();
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -590,7 +600,8 @@ nsNetDiskCache::RemoveAll(void)
     	file->Delete( PR_TRUE );
      
   }
-  
+  if ( mDBFile )
+ 	 mDBFile->Delete(PR_FALSE) ;
   // reinitilize
   return InitCacheFolder() ;
 }
@@ -757,7 +768,10 @@ nsNetDiskCache::DBRecovery(void)
 
   // reinitilize DB 
   return InitDB() ;
+
 }
+
+
 
 // this routine will add string "trash" to current CacheSubDir names. 
 // e.g. 00->trash00, 1f->trash1f. and update the mDBCorrupted. 
