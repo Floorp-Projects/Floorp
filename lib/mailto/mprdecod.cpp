@@ -718,9 +718,15 @@ char *ParseBuffer(char *p_pOldBuffer,SimpleMultipartRelatedMimeDecoder &p_rDecod
             }
 
             if (!p_pOldBuffer[t_index] || p_pOldBuffer[t_index] != 'S')
+            {
+                t_index++;
                 continue;
+            }
             if (XP_STRNCASECMP(p_pOldBuffer + t_index,"SRC",3))
+            {
+                t_index++;
                 continue;
+            }
             t_index+=3;
             while(p_pOldBuffer[t_index] && isspace(t_char))
                 t_char = p_pOldBuffer[t_index++];
