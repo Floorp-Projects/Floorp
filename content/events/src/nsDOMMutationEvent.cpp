@@ -47,14 +47,12 @@ nsDOMMutationEvent::nsDOMMutationEvent(nsPresContext* aPresContext, nsMutationEv
 {  
   if ( aEvent ) {
     mEventIsInternal = PR_FALSE;
-    mEventIsTrusted = PR_TRUE;
     nsMutationEvent* mutation = (nsMutationEvent*)aEvent;
     SetTarget(mutation->mTarget);
   }
   else
   {
     mEventIsInternal = PR_TRUE;
-    mEventIsTrusted = PR_FALSE;
   }
 }
 

@@ -54,15 +54,13 @@
 #include "nsIFrame.h"
 
 nsDOMUIEvent::nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent)
-: nsDOMEvent(aPresContext, aEvent)
+  : nsDOMEvent(aPresContext, aEvent)
 {
   if (aEvent) {
     mEventIsInternal = PR_FALSE;
-    mEventIsTrusted = PR_TRUE;
   }
   else {
     mEventIsInternal = PR_TRUE;
-    mEventIsTrusted = PR_FALSE;
     mEvent->time = PR_Now();
   }
   

@@ -108,8 +108,15 @@ class nsIURI;
 #define NS_EVENT_CAPTURE_MASK             (~(NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
 #define NS_EVENT_BUBBLE_MASK              (~(NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_CAPTURE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
 
-#define NS_APP_EVENT_FLAG_NONE      0x0000
-#define NS_APP_EVENT_FLAG_HANDLED   0x0001 // Similar to NS_EVENT_FLAG_NO_DEFAULT, but it allows focus
+// Flags for internalAppFlags
+
+#define NS_APP_EVENT_FLAG_NONE      0x00000000
+
+// Similar to NS_EVENT_FLAG_NO_DEFAULT, but it allows focus
+#define NS_APP_EVENT_FLAG_HANDLED   0x00000001
+
+// True if the event came from a trusted source
+#define NS_APP_EVENT_FLAG_TRUSTED   0x00000002
 
 #define NS_EVENT_TYPE_NULL                   0
 
@@ -344,8 +351,8 @@ struct nsEvent {
       point(0, 0),
       refPoint(0, 0),
       time(0),
-      flags(0), 
-      internalAppFlags(0),
+      flags(0),
+      internalAppFlags(NS_APP_EVENT_FLAG_NONE),
       userType(0)
   {
   }

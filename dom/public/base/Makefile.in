@@ -48,3 +48,4 @@ EXPORTS=nsPIDOMWindow.h nsPIWindowRoot.h nsIFocusController.h
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES += -D_IMPL_NS_LAYOUT

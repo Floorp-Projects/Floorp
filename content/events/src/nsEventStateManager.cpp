@@ -156,6 +156,7 @@ static PRBool sLeftClickOnly = PR_TRUE;
 static PRBool sKeyCausesActivation = PR_TRUE;
 static PRUint32 sESMInstanceCount = 0;
 static PRInt32 sGeneralAccesskeyModifier = -1; // magic value of -1 means uninitialized
+PRInt32 nsEventStateManager::sUserInputEventDepth = 0;
 
 enum {
  MOUSE_SCROLL_N_LINES,
@@ -283,6 +284,8 @@ nsEventStateManager::Init()
     prefBranch->AddObserver("mousewheel.withshiftkey.numlines", this, PR_TRUE);
     prefBranch->AddObserver("mousewheel.withshiftkey.sysnumlines", this, PR_TRUE);
 #endif
+
+    prefBranch->AddObserver("dom.popup_allowed_events", this, PR_TRUE);
   }
 
   if (sTextfieldSelectModel == eTextfieldSelect_unset) {
@@ -358,6 +361,8 @@ nsEventStateManager::Shutdown()
     prefBranch->RemoveObserver("mousewheel.withnokey.numlines", this);
     prefBranch->RemoveObserver("mousewheel.withnokey.sysnumlines", this);
 #endif
+
+    prefBranch->RemoveObserver("dom.popup_allowed_events", this);
   }
 
   m_haveShutdown = PR_TRUE;
@@ -408,6 +413,8 @@ nsEventStateManager::Observe(nsISupports *aSubject,
     } else if (data.EqualsLiteral("mousewheel.withnokey.numlines")) {
     } else if (data.EqualsLiteral("mousewheel.withnokey.sysnumlines")) {
 #endif
+    } else if (data.EqualsLiteral("dom.popup_allowed_events")) {
+      nsDOMEvent::PopupAllowedEventsChanged();
     }
   }
 
@@ -1042,6 +1049,11 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
           // B) Click on it if the users prefs indicate to do so.
           nsEventStatus status = nsEventStatus_eIgnore;
           nsMouseEvent event(NS_MOUSE_LEFT_CLICK);
+
+          // Propagate trusted state to the new event.
+          event.internalAppFlags |=
+            aEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED;
+
           nsCOMPtr<nsIContent> oldTargetContent = mCurrentTargetContent;
           mCurrentTargetContent = content;
           content->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);

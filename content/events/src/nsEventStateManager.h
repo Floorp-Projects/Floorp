@@ -146,6 +146,21 @@ public:
   NS_IMETHOD MoveFocusToCaret(PRBool aCanFocusDoc, PRBool *aIsSelectionWithFocus);
   NS_IMETHOD MoveCaretToFocus();
 
+  static void StartHandlingUserInput()
+  {
+    ++sUserInputEventDepth;
+  }
+
+  static void StopHandlingUserInput()
+  {
+    --sUserInputEventDepth;
+  }
+
+  static PRBool IsHandlingUserInput()
+  {
+    return sUserInputEventDepth > 0;
+  }
+
 protected:
   friend class CurrentEventShepherd;
 
@@ -334,6 +349,35 @@ protected:
   nsCOMPtr<nsITimer> mClickHoldTimer;
 #endif
 
+  static PRInt32 sUserInputEventDepth;
+};
+
+
+class nsAutoHandlingUserInputStatePusher
+{
+public:
+  nsAutoHandlingUserInputStatePusher(PRBool aIsHandlingUserInput)
+    : mIsHandlingUserInput(aIsHandlingUserInput)
+  {
+    if (aIsHandlingUserInput) {
+      nsEventStateManager::StartHandlingUserInput();
+    }
+  }
+
+  ~nsAutoHandlingUserInputStatePusher()
+  {
+    if (mIsHandlingUserInput) {
+      nsEventStateManager::StopHandlingUserInput();
+    }
+  }
+
+protected:
+  PRBool mIsHandlingUserInput;
+
+private:
+  // Not meant to be implemented.
+  static void* operator new(size_t /*size*/) CPP_THROW_NEW;
+  static void operator delete(void* /*memory*/);
 };
 
 #endif // nsEventStateManager_h__

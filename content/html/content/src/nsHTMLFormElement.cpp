@@ -45,6 +45,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
+#include "nsEventStateManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
@@ -68,6 +69,7 @@
 #include "nsCategoryManagerUtils.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsRange.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
@@ -269,6 +271,10 @@ protected:
   PRPackedBool mIsSubmitting;
   /** Whether the submission is to be deferred in case a script triggers it */
   PRPackedBool mDeferSubmission;
+  /** Keep track of what the popup state was when the submit was initiated */
+  PopupControlState mSubmitPopupState;
+  /** Keep track of whether a submission was user-initiated or not */
+  PRBool mSubmitInitiatedFromUserInput;
 
   /** The pending submission object */
   nsCOMPtr<nsIFormSubmission> mPendingSubmission;
@@ -425,6 +431,8 @@ nsHTMLFormElement::nsHTMLFormElement(nsINodeInfo *aNodeInfo)
     mGeneratingReset(PR_FALSE),
     mIsSubmitting(PR_FALSE),
     mDeferSubmission(PR_FALSE),
+    mSubmitPopupState(openAbused),
+    mSubmitInitiatedFromUserInput(PR_FALSE),
     mPendingSubmission(nsnull),
     mSubmittingRequest(nsnull)
 {
@@ -821,7 +829,18 @@ nsHTMLFormElement::DoSubmit(nsPresContext* aPresContext, nsEvent* aEvent)
   // prepare the submission object
   //
   BuildSubmission(aPresContext, submission, aEvent); 
-  
+
+  nsCOMPtr<nsPIDOMWindow> window =
+    do_QueryInterface(GetOwnerDoc()->GetScriptGlobalObject());
+
+  if (window) {
+    mSubmitPopupState = window->GetPopupControlState();
+  } else {
+    mSubmitPopupState = openAbused;
+  }
+
+  mSubmitInitiatedFromUserInput = nsEventStateManager::IsHandlingUserInput();
+
   if(mDeferSubmission) { 
     // we are in an event handler, JS submitted so we have to
     // defer this submission. let's remember it and return
@@ -918,9 +937,17 @@ nsHTMLFormElement::SubmitSubmission(nsPresContext* aPresContext,
   // Submit
   //
   nsCOMPtr<nsIDocShell> docShell;
-  rv = aFormSubmission->SubmitTo(actionURI, target, this, aPresContext,
-                                 getter_AddRefs(docShell),
-                                 getter_AddRefs(mSubmittingRequest));
+
+  {
+    nsAutoPopupStatePusher popupStatePusher(mSubmitPopupState);
+
+    nsAutoHandlingUserInputStatePusher userInpStatePusher(mSubmitInitiatedFromUserInput);
+
+    rv = aFormSubmission->SubmitTo(actionURI, target, this, aPresContext,
+                                   getter_AddRefs(docShell),
+                                   getter_AddRefs(mSubmittingRequest));
+  }
+
   NS_ENSURE_SUBMIT_SUCCESS(rv);
 
   // Even if the submit succeeds, it's possible for there to be no docshell

@@ -40,6 +40,7 @@
 
 #include <mshtml.h>
 #include <hlink.h>
+#include "nsPIDOMWindow.h"
 
 // A barely documented interface called ITargetFrame from IE
 // This is needed for targeted Hlink* calls (e.g. HlinkNavigateString) to
@@ -1831,6 +1832,12 @@ END_COM_MAP()
                     nsCOMPtr<nsILinkHandler> lh = do_QueryInterface(webNav);
                     if (lh)
                     {
+                        nsCOMPtr<nsPIDOMWindow> window =
+                            do_GetInterface(mDOMWindow);
+
+                        nsAutoPopupStatePusher popupStatePusher(window,
+                                                                openAllowed);
+
                         lh->OnLinkClick(nsnull, eLinkVerb_Replace,
                             uri, szTargetFrame ? szTargetFrame : mUseTarget);
                     }

@@ -49,6 +49,18 @@
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 
+// Popup control state enum. The values in this enum must go from most
+// permissive to least permissive so that its safe to push state in
+// all situations. Pushing popup state onto the stack never makes the
+// current popup state less permissive (see
+// GlobalWindowImpl::PushPopupControlState()).
+enum PopupControlState {
+  openAllowed = 0,  // open that window without worries
+  openControlled,   // it's a popup, but allow it
+  openAbused,       // it's a popup. disallow it, but allow domain override.
+  openOverridden    // disallow window open
+};
+
 class nsIDocShell;
 class nsIFocusController;
 struct nsTimeoutImpl;
@@ -105,6 +117,10 @@ public:
 
   virtual void SetOpenerScriptURL(nsIURI* aURI) = 0;
 
+  virtual PopupControlState PushPopupControlState(PopupControlState aState) const = 0;
+  virtual void PopPopupControlState(PopupControlState state) const = 0;
+  virtual PopupControlState GetPopupControlState() const = 0;
+
 protected:
   nsCOMPtr<nsIChromeEventHandler> mChromeEventHandler; // strong
   nsCOMPtr<nsIDOMDocument> mDocument; // strong
@@ -115,6 +131,59 @@ protected:
   PRUint32               mMutationBits;
 
   PRBool                 mIsDocumentLoaded;
+};
+
+
+#ifdef _IMPL_NS_LAYOUT
+PopupControlState
+PushPopupControlState(PopupControlState aState);
+
+void
+PopPopupControlState(PopupControlState aState);
+#endif
+
+// Helper chass that helps with pushing and poping popup control
+// state. Note that this class looks different from within code that's
+// part of the layout library than it does in code outside the layout
+// library.
+class nsAutoPopupStatePusher
+{
+public:
+#ifdef _IMPL_NS_LAYOUT
+  nsAutoPopupStatePusher(PopupControlState aState)
+    : mOldState(::PushPopupControlState(aState))
+  {
+  }
+
+  ~nsAutoPopupStatePusher()
+  {
+    PopPopupControlState(mOldState);
+  }
+#else
+  nsAutoPopupStatePusher(nsPIDOMWindow *aWindow, PopupControlState aState)
+    : mWindow(aWindow), mOldState(openAbused)
+  {
+    if (aWindow) {
+      mOldState = aWindow->PushPopupControlState(aState);
+    }
+  }
+
+  ~nsAutoPopupStatePusher()
+  {
+    if (mWindow) {
+      mWindow->PopPopupControlState(mOldState);
+    }
+  }
+#endif
+
+protected:
+  nsPIDOMWindow *mWindow; // WEAK
+  PopupControlState mOldState;
+
+private:
+  // Not meant to be implemented.
+  static void* operator new(size_t /*size*/) CPP_THROW_NEW;
+  static void operator delete(void* /*memory*/);
 };
 
 #endif // nsPIDOMWindow_h__

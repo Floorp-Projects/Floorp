@@ -428,6 +428,9 @@ struct OnLinkClickEvent : public PLEvent {
   ~OnLinkClickEvent();
 
   void HandleEvent() {
+    nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mHandler->mScriptGlobal));
+    nsAutoPopupStatePusher popupStatePusher(window, mPopupState);
+
     mHandler->OnLinkClickSync(mContent, mVerb, mURI,
                               mTargetSpec.get(), mPostDataStream,
                               mHeadersDataStream,
@@ -441,6 +444,7 @@ struct OnLinkClickEvent : public PLEvent {
   nsCOMPtr<nsIInputStream> mHeadersDataStream;
   nsCOMPtr<nsIContent>     mContent;
   nsLinkVerb               mVerb;
+  PopupControlState        mPopupState;
 };
 
 static void PR_CALLBACK HandlePLEvent(OnLinkClickEvent* aEvent)
@@ -469,6 +473,10 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
   mHeadersDataStream = aHeadersDataStream;
   mContent = aContent;
   mVerb = aVerb;
+
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mHandler->mScriptGlobal));
+
+  mPopupState = window->GetPopupControlState();
 
   PL_InitEvent(this, nsnull,
                (PLHandleEventProc) ::HandlePLEvent,

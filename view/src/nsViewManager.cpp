@@ -1772,6 +1772,11 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 {
   *aStatus = nsEventStatus_eIgnore;
 
+  // Mark all events coming through here as trusted events, as the
+  // only code that calls this is the widget code that translates OS
+  // events into mozilla events.
+  aEvent->internalAppFlags |= NS_APP_EVENT_FLAG_TRUSTED;
+
   switch(aEvent->message)
     {
     case NS_SIZE:
