@@ -91,6 +91,7 @@ public:
     NS_IMETHOD              SetVerticalScrollbar(nsIWidget * aScrollbar);
     NS_IMETHOD              EnableFileDrop(PRBool aEnable);
     virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
+    virtual void            FreeNativeData(void * data, PRUint32 aDataType) {}//~~~
 protected:
 
     virtual void            DrawScaledRect(nsIRenderingContext& aRenderingContext, const nsRect & aRect, float aScale, float aAppUnits);

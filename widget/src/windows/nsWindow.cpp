@@ -1251,6 +1251,23 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     return NULL;
 }
 
+//~~~
+void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
+{
+  switch(aDataType) 
+  {
+    case NS_NATIVE_GRAPHIC:
+    ::ReleaseDC(mWnd, (HDC)data);
+    case NS_NATIVE_WIDGET:
+    case NS_NATIVE_WINDOW:
+    case NS_NATIVE_PLUGIN_PORT:
+    case NS_NATIVE_COLORMAP:
+      break;
+    default:
+      break;
+  }
+}
+
 //-------------------------------------------------------------------------
 //
 // Set the colormap of the window

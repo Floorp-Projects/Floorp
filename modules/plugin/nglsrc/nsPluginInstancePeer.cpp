@@ -65,6 +65,7 @@ static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID);
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID); 
 static NS_DEFINE_IID(kIJVMPluginTagInfoIID, NS_IJVMPLUGINTAGINFO_IID); 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININSTANCEPEER_IID);//~~~
 
 NS_IMPL_ADDREF(nsPluginInstancePeerImpl);
 NS_IMPL_RELEASE(nsPluginInstancePeerImpl);
@@ -77,6 +78,13 @@ nsresult nsPluginInstancePeerImpl::QueryInterface(const nsIID& iid, void** insta
     if (iid.Equals(nsIPluginInstancePeer::GetIID()) || iid.Equals(nsIPluginInstancePeer2::GetIID()))
     {
         *instance = (void *)(nsIPluginInstancePeer2*)this;
+        AddRef();
+        return NS_OK;
+    }
+
+    if (iid.Equals(kIWindowlessPluginInstancePeerIID))//~~~
+    {
+        *instance = (void *)(nsIWindowlessPluginInstancePeer*)this;
         AddRef();
         return NS_OK;
     }

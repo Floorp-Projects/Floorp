@@ -1059,6 +1059,10 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
   return NULL;
 }
 
+//~~~
+void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
+{
+}
 
 //-------------------------------------------------------------------------
 //

@@ -148,6 +148,7 @@ public:
   NS_IMETHOD Init(nsIPresContext *aPresContext, nsObjectFrame *aFrame);
   
   nsPluginPort* GetPluginPort();
+  void ReleasePluginPort();//~~~
 
 private:
   nsPluginWindow    mPluginWindow;
@@ -2445,10 +2446,28 @@ nsPluginPort* nsPluginInstanceOwner::GetPluginPort()
 {
     // TODO: fix Windows widget code to support NS_NATIVE_PLUGIN_PORT selector.
 	nsPluginPort* result = NULL;
-	if (mWidget != NULL) {
-		result = (nsPluginPort*) mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
+	if (mWidget != NULL)
+  {//~~~
+#ifdef XP_WIN
+    if(mPluginWindow.type == nsPluginWindowType_Drawable)
+      result = (nsPluginPort*) mWidget->GetNativeData(NS_NATIVE_GRAPHIC);
+    else
+#endif
+      result = (nsPluginPort*) mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
 	}
 	return result;
+}
+
+//~~~
+void nsPluginInstanceOwner::ReleasePluginPort()
+{
+#ifdef XP_WIN
+	if (mWidget != NULL)
+  {
+    if(mPluginWindow.type == nsPluginWindowType_Drawable)
+      mWidget->FreeNativeData((HDC)mPluginWindow.window, NS_NATIVE_GRAPHIC);
+  }
+#endif
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
@@ -2480,8 +2499,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 
         if (PR_TRUE == windowless)
         {
-          mPluginWindow.window = nsnull;    //XXX this needs to be a HDC
+          //mPluginWindow.window = nsnull;    //XXX this needs to be a HDC
           mPluginWindow.type = nsPluginWindowType_Drawable;
+          mPluginWindow.window = GetPluginPort();//~~~
         }
         else
         {

@@ -491,6 +491,7 @@ class nsIWidget : public nsISupports {
     virtual void AddChild(nsIWidget* aChild) = 0;
     virtual void RemoveChild(nsIWidget* aChild) = 0;
     virtual void* GetNativeData(PRUint32 aDataType) = 0;
+    virtual void FreeNativeData(void * data, PRUint32 aDataType) = 0;//~~~
     virtual nsIRenderingContext* GetRenderingContext() = 0;
     virtual nsIDeviceContext* GetDeviceContext() = 0;
     virtual nsIAppShell *GetAppShell() = 0;
