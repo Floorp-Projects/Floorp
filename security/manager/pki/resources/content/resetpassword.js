@@ -48,20 +48,12 @@ function onLoad()
     tokenName = self.name;
   }
 
-  var okButton = document.getElementById("ok");
-  var cancelButton = document.getElementById("cancel");
-  var helpButton = document.getElementById("help");
+  var okButton = document.documentElement.getButton("accept");
+  var cancelButton = document.documentElement.getButton("cancel");
   
-  var bundle = document.getElementById("pippki_bundle");
-
-  doSetOKCancel(resetPassword, null, null, null);
-
-  if (okButton && cancelButton && bundle) {
-    okButton.setAttribute("label", bundle.getString("resetPasswordButtonLabel"));
-    okButton.removeAttribute("default");
-    cancelButton.setAttribute("default", "true");
-    cancelButton.focus();
-  }
+  okButton.removeAttribute("default");
+  cancelButton.setAttribute("default", "true");
+  cancelButton.focus();
 }
 
 function resetPassword()
@@ -97,10 +89,6 @@ function resetPassword()
       bundle.getString("resetPasswordConfirmationMessage"));
   }
 
-  window.close();
+  return true;
 }
 
-function doHelpButton()
-{
-  openHelp('reset_pwd');
-}

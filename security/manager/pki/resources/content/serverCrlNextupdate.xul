@@ -39,15 +39,17 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
-<!DOCTYPE window [
+<!DOCTYPE dialog [
     <!ENTITY % pipPkiDTD SYSTEM "chrome://pippki/locale/pippki.dtd">
     %pipPkiDTD;
 ]>
 
-<window
+<dialog
   id="serverCrlNextupdate"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  style="width: 30em; height: 16em"
+  style="width: 30em;"
+  buttons="accept,help"
+  ondialoghelp="openHelp('exp_crl');"
   onload="onLoad();"
 >
 <script type="application/x-javascript" src="chrome://global/content/strres.js" />
@@ -55,24 +57,10 @@
 <script type="application/x-javascript" src="chrome://pippki/content/serverCrlNextupdate.js" />
 <script type="application/x-javascript" src="chrome://help/content/contextHelp.js" />
 
-<keyset id="keys">
-  <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK()"    />
-  <key id="return-key" keycode="VK_RETURN" oncommand="doOK()"    />
-</keyset>
+  <description id="message1"/>
+  <separator/>
+  <description id="message2"/>
+  <separator/>
+  <label value="&serverCrlNextupdate.message;"/>
 
-<vbox style="margin: 5px;" flex="100%">
-
-  <description id="message1" flex="100%"/>
-  <separator/>
-  <description id="message2" flex="100%"/>
-  <separator/>
-  <label value="&serverCrlNextupdate.message;" flex="100%"/>
-  <separator/>
-  <hbox>
-  <button id="ok-button" label="&ok.label;"
-     oncommand="doOK();" /> 
-  <button id="help-button" label="&help.label;"
-    oncommand="openHelp('exp_crl');" /> 
-  </hbox>
-</vbox>
-</window>
+</dialog>

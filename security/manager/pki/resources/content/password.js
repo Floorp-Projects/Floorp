@@ -50,6 +50,7 @@ var pw1;
 
 function onLoad()
 {
+  document.documentElement.getButton("accept").disabled = true;
 
   pw1 = document.getElementById("pw1");
   try {
@@ -157,6 +158,7 @@ function process()
 
 function onP12Load()
 {
+  document.documentElement.getButton("accept").disabled = true;
   pw1 = document.getElementById("pw1");
   params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
   // Select first password field
@@ -229,15 +231,12 @@ function setPassword()
     success = true;
   }
 
-  // Terminate dialog
-  if (success) {
-    if (params) {
-      // Return value 1 means "successfully executed ok"
-      params.SetInt(1, 1);
-    }
+  if (success && params)
+    // Return value 1 means "successfully executed ok"
+    params.SetInt(1, 1);
 
-    window.close();
-  }
+  // Terminate dialog
+  return success;
 }
 
 function getPassword()
@@ -247,7 +246,7 @@ function getPassword()
   // Return value
   params.SetInt(1, 1);
   // Terminate dialog
-  window.close();
+  return true;
 }
 
 function setP12Password()
@@ -257,7 +256,7 @@ function setP12Password()
   // Return value
   params.SetInt(1, 1);
   // Terminate dialog
-  window.close();
+  return true;
 }
 
 function setPasswordStrength()
@@ -318,8 +317,6 @@ function checkPasswords()
   var pw1=document.getElementById('pw1').value;
   var pw2=document.getElementById('pw2').value;
 
-  var ok=document.getElementById('ok-button');
-
   var oldpwbox = document.getElementById("oldpw");
   if (oldpwbox) {
     var initpw = oldpwbox.getAttribute("inited");
@@ -329,16 +326,10 @@ function checkPasswords()
       // was called with the intention to change the password.
       // The token currently uses an empty password.
       // We will not allow changing the password from empty to empty.
-      ok.setAttribute("disabled","true");
+      document.documentElement.getButton("accept").disabled = true;
       return;
     }
   }
 
-  if (pw1 == pw2){
-    ok.setAttribute("disabled","false");
-  } else
-  {
-    ok.setAttribute("disabled","true");
-  }
-
+  document.documentElement.getButton("accept").disabled = (pw1 != pw2);
 }

@@ -40,8 +40,6 @@ var gPrefService = null;
 var gPrefBranch = null;
 
 function onLoad() {
-  doSetOKCancel(doOK, doCancel);
-
   // Set checkboxes from prefs
   const nsIPrefService = Components.interfaces.nsIPrefService;
 
@@ -93,9 +91,5 @@ function doOK() {
   gPrefService.savePrefFile(null);
  } catch(e) { }
 
- window.close();
-}
-
-function doCancel() {
-  window.close();
+ return true;
 }

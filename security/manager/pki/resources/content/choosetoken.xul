@@ -23,15 +23,19 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE window [
+<!DOCTYPE dialog [
 <!ENTITY % pippkiDTD SYSTEM "chrome://pippki/locale/pippki.dtd" >
 %pippkiDTD;
 ]>
 
 
-<window id="ssl_warning" title="&chooseToken.title;"
+<dialog id="ssl_warning" title="&chooseToken.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   style="width: 40em;"
+  buttons="accept,cancel,help"
+  ondialogaccept="return doOk();"
+  ondialogcancel="return doCancel();"
+  ondialoghelp="openHelp('which_token');"
   onload="onLoad();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
@@ -39,27 +43,11 @@
 <script type="application/x-javascript" src="chrome://pippki/content/choosetoken.js"/>
 <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
-<keyset id="keys">
-  <key id="enter-key"  keycode="VK_ENTER"  oncommand="if (!document.getElementById('ok-button').disabled) doOK();"/>
-  <key id="return-key" keycode="VK_RETURN" oncommand="if (!document.getElementById('ok-button').disabled) doOK();"/>
-  <key id="esc-key"    keycode="VK_ESCAPE" oncommand="doCancel();"/>
-</keyset>
-
-<vbox style="margin: 5px;" flex="1">
-    <groupbox>
+  <groupbox>
     <description>&chooseToken.message1;</description>
     <menulist id="tokens">
-        <menupopup/>
+      <menupopup/>
     </menulist>
-    </groupbox>
-  <separator />
-  <hbox>
-  <button id="ok-button" label="&ok.label;"
-          oncommand="doOK();"/> 
-  <button id="cancel-button" label="&cancel.label;"
-          oncommand="doCancel();"/> 
-  <button id="help-button" label="&help.label;"
-          oncommand="openHelp('which_token');"/> 
-  </hbox>
-</vbox>
-</window>
+  </groupbox>
+
+</dialog>

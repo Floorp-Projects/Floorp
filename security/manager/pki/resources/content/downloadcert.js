@@ -63,7 +63,6 @@ function onLoad()
                                              [ caName ],
                                               1);
   setText("message2", message2);
-  window.sizeToContent();
 }
 
 function viewCert()
@@ -89,11 +88,11 @@ function doOK()
   else
     params.SetInt(4,0);
   params.SetInt(1,1);
-  window.close();
+  return true;
 }
 
 function doCancel()
 {
   params.SetInt(1,0);
-  window.close();
+  return true;
 }

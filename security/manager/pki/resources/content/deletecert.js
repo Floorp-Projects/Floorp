@@ -117,7 +117,6 @@ function setWindowName()
   }
 
   setText("impact",impact);
-  window.sizeToContent();
 }
 
 function doOK()
@@ -138,7 +137,7 @@ function doOK()
     }
   }
   gParams.SetInt(1, 1); // means OK
-  window.close();
+  return true;
 }
 
 function doCancel()
@@ -149,7 +148,7 @@ function doCancel()
      gParams.SetString(x+1, "");
   }
   gParams.SetInt(1, 0); // means CANCEL
-  window.close();
+  return true;
 }
 
 function doHelp()
