@@ -75,6 +75,7 @@ public:
   virtual void      SetCaretPosition(PRUint32 aPosition);
   virtual PRUint32  GetCaretPosition();
   virtual PRBool    AutoErase();
+  virtual PRBool 		DispatchMouseEvent(nsMouseEvent &aEvent);
 
   void							PrimitiveKeyDown(PRInt16	aKey,PRInt16 aModifiers);
 
