@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Takashi Toyoshima <toyoshim@be-in.org>
  */
 
 #ifndef nsClipboard_h__
@@ -27,8 +28,6 @@
 #include <Clipboard.h>
 
 class nsITransferable;
-class nsIClipboardOwner;
-class nsIWidget;
 
 /**
  * Native BeOS Clipboard wrapper
@@ -40,9 +39,6 @@ class nsClipboard : public nsBaseClipboard
 public:
   nsClipboard();
   virtual ~nsClipboard();
-
-  //nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIClipboard  
   NS_IMETHOD ForceDataToClipboard();
@@ -57,36 +53,6 @@ protected:
   PRBool            mIgnoreEmptyNotification;
 
   static BView  *sView;
-
-//  // Used for communicating pasted data
-//  // from the asynchronous X routines back to a blocking paste:
-//  GtkSelectionData mSelectionData;
-//  PRBool mBlocking;
-//
-//  void SelectionReceiver(GtkWidget *aWidget,
-//                         GtkSelectionData *aSelectionData);
-//
-//  static void SelectionGetCB(GtkWidget *widget, 
-//                             GtkSelectionData *selection_data,
-//                             guint      /*info*/,
-//                             guint      /*time*/,
-//                             gpointer data);
-//
-//  static void SelectionClearCB(GtkWidget *widget, 
-//                               GdkEventSelection *event,
-//                               gpointer data );
-//
-//  static void SelectionRequestCB(GtkWidget *aWidget,
-//                             GtkSelectionData *aSelectionData,
-//                             gpointer aData);
-//  
-//  static void SelectionReceivedCB(GtkWidget *aWidget,
-//                                  GtkSelectionData *aSelectionData,
-//                                  gpointer aData);
-//
-//  static void SelectionNotifyCB(GtkWidget *aWidget,
-//                                GtkSelectionData *aSelectionData,
-//                                gpointer aData);
 };
 
 #endif // nsClipboard_h__
