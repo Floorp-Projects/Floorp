@@ -62,6 +62,9 @@ nsXIFConverter::nsXIFConverter(nsString& aBuffer)
 
 nsXIFConverter::~nsXIFConverter()
 {
+#ifdef DEBUG
+  WriteDebugFile();
+#endif
 }
 
 
@@ -315,6 +318,20 @@ void nsXIFConverter::AddComment(const nsString& aContent)
   mBuffer.Append(mEndComment);
 }
 
+void nsXIFConverter::AddContentComment(const nsString& aContent)
+{
+  // For actual comments, don't want to include the begin and
+  // end tags; but commenting them out caused bug
+  // http://bugzilla.mozilla.org/show_bug.cgi?id=7720
+  // so we'll have to look into this more deeply later.
+  nsString tag(mComment);
+  AddStartTag(tag, PR_FALSE);
+  nsAutoString content;
+  aContent.Mid(content, 4, aContent.Length() - 7);
+  AddContent(content);
+  AddEndTag(tag, PR_FALSE);
+}
+
 
 void nsXIFConverter::BeginContainer(nsIAtom* aTag)
 {
@@ -457,7 +474,11 @@ void nsXIFConverter::EndCSSDeclaration()
   FinishStartTag(nsString("css_declaration"),PR_TRUE);
 }
 
-void nsXIFConverter::Write()
+#ifdef DEBUG
+//
+// Leave a temp file for debugging purposes
+//
+void nsXIFConverter::WriteDebugFile()
 {
 #if defined(WIN32)
   const char* filename="c:\\temp\\xif.html";
@@ -477,3 +498,4 @@ void nsXIFConverter::Write()
   delete[] s;
 #endif
 }
+#endif /* DEBUG */

@@ -515,6 +515,7 @@ private:
     void      BeginStartTag(const nsIParserNode& aNode);
     eHTMLTags GetStartTag(const nsIParserNode& aNode, nsString& aName);
     void      AddEndTag(const nsIParserNode& aNode);
+    void      AddEndCommentTag(const nsIParserNode& aNode);
 
     PRBool          StartTopOfStack();
     nsIParserNode*  PeekNode();

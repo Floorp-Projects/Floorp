@@ -92,6 +92,7 @@ public:
 
   void AddContent(const nsString& aContent);
   void AddComment(const nsString& aComment);
+  void AddContentComment(const nsString& aComment);
 
   void AddHTMLAttribute(const nsString& aName, const nsString& aValue);
 
@@ -112,18 +113,18 @@ public:
   void EndCSSDeclaration();
   void EndCSSDeclarationList();
 
-  PRBool  IsMarkupEntity(const PRUnichar aChar);
-  PRBool  AddMarkupEntity(const PRUnichar aChar);
+  PRBool IsMarkupEntity(const PRUnichar aChar);
+  PRBool AddMarkupEntity(const PRUnichar aChar);
 
-  // Output routines
-  void Write();
+#ifdef DEBUG
+  void WriteDebugFile();        // saves to a temp file
+#endif
 
-  void    SetSelection(nsIDOMSelection* aSelection);
+  void SetSelection(nsIDOMSelection* aSelection);
 
   nsIDOMSelection*  GetSelection() {
     return mSelection;
   }
-   
 };
 
 #endif

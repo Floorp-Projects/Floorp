@@ -576,8 +576,7 @@ nsresult nsXIFDTD::ReleaseTokenPump(nsITagHandler* aHandler){
 nsresult nsXIFDTD::HandleWhiteSpaceToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
-  CStartToken*  st    = (CStartToken*)(aToken);
-  eXIFTags      type  =(eXIFTags)st->GetTypeID();
+  //CStartToken*  st    = (CStartToken*)(aToken);
 
   //Begin by gathering up attributes...
   nsCParserNode node((CHTMLToken*)aToken);
@@ -677,6 +676,11 @@ nsresult nsXIFDTD::HandleStartToken(CToken* aToken) {
         mInContent = PR_TRUE;
       break;
 
+      case eXIFTag_comment:
+        StartTopOfStack();
+        mSink->AddComment(node);
+      break;
+
       case eXIFTag_encode:
         ProcessEncodeTag(node);
       break;
@@ -711,6 +715,8 @@ nsresult nsXIFDTD::HandleStartToken(CToken* aToken) {
         AddCSSDeclaration(node);
       break;
 
+      default:
+      break;
     }
   } 
   return result;
@@ -750,6 +756,10 @@ nsresult nsXIFDTD::HandleEndToken(CToken* aToken) {
       mInContent = PR_FALSE;
     break;
     
+    case eXIFTag_comment:
+      CloseContainer(node);
+    break;
+
     case eXIFTag_css_stylesheet:
       mInContent = PR_FALSE;
       EndCSSStyleSheet(node);
@@ -764,6 +774,9 @@ nsresult nsXIFDTD::HandleEndToken(CToken* aToken) {
     case eXIFTag_css_declaration_list:
       mInContent = PR_FALSE;
       EndCSSDeclarationList(node);
+    break;
+
+    default:
     break;
   }
   return result;
@@ -817,7 +830,7 @@ nsresult nsXIFDTD::HandleCommentToken(CToken* aToken) {
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
 nsresult nsXIFDTD::HandleAttributeToken(CToken* aToken) {
-  CAttributeToken*  at = (CAttributeToken*)(aToken);
+  //CAttributeToken*  at = (CAttributeToken*)(aToken);
   NS_PRECONDITION(0!=aToken,kNullToken);
   NS_ERROR("attribute encountered -- this shouldn't happen!");
 
@@ -875,7 +888,7 @@ CTokenHandler* nsXIFDTD::AddTokenHandler(CTokenHandler* aHandler) {
   if(aHandler)  {
     eHTMLTokenTypes type=(eHTMLTokenTypes)aHandler->GetTokenType();
     if(type<eToken_last) {
-      CTokenHandler* old=mTokenHandlers[type];
+      //CTokenHandler* old=mTokenHandlers[type];
       mTokenHandlers[type]=aHandler;
     }
     else {
@@ -1221,6 +1234,9 @@ eHTMLTags nsXIFDTD::GetStartTag(const nsIParserNode& aNode, nsString& aName)
       aName = "style";
       tag = GetHTMLTag(aName);
     break;  
+
+    default:
+    break;  
   }
   return tag;
 }
@@ -1387,10 +1403,13 @@ void nsXIFDTD::BeginStartTag(const nsIParserNode& aNode)
 //        nsCParserNode*  node = new nsCParserNode(token);
         PushNodeAndToken(tagName);
       break;
+    default:
+      break;
   }
-
 }
 
+// Translate aNode (which has a typeID corresponding to its XIF tag)
+// to the correct node for the sink.
 void nsXIFDTD::AddEndTag(const nsIParserNode& aNode)
 {
   // Get the top the HTML stack
@@ -1408,7 +1427,21 @@ void nsXIFDTD::AddEndTag(const nsIParserNode& aNode)
   // delete the name
   if (name != nsnull)
     delete name;
- 
+}
+
+// Translate aNode (which has a typeID corresponding to its XIF tag)
+// to the correct node for the sink.
+void nsXIFDTD::AddEndCommentTag(const nsIParserNode& aNode)
+{
+  // Make a comment token
+  eHTMLTags tag = eHTMLTag_comment;
+   
+  // Create a parse node for this token
+  CEndToken token(tag);
+  nsCParserNode node(&token);
+
+  // close the container 
+  mSink->CloseContainer(node); 
 }
 
 
@@ -1432,6 +1465,8 @@ nsresult nsXIFDTD::OpenContainer(const nsIParserNode& aNode){
     case eXIFTag_leaf:
       BeginStartTag(aNode);
     break;
+    default:
+    break;
   }    
   mContextStack[mContextStackPos++]=type;
 
@@ -1454,6 +1489,8 @@ nsresult nsXIFDTD::CloseContainer(const nsIParserNode& aNode)
   
   if (type == eXIFTag_container)
     AddEndTag(aNode);
+  else if (type == eXIFTag_comment)
+    AddEndCommentTag(aNode);
 
   mContextStack[--mContextStackPos]=eXIFTag_unknown;
 
@@ -1472,7 +1509,7 @@ nsresult nsXIFDTD::CloseContainer(const nsIParserNode& aNode)
  */
 nsresult nsXIFDTD::AddLeaf(const nsIParserNode& aNode)
 {
-  eXIFTags  type = (eXIFTags)aNode.GetNodeType();    
+  //eXIFTags  type = (eXIFTags)aNode.GetNodeType();    
   nsresult result=mSink->AddLeaf(aNode); 
   return result;
 }
@@ -1540,7 +1577,7 @@ nsresult nsXIFDTD::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
         aNode.AddAttribute(theToken);
       } 
     }
-    else return kEOF;
+    else return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
@@ -1708,7 +1745,7 @@ void nsXIFDTD::BeginCSSStyleSheet(const nsIParserNode& aNode)
       mMaxCSSSelectorWidth = temp;
   }
   
-  const char* name = NS_EnumToTag(eHTMLTag_html);
+  //const char* name = NS_EnumToTag(eHTMLTag_html);
 }
 
 void nsXIFDTD::EndCSSStyleSheet(const nsIParserNode& aNode)
@@ -1762,10 +1799,10 @@ void nsXIFDTD::AddCSSSelector(const nsIParserNode& aNode)
 
 void nsXIFDTD::BeginCSSDeclarationList(const nsIParserNode& aNode)
 {
-  PRInt32 index = mBuffer.RFind('\n');
-  if (index == kNotFound)
-    index = 0;
-  PRInt32 offset = mBuffer.Length() - index;
+  PRInt32 indx = mBuffer.RFind('\n');
+  if (indx == kNotFound)
+    indx = 0;
+  PRInt32 offset = mBuffer.Length() - indx;
   PRInt32 count = mMaxCSSSelectorWidth - offset;
 
   if (count < 0)

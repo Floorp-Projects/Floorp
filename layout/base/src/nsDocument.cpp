@@ -2652,7 +2652,6 @@ void nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 
 void nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
 {
-  
   nsXIFConverter  converter(aBuffer);
   // call the function
 
@@ -2680,9 +2679,6 @@ void nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
   converter.AddEndTag("section_body");
 
   converter.AddEndTag("section");
-
-  converter.Write();
-  
 }
 
 static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);

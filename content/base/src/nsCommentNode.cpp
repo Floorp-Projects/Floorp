@@ -364,7 +364,7 @@ nsCommentNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
   {
     nsString  buffer;
     textFrag->AppendTo(buffer);
-    aConverter.AddComment(buffer);
+    aConverter.AddContentComment(buffer);
   }
   NS_IF_RELEASE(document);
   // XXX Possible mem leak: Do we need to delete textFrag?
