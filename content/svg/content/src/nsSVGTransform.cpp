@@ -88,6 +88,7 @@ nsSVGTransform::Create(nsIDOMSVGTransform** aResult)
   NS_ADDREF(pl);
   if (NS_FAILED(pl->Init())) {
     NS_RELEASE(pl);
+    *aResult = nsnull;
     return NS_ERROR_FAILURE;
   }
   *aResult = pl;

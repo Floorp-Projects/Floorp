@@ -735,10 +735,14 @@ nsSVGSVGElement::CreateSVGTransform(nsIDOMSVGTransform **_retval)
 
 /* nsIDOMSVGTransform createSVGTransformFromMatrix (in nsIDOMSVGMatrix matrix); */
 NS_IMETHODIMP
-nsSVGSVGElement::CreateSVGTransformFromMatrix(nsIDOMSVGMatrix *matrix, nsIDOMSVGTransform **_retval)
+nsSVGSVGElement::CreateSVGTransformFromMatrix(nsIDOMSVGMatrix *matrix, 
+                                              nsIDOMSVGTransform **_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_NewSVGTransform(_retval);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  (*_retval)->SetMatrix(matrix);
+  return NS_OK;
 }
 
 /* DOMString createSVGString (); */

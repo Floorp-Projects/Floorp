@@ -454,8 +454,11 @@ NS_IMETHODIMP
 nsSVGTransformList::CreateSVGTransformFromMatrix(nsIDOMSVGMatrix *matrix,
                                                  nsIDOMSVGTransform **_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  nsresult rv = NS_NewSVGTransform(_retval);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  (*_retval)->SetMatrix(matrix);
+  return NS_OK;
 }
 
   /* nsIDOMSVGTransform consolidate (); */
