@@ -33,8 +33,7 @@
  * decision by deleting the provisions above and replace them with the notice
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the NPL, the GPL or the LGPL.
- *
+ * the terms of any one of the NPL, the GPL or the LGPL. *
  * ***** END LICENSE BLOCK ***** */
 
 #ifndef _nsAccessible_H_
@@ -42,6 +41,7 @@
 
 #include "nsAccessNodeWrap.h"
 #include "nsIAccessible.h"
+#include "nsPIAccessible.h"
 #include "nsWeakReference.h"
 #include "nsIDOMNodeList.h"
 #include "nsString.h"
@@ -56,7 +56,9 @@ class nsIAtom;
 // When mNextSibling is set to this, it indicates there ar eno more siblings
 #define DEAD_END_ACCESSIBLE NS_STATIC_CAST(nsIAccessible*, (void*)1)
 
-class nsAccessible : public nsAccessNodeWrap, public nsIAccessible
+class nsAccessible : public nsAccessNodeWrap, 
+                     public nsIAccessible, 
+                     public nsPIAccessible
 {
 public:
   // to eliminate the confusion of "magic numbers" -- if ( 0 ){ foo; }
@@ -69,6 +71,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLE
+  NS_DECL_NSPIACCESSIBLE
 
   NS_IMETHOD GetFocusedNode(nsIDOMNode **aFocusedNode);
 

@@ -101,6 +101,8 @@
 #include "nsXULTreeAccessibleWrap.h"
 #endif
 
+nsAccessibilityService *nsAccessibilityService::gAccessibilityService = nsnull;
+
 /**
   * nsAccessibilityService
   */
@@ -123,10 +125,11 @@ nsAccessibilityService::nsAccessibilityService()
 
 nsAccessibilityService::~nsAccessibilityService()
 {
+  nsAccessibilityService::gAccessibilityService = nsnull;
   nsAccessNodeWrap::ShutdownAccessibility();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsAccessibilityService, nsIAccessibilityService, 
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsAccessibilityService, nsIAccessibilityService, nsIAccessibleRetrieval,
                               nsIObserver, nsIWebProgressListener, nsISupportsWeakReference);
 
 // nsIObserver
@@ -242,7 +245,8 @@ nsAccessibilityService::GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIW
 
 nsresult
 nsAccessibilityService::GetShellFromNode(nsIDOMNode *aNode, nsIWeakReference **aWeakShell)
-{  nsCOMPtr<nsIDOMDocument> domDoc;
+{
+  nsCOMPtr<nsIDOMDocument> domDoc;
   aNode->GetOwnerDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   if (!doc)
@@ -325,22 +329,6 @@ nsAccessibilityService::CreateRootAccessible(nsIPresShell *aShell,
 
   NS_ADDREF(*aRootAcc);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsAccessibilityService::CreateCaretAccessible(nsIDOMNode *aNode, 
-                                              nsIAccessible *aRootAccessible,
-                                              nsIAccessibleCaret **_retval)
-{
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsCaretAccessible(aNode, weakShell, aRootAccessible);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
   return NS_OK;
 }
 
@@ -1708,19 +1696,28 @@ nsresult nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-nsresult
-NS_NewAccessibilityService(nsIAccessibilityService** aResult)
+nsresult 
+nsAccessibilityService::GetAccessibilityService(nsIAccessibilityService** aResult)
 {
   NS_PRECONDITION(aResult != nsnull, "null ptr");
   if (! aResult)
       return NS_ERROR_NULL_POINTER;
 
-  nsAccessibilityService* accService = new nsAccessibilityService();
-  if (!accService)
+  *aResult = nsnull;
+  if (!nsAccessibilityService::gAccessibilityService) {
+    gAccessibilityService = new nsAccessibilityService();
+    if (!gAccessibilityService ) {
       return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(accService);
-  *aResult = accService;
+    }
+  }
+  *aResult = nsAccessibilityService::gAccessibilityService;
+  NS_ADDREF(*aResult);
   return NS_OK;
 }
 
+nsresult
+NS_GetAccessibilityService(nsIAccessibilityService** aResult)
+{
+  return nsAccessibilityService::GetAccessibilityService(aResult);
+}
 

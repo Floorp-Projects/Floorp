@@ -171,7 +171,8 @@ NS_IMETHODIMP nsXULButtonAccessible::GetAccFirstChild(nsIAccessible **aResult)
       PRUint32 role;
       if (NS_SUCCEEDED(walker.mState.accessible->GetAccRole(&role)) && role == ROLE_PUSHBUTTON) {
         mFirstChild = walker.mState.accessible;
-        mFirstChild->SetAccNextSibling(nsnull);
+        nsCOMPtr<nsPIAccessible> privChildAcc = do_QueryInterface(mFirstChild);
+        privChildAcc->SetAccNextSibling(nsnull);
       }
     }
   }

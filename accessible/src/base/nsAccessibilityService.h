@@ -62,11 +62,13 @@ public:
   virtual ~nsAccessibilityService();
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIACCESSIBLERETRIEVAL
   NS_DECL_NSIACCESSIBILITYSERVICE
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   static nsresult GetShellFromNode(nsIDOMNode *aNode, nsIWeakReference **weakShell);
+  static nsresult GetAccessibilityService(nsIAccessibilityService** aResult);
 
 private:
   nsresult GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIWeakReference** aShell, nsIDOMNode** aContent);
@@ -74,6 +76,7 @@ private:
   nsIContent* FindContentForDocShell(nsIPresShell* aPresShell, nsIContent* aContent, nsIDocShell*  aDocShell);
   nsresult GetAccessible(nsIDOMNode *aNode, nsIPresShell *aPresShell,
                          nsIWeakReference *aWeakShell, nsIAccessible **aAccessible);
+  static nsAccessibilityService *gAccessibilityService;
 };
 
 #endif /* __nsIAccessibilityService_h__ */

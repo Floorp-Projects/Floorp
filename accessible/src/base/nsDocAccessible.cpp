@@ -121,6 +121,7 @@ nsDocAccessible::~nsDocAccessible()
 
 NS_INTERFACE_MAP_BEGIN(nsDocAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleDocument)
+  NS_INTERFACE_MAP_ENTRY(nsPIAccessibleDocument)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleEventReceiver)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMutationListener)
@@ -356,9 +357,10 @@ NS_IMETHODIMP nsDocAccessible::Init()
           // It should be changed to use GetAccessibleInWeakShell()
           nsCOMPtr<nsIAccessible> accParent;
           accService->GetAccessibleFor(ownerNode, getter_AddRefs(accParent));
-          if (accParent) {
+          nsCOMPtr<nsPIAccessible> privateAccParent(do_QueryInterface(accParent));
+          if (privateAccParent) {
             SetAccParent(accParent);
-            accParent->SetAccFirstChild(this);
+            privateAccParent->SetAccFirstChild(this);
           }
         }
       }
@@ -968,6 +970,11 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
     NS_ASSERTION(parentNode, "Impossible! Crawled up parent chain without "
                              "finding accessible. There should have at least "
                              "been a document accessible at the root.");
+    if (!parentNode) {
+      // XXX Todo We need to figure out why this is happening.
+      // For now, return safely.
+      return NS_ERROR_FAILURE;
+    }
     currentNode = parentNode;
   }
 
@@ -1001,8 +1008,10 @@ void nsDocAccessible::HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aAccessi
 
   nsCOMPtr<nsIAccessibleDocument> docAccessible;
   GetEventDocAccessible(subTreeToInvalidate, getter_AddRefs(docAccessible));
+  nsCOMPtr<nsPIAccessibleDocument> privateDocAccessible =
+    do_QueryInterface(docAccessible);
 
-  docAccessible->InvalidateCacheSubtree(subTreeToInvalidate);
+  privateDocAccessible->InvalidateCacheSubtree(subTreeToInvalidate);
 
   // We need to get an accessible for the mutation event's target node
   // If there is no accessible for that node, we need to keep moving up the parent
@@ -1013,13 +1022,16 @@ void nsDocAccessible::HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aAccessi
 
   nsCOMPtr<nsIAccessible> accessible;
   docAccessible->GetAccessibleInParentChain(targetNode, getter_AddRefs(accessible));
-  accessible->InvalidateChildren();
+  nsCOMPtr<nsPIAccessible> privateAccessible(do_QueryInterface(accessible));
+  if (!privateAccessible)
+    return;
+  privateAccessible->InvalidateChildren();
 
 #ifdef XP_WIN
   // Windows MSAA clients crash if they listen to create or destroy events
   aAccessibleEventType = nsIAccessibleEventReceiver::EVENT_REORDER;
 #endif
-  accessible->FireToolkitEvent(aAccessibleEventType, accessible, nsnull);
+  privateAccessible->FireToolkitEvent(aAccessibleEventType, accessible, nsnull);
 }
 
 NS_IMETHODIMP nsDocAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)

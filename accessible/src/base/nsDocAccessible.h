@@ -41,6 +41,7 @@
 
 #include "nsBaseWidgetAccessible.h"
 #include "nsIAccessibleDocument.h"
+#include "nsPIAccessibleDocument.h"
 #include "nsIAccessibleEventReceiver.h"
 #include "nsIDocument.h"
 #include "nsIDOMMutationListener.h"
@@ -58,6 +59,7 @@ const PRUint32 kDefaultCacheSize = 256;
 
 class nsDocAccessible : public nsBlockAccessible,
                         public nsIAccessibleDocument,
+                        public nsPIAccessibleDocument,
                         public nsIAccessibleEventReceiver,
                         public nsIWebProgressListener,
                         public nsIObserver,
@@ -69,6 +71,7 @@ class nsDocAccessible : public nsBlockAccessible,
   
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLEDOCUMENT
+  NS_DECL_NSPIACCESSIBLEDOCUMENT
   NS_DECL_NSIACCESSIBLEEVENTRECEIVER
   NS_DECL_NSIOBSERVER
 

@@ -123,5 +123,7 @@ NS_IMETHODIMP nsOuterDocAccessible::Init()
   NS_ENSURE_TRUE(innerAccessible, NS_ERROR_FAILURE);
 
   SetAccFirstChild(innerAccessible); // weak ref
-  return innerAccessible->SetAccParent(this);
+  nsCOMPtr<nsPIAccessible> privateInnerAccessible = 
+    do_QueryInterface(innerAccessible);
+  return privateInnerAccessible->SetAccParent(this);
 }

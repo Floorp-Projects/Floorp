@@ -42,6 +42,7 @@
 #include "nsHashtable.h"
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleDocument.h"
+#include "nsPIAccessibleDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMElement.h"
@@ -136,7 +137,10 @@ NS_IMETHODIMP nsAccessNode::Init()
   }
   void* uniqueID;
   GetUniqueID(&uniqueID);
-  docAccessible->CacheAccessNode(uniqueID, this);
+  nsCOMPtr<nsPIAccessibleDocument> privateDocAccessible =
+    do_QueryInterface(docAccessible);
+  NS_ASSERTION(privateDocAccessible, "No private docaccessible for docaccessible");
+  privateDocAccessible->CacheAccessNode(uniqueID, this);
 #ifdef DEBUG
   mIsInitialized = PR_TRUE;
 #endif
