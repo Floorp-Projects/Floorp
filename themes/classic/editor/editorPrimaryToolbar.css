@@ -121,7 +121,7 @@
   -moz-image-region: rect(191px 32px 207px 16px);
 }
 
-#printButton[disabled]="true" {
+#printButton[disabled="true"] {
   -moz-image-region: rect(191px 48px 207px 32px) !important;
 }
 
