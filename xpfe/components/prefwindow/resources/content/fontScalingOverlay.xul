@@ -29,7 +29,7 @@ Contributor(s): ______________________________________. -->
          >
 
   <window id="fontPanel">
-    <html:fieldset style="height: 100%" flex="100%">
+    <html:fieldset style="height: 100%">
       <html:legend>&fontScaling;</html:legend>
       <html:div>&fontScalingIntro;</html:div>
       <spring style="height: 10px;"/>
