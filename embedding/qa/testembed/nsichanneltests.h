@@ -104,6 +104,12 @@ private:
 	nsCAutoString theSpec;
 };
 
+typedef struct
+{
+	char		theURL[1024];
+	char		contentType[1024];	
+} ChannelRow;
+
 /////////////////////////////////////////////////////////////////////////////
 
 //{{AFX_INSERT_LOCATION}}
