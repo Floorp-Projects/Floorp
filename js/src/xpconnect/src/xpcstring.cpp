@@ -102,10 +102,9 @@ XPCReadableJSStringWrapper::GetSharedBufferHandle() const
         return sBufferHandle;
     }
 
-    XPCReadableJSStringWrapper * mutable_this =
-        NS_CONST_CAST(XPCReadableJSStringWrapper *, this);
-
     if (!mSharedBufferHandle) {
+        XPCReadableJSStringWrapper * mutable_this =
+            NS_CONST_CAST(XPCReadableJSStringWrapper *, this);
         PRUnichar *chars =
             NS_REINTERPRET_CAST(PRUnichar *, JS_GetStringChars(mStr));
 
@@ -119,9 +118,8 @@ XPCReadableJSStringWrapper::GetSharedBufferHandle() const
         }
 
         mutable_this->mSharedBufferHandle->RootString();
+        mutable_this->mSharedBufferHandle->AcquireReference();
     }
-
-    mutable_this->mSharedBufferHandle->AcquireReference();
 
     return mSharedBufferHandle;
 }
