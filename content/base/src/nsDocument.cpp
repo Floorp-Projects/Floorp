@@ -2146,14 +2146,19 @@ NS_IMETHODIMP
 nsDocument::CreateAttribute(const nsString& aName, 
                             nsIDOMAttr** aReturn)
 {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_NOT_INITIALIZED);
+
   nsAutoString value;
   nsDOMAttribute* attribute;
-  
-  value.Truncate();
-  attribute = new nsDOMAttribute(nsnull, aName, value);
-  if (nsnull == attribute) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsresult rv = mNodeInfoManager->GetNodeInfo(aName, nsnull, kNameSpaceID_None,
+                                              *getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv); 
+ 
+  attribute = new nsDOMAttribute(nsnull, nodeInfo, value);
+  NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY); 
 
   return attribute->QueryInterface(NS_GET_IID(nsIDOMAttr), (void**)aReturn);
 }

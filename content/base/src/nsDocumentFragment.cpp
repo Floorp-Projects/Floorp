@@ -425,7 +425,7 @@ nsDocumentFragment::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsDocumentFragment::Normalize()
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  // Nothing to do here yet
   return NS_OK;
 }
 

@@ -560,30 +560,39 @@ nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
     name.Truncate();
     name.Append(key);
 
-    nsIAtom* nameSpacePrefix = CutNameSpacePrefix(name);
-    nsIAtom* nameAtom = NS_NewAtom(name);
-    PRInt32 nameSpaceID = (nsnull == nameSpacePrefix) ? kNameSpaceID_None : GetNameSpaceId(nameSpacePrefix);
-    if (kNameSpaceID_Unknown == nameSpaceID) {
-      nameSpaceID = kNameSpaceID_None;  // XXX is this correct? or is it a bad document?
+    nsCOMPtr<nsIAtom> nameSpacePrefix(dont_AddRef(CutNameSpacePrefix(name)));
+    nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(name)));
+    PRInt32 nameSpaceID;
+    
+    if (nameSpacePrefix) {
+        nameSpaceID = GetNameSpaceId(nameSpacePrefix);
+    } else {
+      if (nameAtom.get() == nsLayoutAtoms::xmlnsNameSpace)
+        nameSpaceID = kNameSpaceID_XMLNS;
+      else
+        nameSpaceID = kNameSpaceID_None;
     }
-    if ((kNameSpaceID_XMLNS == nameSpaceID) && aIsHTML) {
-      NS_RELEASE(nameAtom);
+
+    if (kNameSpaceID_Unknown == nameSpaceID) {
+      nameSpaceID = kNameSpaceID_None;
+      nameAtom = dont_AddRef(NS_NewAtom(key));
+      nameSpacePrefix = nsnull;
+    } else if ((kNameSpaceID_XMLNS == nameSpaceID) && aIsHTML) {
       name.InsertWithConversion("xmlns:", 0);
-      nameAtom = NS_NewAtom(name);
+      nameAtom = dont_AddRef(NS_NewAtom(name));
       nameSpaceID = kNameSpaceID_HTML;  // XXX this is wrong, but necessary until HTML can store other namespaces for attrs
     }
 
-    nsAutoString value;
-    if (NS_CONTENT_ATTR_NOT_THERE ==
-        aContent->GetAttribute(nameSpaceID, nameAtom, value)) {
-      // Get value and remove mandatory quotes
-      GetAttributeValueAt(aNode, i, v);
+    nsCOMPtr<nsINodeInfo> ni;
+    mNodeInfoManager->GetNodeInfo(nameAtom, nameSpacePrefix, nameSpaceID,
+                                  *getter_AddRefs(ni));
+    NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
-      // Add attribute to content
-      aContent->SetAttribute(nameSpaceID, nameAtom, v, PR_FALSE);
-    }
-    NS_RELEASE(nameAtom);
-    NS_IF_RELEASE(nameSpacePrefix);
+    // Get value and remove mandatory quotes
+    GetAttributeValueAt(aNode, i, v);
+
+    // Add attribute to content
+    aContent->SetAttribute(ni, v, PR_FALSE);
   }
 
   // Give autoloading links a chance to fire

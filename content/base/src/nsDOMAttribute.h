@@ -28,6 +28,8 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsGenericDOMNodeList.h"
 #include "nsString.h"
+#include "nsCOMPtr.h"
+#include "nsINodeInfo.h"
 
 class nsIContent;
 class nsDOMAttribute;
@@ -41,7 +43,6 @@ public:
   NS_IMETHOD DropReference() = 0;
   NS_IMETHOD SetContent(nsIContent* aContent) = 0;
   NS_IMETHOD GetContent(nsIContent** aContent) = 0;
-  NS_IMETHOD SetName(const nsString& aName) = 0;
 };
 
 // bogus child list for an attribute
@@ -69,8 +70,7 @@ class nsDOMAttribute : public nsIDOMAttr,
                        public nsIDOMAttributePrivate
 {
 public:
-  nsDOMAttribute(nsIContent* aContent, 
-                 const nsString& aName, 
+  nsDOMAttribute(nsIContent* aContent, nsINodeInfo *aNodeInfo,
                  const nsString& aValue);
   virtual ~nsDOMAttribute();
 
@@ -89,11 +89,10 @@ public:
   NS_IMETHOD DropReference();
   NS_IMETHOD SetContent(nsIContent* aContent);
   NS_IMETHOD GetContent(nsIContent** aContent);
-  NS_IMETHOD SetName(const nsString& aName);
 
 private:
   nsIContent* mContent;
-  nsString mName;
+  nsCOMPtr<nsINodeInfo> mNodeInfo;
   nsString mValue;
   // XXX For now, there's only a single child - a text
   // element representing the value

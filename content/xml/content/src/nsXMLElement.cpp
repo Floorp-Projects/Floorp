@@ -219,8 +219,26 @@ nsXMLElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                            const nsString& aValue,
                            PRBool aNotify)
 {
-  if ((kNameSpaceID_XLink == aNameSpaceID) &&
-      (kTypeAtom == aName)) { 
+  nsresult rv;
+  nsCOMPtr<nsINodeInfoManager> nimgr;
+  rv = mInner.mNodeInfo->GetNodeInfoManager(*getter_AddRefs(nimgr));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsINodeInfo> ni;
+  rv = nimgr->GetNodeInfo(aName, nsnull, aNameSpaceID,
+                          *getter_AddRefs(ni));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return SetAttribute(ni, aValue, aNotify);
+}
+
+NS_IMETHODIMP 
+nsXMLElement::SetAttribute(nsINodeInfo *aNodeInfo, const nsString& aValue,
+                           PRBool aNotify)
+{
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  if (aNodeInfo->Equals(kTypeAtom, kNameSpaceID_XLink)) { 
     if (aValue.EqualsAtom(kSimpleAtom, PR_FALSE)) {
       // NOTE: This really is a link according to the XLink spec,
       //       we do not need to check other attributes. If there
@@ -237,24 +255,7 @@ nsXMLElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
     // We will check for actuate="onLoad" in MaybeTriggerAutoLink
   }
 
-  return mInner.SetAttribute(aNameSpaceID, aName, aValue, aNotify);
-}
-
-NS_IMETHODIMP 
-nsXMLElement::SetAttribute(nsINodeInfo *aNodeInfo, const nsString& aValue,
-                           PRBool aNotify)
-{
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
-
-  nsCOMPtr<nsIAtom> atom;
-  PRInt32 nsid;
-
-  aNodeInfo->GetNameAtom(*getter_AddRefs(atom));
-  aNodeInfo->GetNamespaceID(nsid);
-
-  // We still rely on the old way of setting the attribute.
-
-  return SetAttribute(nsid, atom, aValue, aNotify);
+  return mInner.SetAttribute(aNodeInfo, aValue, aNotify);
 }
 
 static nsresult WebShellToPresContext(nsIWebShell *aShell, nsIPresContext **aPresContext)

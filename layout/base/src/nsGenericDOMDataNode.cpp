@@ -217,28 +217,26 @@ nsGenericDOMDataNode::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 nsresult
 nsGenericDOMDataNode::GetNamespaceURI(nsString& aNamespaceURI)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  aNamespaceURI.Truncate();
   return NS_OK;
 }
 
 nsresult
 nsGenericDOMDataNode::GetPrefix(nsString& aPrefix)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  aPrefix.Truncate();
   return NS_OK;
 }
 
 nsresult
 nsGenericDOMDataNode::SetPrefix(const nsString& aPrefix)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_DOM_NAMESPACE_ERR;
 }
 
 nsresult
 nsGenericDOMDataNode::Normalize()
 {
-  NS_NOTYETIMPLEMENTED("write me!");
   return NS_OK;
 }
 
