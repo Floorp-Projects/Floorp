@@ -225,13 +225,13 @@ struct JSContext {
 #ifdef JS_THREADSAFE
     jsword              thread;
     jsrefcount          requestDepth;
-    JSPackedBool        destroying;
 #endif
 
-    /* Exception state (NB: throwing is packed with destroying above). */
+    /* Exception state. */
     JSPackedBool        throwing;           /* is there a pending exception? */
     jsval               exception;          /* most-recently-thrown exceptin */
 
+    /* Per-context options. */
     uint32              options;            /* see jsapi.h for JSOPTION_* */
 
     /* Delay JS_SetVersion scanner effects until they're needed. */
@@ -243,7 +243,7 @@ struct JSContext {
 #define JS_HAS_WERROR_OPTION(cx)    ((cx)->options & JSOPTION_WERROR)
 
 extern JSContext *
-js_NewContext(JSRuntime *rt, size_t stacksize);
+js_NewContext(JSRuntime *rt, size_t stackChunkSize);
 
 extern void
 js_DestroyContext(JSContext *cx, JSGCMode gcmode);

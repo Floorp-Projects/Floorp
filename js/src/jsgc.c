@@ -726,13 +726,12 @@ js_GC(JSContext *cx)
     /* Bump gcLevel and return rather than nest on this thread. */
     currentThread = js_CurrentThreadId();
     if (rt->gcThread == currentThread) {
+	JS_ASSERT(rt->gcLevel > 0);
 	rt->gcLevel++;
 	METER(if (rt->gcLevel > rt->gcStats.maxlevel)
 		  rt->gcStats.maxlevel = rt->gcLevel);
-	if (rt->gcLevel > 1) {
-	    JS_UNLOCK_GC(rt);
-	    return;
-	}
+        JS_UNLOCK_GC(rt);
+        return;
     }
 
     /* If we're in a request, indicate, temporarily, that we're inactive. */
@@ -743,11 +742,14 @@ js_GC(JSContext *cx)
 
     /* If another thread is already in GC, don't attempt GC; wait instead. */
     if (rt->gcLevel > 0) {
-        /* If we are destroying this context return early to avoid deadlock. */
-        if (!cx->destroying) {
-	    while (rt->gcLevel > 0)
-	        JS_AWAIT_GC_DONE(rt);
-	}
+        /* Bump gcLevel to restart the current GC, so it finds new garbage. */
+	rt->gcLevel++;
+	METER(if (rt->gcLevel > rt->gcStats.maxlevel)
+		  rt->gcStats.maxlevel = rt->gcLevel);
+
+        /* Wait for the other thread to finish, then resume our request. */
+        while (rt->gcLevel > 0)
+            JS_AWAIT_GC_DONE(rt);
 	if (cx->requestDepth)
 	    rt->requestCount++;
 	JS_UNLOCK_GC(rt);
@@ -756,8 +758,6 @@ js_GC(JSContext *cx)
 
     /* No other thread is in GC, so indicate that we're now in GC. */
     rt->gcLevel = 1;
-
-    /* Also indicate that GC is active on this thread. */
     rt->gcThread = currentThread;
 
     /* Wait for all other requests to finish. */

@@ -57,7 +57,7 @@
 #include "jsscript.h"
 
 JSContext *
-js_NewContext(JSRuntime *rt, size_t stacksize)
+js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
     JSContext *cx;
     JSBool ok, first;
@@ -109,7 +109,7 @@ js_NewContext(JSRuntime *rt, size_t stacksize)
     cx->version = JSVERSION_DEFAULT;
     cx->jsop_eq = JSOP_EQ;
     cx->jsop_ne = JSOP_NE;
-    JS_InitArenaPool(&cx->stackPool, "stack", stacksize, sizeof(jsval));
+    JS_InitArenaPool(&cx->stackPool, "stack", stackChunkSize, sizeof(jsval));
     JS_InitArenaPool(&cx->codePool, "code", 1024, sizeof(jsbytecode));
     JS_InitArenaPool(&cx->notePool, "note", 256, sizeof(jssrcnote));
     JS_InitArenaPool(&cx->tempPool, "temp", 1024, sizeof(jsdouble));
@@ -169,27 +169,42 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
 	JS_ClearAllWatchPoints(cx);
     }
 
-    /* Remove more GC roots in regExpStatics, then collect garbage. */
 #if JS_HAS_REGEXPS
+    /* Remove more GC roots in regExpStatics, then collect garbage. */
     js_FreeRegExpStatics(cx, &cx->regExpStatics);
 #endif
 
-    /* Used to avoid deadlock with a GC waiting for this request to end. */
 #ifdef JS_THREADSAFE
-    cx->destroying = JS_TRUE;
+    /*
+     * Destroying a context implicitly calls JS_EndRequest().  Also, we must
+     * end our request here in case we are "last" -- in that event, another
+     * js_DestroyContext that was not last might be waiting in the GC for our
+     * request to end.  We'll let it run below, just before we do the truly
+     * final GC and then free atom state.
+     *
+     * At this point, cx must be inaccessible to other threads.  It's off the
+     * rt->contextList, and it should not be reachable via any object private
+     * data structure.
+     */
+    while (cx->requestDepth != 0)
+        JS_EndRequest(cx);
 #endif
 
-    if (gcmode == JS_FORCE_GC)
-        js_ForceGC(cx);
-    else if (gcmode == JS_MAYBE_GC)
-        JS_MaybeGC(cx);
-
     if (last) {
-        if (gcmode == JS_NO_GC)
-            js_ForceGC(cx);
-
-	/* Free atom state now that we've run the GC. */
+        /* Always force, so we wait for any racing GC to finish. */
+        js_ForceGC(cx);
 	js_FreeAtomState(cx, &rt->atomState);
+
+        /* Take the runtime down now that it has no contexts. */
+	JS_LOCK_RUNTIME(rt);
+    	rt->state = JSRTS_DOWN;
+	JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
+	JS_UNLOCK_RUNTIME(rt);
+    } else {
+        if (gcmode == JS_FORCE_GC)
+            js_ForceGC(cx);
+        else if (gcmode == JS_MAYBE_GC)
+            JS_MaybeGC(cx);
     }
 
     /* Free the stuff hanging off of cx. */
@@ -200,13 +215,7 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
     if (cx->lastMessage)
 	free(cx->lastMessage);
 
-#ifdef JS_THREADSAFE
-    /* Destroying a context implicitly calls JS_EndRequest(). */
-    if (cx->requestDepth)
-        JS_EndRequest(cx);
-#endif
-
-    /* remove any argument formatters */
+    /* Remove any argument formatters. */
     map = cx->argumentFormatMap;
     while (map) {
         JSArgumentFormatMap *temp = map;
@@ -214,14 +223,8 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
         JS_free(cx, temp);
     }
 
+    /* Finally, free cx itself. */
     free(cx);
-
-    if (last) {
-	JS_LOCK_RUNTIME(rt);
-    	rt->state = JSRTS_DOWN;
-	JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
-	JS_UNLOCK_RUNTIME(rt);
-    }
 }
 
 JSContext *
