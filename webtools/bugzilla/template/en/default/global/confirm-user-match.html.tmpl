@@ -67,10 +67,10 @@
 [% END %]
 
 <p>
-  <table border=0>
+  <table border="0">
     <tr>
-      <td colspan=2>
-        <hr width=100% size=1>
+      <td colspan="2">
+        <hr width="100%" size="1">
       </td>
     </tr>
 
@@ -78,10 +78,10 @@
 
   [% FOREACH field = matches %]
     <tr>
-      <td align=left valign=top>
+      <td align="left" valign="top">
         [% PROCESS field_names field_name=field.key %]:
       </td>
-      <td align=left valign=top>
+      <td align="left" valign="top">
           [% FOREACH query = field.value %]
               <b>[% query.key FILTER html %]</b>
             [% IF query.value.users.size %]
@@ -143,8 +143,8 @@
       </td>
     </tr>
     <tr>
-      <td colspan=2>
-        <hr width=100% size=1>
+      <td colspan="2">
+        <hr width="100%" size="1">
       </td>
     </tr>
   [% END %]

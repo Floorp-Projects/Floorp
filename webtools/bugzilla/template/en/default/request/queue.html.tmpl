@@ -45,7 +45,7 @@
       <td><input type="text" name="requester" value="[% form.requester FILTER html %]" size="20"></td>
       <th>Product:</th>
       <td>
-        <select name="product" onChange="selectProduct(this.form, 'product', 'component', 'Any');">
+        <select name="product" onchange="selectProduct(this.form, 'product', 'component', 'Any');">
           <option value="">Any</option>
           [% FOREACH item = products %]
             <option value="[% item FILTER html %]" 
@@ -180,7 +180,7 @@
 
 [% BLOCK display_attachment %]
   [% IF request.attach_id %]
-    <a href="attachment.cgi?id=[% request.attach_id %]&action=edit">
+    <a href="attachment.cgi?id=[% request.attach_id %]&amp;action=edit">
       [% request.attach_id %]: [%+ request.attach_summary FILTER html %]</a>
   [% ELSE %]
     N/A

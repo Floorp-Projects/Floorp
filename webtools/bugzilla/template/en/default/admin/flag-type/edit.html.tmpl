@@ -95,7 +95,7 @@
           <tr>
             <td style="vertical-align: top;">
               <b>Product/Component:</b><br>
-              <select name="product" onChange="selectProduct(this.form, 'product', 'component', '__Any__');">
+              <select name="product" onchange="selectProduct(this.form, 'product', 'component', '__Any__');">
                 <option value="">__Any__</option>
                 [% FOREACH item = products %]
                   <option value="[% item %]" [% "selected" IF type.product.name == item %]>[% item %]</option>
@@ -112,12 +112,12 @@
             </td>
             <td style="vertical-align: top;">
               <b>Inclusions:</b><br>
-              [% PROCESS "global/select-menu.html.tmpl" name="inclusion_to_remove" multiple=1 size=4 options=type.inclusions %]<br>
+              [% PROCESS "global/select-menu.html.tmpl" name="inclusion_to_remove" multiple="1" size="4" options=type.inclusions %]<br>
               <input type="submit" name="categoryAction" value="Remove Inclusion">
             </td>
             <td style="vertical-align: top;">
               <b>Exclusions:</b><br>
-              [% PROCESS "global/select-menu.html.tmpl" name="exclusion_to_remove" multiple=1 size=4 options=type.exclusions %]<br>
+              [% PROCESS "global/select-menu.html.tmpl" name="exclusion_to_remove" multiple="1" size="4" options=type.exclusions %]<br>
               <input type="submit" name="categoryAction" value="Remove Exclusion">
             </td>
           </tr>

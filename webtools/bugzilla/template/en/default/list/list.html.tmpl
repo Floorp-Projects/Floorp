@@ -133,7 +133,7 @@
     <input type="hidden" name="buglist" value="[% buglist %]">
     <input type="submit" value="Long Format">
     &nbsp;&nbsp;
-    <a href="buglist.cgi?[% urlquerypart %]&ctype=csv">CSV</a> &nbsp;&nbsp;
+    <a href="buglist.cgi?[% urlquerypart %]&amp;ctype=csv">CSV</a> &nbsp;&nbsp;
     <a href="colchange.cgi?[% urlquerypart %]">Change Columns</a> &nbsp;&nbsp;
 
     [% IF bugs.size > 1 && caneditbugs && !dotweak %]

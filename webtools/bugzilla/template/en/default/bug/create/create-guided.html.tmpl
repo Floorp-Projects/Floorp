@@ -42,7 +42,7 @@
 [% tablecolour = "#FFFFCC" %]
 
 [%# This script displays the descriptions for selected components. %]
-<script>
+<script type="text/javascript">
 var descriptions = [
 [% FOREACH c = component_ %]
   '[% c.description FILTER js %]',
@@ -486,7 +486,7 @@ function PutDescription() {
         <option name="major" value="major">
           Major: A major feature is broken.
         </option>
-        <option name="normal" value="normal" selected>
+        <option name="normal" value="normal" selected="selected">
           Normal: It's a bug that should be fixed.
         </option>
         <option name="minor" value="minor">

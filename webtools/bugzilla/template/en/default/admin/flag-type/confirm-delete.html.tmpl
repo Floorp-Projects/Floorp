@@ -30,20 +30,20 @@
    There are [% flag_count %] flags of type [% name %].  
    If you delete this type, those flags will also be deleted.  Note that 
    instead of deleting the type you can 
-   <a href="editflagtypes.cgi?action=deactivate&id=[% flag_type.id %]">deactivate it</a>,
+   <a href="editflagtypes.cgi?action=deactivate&amp;id=[% flag_type.id %]">deactivate it</a>,
    in which case the type and its flags will remain in the database
    but will not appear in the Bugzilla UI.
 </p>
 
 <table>
    <tr>
-      <td colspan=2>
+      <td colspan="2">
          Do you really want to delete this type?
       </td>
    </tr>
    <tr>
       <td>
-         <a href="editflagtypes.cgi?action=delete&id=[% flag_type.id %]">
+         <a href="editflagtypes.cgi?action=delete&amp;id=[% flag_type.id %]">
             Yes, delete
          </a>
       </td>

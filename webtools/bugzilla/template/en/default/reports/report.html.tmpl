@@ -95,7 +95,8 @@
         [% END %]width=[% width %]&amp;height=[% height %]      
       [% END %]
       
-      <img src="[% imageurl %]" width="[% width %]" height="[% height %]">
+      <img alt="Graphical report results" src="[% imageurl %]"
+        width="[% width %]" height="[% height %]">
     [% END %]
     <br>
   [% END %]  
@@ -113,12 +114,12 @@
         [% FOREACH other_format = formats %]
           [% NEXT IF other_format.name == "pie" AND row_field %]
           [% UNLESS other_format.name == format %]
-            <a href="[% formaturl %]&format=[% other_format.name %]">
+            <a href="[% formaturl %]&amp;format=[% other_format.name %]">
           [% END %]
           [% other_format.description %]
           [% "</a>" UNLESS other_format.name == format %] | 
         [% END %]
-        <a href="[% formaturl %]&ctype=csv">CSV</a> 
+        <a href="[% formaturl %]&amp;ctype=csv">CSV</a> 
       </td>
       
       [% IF format != "table" %]
@@ -126,15 +127,15 @@
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         </td>
 
-        [% sizeurl = "report.cgi?$switchbase&action=wrap&format=$format" %]
+        [% sizeurl = "report.cgi?$switchbase&amp;action=wrap&amp;format=$format" %]
         <td align="center">
-          <a href="[% sizeurl %]&width=[% width %]&height=
+          <a href="[% sizeurl %]&amp;width=[% width %]&amp;height=
                    [% height + 100 %]">Taller</a><br>
-          <a href="[% sizeurl %]&width=[% width - 100 %]&height=
+          <a href="[% sizeurl %]&amp;width=[% width - 100 %]&amp;height=
                    [% height %]">Thinner</a> * 
-          <a href="[% sizeurl %]&width=[% width + 100 %]&height=
+          <a href="[% sizeurl %]&amp;width=[% width + 100 %]&amp;height=
                    [% height %]">Fatter</a>&nbsp;&nbsp;&nbsp;&nbsp;<br>
-          <a href="[% sizeurl %]&width=[% width %]&height=
+          <a href="[% sizeurl %]&amp;width=[% width %]&amp;height=
                    [% height - 100 %]">Shorter</a><br>
         </td>
       [% END %]
@@ -143,11 +144,13 @@
 
   <p>
     [% IF format == "table" %]
-      <a href="query.cgi?[% switchbase %]&format=report-table">Edit 
+      <a href="query.cgi?[% switchbase %]&amp;format=report-table">Edit 
       this report</a>
     [% ELSE %]
-      <a href="query.cgi?[% switchbase %]&format=report-graph&chart_format=
-      [% format %]&cumulate=[% cumulate %]">Edit this report</a>
+      <a href="query.cgi?[% switchbase %]&amp;format=report-graph&amp;
+       chart_format=[% format %]&amp;cumulate=[% cumulate %]">
+        Edit this report
+      </a>
     [% END %]
   </p>
  

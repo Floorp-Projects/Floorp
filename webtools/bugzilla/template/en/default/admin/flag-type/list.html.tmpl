@@ -46,7 +46,7 @@
 [% PROCESS display_flag_types types=bug_types %]
 
 <p>
-  <a href="editflagtypes.cgi?action=enter&target_type=bug">Create Flag Type for Bugs</a>
+  <a href="editflagtypes.cgi?action=enter&amp;target_type=bug">Create Flag Type for Bugs</a>
 </p>
 
 <h3>Flag Types for Attachments</h3>
@@ -54,10 +54,10 @@
 [% PROCESS display_flag_types types=attachment_types %]
 
 <p>
-  <a href="editflagtypes.cgi?action=enter&target_type=attachment">Create Flag Type For Attachments</a>
+  <a href="editflagtypes.cgi?action=enter&amp;target_type=attachment">Create Flag Type For Attachments</a>
 </p>
 
-<script language="JavaScript">
+<script type="text/javascript" language="JavaScript">
   <!--
   function confirmDelete(id, name, count)
   {
@@ -91,11 +91,11 @@
     [% FOREACH type = types %]
 
       <tr class="[% type.is_active ? "active" : "inactive" %]">
-        <td><a href="editflagtypes.cgi?action=edit&id=[% type.id %]">[% type.name FILTER html %]</a></td>
+        <td><a href="editflagtypes.cgi?action=edit&amp;id=[% type.id %]">[% type.name FILTER html %]</a></td>
         <td>[% type.description FILTER html %]</td>
         <td>
-          <a href="editflagtypes.cgi?action=copy&id=[% type.id %]">Copy</a>
-          | <a href="editflagtypes.cgi?action=confirmdelete&id=[% type.id %]" 
+          <a href="editflagtypes.cgi?action=copy&amp;id=[% type.id %]">Copy</a>
+          | <a href="editflagtypes.cgi?action=confirmdelete&amp;id=[% type.id %]" 
                onclick="return confirmDelete([% type.id %], '[% type.name FILTER js %]', 
                                              [% type.flag_count %]);">Delete</a>
         </td>
