@@ -119,22 +119,22 @@ PRIVATE Bool sendRefererHeader=TRUE;
 /* definitions of state for the state machine design
  */
 typedef enum {
-  HTTP_START_CONNECT,
-  HTTP_FINISH_CONNECT,
-  HTTP_SEND_PROXY_TUNNEL_REQUEST,
-  HTTP_BEGIN_UPLOAD_FILE,
-  HTTP_SEND_REQUEST,
-  HTTP_SEND_POST_DATA,
-  HTTP_PARSE_FIRST_LINE,
-  HTTP_PARSE_MIME_HEADERS,
-  HTTP_SETUP_STREAM,
-  HTTP_BEGIN_PUSH_PARTIAL_CACHE_FILE,
-  HTTP_PUSH_PARTIAL_CACHE_FILE,
-  HTTP_PULL_DATA,
-  HTTP_DONE,
-  HTTP_ERROR_DONE,
-HG93634
-  HTTP_FREE
+    HTTP_START_CONNECT,
+    HTTP_FINISH_CONNECT,
+    HTTP_SEND_PROXY_TUNNEL_REQUEST,
+    HTTP_BEGIN_UPLOAD_FILE,
+    HTTP_SEND_REQUEST,
+    HTTP_SEND_POST_DATA,
+    HTTP_PARSE_FIRST_LINE,
+    HTTP_PARSE_MIME_HEADERS,
+    HTTP_SETUP_STREAM,
+    HTTP_BEGIN_PUSH_PARTIAL_CACHE_FILE,
+    HTTP_PUSH_PARTIAL_CACHE_FILE,
+    HTTP_PULL_DATA,
+    HTTP_DONE,
+    HTTP_ERROR_DONE,
+    HG93634
+    HTTP_FREE
 } StatesEnum;
 
 /* structure to hold data about a tcp connection
@@ -142,17 +142,17 @@ HG93634
  */
 typedef struct _HTTPConnection {
     char   *hostname;       /* hostname string (may contain :port) */
-    PRFileDesc *sock;           /* socket */
+    PRFileDesc *sock;       /* socket */
     XP_Bool busy;           /* is the connection in use already? */
     XP_Bool prev_cache;     /* did this connection come from the cache? */
     XP_Bool secure;         /* is it a secure connection? */
-  XP_Bool doNotSendConHdr;
+    XP_Bool doNotSendConHdr;
 } HTTPConnection;
 
 typedef enum {
-  POINT_NINE,
-  ONE_POINT_O,
-  ONE_POINT_ONE
+    POINT_NINE,
+    ONE_POINT_O,
+    ONE_POINT_ONE
 } HTTP_Version;
 
 /* structure to hold data pertaining to the active state of
@@ -270,7 +270,6 @@ int ReturnErrorStatus (int status)
 
 #define STATUS(Status)      ReturnErrorStatus (Status)
 
-
 #define PUTBLOCK(b, l)  (*cd->stream->put_block) \
                                     (cd->stream, b, l)
 #define PUTSTRING(s)    (*cd->stream->put_block) \
@@ -282,9 +281,8 @@ int ReturnErrorStatus (int status)
 
 
 PUBLIC void
-NET_SetSendRefererHeader(Bool b)
-{
-  sendRefererHeader=b;
+NET_SetSendRefererHeader(Bool b) {
+    sendRefererHeader=b;
 }
 
 /* set the method that the user wishes to identify themselves
@@ -292,9 +290,8 @@ NET_SetSendRefererHeader(Bool b)
  * Default is DoNotIdentify unless this is called at startup
  */
 PUBLIC void 
-NET_SetIdentifyMeType(IdentifyMeEnum method)
-{
-  http_identification_method = method;
+NET_SetIdentifyMeType(IdentifyMeEnum method) {
+    http_identification_method = method;
 }
 
 /* Build a string containing the internet keyword extracted from a URL struct.
@@ -356,93 +353,89 @@ PRIVATE int
 net_check_for_company_hostname(ActiveEntry *ce)
 {
     HTTPConData * cd = (HTTPConData *)ce->con_data;
-  Bool add_www = FALSE;
-  Bool add_com = FALSE;
-  Bool goBrowsing = FALSE;
+    Bool add_www = FALSE;
+    Bool add_com = FALSE;
+    Bool goBrowsing = FALSE;
    
     if (PREF_GetBoolPref("browser.goBrowsing.enabled", &goBrowsing) != PREF_OK) goBrowsing = 0;
 
-  if(!cd->orig_host)
-    {
-    char *dot=NULL;
+    if(!cd->orig_host) {
+        char *dot=NULL;
   
-    /* if the hostname doesn't have any
-    * dots in it, then assume it's of
-    * the form "netscape" or "ford".
-    * If we add www. and .com to the front
-    * and end we will get www.netscape.com :)
-    */
-    char * host = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
+        /* if the hostname doesn't have any
+        * dots in it, then assume it's of
+        * the form "netscape" or "ford".
+        * If we add www. and .com to the front
+        * and end we will get www.netscape.com :)
+        */
+        char * host = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
   
-    if(host && *host && !(dot = PL_strchr(host, '.')))
-        {
-      add_www = add_com = TRUE;
-      }
-    else if(dot && !PL_strchr(dot+1, '.'))
-      {
-      /* there is only one dot in the host name
-       * so it's probably of the form of "netscape.com"
-       * or "ukans.edu".   Add a "www." on the front
-       * and try again.
-       */
-      add_www = TRUE;
-      }
+        if(host && *host && !(dot = PL_strchr(host, '.'))) {
+            add_www = add_com = TRUE;
 
-    if(add_www) {
-      /* no dots in hostname */
-      if (goBrowsing && !PL_strchr(ce->URL_s->address, '/')) {     
-      char *pUrl;
-      PREF_CopyCharPref("network.search.url",&pUrl);
-      if (pUrl) {
-        char *tmp = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
-        char* new_address = PR_smprintf("%sgo+%s", pUrl, tmp);
-        PR_Free(pUrl);
-        PR_Free(ce->URL_s->address);
-        PR_FREEIF(tmp);  
-        ce->URL_s->address = new_address;
-  
-        if(cd->connection->sock != NULL)
-          NET_TotalNumberOfOpenConnections--;
-        return (0);
-      } else return (-1);
-      } else {
-
-      char *new_address = NET_ParseURL(ce->URL_s->address, 
-                      GET_PROTOCOL_PART);
-      char *tmp = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
-
-      /* save the host for error messages
-       */
-      cd->orig_host = tmp;
-  
-      StrAllocCat(new_address, "//www.");
-      StrAllocCat(new_address, tmp);
-  
-      if(add_com)
-        StrAllocCat(new_address, ".com");
-
-      tmp = NET_ParseURL(ce->URL_s->address, 
-            GET_PATH_PART | GET_SEARCH_PART | GET_HASH_PART);
-          
-      StrAllocCat(new_address, tmp);
-      PR_FREEIF(tmp);
-  
-      PR_Free(ce->URL_s->address);
-      ce->URL_s->address = new_address;
-  
-        if(cd->connection->sock != NULL)
-          NET_TotalNumberOfOpenConnections--;
-
-      return(0);  /* will repeat this step */
+        } else if(dot && !PL_strchr(dot+1, '.')) {
+            /* there is only one dot in the host name
+             * so it's probably of the form of "netscape.com"
+             * or "ukans.edu".   Add a "www." on the front
+             * and try again.
+             */
+            add_www = TRUE;
         }
+
+        if(add_www) {
+            /* no dots in hostname */
+            if (goBrowsing && !PL_strchr(ce->URL_s->address, '/')) {     
+                char *pUrl;
+                PREF_CopyCharPref("network.search.url",&pUrl);
+                if (pUrl) {
+                    char *tmp = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
+                    char* new_address = PR_smprintf("%sgo+%s", pUrl, tmp);
+                    PR_Free(pUrl);
+                    PR_Free(ce->URL_s->address);
+                    PR_FREEIF(tmp);  
+                    ce->URL_s->address = new_address;
+  
+                    if(cd->connection->sock != NULL)
+                        NET_TotalNumberOfOpenConnections--;
+                    return (0);
+                } else {
+                    return (-1);
+                }
+            } else {
+
+                char *new_address = NET_ParseURL(ce->URL_s->address, 
+                          GET_PROTOCOL_PART);
+                char *tmp = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
+
+                /* save the host for error messages */
+                cd->orig_host = tmp;
+
+                StrAllocCat(new_address, "//www.");
+                StrAllocCat(new_address, tmp);
+
+                if(add_com)
+                    StrAllocCat(new_address, ".com");
+
+                tmp = NET_ParseURL(ce->URL_s->address, 
+                        GET_PATH_PART | GET_SEARCH_PART | GET_HASH_PART);
+          
+                StrAllocCat(new_address, tmp);
+                PR_FREEIF(tmp);
+
+                PR_Free(ce->URL_s->address);
+                ce->URL_s->address = new_address;
+
+                if(cd->connection->sock != NULL)
+                    NET_TotalNumberOfOpenConnections--;
+
+                return(0);  /* will repeat this step */
+            }
         }   
-    } 
-  else
-    {
-    /* the host mapping trick has already been applied and failed
-     * redo the error message and fail
-     */
-    ce->URL_s->error_msg = NET_ExplainErrorDetails(
+    } else {
+        /* the host mapping trick has already been applied and failed
+         * redo the error message and fail
+         */
+        ce->URL_s->error_msg = NET_ExplainErrorDetails(
                         MK_UNABLE_TO_LOCATE_HOST, 
                         cd->orig_host);
         /* fall through for failure case */
@@ -456,26 +449,24 @@ net_check_for_company_hostname(ActiveEntry *ce)
  * returns the TCP status code
  */
 PRIVATE int
-net_start_http_connect(ActiveEntry * ce)
-{
+net_start_http_connect(ActiveEntry * ce) {
     HTTPConData * cd = (HTTPConData *)ce->con_data;
-  HG29898
-  int def_port;
+    HG29898
+    int def_port;
 
-  def_port = DEF_HTTP_PORT;
+    def_port = DEF_HTTP_PORT;
 
-  HG22201
+    HG22201
 
     /* if proxy_server is non NULL then use the string as a host:port
      * when a proxy server is used a connection is made to the proxy
      * host and port and the entire URL is sent instead of just
      * the path part.
      */ 
-    if(cd->proxy_server) 
-      {
-      /* MKConnect can take a URL or a host name as it's first
-       * argument
-       */
+    if(cd->proxy_server) {
+        /* MKConnect can take a URL or a host name as it's first
+         * argument
+         */
         ce->status = NET_BeginConnect (cd->proxy_server,  
                     NULL,
                     "HTTP", 
@@ -487,9 +478,7 @@ net_start_http_connect(ActiveEntry * ce)
                     &ce->URL_s->error_msg,
                     ce->socks_host,
                     ce->socks_port);
-      }
-    else
-      {
+    } else {
         ce->status = NET_BeginConnect (ce->URL_s->address,
                     ce->URL_s->IPAddressString,
                     "HTTP", 
@@ -501,86 +490,81 @@ net_start_http_connect(ActiveEntry * ce)
                     &ce->URL_s->error_msg,
                     ce->socks_host,
                     ce->socks_port);
-      }
+    }
 
-  /* set this so mkgeturl can select on it */
-  ce->socket = cd->connection->sock;
+    /* set this so mkgeturl can select on it */
+    ce->socket = cd->connection->sock;
 
-  if(cd->connection->sock != NULL)
-    NET_TotalNumberOfOpenConnections++;
+    if(cd->connection->sock != NULL)
+        NET_TotalNumberOfOpenConnections++;
 
-    if (ce->status < 0) 
-      {
-    if(ce->status == MK_UNABLE_TO_LOCATE_HOST 
-      && 0 == net_check_for_company_hostname(ce))
-      {
-      /* no need to set the state since this
-       * is the state we want again
-       */
-      if(cd->connection->sock != NULL)
+    if (ce->status < 0) {
+        if(ce->status == MK_UNABLE_TO_LOCATE_HOST 
+            && 0 == net_check_for_company_hostname(ce))
         {
-        PR_Close(cd->connection->sock);
-        cd->connection->sock = NULL;
-        ce->socket = NULL;
+            /* no need to set the state since this
+             * is the state we want again
+             */
+            if(cd->connection->sock != NULL) {
+                PR_Close(cd->connection->sock);
+                cd->connection->sock = NULL;
+                ce->socket = NULL;
+            }
+            return(0);
         }
-        return(0);
-      }
 
         TRACEMSG(("HTTP: Unable to connect to host for `%s' (errno = %d).", 
                           ce->URL_s->address, PR_GetOSError()));
-    /*
-     * Proxy failover
-     */
-    if (cd->proxy_conf && cd->proxy_server &&
-      (ce->status == MK_UNABLE_TO_CONNECT    ||
-       ce->status == MK_CONNECTION_TIMED_OUT ||
-       ce->status == MK_CONNECTION_REFUSED   ||
-       ce->status == MK_UNABLE_TO_LOCATE_HOST))
-      {
+        /*
+         * Proxy failover
+         */
+        if (cd->proxy_conf && cd->proxy_server &&
+            (ce->status == MK_UNABLE_TO_CONNECT    ||
+             ce->status == MK_CONNECTION_TIMED_OUT ||
+             ce->status == MK_CONNECTION_REFUSED   ||
+             ce->status == MK_UNABLE_TO_LOCATE_HOST)
+        ){
 #ifdef MOZILLA_CLIENT
-        if (pacf_get_proxy_addr(ce->window_id, cd->proxy_conf,
-                    &ce->proxy_addr,
-                    &ce->socks_host,
-                    &ce->socks_port))
-        {
-          cd->proxy_server = ce->proxy_addr;
-          return net_start_http_connect(ce);
-        }
+            if (pacf_get_proxy_addr(ce->window_id, cd->proxy_conf,
+                        &ce->proxy_addr,
+                        &ce->socks_host,
+                        &ce->socks_port))
+            {
+                cd->proxy_server = ce->proxy_addr;
+                return net_start_http_connect(ce);
+            }
 #endif  /* MOZILLA_CLIENT */
-      }
+        }
 
-    if(ce->status == MK_UNABLE_TO_CONNECT && cd->proxy_server)
-      {
-      StrAllocCopy (ce->URL_s->error_msg,
+        if(ce->status == MK_UNABLE_TO_CONNECT && cd->proxy_server)
+        {
+            StrAllocCopy (ce->URL_s->error_msg,
               XP_GetString(MK_UNABLE_TO_CONNECT_TO_PROXY));
-      ce->status = MK_UNABLE_TO_CONNECT_TO_PROXY;
-      }
+            ce->status = MK_UNABLE_TO_CONNECT_TO_PROXY;
+        }
 
         cd->next_state = HTTP_ERROR_DONE;
         return STATUS(ce->status);
-      }
+    } /* end status < 0 */
 
-    if(ce->status == MK_CONNECTED)
-      {
-    if(cd->use_proxy_tunnel)
+    if(ce->status == MK_CONNECTED) {
+        if(cd->use_proxy_tunnel)
             cd->next_state = HTTP_SEND_PROXY_TUNNEL_REQUEST;
-    else if(ce->URL_s->files_to_post)
-      cd->next_state = HTTP_BEGIN_UPLOAD_FILE;
-    else
-      {
-HG56817
-        cd->next_state = HTTP_SEND_REQUEST;
-      }
+        else if(ce->URL_s->files_to_post)
+            cd->next_state = HTTP_BEGIN_UPLOAD_FILE;
+        else {
+            HG56817
+            cd->next_state = HTTP_SEND_REQUEST;
+        }
         TRACEMSG(("Connected to HTTP server on sock #%d",cd->connection->sock));
         NET_SetReadSelect(ce->window_id, cd->connection->sock);
-      }
-    else
-      {
+    
+    } else {
         cd->next_state = HTTP_FINISH_CONNECT;
         cd->pause_for_read = TRUE;
         ce->con_sock = cd->connection->sock;  /* set the socket for select */
         NET_SetConnectSelect(ce->window_id, ce->con_sock);
-      }
+    }
 
     return STATUS(ce->status);
 }
@@ -603,8 +587,7 @@ net_finish_http_connect(ActiveEntry * ce)
      * host and port and the entire URL is sent instead of just
      * the path part.
      */
-    if(cd->proxy_server)
-      {
+    if(cd->proxy_server) {
         /* MKConnect can take a URL or a host name as it's first
          * argument
          */
@@ -615,9 +598,7 @@ net_finish_http_connect(ActiveEntry * ce)
                     &cd->tcp_con_data, 
                     ce->window_id,
                     &ce->URL_s->error_msg);
-      }
-    else
-      {
+    } else {
         ce->status = NET_FinishConnect(ce->URL_s->address,
                     "HTTP",
                     def_port,
@@ -625,106 +606,97 @@ net_finish_http_connect(ActiveEntry * ce)
                     &cd->tcp_con_data, 
                     ce->window_id,
                     &ce->URL_s->error_msg);
-      }
+    }
 
-
-    if (ce->status < 0)
-      {
-    if(ce->status == MK_UNABLE_TO_LOCATE_HOST 
-      && 0 == net_check_for_company_hostname(ce))
-      {
-      if(cd->connection->sock != NULL)
+    if (ce->status < 0) {
+        if(ce->status == MK_UNABLE_TO_LOCATE_HOST 
+            && 0 == net_check_for_company_hostname(ce))
         {
-        NET_ClearConnectSelect(ce->window_id, cd->connection->sock);
-        PR_Close(cd->connection->sock);
-        cd->connection->sock = NULL;
-        ce->socket = NULL;
-        ce->con_sock = NULL;
+            if(cd->connection->sock != NULL) {
+                NET_ClearConnectSelect(ce->window_id, cd->connection->sock);
+                PR_Close(cd->connection->sock);
+                cd->connection->sock = NULL;
+                ce->socket = NULL;
+                ce->con_sock = NULL;
+            }
+            cd->next_state = HTTP_START_CONNECT;
+            return(0);
         }
-      cd->next_state = HTTP_START_CONNECT;
-        return(0);
-      }
 
         NET_ClearConnectSelect(ce->window_id, ce->con_sock);
         TRACEMSG(("HTTP: Unable to connect to host for `%s' (errno = %d).",
                                               ce->URL_s->address, PR_GetOSError()));
 
-    /*
-     * Proxy failover
-     */
-    if (cd->proxy_conf && cd->proxy_server &&
-      (ce->status == MK_UNABLE_TO_CONNECT    ||
-       ce->status == MK_CONNECTION_TIMED_OUT ||
-       ce->status == MK_CONNECTION_REFUSED   ||
-       ce->status == MK_UNABLE_TO_LOCATE_HOST))
-      {
-#ifdef MOZILLA_CLIENT
-        if (pacf_get_proxy_addr(ce->window_id, cd->proxy_conf,
-                    &ce->proxy_addr,
-                    &ce->socks_host,
-                    &ce->socks_port))
+        /*
+         * Proxy failover
+         */
+        if (cd->proxy_conf && cd->proxy_server &&
+          (ce->status == MK_UNABLE_TO_CONNECT    ||
+           ce->status == MK_CONNECTION_TIMED_OUT ||
+           ce->status == MK_CONNECTION_REFUSED   ||
+           ce->status == MK_UNABLE_TO_LOCATE_HOST))
         {
-          cd->proxy_server = ce->proxy_addr;
-          return net_start_http_connect(ce);
-        }
+#ifdef MOZILLA_CLIENT
+            if (pacf_get_proxy_addr(ce->window_id, cd->proxy_conf,
+                        &ce->proxy_addr,
+                        &ce->socks_host,
+                        &ce->socks_port))
+            {
+                cd->proxy_server = ce->proxy_addr;
+                return net_start_http_connect(ce);
+            }
 #endif  /* MOZILLA_CLIENT */
-      }
+        }
 
-    /* proxy autodiscovery failover needs to be silent. If we were trying to
-     * connect to a pad server and failed, don't report errors, just go on
-     * about your business. */
-    if(NET_LoadingPac() && NET_UsingPadPac() ) {
-      /* Don't try to use the pad pac again. */
-      net_UsePadPac(FALSE);
-      cd->next_state=HTTP_DONE;
-      ce->status=0;
-      return STATUS(ce->status);
-    }
+        /* proxy autodiscovery failover needs to be silent. If we were trying to
+         * connect to a pad server and failed, don't report errors, just go on
+         * about your business. */
+        if(NET_LoadingPac() && NET_UsingPadPac() ) {
+            /* Don't try to use the pad pac again. */
+            net_UsePadPac(FALSE);
+            cd->next_state=HTTP_DONE;
+            ce->status=0;
+            return STATUS(ce->status);
+        }
 
-    if(ce->status == MK_UNABLE_TO_CONNECT && cd->proxy_server)
-      {
-      StrAllocCopy (ce->URL_s->error_msg,
+        if(ce->status == MK_UNABLE_TO_CONNECT && cd->proxy_server)
+        {
+            StrAllocCopy (ce->URL_s->error_msg,
               XP_GetString(MK_UNABLE_TO_CONNECT_TO_PROXY));
-      ce->status = MK_UNABLE_TO_CONNECT_TO_PROXY;
-      }
+            ce->status = MK_UNABLE_TO_CONNECT_TO_PROXY;
+        }
 
         cd->next_state = HTTP_ERROR_DONE;
         return STATUS(ce->status);
-      }
+    } /* end status < 0 */
 
-    if(ce->status == MK_CONNECTED)
-      {
+    if(ce->status == MK_CONNECTED) {
         NET_ClearConnectSelect(ce->window_id, ce->con_sock);
         ce->con_sock = NULL;  /* reset the socket so we don't select on it  */
-    /* set this so mkgeturl can select on it */
-    ce->socket = cd->connection->sock;
-    if(cd->use_proxy_tunnel)
+        /* set this so mkgeturl can select on it */
+        ce->socket = cd->connection->sock;
+        if(cd->use_proxy_tunnel)
             cd->next_state = HTTP_SEND_PROXY_TUNNEL_REQUEST;
-    else if(ce->URL_s->files_to_post)
-      cd->next_state = HTTP_BEGIN_UPLOAD_FILE;
-    else
-      {
-HG43241
-        cd->next_state = HTTP_SEND_REQUEST;
-      }
+        else if(ce->URL_s->files_to_post)
+            cd->next_state = HTTP_BEGIN_UPLOAD_FILE;
+        else {
+            HG43241
+            cd->next_state = HTTP_SEND_REQUEST;
+        }
         NET_SetReadSelect(ce->window_id, cd->connection->sock);
         TRACEMSG(("Connected to HTTP server on sock #%d",cd->connection->sock));
-
-      } 
-    else
-      {
-    /* unregister the old ce->socket from the select list
-     * and register the new value in the case that it changes
-     */
-    if(ce->con_sock != cd->connection->sock)
-        {
-          NET_ClearConnectSelect(ce->window_id, ce->con_sock);
-          ce->con_sock = cd->connection->sock; 
-          NET_SetConnectSelect(ce->window_id, ce->con_sock);
+    } else {
+        /* unregister the old ce->socket from the select list
+         * and register the new value in the case that it changes
+         */
+        if(ce->con_sock != cd->connection->sock) {
+            NET_ClearConnectSelect(ce->window_id, ce->con_sock);
+            ce->con_sock = cd->connection->sock; 
+            NET_SetConnectSelect(ce->window_id, ce->con_sock);
         }
   
         cd->pause_for_read = TRUE;
-      } 
+    } 
 
     return STATUS(ce->status);
 }
@@ -988,162 +960,149 @@ net_build_http_request (URL_Struct * URL_s,
             char          ** command)
 {
 
-  Bool http1=cd->send_http1;
-  char *proxy_server=(cd->use_proxy_tunnel ? NULL : cd->proxy_server);
-  Bool posting=cd->posting;
+    Bool http1=cd->send_http1;
+    char *proxy_server=(cd->use_proxy_tunnel ? NULL : cd->proxy_server);
+    Bool posting=cd->posting;
 
     char line_buffer[4096];  /* buffer */
     char *auth;         /* authorization header string */
-  size_t csize;        /* size of command */
-  const char *tempURL=NULL;
-  char *proxyServer=NULL;
+    size_t csize;        /* size of command */
+    const char *tempURL=NULL;
+    char *proxyServer=NULL;
         
-  /* begin the request
-   */
-  switch(URL_s->method)
-    {
-    case URL_MKDIR_METHOD:
+    /* begin the request */
+    switch(URL_s->method) {
+        case URL_MKDIR_METHOD:
 #define MKDIR_WORD "MKDIR "
-          BlockAllocCopy(*command, MKDIR_WORD, 5);
-      csize = sizeof(MKDIR_WORD)-1;
-      break;
+            BlockAllocCopy(*command, MKDIR_WORD, 5);
+            csize = sizeof(MKDIR_WORD)-1;
+            break;
 
-    case URL_DELETE_METHOD:
+        case URL_DELETE_METHOD:
 #define DELETE_WORD "DELETE "
 #define RMDIR_WORD "RMDIR "
-      if(URL_s->is_directory)
-        {
-            BlockAllocCopy(*command, RMDIR_WORD, 6);
-        csize = sizeof(RMDIR_WORD)-1;
-        }
-      else
-        {
-            BlockAllocCopy(*command, DELETE_WORD, 7);
-        csize = sizeof(DELETE_WORD)-1;
-        }
-      break;
+            if(URL_s->is_directory) {
+                BlockAllocCopy(*command, RMDIR_WORD, 6);
+                csize = sizeof(RMDIR_WORD)-1;
+            } else {
+                BlockAllocCopy(*command, DELETE_WORD, 7);
+                csize = sizeof(DELETE_WORD)-1;
+            }
+            break;
 
-    case URL_POST_METHOD:
+        case URL_POST_METHOD:
 #define POST_WORD "POST "
-          BlockAllocCopy(*command, POST_WORD, 5);
-      csize = sizeof(POST_WORD)-1;
-      break;
+            BlockAllocCopy(*command, POST_WORD, 5);
+            csize = sizeof(POST_WORD)-1;
+            break;
 
-      case URL_PUT_METHOD:
+        case URL_PUT_METHOD:
 #define PUT_WORD "PUT "
-          BlockAllocCopy(*command, PUT_WORD, 4);
-      csize = sizeof(PUT_WORD)-1;
-      break;
+            BlockAllocCopy(*command, PUT_WORD, 4);
+            csize = sizeof(PUT_WORD)-1;
+            break;
 
-      case URL_HEAD_METHOD:
+        case URL_HEAD_METHOD:
 #define HEAD_WORD "HEAD "
-          BlockAllocCopy(*command, HEAD_WORD, 5);
-      csize = sizeof(HEAD_WORD)-1;
-      break;
+            BlockAllocCopy(*command, HEAD_WORD, 5);
+            csize = sizeof(HEAD_WORD)-1;
+            break;
       
-    case URL_INDEX_METHOD:
+        case URL_INDEX_METHOD:
 #define INDEX_WORD "INDEX "
-      BlockAllocCopy(*command, INDEX_WORD, 6);
-      csize = sizeof(INDEX_WORD)-1;
-      break;
+            BlockAllocCopy(*command, INDEX_WORD, 6);
+            csize = sizeof(INDEX_WORD)-1;
+            break;
 
-    case URL_MOVE_METHOD:
+        case URL_MOVE_METHOD:
 #define MOVE_WORD "MOVE "
-      BlockAllocCopy(*command, MOVE_WORD, 5);
-      csize = sizeof(MOVE_WORD)-1;
-      break;
+            BlockAllocCopy(*command, MOVE_WORD, 5);
+            csize = sizeof(MOVE_WORD)-1;
+            break;
 
-    case URL_COPY_METHOD:
+        case URL_COPY_METHOD:
 #define COPY_WORD "COPY "
-      BlockAllocCopy(*command, COPY_WORD, 5);
-      csize = sizeof(COPY_WORD)-1;
-      break;
+            BlockAllocCopy(*command, COPY_WORD, 5);
+            csize = sizeof(COPY_WORD)-1;
+            break;
 
-    default:
-      PR_ASSERT(0);
-      /* fall through to GET */
+        default:
+            PR_ASSERT(0);
+            /* fall through to GET */
 
-      case URL_GET_METHOD:
+        case URL_GET_METHOD:
 #define GET_WORD "GET "
-          BlockAllocCopy(*command, GET_WORD, 4);
-      csize = sizeof(GET_WORD)-1;
-      break;
+            BlockAllocCopy(*command, GET_WORD, 4);
+            csize = sizeof(GET_WORD)-1;
+            break;
 
-      case URL_GETPROPERTIES_METHOD:
+        case URL_GETPROPERTIES_METHOD:
 #define GETPROPERTIES_WORD "GETPROPERTIES "
-          BlockAllocCopy(*command, GETPROPERTIES_WORD, 14);
-      csize = sizeof(GETPROPERTIES_WORD)-1;
-      break;
-    }
+            BlockAllocCopy(*command, GETPROPERTIES_WORD, 14);
+            csize = sizeof(GETPROPERTIES_WORD)-1;
+            break;
+    } /* End method switch */
 
 
     /* if we are using a proxy gateway copy in the entire URL
-   * minus the hash mark
-     */
-    if(proxy_server)
-    {
+     * minus the hash mark */
+    if(proxy_server) {
 
-    char *url_minus_hash = NET_ParseURL(URL_s->address, 
-      GET_PROTOCOL_PART 
-      | GET_USERNAME_PART
-      | GET_PASSWORD_PART
-      | GET_HOST_PART 
-      | GET_PATH_PART 
-      | GET_SEARCH_PART);
-    if(url_minus_hash)
-    {
-      BlockAllocCat(*command, (size_t) csize, url_minus_hash, PL_strlen(url_minus_hash));
-      csize += PL_strlen(url_minus_hash);
-      PR_Free(url_minus_hash);
-    }
+        char *url_minus_hash = NET_ParseURL(URL_s->address, 
+              GET_PROTOCOL_PART 
+            | GET_USERNAME_PART
+            | GET_PASSWORD_PART
+            | GET_HOST_PART 
+            | GET_PATH_PART 
+            | GET_SEARCH_PART);
 
-    }
-    else 
-    {
-    /* else use just the path and search stuff
-     */
-      char *path = NET_ParseURL(URL_s->address, 
-                    GET_PATH_PART | GET_SEARCH_PART);
+        if(url_minus_hash) {
+            BlockAllocCat(*command, (size_t) csize, url_minus_hash, PL_strlen(url_minus_hash));
+            csize += PL_strlen(url_minus_hash);
+            PR_Free(url_minus_hash);
+        }
+
+    } else {
+        /* else use just the path and search stuff */
+        char *path = NET_ParseURL(URL_s->address, GET_PATH_PART | GET_SEARCH_PART);
         BlockAllocCat(*command, csize, path, PL_strlen(path));
-    csize += PL_strlen(path);
-
-      PR_Free(path);
+        csize += PL_strlen(path);
+        PR_Free(path);
     }
 
-    if(http1) 
-      {
+    if(http1) {
         BlockAllocCat(*command, csize, " ", 1);
-    csize += 1;
+        csize += 1;
         BlockAllocCat(*command, csize, 
             VERSION_STRING, 
             PL_strlen(VERSION_STRING));
-    csize += PL_strlen(VERSION_STRING);
+        csize += PL_strlen(VERSION_STRING);
         /* finish the line */
         BlockAllocCat(*command, csize, CRLF, 2); /* CR LF, as in rfc 977 */
-    csize += 2;
+        csize += 2;
 
-    if ((URL_s->etag) && (URL_s->force_reload != NET_SUPER_RELOAD))
-    {
-      /* add the If-None-Match header */
-      PL_strcpy(line_buffer, "If-None-Match: \"");
-      BlockAllocCat(*command, csize,
-        line_buffer, PL_strlen(line_buffer));
-      csize += PL_strlen(line_buffer);
-      BlockAllocCat(*command, csize, 
-        URL_s->etag,
-        PL_strlen(URL_s->etag));
-      csize += PL_strlen(URL_s->etag);
-      /* Closing " */
-      BlockAllocCat(*command, csize,
-        "\"",
-        1);
-      csize += 1;
-      BlockAllocCat(*command, csize, CRLF, 2);
-      csize += 2;
-    }
+        if ((URL_s->etag) && (URL_s->force_reload != NET_SUPER_RELOAD))
+        {
+            /* add the If-None-Match header */
+            PL_strcpy(line_buffer, "If-None-Match: \"");
+            BlockAllocCat(*command, csize,
+                line_buffer, PL_strlen(line_buffer));
+            csize += PL_strlen(line_buffer);
+            BlockAllocCat(*command, csize, 
+                URL_s->etag,
+                PL_strlen(URL_s->etag));
+            csize += PL_strlen(URL_s->etag);
+            /* Closing " */
+            BlockAllocCat(*command, csize,
+                "\"",
+                1);
+            csize += 1;
+            BlockAllocCat(*command, csize, CRLF, 2);
+            csize += 2;
+        }
 
         if(URL_s->last_modified && URL_s->force_reload != NET_SUPER_RELOAD)
-          {
+        {
             /* add if modified since
              *
              * right now this is being added even if the server sent pragma: no-cache
@@ -1151,7 +1110,7 @@ net_build_http_request (URL_Struct * URL_s,
              * very efficient since we can still use the cache.
              */
 
-      /* add tmp character storage for strings in order for assert
+            /* add tmp character storage for strings in order for assert
              * to work properly in debug compile.
              * IBM compiler does not put "\" to make " work properly.
              */
@@ -1159,355 +1118,345 @@ net_build_http_request (URL_Struct * URL_s,
             char *tmp_str = "http";
 #endif
             {
-               /* A conversion from time_t to NSPR's int64 is needed in order to
-                * use the NSPR time functions.  URL_Struct should really be changed
-                * to use the NSPR time type instead of time_t.
-                */
+                /* A conversion from time_t to NSPR's int64 is needed in order to
+                 * use the NSPR time functions.  URL_Struct should really be changed
+                 * to use the NSPR time type instead of time_t.
+                 */
 #ifndef NSPR20
-               uint64   timeInSec;
-               uint64 timeInUSec;
-               uint64   secToUSec;
-               PRTime expandedTime;
+                uint64   timeInSec;
+                uint64 timeInUSec;
+                uint64   secToUSec;
+                PRTime expandedTime;
 #else
-               PRTime   timeInSec;
-               PRTime timeInUSec;
-               PRTime   secToUSec;
-               PRExplodedTime expandedTime;
+                PRTime   timeInSec;
+                PRTime timeInUSec;
+                PRTime   secToUSec;
+                PRExplodedTime expandedTime;
 #endif /* NSPR20 */
 
-               LL_I2L(timeInSec, URL_s->last_modified);
-               LL_I2L(secToUSec, PR_USEC_PER_SEC);
-               LL_MUL(timeInUSec, timeInSec, secToUSec);
+                LL_I2L(timeInSec, URL_s->last_modified);
+                LL_I2L(secToUSec, PR_USEC_PER_SEC);
+                LL_MUL(timeInUSec, timeInSec, secToUSec);
 #ifndef NSPR20
 #ifndef XP_MAC
-               timeInUSec = PR_ToGMT(timeInUSec);
+                timeInUSec = PR_ToGMT(timeInUSec);
 #endif /* XP_MAC */
-               PR_ExplodeTime(&expandedTime, timeInUSec);
+                PR_ExplodeTime(&expandedTime, timeInUSec);
 #else
-               PR_ExplodeTime(timeInUSec, PR_GMTParameters, &expandedTime);
+                PR_ExplodeTime(timeInUSec, PR_GMTParameters, &expandedTime);
 #endif /* NSPR20 */
-               PR_FormatTimeUSEnglish(line_buffer, 400,
+                PR_FormatTimeUSEnglish(line_buffer, 400,
                                       "If-Modified-Since: %a, %d %b %Y %H:%M:%S GMT",
                                       &expandedTime);
             }
 
-      /* must not be zero for http URL's 
-       * or else I screwed up the cache logic 
-       */
+            /* must not be zero for http URL's 
+             * or else I screwed up the cache logic 
+             */
 #ifndef AIX
-      PR_ASSERT(PL_strncasecmp(URL_s->address, tmp_str, 4)
-            || URL_s->real_content_length > 0);
+            PR_ASSERT(PL_strncasecmp(URL_s->address, tmp_str, 4)
+                || URL_s->real_content_length > 0);
 #endif
 
-      if(URL_s->real_content_length)
-              sprintf(&line_buffer[PL_strlen(line_buffer)], 
-              "; length=%ld" CRLF,
-              URL_s->real_content_length);
+            if(URL_s->real_content_length)
+                sprintf(&line_buffer[PL_strlen(line_buffer)], 
+                    "; length=%ld" CRLF,
+                    URL_s->real_content_length);
             BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-      csize += PL_strlen(line_buffer);
+            csize += PL_strlen(line_buffer);
 
             /* reset the expires since we will want to
              * either get a new one from the server or
              * set it to zero
              */
             URL_s->expires = 0;
-          }
+        } /* end if last_modified */
 
-        if(URL_s->http_headers)  /* use headers that were passed in */
-          {
-
+        if(URL_s->http_headers) {  /* use headers that were passed in */
             BlockAllocCat(*command, csize, URL_s->http_headers, PL_strlen(URL_s->http_headers));
-      csize += PL_strlen(URL_s->http_headers);
-          }
-        else
-          {
-      /* For MOVE method. This contains the destination uri name */
-      int meth=URL_s->method;
-      if(URL_s->destination 
-        && (*(URL_s->destination) != '\0')
-        && ( (meth == URL_MOVE_METHOD)
-            || (meth == URL_COPY_METHOD) ) 
-        ){
-        int len=0;
-        if(meth == URL_MOVE_METHOD) {
-          sprintf(line_buffer, "New-uri: %s", URL_s->destination);
-          len=PL_strlen(line_buffer);
-          BlockAllocCat(*command, csize, line_buffer, len);
-          csize+=len;
-        }
-        else if(meth == URL_COPY_METHOD) {
-          ;/* some http copy syntax */
-        }
+            csize += PL_strlen(URL_s->http_headers);
 
-        BlockAllocCat(*command, csize, CRLF, PL_strlen(CRLF));
+        } else {
+
+            /* For MOVE method. This contains the destination uri name */
+            int meth=URL_s->method;
+            if(URL_s->destination 
+                    && (*(URL_s->destination) != '\0')
+                    && ( (meth == URL_MOVE_METHOD)
+                        || (meth == URL_COPY_METHOD) )
+            ){
+                int len=0;
+                if(meth == URL_MOVE_METHOD) {
+                    sprintf(line_buffer, "New-uri: %s", URL_s->destination);
+                    len=PL_strlen(line_buffer);
+                    BlockAllocCat(*command, csize, line_buffer, len);
+                    csize+=len;
+                } else if(meth == URL_COPY_METHOD) {
+                    ;/* some http copy syntax */
+                }
+
+                BlockAllocCat(*command, csize, CRLF, PL_strlen(CRLF));
                 csize += PL_strlen(CRLF);
-      }
-      /* sendRefererHeader is set in NET_SetSendRefererHeaderPref in mkhttp.c. 
-         This condition is set via a javascript pref and was implemented to 
-         settle some privacy/security issue */
-        /* NET_SupressRefererForAnonymity is true on the first call after entering
-        or leaving anonymous mode and false all other times.  Note that this
-        function has a side effect of changing its own state (so that future
-        calls to it return false until another mode change occurs).  For this
-        reason it must appear first in the if-statement below to make sure it
-        gets called even if sendReferHeader is false */
-      if(!NET_SupressRefererForAnonymity(window_id) && sendRefererHeader)
-      {
-        int url_type = NET_URL_Type(URL_s->referer);
-        char *newReferer=NULL;
-        /* Don't allow these url types to send the referer field. */
-        if(URL_s->referer 
-          && url_type != MAILBOX_TYPE_URL
-          && url_type != IMAP_TYPE_URL
-          && url_type != FILE_TYPE_URL)
-          {
-          char *colon=NULL, *refToSend=NULL;
-          TRACEMSG(("Sending referer field"));
-                PL_strcpy(line_buffer, "Referer: ");
-          BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-          csize += PL_strlen(line_buffer);
-          
-          /* The URL_s->referer can contain a username and password as it draws
-           * this data from the session history. The session history can contain 
-           * the username and password if the user types them into the location
-           * field, like so: http://username:password@www.here.com. We strip out
-           * the username and password here so this info isn't revealed in the 
-           * referer header. */
-
-          colon=PL_strchr(URL_s->referer, ':');
-          if(colon
-            && *(colon+1) == '/'
-            && *(colon+2) == '/'
-            && *(colon+3) != '\0') {
-
-            char *atSign=NULL;            
-            char *path=NULL;
-
-            if( (path=PL_strchr(colon+3, '/')) )
-              *path='\0';
-            if( (atSign=PL_strchr(colon, '@')) ) {
-              /* We found a username and/or a password, don't let it through */
-              char temp;
-              if(path)
-                *path='/';
-              /* Get the protocol part. */
-              temp=*(colon+3);
-              *(colon+3)='\0';
-              StrAllocCopy(newReferer, URL_s->referer);
-              *(colon+3)=temp;
-
-              /* Get the host part. */
-              *atSign='\0';
-              StrAllocCat(newReferer, atSign+1);
-              *atSign='@';
             }
-            if(path)
-              *path='/';
-          } /* End colon */
+            /* sendRefererHeader is set in NET_SetSendRefererHeaderPref in mkhttp.c. 
+             This condition is set via a javascript pref and was implemented to 
+             settle some privacy/security issue */
+            /* NET_SupressRefererForAnonymity is true on the first call after entering
+             or leaving anonymous mode and false all other times.  Note that this
+             function has a side effect of changing its own state (so that future
+             calls to it return false until another mode change occurs).  For this
+             reason it must appear first in the if-statement below to make sure it
+             gets called even if sendReferHeader is false */
+            if(!NET_SupressRefererForAnonymity(window_id) && sendRefererHeader)
+            {
+                int url_type = NET_URL_Type(URL_s->referer);
+                char *newReferer=NULL;
+                /* Don't allow these url types to send the referer field. */
+                if(URL_s->referer 
+                    && url_type != MAILBOX_TYPE_URL
+                    && url_type != IMAP_TYPE_URL
+                    && url_type != FILE_TYPE_URL)
+                {
+                    char *colon=NULL, *refToSend=NULL;
+                    TRACEMSG(("Sending referer field"));
+                    PL_strcpy(line_buffer, "Referer: ");
+                    BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
+                    csize += PL_strlen(line_buffer);
+          
+                    /* The URL_s->referer can contain a username and password as it draws
+                     * this data from the session history. The session history can contain 
+                     * the username and password if the user types them into the location
+                     * field, like so: http://username:password@www.here.com. We strip out
+                     * the username and password here so this info isn't revealed in the 
+                     * referer header. */
 
-          refToSend= newReferer ? newReferer : URL_s->referer;
-          BlockAllocCat(*command,  csize, refToSend,
-                  PL_strlen(refToSend));
-          csize += PL_strlen(refToSend);
-          BlockAllocCat(*command, csize, CRLF, 2);
-          csize += 2;
-          PR_FREEIF(newReferer);
-          }
-      }
+                    colon=PL_strchr(URL_s->referer, ':');
+                    if(colon
+                        && *(colon+1) == '/'
+                        && *(colon+2) == '/'
+                        && *(colon+3) != '\0')
+                    {
+                        char *atSign=NULL;            
+                        char *path=NULL;
 
-      assert (XP_AppCodeName);
-      assert (XP_AppVersion);
+                        if( (path=PL_strchr(colon+3, '/')) )
+                            *path='\0';
+                        if( (atSign=PL_strchr(colon, '@')) ) {
+                            /* We found a username and/or a password, don't let it through */
+                            char temp;
+                            if(path)
+                                *path='/';
+                            /* Get the protocol part. */
+                            temp=*(colon+3);
+                            *(colon+3)='\0';
+                            StrAllocCopy(newReferer, URL_s->referer);
+                            *(colon+3)=temp;
 
-      if(!(cd->connection->doNotSendConHdr)) {
-        if(proxy_server)
-                PL_strcpy(line_buffer, "Proxy-Connection: Keep-Alive" CRLF);
-        else
-                PL_strcpy(line_buffer, "Connection: Keep-Alive" CRLF);
-      }
+                            /* Get the host part. */
+                            *atSign='\0';
+                            StrAllocCat(newReferer, atSign+1);
+                            *atSign='@';
+                        }
+                        if(path)
+                            *path='/';
+                    } /* End colon */
+
+                    refToSend= newReferer ? newReferer : URL_s->referer;
+                    BlockAllocCat(*command,  csize, refToSend,
+                        PL_strlen(refToSend));
+                    csize += PL_strlen(refToSend);
+                    BlockAllocCat(*command, csize, CRLF, 2);
+                    csize += 2;
+                    PR_FREEIF(newReferer);
+                } /* end URL_s->refrerer */
+            } /* end supress */
+
+            assert (XP_AppCodeName);
+            assert (XP_AppVersion);
+
+            if(!(cd->connection->doNotSendConHdr)) {
+                if(proxy_server)
+                    PL_strcpy(line_buffer, "Proxy-Connection: Keep-Alive" CRLF);
+                else
+                    PL_strcpy(line_buffer, "Connection: Keep-Alive" CRLF);
+            }
 
             sprintf (&line_buffer[PL_strlen(line_buffer)], 
-            "User-Agent: %.100s/%.90s" CRLF,
-            XP_AppCodeName, XP_AppVersion);
+                "User-Agent: %.100s/%.90s" CRLF,
+                XP_AppCodeName, XP_AppVersion);
             BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-      csize += PL_strlen(line_buffer);
+            csize += PL_strlen(line_buffer);
 
-            if(URL_s->force_reload)
-        {
+            if(URL_s->force_reload) {
                 BlockAllocCat(*command, csize, "Pragma: no-cache" CRLF, 18);
-        csize += 18;
-        }
+                csize += 18;
+            }
 
-      if(URL_s->range_header)
-        {
+            if(URL_s->range_header) {
 #ifndef AIX
-        char *tmp_str = CRLF;
-        PR_ASSERT(!PL_strstr(URL_s->range_header, tmp_str));
+                char *tmp_str = CRLF;
+                PR_ASSERT(!PL_strstr(URL_s->range_header, tmp_str));
 #endif
 #define REQUEST_RANGE_HEADER "Range: "
-              BlockAllocCat(*command, csize, 
-                REQUEST_RANGE_HEADER,
-                PL_strlen(REQUEST_RANGE_HEADER));
-        csize += PL_strlen(REQUEST_RANGE_HEADER);
-              BlockAllocCat(*command, csize, 
-                URL_s->range_header,
-                PL_strlen(URL_s->range_header));
-        csize += PL_strlen(URL_s->range_header);
-              BlockAllocCat(*command, csize, 
-                CRLF, PL_strlen(CRLF));
-        csize += PL_strlen(CRLF);
-        }
+                BlockAllocCat(*command, csize, 
+                    REQUEST_RANGE_HEADER,
+                    PL_strlen(REQUEST_RANGE_HEADER));
+                csize += PL_strlen(REQUEST_RANGE_HEADER);
+                BlockAllocCat(*command, csize, 
+                    URL_s->range_header,
+                    PL_strlen(URL_s->range_header));
+                csize += PL_strlen(URL_s->range_header);
+                BlockAllocCat(*command, csize, 
+                    CRLF, PL_strlen(CRLF));
+                csize += PL_strlen(CRLF);
+            } /* end url_s->range_header */
 
 #define OLD_RANGE_SUPPORT
 #ifdef OLD_RANGE_SUPPORT
-      /* this is here for backwards compatibility with
-       * the old range spec
-       * It should be removed before final beta 2
-       */
-            if(URL_s->range_header)
-              {
+            /* this is here for backwards compatibility with
+             * the old range spec
+             * It should be removed before final beta 2
+             */
+            if(URL_s->range_header) {
 #ifndef AIX
-    char *tmp_str = CRLF;
+                char *tmp_str = CRLF;
                 PR_ASSERT(!PL_strstr(URL_s->range_header, tmp_str));
 #endif
 #undef REQUEST_RANGE_HEADER
 #define REQUEST_RANGE_HEADER "Request-Range: "
                 BlockAllocCat(*command, csize,
-                              REQUEST_RANGE_HEADER,
-                              PL_strlen(REQUEST_RANGE_HEADER));
+                    REQUEST_RANGE_HEADER,
+                    PL_strlen(REQUEST_RANGE_HEADER));
                 csize += PL_strlen(REQUEST_RANGE_HEADER);
                 BlockAllocCat(*command, csize,
-                              URL_s->range_header,
-                              PL_strlen(URL_s->range_header));
+                    URL_s->range_header,
+                    PL_strlen(URL_s->range_header));
                 csize += PL_strlen(URL_s->range_header);
                 BlockAllocCat(*command, csize,
-                              CRLF, PL_strlen(CRLF));
+                    CRLF, PL_strlen(CRLF));
                 csize += PL_strlen(CRLF);
-              }
+            } /* end url_s->range_header */
 #endif
 
-      if(1)
-        {
-          char * host = NET_ParseURL(URL_s->address, GET_HOST_PART);
+            if(1) {
+                char * host = NET_ParseURL(URL_s->address, GET_HOST_PART);
 
-        if(host)
-          {
-          int len;
+                if(host) {
+                    int len;
 
 #define HOST_HEADER "Host: "
-                  BlockAllocCat(*command, 
-                  csize,  
-                  HOST_HEADER,  
-                  sizeof(HOST_HEADER)-1);
-          csize += sizeof(HOST_HEADER)-1;
-          len = PL_strlen(host);
-                  BlockAllocCat(*command, csize, host, len);
-  
-          csize += len;
+                    BlockAllocCat(*command, 
+                        csize,  
+                        HOST_HEADER,  
+                        sizeof(HOST_HEADER)-1);
+                    csize += sizeof(HOST_HEADER)-1;
+                    len = PL_strlen(host);
+                    BlockAllocCat(*command, csize, host, len);
 
-          PR_Free(host);
+                    csize += len;
 
-                  BlockAllocCat(*command, csize, CRLF, 2);
-          csize += 2;
-          }
-        }
+                    PR_Free(host);
+
+                    BlockAllocCat(*command, csize, CRLF, 2);
+                    csize += 2;
+                }
+            }
 
 #ifdef SEND_FROM_FIELD
             sprintf(line_buffer, "From: %.256s%c%c", 
-                      FE_UsersMailAddress() ? FE_UsersMailAddress() : "unregistered", CR,LF);
+                FE_UsersMailAddress() ? FE_UsersMailAddress() : "unregistered", CR,LF);
             BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-      csize += PL_strlen(line_buffer);
+            csize += PL_strlen(line_buffer);
 #endif /* SEND_FROM_FIELD */
 
-
-      if(CLEAR_CACHE_BIT(format_out) != FO_INTERNAL_IMAGE)
-        {
-        /* send Accept: *(slash)* as well as the others
-         */
-        sprintf(line_buffer, "Accept: %s, %s, %s, %s, %s, */*" CRLF, 
-                IMAGE_GIF, IMAGE_XBM, IMAGE_JPG, IMAGE_PJPG, IMAGE_PNG);
-        }
-      else
-        {
-        sprintf(line_buffer, "Accept: %s, %s, %s, %s, %s" CRLF, 
-                IMAGE_GIF, IMAGE_XBM, IMAGE_JPG, IMAGE_PJPG, IMAGE_PNG);
-        }
+            if(CLEAR_CACHE_BIT(format_out) != FO_INTERNAL_IMAGE)
+            {
+                /* send Accept: *(slash)* as well as the others */
+                sprintf(line_buffer, "Accept: %s, %s, %s, %s, %s, */*" CRLF, 
+                    IMAGE_GIF, IMAGE_XBM, IMAGE_JPG, IMAGE_PJPG, IMAGE_PNG);
+            } else {
+                sprintf(line_buffer, "Accept: %s, %s, %s, %s, %s" CRLF, 
+                    IMAGE_GIF, IMAGE_XBM, IMAGE_JPG, IMAGE_PJPG, IMAGE_PNG);
+            }
 
             BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-      csize += PL_strlen(line_buffer);
+            csize += PL_strlen(line_buffer);
 
-      /* add Accept-Encoding Header */
-      sprintf(line_buffer, "Accept-Encoding: %s" CRLF, ENCODING_GZIP2);
+            /* add Accept-Encoding Header */
+            sprintf(line_buffer, "Accept-Encoding: %s" CRLF, ENCODING_GZIP2);
             BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-      csize += PL_strlen(line_buffer);
+            csize += PL_strlen(line_buffer);
 
 #ifdef MOZILLA_CLIENT
 #define SEND_ACCEPT_LANGUAGE 1
 #ifdef SEND_ACCEPT_LANGUAGE /* Added by ftang */
-      {
-        char *acceptlang = INTL_GetAcceptLanguage();
-        if((acceptlang != NULL) && ( *acceptlang != '\0') )
-        {
-          sprintf(line_buffer, "Accept-Language: %s" CRLF, 
-                   acceptlang );
-                BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-          csize += PL_strlen(line_buffer);
-        }
-      }
+            {
+                char *acceptlang = INTL_GetAcceptLanguage();
+                if((acceptlang != NULL) && ( *acceptlang != '\0') )
+                {
+                    sprintf(line_buffer, "Accept-Language: %s" CRLF, 
+                        acceptlang );
+                    BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
+                    csize += PL_strlen(line_buffer);
+                }
+            }
 #endif /* SEND_ACCEPT_LANGUAGE */
 
 #define SEND_ACCEPT_CHARSET 1
 #ifdef SEND_ACCEPT_CHARSET  /* Added by bstell */
-      {
-        char *acceptCharset = INTL_GetAcceptCharset();
-        if((acceptCharset != NULL) && ( *acceptCharset != '\0') )
-        {
-          sprintf(line_buffer, "Accept-Charset: %s" CRLF, 
-                   acceptCharset );
-                BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-          csize += PL_strlen(line_buffer);
-        }
-      }
+            {
+                char *acceptCharset = INTL_GetAcceptCharset();
+                if((acceptCharset != NULL) && ( *acceptCharset != '\0') )
+                {
+                    sprintf(line_buffer, "Accept-Charset: %s" CRLF, 
+                        acceptCharset );
+                    BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
+                    csize += PL_strlen(line_buffer);
+                }
+            }
 #endif /* SEND_ACCEPT_CHARSET */
 #endif /* MOZILLA_CLIENT */
 
-      /*
-       * Check if proxy is requiring authorization.
-       * If NULL, not necessary, or the proxy will return 407 to
-       * require authorization.
-       *
-      */
-      /* This was hacked in because proxy auth can be required when the Auto-config url
-       * itself requires authorization. We used to ask for proxy auth only when the proxy was 
-       * input directly into the prefs. Now we check to see if there's a pacurl (if there
-       * is, there can't be a proxy url simultaneously) use it, otherwise we're using a
-       * proxy from the prefs.
-       */
-  
-      /* Figure out which kind of proxy we're using: PAC or straight proxy. 
-       * DON'T FREE tempURL!!!
-       */
-      if ( (tempURL = net_GetPACUrl()) && (*tempURL) )
-        proxyServer = NET_ParseURL(tempURL, GET_HOST_PART | GET_PATH_PART | GET_USERNAME_PART | GET_PASSWORD_PART);
-      else 
-        proxyServer = proxy_server; 
+            /*
+             * Check if proxy is requiring authorization.
+             * If NULL, not necessary, or the proxy will return 407 to
+             * require authorization.
+             *
+             */
+            /* This was hacked in because proxy auth can be required when the Auto-config url
+             * itself requires authorization. We used to ask for proxy auth only when the proxy was 
+             * input directly into the prefs. Now we check to see if there's a pacurl (if there
+             * is, there can't be a proxy url simultaneously) use it, otherwise we're using a
+             * proxy from the prefs.
+             */
+
+            /* Figure out which kind of proxy we're using: PAC or straight proxy. 
+             * DON'T FREE tempURL!!!
+             */
+            if ( (tempURL = net_GetPACUrl()) && (*tempURL) )
+                proxyServer = NET_ParseURL(tempURL, 
+                                  GET_HOST_PART 
+                                | GET_PATH_PART
+                                | GET_USERNAME_PART
+                                | GET_PASSWORD_PART);
+            else 
+                proxyServer = proxy_server; 
 
             if (proxyServer &&
-        NULL != (auth=NET_BuildProxyAuthString(window_id,
+                    NULL != (auth=NET_BuildProxyAuthString(window_id,
                              URL_s,
-                             proxyServer)))
-              {
-        if (tempURL)
-          PR_Free(proxyServer);
-        cd->sent_proxy_auth = TRUE;
+                             proxyServer))
+            ){
+                if (tempURL)
+                    PR_Free(proxyServer);
+                cd->sent_proxy_auth = TRUE;
                 sprintf(line_buffer, "Proxy-authorization: %.3840s%c%c", auth, CR, LF);
-              BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
-        csize += PL_strlen(line_buffer);
+                BlockAllocCat(*command, csize, line_buffer, PL_strlen(line_buffer));
+                csize += PL_strlen(line_buffer);
                 TRACEMSG(("HTTP: Sending proxy-authorization: %s", auth));
-              }
-            else 
-              {
+            } else {
                 TRACEMSG(("HTTP: Not sending proxy authorization (yet)"));
-              }
+            }
 
             /* NET_BuildAuthString will return non-NULL if authorization is
              * known to be required for this document.
@@ -1518,51 +1467,46 @@ net_build_http_request (URL_Struct * URL_s,
              * neccessary
              */
             if (NULL!=(auth=NET_BuildAuthString(window_id, URL_s))) 
-              {
-        cd->sent_authorization = TRUE;
-              BlockAllocCat(*command, csize, auth, PL_strlen(auth));
-        csize += PL_strlen(auth);
+            {
+                cd->sent_authorization = TRUE;
+                BlockAllocCat(*command, csize, auth, PL_strlen(auth));
+                csize += PL_strlen(auth);
                 TRACEMSG(("HTTP: Sending authorization: %s", auth));
-              }
-            else 
-              {
+            } else {
                 TRACEMSG(("HTTP: Not sending authorization (yet)"));
-              }
+            }
 
             if (NULL!=(auth=NET_GetCookie(window_id, URL_s->address))) 
-        {
-        int len;
+            {
+                int len;
                 PL_strcpy(line_buffer, "Cookie: ");
                 BlockAllocCat(*command, csize, 
-                line_buffer, PL_strlen(line_buffer));
+                    line_buffer, PL_strlen(line_buffer));
         
                 csize += PL_strlen(line_buffer);
-        len = PL_strlen(auth);
+                len = PL_strlen(auth);
                 BlockAllocCat(*command, csize, auth, len);
                 csize += len;
                 BlockAllocCat(*command, csize, CRLF, PL_strlen(CRLF));
                 csize += PL_strlen(CRLF);
                 TRACEMSG(("HTTP: Sending Cookie: %s", auth));
-    PR_Free(auth);
-              }
-            else
-              {
+                PR_Free(auth);
+            } else {
                 TRACEMSG(("HTTP: Not sending cookie"));
-              }
+            }
 
-          }  /* end of if passed in headers */
-      }  /* end of if(http1) */
+        }  /* end of if passed in headers */
+    }  /* end of if(http1) */
 
     /* end of Get/Post request */
 
-  /* Blank line means "end" of headers
-   * If we are posting WritePostData will
-   * add the extra line feed for us
-   */
-  if(!posting)
-    {
-      BlockAllocCat(*command, csize, CRLF, 2); 
-    csize += 2;
+    /* Blank line means "end" of headers
+     * If we are posting WritePostData will
+     * add the extra line feed for us
+     */
+    if(!posting) {
+        BlockAllocCat(*command, csize, CRLF, 2); 
+        csize += 2;
     }
 
     return((unsigned int) csize);
@@ -1582,7 +1526,7 @@ net_send_http_request (ActiveEntry *ce)
     /* assign it so that we have a typed structure pointer */
     HTTPConData * cd = (HTTPConData *)ce->con_data;
     char * command=0;
-  unsigned int  command_size;
+    unsigned int  command_size;
 
     /* we make the assumption that we are always acting as a proxy
      * server if we get http_headers passed in the URL structure.
@@ -1591,8 +1535,8 @@ net_send_http_request (ActiveEntry *ce)
      * to the server instead of being generated here and the headers
      * from the server are unparsed and sent on the the client.
      */
-    if(ce->format_out == FO_OUT_TO_PROXY_CLIENT ||
-      ce->format_out == FO_CACHE_AND_OUT_TO_PROXY_CLIENT)
+    if(ce->format_out == FO_OUT_TO_PROXY_CLIENT
+        || ce->format_out == FO_CACHE_AND_OUT_TO_PROXY_CLIENT)
         cd->acting_as_proxy=YES;
 
     TRACEMSG(("Entered \"send_http_request\""));
@@ -1602,21 +1546,19 @@ net_send_http_request (ActiveEntry *ce)
      * Is that a bad assumption?
      */
     if(ce->URL_s->method == URL_POST_METHOD
-    || ce->URL_s->method == URL_PUT_METHOD) {
+        || ce->URL_s->method == URL_PUT_METHOD) {
         cd->posting = YES;
 #ifdef MOZILLA_CLIENT
-    SECNAV_Posting(cd->connection->sock);
+        SECNAV_Posting(cd->connection->sock);
 #endif /* MOZILLA_CLIENT */
-  } else if (ce->URL_s->method == URL_HEAD_METHOD) {
+    } else if (ce->URL_s->method == URL_HEAD_METHOD) {
 #ifdef MOZILLA_CLIENT
-    SECNAV_HTTPHead(cd->connection->sock);
+        SECNAV_HTTPHead(cd->connection->sock);
 #endif /* MOZILLA_CLIENT */
-  }
+    }
   
     /* zero out associated mime fields in URL structure
-   *
-   * all except content_length since that may be passed in
-     */
+     * all except content_length since that may be passed in */
     ce->URL_s->protection_template = 0;
     PR_FREEIF(ce->URL_s->redirecting_url);
     ce->URL_s->redirecting_url = NULL;
@@ -1646,17 +1588,15 @@ net_send_http_request (ActiveEntry *ce)
 
 #if defined(JAVA)
 #if defined(DEBUG)
-  if(MKLib_trace_flag)
-    {
-    NET_NTrace("Tx: ", 4);
-    NET_NTrace(command, command_size);
+    if(MKLib_trace_flag) {
+        NET_NTrace("Tx: ", 4);
+        NET_NTrace(command, command_size);
     }
 #endif /* DEBUG */
 #endif /* JAVA */
     PR_Free (command);  /* freeing the request */
 
-  if (ce->status < 0) 
-    {
+    if (ce->status < 0) {
         int err = PR_GetError();
 
         if(err == PR_WOULD_BLOCK_ERROR)
@@ -1667,58 +1607,55 @@ net_send_http_request (ActiveEntry *ce)
         cd->next_state= HTTP_ERROR_DONE;
 
         return(MK_TCP_WRITE_ERROR);
-      }
+    }
 
 
-  /* make sure these are empty
-   */
-  PR_FREEIF(cd->line_buffer); /* reset */
-  cd->line_buffer = NULL;
-  cd->line_buffer_size=0;          /* reset */
+    /* make sure these are empty
+     */
+    PR_FREEIF(cd->line_buffer); /* reset */
+    cd->line_buffer = NULL;
+    cd->line_buffer_size=0;          /* reset */
 
-  if(cd->posting
-    && ce->URL_s->post_data)
-    {
+    if(cd->posting && ce->URL_s->post_data) {
         NET_ClearReadSelect(ce->window_id, cd->connection->sock);
         NET_SetConnectSelect(ce->window_id, cd->connection->sock);
 #ifdef XP_WIN
-    cd->calling_netlib_all_the_time = TRUE;
-    NET_SetCallNetlibAllTheTime(ce->window_id, "mkhttp");
+        cd->calling_netlib_all_the_time = TRUE;
+        NET_SetCallNetlibAllTheTime(ce->window_id, "mkhttp");
 #endif /* XP_WIN */
-    ce->con_sock = cd->connection->sock;
-      cd->next_state = HTTP_SEND_POST_DATA;
-    return(0);
+        ce->con_sock = cd->connection->sock;
+        cd->next_state = HTTP_SEND_POST_DATA;
+        return(0);
     }
   
     cd->next_state = HTTP_PARSE_FIRST_LINE;
 
-  /* Don't pause for read any more because we need to do
-   * at least a single read right away to detect if the
-   * connection is bad.  Apparently windows will queue a
-   * write and not return a failure, but in fact the
-   * connection has already been closed by the server.
-   * Windows select will not even detect the exception
-   * so we end up deadlocked.  By doing one read we
-   * can detect errors immediately
-   *
+    /* Don't pause for read any more because we need to do
+     * at least a single read right away to detect if the
+     * connection is bad.  Apparently windows will queue a
+     * write and not return a failure, but in fact the
+     * connection has already been closed by the server.
+     * Windows select will not even detect the exception
+     * so we end up deadlocked.  By doing one read we
+     * can detect errors immediately
+     *
      * cd->pause_for_read = TRUE;
-   */
+     */
 
-  {
-    char * nonProxyHost = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
-    if (nonProxyHost) {
-      char* msg = PR_smprintf(XP_GetString(XP_PROGRESS_WAIT_REPLY),
-                  nonProxyHost);
-      if (msg) {
-        NET_Progress(ce->window_id, msg);
-        PR_Free(msg);
-      }
-      PR_Free(nonProxyHost);
+    {
+        char * nonProxyHost = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
+        if (nonProxyHost) {
+            char* msg = PR_smprintf(XP_GetString(XP_PROGRESS_WAIT_REPLY),
+                            nonProxyHost);
+            if (msg) {
+                NET_Progress(ce->window_id, msg);
+                PR_Free(msg);
+            }
+            PR_Free(nonProxyHost);
+        }
     }
-  }
 
     return STATUS(ce->status);
-
 } /* end of net_send_http_request */
 
 PRIVATE int
@@ -1828,34 +1765,30 @@ net_parse_http_mime_headers (ActiveEntry *ce)
 {
     HTTPConData * cd = (HTTPConData *)ce->con_data;
     char *line;
-  char *value;
+    char *value;
 
     ce->status = NET_BufferedReadLine(cd->connection->sock, &line, &cd->line_buffer, 
                               &cd->line_buffer_size, &cd->pause_for_read);
 
-    if(ce->status < 0)
-    {
+    if(ce->status < 0) {
         NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
-
-        /* return TCP error
-         */
+        /* return TCP error */
         return MK_TCP_READ_ERROR;
     }
 
-    if(ce->status == 0)
-    {
-    /* if this is set just return so  we can use
-     * the cached copythat
-     */
-    if(cd->use_copy_from_cache)
-      {
+    if(ce->status == 0) {
+        /* if this is set just return so  we can use
+         * the cached copythat
+         */
+        if(cd->use_copy_from_cache) {
             /* clear the URL content fields so that
              * the 304 object doesn't effect the actual
              * cache file
              */
-      if(!ce->URL_s->preset_content_type)
-              PR_FREEIF(ce->URL_s->content_type);
-              ce->URL_s->content_type = NULL;
+            if(!ce->URL_s->preset_content_type) {
+                PR_FREEIF(ce->URL_s->content_type);
+                ce->URL_s->content_type = NULL;
+            }
             ce->URL_s->content_length = 0;
             ce->URL_s->real_content_length = 0;
             ce->URL_s->last_modified = 0;
@@ -1864,148 +1797,126 @@ net_parse_http_mime_headers (ActiveEntry *ce)
             PR_FREEIF(ce->URL_s->content_name);
             ce->URL_s->content_name = NULL;
             cd->next_state = HTTP_DONE;
-      cd->pause_for_read = FALSE;
+            cd->pause_for_read = FALSE;
             return(MK_USE_COPY_FROM_CACHE);
-      }
-
-    /* no mo data */
-    if(cd->use_proxy_tunnel && !cd->proxy_tunnel_setup_done)
-      {
-      /* we have now successfully initiated a proxy tunnel
-       * connection to a remote host
-       *
-       * now we need to give the file descriptor
-       * to the xxx library and let it initiate
-       * a secure connection
-       * after that we need to send a normal
-       * http request
-       *
-       * ADD STUFF HERE KIPP!!!!
-       *
-       * fd is cd->connection->sock
-       */
-      if(ce->URL_s->files_to_post)
-        cd->next_state = HTTP_BEGIN_UPLOAD_FILE;
-      else
-              cd->next_state = HTTP_SEND_REQUEST;
-      cd->proxy_tunnel_setup_done = TRUE;
-      }
-    else if(ce->URL_s->files_to_post)
-      {
-      if(ce->URL_s->files_to_post[0]
-        && ce->URL_s->server_status/100 == 2)
-        {
-          if(ce->URL_s->can_reuse_connection)
-          {
-          cd->next_state = HTTP_BEGIN_UPLOAD_FILE;
-          }
-        else
-          {
-                NET_ClearReadSelect(ce->window_id, cd->connection->sock);
-          NET_TotalNumberOfOpenConnections--;
-
-          /* close the old connection
-           */
-                PR_Close(cd->connection->sock);
-          cd->connection->sock = NULL;
-
-            cd->next_state = HTTP_START_CONNECT;
-          }
         }
-      else
+
+        /* no mo data */
+        if(cd->use_proxy_tunnel && !cd->proxy_tunnel_setup_done)
         {
-        cd->next_state = HTTP_DONE;
-        }
-      }
-    else
-      {
+            /* we have now successfully initiated a proxy tunnel
+             * connection to a remote host
+             *
+             * now we need to give the file descriptor
+             * to the xxx library and let it initiate
+             * a secure connection
+             * after that we need to send a normal
+             * http request
+             *
+             * ADD STUFF HERE KIPP!!!!
+             *
+             * fd is cd->connection->sock
+             */
+            if(ce->URL_s->files_to_post)
+                cd->next_state = HTTP_BEGIN_UPLOAD_FILE;
+            else
+                cd->next_state = HTTP_SEND_REQUEST;
+            cd->proxy_tunnel_setup_done = TRUE;
+
+        } else if(ce->URL_s->files_to_post) {
+
+            if(ce->URL_s->files_to_post[0]
+                && ce->URL_s->server_status/100 == 2)
+            {
+                if(ce->URL_s->can_reuse_connection) {
+                    cd->next_state = HTTP_BEGIN_UPLOAD_FILE;
+                } else {
+                    NET_ClearReadSelect(ce->window_id, cd->connection->sock);
+                    NET_TotalNumberOfOpenConnections--;
+
+                    /* close the old connection
+                     */
+                    PR_Close(cd->connection->sock);
+                    cd->connection->sock = NULL;
+
+                    cd->next_state = HTTP_START_CONNECT;
+                }
+            } else {
+                cd->next_state = HTTP_DONE;
+            }
+        } else {
             cd->next_state = HTTP_SETUP_STREAM;
-      }
-    cd->pause_for_read = FALSE;
+        }
+        cd->pause_for_read = FALSE;
         return(0);
-    }
+    } /* end status == 0 */
 
     if(!line)
         return(0);  /* wait for next line */
 
     TRACEMSG(("parse_http_mime_headers: Parsing headers, got line: %s",line));
 
-    if(cd->acting_as_proxy)
-    {
-    /* save all the headers so we can pass them to the client
-     * when neccessary
-     */
-    StrAllocCat(cd->server_headers, line);
-    StrAllocCat(cd->server_headers, "\r\n");  /* add the \n back on */
+    if(cd->acting_as_proxy) {
+        /* save all the headers so we can pass them to the client
+         * when neccessary
+         */
+        StrAllocCat(cd->server_headers, line);
+        StrAllocCat(cd->server_headers, "\r\n");  /* add the \n back on */
     }
 
     /* check for end of MIME headers */
-    if(*line == '\0' || *line == '\r')
-      {
+    if(*line == '\0' || *line == '\r') {
         TRACEMSG(("Finished parsing MIME headers"));
 
-    cd->pause_for_read = FALSE;
-
-HG07606
-    if(ce->URL_s->files_to_post
-        && ce->URL_s->server_status/100 == 2)
-      {
-      if(ce->URL_s->files_to_post[0])
+        cd->pause_for_read = FALSE;
+        HG07606
+        if(ce->URL_s->files_to_post
+            && ce->URL_s->server_status/100 == 2)
         {
-          if(ce->URL_s->can_reuse_connection)
-          {
-          cd->next_state = HTTP_BEGIN_UPLOAD_FILE;
-          }
-        else
-          {
-                NET_ClearReadSelect(ce->window_id, cd->connection->sock);
-          NET_TotalNumberOfOpenConnections--;
+            if(ce->URL_s->files_to_post[0]) {
+                if(ce->URL_s->can_reuse_connection) {
+                    cd->next_state = HTTP_BEGIN_UPLOAD_FILE;
+                } else {
+                    NET_ClearReadSelect(ce->window_id, cd->connection->sock);
+                    NET_TotalNumberOfOpenConnections--;
         
-            /* close the old connection
-           */
-                PR_Close(cd->connection->sock);
-          cd->connection->sock = NULL;
+                    /* close the old connection */
+                    PR_Close(cd->connection->sock);
+                    cd->connection->sock = NULL;
 
-            cd->next_state = HTTP_START_CONNECT;
-          }
-        }
-      else
-        {
-        cd->next_state = HTTP_DONE;
-        }
-      }
-        else
-          {
+                    cd->next_state = HTTP_START_CONNECT;
+                }
+            } else {
+                cd->next_state = HTTP_DONE;
+            }
+        } else {
             cd->next_state = HTTP_SETUP_STREAM;
-          }
+        }
 
         return(0);
-      }
+    }
 
-  value = PL_strchr(line, ':');
-  if(value)
-    value++;
-  NET_ParseMimeHeader(ce->format_out, ce->window_id, ce->URL_s, line, value, TRUE);
+    value = PL_strchr(line, ':');
+    if(value)
+        value++;
+    NET_ParseMimeHeader(ce->format_out, ce->window_id, ce->URL_s, line, value, TRUE);
 
-  /* If the headers returned from the server indicate that this is a persistant
-   * connection, we don't need to send the "Connection: keep-alive" header
-   * on subsequent requests to this server over this connection. So, set the 
-   * HTTPConnection data variable accordingly. This only works when the server is
-   * speaking 1.1. */
-  if( (cd->protocol_version == ONE_POINT_ONE) && ce->URL_s->can_reuse_connection)
-    cd->connection->doNotSendConHdr=TRUE;
+    /* If the headers returned from the server indicate that this is a persistant
+     * connection, we don't need to send the "Connection: keep-alive" header
+     * on subsequent requests to this server over this connection. So, set the 
+     * HTTPConnection data variable accordingly. This only works when the server is
+     * speaking 1.1. */
+    if( (cd->protocol_version == ONE_POINT_ONE) && ce->URL_s->can_reuse_connection)
+        cd->connection->doNotSendConHdr=TRUE;
     return(1);
 }
 
 /* setup HTTP/1.1 specific protocol defaults */
 PRIVATE void
-net_setup_http11_defaults(ActiveEntry *ce)
-{
+net_setup_http11_defaults(ActiveEntry *ce) {
     HTTPConData * cd = (HTTPConData *)ce->con_data;
-
-  ce->URL_s->can_reuse_connection = TRUE;
-
-  return;
+    ce->URL_s->can_reuse_connection = TRUE;
+    return;
 }
 
 /* parses the first line of the http server's response
@@ -2014,318 +1925,295 @@ net_setup_http11_defaults(ActiveEntry *ce)
  * returns the tcp status code
  */
 PRIVATE int 
-net_parse_first_http_line (ActiveEntry *ce)
-{
+net_parse_first_http_line (ActiveEntry *ce) {
     char *line_feed=0;
-  char *ptr;
-  int line_size;
+    char *ptr;
+    int line_size;
     int num_fields;
     char server_version[36];
     HTTPConData * cd = (HTTPConData *)ce->con_data;
-  char small_buf[MAX_FIRST_LINE_SIZE+16];
-  Bool do_redirect = TRUE;
-  
-  TRACEMSG(("Entered: net_parse_first_http_line"));
+    char small_buf[MAX_FIRST_LINE_SIZE+16];
+    Bool do_redirect = TRUE;
 
-  ce->status = PR_Read(cd->connection->sock, small_buf, MAX_FIRST_LINE_SIZE+10);
+    TRACEMSG(("Entered: net_parse_first_http_line"));
 
-  if(ce->status == 0)
-    {
-    /* the server dropped the connection? */
-    ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_ZERO_LENGTH_FILE);
+    ce->status = PR_Read(cd->connection->sock, small_buf, MAX_FIRST_LINE_SIZE+10);
+
+    if(ce->status == 0) {
+        /* the server dropped the connection? */
+        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_ZERO_LENGTH_FILE);
         cd->next_state = HTTP_ERROR_DONE;
-    cd->pause_for_read = FALSE;
-    return(MK_ZERO_LENGTH_FILE);
-    }
-  else if(ce->status < 0)
-    { 
-    int s_error = PR_GetError();
-    if (s_error == PR_WOULD_BLOCK_ERROR)
-      {
-      cd->pause_for_read = TRUE;
-      return(0);
-      }
-    else
-      {
+        cd->pause_for_read = FALSE;
+        return(MK_ZERO_LENGTH_FILE);
+
+    } else if(ce->status < 0) { 
+
+        int s_error = PR_GetError();
+        if (s_error == PR_WOULD_BLOCK_ERROR) {
+            cd->pause_for_read = TRUE;
+            return(0);
+        } else {
             ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, s_error);
-
-            /* return TCP error
-             */
+            /* return TCP error */
             return MK_TCP_READ_ERROR;
-      }
+        }
     }
 
-  HG21899
+    HG21899
 
 #ifdef MOZILLA_CLIENT
-  HG19088
+    HG19088
 #endif /* MOZILLA_CLIENT */
   
-  /* ce->status greater than 0 
-   */
+    /* ce->status greater than 0 */
+
     TIMING_STOPCLOCK_NAME("http:req", ce->URL_s->address,
                           ce->window_id, "response received");
     BlockAllocCat(cd->line_buffer, cd->line_buffer_size, small_buf, ce->status);
     cd->line_buffer_size += ce->status;
 
-  for(ptr = cd->line_buffer, line_size=0; line_size < cd->line_buffer_size; ptr++, line_size++)
-      if(*ptr == LF)
-        {
-      line_feed = ptr;
-      break;
+    for(ptr = cd->line_buffer, line_size=0; line_size < cd->line_buffer_size; ptr++, line_size++)
+        if(*ptr == LF) {
+            line_feed = ptr;
+            break;
         }
 
-    /* assume HTTP/.9 until we know better 
-   */
+    /* assume HTTP/.9 until we know better */
     cd->protocol_version = POINT_NINE;
 
-    if(line_feed)
-      {
+    if(line_feed) {
         *server_version = 0;
 
-    *line_feed = '\0';
+        *line_feed = '\0';
     
         num_fields = sscanf(cd->line_buffer, "%20s %d", server_version, &ce->URL_s->server_status);
     
         TRACEMSG(("HTTP: Scanned %d fields from first_line: %s", num_fields, cd->line_buffer));
     
-        /* Try and make sure this is an HTTP/1.0 reply
-     */
+        /* Try and make sure this is an HTTP/1.0 reply */
         if (num_fields == 2 || !PL_strncmp("HTTP/", server_version, 5))
-          {
-      double ver = atof(server_version+5);
+        {
+            double ver = atof(server_version+5);
 
-      if(ver > 1.0)
-      {
-              /* HTTP1.1 */
-          cd->protocol_version = ONE_POINT_ONE;
+            if(ver > 1.0) {
+                /* HTTP1.1 */
+                cd->protocol_version = ONE_POINT_ONE;
 
-        net_setup_http11_defaults(ce);
+                net_setup_http11_defaults(ce);
 
-        PR_ASSERT(ver == 1.1);
-      }
-      else
-      {
-              /* HTTP1 */
-          cd->protocol_version = ONE_POINT_O;
+                PR_ASSERT(ver == 1.1);
 
-        PR_ASSERT(ver == 1.0  || ver == 0.0); /* allow 0 bug */
-      }
-          }
+            } else {
+                /* HTTP1 */
+                cd->protocol_version = ONE_POINT_O;
 
-    /* put the line back the way it should be 
-     */
-    *line_feed = LF;
-      }
-    else if(cd->line_buffer_size < MAX_FIRST_LINE_SIZE)
-      {
+                PR_ASSERT(ver == 1.0  || ver == 0.0); /* allow 0 bug */
+            }
+        }
+
+        /* put the line back the way it should be 
+         */
+        *line_feed = LF;
+
+    } else if(cd->line_buffer_size < MAX_FIRST_LINE_SIZE) {
         return(0); /* not ready to process */
-      }
-
-  if(cd->connection->prev_cache && cd->protocol_version == POINT_NINE)
-    {
-    /* got a non HTTP/1.0 or above response from
-     * server that must support HTTP/1.0 since it
-     * supports keep-alive.  The connection
-     * must be in a bad state now so
-     * restart the whole thang by going to the ERROR state
-     */
-    cd->next_state = HTTP_ERROR_DONE;
     }
 
-  /* if we are getting a successful read here
-   * then the connection is valid
-   */
-  cd->connection_is_valid = TRUE;
+    if(cd->connection->prev_cache && cd->protocol_version == POINT_NINE)
+    {
+        /* got a non HTTP/1.0 or above response from
+         * server that must support HTTP/1.0 since it
+         * supports keep-alive.  The connection
+         * must be in a bad state now so
+         * restart the whole thang by going to the ERROR state
+         */
+        cd->next_state = HTTP_ERROR_DONE;
+    }
+
+    /* if we are getting a successful read here
+     * then the connection is valid
+     */
+    cd->connection_is_valid = TRUE;
 
     if(cd->protocol_version == POINT_NINE)
-      {  /* HTTP/0.9 */
-    NET_cinfo * ctype;
+    {  /* HTTP/0.9 */
+        NET_cinfo * ctype;
 
-    TRACEMSG(("Receiving HTTP/0.9"));
+        TRACEMSG(("Receiving HTTP/0.9"));
         
-    ce->URL_s->content_length = 0;
-    ce->URL_s->real_content_length = 0;
-    PR_FREEIF(ce->URL_s->content_encoding);
-    ce->URL_s->content_encoding = NULL;
-    PR_FREEIF(ce->URL_s->content_name);
-    ce->URL_s->content_name = NULL;
+        ce->URL_s->content_length = 0;
+        ce->URL_s->real_content_length = 0;
+        PR_FREEIF(ce->URL_s->content_encoding);
+        ce->URL_s->content_encoding = NULL;
+        PR_FREEIF(ce->URL_s->content_name);
+        ce->URL_s->content_name = NULL;
 
-    if(!ce->URL_s->preset_content_type)
-      {
-      PR_FREEIF(ce->URL_s->content_type);
-      ce->URL_s->content_type = NULL;
+        if(!ce->URL_s->preset_content_type) {
+            PR_FREEIF(ce->URL_s->content_type);
+            ce->URL_s->content_type = NULL;
 
-          /* fake the content_type since we can't get it */
-          ctype = NET_cinfo_find_type(ce->URL_s->address);
+            /* fake the content_type since we can't get it */
+            ctype = NET_cinfo_find_type(ce->URL_s->address);
 
-      /* treat unknown types as HTML
-         */
-      if(ctype->is_default)
-              StrAllocCopy(ce->URL_s->content_type, TEXT_HTML);
-      else
-            StrAllocCopy(ce->URL_s->content_type, ctype->type);
+            /* treat unknown types as HTML */
+            if(ctype->is_default)
+                StrAllocCopy(ce->URL_s->content_type, TEXT_HTML);
+            else
+                StrAllocCopy(ce->URL_s->content_type, ctype->type);
 
-          /* fake the content_encoding since we can't get it */
-          StrAllocCopy(ce->URL_s->content_encoding, 
-             (NET_cinfo_find_enc(ce->URL_s->address))->encoding);
-      }
+            /* fake the content_encoding since we can't get it */
+            StrAllocCopy(ce->URL_s->content_encoding, 
+                (NET_cinfo_find_enc(ce->URL_s->address))->encoding);
+        }
 
     cd->next_state = HTTP_SETUP_STREAM;
 
-      } 
-    else 
-      {
+    } else {
         /* Decode full HTTP/1.0 or 1.1 response */
     
         TRACEMSG(("Receiving HTTP1 reply, status: %d", ce->URL_s->server_status));
 
-    if(ce->URL_s->server_status != 304
-      && (!cd->use_proxy_tunnel || cd->proxy_tunnel_setup_done))
-      {
-      /* if we don't have a 304, zero all
-       * the content headers so that they
-       * don't interfere with the
-       * incoming object
-       *
-       * don't zero these in the case of a proxy tunnel
-       * since this isn't the real request this
-       * is just the connection open request response
-       */
-      if(!ce->URL_s->preset_content_type)
-      {
-        PR_FREEIF(ce->URL_s->content_type);
-        ce->URL_s->content_type = NULL;
-      }
-      ce->URL_s->content_length = 0;
-      ce->URL_s->real_content_length = 0;
-      PR_FREEIF(ce->URL_s->content_encoding);
-      ce->URL_s->content_encoding = NULL;
-      PR_FREEIF(ce->URL_s->content_name);
-      ce->URL_s->content_name = NULL;
-      }
- 
-        switch (ce->URL_s->server_status / 100) 
-          {
-            case 1:
-        if(ce->URL_s->server_status == 100)
+        if(ce->URL_s->server_status != 304
+            && (!cd->use_proxy_tunnel || cd->proxy_tunnel_setup_done))
         {
-          char * endOfResp;
-          char tmp;
-          int curRespSize=0;
-
-          /* We just got a 100 Continue response from the server.
-           * Skip it. We don't do any special handling. We're not
-           * dealing with the status line or any headers sent with
-           * the response. */
-
-          /* Get the length of the response as a string. The end
-           * of the response is a double CRLF sequence. */
-
-          endOfResp=PL_strstr(cd->line_buffer, CRLF CRLF);
-
-          /* If we can't find the end of the response, either we
-           * haven't received it all yet, or it's a malformed
-           * resposne. */
-          if(endOfResp) {
-            endOfResp+=4;
-            tmp=*endOfResp;
-            *endOfResp='\0';
-            curRespSize=PL_strlen(cd->line_buffer);
-            *endOfResp=tmp;
-
-            cd->line_buffer_size -= curRespSize;
-            PR_ASSERT(cd->line_buffer_size >= 0);
-            if(cd->line_buffer_size > 0)
-              memmove(cd->line_buffer, endOfResp, cd->line_buffer_size);
-          }
-
-          /* by not setting cd->next_state to something different
-           * we will come back to this function and look for another
-           * first line.
-           */
-          return(0);
+            /* if we don't have a 304, zero all
+             * the content headers so that they
+             * don't interfere with the
+             * incoming object
+             *
+             * don't zero these in the case of a proxy tunnel
+             * since this isn't the real request this
+             * is just the connection open request response
+             */
+            if(!ce->URL_s->preset_content_type) {
+                PR_FREEIF(ce->URL_s->content_type);
+                ce->URL_s->content_type = NULL;
+            }
+            ce->URL_s->content_length = 0;
+            ce->URL_s->real_content_length = 0;
+            PR_FREEIF(ce->URL_s->content_encoding);
+            ce->URL_s->content_encoding = NULL;
+            PR_FREEIF(ce->URL_s->content_name);
+            ce->URL_s->content_name = NULL;
         }
-        break;
+ 
+        switch (ce->URL_s->server_status / 100) {
+            case 1:
+                if(ce->URL_s->server_status == 100) {
+                    char * endOfResp;
+                    char tmp;
+                    int curRespSize=0;
 
-              case 2:   /* Succesful reply */
+                    /* We just got a 100 Continue response from the server.
+                     * Skip it. We don't do any special handling. We're not
+                     * dealing with the status line or any headers sent with
+                     * the response. */
 
-        /* Since we
-         * are getting a new copy, delete the old one
-         * from the cache
-         */
+                    /* Get the length of the response as a string. The end
+                     * of the response is a double CRLF sequence. */
+
+                    endOfResp=PL_strstr(cd->line_buffer, CRLF CRLF);
+
+                    /* If we can't find the end of the response, either we
+                     * haven't received it all yet, or it's a malformed
+                     * resposne. */
+                    if(endOfResp) {
+                        endOfResp+=4;
+                        tmp=*endOfResp;
+                        *endOfResp='\0';
+                        curRespSize=PL_strlen(cd->line_buffer);
+                        *endOfResp=tmp;
+
+                        cd->line_buffer_size -= curRespSize;
+                        PR_ASSERT(cd->line_buffer_size >= 0);
+                        if(cd->line_buffer_size > 0)
+                            memmove(cd->line_buffer, endOfResp, cd->line_buffer_size);
+                    }
+
+                    /* by not setting cd->next_state to something different
+                     * we will come back to this function and look for another
+                     * first line.
+                     */
+                    return(0);
+                }
+                break;
+
+            case 2:   /* Succesful reply */
+
+                /* Since we
+                 * are getting a new copy, delete the old one
+                 * from the cache
+                 */
 #ifdef MOZILLA_CLIENT
-        NET_RemoveURLFromCache(ce->URL_s);
+                NET_RemoveURLFromCache(ce->URL_s);
 #endif
 
-                if((ce->URL_s->server_status == 204 
-            || ce->URL_s->server_status == 201)
-           && !cd->acting_as_proxy) 
-          {
-          if(ce->URL_s->files_to_post && ce->URL_s->files_to_post[0])
-            {
-              /* fall through since we need to get
-             * the headers to complete the
-             * file transfer
-             */
-            }
-          else
-            {
-                      ce->status = MK_NO_ACTION;
+                if((ce->URL_s->server_status == 204
+                    || ce->URL_s->server_status == 201)
+                    && !cd->acting_as_proxy)
+                {
+                    if(ce->URL_s->files_to_post && ce->URL_s->files_to_post[0])
+                    {
+                        /* fall through since we need to get
+                         * the headers to complete the
+                         * file transfer
+                         */
+                    } else {
+                        ce->status = MK_NO_ACTION;
                         cd->next_state = HTTP_ERROR_DONE;
-                      return STATUS(ce->status);
-            }
-                  }
-              else if(cd->partial_cache_file
-                      && ce->URL_s->range_header
-                      && ce->URL_s->server_status != 206)
-                  {
-                  /* we asked for a range and got back
-                   * the whole document.  Something
-                   * went wrong, error out.
-                   */
-                  ce->status = MK_TCP_READ_ERROR;
-          ce->URL_s->error_msg = NET_ExplainErrorDetails(
+                        return STATUS(ce->status);
+                    }
+                } else if(cd->partial_cache_file
+                            && ce->URL_s->range_header
+                            && ce->URL_s->server_status != 206)
+                {
+                    /* we asked for a range and got back
+                     * the whole document.  Something
+                     * went wrong, error out.
+                     */
+                    ce->status = MK_TCP_READ_ERROR;
+                    ce->URL_s->error_msg = NET_ExplainErrorDetails(
                               MK_TCP_READ_ERROR, 
                               XP_ERRNO_EIO);
-          cd->next_state = HTTP_ERROR_DONE;
-          return(ce->status);
-                  }
+                    cd->next_state = HTTP_ERROR_DONE;
+                    return(ce->status);
+                }
 
                 break;
                 
-              case 3:   /* redirection and other such stuff */
+            case 3:   /* redirection and other such stuff */
 
-        if(!cd->acting_as_proxy 
-                     && (ce->URL_s->server_status == 301 || ce->URL_s->server_status == 302))
-                  {
-                   /* Redirect with GET only (change POST to get)
-          *
-          * Supported within the HTTP module.  
-            * Will retry after mime parsing 
-          */
+                if(!cd->acting_as_proxy 
+                    && (ce->URL_s->server_status == 301 
+                        || ce->URL_s->server_status == 302))
+                {
+                    /* Redirect with GET only (change POST to get)
+                     *
+                     * Supported within the HTTP module.  
+                     * Will retry after mime parsing 
+                     */
                     TRACEMSG(("Got Redirect code"));
                     cd->doing_redirect = TRUE;
-                  }
-        if(!cd->acting_as_proxy && ce->URL_s->server_status == 307)
-                  {
-                   /* Redirect without changing METHOD
-          * 
-          * Supported within the HTTP module.  
-            * Will retry after mime parsing 
-          */
+                }
+                if(!cd->acting_as_proxy && ce->URL_s->server_status == 307)
+                {
+                    /* Redirect without changing METHOD
+                     * 
+                     * Supported within the HTTP module.  
+                     * Will retry after mime parsing 
+                     */
                     TRACEMSG(("Got Redirect code"));
                     cd->doing_redirect = TRUE;
                     cd->save_redirect_method = TRUE;
-          }
-                else if(ce->URL_s->server_status == 304)
-                  {
-          /* use the copy from the cache since it wasn't modified 
-           *
-           *  note: this will work with proxy clients too
-           */
-              if(ce->URL_s->last_modified)
-            {
+
+                } else if(ce->URL_s->server_status == 304)
+                {
+                    /* use the copy from the cache since it wasn't modified 
+                     *
+                     *  note: this will work with proxy clients too
+                     */
+                    if(ce->URL_s->last_modified)
+                    {
 #ifdef MOZILLA_CLIENT
                         /* check to see if we just now entered a secure space
                          *
@@ -2334,39 +2222,38 @@ net_parse_first_http_line (ActiveEntry *ce)
                          */
                         if(HG82773
                             && (ce->format_out == FO_CACHE_AND_PRESENT 
-                || ce->format_out == FO_PRESENT)
+                                || ce->format_out == FO_PRESENT)
                             && !ce->URL_s->history_num)
-                          {
+                        {
                             History_entry * h = SHIST_GetCurrent(&ce->window_id->hist);
-                    
                             HG03903
-            }
+                        }
 #endif /* MOZILLA_CLIENT */
 
-              cd->use_copy_from_cache = TRUE;
+                        cd->use_copy_from_cache = TRUE;
                         /* no longer return since we need to parse
-             * headers from the server
-             *
-             * return(MK_USE_COPY_FROM_CACHE);  
-             */
-            }
+                         * headers from the server
+                         *
+                         * return(MK_USE_COPY_FROM_CACHE);  
+                         */
+                    } /* end url_s->last_modified */
 
-          /* else continue since the server messed up
-           * and sent us a 304 even without us having sent
-           * it an if-modified-since header
-           */
-                  }
+                    /* else continue since the server messed up
+                     * and sent us a 304 even without us having sent
+                     * it an if-modified-since header
+                     */
+                }
                 break;
                 
-              case 4:    /* client error */
+            case 4:    /* client error */
 
-        ce->URL_s->preset_content_type = FALSE;
+                ce->URL_s->preset_content_type = FALSE;
 
                 if(ce->URL_s->server_status == 401 && !cd->acting_as_proxy)
-                  {
+                {
                     /* never do this if acting as a proxy 
                      * If we are a proxy then just pass on 
-           * the headers and the document.
+                     * the headers and the document.
                      *
                      * if authorization_required is set we will check
                      * below after parsing the MIME headers to see
@@ -2375,75 +2262,68 @@ net_parse_first_http_line (ActiveEntry *ce)
                      */
                     cd->authorization_required = TRUE;
 
-          /* Since we
-           * are getting a new copy, delete the old one
-           * from the cache
-           */
+                    /* Since we
+                     * are getting a new copy, delete the old one
+                     * from the cache
+                     */
 #ifdef MOZILLA_CLIENT
-          NET_RemoveURLFromCache(ce->URL_s);
+                    NET_RemoveURLFromCache(ce->URL_s);
 #endif
 
-          /* we probably want to cache this unless
-           * the user chooses not to authorize himself
-           */
-                  }
-        else if (ce->URL_s->server_status == 407 && !cd->acting_as_proxy)
-          {
-          /* This happens only if acting as a client */
-          cd->proxy_auth_required = TRUE;
+                    /* we probably want to cache this unless
+                     * the user chooses not to authorize himself
+                     */
+                } else if (ce->URL_s->server_status == 407 && !cd->acting_as_proxy)
+                {
+                    /* This happens only if acting as a client */
+                    cd->proxy_auth_required = TRUE;
 
-          /* we probably want to cache this unless
-           * the user chooses not to authorize himself
-           */
-          }
-        else
-          {
-                  /* don't cache unless we have a succesful reply
-                  */
-                  TRACEMSG(("Server did not return success: NOT CACHEING!!"));
-          ce->URL_s->dont_cache = TRUE;
+                    /* we probably want to cache this unless
+                     * the user chooses not to authorize himself
+                     */
+                } else {
+                    /* don't cache unless we have a succesful reply */
+                    TRACEMSG(("Server did not return success: NOT CACHEING!!"));
+                    ce->URL_s->dont_cache = TRUE;
 
-                  /* all other codes should be displayed */
-          }
+                    /* all other codes should be displayed */
+                }
                 break;
     
-              case 5:    /* server error code */
+            case 5:    /* server error code */
                 TRACEMSG(("Server did not return success: NOT CACHEING!!!"));
-        ce->URL_s->dont_cache = TRUE;
-        ce->URL_s->preset_content_type = FALSE;
+                ce->URL_s->dont_cache = TRUE;
+                ce->URL_s->preset_content_type = FALSE;
 #ifdef DO_503
-        if(ce->URL_s->server_status == 503 && !cd->acting_as_proxy)
-          {
-          cd->server_busy_retry = TRUE;
-          }
+                if(ce->URL_s->server_status == 503 && !cd->acting_as_proxy)
+                {
+                    cd->server_busy_retry = TRUE;
+                }
 #endif /* DO_503 */
         
                 /* display the error results */
                 break;
                 
-              default:  /* unexpected reply code */
+            default:  /* unexpected reply code */
                 {
-                  char message_buffer[256];
-                  sprintf(message_buffer,
-               XP_GetString(XP_ALERT_UNKNOWN_STATUS),
-                             ce->URL_s->server_status);
-                  FE_Alert(ce->window_id, message_buffer);
+                    char message_buffer[256];
+                    sprintf(message_buffer,
+                    XP_GetString(XP_ALERT_UNKNOWN_STATUS),
+                        ce->URL_s->server_status);
+                    FE_Alert(ce->window_id, message_buffer);
 
-                  /* don't cache unless we have a succesful reply
-                   */
-                  TRACEMSG(("Server did not return 200: NOT CACHEING!!!"));
-          ce->URL_s->dont_cache = TRUE;
+                    /* don't cache unless we have a succesful reply */
+                    TRACEMSG(("Server did not return 200: NOT CACHEING!!!"));
+                    ce->URL_s->dont_cache = TRUE;
                 }
                 break;
-            } /* Switch on server_status/100 */
-
+        } /* Switch on server_status/100 */
 
         cd->next_state = HTTP_PARSE_MIME_HEADERS;
 
       } /* Full HTTP reply */
 
     return(0); /* good */
-    
 }
 
 /* if we were posting a file and received an error put the
@@ -2629,137 +2509,124 @@ net_setup_http_stream(ActiveEntry * ce)
       PR_FREEIF(proxyServer);
     }
 
-  if (need_to_do_again)
-      {
+    if (need_to_do_again) {
         NET_ClearReadSelect(ce->window_id, cd->connection->sock);
         PR_Close(cd->connection->sock);
-    NET_TotalNumberOfOpenConnections--;
+        NET_TotalNumberOfOpenConnections--;
         cd->connection->sock = NULL;
         cd->send_http1 = TRUE;
         cd->authorization_required = FALSE;
-    cd->proxy_auth_required = FALSE;
+        cd->proxy_auth_required = FALSE;
         cd->next_state = HTTP_START_CONNECT;
-    ce->URL_s->last_modified = 0;  /* clear this so we don't get 304 loopage */
+        ce->URL_s->last_modified = 0;  /* clear this so we don't get 304 loopage */
 
-    /* we don't know if the connection is valid anymore */
-    cd->connection_is_valid = FALSE;
+        /* we don't know if the connection is valid anymore */
+        cd->connection_is_valid = FALSE;
 
-        /* clear the buffer 
-         */ 
+        /* clear the buffer */ 
         PR_FREEIF(cd->line_buffer);
         cd->line_buffer = NULL;
         cd->line_buffer_size = 0;
 
-    /* if necessary */
-    PR_FREEIF(cd->server_headers);
-    cd->server_headers = NULL;
+        /* if necessary */
+        PR_FREEIF(cd->server_headers);
+        cd->server_headers = NULL;
 
         return(0); /* continue */
-      }
-    else if (cd->doing_redirect && ce->URL_s->redirecting_url &&
-            /* try and prevent a circular loop. wont work for dual doc loop
-             */
-                PL_strcmp(ce->URL_s->redirecting_url, ce->URL_s->address))
-      {
-    Bool do_redirect=TRUE;
-    char *curURLHost, *redirectURLHost;
-    char *curPort, *redirectPort;
+
+    } else if (cd->doing_redirect && ce->URL_s->redirecting_url &&
+               /* try and prevent a circular loop. wont work for dual doc loop */
+               PL_strcmp(ce->URL_s->redirecting_url, ce->URL_s->address)) 
+    {
+        Bool do_redirect=TRUE;
+        char *curURLHost, *redirectURLHost;
+        char *curPort, *redirectPort;
 
 #ifdef MOZILLA_CLIENT
-    /* update the global history since we wont have the same
-     * url later
-     */
-    GH_UpdateGlobalHistory(ce->URL_s);
+        /* update the global history since we wont have the same
+         * url later */
+        GH_UpdateGlobalHistory(ce->URL_s);
 #endif /* MOZILLA_CLIENT */
 
-    /* Inserted for security reasons. Ie. java applets being told to redirect to places they shouldn't be.*/
-    if(ce->URL_s->dontAllowDiffHostRedirect) {
+        /* Inserted for security reasons. Ie. java applets being told to redirect to places they shouldn't be.*/
+        if(ce->URL_s->dontAllowDiffHostRedirect) {
 
-      if( !(curURLHost = NET_ParseURL(ce->URL_s->address, GET_HOST_PART)) )
-        return MK_INTERRUPTED;
-      if( !(redirectURLHost = NET_ParseURL(ce->URL_s->redirecting_url, GET_HOST_PART)) ) {
-        PR_Free(curURLHost);
-        return MK_INTERRUPTED;
-      }
+            if( !(curURLHost = NET_ParseURL(ce->URL_s->address, GET_HOST_PART)) )
+                return MK_INTERRUPTED;
+            if( !(redirectURLHost = NET_ParseURL(ce->URL_s->redirecting_url, GET_HOST_PART)) )
+            {
+                PR_Free(curURLHost);
+                return MK_INTERRUPTED;
+            }
 
-      if ( (curPort = PL_strchr(curURLHost, ':')) != NULL)
-        *curPort='\0';
-      if ( (redirectPort = PL_strchr(redirectURLHost, ':')) != NULL)
-        *redirectPort='\0';
+            if ( (curPort = PL_strchr(curURLHost, ':')) != NULL)
+                *curPort='\0';
+            if ( (redirectPort = PL_strchr(redirectURLHost, ':')) != NULL)
+                *redirectPort='\0';
 
-      if(PL_strcasecmp(curURLHost, redirectURLHost)) {
-        PR_Free(curURLHost);
-        PR_Free(redirectURLHost);
-        PR_FREEIF(ce->URL_s->redirecting_url);
-        ce->URL_s->redirecting_url = NULL;
-        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_REDIRECT_ATTEMPT_NOT_ALLOWED);
-        return MK_REDIRECT_ATTEMPT_NOT_ALLOWED;
-      }
+            if(PL_strcasecmp(curURLHost, redirectURLHost)) {
+                PR_Free(curURLHost);
+                PR_Free(redirectURLHost);
+                PR_FREEIF(ce->URL_s->redirecting_url);
+                ce->URL_s->redirecting_url = NULL;
+                ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_REDIRECT_ATTEMPT_NOT_ALLOWED);
+                return MK_REDIRECT_ATTEMPT_NOT_ALLOWED;
+            }
 
-      PR_Free(curURLHost);
-      PR_Free(redirectURLHost);   
-      
-    } /* End URL_s->dontAllowDiffHostRedirect */
+            PR_Free(curURLHost);
+            PR_Free(redirectURLHost);   
+
+        } /* End URL_s->dontAllowDiffHostRedirect */
 
         HG92871
 
         /* OK, now we've got the redirection URL stored
          * in redirecting_url.
          * Now change the URL in the URL structure and do the whole
-         * thing again
-         */
+         * thing again */
         StrAllocCopy(ce->URL_s->address, ce->URL_s->redirecting_url);
 
-      /* if we were posting a file and received an error put the
-       * current file we were posting back on the end of the list
-       * so that our state is correctly reset
-       */
-      net_revert_post_data(ce);  
+        /* if we were posting a file and received an error put the
+         * current file we were posting back on the end of the list
+         * so that our state is correctly reset*/
+        net_revert_post_data(ce);  
 
-    if(!cd->save_redirect_method)
-    {
-      PR_FREEIF(ce->URL_s->post_data);
-      ce->URL_s->post_data = NULL;
-      PR_FREEIF(ce->URL_s->post_headers);
-      ce->URL_s->post_headers = NULL;
-      ce->URL_s->post_data_size = 0;
-      ce->URL_s->method = URL_GET_METHOD;
-    }
+        if(!cd->save_redirect_method) {
+            PR_FREEIF(ce->URL_s->post_data);
+            ce->URL_s->post_data = NULL;
+            PR_FREEIF(ce->URL_s->post_headers);
+            ce->URL_s->post_headers = NULL;
+            ce->URL_s->post_data_size = 0;
+            ce->URL_s->method = URL_GET_METHOD;
+        }
 
-    /* clear these */
-    if(!ce->URL_s->preset_content_type) {
-        PR_FREEIF(ce->URL_s->content_type);
-        ce->URL_s->content_type = NULL;
-    }
-    PR_FREEIF(ce->URL_s->content_encoding);
-    ce->URL_s->content_encoding = NULL;
-    ce->URL_s->content_length = 0;       /* reset */
-    ce->URL_s->real_content_length = 0;  /* reset */
-    ce->URL_s->last_modified = 0;        /* reset */
+        /* clear these */
+        if(!ce->URL_s->preset_content_type) {
+            PR_FREEIF(ce->URL_s->content_type);
+            ce->URL_s->content_type = NULL;
+        }
+        PR_FREEIF(ce->URL_s->content_encoding);
+        ce->URL_s->content_encoding = NULL;
+        ce->URL_s->content_length = 0;       /* reset */
+        ce->URL_s->real_content_length = 0;  /* reset */
+        ce->URL_s->last_modified = 0;        /* reset */
+        cd->posting = FALSE;
+        ce->URL_s->address_modified = TRUE;
 
-    cd->posting = FALSE;
-
-    ce->URL_s->address_modified = TRUE;
-
-    if(do_redirect)
+        if(do_redirect)
             return(MK_DO_REDIRECT); /*fall out of HTTP and load the redirecting url */
-    else
-      return(MK_INTERRUPTED);
-      }
-  else if(cd->server_busy_retry)
-    {
-    /* the redirecting mechanism works well for the retry
-     * since it is really the same thing except the url stays
-     * the same
-     */
+        else
+            return(MK_INTERRUPTED);
+
+    } else if(cd->server_busy_retry) {
+
+        /* the redirecting mechanism works well for the retry
+         * since it is really the same thing except the url stays
+         * the same */
         return(MK_DO_REDIRECT); /* fall out of HTTP and reload the url */
     }
 
 #ifdef MOZILLA_CLIENT
-
-
-  /*  */
-
   /* check to see if we just now entered a secure space */ 
     /* don't do if this is coming from history */ 
     /* don't do this if about to redirect */ 
