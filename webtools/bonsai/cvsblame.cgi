@@ -587,7 +587,12 @@ a:active {
     padding: 5;
     position: absolute;
 }
+
+pre {
+    margin: 0;
+}
 </style>
+</head>
 <body onclick="hideMessage()">
 __TOP__
   print '<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#F0A000">' if not ($::use_layers || $::use_dom);

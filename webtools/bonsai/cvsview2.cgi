@@ -373,12 +373,17 @@ sub guess_tab_width {
 # Create gdiff-like output.
 sub do_diff {
     http_lastmod;
-    print "<HTML><HEAD>";
-    print "<TITLE>$opt_file: $opt_rev1 vs. $opt_rev2</TITLE>\n";
-    print "</HEAD>";
-    print "<BODY BGCOLOR=\"$diff_bg_color\" TEXT=\"#000000\"";
-    print " LINK=\"#0000EE\" VLINK=\"#551A8B\" ALINK=\"#FF0000\">";
-
+    print qq|
+<html><head>
+<title>$opt_file: $opt_rev1 vs. $opt_rev2</title>
+<style type="text/css">
+pre {
+    margin: 0;
+}
+</style>
+<body bgcolor="$diff_bg_color" text="#000000"
+link="#0000EE" vlink="#551A8B" alink="#FF0000">
+|;
     CheckHidden("$dir/$opt_file");
 
     chdir($dir);
@@ -388,7 +393,9 @@ sub do_diff {
     &guess_tab_width($rcsfile);
 
     &html_diff($rcsfile, $opt_rev1, $opt_rev2);
-    print "\n</BODY>\n";
+    print qq|
+</body>
+|;
 }
 
 
