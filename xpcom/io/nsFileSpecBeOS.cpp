@@ -166,7 +166,7 @@ nsresult nsFileSpec::ResolveSymlink(PRBool& wasAliased)
 			SetLeafName(resolvedPath);
 		}
 		else {
-			mPath = (char*)&resolvedPath;
+			mPath = (char*)resolvedPath;
 		} 
 
 		BEntry e((const char *)mPath, true);	// traverse symlink
