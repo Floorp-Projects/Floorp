@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.56 $ ';
+$::UtilsVersion = '$Revision: 1.57 $ ';
 
 package TinderUtils;
 
@@ -549,6 +549,8 @@ sub BuildIt {
     my $exit_early = 0;
     my $start_time = 0;
 
+	my $build_failure_count = 0;  # Keep count of build failures.
+
     # Bypass profile at startup.
     $ENV{MOZ_BYPASS_PROFILE_AT_STARTUP} = 1;
     
@@ -604,6 +606,11 @@ sub BuildIt {
 		}
 
         PrintEnv();
+
+		# Print out failure count
+		if($build_failure_count > 0) {
+		  print_log "Previous consecutive build failures: $build_failure_count\n";
+		}
         
 		# Make sure we have client.mk
         unless (-e "$TreeSpecific::name/client.mk") {
@@ -671,6 +678,13 @@ sub BuildIt {
 		my $external_build = "$Settings::BaseDir/post-mozilla.pl";
 		if (-e $external_build and $build_status eq 'success') {
 		  $build_status = PostMozilla::main($build_dir);
+		}
+
+		# Increment failure count if we failed.
+		if ($build_status eq 'busted') {
+		  $build_failure_count++;
+		} else {
+		  $build_failure_count = 0;
 		}
 
         close LOG;
