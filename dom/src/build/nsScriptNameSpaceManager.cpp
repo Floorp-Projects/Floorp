@@ -53,23 +53,97 @@
 
 #define NS_DOM_INTERFACE_PREFIX "nsIDOM"
 
-nsScriptNameSpaceManager::nsScriptNameSpaceManager()
+// Our extended PLDHashEntryHdr
+class GlobalNameMapEntry : public PLDHashEntryHdr
 {
+public:
+  // Our hash table ops don't care about the order of these members
+  nsString mKey;
+  nsGlobalNameStruct mGlobalName;
+};
+
+
+PR_STATIC_CALLBACK(const void *)
+GlobalNameHashGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+  GlobalNameMapEntry *e = NS_STATIC_CAST(GlobalNameMapEntry *, entry);
+
+  return NS_STATIC_CAST(const nsAString *, &e->mKey);
 }
 
-static PRBool PR_CALLBACK
-NameStructCleanupCallback(nsHashKey *aKey, void *aData, void* closure)
+PR_STATIC_CALLBACK(PLDHashNumber)
+GlobalNameHashHashKey(PLDHashTable *table, const void *key)
 {
-  nsGlobalNameStruct *s = (nsGlobalNameStruct *)aData;
+  const nsAString *str = NS_STATIC_CAST(const nsAString *, key);
 
-  delete s;
+  return HashString(*str);
+}
 
-  return PR_TRUE;
+PR_STATIC_CALLBACK(PRBool)
+GlobalNameHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
+                         const void *key)
+{
+  const GlobalNameMapEntry *e =
+    NS_STATIC_CAST(const GlobalNameMapEntry *, entry);
+  const nsAString *str = NS_STATIC_CAST(const nsAString *, key);
+
+  return str->Equals(e->mKey);
+}
+
+PR_STATIC_CALLBACK(void)
+GlobalNameHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+  GlobalNameMapEntry *e = NS_STATIC_CAST(GlobalNameMapEntry *, entry);
+
+  // An entry is being cleared, let the key (nsString) do its own
+  // cleanup.
+  e->mKey.~nsString();
+
+  // This will set e->mGlobalName.mType to
+  // nsGlobalNameStruct::eTypeNotInitialized
+  memset(&e->mGlobalName, 0, sizeof(nsGlobalNameStruct));
+}
+
+PR_STATIC_CALLBACK(void)
+GlobalNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
+                        const void *key)
+{
+  GlobalNameMapEntry *e = NS_STATIC_CAST(GlobalNameMapEntry *, entry);
+  const nsAString *keyStr = NS_STATIC_CAST(const nsAString *, key);
+
+  // Inititlize the key in the entry with placement new
+  nsString *str = new (&e->mKey) nsString(*keyStr);
+
+  // This will set e->mGlobalName.mType to
+  // nsGlobalNameStruct::eTypeNotInitialized
+  memset(&e->mGlobalName, 0, sizeof(nsGlobalNameStruct));
+}
+
+nsScriptNameSpaceManager::nsScriptNameSpaceManager()
+  : mIsInitialized(PR_FALSE)
+{
 }
 
 nsScriptNameSpaceManager::~nsScriptNameSpaceManager()
 {
-  mGlobalNames.Reset(NameStructCleanupCallback);
+  if (mIsInitialized) {
+    // Destroy the hash
+    PL_DHashTableFinish(&mGlobalNames);
+  }
+}
+
+nsGlobalNameStruct *
+nsScriptNameSpaceManager::AddToHash(const nsAString& aKey)
+{
+  GlobalNameMapEntry *entry =
+    NS_STATIC_CAST(GlobalNameMapEntry *,
+                   PL_DHashTableOperate(&mGlobalNames, &aKey, PL_DHASH_ADD));
+
+  if (!entry) {
+    return nsnull;
+  }
+
+  return &entry->mGlobalName;
 }
 
 nsresult
@@ -111,25 +185,12 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
       continue;
     }
 
-    // XXX Mac chokes _later_ if we put the |NS_Conv...| right in
-    // the |nsStringKey| ctor, so make a temp
-    NS_ConvertASCIItoUCS2 temp(categoryEntry);
+    nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(categoryEntry));
+    NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
-    nsStringKey key(temp);
-
-    if (!mGlobalNames.Get(&key)) {
-      nsGlobalNameStruct *s = new nsGlobalNameStruct;
-      NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
-
+    if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
       s->mType = aType;
       s->mCID = cid;
-
-      nsGlobalNameStruct *old =
-        (nsGlobalNameStruct *)mGlobalNames.Put(&key, s);
-
-      NS_WARN_IF_FALSE(!old, "Redefining name in global namespace hash!");
-
-      delete old;
     } else {
       NS_WARNING("Global script name not overwritten!");
     }
@@ -155,8 +216,9 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
   NS_ENSURE_TRUE(iim, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIEnumerator> e;
-  nsresult rv = iim->EnumerateInterfacesWhoseNamesStartWith(
-                                    NS_DOM_INTERFACE_PREFIX, getter_AddRefs(e));
+  nsresult rv =
+    iim->EnumerateInterfacesWhoseNamesStartWith(NS_DOM_INTERFACE_PREFIX,
+                                                getter_AddRefs(e));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISupports> entry;
@@ -212,17 +274,17 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
       }
 
       if (constant_count != parent_constant_count) {
-        nsGlobalNameStruct *s = new nsGlobalNameStruct;
+        nsGlobalNameStruct *s =
+          AddToHash(NS_ConvertASCIItoUCS2(if_name.get() +
+                                          strlen(NS_DOM_INTERFACE_PREFIX)));
         NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
+#ifdef DEBUG
+        NS_ASSERTION(s->mType == nsGlobalNameStruct::eTypeNotInitialized,
+                     "Whaaa, interface name already in hash!");
+#endif
+
         s->mType = nsGlobalNameStruct::eTypeInterface;
-
-        nsStringKey key(NS_ConvertASCIItoUCS2(if_name.get() + strlen(NS_DOM_INTERFACE_PREFIX)));
-
-        nsGlobalNameStruct *old =
-          (nsGlobalNameStruct *)mGlobalNames.Put(&key, s);
-
-        delete old;
       }
     }
   }
@@ -233,6 +295,23 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
 nsresult
 nsScriptNameSpaceManager::Init()
 {
+  static PLDHashTableOps hash_table_ops =
+  {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    GlobalNameHashGetKey,
+    GlobalNameHashHashKey,
+    GlobalNameHashMatchEntry,
+    PL_DHashMoveEntryStub,
+    GlobalNameHashClearEntry,
+    PL_DHashFinalizeStub,
+    GlobalNameHashInitEntry
+  };
+
+  mIsInitialized = PL_DHashTableInit(&mGlobalNames, &hash_table_ops, nsnull,
+                                     sizeof(GlobalNameMapEntry), 128);
+  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_OUT_OF_MEMORY);
+
   nsresult rv = NS_OK;
 
   rv = FillHashWithDOMInterfaces();
@@ -261,41 +340,48 @@ nsScriptNameSpaceManager::Init()
   return NS_OK;
 }
 
-static PRBool PR_CALLBACK
-NameSetInitCallback(nsHashKey *aKey, void *aData, void* closure)
+PR_STATIC_CALLBACK(PLDHashOperator)
+NameSetInitCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                    PRUint32 number, void *arg)
 {
-  nsGlobalNameStruct *s = (nsGlobalNameStruct *)aData;
+  GlobalNameMapEntry *entry = NS_STATIC_CAST(GlobalNameMapEntry *, hdr);
 
-  if (s->mType != nsGlobalNameStruct::eTypeStaticNameSet) {
-    return PR_TRUE;
+  if (entry->mGlobalName.mType == nsGlobalNameStruct::eTypeStaticNameSet) {
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIScriptExternalNameSet> ns =
+      do_CreateInstance(entry->mGlobalName.mCID, &rv);
+    NS_ENSURE_SUCCESS(rv, PL_DHASH_NEXT);
+
+    rv = ns->InitializeNameSet(NS_STATIC_CAST(nsIScriptContext *, arg));
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+                     "Initing external script classes failed!");
   }
 
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIScriptExternalNameSet> ns(do_CreateInstance(s->mCID, &rv));
-  NS_ENSURE_SUCCESS(rv, PR_TRUE);
-
-  rv = ns->InitializeNameSet((nsIScriptContext *)closure);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                   "Initing external script classes failed!");
-
-  return PR_TRUE;
+  return PL_DHASH_NEXT;
 }
 
 nsresult
 nsScriptNameSpaceManager::InitForContext(nsIScriptContext *aContext)
 {
-  mGlobalNames.Enumerate(NameSetInitCallback, aContext);
+  PL_DHashTableEnumerate(&mGlobalNames, NameSetInitCallback, aContext);
 
   return NS_OK;
 }
 
 nsresult
-nsScriptNameSpaceManager::LookupName(const nsAReadableString& aName,
+nsScriptNameSpaceManager::LookupName(const nsAString& aName,
                                      const nsGlobalNameStruct **aNameStruct)
 {
-  nsStringKey key(aName);
+  GlobalNameMapEntry *entry =
+    NS_STATIC_CAST(GlobalNameMapEntry *,
+                   PL_DHashTableOperate(&mGlobalNames, &aName,
+                                        PL_DHASH_LOOKUP));
 
-  *aNameStruct = (const nsGlobalNameStruct *)mGlobalNames.Get(&key);
+  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+    *aNameStruct = &entry->mGlobalName;
+  } else {
+    *aNameStruct = nsnull;
+  }
 
   return NS_OK;
 }
@@ -304,37 +390,27 @@ nsresult
 nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
                                             PRInt32 aDOMClassInfoID)
 {
-  nsAutoString name;
-  CopyASCIItoUCS2(nsDependentCString(aClassName), name);
+  nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(aClassName));
+  NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
-  nsStringKey key(name);
+  if (s) {
+    if (s->mType == nsGlobalNameStruct::eTypeClassConstructor) {
+      return NS_OK;
+    }
 
-  nsGlobalNameStruct *s = (nsGlobalNameStruct *)mGlobalNames.Get(&key);
+    // If a external constructor is already defined with aClassName we
+    // won't overwrite it.
 
-  if (s && s->mType == nsGlobalNameStruct::eTypeClassConstructor) {
-    return NS_OK;
-  }
-
-  // If a external constructor is already defined with aClassName we
-  // won't overwrite it.
-
-  if (s && s->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
-    return NS_OK;
+    if (s->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
+      return NS_OK;
+    }
   }
 
   NS_ASSERTION(!(s && s->mType != nsGlobalNameStruct::eTypeInterface),
-               "Whaa, JS environment name clash!");
-
-  if (!s) {
-    s = new nsGlobalNameStruct;
-    NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
-  }
-  // else reuse the one already found in the hash
+               "Whaaa, JS environment name clash!");
 
   s->mType = nsGlobalNameStruct::eTypeClassConstructor;
   s->mDOMClassInfoID = aDOMClassInfoID;
-
-  mGlobalNames.Put(&key, s);
 
   return NS_OK;
 }
@@ -348,28 +424,18 @@ nsScriptNameSpaceManager::RegisterClassProto(const char *aClassName,
 
   *aFoundOld = PR_FALSE;
 
-  nsAutoString name;
-  CopyASCIItoUCS2(nsDependentCString(aClassName), name);
+  nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(aClassName));
+  NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
-  nsStringKey key(name);
-
-  nsGlobalNameStruct *s = (nsGlobalNameStruct *)mGlobalNames.Get(&key);
-
-  if (s && s->mType != nsGlobalNameStruct::eTypeInterface) {
+  if (s->mType != nsGlobalNameStruct::eTypeNotInitialized &&
+      s->mType != nsGlobalNameStruct::eTypeInterface) {
     *aFoundOld = PR_TRUE;
 
     return NS_OK;
   }
 
-  if (!s) {
-    s = new nsGlobalNameStruct;
-    NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
-  }
-
   s->mType = nsGlobalNameStruct::eTypeClassProto;
   s->mIID = *aConstructorProtoIID;
-
-  mGlobalNames.Put(&key, s);
 
   return NS_OK;
 }

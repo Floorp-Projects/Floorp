@@ -235,6 +235,9 @@ NS_COM PRUint32 CountCharInReadable( const nsAString& aStr,
 NS_COM PRUint32 CountCharInReadable( const nsACString& aStr,
                                      char aChar );
 
+NS_COM PRUint32 HashString( const nsAString& aStr );
+NS_COM PRUint32 HashString( const nsACString& aStr );
+
 
   /*
     |nsSubstituteC?String|:

@@ -289,7 +289,7 @@ typedef void
  */
 typedef void
 (* JS_DLL_CALLBACK JSDHashInitEntry)(JSDHashTable *table,
-                                     const JSDHashEntryHdr *entry,
+                                     JSDHashEntryHdr *entry,
                                      const void *key);
 
 /*
