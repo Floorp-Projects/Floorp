@@ -2764,7 +2764,7 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     }
     else
     {
-      rv = RemoveFrame(objectFrame);
+      rv = RemoveAFrame(objectFrame);
     }
     break;
 
@@ -3053,7 +3053,7 @@ NS_METHOD nsTableFrame::IR_RowGroupRemoved(nsIPresContext&        aPresContext,
                                            nsTableRowGroupFrame * aDeletedFrame)
 {
   if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_RowGroupRemoved for frame %p\n", aDeletedFrame);
-  nsresult rv = RemoveFrame(aDeletedFrame);
+  nsresult rv = RemoveAFrame(aDeletedFrame);
   InvalidateCellMap();
   InvalidateColumnCache();
 
