@@ -75,6 +75,8 @@ public:
   nsTextControlFrame(nsIPresShell* aShell);
   virtual ~nsTextControlFrame();
 
+  static void ReleaseGlobals();
+
   virtual void RemovedAsPrimaryFrame(nsIPresContext* aPresContext); 
 
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);

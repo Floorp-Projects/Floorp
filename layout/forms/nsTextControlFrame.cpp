@@ -139,22 +139,20 @@ static const PRInt32 DEFAULT_COLS = 20;
 static const PRInt32 DEFAULT_ROWS = 1;
 static const PRInt32 DEFAULT_ROWS_TEXTAREA = 2;
 
+static nsIWeakReference *sElementFactory = nsnull;
+
 static nsresult GetElementFactoryService(nsIElementFactory **aFactory)
 {
-  nsresult rv(NS_OK);
-  static nsWeakPtr sElementFactory = getter_AddRefs( NS_GetWeakReference(nsCOMPtr<nsIElementFactory>(do_GetService(
-                     NS_ELEMENT_FACTORY_CONTRACTID_PREFIX"http://www.w3.org/1999/xhtml", &rv) )));
-  if (sElementFactory)
-  {
-    nsCOMPtr<nsIElementFactory> fac(do_QueryReferent(sElementFactory));
-    *aFactory = fac.get();
-    if (!*aFactory)
-      rv = NS_ERROR_FAILURE;
-    NS_IF_ADDREF(*aFactory);
+  if (!sElementFactory) {
+    sElementFactory = NS_GetWeakReference(
+                        nsCOMPtr<nsIElementFactory>(
+                          do_GetService(
+                            NS_ELEMENT_FACTORY_CONTRACTID_PREFIX
+                            "http://www.w3.org/1999/xhtml")));
+    if (!sElementFactory)
+      return NS_ERROR_FAILURE;
   }
-  else
-    return NS_ERROR_FAILURE;
-  return rv;
+  return CallQueryReferent(sElementFactory, aFactory);
 }
 
 
@@ -1321,6 +1319,12 @@ nsTextControlFrame::~nsTextControlFrame()
 {
   //delete mTextListener;
   //delete mTextSelImpl; dont delete this since mSelCon will release it.
+}
+
+/* static */ void
+nsTextControlFrame::ReleaseGlobals()
+{
+  NS_IF_RELEASE(sElementFactory);
 }
 
 static PRBool
