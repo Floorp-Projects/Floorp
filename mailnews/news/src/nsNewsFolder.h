@@ -131,29 +131,29 @@ protected:
   PRInt32 RememberLine(const char *line);
   nsresult RememberUnsubscribedGroup(const char *newsgroup, const char *setStr);
   nsresult ForgetLine(void);
-	nsresult GetNewsMessages(nsIMsgWindow *aMsgWindow, PRBool getOld);
+  nsresult GetNewsMessages(nsIMsgWindow *aMsgWindow, PRBool getOld, nsIUrlListener *aListener);
 
   PRInt32 HandleNewsrcLine(char *line, PRUint32 line_size);
   virtual const char *GetIncomingServerType() {return "nntp";}
   virtual nsresult CreateBaseMessageURI(const char *aURI);
 
-	nsByteArray		m_newsrcInputStream;
+  nsByteArray		m_newsrcInputStream;
 
 protected:
-	PRUint32  mExpungedBytes;
-	PRBool		mGettingNews;
-	PRBool		mInitialized;
-	nsISupportsArray *mMessages;
-	nsCString mOptionLines;
-        nsCString mUnsubscribedNewsgroupLines;
-        PRBool m_downloadMessageForOfflineUse;
-        nsMsgKeySet *mReadSet; 
+  PRUint32  mExpungedBytes;
+  PRBool		mGettingNews;
+  PRBool		mInitialized;
+  nsISupportsArray *mMessages;
+  nsCString mOptionLines;
+  nsCString mUnsubscribedNewsgroupLines;
+  PRBool m_downloadMessageForOfflineUse;
+  nsMsgKeySet *mReadSet; 
 
-	nsCOMPtr<nsIFileSpec> mNewsrcFilePath; 
+  nsCOMPtr<nsIFileSpec> mNewsrcFilePath; 
 
-	// used for auth news
- 	char 		*mGroupUsername;
-	char		*mGroupPassword;
+  // used for auth news
+  char 		*mGroupUsername;
+  char		*mGroupPassword;
 
   // the name of the newsgroup.
   char    *mAsciiName;

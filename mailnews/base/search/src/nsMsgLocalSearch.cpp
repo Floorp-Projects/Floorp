@@ -818,11 +818,7 @@ nsresult nsMsgSearchOfflineNews::OpenSummaryFile ()
   nsCOMPtr <nsIDBFolderInfo>  folderInfo;
   nsCOMPtr <nsIMsgFolder> scopeFolder;
   err = m_scope->GetFolder(getter_AddRefs(scopeFolder));
-  nsCOMPtr <nsIFileSpec> pathSpec;
-  err= scopeFolder->GetPath(getter_AddRefs(pathSpec));
-  PRBool exists=PR_FALSE;
-  err = pathSpec->Exists(&exists);
-  if (!exists) return NS_ERROR_FILE_NOT_FOUND;
+  // code here used to check if offline store existed, which breaks offline news.
   if (NS_SUCCEEDED(err) && scopeFolder)
     err = scopeFolder->GetMsgDatabase(nsnull, &m_db);
   return err;

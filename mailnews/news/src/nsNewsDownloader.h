@@ -52,42 +52,42 @@
 class nsNewsDownloader : public nsIUrlListener, public nsIMsgSearchNotify
 {
 public:
-	nsNewsDownloader(nsIMsgWindow *window, nsIMsgDatabase *db, nsIUrlListener *listener);
-	virtual ~nsNewsDownloader();
+  nsNewsDownloader(nsIMsgWindow *window, nsIMsgDatabase *db, nsIUrlListener *listener);
+  virtual ~nsNewsDownloader();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIURLLISTENER
   NS_DECL_NSIMSGSEARCHNOTIFY
 
-	virtual nsresult DownloadArticles(nsIMsgWindow *window, nsIMsgFolder *folder, nsMsgKeyArray *pKeyArray);
-	
-	PRBool			ShouldAbort() const { return m_abort; }
+  virtual nsresult DownloadArticles(nsIMsgWindow *window, nsIMsgFolder *folder, nsMsgKeyArray *pKeyArray);
+  
+  PRBool ShouldAbort() const { return m_abort; }
 	
 protected:
-	virtual PRInt32 Write(const char * /*block*/, PRInt32 length) {return length;}
-	virtual void Abort();
-	virtual void Complete();
-	virtual PRBool GetNextHdrToRetrieve();
-	virtual nsresult DownloadNext(PRBool firstTimeP);
-	virtual PRInt32 FinishDownload() {return 0;}
-	virtual PRInt32	StartDownload() {return 0;}
+  virtual PRInt32 Write(const char * /*block*/, PRInt32 length) {return length;}
+  virtual void Abort();
+  virtual void Complete();
+  virtual PRBool GetNextHdrToRetrieve();
+  virtual nsresult DownloadNext(PRBool firstTimeP);
+  virtual PRInt32 FinishDownload() {return 0;}
+  virtual PRInt32	StartDownload() {return 0;}
   virtual nsresult ShowProgress(const PRUnichar *progressString, PRInt32 percent);
 
-	nsMsgKeyArray			m_keysToDownload;
-	PRBool			m_downloadFromKeys;
-	nsCOMPtr <nsIMsgFolder>	m_folder;
-	nsCOMPtr <nsIMsgDatabase> m_newsDB;
+  nsMsgKeyArray			m_keysToDownload;
+  nsCOMPtr <nsIMsgFolder>	m_folder;
+  nsCOMPtr <nsIMsgDatabase> m_newsDB;
   nsCOMPtr <nsIUrlListener> m_listener;
-	PRBool			m_existedP;
-	PRBool			m_wroteAnyP;
-	PRBool			m_summaryValidP;
-	PRInt32			m_numwrote;
-	nsMsgKey    m_keyToDownload;
-	nsCOMPtr <nsIMsgWindow>		m_window;
+  PRPackedBool m_downloadFromKeys;
+  PRPackedBool m_existedP;
+  PRPackedBool m_wroteAnyP;
+  PRPackedBool m_summaryValidP;
+  PRPackedBool m_abort;
+  PRInt32			m_numwrote;
+  nsMsgKey    m_keyToDownload;
+  nsCOMPtr <nsIMsgWindow>		m_window;
   nsCOMPtr <nsIMsgStatusFeedback> m_statusFeedback;
   nsCOMPtr <nsIMsgSearchSession> m_searchSession;
-	nsresult				m_status;
-	PRBool			m_abort;
+  nsresult				m_status;
 };
 
 
@@ -95,19 +95,18 @@ protected:
 class DownloadNewsArticlesToOfflineStore : public nsNewsDownloader
 {
 public:
-	DownloadNewsArticlesToOfflineStore(nsIMsgWindow *window, nsIMsgDatabase *db, nsIUrlListener *listener);
-	virtual ~DownloadNewsArticlesToOfflineStore();
+  DownloadNewsArticlesToOfflineStore(nsIMsgWindow *window, nsIMsgDatabase *db, nsIUrlListener *listener);
+  virtual ~DownloadNewsArticlesToOfflineStore();
 
   NS_IMETHOD OnStartRunningUrl(nsIURI* url);
   NS_IMETHOD OnStopRunningUrl(nsIURI* url, nsresult exitCode);
 protected:
-	virtual PRInt32	StartDownload();
-	virtual PRInt32 FinishDownload();
-	virtual PRBool GetNextHdrToRetrieve();
+  virtual PRInt32	StartDownload();
+  virtual PRInt32 FinishDownload();
+  virtual PRBool GetNextHdrToRetrieve();
 
-	nsCOMPtr <nsISimpleEnumerator>	m_headerEnumerator;
-	nsCOMPtr <nsIMsgDBHdr>	m_newsHeader;
-//	MsgDocument		*m_dbWriteDocument;
+  nsCOMPtr <nsISimpleEnumerator>	m_headerEnumerator;
+  nsCOMPtr <nsIMsgDBHdr>	m_newsHeader;
 };
 
 // class for downloading all the articles that match the passed in search criteria
@@ -115,8 +114,8 @@ protected:
 class DownloadMatchingNewsArticlesToNewsDB : public DownloadNewsArticlesToOfflineStore
 {
 public:
-	DownloadMatchingNewsArticlesToNewsDB(nsIMsgWindow *window, nsIMsgFolder *folder, nsIMsgDatabase *newsDB,  nsIUrlListener *listener);
-	virtual ~DownloadMatchingNewsArticlesToNewsDB();
+  DownloadMatchingNewsArticlesToNewsDB(nsIMsgWindow *window, nsIMsgFolder *folder, nsIMsgDatabase *newsDB,  nsIUrlListener *listener);
+  virtual ~DownloadMatchingNewsArticlesToNewsDB();
   nsresult RunSearch(nsIMsgFolder *folder, nsIMsgDatabase *newsDB, nsIMsgSearchSession *searchSession);
 protected:
 };
@@ -137,10 +136,11 @@ public:
 protected:
   nsresult AdvanceToNextServer(PRBool *done);
   nsresult AdvanceToNextGroup(PRBool *done);
+  nsresult DownloadMsgsForCurrentGroup();
 
   DownloadMatchingNewsArticlesToNewsDB *m_downloaderForGroup;
 
-	nsCOMPtr <nsIMsgFolder>	m_currentFolder;
+  nsCOMPtr <nsIMsgFolder> m_currentFolder;
   nsCOMPtr <nsIMsgWindow> m_window;
   nsCOMPtr <nsISupportsArray> m_allServers;
   nsCOMPtr <nsISupportsArray> m_allFolders;
@@ -148,6 +148,8 @@ protected:
   nsCOMPtr <nsIEnumerator> m_serverEnumerator;
   nsCOMPtr <nsIUrlListener> m_listener;
   nsCOMPtr <nsISupportsArray> m_termList;
+
+  PRBool m_downloadedHdrsForCurGroup;
 };
 
 #endif

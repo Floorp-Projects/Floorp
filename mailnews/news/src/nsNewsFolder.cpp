@@ -971,16 +971,15 @@ nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages, nsIMsgWindow *aMsgWi
 
 NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages(nsIMsgWindow *aMsgWindow, nsIUrlListener *aListener)
 {
-  NS_ASSERTION(aListener == nsnull, "news can't currently listen for this finishing");
-  return GetNewsMessages(aMsgWindow, PR_FALSE);
+  return GetNewsMessages(aMsgWindow, PR_FALSE, aListener);
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::GetNextNMessages(nsIMsgWindow *aMsgWindow)
 {
-  return GetNewsMessages(aMsgWindow, PR_TRUE);
+  return GetNewsMessages(aMsgWindow, PR_TRUE, nsnull);
 }
 
-nsresult nsMsgNewsFolder::GetNewsMessages(nsIMsgWindow *aMsgWindow, PRBool aGetOld)
+nsresult nsMsgNewsFolder::GetNewsMessages(nsIMsgWindow *aMsgWindow, PRBool aGetOld, nsIUrlListener *aUrlListener)
 {
   nsresult rv = NS_OK;
 
@@ -990,7 +989,7 @@ nsresult nsMsgNewsFolder::GetNewsMessages(nsIMsgWindow *aMsgWindow, PRBool aGetO
   
   if (isNewsServer) {
     // get new messages only works on a newsgroup, not a news server
-		return NS_OK;
+    return NS_OK;
   }
 
   nsCOMPtr <nsINntpService> nntpService = do_GetService(NS_NNTPSERVICE_CONTRACTID, &rv);
@@ -1000,7 +999,14 @@ nsresult nsMsgNewsFolder::GetNewsMessages(nsIMsgWindow *aMsgWindow, PRBool aGetO
   rv = GetNntpServer(getter_AddRefs(nntpServer));
   if (NS_FAILED(rv)) return rv;
   
-  rv = nntpService->GetNewNews(nntpServer, mURI, aGetOld, this, aMsgWindow, nsnull);
+  nsCOMPtr <nsIURI> resultUri;
+  rv = nntpService->GetNewNews(nntpServer, mURI, aGetOld, this, aMsgWindow, getter_AddRefs(resultUri));
+  if (aUrlListener && NS_SUCCEEDED(rv) && resultUri)
+  {
+    nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(resultUri));
+    if (msgUrl)
+      msgUrl->RegisterListener(aUrlListener);
+  }
   return rv;
 }
 

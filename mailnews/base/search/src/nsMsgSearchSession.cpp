@@ -671,23 +671,25 @@ nsresult nsMsgSearchSession::TimeSliceSerial (PRBool *aDone)
 	// disk, this is the fastest way to do it.
 
   NS_ENSURE_ARG(aDone);
-
-	nsMsgSearchScopeTerm *scope = GetRunningScope();
+  nsresult rv = NS_OK;
+  nsMsgSearchScopeTerm *scope = GetRunningScope();
   if (scope)
   {
-    scope->TimeSlice (aDone);
-    if (*aDone)
+    rv = scope->TimeSlice (aDone);
+    if (NS_FAILED(rv))
+      *aDone = PR_TRUE;
+    if (*aDone || NS_FAILED(rv))
     {
       ReleaseFolderDBRef();
       m_idxRunningScope++;
       //			if (m_idxRunningScope < m_scopeList.Count())
       //  			UpdateStatusBar (MK_MSG_SEARCH_STATUS);
-		}
+    }
     *aDone = PR_FALSE;
-    return NS_OK;
+    return rv;
   }
   else
-	{
+  {
     *aDone = PR_TRUE;
     return NS_OK;
   }

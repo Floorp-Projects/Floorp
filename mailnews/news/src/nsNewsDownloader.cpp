@@ -95,13 +95,13 @@ nsNewsDownloader::nsNewsDownloader(nsIMsgWindow *window, nsIMsgDatabase *msgDB, 
 
 nsNewsDownloader::~nsNewsDownloader()
 {
-	if (m_listener)
-	  m_listener->OnStopRunningUrl(/* don't have a url */nsnull, m_status);
-	if (m_newsDB)
-	{
-		m_newsDB->Commit(nsMsgDBCommitType::kLargeCommit);
-		m_newsDB = nsnull;
-	}
+  if (m_listener)
+    m_listener->OnStopRunningUrl(/* don't have a url */nsnull, m_status);
+  if (m_newsDB)
+  {
+    m_newsDB->Commit(nsMsgDBCommitType::kLargeCommit);
+    m_newsDB = nsnull;
+  }
 }
 
 NS_IMETHODIMP nsNewsDownloader::OnStartRunningUrl(nsIURI* url)
@@ -246,52 +246,52 @@ NS_IMETHODIMP DownloadNewsArticlesToOfflineStore::OnStartRunningUrl(nsIURI* url)
 
 NS_IMETHODIMP DownloadNewsArticlesToOfflineStore::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
 {
-	m_status = exitCode;
-	if (m_newsHeader != nsnull)
-	{
+  m_status = exitCode;
+  if (m_newsHeader != nsnull)
+  {
 #ifdef DEBUG_bienvenu
-//		XP_Trace("finished retrieving %ld\n", m_newsHeader->GetMessageKey());
+    //		XP_Trace("finished retrieving %ld\n", m_newsHeader->GetMessageKey());
 #endif
-		if (m_newsDB)
-		{
+    if (m_newsDB)
+    {
       nsMsgKey msgKey;
       m_newsHeader->GetMessageKey(&msgKey);
-			m_newsDB->MarkMarked(msgKey, PR_FALSE, nsnull);
-		}
-	}	
-	m_newsHeader = nsnull;
-	return nsNewsDownloader::OnStopRunningUrl(url, exitCode);
+      m_newsDB->MarkMarked(msgKey, PR_FALSE, nsnull);
+    }
+  }	
+  m_newsHeader = nsnull;
+  return nsNewsDownloader::OnStopRunningUrl(url, exitCode);
 }
 
 int DownloadNewsArticlesToOfflineStore::FinishDownload()
 {
-	return 0;
+  return 0;
 }
 
 
 NS_IMETHODIMP nsNewsDownloader::OnSearchHit(nsIMsgDBHdr *header, nsIMsgFolder *folder)
 {
   NS_ENSURE_ARG(header);
-
+  
   
   PRUint32 msgFlags;
   header->GetFlags(&msgFlags);
-	// only need to download articles we don't already have...
-	if (! (msgFlags & MSG_FLAG_OFFLINE))
-	{
+  // only need to download articles we don't already have...
+  if (! (msgFlags & MSG_FLAG_OFFLINE))
+  {
     nsMsgKey key;
     header->GetMessageKey(&key);
-		m_keysToDownload.Add(key);
+    m_keysToDownload.Add(key);
 #ifdef HAVE_PORT
-		char *statusTemplate = XP_GetString (MK_MSG_ARTICLES_TO_RETRIEVE);
-		char *statusString = PR_smprintf (statusTemplate,  (long) newsArticleState->m_keysToDownload.GetSize());
-		if (statusString)
-		{
-			FE_Progress (newsArticleState->m_context, statusString);
-			XP_FREE(statusString);
-		}
+    char *statusTemplate = XP_GetString (MK_MSG_ARTICLES_TO_RETRIEVE);
+    char *statusString = PR_smprintf (statusTemplate,  (long) newsArticleState->m_keysToDownload.GetSize());
+    if (statusString)
+    {
+      FE_Progress (newsArticleState->m_context, statusString);
+      XP_FREE(statusString);
+    }
 #endif
-	}
+  }
   return NS_OK;
 }
 
@@ -316,14 +316,14 @@ NS_IMETHODIMP nsNewsDownloader::OnNewSearch()
 
 int DownloadNewsArticlesToOfflineStore::StartDownload()
 {
-	m_newsDB->GetMsgHdrForKey(m_keyToDownload, getter_AddRefs(m_newsHeader));
-	return 0;
+  m_newsDB->GetMsgHdrForKey(m_keyToDownload, getter_AddRefs(m_newsHeader));
+  return 0;
 }
 
 DownloadNewsArticlesToOfflineStore::DownloadNewsArticlesToOfflineStore(nsIMsgWindow *window, nsIMsgDatabase *db, nsIUrlListener *listener)
 	: nsNewsDownloader(window, db, listener)
 {
-	m_newsDB = db;
+  m_newsDB = db;
 }
 
 DownloadNewsArticlesToOfflineStore::~DownloadNewsArticlesToOfflineStore()
@@ -335,10 +335,10 @@ DownloadMatchingNewsArticlesToNewsDB::DownloadMatchingNewsArticlesToNewsDB
 	 nsIUrlListener *listener) :
 	 DownloadNewsArticlesToOfflineStore(window, newsDB, listener)
 {
-	m_window = window;
-	m_folder = folder;
-	m_newsDB = newsDB;
-	m_downloadFromKeys = PR_TRUE;	// search term matching means downloadFromKeys.
+  m_window = window;
+  m_folder = folder;
+  m_newsDB = newsDB;
+  m_downloadFromKeys = PR_TRUE;	// search term matching means downloadFromKeys.
 }
 
 DownloadMatchingNewsArticlesToNewsDB::~DownloadMatchingNewsArticlesToNewsDB()
@@ -357,10 +357,13 @@ nsMsgDownloadAllNewsgroups::nsMsgDownloadAllNewsgroups(nsIMsgWindow *window, nsI
   m_window = window;
   m_listener = listener;
   m_downloaderForGroup = new DownloadMatchingNewsArticlesToNewsDB(window, nsnull, nsnull, this);
+  NS_IF_ADDREF(m_downloaderForGroup);
+  m_downloadedHdrsForCurGroup = PR_FALSE;
 }
 
 nsMsgDownloadAllNewsgroups::~nsMsgDownloadAllNewsgroups()
 {
+  NS_IF_RELEASE(m_downloaderForGroup);
 }
 
 NS_IMETHODIMP nsMsgDownloadAllNewsgroups::OnStartRunningUrl(nsIURI* url)
@@ -373,7 +376,17 @@ nsMsgDownloadAllNewsgroups::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
 {
   nsresult rv = exitCode;
   if (NS_SUCCEEDED(exitCode) || exitCode == NS_MSG_NEWS_ARTICLE_NOT_FOUND)
-    rv = ProcessNextGroup();
+  {
+    if (m_downloadedHdrsForCurGroup)
+    {
+      rv = DownloadMsgsForCurrentGroup();
+      m_downloadedHdrsForCurGroup = PR_FALSE;
+    }
+    else
+    {
+      rv = ProcessNextGroup();
+    }
+  }
   else if (m_listener)  // notify main observer.
     m_listener->OnStopRunningUrl(url, exitCode);
    
@@ -489,7 +502,7 @@ nsresult DownloadMatchingNewsArticlesToNewsDB::RunSearch(nsIMsgFolder *folder, n
 
   searchSession->RegisterListener(this);
   rv = searchSession->AddScopeTerm(nsMsgSearchScope::localNews, folder);
-	return searchSession->Search(m_window);
+  return searchSession->Search(m_window);
 }
 
 nsresult nsMsgDownloadAllNewsgroups::ProcessNextGroup()
@@ -513,12 +526,17 @@ nsresult nsMsgDownloadAllNewsgroups::ProcessNextGroup()
     if (m_listener)
       return m_listener->OnStopRunningUrl(nsnull, NS_OK);
   }
+  m_downloadedHdrsForCurGroup = PR_TRUE;
+  return m_currentFolder->GetNewMessages(m_window, this);
+}
 
+nsresult nsMsgDownloadAllNewsgroups::DownloadMsgsForCurrentGroup()
+{
   nsCOMPtr <nsIMsgDatabase> db;
   nsCOMPtr <nsISupportsArray> termList;
   nsCOMPtr <nsIMsgDownloadSettings> downloadSettings;
   m_currentFolder->GetMsgDatabase(m_window, getter_AddRefs(db));
-  rv = m_currentFolder->GetDownloadSettings(getter_AddRefs(downloadSettings));
+  nsresult rv = m_currentFolder->GetDownloadSettings(getter_AddRefs(downloadSettings));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr <nsIMsgNewsFolder> newsFolder = do_QueryInterface(m_currentFolder);
