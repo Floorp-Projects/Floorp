@@ -46,18 +46,6 @@
 #include "nsCOMPtr.h"
 #include "nsIAccessNode.h"
 #include "nsIDOMNode.h"
-#include "nsIStringBundle.h"
-
-class nsSupportsHashtable;
-class nsHashKey;
-
-static PRBool gIsAccessibilityActive;
-
-#define ACCESSIBLE_BUNDLE_URL "chrome://global-platform/locale/accessible.properties"
-#define PLATFORM_KEYS_BUNDLE_URL "chrome://global-platform/locale/platformKeys.properties"
-
-// Used in 16 bit sibling index field as flags
-enum { eSiblingsUninitialized = 0xffff, eSiblingsWalkNormalDOM = 0xfffe};
 
 class nsAccessNode: public nsIAccessNode
 {
@@ -65,49 +53,15 @@ class nsAccessNode: public nsIAccessNode
     nsAccessNode(nsIDOMNode *);
     virtual ~nsAccessNode();
 
-    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-    NS_IMETHOD_(nsrefcnt) AddRef(void);
-    NS_IMETHOD_(nsrefcnt) Release(void);
-    NS_DECL_OWNINGTHREAD  // Debug - ensure AddRef happens on original thread
-
+    NS_DECL_ISUPPORTS
     NS_DECL_NSIACCESSNODE
-
-    static void InitAccessibility();
-    static void ShutdownAccessibility();
 
   protected:
     nsCOMPtr<nsIDOMNode> mDOMNode;
 
-    // Cache where we are in list of kids that we got from nsIBindingManager::GetContentList(parentContent)
-    // Don't need it until nsAccessible, but it packs together with mRefCnt for 4 bytes total instead of 8
-    PRUint16 mSiblingIndex; 
-
-    PRUint16 mRefCnt;
-
     // XXX aaronl: we should be able to remove this once we have hash table
     nsIAccessibleDocument *mRootAccessibleDoc; 
-
-    // Static data, we do our own refcounting for our static data
-    static nsIStringBundle *gStringBundle;
-    static nsIStringBundle *gKeyStringBundle;
-    static nsIDOMNode * gLastFocusedNode;
-    static nsSupportsHashtable *gGlobalAccessibleDocCache;
-
-    // Static methods for handling cache
-    static void PutCacheEntry(nsSupportsHashtable *aCache, 
-                              void* aUniqueID, nsIAccessNode *aAccessNode);
-    static void GetCacheEntry(nsSupportsHashtable *aCache, void* aUniqueID, 
-                              nsIAccessNode **aAccessNode);
-    static void ClearCache(nsSupportsHashtable *aCache);
-
-    static PRIntn PR_CALLBACK ClearCacheEntry(nsHashKey *aKey, void *aData, 
-                                              void* aClosure);
-
-    // Static cache methods for global document cache
-    static void GetDocumentAccessible(nsIDOMNode *aDocNode,
-                                      nsIAccessible **aDocAccessible);
 };
-
 
 #endif
 
