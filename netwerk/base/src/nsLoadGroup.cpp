@@ -59,8 +59,8 @@ nsLoadGroup::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
     if (aIID.Equals(nsILoadGroup::GetIID()) ||
-        aIID.Equals(nsIRequest::GetIID()) ||
-        aIID.Equals(nsISupports::GetIID())) {
+        aIID.Equals(nsCOMTypeInfo<nsIRequest>::GetIID()) ||
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsILoadGroup*, this);
         NS_ADDREF_THIS();
         return NS_OK;

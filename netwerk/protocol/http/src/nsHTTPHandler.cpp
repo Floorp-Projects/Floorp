@@ -172,8 +172,6 @@ nsHTTPHandler::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     *aInstancePtr = NULL;
     
-    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
     if (aIID.Equals(nsIProtocolHandler::GetIID())) {
         *aInstancePtr = (void*) ((nsIProtocolHandler*)this);
         NS_ADDREF_THIS();
@@ -189,7 +187,7 @@ nsHTTPHandler::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(kISupportsIID)) {
+    if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = (void*) ((nsISupports*)(nsIProtocolHandler*)this);
         NS_ADDREF_THIS();
         return NS_OK;

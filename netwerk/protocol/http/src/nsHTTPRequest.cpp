@@ -202,8 +202,6 @@ nsHTTPRequest::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     *aInstancePtr = NULL;
     
-    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
     if (aIID.Equals(nsIHTTPRequest::GetIID())) {
         *aInstancePtr = (void*) ((nsIHTTPRequest*)this);
         NS_ADDREF_THIS();

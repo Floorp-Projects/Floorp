@@ -29,7 +29,6 @@
 
 #include "prprf.h" // PR_sscanf
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
 // There are actually two transport connections established for an 
@@ -71,7 +70,7 @@ nsFTPChannel::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
     if (aIID.Equals(nsIFTPChannel::GetIID()) ||
         aIID.Equals(nsIChannel::GetIID()) ||
-        aIID.Equals(kISupportsIID) ) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()) ) {
         *aInstancePtr = NS_STATIC_CAST(nsIFTPChannel*, this);
         NS_ADDREF_THIS();
         return NS_OK;

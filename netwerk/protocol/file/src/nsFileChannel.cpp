@@ -37,7 +37,6 @@
 #include "prmem.h" // XXX can be removed when we start doing real content-type discovery
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
-NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +112,7 @@ nsFileChannel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     NS_ASSERTION(aInstancePtr, "no instance pointer");
     if (aIID.Equals(nsIFileChannel::GetIID()) ||
         aIID.Equals(nsIChannel::GetIID()) ||
-        aIID.Equals(kISupportsIID)) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsIFileChannel*, this);
         NS_ADDREF_THIS();
         return NS_OK;

@@ -26,7 +26,6 @@
 #include "nsNeckoUtil.h"
 #include "nsIBufferInputStream.h"
 
-static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIStreamListenerIID,  NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIUnicharStreamLoaderIID,  NS_IUNICHARSTREAMLOADER_IID);
 
@@ -114,7 +113,7 @@ nsUnicharStreamLoader::QueryInterface(const nsIID &aIID, void** aInstancePtr)
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
     nsIUnicharStreamLoader* tmp = this;
     nsISupports* tmp2 = tmp;
     *aInstancePtr = (void*) tmp2;

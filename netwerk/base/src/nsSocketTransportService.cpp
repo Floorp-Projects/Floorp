@@ -24,9 +24,6 @@
 #define MAX_OPEN_CONNECTIONS 50
 
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-
 nsSocketTransportService::nsSocketTransportService()
 {
   NS_INIT_REFCNT();
@@ -323,7 +320,7 @@ nsSocketTransportService::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
     return NS_ERROR_NULL_POINTER; 
   } 
   if (aIID.Equals(nsISocketTransportService::GetIID()) ||
-    aIID.Equals(kISupportsIID)) {
+    aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
     *aInstancePtr = NS_STATIC_CAST(nsISocketTransportService*, this); 
     NS_ADDREF_THIS(); 
     return NS_OK; 

@@ -119,9 +119,6 @@ PRLogModuleInfo* gSocketLog = nsnull;
 
 #endif /* PR_LOGGING */
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-
 nsSocketTransport::nsSocketTransport()
 {
   NS_INIT_REFCNT();
@@ -895,7 +892,7 @@ nsSocketTransport::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
     return NS_ERROR_NULL_POINTER; 
   } 
   if (aIID.Equals(nsIChannel::GetIID()) ||
-      aIID.Equals(kISupportsIID)) {
+      aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
     *aInstancePtr = NS_STATIC_CAST(nsIChannel*, this); 
     NS_ADDREF_THIS(); 
     return NS_OK; 
