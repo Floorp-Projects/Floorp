@@ -40,7 +40,7 @@ TOOLKIT_CPPSRCS = \
 
 TOOLKIT_LIBS = $(TK_GTK_LIBS)
 else
-ifneq (,$(filter motif, $(MOZ_TOOLKIT))
+ifneq (,$(filter motif, $(MOZ_TOOLKIT)))
 TOOLKIT_CFLAGS = \
 	-DWIDGET_DLL=\"libwidgetmotif.so\" \
 	-DGFXWIN_DLL=\"libgfxmotif.so\" \
@@ -149,9 +149,9 @@ include $(topsrcdir)/config/rules.mk
 $(PROGS): $(OBJS) # $(EX_LIBS)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),Linux)
-	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS) $(TOOLKIT_LIBS)
+	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(OS_LIBS)
 else
-	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS) $(TOOLKIT_LIBS)
+	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(OS_LIBS)
 endif
 
 export::
