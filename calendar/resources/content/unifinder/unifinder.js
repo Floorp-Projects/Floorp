@@ -61,9 +61,17 @@ function unifinderInit( CalendarWindow )
          {
             for( i = 0; i < EventSelectionArray.length; i++ )
             {
-               CategoriesTree.addItemToSelection( document.getElementById( "unifinder-treeitem-"+EventSelectionArray[i].id ) );
+               var CategoriesTreeItem = document.getElementById( "unifinder-treeitem-"+EventSelectionArray[i].id );
+
+               var SearchTreeItem = document.getElementById( "search-unifinder-treeitem-"+EventSelectionArray[i].id );
+               
+               //you need this for when an event is added.  It doesn't yet exist.
+               if( CategoriesTreeItem )
+                  CategoriesTree.addItemToSelection( CategoriesTreeItem );
    
-               SearchTree.addItemToSelection( document.getElementById( "search-unifinder-treeitem-"+EventSelectionArray[i].id ) );
+               //you need this for when an event is added. It doesn't yet exist.
+               if( SearchTreeItem )
+                  SearchTree.addItemToSelection( SearchTreeItem );
             }
          }
       }
@@ -175,9 +183,7 @@ function finishCalendarUnifinder( eventSource )
 
 function formatUnifinderEventDate( date )
 {
-   var monthDayString = gDateFormater.getFormatedDate( date );
-   
-   return  monthDayString + ", " + date.getFullYear();
+   return( gDateFormater.getFormatedDate( date ) );
 }
 
 
@@ -389,7 +395,6 @@ function refreshEventTree( eventArray, childrenName, Categories )
       var calendarEvent = eventArray[ index ];
       
       // make the items
-      
       var treeItem = document.createElement( "listitem" );
       
       if( Categories != false )
@@ -469,5 +474,9 @@ function refreshEventTree( eventArray, childrenName, Categories )
       treeItem.appendChild( treeCell );
 
       oldTreeChildren.appendChild( treeItem );
+
+      //you need this for when an event is added.
+      if( gCalendarWindow.EventSelection.isSelectedEvent( calendarEvent ) )
+         oldTreeChildren.addItemToSelection( treeItem );
    }  
 }
