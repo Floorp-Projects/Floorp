@@ -175,14 +175,14 @@ nsThrobber::HandleThrobberEvent(nsGUIEvent *aEvent)
 
 //----------------------------------------------------------------------
 
-MOZ_DECL_CTOR(nsThrobber);
+MOZ_DECL_CTOR_COUNTER(nsThrobber);
 
 PRInt32 nsThrobber::gNumThrobbers;
 
 // Note: operator new zeros our memory
 nsThrobber::nsThrobber()
 {
-  MOZ_CTOR(nsThrobber);
+  MOZ_COUNT_CTOR(nsThrobber);
   NS_INIT_REFCNT();
   if (0 == gNumThrobbers++) {
     gThrobbers = new nsVoidArray;
@@ -192,7 +192,7 @@ nsThrobber::nsThrobber()
 
 nsThrobber::~nsThrobber()
 {
-  MOZ_DTOR(nsThrobber);
+  MOZ_COUNT_DTOR(nsThrobber);
   Destroy();
 }
 
