@@ -51,7 +51,8 @@ sub CreateImagemap {
             $default = qq{<area alt="" shape="default" href="$1">\n};
         }
         if ($line =~ /^rectangle \((.*),(.*)\) \((.*),(.*)\) (http[^ ]*)(.*)?$/) {
-            $map .= qq{<area alt="bug$6" name="bug$6" shape="rect" href="$5" coords="$1,$4,$3,$2">\n};
+            my $bugsummary = value_quote($6);
+            $map .= qq{<area alt="bug$bugsummary" name="bug$bugsummary" shape="rect" href="$5" coords="$1,$4,$3,$2">\n};
         }
     }
     close MAP;
