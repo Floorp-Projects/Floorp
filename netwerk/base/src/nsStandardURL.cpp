@@ -1087,7 +1087,6 @@ nsStandardURL::SetUserPass(const nsACString &input)
         NS_ERROR("uninitialized");
         return NS_ERROR_NOT_INITIALIZED;
     }
-    NS_ASSERTION(mHost.mLen >= 0, "uninitialized");
 
     InvalidateCache();
 
@@ -1105,6 +1104,8 @@ nsStandardURL::SetUserPass(const nsACString &input)
         }
         return NS_OK;
     }
+
+    NS_ASSERTION(mHost.mLen >= 0, "uninitialized");
 
     nsresult rv;
     PRUint32 usernamePos, passwordPos;
