@@ -338,10 +338,10 @@ nsMsgNewsFolder::ReplaceElement(nsISupports* element, nsISupports* newElement)
 //returns NS_OK.  Otherwise returns a failure error value.
 nsresult nsMsgNewsFolder::GetDatabase()
 {
+		nsresult rv;
 	if (!mDatabase)
 	{
 		nsCOMPtr<nsIFileSpec> pathSpec;
-		nsresult rv;
 		rv = GetPath(getter_AddRefs(pathSpec));
 		if (NS_FAILED(rv)) return rv;
 
@@ -366,7 +366,6 @@ nsresult nsMsgNewsFolder::GetDatabase()
 		if (mDatabase) {
 			if(mAddListener)
 				rv = mDatabase->AddListener(this);
-		    nsresult rv;
 		    nsCOMPtr<nsINewsDatabase> db(do_QueryInterface(mDatabase, &rv));
 		    if (NS_FAILED(rv))
 				return rv;        
@@ -1255,8 +1254,6 @@ NS_IMETHODIMP nsMsgNewsFolder::GetUnreadSetStr(char * *aUnreadSetStr)
 
 NS_IMETHODIMP nsMsgNewsFolder::SetUnreadSetStr(char * aUnreadSetStr)
 {
-  nsresult rv;
-    
   if (!aUnreadSetStr) return NS_ERROR_NULL_POINTER;
 
   m_unreadSet = aUnreadSetStr;
