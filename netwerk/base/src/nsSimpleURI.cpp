@@ -93,9 +93,13 @@ nsSimpleURI::SetSpec(char* aSpec)
     PRUint32 count = spec.Length() - pos - 1;
     n = spec.Mid(path, pos + 1, count);
     NS_ASSERTION(n == count, "Mid failed");
+    if (mScheme) 
+		nsCRT::free(mScheme);
     mScheme = scheme.ToNewCString();
     if (mScheme == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
+    if (mPath)   
+		nsCRT::free(mPath);
     mPath = path.ToNewCString();
     if (mPath == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
