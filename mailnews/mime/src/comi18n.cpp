@@ -267,8 +267,29 @@ inline char* StrAllocCopy(char** dest, const char* src) {
   return *dest;
 }
 
-/* TODO: Replace this by XPCOM CharsetManger so charsets are extensible.
- */
+// The default setting of 'B' or 'Q' is the same as 4.5.
+//
+const char kMsgHeaderBEncoding[] = "B";
+const char kMsgHeaderQEncoding[] = "Q";
+static const char * intl_message_header_encoding(const char* charset)
+{
+  //TODO: make this overridable.
+  if (!PL_strcasecmp(charset, "iso-2022-jp") || 
+      !PL_strcasecmp(charset, "iso-2022-kr") ||
+      !PL_strcasecmp(charset, "hz-gb-2312") ||
+      !PL_strcasecmp(charset, "shift_jis") ||
+      !PL_strcasecmp(charset, "euc-jp") ||
+      !PL_strcasecmp(charset, "big5") ||
+      !PL_strcasecmp(charset, "gb2312") ||
+      !PL_strcasecmp(charset, "euc-kr") ||
+      !PL_strcasecmp(charset, "utf-7") ||
+      !PL_strcasecmp(charset, "utf-8")) {
+    return kMsgHeaderBEncoding;
+  }
+
+  return kMsgHeaderQEncoding;
+}
+
 static PRBool stateful_encoding(const char* charset)
 {
   if (!PL_strcasecmp(charset, "iso-2022-jp"))
@@ -790,8 +811,8 @@ char * utf8_mime_encode_mail_address(char *charset, const char *src, int maxLine
       }
 
       // converted to mail charset, now apply MIME encode
-
-      if (stateful_encoding((const char *) charset))
+      const char *msgHeaderEncoding = intl_message_header_encoding((const char *) charset);
+      if (!PL_strcasecmp(msgHeaderEncoding, kMsgHeaderBEncoding))
       {
         /* converts to Base64 Encoding */
         buf2 = (char *)intlmime_encode_base64_buf(buf1, PL_strlen(buf1));
@@ -849,7 +870,7 @@ char * utf8_mime_encode_mail_address(char *charset, const char *src, int maxLine
       /* Add encoding tag for base64 and QP */
       PL_strcat(buf1, "=?");
       PL_strcat(buf1, charset );
-      if(stateful_encoding((const char *) charset))
+      if (!PL_strcasecmp(msgHeaderEncoding, kMsgHeaderBEncoding))
         PL_strcat(buf1, "?B?");
       else
         PL_strcat(buf1, "?Q?");
