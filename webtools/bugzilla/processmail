@@ -239,7 +239,7 @@ sub fixaddresses {
         }
         
         if (!defined $::nomail{$i} && !defined $seen{$i}) {
-            push @result, $i;
+            push(@result, $i . Param('emailsuffix'));
             $seen{$i} = 1;
         }
     }

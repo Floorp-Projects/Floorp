@@ -316,16 +316,15 @@ sub quietly_check_login() {
 
 sub CheckEmailSyntax {
     my ($addr) = (@_);
-    if ($addr !~ /^[^@, ]*@[^@, ]*\.[^@, ]*$/) {
+    my $match = Param('emailregexp');
+    if ($addr !~ /$match/) {
         print "Content-type: text/html\n\n";
 
         print "<H1>Invalid e-mail address entered.</H1>\n";
         print "The e-mail address you entered\n";
         print "(<b>$addr</b>) didn't match our minimal\n";
-        print "syntax checking for a legal email address.  A legal\n";
-        print "address must contain exactly one '\@', and at least one\n";
-        print "'.' after the \@, and may not contain any commas or.\n";
-        print "spaces.\n";
+        print "syntax checking for a legal email address.\n";
+        print Param('emailregexpdesc');
         print "<p>Please click <b>back</b> and try again.\n";
         exit;
     }
@@ -351,7 +350,8 @@ To use the wonders of bugzilla, you can use the following:
  (Your bugzilla and CVS password, if any, are not currently synchronized.
  Top hackers are working around the clock to fix this, as you read this.)
 ";
-    my $msg = sprintf($template, $login, $login, $password);
+    my $msg = sprintf($template, $login . Param('emailsuffix'),
+                      $login, $password);
 
     open SENDMAIL, "|/usr/lib/sendmail -t";
     print SENDMAIL $msg;
