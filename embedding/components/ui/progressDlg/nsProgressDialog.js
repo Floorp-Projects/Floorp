@@ -590,7 +590,7 @@ nsProgressDialog.prototype = {
                 cancelButton.label = this.getString( "close" );
                 cancelButton.focus();
 
-                // Activate reveal/launch buttons if we are them.
+                // Activate reveal/launch buttons if we enable them.
                 var enableButtons = true;
                 try {
                   var prefs = Components.classes[ "@mozilla.org/preferences-service;1" ]
