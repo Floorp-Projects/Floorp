@@ -51,11 +51,6 @@ interface nsIMarkupDocumentViewer : nsISupports
 	/*
 	XXX Comment here!
 	*/
-	attribute boolean isFrame;
-
-	/*
-	XXX Comment here!
-	*/
 	attribute wstring defaultCharacterSet;
 
 	/*
