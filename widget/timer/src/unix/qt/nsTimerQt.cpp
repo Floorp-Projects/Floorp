@@ -97,8 +97,8 @@ nsTimerQt::Init(nsITimerCallback *aCallback, PRUint32 aDelay,
 {
 #ifdef DBG_JCG
 printf("JCG: nsTimerQT::Init (%p) ID: %d WITH Callback\n",this,mTimerID);
-printf("JCG: Priority: %d, Delay: %d, OneShot: %s, Now: %ld\n",aPriority,aDelay,
-       (aType == NS_TYPE_ONE_SHOT)?"Y":"N",PR_Now());
+printf("JCG: Priority: %d, Delay: %d, OneShot: %s\n",aPriority,aDelay,
+       (aType == NS_TYPE_ONE_SHOT)?"Y":"N");
 #endif
   mCallback = aCallback;
   NS_ADDREF(mCallback);
@@ -122,6 +122,12 @@ nsTimerQt::Init(PRUint32 aDelay)
   mTimer->start(aDelay,mType == NS_TYPE_ONE_SHOT);
   mDelay = aDelay;
   return NS_OK;
+}
+
+void nsTimerQt::SetDelay(PRUint32 aDelay)
+{
+  mTimer->changeInterval(aDelay);
+  mDelay = aDelay;
 }
 
 NS_IMPL_ISUPPORTS1(nsTimerQt, nsITimer)

@@ -52,7 +52,7 @@ public:
     virtual void Cancel();
 
     virtual PRUint32 GetDelay() { return mDelay; }
-    virtual void SetDelay(PRUint32 aDelay) { mDelay = aDelay; };
+    virtual void SetDelay(PRUint32 aDelay);
 
     virtual PRUint32 GetPriority() { return mPriority; }
     virtual void SetPriority(PRUint32 aPriority) { mPriority = aPriority; }
