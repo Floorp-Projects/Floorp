@@ -1677,10 +1677,10 @@ function BrowserLoadURL(aTriggeringEvent, aPostData)
       var t = gBrowser.addTab(url, null, null, aPostData); // open link in new tab
       gBrowser.selectedTab = t;
       gURLBar.value = url;
-      event.preventDefault();
-      event.preventBubble();
-      event.preventCapture();
-      event.stopPropagation();
+      aTriggeringEvent.preventDefault();
+      aTriggeringEvent.preventBubble();
+      aTriggeringEvent.preventCapture();
+      aTriggeringEvent.stopPropagation();
     }
     else  
       loadURI(url, null, aPostData);
