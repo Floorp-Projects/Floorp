@@ -428,7 +428,7 @@ nsLabelFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 
   // Resolve style and set the style context
   nsIStyleContext* styleContext =
-    aPresContext.ResolveStyleContextFor(mContent, this);              
+    aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::labelContentPseudo, mStyleContext);
   mFirstChild->SetStyleContext(&aPresContext, styleContext);
   NS_RELEASE(styleContext);                                           
 

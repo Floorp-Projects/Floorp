@@ -851,10 +851,6 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
   if (firstTime) { 
     // create the view. a view is needed since it needs to be a mouse grabber
 
-    // make sure the style context is set
-    if (nsnull == mStyleContext) {
-      GetStyleContext(&aPresContext, mStyleContext);
-    }
     nsIView* view;
     nsresult result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
                                                    (void **)&view);
@@ -954,7 +950,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
         nsIAtom* tag;
         child->GetTag(tag);
         if ((nsHTMLAtoms::frameset == tag) || (nsHTMLAtoms::frame == tag)) {
-          nsIStyleContext* kidSC = aPresContext.ResolveStyleContextFor(child, this);
+          nsIStyleContext* kidSC = aPresContext.ResolveStyleContextFor(child, mStyleContext);
           nsresult         result;
 
           if (nsHTMLAtoms::frameset == tag) {
@@ -1003,7 +999,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
         // XXX the blank frame is using the content of its parent - at some point it should just have null content
         nsHTMLFramesetBlankFrame* blankFrame = new nsHTMLFramesetBlankFrame(mContent, this);
         nsIStyleContext* pseudoStyleContext =
-          aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::framesetBlankPseudo, this);
+          aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::framesetBlankPseudo, mStyleContext);
         blankFrame->SetStyleContext(&aPresContext, pseudoStyleContext);
         NS_RELEASE(pseudoStyleContext);
 
@@ -1041,7 +1037,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
         if (firstTime) { // create horizontal border
           borderFrame = new nsHTMLFramesetBorderFrame(mContent, this, borderWidth, PR_FALSE, PR_FALSE);
           nsIStyleContext* pseudoStyleContext =
-            aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::horizontalFramesetBorderPseudo, this);
+            aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::horizontalFramesetBorderPseudo, mStyleContext);
           borderFrame->SetStyleContext(&aPresContext, pseudoStyleContext);
           NS_RELEASE(pseudoStyleContext);
 
@@ -1066,7 +1062,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
           if (firstTime) { // create vertical border
             borderFrame = new nsHTMLFramesetBorderFrame(mContent, this, borderWidth, PR_TRUE, PR_FALSE);
             nsIStyleContext* pseudoStyleContext =
-              aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::verticalFramesetBorderPseudo, this);
+              aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::verticalFramesetBorderPseudo, mStyleContext);
             borderFrame->SetStyleContext(&aPresContext, pseudoStyleContext);
             NS_RELEASE(pseudoStyleContext);
 

@@ -575,7 +575,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
       nscoord specifiedHeight = 0;
       nscoord cellHeight = desiredSize.height;
       nsIStyleContextPtr kidSC;
-      kidFrame->GetStyleContext(&aPresContext, kidSC.AssignRef());
+      kidFrame->GetStyleContext(kidSC.AssignRef());
       const nsStylePosition* kidPosition = (const nsStylePosition*)
         kidSC->GetStyleData(eStyleStruct_Position);
       switch (kidPosition->mHeight.GetUnit()) {
@@ -827,7 +827,7 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
           // See if it has a specified height that overrides the desired size
           nscoord specifiedHeight = 0;
           nsIStyleContextPtr kidSC;
-          frame->GetStyleContext(&aPresContext, kidSC.AssignRef());
+          frame->GetStyleContext(kidSC.AssignRef());
           const nsStylePosition* kidPosition = (const nsStylePosition*)
             kidSC->GetStyleData(eStyleStruct_Position);
           switch (kidPosition->mHeight.GetUnit()) {
@@ -1255,7 +1255,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     nscoord specifiedHeight = 0;
     nscoord cellHeight = desiredSize.height;
     nsIStyleContextPtr kidSC;
-    aNextFrame->GetStyleContext(&aPresContext, kidSC.AssignRef());
+    aNextFrame->GetStyleContext(kidSC.AssignRef());
     const nsStylePosition* kidPosition = (const nsStylePosition*)
       kidSC->GetStyleData(eStyleStruct_Position);
     switch (kidPosition->mHeight.GetUnit()) {

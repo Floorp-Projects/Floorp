@@ -1517,7 +1517,9 @@ nsBlockFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 
     // Resolve style for the bullet frame
     nsIStyleContext* kidSC;
-    kidSC = aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::bulletPseudo, this);
+    kidSC = aPresContext.ResolvePseudoStyleContextFor(mContent, 
+                                                      nsHTMLAtoms::bulletPseudo, 
+                                                      mStyleContext);
     mBullet->SetStyleContext(&aPresContext, kidSC);
     NS_RELEASE(kidSC);
 
@@ -2125,7 +2127,7 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
     else {
       // Wrap the frame in a view if necessary
       nsIStyleContext* kidSC;
-      frame->GetStyleContext(&aPresContext, kidSC);
+      frame->GetStyleContext(kidSC);
       rv = CreateViewForFrame(aPresContext, frame, kidSC, PR_FALSE);
       NS_RELEASE(kidSC);
       if (NS_OK != rv) {
@@ -3541,7 +3543,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       // that it can compress with other block margins.
       nsIStyleContext* brSC;
       nsIPresContext& px = aState.mPresContext;
-      nsresult rv = brFrame->GetStyleContext(&px, brSC);
+      nsresult rv = brFrame->GetStyleContext(brSC);
       if ((NS_OK == rv) && (nsnull != brSC)) {
         const nsStyleFont* font = (const nsStyleFont*)
           brSC->GetStyleData(eStyleStruct_Font);
@@ -3900,8 +3902,9 @@ nsBlockFrame::InsertNewFrame(nsIPresContext& aPresContext,
   else {
     // Wrap the frame in a view if necessary
     nsIStyleContext* kidSC;
-    aNewFrame->GetStyleContext(&aPresContext, kidSC);
-    nsresult rv = CreateViewForFrame(aPresContext, aNewFrame, kidSC, PR_FALSE);    NS_RELEASE(kidSC);
+    aNewFrame->GetStyleContext(kidSC);
+    nsresult rv = CreateViewForFrame(aPresContext, aNewFrame, kidSC, PR_FALSE);    
+    NS_RELEASE(kidSC);
     if (NS_OK != rv) {
       return rv;
     }

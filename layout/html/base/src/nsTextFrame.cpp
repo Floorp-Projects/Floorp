@@ -517,7 +517,7 @@ TextFrame::Paint(nsIPresContext& aPresContext,
   nsIStyleContext* firstLineStyle = nsnull;
   if ((TEXT_FIRST_LETTER | TEXT_FIRST_LINE) & mFlags) {
     firstLineStyle = aPresContext.
-      ProbePseudoStyleContextFor(nsHTMLAtoms::firstLinePseudo, mContentParent);
+      ProbePseudoStyleContextFor(mContent, nsHTMLAtoms::firstLinePseudo, sc);
     if (nsnull != firstLineStyle) {
       sc = firstLineStyle;
     }
@@ -1544,7 +1544,7 @@ TextFrame::GetPosition(nsIPresContext& aCX,
 
   // Find the font metrics for this text
   nsIStyleContext* styleContext;
-  aNewFrame->GetStyleContext(&aCX, styleContext);
+  aNewFrame->GetStyleContext(styleContext);
   const nsStyleFont *font = (const nsStyleFont*)
     styleContext->GetStyleData(eStyleStruct_Font);
   NS_RELEASE(styleContext);
@@ -1625,7 +1625,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   nsIStyleContext* sc = mStyleContext;
   if (0 == lineLayout.GetLineNumber()) {
     firstLineStyle = lineLayout.mPresContext.
-      ProbePseudoStyleContextFor(nsHTMLAtoms::firstLinePseudo, mContentParent);
+      ProbePseudoStyleContextFor(mContent, nsHTMLAtoms::firstLinePseudo, sc);
     if (nsnull != firstLineStyle) {
       sc = firstLineStyle;
     }
@@ -2117,7 +2117,7 @@ TextFrame::ComputeWordFragmentWidth(nsLineLayout& aLineLayout,
   aStop = contentLen < tx.GetContentLength();
 
   nsIStyleContext* sc;
-  if ((NS_OK == aTextFrame->GetStyleContext(&aLineLayout.mPresContext, sc)) &&
+  if ((NS_OK == aTextFrame->GetStyleContext(sc)) &&
       (nsnull != sc)) {
     // Measure the piece of text. Note that we have to select the
     // appropriate font into the text first because the rendering

@@ -65,8 +65,10 @@ public:
   static nsIAtom* br;
   static nsIAtom* bulletPseudo;
   static nsIAtom* button;
+  static nsIAtom* buttonContentPseudo;
 
   static nsIAtom* caption;
+  static nsIAtom* cellContentPseudo;
   static nsIAtom* cellpadding;
   static nsIAtom* cellspacing;
   static nsIAtom* ch;
@@ -109,6 +111,7 @@ public:
 
   static nsIAtom* face;
   static nsIAtom* fieldset;
+  static nsIAtom* fieldsetContentPseudo;
   static nsIAtom* firstLetterPseudo;
   static nsIAtom* firstLinePseudo;
   static nsIAtom* font;
@@ -148,6 +151,7 @@ public:
   static nsIAtom* ismap;
 
   static nsIAtom* label;
+  static nsIAtom* labelContentPseudo;
   static nsIAtom* lang;
   static nsIAtom* layout;
   static nsIAtom* li;
@@ -155,6 +159,7 @@ public:
   static nsIAtom* left;
   static nsIAtom* leftpadding;
   static nsIAtom* legend;
+  static nsIAtom* legendContentPseudo;
   static nsIAtom* length;
   static nsIAtom* longdesc;
   static nsIAtom* lowsrc;

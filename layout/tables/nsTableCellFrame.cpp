@@ -78,7 +78,7 @@ nsTableCellFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 
   // Resolve style and set the style context
   nsIStyleContext* styleContext =
-    aPresContext.ResolveStyleContextFor(mContent, this);              // styleContext: ADDREF++
+    aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::cellContentPseudo, mStyleContext);              // styleContext: ADDREF++
   mFirstChild->SetStyleContext(&aPresContext, styleContext);
   NS_RELEASE(styleContext);                                           // styleContext: ADDREF--
 
@@ -520,7 +520,7 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext, nsStyleS
   nsTableFrame::GetTableFrame(this, tableFrame);
   nsIStyleContext*  styleContext = nsnull;
   
-  tableFrame->GetStyleContext(aPresContext,styleContext);
+  tableFrame->GetStyleContext(styleContext);
   
   const nsStyleColor* colorData = 
       nsStyleUtil::FindNonTransparentBackground(styleContext);

@@ -2079,28 +2079,26 @@ nsBrowserWindow::DumpStyleContexts(FILE* out)
 {
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
-    nsIPresContext* cx = shell->GetPresContext();
     nsIStyleSet* styleSet = shell->GetStyleSet();
     if (nsnull == styleSet) {
       fputs("null style set\n", out);
     } else {
       nsIFrame* root = shell->GetRootFrame();
       if (nsnull == root) {
-	fputs("null root frame\n", out);
-      } else {
-	nsIStyleContext* rootContext;
-	root->GetStyleContext(cx, rootContext);
-	if (nsnull != rootContext) {
-	  styleSet->ListContexts(rootContext, out);
-	  NS_RELEASE(rootContext);
-	}
-	else {
-	  fputs("null root context", out);
-	}
+	      fputs("null root frame\n", out);
+            } else {
+	      nsIStyleContext* rootContext;
+	      root->GetStyleContext(rootContext);
+	      if (nsnull != rootContext) {
+	        styleSet->ListContexts(rootContext, out);
+	        NS_RELEASE(rootContext);
+	      }
+	      else {
+	        fputs("null root context", out);
+	      }
       }
       NS_RELEASE(styleSet);
     }
-    NS_IF_RELEASE(cx);
     NS_RELEASE(shell);
   } else {
     fputs("null pres shell\n", out);

@@ -106,7 +106,7 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
 
         // Set its style context
         nsIStyleContextPtr colStyleContext =
-          aPresContext.ResolveStyleContextFor(col, this, PR_TRUE);
+          aPresContext.ResolveStyleContextFor(col, mStyleContext, PR_TRUE);
         colFrame->SetStyleContext(&aPresContext, colStyleContext);
         colFrame->Init(aPresContext, nsnull);
 
@@ -551,7 +551,7 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPre
         {
           nsIStyleContextPtr colStyleContext;
           nsStylePosition * colPosition=nsnull;
-          colFrame->GetStyleContext(&aPresContext, colStyleContext.AssignRef());
+          colFrame->GetStyleContext(colStyleContext.AssignRef());
           colPosition = (nsStylePosition*)colStyleContext->GetMutableStyleData(eStyleStruct_Position);
           if (colIndex<numCols)
           {

@@ -542,12 +542,13 @@ public:
 
   virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
                                 nsIContent* aContent,
-                                nsIFrame* aParentFrame,
+                                nsIStyleContext* aParentContext,
                                 nsISupportsArray* aResults);
 
   virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
+                                nsIContent* aParentContent,
                                 nsIAtom* aPseudoTag,
-                                nsIFrame* aParentFrame,
+                                nsIStyleContext* aParentContext,
                                 nsISupportsArray* aResults);
 
   virtual nsIURL* GetURL(void);
@@ -845,18 +846,18 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
 
 struct ContentEnumData {
   ContentEnumData(nsIPresContext* aPresContext, nsIContent* aContent, 
-                  nsIFrame* aParentFrame, nsISupportsArray* aResults)
+                  nsIStyleContext* aParentContext, nsISupportsArray* aResults)
   {
     mPresContext = aPresContext;
     mContent = aContent;
-    mParentFrame = aParentFrame;
+    mParentContext = aParentContext;
     mResults = aResults;
     mCount = 0;
   }
 
   nsIPresContext*   mPresContext;
   nsIContent*       mContent;
-  nsIFrame*         mParentFrame;
+  nsIStyleContext*  mParentContext;
   nsISupportsArray* mResults;
   PRInt32           mCount;
 };
@@ -868,18 +869,17 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, void* aData)
   nsCSSSelector* selector = aRule->FirstSelector();
   if (SelectorMatches(data->mPresContext, selector, data->mContent)) {
     selector = selector->mNext;
-    nsIFrame* frame = data->mParentFrame;
+
+    nsIContent* content = nsnull;
     nsIContent* lastContent = nsnull;
-    while ((nsnull != selector) && (nsnull != frame)) { // check compound selectors
-      nsIContent* content;
-      frame->GetContent(content);
-      if ((content != lastContent) && // skip pseudo frames (actually we're skipping pseudo's parent, but same result)
-          SelectorMatches(data->mPresContext, selector, content)) {
+    data->mContent->GetParent(content);
+    while ((nsnull != selector) && (nsnull != content)) { // check compound selectors
+      if (SelectorMatches(data->mPresContext, selector, content)) {
         selector = selector->mNext;
       }
-      frame->GetGeometricParent(frame);
-      NS_IF_RELEASE(lastContent);
       lastContent = content;
+      content->GetParent(content);
+      NS_IF_RELEASE(lastContent);
     }
     NS_IF_RELEASE(lastContent);
     if (nsnull == selector) { // ran out, it matched
@@ -909,7 +909,7 @@ static PRBool ContentEnumWrap(nsISupports* aRule, void* aData)
 
 PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                          nsIContent* aContent,
-                                         nsIFrame* aParentFrame,
+                                         nsIStyleContext* aParentContext,
                                          nsISupportsArray* aResults)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
@@ -918,76 +918,71 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   PRInt32 matchCount = 0;
 
-  nsIContent* parentContent = nsnull;
-  if (nsnull != aParentFrame) {
-    aParentFrame->GetContent(parentContent);
+  nsICSSStyleSheet*  child = mFirstChild;
+  while (nsnull != child) {
+    matchCount += child->RulesMatching(aPresContext, aContent, aParentContext, aResults);
+    child = ((CSSStyleSheetImpl*)child)->mNext;
   }
 
-  if (aContent != parentContent) {  // if not a pseudo frame...
-    nsICSSStyleSheet*  child = mFirstChild;
-    while (nsnull != child) {
-      matchCount += child->RulesMatching(aPresContext, aContent, aParentFrame, aResults);
-      child = ((CSSStyleSheetImpl*)child)->mNext;
+  if (mWeightedRules.IsNotNull()) {
+    if (nsnull == mRuleHash) {
+      BuildHash();
+    }
+    ContentEnumData data(aPresContext, aContent, aParentContext, aResults);
+    nsIAtom* tagAtom;
+    aContent->GetTag(tagAtom);
+    nsIAtom* idAtom = nsnull;
+    nsIAtom* classAtom = nsnull;
+
+    nsIHTMLContent* htmlContent;
+    if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
+      htmlContent->GetID(idAtom);
+      htmlContent->GetClass(classAtom);
+      NS_RELEASE(htmlContent);
     }
 
-    if (mWeightedRules.IsNotNull()) {
-      if (nsnull == mRuleHash) {
-        BuildHash();
-      }
-      ContentEnumData data(aPresContext, aContent, aParentFrame, aResults);
-      nsIAtom* tagAtom;
-      aContent->GetTag(tagAtom);
-      nsIAtom* idAtom = nsnull;
-      nsIAtom* classAtom = nsnull;
-
-      nsIHTMLContent* htmlContent;
-      if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
-        htmlContent->GetID(idAtom);
-        htmlContent->GetClass(classAtom);
-        NS_RELEASE(htmlContent);
-      }
-
-      mRuleHash->EnumerateAllRules(tagAtom, idAtom, classAtom, ContentEnumFunc, &data);
-      matchCount += data.mCount;
+    mRuleHash->EnumerateAllRules(tagAtom, idAtom, classAtom, ContentEnumFunc, &data);
+    matchCount += data.mCount;
 
 #ifdef DEBUG_RULES
-      nsISupportsArray* list1;
-      nsISupportsArray* list2;
-      NS_NewISupportsArray(&list1);
-      NS_NewISupportsArray(&list2);
+    nsISupportsArray* list1;
+    nsISupportsArray* list2;
+    NS_NewISupportsArray(&list1);
+    NS_NewISupportsArray(&list2);
 
-      data.mResults = list1;
-      mRuleHash->EnumerateAllRules(tagAtom, idAtom, classAtom, ContentEnumFunc, &data);
-      data.mResults = list2;
-      mWeightedRules->EnumerateBackwards(ContentEnumWrap, &data);
-      NS_ASSERTION(list1->Equals(list2), "lists not equal");
-      NS_RELEASE(list1);
-      NS_RELEASE(list2);
+    data.mResults = list1;
+    mRuleHash->EnumerateAllRules(tagAtom, idAtom, classAtom, ContentEnumFunc, &data);
+    data.mResults = list2;
+    mWeightedRules->EnumerateBackwards(ContentEnumWrap, &data);
+    NS_ASSERTION(list1->Equals(list2), "lists not equal");
+    NS_RELEASE(list1);
+    NS_RELEASE(list2);
 #endif
 
-      NS_IF_RELEASE(tagAtom);
-      NS_IF_RELEASE(idAtom);
-      NS_IF_RELEASE(classAtom);
-    }
+    NS_IF_RELEASE(tagAtom);
+    NS_IF_RELEASE(idAtom);
+    NS_IF_RELEASE(classAtom);
   }
-  NS_IF_RELEASE(parentContent);
   return matchCount;
 }
 
 struct PseudoEnumData {
-  PseudoEnumData(nsIPresContext* aPresContext, nsIAtom* aPseudoTag, 
-                 nsIFrame* aParentFrame, nsISupportsArray* aResults)
+  PseudoEnumData(nsIPresContext* aPresContext, nsIContent* aParentContent,
+                 nsIAtom* aPseudoTag, nsIStyleContext* aParentContext, 
+                 nsISupportsArray* aResults)
   {
     mPresContext = aPresContext;
+    mParentContent = aParentContent;
     mPseudoTag = aPseudoTag;
-    mParentFrame = aParentFrame;
+    mParentContext = aParentContext;
     mResults = aResults;
     mCount = 0;
   }
 
   nsIPresContext*   mPresContext;
+  nsIContent*       mParentContent;
   nsIAtom*          mPseudoTag;
-  nsIFrame*         mParentFrame;
+  nsIStyleContext*  mParentContext;
   nsISupportsArray* mResults;
   PRInt32           mCount;
 };
@@ -999,18 +994,16 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
   nsCSSSelector* selector = aRule->FirstSelector();
   if (selector->mTag == data->mPseudoTag) {
     selector = selector->mNext;
-    nsIFrame* frame = data->mParentFrame;
+    nsIContent* content = data->mParentContent;
     nsIContent* lastContent = nsnull;
-    while ((nsnull != selector) && (nsnull != frame)) { // check compound selectors
-      nsIContent* content;
-      frame->GetContent(content);
-      if ((content != lastContent) && // skip pseudo frames (actually we're skipping pseudo's parent, but same result)
-          SelectorMatches(data->mPresContext, selector, content)) {
+    NS_IF_ADDREF(content);
+    while ((nsnull != selector) && (nsnull != content)) { // check compound selectors
+      if (SelectorMatches(data->mPresContext, selector, content)) {
         selector = selector->mNext;
       }
-      frame->GetGeometricParent(frame);
-      NS_IF_RELEASE(lastContent);
       lastContent = content;
+      content->GetParent(content);
+      NS_IF_RELEASE(lastContent);
     }
     NS_IF_RELEASE(lastContent);
     if (nsnull == selector) { // ran out, it matched
@@ -1039,8 +1032,9 @@ static PRBool PseudoEnumWrap(nsISupports* aRule, void* aData)
 #endif
 
 PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
+                                         nsIContent* aParentContent,
                                          nsIAtom* aPseudoTag,
-                                         nsIFrame* aParentFrame,
+                                         nsIStyleContext* aParentContext,
                                          nsISupportsArray* aResults)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
@@ -1051,7 +1045,8 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   nsICSSStyleSheet*  child = mFirstChild;
   while (nsnull != child) {
-    matchCount += child->RulesMatching(aPresContext, aPseudoTag, aParentFrame, aResults);
+    matchCount += child->RulesMatching(aPresContext, aParentContent, aPseudoTag, 
+                                       aParentContext, aResults);
     child = ((CSSStyleSheetImpl*)child)->mNext;
   }
 
@@ -1059,7 +1054,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     if (nsnull == mRuleHash) {
       BuildHash();
     }
-    PseudoEnumData data(aPresContext, aPseudoTag, aParentFrame, aResults);
+    PseudoEnumData data(aPresContext, aParentContent, aPseudoTag, aParentContext, aResults);
     mRuleHash->EnumerateTagRules(aPseudoTag, PseudoEnumFunc, &data);
     matchCount += data.mCount;
 
