@@ -80,7 +80,7 @@ interface nsIInputStream : nsISupports
                                           in unsigned long count);
 
     /**
-     * Set this attribute to put the stream in non-blocking mode.
+     * Check this attribute to see if the stream is in non-blocking mode.
      */
     readonly attribute boolean nonBlocking;
 
