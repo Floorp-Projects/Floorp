@@ -585,7 +585,7 @@ nsComponentManagerImpl::PlatformRegister(const char *cidString,
 
     PlatformSetFileInfo(dllPathKey, dll->GetLastModifiedTime(), dll->GetSize());
 
-    int32 nComponents = 0;
+    PRInt32 nComponents = 0;
     rv = mRegistry->GetInt(dllPathKey, componentCountValueName, &nComponents);
     nComponents++;
     rv = mRegistry->SetInt(dllPathKey,componentCountValueName, nComponents);
@@ -621,7 +621,7 @@ nsComponentManagerImpl::PlatformUnregister(const char *cidString,
 
     // We need to reduce the ComponentCount by 1.
     // If the ComponentCount hits 0, delete the entire key.
-    int32 nComponents = 0;
+    PRInt32 nComponents = 0;
     rv = mRegistry->GetInt(libKey, componentCountValueName, &nComponents);
     if(NS_FAILED(rv)) return rv;
     nComponents--;
@@ -1702,7 +1702,7 @@ nsComponentManagerImpl::AddComponentToRegistry(const nsCID &aClass,
 {
     nsresult rv;
     nsRegistryKey IDKey;
-    int32 nComponents = 0;
+    PRInt32 nComponents = 0;
     
     /* so why do we use strings here rather than writing bytes, anyway? */
     char *cidString = aClass.ToString();

@@ -916,12 +916,12 @@ nsNativeComponentLoader::GetRegistryDllInfo(nsRegistryKey key,
                                             PRUint32 *lastModifiedTime,
                                             PRUint32 *fileSize)
 {
-    int32 lastMod;
+    PRInt32 lastMod;
     nsresult rv = mRegistry->GetInt(key, lastModValueName, &lastMod);
     if (NS_FAILED(rv)) return rv;
     *lastModifiedTime = lastMod;
         
-    int32 fsize;
+    PRInt32 fsize;
     rv = mRegistry->GetInt(key, fileSizeValueName, &fsize);
     if (NS_FAILED(rv)) return rv;
     *fileSize = fsize;
