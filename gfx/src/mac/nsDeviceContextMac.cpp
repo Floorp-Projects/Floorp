@@ -476,6 +476,8 @@ nsDeviceContextMac :: FindScreenForSurface ( nsIScreen** outScreen )
       NS_IF_ADDREF(*outScreen = sPrimaryScreen.get());
     }
     else {
+    	::SetPort ( window );
+
       // convert window bounds to global coordinates
       Point topLeft = { bounds.top, bounds.left };
       Point bottomRight = { bounds.bottom, bounds.right };
