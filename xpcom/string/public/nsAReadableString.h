@@ -692,6 +692,11 @@ class basic_nsLiteralString
 
       virtual PRUint32 Length() const;
 
+      operator const CharT*() const
+        {
+          return mStart;
+        }
+
     private:
       const CharT* mStart;
       const CharT* mEnd;
@@ -1073,12 +1078,25 @@ nsPromiseSubstring<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFrag
     else if ( aRequest == kFragmentAt )
       aPosition += mStartPos;
 
+    // requests for |kNextFragment| or |kPrevFragment| are just relayed down into the string we're slicing
+
     const CharT* position_ptr = mString.GetReadableFragment(aFragment, aRequest, aPosition);
 
-      // if there's more physical data in the returned fragment than I logically have left...
-    size_t logical_size_forward = mLength - aPosition;
-    if ( aFragment.mEnd - position_ptr > logical_size_forward )
-      aFragment.mEnd = position_ptr + logical_size_forward;
+    // If |GetReadableFragment| returns |0|, then we are off the string, the contents of the
+    //  fragment are garbage.
+
+      // Therefore, only need to fix up the fragment boundaries when |position_ptr| is not null
+    if ( position_ptr )
+      {
+          // if there's more physical data in the returned fragment than I logically have left...
+        size_t logical_size_backward = aPosition - mStartPos;
+        if ( position_ptr - aFragment.mStart > logical_size_backward )
+          aFragment.mStart = position_ptr - logical_size_backward;
+
+        size_t logical_size_forward = mLength - logical_size_backward;
+        if ( aFragment.mEnd - position_ptr > logical_size_forward )
+          aFragment.mEnd = position_ptr + logical_size_forward;
+      }
 
     return position_ptr;
   }
