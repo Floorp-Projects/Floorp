@@ -32,6 +32,7 @@ install::
 	$(MAKE_INSTALL) brand.css $(DIST)\bin\chrome\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) button.css $(DIST)\bin\chrome\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) communicator.css $(DIST)\bin\chrome\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) formatting.css $(DIST)\bin\chrome\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) menu.css $(DIST)\bin\chrome\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) menubutton.css $(DIST)\bin\chrome\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) navbar-endbox.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin
