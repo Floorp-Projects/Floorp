@@ -25,6 +25,7 @@
 
 <!-- this is PAGE ONE of the Profile Creation Wizard -->
 
+<?xml-stylesheet href="chrome://profile/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://profile/skin/pwiz_panels.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://profile/locale/newProfile1_1.dtd" >

@@ -27,6 +27,7 @@
   
 -->
 
+<?xml-stylesheet href="chrome://profile/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://profile/skin/profileSelection.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://profile/locale/profileSelection.dtd" >

@@ -22,6 +22,7 @@
 
 -->
 
+<?xml-stylesheet href="chrome://profile/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://profile/skin/profileManager.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://profile/locale/profileManager.dtd" >
