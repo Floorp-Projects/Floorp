@@ -33,6 +33,8 @@
 #include "prio.h"
 #include "plstr.h"
 #include "nsDTDUtils.h"
+#include "nsTagHandler.h"
+
 #ifdef XP_PC
 #include <direct.h> //this is here for debug reasons...
 #endif
@@ -93,6 +95,82 @@ static eHTMLTags gWhitespaceTags[]={
 
 
 static CTokenRecycler gTokenRecycler;
+
+
+/***************************************************************
+  This the ITagHandler deque deallocator, needed by the 
+  CTagHandlerRegister
+ ***************************************************************/
+class CTagHandlerDeallocator: public nsDequeFunctor{
+public:
+  virtual void* operator()(void* anObject) {
+    nsITagHandler* tagHandler =(nsITagHandler*)anObject;
+    delete tagHandler;
+    return 0;
+  }
+};
+
+/***************************************************************
+  This funtor will be called for each item in the TagHandler que to 
+  check for a Tag name, and setting the current TagHandler when it is reached
+ ***************************************************************/
+class CTagFinder: public nsDequeFunctor{
+public:
+  CTagFinder(nsAutoString* aTagName) {
+  }
+
+  virtual ~CTagFinder() {
+  }
+
+  virtual void* operator()(void* anObject) {
+
+    mCurTagHandler = 0;
+    if( ((nsITagHandler*)anObject)->GetString()== mTagName){
+      mCurTagHandler = (nsITagHandler*)anObject;
+      return 0;
+      }
+    return(anObject); 
+   }
+
+  nsAutoString*  mTagName;
+  nsITagHandler* mCurTagHandler;
+};
+
+/***************************************************************
+  This a an object that will keep track of TagHandlers in 
+  the DTD.  Uses a factory pattern
+ ***************************************************************/
+class CTagHandlerRegister {
+
+
+public:
+  CTagHandlerRegister() : mDeallocator(), mTagHandlerDeque(mDeallocator) {
+  }
+
+  ~CTagHandlerRegister() {
+  }
+
+  void RegisterTagHandler(nsAutoString *aTagName,nsITagHandler *aTagHandler){
+    aTagHandler->SetString(aTagName);
+    mTagHandlerDeque.Push(aTagHandler);
+  }
+  
+  nsITagHandler*  FindTagHandler(nsAutoString* aTagName){
+    mTagHandlerDeque.Begin();
+
+    return 0;
+  }
+
+  CTagHandlerDeallocator  mDeallocator;
+  nsDeque                 mTagHandlerDeque;
+
+};
+
+
+
+
+CTagHandlerRegister gTagHandlerRegister;
+
 
 /************************************************************************
   And now for the main class -- CNavDTD...
