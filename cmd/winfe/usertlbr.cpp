@@ -1366,8 +1366,6 @@ BOOL CRDFToolbarDropTarget::OnDrop(CWnd * pWnd, COleDataObject * pDataObject,
 static void toolbarNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened,
 					void *token, uint32 tokenType) 
 {
-	static int toolbarIDCounter = 0;
-
 	CRDFToolbarHolder* theToolbarHolder = (CRDFToolbarHolder*)ns->data;
 	if (theToolbarHolder == NULL)
 		return;
@@ -1375,11 +1373,6 @@ static void toolbarNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event 
 	HT_View theView = HT_GetView(n);
 	
 	// The pane has to handle some events.  These will go here.
-	if (whatHappened == HT_EVENT_VIEW_SELECTED)
-	{
-		
-	}
-	
 	if (theView == NULL)
 		return;
 
@@ -1389,9 +1382,10 @@ static void toolbarNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event 
 		CButtonToolbarWindow *pWindow = new CButtonToolbarWindow(theNewToolbar, 
 										theApp.m_pToolbarStyle, 43, 27, eSMALL_HTAB);
 		
-		theToolbarHolder->AddNewWindow(ID_PERSONAL_TOOLBAR+toolbarIDCounter, pWindow, toolbarIDCounter, 43, 27, 1, 
+		uint32 index = HT_GetViewIndex(theView);
+		
+		theToolbarHolder->AddNewWindow(ID_PERSONAL_TOOLBAR+index, pWindow, index, 43, 27, 1, 
 				HT_GetNodeName(HT_TopNode(theNewToolbar->GetHTView())),theApp.m_pToolbarStyle, FALSE);
-		toolbarIDCounter++;
 		theToolbarHolder->GetCachedParentWindow()->RecalcLayout();
 	}
 	else if (whatHappened == HT_EVENT_VIEW_DELETED)
@@ -1403,13 +1397,13 @@ static void toolbarNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event 
 	}
 	else if (whatHappened == HT_EVENT_NODE_VPROP_CHANGED && HT_TopNode(theView) == n)
 	{
-	}
-	else if (whatHappened == HT_EVENT_NODE_EDIT && HT_TopNode(theView) == n)
-	{
-		// Edit being performed on a selector bar item. (STILL TO DO)
-	}
-	else if (whatHappened == HT_EVENT_VIEW_WORKSPACE_REFRESH)
-	{
+		// Invalidate the toolbar.
+		CRDFToolbar* pToolbar = (CRDFToolbar*)HT_GetViewFEData(theView);
+		if (pToolbar->m_hWnd)
+		{
+			pToolbar->Invalidate();
+			pToolbar->GetParent()->Invalidate();
+		}
 	}
 	// If the pane doesn't handle the event, then a view does.
 	else 
@@ -1436,7 +1430,7 @@ void CRDFToolbar::HandleEvent(HT_Notification ns, HT_Resource n, HT_Event whatHa
 					// Initial population of the toolbar. We should only receive this event once.
 					FillInToolbar();
 				}
-				else 
+				else if (HT_GetParent(n) == HT_TopNode(theView))
 				{
 					// Toolbar button menu.  Populate it.
 					CRDFToolbarButton* theButton = (CRDFToolbarButton*)(HT_GetNodeFEData(n));
@@ -1478,8 +1472,7 @@ void CRDFToolbar::HandleEvent(HT_Notification ns, HT_Resource n, HT_Event whatHa
 				CRDFToolbarButton* pButton = (CRDFToolbarButton*)HT_GetNodeFEData(n);
 				pButton->AddTextEdit();
 			}
-			else if (whatHappened == HT_EVENT_NODE_VPROP_CHANGED && 
-					 HT_GetParent(n) == HT_TopNode(HT_GetView(n)))
+			else if (whatHappened == HT_EVENT_NODE_VPROP_CHANGED)
 			{
 				CRDFToolbarButton* pButton = (CRDFToolbarButton*)HT_GetNodeFEData(n);
 				if (pButton->m_hWnd)
