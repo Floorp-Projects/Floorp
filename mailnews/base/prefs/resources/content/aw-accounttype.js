@@ -21,23 +21,63 @@
  * Alec Flett <alecf@netscape.com>
  */
 
+function onInit() {
+    fixLabels(document.getElementById("ispBox"));
+
+    
+}
+
+
+// this is a workaround for a template shortcoming.
+// basically: templates can't set the "id" attribute on a node, so we
+// have to set "fakeid" and then transfer it manually
+function fixLabels(box) {
+    if (!box) return;
+    var child = box.firstChild;
+
+    while (child) {
+        if (child.tagName.toLowerCase() == "div") {
+            var input = child.childNodes[0];
+            var label = child.childNodes[1];
+
+            dump("Looking at " + input.tagName + " and " + label.tagName + "\n");
+            if (input.tagName.toLowerCase() == "input" &&
+                label.tagName.toLowerCase() == "label") {
+                input.setAttribute("id", input.getAttribute("fakeid"));
+            }
+        }
+
+        child = child.nextSibling;
+    }
+
+}
+
+function onMailChanged(event) {
+    //    enableControls(document.getElementById("ispBox"),
+    //                   event.target.checked);
+}
+
+function enableControls(node, enabled)
+{
+    var tagName = node.tagName.toLowerCase();
+    if (tagName == "input" || tagName == "label") {
+        if (enabled)
+            node.setAttribute("disabled", "true");
+        else
+            node.removeAttribute("disabled");
+    }
+
+    var child = node.firstChild();
+    while (child) {
+        enableIspButtons(child, enabled);
+        child = child.nextSibling;
+    }
+}
 
 function onUnload() {
     var pageData = parent.wizardManager.WSM.PageData;
     var wizardMap = parent.wizardMap;
 
-    if (pageData.accounttype.mailaccount.value) {
-        wizardMap.identity.next = "server";
-        wizardMap.accname.previous = "server";
-    }
-
-    else if (pageData.accounttype.newsaccount.value) {
-        wizardMap.identity.next = "newsserver";
-        wizardMap.accname.previous = "newsserver";
-    }
-
-    else {
-        dump("Handle other types here?");
-    }
+    parent.updateMap(pageData, wizardMap);
     return true;
 }

@@ -41,40 +41,30 @@ Rights Reserved.
   <html:div class="desc">&accountTypeDirections.label;</html:div>
 <box align="vertical">
   <html:div>
-    <html:input type="radio" name="acctyperadio" id="mailaccount" value="mail" checked="1"/>
+    <html:input type="radio" name="acctyperadio" id="mailaccount" onclick="onMailChanged(event);" value="mail" checked="1"/>
     <html:label for="mailaccount">&accountTypeMail.label;</html:label>
   </html:div>
+  <box align="vertical"
+            datasources="rdf:ispdefaults" 
+            containment="http://home.netscape.com/NC-rdf#providers"
+            style="margin-left: 10px"
+            id="ispBox"
+            ref="NC:ispinfo">
+  <template>
+    <rule>
+      <html:div uri="...">
+        <html:input type="radio" name="isp" value="rdf:http://home.netscape.com/NC-rdf#wizardShortName" fakeid="rdf:http://home.netscape.com/NC-rdf#wizardShortName"/>
+        <html:label for="rdf:http://home.netscape.com/NC-rdf#wizardShortName">
+          <text value="rdf:http://home.netscape.com/NC-rdf#wizardLongName"/>
+        </html:label>
+      </html:div>
+    </rule>
+  </template>
+  </box>
   <html:div>
     <html:input type="radio" name="acctyperadio" id="newsaccount" value="news"/>
     <html:label for="newsaccount">&accountTypeNews.label;</html:label>
   </html:div>
-<!-- design #2 for webmail
-  <html:div>
-    <html:input type="radio" name="acctyperadio" id="otheraccount" value="othermail"/>
-    Other type (or whatver):
-    <html:select>
-      <html:option value="Netscape Webmail">Netscape Webmail</html:option>
-      <html:option value="AOL.COM mail">AOL.COM mail</html:option>
-      <html:option value="Earthlink">Earthlink</html:option>
-    </html:select>
-   </html:div>
--->
-<!-- no webmail yet...
-  <html:div>
-    <html:input type="radio" name="acctyperadio" id="webmailaccount" value="webmail"/>
-    &accountTypeWebMail.label;
-  </html:div>
-  <html:div style="padding-left: 15px">
-    <html:div>
-      <html:input type="radio" name="webmailradio" id="newwebmail" value="webmail" checked="1"/>
-      &webMailNew.label;
-    </html:div>
-    <html:div>
-      <html:input type="radio" name="webmailradio" id="existwebmail" value="webmail"/>
-      &webMailExisting.label;
-    </html:div>
-  </html:div>
--->
     
 </box>
 </box>
