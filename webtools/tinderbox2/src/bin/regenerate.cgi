@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.7 $ 
-# $Date: 2002/05/01 02:42:11 $ 
+# $Revision: 1.8 $ 
+# $Date: 2002/05/01 02:46:13 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/regenerate.cgi,v $ 
 # $Name:  $ 
@@ -54,8 +54,18 @@ use FileStructure;
 
 #       Main        
 {
+    my (%form) = HTMLPopUp::split_cgi_args(
+                                           'cgi_remove_args' => ['daemon-mode'],
+                                           );
+
+    my ($tree) = $form{'tree'};
+
     $tree = 'SeaMonkey';
-    $url = FileStructure::get_filename($tree, 'tree_URL');
+    $url = (
+            FileStructure::get_filename($tree, 'tree_URL').
+            '/'.
+            $FileStructure::DEFAULT_HTML_PAGE
+            );
 
     HTMLPopUp::regenerate_HTML_pages();
 
