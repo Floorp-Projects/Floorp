@@ -717,11 +717,20 @@ var BookmarksToolbar =
 
   resizeFunc: function(event) 
   { 
+    if (event && event.target != document)
+      return; // only interested in chrome resizes
+
     var buttons = document.getElementById("bookmarks-ptf");
     if (!buttons)
       return;
 
     var chevron = document.getElementById("bookmarks-chevron");
+    if (!buttons.firstChild) {
+      // No bookmarks means no chevron
+      chevron.collapsed = true;
+      return;
+    }
+
     chevron.collapsed = false;
     var chevronWidth = chevron.boxObject.width;
     chevron.collapsed = true;
