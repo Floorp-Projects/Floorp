@@ -39,6 +39,7 @@ extern "C" {
 
 static int gLogFD = -1;
 static u_long gFlags;
+static int gFillCount = 0;
 
 #define MARKER0		0xFFFFFFFF
 #define MARKER1		0xEEEEEEEE
@@ -167,7 +168,7 @@ static void*
 MallocHook(size_t aSize, u_long aLogType)
 {
   size_t roundedSize = aSize;
-  roundedSize = ((roundedSize + 4) >> 2) << 2;
+  roundedSize = ((roundedSize + 4 + gFillCount) >> 2) << 2;
 
   void* ptr = REAL_MALLOC(sizeof(Header) + roundedSize + sizeof(Trailer));
 
@@ -180,15 +181,9 @@ MallocHook(size_t aSize, u_long aLogType)
 
     ptr = (void*) ((char*)(h+1));
 
-    // Fill entire memory with a pattern to help detect overruns and
+    // Fill new memory with a pattern to help detect overruns and
     // usage of un-written memory
-    if (0 != aSize) {
-      memset(ptr, PATTERN_BYTE, aSize);
-    }
-    size_t fill = roundedSize - aSize;
-    if (0 != fill) {
-      memset((char*)ptr + aSize, PATTERN_BYTE, fill);
-    }
+    memset(ptr, PATTERN_BYTE, roundedSize);
 
     Trailer* t = (Trailer*) ((char*)ptr + roundedSize);
     t->marker2[0] = MARKER2_0;
@@ -221,10 +216,15 @@ FreeHook(void* aAddr, u_long aLogType)
     // still has a live reference they get messed up
     void* ptr = (void*) ((char*)(h+1));
     memset(ptr, FREE_PATTERN_BYTE, h->rawSize);
-    REAL_FREE(h);
+
+    if (0 == (LIBMALLOC_NOFREE & gFlags)) {
+      REAL_FREE(h);
+    }
   }
   else {
-    REAL_FREE(aAddr);
+    if (0 == (LIBMALLOC_NOFREE & gFlags)) {
+      REAL_FREE(aAddr);
+    }
   }
 }
 
@@ -254,12 +254,6 @@ ReallocHook(void* aOldAddr, size_t aSize)
 
     ptr = (void*) ((char*)(h+1));
 
-    // Fill extra memory with a pattern to help detect overruns
-    size_t fill = roundedSize - aSize;
-    if (0 != fill) {
-      memset((char*)ptr + aSize, PATTERN_BYTE, fill);
-    }
-
     Trailer* t = (Trailer*) ((char*)ptr + roundedSize);
     t->marker2[0] = MARKER2_0;
     t->marker2[1] = MARKER2_1;
@@ -269,7 +263,26 @@ ReallocHook(void* aOldAddr, size_t aSize)
     if (copy > aSize) copy = aSize;
     memcpy(ptr, aOldAddr, copy);
 
-    REAL_FREE(oldh);
+    // Fill any uncopied memory with the overrun pattern
+    size_t fill = roundedSize - copy;
+    if (0 != fill) {
+      memset((char*)ptr + copy, PATTERN_BYTE, fill);
+    }
+
+    if (0 == (LIBMALLOC_NOFREE & gFlags)) {
+      REAL_FREE(oldh);
+    }
+    else {
+      // Mark the old header so that a verify will fail if the caller
+      // dup free's it.
+      oldh->marker0 = 0xDEADBEEF;
+      oldh->marker1 = 0xDEADBEEF;
+
+      // Munge the body of the old allocation so that if the user
+      // still has a live reference they get messed up
+      void* optr = (void*) ((char*)(oldh+1));
+      memset(optr, FREE_PATTERN_BYTE, oldh->rawSize);
+    }
 
     if (LIBMALLOC_LOG & gFlags) {
       Log(malloc_log_realloc, ptr, aSize, aOldAddr);
@@ -322,8 +335,20 @@ static void Init()
       char m2[] = "dbgmalloc: enabled refcnt logging\n";
       write(1, m2, sizeof(m2)-1);
     }
+    if (LIBMALLOC_NOFREE & flags) {
+      char m3[] = "dbgmalloc: disabled free\n";
+      write(1, m3, sizeof(m3)-1);
+    }
   }
   SetMallocFlags(flags);
+  s = getenv("LIBMALLOC_FILL");
+  if (s) {
+    gFillCount = atoi(s);
+    char m4[] = "dbgmalloc: adding extra memory fill ";
+    write(1, m4, sizeof(m4)-1);
+    write(1, s, strlen(s));
+    write(1, "\n", 1);
+  }
 }
 
 //----------------------------------------------------------------------
