@@ -28,10 +28,10 @@
 /**
  * A character set converter from CP1253 to Unicode.
  *
- * @created         24/Mar/1999
+ * @created         20/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsCP1253ToUnicode : public nsTableDecoderSupport
+class nsCP1253ToUnicode : public nsOneByteDecoderSupport
 {
 public:
 
@@ -44,14 +44,6 @@ public:
    * Static class constructor.
    */
   static nsresult CreateInstance(nsISupports **aResult);
-
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsDecoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsCP1253ToUnicode_h___ */

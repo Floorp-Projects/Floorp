@@ -17,33 +17,31 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#ifndef nsCP1252ToUnicode_h___
-#define nsCP1252ToUnicode_h___
-
-#include "nsUCvLatinSupport.h"
+#include "nsCP1251ToUnicode.h"
 
 //----------------------------------------------------------------------
-// Class nsCP1252ToUnicode [declaration]
+// Global functions and data [declaration]
 
-/**
- * A character set converter from CP1252 to Unicode.
- *
- * @created         20/Apr/1999
- * @author  Catalin Rotaru [CATA]
- */
-class nsCP1252ToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsCP1252ToUnicode();
-
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
+static PRUint16 g_utMappingTable[] = {
+#include "cp1251.ut"
 };
 
-#endif /* nsCP1252ToUnicode_h___ */
+static PRInt16 g_utShiftTable[] =  {
+  0, u1ByteCharset ,
+  ShiftCell(0,0,0,0,0,0,0,0)
+};
+
+//----------------------------------------------------------------------
+// Class nsCP1251ToUnicode [implementation]
+
+nsCP1251ToUnicode::nsCP1251ToUnicode() 
+: nsOneByteDecoderSupport((uShiftTable*) &g_utShiftTable, 
+                          (uMappingTable*) &g_utMappingTable)
+{
+}
+
+nsresult nsCP1251ToUnicode::CreateInstance(nsISupports ** aResult) 
+{
+  *aResult = new nsCP1251ToUnicode();
+  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+}

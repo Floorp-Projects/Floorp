@@ -22,12 +22,12 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_CP1252MappingTable[] = {
+static PRUint16 g_ufMappingTable[] = {
 #include "cp1252.uf"
 };
 
-static PRInt16 g_CP1252ShiftTable[] =  {
-  1, u1ByteCharset ,
+static PRInt16 g_ufShiftTable[] =  {
+  0, u1ByteCharset ,
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
@@ -35,8 +35,8 @@ static PRInt16 g_CP1252ShiftTable[] =  {
 // Class nsUnicodeToCP1252 [implementation]
 
 nsUnicodeToCP1252::nsUnicodeToCP1252() 
-: nsTableEncoderSupport((uShiftTable*) &g_CP1252ShiftTable, 
-                        (uMappingTable*) &g_CP1252MappingTable)
+: nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
+                        (uMappingTable*) &g_ufMappingTable)
 {
 }
 

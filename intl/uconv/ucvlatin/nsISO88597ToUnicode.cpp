@@ -22,11 +22,11 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_ISO88597MappingTable[] = {
+static PRUint16 g_utMappingTable[] = {
 #include "8859-7.ut"
 };
 
-static PRInt16 g_ISO88597ShiftTable[] =  {
+static PRInt16 g_utShiftTable[] =  {
   0, u1ByteCharset ,
   ShiftCell(0,0,0,0,0,0,0,0)
 };
@@ -35,8 +35,8 @@ static PRInt16 g_ISO88597ShiftTable[] =  {
 // Class nsISO88597ToUnicode [implementation]
 
 nsISO88597ToUnicode::nsISO88597ToUnicode() 
-: nsTableDecoderSupport((uShiftTable*) &g_ISO88597ShiftTable, 
-                        (uMappingTable*) &g_ISO88597MappingTable)
+: nsOneByteDecoderSupport((uShiftTable*) &g_utShiftTable, 
+                          (uMappingTable*) &g_utMappingTable)
 {
 }
 
@@ -44,16 +44,4 @@ nsresult nsISO88597ToUnicode::CreateInstance(nsISupports ** aResult)
 {
   *aResult = new nsISO88597ToUnicode();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
-//----------------------------------------------------------------------
-// Subclassing of nsTableDecoderSupport class [implementation]
-
-NS_IMETHODIMP nsISO88597ToUnicode::GetMaxLength(const char * aSrc, 
-                                                PRInt32 aSrcLength, 
-                                                PRInt32 * aDestLength)
-{
-  // we are a single byte to Unicode converter, so...
-  *aDestLength = aSrcLength;
-  return NS_OK_UDEC_EXACTLENGTH;
 }
