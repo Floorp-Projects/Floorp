@@ -43,20 +43,13 @@ a[name] {
   cursor: default;
 }
 
-a:link img, a:visited img, a:active {
+a:visited, a:active, a[name], a:link img, a:visited img {
   -moz-user-input: none;
 }
 
-a:visited, a:activez {
+a:visited, a:active {
   cursor: text;
   color : inherit;
-  -moz-user-input: none;
-}
-
-input, button, select, textarea {
-  -moz-user-select: all !important;
-  -moz-user-input: none !important;
-  -moz-user-focus: none !important;
 }
 
 /* We suppress user/author's prefs for link underline, 
@@ -65,6 +58,12 @@ input, button, select, textarea {
 a:link {
   text-decoration: underline;
   color: blue;
+}
+
+input, button, select, textarea {
+  -moz-user-select: all !important;
+  -moz-user-input: none !important;
+  -moz-user-focus: none !important;
 }
 
 input[type="hidden"] {
