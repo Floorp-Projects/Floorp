@@ -2513,6 +2513,14 @@ FindElementBackground(nsIPresContext* aPresContext,
   if (!body || !parentFrame)
     return PR_TRUE; // not frame for BODY element
 
+  // We should only look at the <html> background if we're in an HTML document
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
+  nsCOMPtr<nsIDOMDocument> doc;
+  node->GetOwnerDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(doc));
+  if (!htmlDoc)
+    return PR_TRUE;
+
   const nsStyleBackground *htmlBG;
   ::GetStyleData(parentFrame, &htmlBG);
   return !htmlBG->BackgroundIsTransparent();
