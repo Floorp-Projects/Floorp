@@ -996,7 +996,7 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
   socketInfo = (nsNSSSocketInfo*)fd->secret;
   NS_ASSERTION(socketInfo,"nsNSSSocketInfo was null for an fd");
   socketInfo->GetFirstWrite(&firstWrite);
-  PRBool oldBlockVal;
+  PRBool oldBlockVal = PR_FALSE;
   PRBool oldBlockReset = PR_FALSE;
   PRSocketOptionData sockopt;
 

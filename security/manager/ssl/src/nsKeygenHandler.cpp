@@ -112,10 +112,10 @@ static const char *mozKeyGen = "-mozilla-keygen";
 static PQGParams *
 decode_pqg_params(char *aStr)
 {
-    unsigned char *buf;
+    unsigned char *buf = nsnull;
     unsigned int len;
-    PRArenaPool *arena;
-    PQGParams *params;
+    PRArenaPool *arena = nsnull;
+    PQGParams *params = nsnull;
     SECStatus status;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);

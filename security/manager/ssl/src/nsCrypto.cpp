@@ -1836,7 +1836,7 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
   char *retString=nsnull;
   char *freeString=nsnull;
   CMMFCertRepContent *certRepContent = nsnull;
-  int numResponses;
+  int numResponses = 0;
   nsIX509Cert **certArr = nsnull;
   int i;
   CMMFCertResponse *currResponse;
