@@ -26,54 +26,54 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_RESOURCE_CONTENT = \
-		$(srcdir)/nsPrefWindow.js \
-		$(srcdir)/pref.xul \
-		$(srcdir)/pref-advanced.xul \
-		$(srcdir)/pref-imageblocking.xul \
-		$(srcdir)/pref-appearance.xul \
-		$(srcdir)/pref-applications.xul \
-		$(srcdir)/pref-cache.xul \
-		$(srcdir)/pref-cache.js \
-		$(srcdir)/pref-charset.xul \
-		$(srcdir)/pref-charset.js \
-		$(srcdir)/pref-colors.xul \
-		$(srcdir)/pref-cookies.xul \
-		$(srcdir)/pref-colors.js \
-		$(srcdir)/pref-themes.xul \
-		$(srcdir)/pref-themes.js \
-		$(srcdir)/pref-composer.xul \
-		$(srcdir)/pref-composer.js \
-		$(srcdir)/pref-debug.xul \
-		$(srcdir)/pref-download.xul \
-		$(srcdir)/pref-editing.xul \
-		$(srcdir)/pref-fonts.xul \
-		$(srcdir)/pref-fonts.js \
-		$(srcdir)/pref-languages.xul \
- 		$(srcdir)/pref-languages2.xul \
-		$(srcdir)/pref-languages-add.xul \
-		$(srcdir)/pref-languages.js \
-		$(srcdir)/pref-navigator.xul \
-		$(srcdir)/pref-navigator.js \
-		$(srcdir)/pref-offline.xul \
-		$(srcdir)/pref-policies.xul \
-		$(srcdir)/pref-proxies.js \
-		$(srcdir)/pref-proxies.xul \
-		$(srcdir)/pref-proxy-manual.xul \
-		$(srcdir)/pref-publish.xul \
-		$(srcdir)/pref-mousewheel.xul \
-		$(srcdir)/pref-mousewheel.js \
-		$(srcdir)/pref-wallet.xul \
-		$(srcdir)/pref-search.js \
-		$(srcdir)/pref-search.xul \
-		$(srcdir)/pref-smart_browsing.xul \
-		$(srcdir)/pref-smartupdate.xul \
-		$(srcdir)/prefutilities.js \
-		$(srcdir)/preftree.xul \
+CHROME_DIR = packages/core
+CHROME_CONTENT_DIR = communicator/content/pref
+
+CHROME_CONTENT = \
+		nsPrefWindow.js \
+		pref.xul \
+		pref-advanced.xul \
+		pref-imageblocking.xul \
+		pref-appearance.xul \
+		pref-applications.xul \
+		pref-cache.xul \
+		pref-cache.js \
+		pref-charset.xul \
+		pref-charset.js \
+		pref-colors.xul \
+		pref-cookies.xul \
+		pref-colors.js \
+		pref-themes.xul \
+		pref-themes.js \
+		pref-composer.xul \
+		pref-composer.js \
+		pref-debug.xul \
+		pref-download.xul \
+		pref-editing.xul \
+		pref-fonts.xul \
+		pref-fonts.js \
+		pref-languages.xul \
+ 		pref-languages2.xul \
+		pref-languages-add.xul \
+		pref-languages.js \
+		pref-navigator.xul \
+		pref-navigator.js \
+		pref-offline.xul \
+		pref-policies.xul \
+		pref-proxies.js \
+		pref-proxies.xul \
+		pref-proxy-manual.xul \
+		pref-publish.xul \
+		pref-mousewheel.xul \
+		pref-mousewheel.js \
+		pref-wallet.xul \
+		pref-search.js \
+		pref-search.xul \
+		pref-smart_browsing.xul \
+		pref-smartupdate.xul \
+		prefutilities.js \
+		preftree.xul \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/communicator/content/pref
 

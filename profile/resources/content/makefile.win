@@ -42,4 +42,4 @@ FILES=\
         $(NULL)
 
 install::
-        -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\chrome\communicator\content\profile
+        -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\chrome\packages\core\communicator\content\profile

@@ -26,8 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR = editor
-CHROME_CONTENT_DIR = content/images
+CHROME_DIR = packages/core
+CHROME_CONTENT_DIR=editor/content/images
 
 CHROME_CONTENT = \
 		tag-anchor.gif  \

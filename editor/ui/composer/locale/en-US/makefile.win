@@ -21,9 +21,8 @@
 
 DEPTH=..\..\..\..\..
 
-CHROME_DIR = editor
-CHROME_L10N_DIR = locale
-CHROME_TYPE = locale
+CHROME_DIR = locales\en-US
+CHROME_L10N_DIR = editor\locale
 
 CHROME_L10N = \
 	.\editor.dtd \
@@ -32,7 +31,6 @@ CHROME_L10N = \
 	.\viewSource.dtd \
 	.\editorOverlay.dtd \
 	.\editor.properties \
-	.\manifest.rdf \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

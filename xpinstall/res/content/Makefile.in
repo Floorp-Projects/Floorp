@@ -26,15 +26,15 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_RESOURCE_XPINSTALL = \
-		$(srcdir)/xpistatus.xul \
-		$(srcdir)/xpistatus.js \
-		$(srcdir)/institems.xul \
-		$(srcdir)/institems.js \
+CHROME_DIR = packages/core
+CHROME_CONTENT_DIR = communicator/content/xpinstall
+
+CHROME_CONTENT = \
+		xpistatus.xul \
+		xpistatus.js \
+		institems.xul \
+		institems.js \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_XPINSTALL) $(DIST)/bin/chrome/communicator/content/xpinstall
 

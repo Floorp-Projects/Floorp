@@ -56,8 +56,8 @@ CPPSRCS		= \
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
-CHROME_DIR	= communicator
-CHROME_L10N_DIR	= locale/layout
+CHROME_DIR	= locales/en-US
+CHROME_L10N_DIR	= communicator/locale/layout
 CHROME_L10N	= ./HtmlForm.properties
 
 include $(topsrcdir)/config/rules.mk

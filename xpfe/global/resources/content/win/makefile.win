@@ -21,18 +21,17 @@
 
 DEPTH=..\..\..\..\..
 
+CHROME_DIR = packages\widget-toolkit
+CHROME_CONTENT_DIR = global\content
+
+CHROME_CONTENT = \
+	.\platformGlobalOverlay.xul \
+	.\platformDialogOverlay.xul \
+	.\platformBrowserBindings.xul \
+	.\platformInputBindings.xul \
+	.\platformTextAreaBindings.xul \
+	.\platformEditorBindings.xul \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\global\content
-
-
-install::
-	$(MAKE_INSTALL) platformGlobalOverlay.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) platformDialogOverlay.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) platformBrowserBindings.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) platformInputBindings.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) platformTextAreaBindings.xul $(DISTBROWSER)
-	$(MAKE_INSTALL) platformEditorBindings.xul $(DISTBROWSER)
-
-clobber::
-  rm -f $(DIST)\bin\chrome\global\content\*.*

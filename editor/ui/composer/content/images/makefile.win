@@ -21,11 +21,11 @@
 
 DEPTH=..\..\..\..\..
 
-CHROME_DIR = editor
-CHROME_CONTENT_DIR = content\images
+CHROME_DIR = packages\core
+CHROME_CONTENT_DIR = editor\content\images
 
 CHROME_CONTENT = \
-  .\tag-anchor.gif    \
+	.\tag-anchor.gif       \
 	.\tag-abr.gif          \
 	.\tag-acr.gif          \
 	.\tag-adr.gif          \
@@ -121,6 +121,6 @@ CHROME_CONTENT = \
 	.\tag-ul.gif           \
 	.\tag-var.gif          \
 	.\tag-userdefined.gif  \
-  $(NULL)
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -21,40 +21,42 @@
 
 DEPTH=..\..\..\..\..\..
 
+CHROME_DIR = locales\en-US
+CHROME_L10N_DIR = communicator\locale\pref
+
+CHROME_L10N = \
+	.\pref-advanced.dtd \
+	.\pref-imageblocking.dtd \
+	.\pref-appearance.dtd \
+	.\pref-applications.dtd \
+	.\pref-cache.dtd \
+	.\pref-charset.dtd \
+	.\pref-colors.dtd \
+	.\pref-themes.dtd \
+	.\pref-composer.dtd \
+	.\pref-cookies.dtd \
+	.\pref-download.dtd \
+	.\pref-debug.dtd \
+	.\pref-editing.dtd \
+	.\pref-fonts.dtd \
+	.\pref-languages.dtd \
+	.\pref-languages2.dtd \
+	.\pref-navigator.dtd \
+	.\pref-offline.dtd \
+	.\pref-policies.dtd \
+	.\pref-proxies.dtd \
+	.\pref-proxy-manual.dtd \
+	.\pref-publish.dtd \
+	.\pref-search.dtd \
+	.\pref-smart_browsing.dtd \
+	.\pref-smartupdate.dtd \
+	.\prefutilities.properties \
+	.\preftree.dtd \
+	.\pref.dtd \
+	.\pref-wallet.dtd \
+	.\pref-mousewheel.dtd \
+	.\pref-winhooks.dtd \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
-install::
-	$(MAKE_INSTALL) pref-advanced.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-imageblocking.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-appearance.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-applications.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-cache.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-charset.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-colors.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-themes.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-composer.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-cookies.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-download.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-debug.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-editing.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-fonts.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-languages.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-languages2.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-  $(MAKE_INSTALL) pref-navigator.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-offline.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-policies.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-proxies.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-proxy-manual.dtd $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-publish.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-search.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-smart_browsing.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-smartupdate.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) prefutilities.properties  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) preftree.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-wallet.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-mousewheel.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-winhooks.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-
-clobber::
-  rm -f $(DIST)\bin\chrome\communicator\locale\pref\*.*

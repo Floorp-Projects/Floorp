@@ -23,10 +23,8 @@ DEPTH=..\..\..\..\..
 
 DIRS=win
 
-CHROME_DIR=global
-CHROME_L10N_DIR=locale
-
-CHROME_TYPE=locale
+CHROME_DIR=locales\en-US
+CHROME_L10N_DIR=global\locale
 
 CHROME_L10N = \
 	.\intl.css \
@@ -46,8 +44,7 @@ CHROME_L10N = \
 	.\about.dtd \
 	.\accept2locale.properties \
 	.\languageNames.properties \
-	.\manifest.rdf \
-  .\regionNames.properties \
+	.\regionNames.properties \
 	$(NULL)
   
 include <$(DEPTH)\config\rules.mak>

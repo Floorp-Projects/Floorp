@@ -21,48 +21,30 @@
 
 DEPTH=..\..\..\..\..
 
+CHROME_DIR = locales/en-US
+CHROME_L10N_DIR = editor/locale
+
+CHROME_L10N = \
+	.\EditorHLineProperties.dtd \
+	.\EditorImageProperties.dtd \
+	.\EditorInsertSource.dtd \
+	.\EditorInsertChars.dtd \
+	.\EditorInsertTable.dtd \
+	.\EditorLinkProperties.dtd \
+	.\EditorListProperties.dtd \
+	.\EditorPageProperties.dtd \
+	.\EditorColorProperties.dtd \
+	.\EditorPersonalDictionary.dtd \
+	.\EditorSpellCheck.dtd \
+	.\EditorTableProperties.dtd \
+	.\EdNamedAnchorProperties.dtd \
+	.\EdDialogOverlay.dtd \
+	.\EdAdvancedEdit.dtd \
+	.\EditorImageMap.dtd \
+	.\EditorImageMapHotSpot.dtd \
+	.\EditConflict.dtd \
+	.\EditorSaveAsCharset.dtd \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
-
-install::
-	$(MAKE_INSTALL) EditorHLineProperties.dtd        $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) EditorImageProperties.dtd        $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) EditorInsertSource.dtd           $(DIST)\bin\chrome\editor\locale
-  $(MAKE_INSTALL) EditorInsertChars.dtd            $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) EditorInsertTable.dtd            $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) EditorLinkProperties.dtd         $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) EditorListProperties.dtd         $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) EditorPageProperties.dtd         $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) EditorColorProperties.dtd        $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) EditorPersonalDictionary.dtd     $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) EditorSpellCheck.dtd             $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) EditorTableProperties.dtd        $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) EdNamedAnchorProperties.dtd      $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) EdDialogOverlay.dtd              $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) EdAdvancedEdit.dtd               $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) EditorImageMap.dtd               $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) EditorImageMapHotSpot.dtd        $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) EditorSaveAsCharset.dtd        $(DIST)\bin\chrome\editor\locale
-	$(MAKE_INSTALL) EditConflict.dtd                 $(DIST)\bin\chrome\editor\locale
-
-clobber::
-  rm -f $(DIST)\bin\chrome\editor\locale\EditorHLineProperties.dtd 
-  rm -f $(DIST)\bin\chrome\editor\locale\EditorImageProperties.dtd
-  rm -f $(DIST)\bin\chrome\editor\locale\EditorInsertChars.dtd
-  rm -f $(DIST)\bin\chrome\editor\locale\EditorInsertSource.dtd 
-  rm -f $(DIST)\bin\chrome\editor\locale\EditorInsertTable.dtd 
-  rm -f $(DIST)\bin\chrome\editor\locale\EditorLinkProperties.dtd 
-  rm -f $(DIST)\bin\chrome\editor\locale\EditorListProperties.dtd 
-  rm -f $(DIST)\bin\chrome\editor\locale\EditorPageProperties.dtd 
-  rm -f $(DIST)\bin\chrome\editor\locale\EditorColorProperties.dtd 
-  rm -f $(DIST)\bin\chrome\editor\locale\EditorPersonalDictionary.dtd 
-  rm -f $(DIST)\bin\chrome\editor\locale\EditorSpellCheck.dtd 
-  rm -f $(DIST)\bin\chrome\editor\locale\EditorTableProperties.dtd 
-  rm -f $(DIST)\bin\chrome\editor\locale\EdNamedAnchorProperties.dtd 
-  rm -f $(DIST)\bin\chrome\editor\locale\EdDialogOverlay.dtd 
-  rm -f $(DIST)\bin\chrome\editor\locale\EdAdvancedEdit.dtd
-  rm -f $(DIST)\bin\chrome\editor\locale\EditorImageMap.dtd
-  rm -f $(DIST)\bin\chrome\editor\locale\EditorImageMapHotSpot.dtd
-  rm -f $(DIST)\bin\chrome\editor\locale\SaveAsCharset.dtd
-  rm -f $(DIST)\bin\chrome\editor\locale\EditConflict.dtd
-
 

@@ -26,41 +26,41 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_RESOURCE_CONTENT = \
-		$(srcdir)/pref-advanced.dtd \
-		$(srcdir)/pref-imageblocking.dtd \
-		$(srcdir)/pref-appearance.dtd \
-		$(srcdir)/pref-applications.dtd \
-		$(srcdir)/pref-cache.dtd \
-		$(srcdir)/pref-colors.dtd \
-		$(srcdir)/pref-themes.dtd \
-		$(srcdir)/pref-charset.dtd \
-		$(srcdir)/pref-composer.dtd \
-		$(srcdir)/pref-cookies.dtd \
-		$(srcdir)/pref-editing.dtd \
-		$(srcdir)/pref-debug.dtd \
-		$(srcdir)/pref-download.dtd \
-		$(srcdir)/pref-fonts.dtd \
-		$(srcdir)/pref-languages.dtd \
-		$(srcdir)/pref-languages2.dtd \
-		$(srcdir)/pref-navigator.dtd \
-		$(srcdir)/pref-offline.dtd \
-		$(srcdir)/pref-policies.dtd \
-		$(srcdir)/pref-proxies.dtd \
-		$(srcdir)/pref-proxy-manual.dtd \
-		$(srcdir)/pref-publish.dtd \
-		$(srcdir)/pref-search.dtd \
-		$(srcdir)/pref-smart_browsing.dtd \
-		$(srcdir)/pref-smartupdate.dtd \
-		$(srcdir)/pref-mousewheel.dtd	\
-		$(srcdir)/pref-wallet.dtd	\
-		$(srcdir)/prefutilities.properties	\
-		$(srcdir)/preftree.dtd \
-		$(srcdir)/pref.dtd \
+CHROME_DIR = locales/en-US
+CHROME_L10N_DIR = communicator/locale/pref
+
+CHROME_L10N = \
+		pref-advanced.dtd \
+		pref-imageblocking.dtd \
+		pref-appearance.dtd \
+		pref-applications.dtd \
+		pref-cache.dtd \
+		pref-colors.dtd \
+		pref-themes.dtd \
+		pref-charset.dtd \
+		pref-composer.dtd \
+		pref-cookies.dtd \
+		pref-editing.dtd \
+		pref-debug.dtd \
+		pref-download.dtd \
+		pref-fonts.dtd \
+		pref-languages.dtd \
+		pref-languages2.dtd \
+		pref-navigator.dtd \
+		pref-offline.dtd \
+		pref-policies.dtd \
+		pref-proxies.dtd \
+		pref-proxy-manual.dtd \
+		pref-publish.dtd \
+		pref-search.dtd \
+		pref-smart_browsing.dtd \
+		pref-smartupdate.dtd \
+		pref-mousewheel.dtd	\
+		pref-wallet.dtd	\
+		prefutilities.properties	\
+		preftree.dtd \
+		pref.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/communicator/locale/pref
 

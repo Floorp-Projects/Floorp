@@ -21,11 +21,11 @@
 
 DEPTH=..\..\..\..
 
-CHROME_DIR=communicator
-CHROME_SKIN_DIR=content
+CHROME_DIR=packages\core
+CHROME_MISC_DIR=.
 CHROME_TYPE=content
 
-CHROME_SKIN= \
+CHROME_MISC = \
 	.\manifest.rdf \
 	$(NULL)
 

@@ -21,11 +21,13 @@
 
 DEPTH=..\..\..\..\..
 
+CHROME_DIR = packages\core
+CHROME_CONTENT_DIR = communicator\content\timebomb
+
+CHROME_CONTENT = \
+	.\warn.xul \
+       	.\expireText.xul \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
  
-install::
-	$(MAKE_INSTALL) warn.xul        $(DIST)\bin\chrome\communicator\content\timebomb
-    $(MAKE_INSTALL) expireText.xul  $(DIST)\bin\chrome\communicator\content\timebomb
-
-clobber::
-  rm -f $(DIST)\bin\chrome\communicator\content\timebomb\*.*

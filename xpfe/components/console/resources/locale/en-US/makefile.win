@@ -23,12 +23,12 @@
 
 DEPTH=..\..\..\..\..\..
 
-include <$(DEPTH)\config\rules.mak>
-
-CHROME_DIR = global
+CHROME_DIR = locales\en-US
+CHROME_L10N_DIR = global\locale
 
 CHROME_L10N = \
 	console.dtd \
 	$(NULL)
 
-CHROME_TYPE = locale
+include <$(DEPTH)\config\rules.mak>
+

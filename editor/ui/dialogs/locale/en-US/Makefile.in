@@ -26,8 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR = editor
-CHROME_L10N_DIR = locale
+CHROME_DIR = locales/en-US
+CHROME_L10N_DIR = editor/locale
 
 CHROME_L10N = \
 		EditorHLineProperties.dtd \

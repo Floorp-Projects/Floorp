@@ -28,4 +28,4 @@ FILES=\
         $(NULL)
 
 install::
-        -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\chrome\communicator\locale\profile
+        -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\chrome\locales\en-US\communicator\locale\profile

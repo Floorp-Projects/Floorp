@@ -26,14 +26,14 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_RESOURCE_XPINSTALL = \
-		$(srcdir)/xpinstall.properties \
-		$(srcdir)/xpistatus.dtd \
-		$(srcdir)/institems.dtd \
+CHROME_DIR = locales/en-US
+CHROME_L10N_DIR = communicator/locale/xpinstall
+
+CHROME_L10N = \
+		xpinstall.properties \
+		xpistatus.dtd \
+		institems.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_XPINSTALL) $(DIST)/bin/chrome/communicator/locale/xpinstall
 

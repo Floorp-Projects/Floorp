@@ -26,12 +26,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_RESOURCE_CONTENT = \
-		$(srcdir)/timebomb.dtd \
+CHROME_DIR = locales/en-US
+CHROME_L10N_DIR = communicator/locale/timebomb
+
+CHROME_L10N = \
+		timebomb.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/communicator/locale/timebomb
 

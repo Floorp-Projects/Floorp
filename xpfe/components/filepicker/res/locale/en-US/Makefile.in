@@ -28,12 +28,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_RESOURCE_LOCALE = \
-		$(srcdir)/filepicker.properties \
+CHROME_DIR = locales/en-US
+CHROME_L10N_DIR = global/locale
+
+CHROME_L10N = \
+		filepicker.properties \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_LOCALE) $(DIST)/bin/chrome/global/locale
 
