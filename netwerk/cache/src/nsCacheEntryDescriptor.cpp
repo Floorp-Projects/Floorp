@@ -403,6 +403,8 @@ public:
     {
         NS_RELEASE(mDescriptor);
     }
+    
+    nsresult Init();
 
     NS_IMETHOD Close() { return mOutput->Close(); }
     NS_IMETHOD Flush() { return mOutput->Flush(); }
@@ -417,8 +419,26 @@ public:
 private:
     nsresult OnWrite(PRUint32 count);
 };
-
 NS_IMPL_ISUPPORTS1(nsCacheOutputStream, nsIOutputStream);
+
+nsresult
+nsCacheOutputStream::Init()
+{
+    nsCacheAccessMode mode;
+    nsresult rv = mDescriptor->GetAccessGranted(&mode);
+    if (NS_FAILED(rv)) return rv;
+    if (mode == nsICache::ACCESS_WRITE) {
+        nsCacheEntry* cacheEntry = mDescriptor->CacheEntry();
+        if (!cacheEntry) return NS_ERROR_NOT_AVAILABLE;
+        nsCacheDevice* device = cacheEntry->CacheDevice();
+        if (!device) return NS_ERROR_NOT_AVAILABLE;
+        // the entry has been truncated to zero bytes, inform the device.
+        PRInt32 delta = -cacheEntry->DataSize();
+        rv = device->OnDataSizeChange(cacheEntry, delta);
+        cacheEntry->SetDataSize(0);
+    }
+    return rv;
+}
 
 NS_IMETHODIMP
 nsCacheOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *_retval)
@@ -457,6 +477,19 @@ nsCacheOutputStream::OnWrite(PRUint32 count)
     return NS_OK;
 }
 
+static nsresult NS_NewCacheOutputStream(nsIOutputStream ** result,
+                                        nsCacheEntryDescriptor * descriptor,
+                                        nsIOutputStream * output)
+{
+    nsCacheOutputStream* cacheOutput = new nsCacheOutputStream(descriptor, output);
+    if (!cacheOutput) return NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsISupports> ref(cacheOutput);
+    nsresult rv = cacheOutput->Init();
+    if (NS_FAILED(rv)) return rv;
+    NS_ADDREF(*result = cacheOutput);
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsCacheEntryDescriptor::OpenOutputStream(PRUint32            offset,
                                          PRUint32            count,
@@ -477,14 +510,18 @@ nsCacheEntryDescriptor::OpenOutputStream(PRUint32            offset,
         if (NS_FAILED(rv))  return rv;
     }
 
+    // XXX allow more than one output stream at a time on a descriptor?    
+
+    // Create the underlying output stream using the wrapped transport.
     nsCOMPtr<nsIOutputStream> output;    
     rv = mTransport->OpenOutputStream(offset, count, flags, getter_AddRefs(output));
     if (NS_FAILED(rv)) return rv;
-    
-    nsCOMPtr<nsIOutputStream> wrapper = new nsCacheOutputStream(this, output);
-    if (!wrapper) return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(*result = wrapper);
-    return NS_OK;
+
+    // Wrap this output stream, with a stream that monitors how much data gets written,
+    // to maintain the cache entry's size, and to inform the cache device. Eventually,
+    // this mechanism will provide a way for the cache device to enforce space limits,
+    // and to drive cache entry eviction.
+    return NS_NewCacheOutputStream(result, this, output);
 }
 
 NS_IMETHODIMP
