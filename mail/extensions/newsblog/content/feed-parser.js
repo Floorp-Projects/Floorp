@@ -256,7 +256,7 @@ FeedParser.prototype =
       return parsedItems;
 
     aFeed.invalidateItems();
-    var items = this.mDOM.getElementsByTagName("entry");
+    var items = aDOM.getElementsByTagName("entry");
     debug("Items to parse: " + items.length);
   
     for (var i=0; i<items.length; i++) 
