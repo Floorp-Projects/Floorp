@@ -703,6 +703,30 @@ FindImmediateChildOf(nsIFrame* aParent, nsIFrame* aDescendantFrame)
   return result;
 }
 
+/**
+ * Returns PR_TRUE iff a pre-order traversal of the normal child
+ * frames rooted at aFrame finds no non-empty frame before aDescendant.
+ */
+static PRBool AreAllEarlierInFlowFramesEmpty(nsIFrame* aFrame,
+  nsIFrame* aDescendant, PRBool* aFound) {
+  if (aFrame == aDescendant) {
+    *aFound = PR_TRUE;
+    return PR_TRUE;
+  }
+  if (!aFrame->IsFrameEmpty()) {
+    *aFound = PR_FALSE;
+    return PR_FALSE;
+  }
+  for (nsIFrame* f = aFrame->GetFirstChild(nsnull); f; f = f->GetNextSibling()) {
+    PRBool allEmpty = AreAllEarlierInFlowFramesEmpty(f, aDescendant, aFound);
+    if (*aFound || !allEmpty) {
+      return allEmpty;
+    }
+  }
+  *aFound = PR_FALSE;
+  return PR_TRUE;
+}
+
 // Calculate the hypothetical box that the element would have if it were in
 // the flow. The values returned are relative to the padding edge of the
 // absolute containing block
@@ -803,17 +827,18 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
       // relatively positioned...
       if (lineBox != blockFrame->end_lines()) {
         nsIFrame * firstFrame = lineBox->mFirstChild;
-        while (firstFrame != aPlaceholderFrame) {
-          NS_ASSERTION(firstFrame, "Must reach our placeholder before end of list!");
-          if (!firstFrame)   // This can be removed when we split out-of-flow
-            break;           // frames correctly,  see bug 223064
-          if (!firstFrame->IsEmpty()) {
+        PRBool found = PR_FALSE;
+        PRBool allEmpty = PR_TRUE;
+        while (firstFrame) { // See bug 223064
+          allEmpty = AreAllEarlierInFlowFramesEmpty(firstFrame,
+            aPlaceholderFrame, &found);
+          if (found || !allEmpty)
             break;
-          }
-            
           firstFrame = firstFrame->GetNextSibling();
         }
-        if (firstFrame == aPlaceholderFrame) {
+        NS_ASSERTION(firstFrame, "Couldn't find placeholder!");
+
+        if (allEmpty) {
           // The top of the hypothetical box is the top of the line containing
           // the placeholder, since there is nothing in the line before our
           // placeholder except empty frames.

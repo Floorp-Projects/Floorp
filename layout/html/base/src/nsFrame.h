@@ -283,6 +283,7 @@ public:
                                   PRBool*              aIsVisible);
 
   virtual PRBool IsEmpty();
+  virtual PRBool IsFrameEmpty();
 
   // nsIHTMLReflow
   NS_IMETHOD  WillReflow(nsPresContext* aPresContext);

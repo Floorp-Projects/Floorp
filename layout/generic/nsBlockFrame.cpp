@@ -620,7 +620,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   }
 #endif
 
-  nsRect oldRect(mRect);
+  nsSize oldSize = GetSize();
 
   // Should we create a space manager?
   nsAutoSpaceManager autoSpaceManager(NS_CONST_CAST(nsHTMLReflowState &, aReflowState));
@@ -632,50 +632,47 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   if (NS_BLOCK_SPACE_MGR & mState)
     autoSpaceManager.CreateSpaceManagerFor(aPresContext, this);
 
-  // See if it's an incremental reflow command
+  // See if it's an incremental reflow command targeted only at
+  // absolute frames. If so we can skip a whole lot of work via this
+  // fast path.
   if (mAbsoluteContainer.HasAbsoluteFrames() &&
-      eReflowReason_Incremental == aReflowState.reason) {
-    // Give the absolute positioning code a chance to handle it
+      eReflowReason_Incremental == aReflowState.reason &&
+      !aMetrics.mComputeMEW &&
+      mAbsoluteContainer.ReflowingAbsolutesOnly(this, aReflowState)) {
     nscoord containingBlockWidth;
     nscoord containingBlockHeight;
-    PRBool  handled;
 
     CalculateContainingBlock(aReflowState, mRect.width, mRect.height,
                              containingBlockWidth, containingBlockHeight);
     
     mAbsoluteContainer.IncrementalReflow(this, aPresContext, aReflowState,
                                          containingBlockWidth,
-                                         containingBlockHeight,
-                                         handled);
+                                         containingBlockHeight);
 
-    // If the incremental reflow command was handled by the absolute
-    // positioning code, then we're all done.
-    if (handled && !aMetrics.mComputeMEW) {
-      // Just return our current size as our desired size.
-      aMetrics.width = mRect.width;
-      aMetrics.height = mRect.height;
-      aMetrics.ascent = mAscent;
-      aMetrics.descent = aMetrics.height - aMetrics.ascent;
-
-      // Whether or not we're complete hasn't changed
-      aStatus = (nsnull != mNextInFlow) ? NS_FRAME_NOT_COMPLETE : NS_FRAME_COMPLETE;
-      
-      // Factor the absolutely positioned child bounds into the overflow area
-      ComputeCombinedArea(aReflowState, aMetrics);
-      nsRect childBounds;
-      mAbsoluteContainer.CalculateChildBounds(aPresContext, childBounds);
-      aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
-
-      FinishAndStoreOverflow(&aMetrics);
+    // Just return our current size as our desired size.
+    aMetrics.width = mRect.width;
+    aMetrics.height = mRect.height;
+    aMetrics.ascent = mAscent;
+    aMetrics.descent = aMetrics.height - aMetrics.ascent;
+    
+    // Whether or not we're complete hasn't changed
+    aStatus = (nsnull != mNextInFlow) ? NS_FRAME_NOT_COMPLETE : NS_FRAME_COMPLETE;
+    
+    // Factor the absolutely positioned child bounds into the overflow area
+    ComputeCombinedArea(aReflowState, aMetrics);
+    nsRect childBounds;
+    mAbsoluteContainer.CalculateChildBounds(aPresContext, childBounds);
+    aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
+    
+    FinishAndStoreOverflow(&aMetrics);
 
 #ifdef DEBUG
-      if (gNoisy) {
-        gNoiseIndent--;
-      }
-#endif
-
-      return NS_OK;
+    if (gNoisy) {
+      gNoiseIndent--;
     }
+#endif
+    
+    return NS_OK;
   }
 
   // OK, some lines may be reflowed. Blow away any saved line cursor because
@@ -939,6 +936,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
 
   // Compute our final size
   ComputeFinalSize(aReflowState, state, aMetrics);
+  nsRect currentOverflow = aMetrics.mOverflowArea;
   FinishAndStoreOverflow(&aMetrics);
 
   // see if verifyReflow is enabled, and if so store off the space manager pointer
@@ -969,17 +967,47 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   // can use our rect (the border edge) since if the border style
   // changed, the reflow would have been targeted at us so we'd satisfy
   // condition 1.
-  if (NS_SUCCEEDED(rv) && mAbsoluteContainer.HasAbsoluteFrames()) {
+  if (mAbsoluteContainer.HasAbsoluteFrames()) {
     nsRect childBounds;
-    if (eReflowReason_Incremental != aReflowState.reason ||
-        aReflowState.path->mReflowCommand ||
-        mRect != oldRect) {
-      nscoord containingBlockWidth;
-      nscoord containingBlockHeight;
+    nscoord containingBlockWidth;
+    nscoord containingBlockHeight;
 
-      CalculateContainingBlock(aReflowState, aMetrics.width, aMetrics.height,
-                               containingBlockWidth, containingBlockHeight);
+    CalculateContainingBlock(aReflowState, aMetrics.width, aMetrics.height,
+                             containingBlockWidth, containingBlockHeight);
 
+    PRBool needAbsoluteReflow = PR_TRUE;
+    if (eReflowReason_Incremental == aReflowState.reason) {
+      // Do the incremental reflows ... would be nice to merge with
+      // the reflows below but that would be more work, and more risky
+      mAbsoluteContainer.IncrementalReflow(this, aPresContext, aReflowState,
+                                           containingBlockWidth,
+                                           containingBlockHeight);
+      
+      // If a reflow was targeted at this block then we'd better
+      // reflow the absolutes. For example the borders and padding
+      // might have changed in a way that leaves the frame size the
+      // same but the padding edge has moved.
+      if (!aReflowState.path->mReflowCommand) {
+        // Now we can assume that the padding edge hasn't moved.
+        // We need to reflow the absolutes if one of them depends on
+        // its placeholder position, or the containing block size in a
+        // direction in which the containing block size might have
+        // changed.
+        PRBool cbWidthChanged = aMetrics.width != oldSize.width;
+        PRBool isRoot = !GetContent()->GetParent();
+        // If isRoot and we have auto height, then we are the initial
+        // containing block and the containing block height is the
+        // viewport height, which can't change during incremental
+        // reflow.
+        PRBool cbHeightChanged = isRoot && NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight
+          ? PR_FALSE : aMetrics.height != oldSize.height;
+        if (!mAbsoluteContainer.FramesDependOnContainer(cbWidthChanged, cbHeightChanged)) {
+          needAbsoluteReflow = PR_FALSE;
+        }
+      }
+    }
+
+    if (needAbsoluteReflow) {
       rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
                                      containingBlockWidth,
                                      containingBlockHeight,
@@ -989,8 +1017,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
     }
 
     // Factor the absolutely positioned child bounds into the overflow area
-    aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
-
+    aMetrics.mOverflowArea.UnionRect(currentOverflow, childBounds);
     FinishAndStoreOverflow(&aMetrics);
   }
 
@@ -2912,7 +2939,7 @@ IsMarginZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
 }
 
 /* virtual */ PRBool
-nsBlockFrame::IsEmpty()
+nsBlockFrame::IsFrameEmpty()
 {
   const nsStylePosition* position = GetStylePosition();
 
@@ -2960,6 +2987,16 @@ nsBlockFrame::IsEmpty()
     return PR_FALSE;
   }
 
+  return PR_TRUE;
+}
+
+PRBool
+nsBlockFrame::IsEmpty()
+{
+  if (!IsFrameEmpty()) {
+    return PR_FALSE;
+  }
+
   for (line_iterator line = begin_lines(), line_end = end_lines();
        line != line_end;
        ++line)
@@ -2967,6 +3004,7 @@ nsBlockFrame::IsEmpty()
     if (!line->IsEmpty())
       return PR_FALSE;
   }
+
   return PR_TRUE;
 }
 
