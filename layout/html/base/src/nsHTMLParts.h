@@ -252,6 +252,12 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult,
 extern nsresult
 NS_NewAttributeContent(nsIContent ** aResult);
 
+// Create a basic area frame but the GetFrameForPoint is overridden to always
+// return the option frame 
+// By default, area frames will extend
+// their height to cover any children that "stick out".
+extern nsresult NS_NewSelectsAreaFrame(nsIFrame** aNewFrame,
+                                PRUint32 aFlags = NS_AREA_WRAP_SIZE);
 
 // Create a basic area frame. By default, area frames will extend
 // their height to cover any children that "stick out".
