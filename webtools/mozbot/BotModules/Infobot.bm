@@ -263,13 +263,15 @@ sub SetFactoid {
     my($event, $replace, $subject, $database, $add, $object, $direct, $fromBot) = @_;
     if ($direct or $self->allowed($event, 'Learn')) {
 
-        teacher: if (@{$self->{'teachers'}}) {
-            foreach my $user (@{$self->{'teachers'}}) {
-                if ($user eq $event->{'userName'}) {
-                    last teacher;
+        teacher: {
+            if (@{$self->{'teachers'}}) {
+                foreach my $user (@{$self->{'teachers'}}) {
+                    if ($user eq $event->{'userName'}) {
+                        last teacher;
+                    }
                 }
+                return 0;
             }
-            return 0;
         }
 
         # update the database
