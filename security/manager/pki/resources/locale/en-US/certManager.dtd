@@ -38,12 +38,14 @@
 <!ENTITY certmgr.detail.general_tab.title "General">
 <!ENTITY certmgr.detail.prettyprint_tab.title "Details">
 
+<!ENTITY certmgr.subjectinfo.label "Issued To">
+<!ENTITY certmgr.issuerinfo.label "Issued By">
+<!ENTITY certmgr.validity.label "Validity" >
+<!ENTITY certmgr.fingerprints.label "Fingerprints">
 <!ENTITY certmgr.certdetail.title "Certificate Detail">
 <!ENTITY certmgr.certdetail.cn "Common Name (CN)">
 <!ENTITY certmgr.certdetail.o "Organization (O)">
 <!ENTITY certmgr.certdetail.ou "Organizational Unit (OU)">
-<!ENTITY certmgr.certdetail.subjectname "Subject Name">
-<!ENTITY certmgr.certdetail.issuername "Issuer Name">
 <!ENTITY certmgr.certdetail.serialnumber "Serial Number">
 <!ENTITY certmgr.certdetail.rsapubmodulus "RSA Public Modulus">
 <!ENTITY certmgr.certdetail.sha1fingerprint "SHA1 Fingerprint">
@@ -83,5 +85,7 @@
 <!ENTITY certmgr.backup.label "Backup">
 <!ENTITY certmgr.backupall.label "Backup All">
 <!ENTITY certmgr.restore.label "Restore">
-<!ENTITY certmgr.details.label "Certificate Layout">
+<!ENTITY certmgr.details.label "Certificate Fields">
+<!ENTITY certmgr.fields.label "Field Value">
+<!ENTITY certmgr.hierarchy.label "Certificate Hierarchy">
 

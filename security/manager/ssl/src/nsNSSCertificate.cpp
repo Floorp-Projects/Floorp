@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.29 2001/05/23 01:33:35 mcgreer%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.30 2001/05/25 16:50:03 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -672,6 +672,23 @@ nsNSSCertificate::GetIssuerOrganization(PRUnichar **aOrganization)
     }
   }
   *aOrganization = mIssuerOrg.ToNewUnicode();
+  return NS_OK;
+}
+
+/* readonly attribute nsIX509Cert issuer; */
+NS_IMETHODIMP 
+nsNSSCertificate::GetIssuer(nsIX509Cert * *aIssuer)
+{
+  NS_ENSURE_ARG(aIssuer);
+  *aIssuer = nsnull;
+  CERTCertificate *issuer;
+  issuer = CERT_FindCertIssuer(mCert, PR_Now(), certUsageSSLClient);
+  if (issuer) {
+    nsCOMPtr<nsIX509Cert> cert = new nsNSSCertificate(issuer);
+    *aIssuer = cert;
+    NS_ADDREF(*aIssuer);
+    CERT_DestroyCertificate(issuer);
+  }
   return NS_OK;
 }
 
@@ -1802,6 +1819,74 @@ ProcessExtensions(CERTCertExtension **extensions,
   return NS_OK;
 }
 
+static nsresult
+ProcessName(CERTName *name, nsINSSComponent *nssComponent, PRUnichar **value)
+{
+  CERTRDN** rdns;
+  CERTRDN** rdn;
+  CERTAVA** avas;
+  CERTAVA* ava;
+  SECItem *decodeItem = nsnull;
+  nsString finalString;
+
+  rdns = name->rdns;
+
+  nsString type;
+  nsresult rv;
+  const PRUnichar *params[2];
+  nsString avavalue;
+  nsXPIDLString temp;
+  CERTRDN **lastRdn;
+  lastRdn = rdns;
+
+
+  /* find last RDN */
+  lastRdn = rdns;
+  while (*lastRdn) lastRdn++;
+  // The above whille loop will put us at the last member
+  // of the array which is a NULL pointer.  So let's back
+  // up one spot so that we have the last non-NULL entry in 
+  // the array in preparation for traversing the 
+  // RDN's (Relative Distinguished Name) in reverse oder.
+  lastRdn--;
+   
+  /*
+   * Loop over name contents in _reverse_ RDN order appending to string
+   * When building the Ascii string, NSS loops over these entries in 
+   * reverse order, so I will as well.  The difference is that NSS
+   * will always place them in a one line string separated by commas,
+   * where I want each entry on a single line.  I can't just use a comma
+   * as my delimitter because it is a valid character to have in the 
+   * value portion of the AVA and could cause trouble when parsing.
+   */
+  for (rdn = lastRdn; rdn >= rdns; rdn--) {
+    avas = (*rdn)->avas;
+    while ((ava = *avas++) != 0) {
+      rv = GetOIDText(&ava->type, nssComponent, type);
+      if (NS_FAILED(rv))
+        return rv;
+
+      //This function returns a string in UTF8 format.
+      decodeItem = CERT_DecodeAVAValue(&ava->value);
+      if(!decodeItem) {
+         return NS_ERROR_FAILURE;
+      }
+      avavalue.AssignWithConversion((char*)decodeItem->data, decodeItem->len);
+
+      SECITEM_FreeItem(decodeItem, PR_TRUE);
+      params[0] = type.get();
+      params[1] = avavalue.get();
+      nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("AVATemplate").get(),
+                                                  params, 2, 
+                                                  getter_Copies(temp));
+      finalString.Append(temp.get());
+      finalString.Append(NS_LITERAL_STRING("\n").get());
+    }
+  }
+  *value = finalString.ToNewUnicode();    
+  return NS_OK;
+}
+
 nsresult
 nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
                                                  nsINSSComponent *nssComponent)
@@ -1865,7 +1950,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
   asn1Objects->AppendElement(algID);
 
   nsXPIDLString value;
-  GetIssuerName(getter_Copies(value));
+  ProcessName(&mCert->issuer, nssComponent, getter_Copies(value));
 
   printableItem = new nsNSSASN1PrintableItem();
   if (printableItem == nsnull)
@@ -1909,7 +1994,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
     return NS_ERROR_OUT_OF_MEMORY;
 
   printableItem->SetDisplayName(text.get());
-  GetSubjectName(getter_Copies(value));
+  ProcessName(&mCert->subject, nssComponent,getter_Copies(value));
   printableItem->SetDisplayValue(value);
   asn1Objects->AppendElement(printableItem);
 

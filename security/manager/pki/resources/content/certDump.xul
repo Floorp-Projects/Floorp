@@ -30,28 +30,23 @@
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
          xmlns:cert="http://netscape.com/rdf-cert#" 
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<box id="certPrettyPrint" orient="vertical">
-  <box orient="vertical" flex="1">
-    <box flex="0" height="100">
-      <tree id="treesetDump" debug="false" width="500" flex="1">
-        <treecolgroup flex="1">
-          <treecol flex="1"/>
-        </treecolgroup>
-        <treechildren id="chainDump" flex="1" />
-      </tree>
-    </box>
-  </box>
-  <box id="prettyPrintBox" height="200" flex="1" orient="vertical" >
-    <outliner id="prettyDumpOutliner" flex="1">
-      <outlinercol flex ="1" id="certDataCol" label="&certmgr.details.label;" 
-            primary="true" />
-      <splitter />
-      <outlinerbody flex="1" onselect="displaySelected();" />
-    </outliner>
-  </box>
-  <separator class="thin" />
-  <box id="selectValue" height="100" flex="1" orient="vertical">
-    <tree id="certDumpVal" debug="tr2e"/>
-  </box>
+<box class="box-padded" id="certPrettyPrint" orient="vertical" flex="1">
+  <text class="header" value="&certmgr.hierarchy.label;"/>
+  <tree class="inset" id="treesetDump" debug="false" flex="1"
+        style="overflow:auto; max-height: 80px;" onselect="updateCertDump();">
+    <treecolgroup flex="1">
+      <treecol flex="1"/>
+    </treecolgroup>
+    <treechildren id="chainDump" flex="1" />
+  </tree>
+  <outliner class="inset" height="50" id="prettyDumpOutliner" flex="1">
+    <outlinercol flex ="1" id="certDataCol" label="&certmgr.details.label;"
+      ignoreincolumnpicker="true" class="header outlinercol-header" primary="true"/>
+    <splitter />
+    <outlinerbody flex="1" onselect="displaySelected();" />
+  </outliner>
+  <text class="header" value="&certmgr.fields.label;" />
+  <tree class="inset" id="certDumpVal" debug="false" clip="never"
+        style="overflow:auto;"/>
 </box>
 </overlay>
