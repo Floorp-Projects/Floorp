@@ -781,6 +781,15 @@ et_reflect_handler(Reflect_Event * e)
     case LM_LAYERS:
         LM_ReflectLayer(e->ce.context, e->index, e->layer_id, e->pa_tag);
         break;
+#ifdef DOM
+	case LM_SPANS:
+			LM_ReflectSpan(e->ce.context, e->lo_ele, e->pa_tag, 
+				e->layer_id, e->index);
+		break;
+	case LM_TRANSCLUSIONS:
+			LM_ReflectTransclusion(e->ce.context, e->lo_ele, e->layer_id, e->index);
+		break;
+#endif
     default:
 	XP_ASSERT(0);
 	break;

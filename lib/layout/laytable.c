@@ -716,6 +716,11 @@ lo_reuse_current_state(MWContext *context, lo_DocState *state,
 	state->old_break_pos = -1;
 	state->old_break_width = 0;
 
+#ifdef DOM
+	state->current_span = NULL;
+	state->in_span = FALSE;
+#endif
+
 	state->current_named_anchor = NULL;
 	state->current_anchor = NULL;
 
@@ -2266,8 +2271,8 @@ lo_EndCellSubDoc(MWContext *context, lo_DocState *state, lo_DocState *old_state,
 		     * must be relayed out to take care of window
 		     * width and height dependencies.
 		     */
-			/* case LO_HRULE:
-			*/
+
+			/* case LO_HRULE: */
 		    case LO_SUBDOC:
 		    case LO_TABLE:
 				old_state->must_relayout_subdoc = TRUE;
@@ -7923,9 +7928,12 @@ fprintf(stderr, "lo_EndTable called\n");
 		}
 	}
 	*/
-	
+
 	/* Decrement table nesting level (used for passing into lo_CreateCellBackGroundLayer() */
-	state->top_state->table_nesting_level--;
+	if (!relayout)
+	{
+ 		state->top_state->table_nesting_level--;
+	}
 
 #ifdef XP_WIN16
 	_hfree(cell_array);

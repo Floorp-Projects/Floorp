@@ -47,6 +47,7 @@ CSRCS		= et_mocha.c \
 		  lm_nav.c \
 		  lm_plgin.c \
 		  lm_screen.c \
+		  lm_span.c \
 		  lm_supdt.c \
 		  lm_taint.c \
 		  lm_trggr.c \

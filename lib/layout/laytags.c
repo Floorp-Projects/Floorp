@@ -1253,6 +1253,87 @@ lo_process_header_tag(MWContext *context, lo_DocState *state, PA_Tag *tag, int t
 	}
 }
 
+static void
+lo_process_span_tag(MWContext *context, lo_DocState *state, PA_Tag *tag)
+{
+  LO_SpanStruct *span;
+  PA_Block buff;
+  lo_DocLists *doc_lists;
+  
+  doc_lists = lo_GetCurrentDocLists(state);
+
+  span = (LO_SpanStruct*)lo_NewElement(context, state, LO_SPAN, NULL, 0);
+  XP_ASSERT(span);
+  if (!span) return;
+
+  span->lo_any.type = LO_SPAN;
+  span->lo_any.ele_id = NEXT_ELEMENT;
+  span->is_end = tag->is_end;
+
+  span->lo_any.x = state->x;
+  span->lo_any.y = state->y;
+  span->lo_any.x_offset = 0;
+  span->lo_any.y_offset = 0;
+  span->lo_any.width = 0;
+  span->lo_any.height = 0;
+  span->lo_any.line_height = 0;
+
+#ifdef DOM
+    span->name_rec = NULL;
+	if (tag->is_end == FALSE)
+	{		
+		/* get the span's ID. */
+		buff = lo_FetchParamValue(context, tag, PARAM_ID);
+		if (buff != NULL)
+		{
+		  state->in_span = TRUE;
+		  state->current_span = buff;
+		  if (lo_SetNamedSpan(state, buff))
+			{
+			  lo_BindNamedSpanToElement(state, buff, NULL);
+			  lo_ReflectSpan(context, state, tag,
+							 doc_lists->span_list,
+							 lo_CurrentLayerId(state));
+			  span->name_rec = doc_lists->span_list;
+			}
+
+		  PA_UNLOCK(buff);
+		}
+		lo_AppendToLineList(context, state, (LO_Element*)span, 0);
+		state->in_span = TRUE;
+	}
+	else
+	{
+		state->in_span = FALSE;
+		lo_AppendToLineList(context, state, (LO_Element*)span, 0);
+	}
+#endif
+}
+
+static void
+lo_process_div_tag(MWContext *context, lo_DocState *state, PA_Tag *tag)
+{
+  LO_DivStruct *div;
+
+  div = (LO_DivStruct*)lo_NewElement(context, state, LO_DIV, NULL, 0);
+  XP_ASSERT(div);
+  if (!div) return;
+
+  div->lo_any.type = LO_DIV;
+  div->lo_any.ele_id = NEXT_ELEMENT;
+  div->is_end = tag->is_end;
+
+  div->lo_any.x = state->x;
+  div->lo_any.y = state->y;
+  div->lo_any.x_offset = 0;
+  div->lo_any.y_offset = 0;
+  div->lo_any.width = 0;
+  div->lo_any.height = 0;
+  div->lo_any.line_height = 0;
+
+  lo_AppendToLineList(context, state, (LO_Element*)div, 0);
+}
+
 PRIVATE Bool lo_do_underline = TRUE;
 
 #ifdef XP_MAC
@@ -6823,7 +6904,12 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 		 * it's just ignored in normal layout
 		 */
 		case P_SPAN:
+		{
+#ifdef DOM
+			lo_process_span_tag(context, state, tag);
+#endif
 			break;
+		}
 
 		/*
 		 * Just move the left and right margins in for this paragraph

@@ -2365,6 +2365,14 @@ lm_InputEvent(MWContext *context, LO_Element *element, JSEvent *pEvent,
       case LO_TEXT:
 	anchor = element->lo_text.text ? element->lo_text.anchor_href : 0;
 	obj = anchor ? anchor->mocha_object : 0;
+#ifdef DOM
+	/* If this layout element is within a span, set the mocha object to 
+	   the containing SPAN's mocha object */
+	if (LO_IsWithinSpan( element ))
+	{
+		obj = LO_GetMochaObjectOfParentSpan( element );
+	}
+#endif
 	if (!obj) {
 	    if (!LM_EventCaptureCheck(context, pEvent->type) || !anchor) {
 	        LO_UnlockLayout();

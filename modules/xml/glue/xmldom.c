@@ -130,8 +130,93 @@ void XMLDOM_StartHandler (XMLFile f, const char* elementName, const char** attli
       xmle->content = (char*) incl;
       f->numOpenStreams++;
       readHTML(makeAbsoluteURL(f->address, hrefVal), incl);
+      if (f->numTransclusions == 0) {
+        f->transclusions = (XMLElement*)getMem(sizeof(XMLElement*) * 10);
+      } 
+      f->transclusions[f->numTransclusions++] = xmle;
+#ifdef DOM
+      ET_ReflectObject(f->mwcontext, f->transclusions[f->numTransclusions - 1], NULL, LO_DOCUMENT_LAYER_ID, 
+		  f->numTransclusions - 1, LM_TRANSCLUSIONS);
+#endif                       
     }
   }
+}
+
+
+char** 
+setAttribute (char** attlist, char* elName, char* elValue)
+{
+  size_t n = 0;
+  char** nattlist;
+  if (!attlist) return NULL;
+  while ((n < 2*MAX_ATTRIBUTES) && (*(attlist + n) != NULL)) {
+    if (strcmp(*(attlist + n), elName) == 0) {
+      *(attlist + n + 1) = elValue;
+      return attlist;
+    }
+    n = n + 2;
+  }
+
+  nattlist = getMem(n+2);
+  memcpy(nattlist, attlist, (n * sizeof(char**)));
+  *(nattlist + n) = elName;
+  *(nattlist + n + 1) = elValue;
+  freeMem(attlist);
+  return nattlist;
+}
+
+
+void XMLSetTransclusionProperty( XMLFile f, uint index, char* propName, char* propValue ) {
+  XMLElement el = f->transclusions[index];
+  if (!el) return;
+  el->attributes = setAttribute(el->attributes, propName, propValue);
+  if (stringEquals(propName, "href")) {
+    XMLHTMLInclusion incl =  (XMLHTMLInclusion) el->content;
+    freeMem(incl->content);
+    incl->content =  (char**)getMem(400);
+    incl->n = 0;
+    readHTML (makeAbsoluteURL(f->address, propValue), (XMLHTMLInclusion)el->content);
+  } else if (stringEquals(propName, "visibility")
+             ||stringEquals(propName, "display")) {
+    xmlhtml_complete_int(f);
+  }
+}
+
+void XMLDeleteMochaObjectReference(XMLFile f, uint index)
+{
+  XMLElement el = f->transclusions[index];
+  if (el) el->mocha_object = NULL;
+}
+
+int32
+XMLTransclusionCount(MWContext *context)
+{
+  if (!context) {
+    return 0;
+  } else {
+    XMLFile f = (XMLFile)context->xmlfile;
+    if (!f) {
+      return 0;
+    } else {
+      return f->numTransclusions;
+    }
+  }
+}
+
+JSObject* XML_GetMochaObject (void* el) {
+  return ((XMLElement)el)->mocha_object;
+}
+
+void XML_SetMochaObject (void* el, JSObject* jso) {
+  ((XMLElement)el)->mocha_object = jso;
+}
+
+
+void * /* XMLElement */ XMLGetTransclusionByIndex( MWContext *context, uint index )
+{
+  XMLFile f = context->xmlfile;
+  if (!f) return 0;
+  return f->transclusions[index];
 }
 
 void XMLDOM_PIHandler (XMLFile f, const char *elementName, const char *data) {  
@@ -204,3 +289,4 @@ tokenizeXMLElement (char* attr, char** attlist)
     inAttrNamep = (inAttrNamep ? 0 : 1);
   }
 }
+

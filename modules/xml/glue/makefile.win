@@ -19,12 +19,12 @@
 
 
 DEPTH	= ..\..\..
-  
+MODULE = xmlglue  
 CSRCS= xmlglue.c xmlss.c xmldom.c
-
+EXPORTS = xmlglue.h
 C_OBJS=.\$(OBJDIR)\xmlglue.obj .\$(OBJDIR)\xmlss.obj .\$(OBJDIR)\xmldom.obj
 
-LINCS=-I$(XPDIST)\public\nspr -I$(XPDIST)\public\expat
+LINCS=-I$(XPDIST)\public\nspr -I$(XPDIST)\public\expat -I$(XPDIST)\public\js
      
 include <$(DEPTH)\config\rules.mak>
 

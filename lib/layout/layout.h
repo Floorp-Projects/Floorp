@@ -354,6 +354,11 @@ typedef struct lo_DocLists_struct {
     lo_NameList *name_list;	/* list of positions of named anchors */
     uint32 anchor_count;        /* Count of named anchors in this document */
 
+#ifdef DOM
+	lo_NameList *span_list;	/* list of positions of named spans*/
+    uint32 span_count;        /* Count of named spans in this document */
+#endif
+
     lo_FormData *form_list;	/* list of forms in doc */
     intn current_form_num;      /* The id of the next form to lay out */
 
@@ -643,6 +648,11 @@ typedef struct lo_DocState_struct {
     LO_TextBlock * cur_text_block;
     Bool need_min_width;
     uint32 src_text_offset;
+
+#ifdef DOM
+	Bool in_span;
+	PA_Block current_span;
+#endif
 } lo_DocState;
 
 #ifdef TEST_16BIT
@@ -1155,6 +1165,11 @@ extern PA_Block lo_ConvertToFELinebreaks(char *, int32, int32 *);
 extern PA_Block lo_FEToNetLinebreaks(PA_Block);
 extern void lo_CleanFormElementData(LO_FormElementData *);
 extern Bool lo_SetNamedAnchor(lo_DocState *, PA_Block);
+
+#ifdef DOM
+extern Bool lo_SetNamedSpan(lo_DocState *, PA_Block);
+#endif
+
 extern void lo_AddNameList(lo_DocState *, lo_DocState *);
 extern void lo_CheckNameList(MWContext *, lo_DocState *, int32);
 extern int32 lo_StripTextWhitespace(char *, int32);
@@ -1451,6 +1466,10 @@ lo_ReflectNamedAnchor(MWContext *context, lo_DocState *state, PA_Tag *tag,
                       lo_NameList *name_rec, int32 layer_id);
 
 extern void
+lo_ReflectSpan(MWContext *context, lo_DocState *doc_state, PA_Tag *tag,
+                      lo_NameList *name_rec, int32 layer_id);
+
+extern void
 lo_ReflectLink(MWContext *context, lo_DocState *state, PA_Tag *tag,
                LO_AnchorData *anchor_data, int32 layer_id, uint index);
 
@@ -1560,6 +1579,14 @@ lo_use_default_doc_background(MWContext *context, lo_DocState *state);
 Bool
 lo_BindNamedAnchorToElement(lo_DocState *state, PA_Block name,
                            LO_Element *element);
+
+#ifdef DOM
+Bool
+lo_BindNamedSpanToElement(lo_DocState *state, PA_Block name,
+                           LO_Element *element);
+
+LO_SpanStruct * lo_FindParentSpan( LO_Element *ele );
+#endif
 
 /* Return the table element containing the given element (usually a LO_CELL type) */
 LO_TableStruct *lo_GetParentTable(MWContext *pContext, LO_Element *pElement);

@@ -537,7 +537,7 @@ lo_NewLayout(MWContext *context, int32 width, int32 height,
 		return(NULL);
 	}
 
-	state = XP_NEW(lo_DocState);
+	state = XP_NEW_ZAP(lo_DocState);
 	if (state == NULL)
 	{
 		top_state->out_of_memory = TRUE;
@@ -793,6 +793,11 @@ lo_InitDocState(lo_DocState *state, MWContext *context,
 	state->old_break_block = NULL;
 	state->old_break_pos = -1;
 	state->old_break_width = 0;
+
+#ifdef DOM
+	state->current_span = NULL;
+	state->in_span = FALSE;
+#endif
 
 	state->current_named_anchor = NULL;
 	state->current_anchor = NULL;
@@ -3710,8 +3715,10 @@ lo_FinishLayout(MWContext *context, lo_DocState *state, int32 mocha_event)
 #endif /* OLD_MSGS */
 
         /* Flush out layer callbacks so that document dimensions are correct. */
+		/*
         if (context->compositor)
             CL_CompositeNow(context->compositor);
+		*/
 
 		FE_FinishedLayout(context);
 		return;
@@ -3752,9 +3759,10 @@ lo_FinishLayout(MWContext *context, lo_DocState *state, int32 mocha_event)
 #endif /* OLD_MSGS */
 
         /* Flush out layer callbacks so that document dimensions are correct. */
+		/*
         if (context->compositor)
             CL_CompositeNow(context->compositor);
-
+		*/
 		FE_FinishedLayout(context);
 		return;
 	}
@@ -3824,8 +3832,10 @@ lo_FinishLayout(MWContext *context, lo_DocState *state, int32 mocha_event)
 #endif /* OLD_MSGS */
 
     /* Flush out layer callbacks so that document dimensions are correct. */
+	/* 
     if (context->compositor)
         CL_CompositeNow(context->compositor);
+	*/
 
 	if (state->is_a_subdoc == SUBDOC_NOT && state->top_state && !state->top_state->have_title)
 	{

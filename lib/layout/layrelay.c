@@ -555,6 +555,11 @@ lo_rl_InitDocState( MWContext *context, lo_DocState *state, int32 width, int32 h
 	state->old_break_pos = -1;
 	state->old_break_width = 0;
 
+#ifdef DOM
+	state->current_span = NULL;
+	state->in_span = FALSE;
+#endif
+
 	state->current_named_anchor = NULL;
 	state->current_anchor = NULL;
 
@@ -1519,9 +1524,29 @@ lo_rl_FitSpacer( lo_RelayoutState *relay_state, LO_Element *lo_ele )
 }
 
 static LO_Element * lo_rl_FitSpan( lo_RelayoutState *relay_state, LO_Element *lo_ele )
-{
+{	
+#ifndef DOM
 	XP_ASSERT(0);
 	return lo_tv_GetNextLayoutElement( relay_state->doc_state, lo_ele, TRUE);
+#else
+	MWContext *context = relay_state->context;
+	lo_DocState *state = relay_state->doc_state;
+	LO_Element *next = lo_tv_GetNextLayoutElement( relay_state->doc_state, lo_ele, TRUE);
+
+	/* Skip the SPAN element */
+	if (lo_ele->lo_span.is_end == FALSE)
+	{				
+		lo_AppendToLineList(context, state, lo_ele, 0);
+		state->in_span = TRUE;
+	}
+	else
+	{
+		state->in_span = FALSE;
+		lo_AppendToLineList(context, state, lo_ele, 0);
+	}
+
+	return next;
+#endif
 }
 
 static LO_Element * lo_rl_FitDiv( lo_RelayoutState *relay_state, LO_Element *lo_ele )

@@ -30,6 +30,7 @@
 #include "xmlglue.h"
 #include "xmlparse.h"
 #include "xmlss.h"
+#include "layers.h"
 
 
 
@@ -73,7 +74,7 @@ xml_abort(NET_StreamClass *stream, int status)
     XML_ParserFree(obj->parser);
 }
 
-
+ 
 int
 xml_write(NET_StreamClass *stream, char* data, int32 len)
 {
@@ -96,7 +97,7 @@ xml_complete (NET_StreamClass *stream)
 	   return;
   } 
   XML_Parse(obj->parser, NULL, 0, 1);
-  XML_ParserFree(obj->parser);
+  XML_ParserFree(obj->parser); 
   obj->numOpenStreams--;
   
   if (obj->numOpenStreams < 1) {
@@ -107,25 +108,52 @@ xml_complete (NET_StreamClass *stream)
     newstream = NET_StreamBuilder(1,  nurls, (MWContext*)obj->mwcontext);
     obj->stream = newstream;
     convertToHTML(obj);
+    outputToStream(obj, NULL);
     newstream->complete(newstream);
     NET_FreeURLStruct(nurls); 
   }
 }
 
-
+#define OUTPUT_BUFFER_SIZE (4096*16)
 
 void
 outputToStream (XMLFile f, char* s)
 {
   int ans = 0;
   NET_StreamClass *stream = (NET_StreamClass*) f->stream;
-  char* buff = copyString(s);
-#ifdef DEBUG
-/*  FE_Trace(s); */
-#endif
-  
-  if (buff) (*(stream->put_block))(stream, buff, strlen(s)); 
-  freeMem(buff);
+  if (s == NULL) {
+	  if (f->outputBuffer) {
+        XP_Rect rect;
+		CL_OffscreenMode save_offscreen_mode;
+        CL_Compositor *comp = ((MWContext*)f->mwcontext)->compositor;
+		rect.left = rect.top = 0;
+		rect.right = 1600;
+		rect.bottom = 16000;
+        /*        CL_SetCompositorEnabled(comp, 0); */
+		CL_SetCompositorOffscreenDrawing(comp, CL_OFFSCREEN_ENABLED);
+        (*(stream->put_block))(stream, f->outputBuffer, strlen(f->outputBuffer));
+        /*        CL_SetCompositorEnabled(comp, 1);
+		CL_SetCompositorOffscreenDrawing(comp, CL_OFFSCREEN_ENABLED); */
+        CL_UpdateDocumentRect(comp,&rect, 0);
+        freeMem(f->outputBuffer);
+        f->outputBuffer = NULL;
+	  } 
+     return;
+  }
+  if (f->outputBuffer == NULL) f->outputBuffer = getMem(OUTPUT_BUFFER_SIZE+1);
+  if ((strlen(s) > OUTPUT_BUFFER_SIZE)) {
+    char* buff = copyString(s);
+    if (buff) (*(stream->put_block))(stream, buff, strlen(s)); 
+    CL_CompositeNow(((MWContext*)f->mwcontext)->compositor);
+    freeMem(buff);
+  } else if (strlen(f->outputBuffer) + strlen(s) > OUTPUT_BUFFER_SIZE) {
+     (*(stream->put_block))(stream, f->outputBuffer, strlen(f->outputBuffer));
+     CL_CompositeNow(((MWContext*)f->mwcontext)->compositor);
+     memset(f->outputBuffer, '\0', OUTPUT_BUFFER_SIZE);
+     sprintf(f->outputBuffer, s);
+  } else {
+    strcat(f->outputBuffer, s);
+  }
 }
 
 
@@ -152,6 +180,7 @@ XML_XMLConverter(FO_Present_Types  format_out, void *data_object, URL_Struct *UR
     xmlf->status = 1;
     xmlf->address = copyString(URL_s->address);
     xmlf->mwcontext = window_id;
+    window_id->xmlfile = xmlf;
     xmlf->numOpenStreams = 1;
 	/*	URL_s->fedata = xmlf; */
     stream = NET_NewStream("XML", (MKStreamWriteFunc)xml_write, 
@@ -209,6 +238,7 @@ xmlcss_complete  (NET_StreamClass *stream)
     newstream = NET_StreamBuilder(1,  nurls, (MWContext*) xml->mwcontext);
     xml->stream = newstream;
     convertToHTML(xml);
+    outputToStream(xml, NULL);
     newstream->complete(newstream);
     NET_FreeURLStruct(nurls); 
   }     
@@ -290,23 +320,45 @@ xmlhtml_abort(NET_StreamClass *stream, int status)
 
 
 
-void
-xmlhtml_complete  (NET_StreamClass *stream)
-{
-  XMLHTMLInclusion ss =stream->data_object;
-  XMLFile xml = ss->xml;
+
+void xmlhtml_complete_int (XMLFile xml) {
+  MWContext *cx = (MWContext *)xml->mwcontext;
+  int16 save_offscreen_mode;
+
   xml->numOpenStreams--;
-  if (xml->numOpenStreams == 0) { 
+  if (xml->numOpenStreams < 1) { 
   /* direct the stream to the html parser */
     NET_StreamClass *newstream;
     URL_Struct *nurls =   NET_CreateURLStruct(copyString(xml->address), NET_DONT_RELOAD);
     StrAllocCopy(nurls->content_type, TEXT_HTML);
     newstream = NET_StreamBuilder(1,  nurls, (MWContext*) xml->mwcontext);
     xml->stream = newstream;
+    if (cx->compositor)
+      {
+        /* Temporarily force drawing to use the offscreen buffering area to reduce
+           flicker when outputing html. (If no offscreen store is allocated, this code will
+		   have no effect, but it will do no harm.) */
+		save_offscreen_mode = CL_GetCompositorOffscreenDrawing(cx->compositor);
+		CL_SetCompositorOffscreenDrawing(cx->compositor, CL_OFFSCREEN_ENABLED);
+      }
     convertToHTML(xml);
+    outputToStream(xml, NULL);    
+    if (cx->compositor)
+      {
+/*		CL_CompositeNow(cx->compositor);
+		CL_SetCompositorOffscreenDrawing(cx->compositor, save_offscreen_mode); */
+      }
     newstream->complete(newstream);
     NET_FreeURLStruct(nurls); 
   }     
+}
+
+void
+xmlhtml_complete  (NET_StreamClass *stream)
+{
+  XMLHTMLInclusion ss =stream->data_object;
+  XMLFile xml = ss->xml;
+  xmlhtml_complete_int(xml);
 }
 
 
@@ -335,6 +387,8 @@ xmlhtml_GetUrlExitFunc (URL_Struct *urls, int status, MWContext *cx)
 }
 
 
+void setTransclusionProp (XMLFile f, int32 n, char* prop, char* value) {
+}
 
 void
 readHTML (char* url, XMLHTMLInclusion ss)

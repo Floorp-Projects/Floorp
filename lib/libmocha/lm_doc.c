@@ -42,6 +42,7 @@
 #include "jsjava.h"
 #endif
 
+#ifndef DOM
 enum doc_slot {
     DOC_LENGTH          = -1,
     DOC_ELEMENTS        = -2,
@@ -68,7 +69,37 @@ enum doc_slot {
     DOC_WIDTH           = -22,
     DOC_HEIGHT          = -23
 };
-
+#else
+enum doc_slot {
+    DOC_LENGTH          = -1,
+    DOC_ELEMENTS        = -2,
+    DOC_FORMS           = -3,
+    DOC_LINKS           = -4,
+    DOC_ANCHORS         = -5,
+    DOC_APPLETS         = -6,
+    DOC_EMBEDS          = -7,
+	DOC_SPANS			= -8,	/* Added for HTML SPAN DOM stuff */
+	DOC_TRANSCLUSIONS   = -9,	/* Added for XML Transclusion DOM stuff */
+    DOC_TITLE           = -10,
+    DOC_URL             = -11,
+    DOC_REFERRER        = -12,
+    DOC_LAST_MODIFIED   = -13,
+    DOC_COOKIE          = -14,
+    DOC_DOMAIN          = -15,
+    /* slots below this line are not secured */
+    DOC_IMAGES          = -16,
+    DOC_LAYERS          = -17,
+    DOC_LOADED_DATE     = -18,
+    DOC_BG_COLOR        = -19,
+    DOC_FG_COLOR        = -20,
+    DOC_LINK_COLOR      = -21,
+    DOC_VLINK_COLOR     = -22,
+    DOC_ALINK_COLOR     = -23,
+    DOC_WIDTH           = -24,
+    DOC_HEIGHT          = -25
+};
+	
+#endif
 #define IS_SECURE_DOC_SLOT(s) (DOC_DOMAIN <= (s) && (s) <= DOC_LENGTH) 
 
 static JSPropertySpec doc_props[] = {
@@ -82,6 +113,10 @@ static JSPropertySpec doc_props[] = {
     {lm_plugins_str, DOC_EMBEDS,        JSPROP_READONLY},
     {lm_images_str,  DOC_IMAGES,        JSPROP_ENUMERATE|JSPROP_READONLY},
     {lm_layers_str,  DOC_LAYERS,        JSPROP_ENUMERATE|JSPROP_READONLY},
+#ifdef DOM
+	{lm_spans_str,   DOC_SPANS,         JSPROP_ENUMERATE|JSPROP_READONLY},
+	{lm_transclusions_str,   DOC_TRANSCLUSIONS,         JSPROP_ENUMERATE|JSPROP_READONLY},
+#endif
     {"title",        DOC_TITLE,         JSPROP_ENUMERATE|JSPROP_READONLY},
     {"URL",          DOC_URL,           JSPROP_ENUMERATE|JSPROP_READONLY},
     {"referrer",     DOC_REFERRER,      JSPROP_ENUMERATE|JSPROP_READONLY},
@@ -248,6 +283,33 @@ doc_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         *vp = OBJECT_TO_JSVAL(lm_GetDocumentLayerArray(decoder, obj));
         LO_UnlockLayout();
         return JS_TRUE;
+
+#ifdef DOM
+      case DOC_SPANS:
+        *vp = OBJECT_TO_JSVAL(lm_GetSpanArray(decoder, obj));
+        active_layer_id = LM_GetActiveLayer(context);
+        LM_SetActiveLayer(context, doc->layer_id);
+        (void) LO_EnumerateSpans(context,doc->layer_id);
+        LM_SetActiveLayer(context, active_layer_id);
+        LO_UnlockLayout();
+        return JS_TRUE;
+
+	  case DOC_TRANSCLUSIONS:
+		/* We are assuming that by the time any JS sees document.transclusions[]
+		   all the transclusions have been reflected into JS.  So
+		   there is no need for the call to XMLEnumerateTransclusions that
+		   reflects all Transclusions into JS.
+		*/		
+        *vp = OBJECT_TO_JSVAL(lm_GetTransclusionArray(decoder, obj));
+        active_layer_id = LM_GetActiveLayer(context);
+        LM_SetActiveLayer(context, doc->layer_id);
+		/*
+        (void) XMLEnumerateTransclusions(context,doc->layer_id);
+		*/
+        LM_SetActiveLayer(context, active_layer_id); 
+        LO_UnlockLayout();
+        return JS_TRUE;
+#endif
 
         /* XXX BUGBUG Need a story for some of these for a layer's document */
       case DOC_TITLE:
@@ -1578,7 +1640,12 @@ lm_DefineDocument(MochaDecoder *decoder, int32 layer_id)
         !JS_AddNamedRoot(cx, &doc->applets, lm_applets_str) ||
         !JS_AddNamedRoot(cx, &doc->embeds,  lm_embeds_str) ||
         !JS_AddNamedRoot(cx, &doc->images,  lm_images_str) ||
-        !JS_AddNamedRoot(cx, &doc->layers,  lm_layers_str)) {
+        !JS_AddNamedRoot(cx, &doc->layers,  lm_layers_str)
+#ifdef DOM
+		|| !JS_AddNamedRoot(cx, &doc->spans,   lm_spans_str)
+		|| !JS_AddNamedRoot(cx, &doc->transclusions,   lm_transclusions_str)
+#endif
+		) {
         /* doc_finalize will clean up the rest. */
         return NULL;
     }
@@ -1664,6 +1731,10 @@ lm_CleanUpDocumentRoots(MochaDecoder *decoder, JSObject *obj)
     doc->embeds = NULL;
     doc->images = NULL;
     doc->layers = NULL;
+#ifdef DOM
+	doc->spans = NULL;
+	doc->transclusions = NULL;
+#endif
 }
 
 /* 

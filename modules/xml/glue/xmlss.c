@@ -83,7 +83,7 @@ parseNextXMLCSSBlob (NET_StreamClass *stream, char* blob, int32 size)
   return(size);
 }
 
-
+static int32 style_id_counter = 0;
 
 void
 parseNextXMLCSSElement (StyleSheet ss, char* ele)
@@ -95,6 +95,7 @@ parseNextXMLCSSElement (StyleSheet ss, char* ele)
   } else {
      StyleElement se = (StyleElement) getMem(sizeof(StyleElementStruct));
      size_t numTags,  size, n, count;
+     se->id = ++style_id_counter;
      se->next = ss->el;
      ss->el = se;
      size = strlen(ele);
@@ -263,7 +264,25 @@ outputAsHTML (XMLFile f, XMLElement el)
   }
 }
 
-
+void
+outputAllStyles(XMLFile xf)
+{
+  char *ssline;
+  StyleSheet ss ;
+  StyleElement se;
+  outputToStream(xf, "<style>\n");
+  for (ss = xf->ss; (ss != NULL) ; ss = ss->next) {    
+    for (se = ss->el; (se != NULL) ; se = se->next) {
+      ssline = PR_smprintf(".xml%d {%s}\n", se->id, se->style);
+      PR_ASSERT(ssline);
+      if (!ssline)
+          return;
+      outputToStream(xf, ssline);
+      free(ssline);
+    }
+  }
+  outputToStream(xf, "</style>\n");
+}
 
 void
 convertToHTML (XMLFile xf) {
@@ -271,36 +290,40 @@ convertToHTML (XMLFile xf) {
   xf->numOpenStreams--;
   if (xf->numOpenStreams < 1) {
     outputToStream(xf, "<html><body>");
+    outputAllStyles(xf);
     outputAsHTML(xf, el); 
     outputToStream(xf, "</body></html>");
 
   }
 }
 
-
 void
 outputStyleSpan (XMLFile f, XMLElement el, PRBool endp)
 {
+  char *ssid;
   StyleSheet ss ;
   StyleElement se;
   for (ss = f->ss; (ss != NULL) ; ss = ss->next) {    
     for (se = ss->el; (se != NULL) ; se = se->next) {
 	 
-      if (stringEquals((se->tagStack)[0],  el->tag)) {
+      if (se->style && stringEquals((se->tagStack)[0],  el->tag)) {
+        /* check for se->style from Steve Wingard <swingard@spyglass.com> */
         PRBool divp = startsWith("Display:Block;", se->style);
         PRBool listp = startsWith("Display:List-item;", se->style);
         if (!endp) {
           if (divp) {
-            outputToStream(f, "<div style=\"");
-            outputToStream(f, &(se->style)[14]);
+            outputToStream(f, "<div ");
           } else  if (listp) {
-            outputToStream(f, "<UL><LI><span style=\"");
-            outputToStream(f, &(se->style)[20]);
+            outputToStream(f, "<UL><LI><span ");
           } else   {
-            outputToStream(f, "<span style=\"");
-            outputToStream(f, se->style);
+            outputToStream(f, "<span ");
           }
-          outputToStream(f, "\">\n");
+          ssid=PR_smprintf("class=xml%d>\n", se->id);
+          PR_ASSERT(ssid);
+          if (!ssid)
+              return;
+          outputToStream(f, ssid);
+          free(ssid);
         } else {
           if (divp) {
             outputToStream(f, "</div>"); 

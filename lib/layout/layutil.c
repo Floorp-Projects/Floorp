@@ -50,6 +50,10 @@
 #define	FONT_FACE_INC	10
 #define	FONT_FACE_MAX	1000
 
+#ifdef DOM
+static void lo_SetInSpanAttribute( LO_Element *ele );
+#endif
+
 void
 lo_GetElementBbox(LO_Element *element, XP_Rect *rect) 
 {
@@ -1270,7 +1274,11 @@ lo_FetchTextAttr(lo_DocState *state, LO_TextAttr *old_attr)
 			(attr_ptr->font_face == old_attr->font_face)&&
 			(attr_ptr->charset == old_attr->charset)&&
 			(attr_ptr->point_size == old_attr->point_size)&&
-			(attr_ptr->font_weight == old_attr->font_weight))
+			(attr_ptr->font_weight == old_attr->font_weight) 
+#ifdef DOM
+			&& (state->in_span == FALSE)  /* Never reuse text attrs in SPANS */
+#endif		
+			)
 		{
 			break;
 		}
@@ -1280,7 +1288,7 @@ lo_FetchTextAttr(lo_DocState *state, LO_TextAttr *old_attr)
 	{
 		LO_TextAttr *new_attr;
 
-		new_attr = XP_NEW(LO_TextAttr);
+		new_attr = XP_NEW_ZAP(LO_TextAttr);
 		if (new_attr != NULL)
 		{
 			lo_CopyTextAttr(old_attr, new_attr);
@@ -2018,6 +2026,15 @@ lo_NewElement(MWContext *context, lo_DocState *state, intn type,
 		case LO_LAYER:
 			size = sizeof(LO_LayerStruct);
 			break;
+		case LO_HEADING:
+			size = sizeof(LO_HeadingStruct);
+			break;
+		case LO_SPAN:
+			size = sizeof(LO_SpanStruct);
+			break;
+		case LO_DIV:
+			size = sizeof(LO_DivStruct);
+			break;
 		case LO_SPACER:
 			size = sizeof(LO_SpacerStruct);
 			break;
@@ -2036,7 +2053,7 @@ lo_NewElement(MWContext *context, lo_DocState *state, intn type,
 	    }
 	    else
 	    {
-            eptr = XP_NEW(LO_Element);
+            eptr = XP_NEW_ZAP(LO_Element);
         }
     }
 #else
@@ -2247,6 +2264,151 @@ lo_BindNamedAnchorToElement(lo_DocState *state, PA_Block name,
 }
 
 
+#ifdef DOM
+/* Add a named span to the global list of named spans.  This does not
+   associate the span with a layout element.  lo_SetNamedSpan should be
+   followed by a call to lo_BindNamedSpanToElement in order to associate
+   the named span with a layout element. */
+Bool
+lo_SetNamedSpan(lo_DocState *state, PA_Block id)
+{
+	lo_NameList *name_rec = NULL;
+    lo_DocLists *doc_lists;
+
+	/*
+	 * No named spans are allowed within a
+	 * hacked scrolling content layout document.
+	 */
+	if (state->top_state->scrolling_doc != FALSE)
+	{
+		if (id != NULL)
+		{
+			PA_FREE(id);
+		}
+		return FALSE;
+	}
+
+    doc_lists = lo_GetCurrentDocLists(state);
+    
+#ifdef MOCHA
+    if (state->in_relayout) {
+        /* Look for the old lo_NameList.  Its mocha_object is still valid. */
+        lo_NameList *span_list = doc_lists->span_list;
+        lo_NameList *prev;
+        Bool no_match;
+        char *s1, *s2;
+        
+        XP_ASSERT(span_list);   /* If in relayout, this cannot be empty. */
+        
+        prev = span_list;
+        name_rec = span_list;
+        while (name_rec != NULL) {
+            PA_LOCK(s1, char*, id);
+            PA_LOCK(s2, char*, name_rec->name);
+            no_match = XP_STRCMP(s1, s2);
+            PA_UNLOCK(name_rec->name);
+            PA_UNLOCK(id);
+            if (!no_match) {
+                if (name_rec == span_list)
+                    doc_lists->span_list = span_list->next;
+                else
+                    prev->next = name_rec->next;
+                PA_FREE(name_rec->name); /* No need for this, use new one. */
+                break;
+            }
+            prev = name_rec;
+            name_rec = name_rec->next;
+        }
+    }
+    if (!name_rec || !state->in_relayout) {
+#endif /* MOCHA */
+        name_rec = XP_NEW(lo_NameList);
+        if (name_rec == NULL)
+            {
+                state->top_state->out_of_memory = TRUE;
+                PA_FREE(id);
+                return FALSE;
+            }
+#ifdef MOCHA
+        name_rec->mocha_object = NULL;
+    }
+#endif /* MOCHA */
+    name_rec->x = 0;
+    name_rec->y = 0;
+    name_rec->name = id;
+    name_rec->element = NULL;   /* Set by lo_BindNamedSpanToElement. */
+
+	name_rec->next = doc_lists->span_list;
+	doc_lists->span_list = name_rec;
+	return TRUE;
+}
+
+/* Associate a named span with a layout element.  The named span should
+   be the first one in the list of named spans.*/
+Bool
+lo_BindNamedSpanToElement(lo_DocState *state, PA_Block name,
+						  LO_Element *element)
+{
+    Bool no_match;
+	LO_Element *eptr;
+	lo_NameList *name_rec;
+    char *s1, *s2;
+    lo_DocLists *doc_lists;
+
+    doc_lists = lo_GetCurrentDocLists(state);
+
+	if (element == NULL)
+	{
+		if (state->line_list == NULL)
+		{
+			eptr = state->end_last_line;
+		}
+		else
+		{
+			eptr = state->line_list;
+			while (eptr->lo_any.next != NULL)
+			{
+				eptr = eptr->lo_any.next;
+			}
+		}
+	}
+	else
+	{
+		eptr = element;
+	}
+
+    /* Find the matching name_rec in the span_list */
+    name_rec = doc_lists->span_list;
+    PA_LOCK(s1, char*, name);
+    while (name_rec != NULL)
+    {
+	PA_LOCK(s2, char*, name_rec->name);
+	no_match = XP_STRCMP(s1, s2);
+	PA_UNLOCK(name_rec->name);
+	if (!no_match)
+	    break;
+	name_rec = name_rec->next;
+    }
+    PA_UNLOCK(name);
+    if (name_rec == NULL)
+        return FALSE;
+
+	if (eptr == NULL)
+	{
+		name_rec->x = 0;
+		name_rec->y = 0;
+	}
+	else
+	{
+		name_rec->x = eptr->lo_any.x;
+		name_rec->y = eptr->lo_any.y;
+	}
+
+	name_rec->element = eptr;
+    return TRUE;
+}
+#endif  /* DOM */
+
 void
 lo_AddNameList(lo_DocState *state, lo_DocState *old_state)
 {
@@ -2382,6 +2544,23 @@ lo_AppendToLineList(MWContext *context, lo_DocState *state,
 {
 	LO_Element *eptr;
 
+#ifdef DOM
+	if (state->in_span)
+	{
+		lo_SetInSpanAttribute( element );
+	}
+
+	if (state->current_span != NULL) 
+	{
+		if (!lo_BindNamedSpanToElement(state, state->current_span,
+                                         element)) 
+		{
+            XP_ASSERT(FALSE);
+        }
+		state->current_span = NULL;
+	}
+#endif
+	
 	if (state->current_named_anchor != NULL) {
 		if (!lo_BindNamedAnchorToElement(state, state->current_named_anchor,
                                          element)) {
@@ -3556,28 +3735,52 @@ Bool LO_IsWithinSpan( LO_Element *ele )
 {
 	Bool isInSpan = FALSE;
 
+	if (ele)
+	{
+		switch (ele->type) {
+
+		case LO_TEXT:
+			isInSpan = ele->lo_text.ele_attrmask & LO_ELE_IN_SPAN ? TRUE : FALSE;
+			break;
+		case LO_IMAGE:
+			isInSpan = ele->lo_image.ele_attrmask & LO_ELE_IN_SPAN ? TRUE : FALSE;
+			break;
+		case LO_FORM_ELE:
+			isInSpan = ele->lo_form.ele_attrmask & LO_ELE_IN_SPAN ? TRUE : FALSE;
+			break;
+		case LO_EMBED:
+			isInSpan = ele->lo_embed.ele_attrmask & LO_ELE_IN_SPAN ? TRUE : FALSE;
+			break;
+		case LO_JAVA:
+			isInSpan = ele->lo_java.ele_attrmask & LO_ELE_IN_SPAN ? TRUE : FALSE;
+			break;
+		}
+	}
+	return isInSpan;
+}
+
+static void lo_SetInSpanAttribute( LO_Element *ele )
+{
 	switch (ele->type) {
 
 	case LO_TEXT:
-		isInSpan = ele->lo_text.ele_attrmask & LO_ELE_IN_SPAN ? TRUE : FALSE;
+		ele->lo_text.ele_attrmask |= LO_ELE_IN_SPAN;
 		break;
 	case LO_IMAGE:
-		isInSpan = ele->lo_image.ele_attrmask & LO_ELE_IN_SPAN ? TRUE : FALSE;
+		ele->lo_image.ele_attrmask |= LO_ELE_IN_SPAN;
 		break;
 	case LO_FORM_ELE:
-		isInSpan = ele->lo_form.ele_attrmask & LO_ELE_IN_SPAN ? TRUE : FALSE;
+		ele->lo_form.ele_attrmask |= LO_ELE_IN_SPAN;
 		break;
 	case LO_EMBED:
-		isInSpan = ele->lo_embed.ele_attrmask & LO_ELE_IN_SPAN ? TRUE : FALSE;
+		ele->lo_embed.ele_attrmask |= LO_ELE_IN_SPAN;
 		break;
 #ifdef JAVA
 	case LO_JAVA:
-		isInSpan = ele->lo_java.ele_attrmask & LO_ELE_IN_SPAN ? TRUE : FALSE;
+		ele->lo_java.ele_attrmask |= LO_ELE_IN_SPAN;
 		break;
 #endif
 	}
-
-	return isInSpan;
 }
 #endif
 

@@ -2873,3 +2873,156 @@ ET_moz_CompMethodFunction(ETCompMethodFunc fn, int32 argc, JSCompArg *argv)
 
     return (void *)et_PostEvent(&event->ce, TRUE);
 }
+
+#ifdef DOM
+
+/****************************************************************************/
+
+typedef struct {
+    ETEvent	    ce;
+    lo_NameList *name_rec;
+	ETSpanOp	op;
+	void *param_ptr;
+	int32 param_val;
+} MozillaEvent_TweakSpan; 
+
+PR_STATIC_CALLBACK(int)
+et_HandleEvent_TweakSpan(MozillaEvent_TweakSpan* e)
+{
+    Bool ret = TRUE;
+
+    /* check that the doc_id is valid */
+    if(XP_DOCID(e->ce.context) != e->ce.doc_id)
+	return FALSE;
+
+    switch(e->op) {
+    case SP_SetColor:
+        LO_SetSpanColor(e->ce.context, e->name_rec, (LO_Color*)e->param_ptr);
+		/* This call to reflow is just a temp hack */
+		LO_RelayoutFromElement(e->ce.context, e->name_rec->element);
+        if (e->param_ptr)
+            XP_FREE((void*)e->param_ptr);
+        break;
+    case SP_SetBackground:
+        LO_SetSpanBackground(e->ce.context, e->name_rec, (LO_Color*)e->param_ptr);
+		/* This call to reflow is just a temp hack */
+		LO_RelayoutFromElement(e->ce.context, e->name_rec->element);
+        if (e->param_ptr)
+            XP_FREE((void*)e->param_ptr);
+        break;
+    case SP_SetFontFamily:
+      LO_SetSpanFontFamily(e->ce.context, e->name_rec, (char*)e->param_ptr);
+      LO_RelayoutFromElement(e->ce.context, e->name_rec->element);
+      break;
+    case SP_SetFontWeight:
+      LO_SetSpanFontWeight(e->ce.context, e->name_rec, (char*)e->param_ptr);
+      LO_RelayoutFromElement(e->ce.context, e->name_rec->element);
+      break;
+    case SP_SetFontSize:
+      LO_SetSpanFontSize(e->ce.context, e->name_rec, e->param_val);
+      LO_RelayoutFromElement(e->ce.context, e->name_rec->element);
+      break;
+    case SP_SetFontSlant:
+      LO_SetSpanFontSlant(e->ce.context, e->name_rec, (char*)e->param_ptr);
+      LO_RelayoutFromElement(e->ce.context, e->name_rec->element);
+      break;
+    default:
+        XP_ASSERT(0);
+    }
+
+    return (int)ret;
+}
+
+PR_STATIC_CALLBACK(void)
+et_DestroyEvent_TweakSpan(MozillaEvent_TweakSpan * event)
+{
+    XP_FREE(event);
+}
+
+/*
+ * These need to be synchronous so that if we set this and then
+ *    immediately look at it we get the correct (new) value
+ */
+int
+ET_TweakSpan(MWContext * context, void *name_rec, void *param_ptr,
+	int32 param_val, ETSpanOp op, int32 doc_id)
+{
+    MozillaEvent_TweakSpan * event;
+    event = PR_NEW(MozillaEvent_TweakSpan);
+    if (event == NULL) 
+        return NULL;
+
+    PR_InitEvent(&event->ce.event, context,
+		 (PRHandleEventProc)et_HandleEvent_TweakSpan,
+		 (PRDestroyEventProc)et_DestroyEvent_TweakSpan);
+    event->ce.context = context;
+    event->ce.doc_id = doc_id;
+    event->op = op;
+    event->name_rec = name_rec;
+	event->param_ptr = param_ptr;
+    event->param_val = param_val;
+
+    return (int)et_PostEvent(&event->ce, TRUE);
+}
+
+/* Tweak XML Transclusion stuff starts here */
+typedef struct {
+    ETEvent				ce;
+	ETTransclusionOp	op;
+	void *param_ptr;
+	int32 param_val;
+	void *xmlFile;
+} MozillaEvent_TweakTransclusion; 
+
+PR_STATIC_CALLBACK(int)
+et_HandleEvent_TweakTransclusion(MozillaEvent_TweakTransclusion* e)
+{
+    Bool ret = TRUE;
+
+    /* check that the doc_id is valid */
+    if(XP_DOCID(e->ce.context) != e->ce.doc_id)
+	return FALSE;
+
+    switch(e->op) {
+    case TR_SetHref:
+        XMLSetTransclusionProperty(e->xmlFile, e->param_val, "href", e->param_ptr);
+        if (e->param_ptr)
+            XP_FREE((void*)e->param_ptr);
+        break;
+    default:
+        XP_ASSERT(0);
+    }
+
+    return (int)ret;
+}
+
+PR_STATIC_CALLBACK(void)
+et_DestroyEvent_TweakTransclusion(MozillaEvent_TweakTransclusion * event)
+{
+    XP_FREE(event);
+}
+
+
+int
+ET_TweakTransclusion(MWContext * context, void *xmlFile, void *param_ptr,
+	int32 param_val, ETTransclusionOp op, int32 doc_id)
+{
+    MozillaEvent_TweakTransclusion * event;
+    event = PR_NEW(MozillaEvent_TweakTransclusion);
+    if (event == NULL) 
+        return NULL;
+
+    PR_InitEvent(&event->ce.event, context,
+		 (PRHandleEventProc)et_HandleEvent_TweakTransclusion,
+		 (PRDestroyEventProc)et_DestroyEvent_TweakTransclusion);
+    event->ce.context = context;
+    event->ce.doc_id = doc_id;
+    event->op = op;
+	event->param_ptr = param_ptr;
+    event->param_val = param_val;
+	event->xmlFile = xmlFile;
+
+    return (int)et_PostEvent(&event->ce, FALSE);
+}
+
+#endif

@@ -91,6 +91,10 @@ char lm_applets_str[]       = "applets";
 char lm_embeds_str[]        = "embeds";
 char lm_images_str[]        = "images";
 char lm_layers_str[]        = "layers";
+#ifdef DOM
+char lm_spans_str[]			= "spans";
+char lm_transclusions_str[] = "transclusions";
+#endif
 char lm_location_str[]      = "location";
 char lm_navigator_str[]     = "navigator";
 char lm_netcaster_str[]     = "netcaster";

@@ -415,6 +415,83 @@ LO_EnumerateNamedAnchors(MWContext *context, int32 layer_id)
     return count;
 }
 
+#ifdef DOM
+void
+lo_ReflectSpan(MWContext *context, lo_DocState *doc_state, PA_Tag *tag,
+                      lo_NameList *name_rec, int32 layer_id)
+{
+    lo_DocLists *doc_lists;
+
+    if (!doc_state->in_relayout) {
+        doc_lists = lo_GetDocListsById(doc_state, layer_id);
+        if (!doc_lists)
+            return;
+        name_rec->index = doc_lists->span_count++;
+
+        if(!PA_HasMocha(tag))
+            return;
+
+        ET_ReflectObject(context, (void *) name_rec, tag, 
+                         layer_id, name_rec->index, LM_SPANS);
+
+    }
+}
+
+lo_NameList *
+LO_GetSpanByIndex(MWContext *context, int32 layer_id, uint index)
+{
+    lo_TopState *top_state;
+    lo_NameList *name_rec, *nptr;
+    lo_DocLists *doc_lists;
+    
+    top_state = lo_GetTopState(context);
+    if (top_state == NULL)
+        return NULL;
+
+    doc_lists = lo_GetDocListsById(top_state->doc_state, layer_id);
+    if (!doc_lists)
+        return NULL;
+
+    /* The list is not guaranteed to be in reverse-source order when nested
+       tables are involved, so search for matching index instead. */
+    name_rec = NULL;
+    for (nptr = doc_lists->span_list; nptr != NULL; nptr = nptr->next) {
+        if (nptr->index == index) {
+            name_rec = nptr;
+            break;
+        }
+    }
+    return name_rec;
+}
+
+uint
+LO_EnumerateSpans(MWContext *context, int32 layer_id)
+{
+    lo_TopState *top_state;
+    lo_NameList *name_rec;
+    uint count;
+    lo_DocLists *doc_lists;
+
+    top_state = lo_GetTopState(context);
+    if (top_state == NULL)
+        return 0;
+
+    doc_lists = lo_GetDocListsById(top_state->doc_state, layer_id);
+    if (!doc_lists)
+        return 0;
+
+    count = 0;
+    for (name_rec = doc_lists->span_list; name_rec != NULL;
+         name_rec = name_rec->next) {
+        if (name_rec->mocha_object == NULL)
+	    LM_ReflectSpan(context, (void *) name_rec, NULL, 
+				  layer_id, name_rec->index);
+        count++;
+    }
+    return count;
+}
+#endif
+
 void
 lo_ReflectLink(MWContext *context, lo_DocState *doc_state, PA_Tag *tag,
                LO_AnchorData *anchor_data, int32 layer_id, uint index)
