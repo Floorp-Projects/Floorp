@@ -83,58 +83,38 @@ public:
   // 2 - bypass the proxy (not yet implemented) (defined as nsReloadBypassProxy)
   PRInt32 mReloadType;
   PRInt32 mPort;
-  PRBool mOK;
 
   nsISupports* mProtocolUrl;
 
   nsresult ParseURL(const nsIURL* aURL, const nsString& aSpec);
   void CreateProtocolURL();
+
+private:
+  void Init(nsISupports *aContainer);
 };
 
 URLImpl::URLImpl(const nsString& aSpec)
 {
-  NS_INIT_REFCNT();
-  mProtocolUrl = nsnull;
-
-  mProtocol = nsnull;
-  mHost = nsnull;
-  mFile = nsnull;
-  mRef = nsnull;
-  mSearch = nsnull;
-  mPort = -1;
-  mSpec = nsnull;
-  mContainer = nsnull;
-  mReloadType = 0;
-  mLoadAttribs = nsnull;
+  Init(nsnull);
 
   ParseURL(nsnull, aSpec);
 }
 
-URLImpl::URLImpl(const nsString& aSpec, nsISupports* container)
+URLImpl::URLImpl(const nsString& aSpec, nsISupports* aContainer)
 {
-  NS_INIT_REFCNT();
-  mProtocolUrl = nsnull;
-
-  mProtocol = nsnull;
-  mHost = nsnull;
-  mFile = nsnull;
-  mRef = nsnull;
-  mSearch = nsnull;
-  mPort = -1;
-  mSpec = nsnull;
-  if (container) {
-    mContainer = container;
-    NS_ADDREF(container);
-  } else {
-    mContainer = nsnull;
-  }
-  mLoadAttribs = nsnull;
+  Init(aContainer);
 
   ParseURL(nsnull, aSpec);
 }
 
 URLImpl::URLImpl(const nsIURL* aURL, const nsString& aSpec)
 {
+  Init(nsnull);
+  ParseURL(aURL, aSpec);
+}
+
+void URLImpl::Init(nsISupports* aContainer) 
+{
   NS_INIT_REFCNT();
   mProtocolUrl = nsnull;
 
@@ -145,41 +125,60 @@ URLImpl::URLImpl(const nsIURL* aURL, const nsString& aSpec)
   mSearch = nsnull;
   mPort = -1;
   mSpec = nsnull;
-  mContainer = nsnull;
   mReloadType = 0;
   mLoadAttribs = nsnull;
 
-  ParseURL(aURL, aSpec);
+  mContainer = aContainer;
+  NS_IF_ADDREF(mContainer);
 }
 
-NS_IMPL_ADDREF(URLImpl)
-NS_IMPL_RELEASE(URLImpl)
+
+NS_IMPL_THREADSAFE_ADDREF(URLImpl)
+NS_IMPL_THREADSAFE_RELEASE(URLImpl)
 
 NS_DEFINE_IID(kURLIID, NS_IURL_IID);
 
 nsresult URLImpl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 {
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-    if (aIID.Equals(kURLIID)) {
-        *aInstancePtr = (void*) ((nsIURL*)this);
-        AddRef();
-        return NS_OK;
-    }
-    if (aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = (void*) ((nsISupports *)this);
-        AddRef();
-        return NS_OK;
-    }
-    if (nsnull == mProtocolUrl) {
-        CreateProtocolURL();
-    }
-    if (nsnull != mProtocolUrl) {
-        return mProtocolUrl->QueryInterface(aIID, aInstancePtr);
-    }
-    return NS_NOINTERFACE;
+  nsresult rv = NS_NOINTERFACE;
+
+  if (NULL == aInstancePtr) {
+      return NS_ERROR_NULL_POINTER;
+  }
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  if (aIID.Equals(kURLIID)) {
+      *aInstancePtr = (void*) ((nsIURL*)this);
+      NS_ADDREF_THIS();
+      return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+      *aInstancePtr = (void*) ((nsISupports *)this);
+      NS_ADDREF_THIS();
+      return NS_OK;
+  }
+  /*
+   * Check for aggregated interfaces...
+   */
+  NS_LOCK_INSTANCE();
+  if (nsnull == mProtocolUrl) {
+      CreateProtocolURL();
+  }
+  if (nsnull != mProtocolUrl) {
+      rv = mProtocolUrl->QueryInterface(aIID, aInstancePtr);
+  }
+  NS_UNLOCK_INSTANCE();
+
+#if defined(NS_DEBUG) 
+  /*
+   * Check for the debug-only interface indicating thread-safety
+   */
+  static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
+  if (aIID.Equals(kIsThreadsafeIID)) {
+    return NS_OK;
+  }
+#endif /* NS_DEBUG */
+
+  return rv;
 }
 
 
@@ -204,108 +203,188 @@ nsresult URLImpl::Set(const char *aNewSpec)
 
 nsresult URLImpl::SetReloadType(const PRInt32 type)
 {
-    if ( !((type >= 0) && (type <= 2)) )
-        return NS_ERROR_ILLEGAL_VALUE;
+  nsresult rv = NS_OK;
+
+  if ( !((type >= 0) && (type <= 2)) ) {
+    rv = NS_ERROR_ILLEGAL_VALUE;
+  } else {
+    NS_LOCK_INSTANCE();
     mReloadType = type;
-    return NS_OK;
+    NS_UNLOCK_INSTANCE();
+  }
+  return rv;
 }
 
 nsresult URLImpl::SetLoadAttribs(nsILoadAttribs *aLoadAttrib)
 {
     NS_PRECONDITION( (aLoadAttrib != nsnull), "Null pointer.");
+
+    NS_LOCK_INSTANCE();
     mLoadAttribs = aLoadAttrib;
     NS_ADDREF(mLoadAttribs);
+    NS_UNLOCK_INSTANCE();
+
     return NS_OK;
 }
 
 
 PRBool URLImpl::operator==(const nsIURL& aURL) const
 {
+  PRBool bIsEqual;
   URLImpl&  other = (URLImpl&)aURL; // XXX ?
-  return PRBool((0 == PL_strcmp(mProtocol, other.mProtocol)) && 
+
+  NS_LOCK_INSTANCE();
+  bIsEqual =  PRBool((0 == PL_strcmp(mProtocol, other.mProtocol)) && 
                 (0 == PL_strcasecmp(mHost, other.mHost)) &&
                 (0 == PL_strcmp(mFile, other.mFile)));
+  NS_UNLOCK_INSTANCE();
+
+  return bIsEqual;
 }
 
 const char* URLImpl::GetProtocol() const
 {
-  return mProtocol;
+  const char* protocol;
+
+  NS_LOCK_INSTANCE();
+  protocol = mProtocol;
+  NS_UNLOCK_INSTANCE();
+
+  return protocol;
 }
 
 const char* URLImpl::GetHost() const
 {
-  return mHost;
+  const char* host;
+
+  NS_LOCK_INSTANCE();
+  host = mHost;
+  NS_UNLOCK_INSTANCE();
+
+  return host;
 }
 
 const char* URLImpl::GetFile() const
 {
-  return mFile;
+  const char* file;
+
+  NS_LOCK_INSTANCE();
+  file = mFile;
+  NS_UNLOCK_INSTANCE();
+
+  return file;
 }
 
 const char* URLImpl::GetSpec() const
 {
-  return mSpec;
+  const char* spec;
+
+  NS_LOCK_INSTANCE();
+  spec = mSpec;
+  NS_UNLOCK_INSTANCE();
+
+  return spec;
 }
 
 const char* URLImpl::GetRef() const
 {
-  return mRef;
+  const char* ref;
+
+  NS_LOCK_INSTANCE();
+  ref = mRef;
+  NS_UNLOCK_INSTANCE();
+
+  return ref;
 }
 
 const char* URLImpl::GetSearch() const
 {
-  return mSearch;
+  const char* search;
+
+  NS_LOCK_INSTANCE();
+  search = mSearch;
+  NS_UNLOCK_INSTANCE();
+
+  return search;
 }
 
 PRInt32 URLImpl::GetPort() const
 {
-  return mPort;
+  PRInt32 port;
+
+  NS_LOCK_INSTANCE();
+  port = mPort;
+  NS_UNLOCK_INSTANCE();
+
+  return port;
 }
 
 nsISupports* URLImpl::GetContainer() const
 {
-    return mContainer;
+  nsISupports* container;
+
+  NS_LOCK_INSTANCE();
+  container = mContainer;
+  NS_IF_ADDREF(container);
+  NS_UNLOCK_INSTANCE();
+
+  return container;
 }
 
 PRInt32 URLImpl::GetReloadType() const
 {
-    return mReloadType;
+  PRInt32 reloadType;
+
+  NS_LOCK_INSTANCE();
+  reloadType = mReloadType;
+  NS_UNLOCK_INSTANCE();
+
+  return reloadType;
 }
 
 nsILoadAttribs* URLImpl::GetLoadAttribs() const
 {
-    return mLoadAttribs;
+  nsILoadAttribs* loadAttribs;
+
+  NS_LOCK_INSTANCE();
+  loadAttribs = mLoadAttribs;
+  NS_IF_ADDREF(loadAttribs);
+  NS_UNLOCK_INSTANCE();
+
+  return loadAttribs;
 }
 
 void URLImpl::ToString(nsString& aString) const
 {
+  NS_LOCK_INSTANCE();
+
   // XXX Special-case javascript: URLs for the moment.
   // This code will go away when we actually start doing
   // protocol-specific parsing.
   if (PL_strcmp(mProtocol, "javascript") == 0) {
     aString.SetString(mSpec);
-    return;
-  }
-
-  aString.SetLength(0);
-  aString.Append(mProtocol);
-  aString.Append("://");
-  if (nsnull != mHost) {
-    aString.Append(mHost);
-    if (0 < mPort) {
-      aString.Append(':');
-      aString.Append(mPort, 10);
+  } else {
+    aString.SetLength(0);
+    aString.Append(mProtocol);
+    aString.Append("://");
+    if (nsnull != mHost) {
+      aString.Append(mHost);
+      if (0 < mPort) {
+        aString.Append(':');
+        aString.Append(mPort, 10);
+      }
+    }
+    aString.Append(mFile);
+    if (nsnull != mRef) {
+      aString.Append('#');
+      aString.Append(mRef);
+    }
+    if (nsnull != mSearch) {
+      aString.Append('?');
+      aString.Append(mSearch);
     }
   }
-  aString.Append(mFile);
-  if (nsnull != mRef) {
-    aString.Append('#');
-    aString.Append(mRef);
-  }
-  if (nsnull != mSearch) {
-    aString.Append('?');
-    aString.Append(mSearch);
-  }
+  NS_UNLOCK_INSTANCE();
 }
 
 // XXX recode to use nsString api's
@@ -329,6 +408,8 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
     uPort = aURL->GetPort();
   }
 
+  NS_LOCK_INSTANCE();
+
   PR_FREEIF(mProtocol);
   PR_FREEIF(mHost);
   PR_FREEIF(mFile);
@@ -339,12 +420,15 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
 
   if (nsnull == cSpec) {
     if (nsnull == aURL) {
+      NS_UNLOCK_INSTANCE();
       return NS_ERROR_ILLEGAL_VALUE;
     }
     mProtocol = (nsnull != uProtocol) ? PL_strdup(uProtocol) : nsnull;
     mHost = (nsnull != uHost) ? PL_strdup(uHost) : nsnull;
     mPort = uPort;
     mFile = (nsnull != uFile) ? PL_strdup(uFile) : nsnull;
+
+    NS_UNLOCK_INSTANCE();
     return NS_OK;
   }
 
@@ -407,6 +491,8 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
     // relative spec
     if (nsnull == aURL) {
       delete cSpec;
+
+      NS_UNLOCK_INSTANCE();
       return NS_ERROR_ILLEGAL_VALUE;
     }
 
@@ -532,6 +618,8 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
       }
     } else {
       delete cSpec;
+
+      NS_UNLOCK_INSTANCE();
       return NS_ERROR_ILLEGAL_VALUE;
     }
 
@@ -549,7 +637,7 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
        cp--;
       }
     }
-#endif
+#endif /* XP_UNIX */
 
     const char* cp0 = cp;
     if ((PL_strcmp(mProtocol, "resource") == 0) ||
@@ -569,7 +657,7 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
           mFile[1] = ':';
         }
       }
-#endif
+#endif /* NS_WIN32 */
     } else {
       // Host name follows protocol for http style urls
       cp = PL_strpbrk(cp, "/:");
@@ -612,6 +700,8 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
 
 //printf("protocol='%s' host='%s' file='%s'\n", mProtocol, mHost, mFile);
   delete cSpec;
+
+  NS_UNLOCK_INSTANCE();
   return NS_OK;
 }
 
@@ -625,6 +715,7 @@ nsIInputStream* URLImpl::Open(PRInt32* aErrorCode)
   nsINetService *inet = nsnull;
 
   // XXX: Rewrite the resource: URL into a file: URL
+  NS_LOCK_INSTANCE();
   if (PL_strcmp(mProtocol, "resource") == 0) {
     char* fileName;
 
@@ -632,6 +723,7 @@ nsIInputStream* URLImpl::Open(PRInt32* aErrorCode)
     Set(fileName);
     PR_Free(fileName);
   } 
+  NS_UNLOCK_INSTANCE();
 
   rv = nsServiceManager::GetService(kNetServiceCID,
                                     kINetServiceIID,
@@ -651,6 +743,7 @@ nsresult URLImpl::Open(nsIStreamListener *aListener)
   nsresult rv;
 
   // XXX: Rewrite the resource: URL into a file: URL
+  NS_LOCK_INSTANCE();
   if (PL_strcmp(mProtocol, "resource") == 0) {
     char *fileName;
 
@@ -658,6 +751,7 @@ nsresult URLImpl::Open(nsIStreamListener *aListener)
     Set(fileName);
     PR_Free(fileName);
   } 
+  NS_UNLOCK_INSTANCE();
 
   rv = nsServiceManager::GetService(kNetServiceCID,
                                     kINetServiceIID,
@@ -751,7 +845,7 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
   if (nsnull != cp) {
       *cp = '|';
   }
-#endif
+#endif /* XP_PC */
 
 #ifdef XP_UNIX
   // XXX For now, all resources are relative to the current working directory
@@ -778,11 +872,11 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
    }
 
    printf("RESOURCE name %s\n", resourceBase);
-#endif
+#endif /* XP_UNIX */
 
 #ifdef XP_MAC
 	resourceBase = XP_STRDUP("usr/local/netscape/bin");
-#endif
+#endif /* XP_MAC */
 
   // Join base path to resource name
   if (aResourceFileName[0] == '/') {
@@ -800,7 +894,7 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
     *cp = '/';
     cp++;
   }
-#endif
+#endif /* XP_PC */
 
   PR_Free(resourceBase);
 
@@ -842,4 +936,4 @@ BOOL WINAPI DllMain(HINSTANCE hDllInst,
 
 
 
-#endif
+#endif /* XP_PC */
