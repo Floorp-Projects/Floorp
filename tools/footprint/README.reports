@@ -108,3 +108,7 @@ recommend using a clean profile for consistency's sake. Otherwise,
 results will vary based on random stuff like how big your bookmarks
 are, how big your global history is, whether or not you've started
 mail, etc.
+
+3. I removed the ``plugin downloader plugin'' libnullplugin.so, as
+well as all other plugins, from $(DIST)/bin/plugins so that no plugins
+would be loaded.
