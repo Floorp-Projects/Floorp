@@ -120,12 +120,12 @@ function setStopState(state)
     if (state)
     {
         console.jsds.interruptHook = console._executionHook;
-        tb.setAttribute("checked", "true");
+        tb.setAttribute("willStop", "true");
     }
     else
     {
         console.jsds.interruptHook = null;
-        tb.removeAttribute("checked");
+        tb.removeAttribute("willStop");
     }
 }
 
