@@ -14,38 +14,35 @@
 class nsInstallInfo;
 
 #include "nsIScriptExternalNameSet.h"
-
+#include "nsIAppShellComponent.h"
 #include "nsIXPInstallProgressNotifier.h"
 #include "nsTopProgressNotifier.h"
 
-class nsSoftwareUpdate: public nsISoftwareUpdate
+class nsSoftwareUpdate:  public nsIAppShellComponent, public nsISoftwareUpdate
 {
     public:
-        static const nsIID& IID() { static nsIID iid = NS_SoftwareUpdateInstall_CID; return iid; }
+        
+        NS_DEFINE_STATIC_CID_ACCESSOR( NS_SoftwareUpdate_CID );
 
         nsSoftwareUpdate();
         virtual ~nsSoftwareUpdate();
-        
-        static nsSoftwareUpdate *GetInstance();
-        
+
         NS_DECL_ISUPPORTS
+        NS_DECL_IAPPSHELLCOMPONENT
+        
+        NS_IMETHOD InstallJar(const nsString& fromURL,
+                              const nsString& localFile, 
+                              long flags);  
 
-            
-            NS_IMETHOD InstallJar(const nsString& fromURL,
-                                  const nsString& localFile, 
-                                  long flags);  
+        NS_IMETHOD RegisterNotifier(nsIXPInstallProgressNotifier *notifier);
+        
+        NS_IMETHOD InstallPending(void);
 
-            NS_IMETHOD RegisterNotifier(nsIXPInstallProgressNotifier *notifier);
-            
-            NS_IMETHOD InstallPending(void);
-
-            NS_IMETHOD InstallJarCallBack();
-            NS_IMETHOD GetTopLevelNotifier(nsIXPInstallProgressNotifier **notifier);
+        NS_IMETHOD InstallJarCallBack();
+        NS_IMETHOD GetTopLevelNotifier(nsIXPInstallProgressNotifier **notifier);
 
 
     private:
-        nsresult Startup();
-        nsresult Shutdown();
         
         nsresult RunNextInstall();
         nsresult DeleteScheduledNodes();
@@ -53,11 +50,6 @@ class nsSoftwareUpdate: public nsISoftwareUpdate
         PRBool            mInstalling;
         nsVector*         mJarInstallQueue;
         nsTopProgressNotifier   *mTopLevelObserver;
-
-        static nsSoftwareUpdate* mInstance;
-        
-        
-
 };
 
 

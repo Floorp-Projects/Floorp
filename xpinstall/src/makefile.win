@@ -53,6 +53,7 @@ LINCS=                          \
         -I$(PUBLIC)\raptor      \
         -I$(PUBLIC)\nspr2       \
 		-I$(PUBLIC)\zlib        \
+        -I$(PUBLIC)\xpfe\components \
         $(NULL)
 
 LLIBS =                                \

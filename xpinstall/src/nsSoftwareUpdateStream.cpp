@@ -23,7 +23,7 @@
 #include "nsVector.h"
 
 #include "nsISupports.h"
-#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 
 #include "nsIURL.h"
 #include "nsINetlibURL.h"
@@ -51,10 +51,9 @@ nsSoftwareUpdateListener::nsSoftwareUpdateListener(nsInstallInfo *nextInstall)
         mResult = -1;
     };
 
-    mResult = nsComponentManager::CreateInstance(  kSoftwareUpdateCID, 
-                                                   nsnull,
-                                                   kISoftwareUpdateIID,
-                                                   (void**) &mSoftwareUpdate);
+    mResult = nsServiceManager::GetService(  kSoftwareUpdateCID, 
+                                             kISoftwareUpdateIID,
+                                             (nsISupports**)&mSoftwareUpdate);
     
     if (NS_FAILED(mResult))
         return;

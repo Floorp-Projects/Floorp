@@ -41,6 +41,9 @@
 #include "nsTopProgressNotifier.h"
 #include "nsLoggingProgressNotifier.h"
 
+#include "nsIAppShellComponent.h"
+#include "nsIRegistry.h"
+
 /* For Javascript Namespace Access */
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
@@ -76,36 +79,16 @@ static NS_DEFINE_IID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 
 
 
-nsSoftwareUpdate* nsSoftwareUpdate::mInstance = NULL;
 
 nsSoftwareUpdate::nsSoftwareUpdate()
 {
+#ifdef NS_DEBUG
+    printf("XPInstall Component created\n");
+#endif
+
     NS_INIT_ISUPPORTS();
     
-    Startup();
-}
-nsSoftwareUpdate::~nsSoftwareUpdate()
-{
-    Shutdown();
-}
-
-nsSoftwareUpdate *nsSoftwareUpdate::GetInstance()
-{
-  if (mInstance == NULL) 
-  {
-    mInstance = new nsSoftwareUpdate();
-  }
-  return mInstance;
-}
-
-
-NS_IMPL_ISUPPORTS(nsSoftwareUpdate,nsISoftwareUpdate::GetIID());
-
-
-nsresult
-nsSoftwareUpdate::Startup()
-{
-    /***************************************/
+     /***************************************/
     /* Create us a queue                   */
     /***************************************/
     mInstalling = nsnull;
@@ -165,15 +148,13 @@ nsSoftwareUpdate::Startup()
     
     nsLoggingProgressNotifier *logger = new nsLoggingProgressNotifier();
     RegisterNotifier(logger);
-
-    
-    return NS_OK;
 }
-
-
-nsresult
-nsSoftwareUpdate::Shutdown()
+nsSoftwareUpdate::~nsSoftwareUpdate()
 {
+#ifdef NS_DEBUG
+    printf("*** XPInstall Component destroyed\n");
+#endif
+
     if (mJarInstallQueue != nsnull)
     {
         PRUint32 i=0;
@@ -190,8 +171,71 @@ nsSoftwareUpdate::Shutdown()
     }
 
     NR_ShutdownRegistry();
-    return NS_OK;
 }
+
+NS_IMPL_ADDREF( nsSoftwareUpdate );
+NS_IMPL_RELEASE( nsSoftwareUpdate );
+
+NS_IMETHODIMP
+nsSoftwareUpdate::QueryInterface( REFNSIID anIID, void **anInstancePtr ) 
+{
+    nsresult rv = NS_OK;
+    /* Check for place to return result. */
+    
+    if ( !anInstancePtr ) 
+    {
+        rv = NS_ERROR_NULL_POINTER;
+    } 
+    else 
+    {
+        /* Initialize result. */
+        *anInstancePtr = 0;
+        /* Check for IIDs we support and cast this appropriately. */
+        if ( anIID.Equals( nsISoftwareUpdate::GetIID() ) ) 
+        {
+            *anInstancePtr = (void*) ( (nsISoftwareUpdate*)this );
+            NS_ADDREF_THIS();
+        } 
+        else if ( anIID.Equals( nsIAppShellComponent::GetIID() ) ) 
+        {
+            *anInstancePtr = (void*) ( (nsIAppShellComponent*)this );
+            NS_ADDREF_THIS();
+        } 
+        else if ( anIID.Equals( kISupportsIID ) )
+        {
+            *anInstancePtr = (void*) ( (nsISupports*) (nsISoftwareUpdate*) this );
+            NS_ADDREF_THIS();
+        }
+        else 
+        {
+            /* Not an interface we support. */\
+            rv = NS_NOINTERFACE;
+        }
+    }
+    return rv;
+}
+
+
+NS_IMETHODIMP
+nsSoftwareUpdate::Initialize( nsIAppShellService *anAppShell, nsICmdLineService  *aCmdLineService ) 
+{
+    nsresult rv;
+    
+    rv = nsServiceManager::RegisterService( NS_IXPINSTALLCOMPONENT_PROGID, ( (nsISupports*) (nsISoftwareUpdate*) this ) );
+    
+    return rv;
+}
+
+NS_IMETHODIMP
+nsSoftwareUpdate::Shutdown()
+{
+    nsresult rv;
+
+    rv = nsServiceManager::ReleaseService( NS_IXPINSTALLCOMPONENT_PROGID, ( (nsISupports*) (nsISoftwareUpdate*) this ) );
+    
+    return rv;
+}
+
 
 NS_IMETHODIMP 
 nsSoftwareUpdate::RegisterNotifier(nsIXPInstallProgressNotifier *notifier)
@@ -313,7 +357,7 @@ nsSoftwareUpdateFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void
 
     *aResult = NULL;
 
-    nsSoftwareUpdate *inst = nsSoftwareUpdate::GetInstance();
+    nsSoftwareUpdate *inst = new nsSoftwareUpdate();
 
     if (inst == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -438,12 +482,45 @@ NSRegisterSelf(nsISupports* aServMgr, const char *path)
     printf("*** XPInstall is being registered\n");
 #endif
 
-    rv = compMgr->RegisterComponent(kSoftwareUpdate_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    rv = compMgr->RegisterComponent( kSoftwareUpdate_CID,
+                                     NS_IXPINSTALLCOMPONENT_CLASSNAME,
+                                     NS_IXPINSTALLCOMPONENT_PROGID,
+                                     path,
+                                     PR_TRUE,
+                                     PR_TRUE );
+
     if (NS_FAILED(rv)) goto done;
+    
+    nsIRegistry *registry; 
+    rv = servMgr->GetService( NS_REGISTRY_PROGID, 
+                              nsIRegistry::GetIID(), 
+                              (nsISupports**)&registry );
+
+    if ( NS_SUCCEEDED( rv ) ) 
+    {
+        registry->Open();
+        char buffer[256];
+        char *cid = nsSoftwareUpdate::GetCID().ToString();
+        PR_snprintf( buffer,
+                     sizeof buffer,
+                     "%s/%s",
+                     NS_IAPPSHELLCOMPONENT_KEY,
+                     cid ? cid : "unknown" );
+        delete [] cid;
+
+        nsIRegistry::Key key;
+        rv = registry->AddSubtree( nsIRegistry::Common,
+                                   buffer,
+                                   &key );
+        servMgr->ReleaseService( NS_REGISTRY_PROGID, registry );
+    }
+
     rv = compMgr->RegisterComponent(kInstallTrigger_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
+    
     rv = compMgr->RegisterComponent(kInstallVersion_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-  done:
+  
+done:
     (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
     return rv;
 }

@@ -192,10 +192,9 @@ nsInstall::nsInstall()
     mInstallArguments   = "";
 
     nsISoftwareUpdate *su;
-    nsresult rv = nsComponentManager::CreateInstance(  kSoftwareUpdateCID, 
-                                                       nsnull,
-                                                       kISoftwareUpdateIID,
-                                                       (void**) &su);
+    nsresult rv = nsServiceManager::GetService(kSoftwareUpdateCID, 
+                                               kISoftwareUpdateIID,
+                                               (nsISupports**) &su);
     
     if (NS_SUCCEEDED(rv))
     {
