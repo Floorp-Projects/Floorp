@@ -66,6 +66,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
+#include "nsINodeInfo.h"
 #include "nsIFrame.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -2678,34 +2679,44 @@ nsEventListenerManager::RemoveEventListener(const nsAString& aType,
 NS_IMETHODIMP
 nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 {
-  //If we don't have a target set this doesn't work.
-  if (mTarget) {
-    nsCOMPtr<nsIContent> targetContent(do_QueryInterface(mTarget));
-    if (targetContent) {
-      nsCOMPtr<nsIDocument> document;
-      targetContent->GetDocument(*getter_AddRefs(document));
+  nsCOMPtr<nsIContent> targetContent(do_QueryInterface(mTarget));
+  if (!targetContent) {
+    // nothing to dispatch on -- bad!
+    return NS_ERROR_FAILURE;
+  }
+  
+  nsCOMPtr<nsIDocument> document;
+  targetContent->GetDocument(*getter_AddRefs(document));
 
-      // Do nothing if the element isn't in the document
-      if (!document)
-        return NS_OK;
-
-      // Obtain a presentation shell
-      nsCOMPtr<nsIPresShell> shell;
-      document->GetShellAt(0, getter_AddRefs(shell));
-      if (!shell)
-        return NS_OK;
-
-      // Retrieve the context
-      nsCOMPtr<nsIPresContext> aPresContext;
-      shell->GetPresContext(getter_AddRefs(aPresContext));
-
-      nsCOMPtr<nsIEventStateManager> esm;
-      if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(esm)))) {
-        return esm->DispatchNewEvent(mTarget, aEvent, _retval);
-      }
+  if (!document) {
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    targetContent->GetNodeInfo(*getter_AddRefs(nodeInfo));
+    if (nodeInfo) {
+      nodeInfo->GetDocument(*getter_AddRefs(document));
     }
   }
-  return NS_ERROR_FAILURE;
+
+  // Do nothing if the element does not belong to a document
+  if (!document) {
+    return NS_OK;
+  }
+
+  // Obtain a presentation shell
+  nsCOMPtr<nsIPresShell> shell;
+  document->GetShellAt(0, getter_AddRefs(shell));
+  if (!shell) {
+    return NS_OK;
+  }
+  
+  // Retrieve the context
+  nsCOMPtr<nsIPresContext> aPresContext;
+  shell->GetPresContext(getter_AddRefs(aPresContext));
+
+  nsCOMPtr<nsIEventStateManager> esm;
+  nsresult rv = aPresContext->GetEventStateManager(getter_AddRefs(esm));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return esm->DispatchNewEvent(mTarget, aEvent, _retval);
 }
 
 // nsIDOM3EventTarget interface
