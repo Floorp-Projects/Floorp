@@ -1440,7 +1440,7 @@ nsLocalFile::GetNativeLeafName(nsACString &aLeafName)
 
         const char* leaf = strrchr(temp, ':');
         
-        // if the working path is just a node without any directory delimeters.
+        // if the working path is just a node without any directory delimiters.
         if (leaf == nsnull)
             leaf = temp;
         else

@@ -5769,7 +5769,7 @@ nsPluginHostImpl::AddHeadersToChannel(const char *aHeadersData,
   headersString = aHeadersData;
 
   //
-  // Iterate over the nsString: for each "\r\n" delimeted chunk,
+  // Iterate over the nsString: for each "\r\n" delimited chunk,
   // add the value as a header to the nsIHTTPChannel
   //
 

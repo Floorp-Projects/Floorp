@@ -941,12 +941,12 @@ PRBool nsSchemaValidator::IsValidSchemaGDay(const nsAString & aNodeValue, Schema
   char timezoneMinute[3] = "";
   int dayInt;
 
-  char delimeter[4] = "";
-  strncpy(delimeter, str.get(), 3);
-  delimeter[sizeof(delimeter)-1] = '\0';
+  char delimiter[4] = "";
+  strncpy(delimiter, str.get(), 3);
+  delimiter[sizeof(delimiter)-1] = '\0';
 
-  // check for delimeter
-  if (strcmp(delimeter, "---") == 0) {
+  // check for delimiter
+  if (strcmp(delimiter, "---") == 0) {
     strncpy(day, str.get()+3, 2);
     day[sizeof(day)-1] = '\0';
 
@@ -1096,17 +1096,17 @@ PRBool nsSchemaValidator::IsValidSchemaGMonth(const nsAString & aNodeValue,
   int monthInt;
   NS_ConvertUTF16toUTF8 str(aNodeValue);
 
-  char delimeter[3] = "";  
-  strncpy(delimeter, str.get(), 2);
-  delimeter[sizeof(delimeter)-1] = '\0';
+  char delimiter[3] = "";  
+  strncpy(delimiter, str.get(), 2);
+  delimiter[sizeof(delimiter)-1] = '\0';
 
-  // check for the first |--| delimeter
-  if (strcmp(delimeter, "--") == 0) {
-    // check for the 2nd |--| delimeter
-    strncpy(delimeter, str.get()+4, 2);
-    delimeter[sizeof(delimeter)-1] = '\0';
+  // check for the first |--| delimiter
+  if (strcmp(delimiter, "--") == 0) {
+    // check for the 2nd |--| delimiter
+    strncpy(delimiter, str.get()+4, 2);
+    delimiter[sizeof(delimiter)-1] = '\0';
 
-    if (strcmp(delimeter, "--") == 0)
+    if (strcmp(delimiter, "--") == 0)
       isValid = PR_TRUE;
   }
 
