@@ -139,7 +139,7 @@ sub variants {
         if ($@) {
             # ok, so, er, it seems that didn't go to well
             # XXX do we want to do an error here or something?
-            $self->warn(4, "Just so you know, I'm going to silently ignore the fact that I completely failed to get any variants... For what it's worth, the error was: $@");
+            $self->warn(4, "While I was looking for the variants, I failed with: $@");
             return []; # no variants here, no sir!
         }
     }

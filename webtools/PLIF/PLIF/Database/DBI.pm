@@ -52,20 +52,28 @@ sub init {
     my($app) = @_;
     eval {
         $self->getConfig($app);
-        my $type = $self->type;
-        my $name = $self->name;
-        my $host = $self->host;
-        my $port = $self->port;
-        $self->handle(DBI->connect("DBI:$type:$name:$host:$port", 
-                                   $self->username, $self->password, 
-                                   {RaiseError => 0, PrintError => 0, AutoCommit => 1, Taint => 1}));
-        $self->errstr($DBI::errstr);
-        $self->dump(9, 'created a database object without raising an exception');
     };
     if ($@) {
         $self->handle(undef);
         $self->errstr($@);
-        $self->dump(9, "failed to connect to the database because of $@");
+        $self->dump(9, "failed to get the database configuration, not going to bother to connect: $@");
+    } else {
+        eval {
+            my $type = $self->type;
+            my $name = $self->name;
+            my $host = $self->host;
+            my $port = $self->port;
+            $self->handle(DBI->connect("DBI:$type:$name:$host:$port", 
+                                       $self->username, $self->password, 
+                                       {RaiseError => 0, PrintError => 0, AutoCommit => 1, Taint => 1}));
+            $self->errstr($DBI::errstr);
+            $self->dump(9, 'created a database object without raising an exception');
+        };
+        if ($@) {
+            $self->handle(undef);
+            $self->errstr($@);
+            $self->error(1, "failed to connect to the database because of $@");
+        }
     }
 }
 

@@ -51,7 +51,7 @@ sub database {
             }
         }
     }
-    $self->error(1, 'Configuration Error: There is no suitable \''.$self->databaseName.'\' database installed.');
+    $self->error(1, 'There is no suitable \''.$self->databaseName.'\' database installed.');
 }
 
 sub helper {
