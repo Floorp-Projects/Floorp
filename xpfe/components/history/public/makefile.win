@@ -25,6 +25,7 @@ MODULE=history
 
 XPIDLSRCS =                   \
     .\nsIGlobalHistory.idl    \
+	.\nsIBrowserHistory.idl   \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
