@@ -45,7 +45,8 @@ if($#ARGV < 2)
 
        .it file     : input ini template file
        staging path : path to where the components are staged at
-       URL path     : URL path to where the .xpi files will be staged at
+       URL path     : URL path to where the .xpi files will be staged at.
+                      Either ftp:// or http:// can be used
        \n";
 }
 
