@@ -198,7 +198,7 @@ map_js_context_to_jsj_thread_impl(JSContext *cx, char **errp)
 static JSObject* PR_CALLBACK
 map_java_object_to_js_object_impl(JNIEnv *env, void *pNSIPluginInstanceIn, char **errp)
 {
-    JSObject        *window;
+    JSObject        *window = NULL;
     MochaDecoder    *decoder; 
     PRBool           mayscript = PR_FALSE;
     PRBool           jvmMochaPrefsEnabled = PR_FALSE;
