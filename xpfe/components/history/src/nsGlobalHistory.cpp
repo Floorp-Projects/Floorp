@@ -1283,7 +1283,26 @@ nsGlobalHistory::Unassert(nsIRDFResource* aSource,
                           nsIRDFResource* aProperty,
                           nsIRDFNode* aTarget)
 {
-  // History cannot be modified
+  // translate into an appropriate removehistory call
+  nsresult rv;
+  if (aSource == kNC_HistoryRoot &&
+      aProperty == kNC_child) {
+
+    nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(aTarget, &rv);
+
+    if (NS_FAILED(rv)) return NS_RDF_ASSERTION_REJECTED; 
+
+    nsXPIDLCString targetUrl;
+    rv = resource->GetValueConst(getter_Shares(targetUrl));
+    if (NS_FAILED(rv)) return NS_RDF_ASSERTION_REJECTED;
+
+    // ignore any error
+    rv = RemovePage(targetUrl);
+    if (NS_FAILED(rv)) return NS_RDF_ASSERTION_REJECTED;
+    
+    return NS_OK;
+  }
+  
   return NS_RDF_ASSERTION_REJECTED;
 }
 
