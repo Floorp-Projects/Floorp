@@ -164,8 +164,7 @@ function view_init()
   {
       var message_menuitem_hidden = message_menuitem.getAttribute("hidden");
       if(message_menuitem_hidden != "true"){
-          message_menuitem.setAttribute('checked', !IsMessagePaneCollapsed());
-          message_menuitem.setAttribute('disabled', gAccountCentralLoaded);
+          message_menuitem.setAttribute('checked',!IsThreadAndMessagePaneSplitterCollapsed());
       }
   }
   var threadColumn = document.getElementById('ThreadColumnHeader');
@@ -1067,8 +1066,12 @@ function MsgOpenNewWindowForFolder(uri, key)
     // will return the message that is highlighted.
     uriToOpen = GetSelectedFolderURI();
 
-  if (uriToOpen)
-    window.openDialog("chrome://messenger/content/", "_blank", "chrome,all,dialog=no", uriToOpen, keyToSelect);
+  if (uriToOpen) {
+   // get the messenger window open service and ask it to open a new window for us
+   var mailWindowService = Components.classes["@mozilla.org/messenger/windowservice;1"].getService(Components.interfaces.nsIMessengerWindowService);
+   if (mailWindowService)
+     mailWindowService.openMessengerWindowWithUri("mail:3pane", uriToOpen, keyToSelect);
+  }
 }
 
 // passing in the view, so this will work for search and the thread pane
