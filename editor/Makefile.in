@@ -31,5 +31,5 @@ DIRS		= public idl base ui txmgr txtsvc
 include $(topsrcdir)/config/rules.mk
 
 chrome::
-	@$(REGCHROME) content editor comm.jar; \
-	$(REGCHROME) locale en-US/editor en-US.jar
+	@$(REGCHROME) content editor comm.jar
+	@$(REGCHROME) locale en-US/editor en-US.jar

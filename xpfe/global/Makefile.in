@@ -31,5 +31,5 @@ DIRS		= resources
 include $(topsrcdir)/config/rules.mk
 
 chrome::
-	@$(REGCHROME) content global toolkit.jar; \
-	$(REGCHROME) locale en-US/global en-US.jar
+	@$(REGCHROME) content global toolkit.jar
+	@$(REGCHROME) locale en-US/global en-US.jar
