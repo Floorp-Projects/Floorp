@@ -45,6 +45,7 @@
 #include "nsIContextMenuListener.h"
 #include "nsIDOMNode.h"
 #include "nsISHistoryListener.h"
+//#include "nsIURIContentListener.h"
 
 
 class CBrowserImpl : 

@@ -93,44 +93,35 @@ void CnsIObserServ::OnStartTests(UINT nMenuID)
 	{
 
 	case ID_INTERFACES_NSIOBSERVERSERVICE_RUNALLTESTS :
-
 		RunAllTests();
-
 		break;
 
 	case ID_INTERFACES_NSIOBSERVERSERVICE_ADDOBSERVERS :
-
 		AddObserversTest();
-
 		break;
 
-	case ID_INTERFACES_NSIOBSERVERSERVICE_ENUMERATEOBSERVERS : 
-
+	case ID_INTERFACES_NSIOBSERVERSERVICE_ENUMERATEOBSERVERS :
+		QAOutput("nsIObserverService::EnumerateObserversTest(). Adding observers first", 2);
+		AddObserversTest();		
 		EnumerateObserversTest();
-
 		break;
 
 	case ID_INTERFACES_NSIOBSERVERSERVICE_NOTIFYOBSERVERS :
-
 		NotifyObserversTest();
-
 		break;
 
 	case ID_INTERFACES_NSIOBSERVERSERVICE_REMOVEOBSERVERS :
-
+		QAOutput("nsIObserverService::RemoveObserversTest(). Adding observers first.", 2);
+		AddObserversTest();
 		RemoveObserversTest();
-
 		break;
 
 	default :
-
-		AfxMessageBox("Not added menu handler for this menu item");
-
+		AfxMessageBox("Menu handler not added for this menu item");
 		break;
-
 	}
-
 }
+
 void CnsIObserServ::RunAllTests()
 {
 	AddObserversTest();
@@ -145,7 +136,7 @@ void CnsIObserServ::AddObserversTest()
 
 	nsCOMPtr<nsIObserverService>observerService(do_GetService("@mozilla.org/observer-service;1",&rv));
 
-	QAOutput("nsIObserverService::AddObserversTest().");
+	QAOutput("\n nsIObserverService::AddObserversTest().");
 	if (!observerService) 
 	{
 		QAOutput("Can't get nsIObserverService object. Tests fail.");
@@ -160,6 +151,8 @@ void CnsIObserServ::AddObserversTest()
 	{
 		rv = observerService->AddObserver(this, ObserverTable[i].theTopic, 
 									 ObserverTable[i].theOwnsWeak);
+		FormatAndPrintOutput("The observer to be added = ", ObserverTable[i].theTopic, 1);	
+
 		RvTestResult(rv, "AddObservers() test", 2);
 	}
 
@@ -171,7 +164,7 @@ void CnsIObserServ::RemoveObserversTest()
 
 	nsCOMPtr<nsIObserverService>observerService(do_GetService("@mozilla.org/observer-service;1",&rv));
 
-	QAOutput("nsIObserverService::RemoveObserversTest().");
+	QAOutput("\n nsIObserverService::RemoveObserversTest().");
 	if (!observerService) 
 	{
 		QAOutput("Can't get nsIObserverService object. Tests fail.");
@@ -179,11 +172,10 @@ void CnsIObserServ::RemoveObserversTest()
 	}
 
 
-	AddObserversTest();
-
 	for (i=0; i<10; i++)
 	{
 		rv = observerService->RemoveObserver(this, ObserverTable[i].theTopic);
+		FormatAndPrintOutput("The observer to be removed = ", ObserverTable[i].theTopic, 1);	
 		RvTestResult(rv, "RemoveObservers() test", 2);
 	}
 }
@@ -191,7 +183,7 @@ void CnsIObserServ::RemoveObserversTest()
 
 void CnsIObserServ::NotifyObserversTest()
 {
-	QAOutput("nsIObserverService::NotifyObserversTest().");
+	QAOutput("\n nsIObserverService::NotifyObserversTest().");
 }
 
 
@@ -201,22 +193,18 @@ void CnsIObserServ::EnumerateObserversTest()
 	nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1",&rv));
 	nsCOMPtr<nsISimpleEnumerator> simpleEnum;
 
-	QAOutput("nsIObserverService::EnumerateObserversTest().");
+	QAOutput("\n nsIObserverService::EnumerateObserversTest().");
 	if (!observerService) 
 	{
 		QAOutput("Can't get nsIObserverService object. Tests fail.");
 		return;
 	}
 
-
-	AddObserversTest();
-
 	for (i=0; i<10; i++)
 	{
 		// need to handle Simple Enumerator
 
 		rv = observerService->EnumerateObservers(ObserverTable[i].theTopic, 
-
 												 getter_AddRefs(simpleEnum));
 
 
@@ -229,28 +217,26 @@ void CnsIObserServ::EnumerateObserversTest()
 
 		nsCOMPtr<nsIObserver> observer;
 		PRBool theLoop = PR_TRUE;
-
 		PRBool bLoop = PR_TRUE;
 
 		while( NS_SUCCEEDED(simpleEnum->HasMoreElements(&theLoop)) && bLoop) 
 		{
-
-
 			simpleEnum->GetNext(getter_AddRefs(observer));
 
-
-
 			rv = observer->Observe(observer, ObserverTable[i].theTopic, 0);
-			RvTestResult(rv, "Observer() test", 2);	
+			RvTestResult(rv, "nsIObserver() test", 2);	
 			
 			// compare 'this' with observer object
 	//		if (this ==(CnsIObserServ *)observer)
 
 
 			if( this == NS_REINTERPRET_CAST(CnsIObserServ*,NS_REINTERPRET_CAST(void*, observer.get())))
-				QAOutput("match. Test passes.");
+			{
+				QAOutput("observers match. Test passes.");
+				bLoop = PR_FALSE;
+			}
 			else
-				QAOutput("don't match. Test fails.");
+				QAOutput("observers don't match. Test fails.");
 		}
 	}
 }

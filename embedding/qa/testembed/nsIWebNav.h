@@ -90,6 +90,7 @@ public:
 	// Generated message map functions
 protected:
 };
+
 typedef struct
 {
   char			theUri[1024];

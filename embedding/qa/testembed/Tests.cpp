@@ -459,6 +459,22 @@ void CTests::OnTestsAddWebProgListener()
     rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
 	
 	RvTestResult(rv, "AddWebBrowserListener(). Add Web Prog Lstnr test", 2);
+
+/*
+	nsCOMPtr<nsIInterfaceRequestor> qaIReq(do_QueryInterface(qaWebBrowser));
+	nsCOMPtr<nsIWebProgress> qaWebProgress(do_GetInterface(qaIReq));
+	if (!qaWebProgress)
+		QAOutput("Didn't get web progress object.", 2);
+
+	nsCOMPtr<nsISupports> aListener(do_QueryInterface(qaWebBrowser));
+	if (!aListener)
+		QAOutput("We didn't get nsISupports object.", 2);
+	nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(aListener, &rv);
+
+	nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl));
+	rv = qaWebProgress->AddProgressListener(listener);
+	RvTestResult(rv, "nsIWebProgress::AddProgressListener() test", 2);
+*/
 }
 
 // *********************************************************
@@ -564,7 +580,9 @@ void CTests::OnToolsTestYourMethod()
 	// nsIURIContentListener
 
 	// test cases for nsIWebBrowser
+//	qaWebBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID, &rv);
 
+	RvTestResult(rv, "create qaWebBrowser object test", 2);
 	// AddWebBrowserListener
 	nsWeakPtr weakling(
         dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIContextMenuListener*, qaBrowserImpl))));
@@ -578,9 +596,13 @@ void CTests::OnToolsTestYourMethod()
 	// GetContainerWindow
 	nsCOMPtr<nsIWebBrowserChrome> qaWebBrowserChrome;
 	rv = qaWebBrowser->GetContainerWindow(getter_AddRefs(qaWebBrowserChrome));
+	RvTestResult(rv, "nsIWebBrowser::GetContainerWindow() test", 2);
 	if (!qaWebBrowserChrome)
 		QAOutput("Didn't get web browser chrome object.", 2);
-	RvTestResult(rv, "nsIWebBrowser::GetContainerWindow() test", 2);
+	else {
+		rv = qaWebBrowserChrome->ShowAsModal();
+		RvTestResult(rv, "nsIWebBrowserChrome::ShowAsModal() test", 2);
+	}
 
 	// SetContainerWindow
 	rv = qaWebBrowser->SetContainerWindow(qaWebBrowserChrome);
@@ -588,10 +610,16 @@ void CTests::OnToolsTestYourMethod()
 
 	// GetParentURIContentListener
 	nsCOMPtr<nsIURIContentListener> qaURIContentListener;
+
 	rv = qaWebBrowser->GetParentURIContentListener(getter_AddRefs(qaURIContentListener));
+	RvTestResult(rv, "nsIWebBrowser::GetParentURIContentListener() test", 2);
 	if (!qaURIContentListener)
 		QAOutput("Didn't get uri content listener object.", 2);
-	RvTestResult(rv, "nsIWebBrowser::GetParentURIContentListener() test", 2);
+	else {
+		nsCOMPtr<nsISupports> qaSupports;
+		rv = qaURIContentListener->GetLoadCookie(getter_AddRefs(qaSupports));
+		RvTestResult(rv, "nsIURIContentListener::GetLoadCookie() test", 2);
+	}
 
 	// SetParentURIContentListener
 	rv = qaWebBrowser->SetParentURIContentListener(qaURIContentListener);
@@ -600,15 +628,50 @@ void CTests::OnToolsTestYourMethod()
 	// GetContentDOMWindow
 	nsCOMPtr<nsIDOMWindow> qaDOMWindow;
 	rv = qaWebBrowser->GetContentDOMWindow(getter_AddRefs(qaDOMWindow));
+	RvTestResult(rv, "nsIWebBrowser::GetContentDOMWindow() test", 2);
 	if (!qaDOMWindow)
 		QAOutput("Didn't get dom window object.", 2);
-	RvTestResult(rv, "nsIWebBrowser::GetContentDOMWindow() test", 2);
+	else {
+		rv = qaDOMWindow->ScrollTo(50,50);
+		RvTestResult(rv, "nsIDOMWindow::ScrollTo() test", 2);
+	}
 }
 
 // ***********************************************************************
 void CTests::OnToolsTestYourMethod2()
 {
 	// place your test code here
+
+		// nsIWebProgress test cases
+
+		// get webProg object
+	nsCOMPtr<nsIInterfaceRequestor> qaIReq(do_QueryInterface(qaWebBrowser));
+	nsCOMPtr<nsIWebProgress> qaWebProgress(do_GetInterface(qaIReq));
+	if (!qaWebProgress)
+		QAOutput("Didn't get web progress object.", 2);
+	else
+		QAOutput("We got web progress object.", 2);
+
+		// addWebProgListener
+	nsCOMPtr<nsISupports> aListener(do_QueryInterface(qaWebBrowser));
+	if (!aListener)
+		QAOutput("We didn't get nsISupports object.", 2);
+	nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(aListener, &rv);
+
+	rv = qaWebProgress->AddProgressListener(listener);
+	RvTestResult(rv, "nsIWebProgress::AddProgressListener() test", 2);
+
+		// removeWebProgListener
+	rv = qaWebProgress->RemoveProgressListener(listener);
+	RvTestResult(rv, "nsIWebProgress::RemoveProgressListener() test", 2);
+
+		// getTheDOMWindow
+	nsCOMPtr<nsIDOMWindow> qaDOMWindow;
+	rv = qaWebProgress->GetDOMWindow(getter_AddRefs(qaDOMWindow));
+	if (!qaWebProgress)
+		QAOutput("Didn't get DOM Window object.", 2);
+	else
+		RvTestResult(rv, "nsIWebProgress::GetDOMWindow() test", 2);
 }
 
 // ***********************************************************************
@@ -702,32 +765,21 @@ void CTests::OnInterfacesNsiwebnav()
 void CTests::OnInterfacesNsiclipboardcommands() 
 {
 	CNsIClipBoardCmd  oClipCmd(qaWebBrowser) ;
-
 	oClipCmd.OnStartTests(nCommandID);
-
 }
 
 
 void CTests::OnInterfacesNsiobserverservice() 
 
 {
-
 	CnsIObserServ oObserv  ;
-
 	oObserv.OnStartTests(nCommandID);
-
-
-
 }
-
 
 
 void CTests::OnInterfacesNsifile() 
 
 {
-
 	CNsIFile oFile ;
-
 	oFile.OnStartTests(nCommandID);
-
 }
