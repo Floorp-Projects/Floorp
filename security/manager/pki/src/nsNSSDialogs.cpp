@@ -45,6 +45,7 @@
 
 #include "nsNSSDialogs.h"
 #include "nsPKIParamBlock.h"
+#include "nsIKeygenThread.h"
 
 #define PIPSTRING_BUNDLE_URL "chrome://pippki/locale/pippki.properties"
 #define STRING_BUNDLE_URL    "chrome://communicator/locale/security.properties"
@@ -124,14 +125,15 @@ nsNSSDialogs::~nsNSSDialogs()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS8(nsNSSDialogs, nsINSSDialogs, 
+NS_IMPL_THREADSAFE_ISUPPORTS9(nsNSSDialogs, nsINSSDialogs, 
                                             nsITokenPasswordDialogs,
                                             nsISecurityWarningDialogs,
                                             nsIBadCertListener,
                                             nsICertificateDialogs,
                                             nsIClientAuthDialogs,
                                             nsITokenDialogs,
-                                            nsIDOMCryptoDialogs);
+                                            nsIDOMCryptoDialogs,
+                                            nsIGeneratingKeypairInfoDialogs);
 
 nsresult
 nsNSSDialogs::Init()
@@ -821,6 +823,20 @@ nsNSSDialogs::ViewCert(nsIX509Cert *cert)
   rv = nsNSSDialogHelper::openDialog(nsnull,
                                      "chrome://pippki/content/certViewer.xul",
                                      block);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsNSSDialogs::DisplayGeneratingKeypairInfo(nsIInterfaceRequestor *aCtx, nsIKeygenThread *runnable) 
+{
+  nsresult rv;
+
+  // Get the parent window for the dialog
+  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(aCtx);
+
+  rv = nsNSSDialogHelper::openDialog(parent,
+                                     "chrome://pippki/content/createCertInfo.xul",
+                                     runnable);
   return rv;
 }
 

@@ -39,6 +39,7 @@ extern "C" {
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIContent.h"
 #include "nsINSSDialogs.h"
+#include "nsKeygenThread.h"
 
 //These defines are taken from the PKCS#11 spec
 #define CKM_RSA_PKCS_KEY_PAIR_GEN     0x00000000
@@ -297,7 +298,6 @@ nsKeygenFormProcessor::GetPublicKey(nsString& aValue, nsString& aChallenge,
 				    nsString& aOutPublicKey, nsString& aPqg)
 {
     nsresult rv = NS_ERROR_FAILURE;
-    char *emptyCString = "null";
     char *keystring = nsnull;
     char *pqgString = nsnull, *str = nsnull;
     nsAutoString rsaStr;
@@ -321,6 +321,9 @@ nsKeygenFormProcessor::GetPublicKey(nsString& aValue, nsString& aChallenge,
     SECItem signedItem;
     CERTPublicKeyAndChallenge pkac;
     SECKeySizeChoiceInfo *choice = SECKeySizeChoiceList;
+    nsIGeneratingKeypairInfoDialogs * dialogs;
+    nsKeygenThread KeygenRunnable;
+    nsCOMPtr<nsIKeygenThread> runnable;
 
     // Get the key size //
     while (choice) {
@@ -398,8 +401,42 @@ found_match:
         goto loser;
     }
 
-    privateKey = PK11_GenerateKeyPair(slot, keyGenMechanism, params,
-				     &publicKey, PR_TRUE, PR_TRUE, nsnull);
+    rv = getNSSDialogs((void**)&dialogs,
+                       NS_GET_IID(nsIGeneratingKeypairInfoDialogs));
+
+    if (NS_FAILED(rv)) {
+        privateKey = PK11_GenerateKeyPair(slot, keyGenMechanism, params,
+                                          &publicKey, PR_TRUE, PR_TRUE, nsnull);
+    } else {
+        GenerateKeypairParameters gkp;
+        gkp.privateKey = nsnull;
+        gkp.publicKey = nsnull;
+        gkp.slot = slot;
+        gkp.keyGenMechanism = keyGenMechanism;
+        gkp.params = params;
+        KeygenRunnable.SetParams(&gkp);
+        // Our parameters instance will be modified by the thread.
+
+        runnable = do_QueryInterface(&KeygenRunnable);
+        
+        if (runnable) {
+            rv = dialogs->DisplayGeneratingKeypairInfo(m_ctx, runnable);
+
+            // We call join on the thread,
+            // so we can be sure that no simultaneous access will happen.
+            KeygenRunnable.Join();
+
+            NS_RELEASE(dialogs);
+            if (!NS_FAILED(rv)) {
+                privateKey = gkp.privateKey;
+                publicKey = gkp.publicKey;
+                slot = gkp.slot;
+                keyGenMechanism = gkp.keyGenMechanism;
+                params = gkp.params;
+            }
+        }
+    }
+    
     if (!privateKey) {
         goto loser;
     }

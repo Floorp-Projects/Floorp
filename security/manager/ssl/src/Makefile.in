@@ -68,6 +68,7 @@ CPPSRCS = 				\
 	nsKeygenHandler.cpp		\
 	nsCrypto.cpp			\
         nsPKCS11Slot.cpp                \
+        nsKeygenThread.cpp              \
 	$(NULL)
 
 REQUIRES = nspr security xpcom string necko uriloader pref caps dom intl locale profile windowwatcher js docshell widget layout gfx2 pippki xpconnect jar
