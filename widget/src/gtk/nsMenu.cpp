@@ -176,7 +176,11 @@ NS_METHOD nsMenu::GetAccessKey(nsString &aText)
 {
   aText = mAccessKey;
   char *foo = mAccessKey.ToNewCString();
+
+#ifdef DEBUG_pavlov
   g_print("GetAccessKey returns \"%s\"\n", foo);
+#endif
+
   delete [] foo;
   return NS_OK;
 }
@@ -186,7 +190,11 @@ NS_METHOD nsMenu::SetAccessKey(const nsString &aText)
 {
   mAccessKey = aText;
   char *foo = mAccessKey.ToNewCString();
+
+#ifdef DEBUG_pavlov
   g_print("SetAccessKey setting to \"%s\"\n", foo);
+#endif
+
   delete [] foo;
   return NS_OK;
 }
