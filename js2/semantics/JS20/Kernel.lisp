@@ -23,10 +23,6 @@
   (cond
    ((eq token-value :end-of-input)
     (values *end-marker* nil))
-   ((stringp token-value)
-    (values (if line-break (terminal-lf-terminal '$string) '$string) token-value))
-   ((or (float64? token-value) (float32? token-value))
-    (values (if line-break (terminal-lf-terminal '$number) '$number) token-value))
    ((eq token-value :negated-min-long)
     (values (if line-break (terminal-lf-terminal '$negated-min-long) '$negated-min-long) nil))
    (t
@@ -35,7 +31,8 @@
                            (ecase (first token-value)
                              (l:identifier (values '$identifier data))
                              ((l:keyword l:punctuator) (values (intern (string-upcase data)) nil))
-                             ((l:long l:u-long) (values '$number (translate-number token-value)))
+                             (l:number-token (values '$number (translate-number data)))
+                             (l:string-token (values '$string data))
                              (l:regular-expression (values '$regular-expression data)))
         (when line-break
           (setq token (terminal-lf-terminal token)))
@@ -96,10 +93,8 @@
                       (setq lexer-state '$div))
                     (setq token-value (get-next-token-value lexer-state))
                     (setq line-break t))
-                  (setq prev-number-token (or (float64? token-value)
-                                              (float32? token-value)
-                                              (eq token-value :negated-min-long)
-                                              (and (consp token-value) (member (car token-value) '(l:long l:u-long)))))
+                  (setq prev-number-token (or (eq token-value :negated-min-long)
+                                              (and (consp token-value) (eq (car token-value) 'l:number-token))))
                   (multiple-value-setq (token token-arg) (js-lexer-results-to-token token-value line-break)))))
             (setq transition (state-transition state token))
             (unless transition

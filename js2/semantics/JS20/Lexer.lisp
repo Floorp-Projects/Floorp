@@ -14,15 +14,26 @@
               :$next-input-element
               ((:unicode-character (% every (:text "Any Unicode character")) () t)
                (:unicode-initial-alphabetic
-                (% initial-alpha (:text "Any Unicode initial alphabetic character (includes ASCII "
-                                        (:character-literal #\A) :nbhy (:character-literal #\Z) " and "
-                                        (:character-literal #\a) :nbhy (:character-literal #\z) ")"))
+                (% initial-alpha (:text "Any character in category" :space
+                                        (:external-name "Lu") " (uppercase letter)," :space
+                                        (:external-name "Ll") " (lowercase letter)," :space
+                                        (:external-name "Lt") " (titlecase letter)," :space
+                                        (:external-name "Lm") " (modifier letter)," :space
+                                        (:external-name "Lo") " (other letter), or" :space
+                                        (:external-name "Nl") " (letter number)" :space "in the Unicode Character Database"))
                 () t)
                (:unicode-alphanumeric
-                (% alphanumeric (:text "Any Unicode alphabetic or decimal digit character (includes ASCII "
-                                       (:character-literal #\0) :nbhy (:character-literal #\9) ", "
-                                       (:character-literal #\A) :nbhy (:character-literal #\Z) ", and "
-                                       (:character-literal #\a) :nbhy (:character-literal #\z) ")"))
+                (% alphanumeric (:text "Any character in category" :space
+                                       (:external-name "Lu") " (uppercase letter)," :space
+                                       (:external-name "Ll") " (lowercase letter)," :space
+                                       (:external-name "Lt") " (titlecase letter)," :space
+                                       (:external-name "Lm") " (modifier letter)," :space
+                                       (:external-name "Lo") " (other letter)," :space
+                                       (:external-name "Nd") " (decimal number)," :space
+                                       (:external-name "Nl") " (letter number)," :space
+                                       (:external-name "Mn") " (non-spacing mark)," :space
+                                       (:external-name "Mc") " (combining spacing mark), or" :space
+                                       (:external-name "Pc") " (connector punctuation)" :space "in the Unicode Character Database"))
                 () t)
                (:white-space-character (++ (#?0009 #?000B #?000C #\space #?00A0)
                                            (#?2000 #?2001 #?2002 #?2003 #?2004 #?2005 #?2006 #?2007)
@@ -82,10 +93,12 @@
        (deftuple keyword (name string))
        (deftuple punctuator (name string))
        (deftuple identifier (name string))
+       (deftuple number-token (value general-number))
        (deftag negated-min-long)
+       (deftuple string-token (value string))
        (deftuple regular-expression (body string) (flags string))
        
-       (deftype token (union keyword punctuator identifier general-number (tag negated-min-long) string regular-expression))
+       (deftype token (union keyword punctuator identifier number-token (tag negated-min-long) string-token regular-expression))
        (deftype input-element (union (tag line-break end-of-input) token))
        
        
@@ -186,6 +199,21 @@
        
        (%heading 1 "Keywords and Identifiers")
        
+       (rule :identifier-or-keyword
+             ((lex input-element))
+         (production :identifier-or-keyword (:identifier-name) identifier-or-keyword-identifier-name
+           (lex (begin
+                 (const id string (lex-name :identifier-name))
+                 (if (and (set-in id (list-set "abstract" "as" "break" "case" "catch" "class" "const" "continue" "debugger" "default" "delete" "do" "else" "enum"
+                                               "exclude" "export" "extends" "false" "final" "finally" "for" "function" "get" "goto" "if" "implements" "import" "in"
+                                               "include" "instanceof" "interface" "is" "named" "namespace" "native" "new" "null" "package" "private" "protected" "public" "return"
+                                               "set" "static" "super" "switch" "synchronized" "this" "throw" "throws" "transient" "true" "try" "typeof" "use"
+                                               "var" "volatile" "while" "with"))
+                          (not (contains-escapes :identifier-name)))
+                   (return (new keyword id))
+                   (return (new identifier id)))))))
+       (%print-actions)
+       
        (rule :identifier-name
              ((lex-name string) (contains-escapes boolean))
          (production :identifier-name (:initial-identifier-character-or-escape) identifier-name-initial
@@ -213,9 +241,11 @@
            (lex-char ($default-action :initial-identifier-character))
            (contains-escapes false))
          (production :initial-identifier-character-or-escape (#\\ :hex-escape) initial-identifier-character-or-escape-escape
-           (lex-char (begin (if (is-initial-identifier-character (lex-char :hex-escape))
-                              (return (lex-char :hex-escape))
-                              (throw syntax-error))))
+           (lex-char (begin 
+                      (const ch character (lex-char :hex-escape))
+                      (if (is-initial-identifier-character ch)
+                        (return ch)
+                        (throw syntax-error))))
            (contains-escapes true)))
        
        (%charclass :initial-identifier-character)
@@ -226,40 +256,26 @@
            (lex-char ($default-action :continuing-identifier-character))
            (contains-escapes false))
          (production :continuing-identifier-character-or-escape (#\\ :hex-escape) continuing-identifier-character-or-escape-escape
-           (lex-char (begin (if (is-continuing-identifier-character (lex-char :hex-escape))
-                              (return (lex-char :hex-escape))
-                              (throw syntax-error))))
+           (lex-char (begin
+                      (const ch character (lex-char :hex-escape))
+                      (if (is-continuing-identifier-character ch)
+                        (return ch)
+                        (throw syntax-error))))
            (contains-escapes true)))
        
        (%charclass :continuing-identifier-character)
        (%print-actions)
        
-       (define reserved-words (vector string)
-         (vector "abstract" "as" "break" "case" "catch" "class" "const" "continue" "debugger" "default" "delete" "do" "else" "enum"
-                 "export" "extends" "false" "final" "finally" "for" "function" "goto" "if" "implements" "import" "in"
-                 "instanceof" "interface" "is" "namespace" "native" "new" "null" "package" "private" "protected" "public" "return" "static" "super"
-                 "switch" "synchronized" "this" "throw" "throws" "transient" "true" "try" "typeof" "use" "var" "volatile" "while" "with"))
-       (define non-reserved-words (vector string)
-         (vector "exclude" "get" "include" "named" "set"))
-       (define keywords (vector string)
-         (append reserved-words non-reserved-words))
+       (define (is-initial-identifier-character (ch character :unused)) boolean
+         (bottom (:keyword return) " " (:tag true) " if the nonterminal " (:grammar-symbol :initial-identifier-character) " can expand into " (:local ch)
+                 " and " (:tag false) " otherwise."))
+       (defprimitive is-initial-identifier-character (lambda (ch) (initial-identifier-character? ch)))
        
-       (define (member (id string) (list (vector string))) boolean
-         (rwhen (empty list)
-           (return false))
-         (rwhen (= id (nth list 0) string)
-           (return true))
-         (return (member id (subseq list 1))))
+       (define (is-continuing-identifier-character (ch character :unused)) boolean
+         (bottom (:keyword return) " " (:tag true) " if the nonterminal " (:grammar-symbol :continuing-identifier-character) " can expand into " (:local ch)
+                 " and " (:tag false) " otherwise."))
+       (defprimitive is-continuing-identifier-character (lambda (ch) (continuing-identifier-character? ch)))
        
-       (rule :identifier-or-keyword
-             ((lex input-element))
-         (production :identifier-or-keyword (:identifier-name) identifier-or-keyword-identifier-name
-           (lex (begin
-                 (const id string (lex-name :identifier-name))
-                 (if (and (member id keywords) (not (contains-escapes :identifier-name)))
-                   (return (new keyword id))
-                   (return (new identifier id)))))))
-       (%print-actions)
        
        (%heading 1 "Punctuators")
        
@@ -326,23 +342,23 @@
        
        (rule :numeric-literal ((lex token))
          (production :numeric-literal (:decimal-literal) numeric-literal-decimal
-           (lex (real-to-float64 (lex-number :decimal-literal))))
+           (lex (new number-token (real-to-float64 (lex-number :decimal-literal)))))
          (production :numeric-literal (:hex-integer-literal) numeric-literal-hex
-           (lex (real-to-float64 (lex-number :hex-integer-literal))))
+           (lex (new number-token (real-to-float64 (lex-number :hex-integer-literal)))))
          (production :numeric-literal (:decimal-literal :letter-f) numeric-literal-single
-           (lex (real-to-float32 (lex-number :decimal-literal))))
+           (lex (new number-token (real-to-float32 (lex-number :decimal-literal)))))
          (production :numeric-literal (:integer-literal :letter-l) numeric-literal-long
            (lex (begin
                  (const i integer (lex-number :integer-literal))
                  (cond
-                  ((<= i (- (expt 2 63) 1)) (return (new long i)))
+                  ((<= i (- (expt 2 63) 1)) (return (new number-token (new long i))))
                   ((= i (expt 2 63)) (return negated-min-long))
                   (nil (throw range-error))))))
          (production :numeric-literal (:integer-literal :letter-u :letter-l) numeric-literal-unsigned-long
            (lex (begin
                  (const i integer (lex-number :integer-literal))
                  (if (<= i (- (expt 2 64) 1))
-                   (return (new u-long i))
+                   (return (new number-token (new u-long i)))
                    (throw range-error))))))
        
        (rule :integer-literal ((lex-number integer))
@@ -427,9 +443,9 @@
        (grammar-argument :theta single double)
        (rule :string-literal ((lex token))
          (production :string-literal (#\' (:string-chars single) #\') string-literal-single
-           (lex (lex-string :string-chars)))
+           (lex (new string-token (lex-string :string-chars))))
          (production :string-literal (#\" (:string-chars double) #\") string-literal-double
-           (lex (lex-string :string-chars))))
+           (lex (new string-token (lex-string :string-chars)))))
        (%print-actions)
        
        (rule (:string-chars :theta) ((lex-string string))
