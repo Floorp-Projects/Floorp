@@ -26,6 +26,7 @@
 
 class nsIXPFCDataCollection;
 class nsIApplicationShell;
+class nsIShellInstance;
 
 //a2e85d80-5ca8-11d2-80a1-00600832d688
 #define NS_IXPFCDATACOLLECTION_MANAGER_IID   \
@@ -42,8 +43,6 @@ typedef struct CollectedData
   nsString                          LabelName;
   nsString                          Value;
 } *CollectedDataPtr;
-
-class nsIShellInstance;
 
 class nsICollectedData : public nsISupports
 {
@@ -62,11 +61,8 @@ class nsIXPFCDataCollectionManager : public nsISupports
 public:
 
   NS_IMETHOD                        Init() = 0 ;
-//  NS_IMETHOD                        AddDataCollection(nsString& DataHandlerName, DataCollectionHandlerFunc *aDataCollectionHandler) = 0;
   NS_IMETHOD                        AddDataCollection(nsString& DataHandlerName, nsIApplicationShell *aHostShell) = 0;
- 
   NS_IMETHOD                        CallDataHandler(nsString& DataHandlerName, nsICollectedData* TheCollectedData) = 0;
-
 };
 
 #endif /* nsIXPFCToolbarManager_h___ */

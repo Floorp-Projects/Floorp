@@ -30,6 +30,7 @@ class nsIStreamManager;
 class nsIXPFCToolbarManager;
 class nsIDeviceContext;
 class nsIXPFCDataCollectionManager;
+class nsIXPFCOutBoxManager;
 
 // platform independent native handle to application instance
 typedef void * nsNativeApplicationInstance ;
@@ -141,7 +142,9 @@ public:
   NS_IMETHOD_(nsIXPFCToolbarManager *) GetToolbarManager(); 
 
   NS_IMETHOD_(nsIXPFCDataCollectionManager *) GetDataCollectionManager();
-  
+
+  NS_IMETHOD_(nsIXPFCOutBoxManager *) GetOutBoxManager();
+
   NS_IMETHOD_(EVENT_CALLBACK) GetShellEventCallback() ;
 
   NS_IMETHOD LaunchApplication(nsString& aApplication,nsString& aArgument) ;
@@ -150,14 +153,15 @@ public:
 
 
 private:
-  nsNativeApplicationInstance mNativeInstance ;
-  nsIApplicationShell *       mApplicationShell ;
-  nsIWidget *                 mApplicationWindow ;
-  nsIPref *                   mPref;
-  nsIStreamManager *          mStreamManager;
-  nsIXPFCToolbarManager *     mToolbarManager;
+  nsNativeApplicationInstance   mNativeInstance ;
+  nsIApplicationShell *         mApplicationShell ;
+  nsIWidget *                   mApplicationWindow ;
+  nsIPref *                     mPref;
+  nsIStreamManager *            mStreamManager;
+  nsIXPFCToolbarManager *       mToolbarManager;
   nsIXPFCDataCollectionManager* mDataCollectionManager;
-  nsIDeviceContext *          mDeviceContext;
+  nsIXPFCOutBoxManager*         mOutBoxManager;
+  nsIDeviceContext *            mDeviceContext;
 
 public:
   PLOptState * mOptState;

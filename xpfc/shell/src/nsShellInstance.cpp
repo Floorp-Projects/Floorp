@@ -53,6 +53,7 @@
 #include "nsIServiceManager.h"
 
 #include "nsIXPFCDataCollectionManager.h"
+#include "nsIXPFCOutBoxManager.h"
 
 #ifdef NS_WIN32
 #include "direct.h"
@@ -97,6 +98,8 @@ static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 static NS_DEFINE_IID(kCXPFCDataCollectionManager, NS_XPFCDATACOLLECTION_MANAGER_CID);
 static NS_DEFINE_IID(kIXPFCDataCollectionManager, NS_IXPFCDATACOLLECTION_MANAGER_IID);
+static NS_DEFINE_IID(kCXPFCOutBoxManagerCID, NS_XPFCOUTBOX_MANAGER_CID);
+static NS_DEFINE_IID(kIXPFCOutBoxManagerIID, NS_IXPFCOUTBOX_MANAGER_IID);
 
 nsEventStatus PR_CALLBACK HandleEventApplication(nsGUIEvent *aEvent);
 nsShellInstance * gShellInstance = nsnull;
@@ -131,6 +134,8 @@ nsShellInstance::~nsShellInstance()
   NS_IF_RELEASE(mPref);
   NS_IF_RELEASE(mStreamManager);
   NS_IF_RELEASE(mToolbarManager);
+  NS_IF_RELEASE(mDataCollectionManager);
+  NS_IF_RELEASE(mOutBoxManager);
 }
 
 NS_DEFINE_IID(kIShellInstanceIID, NS_IXPFC_SHELL_INSTANCE_IID);
@@ -178,21 +183,12 @@ nsresult nsShellInstance::Init()
   mToolbarManager->Init();
 
   // Create a DataCollection Manager
-#if 0
-  res = nsRepository::CreateInstance(kCXPFCDataCollectionManager,
-                                     NULL,
-                                     kIXPFCDataCollectionManager,
-                                     (void **) &mDataCollectionManager);
-  mDataCollectionManager = new nsXPFCDataCollectionManager();
-#else
   nsServiceManager::GetService(kCXPFCDataCollectionManager, kIXPFCDataCollectionManager, (nsISupports**)&mDataCollectionManager);
-  res = NS_OK;
+  if (mDataCollectionManager) mDataCollectionManager->Init();
 
-#endif
-  if (NS_OK != res)
-    return res;
-
-  mDataCollectionManager->Init();
+  // Create the Outbox manager
+  nsServiceManager::GetService(kCXPFCOutBoxManagerCID, kIXPFCOutBoxManagerIID, (nsISupports**)&mOutBoxManager);
+  if (mOutBoxManager) mOutBoxManager->Init();
 
   return res;
 }
@@ -233,6 +229,11 @@ nsresult nsShellInstance::Run()
 nsIXPFCDataCollectionManager * nsShellInstance::GetDataCollectionManager()
 {
   return (mDataCollectionManager) ;
+}
+
+nsIXPFCOutBoxManager * nsShellInstance::GetOutBoxManager()
+{
+  return (mOutBoxManager) ;
 }
 
 void * nsShellInstance::GetNativeInstance()
@@ -417,6 +418,8 @@ nsRepository::RegisterFactory(kCMenuCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 nsRepository::RegisterFactory(kCMenuItemCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
 nsRepository::RegisterFactory(kCXPFCDataCollectionManager, XPFC_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCXPFCOutBoxManagerCID     , XPFC_DLL, PR_FALSE, PR_FALSE);
+
 static NS_DEFINE_IID(kCParserNodeCID, NS_PARSER_NODE_IID);
 nsRepository::RegisterFactory(kCParserNodeCID, PARSER_DLL, PR_FALSE, PR_FALSE);
 

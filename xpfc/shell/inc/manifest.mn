@@ -14,6 +14,7 @@ EXPORTS = \
     nsApplicationManager.h \
     nsStreamManager.h \
     nsStreamObject.h \
+    nsXPFCOutBoxManager.h \
     nsXPFCDataCollectionManager.h \
     $(NULL)
 
