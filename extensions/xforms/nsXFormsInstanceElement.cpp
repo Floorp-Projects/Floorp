@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Brian Ryner <bryner@brianryner.com>
+ *  Olli Pettay <Olli.Pettay@helsinki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,17 +46,18 @@
 #include "nsXFormsAtoms.h"
 #include "nsString.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIDOMXMLDocument.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIXTFGenericElementWrapper.h"
 #include "nsXFormsUtils.h"
 #include "nsNetUtil.h"
 
+static const char* kLoadAsData = "loadAsData";
+
 NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInstanceElement,
                              nsXFormsStubElement,
                              nsIInstanceElementPrivate,
-                             nsIDOMLoadListener,
-                             nsIDOMEventListener)
+                             nsIStreamListener,
+                             nsIRequestObserver)
 
 nsXFormsInstanceElement::nsXFormsInstanceElement()
   : mElement(nsnull)
@@ -66,10 +68,7 @@ nsXFormsInstanceElement::nsXFormsInstanceElement()
 NS_IMETHODIMP
 nsXFormsInstanceElement::OnDestroyed()
 {
-  nsCOMPtr<nsIDOMEventReceiver> rec = do_QueryInterface(mDocument);
-  if (rec)
-    rec->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMLoadListener));
-
+  mListener = nsnull;
   mElement = nsnull;
   return NS_OK;
 }
@@ -156,55 +155,60 @@ nsXFormsInstanceElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
   return NS_OK;
 }
 
-// nsIDOMLoadListener
+// nsIStreamListener
 
 NS_IMETHODIMP
-nsXFormsInstanceElement::Load(nsIDOMEvent *aEvent)
+nsXFormsInstanceElement::OnStartRequest(nsIRequest *request, nsISupports *ctx)
 {
+  NS_ASSERTION(mListener, "No stream listener for document!");
+  return mListener->OnStartRequest(request, ctx);
+}
+
+NS_IMETHODIMP
+nsXFormsInstanceElement::OnDataAvailable(nsIRequest *aRequest,
+                                         nsISupports *ctxt,
+                                         nsIInputStream *inStr,
+                                         PRUint32 sourceOffset,
+                                         PRUint32 count)
+{
+  NS_ASSERTION(mListener, "No stream listener for document!");
+  return mListener->OnDataAvailable(aRequest, ctxt, inStr, sourceOffset, count);
+}
+
+NS_IMETHODIMP
+nsXFormsInstanceElement::OnStopRequest(nsIRequest *request, nsISupports *ctx,
+                                       nsresult status)
+{
+  NS_ASSERTION(mListener, "No stream listener for document!");
+  mListener->OnStopRequest(request, ctx, status);
+
+  PRBool succeeded = NS_SUCCEEDED(status);
+  if (!succeeded)
+    mDocument = nsnull;
+
+  if (mDocument) {
+    nsCOMPtr<nsIDOMElement> docElem;
+    mDocument->GetDocumentElement(getter_AddRefs(docElem));
+    if (docElem) {
+      nsAutoString tagName, namespaceURI;
+      docElem->GetTagName(tagName);
+      docElem->GetNamespaceURI(namespaceURI);
+  
+      if (tagName.EqualsLiteral("parsererror") &&
+          namespaceURI.EqualsLiteral("http://www.mozilla.org/newlayout/xml/parsererror.xml")) {
+        NS_WARNING("resulting instance document could not be parsed");
+        succeeded = PR_FALSE;
+        mDocument = nsnull;
+      }
+    }
+  }
+
   nsCOMPtr<nsIModelElementPrivate> model = GetModel();
-  if (model)
-    model->InstanceLoadFinished(PR_TRUE);
+  if (model) {
+    model->InstanceLoadFinished(succeeded);
+  }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::BeforeUnload(nsIDOMEvent *aEvent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::Unload(nsIDOMEvent *aEvent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::Abort(nsIDOMEvent *aEvent)
-{
-  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
-  if (model)
-    model->InstanceLoadFinished(PR_FALSE);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::Error(nsIDOMEvent *aEvent)
-{
-  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
-  if (model)
-    model->InstanceLoadFinished(PR_FALSE);
-
-  return NS_OK;
-}
-
-// nsIDOMEventListener
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::HandleEvent(nsIDOMEvent *aEvent)
-{
+  mListener = nsnull;
   return NS_OK;
 }
 
@@ -332,38 +336,46 @@ nsXFormsInstanceElement::CloneInlineInstance()
 void
 nsXFormsInstanceElement::LoadExternalInstance(const nsAString &aSrc)
 {
+  nsresult rv = NS_ERROR_FAILURE;
   // Clear out our existing instance data
-  if (NS_FAILED(CreateInstanceDocument()))
-    return;
+  if (NS_SUCCEEDED(CreateInstanceDocument())) {
+    nsCOMPtr<nsIDocument> newDoc = do_QueryInterface(mDocument);
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
-  if (!doc)
-    return;
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+    if (doc) {
+      nsCOMPtr<nsIURI> uri;
+      NS_NewURI(getter_AddRefs(uri), aSrc, doc->GetDocumentCharacterSet().get(),
+                doc->GetDocumentURI());
+      if (uri) {
+        if (nsXFormsUtils::CheckSameOrigin(doc->GetDocumentURI(), uri)) {
+          nsCOMPtr<nsILoadGroup> loadGroup;
+          loadGroup = doc->GetDocumentLoadGroup();
+          NS_WARN_IF_FALSE(loadGroup, "No load group!");
 
-  nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), aSrc, doc->GetDocumentCharacterSet().get(),
-            doc->GetDocumentURI());
-  if (!uri)
-    return;
+          // Using the same load group as the main document and creating
+          // the channel with LOAD_NORMAL flag delays the dispatching of
+          // the 'load' event until all instance data documents have been loaded.
+          nsCOMPtr<nsIChannel> docChannel;
+          NS_NewChannel(getter_AddRefs(docChannel), uri, nsnull, loadGroup,
+                        nsnull, nsIRequest::LOAD_NORMAL);
 
-  PRBool success = PR_FALSE;
-
-  if (nsXFormsUtils::CheckSameOrigin(doc->GetDocumentURI(), uri)) {
-    nsCOMPtr<nsIDOMEventReceiver> rec = do_QueryInterface(mDocument);
-    rec->AddEventListenerByIID(this, NS_GET_IID(nsIDOMLoadListener));
-
-    nsCOMPtr<nsIDOMXMLDocument> xmlDoc = do_QueryInterface(mDocument);
-    NS_ASSERTION(xmlDoc, "we created a document but it's not an XMLDocument?");
-
-    nsCAutoString spec;
-    uri->GetSpec(spec);
-    xmlDoc->Load(NS_ConvertUTF8toUTF16(spec), &success);
+          if (docChannel) {
+            rv = newDoc->StartDocumentLoad(kLoadAsData, docChannel, loadGroup, nsnull,
+                                           getter_AddRefs(mListener), PR_TRUE);
+            if (NS_SUCCEEDED(rv))
+              rv = docChannel->AsyncOpen(this, nsnull);
+          }
+        }
+      }
+    }
   }
 
   nsCOMPtr<nsIModelElementPrivate> model = GetModel();
   if (model) {
     model->InstanceLoadStarted();
-    if (!success) {
+    if (NS_FAILED(rv)) {
       model->InstanceLoadFinished(PR_FALSE);
     }
   }

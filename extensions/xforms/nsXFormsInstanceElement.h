@@ -42,9 +42,10 @@
 #include "nsXFormsStubElement.h"
 #include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMLoadListener.h"
 #include "nsIModelElementPrivate.h"
 #include "nsIInstanceElementPrivate.h"
+#include "nsIRequestObserver.h"
+#include "nsIStreamListener.h"
 
 class nsIDOMElement;
 
@@ -56,11 +57,13 @@ class nsIDOMElement;
 
 class nsXFormsInstanceElement : public nsXFormsStubElement,
                                 public nsIInstanceElementPrivate,
-                                public nsIDOMLoadListener
+                                public nsIStreamListener
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIINSTANCEELEMENTPRIVATE
+  NS_DECL_NSISTREAMLISTENER
 
   // nsIXTFGenericElement overrides
   NS_IMETHOD OnDestroyed();
@@ -70,16 +73,6 @@ public:
   NS_IMETHOD DoneAddingChildren();
   NS_IMETHOD OnCreated(nsIXTFGenericElementWrapper *aWrapper);
 
-  // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
-
-  // nsIDOMLoadListener
-  NS_IMETHOD Load(nsIDOMEvent *aEvent);
-  NS_IMETHOD BeforeUnload(nsIDOMEvent *aEvent);
-  NS_IMETHOD Unload(nsIDOMEvent *aEvent);
-  NS_IMETHOD Abort(nsIDOMEvent *aEvent);
-  NS_IMETHOD Error(nsIDOMEvent *aEvent);
-
   nsXFormsInstanceElement() NS_HIDDEN;
 
 private:
@@ -88,10 +81,11 @@ private:
   NS_HIDDEN_(nsresult) CreateInstanceDocument();
   NS_HIDDEN_(already_AddRefed<nsIModelElementPrivate>) GetModel();
 
-  nsCOMPtr<nsIDOMDocument>  mDocument;
-  nsCOMPtr<nsIDOMDocument>  mOriginalDocument;
-  nsIDOMElement            *mElement;
-  PRBool                    mIgnoreAttributeChanges;
+  nsCOMPtr<nsIDOMDocument>    mDocument;
+  nsCOMPtr<nsIDOMDocument>    mOriginalDocument;
+  nsIDOMElement              *mElement;
+  nsCOMPtr<nsIStreamListener> mListener;
+  PRBool                      mIgnoreAttributeChanges;
 };
 
 NS_HIDDEN_(nsresult)
