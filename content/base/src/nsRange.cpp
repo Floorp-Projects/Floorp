@@ -1170,7 +1170,7 @@ nsresult nsRange::SelectNode(nsIDOMNode* aN)
 
   if (!aN) return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMNode> parent;
-  nsCOMPtr<nsIDOMNode> theNode( do_QueryInterface(aN) );
+  PRInt32 start, end;
 
   PRUint16 type = 0;
   aN->GetNodeType(&type);
@@ -1184,10 +1184,31 @@ nsresult nsRange::SelectNode(nsIDOMNode* aN)
       return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
   }
 
-  nsresult res = aN->GetParentNode(getter_AddRefs(parent));
-  if (NS_FAILED(res) || !parent) return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
-  PRInt32 indx = IndexOf(theNode);
-  return DoSetRange(parent,indx,parent,indx+1);
+  nsresult res;
+  res = aN->GetParentNode(getter_AddRefs(parent));
+  if(NS_SUCCEEDED(res) && parent)
+  {
+    nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(parent));
+    if(doc)
+    {
+      nsCOMPtr<nsIContent>content(do_QueryInterface(aN));
+      if(!content)
+        return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
+      parent = aN;//parent is now equal to the node you passed in
+      // which is the root.  start is zero, end is the number of children
+      start = 0;
+      res = content->ChildCount(end);
+      if (NS_FAILED(res))
+        return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
+    }
+    else
+    {
+      start = IndexOf(aN);
+      end = start + 1;
+    }
+    return DoSetRange(parent,start,parent,end);
+  }
+  return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
 }
 
 nsresult nsRange::SelectNodeContents(nsIDOMNode* aN)
