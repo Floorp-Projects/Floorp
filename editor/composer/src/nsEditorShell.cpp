@@ -280,7 +280,6 @@ nsEditorShell::nsEditorShell()
 ,  mEditorController(nsnull)
 ,  mDocShell(nsnull)
 ,  mContentAreaDocShell(nsnull)
-,  mInitted(PR_FALSE)
 ,  mCloseWindowWhenLoaded(PR_FALSE)
 ,  mCantEditReason(eCantEditNoReason)
 ,  mEditorType(eUninitializedEditorType)
@@ -289,6 +288,7 @@ nsEditorShell::nsEditorShell()
 ,  mWrapColumn(0)
 ,  mSuggestedWordIndex(0)
 ,  mDictionaryIndex(0)
+,  mEditorTypeString(NS_LITERAL_STRING("html"))
 {
   //TODO:Save last-used display mode in prefs so new window inherits?
   NS_INIT_REFCNT();
@@ -309,22 +309,6 @@ NS_IMPL_ISUPPORTS5(nsEditorShell,
                    nsIURIContentListener, 
                    nsIEditorSpellCheck, 
                    nsISupportsWeakReference);
-
-NS_IMETHODIMP    
-nsEditorShell::Init()
-{
-  NS_ASSERTION(!mInitted, "Double init of nsEditorShell detected");
-  if (mInitted)
-    return NS_OK;
-  
-  nsAutoString    editorType; editorType.AssignWithConversion("html");      // default to creating HTML editor
-  mEditorTypeString = editorType;
-  mEditorTypeString.ToLowerCase();
-
-  mInitted = PR_TRUE;
-  
-  return NS_OK;
-}
 
 NS_IMETHODIMP    
 nsEditorShell::Shutdown()
