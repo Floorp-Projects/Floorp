@@ -159,6 +159,7 @@ class nsWidget : public nsBaseWidget
     PRBool            DispatchWindowEvent(nsGUIEvent* event);
     static PRBool     SetInstance( PtWidget_t *pWidget, nsWidget * inst );
     static nsWidget*  GetInstance( PtWidget_t *pWidget );
+    void              RemoveDamagedWidget(PtWidget_t *aWidget);
     void              QueueWidgetDamage();
     void              UpdateWidgetDamage();
     static int        WorkProc( void *data );

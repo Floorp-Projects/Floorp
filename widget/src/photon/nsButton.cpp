@@ -57,7 +57,7 @@ nsButton::nsButton() : nsWidget(), nsIButton()
 //-------------------------------------------------------------------------
 nsButton::~nsButton()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsButton::~nsButton - Not Implemented!\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsButton::~nsButton this=<%p> - Not Implemented!\n", this));
 }
 
 //-------------------------------------------------------------------------
