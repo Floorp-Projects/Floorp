@@ -150,7 +150,7 @@
     <command id="cmd_delete"/>
     <command id="cmd_selectAll"/>
 
-    <command id="cmd_preferences"/>
+    <command id="cmd_preferences"   oncommand="goDoCommand('cmd_preferences')"/>
 
     <command id="cmd_find"          oncommand="goDoCommand('cmd_find')"/>
     <command id="cmd_findNext"      oncommand="goDoCommand('cmd_findNext')"   value="&findAgainCmd.label;"/>
