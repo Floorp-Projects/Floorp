@@ -42,6 +42,9 @@
 #        include <stdlib.h>
 #        include <windows.h>
 #    endif
+#    ifdef XP_UNIX
+#        include <stdlib.h>
+#    endif
 #endif
 
 namespace JS = JavaScript;
