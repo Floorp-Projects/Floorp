@@ -290,20 +290,6 @@ js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
 		 ptrdiff_t top);
 
 /*
- * Emit a break instruction, recording it for backpatching.
- */
-extern ptrdiff_t
-js_EmitBreak(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *stmt,
-	     JSAtomListElement *label);
-
-/*
- * Emit a continue instruction, recording it for backpatching.
- */
-extern ptrdiff_t
-js_EmitContinue(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *stmt,
-		JSAtomListElement *label);
-
-/*
  * Pop tc->topStmt.  If the top JSStmtInfo struct is not stack-allocated, it
  * is up to the caller to free it.
  */

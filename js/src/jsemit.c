@@ -1300,6 +1300,9 @@ EmitGoto(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
                                  (ptrdiff_t) ALE_INDEX(label))) {
             return -1;
         }
+    } else if (noteType != SRC_NULL) {
+        if (js_NewSrcNote(cx, cg, noteType) < 0)
+            return -1;
     }
 
     EMIT_BACKPATCH_OP(cx, cg, *last, JSOP_BACKPATCH, jmp);
@@ -1328,20 +1331,6 @@ BackPatch(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t last,
         pc -= delta;
     }
     return JS_TRUE;
-}
-
-ptrdiff_t
-js_EmitBreak(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *stmt,
-             JSAtomListElement *label)
-{
-    return EmitGoto(cx, cg, stmt, &stmt->breaks, label, SRC_BREAK2LABEL);
-}
-
-ptrdiff_t
-js_EmitContinue(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *stmt,
-                JSAtomListElement *label)
-{
-    return EmitGoto(cx, cg, stmt, &stmt->continues, label, SRC_CONT2LABEL);
 }
 
 extern void
@@ -1821,6 +1810,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     JSAtomListElement *ale;
     jsatomid atomIndex;
     intN noteIndex;
+    JSSrcNoteType noteType;
     JSOp op;
     uint32 argc;
 
@@ -2681,12 +2671,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             while (stmt->type != STMT_LABEL || stmt->label != atom)
                 stmt = stmt->down;
+            noteType = SRC_BREAK2LABEL;
         } else {
             ale = NULL;
             while (!STMT_IS_LOOP(stmt) && stmt->type != STMT_SWITCH)
                 stmt = stmt->down;
+            noteType = SRC_NULL;
         }
-        if (js_EmitBreak(cx, cg, stmt, ale) < 0)
+
+        if (EmitGoto(cx, cg, stmt, &stmt->breaks, ale, noteType) < 0)
             return JS_FALSE;
         break;
 
@@ -2705,14 +2698,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 stmt = stmt->down;
             }
             stmt = loop;
+            noteType = SRC_CONT2LABEL;
         } else {
             ale = NULL;
             while (!STMT_IS_LOOP(stmt))
                 stmt = stmt->down;
-            if (js_NewSrcNote(cx, cg, SRC_CONTINUE) < 0)
-                return JS_FALSE;
+            noteType = SRC_CONTINUE;
         }
-        if (js_EmitContinue(cx, cg, stmt, ale) < 0)
+
+        if (EmitGoto(cx, cg, stmt, &stmt->continues, ale, noteType) < 0)
             return JS_FALSE;
         break;
 
@@ -2839,7 +2833,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
                     /* Compensate for the [leavewith]. */
                     cg->stackDepth++;
-                    JS_ASSERT(cg->stackDepth <= cg->maxStackDepth);
+                    JS_ASSERT((uintN) cg->stackDepth <= cg->maxStackDepth);
 
                     if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
                         js_Emit1(cx, cg, JSOP_LEAVEWITH) < 0) {
@@ -2960,7 +2954,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
                 /* Compensate for the [leavewith]. */
                 cg->stackDepth++;
-                JS_ASSERT(cg->stackDepth <= cg->maxStackDepth);
+                JS_ASSERT((uintN) cg->stackDepth <= cg->maxStackDepth);
 
                 if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
                     js_Emit1(cx, cg, JSOP_LEAVEWITH) < 0) {
