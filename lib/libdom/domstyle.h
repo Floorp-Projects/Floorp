@@ -22,7 +22,7 @@
  */
 
 #include "jsapi.h"
-#include "dom_priv.h"
+#include "dom.h"
 #include "plhash.h"
 
 #ifndef DOM_STYLE_H

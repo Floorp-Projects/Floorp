@@ -17,6 +17,7 @@
  */
 
 #include "domstyle.h"
+#include "dom_priv.h"
 
 static int
 CompareSelectors(const void *v1, const void *v2)
