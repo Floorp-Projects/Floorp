@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.40 $ $Date: 2002/03/07 20:42:40 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.41 $ $Date: 2002/03/07 22:07:58 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -826,13 +826,19 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc, PRBool forced
     NSSTrust *nssTrust;
     NSSCryptoContext *context = c->object.cryptoContext;
     nssCryptokiInstance *instance = get_cert_instance(c);
+    NSSUTF8 *stanNick;
+    if (instance) {
+	stanNick = instance->label;
+    } else if (context) {
+	stanNick = c->object.tempName;
+    }
     /* fill other fields needed by NSS3 functions using CERTCertificate */
-    if ((!cc->nickname && c->nickname) || forced) {
+    if ((!cc->nickname && stanNick) || forced) {
 	PRStatus nssrv;
 	int nicklen, tokenlen, len;
 	NSSUTF8 *tokenName = NULL;
 	char *nick;
-	nicklen = nssUTF8_Size(c->nickname, &nssrv);
+	nicklen = nssUTF8_Size(stanNick, &nssrv);
 	if (instance && !PK11_IsInternal(instance->token->pk11slot)) {
 	    tokenName = nssToken_GetName(instance->token);
 	    tokenlen = nssUTF8_Size(tokenName, &nssrv);
@@ -848,7 +854,7 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc, PRBool forced
 	    nick += tokenlen-1;
 	    *nick++ = ':';
 	}
-	memcpy(nick, c->nickname, nicklen-1);
+	memcpy(nick, stanNick, nicklen-1);
 	cc->nickname[len-1] = '\0';
     }
     if (context) {
@@ -976,12 +982,6 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
 	nssItem_Create(arena, &c->serial, derSerial.len, derSerial.data);
 	PORT_Free(derSerial.data);
     }
-    if (cc->nickname) {
-	c->nickname = nssUTF8_Create(arena,
-                                     nssStringType_UTF8String,
-                                     (NSSUTF8 *)cc->nickname,
-                                     PORT_Strlen(cc->nickname));
-    }
     if (cc->emailAddr) {
         c->email = nssUTF8_Create(arena,
                                   nssStringType_PrintableString,
@@ -993,6 +993,12 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
 	instance->token = PK11Slot_GetNSSToken(cc->slot);
 	instance->handle = cc->pkcs11ID;
 	instance->isTokenObject = PR_TRUE;
+	if (cc->nickname) {
+	    instance->label = nssUTF8_Create(arena,
+	                                     nssStringType_UTF8String,
+	                                     (NSSUTF8 *)cc->nickname,
+	                                     PORT_Strlen(cc->nickname));
+	}
 	nssList_Add(c->object.instanceList, instance);
 	/* XXX Fix this! */
 	nssListIterator_Destroy(c->object.instances);
@@ -1078,7 +1084,8 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 	    /* this is kind of hacky.  the softoken needs the cert
 	     * object in order to store trust.  forcing it to be perm
 	     */
-	    nssrv = nssToken_ImportCertificate(tok, NULL, c, PR_TRUE);
+	    NSSUTF8 *nickname = NSSCertificate_GetNickname(c, NULL);
+	    nssrv = nssToken_ImportCertificate(tok, NULL, c, nickname, PR_TRUE);
 	    if (nssrv != PR_SUCCESS) return nssrv;
 	}
 	nssrv = nssToken_ImportTrust(tok, NULL, nssTrust, PR_TRUE);

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.27 $ $Date: 2002/03/04 21:06:10 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.28 $ $Date: 2002/03/07 22:08:00 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -308,11 +308,12 @@ remove_nickname_entry
 )
 {
     PRStatus nssrv;
-    if (cert->nickname) {
-	nssHash_Remove(cache->nickname, cert->nickname);
+    NSSUTF8 *nickname = NSSCertificate_GetNickname(cert, NULL);
+    if (nickname) {
+	nssHash_Remove(cache->nickname, nickname);
 	nssrv = PR_SUCCESS;
 #ifdef DEBUG_CACHE
-	PR_LOG(s_log, PR_LOG_DEBUG, ("removed nickname %s", cert->nickname));
+	PR_LOG(s_log, PR_LOG_DEBUG, ("removed nickname %s", nickname));
 #endif
     } else {
 	nssrv = PR_FAILURE;
@@ -561,8 +562,9 @@ add_nickname_entry
 )
 {
     PRStatus nssrv = PR_SUCCESS;
+    NSSUTF8 *certNickname = NSSCertificate_GetNickname(cert, NULL);
     cache_entry *ce;
-    ce = (cache_entry *)nssHash_Lookup(cache->nickname, cert->nickname);
+    ce = (cache_entry *)nssHash_Lookup(cache->nickname, certNickname);
     if (ce) {
 	/* This is a collision.  A nickname entry already exists for this
 	 * subject, but a subject entry didn't.  This would imply there are
@@ -575,7 +577,7 @@ add_nickname_entry
 	if (!ce) {
 	    return PR_FAILURE;
 	}
-	nickname = nssUTF8_Duplicate(cert->nickname, arena);
+	nickname = nssUTF8_Duplicate(certNickname, arena);
 	if (!nickname) {
 	    return PR_FAILURE;
 	}
@@ -696,7 +698,8 @@ add_cert_to_cache
     /* If a new subject entry was created, also need nickname and/or email */
     if (subjectList != NULL) {
 	PRBool handle = PR_FALSE;
-	if (cert->nickname) {
+	NSSUTF8 *certNickname = NSSCertificate_GetNickname(cert, NULL);
+	if (certNickname) {
 	    nssrv = add_nickname_entry(arena, td->cache, cert, subjectList);
 	    if (nssrv != PR_SUCCESS) {
 		goto loser;

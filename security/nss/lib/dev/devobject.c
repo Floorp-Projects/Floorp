@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.19 $ $Date: 2002/03/04 17:13:52 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.20 $ $Date: 2002/03/07 22:07:49 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -291,7 +291,15 @@ create_cryptoki_instance
   PRBool isTokenObject
 )
 {
+    PRStatus nssrv;
     nssCryptokiInstance *instance;
+    CK_ATTRIBUTE cert_template = { CKA_LABEL, NULL, 0 };
+    nssrv = nssCKObject_GetAttributes(h, &cert_template, 1,
+                                      arena, t->defaultSession, t->slot);
+    if (nssrv != PR_SUCCESS) {
+	/* a failure here indicates a device error */
+	return NULL;
+    }
     instance = nss_ZNEW(arena, nssCryptokiInstance);
     if (!instance) {
 	return NULL;
@@ -299,6 +307,7 @@ create_cryptoki_instance
     instance->handle = h;
     instance->token = t;
     instance->isTokenObject = isTokenObject;
+    NSS_CK_ATTRIBUTE_TO_UTF8(&cert_template, instance->label);
     return instance;
 }
 
@@ -355,7 +364,6 @@ get_token_cert
 	{ CKA_VALUE,            NULL, 0 },
 	{ CKA_ISSUER,           NULL, 0 },
 	{ CKA_SERIAL_NUMBER,    NULL, 0 },
-	{ CKA_LABEL,            NULL, 0 },
 	{ CKA_SUBJECT,          NULL, 0 },
 	{ CKA_NETSCAPE_EMAIL,   NULL, 0 }
     };
@@ -386,9 +394,8 @@ get_token_cert
     NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[2], &rvCert->encoding);
     NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[3], &rvCert->issuer);
     NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[4], &rvCert->serial);
-    NSS_CK_ATTRIBUTE_TO_UTF8(&cert_template[5],  rvCert->nickname);
-    NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[6], &rvCert->subject);
-    NSS_CK_ATTRIBUTE_TO_UTF8(&cert_template[7],  rvCert->email);
+    NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[5], &rvCert->subject);
+    NSS_CK_ATTRIBUTE_TO_UTF8(&cert_template[6],  rvCert->email);
     /* XXX this would be better accomplished by dividing attributes to
      * retrieve into "required" and "optional"
      */
@@ -444,6 +451,7 @@ nssToken_ImportCertificate
   NSSToken *tok,
   nssSession *sessionOpt,
   NSSCertificate *cert,
+  NSSUTF8 *nickname,
   PRBool asTokenObject
 )
 {
@@ -462,7 +470,7 @@ nssToken_ImportCertificate
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS,            &g_ck_class_cert);
     NSS_CK_SET_ATTRIBUTE_VAR( attr, CKA_CERTIFICATE_TYPE,  cert_type);
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_ID,               &cert->id);
-    NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_LABEL,             cert->nickname);
+    NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_LABEL,             nickname);
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_VALUE,            &cert->encoding);
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_ISSUER,           &cert->issuer);
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SUBJECT,          &cert->subject);

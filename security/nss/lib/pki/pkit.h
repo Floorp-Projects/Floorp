@@ -35,7 +35,7 @@
 #define PKIT_H
 
 #ifdef DEBUG
-static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.10 $ $Date: 2002/02/04 22:34:22 $ $Name:  $";
+static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.11 $ $Date: 2002/03/07 22:07:59 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -108,6 +108,8 @@ struct nssPKIObjectBaseStr
     NSSTrustDomain *trustDomain;
     /* The object may live in a crypto context */
     NSSCryptoContext *cryptoContext;
+    /* XXX added so temp certs can have nickname, think more ... */
+    NSSUTF8 *tempName;
 };
 
 struct NSSTrustStr 
@@ -139,7 +141,6 @@ struct NSSCertificateStr
     NSSDER issuer;
     NSSDER subject;
     NSSDER serial;
-    NSSUTF8 *nickname;
     NSSASCII7 *email;
     nssDecodedCert *decoding;
 };

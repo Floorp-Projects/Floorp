@@ -35,7 +35,7 @@
 #define DEV_H
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.19 $ $Date: 2002/03/04 17:17:47 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.20 $ $Date: 2002/03/07 22:07:48 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVT_H
@@ -268,6 +268,7 @@ nssToken_ImportCertificate
   NSSToken *tok,
   nssSession *sessionOpt,
   NSSCertificate *cert,
+  NSSUTF8 *nickname,
   PRBool asTokenObject
 );
  

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.32 $ $Date: 2002/03/07 20:42:39 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.33 $ $Date: 2002/03/07 22:07:55 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -90,6 +90,39 @@ NSSCertificate_Destroy
 	}
     }
     return PR_SUCCESS;
+}
+
+NSS_IMPLEMENT NSSUTF8 *
+NSSCertificate_GetNickname
+(
+  NSSCertificate *c,
+  NSSToken *tokenOpt
+)
+{
+    NSSUTF8 *rvNick = NULL;
+    nssCryptokiInstance *instance;
+    nssListIterator *instances = c->object.instances;
+    if (c->object.cryptoContext) {
+	return c->object.tempName;
+    }
+    for (instance  = (nssCryptokiInstance *)nssListIterator_Start(instances);
+         instance != (nssCryptokiInstance *)NULL;
+         instance  = (nssCryptokiInstance *)nssListIterator_Next(instances)) 
+    {
+	if (tokenOpt) {
+	    if (instance->token == tokenOpt) {
+		/* take the nickname on the given token */
+		rvNick = instance->label;
+		break;
+	    }
+	} else {
+	    /* take the first one */
+	    rvNick = instance->label;
+	    break;
+	}
+    }
+    nssListIterator_Finish(instances);
+    return rvNick;
 }
 
 NSS_IMPLEMENT PRStatus

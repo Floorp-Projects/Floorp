@@ -35,7 +35,7 @@
 #define DEVT_H
 
 #ifdef DEBUG
-static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.11 $ $Date: 2002/02/27 21:36:19 $ $Name:  $";
+static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.12 $ $Date: 2002/03/07 22:07:50 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -171,6 +171,7 @@ struct nssCryptokiInstanceStr
     CK_OBJECT_HANDLE handle;
     NSSToken *token;
     PRBool isTokenObject;
+    NSSUTF8 *label;
 };
 
 typedef struct nssTokenCertSearchStr nssTokenCertSearch;
