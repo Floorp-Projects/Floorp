@@ -46,9 +46,9 @@ class nsPresContext;
  * Event listener manager interface.
  */
 #define NS_IPRIVATEDOMEVENT_IID \
-{ /* 80a98c80-2036-11d2-bd89-00805f8ae3f4 */ \
-0x80a98c80, 0x2036, 0x11d2, \
-{0xbd, 0x89, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
+{ /* 25e6626c-8e54-409b-87b5-2beceaac399e */ \
+0x25e6626c, 0x8e54, 0x409b, \
+{0x87, 0xb5, 0x2b, 0xec, 0xea, 0xac, 0x39, 0x9e} }
 
 class nsIDOMEventTarget;
 class nsIDOMEvent;
@@ -66,7 +66,6 @@ public:
   NS_IMETHOD IsDispatchStopped(PRBool* aIsDispatchPrevented) = 0;
   NS_IMETHOD GetInternalNSEvent(nsEvent** aNSEvent) = 0;
   NS_IMETHOD HasOriginalTarget(PRBool* aResult)=0;
-  NS_IMETHOD IsTrustedEvent(PRBool* aResult)=0;
   NS_IMETHOD SetTrusted(PRBool aTrusted)=0;
 };
 

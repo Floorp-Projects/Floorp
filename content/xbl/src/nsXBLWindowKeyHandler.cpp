@@ -46,7 +46,7 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIPrivateDOMEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsXBLService.h"
 #include "nsIServiceManager.h"
 #include "nsHTMLAtoms.h"
@@ -124,14 +124,16 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
   if (prevent)
     return NS_OK;
 
-  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aKeyEvent);
-  if (privateEvent) {
+  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aKeyEvent);
+  PRBool trustedEvent = PR_FALSE;
+
+  if (domNSEvent) {
     //Don't process the event if it was not dispatched from a trusted source
-    PRBool trustedEvent;
-    privateEvent->IsTrustedEvent(&trustedEvent);
-    if (!trustedEvent)
-      return NS_OK;    
+    domNSEvent->GetIsTrusted(&trustedEvent);
   }
+
+  if (!trustedEvent)
+    return NS_OK;
 
   // Make sure our event is really a key event
   nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aKeyEvent));

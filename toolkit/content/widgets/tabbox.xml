@@ -114,6 +114,11 @@
       <![CDATA[({
         tabbox: this,
         handleEvent: function handleEvent(event) {
+          if (!event.isTrusted) {
+            // Don't let untrusted events mess with tabs.
+            return;
+          }
+
           switch (event.keyCode) {
             case event.DOM_VK_TAB:
               if (event.ctrlKey && !event.altKey && !event.metaKey)

@@ -44,7 +44,6 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMNSUIEvent.h"
-#include "nsIDOMNSEvent.h"
 #include "nsGUIEvent.h"
 
 // Drag & Drop, Clipboard
@@ -52,7 +51,7 @@
 #include "nsWidgetsCID.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMKeyEvent.h"
-#include "nsIPrivateDOMEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
@@ -173,15 +172,15 @@ nsMenuListener::KeyPress(nsIDOMEvent* aKeyEvent)
   }
   
   //handlers shouldn't be triggered by non-trusted events.
-  if (aKeyEvent) {
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aKeyEvent);
-    if (privateEvent) {
-      PRBool trustedEvent;
-      privateEvent->IsTrustedEvent(&trustedEvent);
-      if (!trustedEvent)
-        return NS_OK;
-    }
+  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aKeyEvent);
+  PRBool trustedEvent = PR_FALSE;
+
+  if (domNSEvent) {
+    domNSEvent->GetIsTrusted(&trustedEvent);
   }
+
+  if (!trustedEvent)
+    return NS_OK;
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   PRUint32 theChar;
