@@ -137,7 +137,6 @@ class nsBrowserInstance : public nsIBrowserInstance,
     NS_IMETHOD SetHistoryObjectForIndex(PRInt32 aIndex, nsISupports * aState);
 
   protected:
-    NS_IMETHOD DoDialog();
     NS_IMETHOD ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
     void InitializeSearch(nsIFindComponent*);
     void BeginObserving();

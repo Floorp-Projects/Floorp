@@ -6,8 +6,7 @@
         appCore.isViewSource = true;
         appCore.setContentWindow(window.frames[0]);
         appCore.setWebShellWindow(window);
-        appCore.setToolbarWindow(window);
-
+        
         // Get url whose source to view.
         var url = window.arguments[0];
     

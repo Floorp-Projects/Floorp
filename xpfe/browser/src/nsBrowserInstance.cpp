@@ -152,8 +152,6 @@ static nsresult setAttribute( nsIWebShell *shell,
 
 nsBrowserAppCore::nsBrowserAppCore()
 {
-  mToolbarWindow        = nsnull;
-  mToolbarScriptContext = nsnull;
   mContentWindow        = nsnull;
   mContentScriptContext = nsnull;
   mWebShellWin          = nsnull;
@@ -321,10 +319,7 @@ nsBrowserAppCore::Stop()
 	return NS_OK;
 }
 
-#ifdef ClientWallet
 
-#define WALLET_SAMPLES_URL "http://people.netscape.com/morse/wallet/samples/"
-//#define WALLET_SAMPLES_URL "http://peoplestage/morse/wallet/samples/"
 
 nsresult ProfileDirectory(nsFileSpec& dirSpec) {
   nsIFileSpec* spec = NS_LocateFileOrDirectory(
@@ -777,53 +772,6 @@ nsBrowserAppCore::ClearHistoryPopup(nsIDOMNode * aParent)
 }
 
 
-PRInt32
-newWind(char* urlName)
-{
-  nsresult rv;
-  char *  urlstr=urlName;
-
-
-  /*
-   * Create the Application Shell instance...
-   */
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  /*
-   * Post an event to the shell instance to load the AppShell 
-   * initialization routines...  
-   * 
-   * This allows the application to enter its event loop before having to 
-   * deal with GUI initialization...
-   */
-  ///write me...
-  nsIURI* url;
-  
-#ifndef NECKO
-  rv = NS_NewURL(&url, urlstr);
-#else
-  nsIURI *uri = nsnull;
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = service->NewURI(urlstr, nsnull, &uri);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-  NS_RELEASE(uri);
-#endif // NECKO
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIWebShellWindow> newWindow;
-  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, PR_TRUE,
-              NS_CHROME_ALL_CHROME, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
-              getter_AddRefs(newWindow));
-
-  NS_RELEASE(url);
-  
-  return NS_OK;
-}
 
 static void DOMWindowToWebShellWindow(
               nsIDOMWindow *DOMWindow,
@@ -845,165 +793,8 @@ static void DOMWindowToWebShellWindow(
   }
 }
 
-NS_IMETHODIMP    
-nsBrowserAppCore::WalletEditor(nsIDOMWindow* aWin)
-{
-    // (code adapted from nsToolkitCore::ShowModal. yeesh.)
-    nsresult           rv;
-    nsIAppShellService *appShell;
-    nsIWebShellWindow  *window;
 
-    window = nsnull;
-
-    nsCOMPtr<nsIURI> urlObj;
-    char *urlstr = "chrome://wallet/content/WalletEditor.xul";
-#ifndef NECKO
-    rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
-#else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsIURI *uri = nsnull;
-    rv = service->NewURI(urlstr, nsnull, &uri);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
-    NS_RELEASE(uri);
-#endif // NECKO
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
-                                    (nsISupports**) &appShell);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // Create "save to disk" nsIXULCallbacks...
-    //nsIXULWindowCallbacks *cb = new nsFindDialogCallbacks( aURL, aContentType );
-    nsIXULWindowCallbacks *cb = nsnull;
-
-    nsCOMPtr<nsIWebShellWindow> parent;
-    DOMWindowToWebShellWindow(aWin, &parent);
-    window = nsnull;
-    appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
-                              NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
-                              cb, 504, 436, &window);
-    if (window != nsnull) {
-      appShell->RunModalDialog(&window, parent, nsnull, NS_CHROME_ALL_CHROME,
-                               cb, 504, 436);
-      NS_RELEASE(window);
-    }
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-
-    return rv;
-}
-
-NS_IMETHODIMP    
-nsBrowserAppCore::SignonViewer(nsIDOMWindow* aWin)
-{
-    // (code adapted from nsToolkitCore::ShowModal. yeesh.)
-    nsresult           rv;
-    nsIAppShellService *appShell;
-    nsIWebShellWindow  *window;
-
-    window = nsnull;
-
-    nsCOMPtr<nsIURI> urlObj;
-    char * urlstr = "chrome://wallet/content/SignonViewer.xul";
-#ifndef NECKO
-    rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
-#else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsIURI *uri = nsnull;
-    rv = service->NewURI(urlstr, nsnull, &uri);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
-    NS_RELEASE(uri);
-#endif // NECKO
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
-                                    (nsISupports**) &appShell);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // Create "save to disk" nsIXULCallbacks...
-    //nsIXULWindowCallbacks *cb = new nsFindDialogCallbacks( aURL, aContentType );
-    nsIXULWindowCallbacks *cb = nsnull;
-
-    nsCOMPtr<nsIWebShellWindow> parent;
-    DOMWindowToWebShellWindow(aWin, &parent);
-    window = nsnull;
-    appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
-                                 NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
-                                 cb, 504, 436, &window);
-    if (window != nsnull) {
-      appShell->RunModalDialog(&window, parent, nsnull, NS_CHROME_ALL_CHROME,
-                               cb, 504, 436);
-      NS_RELEASE(window);
-    }
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-    return rv;
-}
-
-NS_IMETHODIMP    
-nsBrowserAppCore::CookieViewer(nsIDOMWindow* aWin)
-{
-    // (code adapted from nsToolkitCore::ShowModal. yeesh.)
-    nsresult           rv;
-    nsIAppShellService *appShell;
-    nsIWebShellWindow  *window;
-
-    window = nsnull;
-
-    nsCOMPtr<nsIURI> urlObj;
-    char *urlstr = "chrome://wallet/content/CookieViewer.xul";
-#ifndef NECKO
-    rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
-#else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsIURI *uri = nsnull;
-    rv = service->NewURI(urlstr, nsnull, &uri);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
-    NS_RELEASE(uri);
-#endif // NECKO
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
-                                    (nsISupports**) &appShell);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // Create "save to disk" nsIXULCallbacks...
-    //nsIXULWindowCallbacks *cb = new nsFindDialogCallbacks( aURL, aContentType );
-    nsIXULWindowCallbacks *cb = nsnull;
-
-    nsCOMPtr<nsIWebShellWindow> parent;
-    DOMWindowToWebShellWindow(aWin, &parent);
-    window = nsnull;
-    appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
-                              NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
-                              cb, 504, 436, &window);
-
-    if (window != nsnull) {
-      appShell->RunModalDialog(&window, parent, nsnull, NS_CHROME_ALL_CHROME,
-                               cb, 504, 436);
-      NS_RELEASE(window);
-    }
-
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-    return rv;
-}
-
+#if ClientWallet
 NS_IMETHODIMP    
 nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
 {
@@ -1162,40 +953,8 @@ nsBrowserAppCore::WalletRequestToCapture(nsIDOMWindow* aWin)
   }
 }
 
-NS_IMETHODIMP    
-nsBrowserAppCore::WalletSamples()
-{
-  /* bring up the samples in a new window */
-  mContentAreaWebShell->LoadURL(nsString(WALLET_SAMPLES_URL).GetUnicode(), nsnull, nsnull);
-  return NS_OK;
-}
-
-#else
-NS_IMETHODIMP
-nsBrowserAppCore::WalletEditor() {
-  return NS_OK;
-}
-NS_IMETHODIMP    
-nsBrowserAppCore::WalletSamples() {
-  return NS_OK;
-}
-NS_IMETHODIMP
-nsBrowserAppCore::WalletChangePassword() {
-  return NS_OK;
-}
-NS_IMETHODIMP
-nsBrowserAppCore::WalletRequestToCapture(nsIDOMWindow*) {
-  return NS_OK;
-}
-NS_IMETHODIMP
-nsBrowserAppCore::WalletQuickFillin(nsIDOMWindow*) {
-  return NS_OK;
-}
-NS_IMETHODIMP
-nsBrowserAppCore::WalletSafeFillin(nsIDOMWindow*, nsIDOMWindow*) {
-  return NS_OK;
-}
 #endif
+
 
 NS_IMETHODIMP    
 nsBrowserAppCore::LoadUrl(const PRUnichar *aUrl)
@@ -1318,22 +1077,6 @@ GetScriptContext(nsIDOMWindow * aWin) {
   return scriptContext;
 }
 
-NS_IMETHODIMP    
-nsBrowserAppCore::SetToolbarWindow(nsIDOMWindow* aWin)
-{
-  NS_PRECONDITION(aWin != nsnull, "null ptr");
-  if (! aWin)
-    return NS_ERROR_NULL_POINTER;
-
-  mToolbarWindow = aWin;
-  // NS_ADDREF(aWin);			 WE DO NOT OWN THIS
-  
-  // we do not own the script context, so don't addref it
-  nsCOMPtr<nsIScriptContext>	scriptContext = getter_AddRefs(GetScriptContext(aWin));
-  mToolbarScriptContext = scriptContext;
-
-	return NS_OK;
-}
 
 NS_IMETHODIMP    
 nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
@@ -2048,85 +1791,6 @@ cloneHistory(nsISessionHistory * aSessionHistory) {
 }
 */
 
-////////////////////////////////////////////////////////////////////////
-
-NS_IMETHODIMP    
-nsBrowserAppCore::NewWindow()
-{  
-  nsresult rv;
-  
-  char * urlstr = nsnull;
-
-  // Default URL if one was not provided in the cmdline
-  if (nsnull == urlstr)
-      urlstr = "chrome://navigator/content/";
-  else
-      fprintf(stderr, "URL to load is %s\n", urlstr);
-
-  /*
-   * Create the Application Shell instance...
-   */
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-
-  if (!NS_SUCCEEDED(rv)) return rv;
-
-  /*
-   * Post an event to the shell instance to load the AppShell 
-   * initialization routines...  
-   * 
-   * This allows the application to enter its event loop before having to 
-   * deal with GUI initialization...
-   */
-  ///write me...
-  nsIURI* url;
-
-#ifndef NECKO  
-  rv = NS_NewURL(&url, urlstr);
-#else
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsIURI *uri = nsnull;
-  rv = service->NewURI(urlstr, nsnull, &uri);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-  NS_RELEASE(uri);
-#endif // NECKO
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIWebShellWindow> newWindow;
-  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, PR_TRUE,
-              NS_CHROME_ALL_CHROME, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
-              getter_AddRefs(newWindow));
-  NS_RELEASE(url);
-  
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsBrowserAppCore::OpenWindow()
-//----------------------------------------------------------------------------------------
-{  
-  nsCOMPtr<nsIFileSpecWithUI> fileSpec(getter_AddRefs(NS_CreateFileSpecWithUI()));
-  if (!fileSpec)
-  	return NS_ERROR_FAILURE;
-
-  nsresult rv = fileSpec->ChooseInputFile(
-  	"Open File", nsIFileSpecWithUI::eAllStandardFilters, nsnull, nsnull);
-  if (NS_FAILED(rv))
-    return rv;
-  
-  char buffer[1024];
-  char* urlString;
-  rv = fileSpec->GetURLString(&urlString);
-  if (NS_FAILED(rv))
-    return rv;
-  PR_snprintf( buffer, sizeof buffer, "OpenFile(\"%s\")", urlString);
-  nsCRT::free(urlString);
-  ExecuteScript( mToolbarScriptContext, buffer );
-  return rv;
-} // nsBrowserAppCore::OpenWindow
 
 NS_IMETHODIMP    
 nsBrowserAppCore::PrintPreview()
@@ -2182,23 +1846,6 @@ nsBrowserAppCore::Close()
   return NS_OK;
 }
 
-NS_IMETHODIMP    
-nsBrowserAppCore::Exit()
-{  
-  nsIAppShellService* appShell = nsnull;
-
-  /*
-   * Create the Application Shell instance...
-   */
-  nsresult rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                             kIAppShellServiceIID,
-                                             (nsISupports**)&appShell);
-  if (NS_SUCCEEDED(rv)) {
-    appShell->Shutdown();
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-  } 
-  return NS_OK;
-}
 
 void
 nsBrowserAppCore::InitializeSearch( nsIFindComponent *finder )
@@ -2298,39 +1945,6 @@ nsBrowserAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aSc
 
 
 
-NS_IMETHODIMP    
-nsBrowserAppCore::DoDialog()
-{
-  // (adapted from nsToolkitCore)
-  nsresult           rv;
-
-  nsCOMPtr<nsIURI> urlObj;
-  char * urlstr = "resource:/res/samples/Password.html";
-#ifndef NECKO
-  rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
-#else
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsIURI *uri = nsnull;
-  rv = service->NewURI(urlstr, nsnull, &uri);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
-  NS_RELEASE(uri);
-#endif // NECKO
-  if (NS_FAILED(rv))
-    return rv;
-
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = appShell->RunModalDialog(nsnull, mWebShellWin, urlObj,
-                               NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
-                               nsnull, 300, 200);
-  return rv;
-}
 
 //----------------------------------------------------------------------
 
