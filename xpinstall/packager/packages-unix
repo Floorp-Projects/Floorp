@@ -86,6 +86,7 @@ bin/components/libnecko_cache.so
 bin/components/libnsgif.so
 bin/components/libnsjpg.so
 bin/components/libnslocale.so
+bin/components/libnsmng.so
 bin/components/libnspng.so
 bin/components/liboji.so
 bin/components/libpsmglue.so
