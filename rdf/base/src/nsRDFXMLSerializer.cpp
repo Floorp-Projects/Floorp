@@ -126,8 +126,14 @@ nsRDFXMLSerializer::Init(nsIRDFDataSource* aDataSource)
     mDataSource->GetURI(getter_Copies(mBaseURLSpec));
 
     // Add the ``RDF'' prefix, by default.
-    nsCOMPtr<nsIAtom> prefix = getter_AddRefs(NS_NewAtom("RDF"));
+    nsCOMPtr<nsIAtom> prefix;
+
+    prefix = getter_AddRefs(NS_NewAtom("RDF"));
     AddNameSpace(prefix, NS_LITERAL_STRING("http://www.w3.org/1999/02/22-rdf-syntax-ns#"));
+
+    prefix = getter_AddRefs(NS_NewAtom("NC"));
+    AddNameSpace(prefix, NS_LITERAL_STRING("http://home.netscape.com/NC-rdf#"));
+
     return NS_OK;
 }
 
@@ -370,6 +376,8 @@ nsRDFXMLSerializer::SerializeChildAssertion(nsIOutputStream* aStream,
 
     nsCOMPtr<nsIRDFResource> resource;
     nsCOMPtr<nsIRDFLiteral> literal;
+    nsCOMPtr<nsIRDFInt> number;
+    nsCOMPtr<nsIRDFDate> date;
 
     if ((resource = do_QueryInterface(aValue)) != nsnull) {
         const char *s;
@@ -384,6 +392,8 @@ static const char kRDFResource2[] = "\"/>\n";
         rdf_BlockingWrite(aStream, kRDFResource1, sizeof(kRDFResource1) - 1);
         rdf_BlockingWrite(aStream, uri);
         rdf_BlockingWrite(aStream, kRDFResource2, sizeof(kRDFResource2) - 1);
+
+        goto no_close_tag;
     }
     else if ((literal = do_QueryInterface(aValue)) != nsnull) {
         const PRUnichar *value;
@@ -394,16 +404,43 @@ static const char kRDFResource2[] = "\"/>\n";
 
         rdf_BlockingWrite(aStream, ">", 1);
         rdf_BlockingWrite(aStream, s);
-        rdf_BlockingWrite(aStream, "</", 2);
-        rdf_BlockingWrite(aStream, tag);
-        rdf_BlockingWrite(aStream, ">\n", 2);
+    }
+    else if ((number = do_QueryInterface(aValue)) != nsnull) {
+        PRInt32 value;
+        number->GetValue(&value);
+
+        nsAutoString n;
+        n.AppendInt(value);
+
+static const char kRDFParseType[] = " NC:parseType=\"Integer\">";
+        rdf_BlockingWrite(aStream, kRDFParseType, sizeof(kRDFParseType) - 1);
+        rdf_BlockingWrite(aStream, n);
+    }
+    else if ((date = do_QueryInterface(aValue)) != nsnull) {
+        PRTime value;
+        date->GetValue(&value);
+
+        nsCAutoString s;
+        rdf_FormatDate(value, s);
+
+static const char kRDFParseType[] = " NC:parseType=\"Date\">";
+        rdf_BlockingWrite(aStream, kRDFParseType, sizeof(kRDFParseType) - 1);
+        rdf_BlockingWrite(aStream, s.get(), s.Length());
     }
     else {
         // XXX it doesn't support nsIRDFResource _or_ nsIRDFLiteral???
         // We should serialize nsIRDFInt, nsIRDFDate, etc...
-        NS_ERROR("not an nsIRDFResource or nsIRDFLiteral?");
+        NS_WARNING("unknown RDF node type");
+
+static const char kRDFUnknown[] = "><!-- unknown node type -->";
+        rdf_BlockingWrite(aStream, kRDFUnknown, sizeof(kRDFUnknown) - 1);
     }
 
+    rdf_BlockingWrite(aStream, "</", 2);
+    rdf_BlockingWrite(aStream, tag);
+    rdf_BlockingWrite(aStream, ">\n", 2);
+
+ no_close_tag:
     return NS_OK;
 }
 
@@ -638,8 +675,6 @@ nsRDFXMLSerializer::SerializeMember(nsIOutputStream* aStream,
                                       nsIRDFResource* aContainer,
                                       nsIRDFNode* aMember)
 {
-    nsresult rv;
-
     // If it's a resource, then output a "<RDF:li resource=... />"
     // tag, because we'll be dumping the resource separately. (We
     // iterate thru all the resources in the datasource,
@@ -647,40 +682,72 @@ nsRDFXMLSerializer::SerializeMember(nsIOutputStream* aStream,
 
     nsCOMPtr<nsIRDFResource> resource;
     nsCOMPtr<nsIRDFLiteral> literal;
+    nsCOMPtr<nsIRDFInt> number;
+    nsCOMPtr<nsIRDFDate> date;
+
+static const char kRDFLIOpen[] = "    <RDF:li";
+    rdf_BlockingWrite(aStream, kRDFLIOpen, sizeof(kRDFLIOpen) - 1); 
 
     if ((resource = do_QueryInterface(aMember)) != nsnull) {
         const char *s;
-        if (NS_SUCCEEDED(rv = resource->GetValueConst(&s))) {
-static const char kRDFLIResource1[] = "    <RDF:li resource=\"";
+        resource->GetValueConst(&s);
+static const char kRDFLIResource1[] = " resource=\"";
 static const char kRDFLIResource2[] = "\"/>\n";
 
-            nsAutoString uri = NS_ConvertUTF8toUCS2(s);
-            rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mBaseURLSpec.get()), uri);
-            rdf_EscapeAttributeValue(uri);
+        nsAutoString uri = NS_ConvertUTF8toUCS2(s);
+        rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mBaseURLSpec.get()), uri);
+        rdf_EscapeAttributeValue(uri);
 
-            rdf_BlockingWrite(aStream, kRDFLIResource1, sizeof(kRDFLIResource1) - 1);
-            rdf_BlockingWrite(aStream, uri);
-            rdf_BlockingWrite(aStream, kRDFLIResource2, sizeof(kRDFLIResource2) - 1);
-        }
+        rdf_BlockingWrite(aStream, kRDFLIResource1, sizeof(kRDFLIResource1) - 1);
+        rdf_BlockingWrite(aStream, uri);
+        rdf_BlockingWrite(aStream, kRDFLIResource2, sizeof(kRDFLIResource2) - 1);
+
+        goto no_close_tag;
     }
     else if ((literal = do_QueryInterface(aMember)) != nsnull) {
         const PRUnichar *value;
-        if (NS_SUCCEEDED(rv = literal->GetValueConst(&value))) {
-static const char kRDFLILiteral1[] = "    <RDF:li>";
-static const char kRDFLILiteral2[] = "</RDF:li>\n";
+        literal->GetValueConst(&value);
 
-            rdf_BlockingWrite(aStream, kRDFLILiteral1, sizeof(kRDFLILiteral1) - 1);
+        nsAutoString s(value);
+        rdf_EscapeAmpersandsAndAngleBrackets(s);
 
-            nsAutoString s(value);
-            rdf_EscapeAmpersandsAndAngleBrackets(s);
+        rdf_BlockingWrite(aStream, s);
+    }
+    else if ((number = do_QueryInterface(aMember)) != nsnull) {
+        PRInt32 value;
+        number->GetValue(&value);
 
-            rdf_BlockingWrite(aStream, s);
-            rdf_BlockingWrite(aStream, kRDFLILiteral2, sizeof(kRDFLILiteral2) - 1);
-        }
+        nsAutoString n;
+        n.AppendInt(value);
+
+static const char kRDFParseType[] = " NC:parseType=\"Integer\">";
+        rdf_BlockingWrite(aStream, kRDFParseType, sizeof(kRDFParseType) - 1);
+        rdf_BlockingWrite(aStream, n);
+    }
+    else if ((date = do_QueryInterface(aMember)) != nsnull) {
+        PRTime value;
+        date->GetValue(&value);
+
+        nsCAutoString s;
+        rdf_FormatDate(value, s);
+
+static const char kRDFParseType[] = " NC:parseType=\"Date\">";
+        rdf_BlockingWrite(aStream, kRDFParseType, sizeof(kRDFParseType) - 1);
+        rdf_BlockingWrite(aStream, s.get(), s.Length());
     }
     else {
-        NS_ERROR("uhh -- it's not a literal or a resource?");
+        // XXX it doesn't support nsIRDFResource _or_ nsIRDFLiteral???
+        // We should serialize nsIRDFInt, nsIRDFDate, etc...
+        NS_WARNING("unknown RDF node type");
+
+static const char kRDFUnknown[] = "><!-- unknown node type -->";
+        rdf_BlockingWrite(aStream, kRDFUnknown, sizeof(kRDFUnknown) - 1);
     }
+
+static const char kRDFLIClose[] = "</RDF:li>\n";
+    rdf_BlockingWrite(aStream, kRDFLIClose, sizeof(kRDFLIClose) - 1);
+
+ no_close_tag:
     return NS_OK;
 }
 

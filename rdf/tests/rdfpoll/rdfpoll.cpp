@@ -187,6 +187,8 @@ rdf_WriteOp(const char* aOp,
 
     nsCOMPtr<nsIRDFResource> resource;
     nsCOMPtr<nsIRDFLiteral> literal;
+    nsCOMPtr<nsIRDFDate> date;
+    nsCOMPtr<nsIRDFInt> number;
 
     printf("%.8s [%s]\n", aOp, (const char*) source);
     printf("       --[%s]--\n", (const char*) property);
@@ -210,6 +212,31 @@ rdf_WriteOp(const char* aOp,
         printf("       ->\"%s\"\n", p);
 
         nsCRT::free(p);
+    }
+    else if ((date = do_QueryInterface(aTarget)) != nsnull) {
+        PRTime value;
+        date->GetValue(&value);
+
+        PRExplodedTime t;
+        PR_ExplodeTime(value, PR_GMTParameters, &t);
+
+        printf("       -> %02d/%02d/%04d %02d:%02d:%02d +%06d\n",
+               t.tm_month + 1,
+               t.tm_mday,
+               t.tm_year,
+               t.tm_hour,
+               t.tm_min,
+               t.tm_sec,
+               t.tm_usec);
+    }
+    else if ((number = do_QueryInterface(aTarget)) != nsnull) {
+        PRInt32 value;
+        number->GetValue(&value);
+
+        printf("       -> %d\n", value);
+    }
+    else {
+        printf("       -> (unknown node type)\n");
     }
 
     printf("\n");

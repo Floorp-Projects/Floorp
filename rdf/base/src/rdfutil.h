@@ -56,6 +56,7 @@
 
 #include "prtypes.h"
 
+class nsACString;
 class nsCString;
 class nsString;
 class nsIURI;
@@ -74,6 +75,12 @@ rdf_MakeAbsoluteURI(nsIURI* aBaseURL, nsString& aURI);
 
 nsresult
 rdf_MakeAbsoluteURI(nsIURI* aBaseURL, nsCString& aURI);
+
+void
+rdf_FormatDate(PRTime aTime, nsACString &aResult);
+
+PRTime
+rdf_ParseDate(const nsACString &aTime);
 
 #endif // rdfutil_h__
 
