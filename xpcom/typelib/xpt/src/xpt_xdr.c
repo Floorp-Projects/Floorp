@@ -32,7 +32,7 @@ CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, PRUint32 len,
 #define CURS_POOL_OFFSET_RAW(cursor)                                          \
   ((cursor)->pool == XPT_HEADER                                               \
    ? (cursor)->offset                                                         \
-   : (XPT_ASSERT((cursor)->state->data_offset),                                \
+   : (XPT_ASSERT((cursor)->state->data_offset),                               \
       (cursor)->offset + (cursor)->state->data_offset))
 
 #define CURS_POOL_OFFSET(cursor)                                              \
@@ -42,7 +42,7 @@ CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, PRUint32 len,
 #define CURS_POINT(cursor)                                                    \
   ((cursor)->state->pool->data[CURS_POOL_OFFSET(cursor)])
 
-#ifdef DEBUG_shaver
+#if defined(DEBUG_shaver) || defined(DEBUG_jband) || defined(DEBUG_mccabe)
 #define DBG(x) printf##x
 #else
 #define DBG(x) (0)
@@ -61,7 +61,8 @@ CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, PRUint32 len,
  /* if we're in the data area and we're about to exceed the allocation */     \
  (CURS_POOL_OFFSET(cursor) + (space) > (cursor)->state->pool->allocated ?     \
   /* then grow if we're in ENCODE mode */                                     \
-  (ENCODING(cursor) ? GrowPool((cursor)->state->pool, 0)                      \
+  (ENCODING(cursor) ? GrowPool((cursor)->state->pool, 0,                      \
+                               CURS_POOL_OFFSET(cursor) + (space))            \
    /* and fail if we're in DECODE mode */                                     \
    : (DBG(("can't extend in DECODE")) && PR_FALSE))                           \
   /* otherwise we're OK */                                                    \
@@ -75,7 +76,7 @@ CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, PRUint32 len,
       PR_FALSE))
 
 /* increase the data allocation for the pool by XPT_GROW_CHUNK */
-#define XPT_GROW_CHUNK 8192
+#define XPT_GROW_CHUNK  8192
 
 /*
  * quick and dirty hardcoded hashtable, to avoid dependence on nspr or glib.
@@ -123,7 +124,7 @@ XPT_HashTableAdd(XPTHashTable *table, void *key, void *value) {
 
     while (*bucketloc != NULL)
         bucketloc = &((*bucketloc)->next);
-    
+
     bucket = XPT_NEW(XPTHashRecord);
     bucket->key = key;
     bucket->value = value;
@@ -142,7 +143,7 @@ XPT_HashTableLookup(XPTHashTable *table, void *key) {
     }
     return NULL;
 }
-     
+
 XPT_PUBLIC_API(XPTState *)
 XPT_NewXDRState(XPTMode mode, char *data, PRUint32 len)
 {
@@ -161,8 +162,6 @@ XPT_NewXDRState(XPTMode mode, char *data, PRUint32 len)
 
     state->pool->count = 0;
     state->pool->offset_map = XPT_NewHashTable();
-/*      state->pool->offset_map = PL_NewHashTable(32, null_hash, PL_CompareValues, */
-/*                                                PL_CompareValues, NULL, NULL); */
 
     if (!state->pool->offset_map)
         goto err_free_pool;
@@ -180,7 +179,6 @@ XPT_NewXDRState(XPTMode mode, char *data, PRUint32 len)
 
  err_free_hash:
     XPT_HashTableDestroy(state->pool->offset_map);
-/*      PL_HashTableDestroy(state->pool->offset_map); */
  err_free_pool:
     XPT_DELETE(state->pool);
  err_free_state:
@@ -220,16 +218,30 @@ XPT_DataOffset(XPTState *state, PRUint32 *data_offsetp)
         *data_offsetp = state->data_offset;
 }
 
-/* if new_size is 0, just grow by the next chunk */
+/* if 'exact' is set use that, else grow by the next chunk but
+ * be sure to grow no less that 'at_least' so that we can't get
+ * behind on required space.
+ */
 static PRBool
-GrowPool(XPTDatapool *pool, PRInt32 new_size)
+GrowPool(XPTDatapool *pool, PRUint32 exact, PRUint32 at_least)
 {
-    char *newdata = realloc(pool->data, new_size ? new_size :
-                            pool->allocated + XPT_GROW_CHUNK);
+    PRUint32 total_size;
+    char *newdata;
+
+    if (exact) {
+        XPT_ASSERT(exact > pool->allocated);
+        total_size = exact;
+    } else {
+        total_size = pool->allocated + XPT_GROW_CHUNK;
+        if (at_least > total_size)
+            total_size = at_least;
+    }
+
+    newdata = realloc(pool->data, total_size);
     if (!newdata)
         return PR_FALSE;
     pool->data = newdata;
-    pool->allocated += XPT_GROW_CHUNK;
+    pool->allocated = total_size;
     return PR_TRUE;
 }
 
@@ -240,7 +252,7 @@ XPT_SetDataOffset(XPTState *state, PRUint32 data_offset)
    /* make sure we've allocated enough space for the header */
    if (state->mode == XPT_ENCODE &&
        data_offset > state->pool->allocated) {
-       (void)GrowPool(state->pool, data_offset);
+       (void)GrowPool(state->pool, data_offset, 0);
    }
 }
 
@@ -252,7 +264,7 @@ XPT_MakeCursor(XPTState *state, XPTPool pool, PRUint32 len, XPTCursor *cursor)
     cursor->bits = 0;
     cursor->offset = state->next_cursor[pool];
 
-    if (!(CHECK_COUNT(cursor, len)))        
+    if (!(CHECK_COUNT(cursor, len)))
         return PR_FALSE;
 
     /* this check should be in CHECK_CURSOR */
@@ -347,7 +359,7 @@ XPT_DoString(XPTCursor *cursor, XPTString **strp)
 
     XPT_PREAMBLE_NO_ALLOC(cursor, strp, XPT_DATA, str->length + 2, my_cursor,
                           already);
-    
+
     return XPT_DoStringInline(&my_cursor, strp);
 }
 
@@ -357,7 +369,7 @@ XPT_DoCString(XPTCursor *cursor, char **identp)
     XPTCursor my_cursor;
     char *ident = *identp;
     PRUint32 offset = 0;
-    
+
     XPTMode mode = cursor->state->mode;
 
     if (mode == XPT_DECODE) {
@@ -366,7 +378,7 @@ XPT_DoCString(XPTCursor *cursor, char **identp)
 
         if (!XPT_Do32(cursor, &offset))
             return PR_FALSE;
-        
+
         if (!offset) {
             *identp = NULL;
             return PR_TRUE;
@@ -406,14 +418,14 @@ XPT_DoCString(XPTCursor *cursor, char **identp)
                             &my_cursor) ||
             !XPT_Do32(cursor, &my_cursor.offset))
             return PR_FALSE;
-        
+
         while(*ident)
             if (!XPT_Do8(&my_cursor, (PRUint8 *)ident++))
                 return PR_FALSE;
         if (!XPT_Do8(&my_cursor, (PRUint8 *)ident)) /* write trailing zero */
             return PR_FALSE;
     }
-    
+
     return PR_TRUE;
 }
 
@@ -552,7 +564,7 @@ XPT_Do32(XPTCursor *cursor, PRUint32 *u32p)
         cursor->offset++;
         u.b8[3] = CURS_POINT(cursor);
         *u32p = XPT_SWAB32(u.b32);
-    }        
+    }
     cursor->offset++;
     return PR_TRUE;
 }
@@ -599,76 +611,4 @@ XPT_Do8(XPTCursor *cursor, PRUint8 *u8p)
     return PR_TRUE;
 }
 
-static PRBool
-do_bit(XPTCursor *cursor, PRUint8 *u8p, int bitno)
-{
-    return PR_FALSE;
-#if 0
-    int bit_value, delta, new_value;
-    XPTDatapool *pool = cursor->pool;
 
-    if (cursor->state->mode == XPT_ENCODE) {
-        bit_value = (*u8p & 1) << (bitno);   /* 7 = 0100 0000, 6 = 0010 0000 */
-        if (bit_value) {
-            delta = pool->bit + (bitno) - 7;
-            new_value = delta >= 0 ? bit_value >> delta : bit_value << -delta;
-            pool->data[pool->count] |= new_value;
-        }
-    } else {
-        bit_value = pool->data[pool->count] & (1 << (7 - pool->bit));
-        *u8p = bit_value >> (7 - pool->bit);
-    }
-    if (++pool->bit == 8) {
-        pool->count++;
-        pool->bit = 0;
-    }
-
-    return CHECK_COUNT(cursor);
-#endif
-}
-
-XPT_PUBLIC_API(PRBool)
-XPT_DoBits(XPTCursor *cursor, PRUint8 *u8p, int nbits)
-{
-
-#define DO_BIT(cursor, u8p, nbits)                                            \
-    if (!do_bit(cursor, u8p, nbits))                                          \
-       return PR_FALSE;
-
-    switch(nbits) {
-      case 7:
-        DO_BIT(cursor, u8p, 7);
-      case 6:
-        DO_BIT(cursor, u8p, 6);
-      case 5:
-        DO_BIT(cursor, u8p, 5);
-      case 4:
-        DO_BIT(cursor, u8p, 4);
-      case 3:
-        DO_BIT(cursor, u8p, 3);
-      case 2:
-        DO_BIT(cursor, u8p, 2);
-      case 1:
-        DO_BIT(cursor, u8p, 1);
-      default:;
-    };
-
-#undef DO_BIT
-
-    return PR_TRUE;
-}
-
-XPT_PUBLIC_API(int)
-XPT_FlushBits(XPTCursor *cursor)
-{
-    return 0;
-#if 0
-    cursor->bits = 0;
-    cursor->offset++;
-
-    if (!CHECK_COUNT(cursor))
-        return -1;
-
-    return skipped == 8 ? 0 : skipped;
-#endif
-}
