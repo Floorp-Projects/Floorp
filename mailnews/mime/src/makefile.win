@@ -29,7 +29,6 @@ include <$(DEPTH)\config\config.mak>
 EXPORTS =								\
         nsMsgHeaderParser.h             \
         nsStreamConverter.h             \
-		nsMimeTypes.h		            \
 		nsMimeStringResources.h		    \
 		nsMimeObjectClassAccess.h		\
 		nsMimeConverter.h				\

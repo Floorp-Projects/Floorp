@@ -75,7 +75,6 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS		= \
-		nsMimeTypes.h \
 		nsMimeObjectClassAccess.h \
 		nsMimeStringResources.h \
 		nsMimeConverter.h \
