@@ -136,12 +136,6 @@ var gPermissionManager = {
                              this._type, 
                              capabilityString,
                              aCapability);
-      this._permissions.push(p);
-      
-      this._view._rowCount = this._permissions.length;
-      this._tree.treeBoxObject.rowCountChanged(this._permissions.length-1, 1);
-      this._tree.treeBoxObject.ensureRowIsVisible(this._permissions.length-1);
-      
       uri.spec = p.host;
       this._pm.add(uri, p.type, p.perm);
     }
