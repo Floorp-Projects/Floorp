@@ -302,6 +302,8 @@ nsGNOMERegistry::GetFromType(const char *aMIMEType)
     mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
   }
 
+  g_free(commandPath);
+
   _gnome_vfs_mime_application_free(handlerApp);
 
   nsIMIMEInfo* retval;
