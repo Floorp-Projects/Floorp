@@ -251,38 +251,29 @@ function changeTableRecord(server, name, state) {
 
 function StateChanged(name,state)
 {
-	//dump("StateChanged(" + name + "," + state + ")\n");
-	if (gChangeTable[gServerURI] == undefined) {
-        gChangeTable[gServerURI] = {};
-		gChangeTable[gServerURI][name] = state;
-	}
-	else {
-        if (gChangeTable[gServerURI][name] == undefined) {
-            gChangeTable[gServerURI][name] = state;
-        }
-        else {
-		    var oldValue = gChangeTable[gServerURI][name];
-		    if (oldValue != state) {
-			    gChangeTable[gServerURI][name] = undefined;
-		    }
-        }
-	}
+  if (gServerURI in gChangeTable) {
+    if (name in gChangeTable[gServerURI]) {
+      var oldValue = gChangeTable[gServerURI][name];
+      if (oldValue != state)
+        delete gChangeTable[gServerURI][name];
+    }
+    else {
+      gChangeTable[gServerURI][name] = state;
+    }
+  }
+  else {
+    gChangeTable[gServerURI] = {};
+    gChangeTable[gServerURI][name] = state;
+  }
 }
 
 function SetSubscribeState(state)
 {
-  //dump("SetSubscribedState()\n");
- 
   try {
-	//dump("subscribe button clicked\n");
-	
 	var groupList = gSubscribeTree.selectedItems;
-	for (i=0;i<groupList.length;i++) {
-		group = groupList[i];
-		uri = group.getAttribute('id');
-		//dump(uri + "\n");
-		name = group.getAttribute('name');
-		//dump(name + "\n");
+	for (var i=0;i<groupList.length;i++) {
+		var group = groupList[i];
+		var name = group.getAttribute('name');
 		SetState(name,state);
 	}
   }
