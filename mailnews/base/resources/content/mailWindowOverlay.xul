@@ -58,9 +58,6 @@ Rights Reserved.
 				 valueMessages="&deleteMsgsCmd.label;"/>
 	<broadcaster id="cmd_selectAll"/>
 	<broadcaster id="cmd_preferences"/>
-
-	<broadcaster id="Messenger:Throbber"/>
-	<broadcaster id="Messenger:LoadingProgress"/>
 	
 	<broadcaster id="cmd_nextMsg" oncommand="goDoCommand('cmd_nextMsg')" disabled="true"/>
 	<broadcaster id="cmd_nextUnreadMsg" oncommand="goDoCommand('cmd_nextUnreadMsg')" disabled="true"/>
@@ -592,9 +589,7 @@ Rights Reserved.
 			<button class="button-toolbar-2 top" id="button_stop" value="&stopButton.label;" onclick="MsgStop();"/>
 			<spring flex="100%"/>
 		</box>
-    <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("messenger.throbber.url")'>
-      <observes element="Messenger:Throbber" attribute="busy"/>
-    </button>
+    <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("messenger.throbber.url")'/>
 	</toolbar>
 </toolbox>
 
