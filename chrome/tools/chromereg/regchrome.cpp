@@ -22,15 +22,44 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIChromeRegistry.h"
+#include "nsAppFileLocationProvider.h"
 
 int main(int argc, char **argv)
 {
   NS_InitXPCOM(nsnull, nsnull);
 
   nsCOMPtr <nsIChromeRegistry> chromeReg = 
-        do_GetService("component://netscape/chrome/chrome-registry");
-  NS_ASSERTION(chromeReg, "chrome check couldn't get the chrome registry");
+    do_GetService("component://netscape/chrome/chrome-registry");
+  if (!chromeReg) {
+    NS_WARNING("chrome check couldn't get the chrome registry");
+    return NS_ERROR_FAILURE;
+  }
+  // initialize the directory service so that the chrome directory can
+  // be found when registering new chrome.
+  nsIDirectoryServiceProvider *appFileLocProvider;
+  appFileLocProvider = new nsAppFileLocationProvider;
+  if (!appFileLocProvider) {
+    NS_WARNING("failed to create directory service provider\n");
+    return NS_ERROR_FAILURE;
+  }
+  // add a reference
+  NS_ADDREF(appFileLocProvider);
+  nsresult rv;
+  NS_WITH_SERVICE(nsIDirectoryService, directoryService,
+		  NS_DIRECTORY_SERVICE_PROGID, &rv);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("failed to get directory service");
+    return rv;
+  }
+  rv = directoryService->RegisterProvider(appFileLocProvider);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("failed to register provider");
+    return rv;
+  }
+  NS_RELEASE(appFileLocProvider); // RegisterProvider did AddRef - It owns it now
   chromeReg->CheckForNewChrome();
+  // release the directory service before we shutdown XPCOM
+  directoryService = 0;
   // release the chrome registry before we shutdown XPCOM
   chromeReg = 0;
   NS_ShutdownXPCOM(nsnull);
