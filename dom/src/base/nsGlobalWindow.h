@@ -218,7 +218,7 @@ protected:
   void ClearAllTimeouts();
   void InsertTimeoutIntoList(nsTimeoutImpl **aInsertionPoint,
                              nsTimeoutImpl *aTimeout);
-  friend void nsGlobalWindow_RunTimeout(nsITimer *aTimer, void *aClosure);
+  static void TimerCallback(nsITimer *aTimer, void *aClosure);
 
   // Helper Functions
   nsresult GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner);
