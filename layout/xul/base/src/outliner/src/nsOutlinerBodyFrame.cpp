@@ -887,17 +887,22 @@ nsOutlinerBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsOutlinerColumn* a
     if (aRowIndex == currentIndex)
       mScratchArray->AppendElement(nsXULAtoms::current);
 
-    // container
+    // container or leaf
     PRBool isContainer = PR_FALSE;
     mView->IsContainer(aRowIndex, &isContainer);
     if (isContainer) {
       mScratchArray->AppendElement(nsXULAtoms::container);
 
-      // open
+      // open or closed
       PRBool isOpen = PR_FALSE;
       mView->IsContainerOpen(aRowIndex, &isOpen);
       if (isOpen)
         mScratchArray->AppendElement(nsXULAtoms::open);
+      else
+        mScratchArray->AppendElement(nsXULAtoms::closed);
+    }
+    else {
+      mScratchArray->AppendElement(nsXULAtoms::leaf);
     }
   }
 
@@ -1213,7 +1218,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintColumn(nsOutlinerColumn*    aColumn,
     return NS_OK; // Don't paint hidden columns.
 
   // Now obtain the properties for our cell.
-  // XXX Automatically fill in the following props: open, container, selected, focused, and the col ID.
+  // XXX Automatically fill in the following props: open, closed, container, leaf, selected, focused, and the col ID.
   PrefillPropertyArray(-1, aColumn);
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aColumn->GetElement()));
   mView->GetColumnProperties(aColumn->GetID(), elt, mScratchArray);
@@ -1250,7 +1255,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
     return NS_OK;
 
   // Now obtain the properties for our row.
-  // XXX Automatically fill in the following props: open, container, selected, focused
+  // XXX Automatically fill in the following props: open, closed, container, leaf, selected, focused
   PrefillPropertyArray(aRowIndex, nsnull);
   mView->GetRowProperties(aRowIndex, mScratchArray);
 
@@ -1305,7 +1310,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex,
     return NS_OK; // Don't paint cells in hidden columns.
 
   // Now obtain the properties for our cell.
-  // XXX Automatically fill in the following props: open, container, selected, focused, and the col ID.
+  // XXX Automatically fill in the following props: open, closed, container, leaf, selected, focused, and the col ID.
   PrefillPropertyArray(aRowIndex, aColumn);
   mView->GetCellProperties(aRowIndex, aColumn->GetID(), mScratchArray);
 

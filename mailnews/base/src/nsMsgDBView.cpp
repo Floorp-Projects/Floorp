@@ -53,6 +53,7 @@ nsIAtom * nsMsgDBView::kLowestPriorityAtom	= nsnull;
 nsIAtom * nsMsgDBView::kLowPriorityAtom	= nsnull;
 
 nsIAtom * nsMsgDBView::kUnreadMsgAtom	= nsnull;
+nsIAtom * nsMsgDBView::kReadMsgAtom	= nsnull;
 nsIAtom * nsMsgDBView::kOfflineMsgAtom	= nsnull;
 nsIAtom * nsMsgDBView::kFlaggedMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kNewsMsgAtom = nsnull;
@@ -106,6 +107,7 @@ nsMsgDBView::nsMsgDBView()
 void nsMsgDBView::InitializeAtomsAndLiterals()
 {
   kUnreadMsgAtom = NS_NewAtom("unread");
+  kReadMsgAtom = NS_NewAtom("read");
   kOfflineMsgAtom = NS_NewAtom("offline");
   kFlaggedMsgAtom = NS_NewAtom("flagged");
   kNewsMsgAtom = NS_NewAtom("news");
@@ -140,6 +142,7 @@ nsMsgDBView::~nsMsgDBView()
   if (gInstanceCount <= 0) 
   {
     NS_IF_RELEASE(kUnreadMsgAtom);
+    NS_IF_RELEASE(kReadMsgAtom);
     NS_IF_RELEASE(kOfflineMsgAtom);
     NS_IF_RELEASE(kFlaggedMsgAtom);
     NS_IF_RELEASE(kNewsMsgAtom);
@@ -692,6 +695,8 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
   PRUint32 flags = m_flags.GetAt(aRow);
   if (!(flags & MSG_FLAG_READ))
     properties->AppendElement(kUnreadMsgAtom);  
+  else 
+    properties->AppendElement(kReadMsgAtom);  
 
   if (flags & MSG_FLAG_OFFLINE)
     properties->AppendElement(kOfflineMsgAtom);  
