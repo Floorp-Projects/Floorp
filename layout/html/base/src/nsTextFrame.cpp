@@ -928,8 +928,10 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
 {
   nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(aPresContext)));
 
-  PRBool displaySelection;
-  displaySelection = doc->GetDisplaySelection();
+  PRBool displaySelection = PR_FALSE;
+  NS_ASSERTION(doc, "PaintUnicodeText: PresContext has no document!");
+  if (doc)
+    displaySelection = doc->GetDisplaySelection();
 
   // Make enough space to transform
   PRUnichar wordBufMem[WORD_BUF_SIZE];
@@ -946,7 +948,8 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
 
   // Transform text from content into renderable form
   nsCOMPtr<nsILineBreaker> lb;
-  doc->GetLineBreaker(getter_AddRefs(lb));
+  if (doc)
+    doc->GetLineBreaker(getter_AddRefs(lb));
   // nsCOMPtr<nsIWordBreaker> wb;
   // doc->GetWordBreaker(getter_AddRefs(wb));
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,nsnull);
@@ -2103,8 +2106,8 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
 
     PrepareUnicodeText(tx, ip, paintBuf, &textLength);
     nsIFrame *frameUsed = nsnull;
-    PRBool keepSearching; //if you run out of chars before you hit the end of word, maybe next frame has more text to select?
-    PRInt32 start;
+    PRBool keepSearching=PR_FALSE; //if you run out of chars before you hit the end of word, maybe next frame has more text to select?
+    PRInt32 start=0;
     PRBool found = PR_FALSE;
     PRBool isWhitespace;
     PRInt32 wordLen, contentLen;
@@ -2381,6 +2384,9 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   // Setup text transformer to transform this frames text content
   PRUnichar wordBuf[WORD_BUF_SIZE];
   nsCOMPtr<nsILineBreaker> lb;
+  NS_ASSERTION(doc, "Reflow: mContent has no document!");
+  if (doc)
+    doc->GetLineBreaker(getter_AddRefs(lb));
   if (doc)
     doc->GetLineBreaker(getter_AddRefs(lb));
   nsTextTransformer tx(wordBuf, WORD_BUF_SIZE,lb,nsnull);
@@ -2410,7 +2416,7 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   PRInt32 prevColumn = column;
   mColumn = column;
   PRBool breakable = lineLayout.LineIsBreakable();
-  PRInt32 lastWordLen;
+  PRInt32 lastWordLen=0;
   PRUnichar* bp = nsnull;
   for (;;) {
     // Get next word/whitespace from the text
@@ -2929,7 +2935,10 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
 
     PRUint32 breakP=0;
     PRBool needMore=PR_TRUE;
-    nsresult lres = aLineBreaker->Next(aWordBuf, aWordBufLen+wordLen, 0, &breakP, &needMore);
+    nsresult lres = NS_ERROR_FAILURE;
+    NS_ASSERTION(aLineBreaker, "ComputeWordFragmentWidth: No line breaker!");
+    if (aLineBreaker)
+      lres = aLineBreaker->Next(aWordBuf, aWordBufLen+wordLen, 0, &breakP, &needMore);
     if(NS_SUCCEEDED(lres)) 
     {
        // when we look at two pieces text together, we might decide to break
