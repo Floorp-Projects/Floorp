@@ -83,7 +83,9 @@ BEOS_PROGRAM_RESOURCE	= $(srcdir)/viewer-beos.rsrc
 TOOLKIT_CPPSRCS		= nsBeOSMain.cpp
 endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-TOOLKIT_CPPSRCS		= nsOS2Main.cpp
+TOOLKIT_CPPSRCS		= nsOS2Main.cpp nsWidgetSupport.cpp
+DIRS           += os2
+VIEWER_TK_LIBS		= os2/$(LIB_PREFIX)viewer_os2_s.$(LIB_SUFFIX)
 endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
 TOOLKIT_CPPSRCS		= nsPhMain.cpp nsPhMenu.cpp
@@ -113,6 +115,8 @@ endif
 
 ifeq ($(OS_ARCH),OS2)
 RESFILE		= vieweros2.res
+DEFINES       += -DUSE_LOCAL_WIDGETS 
+XP_DIST_LIBS  += $(DIST)/lib/components/wdgtos2.lib
 endif
 
 ifdef MOZ_OJI
