@@ -27,7 +27,6 @@
 #endif /* DEBUG_SAFE_LIST */
 
 #include "xp.h"
-#include "list.h"
 
 extern "C" {
 #include "edtlist.h"
