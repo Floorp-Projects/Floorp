@@ -208,7 +208,7 @@ private:
   PRInt32 MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseAccountNum);
   nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, const char *newsrcfile, PRInt32 accountNum);
 
-  nsIMsgAccount *LoadAccount(nsString& accountKey);
+  nsIMsgAccount *LoadAccount(nsCAutoString& accountKey);
   nsresult SetPasswordForServer(nsIMsgIncomingServer * server);
   nsIPref *m_prefs;
 };
@@ -731,14 +731,14 @@ nsMsgAccountManager::LoadAccounts()
     nsCOMPtr<nsIMsgAccount> account;
     char *token = nsnull;
     char *rest = NS_CONST_CAST(char*,(const char*)accountList);
-    nsString str("",eOneByte);
+    nsCAutoString str;
 
     token = nsCRT::strtok(rest, ",", &rest);
     while (token && *token) {
       str = token;
       str.StripWhitespace();
       
-      if (str != "") {
+      if (!str.IsEmtpy()) {
         account = getter_AddRefs(LoadAccount(str));
         if (account) {
           rv = AddAccount(account);
@@ -794,7 +794,7 @@ nsMsgAccountManager::MigratePrefs()
 }
 
 nsIMsgAccount *
-nsMsgAccountManager::LoadAccount(nsString& accountKey)
+nsMsgAccountManager::LoadAccount(nsCAutoString& accountKey)
 {
 #ifdef DEBUG_ACCOUNTMANAGER
   printf("Loading preferences for account: %s\n", accountKey.GetBuffer());
@@ -811,7 +811,9 @@ nsMsgAccountManager::LoadAccount(nsString& accountKey)
   
   if (NS_FAILED(rv)) return nsnull;
 
-  account->SetKey(NS_CONST_CAST(char*,accountKey.GetBuffer()));
+  // mscott - due to a bug in the idl compiler, SetKey takes a char * when it should
+  // take a const char *. but the cast *is* safe just ugly until the idl bug gets fixed
+  account->SetKey(((char *) ((const char *) accountKey) ) );
   
   return account;
 }
@@ -980,7 +982,7 @@ nsMsgAccountManager::SetPasswordForServer(nsIMsgIncomingServer * server)
   if (NS_FAILED(rv)) return rv;
 
   if (dialog) {
-    nsString message("", eOneByte);
+    nsCAutoString message;
 
     nsXPIDLCString thisHostname;
     rv = server->GetHostName(getter_Copies(thisHostname));
@@ -1180,17 +1182,17 @@ nsMsgAccountManager::MigrateImapAccounts(nsIMsgIdentity *identity)
   
   char *token = nsnull;
   char *rest = NS_CONST_CAST(char*,(const char*)hostList);
-  nsString str("",eOneByte);
+  nsCAutoString str;
       
   token = nsCRT::strtok(rest, ",", &rest);
   while (token && *token) {
     str = token;
     str.StripWhitespace();
     
-    if (str != "") {
+    if (!str.IsEmtpy()) {
 	  numAccounts++;
       // str is the hostname
-      if (NS_FAILED(MigrateImapAccount(identity,str.GetBuffer(),numAccounts))) {
+      if (NS_FAILED(MigrateImapAccount(identity,str,numAccounts))) {
 		// failed to migrate.  bail out.
         return 0;
       }
@@ -1649,10 +1651,10 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	// can't do dir += "host-"; dir += hostname; 
 	// because += on a nsFileSpec inserts a separator
 	// so we'd end up with host-/<hostname> and not host-<hostname>
-	nsAutoString alteredHost ((const char *) "host-", eOneByte);
+	nsCAutoString alteredHost ((const char *) "host-");
 	alteredHost += hostname;
 	NS_MsgHashIfNecessary(alteredHost);	
-	dir += alteredHost;
+	dir += (const char *) alteredHost;
 
 	rv = NS_NewFileSpecWithSpec(dir, getter_AddRefs(newsDir));
 	if (NS_FAILED(rv)) return rv;

@@ -102,7 +102,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   
   nsAutoString sep = PR_GetDirectorySeparator();
 
-  nsAutoString uri = uriStr;
+  nsCAutoString uri = uriStr;
   if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
     return NS_ERROR_FAILURE;
 
@@ -120,16 +120,16 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   if (hostStart <= 0) return NS_ERROR_FAILURE;
 
   // skip past all //
-  while (uri[hostStart]=='/') hostStart++;
+  while (uri.CharAt(hostStart) =='/') hostStart++;
   
   // cut news://[username@]hostname/newsgroup -> username@hostname/newsgroup
-  nsAutoString hostname (eOneByte);
+  nsCAutoString hostname;
   uri.Right(hostname, uri.Length() - hostStart);
 
   PRInt32 hostEnd = hostname.FindChar('/');
 
   PRInt32 atPos = hostname.FindChar('@');
-  nsAutoString username(eOneByte);
+  nsCAutoString username;
 
   username = "";
   // we have a username here
@@ -144,7 +144,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   }
 
   // newsgroup comes after the hostname, after the '/'
-  nsAutoString newsgroup (eOneByte);
+  nsCAutoString newsgroup;
  
   if (hostEnd != -1) {
     hostname.Right(newsgroup, hostname.Length() - hostEnd - 1);
@@ -181,9 +181,9 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   if (!pathResult.Exists())
     pathResult.CreateDir();
   
-  if (newsgroup != "") {
+  if (!newsgroup.IsEmpty()) {
     NS_MsgHashIfNecessary(newsgroup);
-    pathResult += newsgroup;
+    pathResult += (const char *) newsgroup;
   }
 
   return NS_OK;

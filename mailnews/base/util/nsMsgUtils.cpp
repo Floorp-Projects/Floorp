@@ -49,14 +49,14 @@ nsresult GetMessageServiceProgIDForURI(const char *uri, nsString &progID)
 nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **messageService)
 {
 
-	nsAutoString progID (eOneByte);
+	nsAutoString progID;
 	nsresult rv;
 
 	rv = GetMessageServiceProgIDForURI(uri, progID);
 
 	if(NS_SUCCEEDED(rv))
 	{
-		rv = nsServiceManager::GetService(progID.GetBuffer(), nsCOMTypeInfo<nsIMsgMessageService>::GetIID(),
+		rv = nsServiceManager::GetService(nsCAutoString(progID), nsCOMTypeInfo<nsIMsgMessageService>::GetIID(),
 		           (nsISupports**)messageService, nsnull);
 	}
 
@@ -66,12 +66,12 @@ nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **messag
 
 nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessageService *messageService)
 {
-	nsAutoString progID (eOneByte);
+	nsAutoString progID;
 	nsresult rv;
 
 	rv = GetMessageServiceProgIDForURI(uri, progID);
 	if(NS_SUCCEEDED(rv))
-		rv = nsServiceManager::ReleaseService(progID.GetBuffer(), messageService);
+		rv = nsServiceManager::ReleaseService(nsCAutoString(progID), messageService);
 	return rv;
 }
 
@@ -192,7 +192,7 @@ nsresult NS_MsgGetPriorityFromString(const char *priority, nsMsgPriority *outPri
 }
 
 
-nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriority p, nsString2 *outName)
+nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriority p, nsString *outName)
 {
 	if (!outName)
 		return NS_ERROR_NULL_POINTER;
@@ -236,7 +236,7 @@ static PRUint32 StringHash(const char *ubuf)
   return h;
 }
 
-nsresult NS_MsgHashIfNecessary(nsString &name)
+nsresult NS_MsgHashIfNecessary(nsCAutoString &name)
 {
 #if defined(XP_WIN16) || defined(XP_OS2)
   const PRUint32 MAX_LEN = 8;
@@ -247,7 +247,7 @@ nsresult NS_MsgHashIfNecessary(nsString &name)
 #else
 #error need_to_define_your_max_filename_length
 #endif
-  nsAutoString str(name, eOneByte);
+  nsCAutoString str(name);
 
 #ifdef DEBUG_NS_MsgHashIfNecessary
   printf("in: %s\n",str.GetBuffer());

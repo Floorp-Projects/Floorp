@@ -422,7 +422,7 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement *el
 	element->SetInt32Property("totalMsgs", mNumTotalMessages);
 	element->SetInt32Property("totalUnreadMsgs", mNumUnreadMessages);
 
-	element->SetStringProperty("charset", nsAutoString(mCharset, eOneByte).GetBuffer());
+	element->SetStringProperty("charset", nsCAutoString(mCharset));
 
 #ifdef DEBUG_bienvenu
 	char *uri;

@@ -155,7 +155,7 @@ protected:
   nsresult DoFolderHasAssertion(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target,
 													 PRBool tv, PRBool *hasAssertion);
 
-	nsresult GetBiffStateString(PRUint32 biffState, nsString& biffStateStr);
+	nsresult GetBiffStateString(PRUint32 biffState, nsCAutoString & biffStateStr);
 
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_MessageChild;

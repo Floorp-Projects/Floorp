@@ -643,7 +643,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item
 		{
 			if(PL_strcmp("BiffState", property) == 0)
 			{
-				nsAutoString oldBiffStateStr((const char *)"",eOneByte), newBiffStateStr ((const char *)"", eOneByte);
+				nsCAutoString oldBiffStateStr, newBiffStateStr;
 
 				rv = GetBiffStateString(oldFlag, oldBiffStateStr);
 				if(NS_FAILED(rv))
@@ -651,7 +651,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item
 				rv = GetBiffStateString(newFlag, newBiffStateStr);
 				if(NS_FAILED(rv))
 					return rv;
-				NotifyPropertyChanged(resource, kNC_BiffState, oldBiffStateStr.GetBuffer(), newBiffStateStr.GetBuffer());
+				NotifyPropertyChanged(resource, kNC_BiffState, oldBiffStateStr, newBiffStateStr);
 			}
 		}
 
@@ -791,15 +791,15 @@ nsMsgFolderDataSource::createBiffStateNode(nsIMsgFolder *folder, nsIRDFNode **ta
 	rv = folder->GetBiffState(&biffState);
 	if(NS_FAILED(rv)) return rv;
 
-	nsString biffString;
-
+	nsCAutoString biffString;
 	GetBiffStateString(biffState, biffString);
-	createNode(biffString, target);
+	nsString uniStr = biffString;
+	createNode(uniStr, target);
 	return NS_OK;
 }
 
 nsresult
-nsMsgFolderDataSource::GetBiffStateString(PRUint32 biffState, nsString& biffStateStr)
+nsMsgFolderDataSource::GetBiffStateString(PRUint32 biffState, nsCAutoString& biffStateStr)
 {
 	if(biffState == nsMsgBiffState_NewMail)
 		biffStateStr = "NewMail";

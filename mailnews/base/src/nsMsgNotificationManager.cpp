@@ -234,14 +234,14 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 	//If there's currently a notification for this folder, remove it.
 	RemoveNewMailNotification(folder);
 
-	nsAutoString newMailURI(eOneByte);
+	nsCAutoString newMailURI;
 	rv = BuildNewMailURI(folder, newMailURI);
 	if(NS_FAILED(rv))
 		return rv;
 
 
 	nsCOMPtr<nsIRDFResource> notificationResource;
-	rv = rdfService->GetResource(newMailURI.GetBuffer(), getter_AddRefs(notificationResource));
+	rv = rdfService->GetResource(newMailURI, getter_AddRefs(notificationResource));
 	if(NS_FAILED(rv))
 		return rv;
 
@@ -312,13 +312,13 @@ nsresult nsMsgNotificationManager::RemoveNewMailNotification(nsIMsgFolder *folde
 	if(NS_FAILED(rv))
 		return rv;
 
-	nsAutoString newMailURI(eOneByte);
+	nsCAutoString newMailURI;
 	rv = BuildNewMailURI(folder, newMailURI);
 	if(NS_FAILED(rv))
 		return rv;
 
 	nsCOMPtr<nsIRDFResource> notificationResource;
-	rv = rdfService->GetResource(newMailURI.GetBuffer(), getter_AddRefs(notificationResource));
+	rv = rdfService->GetResource(newMailURI, getter_AddRefs(notificationResource));
 	if(NS_FAILED(rv))
 		return rv;
 	RemoveOldValues(notificationResource);
@@ -357,7 +357,7 @@ nsresult nsMsgNotificationManager::RemoveOldValues(nsIRDFResource *notificationR
 
 }
 
-nsresult nsMsgNotificationManager::BuildNewMailURI(nsIMsgFolder *folder, nsAutoString &newMailURI)
+nsresult nsMsgNotificationManager::BuildNewMailURI(nsIMsgFolder *folder, nsCAutoString &newMailURI)
 {
 	nsresult rv;
 	nsCOMPtr<nsIRDFResource> folderResource = do_QueryInterface(folder);

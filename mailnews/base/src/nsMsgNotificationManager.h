@@ -46,7 +46,7 @@ protected:
 	nsresult AddNewMailNotification(nsIMsgFolder *folder);
 	nsresult RemoveNewMailNotification(nsIMsgFolder *folder);
 	nsresult RemoveOldValues(nsIRDFResource *notificationResource);
-	nsresult BuildNewMailURI(nsIMsgFolder *folder, nsAutoString &newMailURI);
+	nsresult BuildNewMailURI(nsIMsgFolder *folder, nsCAutoString &newMailURI);
 
 protected:
 	nsCOMPtr<nsIRDFDataSource> mInMemoryDataSource;

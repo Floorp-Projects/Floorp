@@ -183,7 +183,7 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
     char *temp = PL_strdup(curPos);
     char *token = nsCRT::strtok(temp, "/", &newStr);
     while (token) {
-      nsAutoString dir(token);
+      nsCAutoString dir(token);
       
       // look for next token
       token = nsCRT::strtok(newStr, "/", &newStr);
@@ -192,11 +192,11 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
       if (token) {
         NS_MsgHashIfNecessary(dir);
         dir += sbdSep;            // no, we're not, so append .sbd
-        pathResult += dir;
+        pathResult += (const char *) dir;
       }
       else {
         NS_MsgHashIfNecessary(dir);
-        pathResult += dir;
+        pathResult += (const char *) dir;
       }
     }
     PL_strfree(temp);

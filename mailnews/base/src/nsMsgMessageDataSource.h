@@ -136,7 +136,7 @@ protected:
 								 nsIRDFNode **target);
 	nsresult createMessageStatusNode(nsIMessage *message,
 								   nsIRDFNode **target);
-	nsresult createStatusStringFromFlag(PRUint32 flags, nsAutoString &statusStr);
+	nsresult createStatusStringFromFlag(PRUint32 flags, nsCAutoString &statusStr);
 
 	nsresult DoMarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
 

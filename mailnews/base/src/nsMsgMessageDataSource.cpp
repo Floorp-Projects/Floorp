@@ -453,15 +453,14 @@ NS_IMETHODIMP nsMsgMessageDataSource::OnItemPropertyFlagChanged(nsISupports *ite
 	{
 		if(PL_strcmp("Status", property) == 0)
 		{
-			nsAutoString oldStatusStr((const char *)"",eOneByte), newStatusStr ((const char *)"", eOneByte);
+			nsCAutoString oldStatusStr, newStatusStr;
 			rv = createStatusStringFromFlag(oldFlag, oldStatusStr);
 			if(NS_FAILED(rv))
 				return rv;
 			rv = createStatusStringFromFlag(newFlag, newStatusStr);
 			if(NS_FAILED(rv))
 				return rv;
-			rv = NotifyPropertyChanged(resource, kNC_Status, oldStatusStr.GetBuffer(), 
-								  newStatusStr.GetBuffer());
+			rv = NotifyPropertyChanged(resource, kNC_Status, oldStatusStr, newStatusStr);
 		}
 	}
 	return rv;
@@ -570,19 +569,20 @@ nsMsgMessageDataSource::createMessageStatusNode(nsIMessage *message,
 {
 	nsresult rv;
 	PRUint32 flags;
-	nsAutoString statusStr;
+	nsCAutoString statusStr;
 	rv = message->GetFlags(&flags);
 	if(NS_FAILED(rv))
 		return rv;
 	rv = createStatusStringFromFlag(flags, statusStr);
 	if(NS_FAILED(rv))
 		return rv;
-	rv = createNode(statusStr, target);
+	nsString uniStr = statusStr;
+	rv = createNode(uniStr, target);
 	return rv;
 }
 
 nsresult 
-nsMsgMessageDataSource::createStatusStringFromFlag(PRUint32 flags, nsAutoString &statusStr)
+nsMsgMessageDataSource::createStatusStringFromFlag(PRUint32 flags, nsCAutoString &statusStr)
 {
 	nsresult rv = NS_OK;
 	statusStr = "";

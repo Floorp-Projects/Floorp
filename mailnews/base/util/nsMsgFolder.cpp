@@ -172,7 +172,7 @@ nsMsgFolder::FindSubFolder(const char *subFolderName, nsIFolder **aFolder)
 	if(NS_FAILED(rv)) 
 		return rv;
 
-	nsString2 uri(eOneByte);
+	nsCAutoString uri;
 	uri.Append(mURI);
 	uri.Append('/');
 
