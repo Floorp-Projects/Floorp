@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.20 $ ';
+$Version = '$Revision: 1.21 $ ';
 
 
 sub PrintUsage {
@@ -105,7 +105,9 @@ sub PrintExampleConfig {
 }
 
 sub ConditionalArgs {
-  $FE          = 'mozilla-bin'; 
+  $fe          = 'mozilla-bin';
+  $RelBinaryName  = "dist/bin/$fe";
+  #$FullBinaryName  = "$BaseDir/$DirName/$TopLevel/$Topsrcdir/$RelBinaryName";
   $BuildModule = 'SeaMonkeyAll';
   $CVSCO      .= " -r $BuildTag" unless $BuildTag eq '';
 }
@@ -349,7 +351,7 @@ sub LoadConfig {
 }
 
 sub BuildIt {
-  my $fe, @felist, $EarlyExit, $LastTime, $SaveCVSCO, $comptmp;
+  my $EarlyExit, $LastTime, $SaveCVSCO, $comptmp;
 
   die "\$BuildName is the empty string ('')\n" if $BuildName eq '';
 
@@ -437,22 +439,25 @@ sub BuildIt {
     
     chdir $Topsrcdir or die "chdir $Topsrcdir: $!\n";
     
-    # Let us delete the binaries before rebuilding
+    #Delete the binaries before rebuilding
     unless ($TestOnly) {
-      @felist = split /,/, $FE;
       
-      foreach $fe (@felist) {            
-        if (&BinaryExists($fe)) {
-          print LOG "deleting existing binary: $fe\n";
-          &DeleteBinary($fe);
-        }
-      }
+	  # Only delete if it exists.
+	  if (&BinaryExists($fe)) {
+		print LOG "deleting existing binary: $fe\n";
+		&DeleteBinary($fe);
+	  } else {
+		print LOG "no binary detected, can't delete.\n";
+	  }
+
     }
     
     $ENV{MOZ_CO_DATE} = "$BuildStart" if $UseTimeStamp;
     
-    # If we are building depend, don't clobber.
+	# Don't build if testing smoke tests.
 	unless ($TestOnly) {
+
+	  # If we are building depend, don't clobber.
 	  if ($BuildDepend) {
 		print LOG "$Make -f client.mk\n";
 		open MAKEDEPEND, "$Make -f client.mk 2>&1 |";
@@ -471,44 +476,45 @@ sub BuildIt {
         }
         close MAKECLOBBER;
       }
-    }
+
+    } # unless ($TestOnly)
     
-    foreach $fe (@felist) {
-      if (&BinaryExists($fe)) {
-        if ($RunTest) {
-          print LOG "export binary exists, build successful. Testing...\n";
-          $BuildStatus = &RunSmokeTest($fe);
-          if ($BuildStatus == 0 and $BloatStats) {
-            $BuildStatusStr = 'success';
-            print LOG "export binary exists, build successful. Gathering bloat stats...\n";
-            $BuildStatus = &RunBloatTest($fe);
-          }
-        } else {
-          print LOG "export binary exists, build successful. Skipping test.\n";
-          $BuildStatus = 0;
-        }
-      } else {
-        print LOG "export binary missing, build FAILED\n";
-        $BuildStatus = 666;
-      }
-      
-      if ($BuildStatus == 0) {
-        $BuildStatusStr = 'success';
-      }
-      elsif ($BuildStatus == 333) {
-        $BuildStatusStr = 'testfailed';
-      } else {
-        $BuildStatusStr = 'busted';
-      }
-      print LOG "tinderbox: tree: $BuildTree\n";
-      print LOG "tinderbox: builddate: $StartTime\n";
-      print LOG "tinderbox: status: $BuildStatusStr\n";
-      print LOG "tinderbox: build: $BuildName\n";
-      print LOG "tinderbox: errorparser: unix\n";
-      print LOG "tinderbox: buildfamily: unix\n";
-      print LOG "tinderbox: version: $Version\n";
-      print LOG "tinderbox: END\n";            
-    }
+	  if (&BinaryExists($fe)) {
+		if ($RunTest) {
+		  print LOG "export binary exists, build successful. Testing...\n";
+		  $BuildStatus = &RunSmokeTest($fe);
+		  if ($BuildStatus == 0 and $BloatStats) {
+			$BuildStatusStr = 'success';
+			print LOG "export binary exists, build successful. Gathering bloat stats...\n";
+			$BuildStatus = &RunBloatTest($fe);
+		  }
+		} else {
+		  print LOG "export binary exists, build successful. Skipping test.\n";
+		  $BuildStatus = 0;
+		}
+	  } else {
+		print LOG "export binary missing, build FAILED\n";
+		$BuildStatus = 666;
+	  } # if (&BinaryExists($fe))
+
+
+	if ($BuildStatus == 0) {
+	  $BuildStatusStr = 'success';
+	}
+	elsif ($BuildStatus == 333) {
+	  $BuildStatusStr = 'testfailed';
+	} else {
+	  $BuildStatusStr = 'busted';
+	}
+	print LOG "tinderbox: tree: $BuildTree\n";
+	print LOG "tinderbox: builddate: $StartTime\n";
+	print LOG "tinderbox: status: $BuildStatusStr\n";
+	print LOG "tinderbox: build: $BuildName\n";
+	print LOG "tinderbox: errorparser: unix\n";
+	print LOG "tinderbox: buildfamily: unix\n";
+	print LOG "tinderbox: version: $Version\n";
+	print LOG "tinderbox: END\n";            
+    
     close LOG;
     chdir $StartDir;
     
@@ -553,23 +559,20 @@ sub BuildIt {
 }
 
 sub MailStartBuildMessage {
-  my $fe, @felist;
-  
-  @felist = split /,/, $FE;
   
   open LOG, "|$mail $Tinderbox_server";
-  foreach $fe (@felist) {
-    print LOG "\n";
-    print LOG "tinderbox: tree: $BuildTree\n";
-    print LOG "tinderbox: builddate: $StartTime\n";
-    print LOG "tinderbox: status: building\n";
-    print LOG "tinderbox: build: $BuildName\n";
-    print LOG "tinderbox: errorparser: unix\n";
-    print LOG "tinderbox: buildfamily: unix\n";
-    print LOG "tinderbox: version: $Version\n";
-    print LOG "tinderbox: END\n";
-    print LOG "\n";
-  }
+
+  print LOG "\n";
+  print LOG "tinderbox: tree: $BuildTree\n";
+  print LOG "tinderbox: builddate: $StartTime\n";
+  print LOG "tinderbox: status: building\n";
+  print LOG "tinderbox: build: $BuildName\n";
+  print LOG "tinderbox: errorparser: unix\n";
+  print LOG "tinderbox: buildfamily: unix\n";
+  print LOG "tinderbox: version: $Version\n";
+  print LOG "tinderbox: END\n";
+  print LOG "\n";
+
   close LOG;
 }
 
@@ -577,9 +580,8 @@ sub MailStartBuildMessage {
 sub BinaryExists {
   my ($fe) = @_;
   my $BinName;
-  $fe = 'x' unless defined $fe; 
   
-  $BinName = "$BuildDir/$TopLevel/${Topsrcdir}$BinaryName{$fe}";
+  $BinName = "$BuildDir/$TopLevel/$Topsrcdir/$RelBinaryName";
   
   if (-e $BinName and -x _ and -s _) {
     print LOG "$BinName exists, is nonzero, and executable.\n";  
@@ -594,11 +596,13 @@ sub BinaryExists {
 sub DeleteBinary {
   my ($fe) = @_;
   my $BinName;
-  $fe = 'mozilla-bin' unless defined $fe; 
+
+  print LOG "DeleteBinary: fe      = $fe\n";
   
-  $BinName = "$BuildDir/$TopLevel/${Topsrcdir}$BinaryName{$fe}";
+  $BinName = "$BuildDir/$TopLevel/${Topsrcdir}/$RelBinaryName";
+
   print LOG "unlinking $BinName\n";
-  unlink $BinName or print LOG "unlinking $BinName failed\n";
+  unlink $BinName or print LOG "ERROR: Unlinking $BinName failed\n";
 }
 
 sub PrintEnv {
@@ -649,7 +653,7 @@ sub RunSmokeTest {
   
   $ENV{LD_LIBRARY_PATH} = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
   $ENV{MOZILLA_FIVE_HOME} = $ENV{LD_LIBRARY_PATH};
-  $Binary = "$BuildDir/$TopLevel/${Topsrcdir}$BinaryName{$fe}";
+  $Binary = "$BuildDir/$TopLevel/$Topsrcdir/$RelBinaryName";
   
   print LOG "$Binary\n";
   $BinaryDir = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
@@ -723,11 +727,10 @@ sub RunBloatTest {
   $ENV{NSPR_LOG_MODULES} = "xpcomrefcnt:1";
   $ENV{XPCOM_MEM_BLOAT_LOG} = "1";
 
-  $Binary = "$BuildDir/$TopLevel/${Topsrcdir}$BinaryName{$fe}";
-  
+  $Binary = "$BuildDir/$TopLevel/$Topsrcdir/$RelBinaryName";
   print LOG "$Binary\n";
+
   $BinaryDir = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
-  $Binary    = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin/mozilla-bin";
   $BinaryLog = $BuildDir . '/bloat-cur.log';
   
   rename ($BinaryLog, "$BuildDir/bloat-prev.log");
@@ -828,9 +831,6 @@ $CVSCO         = 'checkout -P';
 
 #- Set these proper values for your tinderbox server
 $Tinderbox_server = 'tinderbox-daemon@cvs-mirror.mozilla.org';
-
-# Relative path to binary
-$BinaryName{mozilla-bin} = '/dist/bin/mozilla-bin';
 
 #-
 #- The rest should not need to be changed
