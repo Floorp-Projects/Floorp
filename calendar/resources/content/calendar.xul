@@ -105,6 +105,7 @@
 
 <!-- NEEDED FOR MAIL SUPPORT -->
 <script type="application/x-javascript" src="chrome://calendar/content/calendarMail.js"/>
+
 <!-- NEEDED FOR DATE UTILS -->
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
@@ -113,6 +114,7 @@
 <script type="application/x-javascript" src="chrome://calendar/content/calendar.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarSelection.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/pref/rootCalendarPref.js"/>
 
 <!-- Pop up menus -->
 

@@ -92,26 +92,34 @@ function addEventToDialog( Event )
    {
       dump( "\n\n!!!!!!!!!!!calendar alarm window, in iff" );  
       if( "createAlarmBox" in calendarAlarmWindow )
-        {
-           calendarAlarmWindow.onAlarmCall( Event );
-        }
-        else
-        {
-            if( !("pendingEvents" in calendarAlarmWindow) )
-            {
-                calendarAlarmWindow.pendingEvents = new Array();
-            }
-            
-            //dump( "\n ADDING PENDING EVENT TO DIALOG _______________________" );
-            
-            calendarAlarmWindow.pendingEvents.push( Event );
-        }
+      {
+        calendarAlarmWindow.onAlarmCall( Event );
+      }
+      else
+      {
+         if( !("pendingEvents" in calendarAlarmWindow) )
+         {
+             calendarAlarmWindow.pendingEvents = new Array();
+         }
+           
+         //dump( "\n ADDING PENDING EVENT TO DIALOG _______________________" );
+         
+         calendarAlarmWindow.pendingEvents.push( Event );
+      }
     }
    else if( gAllowWindowOpen )
    {
       gAllowWindowOpen = false;
       
-      calendarAlarmWindow = openCalendarAlarmWindow( Event );
+      if( gCalendarWindow.calendarPreferences.getPref( "showalarms" ) )
+      {
+         calendarAlarmWindow = openCalendarAlarmWindow( Event );
+      }
+      else
+      {
+         gPendingEvents.push( Event );
+      }
+      
    }
    else
    {

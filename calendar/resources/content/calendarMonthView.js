@@ -227,7 +227,8 @@ MonthView.prototype.refreshEvents = function( )
    // add each calendarEvent
    
    this.kungFooDeathGripOnEventBoxes = new Array();
-   
+   dump( "\n in calendarMonthView.js, monthEventList.length is "+monthEventList.length );
+
    for( var eventIndex = 0; eventIndex < monthEventList.length; ++eventIndex )
    {
       var calendarEventDisplay = monthEventList[ eventIndex ];

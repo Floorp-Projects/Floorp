@@ -107,7 +107,11 @@
       </menupopup>                                                                                                                                                 
    </menu>                                                                                                                                                           
 
-   <menu id="tasksMenu"/>
+   <menu id="menu_Edit">                                                                                                                                          
+      <menupopup id="mppEdit">
+         <menuitem id="calendar-edit-preferences" label="Preferences..." oncommand="launchPreferences()"/>                                                     
+      </menupopup>                                                                                                                                                 
+   </menu><menu id="tasksMenu"/>
   
    <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
 </menubar>

@@ -76,7 +76,7 @@
 *  G L O B A L     V A R I A B L E S
 */
 
-var gDateMade = "April 2nd, 2002";
+var gDateMade = "April 3rd, 2002";
 
 // turn on debuging
 
@@ -115,6 +115,11 @@ var kWeekViewHourLeftStart = 97;
 var kWeekViewHourHeightDifference = 2;
 
 const kMAX_NUMBER_OF_DOTS_IN_MONTH_VIEW = "8"; //the maximum number of dots that fit in the month view
+
+
+var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefService);
+var rootPrefNode = prefService.getBranch(null); // preferences root node
 
 /*-----------------------------------------------------------------
 *  G L O B A L     C A L E N D A R      F U N C T I O N S
@@ -177,6 +182,11 @@ function calendarFinish()
    finishCalendarUnifinder( gEventSource );
    
    gCalendarWindow.close( );
+}
+
+function launchPreferences()
+{
+   goPreferences("advancedItem", "chrome://calendar/content/pref/calendarPref.xul", "calendar");
 }
 
 
@@ -558,6 +568,9 @@ function getPreviewText( calendarEventDisplay )
 function CalendarWindow( calendarDataSource )
 {
    this.eventSource = calendarDataSource;
+   
+   //setup the preferences
+   this.calendarPreferences = new calendarPreferences( this );
    
    this.EventSelection = new CalendarEventSelection( this );
 

@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0"?> 
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
@@ -12,14 +12,14 @@
    - for the specific language governing rights and limitations under the
    - License.
    -
-   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   - The Original Code is Mozilla Calendar Code.
    -
-   - The Initial Developer of the Original Code is
-   - OEone Corporation.
-   - Portions created by the Initial Developer are Copyright (C) 2001
+   - The Initial Developer of the Original Code is Mike Potter.
+   - Portions created by the Initial Developer are Copyright (C) 2002
    - the Initial Developer. All Rights Reserved.
    -
-   - Contributor(s): Colin Phillips <colinp@oeone.com> 
+   - Contributor(s):
+   -  Mike Potter <mikep@oeone.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,30 +35,33 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
 
-<RDF:Seq about="urn:mozilla:package:root">
-<RDF:li resource="urn:mozilla:package:calendar"/>
-</RDF:Seq>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
-<RDF:Description about="urn:mozilla:package:calendar"
-        chrome:displayName="Calendar"
-        chrome:author="OEOne Corp."
-        chrome:name="calendar">
-</RDF:Description>
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://calendar/content/pref/calendarPref.xul');"
+      headertitle="Calendar">
 
-  <!-- overlay information -->
-  <RDF:Seq about="urn:mozilla:overlays">
-    <RDF:li resource="chrome://communicator/content/tasksOverlay.xul"/>
-    <RDF:li resource="chrome://communicator/content/pref/preftree.xul"/>
-  </RDF:Seq>
+   <script type="application/x-javascript" src="chrome://calendar/content/pref/calendarPref.js"/>
 
-  <RDF:Seq about="chrome://communicator/content/tasksOverlay.xul">
-    <RDF:li>chrome://calendar/content/calendarOverlay.xul</RDF:li>
-  </RDF:Seq>
+   <script type="application/x-javascript">
+     <![CDATA[
+       var panel = "chrome://calendar/content/pref/calendarPref.xul";
+       var _elementIDs = [
+         "showalarms"
+       ];
+     ]]>
+   </script>
+
+   <!-- SAMPLE PREFS
+   Check out http://lxr.mozilla.org/seamonkey/source/xpfe/components/prefwindow/resources/content/nsPrefWindow.js
+   for more information
    
-  <RDF:Seq about="chrome://communicator/content/pref/preftree.xul">
-    <RDF:li>chrome://calendar/content/pref/calendarPrefOverlay.xul</RDF:li>
-  </RDF:Seq>
-</RDF:RDF>
+   <checkbox id="someid" type="checkbox" pref="true" preftype="bool"
+          prefattribute="checked" prefstring="calendar.preferencename"
+          label="Label" />
+   -->
+   <checkbox id="showalarms" type="checkbox" pref="true" preftype="bool"
+          prefattribute="checked" prefstring="calendar.showalarms"
+          label="Show Calendar Alarms?" />
+</page>
