@@ -3772,20 +3772,22 @@ nsPrintEngine::FindFrameByType(nsIPresContext* aPresContext,
 /** ---------------------------------------------------
  *  Find by checking frames type
  */
-static nsresult FindSelectionBounds(nsIPresContext* aPresContext,
-                                    nsIRenderingContext& aRC,
-                                    nsIFrame *      aParentFrame,
-                                    nsRect&         aRect,
-                                    nsIFrame *&     aStartFrame,
-                                    nsRect&         aStartRect,
-                                    nsIFrame *&     aEndFrame,
-                                    nsRect&         aEndRect)
+nsresult 
+nsPrintEngine::FindSelectionBoundsWithList(nsIPresContext* aPresContext,
+                                           nsIRenderingContext& aRC,
+                                           nsIAtom*        aList,
+                                           nsIFrame *      aParentFrame,
+                                           nsRect&         aRect,
+                                           nsIFrame *&     aStartFrame,
+                                           nsRect&         aStartRect,
+                                           nsIFrame *&     aEndFrame,
+                                           nsRect&         aEndRect)
 {
   NS_ASSERTION(aPresContext, "Pointer is null!");
   NS_ASSERTION(aParentFrame, "Pointer is null!");
 
   nsIFrame * child;
-  aParentFrame->FirstChild(aPresContext, nsnull, &child);
+  aParentFrame->FirstChild(aPresContext, aList, &child);
   nsRect rect;
   aParentFrame->GetRect(rect);
   aRect.x += rect.x;
@@ -3819,6 +3821,33 @@ static nsresult FindSelectionBounds(nsIPresContext* aPresContext,
   }
   aRect.x -= rect.x;
   aRect.y -= rect.y;
+  return NS_OK;
+}
+
+//-------------------------------------------------------
+// Find the Frame that is XMost
+nsresult 
+nsPrintEngine::FindSelectionBounds(nsIPresContext* aPresContext,
+                                   nsIRenderingContext& aRC,
+                                   nsIFrame *      aParentFrame,
+                                   nsRect&         aRect,
+                                   nsIFrame *&     aStartFrame,
+                                   nsRect&         aStartRect,
+                                   nsIFrame *&     aEndFrame,
+                                   nsRect&         aEndRect)
+{
+  NS_ASSERTION(aPresContext, "Pointer is null!");
+  NS_ASSERTION(aParentFrame, "Pointer is null!");
+
+  // loop thru named child lists
+  nsIAtom* childListName = nsnull;
+  PRInt32  childListIndex = 0;
+  do {
+    nsresult rv = FindSelectionBoundsWithList(aPresContext, aRC, childListName, aParentFrame, aRect, aStartFrame, aStartRect, aEndFrame, aEndRect);
+    NS_IF_RELEASE(childListName);
+    NS_ENSURE_SUCCESS(rv, rv);
+    aParentFrame->GetAdditionalChildListName(childListIndex++, &childListName);
+  } while (childListName);
   return NS_OK;
 }
 

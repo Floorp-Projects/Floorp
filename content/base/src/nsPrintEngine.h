@@ -291,6 +291,25 @@ protected:
                                             nsIFrame*&      aSeqFrame,
                                             PRInt32&        aCount);
 
+  static nsresult FindSelectionBoundsWithList(nsIPresContext* aPresContext,
+                                              nsIRenderingContext& aRC,
+                                              nsIAtom*        aList,
+                                              nsIFrame *      aParentFrame,
+                                              nsRect&         aRect,
+                                              nsIFrame *&     aStartFrame,
+                                              nsRect&         aStartRect,
+                                              nsIFrame *&     aEndFrame,
+                                              nsRect&         aEndRect);
+
+  static nsresult FindSelectionBounds(nsIPresContext* aPresContext,
+                                      nsIRenderingContext& aRC,
+                                      nsIFrame *      aParentFrame,
+                                      nsRect&         aRect,
+                                      nsIFrame *&     aStartFrame,
+                                      nsRect&         aStartRect,
+                                      nsIFrame *&     aEndFrame,
+                                      nsRect&         aEndRect);
+
   static nsresult GetPageRangeForSelection(nsIPresShell *        aPresShell,
                                            nsIPresContext*       aPresContext,
                                            nsIRenderingContext&  aRC,
@@ -354,4 +373,3 @@ private:
 #endif
 
 #endif /* nsPrintEngine_h___ */
-
