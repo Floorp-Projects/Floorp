@@ -27,55 +27,13 @@
 #include "Fundamentals.h"
 #include "MemoryAccess.h"
 
+PR_BEGIN_EXTERN_C
+extern void staticCompileStub();
+PR_END_EXTERN_C
 
 void* JNIenv = 0;
 
 extern ClassWorld world;
-
-static void __declspec( naked )
-staticCompileStub()
-{
-  _asm
-    {
-      // eax contains the cache entry.
-
-      // make frame
-      push    ebp
-      mov     ebp,esp
-
-      /* Even though ESI and EDI are non-volatile (callee-saved) registers, we need to
-         preserve them here in case an exception is thrown.  The exception-handling
-         code expects to encounter this specially-prepared stack "guard" frame when
-         unwinding the stack.  See x86ExceptionHandler.cpp. */
-      push    edi
-      push    esi
-      push    ebx
-
-      // call compileAndBackPatchMethod with args
-      // third argument is not used
-      push    [esp + 16]              // second argument -- return address
-      push    eax                     // first argument -- cacheEntry
-      call    compileAndBackPatchMethod
-
-      // remove frame
-      mov     esp,ebp
-      pop     ebp
-
-      // jump to the compiled method
-      jmp     eax
-    }
-}
-
-#ifdef DEBUG
-// Pointer to the instruction after the call (used by exception handler to check
-// I wanted to use:
-//		void* compileStubReEntryPoint =  (void*) ((Uint8*)staticCompileStub + 17);
-// but MSDev appears to have a bug, in that compileStubReEntryPoint will be set == (void*)staticCompileStub
-// which is clearly wrong.
-void* compileStubAddress = (void*)staticCompileStub;
-// void* compileStubReEntryPoint = (Uint8*)compileStubAddress + 15; // Correct address ?
-void* compileStubReEntryPoint = NULL;
-#endif // DEBUG
 
 void *
 generateNativeStub(NativeCodeCache& inCache, const CacheEntry& inCacheEntry, void *nativeFunction)
@@ -144,3 +102,14 @@ backPatchMethod(void* inMethodAddress, void* inLastPC, void* /*inUserDefined*/)
 
     return (inMethodAddress);
 }
+
+#ifdef DEBUG
+// Pointer to the instruction after the call (used by exception handler to sanity-check stack)
+// I wanted to use:
+//		void* compileStubReEntryPoint =  (void*) ((Uint8*)staticCompileStub + xx);
+// but MSDev appears to have a bug, in that compileStubReEntryPoint will be set == (void*)staticCompileStub
+// which is clearly wrong.
+void* compileStubAddress = (void*)staticCompileStub;
+// void* compileStubReEntryPoint = (Uint8*)compileStubAddress + 15; // Correct address ?
+void* compileStubReEntryPoint = (void*)NULL;
+#endif // DEBUG
