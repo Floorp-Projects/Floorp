@@ -119,7 +119,10 @@ nsXKBModeSwitch::HandleMappingNotify()
   // since the mapping could change we (re)initialize variables
   Init();
 
-  xmodmap = XGetModifierMapping(GDK_DISPLAY());
+  Display *lGdkDisplay = GDK_DISPLAY();
+  if (!lGdkDisplay)
+    return;
+  xmodmap = XGetModifierMapping(lGdkDisplay);
   if (!xmodmap)
     return;
 
