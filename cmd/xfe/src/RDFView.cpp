@@ -196,7 +196,7 @@ XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
   XtAddCallback(m_widget, XmNdeleteCallback, delete_cb, NULL);
   XtAddCallback(m_widget, XmNactivateCallback, activate_cb, this);
   XtAddCallback(m_widget, XmNresizeCallback, resize_cb, this);
-
+  XtAddCallback(m_widget, XmNeditCallback, edit_cell_cb, this);
   //fe_AddTipStringCallback(outline, XFE_Outliner::tip_cb, this);
 
 }
@@ -336,6 +336,51 @@ XFE_RDFView::refresh(HT_Resource node)
   }
 }
 
+void
+XFE_RDFView::edit_cell_cb(Widget,
+                       XtPointer clientData,
+                       XtPointer callData)
+{
+	XFE_RDFView *obj = (XFE_RDFView*)clientData;
+
+	obj->edit_cell(callData);
+}
+
+void
+XFE_RDFView::edit_cell(XtPointer callData)
+{
+	XP_ASSERT(m_widget);
+	if(!m_widget)
+		return;
+
+	XmLGridCallbackStruct *cbs = (XmLGridCallbackStruct*)callData;
+    HT_Resource node = HT_GetNthItem (m_rdfview, cbs->row);
+
+	if (node && cbs->reason == XmCR_EDIT_COMPLETE)
+    {
+        XmLGridColumn column = XmLGridGetColumn(m_widget, XmCONTENT,
+                                                cbs->column);
+        RDFColumnData *column_data = NULL;
+
+        XtVaGetValues(m_widget, 
+                      XmNcolumnPtr, column,
+                      XmNcolumnUserData, &column_data,
+                      NULL);
+
+        XmLGridRow row = XmLGridGetRow(m_widget, XmCONTENT, cbs->row);
+        XmString cell_string;
+
+        XtVaGetValues(m_widget,
+                      XmNcolumnPtr, column,
+                      XmNrowPtr, row,
+                      XmNcellString, &cell_string,
+                      NULL);
+        char *text;
+        XmStringGetLtoR(cell_string, XmSTRING_DEFAULT_CHARSET, &text);
+        HT_SetNodeData (node, column_data->token, column_data->token_type,
+                        text);
+    }
+}
 
 //////////////////////////////////////////////////////////////////////////
 void
@@ -577,7 +622,7 @@ XFE_RDFView::add_row(HT_Resource node)
         if (HT_GetNodeData (node, column_data->token,
                             column_data->token_type, &data)
             && data) 
-        {
+       {
             time_t dateVal;
             struct tm* time;
             char buffer[200];

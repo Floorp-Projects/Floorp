@@ -88,12 +88,14 @@ private:
   void delete_column(HT_Resource cursor);
   void activate_row(int row);
   void resize(XtPointer);
+  void edit_cell(XtPointer);
 
   static void expand_row_cb(Widget, XtPointer, XtPointer);
   static void collapse_row_cb(Widget, XtPointer, XtPointer);
   static void delete_cb(Widget, XtPointer, XtPointer);
   static void activate_cb(Widget, XtPointer, XtPointer);
   static void resize_cb(Widget, XtPointer, XtPointer);
+  static void edit_cell_cb(Widget, XtPointer, XtPointer);
 
 #ifdef NOTYET
   void dropfunc(Widget dropw, fe_dnd_Event type, fe_dnd_Source *source, XEvent *event);
