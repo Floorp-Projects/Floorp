@@ -226,12 +226,9 @@ endif
 
 EXTRA_LIBS += \
         $(DIST)/lib/libssl.a \
-        $(DIST)/lib/libjar.a \
-        $(DIST)/lib/libzlib.a \
         $(DIST)/lib/libnss.a \
         $(DIST)/lib/libssl.a \
         $(DIST)/lib/libcrmf.a \
-        $(DIST)/lib/libsectool.a \
         $(DIST)/lib/libpkcs12.a \
         $(DIST)/lib/libpkcs7.a \
         $(DIST)/lib/libcerthi.a \
@@ -241,7 +238,6 @@ EXTRA_LIBS += \
         $(DIST)/lib/libpk11wrap.a \
         $(DIST)/lib/libsoftoken.a \
         $(DIST)/lib/libcertdb.a \
-        $(DIST)/lib/libswfci.a \
         $(DIST)/lib/libcrypto.a \
         $(DIST)/lib/libfreebl.a \
         $(DIST)/lib/libsecutil.a \
