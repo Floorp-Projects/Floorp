@@ -1029,6 +1029,7 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
 static JSObject *
 InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
 {
+    JSBool resolving;
     JSDHashTable *table;
     JSRuntime *rt;
     JSResolvingKey key;
@@ -1039,9 +1040,10 @@ InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
     if (!cx->globalObject)
         cx->globalObject = obj;
 
-    /* Record both Function and Object in cx->resolving, if we are resolving. */
-    table = cx->resolving;
-    if (table) {
+    /* Record Function and Object in cx->resolvingTable, if we are resolving. */
+    resolving = (cx->resolving != 0);
+    if (resolving) {
+        table = cx->resolvingTable;
         rt = cx->runtime;
         key.obj = obj;
         key.id = (jsid) rt->atomState.FunctionAtom;
@@ -1073,8 +1075,8 @@ InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
         OBJ_SET_PROTO(cx, obj, obj_proto);
 
     /* If resolving, remove the other entry (Object or Function) from table. */
-    if (table)
-        JS_DHashTableRawRemove(table, entry);
+    if (resolving)
+        JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);
     return fun_proto;
 }
 
