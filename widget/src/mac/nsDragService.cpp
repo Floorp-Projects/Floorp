@@ -91,6 +91,103 @@ nsDragService::~nsDragService()
 }
 
 
+PRBool
+nsDragService :: ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScreenRect )
+{
+  NS_ASSERTION ( aDOMNode, "Oopps, no DOM node" );
+  
+	PRBool	haveRectFlag = PR_FALSE;
+	outScreenRect.left = outScreenRect.right = outScreenRect.top = outScreenRect.bottom = 0;
+
+  // Get the frame for this content node (note: frames are not refcounted)
+  
+	nsIFrame *aFrame = nsnull;
+	nsCOMPtr<nsIContent>	contentNode;
+	if (aDOMNode)	contentNode = do_QueryInterface(aDOMNode);
+	nsCOMPtr<nsIDocument>	doc;
+	if (contentNode)	contentNode->GetDocument(*getter_AddRefs(doc));
+	nsCOMPtr<nsIPresShell>	presShell;
+	nsCOMPtr<nsIPresContext> presContext;
+	if (doc)
+	  presShell = getter_AddRefs(doc->GetShellAt(0));
+	if (presShell) 	{
+		presShell->GetPresContext(getter_AddRefs(presContext));
+		presShell->GetPrimaryFrameFor(contentNode, &aFrame);
+	}
+  NS_ASSERTION ( aFrame, "Can't get frame for this dom node" );
+  NS_ASSERTION ( presContext, "Can't get prescontext for this dom node" );
+  if ( !aFrame || !presContext )
+    return PR_FALSE;
+  
+  // Now that we have the frame, we have to convert its coordinates into global screen
+  // coordinates. This is fairly tricky because we may be nested within a frameset, etc.
+  
+	nsRect	aRect(0,0,0,0);
+	nsIView	*parentView = nsnull;
+	aFrame->GetRect(aRect);
+
+  // Find offset from our view
+	nsIView *containingView = nsnull;
+	nsPoint	viewOffset(0,0);
+	aFrame->GetOffsetFromView(presContext, viewOffset, &containingView);
+NS_ASSERTION(containingView, "No containing view!");
+
+printf("-- rect is x %ld, y %ld w %ld h %ld\n", aRect.x, aRect.y, aRect.width, aRect.height );
+printf("-- view offset x %ld, y %ld\n", viewOffset.x, viewOffset.y );
+
+#if 0
+	aFrame->GetView(presContext, &parentView);
+	if (!parentView)
+	{
+		nsIFrame	*aParentFrame = nsnull;
+		aFrame->GetParentWithView(presContext, &aParentFrame);
+		if (aParentFrame)
+			aParentFrame->GetView(presContext, &parentView);
+	}
+#endif
+  
+  // get the widget associated with the containing view
+  // XXX: GetOffsetFromWidget() is broken when the parent view has a widget and the child view
+  //        is not at 0,0, which is the case for the mail window. This needs to be revisted.
+	nsCOMPtr<nsIWidget>	aWidget;
+	PRInt32 widgetOffsetX = 0, widgetOffsetY = 0;
+	containingView->GetOffsetFromWidget ( &widgetOffsetX, &widgetOffsetY, *getter_AddRefs(aWidget) );
+	if (aWidget)
+	{
+		float twips2Pixels = 1.0, pixels2Twips = 1.0;
+		presContext->GetTwipsToPixels(&twips2Pixels);
+		presContext->GetPixelsToTwips(&pixels2Twips);
+
+    // WidgetToScreen() will give us the global coordinates of the rectangle we give it, but it expects
+    // everything to be in pixels. Convert |frameRect| into pixels first, then offset our rectangle by
+    // that ammount.
+    nsRect frameRectInPixels ( aRect.x * twips2Pixels, aRect.y * twips2Pixels, aRect.width * twips2Pixels,
+                                aRect.height * twips2Pixels );                                
+printf("-- frame in pixels is x %ld, y %ld w %ld h %ld\n", frameRectInPixels.x, frameRectInPixels.y, 
+                                    frameRectInPixels.width, frameRectInPixels.height );
+		nsRect	screenRect(0,0,0,0);
+		aWidget->WidgetToScreen ( frameRectInPixels, screenRect );
+		frameRectInPixels.MoveBy(screenRect.x, screenRect.y);
+printf("-- rect in global coords is x %ld, y %ld w %ld h %ld\n", frameRectInPixels.x, frameRectInPixels.y,
+                     frameRectInPixels.width, frameRectInPixels.height );
+
+    // Finally, offset by where we are in the view (which is also in twips)
+		outScreenRect.left = frameRectInPixels.x + (widgetOffsetX + viewOffset.x) * twips2Pixels;
+		outScreenRect.top = frameRectInPixels.y + (widgetOffsetY + viewOffset.y) * twips2Pixels;
+    outScreenRect.right = outScreenRect.left + aRect.width * twips2Pixels;
+    outScreenRect.bottom = outScreenRect.top + aRect.height * twips2Pixels;
+
+printf("** outscreenRect is %ld %ld %ld %ld\n", outScreenRect.left, outScreenRect.top, 
+            outScreenRect.right, outScreenRect.bottom);
+            
+		haveRectFlag = PR_TRUE;
+	}
+
+  return haveRectFlag;
+
+} // ComputeGlobalRectFromFrame
+
+
 //
 // StartDragSession
 //
@@ -99,84 +196,11 @@ nsDragService::~nsDragService()
 NS_IMETHODIMP
 nsDragService :: InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * aTransferableArray, nsIScriptableRegion * aDragRgn, PRUint32 aActionType)
 {
-	// rjc - compute rect of drag area in global coordinants
-	PRBool	haveRectFlag = PR_FALSE;
-	Rect	aMacRect;
-	aMacRect.left = aMacRect.right = aMacRect.top = aMacRect.bottom = 0;
-
-	nsCOMPtr<nsIContent>	contentNode;
-	if (aDOMNode)	contentNode = do_QueryInterface(aDOMNode);
-
-	nsCOMPtr<nsIDocument>	doc;
-	if (contentNode)	contentNode->GetDocument(*getter_AddRefs(doc));
-	nsCOMPtr<nsIPresShell>	presShell;
-	if (doc)		presShell = getter_AddRefs(doc->GetShellAt(0));
-	nsCOMPtr<nsIPresContext>presContext;
-	// note: nsIFrames are not refcounted
-	nsIFrame		*aFrame = nsnull;
-	if (presShell)
-	{
-		presShell->GetPresContext(getter_AddRefs(presContext));
-		presShell->GetPrimaryFrameFor(contentNode, &aFrame);
-	}
-
-	nsRect	aRect(0,0,0,0);
-	nsPoint	offset(0,0);
-
-	// note: are nsIViews recounted ???
-	nsIView	*parentView = nsnull;
-	if (aFrame && presContext)
-	{
-		aFrame->GetRect(aRect);
-
-		nsIView *containingView = nsnull;
-		aFrame->GetOffsetFromView(presContext, offset, &containingView);
-
-		aFrame->GetView(presContext, &parentView);
-		if (!parentView)
-		{
-			// note: nsIFrames are not refcounted
-			nsIFrame	*aParentFrame = nsnull;
-			aFrame->GetParentWithView(presContext, &aParentFrame);
-			if (aParentFrame)
-			{
-				aParentFrame->GetView(presContext, &parentView);
-			}
-		}
-	}
-
-	nsCOMPtr<nsIWidget>	aWidget = nsnull;
-	if (parentView)
-	{
-		// note: are nsIViews recounted ???
-		nsIView 		*view = parentView;
-		while (!aWidget && view)
-		{
-			view->GetWidget(*getter_AddRefs(aWidget));
-			if (!aWidget)
-			{
-				view->GetParent(view);
-			}
-		}
-	}
-	if (aWidget)
-	{
-		nsRect	screenRect(0,0,0,0);
-		aWidget->WidgetToScreen ( aRect, screenRect );
-		aRect.MoveBy(screenRect.x, screenRect.y);
-
-		float		twips2Pixels = 1.0;
-		presContext->GetTwipsToPixels(&twips2Pixels);
-
-		aMacRect.left = aRect.x + offset.x * twips2Pixels;
-		aMacRect.top = aRect.y + offset.y * twips2Pixels;
-		aMacRect.right = aMacRect.left + aRect.width * twips2Pixels;
-		aMacRect.bottom = aMacRect.top + aRect.height * twips2Pixels;
-
-		haveRectFlag = PR_TRUE;
-	}
-
-
+  Rect frameRect = { 0, 0, 0, 0 };
+  PRBool useRectFromFrame = PR_FALSE;
+  if ( aDOMNode )
+    useRectFromFrame = ComputeGlobalRectFromFrame ( aDOMNode, frameRect );
+    
   DragReference theDragRef;
   OSErr result = ::NewDrag(&theDragRef);
   if ( result != noErr )
@@ -211,22 +235,18 @@ printf("**** created drag ref %ld\n", theDragRef);
   theEvent.modifiers = 0;
   
   RgnHandle theDragRgn = ::NewRgn();
-  ::RectRgn(theDragRgn, &aMacRect);		// rjc: set rect
+  ::RectRgn(theDragRgn, &frameRect);		// rjc: set rect
 
-  if ((haveRectFlag == PR_TRUE) && (mImageDraggingSupported == PR_TRUE))
-  {
+  if ( useRectFromFrame && mImageDraggingSupported ) {
     Point	imgOffsetPt;
     imgOffsetPt.v = imgOffsetPt.h = 0;
 
     // rjc - note: passing in null for image's PixMapHandle
     //       to SetDragImage() means use bits on screen
-    ::SetDragImage (theDragRef, nsnull, theDragRgn,
-    	imgOffsetPt, kDragDarkerTranslucency);
+    ::SetDragImage (theDragRef, nsnull, theDragRgn, imgOffsetPt, kDragDarkerTranslucency);
   }
   else
-  {
     BuildDragRegion ( aDragRgn, globalMouseLoc, theDragRgn );
-  }
 
   // register drag send proc which will call us back when asked for the actual
   // flavor data (instead of placing it all into the drag manager)
