@@ -54,6 +54,9 @@ typedef enum {
   nsScrollPreference_kAlwaysScrollVertical
 } nsScrollPreference;
 
+// the percentage of the page that is scrolled on a page up or down
+#define PAGE_SCROLL_PERCENT 0.9
+
 // IID for the nsIScrollableView interface
 #define NS_ISCROLLABLEVIEW_IID    \
 { 0xc95f1830, 0xc376, 0x11d1, \
