@@ -56,7 +56,7 @@ public:
   NS_IMETHOD GetStreamType(nsPluginStreamType *result);
 
   // ns4xPluginStreamListener specific methods:
-  ns4xPluginStreamListener(nsIPluginInstance* inst, void* notifyData);
+  ns4xPluginStreamListener(nsIPluginInstance* inst, void* notifyData, const char* aURL);
   virtual ~ns4xPluginStreamListener();
   PRBool IsStarted();
   nsresult CleanUpStream(NPReason reason);
@@ -66,14 +66,16 @@ public:
 protected:
   void* mNotifyData;
   char* mStreamBuffer;
+  char* mNotifyURL;
   ns4xPluginInstance* mInst;
   NPStream mNPStream;
   PRUint32 mPosition;
   PRUint32 mStreamBufferSize;
   nsPluginStreamType mStreamType;
-  PRBool mStreamStarted;
-  PRBool mStreamCleanedUp;
-  PRBool mCallNotify;
+  PRPackedBool mStreamStarted;
+  PRPackedBool mStreamCleanedUp;
+  PRPackedBool mCallNotify;
+
 
 public:
   nsIPluginStreamInfo * mStreamInfo;
