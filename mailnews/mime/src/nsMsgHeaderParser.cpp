@@ -126,7 +126,7 @@ NS_IMETHODIMP nsMsgHeaderParserResult::GetAddressAndName(PRUnichar ** aAddress, 
                                         getter_Copies(fullAddress));
     if (NS_SUCCEEDED(rv) && (const char*)fullAddress)
     {
-      value = fullAddress;
+      value.Assign(fullAddress);
       rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, aFullAddress);
     }
 
