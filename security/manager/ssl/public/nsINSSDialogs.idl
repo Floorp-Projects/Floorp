@@ -130,7 +130,27 @@ interface nsICertificateDialogs : nsISupports
                              out boolean canceled);
 
   void viewCert(in nsIX509Cert cert);
+};
 
+/**
+ * nsIClientAuthDialog
+ * Provides UI for SSL client-auth dialogs.
+ */
+[scriptable, uuid(fa4c7520-1433-11d5-ba24-00108303b117)]
+interface nsIClientAuthDialogs : nsISupports
+{
+  /**
+   * display
+   *   UI shown when a user is asked to do SSL client auth.
+   */
+  void ChooseCertificate(in nsIInterfaceRequestor ctx, 
+                      in wstring cn,
+					  in wstring organization,
+					  in wstring issuer,
+					  [array, size_is(count)] in wstring certNickList,
+					  in PRUint32 count,
+                      out wstring certNick,
+                      out boolean canceled);
 };
 
 /**
