@@ -199,7 +199,9 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
       }
     }
   }
-  mPixelSize = NSToIntRound(app2dev * factor * mFont->size);
+  float textZoom = 1.0;
+  mDeviceContext->GetTextZoom(textZoom);
+  mPixelSize = NSToIntRound(app2dev * textZoom * factor * mFont->size);
   if (mPixelSize < minimum) {
     mPixelSize = minimum;
   }
