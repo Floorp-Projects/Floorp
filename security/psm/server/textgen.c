@@ -355,11 +355,11 @@ SSMTextGen_DestroyContext(SSMTextGenContext *cx)
 }
 
 
-SSMResource *
+SSMControlConnection *
 SSMTextGen_GetControlConnection(SSMTextGenContext *cx)
 {
-    if (cx && cx->m_request && cx->m_request->ctrlconn)
-        return &(cx->m_request->ctrlconn->super.super);
+    if (cx && cx->m_request)
+        return cx->m_request->ctrlconn;
     else
         return NULL;
 }
@@ -367,10 +367,16 @@ SSMTextGen_GetControlConnection(SSMTextGenContext *cx)
 SSMResource *
 SSMTextGen_GetTargetObject(SSMTextGenContext *cx)
 {
-    if (cx && cx->m_request && cx->m_request->target)
-        return cx->m_request->target;
-    else
-        return SSMTextGen_GetControlConnection(cx);
+    SSMResource *target = NULL;
+
+    if (cx && cx->m_request && cx->m_request->target) {
+        target = cx->m_request->target;
+    } else {
+        SSMControlConnection *ctrl;
+        ctrl = SSMTextGen_GetControlConnection(cx);
+        target = &(ctrl->super.super);
+    }
+    return target;
 }
 
 /* Allocate/deallocate an array of UTF8 Strings. */
@@ -1256,7 +1262,10 @@ void SSM_InitNLS(char *dataDirectory)
                                SSM_MakeUniqueNameForIssuerWindow);
     SSM_RegisterKeywordHandler("_windowOffset",
                                SSM_GetWindowOffset);
-
+    SSM_RegisterKeywordHandler("_crlButton",
+                               SSM_DisplayCRLButton);
+    SSM_RegisterKeywordHandler("_crlList",
+                               SSM_ListCRLs);
 #if 0
     TestNLS();
 #endif

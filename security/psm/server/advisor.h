@@ -162,4 +162,6 @@ SSMStatus SSM_RemovePrivilegesHandler(HTTPRequest* req);
 SSMStatus SSM_OCSPResponderList(SSMTextGenContext* cx);
 char* SSM_GetOCSPURL(CERTCertificate *cert, PrefSet *prefs);
 PRBool SSM_IsOCSPEnabled(SSMControlConnection *connection);
+SSMStatus SSM_DisplayCRLButton(SSMTextGenContext *cx);
+SSMStatus SSM_ListCRLs(SSMTextGenContext *cx);
 #endif

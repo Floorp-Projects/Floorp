@@ -2164,7 +2164,7 @@ SSM_ConvertStringToHTMLString(char * string)
  
     ptr = string;
     while (*ptr)
-        if (ispunct(*ptr++))
+        if (!isalnum(*ptr++))
             len += 2;
    
     result = (char *) PORT_ZAlloc(len+1);
@@ -2182,8 +2182,8 @@ SSM_ConvertStringToHTMLString(char * string)
     resultptr = result;
     /* copy by character, substituting ascii value for special characters */
     while (*ptr) {
-        if (ispunct(*ptr)) {
-            sprintf(resultptr,"%%%2x", *ptr);
+        if (!isalnum(*ptr)) {
+            sprintf(resultptr,"%%%.2x", *ptr);
             resultptr += 3;
         } else
             *resultptr++ = *ptr;

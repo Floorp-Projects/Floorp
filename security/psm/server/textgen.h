@@ -87,7 +87,7 @@ void SSMTextGen_DestroyContext(SSMTextGenContext *victim);
 /* Helper routines used with a TextGenContext */
 
 SSMResource *SSMTextGen_GetTargetObject(SSMTextGenContext *cx);
-SSMResource *SSMTextGen_GetControlConnection(SSMTextGenContext *cx);
+SSMControlConnection *SSMTextGen_GetControlConnection(SSMTextGenContext *cx);
 
 /* 
    Top level routine called by non-NLS-using parts of Cartman. 
