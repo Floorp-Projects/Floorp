@@ -74,6 +74,7 @@ static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kCDialogCID, NS_DIALOG_CID);
 static NS_DEFINE_IID(kCLabelCID, NS_LABEL_CID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
+static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kCWindowIID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
@@ -125,6 +126,7 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCCheckButtonIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCChildIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCAppShellCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCToolkitCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
