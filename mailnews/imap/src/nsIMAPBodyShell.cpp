@@ -17,7 +17,7 @@
  */
 
 #include "msgCore.h"
-#include "nsImapHostSessionList.h"
+#include "nsIMAPHostSessionList.h"
 #include "nsIMAPBodyShell.h"
 #include "nsImapProtocol.h"
 
