@@ -21,6 +21,14 @@ var				ispRadio = null;
 //var				out = java.lang.System.out;
 
 //window.captureEvents( Event.MOUSEUP| Event.MOUSEDOWN| Event.MOUSEDRAG );
+function loadData()
+{
+	radioValue = document.layers[ "allisp" ].layers[ "level1isp" ].
+					layers[ "levelDisplay" ].layers[ 0 ].
+					layers[ "moreInfoButton" ].document.
+					forms[ 0 ].elements[ 0 ].value;
+	radioClick( radioValue );
+}
 
 function tabIndex( tab )
 {
@@ -133,6 +141,8 @@ function toggle( tabName )
 
 function radioClick( radioValue )
 {
+//	out.println( "radioClick: " + radioValue );
+	
 	if ( radioValue != ispRadio )
 	{
 		allisp = document.layers[ "allisp" ];
@@ -147,7 +157,7 @@ function radioClick( radioValue )
 				form = buttonlayer.document.forms[ 0 ];
 				radio = form.elements[ 0 ];
 				if ( radio.value == radioValue )
-					radio.check == "1";
+					radio.checked=true;
 				else
 					form.reset();
 			}
