@@ -379,7 +379,9 @@ int main(int argc, char **argv)
 #endif
 
 	JS2Object::addRoot(&metadata);
+
     metadata = new MetaData::JS2Metadata(world);
+
     metadata->addGlobalObjectFunction("print", print, 1);
     metadata->addGlobalObjectFunction("load", load, 1);
 #ifdef DEBUG

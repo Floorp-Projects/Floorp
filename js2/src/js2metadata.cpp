@@ -2565,7 +2565,7 @@ doUnary:
         Multiname *mn = new Multiname(id);
         mn->addNamespace(namespaces);
         // Search the local frame for an overlapping definition
-	LocalBindingIterator b, end;
+        LocalBindingIterator b, end;
         if (access & ReadAccess) {
             for (b = localFrame->localReadBindings.lower_bound(*id),
                     end = localFrame->localReadBindings.upper_bound(*id); (b != end); b++) {
@@ -2966,6 +2966,47 @@ doUnary:
         return meta->readEvalString(*meta->toString(argv[0]), widenCString("Eval Source"));
     }
 
+#define JS7_ISHEX(c)    ((c) < 128 && isxdigit(c))
+#define JS7_UNHEX(c)    (uint32)(isdigit(c) ? (c) - '0' : 10 + tolower(c) - 'a')
+
+    static js2val GlobalObject_unescape(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
+    {
+        const String *str = meta->toString(argv[0]);
+        const char16 *chars = str->data();
+        uint32 length = str->length();
+
+        /* Don't bother allocating less space for the new string. */
+        char16 *newchars = new char16[length + 1];
+    
+        uint32 ni = 0;
+        uint32 i = 0;
+        char16 ch;
+        while (i < length) {
+            ch = chars[i++];
+            if (ch == '%') {
+                if (i + 1 < length &&
+                    JS7_ISHEX(chars[i]) && JS7_ISHEX(chars[i + 1]))
+                {
+                    ch = JS7_UNHEX(chars[i]) * 16 + JS7_UNHEX(chars[i + 1]);
+                    i += 2;
+                } else if (i + 4 < length && chars[i] == 'u' &&
+                           JS7_ISHEX(chars[i + 1]) && JS7_ISHEX(chars[i + 2]) &&
+                           JS7_ISHEX(chars[i + 3]) && JS7_ISHEX(chars[i + 4]))
+                {
+                    ch = (((((JS7_UNHEX(chars[i + 1]) << 4)
+                            + JS7_UNHEX(chars[i + 2])) << 4)
+                          + JS7_UNHEX(chars[i + 3])) << 4)
+                        + JS7_UNHEX(chars[i + 4]);
+                    i += 5;
+                }
+            }
+            newchars[ni++] = ch;
+        }
+        newchars[ni] = 0;
+        
+        return STRING_TO_JS2VAL(meta->engine->allocStringPtr(&meta->world.identifiers[newchars]));
+    }
+
     void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code, uint32 length)
     {
         SimpleInstance *fInst = new SimpleInstance(functionClass);
@@ -2983,7 +3024,8 @@ doUnary:
         bCon(new BytecodeContainer()),
         glob(new GlobalObject(world)),
         env(new Environment(new MetaData::SystemFrame(), glob)),
-        showTrees(false)
+        showTrees(false),
+        flags(JS1)
     {
         engine->meta = this;
 
@@ -3001,7 +3043,7 @@ doUnary:
         MAKEBUILTINCLASS(namespaceClass, objectClass, false, true, true, engine->allocStringPtr(&world.identifiers["namespace"]), JS2VAL_NULL);
         MAKEBUILTINCLASS(attributeClass, objectClass, false, true, true, engine->allocStringPtr(&world.identifiers["attribute"]), JS2VAL_NULL);
         MAKEBUILTINCLASS(classClass, objectClass, false, true, true, engine->allocStringPtr(&world.identifiers["Class"]), JS2VAL_NULL);
-        MAKEBUILTINCLASS(functionClass, objectClass, false, true, true, engine->Function_StringAtom, JS2VAL_NULL);
+        MAKEBUILTINCLASS(functionClass, objectClass, true, true, true, engine->Function_StringAtom, JS2VAL_NULL);
         MAKEBUILTINCLASS(prototypeClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["prototype"]), JS2VAL_NULL);
         MAKEBUILTINCLASS(packageClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Package"]), JS2VAL_NULL);
 
@@ -3039,6 +3081,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         addGlobalObjectFunction("isNaN", GlobalObject_isNaN, 1);
         addGlobalObjectFunction("eval", GlobalObject_eval, 1);
         addGlobalObjectFunction("toString", GlobalObject_toString, 0);
+        addGlobalObjectFunction("unescape", GlobalObject_unescape, 0);
 
 
 /*** ECMA 3  Object Class ***/
@@ -3437,7 +3480,10 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 if (!initFlag
                         && (JS2VAL_IS_INACCESSIBLE(v->value) 
                                 || (v->immutable && !JS2VAL_IS_UNINITIALIZED(v->value))))
-                    reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
+                    if (flags == JS2)
+                        reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
+                    else    // quietly ignore the write for JS1 compatibility
+                        return true;
                 v->value = v->type->implicitCoerce(this, newValue);
             }
             return true;
@@ -4065,38 +4111,38 @@ deleteClassProperty:
                     // XXX here we ignore the bound this, can that be right?
                     MethodClosure *mc = checked_cast<MethodClosure *>(fnObj);
                     fWrap = mc->method->fInst->fWrap;
-				}
+                }
                 if (fWrap) {
                     if (fWrap->code) {
                         result = (fWrap->code)(this, thisValue, NULL, 0);
                         return true;
                     }
-					else {
-						uint8 *savePC = NULL;
-						BytecodeContainer *bCon = fWrap->bCon;
+                    else {
+                        uint8 *savePC = NULL;
+                        BytecodeContainer *bCon = fWrap->bCon;
 
-						CompilationData *oldData = startCompilationUnit(bCon, bCon->mSource, bCon->mSourceLocation);
-						ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
-						runtimeFrame->instantiate(env);
-						runtimeFrame->thisObject = thisValue;
-						Frame *oldTopFrame = env->getTopFrame();
-						env->addFrame(runtimeFrame);
-						try {
-							savePC = engine->pc;
-							engine->pc = NULL;
-							result = engine->interpret(RunPhase, bCon);
-						}
-						catch (Exception &x) {
-							engine->pc = savePC;
-							restoreCompilationUnit(oldData);
-							env->setTopFrame(oldTopFrame);
-							throw x;
-						}
-						engine->pc = savePC;
-						restoreCompilationUnit(oldData);
-						env->setTopFrame(oldTopFrame);
-						return true;
-					}
+                        CompilationData *oldData = startCompilationUnit(bCon, bCon->mSource, bCon->mSourceLocation);
+                        ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
+                        runtimeFrame->instantiate(env);
+                        runtimeFrame->thisObject = thisValue;
+                        Frame *oldTopFrame = env->getTopFrame();
+                        env->addFrame(runtimeFrame);
+                        try {
+                            savePC = engine->pc;
+                            engine->pc = NULL;
+                            result = engine->interpret(RunPhase, bCon);
+                        }
+                        catch (Exception &x) {
+                            engine->pc = savePC;
+                            restoreCompilationUnit(oldData);
+                            env->setTopFrame(oldTopFrame);
+                            throw x;
+                        }
+                        engine->pc = savePC;
+                        restoreCompilationUnit(oldData);
+                        env->setTopFrame(oldTopFrame);
+                        return true;
+                    }
                 }
             }
         }
@@ -4649,8 +4695,15 @@ deleteClassProperty:
         ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
         ASSERT((plural->positionalCount == 0) || (plural->positional != NULL));
         
-        js2val argumentsVal = OBJECT_TO_JS2VAL(new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
-        ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(argumentsVal));
+        ArrayInstance *arrInst = new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
+        js2val argumentsVal = OBJECT_TO_JS2VAL(arrInst);
+
+        // Add the 'arguments' property
+        QualifiedName qn(meta->publicNamespace, &meta->world.identifiers["arguments"]);
+        LocalBinding *sb = new LocalBinding(qn, new Variable(meta->arrayClass, argumentsVal, true));
+        const LocalBindingMap::value_type e(*qn.id, sb);
+        localReadBindings.insert(e);
+
         uint32 i;
         for (i = 0; ((i < argCount) && (i < plural->positionalCount)); i++) {
             ASSERT(plural->positional[i]->cloneContent);
@@ -4661,12 +4714,6 @@ deleteClassProperty:
             meta->writeDynamicProperty(arrInst, &mn, true, argBase[i], RunPhase);
         }
         setLength(meta, arrInst, i);
-
-        // Add the 'arguments' property
-        QualifiedName qn(meta->publicNamespace, &meta->world.identifiers["arguments"]);
-        LocalBinding *sb = new LocalBinding(qn, new Variable(meta->arrayClass, argumentsVal, true));
-        const LocalBindingMap::value_type e(*qn.id, sb);
-        localReadBindings.insert(e);
     }
 
 
@@ -4846,6 +4893,7 @@ deleteClassProperty:
     // Allocate from this or the next Pond (make a new one if necessary)
     void *Pond::allocFromPond(size_t sz)
     {
+
         // See if there's room left...
         if (sz > pondSize) {
             // If not, try the free list...
@@ -4871,10 +4919,9 @@ deleteClassProperty:
             // ok, then try the next Pond
             if (nextPond == NULL) {
                 // there isn't one; run the gc
-				uint32 released = JS2Object::gc();
-				if (released > sz)
-					return JS2Object::alloc(sz - sizeof(PondScum));
-
+            uint32 released = JS2Object::gc();
+            if (released > sz)
+                return JS2Object::alloc(sz - sizeof(PondScum));
                 nextPond = new Pond(sz, nextPond);
             }
             return nextPond->allocFromPond(sz);
@@ -4900,7 +4947,7 @@ deleteClassProperty:
         memset(t, 0xB3, p->getSize() - sizeof(PondScum));
 #endif
         freeHeader = p;
-		return p->getSize() - sizeof(PondScum);
+        return p->getSize() - sizeof(PondScum);
     }
 
     // Clear the mark bit from all PondScums
@@ -4919,7 +4966,7 @@ deleteClassProperty:
     // Anything left unmarked is now moved to the free list
     uint32 Pond::moveUnmarkedToFreeList()
     {
-		uint32 released = 0;
+        uint32 released = 0;
         uint8 *t = pondBottom;
         while (t != pondTop) {
             PondScum *p = (PondScum *)t;
@@ -4929,7 +4976,7 @@ deleteClassProperty:
         }
         if (nextPond)
             released += nextPond->moveUnmarkedToFreeList();
-		return released;
+        return released;
     }
 
 

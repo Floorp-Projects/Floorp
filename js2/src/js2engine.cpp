@@ -66,7 +66,7 @@ namespace MetaData {
     // Begin execution of a bytecodeContainer
     js2val JS2Engine::interpret(Phase execPhase, BytecodeContainer *targetbCon)
     {
-        jsr(execPhase, targetbCon, sp, JS2VAL_VOID);
+        jsr(execPhase, targetbCon, sp - execStack, JS2VAL_VOID);
         ActivationFrame *f = activationStackTop;
         js2val result;
         try {
@@ -88,7 +88,7 @@ namespace MetaData {
         retval = JS2VAL_VOID;
         baseVal = JS2VAL_VOID;
         indexVal = JS2VAL_VOID;
-		pFrame = NULL;
+        pFrame = NULL;
         int i = 0;
         while (true) {
             try {
@@ -168,7 +168,7 @@ namespace MetaData {
                             break;
                         }
                     }
-                    sp = hndlr->mStackTop;
+                    sp = execStack + hndlr->mStackTop;
                     pc = hndlr->mPC;
                     meta->env->setTopFrame(hndlr->mFrame);
                     push(x);
@@ -367,11 +367,11 @@ namespace MetaData {
                   pc(NULL),
                   bCon(NULL),
                   retval(JS2VAL_VOID),
-				  a(JS2VAL_VOID),
-				  b(JS2VAL_VOID),
-				  baseVal(JS2VAL_VOID),
-				  indexVal(JS2VAL_VOID),
-				  pFrame(NULL),
+                  a(JS2VAL_VOID),
+                  b(JS2VAL_VOID),
+                  baseVal(JS2VAL_VOID),
+                  indexVal(JS2VAL_VOID),
+                  pFrame(NULL),
                   INIT_STRINGATOM(true),
                   INIT_STRINGATOM(false),
                   INIT_STRINGATOM(null),
@@ -794,7 +794,7 @@ namespace MetaData {
 
     // Save current engine state (pc, environment top) and
     // jump to start of new bytecodeContainer
-    void JS2Engine::jsr(Phase execPhase, BytecodeContainer *new_bCon, js2val *stackBase, js2val returnVal)
+    void JS2Engine::jsr(Phase execPhase, BytecodeContainer *new_bCon, uint32 stackBase, js2val returnVal)
     {
         ASSERT(activationStackTop < (activationStack + MAX_ACTIVATION_STACK));
         activationStackTop->bCon = bCon;
@@ -805,7 +805,15 @@ namespace MetaData {
         activationStackTop->retval = returnVal;
         activationStackTop++;
         bCon = new_bCon;
-        ASSERT((int32)bCon->getMaxStack() <= (execStackLimit - sp));       // XXX realloc if insufficient
+        if ((int32)bCon->getMaxStack() >= (execStackLimit - sp)) {
+            uint32 curDepth = execStackLimit - sp;
+            uint32 newDepth = curDepth + bCon->getMaxStack();
+            js2val *newStack = new js2val[newDepth];
+            ::memcpy(newStack, execStack, curDepth * sizeof(js2val));
+            execStack = newStack;
+            sp = execStack + curDepth;
+            execStackLimit = execStack + newDepth;
+        }
         pc = new_bCon->getCodeStart();
         phase = execPhase;
 
@@ -822,7 +830,7 @@ namespace MetaData {
         phase = activationStackTop->phase;
         while (meta->env->getTopFrame() != activationStackTop->topFrame)
             meta->env->removeTopFrame();
-        sp = activationStackTop->execStackBase;
+        sp = execStack + activationStackTop->execStackBase;
         if (!JS2VAL_IS_VOID(activationStackTop->retval))    // XXX might need an actual 'returnValue' flag instead
             retval = activationStackTop->retval;
     }
@@ -854,6 +862,7 @@ namespace MetaData {
         GCMARKVALUE(baseVal);
         GCMARKVALUE(indexVal);
         GCMARKOBJECT(pFrame);
+
         JS2Object::mark(true_StringAtom);
         JS2Object::mark(false_StringAtom);
         JS2Object::mark(null_StringAtom);
@@ -873,7 +882,7 @@ namespace MetaData {
     void JS2Engine::pushHandler(uint8 *pc)
     { 
         ActivationFrame *curAct = (activationStackEmpty()) ? NULL : (activationStackTop - 1);
-        mTryStack.push(new HandlerData(pc, sp, curAct, meta->env->getTopFrame())); 
+        mTryStack.push(new HandlerData(pc, sp - execStack, curAct, meta->env->getTopFrame())); 
     }
 
     void JS2Engine::popHandler()

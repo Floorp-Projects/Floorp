@@ -159,7 +159,9 @@ enum JS2Op {
 
 
 class Frame;
+
 class ParameterFrame;
+
 class JS2Object;
 class JS2Metadata;
 class BytecodeContainer;
@@ -227,6 +229,7 @@ private:
 
     js2val a,b;
     js2val baseVal,indexVal;
+
 	ParameterFrame *pFrame;
 
 
@@ -259,9 +262,9 @@ public:
         Frame *topFrame;
         Phase phase;
         js2val retval;
-        js2val *execStackBase;
+        uint32 execStackBase;
     };
-    void jsr(Phase execPhase, BytecodeContainer *bCon, js2val *stackBase, js2val returnVal);
+    void jsr(Phase execPhase, BytecodeContainer *bCon, uint32 stackBase, js2val returnVal);
     bool activationStackEmpty() { return (activationStackTop == activationStack); }
     void rts();
     ActivationFrame *activationStack;
@@ -295,11 +298,11 @@ public:
     void insert(js2val x, int count);
 
     struct HandlerData {
-        HandlerData(uint8 *pc, js2val *stackTop, ActivationFrame *curAct, Frame *frame) 
+        HandlerData(uint8 *pc, uint32 stackTop, ActivationFrame *curAct, Frame *frame) 
             : mPC(pc), mStackTop(stackTop), mActivation(curAct), mFrame(frame) { }
 
         uint8 *mPC;
-        js2val *mStackTop;
+        uint32 mStackTop;
         ActivationFrame *mActivation;
         Frame *mFrame;
     };

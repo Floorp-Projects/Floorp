@@ -91,9 +91,9 @@
                             baseVal = OBJECT_TO_JS2VAL(pInst);
                             pFrame->thisObject = baseVal;
                             pFrame->assignArguments(meta, base(argCount), argCount);
-                            jsr(phase, fWrap->bCon, base(argCount + 1), baseVal);   // seems out of order, but we need to catch the current top frame 
+                            jsr(phase, fWrap->bCon, base(argCount + 1) - execStack, baseVal);   // seems out of order, but we need to catch the current top frame 
                             meta->env->addFrame(pFrame);
-							pFrame = NULL;
+                            pFrame = NULL;
                         }
                     }
                     else
@@ -146,9 +146,9 @@
     //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
                     // XXX
                     pFrame->assignArguments(meta, base(argCount), argCount);
-                    jsr(phase, fWrap->bCon, base(argCount + 2), JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
+                    jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
                     meta->env->addFrame(pFrame);
-					pFrame = NULL;
+                    pFrame = NULL;
                 }
             }
             else
@@ -167,12 +167,11 @@
                     pFrame->instantiate(meta->env);
                     pFrame->thisObject = mc->thisObject;
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
-                    jsr(phase, fWrap->bCon, base(argCount + 2), JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
+                    jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
                     meta->env->addFrame(meta->objectType(mc->thisObject));
                     meta->env->addFrame(pFrame);
-					pFrame = NULL;
+                    pFrame = NULL;
                 }
-
             }
             else
             if (fObj->kind == ClassKind) {

@@ -129,7 +129,7 @@ private:
 };
 
 // A pond is a place to get chunks of PondScum from and to return them to
-#define POND_SIZE (32000)
+#define POND_SIZE (64000)
 #define POND_SANITY (0xFADE2BAD)
 class Pond {
 public:
@@ -233,6 +233,7 @@ public:
 // A MULTINAME is the semantic domain of sets of qualified names. Multinames are used internally in property lookup.
 // We keep Multinames as a basename and a list of namespace qualifiers (XXX is that right - would the basename 
 // ever be different for the same multiname?)
+
 // XXX can nsList ever be null, or could allow null nsList to indicate public?
 typedef std::vector<Namespace *> NamespaceList;
 typedef NamespaceList::iterator NamespaceListIterator;
@@ -240,6 +241,7 @@ class Multiname : public JS2Object {
 public:    
     Multiname(const String *name) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList) { }
     Multiname(const String *name, Namespace *ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList) { addNamespace(ns); }
+
     Multiname(const Multiname& m) : JS2Object(MultinameKind), name(m.name), nsList(m.nsList)    { }
 
     void addNamespace(Namespace *ns)                { nsList->push_back(ns); }
@@ -1179,6 +1181,9 @@ public:
     GlobalObject *glob;
     Environment *env;
     Context cxt;
+
+    enum Flag { JS1, JS2 };
+    Flag flags;
 
     TargetList targetList;          // stack of potential break/continue targets
 

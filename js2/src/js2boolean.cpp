@@ -59,11 +59,13 @@ namespace MetaData {
     {   
         js2val thatValue = OBJECT_TO_JS2VAL(new BooleanInstance(meta->booleanClass->prototype, meta->booleanClass));
         BooleanInstance *boolInst = checked_cast<BooleanInstance *>(JS2VAL_TO_OBJECT(thatValue));
+        JS2Object::RootIterator ri = JS2Object::addRoot(&boolInst);
 
         if (argc > 0)
             boolInst->mValue = meta->toBoolean(argv[0]);
         else
             boolInst->mValue = false;
+        JS2Object::removeRoot(ri);
         return thatValue;
     }
     
