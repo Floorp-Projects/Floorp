@@ -666,19 +666,30 @@ nsAccessibilityService::CreateHTMLBlockAccessible(nsIDOMNode* aDOMNode, nsISuppo
 NS_IMETHODIMP 
 nsAccessibilityService::CreateIFrameAccessible(nsIDOMNode* aDOMNode, nsIAccessible **_retval)
 {
+  NS_ENSURE_ARG_POINTER(aDOMNode);
+  
   *_retval = nsnull;
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(aDOMNode));
-  NS_ASSERTION(content,"Error non nsIContent passed to accessible factory!!!");
+  if (!content)
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIWeakReference> outerWeakShell;
   GetShellFromNode(aDOMNode, getter_AddRefs(outerWeakShell));
 
   nsCOMPtr<nsIPresShell> outerPresShell(do_QueryReferent(outerWeakShell));
+  if (NS_WARN_IF_FALSE(outerPresShell,
+                       "No outer pres shell in CreateHTMLIFrameAccessible!")) {
+    return NS_ERROR_FAILURE;
+  }
+  
   nsCOMPtr<nsIPresContext> outerPresContext;
   outerPresShell->GetPresContext(getter_AddRefs(outerPresContext));
-  NS_ASSERTION(outerPresContext,"No outer pres context in CreateHTMLIFrameAccessible!");
-
+  if (NS_WARN_IF_FALSE(outerPresContext,
+                       "No outer pres context in CreateHTMLIFrameAccessible!")) {
+    return NS_ERROR_FAILURE;
+  }
+  
   nsCOMPtr<nsIDocument> doc;
   if (NS_SUCCEEDED(content->GetDocument(*getter_AddRefs(doc))) && doc) {
     if (outerPresShell) {
