@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.4 2001/12/07 01:36:18 relyea%netscape.com Exp $
+ * $Id: lowcert.c,v 1.5 2002/01/17 00:20:52 ian.mcgreer%sun.com Exp $
  */
 
 #include "seccomon.h"
@@ -339,22 +339,45 @@ nsslowcert_FixupEmailAddr(char *emailAddr)
     return(retaddr);
 }
 
+/* NSS has traditionally keyed certificate entries in the cert database
+ * by (serial number, DER_ISSUER).  The serial number may have a leading zero
+ * in order to make it a signed integer.  However, the ASN.1 decoder now 
+ * strips the leading zero, treating any INTEGER as unsigned.  In order to
+ * be compatible with version 7 of the database, it is necessary to reapply
+ * that leading zero to the serial number when needed, before computing the
+ * database key.
+ */
 static SECStatus
 nsslowcert_KeyFromIssuerAndSN(PRArenaPool *arena, SECItem *issuer, SECItem *sn,
 			SECItem *key)
 {
+    PRBool leadingZero = PR_FALSE;
+    int start;
+
     key->len = sn->len + issuer->len;
+
+    if (sn->data[0] & 0x80) {
+	leadingZero = PR_TRUE;
+	key->len++;
+    }
     
     key->data = (unsigned char*)PORT_ArenaAlloc(arena, key->len);
     if ( !key->data ) {
 	goto loser;
     }
 
+    if (leadingZero) {
+	key->data[0] = 0;
+	start = 1;
+    } else {
+	start = 0;
+    }
+
     /* copy the serialNumber */
-    PORT_Memcpy(key->data, sn->data, sn->len);
+    PORT_Memcpy(key->data + start, sn->data, sn->len);
 
     /* copy the issuer */
-    PORT_Memcpy(&key->data[sn->len], issuer->data, issuer->len);
+    PORT_Memcpy(&key->data[start + sn->len], issuer->data, issuer->len);
 
     return(SECSuccess);
 

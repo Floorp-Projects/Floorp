@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.8 2002/01/15 15:43:35 ian.mcgreer%sun.com Exp $
+ * $Id: pcertdb.c,v 1.9 2002/01/17 00:20:53 ian.mcgreer%sun.com Exp $
  */
 #include "prtime.h"
 
@@ -4162,11 +4162,9 @@ nsslowcert_FindCertByIssuerAndSN(NSSLOWCERTCertDBHandle *handle, NSSLOWCERTIssue
 		}
 	    } 
 	}
-	while (sn->data[index] == 0) {
-	    index++;
-	    data_len--;
-	    data_left--;
-	}
+	/* XXX leaving any leading zeros on the serial number for backwards
+	 * compatibility
+	 */
 	/* not a valid der, must be just an unlucky serial number value */
 	if (data_len != data_left) {
 	    data_len = sn->len;
