@@ -47,17 +47,17 @@ select {
   border:2px inset rgb(192, 192, 192);
 }
 
-select[size] option[-moz-option-selected] {
+select[size] option[_moz-option-selected] {
   background-color:rgb(0, 0, 128);
   color: white;
 }
 
-select option[-moz-option-selected] {
+select option[_moz-option-selected] {
   background-color:rgb(0, 0, 128);
   color: white;
 }
 
-select[size="1"] option[-moz-option-selected] {
+select[size="1"] option[_moz-option-selected] {
   background-color:rgb(0, 0, 128);
   color: white;
 }

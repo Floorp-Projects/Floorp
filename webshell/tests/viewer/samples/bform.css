@@ -37,7 +37,7 @@ option {
  padding-left:10px;
 }
 
-option[-moz-option-selected] {
+option[_moz-option-selected] {
   color:black;
   background-color:rgb(255, 221, 255);
   padding-left:10px;
