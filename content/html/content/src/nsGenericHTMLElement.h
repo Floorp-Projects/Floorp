@@ -85,7 +85,8 @@ public:
   nsresult GetID(nsIAtom*& aResult) const;
   nsresult SetClass(nsIAtom* aClass);
   nsresult GetClass(nsIAtom*& aResult) const;
-  nsresult GetStyleRule(nsIStyleRule*& aResult);
+  nsresult GetContentStyleRule(nsIStyleRule*& aResult);
+  nsresult GetInlineStyleRule(nsIStyleRule*& aResult);
   nsresult ToHTMLString(nsString& aResult) const;
   nsresult ToHTML(FILE* out) const;
 
@@ -420,8 +421,11 @@ public:
   NS_IMETHOD GetClass(nsIAtom*& aResult) const {                       \
     return _g.GetClass(aResult);                                       \
   }                                                                    \
-  NS_IMETHOD GetStyleRule(nsIStyleRule*& aResult) {                    \
-    return _g.GetStyleRule(aResult);                                   \
+  NS_IMETHOD GetContentStyleRule(nsIStyleRule*& aResult) {             \
+    return _g.GetContentStyleRule(aResult);                            \
+  }                                                                    \
+  NS_IMETHOD GetInlineStyleRule(nsIStyleRule*& aResult) {              \
+    return _g.GetInlineStyleRule(aResult);                             \
   }                                                                    \
   NS_IMETHOD ToHTMLString(nsString& aResult) const {                   \
     return _g.ToHTMLString(aResult);                                   \
@@ -469,7 +473,8 @@ public:
   NS_IMETHOD GetClass(nsIAtom*& aResult) const {                       \
     return _g.GetClass(aResult);                                       \
   }                                                                    \
-  NS_IMETHOD GetStyleRule(nsIStyleRule*& aResult);                     \
+  NS_IMETHOD GetContentStyleRule(nsIStyleRule*& aResult);              \
+  NS_IMETHOD GetInlineStyleRule(nsIStyleRule*& aResult);               \
   NS_IMETHOD ToHTMLString(nsString& aResult) const {                   \
     return _g.ToHTMLString(aResult);                                   \
   }                                                                    \

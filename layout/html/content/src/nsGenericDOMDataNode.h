@@ -188,7 +188,11 @@ struct nsGenericDOMDataNode {
     aResult = nsnull;
     return NS_OK;
   }
-  nsresult GetStyleRule(nsIStyleRule*& aResult) {
+  nsresult GetContentStyleRule(nsIStyleRule*& aResult) {
+    aResult = nsnull;
+    return NS_OK;
+  }
+  nsresult GetInlineStyleRule(nsIStyleRule*& aResult) {
     aResult = nsnull;
     return NS_OK;
   }
@@ -493,8 +497,11 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD GetClass(nsIAtom*& aResult) const {                       \
     return _g.GetClass(aResult);                                       \
   }                                                                    \
-  NS_IMETHOD GetStyleRule(nsIStyleRule*& aResult) {                    \
-    return _g.GetStyleRule(aResult);                                   \
+  NS_IMETHOD GetContentStyleRule(nsIStyleRule*& aResult) {             \
+    return _g.GetContentStyleRule(aResult);                            \
+  }                                                                    \
+  NS_IMETHOD GetInlineStyleRule(nsIStyleRule*& aResult) {              \
+    return _g.GetInlineStyleRule(aResult);                             \
   }                                                                    \
   NS_IMETHOD ToHTMLString(nsString& aResult) const;                    \
   NS_IMETHOD ToHTML(FILE* out) const;                                  \

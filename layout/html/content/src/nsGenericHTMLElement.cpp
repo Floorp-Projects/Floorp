@@ -810,15 +810,36 @@ nsGenericHTMLElement::GetClass(nsIAtom*& aResult) const
 }
 
 nsresult
-nsGenericHTMLElement::GetStyleRule(nsIStyleRule*& aResult)
+nsGenericHTMLElement::GetContentStyleRule(nsIStyleRule*& aResult)
 {
-  nsIStyleRule* result = nsnull;
+  nsresult result = NS_ERROR_NULL_POINTER;
+  nsIStyleRule* rule = nsnull;
 
   if (nsnull != mAttributes) {
-    mAttributes->QueryInterface(kIStyleRuleIID, (void**)&result);
+    result = mAttributes->QueryInterface(kIStyleRuleIID, (void**)&rule);
   }
-  aResult = result;
-  return NS_OK;
+  aResult = rule;
+  return result;
+}
+
+nsresult
+nsGenericHTMLElement::GetInlineStyleRule(nsIStyleRule*& aResult)
+{
+  nsresult result = NS_ERROR_NULL_POINTER;
+  nsIStyleRule* rule = nsnull;
+
+  if (nsnull != mAttributes) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::style, value)) {
+      if (eHTMLUnit_ISupports == value.GetUnit()) {
+        nsISupports* supports = value.GetISupportsValue();
+        result = supports->QueryInterface(kIStyleRuleIID, (void**)&rule);
+        NS_RELEASE(supports);
+      }
+    }
+  }
+  aResult = rule;
+  return result;
 }
 
 void
