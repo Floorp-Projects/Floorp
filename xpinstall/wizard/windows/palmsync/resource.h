@@ -36,7 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define IDS_APP_TITLE                   103
+#define IDS_APP_TITLE_INSTALL           103
+#define IDS_APP_TITLE_UNINSTALL         104
+#define IDS_CONDUIT_TITLE               105
+#define IDS_BRAND_NAME                  106
 #define IDI_PALMSYNCINSTALL             107
 #define IDI_SMALL                       108
 #define IDC_PALMSYNCINSTALL             109

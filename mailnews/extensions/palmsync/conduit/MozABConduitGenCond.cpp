@@ -151,7 +151,8 @@ ExportFunc long OpenConduit(PROGRESSFN pFn, CSyncProperties& rProps)
 /////////////////////////////////////////////////////////////////////////////
 ExportFunc long GetConduitName(char* pszName,WORD nLen)
 {
-    pszName = CONDUIT_NAME;    
+    strncpy(pszName,CONDUIT_NAME, nLen-1);   
+    *(pszName+nLen-1) = '\0';
 
     return 0;
 }

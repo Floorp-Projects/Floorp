@@ -29,7 +29,6 @@ PALM_CDK_INC	= $(PALM_CDK_DIR)/C++/Include
 include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= PalmSyncInstall$(BIN_SUFFIX)
-REQUIRES	= $(ZLIB_REQUIRES)
 RESFILE		= PalmSyncInstall.res
 USE_NON_MT_LIBS = 1
 
@@ -44,11 +43,9 @@ LDFLAGS		+= /SUBSYSTEM:WINDOWS /MACHINE:i386
 
 libs:: $(PROGRAM)
 	$(INSTALL) $(PROGRAM) $(DIST)/install
-	$(DIST)/install/nszip$(BIN_SUFFIX) $(DIST)/install/nsinstall$(BIN_SUFFIX)
 
 install:: $(PROGRAM)
 	$(SYSINSTALL) $(IFLAGS2) $(PROGRAM) $(DESTDIR)$(mozappdir)/install
-	$(DIST)/install/$(PROGRAM) -g $(DESTDIR)$(mozappdir)/install/nszip$(BIN_SUFFIX) $(DESTDIR)$(mozappdir)/install/nsinstall$(BIN_SUFFIX)
 
 clean clobber clobber_all realclean::
 	$(RM) $(DIST)/install/$(PROGRAM)
