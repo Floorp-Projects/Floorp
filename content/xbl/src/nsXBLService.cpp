@@ -317,7 +317,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     // Remove ourselves from the set of pending docs.
     nsCOMPtr<nsIBindingManager> bindingManager;
     doc->GetBindingManager(getter_AddRefs(bindingManager));
-    nsCOMPtr<nsIURI> uri(mBindingDocument->GetDocumentURL());
+    nsCOMPtr<nsIURI> uri(getter_AddRefs(mBindingDocument->GetDocumentURL()));
     nsXPIDLCString str;
     uri->GetSpec(getter_Copies(str));
     bindingManager->RemoveLoadingDocListener(nsCAutoString(NS_STATIC_CAST(const char*, str)));

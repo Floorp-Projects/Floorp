@@ -436,7 +436,7 @@ nsBindingManager::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
   nsCOMPtr<nsIDocument> doc;
   aDocumentInfo->GetDocument(getter_AddRefs(doc));
 
-  nsCOMPtr<nsIURI> uri(doc->GetDocumentURL());
+  nsCOMPtr<nsIURI> uri(getter_AddRefs(doc->GetDocumentURL()));
   nsXPIDLCString str;
   uri->GetSpec(getter_Copies(str));
   
