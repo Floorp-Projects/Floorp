@@ -1376,7 +1376,7 @@ nsTableRowGroupFrame::GetHeightBasis(const nsHTMLReflowState& aReflowState)
       }
       if (parentRS && (tableFrame == parentRS->frame) && 
           (parentRS->mComputedHeight > 0) && (parentRS->mComputedHeight < NS_UNCONSTRAINEDSIZE)) {
-        nscoord cellSpacing = PR_MAX(0, tableFrame->GetRowCount() - 1) * tableFrame->GetCellSpacingY();
+        nscoord cellSpacing = PR_MAX(0, tableFrame->GetRowCount() + 1) * tableFrame->GetCellSpacingY();
         result = parentRS->mComputedHeight - cellSpacing;
       }
     }
