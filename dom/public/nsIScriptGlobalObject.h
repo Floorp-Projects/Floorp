@@ -66,7 +66,8 @@ public:
 
   NS_IMETHOD       SetContext(nsIScriptContext *aContext)=0;
   NS_IMETHOD       GetContext(nsIScriptContext **aContext)=0;
-  NS_IMETHOD       SetNewDocument(nsIDOMDocument *aDocument)=0;
+  NS_IMETHOD       SetNewDocument(nsIDOMDocument *aDocument,
+                                  PRBool removeEventListeners)=0;
   NS_IMETHOD       SetDocShell(nsIDocShell *aDocShell)=0;
   NS_IMETHOD       GetDocShell(nsIDocShell **aDocShell)=0;
   NS_IMETHOD       SetOpenerWindow(nsIDOMWindowInternal *aOpener)=0;
