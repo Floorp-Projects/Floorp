@@ -922,6 +922,17 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
           desiredSize.height = priorSize.height;
           if (kidMaxElementSize) 
             *kidMaxElementSize = ((nsTableCellFrame *)kidFrame)->GetPass1MaxElementSize();
+
+          // Because we may have moved the frame we need to make sure any views are
+          // positioned properly. We have to do this, because any one of our parent
+          // frames could have moved and we have no way of knowing...
+          nsIView*  view;
+          kidFrame->GetView(aPresContext, &view);
+          if (view) {
+            nsContainerFrame::PositionFrameView(aPresContext, kidFrame, view);
+          } else {
+            nsContainerFrame::PositionChildViews(aPresContext, kidFrame);
+          }
         }
   
         // Calculate the cell's actual size given its pass2 size. This function
