@@ -1,6 +1,9 @@
 <!ENTITY find.label                "Search:">
 <!ENTITY find.accesskey            "S">
-<!ENTITY collapseExpand.accesskey            "e">
+<!ENTITY expand.label              "Expand">
+<!ENTITY expand.accesskey          "E">
+<!ENTITY collapse.label            "Collapse">
+<!ENTITY collapse.accesskey        "C">
 <!ENTITY byDate.label "By Date">
 <!ENTITY byDate.accesskey "D">
 <!ENTITY bySite.label "By Site">

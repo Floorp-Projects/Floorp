@@ -40,14 +40,16 @@
   <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
 
-  <stringbundle id="historyBundle" src="chrome://browser/locale/history/history.properties"/>
+  <stringbundle id="historyBundle" src="chrome://global/locale/history/history.properties"/>
 
   <commandset id="editMenuCommands"/>
   <keyset id="editMenuKeys"/>
   
   <popup id="historyContextMenu" onpopupshowing="buildContextMenu();">
-    <menuitem id="miCollapseExpand" accesskey="&collapseExpand.accesskey;" default="true"
-              oncommand="collapseExpand();"/>
+    <menuitem id="miExpand" label="&expand.label;" accesskey="&expand.accesskey;"
+              default="true" oncommand="collapseExpand();"/>
+    <menuitem id="miCollapse" label="&collapse.label;" accesskey="&collapse.accesskey;"
+              default="true" oncommand="collapseExpand();"/>
     <menuitem id="miOpen" label="&openLinkInWindow.label;" accesskey="&openLinkInWindow.accesskey;" default="true"
               oncommand="OpenURL(0);"/>
     <menuitem id="miOpenInNewWindow" label="&openInNewWindow.label;" accesskey="&openInNewWindow.accesskey;"
