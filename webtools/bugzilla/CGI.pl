@@ -315,7 +315,13 @@ sub GetBugActivity {
     if (defined $starttime) {
         $datepart = "and bugs_activity.bug_when > " . SqlQuote($starttime);
     }
-    
+    my $suppjoins = "";
+    my $suppwhere = "";
+    if (Param("insidergroup") && !UserInGroup(Param('insidergroup'))) {
+        $suppjoins = "LEFT JOIN attachments 
+                   ON attachments.attach_id = bugs_activity.attach_id";
+        $suppwhere = "AND NOT(COALESCE(attachments.isprivate,0))"; 
+    }
     my $query = "
         SELECT COALESCE(fielddefs.description, bugs_activity.fieldid),
                 fielddefs.name,
@@ -323,11 +329,11 @@ sub GetBugActivity {
                 DATE_FORMAT(bugs_activity.bug_when,'%Y.%m.%d %H:%i'),
                 bugs_activity.removed, bugs_activity.added,
                 profiles.login_name
-        FROM bugs_activity LEFT JOIN fielddefs ON 
+        FROM bugs_activity $suppjoins LEFT JOIN fielddefs ON 
                                      bugs_activity.fieldid = fielddefs.fieldid,
              profiles
         WHERE bugs_activity.bug_id = $id $datepart
-              AND profiles.userid = bugs_activity.who
+              AND profiles.userid = bugs_activity.who $suppwhere
         ORDER BY bugs_activity.bug_when";
 
     SendSQL($query);
