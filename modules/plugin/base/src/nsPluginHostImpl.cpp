@@ -1387,8 +1387,8 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType, 
       instance->SetWindow(window);
 
       // don't make an initial steam if it's a java applet
-      if(!aMimeType || PL_strcasecmp(aMimeType, "application/x-java-vm"))
-	      rv = NewEmbededPluginStream(aURL, nsnull, instance);
+      if(!aMimeType || (PL_strcasecmp(aMimeType, "application/x-java-vm") != 0 && PL_strcasecmp(aMimeType, "application/x-java-applet") != 0))
+        rv = NewEmbededPluginStream(aURL, nsnull, instance);
 
       NS_RELEASE(instance);
     }
