@@ -225,13 +225,14 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
       keyEvent->GetKeyCode(&keyCode);
       keyEvent->GetCharCode(&charCode);
 
-      // If charCode == 0, then it is not a printable character.
-      // Don't attempt to handle accesskey for non-printable characters
-      if (IsAccessKeyPressed(keyEvent) && charCode &&
-        (keyCode != (PRUint32)mAccessKey))
-      {
+      // Clear the access key flag unless we are pressing the access key.
+      if (keyCode != (PRUint32)mAccessKey)
         mAccessKeyDown = PR_FALSE;
 
+      // If charCode == 0, then it is not a printable character.
+      // Don't attempt to handle accesskey for non-printable characters
+      if (IsAccessKeyPressed(keyEvent) && charCode)
+      {
         // Do shortcut navigation.
         // A letter was pressed. We want to see if a shortcut gets matched. If
         // so, we'll know the menu got activated.
