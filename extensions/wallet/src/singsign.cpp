@@ -1726,6 +1726,10 @@ static nsKeyType saveCountP = INITIAL_SAVECOUNTP;
 
 /*
  * Load signon data from disk file
+ * Return value is:
+ *   -1: fatal error
+ *    0: successfully load
+ *   +1: user aborted the load (by failing to open the database)
  */
 PUBLIC int
 SI_LoadSignonData(PRBool fullLoad) {
@@ -1774,7 +1778,7 @@ SI_LoadSignonData(PRBool fullLoad) {
   if (!strmu.is_open()) {
     /* this means no data was previously saved, so we must be fully loaded at this time */
     si_FullyLoaded = fullLoad;
-    return -1;
+    return 0;
   }
 
   SI_RemoveAllSignonData();
@@ -1935,7 +1939,7 @@ SI_LoadSignonData(PRBool fullLoad) {
     Recycle(URLName);
     if (badInput) {
       si_unlock_signon_list();
-      return (1);
+      return -1;
     }
 
     PRInt32 count = signonData->Count();
@@ -1949,7 +1953,7 @@ SI_LoadSignonData(PRBool fullLoad) {
   si_unlock_signon_list();
   si_PartiallyLoaded = PR_TRUE;
   si_FullyLoaded = fullLoad;
-  return(0);
+  return 0;
 }
 
 /*
@@ -2277,7 +2281,7 @@ SINGSIGN_RememberSignonData (char* URLName, nsVoidArray * signonData)
     if (j<signonData->Count()) {
       data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
       if (si_OkToSave(URLName, data2->value /* username */)) {
-        if ((SI_LoadSignonData(PR_TRUE) == 0) && (Wallet_KeySize() >= 0)) {
+        if (SI_LoadSignonData(PR_TRUE) == 0) {
           /* user succeeded in unlocking the database */
           si_PutData(URLName, signonData, PR_TRUE);
         }
@@ -2455,7 +2459,7 @@ si_RememberSignonDataFromBrowser(const char* URLName, nsAutoString username, nsA
   signonData->AppendElement(data2);
 
   /* Save the signon data */
-  if ((SI_LoadSignonData(PR_TRUE) == 0) && (Wallet_KeySize() >= 0)) {
+  if (SI_LoadSignonData(PR_TRUE) == 0) {
     /* user succeeded in unlocking the database */
     si_PutData(URLName, signonData, PR_TRUE);
   }
