@@ -6,8 +6,8 @@
   
   <binding id="basewindow">
     <content>
-      <children/>
       <xul:popupgroup/>
+      <children/>
     </content>
   </binding>
 
