@@ -98,7 +98,6 @@ public:
                         nsDrawingSurface aSurface,
                         PRInt32 aSXOffset, PRInt32 aSYOffset,
                         const nsRect &aTileRect);
-#ifdef USE_IMG2
 
 	
    /**
@@ -110,7 +109,6 @@ public:
 	
   NS_IMETHOD          DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord aDY,
                                   nscoord aDWidth, nscoord aDHeight);
-#endif
 	virtual void				SetAlphaLevel(PRInt32 aAlphaLevel);
 	virtual PRInt32			GetAlphaLevel();
 	virtual void*				GetBitInfo()					{ return nsnull; }

@@ -2480,54 +2480,6 @@ nsRenderingContextOS2::GetBoundingMetrics(const PRUnichar*   aString,
 }
 #endif // MOZ_MATHML
 
-// Image drawing: just proxy on to the image object, so no worries yet.
-NS_IMETHODIMP nsRenderingContextOS2::DrawImage( nsIImage *aImage, nscoord aX, nscoord aY)
-{
-   nscoord width, height;
-
-   width = NSToCoordRound( mP2T * aImage->GetWidth());
-   height = NSToCoordRound( mP2T * aImage->GetHeight());
-
-   return this->DrawImage( aImage, aX, aY, width, height);
-}
-
-NS_IMETHODIMP nsRenderingContextOS2::DrawImage( nsIImage *aImage, nscoord aX, nscoord aY,
-                                           nscoord aWidth, nscoord aHeight)
-{
-   nsRect  tr;
-
-   tr.x = aX;
-   tr.y = aY;
-   tr.width = aWidth;
-   tr.height = aHeight;
-
-   return this->DrawImage( aImage, tr);
-}
-                                             
-NS_IMETHODIMP nsRenderingContextOS2::DrawImage( nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
-{
-   nsRect sr,dr;
-
-   sr = aSRect;
-   mTranMatrix->TransformCoord( &sr.x, &sr.y, &sr.width, &sr.height);
-   sr.x = aSRect.x;
-   sr.y = aSRect.y;
-   mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
-
-   dr = aDRect;
-   mTranMatrix->TransformCoord( &dr.x, &dr.y, &dr.width, &dr.height);
-
-   return aImage->Draw( *this, mSurface, sr.x, sr.y, sr.width, sr.height, dr.x, dr.y, dr.width, dr.height);
-}
-
-NS_IMETHODIMP nsRenderingContextOS2::DrawImage( nsIImage *aImage, const nsRect& aRect)
-{
-   nsRect tr( aRect);
-   mTranMatrix->TransformCoord( &tr.x, &tr.y, &tr.width, &tr.height);
-
-   return aImage->Draw( *this, mSurface, tr.x, tr.y, tr.width, tr.height);
-}
-
 NS_IMETHODIMP nsRenderingContextOS2::CopyOffScreenBits(
                      nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                      const nsRect &aDestBounds, PRUint32 aCopyFlags)

@@ -41,7 +41,6 @@
 #include "nsRenderingContextMac.h"
 #include "nsDeviceContextMac.h"
 #include "nsFontMetricsMac.h"
-#include "nsIImage.h"
 #include "nsIRegion.h"
 #include "nsIEnumerator.h"
 #include "nsRegionMac.h"
@@ -1403,75 +1402,6 @@ NS_IMETHODIMP nsRenderingContextMac::DrawString(const nsString& aString,
 
 #pragma mark -
 //------------------------------------------------------------------------
-
-NS_IMETHODIMP nsRenderingContextMac::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
-{
-	nscoord width,height;
-
-	width = NSToCoordRound(mP2T * aImage->GetWidth());
-	height = NSToCoordRound(mP2T * aImage->GetHeight());
-
-	return DrawImage(aImage,aX,aY,width,height);
-}
-
-//------------------------------------------------------------------------
-
-NS_IMETHODIMP nsRenderingContextMac::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
-                                        nscoord aWidth, nscoord aHeight) 
-{
-	nsRect	tr;
-
-	tr.x = aX;
-	tr.y = aY;
-	tr.width = aWidth;
-	tr.height = aHeight;
-
-	return DrawImage(aImage,tr);
-}
-
-//------------------------------------------------------------------------
-
-NS_IMETHODIMP nsRenderingContextMac::DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
-{
-	SetupPortState();
-
-	nsRect sr = aSRect;
-	nsRect dr = aDRect;
-	mGS->mTMatrix.TransformCoord(&sr.x,&sr.y,&sr.width,&sr.height);
-	sr.x -= mTranMatrix->GetXTranslationCoord();
-	sr.y -= mTranMatrix->GetYTranslationCoord();
-	mGS->mTMatrix.TransformCoord(&dr.x,&dr.y,&dr.width,&dr.height);
-
-	return aImage->Draw(*this, mCurrentSurface, sr.x, sr.y, sr.width, sr.height,
-						dr.x, dr.y, dr.width, dr.height);
-}
-
-//------------------------------------------------------------------------
-
-NS_IMETHODIMP nsRenderingContextMac::DrawImage(nsIImage *aImage, const nsRect& aRect)
-{
-	SetupPortState();
-
-	nsRect tr = aRect;
-	mGS->mTMatrix.TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
-  
-	return aImage->Draw(*this, mCurrentSurface, tr.x, tr.y, tr.width, tr.height);
-}
-
-#if 0
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- *	@update 3/16/00 dwc
- */
-NS_IMETHODIMP 
-nsRenderingContextMac::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
-                                                    nscoord aWidth,nscoord aHeight)
-{
-
-  return NS_OK;
-}
-#endif
-
 
 NS_IMETHODIMP nsRenderingContextMac::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
 {

@@ -785,7 +785,6 @@ nsImagePh::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
   	return NS_OK;
 }
 
-#ifdef USE_IMG2
  /**
   * BitBlit the entire (no cropping) nsIImage to another nsImage, the source and dest can be scaled
   * @update - saari 03/08/01
@@ -869,7 +868,6 @@ NS_IMETHODIMP nsImagePh::DrawToImage(nsIImage* aDstImage,
 	}
 	return NS_OK;
 }
-#endif
 
 
 

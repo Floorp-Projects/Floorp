@@ -80,10 +80,8 @@ public:
 		PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
 		PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
 
-#ifdef USE_IMG2
 	NS_IMETHOD DrawToImage(nsIImage *aDstImage, nscoord aDX, nscoord aDY,
 		nscoord aDWidth, nscoord aDHeight);
-#endif
  
 	NS_IMETHOD DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface, 
 		nsRect &aSrcRect, nsRect &aTileRect); 

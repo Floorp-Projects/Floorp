@@ -178,12 +178,6 @@ public:
                         PRInt32 aFontID,
                         const nscoord* aSpacing);
 
-  NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY);
-  NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
-                       nscoord aWidth, nscoord aHeight); 
-  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect);
-  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
-
   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
   //~~~
@@ -217,14 +211,6 @@ protected:
   void SetupFontAndColor(void);
 
   ~nsRenderingContextWin();
-
-  /** ---------------------------------------------------
-   *  See documentation in nsIRenderingContextImpl.h
-   *	@update 4/01/00 dwc
-   */
-  virtual PRBool CanTile(nscoord aWidth,nscoord aHeight);
-
-
 
 private:
    // ConditionRect is used to fix a coordinate overflow problem under WIN95. 

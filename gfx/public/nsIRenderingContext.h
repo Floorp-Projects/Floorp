@@ -47,7 +47,6 @@
 
 class nsIWidget;
 class nsIFontMetrics;
-class nsIImage;
 class nsTransform2D;
 class nsString;
 class nsIDeviceContext;
@@ -64,10 +63,8 @@ struct nsBoundingMetrics;
 #endif
 
 
-#ifdef USE_IMG2
 /* gfx2 */
 class imgIContainer;
-#endif
 
 //cliprect/region combination methods
 
@@ -696,37 +693,6 @@ public:
   NS_IMETHOD DrawString(const nsString& aString, nscoord aX, nscoord aY,
                         PRInt32 aFontID = -1,
                         const nscoord* aSpacing = nsnull) = 0;
-
-  /**
-   * Copy an image to the RenderingContext
-   * @param aX Horzontal left destination coordinate
-   * @param aY Vertical top of destinatio coordinate
-   */
-  NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY) = 0;
-
-  /**
-   * Copy an image to the RenderingContext, scaling can occur if width/hieght does not match source
-   * @param aX Horzontal left destination coordinate
-   * @param aY Vertical top of destinatio coordinate
-   * @param aWidth Width of destination, 
-   * @param aHeight Height of destination
-   */
-  NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
-                       nscoord aWidth, nscoord aHeight) = 0; 
-
-  /**
-   * Copy an image to the RenderingContext, scaling can occur if source/dest rects differ
-   * @param aRect Destination rectangle to copy the image to
-   */
-  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect) = 0;
-
-  /**
-   * Copy an image to the RenderingContext, scaling/clipping can occur if source/dest rects differ
-   * @param aSRect Source rectangle to copy from
-   * @param aDRect Destination rectangle to copy the image to
-   */
-  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)=0;
-
   /**
    * Draw a path.. given a point array.  The Path currently supported is a Quadratic
    * Bezier curve
@@ -838,7 +804,6 @@ public:
 #endif // IBMBIDI
 
 
-#ifdef USE_IMG2
   /* [noscript] void drawImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsPoint aDestPoint); */
   NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint) = 0;
 
@@ -848,7 +813,6 @@ public:
   /* [noscript] void drawTile (in imgIContainer aImage, in nscoord aXOffset, in nscoord aYOffset, [const] in nsRect aTargetRect); */
   NS_IMETHOD DrawTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset, const nsRect * aTargetRect) = 0;
 
-#endif
 };
 
 //modifiers for text rendering

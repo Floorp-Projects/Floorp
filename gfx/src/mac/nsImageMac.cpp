@@ -389,7 +389,6 @@ NS_IMETHODIMP nsImageMac :: Draw(nsIRenderingContext &aContext,
 	return Draw(aContext,aSurface,0,0,mWidth,mHeight,aX,aY,aWidth,aHeight);
 }
  
- #ifdef USE_IMG2
 /** ---------------------------------------------------
  *	See documentation in nsImageMac.h
  *	@update 
@@ -437,8 +436,7 @@ NS_IMETHODIMP nsImageMac :: DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt3
   
   return NS_OK;
 }
-#endif // USE_IMG2
-  
+
 
 /** ---------------------------------------------------
  *	See documentation in nsImageMac.h
