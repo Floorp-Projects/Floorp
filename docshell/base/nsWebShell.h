@@ -29,6 +29,7 @@
 #include "nsIClipboardCommands.h"
 #include "nsDocShell.h"
 #include "nsICommandManager.h"
+#include "nsIIOService.h"
 #include "nsCRT.h"
 
 class nsIEventQueue;
@@ -84,7 +85,7 @@ public:
     NS_IMETHOD OnOverLink(nsIContent* aContent,
         const PRUnichar* aURLSpec,
         const PRUnichar* aTargetSpec);
-    NS_IMETHOD GetLinkState(const char* aLinkURI, nsLinkState& aState);
+    NS_IMETHOD GetLinkState(const nsACString& aLinkURI, nsLinkState& aState);
 
     NS_IMETHOD Create();
     NS_IMETHOD Destroy();
@@ -130,6 +131,9 @@ protected:
 
     nsCOMPtr<nsICommandManager> mCommandManager;
 
+    // cached io service for NS_NewURI
+    nsCOMPtr<nsIIOService> mIOService;
+    
 #ifdef DEBUG
 private:
     // We're counting the number of |nsWebShells| to help find leaks

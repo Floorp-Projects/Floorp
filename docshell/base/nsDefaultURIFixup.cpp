@@ -49,9 +49,9 @@ nsDefaultURIFixup::~nsDefaultURIFixup()
 
 /* nsIURI createFixupURI (in wstring aURIText, in unsigned long aFixupFlags); */
 NS_IMETHODIMP
-nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFlags, nsIURI **aURI)
+nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFlags, nsIURI **aURI)
 {
-    NS_ENSURE_ARG_POINTER(aStringURI);
+    NS_ENSURE_ARG(!aStringURI.IsEmpty());
     NS_ENSURE_ARG_POINTER(aURI);
 
     nsresult rv;
@@ -78,10 +78,9 @@ nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFl
         nsCOMPtr<nsIURI> uri;
         PRUint32 newFixupFlags = aFixupFlags & ~FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
 
-        nsAutoString tempString;
-        tempString = Substring(uriString, 12, uriString.Length() - 12);
-        rv =  CreateFixupURI(tempString.get(), newFixupFlags, getter_AddRefs(uri));
-        if (NS_FAILED(rv) || !uri)
+        rv =  CreateFixupURI(Substring(uriString, 12, uriString.Length() - 12),
+                             newFixupFlags, getter_AddRefs(uri));
+        if (NS_FAILED(rv))
             return NS_ERROR_FAILURE;
         nsCAutoString spec;
         uri->GetSpec(spec);

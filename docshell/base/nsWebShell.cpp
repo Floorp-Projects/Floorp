@@ -191,7 +191,14 @@ nsWebShell::~nsWebShell()
     mDocLoader->Stop();
     mDocLoader->SetContainer(nsnull);
     mDocLoader->Destroy();
+// turn on to track docloader leaks
+#if 0
+    nsrefcnt refcnt;
+    NS_RELEASE2(mDocLoader, refcnt);
+    NS_ASSERTION(mDocLoader == nsnull, "Still have a docloader? who owns it?!");
+#else
     NS_RELEASE(mDocLoader);
+#endif
   }
   // Cancel any timers that were set for this loader.
   CancelRefreshURITimers();
@@ -689,20 +696,42 @@ nsWebShell::OnOverLink(nsIContent* aContent,
 }
 
 NS_IMETHODIMP
-nsWebShell::GetLinkState(const char* aLinkURI, nsLinkState& aState)
+nsWebShell::GetLinkState(const nsACString& aLinkURI, nsLinkState& aState)
 {
   aState = eLinkState_Unvisited;
 
-   if(mGlobalHistory)
-      {
-        PRBool isVisited;
-        NS_ENSURE_SUCCESS(mGlobalHistory->IsVisited(aLinkURI, &isVisited),
-                          NS_ERROR_FAILURE);
-        if (isVisited)
-          aState = eLinkState_Visited;
-      }
+  // no history, leave state unchanged
+  if (!mGlobalHistory)
+    return NS_OK;
+  
+  // default to the given URI
+  nsCAutoString resolvedPath(aLinkURI);
+  nsresult rv;
+    
+  // get the cached IO service
+  if (!mIOService) {
+    mIOService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
+        
+    if (NS_SUCCEEDED(rv)) {
 
-   return NS_OK;
+      // clean up the url using the right parser
+      nsCOMPtr<nsIURI> uri;
+      rv = NS_NewURI(getter_AddRefs(uri), aLinkURI, nsnull, nsnull,
+                     mIOService);
+
+      // now get the fully canonicalized path
+      if (NS_SUCCEEDED(rv))
+        rv = uri->GetSpec(resolvedPath);
+    }
+  }
+  
+  PRBool isVisited;
+  NS_ENSURE_SUCCESS(mGlobalHistory->IsVisited(resolvedPath.get(), &isVisited),
+                    NS_ERROR_FAILURE);
+  if (isVisited)
+    aState = eLinkState_Visited;
+  
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -773,7 +802,6 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
 
       nsCAutoString oldSpec;
       url->GetSpec(oldSpec);
-      NS_ConvertUTF8toUCS2 oldSpecW(oldSpec);
       
       //
       // First try keyword fixup
@@ -854,7 +882,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
         if (doCreateAlternate)
         {
           newURI = nsnull;
-          mURIFixup->CreateFixupURI(oldSpecW.get(),
+          mURIFixup->CreateFixupURI(NS_ConvertUTF8toUCS2(oldSpec),
               nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI, getter_AddRefs(newURI));
         }
       }

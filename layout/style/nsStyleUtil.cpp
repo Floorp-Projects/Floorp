@@ -553,8 +553,8 @@ PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsIPresConte
         // if there is no link, then this anchor is not really a linkpseudo.
         // bug=23209
 
-        char* href;
-        link->GetHrefCString(href);
+        nsXPIDLCString href;
+        link->GetHrefCString(*getter_Copies(href));
 
         if (href) {
           nsILinkHandler *linkHandler = nsnull;
@@ -567,7 +567,6 @@ PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsIPresConte
             // no link handler?  then all links are unvisited
             linkState = eLinkState_Unvisited;
           }
-          nsCRT::free(href);
         } else {
           linkState = eLinkState_NotLink;
         }
@@ -626,10 +625,8 @@ PRBool nsStyleUtil::IsSimpleXlink(nsIContent *aContent, nsIPresContext *aPresCon
 
         // convert here, rather than twice in NS_MakeAbsoluteURI and
         // back again
-        char * href = ToNewCString(val);
-        char * absHREF = nsnull;
-        (void) NS_MakeAbsoluteURI(&absHREF, href, baseURI);
-        nsCRT::free(href);
+        nsCAutoString absHREF;
+        (void) NS_MakeAbsoluteURI(absHREF, NS_ConvertUCS2toUTF8(val), baseURI);
 
         nsILinkHandler *linkHandler = nsnull;
         aPresContext->GetLinkHandler(&linkHandler);
@@ -641,7 +638,6 @@ PRBool nsStyleUtil::IsSimpleXlink(nsIContent *aContent, nsIPresContext *aPresCon
           // no link handler?  then all links are unvisited
           *aState = eLinkState_Unvisited;
         }
-        nsCRT::free(absHREF);
 
         rv = PR_TRUE;
       }
