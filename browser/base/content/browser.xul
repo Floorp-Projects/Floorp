@@ -287,11 +287,11 @@ Contributor(s):
     <menuitem id="context-back"
               label="&backCmd.label;"
               accesskey="&backCmd.accesskey;"
-              oncommand="BrowserBack()"/>
+              command="Browser:Back"/>
     <menuitem id="context-forward"
               label="&forwardCmd.label;"
               accesskey="&forwardCmd.accesskey;"
-              oncommand="BrowserForward()"/>
+              oncommand="Browser:Forward"/>
     <menuitem id="context-reload"
               label="&reloadCmd.label;"
               accesskey="&reloadCmd.accesskey;"
