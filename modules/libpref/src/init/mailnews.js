@@ -375,7 +375,12 @@ pref("mailnews.ui.addressbook_panel_results.version", 1);
 // 1 -> 2 is for the ab results pane outliner landing
 // to hide the non default columns in the select addresses dialog
 // see abCommon.js and abSelectAddressesDialog.js
-pref("mailnews.ui.select_addresses_results.version", 1);                                          
+pref("mailnews.ui.select_addresses_results.version", 1); 
+// for manual upgrades of certain UI features.
+// 1 -> 2 is for the ab results pane
+// to hide the non default columns in the advanced directory search dialog
+// see abCommon.js and ABSearchDialog.js
+pref("mailnews.ui.advanced_directory_search_results.version", 1);                                         
 //If set to a number greater than 0, msg compose windows will be recycled in order to open them quickly
 pref("mail.compose.max_recycled_windows", 0); 
 
