@@ -233,6 +233,41 @@ function matchObject (o, pattern, negate)
     
 }
 
+function matchEntry (partialName, list)
+{
+    
+    if ((typeof partialName == "undefined") ||
+        (String(partialName) == ""))
+        return list;
+
+    var ary = new Array();
+
+    for (var i in list)
+    {
+        if (list[i].indexOf(partialName) == 0)
+            ary.push (list[i]);
+    }
+
+    return ary;
+    
+}
+
+function getCommonPfx (list)
+{
+    var pfx = list[0];
+    var l = list.length;
+    
+    for (var i = 1; i < l; i++)
+    {
+        for (var c = 0; c < pfx.length; c++)
+            if (pfx[c] != list[i][c])
+                pfx = pfx.substr (0, c);
+    }
+
+    return pfx;
+
+}
+
 function renameProperty (obj, oldname, newname)
 {
 

@@ -66,10 +66,20 @@ function cmgr_list (partialName)
     {
         if (this.commands[i].name.indexOf(partialName) == 0)
             ary.push (this.commands[i]);
-        if (this.commands[i].name > partialName)
-            break;
     }
 
     return ary;
 
+}
+
+CCommandManager.prototype.listNames =
+function cmgr_listnames (partialName)
+{
+    var cmds = this.list(partialName);
+    var cmdNames = new Array();
+    
+    for (var c in cmds)
+        cmdNames.push (cmds[c].name);
+
+    return cmdNames;
 }

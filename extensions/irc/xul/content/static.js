@@ -55,6 +55,9 @@ client.lastHistoryReferenced = -1;
 client.incompleteLine = "";
 client.isPermanent = true;
 
+client.lastTabUp = new Date();
+client.DOUBLETAB_TIME = 1500;
+
 CIRCNetwork.prototype.INITIAL_NICK = client.defaultNick;
 CIRCNetwork.prototype.INITIAL_NAME = "chatzilla";
 CIRCNetwork.prototype.INITIAL_DESC = "New Now Know How";
@@ -96,6 +99,11 @@ function initStatic()
                     keys (client.networks) + "]\n" +
                     "More help is available with /help [<command-name>]",
                     "HELLO");
+
+    
+    client.display ("Currently implemented commands are: "  + 
+                    client.commands.listNames().join(", ") + ".", "INFO");
+    
     client.PRINT_DIRECTION = saveDir;
     setCurrentObject (client);
 
@@ -358,7 +366,7 @@ function setClientOutput(doc)
     client.output = doc.getElementById("output");
     /* continue processing now: */
     initStatic();
-    if (client.STARTUP_NETWORK)
+    if (0 && client.STARTUP_NETWORK)
         client.onInputAttach ({inputData: client.STARTUP_NETWORK});
 
 }

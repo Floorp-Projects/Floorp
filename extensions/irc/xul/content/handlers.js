@@ -177,18 +177,18 @@ function onToggleMunger()
 
 function onInputKeyUp (e)
 {
+    if (0 && e.target.id != "input")
+    {
+        dd ("** KeyUp event came from the wrong place, faking it.");
+        dd ("** e.target (" + e.target + ", '" + e.target.id + "') " +
+            " is of type '" + typeof e.target + "'");
+        e = new Object();
+        e.target = document.getElementById ("input");
+    }
     
     switch (e.which)
     {        
         case 13: /* CR */
-            if (e.target.id != "input")
-            {
-                dd ("** KeyUp event came from the wrong place, faking it.");
-                dd ("** e.target (" + e.target + ", '" + e.target.id + "') " +
-                    " is of type '" + typeof e.target + "'");
-                e = new Object();
-                e.target = document.getElementById ("input");
-            }
             e.line = e.target.value;
             onInputCompleteLine (e);
             break;
@@ -211,6 +211,112 @@ function onInputKeyUp (e)
             
             break;
 
+        case 9: /* tab */
+            var selStart = e.target.selectionStart;
+            var selEnd = e.target.selectionEnd;
+            if (selStart != selEnd) 
+            {
+                /* text is highlighted, just move caret to end and exit */
+                e.target.selectionStart = e.target.selectionEnd = v.length;
+                break;
+            }
+            
+            var v = e.target.value;
+            var firstSpace = v.indexOf(" ");
+            if (firstSpace == -1)
+                firstSpace = v.length;
+            
+            if ((v[0] == client.COMMAND_CHAR) && (selStart <= firstSpace))
+            {
+                /* complete a command */                
+                var partialCommand = v.substring (1, firstSpace);
+                var cmds = client.commands.listNames(partialCommand);
+
+                if (cmds.length == 1)
+                {
+                    var pfx = client.COMMAND_CHAR + cmds[0];
+                    if (firstSpace == v.length)
+                        v =  pfx + " ";
+                    else
+                        v = pfx + v.substr (firstSpace);
+                    
+                    e.target.value = v;
+                    e.target.selectionStart = e.target.selectionEnd = 
+                        pfx.length + 1;
+                }
+                else if (cmds.length > 1)
+                {
+                    var d = new Date();
+                    if ((d - client.lastTabUp) <= client.DOUBLETAB_TIME)
+                        client.currentObject.display
+                            ("Commands matching ``" + partialCommand + 
+                             "'' are [" + cmds.join(", ") + "]", "INFO");
+                    else
+                        client.lastTabUp = d;
+
+                    var pfx = client.COMMAND_CHAR + getCommonPfx(cmds);
+                    if (firstSpace == v.length)
+                        v =  pfx;
+                    else
+                        v = pfx + v.substr (firstSpace);
+                    
+                    e.target.value = v;
+                    e.target.selectionStart = e.target.selectionEnd = pfx.length;
+
+                }
+                else
+                    client.currentObject.display ("No commands matching " +
+                                                  partialCommand, "ERROR");
+
+            }
+            else if (client.currentObject.users)
+            {
+                /* complete a nickname */
+                var users = client.currentObject.users;
+                var nicks = new Array();
+                    
+                for (var n in users)
+                    nicks.push (users[n].nick);
+                
+                var nickStart = v.lastIndexOf(" ", selStart) + 1;
+                var nickEnd = v.indexOf (" ", selStart);
+                if (nickEnd == -1)
+                    nickEnd = v.length;
+                
+                var partialNick = v.substring (nickStart, nickEnd);
+                
+                var matchingNicks = matchEntry (partialNick, nicks);
+                
+                if (matchingNicks.length > 0)
+                {
+                    var subst;
+                    
+                    if (matchingNicks.length == 1)
+                        subst = matchingNicks[0];
+                    else
+                    {
+                        var d = new Date();
+                        if ((d - client.lastTabUp) <= client.DOUBLETAB_TIME)
+                            client.currentObject.display
+                                ("Users matching ``" + partialNick +
+                                 "'' are [" + matchingNicks.join(", ") + "]",
+                                 "INFO");
+                        else
+                            client.lastTabUp = d;
+
+                        subst = getCommonPfx(matchingNicks);
+                    }
+
+                    v = v.substr (0, nickStart) + subst + v.substr (nickEnd);
+                    e.target.value = v;
+                    break;
+                        
+                }
+                        
+            }
+
+            break;       
+            
         default:
             client.incompleteLine = e.target.value;
 
