@@ -319,7 +319,6 @@ PrintKey(PK11SymKey *symKey)
     int len = PK11_GetKeyLength(symKey);
     int strength = PK11_GetKeyStrength(symKey, NULL);
     SECItem *value = NULL;
-    SECItem *id = NULL; /* need to read the ID of a key */
     CK_KEY_TYPE type = PK11_GetSymKeyType(symKey);
     (void) PK11_ExtractKeyValue(symKey);
 

@@ -62,7 +62,6 @@ static void Usage(char *progName)
 int main(int argc, char **argv)
 {
     char *progName;
-    int option;
     FILE *outFile;
     PRFileDesc *inFile;
     SECItem der;
