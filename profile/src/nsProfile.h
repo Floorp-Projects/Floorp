@@ -99,6 +99,7 @@ private:
 
     nsString mCurrentProfileName;
     PRBool mCurrentProfileAvailable;
+    nsProfileLock mCurrentProfileLock;
 
     PRBool mIsUILocaleSpecified;
     nsString mUILocaleName;

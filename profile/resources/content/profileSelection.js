@@ -159,6 +159,8 @@ function onStart()
 {
   var profileList = document.getElementById("profiles");
   var selected = profileList.selectedItems[0];
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
+    getService(Components.interfaces.nsIPromptService);
 
   var profilename = selected.getAttribute("profile_name");
   if( selected.getAttribute("rowMigrate") == "no" ) {
@@ -168,8 +170,6 @@ function onStart()
                               gBrandBundle.getString("brandShortName"));
     var title = gProfileManagerBundle.getString("migratetitle");
 
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
     if (promptService.confirm(window, title, lString)) {
       var profileDir = profile.getProfileDir(profilename);
       if (profileDir) {
@@ -196,34 +196,30 @@ function onStart()
   ioService.offline = offlineState.checked;
 
   try {
-
-    var dirExists;
-
-    try {
-      var profileDir = profile.getProfileDir(profilename);
-      dirExists = profileDir.exists();
-    }
-    catch (e) {
-      dirExists = false;
-    }
-    
-	if (dirExists == false) {
-	  var brandName = gBrandBundle.getString("brandShortName");
-	  var alertString = gProfileManagerBundle.getFormattedString("profDirMissing", [brandName, profilename]);
-	  alertString = alertString.replace(/\s*<html:br\/>/g,"\n");	  
-      alert(alertString);
-      return;
-    }
-
     // All this really does is set the current profile.
     // It has nothing to do with starting the application.
     profile.startApprunner(profilename);
   }
   catch (ex) {
-    //var stringA = gProfileManagerBundle.getString(failProfileStartA);
-    //var stringB = gProfileManagerBundle.getString(failProfileStartB);
-    //alert(stringA + " " + profilename + " " + stringB);
+	  var brandName = gBrandBundle.getString("brandShortName");    
+    var message;
+    switch (ex.result) {
+      case Components.results.NS_ERROR_FILE_ACCESS_DENIED:
+        message = gProfileManagerBundle.getFormattedString("profDirLocked", [brandName, profilename]);
+        message = message.replace(/\s*<html:br\/>/g,"\n");
+        break;
+      case Components.results.NS_ERROR_FILE_NOT_FOUND:
+        message = gProfileManagerBundle.getFormattedString("profDirMissing", [brandName, profilename]);
+        message = message.replace(/\s*<html:br\/>/g,"\n");
+        break;
+      default:
+        message = ex.message;
+        break;
   }
+      promptService.alert(window, null, message);
+      return;
+  }
+    
   return true;
 }
 

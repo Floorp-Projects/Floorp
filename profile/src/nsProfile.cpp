@@ -537,13 +537,22 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
         {
             // Make sure the profile dir exists. If not, we need the UI
             nsCOMPtr<nsIFile> curProfileDir;
-            PRBool exists;
+            PRBool exists = PR_FALSE;
             
             rv = GetCurrentProfileDir(getter_AddRefs(curProfileDir));
             if (NS_SUCCEEDED(rv))
                 rv = curProfileDir->Exists(&exists);
             if (NS_FAILED(rv) || !exists)
                 profileURLStr = PROFILE_MANAGER_URL; 
+            if (exists)
+            {
+                // If the profile is locked, we need the UI
+                nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(curProfileDir));
+                nsProfileLock tempLock;
+                rv = tempLock.Lock(localFile);
+                if (NS_FAILED(rv))
+                    profileURLStr = PROFILE_MANAGER_URL;
+            } 
         }
         else
             profileURLStr = PROFILE_SELECTION_URL;
@@ -1180,6 +1189,16 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     else
         isSwitch = PR_FALSE;
     
+    nsProfileLock localLock;
+    nsCOMPtr<nsILocalFile> localProfileDir(do_QueryInterface(profileDir, &rv));
+    if (NS_FAILED(rv)) return rv;
+    rv = localLock.Lock(localProfileDir);
+    if (NS_FAILED(rv))
+    {
+        NS_ERROR("Could not get profile directory lock.");
+        return rv;
+    }
+
     nsCOMPtr<nsIObserverService> observerService = 
              do_GetService("@mozilla.org/observer-service;1", &rv);
     NS_ENSURE_TRUE(observerService, NS_ERROR_FAILURE);
@@ -1214,6 +1233,7 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     gProfileDataAccess->SetCurrentProfile(aCurrentProfile);
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
     gProfileDataAccess->UpdateRegistry(nsnull);
+    mCurrentProfileLock = localLock;
             
     if (NS_FAILED(rv)) return rv;
     mCurrentProfileAvailable = PR_TRUE;
@@ -1300,6 +1320,7 @@ NS_IMETHODIMP nsProfile::ShutDownCurrentProfile(PRUint32 shutDownType)
     UpdateCurrentProfileModTime(PR_TRUE);
     mCurrentProfileAvailable = PR_FALSE;
     mCurrentProfileName.Truncate(0);
+    mCurrentProfileLock.Unlock();
     
     return NS_OK;
 }
@@ -2188,7 +2209,7 @@ nsProfile::MigrateProfileInternal(const PRUnichar* profileName,
 
     // In either of the cases below we have to return error to make
     // app understand that migration has failed.
-    if (errorCode == CREATE_NEW)
+    if (errorCode == MIGRATION_CREATE_NEW)
     {
         PRInt32 numProfiles = 0;
         ShowProfileWizard();
@@ -2212,7 +2233,7 @@ nsProfile::MigrateProfileInternal(const PRUnichar* profileName,
         mOutofDiskSpace = PR_TRUE;
         return NS_ERROR_FAILURE;
     }
-    else if (errorCode == CANCEL) 
+    else if (errorCode == MIGRATION_CANCEL) 
     {
         // When the automigration process fails because of disk space error,
         // user may choose to simply quit the app from the dialog presented 
@@ -2229,7 +2250,7 @@ nsProfile::MigrateProfileInternal(const PRUnichar* profileName,
         mOutofDiskSpace = PR_TRUE;
         return NS_ERROR_FAILURE;
     }
-    else if (errorCode != SUCCESS) 
+    else if (errorCode != MIGRATION_SUCCESS) 
     {
         return NS_ERROR_FAILURE;
     }

@@ -397,7 +397,7 @@ extern "C" void ProfileMigrationController(void *data)
 
     if (migrator->mErrorCode != 0)
     {
-      if (migrator->mErrorCode == RETRY)
+      if (migrator->mErrorCode == MIGRATION_RETRY)
       {
         rv = prefProxy->ShowSpaceDialog(&choice);
         if (NS_FAILED(rv))
@@ -409,7 +409,7 @@ extern "C" void ProfileMigrationController(void *data)
       }
     }
 
-  } while (choice == RETRY);
+  } while (choice == MIGRATION_RETRY);
 
   prefProxy->WindowCloseCallback();
   migrator->mErrorCode = choice;
@@ -823,7 +823,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 
     if (!enoughSpace)
     {
-      mErrorCode = RETRY; 
+      mErrorCode = MIGRATION_RETRY; 
       return NS_OK;
     }
 
