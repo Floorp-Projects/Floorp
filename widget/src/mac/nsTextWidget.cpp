@@ -280,25 +280,23 @@ NS_METHOD  nsTextWidget::GetText(nsString& aTextBuffer, PRUint32 /*aBufferSize*/
 
 //-------------------------------------------------------------------------
 //
-//
+// Assumes aSize is |out| only and does not yet have a value.
 //-------------------------------------------------------------------------
-NS_METHOD  nsTextWidget::SetText(const nsString& aText, PRUint32& aSize)
-{ 
+NS_METHOD  nsTextWidget::SetText(const nsString& aText, PRUint32& outSize)
+{
+	outSize = aText.Length();
+	const unsigned int bufferSize = outSize + 1;	// add 1 for null
+	
 	if (!mControl)
 		return NS_ERROR_NOT_INITIALIZED;
 
-	Size textSize = aText.Length();
-	if ( aSize < textSize )				// truncate to given size
-		textSize = aSize;
-	const unsigned int bufferSize = textSize + 1;	// add 1 for null
 		
 	auto_ptr<char> str ( new char[bufferSize] );
 	if ( str.get() )
 	{
 		aText.ToCString(str.get(), bufferSize);
-		::SetControlData(mControl, kControlNoPart, kControlEditTextTextTag, textSize, (Ptr)str.get());
+		::SetControlData(mControl, kControlNoPart, kControlEditTextTextTag, outSize, (Ptr)str.get());
 		Invalidate(PR_FALSE);
-		aSize = textSize;
 	}
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
