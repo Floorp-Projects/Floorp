@@ -112,7 +112,7 @@ radio[disabled="true"] {
 }
 
 radio:hover {
-  color: -moz-gtk2-hovertext;
+  color: -moz-buttonhovertext;
 }
 
 radio:hover:active > .radio-spacer-box > .radio-check-box1 {
