@@ -810,7 +810,16 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
 	 if (!hiddenWin)
 		 Quit();
   #else
-  	  Quit();
+    // Check to see if we're in server mode, first.
+    if ( mNativeAppSupport ) {
+        PRBool serverMode = PR_FALSE;
+        mNativeAppSupport->GetIsServerMode( &serverMode );
+        if ( serverMode ) {
+            // Then don't quit.
+            return NS_OK;
+        }
+    }
+    Quit();
   #endif 
   }
   return rv;

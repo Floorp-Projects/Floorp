@@ -93,9 +93,7 @@ nsNativeAppSupportBase::GetIsServerMode(PRBool *aIsServerMode) {
 }
 
 NS_IMETHODIMP
-nsNativeAppSupportBase::CacheBrowserWindow(nsIDOMWindow *aWindow, PRBool *aResult) {
-    NS_ENSURE_ARG( aResult );
-    *aResult = PR_FALSE;
+nsNativeAppSupportBase::StartServerMode() {
     return NS_OK;
 }
 

@@ -17,6 +17,24 @@ function goQuitApplication()
   var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
   var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
   var enumerator = windowManagerInterface.getEnumerator( null );
+  var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
+  appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService );
+
+  // Get current server mode setting and turn it off while windows close.
+  var serverMode = false;
+  var nativeAppSupport = null;
+  try 
+  {
+    nativeAppSupport = appShell.nativeAppSupport;
+    if ( nativeAppSupport )
+    {
+      serverMode = nativeAppSupport.isServerMode;
+      nativeAppSupport.isServerMode = false;
+    }
+  }
+  catch ( ex )
+  {
+  }
 
   while ( enumerator.hasMoreElements()  )
   {
@@ -31,13 +49,18 @@ function goQuitApplication()
     {
       // dump(" try to close \n" );
       if ( !domWindow.tryToClose() )
+      {
+        // Restore server mode if it was set on entry.
+        if ( serverMode )
+        {
+          nativeAppSupport.isServerMode = true;
+        }
         return false;
+      }
     }
   };
 
   // call appshell exit
-  var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
-  appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService );
   appShell.Quit();
   return true;
 }

@@ -121,11 +121,17 @@
  *                     invoking the Hide() method on the nsISplashScreen
  *                     interface maintained by the app shell service.
  *
- *  cacheBrowserWindow - Takes an about-to-be-closed navigator window
- *                       and "caches it" for later use.  It returns an
- *                       indicator of whether the window was actually
- *                       cached.  If that result is false, then the
- *                       caller should close the window normally.
+ *  startServerMode -  Method that "starts" server mode.  Typically, this
+ *                     will create a hidden Navigator window (and then close
+ *                     it) in order to fill the cache, load shared libraries,
+ *                     etc.  Note that this method does not set the
+ *                     isServerMode attribute, nor does setting that attribute
+ *                     "start" server mode (at least in the same sense as is
+ *                     meant by this method).  Basically, native code will
+ *                     set isServerMode to tell nsAppRunner; nsAppRunner will
+ *                     then call this method (implemented back in the same
+ *                     native code) at the appropriate time for any additional
+ *                     server-mode startup to be completed.
  *
  * This interface has these attributes:
  *  isServerMode - Boolean attribute indicating whether the application
@@ -154,5 +160,5 @@ interface nsINativeAppSupport : nsISupports {
 
     // Server mode.
     attribute boolean isServerMode;
-    boolean cacheBrowserWindow(in nsIDOMWindow aWindow);
+    void startServerMode();
 };

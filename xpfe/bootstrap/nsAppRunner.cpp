@@ -256,8 +256,7 @@ static nsresult OpenWindow(const char *urlstr, const PRUnichar *args)
 static nsresult
 OpenChromeURL( const char * urlstr,
                PRInt32 height = NS_SIZETOCONTENT,
-               PRInt32 width = NS_SIZETOCONTENT,
-               nsIDOMWindow **aResult = nsnull )
+               PRInt32 width = NS_SIZETOCONTENT )
 {
 #ifdef DEBUG_CMD_LINE
     printf("OpenChromeURL(%s,%d,%d)\n",urlstr,height,width);
@@ -278,20 +277,6 @@ OpenChromeURL( const char * urlstr,
                                       nsIWebBrowserChrome::CHROME_ALL,
                                       width, height,
                                       getter_AddRefs(newWindow));
-    // Check if caller wants resulting window.
-    if(aResult) {
-        // Always return 0 if we don't have a window.
-        *aResult = nsnull;
-        // If window open was OK, then pass result as nsIDOMWindow.
-        if (NS_SUCCEEDED(rv) && newWindow) {
-            nsCOMPtr<nsIDocShell> docShell;
-            if (NS_SUCCEEDED(newWindow->GetDocShell(getter_AddRefs(docShell)))) {
-                nsCOMPtr<nsIDOMWindow> newDOMWin = do_GetInterface(docShell);
-                *aResult = newDOMWin;
-                NS_IF_ADDREF(*aResult);
-            }
-        }
-    }
   return rv;
 }
 
@@ -636,7 +621,7 @@ static nsresult DoOnShutdown()
 }
 
 
-static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width, nsIDOMWindow **aResult)
+static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
 {
     nsresult rv;
     nsCOMPtr<nsICmdLineHandler> handler(do_GetService(NS_BROWSERSTARTUPHANDLER_CONTRACTID, &rv));
@@ -646,7 +631,7 @@ static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width, nsIDOMWindow **
     rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
     if (NS_FAILED(rv)) return rv;
 
-    rv = OpenChromeURL(chromeUrlForTask, height, width, aResult);
+    rv = OpenChromeURL(chromeUrlForTask, height, width);
     if (NS_FAILED(rv)) return rv;
 
     return rv;
@@ -707,6 +692,22 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
     windowEnumerator->HasMoreElements(&more);
     if ( !more )
     {
+      // If starting up in server mode, then we do things differently.
+      nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
+      if (appShellService) {
+        nsCOMPtr<nsINativeAppSupport> nativeApp;
+        appShellService->GetNativeAppSupport(getter_AddRefs(nativeApp));
+        if (nativeApp) {
+          PRBool serverMode = PR_FALSE;
+          nativeApp->GetIsServerMode(&serverMode);
+          if (serverMode) {
+            // Create special Nav window.
+            nativeApp->StartServerMode();
+            return NS_OK;
+          }
+        }
+      }
+
       // No window exists so lets create a browser one
       PRInt32 height  = NS_SIZETOCONTENT;
       PRInt32 width  = NS_SIZETOCONTENT;
@@ -728,26 +729,7 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
       if ((const char*)tempString)
         PR_sscanf(tempString, "%d", &height);
 				
-      nsCOMPtr<nsIDOMWindow> browserWin;
-      rv = OpenBrowserWindow(height, width, getter_AddRefs(browserWin));
-
-      // See if we're in running in server mode.
-      if (NS_SUCCEEDED(rv) && browserWin) {
-        nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
-        if (appShellService) {
-          nsCOMPtr<nsINativeAppSupport> nativeApp;
-          appShellService->GetNativeAppSupport(getter_AddRefs(nativeApp));
-          if (nativeApp) {
-            PRBool serverMode = PR_FALSE;
-            nativeApp->GetIsServerMode(&serverMode);
-            if (serverMode) {
-              // Then cache (i.e., hide) this browser window.
-              PRBool cached = PR_FALSE;
-              nativeApp->CacheBrowserWindow(browserWin, &cached);
-            }
-          }
-        }
-      }
+      rv = OpenBrowserWindow(height, width);
     }
   }
   return rv;
