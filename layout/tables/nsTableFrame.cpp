@@ -2083,6 +2083,7 @@ PRBool nsTableFrame::SetCellLayoutData(nsIPresContext* aPresContext,
         NS_ASSERTION(nsnull != mColumnLayoutData, "bad alloc");
         nsTablePart * tablePart = (nsTablePart *)mContent;
         PRInt32 cols = tablePart->GetMaxColumns();
+        PRInt32 rows = tablePart->GetRowCount();
         mColCache = new ColumnInfoCache(cols);
         PRInt32 tableKidCount = tablePart->ChildCount();
         nsIFrame * colGroupFrame = mFirstChild;
@@ -2099,11 +2100,10 @@ PRBool nsTableFrame::SetCellLayoutData(nsIPresContext* aPresContext,
               // TODO:  unify these 2 kinds of column data
               // TODO:  cache more column data, like the mWidth.GetUnit and what its value
 
-              nsColLayoutData *colData = new nsColLayoutData();
               nsTableColFrame *colFrame=nsnull;
               // XXX Why is this using ChildAt() instead of just walking the sibling list?
               colGroupFrame->ChildAt(j, (nsIFrame *&)colFrame);
-              colData->SetColFrame(colFrame);
+              nsColLayoutData *colData = new nsColLayoutData(colFrame, rows);
               mColumnLayoutData->AppendElement((void *)colData);
               
               // also add the column to the column cache
@@ -2123,22 +2123,25 @@ PRBool nsTableFrame::SetCellLayoutData(nsIPresContext* aPresContext,
         }
       }
 
-    // create cell layout data objects for the passed in data, one per column spanned
-    // for now, divide width equally between spanned columns
-
-      PRInt32 firstColIndex = aCell->GetColIndex();
+      // create cell layout data objects for the passed in data, one per column spanned.
+      // For now, divide width equally between spanned columns
       // XXX Add a GetRowIndex() member function to nsTableCell and we can save the
       // reference counting overhead...
       nsTableRow *row = aCell->GetRow();            // row: ADDREF++
       PRInt32 rowIndex = row->GetRowIndex();
       NS_RELEASE(row);                              // row: ADDREF--
       PRInt32 colSpan = aCell->GetColSpan();
-      nsColLayoutData * colData = (nsColLayoutData *)(mColumnLayoutData->ElementAt(firstColIndex));
-      nsVoidArray *col = colData->GetCells();
-      if (gsDebugCLD) printf ("     ~ SetCellLayoutData with row = %d, firstCol = %d, colSpan = %d, colData = %ld, col=%ld\n", 
-                           rowIndex, firstColIndex, colSpan, colData, col);
-      for (PRInt32 i=0; i<colSpan; i++)
-      {
+      PRInt32 firstColIndex = aCell->GetColIndex();
+
+      for (PRInt32 i = 0; i < colSpan; i++) {
+        if (i > 0) {
+          int j = 5;
+        }
+        nsColLayoutData * colData = (nsColLayoutData *)(mColumnLayoutData->ElementAt(firstColIndex + i));
+        nsVoidArray *col = colData->GetCells();
+        if (gsDebugCLD) printf ("     ~ SetCellLayoutData with row = %d, firstCol = %d, colSpan = %d, colData = %ld, col=%ld\n", 
+                             rowIndex, firstColIndex, colSpan, colData, col);
+  
         nsSize * cellSize = aData->GetMaxElementSize();
         nsSize partialCellSize(*cellSize);
         partialCellSize.width = (cellSize->width)/colSpan;
@@ -2146,22 +2149,13 @@ PRBool nsTableFrame::SetCellLayoutData(nsIPresContext* aPresContext,
         nsCellLayoutData * kidLayoutData = new nsCellLayoutData(aData->GetCellFrame(),
                                                                 aData->GetDesiredSize(),
                                                                 &partialCellSize);
-        PRInt32 numCells = col->Count();
-        if (gsDebugCLD) printf ("     ~ before setting data, number of cells in this column = %d\n", numCells);
-        if ((numCells==0) || numCells<i+rowIndex+1)
-        {
-          if (gsDebugCLD) printf ("     ~ appending  %d\n", i+rowIndex);
-          col->AppendElement((void *)kidLayoutData);
+        NS_ASSERTION(col->Count() > rowIndex, "unexpected count");
+        if (gsDebugCLD) printf ("     ~ replacing rowIndex = %d\n", rowIndex);
+        nsCellLayoutData* data = (nsCellLayoutData*)col->ElementAt(rowIndex);
+        col->ReplaceElementAt((void *)kidLayoutData, rowIndex);
+        if (data != nsnull) {
+          delete data;
         }
-        else
-        {
-          if (gsDebugCLD) printf ("     ~ replacing  %d + rowIndex = %d\n", i, i+rowIndex);
-          nsCellLayoutData* data = (nsCellLayoutData*)col->ElementAt(i+rowIndex);
-          col->ReplaceElementAt((void *)kidLayoutData, i+rowIndex);
-          if (data != nsnull)
-            delete data;
-        }
-        if (gsDebugCLD) printf ("     ~ after setting data, number of cells in this column = %d\n", col->Count());
       }
     }
     else
@@ -2190,20 +2184,20 @@ nsCellLayoutData * nsTableFrame::GetCellLayoutData(nsTableCell *aCell)
     {
       PRInt32 firstColIndex = aCell->GetColIndex();
       nsColLayoutData * colData = (nsColLayoutData *)(mColumnLayoutData->ElementAt(firstColIndex));
-      nsVoidArray *cells = colData->GetCells();
-      PRInt32 count = cells->Count();
-      for (PRInt32 i=0; i<count; i++)
-      {
-        nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(i));
-        nsTableCellPtr cell;
-         
-        data->GetCellFrame()->GetContent((nsIContent*&)(cell.AssignRef()));  // cell: REFCNT++
-        if (cell == aCell)
-        {
-          result = data;
-          break;
-        }
+      nsTableRow *row = aCell->GetRow();            // row: ADDREF++
+      PRInt32 rowIndex = row->GetRowIndex();
+      NS_RELEASE(row);                              // row: ADDREF--
+
+      result = colData->ElementAt(rowIndex);
+#ifdef NS_DEBUG
+      // Do some sanity checking
+      if (nsnull != result) {
+        nsIContent* content;
+        result->GetCellFrame()->GetContent(content);
+        NS_ASSERTION(content == aCell, "unexpected cell");
+        NS_IF_RELEASE(content);
       }
+#endif
     }
   }
   return result;
