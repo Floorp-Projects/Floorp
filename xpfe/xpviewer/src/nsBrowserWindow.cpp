@@ -307,35 +307,35 @@ nsBrowserWindow::QueryInterface(const nsIID& aIID,
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
   if (nsnull == aInstancePtrResult) {
-  return NS_ERROR_NULL_POINTER;
+    return NS_ERROR_NULL_POINTER;
   }
 
   *aInstancePtrResult = NULL;
 
   if (aIID.Equals(kIBrowserWindowIID)) {
-  *aInstancePtrResult = (void*) ((nsIBrowserWindow*)this);
-  NS_ADDREF_THIS();
-  return NS_OK;
+    *aInstancePtrResult = (void*) ((nsIBrowserWindow*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
   }
   if (aIID.Equals(kIStreamObserverIID)) {
-  *aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
-  NS_ADDREF_THIS();
-  return NS_OK;
+    *aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
   }
   if (aIID.Equals(kIWebShellContainerIID)) {
-  *aInstancePtrResult = (void*) ((nsIWebShellContainer*)this);
-  NS_ADDREF_THIS();
-  return NS_OK;
+    *aInstancePtrResult = (void*) ((nsIWebShellContainer*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
   }
   if (aIID.Equals(kINetSupportIID)) {
-  *aInstancePtrResult = (void*) ((nsINetSupport*)this);
-  NS_ADDREF_THIS();
-  return NS_OK;
+    *aInstancePtrResult = (void*) ((nsINetSupport*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
-  *aInstancePtrResult = (void*) ((nsISupports*)((nsIBrowserWindow*)this));
-  NS_ADDREF_THIS();
-  return NS_OK;
+    *aInstancePtrResult = (void*) ((nsISupports*)((nsIBrowserWindow*)this));
+    NS_ADDREF_THIS();
+    return NS_OK;
   }
   return NS_NOINTERFACE;
 }
@@ -348,56 +348,55 @@ HandleBrowserEvent(nsGUIEvent *aEvent)
   nsBrowserWindow* bw = nsBrowserWindow::FindBrowserFor(aEvent->widget, FIND_WINDOW);
 
   if (nsnull != bw) {
-  nsSizeEvent* sizeEvent;
-  switch(aEvent->message) {
-  case NS_SIZE:
-    sizeEvent = (nsSizeEvent*)aEvent;  
-    bw->Layout(sizeEvent->windowSize->width,
-         sizeEvent->windowSize->height);
-    result = nsEventStatus_eConsumeNoDefault;
-    break;
+    nsSizeEvent* sizeEvent;
+    switch(aEvent->message) {
+      case NS_SIZE:
+        sizeEvent = (nsSizeEvent*)aEvent;  
+        bw->Layout(sizeEvent->windowSize->width, sizeEvent->windowSize->height);
+        result = nsEventStatus_eConsumeNoDefault;
+        break;
 
-  case NS_DESTROY:
-    {
-    nsViewerApp* app = bw->mApp;
-    result = nsEventStatus_eConsumeDoDefault;
-    bw->Close();
+      case NS_DESTROY:
+        {
+        nsViewerApp* app = bw->mApp;
+        result = nsEventStatus_eConsumeDoDefault;
+        bw->Close();
+        NS_RELEASE(bw);
+
+        // XXX Really shouldn't just exit, we should just notify somebody...
+          if (0 == nsBrowserWindow::gBrowsers.Count()) {
+            app->Exit();
+          }
+        }
+        return result;
+
+      case NS_MENU_SELECTED:
+        result = bw->DispatchMenuItem(((nsMenuEvent*)aEvent)->mCommand);
+        break;
+
+      // XXX This is a hack, but a needed one
+      // It draws one line between the layout window and the status bar
+      case NS_PAINT: 
+        nsIWidget * statusWidget;
+        if (NS_OK == bw->mStatusBar->QueryInterface(kIWidgetIID,(void**)&statusWidget)) {
+          nsRect rect;
+          statusWidget->GetBounds(rect);
+
+          nsRect r;
+          aEvent->widget->GetBounds(r);
+          r.x = 0;
+          r.y = 0;
+          nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
+          drawCtx->SetColor(NS_RGB(192, 192, 192));//aEvent->widget->GetBackgroundColor());
+          rect.y -= 1;
+          drawCtx->DrawLine(0, rect.y, r.width, rect.y);
+          NS_RELEASE(statusWidget);
+        } break;
+
+      default:
+        break;
+    }
     NS_RELEASE(bw);
-
-    // XXX Really shouldn't just exit, we should just notify somebody...
-    if (0 == nsBrowserWindow::gBrowsers.Count()) {
-      app->Exit();
-    }
-    }
-    return result;
-
-  case NS_MENU_SELECTED:
-    result = bw->DispatchMenuItem(((nsMenuEvent*)aEvent)->mCommand);
-    break;
-
-  // XXX This is a hack, but a needed one
-  // It draws one line between the layout window and the status bar
-  case NS_PAINT: 
-    nsIWidget * statusWidget;
-    if (NS_OK == bw->mStatusBar->QueryInterface(kIWidgetIID,(void**)&statusWidget)) {
-    nsRect rect;
-    statusWidget->GetBounds(rect);
-
-    nsRect r;
-    aEvent->widget->GetBounds(r);
-    r.x = 0;
-    r.y = 0;
-    nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
-    drawCtx->SetColor(NS_RGB(192, 192, 192));//aEvent->widget->GetBackgroundColor());
-    rect.y -= 1;
-    drawCtx->DrawLine(0, rect.y, r.width, rect.y);
-    NS_RELEASE(statusWidget);
-    } break;
-
-  default:
-    break;
-  }
-  NS_RELEASE(bw);
   }
   return result;
 }
@@ -416,19 +415,18 @@ void nsBrowserWindow::ExecuteJavaScriptString(nsIWebShell* aWebShell, nsString& 
 
   // Get nsIScriptContextOwner
   nsIScriptContextOwner* scriptContextOwner;
-	if (NS_OK == aWebShell->QueryInterface(kIScriptContextOwnerIID,(void**)&scriptContextOwner))
-	{
-  const char* url = "";
+	if (NS_OK == aWebShell->QueryInterface(kIScriptContextOwnerIID,(void**)&scriptContextOwner)) {
+    const char* url = "";
     // Get nsIScriptContext
-  nsIScriptContext* scriptContext;
-  nsresult res = scriptContextOwner->GetScriptContext(&scriptContext);
-  if (NS_OK == res) {
-    // Ask the script context to evalute the javascript string
-    scriptContext->EvaluateString(aJavaScript, 
-    url, 0, &retval);
+    nsIScriptContext* scriptContext;
+    nsresult res = scriptContextOwner->GetScriptContext(&scriptContext);
+    if (NS_OK == res) {
+      // Ask the script context to evalute the javascript string
+      scriptContext->EvaluateString(aJavaScript, 
+      url, 0, &retval);
 
-    NS_RELEASE(scriptContext);
-  }
+      NS_RELEASE(scriptContext);
+    }
 		NS_RELEASE(scriptContextOwner);
 	}
 }
@@ -464,10 +462,10 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 
   // Create web shell
   rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
-                  kIWebShellIID,
-                  (void**)&mWebShell);
+                                    kIWebShellIID,
+                                    (void**)&mWebShell);
   if (NS_OK != rv) {
-  return rv;
+    return rv;
   }
   r.x = r.y = 0;
   rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
@@ -490,16 +488,16 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 
   if (NS_CHROME_TOOL_BAR_ON & aChromeMask) {
   rv = CreateToolBar(r.width);
-  if (NS_OK != rv) {
-    return rv;
-  }
+    if (NS_OK != rv) {
+      return rv;
+    }
   }
 
   if (NS_CHROME_STATUS_BAR_ON & aChromeMask) {
-  rv = CreateStatusBar(r.width);
-  if (NS_OK != rv) {
-    return rv;
-  }
+    rv = CreateStatusBar(r.width);
+    if (NS_OK != rv) {
+      return rv;
+    }
   }
 
   // Now lay it all out
@@ -518,11 +516,9 @@ HandleToolbarEvent(nsGUIEvent *aEvent)
   nsEventStatus result = nsEventStatus_eIgnore;
   nsIToolbar * toolbar;
 	if (NS_OK == aEvent->widget->QueryInterface(kIToolbarIID,(void**)&toolbar)) {
-  result = toolbar->HandleEvent(aEvent);
-  NS_RELEASE(toolbar);
+    result = toolbar->HandleEvent(aEvent);
+    NS_RELEASE(toolbar);
   }
-
-
   return result;
 }
 
@@ -534,27 +530,27 @@ HandleToolbarMgrEvent(nsGUIEvent *aEvent)
   nsEventStatus result = nsEventStatus_eIgnore;
 
   switch(aEvent->message) {
-  case NS_PAINT: {
-    nsRect r;
-    aEvent->widget->GetBounds(r);
-    r.x = 0;
-    r.y = 0;
-    nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
-    drawCtx->SetColor(aEvent->widget->GetBackgroundColor());
-    drawCtx->FillRect(r);
+    case NS_PAINT: {
+      nsRect r;
+      aEvent->widget->GetBounds(r);
+      r.x = 0;
+      r.y = 0;
+      nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
+      drawCtx->SetColor(aEvent->widget->GetBackgroundColor());
+      drawCtx->FillRect(r);
 
-    //nsRect rect(*(((nsPaintEvent*)aEvent)->rect));
-    nsRect rect(r);
-    drawCtx->SetColor(NS_RGB(128,128,128));
-    drawCtx->DrawLine(0,0,rect.width,0);
-    //drawCtx->SetColor(NS_RGB(255,255,255));
-    //drawCtx->DrawLine(0,1,rect.width,1);
-    //drawCtx->SetColor(NS_RGB(255,255,255));
-    //drawCtx->DrawLine(0,0,rect.width,0);
-    drawCtx->SetColor(NS_RGB(128,128,128));
-    drawCtx->DrawLine(0,rect.height-1,rect.width,rect.height-1);
-  }
-  break;
+      //nsRect rect(*(((nsPaintEvent*)aEvent)->rect));
+      nsRect rect(r);
+      drawCtx->SetColor(NS_RGB(128,128,128));
+      drawCtx->DrawLine(0,0,rect.width,0);
+      //drawCtx->SetColor(NS_RGB(255,255,255));
+      //drawCtx->DrawLine(0,1,rect.width,1);
+      //drawCtx->SetColor(NS_RGB(255,255,255));
+      //drawCtx->DrawLine(0,0,rect.width,0);
+      drawCtx->SetColor(NS_RGB(128,128,128));
+      drawCtx->DrawLine(0,rect.height-1,rect.width,rect.height-1);
+    }
+    break;
   } //switch
 
   return result;
@@ -566,23 +562,22 @@ HandleToolbarMgrEvent(nsGUIEvent *aEvent)
 static nsEventStatus PR_CALLBACK
 HandleLocationEvent(nsGUIEvent *aEvent)
 {
-  nsEventStatus result = nsEventStatus_eIgnore;
-  nsBrowserWindow* bw =
-  nsBrowserWindow::FindBrowserFor(aEvent->widget, FIND_LOCATION);
+  nsEventStatus    result = nsEventStatus_eIgnore;
+  nsBrowserWindow* bw     = nsBrowserWindow::FindBrowserFor(aEvent->widget, FIND_LOCATION);
   if (nsnull != bw) {
-  switch (aEvent->message) {
-  case NS_KEY_UP:
-    if (NS_VK_RETURN == ((nsKeyEvent*)aEvent)->keyCode) {
-    nsAutoString text;
-    PRUint32 size;
-    bw->mLocation->GetText(text, 1000, size);
-    bw->GoTo(text);
+    switch (aEvent->message) {
+      case NS_KEY_UP:
+        if (NS_VK_RETURN == ((nsKeyEvent*)aEvent)->keyCode) {
+        nsAutoString text;
+        PRUint32 size;
+        bw->mLocation->GetText(text, 1000, size);
+        bw->GoTo(text);
+        }
+        break;
+      default:
+        break;
     }
-    break;
-  default:
-    break;
-  }
-  NS_RELEASE(bw);
+    NS_RELEASE(bw);
   }
   return result;
 }
@@ -596,27 +591,28 @@ nsBrowserWindow::FindBrowserFor(nsIWidget* aWidget, PRIntn aWhich)
 
   PRInt32 i, n = gBrowsers.Count();
   for (i = 0; i < n; i++) {
-  nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers.ElementAt(i);
-  if (nsnull != bw) {
-    switch (aWhich) {
-    case FIND_WINDOW:
-    bw->mWindow->QueryInterface(kIWidgetIID, (void**) &widget);
-    if (widget == aWidget) {
-      result = bw;
-    }
-    NS_IF_RELEASE(widget);
-    break;
-    case FIND_LOCATION:
-    if (bw->mLocation) {
-      bw->mLocation->QueryInterface(kIWidgetIID, (void**) &widget);
-      if (widget == aWidget) {
-      result = bw;
+    nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers.ElementAt(i);
+    if (nsnull != bw) {
+      switch (aWhich) {
+        case FIND_WINDOW:
+          bw->mWindow->QueryInterface(kIWidgetIID, (void**) &widget);
+          if (widget == aWidget) {
+            result = bw;
+          }
+          NS_IF_RELEASE(widget);
+          break;
+
+        case FIND_LOCATION:
+          if (bw->mLocation) {
+            bw->mLocation->QueryInterface(kIWidgetIID, (void**) &widget);
+            if (widget == aWidget) {
+              result = bw;
+            }
+            NS_IF_RELEASE(widget);
+          }
+          break;
       }
-      NS_IF_RELEASE(widget);
     }
-    break;
-    }
-  }
   }
 
   if (nsnull != result) {
@@ -634,19 +630,19 @@ nsBrowserWindow::FindBrowserFor(nsIWidget* aWidget)
   nsBrowserWindow* result = nsnull;
 
   if (NS_OK != aWidget->GetClientData((void *&)widgetBrowser)) {
-  return NULL;
+    return NULL;
   }
 
   PRInt32 i, n = gBrowsers.Count();
   for (i = 0; i < n; i++) {
-  nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers.ElementAt(i);
-  if (nsnull != bw && widgetBrowser == bw) {
-    result = bw;
-  }
+    nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers.ElementAt(i);
+    if (nsnull != bw && widgetBrowser == bw) {
+      result = bw;
+    }
   }
 
   if (nsnull != result) {
-  NS_ADDREF(result);
+    NS_ADDREF(result);
   }
   return result;
 }
@@ -673,10 +669,10 @@ void
 nsBrowserWindow::CloseAllWindows()
 {
   while (0 != gBrowsers.Count()) {
-  nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers.ElementAt(0);
-  NS_ADDREF(bw);
-  bw->Close();
-  NS_RELEASE(bw);
+    nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers.ElementAt(0);
+    NS_ADDREF(bw);
+    bw->Close();
+    NS_RELEASE(bw);
   }
   gBrowsers.Clear();
 }
@@ -687,10 +683,10 @@ void
 nsBrowserWindow::UpdateToolbarBtns()
 {
   if (nsnull != mToolbarBtns) {
-  mToolbarBtns[gBackBtnInx]->Enable(mWebShell->CanBack() == NS_OK);
-  mToolbarBtns[gBackBtnInx]->Invalidate(PR_TRUE);
-  mToolbarBtns[gForwardBtnInx]->Enable(mWebShell->CanForward() == NS_OK);
-  mToolbarBtns[gForwardBtnInx]->Invalidate(PR_TRUE);
+    mToolbarBtns[gBackBtnInx]->Enable(mWebShell->CanBack() == NS_OK);
+    mToolbarBtns[gBackBtnInx]->Invalidate(PR_TRUE);
+    mToolbarBtns[gForwardBtnInx]->Enable(mWebShell->CanForward() == NS_OK);
+    mToolbarBtns[gForwardBtnInx]->Invalidate(PR_TRUE);
   }
 }
 
@@ -706,59 +702,57 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   }
 #endif
   switch (aID) {
-  case VIEWER_EXIT:
-  mApp->Exit();
-  return nsEventStatus_eConsumeNoDefault;
+    case VIEWER_EXIT:
+      mApp->Exit();
+      return nsEventStatus_eConsumeNoDefault;
 
-  case VIEWER_WINDOW_OPEN:
-  mApp->OpenWindow();
-  break;
+    case VIEWER_WINDOW_OPEN:
+      mApp->OpenWindow();
+      break;
   
-  case VIEWER_FILE_OPEN:
-  DoFileOpen();
-  break;
+    case VIEWER_FILE_OPEN:
+      DoFileOpen();
+      break;
   
-  case VIEWER_EDIT_COPY:
-  DoCopy();
-  break;
+    case VIEWER_EDIT_COPY:
+      DoCopy();
+      break;
 
-  case VIEWER_EDIT_SELECTALL:
-  DoSelectAll();
-  break;
+    case VIEWER_EDIT_SELECTALL:
+      DoSelectAll();
+      break;
 
-  case VIEWER_EDIT_FINDINPAGE:
-  DoFind();
-  break;
+    case VIEWER_EDIT_FINDINPAGE:
+      DoFind();
+      break;
 
-  case VIEWER_DEMO0:
-  case VIEWER_DEMO1:
-  case VIEWER_DEMO2:
-  case VIEWER_DEMO3:
-  case VIEWER_DEMO4:
-  case VIEWER_DEMO5:
-  case VIEWER_DEMO6:
-  case VIEWER_DEMO7:
-  case VIEWER_DEMO8: 
-  case VIEWER_DEMO9: 
-  {
-    PRIntn ix = aID - VIEWER_DEMO0;
-    nsAutoString url(SAMPLES_BASE_URL);
-    url.Append("/test");
-    url.Append(ix, 10);
-    url.Append(".html");
-    mWebShell->LoadURL(url);
+    case VIEWER_DEMO0:
+    case VIEWER_DEMO1:
+    case VIEWER_DEMO2:
+    case VIEWER_DEMO3:
+    case VIEWER_DEMO4:
+    case VIEWER_DEMO5:
+    case VIEWER_DEMO6:
+    case VIEWER_DEMO7:
+    case VIEWER_DEMO8: 
+    case VIEWER_DEMO9: {
+        PRIntn ix = aID - VIEWER_DEMO0;
+        nsAutoString url(SAMPLES_BASE_URL);
+        url.Append("/test");
+        url.Append(ix, 10);
+        url.Append(".html");
+        mWebShell->LoadURL(url);
 
-    UpdateToolbarBtns();
-  }
-  break;
-  case JS_CONSOLE:
-  DoJSConsole();
-  break;
+        UpdateToolbarBtns();
+      } break;
+    case JS_CONSOLE:
+      DoJSConsole();
+    break;
 
-  case EDITOR_MODE:
-  DoEditorMode(mWebShell);
-  break;
-  }
+    case EDITOR_MODE:
+      DoEditorMode(mWebShell);
+      break;
+  } //switch
 
   return nsEventStatus_eIgnore;
 }
@@ -798,26 +792,22 @@ static PRBool GetFileNameFromFileSelector(nsIWidget* aParentWindow,
   nsIFileWidget *fileWidget;
   nsString title("Open HTML");
   nsresult rv = nsRepository::CreateInstance(kFileWidgetCID,
-                       nsnull,
-                       kIFileWidgetIID,
-                       (void**)&fileWidget);
+                                             nsnull,
+                                             kIFileWidgetIID,
+                                             (void**)&fileWidget);
   if (NS_OK == rv) {
-  nsString titles[] = {"all files","html" };
-  nsString filters[] = {"*.*", "*.html"};
-  fileWidget->SetFilterList(2, titles, filters);
-  fileWidget->Create(aParentWindow,
-             title,
-             eMode_load,
-             nsnull,
-             nsnull);
+    nsString titles[] = {"all files","html" };
+    nsString filters[] = {"*.*", "*.html"};
+    fileWidget->SetFilterList(2, titles, filters);
+    fileWidget->Create(aParentWindow, title, eMode_load, nsnull, nsnull);
 
-  PRUint32 result = fileWidget->Show();
-  if (result) {
-    fileWidget->GetFile(*aFileName);
-    selectedFileName = PR_TRUE;
-  }
+    PRUint32 result = fileWidget->Show();
+    if (result) {
+      fileWidget->GetFile(*aFileName);
+      selectedFileName = PR_TRUE;
+    }
  
-  NS_RELEASE(fileWidget);
+    NS_RELEASE(fileWidget);
   }
 
   return selectedFileName;
@@ -830,24 +820,24 @@ nsBrowserWindow::DoFileOpen()
   nsAutoString fileName;
   char szFile[1000];
   if (GetFileNameFromFileSelector(mWindow, &fileName)) {
-  fileName.ToCString(szFile, sizeof(szFile));
-  PRInt32 len = strlen(szFile);
-  PRInt32 sum = len + sizeof(FILE_PROTOCOL);
-  char* lpszFileURL = new char[sum];
+    fileName.ToCString(szFile, sizeof(szFile));
+    PRInt32 len = strlen(szFile);
+    PRInt32 sum = len + sizeof(FILE_PROTOCOL);
+    char* lpszFileURL = new char[sum];
   
-  // Translate '\' to '/'
-  for (PRInt32 i = 0; i < len; i++) {
-    if (szFile[i] == '\\') {
-    szFile[i] = '/';
+    // Translate '\' to '/'
+    for (PRInt32 i = 0; i < len; i++) {
+      if (szFile[i] == '\\') {
+        szFile[i] = '/';
+      }
     }
-  }
 
-  // Build the file URL
-  PR_snprintf(lpszFileURL, sum, "%s%s", FILE_PROTOCOL, szFile);
+    // Build the file URL
+    PR_snprintf(lpszFileURL, sum, "%s%s", FILE_PROTOCOL, szFile);
 
-  // Ask the Web widget to load the file URL
-  mWebShell->LoadURL(nsString(lpszFileURL));
-  delete lpszFileURL;
+    // Ask the Web widget to load the file URL
+    mWebShell->LoadURL(nsString(lpszFileURL));
+    delete lpszFileURL;
   }
 }
 
@@ -863,23 +853,23 @@ nsEventStatus PR_CALLBACK HandleGUIEvent(nsGUIEvent *aEvent)
   //printf("HandleGUIEvent aEvent->message %d\n", aEvent->message);
   nsEventStatus result = nsEventStatus_eIgnore;
   if (aEvent == nsnull ||  aEvent->widget == nsnull) {
-  return result;
+    return result;
   }
 
   void * data;
   aEvent->widget->GetClientData(data);
 
   if (data == nsnull) {
-  nsIWidget * parent = aEvent->widget->GetParent();
-  if (parent != nsnull) {
-    parent->GetClientData(data);
-    NS_RELEASE(parent);
-  }
+    nsIWidget * parent = aEvent->widget->GetParent();
+    if (parent != nsnull) {
+      parent->GetClientData(data);
+      NS_RELEASE(parent);
+    }
   }
   
   if (data != nsnull) {
-  nsBrowserWindow * browserWindow = (nsBrowserWindow *)data;
-  result = browserWindow->ProcessDialogEvent(aEvent);
+    nsBrowserWindow * browserWindow = (nsBrowserWindow *)data;
+    result = browserWindow->ProcessDialogEvent(aEvent);
   }
 
   return result;
@@ -892,8 +882,7 @@ static void* GetItemsNativeData(nsISupports* aObject)
 {
 	void* 			result = nsnull;
 	nsIWidget* 	widget;
-	if (NS_OK == aObject->QueryInterface(kIWidgetIID,(void**)&widget))
-	{
+	if (NS_OK == aObject->QueryInterface(kIWidgetIID,(void**)&widget)) {
 		result = widget->GetNativeData(NS_NATIVE_WIDGET);
 		NS_RELEASE(widget);
 	}
@@ -913,28 +902,28 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
     case NS_KEY_DOWN: {
       nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
       if (NS_VK_RETURN == keyEvent->keyCode) {
-      PRBool matchCase   = PR_FALSE;
-      mMatchCheckBtn->GetState(matchCase);
-      PRBool findDwn   = PR_FALSE;
-      mDwnRadioBtn->GetState(findDwn);
-      nsString searchStr;
-      PRUint32 actualSize;
-      mTextField->GetText(searchStr, 255,actualSize);
+        PRBool matchCase   = PR_FALSE;
+        mMatchCheckBtn->GetState(matchCase);
+        PRBool findDwn   = PR_FALSE;
+        mDwnRadioBtn->GetState(findDwn);
+        nsString searchStr;
+        PRUint32 actualSize;
+        mTextField->GetText(searchStr, 255,actualSize);
 
-      nsIPresShell* shell = GetPresShell();
-      if (nsnull != shell) {
-        nsIDocument* doc = shell->GetDocument();
-        if (nsnull != doc) {
-        PRBool foundIt = PR_FALSE;
-        doc->FindNext(searchStr, matchCase, findDwn, foundIt);
-        if (!foundIt) {
-          // Display Dialog here
+        nsIPresShell* shell = GetPresShell();
+        if (nsnull != shell) {
+          nsIDocument* doc = shell->GetDocument();
+          if (nsnull != doc) {
+            PRBool foundIt = PR_FALSE;
+            doc->FindNext(searchStr, matchCase, findDwn, foundIt);
+            if (!foundIt) {
+              // Display Dialog here
+            }
+            ForceRefresh();
+            NS_RELEASE(doc);
+          }
+          NS_RELEASE(shell);
         }
-        ForceRefresh();
-        NS_RELEASE(doc);
-        }
-        NS_RELEASE(shell);
-      }
       }
     } break;
 
@@ -944,42 +933,42 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
      		break;
  				
       if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mCancelBtn)) {
-      dialogWidget->Show(PR_FALSE);
+        dialogWidget->Show(PR_FALSE);
       } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mFindBtn)) {
 
-      PRBool matchCase   = PR_FALSE;
-      mMatchCheckBtn->GetState(matchCase);
-      PRBool findDwn   = PR_FALSE;
-      mDwnRadioBtn->GetState(findDwn);
-      PRUint32 actualSize;
-      nsString searchStr;
-      mTextField->GetText(searchStr, 255,actualSize);
+        PRBool matchCase   = PR_FALSE;
+        mMatchCheckBtn->GetState(matchCase);
+        PRBool findDwn   = PR_FALSE;
+        mDwnRadioBtn->GetState(findDwn);
+        PRUint32 actualSize;
+        nsString searchStr;
+        mTextField->GetText(searchStr, 255,actualSize);
 
-      nsIPresShell* shell = GetPresShell();
-      if (nsnull != shell) {
-        nsIDocument* doc = shell->GetDocument();
-        if (nsnull != doc) {
-        PRBool foundIt = PR_FALSE;
-        doc->FindNext(searchStr, matchCase, findDwn, foundIt);
-        if (!foundIt) {
-          // Display Dialog here
+        nsIPresShell* shell = GetPresShell();
+        if (nsnull != shell) {
+          nsIDocument* doc = shell->GetDocument();
+          if (nsnull != doc) {
+            PRBool foundIt = PR_FALSE;
+            doc->FindNext(searchStr, matchCase, findDwn, foundIt);
+            if (!foundIt) {
+              // Display Dialog here
+            }
+            ForceRefresh();
+            NS_RELEASE(doc);
+          }
+          NS_RELEASE(shell);
         }
-        ForceRefresh();
-        NS_RELEASE(doc);
-        }
-        NS_RELEASE(shell);
-      }
 
       } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mUpRadioBtn)) {
-      mUpRadioBtn->SetState(PR_TRUE);
-      mDwnRadioBtn->SetState(PR_FALSE);
+        mUpRadioBtn->SetState(PR_TRUE);
+        mDwnRadioBtn->SetState(PR_FALSE);
       } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mDwnRadioBtn)) {
-      mDwnRadioBtn->SetState(PR_TRUE);
-      mUpRadioBtn->SetState(PR_FALSE);
+        mDwnRadioBtn->SetState(PR_TRUE);
+        mUpRadioBtn->SetState(PR_FALSE);
       } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mMatchCheckBtn)) {
-      PRBool state = PR_FALSE;
+        PRBool state = PR_FALSE;
       	mMatchCheckBtn->GetState(state);
-      mMatchCheckBtn->SetState(!state);
+        mMatchCheckBtn->SetState(!state);
       }
       } break;
     
@@ -1003,7 +992,7 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
 
       PRInt32 i;
       for (i=0;i<mNumAppsDialogBtns;i++) {
-      NS_RELEASE(mAppsDialogBtns[i]);
+        NS_RELEASE(mAppsDialogBtns[i]);
       }
       delete[] mAppsDialogBtns;
       mAppsDialogBtns = nsnull;
@@ -1073,7 +1062,7 @@ void nsBrowserWindow::DoFind()
   nsString findHTML("resource:/res/samples/find.html");
   //nsString findHTML("resource:/res/samples/find-table.html");
   nsRect rect(0, 0, 510, 170);
-  //nsRect rect(0, 0, 480, 127);
+  //nsRect rect(0, 0, 470, 126);
   nsString title("Find");
 
   nsXPBaseWindow * dialog = nsnull;
@@ -1125,38 +1114,38 @@ nsBrowserWindow::DoSelectAll()
 nsresult 
 NS_CreateImageButton(nsISupports    *aParent, 
 								    nsIImageButton  *&aButton, 
-  		        nsIWidget    *&aButtonWidget,
-            const nsString  &aLabel,
+  		              nsIWidget    *&aButtonWidget,
+                    const nsString  &aLabel,
 								    const nsRect  &aRect, 
 								    EVENT_CALLBACK  aHandleEventFunction,
 								    const nsFont   *aFont,
-            const nsString  &aBaseURL,
-            const nsString  &aUpURL,
-            const nsString  &aPressedURL,
-            const nsString  &aDisabledURL,
-            const nsString  &aRollOverURL,
-            PRInt32     anImageWidth,
-            PRInt32     anImageHeight
-           )
+                    const nsString  &aBaseURL,
+                    const nsString  &aUpURL,
+                    const nsString  &aPressedURL,
+                    const nsString  &aDisabledURL,
+                    const nsString  &aRollOverURL,
+                    PRInt32     anImageWidth,
+                    PRInt32     anImageHeight
+                     )
 {
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull) {
-  aParent->QueryInterface(kIWidgetIID,(void**)&parent);
+    aParent->QueryInterface(kIWidgetIID,(void**)&parent);
   } else {
-  return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
   }
 
   // Create MenuButton
   nsresult rv = nsRepository::CreateInstance(kImageButtonCID, nsnull, kIImageButtonIID,
                        (void**)&aButton);
   if (NS_OK != rv) {
-  return rv;
+    return rv;
   }
 
 	if (NS_OK == aButton->QueryInterface(kIWidgetIID,(void**)&aButtonWidget)) {
 	  aButtonWidget->Create(parent, aRect, aHandleEventFunction, NULL);
 	  aButtonWidget->Show(PR_TRUE);
-  if (aFont != nsnull)
+    if (aFont != nsnull)
 	  	aButtonWidget->SetFont(*aFont);
 	}
 
@@ -1167,19 +1156,19 @@ NS_CreateImageButton(nsISupports    *aParent,
 
   // Load URLs
   if (aBaseURL.Length() > 0) {
-  nsString upURL(aBaseURL);
-  nsString pressedURL(aBaseURL);
-  nsString disabledURL(aBaseURL);
-  nsString rolloverURL(aBaseURL);
+    nsString upURL(aBaseURL);
+    nsString pressedURL(aBaseURL);
+    nsString disabledURL(aBaseURL);
+    nsString rolloverURL(aBaseURL);
 
-  upURL.Append(aUpURL);
-  pressedURL.Append(aPressedURL);
-  disabledURL.Append(aDisabledURL);
-  rolloverURL.Append(aRollOverURL);
+    upURL.Append(aUpURL);
+    pressedURL.Append(aPressedURL);
+    disabledURL.Append(aDisabledURL);
+    rolloverURL.Append(aRollOverURL);
 
-  aButton->SetImageURLs(upURL, pressedURL, disabledURL, rolloverURL);
+    aButton->SetImageURLs(upURL, pressedURL, disabledURL, rolloverURL);
   } else {
-  aButton->SetShowImage(PR_FALSE);
+    aButton->SetShowImage(PR_FALSE);
   }
   
   NS_IF_RELEASE(parent);
@@ -1192,37 +1181,37 @@ NS_CreateImageButton(nsISupports    *aParent,
 nsresult 
 NS_CreateMenuButton(nsISupports    *aParent, 
 								    nsIMenuButton  *&aButton, 
-  		        nsIWidget    *&aButtonWidget,
-            const nsString  &aLabel,
+  		              nsIWidget    *&aButtonWidget,
+                    const nsString  &aLabel,
 								    const nsRect  &aRect, 
 								    EVENT_CALLBACK  aHandleEventFunction,
 								    const nsFont   *aFont,
-            const nsString  &aBaseURL,
-            const nsString  &aUpURL,
-            const nsString  &aPressedURL,
-            const nsString  &aDisabledURL,
-            const nsString  &aRollOverURL,
-            PRInt32     anImageWidth,
-            PRInt32     anImageHeight)
+                    const nsString  &aBaseURL,
+                    const nsString  &aUpURL,
+                    const nsString  &aPressedURL,
+                    const nsString  &aDisabledURL,
+                    const nsString  &aRollOverURL,
+                    PRInt32     anImageWidth,
+                    PRInt32     anImageHeight)
 {
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull) {
-  aParent->QueryInterface(kIWidgetIID,(void**)&parent);
+    aParent->QueryInterface(kIWidgetIID,(void**)&parent);
   } else {
-  return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
   }
 
   // Create MenuButton
   nsresult rv = nsRepository::CreateInstance(kMenuButtonCID, nsnull, kIMenuButtonIID,
                        (void**)&aButton);
   if (NS_OK != rv) {
-  return rv;
+    return rv;
   }
 
 	if (NS_OK == aButton->QueryInterface(kIWidgetIID,(void**)&aButtonWidget)) {
 	  aButtonWidget->Create(parent, aRect, aHandleEventFunction, NULL);
 	  aButtonWidget->Show(PR_TRUE);
-  if (aFont != nsnull)
+    if (aFont != nsnull)
 	  	aButtonWidget->SetFont(*aFont);
 	}
 
@@ -1233,20 +1222,20 @@ NS_CreateMenuButton(nsISupports    *aParent,
 
   // Load URLs
   if (aBaseURL.Length() > 0) {
-  nsString upURL(aBaseURL);
-  nsString pressedURL(aBaseURL);
-  nsString disabledURL(aBaseURL);
-  nsString rolloverURL(aBaseURL);
+    nsString upURL(aBaseURL);
+    nsString pressedURL(aBaseURL);
+    nsString disabledURL(aBaseURL);
+    nsString rolloverURL(aBaseURL);
 
-  upURL.Append(aUpURL);
-  pressedURL.Append(aPressedURL);
-  disabledURL.Append(aDisabledURL);
-  rolloverURL.Append(aRollOverURL);
+    upURL.Append(aUpURL);
+    pressedURL.Append(aPressedURL);
+    disabledURL.Append(aDisabledURL);
+    rolloverURL.Append(aRollOverURL);
 
-  aButton->SetImageURLs(upURL, pressedURL, disabledURL, rolloverURL);
-  aButton->SetShowImage(PR_TRUE);
+    aButton->SetImageURLs(upURL, pressedURL, disabledURL, rolloverURL);
+    aButton->SetShowImage(PR_TRUE);
   } else {
-  aButton->SetShowImage(PR_FALSE);
+    aButton->SetShowImage(PR_FALSE);
   }
   
   NS_IF_RELEASE(parent);
@@ -1268,13 +1257,13 @@ nsBrowserWindow::AddToolbarItem(nsIToolbar    *aToolbar,
   nsresult rv = nsRepository::CreateInstance(kToolbarItemHolderCID, nsnull, kIToolbarItemHolderIID,
                       (void**)&toolbarItemHolder);
   if (NS_OK != rv) {
-  return rv;
+    return rv;
   }
 
   // Get the ToolbarItem interface for adding it to the toolbar
   nsIToolbarItem * toolbarItem;
 	if (NS_OK != toolbarItemHolder->QueryInterface(kIToolbarItemIID,(void**)&toolbarItem)) {
-  return NS_OK;
+    return NS_OK;
   }
 
   // Set client data for callback purposes
@@ -1302,77 +1291,77 @@ void
 nsBrowserWindow::DoAppsDialog()
 {
   if (mAppsDialog == nsnull) {
-  nscoord txtHeight   = 24;
-  nscolor textBGColor = NS_RGB(0, 0, 0);
-  nscolor textFGColor = NS_RGB(255, 255, 255);
+    nscoord txtHeight   = 24;
+    nscolor textBGColor = NS_RGB(0, 0, 0);
+    nscolor textFGColor = NS_RGB(255, 255, 255);
 
-  nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+    nsILookAndFeel * lookAndFeel;
+    if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
      lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
      lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground, textBGColor);
      lookAndFeel->GetColor(nsILookAndFeel::eColor_TextForeground, textFGColor);
      NS_RELEASE(lookAndFeel);
-  }
+    }
 
-  nsIDeviceContext* dc = mWindow->GetDeviceContext();
-  float t2d;
-  dc->GetTwipsToDevUnits(t2d);
-  nsFont font(DIALOG_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-        NS_FONT_WEIGHT_NORMAL, 0,
-        nscoord(t2d * NSIntPointsToTwips(DIALOG_FONT_SIZE)));
-  NS_RELEASE(dc);
+    nsIDeviceContext* dc = mWindow->GetDeviceContext();
+    float t2d;
+    dc->GetTwipsToDevUnits(t2d);
+    nsFont font(DIALOG_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+          NS_FONT_WEIGHT_NORMAL, 0,
+          nscoord(t2d * NSIntPointsToTwips(DIALOG_FONT_SIZE)));
+    NS_RELEASE(dc);
 
-  // create a Dialog
-  //
-  nsRect rect(0, 0, (40*4)+8, 23+31);  
+    // create a Dialog
+    //
+    nsRect rect(0, 0, (40*4)+8, 23+31);  
 
-  nsRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mAppsDialog);
-  nsIWidget* widget = nsnull;
-  NS_CreateDialog(mWindow, mAppsDialog, rect, HandleGUIEvent, &font);
-  if (NS_OK == mAppsDialog->QueryInterface(kIWidgetIID,(void**)&widget)) {
-  	widget->SetClientData(this);
-  	widget->Resize(rect.x, rect.y, rect.width, rect.height, PR_TRUE);
-  	NS_RELEASE(widget);
-  }
-  mAppsDialog->SetLabel("");
+    nsRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mAppsDialog);
+    nsIWidget* widget = nsnull;
+    NS_CreateDialog(mWindow, mAppsDialog, rect, HandleGUIEvent, &font);
+    if (NS_OK == mAppsDialog->QueryInterface(kIWidgetIID,(void**)&widget)) {
+  	  widget->SetClientData(this);
+  	  widget->Resize(rect.x, rect.y, rect.width, rect.height, PR_TRUE);
+  	  NS_RELEASE(widget);
+    }
+    mAppsDialog->SetLabel("");
 
-  nsString label("");
-  nsString baseURL("resource:/res/toolbar/");
+    nsString label("");
+    nsString baseURL("resource:/res/toolbar/");
 
-  // Count number of buttons and create array to hold them
-  mNumAppsDialogBtns = 0;
-  while (gMiniAppsDialogInfo[mNumAppsDialogBtns].mImgWidth > 0) {
-    mNumAppsDialogBtns++;
-  }
-  mAppsDialogBtns = (nsIWidget **)new PRInt32[mNumAppsDialogBtns];
+    // Count number of buttons and create array to hold them
+    mNumAppsDialogBtns = 0;
+    while (gMiniAppsDialogInfo[mNumAppsDialogBtns].mImgWidth > 0) {
+      mNumAppsDialogBtns++;
+    }
+    mAppsDialogBtns = (nsIWidget **)new PRInt32[mNumAppsDialogBtns];
 
-  // Create buttons  
-  PRInt32 i = 0;
-  PRInt32 x = 2;
-  while (gMiniAppsDialogInfo[i].mImgWidth > 0) {
-    nsIImageButton * btn;
-    nsIWidget    * widget;
-    rect.SetRect(x, 2, gMiniAppsDialogInfo[i].mImgWidth+4, gMiniAppsDialogInfo[i].mImgHeight+4);
-    NS_CreateImageButton(mAppsDialog,  btn, widget, gMiniAppsDialogInfo[i].mLabel, 
-               rect, nsnull,
-	  							     &font, baseURL,
-               gMiniAppsDialogInfo[i].mUpName,              
-               gMiniAppsDialogInfo[i].mPressedName,              
-               gMiniAppsDialogInfo[i].mDisabledName,              
-               gMiniAppsDialogInfo[i].mRolloverName,              
-               gMiniAppsDialogInfo[i].mImgWidth,              
-               gMiniAppsDialogInfo[i].mImgHeight);
-    btn->SetShowText(PR_FALSE);
-    btn->SetCommand(gMiniAppsDialogInfo[i].mCommand);
-    btn->SetRollOverDesc(gMiniAppsDialogInfo[i].mRollOverDesc);
-    btn->AddListener(this);
-    mAppsDialogBtns[i] = widget;
-    widget->Enable(gMiniAppsDialogInfo[i].mEnabled);
+    // Create buttons  
+    PRInt32 i = 0;
+    PRInt32 x = 2;
+    while (gMiniAppsDialogInfo[i].mImgWidth > 0) {
+      nsIImageButton * btn;
+      nsIWidget    * widget;
+      rect.SetRect(x, 2, gMiniAppsDialogInfo[i].mImgWidth+4, gMiniAppsDialogInfo[i].mImgHeight+4);
+      NS_CreateImageButton(mAppsDialog,  btn, widget, gMiniAppsDialogInfo[i].mLabel, 
+                 rect, nsnull,
+	  						 &font, baseURL,
+                 gMiniAppsDialogInfo[i].mUpName,              
+                 gMiniAppsDialogInfo[i].mPressedName,              
+                 gMiniAppsDialogInfo[i].mDisabledName,              
+                 gMiniAppsDialogInfo[i].mRolloverName,              
+                 gMiniAppsDialogInfo[i].mImgWidth,              
+                 gMiniAppsDialogInfo[i].mImgHeight);
+      btn->SetShowText(PR_FALSE);
+      btn->SetCommand(gMiniAppsDialogInfo[i].mCommand);
+      btn->SetRollOverDesc(gMiniAppsDialogInfo[i].mRollOverDesc);
+      btn->AddListener(this);
+      mAppsDialogBtns[i] = widget;
+      widget->Enable(gMiniAppsDialogInfo[i].mEnabled);
 
-    NS_RELEASE(btn);
-    x += 40;
-    i++;
-  }
+      NS_RELEASE(btn);
+      x += 40;
+      i++;
+    }
 
   }
   mDialog = mAppsDialog;
@@ -1392,14 +1381,12 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
 
   nsILookAndFeel * lookAndFeel;
   if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
-  lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground,  textBGColor);
-  lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  widgetBGColor);
-  lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  windowBGColor);
-  NS_RELEASE(lookAndFeel);
+    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
+    lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground,  textBGColor);
+    lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  widgetBGColor);
+    lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  windowBGColor);
+    NS_RELEASE(lookAndFeel);
   }
-
-
 
   PRInt32 imageWidth  = 23;
   PRInt32 imageHeight = 21;
@@ -1408,8 +1395,8 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   float t2d;
   dc->GetTwipsToDevUnits(t2d);
   nsFont font(TOOL_BAR_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-        NS_FONT_WEIGHT_NORMAL, 0,
-        nscoord(t2d * NSIntPointsToTwips(TOOL_BAR_FONT_SIZE)));
+              NS_FONT_WEIGHT_NORMAL, 0,
+              nscoord(t2d * NSIntPointsToTwips(TOOL_BAR_FONT_SIZE)));
   NS_RELEASE(dc);
 
   //----------------------------------------------------
@@ -1418,12 +1405,12 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   rv = nsRepository::CreateInstance(kToolbarManagerCID, nsnull, kIToolbarManagerIID,
                   (void**)&mToolbarMgr);
   if (NS_OK != rv) {
-  return rv;
+    return rv;
   }
   nsIWidget * toolbarMgrWidget;
   nsRect rr(0, 0, 200, 32); 
   if (NS_OK != mToolbarMgr->QueryInterface(kIWidgetIID,(void**)&toolbarMgrWidget)) {
-  return rv;
+    return rv;
   }
 	toolbarMgrWidget->Create(mWindow, rr, HandleToolbarMgrEvent, NULL);
 	toolbarMgrWidget->SetBackgroundColor(windowBGColor);
@@ -1439,13 +1426,13 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   rv = nsRepository::CreateInstance(kToolbarCID, nsnull, kIToolbarIID,
                   (void**)&mBtnToolbar);
   if (NS_OK != rv) {
-  return rv;
+    return rv;
   }
 
   nsIWidget * toolbarWidget;
   nsRect rrr(0, 0, 200, 32); 
   if (NS_OK != mBtnToolbar->QueryInterface(kIWidgetIID,(void**)&toolbarWidget)) {
-  return rv;
+    return rv;
   }
   mBtnToolbar->SetMargin(1);
   mBtnToolbar->SetHGap(2);
@@ -1466,7 +1453,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   // Count number of buttons and create array to hold them
   mNumToolbarBtns = 0;
   while (gBtnToolbarInfo[mNumToolbarBtns].mImgWidth > 0) {
-  mNumToolbarBtns++;
+    mNumToolbarBtns++;
   }
   mToolbarBtns = (nsIWidget **)new PRInt32[mNumToolbarBtns];
 
@@ -1479,9 +1466,9 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   nsIMenuButton  * btn;
   nsIWidget    * widget;
   NS_CreateMenuButton(mBtnToolbar,  btn, widget, gBtnToolbarInfo[i].mLabel, 
-            rect, nsnull,              
-	  							    &font, baseURL,
-                  gBtnToolbarInfo[i].mUpName,                            
+                        rect, nsnull,              
+	  							      &font, baseURL,
+                        gBtnToolbarInfo[i].mUpName,                            
                         gBtnToolbarInfo[i].mPressedName,                            
                         gBtnToolbarInfo[i].mDisabledName,                            
                         gBtnToolbarInfo[i].mRolloverName,                            
@@ -1683,7 +1670,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   personalToolbar->SetHGap(2);
   personalToolbar->SetWrapping(PR_TRUE);
 
-personalToolbarWidget->Create(toolbarMgrWidget, rrr, HandleToolbarEvent, NULL);
+  personalToolbarWidget->Create(toolbarMgrWidget, rrr, HandleToolbarEvent, NULL);
 	personalToolbarWidget->SetBackgroundColor(windowBGColor);
 	personalToolbarWidget->Show(PR_TRUE);
   mToolbarMgr->AddToolbar(personalToolbar);
@@ -1749,9 +1736,9 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
 
   nsILookAndFeel * lookAndFeel;
   if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
-  lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  widgetBGColor);
-  lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  windowBGColor);
-  NS_RELEASE(lookAndFeel);
+    lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  widgetBGColor);
+    lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  windowBGColor);
+    NS_RELEASE(lookAndFeel);
   }
 
   nsIDeviceContext* dc = mWindow->GetDeviceContext();
@@ -1768,16 +1755,17 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   rv = nsRepository::CreateInstance(kToolbarCID, nsnull, kIToolbarIID,
                   (void**)&mStatusBar);
   if (NS_OK != rv) {
-  return rv;
+    return rv;
   }
 
   nsIWidget * statusWidget;
   nsRect rrr(0, 0, 200, 32); 
   if (NS_OK != mStatusBar->QueryInterface(kIWidgetIID,(void**)&statusWidget)) {
-  return rv;
+    return rv;
   }
   mStatusBar->SetMargin(1);
   mStatusBar->SetHGap(2);
+  mStatusBar->SetBorderType(eToolbarBorderType_none);
 
 	statusWidget->Create(mWindow, rrr, HandleToolbarEvent, NULL);
 	statusWidget->SetBackgroundColor(windowBGColor);
@@ -1792,57 +1780,57 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   nsString secureImg("StatusBar-secure.gif");
 
   if (NS_OK == NS_CreateImageButton(mStatusBar, mStatusSecurityLabel, widget, "", 
-            r, nsnull, &font, baseURL,
-            insecureImg, insecureImg, secureImg, insecureImg,
-            16, 14)) {
+                                    r, nsnull, &font, baseURL,
+                                    insecureImg, insecureImg, secureImg, insecureImg,
+                                    16, 14)) {
 
-  AddToolbarItem(mStatusBar, 0, PR_TRUE, widget);
-  // Make button look depressed and always show border
-  mStatusSecurityLabel->SwapHighlightShadowColors();
-  mStatusSecurityLabel->SetAlwaysShowBorder(PR_TRUE);
-  mStatusSecurityLabel->SetShowButtonBorder(PR_FALSE);
-  mStatusSecurityLabel->SetShowText(PR_FALSE);
-  mStatusSecurityLabel->SetBorderWidth(0);
-  mStatusSecurityLabel->SetBorderOffset(0);
-  mStatusSecurityLabel->SetImageVerticalAlignment(eButtonVerticalAligment_Center);
+    AddToolbarItem(mStatusBar, 0, PR_TRUE, widget);
+    // Make button look depressed and always show border
+    mStatusSecurityLabel->SwapHighlightShadowColors();
+    mStatusSecurityLabel->SetAlwaysShowBorder(PR_TRUE);
+    mStatusSecurityLabel->SetShowButtonBorder(PR_FALSE);
+    mStatusSecurityLabel->SetShowText(PR_FALSE);
+    mStatusSecurityLabel->SetBorderWidth(0);
+    mStatusSecurityLabel->SetBorderOffset(0);
+    mStatusSecurityLabel->SetImageVerticalAlignment(eButtonVerticalAligment_Center);
 	  widget->SetBackgroundColor(widgetBGColor);
-  NS_RELEASE(widget);
+    NS_RELEASE(widget);
   }
 
   r.SetRect(0, 0, 96, 16); 
   if (NS_OK == NS_CreateImageButton(mStatusBar, mStatusProcess, widget, "", 
-            r, nsnull, &font, "",
-            "", "", "", "", 0, 0)) {
+                                    r, nsnull, &font, "",
+                                    "", "", "", "", 0, 0)) {
 
-  AddToolbarItem(mStatusBar, 2, PR_TRUE, widget);
-  // Make button look depressed and always show border
-  mStatusProcess->SwapHighlightShadowColors();
-  mStatusProcess->SetAlwaysShowBorder(PR_TRUE);
-  mStatusProcess->SetShowButtonBorder(PR_FALSE);
-  mStatusProcess->SetShowText(PR_TRUE);
-  mStatusProcess->SetShowImage(PR_FALSE);
-  mStatusProcess->SetBorderOffset(0);
+    AddToolbarItem(mStatusBar, 2, PR_TRUE, widget);
+    // Make button look depressed and always show border
+    mStatusProcess->SwapHighlightShadowColors();
+    mStatusProcess->SetAlwaysShowBorder(PR_TRUE);
+    mStatusProcess->SetShowButtonBorder(PR_FALSE);
+    mStatusProcess->SetShowText(PR_TRUE);
+    mStatusProcess->SetShowImage(PR_FALSE);
+    mStatusProcess->SetBorderOffset(0);
 	  widget->SetBackgroundColor(widgetBGColor);
-  widget->SetPreferredSize(96, 16); 
-  NS_RELEASE(widget);
+    widget->SetPreferredSize(96, 16); 
+    NS_RELEASE(widget);
   }
 
   if (NS_OK == NS_CreateImageButton(mStatusBar, mStatusText, widget, "", 
             r, nsnull, &font, "",
             "", "", "", "", 0,0)) {
 
-  AddToolbarItem(mStatusBar, 2, PR_TRUE, widget);
-  // Make button look depressed and always show border
-  mStatusText->SwapHighlightShadowColors();
-  mStatusText->SetAlwaysShowBorder(PR_TRUE);
-  mStatusText->SetShowButtonBorder(PR_FALSE);
-  mStatusText->SetBorderOffset(0);
-  // Set up to just display text
-  mStatusText->SetShowText(PR_TRUE);
-  mStatusText->SetShowImage(PR_FALSE);
-  mStatusText->SetTextHorizontalAlignment(eButtonHorizontalAligment_Left);
+    AddToolbarItem(mStatusBar, 2, PR_TRUE, widget);
+    // Make button look depressed and always show border
+    mStatusText->SwapHighlightShadowColors();
+    mStatusText->SetAlwaysShowBorder(PR_TRUE);
+    mStatusText->SetShowButtonBorder(PR_FALSE);
+    mStatusText->SetBorderOffset(0);
+    // Set up to just display text
+    mStatusText->SetShowText(PR_TRUE);
+    mStatusText->SetShowImage(PR_FALSE);
+    mStatusText->SetTextHorizontalAlignment(eButtonHorizontalAligment_Left);
 	  widget->SetBackgroundColor(widgetBGColor);
-  NS_RELEASE(widget);
+    NS_RELEASE(widget);
   }
 
   //----------------------------------------------------
@@ -1852,15 +1840,15 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   rv = nsRepository::CreateInstance(kToolbarCID, nsnull, kIToolbarIID,
                   (void**)&mStatusAppBar);
   if (NS_OK != rv) {
-  return rv;
+    return rv;
   }
 
   if (NS_OK != mStatusAppBar->QueryInterface(kIWidgetIID,(void**)&mStatusAppBarWidget)) {
-  return rv;
+    return rv;
   }
   mStatusAppBar->SetMargin(1);
   mStatusAppBar->SetHGap(2);
-  mStatusAppBar->SetDrawFullBorder(PR_TRUE);
+  mStatusAppBar->SetBorderType(eToolbarBorderType_full);
 
 	mStatusAppBarWidget->Create(statusWidget, rrr, HandleToolbarEvent, NULL);
 	mStatusAppBarWidget->SetBackgroundColor(windowBGColor);
@@ -1871,14 +1859,14 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   // Get the ToolbarItem interface for adding it to the toolbar
   nsIToolbarItem * toolbarItem;
 	if (NS_OK != mStatusAppBar->QueryInterface(kIToolbarItemIID,(void**)&toolbarItem)) {
-  return NS_OK;
+    return NS_OK;
   }
   mStatusBar->AddItem(toolbarItem, 2, PR_FALSE);
 
   // Count number of buttons and create array to hold them
   mNumMiniAppsBtns = 0;
   while (gMiniAppsToolbarInfo[mNumMiniAppsBtns].mImgWidth > 0) {
-  mNumMiniAppsBtns++;
+    mNumMiniAppsBtns++;
   }
   mMiniAppsBtns = (nsIWidget **)new PRInt32[mNumMiniAppsBtns];
 
@@ -1886,39 +1874,39 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   PRInt32 i = 0;
   nsRect  rect;
   while (gMiniAppsToolbarInfo[i].mImgWidth > 0) {
-  if (i == 0) {
-    rect.SetRect(0, 0, 13, 18); 
-  } else {
-    rect.SetRect(0, 0, 32, 16); 
-  }
-  nsIImageButton * btn;
-  nsIWidget    * widget;
-  NS_CreateImageButton(mStatusAppBar,  btn, widget, gMiniAppsToolbarInfo[i].mLabel, 
-            rect, nsnull,
-	  							    &font, baseURL,
-            gMiniAppsToolbarInfo[i].mUpName,              
-            gMiniAppsToolbarInfo[i].mPressedName,              
-            gMiniAppsToolbarInfo[i].mDisabledName,              
-            gMiniAppsToolbarInfo[i].mRolloverName,              
-            gMiniAppsToolbarInfo[i].mImgWidth,              
-            gMiniAppsToolbarInfo[i].mImgHeight);
-  AddToolbarItem(mStatusAppBar, gMiniAppsToolbarInfo[i].mGap, gMiniAppsToolbarInfo[i].mEnabled, widget);
-  btn->SetShowText(PR_FALSE);
-  btn->SetImageVerticalAlignment(eButtonVerticalAligment_Center);
-  btn->SetImageHorizontalAlignment(eButtonHorizontalAligment_Middle);
-  btn->SetShowButtonBorder(PR_FALSE);
-  btn->SetBorderOffset(0);
-  btn->SetCommand(gMiniAppsToolbarInfo[i].mCommand);
-  btn->SetRollOverDesc(gMiniAppsToolbarInfo[i].mRollOverDesc);
-  btn->AddListener(this);
+    if (i == 0) {
+      rect.SetRect(0, 0, 13, 18); 
+    } else {
+      rect.SetRect(0, 0, 32, 16); 
+    }
+    nsIImageButton * btn;
+    nsIWidget    * widget;
+    NS_CreateImageButton(mStatusAppBar,  btn, widget, gMiniAppsToolbarInfo[i].mLabel, 
+                          rect, nsnull,
+	  							        &font, baseURL,
+                          gMiniAppsToolbarInfo[i].mUpName,              
+                          gMiniAppsToolbarInfo[i].mPressedName,              
+                          gMiniAppsToolbarInfo[i].mDisabledName,              
+                          gMiniAppsToolbarInfo[i].mRolloverName,              
+                          gMiniAppsToolbarInfo[i].mImgWidth,              
+                          gMiniAppsToolbarInfo[i].mImgHeight);
+    AddToolbarItem(mStatusAppBar, gMiniAppsToolbarInfo[i].mGap, gMiniAppsToolbarInfo[i].mEnabled, widget);
+    btn->SetShowText(PR_FALSE);
+    btn->SetImageVerticalAlignment(eButtonVerticalAligment_Center);
+    btn->SetImageHorizontalAlignment(eButtonHorizontalAligment_Middle);
+    btn->SetShowButtonBorder(PR_FALSE);
+    btn->SetBorderOffset(0);
+    btn->SetCommand(gMiniAppsToolbarInfo[i].mCommand);
+    btn->SetRollOverDesc(gMiniAppsToolbarInfo[i].mRollOverDesc);
+    btn->AddListener(this);
 	  widget->SetBackgroundColor(widgetBGColor);
-  if (i == 0) {
-    btn->SetAlwaysShowBorder(PR_TRUE);
-  }
-  mMiniAppsBtns[i] = widget;
-  rect.x += 40;
-  i++;
-  NS_RELEASE(btn);
+    if (i == 0) {
+      btn->SetAlwaysShowBorder(PR_TRUE);
+    }
+    mMiniAppsBtns[i] = widget;
+    rect.x += 40;
+    i++;
+    NS_RELEASE(btn);
   }
   PRInt32 width,height;
 	mStatusAppBarWidget->GetPreferredSize(width, height);
@@ -1947,68 +1935,68 @@ NS_METHOD
 nsBrowserWindow::NotifyImageButtonEvent(nsIImageButton * aImgBtn, nsGUIEvent* anEvent)
 {
   if (anEvent->message == NS_MOUSE_ENTER) {
-  nsString msg;
-  aImgBtn->GetRollOverDesc(msg);
-  SetStatus(msg);
-  return NS_OK;
+    nsString msg;
+    aImgBtn->GetRollOverDesc(msg);
+    SetStatus(msg);
+    return NS_OK;
   } else if (anEvent->message == NS_MOUSE_EXIT) {
-  SetStatus("");
-  return NS_OK;
+    SetStatus("");
+    return NS_OK;
   } else if (anEvent->message != NS_MOUSE_LEFT_BUTTON_UP) {
-  return NS_OK;
+    return NS_OK;
   }
 
   PRInt32 command;
   if (NS_OK != aImgBtn->GetCommand(command)) {
-  return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
   }
 
   // Do Personal toolbar
   if (command >= kPersonalCmd) {
-  nsString url(gPersonalURLS[command - kPersonalCmd]);
-  mWebShell->LoadURL(url);
-  return NS_OK;
+    nsString url(gPersonalURLS[command - kPersonalCmd]);
+    mWebShell->LoadURL(url);
+    return NS_OK;
   }
 
   // Do the rest of the commands
   switch (command) {
-  case kStopCmd :
-    mWebShell->Stop();
-    UpdateToolbarBtns();
-    break;
+    case kStopCmd :
+      mWebShell->Stop();
+      UpdateToolbarBtns();
+      break;
 
-  case kBackCmd :
-    Back();
-    UpdateToolbarBtns();
-    break;
+    case kBackCmd :
+      Back();
+      UpdateToolbarBtns();
+      break;
 
-  case kForwardCmd :
-    Forward();
-    UpdateToolbarBtns();
-    break;
+    case kForwardCmd :
+      Forward();
+      UpdateToolbarBtns();
+      break;
 
-  case kHomeCmd : {
-    //XXX This test using javascript instead of calling directly
-    ExecuteJavaScriptString(mWebShell, nsString("window.home();"));
+    case kHomeCmd : {
+      //XXX This test using javascript instead of calling directly
+      ExecuteJavaScriptString(mWebShell, nsString("window.home();"));
    
-    // nsString homeURL("http://www.netscape.com");
-   // mWebShell->LoadURL(homeURL);
-    } break;
+      // nsString homeURL("http://www.netscape.com");
+     // mWebShell->LoadURL(homeURL);
+      } break;
 
-  case kMiniNavCmd :
-    mApp->OpenWindow();
-    break;
+    case kMiniNavCmd :
+      mApp->OpenWindow();
+      break;
 
-  case kMiniTabCmd : {
-    DoAppsDialog();
-    nsIWidget * widget;
-    if (NS_OK == mAppsDialog->QueryInterface(kIWidgetIID,(void**)&widget)) {
-    widget->Show(PR_TRUE);
-    NS_RELEASE(widget);
-    }
-    mStatusAppBarWidget->Show(PR_FALSE);
-    mStatusBar->DoLayout();
-    } break;
+    case kMiniTabCmd : {
+      DoAppsDialog();
+      nsIWidget * widget;
+      if (NS_OK == mAppsDialog->QueryInterface(kIWidgetIID,(void**)&widget)) {
+        widget->Show(PR_TRUE);
+        NS_RELEASE(widget);
+      }
+      mStatusAppBarWidget->Show(PR_FALSE);
+      mStatusBar->DoLayout();
+      } break;
 
   } // switch
 
@@ -2022,15 +2010,15 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   nscoord txtHeight;
   nsILookAndFeel * lookAndFeel;
   if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
-  NS_RELEASE(lookAndFeel);
+    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
+    NS_RELEASE(lookAndFeel);
   } else {
-  txtHeight = 24;
+    txtHeight = 24;
   }
 
   nsIWidget * tbManagerWidget;
   if (NS_OK != mToolbarMgr->QueryInterface(kIWidgetIID,(void**)&tbManagerWidget)) {
-  return;
+    return;
   }
 
   nsRect rr(0, 0, aWidth, aHeight);
@@ -2040,26 +2028,25 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
 
   tbManagerWidget->GetPreferredSize(preferredWidth, preferredHeight);
   tbManagerWidget->Resize(0,0, aWidth, preferredHeight, PR_TRUE);
-  rr.y    += preferredHeight;
+  rr.y      += preferredHeight;
   rr.height -= preferredHeight;
 
   nsIWidget* statusWidget = nsnull;
   PRInt32 statusBarHeight = 0;
 
   if (NS_OK == mStatusBar->QueryInterface(kIWidgetIID,(void**)&statusWidget)) {
-  if (mStatusBar) {
-    if (mChromeMask & NS_CHROME_STATUS_BAR_ON) {
-    //PRInt32 width;
-    //statusWidget->GetPreferredSize(width, statusBarHeight);
-    statusBarHeight = 22;
-    statusWidget->Resize(0, aHeight - statusBarHeight, aWidth, statusBarHeight, PR_TRUE);
-    rr.height -= statusBarHeight+1;
-    statusWidget->Show(PR_TRUE);
+    if (mStatusBar) {
+      if (mChromeMask & NS_CHROME_STATUS_BAR_ON) {
+        //PRInt32 width;
+        //statusWidget->GetPreferredSize(width, statusBarHeight);
+        statusBarHeight = 22;
+        statusWidget->Resize(0, aHeight - statusBarHeight, aWidth, statusBarHeight, PR_TRUE);
+        rr.height -= statusBarHeight;
+        statusWidget->Show(PR_TRUE);
+      } else {
+        statusWidget->Show(PR_FALSE);
+      }
     }
-    else {
-    statusWidget->Show(PR_FALSE);
-    }
-  }
   }
 
   // inset the web widget
@@ -2136,22 +2123,14 @@ nsBrowserWindow::Close()
   RemoveBrowser(this);
 
   if (nsnull != mWebShell) {
-  mWebShell->Destroy();
-  NS_RELEASE(mWebShell);
+    mWebShell->Destroy();
+    NS_RELEASE(mWebShell);
   }
 
-//  NS_IF_RELEASE(mWindow);
   if (nsnull != mWindow) {
-  nsIWidget* w = mWindow;
-  NS_RELEASE(w);
+    nsIWidget* w = mWindow;
+    NS_RELEASE(w);
   }
-
-  /*NS_IF_RELEASE(mBack);
-  NS_IF_RELEASE(mForward);
-  NS_IF_RELEASE(mLocation);
-  NS_IF_RELEASE(mThrobber);
-  NS_IF_RELEASE(mStatus);
-  */
 
   return NS_OK;
 }
@@ -2191,41 +2170,41 @@ NS_IMETHODIMP
 nsBrowserWindow::HandleEvent(nsGUIEvent * anEvent)
 {
   if (anEvent->widget == mToolbarBtns[gBackBtnInx]) {
-  Back();
-  UpdateToolbarBtns();
+    Back();
+    UpdateToolbarBtns();
 
   } else if (anEvent->widget == mToolbarBtns[gForwardBtnInx]) {
-  Forward();
-  UpdateToolbarBtns();
+    Forward();
+    UpdateToolbarBtns();
 
   } else if (mAppsDialogBtns != nsnull && anEvent->widget == mAppsDialogBtns[0]) {
-  mApp->OpenWindow();
+    mApp->OpenWindow();
 
   } else if (anEvent->widget == mMiniAppsBtns[1]) {
-  mApp->OpenWindow();
+    mApp->OpenWindow();
 
   } else if (anEvent->widget == mToolbarBtns[gHomeBtnInx]) {
-  nsString homeURL("http://www.netscape.com");
-  mWebShell->LoadURL(homeURL);
+    nsString homeURL("http://www.netscape.com");
+    mWebShell->LoadURL(homeURL);
 
   } else if (anEvent->widget == mMiniAppsBtns[0]) {
-  DoAppsDialog();
-  nsIWidget * widget;
-  if (NS_OK == mAppsDialog->QueryInterface(kIWidgetIID,(void**)&widget)) {
-    widget->Show(PR_TRUE);
-    NS_RELEASE(widget);
-  }
-  mStatusAppBarWidget->Show(PR_FALSE);
-  mStatusBar->DoLayout();
+    DoAppsDialog();
+    nsIWidget * widget;
+    if (NS_OK == mAppsDialog->QueryInterface(kIWidgetIID,(void**)&widget)) {
+      widget->Show(PR_TRUE);
+      NS_RELEASE(widget);
+    }
+    mStatusAppBarWidget->Show(PR_FALSE);
+    mStatusBar->DoLayout();
   }
 
   PRInt32 i = 0;
   for (i=0;i<mNumPersonalToolbarBtns;i++) {
-  if (mPersonalToolbarBtns[i] == anEvent->widget) {
-    nsString url(gPersonalURLS[i]);
-    mWebShell->LoadURL(url);
-    break;
-  }
+    if (mPersonalToolbarBtns[i] == anEvent->widget) {
+      nsString url(gPersonalURLS[i]);
+      mWebShell->LoadURL(url);
+      break;
+    }
   }
   
   return NS_OK;
@@ -2263,12 +2242,12 @@ NS_IMETHODIMP
 nsBrowserWindow::SetStatus(const nsString & aMsg)
 {
   if (nsnull != mStatusText) {
-  mStatusText->SetLabel(aMsg);
-  nsIWidget * widget;
-  if (NS_OK == mStatusText->QueryInterface(kIWidgetIID,(void**)&widget)) {
-    widget->Invalidate(PR_TRUE);
-    NS_RELEASE(widget);
-  }
+    mStatusText->SetLabel(aMsg);
+    nsIWidget * widget;
+    if (NS_OK == mStatusText->QueryInterface(kIWidgetIID,(void**)&widget)) {
+      widget->Invalidate(PR_TRUE);
+      NS_RELEASE(widget);
+    }
   }
   return NS_OK;
 }
@@ -2292,10 +2271,10 @@ NS_IMETHODIMP
 nsBrowserWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason)
 {
   if (mStatusBar) {
-  nsAutoString url("Connecting to ");
-  url.Append(aURL);
+    nsAutoString url("Connecting to ");
+    url.Append(aURL);
 
-  SetStatus(aURL);
+    SetStatus(aURL);
   }
   return NS_OK;
 }
@@ -2305,15 +2284,15 @@ NS_IMETHODIMP
 nsBrowserWindow::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 {
   if (mThrobber) {
-  mThrobber->Start();
-  PRUint32 size;
-  mLocation->SetText(aURL,size);
+    mThrobber->Start();
+    PRUint32 size;
+    mLocation->SetText(aURL,size);
   }
   nsIWidget * widget;
   if (NS_OK == mToolbarBtns[gStopBtnInx]->QueryInterface(kIWidgetIID,(void**)&widget)) {
-  widget->Enable(PR_TRUE);
-  widget->Invalidate(PR_TRUE);
-  NS_RELEASE(widget);
+    widget->Enable(PR_TRUE);
+    widget->Invalidate(PR_TRUE);
+    NS_RELEASE(widget);
   }
   return NS_OK;
 }
@@ -2330,13 +2309,13 @@ NS_IMETHODIMP
 nsBrowserWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus)
 {
   if (mThrobber) {
-  mThrobber->Stop();
+    mThrobber->Stop();
   }
   nsIWidget * widget;
   if (NS_OK == mToolbarBtns[gStopBtnInx]->QueryInterface(kIWidgetIID,(void**)&widget)) {
-  widget->Enable(PR_FALSE);
-  widget->Invalidate(PR_TRUE);
-  NS_RELEASE(widget);
+    widget->Enable(PR_FALSE);
+    widget->Invalidate(PR_TRUE);
+    NS_RELEASE(widget);
   }
   return NS_OK;
 }
@@ -2353,24 +2332,20 @@ nsBrowserWindow::NewWebShell(nsIWebShell*& aNewWebShell)
   nsBrowserWindow* browser;
   NS_NEWXPCOM(browser, nsBrowserWindow);
 
-  if (nsnull != browser)
-  {
-  nsRect  bounds;
-  GetBounds(bounds);
+  if (nsnull != browser)   {
+    nsRect  bounds;
+    GetBounds(bounds);
 
-  browser->SetApp(mApp);
-  rv = browser->Init(mAppShell, mPrefs, bounds, mChromeMask, mAllowPlugins);
-  if (NS_OK == rv)
-  {
-    browser->Show();
-    nsIWebShell *shell;
-    rv = browser->GetWebShell(shell);
-    aNewWebShell = shell;
-  }
-  else
-  {
-    browser->Close();
-  }
+    browser->SetApp(mApp);
+    rv = browser->Init(mAppShell, mPrefs, bounds, mChromeMask, mAllowPlugins);
+    if (NS_OK == rv) {
+      browser->Show();
+      nsIWebShell *shell;
+      rv = browser->GetWebShell(shell);
+      aNewWebShell = shell;
+    } else {
+      browser->Close();
+    }
   }
   else
   rv = NS_ERROR_OUT_OF_MEMORY;
@@ -2388,24 +2363,24 @@ nsBrowserWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aRes
   nsString aNameStr(aName);
 
   for (i = 0; i < n; i++) {
-  nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers.ElementAt(i);
-  nsIWebShell *ws;
+    nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers.ElementAt(i);
+    nsIWebShell *ws;
   
-  if (NS_OK == bw->GetWebShell(ws)) {
-    PRUnichar *name;
-    if (NS_OK == ws->GetName(&name)) {
-    if (aNameStr.Equals(name)) {
-      aResult = ws;
-      NS_ADDREF(aResult);
-      return NS_OK;
+    if (NS_OK == bw->GetWebShell(ws)) {
+      PRUnichar *name;
+      if (NS_OK == ws->GetName(&name)) {
+        if (aNameStr.Equals(name)) {
+          aResult = ws;
+          NS_ADDREF(aResult);
+          return NS_OK;
+        }
+      }    
     }
-    }    
-  }
-  if (NS_OK == ws->FindChildWithName(aName, aResult)) {
-    if (nsnull != aResult) {
-    return NS_OK;
+    if (NS_OK == ws->FindChildWithName(aName, aResult)) {
+      if (nsnull != aResult) {
+        return NS_OK;
+      }
     }
-  }
   }
   return NS_OK;
 }
@@ -2422,18 +2397,18 @@ nsBrowserWindow::OnProgress(nsIURL* aURL,
               PRInt32 aProgressMax)
 {
   if (mStatusBar) {
-  nsAutoString url;
-  if (nsnull != aURL) {
-    aURL->ToString(url);
-  }
-  url.Append(": progress ");
-  url.Append(aProgress, 10);
-  if (0 != aProgressMax) {
-    url.Append(" (out of ");
-    url.Append(aProgressMax, 10);
-    url.Append(")");
-  }
-  SetStatus(url);
+    nsAutoString url;
+    if (nsnull != aURL) {
+      aURL->ToString(url);
+    }
+    url.Append(": progress ");
+    url.Append(aProgress, 10);
+    if (0 != aProgressMax) {
+      url.Append(" (out of ");
+      url.Append(aProgressMax, 10);
+      url.Append(")");
+    }
+    SetStatus(url);
   }
   return NS_OK;
 }
@@ -2451,12 +2426,12 @@ NS_IMETHODIMP
 nsBrowserWindow::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
   if (mStatusBar) {
-  nsAutoString url;
-  if (nsnull != aURL) {
-    aURL->ToString(url);
-  }
-  url.Append(": start");
-  SetStatus(url);
+    nsAutoString url;
+    if (nsnull != aURL) {
+      aURL->ToString(url);
+    }
+    url.Append(": start");
+    SetStatus(url);
   }
   return NS_OK;
 }
@@ -2468,7 +2443,7 @@ nsBrowserWindow::OnStopBinding(nsIURL* aURL,
                  const nsString& aMsg)
 {
   if (mThrobber) {
-  mThrobber->Stop();
+    mThrobber->Stop();
   }
 
   mToolbarBtns[gStopBtnInx]->Enable(PR_FALSE);
@@ -2476,7 +2451,7 @@ nsBrowserWindow::OnStopBinding(nsIURL* aURL,
 
   nsAutoString url;
   if (nsnull != aURL) {
-  aURL->ToString(url);
+    aURL->ToString(url);
   }
   url.Append(": stop");
   SetStatus(url);
@@ -2603,22 +2578,22 @@ nsBrowserWindow::GetPresShell()
 {
   nsIPresShell* shell = nsnull;
   if (nsnull != mWebShell) {
-  nsIContentViewer* cv = nsnull;
-  mWebShell->GetContentViewer(cv);
-  if (nsnull != cv) {
-    nsIDocumentViewer* docv = nsnull;
-    cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
-    if (nsnull != docv) {
-    nsIPresContext* cx;
-    docv->GetPresContext(cx);
-    if (nsnull != cx) {
-      shell = cx->GetShell();
-      NS_RELEASE(cx);
+    nsIContentViewer* cv = nsnull;
+    mWebShell->GetContentViewer(cv);
+    if (nsnull != cv) {
+      nsIDocumentViewer* docv = nsnull;
+      cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+      if (nsnull != docv) {
+        nsIPresContext* cx;
+        docv->GetPresContext(cx);
+        if (nsnull != cx) {
+          shell = cx->GetShell();
+          NS_RELEASE(cx);
+        }
+        NS_RELEASE(docv);
+      }
+      NS_RELEASE(cv);
     }
-    NS_RELEASE(docv);
-    }
-    NS_RELEASE(cv);
-  }
   }
   return shell;
 }
@@ -2645,42 +2620,38 @@ void PlaceHTMLOnClipboard(PRUint32 aFormat, char* aData, int aLength)
   PRInt32 size = aLength + 1 + strlen(preamble) + strlen(postamble);
 
 
-  if (aLength)
-  {
-  // Copy text to Global Memory Area
-  hGlobalMemory = (HGLOBAL)GlobalAlloc(GHND, size);
-  if (hGlobalMemory != NULL) 
-  {
-    pGlobalMemory = (PSTR) GlobalLock(hGlobalMemory);
+  if (aLength) {
+    // Copy text to Global Memory Area
+    hGlobalMemory = (HGLOBAL)GlobalAlloc(GHND, size);
+    if (hGlobalMemory != NULL) {
+      pGlobalMemory = (PSTR) GlobalLock(hGlobalMemory);
 
-    int i;
+      int i;
 
-    // AOL requires HTML prefix/postamble
-    char*   s  = preamble;
-    PRInt32   len = strlen(s); 
-    for (i=0; i < len; i++)
-    {
-    *pGlobalMemory++ = *s++;
-    }
+      // AOL requires HTML prefix/postamble
+      char*   s  = preamble;
+      PRInt32   len = strlen(s); 
+      for (i=0; i < len; i++) {
+        *pGlobalMemory++ = *s++;
+      }
 
-    s  = aData;
-    len = aLength;
-    for (i=0;i< len;i++) {
-    *pGlobalMemory++ = *s++;
-    }
+      s  = aData;
+      len = aLength;
+      for (i=0;i< len;i++) {
+        *pGlobalMemory++ = *s++;
+      }
 
 
-    s = postamble;
-    len = strlen(s); 
-    for (i=0; i < len; i++)
-    {
-    *pGlobalMemory++ = *s++;
-    }
+      s = postamble;
+      len = strlen(s); 
+      for (i=0; i < len; i++) {
+        *pGlobalMemory++ = *s++;
+      }
     
-    // Put data on Clipboard
-    GlobalUnlock(hGlobalMemory);
-    SetClipboardData(aFormat, hGlobalMemory);
-  }
+      // Put data on Clipboard
+      GlobalUnlock(hGlobalMemory);
+      SetClipboardData(aFormat, hGlobalMemory);
+    }
   }  
 }
 #endif
@@ -2693,73 +2664,71 @@ nsBrowserWindow::DoCopy()
 {
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
-  nsIDocument* doc = shell->GetDocument();
-  if (nsnull != doc) {
-    nsString buffer;
+    nsIDocument* doc = shell->GetDocument();
+    if (nsnull != doc) {
+      nsString buffer;
 
-    doc->CreateXIF(buffer,PR_TRUE);
+      doc->CreateXIF(buffer,PR_TRUE);
 
-    nsIParser* parser;
+      nsIParser* parser;
 
-    static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-    static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-    nsresult rv = nsRepository::CreateInstance(kCParserCID, 
-                         nsnull, 
-                         kCParserIID, 
-                         (void **)&parser);
+      nsresult rv = nsRepository::CreateInstance(kCParserCID, 
+                           nsnull, 
+                           kCParserIID, 
+                           (void **)&parser);
 
-    if (NS_OK == rv) {
-    nsIHTMLContentSink* sink = nsnull;
+      if (NS_OK == rv) {
+      nsIHTMLContentSink* sink = nsnull;
+  
+      rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
+
+      ostrstream  data;
+      ((nsHTMLContentSinkStream*)sink)->SetOutputStream(data);
+
+      if (NS_OK == rv) {
+        parser->SetContentSink(sink);
     
-    rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
+        nsIDTD* dtd = nsnull;
+        rv = NS_NewXIFDTD(&dtd);
+        if (NS_OK == rv) {
+          parser->RegisterDTD(dtd);
+          dtd->SetContentSink(sink);
+          dtd->SetParser(parser);
+          parser->Parse(buffer, PR_FALSE);       
+        }
+        NS_IF_RELEASE(dtd);
+        NS_IF_RELEASE(sink);
+        char* str = data.str();
 
-    ostrstream  data;
-    ((nsHTMLContentSinkStream*)sink)->SetOutputStream(data);
+  #if defined(WIN32)
+        PRUint32 cf_aol = RegisterClipboardFormat(gsAOLFormat);
+        PRUint32 cf_html = RegisterClipboardFormat(gsHTMLFormat);
+   
+        PRInt32   len = data.pcount();
+        if (len) {   
+          OpenClipboard(NULL);
+          EmptyClipboard();
+  
+          PlaceHTMLOnClipboard(cf_aol,str,len);
+          PlaceHTMLOnClipboard(cf_html,str,len);
+          PlaceHTMLOnClipboard(CF_TEXT,str,len);      
+          
+          CloseClipboard();
+        }
+        // in ostrstreams if you cal the str() function
+        // then you are responsible for deleting the string
+  #endif
+        if (str) delete str;
 
-    if (NS_OK == rv) {
-      parser->SetContentSink(sink);
-      
-      nsIDTD* dtd = nsnull;
-      rv = NS_NewXIFDTD(&dtd);
-      if (NS_OK == rv) 
-      {
-      parser->RegisterDTD(dtd);
-      dtd->SetContentSink(sink);
-      dtd->SetParser(parser);
-      parser->Parse(buffer, PR_FALSE);       
       }
-      NS_IF_RELEASE(dtd);
-      NS_IF_RELEASE(sink);
-      char* str = data.str();
-
-#if defined(WIN32)
-      PRUint32 cf_aol = RegisterClipboardFormat(gsAOLFormat);
-      PRUint32 cf_html = RegisterClipboardFormat(gsHTMLFormat);
-     
-      PRInt32   len = data.pcount();
-      if (len)
-      {   
-      OpenClipboard(NULL);
-      EmptyClipboard();
-    
-      PlaceHTMLOnClipboard(cf_aol,str,len);
-      PlaceHTMLOnClipboard(cf_html,str,len);
-      PlaceHTMLOnClipboard(CF_TEXT,str,len);      
-            
-      CloseClipboard();
+      NS_RELEASE(parser);
       }
-      // in ostrstreams if you cal the str() function
-      // then you are responsible for deleting the string
-#endif
-      if (str) delete str;
-
+      NS_RELEASE(doc);
     }
-    NS_RELEASE(parser);
-    }
-    NS_RELEASE(doc);
-  }
-  NS_RELEASE(shell);
+    NS_RELEASE(shell);
   }
 }
 
@@ -2842,15 +2811,15 @@ nsBrowserWindow::DumpFrames(FILE* out, nsString *aFilterName)
 {
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
-  nsIFrame* root = shell->GetRootFrame();
-  if (nsnull != root) {
-    nsIListFilter *filter = nsIFrame::GetFilter(aFilterName);
-    root->List(out, 0, filter);
-  }
-  NS_RELEASE(shell);
-  }
+    nsIFrame* root = shell->GetRootFrame();
+    if (nsnull != root) {
+      nsIListFilter *filter = nsIFrame::GetFilter(aFilterName);
+      root->List(out, 0, filter);
+    }
+    NS_RELEASE(shell);
+    }
   else {
-  fputs("null pres shell\n", out);
+    fputs("null pres shell\n", out);
   }
 }
 
@@ -2858,32 +2827,31 @@ void
 DumpViewsRecurse(nsBrowserWindow* aBrowser, nsIWebShell* aWebShell, FILE* out)
 {
   if (nsnull != aWebShell) {
-  nsIPresShell* shell = aBrowser->GetPresShell();
-  if (nsnull != shell) {
-    nsIViewManager* vm = shell->GetViewManager();
-    if (nsnull != vm) {
-    nsIView* root;
-    vm->GetRootView(root);
-    if (nsnull != root) {
-      root->List(out);
+    nsIPresShell* shell = aBrowser->GetPresShell();
+    if (nsnull != shell) {
+      nsIViewManager* vm = shell->GetViewManager();
+      if (nsnull != vm) {
+        nsIView* root;
+        vm->GetRootView(root);
+        if (nsnull != root) {
+          root->List(out);
+        }
+        NS_RELEASE(vm);
+      }
+      NS_RELEASE(shell);
+    } else {
+      fputs("null pres shell\n", out);
     }
-    NS_RELEASE(vm);
+    // dump the views of the sub documents
+    PRInt32 i, n;
+    aWebShell->GetChildCount(n);
+    for (i = 0; i < n; i++) {
+      nsIWebShell* child;
+      aWebShell->ChildAt(i, child);
+      if (nsnull != child) {
+        DumpViewsRecurse(aBrowser, child, out);
+      }
     }
-    NS_RELEASE(shell);
-  }
-  else {
-    fputs("null pres shell\n", out);
-  }
-  // dump the views of the sub documents
-  PRInt32 i, n;
-  aWebShell->GetChildCount(n);
-  for (i = 0; i < n; i++) {
-    nsIWebShell* child;
-    aWebShell->ChildAt(i, child);
-    if (nsnull != child) {
-    DumpViewsRecurse(aBrowser, child, out);
-    }
-  }
   }
 }
 
