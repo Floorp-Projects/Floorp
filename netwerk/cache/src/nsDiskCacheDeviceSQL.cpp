@@ -465,10 +465,10 @@ nsDiskCacheEntryInfo::GetDeviceID(char ** deviceID)
 }
 
 NS_IMETHODIMP
-nsDiskCacheEntryInfo::GetKey(char ** clientKey)
+nsDiskCacheEntryInfo::GetKey(nsACString &clientKey)
 {
-  *clientKey = nsCRT::strdup(mRec->key);
-  return *clientKey ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  clientKey.Assign(mRec->key);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

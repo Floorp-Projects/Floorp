@@ -94,9 +94,8 @@ nsCacheEntryDescriptor::GetDeviceID(char ** result)
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetKey(char ** result)
+nsCacheEntryDescriptor::GetKey(nsACString &result)
 {
-    NS_ENSURE_ARG_POINTER(result);
     nsAutoLock  lock(nsCacheService::ServiceLock());
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 

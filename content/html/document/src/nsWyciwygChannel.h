@@ -82,7 +82,7 @@ public:
 
 protected:
     nsresult ReadFromCache();
-    nsresult OpenCacheEntry(const char * aCacheKey, nsCacheAccessMode aWriteAccess, PRBool * aDelayFlag = nsnull);
+    nsresult OpenCacheEntry(const nsACString & aCacheKey, nsCacheAccessMode aWriteAccess, PRBool * aDelayFlag = nsnull);
        
     nsresult                            mStatus;
     PRBool                              mIsPending;

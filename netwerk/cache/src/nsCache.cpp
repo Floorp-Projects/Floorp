@@ -131,10 +131,9 @@ ClientIDFromCacheKey(const nsACString&  key, char ** result)
 
 
 nsresult
-ClientKeyFromCacheKey(const nsACString& key, char ** result)
+ClientKeyFromCacheKey(const nsCString& key, nsACString &result)
 {
     nsresult  rv = NS_OK;
-    *result = nsnull;
 
     nsReadingIterator<char> start;
     key.BeginReading(start);
@@ -144,11 +143,11 @@ ClientKeyFromCacheKey(const nsACString& key, char ** result)
         
     if (FindCharInReadable(':', start, end)) {
         ++start;  // advance past clientID ':' delimiter
-        *result = ToNewCString( Substring(start, end));
-        if (!*result) rv = NS_ERROR_OUT_OF_MEMORY;
+        result.Assign(Substring(start, end));
     } else {
         NS_ASSERTION(PR_FALSE, "FindCharInRead failed to find ':'");
         rv = NS_ERROR_UNEXPECTED;
+        result.Truncate(0);
     }
     return rv;
 }

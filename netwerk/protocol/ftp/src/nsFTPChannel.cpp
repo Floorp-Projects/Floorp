@@ -360,7 +360,7 @@ nsFTPChannel::AsyncOpenAt(nsIStreamListener *listener, nsISupports *ctxt,
         nsCAutoString cacheKey;
         GenerateCacheKey(cacheKey);
 
-        rv = mCacheSession->AsyncOpenCacheEntry(cacheKey.get(),
+        rv = mCacheSession->AsyncOpenCacheEntry(cacheKey,
                                                 accessRequested,
                                                 this);
         if (NS_SUCCEEDED(rv))

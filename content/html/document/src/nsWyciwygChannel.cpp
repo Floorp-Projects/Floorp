@@ -309,7 +309,7 @@ nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
 
   // open a cache entry for this channel...
   PRBool delayed = PR_FALSE;
-  nsresult rv = OpenCacheEntry(spec.get(), nsICache::ACCESS_READ, &delayed);        
+  nsresult rv = OpenCacheEntry(spec, nsICache::ACCESS_READ, &delayed);        
   if (NS_FAILED(rv)) {
     LOG(("nsWyciwygChannel::OpenCacheEntry failed [rv=%x]\n", rv));
     return rv;
@@ -346,7 +346,7 @@ nsWyciwygChannel::WriteToCacheEntry(const nsAString &aData)
     nsCAutoString spec;
     rv = mURI->GetAsciiSpec(spec);
     if (NS_FAILED(rv)) return rv;
-    rv = OpenCacheEntry(spec.get(), nsICache::ACCESS_WRITE);
+    rv = OpenCacheEntry(spec, nsICache::ACCESS_WRITE);
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -511,7 +511,7 @@ nsWyciwygChannel::OnStopRequest(nsIRequest *request, nsISupports *ctx, nsresult 
 //////////////////////////////////////////////////////////////////////////////
 
 nsresult
-nsWyciwygChannel::OpenCacheEntry(const char * aCacheKey,
+nsWyciwygChannel::OpenCacheEntry(const nsACString & aCacheKey,
                                  nsCacheAccessMode aAccessMode,
                                  PRBool * aDelayFlag)
 {

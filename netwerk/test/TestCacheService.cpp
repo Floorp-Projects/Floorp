@@ -112,16 +112,18 @@ TestMemoryObjectCache()
 
     // Test ACCESS_READ for non-existent entry
     printf("\nTest ACCESS_READ:\n");
-    rv = session->OpenCacheEntry("non-existent entry",
+    rv = session->OpenCacheEntry(NS_LITERAL_CSTRING("non-existent entry"),
                                  nsICache::ACCESS_READ,
                                  nsICache::BLOCKING,
                                  getter_AddRefs(descriptor));
     if (rv != NS_ERROR_CACHE_KEY_NOT_FOUND)
         printf("OpenCacheEntry(ACCESS_READ) returned: %x for non-existent entry\n", rv);
 
+    NS_NAMED_LITERAL_CSTRING(cacheKey, "http://www.mozilla.org/somekey");
+
     // Test creating new entry
     printf("\nTest ACCESS_READ_WRITE:\n");
-    rv = session->OpenCacheEntry("http://www.mozilla.org/somekey",
+    rv = session->OpenCacheEntry(cacheKey,
                                  nsICache::ACCESS_READ_WRITE,
                                  nsICache::BLOCKING,
                                  getter_AddRefs(descriptor));
@@ -142,7 +144,7 @@ TestMemoryObjectCache()
 
     // Test refetching entry
 
-    rv = session->OpenCacheEntry("http://www.mozilla.org/somekey",
+    rv = session->OpenCacheEntry(cacheKey,
                                  nsICache::ACCESS_READ_WRITE,
                                  nsICache::BLOCKING,
                                  getter_AddRefs(descriptor));
@@ -167,7 +169,7 @@ TestMemoryObjectCache()
 
     // Test ACCESS_WRITE entry
     printf("\nTest ACCESS_WRITE:\n");
-    rv = session->OpenCacheEntry("http://www.mozilla.org/somekey",
+    rv = session->OpenCacheEntry(cacheKey,
                                  nsICache::ACCESS_WRITE,
                                  nsICache::BLOCKING,
                                  getter_AddRefs(descriptor));

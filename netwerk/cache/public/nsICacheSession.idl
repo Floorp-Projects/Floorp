@@ -46,7 +46,7 @@
 interface nsICacheEntryDescriptor;
 interface nsICacheListener;
 
-[scriptable, uuid(b4b419ad-28b7-4d25-9988-20fa98505a19)]
+[scriptable, uuid(ae9e84b5-3e2d-457e-8fcd-5bbd2a8b832e)]
 interface nsICacheSession : nsISupports
 {
     /**
@@ -71,7 +71,7 @@ interface nsICacheSession : nsISupports
      * return NS_ERROR_CACHE_WAIT_FOR_VALIDATION rather than block when another
      * descriptor has been given WRITE access but hasn't validated the entry yet.
      */
-    nsICacheEntryDescriptor openCacheEntry(in string            key,
+    nsICacheEntryDescriptor openCacheEntry(in ACString          key,
                                            in nsCacheAccessMode accessRequested,
                                            in boolean           blockingMode);
 
@@ -80,7 +80,7 @@ interface nsICacheSession : nsISupports
      * Instead, the listener will be notified when the descriptor is
      * available.
      */
-    void asyncOpenCacheEntry(in string            key,
+    void asyncOpenCacheEntry(in ACString          key,
                              in nsCacheAccessMode accessRequested,
                              in nsICacheListener  listener);
 

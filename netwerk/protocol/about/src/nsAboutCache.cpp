@@ -224,11 +224,11 @@ nsAboutCache::VisitEntry(const char *deviceID,
 {
     nsresult        rv;
     PRUint32        bytesWritten;
-    nsXPIDLCString  key;
+    nsCAutoString   key;
     nsXPIDLCString  clientID;
     PRBool          streamBased;
     
-    rv = entryInfo->GetKey(getter_Copies(key));
+    rv = entryInfo->GetKey(key);
     if (NS_FAILED(rv))  return rv;
 
     rv = entryInfo->GetClientID(getter_Copies(clientID));
@@ -244,7 +244,7 @@ nsAboutCache::VisitEntry(const char *deviceID,
     url.AppendLiteral("&amp;sb=");
     url += streamBased ? '1' : '0';
     url.AppendLiteral("&amp;key=");
-    char* escapedKey = nsEscapeHTML(key);
+    char* escapedKey = nsEscapeHTML(key.get());
     url += escapedKey; // key
 
     // Entry start...

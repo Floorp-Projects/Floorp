@@ -353,7 +353,7 @@ nsSound::GetSoundFromCache(nsIURI* inURI, nsISupports** outSound)
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsICacheEntryDescriptor> entry;
-  rv = cacheSession->OpenCacheEntry(uriSpec.get(), nsICache::ACCESS_READ, nsICache::BLOCKING, getter_AddRefs(entry));
+  rv = cacheSession->OpenCacheEntry(uriSpec, nsICache::ACCESS_READ, nsICache::BLOCKING, getter_AddRefs(entry));
 
 #ifdef SOUND_DEBUG
   printf("Got sound from cache with rv %ld\n", rv);
@@ -385,7 +385,7 @@ nsSound::PutSoundInCache(nsIChannel* inChannel, PRUint32 inDataSize, nsISupports
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsICacheEntryDescriptor> entry;
-  rv = cacheSession->OpenCacheEntry(uriSpec.get(), nsICache::ACCESS_WRITE, nsICache::BLOCKING, getter_AddRefs(entry));
+  rv = cacheSession->OpenCacheEntry(uriSpec, nsICache::ACCESS_WRITE, nsICache::BLOCKING, getter_AddRefs(entry));
 #ifdef SOUND_DEBUG
   printf("Put sound in cache with rv %ld\n", rv);
 #endif
