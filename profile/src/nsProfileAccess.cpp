@@ -36,6 +36,11 @@
 #include "nsFileStream.h"
 #include "nsEscape.h"
 
+#define NS_IMPL_IDS
+#include "nsICharsetConverterManager.h"
+#include "nsIPlatformCharset.h"
+#undef NS_IMPL_IDS
+
 #define MAX_PERSISTENT_DATA_SIZE  1000
 #define NUM_HEX_BYTES             8
 #define ISHEX(c) ( ((c) >= '0' && (c) <= '9') || ((c) >= 'a' && (c) <= 'f') || ((c) >= 'A' && (c) <= 'F') )
@@ -50,6 +55,7 @@
 
 // IID and CIDs of all the services needed
 static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 /*
  * Constructor/Destructor
@@ -79,6 +85,64 @@ nsProfileAccess::~nsProfileAccess()
 
     FreeProfileMembers(mProfiles, mCount);
     FreeProfileMembers(m4xProfiles, m4xCount);
+}
+
+// A wrapper function to call the interface to get a platform file charset.
+static
+nsresult 
+GetPlatformCharset(nsAutoString& aCharset)
+{
+    nsresult rv;
+
+    // we may cache it since the platform charset will not change through application life
+    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+    if (NS_SUCCEEDED(rv) && platformCharset) {
+        rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
+    }
+    if (NS_FAILED(rv)) {
+        aCharset.AssignWithConversion("ISO-8859-1");  // use ISO-8859-1 in case of any error
+    }
+    return rv;
+}
+
+// Apply a charset conversion from the given charset to Unicode for input C string.
+static
+nsresult 
+ConvertStringToUnicode(nsAutoString& aCharset, const char* inString, nsAutoString& outString)
+{
+    nsresult rv;
+    // convert result to unicode
+    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv);
+
+    if(NS_SUCCEEDED(rv)) {
+        nsCOMPtr <nsIUnicodeDecoder> decoder; // this may be cached
+        rv = ccm->GetUnicodeDecoder(&aCharset, getter_AddRefs(decoder));
+
+        if(NS_SUCCEEDED(rv) && decoder) {
+            PRInt32 uniLength = 0;
+            PRInt32 srcLength = nsCRT::strlen(inString);
+            rv = decoder->GetMaxLength(inString, srcLength, &uniLength);
+
+            if (NS_SUCCEEDED(rv)) {
+                PRUnichar *unichars = new PRUnichar [uniLength];
+
+                if (nsnull != unichars) {
+                    // convert to unicode
+                    rv = decoder->Convert(inString, &srcLength, unichars, &uniLength);
+
+                    if (NS_SUCCEEDED(rv)) {
+                        // Pass back the unicode string
+                        outString.Assign(unichars, uniLength);
+                    }
+                    delete [] unichars;
+                }
+                else {
+                    rv = NS_ERROR_OUT_OF_MEMORY;
+                }
+            }
+        }    
+    }
+    return rv;
 }
 
 // Free up the member profile structs
@@ -1009,6 +1073,10 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
     nsresult rv = NS_OK;
     mNumOldProfiles = 0;
 
+    nsAutoString charSet;
+    rv = GetPlatformCharset(charSet);
+    if (NS_FAILED(rv)) return rv;
+
 #if defined(XP_PC) || defined(XP_MAC)
     nsCOMPtr <nsIRegistry> oldReg;
     rv = nsComponentManager::CreateInstance(kRegistryCID,
@@ -1062,15 +1130,13 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
         rv = node->GetKey(&key);
         if (NS_FAILED(rv)) return rv;
 
-        nsXPIDLCString profLoc;
-         
-        rv = oldReg->GetStringUTF8( key, "ProfileLocation", getter_Copies(profLoc));
+        nsXPIDLString profLoc;
+        nsAutoString locString;
+        locString.AssignWithConversion("ProfileLocation");
+        
+        rv = oldReg->GetString( key, locString.GetUnicode(), getter_Copies(profLoc));
         if (NS_FAILED(rv)) return rv;
-         
-#if defined(DEBUG_profile)
-    printf("oldProflie Location = %s\n", profLoc);
-#endif
-    
+		
         ProfileStruct*	profileItem  = new ProfileStruct();
         if (!profileItem)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -1082,12 +1148,22 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
         // There is some problem I guess in sending a space as itself
 
         nsCAutoString temp; temp.AssignWithConversion(profile);
-        nsAutoString unescpPrfName;
-        unescpPrfName.AssignWithConversion(nsUnescape( NS_CONST_CAST(char*, temp.GetBuffer()) ));
 
-        profileItem->profileName  = unescpPrfName;
+        nsCAutoString profileName(nsUnescape( NS_CONST_CAST(char*, temp.GetBuffer())));
+        nsAutoString convertedProfName;
+        ConvertStringToUnicode(charSet, profileName.GetBuffer(), convertedProfName);
 
-        profileItem->profileLocation.AssignWithConversion(profLoc);
+        profileItem->profileName  = convertedProfName;
+
+        // Unescape profile location and convert it to the right format
+        nsCAutoString tempLoc; tempLoc.AssignWithConversion(profLoc);
+
+        nsCAutoString profileLocation(nsUnescape( NS_CONST_CAST(char*, tempLoc.GetBuffer())));
+        nsAutoString convertedProfLoc;
+        ConvertStringToUnicode(charSet, profileLocation.GetBuffer(), convertedProfLoc);
+
+        profileItem->profileLocation = convertedProfLoc;
+
         profileItem->isMigrated.AssignWithConversion(REGISTRY_NO_STRING);
 
         if (!m4xProfiles)
