@@ -1638,7 +1638,7 @@ nsBookmarksService::getArgumentN(nsISupportsArray *arguments, nsIRDFResource *re
 		nsCOMPtr<nsIRDFResource>	src = do_QueryInterface(aSource);
 		if (!src)	return(NS_ERROR_NO_INTERFACE);
 		
-		if (src == res)
+		if (src.get() == res)
 		{
 			if (offset > 0)
 			{
