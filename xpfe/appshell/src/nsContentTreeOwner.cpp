@@ -373,26 +373,6 @@ NS_IMETHODIMP nsContentTreeOwner::SetStatus(PRUint32 aStatusType, const PRUnicha
      }
    }
 
-  //
-  // Force pending notifications to be processed immediately... This
-  // causes the status message to be displayed synchronously.
-  //
-  // XXX: This is nasty because we have to drill down to the nsIDocument to
-  //      force the flushing...
-  //
-  // XXXbz no, this is nasty because we're flushing at all!
-  nsCOMPtr<nsIDOMWindowInternal> domWindow;
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  nsCOMPtr<nsIDocument> doc;
-
-  mXULWindow->GetWindowDOMWindow(getter_AddRefs(domWindow));
-  domWindow->GetDocument(getter_AddRefs(domDoc));
-  doc = do_QueryInterface(domDoc);
-
-  if (doc) {
-    doc->FlushPendingNotifications(Flush_Layout);
-  }
-
   return NS_OK;
 }
 
