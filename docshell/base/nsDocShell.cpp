@@ -6582,11 +6582,14 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
         for (PRInt32 i = 0; i < childCount; i++) {
             nsCOMPtr<nsISHEntry> srcChild;
             srcContainer->GetChildAt(i, getter_AddRefs(srcChild));
-            if (!srcChild)
-                return NS_ERROR_FAILURE;
+            if (!srcChild) {
+                // srcChild can be null for valid reasons, for example if the
+                // docshell at index i never loaded anything useful.  So if we
+                // hit a null here, just go on; it'll be null in the cloned
+                // tree as well.
+                continue;
+            }
             nsCOMPtr<nsISHEntry> destChild;
-            if (NS_FAILED(result))
-                return result;
             result =
                 CloneAndReplace(srcChild, aCloneID, replaceEntry,
                                 getter_AddRefs(destChild));
