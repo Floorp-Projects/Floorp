@@ -1570,7 +1570,74 @@ InternetSearchDataSource::HasAssertion(nsIRDFResource *source,
         return(rv);
 }
 
+NS_IMETHODIMP 
+InternetSearchDataSource::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
+{
+    if (mInner) {
+	return mInner->HasArcIn(aNode, aArc, result);
+    }
+    else {
+	*result = PR_FALSE;
+    }
+    return NS_OK;
+}
 
+NS_IMETHODIMP 
+InternetSearchDataSource::HasArcOut(nsIRDFResource *source, nsIRDFResource *aArc, PRBool *result)
+{
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+	return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    if ((source == kNC_SearchEngineRoot) || (source == kNC_LastSearchRoot) || isSearchURI(source))
+    {
+	*result = (aArc == kNC_Child);
+	return NS_OK;
+    }
+
+    if ((isSearchCategoryURI(source)) && (categoryDataSource))
+    {
+	const char	*uri = nsnull;
+	source->GetValueConst(&uri);
+	if (!uri)	return(NS_ERROR_UNEXPECTED);
+
+	nsCOMPtr<nsIRDFResource>	category;
+	if (NS_FAILED(rv = gRDFService->GetResource(uri,
+						    getter_AddRefs(category))))
+	    return(rv);
+
+	return categoryDataSource->HasArcOut(source, aArc, result);
+    }
+
+    if (isSearchCategoryEngineURI(source))
+    {
+	nsCOMPtr<nsIRDFResource>	trueEngine;
+	rv = resolveSearchCategoryEngineURI(source, getter_AddRefs(trueEngine));
+	if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE))	return(rv);
+	if (!trueEngine) {
+	    *result = PR_FALSE;
+	    return NS_OK;
+	}
+	source = trueEngine;
+    }
+
+    if (isEngineURI(source))
+    {
+	// if we're asking for info on a search engine, (deferred) load it if needed
+	nsCOMPtr<nsIRDFLiteral>	dataLit;
+	FindData(source, getter_AddRefs(dataLit));
+    }
+
+    if (mInner)
+    {
+	return mInner->HasArcOut(source, aArc, result);
+    }
+
+    *result = PR_FALSE;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 InternetSearchDataSource::ArcLabelsIn(nsIRDFNode *node,

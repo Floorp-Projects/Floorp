@@ -173,6 +173,13 @@ nsMsgSearchDataSource::HasAssertion(nsIRDFResource *aSource,
 }
 
 
+NS_IMETHODIMP 
+nsMsgSearchDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+{
+    *result = aSource == mSearchRoot.get() && aArc == kNC_MessageChild;
+    return NS_OK;
+}
+
 /* nsISimpleEnumerator ArcLabelsOut (in nsIRDFResource aSource); */
 NS_IMETHODIMP
 nsMsgSearchDataSource::ArcLabelsOut(nsIRDFResource *aSource,

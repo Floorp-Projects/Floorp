@@ -1822,6 +1822,23 @@ public:
 	NS_IMETHOD AddObserver(nsIRDFObserver* aObserver);
 	NS_IMETHOD RemoveObserver(nsIRDFObserver* aObserver);
 
+        NS_IMETHOD HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *_retval) {
+	    return mInner->HasArcIn(aNode, aArc, _retval);
+	}
+
+        NS_IMETHOD HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *_retval) {
+#ifdef	XP_MAC
+	    // on the Mac, IE favorites are stored in an HTML file.
+	    // Defer importing this files contents until necessary.
+
+	    if ((aSource == kNC_IEFavoritesRoot) && (mIEFavoritesAvailable == PR_FALSE))
+	    {
+		ReadFavorites();
+	    }
+#endif
+	    return mInner->HasArcOut(aSource, aArc, _retval);
+	}
+
 	NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
 			       nsISimpleEnumerator** labels) {
 		return mInner->ArcLabelsIn(node, labels);
@@ -1840,6 +1857,7 @@ public:
 			ReadFavorites();
 		}
 #endif
+
 		return mInner->ArcLabelsOut(source, labels);
 	}
 

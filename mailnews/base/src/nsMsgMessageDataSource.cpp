@@ -565,6 +565,44 @@ NS_IMETHODIMP nsMsgMessageDataSource::HasAssertion(nsIRDFResource* source,
 }
 
 
+NS_IMETHODIMP 
+nsMsgMessageDataSource::HasArcOut(nsIRDFResource *source, nsIRDFResource *aArc, PRBool *result)
+{
+  nsresult rv;
+  *result = PR_FALSE;
+
+  nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    PRBool showThreads;
+    rv = GetIsThreaded(&showThreads);
+    // handle this failure gracefully - not all datasources have views.
+   
+    if (NS_SUCCEEDED(rv) && showThreads) {
+      *result = (aArc == kNC_Total ||
+                 aArc == kNC_Unread ||
+                 aArc == kNC_MessageChild);
+    }
+    *result = (*result ||
+               aArc == kNC_Subject ||
+               aArc == kNC_Sender ||
+               aArc == kNC_Recipient ||
+               aArc == kNC_Date ||
+               aArc == kNC_Status ||
+               aArc == kNC_StatusString ||
+               aArc == kNC_Flagged ||
+               aArc == kNC_Priority ||
+               aArc == kNC_PriorityString ||
+               aArc == kNC_Size ||
+               aArc == kNC_IsUnread ||
+               aArc == kNC_HasAttachment ||
+               aArc == kNC_IsImapDeleted ||
+               aArc == kNC_MessageType ||
+               aArc == kNC_OrderReceived);
+    return NS_OK;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgMessageDataSource::ArcLabelsIn(nsIRDFNode* node,
                                                  nsISimpleEnumerator** labels)
 {

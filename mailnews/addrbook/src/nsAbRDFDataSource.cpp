@@ -281,6 +281,20 @@ NS_IMETHODIMP nsAbRDFDataSource::RemoveObserver(nsIRDFObserver* n)
 }
 
 
+NS_IMETHODIMP 
+nsAbRDFDataSource::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
+{
+  *result = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAbRDFDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+{
+  *result = PR_FALSE;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsAbRDFDataSource::ArcLabelsIn(nsIRDFNode* node,
                                                 nsISimpleEnumerator** labels)
 {

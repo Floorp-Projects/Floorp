@@ -289,6 +289,23 @@ NS_IMETHODIMP nsAbDirectoryDataSource::HasAssertion(nsIRDFResource* source,
 	return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsAbDirectoryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+{
+  nsresult rv;
+  nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(aSource, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    *result = (aArc == kNC_DirName ||
+               aArc == kNC_Child ||
+               aArc == kNC_CardChild ||
+               aArc == kNC_DirUri);
+  }
+  else {
+    *result = PR_FALSE;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsAbDirectoryDataSource::ArcLabelsOut(nsIRDFResource* source,
                                                  nsISimpleEnumerator** labels)
 {
@@ -297,8 +314,8 @@ NS_IMETHODIMP nsAbDirectoryDataSource::ArcLabelsOut(nsIRDFResource* source,
 
   nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv)) {
-    fflush(stdout);
-   rv = getDirectoryArcLabelsOut(directory, getter_AddRefs(arcs));
+    // fflush(stdout); // huh?
+    rv = getDirectoryArcLabelsOut(directory, getter_AddRefs(arcs));
   }
   else {
     // how to return an empty cursor?

@@ -40,6 +40,9 @@ interface nsIRDFContainerUtils : nsISupports {
     // Return 'true' if the specified resource is a container
     boolean IsContainer(in nsIRDFDataSource aDataSource, in nsIRDFResource aResource);
 
+    // Return 'true' if the specified resource is a container and it is empty
+    boolean IsEmpty(in nsIRDFDataSource aDataSource, in nsIRDFResource aResource);
+
     // Return 'true' if the specified resource is a bag
     boolean IsBag(in nsIRDFDataSource aDataSource, in nsIRDFResource aResource);
 

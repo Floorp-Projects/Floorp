@@ -196,5 +196,16 @@ interface nsIRDFDataSource : nsISupports
      */
     nsISimpleEnumerator GetAllCmds(in nsIRDFResource aSource);
 
+    /**
+     * Returns true if the specified node is pointed to by the specified arc.
+     * Equivalent to enumerating ArcLabelsIn and comparing for the specified arc.
+     */
+    boolean hasArcIn(in nsIRDFNode aNode, in nsIRDFResource aArc);
+
+    /**
+     * Returns true if the specified node has the specified outward arc.
+     * Equivalent to enumerating ArcLabelsOut and comparing for the specified arc.
+     */
+    boolean hasArcOut(in nsIRDFResource aSource, in nsIRDFResource aArc);
 };
 

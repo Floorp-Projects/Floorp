@@ -257,6 +257,18 @@ nsChromeUIDataSource::RemoveObserver(nsIRDFObserver* aObserver)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsChromeUIDataSource::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
+{
+  return mComposite->HasArcIn(aNode, aArc, result);
+}
+
+NS_IMETHODIMP 
+nsChromeUIDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+{
+  return mComposite->HasArcOut(aSource, aArc, result);
+}
+
 NS_IMETHODIMP
 nsChromeUIDataSource::ArcLabelsIn(nsIRDFNode* aTarget, nsISimpleEnumerator** aResult)
 {

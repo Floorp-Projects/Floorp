@@ -52,6 +52,8 @@ public:
                             PRBool aTruthValue,
                             PRBool *aResult);
     
+    NS_IMETHOD HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *_retval);
+
     NS_IMETHOD ArcLabelsOut(nsIRDFResource *aSource,
                             nsISimpleEnumerator **aResult);
     nsresult Init();

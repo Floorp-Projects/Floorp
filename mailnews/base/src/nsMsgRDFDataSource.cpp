@@ -199,6 +199,20 @@ nsMsgRDFDataSource::RemoveObserver(nsIRDFObserver *aObserver)
 }
 
 
+NS_IMETHODIMP 
+nsMsgRDFDataSource::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
+{
+  *result = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsMsgRDFDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+{
+  *result = PR_FALSE;
+  return NS_OK;
+}
+
 /* nsISimpleEnumerator ArcLabelsIn (in nsIRDFNode aNode); */
 NS_IMETHODIMP
 nsMsgRDFDataSource::ArcLabelsIn(nsIRDFNode *aNode, nsISimpleEnumerator **_retval)

@@ -559,67 +559,8 @@ private:
 public:
 
 	NS_DECL_ISUPPORTS
-
-	// nsIRelatedLinksHandler methods
 	NS_DECL_NSIRELATEDLINKSHANDLER
-
-	// nsIRDFDataSource methods
-
-	NS_IMETHOD	GetURI(char **uri);
-	NS_IMETHOD	GetSource(nsIRDFResource *property,
-				nsIRDFNode *target,
-				PRBool tv,
-				nsIRDFResource **source /* out */);
-	NS_IMETHOD	GetSources(nsIRDFResource *property,
-				nsIRDFNode *target,
-				PRBool tv,
-				nsISimpleEnumerator **sources /* out */);
-	NS_IMETHOD	GetTarget(nsIRDFResource *source,
-				nsIRDFResource *property,
-				PRBool tv,
-				nsIRDFNode **target /* out */);
-	NS_IMETHOD	GetTargets(nsIRDFResource *source,
-				nsIRDFResource *property,
-				PRBool tv,
-				nsISimpleEnumerator **targets /* out */);
-	NS_IMETHOD	Assert(nsIRDFResource *source,
-				nsIRDFResource *property,
-				nsIRDFNode *target,
-				PRBool tv);
-	NS_IMETHOD	Unassert(nsIRDFResource *source,
-				nsIRDFResource *property,
-				nsIRDFNode *target);
-	NS_IMETHOD Change(nsIRDFResource* aSource,
-					  nsIRDFResource* aProperty,
-					  nsIRDFNode* aOldTarget,
-					  nsIRDFNode* aNewTarget);
-	NS_IMETHOD Move(nsIRDFResource* aOldSource,
-					nsIRDFResource* aNewSource,
-					nsIRDFResource* aProperty,
-					nsIRDFNode* aTarget);
-	NS_IMETHOD	HasAssertion(nsIRDFResource *source,
-				nsIRDFResource *property,
-				nsIRDFNode *target,
-				PRBool tv,
-				PRBool *hasAssertion /* out */);
-	NS_IMETHOD	ArcLabelsIn(nsIRDFNode *node,
-				nsISimpleEnumerator **labels /* out */);
-	NS_IMETHOD	ArcLabelsOut(nsIRDFResource *source,
-				nsISimpleEnumerator **labels /* out */);
-	NS_IMETHOD	GetAllResources(nsISimpleEnumerator** aCursor);
-	NS_IMETHOD	AddObserver(nsIRDFObserver *n);
-	NS_IMETHOD	RemoveObserver(nsIRDFObserver *n);
-	NS_IMETHOD	GetAllCommands(nsIRDFResource* source,
-				nsIEnumerator/*<nsIRDFResource>*/** commands);
-	NS_IMETHOD	GetAllCmds(nsIRDFResource* source,
-				nsISimpleEnumerator/*<nsIRDFResource>*/** commands);
-	NS_IMETHOD	IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-				nsIRDFResource*   aCommand,
-				nsISupportsArray/*<nsIRDFResource>*/* aArguments,
-               PRBool* aResult);
-	NS_IMETHOD	DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-				nsIRDFResource*   aCommand,
-				nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+	NS_DECL_NSIRDFDATASOURCE
 };
 
 
@@ -937,7 +878,32 @@ RelatedLinksHandlerImpl::HasAssertion(nsIRDFResource *aSource,
 	return mInner->HasAssertion(aSource, aProperty, aTarget, aTruthValue, aResult);
 }
 
+NS_IMETHODIMP 
+RelatedLinksHandlerImpl::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
+{
+	return mInner->HasArcIn(aNode, aArc, result);
+}
 
+NS_IMETHODIMP 
+RelatedLinksHandlerImpl::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+{
+	nsresult	rv;
+
+	PRBool	hasValueFlag = PR_FALSE;
+	if (aArc == kNC_Child &&
+		(aSource == kNC_RelatedLinksRoot) || 
+		(NS_SUCCEEDED(rv = mInner->HasAssertion(aSource, kRDF_type,
+												kNC_RelatedLinksTopic, PR_TRUE,
+												&hasValueFlag))) &&
+		(hasValueFlag == PR_TRUE))
+	{
+		*result = PR_TRUE;
+	}
+	else {
+		*result = PR_FALSE;
+	}
+	return NS_OK;
+}
 
 NS_IMETHODIMP
 RelatedLinksHandlerImpl::ArcLabelsIn(nsIRDFNode *aTarget,

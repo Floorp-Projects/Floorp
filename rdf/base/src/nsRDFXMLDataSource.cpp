@@ -306,6 +306,14 @@ public:
         return mInner->RemoveObserver(aObserver);
     }
 
+    NS_IMETHOD HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *_retval) {
+        return mInner->HasArcIn(aNode, aArc, _retval);
+    }
+
+    NS_IMETHOD HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *_retval) {
+        return mInner->HasArcOut(aSource, aArc, _retval);
+    }
+
     NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
                            nsISimpleEnumerator** labels) {
         return mInner->ArcLabelsIn(node, labels);

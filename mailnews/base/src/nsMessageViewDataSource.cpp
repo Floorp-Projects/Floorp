@@ -279,6 +279,82 @@ NS_IMETHODIMP nsMessageViewDataSource::RemoveObserver(nsIRDFObserver* n)
   return NS_OK;
 }
 
+nsresult
+nsMessageViewDataSource::GetMessageEnumerator(nsIMessage* message, nsISimpleEnumerator* *result)
+{
+  nsresult rv;
+  nsCOMPtr<nsIMsgFolder> folder;
+  rv = message->GetMsgFolder(getter_AddRefs(folder));
+  if (NS_FAILED(rv)) return rv;
+  NS_ASSERTION(folder, "GetMsgFolder returned NS_OK, but no folder");
+
+  nsCOMPtr<nsIMsgThread> thread;
+  rv = folder->GetThreadForMessage(message, getter_AddRefs(thread));
+  if (NS_FAILED(rv)) return rv;
+  NS_ASSERTION(folder, "GetThreadForMessage returned NS_OK, but no thread");
+
+  nsMsgKey msgKey;
+  rv = message->GetMessageKey(&msgKey);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsISimpleEnumerator> messages;
+  rv = thread->EnumerateMessages(msgKey, getter_AddRefs(messages));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsMessageFromMsgHdrEnumerator> converter;
+  rv = NS_NewMessageFromMsgHdrEnumerator(messages, folder, getter_AddRefs(converter));
+  if (NS_FAILED(rv)) return rv;
+
+  nsMessageViewMessageEnumerator* messageEnumerator = 
+    new nsMessageViewMessageEnumerator(converter, nsIMessageView::eShowAll);
+  if (!messageEnumerator)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(messageEnumerator);
+  *result = messageEnumerator;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsMessageViewDataSource::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
+{
+  *result = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsMessageViewDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+{
+  nsresult rv;
+	nsCOMPtr<nsIMessage> message;
+	if(mShowThreads && NS_SUCCEEDED(aSource->QueryInterface(NS_GET_IID(nsIMessage), getter_AddRefs(message))))
+	{
+    if (aArc == kNC_Subject ||
+        aArc == kNC_Sender ||
+        aArc == kNC_Date ||
+        aArc == kNC_Status) {
+      *result = PR_TRUE;
+      return NS_OK;
+    }
+    else if (aArc == kNC_MessageChild) {
+      nsCOMPtr<nsISimpleEnumerator> messageEnumerator;
+      rv = GetMessageEnumerator(message, getter_AddRefs(messageEnumerator));
+      if (NS_SUCCEEDED(rv)) {
+				PRBool hasMore = PR_FALSE;
+        if (NS_SUCCEEDED(messageEnumerator->HasMoreElements(&hasMore)) && hasMore) {
+          *result = PR_TRUE;
+          return NS_OK;
+        }
+      }
+    }
+  }
+  if (mDataSource)
+    return mDataSource->HasArcOut(aSource, aArc, result);
+  else
+    *result = PR_FALSE;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsIn(nsIRDFNode* node,
 						 nsISimpleEnumerator** labels)
 {
@@ -291,7 +367,6 @@ NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsIn(nsIRDFNode* node,
 NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsOut(nsIRDFResource* source,
 						  nsISimpleEnumerator** labels)
 {
-	
 	nsCOMPtr<nsIMessage> message;
 	if(mShowThreads && NS_SUCCEEDED(source->QueryInterface(NS_GET_IID(nsIMessage), getter_AddRefs(message))))
 	{
@@ -301,38 +376,20 @@ NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsOut(nsIRDFResource* source,
 		if (arcs == nsnull)
 			return NS_ERROR_OUT_OF_MEMORY;
 
-	    arcs->AppendElement(kNC_Subject);
+    arcs->AppendElement(kNC_Subject);
 		arcs->AppendElement(kNC_Sender);
 		arcs->AppendElement(kNC_Date);
 		arcs->AppendElement(kNC_Status);
 
-		nsCOMPtr<nsIMsgFolder> folder;
-		rv = message->GetMsgFolder(getter_AddRefs(folder));
-		if(NS_SUCCEEDED(rv) && folder)
-		{
-			nsCOMPtr<nsIMsgThread> thread;
-			rv =folder->GetThreadForMessage(message, getter_AddRefs(thread));
-			if(thread && NS_SUCCEEDED(rv))
-			{
+    nsCOMPtr<nsISimpleEnumerator> messageEnumerator;
+    rv = GetMessageEnumerator(message, getter_AddRefs(messageEnumerator));
+    if (NS_SUCCEEDED(rv)) {
+      PRBool hasMore = PR_FALSE;
+      if (NS_SUCCEEDED(messageEnumerator->HasMoreElements(&hasMore)) && hasMore) {
+        arcs->AppendElement(kNC_MessageChild);
+      }
+    }
 
-				nsCOMPtr<nsISimpleEnumerator> messages;
-				nsMsgKey msgKey;
-				message->GetMessageKey(&msgKey);
-				thread->EnumerateMessages(msgKey, getter_AddRefs(messages));
-				nsCOMPtr<nsMessageFromMsgHdrEnumerator> converter;
-				NS_NewMessageFromMsgHdrEnumerator(messages, folder, getter_AddRefs(converter));
-				nsMessageViewMessageEnumerator * messageEnumerator = 
-					new nsMessageViewMessageEnumerator(converter, nsIMessageView::eShowAll);
-				if(!messageEnumerator)
-					return NS_ERROR_OUT_OF_MEMORY;
-				NS_ADDREF(messageEnumerator);
-				PRBool hasMore = PR_FALSE;
-
-				if(NS_SUCCEEDED(messageEnumerator->HasMoreElements(&hasMore)) && hasMore)
-					arcs->AppendElement(kNC_MessageChild);
-				NS_IF_RELEASE(messageEnumerator);
-			}
-		}
 		return NS_NewArrayEnumerator(labels, arcs);
 	}
 	if(mDataSource)

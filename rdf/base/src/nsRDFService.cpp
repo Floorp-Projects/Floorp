@@ -613,7 +613,7 @@ RDFServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
         // that we just tried to use...
         prefixlen = (p - aURI);
 
-        if ((mLastFactory) && (prefixlen == mLastPrefixlen) &&
+        if ((mLastFactory) && ((PRInt32)prefixlen == mLastPrefixlen) &&
             (aURI[0] == mLastURIPrefix[0]) &&
             (0 == PL_strncmp(aURI, mLastURIPrefix, prefixlen))) {
             factory = mLastFactory;

@@ -357,6 +357,32 @@ NS_IMETHODIMP nsAbCardDataSource::HasAssertion(nsIRDFResource* source,
 	return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsAbCardDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+{
+  nsresult rv;
+  nsCOMPtr<nsIAbCard> card(do_QueryInterface(aSource, &rv));
+  if (NS_SUCCEEDED(rv) && card) {
+    *result = (aArc == kNC_DisplayName ||
+               aArc == kNC_Name ||
+               aArc == kNC_Nickname ||
+               aArc == kNC_PrimaryEmail ||
+               aArc == kNC_SecondEmail ||
+               aArc == kNC_WorkPhone ||
+               aArc == kNC_HomePhone ||
+               aArc == kNC_Fax ||
+               aArc == kNC_Pager ||
+               aArc == kNC_Cellular ||
+               aArc == kNC_Title ||
+               aArc == kNC_Department ||
+               aArc == kNC_Organization);
+  }
+  else {
+    *result = PR_FALSE;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsAbCardDataSource::ArcLabelsOut(nsIRDFResource* source,
                                                  nsISimpleEnumerator** labels)
 {
@@ -365,7 +391,7 @@ NS_IMETHODIMP nsAbCardDataSource::ArcLabelsOut(nsIRDFResource* source,
 
   nsCOMPtr<nsIAbCard> card(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv) && card) {
-    fflush(stdout);
+    // fflush(stdout);  // huh?
     rv = getCardArcLabelsOut(card, getter_AddRefs(arcs));
   }
   else {

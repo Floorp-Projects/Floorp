@@ -55,10 +55,9 @@ public:
 	virtual ~nsMessageViewDataSource (void);
   virtual nsresult Init();
 
-
 protected:
 	nsresult createMessageNode(nsIMessage *message, nsIRDFResource *property, nsIRDFNode **target);
-
+  nsresult GetMessageEnumerator(nsIMessage* message, nsISimpleEnumerator* *result);
  
 	// caching frequently used resources
 protected:

@@ -1083,6 +1083,38 @@ CompositeDataSourceImpl::RemoveObserver(nsIRDFObserver* aObserver)
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+CompositeDataSourceImpl::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
+{
+    nsresult rv;
+    *result = PR_FALSE;
+    PRInt32 count = mDataSources.Count();
+    for (PRInt32 i = 0; i < count; ++i) {
+        nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
+        rv = ds->HasArcIn(aNode, aArc, result);
+        if (NS_FAILED(rv)) return rv;
+        if (*result == PR_TRUE)
+            return NS_OK;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+CompositeDataSourceImpl::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+{
+    nsresult rv;
+    *result = PR_FALSE;
+    PRInt32 count = mDataSources.Count();
+    for (PRInt32 i = 0; i < count; ++i) {
+        nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
+        rv = ds->HasArcOut(aSource, aArc, result);
+        if (NS_FAILED(rv)) return rv;
+        if (*result == PR_TRUE)
+            return NS_OK;
+    }
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 CompositeDataSourceImpl::ArcLabelsIn(nsIRDFNode* aTarget, nsISimpleEnumerator** aResult)
 {

@@ -71,6 +71,8 @@ public:
 						  PRBool tv,
 						  PRBool* hasAssertion);
 
+	NS_IMETHOD HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result);
+
 	NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
 						  nsISimpleEnumerator** labels); 
 

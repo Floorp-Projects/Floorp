@@ -306,6 +306,34 @@ NS_IMETHODIMP nsSmtpDataSource::RemoveObserver(nsIRDFObserver *aObserver)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP 
+nsSmtpDataSource::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
+{
+  *result = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSmtpDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+{
+  nsresult rv;
+  if (aSource == kNC_SmtpServers.get()) {
+      *result = mServerRootArcsOut->IndexOf(aArc) != -1;
+  }
+  else {
+      nsCOMPtr<nsISmtpServer> smtpServer;
+      rv = aSource->GetDelegate("smtpserver", NS_GET_IID(nsISmtpServer),
+                                (void **)getter_AddRefs(smtpServer));
+      if (NS_SUCCEEDED(rv)) {
+          *result = mServerArcsOut->IndexOf(aArc) != -1;
+      }
+      else {
+          *result = PR_FALSE;
+      }
+  }
+  return NS_OK;
+}
+
 /* nsISimpleEnumerator ArcLabelsIn (in nsIRDFNode aNode); */
 NS_IMETHODIMP nsSmtpDataSource::ArcLabelsIn(nsIRDFNode *aNode, nsISimpleEnumerator **aResult)
 {

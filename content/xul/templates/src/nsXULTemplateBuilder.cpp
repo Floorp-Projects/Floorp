@@ -97,6 +97,10 @@
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
 
+#if defined(DEBUG_warren) || defined(DEBUG_waterson) || defined(DEBUG_alecf) || defined(DEBUG_bienvenu) || defined(DEBUG_mscott)
+#define RDF_USE_HAS_ARC_OUT 1
+#endif
+
 // Return values for EnsureElementHasGenericChild()
 #define NS_RDF_ELEMENT_GOT_CREATED NS_RDF_NO_VALUE
 #define NS_RDF_ELEMENT_WAS_THERE   NS_OK
@@ -5897,6 +5901,52 @@ nsXULTemplateBuilder::CheckContainer(nsIRDFResource* aResource, PRBool* aIsConta
     // we know we'll have children.
     nsresult rv;
 
+#ifdef RDF_USE_HAS_ARC_OUT
+    *aIsContainer = PR_FALSE;
+	*aIsEmpty = PR_TRUE;
+
+    for (ResourceSet::ConstIterator property = mContainmentProperties.First();
+         property != mContainmentProperties.Last();
+         property++) {
+        PRBool hasArc;
+        rv = mDB->HasArcOut(aResource, *property, &hasArc);
+        if (NS_FAILED(rv)) return rv;
+        if (hasArc) {
+            // Well, it's a container...
+            *aIsContainer = PR_TRUE;
+
+            // ...is it empty?
+            nsCOMPtr<nsIRDFNode> dummy;
+            rv = mDB->GetTarget(aResource, *property, PR_TRUE, getter_AddRefs(dummy));
+            if (NS_FAILED(rv)) return rv;
+
+            if (dummy != nsnull) {
+                *aIsEmpty = PR_FALSE;
+                return NS_OK;
+            }
+
+            // Even if there isn't a target for *this* containment
+            // property, we have continue to check the other
+            // properties: one of them may have a target.
+        }
+    }
+
+    // If we get here, and it's a container, then it's an *empty*
+    // container.
+    if  (*aIsContainer)
+        return NS_OK;
+
+    // Otherwise, just return whether or not it's an RDF container
+    rv = gRDFContainerUtils->IsContainer(mDB, aResource, aIsContainer);
+    if (NS_FAILED(rv)) return rv;
+
+    if (*aIsContainer) {
+        rv = gRDFContainerUtils->IsEmpty(mDB, aResource, aIsEmpty);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return NS_OK;
+#else
     nsCOMPtr<nsISimpleEnumerator> arcs;
     rv = mDB->ArcLabelsOut(aResource, getter_AddRefs(arcs));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get arcs out");
@@ -5954,6 +6004,7 @@ nsXULTemplateBuilder::CheckContainer(nsIRDFResource* aResource, PRBool* aIsConta
 
     // Otherwise, just return whether or not it's an RDF container
     return gRDFContainerUtils->IsContainer(mDB, aResource, aIsContainer);
+#endif
 }
 
 

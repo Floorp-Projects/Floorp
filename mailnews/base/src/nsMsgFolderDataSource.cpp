@@ -384,7 +384,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
 			}
     }
     else if ((kNC_Name == property) ||
-		     (kNC_FolderTreeName == property) ||
+             (kNC_FolderTreeName == property) ||
              (kNC_SpecialFolder == property) ||
              (kNC_IsServer == property) ||
              (kNC_IsSecure == property) ||
@@ -460,6 +460,35 @@ NS_IMETHODIMP nsMsgFolderDataSource::HasAssertion(nsIRDFResource* source,
 	return NS_OK;
 }
 
+
+NS_IMETHODIMP 
+nsMsgFolderDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+{
+  nsresult rv;
+	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(aSource, &rv));
+	if (NS_SUCCEEDED(rv)) {
+    *result = (aArc == kNC_Name ||
+               aArc == kNC_FolderTreeName ||
+               aArc == kNC_SpecialFolder ||
+               aArc == kNC_ServerType ||
+               aArc == kNC_IsServer ||
+               aArc == kNC_IsSecure ||
+               aArc == kNC_CanSubscribe ||
+               aArc == kNC_CanFileMessages ||
+               aArc == kNC_CanCreateSubfolders ||
+               aArc == kNC_CanRename ||
+               aArc == kNC_TotalMessages ||
+               aArc == kNC_TotalUnreadMessages ||
+               aArc == kNC_Charset ||
+               aArc == kNC_BiffState ||
+               aArc == kNC_Child ||
+               aArc == kNC_NoSelect);
+	}
+	else {
+		*result = PR_FALSE;
+	}
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsMsgFolderDataSource::ArcLabelsIn(nsIRDFNode* node,
                                                  nsISimpleEnumerator** labels)
@@ -781,7 +810,6 @@ nsMsgFolderDataSource::OnItemBoolPropertyChanged(nsISupports *item,
                                                  PRBool oldValue,
                                                  PRBool newValue)
 {
-    nsresult rv; 
     nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(item)); 
     if(folder) 
 	{ 
