@@ -58,6 +58,7 @@ private:
    nsString iso2022jp;
    nsString utf8;
    nsString xmacroman;
+   nsString unknown;
 };
 
 NS_IMPL_ISUPPORTS(nsCharsetAlias, kICharsetAliasIID);
@@ -74,6 +75,7 @@ nsCharsetAlias::nsCharsetAlias()
   iso2022jp = "ISO-2022-JP";
   xmacroman = "x-mac-roman";
   utf8      = "UTF8";
+  unknown   = "";
 }
 
 nsCharsetAlias::~nsCharsetAlias()
@@ -126,7 +128,7 @@ const nsString& nsCharsetAlias::GetPreferred(
       return utf8;
    }
 
-   return "";
+   return unknown;
 }
 
 NS_IMETHODIMP nsCharsetAlias::GetPreferred(
@@ -157,7 +159,7 @@ NS_IMETHODIMP nsCharsetAlias::GetPreferred(
    const nsString& res = GetPreferred(aAlias);
    if(res.Equals(""))
    {
-     *oResult = NULL;
+     *oResult = (char) NULL;
      return NS_ERROR_NOT_AVAILABLE;
    }
    res.ToCString(oResult, aBufLength);
@@ -202,7 +204,7 @@ public:
      NS_INIT_REFCNT();
      PR_AtomicIncrement(&g_InstanceCount);
    }
-   ~nsCharsetAliasFactory() {
+   virtual ~nsCharsetAliasFactory() {
      PR_AtomicDecrement(&g_InstanceCount);
    }
 

@@ -45,7 +45,7 @@ public:
   /**
    * Class destructor.
    */
-  ~nsEncodeHelperFactory();
+  virtual ~nsEncodeHelperFactory();
 
   //--------------------------------------------------------------------
   // Interface nsIFactory [declaration]

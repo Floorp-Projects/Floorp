@@ -35,7 +35,7 @@ class nsMacCharset : public nsIPlatformCharset
 public:
 
   nsMacCharset();
-  ~nsMacCharset();
+  virtual ~nsMacCharset();
 
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult);
 
@@ -68,7 +68,7 @@ public:
      NS_INIT_REFCNT();
      PR_AtomicIncrement(&g_InstanceCount);
    }
-   ~nsMacCharsetFactory() {
+   virtual ~nsMacCharsetFactory() {
      PR_AtomicDecrement(&g_InstanceCount);
    }
 

@@ -47,7 +47,7 @@ struct ConverterInfo
 
   ConverterInfo() {}
 
-  ~ConverterInfo()
+  virtual ~ConverterInfo()
   {
     if (mCharset != NULL) delete mCharset;
   }
@@ -141,7 +141,7 @@ public:
   /**
    * Class destructor.
    */
-  ~nsCharsetConverterManager();
+  virtual ~nsCharsetConverterManager();
 
   /**
    * Unique factory method for this class (the constructor is private).

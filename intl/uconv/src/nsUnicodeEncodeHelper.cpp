@@ -47,7 +47,7 @@ public:
   /**
    * Class destructor.
    */
-  ~nsUnicodeEncodeHelper();
+  virtual ~nsUnicodeEncodeHelper();
 
   //--------------------------------------------------------------------
   // Interface nsIUnicodeEncodeHelper [declaration]

@@ -35,7 +35,7 @@ class nsUNIXCharset : public nsIPlatformCharset
 public:
 
   nsUNIXCharset();
-  ~nsUNIXCharset();
+  virtual ~nsUNIXCharset();
 
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult);
 
@@ -68,7 +68,7 @@ public:
      NS_INIT_REFCNT();
      PR_AtomicIncrement(&g_InstanceCount);
    }
-   ~nsUNIXCharsetFactory() {
+   virtual ~nsUNIXCharsetFactory() {
      PR_AtomicDecrement(&g_InstanceCount);
    }
 

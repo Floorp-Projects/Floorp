@@ -45,7 +45,7 @@ public:
   /**
    * Class destructor.
    */
-  ~nsManagerFactory();
+  virtual ~nsManagerFactory();
 
   //--------------------------------------------------------------------
   // Interface nsIFactory [declaration]
