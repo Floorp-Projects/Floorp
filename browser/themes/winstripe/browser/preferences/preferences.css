@@ -85,12 +85,15 @@ radio[pane=paneAdvanced]:hover, radio[pane=paneAdvanced][selected="true"] {
 
 /* General Pane */
 #browserStartupHomepage {
-  padding: 2px 2px 3px 4px;
+  padding-top: 2px;
+  padding-bottom: 3px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 2px;
 }
 
 /* File Field Widget */
 filefield {
-  margin: 2px 4px 2px 4px;
+  margin: 2px 4px;
   -moz-appearance: textfield;
 }
 
@@ -111,7 +114,10 @@ filefield[disabled="true"] .fileFieldIcon {
 .fileFieldIcon {
   width: 16px;
   height: 16px;
-  margin: 2px 4px 2px 2px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  -moz-margin-start: 2px;
+  -moz-margin-end: 4px;
 }
 
 .fileFieldLabel {
@@ -186,12 +192,15 @@ filefield[disabled="true"] .fileFieldIcon {
 #typeIcon {
   width: 32px;
   height: 32px;
-  margin-right: 3px;
+  -moz-margin-end: 3px;
 }
 
 #typeField {
   background-color: transparent;
-  margin: 1px 5px 2px 6px !important;
+  margin-top: 1px !important;
+  margin-bottom: 2px !important;
+  -moz-margin-start: 6px !important;
+  -moz-margin-end: 5px !important;
 }
 
 #extensionField {
@@ -201,7 +210,10 @@ filefield[disabled="true"] .fileFieldIcon {
 #ChangeActionDialog {  padding: 0px;
 }
 #ChangeActionDialog .dialog-button-box {
-  padding: 8px 10px 10px 8px;}
+  padding-top: 8px;
+  padding-bottom: 10px;
+  -moz-padding-start: 8px;
+  -moz-padding-end: 10px;  }
 #changeActionHeader {
   border-bottom: 2px groove ThreeDFace;
   margin: 0px;
@@ -210,13 +222,16 @@ filefield[disabled="true"] .fileFieldIcon {
   color: -moz-FieldText;  
 }
 #changeActionContent {
-  padding: 8px 10px 10px 9px;
+  padding-top: 8px;
+  padding-bottom: 10px
+  -moz-padding-start: 9px;
+  -moz-padding-end: 10px;
 }
 #defaultAppIcon {
   width: 16px;  height: 16px;
-  margin-left: 2px;}
+  -moz-margin-start: 2px;}
 
 #defaultAppName {
-  margin-left: 6px !important; 
+  -moz-margin-start: 6px !important; 
   font-weight: bold;
 }
