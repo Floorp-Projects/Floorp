@@ -139,6 +139,7 @@ public:
 
   NS_IMETHOD MoveFocusToCaret(PRBool aCanFocusDoc, PRBool *aIsSelectionWithFocus);
   NS_IMETHOD MoveCaretToFocus();
+  NS_IMETHOD ChangeFocusWith(nsIContent* aFocus, EFocusedWithType aFocusedWith);
 
   static void StartHandlingUserInput()
   {
@@ -172,7 +173,6 @@ protected:
   void GenerateDragDropEnterExit(nsPresContext* aPresContext, nsGUIEvent* aEvent);
   nsresult SetClickCount(nsPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   nsresult CheckForAndDispatchClick(nsPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
-  PRBool ChangeFocus(nsIContent* aFocus, PRInt32 aFocusedWith);
   nsresult GetNextTabbableContent(nsIContent* aRootContent,
                                   nsIContent* aStartContent,
                                   nsIFrame* aStartFrame,
@@ -279,7 +279,7 @@ protected:
   nsCOMPtr<nsIContent> mURLTargetContent;
   nsCOMPtr<nsIContent> mCurrentFocus;
   nsIFrame* mCurrentFocusFrame;
-  PRInt32 mLastFocusedWith;
+  EFocusedWithType mLastFocusedWith;
   PRInt32 mCurrentTabIndex;
 
   // DocShell Traversal Data Memebers

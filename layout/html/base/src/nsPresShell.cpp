@@ -4022,7 +4022,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
         }
         
         PRBool isSelectionWithFocus;
-        esm->MoveFocusToCaret(PR_TRUE, &isSelectionWithFocus);
+        esm->ChangeFocusWith(nsnull, nsIEventStateManager::eEventFocusedByApplication);
       }
     }
   } else {

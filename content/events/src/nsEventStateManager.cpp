@@ -1008,7 +1008,7 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
       } else { // otherwise, it must be HTML
         // It's hard to say what HTML4 wants us to do in all cases.
         // So for now we'll settle for A) Set focus
-        ChangeFocus(content, eEventFocusedByKey);
+        ChangeFocusWith(content, eEventFocusedByKey);
 
         if (sKeyCausesActivation) {
           // B) Click on it if the users prefs indicate to do so.
@@ -1891,7 +1891,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         }
 
         if (newFocus && currFrame)
-          ChangeFocus(newFocus, eEventFocusedByMouse);
+          ChangeFocusWith(newFocus, eEventFocusedByMouse);
         else if (!suppressBlur) {
           SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
         }
@@ -2972,10 +2972,15 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
   return ret;
 }
 
-PRBool
-nsEventStateManager::ChangeFocus(nsIContent* aFocusContent,
-                                 PRInt32 aFocusedWith)
+NS_IMETHODIMP
+nsEventStateManager::ChangeFocusWith(nsIContent* aFocusContent,
+                                     EFocusedWithType aFocusedWith)
 {
+  mLastFocusedWith = aFocusedWith;
+  if (!aFocusContent) {
+    SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+    return NS_OK;
+  }
   aFocusContent->SetFocus(mPresContext);
   if (aFocusedWith != eEventFocusedByMouse) {
     MoveCaretToFocus();
@@ -2996,8 +3001,7 @@ nsEventStateManager::ChangeFocus(nsIContent* aFocusContent,
     }
   }
 
-  mLastFocusedWith = aFocusedWith;
-  return PR_FALSE;
+  return NS_OK;
 }
 
 //---------------------------------------------------------
@@ -3169,7 +3173,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
                            getter_AddRefs(nextFocus), &nextFocusFrame);
 
   // Clear out mCurrentTabIndex. It has a garbage value because of GetNextTabbableContent()'s side effects
-  // It will be set correctly when focus is changed via ChangeFocus()
+  // It will be set correctly when focus is changed via ChangeFocusWith()
   mCurrentTabIndex = 0;
 
   if (nextFocus) {
@@ -3216,9 +3220,9 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
         SetFrameExternalReference(mCurrentTarget);
 
       nsCOMPtr<nsIContent> oldFocus(mCurrentFocus);
-      ChangeFocus(nextFocus, eEventFocusedByKey);
+      ChangeFocusWith(nextFocus, eEventFocusedByKey);
       if (!mCurrentFocus && oldFocus) {
-        // ChangeFocus failed to move focus to nextFocus because a blur handler
+        // ChangeFocusWith failed to move focus to nextFocus because a blur handler
         // made it unfocusable. (bug #118685)
         // Try again unless it's from the same point, bug 232368.
         if (oldFocus != aStart) {

@@ -50,18 +50,25 @@ class nsIView;
 class nsIWidget;
 
 /*
- * Event listener manager interface.
+ * Event state manager interface.
  */
+// {5D47ACA5-B50B-479b-A1C6-2A90C0B8095F}
 #define NS_IEVENTSTATEMANAGER_IID \
-{ /* 4d45b9d0-fcf2-11d8-9669-0800200c9a66 */ \
-0x4d45b9d0, 0xfcf2, 0x11d8, \
-{0x96, 0x69, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66} }
+{ 0x5d47aca5, 0xb50b, 0x479b, { 0xa1, 0xc6, 0x2a, 0x90, 0xc0, 0xb8, 0x9, 0x5f } };
 
 #define NS_EVENT_NEEDS_FRAME(event) (!NS_IS_FOCUS_EVENT(event))
 
 class nsIEventStateManager : public nsISupports {
 
 public:
+  enum EFocusedWithType {
+    eEventFocusedByUnknown,     // focus gained via unknown method
+    eEventFocusedByMouse,       // focus gained via mouse
+    eEventFocusedByKey,         // focus gained via key press (like tab)
+    eEventFocusedByContextMenu, // focus gained via context menu
+    eEventFocusedByApplication  // focus gained via Application (like script)
+  };
+
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEVENTSTATEMANAGER_IID)
 
   NS_IMETHOD Init() = 0;
@@ -104,6 +111,10 @@ public:
   NS_IMETHOD MoveFocusToCaret(PRBool aCanFocusDoc, PRBool *aIsSelectionWithFocus) = 0;
   NS_IMETHOD MoveCaretToFocus() = 0;
 
+  // Set focus on any element that can receive focus, or on document via aFocusContent == nsnull
+  // Must supply method that focus is being set with
+  NS_IMETHOD ChangeFocusWith(nsIContent *aFocusContent, EFocusedWithType aFocusedWith) = 0;
+
   // This is an experiment and may be temporary
   NS_IMETHOD ConsumeFocusEvents(PRBool aDoConsume) = 0;
 
@@ -128,13 +139,5 @@ public:
 #define NS_EVENT_STATE_URLTARGET    0x0010 // content is URL's target (ref)
 // The following states are used only for ContentStatesChanged
 #define NS_EVENT_STATE_CHECKED      0x0020
-
-enum EFocusedWithType {
-  eEventFocusedByUnknown,     // focus gained via unknown method
-  eEventFocusedByMouse,       // focus gained via mouse
-  eEventFocusedByKey,         // focus gained via key press (like tab)
-  eEventFocusedByContextMenu, // focus gained via context menu
-  eEventFocusedByApplication  // focus gained via Application (like script)
-};
 
 #endif // nsIEventStateManager_h__
